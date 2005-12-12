@@ -1,0 +1,26 @@
+Filename:	 csm_share/README 
+Original Author: Erik Kluzek
+Date:            Dec/12/1997
+Description:     Description of the csm_share  module.
+		 (code shared between the CSM models)
+Version-Control:  CSM_SHARE1.3
+
+CVS: $Id$
+CVS: $Source$
+CVS: $Name$
+
+############################################################################
+
+Description of csm_share:
+
+	This module contains codes that are shared between the different 
+model compenents of CSM.  As such these codes are part of the interface protocol
+of CSM.  Codes are currently in two classes.  Either they are codes dealing with 
+the message passing interface that is required to be consistent between all 
+codes.  Or, the codes are physics that is required to be consistent between
+all models.  For example, the solar zenith and orbital calculations MUST be
+the same in all models, therefore these codes are shared in this one place.
+
+
+
+

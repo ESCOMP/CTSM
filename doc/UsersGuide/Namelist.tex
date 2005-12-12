@@ -1,0 +1,848 @@
+\section{Namelist Parameters}
+\label{sec_namelist}
+
+CLM3.0 namelist inputs are presented in sections
+\ref{subsec_run} - \ref{subsec_ccsm_namelist} below.  In what follows,
+"mode" has values of "offline", "ccsm", "cam" or "all", corresponding
+to offline mode, ccsm mode, cam mode, or all the modes.  If a namelist
+variable setting is listed as {\bf required}, the value must be set in
+the namelist in order for the model to execute successfully.  If a
+setting is specified as {\bf required} and the mode is only given as
+offline, then that variable must only be specified when running in
+offline mode.  For namelist variable settings not listed as {\bf
+required}, the code will provide default settings at initialization.
+In the following variable descriptions, we refer to examples presented
+in section \ref{sec_examples}.
+
+\subsection {Specification of run length, run type, initial run date and run decomposition}
+\label{subsec_run}
+
+The following list specifies namelist variables associated with the
+definition of run case names, run types (restart, initial or branch),
+model time step, and initial run date. 
+
+An initial run starts the model from either initial conditions that
+are set internally in the code (referred to as arbitrary initial
+conditions) or from an initial conditions dataset (see namelist
+variable {\bf FINIDAT}) that enables the model to start from a spun-up
+state. 
+
+A restart run is an exact continuation of a previous simulation from
+its point of termination.  Output from a restart run should be
+bit-for-bit the same as if the previous simulation had not
+stopped. Run control variables set in the namelist must be the same as
+in the run that is being restarted. 
+
+A branch run is a new case that uses a restart dataset from a previous
+simulation to begin the integration. For a branch run, the length of
+the history interval and the output history fields do not have to be
+the same as in the control simulation. For example, the branching
+option can be used to output selected fields more frequently than was
+the case in the original run or to add new auxiliary history files to
+the model run.
+
+\bigskip
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf CASEID}
+ \item[description] Case name (short identifier for run) (see ex. 1,2,3).
+ \item[type] char*256
+ \item[mode] offline, ccsm (obtained from atm in cam mode)	
+ \item[default] {\bf required} (must be changed for branch run)
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf CTITLE}
+ \item[description] Case title for use within history files (long identifier).
+ \item[type] char*ctitle
+ \item[mode] offline, ccsm (obtained from atm in cam mode)     
+ \item[default] blank 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf NSREST}   
+ \item[description]     Run type (0 for initial run, 1 for restart, 3 for branch) 
+	(see ex. 1,2,3). 
+ \item[type] integer       
+ \item[mode] offline, ccsm (obtained from atm in cam mode)    
+ \item[default] {\bf required}   
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf DTIME} 
+ \item[description]   Model time step (seconds) (see ex. 1). 
+ \item[type] integer          
+ \item[mode] offline, must agree with CAM model in ccsm mode, obtained from CAM model directly in cam mode  
+ \item[default] {\bf required} (suggested range: 1200-3600 s) 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}]  {\bf STOP\_YMD} and {\bf STOP\_TOD}.
+ \item[description]  Stop date and stop time of day
+ \item[type]     integer       
+ \item[mode]     offline (ending time is obtained from CAM in cam mode and CCSM coupler in ccsm mode)
+ \item[default] {\bf required} (if NESTEP  not set)  
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}]  {\bf NELAPSE}  
+ \item[description]  Elapsed run time in model time steps (positive) or days (negative) (see ex. 2). 
+	Value is ignored if {\bf STOP\_YMD, STOP\_TOD} are specified.
+ \item[type]     integer       
+ \item[mode]     offline (ending time is obtained from CAM in cam mode and CCSM coupler in ccsm mode)
+ \item[default] {\bf required} (if NESTEP  not set)  
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}]   {\bf NESTEP}   
+ \item[description]  Ending run time in model time steps (positive) or days (negative) (see ex. 1). 
+	Value is ignored if either {\bf NELAPSE} or {\bf STOP\_YMD, STOP\_TOD} are specified.
+ \item[type]  integer       
+ \item[mode]     offline (ending time obtained from CAM in cam mode and CCSM coupler in ccsm mode)
+ \item[default]  {\bf required} (if NELAPSE not set)  
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}]  {\bf NELAPSE}  
+ \item[description]  Elapsed run time in model time steps (positive) or days (negative) (see ex. 2). 
+ \item[type]     integer       
+ \item[mode]     offline (obtained from CAM in cam mode and CCSM coupler in ccsm mode)
+ \item[default] {\bf required} (if NESTEP  not set)  
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf START\_YMD} 
+ \item[description]  Start date of run (yyyymmdd format) (see ex. 1). 
+ \item[type] integer 
+ \item[mode] offline, ccsm  (obtained from CAM model in cam mode) 
+ \item[default] {\bf required}      
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf START\_TOD}  
+ \item[description]     Start time of day of run (seconds) (see ex. 1). 
+ \item[type]     integer 
+ \item[mode]     offline, ccsm  (obtained from CAM in cam mode)  
+ \item[default] 0    
+\end{Ventry}
+\bigskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}]  {\bf REF\_YMD} 
+ \item[description]  Refernce date for time coordinate (yyyymmdd format).
+ \item[type]     integer       
+ \item[mode]     offline, ccsm (obtain from CAM in cam mode)
+ \item[default] no default value
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}]  {\bf REF\_TOD} 
+ \item[description]  Refernce reference time of day for time coordinate (secs).
+ \item[type]     integer       
+ \item[mode]     offline, ccsm (obtain from CAM in cam mode)
+ \item[default]  0
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf clump\_pproc}  
+ \item[description] Number of ``clumps'' per process (see section \ref{sec_data_structures}).
+ \item[type] integer 
+ \item[mode] offline, ccsm  (obtained from CAM in cam mode)  
+ \item[default]  1 if OpenMP is disabled \newline
+                 number of OpenMP threads (specified in the environment) if OpenMP is enabled.
+\end{Ventry}
+\bigskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf brnch\_retain\_casename}  
+ \item[description] Flag to retain case name on a branch run. If true, then allow
+ 	case name to remain the same for branch run. In cam mode, this flag must
+	be set for both the cam and clm namelists.
+ \item[type]     logical
+ \item[mode]     offline, cam, ccsm  
+ \item[default]  .FALSE.
+\end{Ventry}
+\bigskip
+
+\subsection {Specification of model input datasets}
+\label{subsec_model_input_data_namelist}
+The following list specifies namelist variables associated with model
+input datasets.
+
+\bigskip
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf FSURDAT}      
+ \item[description] Full pathname of surface dataset (see ex. 1,2,3). 
+ \item[type] char*256   
+ \item[mode] all      
+ \item[default] blank 
+ \item[notes] raw datasets to generate surface dataset provided 
+	are in \$CSMDATA/rawdata surface datasets 
+	provided with the distribution are in \$CSMDATA/srfdata 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}]  {\bf FINIDAT} 
+ \item[description] Full pathname of initial conditions dataset (see ex. 1,2,3).
+ \item[type] char*256   
+ \item[mode] all   
+ \item[default] blank  
+ \item[notes] datasets provided are in \$CSMDATA/inidata 
+\end{Ventry}
+\medskip
+                       
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf FPFTCON} 
+ \item[description] Full pathname of plant functional type (PFT) 
+	physiological constants dataset (see ex. 1,2,3). 
+ \item[type] char*256   
+ \item[mode] all   
+ \item[default] {\bf required} 
+ \item[notes] dataset provided is \$CSMDATA/pftdata/pft-physiology 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf FRIVINP\_RTM}  
+ \item[description] full pathname of RTM input dataset (see ex. 4). 
+ \item[type] char*256   
+ \item[mode] offline, ccsm   
+ \item[default] {\bf required} if cpp token {\bf RTM} is defined in preproc.h  
+ \item[notes] dataset provided is \$CSMDATA/rtmdata/rdirc.05 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf NREVSN}       
+ \item[description] Full pathname of restart file name (only for branch runs) (see ex. 3). 
+ \item[type] char*256   
+ \item[mode] all   
+ \item[default] {\bf required} (only if branch run, NSREST=3) 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_ALL\_PFTS}  
+ \item[description] Flag to turn on new surface dataset format. If true,
+     new surface dataset format (see section \ref{sec_surface_dataset}) is used.
+ \item[type] logical
+ \item[mode] all  
+ \item[default] .false.
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_FVEGTYP}  
+ \item[description] Full pathname of raw vegetation type dataset (see ex. 5). 
+ \item[type] char*256   
+ \item[mode] all  
+ \item[default] {\bf required} (if FSURDAT is blank)   
+ \item[notes] dataset provided is \$CSMDATA/rawdata/mksrf\_pft.nc 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_FSOITEX}  
+ \item[description] full pathname of raw soil texture dataset (see ex. 5). 
+ \item[type] char*256   
+ \item[mode] all  
+ \item[default] {\bf required} (if FSURDAT is blank)   
+ \item[notes] dataset provided is \$CSMDATA/rawdata/mksrf\_soitex.10level.nc 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_FSOICOL}  
+ \item[description] Full pathname of raw soil color dataset (see ex. 5). 
+ \item[type] char*256   
+ \item[mode] all  
+ \item[default] {\bf required} (if FSURDAT is blank) 
+ \item[notes] \$CSMDATA/rawdata/mksrf\_soicol\_clm2.nc 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_FLANWAT}  
+ \item[description]  Full pathname of raw inland water dataset (see ex. 5).
+ \item[type] char*256  
+ \item[mode] all  
+ \item[default] {\bf required} (if FSURDAT is blank) 
+ \item[notes]  dataset provided is \$CSMDATA/rawdata/mksrf\_lanwat.nc 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_FURBAN}   
+ \item[description] full pathname of urban dataset (see ex. 5). 
+ \item[type] char*256   
+ \item[mode] all 
+ \item[default] {\bf required} (if FSURDAT is blank) 
+ \item[notes] dataset provided is \$CSMDATA/rawdata/mksrf\_urban.nc 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_FGLACIER} 
+ \item[description]  Full pathname of glacier dataset (see ex. 5). 
+ \item[type] char*256   
+ \item[mode] all  
+ \item[default] {\bf required} (if FSURDAT is blank) 
+ \item[notes] dataset provided is \$CSMDATA/rawdata/mksrf\_glacier.nc 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_FLAI}     
+ \item[description] full pathname of leaf and stem area index, canopy top and bottom height dataset (see ex. 5). 
+ \item[type] char*256   
+ \item[mode] all  
+ \item[default] {\bf required} (if FSURDAT is blank) 
+ \item[notes] dataset provided is \$CSMDATA/rawdata/mksrf\_lai.nc 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_OFFLINE\_FNAVYORO} 
+ \item[description] 20 min navy orography dataset used to generate land mask (see ex. 5). 
+ \item[type] char*256  
+ \item[mode] offline   
+ \item[default] {\bf required} (if MKSRF\_OFFLINE\_FGRID not set and FSURDAT is blank)  
+ \item[notes] dataset provided is \$CSMDATA/rawdata/mksrf\_navyoro\_20min.nc  
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}]  {\bf MKSRF\_OFFLINE\_FGRID}    
+ \item[description]  Dataset specifying land grid and mask at desired resolution (see ex. 6). 
+ \item[type] char*256   
+ \item[mode] offline   
+ \item[default] blank, {\bf required} (if MKSRF\_OFFLINE\_FNAVYORO not set and fsurdat is blank)  
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_OFFLINE\_EDGEN}    
+ \item[description] Northern edge of land grid (degrees north) (see ex. 5). 
+ \item[type] real  
+ \item[mode] offline   
+ \item[default] 90. 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_OFFLINE\_EDGEE}    
+ \item[description] Eastern edge of land grid (degrees east) (see ex. 5). 
+ \item[type] real   
+ \item[mode] offline  
+ \item[default] 180. 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_OFFLINE\_EDGES}    
+ \item[description] Southern edge of land grid (degrees north) (see ex. 5). 
+ \item[type] real  
+ \item[mode] offline  
+ \item[default] -90.  
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MKSRF\_OFFLINE\_EDGEW}    
+ \item[description] Western edge of grid land (degrees east) (see ex. 5). 
+ \item[type] real 
+ \item[mode] offline 
+ \item[default] -180.  
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf OFFLINE\_ATMDIR}  
+ \item[description] Directory containing atmospheric forcing datasets (see ex. 1,2,3). 
+ \item[type] char*256   
+ \item[mode] offline   
+ \item[default] {\bf required}  
+ \item[notes] datasets provided are in directory \$CSMDATA/NCEPDATA  
+\end{Ventry}
+\bigskip
+
+{\bf FSURDAT} specifies a surface dataset containing time-invariant
+land properties such as plant functional types and soil textures and
+time-variant properties such as leaf area index. Surface datasets
+provided with the distribution are contained in the following
+directories:
+
+\begin{center}
+\begin{itemize}
+\item {\bf \$CSMDATA/srfdata/offine}: offline mode surface datasets
+\item {\bf \$CSMDATA/srfdata/cam}: cam mode surface datasets
+\item {\bf \$CSMDATA/srfdata/ccsm}: ccsm mode surface datasets
+\end{itemize}
+\end{center}
+
+\noindent If {\bf FSURDAT} is set to the empty string, a new surface dataset is
+generated at run time for the specified model resolution and
+land/ocean mask. The creation of a new surface dataset also requires
+the specification of the full pathname of the following raw datasets:
+{\bf MKSRF\_FVEGTYP}, {\bf MKSRF\_FSOITEX}, {\bf MKSRF\_FSOICOL}, {\bf
+MKSRF\_FLANWAT}, {\bf MKSRF\_FURBAN}, {\bf MKSRF\_FGLACIER}, {\bf
+MKSRF\_FLAI}.  These datasets are only used for the generation of a
+model surface dataset. They are provided with the distribution and are
+contained in the input data directory {\bf rawdata}.
+
+In addition to raw datasets, a land/ocean mask is also required for
+the creation of a new surface dataset. If the model is run in ccsm or
+cam mode, this mask is obtained from either the ccsm flux coupler or
+from the cam atmosphere model at startup.  In offline mode, however,
+the land/ocean mask can either be calculated from a high resolution
+orography dataset by setting the namelist variable {\bf
+MKSRF\_OFFLINE\_FNAVYORO} or can be read in from an input dataset via
+the setting of the namelist variable {\bf MKSRF\_OFFLINE\_FGRID}.
+
+Subroutines involved in creating a runtime surface dataset reside in the
+source code directory {\bf mksrfdata/}. In most cases the creation of a new
+surface dataset involves a straightforward interpolation from the raw
+dataset resolution to the desired model resolution. For soil texture,
+however, averaging would create new soil types. Consequently, the
+model determines the dominant soil texture profile per gridcell from
+the raw resolution to the desired resolution. 
+
+Once the surface dataset is created, the model code reads the necessary
+surface dataset back in so that the same results will be obtained
+regardless of whether a run starts from an existing surface dataset or
+from one that is created at start up.
+
+The input file, {\bf FINIDAT}, contains values for the time-dependent
+variables needed to initialize the model from a spun-up state. If {\bf
+FINIDAT} is set to the empty string, the model is internally
+initialized to non spun-up values. The setting of the namelist
+variable, {\bf HIST\_CRTINIC} (described in the next section), can be
+used to generate initial files during a model run. Initial datasets
+provided with the distribution are contained in the directory {\bf
+\$CSMDATA/inidata\_2.1}. A new tool to provide new spun-up initial datasets
+from existing initial dataset at other model resolution is described in
+section \ref{subsec_interpinic}.
+
+{\bf FPFTCON} specifies the dataset containing plant functional type
+physiological constants. The dataset provided with the distribution is
+{\bf \$CSMDATA/pftdata/pft-physiology}.
+
+When the cpp token {\bf RTM} is defined, the RTM river routing scheme
+will be invoked in running the model. In this case, {\bf FRIVINP\_RTM}
+must be set to a river routing dataset. The dataset provided with the
+distribution is {\bf \$CSMDATA/rtmdata/rdirc.05}
+
+{\bf NREVSN} is ignored unless a branch run is specified (i.e., {\bf
+NSREST} is set to 3).
+
+In offline mode, time dependent atmospheric forcing data must be read
+in periodically. The directory containing these files is given by {\bf
+OFFLINE\_ATMDIR}. Forcing datasets provided with the distribution can
+be found in {\bf \$CSMDATA/NCEPDATA}. This variable is ignored
+in cam and ccsm mode.
+
+\subsection {Specification of history and restart files}
+\label{subsec_history_namelist}
+
+The following describes namelist variables associated with history,
+restart, and initialization files. In what follows, max\_tapes
+denotes the maximum allowable number of different types of history
+files (tapes) that the model can produce (currently set to 6) and
+max\_flds denotes the maximum number of history fields that may appear
+on any given history tape (currently set to 1000).
+
+\bigskip
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf HIST\_CRTINIC}     
+ \item[description] Frequency with which initial datasets will be 
+	generated. \\ Valid values are 'MONTHLY','YEARLY','6-HOURLY','DAILY' or'NONE'. 
+ \item[type] char*8     
+ \item[mode] offline, ccsm (obtained from CAM in cam mode) 
+ \item[default] 'YEARLY'                                                        
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf HIST\_NHTFRQ(max\_tapes)}     
+ \item[description] History tape interval(s) \newline
+	(+ for model time steps, - for hours, 0 for monthly ave) (see ex. 4). 
+ \item[type] integer array (1:max\_tapes)   
+ \item[mode] offline, ccsm (obtained from CAM in cam mode) 
+ \item[default] -24                                                             
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf HIST\_MFILT(max\_tapes)}      
+ \item[description] Number of time samples per history tape(s) (see ex. 4). 
+ \item[type] integer 
+ \item[mode] offline, ccsm (obtained from CAM in cam mode) 
+ \item[default] 1                                                               
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf HIST\_NDENS(max\_tapes)}   
+ \item[description] Output tape precision(s). 
+	Valid values are 1 (double precision) or 2 (single precision). 
+ \item[type] integer    
+ \item[mode] all   
+ \item[default] 2                                                              
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf HIST\_DOV2XY(max\_tapes)}   
+ \item[description] 
+	Per tape spatial averaging flag.  If set to true, produces
+	grid-average history fields on output tape. If set to false,
+	one-dimensional fields are produced (see ex. 4).
+ \item[type] logical    
+ \item[mode] all    
+ \item[default] .TRUE.  
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf HIST\_AVGFLAG\_PERTAPE(max\_tapes)}   
+ \item[description] Per tape time averaging flag. 
+	Valid values are 'A' (average over history period), 'I' (instantaneous), 
+	'X' (maximum over history period) or 'M' (minimum over history period). 
+ \item[type] char*1
+ \item[mode] all    
+ \item[default] blank
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf HIST\_TYPE1D\_PERTAPE(max\_tapes)}   
+ \item[description] 
+	Per tape one dimensional output type. 
+	Only used if one dimensional output is selected for the given tape 
+	(via the setting of HIST\_DOV2XY). 
+	Valid values are 'GRID', 'LAND', 'COLS', 'PFTS'.
+	For example, if one dimensional output is selected for tape 3 and 
+	HIST\_TYPE1D\_PERTAPE is set to 'COLS', then all the fields will have 1d 
+	column output. If the specified one dimensional output type
+	is not defined for a given field, output values will be set to 1.e36 
+	for that field.
+ \item[type] char*4
+ \item[mode] all    
+ \item[default] blank
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf HIST\_EMPTY\_HTAPES}   
+ \item[description] 
+	If set to true, all the history tapes are empty by default.
+	Only variables explicitly listed by the user will be output.
+ \item[type] logical
+ \item[mode] all    
+ \item[default] .FALSE.
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf HIST\_FINCL1...HIST\_FINCL6(max\_flds)}   
+ \item[description] 
+	List of fields to include on the respective history tape. See
+	tables 9-16 for the list of default fields on the primary
+	history tape. Namelist specification can take one of two
+	forms.  The user may specify only the name of the field to be
+	included on the history tape (in which case the default time
+	averaging for that field will be used).  For example,
+	HIST\_FINCL2='TV', will add the field TV to the second history
+	tape with whatever default time averaging was specified for
+	TV. Alternatively, the user may specify the field name,
+	followed by a : followed by the time averaging flag desired
+	(valid flags are 'I' for instantaneous, 'A' for average, 'M'
+	for minimum, and 'X' for maximum). For example,
+	HIST\_FINCL2='TV:I'' will add the field TV with instantaneous
+	output to the second history tape.  
+ \item[type] char*34
+ \item[mode] all 
+ \item[default] blank
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf HIST\_FEXCL1..HIST\_FEXCL6(max\_flds)}   
+\item[description] 
+	List of fields to exclude from the respective history
+	tape. The field name must appear in the Master Field List.
+	Currently, there is one default history tape, (the primary 
+	tape is monthly averaged). See tables 9-16 for more details.
+ \item[type] char*32
+ \item[mode] all    
+ \item[default] blank 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MSS\_IRT}   
+ \item[description] 
+	Mass store retention period (days) for output datasets (see ex. 4) 
+ \item[type] integer    
+ \item[mode] offline, ccsm (obtained from CAM in cam mode)  
+ \item[default] 0 (i.e., history files will be written to local disk, 
+	not the NCAR Mass-Store) 
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf MSS\_WPASS}   
+ \item[description] 
+	Mass store write password for output datasets.
+ \item[type] char*8     
+ \item[mode] all      
+ \item[default] blank  
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf RPNTPATH}   
+ \item[description] 
+	Full unix pathname of the local restart pointer file. 
+ \item[type] char*256              
+ \item[mode] all       
+ \item[default] lnd.CASEID.rpointer in home directory   
+\end{Ventry}
+\bigskip
+
+The model writes its own history, restart and initial files. History
+files are in netCDF file format and contain model data values written
+at user specified frequencies during a model run.  Each field has a
+default time averaging flag determining how that field will be
+accumulated in time over a given history interval.  The choices are to
+record averaged, instantaneous, maximum, or minimum values.  The user
+may overwrite this default setting via the namelist variable {\bf
+HIST\_FINCLX} where X can equal 1 to 6.  If the user wishes to see a
+field written at more than one output frequency (e.g. daily and
+hourly), additional history files must be declared containing that
+field.  By default, CLM3.0 produces a monthly averaged primary history
+file and allows the user to define up to five auxiliary history files.
+All files contain grid averaged data unless the namelist variable {\bf
+HIST\_DOV2XY} is set to false for a given file.  Primary history files
+contain the string 'h0', whereas auxiliary history files contain the
+string 'h1', 'h2', 'h3','h4' and 'h5'.  Monthly averaged history files
+may be produced for history tape ``t'' by setting {\bf
+HIST\_NHTFRQ(t)} to zero.  By default, all time averaged fields on
+tape t will be output over the period beginning from the first
+timestep of the current month up to and including the last timestep of
+that month. Each monthly history file will contain exactly one time
+slice of data, regardless of the value of {\bf HIST\_MFILT(t)}.
+
+The model will also periodically create initial netCDF datasets
+containing only one dimensional instantaneous values of initial data
+fields. The model produces initial datasets either yearly, monthly, or
+not at all depending on the setting of the namelist variable {\bf
+HIST\_CRTINIC} (the default setting is ``YEARLY'').  These datasets
+can be utilized as ``spun-up'' initial conditions.
+
+Restart files are in binary format and can be used only for restart or
+branch runs from previous model simulations.  Whenever a restart file
+is written, a corresponding local disk restart pointer file is
+overwritten. The restart pointer file contains the name of the latest
+model restart file. By default, the restart pointer file is placed in
+the user's home directory under the name, lnd.CASEID.rpointer. The
+user may modify the full pathname of the restart pointer file via
+the setting of the namelist variable {\bf RPNTPATH}.
+
+The following table specifies the naming convention used for output
+files.  In this table the string yyyy refers to the model year, mm
+refers to the model month, dd is the model day and sssss corresponds
+to seconds into the model day. Note that for non-monthly history
+files, yyyy-mm-dd-sssss corresponds to the first timestamp of data on
+the file. {\bf CASEID} is the case identifier set via the namelist
+input.
+
+\begin{center}
+\begin{description}
+\item [CASEID.clm2.r.yyyy-mm-dd-sssss ] restart files
+\item [CASEID.clm2.i.yyyy-mm-dd-sssss.nc ] initial files
+\item [CASEID.clm2.h[012345].yyyy-mm.nc ] monthly average history files
+\item [CASEID.clm2.h[012345].yyyy-mm-dd-sssss.nc ] non-monthly history files 
+\end{description}
+\end{center}
+
+\noindent History, restart and initialization files can be archived on the NCAR
+Mass Storage System (MSS) if the namelist variable {\bf MSS\_IRT} is
+set to a value greater than zero.  History, restart and initial files are
+archived as follows (where {\bf USERNAME} is the upper-case equivalent
+of the user's login name, i.e., the user's root directory on the MSS):
+
+\begin{description} 
+ \item [history files] /USERNAME/csm/CASEID/lnd/hist
+ \item [restart files] /USERNAME/csm/CASEID/lnd/rest
+ \item [initial files] /USERNAME/csm/CASEID/lnd/init
+\end{description}
+ 
+\subsection {Specification of input physics variables}
+\label{subsec_physics}
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf IRAD} 
+ \item[description] 
+	Frequency of solar radiation calculations 
+	(+ for model time steps, - for hours). 
+ \item[type] integer   
+ \item[mode] offline, must be consistent with 
+	CAM2 in ccsm mode obtained from CAM in cam mode   
+ \item[default] -1   
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf CSM\_DOFLXAVE}  
+ \item[description] 
+	If set to true, flux averaging is performed over 
+	the duration set in {\bf IRAD}.   
+ \item[type] logical    
+ \item[mode] ccsm (must agree with CAM2 setting in atm.setup.csh)  
+ \item[default] .TRUE.   
+\end{Ventry}
+\medskip
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf WRTDIA}  
+ \item[description] 
+	If true, global average 2-m temperature 
+	written to standard out (ascii log file of the run) (see ex. 4). 
+ \item[type] logical  
+ \item[mode] all  
+ \item[default] .FALSE. 
+\end{Ventry}
+\bigskip
+
+\subsection {Specification of RTM River routing}
+\label{subsec_rtm}
+
+\begin{Ventry}{description}
+ \item[{\bf name}] {\bf RTM\_NSTEPS}  
+ \item[description] 
+	Number of time steps over which RTM output will be averaged.
+ \item[type] integer  
+ \item[mode] all  
+ \item[default] number of timesteps in 3 hours
+\end{Ventry}
+\bigskip
+
+\subsection {Specification of cam mode namelist}
+\label{subsec_cam_namelist}
+
+When running in cam mode, certain CLM3.0 namelist variables cannot be
+set independently.  In particular, any user specification for the
+namelist variables, {\bf CASEID}, {\bf CTITLE}, {\bf IRAD}, {\bf
+NSREST}, {\bf HIST\_CRTINIC}, {\bf HIST\_NHTFRQ(1)}, {\bf
+HIST\_MFILT(1)} and {\bf MSS\_IRT} will be overwritten by values
+obtained from CAM2 at startup. All other namelist settings may be set
+independently by the user.
+
+The following table specifies the namelist variables that are
+overwritten with values obtained from cam and lists the associated CAM2
+namelist variable and its default value.
+
+\begin{longtable}{|l|l|l|}
+\caption{\label{environment_vars} Namelist Variables overwritten with CAM settings} \\
+\hline
+CLM Namelist & CAM namelist & CAM default \\ \hline \hline
+CASEID & CASEID & required \\ \hline
+CTITLE & CTITLE & blank \\ \hline
+NSREST & NSREST & 0 \\ \hline
+IRAD & IRADSW  & -1 \\ \hline
+HIST\_CRTINIC & INITHIST & 'MONTHLY' \\ \hline
+HIST\_NHTFRQ(1) & NHTFRQ(1) & 0 \\ \hline
+HIST\_MFILT(1) & MFILT(1) & 1 \\ \hline
+MSS\_IRT & MSS\_IRT & 365 \\ \hline
+\end{longtable}
+
+The minimum set of model input namelist variables that must be given
+values by the user at run time depends on if a pre-existing surface
+dataset already exists and if RTM river routing is enabled.  At a
+minimum, only the namelist variables {\bf FPFTCON} and {\bf FSURDAT}
+must be given values if a model surface dataset exists and if the cpp
+variable RTM is not defined. If a monthly surface dataset does not
+exist, then {\bf MKSRF\_FVEGTYP}, {\bf MKSRF\_FSOITEX}, {\bf
+MKSRF\_FSOICOL}, {\bf MKSRF\_FLANWAT}, {\bf MKSRF\_FGLACIER}, {\bf
+MKSRF\_FURBAN}, and {\bf MKSRF\_FLAI} must be given values in order to
+generate one at runtime.  If RTM is invoked, then {\bf FRIVINP\_RTM}
+must also be specified.  Finally, the namelist variable {\bf FINIDAT}
+must be set if a pre-existing initial dataset is to be utilized.
+
+
+\subsection {Specification of ccsm mode namelist}
+\label{subsec_ccsm_namelist}
+
+When running in ccsm mode, the user must ensure that settings of the
+the namelist variables, {\bf IRAD}, {\bf DTIME} and {\bf
+CSM\_DOFLXAVE}, have identical values to the corresponding CAM
+namelist variables {\bf IRADSW}, {\bf DTIME} and {\bf FLXAVE}
+in the script cam.buildnml\_prestage.csh (see CCSM3.0 User's Guide).
+
+Two input datsets are required in ccsm mode: an RTM input dataset,
+rdirc.05, obtained from the namelist variable {\bf FRIVINP\_RTM} and
+a dataset containing ecophysiological constants, pft-physiology,
+associated with the namelist variable {\bf FPFTCON}.
+
+When running CLM3.0 in ccsm mode, the CAM and CLM grids must be
+identical. The flux coupler ensures this by providing the land mask
+for this grid at run time as part of the CLM3.0 initialization. This
+land mask is dependent on the specific ocean domain utilized.
+Consequently, a different surface dataset is required for each atm/ocn
+grid combination.  Surface dataset names are automatically generated
+by the ccsm clm script given the corresponding atm/ocn
+resolutions. These are normally renamed to follow the ccsm surface
+dataset naming convention. Currently all supported ccsm-clm surface
+datasets will be released with the ccsm distribution.
+
+Additionally, a CLM3.0 spun-up initial dataset may be provided
+containing values for the time-dependent variables needed to
+initialize the model from a spun-up state by setting the namelist {\bf
+FINIDAT}. This file {\bf MUST} have the same atm/ocn resolution and
+landmask as the model run for which it will be used.  The variables
+appearing in the {\bf \$FINIDAT} file will be internally initialized to non
+spun-up values at run time if {\bf FINIDAT} is not set.
+
+Finally, only the namelist variable, {\bf CSM\_DOFLXAVE} is specific
+to ccsm mode. If this variable is set to true (the default setting),
+flux averaging is performed over the time interval specified by the
+namelist variable, {\bf IRAD}.
+
+\subsection {Creation of new spun-up initial dataset}
+\label{subsec_interpinic}
+
+Often it may take several simulated years to ``spin up'' the model.
+Sometimes it is the case, as when running in CCSM mode, that it may take
+numerous decades to spin up the deep soil liquid water. As a result, it
+has become necessary to provide users with the tool to create a new
+initial dataset at a given resolution using a spun up initial dataset
+at either another resolution and/or landmask. In CLM3.0 we are
+providing a new tool, {\bf interpinic}, in the directory {\bf
+tools/interpinic} that provides users with this functionality.  The
+only constraint is that the user must have already created a
+``template'' initial dataset at the new resolution before this tool is
+used. This can be done by running the model for one day with the
+following namelist settings:
+
+\begin{verbatim}
+     finidat      = ' '
+     hist_crtinic = 'DAILY'
+     nelapse      = -24
+\end{verbatim}
+
+\noindent
+A new initial dataset will be created as a result of this run.  Use of
+{\bf interpinic} will then overwrite the non spun-up values of CLM3.0
+variables in this initial dataset with spun-up values.

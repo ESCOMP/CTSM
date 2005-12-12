@@ -1,0 +1,613 @@
+\documentclass[]{article}
+\usepackage{html}
+\usepackage[T1]{fontenc}
+\usepackage{longtable}
+
+\textwidth 6.5in
+\textheight 8.5in
+\addtolength{\oddsidemargin}{-.75in}
+
+\begin{document}
+\bodytext{BGCOLOR=white LINK=#083194 VLINK=#21004A}
+
+\begin{titlepage}
+
+\begin{latexonly}
+\noindent {\bf Community Climate System Model} \\
+\noindent National Center for Atmospheric Research, Boulder, CO \\
+\vspace{2in}
+\end{latexonly}
+
+\begin{center}
+{\Large\bf CLM2.0 Code Reference} \\
+{\bf Version 1.0}
+\medskip
+{\it Mariana Vertenstein, Sam Levis, Keith Oleson, and Peter Thornton}
+\end{center}
+
+\end{titlepage}
+
+\tableofcontents
+
+\newpage
+\section{Code Structure}
+
+\subsection {Calling Tree}
+
+The following is a brief outline of the calling sequence for the main
+CLM2.0 driver routine, driver.F90.  A comprehensive outline of the
+calling sequence for the full CLM2.0 model is provided in the
+accompanying html document,
+\htmladdnormallink{CLM2.0 Comprehensive Calling Sequence}
+{clm_offline_tree.html}.
+
+\begin{itemize}
+\item ->  histend 
+\item ->  get\_curr\_date 
+\item ->  interpMonthlyVeg 
+  \begin{itemize}
+  \item ->  readMonthlyVegetation 
+  \end{itemize}
+\item -> {\bf ***begin first loop over patch points**} 
+\item ->  Hydrology1 
+  \begin{itemize}
+  \item ->  Fwet 
+  \end{itemize}
+\item ->  Biogeophysics1 
+  \begin{itemize}
+  \item ->  QSat 
+  \item ->  SurfaceRadiation 
+  \item ->  BareGroundFluxes 
+    \begin{itemize}
+    \item ->  MoninObukIni 
+    \item ->  FrictionVelocity 
+    \end{itemize}
+  \item ->  CanopyFluxes 
+     \begin{itemize}
+     \item ->  Qsat 
+     \item ->  MoninObukIni 
+     \item ->  FrictionVelocity 
+     \item ->  Stomata (call for sunlit leaves and shaded leaves) 
+     \item ->  SensibleHCond 
+     \item ->  LatentHCond 
+     \item ->  Qsat 
+     \end{itemize}
+  \end{itemize}
+\item ->  Biogeophysics\_Lake 
+  \begin{itemize}
+  \item ->  SurfaceRadiation 
+  \item ->  Qsat 
+  \item ->  MoninObukIni 
+  \item ->  FrictionVelocity 
+  \item ->  Qsat 
+  \item ->  Tridiagonal 
+  \end{itemize}
+\item ->  Biogeochemistry? 
+\item ->  EcosystemDyn 
+\item ->  SurfaceAlbedo 
+  \begin{itemize}
+  \item ->  shr\_orb\_decl 
+  \item ->  shr\_orb\_cosz 
+  \item ->  SnowAlbedo (called for direct beam and diffuse beam) 
+  \item ->  SoilAlbedo 
+  \item ->  TwoStream (called for visible direct, visible diffuse, NIR direct and NIR diffuse) 
+  \end{itemize}
+\item ->  Biogeophysics2 
+  \begin{itemize}
+  \item ->  SoilTemperature 
+    \begin{itemize}
+    \item ->  SoilThermalProp 
+    \item ->  Tridiagonal 
+    \item ->  PhaseChange 
+    \end{itemize}
+  \end{itemize}
+\item -> {\bf ***end first loop over patch points***} 
+\item -> {\bf ***begin second loop over patch points***} 
+\item ->  Hydrology2 
+   \begin{itemize}
+   \item ->  SnowWater 
+   \item ->  SurfaceRunoff 
+   \item ->  Infiltration 
+   \item ->  SoilWater 
+     \begin{itemize}
+     \item -> Tridiagonal 
+     \end{itemize}
+   \item ->  Drainage 
+   \item ->  SnowCompaction 
+   \item ->  CombineSnowLayers 
+     \begin{itemize}
+     \item -> Combo 
+     \end{itemize}
+   \item ->  DivideSnowLayers 
+     \begin{itemize}
+     \item -> Combo 
+     \end{itemize}
+   \item -> WetIceHydrology 
+   \end{itemize}
+\item ->  Hydrology\_Lake 
+\item ->  SnowAge 
+\item ->  BalanceCheck 
+\item -> {\bf ***end second loop over patch points***} 
+\item ->  histUpdate 
+\item ->  Rtmriverflux 
+   \begin{itemize}
+   \item ->  Rtm 
+   \end{itemize}
+\item ->  histhandler 
+\item ->  restwrt 
+\item ->  inicwrt 
+
+\end{itemize}
+
+\subsection {Code Flow - Main Interface}
+
+The CLM2.0 model can be built to run in one of three modes. It can run
+as a stand alone executable where atmospheric forcing data is
+periodically read . This will be referred to as offline mode. It can
+also be run as part of the Community Atmosphere Model (CAM) where
+communication between the atmospheric and land models occurs via
+subroutine calls. This will be referred to as cam mode. Finally, it
+can be run as a component in a system of geophysical models (CCSM).
+In this mode, the atmosphere, land (CLM2), ocean and sea-ice models
+are run as separate executables that communicate with each other via
+the CCSM flux coupler. This will be referred to as csm mode. \newline
+
+\noindent {\bf offline mode:} The routine, {\bf program\_off.F90},
+provides the program interface for running CLM2.0 in offline
+mode. This routine first initializes the CLM2.0 model. Part of this
+initialization consists of the the determination of orbital parameters
+by a call to the routine {\bf shr\_orb\_params.F90}.  Subsequently,
+the time stepping loop of the model is executed by obtaining
+atmospheric forcing and calling the CLM2.0 driver. \newline
+
+\noindent {\bf csm mode:} The routine, {\bf program\_csm.F90},
+provides the program interface for running CLM2.0 in csm mode. In this
+mode, orbital parameters are obtained from the flux coupler during
+initialization whereas atmospheric data are obtained from the flux
+coupler during the time stepping loop.
+\newline
+
+\noindent {\bf cam mode:} The module, {\bf atm\_lndMod.F90}, contains
+the subroutine interfaces necessary to run CLM2.0 in cam mode. The
+model is initialized by a call to subroutine {\bf atmlnd\_ini} whereas
+subroutine {\bf atmlnd\_drv} is called at every time step by the
+CAM atmospheric model to update the land state and return the 
+necessary states and fluxes back to the atmosphere.
+\newline
+
+\subsection {Code Flow - Driver Loop}
+
+\noindent 
+The following presents a brief outline of the routines appearing in
+the calling sequence for {\bf program\_off.F90}, the main CLM2.0 offline
+program. Most of the following routines are invoked from the driver routine,
+{\bf driver.F90}.
+
+\medskip
+
+\noindent {\bf shr\_orb\_params:} 
+Calculate Earth's orbital parameters. \newline
+
+\noindent {\bf Initialize:} 
+Calls a series of subroutines (see \htmladdnormallink{CLM2.0
+Comprehensive Calling Sequence} {clm_offline_tree.html}) which
+initialize model parameters, read and/or create a surface dataset,
+read the initial file (initial simulations only), read the restart
+file (restart or branch simulations only). If no initial dataset is
+specified in the namelist, the model uses an internal
+initialization. If no surface dataset is specified in the namelist,
+the model uses a list of raw datasets to create a surface dataset and
+read it in. \newline
+
+\noindent {\bf atmdrv:} 
+Read in atmospheric fields and generate atmospheric forcing. \newline
+
+\noindent {\bf driver:} 
+Driver for CLM2.0 physics. \newline
+
+\noindent {\bf histend:} 
+Determine if current time step is the end of history interval. \newline
+
+\noindent {\bf get\_curr\_date:} 
+Determine calender information for next time step. \newline
+
+\noindent {\bf interpMonthlyVeg:} 
+Determine if two new months of vegetation data need to be read in. \newline
+
+\noindent {\bf readMonthlyVegetation:} 
+Read monthly vegetation data for two consecutive months. \newline
+
+\noindent {\bf Hydrology1:} 
+Calculation of (1) water storage of intercepted precipitation (2)
+direct throughfall and canopy drainage of precipitation (3) the
+fraction of foliage covered by water and the fraction of foliage that
+is dry and transpiring and (4) snow layer initialization if the snow
+accumulation exceeds 10 mm. \newline
+
+\noindent {\bf Fwet:} 
+Determine the fraction of foliage covered by water and the fraction of
+foliage that is dry and transpiring. \newline
+
+\noindent {\bf Biogeophysics1:} 
+Main subroutine to determine leaf temperature and surface fluxes based
+on ground temperature from previous time step. \newline
+
+\noindent {\bf QSat:} 
+Compute saturation mixing ratio and the change in saturation mixing
+ratio with respect to temperature. \newline
+
+\noindent {\bf SurfaceRadiation:} 
+Compute Visible and NIR solar fluxes absorbed by vegetation and ground
+surface. Split canopy absorption into sunlit and shaded
+canopy. Calculate NDVI and reflected solar radiation. This routine is
+also used for surface radiation for lake biogeophysics. \newline
+
+\noindent {\bf BareGroundFluxes:}
+Compute sensible and latent heat fluxes and their derivatives with
+respect to ground temperature using ground temperatures from
+previous time step for non-vegetated surfaces or snow-covered
+vegetation. Calculate stability and aerodynamic resistances. \newline
+
+\noindent {\bf MoninObukIni:}
+Initialize Monin-Obukhov length. \newline
+
+\noindent {\bf FrictionVelocity:}
+Calculation of the friction velocity and the relation for potential
+temperature and humidity profiles of surface boundary layer. \newline
+
+\noindent {\bf CanopyFluxes:}
+Calculates the leaf temperature, leaf fluxes, transpiration,
+photosynthesis and updates the dew accumulation due to
+evaporation. \newline
+
+\noindent {\bf Stomata:}
+Leaf stomatal resistance and leaf photosynthesis. Uses Ball-Berry
+formulation for stomatal conductance, and Farquhar photosynthesis
+model. \newline
+
+\noindent {\bf SensibleHCond:}
+Provides dimensional and non-dimensional sensible heat conductances
+for canopy and soil flux calculations. \newline
+
+\noindent {\bf LatentHCond:}
+Provides dimensional and non-dimensional latent heat conductances for
+canopy and soil flux calculations. \newline
+
+\noindent {\bf Biogeophysics\_Lake:}
+Calculates lake temperatures and surface fluxes. Lake temperatures
+are determined from a one-dimensional thermal stratification model
+based on eddy diffusion concepts to represent vertical mixing of
+heat. \newline
+
+\noindent {\bf EcosystemDyn:}
+Determine vegetation phenology \newline
+
+\noindent {\bf SurfaceAlbedo:}
+Surface albedos, fluxes (per unit incoming direct and diffuse
+radiation) reflected, transmitted, and absorbed by vegetation, and
+sunlit fraction of the canopy. \newline
+
+\noindent {\bf shr\_orb\_decl:}
+Determine solar declination for next time step. \newline
+
+\noindent {\bf shr\_orb\_cosz:}
+Determine cosine of solar zenith angle for next time step. \newline
+
+\noindent {\bf SnowAlbedo:}
+Determine direct and diffuse visible and NIR snow albedos. \newline
+
+\noindent {\bf SoilAlbedo:}
+Determine soil/lake/glacier/wetland albedos. \newline
+
+\noindent {\bf TwoStream:}
+Use two-stream approximation to calculate visible and NIR fluxes
+absorbed by vegetation, reflected by vegetation, and transmitted
+through vegetation for unit incoming direct or diffuse flux given an
+underlying surface with known albedo. \newline
+
+\noindent {\bf Biogeophysics2:}
+Main subroutine to determine soil/snow temperatures including ground
+surface temperature and update surface fluxes for new ground
+temperature. \newline
+
+\noindent {\bf SoilTemperature:}
+Determine soil/snow temperatures including ground surface
+temperature. \newline
+
+\noindent {\bf SoilThermProp:}
+Determine soil/snow thermal conductivity and heat capacity. \newline
+
+\noindent {\bf Tridiagonal:}
+Solve tridiagonal system of equations. \newline
+
+\noindent {\bf PhaseChange:}
+Determine phase change within soil/snow layers. \newline
+
+\noindent {\bf Hydrology2:}
+Main subroutine to determine soil/snow hydrology. \newline
+
+\noindent {\bf SnowWater:}
+Determine the change of snow mass and the snow water. \newline
+
+\noindent {\bf SurfaceRunoff:}
+Determine surface runoff. \newline
+
+\noindent {\bf Infiltration:}
+Determine infiltration into surface soil layer (minus the
+evaporation). \newline
+
+\noindent {\bf SoilWater:}
+Determine soil moisture. \newline
+
+\noindent {\bf Drainage:}
+Determine subsurface runoff. \newline
+
+\noindent {\bf SnowCompaction:}
+Determine natural compaction and metamorphosis of snow. \newline
+
+\noindent {\bf CombineSnowLayers:}
+Combine thin snow elements. \newline
+
+\noindent {\bf Combo:}
+Combine two snow elements in terms of temperature, liquid water and
+ice contents, and layer thickess. \newline
+
+\noindent {\bf DivideSnowLayers:}
+Divide thick snow elements. \newline
+
+\noindent {\bf WetIceHydrology:}
+Calculate hydrology for ice and wetland.  Maintains a constant water
+volume for wetlands and ice. \newline
+
+\noindent {\bf Hydrology\_Lake:}
+Determine fate of snow on lake. Force constant lake volume. \newline
+
+\noindent {\bf SnowAge:}
+Determine age of snow for albedo calculations. \newline
+
+\noindent {\bf BalanceCheck:}
+Error checks for energy and water balance. \newline
+
+\noindent {\bf histUpdate:}
+Accumulate history fields over history time interval. \newline
+
+\noindent {\bf Rtmriverflux:}
+Route surface and subsurface runoff into rivers for RTM river routing
+model. \newline
+
+\noindent {\bf Rtm:}
+RTM river routing model. \newline
+
+\noindent {\bf histHandler:}
+Main history file handler. This code 1) increments field accumulation
+counters at every time step and determines if next time step is
+beginning of history interval 2) at the end of a history interval,
+increments the current time sample counter, opens a new history file
+if needed, writes history data to current history file and resets field
+accumulation counters to zero and 3) when a history file is full, or
+at the last time step of the simulation, closes history file and
+disposes to mass store (only if file is open), resets time sample
+counter to zero (only if file is full) and increments file counter by
+one (only if file is full) \newline
+
+\noindent {\bf restwrt:}
+Write binary restart files. \newline
+
+\noindent {\bf inicwrt:}
+Write netCDF initial files. \newline
+
+\section{Modifying CLM2.0 Input and Output Files}
+
+\subsection {Modifying Surface Data}
+
+A list of high resolution ``raw'' datasets is provided with the CLM2.0
+distribution.  These raw datasets are only needed if a raw surface
+dataset is to be created at runtime (see CLM2.0 User's Guide). The
+following is a list of these datasets:
+
+\begin{itemize}
+\item mksrf\_pft.nc: raw vegetation type dataset 
+\item mksrf\_soitex.10level.nc: raw soil texture dataset 
+\item mksrf\_soicol\_clm2.nc: raw soil color dataset 
+\item mksrf\_lanwat.nc: raw inland water dataset 
+\item mksrf\_urban.nc: raw urban dataset 
+\item mksrf\_glacier.nc: raw glacier dataset
+\item mksrf\_lai.nc: raw leaf and stem area index, canopy top and bottom height dataset
+\end{itemize}
+
+The user has the option of replacing any of these raw datasets, as
+long as the structure of the netCDF files is preserved. A series of
+fortran routines to convert ascii to raw netCDF data is provided in
+the directory, /tools/convert\_ascii.  Alternatively, the user may
+wish to modify the model surface data directly as long as the original
+netCDF file structure is preserved.
+
+\subsection {History fields}
+
+To output a history field which has not been included in the CLM2.0 code,
+the user must do the following: \newline
+
+\noindent 
+Step 1. Add the appropriate initialization call for the required
+history field in subroutine {\bf histlst}.  For example, 
+the following lines could be added in {\bf histlst}:
+
+\medskip
+call histfldini(nflds, 'NEWFLD ', 'UNITS', nsing, naver,'FIELD DESC', .true., histfld) 
+\newline
+
+\noindent 
+\begin{itemize}
+\item where NEWFLD is the new field name. 
+\item UNITS is the new field units. 
+\item the level structure of the new history field is either ``nsing'' 
+(for a single level field) or ``nsoil'' (for a multi-level ``soil''
+field).
+\item the type of time averaging desired is set to either
+``naver'' (average), ``ninst'' (instantaneous), ``nmini'' (minimum)
+or ``nmaxi`` (maximum)
+\item FIELD DESC is the new field description
+\item the field is specified to be active or non-active by default [.true., .false.] 
+If value is .true. the field is active by default (ie, written to
+history). \newline
+\end{itemize}
+
+\noindent 
+Step 2. In subroutine {\bf histUpdate}, add the following lines (using
+the following only as an example): \newline
+
+\noindent !\$OMP PARALLEL DO PRIVATE (K)
+\newline do k = begpatch,endpatch
+\newline tmpslev(k) = call histslf('NEWFLD', tmpslev)
+\newline end do
+
+\noindent 
+where tmpslev and histslf are used for adding a new single-level field
+(whereas tmpmlev and histmlf are used for adding a new multi-level
+field).  If adding a multi level field, the call to histmlf passes an
+additional variable denoting the number of levels (nlevsoi or
+nlevlak). It may also be necesasry to increase the maximum allowable
+number of single level fields.  This can be done by increasing the
+values of the parameters {\bf max\_slevflds} or {\bf max\_mlevflds} in
+routine src/main/clm\_varpar.F90.
+
+\subsection {Initial datasets}
+
+Initial datasets are created by the land model periodically (for
+details, see the CLM2.0 User's Guide). Initial datasets are netCDF
+files containing instantaneous variable data. Since certain model
+variables take relatively long to spin up (e.g. soil and snow related
+variables), using an initial dataset ensures faster spin up of the
+model than using arbitrary initialization.  The variables stored in
+initial dataset files are dimensioned by number of landpoints (e.g.,
+numland = 1956 for a T31 global resolution) and the maximum number of
+subgrid patches in a land gridcell (maxpatch = 8).  If a variable has
+multiple vertical levels, an additional dimension (e.g. nlevsoi = 10)
+is used.
+
+Changing an initial dataset should not be necessary most of the
+time. However, if new variables must be added to the initial dataset,
+the user should refer to subroutines {\bf inicwrt} and {\bf inicrd} in
+the file {\bf src/main/inicFileMod.F90}. The user should start in
+subroutine inicwrt by defining the new variable as a single or
+multi-level field (exactly as is done for existing variables). In the
+same subroutine the user should add a few lines to write out the new
+variable (again as done for existing variables). Subsequently, the
+user should add a similar group of lines to subroutine {\bf inicrd},
+for the variable to be recognized by the code at
+initialization. Comments in the code are clear for the user to
+identify where variables are defined, where they are written, and
+where they are read.
+
+An important distinction between initial and restart files is that
+initial files have a self-describing format (since they are netCDF),
+and therefore may be used by future versions of the model to
+initialize a simulation. Restart files (see below), on the other hand,
+may change frequently during model development and may be difficult to
+use with different versions of the code.
+
+\subsection {Restart files}
+
+Restart files contain instantaneous binary data for a set of
+time-dependent variables. The data is stored in binary format to
+ensure bit-for-bit agreement with a terminated run which was
+subsequently restarted. Restart files contain a version number to
+ensure that the code being used is compatible with the restart file
+being read. If the user modifies the contents of the restart file, the
+version number should be incremented.
+
+Restart files should be used to extend previously started simulations
+or to branch from one simulation to another in which history file
+namelist variables have been modified. For a branch run, the user must
+change the simulation's case name.
+
+The criterion for a ``successful restart'' is that the model has
+available exactly the same information upon restart that it would have
+had if it had not stopped. Restart files may need to be modified
+during model development to include new time-dependent variables.  A
+simple rule is that if a run produces even slightly different answers
+when restarted compared to when left uninterrupted, then certain
+variables are missing from the restart file.
+
+Restart files are written in subroutine {\bf restwrt} and read in
+subroutine {\bf restrd} (which are contained in file
+src/main/restFileMod.F90.  Subroutine {\bf restrd} reads the data in
+exactly the same order as it was written out and the simulation
+continues as though uninterrupted. If a user modifies the code such
+that it becomes necessary to add a new variable to the restart file,
+separate entries must be made in subroutines {\bf restwrt} and {\bf
+restrd}. As an example, if the following field were to be added the
+the restart file, the following two entries would have to be made:
+\medskip
+
+\noindent 
+\newline restwrt: 
+\newline buf1d(begpatch:endpatch) = clm(begpatch:endpatch)\%newvar
+\newline call wrtout (nio, buf1d) 
+
+\noindent 
+\newline restrd: 
+\newline call readin (nio, buf1d)
+\newline clm(begpatch:endpatch)\%newvar = buf1d(begpatch:endpatch)
+\newline
+
+\noindent 
+The user must make sure to place the former two lines in exactly the
+same order with respect to existing variables as the latter two
+lines. For example, variable fwet is between variables t\_grnd and
+tlai in both subroutines {\bf restrd} and {\bf restwrt}.
+
+\section{Error codes}
+
+Error codes exist in the model to warn the user of inconsistencies and
+errors. The model is released to the community as a package which
+should not trigger such inconsistencies or errors. However, the user
+may change the code or modify the input files in a way which triggers
+such a message. The user may even simply operate the model on a
+platform which brings up an error message. In many cases these error
+codes are followed by a stoprun in order to alert the user of a
+problem which will render the simulation useless or will cause it to
+fail later.
+
+In general, when an error message appears, the user must switch gears
+from production to debugging mode. The error message may make the
+corrective measures obvious. If not, the user will need to find the
+line in the code which wrote the error message and gradually back
+track till the cause for the error is found. The old fashioned
+placement of write statements in the code or, if available, debugging
+software may help understand the problem. When using debugging
+software, it is useful to change DEBUG to .true. in the jobscript.
+
+\subsection {Energy and water balance errors}
+
+To make sure that the model conserves energy and mass, energy and
+water imbalances appearing in a simulation will trigger errors and
+halt the simulation,
+
+To accomplish energy conservation, all energy inputs at the land
+surface are reflected or absorbed. Absorbed energy may return to the
+atmosphere as sensible heat or may be emitted as terrestrial
+radiation, stored as soil heat, used to evaporate or transpire water,
+or used to melt snow and ice. The error check for the energy balance
+is in subroutine src/main/BalanceCheck.F90.
+
+Similarly, water incident on the land will evaporate, transpire
+through leaf stomata, run off and drain from the soil, or be stored in
+the soil and snow pack. The error check for the water balance is in
+subroutine BalanceCheck.
+
+Water which runs off or drains from the soil fills river chanels and
+flows downstream. At every model time step, the global sum of water
+which runs off and drains from the soil into the rivers must equal the
+global sum of change in river volume. This is because the global sum
+of water flowing out of grid cells must cancel the global sum of water
+flowing into grid cells from upstream. This error check is in
+subroutine src/riverroute/RtmMod.F90.
+
+\end{document}
+
+
+
+
+
+

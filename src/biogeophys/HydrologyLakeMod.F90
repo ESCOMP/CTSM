@@ -1,0 +1,243 @@
+#include <misc.h>
+#include <preproc.h>
+
+module HydrologyLakeMod
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !MODULE: HydrologyLakeMod
+!
+! !DESCRIPTION:
+! Calculate lake hydrology
+!
+! !PUBLIC TYPES:
+  implicit none
+  save
+!
+! !PUBLIC MEMBER FUNCTIONS:
+  public :: HydrologyLake
+!
+! !REVISION HISTORY:
+! Created by Mariana Vertenstein
+!
+!EOP
+!-----------------------------------------------------------------------
+
+contains
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: HydrologyLake
+!
+! !INTERFACE:
+  subroutine HydrologyLake(lbp, ubp, num_lakep, filter_lakep)
+!
+! !DESCRIPTION:
+! Calculate lake hydrology
+!
+! WARNING: This subroutine assumes lake columns have one and only one pft.
+!
+! !USES:
+    use shr_kind_mod, only: r8 => shr_kind_r8
+    use clmtype
+    use time_manager, only : get_step_size
+    use clm_varcon  , only : hfus, tfrz, spval
+!
+! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: lbp, ubp                ! pft-index bounds
+    integer, intent(in) :: num_lakep               ! number of pft non-lake points in pft filter
+    integer, intent(in) :: filter_lakep(ubp-lbp+1) ! pft filter for non-lake points
+!
+! !CALLED FROM:
+! subroutine driver
+!
+! !REVISION HISTORY:
+! Author: Gordon Bonan
+! 15 September 1999: Yongjiu Dai; Initial code
+! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
+! 3/4/02: Peter Thornton; Migrated to new data structures.
+!
+! !LOCAL VARIABLES:
+!
+! local pointers to implicit in arrays
+!
+    integer , pointer :: pcolumn(:)         !pft's column index
+    integer , pointer :: pgridcell(:)       !pft's gridcell index
+    real(r8), pointer :: begwb(:)         !water mass begining of the time step
+    real(r8), pointer :: forc_snow(:)     !snow rate [mm/s]
+    real(r8), pointer :: forc_rain(:)     !rain rate [mm/s]
+    logical , pointer :: do_capsnow(:)    !true => do snow capping
+    real(r8), pointer :: t_grnd(:)        !ground temperature (Kelvin)
+    real(r8), pointer :: qmelt(:)         !snow melt [mm/s]
+    real(r8), pointer :: qflx_evap_soi(:) !soil evaporation (mm H2O/s) (+ = to atm)
+    real(r8), pointer :: qflx_evap_tot(:) !qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+!
+! local pointers to implicit inout arrays
+!
+    real(r8), pointer :: h2osno(:)        !snow water (mm H2O)
+!
+! local pointers to implicit out arrays
+!
+    real(r8), pointer :: endwb(:)         !water mass end of the time step
+    real(r8), pointer :: snowdp(:)        !snow height (m)
+    real(r8), pointer :: snowice(:)       !average snow ice lens
+    real(r8), pointer :: snowliq(:)       !average snow liquid water
+    real(r8), pointer :: eflx_snomelt(:)  !snow melt heat flux (W/m**2)
+    real(r8), pointer :: qflx_infl(:)     !infiltration (mm H2O /s)
+    real(r8), pointer :: qflx_snomelt(:)  !snow melt (mm H2O /s)
+    real(r8), pointer :: qflx_surf(:)     !surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_drain(:)    !sub-surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_qrgwl(:)    !qflx_surf at glaciers, wetlands, lakes
+    real(r8), pointer :: qflx_evap_tot_col(:) !pft quantity averaged to the column (assuming one pft)
+!
+! local pointers to implicit out multi-level arrays
+!
+    real(r8), pointer :: rootr_column(:,:) !effective fraction of roots in each soil layer
+    real(r8), pointer :: h2osoi_vol(:,:)   !volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+    real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
+    real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
+!
+!EOP
+!
+! !OTHER LOCAL VARIABLES:
+    real(r8), parameter :: snow_bd = 250._r8  !constant snow bulk density
+    integer  :: fp, p, c, g    ! indices
+    real(r8) :: dtime          ! land model time step (sec)
+    real(r8) :: qflx_evap_grnd ! ground surface evaporation rate (mm h2o/s)
+    real(r8) :: qflx_dew_grnd  ! ground surface dew formation (mm h2o /s) [+]
+    real(r8) :: qflx_sub_snow  ! sublimation rate from snow pack (mm h2o /s) [+]
+    real(r8) :: qflx_dew_snow  ! surface dew added to snow pack (mm h2o /s) [+]
+!-----------------------------------------------------------------------
+
+    ! Assign local pointers to derived type gridcell members
+
+    forc_snow    => clm3%g%a2lf%forc_snow
+    forc_rain    => clm3%g%a2lf%forc_rain
+
+    ! Assign local pointers to derived type column members
+
+    begwb        => clm3%g%l%c%cwbal%begwb
+    endwb        => clm3%g%l%c%cwbal%endwb
+    do_capsnow   => clm3%g%l%c%cps%do_capsnow
+    snowdp       => clm3%g%l%c%cps%snowdp
+    t_grnd       => clm3%g%l%c%ces%t_grnd
+    h2osno       => clm3%g%l%c%cws%h2osno
+    snowice      => clm3%g%l%c%cws%snowice
+    snowliq      => clm3%g%l%c%cws%snowliq
+    eflx_snomelt => clm3%g%l%c%cef%eflx_snomelt
+    qmelt        => clm3%g%l%c%cwf%qmelt
+    qflx_snomelt => clm3%g%l%c%cwf%qflx_snomelt
+    qflx_surf    => clm3%g%l%c%cwf%qflx_surf
+    qflx_qrgwl   => clm3%g%l%c%cwf%qflx_qrgwl
+    qflx_drain   => clm3%g%l%c%cwf%qflx_drain
+    qflx_infl    => clm3%g%l%c%cwf%qflx_infl
+    rootr_column => clm3%g%l%c%cps%rootr_column
+    h2osoi_vol   => clm3%g%l%c%cws%h2osoi_vol
+    h2osoi_ice   => clm3%g%l%c%cws%h2osoi_ice
+    h2osoi_liq   => clm3%g%l%c%cws%h2osoi_liq
+    qflx_evap_tot_col => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
+
+    ! Assign local pointers to derived type pft members
+
+    pcolumn       => clm3%g%l%c%p%column
+    pgridcell     => clm3%g%l%c%p%gridcell
+    qflx_evap_soi => clm3%g%l%c%p%pwf%qflx_evap_soi
+    qflx_evap_tot => clm3%g%l%c%p%pwf%qflx_evap_tot
+
+    ! Determine step size
+
+    dtime = get_step_size()
+
+!dir$ prefervector
+!dir$ concurrent
+!cdir nodep
+    do fp = 1, num_lakep
+       p = filter_lakep(fp)
+       c = pcolumn(p)
+       g = pgridcell(p)
+
+       ! Snow on the lake ice
+       ! Note that these are only local variables, as per the original
+       ! Hydrology_Lake code. So even though these names correspond to
+       ! variables in clmtype, this routine is not updating the
+       ! values of the clmtype variables. (PET, 3/4/02)
+
+       qflx_evap_grnd = 0._r8
+       qflx_sub_snow = 0._r8
+       qflx_dew_snow = 0._r8
+       qflx_dew_grnd = 0._r8
+
+       if (qflx_evap_soi(p) >= 0._r8) then
+
+          ! Sublimation: do not allow for more sublimation than there is snow
+          ! after melt.  Remaining surface evaporation used for infiltration.
+
+          qflx_sub_snow = min(qflx_evap_soi(p), h2osno(c)/dtime-qmelt(c))
+          qflx_evap_grnd = qflx_evap_soi(p) - qflx_sub_snow
+
+       else
+
+          if (t_grnd(c) < tfrz-0.1_r8) then
+             qflx_dew_snow = abs(qflx_evap_soi(p))
+          else
+             qflx_dew_grnd = abs(qflx_evap_soi(p))
+          end if
+
+       end if
+
+       ! Update snow pack
+
+       if (do_capsnow(c)) then
+          h2osno(c) = h2osno(c) - (qmelt(c) + qflx_sub_snow)*dtime
+       else
+          h2osno(c) = h2osno(c) + (forc_snow(g)-qmelt(c)-qflx_sub_snow+qflx_dew_snow)*dtime
+       end if
+       h2osno(c) = max(h2osno(c), 0._r8)
+
+#if (defined PERGRO)
+       if (abs(h2osno(c)) < 1.e-10_r8) h2osno(c) = 0._r8
+#else
+       h2osno(c) = max(h2osno(c), 0._r8)
+#endif
+
+       ! No snow if lake unfrozen
+
+       if (t_grnd(c) > tfrz) h2osno(c) = 0._r8
+
+       ! Snow depth
+
+       snowdp(c) = h2osno(c)/snow_bd !Assume a constant snow bulk density = 250.
+
+       ! Determine ending water balance
+
+       endwb(c) = h2osno(c)
+
+       ! The following are needed for global average on history tape.
+       ! Note that components that are not displayed over lake on history tape
+       ! must be set to spval here
+
+       eflx_snomelt(c)   = qmelt(c)*hfus
+       qflx_infl(c)      = 0._r8
+       qflx_snomelt(c)   = qmelt(c)
+       qflx_surf(c)      = 0._r8
+       qflx_drain(c)     = 0._r8
+       rootr_column(c,:) = spval
+       snowice(c)        = spval
+       snowliq(c)        = spval
+       h2osoi_vol(c,:)   = spval
+       h2osoi_ice(c,:)   = spval
+       h2osoi_liq(c,:)   = spval
+       qflx_qrgwl(c)     = forc_rain(g) + forc_snow(g) - qflx_evap_tot(p) - (endwb(c)-begwb(c))/dtime
+
+       ! The pft average must be done here for output to history tape
+
+       qflx_evap_tot_col(c) = qflx_evap_tot(p)
+
+    end do
+
+  end subroutine HydrologyLake
+
+end module HydrologyLakeMod

@@ -1,0 +1,1222 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.78 [en] (X11; U; SunOS 5.7 sun4u) [Netscape]">
+</head>
+<body>
+9/26/2001
+<br>Peter Thornton
+<p>Function call trace for CLM2.0 in offline mode
+<br>
+<br>The following assumes that the CPP variable SPMD is defined 
+<br>(the model is run through MPI) and  masterproc corresponds 
+<br> to the MPI process with rank 0
+<br>&nbsp;
+<h1>
+
+<hr WIDTH="100%">First-level function calls
+<hr WIDTH="100%"></h1>
+<a NAME="program_off"></a><b>program_off</b>&nbsp;&nbsp; (in ./main/program_off.F90)
+<br>Description: the main program interface for CLM2.0 in offline mode
+<br>Calling sequence:
+<br>program program_off
+<br>&nbsp;&nbsp;&nbsp; <a href="#spmd_init()">spmd_init</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#shr_orb_params()">shr_orb_params</a>(iyear_AD,
+eccen, obliq, mvelp, obliqr, lambm0, mvellpp, log_print)
+<br>&nbsp;&nbsp;&nbsp; <a href="#initialize()">initialize</a>(eccen, obliqr,lambm0,mvelpp)
+<br>&nbsp;&nbsp;&nbsp; do nstep = nbstep, nestep
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#atmdrv()">atmdrv</a>(nstep)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#driver()">driver</a>(nstep,
+doalb, eccen, obliqr, lambm0, mvelpp)
+<br>&nbsp;&nbsp;&nbsp; end do
+<br>&nbsp;&nbsp;&nbsp; <a href="#mpi_barrier()">mpi_barrier</a>(mpicom,
+ier)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mpi_finalize()">mpi_finalize</a>(ier)
+<br>end program program_off
+<p>(the timing functions are used many times in the following second and
+third level subroutines, but they
+<br>are not included in the calling sequence descriptions)
+<h1>
+
+<hr WIDTH="100%">Second-level function calls
+<hr WIDTH="100%"></h1>
+<a NAME="spmd_init()"></a><b>spmd_init()</b>&nbsp;&nbsp; (in ./main/spmdMod.F90)
+<br>Description:&nbsp; Initialize MPI
+<br>Calling sequence:
+<br>subroutine spmd_init
+<br>&nbsp;&nbsp;&nbsp; <a href="#mpi_initialized()">mpi_initialized</a>(mpi_running,
+ier)
+<br>&nbsp;&nbsp;&nbsp; if (!mpi_running) call <a href="#mpi_init()">mpi_init</a>(ier)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mpi_comm_rank()">mpi_comm_rank</a>(mpicom,
+iam, ier)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mpi_comm_size()">mpi_comm_size</a>(mpicom,
+npes, ier)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mpi_get_processor_name()">mpi_get_processor_name</a>(proc_name(iam),
+length(iam), ier)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mpi_allgather()">mpi_allgather</a>(length(iam),
+1, mpiint, length,1, mpiint, mpicom, ier)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mpi_gatherv()">mpi_gatherv</a>( proc_name(iam),
+length(iam), mpichar, proc_name, length, displ, mpichar, 0,mpicom,ier)
+<br>end subroutine spmd_init
+<br>Calling routine:&nbsp; <a href="#program_off">program_off</a>
+<p><a NAME="shr_orb_params()"></a><b>shr_orb_params()&nbsp;&nbsp; </b>(in
+./csm_share/shr_orb_mod.F90)
+<br>Description: Uses the input year to calculate the earth's orbital parameters.
+<br>Calling routine:&nbsp; <a href="#program_off">program_off</a>
+<p><a NAME="initialize()"></a><b>initialize()</b>&nbsp;&nbsp; (in ./main/initializeMod.F90)
+<br>Description:&nbsp; Initialization routine for CLM2 model
+<br>Calling sequence:
+<br>subroutine initialize
+<br>&nbsp;&nbsp;&nbsp; <a href="#header()">header</a>()
+<br>&nbsp;&nbsp;&nbsp; <a href="#control_init()">control_init</a>() (non-empty argument list if called in coupled mode...)
+<br>&nbsp;&nbsp;&nbsp; <a href="#control_print()">control_print</a>() 
+<br>&nbsp;&nbsp;&nbsp; (if coupled or offline) <a href="#timemgr_init()">timemgr_init</a>() 
+<br>&nbsp;&nbsp;&nbsp; (if offline) <a href="#timemgr_init()">advance_timestep</a>() 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Rtmgridini()">Rtmgridini</a>()
+<br>&nbsp;&nbsp;&nbsp; if (coupled)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#csm_recvorb()">csm_recvorb</a>(eccen,obliqr,lambm0,mvelpp)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#csm_sendcontrol()">csm_sendcontrol</a>(irad)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#csm_recvgrid()">csm_recvgrid</a>(cam_longxy,cam_latixy, cam_numlon, cam_landfrac, cam_landmask)
+<br>&nbsp;&nbsp;&nbsp; endif
+<br>&nbsp;&nbsp;&nbsp; if (offline)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (no surface dataset is specified)
+<a href="#mksrfdat()">mksrfdat</a>()
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#surfrd()">surfrd</a>(vegxy,wtxy)
+<br>&nbsp;&nbsp;&nbsp; else
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (no surface dataset defined)
+<a href="#mksrfdat()">mksrfdat</a>(cam_longxy,cam_latixy,cam_numlon,cam_landfrac, cam_landmask)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#surfrd()">surfrd</a>(vegxy,wtxy, cam_longxy,cam_latixy,cam_numlon, cam_landfrac, cam_landmask)
+<br>&nbsp;&nbsp;&nbsp; end else
+<br>&nbsp;&nbsp;&nbsp; <a href="#pftconrd()">pftconrd</a>()
+<br>&nbsp;&nbsp;&nbsp; <a href="#clm_map()">clm_map</a>(wtxy)
+<br>&nbsp;&nbsp;&nbsp; <a href="#iniTimeConst()">iniTimeConst</a>()
+<br>&nbsp;&nbsp;&nbsp; <a href="#Rtmlandini()">Rtmlandini</a>()
+<br>&nbsp;&nbsp;&nbsp; (if coupled) <a href="#csm_sendrunoff()">csm_sendrunoff</a>()
+<br>&nbsp;&nbsp;&nbsp; if (continuation run)&nbsp; <a href="#restrd()">restrd</a>()
+<br>&nbsp;&nbsp;&nbsp; if (offline) <a href="#atm_getgrid()">atm_getgrid</a>() 
+<br>&nbsp;&nbsp;&nbsp; <a href="#histini()">histini</a>()
+<br>&nbsp;&nbsp;&nbsp; <a href="#accini()">accini</a>()
+<br>&nbsp;&nbsp;&nbsp; <a href="#interpMonthlyVeg()">interpMonthlyVeg</a>(fsurdat,mon,day)
+<br>&nbsp;&nbsp;&nbsp; if (initial run) <a href="#iniTimeVar()">iniTimeVar</a>(readini,calday,nbstep,eccen,obliqr,lambm0,mvelpp)
+<br>&nbsp;&nbsp;&nbsp; if (coupled) <a href="#csm_sendlab()">csm_sendalb</a>()
+<br>end subroutine initialize
+<br>Calling routine:&nbsp; <a href="#program_off">program_off</a>
+<p><a NAME="atmdrv()"></a><b>atmdrv()&nbsp;&nbsp; </b>(in ./main/atmdrvMod.F90)
+<br>Description:&nbsp; Reads atmospheric fields from an input file and
+generates the atmospheric forcing grids required by the land model.&nbsp;
+Returns forcing data for the current time step (nstep).
+<br>Calling sequence:
+<br>subroutine atmdrv(nstep)
+<br>&nbsp;&nbsp;&nbsp; <a href="#get_curr_date()">get_curr_date</a>(kyr,kmo,kda,mcsec)
+<br>&nbsp;&nbsp;&nbsp; if (open_data) <a href="#atm_openfile()">atm_openfile</a>(kda,kmo, kyr, locfn, itim, atmmin)
+<br>&nbsp;&nbsp;&nbsp; if (open_data&nbsp; or read data time step) <a href="#atm_readdata()">atm_readdata</a>(locfn,kmo,itim)
+<br>&nbsp;&nbsp;&nbsp; <a href="#interpa2s()">interpa2s</a>( lots of parameters...)
+<br>&nbsp;&nbsp;&nbsp; <a href="#xy2v()">xy2v</a>( called multiple times, for each of the atmospheric fields)
+<br>end subroutine atmdrv()
+<br>Calling routine:&nbsp; <a href="#program_off">program_off</a>
+<p><a NAME="driver()"></a><b>driver()&nbsp;&nbsp; </b>(in ./main/driver.F90)
+<br>Description:&nbsp; This is the main model driver function for CLM2.0,
+with calls to the main science subroutines.&nbsp; It is called for a single
+time step, with the orbital parameters for that timestep.
+<br>Calling sequence:
+<br>subroutine driver()
+<br>&nbsp;&nbsp;&nbsp; if (coupled)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#csm_dosndrcv()">csm_dosndrcv</a>(nstep,doalb)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (dorecv) <a href="#csm_recv()">csm_recv</a>(nstep)
+<br>&nbsp;&nbsp;&nbsp; endif
+<br>&nbsp;&nbsp;&nbsp; <a href="#histend()">histend</a>(nstep)
+<br>&nbsp;&nbsp;&nbsp; <a href="get_curr_date()"></a>get_curr_date(yrp1,monp1,dayp1,secp1,offset=dtime)
+<br>&nbsp;&nbsp;&nbsp; if (doalb) <a href="#interpMonthlyVeg()">interpMonthlyVeg</a>(fsurdat,nstep,kmop1,kdap1)
+<br>&nbsp;&nbsp;&nbsp; do k=begpatch, endpatch
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!lake)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Hydrology1()">Hydrology1</a>(clm(k))
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Biogeophysics1()">Biogeophysics1</a>(clm(k))
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else <a href="#Biogeophysics_Lake()">Biogeophysics_Lake</a>(clm(k))
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#EcosystemDyn()">EcosystemDyn</a>(clm(k),doalb)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (doalb) <a href="#SurfaceAlbedo()">SurfaceAlbedo</a>(clm(k),caldayp1,eccen,obliqr,lambm0,mvelpp)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!lake) <a href="#Biogeophysics2()">Biogeophysics2</a>(clm(k))
+<br>&nbsp;&nbsp;&nbsp; end do
+<br>&nbsp;&nbsp;&nbsp; if (coupled)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (csm_doflxave) <a href="#csm_flxave()">csm_flxave</a>(nstep)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (dosend) <a href="#csm_send()">csm_send</a>(nstep)
+<br>&nbsp;&nbsp;&nbsp; endif
+<br>&nbsp;&nbsp;&nbsp; do k=begpatch,endpatch
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!lake) <a href="#Hydrology2()">Hydrology2</a>(clm(k))
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else <a href="#Hydrology_Lake()">Hydrology_lake</a>(clm(k))
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#SnowAge()">SnowAge</a>(clm(k))
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#BalanceCheck()">BalanceCheck</a>(clm(k))
+<br>&nbsp;&nbsp;&nbsp; end do
+<br>&nbsp;&nbsp;&nbsp; <a href="#histUpdate()">histUpdate</a>(nstep)
+<br>&nbsp;&nbsp;&nbsp; <a href="#RiverFlux()">RiverFlux</a>(nstep)
+<br>&nbsp;&nbsp;&nbsp; <a href="#histhandler()">histhandler</a>(nstep)
+<br>end subroutine driver()
+<br>Calling routine:&nbsp; <a href="#program_off">program_off</a>
+<p><a NAME="mpi_barrier()"></a><b>mpi_barrier()</b>
+<br>Calling routine:&nbsp; <a href="#program_off">program_off</a>
+<p><a NAME="mpi_finalize()"></a><b>mpi_finalize()</b>
+<br>Calling routine:&nbsp; <a href="#program_off">program_off</a>
+<h1>
+
+<hr WIDTH="100%">Third-level function calls
+<hr WIDTH="100%"></h1>
+
+<p><br><a NAME="header()"></a><b>header()</b>&nbsp;&nbsp; (in ./main/initializeMod.F90)
+<br>Description:&nbsp; Writes the model verison number to standard output.
+Version number is used from clm_varctl.
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="control_init()"></a><b>control_init()</b>&nbsp;&nbsp; (in ./main/controlMod.F90)
+<br>Description:&nbsp; Initialize the run control variables. All parameters
+are optional, if coupled use them all, if not use none. If called from
+masterproc, read namelist from standard input, with the model control information.&nbsp;
+Override many of these namelist options if coupled, using the input parameters
+to control_init().&nbsp; Does lots of error checks on the namelist parameters.&nbsp;
+Assign model calendar variables.&nbsp; Read the list of history variables
+to write.&nbsp; Set variables for model physics (irad).&nbsp; Set restart
+file name.
+<br>Calling sequence:
+<br>subroutine control_init()
+<br>&nbsp;&nbsp;&nbsp; if (SPMD) <a href="#control_spmd()">control_spmd</a>()
+<br>end subroutine control_init()
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="control_print()"></a><b>control_print()</b>&nbsp;&nbsp; (in ./main/controlMod.F90)
+<br>Description:&nbsp; Print settings of run control variables.
+<br>Calling sequence:
+<br>subroutine control_print()
+<br>end subroutine control_print()
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="timemgr_init()"></a><b>timemgr_init()</b>&nbsp;&nbsp; (in ./main/time_manager.F90)
+<br>Description:&nbsp; Performs time manager initialization for offline or coupled mode
+<br>Calling sequence:
+<br>subroutine timemgr_init()
+<br>end subroutine timemgr_init()
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="Rtmgridini()"></a><b>Rtmgridini()</b>&nbsp;&nbsp; (in ./riverroute/RtmMod.F90)
+<br>Description: Initialize RTM grid and land mask (U. of Texas River Transport Model)
+<br>Calling sequence:
+<br>subroutine Rtmgridini()
+<br>&nbsp;&nbsp;&nbsp; <a href="#celledge()">celledge</a>(many parameters)
+<br>&nbsp;&nbsp;&nbsp; <a href="#cellarea()">cellarea</a>(many parameters)
+<br>end subroutine Rtmgridini()
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="csm_recvorb()"></a><b>csm_recvorb()</b>&nbsp;&nbsp; (in ./main/clm_csmMod.F90)
+<br>Description: Receive the orbital data from&nbsp; the flux coupler.&nbsp;
+Then parse it out into the variables used by the&nbsp; land model.
+<br>Calling sequence:
+<br>subroutine csm_recvorb(eccen, obliqr, lambm0, mvelpp)
+<br>&nbsp;&nbsp;&nbsp; <a href="#shr_msg_recv_i()">shr_msg_recv_i</a> (ibuffr,
+size(ibuffr), SHR_MSG_TID_CPL, SHR_MSG_TAG_C2LI)
+<br>&nbsp;&nbsp;&nbsp; <a href="#csm_compat()">csm_compat</a>(maj_vers,
+min_vers,SHR_MSG_L_MAJ_V04, SHR_MSG_L_MIN_V00)
+<br>&nbsp;&nbsp;&nbsp; <a href="#shr_msg_recv_r()">shr_msg_recv_r</a> (rbuff,
+size(rbuff), SHR_MSG_TID_CPL, SHR_MSG_TAG_C2LI)
+<br>&nbsp;&nbsp;&nbsp; <a href="#compat_check_spval()">compat_check_spval</a>(spval,
+..,..) - called several times to check compatibility of various parameters
+<br>&nbsp;&nbsp;&nbsp; <a href="#shr_msg_recv_c()">shr_msg_recv_c</a> (cbuff,
+ncbuff, SHR_MSG_TID_CPL, SHR_MSG_TAG_C2LI)
+<br>&nbsp;&nbsp;&nbsp; if (SPMD) <a href="#mpi_bcast()">mpi_bcast</a>()
+- called several times to send orbital parameters to all processors
+<br>end subroutine csm_recvorb
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="csm_sendcontrol()"></a><b>csm_sendcontrol()</b>&nbsp;&nbsp;
+(in ./main/clm_csmMod.F90)
+<br>Description: Send first control data to flux coupler and "invalid"
+grid&nbsp; containing special value data
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="csm_recvgrid()"></a><b>csm_recvgrid()</b>&nbsp;&nbsp; (in ./main/clm_csmMod.F90)
+<br>Description: Receive valid land grid and land mask from coupler
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="mksrfdat()"></a><b>mksrfdat()</b> (in ./mksrfdata/mksrfdatMod.F90)
+<br>Description: Make land model surface dataset from original "raw" data
+files
+<br>Calling sequence:
+<br>subroutine mksrfdat()
+<br>&nbsp;&nbsp;&nbsp; if (offline) <a href="#mkgrid_offline()">mkgrid_offline</a>()
+<br>&nbsp;&nbsp;&nbsp; if (coupled) <a href="#mkgrid_cam()">mkgrid_cam</a>(cam_longxy,
+cam_latixy, cam_numlon, cam_landfrac, cam_landmask)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mkpft()">mkpft</a> (mksrf_fvegtyp, ndiag,&nbsp;
+noveg, pctlnd_pft, pft, pctpft)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mklanwat()">mklanwat</a> (mksrf_flanwat,
+ndiag,&nbsp; pctlak, pctwet)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mkirrig()">mkirrig</a> (mksrf_firr, ndiag,&nbsp;
+pctirr)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mkglacier()">mkglacier</a> (mksrf_fglacier,
+ndiag, pctgla)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mksoitex()">mksoitex</a> (mksrf_fsoitex,
+ndiag, pctgla, sand3d, clay3d)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mksoicol()">mksoicol</a> (mksrf_fsoicol,
+ndiag, pctgla, soic2d)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mklai()">mklai</a> (mksrf_flai, ndiag,
+pft, mlai, msai, mhgtt, mhgtb)
+<br>&nbsp;&nbsp;&nbsp; <a href="#mkurban()">mkurban</a> (mksrf_furban,
+ndiag, pcturb)
+<br>&nbsp;&nbsp;&nbsp; <a href="#surfwrt()">surfwrt</a>(fsurdat, pft, pctpft,
+mlai, msai, mhgtt, mhgtb)
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="surfrd()"></a><b>surfrd()</b>&nbsp;&nbsp; (in ./main/surfFileMod.F90)
+<br>Description: Read surface data file and make subgrid patches.&nbsp;
+This uses many calls to the NetCDF library
+<br>functions, all of which are in ./camclm_share/wrap_nf.F90.&nbsp;&nbsp;
+This is where the multiple PFTs for each
+<br>gridcell are defined, with area weighting.
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="pftconrd()"></a><b>pftconrd()</b>&nbsp;&nbsp; (in ./main/pftcFileMod.F90)
+<br>Description:&nbsp; Read the plant functional type (PFT) constants during
+program initialization.&nbsp; Data are broadcast
+<br>to all processors with <a href="#mpi_bcast()">mpi_bcast</a>() if SPMD.
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="clm_map()"></a><b>clm_map()</b>&nbsp;&nbsp; (in ./main/clm_map.F90)
+<br>Description:&nbsp; Build mapping indices to go from grid -> vector
+of land points -> vector of subgrid patches.
+<br>This routine calls code to allocate dynamic memory, depending on the
+size of the vectors.
+<br>Calling sequence:
+<br>subroutine clm_map()
+<br>&nbsp;&nbsp;&nbsp; <a href="#mapvar_ini()">mapvar_ini</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#clm_varder_ini()">clm_varder_ini</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#histvar_ini()">histvar_ini</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#accumvar_ini()">accumvar_ini</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#monthveg_ini()">monthveg_ini</a>
+<br>end subroutine clm_map()
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="iniTimeConst()"></a><b>iniTimeConst()</b>&nbsp;&nbsp; (in ./main/iniTimeConst.F90)
+<br>Description:&nbsp; Initialize the time-invariant clm parameters.&nbsp;
+This is dome on the patch vector, with mapping
+<br>from the lsmlon x lsmlat x maxpatch array.&nbsp; There are a lot of
+constants here repeated by patch, that only need
+<br>to be defined once... using a lot of memory unnecessarily.
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="Rtmlandini()"></a><b>Rtmlandini()</b>&nbsp;&nbsp; (in ./riverroute/RtmMod.F90)
+<br>Description:&nbsp; Initialize RTM-land interpolation weights (U. of
+Texas River Transport Model) and variables related to runoff time averaging.&nbsp;
+This routine called for offline run.&nbsp; Subcalls have not been traced
+yet...
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="csm_sendrunoff()"></a><b>csm_sendrunoff()</b>&nbsp;&nbsp; (in
+./main/clm_csmMod.F90)
+<br>Description:&nbsp; Send valid runoff information back to flux coupler.&nbsp;
+Multiple MPI calls.
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="restrd()"></a><b>restrd()</b>&nbsp;&nbsp; (in ./main/restFileMod.F90)
+<br>Description:&nbsp; Read CLM restart file. Open history file if needed.&nbsp;
+If the current history file(s) are not full, file(s) are opened so that
+subsequent time samples are added until the file is full. A new history
+file is used on a branch run.&nbsp; This routine sets nbstep from the previous
+timing parameters.
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="atm_getgrid()"></a><b>atm_getgrid()</b>&nbsp;&nbsp; (in ./main/atmdrvMod.F90)
+<br>Description:&nbsp; For offline run, read or generate atmospheric grid
+data for one time step.&nbsp; Allocate space for the atmospheric grid variables.
+Multiple NetCDF calls.
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="histini()"></a><b>histini()</b>&nbsp;&nbsp; (in ./main/histFileMod.F90)
+<br>Description:&nbsp; Initialize variables for history files.
+<br>Calling sequence:
+<br>subroutine histini()
+<br>&nbsp;&nbsp;&nbsp; <a href="#histlst()">histlst</a>
+<br>end subroutine histini
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="accini()"></a><b>accini()</b>&nbsp;&nbsp; (in ./main/accumulMod.F90)
+<br>Description: Subroutines [accini], [accslf], and [accext] can be used
+to&nbsp; accumulate specified fields over user-defined intervals. This&nbsp;
+interval and the type of accumulation is unique to each field processed.
+Subroutine [accini] defines the fields to be processed and the type of
+accumulation. Subroutine [accslf] does the actual accumulation. Subroutine
+[accext] extracts the current value of a specified field.
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="interpMonthlyVeg()"></a><b>interpMonthlyVeg()</b>&nbsp;&nbsp;
+(in ./main/mvegFileMod.F90)
+<br>Description:&nbsp; Determine if 2 new months of data are to be read
+for the interpolation from monthly to daily veg parameters.
+<br>Calling sequence:
+<br>subroutine interpMonthlyVeg
+<br>&nbsp;&nbsp;&nbsp; <a href="#readMonthlyVegetation()">readMonthlyVegetation</a>
+(fveg, nstep, kmo, kda, months)
+<br>end subroutine interpMonthlyVeg
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a> , <a href="#driver()">driver()</a>
+
+<p><a NAME="iniTimeVar()"></a><b>iniTimeVar()</b>&nbsp;&nbsp; (in ./main/iniTimeVar.F90)
+<br>Description:&nbsp; For an initial run, initialize the following variables:
+h2osno, h2ocan, h2osoi_liq, h20soi_ice, h2osoi_vol, snowdp, snowage, snl,
+dz, z, zi.&nbsp; Some variables are initialized through calls to EcosystemDyn
+, Fwet,
+<br>and SurfaceAlbedo.
+<br>Calling sequence:
+<br>subroutine iniTimeVar (readini, calday, nstep, eccen, obliqr, lambm0
+, mvelpp)
+<br>&nbsp;&nbsp;&nbsp; <a href="#type_inidat()">type_inidat</a> (initype)
+(results sent out with <a href="#mpi_bcast()">mpi_bcast</a>)
+<br>&nbsp;&nbsp;&nbsp; if (INICFILE) <a href="#inicrd()">inicrd</a>
+<br>&nbsp;&nbsp;&nbsp; if (HISTFILE) <a href="#histrd()">histrd</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#snodp2lev()">snowdp2lev</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#EcosystemDyn()">EcosystemDyn</a> (clm(k),
+doalb)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Fwet()">Fwet</a>(clm(k))
+<br>&nbsp;&nbsp;&nbsp; <a href="#SurfaceAlbedo()">SurfaceAlbedo</a> (clm(k),
+calday, eccen, obliqr, lambm0, mvelpp)
+<br>end subroutine iniTimeVar
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="csm_sendlab()"></a><b>csm_sendalb()</b>&nbsp;&nbsp; (in ./main/clm_csmMod.F90)
+<br>Description:&nbsp; Send initial albedos, surface temperature and snow
+data to the flux coupler
+<br>Calling routine:&nbsp; <a href="#initialize()">initialize()</a>
+
+<p><a NAME="atm_openfile()"></a><b>atm_openfile()</b>&nbsp;&nbsp; (in ./main/atmdrvMod.F90)
+<br>Description:&nbsp; Open atmospheric forcing netCDF file. Many NetCDF
+calls, followed by an mpi_bcast call.
+<br>Calling routine:&nbsp; <a href="#atmdrv()">atmdrv()</a>
+
+<p><a NAME="atm_readdata()"></a><b>atm_readdata()</b>&nbsp;&nbsp; (in ./main/atmdrvMod.F90)
+<br>Description:&nbsp; Read atmospheric forcing from netCDF file.
+<br>Calling routine:&nbsp; <a href="#atmdrv()">atmdrv()</a>
+
+<p><a NAME="interpa2s()"></a><b>interpa2s()</b>&nbsp;&nbsp; (in ./main/atmdrvMod.F90)
+<br>Description:&nbsp; Area average fields from atmosphere grid to surface
+grid.&nbsp; Start with call to initialize the
+<br>interpolation parameters - <a href="#interpa2si()">interpa2si</a>().&nbsp;
+Then many calls to <a href="#areaave()">areaave</a>(), one for each field.
+<br>Calling routine:&nbsp; <a href="#atmdrv()">atmdrv()</a>
+
+<p><a NAME="xy2v()"></a><b>xy2v()</b>&nbsp;&nbsp; (in ./main/xy2v.F90)
+<br>Description: Convert a grid-average field to subgrid patch vector
+<br>Calling routine:&nbsp; <a href="#atmdrv()">atmdrv()</a>
+
+<p><a NAME="csm_dosndrcv()"></a><b>csm_dosndrcv()</b>&nbsp;&nbsp; (in ./main/clm_csmMod.F90)
+<br>Description:&nbsp; Determine if send/receive information to/from flux
+coupler Send msgs (land state and fluxes) to the flux coupler only when&nbsp;
+doalb is true (i.e. on time steps before the atm does a solar radiation
+computation). Receive msgs (atm state) from the flux coupler only when
+dorad is true (i.e. on time steps&nbsp; when the atm does a solar radiation
+computation).&nbsp; The fluxes are then averaged between the send and receive calls.
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="csm_recv()"></a><b>csm_recv()</b>&nbsp;&nbsp; (in ./main/clm_csmMod.F90)
+<br>Description:&nbsp; Receive atmospheric data from the flux coupler
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="histend()"></a><b>histend()</b>&nbsp;&nbsp; (in ./main/histHandlerMod.F90)
+<br>Description:&nbsp; Determine if end of history interval. 
+Calls <a href="#get_curr_date()">get_curr_date()</a>.&nbsp; 
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="Hydrology1()"></a><b>Hydrology1()</b>&nbsp;&nbsp; (in ./biogeophys/Hydrology1.F90)
+<br>Description:&nbsp; Calculation of
+<br>(1) water storage of intercepted precipitation
+<br>(2) direct throughfall and canopy drainage of precipitation
+<br>(3) the fraction of foliage covered by water and the fraction
+<br>&nbsp;&nbsp;&nbsp; of foliage that is dry and transpiring.
+<br>(4) snow layer initialization if the snow accumulation exceeds 10 mm.
+<br>Note:&nbsp; The evaporation loss is taken off after the calculation
+of leaf temperature in the subroutine clm_leaftem.f90, not in this subroutine.
+<br>Calling sequence:
+<br>subroutine Hydrology1(clm)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Fwet()">Fwet</a>()
+<br>end subroutine Hydrology1
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="Biogeophysics1()"></a><b>Biogeophysics1()</b>&nbsp;&nbsp; (in
+./biogeophys/Biogeophysics1.F90)
+<br>Description:&nbsp; This is the main subroutine to execute the calculation
+of leaf temperature and surface fluxes. Biogeophysics2.F90 then determines
+soil/snow and ground temperatures and updates the surface fluxes for the
+new ground temperature.
+<br>Calling sequence:
+<br>subroutine Biogeophysics1(clm)
+<br>&nbsp;&nbsp;&nbsp; <a href="#QSat()">QSat</a>(clm%tg, clm%forc_pbot,
+eg, degdT, qsatg, qsatgdT)
+<br>&nbsp;&nbsp;&nbsp; <a href="#SurfaceRadiation()">SurfaceRadiation</a>
+(clm)
+<br>&nbsp;&nbsp;&nbsp; if (veg_nosno == 0) <a href="#BareGroundFluxes()">BareGroundFluxes</a>
+(clm%tg,&nbsp;&nbsp;&nbsp;&nbsp; clm%thm,&nbsp;&nbsp; clm%qg,&nbsp;&nbsp;&nbsp;
+clm%thv,&nbsp;&nbsp; clm%z0mg,&nbsp;&nbsp; &amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%z0hg,&nbsp;&nbsp; clm%z0qg,&nbsp; clm%dqgdT, clm%htvp,&nbsp; clm%beta,&nbsp;&nbsp;
+&amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%zii,&nbsp;&nbsp;&nbsp; clm%ur,&nbsp;&nbsp;&nbsp; clm%dlrad, clm%ulrad,
+clm%cgrnds, &amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%cgrndl, clm%cgrnd, clm&nbsp;&nbsp;&nbsp; )
+<br>&nbsp;&nbsp;&nbsp; else <a href="#CanopyFluxes()">CanopyFluxes</a>
+(clm%z0mv,&nbsp;&nbsp; clm%z0hv,&nbsp; clm%z0qv,&nbsp; clm%thm,&nbsp;&nbsp;
+clm%forc_th, &amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%thv,&nbsp;&nbsp;&nbsp; clm%tg,&nbsp;&nbsp;&nbsp; clm%qg,&nbsp;&nbsp;&nbsp;
+clm%dqgdT, clm%htvp,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%emv,&nbsp;&nbsp;&nbsp; clm%emg,&nbsp;&nbsp; clm%dlrad, clm%ulrad, clm%cgrnds,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%cgrndl, clm%cgrnd, clm&nbsp;&nbsp;&nbsp; )
+<br>end subroutine BioGeophysics1(clm)
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="Biogeophysics_Lake()"></a><b>Biogeophysics_Lake()</b>&nbsp;&nbsp;
+(in ./biogeophys/Biogeophysics_Lake.F90)
+<br>Description:&nbsp; Calculates lake temperatures&nbsp; and surface fluxes.
+Method: Lake temperatures are determined from a one-dimensional thermal
+stratification model based on eddy diffusion concepts to&nbsp; represent
+vertical mixing of heat.
+<br>Calling sequence:
+<br>subroutine Biogeophysics_Lake (clm)
+<br>&nbsp;&nbsp;&nbsp; <a href="#SurfaceRadiation()">SurfaceRadiation</a>
+(clm)
+<br>&nbsp;&nbsp;&nbsp; <a href="#QSat()">QSat</a>(clm%t_grnd, clm%forc_pbot,
+eg, degdT, qsatg, qsatgdT&nbsp;&nbsp;&nbsp;&nbsp; )
+<br>&nbsp;&nbsp;&nbsp; <a href="#MoninObukIni()">MoninObukIni</a>(ur, thv,
+dthv, zldis, z0mg, um, obu&nbsp; )
+<br>&nbsp;&nbsp;&nbsp; do iteration
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#FrictionVelocity()">FrictionVelocity</a>
+(displa, z0mg,&nbsp; z0hg,&nbsp; z0qg,&nbsp; obu, um, ustar, temp1, temp2,
+clm)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#QSat()">QSat</a>(clm%t_grnd,
+clm%forc_pbot, eg, degdT, qsatg, qsatgdT&nbsp;&nbsp;&nbsp;&nbsp; )
+<br>&nbsp;&nbsp;&nbsp; enddo iteration
+<br>&nbsp;&nbsp;&nbsp; <a href="#Tridiagonal()">Tridiagonal</a> (nlevlak,
+a, b, c, r, clm%t_lake(1:nlevlak))
+<br>end subroutine Biogeophysics_Lake
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="EcosystemDyn()"></a><b>EcosystemDyn()</b>&nbsp;&nbsp; (in ./ecosysdyn/EcosystemDyn.F90)
+<br>Description:&nbsp; Ecosystem dynamics: phenology, vegetation, soil
+carbon.&nbsp; Also vegetation covered by snow.
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a> , <a href="#iniTimeVar()">iniTimeVar()</a>
+
+<p><a NAME="SurfaceAlbedo()"></a><b>SurfaceAlbedo()</b>&nbsp;&nbsp; (in
+./biogeophys/SurfaceAlbedo.F90)
+<br>Description:&nbsp; Surface albedos. Also fluxes (per unit incoming
+direct and diffuse radiation) reflected, transmitted, and absorbed by vegetation.
+Also sunlit fraction of the canopy.
+<br>Calling sequence:
+<br>subroutine SurfaceAlbedo(clm, caldayp1, eccen, obliqr, lambm0, mvelpp)
+<br>&nbsp;&nbsp;&nbsp; <a href="#shr_orb_decl()">shr_orb_decl</a> (caldayp1,
+eccen, mvelpp, lambm0, obliqr, delta&nbsp;&nbsp; , eccf )
+<br>&nbsp;&nbsp;&nbsp; <a href="#shr_orb_cosz()">shr_orb_cosz</a>(caldayp1,
+clm%lat, clm%lon, delta)
+<br>&nbsp;&nbsp;&nbsp; <a href="#SnowAlbedo()">SnowAlbedo</a> (clm, coszen,
+nband, ic, albsnd)
+<br>&nbsp;&nbsp;&nbsp; <a href="#SnowAlbedo()">SnowAlbedo</a> (clm, coszen,
+nband, ic, albsni)
+<br>&nbsp;&nbsp;&nbsp; <a href="#SoilAlbedo()">SoilAlbedo</a> (clm, coszen,
+nband, albsnd, albsni)
+<br>&nbsp;&nbsp;&nbsp; do n wavebands
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; calls to TwoStream for direct
+and diffuse
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#TwoStream()">TwoStream</a>
+(clm,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ib,&nbsp; ic,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+coszen,&nbsp;&nbsp; vai, rho,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tau, clm%fabd,
+clm%albd, clm%ftdd, clm%ftid, gdir )
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#TwoStream()">TwoStream</a>
+(clm,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ib,&nbsp; ic,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+coszen,&nbsp;&nbsp; vai, rho,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tau, clm%fabi,
+clm%albi, ftdi, clm%ftii, gdir )
+<br>&nbsp;&nbsp;&nbsp; enddo
+<br>end subroutine SurfaceAlbedo
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>, <a href="#iniTimeVar()">iniTimeVar()</a>
+
+<p><a NAME="Biogeophysics2()"></a><b>Biogeophysics2()</b>&nbsp;&nbsp; (in
+./biogeophys/Biogeophysics2.F90)
+<br>Description:&nbsp; This is the main subroutine to execute the calculation
+of soil/snow and ground temperatures and update surface fluxes based on
+the new ground temperature.
+<br>Calling sequence:
+<br>subroutine Biogeophysics2(clm)
+<br>&nbsp;&nbsp;&nbsp; <a href="#SoilTemperature()">SoilTemperature</a>(clm,
+clm%tssbef, clm%htvp, clm%emg, clm%cgrnd, clm%dlrad, clm%tg, xmf, fact
+)
+<br>end subtoutine Biogeophysics2
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="csm_flxave()"></a><b>csm_flxave()</b>&nbsp;&nbsp; (in ./main/clm_csmMod.F90)
+<br>Description:&nbsp; Average output fluxes for flux coupler. Add land
+surface model output fluxes to accumulators every time step. When icnt==ncnt,
+compute the average flux over the time interval.
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="csm_send()"></a><b>csm_send()</b>&nbsp;&nbsp; (in ./main/clm_csmMod.F90)
+<br>Description:&nbsp; Send data to the flux coupler. Gathers together
+the path-level information in a 1d array, transforms
+<br>to a 2d array, and sends to coupler. Write a sequence of global integrals
+if debug flag is set.
+<br>Calling sequence:
+<br>subroutine csm_send (nstep)
+<br>&nbsp;&nbsp;&nbsp; <a href="#get_curr_date()">get_curr_date</a> (yr,mon,day,ncsec)
+<br>&nbsp;&nbsp;&nbsp; <a href="#shr_msg_send_i()">shr_msg_send_i</a> 
+(ibuffs&nbsp;&nbsp;&nbsp;, size(ibuffs)&nbsp;&nbsp;&nbsp; , SHR_MSG_TID_CPL, SHR_MSG_TAG_L2C)
+<br>&nbsp;&nbsp;&nbsp; <a href="#shr_msg_send_r()">shr_msg_send_r</a> 
+(send2d&nbsp;&nbsp;&nbsp;, size(send2d)&nbsp;&nbsp;&nbsp; , SHR_MSG_TID_CPL, SHR_MSG_TAG_L2C)
+<br>&nbsp;&nbsp;&nbsp; <a href="#shr_msg_send_r()">shr_msg_send_r</a>
+(ocnrof_vec,size(ocnrof_vec), SHR_MSG_TID_CPL, SHR_MSG_TAG_L2C)
+<br>end subroutine csm_send
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="Hydrology2()"></a><b>Hydrology2()</b>&nbsp;&nbsp; (in ./biogeophys/Hydrology2.F90)
+<br>Description:&nbsp; This is the main subroutine to execute the calculation
+of soil/snow hydrology.
+<br>Calling sequence:
+<br>subroutine Hydrology2(clm)
+<br>&nbsp;&nbsp;&nbsp; <a href="#SnowWater()">SnowWater</a> (clm)
+<br>&nbsp;&nbsp;&nbsp; if (itypwat == istsoil)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#SurfaceRunoff()">SurfaceRunoff</a>&nbsp;
+(clm, zwice, vol_liq, s, zwt, fcov)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Infiltration()">Infiltration</a>&nbsp;&nbsp;
+(clm)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#SoilWater()">SoilWater</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(clm, vol_liq, dwat, hk, dhkdw)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Drainage()">Drainage&nbsp;</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(clm,&nbsp; zwice, vol_liq, s,&nbsp;&nbsp; zwt, fcov, hk,&nbsp;&nbsp;&nbsp;
+dhkdw,&nbsp;&nbsp; dwat )
+<br>&nbsp;&nbsp;&nbsp; endif
+<br>&nbsp;&nbsp;&nbsp; <a href="#SnowCompaction()">SnowCompaction</a> (clm)
+<br>&nbsp;&nbsp;&nbsp; <a href="#CombineSnowLayers()">CombineSnowLayers</a>
+(clm)
+<br>&nbsp;&nbsp;&nbsp; <a href="#DivideSnowLayers()">DivideSnowLayers</a>
+(clm)
+<br>&nbsp;&nbsp;&nbsp; if (itypwat == istsoil) <a href="#Irrigation()">Irrigation</a>
+(clm)
+<br>&nbsp;&nbsp;&nbsp; if (itypwat == istwet or istice) <a href="#WetIceHydrology()">WetIceHydrology</a>
+(clm)
+<br>end subroutine Hydrology2
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="Hydrology_Lake()"></a><b>Hydrology_Lake()</b>&nbsp;&nbsp; (in
+./biogeophys/Hydrology_Lake.F90)
+<br>Description:&nbsp; snow-on-lake calculations, and force constant lake
+volume.
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="SnowAge()"></a><b>SnowAge()</b>&nbsp;&nbsp; (in ./biogeophys/SnowAge.F90)
+<br>Description:&nbsp; Updates snow age, based on BATS code.
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="BalanceCheck()"></a><b>BalanceCheck()</b>
+<br>Description:&nbsp; Water and energy balance check. This subroutine
+accumulates the numerical truncation errors of the water and energy balance
+calculation. It is helpful to see the performance of the process of integration.
+The error for energy balance:&nbsp; error = abs(Net radiation - the change
+of internal energy - Sensible heat - Latent heat) The error should be less
+than 0.02 W/m2 in each time integration interval; The error for water balance:
+error = abs(precipitation - change of water storage - evaporation - runoff).
+The error should be less than 0.001 mm in&nbsp; each time integration interval.
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="histUpdate()"></a><b>histUpdate()</b>&nbsp;&nbsp; (in ./main/histUpdate.F90)
+<br>Description:&nbsp; update history file fields. Includes many calls
+to <a href="#histslf()">histslf</a>() and <a href="#histmlf()">histmlf</a>()
+(for single-level and multiple-level fields)
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="RiverFlux()"></a><b>RiverFlux()</b>&nbsp;&nbsp; (in ./riverroute/RiverFluxMod.F90)
+<br>Description:&nbsp; Interface with RTM river routing model.&nbsp; Calls
+<a href="#Rtm()">Rtm</a>().
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+
+<p><a NAME="histhandler()"></a><b>histhandler()</b>&nbsp;&nbsp; (in ./main/histHandlerMod.F90)
+<br>Description:&nbsp; On each time step, multiple checks for updating
+and writing history files, and for writing restart
+<br>file.&nbsp; Many subroutine calls to open, write, move files to mass
+sstore, etc.
+<br>Calling routine:&nbsp; <a href="#driver()">driver()</a>
+<br>&nbsp;
+<h1>
+
+<hr WIDTH="100%">Fourth-level function calls
+<hr WIDTH="100%"></h1>
+
+<a NAME="control_spmd()"></a><b>control_spmd()</b>&nbsp;&nbsp; (in ./main/controlMod.F90)
+<br>Description:&nbsp; Distributes Namelist data to all processors. One
+process is set as the master, and it
+<br>controls the flow of data from disk to all processors, or collects
+data from all processors and writes it to disk.
+<br>Calling sequence:
+<br>subroutine control_spmd()
+<br>&nbsp;&nbsp;&nbsp; <a href="#mpi_bcast()">mpi_bcast</a>(parameter)&nbsp;
+- this is called many times, with a single parameter each time.
+<br>end subroutine control_spmd()
+<br>Calling routine:&nbsp; <a href="#control_init()">control_init()</a>
+
+<p><a NAME="celledge()"></a><b>celledge()</b>&nbsp;&nbsp; (in ./main/areaMod.F90)
+<br>Description:&nbsp; Southern and western edges of grid cells. Called
+using "interface" to regional or global functions.
+<br>Calling routine:&nbsp; <a href="#Rtmgridini()">Rtmgridini()</a> , <a href="#interpa2si()">interpa2si()</a>
+
+<p><a NAME="cellarea()"></a><b>cellarea()</b>&nbsp;&nbsp; (in ./main/areaMod.F90)
+<br>Description:&nbsp; Area of grid cells (square kilometers). Called using
+"interface" to regional or global functions.
+<br>Calling routine:&nbsp; <a href="#Rtmgridini()">Rtmgridini()</a>, <a href="#interpa2si()">interpa2si()</a>
+
+<p><a NAME="shr_msg_recv_i()"></a><b>shr_msg_recv_i()</b>&nbsp;&nbsp; (in
+./csm_share/shr_msg_mod.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#csm_recvorb()">csm_recvorb()</a>
+
+<p><a NAME="csm_compat()"></a><b>csm_compat()</b>&nbsp;&nbsp; (in ./main/clm_csmMod.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#csm_recvorb()">csm_recvorb()</a>
+
+<p><a NAME="shr_msg_recv_r()"></a><b>shr_msg_recv_r()</b>&nbsp;&nbsp; (in
+./csm_share/shr_msg_mod.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#csm_recvorb()">csm_recvorb()</a>
+
+<p><a NAME="compat_check_spval()"></a><b>compat_check_spval()</b>&nbsp;&nbsp;
+(in ./main/clm_csmMod.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#csm_recvorb()">csm_recvorb()</a>
+
+<p><a NAME="shr_msg_recv_c()"></a><b>shr_msg_recv_c()</b>&nbsp;&nbsp; (in
+./csm_share/shr_msg_mod.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#csm_recvorb()">csm_recvorb()</a>
+
+<p><a NAME="mkgrid_offline()"></a><b>mkgrid_offline()</b>&nbsp;&nbsp; (in
+./mksrfdata/mkgridMod.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#mksrfdat()">mksrfdat()</a>
+
+<p><a NAME="mkgrid_cam()"></a><b>mkgrid_cam()</b>&nbsp;&nbsp; (in ./mksrfdata/mkgridMod.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#mksrfdat()">mksrfdat()</a>
+
+<p><a NAME="mkpft()"></a><b>mkpft()</b>&nbsp;&nbsp; (in ./mksrfdata/mkpft.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#mksrfdat()">mksrfdat()</a>
+
+<p><a NAME="mklanwat()"></a><b>mklanwat()</b>&nbsp;&nbsp; (in ./mksrfdata/mklanwat.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#mksrfdat()">mksrfdat()</a>
+
+<p><a NAME="mkirrig()"></a><b>mkirrig()</b>&nbsp;&nbsp; (in ./mksrfdata/mkirrig.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#mksrfdat()">mksrfdat()</a>
+
+<p><a NAME="mkglacier()"></a><b>mkglacier()</b>&nbsp;&nbsp; (in ./mksrfdata/mkglacier.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#mksrfdat()">mksrfdat()</a>
+
+<p><a NAME="mksoitex()"></a><b>mksoitex()</b>&nbsp;&nbsp; (in ./mksrfdata/mksoitex.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#mksrfdat()">mksrfdat()</a>
+
+<p><a NAME="mksoicol()"></a><b>mksoicol()</b>&nbsp;&nbsp; (in ./mksrfdata/mksoicol.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#mksrfdat()">mksrfdat()</a>
+
+<p><a NAME="mklai()"></a><b>mklai()</b>&nbsp;&nbsp; (in ./mksrfdata/mklai.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#mksrfdat()">mksrfdat()</a>
+
+<p><a NAME="mkurban()"></a><b>mkurban()</b>&nbsp;&nbsp; (in ./mksrfdata/mkurban.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#mksrfdat()">mksrfdat()</a>
+
+<p><a NAME="surfwrt()"></a><b>surfwrt()</b>&nbsp;&nbsp; (in./main/surfFileMod.F90)
+<br>Description:
+<br>Calling routine:&nbsp; <a href="#mksrfdat()">mksrfdat()</a>
+
+<p><a NAME="mapvar_ini()"></a><b>mapvar_ini()</b>&nbsp;&nbsp; (in ./main/clm_varmap.F90)
+<br>Description:&nbsp; Initializes mapping vectors (dynamic memory allocation).
+<br>landvec: ixy,jxy -> numland
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+wtxy,patch ->numland x maxpatch
+<br>patchvec: ixy,jxy,mxy,wtxy -> numpatch
+<br>Calling routine:&nbsp; <a href="#clm_map()">clm_map()</a>
+
+<p><a NAME="clm_varder_ini()"></a><b>clm_varder_ini()</b>&nbsp;&nbsp; (in
+./main/clm_varder.F90)
+<br>Description:&nbsp; allocate memory for clm derived type -> numpatch.&nbsp;
+This is a lot of memory...
+<br>Calling routine:&nbsp; <a href="#clm_map()">clm_map()</a>
+
+<p><a NAME="histvar_ini()"></a><b>histvar_ini()</b>&nbsp;&nbsp; (in ./main/histFileMod.F90)
+<br>Description:&nbsp; allocate dynamic memory for history fields.
+<br>Calling routine:&nbsp; <a href="#clm_map()">clm_map()</a>
+
+<p><a NAME="accumvar_ini()"></a><b>accumvar_ini()</b>&nbsp;&nbsp; (in ./main/accumulMod.F90)
+<br>Description:&nbsp; Allocate dynamic memory for accumulation fields
+-> numpatch x maxaccflds
+<br>Calling routine:&nbsp; <a href="#clm_map()">clm_map()</a>
+
+<p><a NAME="monthveg_ini()"></a><b>monthveg_ini()</b>&nbsp;&nbsp; (in ./main/mvegFileMod.F90)
+<br>Description: Allocate dynamic memory for LAI (1 and 2) SAI (1 and 2)
+and top and bottom canopy heights (1 and 2) .
+<br>Calling routine:&nbsp; <a href="#clm_map()">clm_map()</a>
+
+<p><a NAME="histlst()"></a><b>histlst()</b>&nbsp; (in ./main/histFileMod.F90)
+<br>Description:&nbsp; Initialize active field list for history files.
+<br>Contains many calls to <a href="#histfldini()">histfldini</a>(), one
+for each variable in the history lists.
+<br>Calling routine:&nbsp; <a href="#histini()">histini()</a>
+
+<p><a NAME="readMonthlyVegetation()"></a><b>readMonthlyVegetation()</b>&nbsp;&nbsp;
+(in ./main/mvegFileMod.F90)
+<br>Description:&nbsp; Read monthly vegetation data for two consecutive
+months
+<br>Calling routine:&nbsp; <a href="#interpMonthlyVeg()">interpMonthlyVeg()</a>
+
+<p><a NAME="type_inidat()"></a><b>type_inidat()</b>&nbsp; (in ./main/inicFileMod.F90)
+<br>Description:&nbsp; Determines the type of initial condition file -
+returns either "HISTFILE" or "INICFILE"
+<br>Calling routine:&nbsp; <a href="#iniTimeVar()">iniTimeVar()</a>
+
+<p><a NAME="inicrd()"></a><b>inicrd()</b>&nbsp;&nbsp; (in ./main/inicFileMod.F90)
+<br>Description:&nbsp; Read initial data from netCDF instantaneous initial
+data history file&nbsp; for variables:
+<br>snlsno, dzsno, zsno, zisno, h2ocan, h2osno, snowdp, snowage, h2osoi_liq,
+h2osoi_ice, t_veg, t_grnd, t_soisno, t_lake
+<br>Includes many NetCDF calls to read data from the file, then many <a href="#land_to_patch()">land_to_patch</a>()
+calls to convert from land
+<br>vector to patch vector.
+<br>Calling routine:&nbsp; <a href="#iniTimeVar()">iniTimeVar()</a>
+
+<p><a NAME="histrd()"></a><b>histrd()</b>&nbsp;&nbsp; (in ./main/inicFileMod.F90)
+<br>Description:&nbsp; Read initial data from netCDF history file for variables
+SNOWDP, SNOWAGE, TV, TV, TSOI, TSNOW, SOILLIQ, SOILICE, SNOWLIQ, SNOWICE,
+H2OCAN, H2OSNO.&nbsp; Doesn't use the same land_to_patch logic used in
+inicrd().
+<br>Calling routine:&nbsp; <a href="#iniTimeVar()">iniTimeVar()</a>
+
+<p><a NAME="snodp2lev()"></a><b>snodp2lev()</b>&nbsp;&nbsp; (in ./main/snodep2lev.F90)
+<br>Decsription: Create snow layers and interfaces, given snow depth.
+<br>Calling routine:&nbsp; <a href="#iniTimeVar()">iniTimeVar()</a>
+
+<p><a NAME="Fwet()"></a><b>Fwet()</b>&nbsp;&nbsp; (in ./biogeophys/Hydrology1.F90)
+<br>Description:&nbsp; Calculate the fraction of all vegetation surfaces
+which are wet including stem area which contribute to evaporation.
+<br>Calling routine:&nbsp; <a href="#iniTimeVar()">iniTimeVar()</a> , <a href="#Hydrology1()">Hydrology1()</a>
+
+<p><a NAME="interpa2si()"></a><b>interpa2si()</b>&nbsp;&nbsp; (in ./main/atmdrvMod.F90)
+<br>Description:&nbsp; Initialize variables for atm->land model surface
+interpolation.
+<br>Calling sequence:
+<br>subroutine interpa2si
+<br>&nbsp;&nbsp;&nbsp; <a href="#celledge()">celledge</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#cellarea()">cellarea</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#areaini()">areaini</a>
+<br>Calling routine:&nbsp; <a href="#interpa2s()">interpa2s()</a>
+
+<p><a NAME="areaave()"></a><b>areaave()</b>&nbsp;&nbsp; (in ./main/areaMod.F90)
+<br>Description: Area averaging of field from input to output grids
+<br>Calling routine:&nbsp; <a href="#interpa2s()">interpa2s()</a> , <a href="#areaini()">areaini()</a>
+
+<p><a NAME="QSat()"></a><b>QSat()</b>&nbsp;&nbsp; (in ./biogeophys/QSat.F90)
+<br>Description:&nbsp; Computes saturation mixing ratio and the change
+in saturation mixing ratio with respect to temperature.
+<br>Calling routine:&nbsp; <a href="#Biogeophysics1()">Biogeophysics1()</a>
+, <a href="#CanopyFluxes()">CanopyFluxes()</a> , <a href="#Biogeophysics_Lake()">Biogeophysics_Lake()</a>
+
+<p><a NAME="SurfaceRadiation()"></a><b>SurfaceRadiation()</b>&nbsp;&nbsp;
+(in ./biogeophys/SurfaceRadiation.F90)
+<br>Description:&nbsp; Solar fluxes absorbed by vegetation and ground surface.&nbsp;
+Includes loop over n wavebands (currently 2, vis and nir).&nbsp; Splits
+canopy absorption into sunlit and shaded canopy.&nbsp; Calculates NDVI
+and reflected solar radiation.&nbsp; This same routine is also used for
+surface radiation for lake biogeophysics.
+<br>Calling routine:&nbsp; <a href="#Biogeophysics1()">Biogeophysics1()</a>
+, <a href="#Biogeophysics_Lake()">Biogeophysics_Lake()</a>
+
+<p><a NAME="BareGroundFluxes()"></a><b>BareGroundFluxes()</b>&nbsp;&nbsp;
+(in ./biogeophys/BareGroundFluxes.F90)
+<br>Description:&nbsp; Compute sensible and latent fluxes and their derivatives
+with respect to ground temperature using ground temperatures from previous
+time step.&nbsp; Calculate stability and aerodynamic resistances.
+<br>Calling sequence:
+<br>subroutine BareGroundFluxes(clm)
+<br>&nbsp;&nbsp;&nbsp; <a href="#MoninObukIni()">MoninObukIni</a>(ur, thv,
+dthv, zldis, z0mg, um, obu&nbsp; )
+<br>&nbsp;&nbsp;&nbsp; do (iter = 1,3) (stability iteration)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#FrictionVelocity()">FrictionVelocity</a>(displa,
+z0mg, z0hg, z0qg, obu, um, ustar, temp1, temp2, clm)
+<br>&nbsp;&nbsp;&nbsp;&nbsp; end do
+<br>end subroutine BareGroundFluxes
+<br>Calling routine:&nbsp; <a href="#Biogeophysics1()">Biogeophysics1()</a>
+
+<p><a NAME="CanopyFluxes()"></a><b>CanopyFluxes()</b>&nbsp;&nbsp; (in ./biogeophys/CanopyFluxes.F90)
+<br>Description:&nbsp; This subroutine: 1. Calculates the leaf temperature:&nbsp;
+2. Calculates the leaf fluxes, transpiration, photosynthesis and updates
+the dew accumulation due to evaporation.
+<br>Calling sequence:
+<br>subroutine CanopyFluxes (z0mv,&nbsp;&nbsp; z0hv,&nbsp; z0qv,&nbsp;
+thm,&nbsp;&nbsp; th,&nbsp; thv,&nbsp;&nbsp;&nbsp; tg,&nbsp;&nbsp;&nbsp;
+qg,&nbsp;&nbsp;&nbsp; dqgdT, htvp, emv,&nbsp;&nbsp;&nbsp; emg,&nbsp;&nbsp;
+dlrad, ulrad, cgrnds, cgrndl, cgrnd, clm )
+<br>&nbsp;&nbsp;&nbsp; <a href="#QSat()">QSat</a> (clm%t_veg, clm%forc_pbot,
+el, deldT, qsatl, qsatldT)
+<br>&nbsp;&nbsp;&nbsp; <a href="#MoninObukIni()">MoninObukIni</a>(ur, thv,
+dthv, zldis, z0mv, um, obu&nbsp; )
+<br>&nbsp;&nbsp;&nbsp; do iteration
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#FrictionVelocity()">FrictionVelocity</a>
+(clm%displa, z0mv,&nbsp; z0hv,&nbsp; z0qv,&nbsp; obu, um, ustar, temp1,
+temp2, clm)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Stomata()">Stomata</a>(mpe,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%parsun, svpts,&nbsp;&nbsp;&nbsp;&nbsp; eah,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+thm,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+o2,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; co2,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%btran, rb,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clm%rssun,&nbsp; &amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%psnsun, clm%qe25,&nbsp;&nbsp; clm%kc25,&nbsp; clm%ko25, clm%vcmx25,
+&amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%akc,&nbsp;&nbsp;&nbsp; clm%ako,&nbsp;&nbsp;&nbsp; clm%avcmx, clm%bp,&nbsp;&nbsp;
+clm%mp,&nbsp;&nbsp;&nbsp;&nbsp; &amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+foln,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clm%folnmx, clm%c3psn, clm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Stomata()">Stomata</a>(mpe,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%parsha, svpts,&nbsp;&nbsp;&nbsp;&nbsp; eah,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+thm,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+o2,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; co2,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%btran, rb,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clm%rssha,&nbsp; &amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%psnsha, clm%qe25,&nbsp;&nbsp; clm%kc25,&nbsp; clm%ko25, clm%vcmx25,
+&amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+clm%akc,&nbsp;&nbsp;&nbsp; clm%ako,&nbsp;&nbsp;&nbsp; clm%avcmx, clm%bp,&nbsp;&nbsp;
+clm%mp,&nbsp;&nbsp;&nbsp;&nbsp; &amp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+foln,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clm%folnmx, clm%c3psn, clm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#SensibleHCond()">SensibleHCond</a>(rah(1),
+rb,&nbsp;&nbsp; rah(2), wta,&nbsp; wtl, wtg,&nbsp;&nbsp;&nbsp; wta0, wtl0,&nbsp;&nbsp;
+wtg0, wtal, wtga,&nbsp;&nbsp; wtgl, clm&nbsp;&nbsp;&nbsp;&nbsp; )
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#LatentHCond()">LatentHCond</a>(raw(1),
+rb,&nbsp;&nbsp;&nbsp; raw(2), rpp,&nbsp;&nbsp; wtaq, wtlq,&nbsp;&nbsp;
+wtgq,&nbsp; wtaq0,&nbsp; wtlq0, wtgq0, wtalq,&nbsp; wtgaq, wtglq,&nbsp;
+clm&nbsp;&nbsp;&nbsp; )
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#QSat()">QSat</a>(clm%t_veg,
+clm%forc_pbot, el, deldT, qsatl, qsatldT&nbsp;&nbsp;&nbsp; )
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; test for convergence
+<br>&nbsp;&nbsp;&nbsp; enddo iteration
+<br>end subroutine CanopyFluxes
+<br>Calling routine:&nbsp; <a href="#Biogeophysics1()">Biogeophysics1()</a>
+
+<p><a NAME="Tridiagonal()"></a><b>Tridiagonal()</b>&nbsp;&nbsp; (in ./biogeophys/Tridiagonal.F90)
+<br>Description:&nbsp; Solution to tridiagonal matrix (?)
+<br>Calling routine:&nbsp; <a href="#Biogeophysics_Lake()">Biogeophysics_Lake()</a>
+, <a href="#SoilTemperature()">SoilTemperature()</a>
+
+<p><a NAME="shr_orb_decl()"></a><b>shr_orb_decl()</b>&nbsp;&nbsp; (in ./csm_share/shr_orb_mod.F90)
+<br>Description:&nbsp; Compute earth/orbit parameters using formula suggested
+by Duane Thresher.&nbsp; Compute eccentricity factor and solar declination
+using day value where a round day (such as 213.0) refers to 0z at Greenwich
+longitude.
+<br>Calling routine:&nbsp; <a href="#SurfaceAlbedo()">SurfaceAlbedo()</a>
+
+<p><a NAME="shr_orb_cosz()"></a><b>shr_orb_cosz()</b>&nbsp;&nbsp; (in ./csm_share/shr_orb_mod.F90)
+<br>Description:&nbsp; FUNCTION to return the cosine of the solar zenith
+angle. Assumes 365.0 days/year.
+<br>Calling routine:&nbsp; <a href="#SurfaceAlbedo()">SurfaceAlbedo()</a>
+
+<p><a NAME="SnowAlbedo()"></a><b>SnowAlbedo()</b>&nbsp;&nbsp; (in ./biogeophys/SnowAlbedo.F90)
+<br>Description:&nbsp; Determine snow albedos.&nbsp; Snow albedo depends
+on snow-age, zenith angle, and thickness of snow, age gives reduction of
+visible radiation.&nbsp; Different albedos for vis and nir.
+<br>Calling routine:&nbsp; <a href="#SurfaceAlbedo()">SurfaceAlbedo()</a>
+
+<p><a NAME="SoilAlbedo()"></a><b>SoilAlbedo()</b>&nbsp;&nbsp; (in ./biogeophys/SoilAlbedo.F90)
+<br>Description:&nbsp; Determine ground surface albedo, accounting for
+the fractional coverage of snow
+<br>Calling routine:&nbsp; <a href="#SurfaceAlbedo()">SurfaceAlbedo()</a>
+
+<p><a NAME="TwoStream()"></a><b>TwoStream()</b>&nbsp;&nbsp; (in ./biogeophys/TwoStream.F90)
+<br>Description:&nbsp; Use two-stream approximation of Dickinson (1983)
+Adv Geophysics 25:305-353 and Sellers (1985) Int J Remote Sensing 6:1335-1372
+to calculate fluxes absorbed by vegetation, reflected by vegetation, and
+transmitted through vegetation for unit incoming direct or diffuse flux
+given an underlying surface with known albedo.
+<br>Calling routine:&nbsp; <a href="#SurfaceAlbedo()">SurfaceAlbedo()</a>
+
+<p><a NAME="SoilTemperature()"></a><b>SoilTemperature()</b>&nbsp;&nbsp;
+(in ./biogeophys/SoilTemperature.F90)
+<br>Description:&nbsp; Snow and soil temperatures including phase change.
+<br>Calling sequence:
+<br>Subroutine SoilTemperature
+<br>&nbsp;&nbsp;&nbsp; <a href="#SoilThermProp()">SoilThermProp</a> (tk,
+cv, clm)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Tridiagonal()">Tridiagonal</a> (i, at,
+bt, ct, rt, clm%t_soisno(clm%snl+1:nlevsoi))
+<br>&nbsp;&nbsp;&nbsp; <a href="#PhaseChange()">PhaseChange</a> (fact(clm%snl+1),&nbsp;&nbsp;
+brr(clm%snl+1), hs, dhsdT, tssbef(clm%snl+1), xmf, clm )
+<br>end subroutine SoilTemperature
+<br>Calling routine:&nbsp; <a href="#Biogeophysics2()">Biogeophysics2()</a>
+
+<p><a NAME="shr_msg_send_i()"></a><b>shr_msg_send_i()</b>&nbsp;&nbsp; (in
+./csm_share/shr_msg_mod.F90)
+<br>Description:&nbsp; send the integer :: array "arr(n)" to task "tid"
+with id "msgid".&nbsp; Uses call to mpi_isend or mpi_send.
+<br>Calling routine:&nbsp; <a href="#csm_send()">csm_send()</a>
+
+<p><a NAME="shr_msg_send_r()"></a><b>shr_msg_send_r()</b>&nbsp;&nbsp; (in
+./csm_share/shr_msg_mod.F90)
+<br>Description:&nbsp; send the real :: array "arr(n)" to task "tid" with
+id "msgid". Uses call to mpi_isend or mpi_send.
+<br>Calling routine:&nbsp; <a href="#csm_send()">csm_send()</a>
+
+<p><a NAME="SnowWater()"></a><b>SnowWater()</b>&nbsp;&nbsp; (in ./biogeophys/SnowWater.F90)
+<br>Description:&nbsp; Evaluate the change of snow mass and the snow water
+onto soil. Water flow within snow is computed by an explicit and non-physical
+based scheme, which permits a part of liquid water over the holding capacity
+(a tentative value is used, i.e. equal to 0.033*porosity) to percolate
+into the underlying layer.&nbsp; Except for cases where the porosity of
+one of the two neighboring layers is less than 0.05, zero flow is assumed.
+The water flow out of the bottom of the snow pack will participate as the
+input of the soil water and runoff.
+<br>Calling routine:&nbsp; <a href="#Hydrology2()">Hydrology2()</a>
+
+<p><a NAME="SurfaceRunoff()"></a><b>SurfaceRunoff()</b>&nbsp;&nbsp; (in
+./biogeophys/SurfaceRunoff.F90)
+<br>Description:&nbsp; Calculate surface runoff. The original code was
+provide by Robert E. Dickinson based on&nbsp; following clues:&nbsp; exponential
+decrease of Ksat, a water table&nbsp; level determination level including
+highland and lowland levels&nbsp; and fractional area of wetland (water
+table above the surface).&nbsp; Runoff is parameterized from the lowlands
+in terms of precip incident on wet areas and a base flow, where these are
+estimated using ideas from TOPMODEL.
+<br>The original scheme was modified by Z.-L. Yang and G.-Y. Niu, using
+a new method to determine water table depth and&nbsp; the fractional wet
+area (fcov);&nbsp; computing runoff (surface and subsurface) from this
+fraction and the remaining fraction (i.e. 1-fcov);&nbsp; for the 1-fcov
+part, using BATS1e method to compute surface and subsurface runoff.
+<br>Calling routine:&nbsp; <a href="#Hydrology2()">Hydrology2()</a>
+
+<p><a NAME="Infiltration()"></a><b>Infiltration()</b>&nbsp;&nbsp; (in ./biogeophys/Infiltration.F90)
+<br>Description:&nbsp; Calculate infiltration into surface soil layer (minus
+the evaporation)
+<br>Calling routine:&nbsp; <a href="#Hydrology2()">Hydrology2()</a>
+
+<p><a NAME="SoilWater()"></a><b>SoilWater()</b>&nbsp;&nbsp; (in ./biogeophys/SoilWater.F90)
+<br>Description:&nbsp; Soil moisture is predicted from a 10-layer model
+(as with soil temperature), in which the vertical soil moisture transport
+is governed by infiltration, runoff, gradient diffusion, gravity, and root
+extraction through canopy transpiration.&nbsp; The net water applied to
+the surface layer is the snowmelt plus precipitation plus the throughfall&nbsp;
+of canopy dew minus surface runoff and evaporation. The vertical water
+flow in an unsaturated porous media is described by Darcy's law, and the
+hydraulic conductivity and the soil negative potential vary with soil water
+content and soil texture based on the work of Clapp and Hornberger (1978)
+and Cosby et al. (1984). The equation is integrated over the layer thickness,
+in which the time rate of change in water mass must equal the net flow
+across the bounding interface, plus the rate of internal source or sink.
+The terms of water flow across the layer interfaces are linearly expanded
+by using first-order Taylor expansion.&nbsp; The equations result in a
+tridiagonal system equation.
+<br>Calling routine:&nbsp; <a href="#Hydrology2()">Hydrology2()</a>
+
+<p><a NAME="Drainage()"></a><b>Drainage()</b>&nbsp;&nbsp; (in ./biogeophys/Drainage.F90)
+<br>Description:&nbsp; Calculate subsurface drainage.
+<br>Calling routine:&nbsp; <a href="#Hydrology2()">Hydrology2()</a>
+
+<p><a NAME="SnowCompaction()"></a><b>SnowCompaction()</b>&nbsp;&nbsp; (in
+./biogeophys/SnowCompaction.F90)
+<br>Description:&nbsp; Determine the change in snow layer thickness due
+to compaction and settling.&nbsp; Three metamorphisms of changing snow
+characteristics are implemented, i.e., destructive, overburden, and melt.
+The treatments of the former two are from SNTHERM.89 and SNTHERM.99 (1991,
+1999). The contribution due to melt metamorphism is simply taken as a ratio
+of snow ice fraction after the melting versus before the melting.
+<br>Calling routine:&nbsp; <a href="#Hydrology2()">Hydrology2()</a>
+
+<p><a NAME="CombineSnowLayers()"></a><b>CombineSnowLayers()</b>&nbsp;&nbsp;
+(in ./biogeophys/CombineSnowLayers.F90)
+<br>Description:&nbsp; Combine snow layers that are less than a minimum
+thickness or mass.&nbsp; If the snow element thickness or mass is less
+than a prescribed minimum, then it is combined with a neighboring element.
+<br>Calls <a href="#Combo()">Combo() </a>to combine layers
+<br>Calling routine:&nbsp; <a href="#Hydrology2()">Hydrology2()</a>
+
+<p><a NAME="DivideSnowLayers()"></a><b>DivideSnowLayers()</b>&nbsp;&nbsp;
+(in ./biogeophys/DivideSnowLayers.F90)
+<br>Description:&nbsp; Subdivides snow layers if they exceed their prescribed
+maximum thickness.
+<br>Calls <a href="#Combo()">Combo()</a> to divide layers.
+<br>Calling routine:&nbsp; <a href="#Hydrology2()">Hydrology2()</a>
+
+<p><a NAME="Irrigation()"></a><b>Irrigation()</b>&nbsp;&nbsp; (in ./biogeophys/Irrigation.F90)
+<br>Description:&nbsp; Irrigate crops to depth of 30 cm.&nbsp; Saturate
+the soil to a depth of 30 cm by making the liquid water volume equal the
+effective porosity.&nbsp; (This has known problems and has been removed
+from current coupled simulations -PET)
+<br>Calling routine:&nbsp; <a href="#Hydrology2()">Hydrology2()</a>
+
+<p><a NAME="WetIceHydrology()"></a><b>WetIceHydrology()</b>&nbsp;&nbsp;
+(in ./biogeophys/WetIce Hydrology.F90)
+<br>Description:&nbsp; Calculate hydrology for ice and wetland.&nbsp; Maintains
+a constant water volume for wetlands and ice.
+<br>Calling routine:&nbsp; <a href="#Hydrology2()">Hydrology2()</a>
+
+<p><a NAME="histslf()"></a><b>histslf()</b>&nbsp;&nbsp; (in ./main/histFileMod.F90)
+<br>Description:&nbsp; Accumulate single-level field over history time
+interval
+<br>Calling routine:&nbsp; <a href="#histUpdate()">histUpdate()</a>
+
+<p><a NAME="histmlf()"></a><b>histmlf()</b>&nbsp;&nbsp; (in ./main/histFileMod.F90)
+<br>Description:&nbsp; Accumulate multi-level field over history time interval
+<br>Calling routine:&nbsp; <a href="#histUpdate()">histUpdate()</a>
+
+<p><a NAME="Rtm()"></a><b>Rtm()</b>&nbsp;&nbsp; (in ./riverroute/RtmMod.F90)
+<br>Description:&nbsp; River routing model (based on U. Texas code)
+<br>Calling routine:&nbsp; <a href="#RiverFlux()">RiverFlux()</a>
+<h1>
+
+<hr WIDTH="100%">Fifth-level function calls (and higher)
+<hr WIDTH="100%"></h1>
+
+<a NAME="histfldini()"></a><b>histfldini()</b>&nbsp;&nbsp; (in ./main/histFileMod.F90)
+<br>Description:&nbsp; Set up history file field (active or inactive).
+<br>Calling routine:&nbsp; <a href="#histlst()">histlst()</a>
+
+<p><a NAME="land_to_patch()"></a><b>land_to_patch()</b>&nbsp;&nbsp; (in
+./main/inicFileMod.F90)
+<br>Description:&nbsp; Reorders the vectors from land to patch. Calls mpi_scatter.&nbsp;
+Uses a generic function call "interface"
+<br>to access for different data types.
+<br>Calling routine:&nbsp; <a href="#inicrd()">inicrd()</a>
+
+<p><a NAME="areaini()"></a><b>areaini()</b>&nbsp; (in ./main/areaMod.F90)
+<br>Description:&nbsp; Area averaging initialization. This subroutine is
+used in conjunction with areaave.F for area-average
+<br>mapping of a field from one grid to another.
+<br>Calling sequence:
+<br>subroutine areaini()
+<br>&nbsp;&nbsp;&nbsp; <a href="#areamap()">areamap</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#areaave()">areaave</a>
+<br>end subroutine areaini
+<br>Calling routine:&nbsp; <a href="#interpa2si()">interpa2si()</a>
+
+<p><a NAME="areamap()"></a><b>areamap()</b>&nbsp;&nbsp; (in ./main/areaMod.F90)
+<br>Description:&nbsp; Get indices and weights for area-averaging between
+input and output grids.
+<br>Calling sequence:
+<br>subroutine areamap()
+<br>&nbsp;&nbsp;&nbsp; <a href="#areaovr()">areaovr</a>
+<br>end subroutine areamap()
+<br>Calling routine:&nbsp; <a href="#areaini()">areaini()</a>
+
+<p><a NAME="areaovr()"></a><b>areaovr()</b>&nbsp;&nbsp; (in ./main/areaMod.F90)
+<br>Description:&nbsp; uses the latitude and longitude of two overlapping
+grids to calculate the area of overlap. Uses the
+<br>algorithm area = dlon * d(sin(lat)) * radius * radius
+<br>Calling routine:&nbsp; <a href="#areamap()">areamap()</a>
+
+<p><a NAME="MoninObukIni()"></a><b>MoninObukIni()</b>&nbsp;&nbsp; (in ./biogeophys/MoninObukIni.F90)
+<br>Description:&nbsp; Initialization of the Monin-Obukhov length.
+<br>Calling routine:&nbsp; <a href="#BareGroundFluxes()">BareGroundFluxes()</a>
+, <a href="#CanopyFluxes()">CanopyFluxes()</a> , <a href="#Biogeophysics_Lake()">Biogeophysics_Lake()</a>
+
+<p><a NAME="FrictionVelocity()"></a><b>FrictionVelocity()</b>&nbsp;&nbsp;
+(in ./biogeophys/FrictionVelocity.F90)
+<br>Description:&nbsp; Calculation of the friction velocity, relation for
+potential temperature and humidity profiles of surface boundary layer.
+<br>Calling routine:&nbsp; <a href="#BareGroundFluxes()">BareGroundFluxes()</a>,
+<a href="#CanopyFluxes()">CanopyFluxes()</a>
+, <a href="#Biogeophysics_Lake()">Biogeophysics_Lake()</a>
+
+<p><a NAME="Stomata()"></a><b>Stomata()</b>&nbsp;&nbsp; (in ./biogeophys/Stomata.F90)
+<br>Description:&nbsp; Leaf stomatal resistance and leaf photosynthesis.
+Uses Ball-Berry formulation for stomatal conductance, and Farquhar C3 photosynthesis
+model.
+<br>Calling routine: <a href="#CanopyFluxes()">CanopyFluxes()</a>
+
+<p><a NAME="SensibleHCond()"></a><b>SensibleHCond()</b>&nbsp;&nbsp; (in
+./biogeophys/SensibleHCond.F90)
+<br>Description:&nbsp; Provides dimensional and non-dimensional sensible
+heat conductances for canopy and soil fux calculations.
+<br>Calling routine: <a href="#CanopyFluxes()">CanopyFluxes()</a>
+
+<p><a NAME="LatentHCond()"></a><b>LatentHCond()</b>&nbsp;&nbsp; (in ./biogeophys/LatentHCond.F90)
+<br>Description:&nbsp; Provides dimensional and non-dimensional latent
+heat conductances for canopy and soil flux calculations.&nbsp; Latent fluxes
+differs from the sensible heat flux due to stomatal resistance.
+<br>Calling routine: <a href="#CanopyFluxes()">CanopyFluxes()</a>
+
+<p><a NAME="SoilThermProp()"></a><b>SoilThermProp()</b>&nbsp;&nbsp; (in
+./biogeophys/SoilThermProp.F90)
+<br>Description:&nbsp; Calculation of thermal conductivities and heat capacities
+of snow/soil layers
+<br>(1) The volumetric heat capacity is calculated as a linear combination
+in terms of the volumetric fraction of the constituent phases. (2) The
+thermal conductivity of soil is computed from the algorithm of Johansen
+(as reported by Farouki 1981), and of snow is from the formulation used
+in SNTHERM (Jordan 1991).
+<br>Calling routine:&nbsp; <a href="#SoilTemperature()">SoilTemperature()</a>
+
+<p><a NAME="PhaseChange()"></a><b>PhaseChange()</b>&nbsp;&nbsp; (in ./biogeophys/PhaseChange.F90)
+<br>Description:&nbsp; Calculation of the phase change within snow and
+soil layers: (1) Check the conditions for which the phase change may take
+place, i.e., the layer temperature is great than the freezing point and
+the ice mass is not equal to zero (i.e. melting), or the layer temperature
+is less than the freezing point and the liquid water mass is not equal
+to zero (i.e. freezing). (2) Assess the rate of phase change from the energy
+excess (or deficit) after setting the layer temperature to freezing point.
+(3) Re-adjust the ice and liquid mass, and the layer temperature
+<br>Calling routine:&nbsp; <a href="#SoilTemperature()">SoilTemperature()</a>
+
+<p><a NAME="Combo()"></a><b>Combo()</b>&nbsp; (in ./biogeophys/Combo.F90)
+<br>Description: Combines two elements and returns the following combined
+variables: dz, t, wliq, wice.&nbsp; The combined temperature is based on
+the equation: the sum of the enthalpies of the two elements =&nbsp; that
+of the combined element.
+<br>Calling routine:&nbsp; <a href="#CombineSnowLayers()">CombineSnowLayers()</a>
+, <a href="#DivideSnowLayers()">DivideSnowLayers()</a>
+<h1>
+
+<hr WIDTH="100%">MPI Library function calls
+<hr WIDTH="100%"></h1>
+
+<a NAME="mpi_initialized()"></a><b>mpi_initialized()</b>&nbsp;&nbsp; (in
+the MPI library...)
+<br>Calling routine:&nbsp; <a href="#spmd_init()">spmd_init()</a>
+
+<p><a NAME="mpi_init()"></a><b>mpi_init()</b>&nbsp; (in the MPI library...)
+<br>Calling routine:&nbsp; <a href="#spmd_init()">spmd_init()</a>
+
+<p><a NAME="mpi_comm_rank()"></a><b>mpi_comm_rank()</b>&nbsp;&nbsp; (in
+the MPI library...)
+<br>Calling routine:&nbsp; <a href="#spmd_init()">spmd_init()</a>
+
+
+<p><a NAME="mpi_comm_size()"></a><b>mpi_comm_size()</b>&nbsp;&nbsp; (in
+the MPI library...)
+<br>Calling routine:&nbsp; <a href="#spmd_init()">spmd_init()</a>
+
+<p><a NAME="mpi_get_processor_name()"></a><b>mpi_get_processor_name()</b>&nbsp;&nbsp;
+(in the MPI library...)
+<br>Calling routine:&nbsp; <a href="#spmd_init()">spmd_init()</a>
+
+<p><a NAME="mpi_allgather()"></a><b>mpi_allgather()</b>&nbsp;&nbsp; (in
+the MPI library...)
+<br>Calling routine:&nbsp; <a href="#spmd_init()">spmd_init()</a>
+
+<p><a NAME="mpi_gatherv()"></a><b>mpi_gatherv()</b>&nbsp;&nbsp; (in the
+MPI library...)
+<br>Calling routine:&nbsp; <a href="#spmd_init()">spmd_init()</a>
+
+<p><a NAME="mpi_bcast()"></a><b>mpi_bcast()</b>&nbsp;&nbsp; (in the MPI
+library...)
+<br>Calling routine:&nbsp; <a href="#control_spmd()">control_spmd()</a> , <a href="#csm_recvorb()">csm_recvorb()</a>
+<br>&nbsp;
+</body>
+</html>

@@ -1,0 +1,105 @@
+Code in this directory implements a set of general-purpose thread-safe timing
+routines, callable from Fortran or C.  Only the Fortran interface will be
+described here.  For backward compatibility with an older library, interface
+names "t_xxx" are still supported, but hopefully the new names "gptlxxx" will
+be migrated to soon.  The mapping of names is:
+
+old              new
+-------------    -------------- 
+t_setoptionf  -> gptlsetoption
+t_initializef -> gptlinitialize
+t_startf      -> gptlstart
+t_stopf       -> gptlstop
+t_prf         -> gptlpr
+t_stampf      -> gptlstamp
+
+When the new (gptl) names were implemented, the ability to access low level
+hardware counters (e.g. to count floating point ops, cache misses, etc.)
+provided by the library PAPI (http://icl.cs.utk.edu/papi/) was also defined.
+If PAPI has been built, accessing its capabilities is provided through
+gptlsetoption (or t_setoptionf).  Commented out code which does this is
+included in cam.F90.  One of the calls for example is:
+
+!   if (gptlsetoption (PAPI_FP_OPS, 1) < 0) call endrun ('CAM:gptlsetoption')
+
+Access to the PAPI library is set up at CAM build time by changing the
+Makefile in the following way:
+
+o Add to USER_CPPDEFS: -DHAVE_PAPI (-WF,-DHAVE_PAPI for AIX)
+o Add to USER_CFLAGS (if appropriate): -Ixxx argument to define where papi.h lives.
+  NOTE: on bluesky there is an old papi.h in /usr/local/include that
+  shouldn't be used.  So by hook or by crook make sure that the correct
+  papi.h gets used.  I did this for example by adding $(HOME)/include where
+  cpp_dirs is set, BEFORE $(INC_NETCDF) and $(INC_MPI), because netcdf and/or
+  mpi may reside in /usr/local along with the old papi.h.
+o Add to USER_FFLAGS (if appropriate): -Ixxx argument to define where f77papi.h
+  lives.
+o Add to USER_LDFLAGS: -L and -l arguments to tell the loader where to find
+  the PAPI library.
+o On AIX add also to USER_LDFLAGS: -lpmapi
+o On AIX if running in threaded mode (which is likely): change
+  THREADED_PTHREADS to THREADED_OMP.  
+o On AIX if running in threaded mode: change cc to cc_r
+o Add to USER_CFLAGS if running in threaded mode: the appropriate compiler
+  argument to enable threading.  For AIX it is -qsmp=omp.  For IRIX64 it is
+  -mp.  For ifort it is -openmp.  And so on.
+
+My recommendation is not to mess with a PAPI release prior to 3.0.7.  There
+were bugs prior to that which rendered results unreliable or useless,
+particularly under AIX.  
+
+If and when new PAPI options become available, the one file in this directory
+that will require modification is gptl_papi.c.  This is where the list of
+events countable by PAPI is mapped to a print string.  The definition of
+"papitable" in that file will need to be changed accordingly.
+
+------------------------------------------------------------------------------
+
+Normal usage of the timing library (whether PAPI is enabled or not), using
+the old interface names, is as follows:
+
+#include <gptl.inc>
+...
+t_setoptionf (timing_option, value)
+...
+t_initializef ()
+...
+t_startf ('arbitrary_timer_name')
+...
+t_stopf ('arbitrary_timer_name')
+...
+t_prf (mpi_task_id)
+
+also
+
+t_stampf (wall, usr, sys)
+
+An arbitrary number of calls to t_setoptionf() preceeds a single call to
+t_initializef(), and all should be within a non-threaded code region.
+Default behavior with zero calls to t_setoptionf() is to output statistics
+for user time, system time, and wallclock time.  The function's purpose is to
+modify this default behavior.  For example, t_setoptionf (usrsys, 0) turns
+off user and system timings.  t_setoptionf (wall, 1) turns on wallclock
+timings.  Other options (e.g. pcl_l1dcache_miss) are not available in the
+committed code.  Include file gpt.inc need only be included where
+t_setoptionf() is called.
+
+An arbitrary sequence of (potentially nested) paired calls to t_startf() and
+t_stopf() with unique timer names of up to 15 characters each can then occur.
+The call to t_prf() will produce a summary of all timer values.  The argument
+to t_prf() is normally the MPI task id, but can be any integer.  The output
+file with the timing information will be named timing.<num>.  If threading
+was enabled and timing calls were made from within threaded regions of the
+code, a per-thread summary will be included in this output file.
+
+Stand-alone routine t_stampf(wall, usr, sys) can be called to return
+values for use in the application code.  The wallclock user, and system
+timestamps returned are real*8 numbers in units of seconds.
+
+The underlying library routine used to gather user and system times is
+times().  Unfortunately, the behavior of this routine is not consistent
+across platforms.  On IBM and Compaq, it is cumulative across threads.  On
+SGI and PC machines it is thread-specific.  This behavior will be reflected
+in the printed timings.  For example, on a 4-PE dedicated node the user time
+for a given routine called from within a threaded region may exceed the
+wallclock number by as much as a factor of 4 on IBM and Compaq machines.

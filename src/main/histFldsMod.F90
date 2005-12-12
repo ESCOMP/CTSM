@@ -1,0 +1,3719 @@
+#include <misc.h>
+#include <preproc.h>
+
+module histFldsMod
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !MODULE: histFldsMod
+!
+! !DESCRIPTION:
+! Module containing initialization of clm history fields and files
+! This is the module that the user must modify in order to add new
+! history fields or modify defaults associated with existing history
+! fields.
+!
+! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  implicit none
+!
+! !PUBLIC MEMBER FUNCTIONS:
+  public initHistFlds ! Build master field list of all possible history
+                      ! file fields
+!
+! !REVISION HISTORY:
+! Created by Mariana Vertenstein 03/2003
+!
+!EOP
+!------------------------------------------------------------------------
+
+contains
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: initHistFlds
+!
+! !INTERFACE:
+  subroutine initHistFlds()
+!
+! !DESCRIPTION:
+! Build master field list of all possible fields in a history file.
+! Each field has associated with it a ``long\_name'' netcdf attribute that
+! describes what the field is, and a ``units'' attribute. A subroutine is
+! called to add each field to the masterlist.
+!
+! !USES:
+    use clmtype
+    use clm_varcon , only : spval
+    use clm_varctl , only : nsrest
+#if (defined RTM)
+    use RunoffMod  , only : runoff
+#endif
+    use histFileMod, only : add_subscript, add_fld1d, add_fld2d, &
+                            masterlist_printflds
+#if (defined CASA)
+    use CASAMod    , only : nlive, npools
+#endif
+!
+! !ARGUMENTS:
+    implicit none
+!
+! !REVISION HISTORY:
+! Mariana Vertenstein: Created 03/2003
+! Mariana Vertenstein: Updated interface to create history fields 10/2003
+!
+!EOP
+!-----------------------------------------------------------------------
+
+    ! Determine what subscripts to add
+    ! (uncomment the following call and modify it appropriately)
+
+    ! call add_subscript(subname='subscript_name', subdim=subscript_dim)
+
+    ! NOTE: make a field not appear on the primary history tape by default -
+    ! add the keyword to default='inactive' to the call to addfld_1d or addfld_2d
+
+    ! Snow properties
+    ! These will be vertically averaged over the snow profile
+
+    call add_fld1d (fname='SNOWDP',  units='m',  &
+         avgflag='A', long_name='snow height', &
+         ptr_col=clm3%g%l%c%cps%snowdp)
+
+    call add_fld1d (fname='SNOWAGE',  units='unitless',  &
+         avgflag='A', long_name='snow age', &
+         ptr_col=clm3%g%l%c%cps%snowage)
+
+    call add_fld1d (fname='FSNO',  units='unitless',  &
+         avgflag='A', long_name='fraction of ground covered by snow', &
+         ptr_col=clm3%g%l%c%cps%frac_sno)
+
+    ! Temperatures
+
+    call add_fld1d (fname='TSA', units='K',  &
+         avgflag='A', long_name='2m air temperature', &
+         ptr_pft=clm3%g%l%c%p%pes%t_ref2m)
+
+    call add_fld1d (fname='TREFMNAV', units='K',  &
+         avgflag='A', long_name='daily minimum of average 2-m temperature', &
+         ptr_pft=clm3%g%l%c%p%pes%t_ref2m_min)
+
+    call add_fld1d (fname='TREFMXAV', units='K',  &
+         avgflag='A', long_name='daily maximum of average 2-m temperature', &
+         ptr_pft=clm3%g%l%c%p%pes%t_ref2m_max)
+
+    call add_fld1d (fname='TV', units='K',  &
+         avgflag='A', long_name='vegetation temperature', &
+         ptr_pft=clm3%g%l%c%p%pes%t_veg)
+
+    call add_fld1d (fname='TG',  units='K',  &
+         avgflag='A', long_name='ground temperature', &
+         ptr_col=clm3%g%l%c%ces%t_grnd)
+
+    call add_fld1d (fname='TSNOW',  units='K',  &
+         avgflag='I', long_name='snow temperature', &
+         ptr_col=clm3%g%l%c%ces%t_snow, set_lake=spval)
+
+    call add_fld2d (fname='TSOI',  units='K', type2d='levsoi', &
+         avgflag='A', long_name='soil temperature', &
+         ptr_col=clm3%g%l%c%ces%t_soisno)
+
+    call add_fld2d (fname='TLAKE',  units='K', type2d='levsoi', &
+         avgflag='A', long_name='lake temperature', &
+         ptr_col=clm3%g%l%c%ces%t_lake)
+
+    ! Specific humidity
+
+    call add_fld1d (fname='Q2M', units='kg/kg',  &
+         avgflag='A', long_name='2m specific humidity', &
+         ptr_pft=clm3%g%l%c%p%pes%q_ref2m)
+
+    ! Surface radiation
+
+    call add_fld1d (fname='SABV', units='watt/m^2',  &
+         avgflag='A', long_name='solar rad absorbed by veg', &
+         ptr_pft=clm3%g%l%c%p%pef%sabv)
+
+    call add_fld1d (fname='SABG', units='watt/m^2',  &
+         avgflag='A', long_name='solar rad absorbed by ground', &
+         ptr_pft=clm3%g%l%c%p%pef%sabg)
+
+    call add_fld1d (fname='FSDSVD', units='watt/m^2',  &
+         avgflag='A', long_name='direct vis incident solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsds_vis_d)
+
+    call add_fld1d (fname='FSDSND', units='watt/m^2',  &
+         avgflag='A', long_name='direct nir incident solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsds_nir_d)
+
+    call add_fld1d (fname='FSDSVI', units='watt/m^2',  &
+         avgflag='A', long_name='diffuse vis incident solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsds_vis_i)
+
+    call add_fld1d (fname='FSDSNI', units='watt/m^2',  &
+         avgflag='A', long_name='diffuse nir incident solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsds_nir_i)
+
+    call add_fld1d (fname='FSRVD', units='watt/m^2',  &
+         avgflag='A', long_name='direct vis reflected solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsr_vis_d)
+
+    call add_fld1d (fname='FSRND', units='watt/m^2',  &
+         avgflag='A', long_name='direct nir reflected solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsr_nir_d)
+
+    call add_fld1d (fname='FSRVI', units='watt/m^2',  &
+         avgflag='A', long_name='diffuse vis reflected solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsr_vis_i)
+
+    call add_fld1d (fname='FSRNI', units='watt/m^2',  &
+         avgflag='A', long_name='diffuse nir reflected solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsr_nir_i)
+
+    call add_fld1d (fname='FSDSVDLN', units='watt/m^2',  &
+         avgflag='A', long_name='direct vis incident solar radiation at local noon', &
+         ptr_pft=clm3%g%l%c%p%pef%fsds_vis_d_ln)
+
+    call add_fld1d (fname='FSDSNDLN', units='watt/m^2',  &
+         avgflag='A', long_name='direct nir incident solar radiation at local noon', &
+         ptr_pft=clm3%g%l%c%p%pef%fsds_nir_d_ln)
+
+    call add_fld1d (fname='FSRVDLN', units='watt/m^2',  &
+         avgflag='A', long_name='direct vis reflected solar radiation at local noon', &
+         ptr_pft=clm3%g%l%c%p%pef%fsr_vis_d_ln)
+
+    call add_fld1d (fname='FSRNDLN', units='watt/m^2',  &
+         avgflag='A', long_name='direct nir reflected solar radiation at local noon', &
+         ptr_pft=clm3%g%l%c%p%pef%fsr_nir_d_ln)
+
+    call add_fld1d (fname='FSA', units='watt/m^2',  &
+         avgflag='A', long_name='absorbed solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsa)
+
+    call add_fld1d (fname='FSR', units='watt/m^2',  &
+         avgflag='A', long_name='reflected solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsr)
+
+    call add_fld1d (fname='FIRA', units='watt/m^2',  &
+         avgflag='A', long_name='net infrared (longwave) radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_net)
+
+    call add_fld1d (fname='FIRE', units='watt/m^2',  &
+         avgflag='A', long_name='emitted infrared (longwave) radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_out)
+
+    ! Surface energy fluxes
+
+    call add_fld1d (fname='FCTR', units='watt/m^2',  &
+         avgflag='A', long_name='canopy transpiration', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_vegt, set_lake=0._r8)
+
+    call add_fld1d (fname='FCEV', units='watt/m^2',  &
+         avgflag='A', long_name='canopy evaporation', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_vege, set_lake=0._r8)
+
+    call add_fld1d (fname='FGEV', units='watt/m^2',  &
+         avgflag='A', long_name='ground evaporation', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_grnd)
+
+    call add_fld1d (fname='FSH', units='watt/m^2',  &
+         avgflag='A', long_name='sensible heat', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_tot)
+
+    call add_fld1d (fname='FSH_V', units='watt/m^2',  &
+         avgflag='A', long_name='sensible heat from veg', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_veg, set_lake=0._r8)
+
+    call add_fld1d (fname='FSH_G', units='watt/m^2',  &
+         avgflag='A', long_name='sensible heat from ground', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_grnd )
+
+    call add_fld1d (fname='FGR', units='watt/m^2',  &
+         avgflag='A', long_name='heat flux into soil', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd)
+
+    call add_fld1d (fname='FSM',  units='watt/m^2',  &
+         avgflag='A', long_name='snow melt heat flux', &
+         ptr_col=clm3%g%l%c%cef%eflx_snomelt)
+
+    call add_fld1d (fname='TAUX', units='kg/m/s^2',  &
+         avgflag='A', long_name='zonal surface stress', &
+         ptr_pft=clm3%g%l%c%p%pmf%taux)
+
+    call add_fld1d (fname='TAUY', units='kg/m/s^2',  &
+         avgflag='A', long_name='meridional surface stress', &
+         ptr_pft=clm3%g%l%c%p%pmf%tauy)
+
+    ! Vegetation phenology
+
+    call add_fld1d (fname='ELAI', units='m^2/m^2', &
+          avgflag='A', long_name='exposed one-sided leaf area index', &
+         ptr_pft=clm3%g%l%c%p%pps%elai)
+
+    call add_fld1d (fname='ESAI', units='m^2/m^2', &
+          avgflag='A', long_name='exposed one-sided stem area index', &
+         ptr_pft=clm3%g%l%c%p%pps%esai)
+
+    ! Canopy physiology
+
+    call add_fld1d (fname='RSSUN', units='s/m',  &
+         avgflag='A', long_name='sunlit leaf stomatal resistance', &
+         ptr_pft=clm3%g%l%c%p%pps%rssun, set_lake=spval)
+
+    call add_fld1d (fname='RSSHA', units='s/m',  &
+         avgflag='A', long_name='shaded leaf stomatal resistance', &
+         ptr_pft=clm3%g%l%c%p%pps%rssha, set_lake=spval)
+
+    call add_fld1d (fname='BTRAN', units='unitless',  &
+         avgflag='A', long_name='transpiration beta factor', &
+         ptr_pft=clm3%g%l%c%p%pps%btran, set_lake=spval)
+
+    call add_fld1d (fname='FPSN', units='umol/m2s',  &
+         avgflag='A', long_name='photosynthesis', &
+         ptr_pft=clm3%g%l%c%p%pcf%fpsn, set_lake=0._r8)
+
+#if (defined DUST)
+    call add_fld1d (fname='DSTFLXT', units='kg/m2/s',  &
+         avgflag='A', long_name='total surface dust emission', &
+         ptr_pft=clm3%g%l%c%p%pdf%flx_mss_vrt_dst_tot, set_lake=0._r8)
+
+    call add_fld1d (fname='DPVLTRB1', units='m/s',  &
+         avgflag='A', long_name='turbulent deposition velocity 1', &
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_1)
+
+    call add_fld1d (fname='DPVLTRB2', units='m/s',  &
+         avgflag='A', long_name='turbulent deposition velocity 2', &
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_2)
+
+    call add_fld1d (fname='DPVLTRB3', units='m/s',  &
+         avgflag='A', long_name='turbulent deposition velocity 3', &
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_3)
+
+    call add_fld1d (fname='DPVLTRB4', units='m/s',  &
+         avgflag='A', long_name='turbulent deposition velocity 4', &
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_4)
+#endif
+
+#if (defined VOC)
+    call add_fld1d (fname='VOCFLXT', units='uG/M2/H',  &
+         avgflag='A', long_name='total VOC flux into atmosphere', &
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_tot, set_lake=0._r8)
+
+    call add_fld1d (fname='ISOPRENE', units='uG/M2/H',  &
+         avgflag='A', long_name='isoprene flux', &
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_1, set_lake=0._r8)
+
+    call add_fld1d (fname='MONOTERP', units='uG/M2/H',  &
+         avgflag='A', long_name='monoterpene flux', &
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_2, set_lake=0._r8)
+
+    call add_fld1d (fname='OVOC', units='uG/M2/H',  &
+         avgflag='A', long_name='other VOC flux', &
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_3, set_lake=0._r8)
+
+    call add_fld1d (fname='ORVOC', units='uG/M2/H',  &
+         avgflag='A', long_name='other reactive VOC flux', &
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_4, set_lake=0._r8)
+
+    call add_fld1d (fname='BIOGENCO', units='uG/M2/H',  &
+         avgflag='A', long_name='biogenic CO flux', &
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_5, set_lake=0._r8)
+#endif
+
+    ! Hydrology
+
+    call add_fld1d (fname='H2OSNO',  units='mm',  &
+         avgflag='A', long_name='snow depth (liquid water)', &
+         ptr_col=clm3%g%l%c%cws%h2osno)
+
+    call add_fld1d (fname='H2OCAN', units='mm',  &
+         avgflag='A', long_name='intercepted water', &
+         ptr_pft=clm3%g%l%c%p%pws%h2ocan, set_lake=0._r8)
+
+    call add_fld2d (fname='H2OSOI',  units='mm3/mm3', type2d='levsoi', &
+         avgflag='A', long_name='volumetric soil water', &
+         ptr_col=clm3%g%l%c%cws%h2osoi_vol)
+
+    call add_fld2d (fname='SOILLIQ',  units='kg/m2', type2d='levsoi', &
+         avgflag='A', long_name='soil liquid water', &
+         ptr_col=clm3%g%l%c%cws%h2osoi_liq)
+
+    call add_fld2d (fname='SOILICE',  units='kg/m2', type2d='levsoi', &
+         avgflag='A', long_name='soil ice', &
+         ptr_col=clm3%g%l%c%cws%h2osoi_ice)
+
+    call add_fld1d (fname='SNOWLIQ',  units='kg/m2',  &
+         avgflag='I', long_name='snow liquid water', &
+         ptr_col=clm3%g%l%c%cws%snowliq)
+
+    call add_fld1d (fname='SNOWICE',  units='kg/m2',  &
+         avgflag='I', long_name='snow ice', &
+         ptr_col=clm3%g%l%c%cws%snowice)
+
+    call add_fld1d (fname='QINFL',  units='mm/s',  &
+         avgflag='A', long_name='infiltration', &
+         ptr_col=clm3%g%l%c%cwf%qflx_infl)
+
+    call add_fld1d (fname='QOVER',  units='mm/s',  &
+         avgflag='A', long_name='surface runoff', &
+         ptr_col=clm3%g%l%c%cwf%qflx_surf)
+
+    call add_fld1d (fname='QRGWL',  units='mm/s',  &
+         avgflag='A', long_name='surface runoff at glaciers, wetlands, lakes', &
+         ptr_col=clm3%g%l%c%cwf%qflx_qrgwl)
+
+    call add_fld1d (fname='QDRAI',  units='mm/s',  &
+         avgflag='A', long_name='sub-surface drainage', &
+         ptr_col=clm3%g%l%c%cwf%qflx_drain)
+
+    call add_fld1d (fname='QINTR', units='mm/s',  &
+         avgflag='A', long_name='interception', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_prec_intr, set_lake=0._r8)
+
+    call add_fld1d (fname='QDRIP', units='mm/s',  &
+         avgflag='A', long_name='throughfall', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_prec_grnd)
+
+    call add_fld1d (fname='QMELT',  units='mm/s',  &
+         avgflag='A', long_name='snow melt', &
+         ptr_col=clm3%g%l%c%cwf%qflx_snomelt)
+
+    call add_fld1d (fname='QSOIL', units='mm/s',  &
+         avgflag='A', long_name='ground evaporation', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_soi)
+
+    call add_fld1d (fname='QVEGE', units='mm/s',  &
+         avgflag='A', long_name='canopy evaporation', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_can, set_lake=0._r8)
+
+    call add_fld1d (fname='QVEGT', units='mm/s',  &
+         avgflag='A', long_name='canopy transpiration', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_tran_veg, set_lake=0._r8)
+
+#if (defined RTM)
+    ! RTM River Routing
+
+    call add_fld1d (fname='QCHANR', units='m3/s',  typexy='rof', &
+         avgflag='A', long_name='RTM river flow', &
+         ptr_roflnd=runoff%lnd)
+
+    call add_fld1d (fname='QCHOCNR', units='m3/s', typexy='rof', &
+         avgflag='A', long_name='RTM river discharge into ocean', &
+         ptr_rofocn=runoff%ocn)
+
+    call add_fld1d (fname='DVOLRDT_LND', units='mm/s',  typexy='rof', &
+         avgflag='A', long_name='RTM land change in storage', &
+         ptr_roflnd=runoff%lnd_dvolrdt)
+
+    call add_fld1d (fname='DVOLRDT_OCN', units='mm/s',  typexy='rof', &
+         avgflag='A', long_name='RTM ocean change of storage', &
+         ptr_rofocn=runoff%ocn_dvolrdt)
+#endif
+
+    ! Water and energy balance checks
+
+    call add_fld1d (fname='ERRSOI',  units='watt/m^2',  &
+         avgflag='A', long_name='soil/lake energy conservation error', &
+         ptr_col=clm3%g%l%c%cebal%errsoi)
+
+    call add_fld1d (fname='ERRSEB',  units='watt/m^2',  &
+         avgflag='A', long_name='surface energy conservation error', &
+         ptr_pft=clm3%g%l%c%p%pebal%errseb)
+
+    call add_fld1d (fname='ERRSOL',  units='watt/m^2',  &
+         avgflag='A', long_name='solar radiation conservation error', &
+         ptr_pft=clm3%g%l%c%p%pebal%errsol)
+
+    call add_fld1d (fname='ERRH2O', units='mm',  &
+         avgflag='A', long_name='total water conservation error', &
+         ptr_col=clm3%g%l%c%cwbal%errh2o)
+
+    ! Atmospheric forcing
+
+    call add_fld1d (fname='RAIN', units='mm/s',  &
+         avgflag='A', long_name='atmospheric rain', &
+         ptr_gcell=clm3%g%a2lf%forc_rain)
+
+    call add_fld1d (fname='SNOW', units='mm/s',  &
+         avgflag='A', long_name='atmospheric snow', &
+         ptr_gcell=clm3%g%a2lf%forc_snow)
+
+    call add_fld1d (fname='TBOT', units='K',  &
+         avgflag='A', long_name='atmospheric air temperature', &
+         ptr_gcell=clm3%g%a2ls%forc_t)
+
+    call add_fld1d (fname='THBOT', units='K',  &
+         avgflag='A', long_name='atmospheric air potential temperature', &
+         ptr_gcell=clm3%g%a2ls%forc_th)
+
+    call add_fld1d (fname='WIND', units='m/s',  &
+         avgflag='A', long_name='atmospheric wind velocity magnitude', &
+         ptr_gcell=clm3%g%a2ls%forc_wind)
+
+    call add_fld1d (fname='QBOT', units='kg/kg',  &
+         avgflag='A', long_name='atmospheric specific humidity', &
+         ptr_gcell=clm3%g%a2ls%forc_q)
+
+    call add_fld1d (fname='ZBOT', units='m',  &
+         avgflag='A', long_name='atmospheric reference height', &
+         ptr_gcell=clm3%g%a2ls%forc_hgt)
+
+    call add_fld1d (fname='FLDS', units='watt/m^2',  &
+         avgflag='A', long_name='atmospheric longwave radiation', &
+         ptr_gcell=clm3%g%a2lf%forc_lwrad)
+
+    call add_fld1d (fname='FSDS', units='watt/m^2',  &
+         avgflag='A', long_name='atmospheric incident solar radiation', &
+         ptr_gcell=clm3%g%a2lf%forc_solar)
+
+#if (defined DGVM)
+    ! History output of accumulation variables
+
+    call add_fld1d (fname='FMICR', units='umol/m2s',  &
+         avgflag='A', long_name='microbial respiration', &
+         ptr_pft=clm3%g%l%c%p%pcf%fmicr, set_lake=0._r8)
+
+    call add_fld1d (fname='FRMS', units='umol/m2s',  &
+         avgflag='A', long_name='stem maintenance respiration', &
+         ptr_pft=clm3%g%l%c%p%pcf%frms, set_lake=0._r8)
+
+    call add_fld1d (fname='FRMR', units='umol/m2s',  &
+         avgflag='A', long_name='root maintenance respiration', &
+         ptr_pft=clm3%g%l%c%p%pcf%frmr, set_lake=0._r8)
+
+    call add_fld1d (fname='FRMF', units='umol/m2s',  &
+         avgflag='A', long_name='foliage maintenance respiration', &
+         ptr_pft=clm3%g%l%c%p%pcf%frmf, set_lake=0._r8)
+
+    call add_fld1d (fname='FRG', units='umol/m2s',  &
+         avgflag='A', long_name='growth respiration', &
+         ptr_pft=clm3%g%l%c%p%pcf%frg, set_lake=0._r8)
+
+    call add_fld1d (fname='FCO2', units='umol/m2s',  &
+         avgflag='A', long_name='net CO2 flux', &
+         ptr_pft=clm3%g%l%c%p%pcf%fco2, set_lake=0._r8)
+
+    call add_fld1d (fname='DMI', units='umol/m2s',  &
+         avgflag='A', long_name='net primary production', &
+         ptr_pft=clm3%g%l%c%p%pcf%dmi, set_lake=0._r8)
+
+    call add_fld1d (fname='HTOP', units='m',  &
+         avgflag='A', long_name='height of top of canopy', &
+         ptr_pft=clm3%g%l%c%p%pps%htop)
+
+    call add_fld1d (fname='HBOT', units='m',  &
+         avgflag='A', long_name='height of bottom of canopy', &
+         ptr_pft=clm3%g%l%c%p%pps%hbot)
+
+    call add_fld1d (fname='TLAI', units='m^2/m^2', &
+          avgflag='A', long_name='total one-sided leaf area index', &
+         ptr_pft=clm3%g%l%c%p%pps%tlai)
+
+    call add_fld1d (fname='TSAI', units='m^2/m^2', &
+          avgflag='A', long_name='total one-sided stem area index', &
+         ptr_pft=clm3%g%l%c%p%pps%tsai)
+
+    call add_fld1d (fname='TDA', units='K',  &
+         avgflag='A', long_name='daily average 2-m temperature', &
+         ptr_pft=clm3%g%l%c%p%pdgvs%t_mo)
+
+    call add_fld1d (fname='T10', units='K',  &
+         avgflag='A', long_name='10-day running mean of 2-m temperature', &
+         ptr_pft=clm3%g%l%c%p%pdgvs%t10)
+
+    call add_fld1d (fname='AGDD0', units='K',  &
+         avgflag='A', long_name='growing degree-days base 0C', &
+         ptr_pft=clm3%g%l%c%p%pdgvs%agdd0)
+
+    call add_fld1d (fname='AGDD5', units='K',  &
+         avgflag='A', long_name='growing degree-days base 5C', &
+         ptr_pft=clm3%g%l%c%p%pdgvs%agdd5)
+#endif
+
+#if (defined CN)
+    ! add history fields for all CN variables, always set as default='inactive'
+    
+    !-------------------------------
+    ! C state variables - native to PFT 
+    !-------------------------------
+    
+    call add_fld1d (fname='LEAFC', units='gC/m^2', &
+         avgflag='A', long_name='leaf C', &
+         ptr_pft=clm3%g%l%c%p%pcs%leafc)
+
+    call add_fld1d (fname='LEAFC_STORAGE', units='gC/m^2', &
+         avgflag='A', long_name='leaf C storage', &
+         ptr_pft=clm3%g%l%c%p%pcs%leafc_storage, default='inactive')
+
+    call add_fld1d (fname='LEAFC_XFER', units='gC/m^2', &
+         avgflag='A', long_name='leaf C transfer', &
+         ptr_pft=clm3%g%l%c%p%pcs%leafc_xfer, default='inactive')
+
+    call add_fld1d (fname='FROOTC', units='gC/m^2', &
+         avgflag='A', long_name='fine root C', &
+         ptr_pft=clm3%g%l%c%p%pcs%frootc)
+
+    call add_fld1d (fname='FROOTC_STORAGE', units='gC/m^2', &
+         avgflag='A', long_name='fine root C storage', &
+         ptr_pft=clm3%g%l%c%p%pcs%frootc_storage, default='inactive')
+
+    call add_fld1d (fname='FROOTC_XFER', units='gC/m^2', &
+         avgflag='A', long_name='fine root C transfer', &
+         ptr_pft=clm3%g%l%c%p%pcs%frootc_xfer, default='inactive')
+
+    call add_fld1d (fname='LIVESTEMC', units='gC/m^2', &
+         avgflag='A', long_name='live stem C', &
+         ptr_pft=clm3%g%l%c%p%pcs%livestemc)
+
+    call add_fld1d (fname='LIVESTEMC_STORAGE', units='gC/m^2', &
+         avgflag='A', long_name='live stem C storage', &
+         ptr_pft=clm3%g%l%c%p%pcs%livestemc_storage, default='inactive')
+
+    call add_fld1d (fname='LIVESTEMC_XFER', units='gC/m^2', &
+         avgflag='A', long_name='live stem C transfer', &
+         ptr_pft=clm3%g%l%c%p%pcs%livestemc_xfer, default='inactive')
+
+    call add_fld1d (fname='DEADSTEMC', units='gC/m^2', &
+         avgflag='A', long_name='dead stem C', &
+         ptr_pft=clm3%g%l%c%p%pcs%deadstemc)
+
+    call add_fld1d (fname='DEADSTEMC_STORAGE', units='gC/m^2', &
+         avgflag='A', long_name='dead stem C storage', &
+         ptr_pft=clm3%g%l%c%p%pcs%deadstemc_storage, default='inactive')
+
+    call add_fld1d (fname='DEADSTEMC_XFER', units='gC/m^2', &
+         avgflag='A', long_name='dead stem C transfer', &
+         ptr_pft=clm3%g%l%c%p%pcs%deadstemc_xfer, default='inactive')
+
+    call add_fld1d (fname='LIVECROOTC', units='gC/m^2', &
+         avgflag='A', long_name='live coarse root C', &
+         ptr_pft=clm3%g%l%c%p%pcs%livecrootc)
+
+    call add_fld1d (fname='LIVECROOTC_STORAGE', units='gC/m^2', &
+         avgflag='A', long_name='live coarse root C storage', &
+         ptr_pft=clm3%g%l%c%p%pcs%livecrootc_storage, default='inactive')
+
+    call add_fld1d (fname='LIVECROOTC_XFER', units='gC/m^2', &
+         avgflag='A', long_name='live coarse root C transfer', &
+         ptr_pft=clm3%g%l%c%p%pcs%livecrootc_xfer, default='inactive')
+
+    call add_fld1d (fname='DEADCROOTC', units='gC/m^2', &
+         avgflag='A', long_name='dead coarse root C', &
+         ptr_pft=clm3%g%l%c%p%pcs%deadcrootc)
+
+    call add_fld1d (fname='DEADCROOTC_STORAGE', units='gC/m^2', &
+         avgflag='A', long_name='dead coarse root C storage', &
+         ptr_pft=clm3%g%l%c%p%pcs%deadcrootc_storage,  default='inactive')
+
+    call add_fld1d (fname='DEADCROOTC_XFER', units='gC/m^2', &
+         avgflag='A', long_name='dead coarse root C transfer', &
+         ptr_pft=clm3%g%l%c%p%pcs%deadcrootc_xfer, default='inactive')
+
+    call add_fld1d (fname='GRESP_STORAGE', units='gC/m^2', &
+         avgflag='A', long_name='growth respiration storage', &
+         ptr_pft=clm3%g%l%c%p%pcs%gresp_storage, default='inactive')
+
+    call add_fld1d (fname='GRESP_XFER', units='gC/m^2', &
+         avgflag='A', long_name='growth respiration transfer', &
+         ptr_pft=clm3%g%l%c%p%pcs%gresp_xfer, default='inactive')
+
+    call add_fld1d (fname='CPOOL', units='gC/m^2', &
+         avgflag='A', long_name='temporary photosynthate C pool', &
+         ptr_pft=clm3%g%l%c%p%pcs%cpool)
+
+    call add_fld1d (fname='PFT_CTRUNC', units='gC/m^2', &
+         avgflag='A', long_name='pft-level sink for C truncation', &
+         ptr_pft=clm3%g%l%c%p%pcs%pft_ctrunc)
+
+    call add_fld1d (fname='DISPVEGC', units='gC/m^2', &
+         avgflag='A', long_name='displayed veg carbon, excluding storage and cpool', &
+         ptr_pft=clm3%g%l%c%p%pcs%dispvegc)
+
+    call add_fld1d (fname='STORVEGC', units='gC/m^2', &
+         avgflag='A', long_name='stored vegetation carbon, excluding cpool', &
+         ptr_pft=clm3%g%l%c%p%pcs%storvegc)
+
+    call add_fld1d (fname='TOTVEGC', units='gC/m^2', &
+         avgflag='A', long_name='total vegetation carbon, excluding cpool', &
+         ptr_pft=clm3%g%l%c%p%pcs%totvegc)
+
+    call add_fld1d (fname='TOTPFTC', units='gC/m^2', &
+         avgflag='A', long_name='total pft-level carbon, including cpool', &
+         ptr_pft=clm3%g%l%c%p%pcs%totpftc)
+
+    !-------------------------------
+    ! C13 state variables - native to PFT 
+    !-------------------------------
+    
+    call add_fld1d (fname='C13_LEAFC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 leaf C', &
+         ptr_pft=clm3%g%l%c%p%pc13s%leafc)
+
+    call add_fld1d (fname='C13_LEAFC_STORAGE', units='gC13/m^2', &
+         avgflag='A', long_name='C13 leaf C storage', &
+         ptr_pft=clm3%g%l%c%p%pc13s%leafc_storage, default='inactive')
+
+    call add_fld1d (fname='C13_LEAFC_XFER', units='gC13/m^2', &
+         avgflag='A', long_name='C13 leaf C transfer', &
+         ptr_pft=clm3%g%l%c%p%pc13s%leafc_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_FROOTC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 fine root C', &
+         ptr_pft=clm3%g%l%c%p%pc13s%frootc)
+
+    call add_fld1d (fname='C13_FROOTC_STORAGE', units='gC13/m^2', &
+         avgflag='A', long_name='C13 fine root C storage', &
+         ptr_pft=clm3%g%l%c%p%pc13s%frootc_storage, default='inactive')
+
+    call add_fld1d (fname='C13_FROOTC_XFER', units='gC13/m^2', &
+         avgflag='A', long_name='C13 fine root C transfer', &
+         ptr_pft=clm3%g%l%c%p%pc13s%frootc_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_LIVESTEMC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 live stem C', &
+         ptr_pft=clm3%g%l%c%p%pc13s%livestemc)
+
+    call add_fld1d (fname='C13_LIVESTEMC_STORAGE', units='gC13/m^2', &
+         avgflag='A', long_name='C13 live stem C storage', &
+         ptr_pft=clm3%g%l%c%p%pc13s%livestemc_storage, default='inactive')
+
+    call add_fld1d (fname='C13_LIVESTEMC_XFER', units='gC13/m^2', &
+         avgflag='A', long_name='C13 live stem C transfer', &
+         ptr_pft=clm3%g%l%c%p%pc13s%livestemc_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_DEADSTEMC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 dead stem C', &
+         ptr_pft=clm3%g%l%c%p%pc13s%deadstemc)
+
+    call add_fld1d (fname='C13_DEADSTEMC_STORAGE', units='gC13/m^2', &
+         avgflag='A', long_name='C13 dead stem C storage', &
+         ptr_pft=clm3%g%l%c%p%pc13s%deadstemc_storage, default='inactive')
+
+    call add_fld1d (fname='C13_DEADSTEMC_XFER', units='gC13/m^2', &
+         avgflag='A', long_name='C13 dead stem C transfer', &
+         ptr_pft=clm3%g%l%c%p%pc13s%deadstemc_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_LIVECROOTC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 live coarse root C', &
+         ptr_pft=clm3%g%l%c%p%pc13s%livecrootc)
+
+    call add_fld1d (fname='C13_LIVECROOTC_STORAGE', units='gC13/m^2', &
+         avgflag='A', long_name='C13 live coarse root C storage', &
+         ptr_pft=clm3%g%l%c%p%pc13s%livecrootc_storage, default='inactive')
+
+    call add_fld1d (fname='C13_LIVECROOTC_XFER', units='gC13/m^2', &
+         avgflag='A', long_name='C13 live coarse root C transfer', &
+         ptr_pft=clm3%g%l%c%p%pc13s%livecrootc_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_DEADCROOTC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 dead coarse root C', &
+         ptr_pft=clm3%g%l%c%p%pc13s%deadcrootc)
+
+    call add_fld1d (fname='C13_DEADCROOTC_STORAGE', units='gC13/m^2', &
+         avgflag='A', long_name='C13 dead coarse root C storage', &
+         ptr_pft=clm3%g%l%c%p%pc13s%deadcrootc_storage,  default='inactive')
+
+    call add_fld1d (fname='C13_DEADCROOTC_XFER', units='gC13/m^2', &
+         avgflag='A', long_name='C13 dead coarse root C transfer', &
+         ptr_pft=clm3%g%l%c%p%pc13s%deadcrootc_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_GRESP_STORAGE', units='gC13/m^2', &
+         avgflag='A', long_name='C13 growth respiration storage', &
+         ptr_pft=clm3%g%l%c%p%pc13s%gresp_storage, default='inactive')
+
+    call add_fld1d (fname='C13_GRESP_XFER', units='gC13/m^2', &
+         avgflag='A', long_name='C13 growth respiration transfer', &
+         ptr_pft=clm3%g%l%c%p%pc13s%gresp_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL', units='gC13/m^2', &
+         avgflag='A', long_name='C13 temporary photosynthate C pool', &
+         ptr_pft=clm3%g%l%c%p%pc13s%cpool)
+
+    call add_fld1d (fname='C13_PFT_CTRUNC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 pft-level sink for C truncation', &
+         ptr_pft=clm3%g%l%c%p%pc13s%pft_ctrunc)
+
+    call add_fld1d (fname='C13_DISPVEGC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 displayed veg carbon, excluding storage and cpool', &
+         ptr_pft=clm3%g%l%c%p%pc13s%dispvegc)
+
+    call add_fld1d (fname='C13_STORVEGC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 stored vegetation carbon, excluding cpool', &
+         ptr_pft=clm3%g%l%c%p%pc13s%storvegc)
+
+    call add_fld1d (fname='C13_TOTVEGC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 total vegetation carbon, excluding cpool', &
+         ptr_pft=clm3%g%l%c%p%pc13s%totvegc)
+
+    call add_fld1d (fname='C13_TOTPFTC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 total pft-level carbon, including cpool', &
+         ptr_pft=clm3%g%l%c%p%pc13s%totpftc)
+
+    !-------------------------------
+    ! C state variables - native to column
+    !-------------------------------
+    
+    call add_fld1d (fname='CWDC', units='gC/m^2', &
+         avgflag='A', long_name='coarse woody debris C', &
+         ptr_col=clm3%g%l%c%ccs%cwdc)
+
+    call add_fld1d (fname='LITR1C', units='gC/m^2', &
+         avgflag='A', long_name='litter labile C', &
+         ptr_col=clm3%g%l%c%ccs%litr1c)
+
+    call add_fld1d (fname='LITR2C', units='gC/m^2', &
+         avgflag='A', long_name='litter cellulose C', &
+         ptr_col=clm3%g%l%c%ccs%litr2c)
+
+    call add_fld1d (fname='LITR3C', units='gC/m^2', &
+         avgflag='A', long_name='litter lignin C', &
+         ptr_col=clm3%g%l%c%ccs%litr3c)
+
+    call add_fld1d (fname='SOIL1C', units='gC/m^2', &
+         avgflag='A', long_name='soil organic matter C (fast pool)', &
+         ptr_col=clm3%g%l%c%ccs%soil1c)
+
+    call add_fld1d (fname='SOIL2C', units='gC/m^2', &
+         avgflag='A', long_name='soil organic matter C (medium pool)', &
+         ptr_col=clm3%g%l%c%ccs%soil2c)
+
+    call add_fld1d (fname='SOIL3C', units='gC/m^2', &
+         avgflag='A', long_name='soil organic matter C (slow pool)', &
+         ptr_col=clm3%g%l%c%ccs%soil3c)
+    
+    call add_fld1d (fname='COL_CTRUNC', units='gC/m^2', &
+         avgflag='A', long_name='column-level sink for C truncation', &
+         ptr_col=clm3%g%l%c%ccs%col_ctrunc)
+    
+    call add_fld1d (fname='TOTLITC', units='gC/m^2', &
+         avgflag='A', long_name='total litter carbon', &
+         ptr_col=clm3%g%l%c%ccs%totlitc)
+    
+    call add_fld1d (fname='TOTSOMC', units='gC/m^2', &
+         avgflag='A', long_name='total soil organic matter carbon', &
+         ptr_col=clm3%g%l%c%ccs%totsomc)
+    
+    call add_fld1d (fname='TOTECOSYSC', units='gC/m^2', &
+         avgflag='A', long_name='total ecosystem carbon, incl veg but excl cpool', &
+         ptr_col=clm3%g%l%c%ccs%totecosysc)
+    
+    call add_fld1d (fname='TOTCOLC', units='gC/m^2', &
+         avgflag='A', long_name='total column carbon, incl veg and cpool', &
+         ptr_col=clm3%g%l%c%ccs%totcolc)
+    
+    !-------------------------------
+    ! C13 state variables - native to column
+    !-------------------------------
+    
+    call add_fld1d (fname='C13_CWDC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 coarse woody debris C', &
+         ptr_col=clm3%g%l%c%cc13s%cwdc)
+
+    call add_fld1d (fname='C13_LITR1C', units='gC13/m^2', &
+         avgflag='A', long_name='C13 litter labile C', &
+         ptr_col=clm3%g%l%c%cc13s%litr1c)
+
+    call add_fld1d (fname='C13_LITR2C', units='gC13/m^2', &
+         avgflag='A', long_name='C13 litter cellulose C', &
+         ptr_col=clm3%g%l%c%cc13s%litr2c)
+
+    call add_fld1d (fname='C13_LITR3C', units='gC13/m^2', &
+         avgflag='A', long_name='C13 litter lignin C', &
+         ptr_col=clm3%g%l%c%cc13s%litr3c)
+
+    call add_fld1d (fname='C13_SOIL1C', units='gC13/m^2', &
+         avgflag='A', long_name='C13 soil organic matter C (fast pool)', &
+         ptr_col=clm3%g%l%c%cc13s%soil1c)
+
+    call add_fld1d (fname='C13_SOIL2C', units='gC13/m^2', &
+         avgflag='A', long_name='C13 soil organic matter C (medium pool)', &
+         ptr_col=clm3%g%l%c%cc13s%soil2c)
+
+    call add_fld1d (fname='C13_SOIL3C', units='gC13/m^2', &
+         avgflag='A', long_name='C13 soil organic matter C (slow pool)', &
+         ptr_col=clm3%g%l%c%cc13s%soil3c)
+    
+    call add_fld1d (fname='C13_COL_CTRUNC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 column-level sink for C truncation', &
+         ptr_col=clm3%g%l%c%cc13s%col_ctrunc)
+    
+    call add_fld1d (fname='C13_TOTLITC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 total litter carbon', &
+         ptr_col=clm3%g%l%c%cc13s%totlitc)
+    
+    call add_fld1d (fname='C13_TOTSOMC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 total soil organic matter carbon', &
+         ptr_col=clm3%g%l%c%cc13s%totsomc)
+    
+    call add_fld1d (fname='C13_TOTECOSYSC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 total ecosystem carbon, incl veg but excl cpool', &
+         ptr_col=clm3%g%l%c%cc13s%totecosysc)
+    
+    call add_fld1d (fname='C13_TOTCOLC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 total column carbon, incl veg and cpool', &
+         ptr_col=clm3%g%l%c%cc13s%totcolc)
+
+    !-------------------------------
+    ! N state variables - native to PFT
+    !-------------------------------
+
+    call add_fld1d (fname='LEAFN', units='gN/m^2', &
+         avgflag='A', long_name='leaf N', &
+         ptr_pft=clm3%g%l%c%p%pns%leafn)
+
+    call add_fld1d (fname='LEAFN_STORAGE', units='gN/m^2', &
+         avgflag='A', long_name='leaf N storage', &
+         ptr_pft=clm3%g%l%c%p%pns%leafn_storage, default='inactive')
+
+    call add_fld1d (fname='LEAFN_XFER', units='gN/m^2', &
+         avgflag='A', long_name='leaf N transfer', &
+         ptr_pft=clm3%g%l%c%p%pns%leafn_xfer, default='inactive')
+
+    call add_fld1d (fname='FROOTN', units='gN/m^2', &
+         avgflag='A', long_name='fine root N', &
+         ptr_pft=clm3%g%l%c%p%pns%frootn)
+
+    call add_fld1d (fname='FROOTN_STORAGE', units='gN/m^2', &
+         avgflag='A', long_name='fine root N storage', &
+         ptr_pft=clm3%g%l%c%p%pns%frootn_storage, default='inactive')
+
+    call add_fld1d (fname='FROOTN_XFER', units='gN/m^2', &
+         avgflag='A', long_name='fine root N transfer', &
+         ptr_pft=clm3%g%l%c%p%pns%frootn_xfer, default='inactive')
+
+    call add_fld1d (fname='LIVESTEMN', units='gN/m^2', &
+         avgflag='A', long_name='live stem N', &
+         ptr_pft=clm3%g%l%c%p%pns%livestemn)
+
+    call add_fld1d (fname='LIVESTEMN_STORAGE', units='gN/m^2', &
+         avgflag='A', long_name='live stem N storage', &
+         ptr_pft=clm3%g%l%c%p%pns%livestemn_storage, default='inactive')
+
+    call add_fld1d (fname='LIVESTEMN_XFER', units='gN/m^2', &
+         avgflag='A', long_name='live stem N transfer', &
+         ptr_pft=clm3%g%l%c%p%pns%livestemn_xfer, default='inactive')
+
+    call add_fld1d (fname='DEADSTEMN', units='gN/m^2', &
+         avgflag='A', long_name='dead stem N', &
+         ptr_pft=clm3%g%l%c%p%pns%deadstemn)
+
+    call add_fld1d (fname='DEADSTEMN_STORAGE', units='gN/m^2', &
+         avgflag='A', long_name='dead stem N storage', &
+         ptr_pft=clm3%g%l%c%p%pns%deadstemn_storage, default='inactive')
+
+    call add_fld1d (fname='DEADSTEMN_XFER', units='gN/m^2', &
+         avgflag='A', long_name='dead stem N transfer', &
+         ptr_pft=clm3%g%l%c%p%pns%deadstemn_xfer, default='inactive')
+
+    call add_fld1d (fname='LIVECROOTN', units='gN/m^2', &
+         avgflag='A', long_name='live coarse root N', &
+         ptr_pft=clm3%g%l%c%p%pns%livecrootn)
+
+    call add_fld1d (fname='LIVECROOTN_STORAGE', units='gN/m^2', &
+         avgflag='A', long_name='live coarse root N storage', &
+         ptr_pft=clm3%g%l%c%p%pns%livecrootn_storage, default='inactive')
+
+    call add_fld1d (fname='LIVECROOTN_XFER', units='gN/m^2', &
+         avgflag='A', long_name='live coarse root N transfer', &
+         ptr_pft=clm3%g%l%c%p%pns%livecrootn_xfer, default='inactive')
+
+    call add_fld1d (fname='DEADCROOTN', units='gN/m^2', &
+         avgflag='A', long_name='dead coarse root N', &
+         ptr_pft=clm3%g%l%c%p%pns%deadcrootn)
+
+    call add_fld1d (fname='DEADCROOTN_STORAGE', units='gN/m^2', &
+         avgflag='A', long_name='dead coarse root N storage', &
+         ptr_pft=clm3%g%l%c%p%pns%deadcrootn_storage, default='inactive')
+
+    call add_fld1d (fname='DEADCROOTN_XFER', units='gN/m^2', &
+         avgflag='A', long_name='dead coarse root N transfer', &
+         ptr_pft=clm3%g%l%c%p%pns%deadcrootn_xfer, default='inactive')
+
+    call add_fld1d (fname='RETRANSN', units='gN/m^2', &
+         avgflag='A', long_name='plant pool of retranslocated N', &
+         ptr_pft=clm3%g%l%c%p%pns%retransn)
+
+    call add_fld1d (fname='NPOOL', units='gN/m^2', &
+         avgflag='A', long_name='temporary plant N pool', &
+         ptr_pft=clm3%g%l%c%p%pns%npool, default='inactive')
+
+    call add_fld1d (fname='PFT_NTRUNC', units='gN/m^2', &
+         avgflag='A', long_name='pft-level sink for N truncation', &
+         ptr_pft=clm3%g%l%c%p%pns%pft_ntrunc)
+
+    call add_fld1d (fname='DISPVEGN', units='gN/m^2', &
+         avgflag='A', long_name='displayed vegetation nitrogen', &
+         ptr_pft=clm3%g%l%c%p%pns%dispvegn)
+
+    call add_fld1d (fname='STORVEGN', units='gN/m^2', &
+         avgflag='A', long_name='stored vegetation nitrogen', &
+         ptr_pft=clm3%g%l%c%p%pns%storvegn)
+
+    call add_fld1d (fname='TOTVEGN', units='gN/m^2', &
+         avgflag='A', long_name='total vegetation nitrogen', &
+         ptr_pft=clm3%g%l%c%p%pns%totvegn)
+
+    call add_fld1d (fname='TOTPFTN', units='gN/m^2', &
+         avgflag='A', long_name='total PFT-level nitrogen', &
+         ptr_pft=clm3%g%l%c%p%pns%totpftn)
+
+    !-------------------------------
+    ! N state variables - native to column
+    !-------------------------------
+
+    call add_fld1d (fname='CWDN', units='gN/m^2', &
+         avgflag='A', long_name='coarse woody debris N', &
+         ptr_col=clm3%g%l%c%cns%cwdn)
+
+    call add_fld1d (fname='LITR1N', units='gN/m^2', &
+         avgflag='A', long_name='litter labile N', &
+         ptr_col=clm3%g%l%c%cns%litr1n)
+
+    call add_fld1d (fname='LITR2N', units='gN/m^2', &
+         avgflag='A', long_name='litter cellulose N', &
+         ptr_col=clm3%g%l%c%cns%litr2n)
+
+    call add_fld1d (fname='LITR3N', units='gN/m^2', &
+         avgflag='A', long_name='litter lignin N', &
+         ptr_col=clm3%g%l%c%cns%litr3n)
+
+    call add_fld1d (fname='SOIL1N', units='gN/m^2', &
+         avgflag='A', long_name='soil organic matter N (fast pool)', &
+         ptr_col=clm3%g%l%c%cns%soil1n)
+
+    call add_fld1d (fname='SOIL2N', units='gN/m^2', &
+         avgflag='A', long_name='soil organic matter N (medium pool)', &
+         ptr_col=clm3%g%l%c%cns%soil2n)
+
+    call add_fld1d (fname='SOIL3N', units='gN/m^2', &
+         avgflag='A', long_name='soil orgainc matter N (slow pool)', &
+         ptr_col=clm3%g%l%c%cns%soil3n)
+
+    call add_fld1d (fname='SMINN', units='gN/m^2', &
+         avgflag='A', long_name='soil mineral N', &
+         ptr_col=clm3%g%l%c%cns%sminn)
+
+    call add_fld1d (fname='COL_NTRUNC', units='gN/m^2', &
+         avgflag='A', long_name='column-level sink for N truncation', &
+         ptr_col=clm3%g%l%c%cns%col_ntrunc)
+
+    call add_fld1d (fname='TOTLITN', units='gN/m^2', &
+         avgflag='A', long_name='total litter N', &
+         ptr_col=clm3%g%l%c%cns%totlitn)
+
+    call add_fld1d (fname='TOTSOMN', units='gN/m^2', &
+         avgflag='A', long_name='total soil organic matter N', &
+         ptr_col=clm3%g%l%c%cns%totsomn)
+
+    call add_fld1d (fname='TOTECOSYSN', units='gN/m^2', &
+         avgflag='A', long_name='total ecosystem N', &
+         ptr_col=clm3%g%l%c%cns%totecosysn)
+
+    call add_fld1d (fname='TOTCOLN', units='gN/m^2', &
+         avgflag='A', long_name='total column-level N', &
+         ptr_col=clm3%g%l%c%cns%totcoln)
+
+    !-------------------------------
+    ! C flux variables - native to PFT
+    !-------------------------------
+
+    call add_fld1d (fname='PSNSUN', units='umolCO2/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%psnsun, default='inactive')
+
+    call add_fld1d (fname='PSNSHA', units='umolCO2/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%psnsha, default='inactive')
+
+    call add_fld1d (fname='M_LEAFC_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_leafc_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_FROOTC_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LEAFC_STORAGE_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_leafc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_FROOTC_STORAGE_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMC_STORAGE_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMC_STORAGE_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTC_STORAGE_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTC_STORAGE_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LEAFC_XFER_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_leafc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_FROOTC_XFER_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMC_XFER_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMC_XFER_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTC_XFER_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTC_XFER_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMC_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMC_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTC_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTC_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_GRESP_STORAGE_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_gresp_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_GRESP_XFER_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_gresp_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LEAFC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_leafc_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_FROOTC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LEAFC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_leafc_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_FROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_storage_to_fire,  default='inactive')
+
+    call add_fld1d (fname='M_LEAFC_XFER_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_leafc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_FROOTC_XFER_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_frootc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMC_XFER_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMC_XFER_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTC_XFER_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTC_XFER_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMC_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_to_litter_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTC_TO_LITTER_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_to_litter_fire, default='inactive')
+
+    call add_fld1d (fname='M_GRESP_STORAGE_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_gresp_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_GRESP_XFER_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%m_gresp_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='LEAFC_XFER_TO_LEAFC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%leafc_xfer_to_leafc, default='inactive')
+
+    call add_fld1d (fname='FROOTC_XFER_TO_FROOTC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%frootc_xfer_to_frootc, default='inactive')
+
+    call add_fld1d (fname='LIVESTEMC_XFER_TO_LIVESTEMC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%livestemc_xfer_to_livestemc, default='inactive')
+
+    call add_fld1d (fname='DEADSTEMC_XFER_TO_DEADSTEMC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%deadstemc_xfer_to_deadstemc, default='inactive')
+
+    call add_fld1d (fname='LIVECROOTC_XFER_TO_LIVECROOTC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%livecrootc_xfer_to_livecrootc, default='inactive')
+
+    call add_fld1d (fname='DEADCROOTC_XFER_TO_DEADCROOTC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%deadcrootc_xfer_to_deadcrootc, default='inactive')
+
+    call add_fld1d (fname='LEAFC_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%leafc_to_litter, default='inactive')
+
+    call add_fld1d (fname='FROOTC_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%frootc_to_litter, default='inactive')
+
+    call add_fld1d (fname='LEAF_MR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%leaf_mr, default='inactive')
+
+    call add_fld1d (fname='FROOT_MR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%froot_mr, default='inactive')
+
+    call add_fld1d (fname='LIVESTEM_MR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%livestem_mr, default='inactive')
+
+    call add_fld1d (fname='LIVECROOT_MR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%livecroot_mr, default='inactive')
+
+    call add_fld1d (fname='PSNSUN_TO_CPOOL', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%psnsun_to_cpool, default='inactive')
+
+    call add_fld1d (fname='PSNSHADE_TO_CPOOL', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%psnshade_to_cpool, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_LEAFC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_leafc, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_LEAFC_STORAGE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_leafc_storage, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_FROOTC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_frootc, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_FROOTC_STORAGE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_frootc_storage, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_LIVESTEMC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_livestemc, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_LIVESTEMC_STORAGE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_livestemc_storage, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_DEADSTEMC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_deadstemc, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_DEADSTEMC_STORAGE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_deadstemc_storage, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_LIVECROOTC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_livecrootc, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_LIVECROOTC_STORAGE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_livecrootc_storage, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_DEADCROOTC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_deadcrootc, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_DEADCROOTC_STORAGE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_deadcrootc_storage, default='inactive')
+
+    call add_fld1d (fname='CPOOL_TO_GRESP_STORAGE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_to_gresp_storage, default='inactive')
+
+    call add_fld1d (fname='CPOOL_LEAF_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_leaf_gr, default='inactive')
+
+    call add_fld1d (fname='CPOOL_LEAF_STORAGE_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_leaf_storage_gr, default='inactive')
+
+    call add_fld1d (fname='TRANSFER_LEAF_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%transfer_leaf_gr, default='inactive')
+
+    call add_fld1d (fname='CPOOL_FROOT_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_froot_gr, default='inactive')
+
+    call add_fld1d (fname='CPOOL_FROOT_STORAGE_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_froot_storage_gr, default='inactive')
+
+    call add_fld1d (fname='TRANSFER_FROOT_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%transfer_froot_gr, default='inactive')
+
+    call add_fld1d (fname='CPOOL_LIVESTEM_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_livestem_gr, default='inactive')
+
+    call add_fld1d (fname='CPOOL_LIVESTEM_STORAGE_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_livestem_storage_gr, default='inactive')
+
+    call add_fld1d (fname='TRANSFER_LIVESTEM_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%transfer_livestem_gr, default='inactive')
+
+    call add_fld1d (fname='CPOOL_DEADSTEM_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_deadstem_gr, default='inactive')
+
+    call add_fld1d (fname='CPOOL_DEADSTEM_STORAGE_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_deadstem_storage_gr, default='inactive')
+
+    call add_fld1d (fname='TRANSFER_DEADSTEM_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%transfer_deadstem_gr, default='inactive')
+
+    call add_fld1d (fname='CPOOL_LIVECROOT_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_livecroot_gr, default='inactive')
+
+    call add_fld1d (fname='CPOOL_LIVECROOT_STORAGE_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_livecroot_storage_gr, default='inactive')
+
+    call add_fld1d (fname='TRANSFER_LIVECROOT_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%transfer_livecroot_gr, default='inactive')
+
+    call add_fld1d (fname='CPOOL_DEADCROOT_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_deadcroot_gr, default='inactive')
+
+    call add_fld1d (fname='CPOOL_DEADCROOT_STORAGE_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%cpool_deadcroot_storage_gr, default='inactive')
+
+    call add_fld1d (fname='TRANSFER_DEADCROOT_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%transfer_deadcroot_gr, default='inactive')
+
+    call add_fld1d (fname='LEAFC_STORAGE_TO_XFER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%leafc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='FROOTC_STORAGE_TO_XFER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%frootc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='LIVESTEMC_STORAGE_TO_XFER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%livestemc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='DEADSTEMC_STORAGE_TO_XFER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%deadstemc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='LIVECROOTC_STORAGE_TO_XFER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%livecrootc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='DEADCROOTC_STORAGE_TO_XFER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%deadcrootc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='GRESP_STORAGE_TO_XFER', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%gresp_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='LIVESTEMC_TO_DEADSTEMC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%livestemc_to_deadstemc, default='inactive')
+
+    call add_fld1d (fname='LIVECROOTC_TO_DEADCROOTC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pcf%livecrootc_to_deadcrootc, default='inactive')
+
+    call add_fld1d (fname='GPP', units='gC/m^2/s', &
+         avgflag='A', long_name='gross primary production', &
+         ptr_pft=clm3%g%l%c%p%pcf%gpp)
+
+    call add_fld1d (fname='MR', units='gC/m^2/s', &
+         avgflag='A', long_name='maintenance respiration', &
+         ptr_pft=clm3%g%l%c%p%pcf%mr)
+
+    call add_fld1d (fname='CURRENT_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='growth resp for new growth displayed in this timestep', &
+         ptr_pft=clm3%g%l%c%p%pcf%current_gr, default='inactive')
+
+    call add_fld1d (fname='TRANSFER_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='growth resp for transfer growth displayed in this timestep', &
+         ptr_pft=clm3%g%l%c%p%pcf%transfer_gr, default='inactive')
+
+    call add_fld1d (fname='STORAGE_GR', units='gC/m^2/s', &
+         avgflag='A', long_name='growth resp for growth sent to storage for later display', &
+         ptr_pft=clm3%g%l%c%p%pcf%storage_gr, default='inactive')
+
+    call add_fld1d (fname='GR', units='gC/m^2/s', &
+         avgflag='A', long_name='total growth respiration', &
+         ptr_pft=clm3%g%l%c%p%pcf%gr)
+
+    call add_fld1d (fname='AR', units='gC/m^2/s', &
+         avgflag='A', long_name='autotrophic respiration (MR + GR)', &
+         ptr_pft=clm3%g%l%c%p%pcf%ar)
+
+    call add_fld1d (fname='RR', units='gC/m^2/s', &
+         avgflag='A', long_name='root respiration (fine root MR + total root GR)', &
+         ptr_pft=clm3%g%l%c%p%pcf%rr)
+
+    call add_fld1d (fname='NPP', units='gC/m^2/s', &
+         avgflag='A', long_name='net primary production', &
+         ptr_pft=clm3%g%l%c%p%pcf%npp)
+
+    call add_fld1d (fname='AGNPP', units='gC/m^2/s', &
+         avgflag='A', long_name='aboveground NPP', &
+         ptr_pft=clm3%g%l%c%p%pcf%agnpp)
+
+    call add_fld1d (fname='BGNPP', units='gC/m^2/s', &
+         avgflag='A', long_name='belowground NPP', &
+         ptr_pft=clm3%g%l%c%p%pcf%bgnpp)
+
+    call add_fld1d (fname='LITFALL', units='gC/m^2/s', &
+         avgflag='A', long_name='litterfall (leaves and fine roots)', &
+         ptr_pft=clm3%g%l%c%p%pcf%litfall, default='inactive')
+
+    call add_fld1d (fname='VEGFIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='pft-level fire loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%vegfire, default='inactive')
+
+    call add_fld1d (fname='PFT_FIRE_CLOSS', units='gC/m^2/s', &
+         avgflag='A', long_name='total pft-level fire C loss', &
+         ptr_pft=clm3%g%l%c%p%pcf%pft_fire_closs)
+
+    !-------------------------------
+    ! C13 flux variables - native to PFT
+    !-------------------------------
+
+    call add_fld1d (fname='C13_PSNSUN', units='umolCO2/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%psnsun, default='inactive')
+
+    call add_fld1d (fname='C13_PSNSHA', units='umolCO2/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%psnsha, default='inactive')
+
+    call add_fld1d (fname='C13_M_LEAFC_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_FROOTC_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_LEAFC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_FROOTC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVESTEMC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADSTEMC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVECROOTC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADCROOTC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_LEAFC_XFER_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_FROOTC_XFER_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVESTEMC_XFER_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADSTEMC_XFER_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVECROOTC_XFER_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADCROOTC_XFER_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVESTEMC_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADSTEMC_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVECROOTC_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADCROOTC_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_GRESP_STORAGE_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_gresp_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_GRESP_XFER_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_gresp_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_M_LEAFC_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_FROOTC_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_LEAFC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_FROOTC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVESTEMC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADSTEMC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVECROOTC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADCROOTC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_storage_to_fire,  default='inactive')
+
+    call add_fld1d (fname='C13_M_LEAFC_XFER_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_FROOTC_XFER_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVESTEMC_XFER_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADSTEMC_XFER_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVECROOTC_XFER_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADCROOTC_XFER_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVESTEMC_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADSTEMC_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADSTEMC_TO_LITTER_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_to_litter_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVECROOTC_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADCROOTC_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADCROOTC_TO_LITTER_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_to_litter_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_GRESP_STORAGE_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_gresp_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_GRESP_XFER_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%m_gresp_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_LEAFC_XFER_TO_LEAFC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%leafc_xfer_to_leafc, default='inactive')
+
+    call add_fld1d (fname='C13_FROOTC_XFER_TO_FROOTC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%frootc_xfer_to_frootc, default='inactive')
+
+    call add_fld1d (fname='C13_LIVESTEMC_XFER_TO_LIVESTEMC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%livestemc_xfer_to_livestemc, default='inactive')
+
+    call add_fld1d (fname='C13_DEADSTEMC_XFER_TO_DEADSTEMC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%deadstemc_xfer_to_deadstemc, default='inactive')
+
+    call add_fld1d (fname='C13_LIVECROOTC_XFER_TO_LIVECROOTC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%livecrootc_xfer_to_livecrootc, default='inactive')
+
+    call add_fld1d (fname='C13_DEADCROOTC_XFER_TO_DEADCROOTC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%deadcrootc_xfer_to_deadcrootc, default='inactive')
+
+    call add_fld1d (fname='C13_LEAFC_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%leafc_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_FROOTC_TO_LITTER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%frootc_to_litter, default='inactive')
+
+    call add_fld1d (fname='C13_LEAF_MR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%leaf_mr, default='inactive')
+
+    call add_fld1d (fname='C13_FROOT_MR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%froot_mr, default='inactive')
+
+    call add_fld1d (fname='C13_LIVESTEM_MR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%livestem_mr, default='inactive')
+
+    call add_fld1d (fname='C13_LIVECROOT_MR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%livecroot_mr, default='inactive')
+
+    call add_fld1d (fname='C13_PSNSUN_TO_CPOOL', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%psnsun_to_cpool, default='inactive')
+
+    call add_fld1d (fname='C13_PSNSHADE_TO_CPOOL', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%psnshade_to_cpool, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_LEAFC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_leafc, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_LEAFC_STORAGE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_leafc_storage, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_FROOTC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_frootc, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_FROOTC_STORAGE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_frootc_storage, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_LIVESTEMC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_livestemc, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_LIVESTEMC_STORAGE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_livestemc_storage, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_DEADSTEMC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_deadstemc, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_DEADSTEMC_STORAGE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_deadstemc_storage, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_LIVECROOTC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_livecrootc, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_LIVECROOTC_STORAGE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_livecrootc_storage, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_DEADCROOTC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_deadcrootc, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_DEADCROOTC_STORAGE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_deadcrootc_storage, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_TO_GRESP_STORAGE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_gresp_storage, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_LEAF_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_leaf_gr, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_LEAF_STORAGE_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_leaf_storage_gr, default='inactive')
+
+    call add_fld1d (fname='C13_TRANSFER_LEAF_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%transfer_leaf_gr, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_FROOT_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_froot_gr, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_FROOT_STORAGE_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_froot_storage_gr, default='inactive')
+
+    call add_fld1d (fname='C13_TRANSFER_FROOT_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%transfer_froot_gr, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_LIVESTEM_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_livestem_gr, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_LIVESTEM_STORAGE_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_livestem_storage_gr, default='inactive')
+
+    call add_fld1d (fname='C13_TRANSFER_LIVESTEM_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%transfer_livestem_gr, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_DEADSTEM_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_deadstem_gr, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_DEADSTEM_STORAGE_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_deadstem_storage_gr, default='inactive')
+
+    call add_fld1d (fname='C13_TRANSFER_DEADSTEM_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%transfer_deadstem_gr, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_LIVECROOT_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_livecroot_gr, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_LIVECROOT_STORAGE_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_livecroot_storage_gr, default='inactive')
+
+    call add_fld1d (fname='C13_TRANSFER_LIVECROOT_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%transfer_livecroot_gr, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_DEADCROOT_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_deadcroot_gr, default='inactive')
+
+    call add_fld1d (fname='C13_CPOOL_DEADCROOT_STORAGE_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%cpool_deadcroot_storage_gr, default='inactive')
+
+    call add_fld1d (fname='C13_TRANSFER_DEADCROOT_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%transfer_deadcroot_gr, default='inactive')
+
+    call add_fld1d (fname='C13_LEAFC_STORAGE_TO_XFER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%leafc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_FROOTC_STORAGE_TO_XFER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%frootc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_LIVESTEMC_STORAGE_TO_XFER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%livestemc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_DEADSTEMC_STORAGE_TO_XFER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%deadstemc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_LIVECROOTC_STORAGE_TO_XFER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%livecrootc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_DEADCROOTC_STORAGE_TO_XFER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%deadcrootc_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_GRESP_STORAGE_TO_XFER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%gresp_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='C13_LIVESTEMC_TO_DEADSTEMC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%livestemc_to_deadstemc, default='inactive')
+
+    call add_fld1d (fname='C13_LIVECROOTC_TO_DEADCROOTC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_pft=clm3%g%l%c%p%pc13f%livecrootc_to_deadcrootc, default='inactive')
+
+    call add_fld1d (fname='C13_GPP', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 gross primary production', &
+         ptr_pft=clm3%g%l%c%p%pc13f%gpp)
+
+    call add_fld1d (fname='C13_MR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 maintenance respiration', &
+         ptr_pft=clm3%g%l%c%p%pc13f%mr)
+
+    call add_fld1d (fname='C13_CURRENT_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 growth resp for new growth displayed in this timestep', &
+         ptr_pft=clm3%g%l%c%p%pc13f%current_gr, default='inactive')
+
+    call add_fld1d (fname='C13_TRANSFER_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 growth resp for transfer growth displayed in this timestep', &
+         ptr_pft=clm3%g%l%c%p%pc13f%transfer_gr, default='inactive')
+
+    call add_fld1d (fname='C13_STORAGE_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 growth resp for growth sent to storage for later display', &
+         ptr_pft=clm3%g%l%c%p%pc13f%storage_gr, default='inactive')
+
+    call add_fld1d (fname='C13_GR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 total growth respiration', &
+         ptr_pft=clm3%g%l%c%p%pc13f%gr)
+
+    call add_fld1d (fname='C13_AR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 autotrophic respiration (MR + GR)', &
+         ptr_pft=clm3%g%l%c%p%pc13f%ar)
+
+    call add_fld1d (fname='C13_RR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 root respiration (fine root MR + total root GR)', &
+         ptr_pft=clm3%g%l%c%p%pc13f%rr)
+
+    call add_fld1d (fname='C13_NPP', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 net primary production', &
+         ptr_pft=clm3%g%l%c%p%pc13f%npp)
+
+    call add_fld1d (fname='C13_AGNPP', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 aboveground NPP', &
+         ptr_pft=clm3%g%l%c%p%pc13f%agnpp)
+
+    call add_fld1d (fname='C13_BGNPP', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 belowground NPP', &
+         ptr_pft=clm3%g%l%c%p%pc13f%bgnpp)
+
+    call add_fld1d (fname='C13_LITFALL', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 litterfall (leaves and fine roots)', &
+         ptr_pft=clm3%g%l%c%p%pc13f%litfall, default='inactive')
+
+    call add_fld1d (fname='C13_VEGFIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 pft-level fire loss', &
+         ptr_pft=clm3%g%l%c%p%pc13f%vegfire, default='inactive')
+
+    call add_fld1d (fname='C13_PFT_FIRE_CLOSS', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 total pft-level fire C loss', &
+         ptr_pft=clm3%g%l%c%p%pc13f%pft_fire_closs)
+
+    !-------------------------------
+    ! C flux variables - native to column 
+    !-------------------------------
+
+    call add_fld1d (fname='M_LEAFC_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_leafc_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_LEAFC_TO_LITR2C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_leafc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='M_LEAFC_TO_LITR3C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_leafc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='M_FROOTC_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_frootc_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_FROOTC_TO_LITR2C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_frootc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='M_FROOTC_TO_LITR3C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_frootc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='M_LEAFC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_leafc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_FROOTC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_frootc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_livestemc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_deadstemc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_livecrootc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_deadcrootc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_LEAFC_XFER_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_leafc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_FROOTC_XFER_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_frootc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMC_XFER_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_livestemc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMC_XFER_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_deadstemc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTC_XFER_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_livecrootc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTC_XFER_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_deadcrootc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMC_TO_CWDC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_livestemc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMC_TO_CWDC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_deadstemc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTC_TO_CWDC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_livecrootc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTC_TO_CWDC', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_deadcrootc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='M_GRESP_STORAGE_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_gresp_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_GRESP_XFER_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_gresp_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMC_TO_CWDC_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_deadstemc_to_cwdc_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTC_TO_CWDC_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_deadcrootc_to_cwdc_fire, default='inactive')
+
+    call add_fld1d (fname='M_LITR1C_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_litr1c_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LITR2C_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_litr2c_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LITR3C_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_litr3c_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_CWDC_TO_FIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%m_cwdc_to_fire, default='inactive')
+
+    call add_fld1d (fname='LEAFC_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%leafc_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='LEAFC_TO_LITR2C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%leafc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='LEAFC_TO_LITR3C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%leafc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='FROOTC_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%frootc_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='FROOTC_TO_LITR2C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%frootc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='FROOTC_TO_LITR3C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%frootc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='CWDC_TO_LITR2C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%cwdc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='CWDC_TO_LITR3C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%cwdc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='LITR1_HR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%litr1_hr, default='inactive')
+
+    call add_fld1d (fname='LITR1C_TO_SOIL1C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%litr1c_to_soil1c, default='inactive')
+
+    call add_fld1d (fname='LITR2_HR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%litr2_hr, default='inactive')
+
+    call add_fld1d (fname='LITR2C_TO_SOIL2C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%litr2c_to_soil2c, default='inactive')
+
+    call add_fld1d (fname='LITR3_HR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%litr3_hr, default='inactive')
+
+    call add_fld1d (fname='LITR3C_TO_SOIL3C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%litr3c_to_soil3c, default='inactive')
+
+    call add_fld1d (fname='SOIL1_HR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%soil1_hr, default='inactive')
+
+    call add_fld1d (fname='SOIL1C_TO_SOIL2C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%soil1c_to_soil2c, default='inactive')
+
+    call add_fld1d (fname='SOIL2_HR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%soil2_hr, default='inactive')
+
+    call add_fld1d (fname='SOIL2C_TO_SOIL3C', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%soil2c_to_soil3c, default='inactive')
+
+    call add_fld1d (fname='SOIL3_HR', units='gC/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%ccf%soil3_hr, default='inactive')
+
+    call add_fld1d (fname='LITHR', units='gC/m^2/s', &
+         avgflag='A', long_name='litter heterotrophic respiration', &
+         ptr_col=clm3%g%l%c%ccf%lithr)
+
+    call add_fld1d (fname='SOMHR', units='gC/m^2/s', &
+         avgflag='A', long_name='soil organic matter heterotrophic respiration', &
+         ptr_col=clm3%g%l%c%ccf%somhr)
+
+    call add_fld1d (fname='HR', units='gC/m^2/s', &
+         avgflag='A', long_name='total heterotrophic respiration', &
+         ptr_col=clm3%g%l%c%ccf%hr)
+
+    call add_fld1d (fname='SR', units='gC/m^2/s', &
+         avgflag='A', long_name='total soil respiration (HR + root resp)', &
+         ptr_col=clm3%g%l%c%ccf%sr)
+
+    call add_fld1d (fname='ER', units='gC/m^2/s', &
+         avgflag='A', long_name='total ecosystem respiration, autotrophic + heterotrophic', &
+         ptr_col=clm3%g%l%c%ccf%er)
+
+    call add_fld1d (fname='LITFIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='litter fire losses', &
+         ptr_col=clm3%g%l%c%ccf%litfire, default='inactive')
+
+    call add_fld1d (fname='SOMFIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='soil organic matter fire losses', &
+         ptr_col=clm3%g%l%c%ccf%somfire, default='inactive')
+
+    call add_fld1d (fname='TOTFIRE', units='gC/m^2/s', &
+         avgflag='A', long_name='total ecosystem fire losses', &
+         ptr_col=clm3%g%l%c%ccf%totfire, default='inactive')
+
+    call add_fld1d (fname='NEP', units='gC/m^2/s', &
+         avgflag='A', long_name='net ecosystem production, excludes fire flux, positive for sink', &
+         ptr_col=clm3%g%l%c%ccf%nep)
+
+    call add_fld1d (fname='NEE', units='gC/m^2/s', &
+         avgflag='A', long_name='net ecosystem exchange of carbon, includes fire flux, positive for source', &
+         ptr_col=clm3%g%l%c%ccf%nee)
+
+    call add_fld1d (fname='COL_FIRE_CLOSS', units='gC/m^2/s', &
+         avgflag='A', long_name='total column-level fire C loss', &
+         ptr_col=clm3%g%l%c%ccf%col_fire_closs)
+
+    !-------------------------------
+    ! C13 flux variables - native to column 
+    !-------------------------------
+
+    call add_fld1d (fname='C13_M_LEAFC_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_leafc_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_LEAFC_TO_LITR2C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_leafc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='C13_M_LEAFC_TO_LITR3C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_leafc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='C13_M_FROOTC_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_frootc_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_FROOTC_TO_LITR2C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_frootc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='C13_M_FROOTC_TO_LITR3C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_frootc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='C13_M_LEAFC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_leafc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_FROOTC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_frootc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVESTEMC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_livestemc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADSTEMC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_deadstemc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVECROOTC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_livecrootc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADCROOTC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_LEAFC_XFER_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_leafc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_FROOTC_XFER_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_frootc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVESTEMC_XFER_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_livestemc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADSTEMC_XFER_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_deadstemc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVECROOTC_XFER_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_livecrootc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADCROOTC_XFER_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVESTEMC_TO_CWDC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_livestemc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADSTEMC_TO_CWDC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_deadstemc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='C13_M_LIVECROOTC_TO_CWDC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_livecrootc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADCROOTC_TO_CWDC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='C13_M_GRESP_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_gresp_storage_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_GRESP_XFER_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_gresp_xfer_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADSTEMC_TO_CWDC_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_deadstemc_to_cwdc_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_DEADCROOTC_TO_CWDC_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_to_cwdc_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_LITR1C_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_litr1c_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_LITR2C_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_litr2c_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_LITR3C_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_litr3c_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_M_CWDC_TO_FIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%m_cwdc_to_fire, default='inactive')
+
+    call add_fld1d (fname='C13_LEAFC_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%leafc_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_LEAFC_TO_LITR2C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%leafc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='C13_LEAFC_TO_LITR3C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%leafc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='C13_FROOTC_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%frootc_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_FROOTC_TO_LITR2C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%frootc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='C13_FROOTC_TO_LITR3C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%frootc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='C13_CWDC_TO_LITR2C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%cwdc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='C13_CWDC_TO_LITR3C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%cwdc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='C13_LITR1_HR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%litr1_hr, default='inactive')
+
+    call add_fld1d (fname='C13_LITR1C_TO_SOIL1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%litr1c_to_soil1c, default='inactive')
+
+    call add_fld1d (fname='C13_LITR2_HR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%litr2_hr, default='inactive')
+
+    call add_fld1d (fname='C13_LITR2C_TO_SOIL2C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%litr2c_to_soil2c, default='inactive')
+
+    call add_fld1d (fname='C13_LITR3_HR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%litr3_hr, default='inactive')
+
+    call add_fld1d (fname='C13_LITR3C_TO_SOIL3C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%litr3c_to_soil3c, default='inactive')
+
+    call add_fld1d (fname='C13_SOIL1_HR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%soil1_hr, default='inactive')
+
+    call add_fld1d (fname='C13_SOIL1C_TO_SOIL2C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%soil1c_to_soil2c, default='inactive')
+
+    call add_fld1d (fname='C13_SOIL2_HR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%soil2_hr, default='inactive')
+
+    call add_fld1d (fname='C13_SOIL2C_TO_SOIL3C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%soil2c_to_soil3c, default='inactive')
+
+    call add_fld1d (fname='C13_SOIL3_HR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 ', &
+         ptr_col=clm3%g%l%c%cc13f%soil3_hr, default='inactive')
+
+    call add_fld1d (fname='C13_LITHR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 litter heterotrophic respiration', &
+         ptr_col=clm3%g%l%c%cc13f%lithr)
+
+    call add_fld1d (fname='C13_SOMHR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 soil organic matter heterotrophic respiration', &
+         ptr_col=clm3%g%l%c%cc13f%somhr)
+
+    call add_fld1d (fname='C13_HR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 total heterotrophic respiration', &
+         ptr_col=clm3%g%l%c%cc13f%hr)
+
+    call add_fld1d (fname='C13_SR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 total soil respiration (HR + root resp)', &
+         ptr_col=clm3%g%l%c%cc13f%sr)
+
+    call add_fld1d (fname='C13_ER', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 total ecosystem respiration, autotrophic + heterotrophic', &
+         ptr_col=clm3%g%l%c%cc13f%er)
+
+    call add_fld1d (fname='C13_LITFIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 litter fire losses', &
+         ptr_col=clm3%g%l%c%cc13f%litfire, default='inactive')
+
+    call add_fld1d (fname='C13_SOMFIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 soil organic matter fire losses', &
+         ptr_col=clm3%g%l%c%cc13f%somfire, default='inactive')
+
+    call add_fld1d (fname='C13_TOTFIRE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 total ecosystem fire losses', &
+         ptr_col=clm3%g%l%c%cc13f%totfire, default='inactive')
+
+    call add_fld1d (fname='C13_NEP', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 net ecosystem production, excludes fire flux, positive for sink', &
+         ptr_col=clm3%g%l%c%cc13f%nep)
+
+    call add_fld1d (fname='C13_NEE', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 net ecosystem exchange of carbon, includes fire flux, positive for source', &
+         ptr_col=clm3%g%l%c%cc13f%nee)
+
+    call add_fld1d (fname='C13_COL_FIRE_CLOSS', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 total column-level fire C loss', &
+         ptr_col=clm3%g%l%c%cc13f%col_fire_closs)
+
+    !-------------------------------
+    ! N flux variables - native to PFT
+    !-------------------------------
+
+    call add_fld1d (fname='M_LEAFN_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_leafn_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_FROOTN_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_frootn_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LEAFN_STORAGE_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_leafn_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_FROOTN_STORAGE_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_frootn_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMN_STORAGE_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMN_STORAGE_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTN_STORAGE_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTN_STORAGE_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_storage_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LEAFN_XFER_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_leafn_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_FROOTN_XFER_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_frootn_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMN_XFER_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMN_XFER_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTN_XFER_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTN_XFER_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_xfer_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMN_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMN_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTN_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTN_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_RETRANSN_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_retransn_to_litter, default='inactive')
+
+    call add_fld1d (fname='M_LEAFN_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_leafn_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_FROOTN_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_frootn_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LEAFN_STORAGE_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_leafn_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_FROOTN_STORAGE_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_frootn_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMN_STORAGE_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMN_STORAGE_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTN_STORAGE_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTN_STORAGE_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_storage_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LEAFN_XFER_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_leafn_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_FROOTN_XFER_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_frootn_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMN_XFER_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMN_XFER_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTN_XFER_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTN_XFER_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_xfer_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMN_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMN_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMN_TO_LITTER_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_to_litter_fire, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTN_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTN_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTN_TO_LITTER_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_to_litter_fire, default='inactive')
+
+    call add_fld1d (fname='M_RETRANSN_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%m_retransn_to_fire, default='inactive')
+
+    call add_fld1d (fname='LEAFN_XFER_TO_LEAFN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%leafn_xfer_to_leafn, default='inactive')
+
+    call add_fld1d (fname='FROOTN_XFER_TO_FROOTN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%frootn_xfer_to_frootn, default='inactive')
+
+    call add_fld1d (fname='LIVESTEMN_XFER_TO_LIVESTEMN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%livestemn_xfer_to_livestemn, default='inactive')
+
+    call add_fld1d (fname='DEADSTEMN_XFER_TO_DEADSTEMN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%deadstemn_xfer_to_deadstemn, default='inactive')
+
+    call add_fld1d (fname='LIVECROOTN_XFER_TO_LIVECROOTN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%livecrootn_xfer_to_livecrootn, default='inactive')
+
+    call add_fld1d (fname='DEADCROOTN_XFER_TO_DEADCROOTN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%deadcrootn_xfer_to_deadcrootn, default='inactive')
+
+    call add_fld1d (fname='LEAFN_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%leafn_to_litter, default='inactive')
+
+    call add_fld1d (fname='LEAFN_TO_RETRANSN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%leafn_to_retransn, default='inactive')
+
+    call add_fld1d (fname='FROOTN_TO_LITTER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%frootn_to_litter, default='inactive')
+
+    call add_fld1d (fname='RETRANSN_TO_NPOOL', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%retransn_to_npool, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_NPOOL', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%sminn_to_npool, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_LEAFN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_leafn, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_LEAFN_STORAGE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_leafn_storage, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_FROOTN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_frootn, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_FROOTN_STORAGE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_frootn_storage, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_LIVESTEMN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_livestemn, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_LIVESTEMN_STORAGE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_livestemn_storage, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_DEADSTEMN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_deadstemn, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_DEADSTEMN_STORAGE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_deadstemn_storage, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_LIVECROOTN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_livecrootn, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_LIVECROOTN_STORAGE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_livecrootn_storage, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_DEADCROOTN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_deadcrootn, default='inactive')
+
+    call add_fld1d (fname='NPOOL_TO_DEADCROOTN_STORAGE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%npool_to_deadcrootn_storage, default='inactive')
+
+    call add_fld1d (fname='LEAFN_STORAGE_TO_XFER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%leafn_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='FROOTN_STORAGE_TO_XFER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%frootn_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='LIVESTEMN_STORAGE_TO_XFER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%livestemn_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='DEADSTEMN_STORAGE_TO_XFER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%deadstemn_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='LIVECROOTN_STORAGE_TO_XFER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%livecrootn_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='DEADCROOTN_STORAGE_TO_XFER', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%deadcrootn_storage_to_xfer, default='inactive')
+
+    call add_fld1d (fname='LIVESTEMN_TO_DEADSTEMN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%livestemn_to_deadstemn, default='inactive')
+
+    call add_fld1d (fname='LIVESTEMN_TO_RETRANSN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%livestemn_to_retransn, default='inactive')
+
+    call add_fld1d (fname='LIVECROOTN_TO_DEADCROOTN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%livecrootn_to_deadcrootn, default='inactive')
+
+    call add_fld1d (fname='LIVECROOTN_TO_RETRANSN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_pft=clm3%g%l%c%p%pnf%livecrootn_to_retransn, default='inactive')
+
+    call add_fld1d (fname='NDEPLOY', units='gN/m^2/s', &
+         avgflag='A', long_name='total N deployed in new growth', &
+         ptr_pft=clm3%g%l%c%p%pnf%ndeploy)
+
+    call add_fld1d (fname='PFT_FIRE_NLOSS', units='gN/m^2/s', &
+         avgflag='A', long_name='total pft-level fire N loss', &
+         ptr_pft=clm3%g%l%c%p%pnf%pft_fire_nloss)
+
+    !-------------------------------
+    ! N flux variables - native to column
+    !-------------------------------
+
+    call add_fld1d (fname='NDEP_TO_SMINN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%ndep_to_sminn)
+
+    call add_fld1d (fname='NFIX_TO_SMINN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%nfix_to_sminn)
+
+    call add_fld1d (fname='M_LEAFN_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_leafn_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_LEAFN_TO_LITR2N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_leafn_to_litr2n, default='inactive')
+
+    call add_fld1d (fname='M_LEAFN_TO_LITR3N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_leafn_to_litr3n, default='inactive')
+
+    call add_fld1d (fname='M_FROOTN_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_frootn_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_FROOTN_TO_LITR2N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_frootn_to_litr2n, default='inactive')
+
+    call add_fld1d (fname='M_FROOTN_TO_LITR3N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_frootn_to_litr3n, default='inactive')
+
+    call add_fld1d (fname='M_LEAFN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_leafn_storage_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_FROOTN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_frootn_storage_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_livestemn_storage_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_deadstemn_storage_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_livecrootn_storage_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_deadcrootn_storage_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_LEAFN_XFER_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_leafn_xfer_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_FROOTN_XFER_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_frootn_xfer_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMN_XFER_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_livestemn_xfer_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMN_XFER_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_deadstemn_xfer_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTN_XFER_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_livecrootn_xfer_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTN_XFER_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_deadcrootn_xfer_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_LIVESTEMN_TO_CWDN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_livestemn_to_cwdn, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMN_TO_CWDN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_deadstemn_to_cwdn, default='inactive')
+
+    call add_fld1d (fname='M_LIVECROOTN_TO_CWDN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_livecrootn_to_cwdn, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTN_TO_CWDN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_deadcrootn_to_cwdn, default='inactive')
+
+    call add_fld1d (fname='M_RETRANSN_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_retransn_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='M_DEADSTEMN_TO_CWDN_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_deadstemn_to_cwdn_fire, default='inactive')
+
+    call add_fld1d (fname='M_DEADCROOTN_TO_CWDN_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_deadcrootn_to_cwdn_fire, default='inactive')
+
+    call add_fld1d (fname='M_LITR1N_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_litr1n_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LITR2N_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_litr2n_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_LITR3N_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_litr3n_to_fire, default='inactive')
+
+    call add_fld1d (fname='M_CWDN_TO_FIRE', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%m_cwdn_to_fire, default='inactive')
+
+    call add_fld1d (fname='LEAFN_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%leafn_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='LEAFN_TO_LITR2N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%leafn_to_litr2n, default='inactive')
+
+    call add_fld1d (fname='LEAFN_TO_LITR3N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%leafn_to_litr3n, default='inactive')
+
+    call add_fld1d (fname='FROOTN_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%frootn_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='FROOTN_TO_LITR2N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%frootn_to_litr2n, default='inactive')
+
+    call add_fld1d (fname='FROOTN_TO_LITR3N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%frootn_to_litr3n, default='inactive')
+
+    call add_fld1d (fname='CWDN_TO_LITR2N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%cwdn_to_litr2n, default='inactive')
+
+    call add_fld1d (fname='CWDN_TO_LITR3N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%cwdn_to_litr3n, default='inactive')
+
+    call add_fld1d (fname='LITR1N_TO_SOIL1N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%litr1n_to_soil1n, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_SOIL1N_L1', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_soil1n_l1, default='inactive')
+
+    call add_fld1d (fname='LITR2N_TO_SOIL2N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%litr2n_to_soil2n, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_SOIL2N_L2', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_soil2n_l2, default='inactive')
+
+    call add_fld1d (fname='LITR3N_TO_SOIL3N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%litr3n_to_soil3n, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_SOIL3N_L3', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_soil3n_l3, default='inactive')
+
+    call add_fld1d (fname='SOIL1N_TO_SOIL2n', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%soil1n_to_soil2n, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_SOIL2N_S1', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_soil2n_s1, default='inactive')
+
+    call add_fld1d (fname='SOIL2N_TO_SOIL3N', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%soil2n_to_soil3n, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_SOIL3N_S2', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_soil3n_s2, default='inactive')
+
+    call add_fld1d (fname='SOIL3N_TO_SMINN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%soil3n_to_sminn, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_DENIT_L1S1', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_denit_l1s1, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_DENIT_L2S2', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_denit_l2s2, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_DENIT_L3S3', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_denit_l3s3, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_DENIT_S1S2', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_denit_s1s2, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_DENIT_S2S3', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_denit_s2s3, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_DENIT_S3', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_denit_s3, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_DENIT_EXCESS', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_denit_excess, default='inactive')
+
+    call add_fld1d (fname='SMINN_LEACHED', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_leached)
+
+    call add_fld1d (fname='POTENTIAL_IMMOB', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%potential_immob, default='inactive')
+
+    call add_fld1d (fname='ACTUAL_IMMOB', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%actual_immob, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_PLANT', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_plant, default='inactive')
+
+    call add_fld1d (fname='SUPPLEMENT_TO_SMINN', units='gN/m^2/s', &
+         avgflag='A', long_name='', &
+         ptr_col=clm3%g%l%c%cnf%supplement_to_sminn)
+
+    call add_fld1d (fname='GROSS_NMIN', units='gN/m^2/s', &
+         avgflag='A', long_name='gross N mineralization', &
+         ptr_col=clm3%g%l%c%cnf%gross_nmin)
+
+    call add_fld1d (fname='NET_NMIN', units='gN/m^2/s', &
+         avgflag='A', long_name='net N mineralization', &
+         ptr_col=clm3%g%l%c%cnf%net_nmin)
+
+    call add_fld1d (fname='DENIT', units='gN/m^2/s', &
+         avgflag='A', long_name='total denitrification', &
+         ptr_col=clm3%g%l%c%cnf%denit)
+
+    call add_fld1d (fname='COL_FIRE_NLOSS', units='gN/m^2/s', &
+         avgflag='A', long_name='total column-level fire N loss', &
+         ptr_col=clm3%g%l%c%cnf%col_fire_nloss)
+
+    !-------------------------------
+    ! PFT ecophysiological variables (pepv) 
+    !-------------------------------
+
+    call add_fld1d (fname='DORMANT_FLAG', units='none', &
+         avgflag='A', long_name='dormancy flag', &
+         ptr_pft=clm3%g%l%c%p%pepv%dormant_flag, default='inactive')
+
+    call add_fld1d (fname='DAYS_ACTIVE', units='days', &
+         avgflag='A', long_name='number of days since last dormancy', &
+         ptr_pft=clm3%g%l%c%p%pepv%days_active, default='inactive')
+
+    call add_fld1d (fname='ONSET_FLAG', units='none', &
+         avgflag='A', long_name='onset flag', &
+         ptr_pft=clm3%g%l%c%p%pepv%onset_flag, default='inactive')
+
+    call add_fld1d (fname='ONSET_COUNTER', units='days', &
+         avgflag='A', long_name='onset days counter', &
+         ptr_pft=clm3%g%l%c%p%pepv%onset_counter, default='inactive')
+
+    call add_fld1d (fname='ONSET_GDDFLAG', units='none', &
+         avgflag='A', long_name='onset flag for growing degree day sum', &
+         ptr_pft=clm3%g%l%c%p%pepv%onset_gddflag, default='inactive')
+
+    call add_fld1d (fname='ONSET_FDD', units='C degree-days', &
+         avgflag='A', long_name='onset freezing degree days counter', &
+         ptr_pft=clm3%g%l%c%p%pepv%onset_fdd, default='inactive')
+
+    call add_fld1d (fname='ONSET_GDD', units='C degree-days', &
+         avgflag='A', long_name='onset growing degree days', &
+         ptr_pft=clm3%g%l%c%p%pepv%onset_gdd, default='inactive')
+
+    call add_fld1d (fname='ONSET_SWI', units='none', &
+         avgflag='A', long_name='onset soil water index', &
+         ptr_pft=clm3%g%l%c%p%pepv%onset_swi, default='inactive')
+
+    call add_fld1d (fname='OFFSET_FLAG', units='none', &
+         avgflag='A', long_name='offset flag', &
+         ptr_pft=clm3%g%l%c%p%pepv%offset_flag, default='inactive')
+
+    call add_fld1d (fname='OFFSET_COUNTER', units='days', &
+         avgflag='A', long_name='offset days counter', &
+         ptr_pft=clm3%g%l%c%p%pepv%offset_counter, default='inactive')
+
+    call add_fld1d (fname='OFFSET_FDD', units='C degree-days', &
+         avgflag='A', long_name='offset freezing degree days counter', &
+         ptr_pft=clm3%g%l%c%p%pepv%offset_fdd, default='inactive')
+
+    call add_fld1d (fname='OFFSET_SWI', units='none', &
+         avgflag='A', long_name='offset soil water index', &
+         ptr_pft=clm3%g%l%c%p%pepv%offset_swi, default='inactive')
+
+    call add_fld1d (fname='LGSF', units='proportion', &
+         avgflag='A', long_name='long growing season factor', &
+         ptr_pft=clm3%g%l%c%p%pepv%lgsf, default='inactive')
+
+    call add_fld1d (fname='BGLFR', units='1/s', &
+         avgflag='A', long_name='background litterfall rate', &
+         ptr_pft=clm3%g%l%c%p%pepv%bglfr, default='inactive')
+
+    call add_fld1d (fname='BGTR', units='1/s', &
+         avgflag='A', long_name='background transfer growth rate', &
+         ptr_pft=clm3%g%l%c%p%pepv%bgtr, default='inactive')
+
+    call add_fld1d (fname='DAYL',  units='s', &
+         avgflag='A', long_name='daylength', &
+         ptr_pft=clm3%g%l%c%p%pepv%dayl, default='inactive')
+
+    call add_fld1d (fname='PREV_DAYL', units='s', &
+         avgflag='A', long_name='daylength from previous timestep', &
+         ptr_pft=clm3%g%l%c%p%pepv%prev_dayl, default='inactive')
+
+    call add_fld1d (fname='ANNAVG_T2M', units='K', &
+         avgflag='A', long_name='annual average 2m air temperature', &
+         ptr_pft=clm3%g%l%c%p%pepv%annavg_t2m, default='inactive')
+
+    call add_fld1d (fname='TEMPAVG_T2M', units='K', &
+         avgflag='A', long_name='temporary average 2m air temperature', &
+         ptr_pft=clm3%g%l%c%p%pepv%tempavg_t2m, default='inactive')
+
+    call add_fld1d (fname='INIT_GPP', units='gC/m^2/s', &
+         avgflag='A', long_name='GPP flux before downregulation', &
+         ptr_pft=clm3%g%l%c%p%pepv%gpp, default='inactive')
+
+    call add_fld1d (fname='AVAILC', units='gC/m^2/s', &
+         avgflag='A', long_name='C flux available for allocation', &
+         ptr_pft=clm3%g%l%c%p%pepv%availc, default='inactive')
+
+    call add_fld1d (fname='XSMRPOOL_RECOVER', units='gC/m^2/s', &
+         avgflag='A', long_name='C flux assigned to recovery of negative xsmrpool', &
+         ptr_pft=clm3%g%l%c%p%pepv%xsmrpool_recover, default='inactive')
+
+    call add_fld1d (fname='XSMRPOOL_C13RATIO', units='proportion', &
+         avgflag='A', long_name='C13/C(12+13) ratio for xsmrpool', &
+         ptr_pft=clm3%g%l%c%p%pepv%xsmrpool_recover, default='inactive')
+
+    call add_fld1d (fname='ALLOC_PNOW', units='proportion', &
+         avgflag='A', long_name='fraction of current allocation to display as new growth', &
+         ptr_pft=clm3%g%l%c%p%pepv%alloc_pnow, default='inactive')
+
+    call add_fld1d (fname='C_ALLOMETRY', units='none', &
+         avgflag='A', long_name='C allocation index', &
+         ptr_pft=clm3%g%l%c%p%pepv%c_allometry, default='inactive')
+
+    call add_fld1d (fname='N_ALLOMETRY', units='none', &
+         avgflag='A', long_name='N allocation index', &
+         ptr_pft=clm3%g%l%c%p%pepv%n_allometry, default='inactive')
+
+    call add_fld1d (fname='PLANT_NDEMAND', units='gN/m^2/s', &
+         avgflag='A', long_name='N flux required to support initial GPP', &
+         ptr_pft=clm3%g%l%c%p%pepv%plant_ndemand, default='inactive')
+
+    call add_fld1d (fname='TEMPSUM_PLANT_NDEMAND', units='gN/m^2/yr', &
+         avgflag='A', long_name='temporary annual sum of plant_ndemand', &
+         ptr_pft=clm3%g%l%c%p%pepv%tempsum_plant_ndemand, default='inactive')
+
+    call add_fld1d (fname='ANNSUM_PLANT_NDEMAND', units='gN/m^2/yr', &
+         avgflag='A', long_name='annual sum of plant_ndemand', &
+         ptr_pft=clm3%g%l%c%p%pepv%annsum_plant_ndemand, default='inactive')
+
+    call add_fld1d (fname='TEMPSUM_RETRANSN', units='gN/m^2/yr', &
+         avgflag='A', long_name='temporary annual sum of N retranslocation', &
+         ptr_pft=clm3%g%l%c%p%pepv%tempsum_retransn, default='inactive')
+
+    call add_fld1d (fname='ANNSUM_RETRANSN', units='gN/m^2/yr', &
+         avgflag='A', long_name='annual sum of N retranslocation', &
+         ptr_pft=clm3%g%l%c%p%pepv%annsum_retransn, default='inactive')
+
+    call add_fld1d (fname='AVAIL_RETRANSN', units='gN/m^2/s', &
+         avgflag='A', long_name='N flux available from retranslocation pool', &
+         ptr_pft=clm3%g%l%c%p%pepv%avail_retransn, default='inactive')
+
+    call add_fld1d (fname='PLANT_NALLOC', units='gN/m^2/s', &
+         avgflag='A', long_name='total allocated N flux', &
+         ptr_pft=clm3%g%l%c%p%pepv%plant_nalloc, default='inactive')
+
+    call add_fld1d (fname='PLANT_CALLOC', units='gC/m^2/s', &
+         avgflag='A', long_name='total allocated C flux', &
+         ptr_pft=clm3%g%l%c%p%pepv%plant_calloc, default='inactive')
+
+    call add_fld1d (fname='EXCESS_CFLUX', units='gC/m^2/s', &
+         avgflag='A', long_name='C flux not allocated due to downregulation', &
+         ptr_pft=clm3%g%l%c%p%pepv%excess_cflux, default='inactive')
+
+    call add_fld1d (fname='DOWNREG', units='proportion', &
+         avgflag='A', long_name='fractional reduction in GPP due to N limitation', &
+         ptr_pft=clm3%g%l%c%p%pepv%downreg, default='inactive')
+
+    call add_fld1d (fname='PREV_LEAFC_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='previous timestep leaf C litterfall flux', &
+         ptr_pft=clm3%g%l%c%p%pepv%prev_leafc_to_litter, default='inactive')
+
+    call add_fld1d (fname='PREV_FROOTC_TO_LITTER', units='gC/m^2/s', &
+         avgflag='A', long_name='previous timestep froot C litterfall flux', &
+         ptr_pft=clm3%g%l%c%p%pepv%prev_frootc_to_litter, default='inactive')
+
+    call add_fld1d (fname='RC13_CANAIR', units='proportion', &
+         avgflag='A', long_name='C13/C(12+13) for canopy air', &
+         ptr_pft=clm3%g%l%c%p%pepv%rc13_canair, default='inactive')
+
+    call add_fld1d (fname='RC13_PSNSUN', units='proportion', &
+         avgflag='A', long_name='C13/C(12+13) for sunlit photosynthesis', &
+         ptr_pft=clm3%g%l%c%p%pepv%rc13_psnsun, default='inactive')
+
+    call add_fld1d (fname='RC13_PSNSHA', units='proportion', &
+         avgflag='A', long_name='C13/C(12+13) for shaded photosynthesis', &
+         ptr_pft=clm3%g%l%c%p%pepv%rc13_psnsha, default='inactive')
+
+    !-------------------------------
+    ! PFT physical state variables not already defined by default
+    !-------------------------------
+
+    call add_fld1d (fname='EMV', units='proportion', &
+         avgflag='A', long_name='vegetation emissivity', &
+         ptr_pft=clm3%g%l%c%p%pps%emv, default='inactive')
+
+    call add_fld1d (fname='Z0MV', units='m', &
+         avgflag='A', long_name='roughness length over vegetation, momentum', &
+         ptr_pft=clm3%g%l%c%p%pps%z0mv, default='inactive')
+
+    call add_fld1d (fname='Z0HV', units='m', &
+         avgflag='A', long_name='roughness length over vegetation, sensible heat', &
+         ptr_pft=clm3%g%l%c%p%pps%z0hv, default='inactive')
+
+    call add_fld1d (fname='Z0QV', units='m', &
+         avgflag='A', long_name='roughness length over vegetation, latent heat', &
+         ptr_pft=clm3%g%l%c%p%pps%z0qv, default='inactive')
+
+    call add_fld1d (fname='DEWMX', units='mm', &
+         avgflag='A', long_name='Maximum allowed dew', &
+         ptr_pft=clm3%g%l%c%p%pps%dewmx, default='inactive')
+
+    call add_fld1d (fname='LAISUN', units='none', &
+         avgflag='A', long_name='sunlit projected leaf area index', &
+         ptr_pft=clm3%g%l%c%p%pps%laisun, default='inactive')
+
+    call add_fld1d (fname='LAISHA', units='none', &
+         avgflag='A', long_name='shaded projected leaf area index', &
+         ptr_pft=clm3%g%l%c%p%pps%laisha, default='inactive')
+
+    call add_fld1d (fname='TLAI', units='none', &
+         avgflag='A', long_name='total projected leaf area index', &
+         ptr_pft=clm3%g%l%c%p%pps%tlai, default='inactive')
+
+    call add_fld1d (fname='TSAI', units='none', &
+         avgflag='A', long_name='total projected stem area index', &
+         ptr_pft=clm3%g%l%c%p%pps%tsai, default='inactive')
+
+    call add_fld1d (fname='SLASUN', units='m^2/gC', &
+         avgflag='A', long_name='specific leaf area for sunlit canopy, projected area basis', &
+         ptr_pft=clm3%g%l%c%p%pps%slasun, default='inactive')
+
+    call add_fld1d (fname='SLASHA', units='m^2/gC', &
+         avgflag='A', long_name='specific leaf area for shaded canopy, projected area basis', &
+         ptr_pft=clm3%g%l%c%p%pps%slasha, default='inactive')
+
+    call add_fld1d (fname='LNCSUN', units='gN/m^2', &
+         avgflag='A', long_name='leaf N concentration per unit projected LAI', &
+         ptr_pft=clm3%g%l%c%p%pps%lncsun, default='inactive')
+
+    call add_fld1d (fname='LNCSHA', units='gN/m^2', &
+         avgflag='A', long_name='leaf N concentration per unit projected LAI', &
+         ptr_pft=clm3%g%l%c%p%pps%lncsha, default='inactive')
+
+    call add_fld1d (fname='VCMXSUN', units='umolCO2/m^2/s', &
+         avgflag='A', long_name='sunlit leaf Vcmax', &
+         ptr_pft=clm3%g%l%c%p%pps%vcmxsun, default='inactive')
+
+    call add_fld1d (fname='VCMXSHA', units='umolCO2/m^2/s', &
+         avgflag='A', long_name='shaded leaf Vcmax', &
+         ptr_pft=clm3%g%l%c%p%pps%vcmxsha, default='inactive')
+
+    call add_fld1d (fname='FSUN', units='proportion', &
+         avgflag='A', long_name='sunlit fraction of canopy', &
+         ptr_pft=clm3%g%l%c%p%pps%fsun, default='inactive')
+
+    call add_fld1d (fname='GDIR', units='proportion', &
+         avgflag='A', long_name='leaf projection in solar direction', &
+         ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
+
+    call add_fld1d (fname='CISUN', units='Pa', &
+         avgflag='A', long_name='sunlit intracellular CO2', &
+         ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
+
+    call add_fld1d (fname='CISHA', units='Pa', &
+         avgflag='A', long_name='shaded intracellular CO2', &
+         ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
+
+    call add_fld1d (fname='ALPHAPSNSUN', units='proportion', &
+         avgflag='A', long_name='sunlit c13 fractionation', &
+         ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
+
+    call add_fld1d (fname='ALPHAPSNSHA', units='proportion', &
+         avgflag='A', long_name='shaded c13 fractionation', &
+         ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
+
+    call add_fld1d (fname='FWET', units='proportion', &
+         avgflag='A', long_name='fraction of canopy that is wet', &
+         ptr_pft=clm3%g%l%c%p%pps%fwet, default='inactive')
+
+    call add_fld1d (fname='FDRY', units='proportion', &
+         avgflag='A', long_name='fraction of foliage that is green and dry', &
+         ptr_pft=clm3%g%l%c%p%pps%fdry, default='inactive')
+
+    call add_fld1d (fname='DT_VEG', units='K', &
+         avgflag='A', long_name='change in t_veg, last iteration', &
+         ptr_pft=clm3%g%l%c%p%pps%dt_veg, default='inactive')
+
+    call add_fld1d (fname='HTOP', units='m', &
+         avgflag='A', long_name='canopy top', &
+         ptr_pft=clm3%g%l%c%p%pps%htop, default='inactive')
+
+    call add_fld1d (fname='HBOT', units='m', &
+         avgflag='A', long_name='canopy bottom', &
+         ptr_pft=clm3%g%l%c%p%pps%hbot, default='inactive')
+
+    call add_fld1d (fname='Z0M', units='m', &
+         avgflag='A', long_name='momentum roughness length', &
+         ptr_pft=clm3%g%l%c%p%pps%z0m, default='inactive')
+
+    call add_fld1d (fname='DISPLA', units='m', &
+         avgflag='A', long_name='displacement height', &
+         ptr_pft=clm3%g%l%c%p%pps%displa, default='inactive')
+
+    call add_fld1d (fname='U10', units='m/s', &
+         avgflag='A', long_name='10-m wind for dust model', &
+         ptr_pft=clm3%g%l%c%p%pps%u10, default='inactive')
+
+    call add_fld1d (fname='RAM1', units='s/m', &
+         avgflag='A', long_name='aerodynamical resistance ', &
+         ptr_pft=clm3%g%l%c%p%pps%ram1, default='inactive')
+
+    call add_fld1d (fname='FV', units='m/s', &
+         avgflag='A', long_name='friction velocity for dust model', &
+         ptr_pft=clm3%g%l%c%p%pps%fv, default='inactive')
+
+    call add_fld2d (fname='ROOTFR', units='proportion', type2d='levsoi', &
+         avgflag='A', long_name='fraction of roots in each soil layer', &
+         ptr_pft=clm3%g%l%c%p%pps%rootfr, default='inactive')
+                                                                       
+    call add_fld2d (fname='ROOTR', units='proportion', type2d='levsoi', &
+         avgflag='A', long_name='effective fraction of roots in each soil layer', &
+         ptr_pft=clm3%g%l%c%p%pps%rootr, default='inactive')
+                                                                       
+    call add_fld2d (fname='RRESIS', units='proportion', type2d='levsoi', &
+         avgflag='A', long_name='root resistance in each soil layer', &
+         ptr_pft=clm3%g%l%c%p%pps%rresis, default='inactive')
+                                                                       
+    call add_fld2d (fname='ALBD', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='surface albedo (direct)', &
+         ptr_pft=clm3%g%l%c%p%pps%albd, default='inactive')
+                                                                        
+    call add_fld2d (fname='ALBI', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='surface albedo (indirect)', &
+         ptr_pft=clm3%g%l%c%p%pps%albi, default='inactive')
+                                                                       
+    call add_fld2d (fname='FABD', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='flux absorbed by veg per unit direct flux', &
+         ptr_pft=clm3%g%l%c%p%pps%fabd, default='inactive')
+                                                                       
+    call add_fld2d (fname='FABI', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='flux absorbed by veg per unit indirect flux', &
+         ptr_pft=clm3%g%l%c%p%pps%fabi, default='inactive')
+                                                                       
+    call add_fld2d (fname='FTDD', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='down direct flux below veg per unit dir flx', &
+         ptr_pft=clm3%g%l%c%p%pps%ftdd, default='inactive')
+                                                                       
+    call add_fld2d (fname='FTID', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='down indirect flux below veg per unit dir flx', &
+         ptr_pft=clm3%g%l%c%p%pps%ftid, default='inactive')
+                                                                       
+    call add_fld2d (fname='FTII', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='down indirect flux below veg per unit indirect flx', &
+         ptr_pft=clm3%g%l%c%p%pps%ftii, default='inactive')
+                                                                       
+    call add_fld2d (fname='OMEGA', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='fraction of intercepted radiation that is scattered', &
+         ptr_pft=clm3%g%l%c%p%pps%omega, default='inactive')
+                                                                       
+    call add_fld2d (fname='EFF_KID', units='none', type2d='numrad', &
+         avgflag='A', long_name='effective extinction coefficient for indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pps%eff_kid, default='inactive')
+                                                                       
+    call add_fld2d (fname='EFF_KII', units='none', type2d='numrad', &
+         avgflag='A', long_name='effective extinction coefficient for indirect from indirect', &
+         ptr_pft=clm3%g%l%c%p%pps%eff_kii, default='inactive')
+                                                                       
+    call add_fld2d (fname='SUN_FAID', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='fraction sun canopy absorbed indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pps%sun_faid, default='inactive')
+                                                                       
+    call add_fld2d (fname='SUN_FAII', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='fraction sun canopy absorbed indirect from indirect', &
+         ptr_pft=clm3%g%l%c%p%pps%sun_faii, default='inactive')
+                                                                       
+    call add_fld2d (fname='SHA_FAID', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='fraction shade canopy absorbed indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pps%sha_faid, default='inactive')
+                                                                       
+    call add_fld2d (fname='SHA_FAII', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='fraction shade canopy absorbed indirect from indirect', &
+         ptr_pft=clm3%g%l%c%p%pps%sha_faii, default='inactive')
+
+    !-------------------------------
+    ! Column physical state variables not already defined by default
+    !-------------------------------
+
+    call add_fld1d (fname='EMG', units='proportion', &
+         avgflag='A', long_name='ground emissivity', &
+         ptr_col=clm3%g%l%c%cps%emg, default='inactive')
+
+    call add_fld1d (fname='Z0MG', units='m', &
+         avgflag='A', long_name='roughness length over ground, momentum', &
+         ptr_col=clm3%g%l%c%cps%z0mg, default='inactive')
+
+    call add_fld1d (fname='Z0HG', units='m', &
+         avgflag='A', long_name='roughness length over ground, sensible heat', &
+         ptr_col=clm3%g%l%c%cps%z0hg, default='inactive')
+
+    call add_fld1d (fname='Z0QG', units='m', &
+         avgflag='A', long_name='roughness length over ground, latent heat', &
+         ptr_col=clm3%g%l%c%cps%z0qg, default='inactive')
+
+    call add_fld1d (fname='BETA', units='none', &
+         avgflag='A', long_name='coefficient of convective velocity', &
+         ptr_col=clm3%g%l%c%cps%beta, default='inactive')
+
+    call add_fld1d (fname='ZII', units='m', &
+         avgflag='A', long_name='convective boundary height', &
+         ptr_col=clm3%g%l%c%cps%zii, default='inactive')
+
+    call add_fld1d (fname='WF', units='proportion', &
+         avgflag='A', long_name='soil water as frac. of whc for top 0.5 m', &
+         ptr_col=clm3%g%l%c%cps%wf, default='inactive')
+
+    call add_fld1d (fname='DECL', units='radians', &
+         avgflag='A', long_name='solar declination angle', &
+         ptr_col=clm3%g%l%c%cps%decl, default='inactive')
+
+    call add_fld1d (fname='COSZEN', units='none', &
+         avgflag='A', long_name='cosine of solar zenith angle', &
+         ptr_col=clm3%g%l%c%cps%coszen, default='inactive')
+
+    call add_fld1d (fname='FPI', units='proportion', &
+         avgflag='A', long_name='fraction of potential immobilization', &
+         ptr_col=clm3%g%l%c%cps%fpi)
+
+    call add_fld1d (fname='FPG', units='proportion', &
+         avgflag='A', long_name='fraction of potential gpp', &
+         ptr_col=clm3%g%l%c%cps%fpg)
+
+    call add_fld1d (fname='ANNSUM_COUNTER', units='s', &
+         avgflag='A', long_name='seconds since last annual accumulator turnover', &
+         ptr_col=clm3%g%l%c%cps%annsum_counter, default='inactive')
+
+    call add_fld1d (fname='CANNSUM_NPP', units='gC/m^2/s', &
+         avgflag='A', long_name='annual sum of column-level NPP', &
+         ptr_col=clm3%g%l%c%cps%cannsum_npp)
+
+    call add_fld2d (fname='FRAC_ICEOLD', units='proportion', type2d='levsoi', &
+         avgflag='A', long_name='fraction of ice relative to the tot water', &
+         ptr_col=clm3%g%l%c%cps%frac_iceold, default='inactive')
+
+    call add_fld2d (fname='EFF_POROSITY', units='proportion', type2d='levsoi', &
+         avgflag='A', long_name='effective porosity = porosity - vol_ice', &
+         ptr_col=clm3%g%l%c%cps%eff_porosity, default='inactive')
+
+    call add_fld2d (fname='ROOTR_COLUMN', units='proportion', type2d='levsoi', &
+         avgflag='A', long_name='effective fraction of roots in each soil layer', &
+         ptr_col=clm3%g%l%c%cps%rootr_column, default='inactive')
+
+    call add_fld2d (fname='SOILPSI', units='MPa', type2d='levsoi', &
+         avgflag='A', long_name='soil water potential in each soil layer', &
+         ptr_col=clm3%g%l%c%cps%soilpsi)
+
+    call add_fld2d (fname='ALBGRD', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='ground albedo (direct)', &
+         ptr_col=clm3%g%l%c%cps%albgrd, default='inactive')
+
+    call add_fld2d (fname='ALBGRI', units='proportion', type2d='numrad', &
+         avgflag='A', long_name='ground albedo (indirect)', &
+         ptr_col=clm3%g%l%c%cps%albgri, default='inactive')
+
+    call add_fld1d (fname='ME',  units='proportion', &
+         avgflag='A', long_name='moisture of extinction', &
+         ptr_col=clm3%g%l%c%cps%me)
+
+    call add_fld1d (fname='FIRE_PROB',  units='0-1', &
+         avgflag='A', long_name='daily fire probability', &
+         ptr_col=clm3%g%l%c%cps%fire_prob)
+
+    call add_fld1d (fname='MEAN_FIRE_PROB',  units='0-1', &
+         avgflag='A', long_name='e-folding mean of daily fire probability', &
+         ptr_col=clm3%g%l%c%cps%mean_fire_prob)
+
+    call add_fld1d (fname='FIRESEASONL',  units='days', &
+         avgflag='A', long_name='annual fire season length', &
+         ptr_col=clm3%g%l%c%cps%fireseasonl)
+
+    call add_fld1d (fname='FAREA_BURNED',  units='proportion', &
+         avgflag='A', long_name='timestep fractional area burned', &
+         ptr_col=clm3%g%l%c%cps%farea_burned)
+
+    call add_fld1d (fname='ANN_FAREA_BURNED',  units='proportion', &
+         avgflag='A', long_name='annual total fractional area burned', &
+         ptr_col=clm3%g%l%c%cps%ann_farea_burned)
+
+    !-------------------------------
+    ! Energy flux variables not already defined by default - native PFT 
+    !-------------------------------
+
+    call add_fld1d (fname='PARSUN', units='W/m^2', &
+         avgflag='A', long_name='average absorbed PAR for sunlit leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%parsun, default='inactive')
+
+    call add_fld1d (fname='PARSHA', units='W/m^2', &
+         avgflag='A', long_name='average absorbed PAR for shaded leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%parsha, default='inactive')
+
+    call add_fld1d (fname='DLRAD', units='W/m^2', &
+         avgflag='A', long_name='downward longwave radiation below the canopy', &
+         ptr_pft=clm3%g%l%c%p%pef%dlrad, default='inactive')
+
+    call add_fld1d (fname='ULRAD', units='W/m^2', &
+         avgflag='A', long_name='upward longwave radiation above the canopy', &
+         ptr_pft=clm3%g%l%c%p%pef%ulrad, default='inactive')
+
+    call add_fld1d (fname='EFLX_LH_TOT', units='W/m^2', &
+         avgflag='A', long_name='total latent heat flux [+ to atm]', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_tot, default='inactive')
+
+    call add_fld1d (fname='EFLX_SOIL_GRND', units='W/m^2', &
+         avgflag='A', long_name='soil heat flux [+ into soil]', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd, default='inactive')
+
+    call add_fld1d (fname='CGRND', units='W/m^2/K', &
+         avgflag='A', long_name='deriv. of soil energy flux wrt to soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%cgrnd, default='inactive')
+
+    call add_fld1d (fname='CGRNDL', units='W/m^2/K', &
+         avgflag='A', long_name='deriv. of soil latent heat flux wrt soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%cgrndl, default='inactive')
+
+    call add_fld1d (fname='CGRNDS', units='W/m^2/K', &
+         avgflag='A', long_name='deriv. of soil sensible heat flux wrt soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%cgrnds, default='inactive')
+
+    call add_fld1d (fname='EFLX_GNET', units='W/m^2', &
+         avgflag='A', long_name='net heat flux into ground', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_gnet, default='inactive')
+
+    call add_fld1d (fname='DGNETDT', units='W/m^2/K', &
+         avgflag='A', long_name='derivative of net ground heat flux wrt soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%dgnetdT, default='inactive')
+
+    call add_fld2d (fname='SUN_ADD', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy absorbed direct from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_add, default='inactive')
+
+    call add_fld2d (fname='TOT_AID', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='total canopy absorbed indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%tot_aid, default='inactive')
+
+    call add_fld2d (fname='SUN_AID', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy absorbed indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_aid, default='inactive')
+
+    call add_fld2d (fname='SUN_AII', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy absorbed indirect from indirect', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_aii, default='inactive')
+
+    call add_fld2d (fname='SHA_AID', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy absorbed indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_aid, default='inactive')
+
+    call add_fld2d (fname='SHA_AII', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy absorbed indirect from indirect', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_aii, default='inactive')
+
+    call add_fld2d (fname='SUN_ATOT', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy total absorbed', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_atot, default='inactive')
+
+    call add_fld2d (fname='SHA_ATOT', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy total absorbed', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_atot, default='inactive')
+
+    call add_fld2d (fname='SUN_ALF', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy total absorbed by leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_alf, default='inactive')
+
+    call add_fld2d (fname='SHA_ALF', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy total absored by leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_alf, default='inactive')
+
+    call add_fld2d (fname='SUN_APERLAI', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy total absorbed per unit LAI', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_aperlai, default='inactive')
+
+    call add_fld2d (fname='SHA_APERLAI', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy total absorbed per unit LAI', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_aperlai, default='inactive')
+                                                                       
+    !-------------------------------
+    ! Water flux variables not already defined by default  - native PFT
+    !-------------------------------
+
+    call add_fld1d (fname='QFLX_RAIN_GRND', units='mm H2O/s', &
+         avgflag='A', long_name='rain on ground after interception', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_rain_grnd, default='inactive')
+
+    call add_fld1d (fname='QFLX_SNOW_GRND', units='mm H2O/s', &
+         avgflag='A', long_name='snow on ground after interception', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_snow_grnd, default='inactive')
+
+    call add_fld1d (fname='QFLX_SNOWCAP', units='mm H2O/s', &
+         avgflag='A', long_name='excess precipitation due to snow capping', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_snowcap, default='inactive')
+
+    call add_fld1d (fname='QFLX_EVAP_VEG', units='mm H2O/s', &
+         avgflag='A', long_name='vegetation evaporation', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_veg, default='inactive')
+
+    call add_fld1d (fname='QFLX_EVAP_TOT', units='mm H2O/s', &
+         avgflag='A', long_name='qflx_evap_soi + qflx_evap_veg + qflx_tran_veg', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_tot, default='inactive')
+
+    call add_fld1d (fname='QFLX_DEW_GRND', units='mm H2O/s', &
+         avgflag='A', long_name='ground surface dew formation', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_dew_grnd, default='inactive')
+
+    call add_fld1d (fname='QFLX_SUB_SNOW', units='mm H2O/s', &
+         avgflag='A', long_name='sublimation rate from snow pack', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_sub_snow, default='inactive')
+
+    call add_fld1d (fname='QFLX_DEW_SNOW', units='mm H2O/s', &
+         avgflag='A', long_name='surface dew added to snow pacK', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_dew_snow, default='inactive')
+
+    
+#endif
+
+#if (defined CASA)
+    call add_fld1d (fname='CO2FLUX', units='g/m2/s',  &
+         avgflag='A', long_name='net CO2 flux', &
+         ptr_pft=clm3%g%l%c%p%pps%co2flux, set_lake=0._r8)
+
+    call add_fld1d (fname='NPP', units='g/m2/s',  &
+         avgflag='A', long_name='net primary production', &
+         ptr_pft=clm3%g%l%c%p%pps%fnpp, set_lake=0._r8)
+
+    call add_fld1d (fname='PLAI', units='m2/m2',  &
+         avgflag='A', long_name='Prognostic Leaf Area Index', &
+         ptr_pft=clm3%g%l%c%p%pps%plai, set_lake=0._r8)
+
+    call add_fld1d (fname='PET', units='mm h2o/s',  &
+         avgflag='A', long_name='Potential Evapotranspiration', &
+         ptr_pft=clm3%g%l%c%p%pps%pet, set_lake=0._r8)
+
+    call add_fld1d (fname='DEGDAY', units='deg C',  &
+         avgflag='A', long_name='Accumulated degree days', &
+         ptr_pft=clm3%g%l%c%p%pps%degday, set_lake=0._r8)
+
+    call add_fld1d (fname='TDAYAVG', units='deg C',  &
+         avgflag='A', long_name='Daily Averaged Temperature', &
+         ptr_pft=clm3%g%l%c%p%pps%tdayavg, set_lake=0._r8)
+
+! the next three will not give bfb upon restart, due to the frequency of
+! calculation; however, they do not affect other variables (slevis)
+
+    call add_fld1d (fname='STRESST', units=' ',  &
+         avgflag='A', long_name='temperature stress function for leaf loss', &
+         ptr_pft=clm3%g%l%c%p%pps%stressT, set_lake=0._r8)
+
+    call add_fld1d (fname='STRESSW', units=' ',  &
+         avgflag='A', long_name='water stress function for leaf loss', &
+         ptr_pft=clm3%g%l%c%p%pps%stressW, set_lake=0._r8)
+
+    call add_fld1d (fname='STRESSCD', units=' ', &
+         avgflag='A', long_name='cold + drought stress function for leaf loss',&
+         ptr_pft=clm3%g%l%c%p%pps%stressCD, set_lake=0._r8)
+
+    call add_fld1d (fname='LGROW', units=' ',  &
+         avgflag='A', long_name='growing season index (0 or 1)', &
+         ptr_pft=clm3%g%l%c%p%pps%lgrow, set_lake=0._r8)
+
+    call add_fld1d (fname='ISEABEG', units=' ',  &
+         avgflag='A', long_name='index for start of growing season', &
+         ptr_pft=clm3%g%l%c%p%pps%iseabeg, set_lake=0._r8)
+
+    call add_fld1d (fname='NSTEPBEG', units=' ',  &
+         avgflag='A', long_name='nstep at start of growing season', &
+         ptr_pft=clm3%g%l%c%p%pps%nstepbeg, set_lake=0._r8)
+
+    call add_fld1d (fname='BGTEMP', units=' ',  &
+         avgflag='A', long_name='temperature dependence', &
+         ptr_pft=clm3%g%l%c%p%pps%bgtemp, set_lake=0._r8)
+
+    call add_fld1d (fname='BGMOIST', units=' ',  &
+         avgflag='A', long_name='moisture dependence', &
+         ptr_pft=clm3%g%l%c%p%pps%bgmoist, set_lake=0._r8)
+
+    call add_fld1d (fname='EXCESSC', units='g/m2/timestep',  &
+         avgflag='A', long_name='excess carbon', &
+         ptr_pft=clm3%g%l%c%p%pps%excessC, set_lake=0._r8)
+
+    call add_fld1d (fname='CFLUX', units='g/m2/s',  &
+         avgflag='A', long_name='total Carbon flux', &
+         ptr_pft=clm3%g%l%c%p%pps%Cflux, set_lake=0._r8)
+
+    call add_fld1d (fname='XSCPOOL', units='g/m2',  &
+         avgflag='A', long_name='total excess Carbon', &
+         ptr_pft=clm3%g%l%c%p%pps%XSCpool, set_lake=0._r8)
+
+!!! addition
+
+    call add_fld1d (fname='WLIM', units=' ',  &
+         avgflag='A', long_name='Water limitation used in bgmoist (atmp factor)', &
+         ptr_pft=clm3%g%l%c%p%pps%Wlim, set_lake=0._r8)
+
+    call add_fld1d (fname='SOILT', units='deg C',  &
+         avgflag='A', long_name='Soil temperature for top 30cm', &
+         ptr_pft=clm3%g%l%c%p%pps%soilt, set_lake=0._r8)
+
+    call add_fld1d (fname='SMOIST', units='mm3/mm3',  &
+         avgflag='A', long_name='Soil moisture for top 30cm', &
+         ptr_pft=clm3%g%l%c%p%pps%smoist, set_lake=0._r8)
+
+    call add_fld1d (fname='WATOPT', units='mm3/mm3',  &
+         avgflag='A', long_name='watopt for entire column', &
+         ptr_pft=clm3%g%l%c%p%pps%watoptc, set_lake=0._r8)
+
+    call add_fld1d (fname='WATDRY', units='mm3/mm3',  &
+         avgflag='A', long_name='watdry for entire column', &
+         ptr_pft=clm3%g%l%c%p%pps%watdryc, set_lake=0._r8)
+
+!!! end addition
+
+   call add_fld2d (fname='LIVEFR', units='g/m2', type2d='nlive', &
+        avgflag='A', long_name='live fraction for leaf, wood, froot', &
+        ptr_pft=clm3%g%l%c%p%pps%livefr, set_lake=0._r8)
+
+   call add_fld2d (fname='CLOSS', units='g/m2/s', type2d='npools', & 
+        avgflag='A', long_name='Amt. of Carbon lost by pool', &
+        ptr_pft=clm3%g%l%c%p%pps%Closs, set_lake=0._r8)
+
+   call add_fld2d (fname='RESP_C', units='g/m2/s', type2d='npools', &  
+        avgflag='A', long_name='Amt. of Carbon lost to atm by pool', &
+        ptr_pft=clm3%g%l%c%p%pps%Resp_C, set_lake=0._r8)
+
+   call add_fld2d (fname='TPOOL_C', units='g/m2', type2d='npools', &  
+        avgflag='A', long_name='Total Carbon for pool', &
+        ptr_pft=clm3%g%l%c%p%pps%Tpool_C, set_lake=0._r8)
+
+! place holder:
+
+!!$    call add_fld2d (fname='NLOSS', units='', type2d='npools',  &
+!!$         avgflag='A', long_name='Amt. of Nitrogen lost by pool', &
+!!$         ptr_pft=clm3%g%l%c%p%pps%Nloss, set_lake=0.)
+!!$
+!!$    call add_fld2d (fname='RESP_N', units='', type2d='npools',  &
+!!$         avgflag='A', long_name='Amt. of Nitrogen lost to atm by pool', &
+!!$         ptr_pft=clm3%g%l%c%p%pps%Resp_N, set_lake=0.)
+!!$
+!!$    call add_fld2d (fname='TPOOL_N', units='', type2d='npools',  &
+!!$         avgflag='A', long_name='Total Nitrogen for pool', &
+!!$         ptr_pft=clm3%g%l%c%p%pps%Tpool_N, set_lake=0.)
+
+#endif
+
+    ! Print masterlist of history fields
+
+    call masterlist_printflds ()
+
+  end subroutine initHistFlds
+
+end module histFldsMod

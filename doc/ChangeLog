@@ -1,0 +1,1972 @@
+===============================================================
+
+clm3_expa_48
+Originator: forrest (Forrest Hoffman)
+Date: Fri Dec  2 06:50:57 MST 2005
+Model: CLM
+Version: CLM3.expa.48
+One-line Summary: Added bug fix for reading TpoolC in CASA, split long line in DGVM, and modified Makefiles for Cray X1E
+Requires change in build system: yes
+Modified Makefile for the Cray X1E and the newcprnc build
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM (cheetah)
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit)
+Name of tests cases on NCAR Mass-Store: (For changes that change answers)
+Changes made:
+
+1. Fixed TpoolC initialization not to overwrite pools if they were read from
+   initial dataset.
+2. Split a long line in DGVMEstablishmentMod.F90
+3. Updated Makefile for Cray X1E
+4. Updated test system for use on Cray X1E and changed netCDF path for ORNL IBM
+5. Replaced cprnc.f90 with cprnc.F90 in newcprnc and modified its Makefile to
+   use CPP for this file.  NOTE: This was tested only on the IBM and Cray X1E,
+   and may require minor Makefile modifications for other platforms.
+
+Ran the following tests on IBM (cheetah):
+./test-model.pl -res T31      -c $HOME/CCSM/clm3_expa_47
+./test-model.pl -res T31cn    -c $HOME/CCSM/clm3_expa_47
+./test-model.pl -res T31cnall -c $HOME/CCSM/clm3_expa_47
+./test-model.pl -res T31casa  -c $HOME/CCSM/clm3_expa_47
+
+===============================================================
+===============================================================
+
+clm3_expa_47
+Originator: mvertens ( Mariana Vertenstein)
+Date: Fri Nov 25 10:26:47 MST 2005
+Model: CLM
+Version: CLM3.expa.47
+One-line Summary: updated to wrf esmf time manager interfaces
+Requires change in build system: yes
+Makefile is modified	
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) 
+Changes made:
+1) Update offline clm to new wrf esmf time manager interfaces.
+   This change has already been made in the cam code base.
+   This change also implies that the ESMF prototye time manager code
+   is no longer needed. The new time manager interfaces are identical
+   to the latest ESMF library. 	   
+2) Testing done:
+   Verified that the following tests passed and were also bfb 
+   with clm3_expa_46.
+   ./test-model.pl -res T31      
+   ./test-model.pl -res T31cn    
+   ./test-model.pl -res T31cnall 
+   ./test-model.pl -res T31casa  
+   Note - CCSM testing with this code base must still be done.	
+===============================================================
+	
+===============================================================
+
+clm3_expa_46
+Originator: mvertens ( Mariana Vertenstein)
+Date: Fri Nov 11 12:50:40 MST 2005
+Model: CLM
+Version: CLM3.expa.46
+One-line Summary: put in change to csoilc and change in CanopyFluxesMod.F90
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: none
+Tested that restarts are bit-for-bit: no
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself
+Changes answers: Yes (new-physics)
+Changes made:
+
+1) The following two coding changes were made
+In CanopyFluxesMod.F90
+
+  w = exp(-2*(elai(p)+esai(p)))  
+     changed to 
+  w = exp(-(elai(p)+esai(p)))
+
+In clm_varcon.F90
+
+   real(r8) :: csoilc = 0.0025   !Drag coefficient for soil under canopy
+      changed to 
+   real(r8) :: csoilc = 0.004    !Drag coefficient for soil under canopy
+
+2) The following simulation documents the changes 
+   (relative to the clm3 release)- see:
+
+http://www.cgd.ucar.edu/ccr/dlawren/research/hydrology/vh_ncs_lai-hyd_cona/sets.htm
+	
+   hyd_cona  : is the released version of clm3
+   vh_ncs_lai: is new hydrology without csoil changes with new lai dataset
+	
+(contact David Lawrence for more details)	
+	
+3) No other tests were run since the changes were so straightforward
+===============================================================
+	
+===============================================================
+
+clm3_expa_45
+Originator: mvertens ( Mariana Vertenstein)
+Date: Wed Oct 26 15:13:28 MDT 2005
+Model: CLM
+Version: CLM3.expa.45
+One-line Summary: updated to share3_051025 and ESMF_0_0_8 and modified clm_camMod.F90
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: yes
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself, Mat Rothstein
+Changes answers: no (bit-for-bit) 
+Name of tests cases on NCAR Mass-Store: 
+  see following diagnostic output for cam control simulation
+	
+     /MVERTENS/csm/cam3_2_29_fv4x5dom (cam3_2_29 with changes to clm_camMod.F90)
+         vs 
+      /MVERTENs/csm/cam3_2_29_cam3_2_29_fv4x5dom_0 (cam3_2_29 with no changes)
+
+      http://www.cgd.ucar.edu/~mvertens/AMWG_diag/cam3229_fv4x5dom-cam3229_fv4x5dom_0/
+         and also comparison relative to last fv control run done:
+      http://www.cgd.ucar.edu/~mvertens/AMWG_diag/cam3_2_29_fv4x5dom-cam321_fv4x5dom_1
+
+1)Modified clm_camMod.F90 so that cam and clm grid do not have to be bfb. 
+  The tolerance is that the grid latitudes/longitudes grids match to 1.e-12. 
+o  The fractional land however, must be identical.
+2) updated csm_share to share3_051025 (this removes need for autopromotion)
+   in share code and modified clm Makefiles to remove autopromotion	
+3) updated esmf prototype code to ESMF_0_0_8	
+4) Testing done (following tests passed successfully)
+ ./test-model.pl -res T31cnall -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_44
+ ./test-model.pl -res T31      -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_44
+ ./test-model.pl -res T31cn    -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_44
+===============================================================
+	
+===============================================================
+
+clm3_expa_44
+Originator: mvertens ( Mariana Vertenstein)
+Date: Mon Oct 17 09:49:04 MDT 2005
+Model: CLM
+Version: CLM3.expa.44
+One-line Summary: fixed bug in initializeMod.F90 for linux systems
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: yes
+Machines tested: IBM, SGI, Linux
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) 
+Changes made:
+1) Fixed bug in initializeMod.F90 so that all cam tests could
+   pass on linux platform. This was done as part of the cam3_2_28
+   checkin.	
+	
+===============================================================
+===============================================================
+
+clm3_expa_43
+Originator: mvertens ( Mariana Vertenstein)
+Date: Thu Oct 13 20:25:37 MDT 2005
+Model: CLM
+Version: CLM3.expa.43
+One-line Summary: put in fixes to get all cam tests working and bfb with basline cam
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: yes
+Machines tested: IBM, SGI, Linux
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) 
+Changes made:
+1) Put in changes to cam_clmMod.F90 to reset the clm grid
+to the cam grid. This was done to ensure bfb answers. Given
+the number of interface changes that went into clm3_expa_42,
+it seemed that isolating the effects of permitting clm to have
+a grid that was roundoff level different should be done.
+Only a few lines of code need to be changed in order to remove
+this restriction. A climate simulation will be done to verify
+the effect of permitting grid independence to the roundoff level.
+2) Put in fixe to restFileMod.F90 to get cam branch test to
+work on tempest.
+3) Files changed:
+   clm_camMod.F90
+   inicFileMod.F90
+   restFileMod.F90
+4) Testing done - ran cam test-driver.sh with cam3_2_25 and clm3_expa_43 
+on bluesky, tempest and bangkok with BL_ROOT=cam3_2_24.	All tests passed
+successfully.	
+===============================================================
+	
+===============================================================
+
+clm3_expa_42
+Originator: mvertens ( Mariana Vertenstein)
+Date: Tue Oct 11 09:21:49 MDT 2005
+Model: CLM
+Version: CLM3.expa.42
+One-line Summary: put in changes to remove need for autopromotion of floats
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: yes
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit)
+Changes made:
+
+1) Nearly every file in CLM was modified in order to 
+explicitly type variables and constants in order to 
+enable the removal of autopromotion of reals in the Makefile.
+Note that this change was already incorporated into the clm
+version corresponding to cam3_2_23.
+
+Tom Henderson's tool "addrealkind" was used to change "real"
+declarations to "real(r8)" and to add "_r8" to all floating
+point constants that were not already typed. These changes
+were not incorporated into csm_share or utils/esmf.
+
+2) Updated clm_camMod.F90 so that it was consistent with cam3_2_23.
+Put in a tentative change to clm_cam_CheckGrid routine so that
+BFB changes with the current version of cam could be produced.
+Effectively, the cam grid still overrides the clm grid, even
+though the differences in the grids were only on the order of
+1.e-13 for latitudes (no differences in longitudes). A climate simulation
+will have to be done to verify that making the grids independent does
+not change the climate.
+
+3) Testing done	
+   Ran the following tests successfully:	 
+ ./test-model.pl -res T31cnall -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_41
+ ./test-model.pl -res T31      -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_41
+ ./test-model.pl -res T31cn    -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_41
+ ./test-model.pl -res T31casa  -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_41
+ ./test-model.pl -res T31dgvm
+===============================================================
+	
+===============================================================
+
+clm3_expa_41
+Originator: mvertens ( Mariana Vertenstein)
+Date: Sun Oct  2 12:51:03 MDT 2005
+Model: CLM
+Version: CLM3.expa.41
+One-line Summary: changed and simplified clm/cpl6 initializaiton
+Requires change in build system: no
+Tested to work coupled with CCSM: yes (Tony Craig)
+Tested to work with CAM: no
+Machines tested: IBM, SGI
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself, Tony Craig
+Changes answers: no (bit-for-bit)
+Name of tests cases on NCAR Mass-Store: (For changes that change answers)
+Changes made:
+	
+1) CLM/CPL6 initialization has been changed so that clm no longer
+receives the grid and landfrac/landmask from the coupler, but rather
+reads it in from its surface dataset and sends it to the coupler.
+The coupler in turn then checks for consistency between the land/atm
+grid and the land fractions received.
+As part of this, an offline tool has now been constructed by Tony
+Craig that will generate the landfrac and grid appropriate for running
+on a given ocn/atm resoloution. CLM now no longer will permit fsurdat
+to be set to blanks.	
+The following files were modified:
+    main/clm_csmMod.F90
+    main/driver.F90
+    main/program_csm.F90
+    main/histFileMod.F90	
+    biogeochem/DGVMMod.F90	
+
+2) tools/mksurfdata has been modified so that grids can only be
+   read in for the purposes of generating surface datasets. A
+   new directory - tools/mkgriddata - has been created to enable
+   the generation of regular offline clm grids. The functionality
+   of grid generation and surface dataset generation has thereby
+   been separated. There are complete README files in both directories
+   that specify the new namelist settings for generating surface
+   datasets and grids.	
+	
+3) Testing done:
+   ran test-model.pl -c clm3_expa_40 and verifed that results were
+   bfb in the default non-CN case. Further testing in coupled mode
+   will be done by Tony Craig.
+	
+===============================================================
+===============================================================
+
+clm3_expa_40
+Originator: jeff ( Yen-Huei Lee)
+Date: Thu Sep 29 15:26:28 MDT 2005
+Model: CLM
+Version: CLM3.expa.40
+One-line Summary: bug fix restFilemod.F90
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM, SGI, Compaq
+Tested that restarts are bit-for-bit: no
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) 
+Changes made:
+
+ 
+
+===============================================================
+===============================================================
+clm3_expa_39
+Originator: mvertens ( Mariana Vertenstein)
+Date: Fri Sep  9 13:55:43 MDT 2005
+Model: CLM
+Version: CLM3.expa.39
+One-line Summary: made restart files netcdf
+Requires change in build system: no
+Tested to work coupled with CCSM: yes
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) 
+Changes made:
+	
+1) Made all restart data netcdf - EXCEPT for history file restarts
+   (this still binary - they are used for restart runs only, not for branch runs).
+   The effect of this change is that inicFileMod.F90 now only contains code for
+   doing perpetual runs in CAM mode.
+   Initial files and restart files are still written - but they are the same - 
+   ****EXCEPT FOR THE TIME STEP AT WHICH THE ARE OUTPUT***.
+
+   In the current code, the restart file
+        casename.clm2.r.1998-01-01-00000.nc
+   is written on model date 1998-01-01-00000, whereas the initial file
+        casename.clm2.r.1998-01-01-00000.nc 
+   is written on model date 1997-12-31-84600 
+
+   There is a fundamental difference between restart runs and initial runs in clm.
+   On a restart run (assuming 1800 sec time steps), the restart file 
+        casename.clm2.r.1998-01-01-00000.nc
+   will be used to determine the time step 
+        1998-01-01-01800 
+   whereas on an initial run the same restart file (for this tag) will be 
+   used to determine the timestep
+        1998-01-01-00000
+   This is because the restart code increments the time step as part 
+   (by calling advance_timestep()) as part of the time manager initialization.
+   Note that when running in OFFLINE mode, clm also increments the time step
+   for an initial run, so that all initial runs start at time step 1. In 
+   CAM and CSM mode, all initial runs start at time step 0. 
+
+   -----------------------------------------------------------------
+   THE FOLLOWING THINGS ARE IMPORTANT TO NOTE:
+   -----------------------------------------------------------------
+
+   o) initsurfalb will be called either when nsrest is 0 if:
+      - finidat = ' ' 
+      - finidat /= ' ' and albd and albi are not on the initial (or restart) dataset
+
+   o) restart and initial datasets can now be used interchangeably to start up a run
+      Assuming you wanted to start up a run at 1998-01-01-00000 from another run
+      with case "casename"
+      a) Initial runs: finidat should point to 
+        - the restart dataset casename.clm2.r.1998-01-01-00000.nc in OFFLINE mode
+          (this would have been written out at 1999-01-01-00000)
+        - the initial dataset casename.clm2.i.1998-01-01-00000.nc in CAM or CSM mode
+          (this would have been written out at 1997-12-31-84600)
+      b) Branch runs: nrevsn should point to 
+        - the resart filename (CURRENTLY WITHOUT the .nc suffix)
+         (this was done to maintain backwards compatibility) 
+
+   o) The current code base is completly backwards compatible with older versions
+      of the code in terms of doing intitial runs. It is NOT backwards compatible with restart
+      files produced by older versions of the code. 
+
+2) The following routines were changed.
+
+      biogeochem/CNrestMod.F90         (added)
+      biogeochem/DGVMMod.F90
+      biogeochem/DGVMRestMod.F90
+      biogeophys/BiogeophysRestMod.F90 (added)
+      main/CNrestMod.F90               (removed)
+      main/abortutils.F90
+      main/accFldsMod.F90
+      main/accumulMod.F90
+      main/Attic/clm_camMod.F90
+      main/clm_csmMod.F90
+      main/controlMod.F90
+      main/driver.F90
+      main/histFileMod.F90
+      main/Attic/histFldsMod.F90
+      main/inicFileMod.F90
+      main/Attic/initSurfAlbMod.F90
+      main/initializeMod.F90
+      main/Attic/ncdio.F90
+      main/program_csm.F90
+      main/program_off.F90
+      main/restFileMod.F90
+      main/subgridRestMod.F90           (added)
+      main/Attic/time_manager.F90
+      riverroute/RtmMod.F90
+      riverroute/Attic/RunoffMod.F90
+
+3) The automated tests were modified to now run both CASA and DGVM.
+   (A new DGVM control run needs to be performed).
+   Ran the following tests successfully:
+
+  Offline:
+  -------------------
+  ./test-model.pl -res T31cnall -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_38
+  ./test-model.pl -res T31      -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_38
+  ./test-model.pl -res T31cn    -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_38
+  ./test-model.pl -res T31casa  -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_38
+  ./test-model.pl -res T31dgvm  
+
+  Note that ./test-model.pl -res T31cnall now points to finidat obtained from the CCSM
+  BGC case ccsm3_bgc19_F_2: ccsm3_bgc19_F_2.clm2.i.1900-01-01-00000.c050905.nc
+  This initial dataset does not contain all the information that an initial dataset 
+  produced by clm3_expa_19 would have. 
+
+  CCSM:
+  -------------------
+  Checked out two versions of the ccsm tag ccsm3_0_brnchT_bgc19 tags and updated
+  the clm version in one checkout to clm3_expa_38 and the other to clm3_expa_39.
+  Created two test cases 
+        ccsm3_bgc19_F_2_mod1 - used ccsm3_0_brnchT_bgc19 with clm3_expa_38 clm
+        ccsm3_bgc19_F_2_mod2 - used ccsm3_0_brnchT_bgc19 with clm3_expa_39 clm
+  Verified that running the output after a month was bfb with the two cases.
+  (Note that ccsm3_bgc_19 will not give bit-for-bit with 
+  ccsm3_0_brnchT_bgc19 with clm3_expa_38 clm - this needs to be looked into).
+  Also verified that ccsm3_bgc19_F_2_mod2 gave bfb restarts (ran 1 month, restarted
+  and ran another month).
+      	
+	
+===============================================================
+===============================================================
+
+clm3_expa_38
+Originator: thornton ( Peter Thornton)
+Date: Wed Aug 17 10:21:19 MDT 2005
+Model: CLM
+Version: CLM3.expa.38
+One-line Summary: Added C13 isotopes to CN code
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself, Neil Suits
+Changes answers: the non-isotope results are bit-for-bit against clm3_expa_37, 
+	except that the variable xsmrpool has been added as a new carbon state
+        variable, replacing some of the functionality of the cpool variable.
+        So comparisons against clm3_expa_37 will differ in cpool, but this 
+        does not change the behavior of the rest of the prognostic pools. 
+Changes made:
+This work was carried out by Peter Thornton and Neil Suits over multiple
+working sessions during summer 2005. 
+The following files were modified to include C13 isotopes:
+ 1. biogeochem/CNAllocationMod.F90
+ 2. biogeochem/CNBalanceCheckMod.F90
+ 3. biogeochem/CNCStateUpdate1Mod.F90
+ 4. biogeochem/CNDecompMod.F90
+ 5. biogeochem/CNEcosystemDynMod.F90
+ 6. biogeochem/CNPrecisionControlMod.F90
+ 7. biogeochem/CNSetValueMod.F90
+ 8. biogeochem/CNSummaryMod.F90
+ 9. biogeochem/C13SummaryMod.F90
+10. biogeochem/CNC13FluxMod.F90
+11. biogeochem/CNC13StateUpdate1Mod.F90
+12. biogeochem/CNC13StateUpdate2Mod.F90
+13. biogeochem/CNC13StateUpdate3Mod.F90
+14. biogeophys/BareGroundFluxesMod.F90
+15. biogeophys/CanopyFluxesMod.F90
+16. csm_share/shr/shr_const_mod.F90
+17. main/CNiniSpecial.F90
+18. main/CNiniTimeVar.F90
+19. main/CNrestMod.F90
+20. main/atmdrvMod.F90
+21. main/clm_camMod.F90
+22. main/clm_csmMod.F90
+23. main/clm_varcon.F90
+24. main/clmtype.F90
+25. main/clmtypeInitMod.F90
+26. main/histFldsMod.F90
+
+The overall logic was to add new instances of the carbon state and carbon flux
+derived types at the pft and column level to hold the c13 variables.
+Discrimination is calcualted in CanopyFluxes(), and the state variable update
+routines are based on the C13/(C13+C12) ratios for the upstream pools.  There
+is now a C13 state and C13 flux associated with each of the origianl C state
+and C flux variables. A number of new pps and pepv variables have also been
+added as diagnostics for the C13 discrimination during assimilation.
+
+This code passed the clm offline test suite as:
+test-model.pl -res T31 -c clm3_expa_37
+whith the caveat as above for bfb comparisons against expa_37 for cpool.
+
+ 
+===============================================================
+===============================================================
+
+clm3_expa_37
+Originator: thornton ( Peter Thornton)
+Date: Thu Aug 11 12:37:40 MDT 2005
+Model: CLM
+Version: CLM3.expa.37
+One-line Summary: CN hydrology mods and a few other C4MIP mods
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit:yes 
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: Yes for CN, no for non-CN
+Name of tests cases on NCAR Mass-Store: (For changes that change answers)
+Changes made:
+1. Added CN control in CanopyFluxesMod.F90 to use the original formulation for local variable w in calculation of csoilcn.
+2. Added CN control in clm_varcon.F90 to use original value of csoilc (0.004)
+3. Added CN control to SurfaceRunoff() in SoilHydrologyMod.F90 to eliminate the use of infiltration enhancement factor.
+4. Modified CNFireMod.F90 to set the number of steps for fire period averaging to its maximum value from the start of the run. Avoids transient fire algorithm behavior at the start of a new run launching from spun-up initial conditions.
+
+Tested with: 
+test-model.pl -res T31cnoff -c clm3_expa_36 (passed)
+test-model.pl -res T31 (passed)
+
+
+===============================================================
+===============================================================
+
+clm3_expa_36
+Originator: forrest (Forrest Hoffman)
+Date: Thu Jul 21 13:26:51 MDT 2005
+Model: CLM
+Version: CLM3.expa.36
+One-line Summary: Modified PLAI and PET calculations in CASA' and made minor bug fixes
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: yes, on Cray X1E (phoenix)
+Tested to work with CAM: no
+Machines tested: IBM (cheetah)
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: Yes for CASA' only (same-physics)
+Name of tests cases on NCAR Mass-Store:
+Changes made:
+
+1. Fix PLAI calculation in CASA'
+   Added an initialization of stress factors in CASAPhenology for every
+   timestep.
+2. Fix PET calculate in CASA'
+   Changed surface pressure variable used to forc_pbot which is required for
+   CCSM configuration.  Moved the call to CASAPot_Evptr back down into casa()
+   subroutine because of a bug on the Cray X1E which caused crashes in some
+   configurations.
+3. Moved calculation of watopt, watdry, sz, watoptc, watdryc, and szc for
+   CASA' to initCASA() since they need to be calculated only once.
+4. Removed nstep>1 requirement for CASA' routines by moving them to a later
+   stage in driver (after Biogeophysics2).
+5. Moved a vector directive in CASAMod.
+6. Broke two long lines (write statements) in clm_csmMod which cause problems
+   for the Cray compilers.
+7. Replaced the second t_startf() around the call to driver2() in program_csm
+   to a t_stopf().
+
+Ran test-model on IBM (cheetah) for T31cnoff, T31cnoffallpfts, T31, and
+T31allpfts.
+
+===============================================================
+===============================================================
+
+clm3_expa_35
+Originator: mvertens ( Mariana Vertenstein)
+Date: Tue May 31 11:25:06 MDT 2005
+Model: CLM
+Version: CLM3.expa.35
+One-line Summary: bug fixes 
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: yes
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: kyesno
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) (see below)
+Changes made:
+1) clm_csmMod.F90 - changed error check for differences in landfrac to
+   not stop if differences are greater than 1.e-12 and the landfrac is
+   smaller than 1.e-8.
+2) clm_camMod.F90 - replaced all_to_all with all2all in lp_coupling
+   subroutines due to character length limitations of subroutine names
+   on sgi (tempest)
+3) iniTimeConst.F90, surfFileMod.F90 - put in bug fixes for SCAM mode 
+4) mkarbinitMod.F90 - put in bug fix for soilpsi calculation that
+   only occurs for CN mode
+5) modified many of the  routines in tools/mksurfdata so that lsmlon
+   and lsmlat are no longer parameters - but are read dynamically
+   from the input grid file
+6) Testing done:
+   Successfully ran
+   test-model.pl -res T31cnoff   -c clm3_expa_34 (bfb)
+   test-model.pl -res T31        -c clm3_expa_34 (only difference was SOILPSI)
+   test-model.pl -res T31allpfts -c clm3_expa_34 (only difference was SOILPSI)
+===============================================================
+	
+===============================================================
+
+clm3_expa_34
+Originator: thornton ( Peter Thornton)
+Date: Tue May 24 14:29:04 MDT 2005
+Model: CLM
+Version: CLM3.expa.34
+One-line Summary: Limit on negative N leaching, fix units for NEE to coupler
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM, SGI, Compaq
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself, Jeff Lee
+Changes answers: Yes (new-physics)
+Changes made:
+1. Added a new limit in CNNDynamicsMod.F90, CNNLeaching(), to prevent 
+   negative sminn_leached fluxes.
+2. Added a new conversion in clm_csmMod.F90 to put the NEE flux sent
+   to the coupler from gC/m2/s to kg CO2/m2/s.
+===============================================================
+===============================================================
+clm3_expa_33
+Originator: mvertens ( Mariana Vertenstein)
+Date: Wed May 11 21:07:39 MDT 2005
+Model: CLM
+Version: CLM3.expa.33
+One-line Summary: made driver.F90 into a module with two run phases
+Requires change in build system: no
+Tested to work coupled with CCSM: yes (see below)
+Tested to work with CAM:  yes (see below)
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) (offline) or Yes (same-to-roundoff) (cam, ccsm)
+Changes made:
+	
+1) modified driver.F90 so that it is not a module containing
+   subroutines driver1 and driver2. This is a step necessary to make
+   clm an ESMF gridded component. The commmunication calls in CCSM
+   mode have now been moved out of driver and into program_csm.F90.
+   Routine driver1 contains the code executed between the CCSM send
+   and receive calls. Routine driver2 contains the history and restart
+   updates, as well as calls to the DGVM and RTM drivers (if the CPP
+   tokens are defined). This involved mods to program_off.F90,
+   program_csm.F90 and clm_camMod.F90.
+
+2) modified the interface to initialize and driver so that declination
+   angles and calendar day were passed in (caldayp1, declinp1) rather
+   than the orbital parameters (eccen, obliqr, lambm0, mvelpp). This
+   also involved mods to SurfaceAlbedo.F90 and DGVMMod.F90.
+
+3) modified clm_camMod.f90 and program_csm.F90 so that the grid
+   received from cam or the coupler would no longer overwrite the clm
+   grid if differences were less than 1.e-6. Now, if differences in
+   the corresponding grids are greater than 1.e-6, the model will
+   stop, otherwise, the clm grid read in will be used. This leads to
+   round-off level differences in cam and clm compared to the case when
+   the grids were over-written.
+
+4) Modifed clm_varsur.F90 so that external grid information was
+   removed and moved to the appropriate component model.
+
+5) Summary of modified files:
+   biogeochem/DGVMMod.F90,v
+   biogeophys/SurfaceAlbedoMod.F90,v
+   main/clm_camMod.F90,v
+   main/clm_csmMod.F90,v
+   main/clm_varsur.F90,v
+   main/driver.F90,v
+   main/initSurfAlbMod.F90,v
+   main/initializeMod.F90,v
+   main/program_csm.F90,v
+   main/program_off.F90,v
+   main/surfFileMod.F90,v
+
+6) Summary of testing done:
+
+   offline testing (on bluesky - ran following tests successfully):
+     test-model.pl -res T31cnoff        -c clm3_expa_31
+     test-model.pl -res T31             -c clm3_expa_31
+     test-model.pl -res T31allpfts      -c clm3_expa_31
+
+   cam3_1_7 with (clm3_expa_32 with above mods): on bluesky ran
+     test_driver.sh successfully and showed that results were only to
+     roundoff when compared with cam3_1_7 run with clm3_expa_29
+
+   ccsm3_0_brnchT_bgc10 with (clm3_expa_32 with above mods) on bluesky
+     showed that TER.TER.01a.T31_gx3v5.I.bluesky32 passed and that
+     results were only different to roundoff when compared to
+     ccsm3_0_brnchT_bgc10.
+	
+===============================================================
+===============================================================
+
+clm3_expa_32
+Originator: thornton ( Peter Thornton)
+Date: Tue May 10 14:16:45 MDT 2005
+Model: CLM
+Version: CLM3.expa.32
+One-line Summary: Mod to Surface Radiation to avoid divide-by-zero under dynamic pft
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: no
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself, Sam Levis, Mariana Vertenstein
+Changes answers: no (bit-for-bit) 
+Changes made:
+1. A one-line change to SurfaceRadiationMod.F90, adding a new test on gdir(p)
+   > 0.0 in block to assess sunlit and shaded lai.  Corrects a divide-by-zero
+   problem encountered under dynamic PFTs with diagnostic (default) canopy
+   model.
+
+===============================================================
+===============================================================
+
+clm3_expa_31
+Originator: thornton ( Peter Thornton)
+Date: Mon May  9 12:45:03 MDT 2005
+Model: CLM
+Version: CLM3.expa.31
+One-line Summary: migrate CN mods for C4MIP to head of branch
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit:yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers:non-CN is BFB w/ 29, CN has new physics
+Changes made:
+1. Mods in CNDecompMod.F90 to implement accelerated decomposition spinup
+   algorithm. Also required some mods in restart read in CNrestMod.F90.
+2. Mods in CNNDynamicsMod.F90 to implement new N fixation algorithm.
+3. Setting the CN default CO2 concentration to the C4MIP spinup value, in 
+   clm_varcon.F90.
+4. Mods in surfFileMod.F90 to test for deciduous temperate types in the
+   tropics, under allpfts mode.
+5. Using the CLM algorithm for rresis in CanopyFluxesMod.F90, instead of
+   the LSM algorithm that was introduced at tag clm3_expa_27.
+6. Adopting the mods for csoilc (the mid-point mods from clm3_expa_29) for
+   use in CN.
+7. Adopting the surface runoff treatment introduced by David Lawrence in
+   clm3_expa_27 for use in CN.  THis is slightly different than the version
+   used in clm3_expa_23.
+8. Passed offline test-model suite for res: T31cnoff (BFB w/ expa_29), 
+   T31allpfts, and T31. 
+
+===============================================================
+===============================================================
+
+clm3_expa_30
+Originator: thornton ( Peter Thornton)
+Date: Sun May  8 23:20:27 MDT 2005
+Model: CLM
+Version: CLM3.expa.30
+One-line Summary: merge CN mods for C4MIP to head of branch
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: Changes are BFB in non-CN mode, new physics in CN mode.
+Changes made:
+1. Due to a tagging error, clm3_expa_30 is identical with clm3_expa_29.
+===============================================================
+===============================================================
+
+clm3_expa_29
+Originator: mvertens ( Mariana Vertenstein)
+Date: Wed May  4 14:05:30 MDT 2005
+Model: CLM
+Version: CLM3.expa.29
+One-line Summary: incorporated csoilc changes provided by David Lawrence
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: None
+Tested that restarts are bit-for-bit: no
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself, Peter Thornton
+Changes answers: Yes (new-physics)
+Changes made:
+In clm_varcon.F90 changed
+   old: real(r8) :: csoilc = 0.001    !Drag coefficient for soil under canopy [-]
+   new: real(r8) :: csoilc = 0.0025   !Drag coefficient for soil under canopy [-]
+
+In CanopyFluxesMod.F90 changed
+   old: w = exp(-3._r8*(elai(p)+esai(p)))
+   new: w = exp(-2._r8*(elai(p)+esai(p)))
+===============================================================
+	
+===============================================================
+
+clm3_expa_28
+Originator: mvertens ( Mariana Vertenstein)
+Date: Wed May  4 13:08:48 MDT 2005
+Model: CLM
+Version: CLM3.expa.28
+One-line Summary: updated code to have different soil colors classes dependent on surface dataset
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself, Keith Oleson, Peter Thornton
+Changes answers: no (bit-for-bit)
+Changes made:
+1) modified clm_varpar.F90, clm_varcon.F90 and iniTimeConst.F90 so that new and 
+   old soil color classes could be used
+2) modified pftdynMod.F90 to fix bug
+3) modified initialize.F90 in order for CNiniTimeVar to always be called.
+   (this fixes a qflx_drain not initialized problem that occured when initial files were read)
+4) modified RtmMod.F90 to set tempgp and fluxout at ghost latitudes (0 and rtmlat+1) to zero.
+   Thise setting assumes that the river routing data has no communication across the
+   poles - this is true for the river routing file rdirc.05.
+5) modified tools/mksrfdata code so that it could generate either new or old soil color classes
+   based on input from raw datasets
+6) changed testing scripts so that T31 tests would be done by default
+7) following tests were run
+   ./test-model.pl -res T31        -c clm3_expa_27
+   ./test-model.pl -res T31cnoff   -c clm3_expa_27
+   ./test-model.pl -res T31allpfts -c clm3_expa_27
+===============================================================
+	
+===============================================================
+
+clm3_expa_27
+Originator: thornton ( Peter Thornton)
+Date: Tue Apr 26 14:29:20 MDT 2005
+Model: CLM
+Version: CLM3.expa.27
+One-line Summary: Mods to make sun/shade canopy and soil hydrology changes the default
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no 
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself, David Lawrence
+Changes answers: Yes (new-physics)
+Changes made:
+
+1. Removed old SurfaceRadiation(), and moved SurfaceRadiationSunShade() 
+   to SurfaceRadiation() as the new default subroutine.  Eliminated SUNSHA cpp
+   directive.
+2. Removed old Stomata() and moved StomataCN() to Stomata() as the new default
+   subroutine.  Eliminated STOMATA2 cpp directive.
+3. Changed the default treatment of BTRAN to the LSM approach, and added watdry
+   and watopt as new variables in data structure.  This was part of the suite of
+   changes recommended by David Lawrence.
+4. Made the simple canopy interception correction suggested by Thornton the
+   default behavior (new_fpi = old_fpi * 0.25)
+5. Modified csoilcn to reduce ground evaporation under canopies, as suggested
+   by David Lawrence.
+6. Modified drainage() to eliminate drainage from mid-layer soils, both wet
+   and dry.
+7. Eliminate exponential decrease in saturated hydraulic conductivity (hksat)
+   with depth, change in iniTimeConst().
+8. Modify surface runoff from dry soils, introducing a function of rooting
+   fraction in the top three layers. Change recommended by David Lawrence.
+9. Testing done: The following tests all passed:
+	test-model.pl -res T42
+	test-model.pl -res T42allpfts
+	test-model.pl -res T42cnoff
+10. These changes were also compared with the earlier simulations done by David
+   Lawrence and Peter Thornton, and found to give consistent results. 
+	
+===============================================================
+===============================================================
+clm3_expa_26
+Originator: mvertens ( Mariana Vertenstein)
+Date: Fri Apr 22 10:47:01 MDT 2005
+Model: CLM
+Version: CLM3.expa.26
+One-line Summary: updated to new timing library
+Requires change in build system: no
+Tested to work coupled with CCSM: yes
+Tested to work with CAM: yes (with cam interface changes)
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) 
+Changes made:
+1) Code Changes
+utils/timing
+   - uptdated to new timing library changes put in by Jim Rosinski
+clm_camMod
+   - removed parallel and streaming directives which should not be in clm-model interfaces
+     (these were removed from the clm_csmMod.F90 as well)
+   - moved call to radiation_get from initext.F90 to here to keep the interface simple
+   - removed orbital parameters from the clm_camRun interface to keep the interface simple
+clm_varcon, iniTimeConst
+   - made albdry, albsat allocatable arrays and initialized them in iniTimeConst
+     depending on the presence and value of mxsoil_color in the input surface dataset
+controlMod, clm_varctl
+   - removed csm_dtime
+   - removed local time_manager variables for COUP_CAM mode and only permitted those
+     to be in the namelist when running through COUP_CSM or OFFLINE mode (only local varialbe
+     dtime was kept)
+   - removed allocate_all_vegpfts, rank_veg_pfts as a namelist variables
+     ***when maxpatch_pft is set to numpft+1 then allocate_all_vegpfts is always true***
+   - removed all msrf_***_*** namelist variables
+program_off, program_csm
+   - removed old copyright notice
+   - put in changes to be compatible with new timing library
+restFileMod
+   - removed get_nstep for COUP_CAM mode
+   - removed csm_dtime
+surfFileMod
+   - put in changes of fullgrid that were introduced in cam3_0_28 to work with reduced grid
+   - removed rank_veg_pfts logic and introduced allocate_all_vegpfts
+
+2) Updated test-model.pl related code to correspond to above changes
+
+3) Testing done
+   Ran following tests successfully on bluesky:
+     test-model.pl -res T42        -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_25
+     test-model.pl -res T42allpfts -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_25
+     test-model.pl -res T42cnoff   -c /fis/cgd/cseg/people/mvertens/src/clm/clm3_expa_25
+   Ran cam testing suite on bluesky and bankgok with cam interface changes
+   and this code and all tests successfully passed
+===============================================================
+	
+===============================================================
+
+clm3_expa_25
+Originator: forrest (Forrest Hoffman)
+Date: Wed Mar 30 23:47:17 MST 2005
+Model: CLM
+Version: CLM3.expa.25
+One-line Summary: CASA' bug fixes and Cray X1 changes
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM (cheetah) and x86 Linux (anchorage)
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit)
+Name of tests cases on NCAR Mass-Store: (For changes that change answers)
+Changes made:
+
+Modified jobscript.csh to add selection of Programming Environment for Cray X1
+and to support cross compiling.
+
+Modified test_batch.csh to add selection of Programming Environment for Cray X1.
+
+Fixed minor bugs in CASA' code and added co2flux variable and history field
+in the CASA configuration for flux to the atmosphere (instead of re-using the
+fco2 variable).
+
+Removed CSDs around the allocation loop in filterMod.F90.
+
+Ran test-model on IBM (cheetah) and x86 Linux (anchorage); bit-for-bit with clm3_expa_24.
+
+===============================================================
+===============================================================
+
+clm3_expa_24
+Originator: jeff ( Yen-Huei Lee)
+Date: Fri Mar 18 11:01:33 MST 2005
+Model: CLM
+Version: CLM3.expa.24
+One-line Summary: pass co2 flux to atm
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM, SGI, Compaq
+Tested that restarts are bit-for-bit: no
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) or Yes (same-to-roundoff, same-physics, new-physics)
+Name of tests cases on NCAR Mass-Store: (For changes that change answers)
+Changes made:
+
+M /src/main/clm_csmMod.F90
+M /src/main/lnd2atmMod.F90
+
+        (Put your detailed description of the changes you made here...)
+       (You will get your edited copy e-mailed to you.)
+
+===============================================================
+===============================================================
+
+clm3_expa_23
+Originator: thornton ( Peter Thornton)
+Date: Thu Mar 10 11:32:02 MST 2005
+Model: CLM
+Version: CLM3.expa.23
+One-line Summary: CLM Coupling mods to pass CO2 to CLM from CAM, through cpl6
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: yes
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: Jeff Lee, Mariana Vertenstein, myself
+Changes answers: no (bit-for-bit)
+Changes made:
+
+Modifications to allow passing CO2 concentration from CAM to CLM, through cpl6, in CCSM coupled mode.
+1. new namelist variable in CLM: co2_type.  'constant' = use co2 value from clm_varcon.F90.  'diagnostic' = use co2 concentration passed from CAM in the co2_diag field.  'prognostic' = use CO2 concentration passed from CAM in the co2_prog field.  both co2_diag and co2_prog are 2d fields.
+2. modifications to the communications code that allows passing the new fields in from CAM.
+3. Tested for BFB against clm3_expa_22.
+
+===============================================================
+===============================================================
+
+clm3_expa_22
+Originator: thornton ( Peter Thornton)
+Date: Fri Mar  4 14:29:36 MST 2005
+Model: CLM
+Version: CLM3.expa.22
+One-line Summary: Changes to soil hydrology to improve plant water availability for CLM-CN
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: Yes (new-physics)
+Changes made:
+1. Removed exponential decrease in saturated hydraulic condicutivity with depth (modified iniTimeConst.F90)
+2. Set smpmax = -2.57e5 (=-2.5Mpa) in clmtypeInit.F90, to better agree with the observed soil water potential at stomatal closure for most trees and grasses.  The original value was -1.55e5 (=-1.5MPa), which is a wetter soil than is observed to cause complete stomatal closure for most species.  The new value is still not negative enough for drought-tolerant species like semiarid shrubs.
+3. Modified the qflx_over (surface runoff) term, keeping the components unchanged that relate to impermeable and saturated soils, but turning off this flux entirely for unsaturated soils.
+4. Modified the qflx_drai (drainage flux) term (in SoilHydrology) to turn off the mid-layer drainage for both saturated and unsaturated fractions.  Remaining drainage terms are for drainage out of the bottom soil layer, and for drainage in excess of saturation in any layer.
+5. Changed the implementation of rooting distribution from exponential to linear, with a bottom layer specified differently for woody and non-woody vegetation.  Woody vegetation is now set to decrease rooting distribution linearly with depth, ending at zero rooting for the bottom of the last soil layer.  Non-woody vegetation also decreases rooting distribution linearly with depth, ending at zero distribution at the bottom of layer 8 (of 10).  This gives a bottom for woody vegetation at 3.43 m, and a bottom for non-woody vegetation at 1.38 m.  THis change improves the access of both trees and grasses to water in deeper soil layers, compared to the original exponential depth distribution.
+
+===============================================================
+===============================================================
+
+clm3_expa_21
+Originator: thornton ( Peter Thornton)
+Date: Fri Feb 18 12:42:48 MST 2005
+Model: CLM
+Version: CLM3.expa.21
+One-line Summary: Mods in prep for C4MIP runs: dynamic N deposition, changed N fixation, moved order of calls in driver
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: Yes (new-physics)
+Changes made:
+1. Implemented dynamic N deposition through single netcdf file with annual
+timeseries.  Turn on with namelist variable fndepdyn = <filename>
+2. Moved call to EcosystemDyn to the end of the timestep in driver, before mass balance checks, which are before Surface Albedo.  This changes answers slightly
+because soil temperature is used in CNEcosystemDyn, and is being updated in
+Biogeophysics2, which used to be called after ecosystemdyn, but is now called
+before. No compelling science reason for doing this one way vs the other,
+but doing it this way cleans up the order of calls in driver.
+3. Moved the initialization of mass balance checking to the front of the
+timestep, for C and N, which was done for water in expa_17.  This is in prep
+for dynamic shifting of C and N mass due to dynamic landcover information.
+Note that this code does not yet implement the C and N mass shifting required 
+for mass balance under dynamic pft weight.  THat will come in my next tag.
+4. Modified N fixation to use a siongle global constant instead of relating
+it to NPP.  This speeds up the spinup, but it leaves unresolved the problem of
+hpw to dynamically estimate a value for Nfix.
+5. Modified tools/mksurfdata/mkpftMod.F90 to remove the commenting around the
+complete PFT list that I had put in during testing for expa_17.  This will only 
+affect use of the offline tool for creating new surface datasets.
+
+Testing done:
+ran test-model on bluesky (IBM).
+Did extensive testing for restart and MPI/OMP configurations with the
+dynamic N deposition capability.
+===============================================================
+===============================================================
+
+clm3_expa_20
+Originator: mvertens ( Mariana Vertenstein)
+Date: Thu Feb 10 15:14:44 MST 2005
+Model: CLM
+Version: CLM3.expa.20
+One-line Summary: 
+Requires change in build system: no
+Tested to work coupled with CCSM: yes
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) (yes for CCSM relative to clm3_expa_19)
+Name of tests cases on NCAR Mass-Store: (For changes that change answers)
+Changes made:
+1) Put in changes from clm3_expa_16->clm3_expa_17 for clm_clmsMod.F90 back -
+   these changes were inadvertently removed in clm3_expa_18	  
+2) Testing done:
+   Checked out ccsm3_0_brnchT_bgc1 and used clm code from
+   clm3_expa_17 and clm3_expa_20 for tests
+   verified that TER.01a.T31_gx3v5.I.bluesky
+   was bfb when	clm3_expa_20 code and clm3_expa_17 code 
+   was used for clm (note that when using clm3_expa_17 code, 
+   cpl_fields_mod.F90 from ccsm3_0_1_beta03 had to be used for the test)	
+	
+===============================================================
+===============================================================
+
+clm3_expa_19
+Originator: forrest (Forrest Hoffman)
+Date: Mon Jan 31 10:09:45 MST 2005
+Model: CLM
+Version: CLM3.expa.19
+One-line Summary: Changes for CASA model version and vector mods for recent code changes
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM (cheetah), x86 Linux (anchorage)
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit)
+Name of tests cases on NCAR Mass-Store: (For changes that change answers)
+Changes made:
+
+Changes for CASA model version and vector mods for recent code changes
+
+CASA-related changes:
+1. Added pft-level clayfrac(:) variable which, like sandfrac(:), contains
+   the first level clay fractions.  These are now set in iniTimeConst for
+   all pfts since the sand3d(i,j,l) and clay3d(i,j,l) variables from which
+   they are obtained are local to that subroutine.
+2. Moved call to pftdyn_wbal_init() outside ifdef so that column-level
+   h2ocan_loss(:) is initialized in all configurations since it is always
+   used in Hydrology1Mod.F90.
+3. Removed CASA from ifdef line so that water balance routines are
+   performed in the CASA configuration with dynamic landuse.
+
+Vector and performance mods:
+1. Removed loop exits in BalanceCheckMod.F90 which prevented
+   vectorization.
+2. Modified filter construction loop in SurfaceAlbedoMod.F90 for
+   vectorization.
+3. Added vector directives for filter loop recently added to filterMod.F90
+4. Added OpenMP and Cray Streaming directives to loop over clumps in
+   filterMod.F90 since setFilters() is called repeatedly in dynamic
+   landuse configuration.
+5. Vectorized pftdynMod.F90.
+
+Ran test-model on IBM (cheetah) and x86 Linux (anchorage) comparing with
+clm3_expa_18.
+
+===============================================================
+===============================================================
+
+clm3_expa_18
+Originator: mvertens ( Mariana Vertenstein)
+Date: Fri Jan 28 16:59:10 MST 2005
+Model: CLM
+Version: CLM3.expa.18
+One-line Summary: put in new interface in clm_csmMod.F90 for BGC generalization
+Requires change in build system: no
+Tested to work coupled with CCSM: yes
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes (CCSM)
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself, Rob Jacob
+Changes answers: no (bit-for-bit) 
+Changes made:
+Changed clm_csmMod.F90 and csm_share/cpl/cpl_fields_mod.F90 so
+that indexing of fields would occur via MCT prompting commands
+rather than through parameters.	
+===============================================================
+===============================================================
+
+clm3_expa_17
+Originator: thornton ( Peter Thornton)
+Date: Mon Jan 24 10:21:26 MST 2005
+Model: CLM
+Version: CLM3.expa.17
+One-line Summary: modifications to allow water conservation with dynamic pft weights
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: Yes (new-physics)
+Name of tests cases on NCAR Mass-Store: (For changes that change answers)
+Changes made:
+
+Added code that references the pft weight shifts introduced in
+clm3_expa_16, and alters state and flux variables to maintain water
+mass balance across the weight shift.
+1. added routine pftdyn_wbal, called from driver(), that calculates
+   the necessary changes in state and flux variables.  The only state variable
+   affected are the pft and column level h2ocan (intercepted water stored on
+   canopy).  For timesteps in which weight of a PFT increases, the water
+   state is spread over the increased area, resulting in lower h2ocan
+   concentration, but conserved mass.  For increases from zero weight in the
+   previous timestep, the previous h2ocan mass is controlled to be zero.
+   For timesteps in which a pft weight is decreasing, the h2ocan mass
+   associated with the lost area is transferred to to top of the snow/soil
+   column, through a flux in parallel with throughfall. Weight shifting is
+   constrained to occur on albedo timesteps.
+2. Beginning water balance for the timestep is assessed prior to the weight
+   shift, and the end balance is assessed following the weight shift.  Since
+   the water balance is assessed at the column level, using pft-level h2ocan
+   states that have been averaged to the column based on the new pft weights,
+   this ordering will catch mass balance errors associated with incorrectly
+   accounting for the pft-level changes in h2ocan mass.
+3. pftdyn_interp() is also modified from clm3_expa_16, so that now if a 
+   pftdyn dataset is specified and the current model time is before the first
+   year of the pftdyn dataset, the first year of the pftdyn dataset is used
+   until the model time enters the pftdyn dataset time range.  Likewise, if
+   the model time is after the final year of the pftdyn dataset, pft weights
+   from the last year of the pftdyn dataset are used for the rest of the 
+   simulation.
+===============================================================
+===============================================================
+
+clm3_expa_16
+Originator: mvertens ( Mariana Vertenstein)
+Date: Tue Dec 21 13:38:17 MST 2004
+Model: CLM
+Version: CLM3.expa.16
+One-line Summary: incorporated dynamic land use functionality
+Requires change in build system: yes (see notes below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: yes (no comparison made however)
+Machines tested: IBM, Linux(lf95)
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself, Peter Thornton
+Changes answers: no (bit-for-bit) 
+Changes made:
+1) removed generation of surface datasets as part of CLM and created offline tool
+   see $ROOTDIR/tools/mksurfdata and look at README file in this directory
+
+2) parameters:
+   clm_varpar.F90 - the paramater maxpatch_pft is now set to a cpp token MAXPATCH_PFT
+   (note that the cpp token can be set to numpft+1)
+
+3) namelist:
+   namelist addition - the following variables have been added to the namelist
+     rank_vegpfts, allocate_all_vegpfts, fpftdyn  
+   - the following defaults are set for these variables
+     fpftdyn = ' '
+     if (maxpatch_pft == numpft+1) then	
+        allocate_all_vegpfts = .true.
+        rank_vegpfts = .false.
+     else
+        allocate_all_vegpfts = .false.	
+        rank_vegpfts = .true. 
+     end if
+   - if fpftdyn is non-blank: 
+      - the dynamic landuse dataset specified by fpftdyn is used at
+        every time step to read in and interpolate the weights and 
+        a new call to setFilters is done after the weights are read in
+      - rank_vegpfts must be false and allocate_all_vegpfts must be true
+        if fpftdyn is non-blank
+      - SCAM, DGVM and CASA cannot be defined if fpftdyn dyn is non-blank
+   - the following namelist options can still be read in (for backwards compatibility)
+     but currently do not do anything
+        mksrf_fvegtyp, mksrf_fsoitex, mksrf_fsoicol, mksrf_flanwat, &
+        mksrf_fglacier, mksrf_furban, mksrf_flai, mksrf_offline_fgrid, &
+        mksrf_offline_edgen, mksrf_offline_edgee, mksrf_offline_edges, &
+        mksrf_offline_edgew, mksrf_offline_fnavyoro
+
+4) surfFileMod.F90:
+   this routine has been completely rewritten in order to facilitate the
+   addition of dynamic land use (fpftdyn)
+   the public interface - surfrd now contains the following logic:
+
+   surfrd(veg, wtxy)
+       call surfrd_get_grid(ncid) 
+       call surfrd_wtxy_special(ncid, pctspec, veg, wtxy)
+   #if (! defined DGVM)     
+       if (rank_vegpfts) then
+          call surfrd_wtxy_veg_rank(ncid, pctspec, veg, wtxy)
+       else
+          call surfrd_wtxy_veg_all(ncid, pctspec, veg, wtxy)
+       end if
+   #else
+       call surfrd_wtxy_veg_dgvm(pctspec, veg, wtxy)
+   #endif
+
+   routine surfrd_get_grid reads in grid information from the surface dataset
+   and if COUP_CAM or COUP_CSM are defined - compares this grid information
+   with that obtained from either the CAM or CSM via the arrays 
+   (ext_longxy, ext_latixy, etc)
+
+5) any calculations involving weights have been removed from inicFileMod.F90
+   and restFileMod.F90 and put into DriverInitMod.F90. All future coding should
+   maintain this requirement the inicFileMod.F90 and restFileMod.F90 do not
+   need updated weights for any calculations.
+
+6) initializeMod.F90:
+   this routine was completely rewritten in order to facilitate the addition
+   of dynamic land use (fpftdyn). New documentation in the routine should help
+   the readability:
+
+7) iniTimeConst.F90:
+   The following arrays are now local to iniTimeConst.F90 which obtains their
+   values in a separate read from the surface dataset. This was done to conserve
+   memory as higher resolutions CLM versions are implemented.
+     soic2d(lsmlon,lsmlat)         ! read in - soil color
+     sand3d(lsmlon,lsmlat,nlevsoi) ! read in - soil texture: percent sand
+     clay3d(lsmlon,lsmlat,nlevsoi) ! read in - soil texture: percent clay
+     ndep(lsmlon,lsmlat)           ! read in - annual nitrogen deposition rate (gN/m2/yr)
+
+8) iniTimeVar.F90
+   this routine has been split up into module mkarbinitMod.f90 and initSurfAlbMod.F90.
+   
+9) COUP_CAM
+   atm_lndMod.F90 and lp_coupling.F90 have been combined into a new module - 
+   clm_camMod.F90. All the routines in lp_coupling.F90 are now private to clm_camMod.F90.
+
+10) testing done:
+   # summary of tests:
+   # T42       : CN on , allocate_all_vegpfts = .true. , maxpatch_pft=4
+   # T42cnoff  : CN off, allocate_all_vegpfts = .false., maxpatch_pft=4
+   # T42allpfts: CN on , allocate_all_vegpfts = .true. , maxpatch_pft=numpft+1
+   # DGVM      : CN off, allocate_all_vegpfts = .false., maxpatch_pft=10
+   all final tests were done on ibm and linux(lf95)
+   - ran test-model.pl               -c clm3_expa_14 successfully (ibm, linux)
+   - ran test-model.pl -res T42cnoff -c clm3_expa_14 successfully (ibm, linux)
+   - ran test-model.pl -res DGVM     -c clm3_expa_14 successfully (ibm)
+   - verified that ccsm3_0_1_beta03_clm3_expa_16 and ccsm3_0_1_beta03_clm3_expa_14
+     were bfb for TSM.01a.T31_gx3v5.I.blackforest
+   - verified that ccsm3_0_1_beta03_clm3_expa_16 TER.01a.T31_gx3v5.F.blackforest passed
+   - ran test-model.pl successfully cam (cam3_0_21_clm3_expa_16) but did not
+     compare to cam3_0_31 (***this still needs to be done***)
+   - created dynamic landuse dataset for 1980 and 1981 that had identical
+     pft information as the corresponding surface dataset - verified
+     that interpolation	was working correctly - however, was not able
+     to introduce roundoff level changes for a long time period when
+     these dynamic datatset was used since the interpolation introduced
+     roundoff level changes in the weights which corrpespondingly
+     introduced higher than roundoff level changes in the simulation
+     due to the averaging of pft->col weights.	      
+===============================================================
+	
+===============================================================
+
+clm3_expa_15
+Originator: forrest (Forrest Hoffman)
+Date: Mon Dec 20 14:33:59 MST 2004
+Model: CLM
+Version: CLM3.expa.15
+One-line Summary: CN and subgridAve vector modifications and CASA' flux initialization fix
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM (blackforest and cheetah), i386 Linux (anchorage)
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself, Mariana Vertenstein
+Changes answers: no (bit-for-bit) except on Cray X1
+Changes made:
+
+CN Vector Modifications
+-----------------------
+Modified all CN source files in biogeochem/ and main/ to provide vector
+performance of code on Cray X1.  Performed offline model validation test on
+Cray X1 compared by Peter Thornton against results from the IBM.
+
+subgridAve Vector Modifications
+-------------------------------
+Modified the subgrid averaging routines to provide vector performance since
+they must now be called every timestep for dynamic prescribed vegetation.
+CPP_VECTOR must be defined for these code sections to be used; otherwise, the
+more compact non-vector version is compiled.
+
+CASA' Flux and Carbon Pool Initialization
+-----------------------------------------
+fco2, fnpp, and Cflux are now initialized to 0._r8 in initCASA() so that
+they are scaled correctly up to the gridcell level.  Vegetation and wood
+carbon pools are now scaled either by 1.0 or 0.0 since CASA initial carbon
+pool file contains values in terms of vegetation percent averages.
+
+test-model was run on blackforest and cheetah (IBMs) and anchorage (Linux).
+test-model no longer runs correctly on the Cray X1, but the validation
+demonstrated correct results on the Cray X1.
+
+===============================================================
+===============================================================
+
+clm3_expa_14
+Originator: mvertens ( Mariana Vertenstein)
+Date: Tue Nov 16 15:08:17 MST 2004
+Model: CLM
+Version: CLM3.expa.14
+One-line Summary: bug fix in clm_csmMod.F90
+Requires change in build system: no
+Tested to work coupled with CCSM: yes
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: see (clm3_expa_13)
+Changes made:
+1) put in a bug fix that enabled coupled mode to work
+2) testing done:	
+   validated that coupled mode gave bfb answers with clm3_expa_12 
+   when old pft dataset and maxpatch_pfts were used (did F case and K case).
+   validated that using maxpatch_pft = 17 worked and gave restarts
+   (needed to create a new T31 surface format dataset to do this)	
+===============================================================
+	
+===============================================================
+
+clm3_expa_13
+Originator: mvertens ( Mariana Vertenstein)
+Date: Mon Nov  1 09:48:45 MST 2004
+Model: CLM
+Version: CLM3.expa.13
+One-line Summary: added allocation for all pfts on new surface dataset
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM, SGI, Linux(lf95)
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself, Peter Thornton
+Changes answers:  Yes (same-to-roundoff) - climate validation is needed
+Changes made:
+	
+1) Introduced a new clm namelist, allocate_all_vegpfts, that if set to
+   true will reserve memory for numpft+1 pfts on the vegetated
+   landunit. This namelist setting is only valid when the new format
+   surface dataset is used (with all possible pfts present on the
+   gridcell). This namelist setting is not valid in DGVM mode.
+
+2) Changed the calculations so that are done only on pfts where the
+   weight relative to the gridcell is greater than 0.
+
+3) Changed the history file code so that if xy output is requested,
+   the history buffer is always on the gridcell level and mapping to
+   the gridcell is done for every history field at every timestep.
+
+4) loops that went from 1,maxpatch_pft were modified to go from
+   1,max_pft_per_col where max_pft_per_col is set to numpft+1 in 
+   clm_varpar.F90.
+   
+5) Changes were as follows:
+
+  o) modified clm_varpar so that 
+
+     integer, parameter :: max_pft_per_gcell = (numpft+1) + 4 + maxpatch_cft
+     integer, parameter :: max_pft_per_col   = numpft+1
+
+  o) The following files were change so that calculations were only done
+     if the pft weight relative to the gridcell was > 0.
+
+      biogeochem/CNFireMod.F90
+      biogeochem/CNGapMortalityMod.F90
+      biogeochem/CNPhenologyMod.F90
+      biogeochem/DUSTMod.F90
+      biogeophys/BalanceCheckMod.F90
+      biogeophys/Biogeophysics2Mod.F90
+      biogeophys/DriverInitMod.F90
+      biogeophys/SoilHydrologyMod.F90
+      biogeophys/SoilTemperatureMod.F90
+      biogeophys/SurfaceAlbedoMod.F90
+      biogeophys/Attic/SurfaceRadiationMod.F90
+      main/CNiniTimeVar.F90
+      main/clm_csmMod.F90
+      main/lnd2atmMod.F90
+      main/subgridAveMod.F90
+
+   o) Rewrote CanopyFluxesMod.F90 so that calls to 
+      Stomata, StomataCN and FrictionVelocity would not result in array copies
+      (modified Stomata and StomataCN to point to clm3 type arrays rather than
+      passing these in as arguments).  Also changed calculations so that
+      they were only done if the pft weight relative to the gridcell was > 0.
+
+   o) Removed unnecesary variables from DGVMMod.F90
+
+   o) Changed biogeochem/STATICEcosysDynMod.F90 so that logic is more extensible
+      in setting mlai, msai, mhvt, mhvtb to non-zero values 
+
+   o) Removed the Error check: global sum fld_o = global sum fld_i in areaMod.F90.
+      this resulted in erroneous error messages when running with a reduced grid.
+
+   o) Added allocate_all_vegpfts to clm_varctl.F90 and controlMod.F90. 
+      By default this is set to .false.
+
+   o) Modified FilterMod.F90 so that pft filters are only calculated where the
+      pft weights relative to the gridcell are greater than 0.
+
+   o) Modified histFileMod.F90 so that history buffer is at the gridcell level
+      when xy output is requested. Also 1d history buffer is only updated when
+      the weight relative to the gridcell is greater than 0. Also, modified
+      histFldsMod.F90 so that RSSHA, RSSUN are now time averaged fields
+      and TSNOW, SNOWLIQ and SNOWICE are now instantaneous fields.
+ 
+   o) Modified inicFileMod.F90 so that T_REF2M was added. 
+
+   o) Modified initSubGridMod so that npfts_per_lunit = numpft+1 if allocate_all_vegpfts
+      is true.
+
+   o) Modified mlai.F90, mkpft.F90 and mksrfdatMod.F90 so that only new surface data format
+      is created.
+
+6) Testing Done:
+
+   incorporated allocate_all_pfts=.true. as default in test-model.pl
+
+   linux (lf95) (anchorage)
+      ran test-model.pl               successfully (CN on , full alloc on )
+      ran test-model.pl -res T42cnoff successfully (CN off, full alloc on )
+      ran test-model.noalloc.pl       successfully (CN on , full alloc off)
+
+      Comparing the diagnostic output from for alloc-on and alloc-off for CN on,
+      the output was the same for first 5 time steps and then started diverging. 
+      A climate simulation needs to be done to verify that the roundoff level 
+      differences results in the same climate.
+
+   ibm-sp (blackforest)
+      ran test-model.noalloc.pl and test-model.pl (CN is on)
+         diagnostic output was the same for the first 3 timesteps and then started diverging
+      ran test-model.noalloc.pl -res T42cnoff and test-model.pl -res T42CNoff (CN is off)
+         diagnostic output was the same for the first 8 timesteps and then started diverging
+      ran test-model.noalloc.pl -res T42cnoff compared with clm3_expa_12
+         verified that only roundoff differences appeared in the history file fields accept
+         for RSSHA, RSSUN, TSNOW, SNOWLIQ, SNOWICE (see above)
+      ran test-model.hist1d.pl 
+      ran test-model.noalloc.hist1d.pl compared with clm3_expa_12 
+	 1d history file output was identical except for TSNOW, SNOWLIQ and SNOWICE 
+	
+   sgi-irix64 (tempest)
+      ran test-model.noalloc.pl and test-model.pl (CN is on)
+         diagnostic output was the same for the first 3 timesteps and then started diverging
+      ran test-model.pl -res T42cnoff (CN is off)
+      ran test-model.noalloc.pl -res DGVM 
+
+   ***Note*** testing must still be done for COUP_CSM and COUP_CAM model
+   ***Note*** more testing needs to be done with DGVM to validate answers 
+   ***Note*** did not test generation of surface datasets, this must also be done
+	
+===============================================================
+===============================================================
+
+clm3_expa_12
+Originator: thornton ( Peter Thornton)
+Date: Mon Oct 18 13:03:57 MDT 2004
+Model: CLM
+Version: CLM3.expa.12
+One-line Summary: Moved surface albedo call to end of driver loop.
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: yes
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: Yes
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: Mariana Vertenstein, Peter Thornton
+Changes answers: Yes (new-physics)
+Name of tests cases on NCAR Mass-Store: (For changes that change answers)
+ccsm3_K_sa1, ccsm3_K_sa2, ccsm3_K_cnsa1, ccsm3_K_cnsa2
+Changes made:
+
+Merged loop1 and loop2 in clm driver. Now surface albedo is called at the
+end of the loop, and csm_send is called after the loop. This change is the
+first step in getting all updates to prognostic variables moved to the end
+of the timestep, in preparation for water and carbon isotope code.
+
+===============================================================
+===============================================================
+
+clm3_expa_11
+Originator: forrest (Forrest Hoffman)
+Date: Mon Sep 20 11:49:36 MDT 2004
+Model: CLM
+Version: CLM3.expa.11
+One-line Summary: Added experimental CASA' carbon cycle model to CLM.  Renamed *_transfer* variables in CN code to *_xfer* and modified history field names to match.
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: yes
+Machines tested: IBM (cheetah and blackforest), x86 Linux (anchorage), Cray X1 (phoenix)
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself, Jasmin John
+Changes answers: no (bit-for-bit)
+Changes made:
+
+Added the CASA' carbon cycle model to the CLM code.  CASA' can be used by
+compiling with the CASA and SUNSHA cpp variables set.  It can not be used
+with either DGVM or CN enabled.
+
+Renamed all *_transfer* variable in the CN code to *_xfer* and modified
+history field names consistently, so *_TRANSFER* fields became *_XFER* fields.
+
+Ran test-model on cheetah, blackforest, anchorage, and phoenix.
+
+===============================================================
+===============================================================
+	
+clm3_expa_10
+Originator: mvertens ( Mariana Vertenstein)
+Date: Wed Aug 25 11:10:34 MDT 2004
+Model: CLM
+Version: CLM3.expa.10
+One-line Summary: put in new subgrid initialization interface
+Requires change in build system: no (unless a new crop landunit is desired)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) (except for roundoff on 2d history files)
+Changes made:
+1) Removed cpp variable NOCOMPETE from code.
+2) Added namelist variable create_crop_landunit.  
+   This permits the user to decide if a separate crop landunit is to
+   be created with the new surface dataset format (where all pfts appear).
+   By default create_crop_andunit is set to .false.
+   Removed logic that tied the use of new surface dataset format to the presence
+   of a separate crop landunit.
+   modified files:
+     main/controlMod.F90
+     main/surfFileMod.F90
+     min/clm_varctl.F90.
+3) Unified interface to create gridcells and landunits.
+   modified files:
+     main/Attic/decompMod.F90
+     main/histFileMod.F90
+     main/inicFileMod.F90
+     main/Attic/initGridCellsMod.F90
+   added files:
+     main/initGridIndexMod.F90
+     main/initSubgridMod.F90
+   - all logic to create new landunits now goes in module initSubGridMod.F90.
+   - If a new landunit (landunit_xxx) is to be created
+      o subroutine get_gcell_info should be modified to contain logic for landunit_xxx
+      o a new subroutine set_landunit_xxx should be added to the module
+      o a new call to set_landunit_xxx should be added in subroutine initGridCells in 
+        module subroutine initGridCellsMod.F90
+
+       call set_landunit_veg_compete( &
+            ltype=xxx, wtxy=wtxy, vegxy=vegxy, &
+            i=i      , j=j      , gi=gi      , li=li      , ci=ci      , pi=pi, &
+            i_sn=i_sn, j_sn=j_sn, gi_sn=gi_sn, li_sn=li_sn, ci_sn=ci_sn, pi_sn=pi_sn, &
+            nump=nump, numc=numc, numl=numl, &
+            land1d_sn_gi=land1d_sn_gi, cols1d_sn_li=cols1d_sn_li, cols1d_sn_gi=cols1d_sn_gi, &
+            pfts1d_sn_ci=pfts1d_sn_ci, pfts1d_sn_li=pfts1d_sn_li, pfts1d_sn_gi=pfts1d_sn_gi)
+
+       note - the only thing that is unique about this call is the setting of ltype.
+4) Testing done
+   a) ran test-model.pl (with CN on) and verified that code is bfb with clm3_expa_9.
+      Note, however, that the 2d history output will have roundoff differences with 
+      respect to clm3_expa_9 due to the new calculation of the weights in initSubGridMod.F90.
+      Also verified that the initial datasets created with clm3_exap_10 were bfb with clm3_expa_9.
+   b) verified that clm3_expa_10 is bfb with clm3_expa_9 when create_crop_landunit=.true..
+      and a new format surface dataset is used 
+      (fsurdat = '/fs/cgd/csm/inputdata/lnd/clm2/srfdata/csm/surface-data.128x064_atm.gx1v3_ocn.allpfts_c040426.nc).
+===============================================================
+===============================================================
+
+clm3_expa_9
+Originator: thornton ( Peter Thornton)
+Date: Sat Aug 14 01:09:21 MDT 2004
+Model: CLM
+Version: CLM3.expa.9
+One-line Summary: Added constraint preventing zero height in CNVegStructUpdateMod.F90
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself
+Changes answers: Yes (new-physics)
+Name of tests cases on NCAR Mass-Store: (For changes that change answers)
+Changes made:
+Fixed a bug in CNVegStructUpdateMod.F90 that caused divide-by-zero in
+FrictionVelocity when htop -> 0.0, causing z0m -> 0.0. Added constraint so that
+htop is always greater than 0. Bug only appeared in fire simulation when deadstemc
+was forced very low by fire.
+===============================================================
+===============================================================
+
+clm3_expa_8
+Originator: mvertens ( Mariana Vertenstein)
+Date: Thu Aug 12 15:35:51 MDT 2004
+Model: CLM
+Version: CLM3.expa.8
+One-line Summary: merged in changes from clm3_deva_10 to clm3_deva_21 except for removal of DUST code
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit)
+Changes made:
+1) Brought clm_exp branch up to date with clm3_deva_21
+   (branch was created starting from clm3_deva_10)
+2) Testing done:
+   Ran test-model.pl at T42 on IBM and verified that it was 
+   bfb with clm3_expa_7
+===============================================================
+===============================================================
+
+clm3_expa_7
+Originator: thornton ( Peter Thornton)
+Date: Wed Aug  4 13:29:18 MDT 2004
+Model: CLM
+Version: CLM3.expa.7
+One-line Summary: Added fire to CN code, other minor mods
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself
+Changes answers: Yes (new-physics)
+Changes made:
+1. Added Thonicke fire algorithm, working mainly from 2001 paper. Modifications
+   to that algorithm made to represent fire occurrence on every timestep, instead of
+   as an annual process. Set cpp variable NOFIRE in job script to eliminate the 
+   effects of fire algorithm (results bit-for-bit with previous code).
+2. Modified CNPrecisionControlMod.F90 to truncate C and N state variables when they
+   go below a specified threshold value.  Tracking these modifications in new
+   truncation state variables, which accumulate the net changes over a run.
+3. Moved CN state update calls and summary call into CNEcosysdyn, from driver.
+   (bit-for-bit)
+===============================================================
+===============================================================
+
+clm3_expa_6
+Originator: thornton ( Peter Thornton)
+Date: Fri Jul 16 13:17:43 MDT 2004
+Model: CLM
+Version: CLM3.expa.6
+One-line Summary: Added initial file capability for CN code
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: yes (some bug fixes)
+Changes made:
+
+1. Added all required fields on initial file for CN start from spunup values
+2. (bug fix) Added pepv%tampsum_npp and pepv%annsum_npp to CNSetPepv()
+3. (bug fix) Added pepv%prev_leafc_to_litter and pepv%prev_frootc_to_litter
+   to CNiniTimeVar().
+4. Added totlitn, totsomn, totecosysn, totcoln to column loop of
+   CNiniTimeVar(). Added dispvegn, storvegn, totvegn, totpftn to 
+   pft loop of CNiniTimeVar().
+5. set all c and n state and flux variables to 0.0 on special landunits, instead of spval.  
+6. (bug fix) Added missing (p) to frac_veg_nosno in CNiniSpecial().
+7. Modified treatment of AGNPP and BGNPP so that they correspond better to
+   likely measurements of above and belowground NPP, in CSummary().
+8. modified setting for noveg pft rootfr from spval to 0.0
+
+===============================================================
+===============================================================
+
+clm3_expa_5
+Originator: thornton ( Peter Thornton)
+Date: Thu Jul  1 15:37:19 MDT 2004
+Model: CLM
+Version: CLM3.expa.5
+One-line Summary: added two files that were omitted from clm3_expa_4 tag
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM, SGI, Compaq
+Tested that restarts are bit-for-bit: no
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) 
+Changes made:
+added two files (CNNdynamicsMod.F90 and ndepFileMof.F90) that
+were omitted from the clm3_expa_4 tag
+
+===============================================================
+===============================================================
+
+clm3_expa_4
+Originator: thornton ( Peter Thornton)
+Date: Tue Jun 29 09:30:18 MDT 2004
+Model: CLM
+Version: CLM3.expa.4
+One-line Summary: Added NDep input, NFix, NLeaching, NSummary
+Requires change in build system: no
+Modifications to finish the N cycle
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: Yes 
+Changes made:
+1. Added routine to read a new surface dataset for N deposition (optional)
+2. Added routine to estimate biological N fixation as a function of annual NPP
+3. Added N leaching routine, function of mineral N concentration and drainage flow
+4. Added new N cycle summary variables as standard history file outputs (with CN on)
+5. Turned on bulk denitrification (previously implemented, but constant set to 0)
+6. Fixed problem with current datasets where temperate deciduous forest was being assigned
+   in the tropics - the phenology algorithm for temperate deciduous doesn't work in this case
+   because of daylength constraints.  These pfts are now set on initialization to seasonal
+   deciduous types.  Solves high-LAI problem in tropics.
+7. Fixed bug in calculation of diagnostic total carbon (previously excluded coarse woody debris).
+8. Added coarse woody debris decomposition fluxes (previously turned off).
+===============================================================
+===============================================================
+
+clm3_expa_3
+Originator: thornton ( Peter Thornton)
+Date: Thu May 27 15:01:39 MDT 2004
+Model: CLM
+Version: CLM3.expa.3
+One-line Summary: Merged Thornton's CN code onto clm_exp branch
+Requires change in build system: no
+(one-line description of changes: Makefile, include files, directories, etc.)
+(Detailed description below)
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM, SGI, Compaq
+Tested that restarts are bit-for-bit: no
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself
+Changes answers: no (bit-for-bit)
+Changes made:
+Merged Thornton's CN code from branch clm2_deva_41_brnch_cn onto the new
+clm_exp branch.  Tested that the results are BFB for 1-day run against 
+clm3_expa_2 with all CN options turned off, and tested that results are
+BFB for 1-day run against the final tag on the original CN branch
+(clm3_expa_2_brnchT_cn3_9) with all CN options turned on.
+
+===============================================================
+===============================================================
+
+clm3_expa_2
+Originator: mvertens ( Mariana Vertenstein)
+Date: Fri Apr 30 10:21:42 MDT 2004
+Model: CLM
+Version: CLM3.expa.2
+One-line Summary: removed cpl/ code directory from csm_share/ 
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: none
+Tested that restarts are bit-for-bit: no
+Tested that different domain decompositions match bit-for-bit: no
+Code reviewed by: myself
+Changes answers: no (bit-for-bit) 
+Name of tests cases on NCAR Mass-Store: (For changes that change answers)
+Changes made:
+Removed cpl/ code directory from csm_share/ - this is never needed
+	
+===============================================================
+===============================================================
+
+clm3_expa_1
+Originator: erik ( Erik Kluzek)
+Date: Wed Apr 28 14:33:52 MDT 2004
+Model: CLM
+Version: CLM3.expa.1
+One-line Summary: Start of clm_exp experimental development branch -- same as clm3_deva_10
+Requires change in build system: no
+Tested to work coupled with CCSM: no
+Tested to work with CAM: no
+Machines tested: IBM, SGI, Linux
+Tested that restarts are bit-for-bit: yes
+Tested that different domain decompositions match bit-for-bit: yes
+Code reviewed by: myself
+Changes answers: no (bit-for-bit)
+Changes made:
+
+This is the start of the clm_exp experimental development 
+branch. This version is the same as clm3_deva_10 which was checked
+into clm_dev by Mariana Vertenstein on April 27th, 2004.
+===============================================================
+===============================================================
+===============================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

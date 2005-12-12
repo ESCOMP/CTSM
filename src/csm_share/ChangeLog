@@ -1,0 +1,716 @@
+===============================================================
+
+Originator: mvertens ( Mariana Vertenstein)
+Date: Tue Oct 25 12:37:13 MDT 2005
+Model: SHARE
+Version: SHARE3.051025
+One-line summary: made changes to remove necessityty for autopromotion
+Changes made:
+	
+Tom Henderson's tool "addrealkind" was used to change "real"
+declarations to 
+  cpl/dshr : change "real" to "real(R8)" and to add "_R8" 
+	to all floating point constants that were not already typed. 
+  shr : change "real" to "real(SHR_KIND_R8)" and to add "SHR_KIND_R8" 
+	to all floating point constants that were not already typed. 
+
+  float(iii) and real(iii) were replaced by real(iii,r8).
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Sun Oct 16 13:56:26 MDT 2005
+Model: SHARE
+Version: SHARE3.051016
+One-line summary: Bug fixes, fixes datm7 on 
+						tempest
+Changes made:
+
+fix memory leak in dshr_map
+fix use of optional argument in dshr_dataIn
+
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Thu Oct  6 20:47:19 MDT 2005
+Model: SHARE
+Version: SHARE3.051006
+One-line summary: update csm_share to 
+						remove special land grid 
+						initialization
+Changes made:
+ - add frac to list of grid initialization fields (cpl-fields_grid_total
+   now 8 fields)
+ - clean up contract_init, add frac packing/unpacking, delete dead code.
+ - initialize mask and frac to zero rather than spval for all grid cells
+   of a domain.
+ - add Sx_lfrac to cpl_fields_c2a_states
+ - remove cpl_fields_ibuf_inimask variable
+ - remove all references to cpl_fields_c2lg_fields and associated
+   variables
+ - modified all cpl_fields_mod files as needed (not all are tested)
+ - add method, cpl_interface_contractField to return the field
+   name for a given index.  cpl_interface_contractIndex already
+   existed to return an index for a given field.
+ - merge bgc23 code into csm_share, UNICOSMP #if in shr_timer_mod
+   to handle broken irtc on X1.  added manually.
+ - merge bgc23 code, SHR_CONST_PDB, manually.
+ - modify code in shr_map_mod to handle SGI runtime error requesting
+   size of an array that hasn't yet been allocated.
+ - add optional arguments fracName and frac to shr_ncread_domain
+   (untested).
+ - fix some SGI compile problems with subroutine arguments that have
+   both pointer and intent defined, remove intent.
+ - remove dshr_hubInfo_iBuf_iniMask variable.
+	
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Fri Sep 30 16:41:14 MDT 2005
+Model: SHARE
+Version: SHARE3.050930
+One-line summary: msic minor bug fixes as a result of datm7 development
+Changes made:
+  1) cpp #ifdef error corrected in shr_sys_mod wrt UNICOSMP
+  2) new routine: dshr_hubInfo_init()
+  3) fixed stdout type in dshr_domain.F90
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Fri Sep  9 16:00:31 MDT 2005
+Model: SHARE
+Version: SHARE3.050909
+One-line summary: bug fixes in shr/ code wrt non-standard f90 code 
+   that worked on bluesky (iIBM) but not tempest (SGI)
+Changes made:
+
+1) shr_string_mod.F90 ~ backslash is not a valid f90 continuation line indicator
+2) shr_map_mod.F90 ~ allocatable attribute not allowed in derived type (but pointer is OK)
+3) shr_stream_mod.F90 ~ minor/cosmetic bug in stdout message wrt domain var names
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Sun Aug 14 06:14:57 MDT 2005
+Model: SHARE
+Version: SHARE3.050814a
+One-line summary: share3_050814a 
+						
+Changes made:
+
+tag cpl_control_mod.F90, lost in tagging
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Sat Aug 13 17:02:38 MDT 2005
+Model: SHARE
+Version: SHARE3.050813b
+One-line summary: share3_050813b 
+						
+Changes made:
+
+Merge of share3_050121_brnchT_datm7_050811 onto trunk, done manually
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Sat Aug 13 15:44:00 MDT 2005
+Model: SHARE
+Version: SHARE3.050813a
+One-line summary: Merge of trunk with 
+						share3_050121_brnchT_bgc01_050726 onto trunk
+Changes made:
+
+Merge of share3_050121_brnchT_bgc01_050726 onto trunk
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Sat Aug 13 15:07:41 MDT 2005
+Model: SHARE
+Version: SHARE3.050623
+One-line summary: Tag head with bug fix in 
+						cpl_map memory allocation
+Changes made:
+
+tag with bug fix in cpl_map memory allocation, committed in June 2005, never tagged.
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Fri Jan 21 16:57:39 MST 2005
+Model: SHARE
+Version: SHARE3.050121
+One-line summary: new !DIR$ Cray X1 
+						directives as per port to 
+						Cray at ORNL
+Changes made:
+
+new !DIR$ Cray X1 directives as per port to Cray at ORNL
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Fri Jan 21 16:52:12 MST 2005
+Model: SHARE
+Version: SHARE3.040524
+One-line summary: updates to share/cpl code 
+						wrt pro-tex comments 
+						only
+Changes made:
+
+updates to share/cpl wrt pro-tex comments only, done by robj in June 2004
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Sun May 23 19:31:59 MDT 2004
+Model: SHARE
+Version: SHARE3.040523
+One-line summary: share3_040523 
+						
+Changes made:
+
+Added new routine: cpl/cpl_domain_compare(dom1,dom2)
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Fri May 14 11:15:22 MDT 2004
+Model: SHARE
+Version: SHARE3.040514
+One-line summary: fixed memory leaks in 
+						share/cpl
+Changes made:
+
+fixed memory leaks in shr/cpl wrt cleaning up MCT strings
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Fri Apr 16 17:14:45 MDT 2004
+Model: SHARE
+Version: SHARE3.0.7
+One-line summary: Add checking of valid 
+						decomp_* in cpl
+Changes made:
+
+cpl_control_mod, Allow only decomp_al, oi, r to be 1.
+
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Thu Apr 15 14:25:02 MDT 2004
+Model: SHARE
+Version: SHARE3.0.6
+One-line summary: Add bfb capability for 
+						coupler, bfbflag in 
+						coupler namelist
+Changes made:
+
+cpl_control_mod - add bfbflag namelist/control
+cpl_map_mod     - use "src" mapping if bfbflag is true
+cpl_bundle_mod  - bfb bundle_gsum option
+
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Fri Apr  2 10:18:26 MST 2004
+Model: SHARE
+Version: SHARE3.0.5
+One-line summary: 64 bit cpl hist files, 
+						new shr_msg_mod 
+						routines
+Changes made:
+cpl: new 64 bit hist file functionality (wrt regression tests)
+shr: new routines in shr_msg_mod
+
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Fri Jan  9 10:01:09 MST 2004
+Model: SHARE
+Version: SHARE3.0.4
+One-line summary: Minor mod for fcopy on 
+						vector machines, 
+						bfb
+Changes made:
+
+Added fcopy_loc in cpl_bundle_copy in cpl_bundle_mod
+
+#ifdef CPP_VECTOR
+   fcopy_loc = .false.
+   usevector = .true.
+#else
+
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Fri Jan  2 19:12:02 MST 2004
+Model: SHARE
+Version: SHARE3.0.3
+One-line summary: Minor change for compiler 
+						problem on ES in 
+						cpl_mct_mod.F90
+Changes made:
+
+added lines
+!  This was added specifically for ES compiler bug:
+   public :: cpl_mct_list, cpl_mct_gsmap, cpl_mct_router
+
+Should have no impact on any other platform, tested on IBM.
+	
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Fri Dec 12 09:40:04 MST 2003
+Model: SHARE
+Version: SHARE3.0.2
+One-line summary: share3_0_2 
+						
+Changes made:
+
+Add CDIR mod to cpl_bundle_mod.F90 for ES compiler problem
+!CDIR NOASSOC in cpl_bundle_gsum
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Fri Nov 21 17:28:10 MST 2003
+Model: SHARE
+Version: SHARE3.0.1
+One-line summary: Step 2 of merge of 
+						share2_1_3_brnchT_cpl6_b031118 to main trunk, share2_1_4
+Changes made:
+
+Merge share2_1_3_brnchT_cpl6_b031118 to main trunk, share2_1_4.
+
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Fri Nov 21 17:20:07 MST 2003
+Model: SHARE
+Version: SHARE3.0.0
+One-line summary: share3_0_0 
+						
+Changes made:
+
+Merge share2_1_3_brnchT_cpl6_b031118 to main trunk, share2_1_4.
+
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Fri Nov 21 09:22:34 MST 2003
+Model: SHARE
+Version: SHARE2.1.4
+One-line summary: Tag for merge of 
+						cam2_0_2_dev49 version 
+						onto main trunk, from 
+						share2_1_3
+Changes made:
+
+Merge cam2_0_2_dev49 branch changes onto main trunk.
+share2_1_3 was starting point.
+Added shr_vmath_rsqrt, shr_vmath_div to main trunk.
+No other changes.
+
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: Fri May 24 09:34:21 MDT 2002
+Model: SHARE
+Version: SHARE2.1.3
+One-line summary: Tag the latest version of 
+						csm_share, share2_1_3 == 
+						share2_1_2_brnchT_const9
+Changes made:
+All mods made on share2_1_2_brnch_const
+This version is a merge of share2_1_2_brnchT_const9 onto main trunk
+Updated shr_const_mod for new consistent constants
+Split shr_msg_stdio to shr_msg_chdir and shr_msg_dirio in shr_msg_mod
+Minor mod in shr_msg_orb to use share constant PI
+Minor mod in shr_sys_mod to correct format problem and save of 2 variables
+
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Mon Oct 15 16:45:03 MDT 2001
+Model: SHARE
+Version: SHARE2.1.2
+One-line summary: new shr_vmath_mod.F90
+Changes made:
+o new shr_vmath module, uniform API to vendor's vector math routines
+===============================================================
+===============================================================
+
+Originator: rosinski ( Jim Rosinski)
+Date: Sun Sep 16 16:17:31 MDT 2001
+Model: SHARE
+Version: SHARE2.1.1
+One-line summary: Changed Linux and SunOS to LINUX and SUNOS
+Changes made:
+
+o Changed Linux and SunOS to LINUX and SUNOS
+===============================================================
+
+Originator: erik ( Erik Kluzek)
+Date: Fri Jun  1 12:28:29 MDT 2001
+Model: SHARE
+Version: SHARE2.1
+One-line summary: Add asynchronous messaging option, make 
+   modules public/private, add unit tests, add more platforms
+Changes made:
+
+shr_msg_mod has an asynchronous messaging option. 
+
+Make all modules more careful about declaring data and methods 
+public or private. In general try to make all modules private 
+with explicit declarations on public data and methods. shr_msg_mod 
+is still public as it includes "mpif.h" which is assumed to be 
+included by most other models.
+
+Add "unit_testers" directory with a few useful unit tests.
+
+Allow shr_sys_mod to work on more platforms: SunOS, and Linux.
+
+===============================================================
+===============================================================
+
+Originator: erik ( Erik Kluzek)
+Date:   2000/12/21 17:53:15
+Model: SHARE
+Version: SHARE2.0.6
+One-line summary: Change case of kind parameters, add OSF capability.
+Changes made:
+
+ Tony upgraded the share library for the Compaq. 
+
+ "convert isend to send in shr_msg_mod.F90
+ add OSF (compaq) system calls to shr_sys_mod.F90 and shr_timer_mod.F90"
+
+ Change case of kind parameters to upper-case. This seemed to be an 
+ issue on the SGI. I don't think case-sensitivity is in the FORTRAN standard, 
+ but the parameters are addressed as upper-case, and it certainly shouldn't 
+ hurt anything.
+
+===============================================================
+===============================================================
+
+Originator: tcraig ( Anthony Craig)
+Date: 2000/12/15 19:12:57
+Model: SHARE
+Version: SHARE2.0.5
+One-line summary: Add dud component.
+Changes made:
+
+Add the dud component to the message interface.
+===============================================================
+===============================================================
+
+Originator: erik ( Erik Kluzek)
+Date: Tue Aug 15 08:26:25 MDT 2000
+Model: SHARE
+Version: SHARE2.0.4
+One-line summary: Add HIDE_SHR_MSG back in.
+Changes made:
+
+Add HIDE_SHR_MSG token back in shr_msg_mod.F90, so that the
+stand-alone CCM would work again. Ran simple CSM test case to
+make sure it still works in coupled mode.
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Fri Aug  4 15:25:08 MDT 2000
+Model: SHARE
+Version: SHARE2.0.3
+One-line summary: mpi_isend's replace 
+						mpi_sends to insure 
+						asynchronous data 
+						transfer
+Changes made:
+mpi_isend's replace mpi_send's to insure asynchronous data transfer
+
+
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Fri Jun 23 16:54:23 MDT 2000
+Model: SHARE
+Version: SHARE2.0.2
+One-line summary: Same as 2.0.1 except 
+						addition of shr_timer_mod.F90
+Changes made:
+No changes, except addition of a new file: shr_timer_mod.F90
+
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Thu Jun  1 15:54:23 MDT 2000
+Model: SHARE
+Version: SHARE2.0.1
+One-line summary: o incremental upgrade
+Changes made:
+
+... to shr_file_mod.F90 only, minor fixes to msrcp mss: options
+===============================================================
+===============================================================
+
+Originator: erik ( KLUZEK ERIK 1326 ML CGD)
+Date: Thu May 11 23:34:42 MDT 2000
+Model: SHARE
+Version: SHARE2.0
+One-line summary: Change names to comply with "shr_" convention / add new files
+Changes made:
+
+	Change API to agree with convention that all subroutines start with
+"shr_" (as well as constants with SHR_. Also move "msg_mod.F90" to 
+"shr_msg_mod.F90".
+
+	Add new files for file-archive and constants.
+
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Fri Oct 16 12:38:16 MDT 1998
+Model: SHARE
+Version: SHARE1.3.2
+One-line summary: more robust: error 
+						checking, CVS keywords, 
+						info msgs, pxf-routines, 
+						etc
+Changes made:
+
+===============================================================
+===============================================================
+
+Originator: mvertens ( VERTENSTEIN MARIANA 1349 ML CGD)
+Date: Thu Oct  1 12:23:29 MDT 1998
+Model: SHARE
+Version: SHARE1.3.1
+One-line summary: made code compatible with standard MPI library
+Changes made:
+	
+Added routine mpi_setup.F
+Changed all write(* to write(6 etc.
+	
+===============================================================
+===============================================================
+
+Originator: erik ( Erik Kluzek)
+Date: Wed Jul 29 14:32:20 MDT 1998
+Model: SHARE
+Version: SHARE1.3
+One-line summary: Version of csm_share used with CCM3.6, LSM1.1 and CSM1.2
+Changes made:
+
+This is the version of CSM_SHARE publically released with CSM1.2.
+It is compatable with CCM3.6, LSM1.1, and CPL4.0.
+
+===============================================================
+===============================================================
+
+Originator: erik ( Erik Kluzek)
+Date: Mon Jul  6 14:31:38 MDT 1998
+Model: SHARE
+Version: SHARE1.2.2
+One-line summary: Delete repeated definition.
+Changes made:
+
+	Delete repeated definition that caused trouble with the 
+compiler on the SGI.
+
+===============================================================
+===============================================================
+
+Originator: erik ( Erik Kluzek)
+Date: Tue Jun  9 13:58:13 MDT 1998
+Model: SHARE
+Version: SHARE1.2.1
+One-line summary: Add print flag as argument to orb_params / 
+	add a spare coupler compatiblity message #'s
+Changes made:
+
+	Added a argument to orb_params to determine if you want
+to print messages out or not.  Normally this should be set to
+true, but if you are running a program under SPMD you will want
+the master to set it to true and the slaves set it to false.
+Otherwise, all the processesors print out the same messages.
+
+	Added a list of coupler compatibility message numbers.
+that are set and can be used as the coupler changes.  These 
+values can not be changed at this point!
+
+===============================================================
+===============================================================
+
+Originator: erik ( Erik Kluzek)
+Date: Sat Apr 25 20:01:57 MDT 1998
+Model: SHARE
+Version: SHARE1.2
+One-line summary: Require orbital parameters to be set -- don't choose any 
+	defaults.
+Changes made:
+
+	Change orbit so that either IYEAR_AD or (ECCEN,OBLIQ,MVELP) has
+to be set rather than specifying defaults. This makes it much more clear
+what the orbital parameters are set to, since the user HAS to enter it
+as a required namelist item.  If the parameters aren't set, a long message
+comes up that displays what possible values might be.
+
+===============================================================
+===============================================================
+
+Originator: erik ( Erik Kluzek)
+Date: Tue Apr  7 10:23:02 MDT 1998
+Model: SHARE
+Version: SHARE1.1
+One-line summary: Let 1950 orbit be the default (similar to CCM3.0)
+Changes made:
+
+	Set the default orbital parameters to the values that
+would be set if you set IYEAR_AD = 1950.  Also change the 
+printout so that the parameters are output to full precision.
+
+===============================================================
+===============================================================
+
+Originator: erik ( Erik Kluzek)
+Date: Wed Apr  1 09:21:10 MST 1998
+Model: SHARE
+Version: SHARE1.0.3
+One-line summary: Changed directory structure to be reduced 
+	to 2 -- csm_share and "msg"
+Changes made:
+
+	Simply moved files around to accomidate a new directory 
+structure.  MPI/msg_wrapper.F was moved to msg/mpi_msg_wrapper.F.
+Other files were moved from "orbit" into the main directory.  So
+now there are only two directories -- the main "csm_share" directory
+and the one sub-directory "msg" for the files dealing with the 
+message passing interface.
+
+===============================================================
+===============================================================
+
+Originator: erik ( Erik Kluzek)
+Date: Mon Jan 26 08:47:09 MST 1998
+Model: SHARE
+Version: SHARE1.0.2
+One-line summary: Moved files to subdirectories, added msgid for cpl, 
+		added receive for char.
+Changes made:
+
+o Moved files to subdirectories.  
+
+	By doing this we can easily pick which set
+of functions each model needs to share, and we can swap out different packages.
+For example, we can easily pick a different message passing library by 
+compiling the interface routine in the PVM sub-directory for example.  Also
+we can place functions dealing with non-NCAR machines here and only add them
+in the list to compile if we are at a non-NCAR site.
+
+Subdirectories:
+	msg ----- generic message passing files (non-library dependent)
+	orbit --- subroutines dealing with the earths orbit. Solar declination,
+			Solar zenith angle, and eath-sun distance factor.
+	MPI ----- subroutines interfacing to the MPI message passing library.
+
+Updated the README file to document the above changes.  Also suggest names
+for other sub-directories to add later (constants, MSS etc.).
+
+o Added a task identifier for the coupler in msgid.h: MSGID_TID_CPL
+
+o Added the character receive function to the MPI msg_wrapper.F (msg_recv_c).
+
+===============================================================
+===============================================================
+
+Originator: kauff ( Brian Kauffman)
+Date: Thu Jan  8 16:33:25 MST 1998
+Model: SHARE
+Version: SHARE1.0.1
+One-line summary: o shared code with uniform prefix coding style
+Changes made:
+
+o all shared code now conforms to the desired coding style,
+  namely that all related file, subroutine, variable, common-block
+  names, etc, have a uniform prefix.
+
+===============================================================
+===============================================================
+
+Originator: erik ( Erik Kluzek)
+Date: Tue Dec 16 11:47:11 MST 1997
+Model: SHARE
+Version: SHARE1.0
+One-line summary: Initial version, orbit and message compatability.
+Changes made:
+
+Initial version of the shared CSM library.
+
+The purpose of this library is to archive all the code used by CSM models
+THAT HAS TO BE THE SAME!  This way we have one location to look for code
+that is shared.  So the earth's orbital parameters, and message passing
+type codes are archived here.  Other codes regarding the calender and
+physical constants could also be put here as well.  This helps to ensure
+that models have the same expressions for functions shared across the board.
+It is also a more efficient programming paradigm.  And finally it makes it
+easier for other models to link into CSM, since all of the interface
+requirements are packaged up into one location.
+
+Currently the codes that are here are in three classes...
+
+Orbit:
+
+	Orbital codes to calculate earths' orbital parameters and get solar
+	declination angle, earth-sun distance factor, and cosine of the solar 
+	zenith angle.
+
+Message Compatability:
+
+	These codes check the messages from the coupler and ensure that the
+	version of the coupler messages is compatable with the version
+	that is expected.
+
+README/ChangeLog/ChangeSum:
+
+	The README file gives some background on why we created this module
+	and how we want/need to manage it.
+
+	ChangeLog gives a long description of changes made.
+
+	ChangeSum is a one-line description of changes made.
+
+At this point only the atmosphere and land components are accessing these
+codes, but later all models will use all or part of the codes shared here.
+===============================================================
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,31 @@
+Building the executable:
+
+cprnc is a Fortran-90 application. It relies on netcdf version 3 or
+later. F90 support DOES NOT need to exist in the netcdf library. Easiest case
+scenario for a successful build of cprnc is to simply run "gmake" or one of
+its aliases in this directory. The build will fail if netcdf include files
+and library files are not in the default locations of /usr/local/include and
+/usr/local/lib, respectively. These default locations (specified as Makefile
+macros) can be overridden by setting environment variables INC_NETCDF and
+LIB_NETCDF to the proper values. The Makefile has entries for IRIX64, AIX,
+OSF1, SUN, and Linux.  On Linux, entries exist for pgf90 and lf95
+compilers. The Makefile is extremely simple, so adding support for new
+architectures or compilers should be a piece of cake.
+
+What it does:
+
+cprnc is an analysis tool for gathering and printing statistics about
+variables on 1 or 2 CAM or CLM history files. Simplest invocation is: "cprnc
+file1.nc [file2.nc]".  Command-line arguments are available (e.g. for
+printing variable values in a user-specified subdomain). An explanation of
+cmd-line options is printed by running "cprnc" with no arguments. When given
+one or two input files, the code prints a summary of statistics for variables
+on the file(s) which are dimensioned something by time. For example, field max,
+min, and i,j,k positions of these values are printed for each time index. If
+two files are input, difference statistics are also printed for each field
+which exists on both files.  For example, max absolute difference, max
+relative difference, and positional information are printed. The relative
+difference is defined as abs(v1-v2)/(2*max(abs(v1), abs(v2))), where v1 and
+v2 represent variable values from file1 and file2, respectively. The factor
+of 2 in the denominator of this expression is a convenience for computing the
+worst case number of matching decimal digits, which is also printed.

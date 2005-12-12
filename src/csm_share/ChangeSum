@@ -1,0 +1,107 @@
+Originator:   Date:    Tag:       		Synopsis:
+===============================================================
+mvertens		10/25/05 share3_051025	 	made changes to remove 
+						necessity for autopromotion
+tcraig		10/16/05 share3_051016	 	Bug fixes, fixes datm7 on 
+						tempest
+tcraig		10/06/05 share3_051006	 	update csm_share to 
+						remove special land grid 
+						initialization
+kauff		09/30/05 share3_050930	 	msic minor bug fixes as a 
+						result of datm7 
+						development
+kauff		09/09/05 share3_050909	 	bug fixes in shr/ code 
+						wrt non-standard f90 code 
+						that worked on bluesky 
+						(iIBM) but not tempest 
+						(SGI)
+tcraig		08/14/05 share3_050814a	 	 
+						
+tcraig		08/13/05 share3_050813b	 	 
+						
+tcraig		08/13/05 share3_050813a	 	Merge of trunk with 
+						share3_050121_brnchT_bgc01_050726 onto trunk
+tcraig		08/13/05 share3_050623	 	Tag head with bug fix in 
+						cpl_map memory allocation
+kauff		01/21/05 share3_050121	 	new !DIR$ Cray X1 
+						directives as per port to 
+						Cray at ORNL
+kauff		01/21/05 share3_040524	 	updates to share/cpl code 
+						wrt pro-tex comments 
+						only
+kauff		05/23/04 share3_040523	 	 
+						
+kauff		05/14/04 share3_040514	 	fixed memory leaks in 
+						share/cpl
+tcraig		04/16/04 share3_0_7	 	Add checking of valid 
+						decomp_* in cpl
+tcraig		04/15/04 share3_0_6	 	Add bfb capability for 
+						coupler, bfbflag in 
+						coupler namelist
+kauff		04/02/04 share3_0_5	 	64 bit cpl hist files, 
+						new shr_msg_mod 
+						routines
+tcraig		01/09/04 share3_0_4	 	Minor mod for fcopy on 
+						vector machines, 
+						bfb
+tcraig		01/02/04 share3_0_3	 	Minor change for compiler 
+						problem on ES in 
+						cpl_mct_mod.F90
+tcraig		12/12/03 share3_0_2	 	 
+						
+tcraig		11/21/03 share3_0_1	 	Step 2 of merge of 
+						share2_1_3_brnchT_cpl6_b031118 to main trunk, share2_1_4
+tcraig		11/21/03 share3_0_0	 	 
+						
+tcraig		11/21/03 share2_1_4	 	Tag for merge of 
+						cam2_0_2_dev49 version 
+						onto main trunk, from 
+						share2_1_3
+tcraig		05/24/02 share2_1_3	 	Tag the latest version of 
+						csm_share, share2_1_3 == 
+						share2_1_2_brnchT_const9
+kauff		10/15/01 share2_1_2	 	new shr_vmath_mod.F90
+rosinski		09/16/01 share2_1_1	 	Changed Linux and SunOS 
+						to LINUX and SUNOS
+erik		06/01/01 share2_1	 	Add asynchronous 
+						messaging option, make 
+						modules public/private, 
+						add unit tests, add more 
+						platforms
+erik		12/21/00 share2_0_6	 	Change case of kind parameters, add OSF capability.
+tcraig		11/09/00 share2_0_5	 	Add dud component.
+erik		08/15/00 share2_0_4	 	Add HIDE_SHR_MSG back in.
+kauff		08/04/00 share2_0_3	 	mpi_isend's replace 
+						mpi_sends to insure 
+						asynchronous data 
+						transfer
+kauff		06/23/00 share2_0_2	 	Identical to share2.0.1 except 
+						addition of shr_timer_mod.F90
+kauff		06/01/00 share2_0_1	 	o incremental upgrade
+erik		05/11/00 share2_0	 	Change names to comply 
+						with "shr_" convention / 
+						add new files
+kauff		10/16/98 share1_3_2	 	more robust: error 
+						checking, CVS keywords, 
+						info msgs, pxf-routines, etc
+mvertens	10/01/98 share1_3_1	 	made code compatible with 
+						standard MPI library
+erik		07/29/98 share1_3	 	Version of csm_share used 
+						with CCM3.6,LSM1.1,CPL4.0 
+						and CSM1.2
+erik		07/29/98 share1_3	 	Version of csm_share used with CCM3.6, LSM1.1 and CSM1.2
+erik		07/06/98 share1_2_2	 	Delete repeated definition.
+erik		06/09/98 share1_2_1	 	Add print flag as argument to orb_params / 
+						add a spare coupler compatiblity message #'s
+erik		04/25/98 share1_2	 	Require orbital parameters to be set -- 
+						don't choose any defaults.
+erik		04/07/98 share1_1	 	Let 1950 orbit be the default (similar to CCM3.0)
+erik		04/01/98 share1_0_3		Changed directory structure to be reduced 
+						to 2 -- csm_share and "msg"
+erik		01/26/98 share1_0_2		Moved files to subdirectories,
+						added msgid for cpl, added receive
+						for char.
+kauff		01/08/98 share1_0_1		o shared code with uniform prefix coding style
+erik		12/16/97 share1_0		Initial version, orbit and message compatability.
+
+

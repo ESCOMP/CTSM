@@ -1,0 +1,19 @@
+&clmexp
+ mksrf_fnavyoro = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_navyoro_20min.nc'
+ mksrf_lsmlon   =  15
+ mksrf_lsmlat   =  11 
+ mksrf_edgen    =  12 
+ mksrf_edges    = -21 
+ mksrf_edgee    = -36 
+ mksrf_edgew    = -81 
+/
+
+
+
+
+
+
+
+
+
+

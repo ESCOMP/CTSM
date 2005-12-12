@@ -1,0 +1,48 @@
+The routines in this directory create a surface dataset from
+using. The output grid is read in from the input namelist and
+can correspond to either a global or regional grid (depending
+on the setting of the namelist variables mksrf_fgrid_global 
+or mksrf_fgrid_regional). The output grid file must contain:
+
+    dimensions: lon,lat
+    variables : lon,lat or LONGXY,LATIXY (optionally numlon)  
+    variables : LANDFRAC (optionally LANDMASK)
+
+The following steps provide a method to create the executable
+and generate the surface dataset:
+
+1) cd to this directory 
+
+2) run gmake
+
+3) create namelist file (default mksrfdat.namelist) for
+
+    ======================================
+    Must specify settings for either:
+    ======================================
+
+    mksrf_fgrid_global OR mksrf_fgrid_regional
+
+    ======================================
+    Must specify settings for:
+    ======================================
+
+    mksrf_fvegtyp
+    mksrf_fsoitex
+    mksrf_fsoicol
+    mksrf_flanwat
+    mksrf_fglacier
+    mksrf_furban
+    mksrf_flai
+
+    ======================================
+    Optionally specify setting for:
+    ======================================
+
+    mksrf_fdynuse
+
+4) run code (e.g.):
+        mksrfdata < mksrfdat.namelist >&! mksrfdat.out
+
+5) move (and rename if appropriate) generated surface dataset
+   to /fis/cgd/csm/inputdata/clm/srfdata, etc. 

@@ -1,0 +1,58 @@
+\documentclass[]{article}
+\usepackage[T1]{fontenc}
+\usepackage{longtable}
+
+\textwidth 6.5in
+\textheight 8.5in
+\addtolength{\oddsidemargin}{-.75in}
+
+\begin{document}
+
+% This is a modified definition of Ventry from The Latex Companion, p. 64
+ \newenvironment{Ventry}[1]%
+   {\begin{list}{}{\renewcommand{\makelabel}[1]{\textsf{##1:}\hfil}%
+      \settowidth{\labelwidth}{\textsf{#1:}}%
+      \setlength{\leftmargin}{4.2cm}%
+      \setlength{\labelwidth}{2.7cm}%
+      \setlength{\itemsep}{0pt}%
+      \setlength{\parsep}{0pt}}}%
+   {\end{list}}
+
+\begin{titlepage}
+
+\noindent {\bf Community Climate System Model} \\
+\noindent National Center for Atmospheric Research, Boulder, CO \\
+\vspace{2in}
+
+\begin{center}
+{\Large
+  {\bf CLM3.0 User's Guide} \\
+  \vspace{0.5in}
+  Mariana Vertenstein, Forrest Hoffman, Keith Oleson and Sam Levis \\
+}
+  January 2003
+\end{center}
+
+\end{titlepage}
+
+\tableofcontents
+
+\newpage
+
+\input Download.tex
+
+\input Build.tex
+
+\input Namelist.tex
+
+\input Subgrid.tex
+
+\input Surface_Dataset.tex
+
+\input Examples.tex
+
+\end{document}
+
+
+
+

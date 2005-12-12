@@ -1,0 +1,395 @@
++\section{Creating and Running the Executable}
+
+The CLM3.0 model can be built to run in one of three modes. It can run
+as a stand alone executable where atmospheric forcing data is
+periodically read in (e.g., using the data in {\bf NCEPDATA}).  This
+will be referred to as offline mode. It can also be run as part of the
+Community Atmosphere Model (CAM) where communication between the
+atmospheric and land models occurs via subroutine calls. This will be
+referred to as cam mode. Finally, it can be run as a component in a
+system of geophysical models (CCSM).  In this mode, the atmosphere,
+land, ocean and sea-ice models are run as separate executables
+that communicate with each other via the CCSM flux coupler. This will
+be referred to as ccsm mode.
+
+CLM3.0 may be run serially (i.e., on a single processor), in parallel
+using the Message Passing Interface (MPI) for distributed memory
+tasks, in parallel using the Open Multi-Processing (OpenMP) directives
+for shared memory tasks, or finally in parallel using both MPI and
+OpenMP (hybrid parallelism).  As an example, the IBM SP consists of
+distributed memory nodes interconnected by a high performance network
+connection, and each node contains multiple shared memory processors.
+When run on the IBM SP, CLM3.0 uses OpenMP directives for parallelism
+on processors within a shared memory node and MPI routines for
+parallelism across distributed memory nodes to take full advantage of
+the capabilities of the hardware.  The supported architectures and
+associated compilers for running CLM3.0 in offline mode are shown in
+Table
+\ref{table_supported_arch}.
+
+\begin{longtable}{|l|l||l|l|}
+\caption{\label{table_supported_arch} Offline Mode Supported Architectures} \\ \hline 
+Hardware & Architectore & OS        & Compiler     \\ \hline \hline
+IBM SP   & RS600        & AIX       & IBM XL       \\ \hline 
+SGI      & MIPS         & IRIX64    & MIPS         \\ \hline  
+Intel    & Intel X86    & Linux     & pgf90, lf95  \\ \hline  
+CRAY X1  & Cray X1      & Unicos/mp & ftn          \\ \hline 
+NEC SX6  & ???          & ???       & sxf90        \\ \hline        
+\end{longtable}
+\medskip
+
+
+The method of building and running CLM3.0 depends on both the target
+architecture and whether the model will be run serially, in pure SPMD
+mode, in pure OpenMP mode or in hybrid mode.  A general discussion of
+the various aspects of building and running CLM3.0 follows.
+
+Several cautionary notes have to be made concerning Linux systems.
+For Linux operating systems, CLM3.0 is supported for both lf95 and
+pgf90 compilers.  We have noted problems in running CLM3.0 in hybrid
+mode using pgf90 compilers. Consequently, OpenMP threading has been
+turned off by default for Linux systems.  (The user may turn it back
+on by setting {\bf SMP} to TRUE in jobscript.csh (see below). We have
+also noted problems in bounds checking with pgf90 when running in
+debug mode.  As a result, the bounds checking in the Makefile has been
+temporarily disabled. 
+
+\subsection {offline mode: using jobscript.csh}
+
+In order to build and run CLM3.0 in offline mode, a sample script,
+jobscript.csh, and a corresponding Makefile are provided in the {\bf
+bld/offline} directory. In addition, two perl scripts {\bf mkDepends}
+(used to generate dependencies in a form suitable for inclusion into a
+Makefile), and {\bf mkSrcfiles} (used to make a list of files
+containing source code) are also included.
+
+The script, jobscript.csh, creates a model executable at T42 model
+resolution with RTM river routing activated, determines the necessary
+input datasets, constructs the input model namelist and runs the model
+for one day.  Users must edit this script appropriately in order to
+build and run the executable for their particular requirements and in
+their particular environment. This script is provided only as an
+example to aid the novice user in getting CLM3.0 up and running as
+quickly as possible.
+
+The script can be run with minimal user modification, assuming the
+user resets several environment variables at the top of the script.
+In particular, the user must set the following:
+\begin{enumerate}
+\item Set batch queue directives for the required machine
+\item Determine model resolution (number of model longitudes and latitudes)
+\item Set {\bf ROOTDIR} to point to the full disk pathname of the root 
+      directory containing the untarred source code. 
+\item Set {\bf MODEL\_EXEDIR} to point to the directory where the user 
+      wants the executable to be built and run.
+\item Set {\bf CSMDATA} to point to the full disk pathname of the root directory 
+      containing the untarred input dataset subdirectories.
+\item Determine if MPI and/or OpenMP will be used, and if so determine the
+      number of MPI tasks and/or the numbe of OpenMP threads
+      (note that for linux systems the number of mpi tasks is determined
+       from the batch directives if running in batch mode)
+\item Set requied library and include paths
+\item Create an input parameter namelist file
+\item Determine which model cpp tokens will be enabled
+\end{enumerate}
+
+The script can be divided into five functional sections: 1)
+specification of script environment variables; 2) creation of the
+model input namelist; 3) creation of two header files (misc.h and
+preproc.h) and a directory search path file (Filepath) needed to build
+the model executable; 4) creation of the model executable; and 5)
+execution of the model. Jobscript.csh is set up so that the user will
+normally only have to modify sections 1) and 2) in order to obtain a
+model executable and associated namelist.  Each of these functional
+sections is discussed in what follows.
+
+\subsubsection {Specification of script environment variables}
+\label{subsubsec_env_vars}
+ 
+Table \ref{table_env_vars} lists the user modifiable script
+environment variables. Some of these variables are used by the
+Makefile to build the model executable.  Although the script provides
+tentative settings for all these variables, the provided values will
+generally have to be modified by the user.
+
+\bigskip
+\begin{longtable}{|p{1.5in}|p{4.5in}|}
+\caption{\label{table_env_vars} User Modifiable Script Variables} \\
+\hline
+\endhead
+\hline
+{\bf Script Variable} & {\bf Description}  \\ \hline \hline
+{\bf LSMLON}         &   Number of model grid longitudes. \\ \hline
+{\bf LSMLAT}         &   Number of model grid latitudes. \\ \hline
+{\bf ROOTDIR}        &   Full pathname for the root source code directory. \\ \hline
+{\bf MODEL\_EXEDIR}  &   Full pathname for the directory where the model executable will reside. \\
+                     &   Object files will be built in the directory \$MODEL\_EXEDIR/obj. \\ 
+{\bf CSMDATA}        &   Full pathname of root input datasets directory. \\ \hline
+{\bf SMP}            &   Flag that turns on OpenMP (valid values are TRUE or FALSE) \\
+                     &   If SMP is TRUE, OpenMp is enabled and NTHREADS is \\
+                     &   the number of OpenMP threads. \\
+                     &   If SMP is FALSE, OpenMp is disabled and NTHREADS is ignored. \\ 
+                     &   Currently, SMP will also be set to FALSE for Linux platforms. \\ \hline
+{\bf NTHREADS}       &   Number of OpenMP multitasking threads. \\
+	             &   NTHREADS should not exceed the number of physical CPUs (ie, processors) 
+	                 on a shared memory machine and should not exceed the number of CPUs 
+                         in a node on a distributed memory machine \\
+                     &   This setting is ignored if SMP is set to FALSE. \\ \hline
+{\bf SPMD}           &   Flag that turns on MPI (valid values are TRUE or FALSE) \\
+                     &   If SPMD is TRUE, MPI is enabled and NTASKS is \\
+                     &   the number of MPI tasks. \\
+                     &   If SPMD is FALSE, MPI is disabled and NTASKS is ignored. \\ \hline
+{\bf NTASKS}         &   Number of MPI tasks. \\
+                     &   Setting is ignorned if SPMD is set to FALSE. \\
+	             &   NTASKS should not exceed the number of physical CPUs (ie, processors) 
+                         on a machine. \\ \hline 
+{\bf LIB\_NETCDF}    &   Full pathname of directory containing the netCDF library. \\
+                     &   The setting depends on user's target machine. \\ \hline
+{\bf INC\_NETCDF}    &   Full pathname of directory containing netCDF include files. \\ 
+                     &   The setting depends on user's target machine. \\ \hline
+{\bf LIB\_MPI}       &   Full pathname of directory containing the MPI library. \\ 
+                     &   The setting depends on user's target machine. \\ 
+                     &   Only needed if SPMD is set to TRUE.  \\ \hline
+{\bf INC\_MPI}       &   Full pathname for directory containing the MPI include files. \\
+                     &   The setting depends on user's target machine. \\ 
+                     &   Only needed if SPMD is set to TRUE.  \\ \hline
+{\bf linux\_fort\_compiler} & Determines which linux fortran compiler is used. \\
+                            & Valid values are pgf90 or lf95.\\
+                            & Only used on linux platforms. \\ \hline
+{\bf linux\_machine}        & Name of linux machine. \\
+                            & Currently two NCAR platforms, anchorage and bankgok are supported in the scripts. \\
+                            & The user will need to tailor this for their own platform. \\
+                            & Only used on linux platforms. \\ \hline
+{\bf linux\_batch}          & Determines if model will be run interactively or in batch mode on linux platforms. \\
+                            & If the model is run interacatively with SPMD on, then the value of \$NTASKS 
+                              will be used to determine the numbr of MPI tasks. \\
+                            & If the model is run in batch mode with SPMD on, then the number of MPI tasks
+                              is determined from the value in \$PBS\_NODEFILE. \\ \hline
+                            & Only used on linux platforms. \\ \hline
+{\bf linux\_mpirun\_cmnd}   & The full pathname of mpirun to use if \$SPMD is set to TRUE. \\
+                            & Multiple fortran compilers often exists on a single unix system.
+                              Each compiler can have a unique path where the mpich mpirun binary is
+                              installed for that compiler. \\ 
+                            & Only used on linux platforms. \\ \hline
+{\bf DEBUG}          &   Turns debugging flags on in Makefile. \\
+                         Valid values are TRUE or FALSE. \\ \hline
+\end{longtable}
+\bigskip
+
+To obtain a model executable, the environment variables LIB\_NETCDF
+and INC\_NETCDF, which provide pathnames to netCDF library and include
+files must be specified. Furthermore, if the model is to be run under
+MPI (i.e. {\bf SPMD} must be set to {\bf TRUE} and {\bf NTASKS} must
+be set to the required number of MPI tasks) then directories
+containing the MPI library and MPI include files must also be
+specified as environment variables in the script. (This is not the
+case on the IBM where the MPI library and include files are obtained
+directly from the compiler command). 
+
+For linux systems, the user also needs to specify an additional set of
+script variables. It is also assumed that the user has correctly set
+up the environment for their particular compiler choice
+(e.g. LD\_LIBRARY\_PATH is set correctly in the user's environment).
+
+\subsubsection {Setting the Namelist}
+\label{subsubsec_namelist}
+
+Before building and running the model, the user must specify model
+namelist variables via the CLM3 namelist, {\bf clmexp}.  A default namelist
+is generated by jobscript.csh. This namelist results in the generation
+of a one day model run using the provided datasets.  Namelist input is
+written to the file lnd.stdin and can be divided into several
+categories: run definitions, datasets, history and restart file
+settings and land model physics settings. A full discussion of model
+namelist variables is given in section \ref{sec_namelist}.
+
+\subsubsection {Creation of header and directory search path files}
+\label{subsubsec_cpp}
+
+The user will generally not need to modify the section of
+jobscript.csh that creates the header and directory search path files.
+The script creates three files in the directory {\bf
+\$MODEL\_EXEDIR/obj}: the header files misc.h and preproc.h and the
+directory search path file, Filepath. To modify these files, the user
+should edit the file contents from within the script rather than
+attempt to edit the files directly, since the script will overwrite
+the files upon execution. The use of these files by {\bf gnumake}
+is discussed in section \ref{subsub_build}. Each of these files is
+summarized below.
+
+The file, {\bf misc.h}, contains resolution- and model-independent
+C-language pre-processor (cpp) tokens
+
+\medskip
+\begin{longtable}{|p{1.5in}|p{4.5in}|}
+\caption{\label{misc.h} Misc.h CPP tokens} \\
+\hline
+\endhead
+\hline
+{\bf misc.h cpp token} & {\bf Description}  \\ \hline
+SPMD    & If defined, enables distributed memory, SPMD (single program
+          multiple data), implementation. Automatically defined by script if
+          environment variable {\bf SPMD} is set to TRUE. 
+          See section  \ref{subsubsec_env_vars}.  \\ \hline
+PERGRO & If defined, enables modifications that test reasonable perturbation error growth. 
+          Only applicable in cam mode (see CAM User's Guide). \\ \hline
+\end{longtable}
+\medskip
+
+The file {\bf preproc.h} contains resolution-dependent and model-dependent
+C-language cpp tokens
+
+\medskip
+\begin{longtable}{|p{1.5in}|p{4.5in}|}
+\caption{\label{preproc.h} Preproc.h CPP tokens} \\
+\hline
+\endhead
+\hline
+{\bf preproc.h cpp token}  & {\bf Description}  \\ \hline
+ OFFLINE        & If defined, offline mode is invoked \\ \hline
+ COUP\_CSM      & If defined, ccsm mode is invoked \\ \hline
+ COUP\_CAM      & If defined, cam mode is invoked \\ \hline
+ LSMLON         & Number of model longitudes  \\ \hline
+ LSMLAT         & Number of model latitudes \\ \hline
+ RTM            & If defined, RTM river routing is invoked \\ \hline
+ DUST           & If defined, dust mobilization and dry deposition is computed \\ \hline
+ VOC            & If defined, voc emission is computed \\ \hline
+ DGVM           & If defined, dynamic vegetation model is activated \\ \hline
+ NOCOMPETE      & If defined, competition for water is turned of (each pft has its own column) \\ \hline
+\end{longtable}
+\medskip
+
+C-preprocessor directives of the form \#include, \#if defined, etc.,
+are used in the model source code to enhance code portability and
+allow for the implementation of distinct blocks of functionality (such
+as incorporation of different modes) within a single file.  Header
+files, such as misc.h and preproc.h, are included with \#include
+statements within the source code. When {\bf gnumake} is invoked, the
+C preprocessor includes or excludes blocks of code depending on which
+cpp tokens have been defined. C-preprocessor directives are also used
+to perform textual substitution for resolution-specific parameters in
+the code. The format of these tokens follows standard cpp protocol in
+that they are all uppercase versions of the Fortran variables, which
+they define. Thus, a code statement like
+\begin{description}
+\item [parameter(lsmlon = LSMLON); parameter(lsmlat = LSMLAT)] 
+\end{description}
+will result in the following processed line (for T42 model resolution):
+\begin{description}
+\item[parameter(lsmlon=128) ; parameter(lsmlat=64)] 
+\end{description}
+where LSMLON and LSMLAT are set in preproc.h via the jobscript. \\
+
+Filepath contains a list of directories used by Makefile to
+resolve the location of source files and to determine dependencies.
+The search begins in the current directory and proceeds to each
+directory appearing in Filepath, in the order in which they are
+specified.  All files appearing in these directories will be used
+unless duplicate files are found.  For the case of duplicate files,
+the first file found will be used by gnumake to create the object
+file.  If user-modified code is introduced, Filepath should contain,
+as the first entry, the directory containing the user code.
+
+Users can add new search directories by editing jobscript.csh under
+``build Filepath''.  The default Filepath directory hierarchy for
+CLM3.0 is as follows:
+
+\medskip
+\begin{longtable}{|p{2.5in}|p{3.5in}|} 
+\caption{\label{Filepath} Filepath} \\
+\hline
+\endhead
+\hline
+{\bf Source Directories}          & {\bf Functionality} \\ \hline
+  \$MODEL\_SRCDIR/main            & control routines (history, restart, etc) \\ \hline
+  \$MODEL\_SRCDIR/biogeophys      & biogeophysics routines \\ \hline
+  \$MODEL\_SRCDIR/biogeochem      & ecosystem and biogeochemistry dynamics routines \\ \hline
+  \$MODEL\_SRCDIR/riverroute      & river routing routines \\ \hline
+  \$MODEL\_SRCDIR/mksrfdata       & generation of surface dataset routines \\ \hline
+  \$MODEL\_SRCDIR/csm\_share      & code shared by all CCSM geophysical model components \\ \hline
+  \$MODEL\_SRCDIR/utils/timing    & timing routines \\ \hline
+\end{longtable}
+\medskip
+
+\subsubsection {Building the model}
+\label{subsub_build} 
+
+The user will generally not need to modify the section of
+jobscript.csh that builds the model executable.  Jobscript.csh invokes
+{\bf gnumake} to generate the model executable. The file, Makefile,
+located in the {\bf bld/offline} directory, contains commands used by
+{\bf gnumake} on each of the supported target
+architectures. Successful invocation of {\bf gnumake} results in an
+executable, "clm", along with a log file, "compile\_log.clm",
+documenting the build procedure.  Any problems encountered during the
+build procedure will be documented in this log file.  A parallel {\bf
+gnumake} is achieved in the script by invoking {\bf gnumake} with the
+-j option, which specifies the number of job commands to run in
+parallel.
+
+\subsubsection {Running the executable}
+
+The user will generally not need to modify the section of
+jobscript.csh that runs the model executable.  Jobscript.csh will
+execute the commands required to run the model under the supported
+target architectures.  The model runtime environment is determined by
+the script environment variables {\bf SPMD}, {\bf NTASKS}, {\bf SMP}
+and {\bf NTHREADS }. If {\bf SMP} is set to TRUE, then OpenMp
+multitasking will be used for the {\bf NTHREADS} threads.  If {\bf
+SPMD} is set to TRUE, then the model will be run under MPI for {\bf
+NTASKS} MPI tasks. If both {\bf SMP} and {\bf SPMD} are true and if
+both {\bf NTASKS} and {\bf NTHREADS} are greater than one, then hybrid
+mode OpenMP/MPI will be used (see section \ref{subsubsec_env_vars}).
+
+Most MPI implementations provide a startup script which accepts the
+MPI executable as a command line argument.  Additional command line
+arguments allow the user to specify details such as the various
+machine architectures or number of processes to use for the run. Once
+MPI has created the specified number of processes, model execution
+will begin. The collection of active tasks will then compute locally
+and exchange messages with each other to integrate the model.
+
+Upon successful completion of the model run, several files will be
+generated in {\bf MODEL\_EXEDIR}. These include history, restart, and
+initialization files (see section \ref{subsec_history_namelist}) as
+well as log files documenting the model execution. These log files
+will have names of clm.log.YYMMDD-HHMMSS, where YY is the last two
+digits of the current model year, MM is the month, DD is the day of
+the month, HH is the hour, MM is the minutes, and SS is the seconds of
+the start of the model run. Timing files, (e.g. ``timing.0''),
+containing model performance statistics are also generated in the
+executable directory.
+
+\subsection {cam mode}
+
+When running the model as part of the CAM executable, CAM build and
+run scripts must be utilized and the user should refer to the CAM
+User's Guide for specific details on building and running the CAM
+executable. We will only discuss some essential points of the CAM
+build and run scripts here.
+
+The header files, preproc.h and misc.h, as well as the directory
+search path file, Filepath, are needed for the CAM build procedure in
+an analogous manner to the CLM3.0 build procedure.  The user should
+keep in mind that the CLM3.0 directory hierarchy {\bf MUST appear
+after} the CAM directory hierarchy in Filepath. CLM3.0 contains
+several files that have the same name as the corresponding CAM files
+(e.g. time\_manager.F90). When running in CAM mode, the corresponding
+CAM file must be used. The CAM build and run scripts ensure this
+occurs.
+
+The CLM3.0 namelist, {\bf clmexp}, must also be specified.  By
+default, RTM river routing is not enabled in cam mode (i.e. the cpp
+variable, RTM, is not defined). Furthermore, CLM3.0 does not permit
+the user to independently set several namelist variables (in
+particular, those dealing with history file logic and run control
+logic) when running in cam mode. CLM3.0 will override any user input
+for these variables with the corresponding values used by the CAM
+model. This is discussed in more detail in section
+\ref{subsec_cam_namelist}.
+
+\subsection {ccsm mode}
+
+CCSM3.0 will contain CLM3.0. We refer the read to the CCSM3.0 User's Guide
+for further details.
+

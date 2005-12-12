@@ -1,0 +1,412 @@
+\section {Offline Mode Namelist Examples}
+\label{sec_examples}
+
+The following examples illustrate different namelist options that 
+can be used to run CLM3.0 in offline mode.
+
+\subsection {Example 1: Offline initial run, one day, global}
+
+When the model is run in offline mode using a pre-existing surface
+dataset, the minimum namelist parameters are: {\bf CASEID}, {\bf
+NSREST}, {\bf NESTEP} or {\bf NELAPSE}, {\bf FSURDAT}, {\bf FPFTCON},
+{\bf OFFLINE\_ATMDIR}, {\bf START\_YMD}, and {\bf DTIME}. If {\bf
+FSURDAT} is blank, a surface dataset will be generated at run time and
+additional variables need to be specified (see section
+\ref{subsec_model_input_data_namelist} and Examples 5 and 6).  All other
+namelist parameters will be set to default values.  The following
+gives an example of a simple namelist.
+
+\begin{verbatim}
+ &clmexp 
+ CASEID         =  'test01'
+ NSREST         =   0 
+ NESTEP         =  -1 
+ FSURDAT        =  '$CSMDATA/srfdata/cam/clms_64x128_T42_c020514.nc'
+ FINIDAT        =  '$CSMDATA/inidata_2.1/cam/clmi_0000-09-01_64x128_T42_c021125.nc'
+ FPFTCON        =  '$CSMDATA/pftdata/pft-physiology' 
+ FRIVINP_RTM    =  '$CSMDATA/rtmdata/rdirc.05'
+ OFFLINE_ATMDIR =  '$CSMDATA/NCEPDATA' 
+ START_YMD      =  19971231
+ DTIME          =  1800
+ HIST_NHTFRQ(1) =  -24
+ /
+\end{verbatim}
+
+\medskip \noindent 
+{\bf CASEID} = 'test01' \\ Case identifier which distinguishes this
+particular simulation from another. The string in {\bf CASEID} shows
+up in the names of history, restart, and initial files, in the restart
+pointer file name (see Example 2) and in the Mass Store pathname where
+history and restart files are placed if the Mass Store is used.
+In a branch run, the user must specify a new {\bf CASEID}.
+
+\medskip \noindent 
+{\bf NSREST} = 0 \\ Requests an initial run, as opposed to a restart
+or a branch run. An initial run does not require the use of an initial
+input datafile ({\bf FINIDAT}). If none is provided, the model uses
+non spun-up initialization provided in the code (see
+src/main/iniTimeVar.F90).
+
+\medskip \noindent 
+{\bf NESTEP} = -1 \\
+Specifies the run's ending time to be at the end of day 1. Since {\bf
+NESTEP} overrides any value given to {\bf NELAPSE}, {\bf NELAPSE}
+has been omitted in this example.
+
+\medskip \noindent 
+{\bf FSURDAT} = '\$CSMDATA/srfdata/cam/clms\_64x128\_T42\_c020514.nc' \\ 
+Specifies the name of the surface data input file. This T42 surface
+dataset can be used both in cam and offline mode.  The model
+resolution, (i.e. parameters {\bf lsmlon} and {\bf lsmlat}) must be
+compatible with the resolution of {\bf FSURDAT}.  If the filename
+appeared without a path specifying its exact location, the file would
+be expected in the executable directory, defined by the environment
+variable {\bf \$MODEL\_EXEDIR}.
+
+\medskip \noindent 
+{\bf FINIDAT} = '\$CSMDATA/inidata\_2.1/cam/clmi\_0000-09-01\_64x128\_T42\_c021125.nc' \\
+
+Specifies the initial file to be used instead of model-specified
+initial values.  This results in a simulation that starts from a
+spun-up state.
+
+\medskip \noindent 
+{\bf FPFTCON} = '\$CSMDATA/pftdata/pft-physiology' \\
+Specifies a file with PFT (Plant Functional Type) information.  
+
+\medskip \noindent 
+{\bf FRIVINP\_RTM} = '\$CSMDATA/rtmdata/rdirc.05' \\
+Specifies the input file required for the operation of RTM (the River
+Transport Model of Branstetter et al). By default, RTM will operate at
+half degree horizontal resolution and will be invoked every 3 hours,
+where the RTM input fluxes are averaged over the 3 hour period.  If
+the user wants the RTM scheme to be invoked every timestep, {\bf
+RTM\_NSTEPS} should be set to 1. If the user wants the RTM scheme to
+operate at a different frequency than once every 3 hours, {\bf
+RTM\_NSTEPS} should be set to the desired value.  Use of RTM is
+activated in the jobscript.csh with the C pre-processor (cpp) directive
+\#define RTM in the header file {\bf preproc.h} (see \ref{subsubsec_cpp}).
+
+\medskip \noindent 
+{\bf OFFLINE\_ATMDIR} = '\$CSMDATA/NCEPDATA' \\
+Specifies the location of the atmospheric driver data set. Such a data
+set is required for the model to run in offline mode.
+
+\medskip \noindent 
+{\bf START\_YMD} = 19971231 \\ 
+Specifies the base date of the simulation and must be compatible with
+the atmospheric input data. For example, {\bf START\_YMD} = 19971231
+will use the atmospheric input file 1997-12.nc. In a restart or branch
+run, {\bf START\_YMD} need not be changed, as long as it refers to a
+date earlier than the date of restart or branch.
+
+\medskip \noindent 
+{\bf DTIME} = 1800 \\
+Specifies the simulation's timestep in seconds. In offline mode, the
+model can handle a timestep of up to 3600 seconds.
+
+\medskip \noindent 
+{\bf HIST\_NHTFRQ(1)} = -24 \\
+Primary history files and restart files will be produced in the
+executable directory and will be written every 24 hours.
+
+\subsection {Example 2: Restart run}
+
+\noindent 
+The following namelist generates a restart run starting from the last
+file generated by Example 1.
+
+\begin{verbatim}
+ &clmexp
+ CASEID         = 'test01' 
+ NSREST         =  1 
+ NELAPSE        = -1 
+ FSURDAT        = '$CSMDATA/srfdata/cam/clms_64x128_T42_c020514.nc'
+ FINIDAT        = '$CSMDATA/inidata_2.1/cam/clmi_0000-09-01_64x128_T42_c021125.nc'
+ FPFTCON        = '$CSMDATA/pftdata/pft-physiology' 
+ FRIVINP_RTM    = '$CSMDATA/rtmdata/rdirc.05'
+ OFFLINE_ATMDIR = '$CSMDATA/NCEPDATA' 
+ START_YMD      =  19971231 
+ DTIME          =  1800 
+ HIST_NHTFRQ(1) =  -24
+ / 
+\end{verbatim}
+
+\medskip \noindent 
+{\bf NSREST = 1} \\
+Requests a restart run. A restart run finds the name of the
+appropriate restart file automatically by reading the file, lnd.{\bf
+CASEID}.rpointer.  In this example, the pointer file will be
+lnd.test01.rpointer. Restart runs are meant to be 'seamless,'
+producing the same output as runs which were not restarted.
+
+\medskip \noindent 
+{\bf NELAPSE} = -1 \\
+Specifies the run's ending time to be one day after the point of
+restart. This is equivalent to entering {\bf NESTEP} = -2 instead,
+since the previous run stopped at the end of day 1.
+
+\medskip \noindent 
+All other namelist variables remain the same to ensure a 'seamless'
+restart (for information, see example 1). Also, for a seamless
+restart, the user should generally execute the code with the same
+executable used in the initial run (ie, without compiling the code
+again).
+
+\subsection {Example 3: Branch run}
+
+\noindent 
+The following namelist generates a branch run starting from restart
+files generated by Example 1.  The user may branch a run with the same
+executable used in the initial run (i.e., without recompiling the
+code) unless branching is used to test changes in the code (for
+debugging or sensitivity purposes).
+
+\begin{verbatim}
+ &clmexp 
+ CASEID         = 'branch_run' 
+ NSREST         =  3 
+ NELAPSE        = -1 
+ FSURDAT        = '$CSMDATA/srfdata/cam/clms_64x128_T42_c020514.nc'
+ FINIDAT        = '$CSMDATA/inidata_2.1/cam/clmi_0000-09-01_64x128_T42_c021125.nc'
+ FPFTCON        = '$CSMDATA/pftdata/pft-physiology' 
+ FRIVINP_RTM    = '$CSMDATA/rtmdata/rdirc.05'
+ OFFLINE_ATMDIR = '$CSMDATA/NCEPDATA' 
+ NREVSN         = 'test01.clm2.r.1998-01-01-00000' 
+ HIST_FINC2     = 'TV:I'
+ HIST_NHTFRQ    = -3,5 
+ HIST_MFILT     =  2,3
+ START_YMD      = 19971231 
+ DTIME          = 1800 
+ / 
+\end{verbatim}
+
+\medskip \noindent 
+See Example 1 for explanations of namelist variables which remain
+unchanged.
+
+\medskip \noindent 
+{\bf NSREST} = 3 \\
+Requests a branch run.
+
+\medskip \noindent 
+{\bf NELAPSE} = -1 \\
+Specifies the run's ending time to be one day after the
+point of branching.
+
+\medskip \noindent 
+{\bf NREVSN} = 'test.clm2.r.1998-01-01-00000' \\
+Supplies the name of the restart file which will initialize this run.
+(Note this file can be produced by running example 1 above).
+
+\medskip \noindent 
+{\bf HIST\_FINCL2} = 'TV:I' \\
+Add an auxiliary history file with the field ``TV'' that is output instantaneously.
+
+\medskip \noindent 
+{\bf HIST\_NHTFRQ} = -3,5 \\ 
+Changes the frequency of primary history history writes to every 3
+hours.  The write frequency of the auxiliary file is every 5 time
+steps.  This is an example of a change which a user may wish to test
+in a branch run.
+
+\medskip \noindent 
+{\bf HIST\_MFILT} =  2,3 \\
+The primary history file will have 2 time samples on every tape. The
+auxiliary history file will have 3 time samples on every tape.
+
+\subsection {Example 4: Auxiliary history files}
+
+\noindent 
+This example covers the addition of an auxiliary history file, the
+removal of a field from the primary history file and the change of
+field type in a history file. A variety of other namelist options are
+also illustrated.
+
+\begin{verbatim}
+ &CLMEXP    
+ CASEID          = 'rtm_run' 
+ NSREST          =  0 
+ NESTEP          = -31 
+ START_YMD       =  19980101 
+ DTIME           =  1800 
+ FSURDAT        =  '$CSMDATA/srfdata/cam/clms_64x128_T42_c020514.nc'
+ FINIDAT        =  '$CSMDATA/inidata_2.1/cam/surface-data.120x060.013002.nc' 
+ FRIVINP_RTM     = '$CSMDATA/rtmdata/rdirc.05' 
+ OFFLINE_ATMDIR  = '$CSMDATA/NCEPDATA' 
+ HIST_DOV2XY     = .true.,.false. 
+ HIST_NHTFRQ     = -24,-12 
+ HIST_MFILT      =  4,2 
+ HIST_FINCL2     = 'TV','TG:I'
+ HIST_FEXCL1     = 'TSNOW'
+ MSS_IRT         = 365  
+ WRTDIA          = .true. 
+ / 
+\end{verbatim}
+
+\medskip \noindent 
+For namelist variables which are repeated, refer to Examples 1, 2, and 3.
+
+\medskip \noindent 
+{\bf HIST\_DOV2XY} = .true.,.false. \\ 
+History output will appear in gridded two-dimensional format
+(rather than one-dimensional subgrid format) for the primary file and in
+one-dimensional subgrid format for the auxiliary file.
+
+\medskip \noindent 
+{\bf HIST\_NHTFRQ} = -24,-12 \\ 
+History output will be directed to the primary history file every 24
+model hours and to the auxiliary history file every 12 hours.
+
+\medskip \noindent 
+{\bf HIST\_MFILT} = 4,2 \\ 
+Each primary history file will contain 4 time slices of output, while
+each auxiliary history file will contain 2 time slice of output.
+
+\medskip \noindent 
+{\bf HIST\_FINCL2} = 'TV','TG:I' \\ 
+Specifies the two fields to be added to the auxiliary history output. 
+The first field, 'TV', will have the default time averaging done,
+whereas the second field, 'TG' will have instantaneous output.
+
+\medskip \noindent 
+{\bf HIST\_FEXCL1} = 'TSNOW' \\
+The field 'TSNOW' will be excluded from the primary tape.
+
+\medskip \noindent {\bf WRTDIA} = .true. \\ 
+A global average of land surface air temperature as diagnostic will
+appear in the standard output file of the simulation.
+
+\medskip \noindent 
+{\bf MSS\_IRT} = 365 \\ 
+Output files will be archived to the NCAR Mass Storage System with a
+retention time of 365 days.
+
+\subsection {Example 5. Generation of regional grid surface dataset}
+
+\medskip \noindent  
+A regular grid surface dataset can be generated at run time for a
+single gridcell or for gridcells comprising a regular regional or
+global domain. To generate a surface dataset for a regional run, the
+cpp tokens {\bf LSMLON} and {\bf LSMLAT} must be set to the desired
+resolution (e.g., {\bf LSMLON}=1, {\bf LSMLAT}=1 for a single point
+simulation) and the variables {\bf MKSRF\_OFFLINE\_EDGES}, {\bf
+MKSRF\_OFFLINE\_EDGEN}, {\bf MKSRF\_OFFLINE\_EDGEE}, and {\bf
+MKSRF\_OFFLINE\_EDGEW} and their values need to be added to the
+namelist.  A surface dataset will be created with the name
+surface-data.LSMLONxLSMLAT.nc (e.g., for a single point simulation the
+file name will be surface-data.001x001.nc). The model can then be run
+for the single point or for the regional domain by following Example 1
+where {\bf FSURDAT} is set to the new surface dataset. 
+
+In the following example, a regional grid is created over the
+amazon. {\bf LSMLON} and {\bf LSMLAT} should be set to 15 and 11,
+respectively.
+
+\begin{verbatim}
+ &clmexp     
+ CASEID                 = 'create_regional_surfdat' 
+ NSREST                 = 0 
+ NESTEP                 = 2 
+ START_YMD              = 19971231 
+ DTIME                  = 1800 
+ FSURDAT                = ' '   
+ FRIVINP_RTM            = '$CSMDATA/rtmdata/rdirc.05' 
+ FPFTCON                = '$CSMDATA/pftdata/pft-physiology' 
+ OFFLINE_ATMDIR         = '$CSMDATA/NCEPDATA' 
+ MKSRF_OFFLINE_FNAVYORO = '$CSMDATA/rawdata/mksrf_navyoro_20min.nc' 
+ MKSRF_FVEGTYP          = '$CSMDATA/rawdata/mksrf_pft.nc' 
+ MKSRF_FSOITEX          = '$CSMDATA/rawdata/mksrf_soitex.10level.nc' 
+ MKSRF_FSOICOL          = '$CSMDATA/rawdata/mksrf_soicol_clm2.nc' 
+ MKSRF_FLANWAT          = '$CSMDATA/rawdata/mksrf_lanwat.nc' 
+ MKSRF_FGLACIER         = '$CSMDATA/rawdata/mksrf_glacier.nc' 
+ MKSRF_FURBAN           = '$CSMDATA/rawdata/mksrf_urban.nc' 
+ MKSRF_FLAI             = '$CSMDATA/rawdata/mksrf_lai.nc' 
+ MKSRF_EDGEN            =  12 
+ MKSRF_EDGES            = -21 
+ MKSRF_EDGEE            = -36 
+ MKSRF_EDGEW            = -81 
+ /   
+\end{verbatim}
+
+\medskip \noindent 
+{\bf FSURDAT} = ' ' \\ 
+A surface dataset named surface-data.LSMLONXLSMLAT.nc will be created
+in the model executable directory. LSMLON and LSMLAT are defined in
+jobscript.csh (see \ref{subsubsec_cpp}).
+
+\medskip \noindent
+{\bf MKSRF\_OFFLINE\_FNAVYORO} = '\$CSMDATA/rawdata/mksrf\_navyoro\_20min.nc'\\ 
+Points to the orography dataset used to derive the model's land mask
+in offline mode.  The environment variable {\bf \$CSMDATA} is
+explained in \ref{subsubsec_env_vars}.
+
+\medskip \noindent 
+{\bf MKSRF\_FVEGTYP}, {\bf MKSRF\_FSOITEX}, {\bf MKSRF\_FSOICOL}, {\bf
+MKSRF\_FLANWAT}, {\bf MKSRF\_FGLACIER}, {\bf MKSRF\_FURBAN}, and {\bf
+MKSRF\_FLAI} \\ 
+Specify the raw (usually high resolution) input datasets used to
+create the model surface dataset.
+
+\medskip \noindent {\bf MKSRF\_OFFLINE\_EDGES}, {\bf MKSRF\_OFFLINE\_EDGEN}, {\bf
+MKSRF\_OFFLINE\_EDGEE}, and {\bf MKSRF\_OFFLINE\_EDGEW} \\ 
+Must be defined for the desired model regional domain.  The units are
+degrees north for edges and edgen and degrees east for edgee and
+edgew.
+
+\subsection {Example 6. Generation of global gaussian surface dataset}
+
+\medskip \noindent  
+Only global surface datasets can be created on a non-regular grid,
+such as a gaussian grid. To generate a surface dataset on a gaussian
+grid, the cpp tokens {\bf LSMLON} and {\bf LSMLAT} must be set to the
+desired resolution (e.g., {\bf LSMLON}=128, {\bf LSMLAT}=64 for a T42
+grid, and {\bf MKSRF\_OFFLINE\_FGRID} must be set to the appropriate
+dataset in {\bf \$CSMDATA/rawdata} specifying the model grid, land
+mask and land fraction for the model grid. At T42 resolution, a
+surface dataset, ``surface-data.128x064.nc'', will be created in the
+model executable directory. This dataset may be renamed by the user to
+be more self-explanatory.
+
+\medskip \noindent 
+The following namelist will result in the generation of a surface
+dataset on a global gaussian grid.
+
+\begin{verbatim}
+ &clmexp 
+ CASEID              = 'create_global_surfdat'  
+ NSREST              =  0 
+ NESTEP              =  2 
+ START_YMD           = 19971231 
+ DTIME               = 1800 
+ FSURDAT             = ' '   
+ FRIVINP_RTM         = '$CSMDATA/rtmdata/rdirc.05' 
+ FPFTCON             = '$CSMDATA/pftdata/pft-physiology' 
+ OFFLINE_ATMDIR      = '$CSMDATA/NCEPDATA' 
+ MKSRF_OFFLINE_FGRID = '$CSMDATA/rawdata/T42_clm2_camfgrid_040802.nc' 
+ MKSRF_FVEGTYP       = '$CSMDATA/rawdata/mksrf_pft.nc' 
+ MKSRF_FSOITEX       = '$CSMDATA/rawdata/mksrf_soitex.10level.nc' 
+ MKSRF_FSOICOL       = '$CSMDATA/rawdata/mksrf_soicol_clm2.nc' 
+ MKSRF_FLANWAT       = '$CSMDATA/rawdata/mksrf_lanwat.nc' 
+ MKSRF_FGLACIER      = '$CSMDATA/rawdata/mksrf_glacier.nc' 
+ MKSRF_FURBAN        = '$CSMDATA/rawdata/mksrf_urban.nc' 
+ MKSRF_FLAI          = '$CSMDATA/rawdata/mksrf_lai.nc' 
+ / 
+\end{verbatim}
+
+\medskip \noindent 
+{\bf FSURDAT} = ' ' \\ 
+A surface dataset named surface-data.128x064.nc will be created at run
+time in the model executable directory.
+
+\medskip \noindent 
+{\bf MKSRF\_OFFLINE\_FGRID} = '\$CSMDATA/rawdata/T42\_clm2\_camfgrid\_040802.nc'\\ 
+Points to the dataset containing the model grid, land mask and
+fractional land for the surface dataset.
+
+\medskip \noindent 
+{\bf MKSRF\_FVEGTYP}, {\bf MKSRF\_FSOITEX}, {\bf MKSRF\_FSOICOL}, {\bf
+MKSRF\_FLANWAT}, {\bf MKSRF\_FGLACIER}, {\bf MKSRF\_FURBAN}, and {\bf
+MKSRF\_FLAI} \\ 
+Specifies the input datasets used to create the surface dataset.
+

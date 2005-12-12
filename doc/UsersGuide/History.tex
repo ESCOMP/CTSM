@@ -1,0 +1,670 @@
+\section {History File Fields}
+\label{sec_history_file}
+The following sections discuss both the fields that may currently be
+output to CLM3.0 history tapes as well as code modifications that the
+user must make to add new user-defined fields to the history tapes.
+
+\subsection {Model history fields}
+Tables 9-16 list the fields that currently may be output to a CLM3.0
+history tape. By default, these fields are also on the primary history
+tape.  The dimensions of each field may include 'time' (days ince the
+beginning of the simulation, 'levsoi' (number of soil layers, levsoi =
+10) and 'lat' and 'lon' (number of latitude and longitude points,
+e.g., lat=64, lon=128 for a T42 simulation), for grid averaged two
+dimensional output and 'gridcell', 'landunit', 'column' or 'pft' for
+one dimensional output.  Note that the 1d dimension type appearing in
+the dimensions entry specifies only the default 1d output type. For
+example, 'TSA' will be output by default in column 1d output. However,
+that default type may be changed for a given history tape via the
+setting of the namelist variable {\bf HIST\_TYPE1D\_PERTAPE}. The
+Level column can contain either SL or ML as an entry, denoting a
+single-level or multi-level field, respectively. Finally, unless
+explicitly specified in the description, all fields are time averaged
+over the requested history interval.
+
+\begin{longtable}{|l|p{2.3in}|l|l|l|p{1.0in}|} 
+\caption{\label{table_master_field_list} Master Field List - Temperature} \\
+\hline
+\endhead
+\hline
+Name & Description & Units & 1d Output & Level & Spatial Validity  \\ 
+\hline	\hline	
+
+{\bf TSA} 
+& 2 m air temperature 
+& K       
+& column  
+& SL 
+& global  \\
+\hline	
+
+{\bf TV} 
+& vegetation temperature 
+& K       
+& column  
+& SL 
+& global \\
+\hline	
+
+{\bf TG}
+& ground temperature
+& K        
+& column
+& SL 
+& global \\
+\hline	
+
+{\bf TSOI}
+& soil temperature 
+& K       
+& column  
+& ML 
+& lakes excluded \\  
+\hline	
+
+{\bf TLAKE} 
+& lake temperature
+& K        
+& column
+& ML 
+& nonlakes excluded \\
+\hline	
+
+{\bf TSNOW}
+& snow temperature 
+& K         
+& column
+& SL 
+& lakes excluded \\ 
+\hline	
+
+\end{longtable}
+
+\begin{longtable}{|l|p{2.3in}|l|l|l|p{1.0in}|} 
+\caption{\label{master_field_list_srad} Master Field List -Surface Radiation} \\
+\hline
+\endhead
+\hline
+Name & Description & Units & 1d Output & Level & Spatial Validity  \\ 
+\hline	\hline	
+
+{\bf FSA} 
+& absorbed solar radiation   
+& watt/m2        
+& column
+& SL
+& global \\ 
+\hline
+
+{\bf FSR} 
+& reflected solar radiation   
+& watt/m2        
+& column  
+& SL
+& global \\ 
+\hline
+
+{\bf NDVI} 
+& surface normalized difference vegetation index   
+& unitless        
+& column  
+& SL
+& global \\ 
+\hline
+
+{\bf FIRA} 
+& net infrared (longwave) radiation   
+& watt/m2      
+& column  
+& SL
+& global \\ 
+\hline
+
+{\bf FIRE} 
+& emitted infrared (longwave) radiation   
+& watt/m2      
+& column
+& SL
+& global \\ \hline
+
+\end{longtable}
+      
+\begin{longtable}{|l|p{2.3in}|l|l|l|p{1.0in}|} 
+\caption{\label{master_field_list_sflux} Master Field List -Surface Energy Fluxes} \\
+\hline
+\endhead
+\hline
+Name & Description & Units & 1d Output & Level & Spatial Validity  \\ 
+\hline	\hline	
+
+{\bf FCTR} 
+& canopy transpiration   
+& watt/m2      
+& column  
+& SL
+& global (set to 0 over lakes) \\
+\hline
+
+{\bf FCEV} 
+& canopy (intercepted) evaporation   
+& watt/m2      
+& column  
+& SL
+& global (set to 0 over lakes) \\
+\hline
+
+{\bf FGEV} 
+& ground evaporation   
+& watt/m2      
+& column  
+& SL
+& global  \\
+\hline
+
+{\bf FSH} 
+& sensible heat   
+& watt/m2      
+& column  
+& SL
+& global \\
+\hline
+
+{\bf FGR} 
+& heat flux into snow/soil (includes snow melt)   
+& watt/m2      
+& column  
+& SL
+& global \\
+\hline
+
+{\bf FSM} 
+& snow melt heat flux   
+& watt/m2      
+& column  
+& SL
+& global \\
+\hline
+
+{\bf TAUX} 
+& zonal surface stress   
+& kg/m/s2      
+& column  
+& SL
+& global \\
+\hline
+
+{\bf TAUY} 
+& meridional surface stress   
+& kg/m/s2      
+& column  
+& SL
+& global \\ 
+\hline
+
+\end{longtable}
+      
+\begin{longtable}{|l|p{2.3in}|l|l|l|p{1.0in}|} 
+\caption{\label{master_field_list_vegphen} Master Field List - Vegetation Phenology} \\
+\hline
+\endhead
+\hline
+Name & Description & Units & 1d Output & Level & Spatial Validity  \\ 
+\hline	\hline	
+
+{\bf ELAI} 
+& exposed one-sided leaf area index   
+& m2/m2      
+& column  
+& SL
+& global \\
+\hline 
+
+{\bf ESAI} 
+& exposed one-sided stem area index   
+& m2/m2      
+& column  
+& SL
+& global \\
+\hline 
+
+\end{longtable}
+      
+\begin{longtable}{|l|p{2.3in}|l|l|l|p{1.0in}|} 
+\caption{\label{master_field_list_canopy} Master Field List - Canopy Physiology} \\
+\hline
+\endhead
+\hline
+Name & Description & Units & 1d Output & Level & Spatial Validity  \\ 
+\hline	\hline	
+
+{\bf RSSUN} 
+& sunlit leaf stomatal resistance  (minimum over time interval)    
+& s/m      
+& column  
+& SL
+& excludes lakes \\
+\hline 
+
+{\bf RSSHA} 
+& shaded leaf stomatal resistance (minimum over time interval)  
+& s/m      
+& column  
+& SL
+& excludes lakes \\
+\hline 
+
+{\bf BTRAN} 
+& transpiration beta factor (soil moisture limitation)   
+& unitless      
+& column  
+& SL
+& excludes lakes \\
+\hline 
+
+{\bf FPSN} 
+& photosynthesis   
+& unitless      
+& column  
+& SL
+& excludes lakes \\
+\hline
+
+\end{longtable}
+
+\begin{longtable}{|l|p{2.3in}|l|l|l|p{1.0in}|} 
+\caption{\label{master_field_list_hydro} Master Field List - Hydrology} \\
+\hline
+\endhead
+\hline
+Name & Description & Units & 1d Output & Level & Spatial Validity  \\ 
+\hline	\hline	
+
+{\bf H2OSOI} 
+& volumetric soil water   
+& mm3/mm3      
+& column
+& ML
+& excludes lakes \\
+\hline
+
+{\bf H2OSNO} 
+& snow depth (liquid water equivalent)   
+& mm       
+& column
+& SL
+& global \\
+\hline
+
+{\bf H2OCAN} 
+& intercepted water   
+& mm       
+& column
+& SL
+& global (set to 0 over lakes) \\
+\hline
+
+{\bf SOILLIQ} 
+& soil liquid water 
+& kg/m2       
+& column
+& ML
+& excludes lakes \\
+\hline
+
+{\bf SOILICE} 
+& soil ice 
+& kg/m2       
+& column
+& ML
+& excludes lakes \\
+\hline
+
+{\bf SNOWLIQ} 
+& snow liquid water 
+& kg/m2         
+& column
+& SL
+& excludes lakes \\
+\hline
+
+{\bf SNOWICE} 
+& snow ice 
+& kg/m2 
+& column
+& SL
+& excludes lakes \\
+\hline
+
+{\bf SNOWDP} 
+& snow height 
+& m          
+& column
+& SL
+& global \\
+\hline
+
+{\bf SNOWAGE} 
+& snow age 
+& unitless          
+& column
+& SL
+& global (set to 0 over lakes) \\
+\hline
+
+{\bf QINFL} 
+& infiltration 
+& mm/s         
+& column
+& SL
+& global \\
+\hline
+
+{\bf QOVER} 
+& surface runoff 
+& mm/s         
+& column
+& SL
+& global \\
+\hline
+
+{\bf QRWGL} 
+& surface runoff at glaciers, wetlands, lakes 
+& mm/s         
+& column
+& SL
+& global \\
+\hline
+
+{\bf QDRAI} 
+& sub-surface drainage 
+& mm/s         
+& column
+& SL
+& global \\
+\hline
+
+{\bf QINTR} 
+& interception 
+& mm/s         
+& column
+& SL
+& global (set to 0 over lakes) \\
+\hline
+
+{\bf QDRIP} 
+& throughfall 
+& mm/s         
+& column
+& SL
+& global \\
+\hline
+
+{\bf QMELT} 
+& snow melt 
+& mm/s         
+& column
+& SL
+& global \\
+\hline
+
+{\bf QSOIL} 
+& ground evaporation 
+& mm/s         
+& column
+& SL
+& global \\
+\hline
+
+{\bf QVEGE} 
+& canopy (intercepted) evaporation 
+& mm/s         
+& column
+& SL
+& global (set to 0 over lakes) \\
+\hline
+
+{\bf QVEGT} 
+& canopy transpiration 
+& mm/s         
+& column
+& SL
+& global (set to 0 over lakes) \\
+\hline
+
+{\bf QCHOCNR} 
+& RTM river discharge into ocean 
+& m3/s         
+& column
+& SL
+& global (only included if {\bf RTM} defined) \\
+\hline
+
+{\bf QCHANR} 
+& RTM river flow (maximum subgrid flow) 
+& m3/s         
+& column
+& SL
+& global (only included if {\bf RTM} defined) \\
+\hline
+
+\end{longtable}
+
+\begin{longtable}{|l|p{2.3in}|l|l|l|p{1.0in}|} 
+\caption{\label{master_field_list_check} Master Field List - Water and Energy Balance Checks} \\
+\hline
+\endhead
+\hline
+Name & Description & Units & 1d Output & Level & Spatial Validity  \\ 
+\hline	\hline	
+
+{\bf ERRSOI} 
+& soil/lake energy conservation error 
+& watt/m2         
+& column
+& SL
+& global \\
+\hline
+
+{\bf ERRSEB} 
+& surface energy conservation error 
+& watt/m2         
+& column
+& SL
+& global \\
+\hline
+
+{\bf ERRSOL} 
+& solar radiation conservation error 
+& watt/m2         
+& column
+& SL
+& global \\
+\hline
+
+{\bf ERRH2O} 
+& total water conservation error 
+& mm         
+& column
+& SL
+& global \\
+\hline
+
+\end{longtable}
+
+\begin{longtable}{|l|p{2.3in}|l|l|l|p{1.0in}|} 
+\caption{\label{master_field_list_atm} Master Field List - Atmospheric Forcing} \\
+\hline
+\endhead
+\hline
+Name & Description & Units & 1d Output & Level & Spatial Validity  \\ 
+\hline	\hline	
+
+{\bf RAIN} 
+& rain 
+& mm/s         
+& gridcell
+& SL
+& global \\
+\hline
+
+{\bf SNOW} 
+& snow 
+& mm/s         
+& gridcell
+& SL
+& global \\
+\hline
+
+{\bf TBOT} 
+& atmospheric air temperature 
+& K         
+& gridcell
+& SL
+& global \\
+\hline
+
+{\bf WIND} 
+& atmospheric wind velocity magnitude 
+& m/s         
+& gridcell
+& SL
+& global \\
+\hline
+
+{\bf THBOT} 
+& atmospheric air potential temperature 
+& K         
+& gridcell
+& SL
+& global \\
+\hline
+
+{\bf QBOT} 
+& atmospheric specific humidity 
+& kg/kg         
+& gridcell
+& SL
+& global \\
+\hline
+
+{\bf ZBOT} 
+& atmospheric reference height 
+& m         
+& gridcell
+& SL
+& global \\
+\hline
+
+{\bf FLDS} 
+& incident longwave radiation 
+& watt/m2         
+& gridcell
+& SL
+& global \\
+\hline
+
+{\bf FSDS} 
+& incident solar radiation 
+& watt/m2         
+& gridcell
+& SL
+& global \\
+\hline
+
+\end{longtable}
+
+Note that for snow related fields (e.g. SNOWLIQ), horizontal averaging
+is done only using columns that have snow. In this horizontal
+averaging lake subgrid points are excluded. Furthermore, for 
+snow related fields, vertical averaging is done by summing only over
+valid snow layers.
+
+\subsection{Adding new history fields}
+\label{sec_historymod}
+
+Model history output may appear in either xy grid form or native
+subgrid form (depending on the value of the namelist variable {\bf
+HIST\_DOV2XY}).  Native subgrid output may in turn appear in gridcell,
+landunit, column or pft form.  History file output is controlled by
+the files {\bf histFldsMod.F90} and {\bf histFileMod.F90}. The module
+{\bf histFldsMod.F90} contains the user interface which define the
+history fields which are output by the mode whereas {\bf module {\bf
+histFileMod.F90} contains routines that create history fields, update
+and output the model history buffer during during the course of a
+model simulation the course of the model simulation.
+
+If a user wants to add a new field in addition to the ones listed
+above to the history output, model code must be modified. First, the
+user must determine if the field to be added is a single level or a
+multi-level level field.  A single level field will have either pft,
+column, landunit or gridcell as its only non-time dimension. A
+multi-level field will have pft, column, landunit or gridcell as one
+dimension, along with a level field (e.g. soil levels) as a second
+non-time dimension. Once this has been determined, the user must only
+modify {\bf histFldsMod.F90} in order to add a new history field to
+the model output.  A summary of the interface modifications needed to
+add new fields will now be provided.  This summary will primarily be
+done via concrete examples. 
+It is assumed in the following
+that the user is completely familiar with Fortran 90 pointer concepts
+and syntax.
+
+The interface to add history output fields assumes that all arguments
+occur as keyword-value pairs.  The interface also assumes that each
+field to be added has a {\bf corresponding entry in clmtype}.  In
+other words, each history field must be associated with either a
+gridcell, landunit, column or pft level data structure that has
+already been defined in {\bf clmtype.F90}.
+
+As an example of the call needed to add a single-level history output
+field, the interface call to add canopy evaporation to the history
+output is as follows:
+
+\begin{verbatim}
+    call add_fld1d (fname='FCEV', units='watt/m^2',  &
+         avgflag='A', long_name='canopy evaporation', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_vege, set_lake=0._r8)
+
+
+   {\it fname}     
+         history file field name (required)
+
+   {\it long_name} 
+         descriptive name of field (required)
+
+   {\it units}     
+         units of field (required)
+
+   {\it avg flag}  
+         time averaging flag (required) 
+         valid values are "X" (maximum over time), "A" (time average), 
+         "M" (minimum over time) or "I" (instantaneous)
+
+   {\it ptr_pft} or {\it ptr_col} or {\it ptr_lunit} or {\it ptr_gridcell} 
+         pointer to {\bf clmtype} pft, column, landunit or gridcell arrays (required)
+
+   {\it set_lake}
+         value to set lake points to (optional)
+         if this value is not set it is assumed that field values over lake points 
+         will be provided with a valid value by the model
+\end{verbatim}
+
+It is important to note that if the namelist variable {\bf
+HIST\_DOV2XY} is set to true, history output will appear in two
+dimensional grid form.  Two-dimensional grid output will be obtained
+by calculating grid cell averages from the ``type1d'' subgrid
+components.
+ 
+The following lists steps that must be taken by the user to add a new
+history field to the model. Currently, the upward longwave radiation
+above the canopy is not output to the history file. We assume that the
+user wants to add this field to the history output at either the
+column or pft subgrid level. The following steps assume that a
+clmpointer array does not exist for the desired history
+variable. Steps 1 and 2 below discuss how such a pointer array is
+created. If a clmpointer array already exists for the needed history
+variable then only steps 4 and 5 are needed. Step 3 is needed only if
+1d output is requested at a subgrid level where spatial averaging is
+required and that spatial averaging is not currently in the code.
+
+

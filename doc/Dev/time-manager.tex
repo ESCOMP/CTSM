@@ -1,0 +1,887 @@
+\documentclass[12pt]{article}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\textheight}{9in}
+\setlength{\topmargin}{0in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\topskip}{0in}
+\newlength{\parindentorig}
+\setlength{\parindentorig}{\parindent}
+
+\usepackage{html}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\newcommand{\prototype}[1]{\noindent\texttt{\textbf{#1}}}
+
+
+
+\begin{document}
+\bodytext{BGCOLOR=white LINK=#083194 VLINK=#21004A}
+\pagenumbering{roman}
+
+%================================================================================
+\begin{titlepage}
+
+\begin{latexonly}
+\noindent {\bf Community Land Model} \\
+\noindent National Center for Atmospheric Research, Boulder, CO \\
+\vspace{2in}
+\end{latexonly}
+
+\begin{center}
+{\Large\bf Time Manager Module: Requirements and Design} \\
+
+\bigskip
+{\it B. Eaton and M. Vertenstein }
+
+\bigskip
+20 November 2001
+\end{center}
+
+\begin{htmlonly}
+\begin{flushleft}
+Printed versions available:
+\htmladdnormallink{ps}{http://www.ccsm.ucar.edu/models/lnd-clm2/docs/time-manager.ps},
+\htmladdnormallink{pdf}{http://www.ccsm.ucar.edu/models/lnd-clm2/docs/time-manager.pdf}
+\end{flushleft}
+\end{htmlonly}
+
+\begin{latexonly}
+\vspace{2in}
+\begin{flushleft}
+Online version:\\
+http://www.ccsm.ucar.edu/models/lnd-clm2/docs/time-manager/index.html
+\end{flushleft}
+\end{latexonly}
+
+\end{titlepage}
+
+%================================================================================
+\tableofcontents
+\newpage
+
+%================================================================================
+\section{Overview}
+\pagenumbering{arabic}
+
+This document describes the requirements and design of the time manager
+module in CLM2.  The time manager is built
+on top of the utilities for time management available from the Earth System
+Modeling Framework (ESMF) \cite{esmf} libraries.
+
+The time manager's user interface is provided via namelist variables
+which may be set to control simulation properties such as the timestep
+size, start date, and stop date.  Dates are specified using either a
+Gregorian or a 365-day calendar.
+
+The time manager's API provides the methods that are used to control the
+model's time loop, and provides date and time information to model
+procedures or modules that may need it.  The API also provides an alarm
+facility which is designed to be used by parameterizations that need to
+carry out certain actions at specified times during the simulation.  The
+alarms are set up during the initialization process, and are queried each
+timestep for their on/off status.
+
+%================================================================================
+\section{Terminology}
+
+As a model advances in discrete timesteps the time manager keeps track of
+the date and time at each endpoint of the current timestep.  We begin with
+this section on terminology to clarify our use of common words like
+``date'' and ``time.''
+
+\begin{description}
+
+\item [date] \label{term:date} 
+The term ``date'' is used to refer to an instant in time.  It consists of
+year, month, day of month, and time of day components.  The time of day is
+expressed in UTC.  A date specification is incomplete without it's
+associated calendar.
+
+\item [time] \label{term:time}
+The term ``time'' is used in the sense of ``simulation time'' and expresses
+an elapsed time since a reference date.  These time values follow the
+convention for time coordinates supported by the COARDS \cite{coards} and
+CF \cite{cf} metadata conventions.
+
+\item [time of day] \label{term:tod}
+Time of day refers to the elapsed time since midnight of the current day.
+We express time of day in UTC unless explicitly stated otherwise.  In
+common usage the term ``time'' refers to ``time of day.''  In this document
+we will use ``time of day'' explicitly when that is what we mean.
+
+\item [start date] \label{term:start date}
+The start date of a simulation is the date assigned to the initial conditions.
+
+\item [reference date] \label{term:reference date}
+The reference date of a simulation is an arbitrary date that corresponds to
+the origin of the time coordinate.  Often this date corresponds to the
+start date.  But it may be different because providing a reference date
+that is common to a set of simulations that may have different start dates
+allows them to use the same time coordinate.
+
+\item [current date] \label{term:current date}
+A simulation advances by timesteps.  At any point during a simulation
+the current date is taken to be the date at the end of the current
+timestep.
+
+\item [start time] \label{term:start time}
+The start time of a simulation is the elapsed time from the reference date to
+the start date.
+
+\item [current time] \label{term:current time}
+The current time of a simulation is the elapsed time from the reference date to
+the current date.
+
+\item [calendar day] \label{term:calendar-day}
+The day number in the calendar year.  January 1 is calendar day 1.
+Calendar day may be expressed in a floating point format consisting of the
+integer day number plus the time of day (UTC) represented as a fractional
+day.  For example assuming a Gregorian calendar:
+
+\begin{tabular}{ll}
+Date & Calendar day \\
+\hline
+10 January 2000, 6Z    &  10.25   \\
+31 December 2000, 18Z  &  366.75
+\end{tabular}
+
+\item [restart date] \label{term:restart-date}
+The restart date of a simulation is the date of the data in the restart
+files from which the simulation is continuing.
+
+\end{description}
+
+%================================================================================
+\section{Requirements}
+
+%--------------------------------------------------------------------------------
+\subsection{Date calculations}
+
+\begin{itemize}
+
+\item
+Support Gregorian and ``no-leap'' calendars.  A ``no-leap'' calendar is the
+same as a Gregorian calendar with no leap years.
+
+\item
+Represent dates and times to a precision of 1 second.
+
+\item
+Date and time representations must have a range of at least 200,000 years.
+
+\end{itemize}
+
+%--------------------------------------------------------------------------------
+\subsection{Simulation control}
+
+\begin{itemize}
+
+\item
+The time manager will be initialized by specifying the calendar type,
+timestep size, start date and stop date.  The user may optionally specify
+the reference date.  By default the reference date equals the start date.
+
+\item
+The timestep size must be chosen so that there are an integral number of
+steps in a day.  
+
+\item
+The stop date may optionally be specified by any of the following:
+\begin{itemize}
+\item a number of timesteps from the start date;
+\item a number of days from the start date;
+\item a number of timesteps from the restart date;
+\item a number of days from the restart date;
+\end{itemize}
+
+\item
+The current date may be changed at any point during a simulation.
+
+\item
+Provide methods to query timestep size, start date, stop date, and
+reference date.
+
+\item
+Provide methods to query the following:
+\begin{itemize}
+\item the start date, stop date, and reference date;
+\item current timestep number and size;
+\item current date, time, and calendar day;
+\item previous date, i.e., date at the beginning of the current timestep;
+\item perpetual date,
+\item if the current timestep is the final one of the day or month;
+\item if the current timestep is the first one of an initial or restart run;
+\item if the current timestep is the last one of the run;
+\end{itemize}
+
+\item
+The methods that return the current date and calendar day should provide
+for an optional offset to be specified.  This provides easy access to the
+calendar calculations required to find date or calendar day values that
+are offset from the end-point of the current timestep.
+
+\item
+Provide an option to allow running the simulation in a ``perpetual
+calendar'' mode.  Under this option the time and dates are always available
+both as the usual simulation time and date, and as a perpetual time and
+date.  The simulation time and date are written to the output history files
+and log files to track the simulation progress with a monotonic time
+progression.  The perpetual time and date are used to determine the sun
+position and interpolate boundary datasets.  The perpetual day (i.e., the
+year, month, and day of month part of the date) may either be read from the
+initial file or may be set to user specified values.  When running in
+aqua-planet mode the perpetual day is set to March 21 of year 0.  The
+perpetual date and calendar day include a diurnal cycle.
+\begin{itemize}
+\item
+A query method will be provided to determine if the time manager is using
+the perpetual calendar mode.
+\item
+A query method will be provided that returns the current perpetual date
+which is the perpetual year, month, and day of month, plus the time of day
+component from the simulation's current date.  This forces the time of
+day written to the history files to be consistent with the phase of the
+diurnal cycle that is used in the solar calculations.
+\item
+The method that returns the current calendar day will return the calendar
+day corresponding to the current perpetual date when running in perpetual
+mode.
+\end{itemize}
+
+\item
+The time manager must be able to "restart", i.e., it must be able to write
+its state to a binary restart file, and reset its state after reading the
+restart file.  The only attribute of the time manager state that may be
+changed when initializing a restart run is the stop date.
+
+\end{itemize}
+
+%--------------------------------------------------------------------------------
+\subsection{Alarms}
+
+An alarm is used to signal that some event should take place during the
+current timestep.  Alarms are initialized by specifying a set of times when
+they should be turned on.  The time manager will turn an alarm on during
+the first timestep whose late end-point (i.e., the current time) equals or
+exceeds the current alarm time.  When an alarm is turned on the alarm time
+is updated.  Some specific requirements for alarm functionality are:
+
+\begin{itemize}
+\item
+Provide alarms that are turned on periodically and can be specified by a period
+and an offset.
+
+\item
+Provide alarms that are turned on when year and month boundaries are crossed.
+
+\item
+Provide method to query whether an alarm is on or off.
+
+\item
+Provide methods to query the current alarm time and date.  The current
+alarm time is the time that the alarm is set to be turned on.  If
+the alarm in currently on, then the current alarm time is the next time
+that the alarm will be turned on since the time manager updates the alarm
+time when it turns an alarm on.
+
+\end{itemize}
+
+%================================================================================
+\section{Interface Design}
+
+The time manager is designed as a module which provides public data members
+for communicating with the user interface (i.e., Fortran namelist), and
+public methods which wrap the ESMF library methods.  The reasons for
+designing ``wrapper'' methods rather than making direct use of the methods
+provided by the ESMF library's Fortran 90 interface are:
+
+\begin{itemize}
+\item to provide a simpler, higher level CLM2 specific interface;
+\item to hide the handling of the ESMF error returns;
+\item to hide the interprocess communication necessary when running with MPI;
+\item to provide methods for CLM2 specific file I/O to support restarts;
+\item to provide CLM2 specific simulation control options.
+\end{itemize}
+
+The ESMF library has an object oriented design.  In Fortran this implies a
+viewpoint in which each variable declared as one of the derived types is
+thought of as an independent object.  Thus, for example, different objects
+(variables) of the ESMF defined type for representing a date could be based
+on different calendars, and there could be multiple instances of the time
+manager.  But in the context of a single land model simulation there is
+only one calendar being used, and only one time coordinate.  Hence, only
+one time manager is necessary.  The CLM2 specific interface is then
+simplified, for example, by maintaining the calendar type and the time
+manager ID as private module data which does not have to be passed through
+the public method argument lists.
+
+The ESMF library methods all provide an optional argument for error
+checking.  The CLM2 specific interface does not pass this argument, but the
+methods act as wrappers that carry out checking of all error codes and
+invoke a CLM2 (or CCSM) specific error handler as appropriate.
+
+There is no CLM2 specific simulation control option currently implemented.
+
+%--------------------------------------------------------------------------------
+\subsection{User interface}
+
+The user interface is implemented via Fortran namelist variables.  These
+variables are public data in the time manager module.
+
+%................................................................................
+\subsubsection{\code{calendar}}
+
+\begin{tabular}{lp{5.5in}}
+Type    & character(len=*) \\
+Default & 'NO\_LEAP'  \\
+Use     &  
+Calendar to use in date calculations.  Supported calendars are 'NO\_LEAP'
+(i.e., modern calendar, but without leap years) and 'GREGORIAN' (modern
+calendar).
+\end{tabular}
+
+%................................................................................
+\subsubsection{\code{dtime}}
+
+\begin{tabular}{lp{5.5in}}
+Type    & integer \\
+Default & 1200 s \\
+Use     &  
+Timestep size in seconds.  \code{dtime} must evenly divide the number of
+seconds in a day.
+\end{tabular}
+
+%................................................................................
+\subsubsection{\code{start\_ymd}}
+
+\begin{tabular}{lp{5.5in}}
+Type    & integer \\
+Default & Read from the initial conditions input dataset \\
+Use     &  
+Year, month and day of the simulation start date.  The values are encoded
+in an integer as \code{year*10000 + month*100 + day}.
+\end{tabular}
+
+%................................................................................
+\subsubsection{\code{start\_tod}}
+
+\begin{tabular}{lp{5.5in}}
+Type    & integer \\
+Default & 0 if \code{start\_ymd} is specified; otherwise it's read from the
+initial conditions input dataset \\
+Use     &  
+Time of day (UTC) of the simulation start date, in seconds.
+\end{tabular}
+
+%................................................................................
+\subsubsection{\code{stop\_ymd}}
+
+\begin{tabular}{lp{5.5in}}
+Type    & integer \\
+Default & none \\
+Use     &  
+Year, month and day of the simulation stop date.  The values are encoded
+in an integer as \code{year*10000 + month*100 + day}.  If this value is
+specified it takes precedence over both \code{nestep} and \code{nelapse}.
+\end{tabular}
+
+%................................................................................
+\subsubsection{\code{stop\_tod}}
+
+\begin{tabular}{lp{5.5in}}
+Type    & integer \\
+Default & 0 \\
+Use     &  
+Time of day (UTC) of the simulation stop date, in seconds.
+\end{tabular}
+
+%................................................................................
+\subsubsection{\code{nestep}}
+
+\begin{tabular}{lp{5.5in}}
+Type    & integer \\
+Default & none \\
+Use     &  
+If \code{nestep > 0} then \code{nestep} is the number of timesteps to
+advance the solution past the start date.  If \code{nestep < 0} then the
+stop date is \code{-nestep} days past the start date.  \code{nestep} is
+ignored if \code{stop\_ymd} is set.
+\end{tabular}
+
+%................................................................................
+\subsubsection{\code{nelapse}}
+
+\begin{tabular}{lp{5.5in}}
+Type    & integer \\
+Default & none \\
+Use     &  
+If \code{nelapse > 0} then \code{nelapse} is the number of timesteps to
+advance the solution past the start date (on an initial run) or past the
+restart date (on a restart run).  If \code{nelapse < 0} then the stop date
+is \code{-nelapse} days past the start or restart date (again depending on
+run type).  \code{nelapse} is ignored if either \code{stop\_ymd} or
+\code{nestep} is set.
+\end{tabular}
+
+%................................................................................
+\subsubsection{\code{ref\_ymd}}
+
+\begin{tabular}{lp{5.5in}}
+Type    & integer \\
+Default & from year, month, and day components of the start date \\
+Use     &  
+Year, month and day of the time coordinate's reference date.  The values
+are encoded in an integer as \code{year*10000 + month*100 + day}.
+\end{tabular}
+
+%................................................................................
+\subsubsection{\code{ref\_tod}}
+
+\begin{tabular}{lp{5.5in}}
+Type    & integer \\
+Default & from the time of day component of the start date \\
+Use     &  
+Time of day (UTC) of the time coordinate's reference date, in seconds.
+\end{tabular}
+
+%................................................................................
+\subsubsection{\code{perpetual\_ymd}}
+
+\begin{tabular}{lp{5.5in}}
+Type    & integer \\
+Default & none \\
+Use     &  
+Perpetual date specified as \code{year*1000 + month*100 + day}.  This date
+overrides the date from the initial file.  If running in ``aqua-planet''
+mode then \code{perpetual\_ymd} is ignored and the perpetual date is set to
+\code{321}.
+\end{tabular}
+
+%--------------------------------------------------------------------------------
+\subsection{Application programmer interface}
+
+This section provides an overview of the design and functionality of the
+API.  The following is a summary of the time manager's public methods in
+UML notation.  In UML a method prototype has the syntax ``\code{method-name
+(argument-list) :return-type}'', where each argument in the comma separated
+list is expressed as ``\code{intent arg-name:type}''.  The intent of an
+argument is one of the keywords \code{in}, \code{out}, or \code{inout}.
+Optional arguments are enclosed in brackets ``[ ]''.  For methods which
+don't have a return value the ``\code{:return-type}'' is left off.
+
+The API does not currently implement any alarm functionality because it is
+not yet fully functional in the ESMF library.
+
+%................................................................................
+\setlength{\parindent}{0in}
+
+%................................................................................
+\subsubsection{\code{timemgr\_preset}}
+\begin{verbatim}
+subroutine timemgr_preset()
+\end{verbatim}
+
+\begin{quote}
+\code{timemgr\_preset} is used for run-time initialization of namelist
+variables.  Most namelist variables are statically initialized in the time
+manager module.  This method is currently used only for \code{dtime} whose
+default value depends on the dycore.  This method is provided because
+\code{dtime} is used before the time manager is initialized (which happens
+after the header of the initial conditions file is read to obtain the
+default start date).
+\end{quote}
+
+
+%................................................................................
+\subsubsection{\code{timemgr\_init}}
+\begin{verbatim}
+subroutine timemgr_init()
+\end{verbatim}
+
+\begin{quote}
+\code{timemgr\_init} initializes the time manager module for an initial run.
+Before \code{timemgr\_init} is called it is assumed that the namelist has
+been read, and the date in the initial conditions file has been read.
+\end{quote}
+
+
+%................................................................................
+\subsubsection{\code{timemgr\_restart}}
+\begin{verbatim}
+subroutine timemgr_restart()
+\end{verbatim}
+
+\begin{quote}
+\code{timemgr\_restart} initializes the time manager module for a restart
+run.  Before \code{timemgr\_restart} is called it is assumed that the
+namelist has been read, and the restart data has been read from the restart
+file by a call to \code{timemgr\_read\_restart}.
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{advance\_timestep}}
+\begin{verbatim}
+subroutine advance_timestep()
+\end{verbatim}
+
+\begin{quote}
+\code{advance\_timestep} advances the time manager by one timestep.  This
+includes updating the date and time information at the beginning and end of
+the new timestep, and updating the alarms.
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{get\_step\_size}}
+\begin{verbatim}
+function get_step_size()
+   integer :: get_step_size
+\end{verbatim}
+
+\begin{quote}
+\code{get\_step\_size} returns the current timestep size in seconds.
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{get\_nstep}}
+\begin{verbatim}
+function get_nstep()
+   integer :: get_nstep
+\end{verbatim}
+
+\begin{quote}
+\code{get\_nstep} returns the current timestep number.
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{get\_curr\_date}}
+\begin{verbatim}
+subroutine get_curr_date(yr, mon, day, tod, offset)
+   integer,           intent(out) :: yr, mon, day, tod
+   integer, optional, intent(in)  :: offset
+\end{verbatim}
+
+\begin{quote}
+\code{get\_curr\_date} returns the components of the date corresponding to
+the end of the current timestep.  When the optional \code{offset} argument
+is specified the current date is incremented by \code{offset} seconds (may
+be negative).
+The date components are: year (\code{yr}); month (\code{mon}); day of
+month (\code{day}); and time of day in seconds past 0Z (\code{tod}).
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{get\_prev\_date}}
+\begin{verbatim}
+subroutine get_prev_date(yr, mon, day, tod)
+   integer, intent(out) :: yr, mon, day, tod
+\end{verbatim}
+
+\begin{quote}
+\code{get\_prev\_date} returns the components of the date corresponding to
+the beginning of the current timestep.
+The date components are: year (\code{yr}); month (\code{mon}); day of
+month (\code{day}); and time of day in seconds past 0Z (\code{tod}).
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{get\_start\_date}}
+\begin{verbatim}
+subroutine get_start_date(yr, mon, day, tod)
+   integer, intent(out) :: yr, mon, day, tod
+\end{verbatim}
+
+\begin{quote}
+\code{get\_start\_date} returns the components of the date corresponding to
+the starting date for the simulation.
+The date components are: year (\code{yr}); month (\code{mon}); day of
+month (\code{day}); and time of day in seconds past 0Z (\code{tod}).
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{get\_ref\_date}}
+\begin{verbatim}
+subroutine get_ref_date(yr, mon, day, tod)
+   integer, intent(out) :: yr, mon, day, tod
+\end{verbatim}
+
+\begin{quote}
+\code{get\_ref\_date} returns the components of the reference date part of
+the time coordinate.
+The date components are: year (\code{yr}); month (\code{mon}); day of
+month (\code{day}); and time of day in seconds past 0Z (\code{tod}).
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{get\_perp\_date}}
+\begin{verbatim}
+subroutine get_perp_date(yr, mon, day, tod)
+   integer, intent(out) :: yr, mon, day, tod
+\end{verbatim}
+
+\begin{quote}
+\code{get\_perp\_date} returns the components of the perpetual date
+corresponding to the end of the current timestep.
+The date components are: year (\code{yr}); month (\code{mon}); day of
+month (\code{day}); and time of day in seconds past 0Z (\code{tod}).
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{get\_curr\_time}}
+\begin{verbatim}
+subroutine get_curr_time(days, seconds)
+   integer, intent(out) :: days, seconds
+\end{verbatim}
+
+\begin{quote}
+\code{get\_curr\_time} returns the time at the end of the current
+timestep.  \code{days} and \code{seconds} contain the components of the time
+interval in units of days and seconds respectively.
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{get\_curr\_calday}}
+\begin{verbatim}
+function get_curr_calday(offset)
+   real(r8)                      :: get_curr_calday
+   integer, optional, intent(in) :: offset
+\end{verbatim}
+
+\begin{quote}
+\code{get\_curr\_calday} returns the calendar day at the end of the current
+timestep.  In perpetual mode the \code{get\_curr\_calday} returns the
+perpetual calendar day.  When the optional \code{offset} argument is
+specified the current date (or perpetual date) is incremented by
+\code{offset} seconds (may be negative) before converting the date to a
+calendar day.  The real kind, \code{r8}, specifies an 8-byte real value.
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{is\_first\_step}}
+\begin{verbatim}
+function is_first_step()
+   logical :: is_first_step
+\end{verbatim}
+
+\begin{quote}
+\code{is\_first\_step} returns true during the initialization phase of an
+initial run.  This phase lasts from the point at which the time manager is
+initialized until the first call to \code{advance\_timestep}.  In the CCM3
+this phase was indicated by the conditional \code{if(nstep==0)...}
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{is\_first\_restart\_step}}
+\begin{verbatim}
+function is_first_restart_step()
+   logical :: is_first_restart_step
+\end{verbatim}
+
+\begin{quote}
+\code{is\_first\_restart\_step} returns true during the initialization
+phase of a restart run.  This phase lasts from the point at which the time
+manager is restart until the next call to \code{advance\_timestep}.  In the
+CCM3 this phase was indicated by the conditional
+\code{if(nstep==nrstrt)...}
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{is\_last\_step}}
+\begin{verbatim}
+function is_last_step()
+   logical :: is_last_step
+\end{verbatim}
+
+\begin{quote}
+\code{is\_last\_step} returns true during the final timestep of a run.
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{is\_end\_curr\_day}}
+\begin{verbatim}
+function is_end_curr_day()
+   logical :: is_end_curr_day
+\end{verbatim}
+
+\begin{quote}
+\code{is\_end\_curr\_day} returns true during the final timestep of each
+day.  The final timestep of a day is the one whose ending date is equal to
+or later than 0Z of the next day.
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{is\_end\_curr\_month}}
+\begin{verbatim}
+function is_end_curr_month()
+   logical :: is_end_curr_month
+\end{verbatim}
+
+\begin{quote}
+\code{is\_end\_curr\_month} returns true during the final timestep of each
+month.  The final timestep of a month is the one whose ending date is equal to
+or later than 0Z of the first day of the next month.
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{timemgr\_write\_restart}}
+\begin{verbatim}
+subroutine timemgr_write_restart(ftn_unit)
+   integer, intent(in) :: ftn_unit
+\end{verbatim}
+
+\begin{quote}
+\code{timemgr\_write\_restart} writes the state of the time manager to a
+binary file attached to Fortran unit \code{ftn\_unit}.  It is assumed that
+when running with MPI this method is only called from the master process.
+\end{quote}
+
+%................................................................................
+\subsubsection{\code{timemgr\_read\_restart}}
+\begin{verbatim}
+subroutine timemgr_read_restart(ftn_unit)
+   integer, intent(in) :: ftn_unit
+\end{verbatim}
+
+\begin{quote}
+\code{timemgr\_read\_restart} reads the state of the time manager from a
+binary file attached to Fortran unit \code{ftn\_unit}.  It is assumed that
+when running with MPI this method is only called from the master process.
+\end{quote}
+
+%................................................................................
+\setlength{\parindent}{\parindentorig}
+
+%================================================================================
+\section{Module design notes}
+
+In discussions of valid ranges below we assume that the default native
+integer is signed and at least 4 bytes long.
+
+%--------------------------------------------------------------------------------
+\subsection{Representation of dates}
+
+A date is represented by 2 integer values.  One integer contains the
+calendar date (year, month and day of month), and the other contains the
+time of day (seconds past 0Z).
+
+The year, month, and day of month components are packed in an integer using
+the expression \code{year*1000 + month*100 + day}.  The range of valid
+dates is -2147480101 through 2147481231 which corresponds to a valid range
+of years from -214748 to 214748.
+
+The time of day component of a date is represented as an integer number of
+seconds.  Thus the precision of a date is 1 second.
+
+The ESMF time manager defines a date type which may be initialized with
+the 2 integer values used by CLM2.
+
+%--------------------------------------------------------------------------------
+\subsection{Representation of times}
+
+Time values are represented by 2 integer values.  One integer contains the
+number of days and the other contains the partial day in seconds.
+
+The valid range of times (which are assumed to be positive) is 0 through
+2,147,483,647 days + 86399 seconds, or about 5.9 million years.
+
+The precision of a time is 1 second.
+
+The ESMF time manager defines a time type which may be initialized with the
+2 integer values used by CLM2.
+
+%--------------------------------------------------------------------------------
+\subsection{Counting timesteps}
+
+The underlying philosophy of the ESMF time manager design is that
+simulation control is based on the simulation date and the elapsed time
+from some reference date.  There is no assumption that the timestep size is
+constant.
+
+In the CCM3 the timestep size is fixed and the simulation control is based
+on counting timesteps.  The timestep number and size plus a reference date
+are sufficient to compute the current date and time.
+
+The ability to query the timestep number is for backwards compatibility
+with earlier versions of CLM2 and allows a staged implementation of the time manager into
+CLM2.  The alarm facilities in the time manager will eventually replace
+the logic that depends on the timestep number (which implicitly assumes a
+constant step size).
+
+The timestep number in CLM2 is a native signed integer (usually 4 bytes)
+which implies that only $2^{31}$ steps may be counted.  At the nominal
+timestep size of 1200 seconds this imposes a valid range of 81,000 years on
+the time manager.
+
+%--------------------------------------------------------------------------------
+\subsection{Setting the stop date}
+
+The ESMF time manager determines if the current step is the last step of a
+simulation by testing whether the current date is equal to or later than
+the stop date.  To support the options provided by positive values of the
+\code{nestep} and \code{nelapse} namelist variables, i.e., stopping the
+simulation a specified number of timesteps past either the start or current
+dates, the values must be converted to a corresponding stop date.  This is
+done by incrementing the appropriate date by a time interval that is
+calculated using the current value of the timestep size multiplied by the
+specified number of timesteps.  This implementation assumes a constant
+timestep size.
+
+%--------------------------------------------------------------------------------
+\subsection{Status}
+
+\begin{itemize}
+
+\item
+The ESMF time manager has support for resetting the current date at an
+arbitrary point in the simulation.  This feature has not yet been
+incorporated into the CLM2 time manager.
+
+\item
+The ESMF time manager has not fully implemented the alarm functionality.
+
+\end{itemize}
+
+%================================================================================
+\begin{thebibliography}{99}
+
+\bibitem{esmf}
+Earth System Modeling Framework (ESMF).\\
+\begin{htmlonly}
+\htmladdnormallink{http://www.esmf.ucar.edu/}
+{http://www.esmf.ucar.edu/}.
+\end{htmlonly}
+\begin{latexonly}
+http://www.esmf.ucar.edu/.
+\end{latexonly}
+
+\bibitem{coards}
+``Conventions for the standardization of NetCDF files'',
+Sponsored by the Cooperative Ocean/Atmosphere Research Data Service, a
+NOAA/university cooperative for the sharing and distribution of global
+atmospheric and oceanographic research data sets.  May 1995.\\
+\begin{htmlonly}
+\htmladdnormallink{http://ferret.wrc.noaa.gov/noaa_coop/coop_cdf_profile.html}
+{http://ferret.wrc.noaa.gov/noaa_coop/coop_cdf_profile.html}.
+\end{htmlonly}
+\begin{latexonly}
+http://ferret.wrc.noaa.gov/noaa\_coop/coop\_cdf\_profile.html.
+\end{latexonly}
+
+\bibitem{cf}
+NetCDF Climate and Forecast (CF) Metadata Conventions.\\
+\begin{htmlonly}
+\htmladdnormallink{http://www.cgd.ucar.edu/cms/eaton/netcdf/CF-current.htm}
+{http://www.cgd.ucar.edu/cms/eaton/netcdf/CF-current.htm}.
+\end{htmlonly}
+\begin{latexonly}
+http://www.cgd.ucar.edu/cms/eaton/netcdf/CF-current.htm.
+\end{latexonly}
+
+\end{thebibliography}
+
+\addcontentsline{toc}{section}{References}
+
+\end{document}
