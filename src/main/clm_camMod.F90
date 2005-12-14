@@ -152,18 +152,10 @@ contains
 !-----------------------------------------------------------------------
 
     call srfcomp2hub_alloc( srfflx_land )
-    if ( adiabatic .or. ideal_phys .or. aqua_planet )then
+    if ( adiabatic .or. ideal_phys .or. aqua_planet ) then
         noland = .true.
         return
     end if
-#if ( defined SCAM )
-    if(switch(CRM_SW+1))then
-       noland = .true.
-       return
-    end if
-    if ( isrestart ) return
-    if(.not. have_tg) return
-#endif
 
     ! Set namelist variables that must be same
 
@@ -179,6 +171,12 @@ contains
     ! Initialize clm
 
     call initialize( )
+
+#if ( defined SCAM )
+    if (switch(CRM_SW+1)) noland = .true.
+    if (landfrac(1,1)==0) noland = .true.
+    if (noland) return
+#endif
 
     ! Determine consistency with cam grid info - only need to do this on 
     ! master processor (note that cam latitudes and longitudes are

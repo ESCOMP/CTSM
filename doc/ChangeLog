@@ -1,4 +1,69 @@
 ===============================================================
+	
+Tag name: clm3_expa_52
+Originator(s): Mariana Vertenstein
+Date: Tues Dec.12 2005
+One-line Summary: Put in scam fix needed in CAM mode
+
+Purpose of changes: clean up svn clm structure
+
+Bugs fixed (include bugzilla ID):
+
+Describe any changes made to build system:
+None
+	
+Describe any changes made to the namelist:
+None
+
+List any changes to the defaults for the boundary datasets:
+None
+
+Describe any substantial timing or memory changes:
+None
+
+Code reviewed by:
+Mariana Vertenstein
+	
+List all subroutines eliminated:
+None
+
+List all subroutines added and what they do:
+None
+
+List all existing files that have been modified, and describe the changes:
+clm_camMod.F90 (this change was put into cam3_2_41)
+
+Summary of testing:
+No testing done
+
+CLM tag used for the baseline comparison tests if applicable:
+NA
+	
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+Summarize any changes to answers, i.e.,
+ - what code configurations:
+ - what platforms/compilers:
+ - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+If bitwise differences were observed, how did you show they were no worse
+than roundoff?
+
+If this tag changes climate describe the run(s) done to evaluate the new
+climate in enough detail that it(they) could be reproduced, i.e.,
+ - source tag (all code used must be in the repository):
+ - platform/compilers:
+ - configuration (CPP ifdefs):
+ - build-namelist command (or complete namelist):
+ - MSS location of output:
+
+MSS location of control simulations used to validate new climate:
+
+URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+	
 Tag name:  clm3_expa_51
 Originator(s): mvr
 Date: Tues Dec.12 2005
