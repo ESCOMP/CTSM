@@ -265,7 +265,9 @@ subroutine mklai(lsmlon, lsmlat, flai, ndiag, ncido)
      mhgtb_o(:,:,:) = 0.
 
 !$OMP PARALLEL DO PRIVATE (io,jo,ii,ji,l,n,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i)
+#if !defined (USE_OMP)
 !CSD$ PARALLEL DO PRIVATE (io,jo,ii,ji,l,n,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i)
+#endif
      do jo = 1, lsmlat
         do io = 1, numlon(jo)
 
@@ -327,7 +329,9 @@ subroutine mklai(lsmlon, lsmlat, flai, ndiag, ncido)
 
         end do   ! end of output longitude loop
      end do   ! end of output latitude  loop
+#if !defined (USE_OMP)
 !CSD$ END PARALLEL DO
+#endif
 !$OMP END PARALLEL DO
 
      ! -----------------------------------------------------------------

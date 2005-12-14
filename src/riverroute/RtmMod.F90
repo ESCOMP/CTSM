@@ -653,7 +653,9 @@ contains
     ! Determine cell-to-cell transport - calculate sfluxin
 
 !$OMP PARALLEL DO PRIVATE (i,j)
+#if !defined (_OPENMP)
 !CSD$ PARALLEL DO PRIVATE (i,j)
+#endif
     do j=rtmlati,rtmlatf
        do i=rtmloni,rtmlonf
           sfluxin(i,j) = 0._r8
@@ -667,7 +669,9 @@ contains
           if (rdirc(i+1,j-1)==8) sfluxin(i,j) = sfluxin(i,j) + fluxout(i+1,j-1)
        enddo
     enddo
+#if !defined (_OPENMP)
 !CSD$ END PARALLEL DO
+#endif
 !$OMP END PARALLEL DO
 
     ! Loops above and below must remain separate because fluxout is updated below
@@ -675,7 +679,9 @@ contains
     sumdvolr(:) = 0._r8
     sumrunof(:) = 0._r8
 !$OMP PARALLEL DO PRIVATE (i,j,dvolrdt)
+#if !defined (_OPENMP)
 !CSD$ PARALLEL DO PRIVATE (i,j,dvolrdt)
+#endif
     do j = rtmlati,rtmlatf
        do i = rtmloni,rtmlonf
 
@@ -712,7 +718,9 @@ contains
 
        enddo
     enddo
+#if !defined (_OPENMP)
 !CSD$ END PARALLEL DO
+#endif
 !$OMP END PARALLEL DO
 
     ! Global water balance calculation and error check
@@ -1043,7 +1051,9 @@ contains
     ! Map RTM inputs from land model grid to RTM grid (1/2 degree resolution)
 
 !$OMP PARALLEL DO PRIVATE (jr,ir,n,is,js,wt)
+#if !defined (_OPENMP)
 !CSD$ PARALLEL DO PRIVATE (jr,ir,n,is,js,wt)
+#endif
     do jr = rtmlati,rtmlatf
        do ir = rtmloni,rtmlonf
           field_r(ir,jr) = 0._r8
@@ -1064,7 +1074,9 @@ contains
           end do
        end do
     end do
+#if !defined (_OPENMP)
 !CSD$ END PARALLEL DO
+#endif
 !$OMP END PARALLEL DO
 
   end subroutine RtmMapClm2Rtm

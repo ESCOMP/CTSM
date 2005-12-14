@@ -138,7 +138,7 @@ contains
      integer klen            !length of fulpath character string
      integer ierr            !error status
      logical lexist          !true if local file exists
-     character(len=256) text !mswrite command
+     character(len=512) text !mswrite command
 !------------------------------------------------------------------------
 
      ! get local file name from full name: start at end. look for first "/"

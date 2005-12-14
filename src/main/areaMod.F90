@@ -310,20 +310,17 @@ contains
     ! initialize field on output grid to zero everywhere
 
 !$OMP PARALLEL DO PRIVATE (jo,io)
-!CSD$ PARALLEL DO PRIVATE (jo,io)
     do jo = 1, nlat_o
        do io = 1, numlon_o(jo)
           fld_o(io,jo) = 0._r8
        end do
     end do
-!CSD$ END PARALLEL DO
 !$OMP END PARALLEL DO
 
     ! loop through overlapping cells on input grid to make area-average
 
     do n = 1, nmax
 !$OMP PARALLEL DO PRIVATE (jo,io,ii,ji)
-!CSD$ PARALLEL DO PRIVATE (jo,io,ii,ji)
        do jo = 1, nlat_o
           do io =1, numlon_o(jo)
              ii = i_ovr(io,jo,n)
@@ -331,7 +328,6 @@ contains
              fld_o(io,jo) = fld_o(io,jo) + w_ovr(io,jo,n)*fld_i(ii,ji)
           end do
        end do
-!CSD$ END PARALLEL DO
 !$OMP END PARALLEL DO
     end do
 

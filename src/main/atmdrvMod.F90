@@ -300,7 +300,9 @@ contains
 
 #if (!defined PERGRO)
 !$OMP PARALLEL DO PRIVATE (g,i,j)
+#if !defined (USE_OMP)
 !CSD$ PARALLEL DO PRIVATE (g,i,j)
+#endif
 #endif
 !dir$ concurrent
 !cdir nodep
@@ -400,7 +402,9 @@ contains
        end do
 
 #if (!defined PERGRO)
+#if !defined (USE_OMP)
 !CSD$ END PARALLEL DO
+#endif
 !$OMP END PARALLEL DO
 #else
        if (do_perturb) then
@@ -870,7 +874,9 @@ contains
 
     atmread_err = .false.
 !$OMP PARALLEL DO PRIVATE (i,j,e,ea,qsat)
+#if !defined (USE_OMP)
 !CSD$ PARALLEL DO PRIVATE (i,j,e,ea,qsat)
+#endif
     do j = 1, atmlat
        do i = 1, atmlon
 
@@ -1004,7 +1010,9 @@ contains
 
        end do                 !end loop of latitudes
     end do                    !end loop of longitudes
+#if !defined (USE_OMP)
 !CSD$ END PARALLEL DO
+#endif
 !$OMP END PARALLEL DO
 
     if (atmread_err) then
@@ -1198,14 +1206,18 @@ contains
     ! then need to adjust resultant stresses for direction of wind.
 
 !$OMP PARALLEL DO PRIVATE (j,i)
+#if !defined (USE_OMP)
 !CSD$ PARALLEL DO PRIVATE (j,i)
+#endif
     do j = 1, atmlat
        do i = 1, numlon_a(j)
           forc_u(i,j) = abs(forc_u_a(i,j))
           forc_v(i,j) = abs(forc_v_a(i,j))
        end do
     end do
+#if !defined (USE_OMP)
 !CSD$ END PARALLEL DO
+#endif
 !$OMP END PARALLEL DO
 
     call areaave (atmlat   , atmlon   , numlon_a , forc_t_a  , &

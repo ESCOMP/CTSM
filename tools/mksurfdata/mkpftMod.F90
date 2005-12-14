@@ -223,8 +223,10 @@ subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o)
 
 !$OMP PARALLEL DO PRIVATE (io,jo,ii,ji,n,m,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i, &
 !$OMP &  wst, wst_sum)
+#if !defined (USE_OMP)
 !CSD$ PARALLEL DO PRIVATE (io,jo,ii,ji,n,m,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i, &
 !CSD$ &  wst, wst_sum)
+#endif
   do jo = 1, lsmlat
      do io = 1, numlon(jo)
 
@@ -302,7 +304,9 @@ subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o)
 
      end do  !end of output longitude loop
   end do     !end of output latitude  loop
+#if !defined (USE_OMP)
 !CSD$ END PARALLEL DO
+#endif
 !$OMP END PARALLEL DO
 
   ! -----------------------------------------------------------------

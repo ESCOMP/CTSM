@@ -169,7 +169,9 @@ contains
 
     nclumps = get_proc_clumps()
 !$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp,fl,fnl,fs,p,c,l)
+#if !defined (USE_OMP)
 !CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp,fl,fnl,fs,p,c,l)
+#endif
     do nc = 1,nclumps
 
        ! Determine clump boundaries
@@ -253,7 +255,9 @@ contains
 
     end do
 !$OMP END PARALLEL DO
+#if !defined (USE_OMP)
 !CSD$ END PARALLEL DO
+#endif
 
   end subroutine setFilters
 

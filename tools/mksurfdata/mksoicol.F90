@@ -218,8 +218,10 @@ subroutine mksoicol (lsmlon, lsmlat, fsoicol, ndiag, pctgla_o, soil_color_o, nso
 
 !$OMP PARALLEL DO PRIVATE (io,jo,ii,ji,n,k,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i, &
 !$OMP & wst, wsti)
+#if !defined (USE_OMP)
 !CSD$ PARALLEL DO PRIVATE (io,jo,ii,ji,n,k,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i, &
 !CSD$ & wst, wsti)
+#endif
   do jo = 1, lsmlat
      do io = 1, numlon(jo)
 
@@ -294,7 +296,9 @@ subroutine mksoicol (lsmlon, lsmlat, fsoicol, ndiag, pctgla_o, soil_color_o, nso
 
      end do  !end of output longitude loop
   end do     !end of output latitude  loop
+#if !defined (USE_OMP)
 !CSD$ END PARALLEL DO
+#endif
 !$OMP END PARALLEL DO
 
   ! -----------------------------------------------------------------

@@ -1,4 +1,100 @@
 ===============================================================
+Tag name: clm3_expa_49
+Originator(s): Mariana Vertenstein
+Date: Mon Dec 12 2005
+One-line Summary: Updated clm with changes put into cam3_2_38
+
+Purpose of changes:
+Cray-X1E OpenMP/CSD compatibility modifications.
+	
+Bugs fixed (include bugzilla ID): 
+None
+
+Describe any changes made to build system:
+None	
+	
+Describe any changes made to the namelist:
+None	
+	
+List any changes to the defaults for the boundary datasets:
+None	
+	
+Describe any substantial timing or memory changes:
+None	
+	
+Code reviewed by:
+Mariana Vertenstein	
+	
+List all subroutines eliminated:
+None
+	
+List all subroutines added and what they do:
+None
+	
+List all existing files that have been modified, and describe the changes:
+- Allowed coexistence of OpenMP and CSD's on Cray-X1E provided they do not operate
+  on same loop index
+- Removed nested OpenMP capability
+	
+src/main: 
+   areaMod.F90
+   driver.F90
+   histFileMod.F90
+   atmdrvMod.F90
+	
+src/riverroute: 
+   RtmMod.F90
+	
+tools/mksurfdata
+   mkdynpftMod.F90 
+   mklaiMod.F90 
+   mkpftMod.F90 
+   mksoitex.F90
+   mkglacier.F90
+   mklanwat.F90
+   mksoicol.F90
+   mkurban.F90
+	
+Summary of testing:
+
+bluesky:
+test-model.pl -res T31      
+test-model.pl -res T31cn    
+test-model.pl -res T31cnall 
+test-model.pl -res T31casa  
+test-model.pl -res T31dgvm  
+	
+tempest: No testing
+
+bangkok/lf95: No testing
+
+CLM tag used for the baseline comparison tests if applicable:
+clm3_expa_48 (results were bfb)	
+	
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+	
+Summarize any changes to answers, i.e.,
+ - what code configurations:
+ - what platforms/compilers:
+ - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+	
+If bitwise differences were observed, how did you show they were no worse
+than roundoff?
+
+If this tag changes climate describe the run(s) done to evaluate the new
+climate in enough detail that it(they) could be reproduced, i.e.,
+  - source tag (all code used must be in the repository):
+  - platform/compilers:
+  - configuration (CPP ifdefs):
+  - build-namelist command (or complete namelist):
+  - MSS location of output:
+	
+MSS location of control simulations used to validate new climate:
+	
+URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
 
 clm3_expa_48
 Originator: forrest (Forrest Hoffman)
@@ -33,7 +129,6 @@ Ran the following tests on IBM (cheetah):
 ./test-model.pl -res T31cnall -c $HOME/CCSM/clm3_expa_47
 ./test-model.pl -res T31casa  -c $HOME/CCSM/clm3_expa_47
 
-===============================================================
 ===============================================================
 
 clm3_expa_47
