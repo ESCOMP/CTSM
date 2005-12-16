@@ -26,33 +26,33 @@ List all existing files that have been modified, and describe the changes:
 
 Summary of testing:
 
-bluesky:
-tempest:
-bangkok/lf95:
+  bluesky:
+  tempest:
+  bangkok/lf95:
 
 CLM tag used for the baseline comparison tests if applicable:
 
 IF tag changes answers relative to baseline comparison the
 following should be filled in:
 
-Summarize any changes to answers, i.e.,
- - what code configurations:
- - what platforms/compilers:
- - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
 
-If bitwise differences were observed, how did you show they were no worse
-than roundoff?
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
 
-If this tag changes climate describe the run(s) done to evaluate the new
-climate in enough detail that it(they) could be reproduced, i.e.,
- - source tag (all code used must be in the repository):
- - platform/compilers:
- - configuration (CPP ifdefs):
- - build-namelist command (or complete namelist):
- - MSS location of output:
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
 
-MSS location of control simulations used to validate new climate:
-
-URL for LMWG diagnostics output used to validate new climate:
-
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
 ===============================================================

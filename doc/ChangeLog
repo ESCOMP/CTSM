@@ -1,5 +1,87 @@
 ===============================================================
 	
+Tag name: clm3_expa_53
+Originator(s): Mariana Vertenstein
+Date: Fri Dec.16 2005
+One-line Summary: Put in MCT communication for cam-clm coupling
+
+Purpose of changes: removed lp_coupling communication and put in
+MCT communication interfaces
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+	
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the input datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Mariana Vertenstein, Rob Jacob
+	
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: 
+  main/MCT_atmlnd_cpl.F90  
+     clm/cam MCT coupling interface - will be moved out of clm code in
+     near future	
+  main/MCT_lnd_comp.F90
+     clm MCT wrapper layer
+  main/clm_comp.F90
+     module containing wrapper routines that separate clm into chunks of
+     code that contain no communication (e.g. clm_run1, clm_run2 has no
+     communicaiton). This is needed to satisfy requirement for implementing
+     multiple coupling interfaces (e.g. concurrent/MCT, sequential/MCT,
+     sequential/ESMF) within ccsm.	
+  main/clm_varorb.F90	
+     module for orbital parameters 
+    (this will be added to program_off.F90 and program_csm.F90)
+	
+List all existing files that have been modified, and describe the changes:
+    clm_camMod.F90 - all coupling still exists here
+
+Summary of testing:
+	
+  bluesky:
+  test-model.pl -res T31      
+  test-model.pl -res T31cn    
+  test-model.pl -res T31cnall 
+  test-model.pl -res T31casa  
+  test-model.pl -res T31dgvm  
+	
+  tempest: No testing
+
+  bangkok/lf95: No testing
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_48
+  results were bfb with clm3_expa48	
+	
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+	
 Tag name: clm3_expa_52
 Originator(s): Mariana Vertenstein
 Date: Tues Dec.12 2005
@@ -15,7 +97,7 @@ None
 Describe any changes made to the namelist:
 None
 
-List any changes to the defaults for the boundary datasets:
+List any changes to the defaults for the input datasets:
 None
 
 Describe any substantial timing or memory changes:
@@ -77,7 +159,7 @@ Describe any changes made to build system: none
 
 Describe any changes made to the namelist: none
 
-List any changes to the defaults for the boundary datasets: none
+List any changes to the defaults for the input datasets: none
 
 Describe any substantial timing or memory changes: none
 
@@ -139,7 +221,7 @@ None
 Describe any changes made to the namelist:
 None
 
-List any changes to the defaults for the boundary datasets:
+List any changes to the defaults for the input datasets:
 None
 
 Describe any substantial timing or memory changes:
@@ -205,7 +287,7 @@ None
 Describe any changes made to the namelist:
 None	
 	
-List any changes to the defaults for the boundary datasets:
+List any changes to the defaults for the input datasets:
 None	
 	
 Describe any substantial timing or memory changes:
