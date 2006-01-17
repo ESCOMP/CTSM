@@ -60,6 +60,7 @@ contains
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
+    use clm_atmlnd   , only : clm_a2l
     use shr_const_mod, only : SHR_CONST_RGAS
 !
 ! !ARGUMENTS:
@@ -132,8 +133,8 @@ contains
 
     ! Assign local pointers to derived type members (gridcell-level)
 
-    forc_solad => clm3%g%a2lf%forc_solad
-    forc_solai => clm3%g%a2lf%forc_solai
+    forc_solad => clm_a2l%forc_solad
+    forc_solai => clm_a2l%forc_solai
 
     ! Assign local pointers to derived subtypes components (pft-level)
 

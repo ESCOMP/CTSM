@@ -21,7 +21,7 @@ contains
 ! !IROUTINE: mklai
 !
 ! !INTERFACE:
-subroutine mklai(lsmlon, lsmlat, flai, ndiag, ncido)
+subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
 !
 ! !DESCRIPTION:
 ! Make LAI/SAI/height data
@@ -32,53 +32,46 @@ subroutine mklai(lsmlon, lsmlat, flai, ndiag, ncido)
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
   use fileutils   , only : getfil
-  use mkvarpar
-  use mkvarctl   
-  use mkvarsur   
-  use areaMod    
+  use domainMod   , only : domain_type,domain_clean,domain_setptrs
+  use creategridMod, only : read_domain
+  use mkvarpar	
+  use mkvarsur    , only : ldomain
+  use mkvarctl    
+  use areaMod     , only : areaini,areaave,gridmap_type,gridmap_clean  
   use ncdio
 !
 ! !ARGUMENTS:
   implicit none
-  character(len=*), intent(in) :: flai        ! input lai-sai-hgt dataset
-  integer , intent(in) :: lsmlon, lsmlat      ! clm grid resolution
-  integer , intent(in) :: ndiag               ! unit number for diagnostic output
-  integer , intent(in) :: ncido               ! output netcdf file id
+  integer , intent(in) :: lsmlon, lsmlat          ! clm grid resolution
+  character(len=*), intent(in) :: fname           ! input dataset file name
+  integer , intent(in) :: ndiag                   ! unit number for diag out
+  integer , intent(in) :: ncido                   ! output netcdf file id
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
 !
 ! !REVISION HISTORY:
-! Author: Sam Levis
+! Author: Mariana Vertenstein
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
-  character(len=256) :: locfn                 ! local dataset file name
-  integer  :: nlon_i                          ! input grid : longitude points (read in)
-  integer  :: nlat_i                          ! input grid : latitude  points (read in)
-  integer  :: ncidi, dimid,varid              ! input netCDF id's
-  integer  :: beg4d(4),len4d(4)               ! netCDF variable edges
-  integer  :: dim4id(4)                       ! netcdf ids
-  integer  :: ntim                            ! number of input time samples
-  integer  :: ier                             ! error status
+  integer  :: nlon_i                          ! input grid : lon points
+  integer  :: nlat_i                          ! input grid : lat points
+
+  type(domain_type)     :: tdomain            ! local domain
+  type(gridmap_type)    :: tgridmap           ! local gridmap
+
+  integer  :: numpft_i                        ! number of plant types on input
   real(r8) :: glai_o(0:numpft)                ! output grid: global area pfts
   real(r8) :: gsai_o(0:numpft)                ! output grid: global area pfts
   real(r8) :: ghgtt_o(0:numpft)               ! output grid: global area pfts
   real(r8) :: ghgtb_o(0:numpft)               ! output grid: global area pfts
-  real(r8) :: garea_o                         ! output grid: global area
   real(r8) :: glai_i(0:numpft)                ! input grid: global area pfts
   real(r8) :: gsai_i(0:numpft)                ! input grid: global area pfts
   real(r8) :: ghgtt_i(0:numpft)               ! input grid: global area pfts
   real(r8) :: ghgtb_i(0:numpft)               ! input grid: global area pfts
-  real(r8) :: garea_i                         ! input grid: global area
-  integer  :: ii                              ! longitude index for input grid
-  integer  :: io                              ! longitude index for model grid
-  integer  :: ji                              ! latitude  index for input grid
-  integer  :: jo                              ! latitude  index for model grid
-  integer  :: k,l,m,n                         ! indices
-  integer  :: numpft_i                        ! number of plant types on input dataset
-  real(r8) :: edge_i(4)                       ! input grid: N,E,S,W edges (degrees)
+
   real(r8), allocatable :: mlai_o(:,:,:)      ! monthly lai
   real(r8), allocatable :: msai_o(:,:,:)      ! monthly sai
   real(r8), allocatable :: mhgtt_o(:,:,:)     ! monthly height (top)
@@ -91,62 +84,52 @@ subroutine mklai(lsmlon, lsmlat, flai, ndiag, ncido)
   real(r8), allocatable :: msai_i(:,:,:)      ! monthly sai in
   real(r8), allocatable :: mhgtt_i(:,:,:)     ! monthly height (top) in
   real(r8), allocatable :: mhgtb_i(:,:,:)     ! monthly height (bottom) in
-  real(r8), allocatable :: landmask_i(:,:)    ! input grid: fraction land
-  real(r8), allocatable :: latixy_i(:,:)      ! input grid: latitude (degrees)
-  real(r8), allocatable :: longxy_i(:,:)      ! input grid: longitude (degrees)
-  integer , allocatable :: numlon_i(:)        ! input grid: number longitude points by lat
-  real(r8), allocatable :: lon_i(:,:)         ! input grid: longitude, west edge (degrees)
-  real(r8), allocatable :: lon_i_offset(:,:)  ! input grid: offset longitude, west edge (degrees)
-  real(r8), allocatable :: lat_i(:)           ! input grid: latitude, south edge (degrees)
-  real(r8), allocatable :: area_i(:,:)        ! input grid: cell area
   real(r8), allocatable :: mask_i(:,:)        ! input grid: mask (0, 1)
-  integer, parameter :: maxovr = 100000
-  real(r8) :: mask_o                          ! output grid: mask (0, 1)
-  integer  :: novr_i2o                        ! number of overlapping input cells
-  integer  :: iovr_i2o(maxovr)                ! lon index of overlap input cell
-  integer  :: jovr_i2o(maxovr)                ! lat index of overlap input cell
-  real(r8) :: wovr_i2o(maxovr)                ! weight    of overlap input cell
-  real(r8) :: offset                          ! used to shift x-grid 360 degrees
-  real(r8) :: fld_o(lsmlon,lsmlat)            ! output grid: dummy field
-  real(r8) :: fld_i                           ! input grid: dummy field
-  real(r8) :: sum_fldo                        ! global sum of dummy output field
-  real(r8) :: sum_fldi                        ! global sum of dummy input field
-  real(r8) :: relerr = 0.00001                ! max error: sum overlap weights ne 1
+  real(r8), allocatable :: mask_o(:,:)        ! output grid: mask (0, 1)
+  real(r8), allocatable :: fld_i(:,:)         ! input grid: dummy field
+  real(r8), allocatable :: fld_o(:,:)         ! output grid: dummy field
+  real(r8) :: sum_fldi                        ! global sum of dummy input fld
+  real(r8) :: sum_fldo                        ! global sum of dummy output fld
+  real(r8) :: garea_i                         ! input  grid: global area
+  real(r8) :: garea_o                         ! output grid: global area
+
+  integer  :: ii,ji                           ! indices
+  integer  :: io,jo                           ! indices
+  integer  :: k,l,n,m                         ! indices
+  integer  :: ncidi,dimid,varid               ! input netCDF id's
+  integer  :: beg4d(4),len4d(4)               ! netCDF variable edges
+  integer  :: dim4id(4)                       ! netcdf ids
+  integer  :: ntim                            ! number of input time samples
+  integer  :: ier                             ! error status
+  real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
   character(len=256) :: name                  ! name of attribute
   character(len=256) :: unit                  ! units of attribute
-  character(len= 32) :: subname='mklai'       ! subroutine name
+  character(len=256) :: locfn                 ! local dataset file name
+  character(len= 32) :: subname = 'mklai'
 !-----------------------------------------------------------------------
 
   write (6,*) 'Attempting to make LAIs/SAIs/heights .....'
   call shr_sys_flush(6)
 
-  allocate(mlai_o(lsmlon,lsmlat,0:numpft), &
-           msai_o(lsmlon,lsmlat,0:numpft), &
-           mhgtt_o(lsmlon,lsmlat,0:numpft), &
-           mhgtb_o(lsmlon,lsmlat,0:numpft), stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mklai allocation error'; call abort()
-  end if
-
   ! -----------------------------------------------------------------
-  ! Determine input grid info
+  ! Read input file
   ! -----------------------------------------------------------------
 
-  call getfil (flai, locfn, 0)
+  ! Obtain input grid info, read local fields
+
+  call getfil (fname, locfn, 0)
+
+  call read_domain(tdomain,locfn)
+  call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
+
   call check_ret(nf_open(locfn, 0, ncidi), subname)
-
-  call check_ret(nf_inq_dimid(ncidi, 'lon', dimid), subname)
-  call check_ret(nf_inq_dimlen(ncidi, dimid, nlon_i), subname)
-
-  call check_ret(nf_inq_dimid(ncidi, 'lat', dimid), subname)
-  call check_ret(nf_inq_dimlen(ncidi, dimid, nlat_i), subname)
 
   call check_ret(nf_inq_dimid(ncidi, 'pft', dimid), subname)
   call check_ret(nf_inq_dimlen(ncidi, dimid, numpft_i), subname)
   if (numpft_i /= numpft+1) then
      write(6,*)'MKLAI: parameter numpft+1= ',numpft+1, &
           'does not equal input dataset numpft= ',numpft_i
-     call abort()
+     stop
   endif
 
   call check_ret(nf_inq_dimid(ncidi, 'time', dimid), subname)
@@ -156,81 +139,39 @@ subroutine mklai(lsmlon, lsmlat, flai, ndiag, ncido)
      call abort()
   endif
 
-  allocate (latixy_i(nlon_i,nlat_i), &
-       longxy_i(nlon_i,nlat_i), &
-       numlon_i(nlat_i), &
-       lon_i(nlon_i+1,nlat_i), &
-       lon_i_offset(nlon_i+1,nlat_i), &
-       lat_i(nlat_i+1), &
-       area_i(nlon_i,nlat_i), &
-       mask_i(nlon_i,nlat_i), &
-       mlai_i(nlon_i,nlat_i,0:numpft), &
-       msai_i(nlon_i,nlat_i,0:numpft), &
-       mhgtt_i(nlon_i,nlat_i,0:numpft), &
-       mhgtb_i(nlon_i,nlat_i,0:numpft), &
-       landmask_i(nlon_i,nlat_i), stat=ier)
-  if (ier/=0) then
-     write(6,*)subname,' allocation error'; call abort()
+!  --- at bottom of routine ---
+!  call check_ret(nf_close(ncidi), subname)
+
+  ! Compute local fields _o
+
+  allocate(mlai_i(nlon_i,nlat_i,0:numpft), &
+           msai_i(nlon_i,nlat_i,0:numpft), &
+           mhgtt_i(nlon_i,nlat_i,0:numpft), &
+           mhgtb_i(nlon_i,nlat_i,0:numpft), stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mklai allocation error'; call abort()
   end if
 
-  call check_ret(nf_inq_varid (ncidi, 'LATIXY', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, latixy_i), subname)
-
-  call check_ret(nf_inq_varid (ncidi, 'LONGXY', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, longxy_i), subname)
-
-  call check_ret(nf_inq_varid (ncidi, 'EDGEN', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, edge_i(1)), subname)
-
-  call check_ret(nf_inq_varid (ncidi, 'EDGEE', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, edge_i(2)), subname)
-
-  call check_ret(nf_inq_varid (ncidi, 'EDGES', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, edge_i(3)), subname)
-
-  call check_ret(nf_inq_varid (ncidi, 'EDGEW', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, edge_i(4)), subname)
-
-  call check_ret(nf_inq_varid (ncidi, 'LANDMASK', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, landmask_i), subname)
-
-  ! -----------------------------------------------------------------
-  ! Determine input grid cell and cell areas
-  ! -----------------------------------------------------------------
-
-  numlon_i(:) = nlon_i
-
-  call celledge (nlat_i    , nlon_i    , numlon_i  , longxy_i  ,  &
-                 latixy_i  , edge_i(1) , edge_i(2) , edge_i(3) ,  &
-                 edge_i(4) , lat_i     , lon_i     , area_i)
-
-  do ji = 1, nlat_i
-     do ii = 1, numlon_i(ji)
-        mask_i(ii,ji) = 1.
-     end do
-  end do
-
-  ! Shift x-grid to locate periodic grid intersections. This
-  ! assumes that all lon_i(1,j) have the same value for all
-  ! latitudes j and that the same holds for lon_o(1,j)
-
-  if (lon_i(1,1) < lonw(1,1)) then
-     offset = 360.0
-  else
-     offset = -360.0
+  allocate(mlai_o(lsmlon,lsmlat,0:numpft), &
+           msai_o(lsmlon,lsmlat,0:numpft), &
+           mhgtt_o(lsmlon,lsmlat,0:numpft), &
+           mhgtb_o(lsmlon,lsmlat,0:numpft), stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mklai allocation error'; call abort()
   end if
 
-  do ji = 1, nlat_i
-     do ii = 1, numlon_i(ji) + 1
-        lon_i_offset(ii,ji) = lon_i(ii,ji) + offset
-     end do
-  end do
+  allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat))
+  allocate( fld_i(nlon_i,nlat_i), fld_o(lsmlon,lsmlat))
 
-  ! -----------------------------------------------------------------
-  ! Loop over input months
-  ! -----------------------------------------------------------------
+  mask_i = 1.0_r8
+  mask_o = 1.0_r8
+  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
-  ! Loop over months, calculate and output surface dataset variables
+  mask_i = float(tdomain%mask(:,:))
+  call areaave(mask_i,mask_o,tgridmap)
+
+  call gridmap_clean(tgridmap)
+  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
   do m = 1, ntim
 
@@ -253,117 +194,68 @@ subroutine mklai(lsmlon, lsmlat, flai, ndiag, ncido)
      call check_ret(nf_inq_varid (ncidi, 'MONTHLY_HEIGHT_BOT', varid), subname)
      call check_ret(nf_get_vara_double (ncidi, varid, beg4d, len4d, mhgtb_i), subname)
 
-     ! Process each cell on land model grid
-     ! novr_i2o - number of input grid cells that overlap each land grid cell
-     ! iovr_i2o - longitude index of overlapping input grid cell
-     ! jovr_i2o - latitude  index of overlapping input grid cell
-     ! wovr_i2o - fraction of land grid cell overlapped by input grid cell
-
      mlai_o(:,:,:)  = 0.
      msai_o(:,:,:)  = 0.
      mhgtt_o(:,:,:) = 0.
      mhgtb_o(:,:,:) = 0.
 
-!$OMP PARALLEL DO PRIVATE (io,jo,ii,ji,l,n,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i)
-#if !defined (USE_OMP)
-!CSD$ PARALLEL DO PRIVATE (io,jo,ii,ji,l,n,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i)
-#endif
-     do jo = 1, lsmlat
-        do io = 1, numlon(jo)
+     do l = 0, numpft
+        fld_i(:,:) = mlai_i(:,:,l)
+        call areaave(fld_i,fld_o,tgridmap)
+        mlai_o(:,:,l) = fld_o(:,:)
 
-           ! Determine areas of overlap and indices
+        fld_i(:,:) = msai_i(:,:,l)
+        call areaave(fld_i,fld_o,tgridmap)
+        msai_o(:,:,l) = fld_o(:,:)
 
-           mask_o = 1.
+        fld_i(:,:) = mhgtt_i(:,:,l)
+        call areaave(fld_i,fld_o,tgridmap)
+        mhgtt_o(:,:,l) = fld_o(:,:)
 
-           call areaini_point (io        , jo          , nlon_i  , nlat_i  , numlon_i, &
-                              lon_i      , lon_i_offset, lat_i   , area_i  , mask_i  , &
-                              lsmlon     , lsmlat      , numlon  , lonw    , lats    , &
-                              area(io,jo), mask_o      , novr_i2o, iovr_i2o, jovr_i2o, &
-                              wovr_i2o   , maxovr)
+        fld_i(:,:) = mhgtb_i(:,:,l)
+        call areaave(fld_i,fld_o,tgridmap)
+        mhgtb_o(:,:,l) = fld_o(:,:)
 
-           mask_o = 0.
-           do n = 1, novr_i2o        !overlap cell index
-              ii = iovr_i2o(n)       !lon index (input grid) of overlap cell
-              ji = jovr_i2o(n)       !lat index (input grid) of overlap cell
-              mask_o = mask_o + landmask_i(ii,ji) * wovr_i2o(n)
-           end do
+        where (ldomain%mask(:,:) == 0)
+           mlai_o (:,:,l) = 0.
+           msai_o (:,:,l) = 0.
+           mhgtt_o(:,:,l) = 0.
+           mhgtb_o(:,:,l) = 0.
+        endwhere
+     enddo
 
-           call areaini_point (io        , jo          , nlon_i  , nlat_i  , numlon_i   , &
-                              lon_i      , lon_i_offset, lat_i   , area_i  , landmask_i , &
-                              lsmlon     , lsmlat      , numlon  , lonw    , lats       , &
-                              area(io,jo), mask_o      , novr_i2o, iovr_i2o, jovr_i2o   , &
-                              wovr_i2o   , maxovr)
+     ! Global sum of output field -- must multiply by fraction of
+     ! output grid that is land as determined by input grid
 
-           ! Make area average and set oceans to zero
+     sum_fldi = 0.0_r8
+     do ji = 1, nlat_i
+     do ii = 1, nlon_i
+        fld_i(ii,ji) = ((ji-1)*nlon_i + ii) * tdomain%mask(ii,ji)
+        sum_fldi = sum_fldi + tdomain%area(ii,ji) * fld_i(ii,ji)
+     enddo
+     enddo
 
-           if (landmask(io,jo) == 0) then
-              do l = 0, numpft
-                 mlai_o(io,jo,l)  = 0.
-                 msai_o(io,jo,l)  = 0.
-                 mhgtt_o(io,jo,l) = 0.
-                 mhgtb_o(io,jo,l) = 0.
-              end do
-           else
-              do l = 0, numpft
-                 do n = 1, novr_i2o !overlap cell index
-                    ii = iovr_i2o(n) !lon index (input grid) of overlap cell
-                    ji = jovr_i2o(n) !lat index (input grid) of overlap cell
-                    mlai_o(io,jo,l)  = mlai_o(io,jo,l)  + mlai_i(ii,ji,l)  * wovr_i2o(n)
-                    msai_o(io,jo,l)  = msai_o(io,jo,l)  + msai_i(ii,ji,l)  * wovr_i2o(n)
-                    mhgtt_o(io,jo,l) = mhgtt_o(io,jo,l) + mhgtt_i(ii,ji,l) * wovr_i2o(n)
-                    mhgtb_o(io,jo,l) = mhgtb_o(io,jo,l) + mhgtb_i(ii,ji,l) * wovr_i2o(n)
-                 end do
-              end do
-           endif
+     call areaave(fld_i,fld_o,tgridmap)
 
-           ! Global sum of output field -- must multiply by fraction of
-           ! output grid that is land as determined by input grid
-
-           fld_o(io,jo) = 0.
-           do n = 1, novr_i2o
-              ii = iovr_i2o(n)
-              ji = jovr_i2o(n)
-              fld_i = ((ji-1)*nlon_i + ii) * landmask_i(ii,ji)
-              fld_o(io,jo) = fld_o(io,jo) + wovr_i2o(n) * fld_i * mask_o
-           end do
-
-        end do   ! end of output longitude loop
-     end do   ! end of output latitude  loop
-#if !defined (USE_OMP)
-!CSD$ END PARALLEL DO
-#endif
-!$OMP END PARALLEL DO
+     sum_fldo = 0.
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+        fld_o(io,jo) = fld_o(io,jo)*mask_o(io,jo)
+        sum_fldo = sum_fldo + ldomain%area(io,jo) * fld_o(io,jo)
+     end do
+     end do
 
      ! -----------------------------------------------------------------
      ! Error check1
-     ! Compare global sum fld_o to global sum fld_i for month m
+     ! Compare global sum fld_o to global sum fld_i.
      ! -----------------------------------------------------------------
-
-     ! This check is true only if both grids span the same domain.
-     ! To obtain global sum of input field must multiply by
-     ! fraction of input grid that is land as determined by input grid
-
-     sum_fldo = 0.
-     do jo = 1,lsmlat
-        do io = 1,numlon(jo)
-           sum_fldo = sum_fldo + area(io,jo) * fld_o(io,jo)
-        end do
-     end do
-
-     sum_fldi = 0.
-     do ji = 1, nlat_i
-        do ii = 1, numlon_i(ji)
-           fld_i = ((ji-1)*nlon_i + ii) * landmask_i(ii,ji)
-           sum_fldi = sum_fldi + area_i(ii,ji) * fld_i
-        end do
-     end do
 
      if ( mksrf_fgrid_global /= ' ') then
         if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
            write (6,*) 'MKLAI error: input field not conserved'
            write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
            write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-           call abort()
+           stop
         end if
      end if
 
@@ -404,15 +296,20 @@ subroutine mklai(lsmlon, lsmlat, flai, ndiag, ncido)
      garea_i    = 0.
 
      do ji = 1, nlat_i
-        do ii = 1, nlon_i
-           garea_i = garea_i + area_i(ii,ji)
-           do l = 0, numpft
-              glai_i(l)  = glai_i(l) + mlai_i(ii,ji,l)*area_i(ii,ji)
-              gsai_i(l)  = gsai_i(l) + msai_i(ii,ji,l)*area_i(ii,ji)
-              ghgtt_i(l) = ghgtt_i(l)+ mhgtt_i(ii,ji,l)*area_i(ii,ji)
-              ghgtb_i(l) = ghgtb_i(l)+ mhgtb_i(ii,ji,l)*area_i(ii,ji)
-           end do
-        end do
+     do ii = 1, nlon_i
+        garea_i = garea_i + tdomain%area(ii,ji)
+     end do
+     end do
+
+     do l = 0, numpft
+     do ji = 1, nlat_i
+     do ii = 1, nlon_i
+        glai_i(l)  = glai_i(l) + mlai_i(ii,ji,l)*tdomain%area(ii,ji)
+        gsai_i(l)  = gsai_i(l) + msai_i(ii,ji,l)*tdomain%area(ii,ji)
+        ghgtt_i(l) = ghgtt_i(l)+ mhgtt_i(ii,ji,l)*tdomain%area(ii,ji)
+        ghgtb_i(l) = ghgtb_i(l)+ mhgtb_i(ii,ji,l)*tdomain%area(ii,ji)
+     end do
+     end do
      end do
 
      ! Output grid global area
@@ -423,16 +320,21 @@ subroutine mklai(lsmlon, lsmlat, flai, ndiag, ncido)
      ghgtb_o(:) = 0.
      garea_o    = 0.
 
-     do jo = 1, lsmlat
-        do io = 1, numlon(jo)
-           garea_o = garea_o + area(io,jo)
-           do l = 0, numpft
-              glai_o(l)  = glai_o(l) + mlai_o(io,jo,l)*area(io,jo)
-              gsai_o(l)  = gsai_o(l) + msai_o(io,jo,l)*area(io,jo)
-              ghgtt_o(l) = ghgtt_o(l)+ mhgtt_o(io,jo,l)*area(io,jo)
-              ghgtb_o(l) = ghgtb_o(l)+ mhgtb_o(io,jo,l)*area(io,jo)
-           end do
-        end do
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+        garea_o = garea_o + ldomain%area(io,jo)
+     end do
+     end do
+
+     do l = 0, numpft
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+        glai_o(l)  = glai_o(l) + mlai_o(io,jo,l)*ldomain%area(io,jo)
+        gsai_o(l)  = gsai_o(l) + msai_o(io,jo,l)*ldomain%area(io,jo)
+        ghgtt_o(l) = ghgtt_o(l)+ mhgtt_o(io,jo,l)*ldomain%area(io,jo)
+        ghgtb_o(l) = ghgtb_o(l)+ mhgtb_o(io,jo,l)*ldomain%area(io,jo)
+     end do
+     end do
      end do
 
      ! Comparison
@@ -459,25 +361,21 @@ subroutine mklai(lsmlon, lsmlat, flai, ndiag, ncido)
      write (6,*)
      call shr_sys_flush(6)
 
-  end do  ! end loop over time
+  enddo
+
+  call check_ret(nf_close(ncidi), subname)
 
   ! Deallocate dynamic memory
 
-  deallocate(mlai_o, msai_o, mhgtt_o, mhgtb_o)
-  deallocate(latixy_i)
-  deallocate(longxy_i)
-  deallocate(numlon_i)
-  deallocate(lon_i)
-  deallocate(lon_i_offset)
-  deallocate(lat_i)
-  deallocate(area_i)
-  deallocate(mask_i)
-  deallocate(landmask_i)
-  deallocate(mlai_i)
-  deallocate(msai_i)
-  deallocate(mhgtt_i)
-  deallocate(mhgtb_i)
+  call domain_clean(tdomain)
+  call gridmap_clean(tgridmap)
+  deallocate (mlai_o,msai_o,mhgtt_o,mhgtb_o)
+  deallocate (mlai_i,msai_i,mhgtt_i,mhgtb_i)
+  deallocate (mask_i,mask_o)
+  deallocate ( fld_i, fld_o)
 
 end subroutine mklai
 
 end module mklaiMod
+
+

@@ -76,6 +76,7 @@ contains
 ! !USES:
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use clmtype
+    use clm_atmlnd         , only : clm_a2l
     use time_manager       , only : get_step_size
     use clm_varpar         , only : nlevsoi, nlevsno
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, &
@@ -329,17 +330,17 @@ contains
 
    ! Assign local pointers to derived type members (gridcell-level)
 
-   forc_lwrad     => clm3%g%a2lf%forc_lwrad
-   forc_pco2      => clm3%g%a2ls%forc_pco2
-   forc_pc13o2    => clm3%g%a2ls%forc_pc13o2
-   forc_po2       => clm3%g%a2ls%forc_po2
-   forc_q         => clm3%g%a2ls%forc_q
-   forc_pbot      => clm3%g%a2ls%forc_pbot
-   forc_u         => clm3%g%a2ls%forc_u
-   forc_v         => clm3%g%a2ls%forc_v
-   forc_th        => clm3%g%a2ls%forc_th
-   forc_hgt_u     => clm3%g%a2ls%forc_hgt_u
-   forc_rho       => clm3%g%a2ls%forc_rho
+   forc_lwrad     => clm_a2l%forc_lwrad
+   forc_pco2      => clm_a2l%forc_pco2
+   forc_pc13o2    => clm_a2l%forc_pc13o2
+   forc_po2       => clm_a2l%forc_po2
+   forc_q         => clm_a2l%forc_q
+   forc_pbot      => clm_a2l%forc_pbot
+   forc_u         => clm_a2l%forc_u
+   forc_v         => clm_a2l%forc_v
+   forc_th        => clm_a2l%forc_th
+   forc_hgt_u     => clm_a2l%forc_hgt_u
+   forc_rho       => clm_a2l%forc_rho
 
    ! Assign local pointers to derived type members (column-level)
 
@@ -928,6 +929,7 @@ contains
      use shr_kind_mod , only : r8 => shr_kind_r8
      use shr_const_mod, only : SHR_CONST_TKFRZ, SHR_CONST_RGAS
      use clmtype	
+     use clm_atmlnd   , only : clm_a2l
      use spmdMod, only: masterproc
 !
 ! !ARGUMENTS:
@@ -1068,7 +1070,7 @@ contains
 
      ! Assign local pointers to derived type members (gridcell-level)
 
-     forc_pbot => clm3%g%a2ls%forc_pbot
+     forc_pbot => clm_a2l%forc_pbot
 
      ! Assign local pointers to derived type members (column-level)
 

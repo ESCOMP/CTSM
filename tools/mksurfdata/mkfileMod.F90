@@ -3,21 +3,21 @@ module mkfileMod
 contains
 
 !-----------------------------------------------------------------------
-  subroutine mkfile(lsmlon, lsmlat, ncid, dynlanduse)
+  subroutine mkfile(lsmlon, lsmlat, fname, dynlanduse)
 
     use shr_kind_mod, only : r8 => shr_kind_r8
     use shr_sys_mod , only : shr_sys_getenv
     use fileutils   , only : get_filename
     use mkvarpar    , only : nlevsoi, numpft
-    use mkvarsur    , only : numlon
     use mkvarctl
     use ncdio
 
     implicit none
     integer, intent(in) :: lsmlon, lsmlat
-    integer, intent(in) :: ncid
+    character(len=*),intent(in) :: fname
     logical, intent(in) :: dynlanduse	
 
+    integer :: ncid
     integer :: j                    ! index
     integer :: pftsize              ! size of lsmpft dimension
     integer :: dimid                ! temporary
@@ -30,8 +30,12 @@ contains
     character(len= 10) :: time      ! temporary
     character(len=  5) :: zone      ! temporary
     integer            :: ier       ! error status
+    integer            :: omode     ! netCDF output mode
     character(len=32) :: subname = 'mkfile'  ! subroutine name
 !-----------------------------------------------------------------------
+
+    call check_ret(nf_create(trim(fname), nf_clobber, ncid), subname)
+    call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
 
     ! Define dimensions.
 
@@ -66,15 +70,15 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Host', len_trim(str), trim(str)), subname)
 
-    str = 'Community Land Model: CLM2'
+    str = 'Community Land Model: CLM3'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Source', len_trim(str), trim(str)), subname)
 
-    str = '$Name$'
+    str = '$Name: clm3_expa_48_brnchT_fmesh13 $'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Version', len_trim(str), trim(str)), subname)
 
-    str = '$Id$'
+    str = '$Id: mkfileMod.F90,v 1.1.2.4.2.1 2005/12/22 16:25:37 tcraig Exp $'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Revision_Id', len_trim(str), trim(str)), subname)
 
@@ -136,20 +140,32 @@ contains
     call ncd_defvar(ncid=ncid, varname='EDGEW', xtype=nf_double, &
          long_name='western edge of surface grid', units='degrees east')
 
+    call ncd_defvar(ncid=ncid, varname='LATN' , xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='latitude of north edge', units='degrees north')
+
+    call ncd_defvar(ncid=ncid, varname='LONE' , xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='longitude of east edge', units='degrees east')
+
+    call ncd_defvar(ncid=ncid, varname='LATS' , xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='latitude of south edge', units='degrees north')
+
+    call ncd_defvar(ncid=ncid, varname='LONW' , xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='longitude of west edge', units='degrees east')
+
+    call ncd_defvar(ncid=ncid, varname='AREA' , xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='area', units='km^2')
+
     call ncd_defvar(ncid=ncid, varname='NUMLON', xtype=nf_int, &
          dim1name='lsmlat', long_name='number of longitudes for each latitude', units='unitless')
 
-    name = 'longitude'
-    do j = 1,lsmlat
-       if (numlon(j) < lsmlat) then
-          name = 'rlongitude'	
-          exit
-       end if
-    end do
-
     call ncd_defvar(ncid=ncid, varname='LONGXY', xtype=nf_double, &
          dim1name='lsmlon', dim2name='lsmlat', &
-         long_name=trim(name), units='degrees east')
+         long_name='longitude', units='degrees east')
 
     call ncd_defvar(ncid=ncid, varname='LATIXY', xtype=nf_double, &
          dim1name='lsmlon', dim2name='lsmlat', &
@@ -167,6 +183,10 @@ contains
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='land fraction from pft dataset', units='unitless')
 
+    call ncd_defvar(ncid=ncid, varname='PFTDATA_MASK', xtype=nf_int, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='land mask from pft dataset, indicative of real/fake points', units='unitless')
+
     if (.not. dynlanduse) then
        call ncd_defvar(ncid=ncid, varname='mxsoil_color', xtype=nf_int, &
             long_name='maximum numbers of soil colors', units='unitless')
@@ -182,7 +202,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='PCT_CLAY', xtype=nf_float, &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
             long_name='percent clay', units='unitless')
-    end if
+    endif
 
     call ncd_defvar(ncid=ncid, varname='PCT_WETLAND', xtype=nf_float, &
          dim1name='lsmlon', dim2name='lsmlat', &
@@ -237,6 +257,7 @@ contains
     ! End of define mode
 
     call check_ret(nf_enddef(ncid), subname)
+    call check_ret(nf_close(ncid), subname)
 
   end subroutine mkfile
 

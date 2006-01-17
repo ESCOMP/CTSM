@@ -61,6 +61,7 @@ contains
 ! !USES:
     use shr_kind_mod  , only : r8 => shr_kind_r8
     use clmtype
+    use clm_atmlnd    , only : clm_a2l
     use time_manager  , only : get_step_size
     use clm_varcon    , only : sb, capr, cnfac
     use clm_varpar    , only : nlevsno, nlevsoi, max_pft_per_col
@@ -146,7 +147,7 @@ contains
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
 
-    forc_lwrad     => clm3%g%a2lf%forc_lwrad
+    forc_lwrad     => clm_a2l%forc_lwrad
 
     ! Assign local pointers to derived subtypes components (column-level)
 

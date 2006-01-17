@@ -24,6 +24,7 @@ module clm_csmMod
   use shr_kind_mod, only: r8 => shr_kind_r8
   use nanMod
   use clm_varpar
+  use clm_atmlnd      , only : clm_a2l, clm_l2a
 #if (defined SPMD)
   use spmdMod         , only : masterproc, mpicom
   use spmdGathScatMod , only : gather_data_to_master
@@ -246,13 +247,13 @@ contains
 ! Initialize send/recv clm and rtm contracts with flux coupler
 !
 ! !USES:
-    use clmtype
+    use clmtype      , only : clm3
+    use domainMod    , only : ldomain
     use decompMod    , only : get_proc_bounds, get_proc_global
     use RunoffMod    , only : get_proc_rof_bounds, runoff
     use clm_varctl   , only : csm_doflxave, nsrest, irad
-    use RtmMod       , only : area_r, longxy_r, latixy_r, mask_r
+    use RtmMod       , only : rdomain
     use clm_varcon   , only : re
-    use clm_varsur   , only : longxy, latixy, area, landmask, landfrac 
     use time_manager , only : get_step_size
     use shr_const_mod, only : SHR_CONST_CDAY
 !
@@ -312,11 +313,11 @@ contains
     do n = begg, endg	
         i = clm3%g%ixy(n)
         j = clm3%g%jxy(n)
-        Gbuf(n,cpl_fields_grid_lon)   = longxy(i,j)
-        Gbuf(n,cpl_fields_grid_lat)   = latixy(i,j)
-        Gbuf(n,cpl_fields_grid_area)  = area(i,j)/(re*re)
-        Gbuf(n,cpl_fields_grid_frac)  = landfrac(i,j)
-        Gbuf(n,cpl_fields_grid_mask)  = float(landmask(i,j))
+        Gbuf(n,cpl_fields_grid_lon)   = ldomain%lonc(i,j)
+        Gbuf(n,cpl_fields_grid_lat)   = ldomain%latc(i,j)
+        Gbuf(n,cpl_fields_grid_area)  = ldomain%area(i,j)/(re*re)
+        Gbuf(n,cpl_fields_grid_frac)  = ldomain%frac(i,j)
+        Gbuf(n,cpl_fields_grid_mask)  = float(ldomain%mask(i,j))
         gi = (j-1)*lsmlon + i
         Gbuf(n,cpl_fields_grid_index) = gi
     end do
@@ -352,10 +353,10 @@ contains
        gi = (runoff%ocn_jxy(n)-1)*rtmlon + runoff%ocn_ixy(n)
        j = (gi-1) / rtmlon + 1
        i = mod(gi-1,rtmlon) + 1
-       Gbuf(ni,cpl_fields_grid_lon  ) = longxy_r(i,j)
-       Gbuf(ni,cpl_fields_grid_lat  ) = latixy_r(i,j)
-       Gbuf(ni,cpl_fields_grid_area ) = area_r(i,j)/(re*re)
-       Gbuf(ni,cpl_fields_grid_mask ) = 1.0_r8 - float(mask_r(i,j))
+       Gbuf(ni,cpl_fields_grid_lon  ) = rdomain%lonc(i,j)
+       Gbuf(ni,cpl_fields_grid_lat  ) = rdomain%latc(i,j)
+       Gbuf(ni,cpl_fields_grid_area ) = rdomain%area(i,j)/(re*re)
+       Gbuf(ni,cpl_fields_grid_mask ) = 1.0_r8 - float(rdomain%mask(i,j))
        Gbuf(ni,cpl_fields_grid_index) = gi
     end do
 
@@ -467,8 +468,6 @@ contains
 ! flux coupler
 !
 ! !USES:
-    use clmtype
-    use clm_varsur
     use clm_varctl  , only : csm_doflxave, nsrest
     use clm_varcon  , only : sb
     use time_manager, only : get_curr_date, get_prev_date, get_nstep
@@ -488,12 +487,7 @@ contains
     integer :: day           ! current day (0, 1, ...)
     integer :: ncsec         ! current seconds of current date (0, ..., 86400)
     integer :: ncdate        ! current date (yymmdd format) (e.g., 021105)
-    type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
 ! -----------------------------------------------------------------
-
-    ! Set pointers into derived type
-
-    gptr => clm3%g
 
     ! Fill send buffer for grid data
 
@@ -502,12 +496,12 @@ contains
     if (nsrest == 0 ) then   !initial run
 
        do g = begg,endg
-          bufS(g,index_l2c_Sl_t)     = sqrt(sqrt(gptr%l2af%eflx_lwrad_out(g)/sb))
-          bufS(g,index_l2c_Sl_snowh) = gptr%l2as%h2osno(g)
-          bufS(g,index_l2c_Sl_avsdr) = gptr%l2as%albd(g,1)
-          bufS(g,index_l2c_Sl_anidr) = gptr%l2as%albd(g,2)
-          bufS(g,index_l2c_Sl_avsdf) = gptr%l2as%albi(g,1)
-          bufS(g,index_l2c_Sl_anidf) = gptr%l2as%albi(g,2)
+          bufS(g,index_l2c_Sl_t)     = sqrt(sqrt(clm_l2a%eflx_lwrad_out(g)/sb))
+          bufS(g,index_l2c_Sl_snowh) = clm_l2a%h2osno(g)
+          bufS(g,index_l2c_Sl_avsdr) = clm_l2a%albd(g,1)
+          bufS(g,index_l2c_Sl_anidr) = clm_l2a%albd(g,2)
+          bufS(g,index_l2c_Sl_avsdf) = clm_l2a%albi(g,1)
+          bufS(g,index_l2c_Sl_anidf) = clm_l2a%albi(g,2)
        end do
 
     else  ! restart run
@@ -650,9 +644,9 @@ contains
 !  Receive and map data from flux coupler
 !
 ! !USES:
-    use clmtype
     use clm_varctl, only : co2_type
     use clm_varcon, only : rair, o2_molar_const, co2_ppmv_const, c13ratio
+    use clmtype   , only : nameg
 !
 ! !ARGUMENTS:
     implicit none
@@ -672,12 +666,7 @@ contains
     real(r8):: co2_ppmv_prog ! temporary
     real(r8):: co2_ppmv      ! temporary
     integer :: ier           ! return error code
-    type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
 !-----------------------------------------------------------------------
-
-    ! Set pointers into derived type
-
-    gptr => clm3%g
 
     ! Start timers
 
@@ -844,22 +833,22 @@ contains
 
         ! Determine required receive fields
 
-        gptr%a2ls%forc_hgt(g)     = bufR(g,index_c2l_Sa_z)         ! zgcmxy  Atm state m
-        gptr%a2ls%forc_u(g)       = bufR(g,index_c2l_Sa_u)         ! forc_uxy  Atm state m/s
-        gptr%a2ls%forc_v(g)       = bufR(g,index_c2l_Sa_v)         ! forc_vxy  Atm state m/s
-        gptr%a2ls%forc_th(g)      = bufR(g,index_c2l_Sa_ptem)      ! forc_thxy Atm state K
-        gptr%a2ls%forc_q(g)       = bufR(g,index_c2l_Sa_shum)      ! forc_qxy  Atm state kg/kg
-        gptr%a2ls%forc_pbot(g)    = bufR(g,index_c2l_Sa_pbot)      ! ptcmxy  Atm state Pa
-        gptr%a2ls%forc_t(g)       = bufR(g,index_c2l_Sa_tbot)      ! forc_txy  Atm state K
-        gptr%a2lf%forc_lwrad(g)   = bufR(g,index_c2l_Faxa_lwdn)    ! flwdsxy Atm flux  W/m^2
-        forc_rainc                = bufR(g,index_c2l_Faxa_rainc)   ! mm/s
-        forc_rainl                = bufR(g,index_c2l_Faxa_rainl)   ! mm/s
-        forc_snowc                = bufR(g,index_c2l_Faxa_snowc)   ! mm/s
-        forc_snowl                = bufR(g,index_c2l_Faxa_snowl)   ! mm/s
-        gptr%a2lf%forc_solad(g,2) = bufR(g,index_c2l_Faxa_swndr)   ! forc_sollxy  Atm flux  W/m^2
-        gptr%a2lf%forc_solad(g,1) = bufR(g,index_c2l_Faxa_swvdr)   ! forc_solsxy  Atm flux  W/m^2
-        gptr%a2lf%forc_solai(g,2) = bufR(g,index_c2l_Faxa_swndf)   ! forc_solldxy Atm flux  W/m^2
-        gptr%a2lf%forc_solai(g,1) = bufR(g,index_c2l_Faxa_swvdf)   ! forc_solsdxy Atm flux  W/m^2
+        clm_a2l%forc_hgt(g)     = bufR(g,index_c2l_Sa_z)         ! zgcmxy  Atm state m
+        clm_a2l%forc_u(g)       = bufR(g,index_c2l_Sa_u)         ! forc_uxy  Atm state m/s
+        clm_a2l%forc_v(g)       = bufR(g,index_c2l_Sa_v)         ! forc_vxy  Atm state m/s
+        clm_a2l%forc_th(g)      = bufR(g,index_c2l_Sa_ptem)      ! forc_thxy Atm state K
+        clm_a2l%forc_q(g)       = bufR(g,index_c2l_Sa_shum)      ! forc_qxy  Atm state kg/kg
+        clm_a2l%forc_pbot(g)    = bufR(g,index_c2l_Sa_pbot)      ! ptcmxy  Atm state Pa
+        clm_a2l%forc_t(g)       = bufR(g,index_c2l_Sa_tbot)      ! forc_txy  Atm state K
+        clm_a2l%forc_lwrad(g)   = bufR(g,index_c2l_Faxa_lwdn)    ! flwdsxy Atm flux  W/m^2
+        forc_rainc               = bufR(g,index_c2l_Faxa_rainc)   ! mm/s
+        forc_rainl               = bufR(g,index_c2l_Faxa_rainl)   ! mm/s
+        forc_snowc               = bufR(g,index_c2l_Faxa_snowc)   ! mm/s
+        forc_snowl               = bufR(g,index_c2l_Faxa_snowl)   ! mm/s
+        clm_a2l%forc_solad(g,2) = bufR(g,index_c2l_Faxa_swndr)   ! forc_sollxy  Atm flux  W/m^2
+        clm_a2l%forc_solad(g,1) = bufR(g,index_c2l_Faxa_swvdr)   ! forc_solsxy  Atm flux  W/m^2
+        clm_a2l%forc_solai(g,2) = bufR(g,index_c2l_Faxa_swndf)   ! forc_solldxy Atm flux  W/m^2
+        clm_a2l%forc_solai(g,1) = bufR(g,index_c2l_Faxa_swvdf)   ! forc_solsdxy Atm flux  W/m^2
 
         ! Determine optional receive fields
 
@@ -877,19 +866,19 @@ contains
 
         ! Determine derived quantities for required fields
 
-        gptr%a2ls%forc_hgt_u(g) = gptr%a2ls%forc_hgt(g)    !observational height of wind [m]
-        gptr%a2ls%forc_hgt_t(g) = gptr%a2ls%forc_hgt(g)    !observational height of temperature [m]
-        gptr%a2ls%forc_hgt_q(g) = gptr%a2ls%forc_hgt(g)    !observational height of humidity [m]
-        gptr%a2ls%forc_vp(g)    = gptr%a2ls%forc_q(g) * gptr%a2ls%forc_pbot(g) &
-                                  / (0.622_r8 + 0.378_r8 * gptr%a2ls%forc_q(g))
-        gptr%a2ls%forc_rho(g)   = (gptr%a2ls%forc_pbot(g) - 0.378_r8 * gptr%a2ls%forc_vp(g)) &
-                                  / (rair * gptr%a2ls%forc_t(g))
-        gptr%a2ls%forc_po2(g)   = o2_molar_const * gptr%a2ls%forc_pbot(g)
-        gptr%a2ls%forc_wind(g)  = sqrt(gptr%a2ls%forc_u(g)**2 + gptr%a2ls%forc_v(g)**2)
-        gptr%a2lf%forc_solar(g) = gptr%a2lf%forc_solad(g,1) + gptr%a2lf%forc_solai(g,1) + &
-                                  gptr%a2lf%forc_solad(g,2) + gptr%a2lf%forc_solai(g,2)
-        gptr%a2lf%forc_rain(g)  = forc_rainc + forc_rainl
-        gptr%a2lf%forc_snow(g)  = forc_snowc + forc_snowl
+        clm_a2l%forc_hgt_u(g) = clm_a2l%forc_hgt(g)    !observational height of wind [m]
+        clm_a2l%forc_hgt_t(g) = clm_a2l%forc_hgt(g)    !observational height of temperature [m]
+        clm_a2l%forc_hgt_q(g) = clm_a2l%forc_hgt(g)    !observational height of humidity [m]
+        clm_a2l%forc_vp(g)    = clm_a2l%forc_q(g) * clm_a2l%forc_pbot(g) &
+                                / (0.622_r8 + 0.378_r8 * clm_a2l%forc_q(g))
+        clm_a2l%forc_rho(g)   = (clm_a2l%forc_pbot(g) - 0.378_r8 * clm_a2l%forc_vp(g)) &
+                                / (rair * clm_a2l%forc_t(g))
+        clm_a2l%forc_po2(g)   = o2_molar_const * clm_a2l%forc_pbot(g)
+        clm_a2l%forc_wind(g)  = sqrt(clm_a2l%forc_u(g)**2 + clm_a2l%forc_v(g)**2)
+        clm_a2l%forc_solar(g) = clm_a2l%forc_solad(g,1) + clm_a2l%forc_solai(g,1) + &
+                                clm_a2l%forc_solad(g,2) + clm_a2l%forc_solai(g,2)
+        clm_a2l%forc_rain(g)  = forc_rainc + forc_rainl
+        clm_a2l%forc_snow(g)  = forc_snowc + forc_snowl
         
         ! Determine derived quantities for optional fields
         ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
@@ -902,16 +891,16 @@ contains
         else
            co2_ppmv = co2_ppmv_const      
         end if
-        gptr%a2ls%forc_pco2(g) = co2_ppmv * 1.e-6_r8 * gptr%a2ls%forc_pbot(g) 
+        clm_a2l%forc_pco2(g) = co2_ppmv * 1.e-6_r8 * clm_a2l%forc_pbot(g) 
         ! 4/14/05: PET
         ! Adding isotope code
-        gptr%a2ls%forc_pc13o2(g) = co2_ppmv * c13ratio * 1.e-6_r8 * gptr%a2ls%forc_pbot(g)
+        clm_a2l%forc_pc13o2(g) = co2_ppmv * c13ratio * 1.e-6_r8 * clm_a2l%forc_pbot(g)
 
      end do
 
      ! debug write statements (remove)
 
-    print *,'co2_type = ', co2_type, ' co2_ppmv = ', co2_ppmv
+    if (masterproc) write(6,*)'co2_type = ', co2_type, ' co2_ppmv = ', co2_ppmv
 
   end subroutine csm_recv
 
@@ -927,10 +916,10 @@ contains
 ! Send data to the flux coupler
 !
 ! !USES:
-    use clmtype
     use clm_varctl  , only : csm_doflxave
     use clm_varcon  , only : sb
     use time_manager, only : get_curr_date, get_nstep
+    use clmtype     , only : nameg
 !
 ! !ARGUMENTS:
     implicit none
@@ -948,12 +937,8 @@ contains
     integer :: ncsec           ! current seconds of current date (0, ..., 86400)
     integer :: ncdate          ! current date (yymmdd format) (e.g., 021105)
     integer :: ier             ! error status
-    type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived type
 !-----------------------------------------------------------------------
 
-    ! Set pointers into derived type
-
-    gptr => clm3%g
 
     ! Send data to the flux coupler
 
@@ -970,39 +955,39 @@ contains
 
     if (csm_doflxave) then
        do g = begg,endg
-          gptr%l2af%taux(g)           = taux_ave(g)  
-          gptr%l2af%tauy(g)           = tauy_ave(g)  
-          gptr%l2af%eflx_lh_tot(g)    = lhflx_ave(g) 
-          gptr%l2af%eflx_sh_tot(g)    = shflx_ave(g) 
-          gptr%l2af%eflx_lwrad_out(g) = lwup_ave(g)  
-          gptr%l2af%qflx_evap_tot(g)  = qflx_ave(g)  
-          gptr%l2af%fsa(g)            = swabs_ave(g) 
-          gptr%l2as%t_rad(g)          = (abs(gptr%l2af%eflx_lwrad_out(g)/sb))**0.25_r8
+          clm_l2a%taux(g)           = taux_ave(g)  
+          clm_l2a%tauy(g)           = tauy_ave(g)  
+          clm_l2a%eflx_lh_tot(g)    = lhflx_ave(g) 
+          clm_l2a%eflx_sh_tot(g)    = shflx_ave(g) 
+          clm_l2a%eflx_lwrad_out(g) = lwup_ave(g)  
+          clm_l2a%qflx_evap_tot(g)  = qflx_ave(g)  
+          clm_l2a%fsa(g)            = swabs_ave(g) 
+          clm_l2a%t_rad(g)          = (abs(clm_l2a%eflx_lwrad_out(g)/sb))**0.25_r8
           if (index_l2c_Fall_nee /= 0) then
-             gptr%l2af%nee(g)         = nee_ave(g) 
+             clm_l2a%nee(g)         = nee_ave(g) 
           end if
        end do
     endif
 
     bufS(:,:) = 0.0_r8
     do g = begg,endg
-       bufS(g,index_l2c_Sl_t)       =  gptr%l2as%t_rad(g)
-       bufS(g,index_l2c_Sl_snowh)   =  gptr%l2as%h2osno(g)
-       bufS(g,index_l2c_Sl_avsdr)   =  gptr%l2as%albd(g,1)
-       bufS(g,index_l2c_Sl_anidr)   =  gptr%l2as%albd(g,2)
-       bufS(g,index_l2c_Sl_avsdf)   =  gptr%l2as%albi(g,1)
-       bufS(g,index_l2c_Sl_anidf)   =  gptr%l2as%albi(g,2)
-       bufS(g,index_l2c_Sl_tref)    =  gptr%l2as%t_ref2m(g)
-       bufS(g,index_l2c_Sl_qref)    =  gptr%l2as%q_ref2m(g)
-       bufS(g,index_l2c_Fall_taux)  = -gptr%l2af%taux(g)
-       bufS(g,index_l2c_Fall_tauy)  = -gptr%l2af%tauy(g)
-       bufS(g,index_l2c_Fall_lat)   = -gptr%l2af%eflx_lh_tot(g)
-       bufS(g,index_l2c_Fall_sen)   = -gptr%l2af%eflx_sh_tot(g)
-       bufS(g,index_l2c_Fall_lwup)  = -gptr%l2af%eflx_lwrad_out(g)
-       bufS(g,index_l2c_Fall_evap)  = -gptr%l2af%qflx_evap_tot(g)
-       bufS(g,index_l2c_Fall_swnet) = -gptr%l2af%fsa(g)
+       bufS(g,index_l2c_Sl_t)       =  clm_l2a%t_rad(g)
+       bufS(g,index_l2c_Sl_snowh)   =  clm_l2a%h2osno(g)
+       bufS(g,index_l2c_Sl_avsdr)   =  clm_l2a%albd(g,1)
+       bufS(g,index_l2c_Sl_anidr)   =  clm_l2a%albd(g,2)
+       bufS(g,index_l2c_Sl_avsdf)   =  clm_l2a%albi(g,1)
+       bufS(g,index_l2c_Sl_anidf)   =  clm_l2a%albi(g,2)
+       bufS(g,index_l2c_Sl_tref)    =  clm_l2a%t_ref2m(g)
+       bufS(g,index_l2c_Sl_qref)    =  clm_l2a%q_ref2m(g)
+       bufS(g,index_l2c_Fall_taux)  = -clm_l2a%taux(g)
+       bufS(g,index_l2c_Fall_tauy)  = -clm_l2a%tauy(g)
+       bufS(g,index_l2c_Fall_lat)   = -clm_l2a%eflx_lh_tot(g)
+       bufS(g,index_l2c_Fall_sen)   = -clm_l2a%eflx_sh_tot(g)
+       bufS(g,index_l2c_Fall_lwup)  = -clm_l2a%eflx_lwrad_out(g)
+       bufS(g,index_l2c_Fall_evap)  = -clm_l2a%qflx_evap_tot(g)
+       bufS(g,index_l2c_Fall_swnet) = -clm_l2a%fsa(g)
        if (index_l2c_Fall_nee /= 0) then
-          bufS(g,index_l2c_Fall_nee)  = -gptr%l2af%nee(g)
+          bufS(g,index_l2c_Fall_nee)  = -clm_l2a%nee(g)
        end if
     end do
 
@@ -1134,7 +1119,7 @@ contains
 !
 ! !USES:
 !
-    use clmtype
+    use clmtype      , only : clm3
     use clm_varctl   , only : irad
     use time_manager , only : get_nstep
     use subgridAveMod, only : p2g, c2g
@@ -1188,14 +1173,14 @@ contains
 
     ! Set pointers into derived type (gridcell level)
 
-    taux_gcell           => clm3%g%l2af%taux
-    tauy_gcell           => clm3%g%l2af%tauy
-    eflx_lh_tot_gcell    => clm3%g%l2af%eflx_lh_tot
-    eflx_sh_tot_gcell    => clm3%g%l2af%eflx_sh_tot
-    eflx_lwrad_out_gcell => clm3%g%l2af%eflx_lwrad_out
-    qflx_evap_tot_gcell  => clm3%g%l2af%qflx_evap_tot
-    fsa_gcell            => clm3%g%l2af%fsa
-    nee_gcell            => clm3%g%l2af%nee
+    taux_gcell           => clm_l2a%taux
+    tauy_gcell           => clm_l2a%tauy
+    eflx_lh_tot_gcell    => clm_l2a%eflx_lh_tot
+    eflx_sh_tot_gcell    => clm_l2a%eflx_sh_tot
+    eflx_lwrad_out_gcell => clm_l2a%eflx_lwrad_out
+    qflx_evap_tot_gcell  => clm_l2a%qflx_evap_tot
+    fsa_gcell            => clm_l2a%fsa
+    nee_gcell            => clm_l2a%nee
 
     ! Allocate dynamic memory if necessary
     if (.not. allocated(taux_ave)) then
@@ -1394,8 +1379,8 @@ contains
 !EOP
 ! -----------------------------------------------------------------
 
-    write(6,*)'(cpl_COMPAT): This is revision: $Revision$'
-    write(6,*)'              Tag: $Name$'
+    write(6,*)'(cpl_COMPAT): This is revision: $Revision: 1.12.8.19.2.8 $'
+    write(6,*)'              Tag: $Name: clm3_expa_48_brnchT_fmesh13 $'
     write(6,*)'              of the message compatability interface:'
 
     if ( cpl_min_vers /= expect_min_vers )then
@@ -1491,7 +1476,7 @@ contains
 ! Performs a global sum on an input 2d grid array
 !
 ! !USES:
-    use clm_varsur, only : area                 !km^2
+    use domainMod, only : ldomain
 !
 ! !ARGUMENTS:
     implicit none
@@ -1510,7 +1495,7 @@ contains
     do j = 1,lsmlat
        do i = 1,lsmlon
           if (array(i,j) /= spval) then
-             global_sum_fld2d = global_sum_fld2d + array(i,j) * area(i,j) * 1.e6_r8
+             global_sum_fld2d = global_sum_fld2d + array(i,j) * ldomain%area(i,j) * 1.e6_r8
           endif
        end do
     end do
@@ -1529,8 +1514,8 @@ contains
 ! Performs a global sum on an input flux array
 !
 ! !USES:
-    use clmtype
-    use clm_varsur, only : area
+    use clmtype  , only : clm3, gridcell_type
+    use domainMod, only : ldomain
 !
 ! !ARGUMENTS:
     implicit none
@@ -1555,7 +1540,7 @@ contains
     do g = 1,numg
        i = gptr%ixy(g)
        j = gptr%jxy(g)
-       global_sum_fld1d = global_sum_fld1d + array(g) * area(i,j) * 1.e6_r8
+       global_sum_fld1d = global_sum_fld1d + array(g) * ldomain%area(i,j) * 1.e6_r8
     end do
 
   end function global_sum_fld1d

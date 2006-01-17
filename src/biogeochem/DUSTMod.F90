@@ -71,6 +71,7 @@ contains
 ! Source: C. Zender's dust model
 !
 ! !USES
+   use clm_atmlnd   , only : clm_a2l
    use shr_const_mod, only : SHR_CONST_RHOFW
 !
 ! !ARGUMENTS:
@@ -141,7 +142,7 @@ contains
 
     ! Assign local pointers to derived type scalar members (gridcell-level)
 
-    forc_rho        => clm3%g%a2ls%forc_rho
+    forc_rho        => clm_a2l%forc_rho
 
     ! Assign local pointers to derived type scalar members (landunit-level)
 
@@ -374,6 +375,7 @@ contains
 ! !USES
 !
     use shr_const_mod, only : SHR_CONST_PI, SHR_CONST_RDAIR, SHR_CONST_BOLTZ
+    use clm_atmlnd   , only : clm_a2l
 !
 ! !ARGUMENTS:
 !
@@ -425,9 +427,9 @@ contains
 
     ! Assign local pointers to derived type members (gridcell-level)
 
-    forc_pbot => clm3%g%a2ls%forc_pbot
-    forc_rho  => clm3%g%a2ls%forc_rho
-    forc_t    => clm3%g%a2ls%forc_t
+    forc_pbot => clm_a2l%forc_pbot
+    forc_rho  => clm_a2l%forc_rho
+    forc_t    => clm_a2l%forc_t
 
     ! Assign local pointers to derived type members (pft-level)
 

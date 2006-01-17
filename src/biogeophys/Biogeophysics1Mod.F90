@@ -65,6 +65,7 @@ contains
 !
 ! !USES:
     use clmtype
+    use clm_atmlnd         , only : clm_a2l
     use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, &
                                     istice, istwet, zlnd, zsno
     use clm_varpar         , only : nlevsoi, nlevsno
@@ -174,13 +175,13 @@ contains
 
    ! Assign local pointers to derived type members (gridcell-level)
 
-    forc_hgt_t    => clm3%g%a2ls%forc_hgt_t
-    forc_pbot     => clm3%g%a2ls%forc_pbot
-    forc_q        => clm3%g%a2ls%forc_q
-    forc_t        => clm3%g%a2ls%forc_t
-    forc_th       => clm3%g%a2ls%forc_th
-    forc_u        => clm3%g%a2ls%forc_u
-    forc_v        => clm3%g%a2ls%forc_v
+    forc_hgt_t    => clm_a2l%forc_hgt_t
+    forc_pbot     => clm_a2l%forc_pbot
+    forc_q        => clm_a2l%forc_q
+    forc_t        => clm_a2l%forc_t
+    forc_th       => clm_a2l%forc_th
+    forc_u        => clm_a2l%forc_u
+    forc_v        => clm_a2l%forc_v
 
     ! Assign local pointers to derived type members (landunit-level)
 

@@ -45,6 +45,7 @@ module clmtype
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use clm_varpar
+  use domainMod   , only: domain_type
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -1357,46 +1358,6 @@ type gridcell_pstate_type
 end type gridcell_pstate_type
 
 !----------------------------------------------------
-! atmosphere -> land state variables structure
-!----------------------------------------------------
-type atm2lnd_state_type
-#if (defined OFFLINE)
-   real(r8), pointer :: flfall(:)       !fraction of liquid water within falling precipitation
-#endif
-   real(r8), pointer :: forc_t(:)       !atmospheric temperature (Kelvin)
-   real(r8), pointer :: forc_u(:)       !atmospheric wind speed in east direction (m/s)
-   real(r8), pointer :: forc_v(:)       !atmospheric wind speed in north direction (m/s)
-   real(r8), pointer :: forc_wind(:)    !atmospheric wind speed   
-   real(r8), pointer :: forc_q(:)       !atmospheric specific humidity (kg/kg)
-   real(r8), pointer :: forc_hgt(:)     !atmospheric reference height (m)
-   real(r8), pointer :: forc_hgt_u(:)   !observational height of wind [m] (new)
-   real(r8), pointer :: forc_hgt_t(:) 	!observational height of temperature [m] (new)
-   real(r8), pointer :: forc_hgt_q(:) 	!observational height of humidity [m] (new)
-   real(r8), pointer :: forc_pbot(:) 	!atmospheric pressure (Pa)
-   real(r8), pointer :: forc_th(:) 	!atmospheric potential temperature (Kelvin)
-   real(r8), pointer :: forc_vp(:) 	!atmospheric vapor pressure (Pa)
-   real(r8), pointer :: forc_rho(:) 	!density (kg/m**3)
-   real(r8), pointer :: forc_psrf(:) 	!surface pressure (Pa)
-   real(r8), pointer :: forc_pco2(:)    !CO2 partial pressure (Pa)
-   ! 4/14/05: PET
-   ! Adding isotope code
-   real(r8), pointer :: forc_pc13o2(:)  !C13O2 partial pressure (Pa)
-   real(r8), pointer :: forc_po2(:) 	!O2 partial pressure (Pa)
-end type atm2lnd_state_type
-
-!----------------------------------------------------
-! land -> atmosphere state variables structure
-!----------------------------------------------------
-type lnd2atm_state_type
-   real(r8), pointer :: t_rad(:) 	!radiative temperature (Kelvin)
-   real(r8), pointer :: t_ref2m(:)  	!2 m height surface air temperature (Kelvin)
-   real(r8), pointer :: q_ref2m(:)      !2 m height surface specific humidity (kg/kg)
-   real(r8), pointer :: h2osno(:) 	!snow water (mm H2O)
-   real(r8), pointer :: albd(:,:)       !(numrad) surface albedo (direct)
-   real(r8), pointer :: albi(:,:)       !(numrad) surface albedo (diffuse)
-end type lnd2atm_state_type
-
-!----------------------------------------------------
 ! gridcell energy state variables structure
 !----------------------------------------------------
 type gridcell_estate_type
@@ -1451,33 +1412,6 @@ type gridcell_dgvstate_type
    real(r8), pointer :: begenergy(:)
    real(r8), pointer :: endenergy(:)
 end type gridcell_dgvstate_type
-
-!----------------------------------------------------
-! atmosphere -> land flux variables structure
-!----------------------------------------------------
-type atm2lnd_flux_type
-   real(r8), pointer :: forc_lwrad(:) 		!downward infrared (longwave) radiation (W/m**2)
-   real(r8), pointer :: forc_solad(:,:)         !direct beam radiation (vis=forc_sols , nir=forc_soll ) (numrad) 	
-   real(r8), pointer :: forc_solai(:,:)         !diffuse radiation     (vis=forc_solsd, nir=forc_solld) (numrad) 	
-   real(r8), pointer :: forc_solar(:)           !incident solar radiation
-   real(r8), pointer :: forc_rain(:) 		!rain rate [mm/s]
-   real(r8), pointer :: forc_snow(:) 		!snow rate [mm/s]
-   real(r8), pointer :: forc_ndep(:)        !nitrogen deposition rate (gN/m2/s)
-end type atm2lnd_flux_type
-
-!----------------------------------------------------
-! land -> atmosphere flux variables structure
-!----------------------------------------------------
-type lnd2atm_flux_type
-   real(r8), pointer :: taux(:) 		!wind stress: e-w (kg/m/s**2)
-   real(r8), pointer :: tauy(:) 		!wind stress: n-s (kg/m/s**2)
-   real(r8), pointer :: eflx_lh_tot(:) 	        !total latent heat flux (W/m8*2)  [+ to atm]
-   real(r8), pointer :: eflx_sh_tot(:) 	        !total sensible heat flux (W/m**2) [+ to atm]
-   real(r8), pointer :: eflx_lwrad_out(:) 	!emitted infrared (longwave) radiation (W/m**2)
-   real(r8), pointer :: qflx_evap_tot(:) 	!qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
-   real(r8), pointer :: fsa(:) 		        !solar radiation absorbed (total) (W/m**2)
-   real(r8), pointer :: nee(:)		        !net CO2 flux (kg C/m**2/s) [+ = to atm]
-end type lnd2atm_flux_type
 
 !----------------------------------------------------
 ! gridcell energy flux variables structure
@@ -1641,8 +1575,6 @@ end type model_dflux_type
 !----------------------------------------------------
 ! End definition of structures defined at the model_type level
 !----------------------------------------------------
-!*******************************************************************************
-
 
 !*******************************************************************************
 !----------------------------------------------------
@@ -1654,24 +1586,18 @@ end type model_dflux_type
 !----------------------------------------------------
 
 type pft_type
-   ! indices into higher levels in hierarchy
+
+   ! indices into higher levels in hierarchy, point to arrays in subgrid_type
    integer, pointer :: column(:)        !index into column level quantities
+   real(r8), pointer :: wtcol(:)	!weight (relative to column) 
    integer, pointer :: landunit(:)      !index into landunit level quantities
+   real(r8), pointer :: wtlunit(:)      !weight (relative to landunit) 
    integer, pointer :: gridcell(:)      !index into gridcell level quantities
+   real(r8), pointer :: wtgcell(:)	!weight (relative to gridcell) 
 
    ! topological mapping functionality
    integer , pointer :: itype(:)        !pft vegetation 
-   real(r8), pointer :: area(:) 	!total land area for this pft (km^2)
-   real(r8), pointer :: wtcol(:)	!weight (relative to column) for this pft (0-1)
-   real(r8), pointer :: wtcol_old(:)	!weight (relative to column) for this pft (0-1)
-   real(r8), pointer :: wtlunit(:)      !weight (relative to landunit) for this pft (0-1)
-   real(r8), pointer :: wtgcell(:)	!weight (relative to gridcell) for this pft (0-1)
-   integer , pointer :: ixy(:)          !xy lon index
-   integer , pointer :: jxy(:)          !xy lat index
    integer , pointer :: mxy(:)          !m index for laixy(i,j,m),etc.
-   integer , pointer :: snindex(:)      !corresponding pft index in s->n and east->west order
-   real(r8), pointer :: latdeg(:)       !latitude (degrees)
-   real(r8), pointer :: londeg(:)       !longitude (degrees)
 
    ! conservation check structures for the pft level
    type(energy_balance_type)   :: pebal !energy balance structure
@@ -1680,10 +1606,10 @@ type pft_type
    type(nitrogen_balance_type) :: pnbal !nitrogen balance structure
    
    ! DGVM state variables
-   type(pft_dgvstate_type) :: pdgvs           !pft DGVM state variables
+   type(pft_dgvstate_type) :: pdgvs     !pft DGVM state variables
    
    ! CN ecophysiological variables
-   type(pft_epv_type)    :: pepv              !pft ecophysiological variables
+   type(pft_epv_type)    :: pepv        !pft ecophysiological variables
    
    ! state variables defined at the pft level
    type(pft_pstate_type) :: pps         !physical state variables
@@ -1704,8 +1630,8 @@ type pft_type
    
    ! 4/14/05: PET
    ! Adding isotope code
-   type(pft_cstate_type) :: pc13s         !pft carbon-13 state
-   type(pft_cflux_type)  :: pc13f         !pft carbon-13 flux
+   type(pft_cstate_type) :: pc13s       !pft carbon-13 state
+   type(pft_cflux_type)  :: pc13f       !pft carbon-13 flux
    
 end type pft_type
 
@@ -1714,26 +1640,22 @@ end type pft_type
 !----------------------------------------------------
 
 type column_type
-   ! lower levels in hierarchy
-   type(pft_type)   :: p                !plant functional type (pft) data structure 
+
+   type(pft_type)   :: p       !plant functional type (pft) data structure 
+
+   ! higher level in hierarchy, point to arrays in subgrid_type
+   integer , pointer :: landunit(:)     !index into landunit level quantities
+   real(r8), pointer :: wtlunit(:) 	!weight (relative to landunit)
+   integer , pointer :: gridcell(:)     !index into gridcell level quantities
+   real(r8), pointer :: wtgcell(:) 	!weight (relative to gridcell)
+
+   ! lower levels in hierarchy, point to arrays in subgrid_type
    integer , pointer :: pfti(:)         !beginning pft index for each column
    integer , pointer :: pftf(:)         !ending pft index for each column
    integer , pointer :: npfts(:)        !number of pfts for each column
    
-   ! higher level in hierarchy
-   integer , pointer :: landunit(:)     !index into landunit level quantities
-   integer , pointer :: gridcell(:)     !index into gridcell level quantities
-
    ! topological mapping functionality
    integer , pointer :: itype(:) 	!column type
-   real(r8), pointer :: area(:) 	!total land area for this column (km^2)
-   real(r8), pointer :: wtgcell(:) 	!weight (relative to gridcell) for this column (0-1)
-   real(r8), pointer :: wtlunit(:) 	!weight (relative to landunit) for this column (0-1)
-   integer , pointer :: ixy(:)          !xy lon index
-   integer , pointer :: jxy(:)          !xy lat index
-   integer , pointer :: snindex(:)      !corresponding column index in s->n and east->west order
-   real(r8), pointer :: latdeg(:)       !latitude (degrees)
-   real(r8), pointer :: londeg(:)       !longitude (degrees)
 
    ! conservation check structures for the column level
    type(energy_balance_type)   :: cebal !energy balance structure
@@ -1764,8 +1686,8 @@ type column_type
    
    ! 4/14/05: PET
    ! Adding isotope code
-   type(column_cstate_type) :: cc13s      !column carbon-13 state
-   type(column_cflux_type)  :: cc13f      !column carbon-13 flux
+   type(column_cstate_type) :: cc13s    !column carbon-13 state
+   type(column_cflux_type)  :: cc13f    !column carbon-13 flux
    
 end type column_type
 
@@ -1774,53 +1696,49 @@ end type column_type
 !----------------------------------------------------
 
 type landunit_type
-   ! lower levels in hierarchy
-   type(column_type) :: c                !column data structure (soil/snow/canopy columns)
-   integer, pointer :: coli(:)           !beginning column index for each landunit
-   integer, pointer :: colf(:)           !ending column index for each landunit
-   integer, pointer :: ncolumns(:)       !number of columns for each landunit
-   integer, pointer :: pfti(:)           !beginning pft index for each landunit
-   integer, pointer :: pftf(:)           !ending pft index for each landunit
-   integer, pointer :: npfts(:)          !number of pfts for each landunit
-   
-   ! higher level in hierarchy
-   integer, pointer :: gridcell(:)       !index into gridcell level quantities
+
+   type(column_type) :: c    !column data structure (soil/snow/canopy columns)
+
+   ! higher level in hierarchy, point to arrays in subgrid_type
+   integer , pointer :: gridcell(:)     !index into gridcell level quantities
+   real(r8), pointer :: wtgcell(:)      !weight (relative to gridcell)
+
+   ! lower levels in hierarchy, point to arrays in subgrid_type
+   integer , pointer :: coli(:)         !beginning column index per landunit
+   integer , pointer :: colf(:)         !ending column index for each landunit
+   integer , pointer :: ncolumns(:)     !number of columns for each landunit
+   integer , pointer :: pfti(:)         !beginning pft index for each landunit
+   integer , pointer :: pftf(:)         !ending pft index for each landunit
+   integer , pointer :: npfts(:)        !number of pfts for each landunit
    
    ! topological mapping functionality
-   integer , pointer :: itype(:) 	 !landunit type
-   real(r8), pointer :: area(:) 	 !total land area for this landunit (km^2)
-   real(r8), pointer :: wtgcell(:)       !weight (relative to gridcell) for this landunit (0-1)
-   integer , pointer :: ixy(:)           !xy lon index
-   integer , pointer :: jxy(:)           !xy lat index
-   integer , pointer :: snindex(:)       !corresponding landunit index in s->n and east->west order
-   real(r8), pointer :: latdeg(:)        !latitude (degrees)
-   real(r8), pointer :: londeg(:)        !longitude (degrees)
-   logical , pointer :: ifspecial(:)     !BOOL: true=>landunit is not vegetated
-   logical , pointer :: lakpoi(:)	 !BOOL: true=>lake point
+   integer , pointer :: itype(:) 	!landunit type
+   logical , pointer :: ifspecial(:)    !BOOL: true=>landunit is not vegetated
+   logical , pointer :: lakpoi(:)	!BOOL: true=>lake point
 
    ! conservation check structures for the landunit level
-   type(energy_balance_type)   :: lebal  !energy balance structure
-   type(water_balance_type)    :: lwbal  !water balance structure
-   type(carbon_balance_type)   :: lcbal  !carbon balance structure
-   type(nitrogen_balance_type) :: lnbal  !nitrogen balance structure
+   type(energy_balance_type)   :: lebal !energy balance structure
+   type(water_balance_type)    :: lwbal !water balance structure
+   type(carbon_balance_type)   :: lcbal !carbon balance structure
+   type(nitrogen_balance_type) :: lnbal !nitrogen balance structure
    
    ! state variables defined at the land unit level
-   type(landunit_pstate_type) :: lps     !land unit physical state variables
-   type(landunit_estate_type) :: les     !average of energy states over all columns
-   type(landunit_wstate_type) :: lws     !average of water states over all columns
-   type(landunit_cstate_type) :: lcs     !average of carbon states over all columns
-   type(landunit_nstate_type) :: lns     !average of nitrogen states over all columns
-   type(landunit_vstate_type) :: lvs     !average of VOC states over all columns
-   type(landunit_dstate_type) :: lds     !average of dust states over all columns
+   type(landunit_pstate_type) :: lps    !land unit physical state variables
+   type(landunit_estate_type) :: les    !average of energy states all columns
+   type(landunit_wstate_type) :: lws    !average of water states all columns
+   type(landunit_cstate_type) :: lcs    !average of carbon states all columns
+   type(landunit_nstate_type) :: lns    !average of nitrogen states all columns
+   type(landunit_vstate_type) :: lvs    !average of VOC states all columns
+   type(landunit_dstate_type) :: lds    !average of dust states all columns
    
    ! flux variables defined at the landunit level
-   type(landunit_eflux_type) :: lef      !average of energy fluxes over all columns
-   type(landunit_mflux_type) :: lmf      !average of momentum fluxes over all columns
-   type(landunit_wflux_type) :: lwf      !average of water fluxes over all columns
-   type(landunit_cflux_type) :: lcf      !average of carbon fluxes over all columns
-   type(landunit_nflux_type) :: lnf      !average of nitrogen fluxes over all columns
-   type(landunit_vflux_type) :: lvf      !average of VOC fluxes over all columns
-   type(landunit_dflux_type) :: ldf      !average of dust fluxes over all columns
+   type(landunit_eflux_type) :: lef     !average of energy fluxes all columns
+   type(landunit_mflux_type) :: lmf     !average of momentum fluxes all columns
+   type(landunit_wflux_type) :: lwf     !average of water fluxes all columns
+   type(landunit_cflux_type) :: lcf     !average of carbon fluxes all columns
+   type(landunit_nflux_type) :: lnf     !average of nitrogen fluxes all columns
+   type(landunit_vflux_type) :: lvf     !average of VOC fluxes all columns
+   type(landunit_dflux_type) :: ldf     !average of dust fluxes all columns
 end type landunit_type
 
 !----------------------------------------------------
@@ -1828,60 +1746,57 @@ end type landunit_type
 !----------------------------------------------------
 
 type gridcell_type
-   ! lower level in hierarchy
-   type(landunit_type) :: l	          !geomorphological landunits
-   integer, pointer :: luni(:)            !beginning landunit index for each gridcell
-   integer, pointer :: lunf(:)            !ending landunit index for each gridcell
-   integer, pointer :: nlandunits(:)      !number of landunit for each gridcell
-   integer, pointer :: coli(:)            !beginning column index for each gridcell
-   integer, pointer :: colf(:)            !ending column index for each gridcell
-   integer, pointer :: ncolumns(:)        !number of columns for each gridcell
-   integer, pointer :: pfti(:)            !beginning pft index for each gridcell
-   integer, pointer :: pftf(:)            !ending pft index for each gridcell
-   integer, pointer :: npfts(:)           !number of pfts for each gridcell
+
+   type(landunit_type) :: l	        !geomorphological landunits
+
+   ! lower level in hierarchy, point to arrays in subgrid_type
+   integer, pointer :: luni(:)          !beginning landunit index 
+   integer, pointer :: lunf(:)          !ending landunit index 
+   integer, pointer :: nlandunits(:)    !number of landunit for each gridcell
+   integer, pointer :: coli(:)          !beginning column index
+   integer, pointer :: colf(:)          !ending column index
+   integer, pointer :: ncolumns(:)      !number of columns for each gridcell
+   integer, pointer :: pfti(:)          !beginning pft index
+   integer, pointer :: pftf(:)          !ending pft index
+   integer, pointer :: npfts(:)         !number of pfts for each gridcell
 
    ! topological mapping functionality
-   integer , pointer :: itype(:)          !gridcell type
-   real(r8), pointer :: area(:)           !total land area for this gridcell (km^2)
-   real(r8), pointer :: wtglob(:)	  !weight for this gridcell relative to global area (0-1)
-   integer , pointer :: ixy(:)            !xy lon index
-   integer , pointer :: jxy(:)            !xy lat index
-   integer , pointer :: snindex(:)        !corresponding gridcell index in s->n and east->west order
-   real(r8), pointer :: lat(:) 	          !latitude (radians)
-   real(r8), pointer :: lon(:) 	          !longitude (radians)
-   real(r8), pointer :: latdeg(:)         !latitude (degrees)
-   real(r8), pointer :: londeg(:)         !longitude (degrees)
-   real(r8), pointer :: landfrac(:)       !fractional land for this gridcell
+   integer , pointer :: itype(:)        !gridcell type
+   real(r8), pointer :: area(:)         !total land area, gridcell (km^2)
+   integer , pointer :: ixy(:)          !xy lon index
+   integer , pointer :: jxy(:)          !xy lat index
+   real(r8), pointer :: lat(:) 	        !latitude (radians)
+   real(r8), pointer :: lon(:) 	        !longitude (radians)
+   real(r8), pointer :: latdeg(:)       !latitude (degrees)
+   real(r8), pointer :: londeg(:)       !longitude (degrees)
+   real(r8), pointer :: landfrac(:)     !fractional land for this gridcell
 
    ! conservation check structures for the gridcell level
-   type(energy_balance_type)   :: gebal  !energy balance structure
-   type(water_balance_type)    :: gwbal  !water balance structure
-   type(carbon_balance_type)   :: gcbal  !carbon balance structure
-   type(nitrogen_balance_type) :: gnbal  !nitrogen balance structure
+   type(energy_balance_type)   :: gebal !energy balance structure
+   type(water_balance_type)    :: gwbal !water balance structure
+   type(carbon_balance_type)   :: gcbal !carbon balance structure
+   type(nitrogen_balance_type) :: gnbal !nitrogen balance structure
 
    ! dgvm variables defined at the gridcell level
    type(gridcell_dgvstate_type):: gdgvs !gridcell DGVM structure
    
    ! state variables defined at the gridcell level
-   type(gridcell_pstate_type) :: gps     !gridcell physical state variables
-   type(gridcell_estate_type) :: ges     !average of energy states over all landunits
-   type(gridcell_wstate_type) :: gws     !average of water states over all landunits
-   type(gridcell_cstate_type) :: gcs     !average of carbon states over all landunits
-   type(gridcell_nstate_type) :: gns     !average of nitrogen states over all landunits
-   type(gridcell_vstate_type) :: gvs     !average of VOC states over all landunits
-   type(gridcell_dstate_type) :: gds     !average of dust states over all landunits
-   type(atm2lnd_state_type)   :: a2ls    !atmospheric state variables required by the land
-   type(lnd2atm_state_type)   :: l2as    !land state variables required by the atmosphere
+   type(gridcell_pstate_type) :: gps    !gridcell physical state variables
+   type(gridcell_estate_type) :: ges    !average of energy states all landunits
+   type(gridcell_wstate_type) :: gws    !average of water states all landunits
+   type(gridcell_cstate_type) :: gcs    !average of carbon states all landunits
+   type(gridcell_nstate_type) :: gns    !average of nitrogen states all landus
+   type(gridcell_vstate_type) :: gvs    !average of VOC states all landunits
+   type(gridcell_dstate_type) :: gds    !average of dust states all landunits
    
    ! flux variables defined at the gridcell level
-   type(gridcell_eflux_type) :: gef	  !average of energy fluxes over all landunits
-   type(gridcell_wflux_type) :: gwf	  !average of water fluxes over all landunits
-   type(gridcell_cflux_type) :: gcf	  !average of carbon fluxes over all landunits
-   type(gridcell_nflux_type) :: gnf	  !average of nitrogen fluxes over all landunits
-   type(gridcell_vflux_type) :: gvf	  !average of VOC fluxes over all landunits
-   type(gridcell_dflux_type) :: gdf	  !average of dust fluxes over all landunits
-   type(atm2lnd_flux_type)   :: a2lf	  !atmospheric flux variables required by the land
-   type(lnd2atm_flux_type)   :: l2af	  !land flux variables required by the atmosphere
+   type(gridcell_eflux_type) :: gef	!average of energy fluxes all landunits
+   type(gridcell_wflux_type) :: gwf	!average of water fluxes all landunits
+   type(gridcell_cflux_type) :: gcf	!average of carbon fluxes all landunits
+   type(gridcell_nflux_type) :: gnf	!average of nitrogen fluxes all landus
+   type(gridcell_vflux_type) :: gvf	!average of VOC fluxes all landunits
+   type(gridcell_dflux_type) :: gdf	!average of dust fluxes all landunits
+
 end type gridcell_type
 
 !----------------------------------------------------
@@ -1890,33 +1805,34 @@ end type gridcell_type
 
 type model_type
    ! lower level in hierarch
-   type(gridcell_type) :: g	  !gridicell data structure
-   integer  :: ngridcells                 !number of gridcells allocated for this process
-   real(r8) :: area			  !total land area for all gridcells (km^2)
+   type(gridcell_type) :: g    !gridicell data structure
+   integer  :: ngridcells      !number of gridcells for this process
+   real(r8) :: area            !total land area for all gridcells (km^2)
 
    ! conservation check structures for the clm (global) level
-   type(energy_balance_type)   :: mebal  !energy balance structure
-   type(water_balance_type)    :: mwbal  !water balance structure
-   type(carbon_balance_type)   :: mcbal  !carbon balnace structure
-   type(nitrogen_balance_type) :: mnbal  !nitrogen balance structure
+   type(energy_balance_type)   :: mebal !energy balance structure
+   type(water_balance_type)    :: mwbal !water balance structure
+   type(carbon_balance_type)   :: mcbal !carbon balnace structure
+   type(nitrogen_balance_type) :: mnbal !nitrogen balance structure
    
    ! globally average state variables 
-   type(model_pstate_type) ::  mps       !clm physical state variables
-   type(model_estate_type) ::  mes       !average of energy states over all gridcells
-   type(model_wstate_type) ::  mws       !average of water states over all gridcells
-   type(model_cstate_type) ::  mcs       !average of carbon states over all gridcells
-   type(model_nstate_type) ::  mns       !average of nitrogen states over all gridcells
-   type(model_vstate_type) ::  mvs       !average of VOC states over all gridcells
-   type(model_dstate_type) ::  mds       !average of dust states over all gridcells
+   type(model_pstate_type) ::  mps      !clm physical state variables
+   type(model_estate_type) ::  mes      !average of energy states all gridcells
+   type(model_wstate_type) ::  mws      !average of water states all gridcells
+   type(model_cstate_type) ::  mcs      !average of carbon states all gridcells
+   type(model_nstate_type) ::  mns      !average of nitrogen states all gcells
+   type(model_vstate_type) ::  mvs      !average of VOC states all gridcells
+   type(model_dstate_type) ::  mds      !average of dust states all gridcells
    
    ! globally averaged flux variables 
-   type(model_eflux_type) ::   mef       !average of energy fluxes over all gridcells
-   type(model_wflux_type) ::   mwf       !average of water fluxes over all gridcells
-   type(model_cflux_type) ::   mcf       !average of carbon fluxes over all gridcells
-   type(model_nflux_type) ::   mnf       !average of nitrogen fluxes over all gridcells
-   type(model_vflux_type) ::   mvf       !average of VOC fluxes over all gridcells
-   type(model_dflux_type) ::   mdf       !average of dust fluxes over all gridcells
+   type(model_eflux_type) ::   mef      !average of energy fluxes all gridcells
+   type(model_wflux_type) ::   mwf      !average of water fluxes all gridcells
+   type(model_cflux_type) ::   mcf      !average of carbon fluxes all gridcells
+   type(model_nflux_type) ::   mnf      !average of nitrogen fluxes all gcells
+   type(model_vflux_type) ::   mvf      !average of VOC fluxes all gridcells
+   type(model_dflux_type) ::   mdf      !average of dust fluxes all gridcells
 end type model_type
+
 !----------------------------------------------------
 ! End definition of spatial scaling hierarchy
 !----------------------------------------------------
@@ -1926,7 +1842,7 @@ end type model_type
 !----------------------------------------------------
 ! Declare single instance of clmtype
 !----------------------------------------------------
-type(model_type), target, save :: clm3
+type(model_type)    , target     , save :: clm3
 
 !----------------------------------------------------
 ! Declare single instance of array of ecophysiological constant types
@@ -1942,8 +1858,11 @@ character(len=8), parameter :: nameg  = 'gridcell'  ! name of gridcells
 character(len=8), parameter :: namel  = 'landunit'  ! name of landunits
 character(len=8), parameter :: namec  = 'column'    ! name of columns
 character(len=8), parameter :: namep  = 'pft'       ! name of pfts
-character(len=8), parameter :: ocnrof = 'ocnrof'    ! name of river routing ocean runoff
-character(len=8), parameter :: lndrof = 'lndrof'    ! name of river routing land channel runoff
+character(len=8), parameter :: ocnrof = 'ocnrof'    ! name of river routing 
+                                                    ! ocean runoff
+character(len=8), parameter :: lndrof = 'lndrof'    ! name of river routing 
+                                                    ! land channel runoff
+
 !
 !EOP
 !----------------------------------------------------------------------- 

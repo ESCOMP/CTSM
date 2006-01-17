@@ -56,9 +56,10 @@ contains
 !    -> DivideSnowLayers:      subdivide snow layers that are thicker than maximum
 !
 ! !USES:
-    use shr_sys_mod, only: shr_sys_flush
+    use shr_sys_mod , only: shr_sys_flush
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
+    use clm_atmlnd      , only : clm_a2l
     use clm_varcon      , only : denh2o, denice, istice, istwet, istsoil, spval, istwet, istice
     use clm_varpar      , only : nlevsoi, nlevsno
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
@@ -164,8 +165,8 @@ contains
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
 
-    forc_rain => clm3%g%a2lf%forc_rain
-    forc_snow => clm3%g%a2lf%forc_snow
+    forc_rain => clm_a2l%forc_rain
+    forc_snow => clm_a2l%forc_snow
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 

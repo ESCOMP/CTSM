@@ -151,12 +151,15 @@ contains
      endif
 
      ! first check if file is in current working directory.
+     ! Modified at PT's request, do NOT use the local copy if it exists
 
      inquire (file=locfn,exist=lexist)
      if (lexist) then
-        write (6,*) '(GETFIL): using ',trim(locfn), &
-             ' in current working directory'
-        RETURN
+!        write (6,*) '(GETFIL): using ',trim(locfn), &
+!             ' in current working directory'
+!        RETURN
+        write (6,*) '(GETFIL): ',trim(locfn), &
+             ' exist in current working director, IGNORING temporarily'
      endif
 
      ! second check for full pathname on disk

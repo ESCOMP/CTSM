@@ -284,18 +284,18 @@ contains
 
 !=================================================================================
 
-  subroutine MCT_lnd_ExportInit( l2as, l2af, l2c_l )
+  subroutine MCT_lnd_ExportInit( l2a, l2c_l )
 
-    use clmtype   , only : lnd2atm_state_type, lnd2atm_flux_type, clm3
-    use clm_varsur, only : landfrac
+    use clmtype   , only : clm3
+    use clm_atmlnd, only : lnd2atm_type
+    use domainMod , only : ldomain
     use clm_varcon, only : sb
     use decompMod , only : get_proc_bounds
     use m_AttrVect, only : MCT_Avt_Permute => Permute
 
     implicit none
 
-    type(lnd2atm_state_type), intent(inout) :: l2as
-    type(lnd2atm_flux_type) , intent(inout) :: l2af
+    type(lnd2atm_type)      , intent(inout) :: l2a
     type(AttrVect)          , intent(inout) :: l2c_l
 
     integer :: g,i,ier,nstep
@@ -308,14 +308,14 @@ contains
 
     i=1
     do g = begg,endg
-       l2c_l%rAttr(index_l2c_Sl_landfrac,i) =  landfrac(clm3%g%ixy(g), clm3%g%jxy(g))
-       l2c_l%rAttr(index_l2c_Sl_t,i)        =  sqrt(sqrt(l2af%eflx_lwrad_out(g)/sb))
-       l2c_l%rAttr(index_l2c_Sl_snowh,i)    =  l2as%h2osno(g)
-       l2c_l%rAttr(index_l2c_Sl_avsdr,i)    =  l2as%albd(g,1)
-       l2c_l%rAttr(index_l2c_Sl_anidr,i)    =  l2as%albd(g,2)
-       l2c_l%rAttr(index_l2c_Sl_avsdf,i)    =  l2as%albi(g,1)
-       l2c_l%rAttr(index_l2c_Sl_anidf,i)    =  l2as%albi(g,2)
-       l2c_l%rAttr(index_l2c_Fall_lwup,i)   =  l2af%eflx_lwrad_out(g)
+       l2c_l%rAttr(index_l2c_Sl_landfrac,i) =  ldomain%frac(clm3%g%ixy(g), clm3%g%jxy(g))
+       l2c_l%rAttr(index_l2c_Sl_t,i)        =  sqrt(sqrt(l2a%eflx_lwrad_out(g)/sb))
+       l2c_l%rAttr(index_l2c_Sl_snowh,i)    =  l2a%h2osno(g)
+       l2c_l%rAttr(index_l2c_Sl_avsdr,i)    =  l2a%albd(g,1)
+       l2c_l%rAttr(index_l2c_Sl_anidr,i)    =  l2a%albd(g,2)
+       l2c_l%rAttr(index_l2c_Sl_avsdf,i)    =  l2a%albi(g,1)
+       l2c_l%rAttr(index_l2c_Sl_anidf,i)    =  l2a%albi(g,2)
+       l2c_l%rAttr(index_l2c_Fall_lwup,i)   =  l2a%eflx_lwrad_out(g)
        i=i+1
     end do
 
@@ -327,15 +327,14 @@ contains
 
 !====================================================================================
 
-  subroutine MCT_lnd_Export( l2as, l2af, l2c_l )   
+  subroutine MCT_lnd_Export( l2a, l2c_l )   
 
-    use clmtype   , only : lnd2atm_state_type, lnd2atm_flux_type
+    use clm_atmlnd, only : lnd2atm_type
     use decompMod , only : get_proc_bounds
     use m_AttrVect, only : MCT_Avt_Permute => Permute
     implicit none
 
-    type(lnd2atm_state_type), intent(inout) :: l2as
-    type(lnd2atm_flux_type) , intent(inout) :: l2af
+    type(lnd2atm_type)      , intent(inout) :: l2a
     type(AttrVect)          , intent(inout) :: l2c_l
 
     integer :: g,i
@@ -349,23 +348,23 @@ contains
     i=1
     l2c_l%rAttr(:,:) = 0.0_r8
     do g = begg,endg
-       l2c_l%rAttr(index_l2c_Sl_t,i)       =  l2as%t_rad(g)
-       l2c_l%rAttr(index_l2c_Sl_snowh,i)   =  l2as%h2osno(g)
-       l2c_l%rAttr(index_l2c_Sl_avsdr,i)   =  l2as%albd(g,1)
-       l2c_l%rAttr(index_l2c_Sl_anidr,i)   =  l2as%albd(g,2)
-       l2c_l%rAttr(index_l2c_Sl_avsdf,i)   =  l2as%albi(g,1)
-       l2c_l%rAttr(index_l2c_Sl_anidf,i)   =  l2as%albi(g,2)
-       l2c_l%rAttr(index_l2c_Sl_tref,i)    =  l2as%t_ref2m(g)
-       l2c_l%rAttr(index_l2c_Sl_qref,i)    =  l2as%q_ref2m(g)
-       l2c_l%rAttr(index_l2c_Fall_taux,i)  =  l2af%taux(g)
-       l2c_l%rAttr(index_l2c_Fall_tauy,i)  =  l2af%tauy(g)
-       l2c_l%rAttr(index_l2c_Fall_lat,i)   =  l2af%eflx_lh_tot(g)
-       l2c_l%rAttr(index_l2c_Fall_sen,i)   =  l2af%eflx_sh_tot(g)
-       l2c_l%rAttr(index_l2c_Fall_lwup,i)  =  l2af%eflx_lwrad_out(g)
-       l2c_l%rAttr(index_l2c_Fall_evap,i)  =  l2af%qflx_evap_tot(g)
-       l2c_l%rAttr(index_l2c_Fall_swnet,i) =  l2af%fsa(g)
+       l2c_l%rAttr(index_l2c_Sl_t,i)       =  l2a%t_rad(g)
+       l2c_l%rAttr(index_l2c_Sl_snowh,i)   =  l2a%h2osno(g)
+       l2c_l%rAttr(index_l2c_Sl_avsdr,i)   =  l2a%albd(g,1)
+       l2c_l%rAttr(index_l2c_Sl_anidr,i)   =  l2a%albd(g,2)
+       l2c_l%rAttr(index_l2c_Sl_avsdf,i)   =  l2a%albi(g,1)
+       l2c_l%rAttr(index_l2c_Sl_anidf,i)   =  l2a%albi(g,2)
+       l2c_l%rAttr(index_l2c_Sl_tref,i)    =  l2a%t_ref2m(g)
+       l2c_l%rAttr(index_l2c_Sl_qref,i)    =  l2a%q_ref2m(g)
+       l2c_l%rAttr(index_l2c_Fall_taux,i)  =  l2a%taux(g)
+       l2c_l%rAttr(index_l2c_Fall_tauy,i)  =  l2a%tauy(g)
+       l2c_l%rAttr(index_l2c_Fall_lat,i)   =  l2a%eflx_lh_tot(g)
+       l2c_l%rAttr(index_l2c_Fall_sen,i)   =  l2a%eflx_sh_tot(g)
+       l2c_l%rAttr(index_l2c_Fall_lwup,i)  =  l2a%eflx_lwrad_out(g)
+       l2c_l%rAttr(index_l2c_Fall_evap,i)  =  l2a%qflx_evap_tot(g)
+       l2c_l%rAttr(index_l2c_Fall_swnet,i) =  l2a%fsa(g)
        if (index_l2c_Fall_nee /= 0) then
-          l2c_l%rAttr(index_l2c_Fall_nee,i) = l2af%nee(g)
+          l2c_l%rAttr(index_l2c_Fall_nee,i) = l2a%nee(g)
        end if
        i=i+1
     end do
@@ -378,9 +377,9 @@ contains
 
 !====================================================================================
 
-  subroutine MCT_lnd_Import(a2ls, a2lf, a2c_l)
+  subroutine MCT_lnd_Import(a2l, a2c_l)
 
-    use clmtype   , only : atm2lnd_state_type, atm2lnd_flux_type
+    use clm_atmlnd, only : atm2lnd_type
     use clm_varctl, only : co2_type
     use clm_varcon, only : rair, o2_molar_const, co2_ppmv_const, c13ratio
     use m_AttrVectComms , only: AttrVect_gather => gather
@@ -394,8 +393,7 @@ contains
 #endif
 
     implicit none
-    type(atm2lnd_state_type), intent(inout) :: a2ls
-    type(atm2lnd_flux_type) , intent(inout) :: a2lf
+    type(atm2lnd_type)      , intent(inout) :: a2l
     type(AttrVect)          , intent(inout) :: a2c_l
 
     type(AttrVect) :: Ga2c_l
@@ -437,22 +435,22 @@ contains
        
         ! Determine required receive fields
 
-        a2ls%forc_hgt(g)     = a2c_l%rAttr(index_a2c_Sa_z,i)         ! zgcmxy  Atm state m
-        a2ls%forc_u(g)       = a2c_l%rAttr(index_a2c_Sa_u,i)         ! forc_uxy  Atm state m/s
-        a2ls%forc_v(g)       = a2c_l%rAttr(index_a2c_Sa_v,i)         ! forc_vxy  Atm state m/s
-        a2ls%forc_th(g)      = a2c_l%rAttr(index_a2c_Sa_ptem,i)      ! forc_thxy Atm state K
-        a2ls%forc_q(g)       = a2c_l%rAttr(index_a2c_Sa_shum,i)      ! forc_qxy  Atm state kg/kg
-        a2ls%forc_pbot(g)    = a2c_l%rAttr(index_a2c_Sa_pbot,i)      ! ptcmxy  Atm state Pa
-        a2ls%forc_t(g)       = a2c_l%rAttr(index_a2c_Sa_tbot,i)      ! forc_txy  Atm state K
-        a2lf%forc_lwrad(g)   = a2c_l%rAttr(index_a2c_Faxa_lwdn,i)    ! flwdsxy Atm flux  W/m^2
+        a2l%forc_hgt(g)     = a2c_l%rAttr(index_a2c_Sa_z,i)         ! zgcmxy  Atm state m
+        a2l%forc_u(g)       = a2c_l%rAttr(index_a2c_Sa_u,i)         ! forc_uxy  Atm state m/s
+        a2l%forc_v(g)       = a2c_l%rAttr(index_a2c_Sa_v,i)         ! forc_vxy  Atm state m/s
+        a2l%forc_th(g)      = a2c_l%rAttr(index_a2c_Sa_ptem,i)      ! forc_thxy Atm state K
+        a2l%forc_q(g)       = a2c_l%rAttr(index_a2c_Sa_shum,i)      ! forc_qxy  Atm state kg/kg
+        a2l%forc_pbot(g)    = a2c_l%rAttr(index_a2c_Sa_pbot,i)      ! ptcmxy  Atm state Pa
+        a2l%forc_t(g)       = a2c_l%rAttr(index_a2c_Sa_tbot,i)      ! forc_txy  Atm state K
+        a2l%forc_lwrad(g)   = a2c_l%rAttr(index_a2c_Faxa_lwdn,i)    ! flwdsxy Atm flux  W/m^2
         forc_rainc           = a2c_l%rAttr(index_a2c_Faxa_rainc,i)   ! mm/s
         forc_rainl           = a2c_l%rAttr(index_a2c_Faxa_rainl,i)   ! mm/s
         forc_snowc           = a2c_l%rAttr(index_a2c_Faxa_snowc,i)   ! mm/s
         forc_snowl           = a2c_l%rAttr(index_a2c_Faxa_snowl,i)   ! mm/s
-        a2lf%forc_solad(g,2) = a2c_l%rAttr(index_a2c_Faxa_swndr,i)   ! forc_sollxy  Atm flux  W/m^2
-        a2lf%forc_solad(g,1) = a2c_l%rAttr(index_a2c_Faxa_swvdr,i)   ! forc_solsxy  Atm flux  W/m^2
-        a2lf%forc_solai(g,2) = a2c_l%rAttr(index_a2c_Faxa_swndf,i)   ! forc_solldxy Atm flux  W/m^2
-        a2lf%forc_solai(g,1) = a2c_l%rAttr(index_a2c_Faxa_swvdf,i)   ! forc_solsdxy Atm flux  W/m^2
+        a2l%forc_solad(g,2) = a2c_l%rAttr(index_a2c_Faxa_swndr,i)   ! forc_sollxy  Atm flux  W/m^2
+        a2l%forc_solad(g,1) = a2c_l%rAttr(index_a2c_Faxa_swvdr,i)   ! forc_solsxy  Atm flux  W/m^2
+        a2l%forc_solai(g,2) = a2c_l%rAttr(index_a2c_Faxa_swndf,i)   ! forc_solldxy Atm flux  W/m^2
+        a2l%forc_solai(g,1) = a2c_l%rAttr(index_a2c_Faxa_swvdf,i)   ! forc_solsdxy Atm flux  W/m^2
 
         ! Determine optional receive fields
 
@@ -470,19 +468,19 @@ contains
 
         ! Determine derived quantities for required fields
 
-        a2ls%forc_hgt_u(g) = a2ls%forc_hgt(g)    !observational height of wind [m]
-        a2ls%forc_hgt_t(g) = a2ls%forc_hgt(g)    !observational height of temperature [m]
-        a2ls%forc_hgt_q(g) = a2ls%forc_hgt(g)    !observational height of humidity [m]
-        a2ls%forc_vp(g)    = a2ls%forc_q(g) * a2ls%forc_pbot(g) &
-                             / (0.622_r8 + 0.378_r8 * a2ls%forc_q(g))
-        a2ls%forc_rho(g)   = (a2ls%forc_pbot(g) - 0.378_r8 * a2ls%forc_vp(g)) &
-                             / (rair * a2ls%forc_t(g))
-        a2ls%forc_po2(g)   = o2_molar_const * a2ls%forc_pbot(g)
-        a2ls%forc_wind(g)  = sqrt(a2ls%forc_u(g)**2 + a2ls%forc_v(g)**2)
-        a2lf%forc_solar(g) = a2lf%forc_solad(g,1) + a2lf%forc_solai(g,1) + &
-                             a2lf%forc_solad(g,2) + a2lf%forc_solai(g,2)
-        a2lf%forc_rain(g)  = forc_rainc + forc_rainl
-        a2lf%forc_snow(g)  = forc_snowc + forc_snowl
+        a2l%forc_hgt_u(g) = a2l%forc_hgt(g)    !observational height of wind [m]
+        a2l%forc_hgt_t(g) = a2l%forc_hgt(g)    !observational height of temperature [m]
+        a2l%forc_hgt_q(g) = a2l%forc_hgt(g)    !observational height of humidity [m]
+        a2l%forc_vp(g)    = a2l%forc_q(g) * a2l%forc_pbot(g) &
+                            / (0.622_r8 + 0.378_r8 * a2l%forc_q(g))
+        a2l%forc_rho(g)   = (a2l%forc_pbot(g) - 0.378_r8 * a2l%forc_vp(g)) &
+                            / (rair * a2l%forc_t(g))
+        a2l%forc_po2(g)   = o2_molar_const * a2l%forc_pbot(g)
+        a2l%forc_wind(g)  = sqrt(a2l%forc_u(g)**2 + a2l%forc_v(g)**2)
+        a2l%forc_solar(g) = a2l%forc_solad(g,1) + a2l%forc_solai(g,1) + &
+                            a2l%forc_solad(g,2) + a2l%forc_solai(g,2)
+        a2l%forc_rain(g)  = forc_rainc + forc_rainl
+        a2l%forc_snow(g)  = forc_snowc + forc_snowl
         
         ! Determine derived quantities for optional fields
         ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
@@ -495,8 +493,8 @@ contains
         else
            co2_ppmv = co2_ppmv_const      
         end if
-        a2ls%forc_pco2(g) = co2_ppmv * 1.e-6_r8 * a2ls%forc_pbot(g) 
-        a2ls%forc_pc13o2(g) = co2_ppmv * c13ratio * 1.e-6_r8 * a2ls%forc_pbot(g)
+        a2l%forc_pco2(g) = co2_ppmv * 1.e-6_r8 * a2l%forc_pbot(g) 
+        a2l%forc_pc13o2(g) = co2_ppmv * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
 	 
         i=i+1
 

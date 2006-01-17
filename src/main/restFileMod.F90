@@ -722,7 +722,7 @@ contains
 #ifdef SPMD
     use spmdMod     , only : mpicom, MPI_LOGICAL
 #endif
-    use clm_varctl  , only : caseid, ctitle, version, allocate_all_vegpfts, fsurdat
+    use clm_varctl  , only : caseid, ctitle, version, fsurdat
     use clm_varpar  , only : numrad, rtmlon, rtmlat, nlevlak, nlevsno, nlevsoi
     use shr_sys_mod , only : shr_sys_getenv
     use decompMod   , only : get_proc_bounds, get_proc_global
@@ -811,10 +811,10 @@ contains
        str = 'Community Land Model: CLM3'
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'source', len_trim(str), trim(str)), subname)
 
-       str = '$Name$'
+       str = '$Name: clm3_expa_48_brnchT_fmesh13 $'
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'version', len_trim(str), trim(str)), subname)
 
-       str = '$Id$'
+       str = '$Id: restFileMod.F90,v 1.19.14.12.2.1 2005/11/14 17:15:28 tcraig Exp $'
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'revision_id', len_trim(str), trim(str)), subname)
 
        str = ctitle

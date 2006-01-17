@@ -42,6 +42,7 @@ contains
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
+    use clm_atmlnd  , only : clm_a2l
     use time_manager, only : get_step_size
     use clm_varcon  , only : hfus, tfrz, spval
 !
@@ -114,8 +115,8 @@ contains
 
     ! Assign local pointers to derived type gridcell members
 
-    forc_snow    => clm3%g%a2lf%forc_snow
-    forc_rain    => clm3%g%a2lf%forc_rain
+    forc_snow    => clm_a2l%forc_snow
+    forc_rain    => clm_a2l%forc_rain
 
     ! Assign local pointers to derived type column members
 

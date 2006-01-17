@@ -90,6 +90,7 @@ contains
 !
     integer , pointer :: plandunit(:)      ! landunit index associated with each pft
     integer , pointer :: clandunit(:)      ! landunit index associated with each column
+    integer,  pointer :: pgridcell(:)      ! gridcell associated with each pft
     integer , pointer :: itypelun(:) 	   ! landunit type
     logical , pointer :: lakpoi(:)         ! true => landunit is a lake point
     real(r8), pointer :: dz(:,:)           ! layer thickness depth (m)
@@ -235,10 +236,11 @@ contains
        ! timestep (caldaym1) so that the CNphenology routines know if this is 
        ! before or after the summer solstice.
 
-       decl    => clm3%g%l%c%cps%decl
-       latdeg  => clm3%g%l%c%p%latdeg 
-       dayl    => clm3%g%l%c%p%pepv%dayl
-       pcolumn => clm3%g%l%c%p%column
+       decl      => clm3%g%l%c%cps%decl
+       dayl      => clm3%g%l%c%p%pepv%dayl
+       pcolumn   => clm3%g%l%c%p%column
+       pgridcell => clm3%g%l%c%p%gridcell
+       latdeg    => clm3%g%latdeg 
 
        ! declination for previous timestep
        do c = begc, endc
@@ -253,7 +255,7 @@ contains
           c = pcolumn(p)
           l = plandunit(p)
           if (itypelun(l) == istsoil) then
-             lat = latdeg(p) * SHR_CONST_PI / 180._r8
+             lat = latdeg(pgridcell(p)) * SHR_CONST_PI / 180._r8
              temp = -(sin(lat)*sin(decl(c)))/(cos(lat) * cos(decl(c)))
              temp = min(1._r8,max(-1._r8,temp))
              dayl(p) = 2.0_r8 * 13750.9871_r8 * acos(temp) 

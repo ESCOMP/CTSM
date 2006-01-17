@@ -17,6 +17,7 @@ module CASAMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
   use clmtype
+  use clm_atmlnd  , only : clm_a2l
   use shr_sys_mod , only : shr_sys_flush
   use clm_varcon  , only : denh2o, hvap, istsoil, tfrz, spval
   use clm_varpar  , only : numpft, nlevsoi
@@ -256,7 +257,6 @@ contains
     use ncdio        , only : check_ret,check_dim,check_var
     use shr_const_mod, only : SHR_CONST_CDAY
     use decompMod    , only : get_proc_bounds, get_proc_global
-    use clm_varsur   , only : longxy, latixy
     use clm_varctl   , only : nsrest
     use clm_varpar   , only : lsmlon, lsmlat, max_pft_per_gcell
     use spmdMod      , only : masterproc
@@ -312,8 +312,8 @@ contains
     integer , pointer :: pfti(:)      ! initial pft on gridcell
     integer , pointer :: ltype(:)     ! landunit type for corresponding pft
     integer , pointer :: ivt(:)       ! pft vegetation type
-    integer , pointer :: ixy(:)    
-    integer , pointer :: jxy(:)    
+    integer , pointer :: ixy(:)       ! gridcell ixy
+    integer , pointer :: jxy(:)       ! gridcell jxy
     real(r8), pointer :: wtgcell(:)   ! pft weight relative to gridcell
     real(r8), pointer :: XSCpool(:)
     real(r8), pointer :: eff(:,:)
@@ -355,8 +355,8 @@ contains
     pfti       => clm3%g%pfti
     ltype      => clm3%g%l%itype
     ivt        => clm3%g%l%c%p%itype
-    ixy        => clm3%g%l%c%p%ixy
-    jxy        => clm3%g%l%c%p%jxy
+    ixy        => clm3%g%ixy
+    jxy        => clm3%g%jxy
     wtgcell    => clm3%g%l%c%p%wtgcell
     eff        => clm3%g%l%c%p%pps%eff  
     frac_donor => clm3%g%l%c%p%pps%frac_donor
@@ -537,8 +537,8 @@ contains
           ! CHECK !!!
           ! soil textures should be checked for soil depth
           ! These are now set in iniTimeConst
-          !sandfrac(p) = sand3d(ixy(p),jxy(p),1)/100.0
-          !clayfrac    = clay3d(ixy(p),jxy(p),1)/100.0
+          !sandfrac(p) = sand3d(ixy(pgridcell(p)),jxy(pgridcell(p)),1)/100.0
+          !clayfrac    = clay3d(ixy(pgridcell(p)),jxy(pgridcell(p)),1)/100.0
 
           eff(p, 1) =  0.45_r8    ! SLOW,PASSIVE
           eff(p, 2) =  0.45_r8    ! SLOW,SOILMIC
@@ -678,7 +678,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -700,7 +700,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -722,7 +722,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -744,7 +744,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -766,7 +766,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -788,7 +788,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -810,7 +810,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -832,7 +832,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -854,7 +854,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -876,7 +876,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -898,7 +898,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -920,7 +920,7 @@ contains
 !dir$ concurrent
 !cdir nodep
           do p = 1, nump
-             rglob(p) = rbufxy(ixy(p),jxy(p))
+             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
 #if (defined SPMD)
@@ -1056,7 +1056,7 @@ contains
     use decompMod    , only : get_proc_bounds, get_proc_global
     use ncdio        , only : check_ret,ncd_defvar,ncd_ioglobal,ncd_iolocal
     use subgridAveMod, only : p2g
-    use clm_varsur   , only : longxy, latixy, landfrac, landmask
+    use domainMod    , only : ldomain
     use clm_varpar   , only : lsmlon, lsmlat
     use spmdMod      , only : masterproc
 !
@@ -1167,12 +1167,12 @@ contains
        call check_ret(nf_enddef(ncid), subname)
     end if
 
-    lonvar(:) = longxy(1:lsmlon, 1)
-    latvar(:) = latixy(1,1:lsmlat)
+    lonvar(:) = ldomain%lonc(1:lsmlon, 1)
+    latvar(:) = ldomain%latc(1,1:lsmlat)
     call ncd_ioglobal(varname='longitude', data=lonvar, ncid=ncid, flag='write')
     call ncd_ioglobal(varname='latitude', data=latvar, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='landfrac', data=landfrac, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='landmask', data=landmask, ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='landfrac', data=ldomain%frac, ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='landmask', data=ldomain%mask, ncid=ncid, flag='write')
 
     allocate(histi(begp:endp, 1),histo(begg:endg,1),hist1do(begg:endg), stat=ier)
     if (ier /= 0) then
@@ -1432,7 +1432,7 @@ contains
     eflx_lh_vegt   => clm3%g%l%c%p%pef%eflx_lh_vegt    
     eflx_lh_grnd   => clm3%g%l%c%p%pef%eflx_lh_grnd    
     fsa            => clm3%g%l%c%p%pef%fsa
-    forc_pbot      => clm3%g%a2ls%forc_pbot
+    forc_pbot      => clm_a2l%forc_pbot
 
     ! implicit intent inout
     !============================================================
@@ -1714,8 +1714,8 @@ contains
     szc          => clm3%g%l%c%p%pps%szc
     h2osoi_liq   => clm3%g%l%c%cws%h2osoi_liq
     t_soisno     => clm3%g%l%c%ces%t_soisno
-    forc_rain    => clm3%g%a2lf%forc_rain
-    forc_snow    => clm3%g%a2lf%forc_snow
+    forc_rain    => clm_a2l%forc_rain
+    forc_snow    => clm_a2l%forc_snow
     btran        => clm3%g%l%c%p%pps%btran 
     tlai         => clm3%g%l%c%p%pps%tlai
     livefr       => clm3%g%l%c%p%pps%livefr
@@ -2067,8 +2067,8 @@ contains
     do f = 1,num_soilp
        p = filter_soilp(f)
 
-       !         i = clm3%g%l%c%p%ixy(p)
-       !         j = clm3%g%l%c%p%jxy(p)
+       !         i = clm3%g%l%c%p%ixy(pgridcell(p))
+       !         j = clm3%g%l%c%p%jxy(pgridcell(p))
 
        ! temperature dependence
        bgtemp(p) = (Q10 ** ((soilt(p) - 30.0_r8) / 10.0_r8))

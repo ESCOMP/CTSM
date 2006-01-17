@@ -54,10 +54,10 @@ PROGRAM program_off
   use atmdrvMod     , only : atmdrv
   use time_manager  , only : is_last_step, advance_timestep, get_nstep, get_step_size, &
                              get_curr_calday
-  use atmdrvMod     , only : atm_getgrid
+  use atmdrvMod     , only : atmdrv_init
   use initSurfAlbMod, only : initSurfAlb, do_initsurfalb 
   use driver        , only : driver1, driver2
-  use lnd2atmMod    , only : lnd2atm
+  use clm_atmlnd    , only : clm_map2gcell
   use abortutils    , only : endrun
 #if (defined SPMD)
   use spmdMod       , only : masterproc, iam, mpicom, spmd_init
@@ -198,7 +198,7 @@ PROGRAM program_off
   ! forcing and sets atmospheric grid to land grid.
   
   if (masterproc) write (6,*) 'Attempting to set up atmospheric grid '
-  call atm_getgrid()
+  call atmdrv_init()
   if (masterproc) write (6,*) 'Successfully set up atmospheric grid '
   
   ! -----------------------------------------------------------------
@@ -232,7 +232,7 @@ PROGRAM program_off
      ! Determine fields that would be sent to atm for diagnostic purposes
      ! When not in offline mode, this is called from clm_csmMod and lp_coupling
 
-     call lnd2atm()
+     call clm_map2gcell()
 
      ! Call land surface model driver2
 

@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/csh -fv
 #=======================================================================
 #
 #  test_batch.csh
@@ -104,8 +104,9 @@ switch ( $OS )
      if ( ! $?SCRIPT_DIR )then
        echo "ERROR:: The SCRIPT_DIR env variable is not set\!"
        echo "   Set SCRIPT_DIR to the location of test-model.pl"
-       echo "   On IBM SP use:"
+       echo "   On IBM SP use either:"
        echo "      env SCRIPT_DIR=`pwd` llsubmit $0"
+       echo "      setenv SCRIPT_DIR `pwd`; llsubmit $0"
        exit
      endif
      breaksw
@@ -160,8 +161,10 @@ setenv LAB "ncar"
 #
 echo "Starting test-model.pl"
 
-./test-model.pl -res T31      
-./test-model.pl -res T31cn    
-./test-model.pl -res T31cnall 
-./test-model.pl -res T31casa  
+ ./test-model.pl -res T31cnall -c /fis/cgd/ccr/tcraig/fm/clm3_expa_53
+ ./test-model.pl -res T31      -c /fis/cgd/ccr/tcraig/fm/clm3_expa_53
+ ./test-model.pl -res T31cn    -c /fis/cgd/ccr/tcraig/fm/clm3_expa_53
+ ./test-model.pl -res T31casa  -c /fis/cgd/ccr/tcraig/fm/clm3_expa_53
 #./test-model.pl -res T31dgvm  
+
+

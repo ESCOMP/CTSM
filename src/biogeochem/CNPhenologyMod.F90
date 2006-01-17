@@ -208,6 +208,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 ! local pointers to implicit in scalars
    integer , pointer :: ivt(:)                ! pft vegetation type
    integer , pointer :: pcolumn(:)            ! pft's column index
+   integer , pointer :: pgridcell(:)          ! pft's gridcell index
    real(r8), pointer :: latdeg(:)             ! latitude (radians)
    real(r8), pointer :: t_ref2m(:)            ! 2m air temperature (K)
    real(r8), pointer :: decl(:)               ! solar declination (radians)
@@ -310,7 +311,8 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    ! Assign local pointers to derived type arrays (in)
    ivt                           => clm3%g%l%c%p%itype
    pcolumn                       => clm3%g%l%c%p%column
-   latdeg                        => clm3%g%l%c%p%latdeg
+   pgridcell                     => clm3%g%l%c%p%gridcell
+   latdeg                        => clm3%g%latdeg
    t_ref2m                       => clm3%g%l%c%p%pes%t_ref2m
    decl                          => clm3%g%l%c%cps%decl
    t_soisno                      => clm3%g%l%c%ces%t_soisno
@@ -424,7 +426,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
          ! the constant 13750.9871 is the number of seconds per radian of hour-angle
 
          prev_dayl(p) = dayl(p)
-         lat = (SHR_CONST_PI/180._r8)*latdeg(p)
+         lat = (SHR_CONST_PI/180._r8)*latdeg(pgridcell(p))
          temp = -(sin(lat)*sin(decl(c)))/(cos(lat) * cos(decl(c)))
          temp = min(1._r8,max(-1._r8,temp))
          dayl(p) = 2.0_r8 * 13750.9871_r8 * acos(temp)

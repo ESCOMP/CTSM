@@ -48,6 +48,7 @@ subroutine CNNDeposition(num_soilc, filter_soilc)
 !
 ! !USES:
    use clmtype
+   use clm_atmlnd   , only : clm_a2l
 !
 ! !ARGUMENTS:
    implicit none
@@ -76,7 +77,7 @@ subroutine CNNDeposition(num_soilc, filter_soilc)
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays (in)
-   forc_ndep     => clm3%g%a2lf%forc_ndep
+   forc_ndep     => clm_a2l%forc_ndep
    gridcell      => clm3%g%l%c%gridcell
 
    ! Assign local pointers to derived type arrays (out)

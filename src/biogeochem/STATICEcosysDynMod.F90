@@ -503,8 +503,8 @@ contains
 
           do p = 1, nump
 
-             i = clm3%g%l%c%p%ixy(p)
-             j = clm3%g%l%c%p%jxy(p)
+             i = clm3%g%ixy(clm3%g%l%c%p%gridcell(p))
+             j = clm3%g%jxy(clm3%g%l%c%p%gridcell(p))
 
              ! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] pfts
              ! as determined in subroutine surfrd

@@ -45,7 +45,8 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use pftvarcon, only: noveg
+   use clm_atmlnd   , only: clm_a2l
+   use pftvarcon    , only: noveg
    use shr_const_mod, only: SHR_CONST_PI
 !
 ! !ARGUMENTS:
@@ -106,7 +107,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
     leafc                          => clm3%g%l%c%p%pcs%leafc
     deadstemc                      => clm3%g%l%c%p%pcs%deadstemc
     snowdp                         => clm3%g%l%c%cps%snowdp
-    forc_hgt_u                     => clm3%g%a2ls%forc_hgt_u
+    forc_hgt_u                     => clm_a2l%forc_hgt_u
     woody                          => pftcon%woody
     slatop                         => pftcon%slatop
     dsladlai                       => pftcon%dsladlai

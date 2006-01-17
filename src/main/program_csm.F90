@@ -59,7 +59,7 @@ PROGRAM program_csm
                              csm_initialize, csm_sendalb, dorecv, dosend  
   use initSurfAlbMod, only : initSurfAlb, do_initsurfalb 
   use driver        , only : driver1, driver2
-  use lnd2atmMod    , only : lnd2atm
+  use clm_atmlnd    , only : clm_map2gcell
 #if (defined SPMD)
   use spmdMod       , only : masterproc, iam, spmd_init, mpicom
 #else
@@ -197,7 +197,7 @@ PROGRAM program_csm
 
   ! On initial timestep, determine gridcell averaged properties to send to coupler 
 
-  if (nsrest == 0 ) call lnd2atm(init=.true.)
+  if (nsrest == 0 ) call clm_map2gcell(init=.true.)
 
   ! Send first land model data to flux coupler.
 
@@ -246,7 +246,7 @@ PROGRAM program_csm
      
      ! Determine gridcell averaged properties to send to coupler (fill in l2as and l2af)
 
-     call lnd2atm()
+     call clm_map2gcell()
 
      ! Average fluxes over interval if appropriate
      ! Surface states sent to the flux coupler states are not time averaged

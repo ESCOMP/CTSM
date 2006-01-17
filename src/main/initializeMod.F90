@@ -57,19 +57,28 @@ contains
     use shr_sys_mod     , only : shr_sys_flush
     use spmdMod         , only : masterproc
     use clm_varpar      , only : lsmlon, lsmlat, maxpatch
-    use clm_varctl      , only : finidat, fpftdyn, fndepdyn, nsrest 
+    use clm_varctl      , only : finidat, fsurdat, fatmgrid, fpftdyn, &
+                                 fndepdyn, nsrest 
     use clmtypeInitMod  , only : initClmtype
+    use clm_atmlnd      , only : init_atm2lnd_type, init_lnd2atm_type, &
+                                 gridmap_a2l, gridmap_l2a, &
+                                 clm_a2l, clm_l2a, atm_a2l, atm_l2a
     use initGridCellsMod, only : initGridCells
+    use domainMod       , only : ldomain, adomain
+    use areaMod         , only : gridmap_setmapsFM, gridmap_setptrs
+    use decompMod       , only : get_proc_clumps, get_clump_bounds, &
+                                 get_proc_bounds, get_proc_bounds_atm, &
+                                 initDecomp
     use controlMod      , only : control_init, control_print
     use filterMod       , only : allocFilters, setFilters
     use pftdynMod       , only : pftdyn_init, pftdyn_interp
-    use decompMod       , only : initDecomp, get_proc_clumps, get_clump_bounds, get_proc_bounds
     use histFldsMod     , only : initHistFlds
     use histFileMod     , only : htapes_build
-    use restFileMod     , only : restFile_getfile, restFile_open, restFile_close, &
+    use restFileMod     , only : restFile_getfile, &
+                                 restFile_open, restFile_close, &
                                  restFile_read, restFile_read_binary
     use accFldsMod      , only : initAccFlds, initAccClmtype
-    use surfFileMod     , only : surfrd
+    use surfFileMod     , only : surfrd,surfrd_get_grid
     use mkarbinitMod    , only : mkarbinit
     use ndepFileMod     , only : ndepdyn_init, ndepdyn_interp
 #if (defined DGVM)
@@ -117,13 +126,17 @@ contains
     integer  :: ncsec                 ! current time of day [seconds]
     integer  :: nc                    ! clump index
     integer  :: nclumps               ! number of clumps on this processor
-    integer  :: begp, endp            ! clump beginning and ending pft indices
-    integer  :: begc, endc            ! clump beginning and ending column indices
-    integer  :: begl, endl            ! clump beginning and ending landunit indices
-    integer  :: begg, endg            ! clump beginning and ending gridcell indices
+    integer  :: begp, endp            ! clump beg and ending pft indices
+    integer  :: begc, endc            ! clump beg and ending column indices
+    integer  :: begl, endl            ! clump beg and ending landunit indices
+    integer  :: begg, endg            ! clump beg and ending gridcell indices
+    integer  :: begg_atm, endg_atm    ! proc beg and ending gridcell indices
     integer  :: ier                   ! error status
     integer , allocatable :: vegxy(:,:,:) ! vegetation type
     real(r8), allocatable :: wtxy(:,:,:)  ! subgrid weights
+    integer , pointer     :: n_ovr(:,:)   ! num of cells for each dst
+    integer , pointer     :: i_ovr(:,:,:) ! i index, map input cell
+    integer , pointer     :: j_ovr(:,:,:) ! j index, map input cell
     character(len=256) :: fnamer          ! name of netcdf restart file 
     character(len=256) :: pnamer          ! full pathname of netcdf restart file
     character(len=256) :: fnamer_bin      ! name of binary restart file
@@ -139,6 +152,7 @@ contains
     if (masterproc) then
        write (6,*) 'Attempting to initialize the land model .....'
        write (6,*)
+       call shr_sys_flush(6)
     endif
     call control_init ()
     if (masterproc) call control_print()
@@ -154,18 +168,37 @@ contains
        write(6,*)'initialize allocation error'; call endrun()
     endif
 
-    ! Read surface dataset and set up vegetation type [vegxy] and weight [wtxy] arrays
-    ! for [maxpatch] subgrid patches.
+    ! Set coarse and fine grids
+
+    call surfrd_get_grid(ldomain, fsurdat)
+    call surfrd_get_grid(adomain, fatmgrid)
+
+    ! Set the a2l and l2a maps
+
+    call gridmap_setmapsFM(adomain,ldomain,gridmap_a2l,gridmap_l2a)
     
-    call surfrd (vegxy, wtxy)
+    ! Read surface dataset and set up vegetation type [vegxy] and 
+    ! weight [wtxy] arrays for [maxpatch] subgrid patches.
     
+    call surfrd (vegxy, wtxy, fsurdat)
+
     ! Initialize clump and processor decomposition 
-    
-    call initDecomp(wtxy)   
-    
+    ! tcx: FIX - pass down n_ovr, i_ovr, j_ovr due to circular dependency
+
+    call gridmap_setptrs(gridmap_l2a,n_ovr=n_ovr,i_ovr=i_ovr,j_ovr=j_ovr)
+    call initDecomp(wtxy, n_ovr, i_ovr, j_ovr)   
+
     ! Allocate memory and initialize values of clmtype data structures
 
     call initClmtype()
+
+    call get_proc_bounds    (begg    , endg)
+    call init_atm2lnd_type  (begg    , endg    , clm_a2l)
+    call init_lnd2atm_type  (begg    , endg    , clm_l2a)
+
+    call get_proc_bounds_atm(begg_atm, endg_atm)
+    call init_atm2lnd_type  (begg_atm, endg_atm, atm_a2l)
+    call init_lnd2atm_type  (begg_atm, endg_atm, atm_l2a)
 
     ! Build hierarchy and topological info for derived typees
 

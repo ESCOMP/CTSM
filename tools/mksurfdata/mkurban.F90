@@ -1,272 +1,166 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: mkurban
+! !IROUTINE: mkurban
 !
 ! !INTERFACE:
-subroutine mkurban (lsmlon, lsmlat, furb, ndiag, urb_o)
+subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 !
 ! !DESCRIPTION:
-! make %urban
+! make percent urban
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
   use fileutils   , only : getfil
-  use mkvarpar  
-  use mkvarsur  
-  use mkvarctl  
-  use areaMod     
+  use domainMod   , only : domain_type,domain_clean,domain_setptrs
+  use creategridMod, only : read_domain
+  use mkvarpar	
+  use mkvarsur    , only : ldomain
+  use mkvarctl    
+  use areaMod     , only : areaini,areaave,gridmap_type,gridmap_clean  
   use ncdio
 !
 ! !ARGUMENTS:
   implicit none
-  integer, intent(in) :: lsmlon, lsmlat           ! clm grid resolution
-  character(len=*), intent(in) :: furb            ! input urban dataset file name
-  integer , intent(in)  :: ndiag                  ! unit number for diagnostic output
-  real(r8), intent(out) :: urb_o(lsmlon,lsmlat)   ! percent urban on output grid
+  integer , intent(in) :: lsmlon, lsmlat          ! clm grid resolution
+  character(len=*), intent(in) :: fname           ! input dataset file name
+  integer , intent(in) :: ndiag                   ! unit number for diag out
+  real(r8), intent(out):: urbn_o(lsmlon,lsmlat)    ! output grid: %urban
 !
 ! !CALLED FROM:
-! subroutine mksrfdat in module srfdatMod
+! subroutine mksrfdat in module mksrfdatMod
 !
 ! !REVISION HISTORY:
-! Author: Sam Levis
+! Author: Mariana Vertenstein
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
-  integer, parameter :: maxovr = 100000
-  character(len=256) locfn                  ! local dataset file name
-  integer  :: nlon_i                        ! input grid : longitude points (read in)
-  integer  :: nlat_i                        ! input grid : latitude  points (read in)
-  integer  :: ncid,dimid,varid              ! input netCDF id's
-  integer  :: ier                           ! error status
-  real(r8) :: wt                            ! overlap weight
-  real(r8) :: gurb_o                        ! output grid: global area urban
-  real(r8) :: garea_o                       ! output grid: global area
-  real(r8) :: gurb_i                        ! input grid: global area urban
-  real(r8) :: garea_i                       ! input grid: global area
-  integer  :: ii                            ! longitude index for input grid
-  integer  :: io                            ! longitude index for grid
-  integer  :: ji                            ! latitude  index for input grid
-  integer  :: jo                            ! latitude  index for grid
-  integer  :: k,n                           ! indices
-  real(r8) :: edge_i(4)                     ! input grid: N,E,S,W edges (degrees)
-  real(r8), allocatable :: latixy_i(:,:)    ! input grid: latitude (degrees)
-  real(r8), allocatable :: longxy_i(:,:)    ! input grid: longitude (degrees)
-  integer , allocatable :: numlon_i(:)      ! input grid: number longitude points by lat
-  real(r8), allocatable :: lon_i(:,:)       ! input grid: longitude, west edge (degrees)
-  real(r8), allocatable :: lon_i_offset(:,:)! input grid: offset longitude, west edge (degrees)
-  real(r8), allocatable :: lat_i(:)         ! input grid: latitude, south edge (degrees)
-  real(r8), allocatable :: area_i(:,:)      ! input grid: cell area
-  real(r8), allocatable :: mask_i(:,:)      ! input grid: mask (0, 1)
-  real(r8), allocatable :: landmask_i(:,:)  ! input grid: fraction land
-  real(r8), allocatable :: urb_i(:,:)       ! input grid: percent urban
-  real(r8) :: mask_o                        ! output grid: mask (0, 1)
-  integer  :: novr_i2o                      ! number of overlapping input cells
-  integer  :: iovr_i2o(maxovr)              ! lon index of overlap input cell
-  integer  :: jovr_i2o(maxovr)              ! lat index of overlap input cell
-  real(r8) :: wovr_i2o(maxovr)              ! weight    of overlap input cell
-  real(r8) :: offset                        ! used to shift x-grid 360 degrees
-  real(r8) :: fld_o(lsmlon,lsmlat)          ! output grid: dummy field
-  real(r8) :: fld_i                         ! input grid: dummy field
-  real(r8) :: sum_fldo                      ! global sum of dummy output field
-  real(r8) :: sum_fldi                      ! global sum of dummy input field
-  real(r8) :: relerr = 0.00001              ! max error: sum overlap weights ne 1
-  character(len=32) :: subname = 'mkurban'  ! subroutine name
+  integer  :: nlon_i                          ! input grid : lon points
+  integer  :: nlat_i                          ! input grid : lat points
+
+  type(domain_type)     :: tdomain            ! local domain
+  type(gridmap_type)    :: tgridmap           ! local gridmap
+
+  real(r8), allocatable :: urbn_i(:,:)        ! input grid: percent urbn
+  real(r8), allocatable :: mask_i(:,:)        ! input grid: mask (0, 1)
+  real(r8), allocatable :: mask_o(:,:)        ! output grid: mask (0, 1)
+  real(r8), allocatable :: fld_i(:,:)         ! input grid: dummy field
+  real(r8), allocatable :: fld_o(:,:)         ! output grid: dummy field
+  real(r8) :: sum_fldi                        ! global sum of dummy input fld
+  real(r8) :: sum_fldo                        ! global sum of dummy output fld
+  real(r8) :: gurbn_i                          ! input  grid: global urbn
+  real(r8) :: garea_i                         ! input  grid: global area
+  real(r8) :: gurbn_o                          ! output grid: global urbn
+  real(r8) :: garea_o                         ! output grid: global area
+
+  integer  :: ii,ji                           ! indices
+  integer  :: io,jo                           ! indices
+  integer  :: k,n,m                           ! indices
+  integer  :: ncid,dimid,varid                ! input netCDF id's
+  integer  :: ier                             ! error status
+  real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
+  character(len=256) locfn                    ! local dataset file name
+  character(len=32) :: subname = 'mkurban'
 !-----------------------------------------------------------------------
 
   write (6,*) 'Attempting to make %urban .....'
   call shr_sys_flush(6)
 
-  ! Obtain input grid info
+  ! -----------------------------------------------------------------
+  ! Read input file
+  ! -----------------------------------------------------------------
 
-  call getfil (furb, locfn, 0)
+  ! Obtain input grid info, read local fields
+
+  call getfil (fname, locfn, 0)
+
+  call read_domain(tdomain,locfn)
+  call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
+
   call check_ret(nf_open(locfn, 0, ncid), subname)
 
-  call check_ret(nf_inq_dimid  (ncid, 'lon', dimid), subname)
-  call check_ret(nf_inq_dimlen (ncid, dimid, nlon_i), subname)
-
-  call check_ret(nf_inq_dimid  (ncid, 'lat', dimid), subname)
-  call check_ret(nf_inq_dimlen (ncid, dimid, nlat_i), subname)
-
-  allocate (landmask_i(nlon_i,nlat_i), latixy_i(nlon_i,nlat_i), longxy_i(nlon_i,nlat_i),&
-       numlon_i(nlat_i), lon_i(nlon_i+1,nlat_i), lon_i_offset(nlon_i+1,nlat_i), &
-       lat_i(nlat_i+1), area_i(nlon_i,nlat_i), mask_i(nlon_i,nlat_i), &
-       urb_i(nlon_i,nlat_i), stat=ier)
+  allocate(urbn_i(nlon_i,nlat_i), stat=ier)
   if (ier/=0) call abort()
 
-  call check_ret(nf_inq_varid (ncid, 'LATIXY', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, latixy_i), subname)
-
-  call check_ret(nf_inq_varid (ncid, 'LONGXY', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, longxy_i), subname)
-
-  call check_ret(nf_inq_varid (ncid, 'EDGEN', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, edge_i(1)), subname)
-
-  call check_ret(nf_inq_varid (ncid, 'EDGEE', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, edge_i(2)), subname)
-
-  call check_ret(nf_inq_varid (ncid, 'EDGES', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, edge_i(3)), subname)
-
-  call check_ret(nf_inq_varid (ncid, 'EDGEW', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, edge_i(4)), subname)
-
-  ! Obtain input data
-
-  call check_ret(nf_inq_varid (ncid, 'LANDMASK', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, landmask_i), subname)
-
   call check_ret(nf_inq_varid (ncid, 'PCT_URBAN', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, urb_i), subname)
+  call check_ret(nf_get_var_double (ncid, varid, urbn_i), subname)
 
   call check_ret(nf_close(ncid), subname)
 
-  ! -----------------------------------------------------------------
-  ! Map data from input grid to land model grid. Get:
-  ! -----------------------------------------------------------------
+  ! Compute local fields _o
 
-  ! Determine input grid cell and cell areas
+  allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat))
+  allocate( fld_i(nlon_i,nlat_i), fld_o(lsmlon,lsmlat))
 
-  numlon_i(:) = nlon_i
+  mask_i = 1.0_r8
+  mask_o = 1.0_r8
+  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
-  call celledge (nlat_i    , nlon_i    , numlon_i  , longxy_i  ,  &
-                 latixy_i  , edge_i(1) , edge_i(2) , edge_i(3) ,  &
-                 edge_i(4) , lat_i     , lon_i     , area_i)
+  mask_i = float(tdomain%mask(:,:))
+  call areaave(mask_i,mask_o,tgridmap)
 
+  call gridmap_clean(tgridmap)
+  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
+
+  ! Area-average percent cover on input grid to output grid 
+  ! and correct according to land landmask
+  ! Note that percent cover is in terms of total grid area.
+
+  call areaave(urbn_i,urbn_o,tgridmap)
+
+  do jo = 1, ldomain%nj
+  do io = 1, ldomain%numlon(jo)
+        if (urbn_o(io,jo) < 5.) urbn_o(io,jo) = 0.
+  enddo
+  enddo
+
+  ! Check for conservation
+
+  do jo = 1, ldomain%nj
+  do io = 1, ldomain%numlon(jo)
+     if ((urbn_o(io,jo)) > 100.000001_r8) then
+        write (6,*) 'MKURBAN error: urban = ',urbn_o(io,jo), &
+                ' greater than 100.000001 for column, row = ',io,jo
+        call shr_sys_flush(6)
+        stop
+     end if
+  enddo
+  enddo
+
+  ! Global sum of output field -- must multiply by fraction of
+  ! output grid that is land as determined by input grid
+
+  sum_fldi = 0.0_r8
   do ji = 1, nlat_i
-     do ii = 1, numlon_i(ji)
-        mask_i(ii,ji) = 1.
-     end do
+  do ii = 1, nlon_i
+    fld_i(ii,ji) = ((ji-1)*nlon_i + ii) * tdomain%mask(ii,ji)
+    sum_fldi = sum_fldi + tdomain%area(ii,ji) * fld_i(ii,ji)
+  enddo
+  enddo
+
+  call areaave(fld_i,fld_o,tgridmap)
+
+  sum_fldo = 0.
+  do jo = 1, ldomain%nj
+  do io = 1, ldomain%numlon(jo)
+     fld_o(io,jo) = fld_o(io,jo)*mask_o(io,jo)
+     sum_fldo = sum_fldo + ldomain%area(io,jo) * fld_o(io,jo)
   end do
-
-  ! Shift x-grid to locate periodic grid intersections. This
-  ! assumes that all lon_i(1,j) have the same value for all
-  ! latitudes j and that the same holds for lon_o(1,j)
-
-  if (lon_i(1,1) < lonw(1,1)) then
-     offset = 360.0
-  else
-     offset = -360.0
-  end if
-
-  do ji = 1, nlat_i
-     do ii = 1, numlon_i(ji) + 1
-        lon_i_offset(ii,ji) = lon_i(ii,ji) + offset
-     end do
   end do
-
-  ! Process each cell on land model grid
-  ! novr_i2o - number of input grid cells that overlap each land grid cell
-  ! iovr_i2o - longitude index of overlapping input grid cell
-  ! jovr_i2o - latitude  index of overlapping input grid cell
-  ! wovr_i2o - fraction of land grid cell overlapped by input grid cell
-
-!$OMP PARALLEL DO PRIVATE (io,jo,ii,ji,n,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i)
-#if !defined (USE_OMP)
-!CSD$ PARALLEL DO PRIVATE (io,jo,ii,ji,n,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i)
-#endif
-  do jo = 1, lsmlat
-     do io = 1, numlon(jo)
-
-        ! Determine areas of overlap and indices
-
-        mask_o = 1.
-
-        call areaini_point (io        , jo          , nlon_i  , nlat_i  , numlon_i , &
-                           lon_i      , lon_i_offset, lat_i   , area_i  , mask_i   , &
-                           lsmlon     , lsmlat      , numlon  , lonw    , lats     , &
-                           area(io,jo), mask_o      , novr_i2o, iovr_i2o, jovr_i2o , &
-                           wovr_i2o   , maxovr)
-
-        mask_o = 0.
-        do n = 1, novr_i2o        !overlap cell index
-           ii = iovr_i2o(n)       !lon index (input grid) of overlap cell
-           ji = jovr_i2o(n)       !lat index (input grid) of overlap cell
-           mask_o = mask_o + landmask_i(ii,ji) * wovr_i2o(n)
-        end do
-
-        call areaini_point (io        , jo          , nlon_i  , nlat_i  , numlon_i  , &
-                           lon_i      , lon_i_offset, lat_i   , area_i  , landmask_i, &
-                           lsmlon     , lsmlat      , numlon  , lonw    , lats      , &
-                           area(io,jo), mask_o      , novr_i2o, iovr_i2o, jovr_i2o  , &
-                           wovr_i2o   , maxovr)
-
-        ! Make area average
-
-        urb_o(io,jo) = 0.
-        do n = 1, novr_i2o   !overlap cell index
-           ii = iovr_i2o(n)  !lon index (input grid) of overlap cell
-           ji = jovr_i2o(n)  !lat index (input grid) of overlap cell
-           urb_o(io,jo) = urb_o(io,jo) + urb_i(ii,ji) * wovr_i2o(n)
-        end do
-
-        ! Corrections: set oceans to zero and exclude areas less than 5% of cell
-
-        if (landmask(io,jo) == 0) then
-           urb_o(io,jo) = 0.
-        else
-           if (urb_o(io,jo) < 5.) urb_o(io,jo) = 0.
-        end if
-
-        ! Error checks
-
-        if (urb_o(io,jo) > 100.000001_r8) then
-           write (6,*) 'MKURBAN error: urban = ',urb_o(io,jo), &
-                ' greater than 100 for column, row = ',io,jo
-           call abort()
-        end if
-
-        ! Global sum of output field -- must multiply by fraction of
-        ! output grid that is land as determined by input grid
-
-        fld_o(io,jo) = 0.
-        do n = 1, novr_i2o
-           ii = iovr_i2o(n)
-           ji = jovr_i2o(n)
-           fld_i = ((ji-1)*nlon_i + ii) * landmask_i(ii,ji)
-           fld_o(io,jo) = fld_o(io,jo) + wovr_i2o(n) * fld_i * mask_o
-        end do
-
-     end do  !end of output longitude loop
-  end do     !end of output latitude  loop
-#if !defined (USE_OMP)
-!CSD$ END PARALLEL DO
-#endif
-!$OMP END PARALLEL DO
 
   ! -----------------------------------------------------------------
   ! Error check1
   ! Compare global sum fld_o to global sum fld_i.
   ! -----------------------------------------------------------------
 
-  ! This check is true only if both grids span the same domain.
-  ! To obtain global sum of input field must multiply by
-  ! fraction of input grid that is land as determined by input grid
-
-  sum_fldo = 0.
-  do jo = 1,lsmlat
-     do io = 1,numlon(jo)
-        sum_fldo = sum_fldo + area(io,jo) * fld_o(io,jo)
-     end do
-  end do
-
-  sum_fldi = 0.
-  do ji = 1, nlat_i
-     do ii = 1, numlon_i(ji)
-        fld_i = ((ji-1)*nlon_i + ii) * landmask_i(ii,ji)
-        sum_fldi = sum_fldi + area_i(ii,ji) * fld_i
-     end do
-  end do
-
   if ( mksrf_fgrid_global /= ' ') then
      if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-        write (6,*) 'MKGLACIER error: input field not conserved'
+        write (6,*) 'MKURBAN error: input field not conserved'
         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
         write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-        call abort()
+        stop
      end if
   end if
 
@@ -275,31 +169,31 @@ subroutine mkurban (lsmlon, lsmlat, furb, ndiag, urb_o)
   ! Compare global areas on input and output grids
   ! -----------------------------------------------------------------
 
-  ! input grid
+  ! Input grid
 
-  gurb_i = 0.
+  gurbn_i = 0.
   garea_i = 0.
 
   do ji = 1, nlat_i
-     do ii = 1, nlon_i
-        garea_i = garea_i + area_i(ii,ji)
-        gurb_i = gurb_i + urb_i(ii,ji)*area_i(ii,ji)/100.
-     end do
+  do ii = 1, nlon_i
+     garea_i = garea_i + tdomain%area(ii,ji)
+     gurbn_i = gurbn_i + urbn_i(ii,ji)*tdomain%area(ii,ji)/100.
+  end do
   end do
 
-  ! output grid
+  ! Output grid
 
-  gurb_o = 0.
+  gurbn_o = 0.
   garea_o = 0.
 
-  do jo = 1, lsmlat
-     do io = 1, numlon(jo)
-        garea_o = garea_o + area(io,jo)
-        gurb_o = gurb_o + urb_o(io,jo)*area(io,jo)/100.
-     end do
+  do jo = 1, ldomain%nj
+  do io = 1, ldomain%numlon(jo)
+     garea_o = garea_o + ldomain%area(io,jo)
+     gurbn_o = gurbn_o + urbn_o(io,jo)*ldomain%area(io,jo)/100.
+  end do
   end do
 
-  ! comparison
+  ! Diagnostic output
 
   write (ndiag,*)
   write (ndiag,'(1x,70a1)') ('=',k=1,70)
@@ -313,7 +207,7 @@ subroutine mkurban (lsmlon, lsmlat, furb, ndiag, urb_o)
              1x,'                 10**6 km**2      10**6 km**2   ')
   write (ndiag,'(1x,70a1)') ('.',k=1,70)
   write (ndiag,*)
-  write (ndiag,2002) gurb_i*1.e-06,gurb_o*1.e-06
+  write (ndiag,2002) gurbn_i*1.e-06,gurbn_o*1.e-06
   write (ndiag,2004) garea_i*1.e-06,garea_o*1.e-06
 2002 format (1x,'urban       ',f14.3,f17.3)
 2004 format (1x,'all surface ',f14.3,f17.3)
@@ -322,9 +216,10 @@ subroutine mkurban (lsmlon, lsmlat, furb, ndiag, urb_o)
      k = lsmlat/2
      write (ndiag,*)
      write (ndiag,*) 'For reference the area on the output grid of a cell near the equator is: '
-     write (ndiag,'(f10.3,a14)')area(1,k)*1.e-06,' x 10**6 km**2'
+     write (ndiag,'(f10.3,a14)')ldomain%area(1,k)*1.e-06,' x 10**6 km**2'
      write (ndiag,*)
   endif
+  call shr_sys_flush(ndiag)
 
   write (6,*) 'Successfully made %urban'
   write (6,*)
@@ -332,7 +227,11 @@ subroutine mkurban (lsmlon, lsmlat, furb, ndiag, urb_o)
 
   ! Deallocate dynamic memory
 
-  deallocate (latixy_i, longxy_i, numlon_i, lon_i, lon_i_offset, lat_i, &
-       area_i, mask_i, landmask_i, urb_i) 
+  call domain_clean(tdomain)
+  call gridmap_clean(tgridmap)
+  deallocate (urbn_i)
+  deallocate (mask_i,mask_o)
+  deallocate ( fld_i, fld_o)
 
 end subroutine mkurban
+

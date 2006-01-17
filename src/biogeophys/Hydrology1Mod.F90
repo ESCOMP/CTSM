@@ -53,6 +53,7 @@ contains
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
+    use clm_atmlnd   , only : clm_a2l
     use clm_varcon   , only : tfrz, istice, istwet, istsoil
     use FracWetMod   , only : FracWet
     use time_manager , only : get_step_size
@@ -159,11 +160,11 @@ contains
     ! Assign local pointers to derived type members (gridcell-level)
 
     pgridcell          => clm3%g%l%c%p%gridcell
-    forc_rain          => clm3%g%a2lf%forc_rain
-    forc_snow          => clm3%g%a2lf%forc_snow
-    forc_t             => clm3%g%a2ls%forc_t
+    forc_rain          => clm_a2l%forc_rain
+    forc_snow          => clm_a2l%forc_snow
+    forc_t             => clm_a2l%forc_t
 #if (defined OFFLINE)
-    flfall             => clm3%g%a2ls%flfall
+    flfall             => clm_a2l%flfall
 #endif
 
     ! Assign local pointers to derived type members (landunit-level)

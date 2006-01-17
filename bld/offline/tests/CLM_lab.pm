@@ -22,7 +22,7 @@ my %CASE_DIR_dao;
 my %CASE_DIR_nersc;
 my %CASE_DIR_llnl;
 my %CASE_DIR_default;
-$CASE_DIR_ncar{'default'} = "/ptmp/$LOGNAME";
+$CASE_DIR_ncar{'default'} = "/ptmp/$LOGNAME/clmtest";
 $CASE_DIR_ncar{'solaris'} = "/net/flagstaf/export/scratch/$LOGNAME";
 $CASE_DIR_ncar{'linux'} = "/scratch/cluster/$LOGNAME";
 $CASE_DIR_default{'default'} = "\$MODEL_CFGDIR";

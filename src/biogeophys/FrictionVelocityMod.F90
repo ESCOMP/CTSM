@@ -56,6 +56,7 @@ contains
 !
 ! !USES:
    use clmtype
+   use clm_atmlnd, only : clm_a2l
    use clm_varcon, only : vkc
 !
 ! !ARGUMENTS:
@@ -124,10 +125,10 @@ contains
    ! Assign local pointers to derived type members (gridcell-level)
 
    pgridcell  => clm3%g%l%c%p%gridcell
-   forc_hgt   => clm3%g%a2ls%forc_hgt
-   forc_hgt_u => clm3%g%a2ls%forc_hgt_u
-   forc_hgt_t => clm3%g%a2ls%forc_hgt_t
-   forc_hgt_q => clm3%g%a2ls%forc_hgt_q
+   forc_hgt   => clm_a2l%forc_hgt
+   forc_hgt_u => clm_a2l%forc_hgt_u
+   forc_hgt_t => clm_a2l%forc_hgt_t
+   forc_hgt_q => clm_a2l%forc_hgt_q
 
    ! Assign local pointers to derived type members (pft-level)
 

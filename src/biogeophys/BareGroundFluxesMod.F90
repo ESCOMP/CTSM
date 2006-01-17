@@ -44,6 +44,7 @@ contains
 !
 ! !USES:
     use clmtype
+    use clm_atmlnd         , only : clm_a2l
     use clm_varpar         , only : nlevsoi
     use clm_varcon         , only : cpair, vkc, grav
     use shr_const_mod      , only : SHR_CONST_RGAS
@@ -169,14 +170,14 @@ contains
 
     ! Assign local pointers to derived type members (gridcell-level)
 
-    forc_th => clm3%g%a2ls%forc_th
-    forc_hgt_u => clm3%g%a2ls%forc_hgt_u
-    forc_pbot => clm3%g%a2ls%forc_pbot
-    forc_t => clm3%g%a2ls%forc_t
-    forc_u => clm3%g%a2ls%forc_u
-    forc_v => clm3%g%a2ls%forc_v
-    forc_rho => clm3%g%a2ls%forc_rho
-    forc_q => clm3%g%a2ls%forc_q
+    forc_th    => clm_a2l%forc_th
+    forc_hgt_u => clm_a2l%forc_hgt_u
+    forc_pbot  => clm_a2l%forc_pbot
+    forc_t     => clm_a2l%forc_t
+    forc_u     => clm_a2l%forc_u
+    forc_v     => clm_a2l%forc_v
+    forc_rho   => clm_a2l%forc_rho
+    forc_q     => clm_a2l%forc_q
 
     ! Assign local pointers to derived type members (column-level)
 

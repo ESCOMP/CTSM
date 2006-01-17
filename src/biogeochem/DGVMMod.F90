@@ -307,7 +307,7 @@ contains
     use ncdio
     use decompMod    , only : get_proc_bounds, get_proc_global
     use clm_varpar   , only : lsmlon, lsmlat, maxpatch_pft
-    use clm_varsur   , only : fullgrid, landmask, longxy, latixy, lsmedge, numlon
+    use domainMod    , only : ldomain
     use clm_varctl   , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
                               frivinp_rtm, archive_dir, mss_wpass, mss_irt
     use clm_varcon   , only : spval
@@ -509,13 +509,11 @@ contains
        
        ! Define coordinate variables (including time)
        
-       if (fullgrid) then
-          call ncd_defvar(ncid=ncid, varname='lon', xtype=ncprec, dim1name='lon', &
-               long_name='coordinate longitude', units='degrees_east')
+       call ncd_defvar(ncid=ncid, varname='lon', xtype=ncprec, dim1name='lon',&
+            long_name='coordinate longitude', units='degrees_east')
           
-          call ncd_defvar(ncid=ncid, varname='lat', xtype=ncprec, dim1name='lat', &
-               long_name='coordinate latitude', units='degrees_north')
-       end if
+       call ncd_defvar(ncid=ncid, varname='lat', xtype=ncprec, dim1name='lat',&
+            long_name='coordinate latitude', units='degrees_north')
 
        call get_curr_time(mdcur, mscur)
        call get_ref_date(yr, mon, day, nbsec)
@@ -546,19 +544,11 @@ contains
 
        ! Define surface grid (coordinate variables, latitude, longitude, surface type).
        
-       if (fullgrid) then
-          call ncd_defvar(ncid=ncid, varname='longxy', xtype=ncprec, dim1name='lon', dim2name='lat', &
-               long_name='longitude', units='degrees_east')
-       else
-          call ncd_defvar(ncid=ncid, varname='rlongxy', xtype=ncprec, dim1name='lon', dim2name='lat', &
-               long_name='rlongitude', units='degrees_east')
-       end if
+       call ncd_defvar(ncid=ncid, varname='longxy', xtype=ncprec, dim1name='lon', dim2name='lat', &
+            long_name='longitude', units='degrees_east')
        
        call ncd_defvar(ncid=ncid, varname='latixy', xtype=ncprec, dim1name='lon', dim2name='lat', &
             long_name='latitude', units='degrees_north')
-       
-       call ncd_defvar(ncid=ncid, varname='numlon', xtype=nf_int, dim1name='lat', &
-            long_name='number of longitudes at each latitude')
        
        call ncd_defvar(ncid=ncid, varname='landmask', xtype=nf_int, dim1name='lon', dim2name='lat', &
             long_name='land/ocean mask (0.=ocean and 1.=land)')
@@ -645,25 +635,20 @@ contains
     ! Write variables
     ! -----------------------------------------------------------------------
 
-    call ncd_ioglobal(varname='edgen', data=lsmedge(1), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edgee', data=lsmedge(2), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edges', data=lsmedge(3), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edgew', data=lsmedge(4), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgen', data=ldomain%edges(1), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgee', data=ldomain%edges(2), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edges', data=ldomain%edges(3), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgew', data=ldomain%edges(4), ncid=ncid, flag='write')
 
     ! Write surface grid (coordinate variables, latitude, longitude, surface type).
 
-    if (fullgrid) then
-       lonvar(:) = longxy(1:lsmlon,1)
-       latvar(:) = latixy(1,1:lsmlat)
-       call ncd_ioglobal(varname='lon'    , data=lonvar, ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='lat'    , data=latvar, ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='longxy' , data=longxy, ncid=ncid, flag='write')
-    else
-       call ncd_ioglobal(varname='rlongxy', data=longxy, ncid=ncid, flag='write')
-    end if
-    call ncd_ioglobal(varname='latixy'  , data=latixy  , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='landmask', data=landmask, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='numlon'  , data=numlon  , ncid=ncid, flag='write')
+    lonvar(:) = ldomain%lonc(1:lsmlon,1)
+    latvar(:) = ldomain%latc(1,1:lsmlat)
+    call ncd_ioglobal(varname='lon'     , data=lonvar      , ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='lat'     , data=latvar      , ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='longxy'  , data=ldomain%lonc, ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='latixy'  , data=ldomain%latc, ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='landmask', data=ldomain%mask, ncid=ncid, flag='write')
 
     ! Write current date, current seconds, current day, current nstep
 
@@ -911,26 +896,19 @@ contains
 !
    integer , pointer :: ixy(:)            ! gridcell lon index (gridcell level)
    integer , pointer :: jxy(:)            ! gridcell lat index (gridcell level)
-   real(r8), pointer :: garea(:)          ! total land area for this gridcell (km^2)
    integer , pointer :: ltype(:)          ! landunit type
-   real(r8), pointer :: larea(:)          ! total land area for this landunit (km^2)
    logical , pointer :: ifspecial(:)      ! true=>landunit is not vegetated
-   integer , pointer :: clandunit(:)      ! index into landunit for each column
-   integer , pointer :: cgridcell(:)      ! index into gridcell for each column
+   real(r8), pointer :: lwtgcell(:)       ! weight (relative to gridcell) for this landunit
    real(r8), pointer :: fpcgrid(:)        ! weight of pft relative to vegetated landunit
 !
 ! local pointers to implicit out arguments
 !
-   real(r8), pointer :: cwtgcell(:)       ! weight (relative to gridcell) for this column (0-1)
-   real(r8), pointer :: cwtlunit(:)       ! weight (relative to landunit) for this column (0-1)
-   real(r8), pointer :: carea(:)          ! total land area for this column (km^2)
    integer , pointer :: pcolumn(:)        ! index into column for each pft
    integer , pointer :: plandunit(:)      ! index into landunit for each pft
    integer , pointer :: pgridcell(:)      ! index into gridcell for each pft
    real(r8), pointer :: pwtcol(:)         ! weight (relative to column) for this pft (0-1)
    real(r8), pointer :: pwtlunit(:)       ! weight (relative to landunit) for this pft (0-1)
    real(r8), pointer :: pwtgcell(:)       ! weight (relative to gridcell) for this pft (0-1)
-   real(r8), pointer :: parea(:)          ! total land area for this pft (km^2)
 !
 !EOP
 !
@@ -944,21 +922,12 @@ contains
 
     ixy        => clm3%g%ixy
     jxy        => clm3%g%jxy
-    garea      => clm3%g%area
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 
     ltype      => clm3%g%l%itype
-    larea      => clm3%g%l%area
     ifspecial  => clm3%g%l%ifspecial
-
-    ! Assign local pointers to derived subtypes components (column-level)
-
-    cgridcell  => clm3%g%l%c%gridcell
-    clandunit  => clm3%g%l%c%landunit
-    cwtlunit   => clm3%g%l%c%wtlunit
-    cwtgcell   => clm3%g%l%c%wtgcell
-    carea      => clm3%g%l%c%area
+    lwtgcell   => clm3%g%l%wtgcell
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
@@ -968,7 +937,6 @@ contains
     pwtcol     => clm3%g%l%c%p%wtcol
     pwtlunit   => clm3%g%l%c%p%wtlunit
     pwtgcell   => clm3%g%l%c%p%wtgcell
-    parea      => clm3%g%l%c%p%area
     fpcgrid    => clm3%g%l%c%p%pdgvs%fpcgrid
 
     ! Determine new pft properties
@@ -978,6 +946,7 @@ contains
     do p = lbp,ubp
        g = pgridcell(p)
        l = plandunit(p)
+       c = pcolumn(p)
        if (.not. ifspecial(l)) then
 
           ! Determine pft weight relative to column and relative to landunit
@@ -986,11 +955,8 @@ contains
           pwtcol(p) = fpcgrid(p)
           pwtlunit(p) = fpcgrid(p)
 
-          ! Determine new pft area
-          parea(p) = pwtlunit(p) * larea(l)
-
           ! Determine new pft weight relative to grid cell
-          pwtgcell(p) = parea(p) /  garea(g)
+          pwtgcell(p) = pwtlunit(p) * lwtgcell(l)
 
        end if
     end do

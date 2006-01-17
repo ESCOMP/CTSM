@@ -156,6 +156,7 @@ contains
 !
 ! !USES:
     use clmtype
+    use clm_atmlnd   , only : clm_a2l
     use subgridAveMod
     use time_manager , only : get_step_size, get_nstep
 !
@@ -221,11 +222,11 @@ contains
 
     ! Assign local pointers to derived type scalar members (gridcell-level)
 
-    forc_rain         => clm3%g%a2lf%forc_rain
-    forc_snow         => clm3%g%a2lf%forc_snow
-    forc_lwrad        => clm3%g%a2lf%forc_lwrad
-    forc_solad        => clm3%g%a2lf%forc_solad
-    forc_solai        => clm3%g%a2lf%forc_solai
+    forc_rain         => clm_a2l%forc_rain
+    forc_snow         => clm_a2l%forc_snow
+    forc_lwrad        => clm_a2l%forc_lwrad
+    forc_solad        => clm_a2l%forc_solad
+    forc_solai        => clm_a2l%forc_solai
 
     ! Assign local pointers to derived type scalar members (column-level)
 

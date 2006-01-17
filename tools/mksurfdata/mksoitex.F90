@@ -1,10 +1,10 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: mksoitex
+! !IROUTINE: mksoitex
 !
 ! !INTERFACE:
-subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
+subroutine mksoitex(lsmlon, lsmlat, fname, ndiag, pctglac_o, sand_o, clay_o)
 !
 ! !DESCRIPTION:
 ! make %sand and %clay from IGBP soil data, which includes
@@ -14,18 +14,21 @@ subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
   use fileutils   , only : getfil
-  use mkvarpar    
-  use mkvarsur    
+  use domainMod   , only : domain_type,domain_clean,domain_setptrs
+  use creategridMod, only : read_domain
+  use mkvarpar	
+  use mkvarsur    , only : ldomain
   use mkvarctl    
-  use areaMod       
+  use areaMod     , only : gridmap_type,gridmap_clean,gridmap_setptrs
+  use areaMod     , only : areaini,areaave
   use ncdio
 !
 ! !ARGUMENTS:
   implicit none
-  integer , intent(in) :: lsmlon, lsmlat                ! clm grid resolution
-  character(len=*), intent(in) :: fsoitex               ! soil texture dataset file name
-  integer , intent(in) :: ndiag                         ! unit # for diagnostic output
-  real(r8), intent(in) :: pctgla_o(lsmlon,lsmlat)       ! % glacier (output grid)
+  integer , intent(in) :: lsmlon, lsmlat          ! clm grid resolution
+  character(len=*), intent(in) :: fname           ! input dataset file name
+  integer , intent(in) :: ndiag                   ! unit number for diag out
+  real(r8), intent(in) :: pctglac_o(lsmlon,lsmlat)      ! % glac (output grid)
   real(r8), intent(out):: sand_o(lsmlon,lsmlat,nlevsoi) ! % sand (output grid)
   real(r8), intent(out):: clay_o(lsmlon,lsmlat,nlevsoi) ! % clay (output grid)
 !
@@ -33,64 +36,57 @@ subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
 ! subroutine mksrfdat in module mksrfdatMod
 !
 ! !REVISION HISTORY:
-! Authors: Gordon Bonan and Sam Levis
+! Author: Mariana Vertenstein
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
-  integer, parameter :: maxovr = 100000
-  integer, parameter :: num=2                ! get 1st and 2nd largest areas of overlap
-  integer, parameter :: nwstmax = 10000      ! maximum size of overlap weights, by soil mapunit
-  integer, parameter :: nlsm=4               ! number of soil textures (sand, silt, clay)
-  character(len=256) :: locfn                ! local dataset file name
-  character(len=38)  :: soil(0:nlsm)         ! name of each soil texture
-  character(len=38)  :: typ                  ! soil texture based on %sand, silt, clay
-  integer  :: nlon_i                         ! input grid: longitude points
-  integer  :: nlat_i                         ! input grid: latitude  points
-  integer  :: ncid,dimid,varid               ! input netCDF id's
-  integer  :: ier                            ! error status
-  integer  :: nlay                           ! number of soil layers
-  integer  :: mapunitmax                     ! maximum value of igbp soil mapunits
-  integer  :: mapunittemp                    ! temporary igbp soil mapunit
-  integer  :: ii                             ! longitude index for IGBP grid
-  integer  :: ji                             ! latitude  index for IGBP grid
-  integer  :: io                             ! longitude index for land grid
-  integer  :: jo                             ! latitude  index for land grid
-  integer  :: l,m,n                          ! loop indices
-  integer  :: miss = 99999                   ! missing data indicator
-  integer  :: k                              ! igbp soil mapunit index
-  integer  :: wsti(num)                      ! index to 1st and 2nd largest values in wst
-  real(r8) :: wst(0:nwstmax)                 ! overlap weights, by soil mapunit
-  real(r8) :: gast_i(0:nlsm)                 ! input grid : global area, by texture type
-  real(r8) :: gast_o(0:nlsm)                 ! output grid: global area, by texture type
-  integer  :: novr_i2o                       ! number of overlapping input cells
-  integer  :: iovr_i2o(maxovr)               ! lon index of overlap input cell
-  integer  :: jovr_i2o(maxovr)               ! lat index of overlap input cell
-  real(r8) :: wovr_i2o(maxovr)               ! weight    of overlap input cell
-  real(r8) :: mask_o                         ! output grid: mask (0, 1)
-  real(r8) :: offset                         ! used to shift x-grid 360 degrees
-  real(r8) :: mapunit_o(lsmlon,lsmlat)       ! not needed except as diagnostic
-  real(r8) :: edge_i(4)                      ! input grid: N,E,S,W edges (degrees)
-  real(r8), allocatable :: sand_i(:,:)       ! input grid: percent sand
-  real(r8), allocatable :: clay_i(:,:)       ! input grid: percent clay
-  real(r8), allocatable :: landmask_i(:,:)   ! input grid: land=1, no_soil_data=0
-  real(r8), allocatable :: mapunit_i(:,:)    ! input grid: igbp soil mapunits
-  real(r8), allocatable :: latixy_i(:,:)     ! input grid: latitude (degrees)
-  real(r8), allocatable :: longxy_i(:,:)     ! input grid: longitude (degrees)
-  integer , allocatable :: numlon_i(:)       ! input grid: # longitude pts by lat
-  real(r8), allocatable :: lon_i(:,:)        ! input grid: longitude, W edge (deg)
-  real(r8), allocatable :: lon_i_offset(:,:) ! input grid: offset longitude, west edge (degrees)
-  real(r8), allocatable :: lat_i(:)          ! input grid: latitude,  S edge (deg)
-  real(r8), allocatable :: area_i(:,:)       ! input grid: cell area
-  real(r8), allocatable :: mask_i(:,:)       ! input grid: mask (0, 1)
+  integer  :: nlon_i                        ! input grid : lon points
+  integer  :: nlat_i                        ! input grid : lat points
 
-  real(r8) :: fld_o(lsmlon,lsmlat)           ! output grid: dummy field
-  real(r8) :: fld_i                          ! input grid: dummy field
-  real(r8) :: sum_fldo                       ! global sum of dummy output field
-  real(r8) :: sum_fldi                       ! global sum of dummy input field
-  real(r8) :: relerr = 0.00001               ! max error: sum overlap weights ne 1
+  type(domain_type)     :: tdomain          ! local domain
+
+  type(gridmap_type)    :: tgridmap         ! local gridmap
+  integer          :: mxovr                 ! total num of overlapping cells
+  integer ,pointer :: novr(:,:)             ! number of overlapping input cells
+  integer ,pointer :: iovr(:,:,:)           ! lon index of overlap input cell
+  integer ,pointer :: jovr(:,:,:)           ! lat index of overlap input cell
+  real(r8),pointer :: wovr(:,:,:)           ! weight    of overlap input cell
+
+  integer, parameter :: nlsm=4              ! number of soil textures 
+  character(len=38)  :: soil(0:nlsm)        ! name of each soil texture
+  character(len=38)  :: typ                 ! soil texture based on ...
+  integer  :: nlay                          ! number of soil layers
+  integer  :: mapunitmax                    ! max value of igbp soil mapunits
+  integer  :: mapunittemp                   ! temporary igbp soil mapunit
+
+  integer, parameter :: num=2               ! set soil mapunit number
+  integer  :: wsti(num)                     ! index to 1st and 2nd largest wst
+  real(r8),allocatable :: wst(:)            ! overlap weights, by soil mapunit
+  real(r8) :: gast_i(0:nlsm)                ! global area, by texture type
+  real(r8) :: gast_o(0:nlsm)                ! global area, by texture type
+  real(r8), allocatable :: sand_i(:,:)      ! input grid: percent sand
+  real(r8), allocatable :: clay_i(:,:)      ! input grid: percent clay
+  real(r8), allocatable :: mask_i(:,:)      ! input grid: mask (0, 1)
+  real(r8), allocatable :: mask_o(:,:)      ! output grid: mask (0, 1)
+  real(r8), allocatable :: fld_i(:,:)       ! input grid: dummy field
+  real(r8), allocatable :: fld_o(:,:)       ! output grid: dummy field
+  real(r8), allocatable :: mapunit_i(:,:)   ! input grid: igbp soil mapunits
+  real(r8), allocatable :: mapunit_o(:,:)   ! output grid: igbp soil mapunits
+  real(r8) :: sum_fldi                      ! global sum of dummy input fld
+  real(r8) :: sum_fldo                      ! global sum of dummy output fld
+
+  integer  :: ii,ji                         ! indices
+  integer  :: io,jo                         ! indices
+  integer  :: k,l,n,m                       ! indices
+  integer  :: ncid,dimid,varid              ! input netCDF id's
+  integer  :: ier                           ! error status
+  integer  :: miss = 99999                  ! missing data indicator
+  real(r8) :: relerr = 0.00001              ! max error: sum overlap wts ne 1
+  integer  :: t1,t2,t3,t4                   ! timers
+  character(len=256) locfn                  ! local dataset file name
   character(len=32) :: subname = 'mksoitex'
-! -----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 
   write (6,*) 'Attempting to make %sand and %clay .....'
   call shr_sys_flush(6)
@@ -106,19 +102,17 @@ subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
   soil(4) = 'silts                                 '
 
   ! -----------------------------------------------------------------
-  ! Read input data
+  ! Read input file
   ! -----------------------------------------------------------------
 
-  ! Obtain input grid info
+  ! Obtain input grid info, read local fields
 
-  call getfil (fsoitex, locfn, 0)
+  call getfil (fname, locfn, 0)
+
+  call read_domain(tdomain,locfn)
+  call domain_setptrs(tdomain,ni=nlon_i,nj=nlat_i)
+
   call check_ret(nf_open(locfn, 0, ncid), subname)
-
-  call check_ret(nf_inq_dimid  (ncid, 'lon', dimid), subname)
-  call check_ret(nf_inq_dimlen (ncid, dimid, nlon_i), subname)
-
-  call check_ret(nf_inq_dimid  (ncid, 'lat', dimid), subname)
-  call check_ret(nf_inq_dimlen (ncid, dimid, nlat_i), subname)
 
   call check_ret(nf_inq_dimid  (ncid, 'number_of_layers', dimid), subname)
   call check_ret(nf_inq_dimlen (ncid, dimid, nlay), subname)
@@ -126,40 +120,12 @@ subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
   call check_ret(nf_inq_dimid  (ncid, 'max_value_mapunit', dimid), subname)
   call check_ret(nf_inq_dimlen (ncid, dimid, mapunitmax), subname)
 
-  !NOTE: wst must not be allocatable if it is declared private in a thread
-  if (nwstmax < mapunitmax) then
-     write(6,*)'MKSOITEX: parameter nwstmax must be increased to ',mapunitmax
-     call abort()
-  endif
-
-  allocate (sand_i(mapunitmax,nlay), clay_i(mapunitmax,nlay), landmask_i(nlon_i,nlat_i), &
-       mapunit_i(nlon_i,nlat_i), mask_i(nlon_i,nlat_i), latixy_i(nlon_i,nlat_i), &
-       longxy_i(nlon_i,nlat_i), numlon_i(nlat_i), lon_i(nlon_i+1,nlat_i), lon_i_offset(nlon_i+1,nlat_i), &
-       lat_i(nlat_i+1), area_i(nlon_i,nlat_i), stat=ier)
+  allocate(sand_i(mapunitmax,nlay), clay_i(mapunitmax,nlay), stat=ier)
   if (ier/=0) call abort()
-
-  call check_ret(nf_inq_varid (ncid, 'LATIXY', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, latixy_i), subname)
-
-  call check_ret(nf_inq_varid (ncid, 'LONGXY', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, longxy_i), subname)
-
-  call check_ret(nf_inq_varid (ncid, 'EDGEN', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, edge_i(1)), subname)
-
-  call check_ret(nf_inq_varid (ncid, 'EDGEE', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, edge_i(2)), subname)
-
-  call check_ret(nf_inq_varid (ncid, 'EDGES', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, edge_i(3)), subname)
-
-  call check_ret(nf_inq_varid (ncid, 'EDGEW', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, edge_i(4)), subname)
-
-  ! Obtain input data
-
-  call check_ret(nf_inq_varid (ncid, 'LANDMASK', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, landmask_i), subname)
+  allocate(mapunit_i(nlon_i,nlat_i),mapunit_o(lsmlon,lsmlat), stat=ier)
+  if (ier/=0) call abort()
+  allocate(wst(0:mapunitmax), stat=ier)
+  if (ier/=0) call abort()
 
   call check_ret(nf_inq_varid (ncid, 'MAPUNITS', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, mapunit_i), subname)
@@ -172,181 +138,107 @@ subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
 
   call check_ret(nf_close(ncid), subname)
 
-  ! -----------------------------------------------------------------
-  ! Map data from input grid to land model grid.
-  ! -----------------------------------------------------------------
+  ! Compute local fields _o
 
-  ! Determine input grid cell edges and cell areas
+  allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat))
+  allocate( fld_i(nlon_i,nlat_i), fld_o(lsmlon,lsmlat))
 
-  numlon_i(:) = nlon_i
+  mask_i = 1.0_r8
+  mask_o = 1.0_r8
+  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
-  call celledge (nlat_i    , nlon_i    , numlon_i  , longxy_i  ,  &
-                 latixy_i  , edge_i(1) , edge_i(2) , edge_i(3) ,  &
-                 edge_i(4) , lat_i     , lon_i     , area_i)
+  call gridmap_setptrs(tgridmap,mx_ovr=mxovr,n_ovr=novr,i_ovr=iovr,j_ovr=jovr,w_ovr=wovr)
 
+  do jo = 1, ldomain%nj
+  do io = 1, ldomain%numlon(jo)
+     do k = 0, mapunitmax
+        wst(k) = 0
+     enddo
+     do n = 1, novr(io,jo)
+        ii = iovr(io,jo,n)
+        ji = jovr(io,jo,n)
+        k = mapunit_i(ii,ji) * tdomain%mask(ii,ji)
+        wst(k) = wst(k) + wovr(io,jo,n)
+     enddo
 
-  do ji = 1, nlat_i
-     do ii = 1, numlon_i(ji)
-        mask_i(ii,ji) = 1.
-     end do
-  end do
+     ! Rank non-zero weights by soil mapunit.
+     ! wsti(1) is the most extensive mapunit.
+     ! wsti(2) is the second most extensive mapunit.
 
-  ! Shift x-grid to locate periodic grid intersections. This
-  ! assumes that all lon_i(1,j) have the same value for all
-  ! latitudes j and that the same holds for lon_o(1,j)
+     call mkrank (mapunitmax, wst, miss, wsti, num)
 
-  if (lon_i(1,1) < lonw(1,1)) then
-     offset = 360.0
-  else
-     offset = -360.0
-  end if
+     ! Set soil texture as follows:
+     ! If land grid cell is ocean or 100% glacier: cell has no soil
+     ! Otherwise, grid cell needs soil:
+     !   a. Use dominant igbp soil mapunit based on area of overlap unless
+     !     'no data' is dominant
+     !   b. In this case use second most dominant mapunit if it has data
+     !   c. If this has no data or if there isn't a second most dominant
+     !      mapunit, use loam for soil texture
 
-  do ji = 1, nlat_i
-     do ii = 1, numlon_i(ji) + 1
-        lon_i_offset(ii,ji) = lon_i(ii,ji) + offset
-     end do
-  end do
-
-  ! Process each cell on land model grid
-  ! novr_i2o - number of input grid cells that overlap each land grid cell
-  ! iovr_i2o - longitude index of overlapping input grid cell
-  ! jovr_i2o - latitude  index of overlapping input grid cell
-  ! wovr_i2o - fraction of land grid cell overlapped by input grid cell
-
-!$OMP PARALLEL DO PRIVATE (io,jo,ii,ji,n,l,k,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i,wst,wsti)
-#if !defined (USE_OMP)
-!CSD$ PARALLEL DO PRIVATE (io,jo,ii,ji,n,l,k,mask_o,novr_i2o,iovr_i2o,jovr_i2o,wovr_i2o,fld_i,wst,wsti)
-#endif
-  do jo = 1, lsmlat
-     do io = 1, numlon(jo)
-
-        ! Determine areas of overlap and indices
-
-        mask_o = 1.
-
-        call areaini_point (io        , jo          , nlon_i  , nlat_i  , numlon_i, &
-                           lon_i      , lon_i_offset, lat_i   , area_i  , mask_i  , &
-                           lsmlon     , lsmlat      , numlon  , lonw    , lats    , &
-                           area(io,jo), mask_o      , novr_i2o, iovr_i2o, jovr_i2o, &
-                           wovr_i2o   , maxovr)
-
-        ! Process each cell on land grid:
-        ! Find dominant 5 minute x 5 minute IGBP soil mapunit.
-        ! landmask_i=0 means no soil data is available, so assume mapunit=0.
-        ! Map from mapunit values to corresponding %sand and %clay
-        ! (silt not needed by land model and therefore, not calculated).
-        ! Sum overlap weights by igbp soil mapunit
-        ! landmask_i=0 means no soil data and landmask_i=1 means data exist
-
-        do k = 0, mapunitmax
-           wst(k) = 0.
+     if (abs(pctglac_o(io,jo)-100.) < 1.e-06) then    !---glacier
+        mapunit_o(io,jo) = 0.
+        do l = 1, nlay
+           sand_o(io,jo,l) = 0.
+           clay_o(io,jo,l) = 0.
         end do
-        do n = 1, novr_i2o      !overlap cell index
-           ii = iovr_i2o(n)     !lon index (input grid) of overlap cell
-           ji = jovr_i2o(n)     !lat index (input grid) of overlap cell
-           k = mapunit_i(ii,ji) * landmask_i(ii,ji) !mapunit (input grid)
-           wst(k) = wst(k) + wovr_i2o(n)
-        end do
-
-        ! Rank non-zero weights by soil mapunit.
-        ! wsti(1) is the most extensive mapunit.
-        ! wsti(2) is the second most extensive mapunit.
-
-        call mkrank (mapunitmax, wst, miss, wsti, num)
-
-        ! Set soil texture as follows:
-        ! If land grid cell is ocean or 100% glacier: cell has no soil
-        ! Otherwise, grid cell needs soil:
-        !   a. Use dominant igbp soil mapunit based on area of overlap unless
-        !     'no data' is dominant
-        !   b. In this case use second most dominant mapunit so long as it has data
-        !   c. If this has no data or if there isn't a second most dominant
-        !      mapunit, use loam for soil texture
-
-        if (landmask(io,jo) == 0) then                        !ocean
-           mapunit_o(io,jo) = 0.
+     else                                                  !---need soil
+        if (wsti(1) /= 0) then                !---not 'no data'
+           mapunit_o(io,jo) = wsti(1)
            do l = 1, nlay
-              sand_o(io,jo,l) = 0.
-              clay_o(io,jo,l) = 0.
+              sand_o(io,jo,l) = sand_i(wsti(1),l)
+              clay_o(io,jo,l) = clay_i(wsti(1),l)
            end do
-        else if (abs(pctgla_o(io,jo)-100.) < 1.e-06) then     !glacier
-           mapunit_o(io,jo) = 0.
-           do l = 1, nlay
-              sand_o(io,jo,l) = 0.
-              clay_o(io,jo,l) = 0.
-           end do
-        else                                                  !need soil
-           if (wsti(1) /= 0) then                             !not 'no data'
-              mapunit_o(io,jo) = wsti(1)
+        else                                  !---if (wsti(1) == 0) then
+           if (wsti(2) == 0 .or. wsti(2) == miss) then     !---no data
+              mapunit_o(io,jo) = wsti(2)
               do l = 1, nlay
-                 sand_o(io,jo,l) = sand_i(wsti(1),l)
-                 clay_o(io,jo,l) = clay_i(wsti(1),l)
+                 sand_o(io,jo,l) = 43.        !---use loam
+                 clay_o(io,jo,l) = 18.
               end do
-           else                                               !if (wsti(1) == 0) then
-              if (wsti(2) == 0 .or. wsti(2) == miss) then     !no data
-                 mapunit_o(io,jo) = wsti(2)
-                 do l = 1, nlay
-                    sand_o(io,jo,l) = 43.                     !use loam
-                    clay_o(io,jo,l) = 18.
-                 end do
-              else                                            !if (wsti(2) /= 0 and /= miss)
-                 mapunit_o(io,jo) = wsti(2)
-                 do l = 1, nlay
-                    sand_o(io,jo,l) = sand_i(wsti(2),l)
-                    clay_o(io,jo,l) = clay_i(wsti(2),l)
-                 end do
-              end if       !end of wsti(2) if-block
-           end if          !end of wsti(1) if-block
-        end if             !end of land/ocean if-block
+           else                               !---if (wsti(2) /= 0 and /= miss)
+              mapunit_o(io,jo) = wsti(2)
+              do l = 1, nlay
+                 sand_o(io,jo,l) = sand_i(wsti(2),l)
+                 clay_o(io,jo,l) = clay_i(wsti(2),l)
+              end do
+           end if       !---end of wsti(2) if-block
+        end if          !---end of wsti(1) if-block
+     end if             !---end of land/ocean if-block
+  enddo
+  enddo
 
-        ! Global sum of output field -- must multiply by fraction of
-        ! output grid that is land as determined by input grid
+  ! Global sum of output field 
 
-        fld_o(io,jo) = 0.
-        do n = 1, novr_i2o
-           ii = iovr_i2o(n)
-           ji = jovr_i2o(n)
-           fld_i = ((ji-1)*nlon_i + ii)
-           fld_o(io,jo) = fld_o(io,jo) + wovr_i2o(n) * fld_i
-        end do
+  sum_fldi = 0.0_r8
+  do ji = 1, nlat_i
+  do ii = 1, nlon_i
+    fld_i(ii,ji) = ((ji-1)*nlon_i + ii)
+    sum_fldi = sum_fldi + tdomain%area(ii,ji) * fld_i(ii,ji)
+  enddo
+  enddo
 
-     end do  !end of output longitude loop
-  end do     !end of output latitude  loop
-#if !defined (USE_OMP)
-!CSD$ END PARALLEL DO
-#endif
-!$OMP END PARALLEL DO
+  call areaave(fld_i,fld_o,tgridmap)
+
+  sum_fldo = 0.
+  do jo = 1, ldomain%nj
+  do io = 1, ldomain%numlon(jo)
+     fld_o(io,jo) = fld_o(io,jo)
+     sum_fldo = sum_fldo + ldomain%area(io,jo) * fld_o(io,jo)
+  end do
+  end do
 
   ! -----------------------------------------------------------------
   ! Error check1
   ! Compare global sum fld_o to global sum fld_i.
   ! -----------------------------------------------------------------
 
-  ! This check is true only if both grids span the same domain.
-  ! To obtain global sum of input field must multiply by
-  ! fraction of input grid that is land as determined by input grid
-
-  sum_fldo = 0.
-  do jo = 1,lsmlat
-     do io = 1,numlon(jo)
-        sum_fldo = sum_fldo + area(io,jo) * fld_o(io,jo)
-     end do
-  end do
-
-  sum_fldi = 0.
-  do ji = 1, nlat_i
-     do ii = 1, numlon_i(ji)
-        fld_i = ((ji-1)*nlon_i + ii)
-        sum_fldi = sum_fldi + area_i(ii,ji) * fld_i
-     end do
-  end do
-
   if ( mksrf_fgrid_global /= ' ') then
      if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
         write (6,*) 'MKSOITEX error: input field not conserved'
         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
         write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-        call abort()
+        stop
      end if
   end if
 
@@ -369,9 +261,9 @@ subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
            else if (sand_i(mapunittemp,l) >= 50.) then
               typ = 'sands'
            else if (clay_i(mapunittemp,l)+sand_i(mapunittemp,l) < 50.) then
-              if (landmask_i(ii,ji) /= 0.) then
+              if (tdomain%mask(ii,ji) /= 0.) then
                  typ = 'silts'
-              else            !if (landmask_i(ii,ji) == 0.) then !no data
+              else            !if (tdomain%mask(ii,ji) == 0.) then no data
                  typ = 'no soil: ocean, glacier, lake, no data'
               end if
            else
@@ -385,7 +277,7 @@ subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
              ' not assigned to soil type for input grid lon,lat,layer = ',ii,ji,l
            call abort()
 101        continue
-           gast_i(m) = gast_i(m) + area_i(ii,ji)
+           gast_i(m) = gast_i(m) + tdomain%area(ii,ji)
         end do
      end do
   end do
@@ -394,8 +286,8 @@ subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
 
   gast_o(:) = 0.
   do l = 1, nlay
-     do jo = 1, lsmlat
-        do io = 1, numlon(jo)
+     do jo = 1, ldomain%nj
+        do io = 1, ldomain%numlon(jo)
            if (clay_o(io,jo,l)==0. .and. sand_o(io,jo,l)==0.) then
               typ = 'no soil: ocean, glacier, lake, no data'
            else if (clay_o(io,jo,l) >= 40.) then
@@ -415,7 +307,7 @@ subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
              ' not assigned to soil type for output grid lon,lat,layer = ',io,jo,l
            call abort()
 102        continue
-           gast_o(m) = gast_o(m) + area(io,jo)
+           gast_o(m) = gast_o(m) + ldomain%area(io,jo)
         end do
      end do
   end do
@@ -449,7 +341,7 @@ subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
      k = lsmlat/2
      write (ndiag,*)
      write (ndiag,*) 'For reference the area on the output grid of a cell near the equator is: '
-     write (ndiag,'(f10.3,a14)')area(1,k)*1.e-06,' x 10**6 km**2'
+     write (ndiag,'(f10.3,a14)')ldomain%area(1,k)*1.e-06,' x 10**6 km**2'
      write (ndiag,*)
   endif
 
@@ -459,17 +351,11 @@ subroutine mksoitex (lsmlon, lsmlat, fsoitex, ndiag, pctgla_o, sand_o, clay_o)
 
   ! Deallocate dynamic memory
 
-  deallocate (mask_i)
-  deallocate (latixy_i)
-  deallocate (longxy_i)
-  deallocate (numlon_i)
-  deallocate (lon_i)
-  deallocate (lon_i_offset)
-  deallocate (lat_i)
-  deallocate (area_i)
-  deallocate (sand_i)
-  deallocate (clay_i)
-  deallocate (landmask_i)
-  deallocate (mapunit_i)
+  call domain_clean(tdomain)
+  call gridmap_clean(tgridmap)
+  deallocate (sand_i,clay_i,mapunit_i,mapunit_o,wst)
+  deallocate (mask_i,mask_o)
+  deallocate ( fld_i, fld_o)
 
 end subroutine mksoitex
+

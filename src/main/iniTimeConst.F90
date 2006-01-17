@@ -21,6 +21,7 @@ subroutine iniTimeConst
   use nanMod
   use clmtype
   use decompMod   , only : get_proc_bounds, get_proc_global
+  use clm_atmlnd  , only : clm_a2l
   use clm_varpar  , only : nlevsoi, nlevlak, lsmlon, lsmlat, numpft
   use clm_varcon  , only : istice, istdlak, istwet, isturb, &
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
@@ -64,14 +65,12 @@ subroutine iniTimeConst
 ! local pointers to implicit in arguments
 !
   integer , pointer :: ivt(:)             !  vegetation type index
-  integer , pointer :: ixy(:)             ! xy lon index (column-level)
-  integer , pointer :: jxy(:)             ! xy lat index (column-level)
-  integer , pointer :: ixyp(:)            ! xy lon index (pft-level)
-  integer , pointer :: jxyp(:)            ! xy lat index (pft-level)
   integer , pointer :: ixyg(:)            ! xy lon index (gridcell-level)
   integer , pointer :: jxyg(:)            ! xy lat index (gridcell-level)
   integer , pointer :: pcolumn(:)         ! column index of corresponding pft
-  integer , pointer :: clandunit(:)       ! landunit index of corresponding column
+  integer , pointer :: pgridcell(:)       ! gridcell index of corresponding pft
+  integer , pointer :: clandunit(:)       ! landunit index of column
+  integer , pointer :: cgridcell(:)       ! gridcell index of column
   integer , pointer :: ltype(:)           ! landunit type index
 !
 ! local pointers to implicit out arguments
@@ -157,9 +156,8 @@ subroutine iniTimeConst
 
   ! Assign local pointers to derived subtypes components (column-level)
 
-  ixy             => clm3%g%l%c%ixy
-  jxy             => clm3%g%l%c%jxy
   clandunit       => clm3%g%l%c%landunit
+  cgridcell       => clm3%g%l%c%gridcell
   z               => clm3%g%l%c%cps%z
   dz              => clm3%g%l%c%cps%dz
   zi              => clm3%g%l%c%cps%zi
@@ -180,13 +178,12 @@ subroutine iniTimeConst
   isoicol         => clm3%g%l%c%cps%isoicol
   gwc_thr         => clm3%g%l%c%cps%gwc_thr
   mss_frc_cly_vld => clm3%g%l%c%cps%mss_frc_cly_vld
-  forc_ndep       => clm3%g%a2lf%forc_ndep
+  forc_ndep       => clm_a2l%forc_ndep
 
   ! Assign local pointers to derived subtypes components (pft-level)
 
-  ixyp            => clm3%g%l%c%p%ixy
-  jxyp            => clm3%g%l%c%p%jxy
   ivt             => clm3%g%l%c%p%itype
+  pgridcell       => clm3%g%l%c%p%gridcell
   pcolumn         => clm3%g%l%c%p%column
   dewmx           => clm3%g%l%c%p%pps%dewmx
   rootfr          => clm3%g%l%c%p%pps%rootfr
@@ -283,8 +280,10 @@ subroutine iniTimeConst
 !dir$ concurrent
 !cdir nodep
   do p = begp,endp
-     sandfrac(p) = sand3d(ixyp(p),jxyp(p),1)/100.0_r8
-     clayfrac(p) = clay3d(ixyp(p),jxyp(p),1)/100.0_r8
+     i = ixyg(pgridcell(p))
+     j = jxyg(pgridcell(p))
+     sandfrac(p) = sand3d(i,j,1)/100.0_r8
+     clayfrac(p) = clay3d(i,j,1)/100.0_r8
   end do
 #endif
 
@@ -489,8 +488,8 @@ subroutine iniTimeConst
    do c = begc, endc
 
       ! Set gridcell and landunit indices
-      i = ixy(c)
-      j = jxy(c)
+      i = ixyg(cgridcell(c))
+      j = jxyg(cgridcell(c))
       l = clandunit(c)
 
       ! Initialize restriction for min of soil potential (mm)

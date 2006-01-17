@@ -157,6 +157,7 @@ contains
 !
 ! !USES:
     use clmtype
+    use clm_atmlnd   , only : clm_a2l
     use decompMod    , only : get_proc_bounds
     use clm_varcon   , only : spval
     use pftvarcon    , only : pftpar
@@ -225,9 +226,9 @@ contains
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
 
-    forc_t => clm3%g%a2ls%forc_t
-    forc_rain => clm3%g%a2lf%forc_rain
-    forc_snow => clm3%g%a2lf%forc_snow
+    forc_t => clm_a2l%forc_t
+    forc_rain => clm_a2l%forc_rain
+    forc_snow => clm_a2l%forc_snow
 
     ! Assign local pointers to derived subtypes components (pft-level)
 

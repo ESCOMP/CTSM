@@ -61,6 +61,7 @@ contains
 !
 ! !USES:
      use clmtype
+     use clm_atmlnd  , only : clm_a2l
      use clm_varpar  , only : numrad
      use clm_varcon  , only : spval
      use time_manager, only : get_curr_date, get_step_size
@@ -201,8 +202,8 @@ contains
 
      londeg        => clm3%g%londeg
      latdeg        => clm3%g%latdeg
-     forc_solad    => clm3%g%a2lf%forc_solad
-     forc_solai    => clm3%g%a2lf%forc_solai
+     forc_solad    => clm_a2l%forc_solad
+     forc_solai    => clm_a2l%forc_solai
 
      ! Assign local pointers to multi-level derived type members (column level)
 

@@ -13,6 +13,7 @@ module clmtypeInitMod
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
+  use shr_sys_mod , only: shr_sys_flush
   use nanMod
   use clmtype
   use clm_varpar, only: maxpatch_pft
@@ -61,10 +62,6 @@ module clmtypeInitMod
   private :: init_column_nflux_type
   private :: init_landunit_pstate_type
   private :: init_gridcell_pstate_type
-  private :: init_atm2lnd_state_type
-  private :: init_lnd2atm_state_type
-  private :: init_atm2lnd_flux_type
-  private :: init_lnd2atm_flux_type
   private :: init_gridcell_wflux_type
 !EOP
 !----------------------------------------------------
@@ -91,7 +88,7 @@ contains
 !    *%luni, *%lunf, *%lunn
 !
 ! !USES:
-    use decompMod, only : get_proc_bounds, get_proc_global
+    use decompMod , only : get_proc_bounds, get_proc_global
 !
 ! !ARGUMENTS:
     implicit none
@@ -320,16 +317,6 @@ contains
 
     call init_gridcell_wflux_type(begg, endg, clm3%g%gwf)
 
-    ! gridcell atmosphere->land state and flux variables
-
-    call init_atm2lnd_state_type(begg, endg, clm3%g%a2ls)
-    call init_atm2lnd_flux_type (begg, endg, clm3%g%a2lf)
-
-    ! gridcell land->atmosphere state and flux variables
-
-    call init_lnd2atm_state_type(begg, endg, clm3%g%l2as)
-    call init_lnd2atm_flux_type (begg, endg, clm3%g%l2af)
-
   end subroutine initClmtype
 
 !------------------------------------------------------------------------
@@ -354,21 +341,8 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-    allocate(p%column(beg:end))
-    allocate(p%landunit(beg:end))
-    allocate(p%gridcell(beg:end))
     allocate(p%itype(beg:end))
-    allocate(p%area(beg:end))
-    allocate(p%wtcol(beg:end))
-    allocate(p%wtcol_old(beg:end))
-    allocate(p%wtlunit(beg:end))
-    allocate(p%wtgcell(beg:end))
-    allocate(p%latdeg(beg:end))
-    allocate(p%londeg(beg:end))
-    allocate(p%ixy(beg:end))
-    allocate(p%jxy(beg:end))
     allocate(p%mxy(beg:end))
-    allocate(p%snindex(beg:end))
 
   end subroutine init_pft_type
 
@@ -394,20 +368,7 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-   allocate(c%pfti(beg:end))
-   allocate(c%pftf(beg:end))
-   allocate(c%npfts(beg:end))
-   allocate(c%landunit(beg:end))
-   allocate(c%gridcell(beg:end))
    allocate(c%itype(beg:end))
-   allocate(c%area(beg:end))
-   allocate(c%wtgcell(beg:end))
-   allocate(c%wtlunit(beg:end))
-   allocate(c%ixy(beg:end))
-   allocate(c%jxy(beg:end))
-   allocate(c%latdeg(beg:end))
-   allocate(c%londeg(beg:end))
-   allocate(c%snindex(beg:end))
 
   end subroutine init_column_type
 
@@ -433,23 +394,9 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-   allocate(l%coli(beg:end))
-   allocate(l%colf(beg:end))
-   allocate(l%ncolumns(beg:end))
-   allocate(l%pfti(beg:end))
-   allocate(l%pftf(beg:end))
-   allocate(l%npfts(beg:end))
-   allocate(l%gridcell(beg:end))
    allocate(l%itype(beg:end))
-   allocate(l%area(beg:end))
-   allocate(l%wtgcell(beg:end))
-   allocate(l%ixy(beg:end))
-   allocate(l%jxy(beg:end))
-   allocate(l%latdeg(beg:end))
-   allocate(l%londeg(beg:end))
    allocate(l%ifspecial(beg:end))
    allocate(l%lakpoi(beg:end))
-   allocate(l%snindex(beg:end))
 
   end subroutine init_landunit_type
 
@@ -475,18 +422,8 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-   allocate(g%luni(beg:end))
-   allocate(g%lunf(beg:end))
-   allocate(g%nlandunits(beg:end))
-   allocate(g%coli(beg:end))
-   allocate(g%colf(beg:end))
-   allocate(g%ncolumns(beg:end))
-   allocate(g%pfti(beg:end))
-   allocate(g%pftf(beg:end))
-   allocate(g%npfts(beg:end))
    allocate(g%itype(beg:end))
    allocate(g%area(beg:end))
-   allocate(g%wtglob(beg:end))
    allocate(g%ixy(beg:end))
    allocate(g%jxy(beg:end))
    allocate(g%lat(beg:end))
@@ -494,7 +431,6 @@ contains
    allocate(g%latdeg(beg:end))
    allocate(g%londeg(beg:end))
    allocate(g%landfrac(beg:end))
-   allocate(g%snindex(beg:end))
 
   end subroutine init_gridcell_type
 
@@ -3068,196 +3004,6 @@ contains
     gps%wtfact(beg:end) = nan
 
   end subroutine init_gridcell_pstate_type
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: init_atm2lnd_state_type
-!
-! !INTERFACE:
-  subroutine init_atm2lnd_state_type(beg, end, a2ls)
-!
-! !DESCRIPTION:
-! Initialize atmospheric state variables required by the land
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in) :: beg, end
-    type (atm2lnd_state_type), intent(inout):: a2ls
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!------------------------------------------------------------------------
-
-#if (defined OFFLINE)
-    allocate(a2ls%flfall(beg:end))
-#endif
-    allocate(a2ls%forc_t(beg:end))
-    allocate(a2ls%forc_u(beg:end))
-    allocate(a2ls%forc_v(beg:end))
-    allocate(a2ls%forc_wind(beg:end))
-    allocate(a2ls%forc_q(beg:end))
-    allocate(a2ls%forc_hgt(beg:end))
-    allocate(a2ls%forc_hgt_u(beg:end))
-    allocate(a2ls%forc_hgt_t(beg:end))
-    allocate(a2ls%forc_hgt_q(beg:end))
-    allocate(a2ls%forc_pbot(beg:end))
-    allocate(a2ls%forc_th(beg:end))
-    allocate(a2ls%forc_vp(beg:end))
-    allocate(a2ls%forc_rho(beg:end))
-    allocate(a2ls%forc_psrf(beg:end))
-    allocate(a2ls%forc_pco2(beg:end))
-    ! 4/14/05: PET
-    ! Adding isotope code
-    allocate(a2ls%forc_pc13o2(beg:end))
-    allocate(a2ls%forc_po2(beg:end))
-
-#if (defined OFFLINE)
-    a2ls%flfall(beg:end) = nan
-#endif
-    a2ls%forc_t(beg:end) = nan
-    a2ls%forc_u(beg:end) = nan
-    a2ls%forc_v(beg:end) = nan
-    a2ls%forc_wind(beg:end) = nan
-    a2ls%forc_q(beg:end) = nan
-    a2ls%forc_hgt(beg:end) = nan
-    a2ls%forc_hgt_u(beg:end) = nan
-    a2ls%forc_hgt_t(beg:end) = nan
-    a2ls%forc_hgt_q(beg:end) = nan
-    a2ls%forc_pbot(beg:end) = nan
-    a2ls%forc_th(beg:end) = nan
-    a2ls%forc_vp(beg:end) = nan
-    a2ls%forc_rho(beg:end) = nan
-    a2ls%forc_psrf(beg:end) = nan
-    a2ls%forc_pco2(beg:end) = nan
-    ! 4/14/05: PET
-    ! Adding isotope code
-    a2ls%forc_pc13o2(beg:end) = nan
-    a2ls%forc_po2(beg:end) = nan
-
-  end subroutine init_atm2lnd_state_type
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: init_lnd2atm_state_type
-!
-! !INTERFACE:
-  subroutine init_lnd2atm_state_type(beg, end, l2as)
-!
-! !DESCRIPTION:
-! Initialize land state variables required by the atmosphere
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in) :: beg, end
-    type (lnd2atm_state_type), intent(inout):: l2as
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!------------------------------------------------------------------------
-
-    allocate(l2as%t_rad(beg:end))
-    allocate(l2as%t_ref2m(beg:end))
-    allocate(l2as%q_ref2m(beg:end))
-    allocate(l2as%h2osno(beg:end))
-    allocate(l2as%albd(beg:end,1:numrad))
-    allocate(l2as%albi(beg:end,1:numrad))
-
-    l2as%t_rad(beg:end) = nan
-    l2as%t_ref2m(beg:end) = nan
-    l2as%q_ref2m(beg:end) = nan
-    l2as%h2osno(beg:end) = nan
-    l2as%albd(beg:end,1:numrad) = nan
-    l2as%albi(beg:end,1:numrad) = nan
-
-  end subroutine init_lnd2atm_state_type
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: init_atm2lnd_flux_type
-!
-! !INTERFACE:
-  subroutine init_atm2lnd_flux_type(beg, end, a2lf)
-!
-! !DESCRIPTION:
-! Initialize atmospheric fluxes required by the land
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in) :: beg, end
-    type (atm2lnd_flux_type), intent(inout):: a2lf
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!------------------------------------------------------------------------
-
-    allocate(a2lf%forc_lwrad(beg:end))
-    allocate(a2lf%forc_solad(beg:end,numrad))
-    allocate(a2lf%forc_solai(beg:end,numrad))
-    allocate(a2lf%forc_solar(beg:end))
-    allocate(a2lf%forc_rain(beg:end))
-    allocate(a2lf%forc_snow(beg:end))
-    allocate(a2lf%forc_ndep(beg:end))
-
-    a2lf%forc_lwrad(beg:end) = nan
-    a2lf%forc_solad(beg:end,1:numrad) = nan
-    a2lf%forc_solai(beg:end,1:numrad) = nan
-    a2lf%forc_solar(beg:end) = nan
-    a2lf%forc_rain(beg:end) = nan
-    a2lf%forc_snow(beg:end) = nan
-    a2lf%forc_ndep(beg:end) = nan
-
-  end subroutine init_atm2lnd_flux_type
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: init_lnd2atm_flux_type
-!
-! !INTERFACE:
-  subroutine init_lnd2atm_flux_type(beg, end, l2af)
-!
-! !DESCRIPTION:
-! Initialize land fluxes required by the atmosphere
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in) :: beg, end
-    type (lnd2atm_flux_type), intent(inout):: l2af
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!------------------------------------------------------------------------
-
-    allocate(l2af%taux(beg:end))
-    allocate(l2af%tauy(beg:end))
-    allocate(l2af%eflx_lwrad_out(beg:end))
-    allocate(l2af%eflx_sh_tot(beg:end))
-    allocate(l2af%eflx_lh_tot(beg:end))
-    allocate(l2af%qflx_evap_tot(beg:end))
-    allocate(l2af%fsa(beg:end))
-    allocate(l2af%nee(beg:end))
-
-    l2af%taux(beg:end) = nan
-    l2af%tauy(beg:end) = nan
-    l2af%eflx_lwrad_out(beg:end) = nan
-    l2af%eflx_sh_tot(beg:end) = nan
-    l2af%eflx_lh_tot(beg:end) = nan
-    l2af%qflx_evap_tot(beg:end) = nan
-    l2af%fsa(beg:end) = nan
-    l2af%nee(beg:end) = nan
-
-  end subroutine init_lnd2atm_flux_type
 
 !------------------------------------------------------------------------
 !BOP

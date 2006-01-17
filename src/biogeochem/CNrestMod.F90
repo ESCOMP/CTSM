@@ -44,8 +44,9 @@ contains
 !
 ! !USES:
     use clmtype
+    use clm_atmlnd, only : clm_a2l
     use ncdio
-    use decompMod, only : get_proc_bounds
+    use decompMod , only : get_proc_bounds
 !
 ! !ARGUMENTS:
     implicit none
@@ -8683,7 +8684,7 @@ contains
     end if
 
     !--------------------------------
-    ! gridcell a2ls variables
+    ! gridcell a2l variables
     !--------------------------------
 
     ! gricell forc_hgt_u
@@ -8691,7 +8692,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='forc_hgt_u', xtype=nf_double,  &
             dim1name='gridcell',long_name='observational height of wind',units='m')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='forc_hgt_u', data=gptr%a2ls%forc_hgt_u, &
+       call ncd_iolocal(varname='forc_hgt_u', data=clm_a2l%forc_hgt_u, &
             dim1name='gridcell', ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun

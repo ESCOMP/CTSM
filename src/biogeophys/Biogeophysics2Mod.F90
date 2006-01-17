@@ -73,6 +73,7 @@ contains
 !
 ! !USES:
     use clmtype
+    use clm_atmlnd        , only : clm_a2l
     use time_manager      , only : get_step_size
     use clm_varcon        , only : hvap, cpair, grav, vkc, tfrz, sb
     use clm_varpar        , only : nlevsno, nlevsoi, max_pft_per_col
@@ -173,7 +174,7 @@ contains
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
 
-    forc_lwrad => clm3%g%a2lf%forc_lwrad
+    forc_lwrad => clm_a2l%forc_lwrad
 
     ! Assign local pointers to derived subtypes components (column-level)
 

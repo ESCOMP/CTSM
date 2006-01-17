@@ -11,7 +11,8 @@ module pftdynMod
 ! !USES:
   use ncdio
   use spmdMod
-  use clm_varsur, only : numlon, pctspec, landmask
+  use domainMod , only : ldomain
+  use clm_varsur, only : pctspec
   use clm_varpar, only : max_pft_per_col
 !
 ! !DESCRIPTION:
@@ -38,6 +39,7 @@ module pftdynMod
   real(r8), pointer   :: wtpft1(:,:)   
   real(r8), pointer   :: wtpft2(:,:)   
   real(r8), pointer   :: wtpft(:,:)
+  real(r8), pointer   :: wtcol_old(:)
   integer :: nt1
   integer :: nt2
   integer :: ncid
@@ -107,7 +109,7 @@ contains
 
     ! pctspec must be saved between time samples
     ! position to first time sample - assume that first time sample must match starting date
-    ! check consistency -  special landunits, grid, landfrac and landmask
+    ! check consistency -  special landunits, grid, frac and mask
     ! only do this once
 
     ! read data PCT_PFT corresponding to correct year
@@ -115,6 +117,12 @@ contains
     allocate(wtpft1(numg,0:numpft), wtpft2(numg,0:numpft), wtpft(numg,0:numpft), stat=ier)
     if (ier /= 0) then
        write(6,*)'pctpft_dyn_init allocation error for wtpft1, wtpft2, wtpft'
+       call endrun()
+    end if
+
+    allocate(wtcol_old(nump),stat=ier)
+    if (ier /= 0) then
+       write(6,*)'pctpft_dyn_init allocation error for wtcol_old'
        call endrun()
     end if
 
@@ -157,16 +165,16 @@ contains
        call check_ret(nf_get_var_double(ncid, varid, pcturb), subname)
 
        do j = 1,lsmlat
-          do i = 1,numlon(j)
+          do i = 1,lsmlon
              if (pctlak(i,j)+pctwet(i,j)+pcturb(i,j)+pctgla(i,j) /= pctspec(i,j)) then 
                 write(6,*)'mismatch between input pctspec = ',&
                      pctlak(i,j)+pctwet(i,j)+pcturb(i,j)+pctgla(i,j),&
                      ' and that obtained from surface dataset ', pctspec(i,j),' at i,j= ',i,j
                 call endrun()
              end if
-             if (landmask_pftdyn(i,j) /= landmask(i,j)) then
+             if (landmask_pftdyn(i,j) /= ldomain%mask(i,j)) then
                 write(6,*)'mismatch between input landmask = ', landmask_pftdyn(i,j), & 
-                     ' and that obtained from surface dataset ', landmask(i,j),&
+                     ' and that obtained from surface dataset ', ldomain%mask(i,j),&
                      ' at i,j= ',i,j
                 call endrun()
              end if
@@ -398,11 +406,10 @@ contains
        l = pptr%landunit(p)
        if (lptr%itype(l) == istsoil) then
           m = pptr%itype(p)
+          wtcol_old(p)      = pptr%wtcol(p)
           pptr%wtgcell(p)   = wtpft(g,m)
           pptr%wtlunit(p)   = pptr%wtgcell(p) / lptr%wtgcell(l)
-          pptr%wtcol_old(p) = pptr%wtcol(p)
           pptr%wtcol(p)     = pptr%wtgcell(p) / lptr%wtgcell(l)
-  
        end if
     end do
     
@@ -450,8 +457,8 @@ contains
 
     err = 0
     do j = 1,lsmlat
-       do i = 1,numlon(j)
-          if (landmask(i,j) == 1 .and. pctspec(i,j) < 100._r8) then
+       do i = 1,lsmlon
+          if (ldomain%mask(i,j) == 1 .and. pctspec(i,j) < 100._r8) then
              sumpct = 0._r8
              do m = 1, numpft+1
                 sumpct = sumpct + pctpft(i,j,m) * 100._r8/(100._r8-pctspec(i,j))
@@ -605,7 +612,7 @@ contains
        if (lptr%itype(l) == istsoil) then
 
           ! calculate the change in weight for the timestep
-          dwt = pptr%wtcol(p)-pptr%wtcol_old(p)
+          dwt = pptr%wtcol(p)-wtcol_old(p)
   
           if (dwt > 0._r8) then
           
@@ -613,7 +620,7 @@ contains
              ! initial canopy water state is redistributed over the
              ! new (larger) area, conserving mass.
 
-             pptr%pws%h2ocan(p) = pptr%pws%h2ocan(p) * (pptr%wtcol_old(p)/pptr%wtcol(p))
+             pptr%pws%h2ocan(p) = pptr%pws%h2ocan(p) * (wtcol_old(p)/pptr%wtcol(p))
           
           else if (dwt < 0._r8) then
           
@@ -622,7 +629,7 @@ contains
              ! column-level flux term that gets added to the precip flux
              ! for every pft calculation in Hydrology1()
              
-             init_h2ocan = pptr%pws%h2ocan(p) * pptr%wtcol_old(p)
+             init_h2ocan = pptr%pws%h2ocan(p) * wtcol_old(p)
              loss_h2ocan(p) = pptr%pws%h2ocan(p) * (-dwt)
              new_h2ocan = init_h2ocan - loss_h2ocan(p)
              if (abs(new_h2ocan) < 1e-8_r8) then

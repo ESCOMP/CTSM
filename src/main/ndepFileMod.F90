@@ -17,7 +17,6 @@ module ndepFileMod
   use abortutils, only : endrun
   use ncdio
   use spmdMod     
-  use clm_varsur, only : numlon, landmask
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -60,7 +59,6 @@ contains
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varsur  , only : lsmlon,lsmlat
     use clm_varctl  , only : fndepdat                      
     use fileutils   , only : getfil
 !
@@ -301,6 +299,7 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use time_manager, only : get_curr_date, get_curr_calday
     use decompMod   , only : get_proc_global, get_proc_bounds
+    use clm_atmlnd  , only : clm_a2l
     use clm_varcon  , only : istsoil
 !
 ! !ARGUMENTS:
@@ -410,7 +409,7 @@ contains
 !dir$ concurrent
 !cdir nodep
     do g = begg,endg
-       gptr%a2lf%forc_ndep(g) = (ndepdyn1(g)*wt1 + ndepdyn2(g)* wt2)/(86400._r8 * 365._r8)
+       clm_a2l%forc_ndep(g) = (ndepdyn1(g)*wt1 + ndepdyn2(g)* wt2)/(86400._r8 * 365._r8)
     end do
 
   end subroutine ndepdyn_interp

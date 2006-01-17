@@ -251,7 +251,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      call BeginWaterBalance(begc, endc, begp, endp, &
           filter(nc)%num_nolakec, filter(nc)%nolakec, filter(nc)%num_lakec, filter(nc)%lakec)
      call t_stopf('begwbal')
-     
+
 #if (defined CN)
      if (doalb) then
         call t_startf('begcnbal')
@@ -745,7 +745,7 @@ subroutine write_diagnostic (wrtdia, nstep)
 ! timestep.
 !
 ! !USES:
-  use clmtype
+  use clm_atmlnd , only : clm_l2a
   use decompMod  , only : get_proc_bounds, get_proc_global
 #if (defined SPMD)
   use spmdMod    , only : masterproc, npes, MPI_REAL8, MPI_ANY_SOURCE, &
@@ -797,7 +797,7 @@ subroutine write_diagnostic (wrtdia, nstep)
      call mpi_barrier (mpicom, ier)
      call t_stopf ('sync_write_diag')
 #endif
-     psum = sum(clm3%g%l2as%t_rad(begg:endg))
+     psum = sum(clm_l2a%t_rad(begg:endg))
 #if (defined SPMD)
      if (masterproc) then
         tsum = psum

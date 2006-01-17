@@ -16,6 +16,9 @@ module mkvarctl
   save
 !
   character(len=256) :: mksrf_fnavyoro = ' ' ! directory for 20 min navy orography dataset
+  character(len=256) :: mksrf_fcamtopo = ' ' ! directory for cam topo file
+  character(len=256) :: mksrf_fccsmdom = ' ' ! directory for ccsm domain file
+  character(len=256) :: mksrf_fclmgrid = ' ' ! directory for ccsm domain file
   integer            :: mksrf_lsmlon = 0     ! create create with this number of longitudes
   integer            :: mksrf_lsmlat = 0     ! create create with this number of latitudes
   real(r8)           :: mksrf_edgen          ! northern edge of grid (degrees): >  -90 and < 90

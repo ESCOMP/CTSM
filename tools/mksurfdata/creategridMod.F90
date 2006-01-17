@@ -20,7 +20,6 @@ module creategridMod
   implicit none
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: creategrid    ! Generate land model grid.
   public :: read_domain   ! read domain from netcdf file
   public :: write_domain  ! write domain to netcdf file
 
@@ -34,237 +33,6 @@ module creategridMod
 !-----------------------------------------------------------------------
 
 contains
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: creategrid
-!
-! !INTERFACE:
-  subroutine creategrid(fname,type)
-!
-! !DESCRIPTION:
-! Generate land model grid.
-! Surface grid edges -- Grids do not have to be global. To allow this, grids
-! must define the north, east, south, and west edges:
-! namelist variables
-!    o fnavyoro : 20 min navy orography dataset
-!    o edgen (edge(1)) : northern edge of grid (degrees): >  -90 and <= 90
-!    o edgee (edge(2)) : eastern edge of grid (degrees) : see following notes
-!    o edges (edge(3)) : southern edge of grid (degrees): >= -90 and <  90
-!    o edgew (edge(4)) : western edge of grid (degrees) : see following notes
-! For partial grids, northern and southern edges are any latitude
-! between 90 (North Pole) and -90 (South Pole). Western and eastern
-! edges are any longitude between -180 and 180, with longitudes
-! west of Greenwich negative. That is, western edge >= -180 and < 180;
-! eastern edge > western edge and <= 180.
-! For global grids, northern and southern edges are 90 (North Pole)
-! and -90 (South Pole). The western edge of the longitude grid starts
-! at the dateline if the grid is generated (the longitudes for each grid
-! cell correspond with the edges (i.e., range from -180 to 180)).
-!
-! !USES:
-  use mkvarsur
-!
-! !ARGUMENTS:
-    implicit none
-    character(len=*), intent(in) :: fname
-    character(len=*), intent(in) :: type
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-
-    integer  :: i,j                            !indices
-    integer  :: lsmlon, lsmlat                 !local size
-    real(r8) :: dx                             !land model cell width
-    real(r8) :: dy                             !land model cell length
-    character(len= 32) :: subname = 'create_grid'
-!-----------------------------------------------------------------------
-
-    if (trim(type) == 'internal') then
-       if (mksrf_lsmlon==0 .and. mksrf_lsmlat==0) then
-          write(6,*)'must specify mksrf_lsmlon/lat with internal type'
-          stop
-       endif
-
-       call read_domain(ddomain,fname)
-
-       lsmlon     = mksrf_lsmlon
-       lsmlat     = mksrf_lsmlat
-
-       call domain_init(ldomain,lsmlon,lsmlat)
-
-       ldomain%numlon(:) = lsmlon
-       ldomain%edgen = mksrf_edgen
-       ldomain%edgee = mksrf_edgee
-       ldomain%edges = mksrf_edges
-       ldomain%edgew = mksrf_edgew
-
-       dx = (ldomain%edgee - ldomain%edgew) / lsmlon
-       dy = (ldomain%edgen - ldomain%edges) / lsmlat
-       do j = 1, lsmlat
-       do i = 1, lsmlon
-          ldomain%longxy(i,j) = ldomain%edgew + (2*i-1)*dx / 2.
-          ldomain%latixy(i,j) = ldomain%edges + (2*j-1)*dy / 2
-       end do
-       end do
-
-       ! Define edges and area of output land model grid cells
-       call celledge (ldomain, ldomain%edgen , ldomain%edgee , &
-                               ldomain%edges , ldomain%edgew)
-       call cellarea (ldomain, ldomain%edgen , ldomain%edgee , &
-                               ldomain%edges , ldomain%edgew)
-
-       call ddomain_to_ldomain(ddomain,ldomain)
-
-       write(6,*) ' '
-       write(6,*) trim(subname),'- ddomain:'
-       call domain_check(ddomain)
-
-    elseif (trim(type) == 'external') then
-       call read_domain(ldomain,fname)
-    else
-       write(6,*) 'creategrid ERROR, type = ',trim(type)
-       stop
-    endif
-
-    write (6,*) 'Successfully made land grid data'
-    write (6,*)
-    write(6,*) trim(subname),'- ldomain:'
-    call domain_check(ldomain)
-
-  end subroutine creategrid
-
-!----------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: ddomain_to_ldomain
-!
-! !INTERFACE:
-  subroutine ddomain_to_ldomain(ddomain,ldomain)
-!
-! !DESCRIPTION:
-! Read a grid file
-
-! !ARGUMENTS:
-    implicit none
-    type(domain_type),intent(in)  :: ddomain
-    type(domain_type),intent(out) :: ldomain
-!
-! !REVISION HISTORY:
-! Author: T Craig
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-    integer  :: i,j                         !indices
-    real(r8),allocatable :: fld_o(:,:)      !output grid: dummy field
-    real(r8),allocatable :: fld_i(:,:)      !input grid: dummy field
-    real(r8) :: sum_fldo                    !global sum of dummy output field
-    real(r8) :: sum_fldi                    !global sum of dummy input field
-    real(r8) :: relerr = 0.00001            !max error for sum weights ne 1
-    character(len= 32) :: subname = 'ddomain_to_ldomain'
-!-----------------------------------------------------------------
-
-    ddomain%mask = 1
-    ldomain%mask = 1
-
-    ! Determine output grid longitudes and latitudes in increments of dx and dy
-    ! Global latitude grid goes from south pole to north pole
-    ! Global longitude grid starts at Dateline with western edge on Dateline
-
-    allocate(fld_i(ddomain%ni,ddomain%nj))
-    allocate(fld_o(ldomain%ni,ldomain%nj))
-    fld_i = 1.0
-    fld_o = 1.0
-
-    call areaini(ddomain,ldomain,gridmap_d2l,fracin=fld_i,fracout=fld_o)
-
-    write(6,*) ' '
-    write(6,*) trim(subname),':'
-    call gridmap_checkmap(gridmap_d2l)
-
-    call areaave(ddomain%frac,ldomain%frac,gridmap_d2l)
-
-    if (minval(ldomain%frac) < -0.000001_r8 .or. &
-        maxval(ldomain%frac) >  1.000001_r8) then
-       write (6,*) 'MKGRID error: fland out of bounds [0,1] ', &
-          minval(ldomain%frac),maxval(ldomain%frac)
-       stop
-    end if
-
-    where (ldomain%frac(:,:) > 1.0_r8)
-       ldomain%frac(:,:) = 1.0_r8
-    endwhere
-
-    where (ldomain%frac(:,:) < 0.0_r8)
-       ldomain%frac(:,:) = 0.0_r8
-    endwhere
-
-    do j=1,ddomain%nj
-    do i=1,ddomain%ni
-       fld_i(i,j) = ((j-1)*ddomain%ni + i)
-    enddo
-    enddo
-
-    call areaave(fld_i,fld_o,gridmap_d2l)
-
-    ! -----------------------------------------------------------------
-    ! Error check1
-    ! Compare global sum fld_o to global sum fld_i.
-    ! -----------------------------------------------------------------
-
-    ! This check is true only if both grids span the same domain.
-    ! To obtain global sum of input field must multiply by
-    ! fraction of input grid that is land as determined by input grid
-
-    sum_fldi = 0.
-    do j = 1, ddomain%nj
-    do i = 1, ddomain%ni
-       sum_fldi = sum_fldi + ddomain%area(i,j) * fld_i(i,j)
-    end do
-    end do
-
-    sum_fldo = 0.
-    do j = 1,ldomain%nj
-    do i = 1,ldomain%ni
-       sum_fldo = sum_fldo + ldomain%area(i,j) * fld_o(i,j)
-    end do
-    end do
-
-    if ( abs(ldomain%edgen - ldomain%edges) == 180. .and. &
-         abs(ldomain%edgee - ldomain%edgew) == 360. ) then
-       if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-          write (6,*) 'MKGRID error: input field not conserved'
-          write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-          write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-          stop
-       end if
-    end if
-
-    ! Determine land mask
-
-    where (ldomain%frac(:,:) < flandmin)
-       ldomain%mask(:,:) = 0     !ocean
-    elsewhere
-       ldomain%mask(:,:) = 1     !land
-    endwhere
-
-    ! Reset landfrac to zero where landmask has been set to zero
-
-    where (ldomain%mask(:,:) == 0)
-       ldomain%frac(:,:) = 0
-    endwhere
-
-    ! deallocate dynamic memory
-
-    deallocate(fld_i,fld_o)
-
-  end subroutine ddomain_to_ldomain
 
 !----------------------------------------------------------------------------
 !BOP
@@ -316,14 +84,14 @@ contains
 
     write(6,*) ' ' 
 
-    dimset      = .false.
-    lonlatset   = .false.
-    edgeNESWset = .false.
-    llneswset   = .false.
-    areaset     = .false.
-    landfracset = .false.
-    maskset     = .false.
-    numlonset   = .false.
+    dimset      = .false. 
+    lonlatset   = .false. 
+    edgeNESWset = .false. 
+    llneswset   = .false. 
+    areaset     = .false. 
+    landfracset = .false. 
+    maskset     = .false. 
+    numlonset   = .false. 
 
     ! Read domain file and compute stuff as needed
 
@@ -452,13 +220,6 @@ contains
 
        call check_ret(nf_inq_varid (ncid, 'EDGEW', varid), subname)
        call check_ret(nf_get_var_double (ncid, varid, domain%edgew), subname)
-       !--- check whether edges read are acceptable ---
-       if ((abs(domain%edgen)+abs(domain%edges)+ &
-            abs(domain%edgee)+abs(domain%edgew)) > 1.0e6 .or. &
-            abs(domain%edgen-domain%edges) > 1.0e3 .or. &
-            abs(domain%edgee-domain%edgew) > 1.0e3) then 
-          edgeNESWset = .false.
-       endif
     endif
 
     ier = nf_inq_varid (ncid, 'xv', varid)

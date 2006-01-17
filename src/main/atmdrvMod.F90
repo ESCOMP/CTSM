@@ -16,24 +16,27 @@ module atmdrvMod
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_const_mod, only : SHR_CONST_TKFRZ, SHR_CONST_PSTD
-  use clm_varpar   , only : lsmlon, lsmlat
-  use abortutils   , only: endrun
+  use areaMod      , only : gridmap_type
+  use domainMod    , only : domain_type
+  use abortutils   , only : endrun
 #if (defined SPMD)
   use spmdMod      , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
 #else
   use spmdMod      , only : masterproc
 #endif
+  use shr_sys_mod  , only : shr_sys_flush
 !
 ! !PUBLIC TYPES:
   implicit none
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
+  public :: atmdrv_init  ! read atmospheric grid
   public :: atmdrv       ! read atmospheric data
-  public :: atm_getgrid  ! read atmospheric grid
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
+! 2005.12.15 T Craig Updated
 !
 !EOP
 !
@@ -45,63 +48,55 @@ module atmdrvMod
 !
 ! PRIVATE TYPES:
   private
+
+  type(domain_type)  :: ddomain        ! data file domain
+  type(gridmap_type) :: gridmap_d2a    ! local grid for datafile to atm grid
 !
 ! logical variables for file manipuation
 !
-  logical :: open_data=.true.             !true => open data file (first tstep of the run or month)
-  logical :: allocated_data=.false.       !true => allocate dynamic data
+  logical :: open_data=.true.          !true => open data file (first tstep &
+                                       !        of the run or month)
+  logical :: allocated_data=.false.    !true => allocate dynamic data
 !
-! atmospheric grid data
+! datafile, ddomain grid data
 !
-  integer  :: atmlon                      !number of atm longitudes
-  integer  :: atmlat                      !number of atm latitudes
-  real(r8) :: edge_a(4)                   !N,E,S,W edges of atm grid
-  integer , allocatable :: numlon_a(:)    !number of lon points at each lat
-  real(r8), allocatable :: latixy_a(:,:)  !latitude of grid cell (degrees)
-  real(r8), allocatable :: longxy_a(:,:)  !longitude of grid cell (degrees)
+  integer  :: datlon                   !number of data longitudes
+  integer  :: datlat                   !number of data latitudes
 !
-! atmospheric forcing variables on atmospheric grid
+! atmospheric forcing variables on raw data grid
 !
   real(r8), allocatable :: x(:,:,:)            !temp. array in which atm data is stored
-  real(r8), allocatable :: forc_txy_a (:,:)    !atm bottom level temperature (Kelvin)
-  real(r8), allocatable :: forc_uxy_a (:,:)    !atm bottom level zonal wind (m/s)
-  real(r8), allocatable :: forc_vxy_a (:,:)    !atm bottom level meridional wind (m/s)
-  real(r8), allocatable :: forc_qxy_a (:,:)    !atm bottom level specific humidity (kg/kg)
-  real(r8), allocatable :: zgcmxy_a (:,:)      !atm bottom level height above surface (m)
-  real(r8), allocatable :: prcxy_a  (:,:)      !convective precipitation rate (mm H2O/s)
-  real(r8), allocatable :: prlxy_a  (:,:)      !large-scale precipitation rate (mm H2O/s)
-  real(r8), allocatable :: flwdsxy_a(:,:)      !downward longwave rad onto surface (W/m**2)
-  real(r8), allocatable :: forc_solsxy_a (:,:) !vis direct beam solar rad onto srf (W/m**2)
-  real(r8), allocatable :: forc_sollxy_a (:,:) !nir direct beam solar rad onto srf (W/m**2)
-  real(r8), allocatable :: forc_solsdxy_a(:,:) !vis diffuse solar rad onto srf (W/m**2)
-  real(r8), allocatable :: forc_solldxy_a(:,:) !nir diffuse solar rad onto srf(W/m**2)
-  real(r8), allocatable :: forc_pbotxy_a (:,:) !atm bottom level pressure (Pa)
-  real(r8), allocatable :: forc_psrfxy_a (:,:) !atm surface pressure (Pa)
+  real(r8), allocatable :: forc_txy_d (:,:)    !atm bottom level temperature (Kelvin)
+  real(r8), allocatable :: forc_uxy_d (:,:)    !atm bottom level zonal wind (m/s)
+  real(r8), allocatable :: forc_vxy_d (:,:)    !atm bottom level meridional wind (m/s)
+  real(r8), allocatable :: forc_qxy_d (:,:)    !atm bottom level specific humidity (kg/kg)
+  real(r8), allocatable :: zgcmxy_d (:,:)      !atm bottom level height above surface (m)
+  real(r8), allocatable :: prcxy_d  (:,:)      !convective precipitation rate (mm H2O/s)
+  real(r8), allocatable :: prlxy_d  (:,:)      !large-scale precipitation rate (mm H2O/s)
+  real(r8), allocatable :: flwdsxy_d(:,:)      !downward longwave rad onto surface (W/m**2)
+  real(r8), allocatable :: forc_solsxy_d (:,:) !vis direct beam solar rad onto srf (W/m**2)
+  real(r8), allocatable :: forc_sollxy_d (:,:) !nir direct beam solar rad onto srf (W/m**2)
+  real(r8), allocatable :: forc_solsdxy_d(:,:) !vis diffuse solar rad onto srf (W/m**2)
+  real(r8), allocatable :: forc_solldxy_d(:,:) !nir diffuse solar rad onto srf(W/m**2)
+  real(r8), allocatable :: forc_pbotxy_d (:,:) !atm bottom level pressure (Pa)
+  real(r8), allocatable :: forc_psrfxy_d (:,:) !atm surface pressure (Pa)
 !
-! atmospheric forcing variables on land model grid
+! atmospheric forcing variables on atmosphere model grid
 !
-  real(r8) :: forc_txy (lsmlon,lsmlat)         !atm bottom level temperature (Kelvin)
-  real(r8) :: forc_uxy (lsmlon,lsmlat)         !atm bottom level zonal wind (m/s)
-  real(r8) :: forc_vxy (lsmlon,lsmlat)         !atm bottom level meridional wind (m/s)
-  real(r8) :: forc_qxy (lsmlon,lsmlat)         !atm bottom level specific humidity (kg/kg)
-  real(r8) :: zgcmxy (lsmlon,lsmlat)           !atm bottom level height above surface (m)
-  real(r8) :: prcxy  (lsmlon,lsmlat)           !convective precipitation rate (mm H2O/s)
-  real(r8) :: prlxy  (lsmlon,lsmlat)           !large-scale precipitation rate (mm H2O/s)
-  real(r8) :: flwdsxy(lsmlon,lsmlat)           !downward longwave rad onto surface (W/m**2)
-  real(r8) :: forc_solsxy (lsmlon,lsmlat)      !vis direct beam solar rad onto srf (W/m**2)
-  real(r8) :: forc_sollxy (lsmlon,lsmlat)      !nir direct beam solar rad onto srf (W/m**2)
-  real(r8) :: forc_solsdxy(lsmlon,lsmlat)      !vis diffuse solar rad onto srf (W/m**2)
-  real(r8) :: forc_solldxy(lsmlon,lsmlat)      !nir diffuse solar rad onto srf(W/m**2)
-  real(r8) :: forc_pbotxy (lsmlon,lsmlat)      !atm bottom level pressure (Pa)
-  real(r8) :: forc_psrfxy (lsmlon,lsmlat)      !atm surface pressure (Pa)
-!
-! atmosphere grid to land model surface grid mapping for each land grid cell:
-!
-  integer, parameter :: mxovr =10          !maximum number of overlapping cells
-  integer :: novr_a2s(lsmlon,lsmlat)       !number    of overlapping atm cells
-  integer :: iovr_a2s(lsmlon,lsmlat,mxovr) !lon index of overlapping atm cells
-  integer :: jovr_a2s(lsmlon,lsmlat,mxovr) !lat index of overlapping atm cells
-  real(r8):: wovr_a2s(lsmlon,lsmlat,mxovr) !weight    of overlapping atm cells
+  real(r8), allocatable :: forc_txy_a (:,:)         !atm bottom level temperature (Kelvin)
+  real(r8), allocatable :: forc_uxy_a (:,:)         !atm bottom level zonal wind (m/s)
+  real(r8), allocatable :: forc_vxy_a (:,:)         !atm bottom level meridional wind (m/s)
+  real(r8), allocatable :: forc_qxy_a (:,:)         !atm bottom level specific humidity (kg/kg)
+  real(r8), allocatable :: zgcmxy_a (:,:)           !atm bottom level height above surface (m)
+  real(r8), allocatable :: prcxy_a  (:,:)           !convective precipitation rate (mm H2O/s)
+  real(r8), allocatable :: prlxy_a  (:,:)           !large-scale precipitation rate (mm H2O/s)
+  real(r8), allocatable :: flwdsxy_a(:,:)           !downward longwave rad onto surface (W/m**2)
+  real(r8), allocatable :: forc_solsxy_a (:,:)      !vis direct beam solar rad onto srf (W/m**2)
+  real(r8), allocatable :: forc_sollxy_a (:,:)      !nir direct beam solar rad onto srf (W/m**2)
+  real(r8), allocatable :: forc_solsdxy_a(:,:)      !vis diffuse solar rad onto srf (W/m**2)
+  real(r8), allocatable :: forc_solldxy_a(:,:)      !nir diffuse solar rad onto srf(W/m**2)
+  real(r8), allocatable :: forc_pbotxy_a (:,:)      !atm bottom level pressure (Pa)
+  real(r8), allocatable :: forc_psrfxy_a (:,:)      !atm surface pressure (Pa)
 !
 ! file netCDF id's
 !
@@ -176,6 +171,7 @@ contains
     use nanMod
     use clmtype
     use decompMod   , only : get_proc_bounds
+    use clm_atmlnd  , only : clm_a2l, atm_a2l, gridmap_a2l, clm_mapa2l
     use clm_varctl  , only : offline_atmdir, pertlim
     use clm_varcon  , only : rair, cpair, co2_ppmv_const, o2_molar_const, tcrit, c13ratio
     use time_manager, only : get_step_size, get_curr_calday, get_curr_date
@@ -207,7 +203,7 @@ contains
     integer, SAVE :: atmmin           !temporal resolution of atm data (in minutes)
     character(len=256), SAVE :: locfn !full file name in case atmdir is in MSS
 #if (defined PERGRO)
-    real(r8) :: pertval
+    real(r8):: pertval
 #endif
     real(r8):: coefb        ! Slope of "Alta" expression for dependence of flfall on temp
     real(r8):: coefa        ! Offset of  of "Alta" expression for dependence of flfall on temp
@@ -278,15 +274,9 @@ contains
        ! direction) since land model cares about magnitude not direction.
        ! Then need to adjust resultant stresses for direction of wind.
 
-       call interpa2s (forc_txy_a    , forc_txy    , zgcmxy_a      , zgcmxy      , &
-                       forc_uxy_a    , forc_uxy    , forc_vxy_a    , forc_vxy    , &
-                       forc_qxy_a    , forc_qxy    , prcxy_a       , prcxy       , &
-                       prlxy_a       , prlxy       , flwdsxy_a     , flwdsxy     , &
-                       forc_solsxy_a , forc_solsxy , forc_sollxy_a , forc_sollxy , &
-                       forc_solsdxy_a, forc_solsdxy, forc_solldxy_a, forc_solldxy, &
-                       forc_pbotxy_a , forc_pbotxy , forc_psrfxy_a , forc_psrfxy )
+       call interpa2s
 
-       ! Map atmospheric fields to force land model: [lsmlon] x [lsmlat] grid ->
+       ! Map data fields to atm model: [datlon] x [datlat] grid ->
        ! [numland] vector of land points -> [numpatch] vector of subgrid patches
 
 #if (defined PERGRO)
@@ -306,88 +296,89 @@ contains
 #endif
 !dir$ concurrent
 !cdir nodep
+
        do g = begg, endg
           i = gptr%ixy(g)
           j = gptr%jxy(g)
 
           !States
 
-          gptr%a2ls%forc_t(g) = forc_txy(i,j)
-          gptr%a2ls%forc_u(g) = forc_uxy(i,j)
-          gptr%a2ls%forc_v(g) = forc_vxy(i,j)
-          gptr%a2ls%forc_wind(g) = sqrt(forc_uxy(i,j)**2 + forc_vxy(i,j)**2)
-          gptr%a2ls%forc_q(g) = forc_qxy(i,j)
-          gptr%a2ls%forc_hgt(g) = zgcmxy(i,j)
-          gptr%a2ls%forc_hgt_u(g) = zgcmxy(i,j) !observational height of wind [m]
-          gptr%a2ls%forc_hgt_t(g) = zgcmxy(i,j) !observational height of temp [m]
-          gptr%a2ls%forc_hgt_q(g) = zgcmxy(i,j) !observational height of humidity [m]
-          gptr%a2ls%forc_pbot(g) = forc_pbotxy(i,j)
-          gptr%a2ls%forc_psrf(g) = forc_psrfxy(i,j)
-          gptr%a2ls%forc_th(g)  = gptr%a2ls%forc_t(g) * (gptr%a2ls%forc_psrf(g) &
-               / gptr%a2ls%forc_pbot(g))**(rair/cpair)
-          gptr%a2ls%forc_vp(g)  = gptr%a2ls%forc_q(g) * gptr%a2ls%forc_pbot(g) &
-               / (0.622_r8 + 0.378_r8 * gptr%a2ls%forc_q(g))
-          gptr%a2ls%forc_rho(g) = (gptr%a2ls%forc_pbot(g) - 0.378_r8 * gptr%a2ls%forc_vp(g)) &
-               / (rair * gptr%a2ls%forc_t(g))
+          atm_a2l%forc_t(g) = forc_txy_a(i,j)
+          atm_a2l%forc_u(g) = forc_uxy_a(i,j)
+          atm_a2l%forc_v(g) = forc_vxy_a(i,j)
+          atm_a2l%forc_wind(g) = sqrt(forc_uxy_a(i,j)**2 + forc_vxy_a(i,j)**2)
+          atm_a2l%forc_q(g) = forc_qxy_a(i,j)
+          atm_a2l%forc_hgt(g) = zgcmxy_a(i,j)
+          atm_a2l%forc_hgt_u(g) = zgcmxy_a(i,j) !observational height of wind [m]
+          atm_a2l%forc_hgt_t(g) = zgcmxy_a(i,j) !observational height of temp [m]
+          atm_a2l%forc_hgt_q(g) = zgcmxy_a(i,j) !observational height of humidity [m]
+          atm_a2l%forc_pbot(g) = forc_pbotxy_a(i,j)
+          atm_a2l%forc_psrf(g) = forc_psrfxy_a(i,j)
+          atm_a2l%forc_th(g)  = atm_a2l%forc_t(g) * (atm_a2l%forc_psrf(g) &
+               / atm_a2l%forc_pbot(g))**(rair/cpair)
+          atm_a2l%forc_vp(g)  = atm_a2l%forc_q(g) * atm_a2l%forc_pbot(g) &
+               / (0.622_r8 + 0.378_r8 * atm_a2l%forc_q(g))
+          atm_a2l%forc_rho(g) = (atm_a2l%forc_pbot(g) - 0.378_r8 * atm_a2l%forc_vp(g)) &
+               / (rair * atm_a2l%forc_t(g))
 
           !BGC tracers
 
-          gptr%a2ls%forc_pco2(g) = co2_ppmv_const * 1.e-6_r8 * gptr%a2ls%forc_pbot(g)
-          gptr%a2ls%forc_po2(g)  = o2_molar_const * gptr%a2ls%forc_pbot(g)
+          atm_a2l%forc_pco2(g) = co2_ppmv_const * 1.e-6_r8 * atm_a2l%forc_pbot(g)
+          atm_a2l%forc_po2(g)  = o2_molar_const * atm_a2l%forc_pbot(g)
           ! 4/14/05: PET
           ! Adding isotope code
-          gptr%a2ls%forc_pc13o2(g) = co2_ppmv_const * c13ratio * 1.e-6_r8 * gptr%a2ls%forc_pbot(g)
+          atm_a2l%forc_pc13o2(g) = co2_ppmv_const * c13ratio * 1.e-6_r8 * atm_a2l%forc_pbot(g)
 
           !Fluxes
 
-          gptr%a2lf%forc_lwrad(g) = flwdsxy(i,j)
-          gptr%a2lf%forc_solad(g,1) = forc_solsxy(i,j)
-          gptr%a2lf%forc_solad(g,2) = forc_sollxy(i,j)
-          gptr%a2lf%forc_solai(g,1) = forc_solsdxy(i,j)
-          gptr%a2lf%forc_solai(g,2) = forc_solldxy(i,j)
-          gptr%a2lf%forc_solar(g) = forc_solsxy(i,j) + forc_sollxy(i,j) &
-               + forc_solsdxy(i,j) + forc_solldxy(i,j)
+          atm_a2l%forc_lwrad(g) = flwdsxy_a(i,j)
+          atm_a2l%forc_solad(g,1) = forc_solsxy_a(i,j)
+          atm_a2l%forc_solad(g,2) = forc_sollxy_a(i,j)
+          atm_a2l%forc_solai(g,1) = forc_solsdxy_a(i,j)
+          atm_a2l%forc_solai(g,2) = forc_solldxy_a(i,j)
+          atm_a2l%forc_solar(g) = forc_solsxy_a(i,j) + forc_sollxy_a(i,j) &
+               + forc_solsdxy_a(i,j) + forc_solldxy_a(i,j)
 
           ! Snow and Rain
           ! Set upper limit of air temperature for snowfall at 275.65K.
           ! This cut-off was selected based on Fig. 1, Plate 3-1, of Snow
           ! Hydrology (1956).
 
-          if (prcxy(i,j) + prlxy(i,j) > 0._r8) then
-             if (gptr%a2ls%forc_t(g) > (SHR_CONST_TKFRZ + tcrit)) then
-                gptr%a2lf%forc_rain(g) = prcxy(i,j) + prlxy(i,j)
-                gptr%a2lf%forc_snow(g) = 0._r8
-                gptr%a2ls%flfall(g) = 1._r8
+          if (prcxy_a(i,j) + prlxy_a(i,j) > 0._r8) then
+             if (atm_a2l%forc_t(g) > (SHR_CONST_TKFRZ + tcrit)) then
+                atm_a2l%forc_rain(g) = prcxy_a(i,j) + prlxy_a(i,j)
+                atm_a2l%forc_snow(g) = 0._r8
+                atm_a2l%flfall(g) = 1._r8
              else
-                gptr%a2lf%forc_rain(g) = 0._r8
-                gptr%a2lf%forc_snow(g) = prcxy(i,j) + prlxy(i,j)
+                atm_a2l%forc_rain(g) = 0._r8
+                atm_a2l%forc_snow(g) = prcxy_a(i,j) + prlxy_a(i,j)
 #if (defined PERGRO)
                 ! Note for cleanup: this PERGRO block has the same functional form as the
                 ! non-PERGRO block - not sure why.
 
                 coefb = 0.4_r8/2.0_r8
                 coefa = -coefb*SHR_CONST_TKFRZ
-                if (gptr%a2ls%forc_t(g) <= SHR_CONST_TKFRZ) then
-                   gptr%a2ls%flfall = 0.0_r8
-                else if (gptr%a2ls%forc_t(g) <= SHR_CONST_TKFRZ+2._r8) then
-                   gptr%a2ls%flfall(g) = coefa + coefb * gptr%a2ls%forc_t(g)
+                if (atm_a2l%forc_t(g) <= SHR_CONST_TKFRZ) then
+                   atm_a2l%flfall = 0.0_r8
+                else if (atm_a2l%forc_t(g) <= SHR_CONST_TKFRZ+2._r8) then
+                   atm_a2l%flfall(g) = coefa + coefb * atm_a2l%forc_t(g)
                 else
-                   gptr%a2ls%flfall(g) = coefa + coefb * (SHR_CONST_TKFRZ+2._r8)
+                   atm_a2l%flfall(g) = coefa + coefb * (SHR_CONST_TKFRZ+2._r8)
                 endif
 #else
-                if (gptr%a2ls%forc_t(g) <= SHR_CONST_TKFRZ) then
-                   gptr%a2ls%flfall(g) = 0._r8
-                else if (gptr%a2ls%forc_t(g) <= SHR_CONST_TKFRZ+2._r8) then
-                   gptr%a2ls%flfall(g) = -54.632_r8 + 0.2_r8 * gptr%a2ls%forc_t(g)
+                if (atm_a2l%forc_t(g) <= SHR_CONST_TKFRZ) then
+                   atm_a2l%flfall(g) = 0._r8
+                else if (atm_a2l%forc_t(g) <= SHR_CONST_TKFRZ+2._r8) then
+                   atm_a2l%flfall(g) = -54.632_r8 + 0.2_r8 * atm_a2l%forc_t(g)
                 else
-                   gptr%a2ls%flfall(g) = 0.4_r8
+                   atm_a2l%flfall(g) = 0.4_r8
                 endif
 #endif
              endif
           else
-             gptr%a2lf%forc_rain(g) = 0._r8
-             gptr%a2lf%forc_snow(g) = 0._r8
-             gptr%a2ls%flfall(g) = 1._r8
+             atm_a2l%forc_rain(g) = 0._r8
+             atm_a2l%forc_snow(g) = 0._r8
+             atm_a2l%flfall(g) = 1._r8
           endif
 
 #if (defined PERGRO)
@@ -396,7 +387,7 @@ contains
           if (pertlim /= 0.0_r8 .and. do_perturb) then
              call random_number (pertval)
              pertval = 2._r8*pertlim*(0.5_r8 - pertval)
-             gptr%a2ls%forc_t(g) = (gptr%a2ls%forc_t(g))*(1._r8 + pertval)
+             atm_a2l%forc_t(g) = (atm_a2l%forc_t(g))*(1._r8 + pertval)
           endif
 #endif
        end do
@@ -411,6 +402,8 @@ contains
           do_perturb = .false.
        endif
 #endif
+
+       call clm_mapa2l(atm_a2l,clm_a2l,gridmap_a2l)
 
     end if
 
@@ -427,10 +420,10 @@ contains
 !------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: atm_getgrid
+! !IROUTINE: atmdrv_init
 !
 ! !INTERFACE:
-  subroutine atm_getgrid()
+  subroutine atmdrv_init()
 !
 ! !DESCRIPTION:
 ! Read atmospheric grid
@@ -438,7 +431,8 @@ contains
 ! !USES:
     use nanMod
     use clm_varctl  , only : offline_atmdir
-    use clm_varsur  , only : numlon, longxy, latixy, lsmedge
+    use domainMod   , only : domain_init, adomain
+    use areaMod     , only : celledge, cellarea
     use fileutils   , only : getfil
     use time_manager, only : get_curr_date
     use ncdio
@@ -464,8 +458,12 @@ contains
     integer :: dimid              !netCDF dimension id
     integer :: varid              !netCDF variable id
     integer :: ier                !error status
-    character(len=32) :: subname = 'atm_getgrid'
+    character(len=32) :: subname = 'atmdrv_init'
+    integer :: atmlon,atmlat      !size of adomain
 !------------------------------------------------------------------------
+
+    atmlon = adomain%ni
+    atmlat = adomain%nj
 
     ! ----------------------------------------------------------------------
     ! Read offline grid data and allocate dynamic memory
@@ -482,7 +480,7 @@ contains
        call getfil(filenam, locfn, 1)
        inquire (file = locfn, exist = lexist)
        if (.not. lexist) then
-          write(6,*) 'ATM_GETGRID error: could not find initial atm datafile'
+          write(6,*) 'ATMDRV_INIT error: could not find initial atm datafile'
           call endrun
        endif
 
@@ -491,32 +489,49 @@ contains
        call check_ret(nf_open (locfn, nf_nowrite, ncid), subname)
 
        call check_ret(nf_inq_dimid  (ncid, 'lon', dimid), subname)
-       call check_ret(nf_inq_dimlen (ncid, dimid, atmlon), subname)
+       call check_ret(nf_inq_dimlen (ncid, dimid, datlon), subname)
 
        call check_ret(nf_inq_dimid  (ncid, 'lat', dimid), subname)
-       call check_ret(nf_inq_dimlen (ncid, dimid, atmlat), subname)
+       call check_ret(nf_inq_dimlen (ncid, dimid, datlat), subname)
 
        call check_ret(nf_inq_dimid  (ncid, 'time', dimid), subname)
        call check_ret(nf_inq_dimlen (ncid, dimid, ntim), subname)
        if (ntim == 0) then
-          write (6,*) 'ATM_GETGRID error: zero input time slices'
+          write (6,*) 'ATMDRV_INIT error: zero input time slices'
           call endrun
        end if
 
     endif  !end of if-masterproc block
 #if (defined SPMD)
-    call mpi_bcast (atmlon, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (atmlat, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (datlon, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (datlat, 1, MPI_INTEGER, 0, mpicom, ier)
 #endif
 
     ! Allocate space for dynamic variables
 
     if (.not. allocated_data) then
        if (masterproc) write(6,*)' ATM_GETRID: allocating dynamic space'
-       allocate (numlon_a(atmlat), &
-                 latixy_a(atmlon,atmlat), &
-                 longxy_a(atmlon,atmlat), &
-                 forc_txy_a(atmlon,atmlat), &
+       call domain_init(ddomain,datlon,datlat)
+       allocate( forc_txy_d(datlon,datlat), &
+                 forc_uxy_d(datlon,datlat), &
+                 forc_vxy_d(datlon,datlat), &
+                 forc_qxy_d(datlon,datlat), &
+                 zgcmxy_d(datlon,datlat), &
+                 prcxy_d(datlon,datlat), &
+                 prlxy_d(datlon,datlat), &
+                 flwdsxy_d(datlon,datlat), &
+                 forc_solsxy_d(datlon,datlat), &
+                 forc_sollxy_d(datlon,datlat), &
+                 forc_solsdxy_d(datlon,datlat), &
+                 forc_solldxy_d(datlon,datlat), &
+                 forc_pbotxy_d(datlon,datlat), &
+                 forc_psrfxy_d(datlon,datlat), &
+                 x(datlon,datlat,14), stat=ier)
+       if (ier /= 0) then
+          write (6,*) 'atmdrv_init(): allocation error _d'
+          call endrun
+       end if
+       allocate( forc_txy_a(atmlon,atmlat), &
                  forc_uxy_a(atmlon,atmlat), &
                  forc_vxy_a(atmlon,atmlat), &
                  forc_qxy_a(atmlon,atmlat), &
@@ -530,9 +545,9 @@ contains
                  forc_solldxy_a(atmlon,atmlat), &
                  forc_pbotxy_a(atmlon,atmlat), &
                  forc_psrfxy_a(atmlon,atmlat), &
-                 x(atmlon,atmlat,14), stat=ier)
+                 stat=ier)
        if (ier /= 0) then
-          write (6,*) 'atm_getgrid(): allocation error'
+          write (6,*) 'atmdrv_init(): allocation error _a'
           call endrun
        end if
        allocated_data = .true.
@@ -543,35 +558,47 @@ contains
     if (masterproc) then
 
        call check_ret(nf_inq_varid(ncid, 'EDGEN', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, edge_a(1)), subname)
+       call check_ret(nf_get_var_double(ncid, varid, ddomain%edges(1)), subname)
 
        call check_ret(nf_inq_varid(ncid, 'EDGEE', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, edge_a(2)), subname)
+       call check_ret(nf_get_var_double(ncid, varid, ddomain%edges(2)), subname)
 
        call check_ret(nf_inq_varid(ncid, 'EDGES', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, edge_a(3)), subname)
+       call check_ret(nf_get_var_double(ncid, varid, ddomain%edges(3)), subname)
 
        call check_ret(nf_inq_varid(ncid, 'EDGEW', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, edge_a(4)), subname)
+       call check_ret(nf_get_var_double(ncid, varid, ddomain%edges(4)), subname)
 
        call check_ret(nf_inq_varid(ncid, 'LONGXY', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, longxy_a), subname)
+       call check_ret(nf_get_var_double(ncid, varid, ddomain%lonc), subname)
 
        call check_ret(nf_inq_varid(ncid,'LATIXY', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, latixy_a), subname)
+       call check_ret(nf_get_var_double(ncid, varid, ddomain%latc), subname)
 
        call check_ret(nf_close (ncid), subname)
-       write (6,*) 'ATM_GETGRID: closing data for ',trim(locfn)
+       write (6,*) 'ATMDRV_INIT: closing data for ',trim(locfn)
 
     end if !end of if-masterproc block
 
 #if (defined SPMD)
-    call mpi_bcast (edge_a  , size(edge_a)  , MPI_REAL8 , 0, mpicom, ier)
-    call mpi_bcast (longxy_a, size(longxy_a), MPI_REAL8 , 0, mpicom, ier)
-    call mpi_bcast (latixy_a, size(latixy_a), MPI_REAL8 , 0, mpicom, ier)
+    call mpi_bcast (ddomain%edges,size(ddomain%edges),MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast (ddomain%lonc ,size(ddomain%lonc) ,MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast (ddomain%latc ,size(ddomain%latc) ,MPI_REAL8, 0, mpicom, ier)
 #endif
 
-  end subroutine atm_getgrid
+    call celledge (ddomain, &
+                   ddomain%edges(1) , ddomain%edges(2) , &
+                   ddomain%edges(3) , ddomain%edges(4)  )
+
+    call cellarea (ddomain, &
+                   ddomain%edges(1) , ddomain%edges(2) , &
+                   ddomain%edges(3) , ddomain%edges(4)  )
+
+    ! Initialize
+
+    call interpa2si
+
+  end subroutine atmdrv_init
 
 !------------------------------------------------------------------------
 !BOP
@@ -691,14 +718,14 @@ contains
           write (6,*) 'ATM_OPENFILE error: zero input time slices'
           call endrun
        end if
-       if (nlon /= atmlon) then
+       if (nlon /= datlon) then
           write (6,*) 'ATM_OPENFILE error: nlon = ',nlon, &
-               ' in data file not equal to atmlon = ',atmlon,' first read in'
+               ' in data file not equal to datlon = ',datlon,' first read in'
           call endrun
        end if
-       if (nlat /= atmlat) then
+       if (nlat /= datlat) then
           write (6,*) 'ATMRD error: nlat = ',nlat, &
-               ' in data file not equal to atmlat = ',atmlat,' first read in'
+               ' in data file not equal to datlat = ',datlat,' first read in'
           call endrun
        end if
 
@@ -837,8 +864,8 @@ contains
 
        ! read input data single-level fields
 
-       beg3d(1) = 1     ;  len3d(1) = atmlon
-       beg3d(2) = 1     ;  len3d(2) = atmlat
+       beg3d(1) = 1     ;  len3d(1) = datlon
+       beg3d(2) = 1     ;  len3d(2) = datlat
        beg3d(3) = itim  ;  len3d(3) = 1
        do k = 1, 14
           do n = 1, nvar
@@ -877,9 +904,8 @@ contains
 #if !defined (USE_OMP)
 !CSD$ PARALLEL DO PRIVATE (i,j,e,ea,qsat)
 #endif
-    do j = 1, atmlat
-       do i = 1, atmlon
-
+    do j = 1, datlat
+       do i = 1, datlon
           ! FORC_TXY
           if (nint(x(i,j,1)) == -1) then
              write(6,*)'ATM error: TBOT has not been read by atmrd'
@@ -887,9 +913,9 @@ contains
           else if (x(i,j,1) < 50._r8) then
              write(6,*)'ATM error: TBOT appears to be in deg C'
              write(6,*)'Converting to Kelvins now'
-             forc_txy_a(i,j) = x(i,j,1) + SHR_CONST_TKFRZ
+             forc_txy_d(i,j) = x(i,j,1) + SHR_CONST_TKFRZ
           else
-             forc_txy_a(i,j) = x(i,j,1)
+             forc_txy_d(i,j) = x(i,j,1)
           end if
 
           ! FORC_UXY, FORC_VXY
@@ -897,17 +923,17 @@ contains
              write(6,*)'ATM error: WIND has not been read by atmrd'
              atmread_err = .true.
           else
-             forc_uxy_a(i,j) = x(i,j,2) / sqrt(2._r8)
-             forc_vxy_a(i,j) = x(i,j,2) / sqrt(2._r8)
+             forc_uxy_d(i,j) = x(i,j,2) / sqrt(2._r8)
+             forc_vxy_d(i,j) = x(i,j,2) / sqrt(2._r8)
           end if
 
           ! FORC_PSRFXY, FORC_PBOTXY
           if (nint(x(i,j,7)) == -1) then
-             forc_psrfxy_a(i,j) = SHR_CONST_PSTD
+             forc_psrfxy_d(i,j) = SHR_CONST_PSTD
           else
-             forc_psrfxy_a(i,j) = x(i,j,7)
+             forc_psrfxy_d(i,j) = x(i,j,7)
           end if
-          forc_pbotxy_a(i,j)  = forc_psrfxy_a(i,j)
+          forc_pbotxy_d(i,j)  = forc_psrfxy_d(i,j)
 
           !FORC_QXY
           if (nint(x(i,j,3)) == -1) then
@@ -917,20 +943,20 @@ contains
                    write(6,*)'read by atmrd'
                    atmread_err = .true.
                 else          !using RH as %
-                   if (forc_txy_a(i,j) > SHR_CONST_TKFRZ) then
-                      e = x(i,j,5)/100._r8 * esatw(tdc(forc_txy_a(i,j)))
+                   if (forc_txy_d(i,j) > SHR_CONST_TKFRZ) then
+                      e = x(i,j,5)/100._r8 * esatw(tdc(forc_txy_d(i,j)))
                    else
-                      e = x(i,j,5)/100._r8 * esati(tdc(forc_txy_a(i,j)))
+                      e = x(i,j,5)/100._r8 * esati(tdc(forc_txy_d(i,j)))
                    end if
                 end if
-                forc_qxy_a(i,j) = 0.622_r8*e / (forc_pbotxy_a(i,j) - 0.378_r8*e)
+                forc_qxy_d(i,j) = 0.622_r8*e / (forc_pbotxy_d(i,j) - 0.378_r8*e)
              else             !using Tdew
                 if (x(i,j,4) < 50._r8) then
                    write(6,*)'ATM warning: Tdew appears to be in'
                    write(6,*)'deg C, so converting to Kelvin'
                    x(i,j,4) = x(i,j,4) + SHR_CONST_TKFRZ
                 end if
-                if (x(i,j,4) > forc_txy_a(i,j)) then
+                if (x(i,j,4) > forc_txy_d(i,j)) then
                    write(6,*)'ATM warning: Dewpt temp > temp!'
                 end if
                 if (x(i,j,4) > SHR_CONST_TKFRZ) then
@@ -938,74 +964,74 @@ contains
                 else
                    e = esati(tdc(x(i,j,4)))
                 end if
-                forc_qxy_a(i,j) = 0.622_r8*e / (forc_pbotxy_a(i,j) - 0.378_r8*e)
+                forc_qxy_d(i,j) = 0.622_r8*e / (forc_pbotxy_d(i,j) - 0.378_r8*e)
              end if
           else                !using QBOT in kg/kg
-             if (forc_txy_a(i,j) > SHR_CONST_TKFRZ) then
-                e = esatw(tdc(forc_txy_a(i,j)))
+             if (forc_txy_d(i,j) > SHR_CONST_TKFRZ) then
+                e = esatw(tdc(forc_txy_d(i,j)))
              else
-                e = esati(tdc(forc_txy_a(i,j)))
+                e = esati(tdc(forc_txy_d(i,j)))
              end if
-             qsat = 0.622_r8*e / (forc_pbotxy_a(i,j) - 0.378_r8*e)
+             qsat = 0.622_r8*e / (forc_pbotxy_d(i,j) - 0.378_r8*e)
              if (qsat < x(i,j,3)) then
-                forc_qxy_a(i,j) = qsat
+                forc_qxy_d(i,j) = qsat
 !                 write(6,*)'ATM warning: qsat < q!'
              else
-                forc_qxy_a(i,j) = x(i,j,3)
+                forc_qxy_d(i,j) = x(i,j,3)
              end if
           end if
 
           ! ZGCMXY
           if (nint(x(i,j,6)) == -1) then
-             zgcmxy_a(i,j) = 30._r8
+             zgcmxy_d(i,j) = 30._r8
           else
-             zgcmxy_a(i,j) = x(i,j,6)
+             zgcmxy_d(i,j) = x(i,j,6)
           end if
 
           ! FORC_SOLSXY, FORC_SOLLXY, FORC_SOLSDXY, FORC_SOLLDXY
 
           if (nint(x(i,j,9))==-1.or.nint(x(i,j,10))==-1) then
              if (nint(x(i,j,8)) /= -1) then
-                forc_solsxy_a(i,j)  = 0.7_r8 * (0.5_r8 * x(i,j,8))
-                forc_sollxy_a(i,j)  = forc_solsxy_a(i,j)
-                forc_solsdxy_a(i,j) = 0.3_r8 * (0.5_r8 * x(i,j,8))
-                forc_solldxy_a(i,j) = forc_solsdxy_a(i,j)
+                forc_solsxy_d(i,j)  = 0.7_r8 * (0.5_r8 * x(i,j,8))
+                forc_sollxy_d(i,j)  = forc_solsxy_d(i,j)
+                forc_solsdxy_d(i,j) = 0.3_r8 * (0.5_r8 * x(i,j,8))
+                forc_solldxy_d(i,j) = forc_solsdxy_d(i,j)
              else
                 write(6,*)'ATM error: neither FSDSdir/dif nor'
                 write(6,*)'       FSDS have been read in by atmrd'
                 atmread_err = .true.
              end if
           else
-             forc_solsxy_a(i,j)  = 0.5_r8 * x(i,j,9)
-             forc_sollxy_a(i,j)  = forc_solsxy_a(i,j)
-             forc_solsdxy_a(i,j) = 0.5_r8 * x(i,j,10)
-             forc_solldxy_a(i,j) = forc_solsdxy_a(i,j)
+             forc_solsxy_d(i,j)  = 0.5_r8 * x(i,j,9)
+             forc_sollxy_d(i,j)  = forc_solsxy_d(i,j)
+             forc_solsdxy_d(i,j) = 0.5_r8 * x(i,j,10)
+             forc_solldxy_d(i,j) = forc_solsdxy_d(i,j)
           end if
 
           ! PRCXY, PRLXY
 
           if (nint(x(i,j,13))==-1.or.nint(x(i,j,14))==-1) then
              if (nint(x(i,j,12)).ne.-1) then
-                prcxy_a(i,j) = 0.1_r8 * x(i,j,12)
-                prlxy_a(i,j) = 0.9_r8 * x(i,j,12)
+                prcxy_d(i,j) = 0.1_r8 * x(i,j,12)
+                prlxy_d(i,j) = 0.9_r8 * x(i,j,12)
              else
                 write(6,*)'ATM error: neither PRECC/L nor PRECT'
                 write(6,*)'           have been read in by atmrd'
                 atmread_err = .true.
              end if
           else
-             prcxy_a(i,j) = x(i,j,13)
-             prlxy_a(i,j) = x(i,j,14)
+             prcxy_d(i,j) = x(i,j,13)
+             prlxy_d(i,j) = x(i,j,14)
           end if
 
           ! FLWDSXY
 
           if (nint(x(i,j,11)) == -1) then
-             e = forc_psrfxy_a(i,j) * forc_qxy_a(i,j) / (0.622_r8 + 0.378_r8 * forc_qxy_a(i,j))
-             ea = 0.70_r8 + 5.95e-05_r8 * 0.01_r8*e * exp(1500.0_r8/forc_txy_a(i,j))
-             flwdsxy_a(i,j) = ea * sb * forc_txy_a(i,j)**4
+             e = forc_psrfxy_d(i,j) * forc_qxy_d(i,j) / (0.622_r8 + 0.378_r8 * forc_qxy_d(i,j))
+             ea = 0.70_r8 + 5.95e-05_r8 * 0.01_r8*e * exp(1500.0_r8/forc_txy_d(i,j))
+             flwdsxy_d(i,j) = ea * sb * forc_txy_d(i,j)**4
           else
-             flwdsxy_a(i,j) = x(i,j,11)
+             flwdsxy_d(i,j) = x(i,j,11)
           end if
 
        end do                 !end loop of latitudes
@@ -1034,8 +1060,9 @@ contains
 ! Initialize variables for atm->land model surface interp
 !
 ! !USES:
-    use clm_varsur, only : numlon, longxy, latixy, lsmedge, lonw, lats, area
-    use areaMod
+    use areaMod  , only : areaini,gridmap_checkmap
+    use domainMod, only : adomain
+
 !
 ! !ARGUMENTS:
     implicit none
@@ -1048,20 +1075,17 @@ contains
 ! LOCAL VARIABLES:
     integer :: i,j                       !indices
     integer :: ier                       !error status
-    real(r8), allocatable :: lon_a(:,:)  !atm grid longitude cell edges
-    real(r8), allocatable :: lat_a(:)    !atm grid latitude cell edges
-    real(r8), allocatable :: area_a(:,:) !atm grid grid cell areas
-    real(r8), allocatable :: mask_a(:,:) !dummy field: atm grid mask
-    real(r8), allocatable :: mask_s(:,:) !dummy field: land model grid mask
+    integer :: atmlon,atmlat             !size of adomain
+    real(r8), allocatable :: mask_d(:,:) !dummy field: atm grid mask
+    real(r8), allocatable :: mask_a(:,:) !dummy field: land model grid mask
 !------------------------------------------------------------------------
+
+    atmlon = adomain%ni
+    atmlat = adomain%nj
 
     ! Dynamically allocate memory
 
-    allocate (lon_a(atmlon+1,atmlat), &
-              lat_a(atmlat+1), &
-              area_a(atmlon,atmlat), &
-              mask_a(atmlon,atmlat), &
-              mask_s(lsmlon,lsmlat), stat=ier)
+    allocate (mask_d(datlon,datlat),mask_a(atmlon,atmlat), stat=ier)
     if (ier /= 0) then
        write (6,*) 'interpa2si(): allocation error'
        call endrun
@@ -1076,49 +1100,33 @@ contains
     ! Map from atmosphere grid to surface grid
     ! --------------------------------------------------------------------
 
-    ! determine numlon for atmosphere grid
-
-    numlon_a(:) = 0
-    do j = 1, atmlat
-       do i = 1, atmlon
-          if (longxy_a(i,j) /= 1.e36_r8) numlon_a(j) = numlon_a(j) + 1
-       end do
-    end do
-
-    ! [mask_a] = 1 means all grid cells on atm grid, regardless of whether
+    ! [mask_d] = 1 means all grid cells on atm grid, regardless of whether
     ! land or ocean, will contribute to surface grid.
 
-    do j = 1, atmlat
-       do i = 1, numlon_a(j)
-          mask_a(i,j) = 1._r8
+    do j = 1, datlat
+       do i = 1, datlon
+          mask_d(i,j) = 1._r8
        end do
     end do
 
-    ! [mask_s] = 1 means all the surface grid is land. Used as dummy
+    ! [mask_a] = 1 means all the surface grid is land. Used as dummy
     ! variable so code will not abort with false, non-valid error check
 
-    do j = 1, lsmlat
-       do i = 1, numlon(j)
-          mask_s(i,j) = 1._r8
+    do j = 1, atmlat
+       do i = 1, atmlon
+          mask_a(i,j) = 1._r8
        end do
     end do
 
     ! For each surface grid cell: get lat [jovr_a2s] and lon [iovr_a2s] indices
     ! and weights [wovr_a2s] of overlapping atm grid cells
 
-    call celledge (atmlat    , atmlon    , numlon_a  , longxy_a  , &
-                   latixy_a  , edge_a(1) , edge_a(2) , edge_a(3) , &
-                   edge_a(4) , lat_a     , lon_a     )
+    call areaini (ddomain, adomain, gridmap_d2a, &
+                  fracin=mask_d, fracout=mask_a )
 
-    call cellarea (atmlat    , atmlon    , numlon_a  , lat_a     , &
-                   lon_a     , edge_a(1) , edge_a(2) , edge_a(3) , &
-                   edge_a(4) , area_a    )
+    call gridmap_checkmap(gridmap_d2a)
 
-    call areaini (atmlon, atmlat, numlon_a, lon_a, lat_a, area_a, mask_a, &
-                  lsmlon, lsmlat, numlon  , lonw , lats , area  , mask_s, &
-                  mxovr , novr_a2s, iovr_a2s, jovr_a2s, wovr_a2s )
-
-    deallocate (lon_a, lat_a, area_a, mask_a, mask_s)
+    deallocate (mask_d, mask_a)
 
     if ( masterproc )then
        write (6,*) 'Successfully made atm -> srf interpolation'
@@ -1134,53 +1142,16 @@ contains
 ! !IROUTINE: interpa2s
 !
 ! !INTERFACE:
-  subroutine interpa2s (forc_t_a  , forc_t_s  , zgcm_a  , zgcm_s  , &
-                        forc_u_a  , forc_u_s  , forc_v_a  , forc_v_s  , &
-                        forc_q_a  , forc_q_s  , prc_a   , prc_s   , &
-                        prl_a   , prl_s   , flwds_a , flwds_s , &
-                        forc_sols_a, forc_sols_s  , forc_soll_a  , &
-                        forc_soll_s, forc_solsd_a , forc_solsd_s , &
-                        forc_solld_a, forc_solld_s, forc_pbot_a  , &
-                        forc_pbot_s  , forc_psrf_a  , forc_psrf_s  )
+  subroutine interpa2s ()
 !
 ! !DESCRIPTION:
 ! Area average fields from atmosphere grid to surface grid
 !
 ! !USES:
-    use clm_varsur, only : numlon, longxy, latixy, lsmedge
     use areaMod
 !
 ! !ARGUMENTS:
     implicit none
-    real(r8), intent(in)  ::  forc_t_a(atmlon,atmlat)     !atm bottom level temperature (Kelvin)
-    real(r8), intent(in)  ::  zgcm_a(atmlon,atmlat)       !atm bottom level height above surface (m)
-    real(r8), intent(in)  ::  forc_u_a(atmlon,atmlat)     !atm bottom level zonal wind (m/s)
-    real(r8), intent(in)  ::  forc_v_a(atmlon,atmlat)     !atm bottom level meridional wind (m/s)
-    real(r8), intent(in)  ::  forc_q_a(atmlon,atmlat)     !atm bottom level specific humidity (kg/kg)
-    real(r8), intent(in)  ::  prc_a(atmlon,atmlat)        !convective precipitation rate (mm H2O/s)
-    real(r8), intent(in)  ::  prl_a(atmlon,atmlat)        !large-scale precipitation rate (mm H2O/s)
-    real(r8), intent(in)  ::  flwds_a(atmlon,atmlat)      !downward longwave rad onto surface (W/m**2)
-    real(r8), intent(in)  ::  forc_sols_a(atmlon,atmlat)  !vis direct beam solar rad onto srf (W/m**2)
-    real(r8), intent(in)  ::  forc_soll_a(atmlon,atmlat)  !nir direct beam solar rad onto srf (W/m**2)
-    real(r8), intent(in)  ::  forc_solsd_a(atmlon,atmlat) !vis diffuse solar rad onto srf (W/m**2)
-    real(r8), intent(in)  ::  forc_solld_a(atmlon,atmlat) !nir diffuse solar rad onto srf(W/m**2)
-    real(r8), intent(in)  ::  forc_pbot_a(atmlon,atmlat)  !atm bottom level pressure (Pa)
-    real(r8), intent(in)  ::  forc_psrf_a(atmlon,atmlat)  !atm surface pressure (Pa)
-
-    real(r8), intent(out) ::  forc_t_s(lsmlon,lsmlat)     !atm bottom level temperature (Kelvin)
-    real(r8), intent(out) ::  zgcm_s(lsmlon,lsmlat)       !atm bottom level height above surface (m)
-    real(r8), intent(out) ::  forc_u_s(lsmlon,lsmlat)     !atm bottom level zonal wind (m/s)
-    real(r8), intent(out) ::  forc_v_s(lsmlon,lsmlat)     !atm bottom level meridional wind (m/s)
-    real(r8), intent(out) ::  forc_q_s(lsmlon,lsmlat)     !atm bottom level specific humidity (kg/kg)
-    real(r8), intent(out) ::  prc_s(lsmlon,lsmlat)        !convective precipitation rate (mm H2O/s)
-    real(r8), intent(out) ::  prl_s(lsmlon,lsmlat)        !large-scale precipitation rate (mm H2O/s)
-    real(r8), intent(out) ::  flwds_s(lsmlon,lsmlat)      !downward longwave rad onto surface (W/m**2)
-    real(r8), intent(out) ::  forc_sols_s(lsmlon,lsmlat)  !vis direct beam solar rad onto srf (W/m**2)
-    real(r8), intent(out) ::  forc_soll_s(lsmlon,lsmlat)  !nir direct beam solar rad onto srf (W/m**2)
-    real(r8), intent(out) ::  forc_solsd_s(lsmlon,lsmlat) !vis diffuse solar rad onto srf (W/m**2)
-    real(r8), intent(out) ::  forc_solld_s(lsmlon,lsmlat) !nir diffuse solar rad onto srf(W/m**2)
-    real(r8), intent(out) ::  forc_pbot_s(lsmlon,lsmlat)  !atm bottom level pressure (Pa)
-    real(r8), intent(out) ::  forc_psrf_s(lsmlon,lsmlat)  !atm surface pressure (Pa)
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan
@@ -1189,17 +1160,9 @@ contains
 !
 ! LOCAL VARIABLES:
     integer  :: i,j                  !longitude,latitude loop indices
-    real(r8) :: forc_u(atmlon,atmlat)  !dummy wind (u)
-    real(r8) :: forc_v(atmlon,atmlat)  !dummy wind (v)
-    logical  :: initinterp = .false. !interpolation initialization flag
+    real(r8) :: forc_u(datlon,datlat)  !dummy wind (u)
+    real(r8) :: forc_v(datlon,datlat)  !dummy wind (v)
 !------------------------------------------------------------------------
-
-    ! Initialize
-
-    if (.not. initinterp) then
-       call interpa2si
-       initinterp = .true.
-    endif
 
     ! area-average absolute value of winds (i.e., regardless of
     ! direction) since land model cares about magnitude not direction.
@@ -1209,10 +1172,10 @@ contains
 #if !defined (USE_OMP)
 !CSD$ PARALLEL DO PRIVATE (j,i)
 #endif
-    do j = 1, atmlat
-       do i = 1, numlon_a(j)
-          forc_u(i,j) = abs(forc_u_a(i,j))
-          forc_v(i,j) = abs(forc_v_a(i,j))
+    do j = 1, datlat
+       do i = 1, datlon
+          forc_u(i,j) = abs(forc_uxy_d(i,j))
+          forc_v(i,j) = abs(forc_vxy_d(i,j))
        end do
     end do
 #if !defined (USE_OMP)
@@ -1220,61 +1183,20 @@ contains
 #endif
 !$OMP END PARALLEL DO
 
-    call areaave (atmlat   , atmlon   , numlon_a , forc_t_a  , &
-                  lsmlat   , lsmlon   , numlon   , forc_t_s  , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , zgcm_a  , &
-                  lsmlat   , lsmlon   , numlon   , zgcm_s  , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , forc_u    , &
-                  lsmlat   , lsmlon   , numlon   , forc_u_s  , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , forc_v    , &
-                  lsmlat   , lsmlon   , numlon   , forc_v_s  , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , forc_q_a  , &
-                  lsmlat   , lsmlon   , numlon   , forc_q_s  , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , forc_pbot_a  , &
-                  lsmlat   , lsmlon   , numlon   , forc_pbot_s  , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , forc_psrf_a  , &
-                  lsmlat   , lsmlon   , numlon   , forc_psrf_s  , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , prc_a   , &
-                  lsmlat   , lsmlon   , numlon   , prc_s   , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , prl_a   , &
-                  lsmlat   , lsmlon   , numlon   , prl_s   , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , flwds_a , &
-                  lsmlat   , lsmlon   , numlon   , flwds_s , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , forc_sols_a  , &
-                  lsmlat   , lsmlon   , numlon   , forc_sols_s  , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , forc_soll_a  , &
-                  lsmlat   , lsmlon   , numlon   , forc_soll_s  , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , forc_solsd_a , &
-                  lsmlat   , lsmlon   , numlon   , forc_solsd_s , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
-
-    call areaave (atmlat   , atmlon   , numlon_a , forc_solld_a , &
-                  lsmlat   , lsmlon   , numlon   , forc_solld_s , &
-                  iovr_a2s , jovr_a2s , wovr_a2s , mxovr   )
+    call areaave ( forc_txy_d    , forc_txy_a    , gridmap_d2a )
+    call areaave ( forc_u        , forc_uxy_a    , gridmap_d2a )
+    call areaave ( forc_v        , forc_vxy_a    , gridmap_d2a )
+    call areaave ( forc_qxy_d    , forc_qxy_a    , gridmap_d2a )
+    call areaave ( zgcmxy_d      , zgcmxy_a      , gridmap_d2a )
+    call areaave ( prcxy_d       , prcxy_a       , gridmap_d2a )
+    call areaave ( prlxy_d       , prlxy_a       , gridmap_d2a )
+    call areaave ( flwdsxy_d     , flwdsxy_a     , gridmap_d2a )
+    call areaave ( forc_solsxy_d , forc_solsxy_a , gridmap_d2a )
+    call areaave ( forc_sollxy_d , forc_sollxy_a , gridmap_d2a )
+    call areaave ( forc_solsdxy_d, forc_solsdxy_a, gridmap_d2a )
+    call areaave ( forc_solldxy_d, forc_solldxy_a, gridmap_d2a )
+    call areaave ( forc_pbotxy_d , forc_pbotxy_a , gridmap_d2a )
+    call areaave ( forc_psrfxy_d , forc_psrfxy_a , gridmap_d2a )
 
   end subroutine interpa2s
 

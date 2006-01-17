@@ -66,7 +66,7 @@ contains
     use clm_varctl      , only : finidat
     use initSurfAlbMod  , only : initSurfAlb, do_initsurfalb 
     use time_manager    , only : get_nstep, get_step_size, get_curr_calday
-    use lnd2atmMod      , only : lnd2atm
+    use clm_atmlnd      , only : clm_map2gcell
     use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
 !
 ! !ARGUMENTS:
@@ -104,7 +104,7 @@ contains
 
        ! Determine gridcell averaged properties to send to atm
 
-       call lnd2atm(init=.true.)
+       call clm_map2gcell(init=.true.)
 
     end if
 
@@ -127,7 +127,7 @@ contains
     use time_manager, only : get_nstep, get_step_size, get_curr_calday
     use clm_varorb  , only : eccen, mvelpp, lambm0, obliqr
     use driver      , only : driver1
-    use lnd2atmMod  , only : lnd2atm
+    use clm_atmlnd  , only : clm_map2gcell
 !
 ! !ARGUMENTS:
 !
@@ -164,7 +164,7 @@ contains
 
     ! Determine gridcell averaged properties to send to atm (l2as and l2af derived types)
 
-    call lnd2atm( )
+    call clm_map2gcell( )
 
   end subroutine clm_run1
 

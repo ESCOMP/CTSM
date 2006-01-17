@@ -15,6 +15,7 @@ subroutine CNiniTimeVar()
 !
 ! !USES:
    use clmtype
+   use clm_atmlnd  , only: clm_a2l
    use shr_kind_mod, only: r8 => shr_kind_r8
    use clm_varcon  , only: istsoil, c13ratio
    use pftvarcon   , only: noveg
@@ -233,7 +234,7 @@ subroutine CNiniTimeVar()
 !-----------------------------------------------------------------------
 
     ! assign local pointers at the gridcell level
-    forc_hgt_u                     => clm3%g%a2ls%forc_hgt_u
+    forc_hgt_u                     => clm_a2l%forc_hgt_u
 
     ! assign local pointers at the landunit level
     lakpoi                         => clm3%g%l%lakpoi

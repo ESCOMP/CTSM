@@ -27,17 +27,17 @@ module decompMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public initDecomp              ! initializes land surface decomposition
-                                 ! into clumps and processors
+!                                 ! into clumps and processors
   public get_nclumps             ! returns the number of clumps defined
-  public get_clump_cell_id_coord ! returns clump/cell ids based on lon/lat
   public get_clump_owner_id      ! returns clump owner based on clump id
   public get_clump_ncells_proc   ! returns number of cells for process
   public get_clump_ncells_id     ! returns number of cells in clump
-  public get_clump_coord_id      ! returns lon/lat coordinates based on id
   public get_clump_gcell_info    ! returns 1d gridcell index
   public get_clump_bounds        ! beg and end gridcell, landunit, column,
                                  ! pft indices for clump
+  public get_clump_coord_id      ! i,j indices for clump gridcells
   public get_proc_clumps         ! number of clumps for this processor
+  public get_proc_bounds_atm     ! beg and end gridcell for atm
   public get_proc_bounds         ! beg and end gridcell, landunit, column,
                                  ! pft indices for this processor
   public get_proc_total          ! total number of gridcells, landunits,
@@ -52,81 +52,65 @@ module decompMod
 !
 ! !REVISION HISTORY:
 ! 2002.09.11  Forrest Hoffman  Creation.
+! 2005.11.01  T Craig  Rewrite
 !
 !EOP
 !
 ! !PRIVATE TYPES:
   private
 
-  integer :: nclumps             ! total number of clumps across all processors
+  integer :: nclumps     ! total number of clumps across all processors
 
-  type processor
-     integer :: nclumps          ! number of clumps for processor iam
-     integer, pointer :: cid(:)  ! array of clump id's for processor iam
-     integer :: begg, endg       ! beginning and ending gridcell index on processor iam
-     integer :: begl, endl       ! beginning and ending landunit index on processor iam
-     integer :: begc, endc       ! beginning and ending column index on processor iam
-     integer :: begp, endp       ! beginning and ending pft index on processor iam
-     integer :: ncells           ! total number of gridcells on processor iam
-     integer :: nlunits          ! total number of landunits on processor iam
-     integer :: ncols            ! total number of columns on processor iam
-     integer :: npfts            ! total number of pfts on processor iam
-     integer :: numg             ! total number of gridcells across all processors
-     integer :: numl             ! total number of landunits across all processors
-     integer :: numc             ! total number of columns across all processors
-     integer :: nump             ! total number of pfts across all processors
-  end type processor
-  type(processor), allocatable :: procs(:)
+  !---global information on each pe
+  type processor_type
+     integer :: nclumps          ! number of clumps for processor_type iam
+     integer,pointer :: cid(:)   ! clump indices
+     integer :: ncells           ! number of gridcells in proc
+     integer :: nlunits          ! number of landunits in proc
+     integer :: ncols            ! number of columns in proc
+     integer :: npfts            ! number of pfts in proc
+     integer :: begg, endg       ! beginning and ending gridcell index
+     integer :: begl, endl       ! beginning and ending landunit index
+     integer :: begc, endc       ! beginning and ending column index
+     integer :: begp, endp       ! beginning and ending pft index
+     integer :: numg             ! total number of gridcells on all procs
+     integer :: numl             ! total number of landunits on all procs
+     integer :: numc             ! total number of columns on all procs
+     integer :: nump             ! total number of pfts on all procs
+  end type processor_type
+  type(processor_type), allocatable :: procs(:)
 
-  type clump
+  !---global information on each pe
+  type clump_type
      integer :: owner            ! process id owning clump
      integer :: ncells           ! number of gridcells in clump
      integer :: nlunits          ! number of landunits in clump
      integer :: ncols            ! number of columns in clump
      integer :: npfts            ! number of pfts in clump
-     integer :: begg, endg       ! beginning and ending gridcell index in clump
-     integer :: begl, endl       ! beginning and ending landunit index in clump
-     integer :: begc, endc       ! beginning and ending column index in clump
-     integer :: begp, endp       ! beginning and ending pft index in clump
-     integer, pointer :: ixy(:)  ! cell longitude indices
-     integer, pointer :: jxy(:)  ! cell latitude indices
-     integer, pointer :: gi(:)   ! global 1d grid cell index
-  end type clump
-  type(clump), allocatable :: clumps(:)
+     integer :: begg, endg       ! beginning and ending gridcell index
+     integer :: begl, endl       ! beginning and ending landunit index
+     integer :: begc, endc       ! beginning and ending column index
+     integer :: begp, endp       ! beginning and ending pft index
+  end type clump_type
+  type(clump_type),  allocatable :: clumps(:)
 
-  type pmulc
-     integer :: clumpid          ! clump id for (lon, lat)
-     integer :: cell             ! matching cell id
-  end type pmulc
-  type(pmulc), allocatable :: pmulcs(:,:)
+  !---global information on each pe
+  type decomp_type
+     integer,pointer :: gsn2gdc(:)    ! 1d gsn to 1d gdc
+     integer,pointer :: gdc2gsn(:)    ! 1d gdc to 1d gsn
+     integer,pointer :: gsn2i(:)      ! 1d gsn to 2d sn i index
+     integer,pointer :: gsn2j(:)      ! 1d gsn to 2d sn j index
+     integer,pointer :: gdc2i(:)      ! 1d gdc to 2d sn i index
+     integer,pointer :: gdc2j(:)      ! 1d gdc to 2d sn j index
+     integer,pointer :: ij2gsn(:,:)   ! 2d sn i,j index to 1d gsn
+     integer,pointer :: ij2gdc(:,:)   ! 2d sn i,j index to 1d gdc
+  end type decomp_type
+  public decomp_type
+  type(decomp_type),public,target :: ldecomp
+  type(decomp_type),public,target :: adecomp
 
-  type gcell_decomp
-     integer :: gsn     ! corresponding cell index in south->north gridcell array
-     integer :: ixy     ! cell longitude index
-     integer :: jxy     ! cell latitude index
-     integer :: li      ! beginning landunit index
-     integer :: lf      ! ending landunit index
-     integer :: ci      ! beginning column index
-     integer :: cf      ! ending column index
-     integer :: pi      ! beginning pft index
-     integer :: pf      ! ending pft index
-  end type gcell_decomp
-  public gcell_decomp	
-  type(gcell_decomp), public, allocatable :: gcelldc(:)
-
-  type gcell_south_north
-     integer :: gdc     ! corresponding cell index in decomposition gridcell array
-     integer :: ixy     ! cell longitude index
-     integer :: jxy     ! cell latitude index
-     integer :: li      ! beginning landunit index
-     integer :: lf      ! ending landunit index
-     integer :: ci      ! beginning column index
-     integer :: cf      ! ending column index
-     integer :: pi      ! beginning pft index
-     integer :: pf      ! ending pft index
-  end type gcell_south_north
-  public gcell_south_north
-  type(gcell_south_north), public, allocatable :: gcellsn(:)
+  integer,pointer,save,public     :: abegg(:)
+  integer,pointer,save,public     :: aendg(:)
 
   interface map_dc2sn
      module procedure map_dc2sn_sl_real
@@ -156,27 +140,29 @@ contains
 ! !IROUTINE: initDecomp
 !
 ! !INTERFACE:
-  subroutine initDecomp(wtxy)
+  subroutine initDecomp(wtxy,n_ovr,i_ovr,j_ovr)
 !
 ! !DESCRIPTION:
 ! This subroutine initializes the land surface decomposition into a clump
 ! data structure.
 !
 ! !USES:
-    use clmtype
-    use clm_varsur    , only : numlon, landmask
-    use clm_varpar    , only : lsmlon, lsmlat, maxpatch
+    use domainMod     , only : ldomain,adomain
     use initSubgridMod, only : get_gcell_info
 !
 ! !ARGUMENTS:
     implicit none
-    real(r8), intent(in) :: wtxy(lsmlon, lsmlat, maxpatch) ! subgrid patch
-                                                           ! weights
+    real(r8), intent(in) :: wtxy(:,:,:)   ! subgrid patch weights
+    integer , pointer :: n_ovr(:,:)    ! num of cells for each dst
+    integer , pointer :: i_ovr(:,:,:)  ! i index, map input cell
+    integer , pointer :: j_ovr(:,:,:)  ! j index, map input cell
+
 !
 ! !LOCAL VARIABLES:
     integer :: ppc                    ! min number of pfts per clump
     integer :: lpc                    ! min number of landunits per clump
     integer :: ppclump                ! min pfts per clump
+    integer :: lni,lnj                ! land domain global size
     integer :: i,j,cid,pid            ! indices
     integer :: gi,li,ci,pi            ! indices
     integer :: gf,lf,cf,pf            ! indices
@@ -198,58 +184,141 @@ contains
                                       ! processors
     logical, pointer :: clumpfull(:)  ! true => clump is full
     logical :: validclump             ! temporary for finding full clump
-    logical :: error = .false.        ! temporary for finding full clump
+    logical :: error                  ! temporary for finding full clump
     integer :: clumpcount             ! temporary for finding full clump
+    integer, pointer :: cidi(:,:)     ! temporary for setting decomp
+    integer, pointer :: cidj(:,:)     ! temporary for setting decomp
+    logical, pointer :: lcell(:,:)    ! temporary for tracking used land cells
     integer :: ilunits, icols, ipfts  ! temporaries
     integer :: ng                     ! temporaries
     integer :: nl                     ! temporaries
     integer :: nc                     ! temporaries
     integer :: np                     ! temporaries
     integer :: ier                    ! error code
+
+    integer :: ani,anj                ! atm domain global size
+    integer :: ai,aj,ag               ! indices
+    integer :: ancells                ! atm ncells
+    integer, pointer :: acidi(:,:)    ! temporary for setting adecomp
+    integer, pointer :: acidj(:,:)    ! temporary for setting adecomp
+    integer, pointer :: clumps_ancells(:) ! tmp for number of atm cells/clump
 !
 ! !CALLED FROM:
 ! subroutine initialize
 !
 ! !REVISION HISTORY:
 ! 2002.09.11  Forrest Hoffman  Creation.
+! 2005.12.15  T Craig Updated for finemesh
 !
 !EOP
 !------------------------------------------------------------------------------
 
-    ! Dynamic memory allocation for procs
+    lni = ldomain%ni
+    lnj = ldomain%nj
+    ani = adomain%ni
+    anj = adomain%nj
 
     ier = 0
+    allocate(lcell(lni,lnj),stat=ier)
+    if (ier /= 0) then
+       write (6,*) 'initDecomp(): allocation error for lcell'
+       call endrun
+    end if
+    lcell = .false.
+
+    ! Dynamic memory allocation for procs
+
     if( .not. allocated(procs)) allocate(procs(0:npes-1), stat=ier)
     if (ier /= 0) then
        write (6,*) 'initDecomp(): allocation error for procs'
        call endrun
     end if
 
+    allocate(abegg(0:npes-1),aendg(0:npes-1), stat=ier)
+    if (ier /= 0) then
+       write (6,*) 'initDecomp(): allocation error for abegg,aendg'
+       call endrun
+    end if
+
     ! Find total global number of grid cells, landunits, columns and pfts
 
-    ncells = 0
+    ancells = 0
+    ncells  = 0
     nlunits = 0
-    ncols = 0
-    npfts = 0
-    do j = 1, lsmlat
-       do i = 1, numlon(j)
-          if (landmask(i,j) == 1) then
-             call get_gcell_info (i, j, wtxy, nlunits=ilunits, ncols=icols, npfts=ipfts)
-             ncells  = ncells  + 1
-             nlunits = nlunits + ilunits
-             ncols   = ncols   + icols
-             npfts   = npfts   + ipfts
-          end if
-       end do
+    ncols   = 0
+    npfts   = 0
+    do aj = 1, anj
+    do ai = 1, ani
+       if (adomain%mask(ai,aj) == 1) then
+          ancells  = ancells  + 1
+          do n = 1,n_ovr(ai,aj)
+             i = i_ovr(ai,aj,n)
+             j = j_ovr(ai,aj,n)
+             if (ldomain%mask(i,j) == 1) then
+                call get_gcell_info (i, j, wtxy, nlunits=ilunits, &
+                                     ncols=icols, npfts=ipfts)
+                ncells  = ncells  + 1
+                nlunits = nlunits + ilunits
+                ncols   = ncols   + icols
+                npfts   = npfts   + ipfts
+                lcell(i,j) = .true.
+             end if
+          enddo
+       end if
+    end do
     end do
 
-    ! Allocate dynamic memory for gridcell derived types
+    ! Allocate dynamic memory for adecomp, ldecomp derived type
 
-    if( .not. allocated(gcellsn)) allocate(gcellsn(ncells), gcelldc(ncells), stat=ier)
+    allocate(adecomp%gdc2gsn(ancells), adecomp%gsn2gdc(ancells), &
+             adecomp%gdc2i  (ancells), adecomp%gdc2j  (ancells), &
+             adecomp%gsn2i  (ancells), adecomp%gsn2j  (ancells), &
+             stat=ier)
     if (ier /= 0) then
-       write (6,*) 'initDecomp(): allocation error for gcellsn and gcelldc'
+       write (6,*) 'initDecomp(): allocation error1 for adecomp'
        call endrun()
     end if
+
+    allocate(adecomp%ij2gsn(ani,anj), adecomp%ij2gdc(ani,anj), &
+             stat=ier)
+    if (ier /= 0) then
+       write (6,*) 'initDecomp(): allocation error2 for adecomp'
+       call endrun()
+    end if
+
+    adecomp%gdc2gsn(:)  = 0
+    adecomp%gsn2gdc(:)  = 0
+    adecomp%gsn2i(:)    = 0
+    adecomp%gsn2j(:)    = 0
+    adecomp%gdc2i(:)    = 0
+    adecomp%gdc2j(:)    = 0
+    adecomp%ij2gsn(:,:) = 0
+    adecomp%ij2gdc(:,:) = 0
+
+    allocate(ldecomp%gdc2gsn(ncells), ldecomp%gsn2gdc(ncells), &
+             ldecomp%gdc2i  (ncells), ldecomp%gdc2j  (ncells), &
+             ldecomp%gsn2i  (ncells), ldecomp%gsn2j  (ncells), &
+             stat=ier)
+    if (ier /= 0) then
+       write (6,*) 'initDecomp(): allocation error1 for ldecomp'
+       call endrun()
+    end if
+
+    allocate(ldecomp%ij2gsn(lni,lnj), ldecomp%ij2gdc(lni,lnj), &
+             stat=ier)
+    if (ier /= 0) then
+       write (6,*) 'initDecomp(): allocation error2 for ldecomp'
+       call endrun()
+    end if
+
+    ldecomp%gdc2gsn(:)  = 0
+    ldecomp%gsn2gdc(:)  = 0
+    ldecomp%gsn2i(:)    = 0
+    ldecomp%gsn2j(:)    = 0
+    ldecomp%gdc2i(:)    = 0
+    ldecomp%gdc2j(:)    = 0
+    ldecomp%ij2gsn(:,:) = 0
+    ldecomp%ij2gdc(:,:) = 0
 
     ! Error check on total number of gridcells
 
@@ -262,11 +331,13 @@ contains
     ! Diagnostic output
 
     if (masterproc) then
+       write (6,*)' Atm Grid Characteristics'
+       write (6,*)'   longitude points          = ',ani
+       write (6,*)'   latitude points           = ',anj
+       write (6,*)'   total number of gridcells = ',ancells
        write (6,*)' Surface Grid Characteristics'
-       write (6,*)'   longitude points          = ',lsmlon
-       write (6,*)'   latitude points           = ',lsmlat
-       write (6,*)'   minimum number of longitude points per latitude = ',minval(numlon)
-       write (6,*)'   maximum number of longitude points per latitude = ',maxval(numlon)
+       write (6,*)'   longitude points          = ',lni
+       write (6,*)'   latitude points           = ',lnj
        write (6,*)'   total number of gridcells = ',ncells
        write (6,*)'   total number of landunits = ',nlunits
        write (6,*)'   total number of columns   = ',ncols
@@ -298,66 +369,117 @@ contains
        write (6,*) 'initDecomp(): allocation error for clumps'
        call endrun()
     end if
+    allocate(clumps_ancells(1:nclumps), stat=ier)
+    if (ier /= 0) then
+       write (6,*) 'initDecomp(): allocation error for clumps_ancells'
+       call endrun()
+    end if
     allocate(clumpfull(1:nclumps), stat=ier)
     if (ier /= 0) then
        write (6,*) 'initDecomp(): allocation error for temporary clump arrays'
        call endrun()
     end if
-    if( .not. allocated(pmulcs)) allocate(pmulcs(1:lsmlon, 1:lsmlat), stat=ier)
+    allocate(acidi(1:nclumps,ancells),acidj(1:nclumps,ancells),stat=ier)
     if (ier /= 0) then
-       write (6,*) 'initDecomp(): allocation error for pmulcs'
+       write (6,*) 'initDecomp(): allocation error for acidi, acidj'
        call endrun()
     end if
+    allocate(cidi(1:nclumps,ncells),cidj(1:nclumps,ncells),stat=ier)
+    if (ier /= 0) then
+       write (6,*) 'initDecomp(): allocation error for cidi, cidj'
+       call endrun()
+    end if
+
 
     ! Determine number of grid cells in each clump - assign gridcells to clumps
     ! in a round robin fashion
 
+    acidi(:,:) = 0
+    acidj(:,:) = 0
+    clumps_ancells(:) = 0
     clumps(:)%ncells  = 0
     clumps(:)%nlunits = 0
     clumps(:)%ncols   = 0
     clumps(:)%npfts   = 0
     clumpfull(:) = .false.
+    cidi(:,:) = 0
+    cidj(:,:) = 0
     cid = 0
-    do j = 1,lsmlat
-       do i = 1,numlon(j)
-          if (landmask(i,j) == 1) then
 
-             ! Set clump id for gridcell - if clump is full, then determine
-             ! first non-full clump
+    ! Set ldecomp sn indexing based on cells to be used and i,j order
+    g  = 0
+    do j = 1,lnj
+    do i = 1,lni
+       if (lcell(i,j)) then
+          g = g + 1
+          ldecomp%ij2gsn(i,j) = g
+          ldecomp%gsn2i(g) = i
+          ldecomp%gsn2j(g) = j
+       endif
+    enddo
+    enddo
 
+    ag = 0
+    error = .false.
+    do aj = 1,anj
+    do ai = 1,ani
+       if (adomain%mask(ai,aj) == 1) then
+
+          ag = ag + 1
+          adecomp%ij2gsn(ai,aj) = ag
+          adecomp%gsn2i(ag) = ai
+          adecomp%gsn2j(ag) = aj
+
+          ! Set clump id for gridcell - if clump is full, then determine
+          ! first non-full clump
+
+          clumpcount = 0
+          validclump = .false.
+          do while (.not. validclump .and. clumpcount <= nclumps)
+             clumpcount = clumpcount + 1
              cid = cid + 1
              if (cid == nclumps+1) cid = 1
-             if (clumpfull(cid)) then
-                clumpcount = 0
-                validclump = .false.
-                do while (.not. validclump .and. clumpcount <= nclumps)
-                   clumpcount = clumpcount + 1
-                   cid = cid + 1
-                   if (cid == nclumps+1) cid = 1
-                   if (.not. clumpfull(cid)) validclump = .true.
-                end do
-                if (.not. validclump) error = .true.
-                if (error) exit
+             if (.not. clumpfull(cid)) validclump = .true.
+          end do
+          if (.not.validclump)  error = .true.
+          if (n_ovr(ai,aj) < 1) error = .true.
+          if (error) exit
+
+          clumps_ancells(cid) = clumps_ancells(cid) + 1
+          acidi(cid,clumps_ancells(cid)) = ai
+          acidj(cid,clumps_ancells(cid)) = aj
+
+          do n = 1,n_ovr(ai,aj)
+             i = i_ovr(ai,aj,n)
+             j = j_ovr(ai,aj,n)
+             if (ldomain%mask(i,j) == 1) then
+
+                ! Determine grid cell info
+                call get_gcell_info (i, j, wtxy, nlunits=ilunits, &
+                                     ncols=icols, npfts=ipfts)
+
+                clumps(cid)%ncells  = clumps(cid)%ncells  + 1
+                clumps(cid)%nlunits = clumps(cid)%nlunits + ilunits
+                clumps(cid)%ncols   = clumps(cid)%ncols   + icols
+                clumps(cid)%npfts   = clumps(cid)%npfts   + ipfts
+
+                ! set tmps, cid,ncell <-> i,j
+
+                cidi(cid,clumps(cid)%ncells) = i
+                cidj(cid,clumps(cid)%ncells) = j
+
+                if (clumps(cid)%npfts >= ppc .and. cid < nclumps) then
+                   clumpfull(cid) = .true.
+                end if
              end if
+          end do
 
-            ! Determine grid cell info
-
-             call get_gcell_info (i, j, wtxy, nlunits=ilunits, ncols=icols, npfts=ipfts)
-
-             clumps(cid)%ncells  = clumps(cid)%ncells  + 1
-             clumps(cid)%nlunits = clumps(cid)%nlunits + ilunits
-             clumps(cid)%ncols   = clumps(cid)%ncols   + icols
-             clumps(cid)%npfts   = clumps(cid)%npfts   + ipfts
-
-             if (clumps(cid)%npfts >= ppc .and. cid < nclumps) then
-                clumpfull(cid) = .true.
-             end if
-          end if
-       end do
-       if (error) exit
+          if (error) exit
+       endif
+    end do
     end do
     if (error) then
-       write(6,*)'initDecomp: error encountered while trying to find an unfull clump'
+       write(6,*)'initDecomp: error encountered trying to find an unfull clump'
        call endrun()
     end if
 
@@ -372,80 +494,6 @@ contains
           call endrun
        end if
     end do
-
-    ! Allocate dynamic memory for clumps
-
-    do cid = 1,nclumps
-       ncells  = clumps(cid)%ncells
-       nlunits = clumps(cid)%nlunits
-       ncols   = clumps(cid)%ncols
-       npfts   = clumps(cid)%npfts
-       allocate(clumps(cid)%ixy(ncells), clumps(cid)%jxy(ncells), clumps(cid)%gi(ncells), stat=ier)
-       if (ier /= 0) then
-          write (6,*) 'initDecomp(): allocation errors for clump indices'
-          call endrun()
-       end if
-    end do
-
-    ! Redo the above calculation for gridcells distribution of clumps to determine
-    ! the xy i and j indices for each clump gridcell
-
-    clumps(:)%ncells  = 0
-    clumps(:)%nlunits = 0
-    clumps(:)%ncols   = 0
-    clumps(:)%npfts   = 0
-    clumpfull(:) = .false.
-    cid = 0
-    do j = 1,lsmlat
-       do i = 1,numlon(j)
-          if (landmask(i,j) == 1) then
-
-             ! Set clump id for gridcell - if clump is full, then determine
-             ! first non-full clump
-
-             cid = cid + 1
-             if (cid == nclumps+1) cid = 1
-             if (clumpfull(cid)) then
-                clumpcount = 0
-                validclump = .false.
-                do while (.not. validclump .and. clumpcount <= nclumps)
-                   clumpcount = clumpcount + 1
-                   cid = cid + 1
-                   if (cid == nclumps+1) cid = 1
-                   if (.not. clumpfull(cid)) validclump = .true.
-                end do
-                if (.not. validclump) error = .true.
-                if (error) exit
-             end if
-
-            ! Determine grid cell info
-
-             call get_gcell_info (i, j, wtxy, nlunits=ilunits, ncols=icols, npfts=ipfts)
-
-             clumps(cid)%ncells  = clumps(cid)%ncells  + 1
-             clumps(cid)%nlunits = clumps(cid)%nlunits + ilunits
-             clumps(cid)%ncols   = clumps(cid)%ncols   + icols
-             clumps(cid)%npfts   = clumps(cid)%npfts   + ipfts
-
-             if (clumps(cid)%npfts >= ppc .and. cid < nclumps) then
-                clumpfull(cid) = .true.
-             end if
-
-             ! Now determine the ixy and jxy indices since memory has been
-             ! allocated for these arrays
-
-             n = clumps(cid)%ncells
-             clumps(cid)%ixy(n) = i
-             clumps(cid)%jxy(n) = j
-
-          end if
-       end do
-       if (error) exit
-    end do
-    if (error) then
-       write(6,*)'initDecomp: error encountered while trying to find an unfull clump'
-       call endrun()
-    end if
 
     ! Assign clumps to processors in a round robin fashion.
 
@@ -467,7 +515,6 @@ contains
     end do
 
     ! Determine clump ids for each clump on this processor
-
     do pid = 0,npes-1
        n = procs(pid)%nclumps
        allocate(procs(pid)%cid(n), stat=ier)
@@ -506,40 +553,28 @@ contains
     end do
 
     ! Determine per clump indices
-
-    gi = 1
-    li = 1
-    ci = 1
-    pi = 1
-    gf = clumps(1)%ncells
-    lf = clumps(1)%nlunits
-    cf = clumps(1)%ncols
-    pf = clumps(1)%npfts
+    gf = 0
+    lf = 0
+    cf = 0
+    pf = 0
     do pid = 0,npes-1
        do n = 1,procs(pid)%nclumps
           cid = procs(pid)%cid(n)
-          if (pid == 0 .and. n == 0 .and. cid /= 1) then
-             write(6,*)'initProc error: clump 1 must always be the first clump ',&
-                  ' on the first processor'
-             call endrun()
-          end if
-          if (cid /= 1) then
-             gi = gf + 1
-             li = lf + 1
-             ci = cf + 1
-             pi = pf + 1
-             gf = gi + clumps(cid)%ncells  - 1
-             lf = li + clumps(cid)%nlunits - 1
-             cf = ci + clumps(cid)%ncols   - 1
-             pf = pi + clumps(cid)%npfts   - 1
-          end if
+          gi = gf + 1
+          gf = gi + clumps(cid)%ncells  - 1
+          li = lf + 1
+          lf = li + clumps(cid)%nlunits - 1
+          ci = cf + 1
+          cf = ci + clumps(cid)%ncols   - 1
+          pi = pf + 1
+          pf = pi + clumps(cid)%npfts   - 1
           clumps(cid)%begg = gi
-          clumps(cid)%begl = li
-          clumps(cid)%begc = ci
-          clumps(cid)%begp = pi
           clumps(cid)%endg = gf
+          clumps(cid)%begl = li
           clumps(cid)%endl = lf
+          clumps(cid)%begc = ci
           clumps(cid)%endc = cf
+          clumps(cid)%begp = pi
           clumps(cid)%endp = pf
        end do
     end do
@@ -561,118 +596,90 @@ contains
     procs(0:npes-1)%numc = numc
     procs(0:npes-1)%nump = nump
 
-    ! Determine pmulcs components and index into decomposition gridcells for each
-    ! clump gridcell
+    ! Set ldecomp and adecomp data
 
-    pmulcs(:,:)%clumpid = 0
-    pmulcs(:,:)%cell = 0
+    ag = 0
     g = 0
     do pid = 0,npes-1
-       do nc = 1,procs(pid)%nclumps
+       abegg(pid) = ag+1
+       do nc=1,procs(pid)%nclumps
           cid = procs(pid)%cid(nc)
+
+          do n = 1,clumps_ancells(cid)
+             ag=ag+1
+             i = acidi(cid,n)
+             j = acidj(cid,n)
+             if (i==0.or.j==0) then
+                write(6,*)'initDecomp ERROR: acidi,acidj ',pid,nc,cid,n,ag,i,j
+                call endrun()
+             endif
+             adecomp%gdc2i(ag) = i
+             adecomp%gdc2j(ag) = j
+             adecomp%gdc2gsn(ag) = adecomp%ij2gsn(i,j)
+             adecomp%ij2gdc(i,j) = ag
+             adecomp%gsn2gdc(adecomp%ij2gsn(i,j)) = ag
+          enddo
+
           do n = 1,clumps(cid)%ncells
-             g = g + 1
-             i = clumps(cid)%ixy(n)
-             j = clumps(cid)%jxy(n)
-             pmulcs(i,j)%clumpid = cid
-             pmulcs(i,j)%cell = n
-             clumps(cid)%gi(n) = g
-          end do
-       end do
-    end do
+             g=g+1
+             i = cidi(cid,n)
+             j = cidj(cid,n)
+             if (i==0.or.j==0) then
+                write(6,*)'initDecomp ERROR: cidi,cidj ',pid,nc,cid,n,g,i,j
+                call endrun()
+             endif
+             ldecomp%gdc2i(g) = i
+             ldecomp%gdc2j(g) = j
+             ldecomp%gdc2gsn(g) = ldecomp%ij2gsn(i,j)
+             ldecomp%ij2gdc(i,j) = g
+             ldecomp%gsn2gdc(ldecomp%ij2gsn(i,j)) = g
+          enddo
 
-    ! Determine derived type components for south->north gridcell array
-    ! and decomposition gridcell array
-
-    gcellsn(1)%li = 1
-    gcellsn(1)%ci = 1
-    gcellsn(1)%pi = 1
-    g = 0
-    do j = 1,lsmlat
-       do i = 1,numlon(j)
-          if (landmask(i,j) == 1) then
-             call get_gcell_info (i, j, wtxy, nlunits=ilunits, ncols=icols, npfts=ipfts)
-             g = g+1
-             gcellsn(g)%ixy = i
-             gcellsn(g)%jxy = j
-             gcellsn(g)%lf = gcellsn(g)%li + ilunits - 1
-             gcellsn(g)%cf = gcellsn(g)%ci + icols   - 1
-             gcellsn(g)%pf = gcellsn(g)%pi + ipfts   - 1
-             if (g <= numg-1) then
-                gcellsn(g+1)%li = gcellsn(g)%lf + 1
-                gcellsn(g+1)%ci = gcellsn(g)%cf + 1
-                gcellsn(g+1)%pi = gcellsn(g)%pf + 1
-             end if
-          end if
-       end do
-    end do
-
-    gcelldc(1)%li = 1
-    gcelldc(1)%ci = 1
-    gcelldc(1)%pi = 1
-    g = 0
-    do pid = 0,npes-1
-       do nc = 1,procs(pid)%nclumps
-          cid = procs(pid)%cid(nc)
-          do n = 1,clumps(cid)%ncells
-             i = clumps(cid)%ixy(n)
-             j = clumps(cid)%jxy(n)
-             call get_gcell_info (i, j, wtxy, nlunits=ilunits, ncols=icols, npfts=ipfts)
-             g = g + 1
-             gcelldc(g)%ixy = i
-             gcelldc(g)%jxy = j
-             gcelldc(g)%lf = gcelldc(g)%li + ilunits - 1
-             gcelldc(g)%cf = gcelldc(g)%ci + icols   - 1
-             gcelldc(g)%pf = gcelldc(g)%pi + ipfts   - 1
-             if (g <= numg-1) then
-                gcelldc(g+1)%li = gcelldc(g)%lf + 1
-                gcelldc(g+1)%ci = gcelldc(g)%cf + 1
-                gcelldc(g+1)%pi = gcelldc(g)%pf + 1
-             end if
-          end do
-       end do
-    end do
-
-    ! Find corresponding south->north gridcell for each decomposition gridcell
-    ! and corresponding decomposition gridcell for each south->north gridcell
-
-    do gdc = 1,numg
-       i = gcelldc(gdc)%ixy
-       j = gcelldc(gdc)%jxy
-       do gsn = 1,numg
-          if (gcellsn(gsn)%ixy == i .and. gcellsn(gsn)%jxy == j) then
-             gcellsn(gsn)%gdc = gdc
-             gcelldc(gdc)%gsn = gsn
-          end if
-       end do
-    end do
+       enddo
+       aendg(pid) = ag
+    enddo
 
     ! Write out clump and proc info
 
     if (masterproc) then
        do pid = 0,npes-1
           write(6,*)
-          write(6,*)'proc= ',pid,' beg gridcell= ',procs(pid)%begg,' end gridcell= ',procs(pid)%endg, &
+          write(6,*)'proc= ',pid,' beg atmcell = ',abegg(pid),      &
+               ' end atmcell = ',aendg(pid),                        &
+               ' total atmcells per proc = ',aendg(pid)-abegg(pid)+1
+          write(6,*)'proc= ',pid,' beg gridcell= ',procs(pid)%begg, &
+               ' end gridcell= ',procs(pid)%endg,                   &
                ' total gridcells per proc= ',procs(pid)%ncells
-          write(6,*)'proc= ',pid,' beg landunit= ',procs(pid)%begl,' end landunit= ',procs(pid)%endl, &
+          write(6,*)'proc= ',pid,' beg landunit= ',procs(pid)%begl, &
+               ' end landunit= ',procs(pid)%endl,                   &
                ' total landunits per proc = ',procs(pid)%nlunits
-          write(6,*)'proc= ',pid,' beg column  = ',procs(pid)%begc,' end column  = ',procs(pid)%endc, &
+          write(6,*)'proc= ',pid,' beg column  = ',procs(pid)%begc, &
+               ' end column  = ',procs(pid)%endc,                   &
                ' total columns per proc  = ',procs(pid)%ncols
-          write(6,*)'proc= ',pid,' beg pft     = ',procs(pid)%begp,' end pft     = ',procs(pid)%endp, &
+          write(6,*)'proc= ',pid,' beg pft     = ',procs(pid)%begp, &
+               ' end pft     = ',procs(pid)%endp,                   &
                ' total pfts per proc     = ',procs(pid)%npfts
           do n = 1,procs(pid)%nclumps
              cid = procs(pid)%cid(n)
-             write(6,*)'proc= ',pid,' clump no = ',n,' clump id= ',procs(pid)%cid(n), &
-                  ' beg gridcell= ',clumps(cid)%begg,' end gridcell= ',clumps(cid)%endg, &
+             write(6,*)'proc= ',pid,' clump no = ',n, &
+                  ' clump id= ',procs(pid)%cid(n),    &
+                  ' beg gridcell= ',clumps(cid)%begg, &
+                  ' end gridcell= ',clumps(cid)%endg, &
                   ' total gridcells per clump= ',clumps(cid)%ncells
-             write(6,*)'proc= ',pid,' clump no = ',n,' clump id= ',procs(pid)%cid(n), &
-                  ' beg landunit= ',clumps(cid)%begl,' end landunit= ',clumps(cid)%endl, &
+             write(6,*)'proc= ',pid,' clump no = ',n, &
+                  ' clump id= ',procs(pid)%cid(n),    &
+                  ' beg landunit= ',clumps(cid)%begl, &
+                  ' end landunit= ',clumps(cid)%endl, &
                   ' total landunits per clump = ',clumps(cid)%nlunits
-             write(6,*)'proc= ',pid,' clump no = ',n,' clump id= ',procs(pid)%cid(n), &
-                  ' beg column  = ',clumps(cid)%begc,' end column  = ',clumps(cid)%endc, &
+             write(6,*)'proc= ',pid,' clump no = ',n, &
+                  ' clump id= ',procs(pid)%cid(n),    &
+                  ' beg column  = ',clumps(cid)%begc, &
+                  ' end column  = ',clumps(cid)%endc, &
                   ' total columns per clump  = ',clumps(cid)%ncols
-             write(6,*)'proc= ',pid,' clump no = ',n,' clump id= ',procs(pid)%cid(n), &
-                  ' beg pft     = ',clumps(cid)%begp,' end pft     = ',clumps(cid)%endp, &
+             write(6,*)'proc= ',pid,' clump no = ',n, &
+                  ' clump id= ',procs(pid)%cid(n),    &
+                  ' beg pft     = ',clumps(cid)%begp, &
+                  ' end pft     = ',clumps(cid)%endp, &
                   ' total pfts per clump     = ',clumps(cid)%npfts
           end do
        end do
@@ -684,7 +691,11 @@ contains
        call shr_sys_flush(6)
     end if
 
+    deallocate(clumps_ancells)
     deallocate(clumpfull)
+    deallocate(acidi,acidj)
+    deallocate(cidi,cidj)
+    deallocate(lcell)
 
   end subroutine initDecomp
 
@@ -718,37 +729,6 @@ contains
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: get_clump_cell_id_coord
-!
-! !INTERFACE:
-   subroutine get_clump_cell_id_coord(lon, lat, cid, cell)
-!
-! !DESCRIPTION:
-! This subroutine returns the id of the clump and cell corresponding to
-! the longitude/latitude indices provided.
-!
-! !ARGUMENTS:
-     implicit none
-     integer, intent(in)  :: lon, lat      ! longitude/latitude indices
-     integer, intent(out) :: cid, cell     ! clump and cell id
-!
-! !CALLED FROM:
-! Unused.
-!
-! !REVISION HISTORY:
-! 2002.09.11  Forrest Hoffman  Creation.
-!
-!EOP
-!------------------------------------------------------------------------------
-
-     cid  = pmulcs(lon,lat)%clumpid
-     cell = pmulcs(lon,lat)%cell
-
-   end subroutine get_clump_cell_id_coord
-
-!------------------------------------------------------------------------------
-!BOP
-!
 ! !IROUTINE: get_clump_owner_id
 !
 ! !INTERFACE:
@@ -757,6 +737,8 @@ contains
 ! !DESCRIPTION:
 ! This function returns the MPI process id (rank) responsible for the clump
 ! identified by the clump id cid.
+!
+! !USES:
 !
 ! !ARGUMENTS:
      implicit none
@@ -786,6 +768,8 @@ contains
 ! !DESCRIPTION:
 ! This function returns the number of cells contained within clumps owned
 ! by process pid.
+!
+! !USES:
 !
 ! !ARGUMENTS:
      implicit none
@@ -823,6 +807,8 @@ contains
 ! !REVISION HISTORY:
 ! 2002.09.11  Forrest Hoffman  Creation.
 !
+! !USES:
+!
 ! !ARGUMENTS:
      implicit none
      integer, intent(in) :: cid                    ! clump id
@@ -854,6 +840,8 @@ contains
 ! the clump identified by the clump id cid.  In practice, this ncells is
 ! always the number of cells in clump cid: clumps(cid)%ncells.
 !
+! !USES:
+!
 ! !ARGUMENTS:
      implicit none
      integer, intent(in)  :: cid                    ! clump id
@@ -863,6 +851,7 @@ contains
 !
 ! !LOCAL VARIABLES:
      integer :: i                                   ! loop index
+     integer :: gdc                                 ! global dc index
 !
 ! !CALLED FROM:
 ! subroutine lp_coupling_init() in module lp_coupling (lp_coupling.F90)
@@ -874,8 +863,9 @@ contains
 !------------------------------------------------------------------------------
 
      do i = 1,ncells
-        lons(i) = clumps(cid)%ixy(i)
-        lats(i) = clumps(cid)%jxy(i)
+        gdc = clumps(cid)%begg + i - 1
+        lons(i) = ldecomp%gdc2i(gdc)
+        lats(i) = ldecomp%gdc2j(gdc)
      end do
 
    end subroutine get_clump_coord_id
@@ -890,6 +880,8 @@ contains
 !
 ! !DESCRIPTION:
 ! Determine beginning grid cell index
+!
+! !USES:
 !
 ! !ARGUMENTS:
      implicit none
@@ -907,7 +899,7 @@ contains
 !EOP
 !------------------------------------------------------------------------------
 
-     gi = clumps(cid)%gi(cell)
+     gi = clumps(cid)%begg+cell-1
 
    end subroutine get_clump_gcell_info
 
@@ -919,6 +911,8 @@ contains
 ! !INTERFACE:
    subroutine get_clump_bounds (n, begg, endg, begl, endl, begc, endc, &
                                 begp, endp)
+!
+! !USES:
 !
 ! !ARGUMENTS:
      implicit none
@@ -966,16 +960,18 @@ contains
    subroutine get_proc_bounds (begg, endg, begl, endl, begc, endc, &
                                begp, endp)
 !
+! !USES:
+!
 ! !ARGUMENTS:
      implicit none
-     integer, intent(out) :: begp, endp  ! proc beginning and ending
-                                         ! pft indices
-     integer, intent(out) :: begc, endc  ! proc beginning and ending
-                                         ! column indices
-     integer, intent(out) :: begl, endl  ! proc beginning and ending
-                                         ! landunit indices
-     integer, intent(out) :: begg, endg  ! proc beginning and ending
-                                         ! gridcell indices
+     integer, optional, intent(out) :: begp, endp  ! proc beginning and ending
+                                                   ! pft indices
+     integer, optional, intent(out) :: begc, endc  ! proc beginning and ending
+                                                   ! column indices
+     integer, optional, intent(out) :: begl, endl  ! proc beginning and ending
+                                                   ! landunit indices
+     integer, optional, intent(out) :: begg, endg  ! proc beginning and ending
+                                                   ! gridcell indices
 ! !DESCRIPTION:
 ! Retrieve gridcell, landunit, column, and pft bounds for process.
 !
@@ -985,16 +981,60 @@ contains
 !EOP
 !------------------------------------------------------------------------------
 
-     begp = procs(iam)%begp
-     endp = procs(iam)%endp
-     begc = procs(iam)%begc
-     endc = procs(iam)%endc
-     begl = procs(iam)%begl
-     endl = procs(iam)%endl
-     begg = procs(iam)%begg
-     endg = procs(iam)%endg
+     if (present(begp)) then
+        begp = procs(iam)%begp
+     endif
+     if (present(endp)) then
+        endp = procs(iam)%endp
+     endif
+     if (present(begc)) then
+        begc = procs(iam)%begc
+     endif
+     if (present(endc)) then
+        endc = procs(iam)%endc
+     endif
+     if (present(begl)) then
+        begl = procs(iam)%begl
+     endif
+     if (present(endl)) then
+        endl = procs(iam)%endl
+     endif
+     if (present(begg)) then
+        begg = procs(iam)%begg
+     endif
+     if (present(endg)) then
+        endg = procs(iam)%endg
+     endif
 
    end subroutine get_proc_bounds
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: get_proc_bounds_atm
+!
+! !INTERFACE:
+   subroutine get_proc_bounds_atm (begg, endg)
+!
+! !USES:
+!
+! !ARGUMENTS:
+     implicit none
+     integer, intent(out) :: begg, endg  ! proc beginning and ending
+                                         ! gridcell indices for atm grid
+! !DESCRIPTION:
+! Retrieve gridcell begg, endg for atm decomp
+!
+! !REVISION HISTORY:
+! 2005.12.15  T Craig Added
+!
+!EOP
+!------------------------------------------------------------------------------
+
+   begg = abegg(iam)
+   endg = aendg(iam)
+
+   end subroutine get_proc_bounds_atm
 
 !------------------------------------------------------------------------------
 !BOP
@@ -1006,6 +1046,8 @@ contains
 !
 ! !DESCRIPTION:
 ! Count up gridcells, landunits, columns, and pfts on process.
+!
+! !USES:
 !
 ! !ARGUMENTS:
      implicit none
@@ -1055,6 +1097,8 @@ contains
 ! Return number of gridcells, landunits, columns, and pfts across all
 ! processes.
 !
+! !USES:
+!
 ! !ARGUMENTS:
      implicit none
      integer, intent(out) :: numg  ! total number of gridcells
@@ -1089,6 +1133,8 @@ contains
 ! !DESCRIPTION:
 ! Return the number of clumps.
 !
+! !USES:
+!
 ! !ARGUMENTS:
      implicit none
 !
@@ -1118,7 +1164,7 @@ contains
 !  south->north single level real array
 !
 ! !USES:
-    use clmtype, only : nameg, namel, namec, namep
+   use clmtype, only : nameg, namel, namec, namep
 !
 ! !ARGUMENTS:
      implicit none
@@ -1134,66 +1180,18 @@ contains
 ! !LOCAL VARIABLES:
      integer :: dc,sn,gdc,gsn
      integer :: dci,dcf,sni,snf
-     integer :: n,l,c,p
-     logical :: error
+     integer :: n,l
 !------------------------------------------------------------------------------
-
-     error = .false.
      do gdc = 1,procs(iam)%numg
-        gsn = gcelldc(gdc)%gsn
-        if (type1d == nameg) then
-           arraysn(gsn) = arraydc(gdc)
-        else if (type1d == namel) then
-           dci = gcelldc(gdc)%li
-           dcf = gcelldc(gdc)%lf
-           sni = gcellsn(gsn)%li
-           snf = gcellsn(gsn)%lf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do l = 1,n
-              sn = gcellsn(gsn)%li + l - 1
-              dc = gcelldc(gdc)%li + l - 1
-              arraysn(sn) = arraydc(dc)
-           end do
-        else if (type1d == namec) then
-           dci = gcelldc(gdc)%ci
-           dcf = gcelldc(gdc)%cf
-           sni = gcellsn(gsn)%ci
-           snf = gcellsn(gsn)%cf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do c = 1,n
-              sn = gcellsn(gsn)%ci + c - 1
-              dc = gcelldc(gdc)%ci + c - 1
-              arraysn(sn) = arraydc(dc)
-           end do
-        else if (type1d == namep) then
-           dci = gcelldc(gdc)%pi
-           dcf = gcelldc(gdc)%pf
-           sni = gcellsn(gsn)%pi
-           snf = gcellsn(gsn)%pf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do p = 1,n
-              sn = gcellsn(gsn)%pi + p - 1
-              dc = gcelldc(gdc)%pi + p - 1
-              arraysn(sn) = arraydc(dc)
-           end do
-        end if
+        gsn = ldecomp%gdc2gsn(gdc)
+        call map_indexes(gdc,gsn,type1d,dci,dcf,sni,snf)
+        n = dcf - dci + 1
+        do l = 1,n
+           sn = sni + l - 1
+           dc = dci + l - 1
+           arraysn(sn) = arraydc(dc)
+        end do
      end do
-     if (error)  then
-        write(6,*)'error in  map_dc2n_sl_real '
-        call endrun()
-     end if
 
    end subroutine map_dc2sn_sl_real
 
@@ -1210,7 +1208,7 @@ contains
 !  south->north single level real array
 !
 ! !USES:
-    use clmtype, only : nameg, namel, namec, namep
+   use clmtype, only : nameg, namel, namec, namep
 !
 ! !ARGUMENTS:
      implicit none
@@ -1226,66 +1224,19 @@ contains
 ! !LOCAL VARIABLES:
      integer :: dc,sn,gdc,gsn
      integer :: dci,dcf,sni,snf
-     integer :: n,l,c,p
-     logical :: error
+     integer :: n,l
 !------------------------------------------------------------------------------
 
-     error = .false.
      do gdc = 1,procs(iam)%numg
-        gsn = gcelldc(gdc)%gsn
-        if (type1d == nameg) then
-           arraysn(gsn) = arraydc(gdc)
-        else if (type1d == namel) then
-           dci = gcelldc(gdc)%li
-           dcf = gcelldc(gdc)%lf
-           sni = gcellsn(gsn)%li
-           snf = gcellsn(gsn)%lf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do l = 1,n
-              sn = gcellsn(gsn)%li + l - 1
-              dc = gcelldc(gdc)%li + l - 1
-              arraysn(sn) = arraydc(dc)
-           end do
-        else if (type1d == namec) then
-           dci = gcelldc(gdc)%ci
-           dcf = gcelldc(gdc)%cf
-           sni = gcellsn(gsn)%ci
-           snf = gcellsn(gsn)%cf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do c = 1,n
-              sn = gcellsn(gsn)%ci + c - 1
-              dc = gcelldc(gdc)%ci + c - 1
-              arraysn(sn) = arraydc(dc)
-           end do
-        else if (type1d == namep) then
-           dci = gcelldc(gdc)%pi
-           dcf = gcelldc(gdc)%pf
-           sni = gcellsn(gsn)%pi
-           snf = gcellsn(gsn)%pf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do p = 1,n
-              sn = gcellsn(gsn)%pi + p - 1
-              dc = gcelldc(gdc)%pi + p - 1
-              arraysn(sn) = arraydc(dc)
-           end do
-        end if
+        gsn = ldecomp%gdc2gsn(gdc)
+        call map_indexes(gdc,gsn,type1d,dci,dcf,sni,snf)
+        n = dcf - dci + 1
+        do l = 1,n
+           sn = sni + l - 1
+           dc = dci + l - 1
+           arraysn(sn) = arraydc(dc)
+        end do
      end do
-     if (error)  then
-        write(6,*)'error in  map_dc2n_sl '
-        call endrun()
-     end if
 
    end subroutine map_dc2sn_sl_int
 
@@ -1302,7 +1253,7 @@ contains
 !  south->north (sn) multilevel level real array
 !
 ! !USES:
-    use clmtype, only : nameg, namel, namec, namep
+   use clmtype, only : nameg, namel, namec, namep
 !
 ! !ARGUMENTS:
      implicit none
@@ -1321,17 +1272,17 @@ contains
 ! !LOCAL VARIABLES:
      integer :: dc,sn,gdc,gsn,lev
      integer :: dci,dcf,sni,snf
-     integer :: n,l,c,p
-     logical :: error
+     integer :: n,l
 !------------------------------------------------------------------------------
 
-     error = .false.
      do gdc = 1,procs(iam)%numg
-        gsn = gcelldc(gdc)%gsn
-        if (type1d == nameg) then
+        gsn = ldecomp%gdc2gsn(gdc)
+        call map_indexes(gdc,gsn,type1d,dci,dcf,sni,snf)
+        n = dcf - dci + 1
+        do l = 1,n
+           sn = sni + l - 1
+           dc = dci + l - 1
            do lev = lb1, ub1
-              sn = gsn
-              dc = gdc
               if (present(revord)) then
                  if (revord) then
                     arraysn(sn,lev) = arraydc(dc,lev)
@@ -1340,84 +1291,8 @@ contains
                  arraysn(lev,sn) = arraydc(lev,dc)
               end if
            end do
-        else if (type1d == namel) then
-           dci = gcelldc(gdc)%li
-           dcf = gcelldc(gdc)%lf
-           sni = gcellsn(gsn)%li
-           snf = gcellsn(gsn)%lf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do l = 1,n
-              sn = gcellsn(gsn)%li + l - 1
-              dc = gcelldc(gdc)%li + l - 1
-              do lev = lb1, ub1
-                 if (present(revord)) then
-                    if (revord) then
-                       arraysn(sn,lev) = arraydc(dc,lev)
-                    end if
-                 else
-                    arraysn(lev,sn) = arraydc(lev,dc)
-                 end if
-              end do
-           end do
-        else if (type1d == namec) then
-           dci = gcelldc(gdc)%ci
-           dcf = gcelldc(gdc)%cf
-           sni = gcellsn(gsn)%ci
-           snf = gcellsn(gsn)%cf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do c = 1,n
-              sn = gcellsn(gsn)%ci + c - 1
-              dc = gcelldc(gdc)%ci + c - 1
-              do lev = lb1, ub1
-                 if (present(revord)) then
-                    if (revord) then
-                       arraysn(sn,lev) = arraydc(dc,lev)
-                    end if
-                 else
-                    arraysn(lev,sn) = arraydc(lev,dc)
-                 end if
-              end do
-           end do
-        else if (type1d == namep) then
-           dci = gcelldc(gdc)%pi
-           dcf = gcelldc(gdc)%pf
-           sni = gcellsn(gsn)%pi
-           snf = gcellsn(gsn)%pf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do p = 1,n
-              sn = gcellsn(gsn)%pi + p - 1
-              dc = gcelldc(gdc)%pi + p - 1
-              do lev = lb1, ub1
-                 if (present(revord)) then
-                    if (revord) then
-                       arraysn(sn,lev) = arraydc(dc,lev)
-                    end if
-                 else
-                    arraysn(lev,sn) = arraydc(lev,dc)
-                 end if
-              end do
-           end do
-        end if
+        end do
      end do
-     if (error)  then
-        write(6,*)'ndc = ',n,' nsn= ',snf - sni + 1
-        write(6,*)'snf= ',snf,' sni= ',sni
-        write(6,*)'dcf= ',dcf,' dci= ',dci
-        write(6,*)'error in  map_dc2sn_ml1 '
-        call endrun()
-     end if
 
    end subroutine map_dc2sn_ml1_real
 
@@ -1434,7 +1309,7 @@ contains
 !  south->north (sn) multilevel level integer array
 !
 ! !USES:
-    use clmtype, only : nameg, namel, namec, namep
+   use clmtype, only : nameg, namel, namec, namep
 !
 ! !ARGUMENTS:
      implicit none
@@ -1453,16 +1328,16 @@ contains
 ! !LOCAL VARIABLES:
      integer :: dc,sn,gdc,gsn,lev
      integer :: dci,dcf,sni,snf
-     integer :: n,l,c,p
-     logical :: error
+     integer :: n,l
 !------------------------------------------------------------------------------
 
-     error = .false.
      do gdc = 1,procs(iam)%numg
-        gsn = gcelldc(gdc)%gsn
-        if (type1d == nameg) then
-           sn = gsn
-           dc = gdc
+        gsn = ldecomp%gdc2gsn(gdc)
+        call map_indexes(gdc,gsn,type1d,dci,dcf,sni,snf)
+        n = dcf - dci + 1
+        do l = 1,n
+           sn = sni + l - 1
+           dc = dci + l - 1
            do lev = lb1, ub1
               if (present(revord)) then
                  if (revord) then
@@ -1472,84 +1347,8 @@ contains
                  arraysn(lev,sn) = arraydc(lev,dc)
               end if
            end do
-        else if (type1d == namel) then
-           dci = gcelldc(gdc)%li
-           dcf = gcelldc(gdc)%lf
-           sni = gcellsn(gsn)%li
-           snf = gcellsn(gsn)%lf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do l = 1,n
-              sn = gcellsn(gsn)%li + l - 1
-              dc = gcelldc(gdc)%li + l - 1
-              do lev = lb1, ub1
-                 if (present(revord)) then
-                    if (revord) then
-                       arraysn(sn,lev) = arraydc(dc,lev)
-                    end if
-                 else
-                    arraysn(lev,sn) = arraydc(lev,dc)
-                 end if
-              end do
-           end do
-        else if (type1d == namec) then
-           dci = gcelldc(gdc)%ci
-           dcf = gcelldc(gdc)%cf
-           sni = gcellsn(gsn)%ci
-           snf = gcellsn(gsn)%cf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do c = 1,n
-              sn = gcellsn(gsn)%ci + c - 1
-              dc = gcelldc(gdc)%ci + c - 1
-              do lev = lb1,ub1
-                 if (present(revord)) then
-                    if (revord) then
-                       arraysn(sn,lev) = arraydc(dc,lev)
-                    end if
-                 else
-                    arraysn(lev,sn) = arraydc(lev,dc)
-                 end if
-              end do
-           end do
-        else if (type1d == namep) then
-           dci = gcelldc(gdc)%pi
-           dcf = gcelldc(gdc)%pf
-           sni = gcellsn(gsn)%pi
-           snf = gcellsn(gsn)%pf
-           n = dcf - dci + 1
-           if (n /= snf - sni + 1) then
-              error = .true.
-              exit
-           end if
-           do p = 1,n
-              sn = gcellsn(gsn)%pi + p - 1
-              dc = gcelldc(gdc)%pi + p - 1
-              do lev = lb1,ub1
-                 if (present(revord)) then
-                    if (revord) then
-                       arraysn(sn,lev) = arraydc(dc,lev)
-                    end if
-                 else
-                    arraysn(lev,sn) = arraydc(lev,dc)
-                 end if
-              end do
-           end do
-        end if
+        end do
      end do
-     if (error)  then
-        write(6,*)'ndc = ',n,' nsn= ',snf - sni + 1
-        write(6,*)'snf= ',snf,' sni= ',sni
-        write(6,*)'dcf= ',dcf,' dci= ',dci
-        write(6,*)'error in map_dc2sn_ml1 '
-        call endrun()
-     end if
 
    end subroutine map_dc2sn_ml1_int
 
@@ -1566,7 +1365,7 @@ contains
 !  decomposition single level real array
 !
 ! !USES:
-    use clmtype, only : nameg, namel, namec, namep
+   use clmtype, only : nameg, namel, namec, namep
 !
 ! !ARGUMENTS:
      implicit none
@@ -1582,68 +1381,19 @@ contains
 ! !LOCAL VARIABLES:
      integer :: dc,sn,gdc,gsn
      integer :: dci,dcf,sni,snf
-     integer :: n,l,c,p
-     logical :: error
+     integer :: n,l
 !------------------------------------------------------------------------------
 
-     error = .false.
      do gsn = 1,procs(iam)%numg
-        gdc = gcellsn(gsn)%gdc
-        if (type1d == nameg) then
-           sn = gsn
-           dc = gdc
+        gdc = ldecomp%gsn2gdc(gsn)
+        call map_indexes(gdc,gsn,type1d,dci,dcf,sni,snf)
+        n = dcf - dci + 1
+        do l = 1,n
+           sn = sni + l - 1
+           dc = dci + l - 1
            arraydc(dc) = arraysn(sn)
-        else if (type1d == namel) then
-           sni = gcellsn(gsn)%li
-           snf = gcellsn(gsn)%lf
-           dci = gcelldc(gdc)%li
-           dcf = gcelldc(gdc)%lf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do l = 1,n
-              dc = gcelldc(gdc)%li + l - 1
-              sn = gcellsn(gsn)%li + l - 1
-              arraydc(dc) = arraysn(sn)
-           end do
-        else if (type1d == namec) then
-           sni = gcellsn(gsn)%ci
-           snf = gcellsn(gsn)%cf
-           dci = gcelldc(gdc)%ci
-           dcf = gcelldc(gdc)%cf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do c = 1,n
-              dc = gcelldc(gdc)%ci + c - 1
-              sn = gcellsn(gsn)%ci + c - 1
-              arraydc(dc) = arraysn(sn)
-           end do
-        else if (type1d == namep) then
-           sni = gcellsn(gsn)%pi
-           snf = gcellsn(gsn)%pf
-           dci = gcelldc(gdc)%pi
-           dcf = gcelldc(gdc)%pf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do p = 1,n
-              dc = gcelldc(gdc)%pi + p - 1
-              sn = gcellsn(gsn)%pi + p - 1
-              arraydc(dc) = arraysn(sn)
-           end do
-        end if
+        end do
      end do
-     if (error)  then
-        write(6,*)'error in  map_sn2dc_sl '
-        call endrun()
-     end if
 
    end subroutine map_sn2dc_sl_real
 
@@ -1660,7 +1410,7 @@ contains
 !  decomposition single level integer array
 !
 ! !USES:
-    use clmtype, only : nameg, namel, namec, namep
+   use clmtype, only : nameg, namel, namec, namep
 !
 ! !ARGUMENTS:
      implicit none
@@ -1676,68 +1426,19 @@ contains
 ! !LOCAL VARIABLES:
      integer :: dc,sn,gdc,gsn
      integer :: dci,dcf,sni,snf
-     integer :: n,l,c,p
-     logical :: error
+     integer :: n,l
 !------------------------------------------------------------------------------
 
-     error = .false.
      do gsn = 1,procs(iam)%numg
-        gdc = gcellsn(gsn)%gdc
-        if (type1d == nameg) then
-           sn = gsn
-           dc = gdc
+        gdc = ldecomp%gsn2gdc(gsn)
+        call map_indexes(gdc,gsn,type1d,dci,dcf,sni,snf)
+        n = dcf - dci + 1
+        do l = 1,n
+           sn = sni + l - 1
+           dc = dci + l - 1
            arraydc(dc) = arraysn(sn)
-        else if (type1d == namel) then
-           sni = gcellsn(gsn)%li
-           snf = gcellsn(gsn)%lf
-           dci = gcelldc(gdc)%li
-           dcf = gcelldc(gdc)%lf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do l = 1,n
-              dc = gcelldc(gdc)%li + l - 1
-              sn = gcellsn(gsn)%li + l - 1
-              arraydc(dc) = arraysn(sn)
-           end do
-        else if (type1d == namec) then
-           sni = gcellsn(gsn)%ci
-           snf = gcellsn(gsn)%cf
-           dci = gcelldc(gdc)%ci
-           dcf = gcelldc(gdc)%cf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do c = 1,n
-              dc = gcelldc(gdc)%ci + c - 1
-              sn = gcellsn(gsn)%ci + c - 1
-              arraydc(dc) = arraysn(sn)
-           end do
-        else if (type1d == namep) then
-           sni = gcellsn(gsn)%pi
-           snf = gcellsn(gsn)%pf
-           dci = gcelldc(gdc)%pi
-           dcf = gcelldc(gdc)%pf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do p = 1,n
-              dc = gcelldc(gdc)%pi + p - 1
-              sn = gcellsn(gsn)%pi + p - 1
-              arraydc(dc) = arraysn(sn)
-           end do
-        end if
+        end do
      end do
-     if (error)  then
-        write(6,*)'error in  map_sn2dc_sl '
-        call endrun()
-     end if
 
    end subroutine map_sn2dc_sl_int
 
@@ -1754,7 +1455,7 @@ contains
 !  decomposition multi level real array
 !
 ! !USES:
-    use clmtype, only : nameg, namel, namec, namep
+   use clmtype, only : nameg, namel, namec, namep
 !
 ! !ARGUMENTS:
      implicit none
@@ -1772,77 +1473,22 @@ contains
 ! !LOCAL VARIABLES:
      integer :: dc,sn,gdc,gsn
      integer :: dci,dcf,sni,snf
-     integer :: n,l,c,p,lev
-     logical :: error
+     integer :: n,l,lev
 
 !------------------------------------------------------------------------------
 
-     error = .false.
      do gsn = 1,procs(iam)%numg
-        gdc = gcellsn(gsn)%gdc
-        if (type1d == nameg) then
-           sn = gsn
-           dc = gdc
+        gdc = ldecomp%gsn2gdc(gsn)
+        call map_indexes(gdc,gsn,type1d,dci,dcf,sni,snf)
+        n = dcf - dci + 1
+        do l = 1,n
+           sn = sni + l - 1
+           dc = dci + l - 1
            do lev = lb1, ub1
               arraydc(lev,dc) = arraysn(lev,sn)
            end do
-        else if (type1d == namel) then
-           sni = gcellsn(gsn)%li
-           snf = gcellsn(gsn)%lf
-           dci = gcelldc(gdc)%li
-           dcf = gcelldc(gdc)%lf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do l = 1,n
-              dc = gcelldc(gdc)%li + l - 1
-              sn = gcellsn(gsn)%li + l - 1
-              do lev = lb1, ub1
-                 arraydc(lev,dc) = arraysn(lev,sn)
-              end do
-           end do
-        else if (type1d == namec) then
-           sni = gcellsn(gsn)%ci
-           snf = gcellsn(gsn)%cf
-           dci = gcelldc(gdc)%ci
-           dcf = gcelldc(gdc)%cf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do c = 1,n
-              dc = gcelldc(gdc)%ci + c - 1
-              sn = gcellsn(gsn)%ci + c - 1
-              do lev = lb1,ub1
-                 arraydc(lev,dc) = arraysn(lev,sn)
-              end do
-           end do
-        else if (type1d == namep) then
-           sni = gcellsn(gsn)%pi
-           snf = gcellsn(gsn)%pf
-           dci = gcelldc(gdc)%pi
-           dcf = gcelldc(gdc)%pf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do p = 1,n
-              dc = gcelldc(gdc)%pi + p - 1
-              sn = gcellsn(gsn)%pi + p - 1
-              do lev = lb1,ub1
-                 arraydc(lev,dc) = arraysn(lev,sn)
-              end do
-           end do
-        end if
+        end do
      end do
-     if (error)  then
-        write(6,*)'error in  map_sn2n_ml1 '
-        call endrun()
-     end if
 
    end subroutine map_sn2dc_ml1_real
 
@@ -1859,7 +1505,7 @@ contains
 !  decomposition multi level integer array
 !
 ! !USES:
-    use clmtype, only : nameg, namel, namec, namep
+   use clmtype, only : nameg, namel, namec, namep
 !
 ! !ARGUMENTS:
      implicit none
@@ -1877,77 +1523,82 @@ contains
 ! !LOCAL VARIABLES:
      integer :: dc,sn,gdc,gsn
      integer :: dci,dcf,sni,snf
-     integer :: n,l,c,p,lev
-     logical :: error
+     integer :: n,l,lev
 !------------------------------------------------------------------------------
 
-     error = .false.
      do gsn = 1,procs(iam)%numg
-        gdc = gcellsn(gsn)%gdc
-        if (type1d == nameg) then
-           sn = gsn
-           dc = gdc
+        gdc = ldecomp%gsn2gdc(gsn)
+        call map_indexes(gdc,gsn,type1d,dci,dcf,sni,snf)
+        n = dcf - dci + 1
+        do l = 1,n
+           sn = sni + l - 1
+           dc = dci + l - 1
            do lev = lb1, ub1
               arraydc(lev,dc) = arraysn(lev,sn)
            end do
-        else if (type1d == namel) then
-           sni = gcellsn(gsn)%li
-           snf = gcellsn(gsn)%lf
-           dci = gcelldc(gdc)%li
-           dcf = gcelldc(gdc)%lf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do l = 1,n
-              dc = gcelldc(gdc)%li + l - 1
-              sn = gcellsn(gsn)%li + l - 1
-              do lev = lb1, ub1
-                 arraydc(lev,dc) = arraysn(lev,sn)
-              end do
-           end do
-        else if (type1d == namec) then
-           sni = gcellsn(gsn)%ci
-           snf = gcellsn(gsn)%cf
-           dci = gcelldc(gdc)%ci
-           dcf = gcelldc(gdc)%cf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do c = 1,n
-              dc = gcelldc(gdc)%ci + c - 1
-              sn = gcellsn(gsn)%ci + c - 1
-              do lev = lb1,ub1
-                 arraydc(lev,dc) = arraysn(lev,sn)
-              end do
-           end do
-        else if (type1d == namep) then
-           sni = gcellsn(gsn)%pi
-           snf = gcellsn(gsn)%pf
-           dci = gcelldc(gdc)%pi
-           dcf = gcelldc(gdc)%pf
-           n = snf - sni + 1
-           if (n /= dcf - dci + 1) then
-              error = .true.
-              exit
-           end if
-           do p = 1,n
-              dc = gcelldc(gdc)%pi + p - 1
-              sn = gcellsn(gsn)%pi + p - 1
-              do lev = lb1,ub1
-                 arraydc(lev,dc) = arraysn(lev,sn)
-              end do
-           end do
-        end if
+        end do
      end do
-     if (error)  then
-        write(6,*)'error in  map_sn2n_ml1 '
-        call endrun()
-     end if
 
    end subroutine map_sn2dc_ml1_int
 
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: map_indexes
+!
+! !INTERFACE:
+   subroutine map_indexes(gdc,gsn,type1d,dci,dcf,sni,snf)
+!
+! !DESCRIPTION:
+!  Gets indices for dc2sn mapping routines
+!
+! !USES:
+   use clmtype, only : nameg, namel, namec, namep
+   use initSubgridMod, only : gcellsn,gcelldc
+!
+! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: gdc,gsn
+    character(len=*), intent(in) :: type1d
+    integer, intent(out) :: dci,dcf,sni,snf
+!
+! !REVISION HISTORY:
+! 2005.11.15  T Craig Extracted from map_*_* subroutines
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    logical :: error
+!------------------------------------------------------------------------------
+
+     error = .false.
+     if (type1d == nameg) then
+        dci = gdc
+        dcf = gdc
+        sni = gsn
+        snf = gsn
+     else if (type1d == namel) then
+        dci = gcelldc%g_li(gdc)
+        dcf = gcelldc%g_lf(gdc)
+        sni = gcellsn%g_li(gsn)
+        snf = gcellsn%g_lf(gsn)
+     else if (type1d == namec) then
+        dci = gcelldc%g_ci(gdc)
+        dcf = gcelldc%g_cf(gdc)
+        sni = gcellsn%g_ci(gsn)
+        snf = gcellsn%g_cf(gsn)
+     else if (type1d == namep) then
+        dci = gcelldc%g_pi(gdc)
+        dcf = gcelldc%g_pf(gdc)
+        sni = gcellsn%g_pi(gsn)
+        snf = gcellsn%g_pf(gsn)
+     end if
+     if (dcf - dci /= snf - sni) then
+        write(6,*)'error in map_indexes ',gsn,gdc,trim(type1d),dci,dcf,sni,snf
+        call endrun()
+     end if
+
+end subroutine map_indexes
+
+!------------------
 end module decompMod

@@ -48,6 +48,7 @@ contains
     use clmtype
     use clm_varcon , only : spval
     use clm_varctl , only : nsrest
+    use clm_atmlnd , only : clm_a2l
 #if (defined RTM)
     use RunoffMod  , only : runoff
 #endif
@@ -434,39 +435,39 @@ contains
 
     call add_fld1d (fname='RAIN', units='mm/s',  &
          avgflag='A', long_name='atmospheric rain', &
-         ptr_gcell=clm3%g%a2lf%forc_rain)
+         ptr_gcell=clm_a2l%forc_rain)
 
     call add_fld1d (fname='SNOW', units='mm/s',  &
          avgflag='A', long_name='atmospheric snow', &
-         ptr_gcell=clm3%g%a2lf%forc_snow)
+         ptr_gcell=clm_a2l%forc_snow)
 
     call add_fld1d (fname='TBOT', units='K',  &
          avgflag='A', long_name='atmospheric air temperature', &
-         ptr_gcell=clm3%g%a2ls%forc_t)
+         ptr_gcell=clm_a2l%forc_t)
 
     call add_fld1d (fname='THBOT', units='K',  &
          avgflag='A', long_name='atmospheric air potential temperature', &
-         ptr_gcell=clm3%g%a2ls%forc_th)
+         ptr_gcell=clm_a2l%forc_th)
 
     call add_fld1d (fname='WIND', units='m/s',  &
          avgflag='A', long_name='atmospheric wind velocity magnitude', &
-         ptr_gcell=clm3%g%a2ls%forc_wind)
+         ptr_gcell=clm_a2l%forc_wind)
 
     call add_fld1d (fname='QBOT', units='kg/kg',  &
          avgflag='A', long_name='atmospheric specific humidity', &
-         ptr_gcell=clm3%g%a2ls%forc_q)
+         ptr_gcell=clm_a2l%forc_q)
 
     call add_fld1d (fname='ZBOT', units='m',  &
          avgflag='A', long_name='atmospheric reference height', &
-         ptr_gcell=clm3%g%a2ls%forc_hgt)
+         ptr_gcell=clm_a2l%forc_hgt)
 
     call add_fld1d (fname='FLDS', units='watt/m^2',  &
          avgflag='A', long_name='atmospheric longwave radiation', &
-         ptr_gcell=clm3%g%a2lf%forc_lwrad)
+         ptr_gcell=clm_a2l%forc_lwrad)
 
     call add_fld1d (fname='FSDS', units='watt/m^2',  &
          avgflag='A', long_name='atmospheric incident solar radiation', &
-         ptr_gcell=clm3%g%a2lf%forc_solar)
+         ptr_gcell=clm_a2l%forc_solar)
 
 #if (defined DGVM)
     ! History output of accumulation variables
