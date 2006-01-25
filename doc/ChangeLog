@@ -1,4 +1,83 @@
 ===============================================================
+Tag name: clm3_expa_55
+Originator(s): Peter Thornton
+Date: 24 Jan 2006
+One-line Summary: Fixes for 13C isotope code, migration from cvs
+
+Purpose of changes:
+
+Bugs fixed (include bugzilla ID):
+
+Describe any changes made to build system:
+
+Describe any changes made to the namelist:
+
+List any changes to the defaults for the boundary datasets:
+
+Describe any substantial timing or memory changes:
+
+Code reviewed by: myself
+
+List all subroutines eliminated:
+
+List all subroutines added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+Files modified:
+1. CNFireMod.F90
+Added initialization of variable mep.
+
+2. CNrestMod.F90
+Added EXIT_SPINUP controls on column-level 13C pools
+
+3. C13SummaryMod.F90
+Added current and excess maintenance respiration terms to summary MR variable.
+
+4. CNC13FluxMod.F90
+Added new routines to calculate 13C fluxes. Litter to column, non-mortality fluxes
+at the column level, pft-level gap mortality fluxes, pft and column level fire mortality fluxes,
+
+5. CNEcosystemDynMod.F90
+Added calls for C13Flux2, C13Flux3, C13StateUpdate2, and C13StateUpdate3.
+
+6. clm_varcon.F90
+Added parameters to define a fixed pre_industrial del13C (set to -6 permil)
+
+Summary of testing:
+
+  bluesky:
+  tempest:
+  bangkok/lf95:
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_40
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+Changes answers for CN only, and then only for the isotope prognostics.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+http://www.cgd.ucar.edu/tss/clm/diagnostics/clm3cn/c13/ccsm3_bgc31_I_2a-ccsm3_bgc26_I_1d/setsIndex.html
+===============================================================
+===============================================================
 	
 Tag name: clm3_expa_53
 Originator(s): Mariana Vertenstein

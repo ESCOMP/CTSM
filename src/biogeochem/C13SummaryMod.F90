@@ -127,16 +127,24 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: frootc_to_litter(:)
    real(r8), pointer :: frootc_xfer_to_frootc(:)       
    real(r8), pointer :: froot_mr(:)     
+   real(r8), pointer :: froot_curmr(:)     
+   real(r8), pointer :: froot_xsmr(:)     
    real(r8), pointer :: gpp(:)                  !GPP flux before downregulation (gC/m2/s)
    real(r8), pointer :: gr(:)             ! (gC/m2/s) total growth respiration
    real(r8), pointer :: leafc_to_litter(:)
    real(r8), pointer :: leafc_xfer_to_leafc(:)         
    real(r8), pointer :: leaf_mr(:)
+   real(r8), pointer :: leaf_curmr(:)
+   real(r8), pointer :: leaf_xsmr(:)
    real(r8), pointer :: litfall(:)        ! (gC/m2/s) litterfall (leaves and fine roots)
    real(r8), pointer :: livecrootc_xfer_to_livecrootc(:)
    real(r8), pointer :: livecroot_mr(:)
+   real(r8), pointer :: livecroot_curmr(:)
+   real(r8), pointer :: livecroot_xsmr(:)
    real(r8), pointer :: livestemc_xfer_to_livestemc(:) 
    real(r8), pointer :: livestem_mr(:)  
+   real(r8), pointer :: livestem_curmr(:)  
+   real(r8), pointer :: livestem_xsmr(:)  
    real(r8), pointer :: m_deadcrootc_storage_to_fire(:) 
    real(r8), pointer :: m_deadcrootc_storage_to_litter(:) 
    real(r8), pointer :: m_deadcrootc_to_fire(:)         
@@ -303,16 +311,24 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     frootc_to_litter               => clm3%g%l%c%p%pc13f%frootc_to_litter
     frootc_xfer_to_frootc          => clm3%g%l%c%p%pc13f%frootc_xfer_to_frootc
     froot_mr                       => clm3%g%l%c%p%pc13f%froot_mr
+    froot_curmr                    => clm3%g%l%c%p%pc13f%froot_curmr
+    froot_xsmr                     => clm3%g%l%c%p%pc13f%froot_xsmr
     gpp                            => clm3%g%l%c%p%pc13f%gpp
     gr                             => clm3%g%l%c%p%pc13f%gr
     leafc_to_litter                => clm3%g%l%c%p%pc13f%leafc_to_litter
     leafc_xfer_to_leafc            => clm3%g%l%c%p%pc13f%leafc_xfer_to_leafc
     leaf_mr                        => clm3%g%l%c%p%pc13f%leaf_mr
+    leaf_curmr                     => clm3%g%l%c%p%pc13f%leaf_curmr
+    leaf_xsmr                      => clm3%g%l%c%p%pc13f%leaf_xsmr
     litfall                        => clm3%g%l%c%p%pc13f%litfall
     livecrootc_xfer_to_livecrootc  => clm3%g%l%c%p%pc13f%livecrootc_xfer_to_livecrootc
     livecroot_mr                   => clm3%g%l%c%p%pc13f%livecroot_mr
+    livecroot_curmr                => clm3%g%l%c%p%pc13f%livecroot_curmr
+    livecroot_xsmr                 => clm3%g%l%c%p%pc13f%livecroot_xsmr
     livestemc_xfer_to_livestemc    => clm3%g%l%c%p%pc13f%livestemc_xfer_to_livestemc
     livestem_mr                    => clm3%g%l%c%p%pc13f%livestem_mr
+    livestem_curmr                 => clm3%g%l%c%p%pc13f%livestem_curmr
+    livestem_xsmr                  => clm3%g%l%c%p%pc13f%livestem_xsmr
     m_deadcrootc_storage_to_fire   => clm3%g%l%c%p%pc13f%m_deadcrootc_storage_to_fire
     m_deadcrootc_storage_to_litter => clm3%g%l%c%p%pc13f%m_deadcrootc_storage_to_litter
     m_deadcrootc_to_fire           => clm3%g%l%c%p%pc13f%m_deadcrootc_to_fire
@@ -412,6 +428,12 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          psnshade_to_cpool(p)
 
       ! maintenance respiration (MR)
+      
+      leaf_mr(p)      = leaf_curmr(p)      + leaf_xsmr(p)
+      froot_mr(p)     = froot_curmr(p)     + froot_xsmr(p)
+      livestem_mr(p)  = livestem_curmr(p)  + livestem_xsmr(p)
+      livecroot_mr(p) = livecroot_curmr(p) + livecroot_xsmr(p)
+      
       mr(p)  = &
          leaf_mr(p)     + &
          froot_mr(p)    + &

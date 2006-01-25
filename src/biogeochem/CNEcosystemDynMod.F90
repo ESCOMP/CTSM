@@ -74,7 +74,7 @@ contains
     use CNC13StateUpdate1Mod , only: C13StateUpdate1,C13StateUpdate0
     use CNC13StateUpdate2Mod , only: C13StateUpdate2
     use CNC13StateUpdate3Mod , only: C13StateUpdate3
-    use CNC13FluxMod         , only: C13Flux1
+    use CNC13FluxMod         , only: C13Flux1, C13Flux2, C13Flux3
     use C13SummaryMod        , only: C13Summary
 !
 ! !ARGUMENTS:
@@ -143,7 +143,11 @@ contains
 
        call CNGapMortality(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
+       call C13Flux2(num_soilc, filter_soilc, num_soilp, filter_soilp)
+
        call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
+
+       call C13StateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
        call NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
@@ -153,13 +157,13 @@ contains
 
        call CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
 
+       call C13Flux3(num_soilc, filter_soilc, num_soilp, filter_soilp)
+
        call CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
-       call NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
-
-       call C13StateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
-
        call C13StateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
+
+       call NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
        call CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
 

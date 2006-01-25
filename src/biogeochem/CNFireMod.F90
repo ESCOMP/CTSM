@@ -128,6 +128,7 @@ subroutine CNFireArea (num_soilc, filter_soilc)
       c = filter_soilc(fc)
       me(c) = 0._r8
    end do
+   mep = me_woody
    do pi = 1,max_pft_per_col
 !dir$ concurrent
 !cdir nodep

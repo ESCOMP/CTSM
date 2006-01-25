@@ -85,7 +85,9 @@ module clm_varcon
   real(r8) :: pondmx = 10.0_r8    !Ponding depth (mm)
   ! 4/14/05: PET
   ! Adding isotope code
-  real(r8) :: c13ratio = SHR_CONST_PDB/(1._r8+SHR_CONST_PDB) ! ratio 13C/(12+13)C in pdb
+  real(r8), parameter :: preind_atm_del13c = -6.0   ! preindustrial value for atmospheric del13C
+  real(r8), parameter :: preind_atm_ratio = SHR_CONST_PDB + (preind_atm_del13c * SHR_CONST_PDB)/1000.0  ! 13C/12C
+  real(r8) :: c13ratio = preind_atm_ratio/(1.0+preind_atm_ratio) ! 13C/(12+13)C preind atmosphere
   
   !------------------------------------------------------------------
   ! Initialize water type constants

@@ -8710,6 +8710,16 @@ contains
           clm3%g%l%c%ccs%soil1c(c) = clm3%g%l%c%ccs%soil1c(c) * m
           clm3%g%l%c%ccs%soil2c(c) = clm3%g%l%c%ccs%soil2c(c) * m
           clm3%g%l%c%ccs%soil3c(c) = clm3%g%l%c%ccs%soil3c(c) * m
+          
+          ! adding code for 13C, 12/25/05, PET 
+          clm3%g%l%c%cc13s%cwdc(c)   = clm3%g%l%c%cc13s%cwdc(c)   * m
+          clm3%g%l%c%cc13s%litr1c(c) = clm3%g%l%c%cc13s%litr1c(c) * m
+          clm3%g%l%c%cc13s%litr2c(c) = clm3%g%l%c%cc13s%litr2c(c) * m
+          clm3%g%l%c%cc13s%litr3c(c) = clm3%g%l%c%cc13s%litr3c(c) * m
+          clm3%g%l%c%cc13s%soil1c(c) = clm3%g%l%c%cc13s%soil1c(c) * m
+          clm3%g%l%c%cc13s%soil2c(c) = clm3%g%l%c%cc13s%soil2c(c) * m
+          clm3%g%l%c%cc13s%soil3c(c) = clm3%g%l%c%cc13s%soil3c(c) * m
+          
           clm3%g%l%c%cns%cwdn(c)   = clm3%g%l%c%cns%cwdn(c)   * m
           clm3%g%l%c%cns%litr1n(c) = clm3%g%l%c%cns%litr1n(c) * m
           clm3%g%l%c%cns%litr2n(c) = clm3%g%l%c%cns%litr2n(c) * m
