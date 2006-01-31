@@ -18,7 +18,7 @@ program mksrfdat
     use mklaiMod    , only : mklai
     use mkpftMod    , only : mkpft
     use creategridMod, only : read_domain,write_domain
-    use domainMod   , only : domain_setptrs
+    use domainMod   , only : domain_setptrs, domain_type, domain_init
     use mkfileMod   , only : mkfile
     use mkvarpar
     use mkvarsur
@@ -37,7 +37,7 @@ program mksrfdat
 ! !LOCAL VARIABLES:
     integer  :: lsmlon, lsmlat       ! clm grid resolution
     integer  :: nsoicol              ! number of model color classes
-    integer  :: i,j,k,m              ! indices
+    integer  :: i,j,k,m,n            ! indices
     integer  :: ier                  ! error status
     integer  :: ndiag,nfdyn          ! unit numbers
     integer  :: ncid                 ! netCDF id
@@ -56,6 +56,8 @@ program mksrfdat
     character(len=256) :: loc_fn     ! local file name
     character(len=  7) :: resol      ! resolution for file name
     integer  :: t1                   ! timer
+    real(r8),parameter :: p5  = 0.5_r8   ! constant
+    real(r8),parameter :: p25 = 0.25_r8  ! constant
 
     real(r8), allocatable  :: landfrac_pft(:,:)    ! PFT data: % land per gridcell
     real(r8), allocatable  :: pctlnd_pft(:,:)      ! PFT data: % of gridcell for PFTs
@@ -69,6 +71,35 @@ program mksrfdat
     integer , allocatable  :: soic2d(:,:)          ! soil color                            
     real(r8), allocatable  :: sand3d(:,:,:)        ! soil texture: percent sand            
     real(r8), allocatable  :: clay3d(:,:,:)        ! soil texture: percent clay            
+
+    logical  :: do_double_res_too     ! write matching double resolution dataset
+    character(len=256) :: fdfile      ! double surface data file name
+    integer  :: dbllon, dbllat        ! double clm grid resolution
+    type(domain_type) :: dbldomain    ! double domain
+    integer  :: di,dj                 ! double i,j
+    integer  :: ncidi                 ! netCDF id
+    integer  :: dnsoicol              ! number of model color classes
+    real(r8), allocatable  :: dlandfrac_pft(:,:)    ! PFT data: % land per gridcell
+    real(r8), allocatable  :: dpctlnd_pft(:,:)      ! PFT data: % of gridcell for PFTs
+    real(r8), allocatable  :: dpctlnd_pft_dyn(:,:)  ! PFT data: % of gridcell for dyn landuse PFTs
+    integer , allocatable  :: dpftdata_mask(:,:)    ! mask indicating real or fake land type
+    real(r8), allocatable  :: dpctpft(:,:,:)        ! PFT data: land fraction per gridcell
+    real(r8), allocatable  :: dpctgla(:,:)          ! percent of grid cell that is glacier  
+    real(r8), allocatable  :: dpctlak(:,:)          ! percent of grid cell that is lake     
+    real(r8), allocatable  :: dpctwet(:,:)          ! percent of grid cell that is wetland  
+    real(r8), allocatable  :: dpcturb(:,:)          ! percent of grid cell that is urbanized
+    integer , allocatable  :: dsoic2d(:,:)          ! soil color                            
+    real(r8), allocatable  :: dsand3d(:,:,:)        ! soil texture: percent sand            
+    real(r8), allocatable  :: dclay3d(:,:,:)        ! soil texture: percent clay            
+    real(r8), allocatable :: mlai_i(:,:,:)          ! baseline monthly lai
+    real(r8), allocatable :: msai_i(:,:,:)          ! baseline monthly sai
+    real(r8), allocatable :: mhgtt_i(:,:,:)         ! baseline monthly height (top)
+    real(r8), allocatable :: mhgtb_i(:,:,:)         ! baseline monthly height (bottom)
+    real(r8), allocatable :: mlai_o(:,:,:)          ! double monthly lai
+    real(r8), allocatable :: msai_o(:,:,:)          ! double monthly sai
+    real(r8), allocatable :: mhgtt_o(:,:,:)         ! double monthly height (top)
+    real(r8), allocatable :: mhgtb_o(:,:,:)         ! double monthly height (bottom)
+
     character(len=32) :: subname = 'mksrfdat'  ! program name
 
     namelist /clmexp/              &
@@ -81,7 +112,8 @@ program mksrfdat
          mksrf_fglacier,           &
          mksrf_furban,             &
          mksrf_flai,               &
-         mksrf_fdynuse
+         mksrf_fdynuse,            &
+         do_double_res_too      
 !-----------------------------------------------------------------------
 
     ! ======================================================================
@@ -114,6 +146,7 @@ program mksrfdat
 
     write(6,*) 'Attempting to initialize control settings .....'
 
+    do_double_res_too = .false.
     read(5, clmexp, iostat=ier)
     if (ier /= 0) then
        write(6,*)'error: namelist input resulted in error code ',ier
@@ -579,6 +612,163 @@ program mksrfdat
     write (6,*) 'Diagnostic log file      = ',trim(loc_fn)
     write (6,*) '   See this file for a summary of the dataset'
     write (6,*)
+
+    write(6,*) ' timer_v double_res-----'
+    call shr_timer_print(t1)
+
+    if (do_double_res_too) then
+       dbllon = 2*lsmlon
+       dbllat = 2*lsmlat
+       call domain_init(dbldomain,dbllon,dbllat)
+
+       allocate ( dlandfrac_pft(dbllon,dbllat)    , &
+                  dpctlnd_pft(dbllon,dbllat)      , & 
+                  dpctlnd_pft_dyn(dbllon,dbllat)  , & 
+                  dpftdata_mask(dbllon,dbllat)    , & 
+                  dpctpft(dbllon,dbllat,0:numpft) , & 
+                  dpctgla(dbllon,dbllat)          , & 
+                  dpctlak(dbllon,dbllat)          , & 
+                  dpctwet(dbllon,dbllat)          , & 
+                  dpcturb(dbllon,dbllat)          , & 
+                  dsand3d(dbllon,dbllat,nlevsoi)  , & 
+                  dclay3d(dbllon,dbllat,nlevsoi)  , & 
+                  dsoic2d(dbllon,dbllat))
+       allocate ( mlai_i(lsmlon,lsmlat,0:numpft)  , &
+                  msai_i(lsmlon,lsmlat,0:numpft)  , &
+                  mhgtt_i(lsmlon,lsmlat,0:numpft) , &
+                  mhgtb_i(lsmlon,lsmlat,0:numpft))
+       allocate ( mlai_o(dbllon,dbllat,0:numpft)  , &
+                  msai_o(dbllon,dbllat,0:numpft)  , &
+                  mhgtt_o(dbllon,dbllat,0:numpft) , &
+                  mhgtb_o(dbllon,dbllat,0:numpft))
+
+       dbldomain%ni = dbllon
+       dbldomain%nj = dbllat
+       dbldomain%edgen = ldomain%edgen
+       dbldomain%edgee = ldomain%edgee
+       dbldomain%edges = ldomain%edges
+       dbldomain%edgew = ldomain%edgew
+       dbldomain%numlon = dbllon
+
+       dnsoicol = nsoicol
+
+       do j = 1,lsmlat
+       do i = 1,lsmlon
+         di = 2*(i-1)+1
+         dj = 2*(j-1)+1
+         dbldomain%mask  (di:di+1,dj:dj+1) = ldomain%mask(i,j)
+         dbldomain%frac  (di:di+1,dj:dj+1) = ldomain%frac(i,j)
+         dbldomain%latixy(di:di+1,dj     ) = ldomain%latixy(i,j)*p5 + ldomain%lats(i,j)*p5
+         dbldomain%latixy(di:di+1,   dj+1) = ldomain%latixy(i,j)*p5 + ldomain%latn(i,j)*p5
+         dbldomain%longxy(di     ,dj:dj+1) = ldomain%longxy(i,j)*p5 + ldomain%lonw(i,j)*p5
+         dbldomain%longxy(   di+1,dj:dj+1) = ldomain%longxy(i,j)*p5 + ldomain%lone(i,j)*p5
+         dbldomain%area  (di:di+1,dj:dj+1) = ldomain%area(i,j)*p25
+         dbldomain%lats  (di:di+1,dj     ) = ldomain%lats(i,j)
+         dbldomain%lats  (di:di+1,   dj+1) = ldomain%latixy(i,j)
+         dbldomain%latn  (di:di+1,dj     ) = ldomain%latixy(i,j)
+         dbldomain%latn  (di:di+1,   dj+1) = ldomain%latn(i,j)
+         dbldomain%lonw  (di     ,dj:dj+1) = ldomain%lonw(i,j)
+         dbldomain%lonw  (   di+1,dj:dj+1) = ldomain%longxy(i,j)
+         dbldomain%lone  (di     ,dj:dj+1) = ldomain%longxy(i,j)
+         dbldomain%lone  (   di+1,dj:dj+1) = ldomain%lone(i,j)
+         dlandfrac_pft   (di:di+1,dj:dj+1) = landfrac_pft(i,j)
+         dpctlnd_pft     (di:di+1,dj:dj+1) = pctlnd_pft(i,j)
+         dpctlnd_pft_dyn (di:di+1,dj:dj+1) = pctlnd_pft_dyn(i,j)
+         dpftdata_mask   (di:di+1,dj:dj+1) = pftdata_mask(i,j)
+         do n = 0,numpft
+            dpctpft      (di:di+1,dj:dj+1,n) = pctpft(i,j,n)
+         enddo
+         dpctgla         (di:di+1,dj:dj+1) = pctgla(i,j)
+         dpctlak         (di:di+1,dj:dj+1) = pctlak(i,j)
+         dpctwet         (di:di+1,dj:dj+1) = pctwet(i,j)
+         dpcturb         (di:di+1,dj:dj+1) = pcturb(i,j)
+         do n = 1,nlevsoi
+            dsand3d      (di:di+1,dj:dj+1,n) = sand3d(i,j,n)
+            dclay3d      (di:di+1,dj:dj+1,n) = clay3d(i,j,n)
+         enddo
+         dsoic2d         (di:di+1,dj:dj+1) = soic2d(i,j)
+       enddo
+       enddo
+
+       write (resol,'(i3.3,"x",i3.3)') dbllon,dbllat
+       fdfile = './surface-data.'//trim(resol)//'.double.nc'
+
+       call mkfile(dbldomain%ni, dbldomain%nj, fdfile, dynlanduse = .false.)
+       call write_domain(dbldomain,fdfile)
+
+       call check_ret(nf_open(trim(fdfile), nf_write, ncid), subname)
+       call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
+
+       ! Write fields other than lai, sai, and heights to netcdf surface dataset
+
+       call ncd_ioglobal(varname='PFTDATA_MASK', data=dpftdata_mask, ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='LANDFRAC_PFT', data=dlandfrac_pft, ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='mxsoil_color', data=dnsoicol     , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='SOIL_COLOR'  , data=dsoic2d      , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='PCT_SAND'    , data=dsand3d      , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='PCT_CLAY'    , data=dclay3d      , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='PCT_WETLAND' , data=dpctwet      , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='PCT_LAKE'    , data=dpctlak      , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='PCT_GLACIER' , data=dpctgla      , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='PCT_URBAN'   , data=dpcturb      , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='PCT_PFT'     , data=dpctpft      , ncid=ncid, flag='write')
+
+       call check_ret(nf_open(fsurdat, 0, ncidi), subname)
+       do m = 1,12
+          beg4d(1) = 1  ;  len4d(1) = lsmlon
+          beg4d(2) = 1  ;  len4d(2) = lsmlat
+          beg4d(3) = 1  ;  len4d(3) = numpft+1
+          beg4d(4) = m  ;  len4d(4) = 1
+
+          call check_ret(nf_inq_varid(ncidi, 'MONTHLY_LAI', varid), subname)
+          call check_ret(nf_get_vara_double(ncidi, varid, beg4d, len4d, mlai_i), subname)
+          call check_ret(nf_inq_varid(ncidi, 'MONTHLY_SAI', varid), subname)
+          call check_ret(nf_get_vara_double(ncidi, varid, beg4d, len4d, msai_i), subname)
+          call check_ret(nf_inq_varid(ncidi, 'MONTHLY_HEIGHT_TOP', varid), subname)
+          call check_ret(nf_get_vara_double(ncidi, varid, beg4d, len4d, mhgtt_i), subname)
+          call check_ret(nf_inq_varid(ncidi, 'MONTHLY_HEIGHT_BOT', varid), subname)
+          call check_ret(nf_get_vara_double(ncidi, varid, beg4d, len4d, mhgtb_i), subname)
+
+          do j = 1,lsmlat
+          do i = 1,lsmlon
+             di = 2*(i-1)+1
+             dj = 2*(j-1)+1
+             do n = 0,numpft
+                mlai_o (di:di+1,dj:dj+1,n) = mlai_i (i,j,n)
+                msai_o (di:di+1,dj:dj+1,n) = msai_i (i,j,n)
+                mhgtt_o(di:di+1,dj:dj+1,n) = mhgtt_i(i,j,n)
+                mhgtb_o(di:di+1,dj:dj+1,n) = mhgtb_i(i,j,n)
+             enddo
+          enddo
+          enddo
+
+          beg4d(1) = 1  ;  len4d(1) = dbllon
+          beg4d(2) = 1  ;  len4d(2) = dbllat
+          beg4d(3) = 1  ;  len4d(3) = numpft+1
+          beg4d(4) = m  ;  len4d(4) = 1
+
+          call check_ret(nf_inq_varid(ncid, 'MONTHLY_LAI', varid), subname)
+          call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, mlai_o), subname)
+          call check_ret(nf_inq_varid(ncid, 'MONTHLY_SAI', varid), subname)
+          call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, msai_o), subname)
+          call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_TOP', varid), subname)
+          call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, mhgtt_o), subname)
+          call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_BOT', varid), subname)
+          call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, mhgtb_o), subname)
+       enddo
+
+       call check_ret(nf_sync(ncid), subname)
+       ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
+
+       call check_ret(nf_sync(ncid), subname)
+
+       call check_ret(nf_close(ncid), subname)
+ 
+       write (6,'(72a1)') ("-",i=1,60)
+       write (6, *) 'Generated file ',trim(fdfile)
+       write (6,'(a46,f5.1,a4,f5.1,a5)') 'land model surface data set successfully created for ', &
+          360./dbllon,' by ',180./dbllat,' double grid'
+    endif
 
     write(6,*) ' timer_z end-----'
     call shr_timer_print(t1)

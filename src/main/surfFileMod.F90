@@ -332,6 +332,10 @@ contains
        call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LONGXY'  , domain%lonc, RET)
        call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LATIXY'  , domain%latc, RET)
        call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LANDMASK', domain%mask, RET)
+       domain%pftm = domain%mask
+       where (domain%mask <= 0)
+          domain%pftm = -1
+       endwhere
        call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LANDFRAC', domain%frac, RET)
 #else
 
@@ -356,9 +360,19 @@ contains
 
        call check_ret(nf_inq_varid(ncid, 'LANDMASK', varid), subname)
        call check_ret(nf_get_var_int(ncid, varid, domain%mask), subname)
+       domain%pftm = domain%mask
+       where (domain%mask <= 0)
+          domain%pftm = -1
+       endwhere
 
        call check_ret(nf_inq_varid(ncid, 'LANDFRAC', varid), subname)
        call check_ret(nf_get_var_double(ncid, varid, domain%frac), subname)
+
+       ier = nf_inq_varid (ncid, 'PFTDATA_MASK', varid)
+       if (ier == NF_NOERR) then
+          call check_ret(nf_get_var_int(ncid, varid, domain%pftm), subname)
+       endif
+
 #endif
 
 !tcx fix, this or a test/abort should be added so overlaps can be computed
@@ -422,6 +436,7 @@ contains
     call mpi_bcast (domain%latc , size(domain%latc) , MPI_REAL8  , 0, mpicom, ier)
     call mpi_bcast (domain%lonc , size(domain%lonc) , MPI_REAL8  , 0, mpicom, ier)
     call mpi_bcast (domain%mask , size(domain%mask) , MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (domain%pftm , size(domain%pftm) , MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (domain%frac , size(domain%frac) , MPI_REAL8  , 0, mpicom, ier)
     call mpi_bcast (domain%edges, size(domain%edges), MPI_REAL8  , 0, mpicom, ier)
 #endif
@@ -533,7 +548,7 @@ contains
           if (found) exit
        end do
        if ( found ) then
-          write (6,*)'surfrd error: urban parameterization not implemented at i,j= ',iindx,jindx
+          write (6,*)'surfrd error: urban parameterization not implemented at i,j= ',iindx,jindx,pcturb(iindx,jindx)
           call endrun()
        end if
 
@@ -668,7 +683,7 @@ contains
                       call endrun()
                    end if
                 end do
-                if (sumvec(i,j) > 1.e-04_r8 .and. ldomain%mask(i,j) == 1) then
+                if (sumvec(i,j) > 1.e-04_r8 .and. ldomain%pftm(i,j) >= 0) then
                    write(6,*)'surfrd error: PFT cover not equal to 100 for i,j=',i,j
                    do m=1,maxpatch_pft
                       write(6,*)'m= ',m,' pft= ',pft(i,j,m)
@@ -761,7 +776,7 @@ contains
                    wst_sum = wst_sum + pctpft(i,j,m)
                 end do
 
-                if (ldomain%mask(i,j) == 1) then
+                if (ldomain%pftm(i,j) >= 0) then
 
                    ! Rank [wst] in ascendg order to obtain the top [maxpatch_pft] PFTs
 
@@ -855,7 +870,7 @@ contains
                 if (k1 == -9999 .and. k2 == -9999) then
                    write(6,*)'surfrd error: largest PFT patch not found'
                    call endrun()
-                else if (ldomain%mask(i,j) == 1) then
+                else if (ldomain%pftm(i,j) >= 0) then
                    if (sumpct < 95 .or. sumpct > 105._r8) then
                       write(6,*)'surfrd error: sum of PFT cover =',sumpct,' at i,j=',i,j
                       call endrun()
@@ -875,7 +890,7 @@ contains
                 do m = 1, maxpatch_cft
                    sumpct = sumpct + pctcft_lunit(i,j,m)
                 end do
-                if (ldomain%mask(i,j) == 1) then
+                if (ldomain%pftm(i,j) >= 0) then
                    if (abs(sumpct - 100._r8) > 0.000001_r8) then
                       write(6,*)'surfFileMod error: sum(pct) over maxpatch_pft is not = 100.'
                       write(6,*)sumpct, i,j
@@ -911,7 +926,7 @@ contains
 
     do j = 1,lsmlat
        do i = 1,lsmlon
-          if (ldomain%mask(i,j) == 1) then
+          if (ldomain%pftm(i,j) >= 0) then
 
              ! Naturally vegetated landunit
 
@@ -952,7 +967,7 @@ contains
     sumvec(:,:) = abs(sum(wtxy,dim=3)-1._r8)
     do j=1,lsmlat
        do i=1,lsmlon
-          if (sumvec(i,j) > 1.e-06_r8 .and. ldomain%mask(i,j)==1) then
+          if (sumvec(i,j) > 1.e-06_r8 .and. ldomain%pftm(i,j)>=0) then
              found = .true.
              iindx = i
              jindx = j
@@ -1029,7 +1044,7 @@ contains
 
     do j = 1,lsmlat
        do i = 1,lsmlon
-          if (ldomain%mask(i,j) == 1) then
+          if (ldomain%pftm(i,j) >= 0) then
 
              ! Error check: make sure PFTs sum to 100% cover for vegetated landunit 
              ! (convert pctpft from percent with respect to gridcel to percent with 

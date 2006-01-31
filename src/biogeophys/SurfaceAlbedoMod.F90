@@ -149,8 +149,8 @@ contains
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
 
-    lat       => clm3%g%lat
-    lon       => clm3%g%lon
+    lat       => clm3%g%lat_a
+    lon       => clm3%g%lon_a
 
     ! Assign local pointers to derived subtypes components (landunit level)
 

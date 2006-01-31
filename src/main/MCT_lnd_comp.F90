@@ -195,13 +195,11 @@ contains
     use m_Permuter    , only : MCT_Permute => Permute
 
     use MCT_seq
-    use decompMod     , only : get_proc_bounds
 #if (defined SPMD)
     use mpishorthand  , only : mpicom
 #endif
-    use clmtype
-    use clm_varpar    , only : lsmlon, lsmlat
-    use decompMod     , only : get_proc_bounds
+    use decompMod     , only : get_proc_bounds_atm,adecomp
+    use domainMod     , only : adomain
 
 
     implicit none
@@ -214,12 +212,9 @@ contains
 #endif
 
     integer,allocatable :: gindex(:)
-    integer :: i, j, n, gi
+    integer :: i,j,n,gi
     integer :: lsize,gsize
     integer :: ier
-    integer :: begp, endp    ! beginning and ending pft indices
-    integer :: begc, endc    ! beginning and ending column indices
-    integer :: begl, endl    ! beginning and ending landunit indices
     integer :: begg, endg    ! beginning and ending gridcell indices
     !-------------------------------------------------------------------
 
@@ -230,21 +225,20 @@ contains
     ! starting at south pole.  Should be the same as what's used
     ! in SCRIP
     
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+    call get_proc_bounds_atm(begg, endg)
 
     allocate(gindex(begg:endg),stat=ier)
 
     ! number the local grid
 
     do n = begg, endg
-        i = clm3%g%ixy(n)
-        j = clm3%g%jxy(n)
-        gi = (j-1)*lsmlon + i
-        gindex(n) = gi
+        i = adecomp%gdc2i(n)
+        j = adecomp%gdc2j(n)
+        gindex(n) = (j-1)*adomain%ni + i
     end do
 
     lsize = endg-begg+1
-    gsize = lsmlon*lsmlat
+    gsize = adomain%ni*adomain%nj
 
     allocate(perm(lsize),stat=ier)
 
@@ -286,11 +280,10 @@ contains
 
   subroutine MCT_lnd_ExportInit( l2a, l2c_l )
 
-    use clmtype   , only : clm3
     use clm_atmlnd, only : lnd2atm_type
-    use domainMod , only : ldomain
+    use domainMod , only : adomain
     use clm_varcon, only : sb
-    use decompMod , only : get_proc_bounds
+    use decompMod , only : get_proc_bounds_atm,adecomp
     use m_AttrVect, only : MCT_Avt_Permute => Permute
 
     implicit none
@@ -299,16 +292,13 @@ contains
     type(AttrVect)          , intent(inout) :: l2c_l
 
     integer :: g,i,ier,nstep
-    integer :: begp, endp    ! beginning and ending pft indices
-    integer :: begc, endc    ! beginning and ending column indices
-    integer :: begl, endl    ! beginning and ending landunit indices
     integer :: begg, endg    ! beginning and ending gridcell indices
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+    call get_proc_bounds_atm(begg, endg)
 
     i=1
     do g = begg,endg
-       l2c_l%rAttr(index_l2c_Sl_landfrac,i) =  ldomain%frac(clm3%g%ixy(g), clm3%g%jxy(g))
+       l2c_l%rAttr(index_l2c_Sl_landfrac,i) =  adomain%frac(adecomp%gdc2i(g), adecomp%gdc2j(g))
        l2c_l%rAttr(index_l2c_Sl_t,i)        =  sqrt(sqrt(l2a%eflx_lwrad_out(g)/sb))
        l2c_l%rAttr(index_l2c_Sl_snowh,i)    =  l2a%h2osno(g)
        l2c_l%rAttr(index_l2c_Sl_avsdr,i)    =  l2a%albd(g,1)
@@ -330,7 +320,7 @@ contains
   subroutine MCT_lnd_Export( l2a, l2c_l )   
 
     use clm_atmlnd, only : lnd2atm_type
-    use decompMod , only : get_proc_bounds
+    use decompMod , only : get_proc_bounds_atm
     use m_AttrVect, only : MCT_Avt_Permute => Permute
     implicit none
 
@@ -338,12 +328,9 @@ contains
     type(AttrVect)          , intent(inout) :: l2c_l
 
     integer :: g,i
-    integer  :: begp, endp    ! beginning and ending pft indices
-    integer  :: begc, endc    ! beginning and ending column indices
-    integer  :: begl, endl    ! beginning and ending landunit indices
     integer  :: begg, endg    ! beginning and ending gridcell indices
     
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+    call get_proc_bounds_atm(begg, endg)
 
     i=1
     l2c_l%rAttr(:,:) = 0.0_r8
@@ -385,7 +372,7 @@ contains
     use m_AttrVectComms , only: AttrVect_gather => gather
     use m_AttrVect, only : MCT_Avt_lsize => lsize
     use m_AttrVect, only : MCT_Avt_Unpermute => Unpermute
-    use decompMod , only : get_proc_bounds
+    use decompMod , only : get_proc_bounds_atm
     use time_manager,   only: get_nstep
     use spmd_utils    , only: masterproc, iam
 #if (defined SPMD)
@@ -405,16 +392,13 @@ contains
     real(r8) :: co2_ppmv_diag ! temporary
     real(r8) :: co2_ppmv_prog ! temporary
     real(r8) :: co2_ppmv      ! temporary
-    integer  :: begp, endp    ! beginning and ending pft indices
-    integer  :: begc, endc    ! beginning and ending column indices
-    integer  :: begl, endl    ! beginning and ending landunit indices
     integer  :: begg, endg    ! beginning and ending gridcell indices
 
     ! unpermute after rearrange call and before copying into local arrays.
 
     call MCT_Avt_Unpermute(a2c_l,perm)
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+    call get_proc_bounds_atm(begg, endg)
 
     if (co2_type == 'prognostic' .and. index_a2c_Sa_co2prog == 0) then
        write(6,*)' must have nonzero index_a2c_Sa_co2prog for co2_type equal to prognostic'
@@ -443,10 +427,10 @@ contains
         a2l%forc_pbot(g)    = a2c_l%rAttr(index_a2c_Sa_pbot,i)      ! ptcmxy  Atm state Pa
         a2l%forc_t(g)       = a2c_l%rAttr(index_a2c_Sa_tbot,i)      ! forc_txy  Atm state K
         a2l%forc_lwrad(g)   = a2c_l%rAttr(index_a2c_Faxa_lwdn,i)    ! flwdsxy Atm flux  W/m^2
-        forc_rainc           = a2c_l%rAttr(index_a2c_Faxa_rainc,i)   ! mm/s
-        forc_rainl           = a2c_l%rAttr(index_a2c_Faxa_rainl,i)   ! mm/s
-        forc_snowc           = a2c_l%rAttr(index_a2c_Faxa_snowc,i)   ! mm/s
-        forc_snowl           = a2c_l%rAttr(index_a2c_Faxa_snowl,i)   ! mm/s
+        forc_rainc          = a2c_l%rAttr(index_a2c_Faxa_rainc,i)   ! mm/s
+        forc_rainl          = a2c_l%rAttr(index_a2c_Faxa_rainl,i)   ! mm/s
+        forc_snowc          = a2c_l%rAttr(index_a2c_Faxa_snowc,i)   ! mm/s
+        forc_snowl          = a2c_l%rAttr(index_a2c_Faxa_snowl,i)   ! mm/s
         a2l%forc_solad(g,2) = a2c_l%rAttr(index_a2c_Faxa_swndr,i)   ! forc_sollxy  Atm flux  W/m^2
         a2l%forc_solad(g,1) = a2c_l%rAttr(index_a2c_Faxa_swvdr,i)   ! forc_solsxy  Atm flux  W/m^2
         a2l%forc_solai(g,2) = a2c_l%rAttr(index_a2c_Faxa_swndf,i)   ! forc_solldxy Atm flux  W/m^2
@@ -502,7 +486,7 @@ contains
 
      ! debug write statements (remove)
 
-     print *,'co2_type = ', co2_type, ' co2_ppmv = ', co2_ppmv
+!!     print *,'co2_type = ', co2_type, ' co2_ppmv = ', co2_ppmv
 
    end subroutine MCT_lnd_Import
 

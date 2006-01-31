@@ -408,13 +408,7 @@ contains
        irad           = cam_irad
        nsrest         = cam_nsrest
        hist_crtinic   = cam_crtinic
-       hist_mfilt(1)  = cam_mfilt
-       hist_nhtfrq(1) = cam_nhtfrq
-#if (defined PERGRO)
-       hist_empty_htapes = .true.
-       hist_fincl1 = 'TSA'
-#endif
-       mss_irt = cam_irt
+       mss_irt        = cam_irt
 #if (defined RTM) || (defined DGVM)
        if (is_perpetual()) then
           write(6,*)'RTM or DGVM cannot be defined in perpetual mode'

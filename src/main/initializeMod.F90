@@ -171,7 +171,15 @@ contains
     ! Set coarse and fine grids
 
     call surfrd_get_grid(ldomain, fsurdat)
+    if (ldomain%ni /= lsmlon .or. ldomain%nj /= lsmlat) then
+       if (masterproc) write(6,*) 'ERROR ldomain size not consistent with lsmlon/lsmlat: ',ldomain%ni, ldomain%nj, lsmlon, lsmlat
+       call endrun()
+    endif
     call surfrd_get_grid(adomain, fatmgrid)
+    if (ldomain%ni < adomain%ni .or. ldomain%nj < adomain%nj) then
+       if (masterproc) write(6,*) 'ERROR ldomain size bigger than adomain size: ',ldomain%ni, ldomain%nj, adomain%ni, adomain%nj
+       call endrun()
+    endif
 
     ! Set the a2l and l2a maps
 

@@ -74,13 +74,14 @@ contains
     use camsrfexch_types, only : srfflx_parm, srfflx_state, srfcomp2hub_alloc
     use time_manager    , only : get_nstep
     use filenames       , only : mss_irt, caseid
-    use history         , only : ctitle, inithist, nhtfrq, mfilt
+    use history         , only : ctitle, inithist
     ! clm uses
-    use clm_atmlnd      , only : clm_l2a
-    use domainMod       , only : ldomain
+    use clm_atmlnd      , only : clm_l2a, atm_l2a
+    use clm_atmlnd      , only : gridmap_l2a, clm_mapl2a
+    use domainMod       , only : adomain
     use clm_comp        , only : clm_init1, clm_init2
     use clm_varctl      , only : cam_caseid, cam_ctitle, cam_irad, cam_nsrest, &
-                                 cam_crtinic, cam_nhtfrq, cam_mfilt, cam_irt, finidat       
+                                 cam_crtinic, cam_irt, finidat       
     ! mct uses
     use MCT_lnd_comp
     use MCT_atm_comp
@@ -129,8 +130,6 @@ contains
     cam_ctitle  = ctitle
     cam_nsrest  = nsrest
     cam_crtinic = inithist
-    cam_nhtfrq  = nhtfrq(1)
-    cam_mfilt   = mfilt(1)
     cam_irt     = mss_irt
 
     !=============================================================
@@ -147,7 +146,7 @@ contains
 
 #if ( defined SCAM )
     if (switch(CRM_SW+1)) noland = .true.
-    if (ldomain%frac(1,1)==0) noland = .true.
+    if (adomain%frac(1,1)==0) noland = .true.
     if (noland) return
 #endif
 
@@ -183,7 +182,9 @@ contains
        call t_stopf('sync_cl2ch_ini')
 #endif
        call t_startf('clump2chunkini')
-       call MCT_lnd_ExportInit( clm_l2a, l2c_l )
+       call clm_mapl2a(clm_l2a, atm_l2a, gridmap_l2a)
+       call MCT_lnd_ExportInit(atm_l2a, l2c_l)
+!tcxz       call MCT_lnd_ExportInit(clm_l2a, l2c_l)
        call MCT_lnd2atm( l2c_l, l2c_a ) 
        call MCT_atmhub_lndImportInit( l2c_a, lnd_out ) 
        call t_stopf('clump2chunkini')
@@ -203,9 +204,9 @@ contains
     !=============================================================
 
     noland=.true.
-    do j = 1,ldomain%nj
-       do i = 1,ldomain%ni
-          if (ldomain%frac(i,j) > 0._r8) noland = .false.
+    do j = 1,adomain%nj
+       do i = 1,adomain%ni
+          if (adomain%frac(i,j) > 0._r8) noland = .false.
        end do
     end do
 
@@ -217,7 +218,7 @@ contains
 ! !IROUTINE: clm_camRun
 !
 ! !INTERFACE:
-  subroutine clm_camRun( atm_out, lnd_out )
+  subroutine clm_camRun( atm_out, lnd_out, rstwr )
 !
 ! !DESCRIPTION:
 ! Pack data to be sent to land model into a single array.  Send data to
@@ -232,7 +233,9 @@ contains
 ! !USES:
     use ppgrid          , only : begchunk, endchunk
     use camsrfexch_types, only : srfflx_parm, surface_state
-    use clm_atmlnd      , only : clm_a2l, clm_l2a
+    use clm_atmlnd      , only : clm_a2l, clm_l2a, atm_a2l, atm_l2a
+    use clm_atmlnd      , only : gridmap_l2a, clm_mapl2a
+    use clm_atmlnd      , only : gridmap_a2l, clm_mapa2l
     use clm_comp        , only : clm_run1, clm_run2
     use MCT_lnd_comp 
     use MCT_atm_comp
@@ -241,6 +244,7 @@ contains
 ! !ARGUMENTS:
     type(surface_state), intent(inout) :: atm_out(begchunk:endchunk)
     type(srfflx_parm)  , intent(inout) :: lnd_out(begchunk:endchunk)
+    logical,             intent(in)    :: rstwr    ! true => write restart file this step
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -260,13 +264,15 @@ contains
     call t_startf('chunk2clump')
     call MCT_atm_Export( atm_out, a2c_a )       
     call MCT_atm2lnd( a2c_a, a2c_l )
-    call MCT_lnd_Import( clm_a2l, a2c_l )
+!tcxz    call MCT_lnd_Import( clm_a2l, a2c_l )
+    call MCT_lnd_Import( atm_a2l, a2c_l )
+    call clm_mapa2l(atm_a2l, clm_a2l, gridmap_a2l)
     call t_stopf('chunk2clump')
     
     ! Run clm
 
     call clm_run1( )
-    call clm_run2( )
+    call clm_run2(rstwr)
 
     ! l->a coupling
 
@@ -276,7 +282,9 @@ contains
     call t_stopf('sync_clmp2chnk')
 #endif
     call t_startf('clump2chunk')
-    call MCT_lnd_Export(clm_l2a, l2c_l)
+    call clm_mapl2a(clm_l2a, atm_l2a, gridmap_l2a)
+    call MCT_lnd_Export(atm_l2a, l2c_l)
+!tcxz    call MCT_lnd_Export(clm_l2a, l2c_l)
     call MCT_lnd2atm( l2c_l, l2c_a )
     call MCT_atmhub_lndImport( l2c_a, lnd_out)
     call t_stopf('clump2chunk')
@@ -333,7 +341,7 @@ contains
     use ppgrid          , only : begchunk, endchunk
     use shr_const_mod   , only : SHR_CONST_PI
     use commap          , only : clat, londeg
-    use domainMod       , only : ldomain
+    use domainMod       , only : adomain
     use rgrid           , only : nlon
     use pmgrid          , only : plon, plat
     use ppgrid          , only : pcols
@@ -377,21 +385,21 @@ contains
 
     do j = 1,plat
        ext_numlon(j) = nlon(j)	
-       if (ext_numlon(j) /= ldomain%ni) then
+       if (ext_numlon(j) /= adomain%ni) then
           write(6,*)'clm_camInit error: CAM numlon array not consistent'
           call endrun()
        end if
        do i = 1,nlon(j)
           ext_lonc(i,j) = londeg(i,j)
           ext_latc(i,j) = (180._r8/SHR_CONST_PI)*clat(j)
-          if ( abs(ext_latc(i,j)-ldomain%latc(i,j)) > 1.e-12_r8 ) then
+          if ( abs(ext_latc(i,j)-adomain%latc(i,j)) > 1.e-12_r8 ) then
              write(6,*)'clm_camInit error: CAM latitude ',ext_latc(i,j),' and clm input latitude ', &
-                  ldomain%latc(i,j),' has difference too large at i,j= ',i,j
+                  adomain%latc(i,j),' has difference too large at i,j= ',i,j
              call endrun()
           end if
-          if ( abs(ext_lonc(i,j)-ldomain%lonc(i,j)) > 1.e-12_r8 ) then
+          if ( abs(ext_lonc(i,j)-adomain%lonc(i,j)) > 1.e-12_r8 ) then
              write(6,*)'clm_camInit error: CAM longitude ',ext_lonc(i,j),' and clm input longitude ', &
-                  ldomain%lonc(i,j),' has difference too large at i,j= ',i,j
+                  adomain%lonc(i,j),' has difference too large at i,j= ',i,j
              call endrun()
           end if
        end do
@@ -413,11 +421,11 @@ contains
              else
                 ext_landmask(i,j) = 0
              endif
-             if (ext_landmask(i,j) /= ldomain%mask(i,j)) then
+             if (ext_landmask(i,j) /= adomain%mask(i,j)) then
                 write(6,*)'clm_camInit error: CAM land mask different from surface dataset at i,j= ',i,j
                 call endrun()
              end if
-             if (ext_landfrac(i,j) /= ldomain%frac(i,j)) then
+             if (ext_landfrac(i,j) /= adomain%frac(i,j)) then
                 write(6,*)'clm_camInit error: CAM fractional land differs from surface dataset at i,j= ',i,j
                 call endrun()
              end if

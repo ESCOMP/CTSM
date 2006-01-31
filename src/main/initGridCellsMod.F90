@@ -117,7 +117,8 @@ contains
     nump = 0
     do j = 1, lsmlat
        do i = 1, lsmlon
-          if (ldomain%mask(i,j) == 1) then         
+!tcx fix this so numg,numl,numc,nump global are stored somewhere, not recomputed
+          if (ldecomp%ij2gdc(i,j) > 0) then
              call get_gcell_info (i, j, wtxy, nlunits=ilunits, ncols=icols, npfts=ipfts)
              numg = numg + 1
              numl = numl + ilunits
@@ -225,7 +226,7 @@ contains
 
     ! Set clm3 pointers for g,l,c,p indexes
 
-    call set_clm_gptrs(clm3,gcelldc,ldecomp,ldomain)
+    call set_clm_gptrs()
 
   end subroutine initGridcells
 
@@ -235,25 +236,24 @@ contains
 ! !IROUTINE: set_clm_gptrs
 !
 ! !INTERFACE:
-  subroutine set_clm_gptrs(clm3,gridcell,decomp,domain)
+  subroutine set_clm_gptrs()
 !
 ! !DESCRIPTION: 
 ! Initialize clmtype gptr properties
 !
 ! !USES
-  use clmtype       , only : gridcell_type, landunit_type, &
+  use clmtype       , only : clm3, gridcell_type, landunit_type, &
                              column_type, pft_type, model_type
-  use initSubgridMod, only : subgrid_type
-  use decompMod     , only : get_proc_global, decomp_type
+  use domainMod     , only : ldomain,adomain
+  use decompMod     , only : ldecomp
+  use areaMod       , only : gridmap_setptrs
+  use clm_atmlnd    , only : gridmap_a2l
+  use initSubgridMod, only : gcelldc
+  use decompMod     , only : get_proc_global
   use shr_const_mod , only : SHR_CONST_PI
-  use domainMod     , only : domain_type
   implicit none
 !
 ! !ARGUMENTS:
-  type(model_type)   ,intent(inout), target :: clm3
-  type(subgrid_type) ,intent(in)    :: gridcell
-  type(decomp_type)  ,intent(in)    :: decomp
-  type(domain_type)  ,intent(in)    :: domain
 !
 ! !REVISION HISTORY:
 ! Created by T Craig 2005.11.15
@@ -261,7 +261,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-  integer :: i,j,g,l,c,p
+  integer :: i,j,g,l,c,p,ia,ja,n
   integer :: numg     ! global number of gridcells
   integer :: numl     ! global number of landunits
   integer :: numc     ! global number of columns
@@ -270,6 +270,10 @@ contains
   type(landunit_type), pointer  :: lptr ! pointer to landunit derived subtype
   type(column_type)  , pointer  :: cptr ! pointer to column derived subtype
   type(pft_type)     , pointer  :: pptr ! pointer to pft derived subtype
+  integer            ,pointer   :: n_a2l(:,:)   ! number of overlapping cells
+  integer            ,pointer   :: i_a2l(:,:,:) ! i index of overlap input cell
+  integer            ,pointer   :: j_a2l(:,:,:) ! j index of overlap input cell
+
 !------------------------------------------------------------------------
 
     ! Set pointers into derived types for this module
@@ -283,58 +287,80 @@ contains
 
     ! pointers
 
-    gptr%luni     => gridcell%g_li
-    gptr%lunf     => gridcell%g_lf
-    gptr%coli     => gridcell%g_ci
-    gptr%colf     => gridcell%g_cf
-    gptr%pfti     => gridcell%g_pi
-    gptr%pftf     => gridcell%g_pf
+    gptr%luni     => gcelldc%g_li
+    gptr%lunf     => gcelldc%g_lf
+    gptr%coli     => gcelldc%g_ci
+    gptr%colf     => gcelldc%g_cf
+    gptr%pfti     => gcelldc%g_pi
+    gptr%pftf     => gcelldc%g_pf
 
-    lptr%gridcell => gridcell%l_g
-    lptr%wtgcell  => gridcell%l_gw
-    lptr%coli     => gridcell%l_ci
-    lptr%colf     => gridcell%l_cf
-    lptr%pfti     => gridcell%l_pi
-    lptr%pftf     => gridcell%l_pf
+    lptr%gridcell => gcelldc%l_g
+    lptr%wtgcell  => gcelldc%l_gw
+    lptr%coli     => gcelldc%l_ci
+    lptr%colf     => gcelldc%l_cf
+    lptr%pfti     => gcelldc%l_pi
+    lptr%pftf     => gcelldc%l_pf
 
-    cptr%gridcell => gridcell%c_g
-    cptr%wtgcell  => gridcell%c_gw
-    cptr%landunit => gridcell%c_l
-    cptr%wtlunit  => gridcell%c_lw
-    cptr%pfti     => gridcell%c_pi
-    cptr%pftf     => gridcell%c_pf
+    cptr%gridcell => gcelldc%c_g
+    cptr%wtgcell  => gcelldc%c_gw
+    cptr%landunit => gcelldc%c_l
+    cptr%wtlunit  => gcelldc%c_lw
+    cptr%pfti     => gcelldc%c_pi
+    cptr%pftf     => gcelldc%c_pf
 
-    pptr%gridcell => gridcell%p_g
-    pptr%wtgcell  => gridcell%p_gw
-    pptr%landunit => gridcell%p_l
-    pptr%wtlunit  => gridcell%p_lw
-    pptr%column   => gridcell%p_c
-    pptr%wtcol    => gridcell%p_cw
+    pptr%gridcell => gcelldc%p_g
+    pptr%wtgcell  => gcelldc%p_gw
+    pptr%landunit => gcelldc%p_l
+    pptr%wtlunit  => gcelldc%p_lw
+    pptr%column   => gcelldc%p_c
+    pptr%wtcol    => gcelldc%p_cw
 
-    gptr%nlandunits => gridcell%g_ln
-    gptr%ncolumns   => gridcell%g_cn
-    gptr%npfts      => gridcell%g_pn
-    lptr%ncolumns   => gridcell%l_cn
-    lptr%npfts      => gridcell%l_pn
-    cptr%npfts      => gridcell%c_pn
+    gptr%nlandunits => gcelldc%g_ln
+    gptr%ncolumns   => gcelldc%g_cn
+    gptr%npfts      => gcelldc%g_pn
+    lptr%ncolumns   => gcelldc%l_cn
+    lptr%npfts      => gcelldc%l_pn
+    cptr%npfts      => gcelldc%c_pn
 
     ! Set lats/lons
 
     do g = 1,numg
 
-       i = decomp%gdc2i(g)
-       j = decomp%gdc2j(g)
+       i = ldecomp%gdc2i(g)
+       j = ldecomp%gdc2j(g)
 
        gptr%ixy(g) = i 
        gptr%jxy(g) = j 
-       gptr%latdeg(g) = domain%latc(i,j) 
-       gptr%londeg(g) = domain%lonc(i,j) 
-       gptr%lat(g)    = domain%latc(i,j) * SHR_CONST_PI/180._r8  
-       gptr%lon(g)    = domain%lonc(i,j) * SHR_CONST_PI/180._r8
-       gptr%landfrac(g) = domain%frac(i,j)
-       gptr%area(g)   = domain%area(i,j)
+       gptr%latdeg(g) = ldomain%latc(i,j) 
+       gptr%londeg(g) = ldomain%lonc(i,j) 
+       gptr%lat(g)    = ldomain%latc(i,j) * SHR_CONST_PI/180._r8  
+       gptr%lon(g)    = ldomain%lonc(i,j) * SHR_CONST_PI/180._r8
+       gptr%landfrac(g) = ldomain%frac(i,j)
+       gptr%area(g)   = ldomain%area(i,j)
 
     end do
+
+    ! Set "atm" lats/lons in gridcell
+
+    call gridmap_setptrs(gridmap_a2l,n_ovr=n_a2l,i_ovr=i_a2l,j_ovr=j_a2l)
+
+    do g = 1,numg
+       i = ldecomp%gdc2i(g)
+       j = ldecomp%gdc2j(g)
+       if (n_a2l(i,j) /= 1) then
+          write(6,*) 'set_clm_gptrs ERROR: n_a2l must be one, ',n_a2l(i,j)
+          call endrun()
+       endif
+       do n = 1,n_a2l(i,j)
+          ia = i_a2l(i,j,n)
+          ja = j_a2l(i,j,n)
+          gptr%londeg_a(g) = adomain%lonc(ia,ja)
+          gptr%latdeg_a(g) = adomain%latc(ia,ja)
+       enddo
+    enddo
+
+    gptr%lon_a(:) = gptr%londeg_a(:) * SHR_CONST_PI/180._r8  
+    gptr%lat_a(:) = gptr%latdeg_a(:) * SHR_CONST_PI/180._r8  
 
   end subroutine set_clm_gptrs
 

@@ -251,18 +251,21 @@ contains
     do ai = 1, ani
        if (adomain%mask(ai,aj) == 1) then
           ancells  = ancells  + 1
+          !--- check again that cell in adomain has ldomain valid underneath
+          if (n_ovr(ai,aj) < 1) then
+             write (6,*) 'initDecomp(): map overlap error at ',ai,aj,adomain%mask(ai,aj),n_ovr(ai,aj)
+             call endrun()
+          endif
           do n = 1,n_ovr(ai,aj)
              i = i_ovr(ai,aj,n)
              j = j_ovr(ai,aj,n)
-             if (ldomain%mask(i,j) == 1) then
-                call get_gcell_info (i, j, wtxy, nlunits=ilunits, &
-                                     ncols=icols, npfts=ipfts)
-                ncells  = ncells  + 1
-                nlunits = nlunits + ilunits
-                ncols   = ncols   + icols
-                npfts   = npfts   + ipfts
-                lcell(i,j) = .true.
-             end if
+             call get_gcell_info (i, j, wtxy, nlunits=ilunits, &
+                                  ncols=icols, npfts=ipfts)
+             ncells  = ncells  + 1
+             nlunits = nlunits + ilunits
+             ncols   = ncols   + icols
+             npfts   = npfts   + ipfts
+             lcell(i,j) = .true.
           enddo
        end if
     end do
@@ -452,25 +455,22 @@ contains
           do n = 1,n_ovr(ai,aj)
              i = i_ovr(ai,aj,n)
              j = j_ovr(ai,aj,n)
-             if (ldomain%mask(i,j) == 1) then
 
-                ! Determine grid cell info
-                call get_gcell_info (i, j, wtxy, nlunits=ilunits, &
-                                     ncols=icols, npfts=ipfts)
+             ! Determine grid cell info
+             call get_gcell_info (i, j, wtxy, nlunits=ilunits, &
+                                  ncols=icols, npfts=ipfts)
 
-                clumps(cid)%ncells  = clumps(cid)%ncells  + 1
-                clumps(cid)%nlunits = clumps(cid)%nlunits + ilunits
-                clumps(cid)%ncols   = clumps(cid)%ncols   + icols
-                clumps(cid)%npfts   = clumps(cid)%npfts   + ipfts
+             clumps(cid)%ncells  = clumps(cid)%ncells  + 1
+             clumps(cid)%nlunits = clumps(cid)%nlunits + ilunits
+             clumps(cid)%ncols   = clumps(cid)%ncols   + icols
+             clumps(cid)%npfts   = clumps(cid)%npfts   + ipfts
 
-                ! set tmps, cid,ncell <-> i,j
+             ! set tmps, cid,ncell <-> i,j
 
-                cidi(cid,clumps(cid)%ncells) = i
-                cidj(cid,clumps(cid)%ncells) = j
-
-                if (clumps(cid)%npfts >= ppc .and. cid < nclumps) then
-                   clumpfull(cid) = .true.
-                end if
+             cidi(cid,clumps(cid)%ncells) = i
+             cidj(cid,clumps(cid)%ncells) = j
+             if (clumps(cid)%npfts >= ppc .and. cid < nclumps) then
+                clumpfull(cid) = .true.
              end if
           end do
 

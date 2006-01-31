@@ -1940,11 +1940,17 @@ contains
     call ncd_defvar(varname='area', xtype=ncprec, dim1name='lon', dim2name='lat',&
          long_name='grid cell areas', units='km^2', ncid=nfid(t))
 
+    call ncd_defvar(varname='areaupsc', xtype=ncprec, dim1name='lon', dim2name='lat',&
+         long_name='normalized grid cell areas related to upscaling', units='km^2', ncid=nfid(t))
+
     call ncd_defvar(varname='landfrac', xtype=ncprec, dim1name='lon', dim2name='lat', &
          long_name='land fraction', ncid=nfid(t))
 
     call ncd_defvar(varname='landmask', xtype=nf_int, dim1name='lon', dim2name='lat', &
          long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t))
+
+    call ncd_defvar(varname='pftmask' , xtype=nf_int, dim1name='lon', dim2name='lat', &
+         long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t))
 
     ! Define time information
 
@@ -2015,8 +2021,10 @@ contains
     call ncd_ioglobal(varname='longxy'  , data=ldomain%lonc, ncid=nfid(t), flag='write')
     call ncd_ioglobal(varname='latixy'  , data=ldomain%latc, ncid=nfid(t), flag='write')
     call ncd_ioglobal(varname='area'    , data=ldomain%area, ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='areaupsc', data=ldomain%nara, ncid=nfid(t), flag='write')
     call ncd_ioglobal(varname='landfrac', data=ldomain%frac, ncid=nfid(t), flag='write')
     call ncd_ioglobal(varname='landmask', data=ldomain%mask, ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='pftmask' , data=ldomain%pftm, ncid=nfid(t), flag='write')
 
   end subroutine htape_create
 

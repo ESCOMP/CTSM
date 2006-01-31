@@ -169,8 +169,7 @@ contains
 !
 ! !USES:
     use nanMod
-    use clmtype
-    use decompMod   , only : get_proc_bounds
+    use decompMod   , only : adecomp, get_proc_bounds_atm
     use clm_atmlnd  , only : clm_a2l, atm_a2l, gridmap_a2l, clm_mapa2l
     use clm_varctl  , only : offline_atmdir, pertlim
     use clm_varcon  , only : rair, cpair, co2_ppmv_const, o2_molar_const, tcrit, c13ratio
@@ -207,20 +206,12 @@ contains
 #endif
     real(r8):: coefb        ! Slope of "Alta" expression for dependence of flfall on temp
     real(r8):: coefa        ! Offset of  of "Alta" expression for dependence of flfall on temp
-    integer :: begp, endp   ! per-proc beginning and ending pft indices
-    integer :: begc, endc   ! per-proc beginning and ending column indices
-    integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
-    type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
 !------------------------------------------------------------------------
 
     ! Determine necessary indices
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-
-    ! Set pointers into derived type
-
-    gptr => clm3%g
+    call get_proc_bounds_atm(begg, endg)
 
     ! -----------------------------------------------------------------
     ! Open netcdf file and read data every [atmmin] minutes
@@ -298,8 +289,8 @@ contains
 !cdir nodep
 
        do g = begg, endg
-          i = gptr%ixy(g)
-          j = gptr%jxy(g)
+          i = adecomp%gdc2i(g)
+          j = adecomp%gdc2j(g)
 
           !States
 

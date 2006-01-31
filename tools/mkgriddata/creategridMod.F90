@@ -106,6 +106,12 @@ contains
 
        dx = (ldomain%edgee - ldomain%edgew) / lsmlon
        dy = (ldomain%edgen - ldomain%edges) / lsmlat
+
+       if (dx < 0._r8 .or. dy < 0._r8) then
+          write(6,*) 'creategrid ERROR edges wrong sign NESN:',ldomain%edgen,ldomain%edgee,ldomain%edges,ldomain%edgen
+          stop
+       endif
+
        do j = 1, lsmlat
        do i = 1, lsmlon
           ldomain%longxy(i,j) = ldomain%edgew + (2*i-1)*dx / 2.

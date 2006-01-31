@@ -551,12 +551,13 @@ end subroutine driver1
 ! !ROUTINE: driver2
 !
 ! !INTERFACE:
-subroutine driver2(caldayp1, declinp1)
+subroutine driver2(caldayp1, declinp1, rstwr)
 !
 ! !ARGUMENTS:
   implicit none
-  real(r8), intent(in) :: caldayp1 ! calendar day for nstep+1
-  real(r8), intent(in) :: declinp1 ! declination angle for next time step
+  real(r8),          intent(in) :: caldayp1 ! calendar day for nstep+1
+  real(r8),          intent(in) :: declinp1 ! declination angle for next time step
+  logical, optional, intent(in) :: rstwr    ! true => write restart file this step
 !
 ! !CALLED FROM:
 ! program program_off (if COUP_OFFLINE cpp variable is defined)
@@ -592,7 +593,7 @@ subroutine driver2(caldayp1, declinp1)
   integer  :: begg, endg    ! clump beginning and ending gridcell indices
 #endif
   character(len=256) :: filer       ! restart file name
-  logical, external :: do_restwrite ! determine if time to write restart
+  logical :: write_restart
 !-----------------------------------------------------------------------
 
   ! ============================================================================
@@ -712,7 +713,13 @@ subroutine driver2(caldayp1, declinp1)
   ! ============================================================================
 
 #if ( !defined SCAM )
-  if (do_restwrite()) then
+  if (present(rstwr)) then
+     write_restart = rstwr
+  else
+     write_restart = do_restwrite()
+  end if
+     
+  if (write_restart) then
      call t_startf('clm_driver_io')
      filer = restFile_filename(type='netcdf')
      call restFile_write( filer )
@@ -870,7 +877,7 @@ logical function do_restwrite()
 
   do_restwrite = .false.
 
-#if (defined OFFLINE) || (defined COUP_CAM)
+#if (defined OFFLINE)
 
   ! Write restart if end of run or if time to dispose master history file
 

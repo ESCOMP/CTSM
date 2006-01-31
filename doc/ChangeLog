@@ -1,4 +1,82 @@
 ===============================================================
+Tag name: clm3_expa_56
+Originator(s): Tony Craig
+Date: 31 Jan 2006
+One-line Summary: Final changes for finemesh implementation.
+
+Purpose of changes: Integrate final changes for finemesh implementation.  These
+changes are 100% backward compatable and bfb, but also support use of a finemesh grid.  finemesh implementation has been test in clm and cam.
+
+Bugs fixed (include bugzilla ID):
+
+Describe any changes made to build system: Update Makefile so Depends are regenerated if any code is changed.
+
+Describe any changes made to the namelist: Added one new optional namelist, fatmgrid.  This is a dataset for the coarse grid in clm.  The format is the same as the surface dataset but only needs to include grid variables.
+
+List any changes to the defaults for the boundary datasets:  Generated some new datasets with filled wetland and higher resolution.  Not required and not yet added to default suite of datasets.
+
+Describe any substantial timing or memory changes:
+
+Code reviewed by:
+
+List all subroutines eliminated:
+
+List all subroutines added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+tools/mksurfdata:
+  mksrfdat.F90,areaMod.F90,creategridMod.F90
+bld/offline/Makefile
+doc/ChangeLog
+ src/main:
+clm_comp.F90,driver.F90,clm_camMod.F90,atmdrvMod.F90,clmtypeInitMod.F90,initializeMod.F90,histFileMod.F90,program_csm.F90,clm_atmlnd.F90,clm_csmMod.F90,surfFileMod.F90,controlMod.F90,clm_varctl.F90,initGridCellsMod.F90,MCT_lnd_comp.F90,program_off.F90,domainMod.F90,decompMod.F90,areaMod.F90,clmtype.F90
+src/biogeophys/SurfaceAlbedoMod.F90
+
+Code changes:
+add pftm to domain datatype and history file
+modify program_off and program_cs to use clm_init[1,2], clm_run[1,2]
+modify coupling to handle coarse <-> finemesh for standlaone, cam, and
+  ccsm.
+modify Makefile so depends file is reset whenever there is a code change
+add normalized area to history files
+add lat_a, lon_a, latdeg_a, londeg_a to clm3 datatype for atm lats/lons.  
+  required in SurfaceAlbedo computation where the the zenith angle has
+  to be based on the atm (coarse) grid, not the fine clm grid.
+merge with clm3_expa_53_brnchT_cam01 tag
+	
+Summary of testing:
+
+  bluesky: clm full suite bfb, cam full suite bfb, ccsm bfb
+  tempest: cam full suite bfb
+  bangkok/lf95: cam full suite bfb
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_55
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in: bfb
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? bfb
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
 Tag name: clm3_expa_55
 Originator(s): Peter Thornton
 Date: 24 Jan 2006
@@ -77,6 +155,113 @@ Changes answers for CN only, and then only for the isotope prognostics.
    URL for LMWG diagnostics output used to validate new climate:
 http://www.cgd.ucar.edu/tss/clm/diagnostics/clm3cn/c13/ccsm3_bgc31_I_2a-ccsm3_bgc26_I_1d/setsIndex.html
 ===============================================================
+Tag name: clm3_expa_54
+Originator(s): Tony Craig
+Date: 17 Jan 2006
+One-line Summary: Update infrastructure in support of finemesh, migration from cvs
+
+Purpose of changes: bfb infrastructure changes committed, partial step towards finemesh implementation
+
+Bugs fixed (include bugzilla ID): None
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: Some memory added for extra coarse grid, atmosphere domain, as well as changes to interpolation datatypes and code.  Redundant memory deleted from some datasets.
+
+Code reviewed by: Mariana Vertenstein
+
+List all subroutines eliminated: 
+
+List all subroutines added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+src/main:
+initGridIndexMod.F90,lnd2atmMod.F90,CNiniTimeVar.F90,abortutils.F90,clm_comp.F90,driver.F90,clm_camMod.F90,atmdrvMod.F90,subgridRestMod.F90,accFldsMod.F90,clmtypeInitMod.F90,initializeMod.F90,pftdynMod.F90,iniTimeConst.F90,histFileMod.F90,program_csm.F90,clm_atmlnd.F90,clm_varsur.F90,clm_csmMod.F90,restFileMod.F90,surfFileMod.F90,controlMod.F90,initSurfAlbMod.F90,initSubgridMod.F90,clm_varctl.F90,ndepFileMod.F90,initGridCellsMod.F90,MCT_lnd_comp.F90,program_off.F90,domainMod.F90,decompMod.F90,areaMod.F90,clmtype.F90,histFldsMod.F90
+
+src/riverroute:
+RtmMod.F90
+
+src/biogeochem:
+CASAMod.F90,DUSTMod.F90,CNPhenologyMod.F90,STATICEcosysDynMod.F90,DGVMMod.F90,CNrestMod.F90,VOCEmissionMod.F90,CNNDynamicsMod.F90,CNVegStructUpdateMod.F90
+
+src/biogeophys:
+BalanceCheckMod.F90,SurfaceRadiationMod.F90,SoilTemperatureMod.F90,Biogeophysics1Mod.F90,Biogeophysics2Mod.F90,FrictionVelocityMod.F90,Hydrology1Mod.F90,Hydrology2Mod.F90,BiogeophysicsLakeMod.F90,HydrologyLakeMod.F90,BareGroundFluxesMod.F90,CanopyFluxesMod.F90
+
+bld/offline/tests:
+CLM_lab.pm,test_batch.csh
+	
+tools/mksurfdata:
+mkdynpftMod.F90,mkgridMod.F90,shr_timer_mod.F90,mklaiMod.F90,mkglacier.F90,mkurban.F90,fileutils.F90,mksoitex.F90,mkfileMod.F90,domainMod.F90,areaMod.F90,creategridMod.F90,mkvarsur.F90,mksrfdat.F90,nanMod.F90,mklanwat.F90,mksoicol.F90,Makefile,mkpftMod.F90
+
+tools/mkgriddata:
+mkvarctl.F90,fileutils.F90,mkgriddata.F90,mkfileMod.F90,domainMod.F90,areaMod.F90,creategridMod.F90,mkvarsur.F90,nanMod.F90,Makefile
+
+Code changes:
+Merge atm2lnd_state_type, atm2lnd_flux_type.  Same for lnd2atm state/flux.
+  Related changes in clm3 and elsewhere in code.
+Add domainMod.F90 and domain_type.  Migrate grid data into domain type.
+  Instantiate adomain(atm/coarse), ldomain(lnd/finemesh), rdomain(rtm),
+  ddomain(atmdrv external data) in model.
+Add lats, latn, lonw, lone 2d arrays and associated code changes.
+Cleanup areaMod.F90; merging subroutines, removing redundant code, eliminate
+  *_point routines.
+Remove numlon
+Add decomp_type for gcelldc and gcellsn.  Remove redundant data in other
+  arrays related to addressing physical space and logical space.
+Clean up interface in set_landunit subroutines.  Remove redundant code.
+Clean up procs and clumps datatypes, removing redundant data.
+Migrate clm3 topology data to pointers from copies
+Add gridmap_type for interpolation and associated code and routines to
+  support the type.
+Add clm_atmlnd.F90 file for upscale/downscale code.  Add clm_mapa2l
+  and clm_mapl2a to carry out mapping associated with upscale/downscale.
+Add gridmap_setmapsFM for generation of weights for downscale/upscale
+  routines.
+forc_ndep should not be in atm2lnd_type.
+Reuse code as much as possible throughout.
+Update mksurfdata, mkgriddata.  Speed code up, bfb, new fields added,
+  new input options for files.  Fill with wetland, add PFTDATA_MASK
+  field for real/fake land.
+Update code to clm3_expa_53
+Rename latixy and longxy to latc and lonc.
+Remove fullgrid attribute.
+
+Summary of testing:
+
+  bluesky: full clm test, full cam test
+  tempest: full cam test
+  bangkok/lf95: full cam test
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_53
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:  bfb
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? bfb
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
 ===============================================================
 	
 Tag name: clm3_expa_53

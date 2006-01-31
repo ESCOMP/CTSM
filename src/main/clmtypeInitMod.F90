@@ -431,6 +431,10 @@ contains
    allocate(g%latdeg(beg:end))
    allocate(g%londeg(beg:end))
    allocate(g%landfrac(beg:end))
+   allocate(g%lat_a(beg:end))
+   allocate(g%lon_a(beg:end))
+   allocate(g%latdeg_a(beg:end))
+   allocate(g%londeg_a(beg:end))
 
   end subroutine init_gridcell_type
 

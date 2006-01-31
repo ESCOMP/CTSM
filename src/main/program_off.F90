@@ -47,17 +47,14 @@ PROGRAM program_off
 !
 ! !USES:
   use shr_kind_mod  , only : r8 => shr_kind_r8
+  use shr_sys_mod   , only : shr_sys_flush
   use shr_orb_mod          
-  use clm_varpar
-  use clm_varctl    , only : irad, nsrest, finidat
-  use initializeMod , only : initialize
+  use clm_varorb    , only : eccen, mvelpp, lambm0, obliqr, obliq, &
+                             iyear_AD, nmvelp
+  use clm_comp      , only : clm_init1, clm_init2, clm_run1, clm_run2
   use atmdrvMod     , only : atmdrv
-  use time_manager  , only : is_last_step, advance_timestep, get_nstep, get_step_size, &
-                             get_curr_calday
+  use time_manager  , only : is_last_step, advance_timestep, get_nstep
   use atmdrvMod     , only : atmdrv_init
-  use initSurfAlbMod, only : initSurfAlb, do_initsurfalb 
-  use driver        , only : driver1, driver2
-  use clm_atmlnd    , only : clm_map2gcell
   use abortutils    , only : endrun
 #if (defined SPMD)
   use spmdMod       , only : masterproc, iam, mpicom, spmd_init
@@ -89,18 +86,8 @@ PROGRAM program_off
   real(r8) :: declinm1  ! solar declination angle in radians for nstep-1
   integer  :: ier       ! error code
 
-! Earth's orbital characteristics
-
-  integer  :: iyear_AD  ! Year (AD) to simulate above earth's orbital parameters for
-  real(r8) :: eccen     ! Earth's eccentricity factor (unitless) (typically 0 to 0.1)
-  real(r8) :: obliq     ! Earth's obliquity angle (degree's) (-90 to +90) (typically 22-26)
-  real(r8) :: mvelp     ! Earth's moving vernal equinox at perhelion (degree's) (0 to 360.0)
-
 ! Orbital information after call to routine shr_orbit_params
 
-  real(r8) :: obliqr    ! Earth's obliquity in radians
-  real(r8) :: lambm0    ! Mean longitude (radians) of perihelion at the vernal equinox
-  real(r8) :: mvelpp    ! Earth's moving vernal equinox longitude
   logical  :: log_print ! true=> print diagnostics
   real(r8) :: eccf      ! earth orbit eccentricity factor
 !-----------------------------------------------------------------------
@@ -151,7 +138,7 @@ PROGRAM program_off
   ! Initialize Orbital parameters
   ! -----------------------------------------------------------------
 
-  ! obliq, eccen and mvelp are determined based on value of iyear_AD
+  ! obliq, eccen and nmvelp are determined based on value of iyear_AD
 
   if (masterproc) then
      log_print = .true.
@@ -161,32 +148,17 @@ PROGRAM program_off
   iyear_AD = 1950
   obliq    = SHR_ORB_UNDEF_REAL
   eccen    = SHR_ORB_UNDEF_REAL
-  mvelp    = SHR_ORB_UNDEF_REAL
-  call shr_orb_params (iyear_AD, eccen, obliq, mvelp, obliqr, &
+  nmvelp   = SHR_ORB_UNDEF_REAL
+  call shr_orb_params (iyear_AD, eccen, obliq, nmvelp, obliqr, &
                        lambm0, mvelpp, log_print)
 
   ! -----------------------------------------------------------------
   ! Initialize land model
   ! -----------------------------------------------------------------
 
-  call initialize()
+  call clm_init1()
+  call clm_init2()
 
-  ! Initialize albedos (correct pft filters are needed)
-  ! Only done for arbitrary initialization
-  
-  if (nsrest == 0) then
-     if (finidat == ' ' .or. do_initsurfalb) then
-        calday = get_curr_calday()
-        call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
-        
-        dtime = get_step_size()
-        caldaym1 = get_curr_calday(offset=-int(dtime))
-        call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
-        
-        call initSurfAlb( calday, declin, declinm1 )
-     end if
-  end if
-  
   ! -----------------------------------------------------------------
   ! Initialize "external" atmospheric forcing
   ! -----------------------------------------------------------------
@@ -213,32 +185,10 @@ PROGRAM program_off
      nstep = get_nstep()
      call atmdrv(nstep)
 
-     ! doalb is true when the next time step is a radiation time step
+     ! Run
 
-     doalb = (irad==1 .or. (mod(nstep,irad)==0 .and. nstep/=0))
-
-     ! Determin declination angle for next time step
-
-     dtime = get_step_size()
-     caldayp1 = get_curr_calday( offset=int(dtime) )
-     call shr_orb_decl( caldayp1, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
-
-     ! Call land surface model driver1
-
-     call t_startf('clm_driver1')
-     call driver1(doalb, caldayp1, declinp1)
-     call t_stopf('clm_driver1')
-
-     ! Determine fields that would be sent to atm for diagnostic purposes
-     ! When not in offline mode, this is called from clm_csmMod and lp_coupling
-
-     call clm_map2gcell()
-
-     ! Call land surface model driver2
-
-     call t_startf('clm_driver2')
-     call driver2(caldayp1, declinp1)
-     call t_stopf('clm_driver2')
+     call clm_run1()
+     call clm_run2()
 
      ! Determine if time to stop
 

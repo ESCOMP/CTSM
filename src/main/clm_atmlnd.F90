@@ -124,6 +124,9 @@ contains
 ! Modified by T Craig, 11/01/05 for finemesh project
 !
 !EOP
+!
+! !LOCAL VARIABLES:
+  real(r8) :: ival   ! initial value
 !------------------------------------------------------------------------
 
 #if (defined OFFLINE)
@@ -156,35 +159,38 @@ contains
   allocate(a2l%forc_pc13o2(beg:end))
   allocate(a2l%forc_po2(beg:end))
 
+! ival = nan      ! causes core dump in gridmap_maparray, tcx fix
+  ival = 0.0_r8
+
 #if (defined OFFLINE)
-  a2l%flfall(beg:end) = nan
+  a2l%flfall(beg:end) = ival
 #endif
-  a2l%forc_t(beg:end) = nan
-  a2l%forc_u(beg:end) = nan
-  a2l%forc_v(beg:end) = nan
-  a2l%forc_wind(beg:end) = nan
-  a2l%forc_q(beg:end) = nan
-  a2l%forc_hgt(beg:end) = nan
-  a2l%forc_hgt_u(beg:end) = nan
-  a2l%forc_hgt_t(beg:end) = nan
-  a2l%forc_hgt_q(beg:end) = nan
-  a2l%forc_pbot(beg:end) = nan
-  a2l%forc_th(beg:end) = nan
-  a2l%forc_vp(beg:end) = nan
-  a2l%forc_rho(beg:end) = nan
-  a2l%forc_psrf(beg:end) = nan
-  a2l%forc_pco2(beg:end) = nan
-  a2l%forc_lwrad(beg:end) = nan
-  a2l%forc_solad(beg:end,1:numrad) = nan
-  a2l%forc_solai(beg:end,1:numrad) = nan
-  a2l%forc_solar(beg:end) = nan
-  a2l%forc_rain(beg:end) = nan
-  a2l%forc_snow(beg:end) = nan
-  a2l%forc_ndep(beg:end) = nan
+  a2l%forc_t(beg:end) = ival
+  a2l%forc_u(beg:end) = ival
+  a2l%forc_v(beg:end) = ival
+  a2l%forc_wind(beg:end) = ival
+  a2l%forc_q(beg:end) = ival
+  a2l%forc_hgt(beg:end) = ival
+  a2l%forc_hgt_u(beg:end) = ival
+  a2l%forc_hgt_t(beg:end) = ival
+  a2l%forc_hgt_q(beg:end) = ival
+  a2l%forc_pbot(beg:end) = ival
+  a2l%forc_th(beg:end) = ival
+  a2l%forc_vp(beg:end) = ival
+  a2l%forc_rho(beg:end) = ival
+  a2l%forc_psrf(beg:end) = ival
+  a2l%forc_pco2(beg:end) = ival
+  a2l%forc_lwrad(beg:end) = ival
+  a2l%forc_solad(beg:end,1:numrad) = ival
+  a2l%forc_solai(beg:end,1:numrad) = ival
+  a2l%forc_solar(beg:end) = ival
+  a2l%forc_rain(beg:end) = ival
+  a2l%forc_snow(beg:end) = ival
+  a2l%forc_ndep(beg:end) = ival
   ! 4/14/05: PET
   ! Adding isotope code
-  a2l%forc_pc13o2(beg:end) = nan
-  a2l%forc_po2(beg:end) = nan
+  a2l%forc_pc13o2(beg:end) = ival
+  a2l%forc_po2(beg:end) = ival
 
 end subroutine init_atm2lnd_type
 
@@ -209,6 +215,9 @@ end subroutine init_atm2lnd_type
 ! Modified by T Craig, 11/01/05 for finemesh project
 !
 !EOP
+!
+! !LOCAL VARIABLES:
+  real(r8) :: ival   ! initial value
 !------------------------------------------------------------------------
 
   allocate(l2a%t_rad(beg:end))
@@ -226,20 +235,23 @@ end subroutine init_atm2lnd_type
   allocate(l2a%fsa(beg:end))
   allocate(l2a%nee(beg:end))
 
-  l2a%t_rad(beg:end) = nan
-  l2a%t_ref2m(beg:end) = nan
-  l2a%q_ref2m(beg:end) = nan
-  l2a%h2osno(beg:end) = nan
-  l2a%albd(beg:end,1:numrad) = nan
-  l2a%albi(beg:end,1:numrad) = nan
-  l2a%taux(beg:end) = nan
-  l2a%tauy(beg:end) = nan
-  l2a%eflx_lwrad_out(beg:end) = nan
-  l2a%eflx_sh_tot(beg:end) = nan
-  l2a%eflx_lh_tot(beg:end) = nan
-  l2a%qflx_evap_tot(beg:end) = nan
-  l2a%fsa(beg:end) = nan
-  l2a%nee(beg:end) = nan
+! ival = nan      ! causes core dump in gridmap_maparray, tcx fix
+  ival = 0.0_r8
+
+  l2a%t_rad(beg:end) = ival
+  l2a%t_ref2m(beg:end) = ival
+  l2a%q_ref2m(beg:end) = ival
+  l2a%h2osno(beg:end) = ival
+  l2a%albd(beg:end,1:numrad) = ival
+  l2a%albi(beg:end,1:numrad) = ival
+  l2a%taux(beg:end) = ival
+  l2a%tauy(beg:end) = ival
+  l2a%eflx_lwrad_out(beg:end) = ival
+  l2a%eflx_sh_tot(beg:end) = ival
+  l2a%eflx_lh_tot(beg:end) = ival
+  l2a%qflx_evap_tot(beg:end) = ival
+  l2a%fsa(beg:end) = ival
+  l2a%nee(beg:end) = ival
 
 end subroutine init_lnd2atm_type
 
@@ -272,18 +284,18 @@ end subroutine init_lnd2atm_type
 ! !LOCAL VARIABLES:
   integer :: n                     ! loop counter
   integer :: nflds                 ! size of 2nd dim in arrays
-  integer :: begg_o,endg_o         ! beg,end of output grid
-  integer :: begg_i,endg_i         ! beg,end of input grid
+  integer :: begg_s,endg_s         ! beg,end of input grid
+  integer :: begg_d,endg_d         ! beg,end of output grid
   real(r8),pointer :: asrc(:)      ! temporary source data
   real(r8),pointer :: adst(:)      ! temporary dest data
 !------------------------------------------------------------------------------
 
   !--- allocate temporaries
-  call get_proc_bounds    (begg_o, endg_o)
-  call get_proc_bounds_atm(begg_i, endg_i)
+  call get_proc_bounds_atm(begg_s, endg_s)
+  call get_proc_bounds    (begg_d, endg_d)
 
-  allocate(asrc(begg_o:endg_o))
-  allocate(adst(begg_i:endg_i))
+  allocate(asrc(begg_s:endg_s))
+  allocate(adst(begg_d:endg_d))
 
   nflds = size(a2l_src%forc_solad,dim=2)
   if (nflds /= numrad) then
@@ -292,40 +304,40 @@ end subroutine init_lnd2atm_type
   endif
 
 #if (defined OFFLINE)
-  call gridmap_maparray(a2l_src%flfall,a2l_dst%flfall,gridmap)
+  call gridmap_maparray(a2l_src%flfall     ,a2l_dst%flfall     ,gridmap,'a2l')
 #endif
-  call gridmap_maparray(a2l_src%forc_t     , a2l_dst%forc_t     , gridmap)
-  call gridmap_maparray(a2l_src%forc_u     , a2l_dst%forc_u     , gridmap)
-  call gridmap_maparray(a2l_src%forc_v     , a2l_dst%forc_v     , gridmap)
-  call gridmap_maparray(a2l_src%forc_wind  , a2l_dst%forc_wind  , gridmap)
-  call gridmap_maparray(a2l_src%forc_q     , a2l_dst%forc_q     , gridmap)
-  call gridmap_maparray(a2l_src%forc_hgt   , a2l_dst%forc_hgt   , gridmap)
-  call gridmap_maparray(a2l_src%forc_hgt_u , a2l_dst%forc_hgt_u , gridmap)
-  call gridmap_maparray(a2l_src%forc_hgt_t , a2l_dst%forc_hgt_t , gridmap)
-  call gridmap_maparray(a2l_src%forc_hgt_q , a2l_dst%forc_hgt_q , gridmap)
-  call gridmap_maparray(a2l_src%forc_pbot  , a2l_dst%forc_pbot  , gridmap)
-  call gridmap_maparray(a2l_src%forc_th    , a2l_dst%forc_th    , gridmap)
-  call gridmap_maparray(a2l_src%forc_vp    , a2l_dst%forc_vp    , gridmap)
-  call gridmap_maparray(a2l_src%forc_rho   , a2l_dst%forc_rho   , gridmap)
-  call gridmap_maparray(a2l_src%forc_psrf  , a2l_dst%forc_psrf  , gridmap)
-  call gridmap_maparray(a2l_src%forc_pco2  , a2l_dst%forc_pco2  , gridmap)
-  call gridmap_maparray(a2l_src%forc_lwrad , a2l_dst%forc_lwrad , gridmap)
+  call gridmap_maparray(a2l_src%forc_t     ,a2l_dst%forc_t     ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_u     ,a2l_dst%forc_u     ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_v     ,a2l_dst%forc_v     ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_wind  ,a2l_dst%forc_wind  ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_q     ,a2l_dst%forc_q     ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_hgt   ,a2l_dst%forc_hgt   ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_hgt_u ,a2l_dst%forc_hgt_u ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_hgt_t ,a2l_dst%forc_hgt_t ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_hgt_q ,a2l_dst%forc_hgt_q ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_pbot  ,a2l_dst%forc_pbot  ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_th    ,a2l_dst%forc_th    ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_vp    ,a2l_dst%forc_vp    ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_rho   ,a2l_dst%forc_rho   ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_psrf  ,a2l_dst%forc_psrf  ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_pco2  ,a2l_dst%forc_pco2  ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_lwrad ,a2l_dst%forc_lwrad ,gridmap,'a2l')
   do n = 1,numrad
      asrc(:) = a2l_src%forc_solad(:,n)
-     call gridmap_maparray(asrc,adst,gridmap)
+     call gridmap_maparray(asrc,adst,gridmap,'a2l')
      a2l_dst%forc_solad(:,n) = adst(:)
      asrc(:) = a2l_src%forc_solai(:,n)
-     call gridmap_maparray(asrc,adst,gridmap)
+     call gridmap_maparray(asrc,adst,gridmap,'a2l')
      a2l_dst%forc_solai(:,n) = adst(:)
   enddo
-  call gridmap_maparray(a2l_src%forc_solar , a2l_dst%forc_solar , gridmap)
-  call gridmap_maparray(a2l_src%forc_rain  , a2l_dst%forc_rain  , gridmap)
-  call gridmap_maparray(a2l_src%forc_snow  , a2l_dst%forc_snow  , gridmap)
-!-forc_ndep is not recd from atm, don't know why it's in a2l (TCFIX) ---
+  call gridmap_maparray(a2l_src%forc_solar ,a2l_dst%forc_solar ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_rain  ,a2l_dst%forc_rain  ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_snow  ,a2l_dst%forc_snow  ,gridmap,'a2l')
+!-forc_ndep is not recd from atm,don't know why it's in a2l (TCFIX) ---
 !-forc_ndep cannot be updated here, array will be trashed and CN will fail ---
-! call gridmap_maparray(a2l_src%forc_ndep  , a2l_dst%forc_ndep  , gridmap)
-  call gridmap_maparray(a2l_src%forc_pc13o2, a2l_dst%forc_pc13o2, gridmap)
-  call gridmap_maparray(a2l_src%forc_po2   , a2l_dst%forc_po2   , gridmap)
+! call gridmap_maparray(a2l_src%forc_ndep  ,a2l_dst%forc_ndep  ,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_pc13o2,a2l_dst%forc_pc13o2,gridmap,'a2l')
+  call gridmap_maparray(a2l_src%forc_po2   ,a2l_dst%forc_po2   ,gridmap,'a2l')
 
   deallocate(asrc)
   deallocate(adst)
@@ -361,18 +373,18 @@ end subroutine clm_mapa2l
 ! !LOCAL VARIABLES:
   integer :: n                     ! loop counter
   integer :: nflds                 ! size of 2nd dim in arrays
-  integer :: begg_o,endg_o         ! beg,end of output grid
-  integer :: begg_i,endg_i         ! beg,end of input grid
+  integer :: begg_s,endg_s         ! beg,end of input grid
+  integer :: begg_d,endg_d         ! beg,end of output grid
   real(r8),pointer :: asrc(:)      ! temporary source data
   real(r8),pointer :: adst(:)      ! temporary dest data
 !------------------------------------------------------------------------------
 
   !--- allocate temporaries
-  call get_proc_bounds    (begg_o, endg_o)
-  call get_proc_bounds_atm(begg_i, endg_i)
+  call get_proc_bounds    (begg_s, endg_s)
+  call get_proc_bounds_atm(begg_d, endg_d)
 
-  allocate(asrc(begg_o:endg_o))
-  allocate(adst(begg_i:endg_i))
+  allocate(asrc(begg_s:endg_s))
+  allocate(adst(begg_d:endg_d))
 
   nflds = size(l2a_src%albd,dim=2)
   if (nflds /= numrad) then
@@ -380,26 +392,28 @@ end subroutine clm_mapa2l
     call endrun()
   endif
 
-  call gridmap_maparray(l2a_src%t_rad         ,l2a_dst%t_rad         ,gridmap)
-  call gridmap_maparray(l2a_src%t_ref2m       ,l2a_dst%t_ref2m       ,gridmap)
-  call gridmap_maparray(l2a_src%q_ref2m       ,l2a_dst%q_ref2m       ,gridmap)
-  call gridmap_maparray(l2a_src%h2osno        ,l2a_dst%h2osno        ,gridmap)
+  call gridmap_maparray(l2a_src%t_rad      ,l2a_dst%t_rad      ,gridmap,'l2a')
+  call gridmap_maparray(l2a_src%t_ref2m    ,l2a_dst%t_ref2m    ,gridmap,'l2a')
+  call gridmap_maparray(l2a_src%q_ref2m    ,l2a_dst%q_ref2m    ,gridmap,'l2a')
+  call gridmap_maparray(l2a_src%h2osno     ,l2a_dst%h2osno     ,gridmap,'l2a')
   do n = 1,numrad
      asrc(:) = l2a_src%albd(:,n)
-     call gridmap_maparray(asrc,adst,gridmap)
+     call gridmap_maparray(asrc,adst,gridmap,'l2a')
      l2a_dst%albd(:,n) = adst(:)
      asrc(:) = l2a_src%albi(:,n)
-     call gridmap_maparray(asrc,adst,gridmap)
+     call gridmap_maparray(asrc,adst,gridmap,'l2a')
      l2a_dst%albi(:,n) = adst(:)
   enddo
-  call gridmap_maparray(l2a_src%taux          ,l2a_dst%taux          ,gridmap)
-  call gridmap_maparray(l2a_src%tauy          ,l2a_dst%tauy          ,gridmap)
-  call gridmap_maparray(l2a_src%eflx_lh_tot   ,l2a_dst%eflx_lh_tot   ,gridmap)
-  call gridmap_maparray(l2a_src%eflx_sh_tot   ,l2a_dst%eflx_sh_tot   ,gridmap)
-  call gridmap_maparray(l2a_src%eflx_lwrad_out,l2a_dst%eflx_lwrad_out,gridmap)
-  call gridmap_maparray(l2a_src%qflx_evap_tot ,l2a_dst%qflx_evap_tot ,gridmap)
-  call gridmap_maparray(l2a_src%fsa           ,l2a_dst%fsa           ,gridmap)
-  call gridmap_maparray(l2a_src%nee           ,l2a_dst%nee           ,gridmap)
+  call gridmap_maparray(l2a_src%taux       ,l2a_dst%taux       ,gridmap,'l2a')
+  call gridmap_maparray(l2a_src%tauy       ,l2a_dst%tauy       ,gridmap,'l2a')
+  call gridmap_maparray(l2a_src%eflx_lh_tot,l2a_dst%eflx_lh_tot,gridmap,'l2a')
+  call gridmap_maparray(l2a_src%eflx_sh_tot,l2a_dst%eflx_sh_tot,gridmap,'l2a')
+  call gridmap_maparray(l2a_src%eflx_lwrad_out, &
+                                         l2a_dst%eflx_lwrad_out,gridmap,'l2a')
+  call gridmap_maparray(l2a_src%qflx_evap_tot , &
+                                         l2a_dst%qflx_evap_tot ,gridmap,'l2a')
+  call gridmap_maparray(l2a_src%fsa        ,l2a_dst%fsa        ,gridmap,'l2a')
+  call gridmap_maparray(l2a_src%nee        ,l2a_dst%nee        ,gridmap,'l2a')
 
   deallocate(asrc)
   deallocate(adst)
@@ -586,6 +600,7 @@ end subroutine clm_mapl2a
 
 end subroutine clm_map2gcell
 
+!------------------------------------------------------------------------
 !------------------------------------------------------------------------
 end module clm_atmlnd
 

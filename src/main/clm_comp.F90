@@ -3,8 +3,6 @@
 
 module clm_comp
 
-#if (defined COUP_CAM)
-
   use shr_kind_mod, only : r8 => shr_kind_r8
   implicit none
 
@@ -63,7 +61,7 @@ contains
 !
 ! !USES:
     use shr_orb_mod     , only : shr_orb_decl
-    use clm_varctl      , only : finidat
+    use clm_varctl      , only : finidat, nsrest
     use initSurfAlbMod  , only : initSurfAlb, do_initsurfalb 
     use time_manager    , only : get_nstep, get_step_size, get_curr_calday
     use clm_atmlnd      , only : clm_map2gcell
@@ -87,7 +85,7 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    if (get_nstep() == 0) then
+    if (get_nstep() == 0 .or. nsrest == 0) then
 
        ! Initialize albedos (correct pft filters are needed)
 
@@ -174,7 +172,7 @@ contains
 ! !IROUTINE: clm_run2
 !
 ! !INTERFACE:
-  subroutine clm_run2( )
+  subroutine clm_run2(rstwr)
 !
 ! !DESCRIPTION:
 ! land model run2 phase
@@ -186,6 +184,7 @@ contains
     use driver      , only : driver2
 !
 ! !ARGUMENTS:
+    logical,optional,intent(in) :: rstwr    ! true => write restart file this step
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -206,12 +205,14 @@ contains
     dtime = get_step_size()
     caldayp1 = get_curr_calday( offset=int(dtime) )
     call shr_orb_decl( caldayp1, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
-    call driver2(caldayp1, declinp1)
+    if (present(rstwr)) then
+       call driver2(caldayp1, declinp1, rstwr)
+    else
+       call driver2(caldayp1, declinp1)
+    endif
 
     call t_stopf('clm_driver2')
 
   end subroutine clm_run2
-
-#endif
 
 end module clm_comp

@@ -78,8 +78,6 @@ module clm_varctl
     character(len=  8) :: cam_crtinic           ! cam initial dataset generation frequency
     integer            :: cam_irad              ! cam radiation frequency
     integer            :: cam_nsrest            ! cam 0=initial run, > 0=continuation run
-    integer            :: cam_nhtfrq            ! cam history write freq for tape 1
-    integer            :: cam_mfilt             ! cam number of files per tape for tape 1
     integer            :: cam_irt               ! cam mss retention time
 #endif
 !

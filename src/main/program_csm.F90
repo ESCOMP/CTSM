@@ -52,14 +52,12 @@ PROGRAM program_csm
   use shr_msg_mod        
   use clm_varpar    , only : lsmlon, lsmlat     
   use clm_varctl    , only : nsrest, irad, csm_doflxave, finidat
+  use clm_varorb    , only : eccen, mvelpp, lambm0, obliqr
   use time_manager  , only : advance_timestep, get_nstep, get_curr_calday, get_step_size
-  use initializeMod , only : initialize
   use clm_csmMod    , only : csmstop_now, csm_setup, csm_shutdown, & 
                              csm_dosndrcv, csm_recv, csm_send, csm_flxave, &
                              csm_initialize, csm_sendalb, dorecv, dosend  
-  use initSurfAlbMod, only : initSurfAlb, do_initsurfalb 
-  use driver        , only : driver1, driver2
-  use clm_atmlnd    , only : clm_map2gcell
+  use clm_comp      , only : clm_init1, clm_init2, clm_run1, clm_run2
 #if (defined SPMD)
   use spmdMod       , only : masterproc, iam, spmd_init, mpicom
 #else
@@ -91,22 +89,9 @@ PROGRAM program_csm
   real(r8) :: declin       ! solar declination angle in radians for nstep
   real(r8) :: declinm1     ! solar declination angle in radians for nstep-1
   integer  :: ier          ! error code
-!
-! Earth's orbital characteristics
-!
-  integer  :: iyear_AD     ! Year (AD) to simulate above earth's orbital parameters for
-  real(r8) :: eccen        ! Earth's eccentricity factor (unitless) (typically 0 to 0.1)
-  real(r8) :: obliq        ! Earth's obliquity angle (degree's) (-90 to +90) (typically 22-26)
-  real(r8) :: mvelp        ! Earth's moving vernal equinox at perhelion (degree's) (0 to 360.0)
-  real(r8) :: eccf         ! earth orbit eccentricity factor
-!
-! Orbital information after call to routine shr_orbit_params
-!
-  real(r8) :: obliqr       ! Earth's obliquity in radians
-  real(r8) :: lambm0       ! Mean longitude (radians) of perihelion at the vernal equinox
-  real(r8) :: mvelpp       ! Earth's moving vernal equinox longitude
   logical  :: log_print    ! true=> print diagnostics
   integer  :: mpicom_dummy ! temporary
+!
 !-----------------------------------------------------------------------
 
   ! -----------------------------------------------------------------
@@ -173,7 +158,7 @@ PROGRAM program_csm
 
   ! Initialize land model - initialize communication with flux coupler
 
-  call initialize()
+  call clm_init1()
 
   ! Initialize flux coupler communication - need to call get orbital 
   ! parameters before the call to initialize albedos
@@ -181,23 +166,8 @@ PROGRAM program_csm
   call csm_initialize(eccen, obliqr, lambm0, mvelpp)
 
   ! Initialize albedos (correct pft filters are needed)
-  
-   if (nsrest == 0) then
-      if (finidat == ' ' .or. do_initsurfalb) then
-         calday = get_curr_calday()
-         call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
-         
-         dtime = get_step_size()
-         caldaym1 = get_curr_calday(offset=-int(dtime))
-         call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
-         
-         call initSurfAlb( calday, declin, declinm1 )
-      end if
-   end if
 
-  ! On initial timestep, determine gridcell averaged properties to send to coupler 
-
-  if (nsrest == 0 ) call clm_map2gcell(init=.true.)
+  call clm_init2() 
 
   ! Send first land model data to flux coupler.
 
@@ -232,21 +202,7 @@ PROGRAM program_csm
         end if
      end if
 
-     ! Determine declination angle for next time step
-
-     dtime = get_step_size()
-     caldayp1 = get_curr_calday( offset=int(dtime) )
-     call shr_orb_decl( caldayp1, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
-
-     ! Call land surface model driver1
-
-     call t_startf('clm_driver1')
-     call driver1 (doalb, caldayp1, declinp1)
-     call t_stopf('clm_driver1')
-     
-     ! Determine gridcell averaged properties to send to coupler (fill in l2as and l2af)
-
-     call clm_map2gcell()
+     call clm_run1()
 
      ! Average fluxes over interval if appropriate
      ! Surface states sent to the flux coupler states are not time averaged
@@ -259,11 +215,7 @@ PROGRAM program_csm
 
      if (dosend) call csm_send()
 
-     ! Call land surface model driver2
-
-     call t_startf('clm_driver2')
-     call driver2(caldayp1, declinp1)
-     call t_stopf('clm_driver2')
+     call clm_run2()
      
      ! Increment time step
 

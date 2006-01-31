@@ -24,7 +24,9 @@ module clm_csmMod
   use shr_kind_mod, only: r8 => shr_kind_r8
   use nanMod
   use clm_varpar
-  use clm_atmlnd      , only : clm_a2l, clm_l2a
+  use clm_atmlnd      , only : clm_a2l, clm_l2a, atm_a2l, atm_l2a
+  use clm_atmlnd      , only : gridmap_a2l, gridmap_l2a
+  use clm_atmlnd      , only : clm_mapa2l, clm_mapl2a
 #if (defined SPMD)
   use spmdMod         , only : masterproc, mpicom
   use spmdGathScatMod , only : gather_data_to_master
@@ -247,8 +249,8 @@ contains
 ! Initialize send/recv clm and rtm contracts with flux coupler
 !
 ! !USES:
-    use clmtype      , only : clm3
-    use domainMod    , only : ldomain
+    use domainMod    , only : adomain
+    use decompMod    , only : adecomp
     use decompMod    , only : get_proc_bounds, get_proc_global
     use RunoffMod    , only : get_proc_rof_bounds, runoff
     use clm_varctl   , only : csm_doflxave, nsrest, irad
@@ -299,9 +301,9 @@ contains
     endif
 
     ibuffs(:)  = 0                                   ! initialize ibuffs
-    ibuffs(cpl_fields_ibuf_gsize  ) = lsmlon*lsmlat  ! global array size
-    ibuffs(cpl_fields_ibuf_gisize ) = lsmlon         ! global number of lons
-    ibuffs(cpl_fields_ibuf_gjsize ) = lsmlat         ! global number of lats
+    ibuffs(cpl_fields_ibuf_gsize  ) = adomain%ni*adomain%nj ! global array size
+    ibuffs(cpl_fields_ibuf_gisize ) = adomain%ni     ! global number of lons
+    ibuffs(cpl_fields_ibuf_gjsize ) = adomain%nj     ! global number of lats
     ibuffs(cpl_fields_ibuf_lsize  ) = endg-begg+1
     ibuffs(cpl_fields_ibuf_lisize ) = endg-begg+1
     ibuffs(cpl_fields_ibuf_ljsize ) = 1
@@ -311,14 +313,14 @@ contains
     allocate(Gbuf(begg:endg,cpl_fields_grid_total))
 
     do n = begg, endg	
-        i = clm3%g%ixy(n)
-        j = clm3%g%jxy(n)
-        Gbuf(n,cpl_fields_grid_lon)   = ldomain%lonc(i,j)
-        Gbuf(n,cpl_fields_grid_lat)   = ldomain%latc(i,j)
-        Gbuf(n,cpl_fields_grid_area)  = ldomain%area(i,j)/(re*re)
-        Gbuf(n,cpl_fields_grid_frac)  = ldomain%frac(i,j)
-        Gbuf(n,cpl_fields_grid_mask)  = float(ldomain%mask(i,j))
-        gi = (j-1)*lsmlon + i
+        i = adecomp%gdc2i(n)
+        j = adecomp%gdc2j(n)
+        Gbuf(n,cpl_fields_grid_lon)   = adomain%lonc(i,j)
+        Gbuf(n,cpl_fields_grid_lat)   = adomain%latc(i,j)
+        Gbuf(n,cpl_fields_grid_area)  = adomain%area(i,j)/(re*re)
+        Gbuf(n,cpl_fields_grid_frac)  = adomain%frac(i,j)
+        Gbuf(n,cpl_fields_grid_mask)  = float(adomain%mask(i,j))
+        gi = (j-1)*adomain%ni + i
         Gbuf(n,cpl_fields_grid_index) = gi
     end do
 
@@ -495,13 +497,15 @@ contains
 
     if (nsrest == 0 ) then   !initial run
 
+       call clm_mapl2a(clm_l2a,atm_l2a,gridmap_l2a)
+
        do g = begg,endg
-          bufS(g,index_l2c_Sl_t)     = sqrt(sqrt(clm_l2a%eflx_lwrad_out(g)/sb))
-          bufS(g,index_l2c_Sl_snowh) = clm_l2a%h2osno(g)
-          bufS(g,index_l2c_Sl_avsdr) = clm_l2a%albd(g,1)
-          bufS(g,index_l2c_Sl_anidr) = clm_l2a%albd(g,2)
-          bufS(g,index_l2c_Sl_avsdf) = clm_l2a%albi(g,1)
-          bufS(g,index_l2c_Sl_anidf) = clm_l2a%albi(g,2)
+          bufS(g,index_l2c_Sl_t)     = sqrt(sqrt(atm_l2a%eflx_lwrad_out(g)/sb))
+          bufS(g,index_l2c_Sl_snowh) = atm_l2a%h2osno(g)
+          bufS(g,index_l2c_Sl_avsdr) = atm_l2a%albd(g,1)
+          bufS(g,index_l2c_Sl_anidr) = atm_l2a%albd(g,2)
+          bufS(g,index_l2c_Sl_avsdf) = atm_l2a%albi(g,1)
+          bufS(g,index_l2c_Sl_anidf) = atm_l2a%albi(g,2)
        end do
 
     else  ! restart run
@@ -833,22 +837,22 @@ contains
 
         ! Determine required receive fields
 
-        clm_a2l%forc_hgt(g)     = bufR(g,index_c2l_Sa_z)         ! zgcmxy  Atm state m
-        clm_a2l%forc_u(g)       = bufR(g,index_c2l_Sa_u)         ! forc_uxy  Atm state m/s
-        clm_a2l%forc_v(g)       = bufR(g,index_c2l_Sa_v)         ! forc_vxy  Atm state m/s
-        clm_a2l%forc_th(g)      = bufR(g,index_c2l_Sa_ptem)      ! forc_thxy Atm state K
-        clm_a2l%forc_q(g)       = bufR(g,index_c2l_Sa_shum)      ! forc_qxy  Atm state kg/kg
-        clm_a2l%forc_pbot(g)    = bufR(g,index_c2l_Sa_pbot)      ! ptcmxy  Atm state Pa
-        clm_a2l%forc_t(g)       = bufR(g,index_c2l_Sa_tbot)      ! forc_txy  Atm state K
-        clm_a2l%forc_lwrad(g)   = bufR(g,index_c2l_Faxa_lwdn)    ! flwdsxy Atm flux  W/m^2
+        atm_a2l%forc_hgt(g)     = bufR(g,index_c2l_Sa_z)         ! zgcmxy  Atm state m
+        atm_a2l%forc_u(g)       = bufR(g,index_c2l_Sa_u)         ! forc_uxy  Atm state m/s
+        atm_a2l%forc_v(g)       = bufR(g,index_c2l_Sa_v)         ! forc_vxy  Atm state m/s
+        atm_a2l%forc_th(g)      = bufR(g,index_c2l_Sa_ptem)      ! forc_thxy Atm state K
+        atm_a2l%forc_q(g)       = bufR(g,index_c2l_Sa_shum)      ! forc_qxy  Atm state kg/kg
+        atm_a2l%forc_pbot(g)    = bufR(g,index_c2l_Sa_pbot)      ! ptcmxy  Atm state Pa
+        atm_a2l%forc_t(g)       = bufR(g,index_c2l_Sa_tbot)      ! forc_txy  Atm state K
+        atm_a2l%forc_lwrad(g)   = bufR(g,index_c2l_Faxa_lwdn)    ! flwdsxy Atm flux  W/m^2
         forc_rainc               = bufR(g,index_c2l_Faxa_rainc)   ! mm/s
         forc_rainl               = bufR(g,index_c2l_Faxa_rainl)   ! mm/s
         forc_snowc               = bufR(g,index_c2l_Faxa_snowc)   ! mm/s
         forc_snowl               = bufR(g,index_c2l_Faxa_snowl)   ! mm/s
-        clm_a2l%forc_solad(g,2) = bufR(g,index_c2l_Faxa_swndr)   ! forc_sollxy  Atm flux  W/m^2
-        clm_a2l%forc_solad(g,1) = bufR(g,index_c2l_Faxa_swvdr)   ! forc_solsxy  Atm flux  W/m^2
-        clm_a2l%forc_solai(g,2) = bufR(g,index_c2l_Faxa_swndf)   ! forc_solldxy Atm flux  W/m^2
-        clm_a2l%forc_solai(g,1) = bufR(g,index_c2l_Faxa_swvdf)   ! forc_solsdxy Atm flux  W/m^2
+        atm_a2l%forc_solad(g,2) = bufR(g,index_c2l_Faxa_swndr)   ! forc_sollxy  Atm flux  W/m^2
+        atm_a2l%forc_solad(g,1) = bufR(g,index_c2l_Faxa_swvdr)   ! forc_solsxy  Atm flux  W/m^2
+        atm_a2l%forc_solai(g,2) = bufR(g,index_c2l_Faxa_swndf)   ! forc_solldxy Atm flux  W/m^2
+        atm_a2l%forc_solai(g,1) = bufR(g,index_c2l_Faxa_swvdf)   ! forc_solsdxy Atm flux  W/m^2
 
         ! Determine optional receive fields
 
@@ -866,19 +870,19 @@ contains
 
         ! Determine derived quantities for required fields
 
-        clm_a2l%forc_hgt_u(g) = clm_a2l%forc_hgt(g)    !observational height of wind [m]
-        clm_a2l%forc_hgt_t(g) = clm_a2l%forc_hgt(g)    !observational height of temperature [m]
-        clm_a2l%forc_hgt_q(g) = clm_a2l%forc_hgt(g)    !observational height of humidity [m]
-        clm_a2l%forc_vp(g)    = clm_a2l%forc_q(g) * clm_a2l%forc_pbot(g) &
-                                / (0.622_r8 + 0.378_r8 * clm_a2l%forc_q(g))
-        clm_a2l%forc_rho(g)   = (clm_a2l%forc_pbot(g) - 0.378_r8 * clm_a2l%forc_vp(g)) &
-                                / (rair * clm_a2l%forc_t(g))
-        clm_a2l%forc_po2(g)   = o2_molar_const * clm_a2l%forc_pbot(g)
-        clm_a2l%forc_wind(g)  = sqrt(clm_a2l%forc_u(g)**2 + clm_a2l%forc_v(g)**2)
-        clm_a2l%forc_solar(g) = clm_a2l%forc_solad(g,1) + clm_a2l%forc_solai(g,1) + &
-                                clm_a2l%forc_solad(g,2) + clm_a2l%forc_solai(g,2)
-        clm_a2l%forc_rain(g)  = forc_rainc + forc_rainl
-        clm_a2l%forc_snow(g)  = forc_snowc + forc_snowl
+        atm_a2l%forc_hgt_u(g) = atm_a2l%forc_hgt(g)    !observational height of wind [m]
+        atm_a2l%forc_hgt_t(g) = atm_a2l%forc_hgt(g)    !observational height of temperature [m]
+        atm_a2l%forc_hgt_q(g) = atm_a2l%forc_hgt(g)    !observational height of humidity [m]
+        atm_a2l%forc_vp(g)    = atm_a2l%forc_q(g) * atm_a2l%forc_pbot(g) &
+                                / (0.622_r8 + 0.378_r8 * atm_a2l%forc_q(g))
+        atm_a2l%forc_rho(g)   = (atm_a2l%forc_pbot(g) - 0.378_r8 * atm_a2l%forc_vp(g)) &
+                                / (rair * atm_a2l%forc_t(g))
+        atm_a2l%forc_po2(g)   = o2_molar_const * atm_a2l%forc_pbot(g)
+        atm_a2l%forc_wind(g)  = sqrt(atm_a2l%forc_u(g)**2 + atm_a2l%forc_v(g)**2)
+        atm_a2l%forc_solar(g) = atm_a2l%forc_solad(g,1) + atm_a2l%forc_solai(g,1) + &
+                                atm_a2l%forc_solad(g,2) + atm_a2l%forc_solai(g,2)
+        atm_a2l%forc_rain(g)  = forc_rainc + forc_rainl
+        atm_a2l%forc_snow(g)  = forc_snowc + forc_snowl
         
         ! Determine derived quantities for optional fields
         ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
@@ -891,12 +895,14 @@ contains
         else
            co2_ppmv = co2_ppmv_const      
         end if
-        clm_a2l%forc_pco2(g) = co2_ppmv * 1.e-6_r8 * clm_a2l%forc_pbot(g) 
+        atm_a2l%forc_pco2(g) = co2_ppmv * 1.e-6_r8 * atm_a2l%forc_pbot(g) 
         ! 4/14/05: PET
         ! Adding isotope code
-        clm_a2l%forc_pc13o2(g) = co2_ppmv * c13ratio * 1.e-6_r8 * clm_a2l%forc_pbot(g)
+        atm_a2l%forc_pc13o2(g) = co2_ppmv * c13ratio * 1.e-6_r8 * atm_a2l%forc_pbot(g)
 
      end do
+
+     call clm_mapa2l(atm_a2l,clm_a2l,gridmap_a2l)
 
      ! debug write statements (remove)
 
@@ -969,25 +975,27 @@ contains
        end do
     endif
 
+    call clm_mapl2a(clm_l2a,atm_l2a,gridmap_l2a)
+
     bufS(:,:) = 0.0_r8
     do g = begg,endg
-       bufS(g,index_l2c_Sl_t)       =  clm_l2a%t_rad(g)
-       bufS(g,index_l2c_Sl_snowh)   =  clm_l2a%h2osno(g)
-       bufS(g,index_l2c_Sl_avsdr)   =  clm_l2a%albd(g,1)
-       bufS(g,index_l2c_Sl_anidr)   =  clm_l2a%albd(g,2)
-       bufS(g,index_l2c_Sl_avsdf)   =  clm_l2a%albi(g,1)
-       bufS(g,index_l2c_Sl_anidf)   =  clm_l2a%albi(g,2)
-       bufS(g,index_l2c_Sl_tref)    =  clm_l2a%t_ref2m(g)
-       bufS(g,index_l2c_Sl_qref)    =  clm_l2a%q_ref2m(g)
-       bufS(g,index_l2c_Fall_taux)  = -clm_l2a%taux(g)
-       bufS(g,index_l2c_Fall_tauy)  = -clm_l2a%tauy(g)
-       bufS(g,index_l2c_Fall_lat)   = -clm_l2a%eflx_lh_tot(g)
-       bufS(g,index_l2c_Fall_sen)   = -clm_l2a%eflx_sh_tot(g)
-       bufS(g,index_l2c_Fall_lwup)  = -clm_l2a%eflx_lwrad_out(g)
-       bufS(g,index_l2c_Fall_evap)  = -clm_l2a%qflx_evap_tot(g)
-       bufS(g,index_l2c_Fall_swnet) = -clm_l2a%fsa(g)
+       bufS(g,index_l2c_Sl_t)       =  atm_l2a%t_rad(g)
+       bufS(g,index_l2c_Sl_snowh)   =  atm_l2a%h2osno(g)
+       bufS(g,index_l2c_Sl_avsdr)   =  atm_l2a%albd(g,1)
+       bufS(g,index_l2c_Sl_anidr)   =  atm_l2a%albd(g,2)
+       bufS(g,index_l2c_Sl_avsdf)   =  atm_l2a%albi(g,1)
+       bufS(g,index_l2c_Sl_anidf)   =  atm_l2a%albi(g,2)
+       bufS(g,index_l2c_Sl_tref)    =  atm_l2a%t_ref2m(g)
+       bufS(g,index_l2c_Sl_qref)    =  atm_l2a%q_ref2m(g)
+       bufS(g,index_l2c_Fall_taux)  = -atm_l2a%taux(g)
+       bufS(g,index_l2c_Fall_tauy)  = -atm_l2a%tauy(g)
+       bufS(g,index_l2c_Fall_lat)   = -atm_l2a%eflx_lh_tot(g)
+       bufS(g,index_l2c_Fall_sen)   = -atm_l2a%eflx_sh_tot(g)
+       bufS(g,index_l2c_Fall_lwup)  = -atm_l2a%eflx_lwrad_out(g)
+       bufS(g,index_l2c_Fall_evap)  = -atm_l2a%qflx_evap_tot(g)
+       bufS(g,index_l2c_Fall_swnet) = -atm_l2a%fsa(g)
        if (index_l2c_Fall_nee /= 0) then
-          bufS(g,index_l2c_Fall_nee)  = -clm_l2a%nee(g)
+          bufS(g,index_l2c_Fall_nee)  = -atm_l2a%nee(g)
        end if
     end do
 
@@ -1476,12 +1484,12 @@ contains
 ! Performs a global sum on an input 2d grid array
 !
 ! !USES:
-    use domainMod, only : ldomain
+    use domainMod, only : adomain
 !
 ! !ARGUMENTS:
     implicit none
-    real(r8), intent(in) :: array(lsmlon,lsmlat) !W/m2, Kg/m2-s or N/m2
-    real(r8), intent(in) :: spval                !points to not include in global sum
+    real(r8), intent(in) :: array(:,:)  !W/m2, Kg/m2-s or N/m2
+    real(r8), intent(in) :: spval       !points to not include in global sum
 !
 ! !REVISION HISTORY:
 !
@@ -1492,10 +1500,10 @@ contains
 !------------------------------------------------------------------------
 
     global_sum_fld2d = 0._r8
-    do j = 1,lsmlat
-       do i = 1,lsmlon
+    do j = 1,adomain%nj
+       do i = 1,adomain%ni
           if (array(i,j) /= spval) then
-             global_sum_fld2d = global_sum_fld2d + array(i,j) * ldomain%area(i,j) * 1.e6_r8
+             global_sum_fld2d = global_sum_fld2d + array(i,j) * adomain%area(i,j) * 1.e6_r8
           endif
        end do
     end do
@@ -1514,8 +1522,8 @@ contains
 ! Performs a global sum on an input flux array
 !
 ! !USES:
-    use clmtype  , only : clm3, gridcell_type
-    use domainMod, only : ldomain
+    use domainMod, only : adomain
+    use decompMod, only : adecomp
 !
 ! !ARGUMENTS:
     implicit none
@@ -1527,20 +1535,15 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer :: g,i,j  ! indices
-    type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived type
 !------------------------------------------------------------------------
-
-    ! Set pointers into derived type
-
-    gptr => clm3%g
 
     ! Note: area is in km^2
 
     global_sum_fld1d = 0._r8
     do g = 1,numg
-       i = gptr%ixy(g)
-       j = gptr%jxy(g)
-       global_sum_fld1d = global_sum_fld1d + array(g) * ldomain%area(i,j) * 1.e6_r8
+       i = adecomp%gdc2i(g)
+       j = adecomp%gdc2j(g)
+       global_sum_fld1d = global_sum_fld1d + array(g) * adomain%area(i,j) * 1.e6_r8
     end do
 
   end function global_sum_fld1d

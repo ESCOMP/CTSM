@@ -850,10 +850,13 @@ end subroutine gridmap_checkmap
           ! error check only valid if output grid cell has land. non-land cells
           ! will have weights equal to zero
 
-          if (fland_o(io,jo) > 0._r8) then
+          if (fland_o(io,jo) > relerr) then
              if (abs(f_ovr-1._r8) > relerr) then
                 write (6,*) 'AREAMAP error: area not conserved for lon,lat = ',io,jo
-                write (6,'(a30,e20.10)') 'sum of overlap weights = ',f_ovr
+                write (6,'(a30,e20.10)') 'sum of overlap weights = ',fland_o(io,jo),f_ovr,mx_ovr,n_ovr(io,jo)
+                do n = 1, mx_ovr
+                   write(6,*) ' weights ',n,i_ovr(io,jo,n),j_ovr(io,jo,n),w_ovr(io,jo,n)
+                enddo
                 stop
              end if
           end if
