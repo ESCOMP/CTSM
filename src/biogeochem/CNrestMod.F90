@@ -5998,6 +5998,18 @@ contains
   	  if (is_restart()) call endrun
        end if	
     end if
+
+    ! soil4c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='soil4c', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='soil4c', data=cptr%ccs%soil4c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
     
     ! col_ctrunc
     if (flag == 'define') then
@@ -6147,6 +6159,18 @@ contains
        end if	
     end if
     
+    ! soil4c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='soil4c_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='soil4c_13', data=cptr%cc13s%soil4c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
     ! col_ctrunc
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='col_ctrunc_13', xtype=nf_double,  &
@@ -6289,6 +6313,18 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil3n', data=cptr%cns%soil3n, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! soil4n
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='soil4n', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='soil4n', data=cptr%cns%soil4n, &
             dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -6953,6 +6989,30 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil3_hr', data=cptr%ccf%soil3_hr, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! soil3c_to_soil4c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='soil3c_to_soil4c', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='soil3c_to_soil4c', data=cptr%ccf%soil3c_to_soil4c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! soil4_hr
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='soil4_hr', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='soil4_hr', data=cptr%ccf%soil4_hr, &
             dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -7707,6 +7767,30 @@ contains
        end if	
     end if
 
+    ! soil3c_to_soil4c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='soil3c_to_soil4c_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='soil3c_to_soil4c_13', data=cptr%cc13f%soil3c_to_soil4c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! soil4_hr
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='soil4_hr_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='soil4_hr_13', data=cptr%cc13f%soil4_hr, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
     ! lithr
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='lithr_13', xtype=nf_double,  &
@@ -8455,12 +8539,36 @@ contains
        end if	
     end if
 
-    ! soil3n_to_sminn
+    ! soil3n_to_soil4n
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soil3n_to_sminn', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='soil3n_to_soil4n', xtype=nf_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='soil3n_to_sminn', data=cptr%cnf%soil3n_to_sminn, &
+       call ncd_iolocal(varname='soil3n_to_soil4n', data=cptr%cnf%soil3n_to_soil4n, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! sminn_to_soil4n_s3
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sminn_to_soil4n_s3', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sminn_to_soil4n_s3', data=cptr%cnf%sminn_to_soil4n_s3, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! soil4n_to_sminn
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='soil4n_to_sminn', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='soil4n_to_sminn', data=cptr%cnf%soil4n_to_sminn, &
             dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -8527,12 +8635,24 @@ contains
        end if	
     end if
 
-    ! sminn_to_denit_s3
+    ! sminn_to_denit_s3s4
     if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='sminn_to_denit_s3', xtype=nf_double,  &
+       call ncd_defvar(ncid=ncid, varname='sminn_to_denit_s3s4', xtype=nf_double,  &
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='sminn_to_denit_s3', data=cptr%cnf%sminn_to_denit_s3, &
+       call ncd_iolocal(varname='sminn_to_denit_s3s4', data=cptr%cnf%sminn_to_denit_s3s4, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! sminn_to_denit_s4
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sminn_to_denit_s4', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sminn_to_denit_s4', data=cptr%cnf%sminn_to_denit_s4, &
             dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -8710,6 +8830,7 @@ contains
           clm3%g%l%c%ccs%soil1c(c) = clm3%g%l%c%ccs%soil1c(c) * m
           clm3%g%l%c%ccs%soil2c(c) = clm3%g%l%c%ccs%soil2c(c) * m
           clm3%g%l%c%ccs%soil3c(c) = clm3%g%l%c%ccs%soil3c(c) * m
+          clm3%g%l%c%ccs%soil4c(c) = clm3%g%l%c%ccs%soil4c(c) * m
           
           ! adding code for 13C, 12/25/05, PET 
           clm3%g%l%c%cc13s%cwdc(c)   = clm3%g%l%c%cc13s%cwdc(c)   * m
@@ -8719,6 +8840,7 @@ contains
           clm3%g%l%c%cc13s%soil1c(c) = clm3%g%l%c%cc13s%soil1c(c) * m
           clm3%g%l%c%cc13s%soil2c(c) = clm3%g%l%c%cc13s%soil2c(c) * m
           clm3%g%l%c%cc13s%soil3c(c) = clm3%g%l%c%cc13s%soil3c(c) * m
+          clm3%g%l%c%cc13s%soil4c(c) = clm3%g%l%c%cc13s%soil4c(c) * m
           
           clm3%g%l%c%cns%cwdn(c)   = clm3%g%l%c%cns%cwdn(c)   * m
           clm3%g%l%c%cns%litr1n(c) = clm3%g%l%c%cns%litr1n(c) * m
@@ -8727,6 +8849,7 @@ contains
           clm3%g%l%c%cns%soil1n(c) = clm3%g%l%c%cns%soil1n(c) * m
           clm3%g%l%c%cns%soil2n(c) = clm3%g%l%c%cns%soil2n(c) * m
           clm3%g%l%c%cns%soil3n(c) = clm3%g%l%c%cns%soil3n(c) * m
+          clm3%g%l%c%cns%soil4n(c) = clm3%g%l%c%cns%soil4n(c) * m
        end do
     end if
 #endif

@@ -1,4 +1,88 @@
 ===============================================================
+Tag name: clm3_expa_57
+Originator(s): Peter Thornton
+Date: 31 Jan 2006
+One-line Summary: Mods to allow switching between 3 and 4 soil
+ organic matter pools
+
+Purpose of changes: New science.
+
+Bugs fixed (include bugzilla ID): bugs in pftdynMod.F90 and ndepfileMod.F90
+
+Describe any changes made to build system:
+
+Describe any changes made to the namelist: Added SOM4 as new CPP directive
+
+List any changes to the defaults for the boundary datasets:
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: myself
+
+List all subroutines eliminated:
+
+List all subroutines added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+main/clmtype.F90: added soil4c (and 13C equiv.), soil4n states and associated
+    flux variables. Also added long name commenting for many previously defined
+    variables.
+main/clmtypeInitMod.F90: added initialization for new variables
+main/CNiniTimeVar.F90: initialize new state variables.
+main/histFldsMod.F90: added new variables, and also added long names for 
+    many previously defined variables.
+main/pftdynMod.F90: bug fix in mpi_bcast, change MPI_REAL8 to MPI_INTEGER.
+main/ndepFileMod.F90: bug fix for mpi_bcast, change MPI_REAL8 to MPI_INTEGER.
+biogeochem/CNSetValueMod.F90: add code for new state and flux variables.
+biogeochem/CNDecompMod.F90: add code to allow either 3 or 4 SOM pools. Default
+    behavior is 3 pools, 4-pool behavior triggered by SOM4 CPP directive.
+biogeochem/CNCStateUpdate1Mod.F90: handling for new variables.
+biogeochem/CNNStateUpdate1Mod.F90: handling for new variables.
+biogeochem/CNSummaryMod.F90: handling for new variables.
+biogeochem/CNBalanceCheckMod.F90: handling for new variables
+biogeochem/CNPrecisionControlMod.F90: handling for new variables
+biogeochem/CNC13FluxMod.F90: handling for isotope version of new variables
+biogeochem/C13StateUpdate1Mod.F90: handling for new variables
+biogeochem/C13SummaryMod.F90: handling for new variables
+biogeochem/CNrestMod.F90: handling for new variables, and modify EXIT_SPINUP
+    controls
+    
+Summary of testing:
+
+  bluesky:
+  tempest:
+  bangkok/lf95:
+
+CLM tag used for the baseline comparison tests if applicable: in 3-pool mode 
+(SOM4 not set), results are bfb with clm3_expa_55.  in 4-pool mode, changes
+answers, as expected.
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+bfb under 3-pools is demonstrated at:
+http:/www.cgd.ucar.edu/tss/clm/diagnostics/clm3cn/c13/ccsm3_bgc31_I_5a-ccsm3_bgc31_I_2b/setsIndex.html
+	
+===============================================================
 Tag name: clm3_expa_56
 Originator(s): Tony Craig
 Date: 31 Jan 2006

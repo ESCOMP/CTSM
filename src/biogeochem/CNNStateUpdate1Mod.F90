@@ -84,16 +84,19 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: sminn_to_denit_l3s3(:)
    real(r8), pointer :: sminn_to_denit_s1s2(:)
    real(r8), pointer :: sminn_to_denit_s2s3(:)
-   real(r8), pointer :: sminn_to_denit_s3(:)
+   real(r8), pointer :: sminn_to_denit_s3s4(:)
+   real(r8), pointer :: sminn_to_denit_s4(:)
    real(r8), pointer :: sminn_to_plant(:)
    real(r8), pointer :: sminn_to_soil1n_l1(:)
    real(r8), pointer :: sminn_to_soil2n_l2(:)
    real(r8), pointer :: sminn_to_soil2n_s1(:)
    real(r8), pointer :: sminn_to_soil3n_l3(:)
    real(r8), pointer :: sminn_to_soil3n_s2(:)
+   real(r8), pointer :: sminn_to_soil4n_s3(:)
    real(r8), pointer :: soil1n_to_soil2n(:)
    real(r8), pointer :: soil2n_to_soil3n(:)
-   real(r8), pointer :: soil3n_to_sminn(:)
+   real(r8), pointer :: soil3n_to_soil4n(:)
+   real(r8), pointer :: soil4n_to_sminn(:)
    real(r8), pointer :: supplement_to_sminn(:)
    real(r8), pointer :: deadcrootn_storage_to_xfer(:)
    real(r8), pointer :: deadcrootn_xfer_to_deadcrootn(:)
@@ -137,6 +140,7 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1n(:)             ! (gN/m2) soil organic matter N (fast pool)
    real(r8), pointer :: soil2n(:)             ! (gN/m2) soil organic matter N (medium pool)
    real(r8), pointer :: soil3n(:)             ! (gN/m2) soil orgainc matter N (slow pool)
+   real(r8), pointer :: soil4n(:)             ! (gN/m2) soil orgainc matter N (slowest pool)
    real(r8), pointer :: cwdn(:)               ! (gN/m2) coarse woody debris N
    real(r8), pointer :: frootn(:)             ! (gN/m2) fine root N
    real(r8), pointer :: frootn_storage(:)     ! (gN/m2) fine root N storage
@@ -194,16 +198,19 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    sminn_to_denit_l3s3            => clm3%g%l%c%cnf%sminn_to_denit_l3s3
    sminn_to_denit_s1s2            => clm3%g%l%c%cnf%sminn_to_denit_s1s2
    sminn_to_denit_s2s3            => clm3%g%l%c%cnf%sminn_to_denit_s2s3
-   sminn_to_denit_s3              => clm3%g%l%c%cnf%sminn_to_denit_s3
+   sminn_to_denit_s3s4            => clm3%g%l%c%cnf%sminn_to_denit_s3s4
+   sminn_to_denit_s4              => clm3%g%l%c%cnf%sminn_to_denit_s4
    sminn_to_plant                 => clm3%g%l%c%cnf%sminn_to_plant
    sminn_to_soil1n_l1             => clm3%g%l%c%cnf%sminn_to_soil1n_l1
    sminn_to_soil2n_l2             => clm3%g%l%c%cnf%sminn_to_soil2n_l2
    sminn_to_soil2n_s1             => clm3%g%l%c%cnf%sminn_to_soil2n_s1
    sminn_to_soil3n_l3             => clm3%g%l%c%cnf%sminn_to_soil3n_l3
    sminn_to_soil3n_s2             => clm3%g%l%c%cnf%sminn_to_soil3n_s2
+   sminn_to_soil4n_s3             => clm3%g%l%c%cnf%sminn_to_soil4n_s3
    soil1n_to_soil2n               => clm3%g%l%c%cnf%soil1n_to_soil2n
    soil2n_to_soil3n               => clm3%g%l%c%cnf%soil2n_to_soil3n
-   soil3n_to_sminn                => clm3%g%l%c%cnf%soil3n_to_sminn
+   soil3n_to_soil4n               => clm3%g%l%c%cnf%soil3n_to_soil4n
+   soil4n_to_sminn                => clm3%g%l%c%cnf%soil4n_to_sminn
    supplement_to_sminn            => clm3%g%l%c%cnf%supplement_to_sminn
    cwdn                           => clm3%g%l%c%cns%cwdn
    litr1n                         => clm3%g%l%c%cns%litr1n
@@ -213,6 +220,7 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    soil1n                         => clm3%g%l%c%cns%soil1n
    soil2n                         => clm3%g%l%c%cns%soil2n
    soil3n                         => clm3%g%l%c%cns%soil3n
+   soil4n                         => clm3%g%l%c%cns%soil4n
 
    ! assign local pointers at the pft level
    ivt                            => clm3%g%l%c%p%itype
@@ -315,20 +323,23 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
           soil1n_to_soil2n(c) + sminn_to_soil2n_s1(c) - soil2n_to_soil3n(c))*dt
       soil3n(c) = soil3n(c) + &
          (litr3n_to_soil3n(c) + sminn_to_soil3n_l3(c) + &
-          soil2n_to_soil3n(c) + sminn_to_soil3n_s2(c) - soil3n_to_sminn(c))*dt
+          soil2n_to_soil3n(c) + sminn_to_soil3n_s2(c) - soil3n_to_soil4n(c))*dt
+      soil4n(c) = soil4n(c) + &
+         (soil3n_to_soil4n(c) + sminn_to_soil4n_s3(c) - soil4n_to_sminn(c))*dt
 
       ! immobilization/mineralization in litter-to-SOM and SOM-to-SOM fluxes
       sminn(c)  = sminn(c)  - &
          (sminn_to_soil1n_l1(c) + sminn_to_soil2n_l2(c) + &
           sminn_to_soil3n_l3(c) + sminn_to_soil2n_s1(c) + &
-          sminn_to_soil3n_s2(c) - soil3n_to_sminn(c))*dt
+          sminn_to_soil3n_s2(c) + sminn_to_soil4n_s3(c) - &
+          soil4n_to_sminn(c))*dt
 
       ! denitrification fluxes
       sminn(c) = sminn(c) - &
          (sminn_to_denit_l1s1(c) + sminn_to_denit_l2s2(c) + &
           sminn_to_denit_l3s3(c) + sminn_to_denit_s1s2(c) + &
-          sminn_to_denit_s2s3(c) + sminn_to_denit_s3(c) + &
-          sminn_to_denit_excess(c))*dt
+          sminn_to_denit_s2s3(c) + sminn_to_denit_s3s4(c) + &
+          sminn_to_denit_s4(c)   + sminn_to_denit_excess(c))*dt
 
       ! total plant uptake from mineral N
       sminn(c) = sminn(c) - sminn_to_plant(c)*dt

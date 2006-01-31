@@ -83,6 +83,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1_hr(:)        
    real(r8), pointer :: soil2_hr(:)        
    real(r8), pointer :: soil3_hr(:) 
+   real(r8), pointer :: soil4_hr(:) 
    real(r8), pointer :: somfire(:)       ! (gC/m2/s) soil organic matter fire losses
    real(r8), pointer :: somhr(:)         ! (gC/m2/s) soil organic matter heterotrophic respiration
    real(r8), pointer :: sr(:)            ! (gC/m2/s) total soil respiration (HR + root resp)
@@ -96,6 +97,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1c(:)             ! (gC/m2) soil organic matter C (fast pool)
    real(r8), pointer :: soil2c(:)             ! (gC/m2) soil organic matter C (medium pool)
    real(r8), pointer :: soil3c(:)             ! (gC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: soil4c(:)             ! (gC/m2) soil organic matter C (slow pool)
    real(r8), pointer :: totcolc(:)            ! (gC/m2) total column carbon, incl veg and cpool
    real(r8), pointer :: totecosysc(:)         ! (gC/m2) total ecosystem carbon, incl veg but excl cpool
    real(r8), pointer :: totlitc(:)            ! (gC/m2) total litter carbon
@@ -267,6 +269,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil1_hr                       => clm3%g%l%c%cc13f%soil1_hr
     soil2_hr                       => clm3%g%l%c%cc13f%soil2_hr
     soil3_hr                       => clm3%g%l%c%cc13f%soil3_hr
+    soil4_hr                       => clm3%g%l%c%cc13f%soil4_hr
     somfire                        => clm3%g%l%c%cc13f%somfire
     somhr                          => clm3%g%l%c%cc13f%somhr
     sr                             => clm3%g%l%c%cc13f%sr
@@ -280,6 +283,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil1c                         => clm3%g%l%c%cc13s%soil1c
     soil2c                         => clm3%g%l%c%cc13s%soil2c
     soil3c                         => clm3%g%l%c%cc13s%soil3c
+    soil4c                         => clm3%g%l%c%cc13s%soil4c
     totcolc                        => clm3%g%l%c%cc13s%totcolc
     totecosysc                     => clm3%g%l%c%cc13s%totecosysc
     totlitc                        => clm3%g%l%c%cc13s%totlitc
@@ -634,7 +638,8 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
       somhr(c) = &
          soil1_hr(c) + &
          soil2_hr(c) + &
-         soil3_hr(c)
+         soil3_hr(c) + &
+         soil4_hr(c)
 
       ! total heterotrophic respiration (HR)
       hr(c) = lithr(c) + somhr(c)
@@ -681,7 +686,8 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
       totsomc(c) = &
          soil1c(c) + &
          soil2c(c) + &
-         soil3c(c)
+         soil3c(c) + &
+         soil4c(c)
 
       ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
       totecosysc(c) = &

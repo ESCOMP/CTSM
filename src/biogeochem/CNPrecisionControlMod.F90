@@ -69,6 +69,7 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1c(:)             ! (gC/m2) soil organic matter C (fast pool)
    real(r8), pointer :: soil2c(:)             ! (gC/m2) soil organic matter C (medium pool)
    real(r8), pointer :: soil3c(:)             ! (gC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: soil4c(:)             ! (gC/m2) soil organic matter C (slowest pool)
    real(r8), pointer :: c13_col_ctrunc(:)     ! (gC/m2) column-level sink for C truncation
    real(r8), pointer :: c13_cwdc(:)           ! (gC/m2) coarse woody debris C
    real(r8), pointer :: c13_litr1c(:)         ! (gC/m2) litter labile C
@@ -77,6 +78,7 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: c13_soil1c(:)         ! (gC/m2) soil organic matter C (fast pool)
    real(r8), pointer :: c13_soil2c(:)         ! (gC/m2) soil organic matter C (medium pool)
    real(r8), pointer :: c13_soil3c(:)         ! (gC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: c13_soil4c(:)         ! (gC/m2) soil organic matter C (slowest pool)
    real(r8), pointer :: col_ntrunc(:)         ! (gN/m2) column-level sink for N truncation
    real(r8), pointer :: cwdn(:)               ! (gN/m2) coarse woody debris N
    real(r8), pointer :: litr1n(:)             ! (gN/m2) litter labile N
@@ -85,6 +87,7 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1n(:)             ! (gN/m2) soil organic matter N (fast pool)
    real(r8), pointer :: soil2n(:)             ! (gN/m2) soil organic matter N (medium pool)
    real(r8), pointer :: soil3n(:)             ! (gN/m2) soil orgainc matter N (slow pool)
+   real(r8), pointer :: soil4n(:)             ! (gN/m2) soil orgainc matter N (slowest pool)
    real(r8), pointer :: cpool(:)              ! (gC/m2) temporary photosynthate C pool
    real(r8), pointer :: deadcrootc(:)         ! (gC/m2) dead coarse root C
    real(r8), pointer :: deadcrootc_storage(:) ! (gC/m2) dead coarse root C storage
@@ -174,6 +177,7 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil1c                         => clm3%g%l%c%ccs%soil1c
     soil2c                         => clm3%g%l%c%ccs%soil2c
     soil3c                         => clm3%g%l%c%ccs%soil3c
+    soil4c                         => clm3%g%l%c%ccs%soil4c
     c13_col_ctrunc                     => clm3%g%l%c%cc13s%col_ctrunc
     c13_cwdc                           => clm3%g%l%c%cc13s%cwdc
     c13_litr1c                         => clm3%g%l%c%cc13s%litr1c
@@ -182,6 +186,7 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
     c13_soil1c                         => clm3%g%l%c%cc13s%soil1c
     c13_soil2c                         => clm3%g%l%c%cc13s%soil2c
     c13_soil3c                         => clm3%g%l%c%cc13s%soil3c
+    c13_soil4c                         => clm3%g%l%c%cc13s%soil4c
     col_ntrunc                     => clm3%g%l%c%cns%col_ntrunc
     cwdn                           => clm3%g%l%c%cns%cwdn
     litr1n                         => clm3%g%l%c%cns%litr1n
@@ -190,6 +195,7 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil1n                         => clm3%g%l%c%cns%soil1n
     soil2n                         => clm3%g%l%c%cns%soil2n
     soil3n                         => clm3%g%l%c%cns%soil3n
+    soil4n                         => clm3%g%l%c%cns%soil4n
 
     ! assign local pointers at the pft level
     cpool                          => clm3%g%l%c%p%pcs%cpool
@@ -583,6 +589,16 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
           c13_soil3c(c) = 0._r8
           cn = cn + soil3n(c)
           soil3n(c) = 0._r8
+      end if
+      
+      ! soil4 C and N
+      if (abs(soil4c(c)) < ccrit) then
+          cc = cc + soil4c(c)
+          soil4c(c) = 0._r8
+          cc13 = cc13 + c13_soil4c(c)
+          c13_soil4c(c) = 0._r8
+          cn = cn + soil4n(c)
+          soil4n(c) = 0._r8
       end if
       
       ! not doing precision control on soil mineral N, since it will

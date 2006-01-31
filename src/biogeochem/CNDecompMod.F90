@@ -80,6 +80,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    real(r8), pointer :: soil1c(:)        ! (kgC/m2) soil organic matter C (fast pool)
    real(r8), pointer :: soil2c(:)        ! (kgC/m2) soil organic matter C (medium pool)
    real(r8), pointer :: soil3c(:)        ! (kgC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: soil4c(:)        ! (kgC/m2) soil organic matter C (slowest pool)
    real(r8), pointer :: cwdn(:)          ! (gN/m2) coarse woody debris N
    real(r8), pointer :: litr1n(:)        ! (kgN/m2) litter labile N
    real(r8), pointer :: litr2n(:)        ! (kgN/m2) litter cellulose N
@@ -105,6 +106,8 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    real(r8), pointer :: soil2_hr(:)
    real(r8), pointer :: soil2c_to_soil3c(:)
    real(r8), pointer :: soil3_hr(:)
+   real(r8), pointer :: soil3c_to_soil4c(:)
+   real(r8), pointer :: soil4_hr(:)
    real(r8), pointer :: cwdn_to_litr2n(:)
    real(r8), pointer :: cwdn_to_litr3n(:)
    real(r8), pointer :: potential_immob(:)
@@ -118,13 +121,16 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    real(r8), pointer :: sminn_to_soil2n_s1(:)
    real(r8), pointer :: soil2n_to_soil3n(:)
    real(r8), pointer :: sminn_to_soil3n_s2(:)
-   real(r8), pointer :: soil3n_to_sminn(:)
+   real(r8), pointer :: soil3n_to_soil4n(:)
+   real(r8), pointer :: sminn_to_soil4n_s3(:)
+   real(r8), pointer :: soil4n_to_sminn(:)
    real(r8), pointer :: sminn_to_denit_l1s1(:)
    real(r8), pointer :: sminn_to_denit_l2s2(:)
    real(r8), pointer :: sminn_to_denit_l3s3(:)
    real(r8), pointer :: sminn_to_denit_s1s2(:)
    real(r8), pointer :: sminn_to_denit_s2s3(:)
-   real(r8), pointer :: sminn_to_denit_s3(:)
+   real(r8), pointer :: sminn_to_denit_s3s4(:)
+   real(r8), pointer :: sminn_to_denit_s4(:)
    real(r8), pointer :: sminn_to_denit_excess(:)
    real(r8), pointer :: gross_nmin(:)
    real(r8), pointer :: net_nmin(:)
@@ -150,17 +156,20 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    real(r8):: cn_s1        !C:N for SOM 1
    real(r8):: cn_s2        !C:N for SOM 2
    real(r8):: cn_s3        !C:N for SOM 3
+   real(r8):: cn_s4        !C:N for SOM 4
    real(r8):: rf_l1s1      !respiration fraction litter 1 -> SOM 1
    real(r8):: rf_l2s2      !respiration fraction litter 2 -> SOM 2
    real(r8):: rf_l3s3      !respiration fraction litter 3 -> SOM 3
    real(r8):: rf_s1s2      !respiration fraction SOM 1 -> SOM 2
    real(r8):: rf_s2s3      !respiration fraction SOM 2 -> SOM 3
+   real(r8):: rf_s3s4      !respiration fraction SOM 3 -> SOM 4
    real(r8):: k_l1         !decomposition rate constant litter 1
    real(r8):: k_l2         !decomposition rate constant litter 2
    real(r8):: k_l3         !decomposition rate constant litter 3
    real(r8):: k_s1         !decomposition rate constant SOM 1
    real(r8):: k_s2         !decomposition rate constant SOM 2
    real(r8):: k_s3         !decomposition rate constant SOM 3
+   real(r8):: k_s4         !decomposition rate constant SOM 3
    real(r8):: k_frag       !fragmentation rate constant CWD
    real(r8):: ck_l1        !corrected decomposition rate constant litter 1
    real(r8):: ck_l2        !corrected decomposition rate constant litter 2
@@ -168,6 +177,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    real(r8):: ck_s1        !corrected decomposition rate constant SOM 1
    real(r8):: ck_s2        !corrected decomposition rate constant SOM 2
    real(r8):: ck_s3        !corrected decomposition rate constant SOM 3
+   real(r8):: ck_s4        !corrected decomposition rate constant SOM 3
    real(r8):: ck_frag      !corrected fragmentation rate constant CWD
    real(r8):: cwd_fcel     !cellulose fraction of coarse woody debris
    real(r8):: cwd_flig     !lignin fraction of coarse woody debris
@@ -179,12 +189,14 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    real(r8):: psoil1c_loss(lbc:ubc) !potential C loss from SOM 1
    real(r8):: psoil2c_loss(lbc:ubc) !potential C loss from SOM 2
    real(r8):: psoil3c_loss(lbc:ubc) !potential C loss from SOM 3
+   real(r8):: psoil4c_loss(lbc:ubc) !potential C loss from SOM 4
    real(r8):: pmnf_l1s1(lbc:ubc)    !potential mineral N flux, litter 1 -> SOM 1
    real(r8):: pmnf_l2s2(lbc:ubc)    !potential mineral N flux, litter 2 -> SOM 2
    real(r8):: pmnf_l3s3(lbc:ubc)    !potential mineral N flux, litter 3 -> SOM 3
    real(r8):: pmnf_s1s2(lbc:ubc)    !potential mineral N flux, SOM 1 -> SOM 2
    real(r8):: pmnf_s2s3(lbc:ubc)    !potential mineral N flux, SOM 2 -> SOM 3
-   real(r8):: pmnf_s3(lbc:ubc)      !potential mineral N flux, SOM 3
+   real(r8):: pmnf_s3s4(lbc:ubc)    !potential mineral N flux, SOM 3 -> SOM 4
+   real(r8):: pmnf_s4(lbc:ubc)      !potential mineral N flux, SOM 4
    real(r8):: immob(lbc:ubc)        !potential N immobilization
    real(r8):: ratio        !temporary variable
    real(r8):: dnp          !denitrification proportion
@@ -201,6 +213,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    soil1c                => clm3%g%l%c%ccs%soil1c
    soil2c                => clm3%g%l%c%ccs%soil2c
    soil3c                => clm3%g%l%c%ccs%soil3c
+   soil4c                => clm3%g%l%c%ccs%soil4c
    cwdn                  => clm3%g%l%c%cns%cwdn
    litr1n                => clm3%g%l%c%cns%litr1n
    litr2n                => clm3%g%l%c%cns%litr2n
@@ -219,6 +232,8 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    soil2_hr              => clm3%g%l%c%ccf%soil2_hr
    soil2c_to_soil3c      => clm3%g%l%c%ccf%soil2c_to_soil3c
    soil3_hr              => clm3%g%l%c%ccf%soil3_hr
+   soil3c_to_soil4c      => clm3%g%l%c%ccf%soil3c_to_soil4c
+   soil4_hr              => clm3%g%l%c%ccf%soil4_hr
    cwdn_to_litr2n        => clm3%g%l%c%cnf%cwdn_to_litr2n
    cwdn_to_litr3n        => clm3%g%l%c%cnf%cwdn_to_litr3n
    potential_immob       => clm3%g%l%c%cnf%potential_immob
@@ -232,13 +247,16 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    sminn_to_soil2n_s1    => clm3%g%l%c%cnf%sminn_to_soil2n_s1
    soil2n_to_soil3n      => clm3%g%l%c%cnf%soil2n_to_soil3n
    sminn_to_soil3n_s2    => clm3%g%l%c%cnf%sminn_to_soil3n_s2
-   soil3n_to_sminn       => clm3%g%l%c%cnf%soil3n_to_sminn
+   soil3n_to_soil4n      => clm3%g%l%c%cnf%soil3n_to_soil4n
+   sminn_to_soil4n_s3    => clm3%g%l%c%cnf%sminn_to_soil4n_s3
+   soil4n_to_sminn       => clm3%g%l%c%cnf%soil4n_to_sminn
    sminn_to_denit_l1s1   => clm3%g%l%c%cnf%sminn_to_denit_l1s1
    sminn_to_denit_l2s2   => clm3%g%l%c%cnf%sminn_to_denit_l2s2
    sminn_to_denit_l3s3   => clm3%g%l%c%cnf%sminn_to_denit_l3s3
    sminn_to_denit_s1s2   => clm3%g%l%c%cnf%sminn_to_denit_s1s2
    sminn_to_denit_s2s3   => clm3%g%l%c%cnf%sminn_to_denit_s2s3
-   sminn_to_denit_s3     => clm3%g%l%c%cnf%sminn_to_denit_s3
+   sminn_to_denit_s3s4   => clm3%g%l%c%cnf%sminn_to_denit_s3s4
+   sminn_to_denit_s4     => clm3%g%l%c%cnf%sminn_to_denit_s4
    sminn_to_denit_excess => clm3%g%l%c%cnf%sminn_to_denit_excess
    gross_nmin            => clm3%g%l%c%cnf%gross_nmin
    net_nmin              => clm3%g%l%c%cnf%net_nmin
@@ -255,6 +273,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    cn_s1 = 12.0_r8
    cn_s2 = 12.0_r8
    cn_s3 = 10.0_r8
+   cn_s4 = 10.0_r8
 
    ! set respiration fractions for fluxes between compartments
    ! (from Biome-BGC v4.2.0)
@@ -263,6 +282,10 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    rf_l3s3 = 0.29_r8
    rf_s1s2 = 0.28_r8
    rf_s2s3 = 0.46_r8
+   rf_s3s4 = 1.0
+#if (defined SOM4)
+	rf_s3s4 = 0.55
+#endif
 
    ! set the cellulose and lignin fractions for coarse woody debris
    cwd_fcel = 0.76_r8
@@ -280,6 +303,11 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    k_s1 = -log(1.0_r8-0.07_r8)
    k_s2 = -log(1.0_r8-0.014_r8)
    k_s3 = -log(1.0_r8-0.0005_r8)
+   k_s4 = -log(1.0_r8-0.0_r8)
+#if (defined SOM4)
+	k_s3 = -log(1.0_r8-0.0014_r8)
+   k_s4 = -log(1.0_r8-0.0001_r8)
+#endif
    k_frag = -log(1.0_r8-0.001_r8)
 
    ! calculate the new discrete-time decay rate for model timestep
@@ -289,6 +317,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    k_s1 = 1.0_r8-exp(-k_s1*dtd)
    k_s2 = 1.0_r8-exp(-k_s2*dtd)
    k_s3 = 1.0_r8-exp(-k_s3*dtd)
+   k_s4 = 1.0_r8-exp(-k_s4*dtd)
    k_frag = 1.0_r8-exp(-k_frag*dtd)
    
    ! The following code implements the acceleration part of the AD spinup
@@ -301,6 +330,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    k_s1 = k_s1 * 10._r8
    k_s2 = k_s2 * 10._r8
    k_s3 = k_s3 * 10._r8
+   k_s4 = k_s4 * 10._r8
    k_frag = k_frag * 10._r8
 #endif
 
@@ -397,12 +427,14 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    psoil1c_loss(:) = 0._r8
    psoil2c_loss(:) = 0._r8
    psoil3c_loss(:) = 0._r8
+   psoil4c_loss(:) = 0._r8
    pmnf_l1s1(:) = 0._r8
    pmnf_l2s2(:) = 0._r8
    pmnf_l3s3(:) = 0._r8
    pmnf_s1s2(:) = 0._r8
    pmnf_s2s3(:) = 0._r8
-   pmnf_s3(:) = 0._r8
+   pmnf_s3s4(:) = 0._r8
+   pmnf_s4(:) = 0._r8
 
    ! column loop to calculate potential decomp rates and total immobilization
    ! demand.
@@ -426,6 +458,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
       ck_s1 = k_s1 * rate_scalar
       ck_s2 = k_s2 * rate_scalar
       ck_s3 = k_s3 * rate_scalar
+      ck_s4 = k_s4 * rate_scalar
       ck_frag = k_frag * rate_scalar
 
       ! calculate the non-nitrogen-limited fluxes
@@ -477,10 +510,16 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
          pmnf_s2s3(c) = (psoil2c_loss(c) * (1.0_r8 - rf_s2s3 - (cn_s3/cn_s2)))/cn_s3
       end if
 
-      ! Loss from SOM 3 is entirely respiration (no downstream pool)
+      ! SOM 3 -> SOM 4
       if (soil3c(c) > 0._r8) then
          psoil3c_loss(c) = soil3c(c) * ck_s3 / dt
-         pmnf_s3(c) = -psoil3c_loss(c)/cn_s3
+         pmnf_s3s4(c) = (psoil3c_loss(c) * (1.0_r8 - rf_s3s4 - (cn_s4/cn_s3)))/cn_s4
+      end if
+
+      ! Loss from SOM 4 is entirely respiration (no downstream pool)
+      if (soil4c(c) > 0._r8) then
+         psoil4c_loss(c) = soil4c(c) * ck_s4 / dt
+         pmnf_s4(c) = -psoil4c_loss(c)/cn_s4
       end if
 
       ! Sum up all the potential immobilization fluxes (positive pmnf flux)
@@ -522,8 +561,15 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
          gross_nmin(c) = gross_nmin(c) - pmnf_s2s3(c)
       end if
 
-      ! SOM 3
-      gross_nmin(c) = gross_nmin(c) - pmnf_s3(c)
+      ! SOM 3 -> SOM 4
+      if (pmnf_s3s4(c) > 0._r8) then
+         immob(c) = immob(c) + pmnf_s3s4(c)
+      else
+         gross_nmin(c) = gross_nmin(c) - pmnf_s3s4(c)
+      end if
+
+      ! SOM 4
+      gross_nmin(c) = gross_nmin(c) - pmnf_s4(c)
 
       potential_immob(c) = immob(c)
 
@@ -633,10 +679,26 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
 
       ! SOM 3 fluxes (slow rate soil organic matter pool)
       if (soil3c(c) > 0._r8) then
-         soil3_hr(c) = psoil3c_loss(c)
-         soil3n_to_sminn(c) = psoil3c_loss(c) / cn_s3
-         sminn_to_denit_s3(c) = -dnp * pmnf_s3(c)
-         net_nmin(c) = net_nmin(c) - pmnf_s3(c)
+         if (pmnf_s3s4(c) > 0._r8) then
+            psoil3c_loss(c) = psoil3c_loss(c) * fpi(c)
+            pmnf_s3s4(c) = pmnf_s3s4(c) * fpi(c)
+            sminn_to_denit_s3s4(c) = 0._r8
+         else
+            sminn_to_denit_s3s4(c) = -dnp * pmnf_s3s4(c)
+         end if
+         soil3_hr(c) = rf_s3s4 * psoil3c_loss(c)
+         soil3c_to_soil4c(c) = (1._r8 - rf_s3s4) * psoil3c_loss(c)
+         soil3n_to_soil4n(c) = psoil3c_loss(c) / cn_s3
+         sminn_to_soil4n_s3(c) = pmnf_s3s4(c)
+         net_nmin(c) = net_nmin(c) - pmnf_s3s4(c)
+      end if
+
+      ! SOM 4 fluxes (slowest rate soil organic matter pool)
+      if (soil4c(c) > 0._r8) then
+         soil4_hr(c) = psoil4c_loss(c)
+         soil4n_to_sminn(c) = psoil4c_loss(c) / cn_s4
+         sminn_to_denit_s4(c) = -dnp * pmnf_s4(c)
+         net_nmin(c) = net_nmin(c) - pmnf_s4(c)
       end if
 
    end do

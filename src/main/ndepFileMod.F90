@@ -277,7 +277,7 @@ contains
        allocate(yearsndep(ntimes))
     end if
 #if (defined SPMD)
-    call mpi_bcast (yearsndep, size(yearsndep), MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast (yearsndep, size(yearsndep), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (ndepdyn1  , size(ndepdyn1)  , MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (ndepdyn2  , size(ndepdyn2)  , MPI_REAL8, 0, mpicom, ier)
 #endif    

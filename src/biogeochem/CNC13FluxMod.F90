@@ -369,6 +369,14 @@ subroutine C13Flux1(num_soilc, filter_soilc, num_soilp, filter_soilp)
                      c%cc13s%soil3c, c%ccs%soil3c, &
                      num_soilc, filter_soilc, 1._r8, 0)
    
+   call C13FluxCalc(c%cc13f%soil3c_to_soil4c, c%ccf%soil3c_to_soil4c, &
+                     c%cc13s%soil3c, c%ccs%soil3c, &
+                     num_soilc, filter_soilc, 1._r8, 0)
+   
+   call C13FluxCalc(c%cc13f%soil4_hr, c%ccf%soil4_hr, &
+                     c%cc13s%soil4c, c%ccs%soil4c, &
+                     num_soilc, filter_soilc, 1._r8, 0)
+   
    
 !	call C13FluxCalc(p%pc13f%fx, p%pcf%fx, &
 !                    p%pc13s%sx, p%pcs%sx, &

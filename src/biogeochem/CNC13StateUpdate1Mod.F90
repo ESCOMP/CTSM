@@ -151,6 +151,8 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil2_hr(:)
    real(r8), pointer :: soil2c_to_soil3c(:)
    real(r8), pointer :: soil3_hr(:)
+   real(r8), pointer :: soil3c_to_soil4c(:)
+   real(r8), pointer :: soil4_hr(:)
    real(r8), pointer :: col_ctrunc(:)    ! (gC/m2) column-level sink for C truncation
    integer , pointer :: ivt(:)           ! pft vegetation type
    real(r8), pointer :: deadcrootc_xfer_to_deadcrootc(:)
@@ -223,6 +225,7 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1c(:)        ! (gC/m2) soil organic matter C (fast pool)
    real(r8), pointer :: soil2c(:)        ! (gC/m2) soil organic matter C (medium pool)
    real(r8), pointer :: soil3c(:)        ! (gC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: soil4c(:)        ! (gC/m2) soil organic matter C (slowest pool)
    real(r8), pointer :: cpool(:)              ! (gC/m2) temporary photosynthate C pool
    real(r8), pointer :: xsmrpool(:)           ! (gC/m2) execss maint resp C pool
    real(r8), pointer :: deadcrootc(:)         ! (gC/m2) dead coarse root C
@@ -278,6 +281,8 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil2_hr                       => clm3%g%l%c%cc13f%soil2_hr
     soil2c_to_soil3c               => clm3%g%l%c%cc13f%soil2c_to_soil3c
     soil3_hr                       => clm3%g%l%c%cc13f%soil3_hr
+    soil3c_to_soil4c               => clm3%g%l%c%cc13f%soil3c_to_soil4c
+    soil4_hr                       => clm3%g%l%c%cc13f%soil4_hr
     col_ctrunc                     => clm3%g%l%c%cc13s%col_ctrunc
     cwdc                           => clm3%g%l%c%cc13s%cwdc
     litr1c                         => clm3%g%l%c%cc13s%litr1c
@@ -286,6 +291,7 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil1c                         => clm3%g%l%c%cc13s%soil1c
     soil2c                         => clm3%g%l%c%cc13s%soil2c
     soil3c                         => clm3%g%l%c%cc13s%soil3c
+    soil4c                         => clm3%g%l%c%cc13s%soil4c
 
     ! assign local pointers at the pft level
     ivt                            => clm3%g%l%c%p%itype
@@ -403,6 +409,7 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
        soil1c(c) = soil1c(c) - soil1_hr(c)*dt
        soil2c(c) = soil2c(c) - soil2_hr(c)*dt
        soil3c(c) = soil3c(c) - soil3_hr(c)*dt
+       soil4c(c) = soil4c(c) - soil4_hr(c)*dt
  
        ! CWD to litter fluxes
        cwdc(c)   = cwdc(c)   - cwdc_to_litr2c(c)*dt
@@ -423,6 +430,8 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
        soil2c(c) = soil2c(c) + soil1c_to_soil2c(c)*dt
        soil2c(c) = soil2c(c) - soil2c_to_soil3c(c)*dt
        soil3c(c) = soil3c(c) + soil2c_to_soil3c(c)*dt
+       soil3c(c) = soil3c(c) - soil3c_to_soil4c(c)*dt
+       soil4c(c) = soil4c(c) + soil3c_to_soil4c(c)*dt
  
     end do ! end of columns loop
  

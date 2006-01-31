@@ -71,6 +71,7 @@ subroutine BeginCBalance(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1c(:)        ! (gC/m2) soil organic matter C (fast pool)
    real(r8), pointer :: soil2c(:)        ! (gC/m2) soil organic matter C (medium pool)
    real(r8), pointer :: soil3c(:)        ! (gC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: soil4c(:)        ! (gC/m2) soil organic matter C (slowest pool)
    real(r8), pointer :: cpool(:)              ! (gC/m2) temporary photosynthate C pool
    real(r8), pointer :: xsmrpool(:)           ! (gC/m2) temporary photosynthate C pool
    real(r8), pointer :: deadcrootc(:)         ! (gC/m2) dead coarse root C
@@ -116,6 +117,7 @@ subroutine BeginCBalance(num_soilc, filter_soilc, num_soilp, filter_soilp)
    soil1c                         => clm3%g%l%c%ccs%soil1c
    soil2c                         => clm3%g%l%c%ccs%soil2c
    soil3c                         => clm3%g%l%c%ccs%soil3c
+   soil4c                         => clm3%g%l%c%ccs%soil4c
 
    ! assign local pointers at the pft level
    pft_begcb                      => clm3%g%l%c%p%pcbal%begcb
@@ -154,7 +156,7 @@ subroutine BeginCBalance(num_soilc, filter_soilc, num_soilp, filter_soilp)
  
       col_begcb(c) = cwdc(c) + &
          litr1c(c) + litr2c(c) + litr3c(c) + &
-         soil1c(c) + soil2c(c) + soil3c(c) + &
+         soil1c(c) + soil2c(c) + soil3c(c) + soil4c(c) + &
          col_ctrunc(c)
 
    end do ! end of columns loop
@@ -220,6 +222,7 @@ subroutine BeginNBalance(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1n(:)             ! (gN/m2) soil organic matter N (fast pool)
    real(r8), pointer :: soil2n(:)             ! (gN/m2) soil organic matter N (medium pool)
    real(r8), pointer :: soil3n(:)             ! (gN/m2) soil orgainc matter N (slow pool)
+   real(r8), pointer :: soil4n(:)             ! (gN/m2) soil orgainc matter N (slowest pool)
    real(r8), pointer :: cwdn(:)               ! (gN/m2) coarse woody debris N
    real(r8), pointer :: frootn(:)             ! (gN/m2) fine root N
    real(r8), pointer :: frootn_storage(:)     ! (gN/m2) fine root N storage
@@ -265,6 +268,7 @@ subroutine BeginNBalance(num_soilc, filter_soilc, num_soilp, filter_soilp)
    soil1n                         => clm3%g%l%c%cns%soil1n
    soil2n                         => clm3%g%l%c%cns%soil2n
    soil3n                         => clm3%g%l%c%cns%soil3n
+   soil4n                         => clm3%g%l%c%cns%soil4n
 
    ! assign local pointers at the pft level
    pft_begnb                      => clm3%g%l%c%p%pnbal%begnb
@@ -301,7 +305,7 @@ subroutine BeginNBalance(num_soilc, filter_soilc, num_soilp, filter_soilp)
  
       col_begnb(c) = cwdn(c) + &
         litr1n(c) + litr2n(c) + litr3n(c) + &
-        soil1n(c) + soil2n(c) + soil3n(c) + &
+        soil1n(c) + soil2n(c) + soil3n(c) + soil4n(c) + &
         sminn(c)  + col_ntrunc(c)
 
    end do ! end of columns loop
@@ -368,6 +372,7 @@ subroutine CBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1c(:)     ! (gC/m2) soil organic matter C (fast pool)
    real(r8), pointer :: soil2c(:)     ! (gC/m2) soil organic matter C (medium pool)
    real(r8), pointer :: soil3c(:)     ! (gC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: soil4c(:)     ! (gC/m2) soil organic matter C (slowest pool)
    real(r8), pointer :: col_ctrunc(:) ! (gC/m2) column-level sink for C truncation
    real(r8), pointer :: leafc_to_litr1c(:)
    real(r8), pointer :: leafc_to_litr2c(:)
@@ -407,6 +412,7 @@ subroutine CBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1_hr(:)
    real(r8), pointer :: soil2_hr(:)
    real(r8), pointer :: soil3_hr(:)
+   real(r8), pointer :: soil4_hr(:)
    real(r8), pointer :: m_litr1c_to_fire(:)
    real(r8), pointer :: m_litr2c_to_fire(:)
    real(r8), pointer :: m_litr3c_to_fire(:)
@@ -540,6 +546,7 @@ subroutine CBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil1c                         => clm3%g%l%c%ccs%soil1c
     soil2c                         => clm3%g%l%c%ccs%soil2c
     soil3c                         => clm3%g%l%c%ccs%soil3c
+    soil4c                         => clm3%g%l%c%ccs%soil4c
     col_ctrunc                     => clm3%g%l%c%ccs%col_ctrunc
     leafc_to_litr1c                => clm3%g%l%c%ccf%leafc_to_litr1c
     leafc_to_litr2c                => clm3%g%l%c%ccf%leafc_to_litr2c
@@ -581,6 +588,7 @@ subroutine CBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil1_hr                       => clm3%g%l%c%ccf%soil1_hr
     soil2_hr                       => clm3%g%l%c%ccf%soil2_hr
     soil3_hr                       => clm3%g%l%c%ccf%soil3_hr
+    soil4_hr                       => clm3%g%l%c%ccf%soil4_hr
     m_litr1c_to_fire               => clm3%g%l%c%ccf%m_litr1c_to_fire
     m_litr2c_to_fire               => clm3%g%l%c%ccf%m_litr2c_to_fire
     m_litr3c_to_fire               => clm3%g%l%c%ccf%m_litr3c_to_fire
@@ -706,7 +714,7 @@ subroutine CBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
       ! calculate the total column-level carbon storage, for mass conservation check
 
       col_endcb(c) = cwdc(c) + litr1c(c) + litr2c(c) + litr3c(c) + &
-         soil1c(c) + soil2c(c) + soil3c(c) + col_ctrunc(c)
+         soil1c(c) + soil2c(c) + soil3c(c) + soil4c(c) + col_ctrunc(c)
 
       ! calculate total column-level inputs
 
@@ -736,7 +744,7 @@ subroutine CBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
       col_coutputs(c) = &
          litr1_hr(c)         + litr2_hr(c)         + litr3_hr(c) + &
-         soil1_hr(c)         + soil2_hr(c)         + soil3_hr(c) + &
+         soil1_hr(c)         + soil2_hr(c)         + soil3_hr(c) + soil4_hr(c) + &
          m_litr1c_to_fire(c) + m_litr2c_to_fire(c) + m_litr3c_to_fire(c) + &
          m_cwdc_to_fire(c)
 
@@ -897,6 +905,7 @@ subroutine NBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1n(:)             ! (gN/m2) soil organic matter N (fast pool)
    real(r8), pointer :: soil2n(:)             ! (gN/m2) soil organic matter N (medium pool)
    real(r8), pointer :: soil3n(:)             ! (gN/m2) soil orgainc matter N (slow pool)
+   real(r8), pointer :: soil4n(:)             ! (gN/m2) soil orgainc matter N (slowest pool)
    real(r8), pointer :: sminn(:)              ! (gN/m2) soil mineral N
    real(r8), pointer :: col_ntrunc(:)         ! (gN/m2) column-level sink for N truncation
    real(r8), pointer :: ndep_to_sminn(:)
@@ -938,7 +947,8 @@ subroutine NBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: sminn_to_denit_l3s3(:)
    real(r8), pointer :: sminn_to_denit_s1s2(:)
    real(r8), pointer :: sminn_to_denit_s2s3(:)
-   real(r8), pointer :: sminn_to_denit_s3(:)
+   real(r8), pointer :: sminn_to_denit_s3s4(:)
+   real(r8), pointer :: sminn_to_denit_s4(:)
    real(r8), pointer :: sminn_to_denit_excess(:)
    real(r8), pointer :: sminn_to_plant(:)
    real(r8), pointer :: sminn_leached(:) 
@@ -1043,6 +1053,7 @@ subroutine NBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil1n                         => clm3%g%l%c%cns%soil1n
     soil2n                         => clm3%g%l%c%cns%soil2n
     soil3n                         => clm3%g%l%c%cns%soil3n
+    soil4n                         => clm3%g%l%c%cns%soil4n
     sminn                          => clm3%g%l%c%cns%sminn
     col_ntrunc                     => clm3%g%l%c%cns%col_ntrunc
     ndep_to_sminn                  => clm3%g%l%c%cnf%ndep_to_sminn
@@ -1084,7 +1095,8 @@ subroutine NBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
     sminn_to_denit_l3s3            => clm3%g%l%c%cnf%sminn_to_denit_l3s3
     sminn_to_denit_s1s2            => clm3%g%l%c%cnf%sminn_to_denit_s1s2
     sminn_to_denit_s2s3            => clm3%g%l%c%cnf%sminn_to_denit_s2s3
-    sminn_to_denit_s3              => clm3%g%l%c%cnf%sminn_to_denit_s3
+    sminn_to_denit_s3s4            => clm3%g%l%c%cnf%sminn_to_denit_s3s4
+    sminn_to_denit_s4              => clm3%g%l%c%cnf%sminn_to_denit_s4
     sminn_to_denit_excess          => clm3%g%l%c%cnf%sminn_to_denit_excess
     sminn_to_plant                 => clm3%g%l%c%cnf%sminn_to_plant
     sminn_leached                  => clm3%g%l%c%cnf%sminn_leached
@@ -1185,7 +1197,7 @@ subroutine NBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
       col_endnb(c) = cwdn(c) + &
          litr1n(c) + litr2n(c) + litr3n(c) + &
-         soil1n(c) + soil2n(c) + soil3n(c) + &
+         soil1n(c) + soil2n(c) + soil3n(c) + soil4n(c) + &
          sminn(c)  + col_ntrunc(c)
 
       ! calculate total column-level inputs
@@ -1218,7 +1230,8 @@ subroutine NBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
       col_noutputs(c) = &
          sminn_to_denit_l1s1(c)   + sminn_to_denit_l2s2(c) + sminn_to_denit_l3s3(c) + &
-         sminn_to_denit_s1s2(c)   + sminn_to_denit_s2s3(c) + sminn_to_denit_s3(c)   + &
+         sminn_to_denit_s1s2(c)   + sminn_to_denit_s2s3(c) + sminn_to_denit_s3s4(c) + &
+         sminn_to_denit_s4(c) + &
          sminn_to_denit_excess(c) + sminn_to_plant(c)      + sminn_leached(c)       + &
          m_litr1n_to_fire(c) + m_litr2n_to_fire(c) + m_litr3n_to_fire(c) + &
          m_cwdn_to_fire(c)

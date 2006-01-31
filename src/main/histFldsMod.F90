@@ -624,6 +624,10 @@ contains
          avgflag='A', long_name='temporary photosynthate C pool', &
          ptr_pft=clm3%g%l%c%p%pcs%cpool)
 
+    call add_fld1d (fname='XSMRPOOL', units='gC/m^2', &
+         avgflag='A', long_name='temporary photosynthate C pool', &
+         ptr_pft=clm3%g%l%c%p%pcs%xsmrpool)
+
     call add_fld1d (fname='PFT_CTRUNC', units='gC/m^2', &
          avgflag='A', long_name='pft-level sink for C truncation', &
          ptr_pft=clm3%g%l%c%p%pcs%pft_ctrunc)
@@ -732,6 +736,10 @@ contains
          avgflag='A', long_name='C13 temporary photosynthate C pool', &
          ptr_pft=clm3%g%l%c%p%pc13s%cpool)
 
+    call add_fld1d (fname='C13_XSMRPOOL', units='gC13/m^2', &
+         avgflag='A', long_name='C13 temporary photosynthate C pool', &
+         ptr_pft=clm3%g%l%c%p%pc13s%xsmrpool)
+
     call add_fld1d (fname='C13_PFT_CTRUNC', units='gC13/m^2', &
          avgflag='A', long_name='C13 pft-level sink for C truncation', &
          ptr_pft=clm3%g%l%c%p%pc13s%pft_ctrunc)
@@ -784,6 +792,10 @@ contains
          avgflag='A', long_name='soil organic matter C (slow pool)', &
          ptr_col=clm3%g%l%c%ccs%soil3c)
     
+    call add_fld1d (fname='SOIL4C', units='gC/m^2', &
+         avgflag='A', long_name='soil organic matter C (slowest pool)', &
+         ptr_col=clm3%g%l%c%ccs%soil4c)
+    
     call add_fld1d (fname='COL_CTRUNC', units='gC/m^2', &
          avgflag='A', long_name='column-level sink for C truncation', &
          ptr_col=clm3%g%l%c%ccs%col_ctrunc)
@@ -835,6 +847,10 @@ contains
     call add_fld1d (fname='C13_SOIL3C', units='gC13/m^2', &
          avgflag='A', long_name='C13 soil organic matter C (slow pool)', &
          ptr_col=clm3%g%l%c%cc13s%soil3c)
+    
+    call add_fld1d (fname='C13_SOIL4C', units='gC13/m^2', &
+         avgflag='A', long_name='C13 soil organic matter C (slowest pool)', &
+         ptr_col=clm3%g%l%c%cc13s%soil4c)
     
     call add_fld1d (fname='C13_COL_CTRUNC', units='gC13/m^2', &
          avgflag='A', long_name='C13 column-level sink for C truncation', &
@@ -992,6 +1008,10 @@ contains
          avgflag='A', long_name='soil orgainc matter N (slow pool)', &
          ptr_col=clm3%g%l%c%cns%soil3n)
 
+    call add_fld1d (fname='SOIL4N', units='gN/m^2', &
+         avgflag='A', long_name='soil orgainc matter N (slowest pool)', &
+         ptr_col=clm3%g%l%c%cns%soil4n)
+
     call add_fld1d (fname='SMINN', units='gN/m^2', &
          avgflag='A', long_name='soil mineral N', &
          ptr_col=clm3%g%l%c%cns%sminn)
@@ -1021,395 +1041,395 @@ contains
     !-------------------------------
 
     call add_fld1d (fname='PSNSUN', units='umolCO2/m^2/s', &
-         avgflag='A', long_name='', &
-         ptr_pft=clm3%g%l%c%p%pcf%psnsun, default='inactive')
+         avgflag='A', long_name='sunlit leaf photosynthesis', &
+         ptr_pft=clm3%g%l%c%p%pcf%psnsun)
 
     call add_fld1d (fname='PSNSHA', units='umolCO2/m^2/s', &
-         avgflag='A', long_name='', &
-         ptr_pft=clm3%g%l%c%p%pcf%psnsha, default='inactive')
+         avgflag='A', long_name='shaded leaf photosynthesis', &
+         ptr_pft=clm3%g%l%c%p%pcf%psnsha)
 
     call add_fld1d (fname='M_LEAFC_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_leafc_to_litter, default='inactive')
 
     call add_fld1d (fname='M_FROOTC_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_frootc_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LEAFC_STORAGE_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_leafc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_FROOTC_STORAGE_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_frootc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMC_STORAGE_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMC_STORAGE_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTC_STORAGE_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTC_STORAGE_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LEAFC_XFER_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_leafc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_FROOTC_XFER_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_frootc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMC_XFER_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMC_XFER_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTC_XFER_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTC_XFER_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMC_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMC_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTC_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTC_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_to_litter, default='inactive')
 
     call add_fld1d (fname='M_GRESP_STORAGE_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='growth respiration storage mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_gresp_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_GRESP_XFER_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='growth respiration transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pcf%m_gresp_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LEAFC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_leafc_to_fire, default='inactive')
 
     call add_fld1d (fname='M_FROOTC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_frootc_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LEAFC_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_leafc_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_FROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_frootc_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMC_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMC_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTC_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_storage_to_fire,  default='inactive')
 
     call add_fld1d (fname='M_LEAFC_XFER_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_leafc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_FROOTC_XFER_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_frootc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMC_XFER_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMC_XFER_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTC_XFER_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTC_XFER_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livestemc_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMC_TO_LITTER_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C fire mortality to litter', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadstemc_to_litter_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_livecrootc_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTC_TO_LITTER_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C fire mortality to litter', &
          ptr_pft=clm3%g%l%c%p%pcf%m_deadcrootc_to_litter_fire, default='inactive')
 
     call add_fld1d (fname='M_GRESP_STORAGE_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='growth respiration storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_gresp_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_GRESP_XFER_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='growth respiration transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%m_gresp_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='LEAFC_XFER_TO_LEAFC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%leafc_xfer_to_leafc, default='inactive')
 
     call add_fld1d (fname='FROOTC_XFER_TO_FROOTC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%frootc_xfer_to_frootc, default='inactive')
 
     call add_fld1d (fname='LIVESTEMC_XFER_TO_LIVESTEMC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%livestemc_xfer_to_livestemc, default='inactive')
 
     call add_fld1d (fname='DEADSTEMC_XFER_TO_DEADSTEMC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%deadstemc_xfer_to_deadstemc, default='inactive')
 
     call add_fld1d (fname='LIVECROOTC_XFER_TO_LIVECROOTC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%livecrootc_xfer_to_livecrootc, default='inactive')
 
     call add_fld1d (fname='DEADCROOTC_XFER_TO_DEADCROOTC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%deadcrootc_xfer_to_deadcrootc, default='inactive')
 
     call add_fld1d (fname='LEAFC_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C litterfall', &
          ptr_pft=clm3%g%l%c%p%pcf%leafc_to_litter, default='inactive')
 
     call add_fld1d (fname='FROOTC_TO_LITTER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C litterfall', &
          ptr_pft=clm3%g%l%c%p%pcf%frootc_to_litter, default='inactive')
 
     call add_fld1d (fname='LEAF_MR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf maintenance respiration', &
          ptr_pft=clm3%g%l%c%p%pcf%leaf_mr, default='inactive')
 
     call add_fld1d (fname='FROOT_MR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root maintenance respiration', &
          ptr_pft=clm3%g%l%c%p%pcf%froot_mr, default='inactive')
 
     call add_fld1d (fname='LIVESTEM_MR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem maintenance respiration', &
          ptr_pft=clm3%g%l%c%p%pcf%livestem_mr, default='inactive')
 
     call add_fld1d (fname='LIVECROOT_MR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root maintenance respiration', &
          ptr_pft=clm3%g%l%c%p%pcf%livecroot_mr, default='inactive')
 
     call add_fld1d (fname='PSNSUN_TO_CPOOL', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
-         ptr_pft=clm3%g%l%c%p%pcf%psnsun_to_cpool, default='inactive')
+         avgflag='A', long_name='C fixation from sunlit canopy', &
+         ptr_pft=clm3%g%l%c%p%pcf%psnsun_to_cpool)
 
     call add_fld1d (fname='PSNSHADE_TO_CPOOL', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
-         ptr_pft=clm3%g%l%c%p%pcf%psnshade_to_cpool, default='inactive')
+         avgflag='A', long_name='C fixation from shaded canopy', &
+         ptr_pft=clm3%g%l%c%p%pcf%psnshade_to_cpool)
 
     call add_fld1d (fname='CPOOL_TO_LEAFC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to leaf C', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_leafc, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_LEAFC_STORAGE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to leaf C storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_leafc_storage, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_FROOTC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to fine root C', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_frootc, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_FROOTC_STORAGE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to fine root C storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_frootc_storage, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_LIVESTEMC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to live stem C', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_livestemc, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_LIVESTEMC_STORAGE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to live stem C storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_livestemc_storage, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_DEADSTEMC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to dead stem C', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_deadstemc, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_DEADSTEMC_STORAGE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to dead stem C storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_deadstemc_storage, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_LIVECROOTC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to live coarse root C', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_livecrootc, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_LIVECROOTC_STORAGE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to live coarse root C storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_livecrootc_storage, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_DEADCROOTC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to dead coarse root C', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_deadcrootc, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_DEADCROOTC_STORAGE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to dead coarse root C storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_deadcrootc_storage, default='inactive')
 
     call add_fld1d (fname='CPOOL_TO_GRESP_STORAGE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to growth respiration storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_to_gresp_storage, default='inactive')
 
     call add_fld1d (fname='CPOOL_LEAF_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf growth respiration', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_leaf_gr, default='inactive')
 
     call add_fld1d (fname='CPOOL_LEAF_STORAGE_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_leaf_storage_gr, default='inactive')
 
     call add_fld1d (fname='TRANSFER_LEAF_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%transfer_leaf_gr, default='inactive')
 
     call add_fld1d (fname='CPOOL_FROOT_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root growth respiration', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_froot_gr, default='inactive')
 
     call add_fld1d (fname='CPOOL_FROOT_STORAGE_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root  growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_froot_storage_gr, default='inactive')
 
     call add_fld1d (fname='TRANSFER_FROOT_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root  growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%transfer_froot_gr, default='inactive')
 
     call add_fld1d (fname='CPOOL_LIVESTEM_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem growth respiration', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_livestem_gr, default='inactive')
 
     call add_fld1d (fname='CPOOL_LIVESTEM_STORAGE_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_livestem_storage_gr, default='inactive')
 
     call add_fld1d (fname='TRANSFER_LIVESTEM_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%transfer_livestem_gr, default='inactive')
 
     call add_fld1d (fname='CPOOL_DEADSTEM_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem growth respiration', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_deadstem_gr, default='inactive')
 
     call add_fld1d (fname='CPOOL_DEADSTEM_STORAGE_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_deadstem_storage_gr, default='inactive')
 
     call add_fld1d (fname='TRANSFER_DEADSTEM_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%transfer_deadstem_gr, default='inactive')
 
     call add_fld1d (fname='CPOOL_LIVECROOT_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root growth respiration', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_livecroot_gr, default='inactive')
 
     call add_fld1d (fname='CPOOL_LIVECROOT_STORAGE_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_livecroot_storage_gr, default='inactive')
 
     call add_fld1d (fname='TRANSFER_LIVECROOT_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%transfer_livecroot_gr, default='inactive')
 
     call add_fld1d (fname='CPOOL_DEADCROOT_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root growth respiration', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_deadcroot_gr, default='inactive')
 
     call add_fld1d (fname='CPOOL_DEADCROOT_STORAGE_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pcf%cpool_deadcroot_storage_gr, default='inactive')
 
     call add_fld1d (fname='TRANSFER_DEADCROOT_GR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pcf%transfer_deadcroot_gr, default='inactive')
 
     call add_fld1d (fname='LEAFC_STORAGE_TO_XFER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pcf%leafc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='FROOTC_STORAGE_TO_XFER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pcf%frootc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='LIVESTEMC_STORAGE_TO_XFER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pcf%livestemc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='DEADSTEMC_STORAGE_TO_XFER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pcf%deadstemc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='LIVECROOTC_STORAGE_TO_XFER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pcf%livecrootc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='DEADCROOTC_STORAGE_TO_XFER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pcf%deadcrootc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='GRESP_STORAGE_TO_XFER', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='growth respiration shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pcf%gresp_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='LIVESTEMC_TO_DEADSTEMC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C turnover', &
          ptr_pft=clm3%g%l%c%p%pcf%livestemc_to_deadstemc, default='inactive')
 
     call add_fld1d (fname='LIVECROOTC_TO_DEADCROOTC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C turnover', &
          ptr_pft=clm3%g%l%c%p%pcf%livecrootc_to_deadcrootc, default='inactive')
 
     call add_fld1d (fname='GPP', units='gC/m^2/s', &
@@ -1473,395 +1493,395 @@ contains
     !-------------------------------
 
     call add_fld1d (fname='C13_PSNSUN', units='umolCO2/m^2/s', &
-         avgflag='A', long_name='C13 ', &
-         ptr_pft=clm3%g%l%c%p%pc13f%psnsun, default='inactive')
+         avgflag='A', long_name='C13 sunlit leaf photosynthesis', &
+         ptr_pft=clm3%g%l%c%p%pc13f%psnsun)
 
     call add_fld1d (fname='C13_PSNSHA', units='umolCO2/m^2/s', &
-         avgflag='A', long_name='C13 ', &
-         ptr_pft=clm3%g%l%c%p%pc13f%psnsha, default='inactive')
+         avgflag='A', long_name='C13 shaded leaf photosynthesis', &
+         ptr_pft=clm3%g%l%c%p%pc13f%psnsha)
 
     call add_fld1d (fname='C13_M_LEAFC_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_FROOTC_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_LEAFC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_FROOTC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVESTEMC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADSTEMC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVECROOTC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADCROOTC_STORAGE_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C storage mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_LEAFC_XFER_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_FROOTC_XFER_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVESTEMC_XFER_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADSTEMC_XFER_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVECROOTC_XFER_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADCROOTC_XFER_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVESTEMC_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADSTEMC_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVECROOTC_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADCROOTC_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_GRESP_STORAGE_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 growth respiration storage mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_gresp_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_GRESP_XFER_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 growth respiration transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_gresp_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_M_LEAFC_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_FROOTC_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_LEAFC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_FROOTC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVESTEMC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADSTEMC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVECROOTC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADCROOTC_STORAGE_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_storage_to_fire,  default='inactive')
 
     call add_fld1d (fname='C13_M_LEAFC_XFER_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_leafc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_FROOTC_XFER_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_frootc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVESTEMC_XFER_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADSTEMC_XFER_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVECROOTC_XFER_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADCROOTC_XFER_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVESTEMC_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livestemc_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADSTEMC_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADSTEMC_TO_LITTER_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C fire mortality to litter', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadstemc_to_litter_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVECROOTC_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_livecrootc_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADCROOTC_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADCROOTC_TO_LITTER_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C fire mortality to litter', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_deadcrootc_to_litter_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_GRESP_STORAGE_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 growth respiration storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_gresp_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_GRESP_XFER_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 growth respiration transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%m_gresp_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_LEAFC_XFER_TO_LEAFC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%leafc_xfer_to_leafc, default='inactive')
 
     call add_fld1d (fname='C13_FROOTC_XFER_TO_FROOTC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%frootc_xfer_to_frootc, default='inactive')
 
     call add_fld1d (fname='C13_LIVESTEMC_XFER_TO_LIVESTEMC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%livestemc_xfer_to_livestemc, default='inactive')
 
     call add_fld1d (fname='C13_DEADSTEMC_XFER_TO_DEADSTEMC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%deadstemc_xfer_to_deadstemc, default='inactive')
 
     call add_fld1d (fname='C13_LIVECROOTC_XFER_TO_LIVECROOTC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%livecrootc_xfer_to_livecrootc, default='inactive')
 
     call add_fld1d (fname='C13_DEADCROOTC_XFER_TO_DEADCROOTC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C growth from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%deadcrootc_xfer_to_deadcrootc, default='inactive')
 
     call add_fld1d (fname='C13_LEAFC_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C litterfall', &
          ptr_pft=clm3%g%l%c%p%pc13f%leafc_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_FROOTC_TO_LITTER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C litterfall', &
          ptr_pft=clm3%g%l%c%p%pc13f%frootc_to_litter, default='inactive')
 
     call add_fld1d (fname='C13_LEAF_MR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf maintenance respiration', &
          ptr_pft=clm3%g%l%c%p%pc13f%leaf_mr, default='inactive')
 
     call add_fld1d (fname='C13_FROOT_MR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root maintenance respiration', &
          ptr_pft=clm3%g%l%c%p%pc13f%froot_mr, default='inactive')
 
     call add_fld1d (fname='C13_LIVESTEM_MR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem maintenance respiration', &
          ptr_pft=clm3%g%l%c%p%pc13f%livestem_mr, default='inactive')
 
     call add_fld1d (fname='C13_LIVECROOT_MR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root maintenance respiration', &
          ptr_pft=clm3%g%l%c%p%pc13f%livecroot_mr, default='inactive')
 
     call add_fld1d (fname='C13_PSNSUN_TO_CPOOL', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
-         ptr_pft=clm3%g%l%c%p%pc13f%psnsun_to_cpool, default='inactive')
+         avgflag='A', long_name='C13 C fixation from sunlit canopy', &
+         ptr_pft=clm3%g%l%c%p%pc13f%psnsun_to_cpool)
 
     call add_fld1d (fname='C13_PSNSHADE_TO_CPOOL', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
-         ptr_pft=clm3%g%l%c%p%pc13f%psnshade_to_cpool, default='inactive')
+         avgflag='A', long_name='C13 C fixation from shaded canopy', &
+         ptr_pft=clm3%g%l%c%p%pc13f%psnshade_to_cpool)
 
     call add_fld1d (fname='C13_CPOOL_TO_LEAFC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to leaf C', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_leafc, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_LEAFC_STORAGE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to leaf C storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_leafc_storage, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_FROOTC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to fine root C', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_frootc, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_FROOTC_STORAGE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to fine root C storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_frootc_storage, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_LIVESTEMC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to live stem C', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_livestemc, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_LIVESTEMC_STORAGE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to live stem C storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_livestemc_storage, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_DEADSTEMC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to dead stem C', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_deadstemc, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_DEADSTEMC_STORAGE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to dead stem C storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_deadstemc_storage, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_LIVECROOTC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to live coarse root C', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_livecrootc, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_LIVECROOTC_STORAGE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to live coarse root C storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_livecrootc_storage, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_DEADCROOTC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to dead coarse root C', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_deadcrootc, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_DEADCROOTC_STORAGE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to dead coarse root C storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_deadcrootc_storage, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_TO_GRESP_STORAGE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 allocation to growth respiration storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_to_gresp_storage, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_LEAF_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf growth respiration', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_leaf_gr, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_LEAF_STORAGE_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_leaf_storage_gr, default='inactive')
 
     call add_fld1d (fname='C13_TRANSFER_LEAF_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%transfer_leaf_gr, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_FROOT_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root growth respiration', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_froot_gr, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_FROOT_STORAGE_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root  growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_froot_storage_gr, default='inactive')
 
     call add_fld1d (fname='C13_TRANSFER_FROOT_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root  growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%transfer_froot_gr, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_LIVESTEM_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem growth respiration', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_livestem_gr, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_LIVESTEM_STORAGE_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_livestem_storage_gr, default='inactive')
 
     call add_fld1d (fname='C13_TRANSFER_LIVESTEM_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%transfer_livestem_gr, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_DEADSTEM_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem growth respiration', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_deadstem_gr, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_DEADSTEM_STORAGE_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_deadstem_storage_gr, default='inactive')
 
     call add_fld1d (fname='C13_TRANSFER_DEADSTEM_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%transfer_deadstem_gr, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_LIVECROOT_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root growth respiration', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_livecroot_gr, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_LIVECROOT_STORAGE_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_livecroot_storage_gr, default='inactive')
 
     call add_fld1d (fname='C13_TRANSFER_LIVECROOT_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%transfer_livecroot_gr, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_DEADCROOT_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root growth respiration', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_deadcroot_gr, default='inactive')
 
     call add_fld1d (fname='C13_CPOOL_DEADCROOT_STORAGE_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root growth respiration to storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%cpool_deadcroot_storage_gr, default='inactive')
 
     call add_fld1d (fname='C13_TRANSFER_DEADCROOT_GR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root growth respiration from storage', &
          ptr_pft=clm3%g%l%c%p%pc13f%transfer_deadcroot_gr, default='inactive')
 
     call add_fld1d (fname='C13_LEAFC_STORAGE_TO_XFER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pc13f%leafc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='C13_FROOTC_STORAGE_TO_XFER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pc13f%frootc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='C13_LIVESTEMC_STORAGE_TO_XFER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pc13f%livestemc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='C13_DEADSTEMC_STORAGE_TO_XFER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pc13f%deadstemc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='C13_LIVECROOTC_STORAGE_TO_XFER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pc13f%livecrootc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='C13_DEADCROOTC_STORAGE_TO_XFER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pc13f%deadcrootc_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='C13_GRESP_STORAGE_TO_XFER', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 growth respiration shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pc13f%gresp_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='C13_LIVESTEMC_TO_DEADSTEMC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C turnover', &
          ptr_pft=clm3%g%l%c%p%pc13f%livestemc_to_deadstemc, default='inactive')
 
     call add_fld1d (fname='C13_LIVECROOTC_TO_DEADCROOTC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C turnover', &
          ptr_pft=clm3%g%l%c%p%pc13f%livecrootc_to_deadcrootc, default='inactive')
 
     call add_fld1d (fname='C13_GPP', units='gC13/m^2/s', &
@@ -1925,200 +1945,208 @@ contains
     !-------------------------------
 
     call add_fld1d (fname='M_LEAFC_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_leafc_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_LEAFC_TO_LITR2C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C mortality to litter 2 C', &
          ptr_col=clm3%g%l%c%ccf%m_leafc_to_litr2c, default='inactive')
 
     call add_fld1d (fname='M_LEAFC_TO_LITR3C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C mortality to litter 3 C', &
          ptr_col=clm3%g%l%c%ccf%m_leafc_to_litr3c, default='inactive')
 
     call add_fld1d (fname='M_FROOTC_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_frootc_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_FROOTC_TO_LITR2C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C mortality to litter 2 C', &
          ptr_col=clm3%g%l%c%ccf%m_frootc_to_litr2c, default='inactive')
 
     call add_fld1d (fname='M_FROOTC_TO_LITR3C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C mortality to litter 3 C', &
          ptr_col=clm3%g%l%c%ccf%m_frootc_to_litr3c, default='inactive')
 
     call add_fld1d (fname='M_LEAFC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_leafc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_FROOTC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_frootc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_livestemc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_deadstemc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_livecrootc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTC_STORAGE_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_deadcrootc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_LEAFC_XFER_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_leafc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_FROOTC_XFER_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_frootc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMC_XFER_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_livestemc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMC_XFER_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_deadstemc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTC_XFER_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_livecrootc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTC_XFER_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_deadcrootc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMC_TO_CWDC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem C mortality to coarse woody debris C', &
          ptr_col=clm3%g%l%c%ccf%m_livestemc_to_cwdc, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMC_TO_CWDC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C mortality to coarse woody debris C', &
          ptr_col=clm3%g%l%c%ccf%m_deadstemc_to_cwdc, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTC_TO_CWDC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root C mortality to coarse woody debris C', &
          ptr_col=clm3%g%l%c%ccf%m_livecrootc_to_cwdc, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTC_TO_CWDC', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C mortality to coarse woody debris C', &
          ptr_col=clm3%g%l%c%ccf%m_deadcrootc_to_cwdc, default='inactive')
 
     call add_fld1d (fname='M_GRESP_STORAGE_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='growth respiration storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_gresp_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_GRESP_XFER_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='growth respiration transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%m_gresp_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMC_TO_CWDC_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem C to coarse woody debris C by fire', &
          ptr_col=clm3%g%l%c%ccf%m_deadstemc_to_cwdc_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTC_TO_CWDC_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root C to to woody debris C by fire', &
          ptr_col=clm3%g%l%c%ccf%m_deadcrootc_to_cwdc_fire, default='inactive')
 
     call add_fld1d (fname='M_LITR1C_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='litter 1 C fire loss', &
          ptr_col=clm3%g%l%c%ccf%m_litr1c_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LITR2C_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='litter 2 C fire loss', &
          ptr_col=clm3%g%l%c%ccf%m_litr2c_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LITR3C_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='litter 3 C fire loss', &
          ptr_col=clm3%g%l%c%ccf%m_litr3c_to_fire, default='inactive')
 
     call add_fld1d (fname='M_CWDC_TO_FIRE', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='coarse woody debris C fire loss', &
          ptr_col=clm3%g%l%c%ccf%m_cwdc_to_fire, default='inactive')
 
     call add_fld1d (fname='LEAFC_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C litterfall to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%leafc_to_litr1c, default='inactive')
 
     call add_fld1d (fname='LEAFC_TO_LITR2C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C litterfall to litter 2 C', &
          ptr_col=clm3%g%l%c%ccf%leafc_to_litr2c, default='inactive')
 
     call add_fld1d (fname='LEAFC_TO_LITR3C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf C litterfall to litter 3 C', &
          ptr_col=clm3%g%l%c%ccf%leafc_to_litr3c, default='inactive')
 
     call add_fld1d (fname='FROOTC_TO_LITR1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C litterfall to litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%frootc_to_litr1c, default='inactive')
 
     call add_fld1d (fname='FROOTC_TO_LITR2C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C litterfall to litter 2 C', &
          ptr_col=clm3%g%l%c%ccf%frootc_to_litr2c, default='inactive')
 
     call add_fld1d (fname='FROOTC_TO_LITR3C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root C litterfall to litter 3 C', &
          ptr_col=clm3%g%l%c%ccf%frootc_to_litr3c, default='inactive')
 
     call add_fld1d (fname='CWDC_TO_LITR2C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of coarse woody debris C to litter 2 C', &
          ptr_col=clm3%g%l%c%ccf%cwdc_to_litr2c, default='inactive')
 
     call add_fld1d (fname='CWDC_TO_LITR3C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of coarse woody debris C to litter 3 C', &
          ptr_col=clm3%g%l%c%ccf%cwdc_to_litr3c, default='inactive')
 
     call add_fld1d (fname='LITR1_HR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='het. resp. from litter 1 C', &
          ptr_col=clm3%g%l%c%ccf%litr1_hr, default='inactive')
 
     call add_fld1d (fname='LITR1C_TO_SOIL1C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of litter 1 C to SOM 1 C', &
          ptr_col=clm3%g%l%c%ccf%litr1c_to_soil1c, default='inactive')
 
     call add_fld1d (fname='LITR2_HR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='het. resp. from litter 2 C', &
          ptr_col=clm3%g%l%c%ccf%litr2_hr, default='inactive')
 
     call add_fld1d (fname='LITR2C_TO_SOIL2C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of litter 2 C to SOM 2 C', &
          ptr_col=clm3%g%l%c%ccf%litr2c_to_soil2c, default='inactive')
 
     call add_fld1d (fname='LITR3_HR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='het. resp. from litter 3 C', &
          ptr_col=clm3%g%l%c%ccf%litr3_hr, default='inactive')
 
     call add_fld1d (fname='LITR3C_TO_SOIL3C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of litter 3 C to SOM 3 C', &
          ptr_col=clm3%g%l%c%ccf%litr3c_to_soil3c, default='inactive')
 
     call add_fld1d (fname='SOIL1_HR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='het. resp. from SOM 1 C', &
          ptr_col=clm3%g%l%c%ccf%soil1_hr, default='inactive')
 
     call add_fld1d (fname='SOIL1C_TO_SOIL2C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of SOM 1 C to SOM 2 C', &
          ptr_col=clm3%g%l%c%ccf%soil1c_to_soil2c, default='inactive')
 
     call add_fld1d (fname='SOIL2_HR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='het. resp. from SOM 2 C', &
          ptr_col=clm3%g%l%c%ccf%soil2_hr, default='inactive')
 
     call add_fld1d (fname='SOIL2C_TO_SOIL3C', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of SOM 2 C to SOM 3 C', &
          ptr_col=clm3%g%l%c%ccf%soil2c_to_soil3c, default='inactive')
 
     call add_fld1d (fname='SOIL3_HR', units='gC/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='het. resp. from SOM 3 C', &
          ptr_col=clm3%g%l%c%ccf%soil3_hr, default='inactive')
+
+    call add_fld1d (fname='SOIL3C_TO_SOIL4C', units='gC/m^2/s', &
+         avgflag='A', long_name='decomp. of SOM 3 C to SOM 4 C', &
+         ptr_col=clm3%g%l%c%ccf%soil3c_to_soil4c, default='inactive')
+
+    call add_fld1d (fname='SOIL4_HR', units='gC/m^2/s', &
+         avgflag='A', long_name='het. resp. from SOM 4 C', &
+         ptr_col=clm3%g%l%c%ccf%soil4_hr, default='inactive')
 
     call add_fld1d (fname='LITHR', units='gC/m^2/s', &
          avgflag='A', long_name='litter heterotrophic respiration', &
@@ -2169,200 +2197,208 @@ contains
     !-------------------------------
 
     call add_fld1d (fname='C13_M_LEAFC_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_leafc_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_LEAFC_TO_LITR2C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C mortality to litter 2 C', &
          ptr_col=clm3%g%l%c%cc13f%m_leafc_to_litr2c, default='inactive')
 
     call add_fld1d (fname='C13_M_LEAFC_TO_LITR3C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C mortality to litter 3 C', &
          ptr_col=clm3%g%l%c%cc13f%m_leafc_to_litr3c, default='inactive')
 
     call add_fld1d (fname='C13_M_FROOTC_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_frootc_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_FROOTC_TO_LITR2C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C mortality to litter 2 C', &
          ptr_col=clm3%g%l%c%cc13f%m_frootc_to_litr2c, default='inactive')
 
     call add_fld1d (fname='C13_M_FROOTC_TO_LITR3C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C mortality to litter 3 C', &
          ptr_col=clm3%g%l%c%cc13f%m_frootc_to_litr3c, default='inactive')
 
     call add_fld1d (fname='C13_M_LEAFC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_leafc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_FROOTC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_frootc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVESTEMC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_livestemc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADSTEMC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_deadstemc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVECROOTC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_livecrootc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADCROOTC_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_LEAFC_XFER_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_leafc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_FROOTC_XFER_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_frootc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVESTEMC_XFER_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_livestemc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADSTEMC_XFER_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_deadstemc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVECROOTC_XFER_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_livecrootc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADCROOTC_XFER_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVESTEMC_TO_CWDC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live stem C mortality to coarse woody debris C', &
          ptr_col=clm3%g%l%c%cc13f%m_livestemc_to_cwdc, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADSTEMC_TO_CWDC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C mortality to coarse woody debris C', &
          ptr_col=clm3%g%l%c%cc13f%m_deadstemc_to_cwdc, default='inactive')
 
     call add_fld1d (fname='C13_M_LIVECROOTC_TO_CWDC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 live coarse root C mortality to coarse woody debris C', &
          ptr_col=clm3%g%l%c%cc13f%m_livecrootc_to_cwdc, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADCROOTC_TO_CWDC', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C mortality to coarse woody debris C', &
          ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_to_cwdc, default='inactive')
 
     call add_fld1d (fname='C13_M_GRESP_STORAGE_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 growth respiration storage mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_gresp_storage_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_GRESP_XFER_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 growth respiration transfer mortality to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%m_gresp_xfer_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADSTEMC_TO_CWDC_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead stem C to coarse woody debris C by fire', &
          ptr_col=clm3%g%l%c%cc13f%m_deadstemc_to_cwdc_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_DEADCROOTC_TO_CWDC_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 dead coarse root C to to woody debris C by fire', &
          ptr_col=clm3%g%l%c%cc13f%m_deadcrootc_to_cwdc_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_LITR1C_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 litter 1 C fire loss', &
          ptr_col=clm3%g%l%c%cc13f%m_litr1c_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_LITR2C_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 litter 2 C fire loss', &
          ptr_col=clm3%g%l%c%cc13f%m_litr2c_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_LITR3C_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 litter 3 C fire loss', &
          ptr_col=clm3%g%l%c%cc13f%m_litr3c_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_M_CWDC_TO_FIRE', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 coarse woody debris C fire loss', &
          ptr_col=clm3%g%l%c%cc13f%m_cwdc_to_fire, default='inactive')
 
     call add_fld1d (fname='C13_LEAFC_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C litterfall to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%leafc_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_LEAFC_TO_LITR2C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C litterfall to litter 2 C', &
          ptr_col=clm3%g%l%c%cc13f%leafc_to_litr2c, default='inactive')
 
     call add_fld1d (fname='C13_LEAFC_TO_LITR3C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 leaf C litterfall to litter 3 C', &
          ptr_col=clm3%g%l%c%cc13f%leafc_to_litr3c, default='inactive')
 
     call add_fld1d (fname='C13_FROOTC_TO_LITR1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C litterfall to litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%frootc_to_litr1c, default='inactive')
 
     call add_fld1d (fname='C13_FROOTC_TO_LITR2C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C litterfall to litter 2 C', &
          ptr_col=clm3%g%l%c%cc13f%frootc_to_litr2c, default='inactive')
 
     call add_fld1d (fname='C13_FROOTC_TO_LITR3C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 fine root C litterfall to litter 3 C', &
          ptr_col=clm3%g%l%c%cc13f%frootc_to_litr3c, default='inactive')
 
     call add_fld1d (fname='C13_CWDC_TO_LITR2C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 decomp. of coarse woody debris C to litter 2 C', &
          ptr_col=clm3%g%l%c%cc13f%cwdc_to_litr2c, default='inactive')
 
     call add_fld1d (fname='C13_CWDC_TO_LITR3C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 decomp. of coarse woody debris C to litter 3 C', &
          ptr_col=clm3%g%l%c%cc13f%cwdc_to_litr3c, default='inactive')
 
     call add_fld1d (fname='C13_LITR1_HR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 het. resp. from litter 1 C', &
          ptr_col=clm3%g%l%c%cc13f%litr1_hr, default='inactive')
 
     call add_fld1d (fname='C13_LITR1C_TO_SOIL1C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 decomp. of litter 1 C to SOM 1 C', &
          ptr_col=clm3%g%l%c%cc13f%litr1c_to_soil1c, default='inactive')
 
     call add_fld1d (fname='C13_LITR2_HR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 het. resp. from litter 2 C', &
          ptr_col=clm3%g%l%c%cc13f%litr2_hr, default='inactive')
 
     call add_fld1d (fname='C13_LITR2C_TO_SOIL2C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 decomp. of litter 2 C to SOM 2 C', &
          ptr_col=clm3%g%l%c%cc13f%litr2c_to_soil2c, default='inactive')
 
     call add_fld1d (fname='C13_LITR3_HR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 het. resp. from litter 3 C', &
          ptr_col=clm3%g%l%c%cc13f%litr3_hr, default='inactive')
 
     call add_fld1d (fname='C13_LITR3C_TO_SOIL3C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 decomp. of litter 3 C to SOM 3 C', &
          ptr_col=clm3%g%l%c%cc13f%litr3c_to_soil3c, default='inactive')
 
     call add_fld1d (fname='C13_SOIL1_HR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 het. resp. from SOM 1 C', &
          ptr_col=clm3%g%l%c%cc13f%soil1_hr, default='inactive')
 
     call add_fld1d (fname='C13_SOIL1C_TO_SOIL2C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 decomp. of SOM 1 C to SOM 2 C', &
          ptr_col=clm3%g%l%c%cc13f%soil1c_to_soil2c, default='inactive')
 
     call add_fld1d (fname='C13_SOIL2_HR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 het. resp. from SOM 2 C', &
          ptr_col=clm3%g%l%c%cc13f%soil2_hr, default='inactive')
 
     call add_fld1d (fname='C13_SOIL2C_TO_SOIL3C', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 decomp. of SOM 2 C to SOM 3 C', &
          ptr_col=clm3%g%l%c%cc13f%soil2c_to_soil3c, default='inactive')
 
     call add_fld1d (fname='C13_SOIL3_HR', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 ', &
+         avgflag='A', long_name='C13 het. resp. from SOM 3 C', &
          ptr_col=clm3%g%l%c%cc13f%soil3_hr, default='inactive')
+
+    call add_fld1d (fname='C13_SOIL3C_TO_SOIL4C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 decomp. of SOM 3 C to SOM 4 C', &
+         ptr_col=clm3%g%l%c%cc13f%soil3c_to_soil4c, default='inactive')
+
+    call add_fld1d (fname='C13_SOIL4_HR', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 het. resp. from SOM 4 C', &
+         ptr_col=clm3%g%l%c%cc13f%soil4_hr, default='inactive')
 
     call add_fld1d (fname='C13_LITHR', units='gC13/m^2/s', &
          avgflag='A', long_name='C13 litter heterotrophic respiration', &
@@ -2413,295 +2449,295 @@ contains
     !-------------------------------
 
     call add_fld1d (fname='M_LEAFN_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_leafn_to_litter, default='inactive')
 
     call add_fld1d (fname='M_FROOTN_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_frootn_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LEAFN_STORAGE_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N storage mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_leafn_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_FROOTN_STORAGE_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N storage mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_frootn_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMN_STORAGE_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N storage mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMN_STORAGE_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N storage mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTN_STORAGE_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N storage mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTN_STORAGE_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N storage mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_storage_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LEAFN_XFER_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_leafn_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_FROOTN_XFER_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_frootn_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMN_XFER_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMN_XFER_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTN_XFER_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTN_XFER_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N transfer mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_xfer_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMN_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMN_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTN_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_to_litter, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTN_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_to_litter, default='inactive')
 
     call add_fld1d (fname='M_RETRANSN_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='retranslocated N pool mortality', &
          ptr_pft=clm3%g%l%c%p%pnf%m_retransn_to_litter, default='inactive')
 
     call add_fld1d (fname='M_LEAFN_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_leafn_to_fire, default='inactive')
 
     call add_fld1d (fname='M_FROOTN_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N fire loss ', &
          ptr_pft=clm3%g%l%c%p%pnf%m_frootn_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LEAFN_STORAGE_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_leafn_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_FROOTN_STORAGE_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_frootn_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMN_STORAGE_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMN_STORAGE_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTN_STORAGE_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTN_STORAGE_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N storage fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_storage_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LEAFN_XFER_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_leafn_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_FROOTN_XFER_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_frootn_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMN_XFER_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMN_XFER_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTN_XFER_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTN_XFER_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N transfer fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_xfer_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMN_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livestemn_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMN_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMN_TO_LITTER_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N fire mortality to litter', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadstemn_to_litter_fire, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTN_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_livecrootn_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTN_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_to_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTN_TO_LITTER_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N fire mortality to litter', &
          ptr_pft=clm3%g%l%c%p%pnf%m_deadcrootn_to_litter_fire, default='inactive')
 
     call add_fld1d (fname='M_RETRANSN_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='retranslocated N pool fire loss', &
          ptr_pft=clm3%g%l%c%p%pnf%m_retransn_to_fire, default='inactive')
 
     call add_fld1d (fname='LEAFN_XFER_TO_LEAFN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N growth from storage', &
          ptr_pft=clm3%g%l%c%p%pnf%leafn_xfer_to_leafn, default='inactive')
 
     call add_fld1d (fname='FROOTN_XFER_TO_FROOTN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N growth from storage', &
          ptr_pft=clm3%g%l%c%p%pnf%frootn_xfer_to_frootn, default='inactive')
 
     call add_fld1d (fname='LIVESTEMN_XFER_TO_LIVESTEMN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N growth from storage', &
          ptr_pft=clm3%g%l%c%p%pnf%livestemn_xfer_to_livestemn, default='inactive')
 
     call add_fld1d (fname='DEADSTEMN_XFER_TO_DEADSTEMN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N growth from storage', &
          ptr_pft=clm3%g%l%c%p%pnf%deadstemn_xfer_to_deadstemn, default='inactive')
 
     call add_fld1d (fname='LIVECROOTN_XFER_TO_LIVECROOTN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N growth from storage', &
          ptr_pft=clm3%g%l%c%p%pnf%livecrootn_xfer_to_livecrootn, default='inactive')
 
     call add_fld1d (fname='DEADCROOTN_XFER_TO_DEADCROOTN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N growth from storage', &
          ptr_pft=clm3%g%l%c%p%pnf%deadcrootn_xfer_to_deadcrootn, default='inactive')
 
     call add_fld1d (fname='LEAFN_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N litterfall', &
          ptr_pft=clm3%g%l%c%p%pnf%leafn_to_litter, default='inactive')
 
     call add_fld1d (fname='LEAFN_TO_RETRANSN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N to retranslocated N pool', &
          ptr_pft=clm3%g%l%c%p%pnf%leafn_to_retransn, default='inactive')
 
     call add_fld1d (fname='FROOTN_TO_LITTER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N litterfall', &
          ptr_pft=clm3%g%l%c%p%pnf%frootn_to_litter, default='inactive')
 
     call add_fld1d (fname='RETRANSN_TO_NPOOL', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
-         ptr_pft=clm3%g%l%c%p%pnf%retransn_to_npool, default='inactive')
+         avgflag='A', long_name='deployment of retranslocated N', &
+         ptr_pft=clm3%g%l%c%p%pnf%retransn_to_npool)
 
     call add_fld1d (fname='SMINN_TO_NPOOL', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
-         ptr_pft=clm3%g%l%c%p%pnf%sminn_to_npool, default='inactive')
+         avgflag='A', long_name='deployment of soil mineral N uptake', &
+         ptr_pft=clm3%g%l%c%p%pnf%sminn_to_npool)
 
     call add_fld1d (fname='NPOOL_TO_LEAFN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to leaf N', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_leafn, default='inactive')
 
     call add_fld1d (fname='NPOOL_TO_LEAFN_STORAGE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to leaf N storage', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_leafn_storage, default='inactive')
 
     call add_fld1d (fname='NPOOL_TO_FROOTN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to fine root N', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_frootn, default='inactive')
 
     call add_fld1d (fname='NPOOL_TO_FROOTN_STORAGE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to fine root N storage', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_frootn_storage, default='inactive')
 
     call add_fld1d (fname='NPOOL_TO_LIVESTEMN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to live stem N', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_livestemn, default='inactive')
 
     call add_fld1d (fname='NPOOL_TO_LIVESTEMN_STORAGE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to live stem N storage', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_livestemn_storage, default='inactive')
 
     call add_fld1d (fname='NPOOL_TO_DEADSTEMN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to dead stem N', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_deadstemn, default='inactive')
 
     call add_fld1d (fname='NPOOL_TO_DEADSTEMN_STORAGE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to dead stem N storage', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_deadstemn_storage, default='inactive')
 
     call add_fld1d (fname='NPOOL_TO_LIVECROOTN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to live coarse root N', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_livecrootn, default='inactive')
 
     call add_fld1d (fname='NPOOL_TO_LIVECROOTN_STORAGE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to live coarse root N storage', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_livecrootn_storage, default='inactive')
 
     call add_fld1d (fname='NPOOL_TO_DEADCROOTN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to dead coarse root N', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_deadcrootn, default='inactive')
 
     call add_fld1d (fname='NPOOL_TO_DEADCROOTN_STORAGE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='allocation to dead coarse root N storage', &
          ptr_pft=clm3%g%l%c%p%pnf%npool_to_deadcrootn_storage, default='inactive')
 
     call add_fld1d (fname='LEAFN_STORAGE_TO_XFER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pnf%leafn_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='FROOTN_STORAGE_TO_XFER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pnf%frootn_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='LIVESTEMN_STORAGE_TO_XFER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pnf%livestemn_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='DEADSTEMN_STORAGE_TO_XFER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pnf%deadstemn_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='LIVECROOTN_STORAGE_TO_XFER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pnf%livecrootn_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='DEADCROOTN_STORAGE_TO_XFER', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N shift storage to transfer', &
          ptr_pft=clm3%g%l%c%p%pnf%deadcrootn_storage_to_xfer, default='inactive')
 
     call add_fld1d (fname='LIVESTEMN_TO_DEADSTEMN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N turnover', &
          ptr_pft=clm3%g%l%c%p%pnf%livestemn_to_deadstemn, default='inactive')
 
     call add_fld1d (fname='LIVESTEMN_TO_RETRANSN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N to retranslocated N pool', &
          ptr_pft=clm3%g%l%c%p%pnf%livestemn_to_retransn, default='inactive')
 
     call add_fld1d (fname='LIVECROOTN_TO_DEADCROOTN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N turnover', &
          ptr_pft=clm3%g%l%c%p%pnf%livecrootn_to_deadcrootn, default='inactive')
 
     call add_fld1d (fname='LIVECROOTN_TO_RETRANSN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N to retranslocated N pool', &
          ptr_pft=clm3%g%l%c%p%pnf%livecrootn_to_retransn, default='inactive')
 
     call add_fld1d (fname='NDEPLOY', units='gN/m^2/s', &
@@ -2717,263 +2753,275 @@ contains
     !-------------------------------
 
     call add_fld1d (fname='NDEP_TO_SMINN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='atmospheric N deposition to soil mineral N', &
          ptr_col=clm3%g%l%c%cnf%ndep_to_sminn)
 
     call add_fld1d (fname='NFIX_TO_SMINN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='symbiotic/asymbiotic N fixation to soil mineral N', &
          ptr_col=clm3%g%l%c%cnf%nfix_to_sminn)
 
     call add_fld1d (fname='M_LEAFN_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_leafn_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_LEAFN_TO_LITR2N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N mortality to litter 2 N', &
          ptr_col=clm3%g%l%c%cnf%m_leafn_to_litr2n, default='inactive')
 
     call add_fld1d (fname='M_LEAFN_TO_LITR3N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N mortality to litter 3 N', &
          ptr_col=clm3%g%l%c%cnf%m_leafn_to_litr3n, default='inactive')
 
     call add_fld1d (fname='M_FROOTN_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_frootn_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_FROOTN_TO_LITR2N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N mortality to litter 2 N', &
          ptr_col=clm3%g%l%c%cnf%m_frootn_to_litr2n, default='inactive')
 
     call add_fld1d (fname='M_FROOTN_TO_LITR3N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N mortality to litter 3 N', &
          ptr_col=clm3%g%l%c%cnf%m_frootn_to_litr3n, default='inactive')
 
     call add_fld1d (fname='M_LEAFN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N storage mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_leafn_storage_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_FROOTN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N storage mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_frootn_storage_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N storage mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_livestemn_storage_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N storage mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_deadstemn_storage_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N storage mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_livecrootn_storage_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTN_STORAGE_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N storage mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_deadcrootn_storage_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_LEAFN_XFER_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N transfer mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_leafn_xfer_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_FROOTN_XFER_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N transfer mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_frootn_xfer_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMN_XFER_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N transfer mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_livestemn_xfer_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMN_XFER_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N transfer mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_deadstemn_xfer_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTN_XFER_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N transfer mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_livecrootn_xfer_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTN_XFER_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N transfer mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_deadcrootn_xfer_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_LIVESTEMN_TO_CWDN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live stem N mortality to coarse woody debris N', &
          ptr_col=clm3%g%l%c%cnf%m_livestemn_to_cwdn, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMN_TO_CWDN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N mortality to coarse woody debris N', &
          ptr_col=clm3%g%l%c%cnf%m_deadstemn_to_cwdn, default='inactive')
 
     call add_fld1d (fname='M_LIVECROOTN_TO_CWDN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='live coarse root N mortality to coarse woody debris N', &
          ptr_col=clm3%g%l%c%cnf%m_livecrootn_to_cwdn, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTN_TO_CWDN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N mortality to coarse woody debris N', &
          ptr_col=clm3%g%l%c%cnf%m_deadcrootn_to_cwdn, default='inactive')
 
     call add_fld1d (fname='M_RETRANSN_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='retranslocated N pool mortality to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%m_retransn_to_litr1n, default='inactive')
 
     call add_fld1d (fname='M_DEADSTEMN_TO_CWDN_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead stem N to coarse woody debris N by fire', &
          ptr_col=clm3%g%l%c%cnf%m_deadstemn_to_cwdn_fire, default='inactive')
 
     call add_fld1d (fname='M_DEADCROOTN_TO_CWDN_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='dead coarse root N to to woody debris N by fire', &
          ptr_col=clm3%g%l%c%cnf%m_deadcrootn_to_cwdn_fire, default='inactive')
 
     call add_fld1d (fname='M_LITR1N_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='litter 1 N fire loss', &
          ptr_col=clm3%g%l%c%cnf%m_litr1n_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LITR2N_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='litter 2 N fire loss', &
          ptr_col=clm3%g%l%c%cnf%m_litr2n_to_fire, default='inactive')
 
     call add_fld1d (fname='M_LITR3N_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='litter 3 N fire loss', &
          ptr_col=clm3%g%l%c%cnf%m_litr3n_to_fire, default='inactive')
 
     call add_fld1d (fname='M_CWDN_TO_FIRE', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='coarse woody debris N fire loss', &
          ptr_col=clm3%g%l%c%cnf%m_cwdn_to_fire, default='inactive')
 
     call add_fld1d (fname='LEAFN_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N litterfall to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%leafn_to_litr1n, default='inactive')
 
     call add_fld1d (fname='LEAFN_TO_LITR2N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N litterfall to litter 2 N', &
          ptr_col=clm3%g%l%c%cnf%leafn_to_litr2n, default='inactive')
 
     call add_fld1d (fname='LEAFN_TO_LITR3N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='leaf N litterfall to litter 3 N', &
          ptr_col=clm3%g%l%c%cnf%leafn_to_litr3n, default='inactive')
 
     call add_fld1d (fname='FROOTN_TO_LITR1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N litterfall to litter 1 N', &
          ptr_col=clm3%g%l%c%cnf%frootn_to_litr1n, default='inactive')
 
     call add_fld1d (fname='FROOTN_TO_LITR2N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N litterfall to litter 2 N', &
          ptr_col=clm3%g%l%c%cnf%frootn_to_litr2n, default='inactive')
 
     call add_fld1d (fname='FROOTN_TO_LITR3N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='fine root N litterfall to litter 3 N ', &
          ptr_col=clm3%g%l%c%cnf%frootn_to_litr3n, default='inactive')
 
     call add_fld1d (fname='CWDN_TO_LITR2N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of coarse woody debris N to litter 2 N', &
          ptr_col=clm3%g%l%c%cnf%cwdn_to_litr2n, default='inactive')
 
     call add_fld1d (fname='CWDN_TO_LITR3N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of coarse woody debris N to litter 3 N', &
          ptr_col=clm3%g%l%c%cnf%cwdn_to_litr3n, default='inactive')
 
     call add_fld1d (fname='LITR1N_TO_SOIL1N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of litter 1 N to SOM 1 N', &
          ptr_col=clm3%g%l%c%cnf%litr1n_to_soil1n, default='inactive')
 
     call add_fld1d (fname='SMINN_TO_SOIL1N_L1', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='mineral N flux for decomp. of litter 1 to SOM 1', &
          ptr_col=clm3%g%l%c%cnf%sminn_to_soil1n_l1, default='inactive')
 
     call add_fld1d (fname='LITR2N_TO_SOIL2N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of litter 2 N to SOM 2 N', &
          ptr_col=clm3%g%l%c%cnf%litr2n_to_soil2n, default='inactive')
 
     call add_fld1d (fname='SMINN_TO_SOIL2N_L2', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='mineral N flux for decomp. of litter 2 to SOM 2', &
          ptr_col=clm3%g%l%c%cnf%sminn_to_soil2n_l2, default='inactive')
 
     call add_fld1d (fname='LITR3N_TO_SOIL3N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of litter 3 N to SOM 3 N', &
          ptr_col=clm3%g%l%c%cnf%litr3n_to_soil3n, default='inactive')
 
     call add_fld1d (fname='SMINN_TO_SOIL3N_L3', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='mineral N flux for decomp. of litter 3 to SOM 3', &
          ptr_col=clm3%g%l%c%cnf%sminn_to_soil3n_l3, default='inactive')
 
     call add_fld1d (fname='SOIL1N_TO_SOIL2n', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of SOM 1 N to SOM 2 N', &
          ptr_col=clm3%g%l%c%cnf%soil1n_to_soil2n, default='inactive')
 
     call add_fld1d (fname='SMINN_TO_SOIL2N_S1', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='mineral N flux for decomp. of SOM 1 to SOM 2', &
          ptr_col=clm3%g%l%c%cnf%sminn_to_soil2n_s1, default='inactive')
 
     call add_fld1d (fname='SOIL2N_TO_SOIL3N', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='decomp. of SOM 2 N to SOM 3 N', &
          ptr_col=clm3%g%l%c%cnf%soil2n_to_soil3n, default='inactive')
 
     call add_fld1d (fname='SMINN_TO_SOIL3N_S2', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='mineral N flux for decomp. of SOM 2 to SOM 3', &
          ptr_col=clm3%g%l%c%cnf%sminn_to_soil3n_s2, default='inactive')
 
-    call add_fld1d (fname='SOIL3N_TO_SMINN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
-         ptr_col=clm3%g%l%c%cnf%soil3n_to_sminn, default='inactive')
+    call add_fld1d (fname='SOIL3N_TO_SOIL4N', units='gN/m^2/s', &
+         avgflag='A', long_name='decomp. of SOM 3 N to SOM 4 N', &
+         ptr_col=clm3%g%l%c%cnf%soil3n_to_soil4n, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_SOIL4N_S3', units='gN/m^2/s', &
+         avgflag='A', long_name='mineral N flux for decomp. of SOM 3 to SOM 4', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_soil4n_s3, default='inactive')
+
+    call add_fld1d (fname='SOIL4N_TO_SMINN', units='gN/m^2/s', &
+         avgflag='A', long_name='N mineralization for decomp. of SOM 4', &
+         ptr_col=clm3%g%l%c%cnf%soil4n_to_sminn, default='inactive')
 
     call add_fld1d (fname='SMINN_TO_DENIT_L1S1', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='denitrification for decomp. of litter 1 to SOM 1', &
          ptr_col=clm3%g%l%c%cnf%sminn_to_denit_l1s1, default='inactive')
 
     call add_fld1d (fname='SMINN_TO_DENIT_L2S2', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='denitrification for decomp. of litter 2 to SOM 2', &
          ptr_col=clm3%g%l%c%cnf%sminn_to_denit_l2s2, default='inactive')
 
     call add_fld1d (fname='SMINN_TO_DENIT_L3S3', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='denitrification for decomp. of litter 3 to SOM 3', &
          ptr_col=clm3%g%l%c%cnf%sminn_to_denit_l3s3, default='inactive')
 
     call add_fld1d (fname='SMINN_TO_DENIT_S1S2', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='denitrification for decomp. of SOM 1 to SOM 2', &
          ptr_col=clm3%g%l%c%cnf%sminn_to_denit_s1s2, default='inactive')
 
     call add_fld1d (fname='SMINN_TO_DENIT_S2S3', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='denitrification for decomp. of SOM 2 to SOM 3', &
          ptr_col=clm3%g%l%c%cnf%sminn_to_denit_s2s3, default='inactive')
 
-    call add_fld1d (fname='SMINN_TO_DENIT_S3', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
-         ptr_col=clm3%g%l%c%cnf%sminn_to_denit_s3, default='inactive')
+    call add_fld1d (fname='SMINN_TO_DENIT_S3S4', units='gN/m^2/s', &
+         avgflag='A', long_name='denitrification for decomp. of SOM 3 to SOM 4', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_denit_s3s4, default='inactive')
+
+    call add_fld1d (fname='SMINN_TO_DENIT_S4', units='gN/m^2/s', &
+         avgflag='A', long_name='denitrification for decomp. of SOM 4', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_denit_s4, default='inactive')
 
     call add_fld1d (fname='SMINN_TO_DENIT_EXCESS', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='denitrification from excess mineral N pool', &
          ptr_col=clm3%g%l%c%cnf%sminn_to_denit_excess, default='inactive')
 
     call add_fld1d (fname='SMINN_LEACHED', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='soil mineral N pool loss to leaching', &
          ptr_col=clm3%g%l%c%cnf%sminn_leached)
 
     call add_fld1d (fname='POTENTIAL_IMMOB', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
-         ptr_col=clm3%g%l%c%cnf%potential_immob, default='inactive')
+         avgflag='A', long_name='potential N immobilization', &
+         ptr_col=clm3%g%l%c%cnf%potential_immob)
 
     call add_fld1d (fname='ACTUAL_IMMOB', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
-         ptr_col=clm3%g%l%c%cnf%actual_immob, default='inactive')
+         avgflag='A', long_name='actual N immobilization', &
+         ptr_col=clm3%g%l%c%cnf%actual_immob)
 
     call add_fld1d (fname='SMINN_TO_PLANT', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
-         ptr_col=clm3%g%l%c%cnf%sminn_to_plant, default='inactive')
+         avgflag='A', long_name='plant uptake of soil mineral N', &
+         ptr_col=clm3%g%l%c%cnf%sminn_to_plant)
 
     call add_fld1d (fname='SUPPLEMENT_TO_SMINN', units='gN/m^2/s', &
-         avgflag='A', long_name='', &
+         avgflag='A', long_name='supplemental N supply', &
          ptr_col=clm3%g%l%c%cnf%supplement_to_sminn)
 
     call add_fld1d (fname='GROSS_NMIN', units='gN/m^2/s', &
-         avgflag='A', long_name='gross N mineralization', &
+         avgflag='A', long_name='gross rate of N mineralization', &
          ptr_col=clm3%g%l%c%cnf%gross_nmin)
 
     call add_fld1d (fname='NET_NMIN', units='gN/m^2/s', &
-         avgflag='A', long_name='net N mineralization', &
+         avgflag='A', long_name='net rate of N mineralization', &
          ptr_col=clm3%g%l%c%cnf%net_nmin)
 
     call add_fld1d (fname='DENIT', units='gN/m^2/s', &
-         avgflag='A', long_name='total denitrification', &
+         avgflag='A', long_name='total rate of denitrification', &
          ptr_col=clm3%g%l%c%cnf%denit)
 
     call add_fld1d (fname='COL_FIRE_NLOSS', units='gN/m^2/s', &
@@ -3174,19 +3222,19 @@ contains
 
     call add_fld1d (fname='LAISUN', units='none', &
          avgflag='A', long_name='sunlit projected leaf area index', &
-         ptr_pft=clm3%g%l%c%p%pps%laisun, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pps%laisun)
 
     call add_fld1d (fname='LAISHA', units='none', &
          avgflag='A', long_name='shaded projected leaf area index', &
-         ptr_pft=clm3%g%l%c%p%pps%laisha, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pps%laisha)
 
     call add_fld1d (fname='TLAI', units='none', &
          avgflag='A', long_name='total projected leaf area index', &
-         ptr_pft=clm3%g%l%c%p%pps%tlai, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pps%tlai)
 
     call add_fld1d (fname='TSAI', units='none', &
          avgflag='A', long_name='total projected stem area index', &
-         ptr_pft=clm3%g%l%c%p%pps%tsai, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pps%tsai)
 
     call add_fld1d (fname='SLASUN', units='m^2/gC', &
          avgflag='A', long_name='specific leaf area for sunlit canopy, projected area basis', &

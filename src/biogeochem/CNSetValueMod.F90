@@ -291,6 +291,7 @@ subroutine CNSetPcs (num, filter, val, pcs)
       pcs%gresp_storage(i) = val
       pcs%gresp_xfer(i) = val
       pcs%cpool(i) = val
+      pcs%xsmrpool(i) = val
       pcs%pft_ctrunc(i) = val
       pcs%dispvegc(i) = val
       pcs%storvegc(i) = val
@@ -741,6 +742,7 @@ subroutine CNSetCcs(num, filter, val, ccs)
       ccs%soil1c(i) = val
       ccs%soil2c(i) = val
       ccs%soil3c(i) = val
+      ccs%soil4c(i) = val
       ccs%col_ctrunc(i) = val
       ccs%totlitc(i) = val
       ccs%totsomc(i) = val
@@ -791,6 +793,7 @@ subroutine CNSetCns(num, filter, val, cns)
       cns%soil1n(i) = val
       cns%soil2n(i) = val
       cns%soil3n(i) = val
+      cns%soil4n(i) = val
       cns%sminn(i) = val
       cns%col_ntrunc(i) = val
       cns%totlitn(i) = val
@@ -884,6 +887,8 @@ subroutine CNSetCcf(num, filter, val, ccf)
       ccf%soil2_hr(i) = val
       ccf%soil2c_to_soil3c(i) = val
       ccf%soil3_hr(i) = val
+      ccf%soil3c_to_soil4c(i) = val
+      ccf%soil4_hr(i) = val
       ccf%lithr(i) = val
       ccf%somhr(i) = val
       ccf%hr(i) = val
@@ -984,13 +989,16 @@ subroutine CNSetCnf(num, filter, val, cnf)
       cnf%sminn_to_soil2n_s1(i) = val
       cnf%soil2n_to_soil3n(i) = val
       cnf%sminn_to_soil3n_s2(i) = val
-      cnf%soil3n_to_sminn(i) = val
+      cnf%soil3n_to_soil4n(i) = val
+      cnf%sminn_to_soil4n_s3(i) = val
+      cnf%soil4n_to_sminn(i) = val
       cnf%sminn_to_denit_l1s1(i) = val
       cnf%sminn_to_denit_l2s2(i) = val
       cnf%sminn_to_denit_l3s3(i) = val
       cnf%sminn_to_denit_s1s2(i) = val
       cnf%sminn_to_denit_s2s3(i) = val
-      cnf%sminn_to_denit_s3(i) = val
+      cnf%sminn_to_denit_s3s4(i) = val
+      cnf%sminn_to_denit_s4(i) = val
       cnf%sminn_to_denit_excess(i) = val
       cnf%sminn_leached(i) = val
       cnf%potential_immob(i) = val

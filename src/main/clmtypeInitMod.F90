@@ -2457,6 +2457,7 @@ contains
     allocate(ccs%soil1c(beg:end))
     allocate(ccs%soil2c(beg:end))
     allocate(ccs%soil3c(beg:end))
+    allocate(ccs%soil4c(beg:end))
     allocate(ccs%col_ctrunc(beg:end))
     allocate(ccs%totlitc(beg:end))
     allocate(ccs%totsomc(beg:end))
@@ -2471,6 +2472,7 @@ contains
     ccs%soil1c(beg:end) = nan
     ccs%soil2c(beg:end) = nan
     ccs%soil3c(beg:end) = nan
+    ccs%soil4c(beg:end) = nan
     ccs%col_ctrunc(beg:end) = nan
     ccs%totlitc(beg:end) = nan
     ccs%totsomc(beg:end) = nan
@@ -2508,6 +2510,7 @@ contains
     allocate(cns%soil1n(beg:end))
     allocate(cns%soil2n(beg:end))
     allocate(cns%soil3n(beg:end))
+    allocate(cns%soil4n(beg:end))
     allocate(cns%sminn(beg:end))
     allocate(cns%col_ntrunc(beg:end))
     allocate(cns%totlitn(beg:end))
@@ -2522,6 +2525,7 @@ contains
     cns%soil1n(beg:end) = nan
     cns%soil2n(beg:end) = nan
     cns%soil3n(beg:end) = nan
+    cns%soil4n(beg:end) = nan
     cns%sminn(beg:end) = nan
     cns%col_ntrunc(beg:end) = nan
     cns%totlitn(beg:end) = nan
@@ -2674,6 +2678,8 @@ contains
     allocate(ccf%soil2_hr(beg:end))
     allocate(ccf%soil2c_to_soil3c(beg:end))
     allocate(ccf%soil3_hr(beg:end))
+    allocate(ccf%soil3c_to_soil4c(beg:end))
+    allocate(ccf%soil4_hr(beg:end))
     allocate(ccf%lithr(beg:end))
     allocate(ccf%somhr(beg:end))
     allocate(ccf%hr(beg:end))
@@ -2737,6 +2743,8 @@ contains
     ccf%soil2_hr(beg:end) = nan
     ccf%soil2c_to_soil3c(beg:end) = nan
     ccf%soil3_hr(beg:end) = nan
+    ccf%soil3c_to_soil4c(beg:end) = nan
+    ccf%soil4_hr(beg:end) = nan
     ccf%lithr(beg:end) = nan
     ccf%somhr(beg:end) = nan
     ccf%hr(beg:end) = nan
@@ -2824,13 +2832,16 @@ contains
     allocate(cnf%sminn_to_soil2n_s1(beg:end))
     allocate(cnf%soil2n_to_soil3n(beg:end))
     allocate(cnf%sminn_to_soil3n_s2(beg:end))
-    allocate(cnf%soil3n_to_sminn(beg:end))
+    allocate(cnf%soil3n_to_soil4n(beg:end))
+    allocate(cnf%sminn_to_soil4n_s3(beg:end))
+    allocate(cnf%soil4n_to_sminn(beg:end))
     allocate(cnf%sminn_to_denit_l1s1(beg:end))
     allocate(cnf%sminn_to_denit_l2s2(beg:end))
     allocate(cnf%sminn_to_denit_l3s3(beg:end))
     allocate(cnf%sminn_to_denit_s1s2(beg:end))
     allocate(cnf%sminn_to_denit_s2s3(beg:end))
-    allocate(cnf%sminn_to_denit_s3(beg:end))
+    allocate(cnf%sminn_to_denit_s3s4(beg:end))
+    allocate(cnf%sminn_to_denit_s4(beg:end))
     allocate(cnf%sminn_to_denit_excess(beg:end))
     allocate(cnf%sminn_leached(beg:end))
     allocate(cnf%potential_immob(beg:end))
@@ -2893,13 +2904,16 @@ contains
     cnf%sminn_to_soil2n_s1(beg:end) = nan
     cnf%soil2n_to_soil3n(beg:end) = nan
     cnf%sminn_to_soil3n_s2(beg:end) = nan
-    cnf%soil3n_to_sminn(beg:end) = nan
+    cnf%soil3n_to_soil4n(beg:end) = nan
+    cnf%sminn_to_soil4n_s3(beg:end) = nan
+    cnf%soil4n_to_sminn(beg:end) = nan
     cnf%sminn_to_denit_l1s1(beg:end) = nan
     cnf%sminn_to_denit_l2s2(beg:end) = nan
     cnf%sminn_to_denit_l3s3(beg:end) = nan
     cnf%sminn_to_denit_s1s2(beg:end) = nan
     cnf%sminn_to_denit_s2s3(beg:end) = nan
-    cnf%sminn_to_denit_s3(beg:end) = nan
+    cnf%sminn_to_denit_s3s4(beg:end) = nan
+    cnf%sminn_to_denit_s4(beg:end) = nan
     cnf%sminn_to_denit_excess(beg:end) = nan
     cnf%sminn_leached(beg:end) = nan
     cnf%potential_immob(beg:end) = nan

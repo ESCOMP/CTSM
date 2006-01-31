@@ -84,6 +84,7 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1_hr(:)        
    real(r8), pointer :: soil2_hr(:)        
    real(r8), pointer :: soil3_hr(:) 
+   real(r8), pointer :: soil4_hr(:) 
    real(r8), pointer :: somfire(:)       ! (gC/m2/s) soil organic matter fire losses
    real(r8), pointer :: somhr(:)         ! (gC/m2/s) soil organic matter heterotrophic respiration
    real(r8), pointer :: sr(:)            ! (gC/m2/s) total soil respiration (HR + root resp)
@@ -97,6 +98,7 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1c(:)             ! (gC/m2) soil organic matter C (fast pool)
    real(r8), pointer :: soil2c(:)             ! (gC/m2) soil organic matter C (medium pool)
    real(r8), pointer :: soil3c(:)             ! (gC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: soil4c(:)             ! (gC/m2) soil organic matter C (slowest pool)
    real(r8), pointer :: totcolc(:)            ! (gC/m2) total column carbon, incl veg and cpool
    real(r8), pointer :: totecosysc(:)         ! (gC/m2) total ecosystem carbon, incl veg but excl cpool
    real(r8), pointer :: totlitc(:)            ! (gC/m2) total litter carbon
@@ -260,6 +262,7 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil1_hr                       => clm3%g%l%c%ccf%soil1_hr
     soil2_hr                       => clm3%g%l%c%ccf%soil2_hr
     soil3_hr                       => clm3%g%l%c%ccf%soil3_hr
+    soil4_hr                       => clm3%g%l%c%ccf%soil4_hr
     somfire                        => clm3%g%l%c%ccf%somfire
     somhr                          => clm3%g%l%c%ccf%somhr
     sr                             => clm3%g%l%c%ccf%sr
@@ -273,6 +276,7 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil1c                         => clm3%g%l%c%ccs%soil1c
     soil2c                         => clm3%g%l%c%ccs%soil2c
     soil3c                         => clm3%g%l%c%ccs%soil3c
+    soil4c                         => clm3%g%l%c%ccs%soil4c
     totcolc                        => clm3%g%l%c%ccs%totcolc
     totecosysc                     => clm3%g%l%c%ccs%totecosysc
     totlitc                        => clm3%g%l%c%ccs%totlitc
@@ -613,7 +617,8 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
       somhr(c) = &
          soil1_hr(c) + &
          soil2_hr(c) + &
-         soil3_hr(c)
+         soil3_hr(c) + &
+         soil4_hr(c)
 
       ! total heterotrophic respiration (HR)
       hr(c) = lithr(c) + somhr(c)
@@ -660,7 +665,8 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
       totsomc(c) = &
          soil1c(c) + &
          soil2c(c) + &
-         soil3c(c)
+         soil3c(c) + &
+         soil4c(c)
 
       ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
       totecosysc(c) = &
@@ -726,7 +732,8 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: sminn_to_denit_l3s3(:)
    real(r8), pointer :: sminn_to_denit_s1s2(:)
    real(r8), pointer :: sminn_to_denit_s2s3(:)
-   real(r8), pointer :: sminn_to_denit_s3(:)  
+   real(r8), pointer :: sminn_to_denit_s3s4(:)
+   real(r8), pointer :: sminn_to_denit_s4(:)  
    real(r8), pointer :: cwdn(:)               ! (gN/m2) coarse woody debris N
    real(r8), pointer :: litr1n(:)             ! (gN/m2) litter labile N
    real(r8), pointer :: litr2n(:)             ! (gN/m2) litter cellulose N
@@ -737,6 +744,7 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil1n(:)             ! (gN/m2) soil organic matter N (fast pool)
    real(r8), pointer :: soil2n(:)             ! (gN/m2) soil organic matter N (medium pool)
    real(r8), pointer :: soil3n(:)             ! (gN/m2) soil orgainc matter N (slow pool)
+   real(r8), pointer :: soil4n(:)             ! (gN/m2) soil orgainc matter N (slowest pool)
    real(r8), pointer :: totcoln(:)            ! (gN/m2) total column nitrogen, incl veg
    real(r8), pointer :: totecosysn(:)         ! (gN/m2) total ecosystem nitrogen, incl veg 
    real(r8), pointer :: totlitn(:)            ! (gN/m2) total litter nitrogen
@@ -812,7 +820,8 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     sminn_to_denit_l3s3            => clm3%g%l%c%cnf%sminn_to_denit_l3s3
     sminn_to_denit_s1s2            => clm3%g%l%c%cnf%sminn_to_denit_s1s2
     sminn_to_denit_s2s3            => clm3%g%l%c%cnf%sminn_to_denit_s2s3
-    sminn_to_denit_s3              => clm3%g%l%c%cnf%sminn_to_denit_s3
+    sminn_to_denit_s3s4            => clm3%g%l%c%cnf%sminn_to_denit_s3s4
+    sminn_to_denit_s4              => clm3%g%l%c%cnf%sminn_to_denit_s4
     cwdn                           => clm3%g%l%c%cns%cwdn
     litr1n                         => clm3%g%l%c%cns%litr1n
     litr2n                         => clm3%g%l%c%cns%litr2n
@@ -823,6 +832,7 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil1n                         => clm3%g%l%c%cns%soil1n
     soil2n                         => clm3%g%l%c%cns%soil2n
     soil3n                         => clm3%g%l%c%cns%soil3n
+    soil4n                         => clm3%g%l%c%cns%soil4n
     totcoln                        => clm3%g%l%c%cns%totcoln
     totecosysn                     => clm3%g%l%c%cns%totecosysn
     totlitn                        => clm3%g%l%c%cns%totlitn
@@ -960,7 +970,8 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          sminn_to_denit_l3s3(c) + &
          sminn_to_denit_s1s2(c) + &
          sminn_to_denit_s2s3(c) + &
-         sminn_to_denit_s3(c) + &
+         sminn_to_denit_s3s4(c) + &
+         sminn_to_denit_s4(c) + &
          sminn_to_denit_excess(c)
 
       ! total column-level fire N losses
@@ -981,7 +992,8 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
       totsomn(c) = &
          soil1n(c) + &
          soil2n(c) + &
-         soil3n(c)
+         soil3n(c) + &
+         soil4n(c)
 
       ! total ecosystem nitrogen, including veg (TOTECOSYSN)
       totecosysn(c) = &

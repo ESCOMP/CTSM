@@ -260,7 +260,7 @@ contains
        allocate(yearspft(ntimes))
     end if
 #if (defined SPMD)
-    call mpi_bcast (yearspft, size(yearspft), MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast (yearspft, size(yearspft), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (wtpft1  , size(wtpft1)  , MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (wtpft2  , size(wtpft2)  , MPI_REAL8, 0, mpicom, ier)
 #endif    

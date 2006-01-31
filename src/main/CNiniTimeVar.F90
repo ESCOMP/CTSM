@@ -56,6 +56,7 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: soil1c(:)             ! (gC/m2) soil organic matter C (fast pool)
    real(r8), pointer :: soil2c(:)             ! (gC/m2) soil organic matter C (medium pool)
    real(r8), pointer :: soil3c(:)             ! (gC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: soil4c(:)             ! (gC/m2) soil organic matter C (slowest pool)
    real(r8), pointer :: cwdn(:)               ! (gN/m2) coarse woody debris N
    real(r8), pointer :: litr1n(:)             ! (gN/m2) litter labile N
    real(r8), pointer :: litr2n(:)             ! (gN/m2) litter cellulose N
@@ -63,6 +64,7 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: soil1n(:)             ! (gN/m2) soil organic matter N (fast pool)
    real(r8), pointer :: soil2n(:)             ! (gN/m2) soil organic matter N (medium pool)
    real(r8), pointer :: soil3n(:)             ! (gN/m2) soil orgainc matter N (slow pool)
+   real(r8), pointer :: soil4n(:)             ! (gN/m2) soil orgainc matter N (slowest pool)
    real(r8), pointer :: sminn(:)              ! (gN/m2) soil mineral N
    real(r8), pointer :: leafc(:)              ! (gC/m2) leaf C
    real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
@@ -199,6 +201,7 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: soil1c13(:)             ! (gC/m2) soil organic matter C (fast pool)
    real(r8), pointer :: soil2c13(:)             ! (gC/m2) soil organic matter C (medium pool)
    real(r8), pointer :: soil3c13(:)             ! (gC/m2) soil organic matter C (slow pool)
+   real(r8), pointer :: soil4c13(:)             ! (gC/m2) soil organic matter C (slowest pool)
    real(r8), pointer :: c13_col_ctrunc(:)       ! (gC/m2) C truncation term
    real(r8), pointer :: leafc13(:)              ! (gC/m2) leaf C
    real(r8), pointer :: leafc13_storage(:)      ! (gC/m2) leaf C storage
@@ -259,6 +262,7 @@ subroutine CNiniTimeVar()
     soil1c                         => clm3%g%l%c%ccs%soil1c
     soil2c                         => clm3%g%l%c%ccs%soil2c
     soil3c                         => clm3%g%l%c%ccs%soil3c
+    soil4c                         => clm3%g%l%c%ccs%soil4c
     cwdn                           => clm3%g%l%c%cns%cwdn
     litr1n                         => clm3%g%l%c%cns%litr1n
     litr2n                         => clm3%g%l%c%cns%litr2n
@@ -266,6 +270,7 @@ subroutine CNiniTimeVar()
     soil1n                         => clm3%g%l%c%cns%soil1n
     soil2n                         => clm3%g%l%c%cns%soil2n
     soil3n                         => clm3%g%l%c%cns%soil3n
+    soil4n                         => clm3%g%l%c%cns%soil4n
     sminn                          => clm3%g%l%c%cns%sminn
     col_ctrunc                     => clm3%g%l%c%ccs%col_ctrunc
     totcolc                        => clm3%g%l%c%ccs%totcolc
@@ -286,6 +291,7 @@ subroutine CNiniTimeVar()
     soil1c13                         => clm3%g%l%c%cc13s%soil1c
     soil2c13                         => clm3%g%l%c%cc13s%soil2c
     soil3c13                         => clm3%g%l%c%cc13s%soil3c
+    soil4c13                         => clm3%g%l%c%cc13s%soil4c
     c13_col_ctrunc                   => clm3%g%l%c%cc13s%col_ctrunc
 
     ! assign local pointers at the pft level
@@ -472,6 +478,7 @@ subroutine CNiniTimeVar()
          soil1c(c) = 0._r8
          soil2c(c) = 0._r8
          soil3c(c) = 0._r8
+         soil4c(c) = 0._r8
          col_ctrunc(c) = 0._r8
          totlitc(c)    = 0._r8
          totsomc(c)    = 0._r8
@@ -486,6 +493,7 @@ subroutine CNiniTimeVar()
          soil1c13(c) = soil1c(c) * c13ratio
          soil2c13(c) = soil2c(c) * c13ratio
          soil3c13(c) = soil3c(c) * c13ratio
+         soil4c13(c) = soil4c(c) * c13ratio
          c13_col_ctrunc(c) = col_ctrunc(c) * c13ratio
 
          ! column nitrogen state variables
@@ -496,6 +504,7 @@ subroutine CNiniTimeVar()
          soil1n(c) = soil1c(c) / 12._r8
          soil2n(c) = soil2c(c) / 12._r8
          soil3n(c) = soil3c(c) / 10._r8
+         soil4n(c) = soil4c(c) / 10._r8
          sminn(c) = 0._r8
          col_ntrunc(c) = 0._r8
          totlitn(c)    = 0._r8
