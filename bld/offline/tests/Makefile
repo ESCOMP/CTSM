@@ -113,17 +113,17 @@ all: $(MODEL_EXEDIR)/$(EXENAME)
 
 SOURCES   := $(shell cat Srcfiles)
 
-Depends: Srcfiles Filepath
-	$(ROOTDIR)/bld/offline/mkDepends Filepath Srcfiles > $@
-
-Srcfiles: Filepath
-	$(ROOTDIR)/bld/offline/mkSrcfiles > $@
-
 OBJS   := $(addsuffix .o, $(basename $(SOURCES)))
 
 CPPDEF := -DNO_SHR_VMATH -DHIDE_SHR_MSG
 
-$(MODEL_EXEDIR)/$(EXENAME): $(OBJS)
+Srcfiles: Filepath
+	$(ROOTDIR)/bld/offline/mkSrcfiles > $@
+
+Depends: Srcfiles Filepath $(SOURCES)
+	$(ROOTDIR)/bld/offline/mkDepends Filepath Srcfiles > $@
+
+$(MODEL_EXEDIR)/$(EXENAME): Depends $(OBJS)
 	$(FC) -o $@ $(OBJS) -L$(LIB_NETCDF) -lnetcdf $(LDFLAGS)
 
 debug: $(OBJS)

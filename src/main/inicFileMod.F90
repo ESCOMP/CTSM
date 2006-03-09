@@ -159,6 +159,8 @@ contains
     ! Determine volumetric soil water
 
     do j = 1,nlevsoi
+!dir$ concurrent
+!cdir nodep
        do c = begc,endc
           l = cptr%landunit(c)
           if (.not. lptr%lakpoi(l)) then

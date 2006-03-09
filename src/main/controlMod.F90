@@ -336,7 +336,7 @@ contains
 #if (defined SSP)
     clump_pproc = 1
 #else
-    clump_pproc = 4
+    clump_pproc = 1 ! 4 when using CSDs in driver.F90; 1 otherwise
 #endif
 #endif
 #endif

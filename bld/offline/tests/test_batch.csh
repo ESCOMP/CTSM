@@ -52,13 +52,13 @@
 ##QSUB -mb -me -eo
 #
 #-----------------------------------------------------------------------
-# ORNL Cray X1: phoenix
-# Usage: qsub test_batch.csh
+# ORNL Cray X1E: phoenix
+# Usage: qsub -A acctname test_batch.csh
 #-----------------------------------------------------------------------
 ##PBS -N test-model
 ##PBS -j oe
 ##PBS -q batch
-##PBS -l walltime=3:00:00,mppe=16,mem=128gb
+##PBS -l walltime=12:00:00,mppe=16,mem=128gb
 ##PBS -m ae
 ##PBS -V
 #
@@ -131,10 +131,9 @@ switch ( $OS )
      source /opt/modules/modules/init/csh
      module purge
      module load open
-     #module load PrgEnv.5302
-     #module unload mpt
-     #module load mpt.2.4.0.2
      module load PrgEnv.5407
+     module unload mpt
+     module load mpt.2.4.0.6
      module load pbs
      module list
      #

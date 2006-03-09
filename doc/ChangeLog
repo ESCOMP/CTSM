@@ -1,4 +1,98 @@
 ===============================================================
+Tag name: clm3_expa_58
+Originator(s): Forrest Hoffman
+Date: Thu Mar  9 17:04:27 EST 2006
+One-line Summary: Updates for the Cray X1E and a forcing height error check.
+
+Purpose of changes: Improvements on the Cray X1E and avoiding arithmetic exceptions when the forcing height is below the canopy height.
+
+Bugs fixed (include bugzilla ID): Bug #36
+
+Describe any changes made to build system: jobscript.csh modified for Cray X1E
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: myself and (for forcing height check code) Mariana Vertenstein
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   jobscript.csh - Modified for Cray X1E and cross-compiler
+   inicFileMod.F90 - Added compiler directives for vectorization
+   driver.F90 - Commented out CSDs to avoid model hangs caused by write
+      statements in science routines within the associated loops
+   controlMod.F90 - Changed default clump_pproc to 1 for the Cray (since CSDs
+      are not used in driver.F90
+   histFldsMod.F90 - Changed type2d='levlak' for the TLAKE field
+   CanopyFluxesMod.F90 - Inserted code to check if the forcing height
+      is below the canopy height for any pft.  Model will now abort when this
+      occurs instead of taking the log() of a negative number.  See Bug #36
+
+Summary of testing:
+
+  bluesky: test-model ran as follows
+01_debug_run_SPMD: T31 ran
+02_debug_run_nonSPMD: T31 ran
+03_start: T31 ran
+04_restart: T31 ran
+05_norestart_compare_to_restart: T31 ran
+06_control: T31 ran
+01_debug_run_SPMD: T31cn ran
+02_debug_run_nonSPMD: T31cn ran
+03_start: T31cn ran
+04_restart: T31cn ran
+05_norestart_compare_to_restart: T31cn ran
+06_control: T31cn ran
+01_debug_run_SPMD: T31cnall ran
+02_debug_run_nonSPMD: T31cnall ran
+03_start: T31cnall ran
+04_restart: T31cnall ran
+05_norestart_compare_to_restart: T31cnall ran
+06_control: T31cnall ran
+01_debug_run_SPMD: T31casa ran
+02_debug_run_nonSPMD: T31casa ran
+03_start: T31casa ran
+04_restart: T31casa ran
+05_norestart_compare_to_restart: T31casa ran
+06_control: T31casa ran
+  cheetah:
+01_debug_run_SPMD: T31cnall ran
+02_debug_run_nonSPMD: T31cnall ran
+03_start: T31cnall ran
+04_restart: T31cnall ran
+05_norestart_compare_to_restart: T31cnall ran
+06_control: T31cnall ran
+01_debug_run_SPMD: T31 ran
+02_debug_run_nonSPMD: T31 ran
+03_start: T31 ran
+04_restart: T31 ran
+05_norestart_compare_to_restart: T31 ran
+06_control: T31 ran
+01_debug_run_SPMD: T31cn ran
+02_debug_run_nonSPMD: T31cn ran
+03_start: T31cn ran
+04_restart: T31cn ran
+05_norestart_compare_to_restart: T31cn ran
+06_control: T31cn ran
+01_debug_run_SPMD: T31casa ran
+02_debug_run_nonSPMD: T31casa ran
+03_start: T31casa ran
+04_restart: T31casa ran
+05_norestart_compare_to_restart: T31casa ran
+06_control: T31casa ran
+  tempest:
+  bangkok/lf95:
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_57
+
+===============================================================
 Tag name: clm3_expa_57
 Originator(s): Peter Thornton
 Date: 31 Jan 2006

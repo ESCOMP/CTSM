@@ -180,11 +180,10 @@ setenv NTHREADS 1
 setenv OS `uname -s`
 setenv HOST `uname -n`
 if ($OS == 'UNICOS/mp') then
-   # Need gmake alias for Cray X1 (but not when cross-compiling on barracuda1 or robin)
+   # Need gmake alias for Cray X1E (but not when cross-compiling on robin)
    alias gmake /opt/open/open/bin/make
 endif
-if ($HOST == barracuda1.ccs.ornl.gov) setenv OS "UNICOS/mp"
-if ($HOST == robin.ccs.ornl.gov) setenv OS "UNICOS/mp"
+if ($HOST == robin) setenv OS "UNICOS/mp"
 if ($OS == Linux) setenv SMP FALSE
 
 ##-------------------------------------------------------------------------------
@@ -251,24 +250,15 @@ else if ($OS == 'UNICOS/mp') then
   source /opt/modules/modules/init/csh
   module purge
   module load open
-  #
-  # PE5105
-  #module load PrgEnv.5105
-  #module unload mpt.2.3.0.2
-  #module load mpt.2.3.0.3
-  # PE5302
-  module load PrgEnv.5302
+  # PE5407
+  module load PrgEnv.5407
   module unload mpt
-  module load mpt.2.4.0.2
-  #
+  module load mpt.2.4.0.6
   module load pbs
   module list
 
   # LIB_MPI and INC_MPI do not need to be set
-  # PE5105
-  #setenv INC_NETCDF /apps/netcdf/3.5.1/x1_pe51_r4/include
-  #setenv LIB_NETCDF /apps/netcdf/3.5.1/x1_pe51_r4/lib
-  # PE5302
+  # PE5407
   setenv INC_NETCDF /apps/netcdf/3.5.1/x1_pe53_r4/include
   setenv LIB_NETCDF /apps/netcdf/3.5.1/x1_pe53_r4/lib
 
@@ -431,9 +421,6 @@ endif
 # since cross compilers are used to do the builds. The user will have to do
 # this independently since this is not officially supported in this script.
 
-if ($OS == 'UNICOS/mp') then
-   alias gmake /opt/open/open/bin/make
-endif
 gmake -j8 -f $ROOTDIR/bld/offline/Makefile >>& $MODEL_EXEDIR/compile_log.clm 
 if ($status != 0) then
   echo GMAKE ERROR failed: see $MODEL_EXEDIR/compile_log.clm

@@ -233,7 +233,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 
 !$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
 #if !defined (USE_OMP)
-!CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
+!!CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
 #endif
   do nc = 1,nclumps
 
@@ -269,7 +269,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
   end do
 !$OMP END PARALLEL DO
 #if !defined (USE_OMP)
-!CSD$ END PARALLEL DO
+!!CSD$ END PARALLEL DO
 #endif
 
   ! ============================================================================
@@ -302,7 +302,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 
 !$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
 #if !defined (USE_OMP)
-!CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
+!!CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
 #endif
   do nc = 1,nclumps
 
@@ -541,7 +541,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
   end do
 !$OMP END PARALLEL DO
 #if !defined (USE_OMP)
-!CSD$ END PARALLEL DO
+!!CSD$ END PARALLEL DO
 #endif
 
 end subroutine driver1
@@ -667,7 +667,7 @@ subroutine driver2(caldayp1, declinp1, rstwr)
 
 !$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
 #if !defined (USE_OMP)
-!CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
+!!CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
 #endif
      do nc = 1,nclumps
         call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
@@ -678,7 +678,7 @@ subroutine driver2(caldayp1, declinp1, rstwr)
         call resetTimeConstDGVM(begp, endp)
      end do
 #if !defined (USE_OMP)
-!CSD$ END PARALLEL DO
+!!CSD$ END PARALLEL DO
 #endif
 !$OMP END PARALLEL DO
      call gatherWeightsDGVM()

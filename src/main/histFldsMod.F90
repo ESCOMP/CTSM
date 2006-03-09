@@ -121,7 +121,7 @@ contains
          avgflag='A', long_name='soil temperature', &
          ptr_col=clm3%g%l%c%ces%t_soisno)
 
-    call add_fld2d (fname='TLAKE',  units='K', type2d='levsoi', &
+    call add_fld2d (fname='TLAKE',  units='K', type2d='levlak', &
          avgflag='A', long_name='lake temperature', &
          ptr_col=clm3%g%l%c%ces%t_lake)
 

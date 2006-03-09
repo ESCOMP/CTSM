@@ -229,7 +229,7 @@ contains
    real(r8) :: zeta                  ! dimensionless height used in Monin-Obukhov theory
    real(r8) :: wc                    ! convective velocity [m/s]
    real(r8) :: dth(lbp:ubp)          ! diff of virtual temp. between ref. height and surface
-   real(r8) :: dthv                  ! diff of vir. poten. temp. between ref. height and surface
+   real(r8) :: dthv(lbp:ubp)         ! diff of vir. poten. temp. between ref. height and surface
    real(r8) :: dqh(lbp:ubp)          ! diff of humidity between ref. height and surface
    real(r8) :: obu(lbp:ubp)          ! Monin-Obukhov length (m)
    real(r8) :: um(lbp:ubp)           ! wind speed including the stablity effect [m/s]
@@ -326,6 +326,8 @@ contains
    real(r8) :: z0mv_loc(lbp:ubp)     ! temporary copy
    real(r8) :: z0hv_loc(lbp:ubp)     ! temporary copy
    real(r8) :: z0qv_loc(lbp:ubp)     ! temporary copy
+   logical  :: found                 ! error flag for canopy above forcing hgt
+   integer  :: index                 ! pft index for error
 !------------------------------------------------------------------------------
 
    ! Assign local pointers to derived type members (gridcell-level)
@@ -504,6 +506,7 @@ contains
       end do
    end do
 
+   found = .false.
 !dir$ concurrent
 !cdir nodep
    do f = 1, fn
@@ -542,12 +545,31 @@ contains
       ur(p) = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
       dth(p) = thm(c)-taf(p)
       dqh(p) = forc_q(g)-qaf(p)
-      dthv = dth(p)*(1._r8+0.61_r8*forc_q(g))+0.61_r8*forc_th(g)*dqh(p)
+      dthv(p) = dth(p)*(1._r8+0.61_r8*forc_q(g))+0.61_r8*forc_th(g)*dqh(p)
       zldis(p) = forc_hgt_u(g) - displa(p)
+
+      ! Check to see if the forcing height is below the canopy height
+      if (zldis(p) < 0._r8) then
+         found = .true.
+         index = p
+      end if
+
+   end do
+
+   if (found) then
+      write(6,*)'Error: Forcing height is below canopy height for pft index ',index
+      call endrun()
+   end if
+
+!dir$ concurrent
+!cdir nodep
+   do f = 1, fn
+      p = filterp(f)
+      c = pcolumn(p)
 
       ! Initialize Monin-Obukhov length and wind speed
 
-      call MoninObukIni(ur(p), thv(c), dthv, zldis(p), z0mv(p), um(p), obu(p))
+      call MoninObukIni(ur(p), thv(c), dthv(p), zldis(p), z0mv(p), um(p), obu(p))
 
    end do
 
@@ -621,7 +643,7 @@ contains
          svpts(p) = el(p)                         ! pa
          eah(p) = forc_pbot(g) * qaf(p) / 0.622_r8   ! pa
       end do
-		
+
       ! 4/25/05, PET: Now calling the sun/shade version of Stomata by default
       call Stomata (fn, filterp, lbp, ubp, svpts, eah, o2, co2, rb, phase='sun')
       call Stomata (fn, filterp, lbp, ubp, svpts, eah, o2, co2, rb, phase='sha')
