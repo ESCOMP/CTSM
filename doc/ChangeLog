@@ -1,3 +1,123 @@
+
+===============================================================
+Tag name: clm3_expa_59
+Originator(s): Tony Craig
+Date: Wed Apr  5 18:03:23 MDT 2006
+One-line Summary: add fatmlndfrc capability
+
+Purpose of changes:  Support new datasets, other minor improvements,
+  update mkgrid and mksurf tools for new dataset generation.
+
+Bugs fixed (include bugzilla ID):
+
+Describe any changes made to build system: jobscript.csh modified for
+  new surface datasets, change baseline resolution to T31.
+
+Describe any changes made to the namelist: added optional fatmlndfrc
+  namelist input for landfrac file on atm grid.
+
+List any changes to the defaults for the boundary datasets:  all new
+  grid, frac, and surf datasets generated, located in 
+  /fs/cgd/csm/inputdata/lnd/clm2/[griddata,surfdata]
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: myself
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+tools/mksurfdata/mkrfdat.F90 - change default output filenames
+tools/mksurfdata/mklaiMod.F90 - removed masking since there is no mask anymore
+tools/mksurfdata/mkfileMod.F90 - removed read of LANDMASK and LANDFRAC
+tools/mksurfdata/creategridMod.F90 - removed write of LANDMASK and LANDFRAC
+tools/mksurfdata/Makefile - fix clean bug
+tools/mkgriddata/mkgriddata.F90 - add generation of ffracdat file
+   force area calculation for ccsm domain files due to noise in scrip areas
+   change default output filenames
+tools/mkgriddata/mkvarctl.F90 - add support for area recomputation
+tools/mkgriddata/mkfileMod.F90 - removed, merged into creategridMod.F90
+tools/mkgriddata/areaMod.F90 - add flush(6)
+tools/mkgriddata/creategridMod.F90 - add mkfile subroutine
+   fix bug in setting of corner points
+   handle wrap-around points better with corner points
+   add ability to adjust units of area (not automatic)
+   add checks for area
+   add ability write eigher grid or frac file in write_domain
+bld/offline/tests/test_batch.csh - change default version from 53 to 58
+   turn on dgvm testing by default
+bld/offline/jobscript.csh - change to share queue on bluesky
+   run mixed mpi/openmp by default, 2x2
+   change default resolution to T31 (was T42)
+   update to use new surface datasets
+   change default, turn on DUST, RTM, VOC, turn off CN, SUPLN, SUNSHA, STOMATA2
+   add unlimit unlimited for AIX
+   fix redirection to compile_log.clm output file
+src/main/initializeMod.F90 - add fatmlndfrc stuff
+   add computation of ldomain%frac and ldomain%mask
+src/main/controlMod.F90 - add fatmlndfrc stuff
+src/main/clm_varctl.F90 - add fatmlndfrc stuff
+src/main/driver.F90 - remove redundant definition of caldayp1
+src/main/clmtypeInitMod.F90 - remove landfrac variable for clm3 gridcell_type
+src/main/histFileMod.F90 - add indxupsc, jndxupsc indices for upscaling
+src/main/program_csm.F90 - move shr_msg_stdio to after MPI_INIT, change
+   call so it only redirects log file for masterproc.  this will clean
+   up the log file significantly but may lead to error messages ending
+   up in stdout.
+src/main/surfFileMod.F90 - add fatmlndfrc stuff
+src/main/initGridCellsMod.F90 - remove landfrac variable for clm3 gridcell_type
+src/main/domainMod.F90 - reorder domain data slightly (nothing changed)
+src/main/areaMod.F90 - change default of i_ovr and j_ovr from bigint to -1,
+   allows for cleaner writing of indxupsc and jndxupsc in history file.
+   change gridmap_setmapsFM to use _a and _l notation instead of _i and _o
+src/main/clmtype.F90 - remove landfrac from clm3 gridcell_type
+
+	
+Summary of testing:
+
+  Baseline versions, clm3_expa_58, cam3_2_56, ccsm3_1_beta24
+
+  bluesky: clm full suite passes, cam full suite passes
+  tempest: cam full suite passes 
+  bangkok/lf95: cam full suite passes
+  bluevista: ccsm TER.01a B passes for several resolutions, new datasets
+     in scripts
+	
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_58
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Code changes are bfb, but answers may change when using new surface datasets
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CCSM answers will change with new datasets as
+      default datasets are changing.  clm default test is bfb at T31 with new datasets,
+      cam will be bfb as current default datasets are not being updated.
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+
+
 ===============================================================
 Tag name: clm3_expa_58
 Originator(s): Forrest Hoffman

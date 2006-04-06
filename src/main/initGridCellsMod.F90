@@ -335,7 +335,6 @@ contains
        gptr%londeg(g) = ldomain%lonc(i,j) 
        gptr%lat(g)    = ldomain%latc(i,j) * SHR_CONST_PI/180._r8  
        gptr%lon(g)    = ldomain%lonc(i,j) * SHR_CONST_PI/180._r8
-       gptr%landfrac(g) = ldomain%frac(i,j)
        gptr%area(g)   = ldomain%area(i,j)
 
     end do

@@ -46,6 +46,7 @@ module surfFileMod
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: surfrd  ! Read surface dataset and determine subgrid weights
   public :: surfrd_get_grid  ! Read surface dataset into domain
+  public :: surfrd_get_frac  ! Read surface dataset into domain
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -279,7 +280,6 @@ contains
        ni = lsmlon
        nj = lsmlat
 #endif
-       call check_dim(ncid, 'nlevsoi', nlevsoi)
 
     endif
 
@@ -331,6 +331,7 @@ contains
        time_index=1
        call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LONGXY'  , domain%lonc, RET)
        call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LATIXY'  , domain%latc, RET)
+       domain%mask = 1
        call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LANDMASK', domain%mask, RET)
        domain%pftm = domain%mask
        where (domain%mask <= 0)
@@ -358,15 +359,18 @@ contains
        call check_ret(nf_inq_varid(ncid, 'LATIXY', varid), subname)
        call check_ret(nf_get_var_double(ncid, varid, domain%latc), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'LANDMASK', varid), subname)
-       call check_ret(nf_get_var_int(ncid, varid, domain%mask), subname)
-       domain%pftm = domain%mask
-       where (domain%mask <= 0)
-          domain%pftm = -1
-       endwhere
-
-       call check_ret(nf_inq_varid(ncid, 'LANDFRAC', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, domain%frac), subname)
+! set mask to 1 everywhere by default, override if LANDMASK exists
+! if landmask exists, use it to set pftm (for older datasets)
+! pftm should be overwritten below for newer datasets
+       domain%mask = 1
+       ier = nf_inq_varid(ncid, 'LANDMASK', varid)
+       if (ier == NF_NOERR) then
+          call check_ret(nf_get_var_int(ncid, varid, domain%mask), subname)
+          domain%pftm = domain%mask
+          where (domain%mask <= 0)
+             domain%pftm = -1
+          endwhere
+       endif
 
        ier = nf_inq_varid (ncid, 'PFTDATA_MASK', varid)
        if (ier == NF_NOERR) then
@@ -435,13 +439,150 @@ contains
     call mpi_bcast (domain%area , size(domain%area) , MPI_REAL8  , 0, mpicom, ier)
     call mpi_bcast (domain%latc , size(domain%latc) , MPI_REAL8  , 0, mpicom, ier)
     call mpi_bcast (domain%lonc , size(domain%lonc) , MPI_REAL8  , 0, mpicom, ier)
-    call mpi_bcast (domain%mask , size(domain%mask) , MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (domain%pftm , size(domain%pftm) , MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (domain%frac , size(domain%frac) , MPI_REAL8  , 0, mpicom, ier)
     call mpi_bcast (domain%edges, size(domain%edges), MPI_REAL8  , 0, mpicom, ier)
 #endif
 
   end subroutine surfrd_get_grid
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: surfrd_get_frac
+!
+! !INTERFACE:
+  subroutine surfrd_get_frac(domain,filename)
+!
+! !DESCRIPTION:
+! Read the landfrac dataset grid related information:
+! Assume domain has already been initialized and read
+!
+! !USES:
+    use domainMod , only : domain_type
+    use fileutils , only : getfil
+!
+! !ARGUMENTS:
+    implicit none
+    include 'netcdf.inc'
+    type(domain_type),intent(inout) :: domain   ! domain to init
+    character(len=*) ,intent(in)    :: filename ! grid filename
+!
+! !CALLED FROM:
+! subroutine initialize
+!
+! !REVISION HISTORY:
+! Created by T Craig
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer :: i,j                 ! indices
+    integer :: ni,nj               ! size of grid on file
+    integer :: ncid,dimid,varid    ! netCDF id's
+    integer :: ier                 ! error status
+    real(r8):: eps = 1.0e-12_r8    ! lat/lon error tolerance
+    integer,allocatable :: numlon(:)  ! local numlon from file
+    real(r8),allocatable:: lonc(:,:),latc(:,:)  ! local lat/lon
+    character(len=256)  :: locfn   ! local file name
+#if ( defined SCAM )
+    integer :: ret, time_index
+#endif
+    character(len=32) :: subname = 'surfrd_get_frac'     ! subroutine name
+!-----------------------------------------------------------------------
+
+    if (masterproc) then
+
+       if (filename == ' ') then
+          write(6,*) trim(subname),' ERROR: filename must be specified '
+          call endrun()
+       endif
+
+       call getfil( filename, locfn, 0 )
+       call check_ret( nf_open(locfn, 0, ncid), subname )
+
+#if ( ! defined SCAM )
+       call check_ret(nf_inq_dimid (ncid, 'lsmlon', dimid), subname)
+       call check_ret(nf_inq_dimlen(ncid, dimid, ni), subname)
+       call check_ret(nf_inq_dimid (ncid, 'lsmlat', dimid), subname)
+       call check_ret(nf_inq_dimlen(ncid, dimid, nj), subname)
+#else
+       ni = lsmlon
+       nj = lsmlat
+#endif
+
+       if (domain%ni /= ni .or. domain%nj /= nj) then
+          write(6,*) trim(subname),' ERROR: landfrac file mismatch ni,nj'
+          call endrun()
+       endif
+
+       allocate(latc(ni,nj),lonc(ni,nj))
+
+#if ( defined SCAM )
+       time_index=1
+       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LONGXY'  , lonc, RET)
+       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LATIXY'  , latc, RET)
+       do j=1,nj
+       do i=1,ni
+          if (abs(latc(i,j)-domain%latc(i,j)) > eps .or. &
+              abs(lonc(i,j)-domain%lonc(i,j)) > eps) then
+             write(6,*) trim(subname),' ERROR: landfrac file mismatch lat,lon'
+             call endrun()
+          endif
+       enddo
+       enddo
+       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LANDMASK', domain%mask, RET)
+       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LANDFRAC', domain%frac, RET)
+#else
+
+       ! if NUMLON is on file, make sure it's not a reduced grid.
+       ier = nf_inq_varid (ncid, 'NUMLON', varid)
+       if (ier == NF_NOERR) then
+          allocate(numlon(domain%nj))
+          call check_ret(nf_get_var_int(ncid, varid, numlon), subname)
+          if (minval(numlon) /= maxval(numlon)) then
+             write(6,*) 'ERROR surfFileMod: NUMLON no longer supported ', &
+                         minval(numlon),maxval(numlon)
+             call endrun
+          endif
+          deallocate(numlon)
+       endif
+
+       call check_ret(nf_inq_varid(ncid, 'LONGXY' , varid), subname)
+       call check_ret(nf_get_var_double(ncid, varid, lonc), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'LATIXY', varid), subname)
+       call check_ret(nf_get_var_double(ncid, varid, latc), subname)
+
+       do j=1,nj
+       do i=1,ni
+          if (abs(latc(i,j)-domain%latc(i,j)) > eps .or. &
+              abs(lonc(i,j)-domain%lonc(i,j)) > eps) then
+             write(6,*) trim(subname),' ERROR: landfrac file mismatch lat,lon'
+             call endrun()
+          endif
+       enddo
+       enddo
+
+       call check_ret(nf_inq_varid(ncid, 'LANDMASK', varid), subname)
+       call check_ret(nf_get_var_int(ncid, varid, domain%mask), subname)
+
+       call check_ret(nf_inq_varid(ncid, 'LANDFRAC', varid), subname)
+       call check_ret(nf_get_var_double(ncid, varid, domain%frac), subname)
+
+#endif
+
+       deallocate(latc,lonc)
+
+       call check_ret(nf_close(ncid), subname)
+
+    end if   ! end of if-masterproc block
+
+#if (defined SPMD)
+    call mpi_bcast (domain%mask , size(domain%mask) , MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (domain%frac , size(domain%frac) , MPI_REAL8  , 0, mpicom, ier)
+#endif
+
+  end subroutine surfrd_get_frac
 
 !-----------------------------------------------------------------------
 !BOP
@@ -491,6 +632,8 @@ contains
 !!-----------------------------------------------------------------------
 
     if (masterproc) then
+
+       call check_dim(ncid, 'nlevsoi', nlevsoi)
 
        ! Obtain non-grid surface properties of surface dataset other than percent pft
 

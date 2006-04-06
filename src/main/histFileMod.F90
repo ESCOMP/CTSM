@@ -1711,6 +1711,8 @@ contains
     use clm_varpar  , only : lsmlon, lsmlat, nlevsoi
     use clm_varctl  , only : caseid, ctitle, frivinp_rtm, fsurdat, finidat, fpftcon
     use domainMod   , only : ldomain
+    use clm_atmlnd  , only : gridmap_a2l
+    use areaMod     , only : gridmap_setptrs
     use clm_varcon  , only : zsoi, zlak
     use fileutils   , only : get_filename
     use time_manager, only : get_ref_date
@@ -1751,6 +1753,8 @@ contains
     integer :: numg                ! total number of gridcells across all processors
     real(r8):: lonvar(lsmlon)      ! only used for full grid
     real(r8):: latvar(lsmlat)      ! only used for full grid
+    integer, pointer :: i_ovr(:,:,:) ! i index from gridmap
+    integer, pointer :: j_ovr(:,:,:) ! j index from gridmap
 #ifdef RTM
     real(r8):: lonvar_rof(rtmlon)  ! only used for full grid
     real(r8):: latvar_rof(rtmlat)  ! only used for full grid
@@ -1952,6 +1956,12 @@ contains
     call ncd_defvar(varname='pftmask' , xtype=nf_int, dim1name='lon', dim2name='lat', &
          long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t))
 
+    call ncd_defvar(varname='indxupsc', xtype=nf_int, dim1name='lon', dim2name='lat', &
+         long_name='upscaling atm grid i-index', ncid=nfid(t))
+
+    call ncd_defvar(varname='jndxupsc', xtype=nf_int, dim1name='lon', dim2name='lat', &
+         long_name='upscaling atm grid j-index', ncid=nfid(t))
+
     ! Define time information
 
     dim1id(1) = time_dimid
@@ -2025,6 +2035,11 @@ contains
     call ncd_ioglobal(varname='landfrac', data=ldomain%frac, ncid=nfid(t), flag='write')
     call ncd_ioglobal(varname='landmask', data=ldomain%mask, ncid=nfid(t), flag='write')
     call ncd_ioglobal(varname='pftmask' , data=ldomain%pftm, ncid=nfid(t), flag='write')
+
+!-- write i and j indices for a2l mapping, assumes mx_ovr is one --
+    call gridmap_setptrs(gridmap_a2l,i_ovr=i_ovr,j_ovr=j_ovr)
+    call ncd_ioglobal(varname='indxupsc', data=i_ovr       , ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='jndxupsc', data=j_ovr       , ncid=nfid(t), flag='write')
 
   end subroutine htape_create
 

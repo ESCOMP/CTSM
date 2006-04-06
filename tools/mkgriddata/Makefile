@@ -108,7 +108,7 @@ endif
 #------------------------------------------------------------------------
 
 OBJS := fileutils.o shr_kind_mod.o  shr_const_mod.o shr_sys_mod.o ncdio.o domainMod.o \
-        areaMod.o mkvarctl.o mkvarsur.o creategridMod.o mkfileMod.o mkgriddata.o nanMod.o
+        areaMod.o mkvarctl.o mkvarsur.o creategridMod.o mkgriddata.o nanMod.o
 
 .SUFFIXES:
 .SUFFIXES: .F90 .o
@@ -132,6 +132,5 @@ areaMod.o:       shr_kind_mod.o shr_const_mod.o nanMod.o domainMod.o
 ncdio.o:         shr_kind_mod.o shr_sys_mod.o mkvarsur.o
 mkvarctl.o:      shr_kind_mod.o
 mkvarsur.o:      shr_kind_mod.o domainMod.o
-mkfileMod.o:     shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarctl.o ncdio.o 
-creategridMod.o: shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o domainMod.o mkfileMod.o
-mkgriddata.o:    shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o mkfileMod.o creategridMod.o 
+creategridMod.o: shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o domainMod.o 
+mkgriddata.o:    shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o creategridMod.o 

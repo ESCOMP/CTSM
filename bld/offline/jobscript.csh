@@ -34,14 +34,14 @@
 ## @ node_usage = not_shared acquires dedicated access to nodes for the job.
 ## @ queue tells load leveler to submit the job
 
-#@ class          = com_reg
-#@ node           = 2
-#@ tasks_per_node = 1
+#@ class          = share
+#@ node           = 1
+#@ tasks_per_node = 2
 #@ output         = clm3.$(jobid)
 #@ error          = clm3.$(jobid)
 #@ job_type       = parallel
-#@ network.MPI    = csss,not_shared,us
-#@ node_usage     = not_shared
+#@ network.MPI    = csss,shared,us
+#@ node_usage     = shared
 ## @ account_no   = 00000000
 ## @ wall_clock_limit = 3800
 #@ queue
@@ -128,21 +128,21 @@
 # 2. Set model resolution 
 ##-------------------------------------------------------------------------------
 
-setenv LSMLON       128
-setenv LSMLAT       64
+setenv LSMLON       96
+setenv LSMLAT       48
 setenv MAXPATCH_PFT numpft+1
 
 ##-------------------------------------------------------------------------------
 # 3. Set root directory for CLM source distribution
 ##-------------------------------------------------------------------------------
 
-setenv ROOTDIR /fs/cgd/data0/mvertens/src/clm/clm_exp/clm3_expa_15
+setenv ROOTDIR /fis/cgd/ccr/$LOGNAME/fm/clm3
 
 ##-------------------------------------------------------------------------------
 # 4. Set directory to build the executable in
 ##-------------------------------------------------------------------------------
 
-setenv MODEL_EXEDIR /scratch/cluster/$LOGNAME/pftdyn
+setenv MODEL_EXEDIR /ptmp/$LOGNAME/clmrun
 
 ##-------------------------------------------------------------------------------
 # 5. Set root directory for input data
@@ -169,11 +169,11 @@ setenv CSMDATA /fs/cgd/csm/inputdata/lnd/clm2
 # In SPMD mode    : NTHREADS must be set equal to (CPUs-per-node / tasks_per_node)
 # In non-SPMD mode: NTHREADS must be set equal to (CPUs-per-node)
 
-setenv SPMD     FALSE
-setenv NTASKS   1 
+setenv SPMD     TRUE
+setenv NTASKS   2
 
-setenv SMP      FALSE
-setenv NTHREADS 1 
+setenv SMP      TRUE
+setenv NTHREADS 2
 
 
 # force OpenMP threading to be disabled, regardless of the setting above
@@ -279,11 +279,12 @@ endif
 mkdir -p $MODEL_EXEDIR; cd $MODEL_EXEDIR
 cat >! lnd.stdin << EOF
  &clmexp
- caseid         = 'pftdyn'
- ctitle         = 'pftdyn'
+ caseid         = 'test1'
+ ctitle         = 'test1 title'
  finidat        = ' '
- fsurdat        = '/fs/cgd/data0/mvertens/src/clm/clm_exp/clm3_expa_15/bld/offline/surface-data.128x064.nc' 
- fpftdyn        = '/fs/cgd/data0/mvertens/src/clm/clm_exp/clm3_expa_15/bld/offline/surface-data.dynpft.128x064.nc'
+ fsurdat        = '$CSMDATA/surfdata/surfdata_48x96_060404.nc'
+ fatmgrid       = '$CSMDATA/griddata/griddata_48x96_060404.nc'
+ fatmlndfrc     = '$CSMDATA/griddata/fracdata_48x96_gx1v3_060404.nc'
  fpftcon        = '$CSMDATA/pftdata/pft-physiology-cn16.c040719'
  frivinp_rtm    = '$CSMDATA/rtmdata/rdirc.05'
  offline_atmdir = '$CSMDATA/NCEPDATA'
@@ -301,6 +302,12 @@ cat >! lnd.stdin << EOF
  hist_crtinic   = 'MONTHLY'
  /
 EOF
+# fatmgrid       = '/ptmp/tcraig/surface-data.064x032.tc.060117.nc'
+# fsurdat        = '/ptmp/tcraig/surface-data.064x032.tc.060123.nc'
+# fsurdat        = '/ptmp/tcraig/surface-data.720x360.tc.060120.nc'
+# fsurdat        = '/ptmp/tcraig/surface-data.128x064.double.tc.060123.nc'
+# fsurdat        = '/fs/cgd/csm/inputdata/lnd/clm2/srfdata/cam/clms_3.1_32x64_c050523.nc'
+# fpftdyn        = '/fs/cgd/data0/mvertens/src/clm/clm_exp/clm3_expa_15/bld/offline/surface-data.dynpft.128x064.nc'
 
 ##-------------------------------------------------------------------------------
 # 9. Determine which model cpp options will be enabled
@@ -322,14 +329,14 @@ if !( -d $MODEL_EXEDIR/obj ) mkdir -p $MODEL_EXEDIR/obj; cd $MODEL_EXEDIR/obj
 #define LSMLON       $LSMLON
 #define LSMLAT       $LSMLAT
 #define MAXPATCH_PFT $MAXPATCH_PFT
-#undef  DUST
-#undef  RTM
-#undef  VOC
+#define DUST
+#define RTM
+#define VOC
 #undef  DGVM
-#define CN
-#define SUPLN
-#define SUNSHA
-#define STOMATA2
+#undef  CN
+#undef  SUPLN
+#undef  SUNSHA
+#undef  STOMATA2
 EOF
 
 ##=======================================================================
@@ -360,8 +367,8 @@ $ROOTDIR/src/riverroute
 $ROOTDIR/src/csm_share/shr
 $ROOTDIR/src/utils/timing
 $ROOTDIR/src/utils/esmf_wrf_timemgr
-$ROOTDIR/src/mksrfdata
 EOF
+#$ROOTDIR/src/mksrfdata
 
 touch $MODEL_EXEDIR/compile_log.clm
 echo '------------------------------------------------------------------' >>& $MODEL_EXEDIR/compile_log.clm
@@ -421,7 +428,7 @@ endif
 # since cross compilers are used to do the builds. The user will have to do
 # this independently since this is not officially supported in this script.
 
-gmake -j8 -f $ROOTDIR/bld/offline/Makefile >>& $MODEL_EXEDIR/compile_log.clm 
+gmake -j8 -f $ROOTDIR/bld/offline/Makefile >& $MODEL_EXEDIR/compile_log.clm 
 if ($status != 0) then
   echo GMAKE ERROR failed: see $MODEL_EXEDIR/compile_log.clm
   exit  5
@@ -476,6 +483,7 @@ if ($OS == 'AIX') then
   setenv XLSMPOPTS "stack=86000000"
   setenv OMP_DYNAMIC false
   setenv OMP_NUM_THREADS $NTHREADS 
+  ulimit unlimited
   if ($SPMD == TRUE) then
       poe clm < lnd.stdin >&! clm.log.$LID || echo "CLM run failed" && exit 1
   else

@@ -25,19 +25,18 @@ module domainMod
      integer          :: ni,nj         ! size of global arrays (lsmlon,lsmlat)
      real(r8)         :: edges(4)      ! edges (N,E,S,W)
      integer ,pointer :: mask(:,:)     ! land mask: 1 = land, 0 = ocean
-     integer ,pointer :: pftm(:,:)     ! pft  mask: 1 = real, 0 = fake, 
-                                       ! -1 = invalid, used only in land domain
      real(r8),pointer :: frac(:,:)     ! fractional land
      real(r8),pointer :: latc(:,:)     ! latitude of grid cell (deg)
      real(r8),pointer :: lonc(:,:)     ! longitude of grid cell (deg)
      real(r8),pointer :: area(:,:)     ! grid cell area (km**2)
-     real(r8),pointer :: nara(:,:)     ! normalized area in upscaling (km**2),
-                                       ! used only for land domain
      real(r8),pointer :: lats(:,:)     ! grid cell latitude, S edge (deg)
      real(r8),pointer :: latn(:,:)     ! grid cell latitude, N edge (deg)
      real(r8),pointer :: lonw(:,:)     ! grid cell longitude, W edge (deg)
      real(r8),pointer :: lone(:,:)     ! grid cell longitude, E edge (deg)
      character*16     :: domain_set    ! flag to check if domain is set
+     !--- following are valid only for land domain ---
+     integer ,pointer :: pftm(:,:)     ! pft  mask: 1=real, 0=fake, -1=notset
+     real(r8),pointer :: nara(:,:)     ! normalized area in upscaling (km**2),
   end type domain_type
 
   type(domain_type),public :: ldomain
@@ -110,18 +109,19 @@ contains
     domain%nj       = nj
     domain%edges    = nan
     domain%mask     = bigint
-    domain%pftm     = bigint
     domain%frac     = nan
     domain%latc     = nan
     domain%lonc     = nan
     domain%area     = nan
-    domain%nara     = nan
     domain%lats     = nan
     domain%latn     = nan
     domain%lonw     = nan
     domain%lone     = nan
 
     domain%domain_set = domain_set
+
+    domain%pftm     = bigint
+    domain%nara     = nan
 
 end subroutine domain_init
 !------------------------------------------------------------------------------

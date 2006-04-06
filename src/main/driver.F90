@@ -586,7 +586,6 @@ subroutine driver2(caldayp1, declinp1, rstwr)
   integer  :: ncdate        ! current date
   integer  :: nbdate        ! base date (reference date)
   integer  :: kyr           ! thousand years, equals 2 at end of first year
-  real(r8) :: caldayp1      ! calendar day for nstep+1
   integer  :: begp, endp    ! clump beginning and ending pft indices
   integer  :: begc, endc    ! clump beginning and ending column indices
   integer  :: begl, endl    ! clump beginning and ending landunit indices

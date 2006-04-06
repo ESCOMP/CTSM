@@ -25,6 +25,7 @@ program mksrfdat
     use mkvarctl
     use areaMod
     use ncdio
+    use nanMod
 !
 ! !ARGUMENTS:
     implicit none
@@ -195,8 +196,11 @@ program mksrfdat
     ! Determine land model grid, fractional land and land mask
     
     call read_domain(ldomain,fgrddat)
-    call domain_setptrs(ldomain,lsmlon,lsmlat)
+    ! --- invalidate mask and frac for ldomain ---
+    ldomain%mask = bigint
+    ldomain%frac = nan
 
+    call domain_setptrs(ldomain,lsmlon,lsmlat)
     write(6,*)'lsmlon= ',lsmlon,' lsmlat= ',lsmlat
 
     ! Allocate and initialize dynamic memory
@@ -427,8 +431,8 @@ program mksrfdat
 
     ! Create netCDF surface dataset.  
 
-    write (resol,'(i3.3,"x",i3.3)') lsmlon,lsmlat
-    fsurdat = './surface-data.'//trim(resol)//'.nc'
+    write (resol,'(i3.3,"x",i3.3)') lsmlat,lsmlon
+    fsurdat = './surfdata_'//trim(resol)//'.nc'
 
     call mkfile(ldomain%ni, ldomain%nj, fsurdat, dynlanduse = .false.)
     call write_domain(ldomain,fsurdat)

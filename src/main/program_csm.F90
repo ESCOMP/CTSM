@@ -129,12 +129,6 @@ PROGRAM program_csm
   if (gptlinitialize () < 0) call endrun ('CLM: gptlinitialize')
 
   ! -----------------------------------------------------------------
-  ! Initailize input/output units
-  ! -----------------------------------------------------------------
-
-  call shr_msg_stdio ('lnd')
-
-  ! -----------------------------------------------------------------
   ! Initialize inter-model MPI communication 
   ! -----------------------------------------------------------------
 
@@ -151,6 +145,14 @@ PROGRAM program_csm
 #if (defined SPMD)
   call spmd_init()
 #endif
+
+  ! -----------------------------------------------------------------
+  ! Initialize input/output units
+  ! -----------------------------------------------------------------
+
+   call shr_msg_chdir('lnd')                    ! all PE's chdir
+   call shr_msg_chStdin('lnd')                  ! all PE's redirect unit 5
+   if (masterproc) call shr_msg_chStdout('lnd') ! redir unit 6
 
   ! -----------------------------------------------------------------
   ! Initialize land model

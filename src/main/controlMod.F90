@@ -52,6 +52,7 @@ module controlMod
 !    o finidat         = 256 character initial conditions file name
 !    o fsurdat         = 256 character surface data file name
 !    o fatmgrid        = 256 character atmosphere grid data file name
+!    o fatmlndfrc      = 256 character landfrac (on atm grid) file name
 !    o fndepdat        = 254 character nitrogen deposition data file name (netCDF)
 !    o fpftcon         = 256 character data file with PFT physiological constants
 !    o frivinp_rtm     = 256 character input data file for rtm
@@ -212,8 +213,8 @@ contains
     ! clm input datasets
 
     namelist /clmexp/  &
-         finidat, fsurdat, fatmgrid, fpftcon, frivinp_rtm,  fpftdyn, &
-         fndepdat, fndepdyn, nrevsn, offline_atmdir 
+         finidat, fsurdat, fatmgrid, fatmlndfrc, fpftcon, frivinp_rtm,  &
+         fpftdyn, fndepdat, fndepdyn, nrevsn, offline_atmdir 
 
     ! clm history, restart, archive options
 
@@ -268,6 +269,7 @@ contains
 
     fsurdat     = ' '
     fatmgrid    = ' '
+    fatmlndfrc  = ' '
     fndepdat    = ' '
     fndepdyn    = ' '
     finidat     = ' '
@@ -625,6 +627,7 @@ contains
     call mpi_bcast (finidat , len(finidat) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsurdat , len(fsurdat) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmgrid, len(fatmgrid), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdat, len(fndepdat), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdyn, len(fndepdyn), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
@@ -737,6 +740,13 @@ contains
        write(6,*) '   atm grid data  = ',trim(fatmgrid)
     else
        write(6,*) '   atm grid data  = ',trim(fatmgrid)
+    end if
+    if (fatmlndfrc == ' ') then
+       write(6,*) '   fatmlndfrc not set, using fatmgrid'
+       fatmlndfrc = fatmgrid
+       write(6,*) '   land frac data = ',trim(fatmlndfrc)
+    else
+       write(6,*) '   land frac data = ',trim(fatmlndfrc)
     end if
     if (fndepdat == ' ') then
         write(6,*) '   NOT using input data for nitrogen deposition'

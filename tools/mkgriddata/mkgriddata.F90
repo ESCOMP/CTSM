@@ -13,8 +13,7 @@ program mkgriddata
     use shr_kind_mod , only : r8 => shr_kind_r8
     use shr_sys_mod  , only : shr_sys_getenv
     use fileutils    , only : getfil, putfil, opnfil, getavu, get_filename
-    use creategridMod, only : creategrid, write_domain
-    use mkfileMod    , only : mkfile
+    use creategridMod, only : creategrid, write_domain, mkfile
     use mkvarctl
     use mkvarsur
     use areaMod
@@ -35,6 +34,7 @@ program mkgriddata
     integer  :: ier                  ! error status
     character(len= 7) :: resol       ! resolution for file name
     character(len=64) :: fgriddat    ! output filename
+    character(len=64) :: ffracdat    ! output filename
     character(len=256):: fileinfo    ! output filename
     character(len=32) :: subname = 'mkgriddata'  ! program name
 
@@ -67,6 +67,8 @@ program mkgriddata
 
     if     (mksrf_fccsmdom /= ' ')  then
        write(6,*) 'Setting grid from ccsm domain file ',trim(mksrf_fccsmdom)
+       area_units = 1
+       area_valid = .false.
        call creategrid(mksrf_fccsmdom,'external')
        fileinfo = mksrf_fccsmdom
     elseif (mksrf_fcamtopo /= ' ') then
@@ -90,12 +92,15 @@ program mkgriddata
     lsmlon = ldomain%ni
     lsmlat = ldomain%nj
 
-    write (resol,'(i3.3,"x",i3.3)') lsmlon,lsmlat
-    fgriddat = './grid-data.'//trim(resol)//'.nc'
+    write (resol,'(i3.3,"x",i3.3)') lsmlat,lsmlon
+    fgriddat = './griddata_'//trim(resol)//'.nc'
+    ffracdat = './fracdata_'//trim(resol)//'.nc'
 
-    call mkfile(lsmlon, lsmlat, fgriddat, fileinfo)
+    call mkfile(lsmlon, lsmlat, fgriddat, fileinfo, itype=1)
+    call mkfile(lsmlon, lsmlat, ffracdat, fileinfo, itype=2)
 
-    call write_domain(ldomain,fgriddat)
+    call write_domain(ldomain,fgriddat, itype=1)
+    call write_domain(ldomain,ffracdat, itype=2)
 
     write (6,'(72a1)') ("-",i=1,60)
     write (6,'(a46,f5.1,a4,f5.1,a5)') 'land model grid data set successfully created for ', &

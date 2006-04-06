@@ -121,7 +121,7 @@ $(EXENAME): $(OBJS)
 	$(FC) -o $@ $(OBJS) $(LDFLAGS)
 
 clean:
-	$(RM) -f $(OBJS) *.mod $(EXEDIR)/$(EXENAME)
+	$(RM) -f $(OBJS) *.mod $(EXENAME)
 
 fileutils.o:
 shr_kind_mod.o: 

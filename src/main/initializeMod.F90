@@ -57,8 +57,8 @@ contains
     use shr_sys_mod     , only : shr_sys_flush
     use spmdMod         , only : masterproc
     use clm_varpar      , only : lsmlon, lsmlat, maxpatch
-    use clm_varctl      , only : finidat, fsurdat, fatmgrid, fpftdyn, &
-                                 fndepdyn, nsrest 
+    use clm_varctl      , only : finidat, fsurdat, fatmgrid, fatmlndfrc, &
+                                 fpftdyn, fndepdyn, nsrest 
     use clmtypeInitMod  , only : initClmtype
     use clm_atmlnd      , only : init_atm2lnd_type, init_lnd2atm_type, &
                                  gridmap_a2l, gridmap_l2a, &
@@ -78,7 +78,7 @@ contains
                                  restFile_open, restFile_close, &
                                  restFile_read, restFile_read_binary
     use accFldsMod      , only : initAccFlds, initAccClmtype
-    use surfFileMod     , only : surfrd,surfrd_get_grid
+    use surfFileMod     , only : surfrd,surfrd_get_grid,surfrd_get_frac
     use mkarbinitMod    , only : mkarbinit
     use ndepFileMod     , only : ndepdyn_init, ndepdyn_interp
 #if (defined DGVM)
@@ -151,9 +151,11 @@ contains
 
     if (masterproc) then
        write (6,*) 'Attempting to initialize the land model .....'
+       write (6,*) 'This is the local tcraig version '
        write (6,*)
        call shr_sys_flush(6)
     endif
+
     call control_init ()
     if (masterproc) call control_print()
 
@@ -170,10 +172,19 @@ contains
 
     ! Set coarse and fine grids
 
+    if (masterproc) then
+       write (6,*) 'Attempting to read ldomain from fsurdat'
+       call shr_sys_flush(6)
+    endif
     call surfrd_get_grid(ldomain, fsurdat)
     if (ldomain%ni /= lsmlon .or. ldomain%nj /= lsmlat) then
        if (masterproc) write(6,*) 'ERROR ldomain size not consistent with lsmlon/lsmlat: ',ldomain%ni, ldomain%nj, lsmlon, lsmlat
        call endrun()
+    endif
+
+    if (masterproc) then
+       write (6,*) 'Attempting to read adomain from fatmgrid'
+       call shr_sys_flush(6)
     endif
     call surfrd_get_grid(adomain, fatmgrid)
     if (ldomain%ni < adomain%ni .or. ldomain%nj < adomain%nj) then
@@ -181,10 +192,40 @@ contains
        call endrun()
     endif
 
+    if (masterproc) then
+       write (6,*) 'Attempting to read atm landfrac from fatmlndfrc'
+       call shr_sys_flush(6)
+    endif
+    call surfrd_get_frac(adomain, fatmlndfrc)
+
     ! Set the a2l and l2a maps
 
     call gridmap_setmapsFM(adomain,ldomain,gridmap_a2l,gridmap_l2a)
+
+    ! Set ldomain mask and frac base on adomain and mapping.
+    ! Want ldomain%frac to match adomain%frac but scale by effective area.
+    ! so the implied area of an ldomain cell is the actual area *
+    ! scaled frac which aggregated over all land cells under an atm cell,
+    ! will match the area associated with the atm cell.
+
+    call gridmap_setptrs(gridmap_a2l,n_ovr=n_ovr,i_ovr=i_ovr,j_ovr=j_ovr)
+    do j=1,ldomain%nj
+    do i=1,ldomain%ni
+       if (n_ovr(i,j) == 0) then
+          ldomain%mask(i,j) = 0
+          ldomain%frac(i,j) = 0.
+       elseif (n_ovr(i,j) == 1) then
+          ldomain%mask(i,j) = 1
+          ldomain%frac(i,j) = adomain%frac(i_ovr(i,j,1),j_ovr(i,j,1))*  &
+                              (ldomain%nara(i,j)/ldomain%area(i,j))
+       else
+          if (masterproc) write(6,*) 'ERROR setting ldomain%frac, n_ovr'
+          call endrun()
+       endif
+    enddo
+    enddo
     
+
     ! Read surface dataset and set up vegetation type [vegxy] and 
     ! weight [wtxy] arrays for [maxpatch] subgrid patches.
     

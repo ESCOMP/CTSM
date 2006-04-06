@@ -15,6 +15,8 @@ module creategridMod
   use domainMod   , only : domain_init, domain_type, domain_check
   use areaMod
   use ncdio
+  use shr_const_mod, only : SHR_CONST_PI, SHR_CONST_REARTH
+  use shr_sys_mod    , only : shr_sys_flush
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -23,9 +25,11 @@ module creategridMod
   public :: creategrid    ! Generate land model grid.
   public :: read_domain   ! read domain from netcdf file
   public :: write_domain  ! write domain to netcdf file
+  public :: mkfile        ! create netcdf file
 
 ! !PRIVATE MEMBER FUNCTIONS:
-  real(r8) :: flandmin = 0.001            !minimum land frac for land cell
+  real(r8) :: flandmin = 0.001             ! minimum land frac for land cell
+  real(r8) :: re = SHR_CONST_REARTH*0.001  ! radius of earth (km)
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -87,7 +91,7 @@ contains
 
     if (trim(type) == 'internal') then
        if (mksrf_lsmlon==0 .and. mksrf_lsmlat==0) then
-          write(6,*)'must specify mksrf_lsmlon/lat with internal type'
+          write(6,*) 'must specify mksrf_lsmlon/lat with internal type'
           stop
        endif
 
@@ -487,8 +491,8 @@ contains
           endif
           domain%latn(i,j) = yv(3,i,j)
           domain%lone(i,j) = xv(3,i,j)
-          domain%lats(i,j) = yv(2,i,j)
-          domain%lonw(i,j) = xv(2,i,j)
+          domain%lats(i,j) = yv(1,i,j)
+          domain%lonw(i,j) = xv(1,i,j)
        enddo
        enddo
        deallocate(xv,yv)
@@ -563,6 +567,11 @@ contains
        call check_ret(nf_get_var_double (ncid, varid, domain%area), subname)
     endif
 
+    if (area_units == 1) then
+       domain%area = domain%area * re * re
+       area_units = 0
+    endif
+
     call check_ret(nf_close(ncid), subname)
 
     if (.not.lonlatset) then
@@ -593,6 +602,7 @@ contains
     endif
 
     if (.not.llneswset) then
+       llneswset = .true.
        if (edgeneswset) then
           write(6,*) trim(subname),' compute lat[ns],lon[we] from edge[nesw]'
           call celledge (domain, domain%edgen,domain%edgee,domain%edges,domain%edgew)
@@ -602,22 +612,47 @@ contains
        endif
     endif
 
-    if (.not.areaset) then
+! check n/s/e/w/ consistent with center
+    write(6,*) trim(subname),' check nesw consistent with center'
+    do j = 1, nlat
+    do i = 1, nlon
+       call shr_sys_flush(6)
+       if (domain%lone(i,j) < domain%longxy(i,j))  then
+          domain%lone(i,j) = domain%lone(i,j) + 360.0_r8
+          domain%edgee = max(domain%edgee,domain%lone(i,j))
+       endif
+       if (domain%lonw(i,j) > domain%longxy(i,j))  then
+          domain%lonw(i,j) = domain%lonw(i,j) - 360.0_r8
+          domain%edgew = min(domain%edgew,domain%lonw(i,j))
+       endif
+    enddo
+    enddo
+
+    if (.not.edgeneswset) then
+       write(6,*) trim(subname),' set edges '
+       call shr_sys_flush(6)
+       edgeneswset = .true.
+       domain%edgen = maxval(domain%latn)
+       domain%edgee = maxval(domain%lone)
+       domain%edges = minval(domain%lats)
+       domain%edgew = minval(domain%lonw)
+    endif
+
+    if (.not.areaset .or. .not.area_valid) then
+       areaset = .true.
        if (edgeneswset) then
           write(6,*) trim(subname),' compute cellarea with edge[nesw]'
+          call shr_sys_flush(6)
           call cellarea (domain, domain%edgen,domain%edgee,domain%edges,domain%edgew)
        else
           write(6,*) trim(subname),' compute cellarea'
+          call shr_sys_flush(6)
           call cellarea (domain)
        endif
     endif
 
-    if (.not.edgeneswset) then
-        domain%edgen = maxval(domain%latn)
-        domain%edgee = maxval(domain%lone)
-        domain%edges = minval(domain%lats)
-        domain%edgew = minval(domain%lonw)
-    endif
+    write(6,*) trim(subname),' done'
+    call shr_sys_flush(6)
 
 !    write(6,*) ' '
 !    write(6,*) trim(subname),':'
@@ -626,12 +661,171 @@ contains
   end subroutine read_domain
 
 !----------------------------------------------------------------------------
+
+  subroutine mkfile(lsmlon, lsmlat, fname, finfo, itype)
+
+    use shr_kind_mod, only : r8 => shr_kind_r8
+    use shr_sys_mod , only : shr_sys_getenv
+    use fileutils   , only : get_filename
+    use mkvarctl
+    use ncdio
+
+    implicit none
+    integer, intent(in) :: lsmlon, lsmlat
+    character(len=*),intent(in) :: fname
+    character(len=*),intent(in) :: finfo
+    integer, intent(in), optional :: itype
+
+    integer :: ncid
+    integer :: j                    ! index
+    integer :: pftsize              ! size of lsmpft dimension
+    integer :: dimid                ! temporary
+    integer :: values(8)            ! temporary
+    character(len=256) :: str       ! global attribute string
+    character(len=256) :: name      ! name of attribute
+    character(len=256) :: unit      ! units of attribute
+    character(len= 18) :: datetime  ! temporary
+    character(len=  8) :: date      ! temporary
+    character(len= 10) :: time      ! temporary
+    character(len=  5) :: zone      ! temporary
+    integer            :: ier       ! error status
+    integer            :: omode     ! netCDF output mode
+    character(len=32)  :: subname = 'mkfile'  ! subroutine name
+    integer            :: type      ! 1=grid, 2=frac
+!-----------------------------------------------------------------------
+
+    type = 1
+    if (present(itype)) then
+       type = itype
+    endif
+
+    call check_ret(nf_create(trim(fname), nf_clobber, ncid), subname)
+    call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
+
+    ! Define dimensions.
+
+    call check_ret(nf_def_dim (ncid, 'lsmlon'    , lsmlon      , dimid), subname)
+    call check_ret(nf_def_dim (ncid, 'lsmlat'    , lsmlat      , dimid), subname)
+    call check_ret(nf_def_dim (ncid, 'nchar'  , 128         , dimid), subname)
+
+    ! Create global attributes.
+
+    str = 'NCAR-CSM'
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'Conventions', len_trim(str), trim(str)), subname)
+
+    call date_and_time (date, time, zone, values)
+    datetime(1:8) =        date(5:6) // '-' // date(7:8) // '-' // date(3:4)
+    datetime(9:)  = ' ' // time(1:2) // ':' // time(3:4) // ':' // time(5:6) // ' '
+    str = 'created on: ' // datetime
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'History_Log', len_trim(str), trim(str)), subname)
+
+    call shr_sys_getenv ('LOGNAME', str, ier)
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'Logname', len_trim(str), trim(str)), subname)
+
+    call shr_sys_getenv ('HOST', str, ier)
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'Host', len_trim(str), trim(str)), subname)
+
+    str = finfo
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'Input_Filename', len_trim(str), trim(str)), subname)
+
+    str = 'Community Land Model: CLM3'
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'Source', len_trim(str), trim(str)), subname)
+
+    str = '$Name: clm3_expa_48_brnchT_fmesh13 $'
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'Version', len_trim(str), trim(str)), subname)
+
+    str = '$Id: creategridMod.F90,v 1.1.2.1.2.1 2005/12/22 16:25:18 tcraig Exp $'
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'Revision_Id', len_trim(str), trim(str)), subname)
+
+    ! ----------------------------------------------------------------------
+    ! Define variables
+    ! ----------------------------------------------------------------------
+
+    call ncd_defvar(ncid=ncid, varname='NUMLON', xtype=nf_int, &
+         dim1name='lsmlat', &
+         long_name='number of grid cells at each latitude', units='unitless')
+
+    call ncd_defvar(ncid=ncid, varname='LONGXY', xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='longitude', units='degrees east')
+
+    call ncd_defvar(ncid=ncid, varname='LATIXY', xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='latitude', units='degrees north')
+
+    if (type == 1) then
+
+       call ncd_defvar(ncid=ncid, varname='EDGEN', xtype=nf_double, &
+         long_name='northern edge of surface grid', units='degrees north')
+    
+       call ncd_defvar(ncid=ncid, varname='EDGEE', xtype=nf_double, &
+         long_name='eastern edge of surface grid', units='degrees east')
+    
+       call ncd_defvar(ncid=ncid, varname='EDGES', xtype=nf_double, &
+         long_name='southern edge of surface grid', units='degrees north')
+    
+       call ncd_defvar(ncid=ncid, varname='EDGEW', xtype=nf_double, &
+         long_name='western edge of surface grid', units='degrees east')
+
+       call ncd_defvar(ncid=ncid, varname='LATN' , xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='latitude of north edge', units='degrees north')
+
+       call ncd_defvar(ncid=ncid, varname='LONE' , xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='longitude of east edge', units='degrees east')
+
+       call ncd_defvar(ncid=ncid, varname='LATS' , xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='latitude of south edge', units='degrees north')
+
+       call ncd_defvar(ncid=ncid, varname='LONW' , xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='longitude of west edge', units='degrees east')
+
+       call ncd_defvar(ncid=ncid, varname='AREA' , xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='area', units='km^2')
+
+    elseif (type == 2) then
+
+       call ncd_defvar(ncid=ncid, varname='LANDMASK', xtype=nf_int, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='land/ocean mask', units='0=ocean and 1=land')
+
+       call ncd_defvar(ncid=ncid, varname='LANDFRAC', xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='land fraction', units='unitless')
+
+    else
+
+       write(6,*) 'ERROR: itype value invalid ',type
+       stop
+
+    endif
+
+    ! End of define mode
+
+    call check_ret(nf_enddef(ncid), subname)
+    call check_ret(nf_close(ncid), subname)
+
+  end subroutine mkfile
+
+!----------------------------------------------------------------------------
 !BOP
 !
 ! !IROUTINE: write_domain
 !
 ! !INTERFACE:
-  subroutine write_domain(domain,fname)
+  subroutine write_domain(domain,fname,itype)
 !
 ! !USES:
 !
@@ -642,6 +836,7 @@ contains
     implicit none
     type(domain_type),intent(in) :: domain
     character(len=*) ,intent(in) :: fname
+    integer, intent(in), optional :: itype
 !
 ! !REVISION HISTORY:
 ! Author: T Craig
@@ -652,7 +847,13 @@ contains
     integer  :: ncid                           !netCDF file id
     integer  :: omode                          !netCDF output mode
     character(len= 32) :: subname = 'write_domain'
+    integer  :: type   ! 1=grid, 2=frac
 !-----------------------------------------------------------------
+
+     type = 1
+     if (present(itype)) then
+        type = itype
+     endif
 
 !    write(6,*) ' '
 !    write(6,*) trim(subname),':'
@@ -665,22 +866,35 @@ contains
 
     ! Write domain fields 
 
-    call ncd_ioglobal(varname='EDGEN'   , data=domain%edgen, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='EDGEE'   , data=domain%edgee, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='EDGES'   , data=domain%edges, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='EDGEW'   , data=domain%edgew, ncid=ncid, flag='write')
-
-    call ncd_ioglobal(varname='LATN'    , data=domain%latn , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='LONE'    , data=domain%lone , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='LATS'    , data=domain%lats , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='LONW'    , data=domain%lonw , ncid=ncid, flag='write')
-
     call ncd_ioglobal(varname='NUMLON'  , data=domain%numlon, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='AREA'    , data=domain%area  , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='LONGXY'  , data=domain%longxy, ncid=ncid, flag='write')
     call ncd_ioglobal(varname='LATIXY'  , data=domain%latixy, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='LANDMASK', data=domain%mask  , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='LANDFRAC', data=domain%frac  , ncid=ncid, flag='write')
+
+    if (type == 1) then
+
+       call ncd_ioglobal(varname='EDGEN'   , data=domain%edgen, ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='EDGEE'   , data=domain%edgee, ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='EDGES'   , data=domain%edges, ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='EDGEW'   , data=domain%edgew, ncid=ncid, flag='write')
+
+       call ncd_ioglobal(varname='LATN'    , data=domain%latn , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='LONE'    , data=domain%lone , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='LATS'    , data=domain%lats , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='LONW'    , data=domain%lonw , ncid=ncid, flag='write')
+
+       call ncd_ioglobal(varname='AREA'    , data=domain%area  , ncid=ncid, flag='write')
+
+    elseif (type == 2) then
+
+       call ncd_ioglobal(varname='LANDMASK', data=domain%mask  , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='LANDFRAC', data=domain%frac  , ncid=ncid, flag='write')
+
+    else
+
+       write(6,*) 'ERROR: itype value invalid ',type
+       stop
+
+    endif
 
     ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 

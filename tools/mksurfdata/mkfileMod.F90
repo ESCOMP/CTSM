@@ -171,13 +171,13 @@ contains
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='latitude', units='degrees north')
 
-    call ncd_defvar(ncid=ncid, varname='LANDMASK', xtype=nf_int, &
-         dim1name='lsmlon', dim2name='lsmlat', &
-         long_name='land/ocean mask', units='0=ocean and 1=land')
+!    call ncd_defvar(ncid=ncid, varname='LANDMASK', xtype=nf_int, &
+!         dim1name='lsmlon', dim2name='lsmlat', &
+!         long_name='land/ocean mask', units='0=ocean and 1=land')
 
-    call ncd_defvar(ncid=ncid, varname='LANDFRAC', xtype=nf_double, &
-         dim1name='lsmlon', dim2name='lsmlat', &
-         long_name='land fraction', units='unitless')
+!    call ncd_defvar(ncid=ncid, varname='LANDFRAC', xtype=nf_double, &
+!         dim1name='lsmlon', dim2name='lsmlat', &
+!         long_name='land fraction', units='unitless')
 
     call ncd_defvar(ncid=ncid, varname='LANDFRAC_PFT', xtype=nf_double, &
          dim1name='lsmlon', dim2name='lsmlat', &

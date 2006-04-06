@@ -434,8 +434,8 @@ contains
     call ncd_ioglobal(varname='AREA'    , data=domain%area  , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='LONGXY'  , data=domain%longxy, ncid=ncid, flag='write')
     call ncd_ioglobal(varname='LATIXY'  , data=domain%latixy, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='LANDMASK', data=domain%mask  , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='LANDFRAC', data=domain%frac  , ncid=ncid, flag='write')
+!    call ncd_ioglobal(varname='LANDMASK', data=domain%mask  , ncid=ncid, flag='write')
+!    call ncd_ioglobal(varname='LANDFRAC', data=domain%frac  , ncid=ncid, flag='write')
 
     ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 

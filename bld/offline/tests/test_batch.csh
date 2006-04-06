@@ -52,8 +52,8 @@
 ##QSUB -mb -me -eo
 #
 #-----------------------------------------------------------------------
-# ORNL Cray X1E: phoenix
-# Usage: qsub -A acctname test_batch.csh
+# ORNL Cray X1: phoenix
+# Usage: qsub -A account_name test_batch.csh
 #-----------------------------------------------------------------------
 ##PBS -N test-model
 ##PBS -j oe
@@ -158,12 +158,23 @@ endsw
 # CHANGE: Set to the appropriate LAB value
 setenv LAB "ncar"
 #
+set cdir = `pwd`
+set id = "`date +%y%m%d-%H%M%S`"
 echo "Starting test-model.pl"
 
- ./test-model.pl -res T31cnall -c /fis/cgd/ccr/tcraig/fm/clm3_expa_53
- ./test-model.pl -res T31      -c /fis/cgd/ccr/tcraig/fm/clm3_expa_53
- ./test-model.pl -res T31cn    -c /fis/cgd/ccr/tcraig/fm/clm3_expa_53
- ./test-model.pl -res T31casa  -c /fis/cgd/ccr/tcraig/fm/clm3_expa_53
-#./test-model.pl -res T31dgvm  
+#rm -f /ptmp/tcraig/clmtest/*/0*.log
 
+ ./test-model.pl -res T31cnall -c /fis/cgd/ccr/tcraig/fm/clm3_expa_58
+ ./test-model.pl -res T31      -c /fis/cgd/ccr/tcraig/fm/clm3_expa_58
+ ./test-model.pl -res T31cn    -c /fis/cgd/ccr/tcraig/fm/clm3_expa_58
+ ./test-model.pl -res T31casa  -c /fis/cgd/ccr/tcraig/fm/clm3_expa_58
+ ./test-model.pl -res T31dgvm  
+
+#foreach file (/ptmp/tcraig/clmtest/*/0*.log)
+#  cp $file $cdir/logs/
+#end
+#cd $cdir/logs
+#foreach file (*.log)
+#  mv $file $file.$id
+#end
 

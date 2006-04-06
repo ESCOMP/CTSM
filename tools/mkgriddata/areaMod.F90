@@ -1221,6 +1221,7 @@ end subroutine gridmap_checkmap
 !------------------------------------------------------------------------
 
     write(6,*) 'cellarea, using cellarea_global'
+    call shr_sys_flush(6)
 
     ! Note: supports general lat/lon grids
 

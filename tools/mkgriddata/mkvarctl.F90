@@ -25,6 +25,10 @@ module mkvarctl
   real(r8)           :: mksrf_edgee          ! eastern edge of grid (degrees) : see following notes
   real(r8)           :: mksrf_edges          ! southern edge of grid (degrees): >= -90 and <  90
   real(r8)           :: mksrf_edgew          ! western edge of grid (degrees) : see following notes
+
+  integer            :: area_units = 0       ! 0=km2, 1=rad2
+  logical            :: area_valid = .true.  ! is area read valid
+
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 11/04

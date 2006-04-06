@@ -216,12 +216,12 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
         call areaave(fld_i,fld_o,tgridmap)
         mhgtb_o(:,:,l) = fld_o(:,:)
 
-        where (ldomain%mask(:,:) == 0)
-           mlai_o (:,:,l) = 0.
-           msai_o (:,:,l) = 0.
-           mhgtt_o(:,:,l) = 0.
-           mhgtb_o(:,:,l) = 0.
-        endwhere
+!tcx?        where (ldomain%mask(:,:) == 0)
+!           mlai_o (:,:,l) = 0.
+!           msai_o (:,:,l) = 0.
+!           mhgtt_o(:,:,l) = 0.
+!           mhgtb_o(:,:,l) = 0.
+!        endwhere
      enddo
 
      ! Global sum of output field -- must multiply by fraction of
