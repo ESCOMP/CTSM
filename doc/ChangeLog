@@ -1,5 +1,80 @@
 
 ===============================================================
+Tag name: clm3_expa_60
+Originator(s): Forrest Hoffman
+Date: Fri Apr 14 11:03:34 EDT 2006
+One-line Summary: Rearranged physiology fields, changed CO2 constants, fixed Bug #43
+
+Purpose of changes: Make radiation-related physiology fields standard, prepare code for C-LAMP experiments, and make test-model run on Cray X1E (phoenix)
+
+Bugs fixed (include bugzilla ID): Bug #43
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: Myself
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+nfwrappers.f90:
+Changed intent for ncid from intent(in) to intent(out) since it must be
+returned to the calling routines.  This fixed Bug #43 which was discovered
+on the Cray X1E (phoenix).
+
+ChangeLog:
+Added this log entry.
+
+clm_varcon.F90:
+Changed co2_ppmv_const to 283.1878_r8 for both CASA' and CN in preparation
+for Experiment 1 of the C-LAMP.
+
+histFldsMod.F90
+Moved LAISUN, LAISHA, TLAI, TSAI, SLASUN, and SLASHA out of the CN-only
+section of the code so that they appear on the regular CLM output files
+since the two-leaf radiation code is now standard.  In addition, TLAI and
+TSAI were removed from the DGVM-only section of the code since these
+output fields are now standard.
+
+Summary of testing:
+
+  cheetah:
+Ran test-model for T31, T31cn, T31cnall, T31casa, and T31dgvm with
+baseline clm3_expa_59.  T31 and T31dgvm passed all tests.  The others
+passed tests 01-05, but not the 06_control test because of the change
+in co2_ppmv_const.
+
+  phoenix:
+Ran test-model for T31, T31cn, T31cnall, T31casa, and T31dgvm with
+baseline clm3_expa_59.  T31 and T31dgvm passed all tests.  The others
+passed tests 01-05, but not the 06_control test because of the change
+in co2_ppmv_const.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_59
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: co2_ppmv_const modification changes answers
+    - what platforms/compilers: IBM (cheetah) and Cray X1E (phoenix)
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff because of changes in carbon pools
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? cprnc
+
+   * There is no validated climate in these model configurations. *
+
+===============================================================
+===============================================================
 Tag name: clm3_expa_59
 Originator(s): Tony Craig
 Date: Wed Apr  5 18:03:23 MDT 2006

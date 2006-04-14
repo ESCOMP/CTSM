@@ -56,9 +56,9 @@ module clm_varcon
   real(r8) :: tcrit  = 2.5_r8       !critical temperature to determine rain or snow
   real(r8) :: o2_molar_const = 0.209_r8   !constant atmospheric O2 molar ratio (mol/mol)
 #if (defined CASA)
-  real(r8) :: co2_ppmv_const = 280._r8    !constant atmospheric CO2 molar ratio (umol/mol)
+  real(r8) :: co2_ppmv_const = 283.1878_r8    !constant atmospheric CO2 molar ratio (umol/mol)
 #elif (defined CN)
-  real(r8) :: co2_ppmv_const = 284.5982_r8    !constant atmospheric CO2 molar ratio (umol/mol)
+  real(r8) :: co2_ppmv_const = 283.1878_r8    !constant atmospheric CO2 molar ratio (umol/mol)
 #else
   real(r8) :: co2_ppmv_const = 355._r8    !constant atmospheric CO2 molar ratio (umol/mol)
 #endif

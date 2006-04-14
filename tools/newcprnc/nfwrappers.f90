@@ -31,7 +31,8 @@ end subroutine wrap_create
 
 subroutine wrap_open (path, omode, ncid)
    character(len=*), intent(in) :: path
-   integer, intent(in) :: omode, ncid
+   integer, intent(in) :: omode
+   integer, intent(out):: ncid
 
    ret = nf_open (path, omode, ncid)
    if (ret /= NF_NOERR) then

@@ -257,6 +257,30 @@ contains
           avgflag='A', long_name='exposed one-sided stem area index', &
          ptr_pft=clm3%g%l%c%p%pps%esai)
 
+    call add_fld1d (fname='LAISUN', units='none', &
+         avgflag='A', long_name='sunlit projected leaf area index', &
+         ptr_pft=clm3%g%l%c%p%pps%laisun)
+
+    call add_fld1d (fname='LAISHA', units='none', &
+         avgflag='A', long_name='shaded projected leaf area index', &
+         ptr_pft=clm3%g%l%c%p%pps%laisha)
+
+    call add_fld1d (fname='TLAI', units='none', &
+         avgflag='A', long_name='total projected leaf area index', &
+         ptr_pft=clm3%g%l%c%p%pps%tlai)
+
+    call add_fld1d (fname='TSAI', units='none', &
+         avgflag='A', long_name='total projected stem area index', &
+         ptr_pft=clm3%g%l%c%p%pps%tsai)
+
+    call add_fld1d (fname='SLASUN', units='m^2/gC', &
+         avgflag='A', long_name='specific leaf area for sunlit canopy, projected area basis', &
+         ptr_pft=clm3%g%l%c%p%pps%slasun, default='inactive')
+
+    call add_fld1d (fname='SLASHA', units='m^2/gC', &
+         avgflag='A', long_name='specific leaf area for shaded canopy, projected area basis', &
+         ptr_pft=clm3%g%l%c%p%pps%slasha, default='inactive')
+
     ! Canopy physiology
 
     call add_fld1d (fname='RSSUN', units='s/m',  &
@@ -507,14 +531,6 @@ contains
     call add_fld1d (fname='HBOT', units='m',  &
          avgflag='A', long_name='height of bottom of canopy', &
          ptr_pft=clm3%g%l%c%p%pps%hbot)
-
-    call add_fld1d (fname='TLAI', units='m^2/m^2', &
-          avgflag='A', long_name='total one-sided leaf area index', &
-         ptr_pft=clm3%g%l%c%p%pps%tlai)
-
-    call add_fld1d (fname='TSAI', units='m^2/m^2', &
-          avgflag='A', long_name='total one-sided stem area index', &
-         ptr_pft=clm3%g%l%c%p%pps%tsai)
 
     call add_fld1d (fname='TDA', units='K',  &
          avgflag='A', long_name='daily average 2-m temperature', &
@@ -3219,30 +3235,6 @@ contains
     call add_fld1d (fname='DEWMX', units='mm', &
          avgflag='A', long_name='Maximum allowed dew', &
          ptr_pft=clm3%g%l%c%p%pps%dewmx, default='inactive')
-
-    call add_fld1d (fname='LAISUN', units='none', &
-         avgflag='A', long_name='sunlit projected leaf area index', &
-         ptr_pft=clm3%g%l%c%p%pps%laisun)
-
-    call add_fld1d (fname='LAISHA', units='none', &
-         avgflag='A', long_name='shaded projected leaf area index', &
-         ptr_pft=clm3%g%l%c%p%pps%laisha)
-
-    call add_fld1d (fname='TLAI', units='none', &
-         avgflag='A', long_name='total projected leaf area index', &
-         ptr_pft=clm3%g%l%c%p%pps%tlai)
-
-    call add_fld1d (fname='TSAI', units='none', &
-         avgflag='A', long_name='total projected stem area index', &
-         ptr_pft=clm3%g%l%c%p%pps%tsai)
-
-    call add_fld1d (fname='SLASUN', units='m^2/gC', &
-         avgflag='A', long_name='specific leaf area for sunlit canopy, projected area basis', &
-         ptr_pft=clm3%g%l%c%p%pps%slasun, default='inactive')
-
-    call add_fld1d (fname='SLASHA', units='m^2/gC', &
-         avgflag='A', long_name='specific leaf area for shaded canopy, projected area basis', &
-         ptr_pft=clm3%g%l%c%p%pps%slasha, default='inactive')
 
     call add_fld1d (fname='LNCSUN', units='gN/m^2', &
          avgflag='A', long_name='leaf N concentration per unit projected LAI', &
