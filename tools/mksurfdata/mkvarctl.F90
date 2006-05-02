@@ -15,8 +15,8 @@ module mkvarctl
   implicit none
   save
 !
-  character(len=256) :: mksrf_fgrid_global = ' '   ! land grid file name to use 
-  character(len=256) :: mksrf_fgrid_regional = ' ' ! land grid file name to use 
+  character(len=256) :: mksrf_fgrid = ' '          ! land grid file name to use 
+  character(len=256) :: mksrf_gridtype = ' '       ! land gridtype, global or reg
   character(len=256) :: mksrf_fvegtyp              ! vegetation data file name
   character(len=256) :: mksrf_fsoitex              ! soil texture data file name
   character(len=256) :: mksrf_fsoicol              ! soil color data file name

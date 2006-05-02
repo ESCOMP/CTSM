@@ -11,12 +11,43 @@ module clm_comp
 
 ! !PUBLIC MEMBER FUNCTIONS:
 
+  public clm_init0
   public clm_init1
   public clm_init2
   public clm_run1
   public clm_run2
 
 contains
+
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: clm_init0
+!
+! !INTERFACE:
+  subroutine clm_init0( )
+!
+! !DESCRIPTION:
+! Initialize land surface model and obtain relevant atmospheric model arrays
+! back from (i.e. albedos, surface temperature and snow cover over land).
+!
+! !USES:
+    use initializeMod, only : initialize1
+!
+! !ARGUMENTS:
+!
+! !LOCAL VARIABLES:
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!-----------------------------------------------------------------------
+
+    call initialize1()
+
+  end subroutine clm_init0
+
 
 !---------------------------------------------------------------------------
 !BOP
@@ -31,7 +62,7 @@ contains
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use initializeMod, only : initialize           
+    use initializeMod, only : initialize2
 !
 ! !ARGUMENTS:
 !
@@ -43,7 +74,7 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    call initialize()
+    call initialize2()
 
   end subroutine clm_init1
 

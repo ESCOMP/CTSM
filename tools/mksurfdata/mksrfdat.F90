@@ -104,8 +104,8 @@ program mksrfdat
     character(len=32) :: subname = 'mksrfdat'  ! program name
 
     namelist /clmexp/              &
-	 mksrf_fgrid_global,       &	
-	 mksrf_fgrid_regional,     &	
+	 mksrf_fgrid,              &	
+	 mksrf_gridtype,           &	
          mksrf_fvegtyp,            &
 	 mksrf_fsoitex,            &
          mksrf_fsoicol,            &
@@ -122,9 +122,7 @@ program mksrfdat
     ! ======================================
     ! Must specify settings for either:
     ! ======================================
-    !	 mksrf_fgrid_global
-    !         OR
-    !	 mksrf_fgrid_regional
+    !	 mksrf_fgrid
     ! ======================================
     ! Must specify settings for:
     ! ======================================
@@ -138,7 +136,9 @@ program mksrfdat
     ! ======================================
     ! Optionally specify setting for:
     ! ======================================
+    !    mksrf_gridtype
     !    mksrf_fdynuse
+    !    do_double_res_too
     ! ======================================================================
 
     call shr_timer_init()
@@ -148,6 +148,7 @@ program mksrfdat
     write(6,*) 'Attempting to initialize control settings .....'
 
     do_double_res_too = .false.
+    mksrf_gridtype = 'global'
     read(5, clmexp, iostat=ier)
     if (ier /= 0) then
        write(6,*)'error: namelist input resulted in error code ',ier
@@ -165,20 +166,27 @@ program mksrfdat
     ndiag = getavu()
     call opnfil (loc_fn, ndiag, 'f')
     
-    if (mksrf_fgrid_global /= ' ')then
-       fgrddat = mksrf_fgrid_global
-       write(6,*)'mksrf_fgrid_global  = ',mksrf_fgrid_global
+    if (mksrf_fgrid /= ' ')then
+       fgrddat = mksrf_fgrid
+       write(6,*)'mksrf_fgrid = ',mksrf_fgrid
        write (ndiag,*)'using fractional land data from file= ', &
-            trim(mksrf_fgrid_regional),' to create the surface dataset'
-    else if (mksrf_fgrid_regional /= ' ')then
-       fgrddat = mksrf_fgrid_regional
-       write(6,*)'mksrf_fgrid_regional= ',mksrf_fgrid_regional
-       write (ndiag,*)'using fractional land data from file= ', &
-            trim(mksrf_fgrid_regional),' to create the surface dataset'
+            trim(mksrf_fgrid),' to create the surface dataset'
     else
-       write (ndiag,*)'must specify either mksrf_fgrid_region or mksrf_fgrid_global'
+       write (6,*)'must specify mksrf_fgrid'
+       write (ndiag,*)'must specify mksrf_fgrid'
        stop
     endif
+
+    if (trim(mksrf_gridtype) == 'global' .or. &
+        trim(mksrf_gridtype) == 'regional') then
+       write(6,*)'mksrf_gridtype = ',trim(mksrf_gridtype)
+    else
+       write(6,*)'mksrf_gridtype = ',trim(mksrf_gridtype)
+       write (6,*)'illegal mksrf_gridtype, must be global or regional '
+       write (ndiag,*)'illegal mksrf_gridtype, must be global or regional '
+       stop
+    endif
+
     write (ndiag,*) 'PFTs from:         ',trim(mksrf_fvegtyp)
     write (ndiag,*) 'glaciers from:     ',trim(mksrf_fglacier)
     write (ndiag,*) 'urban from:        ',trim(mksrf_furban)
@@ -694,8 +702,8 @@ program mksrfdat
        enddo
        enddo
 
-       write (resol,'(i3.3,"x",i3.3)') dbllon,dbllat
-       fdfile = './surface-data.'//trim(resol)//'.double.nc'
+       write (resol,'(i3.3,"x",i3.3)') dbllat,dbllon
+       fdfile = './surfdata_'//trim(resol)//'.double.nc'
 
        call mkfile(dbldomain%ni, dbldomain%nj, fdfile, dynlanduse = .false.)
        call write_domain(dbldomain,fdfile)

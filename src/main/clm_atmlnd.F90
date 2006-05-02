@@ -278,66 +278,96 @@ end subroutine init_lnd2atm_type
 !
 ! !REVISION HISTORY:
 ! 2005.11.15  T Craig  Creation.
+! 2006.3.30   P Worley Restructuring for improved vector performance
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
   integer :: n                     ! loop counter
-  integer :: nflds                 ! size of 2nd dim in arrays
+  integer :: nflds                 ! number of fields to be mapped
+  integer :: nradflds              ! size of 2nd dim in arrays
   integer :: begg_s,endg_s         ! beg,end of input grid
   integer :: begg_d,endg_d         ! beg,end of output grid
-  real(r8),pointer :: asrc(:)      ! temporary source data
-  real(r8),pointer :: adst(:)      ! temporary dest data
+  logical :: a2ltrue               ! a2l or l2a map type flag
+  real(r8),pointer :: asrc(:,:)    ! temporary source data
+  real(r8),pointer :: adst(:,:)    ! temporary dest data
 !------------------------------------------------------------------------------
+
+  nradflds = size(a2l_src%forc_solad,dim=2)
+  if (nradflds /= numrad) then
+    write(6,*) 'clm_mapa2l ERROR: nradflds ne numrad ',nradflds,numrad
+    call endrun()
+  endif
 
   !--- allocate temporaries
   call get_proc_bounds_atm(begg_s, endg_s)
   call get_proc_bounds    (begg_d, endg_d)
+  nflds = 21+2*numrad
 
-  allocate(asrc(begg_s:endg_s))
-  allocate(adst(begg_d:endg_d))
+  allocate(asrc(begg_s:endg_s,nflds))
+  allocate(adst(begg_d:endg_d,nflds))
 
-  nflds = size(a2l_src%forc_solad,dim=2)
-  if (nflds /= numrad) then
-    write(6,*) 'clm_mapa2l ERROR: nflds ne numrad ',nflds,numrad
-    call endrun()
-  endif
-
-#if (defined OFFLINE)
-  call gridmap_maparray(a2l_src%flfall     ,a2l_dst%flfall     ,gridmap,'a2l')
-#endif
-  call gridmap_maparray(a2l_src%forc_t     ,a2l_dst%forc_t     ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_u     ,a2l_dst%forc_u     ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_v     ,a2l_dst%forc_v     ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_wind  ,a2l_dst%forc_wind  ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_q     ,a2l_dst%forc_q     ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_hgt   ,a2l_dst%forc_hgt   ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_hgt_u ,a2l_dst%forc_hgt_u ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_hgt_t ,a2l_dst%forc_hgt_t ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_hgt_q ,a2l_dst%forc_hgt_q ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_pbot  ,a2l_dst%forc_pbot  ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_th    ,a2l_dst%forc_th    ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_vp    ,a2l_dst%forc_vp    ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_rho   ,a2l_dst%forc_rho   ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_psrf  ,a2l_dst%forc_psrf  ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_pco2  ,a2l_dst%forc_pco2  ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_lwrad ,a2l_dst%forc_lwrad ,gridmap,'a2l')
+  asrc(:,1)  = a2l_src%forc_t(:)  
+  asrc(:,2)  = a2l_src%forc_u(:)  
+  asrc(:,3)  = a2l_src%forc_v(:)  
+  asrc(:,4)  = a2l_src%forc_wind(:)  
+  asrc(:,5)  = a2l_src%forc_q(:)  
+  asrc(:,6)  = a2l_src%forc_hgt(:)  
+  asrc(:,7)  = a2l_src%forc_hgt_u(:)  
+  asrc(:,8)  = a2l_src%forc_hgt_t(:)  
+  asrc(:,9)  = a2l_src%forc_hgt_q(:)  
+  asrc(:,10) = a2l_src%forc_pbot(:)  
+  asrc(:,11) = a2l_src%forc_th(:)  
+  asrc(:,12) = a2l_src%forc_vp(:)  
+  asrc(:,13) = a2l_src%forc_rho(:)  
+  asrc(:,14) = a2l_src%forc_psrf(:)  
+  asrc(:,15) = a2l_src%forc_pco2(:)  
+  asrc(:,16) = a2l_src%forc_lwrad(:)  
+  asrc(:,17) = a2l_src%forc_solar(:)  
+  asrc(:,18) = a2l_src%forc_rain(:)  
+  asrc(:,19) = a2l_src%forc_snow(:)  
+  asrc(:,20) = a2l_src%forc_pc13o2(:)  
+  asrc(:,21) = a2l_src%forc_po2(:)  
   do n = 1,numrad
-     asrc(:) = a2l_src%forc_solad(:,n)
-     call gridmap_maparray(asrc,adst,gridmap,'a2l')
-     a2l_dst%forc_solad(:,n) = adst(:)
-     asrc(:) = a2l_src%forc_solai(:,n)
-     call gridmap_maparray(asrc,adst,gridmap,'a2l')
-     a2l_dst%forc_solai(:,n) = adst(:)
+     asrc(:,20+2*n) = a2l_src%forc_solad(:,n)  
+     asrc(:,21+2*n) = a2l_src%forc_solai(:,n)  
   enddo
-  call gridmap_maparray(a2l_src%forc_solar ,a2l_dst%forc_solar ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_rain  ,a2l_dst%forc_rain  ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_snow  ,a2l_dst%forc_snow  ,gridmap,'a2l')
 !-forc_ndep is not recd from atm,don't know why it's in a2l (TCFIX) ---
 !-forc_ndep cannot be updated here, array will be trashed and CN will fail ---
-! call gridmap_maparray(a2l_src%forc_ndep  ,a2l_dst%forc_ndep  ,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_pc13o2,a2l_dst%forc_pc13o2,gridmap,'a2l')
-  call gridmap_maparray(a2l_src%forc_po2   ,a2l_dst%forc_po2   ,gridmap,'a2l')
+! call gridmap_maparray(begg_s, endg_s, begg_d, endg_d, a2l_src%forc_ndep  ,a2l_dst%forc_ndep  ,gridmap,a2ltrue)
+!  asrc(:,xx) = a2l_src%forc_ndep(:)  
+
+  a2ltrue = .true.
+#if (defined OFFLINE)
+  call gridmap_maparray(begg_s, endg_s, begg_d, endg_d, 1, a2l_src%flfall, a2l_dst%flfall, gridmap, a2ltrue)
+#endif
+  call gridmap_maparray(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, gridmap, a2ltrue)
+
+  a2l_dst%forc_t(:)     =   adst(:,1)
+  a2l_dst%forc_u(:)     =   adst(:,2)
+  a2l_dst%forc_v(:)     =   adst(:,3)
+  a2l_dst%forc_wind(:)  =   adst(:,4)
+  a2l_dst%forc_q(:)     =   adst(:,5)
+  a2l_dst%forc_hgt(:)   =   adst(:,6)
+  a2l_dst%forc_hgt_u(:) =   adst(:,7)
+  a2l_dst%forc_hgt_t(:) =   adst(:,8)
+  a2l_dst%forc_hgt_q(:) =   adst(:,9)
+  a2l_dst%forc_pbot(:)  =   adst(:,10)
+  a2l_dst%forc_th(:)    =   adst(:,11)
+  a2l_dst%forc_vp(:)    =   adst(:,12)
+  a2l_dst%forc_rho(:)   =   adst(:,13)
+  a2l_dst%forc_psrf(:)  =   adst(:,14)
+  a2l_dst%forc_pco2(:)  =   adst(:,15)
+  a2l_dst%forc_lwrad(:) =   adst(:,16)
+  a2l_dst%forc_solar(:) =   adst(:,17)
+  a2l_dst%forc_rain(:)  =   adst(:,18)
+  a2l_dst%forc_snow(:)  =   adst(:,19)
+  a2l_dst%forc_pc13o2(:)=   adst(:,20)
+  a2l_dst%forc_po2(:)   =   adst(:,21)
+  do n = 1,numrad
+     a2l_dst%forc_solad(:,n)  = adst(:,20+2*n)
+     a2l_dst%forc_solai(:,n)  = adst(:,21+2*n)
+  enddo
 
   deallocate(asrc)
   deallocate(adst)
@@ -367,53 +397,71 @@ end subroutine clm_mapa2l
 !
 ! !REVISION HISTORY:
 ! 2005.11.15  T Craig  Creation.
+! 2006.3.30   P Worley Restructuring for improved vector performance
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
   integer :: n                     ! loop counter
-  integer :: nflds                 ! size of 2nd dim in arrays
+  integer :: nflds                 ! number of fields to be mapped
+  integer :: nradflds              ! size of 2nd dim in arrays
   integer :: begg_s,endg_s         ! beg,end of input grid
   integer :: begg_d,endg_d         ! beg,end of output grid
-  real(r8),pointer :: asrc(:)      ! temporary source data
-  real(r8),pointer :: adst(:)      ! temporary dest data
+  logical :: a2lfalse              ! a2l or l2a map type flag
+  real(r8),pointer :: asrc(:,:)    ! temporary source data
+  real(r8),pointer :: adst(:,:)    ! temporary dest data
 !------------------------------------------------------------------------------
+
+  nradflds = size(l2a_src%albd,dim=2)
+  if (nradflds /= numrad) then
+    write(6,*) 'clm_mapl2a ERROR: nradflds ne numrad ',nradflds,numrad
+    call endrun()
+  endif
 
   !--- allocate temporaries
   call get_proc_bounds    (begg_s, endg_s)
   call get_proc_bounds_atm(begg_d, endg_d)
+  nflds = 12+2*numrad
 
-  allocate(asrc(begg_s:endg_s))
-  allocate(adst(begg_d:endg_d))
+  allocate(asrc(begg_s:endg_s,nflds))
+  allocate(adst(begg_d:endg_d,nflds))
 
-  nflds = size(l2a_src%albd,dim=2)
-  if (nflds /= numrad) then
-    write(6,*) 'clm_mapl2a ERROR: nflds ne numrad ',nflds,numrad
-    call endrun()
-  endif
-
-  call gridmap_maparray(l2a_src%t_rad      ,l2a_dst%t_rad      ,gridmap,'l2a')
-  call gridmap_maparray(l2a_src%t_ref2m    ,l2a_dst%t_ref2m    ,gridmap,'l2a')
-  call gridmap_maparray(l2a_src%q_ref2m    ,l2a_dst%q_ref2m    ,gridmap,'l2a')
-  call gridmap_maparray(l2a_src%h2osno     ,l2a_dst%h2osno     ,gridmap,'l2a')
+  asrc(:,1)  = l2a_src%t_rad(:)  
+  asrc(:,2)  = l2a_src%t_ref2m(:)  
+  asrc(:,3)  = l2a_src%q_ref2m(:)  
+  asrc(:,4)  = l2a_src%h2osno(:)  
+  asrc(:,5)  = l2a_src%taux(:)  
+  asrc(:,6)  = l2a_src%tauy(:)  
+  asrc(:,7)  = l2a_src%eflx_lh_tot(:)  
+  asrc(:,8)  = l2a_src%eflx_sh_tot(:)  
+  asrc(:,9)  = l2a_src%eflx_lwrad_out(:)  
+  asrc(:,10)  = l2a_src%qflx_evap_tot(:)  
+  asrc(:,11)  = l2a_src%fsa(:)  
+  asrc(:,12)  = l2a_src%nee(:)  
   do n = 1,numrad
-     asrc(:) = l2a_src%albd(:,n)
-     call gridmap_maparray(asrc,adst,gridmap,'l2a')
-     l2a_dst%albd(:,n) = adst(:)
-     asrc(:) = l2a_src%albi(:,n)
-     call gridmap_maparray(asrc,adst,gridmap,'l2a')
-     l2a_dst%albi(:,n) = adst(:)
+     asrc(:,11+2*n)  = l2a_src%albd(:,n)  
+     asrc(:,12+2*n)  = l2a_src%albi(:,n)  
   enddo
-  call gridmap_maparray(l2a_src%taux       ,l2a_dst%taux       ,gridmap,'l2a')
-  call gridmap_maparray(l2a_src%tauy       ,l2a_dst%tauy       ,gridmap,'l2a')
-  call gridmap_maparray(l2a_src%eflx_lh_tot,l2a_dst%eflx_lh_tot,gridmap,'l2a')
-  call gridmap_maparray(l2a_src%eflx_sh_tot,l2a_dst%eflx_sh_tot,gridmap,'l2a')
-  call gridmap_maparray(l2a_src%eflx_lwrad_out, &
-                                         l2a_dst%eflx_lwrad_out,gridmap,'l2a')
-  call gridmap_maparray(l2a_src%qflx_evap_tot , &
-                                         l2a_dst%qflx_evap_tot ,gridmap,'l2a')
-  call gridmap_maparray(l2a_src%fsa        ,l2a_dst%fsa        ,gridmap,'l2a')
-  call gridmap_maparray(l2a_src%nee        ,l2a_dst%nee        ,gridmap,'l2a')
+
+  a2lfalse = .false.
+  call gridmap_maparray(begg_d, endg_d, begg_s, endg_s, nflds, asrc, adst, gridmap, a2lfalse)
+
+  l2a_dst%t_rad(:)          = adst(:,1)
+  l2a_dst%t_ref2m(:)        = adst(:,2)
+  l2a_dst%q_ref2m(:)        = adst(:,3)
+  l2a_dst%h2osno(:)         = adst(:,4)
+  l2a_dst%taux(:)           = adst(:,5)
+  l2a_dst%tauy(:)           = adst(:,6)
+  l2a_dst%eflx_lh_tot(:)    = adst(:,7)
+  l2a_dst%eflx_sh_tot(:)    = adst(:,8)
+  l2a_dst%eflx_lwrad_out(:) = adst(:,9)
+  l2a_dst%qflx_evap_tot(:)  = adst(:,10)
+  l2a_dst%fsa(:)            = adst(:,11)
+  l2a_dst%nee(:)            = adst(:,12)
+  do n = 1,numrad
+     l2a_dst%albd(:,n)      = adst(:,11+2*n)
+     l2a_dst%albi(:,n)      = adst(:,12+2*n)
+  enddo
 
   deallocate(asrc)
   deallocate(adst)

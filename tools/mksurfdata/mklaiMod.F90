@@ -250,7 +250,7 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
      ! Compare global sum fld_o to global sum fld_i.
      ! -----------------------------------------------------------------
 
-     if ( mksrf_fgrid_global /= ' ') then
+     if ( trim(mksrf_gridtype) == 'global') then
         if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
            write (6,*) 'MKLAI error: input field not conserved'
            write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo

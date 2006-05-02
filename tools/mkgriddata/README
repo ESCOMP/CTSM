@@ -10,13 +10,19 @@ input topographic dataset.
 3) create namelist file (default mkgriddata.namelist).
    must specify settings for either
 
-   mksrf_fnavyoro    - high resolution topo dataset        
-   mksrf_lsmlon      - number of longitudes
-   mksrf_lsmlat      - number of latitudes
-   mksrf_edgen       - northern edge of grid (degrees)
-   mksrf_edgee       - eastern edge of grid (degrees)
-   mksrf_edges       - southern edge of grid (degrees)
-   mksrf_edgew       - western edge of grid (degrees)
+      mksrf_fnavyoro    - high resolution topo dataset        
+      mksrf_lsmlon      - number of longitudes
+      mksrf_lsmlat      - number of latitudes
+      mksrf_edgen       - northern edge of grid (degrees)
+      mksrf_edgee       - eastern edge of grid (degrees)
+      mksrf_edges       - southern edge of grid (degrees)
+      mksrf_edgew       - western edge of grid (degrees)
+   or
+      mksrf_fcamtopo    - cam topo file
+   or 
+      mksrf_fccsmdom    - ccsm domain file
+   or
+      mksrf_fclmgrid    - clm grid or surface dataset file
 
 4) run code (e.g.):
    mkgriddata < mkgrdidata.namelist >&! mkgriddata.out

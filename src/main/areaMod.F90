@@ -213,65 +213,56 @@ end subroutine gridmap_setptrs
 ! !IROUTINE: gridmap_maparray
 !
 ! !INTERFACE:
-  subroutine gridmap_maparray(fld_i,fld_o,gridmap,type)
+  subroutine gridmap_maparray(begg_i, endg_i, begg_o, endg_o, nflds, &
+                              fld_i, fld_o, gridmap, a2l)
 !
 ! !DESCRIPTION:
 ! This subroutine maps arrays, local 1d
 ! Need a decomp, use type to set decomps for now, could be improved (tcx fix)
 !
 ! !USES:
-  use decompMod, only : ldecomp, adecomp, get_proc_bounds, get_proc_bounds_atm, decomp_type
+  use decompMod, only : ldecomp, adecomp, decomp_type
 !
 ! !ARGUMENTS:
   implicit none
-  real(r8),pointer                :: fld_i(:)
-  real(r8),pointer                :: fld_o(:)
+  integer                         :: begg_i,endg_i         !beg,end of input grid
+  integer                         :: begg_o,endg_o         !beg,end of output grid
+  integer                         :: nflds                 !number of fields being mapped
+  real(r8), intent(in)            :: fld_i(begg_i:endg_i,nflds)
+  real(r8), intent(out)           :: fld_o(begg_o:endg_o,nflds)
   type(gridmap_type), intent(in)  :: gridmap
-  character(len=*)  , intent(in)  :: type
+  logical, intent(in)             :: a2l                   !a2l or l2a type
 !
 ! !REVISION HISTORY:
 ! 2005.11.15  T Craig  Creation.
+! 2006.3.30   P Worley Restructuring for improved vector performance
 !
 !EOP
 
 ! !LOCAL VARIABLES:
-  integer :: begg_o,endg_o         !beg,end of output grid
-  integer :: begg_i,endg_i         !beg,end of input grid
   integer :: g_o ,g_i              !gridcell indices
   integer          :: mx_ovr       !max overlapping cells
-  integer ,pointer :: n_ovr(:,:)   !lon index, overlapping input cell
+  integer ,pointer :: n_ovr(:,:)   !number of overlapping input cells
   integer ,pointer :: i_ovr(:,:,:) !lon index, overlapping input cell
   integer ,pointer :: j_ovr(:,:,:) !lat index, overlapping input cell
   real(r8),pointer :: w_ovr(:,:,:) !overlap weights for input cells
-  integer          :: n            !loop counters
+  integer          :: n_ovr_g(begg_o:endg_o)   !number of overlapping input cells
+  integer          :: n, ifld      !loop counters
   integer          :: ii,ji        !indices for input grid
   integer          :: io,jo        !indices for output grid
-  logical          :: a2ltype      !a2l or l2a type
+  logical          :: error_flag(begg_o:endg_o)
   type(decomp_type),pointer :: decomp_o
   type(decomp_type),pointer :: decomp_i
 
 !
 !------------------------------------------------------------------------------
 
-    if (trim(type) == 'a2l') then
-       a2ltype = .true.
-    elseif (trim(type) == 'l2a') then
-       a2ltype = .false.
-    else
-       write(6,*) 'gridmap_maparry ERROR type must be a2l or l2a:',trim(type)
-       call endrun()
-    endif
-
-    if (a2ltype) then
+    if (a2l) then
        decomp_i => adecomp
-       call get_proc_bounds_atm(begg_i, endg_i)
        decomp_o => ldecomp
-       call get_proc_bounds    (begg_o, endg_o)
     else
        decomp_i => ldecomp
-       call get_proc_bounds    (begg_i, endg_i)
        decomp_o => adecomp
-       call get_proc_bounds_atm(begg_o, endg_o)
     endif
 
     call gridmap_setptrs(gridmap,mx_ovr=mx_ovr,n_ovr=n_ovr,i_ovr=i_ovr, &
@@ -284,25 +275,59 @@ end subroutine gridmap_setptrs
 
     ! initialize field on output grid to zero everywhere
 
-    do g_o = begg_o,endg_o
-       fld_o(g_o) = 0._r8
-    end do
+    fld_o(:,:) = 0._r8
 
-    ! loop through overlapping cells on input grid to make area-average
+    ! check for errors in overlap logic
 
+    error_flag(:) = .false.
+!dir$ concurrent
     do g_o = begg_o,endg_o
        io = decomp_o%gdc2i(g_o)
        jo = decomp_o%gdc2j(g_o)
+       n_ovr_g(g_o) = n_ovr(io,jo)
        do n = 1, n_ovr(io,jo)
           ii = i_ovr(io,jo,n)
           ji = j_ovr(io,jo,n)
           g_i = decomp_i%ij2gdc(ii,ji)
           if (g_i < begg_i .or. g_i > endg_i) then
-             write(6,*) 'gridmap_maparray ERROR: g_i out of bounds ',g_i, &
-                         begg_i,endg_i,ii,ji,io,jo,g_o,n
-             call endrun()
+             error_flag(g_o) = .true.
           endif
-          fld_o(g_o) = fld_o(g_o) + w_ovr(io,jo,n)*fld_i(g_i)
+       end do
+    end do
+
+    do g_o = begg_o,endg_o
+       if (error_flag(g_o)) then
+          io = decomp_o%gdc2i(g_o)
+          jo = decomp_o%gdc2j(g_o)
+          do n = 1, n_ovr(io,jo)
+             ii = i_ovr(io,jo,n)
+             ji = j_ovr(io,jo,n)
+             g_i = decomp_i%ij2gdc(ii,ji)
+             if (g_i < begg_i .or. g_i > endg_i) then
+                write(6,*) 'gridmap_maparray ERROR: g_i out of bounds ',g_i, &
+                            begg_i,endg_i,ii,ji,io,jo,g_o,n
+                call endrun()
+             endif
+          end do
+       endif
+    end do
+
+    ! loop through overlapping cells on input grid to make area-average
+
+    do ifld = 1,nflds
+       do n = 1, mx_ovr
+!dir$ concurrent
+!dir$ prefervector
+          do g_o = begg_o,endg_o
+             if (n .le. n_ovr_g(g_o)) then
+                io = decomp_o%gdc2i(g_o)
+                jo = decomp_o%gdc2j(g_o)
+                ii = i_ovr(io,jo,n)
+                ji = j_ovr(io,jo,n)
+                g_i = decomp_i%ij2gdc(ii,ji)
+                fld_o(g_o,ifld) = fld_o(g_o,ifld) + w_ovr(io,jo,n)*fld_i(g_i,ifld)
+             endif
+          end do
        end do
     end do
 

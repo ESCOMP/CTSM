@@ -164,10 +164,10 @@ echo "Starting test-model.pl"
 
 #rm -f /ptmp/tcraig/clmtest/*/0*.log
 
- ./test-model.pl -res T31cnall -c /fis/cgd/ccr/tcraig/fm/clm3_expa_58
- ./test-model.pl -res T31      -c /fis/cgd/ccr/tcraig/fm/clm3_expa_58
- ./test-model.pl -res T31cn    -c /fis/cgd/ccr/tcraig/fm/clm3_expa_58
- ./test-model.pl -res T31casa  -c /fis/cgd/ccr/tcraig/fm/clm3_expa_58
+ ./test-model.pl -res T31cnall -c /fis/cgd/ccr/tcraig/clmnew/clm3_expa_60
+ ./test-model.pl -res T31      -c /fis/cgd/ccr/tcraig/clmnew/clm3_expa_60
+ ./test-model.pl -res T31cn    -c /fis/cgd/ccr/tcraig/clmnew/clm3_expa_60
+ ./test-model.pl -res T31casa  -c /fis/cgd/ccr/tcraig/clmnew/clm3_expa_60
  ./test-model.pl -res T31dgvm  
 
 #foreach file (/ptmp/tcraig/clmtest/*/0*.log)

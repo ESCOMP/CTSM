@@ -1,5 +1,65 @@
 
 ===============================================================
+Tag name: clm3_expa_61
+Originator(s): T Craig
+Date: Thu Apr 27 01:10:40 MDT 2006
+One-line Summary: merge cammct05_clm3_expa_58 onto main trunk,
+  modify surface dataset input
+
+Purpose of changes: merge branch
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: myself, developed my MV
+
+List all subroutines eliminated:
+  clm_camMod.F90 - interface to cam
+  MCT_atmlnd_cpl.F90 - mct migrated to sequential driver
+  MCT_lnd_comp.F90 - mct migrated to sequential driver
+
+List all subroutines added and what they do:
+  lnd_comp_mct.F90 - interface to sequential driver using mct coupling
+	
+List all existing files that have been modified, and describe the changes:
+  clm_comp.F90 - separate init method into init1, init2
+  initializeMod.F90 - separate initialize into initialize1 and 2
+  program_csm.F90 - add call to clm_init0
+  clm_atmlnd.F90 - PWorley's changes to improve phoenix performance,
+    packed arrays in clm_mapa2l and clm_mapl2a interpolation.
+  program_off.F90 - add call to clm_init0
+  areaMod.F90 - PWorley's changes to improve phoenix performance,
+    interpolate packed arrays in gridmap_maparray
+  Hydrology2Mod.F90 - remove use of iam
+
+  mksurfdata, several files changed to convert
+    mksrf_fgrid_global/regional to mksrf_fgrid and mksrf_gridtype
+	
+Summary of testing:
+
+  bluesky: clm full suite bfb, cam full suite bfb
+  bluevista: ccsm bfb TER.01a.T31_gx3v5.B.bluevista, TER.01a.4x5_gx3v5.B.bluevista
+  tempest: cam full suite bfb
+  bangkok/lf95: cam full suite bfb
+
+  mksrf tested on bluevista, 7 cases, bfb
+	
+CLM tag used for the baseline comparison tests if applicable:
+  clm3_expa_60, cam3_3_2, ccsm3_1_beta25
+
+changes are bit-for-bit
+	
+===============================================================
+
+	
+===============================================================
 Tag name: clm3_expa_60
 Originator(s): Forrest Hoffman
 Date: Fri Apr 14 11:03:34 EDT 2006

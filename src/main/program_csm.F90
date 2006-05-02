@@ -57,7 +57,7 @@ PROGRAM program_csm
   use clm_csmMod    , only : csmstop_now, csm_setup, csm_shutdown, & 
                              csm_dosndrcv, csm_recv, csm_send, csm_flxave, &
                              csm_initialize, csm_sendalb, dorecv, dosend  
-  use clm_comp      , only : clm_init1, clm_init2, clm_run1, clm_run2
+  use clm_comp      , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
 #if (defined SPMD)
   use spmdMod       , only : masterproc, iam, spmd_init, mpicom
 #else
@@ -160,6 +160,7 @@ PROGRAM program_csm
 
   ! Initialize land model - initialize communication with flux coupler
 
+  call clm_init0()
   call clm_init1()
 
   ! Initialize flux coupler communication - need to call get orbital 

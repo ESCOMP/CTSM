@@ -51,7 +51,7 @@ PROGRAM program_off
   use shr_orb_mod          
   use clm_varorb    , only : eccen, mvelpp, lambm0, obliqr, obliq, &
                              iyear_AD, nmvelp
-  use clm_comp      , only : clm_init1, clm_init2, clm_run1, clm_run2
+  use clm_comp      , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
   use atmdrvMod     , only : atmdrv
   use time_manager  , only : is_last_step, advance_timestep, get_nstep
   use atmdrvMod     , only : atmdrv_init
@@ -156,6 +156,7 @@ PROGRAM program_off
   ! Initialize land model
   ! -----------------------------------------------------------------
 
+  call clm_init0()
   call clm_init1()
   call clm_init2()
 

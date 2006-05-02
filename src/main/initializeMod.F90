@@ -11,12 +11,21 @@ module initializeMod
 ! !DESCRIPTION:
 ! Performs land model initialization
 !
+! !USES:
+  use shr_kind_mod    , only : r8 => shr_kind_r8
+  use spmdMod         , only : masterproc
+  use shr_sys_mod     , only : shr_sys_flush
+  use abortutils      , only : endrun
+  use clm_varctl      , only : nsrest
 ! !PUBLIC TYPES:
   implicit none
   save
 !
+  private    ! By default everything is private
+
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: initialize
+  public :: initialize1
+  public :: initialize2
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
@@ -27,16 +36,19 @@ module initializeMod
   private header    ! echo version numbers
   private do_restread
 !-----------------------------------------------------------------------
+! !PRIVATE DATA:
+  integer , allocatable, private, save :: vegxy(:,:,:) ! vegetation type
+  real(r8), allocatable, private, save :: wtxy(:,:,:)  ! subgrid weights
 
 contains
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: initialize
+! !IROUTINE: initialize1
 !
 ! !INTERFACE:
-  subroutine initialize( )
+  subroutine initialize1( )
 !
 ! !DESCRIPTION:
 ! Land model initialization.
@@ -53,60 +65,15 @@ contains
 ! o Initializes accumulation variables.
 !
 ! !USES:
-    use shr_kind_mod    , only : r8 => shr_kind_r8
-    use shr_sys_mod     , only : shr_sys_flush
-    use spmdMod         , only : masterproc
     use clm_varpar      , only : lsmlon, lsmlat, maxpatch
-    use clm_varctl      , only : finidat, fsurdat, fatmgrid, fatmlndfrc, &
-                                 fpftdyn, fndepdyn, nsrest 
-    use clmtypeInitMod  , only : initClmtype
-    use clm_atmlnd      , only : init_atm2lnd_type, init_lnd2atm_type, &
-                                 gridmap_a2l, gridmap_l2a, &
-                                 clm_a2l, clm_l2a, atm_a2l, atm_l2a
-    use initGridCellsMod, only : initGridCells
     use domainMod       , only : ldomain, adomain
-    use areaMod         , only : gridmap_setmapsFM, gridmap_setptrs
-    use decompMod       , only : get_proc_clumps, get_clump_bounds, &
-                                 get_proc_bounds, get_proc_bounds_atm, &
-                                 initDecomp
-    use controlMod      , only : control_init, control_print
-    use filterMod       , only : allocFilters, setFilters
-    use pftdynMod       , only : pftdyn_init, pftdyn_interp
-    use histFldsMod     , only : initHistFlds
-    use histFileMod     , only : htapes_build
-    use restFileMod     , only : restFile_getfile, &
-                                 restFile_open, restFile_close, &
-                                 restFile_read, restFile_read_binary
-    use accFldsMod      , only : initAccFlds, initAccClmtype
+    use areaMod         , only : gridmap_setmapsFM,gridmap_setptrs
     use surfFileMod     , only : surfrd,surfrd_get_grid,surfrd_get_frac
-    use mkarbinitMod    , only : mkarbinit
-    use ndepFileMod     , only : ndepdyn_init, ndepdyn_interp
-#if (defined DGVM)
-    use DGVMMod            , only : resetTimeConstDGVM, resetWeightsDGVM, gatherWeightsDGVM
-    use DGVMEcosystemDynMod, only : DGVMEcosystemDynini
-#else
-    use STATICEcosysDynMod , only : EcosystemDynini
-#endif
-#if (defined DUST) 
-    use DustMod         , only : Dustini
-#endif
-#if (defined CASA)
-    use CASAMod         , only : initCASA
-    use CASAPhenologyMod, only : initCASAPhenology
-#endif
-#if (defined RTM) 
-    use RtmMod          , only : Rtmini
-#endif
-#if (defined COUP_CAM)
-    use time_manager    , only : get_curr_date, get_nstep 
-#else
-    use time_manager    , only : get_curr_date, get_nstep, advance_timestep, &
-                                 timemgr_init, timemgr_restart
-#endif
-    use abortutils      , only : endrun
+    use clm_varctl      , only : fsurdat, fatmgrid, fatmlndfrc
+    use clm_atmlnd      , only : gridmap_a2l, gridmap_l2a
+    use controlMod      , only : control_init, control_print
 !
 ! !ARGUMENTS:
-    implicit none
 !
 ! !CALLED FROM:
 ! routine program_off if cpp token OFFLINE is defined
@@ -119,28 +86,11 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer  :: i,j,k                 ! indices
-    integer  :: yr                    ! current year (0, ...)
-    integer  :: mon                   ! current month (1 -> 12)
-    integer  :: day                   ! current day (1 -> 31)
-    integer  :: ncsec                 ! current time of day [seconds]
-    integer  :: nc                    ! clump index
-    integer  :: nclumps               ! number of clumps on this processor
-    integer  :: begp, endp            ! clump beg and ending pft indices
-    integer  :: begc, endc            ! clump beg and ending column indices
-    integer  :: begl, endl            ! clump beg and ending landunit indices
-    integer  :: begg, endg            ! clump beg and ending gridcell indices
-    integer  :: begg_atm, endg_atm    ! proc beg and ending gridcell indices
-    integer  :: ier                   ! error status
-    integer , allocatable :: vegxy(:,:,:) ! vegetation type
-    real(r8), allocatable :: wtxy(:,:,:)  ! subgrid weights
+    integer  :: ier                       ! error status
+    integer  :: i,j                       ! loop indices
     integer , pointer     :: n_ovr(:,:)   ! num of cells for each dst
     integer , pointer     :: i_ovr(:,:,:) ! i index, map input cell
     integer , pointer     :: j_ovr(:,:,:) ! j index, map input cell
-    character(len=256) :: fnamer          ! name of netcdf restart file 
-    character(len=256) :: pnamer          ! full pathname of netcdf restart file
-    character(len=256) :: fnamer_bin      ! name of binary restart file
-    integer  :: ncid                      ! netcdf id
 !-----------------------------------------------------------------------
 
     ! ------------------------------------------------------------------------
@@ -151,7 +101,6 @@ contains
 
     if (masterproc) then
        write (6,*) 'Attempting to initialize the land model .....'
-       write (6,*) 'This is the local tcraig version '
        write (6,*)
        call shr_sys_flush(6)
     endif
@@ -201,8 +150,8 @@ contains
     ! Set the a2l and l2a maps
 
     call gridmap_setmapsFM(adomain,ldomain,gridmap_a2l,gridmap_l2a)
-
-    ! Set ldomain mask and frac base on adomain and mapping.
+    
+    ! Set ldomain mask and frac based on adomain and mapping.
     ! Want ldomain%frac to match adomain%frac but scale by effective area.
     ! so the implied area of an ldomain cell is the actual area *
     ! scaled frac which aggregated over all land cells under an atm cell,
@@ -224,12 +173,111 @@ contains
        endif
     enddo
     enddo
-    
 
     ! Read surface dataset and set up vegetation type [vegxy] and 
     ! weight [wtxy] arrays for [maxpatch] subgrid patches.
     
     call surfrd (vegxy, wtxy, fsurdat)
+
+  end subroutine initialize1
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: initialize2
+!
+! !INTERFACE:
+  subroutine initialize2( )
+!
+! !DESCRIPTION:
+! Land model initialization.
+! o Initializes run control variables via the [clmexp] namelist.
+! o Reads surface data on model grid.
+! o Defines the multiple plant types and fraction areas for each surface type.
+! o Builds the appropriate subgrid <-> grid mapping indices and weights.
+! o Set up parallel processing.
+! o Initializes time constant variables.
+! o Reads restart data for a restart or branch run.
+! o Reads initial data and initializes the time variant variables for an initial run.
+! o Initializes history file output.
+! o Initializes river routing model.
+! o Initializes accumulation variables.
+!
+! !USES:
+    use clm_atmlnd      , only : init_atm2lnd_type, init_lnd2atm_type, &
+                                 gridmap_l2a, clm_a2l, clm_l2a, atm_a2l, atm_l2a
+    use initGridCellsMod, only : initGridCells
+    use clm_varctl      , only : finidat, fpftdyn, fndepdyn
+    use clmtypeInitMod  , only : initClmtype
+    use areaMod         , only : gridmap_setptrs
+    use decompMod       , only : get_proc_clumps, get_clump_bounds, &
+                                 get_proc_bounds, get_proc_bounds_atm, &
+                                 initDecomp
+    use filterMod       , only : allocFilters, setFilters
+    use pftdynMod       , only : pftdyn_init, pftdyn_interp
+    use histFldsMod     , only : initHistFlds
+    use histFileMod     , only : htapes_build
+    use restFileMod     , only : restFile_getfile, &
+                                 restFile_open, restFile_close, &
+                                 restFile_read, restFile_read_binary
+    use accFldsMod      , only : initAccFlds, initAccClmtype
+    use mkarbinitMod    , only : mkarbinit
+    use ndepFileMod     , only : ndepdyn_init, ndepdyn_interp
+#if (defined DGVM)
+    use DGVMMod            , only : resetTimeConstDGVM, resetWeightsDGVM, gatherWeightsDGVM
+    use DGVMEcosystemDynMod, only : DGVMEcosystemDynini
+#else
+    use STATICEcosysDynMod , only : EcosystemDynini
+#endif
+#if (defined DUST) 
+    use DustMod         , only : Dustini
+#endif
+#if (defined CASA)
+    use CASAMod         , only : initCASA
+    use CASAPhenologyMod, only : initCASAPhenology
+#endif
+#if (defined RTM) 
+    use RtmMod          , only : Rtmini
+#endif
+#if (defined COUP_CAM)
+    use time_manager    , only : get_curr_date, get_nstep 
+#else
+    use time_manager    , only : get_curr_date, get_nstep, advance_timestep, &
+                                 timemgr_init, timemgr_restart
+#endif
+!
+! !ARGUMENTS:
+!
+! !CALLED FROM:
+! routine program_off if cpp token OFFLINE is defined
+! routine program_csm if cpp token COUP_CSM is defined
+! routine atmlnd_ini in module atm_lndMod if cpp token COUP_CAM is defined
+!
+! !REVISION HISTORY:
+! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer  :: i,j,k                 ! indices
+    integer  :: yr                    ! current year (0, ...)
+    integer  :: mon                   ! current month (1 -> 12)
+    integer  :: day                   ! current day (1 -> 31)
+    integer  :: ncsec                 ! current time of day [seconds]
+    integer  :: nc                    ! clump index
+    integer  :: nclumps               ! number of clumps on this processor
+    integer  :: begp, endp            ! clump beg and ending pft indices
+    integer  :: begc, endc            ! clump beg and ending column indices
+    integer  :: begl, endl            ! clump beg and ending landunit indices
+    integer  :: begg, endg            ! clump beg and ending gridcell indices
+    integer  :: begg_atm, endg_atm    ! proc beg and ending gridcell indices
+    integer , pointer     :: n_ovr(:,:)   ! num of cells for each dst
+    integer , pointer     :: i_ovr(:,:,:) ! i index, map input cell
+    integer , pointer     :: j_ovr(:,:,:) ! j index, map input cell
+    character(len=256) :: fnamer          ! name of netcdf restart file 
+    character(len=256) :: pnamer          ! full pathname of netcdf restart file
+    character(len=256) :: fnamer_bin      ! name of binary restart file
+    integer  :: ncid                      ! netcdf id
 
     ! Initialize clump and processor decomposition 
     ! tcx: FIX - pass down n_ovr, i_ovr, j_ovr due to circular dependency
@@ -468,7 +516,7 @@ contains
        write (6,*)
     endif
 
-  end subroutine initialize
+  end subroutine initialize2
 
 !-----------------------------------------------------------------------
 !BOP
@@ -482,9 +530,7 @@ contains
 ! Echo and save model version number
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_varctl  , only : version
-    use spmdMod     , only : masterproc
 !
 ! !ARGUMENTS:
     implicit none
@@ -518,7 +564,7 @@ contains
 ! Determine if restart file will be read
 !
 ! !USES:
-    use clm_varctl, only : finidat, nsrest
+    use clm_varctl, only : finidat
 !
 ! !ARGUMENTS:
     implicit none

@@ -12,7 +12,6 @@ module Hydrology2Mod
 ! Calculation of soil/snow hydrology.
 !
 ! !PUBLIC TYPES:
-  use spmdMod, only: iam
   implicit none
   save
 !

@@ -82,15 +82,13 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Revision_Id', len_trim(str), trim(str)), subname)
 
-    if (mksrf_fgrid_global /= ' ') then
-       str = mksrf_fgrid_global
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-            'Input_global_grid_dataset', len_trim(str), trim(str)), subname)
-    else if (mksrf_fgrid_regional /= ' ') then
-       str = mksrf_fgrid_regional
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
-            'Input_regional_grid_dataset', len_trim(str), trim(str)), subname)
-    endif
+    str = trim(mksrf_fgrid)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'Input_grid_dataset', len_trim(str), trim(str)), subname)
+
+    str = trim(mksrf_gridtype)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'Input_gridtype', len_trim(str), trim(str)), subname)
 
     str = get_filename(mksrf_fvegtyp)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
