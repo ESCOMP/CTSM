@@ -1,3 +1,93 @@
+===============================================================
+Tag name: clm3_expa_62
+Originator(s): erik, tcraig
+Date: Wed May 10 00:06:39 MDT 2006
+One-line Summary: merge shrgetput08_clm3_expa_61, fix finemesh bugs
+
+Purpose of changes: changes required for sequential ccsm.  validate
+	finemesh is running properly.
+
+Bugs fixed (include bugzilla ID):
+	a couple finemesh bugs, not documented.
+
+Describe any changes made to build system: modified makefile slightly
+	to set HIDE_MPI when SPMD is FALSE, remove HIDE_SHR_MSG
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: erik, tcraig
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+Makefile:
+ - remove HIDE_SHR_MSG, not needed anymore
+ - add HIDE_MPI if SPMD is FALSE
+SVN_EXTERNALS:
+ - change csm_share version from share3_051205 to share3_060428
+ - change emsf_wrf_timemgr version from esmf_wrf_timemgr_051212 to esmf_wrf_timemgr_060501
+fileutils.F90:
+ - uses shr_file_mod.F90 routines
+ - use shr_file_mod syntax for archive_dir (using mss: prefix)
+initializeMod.F90:
+ - add pnamer_bin get
+program_csm.F90:
+ - add ESMF_Initialize call
+clm_atmlnd.F90:
+ - fix bug in call to grid_maparray for finemesh mapping, only affects finemesh runs.
+controlMod.F90:
+ - use shr_file_mod syntax for archive_dir (using mss: prefix)
+lnd_comp_mct.F90:
+ - change call to get_proc_bounds to get_proc_bounds_atm (bug for finemesh runs).
+program_off.F90:
+ - add calls to ESMF_Initialize and ESMF_Finalize
+ 
+	
+Summary of testing:
+  bluesky: cam full suite bfb
+	   clm full suite not bfb (TS is bfb for 2 days, history file not bfb
+	      after ~1.5 days probably due to new esmf time manager, likely roundoff)
+  tempest: cam full suite bfb, ccsm build test
+  bangkok/lf95: cam full suite bfb
+  bluevista : ccsm TER.01a.1.9x2.5_gx1v3.B.bluevista bfb
+	      cam finemesh T42half.clim0 test, bfb for 42 timesteps vs cam3_2_49
+  lightning : ccsm TER.01a.4x5_gx3v5.B.bluevista bfb
+
+CLM tag used for the baseline comparison tests if applicable: 
+  clm3_expa_61, cam3_3_4, ccsm3_1_beta27
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm standalone only
+    - what platforms/compilers: only bluesky tested
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+	assume roundoff.  it's bfb for at least a day.  in cam and ccsm mode they
+	are bfb.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?  guess
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
 
 ===============================================================
 Tag name: clm3_expa_61

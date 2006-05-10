@@ -56,6 +56,7 @@ PROGRAM program_off
   use time_manager  , only : is_last_step, advance_timestep, get_nstep
   use atmdrvMod     , only : atmdrv_init
   use abortutils    , only : endrun
+  use ESMF_Mod
 #if (defined SPMD)
   use spmdMod       , only : masterproc, iam, mpicom, spmd_init
 #else
@@ -125,6 +126,9 @@ PROGRAM program_off
   ! calls and before all other timing lib calls.
 
   if (gptlinitialize () < 0) call endrun ('CLM: gptlinitialize')
+
+  ! Initialize ESMF (needed for time-manager)
+  call ESMF_Initialize()
 
   ! -----------------------------------------------------------------
   ! Initialize intra-model MPI communication
@@ -210,10 +214,9 @@ PROGRAM program_off
      write(6,*)'SUCCESFULLY TERMINATING CLM MODEL at nstep= ',get_nstep()
   endif
   call t_prf(iam)
-#if (defined SPMD)
-  call mpi_barrier (mpicom, ier)
-  call mpi_finalize(ier)
-#endif
+
+  ! Finalize ESMF
+  call ESMF_Finalize()
 
   stop
 end program program_off

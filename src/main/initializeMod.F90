@@ -245,6 +245,7 @@ contains
     use time_manager    , only : get_curr_date, get_nstep, advance_timestep, &
                                  timemgr_init, timemgr_restart
 #endif
+    use fileutils       , only : getfil
 !
 ! !ARGUMENTS:
 !
@@ -277,6 +278,7 @@ contains
     character(len=256) :: fnamer          ! name of netcdf restart file 
     character(len=256) :: pnamer          ! full pathname of netcdf restart file
     character(len=256) :: fnamer_bin      ! name of binary restart file
+    character(len=256) :: pnamer_bin      ! full pathname of binary restart file
     integer  :: ncid                      ! netcdf id
 
     ! Initialize clump and processor decomposition 
@@ -399,7 +401,10 @@ contains
     ! For restart run, read binary history restart
 
     if (nsrest == 1) then
-       if (masterproc) fnamer_bin = fnamer(1:(len_trim(fnamer)-3))
+       if (masterproc)then 
+          pnamer_bin = pnamer(1:(len_trim(pnamer)-3))
+          call getfil( pnamer_bin, fnamer_bin )
+       end if
        call restFile_read_binary( fnamer_bin )
     end if
 #endif

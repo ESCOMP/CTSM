@@ -242,7 +242,7 @@ contains
   subroutine lnd_SetGSMap_mct( gsMap_lnd )
 
     !-------------------------------------------------------------------
-    use decompMod     , only : get_proc_bounds, adecomp
+    use decompMod     , only : get_proc_bounds_atm, adecomp
     use domainMod     , only : adomain
     use clmtype
 
@@ -253,9 +253,6 @@ contains
     integer :: i, j, n, gi
     integer :: lsize,gsize
     integer :: ier
-    integer :: begp, endp    ! beginning and ending pft indices
-    integer :: begc, endc    ! beginning and ending column indices
-    integer :: begl, endl    ! beginning and ending landunit indices
     integer :: begg, endg    ! beginning and ending gridcell indices
     !-------------------------------------------------------------------
 
@@ -264,7 +261,7 @@ contains
     ! starting at south pole.  Should be the same as what's used
     ! in SCRIP
     
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+    call get_proc_bounds_atm(begg, endg)
 
     allocate(gindex(begg:endg),stat=ier)
 

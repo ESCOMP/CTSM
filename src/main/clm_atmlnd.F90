@@ -444,7 +444,7 @@ end subroutine clm_mapa2l
   enddo
 
   a2lfalse = .false.
-  call gridmap_maparray(begg_d, endg_d, begg_s, endg_s, nflds, asrc, adst, gridmap, a2lfalse)
+  call gridmap_maparray(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, gridmap, a2lfalse)
 
   l2a_dst%t_rad(:)          = adst(:,1)
   l2a_dst%t_ref2m(:)        = adst(:,2)

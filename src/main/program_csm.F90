@@ -64,6 +64,7 @@ PROGRAM program_csm
   use spmdMod       , only : masterproc, iam
 #endif
   use abortutils    , only : endrun
+  use ESMF_Mod
 !
 ! !ARGUMENTS:
     implicit none
@@ -127,6 +128,11 @@ PROGRAM program_csm
   ! calls and before all other timing lib calls.
 
   if (gptlinitialize () < 0) call endrun ('CLM: gptlinitialize')
+
+  ! -----------------------------------------------------------------
+  ! Initialize ESMF
+  ! -----------------------------------------------------------------
+  call ESMF_Initialize()
 
   ! -----------------------------------------------------------------
   ! Initialize inter-model MPI communication 

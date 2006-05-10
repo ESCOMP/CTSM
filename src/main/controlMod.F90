@@ -442,7 +442,7 @@ contains
                 cap(i:i) = char(ichar(ctmp) - 32)
              endif
           end do
-          archive_dir = '/' // trim(cap) // '/csm/' // trim(caseid) // '/lnd'
+          archive_dir = 'mss:/' // trim(cap) // '/csm/' // trim(caseid) // '/lnd'
        end if
 
 #if (defined RTM)

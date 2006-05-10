@@ -115,7 +115,12 @@ SOURCES   := $(shell cat Srcfiles)
 
 OBJS   := $(addsuffix .o, $(basename $(SOURCES)))
 
-CPPDEF := -DNO_SHR_VMATH -DHIDE_SHR_MSG
+CPPDEF := -DNO_SHR_VMATH
+
+# If NOT SPMD, hide csm_share references to MPI include or function calls
+ifeq ($(SPMD),FALSE)
+CPPDEF += -DHIDE_MPI
+endif
 
 Srcfiles: Filepath
 	$(ROOTDIR)/bld/offline/mkSrcfiles > $@

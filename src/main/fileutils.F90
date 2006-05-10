@@ -24,7 +24,7 @@ module fileutils
   public :: set_filename  !Set remote full path filename
   public :: opnfil        !Open local unformatted or formatted file
   public :: getfil        !Obtain local copy of file
-  public :: putfil        !Dispose file to Mass Store
+  public :: putfil        !Dispose file to archival system
   public :: relavu        !Close and release Fortran unit no longer in use
   public :: getavu        !Get next available Fortran unit number
 !
@@ -120,11 +120,13 @@ contains
 ! Obtain local copy of file
 ! First check current working directory
 ! Next check full pathname[fulpath] on disk
-! Finally check full pathname[fulpath] on mass store
-!
+! Finally check full pathname[fulpath] on archival system
+! 
+! !USES:
+     use shr_file_mod, only: shr_file_get
 ! !ARGUMENTS:
      implicit none
-     character(len=*), intent(in)  :: fulpath !MSS or permanent disk full pathname
+     character(len=*), intent(in)  :: fulpath !Archival or permanent disk full pathname
      character(len=*), intent(out) :: locfn   !output local file name
      integer, optional, intent(in) :: iflag   !0=>abort if file not found 1=>do not abort
 !
@@ -138,7 +140,7 @@ contains
      integer klen            !length of fulpath character string
      integer ierr            !error status
      logical lexist          !true if local file exists
-     character(len=512) text !mswrite command
+     character(len=len(fulpath)+5)  :: fulpath2 !Archival full pathname
 !------------------------------------------------------------------------
 
      ! get local file name from full name: start at end. look for first "/"
@@ -166,29 +168,43 @@ contains
         RETURN
      endif
 
-     ! second check for full pathname on disk
+     ! second check for full pathname on disk if no prepended "type:"
 
-     inquire(file=fulpath,exist=lexist)
-     if (lexist) then
-        locfn = trim(fulpath)
-        write(6,*)'(GETFIL): using ',trim(fulpath)
-        return
-     endif
+     if ( index(fulpath,":") == 0 )then
+        inquire(file=fulpath,exist=lexist)
+        if (lexist) then
+           locfn = trim(fulpath)
+           write(6,*)'(GETFIL): using ',trim(fulpath)
+           return
+        endif
+        fulpath2 = "mss:"//trim(fulpath)
+     else
+        fulpath2 = trim(fulpath)
+     end if
 
-     ! finally check on mass store
+     ! finally check on full archive path location
 
-     text='msread '//trim(locfn)//' '//trim(fulpath)
-     call shell_cmd(text, ierr)
+     call shr_file_get( ierr, locfn, fulpath2 )
      if (ierr==0) then
-        write(6,*)'(GETFIL): File ',trim(locfn),' read from MSS'
+        write(6,*)'(GETFIL): File ',trim(locfn),' read in from: ', fulpath2
      else  ! all tries to get file have been unsuccessful
-        write(6,*)'(GETFIL): failed cmd=',trim(text)
+        write(6,*)'(GETFIL): failed getting file from full path: ', fulpath2
         if (present(iflag) .and. iflag==0) then
-           call endrun
+           call endrun ('GETFIL: FAILED to get '//trim(fulpath2))
         else
            RETURN
         endif
      end if
+
+     ! And now make sure file was successfully transfered
+
+     inquire (file=locfn,exist=lexist)
+     if ( .not. lexist) then
+        write(6,*)'(GETFIL): failed transferring file to local path: ', locfn
+        if (present(iflag) .and. iflag==0) then
+           call endrun ('GETFIL: file not transfered to local path' )
+        end if
+     endif
 
    end subroutine getfil
 
@@ -198,21 +214,23 @@ contains
 ! !IROUTINE: putfil
 !
 ! !INTERFACE:
-   subroutine putfil(locfn, mssfpn, pass, irt, lremov)
+   subroutine putfil(locfn, fulpath, pass, irt, lremov)
 !
 ! !DESCRIPTION:
-! Dispose to Mass Store only if nonzero retention period.
+! Dispose to archival system only if nonzero retention period.
 ! Put mswrite command in background for asynchronous behavior.
 ! The string put into 'cmd' below needs to be changed to
 ! the appropriate archival command for the users system
 ! if a shell command 'mswrite' does not exist.
 !
+! !USES:
+     use shr_file_mod, only: shr_file_put
 ! !ARGUMENTS:
      implicit none
      character(len=*), intent(in) :: locfn   ! Local filename
-     character(len=*), intent(in) :: mssfpn  ! Mass Store full pathname
+     character(len=*), intent(in) :: fulpath ! archive full pathname
      character(len=*), intent(in) :: pass    ! write password
-     integer, intent(in) :: irt              ! Mass Store retention time
+     integer, intent(in) :: irt              ! Archival system retention time
      logical, intent(in) :: lremov           ! true=>remove local file
 !
 ! !REVISION HISTORY:
@@ -221,29 +239,20 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-     character(len=256) cmd     ! Command string
-     character(len=256) cmdtem  ! Temporary for command string
-     character(len=  4) crt     ! Retention time as characters
-     character(len= 16) wpass   ! Write password
      integer ier                ! error number
 !------------------------------------------------------------------------
 
      if (irt/=0) then
-        wpass = ' '
-        if (pass(1:1) /= ' ') wpass = ' -w ' // trim(pass)
-        write (crt,'(i4)') irt
-        write (cmd,'(100a)') 'mswrite ',' -t ',crt,trim(wpass),' ',&
-             trim(locfn),' ',trim(mssfpn)
-        if (lremov) then
-           cmdtem = '('//trim(cmd)//' && /bin/rm '//trim(locfn)//' )&'
+        if (pass(1:1) /= ' ')then
+           call shr_file_put( ier, locfn, fulpath, passwd=pass, rtpd=irt, &
+                              async=.true., remove=lremov )
         else
-           cmdtem = '('//trim(cmd)//' )&'
+           call shr_file_put( ier, locfn, fulpath, rtpd=irt, async=.true., &
+                              remove=lremov )
         end if
-        write(6,*)'(PUTFIL): Issuing shell cmd:',trim(cmdtem)
-        call shell_cmd(cmdtem, ier)
+
         if (ier /= 0) then
-           write(6,*)'(PUTFIL): Error from shell cmd'
-           call endrun
+           call endrun ('PUTFIL: Error from shell shr_file_put')
         end if
      endif
 
