@@ -1,4 +1,70 @@
 ===============================================================
+Tag name: clm3_expa_63
+Originator(s): Mariana Vertenstein
+Date: Fri May 12 16:08:03 MDT 2006  
+One-line Summary: introduced mct domains in COUP_CAM mode
+
+Purpose of changes: To introduce generalized mct domains
+in COUP_CAM mode for the purposes of generating a sequential 
+ccsm 
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+ 
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Tony Craig
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+  lnd_comp_mct.f90 
+     removed lnd_CheckGrid_mct routine and replaced it with lnd_domain_mct
+     each processor sends it local domain information stored in an MCT
+     GeneralGrid data structure back to the top level application driver. 
+     A global gather is done for the GeneralGrid and domain comparison is
+     performed on the master processor.     
+
+Summary of testing:
+
+  bluesky: only cam test suite was run successfully
+  tempest: only cam test suite was run successfully
+  bangkok/lf95: only cam test suite was run successfully
+
+CLM tag used for the baseline comparison tests if applicable:
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_62
 Originator(s): erik, tcraig
 Date: Wed May 10 00:06:39 MDT 2006

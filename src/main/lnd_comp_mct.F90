@@ -15,7 +15,7 @@ module lnd_comp_mct
 !
 ! !USES:
   use seq_mct_mod
-  use seq_mct_init
+  use seq_init_mct
   use seq_flds_mod
   use seq_flds_indices
   use shr_kind_mod,   only : r8 => shr_kind_r8
@@ -39,11 +39,11 @@ module lnd_comp_mct
 !
 !EOP
 ! !PRIVATE MEMBER FUNCTIONS:
+  private :: lnd_SetgsMap_mct
+  private :: lnd_domain_mct
   private :: lnd_export_mct
   private :: lnd_exportinit_mct
   private :: lnd_import_mct
-  private :: lnd_SetGSMap_mct
-  private :: lnd_CheckGrid_mct         ! check consistency of cam/clm grid
 !
 ! !PRIVATE VARIABLES
   integer, dimension(:), allocatable :: perm  ! permutation array to reorder points
@@ -62,7 +62,7 @@ contains
 ! !IROUTINE: lnd_init_mct
 !
 ! !INTERFACE:
-  subroutine lnd_init_mct( gsMap_lnd, x2l_l, l2x_l, land_present )
+  subroutine lnd_init_mct( gsMap_lnd, dom_l, x2l_l, l2x_l, land_present )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
@@ -72,7 +72,7 @@ contains
     use radiation       , only : radiation_get      !(cam use)
     use filenames       , only : mss_irt, caseid    !(cam use) 
     use history         , only : ctitle, inithist   !(cam use)
-    use time_manager    , only : get_nstep      
+    use time_manager    , only : get_nstep          
     use clm_atmlnd      , only : clm_l2a, atm_l2a
     use clm_atmlnd      , only : gridmap_l2a, clm_mapl2a
     use domainMod       , only : adomain
@@ -83,12 +83,13 @@ contains
 #include <comsol.h>
 !
 ! !ARGUMENTS:
-    type(mct_gsMap), intent(inout) :: GSMap_lnd
+    type(mct_gsMap), intent(inout) :: gsMap_lnd
+    type(mct_gGrid), intent(inout) :: dom_l
     type(mct_aVect), intent(inout) :: x2l_l, l2x_l
     logical        , intent(inout) :: land_present
 !
 ! !LOCAL VARIABLES:
-    integer  :: i,j         ! indices
+    integer  :: i,j                ! indices
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -96,18 +97,14 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    !=============================================================
     ! Determine if must return now
-    !=============================================================
 
     if (adiabatic .or. ideal_phys .or. aqua_planet) then
        land_present = .false.
        return
     end if
 
-    !=============================================================
     ! Preset clm namelist variables and orbital params same as cam
-    !=============================================================
 
     call radiation_get(iradsw_out=cam_irad)
     cam_caseid  = caseid
@@ -117,9 +114,7 @@ contains
     cam_irt     = mss_irt
     call lnd_setorb_mct( eccen, obliqr, lambm0, mvelpp )
 
-    !=============================================================
     ! Initialize clm phase 1 - read namelist, grid and surface data
-    !=============================================================
 
     call clm_init0()
 
@@ -130,36 +125,26 @@ contains
     end if
 #endif
 
-    ! Determine consistency with cam grid info 
-    ! only need to do this on  master processor (note that cam latitudes
-    ! and longitudes are computed each time by the cam model at startup)
-
-    call lnd_CheckGrid_mct( )
-
-    !=============================================================
     ! Initialize clm phase 2 - rest of initialization
-    !=============================================================
 
     call clm_init1()
     call clm_init2()
 
-    !=============================================================
-    ! Initialize MCT attribute vectors and indices
-    !=============================================================
+    ! Initialize MCT gsMap, domain and attribute vectors
 
-    call lnd_SetGSMap_mct( GSMap_lnd ) 	
+    call lnd_SetgsMap_mct( gsMap_lnd ) 	
+
+    call lnd_domain_mct( gsMap_lnd, dom_l )
 
     call mct_aVect_init(x2l_l, rList=seq_flds_x2l_fields,    &
-         lsize=MCT_GSMap_lsize(GSMap_lnd, mpicom))
+         lsize=mct_gsMap_lsize(gsMap_lnd, mpicom))
     call mct_aVect_zero(x2l_l)
 
     call mct_aVect_init(l2x_l, rList=seq_flds_l2x_fields,    &
-         lsize=MCT_GSMap_lsize(GSMap_lnd, mpicom))
+         lsize=mct_gsMap_lsize(gsMap_lnd, mpicom))
     call mct_aVect_zero(l2x_l)
 
-    !=============================================================
     ! Map internal data structure into coupling data structure
-    !=============================================================
 
     if (get_nstep() == 0) then
        call clm_mapl2a( clm_l2a, atm_l2a, gridmap_l2a )
@@ -239,11 +224,11 @@ contains
 
 !=================================================================================
 
-  subroutine lnd_SetGSMap_mct( gsMap_lnd )
+  subroutine lnd_SetgsMap_mct( gsMap_lnd )
 
     !-------------------------------------------------------------------
-    use decompMod     , only : get_proc_bounds_atm, adecomp
-    use domainMod     , only : adomain
+    use decompMod, only : get_proc_bounds_atm, adecomp
+    use domainMod, only : adomain
     use clmtype
 
     implicit none
@@ -293,11 +278,11 @@ contains
 
     call mct_permute(gindex,perm,lsize)
 
-    call seq_mct_init_SetgsMap( lsize, gsize, gindex, mpicom, LNDID, gsMap_lnd )
+    call seq_init_SetgsMap_mct( lsize, gsize, gindex, mpicom, LNDID, gsMap_lnd )
 
     deallocate(gindex)
 
-  end subroutine lnd_SetGSMap_mct
+  end subroutine lnd_SetgsMap_mct
 
 !=================================================================================
 
@@ -344,7 +329,7 @@ contains
   subroutine lnd_export_mct( l2a, l2x_l )   
 
     !-----------------------------------------------------
-    use time_manager, only : get_nstep
+    use time_manager, only : get_nstep  
     use clm_atmlnd  , only : lnd2atm_type
     use domainMod   , only : adomain
     use decompMod   , only : get_proc_bounds_atm, adecomp
@@ -517,80 +502,6 @@ contains
 !---------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: lnd_CheckGrid_mct
-!
-! !INTERFACE:
-  subroutine lnd_CheckGrid_mct( )
-!
-! !DESCRIPTION:
-! Check that cam grid is consistent with clm grid read in from clm surface 
-! dataset
-!
-! !USES:
-    use shr_const_mod   , only : SHR_CONST_PI
-    use commap          , only : clat, londeg              !(cam use)
-    use comsrf          , only : ext_frac => landfrac_glob !(cam use)
-    use domainMod       , only : adomain 
-    use spmdMod         , only : masterproc
-!
-! !ARGUMENTS:
-!
-! !REVISION HISTORY:
-! Author: Mariana Vertenstein 2005-05-14
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-    integer :: i,j        ! indices
-    real(r8):: ext_lonc   ! ext lon values
-    real(r8):: ext_latc   ! ext lat values
-    integer :: ext_mask   ! ext land mask values	
-!---------------------------------------------------------------------------
-
-    do j = 1,adomain%nj
-       do i = 1,adomain%ni
-
-          ! Determine consistency of cam and clm grid - all processors
-
-          ext_latc = (180._r8/SHR_CONST_PI)*clat(j)
-          if ( abs(ext_latc - adomain%latc(i,j)) > 1.e-12_r8 ) then
-             write(6,*)'MCT_lnd_checkgrid error: CAM latitude ',ext_latc,' and clm input latitude ', &
-                  adomain%latc(i,j),' has difference too large at i,j= ',i,j
-             call endrun()
-          end if
-          ext_lonc = londeg(i,j)
-          if ( abs(ext_lonc - adomain%lonc(i,j)) > 1.e-12_r8 ) then
-             write(6,*)'MCT_lnd_checkgrid error: CAM longitude ',ext_lonc,' and clm input longitude ', &
-                  adomain%lonc(i,j),' has difference too large at i,j= ',i,j
-             call endrun()
-          end if
-
-          ! Determine consistency of cam and clm landfrac/landmask - masterproc only
-
-          if (masterproc) then
-             if (ext_frac(i,j) > 0._r8) then
-                ext_mask = 1
-             else
-                ext_mask = 0
-             endif
-             if (ext_mask /= adomain%mask(i,j)) then
-                write(6,*)'MCT_lnd_checkgrid error: CAM land mask different from surface dataset at i,j= ',i,j
-                call endrun()
-             end if
-             if (ext_frac(i,j) /= adomain%frac(i,j)) then
-                write(6,*)'MCT_lnd_checkgrid error: CAM fractional land differs from surface dataset at i,j= ',i,j
-                call endrun()
-             end if
-          end if
-    
-       end do
-    end do
-       
-  end subroutine lnd_CheckGrid_mct
-
-!---------------------------------------------------------------------------
-!BOP
-!
 ! !IROUTINE: lnd_setorb_mct_mct
 !
 ! !INTERFACE:
@@ -619,7 +530,113 @@ contains
 
   end subroutine lnd_setorb_mct
 
+!===============================================================================
+
+  subroutine lnd_domain_mct( gsMap_lnd, dom_l )
+
+    !-------------------------------------------------------------------
+    use clm_varcon, only : re
+    use domainMod , only : adomain
+    use decompMod , only : get_proc_bounds_atm, adecomp
+    !
+    ! Arguments
+    !
+    type(mct_gsMap), intent(inout) :: gsMap_lnd
+    type(mct_ggrid), intent(out)   :: dom_l      
+    !
+    ! Local Variables
+    !
+    integer :: g,i,j,n            ! index
+    integer :: lsize              ! domain size
+    integer :: begg, endg         ! beginning and ending gridcell indices
+    real(r8), pointer :: data(:)  ! temporary
+    integer , pointer :: idata(:)     ! temporary
+    !-------------------------------------------------------------------
+    !
+    ! Initialize mct domain type
+    !
+    call mct_gGrid_init( GGrid=dom_l, CoordChars="lat:lon", OtherChars="area:mask:maxfrac", &
+         lsize=mct_gsMap_lsize(gsMap_lnd, mpicom) )
+    !
+    ! Allocate memory
+    !
+    lsize = mct_gGrid_lsize(dom_l)
+    allocate(data(lsize))
+    allocate(idata(lsize))
+    !
+    ! Determine cam domain 
+    ! Numbering scheme is: West to East and South to North to South pole
+    !
+    ! Initialize attribute vector with special value
+    !
+    idata(:) = -999
+    call mct_gGrid_importIAttr(dom_l,'GlobGridNum',idata,lsize)
+    !
+    data(:) = -9999.0_R8  ! generic special value 	
+    call mct_gGrid_importRAttr(dom_l,"lat" ,data,lsize) 
+    call mct_gGrid_importRAttr(dom_l,"lon" ,data,lsize) 
+    call mct_gGrid_importRAttr(dom_l,"area",data,lsize) 
+
+    data(:) = 0.0_R8  ! generic special value 	
+    call mct_gGrid_importRAttr(dom_l,"mask"   ,data,lsize) 
+    call mct_gGrid_importRAttr(dom_l,"maxfrac",data,lsize) 
+    !
+    ! Determine bounds
+    !
+    call get_proc_bounds_atm(begg, endg)
+    !
+    ! Fill in correct values for domain components
+    !
+    do g = begg,endg
+       i = adecomp%gdc2i(g)
+       j = adecomp%gdc2j(g)
+       n = 1 + (g - begg)
+       data(n) = adomain%lonc(i,j)
+    end do
+    call mct_gGrid_importRattr(dom_l,"lon",data,lsize) 
+
+    do g = begg,endg
+       i = adecomp%gdc2i(g)
+       j = adecomp%gdc2j(g)
+       n = 1 + (g - begg)
+       data(n) = adomain%latc(i,j)
+       write(6,*)'n= ',n,' g= ',g,' i= ',i,' j= ',j,' lat= ',data(n)
+    end do
+    call mct_gGrid_importRattr(dom_l,"lat",data,lsize) 
+
+    do g = begg,endg
+       i = adecomp%gdc2i(g)
+       j = adecomp%gdc2j(g)
+       n = 1 + (g - begg)
+       data(n) = adomain%area(i,j)/(re*re)
+    end do
+    call mct_gGrid_importRattr(dom_l,"area",data,lsize) 
+
+    do g = begg,endg
+       i = adecomp%gdc2i(g)
+       j = adecomp%gdc2j(g)
+       n = 1 + (g - begg)
+       data(n) = real(adomain%mask(i,j), r8)
+    end do
+    call mct_gGrid_importRattr(dom_l,"mask",data,lsize) 
+
+    do g = begg,endg
+       i = adecomp%gdc2i(g)
+       j = adecomp%gdc2j(g)
+       n = 1 + (g - begg)
+       data(n) = adomain%frac(i,j)
+    end do
+    call mct_gGrid_importRattr(dom_l,"maxfrac",data,lsize) 
+
+    ! Permute dom_l to have ascending order
+
+    call mct_gGrid_permute(dom_l, perm)
+
+    deallocate(data)
+    deallocate(idata)
+    
 #endif 
 
-end module lnd_comp_mct
+  end subroutine lnd_domain_mct
 
+end module lnd_comp_mct
