@@ -1,4 +1,73 @@
 ===============================================================
+Tag name: clm3_expa_64
+Originator(s): Dani Bundy Coleman <bundy@ucar.edu>
+Date: Thu Jun 29 14:44:07 MDT 2006
+One-line Summary: dust modifications from Natalie Mahowald
+
+Purpose of changes: update dust code 
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Mariana Vertenstein <mvertens@ucar.edu>
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M      src/biogeochem/DUSTMod.F90
+       OLD     dmt_vma = 2.524e-6_r8 ! [m] Mass median diameter analytic       She84 p.75 Table1
+       NEW     dmt_vma = 3.500e-6_r8 ! [m] Mass median diameter analytic 
+
+M      src/main/clm_atmlnd.F90
+       add land-to-atmosphere communication of fv,ram1 & dust fluxes
+       (only active if defined DUST or PROGSEASALT )
+M      src/main/lnd_comp_mct.F90
+       add land-to-atmosphere communication of fv,ram1 & dust fluxes
+       (only active if defined DUST or PROGSEASALT )
+
+Summary of testing:
+
+  bluesky: tested with cam, bfb when DUST and PROGSEASALT not defined
+  tempest:
+  bangkok/lf95:  tested with cam, bfb when DUST and PROGSEASALT not defined
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_63
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_63
 Originator(s): Mariana Vertenstein
 Date: Fri May 12 16:08:03 MDT 2006  

@@ -368,7 +368,22 @@ contains
        if (index_l2x_Fall_nee /= 0) then
           l2x_l%rAttr(index_l2x_Fall_nee,i) = l2a%nee(g)
        end if
+
+! optional fields for dust.  The index = 0 is a good way to flag it,
+! but I have set it up so that l2a doesn't have ram1,fv,flxdst[1-4] if
+! progsslt or dust aren't running. 
+#if ( defined DUST || defined PROGSSLT )
+       if (index_l2x_Sl_ram1 /= 0 )  l2x_l%rAttr(index_l2x_Sl_ram1,i)   = l2a%ram1(g)
+       if (index_l2x_Sl_fv   /= 0 )  l2x_l%rAttr(index_l2x_Sl_fv,i)     = l2a%fv(g)
+#endif
+#if ( defined DUST )
+       if (index_l2x_Fall_flxdst1 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst1,i)= l2a%flxdst(g,1)
+       if (index_l2x_Fall_flxdst2 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst2,i)= l2a%flxdst(g,2)
+       if (index_l2x_Fall_flxdst3 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst3,i)= l2a%flxdst(g,3)
+       if (index_l2x_Fall_flxdst4 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst4,i)= l2a%flxdst(g,4)
+#endif
     end do
+
 
     ! permute before using the Rearrange call.
 

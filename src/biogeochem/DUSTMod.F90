@@ -175,6 +175,11 @@ contains
 
 !dir$ concurrent
 !cdir nodep
+
+! initialize variables which get passed to the atmosphere
+	flx_mss_vrt_dst(lbp:ubp,:)=0.
+
+!
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        c = pcolumn(p)
@@ -733,7 +738,7 @@ contains
 
     ! Set a fundamental statistic for each bin
 
-    dmt_vma = 2.524e-6_r8 ! [m] Mass median diameter analytic She84 p.75 Table1
+    dmt_vma = 3.500e-6_r8 ! [m] Mass median diameter analytic She84 p.75 Table1--changed nmm
 
     ! Compute analytic size statistics
     ! Convert mass median diameter to number median diameter (call vma2nma)

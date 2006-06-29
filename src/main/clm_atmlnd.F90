@@ -12,7 +12,7 @@ module clm_atmlnd
 ! Handle atm2lnd, lnd2atm mapping/downscaling/upscaling/data
 !
 ! !USES:
-  use clm_varpar  , only : numrad
+  use clm_varpar  , only : numrad, ndst   !ndst = number of dust bins. only used # ifdef DUST
   use areaMod     , only : gridmap_type
   use shr_kind_mod, only : r8 => shr_kind_r8
   use nanMod      , only : nan
@@ -75,6 +75,13 @@ type lnd2atm_type
   real(r8), pointer :: qflx_evap_tot(:)!qflx_evap(_soi + _veg) + qflx_tran_veg
   real(r8), pointer :: fsa(:)          !solar rad absorbed (total) (W/m**2)
   real(r8), pointer :: nee(:)          !net CO2 flux (kg C/m**2/s) [+ to atm]
+#if (defined DUST || defined  PROGSSLT )
+  real(r8), pointer :: ram1(:)         !aerodynamical resistance (s/m)
+  real(r8), pointer :: fv(:)           !friction velocity (m/s) (for dust model)
+#endif
+#if (defined DUST  )
+  real(r8), pointer :: flxdst(:,:)       !dust flux (size bins)
+#endif
 end type lnd2atm_type
 
   type(atm2lnd_type),public,target :: atm_a2l      ! a2l fields on atm grid
@@ -234,6 +241,13 @@ end subroutine init_atm2lnd_type
   allocate(l2a%qflx_evap_tot(beg:end))
   allocate(l2a%fsa(beg:end))
   allocate(l2a%nee(beg:end))
+#if (defined DUST || defined  PROGSSLT )
+  allocate(l2a%ram1(beg:end))
+  allocate(l2a%fv(beg:end))
+#endif
+#if (defined DUST )
+  allocate(l2a%flxdst(beg:end,1:ndst))
+#endif
 
 ! ival = nan      ! causes core dump in gridmap_maparray, tcx fix
   ival = 0.0_r8
@@ -252,7 +266,13 @@ end subroutine init_atm2lnd_type
   l2a%qflx_evap_tot(beg:end) = ival
   l2a%fsa(beg:end) = ival
   l2a%nee(beg:end) = ival
-
+#if (defined DUST || defined  PROGSSLT )
+  l2a%ram1(beg:end) = ival
+  l2a%fv(beg:end) = ival
+#endif
+#if (defined DUST )
+  l2a%flxdst(beg:end,:) = ival
+#endif
 end subroutine init_lnd2atm_type
 
 !------------------------------------------------------------------------------
@@ -410,6 +430,9 @@ end subroutine clm_mapa2l
   logical :: a2lfalse              ! a2l or l2a map type flag
   real(r8),pointer :: asrc(:,:)    ! temporary source data
   real(r8),pointer :: adst(:,:)    ! temporary dest data
+#if (defined DUST )
+  integer :: m                     ! loop counter
+#endif
 !------------------------------------------------------------------------------
 
   nradflds = size(l2a_src%albd,dim=2)
@@ -422,6 +445,17 @@ end subroutine clm_mapa2l
   call get_proc_bounds    (begg_s, endg_s)
   call get_proc_bounds_atm(begg_d, endg_d)
   nflds = 12+2*numrad
+
+#if (defined DUST || defined  PROGSSLT )  
+  ! add on fv, ram1 
+  nflds = nflds + 2 
+#endif
+
+#if (defined DUST  ) 
+  ! add on the number of dust bins (for flxdust)
+  nflds = nflds + ndst
+#endif
+
 
   allocate(asrc(begg_s:endg_s,nflds))
   allocate(adst(begg_d:endg_d,nflds))
@@ -443,6 +477,16 @@ end subroutine clm_mapa2l
      asrc(:,12+2*n)  = l2a_src%albi(:,n)  
   enddo
 
+#if (defined DUST || defined  PROGSSLT )
+  asrc(:,13+2*numrad)  = l2a_src%ram1(:)  
+  asrc(:,14+2*numrad)  = l2a_src%fv(:)
+#endif
+#if (defined DUST )
+  do m = 1,ndst  ! dust bins
+     asrc(:,14+m+2*numrad)  = l2a_src%flxdst(:,m)  
+  end do !m
+#endif
+
   a2lfalse = .false.
   call gridmap_maparray(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, gridmap, a2lfalse)
 
@@ -462,6 +506,16 @@ end subroutine clm_mapa2l
      l2a_dst%albd(:,n)      = adst(:,11+2*n)
      l2a_dst%albi(:,n)      = adst(:,12+2*n)
   enddo
+
+#if (defined DUST || defined  PROGSSLT )
+  l2a_dst%ram1(:) =  adst(:,13+2*numrad)
+  l2a_dst%fv(:)   = adst(:,14+2*numrad)
+#endif
+#if (defined DUST  )
+  do m = 1,ndst  ! dust bins
+     l2a_dst%flxdst(:,m) =  adst(:,14+m+2*numrad)
+  end do !m
+#endif
 
   deallocate(asrc)
   deallocate(adst)
@@ -517,6 +571,11 @@ end subroutine clm_mapl2a
   type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
   type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
   type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
+#if (defined DUST)
+  type(pft_dflux_type)   , pointer :: pdf  ! local pointer to derived subtype
+  integer n
+#endif
+
 !------------------------------------------------------------------------
 
   ! Set pointers into derived type
@@ -631,6 +690,25 @@ end subroutine clm_mapl2a
         clm_l2a%nee(g) = clm_l2a%nee(g)*12.011e-6_r8
      end do
 #endif
+
+#if (defined DUST || defined  PROGSSLT )
+
+      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+           pptr%pps%fv, clm_l2a%fv, &
+           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+
+      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+           pptr%pps%ram1, clm_l2a%ram1, &
+           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+
+#endif
+
+#if (defined DUST )
+      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, ndst, &
+           pptr%pdf%flx_mss_vrt_dst, clm_l2a%flxdst, &
+           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+#endif
+
      ! Convert from gC/m2/s to kgC/m2/s
 !dir$ concurrent
 !cdir nodep
