@@ -90,6 +90,7 @@ sub process_args {
       $self->usage;
     # List tests
     } elsif ( /^-t/ ) {
+      $self->setup_tests;
       $self->list_tests;
     # Clean the old directories out before running
     } elsif ( /^-clean/ ) {
@@ -239,7 +240,7 @@ sub list_tests {
 #
   my $self = shift;
 
-  my @list, sort( keys( %main::runtypes  ) );
+  my @list = sort( keys( %main::runtypes  ) );
   push @list, $main::control;
 
   print <<EOF;

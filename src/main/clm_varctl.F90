@@ -69,18 +69,6 @@ module clm_varctl
 ! Rtm control variables
 !
   integer :: rtm_nsteps                         ! if > 1, average rtm over rtm_nsteps time steps
-
-#if (defined COUP_CAM)
-!
-! CAM shared namelist variables
-!
-    character(len=256) :: cam_caseid            ! cam caseid
-    character(len=256) :: cam_ctitle            ! cam title
-    character(len=  8) :: cam_crtinic           ! cam initial dataset generation frequency
-    integer            :: cam_irad              ! cam radiation frequency
-    integer            :: cam_nsrest            ! cam 0=initial run, > 0=continuation run
-    integer            :: cam_irt               ! cam mss retention time
-#endif
 !
 ! Derived variables (run, history and restart file)
 !

@@ -127,9 +127,6 @@ PROGRAM program_off
 
   if (gptlinitialize () < 0) call endrun ('CLM: gptlinitialize')
 
-  ! Initialize ESMF (needed for time-manager)
-  call ESMF_Initialize()
-
   ! -----------------------------------------------------------------
   ! Initialize intra-model MPI communication
   ! -----------------------------------------------------------------
@@ -137,6 +134,9 @@ PROGRAM program_off
 #if (defined SPMD)
   call spmd_init()
 #endif
+
+  ! Initialize ESMF (needed for time-manager)
+  call ESMF_Initialize()
 
   ! -----------------------------------------------------------------
   ! Initialize Orbital parameters

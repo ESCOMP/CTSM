@@ -16,16 +16,16 @@
 # Note: Make sure to set the LAB environment variable as appropriate.
 #
 #-----------------------------------------------------------------------
-# NCAR Linux Cluster: anchorage
+# NCAR Linux Cluster: bangkok
 # Usage: qsub test_batch.csh
 #-----------------------------------------------------------------------
-##PBS -N test-model
-##PBS -j oe
-##PBS -q default
-##PBS -l nodes=2
-##PBS -l walltime=06:00:00
-##PBS -m ae
-##PBS -V
+#PBS -N test-model
+#PBS -j oe
+#PBS -q long
+#PBS -l nodes=2:ppn=2:ecc
+#PBS -l walltime=06:00:00
+#PBS -m ae
+#PBS -V
 #
 #-----------------------------------------------------------------------
 # NCAR IBM SP: bluesky
@@ -47,9 +47,12 @@
 # NCAR SGI: tempest
 # Usage: qsub test_batch.csh
 #-----------------------------------------------------------------------
-##QSUB -q ded_16
-##QSUB -l mpp_p=4
-##QSUB -mb -me -eo
+#QSUB -q ded_32
+#QSUB -l mpp_p=20      # Maximum number of processes (CHANGE THIS if needed)
+#QSUB -mb -me -eo
+#QSUB -x               # Export all Environment variables
+#QSUB -J y             # Put job log in its own file
+#QSUB                  # End of options
 #
 #-----------------------------------------------------------------------
 # ORNL Cray X1: phoenix
@@ -113,17 +116,19 @@ switch ( $OS )
 endsw
 echo "Changing directory to $SCRIPT_DIR"
 cd $SCRIPT_DIR
+set COMPDIR=/fis/cgd/ccr/tcraig/clmnew/clm3_expa_61
 switch ( $OS )
   case AIX:
-     setenv SPMD_NODES 4
+     setenv SPMD_NODES 2
      setenv SHMEM_CPUS 4
      echo "Set SPMD_NODES to $SPMD_NODES"
      echo "Set SHMEM_CPUS to $SHMEM_CPUS"
+     setenv MODEL_DATDIR /fs/cgd/csm/inputdata
      breaksw
   case IRIX64:
-     setenv SPMD_NODES 2
+     setenv SPMD_NODES 8
      echo "Set SPMD_NODES to $SPMD_NODES"
-     setenv SHMEM_CPUS 2
+     setenv SHMEM_CPUS 4
      echo "Set SHMEM_CPUS to $SHMEM_CPUS"
      breaksw
   case UNICOS/mp:
@@ -145,10 +150,17 @@ switch ( $OS )
      echo "Set SHMEM_CPUS to $SHMEM_CPUS"
      breaksw
   case Linux:
+     set COMPDIR=/fs/cgd/csm/models/lnd/clm2/clm3_expa_64
+     setenv USER_FC "lf95"
+     setenv MPI_ROOT "/usr/local/mpich-1.2.7p1-gcc-g++-4.0.2-8-lf9562"
+     setenv LIB_MPI $MPI_ROOT/lib
+     setenv INC_MPI $MPI_ROOT/include
+     setenv NETCDF_ROOT "/usr/local/netcdf-3.6.1beta3-gcc-4.0.2-g77-lf9562"
+     setenv LIB_NETCDF    $NETCDF_ROOT/lib
+     setenv INC_NETCDF    $NETCDF_ROOT/include
      setenv SPMD_NODES 2
      echo "Set SPMD_NODES to $SPMD_NODES"
-     cp -p $PBS_NODEFILE machines.$OS
-     setenv SPMD_RUNCMND "mpirun -machinefile $SCRIPT_DIR/machines.$OS -np \$SPMD_NODES"
+     setenv SPMD_RUNCMND "$MPI_ROOT/bin/mpirun -np $SPMD_NODES"
      breaksw
   default:
     echo "Use default values for number of nodes and shared memory CPUs"
@@ -164,10 +176,10 @@ echo "Starting test-model.pl"
 
 #rm -f /ptmp/tcraig/clmtest/*/0*.log
 
- ./test-model.pl -res T31cnall -c /fis/cgd/ccr/tcraig/clmnew/clm3_expa_61
- ./test-model.pl -res T31      -c /fis/cgd/ccr/tcraig/clmnew/clm3_expa_61
- ./test-model.pl -res T31cn    -c /fis/cgd/ccr/tcraig/clmnew/clm3_expa_61
- ./test-model.pl -res T31casa  -c /fis/cgd/ccr/tcraig/clmnew/clm3_expa_61
+ ./test-model.pl -res T31cnall -c $COMPDIR
+ ./test-model.pl -res T31      -c $COMPDIR
+ ./test-model.pl -res T31cn    -c $COMPDIR
+ ./test-model.pl -res T31casa  -c $COMPDIR
  ./test-model.pl -res T31dgvm  
 
 #foreach file (/ptmp/tcraig/clmtest/*/0*.log)

@@ -261,7 +261,7 @@ sub write_file {
   if ( -f $file ) { unlink( $file ); }
   my $key;
   open( OUT, ">$file" ) || die "Can not open namelist file: $file";
-  print OUT "&clmexp\n";
+  print OUT "&clm_inparm\n";
   foreach my $key ( sort( keys(%CLM_namelist::CLMEXP) ) ) {
     if ( defined($CLM_namelist::CLMEXP{$key}) ) {
       print OUT " $key\t\t= $CLM_namelist::CLMEXP{$key}\n";

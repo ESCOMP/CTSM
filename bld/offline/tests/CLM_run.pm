@@ -86,7 +86,7 @@ sub machine_specs {
       $_= <>; chomp( $_ ); if ( /./ ) { $RUNTYPE = $_; }
     }
     if ( ! defined($NAMELIST) ) {
-      $NAMELIST = "clm.parm.$RUNTYPE.$OS";
+      $NAMELIST = "lnd.stdin";
       print "Set namelist to $NAMELIST in " . cwd( ) . "\n";
     }
     if ( ! defined($MODEL_DATDIR) ) {
@@ -95,7 +95,7 @@ sub machine_specs {
       $_ = <>; chomp( $_ ); if ( /./ ) { $MODEL_DATDIR = $_; }
     }
     if ( ! defined($NAMELIST) ) {
-      $NAMELIST = "clm.parm.$RUNTYPE.$OS";
+      $NAMELIST = "lnd.stdin";
       print "Set namelist to $NAMELIST in " . cwd( ) . "\n";
     }
     if ( ! defined($SHMEM_CPUS) ) { $SHMEM_CPUS = $CLM_run::SHMEM_CPUS_default->value($LAB, $OS); }
@@ -427,11 +427,11 @@ sub run {
   my $die_msg = "Error running the model";
   if ( $self->do_log ) { $die_msg = "$die_msg - see $logfile for log \n\n"; }
   if ( $SPMD ne "TRUE" ) {
-    $self->exec( "time $exec < $NAMELIST $log", $die_msg, "echo" );
+    $self->exec( "time $exec $log", $die_msg, "echo" );
   } elsif ( $SPMD_RUNCMND =~ /sh -c/ ) {
-    $self->exec( "time $SPMD_RUNCMND \'$exec < $NAMELIST $log\'", $die_msg, "echo" );
+    $self->exec( "time $SPMD_RUNCMND \'$exec $log\'", $die_msg, "echo" );
   } else {
-    $self->exec( "time $SPMD_RUNCMND $exec < $NAMELIST $log", $die_msg, "echo" );
+    $self->exec( "time $SPMD_RUNCMND $exec $log", $die_msg, "echo" );
   }
   print "\n\nCLM2 Finished";
   if ( $self->do_log ) { print " - see $logfile for log \n\n"; }

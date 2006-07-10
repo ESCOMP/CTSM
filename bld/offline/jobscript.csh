@@ -278,7 +278,7 @@ endif
 
 mkdir -p $MODEL_EXEDIR; cd $MODEL_EXEDIR
 cat >! lnd.stdin << EOF
- &clmexp
+ &clm_inparm
  caseid         = 'test1'
  ctitle         = 'test1 title'
  finidat        = ' '
@@ -365,6 +365,7 @@ $ROOTDIR/src/biogeophys
 $ROOTDIR/src/biogeochem
 $ROOTDIR/src/riverroute
 $ROOTDIR/src/csm_share/shr
+$ROOTDIR/src/csm_share/eshr
 $ROOTDIR/src/utils/timing
 $ROOTDIR/src/utils/esmf_wrf_timemgr
 EOF
@@ -461,9 +462,9 @@ if ($OS == 'IRIX64') then
   setenv MP_SLAVE_STACKSIZE 40000000
   setenv MP_SET_NUMTHREADS $NTHREADS  
   if ($SPMD == TRUE) then
-     mpirun -np $NTASKS clm < lnd.stdin >&! clm.log.$LID || echo "CLM run failed" && exit 1 
+     mpirun -np $NTASKS clm >&! clm.log.$LID || echo "CLM run failed" && exit 1 
   else
-                        clm < lnd.stdin >&! clm.log.$LID || echo "CLM run failed" && exit 1
+                        clm >&! clm.log.$LID || echo "CLM run failed" && exit 1
   endif
 endif
 
@@ -485,9 +486,9 @@ if ($OS == 'AIX') then
   setenv OMP_NUM_THREADS $NTHREADS 
   ulimit unlimited
   if ($SPMD == TRUE) then
-      poe clm < lnd.stdin >&! clm.log.$LID || echo "CLM run failed" && exit 1
+      poe clm >&! clm.log.$LID || echo "CLM run failed" && exit 1
   else
-          clm < lnd.stdin >&! clm.log.$LID || echo "CLM run failed" && exit 1
+          clm >&! clm.log.$LID || echo "CLM run failed" && exit 1
   endif 
 endif
 
@@ -513,16 +514,16 @@ if ($OS == 'Linux') then
        #
        # Run the parallel MPI executable "clm" 
        echo "`date` MPIRUN - Start" 
-       $linux_mpirun_cmnd -v -machinefile $PBS_NODEFILE -np $NPROCS clm < lnd.stdin >&! clm.log.$LID || echo "CLM run failed" && exit 1
+       $linux_mpirun_cmnd -v -machinefile $PBS_NODEFILE -np $NPROCS clm >&! clm.log.$LID || echo "CLM run failed" && exit 1
        echo "`date` MPIRUN - END"                       
      else
        echo " running in interactive mode"
-       $linux_mpirun_cmnd -v -np $NTASKS clm < lnd.stdin >&! clm.log.$LID || echo "CLM run failed" && exit 1
+       $linux_mpirun_cmnd -v -np $NTASKS clm >&! clm.log.$LID || echo "CLM run failed" && exit 1
        echo "`date` MPIRUN - END"                       
      endif   
      echo "`date` MPIRUN - END"                       
   else     
-     clm < lnd.stdin >&! clm.log.$LID || echo "CLM run failed" && exit 1
+     clm >&! clm.log.$LID || echo "CLM run failed" && exit 1
   endif
 
 endif
@@ -531,7 +532,7 @@ endif
 #------------------------------------------------------
 if ($OS == 'UNICOS/mp') then
    setenv TRACEBK 100
-   env OMP_NUM_THREADS=$NTHREADS aprun -A -d $NTHREADS -n $NTASKS clm < lnd.stdin >&! clm.log.$LID || echo "CLM run failed" && exit 1
+   env OMP_NUM_THREADS=$NTHREADS aprun -A -d $NTHREADS -n $NTASKS clm >&! clm.log.$LID || echo "CLM run failed" && exit 1
 endif
 
 ## NEC SX6
@@ -540,10 +541,11 @@ if ($OS == 'SUPER-UX') then
   cd ${RUNDIR}
   setenv MPISUSPEND ON
   setenv F_SETBUF6 0
+  cp ${MODEL_EXEDIR/lnd.stdin .
   if ($NTASKS > 1) then
-     mpirun -np $NTASKS ${MODEL_EXEDIR}/clm < ${MODEL_EXEDIR}/lnd.stdin >&! clm.log.$LID || echo "CLM run failed" && exit 1
+     mpirun -np $NTASKS ${MODEL_EXEDIR}/clm >&! clm.log.$LID || echo "CLM run failed" && exit 1
   else
-     ${MODEL_EXEDIR}/clm < ${MODEL_EXEDIR}/lnd.stdin >&! clm.log.$LID || echo "CLM run failed" && exit 1
+     ${MODEL_EXEDIR}/clm >&! clm.log.$LID || echo "CLM run failed" && exit 1
   endif
 endif
 

@@ -62,34 +62,38 @@ contains
 ! !IROUTINE: lnd_init_mct
 !
 ! !INTERFACE:
-  subroutine lnd_init_mct( gsMap_lnd, dom_l, x2l_l, l2x_l, land_present )
+  subroutine lnd_init_mct( gsMap_lnd, dom_l, x2l_l, l2x_l, CCSMInit, SyncClock, &
+                           NLFilename, land_present )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use radiation       , only : radiation_get      !(cam use)
-    use filenames       , only : mss_irt, caseid    !(cam use) 
-    use history         , only : ctitle, inithist   !(cam use)
-    use time_manager    , only : get_nstep          
-    use clm_atmlnd      , only : clm_l2a, atm_l2a
-    use clm_atmlnd      , only : gridmap_l2a, clm_mapl2a
-    use domainMod       , only : adomain
-    use clm_comp        , only : clm_init0, clm_init1, clm_init2
-    use clm_varctl      , only : cam_caseid, cam_ctitle, cam_irad, cam_nsrest, &
-                                 cam_crtinic, cam_irt, finidat       
-#include <comctl.h>
-#include <comsol.h>
+    use time_manager     , only : get_nstep      
+    use clm_atmlnd       , only : clm_l2a, atm_l2a
+    use clm_atmlnd       , only : gridmap_l2a, clm_mapl2a
+    use domainMod        , only : adomain
+    use clm_comp         , only : clm_init0, clm_init1, clm_init2
+    use clm_varctl       , only : finidat       
+    use shr_InputInfo_mod, only : shr_inputInfo_initType
+    use eshr_timemgr_mod , only : eshr_timemgr_clockType, eshr_timemgr_clockInfoType, &
+                                  eshr_timemgr_clockGet
+    use controlMod       , only : control_setNL
 !
 ! !ARGUMENTS:
-    type(mct_gsMap), intent(inout) :: gsMap_lnd
-    type(mct_gGrid), intent(inout) :: dom_l
-    type(mct_aVect), intent(inout) :: x2l_l, l2x_l
-    logical        , intent(inout) :: land_present
+    type(mct_gsMap),                 intent(inout) :: GSMap_lnd
+    type(mct_gGrid),                 intent(inout) :: dom_l
+    type(mct_aVect),                 intent(inout) :: x2l_l, l2x_l
+    type(shr_InputInfo_initType),    intent(in)    :: CCSMInit
+    type(eshr_timemgr_clockType),    intent(in)    :: SyncClock
+    character(len=*), optional,      intent(in)    :: NLFilename ! Namelist filename
+    logical,          optional,      intent(out)   :: land_present
 !
 ! !LOCAL VARIABLES:
-    integer  :: i,j                ! indices
+    character(len=32), parameter :: sub = 'lnd_init_mct'
+    integer  :: i,j                              ! indices
+    type(eshr_timemgr_clockInfoType) :: clockInfo ! Clock information including orbit
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -97,31 +101,39 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    ! Determine if must return now
+    ! Use CCSMInit to set orbital values
 
-    if (adiabatic .or. ideal_phys .or. aqua_planet) then
-       land_present = .false.
-       return
-    end if
-
-    ! Preset clm namelist variables and orbital params same as cam
-
-    call radiation_get(iradsw_out=cam_irad)
-    cam_caseid  = caseid
-    cam_ctitle  = ctitle
-    cam_nsrest  = nsrest
-    cam_crtinic = inithist
-    cam_irt     = mss_irt
-    call lnd_setorb_mct( eccen, obliqr, lambm0, mvelpp )
+    call eshr_timemgr_clockGet( SyncClock, info=clockInfo )
+    call lnd_setorb_mct( clockInfo )
 
     ! Initialize clm phase 1 - read namelist, grid and surface data
 
-    call clm_init0()
+#ifndef SCAM
 
-#if ( defined SCAM )
+    ! If coupled with sequential CCSM
+
+    if ( present(nlfilename) )then
+       call control_setNL( nlfilename )
+    else
+       call endrun( sub//': NLFilename not sent in')
+    endif
+    call clm_init0( CCSMInit )
+#else
+
+    ! If coupled with SCAM
+
+    if ( present(nlfilename) )then
+       call endrun( sub//': NLFilename not needed for SCAM mode')
+    endif
+    call clm_init0( CCSMInit )
+    if ( .not. present(land_present) )then
+       call endrun( sub//': land_present not sent in')
+    end if
     if (adomain%frac(1,1)==0) then
        land_present = .false.
-       return
+       return        ! EXIT OUT OF INITIALIZATION
+    else
+       land_present = .true.
     end if
 #endif
 
@@ -159,26 +171,46 @@ contains
 ! !IROUTINE: lnd_run_mct
 !
 ! !INTERFACE:
-  subroutine lnd_run_mct( x2l_l, l2x_l, rstwr )
+  subroutine lnd_run_mct( x2l_l, l2x_l, SyncClock )
 !
 ! !DESCRIPTION:
 ! Run clm model
 !
 ! !USES:
-    use clm_atmlnd, only : clm_a2l, clm_l2a, atm_a2l, atm_l2a, &
-                           gridmap_l2a, clm_mapl2a, gridmap_a2l, clm_mapa2l
-    use clm_comp  , only : clm_run1, clm_run2
+    use clm_atmlnd     , only : clm_a2l, clm_l2a, atm_a2l, atm_l2a, &
+                                gridmap_l2a, clm_mapl2a, gridmap_a2l, clm_mapa2l
+    use clm_comp       , only : clm_run1, clm_run2
+    use eshr_timemgr_mod,only : eshr_timemgr_clockType,         &
+                                eshr_timemgr_clockAlarmIsOnRes, &
+                                eshr_timemgr_clockDateInSync
+    use time_manager   , only : get_curr_date
 !
 ! !ARGUMENTS:
-    type(mct_aVect), intent(inout) :: x2l_l
-    type(mct_aVect), intent(inout) :: l2x_l
-    logical        , intent(in)    :: rstwr    ! true => write restart file this step
+    type(mct_aVect)             , intent(inout) :: x2l_l
+    type(mct_aVect)             , intent(inout) :: l2x_l
+    type(eshr_timemgr_clockType), intent(in)    :: SyncClock
+!
+! !LOCAL VARIABLES:
+    character(len=32), parameter :: sub = "lnd_run_mct"
+    logical :: rstwr   ! If time to write restart file
+    integer :: ymd     ! Current date (YYYYMMDD)
+    integer :: yr      ! Current year
+    integer :: mon     ! Current month
+    integer :: day     ! Current day
+    integer :: tod     ! Current time of day (sec)
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
 !EOP
 !---------------------------------------------------------------------------
+    ! Check that internal clock in sync with master clock
+    call get_curr_date(yr, mon, day, tod )
+    ymd = yr*10000 + mon*100 + day
+    if ( .not. eshr_timemgr_clockDateInSync( SyncClock, ymd, tod ) )then
+       call endrun( sub//":: Internal CLM clock not in sync with "// &
+                    "Master Synchronization clock" )
+    end if
 
     ! Map MCT to land data type
 
@@ -188,6 +220,7 @@ contains
     ! Run clm
 
     call clm_run1( )
+    rstwr = eshr_timemgr_clockAlarmIsOnRes( SyncClock )
     call clm_run2( rstwr )
 
     ! Map land data type to MCT
@@ -517,31 +550,36 @@ contains
 !---------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: lnd_setorb_mct_mct
+! !IROUTINE: lnd_setorb_mct
 !
 ! !INTERFACE:
-  subroutine lnd_setorb_mct(clm_eccen, clm_obliqr, clm_lambm0, clm_mvelpp)
+  subroutine lnd_setorb_mct( ClockInfo )
 !
 ! !DESCRIPTION:
 ! Determine clm orbital parameters
 !
 ! !USES:
-    use clm_varorb, only : eccen, obliqr, lambm0, mvelpp
+    use clm_varorb      , only : iyear_AD, eccen, obliq, nmvelp, obliqr, &
+                                 lambm0, mvelpp
+    use eshr_timemgr_mod, only : eshr_timemgr_clockInfoType, &
+                                 eshr_timemgr_clockInfoGet
+    use shr_orb_mod     , only : shr_orb_params
+
+    implicit none
 !
 ! !ARGUMENTS: 
-    implicit none
-    real(r8), intent(in) :: clm_eccen
-    real(r8), intent(in) :: clm_obliqr 
-    real(r8), intent(in) :: clm_lambm0
-    real(r8), intent(in) :: clm_mvelpp
+    type(eshr_timemgr_clockInfoType), intent(in) :: ClockInfo
+
 !
 !EOP
 !-----------------------------------------------------------------------
 
-    eccen  = clm_eccen  
-    obliqr = clm_obliqr 
-    lambm0 = clm_lambm0
-    mvelpp = clm_mvelpp
+    ! Get orbital information from clockInfo object
+    call eshr_timemgr_clockInfoGet( ClockInfo, orb_eccen=eccen, orb_mvelp=nmvelp, &
+                                    orb_iyear_AD=iyear_AD, orb_obliq=obliq )
+    ! Set orbital parameters based on the above values
+    call shr_orb_params( iyear_AD, eccen, obliq, nmvelp,     &
+                         obliqr, lambm0, mvelpp,   Log_Print=.false. )
 
   end subroutine lnd_setorb_mct
 
@@ -649,9 +687,10 @@ contains
 
     deallocate(data)
     deallocate(idata)
+
+  end subroutine lnd_domain_mct
     
 #endif 
 
-  end subroutine lnd_domain_mct
 
 end module lnd_comp_mct

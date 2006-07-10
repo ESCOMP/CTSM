@@ -17,7 +17,6 @@ module fileutils
 ! !PUBLIC TYPES:
   implicit none
   save
-  logical, public :: lsmiou(99)  !I/O file unit numbers (1 to 99)
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: get_filename  !Returns filename given full pathname
@@ -323,9 +322,7 @@ contains
 ! navu to get available unit number, in which case lsmiou is not needed.
 !
 ! !USES:
-#if (defined COUP_CAM)
-    use units     !CAM units module
-#endif
+   use shr_file_mod, only : shr_file_getUnit
 !
 ! !ARGUMENTS:
     implicit none
@@ -337,23 +334,10 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer itst  !Fortran unit number
 !------------------------------------------------------------------------
 
-#if (defined COUP_CAM)
-    getavu = getunit()
-    RETURN
-#else
-    do itst = 1, 99
-       if (.not.lsmiou(itst)) then
-          getavu = itst
-          lsmiou(itst) = .true.
-          RETURN
-       end if
-    end do
-    write (6,*) 'GETAVU error: ran out of Fortran unit numbers'
-    call endrun
-#endif
+    getavu = shr_file_getunit()
+
   end function getavu
 
 !------------------------------------------------------------------------
@@ -372,9 +356,7 @@ contains
 ! unit number.
 !
 ! !USES:
-#if (defined COUP_CAM)
-    use units     !CAM units module
-#endif
+   use shr_file_mod, only : shr_file_freeUnit
 !
 ! !ARGUMENTS:
     implicit none
@@ -386,21 +368,8 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-#if (defined COUP_CAM)
     close(iunit)
-    call freeunit(iunit)
-#else
-    if (.not.lsmiou(iunit)) then
-       write (6,*) 'RELAVU eror: unit ',iunit,' is not flagged as in use'
-       call endrun
-    end if
-    if (iunit<1 .or. iunit>99) then
-       write (6,*) 'RELAVU error: attempt to return out of range unit'
-       call endrun
-    end if
-    close(iunit)
-    lsmiou(iunit) = .false.
-#endif
+    call shr_file_freeUnit(iunit)
 
   end subroutine relavu
 

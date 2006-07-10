@@ -1,4 +1,75 @@
 ===============================================================
+Tag name: clm3_expa_65
+Originator(s): Erik Kluzek
+Date: Mon Jul 10 13:52:20 MDT 2006
+One-line Summary: Use share clocks and inputinfo object at driver level
+
+Purpose of changes: Use new version of esmf_wrf and csm_share as next step
+  in sequential CCSM development.
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: Add ability to use Darwin, add eshr to
+Filepath
+
+Describe any changes made to the namelist: Instead of directing namelist from stdin
+  explicitly open namelist filename.  Change namelist name from clmexp to clm_inparm.
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: Mariana Vertenstein, Tony Craig, Forrest Hoffman
+
+Externals changed:  csm_share        to share3_060710
+		    esmf_wrf_timemgr to esmf_wrf_timemgr_060616
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: control_setNL (controlMod.F90) sets the
+  namelist filename.
+
+List all existing files that have been modified, and describe the changes:
+
+tools/newcprnc/Makefile
+bld/offline/tests/CLM_namelist.pm
+bld/offline/tests/CLM_lab.pm
+bld/offline/tests/CLM.pm
+bld/offline/tests/model_specs.csh
+bld/offline/tests/configure.csh
+bld/offline/tests/config_machine_specs.csh
+bld/offline/tests/CLM_run.pm
+bld/offline/tests/test_batch.csh
+bld/offline/tests/Makefile
+bld/offline/jobscript.csh
+
+    Add eshr to Filepath, add Darwin as a valid platform, don't redirect unit 5 for
+namelist. Set MODEL_DATDIR explicitly. Use lnd.stdin as default namelist name.
+Add "-g" to Makefile. Change clm namelist from clmexp to clm_inparm. Get test_batch.csh
+to work both on bangkok for Linux/Lahey and tempest for SGI. Write out Rootdir file
+when configuring build directory.
+
+src/main/time_manager.F90 -- Use dayOfYear_r8 for calc_calday.
+src/main/clm_comp.F90 ------ Pass CCSMInit in.
+src/main/fileutils.F90 ----- Small changes to how using shr_file_mod.
+src/main/initializeMod.F90 - Pass clock in.
+src/main/program_csm.F90 --- Change where ESMF_Initialize is done.
+src/main/controlMod.F90 ---- Add method to set namelist name, pass clock in and use it.
+src/main/clm_varctl.F90 ---- Get rid of cam_ variables.
+src/main/lnd_comp_mct.F90 -- Pass in clock and CCSMInit object.
+
+Summary of testing:
+
+  bluesky: 	test-batch.csh -- PASS and CAM and CAM CCSM tests pass.
+  tempest: 	test-batch.csh -- PASS and CAM tests pass.
+  bangkok/lf95: test-batch.csh -- PASS and CAM tests pass.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_64
+
+  Summarize any changes to answers: NONE bit-for-bit
+
+===============================================================
+===============================================================
 Tag name: clm3_expa_64
 Originator(s): Dani Bundy Coleman <bundy@ucar.edu>
 Date: Thu Jun 29 14:44:07 MDT 2006

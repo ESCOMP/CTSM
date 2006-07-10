@@ -38,6 +38,14 @@ endif
 # 4. Write out environment variables that have been set 
 #-----------------------------------------------------------------------
 
+if ( $?ROOTDIR ) then
+  echo "$ROOTDIR" >! Rootdir
+endif
+
+#-----------------------------------------------------------------------
+# 5. Write out environment variables that have been set 
+#-----------------------------------------------------------------------
+
 set ARCH = `uname -s`
 if ( $ARCH == UNICOS/mp ) set ARCH = UNICOSmp
 if ( $?SCRIPT_DIR ) then
@@ -87,7 +95,7 @@ echo "#CONFIGURE-END" >> $configfile
 chmod +x $configfile
 
 #-----------------------------------------------------------------------
-# 5. Log
+# 6. Log
 #-----------------------------------------------------------------------
 
 if ( $?SCRIPT_DIR ) then

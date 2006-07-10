@@ -25,16 +25,18 @@ contains
 ! !IROUTINE: clm_init0
 !
 ! !INTERFACE:
-  subroutine clm_init0( )
+  subroutine clm_init0( CCSMInit )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use initializeMod, only : initialize1
+    use initializeMod,     only : initialize1
+    use shr_InputInfo_mod, only : shr_InputInfo_initType
 !
 ! !ARGUMENTS:
+    type(shr_InputInfo_initType), intent(in), optional :: CCSMInit
 !
 ! !LOCAL VARIABLES:
 !
@@ -44,7 +46,11 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    call initialize1()
+    if ( present(CCSMInit) )then
+       call initialize1( CCSMInit )
+    else
+       call initialize1( )
+    end if
 
   end subroutine clm_init0
 

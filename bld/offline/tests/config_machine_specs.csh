@@ -40,7 +40,7 @@ if ( $OP_SYSTEM == SunOS )then
 
 else if ( $OP_SYSTEM == AIX )then
 #-----------------------------------------------------------------------
-# AIX (babyblue or blackforest)
+# AIX (bluesky)
 #-----------------------------------------------------------------------
 
   if ( ! $?LIB_NETCDF ) setenv LIB_NETCDF  /usr/local/lib64/r4i4
@@ -50,24 +50,38 @@ else if ( $OP_SYSTEM == AIX )then
 
 else if ( $OP_SYSTEM == IRIX64 )then
 #-----------------------------------------------------------------------
-# SGI (utefe)
+# SGI (tempest)
 #-----------------------------------------------------------------------
 
   if ( ! $?LIB_NETCDF ) setenv LIB_NETCDF  /usr/local/lib64/r4i4
+  if ( ! $?INC_NETCDF ) setenv INC_NETCDF  /usr/local/include
+
+  if ( ! $?SPMD ) setenv SPMD TRUE
+
+else if ( $OP_SYSTEM == Darwin )then
+#-----------------------------------------------------------------------
+# Darwin (MacOS)
+#-----------------------------------------------------------------------
+
+  if ( ! $?LIB_NETCDF ) setenv LIB_NETCDF  /usr/local/lib
   if ( ! $?INC_NETCDF ) setenv INC_NETCDF  /usr/local/include
 
   if ( ! $?SPMD ) setenv SPMD FALSE
 
 else if ( $OP_SYSTEM == Linux )then
 #-----------------------------------------------------------------------
-# Linux (longs)
+# Linux (bangkok)
 #-----------------------------------------------------------------------
 
-  if ( ! $?LIB_MPI ) setenv LIB_MPI /contrib/mpich/lib
-  if ( ! $?INC_MPI ) setenv INC_MPI /contrib/mpich/include
+  setenv MPI_ROOT "/usr/local/mpich-1.2.7p1-pgi-pgcc-pghf-6.1-3"
+  if ( $?USER_FC ) setenv MPI_ROOT "/usr/local/mpich-1.2.7p1-gcc-g++-4.0.2-8-lf9562"
+  if ( ! $?LIB_MPI ) setenv LIB_MPI $MPI_ROOT/lib
+  if ( ! $?INC_MPI ) setenv INC_MPI $MPI_ROOT/include
 
-  if ( ! $?LIB_NETCDF )  setenv LIB_NETCDF    /usr/local/lib
-  if ( ! $?INC_NETCDF )  setenv INC_NETCDF    /usr/local/include
+  setenv NETCDF_ROOT "/usr/local/netcdf-3.6.1-beta3-pgi-hpf-cc-6.0-5"
+  if ( $?USER_FC ) setenv NETCDF_ROOT "/usr/local/netcdf-3.6.1beta3-gcc-4.0.2-g77-lf9562"
+  if ( ! $?LIB_NETCDF )  setenv LIB_NETCDF    $NETCDF_ROOT/lib
+  if ( ! $?INC_NETCDF )  setenv INC_NETCDF    $NETCDF_ROOT/include
 
   if ( ! $?SPMD ) setenv SPMD    TRUE
 

@@ -48,11 +48,11 @@ contains
 ! !IROUTINE: initialize1
 !
 ! !INTERFACE:
-  subroutine initialize1( )
+  subroutine initialize1( CCSMInit )
 !
 ! !DESCRIPTION:
 ! Land model initialization.
-! o Initializes run control variables via the [clmexp] namelist.
+! o Initializes run control variables via the [clm_inparm] namelist.
 ! o Reads surface data on model grid.
 ! o Defines the multiple plant types and fraction areas for each surface type.
 ! o Builds the appropriate subgrid <-> grid mapping indices and weights.
@@ -65,15 +65,17 @@ contains
 ! o Initializes accumulation variables.
 !
 ! !USES:
-    use clm_varpar      , only : lsmlon, lsmlat, maxpatch
-    use domainMod       , only : ldomain, adomain
-    use areaMod         , only : gridmap_setmapsFM,gridmap_setptrs
-    use surfFileMod     , only : surfrd,surfrd_get_grid,surfrd_get_frac
-    use clm_varctl      , only : fsurdat, fatmgrid, fatmlndfrc
-    use clm_atmlnd      , only : gridmap_a2l, gridmap_l2a
-    use controlMod      , only : control_init, control_print
+    use clm_varpar       , only : lsmlon, lsmlat, maxpatch
+    use domainMod        , only : ldomain, adomain
+    use areaMod          , only : gridmap_setmapsFM,gridmap_setptrs
+    use surfFileMod      , only : surfrd,surfrd_get_grid,surfrd_get_frac
+    use clm_varctl       , only : fsurdat, fatmgrid, fatmlndfrc
+    use clm_atmlnd       , only : gridmap_a2l, gridmap_l2a
+    use controlMod       , only : control_init, control_print
+    use shr_InputInfo_mod, only : shr_InputInfo_initType
 !
 ! !ARGUMENTS:
+    type(shr_InputInfo_initType), intent(in), optional :: CCSMInit
 !
 ! !CALLED FROM:
 ! routine program_off if cpp token OFFLINE is defined
@@ -105,7 +107,11 @@ contains
        call shr_sys_flush(6)
     endif
 
-    call control_init ()
+    if ( present(CCSMInit) )then
+       call control_init ( CCSMInit )
+    else
+       call control_init ( )
+    end if
     if (masterproc) call control_print()
 
     ! ------------------------------------------------------------------------
@@ -191,7 +197,7 @@ contains
 !
 ! !DESCRIPTION:
 ! Land model initialization.
-! o Initializes run control variables via the [clmexp] namelist.
+! o Initializes run control variables via the [clm_inparm] namelist.
 ! o Reads surface data on model grid.
 ! o Defines the multiple plant types and fraction areas for each surface type.
 ! o Builds the appropriate subgrid <-> grid mapping indices and weights.

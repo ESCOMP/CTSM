@@ -47,9 +47,10 @@ PROGRAM program_csm
 !   from the flux coupler. if not, there is a problem.
 !
 ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8
+  use shr_kind_mod, only: r8 => shr_kind_r8, SHR_KIND_CL
   use shr_orb_mod        
-  use shr_msg_mod        
+  use shr_file_mod        
+  use controlMod    , only : control_setNL
   use clm_varpar    , only : lsmlon, lsmlat     
   use clm_varctl    , only : nsrest, irad, csm_doflxave, finidat
   use clm_varorb    , only : eccen, mvelpp, lambm0, obliqr
@@ -92,6 +93,7 @@ PROGRAM program_csm
   integer  :: ier          ! error code
   logical  :: log_print    ! true=> print diagnostics
   integer  :: mpicom_dummy ! temporary
+  character(len=SHR_KIND_CL) :: nlfilename ! Namelist filename
 !
 !-----------------------------------------------------------------------
 
@@ -130,11 +132,6 @@ PROGRAM program_csm
   if (gptlinitialize () < 0) call endrun ('CLM: gptlinitialize')
 
   ! -----------------------------------------------------------------
-  ! Initialize ESMF
-  ! -----------------------------------------------------------------
-  call ESMF_Initialize()
-
-  ! -----------------------------------------------------------------
   ! Initialize inter-model MPI communication 
   ! -----------------------------------------------------------------
 
@@ -153,12 +150,21 @@ PROGRAM program_csm
 #endif
 
   ! -----------------------------------------------------------------
+  ! Initialize ESMF
+  ! -----------------------------------------------------------------
+  call ESMF_Initialize()
+
+
+  ! -----------------------------------------------------------------
   ! Initialize input/output units
   ! -----------------------------------------------------------------
 
-   call shr_msg_chdir('lnd')                    ! all PE's chdir
-   call shr_msg_chStdin('lnd')                  ! all PE's redirect unit 5
-   if (masterproc) call shr_msg_chStdout('lnd') ! redir unit 6
+   call shr_file_chdir('lnd')                    ! all PE's chdir
+   if (masterproc) then
+      call shr_file_chStdin('lnd', nlfilename=nlfilename)  ! redir unit 5
+      call control_setNL( nlfilename )                     ! Set namelist
+      call shr_file_chStdout('lnd')                        ! redir unit 6
+   end if
 
   ! -----------------------------------------------------------------
   ! Initialize land model

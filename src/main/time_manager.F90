@@ -1051,7 +1051,7 @@ function get_curr_calday(offset)
    character(len=*), parameter :: sub = 'get_curr_calday'
    integer :: rc
    type(ESMF_Time) :: date
-   type(ESMF_TimeInterval) :: off, diurnal, intval
+   type(ESMF_TimeInterval) :: off, diurnal
    integer :: year, month, day, tod
 !-----------------------------------------------------------------------------------------
 
@@ -1078,10 +1078,8 @@ function get_curr_calday(offset)
       date = tm_perp_date + diurnal
    end if
 
-   call ESMF_TimeGet( date, dayOfYear_intvl=intval, rc=rc )
+   call ESMF_TimeGet( date, dayOfYear_r8=get_curr_calday, rc=rc )
    call chkrc(rc, sub//': error return from ESMF_TimeGet')
-   call ESMF_TimeIntervalGet( intval, d_r8=get_curr_calday, rc=rc )
-   call chkrc(rc, sub//': error return from ESMF_TimeIntervalGet')
    if ( (get_curr_calday < 1.0) .or. (get_curr_calday > 366.0) )then
       write(6,*) 'calday = ', get_curr_calday
       if ( present(offset) ) write(6,*) 'offset = ', offset
@@ -1109,14 +1107,11 @@ function get_calday(ymd, tod)
    character(len=*), parameter :: sub = 'get_calday'
    integer :: rc                 ! return code
    type(ESMF_Time) :: date
-   type(ESMF_TimeInterval) :: intval
 !-----------------------------------------------------------------------------------------
 
    date = TimeSetymd( ymd, tod, "get_calday" )
-   call ESMF_TimeGet( date, dayOfYear_intvl=intval, rc=rc )
+   call ESMF_TimeGet( date, dayOfYear_r8=get_calday, rc=rc )
    call chkrc(rc, sub//': error return from ESMF_TimeGet')
-   call ESMF_TimeIntervalGet( intval, d_r8=get_calday, rc=rc )
-   call chkrc(rc, sub//': error return from ESMF_TimeIntervalGet')
    if ( (get_calday < 1.0) .or. (get_calday > 366.0) )then
       write(6,*) 'calday = ', get_calday
       call endrun( sub//': error calday out of range' )
@@ -1259,6 +1254,7 @@ subroutine timemgr_datediff(ymd1, tod1, ymd2, tod2, days)
    diff = date2 - date1
    call ESMF_TimeIntervalGet( diff, d_r8=days, rc=rc )
    call chkrc(rc, sub//': error return from ESMF_TimeIntervalGet')
+   days = days + 1.0_r8
 
 end subroutine timemgr_datediff
 

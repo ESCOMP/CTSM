@@ -147,7 +147,7 @@ sub OS_list {
 #
   my $self = shift;
 
-  my @list = ( "dec_osf", "linux", "solaris", "irix", "aix", "unicosmp" );
+  my @list = ( "dec_osf", "linux", "solaris", "irix", "aix", "unicosmp", "darwin" );
   return( @list );
 }
 
@@ -239,6 +239,8 @@ sub Platform {
     $platform = "sgi";
   } elsif ( /aix/ ) {
     $platform = "aix";
+  } elsif ( /darwin/ ) {
+    $platform = "darwin";
   } elsif ( /unicos/ ) {
     $platform = "unicosmp";
   } else {

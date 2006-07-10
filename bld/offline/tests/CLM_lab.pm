@@ -7,7 +7,7 @@
 #
 use strict;
 use lab_default;
-use Env qw(LOGNAME MODEL_CFGDIR SPMD_NODES SPMD_CPUS_ON_NODES);
+use Env qw(LOGNAME HOME MODEL_CFGDIR SPMD_NODES SPMD_CPUS_ON_NODES);
 
 #
 # List of labs setup with default values
@@ -98,6 +98,7 @@ my %SPMD_ncar;
 my %SPMD_ornl;
 $SPMD_default{'default'} = "TRUE";
 $SPMD_default{'linux'} = "FALSE";
+$SPMD_default{'darwin'} = "FALSE";
 $SPMD_default{'irix'} = "FALSE";
 $SPMD_ncar{'default'} = "TRUE";
 $SPMD_ncar{'dec_osf'} = "FALSE";
@@ -122,6 +123,7 @@ $GNUMAKE_ncar{'solaris'} = "gmake ";
 $GNUMAKE_ncar{'irix'} = "gmake -j 8";
 $GNUMAKE_ncar{'dec_osf'} = "gmake -j 4";
 $GNUMAKE_ncar{'aix'} = "gmake -j 4";
+$GNUMAKE_ncar{'darwin'} = "make";
 $GNUMAKE_ornl{'linux'} = "gmake -j 2";
 $GNUMAKE_ornl{'default'} = "gmake -j 8";
 $GNUMAKE_nersc{'default'} = "gmake -j 16";
@@ -130,6 +132,7 @@ $GNUMAKE_dao{'aix'} = "gmake -j 8";
 $GNUMAKE_dao{'irix'} = "gmake -j 8";
 $GNUMAKE_dao{'linux'} = "gmake -j 2";
 $GNUMAKE_default{'default'} = "gmake";
+$GNUMAKE_default{'darwin'} = "make";
 $CLM_run::GNUMAKE_default = lab_default->new( \@CLM_run::LAB_list, (
                                                  'dao', \%GNUMAKE_dao, 
                                                  'ncar', \%GNUMAKE_ncar, 
@@ -161,6 +164,7 @@ $SHMEM_CPUS_ornl{'default'} = 2;
 $SHMEM_CPUS_ornl{'unicosmp'} = 4;
 $SHMEM_CPUS_default{'default'} = 2;
 $SHMEM_CPUS_default{'aix'}     = 0;
+$SHMEM_CPUS_default{'darwin'}  = 1;
 $CLM_run::SHMEM_CPUS_default = lab_default->new( \@CLM_run::LAB_list, (
                                                    'dao', \%SHMEM_CPUS_dao, 
                                                    'ncar', \%SHMEM_CPUS_ncar, 
@@ -333,8 +337,10 @@ my %MODEL_DATDIR_default;
 my %MODEL_DATDIR_ncar;
 my %MODEL_DATDIR_ornl;
 $MODEL_DATDIR_ncar{'default'} = "/fs/cgd/csm/inputdata";
+$MODEL_DATDIR_ncar{'darwin'} = "$HOME/inputdata";
 $MODEL_DATDIR_ornl{'default'} = "/spin/proj/ccsm/inputdata";
 $MODEL_DATDIR_default{'default'} = "/fs/cgd/csm/inputdata";
+$MODEL_DATDIR_default{'darwin'} = "$HOME/inputdata";
 $CLM_run::MODEL_DATDIR_default = lab_default->new( \@CLM_run::LAB_list, (
 						'ncar', \%MODEL_DATDIR_ncar,
 						'ornl', \%MODEL_DATDIR_ornl,

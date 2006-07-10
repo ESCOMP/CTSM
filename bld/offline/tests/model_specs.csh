@@ -138,6 +138,7 @@ touch Filepath
 
 \cat >! Filepath << EOF
 $ROOTDIR/src/csm_share/shr
+$ROOTDIR/src/csm_share/eshr
 $ROOTDIR/src/main
 $ROOTDIR/src/biogeophys
 $ROOTDIR/src/biogeochem

@@ -129,7 +129,7 @@ Depends: Srcfiles Filepath $(SOURCES)
 	$(ROOTDIR)/bld/offline/mkDepends Filepath Srcfiles > $@
 
 $(MODEL_EXEDIR)/$(EXENAME): Depends $(OBJS)
-	$(FC) -o $@ $(OBJS) -L$(LIB_NETCDF) -lnetcdf $(LDFLAGS)
+	$(LD) -o $@ $(OBJS) -L$(LIB_NETCDF) -lnetcdf $(LDFLAGS)
 
 debug: $(OBJS)
 	echo "FFLAGS: $(FFLAGS)"
@@ -174,7 +174,7 @@ FPPFLAGS   := -WF,-DAIX,$(subst $(space),$(comma),$(CPPDEF))
 
 mod_path   := -I$(MOD_NETCDF)
 FFLAGS     := $(cpp_path) $(mod_path) $(FPPFLAGS) -qarch=auto \
-		-qspillsize=2500 -g -qfullpath $(QCMP)
+		-qspillsize=2500 -qfullpath $(QCMP)
 FREEFLAGS  := -qsuffix=f=f90:cpp=F90
 FIXEDFLAGS := -qfixed=132
 
@@ -187,6 +187,7 @@ else
   FC := xlf90_r
   FFLAGS += -WF,-DHIDE_MPI
 endif
+LD      := $(FC)
 
 ifeq ($(SMP),TRUE)
   # THREADED_PTHREADS is used by the timing library
@@ -242,15 +243,16 @@ endif
 
 ESMF_ARCH := IRIX64
 FC        := f90
+LD        := $(FC)
 CPP       := /lib/cpp
 CPPFLAGS  := -P
 CFLAGS    := $(cpp_path) -64 -DIRIX64 -O2 $(CPPDEF)
 mod_path  := -I$(MOD_NETCDF)
-FFLAGS    := $(cpp_path) $(mod_path) -64 -i4 -c -cpp -extend_source -DIRIX64 \
-	     $(CPPDEF) 
+FFLAGS    := $(cpp_path) $(mod_path) -64 -i4 -c -extend_source -macro_expand \
+		-DIRIX64 $(CPPDEF) 
 # -mp is used at load time even when SMP=FALSE to satisfy external
 # references (pthreads) in the timing library
-LDFLAGS    = -64 -mp
+LDFLAGS   := -64 -mp
 
 ifeq ($(SPMD),TRUE)
   FFLAGS  += -I$(INC_MPI)
@@ -264,6 +266,7 @@ ifeq ($(SMP),TRUE)
   CFLAGS += -DTHREADED_OMP
 # Only enable OpenMP, not SGI specific parallelism
   FFLAGS  += -mp -MP:dsm=OFF -MP:old_mp=OFF
+  LDFLAGS += -lmp
 endif
 
 # WARNING: -mp and -g together cause wrong answers
@@ -294,6 +297,7 @@ ifeq ($(UNAMES),SunOS)
 ESMF_ARCH = solaris
 FC	:= f90
 FC77	:= f77
+LD      := $(FC)
 CPP     := /usr/ccs/lib/cpp
 CFLAGS  := $(cpp_path) -DSUNOS $(CPPDEF)
 mod_path:= -M$(MOD_NETCDF)
@@ -346,6 +350,7 @@ ifeq ($(USER_FC),$(null))
 else
   FC := $(USER_FC)
 endif
+LD   := $(FC)
 
 # If USER_CC is set, use it. 
 # Otherwise use pgcc if pgf90 is the Fortran compiler, and cc if not.
@@ -396,7 +401,8 @@ ifeq ($(FC),pgf90)
     SMP := FALSE
   endif
   mod_path  := -I$(MOD_NETCDF)
-  FFLAGS    := $(cpp_path) $(mod_path) -i4 $(CPPDEF) -Mdalign -Mextend -DNO_R16 -byteswapio
+  FFLAGS    := $(cpp_path) $(mod_path) -i4 $(CPPDEF) -Mdalign -Mextend -DNO_R16 \
+		-byteswapio -DLINUX
   FREEFLAGS := -Mfree
   LDFLAGS   :=
   ifeq ($(DEBUG),TRUE)
@@ -431,7 +437,7 @@ ifeq ($(FC),lf95)
 
   ESMF_ARCH   := linux_lf95
   mod_path    := -I$(MOD_NETCDF)
-  FFLAGS      := $(cpp_path) $(mod_path) $(CPPDEF) --trace --trap --wide
+  FFLAGS      := $(cpp_path) $(mod_path) $(CPPDEF) --trace --trap --wide -DLINUX
   SPEC_FFLAGS := $(FFLAGS)
   LDFLAGS     := --staticlink
   ifeq ($(DEBUG),TRUE)
@@ -499,6 +505,7 @@ ifeq ($(UNAMES),OSF1)
 ESMF_ARCH     := alpha
 CFLAGS        := $(cpp_path) -DOSF1 -O2 -omp $(CPPDEF)
 FC            := f90
+LD            := $(FC)
 mod_path      := -I$(MOD_NETCDF)
 FFLAGS        := $(cpp_path) $(mod_path) $(CPPDEF) -i4 -c -omp -automatic -fpe3 \
 		 -check omp_bindings
@@ -564,6 +571,7 @@ else
 endif
 CFLAGS        := $(cpp_path) $(CPPDEF) -DUNICOSMP -DCPP_VECTOR -h gen_private_callee
 FC            := ftn
+LD            := $(FC)
 mod_path      := -I$(INC_NETCDF) -p$(MOD_NETCDF)
 FPPFLAGS      := -DUNICOSMP -DCPP_VECTOR
 FFLAGS        := $(cpp_path) $(mod_path) $(FPPFLAGS) $(FOPT) -r a -r m -d y -e m -F -O msgs,negmsgs -O gen_private_callee
@@ -612,6 +620,7 @@ CC            := sxc++
 CFLAGS        := $(cpp_path) $(CPPDEF) -D_SX  -DNEC_SX -DCPP_VECTOR \
 		$(PROF)
 FC            := sxf90 -Yf,/SX/opt/sxf90/rev285/lib
+LD            := $(FC)
 FFLAGS        := $(cpp_path) $(CPPDEF)  -DHIDE_MPI -D_SX -DNEC_SX -DCPP_VECTOR \
 		$(PROF) $(FOPT)
 FREEFLAGS     :=
@@ -654,6 +663,65 @@ BiogeophysicsLakeMod.o	: BiogeophysicsLakeMod.F90 FrictionVelocityMod.f90
 
 endif
 
+#------------------------------------------------------------------------
+# Darwin  XLF compiler (serial only, no MPI multi-tasking or OpenMP threading)
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),Darwin)
+
+ifeq ($(SMP),$(null))
+  SMP := FALSE
+endif
+
+CC         := xlc_r
+CFLAGS     := $(cpp_path) -O2 -DAIX -DDarwin $(CPPDEF)
+FPPFLAGS   := -WF,-DAIX,$(subst $(space),$(comma),$(CPPDEF))
+
+mod_path   := -I$(MOD_NETCDF)
+FFLAGS     := $(cpp_path) $(mod_path) $(FPPFLAGS) -qarch=auto \
+		-qspillsize=2500 -qfullpath
+FREEFLAGS  := -qsuffix=f=f90:cpp=F90
+FIXEDFLAGS := -qfixed=132
+
+LDFLAGS    := -L$(NETCDF_ROOT)/lib -lnetcdf -lSystemStubs
+
+# Use the thread-safe compilers even when using enabling openMP.
+FFLAGS += -WF,-DHIDE_MPI
+FC     := xlf90_r
+LD     := $(FC)
+
+# For linking with MPICH
+ifeq ($(SPMD),TRUE)
+   LDFLAGS  += -lmpich
+   LD       := mpif90
+endif
+LDFLAGS    += -lSystemStubs_profile
+
+
+ifeq ($(DEBUG),TRUE)
+  # Bounds checking is unreliable on the IBM.
+  # Sometimes you can get it to go if you turn threading off (by deleting -qsmp=omp)
+  # Only turn float-trapping on for debug mode as it's a 20% performance hit.
+  FFLAGS  += -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C -g
+  LDFLAGS += -g
+else
+  # Inline when not debugging
+  FFLAGS += -O2 -qmaxmem=-1 -Q
+endif
+
+.SUFFIXES:
+.SUFFIXES: .F .F90 .c .o
+
+.F.o:
+	$(FC) -c $(FIXEDFLAGS) $(FFLAGS) $<
+
+.F90.o:
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) $<
+
+.c.o:
+	cc -c  $(CFLAGS) $<
+
+endif
 #------------------------------------------------------------------------
 # Targets/rules that depend on architecture specific variables.
 #------------------------------------------------------------------------

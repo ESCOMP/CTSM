@@ -103,11 +103,11 @@ module controlMod
 !    o rtm_nsteps  = if > 1, average rtm over rtm_nsteps time steps
 !
 ! When coupled to CAM: base calendar info, nstep, nestep, nsrest, and time
-! step are input to the land model from CAM. The values in the clmexp namelist
+! step are input to the land model from CAM. The values in the clm_inparm namelist
 ! are not used. 
 !
 ! !USES:
-  use shr_kind_mod , only : r8 => shr_kind_r8
+  use shr_kind_mod , only : r8 => shr_kind_r8, SHR_KIND_CL
   use shr_sys_mod  , only : shr_sys_getenv
   use clm_varpar   , only : maxpatch_pft, numpft
   use clm_varctl
@@ -132,8 +132,10 @@ module controlMod
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
+  public :: control_setNL ! Set namelist filename
   public :: control_init  ! initial run control information
   public :: control_print ! print run control information
+!
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -142,8 +144,9 @@ module controlMod
 !
 ! PRIVATE TYPES:
 ! Namelist variables only used locally
-  character(len=256) :: rpntpath             ! full UNIX pathname of restart pointer file
-  character(len=  7) :: runtyp(4)            ! run type
+  character(len=256) :: rpntpath                         ! full UNIX pathname of restart pointer file
+  character(len=  7) :: runtyp(4)                        ! run type
+  character(len=SHR_KIND_CL) :: NLFilename = 'lnd.stdin' ! Namelist filename
 #if (defined _OPENMP)
    integer, external :: omp_get_max_threads  ! max number of threads that can execute
                                              ! concurrently in a single parallel region
@@ -155,27 +158,79 @@ contains
 !------------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: control_setNL
+!
+! !INTERFACE:
+  subroutine control_setNL( NLfile )
+
+    implicit none
+!
+! !DESCRIPTION:
+! Set the namelist filename to use
+!
+!
+! !ARGUMENTS:
+  character(len=*), intent(IN) :: NLFile ! Namelist filename
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    character(len=32) :: subname = 'control_setNL'  ! subroutine name
+    logical :: lexist                               ! File exists
+
+    ! Error checking...
+    if ( len_trim(NLFile) == 0 )then
+       call endrun( subname//' error: nlfilename entered is not set' )
+    end if
+    inquire (file = trim(NLFile), exist = lexist)
+    if ( .not. lexist )then
+       call endrun( subname//' error: NLfilename entered does NOT exist:'//trim(NLFile) )
+    end if
+    if ( len_trim(NLFile) > len(NLFilename) )then
+       call endrun( subname//' error: entered NLFile is too long' )
+    end if
+    ! Set the filename
+    NLFilename = NLFile
+  end subroutine control_setNL
+
+!------------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: control_init
 !
 ! !INTERFACE:
-  subroutine control_init 
+  subroutine control_init( CCSMInit )
 !
 ! !DESCRIPTION:
 ! Initialize CLM run control information
 !
 ! !USES:
 #if (defined OFFLINE) || (defined COUP_CSM)
-  use time_manager, only : calendar, dtime, nestep, nelapse, start_ymd, &
-                           start_tod, stop_ymd, stop_tod, ref_ymd, ref_tod
+    use time_manager     , only : calendar, dtime, nestep, nelapse, start_ymd, &
+                                  start_tod, stop_ymd, stop_tod, ref_ymd, ref_tod
 #else
-  use time_manager, only : get_step_size, is_perpetual
+    use radiation        , only : radiation_get
+    use time_manager     , only : get_step_size, is_perpetual
 #endif
 #if (defined CASA)
-  use CASAMod     , only : lnpp, lalloc, q10, spunup, fcpool
+    use CASAMod          , only : lnpp, lalloc, q10, spunup, fcpool
 #endif
+    use shr_InputInfo_mod, only : shr_inputInfo_initType,       &
+                                  shr_inputInfo_initGetData,    &
+                                  shr_inputInfo_initIsBranch,   &
+                                  shr_inputInfo_initIsContinue, &
+                                  shr_inputInfo_initIsStartup
+    use fileutils        , only : getavu, relavu
+    use shr_string_mod   , only : shr_string_getParentDir
+
+    implicit none
 !
 ! !ARGUMENTS:
-    implicit none
+    type(shr_InputInfo_initType), intent(in), optional :: CCSMInit   ! Input CCSM info
+
     include 'netcdf.inc'
 !
 ! !REVISION HISTORY:
@@ -188,13 +243,16 @@ contains
     character(len=256) :: logid     ! logid part of file path name
     character(len=256) :: cap       ! upper case logid
     character(len=  1) :: ctmp      ! character temporary
+    character(len=256) :: drvarchdir! driver archive directory
     integer :: i,j,n                ! loop indices
     integer :: iundef               ! integer undefined value
     real(r8):: rundef               ! real undefined value
     integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
 #if (defined COUP_CAM)
     integer :: dtime                ! needed since dtime from CAM is not read in
 #endif  
+    character(len=32) :: subname = 'control_init'  ! subroutine name
 !------------------------------------------------------------------------
 
     ! ----------------------------------------------------------------------
@@ -204,43 +262,46 @@ contains
     ! clm time manager info
 
 #if (!defined COUP_CAM)
-    namelist /clmexp/  &
+    namelist /clm_inparm/  &
          ctitle, caseid, nsrest,  &
          calendar, dtime, nelapse, nestep, start_ymd, start_tod,  &
          stop_ymd, stop_tod, ref_ymd, ref_tod
+
+    ! Archive options
+    namelist /clm_inparm/ archive_dir, mss_wpass, mss_irt, &
+         brnch_retain_casename 
 #endif
 
     ! clm input datasets
 
-    namelist /clmexp/  &
+    namelist /clm_inparm/  &
          finidat, fsurdat, fatmgrid, fatmlndfrc, fpftcon, frivinp_rtm,  &
          fpftdyn, fndepdat, fndepdyn, nrevsn, offline_atmdir 
 
     ! clm history, restart, archive options
 
-    namelist /clmexp/  &
+    namelist /clm_inparm/  &
          hist_empty_htapes, hist_dov2xy, &
          hist_avgflag_pertape, hist_type1d_pertape, &
-         hist_nhtfrq, hist_ndens, hist_mfilt, &
-         hist_fincl1, hist_fincl2, hist_fincl3, &
-         hist_fincl4, hist_fincl5, hist_fincl6, &
-         hist_fexcl1, hist_fexcl2, hist_fexcl3, &
-         hist_fexcl4, hist_fexcl5, hist_fexcl6, &
-         hist_crtinic, archive_dir, mss_wpass, mss_irt, &
-         rpntpath, brnch_retain_casename 
+         hist_nhtfrq,  hist_ndens, hist_mfilt, &
+         hist_fincl1,  hist_fincl2, hist_fincl3, &
+         hist_fincl4,  hist_fincl5, hist_fincl6, &
+         hist_fexcl1,  hist_fexcl2, hist_fexcl3, &
+         hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
+         hist_crtinic, rpntpath
 
     ! clm bgc info
 
 #if (defined CASA)
-    namelist /clmexp/  &
+    namelist /clm_inparm/  &
          lnpp, lalloc, q10, spunup, fcpool
 #endif
-    namelist /clmexp / &
+    namelist /clm_inparm / &
          co2_type
 
     ! clm other options
 
-    namelist /clmexp/  &
+    namelist /clm_inparm/  &
          clump_pproc, irad, wrtdia, csm_doflxave, rtm_nsteps, pertlim, &
          create_crop_landunit
          
@@ -353,11 +414,20 @@ contains
        call scam_clm_default_opts( pftfile_out=fpftcon, srffile_out=fsurdat, &
                                    inifile_out=finidat )
 #else
-       read(5, clmexp, iostat=ierr)
-       if (ierr /= 0) then
-          write(6,*)'error: namelist input resulted in error code ',ierr
-          call endrun()
-       endif
+       if ( len_trim(NLFilename) == 0  )then
+          call endrun( subname//' error: nlfilename not set' )
+       end if
+       unitn = getavu()
+       write(6,*) 'Read in clm_inparm namelist from: ', trim(NLFilename)
+       open( unitn, file=trim(NLFilename), status='old' )
+       ierr = 1
+       do while ( ierr /= 0 )
+          read(unitn, clm_inparm, iostat=ierr)
+          if (ierr < 0) then
+             call endrun( subname//' encountered end-of-file on namelist read' )
+          endif
+       end do
+       call relavu( unitn )
 #endif
 
        ! ----------------------------------------------------------------------
@@ -405,12 +475,24 @@ contains
 
        ! Override select set of namelist values with CAM input
 
-       caseid         = cam_caseid
-       ctitle         = cam_ctitle
-       irad           = cam_irad
-       nsrest         = cam_nsrest
-       hist_crtinic   = cam_crtinic
-       mss_irt        = cam_irt
+       if ( .not. present(CCSMInit) )then
+          call endrun( subname//' error CCSMInit not present but is '// &
+                       'required when linking with CAM' )
+       end if
+       call shr_inputInfo_initGetData( CCSMInit, case_name=caseid,        &
+                                       case_desc=ctitle, mss_irt=mss_irt, &
+                                       mss_wpass=mss_wpass,               &
+                                       brnch_retain_casename=brnch_retain_casename,  &
+                                       archive_dir=drvarchdir )
+       archive_dir = shr_string_getParentDir( drvarchdir )//'/lnd/'
+       call radiation_get( iradsw_out=irad )
+       if (      shr_inputInfo_initIsStartup(  CCSMInit ) )then
+          nsrest = 0
+       else if ( shr_inputInfo_initIsContinue( CCSMInit ) )then
+          nsrest = 1
+       else if ( shr_inputInfo_initIsBranch(   CCSMInit ) )then
+          nsrest = 3
+       end if
 #if (defined RTM) || (defined DGVM)
        if (is_perpetual()) then
           write(6,*)'RTM or DGVM cannot be defined in perpetual mode'
