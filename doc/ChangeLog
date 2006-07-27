@@ -1,4 +1,43 @@
 ===============================================================
+Tag name: clm3_expa_67
+Originator(s): tcraig
+Date: Thu Jul 27 12:50:37 MDT 2006
+One-line Summary: Fix tiny bug in controlMod.F90 for lighting compiling 
+
+Purpose of changes: compiler failure associated with inconsistent
+	module name related to shr_input vs shr_Input.
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: 
+
+Describe any changes made to the namelist:
+
+List any changes to the defaults for the boundary datasets:
+
+Describe any substantial timing or memory changes: 
+
+Code reviewed by: jeff, mvertens
+
+Externals changed:  
+
+List all subroutines eliminated:
+
+List all subroutines added and what they do: 
+	
+List all existing files that have been modified, and describe the changes:
+
+src/main/controlMod.F90
+-     use shr_InputInfo_mod, only : shr_inputInfo_initType,       &
++     use shr_inputinfo_mod, only : shr_inputInfo_initType,       &
+		
+Summary of testing: NONE
+
+CLM tag used for the baseline comparison tests if applicable: 
+
+Summarize any changes to answers: should be bit-for-bit
+
+===============================================================
 Tag name: clm3_expa_66
 Originator(s): tcraig
 Date: Tue Jul 25 17:29:37 MDT 2006
