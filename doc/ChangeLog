@@ -1,4 +1,136 @@
 ===============================================================
+Tag name: clm3_expa_66
+Originator(s): tcraig
+Date: Tue Jul 25 17:29:37 MDT 2006
+One-line Summary: Add topographic downscaling, refactor mid-level infrastructure
+
+Purpose of changes: Add topographic downscaling, improve memory use and scaling,
+	step towards supporting nested grids.  Merge fmc12_clm3_expa_64 to trunk.
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: 
+
+Describe any changes made to the namelist: Add two new optional namelist to
+	read atm and lnd topography, fatmtop, flndtop
+
+List any changes to the defaults for the boundary datasets: Updated the
+	mkgriddata tool to produce an optional topographic dataset.
+	Several topo datasets added to inputdata/lnd/clm2/griddata/.
+	These datasets have not been added to any scripts as they
+	are optional at this point and the scripts don't support 
+	downscaling yet "out of the box".
+
+Describe any substantial timing or memory changes: Memory scaling much improved.
+	still too many global arrays in domain and decomp.  these will be removed
+	in future revisions.
+
+Code reviewed by: 
+
+Externals changed:  
+
+List all subroutines eliminated:
+D      src/main/surfFileMod.F90
+D      src/main/initSubgridMod.F90
+	
+
+List all subroutines added and what they do: 
+A  +   src/main/subgridMod.F90
+  - code cleanup and merge of deleted subroutines
+A  +   src/main/surfrdMod.F90
+  - added to isolate routines and eliminate circular use issues
+	
+List all existing files that have been modified, and describe the changes:
+M      tools/mkgriddata/mkvarctl.F90
+M      tools/mkgriddata/domainMod.F90
+M      tools/mkgriddata/mkgriddata.F90
+M      tools/mkgriddata/areaMod.F90
+M      tools/mkgriddata/creategridMod.F90
+M      tools/mkgriddata/mkvarsur.F90
+M      src/biogeochem/CASAMod.F90
+M      src/biogeochem/STATICEcosysDynMod.F90
+M      src/biogeochem/DGVMMod.F90
+M      src/main/clm_varpar.F90
+M      src/main/driver.F90
+M      src/main/ncdio.F90
+M      src/main/atmdrvMod.F90
+M      src/main/subgridRestMod.F90
+M      src/main/initializeMod.F90
+M      src/main/clmtypeInitMod.F90
+M      src/main/pftdynMod.F90
+M      src/main/iniTimeConst.F90
+M      src/main/histFileMod.F90
+M      src/main/clm_atmlnd.F90
+M      src/main/clm_varsur.F90
+M      src/main/clm_csmMod.F90
+M      src/main/controlMod.F90
+M      src/main/filterMod.F90
+M      src/main/clm_varctl.F90
+M      src/main/ndepFileMod.F90
+M      src/main/initGridCellsMod.F90
+M      src/main/lnd_comp_mct.F90
+M      src/main/domainMod.F90
+M      src/main/decompMod.F90
+M      src/main/areaMod.F90
+M      src/main/clmtype.F90
+M      src/riverroute/RtmMod.F90
+M      src/biogeophys/SurfaceAlbedoMod.F90
+
+Merge fmc12_clm3_expa_64 to trunk:
+- update mkgrid to add topographic data file generation
+- comment out print statement in lnd_comp_mct
+- change use of shr_kind_mod in SurfaceAlbedoMod for compiler
+  problem on pgi (MVR)
+- change clm so memory now dynamically allocated.  LSMLON and LSMLAT
+  in preproc.h no longer used except for with SCAM.  MAXPATCH still
+  used but could be changed into a namelist input.
+- add support for reading topographic datasets and using them
+  for downscaling between clm atm and land grids.
+- reorganize code to eliminate circular use logic
+- rewrite decompInit to improve memory use and scaling
+- remove obsolete routines in decompMod.F90
+- rename datatype procs to procinfo, now contains only local data
+- modify clmtype so all data is local gdc, no more global arrays in
+  clmtype!
+- update map_type for efficient memory use.  like mct with 1d arrays
+  consisting of src, dst, S (COL, ROW, S).  update the internal clm
+  atm/lnd mappings to use new datatype.  lnd/rtm and driver/atm
+  mapping still using gridmap_type.  this will be updated in future
+  versions.
+- convert domain from 2d global to 1d global arrays.  add glo 
+  decomp which is global 1d indexing like ij to 1d or gsn 
+  uncompressed.
+- convert wtxy, vegxy, pctspec from 2d to 1d arrays.  migrate many other arrays 
+  from 2d global (i,j) to 1d global.  this is for nesting and to eventually
+  cut down on number of index mappings in decomp_type
+- reorganize order of initialization calls to start thinking about nesting
+- add gatm array to domain datatype
+- clean up dead code.
+- rename initSubgridMod to subgridMod
+- move map_indexes to subgridMod, rename get_subgrid_indexees
+- rearrange a few subroutines to improve filename hierarchy and use logic
+- delete get_sn routines, no longer needed
+- update indexing in clm_atmlnd, remove hardwire indexes
+- rewrite i/o as needed for 1d global arrays, not 2d
+- delete gatherWeightsDGVM from DGVMMod.F90, no longer needed
+- rename surfFileMod to surfrdMod.F90
+- reduce size of subgrid_type and redefine gcelldc and gcellsn
+
+
+Summary of testing:
+
+  bluesky: 	clm test passes, cam pretag passes except ccsm
+  tempest: 	cam pretag passes
+  bangkok/lf95: cam pretag passes except bl153, bl353, bl553 due to code
+	changes and resulting binary produced by compiler optimizations.
+	also scam fails.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_65, cam3_3_16
+
+  Summarize any changes to answers: NONE bit-for-bit
+
+===============================================================
+===============================================================
 Tag name: clm3_expa_65
 Originator(s): Erik Kluzek
 Date: Mon Jul 10 13:52:20 MDT 2006

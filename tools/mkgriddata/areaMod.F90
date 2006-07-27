@@ -42,10 +42,6 @@ module areaMod
   character(len=16),parameter,public :: gridmap_typedst    = 'dst'
   character(len=16),parameter,public :: gridmap_typesrc    = 'src'
 
-  type (gridmap_type), public :: gridmap_d2l
-
-!
-!
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: gridmap_init
   public :: gridmap_clean

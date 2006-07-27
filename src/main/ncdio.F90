@@ -311,7 +311,7 @@ contains
 ! I/O for 1d int field
 !
 ! !USES:
-  use decompMod, only : map_dc2sn, map_sn2dc
+  use decompMod, only : map_dc2sn, map_sn2dc, ldecomp
 #ifdef SPMD
   use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
 #endif
@@ -333,7 +333,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: i,j,k,n                  ! indices
+    integer :: i,j,k,n,ixy,jxy          ! indices
     integer :: ndims                    ! dimension counter
     integer :: dimid(3)                 ! dimension ids
     integer :: varid                    ! variable id
@@ -397,9 +397,9 @@ contains
 !dir$ concurrent
 !cdir nodep
              do k = 1,nsize
-                i = clm3%g%ixy(k)
-                j = clm3%g%jxy(k)
-                fldxy(i,j) = iglobdc(k)
+                ixy = ldecomp%gdc2i(k)
+                jxy = ldecomp%gdc2j(k)
+                fldxy(ixy,jxy) = iglobdc(k)
              end do
              call check_ret(nf_put_vara_int(ncid, varid, start, count, fldxy), subname)
              deallocate(fldxy)
@@ -469,7 +469,7 @@ contains
 ! I/O for 1d int field
 !
 ! !USES:
-  use decompMod, only : map_dc2sn, map_sn2dc
+  use decompMod, only : map_dc2sn, map_sn2dc, ldecomp
 #ifdef RTM
   use RunoffMod      , only : runoff
 #endif
@@ -494,7 +494,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: i,j,k,n                  ! indices
+    integer :: i,j,k,n,ixy,jxy          ! indices
     integer :: ndims                    ! dimension counter
     integer :: dimid(3)                 ! dimension ids
     integer :: varid                    ! variable id
@@ -576,7 +576,9 @@ contains
 !dir$ concurrent
 !cdir nodep
                 do k = 1,nsize
-                   fldxy(clm3%g%ixy(k),clm3%g%jxy(k)) = rglobdc(k)
+                   ixy = ldecomp%gdc2i(k)
+                   jxy = ldecomp%gdc2j(k)
+                   fldxy(ixy,jxy) = rglobdc(k)
                 end do
              end select
              call check_ret(nf_put_vara_double(ncid, varid, start, count, fldxy), subname)
@@ -644,7 +646,7 @@ contains
 ! Netcdf i/o of 2d initial integer field out to netCDF file
 !
 ! !USES:
-  use decompMod, only : map_dc2sn, map_sn2dc
+  use decompMod, only : map_dc2sn, map_sn2dc, ldecomp
 #ifdef SPMD
   use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
 #endif
@@ -668,7 +670,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: j,k                      ! indices
+    integer :: j,k,ixy,jxy              ! indices
     integer :: ier                      ! error status
     integer :: ndims                    ! dimension counter
     integer :: start(4), count(4)       ! bounds for io
@@ -757,7 +759,9 @@ contains
 !dir$ concurrent
 !cdir nodep
                 do k = 1,nsize
-                   fldxy(clm3%g%ixy(k),clm3%g%jxy(k),j) = iglobdc(j,k)
+                   ixy = ldecomp%gdc2i(k)
+                   jxy = ldecomp%gdc2j(k)
+                   fldxy(ixy,jxy,j) = iglobdc(j,k)
                 end do
              end do
              call check_ret(nf_put_vara_int(ncid, varid, start, count, fldxy), subname)
@@ -841,7 +845,7 @@ contains
 ! Netcdf i/o of 2d initial integer field out to netCDF file
 !
 ! !USES:
-  use decompMod, only : map_dc2sn, map_sn2dc
+  use decompMod, only : map_dc2sn, map_sn2dc, ldecomp
 #ifdef SPMD
   use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
 #endif
@@ -865,7 +869,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: j,k                      ! indices
+    integer :: j,k,ixy,jxy              ! indices
     integer :: ier                      ! error status
     integer :: ndims                    ! dimension counter
     integer :: start(4), count(4)       ! bounds for io
@@ -954,7 +958,9 @@ contains
 !dir$ concurrent
 !cdir nodep
                 do k = 1,nsize
-                   fldxy(clm3%g%ixy(k),clm3%g%jxy(k),j) = rglobdc(j,k)
+                   ixy = ldecomp%gdc2i(k)
+                   jxy = ldecomp%gdc2j(k)
+                   fldxy(ixy,jxy,j) = rglobdc(j,k)
                 end do
              end do
              call check_ret(nf_put_vara_double(ncid, varid, start, count, fldxy), subname)

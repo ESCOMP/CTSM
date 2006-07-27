@@ -1593,7 +1593,7 @@ end type model_dflux_type
 
 type pft_type
 
-   ! indices into higher levels in hierarchy, point to arrays in subgrid_type
+   ! g/l/c/p hierarchy, point to arrays in subgrid_type, global glo arrays
    integer, pointer :: column(:)        !index into column level quantities
    real(r8), pointer :: wtcol(:)	!weight (relative to column) 
    integer, pointer :: landunit(:)      !index into landunit level quantities
@@ -1649,13 +1649,12 @@ type column_type
 
    type(pft_type)   :: p       !plant functional type (pft) data structure 
 
-   ! higher level in hierarchy, point to arrays in subgrid_type
+   ! g/l/c/p hierarchy, point to arrays in subgrid_type, global glo arrays
    integer , pointer :: landunit(:)     !index into landunit level quantities
    real(r8), pointer :: wtlunit(:) 	!weight (relative to landunit)
    integer , pointer :: gridcell(:)     !index into gridcell level quantities
    real(r8), pointer :: wtgcell(:) 	!weight (relative to gridcell)
 
-   ! lower levels in hierarchy, point to arrays in subgrid_type
    integer , pointer :: pfti(:)         !beginning pft index for each column
    integer , pointer :: pftf(:)         !ending pft index for each column
    integer , pointer :: npfts(:)        !number of pfts for each column
@@ -1705,11 +1704,10 @@ type landunit_type
 
    type(column_type) :: c    !column data structure (soil/snow/canopy columns)
 
-   ! higher level in hierarchy, point to arrays in subgrid_type
+   ! g/l/c/p hierarchy, point to arrays in subgrid_type, global glo arrays
    integer , pointer :: gridcell(:)     !index into gridcell level quantities
    real(r8), pointer :: wtgcell(:)      !weight (relative to gridcell)
 
-   ! lower levels in hierarchy, point to arrays in subgrid_type
    integer , pointer :: coli(:)         !beginning column index per landunit
    integer , pointer :: colf(:)         !ending column index for each landunit
    integer , pointer :: ncolumns(:)     !number of columns for each landunit
@@ -1755,7 +1753,7 @@ type gridcell_type
 
    type(landunit_type) :: l	        !geomorphological landunits
 
-   ! lower level in hierarchy, point to arrays in subgrid_type
+   ! g/l/c/p hierarchy, point to arrays in subgrid_type, global glo arrays
    integer, pointer :: luni(:)          !beginning landunit index 
    integer, pointer :: lunf(:)          !ending landunit index 
    integer, pointer :: nlandunits(:)    !number of landunit for each gridcell
@@ -1766,11 +1764,8 @@ type gridcell_type
    integer, pointer :: pftf(:)          !ending pft index
    integer, pointer :: npfts(:)         !number of pfts for each gridcell
 
-   ! topological mapping functionality
-   integer , pointer :: itype(:)        !gridcell type
+   ! topological mapping functionality, local 1d gdc arrays
    real(r8), pointer :: area(:)         !total land area, gridcell (km^2)
-   integer , pointer :: ixy(:)          !xy lon index
-   integer , pointer :: jxy(:)          !xy lat index
    real(r8), pointer :: lat(:) 	        !latitude (radians)
    real(r8), pointer :: lon(:) 	        !longitude (radians)
    real(r8), pointer :: latdeg(:)       !latitude (degrees)

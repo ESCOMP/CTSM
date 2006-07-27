@@ -42,6 +42,8 @@ module clm_varctl
   character(len=256) :: fsurdat                 ! surface data file name
   character(len=256) :: fatmgrid                ! atm grid file name
   character(len=256) :: fatmlndfrc              ! lnd frac file on atm grid
+  character(len=256) :: fatmtopo                ! topography on atm grid
+  character(len=256) :: flndtopo                ! topography on lnd grid
   character(len=256) :: fndepdat                ! static nitrogen deposition data file name
   character(len=256) :: fndepdyn                ! dynamic nitrogen deposition data file name
   character(len=256) :: fpftdyn                 ! dynamic landuse dataset

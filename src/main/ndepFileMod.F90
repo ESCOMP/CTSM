@@ -65,7 +65,7 @@ contains
 ! !ARGUMENTS:
     implicit none
     include 'netcdf.inc'
-    real(r8), intent(out) :: ndep(lsmlon,lsmlat)         ! annual nitrogen deposition rate (gN/m2/yr)
+    real(r8), intent(out) :: ndep(:,:)         ! annual nitrogen deposition rate (gN/m2/yr)
 !
 ! !CALLED FROM:
 ! subroutine initialize in module initializeMod
@@ -133,7 +133,7 @@ contains
 !
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
-    use decompMod   , only : get_proc_global
+    use decompMod   , only : get_proc_global, ldecomp
     use time_manager, only : get_curr_date
     use clm_varctl  , only : fndepdyn
     use fileutils   , only : getfil
@@ -159,12 +159,14 @@ contains
     integer  :: numl                            ! total number of landunits across all procs
     integer  :: numc                            ! total number of columns across all procs
     integer  :: nump                            ! total number of pfts across all procs
-    integer  :: landmask_ndepdyn(lsmlon,lsmlat) ! input landmask
+    integer , allocatable :: landmask_ndepdyn(:,:) ! input landmask
     real(r8), allocatable :: ndep(:,:)          ! input ndep
     type(gridcell_type), pointer :: gptr        ! pointer to gridcell derived subtype
     character(len=256) :: locfn                 ! local file name
     character(len= 32) :: subname='ndepdyn_init' ! subroutine name
  !-----------------------------------------------------------------------
+
+    allocate(landmask_ndepdyn(lsmlon,lsmlat))
 
     ! Set pointers into derived type
 
@@ -249,8 +251,8 @@ contains
 !dir$ concurrent
 !cdir nodep
        do g = 1,numg
-          i = gptr%ixy(g)
-          j = gptr%jxy(g)
+          i = ldecomp%gdc2i(g)
+          j = ldecomp%gdc2j(g)
           ndepdyn1(g) = ndep(i,j)
        end do
        
@@ -259,8 +261,8 @@ contains
 !dir$ concurrent
 !cdir nodep
        do g = 1,numg
-          i = gptr%ixy(g)
-          j = gptr%jxy(g)
+          i = ldecomp%gdc2i(g)
+          j = ldecomp%gdc2j(g)
           ndepdyn2(g) = ndep(i,j)
        end do
 
@@ -282,6 +284,8 @@ contains
     call mpi_bcast (ndepdyn2  , size(ndepdyn2)  , MPI_REAL8, 0, mpicom, ier)
 #endif    
 
+    deallocate(landmask_ndepdyn)
+
   end subroutine ndepdyn_init
 
 !-----------------------------------------------------------------------
@@ -298,7 +302,7 @@ contains
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use time_manager, only : get_curr_date, get_curr_calday
-    use decompMod   , only : get_proc_global, get_proc_bounds
+    use decompMod   , only : get_proc_global, get_proc_bounds, ldecomp
     use clm_atmlnd  , only : clm_a2l
     use clm_varcon  , only : istsoil
 !
@@ -382,8 +386,8 @@ contains
 !dir$ concurrent
 !cdir nodep
           do g = 1,numg
-             i = gptr%ixy(g)
-             j = gptr%jxy(g)
+             i = ldecomp%gdc2i(g)
+             j = ldecomp%gdc2j(g)
              ndepdyn2(g) = ndep(i,j)
           end do
           deallocate(ndep)
@@ -432,7 +436,7 @@ contains
     implicit none
     include 'netcdf.inc'
     integer , intent(in)  :: ntime
-    real(r8), intent(out) :: ndep(lsmlon,lsmlat)
+    real(r8), intent(out) :: ndep(:,:)
 !
 !EOP
 !

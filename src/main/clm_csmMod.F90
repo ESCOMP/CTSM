@@ -24,9 +24,8 @@ module clm_csmMod
   use shr_kind_mod, only: r8 => shr_kind_r8
   use nanMod
   use clm_varpar
-  use clm_atmlnd      , only : clm_a2l, clm_l2a, atm_a2l, atm_l2a
-  use clm_atmlnd      , only : gridmap_a2l, gridmap_l2a
   use clm_atmlnd      , only : clm_mapa2l, clm_mapl2a
+  use clm_atmlnd      , only : atm_a2l, clm_a2l, clm_l2a, atm_l2a
 #if (defined SPMD)
   use spmdMod         , only : masterproc, mpicom
   use spmdGathScatMod , only : gather_data_to_master
@@ -315,12 +314,12 @@ contains
     do n = begg, endg	
         i = adecomp%gdc2i(n)
         j = adecomp%gdc2j(n)
-        Gbuf(n,cpl_fields_grid_lon)   = adomain%lonc(i,j)
-        Gbuf(n,cpl_fields_grid_lat)   = adomain%latc(i,j)
-        Gbuf(n,cpl_fields_grid_area)  = adomain%area(i,j)/(re*re)
-        Gbuf(n,cpl_fields_grid_frac)  = adomain%frac(i,j)
-        Gbuf(n,cpl_fields_grid_mask)  = float(adomain%mask(i,j))
         gi = (j-1)*adomain%ni + i
+        Gbuf(n,cpl_fields_grid_lon)   = adomain%lonc(gi)
+        Gbuf(n,cpl_fields_grid_lat)   = adomain%latc(gi)
+        Gbuf(n,cpl_fields_grid_area)  = adomain%area(gi)/(re*re)
+        Gbuf(n,cpl_fields_grid_frac)  = adomain%frac(gi)
+        Gbuf(n,cpl_fields_grid_mask)  = float(adomain%mask(gi))
         Gbuf(n,cpl_fields_grid_index) = gi
     end do
 
@@ -355,10 +354,10 @@ contains
        gi = (runoff%ocn_jxy(n)-1)*rtmlon + runoff%ocn_ixy(n)
        j = (gi-1) / rtmlon + 1
        i = mod(gi-1,rtmlon) + 1
-       Gbuf(ni,cpl_fields_grid_lon  ) = rdomain%lonc(i,j)
-       Gbuf(ni,cpl_fields_grid_lat  ) = rdomain%latc(i,j)
-       Gbuf(ni,cpl_fields_grid_area ) = rdomain%area(i,j)/(re*re)
-       Gbuf(ni,cpl_fields_grid_mask ) = 1.0_r8 - float(rdomain%mask(i,j))
+       Gbuf(ni,cpl_fields_grid_lon  ) = rdomain%lonc(gi)
+       Gbuf(ni,cpl_fields_grid_lat  ) = rdomain%latc(gi)
+       Gbuf(ni,cpl_fields_grid_area ) = rdomain%area(gi)/(re*re)
+       Gbuf(ni,cpl_fields_grid_mask ) = 1.0_r8 - float(rdomain%mask(gi))
        Gbuf(ni,cpl_fields_grid_index) = gi
     end do
 
@@ -497,7 +496,7 @@ contains
 
     if (nsrest == 0 ) then   !initial run
 
-       call clm_mapl2a(clm_l2a,atm_l2a,gridmap_l2a)
+       call clm_mapl2a(clm_l2a, atm_l2a)
 
        do g = begg,endg
           bufS(g,index_l2c_Sl_t)     = sqrt(sqrt(atm_l2a%eflx_lwrad_out(g)/sb))
@@ -902,7 +901,7 @@ contains
 
      end do
 
-     call clm_mapa2l(atm_a2l,clm_a2l,gridmap_a2l)
+     call clm_mapa2l(atm_a2l, clm_a2l)
 
      ! debug write statements (remove)
 
@@ -975,7 +974,7 @@ contains
        end do
     endif
 
-    call clm_mapl2a(clm_l2a,atm_l2a,gridmap_l2a)
+    call clm_mapl2a(clm_l2a, atm_l2a)
 
     bufS(:,:) = 0.0_r8
     do g = begg,endg
@@ -1496,14 +1495,15 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: i,j         !indices
+    integer :: i,j,n         !indices
 !------------------------------------------------------------------------
 
     global_sum_fld2d = 0._r8
     do j = 1,adomain%nj
        do i = 1,adomain%ni
+          n = (j-1)*adomain%ni + i
           if (array(i,j) /= spval) then
-             global_sum_fld2d = global_sum_fld2d + array(i,j) * adomain%area(i,j) * 1.e6_r8
+             global_sum_fld2d = global_sum_fld2d + array(i,j) * adomain%area(n) * 1.e6_r8
           endif
        end do
     end do
@@ -1534,7 +1534,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: g,i,j  ! indices
+    integer :: g,i,j,n  ! indices
 !------------------------------------------------------------------------
 
     ! Note: area is in km^2
@@ -1543,7 +1543,8 @@ contains
     do g = 1,numg
        i = adecomp%gdc2i(g)
        j = adecomp%gdc2j(g)
-       global_sum_fld1d = global_sum_fld1d + array(g) * adomain%area(i,j) * 1.e6_r8
+       n = (j-1)*adomain%ni + i
+       global_sum_fld1d = global_sum_fld1d + array(g) * adomain%area(n) * 1.e6_r8
     end do
 
   end function global_sum_fld1d

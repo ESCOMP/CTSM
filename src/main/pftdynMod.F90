@@ -61,7 +61,7 @@ contains
 !
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
-    use decompMod   , only : get_proc_global
+    use decompMod   , only : get_proc_global, ldecomp
     use time_manager, only : get_curr_date
     use clm_varctl  , only : fpftdyn
     use fileutils   , only : getfil
@@ -87,16 +87,20 @@ contains
     integer  :: numl                            ! total number of landunits across all procs
     integer  :: numc                            ! total number of columns across all procs
     integer  :: nump                            ! total number of pfts across all procs
-    real(r8) :: pctgla(lsmlon,lsmlat)           ! percent of grid cell that is glacier
-    real(r8) :: pctlak(lsmlon,lsmlat)           ! percent of grid cell that is lake
-    real(r8) :: pctwet(lsmlon,lsmlat)           ! percent of grid cell that is wetland
-    real(r8) :: pcturb(lsmlon,lsmlat)           ! percent of grid cell that is urbanized
-    integer  :: landmask_pftdyn(lsmlon,lsmlat)  ! input landmask
+    real(r8), allocatable :: pctgla(:,:)        ! percent of gcell is glacier
+    real(r8), allocatable :: pctlak(:,:)        ! percent of gcell is lake
+    real(r8), allocatable :: pctwet(:,:)        ! percent of gcell is wetland
+    real(r8), allocatable :: pcturb(:,:)        ! percent of gcell is urbanized
+    integer , allocatable :: landmask_pftdyn(:,:)  ! input landmask
     real(r8), allocatable :: pctpft(:,:,:)      ! input pctpft
     type(gridcell_type), pointer :: gptr        ! pointer to gridcell derived subtype
     character(len=256) :: locfn                 ! local file name
     character(len= 32) :: subname='pftdyn_init' ! subroutine name
  !-----------------------------------------------------------------------
+
+    allocate(pctgla(lsmlon,lsmlat),pctlak(lsmlon,lsmlat))
+    allocate(pctwet(lsmlon,lsmlat),pcturb(lsmlon,lsmlat))
+    allocate(landmask_pftdyn(lsmlon,lsmlat))
 
     ! Set pointers into derived type
 
@@ -166,15 +170,16 @@ contains
 
        do j = 1,lsmlat
           do i = 1,lsmlon
-             if (pctlak(i,j)+pctwet(i,j)+pcturb(i,j)+pctgla(i,j) /= pctspec(i,j)) then 
+             n = (j-1)*lsmlon + i
+             if (pctlak(i,j)+pctwet(i,j)+pcturb(i,j)+pctgla(i,j) /= pctspec(n)) then 
                 write(6,*)'mismatch between input pctspec = ',&
                      pctlak(i,j)+pctwet(i,j)+pcturb(i,j)+pctgla(i,j),&
-                     ' and that obtained from surface dataset ', pctspec(i,j),' at i,j= ',i,j
+                     ' and that obtained from surface dataset ', pctspec(n),' at i,j= ',i,j
                 call endrun()
              end if
-             if (landmask_pftdyn(i,j) /= ldomain%mask(i,j)) then
+             if (landmask_pftdyn(i,j) /= ldomain%mask(n)) then
                 write(6,*)'mismatch between input landmask = ', landmask_pftdyn(i,j), & 
-                     ' and that obtained from surface dataset ', ldomain%mask(i,j),&
+                     ' and that obtained from surface dataset ', ldomain%mask(n),&
                      ' at i,j= ',i,j
                 call endrun()
              end if
@@ -230,8 +235,8 @@ contains
 !dir$ concurrent
 !cdir nodep
           do g = 1,numg
-             i = gptr%ixy(g)
-             j = gptr%jxy(g)
+             i = ldecomp%gdc2i(g)
+             j = ldecomp%gdc2j(g)
              wtpft1(g,m) = pctpft(i,j,m)/100._r8
           end do
        end do
@@ -241,8 +246,8 @@ contains
 !dir$ concurrent
 !cdir nodep
           do g = 1,numg
-             i = gptr%ixy(g)
-             j = gptr%jxy(g)
+             i = ldecomp%gdc2i(g)
+             j = ldecomp%gdc2j(g)
              wtpft2(g,m) = pctpft(i,j,m)/100._r8
           end do
        end do
@@ -265,6 +270,8 @@ contains
     call mpi_bcast (wtpft2  , size(wtpft2)  , MPI_REAL8, 0, mpicom, ier)
 #endif    
 
+    deallocate(pctgla,pctlak,pctwet,pcturb,landmask_pftdyn)
+
   end subroutine pftdyn_init
 
 !-----------------------------------------------------------------------
@@ -281,7 +288,7 @@ contains
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use time_manager, only : get_curr_date, get_curr_calday
-    use decompMod   , only : get_proc_global
+    use decompMod   , only : get_proc_global, ldecomp
     use clm_varcon  , only : istsoil
 !
 ! !ARGUMENTS:
@@ -369,8 +376,8 @@ contains
 !dir$ concurrent
 !cdir nodep
              do g = 1,numg
-                i = gptr%ixy(g)
-                j = gptr%jxy(g)
+                i = ldecomp%gdc2i(g)
+                j = ldecomp%gdc2j(g)
                 wtpft2(g,m) = pctpft(i,j,m)/100._r8
              end do
           end do
@@ -434,12 +441,12 @@ contains
     implicit none
     include 'netcdf.inc'
     integer , intent(in)  :: ntime
-    real(r8), intent(out) :: pctpft(lsmlon,lsmlat,numpft+1)
+    real(r8), intent(out) :: pctpft(:,:,:)
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer  :: i,j,m
+    integer  :: i,j,m,n
     integer  :: err, ierr, jerr, sumerr
     integer  :: varid                             ! netcdf variable id
     real(r8) :: sumpct                            ! temporary
@@ -458,10 +465,11 @@ contains
     err = 0
     do j = 1,lsmlat
        do i = 1,lsmlon
-          if (ldomain%mask(i,j) == 1 .and. pctspec(i,j) < 100._r8) then
+          n = (j-1)*lsmlon + i
+          if (ldomain%mask(n) == 1 .and. pctspec(n) < 100._r8) then
              sumpct = 0._r8
              do m = 1, numpft+1
-                sumpct = sumpct + pctpft(i,j,m) * 100._r8/(100._r8-pctspec(i,j))
+                sumpct = sumpct + pctpft(i,j,m) * 100._r8/(100._r8-pctspec(n))
              end do
              if (abs(sumpct - 100._r8) > 0.1_r8) then
                 err = 1; ierr = i; jerr = j; sumerr = sumpct

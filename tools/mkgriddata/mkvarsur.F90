@@ -21,7 +21,6 @@ module mkvarsur
   real(r8) :: spval = 1.e36                     ! special value
 
   type(domain_type) :: ldomain
-  type(domain_type) :: ddomain
 
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein

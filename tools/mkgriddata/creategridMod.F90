@@ -15,7 +15,7 @@ module creategridMod
   use domainMod   , only : domain_init, domain_type, domain_check
   use areaMod
   use ncdio
-  use shr_const_mod, only : SHR_CONST_PI, SHR_CONST_REARTH
+  use shr_const_mod, only : SHR_CONST_PI, SHR_CONST_REARTH, SHR_CONST_G
   use shr_sys_mod    , only : shr_sys_flush
 !
 ! !PUBLIC TYPES:
@@ -23,6 +23,7 @@ module creategridMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: creategrid    ! Generate land model grid.
+  public :: settopo       ! Generate topography
   public :: read_domain   ! read domain from netcdf file
   public :: write_domain  ! write domain to netcdf file
   public :: mkfile        ! create netcdf file
@@ -30,6 +31,8 @@ module creategridMod
 ! !PRIVATE MEMBER FUNCTIONS:
   real(r8) :: flandmin = 0.001             ! minimum land frac for land cell
   real(r8) :: re = SHR_CONST_REARTH*0.001  ! radius of earth (km)
+  type (gridmap_type), public :: gridmap_d2l
+  type (gridmap_type), public :: gridmap_t2l
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -87,6 +90,7 @@ contains
     real(r8) :: dx                             !land model cell width
     real(r8) :: dy                             !land model cell length
     character(len= 32) :: subname = 'create_grid'
+    type(domain_type) :: ddomain
 !-----------------------------------------------------------------------
 
     if (trim(type) == 'internal') then
@@ -148,6 +152,83 @@ contains
     call domain_check(ldomain)
 
   end subroutine creategrid
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: settopo
+!
+! !INTERFACE:
+  subroutine settopo(fname)
+!
+! !DESCRIPTION:
+! Generate topo data.
+!
+! !USES:
+  use mkvarsur
+!
+! !ARGUMENTS:
+    implicit none
+    character(len=*), intent(in) :: fname
+!
+! !REVISION HISTORY:
+! Author: T Craig
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+
+    integer  :: i,j,im,jm                      !indices
+    integer  :: lsmlon, lsmlat                 !local size
+    real(r8) :: dx                             !land model cell width
+    real(r8) :: dy                             !land model cell length
+    character(len= 32) :: subname = 'settopo'
+    real(r8),allocatable :: fld_o(:,:)      !output grid: dummy field
+    real(r8),allocatable :: fld_i(:,:)      !input grid: dummy field
+    integer ,allocatable :: mask(:,:)       !temp for ldomain mask
+    type(domain_type) :: tdomain
+
+!-----------------------------------------------------------------------
+
+! establish tdomain
+    call read_domain(tdomain,fname)
+
+    call domain_check(tdomain)
+
+    allocate(fld_i(tdomain%ni,tdomain%nj))
+    allocate(fld_o(ldomain%ni,ldomain%nj))
+    allocate(mask (ldomain%ni,ldomain%nj))
+    fld_i = 1.0
+    fld_o = 1.0
+
+    mask = ldomain%mask
+    tdomain%mask = 1
+    ldomain%mask = 1
+
+    write(6,*) 'call areaini'
+
+    call areaini(tdomain,ldomain,gridmap_t2l,fracin=fld_i,fracout=fld_o)
+
+    write(6,*) 'areaini done'
+
+    ldomain%mask = mask
+
+    write(6,*) ' '
+    write(6,*) trim(subname),':'
+    call gridmap_checkmap(gridmap_t2l)
+
+    write(6,*) 'call areaave'
+
+    call areaave(tdomain%topo,ldomain%topo,gridmap_t2l)
+
+    write(6,*) 'areaave done'
+
+    write(6,*) trim(subname),': raw topo min/max = ',minval(tdomain%topo),maxval(tdomain%topo)
+    write(6,*) trim(subname),': new topo min/max = ',minval(ldomain%topo),maxval(ldomain%topo)
+
+    deallocate(fld_i,fld_o,mask)
+
+  end subroutine settopo
 
 !----------------------------------------------------------------------------
 !BOP
@@ -316,6 +397,7 @@ contains
     logical :: edgeNESWset                     !local EDGE[NESW]
     logical :: llneswset                       !local lat[ns],lon[we]
     logical :: areaset                         !local area
+    logical :: toposet                         !local topo
     logical :: landfracset                     !local landfrac
     logical :: maskset                         !local mask
     logical :: numlonset                       !local numlon
@@ -331,6 +413,7 @@ contains
     edgeNESWset = .false.
     llneswset   = .false.
     areaset     = .false.
+    toposet     = .false.
     landfracset = .false.
     maskset     = .false.
     numlonset   = .false.
@@ -567,6 +650,25 @@ contains
        call check_ret(nf_get_var_double (ncid, varid, domain%area), subname)
     endif
 
+    ier = nf_inq_varid (ncid, 'PHIS', varid)
+    if (ier == NF_NOERR) then
+       if (toposet) write(6,*) trim(subname),' WARNING, overwriting topo'
+       toposet = .true.
+       write(6,*) trim(subname),' read TOPO'
+       call check_ret(nf_inq_varid (ncid, 'PHIS', varid), subname)
+       call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
+       domain%topo = domain%topo/SHR_CONST_G
+    endif
+
+    ier = nf_inq_varid (ncid, 'TOPO', varid)
+    if (ier == NF_NOERR) then
+       if (toposet) write(6,*) trim(subname),' WARNING, overwriting topo'
+       toposet = .true.
+       write(6,*) trim(subname),' read TOPO'
+       call check_ret(nf_inq_varid (ncid, 'TOPO', varid), subname)
+       call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
+    endif
+
     if (area_units == 1) then
        domain%area = domain%area * re * re
        area_units = 0
@@ -733,17 +835,23 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Input_Filename', len_trim(str), trim(str)), subname)
 
+    if (itype == 3) then
+      str = mksrf_frawtopo
+      call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+           'Topo_Input_Filename', len_trim(str), trim(str)), subname)
+    endif
+
     str = 'Community Land Model: CLM3'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Source', len_trim(str), trim(str)), subname)
 
-    str = '$Name: clm3_expa_48_brnchT_fmesh13 $'
-    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
-         'Version', len_trim(str), trim(str)), subname)
+!    str = '$Name: clm3_expa_48_brnchT_fmesh13 $'
+!    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+!         'Version', len_trim(str), trim(str)), subname)
 
-    str = '$Id: creategridMod.F90,v 1.1.2.1.2.1 2005/12/22 16:25:18 tcraig Exp $'
-    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
-         'Revision_Id', len_trim(str), trim(str)), subname)
+!    str = '$Id: creategridMod.F90,v 1.1.2.1.2.1 2005/12/22 16:25:18 tcraig Exp $'
+!    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+!         'Revision_Id', len_trim(str), trim(str)), subname)
 
     ! ----------------------------------------------------------------------
     ! Define variables
@@ -804,6 +912,13 @@ contains
        call ncd_defvar(ncid=ncid, varname='LANDFRAC', xtype=nf_double, &
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='land fraction', units='unitless')
+
+
+    elseif (type == 3) then
+
+       call ncd_defvar(ncid=ncid, varname='TOPO', xtype=nf_double, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='topography height', units='m')
 
     else
 
@@ -888,6 +1003,10 @@ contains
 
        call ncd_ioglobal(varname='LANDMASK', data=domain%mask  , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='LANDFRAC', data=domain%frac  , ncid=ncid, flag='write')
+
+    elseif (type == 3) then
+
+       call ncd_ioglobal(varname='TOPO'    , data=domain%topo  , ncid=ncid, flag='write')
 
     else
 

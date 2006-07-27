@@ -13,7 +13,6 @@ module clm_varsur
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use clm_varpar  , only : lsmlon, lsmlat
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -23,7 +22,7 @@ module clm_varsur
 !
 ! surface boundary data
 !
-  real(r8) :: pctspec(lsmlon,lsmlat)         ! percent of special landunits wrt gridcell
+  real(r8),allocatable :: pctspec(:)         ! percent of spec lunits wrt gcell
   logical  :: all_pfts_on_srfdat = .false.   ! true=>old format dataset 
 !
 ! !REVISION HISTORY:

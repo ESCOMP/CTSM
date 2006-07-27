@@ -15,6 +15,7 @@ module SurfaceAlbedoMod
   use shr_sys_mod, only : shr_sys_flush
   use clm_varcon , only : istsoil
   use spmdMod    , only : masterproc
+  use shr_kind_mod, only : r8 => shr_kind_r8
   implicit none
   save
 !
@@ -57,7 +58,6 @@ contains
 !    -> TwoStream:    absorbed, reflected, transmitted solar fluxes (vis dir,vis dif, nir dir, nir dif)
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
     use clmtype
     use shr_orb_mod
     use time_manager, only : get_nstep
@@ -347,7 +347,6 @@ contains
 ! Determine snow albedos
 !
 ! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
 !
 ! !ARGUMENTS:
@@ -445,7 +444,6 @@ contains
 ! Determine ground surface albedo, accounting for snow
 !
 ! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
     use clm_varpar, only : numrad
     use clm_varcon, only : albsat, albdry, alblak, albice, tfrz, istice, istsoil
@@ -560,7 +558,6 @@ contains
 ! flux given an underlying surface with known albedo.
 !
 ! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
     use clm_varpar, only : numrad
     use clm_varcon, only : omegas, tfrz, betads, betais
@@ -841,7 +838,6 @@ contains
 ! Updates snow age Based on BATS code.
 !
 ! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
     use clm_varcon, only : tfrz
     use time_manager, only : get_step_size

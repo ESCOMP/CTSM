@@ -16,6 +16,7 @@ module RtmMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use spmdMod     , only : masterproc
   use clm_varpar  , only : lsmlon, lsmlat, rtmlon, rtmlat
   use shr_sys_mod , only : shr_sys_flush
   use domainMod   , only : domain_type, domain_init
@@ -88,10 +89,8 @@ contains
 ! Initialize RTM grid and land mask.
 !
 ! !USES:
-    use shr_kind_mod , only : r8 => shr_kind_r8
     use shr_const_mod, only : SHR_CONST_PI
     use domainMod    , only : ldomain
-    use spmdMod      , only : masterproc
     use areaMod      , only : celledge, cellarea
     use clm_varctl   , only : frivinp_rtm
     use clm_varcon   , only : re
@@ -114,7 +113,7 @@ contains
     real(r8), dimension(4) :: rtmedge = (/ 90._r8, 180._r8, -90._r8, -180._r8 /)  !N,E,S,W edges of rtm grid
     integer  :: ioff(0:8) = (/0,0,1,1,1,0,-1,-1,-1/) !calc dist as in hydra
     integer  :: joff(0:8) = (/0,1,1,0,-1,-1,-1,0,1/) !of grid cell down stream
-    integer  :: i,j,k,n,g                     ! loop indices
+    integer  :: i,j,k,n,g,n2                  ! loop indices
     integer  :: i2,j2                         ! downstream i and j
     integer  :: is,js                         ! land model grid indices
     integer  :: ir,jr                         ! rtm grid indices
@@ -133,6 +132,7 @@ contains
     integer  :: numl                          ! tot num of landunits on all pes
     integer  :: numc                          ! tot num of columns on all pes
     integer  :: nump                          ! tot num of pfts on all pes
+    real(r8),allocatable :: ltmp(:,:),rtmp(:,:) ! temporaries
     character(len=16), dimension(50) :: river_name
     character(len=30), dimension(50) :: rivstat_name
     real(r8)         , dimension(50) :: rivstat_lon
@@ -190,7 +190,8 @@ contains
     open (1,file=frivinp_rtm)
     do j = 1,rtmlat
        do i = 1,rtmlon
-          read(1,*) rdomain%latc(i,j),rdomain%lonc(i,j),tempg(i,j)
+          n = (j-1)*rtmlon + i
+          read(1,*) rdomain%latc(n),rdomain%lonc(n),tempg(i,j)
           tempgp(i,j) = nint(tempg(i,j))
        enddo
     enddo
@@ -233,10 +234,11 @@ contains
 
     do j=rtmlati,rtmlatf
        do i=rtmloni,rtmlonf
+          n = (j-1)*rtmlon + i
           if (rdirc(i,j) == 0) then
-             rdomain%mask(i,j) = 0
+             rdomain%mask(n) = 0
           else
-             rdomain%mask(i,j) = 1
+             rdomain%mask(n) = 1
           end if
        enddo
     enddo
@@ -254,15 +256,17 @@ contains
 
     do j=rtmlati,rtmlatf
        do i=rtmloni,rtmlonf
+          n = (j-1)*rtmlon + i
           i2 = i + ioff(tempgp(i,j))
           j2 = j + joff(tempgp(i,j))
           if (i2 == 0) i2 = 2                 !avoids i2 out of bounds in the following
           if (i2 == rtmlon+1) i2 = rtmlon-1   !avoids i2 out of bounds in the following
-          dy = deg2rad * abs(rdomain%latc(i,j)-rdomain%latc(i2,j2)) * re*1000._r8
-          dx = deg2rad * abs(rdomain%lonc(i,j)-rdomain%lonc(i2,j2)) * re*1000._r8 &
-               *0.5_r8*(cos(rdomain%latc(i,j)*deg2rad)+cos(rdomain%latc(i2,j2)*deg2rad))
+          n2 = (j2-1)*rtmlon + i2
+          dy = deg2rad * abs(rdomain%latc(n)-rdomain%latc(n2)) * re*1000._r8
+          dx = deg2rad * abs(rdomain%lonc(n)-rdomain%lonc(n2)) * re*1000._r8 &
+               *0.5_r8*(cos(rdomain%latc(n)*deg2rad)+cos(rdomain%latc(n2)*deg2rad))
           ddist(i,j) = sqrt(dx*dx + dy*dy)
-          rivarea(i,j)=1.e6_r8 * rdomain%area(i,j)     !convert into m**2
+          rivarea(i,j)=1.e6_r8 * rdomain%area(n)     !convert into m**2
        enddo
     enddo
 
@@ -279,13 +283,29 @@ contains
     ! need to first count to allocate vector and must now count to actually 
     ! determine indices
 
-    call RtmMapClm2Rtm( ldomain%frac, rdomain%frac )
+    allocate(ltmp(lsmlon,lsmlat),rtmp(rtmlon,rtmlat))
+    do j = 1,lsmlat
+    do i = 1,lsmlon
+       n = (j-1)*lsmlon + i
+       ltmp(i,j) = ldomain%frac(n)
+    enddo
+    enddo
+!    call RtmMapClm2Rtm( ldomain%frac, rdomain%frac )
+    call RtmMapClm2Rtm( ltmp, rtmp )
+    do j = 1,rtmlat
+    do i = 1,rtmlon
+       n = (j-1)*rtmlon + i
+       rdomain%frac(n) = rtmp(i,j)
+    enddo
+    enddo
+    deallocate(ltmp,rtmp)
 
     nrofocn = 0
     masktmp_r(:,:) = 0
     do j=rtmlati,rtmlatf
        do i=rtmloni,rtmlonf
-          if (rdomain%mask(i,j) == 0) then
+          n = (j-1)*rtmlon + i
+          if (rdomain%mask(n) == 0) then
              if (rdirc(i  ,j-1)==1) masktmp_r(i,j) = 1
              if (rdirc(i-1,j-1)==2) masktmp_r(i,j) = 1
              if (rdirc(i-1,j  )==3) masktmp_r(i,j) = 1
@@ -294,7 +314,7 @@ contains
              if (rdirc(i+1,j+1)==6) masktmp_r(i,j) = 1
              if (rdirc(i+1,j  )==7) masktmp_r(i,j) = 1
              if (rdirc(i+1,j-1)==8) masktmp_r(i,j) = 1
-             if (masktmp_r(i,j) == 0 .and. rdomain%frac(i,j)>0._r8) masktmp_r(i,j) = 1
+             if (masktmp_r(i,j) == 0 .and. rdomain%frac(n)>0._r8) masktmp_r(i,j) = 1
           endif
           if (masktmp_r(i,j) == 1) nrofocn = nrofocn +1
        enddo
@@ -308,7 +328,8 @@ contains
     masktmp_r(:,:) = 0
     do j=rtmlati,rtmlatf
        do i=rtmloni,rtmlonf
-          if (rdomain%mask(i,j) == 1) then
+          n = (j-1)*rtmlon + i
+          if (rdomain%mask(n) == 1) then
              masktmp_r(i,j) = 1
              nroflnd = nroflnd +1
           end if
@@ -348,7 +369,6 @@ contains
 ! read in. For restart run, RTM fluxout is read from restart dataset.
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
     use time_manager, only : get_step_size
     use clm_varctl  , only : rtm_nsteps
 !
@@ -363,14 +383,15 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: i,j         !indices
+    integer :: i,j,n       !indices
     integer :: delt        !delt for rtm
 !-----------------------------------------------------------------------
 
     delt = rtm_nsteps*get_step_size()
     do j = rtmlati,rtmlatf
        do i = rtmloni,rtmlonf
-          if (rdomain%mask(i,j)==1) then
+          n = (j-1)*rtmlon + i
+          if (rdomain%mask(n)==1) then
              fluxout(i,j) = volr(i,j) * effvel/ddist(i,j)
              fluxout(i,j) = min(fluxout(i,j), volr(i,j) / delt)
           else
@@ -393,9 +414,6 @@ contains
 ! Interface with RTM river routing model.
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use spmdMod     , only : masterproc
-    use clm_varpar  , only : lsmlon, lsmlat
     use RunoffMod   , only : UpdateRunoff
 !
 ! !ARGUMENTS:
@@ -410,8 +428,10 @@ contains
 !EOP
 !
     logical  :: do_rtm                       ! true => perform rtm calculation
-    real(r8) :: totruninxy(lsmlon,lsmlat)    ! surface runoff (mm H2O /s)
+    real(r8),allocatable :: totruninxy(:,:)  ! surface runoff (mm H2O /s)
 !-----------------------------------------------------------------------
+
+    allocate(totruninxy(lsmlon,lsmlat))
 
     ! Determine RTM inputs on land model grid
 
@@ -438,6 +458,8 @@ contains
 
     end if
 
+    deallocate(totruninxy)
+
   end subroutine Rtmriverflux
 
 !-----------------------------------------------------------------------
@@ -452,23 +474,19 @@ contains
 ! Update RTM inputs.
 !
 ! !USES:
-    use shr_kind_mod   , only: r8 => shr_kind_r8
     use clmtype        , only : clm3,nameg
-    use decompMod      , only : get_proc_bounds, get_proc_global
-    use clm_varpar     , only : lsmlon, lsmlat
+    use decompMod      , only : get_proc_bounds, get_proc_global, ldecomp
     use clm_varctl     , only : rtm_nsteps
     use time_manager   , only : get_step_size, get_nstep
 #if (defined SPMD)
-    use spmdMod        , only : masterproc, mpicom
+    use spmdMod        , only : mpicom
     use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master, allgather_data
-#else
-    use spmdMod        , only : masterproc
 #endif
 !
 ! !ARGUMENTS:
     implicit none
     logical , intent(out) :: do_rtm
-    real(r8), intent(out) :: totruninxy(lsmlon,lsmlat) ! surface runoff (mm H2O /s)
+    real(r8), intent(out) :: totruninxy(:,:) ! surface runoff (mm H2O /s)
 !
 ! !CALLED FROM:
 ! subroutine driver
@@ -515,8 +533,8 @@ contains
 
    ! Assign local pointers to derived type members
 
-    ixy           => clm3%g%ixy
-    jxy           => clm3%g%jxy
+    ixy           => ldecomp%gdc2i
+    jxy           => ldecomp%gdc2j
     cgridcell     => clm3%g%l%c%gridcell
     wtgcell       => clm3%g%l%c%wtgcell
     qflx_qrgwl    => clm3%g%l%c%cwf%qflx_qrgwl
@@ -617,7 +635,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer  :: i, j                        !loop indices
+    integer  :: i, j, n                     !loop indices
     real(r8) :: dvolrdt                     !change in storage (m3/s)
     real(r8) :: sumdvolr(rtmlat)            !global sum (m3/s)
     real(r8) :: sumrunof(rtmlat)            !global sum (m3/s)
@@ -665,6 +683,7 @@ contains
 #endif
     do j = rtmlati,rtmlatf
        do i = rtmloni,rtmlonf
+          n = (j-1)*rtmlon + i
 
           ! calculate change in cell storage volume change units for
           ! totrunin from kg/m2s==mm/s -> m3/s
@@ -679,7 +698,7 @@ contains
           ! water balance check (in mm/s), convert runinxy from mm/s to m/s (* 1.e-3)
           ! and land model area from km**2 to m**2 (* 1.e6)
 
-          if (rdomain%mask(i,j) == 1) then         ! land points
+          if (rdomain%mask(n) == 1) then         ! land points
              volr(i,j)     = volr(i,j) + dvolrdt*delt_rtm
              fluxout(i,j)  = volr(i,j) * effvel/ddist(i,j)
              fluxout(i,j)  = min(fluxout(i,j), volr(i,j) / delt_rtm)
@@ -694,7 +713,7 @@ contains
              dvolrdt_ocn_r(i,j) = 1000._r8*dvolrdt/rivarea(i,j)
           endif
           sumdvolr(j) = sumdvolr(j) + dvolrdt
-          sumrunof(j) = sumrunof(j) + totrunin_r(i,j)*1000._r8*rdomain%area(i,j)
+          sumrunof(j) = sumrunof(j) + totrunin_r(i,j)*1000._r8*rdomain%area(n)
           dvolrdt_r(i,j) = 1000._r8*dvolrdt/rivarea(i,j)
 
        enddo
@@ -732,7 +751,6 @@ contains
 ! Read/write RTM restart data.
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
     use runoffMod   , only : runoff
     use ncdio
 !
@@ -872,13 +890,12 @@ contains
   subroutine RtmMapClm2Rtm( field_s, field_r, landfrac_scale)
 !
 ! !USES:
-    use spmdMod   , only : masterproc
     use domainMod , only : ldomain
     use areaMod   , only : gridmap_type,areaini,areaave
 !
 ! !ARGUMENTS:
     implicit none
-    real(r8), intent(in) :: field_s(lsmlon,lsmlat)   ! input on clm grid
+    real(r8), intent(in) :: field_s(:,:)             ! input on clm grid
     real(r8), intent(out):: field_r(rtmlon, rtmlat)  ! output on rtm grid
     logical , intent(in), optional :: landfrac_scale ! scale field_s by landfrac
 !
@@ -888,20 +905,21 @@ contains
 !
     real(r8), dimension(4) :: rtmedge = (/ 90._r8, 180._r8, -90._r8, -180._r8 /)  ! RTM grid N,E,S,W edges 
     integer  :: i,j,ir,jr,is,js,n             ! indices
-    real(r8) :: maskone_s(lsmlon,lsmlat)      ! global dummy field
-    real(r8) :: maskone_r(rtmlon,rtmlat)      ! global dummy field
-    real(r8) :: lonw_offset(lsmlon,lsmlat)    ! global longitudinal offset for interpolation from model->rtm grid
-    real(r8) :: lone_offset(lsmlon,lsmlat)    ! global longitudinal offset for interpolation from model->rtm grid
+    real(r8),allocatable :: maskone_s(:)      ! global dummy field
+    real(r8),allocatable :: maskone_r(:)      ! global dummy field
     real(r8) :: offset                        ! offset for interpolation from model->rtm grid
     integer  :: ier                           ! error code
     type (gridmap_type),save :: gridmap_l2r
-    real(r8):: wt                                   ! weight
+    real(r8):: wt                             ! weight
     logical :: init = .true.
 !-----------------------------------------------------------------------
 
     if (init) then 
 
        init = .false.
+
+       allocate(maskone_s(lsmlon*lsmlat))
+       allocate(maskone_r(rtmlon*rtmlat))
 
        ! --------------------------------------------------------------------
        ! Map weights from land model grid to rtm grid (global calculation)
@@ -919,26 +937,20 @@ contains
        ! [maskone_s]=1 means all grid cells on land model grid, regardless of 
        ! whether land or ocean, will contribute to rtm grid.
 
-       do j = 1,lsmlat
-          do i = 1,lsmlon
-             maskone_s(i,j) = 1._r8
-          end do
-       end do
+       maskone_s = 1._r8
 
        ! [maskone_r] = 1 means all the rtm grid is land. Used as dummy
        ! variable so code will not abort with false, non-valid error check
 
-       do j = 1,rtmlat
-          do i = 1,rtmlon
-             maskone_r(i,j) = 1._r8
-          end do
-       end do
+       maskone_r = 1._r8
 
        ! For each rtm grid cell: get lat [jovr_s2r] and lon [iovr_s2r] indices
        ! and weights [wovr_s2r] of overlapping atm grid cells
 
        call areaini (  ldomain, rdomain, gridmap_l2r, &
             fracin=maskone_s, fracout=maskone_r)
+
+       deallocate(maskone_s,maskone_r)
 
        if (masterproc) then
           write(6,*) 'Successfully made land model -> rtm interpolation'

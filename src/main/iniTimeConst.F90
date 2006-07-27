@@ -20,7 +20,7 @@ subroutine iniTimeConst
   use shr_kind_mod, only : r8 => shr_kind_r8
   use nanMod
   use clmtype
-  use decompMod   , only : get_proc_bounds, get_proc_global
+  use decompMod   , only : get_proc_bounds, get_proc_global, ldecomp
   use clm_atmlnd  , only : clm_a2l
   use clm_varpar  , only : nlevsoi, nlevlak, lsmlon, lsmlat, numpft
   use clm_varcon  , only : istice, istdlak, istwet, isturb, &
@@ -127,11 +127,11 @@ subroutine iniTimeConst
   integer  :: numl             ! total number of landunits across all processors
   integer  :: numc             ! total number of columns across all processors
   integer  :: nump             ! total number of pfts across all processors
-  integer  :: soic2d(lsmlon,lsmlat)         ! read in - soil color
-  real(r8) :: sand3d(lsmlon,lsmlat,nlevsoi) ! read in - soil texture: percent sand
-  real(r8) :: clay3d(lsmlon,lsmlat,nlevsoi) ! read in - soil texture: percent clay
-  real(r8) :: ndep(lsmlon,lsmlat)           ! read in -  annual nitrogen deposition rate (gN/m2/yr)
-  integer  :: dimid,varid                   ! netCDF id's
+  integer ,allocatable :: soic2d(:,:)   ! read in - soil color
+  real(r8),allocatable :: sand3d(:,:,:) ! read in - soil texture: percent sand
+  real(r8),allocatable :: clay3d(:,:,:) ! read in - soil texture: percent clay
+  real(r8),allocatable :: ndep(:,:)     ! read in -  annual nitrogen deposition rate (gN/m2/yr)
+  integer  :: dimid,varid      ! netCDF id's
 #if ( defined SCAM )
   integer  :: ret, time_index
   real(r8) :: nlevsoidata(nlevsoi)
@@ -144,11 +144,15 @@ subroutine iniTimeConst
 
     if (masterproc) write (6,*) 'Attempting to initialize time invariant variables'
 
+
+  allocate(soic2d(lsmlon,lsmlat),ndep(lsmlon,lsmlat))
+  allocate(sand3d(lsmlon,lsmlat,nlevsoi),clay3d(lsmlon,lsmlat,nlevsoi))
+
   ! Assign local pointers to derived subtypes components (gridcell-level)
 
   wtfact          => clm3%g%gps%wtfact
-  ixyg            => clm3%g%ixy
-  jxyg            => clm3%g%jxy
+  ixyg            => ldecomp%gdc2i
+  jxyg            => ldecomp%gdc2j
 
   ! Assign local pointers to derived subtypes components (landunit-level)
 
@@ -631,6 +635,8 @@ subroutine iniTimeConst
    call CNiniSpecial()
 #endif
 
-    if (masterproc) write (6,*) 'Successfully initialized time invariant variables'
+   deallocate(soic2d,ndep,sand3d,clay3d)
+
+   if (masterproc) write (6,*) 'Successfully initialized time invariant variables'
 
 end subroutine iniTimeConst

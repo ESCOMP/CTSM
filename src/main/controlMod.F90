@@ -51,8 +51,10 @@ module controlMod
 !
 !    o finidat         = 256 character initial conditions file name
 !    o fsurdat         = 256 character surface data file name
+!    o flndtopo        = 256 character land topography file name
 !    o fatmgrid        = 256 character atmosphere grid data file name
 !    o fatmlndfrc      = 256 character landfrac (on atm grid) file name
+!    o fatmtopo        = 256 character atmosphere topography file name
 !    o fndepdat        = 254 character nitrogen deposition data file name (netCDF)
 !    o fpftcon         = 256 character data file with PFT physiological constants
 !    o frivinp_rtm     = 256 character input data file for rtm
@@ -275,7 +277,8 @@ contains
     ! clm input datasets
 
     namelist /clm_inparm/  &
-         finidat, fsurdat, fatmgrid, fatmlndfrc, fpftcon, frivinp_rtm,  &
+         finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
+         fpftcon, frivinp_rtm,  &
          fpftdyn, fndepdat, fndepdyn, nrevsn, offline_atmdir 
 
     ! clm history, restart, archive options
@@ -331,6 +334,8 @@ contains
     fsurdat     = ' '
     fatmgrid    = ' '
     fatmlndfrc  = ' '
+    fatmtopo    = ' '
+    flndtopo    = ' '
     fndepdat    = ' '
     fndepdyn    = ' '
     finidat     = ' '
@@ -710,6 +715,8 @@ contains
     call mpi_bcast (fsurdat , len(fsurdat) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmgrid, len(fatmgrid), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fatmtopo, len(fatmtopo) ,MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdat, len(fndepdat), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdyn, len(fndepdyn), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
@@ -812,9 +819,14 @@ contains
     write(6,*) 'input data files:'
     write(6,*) '   PFT physiology = ',trim(fpftcon)
     if (fsurdat == ' ') then
-       write(6,*) '   generating only surface grid info for use in offline surface generation'
+       write(6,*) '   fsurdat, surface dataset not set'
     else
        write(6,*) '   surface data   = ',trim(fsurdat)
+    end if
+    if (flndtopo == ' ') then
+       write(6,*) '   flndtopo not set'
+    else
+       write(6,*) '   land topographic data = ',trim(flndtopo)
     end if
     if (fatmgrid == ' ') then
        write(6,*) '   fatmgrid not set, using fsurdat'
@@ -829,6 +841,11 @@ contains
        write(6,*) '   land frac data = ',trim(fatmlndfrc)
     else
        write(6,*) '   land frac data = ',trim(fatmlndfrc)
+    end if
+    if (fatmtopo == ' ') then
+       write(6,*) '   fatmtopo not set'
+    else
+       write(6,*) '   atm topographic data = ',trim(fatmtopo)
     end if
     if (fndepdat == ' ') then
         write(6,*) '   NOT using input data for nitrogen deposition'

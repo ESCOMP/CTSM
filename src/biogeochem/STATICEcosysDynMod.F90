@@ -43,14 +43,10 @@ module STATICEcosysdynMOD
 ! PRIVATE TYPES:
   integer , private :: InterpMonths1         ! saved month index
   real(r8), private :: timwt(2)              ! time weights for month 1 and month 2
-  real(r8), private, allocatable :: mlai1(:) ! lai for interpolation (month 1)
-  real(r8), private, allocatable :: mlai2(:) ! lai for interpolation (month 2)
-  real(r8), private, allocatable :: msai1(:) ! sai for interpolation (month 1)
-  real(r8), private, allocatable :: msai2(:) ! sai for interpolation (month 2)
-  real(r8), private, allocatable :: mhvt1(:) ! top vegetation height for interpolation (month 1)
-  real(r8), private, allocatable :: mhvt2(:) ! top vegetation height for interpolation (month 2)
-  real(r8), private, allocatable :: mhvb1(:) ! bottom vegetation height for interpolation(month 1)
-  real(r8), private, allocatable :: mhvb2(:) ! bottom vegetation height for interpolation(month 2)
+  real(r8), private, allocatable :: mlai2t(:,:) ! lai for interpolation (2 months)
+  real(r8), private, allocatable :: msai2t(:,:) ! sai for interpolation (2 months)
+  real(r8), private, allocatable :: mhvt2t(:,:) ! top vegetation height for interpolation (2 months)
+  real(r8), private, allocatable :: mhvb2t(:,:) ! bottom vegetation height for interpolation(2 months)
 !-----------------------------------------------------------------------
 
 contains
@@ -68,7 +64,7 @@ contains
 !
 ! !USES:
     use nanMod
-    use decompMod, only : get_proc_global
+    use decompMod, only : get_proc_bounds
 !
 ! !ARGUMENTS:
     implicit none
@@ -79,33 +75,26 @@ contains
 !
 ! LOCAL VARIABLES:
     integer :: ier    ! error code
-    integer :: numg   ! total number of gridcells across all processors
-    integer :: numl   ! total number of landunits across all processors
-    integer :: numc   ! total number of columns across all processors
-    integer :: nump   ! total number of pfts across all processors
+    integer :: begp,endp  ! local beg and end p index
 !-----------------------------------------------------------------------
 
     InterpMonths1 = -999  ! saved month index
-    call get_proc_global(numg, numl, numc, nump) 
+    call get_proc_bounds(begp=begp,endp=endp)
 
     ier = 0
-    if(.not.allocated(mlai1))allocate (mlai1(nump), mlai2(nump), &
-              msai1(nump), msai2(nump), &
-              mhvt1(nump), mhvt2(nump), &
-              mhvb1(nump), mhvb2(nump), stat=ier)
+    if(.not.allocated(mlai2t))allocate (mlai2t(begp:endp,2), &
+              msai2t(begp:endp,2), &
+              mhvt2t(begp:endp,2), &
+              mhvb2t(begp:endp,2), stat=ier)
     if (ier /= 0) then
        write (6,*) 'EcosystemDynini allocation error'
        call endrun
     end if
 
-    mlai1(:) = nan
-    mlai2(:) = nan
-    msai1(:) = nan
-    msai2(:) = nan
-    mhvt1(:) = nan
-    mhvt2(:) = nan
-    mhvb1(:) = nan
-    mhvb2(:) = nan
+    mlai2t(:,:) = nan
+    msai2t(:,:) = nan
+    mhvt2t(:,:) = nan
+    mhvb2t(:,:) = nan
 
   end subroutine EcosystemDynini
 
@@ -211,10 +200,10 @@ contains
           ! top height      HTOP <- mhvt1 and mhvt2
           ! bottom height   HBOT <- mhvb1 and mhvb2
 
-          tlai(p) = timwt(1)*mlai1(p) + timwt(2)*mlai2(p)
-          tsai(p) = timwt(1)*msai1(p) + timwt(2)*msai2(p)
-          htop(p) = timwt(1)*mhvt1(p) + timwt(2)*mhvt2(p)
-          hbot(p) = timwt(1)*mhvb1(p) + timwt(2)*mhvb2(p)
+          tlai(p) = timwt(1)*mlai2t(p,1) + timwt(2)*mlai2t(p,2)
+          tsai(p) = timwt(1)*msai2t(p,1) + timwt(2)*msai2t(p,2)
+          htop(p) = timwt(1)*mhvt2t(p,1) + timwt(2)*mhvt2t(p,2)
+          hbot(p) = timwt(1)*mhvb2t(p,1) + timwt(2)*mhvb2t(p,2)
 
 #if (defined CASA)
 ! use PLAI from CASA
@@ -331,7 +320,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use decompMod   , only : get_proc_global
+    use decompMod   , only : get_proc_bounds, ldecomp
     use clm_varpar  , only : lsmlon, lsmlat, maxpatch_pft, maxpatch, npatch_crop, numpft
     use clm_varsur  , only : all_pfts_on_srfdat
     use pftvarcon   , only : noveg
@@ -370,10 +359,7 @@ contains
     integer :: nlon_i                     ! number of input data longitudes
     integer :: nlat_i                     ! number of input data latitudes
     integer :: npft_i                     ! number of input data pft types
-    integer :: numg                       ! total number of gridcells across all processors
-    integer :: numl                       ! total number of landunits across all processors
-    integer :: numc                       ! total number of columns across all processors
-    integer :: nump                       ! total number of pfts across all processors
+    integer :: begp,endp                  ! beg and end local p index
     integer :: ier                        ! error code
     real(r8), allocatable :: mlai(:,:,:)  ! lai read from input files
     real(r8), allocatable :: msai(:,:,:)  ! sai read from input files
@@ -411,61 +397,61 @@ contains
 #endif
     ! Determine necessary indices
 
-    call get_proc_global(numg, numl, numc, nump)
+    call get_proc_bounds(begp=begp,endp=endp)
 
     ! ----------------------------------------------------------------------
     ! Open monthly vegetation file
     ! Read data and convert from [lsmlon] x [lsmlat] grid to patch data
     ! ----------------------------------------------------------------------
 
-    if (masterproc) then
+    do k=1,2   !loop over months and read vegetated data
 
-       write (6,*) 'Attempting to read monthly vegetation data .....'
-       write (6,*) 'nstep = ',get_nstep(),' month = ',kmo,' day = ',kda
+       if (masterproc) then
 
-       call getfil(fveg, locfn, 0)
-       call check_ret(nf_open(locfn, 0, ncid), subname)
+          write (6,*) 'Attempting to read monthly vegetation data .....'
+          write (6,*) 'nstep = ',get_nstep(),' month = ',kmo,' day = ',kda
 
-       call check_ret(nf_inq_dimid (ncid, 'lsmlon', dimid), subname)
-       call check_ret(nf_inq_dimlen(ncid, dimid, nlon_i), subname)
+          call getfil(fveg, locfn, 0)
+          call check_ret(nf_open(locfn, 0, ncid), subname)
+
+          call check_ret(nf_inq_dimid (ncid, 'lsmlon', dimid), subname)
+          call check_ret(nf_inq_dimlen(ncid, dimid, nlon_i), subname)
 #if ( !defined SCAM)
-       if (nlon_i /= lsmlon) then
-          write(6,*)subname,' parameter lsmlon= ',lsmlon,'does not equal input nlat_i= ',nlon_i
-          call endrun()
-       end if
-#endif
-
-       call check_ret(nf_inq_dimid(ncid, 'lsmlat', dimid), subname)
-       call check_ret(nf_inq_dimlen(ncid, dimid, nlat_i), subname)
-
-#if ( !defined SCAM )
-       if (nlat_i /= lsmlat) then
-          write(6,*)subname,' parameter lsmlat= ',lsmlat,'does not equal input nlat_i= ',nlat_i
-          call endrun()
-       end if
-#endif
-
-       call check_ret(nf_inq_dimid(ncid, 'lsmpft', dimid), subname)
-       call check_ret(nf_inq_dimlen(ncid, dimid, npft_i), subname)
-
-#if ( !defined SCAM )
-       if (all_pfts_on_srfdat) then
-          if (npft_i /= numpft+1) then
-             write(6,*)subname,' parameter numpft+1 = ',numpft+1,'does not equal input npft_i= ',npft_i
+          if (nlon_i /= lsmlon) then
+             write(6,*)subname,' parameter lsmlon= ',lsmlon,'does not equal input nlat_i= ',nlon_i
              call endrun()
           end if
-       else
-          if (npft_i /= maxpatch_pft) then
-             write(6,*)subname,' parameter maxpatch_pft = ',maxpatch_pft,'does not equal input npft_i= ',npft_i
-             call endrun()
-          end if
-       end if
 #endif
 
-       call check_ret(nf_inq_dimid(ncid, 'time', dimid), subname)
-       call check_ret(nf_inq_dimlen(ncid, dimid, ntim), subname)
+          call check_ret(nf_inq_dimid(ncid, 'lsmlat', dimid), subname)
+          call check_ret(nf_inq_dimlen(ncid, dimid, nlat_i), subname)
 
-       do k=1,2   !loop over months and read vegetated data
+#if ( !defined SCAM )
+          if (nlat_i /= lsmlat) then
+             write(6,*)subname,' parameter lsmlat= ',lsmlat,'does not equal input nlat_i= ',nlat_i
+             call endrun()
+          end if
+#endif
+
+          call check_ret(nf_inq_dimid(ncid, 'lsmpft', dimid), subname)
+          call check_ret(nf_inq_dimlen(ncid, dimid, npft_i), subname)
+
+#if ( !defined SCAM )
+          if (all_pfts_on_srfdat) then
+             if (npft_i /= numpft+1) then
+                write(6,*)subname,' parameter numpft+1 = ',numpft+1,'does not equal input npft_i= ',npft_i
+                call endrun()
+             end if
+          else
+             if (npft_i /= maxpatch_pft) then
+                write(6,*)subname,' parameter maxpatch_pft = ',maxpatch_pft,'does not equal input npft_i= ',npft_i
+                call endrun()
+             end if
+          end if
+#endif
+
+          call check_ret(nf_inq_dimid(ncid, 'time', dimid), subname)
+          call check_ret(nf_inq_dimlen(ncid, dimid, ntim), subname)
 
           beg4d(1) = 1         ; len4d(1) = nlon_i
           beg4d(2) = 1         ; len4d(2) = nlat_i
@@ -498,106 +484,76 @@ contains
           call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, mhgtb), subname)
 #endif
 
-          ! store data directly in clmtype structure
-          ! only vegetated pfts have nonzero values
+          call check_ret(nf_close(ncid), subname)
 
-          do p = 1, nump
+          write (6,*) 'Successfully read monthly vegetation data for'
+          write (6,*) 'month ', months(k)
+          write (6,*)
 
-             i = clm3%g%ixy(clm3%g%l%c%p%gridcell(p))
-             j = clm3%g%jxy(clm3%g%l%c%p%gridcell(p))
-
-             ! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] pfts
-             ! as determined in subroutine surfrd
-
-             if (all_pfts_on_srfdat) then
-
-                ivt = clm3%g%l%c%p%itype(p)
-                if (ivt /= noveg) then     ! vegetated pft
-                   do l = 0, numpft
-                      if (l == ivt) then
-                         if (k == 1) then
-                            mlai1(p) = mlai(i,j,l)
-                            msai1(p) = msai(i,j,l)
-                            mhvt1(p) = mhgtt(i,j,l)
-                            mhvb1(p) = mhgtb(i,j,l)
-                         else !if (k == 2)
-                            mlai2(p) = mlai(i,j,l)
-                            msai2(p) = msai(i,j,l)
-                            mhvt2(p) = mhgtt(i,j,l)
-                            mhvb2(p) = mhgtb(i,j,l)
-                         end if
-                      end if
-                   end do
-                else                        ! non-vegetated pft
-                   if (k == 1) then
-                      mlai1(p) = 0._r8
-                      msai1(p) = 0._r8
-                      mhvt1(p) = 0._r8
-                      mhvb1(p) = 0._r8
-                   else   !if (k == 2)
-                      mlai2(p) = 0._r8
-                      msai2(p) = 0._r8
-                      mhvt2(p) = 0._r8
-                      mhvb2(p) = 0._r8
-                   end if
-                end if
-
-             else
-
-                m = clm3%g%l%c%p%mxy(p)
-                if (m <= maxpatch_pft) then ! vegetated pft
-                   if (k == 1) then
-                      mlai1(p) = mlai(i,j,m)
-                      msai1(p) = msai(i,j,m)
-                      mhvt1(p) = mhgtt(i,j,m)
-                      mhvb1(p) = mhgtb(i,j,m)
-                   else !if (k == 2)
-                      mlai2(p) = mlai(i,j,m)
-                      msai2(p) = msai(i,j,m)
-                      mhvt2(p) = mhgtt(i,j,m)
-                      mhvb2(p) = mhgtb(i,j,m)
-                   end if
-                else                        ! non-vegetated pft
-                   if (k == 1) then
-                      mlai1(p) = 0._r8
-                      msai1(p) = 0._r8
-                      mhvt1(p) = 0._r8
-                      mhvb1(p) = 0._r8
-                   else !if (k == 2)
-                      mlai2(p) = 0._r8
-                      msai2(p) = 0._r8
-                      mhvt2(p) = 0._r8
-                      mhvb2(p) = 0._r8
-                   end if
-                end if
-
-             end if
-
-          end do   ! end of loop over pfts
-
-       end do   ! end of loop over months
-
-       call check_ret(nf_close(ncid), subname)
-
-       write (6,*) 'Successfully read monthly vegetation data for'
-       write (6,*) 'month ', months(1), ' and month ', months(2)
-       write (6,*)
-
-    end if ! end of if-masterproc if block
+       end if ! end of if-masterproc if block
 
 #if ( defined SPMD )
-    ! pass surface data to all processors
-    call mpi_bcast (mlai1, size(mlai1), MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (mlai2, size(mlai2), MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (msai1, size(msai1), MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (msai2, size(msai2), MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (mhvt1, size(mhvt1), MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (mhvt2, size(mhvt2), MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (mhvb1, size(mhvb1), MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (mhvb2, size(mhvb2), MPI_REAL8, 0, mpicom, ier)
+       ! pass surface data to all processors
+       call mpi_bcast (mlai , size(mlai) , MPI_REAL8, 0, mpicom, ier)
+       call mpi_bcast (msai , size(msai) , MPI_REAL8, 0, mpicom, ier)
+       call mpi_bcast (mhgtt, size(mhgtt), MPI_REAL8, 0, mpicom, ier)
+       call mpi_bcast (mhgtb, size(mhgtb), MPI_REAL8, 0, mpicom, ier)
 #endif
 
+       ! store data directly in clmtype structure
+       ! only vegetated pfts have nonzero values
+
+       do p = begp,endp
+
+          i = ldecomp%gdc2i(clm3%g%l%c%p%gridcell(p))
+          j = ldecomp%gdc2j(clm3%g%l%c%p%gridcell(p))
+
+          ! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] pfts
+          ! as determined in subroutine surfrd
+
+          if (all_pfts_on_srfdat) then
+
+             ivt = clm3%g%l%c%p%itype(p)
+             if (ivt /= noveg) then     ! vegetated pft
+                do l = 0, numpft
+                   if (l == ivt) then
+                      mlai2t(p,k) = mlai(i,j,l)
+                      msai2t(p,k) = msai(i,j,l)
+                      mhvt2t(p,k) = mhgtt(i,j,l)
+                      mhvb2t(p,k) = mhgtb(i,j,l)
+                   end if
+                end do
+             else                        ! non-vegetated pft
+                mlai2t(p,k) = 0._r8
+                msai2t(p,k) = 0._r8
+                mhvt2t(p,k) = 0._r8
+                mhvb2t(p,k) = 0._r8
+             end if
+
+          else
+
+             m = clm3%g%l%c%p%mxy(p)
+             if (m <= maxpatch_pft) then ! vegetated pft
+                mlai2t(p,k) = mlai(i,j,m)
+                msai2t(p,k) = msai(i,j,m)
+                mhvt2t(p,k) = mhgtt(i,j,m)
+                mhvb2t(p,k) = mhgtb(i,j,m)
+             else                        ! non-vegetated pft
+                mlai2t(p,k) = 0._r8
+                msai2t(p,k) = 0._r8
+                mhvt2t(p,k) = 0._r8
+                mhvb2t(p,k) = 0._r8
+             end if
+          end if
+
+       end do   ! end of loop over pfts
+
+    end do   ! end of loop over months
+
     deallocate(mlai, msai, mhgtt, mhgtb)
+#if ( defined SCAM )
+    deallocate(coldata)
+#endif
 
   end subroutine readMonthlyVegetation
 

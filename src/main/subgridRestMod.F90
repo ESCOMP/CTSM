@@ -10,13 +10,12 @@ contains
 ! !INTERFACE:
   subroutine subgridRest( ncid, flag )
 
-    use shr_kind_mod    , only : r8 => shr_kind_r8
+    use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use ncdio           
-    use decompMod       , only : get_proc_bounds, get_proc_global, map_dc2sn
-    use initSubgridMod  , only : get_sn_land1d, get_sn_cols1d, get_sn_pfts1d
-    use time_manager    , only : get_curr_date
-    use spmdMod         , only : masterproc
+    use decompMod    , only : get_proc_bounds, ldecomp
+    use time_manager , only : get_curr_date
+    use spmdMod      , only : masterproc
 !
 ! !ARGUMENTS:
     implicit none
@@ -35,28 +34,19 @@ contains
     integer :: mcsec               ! seconds of current date
     integer :: mcdate              ! current date
     logical :: readvar             ! determine if variable is on initial file
-    integer :: begp, endp          ! per-proc beginning and ending pft indices
-    integer :: begc, endc          ! per-proc beginning and ending column indices
-    integer :: begl, endl          ! per-proc beginning and ending landunit indices
-    integer :: begg, endg          ! per-proc gridcell ending gridcell indices
-    integer :: numg                ! total number of gridcells across all processors
-    integer :: numl                ! total number of landunits across all processors
-    integer :: numc                ! total number of columns across all processors
-    integer :: nump                ! total number of pfts across all processors
+    integer :: begp, endp          ! per-proc beg/end pft indices
+    integer :: begc, endc          ! per-proc beg/end column indices
+    integer :: begl, endl          ! per-proc beg/end landunit indices
+    integer :: begg, endg          ! per-proc beg/end gridcell indices
     integer :: ier                 ! error status
-    integer, pointer :: iltemp(:)  ! temporary
-    integer, pointer :: ictemp(:)  ! temporary
-    integer, pointer :: iptemp(:)  ! temporary
-    integer, pointer :: ictype(:)  ! temporary
-    integer, pointer :: iptype(:)  ! temporary
-    real(r8),pointer :: rgarr(:)    ! temporary
-    real(r8),pointer :: rlarr(:)    ! temporary
-    real(r8),pointer :: rcarr(:)    ! temporary
-    real(r8),pointer :: rparr(:)    ! temporary
-    integer ,pointer :: igarr(:)    ! temporary
-    integer ,pointer :: ilarr(:)    ! temporary
-    integer ,pointer :: icarr(:)    ! temporary
-    integer ,pointer :: iparr(:)    ! temporary
+    real(r8),pointer :: rgarr(:)   ! temporary
+    real(r8),pointer :: rlarr(:)   ! temporary
+    real(r8),pointer :: rcarr(:)   ! temporary
+    real(r8),pointer :: rparr(:)   ! temporary
+    integer ,pointer :: igarr(:)   ! temporary
+    integer ,pointer :: ilarr(:)   ! temporary
+    integer ,pointer :: icarr(:)   ! temporary
+    integer ,pointer :: iparr(:)   ! temporary
     type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
     type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
@@ -73,19 +63,14 @@ contains
 
     ! Get relevant sizes
 
-    call get_proc_global(numg, numl, numc, nump)
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
     ! Allocate dynamic memory
 
     if (flag == 'write') then
-       allocate(iltemp(numl), ictemp(numc), iptemp(nump), ictype(numc), iptype(nump), stat=ier)
-       if (ier /= 0) then
-          write(6,*)'allocation error from inicfile_fields'; call endrun()
-       end if
-       allocate(rgarr(numg),rlarr(numl),rcarr(numc),rparr(nump),stat=ier)
+       allocate(rgarr(begg:endg),rlarr(begl:endl),rcarr(begc:endc),rparr(begp:endp),stat=ier)
        if (ier /= 0) call endrun('allocation error from inicfile_fields rarrs')
-       allocate(igarr(numg),ilarr(numl),icarr(numc),iparr(nump),stat=ier)
+       allocate(igarr(begg:endg),ilarr(begl:endl),icarr(begc:endc),iparr(begp:endp),stat=ier)
        if (ier /= 0) call endrun('allocation error from inicfile_fields iarrs')
     end if
 
@@ -117,10 +102,16 @@ contains
        call ncd_defvar(ncid=ncid, varname='grid1d_jxy', xtype=nf_int,  &
             dim1name='gridcell', long_name='2d latitude index of corresponding gridcell')
     else if (flag == 'write') then
+       do g=begg,endg
+          igarr(g) = ldecomp%gdc2i(g)
+       enddo
+       call ncd_iolocal(varname='grid1d_ixy', data=igarr      , dim1name='gridcell', ncid=ncid, flag=flag)
+       do g=begg,endg
+          igarr(g) = ldecomp%gdc2j(g)
+       enddo
+       call ncd_iolocal(varname='grid1d_jxy', data=igarr      , dim1name='gridcell', ncid=ncid, flag=flag)
        call ncd_iolocal(varname='grid1d_lon', data=gptr%londeg, dim1name='gridcell', ncid=ncid, flag=flag)
        call ncd_iolocal(varname='grid1d_lat', data=gptr%latdeg, dim1name='gridcell', ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='grid1d_ixy', data=gptr%ixy   , dim1name='gridcell', ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='grid1d_jxy', data=gptr%jxy   , dim1name='gridcell', ncid=ncid, flag=flag)
     end if
 
     ! Write landunit info
@@ -141,28 +132,25 @@ contains
        call ncd_defvar(ncid=ncid, varname='land1d_ityplun', xtype=nf_int,  &
             dim1name='landunit', long_name='landunit type (vegetated,urban,lake,wetland or glacier)')
     else if (flag == 'write') then
-       do l=1,numl
-         rlarr(l) = gptr%londeg(lptr%gridcell(l))
+       do l=begl,endl
+          rlarr(l) = gptr%londeg(lptr%gridcell(l))
        enddo
-       call ncd_iolocal(varname='land1d_lon'    , data=rlarr, dim1name='landunit', ncid=ncid, flag=flag)
-       do l=1,numl
-         rlarr(l) = gptr%latdeg(lptr%gridcell(l))
+       call ncd_iolocal(varname='land1d_lon'    , data=rlarr        , dim1name='landunit', ncid=ncid, flag=flag)
+       do l=begl,endl
+          rlarr(l) = gptr%latdeg(lptr%gridcell(l))
        enddo
-       call ncd_iolocal(varname='land1d_lat'    , data=rlarr, dim1name='landunit', ncid=ncid, flag=flag)
-       do l=1,numl
-         ilarr(l) = gptr%ixy(lptr%gridcell(l))
+       call ncd_iolocal(varname='land1d_lat'    , data=rlarr        , dim1name='landunit', ncid=ncid, flag=flag)
+       do l=begl,endl
+          ilarr(l) = ldecomp%gdc2i(lptr%gridcell(l))
        enddo
-       call ncd_iolocal(varname='land1d_ixy'    , data=ilarr, dim1name='landunit', ncid=ncid, flag=flag)
-       do l=1,numl
-         ilarr(l) = gptr%jxy(lptr%gridcell(l))
+       call ncd_iolocal(varname='land1d_ixy'    , data=ilarr        , dim1name='landunit', ncid=ncid, flag=flag)
+       do l=begl,endl
+          ilarr(l) = ldecomp%gdc2j(lptr%gridcell(l))
        enddo
-       call ncd_iolocal(varname='land1d_jxy'    , data=ilarr, dim1name='landunit', ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='land1d_wtxy'   , data=lptr%wtgcell, dim1name='landunit', ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='land1d_ityplun', data=lptr%itype  , dim1name='landunit', ncid=ncid, flag=flag)
-       if (masterproc) then
-          call get_sn_land1d(iltemp, type1d='gridcell',numl=numl)
-          call ncd_ioglobal(varname='land1d_gi', data=iltemp, ncid=ncid, flag=flag)
-       end if
+       call ncd_iolocal(varname='land1d_jxy'    , data=ilarr        , dim1name='landunit', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='land1d_wtxy'   , data=lptr%wtgcell , dim1name='landunit', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='land1d_ityplun', data=lptr%itype   , dim1name='landunit', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='land1d_gi'     , data=lptr%gridcell, dim1name='landunit', ncid=ncid, flag=flag)
     end if
 
     ! Write column info
@@ -187,36 +175,30 @@ contains
        call ncd_defvar(ncid=ncid, varname='cols1d_ityplun', xtype=nf_int,   &
             dim1name='column', long_name='column landunit type (vegetated,urban,lake,wetland or glacier)')
     else if (flag == 'write') then
-       do c=1,numc
-         rcarr(c) = gptr%londeg(cptr%gridcell(c))
+       do c=begc,endc
+          rcarr(c) = gptr%londeg(cptr%gridcell(c))
        enddo
-       call ncd_iolocal(varname='cols1d_lon'  , data=rcarr, dim1name='column', ncid=ncid, flag=flag)
-       do c=1,numc
-         rcarr(c) = gptr%latdeg(cptr%gridcell(c))
+       call ncd_iolocal(varname='cols1d_lon'  , data=rcarr        , dim1name='column', ncid=ncid, flag=flag)
+       do c=begc,endc
+          rcarr(c) = gptr%latdeg(cptr%gridcell(c))
        enddo
-       call ncd_iolocal(varname='cols1d_lat'  , data=rcarr, dim1name='column', ncid=ncid, flag=flag)
-       do c=1,numc
-         icarr(c) = gptr%ixy(cptr%gridcell(c))
+       call ncd_iolocal(varname='cols1d_lat'  , data=rcarr        , dim1name='column', ncid=ncid, flag=flag)
+       do c=begc,endc
+          icarr(c) = ldecomp%gdc2i(cptr%gridcell(c))
        enddo
-       call ncd_iolocal(varname='cols1d_ixy'  , data=icarr, dim1name='column', ncid=ncid, flag=flag)
-       do c=1,numc
-         icarr(c) = gptr%jxy(cptr%gridcell(c))
+       call ncd_iolocal(varname='cols1d_ixy'  , data=icarr        , dim1name='column', ncid=ncid, flag=flag)
+       do c=begc,endc
+          icarr(c) = ldecomp%gdc2j(cptr%gridcell(c))
        enddo
-       call ncd_iolocal(varname='cols1d_jxy'  , data=icarr, dim1name='column', ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='cols1d_wtxy' , data=cptr%wtgcell, dim1name='column', ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='cols1d_wtlnd', data=cptr%wtlunit, dim1name='column', ncid=ncid, flag=flag)
-       if (masterproc) then
-          call get_sn_cols1d(ictemp, type1d='gridcell',numc=numc)
-          call ncd_ioglobal(varname='cols1d_gi', data=ictemp, ncid=ncid, flag=flag)
-          call get_sn_cols1d(ictemp, type1d='landunit',numc=numc)
-          call ncd_ioglobal(varname='cols1d_li', data=ictemp, ncid=ncid, flag=flag)
-          do c = 1,numc
-             l = cptr%landunit(c)
-             ictype(c) = lptr%itype(l)
-          end do
-          call map_dc2sn(ictype, ictemp, type1d=namec)
-          call ncd_ioglobal(varname='cols1d_ityplun', data=ictemp, ncid=ncid, flag=flag)
-       end if
+       call ncd_iolocal(varname='cols1d_jxy'  , data=icarr        , dim1name='column', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='cols1d_wtxy' , data=cptr%wtgcell , dim1name='column', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='cols1d_wtlnd', data=cptr%wtlunit , dim1name='column', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='cols1d_gi'   , data=cptr%gridcell, dim1name='column', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='cols1d_li'   , data=cptr%landunit, dim1name='column', ncid=ncid, flag=flag)
+       do c=begc,endc
+          icarr(c) = lptr%itype(cptr%landunit(c))
+       enddo
+       call ncd_iolocal(varname='cols1d_ityplun', data=icarr      , dim1name='column', ncid=ncid, flag=flag)
     end if
 
     ! Write pft info
@@ -247,44 +229,36 @@ contains
        call ncd_defvar(ncid=ncid, varname='pfts1d_ityplun', xtype=nf_int,  &
             dim1name='pft', long_name='pft landunit type (vegetated,urban,lake,wetland or glacier)')
     else if (flag == 'write') then
-       do p=1,nump
-         rparr(p) = gptr%londeg(pptr%gridcell(p))
+       do p=begp,endp
+          rparr(p) = gptr%londeg(pptr%gridcell(p))
        enddo
-       call ncd_iolocal(varname='pfts1d_lon'    , data=rparr, dim1name='pft', ncid=ncid, flag=flag)
-       do p=1,nump
-         rparr(p) = gptr%latdeg(pptr%gridcell(p))
+       call ncd_iolocal(varname='pfts1d_lon'    , data=rparr        , dim1name='pft', ncid=ncid, flag=flag)
+       do p=begp,endp
+          rparr(p) = gptr%latdeg(pptr%gridcell(p))
        enddo
-       call ncd_iolocal(varname='pfts1d_lat'    , data=rparr, dim1name='pft', ncid=ncid, flag=flag)
-       do p=1,nump
-         iparr(p) = gptr%ixy(pptr%gridcell(p))
+       call ncd_iolocal(varname='pfts1d_lat'    , data=rparr        , dim1name='pft', ncid=ncid, flag=flag)
+       do p=begp,endp
+          iparr(p) = ldecomp%gdc2i(pptr%gridcell(p))
        enddo
-       call ncd_iolocal(varname='pfts1d_ixy'    , data=iparr, dim1name='pft', ncid=ncid, flag=flag)
-       do p=1,nump
-         iparr(p) = gptr%jxy(pptr%gridcell(p))
+       call ncd_iolocal(varname='pfts1d_ixy'    , data=iparr        , dim1name='pft', ncid=ncid, flag=flag)
+       do p=begp,endp
+          iparr(p) = ldecomp%gdc2j(pptr%gridcell(p))
        enddo
-       call ncd_iolocal(varname='pfts1d_jxy'    , data=iparr, dim1name='pft', ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='pfts1d_wtxy'   , data=pptr%wtgcell, dim1name='pft', ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='pfts1d_wtlnd'  , data=pptr%wtlunit, dim1name='pft', ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='pfts1d_wtcol'  , data=pptr%wtcol  , dim1name='pft', ncid=ncid, flag=flag)
-       call ncd_iolocal(varname='pfts1d_itypveg',data=pptr%itype   , dim1name='pft', ncid=ncid, flag=flag)
-       if (masterproc) then
-          call get_sn_pfts1d(iptemp, type1d='gridcell', nump=nump)
-          call ncd_ioglobal(varname='pfts1d_gi', data=iptemp, ncid=ncid, flag=flag)
-          call get_sn_pfts1d(iptemp, type1d='landunit', nump=nump)
-          call ncd_ioglobal(varname='pfts1d_li', data=iptemp, ncid=ncid, flag=flag)
-          call get_sn_pfts1d(iptemp, type1d='column', nump=nump)
-          call ncd_ioglobal(varname='pfts1d_ci', data=iptemp, ncid=ncid, flag=flag)
-          do p = 1,nump
-             l = pptr%landunit(p)
-             iptype(p) = lptr%itype(l)
-          end do
-          call map_dc2sn(iptype, iptemp, type1d=namep)
-          call ncd_ioglobal(varname='pfts1d_ityplun', data=iptemp, ncid=ncid, flag=flag)
-       end if
+       call ncd_iolocal(varname='pfts1d_jxy'    , data=iparr        , dim1name='pft', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='pfts1d_wtxy'   , data=pptr%wtgcell , dim1name='pft', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='pfts1d_wtlnd'  , data=pptr%wtlunit , dim1name='pft', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='pfts1d_wtcol'  , data=pptr%wtcol   , dim1name='pft', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='pfts1d_itypveg', data=pptr%itype   , dim1name='pft', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='pfts1d_gi'     , data=pptr%gridcell, dim1name='pft', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='pfts1d_li'     , data=pptr%landunit, dim1name='pft', ncid=ncid, flag=flag)
+       call ncd_iolocal(varname='pfts1d_ci'     , data=pptr%column  , dim1name='pft', ncid=ncid, flag=flag)
+       do p=begp,endp
+          iparr(p) = lptr%itype(pptr%landunit(p))
+       enddo
+       call ncd_iolocal(varname='pfts1d_ityplun', data=iparr      , dim1name='pft', ncid=ncid, flag=flag)
     end if
 
     if (flag == 'write') then
-       deallocate(iltemp, ictemp, iptemp, ictype, iptype)
        deallocate(rgarr,rlarr,rcarr,rparr)
        deallocate(igarr,ilarr,icarr,iparr)
     end if

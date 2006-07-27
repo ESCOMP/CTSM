@@ -31,7 +31,6 @@ module DGVMMod
   public lpjreset           ! Resets variables related to LPJ
   public resetTimeConstDGVM ! Initialize/Reset time invariant dgvm variables
   public resetWeightsDGVM   ! Reset DGVM subgrid weights and areas
-  public gatherWeightsDGVM  ! Gather DGVM subgrid weights to masterproc
   public histDGVM           ! Output DGVM history file
 !
 ! !REVISION HISTORY:
@@ -305,7 +304,7 @@ contains
 ! !USES:
     use clmtype
     use ncdio
-    use decompMod    , only : get_proc_bounds, get_proc_global
+    use decompMod    , only : get_proc_bounds
     use clm_varpar   , only : lsmlon, lsmlat, maxpatch_pft
     use domainMod    , only : ldomain
     use clm_varctl   , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
@@ -358,11 +357,8 @@ contains
     integer :: begc, endc              ! per-proc beginning and ending column indices
     integer :: begl, endl              ! per-proc beginning and ending landunit indices
     integer :: begg, endg              ! per-proc gridcell ending gridcell indices
-    integer :: numg                    ! total number of gridcells across all processors
-    integer :: numl                    ! total number of landunits across all processors
-    integer :: numc                    ! total number of columns across all processors
-    integer :: nump                    ! total number of pfts across all processors
     integer :: ier                     ! error status
+    integer :: n                       ! index
     integer :: mdcur, mscur, mcdate    ! outputs from get_curr_time
     integer :: yr,mon,day,mcsec        ! outputs from get_curr_date
     integer :: hours,minutes,secs      ! hours,minutes,seconds of hh:mm:ss
@@ -370,8 +366,8 @@ contains
     integer :: nbsec                   ! seconds components of a date
     integer :: dimid                   ! dimension, variable id
     real(r8):: time                    ! current time
-    real(r8):: lonvar(lsmlon)          ! only used for full grid
-    real(r8):: latvar(lsmlat)          ! only used for full grid
+    real(r8),pointer :: lonvar(:)      ! only used for full grid
+    real(r8),pointer :: latvar(:)      ! only used for full grid
     character(len=256) :: str          ! temporary string
     character(len=  8) :: curdate      ! current date
     character(len=  8) :: curtime      ! current time
@@ -411,7 +407,6 @@ contains
     ! Determine subgrid bounds for this processor and allocate dynamic memory
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-    call get_proc_global(numg, numl, numc, nump)
 
     allocate(rbuf2dg(begg:endg,maxpatch_pft), ibuf2dg(begg:endg,maxpatch_pft), stat=ier)
     if (ier /= 0) call endrun('histDGVM: allocation error for rbuf2dg, ibuf2dg')
@@ -642,13 +637,17 @@ contains
 
     ! Write surface grid (coordinate variables, latitude, longitude, surface type).
 
-    lonvar(:) = ldomain%lonc(1:lsmlon,1)
-    latvar(:) = ldomain%latc(1,1:lsmlat)
+    allocate(lonvar(lsmlon),latvar(lsmlat))
+    lonvar(:) = ldomain%lonc(1:lsmlon)
+    do n = 1,lsmlat
+       latvar(n) = ldomain%latc((n-1)*ldomain%ni+1)
+    enddo
     call ncd_ioglobal(varname='lon'     , data=lonvar      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='lat'     , data=latvar      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='longxy'  , data=ldomain%lonc, ncid=ncid, flag='write')
     call ncd_ioglobal(varname='latixy'  , data=ldomain%latc, ncid=ncid, flag='write')
     call ncd_ioglobal(varname='landmask', data=ldomain%mask, ncid=ncid, flag='write')
+    deallocate(lonvar,latvar)
 
     ! Write current date, current seconds, current day, current nstep
 
@@ -875,6 +874,7 @@ contains
 !
 ! !USES:
     use clmtype
+    use decompMod, only : ldecomp
 !
 ! !ARGUMENTS:
     implicit none
@@ -920,8 +920,8 @@ contains
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
 
-    ixy        => clm3%g%ixy
-    jxy        => clm3%g%jxy
+    ixy        => ldecomp%gdc2i
+    jxy        => ldecomp%gdc2j
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 
@@ -985,105 +985,6 @@ contains
     end if
 
   end subroutine resetWeightsDGVM
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: gatherWeightsDGVM
-!
-! !INTERFACE:
-  subroutine gatherWeightsDGVM()
-!
-! !DESCRIPTION:
-! Gather DGVM weights to master process.  Should be called after all
-! invocations of resetWeightsDGVM() are complete to update weights on
-! master process if SPMD is defined.
-!
-! !USES:
-    use clmtype
-    use decompMod      , only : get_proc_bounds, get_proc_global
-#ifdef SPMD
-    use spmdGathScatMod, only : gather_data_to_master
-#endif
-    use spmdMod        , only : masterproc
-!
-! !ARGUMENTS:
-    implicit none
-!
-! !CALLED FROM:
-!  subroutines driver and initialize
-!
-! !REVISION HISTORY:
-! Author: Gordon Bonan
-!
-! !LOCAL VARIABLES:
-!
-! local pointers to implicit inout arguments
-!
-   real(r8), pointer :: pwtcol(:)         ! weight (relative to column) for this pft (0-1)
-   real(r8), pointer :: pwtlunit(:)       ! weight (relative to landunit) for this pft (0-1)
-   real(r8), pointer :: pwtgcell(:)       ! weight (relative to gridcell) for this pft (0-1)
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-    integer :: begp, endp   ! per-proc beginning and ending pft indices
-    integer :: begc, endc   ! per-proc beginning and ending column indices
-    integer :: begl, endl   ! per-proc beginning and ending landunit indices
-    integer :: begg, endg   ! per-proc gridcell ending gridcell indices
-    integer :: numg         ! total number of gridcells across all processors
-    integer :: numl         ! total number of landunits across all processors
-    integer :: numc         ! total number of columns across all processors
-    integer :: nump         ! total number of pfts across all processors
-    integer :: ier          ! error status
-    real(r8), pointer :: rbufp(:)   ! temporary
-    real(r8), pointer :: rglobp(:)  ! temporary
-!-----------------------------------------------------------------------
-
-#if (defined SPMD)
-    ! Assign local pointers to derived subtypes components (pft-level)
-
-    pwtcol     => clm3%g%l%c%p%wtcol
-    pwtlunit   => clm3%g%l%c%p%wtlunit
-    pwtgcell   => clm3%g%l%c%p%wtgcell
-
-    ! Determine necessary subgrid bounds
-
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-    call get_proc_global(numg, numl, numc, nump)
-
-    ! On master processor need to determine pft weights for all processor
-    ! pfts. This is needed for calls to map from vector to xy grid
-    ! and for one-dimensional history output.
-
-    if (masterproc) then
-       allocate(rglobp(nump), stat=ier)
-       if (ier /= 0) then
-          call endrun('gatherWeightsDGVM: allocation error for rglobp')
-       end if
-    end if
-    allocate(rbufp(begp:endp), stat=ier)
-    if (ier /= 0) then
-       call endrun('gatherWeightsDGVM: allocation error for rbufp')
-    end if
-
-    rbufp(begp:endp) = pwtgcell(begp:endp)
-    call gather_data_to_master (rbufp, rglobp, clmlevel=namep)
-    if (masterproc) pwtgcell(1:nump) = rglobp(1:nump)
-
-    rbufp(begp:endp) = pwtcol(begp:endp)
-    call gather_data_to_master (rbufp, rglobp, clmlevel=namep)
-    if (masterproc) pwtcol(1:nump) = rglobp(1:nump)
-
-    rbufp(begp:endp) = pwtlunit(begp:endp)
-    call gather_data_to_master (rbufp, rglobp, clmlevel=namep)
-    if (masterproc) pwtlunit(1:nump) = rglobp(1:nump)
-
-    deallocate(rbufp)
-    if (masterproc) deallocate(rglobp)
-#endif
-
-  end subroutine gatherWeightsDGVM
 
 !-----------------------------------------------------------------------
 !BOP

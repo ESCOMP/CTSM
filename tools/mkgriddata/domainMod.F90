@@ -28,6 +28,7 @@ module domainMod
      integer ,pointer :: numlon(:)     ! numlon
      integer ,pointer :: mask(:,:)     ! land mask: 1 = land. 0 = ocean
      real(r8),pointer :: frac(:,:)     ! fractional land
+     real(r8),pointer :: topo(:,:)     ! topography,elevation (m)
      real(r8),pointer :: latixy(:,:)   ! latitude of grid cell (deg)
      real(r8),pointer :: longxy(:,:)   ! longitude of grid cell (deg)
      real(r8),pointer :: area(:,:)     ! grid cell area (km**2)
@@ -90,7 +91,8 @@ contains
     endif
 
     allocate(domain%mask(ni,nj),domain%frac(ni,nj),domain%latixy(ni,nj), &
-             domain%longxy(ni,nj),domain%area(ni,nj),stat=ier)
+             domain%longxy(ni,nj),domain%area(ni,nj),domain%topo(ni,nj), &
+             stat=ier)
     if (ier /= 0) then
        write(6,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
        stop
@@ -117,6 +119,7 @@ contains
     domain%edgew    = nan
     domain%mask     = bigint
     domain%frac     = nan
+    domain%topo     = 0._r8
     domain%latixy   = nan
     domain%longxy   = nan
     domain%area     = nan
@@ -157,7 +160,7 @@ end subroutine domain_init
     if (domain%domain_set == domain_set) then
        write(6,*) 'domain_clean: cleaning ',domain%ni,domain%nj
        deallocate(domain%mask,domain%frac,domain%latixy, &
-              domain%longxy,domain%area,stat=ier)
+              domain%longxy,domain%area,domain%topo,stat=ier)
        if (ier /= 0) then
           write(6,*) 'domain_clean ERROR: deallocate mask, frac, lat, lon, area '
           stop
@@ -188,7 +191,7 @@ end subroutine domain_clean
 ! !IROUTINE: domain_setptrs
 !
 ! !INTERFACE:
-  subroutine domain_setptrs(domain,ni,nj,mask,frac,latixy,longxy,area, &
+  subroutine domain_setptrs(domain,ni,nj,mask,frac,topo,latixy,longxy,area, &
      lats,latn,lonw,lone)
 !
 ! !DESCRIPTION:
@@ -202,6 +205,7 @@ end subroutine domain_clean
     integer ,optional :: ni,nj      ! grid size, 2d
     integer ,optional,pointer  :: mask(:,:)
     real(r8),optional,pointer  :: frac(:,:)
+    real(r8),optional,pointer  :: topo(:,:)
     real(r8),optional,pointer  :: latixy(:,:)
     real(r8),optional,pointer  :: longxy(:,:)
     real(r8),optional,pointer  :: area(:,:)
@@ -229,6 +233,9 @@ end subroutine domain_clean
     endif
     if (present(frac)) then
       frac => domain%frac
+    endif
+    if (present(topo)) then
+      topo => domain%topo
     endif
     if (present(latixy)) then
       latixy => domain%latixy
@@ -287,6 +294,7 @@ end subroutine domain_setptrs
     write(6,*) 'domain_check latixy = ',minval(domain%latixy),maxval(domain%latixy)
     write(6,*) 'domain_check mask   = ',minval(domain%mask),maxval(domain%mask)
     write(6,*) 'domain_check frac   = ',minval(domain%frac),maxval(domain%frac)
+    write(6,*) 'domain_check topo   = ',minval(domain%topo),maxval(domain%topo)
     write(6,*) 'domain_check area   = ',minval(domain%area),maxval(domain%area)
     write(6,*) 'domain_check latn   = ',minval(domain%latn),maxval(domain%latn)
     write(6,*) 'domain_check lone   = ',minval(domain%lone),maxval(domain%lone)

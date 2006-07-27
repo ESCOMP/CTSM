@@ -170,7 +170,7 @@ contains
 ! !USES:
     use nanMod
     use decompMod   , only : adecomp, get_proc_bounds_atm
-    use clm_atmlnd  , only : clm_a2l, atm_a2l, gridmap_a2l, clm_mapa2l
+    use clm_atmlnd  , only : clm_mapa2l, atm_a2l, clm_a2l
     use clm_varctl  , only : offline_atmdir, pertlim
     use clm_varcon  , only : rair, cpair, co2_ppmv_const, o2_molar_const, tcrit, c13ratio
     use time_manager, only : get_step_size, get_curr_calday, get_curr_date
@@ -394,7 +394,7 @@ contains
        endif
 #endif
 
-       call clm_mapa2l(atm_a2l,clm_a2l,gridmap_a2l)
+       call clm_mapa2l(atm_a2l, clm_a2l)
 
     end if
 
@@ -1067,8 +1067,8 @@ contains
     integer :: i,j                       !indices
     integer :: ier                       !error status
     integer :: atmlon,atmlat             !size of adomain
-    real(r8), allocatable :: mask_d(:,:) !dummy field: atm grid mask
-    real(r8), allocatable :: mask_a(:,:) !dummy field: land model grid mask
+    real(r8), allocatable :: mask_d(:)   !dummy field: atm grid mask
+    real(r8), allocatable :: mask_a(:)   !dummy field: land model grid mask
 !------------------------------------------------------------------------
 
     atmlon = adomain%ni
@@ -1076,7 +1076,7 @@ contains
 
     ! Dynamically allocate memory
 
-    allocate (mask_d(datlon,datlat),mask_a(atmlon,atmlat), stat=ier)
+    allocate (mask_d(datlon*datlat),mask_a(atmlon*atmlat), stat=ier)
     if (ier /= 0) then
        write (6,*) 'interpa2si(): allocation error'
        call endrun
@@ -1094,20 +1094,12 @@ contains
     ! [mask_d] = 1 means all grid cells on atm grid, regardless of whether
     ! land or ocean, will contribute to surface grid.
 
-    do j = 1, datlat
-       do i = 1, datlon
-          mask_d(i,j) = 1._r8
-       end do
-    end do
+    mask_d = 1._r8
 
     ! [mask_a] = 1 means all the surface grid is land. Used as dummy
     ! variable so code will not abort with false, non-valid error check
 
-    do j = 1, atmlat
-       do i = 1, atmlon
-          mask_a(i,j) = 1._r8
-       end do
-    end do
+    mask_a = 1._r8
 
     ! For each surface grid cell: get lat [jovr_a2s] and lon [iovr_a2s] indices
     ! and weights [wovr_a2s] of overlapping atm grid cells

@@ -12,10 +12,12 @@ module clm_atmlnd
 ! Handle atm2lnd, lnd2atm mapping/downscaling/upscaling/data
 !
 ! !USES:
-  use clm_varpar  , only : numrad, ndst   !ndst = number of dust bins. only used # ifdef DUST
-  use areaMod     , only : gridmap_type
+  use clm_varpar  , only : numrad, ndst   !ndst = number of dust bins.
+                                          !only used # ifdef DUST
+  use clm_varcon  , only : rair, grav, cpair
   use shr_kind_mod, only : r8 => shr_kind_r8
   use nanMod      , only : nan
+  use spmdMod     , only : masterproc
   use abortutils,   only : endrun
 !
 ! !PUBLIC TYPES:
@@ -90,9 +92,6 @@ end type lnd2atm_type
   type(atm2lnd_type),public,target :: clm_a2l      ! a2l fields on clm grid
   type(lnd2atm_type),public,target :: clm_l2a      ! l2a fields on clm grid
 
-  type(gridmap_type),public        :: gridmap_a2l  ! mapping from a2l
-  type(gridmap_type),public        :: gridmap_l2a  ! mapping from l2a
-
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: init_atm2lnd_type
   public :: init_lnd2atm_type
@@ -166,7 +165,7 @@ contains
   allocate(a2l%forc_pc13o2(beg:end))
   allocate(a2l%forc_po2(beg:end))
 
-! ival = nan      ! causes core dump in gridmap_maparray, tcx fix
+! ival = nan      ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
 
 #if (defined OFFLINE)
@@ -249,7 +248,7 @@ end subroutine init_atm2lnd_type
   allocate(l2a%flxdst(beg:end,1:ndst))
 #endif
 
-! ival = nan      ! causes core dump in gridmap_maparray, tcx fix
+! ival = nan      ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
 
   l2a%t_rad(beg:end) = ival
@@ -271,7 +270,7 @@ end subroutine init_atm2lnd_type
   l2a%fv(beg:end) = ival
 #endif
 #if (defined DUST )
-  l2a%flxdst(beg:end,:) = ival
+  l2a%flxdst(beg:end,1:ndst) = ival
 #endif
 end subroutine init_lnd2atm_type
 
@@ -281,20 +280,22 @@ end subroutine init_lnd2atm_type
 ! !IROUTINE: clm_mapa2l
 !
 ! !INTERFACE:
-  subroutine clm_mapa2l(a2l_src,a2l_dst,gridmap)
+  subroutine clm_mapa2l(a2l_src, a2l_dst)
 !
 ! !DESCRIPTION:
 ! Maps atm2lnd fields from external grid to clm grid
 !
 ! !USES:
   use decompMod, only : get_proc_bounds, get_proc_bounds_atm
-  use areaMod  , only : gridmap_maparray
+  use areaMod  , only : map_maparray, map1dl_a2l, map1dl_l2a, map_setptrs
+  use decompMod, only : ldecomp,adecomp
+  use domainMod, only : ldomain,adomain
+  use QSatMod,   only : QSat
 !
 ! !ARGUMENTS:
   implicit none
   type(atm2lnd_type), intent(in)  :: a2l_src
   type(atm2lnd_type), intent(out) :: a2l_dst
-  type(gridmap_type), intent(in)  :: gridmap
 !
 ! !REVISION HISTORY:
 ! 2005.11.15  T Craig  Creation.
@@ -304,14 +305,33 @@ end subroutine init_lnd2atm_type
 !
 ! !LOCAL VARIABLES:
   integer :: n                     ! loop counter
+  integer :: ix                    ! field index
   integer :: nflds                 ! number of fields to be mapped
   integer :: nradflds              ! size of 2nd dim in arrays
   integer :: begg_s,endg_s         ! beg,end of input grid
   integer :: begg_d,endg_d         ! beg,end of output grid
-  logical :: a2ltrue               ! a2l or l2a map type flag
   real(r8),pointer :: asrc(:,:)    ! temporary source data
   real(r8),pointer :: adst(:,:)    ! temporary dest data
+  integer          :: nmap         ! size of map
+  integer          :: mo           ! size of map
+  integer, pointer :: src(:)       ! map src index
+  integer, pointer :: dst(:)       ! map dst index
+  real(r8),pointer :: wts(:)       ! map wts values
+  integer :: ns,nijs               !source (atm) indexes
+  integer :: nd,nijd               !destination (lnd) indexes
+  ! temporaries for topo downscaling:
+  real(r8):: hsurf_a,hsurf_l,Hbot,Hsrf,lapse
+  real(r8):: zbot_a, tbot_a, pbot_a, thbot_a, qbot_a, qs_a, es_a
+  real(r8):: zbot_l, tbot_l, pbot_l, thbot_l, qbot_l, qs_l, es_l
+  real(r8):: tsrf_l, psrf_l, egcm_l, rhos_l
+  real(r8):: dum1,dum2,sum1,sum2,sum3,sum4,sum5,sum6,sum7,sum8
+  real(r8),allocatable :: qsum(:)
+  logical :: first_call = .true.
 !------------------------------------------------------------------------------
+
+  if (first_call .and. masterproc) then
+    write(6,*) 'clm_mapa2l subroutine'
+  endif
 
   nradflds = size(a2l_src%forc_solad,dim=2)
   if (nradflds /= numrad) then
@@ -322,75 +342,213 @@ end subroutine init_lnd2atm_type
   !--- allocate temporaries
   call get_proc_bounds_atm(begg_s, endg_s)
   call get_proc_bounds    (begg_d, endg_d)
+
   nflds = 21+2*numrad
 
   allocate(asrc(begg_s:endg_s,nflds))
   allocate(adst(begg_d:endg_d,nflds))
 
-  asrc(:,1)  = a2l_src%forc_t(:)  
-  asrc(:,2)  = a2l_src%forc_u(:)  
-  asrc(:,3)  = a2l_src%forc_v(:)  
-  asrc(:,4)  = a2l_src%forc_wind(:)  
-  asrc(:,5)  = a2l_src%forc_q(:)  
-  asrc(:,6)  = a2l_src%forc_hgt(:)  
-  asrc(:,7)  = a2l_src%forc_hgt_u(:)  
-  asrc(:,8)  = a2l_src%forc_hgt_t(:)  
-  asrc(:,9)  = a2l_src%forc_hgt_q(:)  
-  asrc(:,10) = a2l_src%forc_pbot(:)  
-  asrc(:,11) = a2l_src%forc_th(:)  
-  asrc(:,12) = a2l_src%forc_vp(:)  
-  asrc(:,13) = a2l_src%forc_rho(:)  
-  asrc(:,14) = a2l_src%forc_psrf(:)  
-  asrc(:,15) = a2l_src%forc_pco2(:)  
-  asrc(:,16) = a2l_src%forc_lwrad(:)  
-  asrc(:,17) = a2l_src%forc_solar(:)  
-  asrc(:,18) = a2l_src%forc_rain(:)  
-  asrc(:,19) = a2l_src%forc_snow(:)  
-  asrc(:,20) = a2l_src%forc_pc13o2(:)  
-  asrc(:,21) = a2l_src%forc_po2(:)  
+  ix = 0
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_t(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_u(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_v(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_wind(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_q(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt_u(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt_t(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt_q(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_pbot(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_th(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_vp(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_rho(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_psrf(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_pco2(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_lwrad(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_solar(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_rain(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_snow(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_pc13o2(:)  
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_po2(:)  
   do n = 1,numrad
-     asrc(:,20+2*n) = a2l_src%forc_solad(:,n)  
-     asrc(:,21+2*n) = a2l_src%forc_solai(:,n)  
+     ix=ix+1; asrc(:,ix) = a2l_src%forc_solad(:,n)  
+     ix=ix+1; asrc(:,ix) = a2l_src%forc_solai(:,n)  
   enddo
 !-forc_ndep is not recd from atm,don't know why it's in a2l (TCFIX) ---
 !-forc_ndep cannot be updated here, array will be trashed and CN will fail ---
-! call gridmap_maparray(begg_s, endg_s, begg_d, endg_d, a2l_src%forc_ndep  ,a2l_dst%forc_ndep  ,gridmap,a2ltrue)
 !  asrc(:,xx) = a2l_src%forc_ndep(:)  
 
-  a2ltrue = .true.
 #if (defined OFFLINE)
-  call gridmap_maparray(begg_s, endg_s, begg_d, endg_d, 1, a2l_src%flfall, a2l_dst%flfall, gridmap, a2ltrue)
+  call map_maparray(begg_s, endg_s, begg_d, endg_d, 1, a2l_src%flfall, a2l_dst%flfall, map1dl_a2l)
 #endif
-  call gridmap_maparray(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, gridmap, a2ltrue)
+  call map_maparray(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_a2l)
 
-  a2l_dst%forc_t(:)     =   adst(:,1)
-  a2l_dst%forc_u(:)     =   adst(:,2)
-  a2l_dst%forc_v(:)     =   adst(:,3)
-  a2l_dst%forc_wind(:)  =   adst(:,4)
-  a2l_dst%forc_q(:)     =   adst(:,5)
-  a2l_dst%forc_hgt(:)   =   adst(:,6)
-  a2l_dst%forc_hgt_u(:) =   adst(:,7)
-  a2l_dst%forc_hgt_t(:) =   adst(:,8)
-  a2l_dst%forc_hgt_q(:) =   adst(:,9)
-  a2l_dst%forc_pbot(:)  =   adst(:,10)
-  a2l_dst%forc_th(:)    =   adst(:,11)
-  a2l_dst%forc_vp(:)    =   adst(:,12)
-  a2l_dst%forc_rho(:)   =   adst(:,13)
-  a2l_dst%forc_psrf(:)  =   adst(:,14)
-  a2l_dst%forc_pco2(:)  =   adst(:,15)
-  a2l_dst%forc_lwrad(:) =   adst(:,16)
-  a2l_dst%forc_solar(:) =   adst(:,17)
-  a2l_dst%forc_rain(:)  =   adst(:,18)
-  a2l_dst%forc_snow(:)  =   adst(:,19)
-  a2l_dst%forc_pc13o2(:)=   adst(:,20)
-  a2l_dst%forc_po2(:)   =   adst(:,21)
+  ix = 0
+  ix=ix+1; a2l_dst%forc_t(:)     =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_u(:)     =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_v(:)     =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_wind(:)  =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_q(:)     =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_hgt(:)   =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_hgt_u(:) =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_hgt_t(:) =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_hgt_q(:) =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_pbot(:)  =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_th(:)    =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_vp(:)    =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_rho(:)   =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_psrf(:)  =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_pco2(:)  =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_lwrad(:) =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_solar(:) =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_rain(:)  =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_snow(:)  =   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_pc13o2(:)=   adst(:,ix)
+  ix=ix+1; a2l_dst%forc_po2(:)   =   adst(:,ix)
   do n = 1,numrad
-     a2l_dst%forc_solad(:,n)  = adst(:,20+2*n)
-     a2l_dst%forc_solai(:,n)  = adst(:,21+2*n)
+     ix=ix+1; a2l_dst%forc_solad(:,n)  = adst(:,ix)
+     ix=ix+1; a2l_dst%forc_solai(:,n)  = adst(:,ix)
   enddo
 
   deallocate(asrc)
   deallocate(adst)
+
+  if (first_call.and.masterproc) then
+    write(6,*) 'clm_mapa2l mapping complete'
+  endif
+
+!-topographic downscaling
+!-only call this if there is more than 1 land cell / atm cell somewhere
+  call map_setptrs(map1dl_l2a,dstmo=mo)
+  if (mo > 1) then
+
+  if (first_call.and.masterproc) then
+    write(6,*) 'clm_mapa2l downscaling ON'
+  endif
+
+  call map_setptrs(map1dl_a2l,nwts=nmap,src=src,dst=dst,dstmo=mo)
+  if (mo /= 1) then
+     write(6,*)' clm_mapa2l ERROR: map1dl_a2l mo not 1 ',mo
+     call endrun()
+  endif
+
+  lapse   = 0.0065_r8                  ! hardwired in multiple places in cam
+
+  do n = 1,nmap
+    ns = src(n)
+    nd = dst(n)
+    nijs = adecomp%gdc2glo(ns)
+    nijd = ldecomp%gdc2glo(nd)
+
+    hsurf_a = adomain%topo(nijs)        ! atm elevation
+    hsurf_l = ldomain%ntop(nijd)        ! lnd elevation
+
+    if (abs(hsurf_a - hsurf_l) .gt. 0.1_r8) then
+
+       tbot_a = a2l_src%forc_t(ns)        ! atm temp at bot
+       thbot_a= a2l_src%forc_th(ns)       ! atm pot temp at bot
+       pbot_a = a2l_src%forc_pbot(ns)     ! atm press at bot
+       qbot_a = a2l_src%forc_q(ns)        ! atm sp humidity at bot
+       zbot_a = a2l_src%forc_hgt(ns)      ! atm ref height
+
+       zbot_l = zbot_a
+       tbot_l = tbot_a-lapse*(hsurf_l-hsurf_a)          ! lnd temp for topo
+
+       Hbot   = rair*0.5_r8*(tbot_a+tbot_l)/grav        ! scale ht at avg temp
+       pbot_l = pbot_a*exp(-(hsurf_l-hsurf_a)/Hbot)     ! lnd press for topo
+       thbot_l= tbot_l*exp((zbot_l/Hbot)*(rair/cpair))  ! pot temp calc
+
+       tsrf_l = tbot_l-lapse*(-zbot_l)                  ! lnd temp at surface
+       Hsrf   = rair*0.5_r8*(tbot_l+tsrf_l)/grav        ! scale ht at avg temp
+       psrf_l = pbot_l*exp(-(zbot_l)/Hsrf)              ! lnd press for topo
+
+       call Qsat(tbot_a,pbot_a,es_a,dum1,qs_a,dum2)
+       call Qsat(tbot_l,pbot_l,es_l,dum1,qs_l,dum2)
+       qbot_l = qbot_a*(qs_l/qs_a)
+
+       a2l_dst%forc_hgt(nd)  = zbot_l
+       a2l_dst%forc_t(nd)    = tbot_l
+       a2l_dst%forc_pbot(nd) = pbot_l
+       a2l_dst%forc_th(nd)   = thbot_l
+       a2l_dst%forc_q(nd)    = qbot_l
+       a2l_dst%forc_vp(nd)   = es_l
+       a2l_dst%forc_psrf(nd) = psrf_l
+
+    endif
+  enddo
+
+  allocate(qsum(begg_s:endg_s))
+  qsum = 0.0_r8
+  call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
+  do n = 1,nmap
+    ns = dst(n)
+    nd = src(n)
+    qsum(ns) = qsum(ns) + wts(n)* a2l_dst%forc_q(nd)
+  enddo
+
+  call map_setptrs(map1dl_a2l,nwts=nmap,src=src,dst=dst)
+  do n = 1,nmap
+    ns = src(n)
+    nd = dst(n)
+
+    qbot_a = a2l_src%forc_q(ns)        ! atm specific humidity
+    qbot_l = a2l_dst%forc_q(nd)        ! lnd specific humidity
+    pbot_l = a2l_dst%forc_pbot(nd)  
+    tbot_l = a2l_dst%forc_t(nd)  
+
+    qbot_l = qbot_l - (qsum(ns) - qbot_a)        ! normalize
+    egcm_l = qbot_l*pbot_l/(0.622+0.378*qbot_l)
+    rhos_l = (pbot_l-0.378*egcm_l) / (rair*tbot_l)
+
+    a2l_dst%forc_q(nd)    = qbot_l
+    a2l_dst%forc_rho(nd)  = rhos_l
+
+  enddo
+
+  deallocate(qsum)
+
+! --- check ---
+  call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
+  do ns = begg_s,endg_s
+    sum1 = 0.0_r8
+    sum2 = 0.0_r8
+    sum3 = 0.0_r8
+    sum4 = 0.0_r8
+    sum5 = 0.0_r8
+    sum6 = 0.0_r8
+    do n = 1,nmap
+      if (dst(n) == ns) then
+        nd = src(n)
+        nijs = adecomp%gdc2glo(ns)
+        nijd = ldecomp%gdc2glo(nd)
+        sum1 = sum1 + ldomain%ntop(nijd)    * wts(n)
+        sum2 = sum2 + a2l_dst%forc_t(nd)    * wts(n)
+        sum3 = sum3 + a2l_dst%forc_q(nd)    * wts(n)
+        sum4 = sum4 + a2l_dst%forc_hgt(nd)  * wts(n)
+        sum5 = sum5 + a2l_dst%forc_pbot(nd) * wts(n)
+        sum6 = sum6 + a2l_dst%forc_th(nd)   * wts(n)
+      endif
+    enddo
+    if   ((abs(sum1 - adomain%topo(nijs))    > 1.0e-8) &
+      .or.(abs(sum2 - a2l_src%forc_t(ns))    > 1.0e-3) &
+      .or.(abs(sum3 - a2l_src%forc_q(ns))    > 1.0e-8) &
+      .or.(abs(sum4 - a2l_src%forc_hgt(ns))  > 1.0e-6) &
+!      .or.(abs(sum5 - a2l_src%forc_pbot(ns)) > 1.0e-6) &
+!      .or.(abs(sum6 - a2l_src%forc_th(ns))   > 1.0e-6) &
+       ) then
+      write(6,*) 'clm_map2l check ERROR topo ',sum1,adomain%topo(nijs)
+      write(6,*) 'clm_map2l check ERROR t    ',sum2,a2l_src%forc_t(ns)
+      write(6,*) 'clm_map2l check ERROR q    ',sum3,a2l_src%forc_q(ns)
+      write(6,*) 'clm_map2l check ERROR hgt  ',sum4,a2l_src%forc_hgt(ns)
+      write(6,*) 'clm_map2l check ERROR pbot ',sum5,a2l_src%forc_pbot(ns)
+      write(6,*) 'clm_map2l check ERROR th   ',sum6,a2l_src%forc_th(ns)
+!      call endrun()
+    endif
+  enddo
+
+  endif   ! mx_ovr > 1
+
+  first_call = .false.
 
 end subroutine clm_mapa2l
 
@@ -400,20 +558,19 @@ end subroutine clm_mapa2l
 ! !IROUTINE: clm_mapl2a
 !
 ! !INTERFACE:
-  subroutine clm_mapl2a(l2a_src,l2a_dst,gridmap)
+  subroutine clm_mapl2a(l2a_src, l2a_dst)
 !
 ! !DESCRIPTION:
 ! Maps lnd2atm fields from clm grid to external grid
 !
 ! !USES:
   use decompMod, only : get_proc_bounds, get_proc_bounds_atm
-  use areaMod  , only : gridmap_maparray
+  use areaMod  , only : map_maparray, map1dl_l2a
 !
 ! !ARGUMENTS:
   implicit none
   type(lnd2atm_type), intent(in)  :: l2a_src
   type(lnd2atm_type), intent(out) :: l2a_dst
-  type(gridmap_type), intent(in)  :: gridmap
 !
 ! !REVISION HISTORY:
 ! 2005.11.15  T Craig  Creation.
@@ -423,11 +580,11 @@ end subroutine clm_mapa2l
 !
 ! !LOCAL VARIABLES:
   integer :: n                     ! loop counter
+  integer :: ix                    ! field index
   integer :: nflds                 ! number of fields to be mapped
   integer :: nradflds              ! size of 2nd dim in arrays
   integer :: begg_s,endg_s         ! beg,end of input grid
   integer :: begg_d,endg_d         ! beg,end of output grid
-  logical :: a2lfalse              ! a2l or l2a map type flag
   real(r8),pointer :: asrc(:,:)    ! temporary source data
   real(r8),pointer :: adst(:,:)    ! temporary dest data
 #if (defined DUST )
@@ -444,6 +601,7 @@ end subroutine clm_mapa2l
   !--- allocate temporaries
   call get_proc_bounds    (begg_s, endg_s)
   call get_proc_bounds_atm(begg_d, endg_d)
+
   nflds = 12+2*numrad
 
 #if (defined DUST || defined  PROGSSLT )  
@@ -460,60 +618,60 @@ end subroutine clm_mapa2l
   allocate(asrc(begg_s:endg_s,nflds))
   allocate(adst(begg_d:endg_d,nflds))
 
-  asrc(:,1)  = l2a_src%t_rad(:)  
-  asrc(:,2)  = l2a_src%t_ref2m(:)  
-  asrc(:,3)  = l2a_src%q_ref2m(:)  
-  asrc(:,4)  = l2a_src%h2osno(:)  
-  asrc(:,5)  = l2a_src%taux(:)  
-  asrc(:,6)  = l2a_src%tauy(:)  
-  asrc(:,7)  = l2a_src%eflx_lh_tot(:)  
-  asrc(:,8)  = l2a_src%eflx_sh_tot(:)  
-  asrc(:,9)  = l2a_src%eflx_lwrad_out(:)  
-  asrc(:,10)  = l2a_src%qflx_evap_tot(:)  
-  asrc(:,11)  = l2a_src%fsa(:)  
-  asrc(:,12)  = l2a_src%nee(:)  
+  ix = 0
+  ix=ix+1; asrc(:,ix) = l2a_src%t_rad(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%t_ref2m(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%q_ref2m(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%h2osno(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%taux(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%tauy(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%eflx_lh_tot(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%eflx_sh_tot(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%eflx_lwrad_out(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%qflx_evap_tot(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%fsa(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%nee(:)  
   do n = 1,numrad
-     asrc(:,11+2*n)  = l2a_src%albd(:,n)  
-     asrc(:,12+2*n)  = l2a_src%albi(:,n)  
+     ix=ix+1; asrc(:,ix) = l2a_src%albd(:,n)  
+     ix=ix+1; asrc(:,ix) = l2a_src%albi(:,n)  
   enddo
-
 #if (defined DUST || defined  PROGSSLT )
-  asrc(:,13+2*numrad)  = l2a_src%ram1(:)  
-  asrc(:,14+2*numrad)  = l2a_src%fv(:)
+  ix=ix+1; asrc(:,ix) = l2a_src%ram1(:)  
+  ix=ix+1; asrc(:,ix) = l2a_src%fv(:)
 #endif
 #if (defined DUST )
   do m = 1,ndst  ! dust bins
-     asrc(:,14+m+2*numrad)  = l2a_src%flxdst(:,m)  
+     ix=ix+1; asrc(:,ix) = l2a_src%flxdst(:,m)  
   end do !m
 #endif
 
-  a2lfalse = .false.
-  call gridmap_maparray(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, gridmap, a2lfalse)
+  call map_maparray(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_l2a)
 
-  l2a_dst%t_rad(:)          = adst(:,1)
-  l2a_dst%t_ref2m(:)        = adst(:,2)
-  l2a_dst%q_ref2m(:)        = adst(:,3)
-  l2a_dst%h2osno(:)         = adst(:,4)
-  l2a_dst%taux(:)           = adst(:,5)
-  l2a_dst%tauy(:)           = adst(:,6)
-  l2a_dst%eflx_lh_tot(:)    = adst(:,7)
-  l2a_dst%eflx_sh_tot(:)    = adst(:,8)
-  l2a_dst%eflx_lwrad_out(:) = adst(:,9)
-  l2a_dst%qflx_evap_tot(:)  = adst(:,10)
-  l2a_dst%fsa(:)            = adst(:,11)
-  l2a_dst%nee(:)            = adst(:,12)
+  ix = 0
+  ix=ix+1; l2a_dst%t_rad(:)          = adst(:,ix)
+  ix=ix+1; l2a_dst%t_ref2m(:)        = adst(:,ix)
+  ix=ix+1; l2a_dst%q_ref2m(:)        = adst(:,ix)
+  ix=ix+1; l2a_dst%h2osno(:)         = adst(:,ix)
+  ix=ix+1; l2a_dst%taux(:)           = adst(:,ix)
+  ix=ix+1; l2a_dst%tauy(:)           = adst(:,ix)
+  ix=ix+1; l2a_dst%eflx_lh_tot(:)    = adst(:,ix)
+  ix=ix+1; l2a_dst%eflx_sh_tot(:)    = adst(:,ix)
+  ix=ix+1; l2a_dst%eflx_lwrad_out(:) = adst(:,ix)
+  ix=ix+1; l2a_dst%qflx_evap_tot(:)  = adst(:,ix)
+  ix=ix+1; l2a_dst%fsa(:)            = adst(:,ix)
+  ix=ix+1; l2a_dst%nee(:)            = adst(:,ix)
   do n = 1,numrad
-     l2a_dst%albd(:,n)      = adst(:,11+2*n)
-     l2a_dst%albi(:,n)      = adst(:,12+2*n)
+     ix=ix+1; l2a_dst%albd(:,n)      = adst(:,ix)
+     ix=ix+1; l2a_dst%albi(:,n)      = adst(:,ix)
   enddo
 
 #if (defined DUST || defined  PROGSSLT )
-  l2a_dst%ram1(:) =  adst(:,13+2*numrad)
-  l2a_dst%fv(:)   = adst(:,14+2*numrad)
+  ix=ix+1; l2a_dst%ram1(:)           = adst(:,ix)
+  ix=ix+1; l2a_dst%fv(:)             = adst(:,ix)
 #endif
 #if (defined DUST  )
   do m = 1,ndst  ! dust bins
-     l2a_dst%flxdst(:,m) =  adst(:,14+m+2*numrad)
+     ix=ix+1; l2a_dst%flxdst(:,m)    = adst(:,ix)
   end do !m
 #endif
 
@@ -572,7 +730,7 @@ end subroutine clm_mapl2a
   type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
   type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
 #if (defined DUST)
-  type(pft_dflux_type)   , pointer :: pdf  ! local pointer to derived subtype
+  type(pft_dflux_type),pointer :: pdf   ! local pointer to derived subtype
   integer n
 #endif
 
@@ -692,7 +850,6 @@ end subroutine clm_mapl2a
 #endif
 
 #if (defined DUST || defined  PROGSSLT )
-
       call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
            pptr%pps%fv, clm_l2a%fv, &
            p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
@@ -700,7 +857,6 @@ end subroutine clm_mapl2a
       call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
            pptr%pps%ram1, clm_l2a%ram1, &
            p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-
 #endif
 
 #if (defined DUST )

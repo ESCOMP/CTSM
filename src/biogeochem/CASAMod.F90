@@ -256,7 +256,7 @@ contains
     use fileutils    , only : getfil
     use ncdio        , only : check_ret,check_dim,check_var
     use shr_const_mod, only : SHR_CONST_CDAY
-    use decompMod    , only : get_proc_bounds, get_proc_global
+    use decompMod    , only : get_proc_bounds, get_proc_global, ldecomp
     use clm_varctl   , only : nsrest
     use clm_varpar   , only : lsmlon, lsmlat, max_pft_per_gcell
     use spmdMod      , only : masterproc
@@ -355,8 +355,8 @@ contains
     pfti       => clm3%g%pfti
     ltype      => clm3%g%l%itype
     ivt        => clm3%g%l%c%p%itype
-    ixy        => clm3%g%ixy
-    jxy        => clm3%g%jxy
+    ixy        => ldecomp%gdc2i
+    jxy        => ldecomp%gdc2j
     wtgcell    => clm3%g%l%c%p%wtgcell
     eff        => clm3%g%l%c%p%pps%eff  
     frac_donor => clm3%g%l%c%p%pps%frac_donor
@@ -1077,7 +1077,8 @@ contains
     integer :: numc          ! total number of columns across all processors
     integer :: nump          ! total number of pfts across all processors
     integer :: ier           ! error flag
-    real(r8)          :: lonvar(lsmlon), latvar(lsmlat)
+    integer :: n             ! index
+    real(r8), pointer :: lonvar(:), latvar(:)
     real(r8), pointer :: histi(:,:)
     real(r8), pointer :: histo(:,:)
     real(r8), pointer :: hist1do(:)
@@ -1167,12 +1168,16 @@ contains
        call check_ret(nf_enddef(ncid), subname)
     end if
 
-    lonvar(:) = ldomain%lonc(1:lsmlon, 1)
-    latvar(:) = ldomain%latc(1,1:lsmlat)
+    allocate(lonvar(lsmlon),latvar(lsmlat))
+    lonvar(:) = ldomain%lonc(1:lsmlon)
+    do n = 1,lsmlat
+       latvar(n) = ldomain%latc((n-1)*lsmlon+1)
+    enddo
     call ncd_ioglobal(varname='longitude', data=lonvar, ncid=ncid, flag='write')
     call ncd_ioglobal(varname='latitude', data=latvar, ncid=ncid, flag='write')
     call ncd_ioglobal(varname='landfrac', data=ldomain%frac, ncid=ncid, flag='write')
     call ncd_ioglobal(varname='landmask', data=ldomain%mask, ncid=ncid, flag='write')
+    deallocate(lonvar,latvar)
 
     allocate(histi(begp:endp, 1),histo(begg:endg,1),hist1do(begg:endg), stat=ier)
     if (ier /= 0) then

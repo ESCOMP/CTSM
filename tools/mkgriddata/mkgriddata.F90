@@ -13,7 +13,7 @@ program mkgriddata
     use shr_kind_mod , only : r8 => shr_kind_r8
     use shr_sys_mod  , only : shr_sys_getenv
     use fileutils    , only : getfil, putfil, opnfil, getavu, get_filename
-    use creategridMod, only : creategrid, write_domain, mkfile
+    use creategridMod, only : creategrid, write_domain, mkfile, settopo
     use mkvarctl
     use mkvarsur
     use areaMod
@@ -35,11 +35,13 @@ program mkgriddata
     character(len= 7) :: resol       ! resolution for file name
     character(len=64) :: fgriddat    ! output filename
     character(len=64) :: ffracdat    ! output filename
+    character(len=64) :: ftopodat    ! output filename
     character(len=256):: fileinfo    ! output filename
     character(len=32) :: subname = 'mkgriddata'  ! program name
 
     namelist /clmexp/    &
          mksrf_fnavyoro, &
+         mksrf_frawtopo, &
          mksrf_fcamtopo, &
          mksrf_fccsmdom, &
          mksrf_fclmgrid, &
@@ -87,6 +89,10 @@ program mkgriddata
        write(6,*) 'MKGRID namelist error, must specify file'
     endif
 
+    if (mksrf_frawtopo /= ' ') then
+       call settopo(mksrf_frawtopo)
+    endif
+
     !--- final comments ---
 
     lsmlon = ldomain%ni
@@ -95,12 +101,15 @@ program mkgriddata
     write (resol,'(i3.3,"x",i3.3)') lsmlat,lsmlon
     fgriddat = './griddata_'//trim(resol)//'.nc'
     ffracdat = './fracdata_'//trim(resol)//'.nc'
+    ftopodat = './topodata_'//trim(resol)//'.nc'
 
     call mkfile(lsmlon, lsmlat, fgriddat, fileinfo, itype=1)
     call mkfile(lsmlon, lsmlat, ffracdat, fileinfo, itype=2)
+    call mkfile(lsmlon, lsmlat, ftopodat, fileinfo, itype=3)
 
     call write_domain(ldomain,fgriddat, itype=1)
     call write_domain(ldomain,ffracdat, itype=2)
+    call write_domain(ldomain,ftopodat, itype=3)
 
     write (6,'(72a1)') ("-",i=1,60)
     write (6,'(a46,f5.1,a4,f5.1,a5)') 'land model grid data set successfully created for ', &

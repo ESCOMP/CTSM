@@ -71,8 +71,7 @@ contains
 !
 ! !USES:
     use time_manager     , only : get_nstep      
-    use clm_atmlnd       , only : clm_l2a, atm_l2a
-    use clm_atmlnd       , only : gridmap_l2a, clm_mapl2a
+    use clm_atmlnd      , only : clm_mapl2a, clm_l2a, atm_l2a
     use domainMod        , only : adomain
     use clm_comp         , only : clm_init0, clm_init1, clm_init2
     use clm_varctl       , only : finidat       
@@ -129,7 +128,7 @@ contains
     if ( .not. present(land_present) )then
        call endrun( sub//': land_present not sent in')
     end if
-    if (adomain%frac(1,1)==0) then
+    if (adomain%frac(1)==0) then
        land_present = .false.
        return        ! EXIT OUT OF INITIALIZATION
     else
@@ -159,7 +158,7 @@ contains
     ! Map internal data structure into coupling data structure
 
     if (get_nstep() == 0) then
-       call clm_mapl2a( clm_l2a, atm_l2a, gridmap_l2a )
+       call clm_mapl2a(clm_l2a, atm_l2a)
        call lnd_exportinit_mct( atm_l2a, l2x_l)
     endif
 
@@ -177,8 +176,8 @@ contains
 ! Run clm model
 !
 ! !USES:
-    use clm_atmlnd     , only : clm_a2l, clm_l2a, atm_a2l, atm_l2a, &
-                                gridmap_l2a, clm_mapl2a, gridmap_a2l, clm_mapa2l
+    use clm_atmlnd, only : clm_mapl2a, clm_mapa2l
+    use clm_atmlnd, only : clm_l2a, atm_l2a, atm_a2l, clm_a2l
     use clm_comp       , only : clm_run1, clm_run2
     use eshr_timemgr_mod,only : eshr_timemgr_clockType,         &
                                 eshr_timemgr_clockAlarmIsOnRes, &
@@ -215,7 +214,7 @@ contains
     ! Map MCT to land data type
 
     call lnd_import_mct( x2l_l, atm_a2l )
-    call clm_mapa2l( atm_a2l, clm_a2l, gridmap_a2l )
+    call clm_mapa2l(atm_a2l, clm_a2l)
     
     ! Run clm
 
@@ -225,7 +224,7 @@ contains
 
     ! Map land data type to MCT
 
-    call clm_mapl2a( clm_l2a, atm_l2a, gridmap_l2a )
+    call clm_mapl2a(clm_l2a, atm_l2a)
     call lnd_export_mct( atm_l2a, l2x_l )
 
   end subroutine lnd_run_mct
@@ -332,7 +331,7 @@ contains
     type(lnd2atm_type), intent(inout) :: l2a
     type(mct_aVect)   , intent(inout) :: l2x_l
 
-    integer :: g,i
+    integer :: g,i,n
     integer :: begg, endg    ! beginning and ending gridcell indices
     !-----------------------------------------------------
 
@@ -341,7 +340,8 @@ contains
 !dir$ concurrent
     do g = begg,endg
        i = 1 + (g - begg)
-       l2x_l%rAttr(index_l2x_Sl_landfrac,i) =  adomain%frac(adecomp%gdc2i(g), adecomp%gdc2j(g))
+       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
+       l2x_l%rAttr(index_l2x_Sl_landfrac,i) =  adomain%frac(n)
        l2x_l%rAttr(index_l2x_Sl_t,i)        =  sqrt(sqrt(l2a%eflx_lwrad_out(g)/sb))
        l2x_l%rAttr(index_l2x_Sl_snowh,i)    =  l2a%h2osno(g)
        l2x_l%rAttr(index_l2x_Sl_avsdr,i)    =  l2a%albd(g,1)
@@ -371,7 +371,7 @@ contains
     type(lnd2atm_type), intent(inout) :: l2a
     type(mct_aVect)   , intent(inout) :: l2x_l
 
-    integer :: g,i
+    integer :: g,i,n
     integer :: begg, endg    ! beginning and ending gridcell indices
     !-----------------------------------------------------
     
@@ -382,7 +382,8 @@ contains
 !dir$ concurrent
     do g = begg,endg
        i = 1 + (g-begg)
-       l2x_l%rAttr(index_l2x_Sl_landfrac,i) = adomain%frac(adecomp%gdc2i(g), adecomp%gdc2j(g))
+       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
+       l2x_l%rAttr(index_l2x_Sl_landfrac,i) = adomain%frac(n)
        l2x_l%rAttr(index_l2x_Sl_t,i)        = l2a%t_rad(g)
        l2x_l%rAttr(index_l2x_Sl_snowh,i)    = l2a%h2osno(g)
        l2x_l%rAttr(index_l2x_Sl_avsdr,i)    = l2a%albd(g,1)
@@ -641,43 +642,37 @@ contains
     ! Fill in correct values for domain components
     !
     do g = begg,endg
-       i = adecomp%gdc2i(g)
-       j = adecomp%gdc2j(g)
-       n = 1 + (g - begg)
-       data(n) = adomain%lonc(i,j)
+       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
+       i = 1 + (g - begg)
+       data(i) = adomain%lonc(n)
     end do
     call mct_gGrid_importRattr(dom_l,"lon",data,lsize) 
 
     do g = begg,endg
-       i = adecomp%gdc2i(g)
-       j = adecomp%gdc2j(g)
-       n = 1 + (g - begg)
-       data(n) = adomain%latc(i,j)
-       write(6,*)'n= ',n,' g= ',g,' i= ',i,' j= ',j,' lat= ',data(n)
+       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
+       i = 1 + (g - begg)
+       data(i) = adomain%latc(n)
     end do
     call mct_gGrid_importRattr(dom_l,"lat",data,lsize) 
 
     do g = begg,endg
-       i = adecomp%gdc2i(g)
-       j = adecomp%gdc2j(g)
-       n = 1 + (g - begg)
-       data(n) = adomain%area(i,j)/(re*re)
+       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
+       i = 1 + (g - begg)
+       data(i) = adomain%area(n)/(re*re)
     end do
     call mct_gGrid_importRattr(dom_l,"area",data,lsize) 
 
     do g = begg,endg
-       i = adecomp%gdc2i(g)
-       j = adecomp%gdc2j(g)
-       n = 1 + (g - begg)
-       data(n) = real(adomain%mask(i,j), r8)
+       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
+       i = 1 + (g - begg)
+       data(i) = real(adomain%mask(n), r8)
     end do
     call mct_gGrid_importRattr(dom_l,"mask",data,lsize) 
 
     do g = begg,endg
-       i = adecomp%gdc2i(g)
-       j = adecomp%gdc2j(g)
-       n = 1 + (g - begg)
-       data(n) = adomain%frac(i,j)
+       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
+       i = 1 + (g - begg)
+       data(i) = adomain%frac(n)
     end do
     call mct_gGrid_importRattr(dom_l,"maxfrac",data,lsize) 
 
@@ -690,7 +685,7 @@ contains
 
   end subroutine lnd_domain_mct
     
-#endif 
 
+#endif 
 
 end module lnd_comp_mct

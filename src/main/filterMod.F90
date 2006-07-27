@@ -72,7 +72,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use decompMod , only : get_nclumps, get_proc_clumps, get_clump_bounds
+    use decompMod , only : get_proc_clumps, get_clump_bounds
 !
 ! !ARGUMENTS:
     implicit none
@@ -140,7 +140,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use decompMod , only : get_nclumps, get_proc_clumps, get_clump_bounds
+    use decompMod , only : get_proc_clumps, get_clump_bounds
     use clm_varcon, only : istsoil
 !
 ! !ARGUMENTS:

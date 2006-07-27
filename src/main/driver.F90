@@ -125,7 +125,7 @@ module driver
   use pft2colMod          , only : pft2col
 #if (defined DGVM)
   use DGVMEcosystemDynMod , only : DGVMEcosystemDyn, DGVMRespiration
-  use DGVMMod             , only : lpj, lpjreset, gatherWeightsDGVM, histDGVM, &
+  use DGVMMod             , only : lpj, lpjreset, histDGVM, &
 	                           resetweightsdgvm, resettimeconstdgvm 
 #elif (defined CN)
   use CNEcosystemDynMod   , only : CNEcosystemDyn
@@ -680,7 +680,6 @@ subroutine driver2(caldayp1, declinp1, rstwr)
 !!CSD$ END PARALLEL DO
 #endif
 !$OMP END PARALLEL DO
-     call gatherWeightsDGVM()
   end if
 #endif
 

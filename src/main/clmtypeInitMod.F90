@@ -114,12 +114,10 @@ contains
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
 
-    ! ***NOTE: all topological info has global extent***
-
-    call init_pft_type     (1, nump, clm3%g%l%c%p)
-    call init_column_type  (1, numc, clm3%g%l%c)
-    call init_landunit_type(1, numl, clm3%g%l)
-    call init_gridcell_type(1, numg, clm3%g)
+    call init_pft_type     (begp, endp, clm3%g%l%c%p)
+    call init_column_type  (begc, endc, clm3%g%l%c)
+    call init_landunit_type(begl, endl, clm3%g%l)
+    call init_gridcell_type(begg, endg, clm3%g)
 
     ! pft ecophysiological constants
 
@@ -341,6 +339,10 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
+    allocate(p%gridcell(beg:end),p%wtgcell(beg:end))
+    allocate(p%landunit(beg:end),p%wtlunit(beg:end))
+    allocate(p%column  (beg:end),p%wtcol  (beg:end))
+
     allocate(p%itype(beg:end))
     allocate(p%mxy(beg:end))
 
@@ -368,6 +370,11 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
+   allocate(c%gridcell(beg:end),c%wtgcell(beg:end))
+   allocate(c%landunit(beg:end),c%wtlunit(beg:end))
+
+   allocate(c%pfti(beg:end),c%pftf(beg:end),c%npfts(beg:end))
+
    allocate(c%itype(beg:end))
 
   end subroutine init_column_type
@@ -393,6 +400,11 @@ contains
 !
 !EOP
 !------------------------------------------------------------------------
+
+   allocate(l%gridcell(beg:end),l%wtgcell(beg:end))
+
+   allocate(l%coli(beg:end),l%colf(beg:end),l%ncolumns(beg:end))
+   allocate(l%pfti(beg:end),l%pftf(beg:end),l%npfts   (beg:end))
 
    allocate(l%itype(beg:end))
    allocate(l%ifspecial(beg:end))
@@ -422,10 +434,11 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-   allocate(g%itype(beg:end))
+   allocate(g%luni(beg:end),g%lunf(beg:end),g%nlandunits(beg:end))
+   allocate(g%coli(beg:end),g%colf(beg:end),g%ncolumns  (beg:end))
+   allocate(g%pfti(beg:end),g%pftf(beg:end),g%npfts     (beg:end))
+
    allocate(g%area(beg:end))
-   allocate(g%ixy(beg:end))
-   allocate(g%jxy(beg:end))
    allocate(g%lat(beg:end))
    allocate(g%lon(beg:end))
    allocate(g%latdeg(beg:end))
