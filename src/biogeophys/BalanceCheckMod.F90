@@ -158,7 +158,7 @@ contains
     use clmtype
     use clm_atmlnd   , only : clm_a2l
     use subgridAveMod
-    use time_manager , only : get_step_size, get_nstep
+    use clm_time_manager , only : get_step_size, get_nstep
 !
 ! !ARGUMENTS:
     implicit none

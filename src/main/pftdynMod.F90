@@ -62,7 +62,7 @@ contains
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use decompMod   , only : get_proc_global, ldecomp
-    use time_manager, only : get_curr_date
+    use clm_time_manager, only : get_curr_date
     use clm_varctl  , only : fpftdyn
     use fileutils   , only : getfil
 !
@@ -287,7 +287,7 @@ contains
 !
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
-    use time_manager, only : get_curr_date, get_curr_calday
+    use clm_time_manager, only : get_curr_date, get_curr_calday
     use decompMod   , only : get_proc_global, ldecomp
     use clm_varcon  , only : istsoil
 !
@@ -557,7 +557,7 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use decompMod   , only : get_proc_bounds
     use clm_varcon  , only : istsoil
-    use time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size
 !
 ! !ARGUMENTS:
     implicit none

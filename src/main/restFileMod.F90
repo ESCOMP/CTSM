@@ -63,9 +63,9 @@ contains
 !
 ! !USES:
 #if (defined OFFLINE) || (defined COUP_CSM)
-    use time_manager     , only : timemgr_restart, get_nstep
+    use clm_time_manager     , only : timemgr_restart, get_nstep
 #else
-    use time_manager     , only : get_nstep
+    use clm_time_manager     , only : get_nstep
 #endif
     use subgridRestMod   , only : SubgridRest
     use BiogeophysRestMod, only : BiogeophysRest
@@ -499,7 +499,7 @@ contains
 #if (defined COUP_CSM)
     use clm_csmMod  , only : csmstop_next
 #endif
-    use time_manager, only : is_last_step
+    use clm_time_manager, only : is_last_step
     use clm_varctl  , only : mss_irt, mss_wpass, archive_dir
     use fileutils   , only : putfil, set_filename
 !
@@ -601,7 +601,7 @@ contains
 !-----------------------------------------------------------------------
   subroutine restFile_open( flag, file, ncid )
 
-    use time_manager, only : get_nstep
+    use clm_time_manager, only : get_nstep
     
     implicit none
     character(len=*), intent(in) :: flag ! flag to specify read or write
@@ -648,7 +648,7 @@ contains
 !
 ! !USES:
     use clm_varctl  , only : caseid
-    use time_manager, only : get_curr_date, get_step_size
+    use clm_time_manager, only : get_curr_date, get_step_size
 !
 ! !ARGUMENTS:
     implicit none
@@ -718,7 +718,7 @@ contains
 !
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
-    use time_manager, only : get_nstep, get_curr_date
+    use clm_time_manager, only : get_nstep, get_curr_date
 #ifdef SPMD
     use spmdMod     , only : mpicom, MPI_LOGICAL
 #endif

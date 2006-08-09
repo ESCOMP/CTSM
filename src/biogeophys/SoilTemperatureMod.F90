@@ -62,7 +62,7 @@ contains
     use shr_kind_mod  , only : r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd    , only : clm_a2l
-    use time_manager  , only : get_step_size
+    use clm_time_manager  , only : get_step_size
     use clm_varcon    , only : sb, capr, cnfac
     use clm_varpar    , only : nlevsno, nlevsoi, max_pft_per_col
     use TridiagonalMod, only : Tridiagonal
@@ -550,7 +550,7 @@ contains
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clmtype
-    use time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size
     use clm_varcon  , only : tfrz, hfus
     use clm_varpar  , only : nlevsno, nlevsoi
 !

@@ -346,7 +346,7 @@ subroutine CBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
    use clm_varctl, only: irad
 !
 ! !ARGUMENTS:
@@ -879,7 +879,7 @@ subroutine NBalanceCheck(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
    use clm_varctl, only: irad
 !
 ! !ARGUMENTS:

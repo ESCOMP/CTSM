@@ -134,7 +134,7 @@ contains
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use decompMod   , only : get_proc_global, ldecomp
-    use time_manager, only : get_curr_date
+    use clm_time_manager, only : get_curr_date
     use clm_varctl  , only : fndepdyn
     use fileutils   , only : getfil
 !
@@ -301,7 +301,7 @@ contains
 !
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
-    use time_manager, only : get_curr_date, get_curr_calday
+    use clm_time_manager, only : get_curr_date, get_curr_calday
     use decompMod   , only : get_proc_global, get_proc_bounds, ldecomp
     use clm_atmlnd  , only : clm_a2l
     use clm_varcon  , only : istsoil

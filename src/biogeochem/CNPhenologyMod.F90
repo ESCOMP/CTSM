@@ -189,7 +189,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_varctl, only: irad
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
    use shr_const_mod, only: SHR_CONST_TKFRZ, SHR_CONST_PI
 !
 ! !ARGUMENTS:
@@ -612,7 +612,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_varctl, only: irad
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
    use shr_const_mod, only: SHR_CONST_TKFRZ
 !
 ! !ARGUMENTS:
@@ -1135,7 +1135,7 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_varctl, only: irad
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -1307,7 +1307,7 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_varctl, only: irad
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -1439,7 +1439,7 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_varctl, only: irad
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -1556,7 +1556,7 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_varctl, only: irad
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none

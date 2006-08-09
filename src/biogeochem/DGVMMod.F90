@@ -310,7 +310,7 @@ contains
     use clm_varctl   , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
                               frivinp_rtm, archive_dir, mss_wpass, mss_irt
     use clm_varcon   , only : spval
-    use time_manager , only : get_ref_date, get_nstep, get_curr_date, &
+    use clm_time_manager , only : get_ref_date, get_nstep, get_curr_date, &
                               get_curr_time
     use fileutils    , only : set_filename, putfil, get_filename
     use shr_sys_mod  , only : shr_sys_getenv
@@ -999,7 +999,7 @@ contains
 !
 ! !USES:
     use clm_varctl  , only : caseid
-    use time_manager, only : get_curr_date
+    use clm_time_manager, only : get_curr_date
 !
 ! !ARGUMENTS:
     implicit none

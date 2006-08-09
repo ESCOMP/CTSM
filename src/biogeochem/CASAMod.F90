@@ -263,7 +263,7 @@ contains
 #if (defined SPMD) 
     use spmdGathScatMod, only : scatter_data_from_master
 #endif
-    use time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size
     use shr_sys_mod, only : shr_sys_flush
 !
 ! !ARGUMENTS:
@@ -1901,7 +1901,7 @@ contains
 ! code only executed for soils (ist = 1)
 !
 ! !USES:
-    use time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size
 !
 ! !ARGUMENTS:
     implicit none
@@ -2314,7 +2314,7 @@ contains
 ! code only executed for soils (ist = 1)
 !
 ! !USES:
-    use time_manager , only : get_step_size, get_nstep
+    use clm_time_manager , only : get_step_size, get_nstep
 !
 ! !ARGUMENTS:
     implicit none

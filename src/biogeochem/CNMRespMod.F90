@@ -45,7 +45,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_varctl, only: irad
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none

@@ -64,7 +64,7 @@ contains
      use clm_atmlnd  , only : clm_a2l
      use clm_varpar  , only : numrad
      use clm_varcon  , only : spval
-     use time_manager, only : get_curr_date, get_step_size
+     use clm_time_manager, only : get_curr_date, get_step_size
 !
 ! !ARGUMENTS:
      implicit none

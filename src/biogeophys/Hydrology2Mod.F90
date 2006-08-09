@@ -65,9 +65,9 @@ contains
                                  SnowWater, BuildSnowFilter
     use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff
 #if (defined COUP_CAM)
-    use time_manager    , only : get_step_size, get_nstep, is_perpetual
+    use clm_time_manager    , only : get_step_size, get_nstep, is_perpetual
 #else
-    use time_manager    , only : get_step_size, get_nstep
+    use clm_time_manager    , only : get_step_size, get_nstep
 #endif
 !
 ! !ARGUMENTS:

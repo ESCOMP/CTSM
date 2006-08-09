@@ -95,7 +95,7 @@ contains
     use clm_varctl   , only : frivinp_rtm
     use clm_varcon   , only : re
     use decompMod    , only : get_proc_bounds, get_proc_global
-    use time_manager , only : get_curr_date
+    use clm_time_manager , only : get_curr_date
     use RunoffMod    , only : set_proc_rof_bounds, set_roflnd, set_rofocn
 !
 ! !ARGUMENTS:
@@ -369,7 +369,7 @@ contains
 ! read in. For restart run, RTM fluxout is read from restart dataset.
 !
 ! !USES:
-    use time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size
     use clm_varctl  , only : rtm_nsteps
 !
 ! !ARGUMENTS:
@@ -477,7 +477,7 @@ contains
     use clmtype        , only : clm3,nameg
     use decompMod      , only : get_proc_bounds, get_proc_global, ldecomp
     use clm_varctl     , only : rtm_nsteps
-    use time_manager   , only : get_step_size, get_nstep
+    use clm_time_manager   , only : get_step_size, get_nstep
 #if (defined SPMD)
     use spmdMod        , only : mpicom
     use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master, allgather_data

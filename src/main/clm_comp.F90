@@ -100,7 +100,7 @@ contains
     use shr_orb_mod     , only : shr_orb_decl
     use clm_varctl      , only : finidat, nsrest
     use initSurfAlbMod  , only : initSurfAlb, do_initsurfalb 
-    use time_manager    , only : get_nstep, get_step_size, get_curr_calday
+    use clm_time_manager    , only : get_nstep, get_step_size, get_curr_calday
     use clm_atmlnd      , only : clm_map2gcell
     use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
 !
@@ -159,7 +159,7 @@ contains
 ! !USES:
     use shr_orb_mod , only : shr_orb_decl
     use clm_varctl  , only : irad 
-    use time_manager, only : get_nstep, get_step_size, get_curr_calday
+    use clm_time_manager, only : get_nstep, get_step_size, get_curr_calday
     use clm_varorb  , only : eccen, mvelpp, lambm0, obliqr
     use driver      , only : driver1
     use clm_atmlnd  , only : clm_map2gcell
@@ -216,7 +216,7 @@ contains
 !
 ! !USES:
     use shr_orb_mod , only : shr_orb_decl
-    use time_manager, only : get_nstep, get_step_size, get_curr_calday
+    use clm_time_manager, only : get_nstep, get_step_size, get_curr_calday
     use clm_varorb  , only : eccen, mvelpp, lambm0, obliqr
     use driver      , only : driver2
 !

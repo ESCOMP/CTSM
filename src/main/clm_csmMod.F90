@@ -255,7 +255,7 @@ contains
     use clm_varctl   , only : csm_doflxave, nsrest, irad
     use RtmMod       , only : rdomain
     use clm_varcon   , only : re
-    use time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size
     use shr_const_mod, only : SHR_CONST_CDAY
 !
 ! !ARGUMENTS:
@@ -471,7 +471,7 @@ contains
 ! !USES:
     use clm_varctl  , only : csm_doflxave, nsrest
     use clm_varcon  , only : sb
-    use time_manager, only : get_curr_date, get_prev_date, get_nstep
+    use clm_time_manager, only : get_curr_date, get_prev_date, get_nstep
 !
 ! !ARGUMENTS:
     implicit none
@@ -569,7 +569,7 @@ contains
 !
 ! !USES:
     use clm_varctl   , only : csm_doflxave
-    use time_manager , only : get_step_size, get_nstep
+    use clm_time_manager , only : get_step_size, get_nstep
     use shr_const_mod, only : SHR_CONST_CDAY
 !
 ! !ARGUMENTS:
@@ -923,7 +923,7 @@ contains
 ! !USES:
     use clm_varctl  , only : csm_doflxave
     use clm_varcon  , only : sb
-    use time_manager, only : get_curr_date, get_nstep
+    use clm_time_manager, only : get_curr_date, get_nstep
     use clmtype     , only : nameg
 !
 ! !ARGUMENTS:
@@ -1128,7 +1128,7 @@ contains
 !
     use clmtype      , only : clm3
     use clm_varctl   , only : irad
-    use time_manager , only : get_nstep
+    use clm_time_manager , only : get_nstep
     use subgridAveMod, only : p2g, c2g
 !
 ! !ARGUMENTS:

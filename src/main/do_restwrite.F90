@@ -16,7 +16,7 @@ logical function do_restwrite()
 #if (defined COUP_CSM)
   use clm_csmMod  , only : csmstop_next, csmrstrt
 #else
-  use time_manager, only : is_last_step
+  use clm_time_manager, only : is_last_step
   use histFileMod , only : if_writrest
 #endif
 !

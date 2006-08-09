@@ -74,7 +74,7 @@ contains
 ! !USES:
     use clmtype
     use clm_atmlnd        , only : clm_a2l
-    use time_manager      , only : get_step_size
+    use clm_time_manager      , only : get_step_size
     use clm_varcon        , only : hvap, cpair, grav, vkc, tfrz, sb
     use clm_varpar        , only : nlevsno, nlevsoi, max_pft_per_col
     use SoilTemperatureMod, only : SoilTemperature

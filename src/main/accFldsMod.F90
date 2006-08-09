@@ -60,7 +60,7 @@ contains
 !
 ! !USES:
     use accumulMod   , only : init_accum_field, print_accum_fields
-    use time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size
     use shr_const_mod, only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use nanMod       , only : bigint
 !
@@ -162,7 +162,7 @@ contains
     use clm_varcon   , only : spval
     use pftvarcon    , only : pftpar
     use shr_const_mod, only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
-    use time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
+    use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
     use accumulMod   , only : update_accum_field, extract_accum_field
 !
 ! !ARGUMENTS:
@@ -429,7 +429,7 @@ contains
     use clmtype
     use decompMod   , only : get_proc_bounds, get_proc_global
     use accumulMod  , only : extract_accum_field
-    use time_manager, only : get_nstep
+    use clm_time_manager, only : get_nstep
     use clm_varctl  , only : nsrest
     use clm_varcon  , only : spval
 !

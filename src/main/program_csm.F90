@@ -6,10 +6,14 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: program_csm
+! !ROUTINE: CLM
 !
 ! !INTERFACE:
-PROGRAM program_csm
+#ifdef SINGLE_EXEC
+ subroutine ccsm_lnd()
+#else
+ program ccsm_lnd
+#endif
 !
 ! !DESCRIPTION:
 ! Driver for CLM as the land component of CCSM.
@@ -47,14 +51,17 @@ PROGRAM program_csm
 !   from the flux coupler. if not, there is a problem.
 !
 ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8, SHR_KIND_CL
+#ifdef SINGLE_EXEC
+  use MPH_module    , only : MPH_get_argument
+#endif
+  use shr_kind_mod  , only : r8 => shr_kind_r8, SHR_KIND_CL
   use shr_orb_mod        
   use shr_file_mod        
   use controlMod    , only : control_setNL
   use clm_varpar    , only : lsmlon, lsmlat     
   use clm_varctl    , only : nsrest, irad, csm_doflxave, finidat
   use clm_varorb    , only : eccen, mvelpp, lambm0, obliqr
-  use time_manager  , only : advance_timestep, get_nstep, get_curr_calday, get_step_size
+  use clm_time_manager  , only : advance_timestep, get_nstep, get_curr_calday, get_step_size
   use clm_csmMod    , only : csmstop_now, csm_setup, csm_shutdown, & 
                              csm_dosndrcv, csm_recv, csm_send, csm_flxave, &
                              csm_initialize, csm_sendalb, dorecv, dosend  
@@ -68,7 +75,7 @@ PROGRAM program_csm
   use ESMF_Mod
 !
 ! !ARGUMENTS:
-    implicit none
+  implicit none
 #include <gptl.inc>
 #if (defined HAVE_PAPI)
 #include <f77papi.h>
@@ -80,6 +87,9 @@ PROGRAM program_csm
 !EOP
 !
 ! !LOCAL VARIABLES:
+#ifdef SINGLE_EXEC
+  integer  :: nthreads
+#endif
   integer  :: i,j          ! loop indices
   integer  :: nstep        ! time step index
   real(r8) :: dtime        ! time step increment (sec)
@@ -96,6 +106,11 @@ PROGRAM program_csm
   character(len=SHR_KIND_CL) :: nlfilename ! Namelist filename
 !
 !-----------------------------------------------------------------------
+
+#ifdef SINGLE_EXEC
+  call MPH_get_argument("THREADS", nthreads, "lnd")
+  call OMP_SET_NUM_THREADS(nthreads)
+#endif
 
   ! -----------------------------------------------------------------
   ! Initialize timing library
@@ -250,7 +265,12 @@ PROGRAM program_csm
   call csm_shutdown()
 
   stop
-end program program_csm
+
+#ifdef SINGLE_EXEC
+ end subroutine ccsm_lnd
+#else
+ end program ccsm_lnd
+#endif
 
 #else
 

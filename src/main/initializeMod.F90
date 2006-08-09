@@ -267,9 +267,9 @@ contains
     use RtmMod          , only : Rtmini
 #endif
 #if (defined COUP_CAM)
-    use time_manager    , only : get_curr_date, get_nstep 
+    use clm_time_manager    , only : get_curr_date, get_nstep 
 #else
-    use time_manager    , only : get_curr_date, get_nstep, advance_timestep, &
+    use clm_time_manager    , only : get_curr_date, get_nstep, advance_timestep, &
                                  timemgr_init, timemgr_restart
 #endif
     use fileutils       , only : getfil

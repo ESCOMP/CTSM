@@ -77,7 +77,7 @@ contains
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd         , only : clm_a2l
-    use time_manager       , only : get_step_size
+    use clm_time_manager       , only : get_step_size
     use clm_varpar         , only : nlevsoi, nlevsno
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, &
                                     denh2o, tfrz, csoilc

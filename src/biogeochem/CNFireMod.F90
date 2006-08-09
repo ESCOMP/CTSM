@@ -47,7 +47,7 @@ subroutine CNFireArea (num_soilc, filter_soilc)
 !
 ! !USES:
    use clmtype
-   use time_manager, only: get_step_size, get_nstep
+   use clm_time_manager, only: get_step_size, get_nstep
    use clm_varctl  , only: irad
    use clm_varpar  , only: max_pft_per_col
 !
@@ -237,7 +237,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
    use clm_varctl  , only: irad
 !
 ! !ARGUMENTS:

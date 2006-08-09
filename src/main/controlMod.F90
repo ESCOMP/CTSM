@@ -211,11 +211,11 @@ contains
 !
 ! !USES:
 #if (defined OFFLINE) || (defined COUP_CSM)
-    use time_manager     , only : calendar, dtime, nestep, nelapse, start_ymd, &
+    use clm_time_manager     , only : calendar, dtime, nestep, nelapse, start_ymd, &
                                   start_tod, stop_ymd, stop_tod, ref_ymd, ref_tod
 #else
     use radiation        , only : radiation_get
-    use time_manager     , only : get_step_size, is_perpetual
+    use clm_time_manager     , only : get_step_size, is_perpetual
 #endif
 #if (defined CASA)
     use CASAMod          , only : lnpp, lalloc, q10, spunup, fcpool
@@ -669,7 +669,7 @@ contains
 ! !USES:
 !
 #if (defined OFFLINE) || (defined COUP_CSM)
-    use time_manager, only : calendar, dtime, nestep, nelapse, start_ymd, &
+    use clm_time_manager, only : calendar, dtime, nestep, nelapse, start_ymd, &
                              start_tod, stop_ymd, stop_tod, ref_ymd, ref_tod
 #endif
 #if (defined CASA)

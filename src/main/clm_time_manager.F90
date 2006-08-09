@@ -1,9 +1,13 @@
 #include <misc.h>
 #include <preproc.h>
 
-module time_manager
+module clm_time_manager
 
-#if (!defined COUP_CAM)
+#if (defined COUP_CAM)
+
+   use time_manager
+
+#else
 
    use shr_kind_mod, only: r8 => shr_kind_r8
    use spmdMod     , only: masterproc
@@ -1306,4 +1310,4 @@ end function is_restart
 
 #endif
 
-end module time_manager
+end module clm_time_manager

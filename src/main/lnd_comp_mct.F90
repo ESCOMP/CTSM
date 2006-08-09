@@ -70,7 +70,7 @@ contains
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use time_manager     , only : get_nstep      
+    use clm_time_manager     , only : get_nstep      
     use clm_atmlnd      , only : clm_mapl2a, clm_l2a, atm_l2a
     use domainMod        , only : adomain
     use clm_comp         , only : clm_init0, clm_init1, clm_init2
@@ -182,7 +182,7 @@ contains
     use eshr_timemgr_mod,only : eshr_timemgr_clockType,         &
                                 eshr_timemgr_clockAlarmIsOnRes, &
                                 eshr_timemgr_clockDateInSync
-    use time_manager   , only : get_curr_date
+    use clm_time_manager   , only : get_curr_date
 !
 ! !ARGUMENTS:
     type(mct_aVect)             , intent(inout) :: x2l_l
@@ -362,7 +362,7 @@ contains
   subroutine lnd_export_mct( l2a, l2x_l )   
 
     !-----------------------------------------------------
-    use time_manager, only : get_nstep  
+    use clm_time_manager, only : get_nstep  
     use clm_atmlnd  , only : lnd2atm_type
     use domainMod   , only : adomain
     use decompMod   , only : get_proc_bounds_atm, adecomp

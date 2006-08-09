@@ -1,4 +1,113 @@
 ===============================================================
+Tag name: clm3_expa_68
+Originator(s): mvertens
+Date: Wed Aug  9 16:43:04 MDT 2006
+One-line Summary: replaced time_manager.F90 with clm_time_manager.F90
+
+Purpose of changes: To eliminate name space conflicts in the 
+	single executable CCSM mplementation. 
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none 
+
+Code reviewed by: erik, mvertens
+
+Externals changed:  
+
+List all subroutines eliminated:
+
+List all subroutines added and what they do: 
+	
+List all existing files that have been modified, and describe the changes:
+
+- time_manager.F90 has been moved to clm_time_manager.F90
+  to eliminate name space conflicts in the single executable CCSM 
+  implementation. For stand-alone CAM, clm_time_manager.F90 simply
+  uses the cam time_manager.F90 code.	 
+- program_csm.F90 has also been modified to put in changes needed	
+  for the single executable ccsm implementation.	
+	
+        M      src/biogeochem/CNCStateUpdate2Mod.F90
+	M      src/biogeochem/CASAPhenologyMod.F90
+	M      src/biogeochem/CNC13StateUpdate2Mod.F90
+	M      src/biogeochem/CNNStateUpdate1Mod.F90
+	M      src/biogeochem/DGVMEcosystemDynMod.F90
+	M      src/biogeochem/CNBalanceCheckMod.F90
+	M      src/biogeochem/CNNStateUpdate3Mod.F90
+	M      src/biogeochem/CNFireMod.F90
+	M      src/biogeochem/CNMRespMod.F90
+	M      src/biogeochem/CASAMod.F90
+	M      src/biogeochem/CNPhenologyMod.F90
+	M      src/biogeochem/CNCStateUpdate1Mod.F90
+	M      src/biogeochem/CNDecompMod.F90
+	M      src/biogeochem/STATICEcosysDynMod.F90
+	M      src/biogeochem/CNCStateUpdate3Mod.F90
+	M      src/biogeochem/CNC13StateUpdate1Mod.F90
+	M      src/biogeochem/DGVMMod.F90
+	M      src/biogeochem/CNC13StateUpdate3Mod.F90
+	M      src/biogeochem/CNAnnualUpdateMod.F90
+	M      src/biogeochem/CNNStateUpdate2Mod.F90
+	M      src/biogeochem/CNNDynamicsMod.F90
+	M      src/biogeochem/CNAllocationMod.F90
+	M      src/biogeochem/CNC13FluxMod.F90
+	D      src/main/time_manager.F90
+	M      src/main/accumulMod.F90
+	M      src/main/clm_comp.F90
+	M      src/main/driver.F90
+	M      src/main/atmdrvMod.F90
+	M      src/main/subgridRestMod.F90
+	M      src/main/accFldsMod.F90
+	M      src/main/initializeMod.F90
+	M      src/main/pftdynMod.F90
+	M      src/main/iniTimeConst.F90
+	M      src/main/histFileMod.F90
+	M      src/main/program_csm.F90
+	M      src/main/do_restwrite.F90
+	M      src/main/clm_csmMod.F90
+	M      src/main/restFileMod.F90
+	M      src/main/controlMod.F90
+	M      src/main/initSurfAlbMod.F90
+	A  +   src/main/clm_time_manager.F90
+	M      src/main/ndepFileMod.F90
+	M      src/main/lnd_comp_mct.F90
+	M      src/main/program_off.F90
+	M      src/main/do_close_dispose.F90
+	M      src/riverroute/RtmMod.F90
+	M      src/biogeophys/BalanceCheckMod.F90
+	M      src/biogeophys/SurfaceRadiationMod.F90
+	M      src/biogeophys/SoilTemperatureMod.F90
+	M      src/biogeophys/SnowHydrologyMod.F90
+	M      src/biogeophys/Biogeophysics2Mod.F90
+	M      src/biogeophys/SurfaceAlbedoMod.F90
+	M      src/biogeophys/Hydrology1Mod.F90
+	M      src/biogeophys/Hydrology2Mod.F90
+	M      src/biogeophys/BiogeophysicsLakeMod.F90
+	M      src/biogeophys/SoilHydrologyMod.F90
+	M      src/biogeophys/HydrologyLakeMod.F90
+	M      src/biogeophys/CanopyFluxesMod.F90
+		
+Summary of testing: 
+        - ran test-model.pl on bluesky and verified that all tests
+	  passed successfully when compared to clm3_expa_67
+	- ran cam3_3_17 test model suite with clm3_expa_68 code used
+	  for clm and verified that all tests passed successfully when 
+	  compared to cam3_3_17
+	- ran ERS.T31_g35.I.bluesky using ccsm3_1_beta35 and the clm3_expa_68
+	  clm code based and verified that results were bfb when compared to
+	  ccsm3_1_beta35
+	
+CLM tag used for the baseline comparison tests if applicable: 
+
+Summarize any changes to answers: results are bfb
+
+===============================================================
 Tag name: clm3_expa_67
 Originator(s): tcraig
 Date: Thu Jul 27 12:50:37 MDT 2006

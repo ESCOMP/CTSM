@@ -98,10 +98,10 @@ module driver
   use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal 
   use clm_varcon          , only : zlnd
 #if (defined COUP_CAM)
-  use time_manager        , only : get_step_size, get_curr_calday, &
+  use clm_time_manager        , only : get_step_size, get_curr_calday, &
                                    get_curr_date, get_ref_date, get_nstep, is_perpetual
 #else
-  use time_manager        , only : get_step_size, get_curr_calday, &
+  use clm_time_manager        , only : get_step_size, get_curr_calday, &
                                    get_curr_date, get_ref_date, get_nstep
 #endif
   use histFileMod         , only : update_hbuf, htapes_wrapup
@@ -860,7 +860,7 @@ logical function do_restwrite()
 #if (defined COUP_CSM)
   use clm_csmMod  , only : csmstop_next, csmrstrt
 #else
-  use time_manager, only : is_last_step
+  use clm_time_manager, only : is_last_step
   use histFileMod , only : if_writrest
 #endif
 !
@@ -905,7 +905,7 @@ end function do_restwrite
 ! before the date contained in the filename.
 !
 ! !USES:
-    use time_manager, only : get_curr_date, get_prev_date, get_step_size
+    use clm_time_manager, only : get_curr_date, get_prev_date, get_step_size
     use clm_varctl  , only : hist_crtinic
 !
 ! !ARGUMENTS:

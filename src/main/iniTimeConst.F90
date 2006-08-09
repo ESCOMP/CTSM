@@ -37,7 +37,7 @@ subroutine iniTimeConst
                            pftpar , tree   , summergreen, raingreen  , sla     , &
                            lm_sapl, sm_sapl, hm_sapl    , rm_sapl    , latosa  , &
                            allom1 , allom2 , allom3     , reinickerp , wooddens
-  use time_manager, only : get_step_size
+  use clm_time_manager, only : get_step_size
   use abortutils  , only : endrun
   use fileutils   , only : getfil
   use ndepFileMod , only : ndeprd

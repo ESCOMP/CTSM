@@ -471,7 +471,7 @@ contains
 !
 ! !USES:
     use spmdMod, only : masterproc
-    use time_manager, only: get_curr_date, get_curr_time
+    use clm_time_manager, only: get_curr_date, get_curr_time
 !
 ! !ARGUMENTS:
     implicit none
@@ -1713,7 +1713,7 @@ contains
     use domainMod   , only : ldomain
     use clm_varcon  , only : zsoi, zlak
     use fileutils   , only : get_filename
-    use time_manager, only : get_ref_date
+    use clm_time_manager, only : get_ref_date
 #if (defined RTM)
     use RtmMod      , only : rdomain
     use RunoffMod   , only : get_proc_rof_global
@@ -2700,7 +2700,7 @@ contains
     use clm_varctl   , only : archive_dir, mss_wpass, mss_irt
     use fileutils    , only : set_filename, putfil
     use spmdMod      , only : masterproc
-    use time_manager , only : get_nstep, get_curr_date, get_curr_time, get_prev_date
+    use clm_time_manager , only : get_nstep, get_curr_date, get_curr_time, get_prev_date
     use shr_const_mod, only : SHR_CONST_CDAY
     use ncdio
     use shr_sys_mod  , only : shr_sys_flush
@@ -3526,7 +3526,7 @@ contains
 !
 ! !USES:
     use clm_varctl, only : caseid
-    use time_manager, only : get_curr_date, get_prev_date
+    use clm_time_manager, only : get_curr_date, get_prev_date
 !
 ! !ARGUMENTS:
    implicit none

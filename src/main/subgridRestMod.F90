@@ -14,7 +14,7 @@ contains
     use clmtype
     use ncdio           
     use decompMod    , only : get_proc_bounds, ldecomp
-    use time_manager , only : get_curr_date
+    use clm_time_manager , only : get_curr_date
     use spmdMod      , only : masterproc
 !
 ! !ARGUMENTS:

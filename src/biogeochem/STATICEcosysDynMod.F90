@@ -252,9 +252,9 @@ contains
 ! !USES:
     use clm_varctl  , only : fsurdat
 #ifdef COUP_CAM
-    use time_manager, only : get_curr_date, get_step_size, get_perp_date, is_perpetual
+    use clm_time_manager, only : get_curr_date, get_step_size, get_perp_date, is_perpetual
 #else
-    use time_manager, only : get_curr_date, get_step_size
+    use clm_time_manager, only : get_curr_date, get_step_size
 #endif
 !
 ! !ARGUMENTS:
@@ -330,7 +330,7 @@ contains
 #else
     use spmdMod     , only : masterproc
 #endif
-    use time_manager, only : get_nstep
+    use clm_time_manager, only : get_nstep
     use ncdio       , only : check_ret
 #if ( defined SCAM )
     use getnetcdfdata

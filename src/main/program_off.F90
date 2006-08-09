@@ -53,7 +53,7 @@ PROGRAM program_off
                              iyear_AD, nmvelp
   use clm_comp      , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
   use atmdrvMod     , only : atmdrv
-  use time_manager  , only : is_last_step, advance_timestep, get_nstep
+  use clm_time_manager  , only : is_last_step, advance_timestep, get_nstep
   use atmdrvMod     , only : atmdrv_init
   use abortutils    , only : endrun
   use ESMF_Mod

@@ -58,7 +58,7 @@ contains
     use filterMod           , only : filter
     use clm_varpar          , only : nlevsoi, nlevsno, nlevlak
     use clm_varcon          , only : zlnd, istsoil 
-    use time_manager        , only : get_step_size
+    use clm_time_manager        , only : get_step_size
     use FracWetMod          , only : FracWet
     use SurfaceAlbedoMod    , only : SurfaceAlbedo
 #if (defined DGVM)

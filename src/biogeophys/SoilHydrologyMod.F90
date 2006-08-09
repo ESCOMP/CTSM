@@ -400,7 +400,7 @@ contains
     use clm_varpar    , only : nlevsoi, max_pft_per_col
     use shr_const_mod , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
     use TridiagonalMod, only : Tridiagonal
-    use time_manager  , only : get_step_size
+    use clm_time_manager  , only : get_step_size
 !
 ! !ARGUMENTS:
     implicit none
@@ -747,7 +747,7 @@ contains
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
-    use time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size
     use clm_varcon  , only: pondmx
     use clm_varpar  , only : nlevsoi
 !

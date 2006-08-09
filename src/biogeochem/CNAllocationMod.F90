@@ -46,7 +46,7 @@ subroutine CNAllocation (lbc, ubc, &
 ! !USES:
    use clmtype
    use clm_varctl, only: irad
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
    use pft2colMod, only: p2c
 !
 ! !ARGUMENTS:

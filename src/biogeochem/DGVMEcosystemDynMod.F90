@@ -460,7 +460,7 @@ contains
 ! !USES:
     use clmtype
     use shr_const_mod, only: SHR_CONST_CDAY
-    use time_manager, only : get_step_size, get_nstep, get_curr_date
+    use clm_time_manager, only : get_step_size, get_nstep, get_curr_date
 !
 ! !ARGUMENTS:
     implicit none
@@ -623,7 +623,7 @@ contains
     use clmtype
     use shr_const_mod , only: SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_varpar    , only : nlevsoi
-    use time_manager  , only : get_step_size
+    use clm_time_manager  , only : get_step_size
 !
 ! !ARGUMENTS:
     implicit none
@@ -1018,7 +1018,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size
     use shr_const_mod, only : SHR_CONST_PI, SHR_CONST_CDAY, SHR_CONST_TKFRZ
 !
 ! !ARGUMENTS:
@@ -1114,7 +1114,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size
     use shr_const_mod, only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
 !
 ! !ARGUMENTS:

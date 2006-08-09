@@ -60,7 +60,7 @@ contains
 ! !USES:
     use clmtype
     use clm_varcon  , only : denh2o, denice, wimp, ssi
-    use time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size
 !
 ! !ARGUMENTS:
     implicit none
@@ -248,7 +248,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use time_manager, only : get_step_size
+    use clm_time_manager, only : get_step_size
     use clm_varcon  , only : denice, denh2o, tfrz
 !
 ! !ARGUMENTS:

@@ -51,7 +51,7 @@ subroutine C13Flux1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
    use clm_varctl, only: irad
 !
 ! !ARGUMENTS:
@@ -398,7 +398,7 @@ subroutine C13Flux2(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
    use clm_varctl, only: irad
 !
 ! !ARGUMENTS:
@@ -528,7 +528,7 @@ subroutine C13Flux3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
    use clm_varctl, only: irad
    use pft2colMod, only: p2c
 !
@@ -1040,7 +1040,7 @@ subroutine C13FluxCalc(c13_flux, ctot_flux, c13_state, ctot_state, &
 !
 ! !USES:
    use clmtype
-   use time_manager, only: get_step_size
+   use clm_time_manager, only: get_step_size
    use clm_varctl, only: irad
 !
 ! !ARGUMENTS:

@@ -173,7 +173,7 @@ contains
     use clm_atmlnd  , only : clm_mapa2l, atm_a2l, clm_a2l
     use clm_varctl  , only : offline_atmdir, pertlim
     use clm_varcon  , only : rair, cpair, co2_ppmv_const, o2_molar_const, tcrit, c13ratio
-    use time_manager, only : get_step_size, get_curr_calday, get_curr_date
+    use clm_time_manager, only : get_step_size, get_curr_calday, get_curr_date
     use fileutils   , only : getfil
 !
 ! !ARGUMENTS:
@@ -425,7 +425,7 @@ contains
     use domainMod   , only : domain_init, adomain
     use areaMod     , only : celledge, cellarea
     use fileutils   , only : getfil
-    use time_manager, only : get_curr_date
+    use clm_time_manager, only : get_curr_date
     use ncdio
 !
 ! !ARGUMENTS:

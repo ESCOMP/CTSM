@@ -56,7 +56,7 @@ contains
     use clm_atmlnd   , only : clm_a2l
     use clm_varcon   , only : tfrz, istice, istwet, istsoil
     use FracWetMod   , only : FracWet
-    use time_manager , only : get_step_size
+    use clm_time_manager , only : get_step_size
     use subgridAveMod, only : p2c
 !
 ! !ARGUMENTS:

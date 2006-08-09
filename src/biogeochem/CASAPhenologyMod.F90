@@ -191,7 +191,7 @@ contains
 ! !USES:
     use clmtype
     use clm_varcon  , only : tfrz
-    use time_manager, only : get_step_size, get_nstep, get_curr_date
+    use clm_time_manager, only : get_step_size, get_nstep, get_curr_date
 !
 ! !ARGUMENTS:
     implicit none
