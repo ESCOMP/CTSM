@@ -23,17 +23,17 @@ my %CASE_DIR_nersc;
 my %CASE_DIR_llnl;
 my %CASE_DIR_default;
 $CASE_DIR_ncar{'default'} = "/ptmp/$LOGNAME/clmtest";
-$CASE_DIR_ncar{'solaris'} = "/net/flagstaf/export/scratch/$LOGNAME";
-$CASE_DIR_ncar{'linux'} = "/scratch/cluster/$LOGNAME";
-$CASE_DIR_default{'default'} = "\$MODEL_CFGDIR";
-$CASE_DIR_default{'dec_osf'} = "/tmp/$LOGNAME";
-$CASE_DIR_llnl{'aix'} = "/p/gb1/$LOGNAME";
-$CASE_DIR_llnl{'default'} = "/nfs/tmp0/$LOGNAME";
-$CASE_DIR_ornl{'aix'} = "/tmp/work/$LOGNAME";
-$CASE_DIR_ornl{'linux'} = "/u1/$LOGNAME";
-$CASE_DIR_ornl{'default'} = "/scratch/scr101/$LOGNAME";
-$CASE_DIR_dao{'default'} = "/scratch/$LOGNAME";
-$CASE_DIR_nersc{'default'} = "/scratch/scratchdirs/$LOGNAME";
+$CASE_DIR_ncar{'solaris'} = "/net/flagstaf/export/scratch/$LOGNAME/clmtest";
+$CASE_DIR_ncar{'linux'} = "/scratch/cluster/$LOGNAME/clmtest";
+$CASE_DIR_default{'default'} = "\$MODEL_CFGDIR/clmtest";
+$CASE_DIR_default{'dec_osf'} = "/tmp/$LOGNAME/clmtest";
+$CASE_DIR_llnl{'aix'} = "/p/gb1/$LOGNAME/clmtest";
+$CASE_DIR_llnl{'default'} = "/nfs/tmp0/$LOGNAME/clmtest";
+$CASE_DIR_ornl{'aix'} = "/tmp/work/$LOGNAME/clmtest";
+$CASE_DIR_ornl{'linux'} = "/u1/$LOGNAME/clmtest";
+$CASE_DIR_ornl{'default'} = "/scratch/scr101/$LOGNAME/clmtest";
+$CASE_DIR_dao{'default'} = "/scratch/$LOGNAME/clmtest";
+$CASE_DIR_nersc{'default'} = "/scratch/scratchdirs/$LOGNAME/clmtest";
 $CLM_run::CASE_DIR_default = lab_default->new( \@CLM_run::LAB_list, (
                                                 'ncar', \%CASE_DIR_ncar, 
                                                 'ornl', \%CASE_DIR_ornl,

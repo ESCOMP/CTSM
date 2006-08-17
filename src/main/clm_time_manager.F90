@@ -878,18 +878,27 @@ subroutine get_perp_date(yr, mon, day, tod, offset)
    character(len=*), parameter :: sub = 'get_perp_date'
    integer :: rc
    type(ESMF_Time) :: date
+   type(ESMF_TimeInterval) :: DelTime
 !-----------------------------------------------------------------------------------------
 
-!  Get time of day with current clock
-   call ESMF_ClockGet(tm_clock, currTime=date, rc=rc )
-   call chkrc(rc, sub//': error return from ESMF_ClockGet')
-
-!  Supply year, month, and day so that seconds are seconds in day rather 
-!  than seconds from start_date
+   call ESMF_ClockGet( tm_clock, currTime=date, rc=rc )
+   ! Get time of day add it to perpetual date
+   ! Get year, month, day so that seconds are time-of-day rather than since start time
    call ESMF_TimeGet(date, yy=yr, mm=mon, dd=day, s=tod, rc=rc)
    call chkrc(rc, sub//': error return from ESMF_TimeGet')
+   call ESMF_TimeIntervalSet(DelTime, s=tod, rc=rc)
+   call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet')
+   date = tm_perp_date + DelTime
+   if ( present(offset) )then
+      call ESMF_TimeIntervalSet(DelTime, s=offset, rc=rc)
+      call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet')
+      date = date + DelTime
+   end if
+   ! Get time of day from the result
+   ! Get year, month, day so that seconds are time-of-day rather than since start time
+   call ESMF_TimeGet(date, yy=yr, mm=mon, dd=day, s=tod, rc=rc)
 
-! Get the date from the fixed perpetual date
+   ! Get the date from the fixed perpetual date (in case it overflows to next day)
    call ESMF_TimeGet(tm_perp_date, yy=yr, mm=mon, dd=day, rc=rc)
    call chkrc(rc, sub//': error return from ESMF_TimeGet')
 

@@ -1,4 +1,57 @@
 ===============================================================
+Tag name: clm3_expa_69
+Originator(s): erik, jedwards, jeff
+Date: Thu Aug 17 09:54:23 MDT 2006
+One-line Summary: Fix perpetual bug and update csm_share
+
+Purpose of changes: Fix bugs in perpetual mode and restat_option="end" when
+	running with CAM.
+
+Bugs fixed (include bugzilla ID): 107, 185
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M bld/offline/tests/CLM_lab.pm
+    Put test output for all platforms under "clmtest" directory
+M bld/offline/tests/test_batch.csh
+    Update version comparing to, abort if error status is not ok.
+M src/SVN_EXTERNAL_DIRECTORIES
+    Update csm_share to share3_060814
+M src/main/ncdio.F90
+    Change from Jim Edwards to eliminate use of wrap_nf module (from cam3_3_19 commit)
+M src/main/controlMod.F90
+    Change from Jeff Lee to make use statement for "shr_inputInfo_mod" all lower-case.
+    This is important for the CCSM dependency generator on some platforms.
+
+Summary of testing:
+
+  bluesky: all tests pass
+  tempest: T31 debug-mode, spmd=False test fails
+  bangkok/lf95: all tests pass
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_65, and
+                                                              clm3_expa_67 (bangkok)
+
+  Summarize any changes to answers: bit-for-bit
+
+Move branch tag over to trunk from: fixtgrbug2_clm3_expa_68
+
+===============================================================
+===============================================================
 Tag name: clm3_expa_68
 Originator(s): mvertens
 Date: Wed Aug  9 16:43:04 MDT 2006

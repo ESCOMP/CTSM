@@ -220,7 +220,7 @@ contains
 #if (defined CASA)
     use CASAMod          , only : lnpp, lalloc, q10, spunup, fcpool
 #endif
-    use shr_inputInfo_mod, only : shr_inputInfo_initType,       &
+    use shr_inputinfo_mod, only : shr_inputInfo_initType,       &
                                   shr_inputInfo_initGetData,    &
                                   shr_inputInfo_initIsBranch,   &
                                   shr_inputInfo_initIsContinue, &

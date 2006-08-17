@@ -150,6 +150,7 @@ switch ( $OS )
      echo "Set SHMEM_CPUS to $SHMEM_CPUS"
      breaksw
   case Linux:
+     set COMPDIR=/fs/cgd/csm/models/lnd/clm/clm3_expa_68
      setenv USER_FC "lf95"
      setenv MPI_ROOT "/usr/local/mpich-1.2.7p1-gcc-g++-4.0.2-8-lf9562"
      setenv LIB_MPI $MPI_ROOT/lib
@@ -176,10 +177,15 @@ echo "Starting test-model.pl"
 #rm -f /ptmp/tcraig/clmtest/*/0*.log
 
  ./test-model.pl -res T31cnall -c $COMPDIR
+if ( $status != 0 ) exit 999
  ./test-model.pl -res T31      -c $COMPDIR
+if ( $status != 0 ) exit 999
  ./test-model.pl -res T31cn    -c $COMPDIR
+if ( $status != 0 ) exit 999
  ./test-model.pl -res T31casa  -c $COMPDIR
+if ( $status != 0 ) exit 999
  ./test-model.pl -res T31dgvm  
+if ( $status != 0 ) exit 999
 
 #foreach file (/ptmp/tcraig/clmtest/*/0*.log)
 #  cp $file $cdir/logs/

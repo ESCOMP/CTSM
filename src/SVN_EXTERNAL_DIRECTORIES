@@ -1,4 +1,4 @@
-csm_share/shr https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_060710/shr
-csm_share/eshr https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_060710/eshr
+csm_share/shr https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_060814/shr
+csm_share/eshr https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_060814/eshr
 utils/esmf_wrf_timemgr https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_060616
 utils/timing             https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_051212

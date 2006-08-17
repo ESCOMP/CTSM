@@ -1684,6 +1684,7 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use decompMod   , only : get_proc_bounds
     use nanMod
+    use wrap_nf
 !
 ! !ARGUMENTS:
     implicit none
