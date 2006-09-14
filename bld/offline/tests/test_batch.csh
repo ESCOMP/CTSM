@@ -92,6 +92,8 @@
 ##PBS -m ae
 #
 #=======================================================================
+set COMPDIR=/fs/cgd/csm/models/lnd/clm/clm3_expa_69
+
 set OS = `uname -s`
 switch ( $OS )
   case UNICOS/mp:
@@ -116,7 +118,6 @@ switch ( $OS )
 endsw
 echo "Changing directory to $SCRIPT_DIR"
 cd $SCRIPT_DIR
-set COMPDIR=/fis/cgd/ccr/tcraig/fm/clm3_expa_65
 switch ( $OS )
   case AIX:
      setenv SPMD_NODES 2
@@ -150,7 +151,6 @@ switch ( $OS )
      echo "Set SHMEM_CPUS to $SHMEM_CPUS"
      breaksw
   case Linux:
-     set COMPDIR=/fs/cgd/csm/models/lnd/clm/clm3_expa_68
      setenv USER_FC "lf95"
      setenv MPI_ROOT "/usr/local/mpich-1.2.7p1-gcc-g++-4.0.2-8-lf9562"
      setenv LIB_MPI $MPI_ROOT/lib

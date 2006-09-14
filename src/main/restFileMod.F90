@@ -62,11 +62,7 @@ contains
 ! Read/write CLM restart file.
 !
 ! !USES:
-#if (defined OFFLINE) || (defined COUP_CSM)
-    use clm_time_manager     , only : timemgr_restart, get_nstep
-#else
-    use clm_time_manager     , only : get_nstep
-#endif
+    use clm_time_manager , only : timemgr_restart_io, get_nstep
     use subgridRestMod   , only : SubgridRest
     use BiogeophysRestMod, only : BiogeophysRest
 #if (defined CN)
@@ -114,9 +110,7 @@ contains
 
     ! Define restart file variables
 
-#if (defined OFFLINE) || (defined COUP_CSM)
-    call timemgr_restart(ncid, flag='define')
-#endif
+    call timemgr_restart_io( ncid, flag='define' )
     call SubgridRest( ncid, flag='define' )
     call BiogeophysRest( ncid, flag='define' )
 #if (defined CN)
@@ -132,16 +126,14 @@ contains
     call RtmRest( ncid, flag='define' )
 #endif
 #if (defined COUP_CSM)
-    call csm_restart(ncid, flag='define')
+    call csm_restart( ncid, flag='define' )
 #endif
     call accumulRest( ncid, flag='define' )
     call restFile_enddef( ncid )
 
     ! Write restart file variables
     
-#if (defined OFFLINE) || (defined COUP_CSM)
-    call timemgr_restart(ncid, flag='write')
-#endif
+    call timemgr_restart_io( ncid, flag='write' )
     call SubgridRest( ncid, flag='write' )
     call BiogeophysRest( ncid, flag='write' )
 #if (defined CN)
@@ -157,7 +149,7 @@ contains
     call RtmRest( ncid, flag='write' )
 #endif
 #if (defined COUP_CSM)
-    call csm_restart(ncid, flag='write')
+    call csm_restart( ncid, flag='write' )
 #endif
     call accumulRest( ncid, flag='write' )
     

@@ -61,16 +61,18 @@ contains
 ! !IROUTINE: clm_init1
 !
 ! !INTERFACE:
-  subroutine clm_init1( )
+  subroutine clm_init1( SyncClock )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use initializeMod, only : initialize2
+    use initializeMod,   only : initialize2
+    use eshr_timemgr_mod,only : eshr_timemgr_clockType
 !
 ! !ARGUMENTS:
+   type(eshr_timeMgr_clockType), optional, intent(IN) :: SyncClock ! Synchronization clock
 !
 ! !LOCAL VARIABLES:
 !
@@ -80,7 +82,11 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    call initialize2()
+   if (present(SyncClock)) then	
+      call initialize2( SyncClock )
+   else
+      call initialize2()
+   end if
 
   end subroutine clm_init1
 
@@ -100,7 +106,7 @@ contains
     use shr_orb_mod     , only : shr_orb_decl
     use clm_varctl      , only : finidat, nsrest
     use initSurfAlbMod  , only : initSurfAlb, do_initsurfalb 
-    use clm_time_manager    , only : get_nstep, get_step_size, get_curr_calday
+    use clm_time_manager, only : get_nstep, get_step_size, get_curr_calday
     use clm_atmlnd      , only : clm_map2gcell
     use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
 !
@@ -157,12 +163,12 @@ contains
 ! land model run1 phase
 !
 ! !USES:
-    use shr_orb_mod , only : shr_orb_decl
-    use clm_varctl  , only : irad 
+    use shr_orb_mod     , only : shr_orb_decl
+    use clm_varctl      , only : irad 
     use clm_time_manager, only : get_nstep, get_step_size, get_curr_calday
-    use clm_varorb  , only : eccen, mvelpp, lambm0, obliqr
-    use driver      , only : driver1
-    use clm_atmlnd  , only : clm_map2gcell
+    use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
+    use driver          , only : driver1
+    use clm_atmlnd      , only : clm_map2gcell
 !
 ! !ARGUMENTS:
 !

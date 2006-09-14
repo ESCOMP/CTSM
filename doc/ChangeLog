@@ -1,4 +1,67 @@
 ===============================================================
+Tag name: clm3_expa_70
+Originator(s): mvertens
+Date: Thu Sep 14 12:53:28 MDT 2006
+One-line Summary: removed use of cam time manager in COUP_CAM mode
+
+Purpose of changes: To enable clm to only use the clm time manager regardless
+   of the modes it is run in
+
+Bugs fixed (include bugzilla ID): #215 will be resolved when clm3_expa_70
+   is checked into the cam code base
+
+Describe any changes made to build system: clm.template needed to have
+   \$CODEROOT/csm_share/eshr added to Filepath
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: mvertens, erik (briefly)
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+   M   src/main/clm_comp.F90
+         - passed SyncClock as optional argument to clm_init1 and call initialize2 
+   M   src/main/initializeMod.F90
+         - obtained initialization information from SyncClock if passed in as argument,
+           rather than using namelist input. For restart runs, stop date obtained from
+           SyncClock if passed in as argument, rather than from namelist input.
+         - removed COUP_CAM as CPP if-def
+   M   src/main/restFileMod.F90
+         - renamed routine that reads in time manager restart information to timemgr_restart_io
+   M   src/main/controlMod.F90
+         - now use clm_time_manager in all CLM modes (including COUP_CAM)
+         - removed call to CAM radiation_get routine
+         - ***Note that this assumes that CAM and CLM radiation frequency are identical ***
+         - ***Should put this into the CAM build-namelist generation routine - filed as a bug report ***
+         - need to put in such a check in the future
+         - dtime obtained now from CLM namelist, not CAM time manager
+   M   src/main/clm_time_manager.F90
+         - put in new optional arguments into timemgr_init and timemgr_restart to use SyncClock values if 
+           they are passed in to initialize clock
+   M   src/main/lnd_comp_mct.F90
+         - passed SyncClock in as argument into clm_init1
+
+Summary of testing:
+
+    bluesky: 
+    - ran test_batch.csh and verified that all tests passed successfully
+	   when compared to clm3_expa_69
+    - ran cam3_3_27 using clm3_expa_70 code changes and verified that 
+      all tests passed successfully when compared to cam3_3_27
+    - ran ESR.T31_g35.B.bluesky using ccsm3_1_beta36 and the clm3_expa_70 code base
+      and verified that results were bfb when compared to ccsm3_1_beta36
+
+Summarize any changes to answers: Results are bfb
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_69
 Originator(s): erik, jedwards, jeff
 Date: Thu Aug 17 09:54:23 MDT 2006

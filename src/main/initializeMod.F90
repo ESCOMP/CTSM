@@ -37,8 +37,8 @@ module initializeMod
   private do_restread
 !-----------------------------------------------------------------------
 ! !PRIVATE DATA:
-  integer , allocatable, private, save :: vegxy(:,:) ! vegetation type
-  real(r8), allocatable, private, save :: wtxy(:,:)  ! subgrid weights
+  integer , allocatable, private :: vegxy(:,:) ! vegetation type
+  real(r8), allocatable, private :: wtxy(:,:)  ! subgrid weights
 
 contains
 
@@ -77,11 +77,6 @@ contains
 !
 ! !ARGUMENTS:
     type(shr_InputInfo_initType), intent(in), optional :: CCSMInit
-!
-! !CALLED FROM:
-! routine program_off if cpp token OFFLINE is defined
-! routine program_csm if cpp token COUP_CSM is defined
-! routine atmlnd_ini in module atm_lndMod if cpp token COUP_CAM is defined
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
@@ -212,7 +207,7 @@ contains
 ! !IROUTINE: initialize2
 !
 ! !INTERFACE:
-  subroutine initialize2( )
+  subroutine initialize2( SyncClock )
 !
 ! !DESCRIPTION:
 ! Land model initialization.
@@ -229,6 +224,8 @@ contains
 ! o Initializes accumulation variables.
 !
 ! !USES:
+    use eshr_timemgr_mod, only : eshr_timemgr_clockType, eshr_timemgr_clockInfoType, &
+                                 eshr_timemgr_clockGet
     use clm_atmlnd      , only : init_atm2lnd_type, init_lnd2atm_type, &
                                  clm_a2l, clm_l2a, atm_a2l, atm_l2a
     use initGridCellsMod, only : initGridCells
@@ -266,20 +263,12 @@ contains
 #if (defined RTM) 
     use RtmMod          , only : Rtmini
 #endif
-#if (defined COUP_CAM)
-    use clm_time_manager    , only : get_curr_date, get_nstep 
-#else
-    use clm_time_manager    , only : get_curr_date, get_nstep, advance_timestep, &
-                                 timemgr_init, timemgr_restart
-#endif
+    use clm_time_manager, only : get_curr_date, get_nstep, advance_timestep, &
+                                 timemgr_init, timemgr_restart_io, timemgr_restart
     use fileutils       , only : getfil
 !
 ! !ARGUMENTS:
-!
-! !CALLED FROM:
-! routine program_off if cpp token OFFLINE is defined
-! routine program_csm if cpp token COUP_CSM is defined
-! routine atmlnd_ini in module atm_lndMod if cpp token COUP_CAM is defined
+   type(eshr_timeMgr_clockType), optional, intent(IN) :: SyncClock ! Synchronization clock
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
@@ -299,14 +288,24 @@ contains
     integer  :: begl, endl            ! clump beg and ending landunit indices
     integer  :: begg, endg            ! clump beg and ending gridcell indices
     integer  :: begg_atm, endg_atm    ! proc beg and ending gridcell indices
-    character(len=256) :: fnamer          ! name of netcdf restart file 
-    character(len=256) :: pnamer          ! full pathname of netcdf restart file
-    character(len=256) :: fnamer_bin      ! name of binary restart file
-    character(len=256) :: pnamer_bin      ! full pathname of binary restart file
-    integer  :: ncid                      ! netcdf id
+    character(len=256) :: fnamer             ! name of netcdf restart file 
+    character(len=256) :: pnamer             ! full pathname of netcdf restart file
+    character(len=256) :: fnamer_bin         ! name of binary restart file
+    character(len=256) :: pnamer_bin         ! full pathname of binary restart file
+    integer  :: ncid                         ! netcdf id
     logical ,parameter :: a2ltrue = .true.   ! local
     logical ,parameter :: a2lfalse = .false. ! local
-
+    !
+    character(len=80) :: calendar           ! Calendar type
+    integer           :: start_ymd          ! Start date (YYYYMMDD)
+    integer           :: start_tod          ! Start time of day (sec)
+    integer           :: ref_ymd            ! Reference date (YYYYMMDD)
+    integer           :: ref_tod            ! Reference time of day (sec)
+    integer           :: stop_ymd           ! Stop date (YYYYMMDD)
+    integer           :: stop_tod           ! Stop time of day (sec)
+    logical           :: log_print          ! Flag to print out log information or not
+    logical           :: perpetual_run      ! If in perpetual mode or not
+    integer           :: perpetual_ymd      ! Perpetual date (YYYYMMDD)
 !----------------------------------------------------------------------
 
     ! Compute gatm, ldomain/adomain overlap point
@@ -405,15 +404,33 @@ contains
     ! Initialize time manager
     ! ------------------------------------------------------------------------
 
-#if (! defined COUP_CAM)
     if (nsrest == 0) then  
-       call timemgr_init()
+       if (present(SyncClock)) then	
+          call eshr_timemgr_clockGet(                                          &
+               SyncClock, start_ymd=start_ymd,                                 &
+               start_tod=start_tod, ref_ymd=ref_ymd,                           &
+               ref_tod=ref_tod, stop_ymd=stop_ymd, stop_tod=stop_tod,          &
+               perpetual_run=perpetual_run, perpetual_ymd=perpetual_ymd,       &
+               calendar=calendar )
+          call timemgr_init(                                                   &
+               calendar_in=calendar, start_ymd_in=start_ymd,                   &
+               start_tod_in=start_tod, ref_ymd_in=ref_ymd,                     &
+               ref_tod_in=ref_tod, stop_ymd_in=stop_ymd, stop_tod_in=stop_tod, &
+               perpetual_run_in=perpetual_run, perpetual_ymd_in=perpetual_ymd )
+       else
+          call timemgr_init()
+       end if
     else
        call restFile_open( flag='read', file=fnamer, ncid=ncid )
-       call timemgr_restart( ncid=ncid, flag='read' )
+       call timemgr_restart_io( ncid=ncid, flag='read' )
        call restFile_close( ncid=ncid )
+       if (present(SyncClock)) then	
+          call eshr_timemgr_clockGet( SyncClock, stop_ymd=stop_ymd, stop_tod=stop_tod )
+          call timemgr_restart( stop_ymd, stop_tod )
+       else
+          call timemgr_restart()
+       end if
     end if
-#endif
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields

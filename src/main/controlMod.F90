@@ -1,4 +1,4 @@
-#include <misc.h>
+            #include <misc.h>
 #include <preproc.h>
 #if ( defined SCAM )
 #include <max.h>
@@ -210,13 +210,7 @@ contains
 ! Initialize CLM run control information
 !
 ! !USES:
-#if (defined OFFLINE) || (defined COUP_CSM)
-    use clm_time_manager     , only : calendar, dtime, nestep, nelapse, start_ymd, &
-                                  start_tod, stop_ymd, stop_tod, ref_ymd, ref_tod
-#else
-    use radiation        , only : radiation_get
-    use clm_time_manager     , only : get_step_size, is_perpetual
-#endif
+    use clm_time_manager
 #if (defined CASA)
     use CASAMod          , only : lnpp, lalloc, q10, spunup, fcpool
 #endif
@@ -251,9 +245,6 @@ contains
     real(r8):: rundef               ! real undefined value
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
-#if (defined COUP_CAM)
-    integer :: dtime                ! needed since dtime from CAM is not read in
-#endif  
     character(len=32) :: subname = 'control_init'  ! subroutine name
 !------------------------------------------------------------------------
 
@@ -266,7 +257,7 @@ contains
 #if (!defined COUP_CAM)
     namelist /clm_inparm/  &
          ctitle, caseid, nsrest,  &
-         calendar, dtime, nelapse, nestep, start_ymd, start_tod,  &
+         calendar, nelapse, nestep, start_ymd, start_tod,  &
          stop_ymd, stop_tod, ref_ymd, ref_tod
 
     ! Archive options
@@ -275,6 +266,9 @@ contains
 #endif
 
     ! clm input datasets
+
+    namelist / clm_inparm/ &
+	 dtime	
 
     namelist /clm_inparm/  &
          finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
@@ -474,11 +468,7 @@ contains
        end if
 
 #if (defined COUP_CAM)
-       ! Initialization of time manager done in cam code before this is called
-
-       dtime = get_step_size()
-
-       ! Override select set of namelist values with CAM input
+       ! Override select set of namelist values with sequential driver input
 
        if ( .not. present(CCSMInit) )then
           call endrun( subname//' error CCSMInit not present but is '// &
@@ -490,7 +480,6 @@ contains
                                        brnch_retain_casename=brnch_retain_casename,  &
                                        archive_dir=drvarchdir )
        archive_dir = shr_string_getParentDir( drvarchdir )//'/lnd/'
-       call radiation_get( iradsw_out=irad )
        if (      shr_inputInfo_initIsStartup(  CCSMInit ) )then
           nsrest = 0
        else if ( shr_inputInfo_initIsContinue( CCSMInit ) )then
@@ -668,10 +657,7 @@ contains
 !
 ! !USES:
 !
-#if (defined OFFLINE) || (defined COUP_CSM)
-    use clm_time_manager, only : calendar, dtime, nestep, nelapse, start_ymd, &
-                             start_tod, stop_ymd, stop_tod, ref_ymd, ref_tod
-#endif
+    use clm_time_manager
 #if (defined CASA)
     use CASAMod, only : lnpp, lalloc, q10, spunup
 #endif
@@ -695,10 +681,11 @@ contains
     call mpi_bcast (ctitle, len(ctitle), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (nsrest,           1, MPI_INTEGER  , 0, mpicom, ier)
 
+    call mpi_bcast (dtime    , 1, MPI_INTEGER  , 0, mpicom, ier)
+
 #if (defined OFFLINE) || (defined COUP_CSM)
     call mpi_bcast (nestep   , 1, MPI_INTEGER  , 0, mpicom, ier)
     call mpi_bcast (nelapse  , 1, MPI_INTEGER  , 0, mpicom, ier)
-    call mpi_bcast (dtime    , 1, MPI_INTEGER  , 0, mpicom, ier)
     call mpi_bcast (start_ymd, 1, MPI_INTEGER  , 0, mpicom, ier)
     call mpi_bcast (start_tod, 1, MPI_INTEGER  , 0, mpicom, ier)
     call mpi_bcast (stop_ymd , 1, MPI_INTEGER  , 0, mpicom, ier)
@@ -865,9 +852,9 @@ contains
        write(6,*) '   atmosperic forcing data    = ',trim(offline_atmdir)
     end if
 #elif (defined COUP_CAM)
-    write(6,*) '   atmosperhic forcing data is from cam model'
+    write(6,*) '   atmosperhic forcing data is from sequential ccsm model'
 #elif (defined COUP_CSM)
-    write(6,*) '   atmospheric forcint data is from csm flux coupler'
+    write(6,*) '   atmospheric forcint data is from ccsm flux coupler'
 #endif
 #if (defined RTM)
     if (frivinp_rtm /= ' ') write(6,*) '   RTM river data       = ',trim(frivinp_rtm)

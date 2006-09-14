@@ -70,8 +70,8 @@ contains
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use clm_time_manager     , only : get_nstep      
-    use clm_atmlnd      , only : clm_mapl2a, clm_l2a, atm_l2a
+    use clm_time_manager , only : get_nstep      
+    use clm_atmlnd       , only : clm_mapl2a, clm_l2a, atm_l2a
     use domainMod        , only : adomain
     use clm_comp         , only : clm_init0, clm_init1, clm_init2
     use clm_varctl       , only : finidat       
@@ -138,7 +138,7 @@ contains
 
     ! Initialize clm phase 2 - rest of initialization
 
-    call clm_init1()
+    call clm_init1( SyncClock )
     call clm_init2()
 
     ! Initialize MCT gsMap, domain and attribute vectors
@@ -176,13 +176,13 @@ contains
 ! Run clm model
 !
 ! !USES:
-    use clm_atmlnd, only : clm_mapl2a, clm_mapa2l
-    use clm_atmlnd, only : clm_l2a, atm_l2a, atm_a2l, clm_a2l
-    use clm_comp       , only : clm_run1, clm_run2
+    use clm_atmlnd      ,only : clm_mapl2a, clm_mapa2l
+    use clm_atmlnd      ,only : clm_l2a, atm_l2a, atm_a2l, clm_a2l
+    use clm_comp        ,only : clm_run1, clm_run2
     use eshr_timemgr_mod,only : eshr_timemgr_clockType,         &
                                 eshr_timemgr_clockAlarmIsOnRes, &
                                 eshr_timemgr_clockDateInSync
-    use clm_time_manager   , only : get_curr_date
+    use clm_time_manager,only : get_curr_date, advance_timestep
 !
 ! !ARGUMENTS:
     type(mct_aVect)             , intent(inout) :: x2l_l
@@ -203,7 +203,9 @@ contains
 !
 !EOP
 !---------------------------------------------------------------------------
+
     ! Check that internal clock in sync with master clock
+
     call get_curr_date(yr, mon, day, tod )
     ymd = yr*10000 + mon*100 + day
     if ( .not. eshr_timemgr_clockDateInSync( SyncClock, ymd, tod ) )then
@@ -218,8 +220,8 @@ contains
     
     ! Run clm
 
-    call clm_run1( )
     rstwr = eshr_timemgr_clockAlarmIsOnRes( SyncClock )
+    call clm_run1( )
     call clm_run2( rstwr )
 
     ! Map land data type to MCT
@@ -227,6 +229,10 @@ contains
     call clm_mapl2a(clm_l2a, atm_l2a)
     call lnd_export_mct( atm_l2a, l2x_l )
 
+    ! Advance clm time step
+
+    call advance_timestep()
+	
   end subroutine lnd_run_mct
 
 !---------------------------------------------------------------------------
