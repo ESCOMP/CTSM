@@ -88,7 +88,7 @@
 !
 ! !LOCAL VARIABLES:
 #ifdef SINGLE_EXEC
-  integer  :: nthreads
+  integer  :: nThreads
 #endif
   integer  :: i,j          ! loop indices
   integer  :: nstep        ! time step index
@@ -108,8 +108,10 @@
 !-----------------------------------------------------------------------
 
 #ifdef SINGLE_EXEC
-  call MPH_get_argument("THREADS", nthreads, "lnd")
-  call OMP_SET_NUM_THREADS(nthreads)
+  call MPH_get_argument("THREADS", nThreads, "lnd")
+#ifdef _OPENMP
+   call OMP_SET_NUM_THREADS(nThreads)
+#endif
 #endif
 
   ! -----------------------------------------------------------------

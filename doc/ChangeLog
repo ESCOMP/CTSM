@@ -1,4 +1,46 @@
 ===============================================================
+Tag name: clm3_expa_71
+Originator(s): jwolfe
+Date: Wed Sep 20 12:09:10 MDT 2006
+One-line Summary: fixed single executable problem on lightning
+
+Purpose of changes: to fix single executable ccsm problem on lightning
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: jwofle
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: one
+
+List all existing files that have been modified, and describe the changes:
+  program_csm.F90
+   - call to opm_set_threads only invoked now if cpp variable _OPENMP is defined
+
+Summary of testing:
+
+  bluesky: none
+  tempest: none
+  bangkok/lf95: none
+  lightning/pathscale : ccsm mode  only tested
+
+  Note: this change only effects the driver for COUP_CSM mode and so will
+  have no impact on COUP_CAM or OFFLINE mode   
+
+CLM tag used for the baseline comparison tests if applicable:
+
+Summarize any changes to answers: answers are bfb
+===============================================================
+===============================================================
 Tag name: clm3_expa_70
 Originator(s): mvertens
 Date: Thu Sep 14 12:53:28 MDT 2006
