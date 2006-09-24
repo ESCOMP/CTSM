@@ -1,4 +1,43 @@
 ===============================================================
+Tag name: clm3_expa_72
+Originator(s): mvertens
+Date: Sun Sep 24 17:40:41 MDT 2006
+One-line Summary: removed spaces before #include in controlMod.F90
+
+Purpose of changes: fixed spaces before #include in controlMdd.F90
+   this caused problems on lightning with CCSM build (where the
+   c preprocessor is invoked independently 
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+ 
+Describe any substantial timing or memory changes: nonen
+
+Code reviewed by: mvertens
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+ M src/main/controlMod.F90
+    - removed spaces before #include (introduced in clm3_epxa_70)
+
+Summary of testing:
+
+  bluesky: none
+  tempest: none
+  bangkok/lf95: none
+
+Summarize any changes to answers: Answers are bfb
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_71
 Originator(s): jwolfe
 Date: Wed Sep 20 12:09:10 MDT 2006
