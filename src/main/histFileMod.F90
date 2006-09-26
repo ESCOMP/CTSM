@@ -2904,7 +2904,7 @@ contains
     ! Determine if time to write restarts before resetting number of
     ! time samples below
 
-#if (defined OFFLINE) || (defined COUP_CAM)
+#if (defined OFFLINE) 
     if_writrest = .false.
     if (tape(1)%ntimes == tape(1)%mfilt) if_writrest = .true.
 #endif

@@ -18,88 +18,64 @@ module spmdMod
 !-----------------------------------------------------------------------
 
   use shr_kind_mod, only: r8 => shr_kind_r8
-#if (defined COUP_CSM)
-  use mpiinc
-#endif
-
-#if (!defined SPMD)
-! ----------------------- SPMD OFF --------------------------------------
-
-  logical :: masterproc = .true. ! proc 0 logical for printing msgs
-  integer :: iam = 0
-  integer :: npes = 1
+  implicit none
   save
+  public  
+
+  ! Default settings valid even if there is no spmd 
+
+  logical, public :: masterproc      ! proc 0 logical for printing msgs
+  integer, public :: iam             ! processor number
+  integer, public :: npes            ! number of processors for clm
+  integer, public :: mpicom          ! communicator group for clm
+
+#ifdef SPMD
+#include <mpif.h>  
 #endif
-
-#if (defined SPMD)
-! ----------------------- SPMD ON ---------------------------------------
-
-#if (defined COUP_CAM)
-  use mpishorthand
-  use spmd_utils, only: npes, masterproc, iam
-#elif (defined OFFLINE)
-  use mpiinc
-  integer, public :: npes        !number of processors
-  integer, public :: iam         !proc number
-  logical, public :: masterproc  !proc 0 logical for printing msgs
-  integer, public :: mpicom
-  save
-#elif (defined COUP_CSM)
-  integer, public :: npes        !number of processors
-  integer, public :: iam         !proc number
-  logical, public :: masterproc  !proc 0 logical for printing msgs
-  integer, public :: mpicom
-  save
-#endif
-
-#if (defined OFFLINE) || (defined COUP_CSM)
 
 contains
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: spmd_init
+! !IROUTINE: spmd_init( clm_mpicom )
 !
 ! !INTERFACE:
-  subroutine spmd_init
+  subroutine spmd_init( clm_mpicom )
 !
 ! !DESCRIPTION:
 ! MPI initialization (number of cpus, processes, tids, etc)
 !
+! !USES
+!
 ! !ARGUMENTS:
     implicit none
+    integer, intent(in) :: clm_mpicom
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
 !EOP
 !
+#ifdef SPMD
 ! !LOCAL VARIABLES:
-    integer :: i,j        ! indices
-    integer :: ier        ! return error status
+    integer :: i,j         ! indices
+    integer :: ier         ! return error status
+    logical :: mpi_running ! temporary
     integer, allocatable :: length(:)
     integer, allocatable :: displ(:)
     character*(MPI_MAX_PROCESSOR_NAME), allocatable :: procname(:)
-#if (defined OFFLINE)
-    logical mpi_running
-#endif
 !-----------------------------------------------------------------------
 
-#if (defined OFFLINE)
+    ! Initialize mpi communicator group
 
-    ! Initialize mpi and set communication group
+    mpicom = clm_mpicom
 
+    ! Initialize mpi
+
+#ifdef OFFLINE
     call mpi_initialized (mpi_running, ier)
     if (.not. mpi_running) call mpi_init (ier)
-
-    mpicom  = MPI_COMM_WORLD
-
-#elif (defined COUP_CSM)
-
-    ! Initialize mpi and set communication group
-    ! Done in program_csm.F90
-
 #endif
 
     ! Get my processor id
@@ -142,10 +118,16 @@ contains
 220 format(/,"NODE#",2x,"NAME")
 250 format("(",i3,")",2x,100a1)
 
+#else
+
+    ! spmd is not defined
+
+    iam = 0
+    masterproc = .true.
+    npes = 1
+	
+#endif   
+
   end subroutine spmd_init
-
-#endif
-
-#endif
 
 end module spmdMod

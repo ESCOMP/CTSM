@@ -411,7 +411,7 @@ contains
 
 #if ( defined SCAM )
        call scam_clm_default_opts( pftfile_out=fpftcon, srffile_out=fsurdat, &
-                                   inifile_out=finidat )
+                                   inifile_out=finidat, dtime_out=dtime )
 #else
        if ( len_trim(NLFilename) == 0  )then
           call endrun( subname//' error: nlfilename not set' )

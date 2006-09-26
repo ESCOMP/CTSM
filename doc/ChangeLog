@@ -1,4 +1,74 @@
 ===============================================================
+Tag name: clm3_expa_73
+Originator(s): mvertens
+Tue Sep 26 08:33:48 MDT 2006
+One-line Summary: removed use of mpicom as cam module variable
+
+Purpose of changes: to make determination of clm mpi commmunicator
+   self contained
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: 
+  clm namelist in cam-standalone mode has changed
+  clm namelist in offline and ccsm mode has not changed
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: tcraig, robj, eaton
+
+List all subroutines eliminated: 
+  
+  D  src/main/do_restwrite.F90
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+  M  src/main/histFileMod.F90
+     - removed COUP_CAM if-def for setting if_writrest flag
+  M  src/main/program_csm.F90
+     - initialize mpi communicator group and iam, masterproc and npes in this module
+  M  src/main/controlMod.F90
+     - added ditme_out to scam_clm_default_opts call 
+       this should have been done when the cam time manager was no longer used by clm
+  M  src/main/lnd_comp_mct.F90
+     - removed lnd_export_init (using only lnd_export now) 
+     - now passing LNDID, mpicom as input argument to lnd_init_mct
+     - mct_gsmap_init now used to set clm gsmap (rather than seq_init_setgsmap_init)
+  M  src/main/program_off.F90
+     - initialize mpi communicator group and iam, masterproc and npes in this module
+  M  src/main/spmdMod.F90
+     - masterproc, iam, npes and mpicom are now module variables
+     - mpi no longe intialized in spmd_init
+     - clm communicator pased in as argument
+
+Summary of testing:
+
+  bluesky:
+    - ran test_batch.csh and verified that all tests passed successfully
+	 when compared to clm3_expa_69
+    - ran cam3_3_31 sandbox (not checked in yet) using clm3_expa_73 code changes 
+         and verified that all tests passed successfully when compared to cam3_3_30
+    - ran ESR.T31_g35.B.bluesky using ccsm3_1_beta36 and the clm3_expa_73 code base
+         and verified that results were bfb when compared to ccsm3_1_beta36
+  tempest:
+    - ran cam3_3_31 sandbox (not checked in yet) using clm3_expa_73 code changes 
+         and verified that all tests passed successfully when compared to cam3_3_30
+  bangkok/lf95:
+    - ran cam3_3_31 sandbox (not checked in yet) using clm3_expa_73 code changes 
+         and verified that all tests passed successfully when compared to cam3_3_30
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_69
+
+Summarize any changes to answers: Results are bfb
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_72
 Originator(s): mvertens
 Date: Sun Sep 24 17:40:41 MDT 2006

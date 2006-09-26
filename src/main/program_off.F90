@@ -46,22 +46,17 @@ PROGRAM program_off
 !   the models are coupled.
 !
 ! !USES:
-  use shr_kind_mod  , only : r8 => shr_kind_r8
-  use shr_sys_mod   , only : shr_sys_flush
+  use shr_kind_mod    , only : r8 => shr_kind_r8
+  use shr_sys_mod     , only : shr_sys_flush
   use shr_orb_mod          
-  use clm_varorb    , only : eccen, mvelpp, lambm0, obliqr, obliq, &
-                             iyear_AD, nmvelp
-  use clm_comp      , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
-  use atmdrvMod     , only : atmdrv
-  use clm_time_manager  , only : is_last_step, advance_timestep, get_nstep
-  use atmdrvMod     , only : atmdrv_init
-  use abortutils    , only : endrun
+  use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr, obliq, &
+                               iyear_AD, nmvelp
+  use clm_comp        , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
+  use clm_time_manager, only : is_last_step, advance_timestep, get_nstep
+  use atmdrvMod       , only : atmdrv, atmdrv_init
+  use abortutils      , only : endrun
+  use spmdMod  
   use ESMF_Mod
-#if (defined SPMD)
-  use spmdMod       , only : masterproc, iam, mpicom, spmd_init
-#else
-  use spmdMod       , only : masterproc, iam
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -76,21 +71,16 @@ PROGRAM program_off
 !EOP
 !
 ! !LOCAL VARIABLES:
-  logical  :: doalb     ! true if surface albedo calculation time step
   integer  :: nstep     ! time step index
   real(r8) :: dtime     ! time step increment (sec)
-  real(r8) :: caldayp1  ! calendar day for nstep+1
-  real(r8) :: calday    ! calendar day for nstep
-  real(r8) :: caldaym1  ! calendar day for nstep-1
-  real(r8) :: declinp1  ! solar declination angle in radians for nstep+1
-  real(r8) :: declin    ! solar declination angle in radians for nstep
-  real(r8) :: declinm1  ! solar declination angle in radians for nstep-1
   integer  :: ier       ! error code
 
 ! Orbital information after call to routine shr_orbit_params
 
-  logical  :: log_print ! true=> print diagnostics
-  real(r8) :: eccf      ! earth orbit eccentricity factor
+  logical  :: log_print    ! true=> print diagnostics
+  real(r8) :: eccf         ! earth orbit eccentricity factor
+  logical  :: mpi_running  ! true => MPI is initialized 
+  integer  :: mpicom_glob  ! MPI communicator
 !-----------------------------------------------------------------------
 
   ! -----------------------------------------------------------------
@@ -128,14 +118,22 @@ PROGRAM program_off
   if (gptlinitialize () < 0) call endrun ('CLM: gptlinitialize')
 
   ! -----------------------------------------------------------------
-  ! Initialize intra-model MPI communication
+  ! Initialize MPI
   ! -----------------------------------------------------------------
 
 #if (defined SPMD)
-  call spmd_init()
+  call mpi_initialized (mpi_running, ier)
+  if (.not. mpi_running) call mpi_init(ier)
+  mpicom_glob = MPI_COMM_WORLD
+#else
+  mpicom_glob = 1
 #endif
+  call spmd_init(mpicom_glob)
 
+  ! -----------------------------------------------------------------
   ! Initialize ESMF (needed for time-manager)
+  ! -----------------------------------------------------------------
+
   call ESMF_Initialize()
 
   ! -----------------------------------------------------------------

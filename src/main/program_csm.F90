@@ -22,7 +22,7 @@
 ! forcing for the land model to run.
 ! o the land surface model returns to the CCSM flux coupler surface
 !   fluxes, temperatures, and albedos for only the land points on the
-!   [lsmlon x lsmlat] grid
+
 ! o the land surface model uses its own surface type data set. because
 !   it processes only land points, this data set must correctly define
 !   what points are land and what are not land
@@ -52,26 +52,21 @@
 !
 ! !USES:
 #ifdef SINGLE_EXEC
-  use MPH_module    , only : MPH_get_argument
+  use MPH_module      , only : MPH_get_argument
 #endif
-  use shr_kind_mod  , only : r8 => shr_kind_r8, SHR_KIND_CL
+  use shr_kind_mod    , only : r8 => shr_kind_r8, SHR_KIND_CL
   use shr_orb_mod        
   use shr_file_mod        
-  use controlMod    , only : control_setNL
-  use clm_varpar    , only : lsmlon, lsmlat     
-  use clm_varctl    , only : nsrest, irad, csm_doflxave, finidat
-  use clm_varorb    , only : eccen, mvelpp, lambm0, obliqr
-  use clm_time_manager  , only : advance_timestep, get_nstep, get_curr_calday, get_step_size
-  use clm_csmMod    , only : csmstop_now, csm_setup, csm_shutdown, & 
-                             csm_dosndrcv, csm_recv, csm_send, csm_flxave, &
-                             csm_initialize, csm_sendalb, dorecv, dosend  
-  use clm_comp      , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
-#if (defined SPMD)
-  use spmdMod       , only : masterproc, iam, spmd_init, mpicom
-#else
-  use spmdMod       , only : masterproc, iam
-#endif
-  use abortutils    , only : endrun
+  use controlMod      , only : control_setNL
+  use clm_varctl      , only : nsrest, irad, csm_doflxave, finidat
+  use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
+  use clm_time_manager, only : advance_timestep, get_nstep, get_curr_calday, get_step_size
+  use clm_csmMod      , only : csmstop_now, csm_setup, csm_shutdown, & 
+                               csm_dosndrcv, csm_recv, csm_send, csm_flxave, &
+                               csm_initialize, csm_sendalb, dorecv, dosend  
+  use clm_comp        , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
+  use abortutils      , only : endrun
+  use spmdMod       
   use ESMF_Mod
 !
 ! !ARGUMENTS:
@@ -94,15 +89,9 @@
   integer  :: nstep        ! time step index
   real(r8) :: dtime        ! time step increment (sec)
   logical  :: doalb        ! true if surface albedo calculation time step
-  real(r8) :: caldayp1     ! calendar day for nstep+1
-  real(r8) :: calday       ! calendar day for nstep
-  real(r8) :: caldaym1     ! calendar day for nstep-1
-  real(r8) :: declinp1     ! solar declination angle in radians for nstep+1
-  real(r8) :: declin       ! solar declination angle in radians for nstep
-  real(r8) :: declinm1     ! solar declination angle in radians for nstep-1
   integer  :: ier          ! error code
   logical  :: log_print    ! true=> print diagnostics
-  integer  :: mpicom_dummy ! temporary
+  integer  :: mpicom       ! MPI communicator
   character(len=SHR_KIND_CL) :: nlfilename ! Namelist filename
 !
 !-----------------------------------------------------------------------
@@ -149,28 +138,22 @@
   if (gptlinitialize () < 0) call endrun ('CLM: gptlinitialize')
 
   ! -----------------------------------------------------------------
-  ! Initialize inter-model MPI communication 
+  ! Initialize MPI
   ! -----------------------------------------------------------------
 
-#if (defined SPMD)
+#ifdef SPMD
   call csm_setup(mpicom)
+  call spmd_init(mpicom)
 #else
-  call csm_setup(mpicom_dummy)
-#endif
-
-  ! -----------------------------------------------------------------
-  ! Initialize intra-model MPI communication 
-  ! -----------------------------------------------------------------
-
-#if (defined SPMD)
-  call spmd_init()
+  write(6,*)'SPMD must to be defined when running in COUP_CSM mode
+  call endrun()
 #endif
 
   ! -----------------------------------------------------------------
   ! Initialize ESMF
   ! -----------------------------------------------------------------
-  call ESMF_Initialize()
 
+  call ESMF_Initialize()
 
   ! -----------------------------------------------------------------
   ! Initialize input/output units

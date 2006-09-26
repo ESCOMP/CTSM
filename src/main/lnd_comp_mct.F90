@@ -15,14 +15,11 @@ module lnd_comp_mct
 !
 ! !USES:
   use seq_mct_mod
-  use seq_init_mct
   use seq_flds_mod
   use seq_flds_indices
   use shr_kind_mod,   only : r8 => shr_kind_r8
   use abortutils,     only : endrun
-#if (defined SPMD)
-  use mpishorthand,   only : mpicom
-#endif
+  use spmdMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -42,15 +39,10 @@ module lnd_comp_mct
   private :: lnd_SetgsMap_mct
   private :: lnd_domain_mct
   private :: lnd_export_mct
-  private :: lnd_exportinit_mct
   private :: lnd_import_mct
 !
 ! !PRIVATE VARIABLES
   integer, dimension(:), allocatable :: perm  ! permutation array to reorder points
-#if !(defined SPMD)
-    integer, parameter :: mpicom = 1
-#endif
-!---------------------------------------------------------------------------
 
 !===============================================================
 contains
@@ -62,8 +54,8 @@ contains
 ! !IROUTINE: lnd_init_mct
 !
 ! !INTERFACE:
-  subroutine lnd_init_mct( gsMap_lnd, dom_l, x2l_l, l2x_l, CCSMInit, SyncClock, &
-                           NLFilename, land_present )
+  subroutine lnd_init_mct( LNDID, mpicom_lnd, gsMap_lnd, dom_l, x2l_l, l2x_l, &
+	                   CCSMInit, SyncClock, NLFilename, land_present )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
@@ -81,17 +73,19 @@ contains
     use controlMod       , only : control_setNL
 !
 ! !ARGUMENTS:
-    type(mct_gsMap),                 intent(inout) :: GSMap_lnd
-    type(mct_gGrid),                 intent(inout) :: dom_l
-    type(mct_aVect),                 intent(inout) :: x2l_l, l2x_l
-    type(shr_InputInfo_initType),    intent(in)    :: CCSMInit
-    type(eshr_timemgr_clockType),    intent(in)    :: SyncClock
-    character(len=*), optional,      intent(in)    :: NLFilename ! Namelist filename
-    logical,          optional,      intent(out)   :: land_present
+    integer        ,              intent(in)    :: LNDID	
+    integer        ,              intent(in)    :: mpicom_lnd       	
+    type(mct_gsMap),              intent(inout) :: GSMap_lnd
+    type(mct_gGrid),              intent(inout) :: dom_l
+    type(mct_aVect),              intent(inout) :: x2l_l, l2x_l
+    type(shr_InputInfo_initType), intent(in)    :: CCSMInit
+    type(eshr_timemgr_clockType), intent(in)    :: SyncClock
+    character(len=*), optional,   intent(in)    :: NLFilename ! Namelist filename
+    logical,          optional,   intent(out)   :: land_present
 !
 ! !LOCAL VARIABLES:
     character(len=32), parameter :: sub = 'lnd_init_mct'
-    integer  :: i,j                              ! indices
+    integer  :: i,j                               ! indices
     type(eshr_timemgr_clockInfoType) :: clockInfo ! Clock information including orbit
 !
 ! !REVISION HISTORY:
@@ -100,52 +94,53 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
+    ! Initialize clm MPI communicator 
+
+    call spmd_init( mpicom_lnd )
+
     ! Use CCSMInit to set orbital values
 
     call eshr_timemgr_clockGet( SyncClock, info=clockInfo )
     call lnd_setorb_mct( clockInfo )
 
-    ! Initialize clm phase 1 - read namelist, grid and surface data
+    ! Consistency check on namelist filename	
 
-#ifndef SCAM
-
-    ! If coupled with sequential CCSM
-
+#ifdef SCAM
+    if ( present(nlfilename) )then
+       call endrun( sub//': NLFilename not needed for SCAM mode')
+    endif
+    if ( .not. present(land_present) )then
+       call endrun( sub//': land_present not sent in')
+    end if
+#else
     if ( present(nlfilename) )then
        call control_setNL( nlfilename )
     else
        call endrun( sub//': NLFilename not sent in')
     endif
-    call clm_init0( CCSMInit )
-#else
+#endif
 
-    ! If coupled with SCAM
+    ! Initialize clm
+    ! clm_init0 reads namelist, grid and surface data
+    ! clm_init1 and clm_init2 performs rest of initialization	
 
-    if ( present(nlfilename) )then
-       call endrun( sub//': NLFilename not needed for SCAM mode')
-    endif
     call clm_init0( CCSMInit )
-    if ( .not. present(land_present) )then
-       call endrun( sub//': land_present not sent in')
-    end if
+#ifdef SCAM
     if (adomain%frac(1)==0) then
        land_present = .false.
-       return        ! EXIT OUT OF INITIALIZATION
+       return ! EXIT OUT OF INITIALIZATION
     else
        land_present = .true.
     end if
 #endif
-
-    ! Initialize clm phase 2 - rest of initialization
-
     call clm_init1( SyncClock )
     call clm_init2()
 
     ! Initialize MCT gsMap, domain and attribute vectors
 
-    call lnd_SetgsMap_mct( gsMap_lnd ) 	
+    call lnd_SetgsMap_mct( mpicom_lnd, LNDID, gsMap_lnd ) 	
 
-    call lnd_domain_mct( gsMap_lnd, dom_l )
+    call lnd_domain_mct( mpicom_lnd, gsMap_lnd, dom_l )
 
     call mct_aVect_init(x2l_l, rList=seq_flds_x2l_fields,    &
          lsize=mct_gsMap_lsize(gsMap_lnd, mpicom))
@@ -159,7 +154,7 @@ contains
 
     if (get_nstep() == 0) then
        call clm_mapl2a(clm_l2a, atm_l2a)
-       call lnd_exportinit_mct( atm_l2a, l2x_l)
+       call lnd_export_mct( atm_l2a, l2x_l )
     endif
 
   end subroutine lnd_init_mct
@@ -262,27 +257,34 @@ contains
 
 !=================================================================================
 
-  subroutine lnd_SetgsMap_mct( gsMap_lnd )
+  subroutine lnd_SetgsMap_mct( mpicom_lnd, LNDID, gsMap_lnd )
 
     !-------------------------------------------------------------------
+    !
+    ! Uses
+    !
     use decompMod, only : get_proc_bounds_atm, adecomp
     use domainMod, only : adomain
-    use clmtype
-
+    !
+    ! Arguments
+    !
     implicit none
-    type(mct_gsMap), intent(inout) :: gsMap_lnd
-
+    integer        , intent(in)  :: mpicom_lnd
+    integer        , intent(in)  :: LNDID
+    type(mct_gsMap), intent(out) :: gsMap_lnd
+    !
+    ! Local Variables
+    !
     integer,allocatable :: gindex(:)
     integer :: i, j, n, gi
     integer :: lsize,gsize
     integer :: ier
-    integer :: begg, endg    ! beginning and ending gridcell indices
+    integer :: begg, endg    
     !-------------------------------------------------------------------
 
     ! Build the land grid numbering for MCT
     ! NOTE:  Numbering scheme is: West to East and South to North
-    ! starting at south pole.  Should be the same as what's used
-    ! in SCRIP
+    ! starting at south pole.  Should be the same as what's used in SCRIP
     
     call get_proc_bounds_atm(begg, endg)
 
@@ -295,73 +297,22 @@ contains
         j = adecomp%gdc2j(n)
         gindex(n) = (j-1)*adomain%ni + i
     end do
-
     lsize = endg-begg+1
     gsize = adomain%ni*adomain%nj
 
+    ! reorder gindex to be in ascending order, initialize a permutation array,
+    ! derive a permutation that puts gindex in ascending order since the
+    ! the default for IndexSort is ascending and finally sort gindex in-place
+
     allocate(perm(lsize),stat=ier)
-
-    ! reorder gindex to be in ascending order.
-
-    ! initialize a permutation array
-
     call mct_indexset(perm)
-
-    ! derive a permutation that puts gindex in ascending order
-    ! the default for IndexSort is Ascending.
-
     call mct_indexsort(lsize,perm,gindex)
-
-    ! Sort gindex in-place
-
     call mct_permute(gindex,perm,lsize)
-
-    call seq_init_SetgsMap_mct( lsize, gsize, gindex, mpicom, LNDID, gsMap_lnd )
+    call mct_gsMap_init( gsMap_lnd, gindex, mpicom_lnd, LNDID, lsize, gsize )
 
     deallocate(gindex)
 
   end subroutine lnd_SetgsMap_mct
-
-!=================================================================================
-
-  subroutine lnd_exportinit_mct( l2a, l2x_l )
-
-    !-----------------------------------------------------
-    use clm_atmlnd, only : lnd2atm_type
-    use domainMod , only : adomain
-    use decompMod , only : get_proc_bounds_atm, adecomp
-    use clm_varcon, only : sb
-
-    implicit none
-
-    type(lnd2atm_type), intent(inout) :: l2a
-    type(mct_aVect)   , intent(inout) :: l2x_l
-
-    integer :: g,i,n
-    integer :: begg, endg    ! beginning and ending gridcell indices
-    !-----------------------------------------------------
-
-    call get_proc_bounds_atm(begg, endg)
-
-!dir$ concurrent
-    do g = begg,endg
-       i = 1 + (g - begg)
-       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
-       l2x_l%rAttr(index_l2x_Sl_landfrac,i) =  adomain%frac(n)
-       l2x_l%rAttr(index_l2x_Sl_t,i)        =  sqrt(sqrt(l2a%eflx_lwrad_out(g)/sb))
-       l2x_l%rAttr(index_l2x_Sl_snowh,i)    =  l2a%h2osno(g)
-       l2x_l%rAttr(index_l2x_Sl_avsdr,i)    =  l2a%albd(g,1)
-       l2x_l%rAttr(index_l2x_Sl_anidr,i)    =  l2a%albd(g,2)
-       l2x_l%rAttr(index_l2x_Sl_avsdf,i)    =  l2a%albi(g,1)
-       l2x_l%rAttr(index_l2x_Sl_anidf,i)    =  l2a%albi(g,2)
-       l2x_l%rAttr(index_l2x_Fall_lwup,i)   =  l2a%eflx_lwrad_out(g)
-    end do
-
-    ! permute before using the Rearrange call
-
-    call mct_Avect_permute(l2x_l,perm)
-    
-  end subroutine lnd_exportinit_mct
 
 !====================================================================================
 
@@ -409,9 +360,9 @@ contains
           l2x_l%rAttr(index_l2x_Fall_nee,i) = l2a%nee(g)
        end if
 
-! optional fields for dust.  The index = 0 is a good way to flag it,
-! but I have set it up so that l2a doesn't have ram1,fv,flxdst[1-4] if
-! progsslt or dust aren't running. 
+       ! optional fields for dust.  The index = 0 is a good way to flag it,
+       ! but I have set it up so that l2a doesn't have ram1,fv,flxdst[1-4] if
+       ! progsslt or dust aren't running. 
 #if ( defined DUST || defined PROGSSLT )
        if (index_l2x_Sl_ram1 /= 0 )  l2x_l%rAttr(index_l2x_Sl_ram1,i)   = l2a%ram1(g)
        if (index_l2x_Sl_fv   /= 0 )  l2x_l%rAttr(index_l2x_Sl_fv,i)     = l2a%fv(g)
@@ -423,7 +374,6 @@ contains
        if (index_l2x_Fall_flxdst4 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst4,i)= l2a%flxdst(g,4)
 #endif
     end do
-
 
     ! permute before using the Rearrange call.
 
@@ -440,11 +390,15 @@ contains
     use clm_varctl      , only: co2_type
     use clm_varcon      , only: rair, o2_molar_const, co2_ppmv_const, c13ratio
     use decompMod       , only: get_proc_bounds_atm
-
+    !
+    ! Arguments
+    !
     implicit none
     type(mct_aVect)   , intent(inout) :: x2l_l
     type(atm2lnd_type), intent(inout) :: a2l
-
+    !
+    ! Local Variables
+    !
     integer  :: g,i,nstep,ier
     real(r8) :: forc_rainc    ! rainxy Atm flux mm/s
     real(r8) :: forc_rainl    ! rainxy Atm flux mm/s
@@ -592,7 +546,7 @@ contains
 
 !===============================================================================
 
-  subroutine lnd_domain_mct( gsMap_lnd, dom_l )
+  subroutine lnd_domain_mct( mpicom_lnd, gsMap_lnd, dom_l )
 
     !-------------------------------------------------------------------
     use clm_varcon, only : re
@@ -601,6 +555,7 @@ contains
     !
     ! Arguments
     !
+    integer        , intent(in)    :: mpicom_lnd
     type(mct_gsMap), intent(inout) :: gsMap_lnd
     type(mct_ggrid), intent(out)   :: dom_l      
     !
@@ -610,7 +565,7 @@ contains
     integer :: lsize              ! domain size
     integer :: begg, endg         ! beginning and ending gridcell indices
     real(r8), pointer :: data(:)  ! temporary
-    integer , pointer :: idata(:)     ! temporary
+    integer , pointer :: idata(:) ! temporary
     !-------------------------------------------------------------------
     !
     ! Initialize mct domain type
