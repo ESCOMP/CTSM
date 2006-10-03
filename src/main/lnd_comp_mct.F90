@@ -55,7 +55,7 @@ contains
 !
 ! !INTERFACE:
   subroutine lnd_init_mct( LNDID, mpicom_lnd, gsMap_lnd, dom_l, x2l_l, l2x_l, &
-	                   CCSMInit, SyncClock, NLFilename, land_present )
+	                   CCSMInit, SyncClock, NLFilename )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
@@ -81,7 +81,6 @@ contains
     type(shr_InputInfo_initType), intent(in)    :: CCSMInit
     type(eshr_timemgr_clockType), intent(in)    :: SyncClock
     character(len=*), optional,   intent(in)    :: NLFilename ! Namelist filename
-    logical,          optional,   intent(out)   :: land_present
 !
 ! !LOCAL VARIABLES:
     character(len=32), parameter :: sub = 'lnd_init_mct'
@@ -105,34 +104,15 @@ contains
 
     ! Consistency check on namelist filename	
 
-#ifdef SCAM
-    if ( present(nlfilename) )then
-       call endrun( sub//': NLFilename not needed for SCAM mode')
-    endif
-    if ( .not. present(land_present) )then
-       call endrun( sub//': land_present not sent in')
-    end if
-#else
     if ( present(nlfilename) )then
        call control_setNL( nlfilename )
-    else
-       call endrun( sub//': NLFilename not sent in')
     endif
-#endif
 
     ! Initialize clm
     ! clm_init0 reads namelist, grid and surface data
     ! clm_init1 and clm_init2 performs rest of initialization	
 
     call clm_init0( CCSMInit )
-#ifdef SCAM
-    if (adomain%frac(1)==0) then
-       land_present = .false.
-       return ! EXIT OUT OF INITIALIZATION
-    else
-       land_present = .true.
-    end if
-#endif
     call clm_init1( SyncClock )
     call clm_init2()
 

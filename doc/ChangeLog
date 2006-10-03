@@ -1,4 +1,42 @@
 ===============================================================
+Tag name: clm3_expa_74
+Originator(s): mvertens
+Date: Mon Oct  2 20:16:52 MDT 2006
+One-line Summary: removed SCAM if-defs from lnd_comp_mct.F90
+
+Purpose of changes: Let SCAM driver decide if clm has a land point
+   rather than putting that decision in lnd_comp_mct.F90.
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: erik
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+  M lnd_comp_mct.F90
+    - removed SCAM if-defs
+
+Summary of testing:
+
+  bluesky: all CAM tests passed using this lnd_comp_mct.F90
+  tempest: all CAM tests passed using this lnd_comp_mct.F90
+  bangkok/lf95: all CAM tests passed using this lnd_comp_mct.F90
+
+Summarize any changes to answers: NONE
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_73
 Originator(s): mvertens
 Tue Sep 26 08:33:48 MDT 2006
