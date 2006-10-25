@@ -192,9 +192,6 @@ subroutine timemgr_init( calendar_in, start_ymd_in, start_tod_in, ref_ymd_in, &
            current = curr_date - day_step_size*nelapse
         end if
         if ( current < stop_date ) stop_date = current
-        if ( current < stop_date ) then
-           write(30+iam,*)'setting stop_date from nelapse'
-        end if
         run_length_specified = .true.
      end if
      if ( .not. run_length_specified ) then

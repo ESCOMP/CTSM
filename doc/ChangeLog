@@ -1,4 +1,46 @@
 ===============================================================
+Tag name: clm3_expa_75
+Originator(s): mvertens	
+Date: Tue Oct 24 21:10:59 MDT 2006
+One-line Summary: sequential and concurrent ccsm now have same flux sign convention
+
+Purpose of changes: To have consistent flux sign convention in sequential and concurrent ccsm.
+As a result, lnd_comp_mct.F90 now has same flux sign convention as clm_csmsMod.F90
+(i.e. fluxes are positive downwards).
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+ 
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: mvertens
+
+List all subroutines eliminated: nonen
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+   M  lnd/clm2/src/main/clm_time_manager.F90
+      - Removed write statement to fort.30
+
+   M  lnd/clm2/src/main/lnd_comp_mct.F90
+      - Changed sign convention of fluxes sent to driver to be consistent 
+        with those used by concurrent ccsm
+
+Summary of testing:
+
+  no offline or ccsm tests were done
+  ran cam testing suite successfully (see ChangeLog for cam3_3_37)
+
+Summarize any changes to answers: See ChangeLog for cam3_3_37
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_74
 Originator(s): mvertens
 Date: Mon Oct  2 20:16:52 MDT 2006
