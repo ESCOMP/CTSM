@@ -15,7 +15,7 @@ module histFileMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_getenv, shr_sys_flush
   use abortutils  , only : endrun
-  use clm_varcon  , only : spval
+  use clm_varcon  , only : spval,ispval
   use shr_sys_mod , only : shr_sys_flush 
   implicit none
   save
@@ -313,7 +313,7 @@ contains
 ! into a type entry in the global master field list (masterlist).
 !
 ! !USES:
-    use clmtype  , only : nameg, namel, namec, namep, lndrof, ocnrof
+    use clmtype  , only : nameg, namel, namec, namep, lndrof, ocnrof, allrof
     use decompMod, only : get_proc_bounds, get_proc_global
 #if (defined RTM)
     use RunoffMod, only : get_proc_rof_bounds, get_proc_rof_global
@@ -354,6 +354,7 @@ contains
     integer :: nump         ! total number of pfts across all processors
     integer :: beg_lndrof, end_lndrof, num_lndrof  ! land  runoff bounds
     integer :: beg_ocnrof, end_ocnrof, num_ocnrof  ! ocean runoff bounds
+    integer :: beg_rof, end_rof, num_rtm      ! total num of rtm cells on all procs
 !------------------------------------------------------------------------
 
     ! Determine bounds
@@ -361,8 +362,8 @@ contains
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
 #if (defined RTM)
-    call get_proc_rof_bounds(beg_lndrof, end_lndrof, beg_ocnrof, end_ocnrof)
-    call get_proc_rof_global(num_lndrof, num_ocnrof)
+    call get_proc_rof_bounds(beg_rof, end_rof)
+    call get_proc_rof_global(num_rtm, num_lndrof, num_ocnrof)
 #endif
     ! Ensure that new field is not all blanks
 
@@ -428,14 +429,18 @@ contains
        masterlist(f)%field%end1d = endp
        masterlist(f)%field%num1d = nump
 #if (defined RTM)
+    case (allrof)
+       masterlist(f)%field%beg1d = beg_rof
+       masterlist(f)%field%end1d = end_rof
+       masterlist(f)%field%num1d = num_rtm
     case (lndrof)
-       masterlist(f)%field%beg1d = beg_lndrof
-       masterlist(f)%field%end1d = end_lndrof
-       masterlist(f)%field%num1d = num_lndrof
+       masterlist(f)%field%beg1d = beg_rof
+       masterlist(f)%field%end1d = end_rof
+       masterlist(f)%field%num1d = num_rtm
     case (ocnrof)
-       masterlist(f)%field%beg1d = beg_ocnrof
-       masterlist(f)%field%end1d = end_ocnrof
-       masterlist(f)%field%num1d = num_ocnrof
+       masterlist(f)%field%beg1d = beg_rof
+       masterlist(f)%field%end1d = end_rof
+       masterlist(f)%field%num1d = num_rtm
 #endif
     case default
        write(6,*)'MASTERLIST_ADDFLD: unknown 1d output type= ',type1d
@@ -894,7 +899,7 @@ contains
 !
 ! !USES:
     use decompMod , only : get_proc_bounds, get_proc_global
-    use clmtype   , only : nameg, namel, namec, namep, lndrof, ocnrof
+    use clmtype   , only : nameg, namel, namec, namep, lndrof, ocnrof, allrof
     use decompMod , only : get_proc_bounds, get_proc_global
 #if (defined RTM)
     use RunoffMod , only : get_proc_rof_bounds, get_proc_rof_global
@@ -931,8 +936,11 @@ contains
     integer :: end_roflnd           ! per-proc ending land runoff index
     integer :: beg_rofocn           ! per-proc beginning ocean runoff index
     integer :: end_rofocn           ! per-proc ending ocean runoff index
+    integer :: beg_rof              ! per-proc beginning land runoff index
+    integer :: end_rof              ! per-proc ending land runoff index
     integer :: num_roflnd           ! total number of land runoff points across all procs
     integer :: num_rofocn           ! total number of ocean runoff points across all procs
+    integer :: num_rtm              ! total number of rtm cells on all procs
 #endif
 !-----------------------------------------------------------------------
 
@@ -956,8 +964,8 @@ contains
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
 #if (defined RTM)
-    call get_proc_rof_bounds(beg_roflnd, end_roflnd, beg_rofocn, end_rofocn)
-    call get_proc_rof_global(num_roflnd, num_rofocn)
+    call get_proc_rof_bounds(beg_rof, end_rof)
+    call get_proc_rof_global(num_rtm, num_roflnd, num_rofocn)
 #endif
 
     ! Modify type1d_out if necessary
@@ -1011,15 +1019,19 @@ contains
        beg1d_out = begp
        end1d_out = endp
        num1d_out = nump
-#ifdef RTM
+#if (defined RTM)
+    else if (type1d_out == allrof) then
+       beg1d_out = beg_rof
+       end1d_out = end_rof
+       num1d_out = num_rtm
     else if (type1d_out == lndrof) then
-       beg1d_out = beg_roflnd
-       end1d_out = end_roflnd
-       num1d_out = num_roflnd
+       beg1d_out = beg_rof
+       end1d_out = end_rof
+       num1d_out = num_rtm
     else if (type1d_out == ocnrof) then
-       beg1d_out = beg_rofocn
-       end1d_out = end_rofocn
-       num1d_out = num_rofocn
+       beg1d_out = beg_rof
+       end1d_out = end_rof
+       num1d_out = num_rtm
 #endif
     else
        write(6,*)'HTAPE_ADDFLD error: incorrect value of type1d_out= ',type1d_out
@@ -1710,14 +1722,13 @@ contains
     use decompMod   , only : get_proc_global
     use clm_varpar  , only : lsmlon, lsmlat, nlevsoi
     use clm_varctl  , only : caseid, ctitle, frivinp_rtm, fsurdat, finidat, fpftcon
-    use domainMod   , only : ldomain
+    use domainMod   , only : llocdomain
+#if (defined RTM)
+    use RunoffMod   , only : get_proc_rof_global
+#endif	
     use clm_varcon  , only : zsoi, zlak
     use fileutils   , only : get_filename
     use clm_time_manager, only : get_ref_date
-#if (defined RTM)
-    use RtmMod      , only : rdomain
-    use RunoffMod   , only : get_proc_rof_global
-#endif	
 #if (defined CASA)
     use CASAMod,    only : nlive, npools
 #endif
@@ -1749,11 +1760,10 @@ contains
     integer :: numc                ! total number of columns across all processors
     integer :: numl                ! total number of landunits across all processors
     integer :: numg                ! total number of gridcells across all processors
-    real(r8),allocatable :: lonvar(:)      ! only used for full grid
-    real(r8),allocatable :: latvar(:)      ! only used for full grid
-#ifdef RTM
+#if (defined RTM)
     integer :: num_lndrof          ! total number of land runoff across all procs
     integer :: num_ocnrof          ! total number of ocean runoff across all procs
+    integer :: num_rtm             ! total number of rtm cells on all procs
 #endif
     character(len=  8) :: curdate  ! current date
     character(len=  8) :: curtime  ! current time
@@ -1769,8 +1779,8 @@ contains
     ! Determine necessary indices
 
     call get_proc_global(numg, numl, numc, nump)
-#ifdef RTM
-    call get_proc_rof_global(num_lndrof, num_ocnrof)
+#if (defined RTM)
+    call get_proc_rof_global(num_rtm, num_lndrof, num_ocnrof)
 #endif
 
     ! define output write precsion for tape
@@ -1853,9 +1863,10 @@ contains
     call check_ret(nf_def_dim (nfid(t), 'landunit', numl   , dimid), subname)
     call check_ret(nf_def_dim (nfid(t), 'column'  , numc   , dimid), subname)
     call check_ret(nf_def_dim (nfid(t), 'pft'     , nump   , dimid), subname)
-#ifdef RTM
+#if (defined RTM)
     call check_ret(nf_def_dim (nfid(t), 'ocnrof', num_ocnrof, dimid), subname)
     call check_ret(nf_def_dim (nfid(t), 'lndrof', num_lndrof, dimid), subname)
+    call check_ret(nf_def_dim (nfid(t), 'allrof', num_rtm   , dimid), subname)
 #endif
     call check_ret(nf_def_dim (nfid(t), 'levsoi', nlevsoi, dimid), subname)
     call check_ret(nf_def_dim (nfid(t), 'levlak', nlevlak, dimid), subname)
@@ -1869,7 +1880,7 @@ contains
     end do
     call check_ret(nf_def_dim (nfid(t), 'lon'   , lsmlon, dimid), subname)
     call check_ret(nf_def_dim (nfid(t), 'lat'   , lsmlat, dimid), subname)
-#ifdef RTM
+#if (defined RTM)
     call check_ret(nf_def_dim (nfid(t), 'lonrof', rtmlon, dimid), subname)
     call check_ret(nf_def_dim (nfid(t), 'latrof', rtmlat, dimid), subname)
 #endif
@@ -1880,17 +1891,6 @@ contains
     write(6,*)'HTAPE_CREATE: Successfully defined netcdf history file ',t
 
     ! Define coordinate variables (including time)
-
-    call ncd_defvar(varname='lon', xtype=ncprec, dim1name='lon', &
-         long_name='coordinate longitude', units='degrees_east', ncid=nfid(t))
-    call ncd_defvar(varname='lat', xtype=ncprec, dim1name='lat', &
-         long_name='coordinate latitude', units='degrees_north', ncid=nfid(t))
-#ifdef RTM
-    call ncd_defvar(varname='lonrof', xtype=ncprec, dim1name='lonrof', &
-         long_name='runoff coordinate longitude', units='degrees_east', ncid=nfid(t))
-    call ncd_defvar(varname='latrof', xtype=ncprec, dim1name='latrof', &
-         long_name='runoff coordinate latitude', units='degrees_north', ncid=nfid(t))
-#endif
 
     call get_ref_date(yr, mon, day, nbsec)
     hours   = nbsec / 3600
@@ -1903,11 +1903,13 @@ contains
     dim1id(1) = time_dimid
     call check_ret(nf_def_var(nfid(t), 'time', ncprec, 1, dim1id, time_var_id(t)), subname)
     str = 'time'
-    call check_ret(nf_put_att_text (nfid(t), time_var_id(t), 'logname', len_trim(str), trim(str)), subname)
+    call check_ret(nf_put_att_text (nfid(t), time_var_id(t), 'long_name', len_trim(str), trim(str)), subname)
     str = 'days since ' // basedate // " " // basesec
     call check_ret(nf_put_att_text (nfid(t), time_var_id(t), 'units', len_trim(str), trim(str)), subname)
     str = 'noleap'
     call check_ret(nf_put_att_text (nfid(t), time_var_id(t), 'calendar', len_trim(str), trim(str)), subname)
+    str = 'time_bounds'
+    call check_ret(nf_put_att_text (nfid(t), time_var_id(t), 'bounds', len_trim(str), trim(str)), subname)
 
     call ncd_defvar(varname='levsoi', xtype=ncprec, dim1name='levsoi', &
          long_name='coordinate soil levels', units='m', ncid=nfid(t))
@@ -1915,80 +1917,44 @@ contains
     call ncd_defvar(varname='levlak', xtype=ncprec, dim1name='levlak', &
          long_name='coordinate lake levels', units='m', ncid=nfid(t))
 
-    ! Define time-invariant grid variables
-
     call ncd_defvar(varname='edgen', xtype=ncprec, &
          long_name='northern edge of surface grid', units='degrees_north', ncid=nfid(t))
-    
     call ncd_defvar(varname='edgee', xtype=ncprec, &
          long_name='eastern edge of surface grid', units='degrees_east', ncid=nfid(t))
-    
     call ncd_defvar(varname='edges', xtype=ncprec, &
          long_name='southern edge of surface grid', units='degrees_north', ncid=nfid(t))
-    
     call ncd_defvar(varname='edgew', xtype=ncprec, &
          long_name='western edge of surface grid', units='degrees_east', ncid=nfid(t))
-
-    call ncd_defvar(varname='longxy', xtype=ncprec, dim1name='lon', dim2name='lat', &
-         long_name='longitude', units='degrees_east',  ncid=nfid(t))
-
-    call ncd_defvar(varname='latixy', xtype=ncprec, dim1name='lon', dim2name='lat',&
-         long_name='latitude', units='degrees_north', ncid=nfid(t))
-
-    call ncd_defvar(varname='area', xtype=ncprec, dim1name='lon', dim2name='lat',&
-         long_name='grid cell areas', units='km^2', ncid=nfid(t))
-
-    call ncd_defvar(varname='areaupsc', xtype=ncprec, dim1name='lon', dim2name='lat',&
-         long_name='normalized grid cell areas related to upscaling', units='km^2', ncid=nfid(t))
-
-    call ncd_defvar(varname='topo', xtype=ncprec, dim1name='lon', dim2name='lat',&
-         long_name='grid cell topography', units='m', ncid=nfid(t))
-
-    call ncd_defvar(varname='topodnsc', xtype=ncprec, dim1name='lon', dim2name='lat',&
-         long_name='normalized grid cell topography related to downscaling', units='m', ncid=nfid(t))
-
-    call ncd_defvar(varname='landfrac', xtype=ncprec, dim1name='lon', dim2name='lat', &
-         long_name='land fraction', ncid=nfid(t))
-
-    call ncd_defvar(varname='landmask', xtype=nf_int, dim1name='lon', dim2name='lat', &
-         long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t))
-
-    call ncd_defvar(varname='pftmask' , xtype=nf_int, dim1name='lon', dim2name='lat', &
-         long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t))
-
-    call ncd_defvar(varname='indxupsc', xtype=nf_int, dim1name='lon', dim2name='lat', &
-         long_name='upscaling atm global grid index', ncid=nfid(t))
-
 
     ! Define time information
 
     dim1id(1) = time_dimid
     call check_ret(nf_def_var(nfid(t) , 'mcdate', nf_int, 1, dim1id  , mcdate_id(t)), subname)
     str = 'current date (YYYYMMDD)'
-    call check_ret(nf_put_att_text (nfid(t), mcdate_id(t), 'logname', len_trim(str), trim(str)), subname)
+    call check_ret(nf_put_att_text (nfid(t), mcdate_id(t), 'long_name', len_trim(str), trim(str)), subname)
 
     call check_ret(nf_def_var(nfid(t) , 'mcsec' , nf_int, 1, dim1id , mcsec_id(t)), subname)
     str = 'current seconds of current date'
-    call check_ret(nf_put_att_text (nfid(t), mcsec_id(t), 'logname', len_trim(str), trim(str)), subname)
+    call check_ret(nf_put_att_text (nfid(t), mcsec_id(t), 'long_name', len_trim(str), trim(str)), subname)
     str = 's'
     call check_ret(nf_put_att_text (nfid(t), mcsec_id(t), 'units', len_trim(str), trim(str)), subname)
 
     call check_ret(nf_def_var(nfid(t) , 'mdcur' , nf_int, 1, dim1id , mdcur_id(t)), subname)
     str = 'current day (from base day)'
-    call check_ret(nf_put_att_text (nfid(t), mdcur_id(t), 'logname', len_trim(str), trim(str)), subname)
+    call check_ret(nf_put_att_text (nfid(t), mdcur_id(t), 'long_name', len_trim(str), trim(str)), subname)
 
     call check_ret(nf_def_var(nfid(t) , 'mscur' , nf_int, 1, dim1id , mscur_id(t)), subname)
     str = 'current seconds of current day'
-    call check_ret(nf_put_att_text (nfid(t), mscur_id(t), 'logname', len_trim(str), trim(str)), subname)
+    call check_ret(nf_put_att_text (nfid(t), mscur_id(t), 'long_name', len_trim(str), trim(str)), subname)
 
     call check_ret(nf_def_var(nfid(t) , 'nstep' , nf_int, 1, dim1id , nstep_id(t)), subname)
     str = 'time step'
-    call check_ret(nf_put_att_text (nfid(t), nstep_id(t), 'logname', len_trim(str), trim(str)), subname)
+    call check_ret(nf_put_att_text (nfid(t), nstep_id(t), 'long_name', len_trim(str), trim(str)), subname)
 
     dim2id(1) = hist_interval_dimid;  dim2id(2) = time_dimid
     call check_ret(nf_def_var(nfid(t), 'time_bounds', nf_double, 2, dim2id, time_bounds_id(t)), subname)
     str = 'history time interval endpoints'
-    call check_ret(nf_put_att_text (nfid(t), time_bounds_id(t), 'logname', len_trim(str), trim(str)), subname)
+    call check_ret(nf_put_att_text (nfid(t), time_bounds_id(t), 'long_name', len_trim(str), trim(str)), subname)
 
     dim2id(1) = strlen_dimid;  dim2id(2) = time_dimid
     call check_ret(nf_def_var(nfid(t), 'date_written', nf_char, 2, dim2id, date_written_id(t)), subname)
@@ -2008,42 +1974,13 @@ contains
 
     ! Write out variables
 
-    allocate(lonvar(lsmlon),latvar(lsmlat))
-    lonvar(:) = ldomain%lonc(1:lsmlon)
-    do n = 1,lsmlat
-      latvar(n) = ldomain%latc((n-1)*lsmlon+1)
-    enddo
-    call ncd_ioglobal(varname='lon', data=lonvar, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='lat', data=latvar, ncid=nfid(t), flag='write')
-    deallocate(lonvar,latvar)
-#ifdef RTM
-    allocate(lonvar(rtmlon),latvar(rtmlat))
-    lonvar = rdomain%lonc(1:rtmlon)
-    do n = 1,rtmlat
-      latvar(n) = rdomain%latc((n-1)*rtmlon+1)
-    enddo
-    call ncd_ioglobal(varname='lonrof', data=lonvar, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='latrof', data=latvar, ncid=nfid(t), flag='write')
-    deallocate(lonvar,latvar)
-#endif
     call ncd_ioglobal(varname='levsoi', data=zsoi, ncid=nfid(t), flag='write')
     call ncd_ioglobal(varname='levlak', data=zlak, ncid=nfid(t), flag='write')
 
-    call ncd_ioglobal(varname='edgen', data=ldomain%edges(1), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edgee', data=ldomain%edges(2), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edges', data=ldomain%edges(3), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edgew', data=ldomain%edges(4), ncid=nfid(t), flag='write')
-
-    call ncd_ioglobal(varname='longxy'  , data=ldomain%lonc, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='latixy'  , data=ldomain%latc, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='area'    , data=ldomain%area, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='areaupsc', data=ldomain%nara, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='topo    ', data=ldomain%topo, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='topodnsc', data=ldomain%ntop, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='landfrac', data=ldomain%frac, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='landmask', data=ldomain%mask, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='pftmask' , data=ldomain%pftm, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='indxupsc', data=ldomain%gatm, ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edgen', data=llocdomain%edges(1), ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edgee', data=llocdomain%edges(2), ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edges', data=llocdomain%edges(3), ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edgew', data=llocdomain%edges(4), ncid=nfid(t), flag='write')
 
   end subroutine htape_create
 
@@ -2063,9 +2000,16 @@ contains
 ! !USES:
     use clmtype
     use subgridAveMod, only : c2g
-    use decompMod    , only : get_proc_bounds, get_proc_global
+    use decompMod    , only : get_proc_bounds, get_proc_global, ldecomp
+    use domainMod   , only : llocdomain,llon,llat
+#if (defined RTM)
+    use RunoffMod   , only : runoff,get_proc_rof_global
+#endif	
     use clm_varpar   , only : lsmlon, lsmlat, nlevsoi
     use ncdio
+#ifdef SPMD
+  use spmdGathScatMod, only : gather_data_to_master
+#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -2078,16 +2022,19 @@ contains
 !EOP
 !
 ! LOCAL VARIABLES:
-    integer :: c,l,lev,ifld,vid           ! indices
+    integer :: c,l,lev,ifld,vid,n,m,g     ! indices
     integer :: ier                        ! error status
-    integer :: begp, endp                 ! per-proc beginning and ending pft indices
-    integer :: begc, endc                 ! per-proc beginning and ending column indices
-    integer :: begl, endl                 ! per-proc beginning and ending landunit indices
-    integer :: begg, endg                 ! per-proc gridcell ending gridcell indices
-    integer :: numg                       ! total number of gridcells across all processors
-    integer :: numl                       ! total number of landunits across all processors
-    integer :: numc                       ! total number of columns across all processors
-    integer :: nump                       ! total number of pfts across all processors
+    integer :: begp, endp   ! per-proc beginning and ending pft indices
+    integer :: begc, endc   ! per-proc beginning and ending column indices
+    integer :: begl, endl   ! per-proc beginning and ending landunit indices
+    integer :: begg, endg   ! per-proc gridcell ending gridcell indices
+    integer :: numg         ! total number of gridcells across all processors
+    integer :: numl         ! total number of landunits across all processors
+    integer :: numc         ! total number of columns across all processors
+    integer :: nump         ! total number of pfts across all processors
+    integer :: num_roflnd   ! total number of land runoff points across all procs
+    integer :: num_rofocn   ! total number of ocn runoff points across all procs
+    integer :: num_rtm      ! total number of rtm cell on all procs
     character(len=max_chars) :: long_name ! variable long name
     character(len=max_namlen):: varname   ! variable name
     character(len=max_namlen):: units     ! variable units
@@ -2127,6 +2074,62 @@ contains
                      long_name=long_name, units=units, missing_value=spval, fill_value=spval)
              end if
           end do
+
+         ! Define time-invariant grid variables
+
+         call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, dim1name='lon', &
+              long_name='coordinate longitude', units='degrees_east', &
+              ncid=nfid(t))
+         call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, dim1name='lat', &
+              long_name='coordinate latitude', units='degrees_north', &
+              ncid=nfid(t))
+#if (defined RTM)
+         call ncd_defvar(varname='lonrof', xtype=tape(t)%ncprec, dim1name='lonrof', &
+              long_name='runoff coordinate longitude', units='degrees_east', ncid=nfid(t))
+         call ncd_defvar(varname='latrof', xtype=tape(t)%ncprec, dim1name='latrof', &
+              long_name='runoff coordinate latitude', units='degrees_north', ncid=nfid(t))
+#endif
+         call ncd_defvar(varname='longxy',   xtype=tape(t)%ncprec, &
+              dim1name='lon', dim2name='lat', &
+              long_name='longitude', units='degrees_east',  ncid=nfid(t), &
+              missing_value=spval, fill_value=spval)
+         call ncd_defvar(varname='latixy',   xtype=tape(t)%ncprec, &
+              dim1name='lon', dim2name='lat',&
+              long_name='latitude', units='degrees_north', ncid=nfid(t), &
+              missing_value=spval, fill_value=spval)
+         call ncd_defvar(varname='area',     xtype=tape(t)%ncprec, &
+              dim1name='lon', dim2name='lat',&
+              long_name='grid cell areas', units='km^2', ncid=nfid(t), &
+              missing_value=spval, fill_value=spval)
+         call ncd_defvar(varname='areaupsc', xtype=tape(t)%ncprec, &
+              dim1name='lon', dim2name='lat',&
+              long_name='normalized grid cell areas related to upscaling', units='km^2', ncid=nfid(t), &
+              missing_value=spval, fill_value=spval)
+         call ncd_defvar(varname='topo',     xtype=tape(t)%ncprec, &
+              dim1name='lon', dim2name='lat',&
+              long_name='grid cell topography', units='m', ncid=nfid(t), &
+              missing_value=spval, fill_value=spval)
+         call ncd_defvar(varname='topodnsc', xtype=tape(t)%ncprec, &
+              dim1name='lon', dim2name='lat',&
+              long_name='normalized grid cell topography related to downscaling', units='m', ncid=nfid(t), &
+              missing_value=spval, fill_value=spval)
+         call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
+              dim1name='lon', dim2name='lat', &
+              long_name='land fraction', ncid=nfid(t), &
+              missing_value=spval, fill_value=spval)
+
+         call ncd_defvar(varname='landmask', xtype=nf_int, &
+              dim1name='lon', dim2name='lat', &
+              long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
+              imissing_value=ispval, ifill_value=ispval)
+         call ncd_defvar(varname='pftmask' , xtype=nf_int, &
+              dim1name='lon', dim2name='lat', &
+              long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
+              imissing_value=ispval, ifill_value=ispval)
+         call ncd_defvar(varname='indxupsc', xtype=nf_int, &
+              dim1name='lon', dim2name='lat', &
+              long_name='upscaling atm global grid index', ncid=nfid(t), &
+              imissing_value=ispval, ifill_value=ispval)
        end if
 
     else if (mode == 'write') then
@@ -2138,6 +2141,9 @@ contains
 
        call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
        call get_proc_global(numg, numl, numc, nump)
+#if (defined RTM)
+       call get_proc_rof_global(num_rtm, num_roflnd, num_rofocn)
+#endif
 
        allocate(histi(begc:endc,nlevsoi), stat=ier)
        if (ier /= 0) then
@@ -2196,6 +2202,51 @@ contains
        if (tape(t)%dov2xy) deallocate(histo)
        deallocate(histi)
 
+       if (masterproc) then
+          call ncd_ioglobal(varname='lon', data=llon, ncid=nfid(t), flag='write')
+       endif
+       if (masterproc) then
+          call ncd_ioglobal(varname='lat', data=llat, ncid=nfid(t), flag='write')
+       endif
+
+#if (defined RTM)
+       if (masterproc) then
+          call ncd_ioglobal(varname='lonrof', data=runoff%rlon, ncid=nfid(t), flag='write')
+       endif
+       if (masterproc) then
+          call ncd_ioglobal(varname='latrof', data=runoff%rlat, ncid=nfid(t), flag='write')
+       endif
+#endif
+       call ncd_iolocal(varname='longxy'  , data=llocdomain%lonc, &
+            dim1name='gridcell', ncid=nfid(t), &
+            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+       call ncd_iolocal(varname='latixy'  , data=llocdomain%latc, &
+            dim1name='gridcell', ncid=nfid(t), &
+            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+       call ncd_iolocal(varname='area'    , data=llocdomain%area, &
+            dim1name='gridcell', ncid=nfid(t), &
+            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+       call ncd_iolocal(varname='areaupsc', data=llocdomain%nara, &
+            dim1name='gridcell', ncid=nfid(t), &
+            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+       call ncd_iolocal(varname='topo    ', data=llocdomain%topo, &
+            dim1name='gridcell', ncid=nfid(t), &
+            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+       call ncd_iolocal(varname='topodnsc', data=llocdomain%ntop, &
+            dim1name='gridcell', ncid=nfid(t), &
+            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+       call ncd_iolocal(varname='landfrac', data=llocdomain%frac, &
+            dim1name='gridcell', ncid=nfid(t), &
+            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+       call ncd_iolocal(varname='landmask', data=llocdomain%mask, &
+            dim1name='gridcell', ncid=nfid(t), &
+            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+       call ncd_iolocal(varname='pftmask' , data=llocdomain%pftm, &
+            dim1name='gridcell', ncid=nfid(t), &
+            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+       call ncd_iolocal(varname='indxupsc', data=llocdomain%gatm, &
+            dim1name='gridcell', ncid=nfid(t), &
+            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
     end if
 
   end subroutine htape_timeconst
@@ -2295,7 +2346,7 @@ contains
              write(6,*)subname,' error: unknown time averaging flag (avgflag)=',avgflag; call endrun()
           end select
 
-          if (type1d_out == 'lndrof' .or. type1d_out == 'ocnrof') then
+          if (type1d_out == 'lndrof' .or. type1d_out == 'ocnrof' .or. type1d_out == 'allrof') then
 
              dim1name = 'lonrof'; dim2name = 'latrof'
              call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
@@ -2349,7 +2400,7 @@ contains
 
           ! Write history output.  Always output land and ocean runoff on xy grid.
 
-          if (type1d_out == 'lndrof' .or. type1d_out == 'ocnrof') then
+          if (type1d_out == 'lndrof' .or. type1d_out == 'ocnrof' .or. type1d_out == 'allrof') then
 
              call ncd_iolocal(flag='write', varname=varname, dim1name=type1d_out, &
                   data=hist1do, ncid=nfid(t), nlonxy=nlonxy, nlatxy=nlatxy, nt=nt)
@@ -2936,7 +2987,7 @@ contains
 ! !USES:
     use iobinary
     use ncdio
-    use clmtype   , only : nameg, namel, namec, namep, ocnrof, lndrof
+    use clmtype   , only : nameg, namel, namec, namep, ocnrof, lndrof, allrof
     use decompMod , only : get_proc_bounds, get_proc_global
 #if (defined RTM)
     use RunoffMod , only : get_proc_rof_bounds, get_proc_rof_global
@@ -2992,8 +3043,11 @@ contains
     integer :: end_roflnd   ! per-proc ending land runoff index
     integer :: beg_rofocn   ! per-proc beginning ocean runoff index
     integer :: end_rofocn   ! per-proc ending ocean runoff index
+    integer :: beg_rof      ! per-proc beginning ocean runoff index
+    integer :: end_rof      ! per-proc ending ocean runoff index
     integer :: num_roflnd   ! total number of land runoff points across all procs
     integer :: num_rofocn   ! total number of ocean runoff points across all procs
+    integer :: num_rtm      ! total number of rtm cell on all procs
 #endif
     character(len=32) :: subname = 'restart_history'
     integer :: varid(max_flds,max_tapes)   ! no longer used (here for backwards compat)
@@ -3016,8 +3070,8 @@ contains
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
 #if (defined RTM)
-    call get_proc_rof_bounds(beg_roflnd, end_roflnd, beg_rofocn, end_rofocn)
-    call get_proc_rof_global(num_roflnd, num_rofocn)
+    call get_proc_rof_bounds(beg_rof, end_rof)
+    call get_proc_rof_global(num_rtm, num_roflnd, num_rofocn)
 #endif
 
     ! Read/write history file data only for restart run (not for branch run)
@@ -3194,14 +3248,18 @@ contains
                  beg1d_out = begp
                  end1d_out = endp
 #if (defined RTM)
+              case (allrof)
+                 num1d_out = num_rtm
+                 beg1d_out = beg_rof
+                 end1d_out = end_rof
               case (lndrof)
-                 num1d_out = num_roflnd
-                 beg1d_out = beg_roflnd
-                 end1d_out = end_roflnd
+                 num1d_out = num_rtm
+                 beg1d_out = beg_rof
+                 end1d_out = end_rof
               case (ocnrof)
-                 num1d_out = num_rofocn
-                 beg1d_out = beg_rofocn
-                 end1d_out = end_rofocn
+                 num1d_out = num_rtm
+                 beg1d_out = beg_rof
+                 end1d_out = end_rof
 #endif
               case default
                  write(6,*)'RESTART_HISTORY error: read unknown 1d output type=',type1d_out
@@ -3241,14 +3299,18 @@ contains
                  beg1d = begp
                  end1d = endp
 #if (defined RTM)
+              case (allrof)
+                 num1d = num_rtm
+                 beg1d = beg_rof
+                 end1d = end_rof
               case (lndrof)
-                 num1d = num_roflnd
-                 beg1d = beg_roflnd
-                 end1d = end_roflnd
+                 num1d = num_rtm
+                 beg1d = beg_rof
+                 end1d = end_rof
               case (ocnrof)
-                 num1d = num_rofocn
-                 beg1d = beg_rofocn
-                 end1d = end_rofocn
+                 num1d = num_rtm
+                 beg1d = beg_rof
+                 end1d = end_rof
 #endif
               case default
                  write(6,*)'RESTART_HISTORY error: read unknown 1d type=',type1d
@@ -3567,7 +3629,8 @@ contains
 !
 ! !INTERFACE:
   subroutine add_fld1d (fname, units, avgflag, long_name, &
-                        ptr_gcell, ptr_lunit, ptr_col, ptr_pft, ptr_roflnd, &
+                        ptr_gcell, ptr_lunit, ptr_col, ptr_pft, &
+                        ptr_rofall, ptr_roflnd, &
                         ptr_rofocn, p2c_scale_type, c2l_scale_type, &
                         l2g_scale_type, set_lake, default, typexy)
 !
@@ -3596,6 +3659,7 @@ contains
     real(r8)        , optional, pointer    :: ptr_lunit(:)   ! pointer to landunit array
     real(r8)        , optional, pointer    :: ptr_col(:)     ! pointer to column array
     real(r8)        , optional, pointer    :: ptr_pft(:)     ! pointer to pft array
+    real(r8)        , optional, pointer    :: ptr_rofall(:)  ! pointer to channel runoff
     real(r8)        , optional, pointer    :: ptr_roflnd(:)  ! pointer to land channel runoff
     real(r8)        , optional, pointer    :: ptr_rofocn(:)  ! pointer to ocean runoff
     real(r8)        , optional, intent(in) :: set_lake       ! value to set lakes to
@@ -3672,6 +3736,11 @@ contains
        end if
 
 #if (defined RTM)
+    else if (present(ptr_rofall)) then
+
+       type1d = allrof
+       clmptr_rs(hpindex)%ptr => ptr_rofall
+
     else if (present(ptr_roflnd)) then
 
        type1d = lndrof
@@ -3686,7 +3755,7 @@ contains
 
        write(6,*)'ADDFLD_1D error: must specify a valid pointer index'
        write(6,*)'choices are [ptr_pft, ptr_lunit, ptr_col, ptr_pft] ', &
-             'and if RTM is defined also [ptr_roflnd.ptr_rofocn]'
+             'and if RTM is defined also [ptr_roflnd.ptr_rofocn,ptr_rofall]'
        call endrun()
 
     end if

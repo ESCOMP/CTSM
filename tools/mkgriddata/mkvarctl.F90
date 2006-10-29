@@ -17,6 +17,7 @@ module mkvarctl
 !
   character(len=256) :: mksrf_fnavyoro = ' ' ! directory for 20 min navy orography dataset
   character(len=256) :: mksrf_frawtopo = ' ' ! directory for raw topo file
+  character(len=256) :: mksrf_fcamfile = ' ' ! directory for cam grid file
   character(len=256) :: mksrf_fcamtopo = ' ' ! directory for cam topo file
   character(len=256) :: mksrf_fccsmdom = ' ' ! directory for ccsm domain file
   character(len=256) :: mksrf_fclmgrid = ' ' ! directory for ccsm domain file

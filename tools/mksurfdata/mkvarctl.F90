@@ -23,6 +23,7 @@ module mkvarctl
   character(len=256) :: mksrf_flanwat              ! inland water data file name
   character(len=256) :: mksrf_furban               ! urban data file name
   character(len=256) :: mksrf_fglacier             ! glacier data file name
+  character(len=256) :: mksrf_fmax                 ! fmax data file name
   character(len=256) :: mksrf_flai                 ! lai data filename
   character(len=256) :: mksrf_fdynuse              ! ascii file containing names of dynamic land use files
 !

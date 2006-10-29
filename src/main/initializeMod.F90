@@ -232,6 +232,10 @@ contains
     use clm_varctl      , only : finidat, fpftdyn, fndepdyn
     use clmtypeInitMod  , only : initClmtype
     use domainMod       , only : ldomain, adomain
+    use domainMod       , only : llon,llat
+    use domainMod       , only : llocdomain, alocdomain
+    use domainMod       , only : domain_check, domain_clean
+    use decompMod       , only : adecomp,ldecomp, decomp_domg2l
     use areaMod         , only : map1dl_a2l, map1dl_l2a
     use areaMod         , only : map_setmapsFM,map_setgatm
     use decompMod       , only : get_proc_clumps, get_clump_bounds, &
@@ -339,6 +343,33 @@ contains
        endif
     enddo
 
+    ! Set "local" domains
+    call get_proc_bounds_atm(begg_atm, endg_atm)
+    call decomp_domg2l(adomain,alocdomain,adecomp,begg_atm,endg_atm)
+    if (masterproc) then
+       write(6,*) 'alocdomain status:'
+       call domain_check(alocdomain)
+    endif
+#if (! defined OFFLINE)
+    call domain_clean(adomain)
+#endif
+
+    allocate(llon(ldomain%ni),llat(ldomain%nj))
+    do j = 1,ldomain%nj
+       k = (j-1)*ldomain%ni + 1
+       llat(j) = ldomain%latc(k)
+    enddo
+    do i = 1,ldomain%ni
+       llon(i) = ldomain%lonc(i)
+    enddo
+
+    call get_proc_bounds    (begg    , endg)
+    call decomp_domg2l(ldomain,llocdomain,ldecomp,begg,endg)
+    if (masterproc) then
+       write(6,*) 'llocdomain status:'
+       call domain_check(llocdomain)
+    endif
+
     ! Allocate memory and initialize values of clmtype data structures
 
     call initClmtype()
@@ -384,14 +415,6 @@ contains
 
     call iniTimeConst()
     
-    ! Initialize river routing model 
-
-#if (defined RTM)
-    if (masterproc) write(6,*)'Attempting to initialize RTM'
-    call Rtmini()
-    if (masterproc) write(6,*)'Successfully initialized RTM'
-#endif
-
     ! ------------------------------------------------------------------------
     ! Obtain restart file if appropriate
     ! ------------------------------------------------------------------------
@@ -431,6 +454,19 @@ contains
           call timemgr_restart()
        end if
     end if
+
+    ! Initialize river routing model, after time manager because ts needed
+
+#if (defined RTM)
+    if (masterproc) write(6,*)'Attempting to initialize RTM'
+    call Rtmini()
+    if (masterproc) write(6,*)'Successfully initialized RTM'
+    call shr_sys_flush(6)
+#endif
+
+    ! Need ldomain for rtmini
+
+    call domain_clean(ldomain)
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields

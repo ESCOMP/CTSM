@@ -13,6 +13,7 @@ module domainMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use nanMod
+  use spmdMod     , only : masterproc
   use abortutils  , only : endrun
 !
 ! !PUBLIC TYPES:
@@ -22,9 +23,12 @@ module domainMod
   public :: domain_type
 
   type domain_type
-     integer          :: ns         ! size of arrays
-     integer          :: ni,nj      ! axis lenght if 2d (nj=1 if unstructured)
-     real(r8)         :: edges(4)   ! edges (N,E,S,W)
+     integer          :: ns         ! global size of domain
+     integer          :: ni,nj      ! global axis if 2d (nj=1 if unstructured)
+     integer          :: nbeg,nend  ! local beg/end indices
+     logical          :: decomped   ! decomposed locally or global copy
+     logical          :: regional   ! regional or global grid
+     real(r8)         :: edges(4)   ! global edges (N,E,S,W)
      integer ,pointer :: mask(:)    ! land mask: 1 = land, 0 = ocean
      real(r8),pointer :: frac(:)    ! fractional land
      real(r8),pointer :: topo(:)    ! topography
@@ -47,9 +51,16 @@ module domainMod
   type(domain_type),public,pointer :: ndomains(:)
   type(domain_type),public,target  :: adomain
 
+  type(domain_type),public         :: alocdomain
+  type(domain_type),public         :: llocdomain
+
+  real(r8),pointer,public          :: llon(:)   ! land lons, 1d global
+  real(r8),pointer,public          :: llat(:)   ! land lats, 1d global
+
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public domain_init          ! allocates/nans domain types
+  public domain_clean         ! deallocates domain types
   public domain_setptrs       ! sets external pointer arrays into domain
   public domain_check         ! write out domain info
 !
@@ -72,7 +83,7 @@ contains
 ! !IROUTINE: domain_init
 !
 ! !INTERFACE:
-  subroutine domain_init(domain,ni,nj)
+  subroutine domain_init(domain,ni,nj,nbeg,nend)
 !
 ! !DESCRIPTION:
 ! This subroutine allocates and nans the domain type
@@ -82,7 +93,8 @@ contains
 ! !ARGUMENTS:
     implicit none
     type(domain_type) :: domain        ! domain datatype
-    integer           :: ni,nj      ! grid size, 2d
+    integer           :: ni,nj         ! grid size, 2d
+    integer,optional  :: nbeg,nend     ! beg/end indices
 !
 ! !REVISION HISTORY:
 !   Created by T Craig
@@ -91,22 +103,33 @@ contains
 !
 ! LOCAL VARIABLES:
     integer ier
+    integer nb,ne
 !
 !------------------------------------------------------------------------------
+
+    nb = 1
+    ne = ni*nj
+    if (present(nbeg)) then
+       if (present(nend)) then
+          nb = nbeg
+          ne = nend
+       endif
+    endif
+
     if (domain%domain_set == domain_set) then
        call domain_clean(domain)
     endif
 
-    allocate(domain%mask(ni*nj),domain%frac(ni*nj),domain%latc(ni*nj), &
-             domain%pftm(ni*nj),domain%area(ni*nj),domain%lonc(ni*nj), &
-             domain%nara(ni*nj),domain%topo(ni*nj),domain%ntop(ni*nj), &
-             domain%gatm(ni*nj), &
+    allocate(domain%mask(nb:ne),domain%frac(nb:ne),domain%latc(nb:ne), &
+             domain%pftm(nb:ne),domain%area(nb:ne),domain%lonc(nb:ne), &
+             domain%nara(nb:ne),domain%topo(nb:ne),domain%ntop(nb:ne), &
+             domain%gatm(nb:ne), &
              stat=ier)
     if (ier /= 0) then
        write(6,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
        call endrun()
     endif
-    allocate(domain%lats(ni*nj),domain%latn(ni*nj),domain%lonw(ni*nj),domain%lone(ni*nj), &
+    allocate(domain%lats(nb:ne),domain%latn(nb:ne),domain%lonw(nb:ne),domain%lone(nb:ne), &
        stat=ier)
     if (ier /= 0) then
        write(6,*) 'domain_init ERROR: allocate lats, latn, lonw, lone'
@@ -116,6 +139,8 @@ contains
     domain%ns       = ni*nj
     domain%ni       = ni
     domain%nj       = nj
+    domain%nbeg     = nb
+    domain%nend     = ne
     domain%edges    = nan
     domain%mask     = bigint
     domain%frac     = -1.0e36
@@ -129,6 +154,12 @@ contains
     domain%lone     = nan
 
     domain%domain_set = domain_set
+    domain%regional   = .false.
+    if (domain%nbeg == 1 .and. domain%nend == domain%ns) then
+       domain%decomped = .false.
+    else
+       domain%decomped = .true.
+    endif
 
     domain%pftm     = bigint
     domain%nara     = 0._r8
@@ -163,7 +194,9 @@ end subroutine domain_init
 !
 !------------------------------------------------------------------------------
     if (domain%domain_set == domain_set) then
-       write(6,*) 'domain_clean: cleaning ',domain%ni,domain%nj
+       if (masterproc) then
+          write(6,*) 'domain_clean: cleaning ',domain%ni,domain%nj
+       endif
        deallocate(domain%mask,domain%frac,domain%latc, &
                   domain%lonc,domain%area,domain%pftm, &
                   domain%nara,domain%topo,domain%ntop, &
@@ -180,13 +213,19 @@ end subroutine domain_init
           call endrun()
        endif
     else
-       write(6,*) 'domain_clean WARN: clean domain unecessary '
+       if (masterproc) then
+          write(6,*) 'domain_clean WARN: clean domain unecessary '
+       endif
     endif
 
     domain%ns         = bigint
     domain%ni         = bigint
     domain%nj         = bigint
+    domain%nbeg       = bigint
+    domain%nend       = bigint
     domain%domain_set = domain_unset
+    domain%decomped   = .true.
+    domain%regional   = .false.
 
 end subroutine domain_clean
 !------------------------------------------------------------------------------
@@ -195,7 +234,8 @@ end subroutine domain_clean
 ! !IROUTINE: domain_setptrs
 !
 ! !INTERFACE:
-  subroutine domain_setptrs(domain,ns,ni,nj,mask,pftm, &
+  subroutine domain_setptrs(domain,ns,ni,nj,nbeg,nend,decomped,regional, &
+     mask,pftm, &
      frac,topo,latc,lonc,area,nara,ntop,gatm,lats,latn,lonw,lone)
 !
 ! !DESCRIPTION:
@@ -206,7 +246,9 @@ end subroutine domain_clean
 ! !ARGUMENTS:
     implicit none
     type(domain_type),intent(in)  :: domain    ! domain datatype
-    integer ,optional :: ns,ni,nj              ! grid size, 2d
+    integer ,optional :: ns,ni,nj,nbeg,nend    ! grid size, 2d, beg/end
+    logical, optional :: decomped              ! decomped or global
+    logical, optional :: regional              ! regional or global
     integer ,optional,pointer  :: mask(:)  
     integer ,optional,pointer  :: pftm(:)  
     real(r8),optional,pointer  :: frac(:)  
@@ -238,6 +280,18 @@ end subroutine domain_clean
     endif
     if (present(nj)) then
       nj = domain%nj
+    endif
+    if (present(nbeg)) then
+      nbeg = domain%nbeg
+    endif
+    if (present(nend)) then
+      nend = domain%nend
+    endif
+    if (present(decomped)) then
+      decomped = domain%decomped
+    endif
+    if (present(regional)) then
+      regional = domain%regional
     endif
     if (present(mask)) then
       mask => domain%mask
@@ -309,9 +363,12 @@ end subroutine domain_setptrs
 !
 !------------------------------------------------------------------------------
 
-    write(6,*) '  domain_check domain_set= ',trim(domain_set)
+    write(6,*) '  domain_check domain_set= ',trim(domain%domain_set)
+    write(6,*) '  domain_check decomped  = ',domain%decomped
+    write(6,*) '  domain_check regional  = ',domain%regional
     write(6,*) '  domain_check ns        = ',domain%ns
     write(6,*) '  domain_check ni,nj     = ',domain%ni,domain%nj
+    write(6,*) '  domain_check nbeg,nend = ',domain%nbeg,domain%nend
     write(6,*) '  domain_check edgeNESW  = ',domain%edges
     write(6,*) '  domain_check lonc = ',minval(domain%lonc),maxval(domain%lonc)
     write(6,*) '  domain_check latc = ',minval(domain%latc),maxval(domain%latc)

@@ -63,7 +63,8 @@ subroutine wrap_inq_dimid (nfid, dimname, dimid)
   
    ret = nf_inq_dimid (nfid, dimname, dimid)
    if (ret /= NF_NOERR) then
-      call endrun ('wrap_inq_dimid:'//nf_strerror (ret))
+      write(6,*) "WRAP_INQ_DIMID: error "//trim(nf_strerror(ret))
+!     call endrun ('wrap_inq_dimid:'//nf_strerror (ret))
    end if
    return
 end subroutine wrap_inq_dimid
@@ -114,7 +115,8 @@ subroutine wrap_inq_dimlen (nfid, dimid, dimlen)
       
    ret = nf_inq_dimlen (nfid, dimid, dimlen)
    if (ret /= NF_NOERR) then
-      call endrun ('wrap_inq_dimlen:'//nf_strerror (ret))
+      write(6,*) "WRAP_INQ_DIMLEN: error "//trim(nf_strerror(ret))
+!      call endrun ('wrap_inq_dimlen:'//nf_strerror (ret))
    end if
    return
 end subroutine wrap_inq_dimlen

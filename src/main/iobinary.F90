@@ -22,7 +22,7 @@ module iobinary
 #endif
   use decompMod      , only : map_sn2dc, map_dc2sn
   use abortutils     , only : endrun
-  use clmtype        , only : nameg, namel, namec, namep, lndrof, ocnrof
+  use clmtype        , only : nameg, namel, namec, namep, lndrof, ocnrof, allrof
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -544,13 +544,14 @@ contains
     integer :: numc        ! total number of columns   across all processors
     integer :: nump        ! total number of pfts      across all processors
 #if (defined RTM)
-    integer :: num_roflnd  ! total number of land  runoff points across all procs
-    integer :: num_rofocn  ! total number of ocean runoff points across all procs
+    integer :: num_rtm     ! total number of runoff cells across all procs
+    integer :: num_roflnd  ! total number of lrunoff cells across all procs
+    integer :: num_rofocn  ! total number of orunoff cells across all procs
 #endif
 !-----------------------------------------------------------------------
     call get_proc_global(numg, numl, numc, nump)
 #if (defined RTM)
-    call get_proc_rof_global(num_roflnd, num_rofocn)
+    call get_proc_rof_global(num_rtm, num_roflnd, num_rofocn)
 #endif
 
     select case (type1d)
@@ -563,10 +564,12 @@ contains
     case(namep)
        getnum = nump
 #if (defined RTM)
+    case(allrof)
+       getnum = num_rtm
     case(lndrof)
-       getnum = num_roflnd
+       getnum = num_rtm
     case(ocnrof)
-       getnum = num_rofocn
+       getnum = num_rtm
 #endif
     case default
        write(6,*) 'getnum errror: no match for type ',trim(type1d)

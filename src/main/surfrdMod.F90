@@ -422,13 +422,7 @@ contains
           end if	
        endif
        if (.not.AREAset) then
-          if (.not.EDGEset) then           ! global grid without use of edges
-             call cellarea (domain)
-          else                             ! regional regular grid 
-             call cellarea (domain, &
-                            domain%edges(1), domain%edges(2), &
-                            domain%edges(3), domain%edges(4))
-          endif
+          call cellarea (domain)
        end if	
 #endif
 

@@ -11,9 +11,10 @@ module pftdynMod
 ! !USES:
   use ncdio
   use spmdMod
-  use domainMod , only : ldomain
+  use domainMod , only : llocdomain
   use clm_varsur, only : pctspec
   use clm_varpar, only : max_pft_per_col
+  use shr_kind_mod, only : r8 => shr_kind_r8
 !
 ! !DESCRIPTION:
 ! Determine pft weights at current time using dynamic landuse datasets.
@@ -40,6 +41,7 @@ module pftdynMod
   real(r8), pointer   :: wtpft2(:,:)   
   real(r8), pointer   :: wtpft(:,:)
   real(r8), pointer   :: wtcol_old(:)
+  integer , pointer,save :: lmask(:)           ! llocdomain landmask
   integer :: nt1
   integer :: nt2
   integer :: ncid
@@ -65,6 +67,9 @@ contains
     use clm_time_manager, only : get_curr_date
     use clm_varctl  , only : fpftdyn
     use fileutils   , only : getfil
+#ifdef SPMD
+    use spmdGathScatMod, only : gather_data_to_master
+#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -101,6 +106,13 @@ contains
     allocate(pctgla(lsmlon,lsmlat),pctlak(lsmlon,lsmlat))
     allocate(pctwet(lsmlon,lsmlat),pcturb(lsmlon,lsmlat))
     allocate(landmask_pftdyn(lsmlon,lsmlat))
+    allocate(lmask(lsmlon*lsmlat))
+
+#ifdef SPMD
+    call gather_data_to_master (llocdomain%mask, lmask, clmlevel='gridcell')
+#else
+    lmask = llocdomain%mask
+#endif
 
     ! Set pointers into derived type
 
@@ -177,9 +189,9 @@ contains
                      ' and that obtained from surface dataset ', pctspec(n),' at i,j= ',i,j
                 call endrun()
              end if
-             if (landmask_pftdyn(i,j) /= ldomain%mask(n)) then
+             if (landmask_pftdyn(i,j) /= lmask(ldecomp%glo2gdc(n))) then
                 write(6,*)'mismatch between input landmask = ', landmask_pftdyn(i,j), & 
-                     ' and that obtained from surface dataset ', ldomain%mask(n),&
+                     ' and that obtained from surface dataset ', lmask(ldecomp%glo2gdc(n)),&
                      ' at i,j= ',i,j
                 call endrun()
              end if
@@ -436,6 +448,7 @@ contains
 !
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
+    use decompMod   , only : ldecomp
 !
 ! !ARGUMENTS:
     implicit none
@@ -466,7 +479,7 @@ contains
     do j = 1,lsmlat
        do i = 1,lsmlon
           n = (j-1)*lsmlon + i
-          if (ldomain%mask(n) == 1 .and. pctspec(n) < 100._r8) then
+          if (lmask(ldecomp%glo2gdc(n)) == 1 .and. pctspec(n) < 100._r8) then
              sumpct = 0._r8
              do m = 1, numpft+1
                 sumpct = sumpct + pctpft(i,j,m) * 100._r8/(100._r8-pctspec(n))

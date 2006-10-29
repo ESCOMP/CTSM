@@ -746,6 +746,7 @@ contains
     integer :: nump                ! total number of pfts across all processors
     integer :: nrof_lnd            ! total number of land runoff points across all procs
     integer :: nrof_ocn            ! total number of ocean runoff points across all procs
+    integer :: nrof_rtm            ! total number of rtm cells over all procs
     integer :: ier                 ! error status
     integer :: strlen_dimid        ! string dimension id
     character(len=  8) :: curdate  ! current date
@@ -758,7 +759,7 @@ contains
 
        call get_proc_global(numg, numl, numc, nump)
 #if (defined RTM)
-       call get_proc_rof_global(nrof_lnd, nrof_ocn)
+       call get_proc_rof_global(nrof_rtm, nrof_lnd, nrof_ocn)
 #endif
 
        ! Define dimensions
@@ -780,6 +781,7 @@ contains
 #if (defined RTM)
        call check_ret( nf_def_dim(ncid, 'ocnrof'  , nrof_ocn       , dimid), subname )
        call check_ret( nf_def_dim(ncid, 'lndrof'  , nrof_lnd       , dimid), subname )
+       call check_ret( nf_def_dim(ncid, 'allrof'  , nrof_rtm       , dimid), subname )
        call check_ret( nf_def_dim(ncid, 'rtmlon'  , rtmlon         , dimid), subname )
        call check_ret( nf_def_dim(ncid, 'rtmlat'  , rtmlat         , dimid), subname )
 #endif
@@ -854,6 +856,7 @@ contains
     integer :: nump     ! total number of pfts across all processors
     integer :: nrof_lnd ! total number of land runoff points across all procs
     integer :: nrof_ocn ! total number of ocean runoff points across all procs
+    integer :: nrof_rtm ! total number of runoff points across all procs
     character(len=32) :: subname='restFile_dimcheck' ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -862,7 +865,7 @@ contains
     if (masterproc) then
        call get_proc_global(numg, numl, numc, nump)
 #if (defined RTM)
-       call get_proc_rof_global(nrof_lnd, nrof_ocn)
+       call get_proc_rof_global(nrof_rtm, nrof_lnd, nrof_ocn)
 #endif
 
 #if ( !defined SCAM )

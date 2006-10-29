@@ -108,7 +108,7 @@ endif
 #------------------------------------------------------------------------
 
 OBJS := fileutils.o shr_kind_mod.o  shr_const_mod.o shr_sys_mod.o ncdio.o domainMod.o creategridMod.o \
-        areaMod.o mkvarctl.o mkvarpar.o mkrank.o mkvarsur.o mklaiMod.o mkglacier.o shr_timer_mod.o \
+        areaMod.o mkvarctl.o mkvarpar.o mkrank.o mkvarsur.o mklaiMod.o mkglacier.o mkfmax.o shr_timer_mod.o \
         mklanwat.o mkurban.o mksoitex.o mksoicol.o mkpftMod.o mkfileMod.o mksrfdat.o nanMod.o 
 
 .SUFFIXES:
@@ -140,6 +140,7 @@ mkvarsur.o:      shr_kind_mod.o mkvarpar.o domainMod.o
 mkfileMod.o:     shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarpar.o mkvarctl.o ncdio.o 
 mklaiMod.o:      shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarpar.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o
 mkglacier.o:     shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarpar.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o
+mkfmax.o:        shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarpar.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o
 mklanwat.o:      shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarpar.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o
 mkurban.o:       shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarpar.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o
 mksoitex.o:      shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarpar.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o

@@ -32,6 +32,7 @@ program mksrfdat
 !
 ! !REVISION HISTORY:
 ! Authors: Gordon Bonan, Sam Levis and Mariana Vertenstein
+! Revised: Nan Rosenbloom to add fmax processing.
 !
 !EOP
 !
@@ -69,6 +70,7 @@ program mksrfdat
     real(r8), allocatable  :: pctlak(:,:)          ! percent of grid cell that is lake     
     real(r8), allocatable  :: pctwet(:,:)          ! percent of grid cell that is wetland  
     real(r8), allocatable  :: pcturb(:,:)          ! percent of grid cell that is urbanized
+    real(r8), allocatable  :: fmax(:,:)            ! fractional saturated area
     integer , allocatable  :: soic2d(:,:)          ! soil color                            
     real(r8), allocatable  :: sand3d(:,:,:)        ! soil texture: percent sand            
     real(r8), allocatable  :: clay3d(:,:,:)        ! soil texture: percent clay            
@@ -89,17 +91,18 @@ program mksrfdat
     real(r8), allocatable  :: dpctlak(:,:)          ! percent of grid cell that is lake     
     real(r8), allocatable  :: dpctwet(:,:)          ! percent of grid cell that is wetland  
     real(r8), allocatable  :: dpcturb(:,:)          ! percent of grid cell that is urbanized
+    real(r8), allocatable  :: dfmax(:,:)            ! fractional saturated area
     integer , allocatable  :: dsoic2d(:,:)          ! soil color                            
     real(r8), allocatable  :: dsand3d(:,:,:)        ! soil texture: percent sand            
     real(r8), allocatable  :: dclay3d(:,:,:)        ! soil texture: percent clay            
-    real(r8), allocatable :: mlai_i(:,:,:)          ! baseline monthly lai
-    real(r8), allocatable :: msai_i(:,:,:)          ! baseline monthly sai
-    real(r8), allocatable :: mhgtt_i(:,:,:)         ! baseline monthly height (top)
-    real(r8), allocatable :: mhgtb_i(:,:,:)         ! baseline monthly height (bottom)
-    real(r8), allocatable :: mlai_o(:,:,:)          ! double monthly lai
-    real(r8), allocatable :: msai_o(:,:,:)          ! double monthly sai
-    real(r8), allocatable :: mhgtt_o(:,:,:)         ! double monthly height (top)
-    real(r8), allocatable :: mhgtb_o(:,:,:)         ! double monthly height (bottom)
+    real(r8), allocatable  :: mlai_i(:,:,:)         ! baseline monthly lai
+    real(r8), allocatable  :: msai_i(:,:,:)         ! baseline monthly sai
+    real(r8), allocatable  :: mhgtt_i(:,:,:)        ! baseline monthly height (top)
+    real(r8), allocatable  :: mhgtb_i(:,:,:)        ! baseline monthly height (bottom)
+    real(r8), allocatable  :: mlai_o(:,:,:)         ! double monthly lai
+    real(r8), allocatable  :: msai_o(:,:,:)         ! double monthly sai
+    real(r8), allocatable  :: mhgtt_o(:,:,:)        ! double monthly height (top)
+    real(r8), allocatable  :: mhgtb_o(:,:,:)        ! double monthly height (bottom)
 
     character(len=32) :: subname = 'mksrfdat'  ! program name
 
@@ -111,6 +114,7 @@ program mksrfdat
          mksrf_fsoicol,            &
          mksrf_flanwat,            &
          mksrf_fglacier,           &
+         mksrf_fmax,               &
          mksrf_furban,             &
          mksrf_flai,               &
          mksrf_fdynuse,            &
@@ -130,6 +134,7 @@ program mksrfdat
     !	 mksrf_fsoitex
     !    mksrf_fsoicol
     !    mksrf_flanwat
+    !    mksrf_fmax
     !    mksrf_fglacier
     !    mksrf_furban
     !    mksrf_flai
@@ -188,6 +193,7 @@ program mksrfdat
     endif
 
     write (ndiag,*) 'PFTs from:         ',trim(mksrf_fvegtyp)
+    write (ndiag,*) 'fmax from:         ',trim(mksrf_fmax)
     write (ndiag,*) 'glaciers from:     ',trim(mksrf_fglacier)
     write (ndiag,*) 'urban from:        ',trim(mksrf_furban)
     write (ndiag,*) 'inland water from: ',trim(mksrf_flanwat)
@@ -222,6 +228,7 @@ program mksrfdat
                pctlak(lsmlon,lsmlat)          , & 
                pctwet(lsmlon,lsmlat)          , & 
                pcturb(lsmlon,lsmlat)          , & 
+               fmax(lsmlon,lsmlat)            , & 
                sand3d(lsmlon,lsmlat,nlevsoi)  , & 
                clay3d(lsmlon,lsmlat,nlevsoi)  , & 
                soic2d(lsmlon,lsmlat))
@@ -234,6 +241,7 @@ program mksrfdat
     pctlak(:,:)       = spval
     pctwet(:,:)       = spval
     pcturb(:,:)       = spval
+    fmax(:,:)         = spval
     sand3d(:,:,:)     = spval
     clay3d(:,:,:)     = spval
     soic2d(:,:)       = -999
@@ -253,6 +261,13 @@ program mksrfdat
     call mklanwat (lsmlon, lsmlat, mksrf_flanwat, ndiag, pctlak, pctwet)
 
     write(6,*) ' timer_c mklanwat-----'
+    call shr_timer_print(t1)
+
+    ! Make fmax [fmax] from [fmax] dataset
+
+    call mkfmax (lsmlon, lsmlat, mksrf_fmax, ndiag, fmax)
+
+    write(6,*) ' timer_d mkfmax-----'
     call shr_timer_print(t1)
 
     ! Make glacier fraction [pctgla] from [fglacier] dataset
@@ -461,6 +476,7 @@ program mksrfdat
     call ncd_ioglobal(varname='PCT_GLACIER' , data=pctgla      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_URBAN'   , data=pcturb      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_PFT'     , data=pctpft      , ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='FMAX'        , data=fmax        , ncid=ncid, flag='write')
 
     ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 
@@ -512,6 +528,7 @@ program mksrfdat
        call ncd_ioglobal(varname='PCT_LAKE'    , data=pctlak      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_GLACIER' , data=pctgla      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_URBAN'   , data=pcturb      , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='FMAX'        , data=fmax        , ncid=ncid, flag='write')
 
        ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 
@@ -642,6 +659,7 @@ program mksrfdat
                   dpctlak(dbllon,dbllat)          , & 
                   dpctwet(dbllon,dbllat)          , & 
                   dpcturb(dbllon,dbllat)          , & 
+                  dfmax(dbllon,dbllat)            , & 
                   dsand3d(dbllon,dbllat,nlevsoi)  , & 
                   dclay3d(dbllon,dbllat,nlevsoi)  , & 
                   dsoic2d(dbllon,dbllat))
@@ -694,6 +712,7 @@ program mksrfdat
          dpctlak         (di:di+1,dj:dj+1) = pctlak(i,j)
          dpctwet         (di:di+1,dj:dj+1) = pctwet(i,j)
          dpcturb         (di:di+1,dj:dj+1) = pcturb(i,j)
+         dfmax           (di:di+1,dj:dj+1) = fmax(i,j)
          do n = 1,nlevsoi
             dsand3d      (di:di+1,dj:dj+1,n) = sand3d(i,j,n)
             dclay3d      (di:di+1,dj:dj+1,n) = clay3d(i,j,n)
@@ -724,6 +743,7 @@ program mksrfdat
        call ncd_ioglobal(varname='PCT_GLACIER' , data=dpctgla      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_URBAN'   , data=dpcturb      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_PFT'     , data=dpctpft      , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='FMAX'        , data=dfmax        , ncid=ncid, flag='write')
 
        call check_ret(nf_open(fsurdat, 0, ncidi), subname)
        do m = 1,12

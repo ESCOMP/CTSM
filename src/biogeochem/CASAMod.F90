@@ -1056,9 +1056,13 @@ contains
     use decompMod    , only : get_proc_bounds, get_proc_global
     use ncdio        , only : check_ret,ncd_defvar,ncd_ioglobal,ncd_iolocal
     use subgridAveMod, only : p2g
-    use domainMod    , only : ldomain
+    use domainMod    , only : llocdomain
+    use decompMod    , only : ldecomp
     use clm_varpar   , only : lsmlon, lsmlat
     use spmdMod      , only : masterproc
+#ifdef SPMD
+    use spmdGathScatMod, only : gather_data_to_master
+#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -1077,8 +1081,9 @@ contains
     integer :: numc          ! total number of columns across all processors
     integer :: nump          ! total number of pfts across all processors
     integer :: ier           ! error flag
-    integer :: n             ! index
+    integer :: n,m,g         ! index
     real(r8), pointer :: lonvar(:), latvar(:)
+    real(r8), pointer :: data(:)
     real(r8), pointer :: histi(:,:)
     real(r8), pointer :: histo(:,:)
     real(r8), pointer :: hist1do(:)
@@ -1168,16 +1173,45 @@ contains
        call check_ret(nf_enddef(ncid), subname)
     end if
 
-    allocate(lonvar(lsmlon),latvar(lsmlat))
-    lonvar(:) = ldomain%lonc(1:lsmlon)
-    do n = 1,lsmlat
-       latvar(n) = ldomain%latc((n-1)*lsmlon+1)
+    allocate(lonvar(lsmlon),latvar(lsmlat),data(numg))
+
+#ifdef SPMD
+    call gather_data_to_master (llocdomain%lonc, data, clmlevel='gridcell')
+#else
+    data(1:numg) = llocdomain%lonc(1:numg)
+#endif
+    lonvar = spval
+    do n = 1,lsmlon
+    do m = 1,lsmlat
+       g = ldecomp%glo2gdc((m-1)*lsmlon + n)
+       if (g > 0 .and. g < lsmlon*lsmlat) lonvar(n) = data(g)
     enddo
-    call ncd_ioglobal(varname='longitude', data=lonvar, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='latitude', data=latvar, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='landfrac', data=ldomain%frac, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='landmask', data=ldomain%mask, ncid=ncid, flag='write')
-    deallocate(lonvar,latvar)
+    enddo
+
+#ifdef SPMD
+    call gather_data_to_master (llocdomain%latc, data, clmlevel='gridcell')
+#else
+    data(1:numg) = llocdomain%latc(1:numg)
+#endif
+    latvar = spval
+    do n = 1,lsmlon
+    do m = 1,lsmlat
+       g = ldecomp%glo2gdc((m-1)*lsmlon + n)
+       if (g > 0 .and. g < lsmlon*lsmlat) latvar(m) = data(g)
+    enddo
+    enddo
+
+    if (masterproc) then
+       call ncd_ioglobal(varname='longitude', data=lonvar, ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='latitude', data=latvar, ncid=ncid, flag='write')
+    endif
+    call ncd_iolocal(varname='landfrac', data=llocdomain%frac, ncid=ncid, &
+         flag='write', dim1name='gridcell', &
+         nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+    call ncd_iolocal(varname='landmask', data=llocdomain%mask, ncid=ncid, &
+         flag='write', dim1name='gridcell', &
+         nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+    deallocate(lonvar,latvar,data)
 
     allocate(histi(begp:endp, 1),histo(begg:endg,1),hist1do(begg:endg), stat=ier)
     if (ier /= 0) then

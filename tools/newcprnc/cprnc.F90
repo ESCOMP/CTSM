@@ -338,6 +338,8 @@ subroutine chkdims (nfid)
 !
    call wrap_inq_ndims (nfid(1), ndims)
    do n=1,ndims
+      dimlen1 = -1
+      dimlen2 = -1
       call wrap_inq_dimname (nfid(1), n, dimname)
       call wrap_inq_dimlen (nfid(1), n, dimlen1)
       call wrap_inq_dimid (nfid(2), dimname, dimid)
@@ -347,9 +349,11 @@ subroutine chkdims (nfid)
       else
          if (dimname == 'time') then
             write(6,*)'chkdims note: time dimension lengths differ:', dimlen1, dimlen2
+         elseif (dimlen1 == -1 .or. dimlen2 == -1) then
+            write(6,*)'Dimension ',dimname(1:lenchr(dimname)),' only exists on one file ', dimlen1,dimlen2
          else
             write(6,*)'Dimension ',dimname(1:lenchr(dimname)), ' has lengths ', dimlen1, dimlen2
-            call endrun ('chkdims')
+!            call endrun ('chkdims')
          end if
       end if
    end do

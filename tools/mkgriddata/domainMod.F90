@@ -87,7 +87,8 @@ contains
 !
 !------------------------------------------------------------------------------
     if (domain%domain_set == domain_set) then
-       call domain_clean(domain)
+        return
+!       call domain_clean(domain)
     endif
 
     allocate(domain%mask(ni,nj),domain%frac(ni,nj),domain%latixy(ni,nj), &

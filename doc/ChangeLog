@@ -1,4 +1,148 @@
 ===============================================================
+Tag name: clm3_expa_76
+Originator(s): tcraig,nanr,pworley
+Date: Sun Oct 29 16:03:38 MST 2006
+One-line Summary: memory use and rtm parallelization/rewrite
+
+Purpose of changes: Merge fmd07_clm3_expa_75 to the main trunk.
+  That branch has several updates related to memory usage and
+  parallelization of RTM.  In addition, rtm subcycling was
+  added to address problems in cfl in rtm and a bug was fixed
+  that resulted in incorrect downstream flux when volumes were
+  negative.  Also, mksurfdata was updated to add fmax and
+  several other minor bugs were fixed.
+
+Bugs fixed (include bugzilla ID):
+  RTM was changed from velocity limiting to subcycling to
+    handle cfl issues.
+  RTM bug fix in downstream flux calculation when volumes were
+    negative
+  Fix to history file for long_name.
+  Add bounds attribute to time variable in history files (#254).
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by:
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+	M      tools/newcprnc/cprnc.F90
+	M      tools/newcprnc/nfwrappers.f90
+	M      tools/mksurfdata/mksrfdat.namelist
+	M      tools/mkgriddata/mkvarctl.F90
+	M      tools/mkgriddata/README
+	M      tools/mkgriddata/domainMod.F90
+	M      tools/mkgriddata/mkgriddata.F90
+	M      tools/mkgriddata/creategridMod.F90
+	M      bld/offline/tests/test_batch.csh
+	M      src/biogeochem/CASAMod.F90
+	M      src/biogeochem/DGVMMod.F90
+	M      src/main/spmdGathScatMod.F90
+	M      src/main/clm_varcon.F90
+	M      src/main/ncdio.F90
+	M      src/main/atmdrvMod.F90
+	M      src/main/initializeMod.F90
+	M      src/main/pftdynMod.F90
+	M      src/main/histFileMod.F90
+	M      src/main/program_csm.F90
+	M      src/main/clm_atmlnd.F90
+	M      src/main/clm_csmMod.F90
+	M      src/main/restFileMod.F90
+	M      src/main/ndepFileMod.F90
+	M      src/main/initGridCellsMod.F90
+	M      src/main/lnd_comp_mct.F90
+	M      src/main/surfrdMod.F90
+	M      src/main/domainMod.F90
+	M      src/main/decompMod.F90
+	M      src/main/areaMod.F90
+	M      src/main/iobinary.F90
+	M      src/main/clmtype.F90
+	M      src/main/histFldsMod.F90
+	M      src/SVN_EXTERNAL_DIRECTORIES
+	M      src/riverroute/RtmMod.F90
+	M      src/riverroute/RunoffMod.F90
+	
+- added Pat Worley's mods for initialization performance on phoenix.  in 
+  decompMod and areaMod.
+- add fmax calculation in mksurdata
+- add time bounds attribute and fix long_name string in history files
+- rtm refactor.  convert from 2d to 1d fields.  inline routines where
+  appropriate.  introduce downstream index instead of rdirc.  
+  parallelize over river basins.  update i/o for parallel rtm.
+  introduce subcycling.  fix bug in downstream flux calc when
+  volume is negative.  introduce max timestep calculation for cfl
+  for use in subcyling.  add cfl_scale parameter to rtm to set
+  relative cfl limit, set cfl_scale to 0.1.  remove rtmfluxini
+  routine, set fluxout=0 at initialization.  update rtm restart
+  to maximize backward compatability but allowing upgrade.
+- remove global domains after use in initalization.  introduce
+  local domains (locdomain) in run phase.  add decomp_domg2l meethod.
+  add regional and decomped logicals to domain type.
+- migrate all ioglobal calls to iolocal.
+- inline interpa2si in atmdrv.
+- add mct to externals set, not yet used.
+
+Summary of testing:
+
+  This tag is bfb except when RTM is turned on.  the bug fix
+  and subcycling change answers by more than roundoff.  A validation
+  was performed with RTM, see below.
+
+  bluesky: clm stand alone tests pass except RTM fields.
+  bluesky: cam pretag tests all pass
+  tempest: cam pretag tests all pass
+  bangkok/lf95: cam pretag tests all pass
+  bluevista: ccsm test bfb except rtm fields which lead to
+	     divergence in solution after 2 days.  pass ERS test.
+  bluevista: finemesh tests case runs to completion.
+  lightning: ccsm test bfb except rtm fields which lead to
+	     divergence in solution after 2 days.  pass ERS test.
+
+CLM tag used for the baseline comparison tests if applicable:
+  clm3_expa_69, cam3_3_37, ccsm3_1_beta40
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: RTM subcyling and bug fix
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff, same climate
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   b31.001r1 validation run done, see /TCRAIG/csm/b31.001r1 relative
+   to /CCSM/csm/b31.001.  Keith Oleson also carried out a standalone
+   clm run and found bfb except in runoff fields.  Results reviewed
+   by land and ocean groups.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository): ccsm3_1_beta39
+	and ccsm3_1_beat39 + fmd06_clm3_expa_74
+   - platform/compilers: bluevista16
+   - configuration (CPP ifdefs): ccsm B2 case
+   - build-namelist command (or complete namelist):
+   - MSS location of output: /CCSM/csm/b31.001, /TCRAIG/csm/b31.001r1
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+
+	
+===============================================================
 Tag name: clm3_expa_75
 Originator(s): mvertens	
 Date: Tue Oct 24 21:10:59 MDT 2006

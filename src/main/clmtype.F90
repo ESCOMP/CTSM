@@ -1866,6 +1866,8 @@ character(len=8), parameter :: ocnrof = 'ocnrof'    ! name of river routing
                                                     ! ocean runoff
 character(len=8), parameter :: lndrof = 'lndrof'    ! name of river routing 
                                                     ! land channel runoff
+character(len=8), parameter :: allrof = 'allrof'    ! name of river routing 
+                                                    ! all channel runoff
 
 !
 !EOP

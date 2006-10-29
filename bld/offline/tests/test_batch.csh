@@ -174,24 +174,14 @@ set cdir = `pwd`
 set id = "`date +%y%m%d-%H%M%S`"
 echo "Starting test-model.pl"
 
-#rm -f /ptmp/tcraig/clmtest/*/0*.log
-
- ./test-model.pl -res T31cnall -c $COMPDIR
-if ( $status != 0 ) exit 999
  ./test-model.pl -res T31      -c $COMPDIR
-if ( $status != 0 ) exit 999
+##if ( $status != 0 ) exit 999
+ ./test-model.pl -res T31cnall -c $COMPDIR
+##if ( $status != 0 ) exit 999
  ./test-model.pl -res T31cn    -c $COMPDIR
-if ( $status != 0 ) exit 999
+##if ( $status != 0 ) exit 999
  ./test-model.pl -res T31casa  -c $COMPDIR
-if ( $status != 0 ) exit 999
+##if ( $status != 0 ) exit 999
  ./test-model.pl -res T31dgvm  
-if ( $status != 0 ) exit 999
-
-#foreach file (/ptmp/tcraig/clmtest/*/0*.log)
-#  cp $file $cdir/logs/
-#end
-#cd $cdir/logs
-#foreach file (*.log)
-#  mv $file $file.$id
-#end
+##if ( $status != 0 ) exit 999
 

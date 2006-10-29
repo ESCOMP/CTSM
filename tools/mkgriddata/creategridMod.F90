@@ -140,7 +140,7 @@ contains
        call domain_check(ddomain)
 
     elseif (trim(type) == 'external') then
-       call read_domain(ldomain,fname)
+       call read_domain(ldomain,fname,trim(type))
     else
        write(6,*) 'creategrid ERROR, type = ',trim(type)
        stop
@@ -363,7 +363,7 @@ contains
 ! !IROUTINE: read_domain
 !
 ! !INTERFACE:
-  subroutine read_domain(domain,fname)
+  subroutine read_domain(domain,fname,type)
 !
 ! !DESCRIPTION:
 ! Read a grid file
@@ -375,6 +375,7 @@ contains
     implicit none
     type(domain_type),intent(inout) :: domain
     character(len=*) ,intent(in)    :: fname
+    character(len=*) ,intent(in),optional :: type
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -383,11 +384,13 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer :: nlon,nlat                       !size
+    logical :: etype                           !external type
     real(r8), allocatable :: lon1d(:)          !local array for 1d lon
     real(r8), allocatable :: lat1d(:)          !local array for 1d lat
     real(r8), allocatable :: xv(:,:,:)         !local array for corner lons
     real(r8), allocatable :: yv(:,:,:)         !local array for corner lats
     character(len=256) :: locfn                !local file name
+    character(len=256) :: fnamel               !local file name
     integer :: i,j                             !indexes
     integer :: ncid                            !netCDF file id
     integer :: dimid                           !netCDF dimension id
@@ -406,6 +409,12 @@ contains
     character(len= 32) :: subname = 'read_domain'
 !-----------------------------------------------------------------
 
+    fnamel = fname
+
+    etype = .false.
+    if (present(type)) then
+       if (trim(type) == 'external') etype = .true.
+    endif
     write(6,*) ' ' 
 
     dimset      = .false.
@@ -420,7 +429,7 @@ contains
 
     ! Read domain file and compute stuff as needed
 
-    call getfil (fname, locfn, 0)
+    call getfil (fnamel, locfn, 0)
     call check_ret(nf_open(locfn, 0, ncid), subname)
 
     ier = nf_inq_dimid (ncid, 'lon', dimid)
@@ -676,6 +685,81 @@ contains
 
     call check_ret(nf_close(ncid), subname)
 
+!----------------------
+    if (etype) then
+    if (mksrf_fcamfile /= '') then
+    fnamel = mksrf_fcamfile
+    call getfil (fnamel, locfn, 0)
+    call check_ret(nf_open(locfn, 0, ncid), subname)
+
+    ier = nf_inq_varid (ncid, 'lon', varid)
+    if (ier == NF_NOERR) then
+       if (lonlatset) write(6,*) trim(subname),' WARNING, overwriting lat,lon'
+       lonlatset = .true.
+       ier = nf_inq_varndims(ncid,varid,ndims)
+       if (ndims == 1) then
+          write(6,*) trim(subname),' read lon and lat 1d fields'
+          allocate(lon1d(nlon),lat1d(nlat))
+          call check_ret(nf_inq_varid (ncid, 'lon', varid), subname)
+          call check_ret(nf_get_var_double (ncid, varid, lon1d), subname)
+          call check_ret(nf_inq_varid (ncid, 'lat', varid), subname)
+          call check_ret(nf_get_var_double (ncid, varid, lat1d), subname)
+          do j = 1, nlat
+          do i = 1, nlon
+             domain%longxy(i,j) = lon1d(i)
+             domain%latixy(i,j) = lat1d(j)
+          enddo
+          enddo
+          deallocate(lon1d,lat1d)
+       elseif (ndims == 2) then
+          write(6,*) trim(subname),' read lon and lat 2d fields'
+          call check_ret(nf_inq_varid (ncid, 'lat', varid), subname)
+          call check_ret(nf_get_var_double (ncid, varid, domain%latixy), subname)
+          call check_ret(nf_inq_varid (ncid, 'lon', varid), subname)
+          call check_ret(nf_get_var_double (ncid, varid, domain%longxy), subname)
+       else
+          write(6,*) trim(subname),'ERROR: lon and lat illegal dim ',ndims
+          stop
+       endif
+    endif
+
+    call check_ret(nf_close(ncid), subname)
+
+    endif
+    endif
+!----------------------
+!----------------------
+    if (etype) then
+    if (mksrf_fcamtopo /= '') then
+    fnamel = mksrf_fcamtopo
+    call getfil (fnamel, locfn, 0)
+    call check_ret(nf_open(locfn, 0, ncid), subname)
+
+    ier = nf_inq_varid (ncid, 'PHIS', varid)
+    if (ier == NF_NOERR) then
+       if (toposet) write(6,*) trim(subname),' WARNING, overwriting topo'
+       toposet = .true.
+       write(6,*) trim(subname),' read TOPO'
+       call check_ret(nf_inq_varid (ncid, 'PHIS', varid), subname)
+       call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
+       domain%topo = domain%topo/SHR_CONST_G
+    endif
+
+    ier = nf_inq_varid (ncid, 'TOPO', varid)
+    if (ier == NF_NOERR) then
+       if (toposet) write(6,*) trim(subname),' WARNING, overwriting topo'
+       toposet = .true.
+       write(6,*) trim(subname),' read TOPO'
+       call check_ret(nf_inq_varid (ncid, 'TOPO', varid), subname)
+       call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
+    endif
+
+    call check_ret(nf_close(ncid), subname)
+
+    endif
+    endif
+!----------------------
+
     if (.not.lonlatset) then
        write(6,*) trim(subname),' ERROR: long and lati not set '
        stop
@@ -761,7 +845,6 @@ contains
 !    call domain_check(domain)
 
   end subroutine read_domain
-
 !----------------------------------------------------------------------------
 
   subroutine mkfile(lsmlon, lsmlat, fname, finfo, itype)
@@ -831,9 +914,21 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Host', len_trim(str), trim(str)), subname)
 
+    str = mksrf_fcamfile
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'fcamfile', len_trim(str), trim(str)), subname)
+
+    str = mksrf_fccsmdom
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'fccsmdom', len_trim(str), trim(str)), subname)
+
+    str = mksrf_fcamtopo
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'fcamtopo', len_trim(str), trim(str)), subname)
+
     str = finfo
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
-         'Input_Filename', len_trim(str), trim(str)), subname)
+         'Other_Info', len_trim(str), trim(str)), subname)
 
     if (itype == 3) then
       str = mksrf_frawtopo

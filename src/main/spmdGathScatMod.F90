@@ -67,7 +67,7 @@ contains
 ! Compute arguments for gatherv, scatterv for vectors
 !
 ! !USES:
-    use clmtype  , only : nameg, namel, namec, namep, ocnrof, lndrof
+    use clmtype  , only : nameg, namel, namec, namep, ocnrof, lndrof, allrof
     use decompMod, only : get_proc_bounds, get_proc_total
 #if (defined RTM)
     use RunoffMod, only : get_proc_rof_bounds, get_proc_rof_total
@@ -97,12 +97,8 @@ contains
     integer :: nlunits      ! total number of landunits on the processor
     integer :: ncols        ! total number of columns on the processor
     integer :: npfts        ! total number of pfts on the processor
-    integer :: roflnd_beg
-    integer :: roflnd_end
-    integer :: rofocn_beg
-    integer :: rofocn_end
-    integer :: nroflnd
-    integer :: nrofocn
+    integer :: begr, endr   ! beginning and ending rtm index in processor
+    integer :: nroff        ! total number of rtm cells on the processor
 !----------------------------------------------------------------------
 
     select case (clmlevel)
@@ -151,27 +147,38 @@ contains
        indexi = begp
 
 #if (defined RTM)
+    case(allrof)
+
+       call get_proc_rof_bounds(begr, endr)
+       call get_proc_rof_total(iam, nroff)
+       numtot = nroff * nfact
+       do pid = 0,npes-1
+          call get_proc_rof_total(pid, nroff)
+          numperproc(pid) = nroff * nfact
+       end do
+       indexi = begr
+
     case(lndrof)
 
-       call get_proc_rof_bounds(roflnd_beg, roflnd_end, rofocn_beg, rofocn_end)
-       call get_proc_rof_total(iam, nroflnd, nrofocn)
-       numtot = nroflnd * nfact
+       call get_proc_rof_bounds(begr, endr)
+       call get_proc_rof_total(iam, nroff)
+       numtot = nroff * nfact
        do pid = 0,npes-1
-          call get_proc_rof_total(pid, nroflnd, nrofocn)
-          numperproc(pid) = nroflnd * nfact
+          call get_proc_rof_total(pid, nroff)
+          numperproc(pid) = nroff * nfact
        end do
-       indexi = roflnd_beg
+       indexi = begr
 
     case(ocnrof)
 
-       call get_proc_rof_bounds(roflnd_beg, roflnd_end, rofocn_beg, rofocn_end)
-       call get_proc_rof_total(iam, nroflnd, nrofocn)
-       numtot = nrofocn * nfact
+       call get_proc_rof_bounds(begr, endr)
+       call get_proc_rof_total(iam, nroff)
+       numtot = nroff * nfact
        do pid = 0,npes-1
-          call get_proc_rof_total(pid, nroflnd, nrofocn)
-          numperproc(pid) = nrofocn * nfact
+          call get_proc_rof_total(pid, nroff)
+          numperproc(pid) = nroff * nfact
        end do
-       indexi = rofocn_beg
+       indexi = begr
 #endif
 
     case default

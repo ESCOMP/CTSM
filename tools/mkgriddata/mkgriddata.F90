@@ -42,9 +42,9 @@ program mkgriddata
     namelist /clmexp/    &
          mksrf_fnavyoro, &
          mksrf_frawtopo, &
-         mksrf_fcamtopo, &
+         mksrf_fcamfile, &
          mksrf_fccsmdom, &
-         mksrf_fclmgrid, &
+         mksrf_fcamtopo, &
          mksrf_lsmlon  , &
          mksrf_lsmlat  , &
          mksrf_edgen   , &
@@ -67,16 +67,18 @@ program mkgriddata
 
     write (6,*) 'Attempting to create grid dataset .....'
 
+    fileinfo  = ' '
     if     (mksrf_fccsmdom /= ' ')  then
        write(6,*) 'Setting grid from ccsm domain file ',trim(mksrf_fccsmdom)
        area_units = 1
        area_valid = .false.
        call creategrid(mksrf_fccsmdom,'external')
-       fileinfo = mksrf_fccsmdom
+    elseif (mksrf_fcamfile /= ' ') then
+       write(6,*) 'Setting grid from cam grid file ',trim(mksrf_fcamfile)
+       call creategrid(mksrf_fcamfile,'external')
     elseif (mksrf_fcamtopo /= ' ') then
        write(6,*) 'Setting grid from cam topo file ',trim(mksrf_fcamtopo)
        call creategrid(mksrf_fcamtopo,'external')
-       fileinfo = mksrf_fcamtopo
     elseif (mksrf_fclmgrid /= ' ') then
        write(6,*) 'Setting grid from clm grid file ',trim(mksrf_fclmgrid)
        call creategrid(mksrf_fclmgrid,'external')

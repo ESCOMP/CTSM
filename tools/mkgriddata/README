@@ -18,7 +18,7 @@ input topographic dataset.
       mksrf_edges       - southern edge of grid (degrees)
       mksrf_edgew       - western edge of grid (degrees)
    or
-      mksrf_fcamtopo    - cam topo file
+      mksrf_fcamfile    - cam topo file
    or 
       mksrf_fccsmdom    - ccsm domain file
    or

@@ -304,9 +304,10 @@ contains
 ! !USES:
     use clmtype
     use ncdio
-    use decompMod    , only : get_proc_bounds
+    use decompMod    , only : get_proc_bounds, get_proc_global
     use clm_varpar   , only : lsmlon, lsmlat, maxpatch_pft
-    use domainMod    , only : ldomain
+    use domainMod    , only : llocdomain
+    use decompMod    , only : ldecomp
     use clm_varctl   , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
                               frivinp_rtm, archive_dir, mss_wpass, mss_irt
     use clm_varcon   , only : spval
@@ -315,6 +316,9 @@ contains
     use fileutils    , only : set_filename, putfil, get_filename
     use shr_sys_mod  , only : shr_sys_getenv
     use spmdMod      , only : masterproc
+#ifdef SPMD
+    use spmdGathScatMod, only : gather_data_to_master
+#endif
     use shr_const_mod, only : SHR_CONST_CDAY
 !
 ! !ARGUMENTS:
@@ -344,6 +348,7 @@ contains
    real(r8), pointer :: acfluxfire_gcell(:) ! gridcell C flux to atmosphere from biomass burning
    real(r8), pointer :: bmfm_gcell(:,:)     ! gridcell biomass
    real(r8), pointer :: afmicr_gcell(:,:)   ! gridcell microbial respiration
+   real(r8), pointer :: data(:)             ! temporary global array
 !
 !EOP
 !
@@ -357,8 +362,9 @@ contains
     integer :: begc, endc              ! per-proc beginning and ending column indices
     integer :: begl, endl              ! per-proc beginning and ending landunit indices
     integer :: begg, endg              ! per-proc gridcell ending gridcell indices
+    integer :: numg,numl,numc,nump     ! global glcp cells
     integer :: ier                     ! error status
-    integer :: n                       ! index
+    integer :: n,m                     ! index
     integer :: mdcur, mscur, mcdate    ! outputs from get_curr_time
     integer :: yr,mon,day,mcsec        ! outputs from get_curr_date
     integer :: hours,minutes,secs      ! hours,minutes,seconds of hh:mm:ss
@@ -407,6 +413,7 @@ contains
     ! Determine subgrid bounds for this processor and allocate dynamic memory
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+    call get_proc_global(numg, numl, numc, nump)
 
     allocate(rbuf2dg(begg:endg,maxpatch_pft), ibuf2dg(begg:endg,maxpatch_pft), stat=ier)
     if (ier /= 0) call endrun('histDGVM: allocation error for rbuf2dg, ibuf2dg')
@@ -630,24 +637,57 @@ contains
     ! Write variables
     ! -----------------------------------------------------------------------
 
-    call ncd_ioglobal(varname='edgen', data=ldomain%edges(1), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edgee', data=ldomain%edges(2), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edges', data=ldomain%edges(3), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edgew', data=ldomain%edges(4), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgen', data=llocdomain%edges(1), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgee', data=llocdomain%edges(2), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edges', data=llocdomain%edges(3), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgew', data=llocdomain%edges(4), ncid=ncid, flag='write')
 
     ! Write surface grid (coordinate variables, latitude, longitude, surface type).
 
-    allocate(lonvar(lsmlon),latvar(lsmlat))
-    lonvar(:) = ldomain%lonc(1:lsmlon)
-    do n = 1,lsmlat
-       latvar(n) = ldomain%latc((n-1)*ldomain%ni+1)
+    allocate(lonvar(lsmlon),latvar(lsmlat),data(numg))
+
+#ifdef SPMD
+    call gather_data_to_master (llocdomain%lonc, data, clmlevel='gridcell')
+#else
+    data(1:numg) = llocdomain%lonc(1:numg)
+#endif
+    lonvar = spval
+    do n = 1,lsmlon
+    do m = 1,lsmlat
+       g = ldecomp%glo2gdc((m-1)*lsmlon + n)
+       if (g > 0 .and. g < lsmlon*lsmlat) lonvar(n) = data(g)
     enddo
-    call ncd_ioglobal(varname='lon'     , data=lonvar      , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='lat'     , data=latvar      , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='longxy'  , data=ldomain%lonc, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='latixy'  , data=ldomain%latc, ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='landmask', data=ldomain%mask, ncid=ncid, flag='write')
-    deallocate(lonvar,latvar)
+    enddo
+
+#ifdef SPMD
+    call gather_data_to_master (llocdomain%latc, data, clmlevel='gridcell')
+#else
+    data(1:numg) = llocdomain%latc(1:numg)
+#endif
+    latvar = spval
+    do n = 1,lsmlon
+    do m = 1,lsmlat
+       g = ldecomp%glo2gdc((m-1)*lsmlon + n)
+       if (g > 0 .and. g < lsmlon*lsmlat) latvar(m) = data(g)
+    enddo
+    enddo
+
+    if (masterproc) then
+       call ncd_ioglobal(varname='lon', data=lonvar, ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='lat', data=latvar, ncid=ncid, flag='write')
+    endif
+
+    call ncd_iolocal(varname='longxy'  , data=llocdomain%lonc, ncid=ncid, &
+         flag='write', dim1name='gridcell', &
+         nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+    call ncd_iolocal(varname='latixy'  , data=llocdomain%latc, ncid=ncid, &
+         flag='write', dim1name='gridcell', &
+         nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+    call ncd_iolocal(varname='landmask', data=llocdomain%mask, ncid=ncid, &
+         flag='write', dim1name='gridcell', &
+         nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+
+    deallocate(lonvar,latvar,data)
 
     ! Write current date, current seconds, current day, current nstep
 

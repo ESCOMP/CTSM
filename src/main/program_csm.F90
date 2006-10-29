@@ -91,7 +91,7 @@
   logical  :: doalb        ! true if surface albedo calculation time step
   integer  :: ier          ! error code
   logical  :: log_print    ! true=> print diagnostics
-  integer  :: mpicom       ! MPI communicator
+  integer  :: mpicom_top   ! MPI communicator
   character(len=SHR_KIND_CL) :: nlfilename ! Namelist filename
 !
 !-----------------------------------------------------------------------
@@ -142,8 +142,8 @@
   ! -----------------------------------------------------------------
 
 #ifdef SPMD
-  call csm_setup(mpicom)
-  call spmd_init(mpicom)
+  call csm_setup(mpicom_top)
+  call spmd_init(mpicom_top)
 #else
   write(6,*)'SPMD must to be defined when running in COUP_CSM mode
   call endrun()

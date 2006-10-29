@@ -24,6 +24,7 @@ module decompMod
 ! !PUBLIC MEMBER FUNCTIONS:
   public decomp_init             ! initializes land surface decomposition
                                  ! into clumps and processors
+  public decomp_domg2l           ! create local domain from global domain
   public get_clump_bounds        ! beg and end gridcell, landunit, column,
                                  ! pft indices for clump
   public get_proc_clumps         ! number of clumps for this processor
@@ -169,6 +170,10 @@ contains
     integer :: ier                    ! error code
     integer :: cnt                    ! local counter
 
+    integer, pointer :: lncnt(:)      ! lnd cell count per atm cell
+    integer, pointer :: lnoff(:)      ! atm cell offset in lnmap
+    integer, pointer :: lnmap(:)      ! map from atm cell to lnd cells
+    integer :: lnidx
 
 ! !CALLED FROM:
 ! subroutine initialize
@@ -264,6 +269,31 @@ contains
        endif
     enddo
 
+    allocate(lncnt(ans),lnoff(ans),lnmap(lns))
+
+    lncnt = 0
+    do ln = 1,lns
+       an = ldomain%gatm(ln)
+       if ((an > 0) .and. (an .le. ans)) then
+          lncnt(an) = lncnt(an) + 1
+       endif
+    enddo
+
+    lnoff(1) = 1
+    do an = 2,ans
+       lnoff(an) = lnoff(an-1) + lncnt(an-1)
+    enddo
+
+    lncnt = 0
+    lnmap = -1
+    do ln = 1,lns
+       an = ldomain%gatm(ln)
+       if ((an > 0) .and. (an .le. ans)) then
+         lnmap(lnoff(an)+lncnt(an)) = ln
+         lncnt(an) = lncnt(an) + 1
+       endif
+    enddo
+
     !--- assign gridcells to clumps (and thus pes) ---
     allocate(lcid(lns),acid(ans))
     lcid = 0
@@ -295,8 +325,8 @@ contains
           endif
 
           cnt = 0
-          do ln = 1,lns
-          if (ldomain%gatm(ln) == an) then         
+          do lnidx = 0,lncnt(an)-1
+             ln = lnmap(lnoff(an)+lnidx)          
              cnt = cnt + 1
              call subgrid_get_gcellinfo (ln, wtxy, nlunits=ilunits, &
                                   ncols=icols, npfts=ipfts)
@@ -355,7 +385,6 @@ contains
                 procinfo%endc = procinfo%endc + icols
                 procinfo%endp = procinfo%endp + ipfts
              endif
-          endif  ! ldomain%gatm == an
           enddo
           !--- check that atm cell has at least 1 lnd grid cell
           if (cnt < 1) then
@@ -528,7 +557,7 @@ contains
     enddo
 
     deallocate(acid,lcid)
-
+    deallocate(lncnt,lnoff,lnmap)
 
     ! Diagnostic output
 
@@ -607,9 +636,62 @@ contains
 
     call shr_sys_flush(6)
 
-
   end subroutine decomp_init
 
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: decomp_domg2l
+!
+! !INTERFACE:
+  subroutine decomp_domg2l(gdomain,ldomain,decomp,nbeg,nend)
+!
+! !DESCRIPTION:
+! This subroutine allocates and nans the domain type
+!
+! !USES:
+    use domainMod, only : domain_type, domain_init
+!
+! !ARGUMENTS:
+    implicit none
+    type(domain_type) :: gdomain       ! global domain
+    type(domain_type) :: ldomain       ! local domain
+    type(decomp_type) :: decomp        ! decomp type
+    integer           :: nbeg,nend     ! local beg/end
+!
+! !REVISION HISTORY:
+!   Created by T Craig
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    integer ier,nl,ng
+!
+!------------------------------------------------------------------------------
+
+    call domain_init(ldomain,gdomain%ni,gdomain%nj,nbeg,nend)
+
+    ldomain%edges   = gdomain%edges
+    do nl = nbeg,nend
+       ng = decomp%gdc2glo(nl)
+       ldomain%mask(nl) = gdomain%mask(ng)
+       ldomain%frac(nl) = gdomain%frac(ng)
+       ldomain%topo(nl) = gdomain%topo(ng)
+       ldomain%latc(nl) = gdomain%latc(ng)
+       ldomain%lonc(nl) = gdomain%lonc(ng)
+       ldomain%area(nl) = gdomain%area(ng)
+       ldomain%lats(nl) = gdomain%lats(ng)
+       ldomain%latn(nl) = gdomain%latn(ng)
+       ldomain%lonw(nl) = gdomain%lonw(ng)
+       ldomain%lone(nl) = gdomain%lone(ng)
+
+       ldomain%pftm(nl) = gdomain%pftm(ng)
+       ldomain%nara(nl) = gdomain%nara(ng)
+       ldomain%ntop(nl) = gdomain%ntop(ng)
+       ldomain%gatm(nl) = gdomain%gatm(ng)
+    enddo
+
+end subroutine decomp_domg2l
 !------------------------------------------------------------------------------
 !BOP
 !

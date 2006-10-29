@@ -57,8 +57,8 @@ contains
 ! !USES
     use clmtype     , only : clm3, gridcell_type, landunit_type, &
                              column_type, pft_type
-    use domainMod   , only : ldomain, adomain
-    use decompMod   , only : ldecomp, get_proc_global, get_proc_bounds
+    use domainMod   , only : llocdomain, alocdomain
+    use decompMod   , only : ldecomp, adecomp, get_proc_global, get_proc_bounds
     use clm_varcon  , only : istsoil, istice, istwet, istdlak, isturb
     use subgridMod  , only : gcelldc, gcellsn, subgrid_alloc
     use shr_const_mod,only : SHR_CONST_PI
@@ -164,15 +164,15 @@ contains
        ! Set clm3 lats/lons
 
        if (my_gcell) then
-          gptr%latdeg(gdc) = ldomain%latc(glo) 
-          gptr%londeg(gdc) = ldomain%lonc(glo) 
-          gptr%lat(gdc)    = ldomain%latc(glo) * SHR_CONST_PI/180._r8  
-          gptr%lon(gdc)    = ldomain%lonc(glo) * SHR_CONST_PI/180._r8
-          gptr%area(gdc)   = ldomain%area(glo)
+          gptr%latdeg(gdc) = llocdomain%latc(gdc) 
+          gptr%londeg(gdc) = llocdomain%lonc(gdc) 
+          gptr%lat(gdc)    = gptr%latdeg(gdc) * SHR_CONST_PI/180._r8  
+          gptr%lon(gdc)    = gptr%londeg(gdc) * SHR_CONST_PI/180._r8
+          gptr%area(gdc)   = llocdomain%area(gdc)
 
-          na = ldomain%gatm(glo)
-          gptr%londeg_a(gdc) = adomain%lonc(na)
-          gptr%latdeg_a(gdc) = adomain%latc(na)
+          na = adecomp%glo2gdc(llocdomain%gatm(gdc))
+          gptr%londeg_a(gdc) = alocdomain%lonc(na)
+          gptr%latdeg_a(gdc) = alocdomain%latc(na)
           gptr%lon_a   (gdc) = gptr%londeg_a(gdc) * SHR_CONST_PI/180._r8  
           gptr%lat_a   (gdc) = gptr%latdeg_a(gdc) * SHR_CONST_PI/180._r8  
        endif

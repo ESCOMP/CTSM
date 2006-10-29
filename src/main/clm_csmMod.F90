@@ -90,6 +90,7 @@ module clm_csmMod
   real(r8), pointer     :: bufRloc(:,:)       ! Recv local sum buffer for land
   real(r8), pointer     :: fieldS(:)          ! Global sum send field
   real(r8), pointer     :: fieldR(:)          ! Global sum receive field
+  real(r8), pointer     :: area(:)            ! Global area field
 
   integer :: csm_nptg                         ! Loc sizes, grid coupling buffers
   integer :: csm_nptr                         ! Loc sizes, roff coupling buffers
@@ -101,8 +102,10 @@ module clm_csmMod
   integer :: numl                             ! total number of landunits across all processors
   integer :: numc                             ! total number of columns across all processors
   integer :: nump                             ! total number of pfts across all processors
+#if (1 == 0)
   integer :: beg_lnd_rof,end_lnd_rof          ! beginning,ending landrunoff points
   integer :: beg_ocn_rof,end_ocn_rof          ! beginning,ending oceaan
+#endif
 !
 ! Flux averaging arrays and counters
 !
@@ -134,7 +137,6 @@ module clm_csmMod
   logical  :: timer_lnd_recvsend = .false. ! true => timer is on
 
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: global_sum_fld2d    ! global sum of 2d grid fields
   private :: global_sum_fld1d    ! global sum of 1d fluxes
 
 ! Indices for send/recv fields
@@ -248,12 +250,11 @@ contains
 ! Initialize send/recv clm and rtm contracts with flux coupler
 !
 ! !USES:
-    use domainMod    , only : adomain
+    use domainMod    , only : alocdomain
     use decompMod    , only : adecomp
     use decompMod    , only : get_proc_bounds, get_proc_global
     use RunoffMod    , only : get_proc_rof_bounds, runoff
     use clm_varctl   , only : csm_doflxave, nsrest, irad
-    use RtmMod       , only : rdomain
     use clm_varcon   , only : re
     use clm_time_manager , only : get_step_size
     use shr_const_mod, only : SHR_CONST_CDAY
@@ -273,7 +274,7 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer  :: nsize                     ! attribute vector property	
-    integer  :: i,j,g,gi,n,ni             ! indices
+    integer  :: g,gi,n,ni                 ! indices
     real(r8) :: dtime                     ! step size
     real(r8) :: spval                     ! special value
 !------------------------------------------------------------------------
@@ -284,7 +285,7 @@ contains
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
-    call get_proc_rof_bounds(beg_lnd_rof, end_lnd_rof, beg_ocn_rof, end_ocn_rof)
+!    call get_proc_rof_bounds(beg_lnd_rof, end_lnd_rof, beg_ocn_rof, end_ocn_rof)
 
     !---------------------------------------------------------------
     ! Setup contracts for send/recv communication
@@ -300,9 +301,9 @@ contains
     endif
 
     ibuffs(:)  = 0                                   ! initialize ibuffs
-    ibuffs(cpl_fields_ibuf_gsize  ) = adomain%ni*adomain%nj ! global array size
-    ibuffs(cpl_fields_ibuf_gisize ) = adomain%ni     ! global number of lons
-    ibuffs(cpl_fields_ibuf_gjsize ) = adomain%nj     ! global number of lats
+    ibuffs(cpl_fields_ibuf_gsize  ) = alocdomain%ni*alocdomain%nj ! global array size
+    ibuffs(cpl_fields_ibuf_gisize ) = alocdomain%ni     ! global number of lons
+    ibuffs(cpl_fields_ibuf_gjsize ) = alocdomain%nj     ! global number of lats
     ibuffs(cpl_fields_ibuf_lsize  ) = endg-begg+1
     ibuffs(cpl_fields_ibuf_lisize ) = endg-begg+1
     ibuffs(cpl_fields_ibuf_ljsize ) = 1
@@ -312,14 +313,15 @@ contains
     allocate(Gbuf(begg:endg,cpl_fields_grid_total))
 
     do n = begg, endg	
-        i = adecomp%gdc2i(n)
-        j = adecomp%gdc2j(n)
-        gi = (j-1)*adomain%ni + i
-        Gbuf(n,cpl_fields_grid_lon)   = adomain%lonc(gi)
-        Gbuf(n,cpl_fields_grid_lat)   = adomain%latc(gi)
-        Gbuf(n,cpl_fields_grid_area)  = adomain%area(gi)/(re*re)
-        Gbuf(n,cpl_fields_grid_frac)  = adomain%frac(gi)
-        Gbuf(n,cpl_fields_grid_mask)  = float(adomain%mask(gi))
+!        i = adecomp%gdc2i(n)
+!        j = adecomp%gdc2j(n)
+!        gi = (j-1)*alocdomain%ni + i
+        gi = adecomp%gdc2glo(n)
+        Gbuf(n,cpl_fields_grid_lon)   = alocdomain%lonc(n)
+        Gbuf(n,cpl_fields_grid_lat)   = alocdomain%latc(n)
+        Gbuf(n,cpl_fields_grid_area)  = alocdomain%area(n)/(re*re)
+        Gbuf(n,cpl_fields_grid_frac)  = alocdomain%frac(n)
+        Gbuf(n,cpl_fields_grid_mask)  = float(alocdomain%mask(n))
         Gbuf(n,cpl_fields_grid_index) = gi
     end do
 
@@ -337,29 +339,38 @@ contains
     !---------------------------------------------------------------
 
     ibuffs(:) = 0
-    ibuffs(cpl_fields_ibuf_gsize  ) = rtmlon*rtmlat                 ! global array size
-    ibuffs(cpl_fields_ibuf_gisize ) = rtmlon                        ! global number of lons
-    ibuffs(cpl_fields_ibuf_gjsize ) = rtmlat                        ! global number of lats
-    ibuffs(cpl_fields_ibuf_ncpl   ) = ncpday                        ! number of land send/recv calls per day
-    ibuffs(cpl_fields_ibuf_lsize  ) = end_ocn_rof - beg_ocn_rof + 1 ! local array size
-    ibuffs(cpl_fields_ibuf_lisize ) = end_ocn_rof - beg_ocn_rof + 1 ! local array size
-    ibuffs(cpl_fields_ibuf_ljsize ) = 1                             ! local array size
+    ibuffs(cpl_fields_ibuf_gsize  ) = rtmlon*rtmlat   ! global array size
+    ibuffs(cpl_fields_ibuf_gisize ) = rtmlon          ! global number of lons
+    ibuffs(cpl_fields_ibuf_gjsize ) = rtmlat          ! global number of lats
+    ibuffs(cpl_fields_ibuf_ncpl   ) = ncpday          ! number of land send/recv calls per day
+    ibuffs(cpl_fields_ibuf_lsize  ) = runoff%lnumro   ! local array size
+    ibuffs(cpl_fields_ibuf_lisize ) = runoff%lnumro   ! local array size
+    ibuffs(cpl_fields_ibuf_ljsize ) = 1               ! local array size
 
     csm_nptr = ibuffs(cpl_fields_ibuf_lsize)
 
     allocate(Gbuf(csm_nptr,cpl_fields_grid_total))
 
-    do n = beg_ocn_rof,end_ocn_rof
-       ni = n - beg_ocn_rof+ 1
-       gi = (runoff%ocn_jxy(n)-1)*rtmlon + runoff%ocn_ixy(n)
-       j = (gi-1) / rtmlon + 1
-       i = mod(gi-1,rtmlon) + 1
-       Gbuf(ni,cpl_fields_grid_lon  ) = rdomain%lonc(gi)
-       Gbuf(ni,cpl_fields_grid_lat  ) = rdomain%latc(gi)
-       Gbuf(ni,cpl_fields_grid_area ) = rdomain%area(gi)/(re*re)
-       Gbuf(ni,cpl_fields_grid_mask ) = 1.0_r8 - float(rdomain%mask(gi))
-       Gbuf(ni,cpl_fields_grid_index) = gi
+    ni = 0
+    do n = runoff%begr,runoff%endr
+       if (runoff%mask(n) == 2) then
+          ni = ni + 1
+          gi = runoff%gdc2glo(n)
+          if (ni > runoff%lnumro) then
+             write(6,*)'clm_csmMod: ERROR runoff count',n,ni,runoff%lnumro,gi
+             call endrun()
+          endif
+          Gbuf(ni,cpl_fields_grid_lon  ) = runoff%lonc(n)
+          Gbuf(ni,cpl_fields_grid_lat  ) = runoff%latc(n)
+          Gbuf(ni,cpl_fields_grid_area ) = runoff%area(n)*1.0e-6_r8/(re*re)
+          Gbuf(ni,cpl_fields_grid_mask ) = 1.0_r8 - float(runoff%mask(n))
+          Gbuf(ni,cpl_fields_grid_index) = gi
+       endif
     end do
+    if (ni /= runoff%lnumro) then
+       write(6,*)'clm_csmMod: ERROR runoff total count',ni,runoff%lnumro
+       call endrun()
+    endif
 
     call cpl_interface_contractInit(contractSr,cpl_fields_lndname,cpl_fields_cplname,cpl_fields_r2c_fields, ibuffs,Gbuf)
 
@@ -539,11 +550,23 @@ contains
     ! Send runoff data to coupler
     ! Must convert runoff to units of kg/m^2/s from m^3/s
 
+    ni = 0
     bufSr(:,:) = 0._r8
-    do n = beg_ocn_rof, end_ocn_rof
-       ni = n - beg_ocn_rof+ 1
-       bufSr(ni,index_r2c_Forr_roff) = runoff%ocn(n) / (runoff%ocn_area(n)*1000._r8)
+    do n = runoff%begr,runoff%endr
+       if (runoff%mask(n) == 2) then
+          ni = ni + 1
+          bufSr(ni,index_r2c_Forr_roff) = runoff%runoff(n)/(runoff%area(n)*1.0e-6_r8*1000._r8)
+          if (ni > runoff%lnumro) then
+             write(6,*)'clm_csmMod: ERROR runoff count',n,ni,gi
+             call endrun()
+          endif
+       endif
     end do
+    if (ni /= runoff%lnumro) then
+       write(6,*)'clm_csmMod: ERROR runoff total count',ni,runoff%lnumro
+       call endrun()
+    endif
+
     call cpl_interface_contractSend(cpl_fields_cplname,contractSr,ibuffs,bufSr)
 
   end subroutine csm_sendalb
@@ -650,6 +673,7 @@ contains
     use clm_varctl, only : co2_type
     use clm_varcon, only : rair, o2_molar_const, co2_ppmv_const, c13ratio
     use clmtype   , only : nameg
+    use domainMod , only : alocdomain
 !
 ! !ARGUMENTS:
     implicit none
@@ -699,6 +723,12 @@ contains
                     write(6,*)'clm_csmMod: allocation error for fieldR'; call endrun
                  end if
               endif
+              if (.not. associated(area)) then
+                 allocate(area(numg), stat=ier)
+                 if (ier /= 0) then
+                    write(6,*)'clm_csmMod: allocation error for area'; call endrun
+                 end if
+              endif
            end if
         end if
         if (.not. associated(bufRloc)) then
@@ -717,69 +747,71 @@ contains
         end do
 #if (defined SPMD)
         call gather_data_to_master(bufRloc, bufRglob, clmlevel=nameg)
+        call gather_data_to_master(alocdomain%area, area, clmlevel=nameg)
 #else
         bufRglob(:,:) = bufRloc(:,:)
+        area(:) = alocdomain%area(:)
 #endif
         if (masterproc) then
            write(6,*)
 
            if (index_c2l_Sa_co2prog /= 0) then
               fieldR(:) = bufRglob(index_c2l_Sa_co2prog,:)
-              write(6,100) 'lnd','recv', index_c2l_Sa_co2prog, global_sum_fld1d(fieldR), ' co2prog'
+              write(6,100) 'lnd','recv', index_c2l_Sa_co2prog, global_sum_fld1d(fieldR,area), ' co2prog'
            end if
 
            if (index_c2l_Sa_co2diag /= 0) then
               fieldR(:) = bufRglob(index_c2l_Sa_co2diag,:)
-              write(6,100) 'lnd','recv', index_c2l_Sa_co2diag, global_sum_fld1d(fieldR), ' co2diag'
+              write(6,100) 'lnd','recv', index_c2l_Sa_co2diag, global_sum_fld1d(fieldR,area), ' co2diag'
            end if
 
            fieldR(:) = bufRglob(index_c2l_Sa_z,:)
-           write(6,100) 'lnd','recv', index_c2l_Sa_z, global_sum_fld1d(fieldR), ' hgt'
+           write(6,100) 'lnd','recv', index_c2l_Sa_z, global_sum_fld1d(fieldR,area), ' hgt'
 
            fieldR(:) = bufRglob(index_c2l_Sa_u,:)
-           write(6,100) 'lnd','recv', index_c2l_Sa_u, global_sum_fld1d(fieldR), ' u'
+           write(6,100) 'lnd','recv', index_c2l_Sa_u, global_sum_fld1d(fieldR,area), ' u'
 
            fieldR(:) = bufRglob(index_c2l_Sa_v,:)
-           write(6,100) 'lnd','recv', index_c2l_Sa_v, global_sum_fld1d(fieldR), ' v'
+           write(6,100) 'lnd','recv', index_c2l_Sa_v, global_sum_fld1d(fieldR,area), ' v'
 
            fieldR(:) = bufRglob(index_c2l_Sa_ptem,:)
-           write(6,100) 'lnd','recv', index_c2l_Sa_ptem, global_sum_fld1d(fieldR), ' th'
+           write(6,100) 'lnd','recv', index_c2l_Sa_ptem, global_sum_fld1d(fieldR,area), ' th'
 
            fieldR(:) = bufRglob(index_c2l_Sa_shum,:)
-           write(6,100) 'lnd','recv', index_c2l_Sa_shum, global_sum_fld1d(fieldR), ' q'
+           write(6,100) 'lnd','recv', index_c2l_Sa_shum, global_sum_fld1d(fieldR,area), ' q'
 
            fieldR(:) = bufRglob(index_c2l_Sa_pbot,:)
-           write(6,100) 'lnd','recv', index_c2l_Sa_pbot, global_sum_fld1d(fieldR), ' pbot'
+           write(6,100) 'lnd','recv', index_c2l_Sa_pbot, global_sum_fld1d(fieldR,area), ' pbot'
 
            fieldR(:) = bufRglob(index_c2l_Sa_tbot,:)
-           write(6,100) 'lnd','recv', index_c2l_Sa_tbot, global_sum_fld1d(fieldR), ' t'
+           write(6,100) 'lnd','recv', index_c2l_Sa_tbot, global_sum_fld1d(fieldR,area), ' t'
 
            fieldR(:) = bufRglob(index_c2l_Faxa_lwdn,:)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_lwdn, global_sum_fld1d(fieldR), ' lwrad'
+           write(6,100) 'lnd','recv', index_c2l_Faxa_lwdn, global_sum_fld1d(fieldR,area), ' lwrad'
 
            fieldR(:) = bufRglob(index_c2l_Faxa_rainc,:)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_rainc, global_sum_fld1d(fieldR), ' rainc'
+           write(6,100) 'lnd','recv', index_c2l_Faxa_rainc, global_sum_fld1d(fieldR,area), ' rainc'
 
            fieldR(:) = bufRglob(index_c2l_Faxa_rainl,:)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_rainl, global_sum_fld1d(fieldR), ' rainl'
+           write(6,100) 'lnd','recv', index_c2l_Faxa_rainl, global_sum_fld1d(fieldR,area), ' rainl'
 
            fieldR(:) = bufRglob(index_c2l_Faxa_snowc,:)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_snowc, global_sum_fld1d(fieldR), ' snowc'
+           write(6,100) 'lnd','recv', index_c2l_Faxa_snowc, global_sum_fld1d(fieldR,area), ' snowc'
 
            fieldR(:) = bufRglob(index_c2l_Faxa_snowl,:)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_snowl, global_sum_fld1d(fieldR), ' snowl'
+           write(6,100) 'lnd','recv', index_c2l_Faxa_snowl, global_sum_fld1d(fieldR,area), ' snowl'
 
            fieldR(:) = bufRglob(index_c2l_Faxa_swndr,:)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_swndr, global_sum_fld1d(fieldR),' soll '
+           write(6,100) 'lnd','recv', index_c2l_Faxa_swndr, global_sum_fld1d(fieldR,area),' soll '
 
            fieldR(:) = bufRglob(index_c2l_Faxa_swvdr,:)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_swvdr, global_sum_fld1d(fieldR),' sols '
+           write(6,100) 'lnd','recv', index_c2l_Faxa_swvdr, global_sum_fld1d(fieldR,area),' sols '
 
            fieldR(:) = bufRglob(index_c2l_Faxa_swndf,:)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_swndf, global_sum_fld1d(fieldR),' solld'
+           write(6,100) 'lnd','recv', index_c2l_Faxa_swndf, global_sum_fld1d(fieldR,area),' solld'
 
            fieldR(:) = bufRglob(index_c2l_Faxa_swvdf,:)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_swvdf, global_sum_fld1d(fieldR),' solsd'
+           write(6,100) 'lnd','recv', index_c2l_Faxa_swvdf, global_sum_fld1d(fieldR,area),' solsd'
 
 100        format('comm_diag ',a3,1x,a4,1x,i3,es26.19,a)
            write(6,*)
@@ -925,6 +957,7 @@ contains
     use clm_varcon  , only : sb
     use clm_time_manager, only : get_curr_date, get_nstep
     use clmtype     , only : nameg
+    use domainMod   , only : alocdomain
 !
 ! !ARGUMENTS:
     implicit none
@@ -1009,11 +1042,23 @@ contains
 
     ! Must convert runoff to units of kg/m^2/s from m^3/s
 
+    ni = 0
     bufSr(:,:) = 0._r8
-    do n = beg_ocn_rof, end_ocn_rof
-       ni = n - beg_ocn_rof+ 1
-       bufSr(ni,index_r2c_Forr_roff) = runoff%ocn(n) / (runoff%ocn_area(n)*1000._r8)
-    enddo
+    do n = runoff%begr,runoff%endr
+       if (runoff%mask(n) == 2) then
+          ni = ni + 1
+          bufSr(ni,index_r2c_Forr_roff) = runoff%runoff(n)/(runoff%area(n)*1.0e-6_r8*1000._r8)
+          if (ni > runoff%lnumro) then
+             write(6,*)'clm_csmMod: ERROR runoff count',n,ni,runoff%lnumro
+             call endrun()
+          endif
+       endif
+    end do
+    if (ni /= runoff%lnumro) then
+       write(6,*)'clm_csmMod: ERROR runoff total count',ni,runoff%lnumro
+       call endrun()
+    endif
+
     call cpl_interface_contractSend(cpl_fields_cplname, contractSr, ibuffs, bufSr)
 
     ! Do global integrals if flag is set
@@ -1033,6 +1078,12 @@ contains
                 write(6,*)'clm_csmMod: allocation error for fieldS'; call endrun
              end if
           endif
+          if (.not. associated(area)) then
+             allocate(area(numg), stat=ier)
+             if (ier /= 0) then
+                write(6,*)'clm_csmMod: allocation error for area'; call endrun
+             end if
+          endif
        end if
        if (.not. associated(bufSloc)) then
           allocate(bufSloc(nsend,begg:endg), stat=ier)
@@ -1048,52 +1099,54 @@ contains
        end do
 #if (defined SPMD)
        call gather_data_to_master(bufSloc, bufSglob, clmlevel=nameg)
+       call gather_data_to_master(alocdomain%area, area, clmlevel=nameg)
 #else
        bufSglob(:,:) = bufSloc(:,:)
+       area(:) = alocdomain%area(:)
 #endif
 
        if (masterproc) then
           write(6,*)
           
           fieldS(:) = bufSglob(index_l2c_Sl_t,:)
-          write(6,100) 'lnd','send', index_l2c_Sl_t, global_sum_fld1d(fieldS),' trad'
+          write(6,100) 'lnd','send', index_l2c_Sl_t, global_sum_fld1d(fieldS,area),' trad'
 
           fieldS(:) = bufSglob(index_l2c_Sl_avsdr,:)
-          write(6,100) 'lnd','send', index_l2c_Sl_avsdr, global_sum_fld1d(fieldS),' asdir'
+          write(6,100) 'lnd','send', index_l2c_Sl_avsdr, global_sum_fld1d(fieldS,area),' asdir'
 
           fieldS(:) = bufSglob(index_l2c_Sl_anidr,:)
-          write(6,100) 'lnd','send', index_l2c_Sl_anidr, global_sum_fld1d(fieldS),' aldir'
+          write(6,100) 'lnd','send', index_l2c_Sl_anidr, global_sum_fld1d(fieldS,area),' aldir'
 
           fieldS(:) = bufSglob(index_l2c_Sl_avsdf,:)
-          write(6,100) 'lnd','send', index_l2c_Sl_avsdf, global_sum_fld1d(fieldS),' asdif'
+          write(6,100) 'lnd','send', index_l2c_Sl_avsdf, global_sum_fld1d(fieldS,area),' asdif'
 
           fieldS(:) = bufSglob(index_l2c_Sl_anidf,:)
-          write(6,100) 'lnd','send', index_l2c_Sl_anidf, global_sum_fld1d(fieldS),' aldif'
+          write(6,100) 'lnd','send', index_l2c_Sl_anidf, global_sum_fld1d(fieldS,area),' aldif'
 
           fieldS(:) = bufSglob(index_l2c_Fall_taux,:)
-          write(6,100) 'lnd','send', index_l2c_Fall_taux, global_sum_fld1d(fieldS),' taux'
+          write(6,100) 'lnd','send', index_l2c_Fall_taux, global_sum_fld1d(fieldS,area),' taux'
 
           fieldS(:) = bufSglob(index_l2c_Fall_tauy,:)
-          write(6,100) 'lnd','send', index_l2c_Fall_tauy, global_sum_fld1d(fieldS),' tauy'
+          write(6,100) 'lnd','send', index_l2c_Fall_tauy, global_sum_fld1d(fieldS,area),' tauy'
 
           fieldS(:) = bufSglob(index_l2c_Fall_lat,:)
-          write(6,100) 'lnd','send', index_l2c_Fall_lat, global_sum_fld1d(fieldS),' lhflx'
+          write(6,100) 'lnd','send', index_l2c_Fall_lat, global_sum_fld1d(fieldS,area),' lhflx'
 
           fieldS(:) = bufSglob(index_l2c_Fall_sen,:)
-          write(6,100) 'lnd','send', index_l2c_Fall_sen, global_sum_fld1d(fieldS),' shflx'
+          write(6,100) 'lnd','send', index_l2c_Fall_sen, global_sum_fld1d(fieldS,area),' shflx'
 
           fieldS(:) = bufSglob(index_l2c_Fall_lwup,:)
-          write(6,100) 'lnd','send', index_l2c_Fall_lwup, global_sum_fld1d(fieldS),' lwup'
+          write(6,100) 'lnd','send', index_l2c_Fall_lwup, global_sum_fld1d(fieldS,area),' lwup'
 
           fieldS(:) = bufSglob(index_l2c_Fall_evap,:)
-          write(6,100) 'lnd','send', index_l2c_Fall_evap, global_sum_fld1d(fieldS),' qflx'
+          write(6,100) 'lnd','send', index_l2c_Fall_evap, global_sum_fld1d(fieldS,area),' qflx'
 
           fieldS(:) = bufSglob(index_l2c_Fall_swnet,:)
-          write(6,100) 'lnd','send', index_l2c_Fall_swnet, global_sum_fld1d(fieldS),' swabs'
+          write(6,100) 'lnd','send', index_l2c_Fall_swnet, global_sum_fld1d(fieldS,area),' swabs'
 
           if (index_l2c_Fall_nee /= 0) then
              fieldS(:) = bufSglob(index_l2c_Fall_nee,:)
-             write(6,100) 'lnd','send', index_l2c_Fall_nee, global_sum_fld1d(fieldS),' nee'
+             write(6,100) 'lnd','send', index_l2c_Fall_nee, global_sum_fld1d(fieldS,area),' nee'
           end if
 
           write(6,*)
@@ -1474,60 +1527,20 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: global_sum_fld2d
-!
-! !INTERFACE:
-  real(r8) function global_sum_fld2d(array, spval)
-!
-! !DESCRIPTION:
-! Performs a global sum on an input 2d grid array
-!
-! !USES:
-    use domainMod, only : adomain
-!
-! !ARGUMENTS:
-    implicit none
-    real(r8), intent(in) :: array(:,:)  !W/m2, Kg/m2-s or N/m2
-    real(r8), intent(in) :: spval       !points to not include in global sum
-!
-! !REVISION HISTORY:
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-    integer :: i,j,n         !indices
-!------------------------------------------------------------------------
-
-    global_sum_fld2d = 0._r8
-    do j = 1,adomain%nj
-       do i = 1,adomain%ni
-          n = (j-1)*adomain%ni + i
-          if (array(i,j) /= spval) then
-             global_sum_fld2d = global_sum_fld2d + array(i,j) * adomain%area(n) * 1.e6_r8
-          endif
-       end do
-    end do
-
-  end function global_sum_fld2d
-
-!-----------------------------------------------------------------------
-!BOP
-!
 ! !IROUTINE: global_sum_fld1d
 !
 ! !INTERFACE:
-  real(r8) function global_sum_fld1d(array)
+  real(r8) function global_sum_fld1d(array,area)
 !
 ! !DESCRIPTION:
 ! Performs a global sum on an input flux array
 !
 ! !USES:
-    use domainMod, only : adomain
-    use decompMod, only : adecomp
 !
 ! !ARGUMENTS:
     implicit none
     real(r8), intent(in) :: array(:) !W/m2, Kg/m2-s or N/m2
+    real(r8), intent(in) :: area(:)  !area
 !
 ! !REVISION HISTORY:
 !
@@ -1541,10 +1554,7 @@ contains
 
     global_sum_fld1d = 0._r8
     do g = 1,numg
-       i = adecomp%gdc2i(g)
-       j = adecomp%gdc2j(g)
-       n = (j-1)*adomain%ni + i
-       global_sum_fld1d = global_sum_fld1d + array(g) * adomain%area(n) * 1.e6_r8
+       global_sum_fld1d = global_sum_fld1d + array(g) * area(g) * 1.e6_r8
     end do
 
   end function global_sum_fld1d

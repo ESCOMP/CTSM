@@ -67,7 +67,8 @@ module clm_varcon
 
   real(r8) :: re = SHR_CONST_REARTH*0.001_r8 !radius of earth (km)
 
-  real(r8), public, parameter :: spval  = 1.e36_r8  ! special value for real data
+  real(r8), public, parameter ::  spval = 1.e36_r8  ! special value for real data
+  integer , public, parameter :: ispval = -9999     ! special value for int data
 
   ! These are tunable constants from clm2_3
 

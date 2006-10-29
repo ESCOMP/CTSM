@@ -422,19 +422,19 @@ contains
 
     call add_fld1d (fname='QCHANR', units='m3/s',  typexy='rof', &
          avgflag='A', long_name='RTM river flow', &
-         ptr_roflnd=runoff%lnd)
+         ptr_roflnd=runoff%runoff)
 
     call add_fld1d (fname='QCHOCNR', units='m3/s', typexy='rof', &
          avgflag='A', long_name='RTM river discharge into ocean', &
-         ptr_rofocn=runoff%ocn)
+         ptr_rofocn=runoff%runoff)
 
     call add_fld1d (fname='DVOLRDT_LND', units='mm/s',  typexy='rof', &
          avgflag='A', long_name='RTM land change in storage', &
-         ptr_roflnd=runoff%lnd_dvolrdt)
+         ptr_roflnd=runoff%dvolrdt)
 
     call add_fld1d (fname='DVOLRDT_OCN', units='mm/s',  typexy='rof', &
          avgflag='A', long_name='RTM ocean change of storage', &
-         ptr_rofocn=runoff%ocn_dvolrdt)
+         ptr_rofocn=runoff%dvolrdt)
 #endif
 
     ! Water and energy balance checks

@@ -64,7 +64,7 @@ contains
 ! !USES:
     use clm_time_manager , only : get_nstep      
     use clm_atmlnd       , only : clm_mapl2a, clm_l2a, atm_l2a
-    use domainMod        , only : adomain
+    use domainMod        , only : alocdomain
     use clm_comp         , only : clm_init0, clm_init1, clm_init2
     use clm_varctl       , only : finidat       
     use shr_InputInfo_mod, only : shr_inputInfo_initType
@@ -244,7 +244,7 @@ contains
     ! Uses
     !
     use decompMod, only : get_proc_bounds_atm, adecomp
-    use domainMod, only : adomain
+    use domainMod, only : alocdomain
     !
     ! Arguments
     !
@@ -273,12 +273,10 @@ contains
     ! number the local grid
 
     do n = begg, endg
-        i = adecomp%gdc2i(n)
-        j = adecomp%gdc2j(n)
-        gindex(n) = (j-1)*adomain%ni + i
+        gindex(n) = adecomp%gdc2glo(n)
     end do
     lsize = endg-begg+1
-    gsize = adomain%ni*adomain%nj
+    gsize = alocdomain%ni*alocdomain%nj
 
     ! reorder gindex to be in ascending order, initialize a permutation array,
     ! derive a permutation that puts gindex in ascending order since the
@@ -301,14 +299,14 @@ contains
     !-----------------------------------------------------
     use clm_time_manager, only : get_nstep  
     use clm_atmlnd  , only : lnd2atm_type
-    use domainMod   , only : adomain
+    use domainMod   , only : alocdomain
     use decompMod   , only : get_proc_bounds_atm, adecomp
     implicit none
 
     type(lnd2atm_type), intent(inout) :: l2a
     type(mct_aVect)   , intent(inout) :: l2x_l
 
-    integer :: g,i,n
+    integer :: g,i
     integer :: begg, endg    ! beginning and ending gridcell indices
     !-----------------------------------------------------
     
@@ -321,8 +319,7 @@ contains
 !dir$ concurrent
     do g = begg,endg
        i = 1 + (g-begg)
-       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
-       l2x_l%rAttr(index_l2x_Sl_landfrac,i) =  adomain%frac(n)
+       l2x_l%rAttr(index_l2x_Sl_landfrac,i) =  alocdomain%frac(g)
        l2x_l%rAttr(index_l2x_Sl_t,i)        =  l2a%t_rad(g)
        l2x_l%rAttr(index_l2x_Sl_snowh,i)    =  l2a%h2osno(g)
        l2x_l%rAttr(index_l2x_Sl_avsdr,i)    =  l2a%albd(g,1)
@@ -532,7 +529,7 @@ contains
 
     !-------------------------------------------------------------------
     use clm_varcon, only : re
-    use domainMod , only : adomain
+    use domainMod , only : alocdomain
     use decompMod , only : get_proc_bounds_atm, adecomp
     !
     ! Arguments
@@ -543,7 +540,7 @@ contains
     !
     ! Local Variables
     !
-    integer :: g,i,j,n            ! index
+    integer :: g,i,j              ! index
     integer :: lsize              ! domain size
     integer :: begg, endg         ! beginning and ending gridcell indices
     real(r8), pointer :: data(:)  ! temporary
@@ -585,37 +582,32 @@ contains
     ! Fill in correct values for domain components
     !
     do g = begg,endg
-       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
        i = 1 + (g - begg)
-       data(i) = adomain%lonc(n)
+       data(i) = alocdomain%lonc(g)
     end do
     call mct_gGrid_importRattr(dom_l,"lon",data,lsize) 
 
     do g = begg,endg
-       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
        i = 1 + (g - begg)
-       data(i) = adomain%latc(n)
+       data(i) = alocdomain%latc(g)
     end do
     call mct_gGrid_importRattr(dom_l,"lat",data,lsize) 
 
     do g = begg,endg
-       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
        i = 1 + (g - begg)
-       data(i) = adomain%area(n)/(re*re)
+       data(i) = alocdomain%area(g)/(re*re)
     end do
     call mct_gGrid_importRattr(dom_l,"area",data,lsize) 
 
     do g = begg,endg
-       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
        i = 1 + (g - begg)
-       data(i) = real(adomain%mask(n), r8)
+       data(i) = real(alocdomain%mask(g), r8)
     end do
     call mct_gGrid_importRattr(dom_l,"mask",data,lsize) 
 
     do g = begg,endg
-       n = (adecomp%gdc2j(g)-1)*adomain%ni + adecomp%gdc2i(g)
        i = 1 + (g - begg)
-       data(i) = adomain%frac(n)
+       data(i) = alocdomain%frac(g)
     end do
     call mct_gGrid_importRattr(dom_l,"maxfrac",data,lsize) 
 

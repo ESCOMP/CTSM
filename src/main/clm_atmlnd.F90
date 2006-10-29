@@ -289,7 +289,7 @@ end subroutine init_lnd2atm_type
   use decompMod, only : get_proc_bounds, get_proc_bounds_atm
   use areaMod  , only : map_maparray, map1dl_a2l, map1dl_l2a, map_setptrs
   use decompMod, only : ldecomp,adecomp
-  use domainMod, only : ldomain,adomain
+  use domainMod, only : llocdomain,alocdomain
   use QSatMod,   only : QSat
 !
 ! !ARGUMENTS:
@@ -317,8 +317,8 @@ end subroutine init_lnd2atm_type
   integer, pointer :: src(:)       ! map src index
   integer, pointer :: dst(:)       ! map dst index
   real(r8),pointer :: wts(:)       ! map wts values
-  integer :: ns,nijs               !source (atm) indexes
-  integer :: nd,nijd               !destination (lnd) indexes
+  integer :: ns                    !source (atm) indexes
+  integer :: nd                    !destination (lnd) indexes
   ! temporaries for topo downscaling:
   real(r8):: hsurf_a,hsurf_l,Hbot,Hsrf,lapse
   real(r8):: zbot_a, tbot_a, pbot_a, thbot_a, qbot_a, qs_a, es_a
@@ -437,11 +437,9 @@ end subroutine init_lnd2atm_type
   do n = 1,nmap
     ns = src(n)
     nd = dst(n)
-    nijs = adecomp%gdc2glo(ns)
-    nijd = ldecomp%gdc2glo(nd)
 
-    hsurf_a = adomain%topo(nijs)        ! atm elevation
-    hsurf_l = ldomain%ntop(nijd)        ! lnd elevation
+    hsurf_a = alocdomain%topo(ns)        ! atm elevation
+    hsurf_l = llocdomain%ntop(nd)        ! lnd elevation
 
     if (abs(hsurf_a - hsurf_l) .gt. 0.1_r8) then
 
@@ -519,9 +517,7 @@ end subroutine init_lnd2atm_type
     do n = 1,nmap
       if (dst(n) == ns) then
         nd = src(n)
-        nijs = adecomp%gdc2glo(ns)
-        nijd = ldecomp%gdc2glo(nd)
-        sum1 = sum1 + ldomain%ntop(nijd)    * wts(n)
+        sum1 = sum1 + llocdomain%ntop(nd)   * wts(n)
         sum2 = sum2 + a2l_dst%forc_t(nd)    * wts(n)
         sum3 = sum3 + a2l_dst%forc_q(nd)    * wts(n)
         sum4 = sum4 + a2l_dst%forc_hgt(nd)  * wts(n)
@@ -529,14 +525,14 @@ end subroutine init_lnd2atm_type
         sum6 = sum6 + a2l_dst%forc_th(nd)   * wts(n)
       endif
     enddo
-    if   ((abs(sum1 - adomain%topo(nijs))    > 1.0e-8) &
+    if   ((abs(sum1 - alocdomain%topo(ns))   > 1.0e-8) &
       .or.(abs(sum2 - a2l_src%forc_t(ns))    > 1.0e-3) &
       .or.(abs(sum3 - a2l_src%forc_q(ns))    > 1.0e-8) &
       .or.(abs(sum4 - a2l_src%forc_hgt(ns))  > 1.0e-6) &
 !      .or.(abs(sum5 - a2l_src%forc_pbot(ns)) > 1.0e-6) &
 !      .or.(abs(sum6 - a2l_src%forc_th(ns))   > 1.0e-6) &
        ) then
-      write(6,*) 'clm_map2l check ERROR topo ',sum1,adomain%topo(nijs)
+      write(6,*) 'clm_map2l check ERROR topo ',sum1,alocdomain%topo(ns)
       write(6,*) 'clm_map2l check ERROR t    ',sum2,a2l_src%forc_t(ns)
       write(6,*) 'clm_map2l check ERROR q    ',sum3,a2l_src%forc_q(ns)
       write(6,*) 'clm_map2l check ERROR hgt  ',sum4,a2l_src%forc_hgt(ns)

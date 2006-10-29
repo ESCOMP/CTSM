@@ -23,7 +23,7 @@ module ncdio
   use spmdMod        , only : masterproc
 #endif
   use clmtype
-  use clm_varcon     , only : spval
+  use clm_varcon     , only : spval,ispval
   use shr_sys_mod    , only : shr_sys_flush
   use abortutils     , only : endrun
 #if ( defined SCAM )
@@ -393,7 +393,7 @@ contains
                 write(6,*)subname,' error: 1d clm output type must be ',&
                      'at gridcell level if 2d xy output is requested'; call endrun()
              end if
-             fldxy(:,:) = 9999
+             fldxy(:,:) = ispval
 !dir$ concurrent
 !cdir nodep
              do k = 1,nsize
@@ -555,17 +555,33 @@ contains
              fldxy(:,:) = spval
              select case (dim1name)
 #ifdef RTM
+             case('allrof')
+!dir$ concurrent
+!cdir nodep
+                do k = 1,nsize
+                      ixy = runoff%gdc2i(k)
+                      jxy = runoff%gdc2j(k)
+                      fldxy(ixy,jxy) = rglobdc(k)
+                end do
              case('lndrof')
 !dir$ concurrent
 !cdir nodep
-                do k = 1,size(runoff%lnd)
-                   fldxy(runoff%lnd_ixy(k),runoff%lnd_jxy(k)) = rglobdc(k)
+                do k = 1,nsize
+                   if (runoff%mask(k) == 1) then
+                      ixy = runoff%gdc2i(k)
+                      jxy = runoff%gdc2j(k)
+                      fldxy(ixy,jxy) = rglobdc(k)
+                   endif
                 end do
              case('ocnrof')
 !dir$ concurrent
 !cdir nodep
-                do k = 1,size(runoff%ocn)
-                   fldxy(runoff%ocn_ixy(k),runoff%ocn_jxy(k)) = rglobdc(k)
+                do k = 1,nsize
+                   if (runoff%mask(k) == 2) then
+                      ixy = runoff%gdc2i(k)
+                      jxy = runoff%gdc2j(k)
+                      fldxy(ixy,jxy) = rglobdc(k)
+                   endif
                 end do
 #endif
              case default
@@ -609,10 +625,73 @@ contains
              start(1) = data_offset; count(1) = ndata
              call check_ret(nf_get_vara_double(ncid, varid, start, count, rglobsn), subname)
 #else
+          if (present(nlonxy) .and. present(nlatxy)) then
+
+             ! Write xy output
+
+             start(1) = 1;  count(1) = nlonxy
+             start(2) = 1;  count(2) = nlatxy
+             if (present(nt)) then
+                start(3) = nt;  count(3) = 1
+             end if
+             allocate(fldxy(nlonxy,nlatxy), stat=ier)
+             if (ier /= 0) then
+                write(6,*)subname,' error: allocation error for fldxy'; call endrun()
+             end if
+             call check_ret(nf_get_vara_double(ncid, varid, start, count, fldxy), subname)
+             rglobdc(:) = 0._r8
+             select case (dim1name)
+#ifdef RTM
+             case('allrof')
+!dir$ concurrent
+!cdir nodep
+                do k = 1,nsize
+                      ixy = runoff%gdc2i(k)
+                      jxy = runoff%gdc2j(k)
+                      rglobdc(k) = fldxy(ixy,jxy)
+                end do
+             case('lndrof')
+!dir$ concurrent
+!cdir nodep
+                do k = 1,nsize
+                   if (runoff%mask(k) == 1) then
+                      ixy = runoff%gdc2i(k)
+                      jxy = runoff%gdc2j(k)
+                      rglobdc(k) = fldxy(ixy,jxy)
+                   endif
+                end do
+             case('ocnrof')
+!dir$ concurrent
+!cdir nodep
+                do k = 1,nsize
+                   if (runoff%mask(k) == 2) then
+                      ixy = runoff%gdc2i(k)
+                      jxy = runoff%gdc2j(k)
+                      rglobdc(k) = fldxy(ixy,jxy)
+                   endif
+                end do
+#endif
+             case default
+                if (dim1name /= 'gridcell') then
+                   write(6,*)subname,' error: 1d clm output type must be ',&
+                        'at gridcell level if 2d xy output is requested'; call endrun()
+                end if
+!dir$ concurrent
+!cdir nodep
+                do k = 1,nsize
+                   ixy = ldecomp%gdc2i(k)
+                   jxy = ldecomp%gdc2j(k)
+                   rglobdc(k) = fldxy(ixy,jxy)
+                end do
+             end select
+             deallocate(fldxy)
+
+          else
              call check_ret(nf_get_var_double(ncid, varid, rglobsn), subname)
              call map_sn2dc(rglobsn, rglobdc, dim1name)
-#endif
           end if
+#endif
+          endif
        end if
 #ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -754,7 +833,7 @@ contains
                 write(6,*)subname,' error: 1d clm output type must be ',&
                      'at gridcell level if 2d xy output is requested'; call endrun()
              end if
-             fldxy(:,:,:) = 9999
+             fldxy(:,:,:) = ispval
              do j = lb2,ub2
 !dir$ concurrent
 !cdir nodep
@@ -1636,6 +1715,7 @@ contains
     integer :: numl        ! total number of landunits across all processors
     integer :: numg        ! total number of gridcells across all processors
 #ifdef RTM
+    integer :: num_rtm     ! total number of all rtm cells on all procs
     integer :: num_lndrof  ! total number of land runoff across all procs
     integer :: num_ocnrof  ! total number of ocean runoff across all procs
 #endif
@@ -1644,7 +1724,7 @@ contains
 
     call get_proc_global(numg, numl, numc, nump)
 #ifdef RTM
-    call get_proc_rof_global(num_lndrof, num_ocnrof)
+    call get_proc_rof_global(num_rtm, num_lndrof, num_ocnrof)
 #endif
 
     select case (dim1name)
@@ -1657,10 +1737,12 @@ contains
     case('pft')
        get_size_dim1 = nump
 #ifdef RTM
+    case('allrof')
+       get_size_dim1 = num_rtm
     case('lndrof')
-       get_size_dim1 = num_lndrof
+       get_size_dim1 = num_rtm
     case('ocnrof')
-       get_size_dim1 = num_ocnrof
+       get_size_dim1 = num_rtm
 #endif
     case default
        write(6,*) 'GET1DSIZE does not match dim1 type: ', trim(dim1name)

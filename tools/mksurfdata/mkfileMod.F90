@@ -112,6 +112,10 @@ contains
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Glacier_raw_data_file_name', len_trim(str), trim(str)), subname)
 
+    str = get_filename(mksrf_fmax)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'Fmax_raw_data_file_name', len_trim(str), trim(str)), subname)
+
     str = get_filename(mksrf_furban)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Urban_raw_data_file_name', len_trim(str), trim(str)), subname)
@@ -213,6 +217,10 @@ contains
     call ncd_defvar(ncid=ncid, varname='PCT_GLACIER', xtype=nf_float, &
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='percent glacier', units='unitless')
+
+    call ncd_defvar(ncid=ncid, varname='FMAX', xtype=nf_float, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='maximum fractional saturated area', units='unitless')
 
     call ncd_defvar(ncid=ncid, varname='PCT_URBAN', xtype=nf_float, &
          dim1name='lsmlon', dim2name='lsmlat', &
