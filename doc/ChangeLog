@@ -1,3 +1,45 @@
+
+===============================================================
+Tag name: clm3_expa_77
+Originator(s): tcraig
+Date: Thu Nov  9 23:08:50 MST 2006
+One-line Summary: fix retain branch casename bug in restFileMod
+
+Purpose of changes: correct behaviour of retain branch casename.  
+  Was mostly working ok except for a few cases where the test
+  of the old and new casename would produce the incorrect result.
+
+Bugs fixed (include bugzilla ID): #269
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: none
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+M      src/main/restFileMod.F90
+       - recode verify call to a more robust index call and associated mods
+
+Summary of testing:
+
+  bluesky: none
+  tempest: none
+  bangkok/lf95: all CAM tests passed with cam3_3_40 vs cam3_3_37
+  bluevista: tested in CCSM with ERB test
+  lightning: tested in CCSM with ERB test
+
+Summarize any changes to answers: NONE
+	
+===============================================================
 ===============================================================
 Tag name: clm3_expa_76
 Originator(s): tcraig,nanr,pworley

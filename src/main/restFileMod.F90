@@ -375,6 +375,7 @@ contains
 ! !LOCAL VARIABLES:
     integer :: status                      ! return status
     integer :: length                      ! temporary          
+    character(len=256) :: ftest,ctest      ! temporaries
 !-----------------------------------------------------------------------
 
     if (masterproc) then
@@ -401,12 +402,17 @@ contains
           end if
           call getfil( path, file, 0 )
 
-          status = verify(caseid, file)
-          if (status == 0 .and. .not.(brnch_retain_casename)) then
+          ! tcraig, adding xx. and .clm2 makes this more robust
+          ctest = 'xx.'//trim(caseid)//'.clm2'
+          ftest = 'xx.'//trim(file)
+          status = index(trim(ftest),trim(ctest))
+          if (status /= 0 .and. .not.(brnch_retain_casename)) then
              write(6,*) 'Must change case name on branch run if ',&
                   'brnch_retain_casename namelist is not set'
              write(6,*) 'previous case filename= ',trim(file),&
-                  ' current case = ',trim(caseid)
+                  ' current case = ',trim(caseid), &
+                  ' ctest = ',trim(ctest), &
+                  ' ftest = ',trim(ftest)
              call endrun()
           end if
        end if
