@@ -1,0 +1,855 @@
+#-----------------------------------------------------------------------
+# Makefile template for building CLM on various platforms.
+#
+# This makefile assumes the existence the file:
+#
+# Filepath      The directories, listed one per line, that contain the source
+#               code required to build CAM.  This list is used to set the
+#               VPATH variable which is used by GNU make to search for
+#               dependencies (after it looks in the directory from which
+#               it was invoked).  This list of directories, prepended with ./,
+#               is also used to construct the list of search directories 
+#               used by the preprocessor (as specified by -I command-line options).
+#
+# The following macros are set by CAM's configure script.  They should only be hand edited
+# by experts.
+#
+# UNAMES        Result of the "uname -s" command on the target platform.
+# ROOTDIR       Root directory for the CAM source distribution.
+# EXENAME       Name of the executable.
+# MODEL_EXEDIR  Directory to build the executable in.
+# INC_NETCDF    Directory containing the NetCDF include files.
+# LIB_NETCDF    Directory containing the NetCDF library.
+# MOD_NETCDF    Directory containing the NetCDF module files.
+# INC_MPI       Directory containing the MPI include files.
+# LIB_MPI       Directory containing the MPI library.
+# MPI_LIB_NAME  Name of MPI library.
+# LAPACK_LIBDIR Directory containing the LAPACK library.
+# ESMF_LIBDIR   Directory containing the ESMF library (for use with external library only).
+# DEBUG         Set to TRUE to turn on compiler debugging options.  Default: FALSE 
+# SPMD          Whether to build in SPMD mode or not. 	[values TRUE FALSE]
+# SMP           Set to TRUE to enable building in SMP mode (uses OpenMP).  
+# USER_FC       Allow user to override the default Fortran compiler specified in Makefile.
+# USER_CC       Allow user to override the default C compiler specified in Makefile (linux only).
+# USER_LINKER   Allow user to override the default linker specified in Makefile.
+# USER_CPPDEFS  Additional CPP defines.
+# USER_CFLAGS   Additional C compiler flags that the user wishes to set.
+# USER_FFLAGS   Additional Fortran compiler flags that the user wishes to set.
+# USER_LDLAGS   Additional load flags that the user wishes to set.
+# F_OPTIMIZATION_OVERRIDE
+#               Use this to replace default Fortran compiler optimization.  
+#
+# Note: An internal implementation of the ESMF time-manager interface is provided
+#       with the sequential CCSM distribution in src/utils/esmf_wrf_timemgr.
+#
+#------------------------------------------------------------------------
+
+# Set up special characters
+null  :=
+space := $(null) $(null)
+comma := $(null),$(null)
+
+# Initialize macros that allow a user override.
+# *** N.B. *** Only the Linux architure observes the override for FC and CC.
+
+# Set user specified Fortran compiler
+ifneq ($(strip $(USER_FC)),)
+  FC := $(USER_FC)
+endif
+# Set user override of default Fortran compiler optimizations
+ifneq ($(strip $(F_OPTIMIZATION_OVERRIDE)),)
+  FORTRAN_OPTIMIZATION := $(F_OPTIMIZATION_OVERRIDE)
+endif
+# Set user specified C compiler
+ifneq ($(strip $(USER_CC)),)
+  CC := $(USER_CC)
+endif
+# Set user specified linker
+ifneq ($(strip $(USER_LINKER)),)
+  LINKER := $(USER_LINKER)
+endif
+
+# Load dependency search path.
+dirs := . $(shell cat Filepath)
+
+# Set cpp search path, include netcdf
+cpp_dirs := $(dirs) $(INC_NETCDF) $(INC_MPI)
+cpp_path := $(foreach dir,$(cpp_dirs),-I$(dir)) # format for command line
+
+# Expand any tildes in directory names. Change spaces to colons.
+VPATH    := $(foreach dir,$(cpp_dirs),$(wildcard $(dir))) 
+VPATH    := $(subst $(space),:,$(VPATH))               
+
+#------------------------------------------------------------------------
+# Primary target: build the model
+#------------------------------------------------------------------------
+all: $(MODEL_EXEDIR)/$(EXENAME)
+
+# Get list of files and build dependency file for all .o files
+#   using perl scripts mkSrcfiles and mkDepends
+
+SOURCES   := $(shell cat Srcfiles)
+
+# Newer makes set the CURDIR variable.
+CURDIR := $(shell pwd)
+
+$(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Filepath
+	$(ROOTDIR)/bld/mkDepends Filepath Srcfiles > $@
+
+$(CURDIR)/Srcfiles: $(CURDIR)/Filepath
+	$(ROOTDIR)/bld/mkSrcfiles > $@
+
+OBJS      := $(addsuffix .o, $(basename $(SOURCES)))
+
+CPPDEF    := $(USER_CPPDEFS)
+ifeq ($(SPMD),TRUE)
+   CPPDEF += -DSPMD
+endif
+
+$(MODEL_EXEDIR)/$(EXENAME): $(OBJS)
+	$(LINKER) -o $@ $(OBJS) -L$(LIB_NETCDF) -lnetcdf $(LDFLAGS)
+
+
+# Compilation rules:
+.SUFFIXES:
+.SUFFIXES: .F .F90 .c .s .o
+
+.F.o:
+	$(FC) -c $(FIXEDFLAGS) $(FFLAGS) $<
+
+.F90.o:
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) $<
+
+.c.o:
+	$(CC) -c $(CFLAGS) $<
+
+.s.o:
+	$(AS) -m  $<
+
+# Rules used for the tests run by "configure -test"
+test_fc: test_fc.o
+	$(LINKER) -o $@ test_fc.o $(LDFLAGS)
+test_nc: test_nc.o
+	$(LINKER) -o $@ test_nc.o -L$(LIB_NETCDF) -lnetcdf $(LDFLAGS)
+test_mpi: test_mpi.o
+	$(LINKER) -o $@ test_mpi.o $(LDFLAGS)
+test_esmf: test_esmf.o
+	$(LINKER) -o $@ test_esmf.o $(LDFLAGS)
+
+
+debug: $(OBJS)
+	echo "FC: $(FC)"
+	echo "FFLAGS: $(FFLAGS)"
+	echo "LINKER: $(LINKER)"
+	echo "LDFLAGS: $(LDFLAGS)"
+	echo "OBJS: $(OBJS)"
+
+#------------------------------------------------------------------------
+# AIX
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),AIX)
+
+CPPDEF     += -DAIX -DFORTRAN_SAME
+ifeq ($(SMP),TRUE)
+  # THREADED_PTHREADS is used by the timing library
+  CPPDEF   += -DTHREADED_PTHREADS
+endif
+
+cpre = $(null)-WF,-D$(null)
+FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
+
+# Use the thread-safe compilers even when disabling openMP.
+ifeq ($(SPMD),TRUE)
+  FC       := mpxlf90_r
+else
+  FC       := xlf90_r
+endif
+
+CC         := mpcc_r
+CFLAGS     := -q64 $(cpp_path) $(CPPDEF) -O2
+mod_path   := -I$(MOD_NETCDF)
+FFLAGS     := -q64 $(cpp_path) $(mod_path) $(FPPFLAGS) -qarch=auto -qspillsize=2500 -g -qfullpath
+FREEFLAGS  := -qsuffix=f=f90:cpp=F90
+FIXEDFLAGS := -qfixed=132
+
+ifeq ($(DEBUG),TRUE)
+  # Bounds checking is unreliable on the IBM.
+  # Sometimes you can get it to go if you turn threading off (by deleting -qsmp=omp)
+  # Only turn float-trapping on for debug mode as it's a 20% performance hit.
+  FFLAGS += -qinitauto=FF911299 -qflttrap=ov:zero:inv:en
+  # As of Apr/15/2003 cam2_0_2_dev18 xlfrte8.1.0.3 using -lmass causes the code to core-dump
+  # when using DEBUG compiler options.
+  LDFLAGS := -q64 -lmassv
+else
+  # Check for override of default Fortran compiler optimizations
+  ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+    # Inline when not debugging
+    FORTRAN_OPTIMIZATION := -O3 -qstrict -Q
+  endif
+  FFLAGS += $(FORTRAN_OPTIMIZATION)
+  LDFLAGS := -q64 -lmass -lmassv
+endif
+
+ifeq ($(SMP),TRUE)
+  FFLAGS  += -qsmp=omp
+  LDFLAGS += -qsmp=omp
+endif
+
+ifeq ($(SPMD),TRUE)
+  LDFLAGS += -lmpi_r
+else
+  FFLAGS  += -WF,-DHIDE_MPI
+endif
+
+ifneq ($(strip $(LAPACK_LIBDIR)),)
+  LDFLAGS += -L$(LAPACK_LIBDIR) -llapack -lblas
+endif
+
+endif
+
+#------------------------------------------------------------------------
+# SGI
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),IRIX64)
+
+CPPDEF      += -DIRIX64
+FC          := f90
+CC          := cc
+CFLAGS      := -64 $(cpp_path) $(CPPDEF) -O2
+mod_path    := -I$(MOD_NETCDF)
+FFLAGS      := -64 $(cpp_path) $(mod_path) $(CPPDEF) -i4 -macro_expand -extend_source
+FREEFLAGS   :=
+FIXEDFLAGS  :=
+LDFLAGS     := -64
+
+ifeq ($(DEBUG),TRUE)
+  # WARNING: -mp and -g together has been known to cause wrong answers
+  FFLAGS  += -g -DEBUG:trap_uninitialized=ON -C
+else
+  # Check for override of default Fortran compiler optimizations
+  ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+    FORTRAN_OPTIMIZATION := -O2
+  endif
+  FFLAGS += $(FORTRAN_OPTIMIZATION)
+endif
+
+ifeq ($(SMP),TRUE)
+  # THREADED_OMP is used by the timing library
+  CFLAGS += -DTHREADED_OMP
+  # Only enable OpenMP, not SGI specific parallelism
+  # Note that -lmp should precede -lmpi when running hybrid MPI/OpenMP
+  FFLAGS  += -mp -MP:dsm=OFF -MP:old_mp=OFF
+  LDFLAGS += -mp -lmp
+endif
+
+ifeq ($(SPMD),TRUE)
+  FFLAGS  += -I$(INC_MPI)
+  LDFLAGS += -L$(LIB_MPI) -lmpi
+else
+  FFLAGS  += -DHIDE_MPI
+endif
+
+endif
+
+#------------------------------------------------------------------------
+# Linux
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),Linux)
+
+CPPDEF += -DLINUX
+
+# Set the default Fortran compiler
+ifeq ($(strip $(USER_FC)),)
+  FC := pgf90
+endif
+
+# Decide whether or not a PGI Fortran compiler is being used by looking
+# for a match of the string 'pgf' in the compiler name.
+PGI_FC := FALSE
+PGI_CC := FALSE
+ifeq ($(findstring pgf,$(FC)),pgf)
+  PGI_FC := TRUE
+endif
+# On Cray XT3, ftn is a wrapper for pgf90 (and cc is a wrapper for pgcc)
+ifeq ($(findstring ftn,$(FC)),ftn)
+  PGI_FC := TRUE
+  USER_CC := cc
+  PGI_CC := TRUE
+endif
+
+# Set the C compiler (default: pgcc if using PGI Fortran compiler, cc otherwise)
+# and cc if not
+ifeq ($(USER_CC),$(null))
+  ifeq ($(PGI_FC),TRUE)
+    CC := pgcc
+  else
+    CC := cc
+  endif
+else
+  CC := $(USER_CC)
+endif
+# Decide whether or not a PGI cc compiler is being used by looking
+# for a match of the string 'pgc' in the compiler name.
+ifeq ($(findstring pgc,$(CC)),pgc)
+  PGI_CC := TRUE
+endif
+
+ifeq ($(SMP),TRUE)
+  # THREADED_OMP and THREADED_PTHREADS are used by the timing library
+  ifeq ($(PGI_CC),TRUE)
+    CPPDEF += -DTHREADED_OMP
+  else
+    CPPDEF += -DTHREADED_PTHREADS
+  endif
+endif
+
+CFLAGS = $(cpp_path) $(CPPDEF)
+ifeq ($(PGI_CC),TRUE)
+  CFLAGS += -fast
+endif
+
+# Set search path for module files for external libraries.
+mod_path  := -I$(MOD_NETCDF)
+
+# pgf90
+
+ifeq ($(PGI_FC),TRUE)
+
+  CPPDEF     += -DNO_R16
+  FFLAGS     := $(cpp_path) $(mod_path) $(CPPDEF) -i4 -Mdalign -Mextend -byteswapio
+  FREEFLAGS  := -Mfree
+  FIXEDFLAGS :=
+  LDFLAGS    :=
+
+  ifeq ($(DEBUG),TRUE)
+    FFLAGS   += -g -Ktrap=fp -Mrecursive -Mbounds
+  else
+    # Check for override of default Fortran compiler optimizations
+    ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+      FORTRAN_OPTIMIZATION := -O1
+    endif
+    FFLAGS   += $(FORTRAN_OPTIMIZATION)
+  endif
+
+  ifeq ($(SMP),TRUE)
+    FFLAGS   += -mp
+    LDFLAGS  += -mp
+  endif
+
+endif
+
+# lf95
+
+ifeq ($(FC),lf95)
+
+  FFLAGS      := $(cpp_path) $(mod_path) $(CPPDEF) --wide
+  SPEC_FFLAGS := $(FFLAGS)
+  FREEFLAGS   :=
+  FIXEDFLAGS  :=
+  LDFLAGS     :=
+
+  ifeq ($(DEBUG),TRUE)
+    # --trace produces a call traceback on abort
+    # --trap causes code to stop on divide by zero or overflow exceptions
+    # --pca prevents overwriting constant arguments
+    # --chk for basic compiler checking (a,e,s,u,x)
+    #TBH:  this works    FFLAGS += -g --chk --pca
+    #TBH:  this FAILS    FFLAGS += -g --chk a,e,s,u,x --pca
+    FFLAGS    += -g --chk a,e,s,u --pca --trace --trap
+  else
+    # Check for override of default Fortran compiler optimizations
+    ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+      FORTRAN_OPTIMIZATION := -O
+    endif
+    FFLAGS    += $(FORTRAN_OPTIMIZATION)
+    # Threading only works by putting thread memory on the heap rather than the stack (--threadheap).
+    # As of lf95 version 6.2 the thread stacksize limits are (still) too small to run even small
+    # resolution problems (FV at 10x15 res fails).
+    ifeq ($(SMP),TRUE)
+      FFLAGS  += --openmp --threadheap 4096
+      LDFLAGS += --openmp --threadheap 4096
+    endif
+  endif
+
+binary_io.o: binary_io.F90
+	$(FC) -c $(SPEC_FFLAGS) $<
+wrap_nf.o: wrap_nf.F90
+	$(FC) -c $(SPEC_FFLAGS) $<
+wrap_mpi.o: wrap_mpi.F90
+	$(FC) -c $(SPEC_FFLAGS) $<
+apex_subs.o: apex_subs.F90
+	$(FC) -c $(SPEC_FFLAGS) $<
+
+endif
+
+ifeq ($(findstring ifort,$(FC)),ifort)
+
+  FFLAGS      := $(cpp_path) $(mod_path) $(CPPDEF) -132 -ftz -g
+  FREEFLAGS   := -FR
+  FIXEDFLAGS  :=
+  LDFLAGS     :=
+
+  ifeq ($(DEBUG),TRUE)
+    FFLAGS    += -CB
+  else
+    # Check for override of default Fortran compiler optimizations
+    ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+      FORTRAN_OPTIMIZATION := -O2
+    endif
+    FFLAGS    += $(FORTRAN_OPTIMIZATION)
+  endif
+
+  ifeq ($(SMP),TRUE)
+    FFLAGS    += -openmp
+    LDFLAGS   += -openmp
+  endif
+
+endif
+
+# pathf90
+
+ifeq ($(FC),pathf90)
+
+  CC         := pathcc
+  CPPDEF     += -DNO_R16
+  FFLAGS     := $(cpp_path) $(mod_path) $(CPPDEF) -extend_source -ftpp -fno-second-underscore
+  FREEFLAGS  :=
+  FIXEDFLAGS :=
+  LDFLAGS    :=
+
+  ifeq ($(DEBUG),TRUE)
+    FFLAGS   += -g
+  else
+    # Check for override of default Fortran compiler optimizations
+    ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+      FORTRAN_OPTIMIZATION := -O
+    endif
+    FFLAGS   += $(FORTRAN_OPTIMIZATION)
+  endif
+
+  ifeq ($(SMP),TRUE)
+    FFLAGS   += -mp
+    LDFLAGS  += -mp
+  endif
+
+endif
+
+# g95
+
+ifeq ($(FC),g95)
+
+  CPPDEF     += -DG95 -DNO_R16 -DDISABLE_TIMERS -DNO_CRAY_POINTERS
+  FFLAGS     := $(cpp_path) $(mod_path) $(CPPDEF) -i4 -fno-second-underscore -fstatic  
+  FREEFLAGS  := 
+  FIXEDFLAGS :=
+  LDFLAGS    :=
+
+  ifeq ($(DEBUG),TRUE)
+    FFLAGS   += -g -fbounds-check
+  else
+    # Check for override of default Fortran compiler optimizations
+    ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+      FORTRAN_OPTIMIZATION := 
+    endif
+    FFLAGS   += $(FORTRAN_OPTIMIZATION)
+  endif
+
+endif
+
+# Flags common to all compilers
+
+ifeq ($(SPMD),TRUE)
+  LDFLAGS += -L$(LIB_MPI) -l$(MPI_LIB_NAME)
+else
+  FFLAGS  += -DHIDE_MPI
+endif
+
+endif
+
+#------------------------------------------------------------------------
+# NEC SX-6
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),SUPER-UX)
+
+VER = inst
+VER = rev285
+
+CPPDEF     += -USX -DFORTRANUNDERSCORE -DNEC_SX -D_SX -DDISABLE_TIMERS
+ifeq ($(SMP),TRUE)
+  CPPDEF   += -DTHREADED_OMP
+endif
+ifeq ($(SPMD),FALSE)
+  CPPDEF   += -DHIDE_MPI
+endif
+CPPFLAGS   := $(CPPDEF) $(cpp_path)
+
+FC         := sxf90 -Yf,/SX/opt/sxf90/$(VER)/lib -V
+CC         := sxc++
+AS         := sxas
+CPP        := cpp -traditional
+PROF       := -ftrace
+CFLAGS     := $(PROF) $(CPPFLAGS)
+FFLAGS     := $(PROF) $(CPPFLAGS) -Wf,"-A idbl4 -pvctl fullmsg loopcnt=1000000 noassume noloopchg" \
+              -Wf,"-L fmtlist map transform -ptr byte"
+FREEFLAGS  :=
+FIXEDFLAGS :=
+LDFLAGS    := $(PROF) -Wl"-Z 5000M -ZL 5000M"
+
+ifneq ($strip $(LINKER)),)
+  LINKER := $(CC) -f90lib
+endif
+
+ifeq ($(DEBUG),TRUE)
+  FFLAGS  += -g -Cvsafe
+else
+# Check for override of default Fortran compiler optimizations
+  ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+    FORTRAN_OPTIMIZATION := -Cvopt
+  endif
+  FFLAGS += $(FORTRAN_OPTIMIZATION)
+endif
+
+ifeq ($(SMP),TRUE)
+  CFLAGS  += -P openmp
+  FFLAGS  += -P openmp
+  LDFLAGS += -lcpp -P openmp
+endif
+
+ifeq ($(SPMD),TRUE)
+  LDFLAGS += -L$(LIB_MPI) -lmpi
+endif
+
+wv_saturation.o:        wv_saturation.F90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi rexp=estblf $<
+
+wv_saturation.f90:	wv_saturation.F90
+	$(CPP)	$(CPPFLAGS) $< > wv_saturation.f90
+
+FrictionVelocityMod.o:	FrictionVelocityMod.F90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi $<
+
+shr_orb_mod.f90:        shr_orb_mod.F90
+	$(CPP)  $(CPPFLAGS) $< > shr_orb_mod.f90
+
+zenith.o:       zenith.F90 shr_orb_mod.f90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi expin=shr_orb_mod.f90 rexp=shr_orb_cosz $<
+
+# inlining for CLM
+
+QSatMod.f90:	QSatMod.F90
+	$(CPP) $(CPPFLAGS) $< > QSatMod.f90
+
+CanopyFluxesMod.o:	CanopyFluxesMod.F90 QSatMod.f90  FrictionVelocityMod.f90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=qsat,moninobukini expin=QSatMod.f90,FrictionVelocityMod.f90
+
+Biogeophysics1Mod.o:	Biogeophysics1Mod.F90 QSatMod.f90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=qsat expin=QSatMod.f90
+
+FrictionVelocityMod.f90	: FrictionVelocityMod.F90
+	$(CPP) $(CPPFLAGS) $< > FrictionVelocityMod.f90
+
+BareGroundFluxesMod.o	: BareGroundFluxesMod.F90 FrictionVelocityMod.f90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=moninobukini expin=FrictionVelocityMod.f90
+
+BiogeophysicsLakeMod.o	: BiogeophysicsLakeMod.F90 FrictionVelocityMod.f90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=moninobukini expin=FrictionVelocityMod.f90
+
+endif
+
+#------------------------------------------------------------------------
+# Earth Simulator
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),ES)
+
+CPPDEF     += -USX -DFORTRANUNDERSCORE -DNEC_SX -D_SX -DDISABLE_TIMERS
+ifeq ($(SMP),TRUE)
+  CPPDEF   += -DTHREADED_OMP
+endif
+ifeq ($(SPMD),FALSE)
+  CPPDEF   += -DHIDE_MPI
+endif
+CPPFLAGS   := $(CPPDEF) $(cpp_path)
+
+FC         := esf90 -V
+CC         := esc++
+AS         := esas
+CPP        := cpp -traditional
+PROF       :=
+CFLAGS     := $(PROF) $(CPPFLAGS)
+FFLAGS     := $(PROF) $(CPPFLAGS) -Wf,"-A idbl4 -pvctl fullmsg loopcnt=1000000 noassume noloopchg" \
+              -Wf,"-L fmtlist map transform -ptr byte"
+FREEFLAGS  :=
+FIXEDFLAGS :=
+LDFLAGS    := $(PROF) -Wl"-Z 5000M -ZL 5000M"
+
+ifneq ($strip $(LINKER)),)
+  LINKER   := $(CC) -f90lib
+endif
+
+ifeq ($(DEBUG),TRUE)
+  FFLAGS   += -g -Cvsafe
+else
+# Check for override of default Fortran compiler optimizations
+  ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+    FORTRAN_OPTIMIZATION := -Cvopt
+  endif
+  FFLAGS   += $(FORTRAN_OPTIMIZATION)
+endif
+
+ifeq ($(SMP),TRUE)
+  CFLAGS   += -P openmp
+  FFLAGS   += -P openmp
+  LDFLAGS  += -lcpp -P openmp
+endif
+
+ifeq ($(SPMD),TRUE)
+  LDFLAGS  += -L$(LIB_MPI) -lmpi
+endif
+
+ifeq ($(SPMD),TRUE)
+#...jps....added for MPI Global Memory usage
+phys_grid.o:        phys_grid.F90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -gmalloc $<
+
+# (mitsuo) add "-gmalloc"
+spmd_dyn.o: spmd_dyn.F90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -gmalloc $<
+
+endif
+
+wv_saturation.o:        wv_saturation.F90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi rexp=estblf $<
+
+wv_saturation.f90:	wv_saturation.F90
+	$(CPP)	$(CPPFLAGS) $< > wv_saturation.f90
+
+FrictionVelocityMod.o:	FrictionVelocityMod.F90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi $<
+
+shr_orb_mod.f90:        shr_orb_mod.F90
+	$(CPP)  $(CPPFLAGS) $< > shr_orb_mod.f90
+
+zenith.o:       zenith.F90 shr_orb_mod.f90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi expin=shr_orb_mod.f90 rexp=shr_orb_cosz $<
+
+# inlining for CLM
+
+QSatMod.f90:	QSatMod.F90
+	$(CPP) $(CPPFLAGS) $< > QSatMod.f90
+
+CanopyFluxesMod.o:	CanopyFluxesMod.F90 QSatMod.f90  FrictionVelocityMod.f90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=qsat,moninobukini expin=QSatMod.f90,FrictionVelocityMod.f90
+
+Biogeophysics1Mod.o:	Biogeophysics1Mod.F90 QSatMod.f90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=qsat expin=QSatMod.f90
+
+FrictionVelocityMod.f90	: FrictionVelocityMod.F90
+	$(CPP) $(CPPFLAGS) $< > FrictionVelocityMod.f90
+
+BareGroundFluxesMod.o	: BareGroundFluxesMod.F90 FrictionVelocityMod.f90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=moninobukini expin=FrictionVelocityMod.f90
+
+BiogeophysicsLakeMod.o	: BiogeophysicsLakeMod.F90 FrictionVelocityMod.f90
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=moninobukini expin=FrictionVelocityMod.f90
+
+endif
+
+#------------------------------------------------------------------------
+# Cray X1
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),UNICOS/mp)
+
+ifeq ($(SSP),$(null))
+  SSP := FALSE
+endif
+
+CC := cc
+CPPFLAGS := -UCRAY -DUNICOSMP -DCPP_VECTOR $(CPPDEF)
+ifeq ($(SMP),FALSE)
+  COPT := -h task0
+else
+  COPT := -h task1
+  # THREADED_OMP is used by the timing library
+  CPPFLAGS += -DTHREADED_OMP
+endif
+ifeq ($(SSP),FALSE)
+  COPT += -h gen_private_callee
+else
+  COPT += -h ssp
+  CPPFLAGS += -DSSP
+endif
+CFLAGS := $(cpp_path) $(CPPFLAGS) $(COPT) -h list=m 
+
+FC := ftn
+FPPFLAGS := -F -UCRAY -DUNICOSMP -DSYSUNICOS -DCPP_VECTOR $(CPPDEF)
+FOPT := -Ofp1,nomodinline
+
+# Check for override of default Fortran compiler optimizations
+ifneq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+  FOPT += $F_OPTIMIZATION_OVERRIDE
+endif
+ifeq ($(SPMD),FALSE)
+  FPPFLAGS += -DHIDE_MPI
+endif
+ifeq ($(SMP),FALSE)
+  FOPT += -Otask0 -xomp
+else
+  FOPT += -Otask1
+  FPPFLAGS += -DUSE_OMP
+endif
+ifeq ($(SSP),FALSE)
+  FOPT += -Ogen_private_callee
+else
+  FOPT += -Ossp
+  FPPFLAGS += -DSSP
+endif
+
+mod_path   := -I$(INC_NETCDF) -p$(MOD_NETCDF)
+FFLAGS     := $(cpp_path) $(mod_path) $(FPPFLAGS) $(FOPT) -r a -dy -rm -em
+FREEFLAGS  := -f free
+FIXEDFLAGS := -f fixed -N 132
+
+LDFLAGS := -L. -lsci
+ifeq ($(SSP),TRUE)
+  LDFLAGS += -Ossp
+endif
+
+ifeq ($(DEBUG),TRUE)
+  CFLAGS += -Gp
+  FFLAGS += -G1
+endif
+
+# Specific targets for chunking reproducibility
+vertical_diffusion.o : 
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -Ofp0 $<
+
+# Specific targets for CLM2 for good performance
+wv_saturation.o FrictionVelocityMod.o QSatMod.o shr_orb_mod.o :
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -Omodinline $<
+endif
+
+
+#------------------------------------------------------------------------
+# Darwin XLF compiler (serial only, no MPI multi-tasking or OpenMP threading)
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),Darwin)
+
+CPPDEF     += -DAIX -DDarwin -DFORTRAN_SAME
+
+cpre = $(null)-WF,-D$(null)
+FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
+
+FC := xlf90_r
+
+CC         := xlc
+CFLAGS     := $(cpp_path) $(CPPDEF) -O2
+mod_path   := -I$(MOD_NETCDF)
+FFLAGS     := $(cpp_path) $(mod_path) $(FPPFLAGS) -qspillsize=2500 
+FREEFLAGS  := -qsuffix=f=f90:cpp=F90
+FIXEDFLAGS := -qfixed=132
+LDFLAGS    := -lSystemStubs -lSystemStubs_profile
+
+ifeq ($(DEBUG),TRUE)
+  # Only turn float-trapping on for debug mode as it's a performance hit.
+  FFLAGS += -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C -qfullpath -qhalt=e
+else
+  # Check for override of default Fortran compiler optimizations
+  ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+    FORTRAN_OPTIMIZATION := -O3 -qstrict
+  endif
+  FFLAGS += $(FORTRAN_OPTIMIZATION)
+endif
+
+ifeq ($(SMP),TRUE)
+  # SMP not implemented
+  FFLAGS  +=
+  LDFLAGS +=
+endif
+
+ifeq ($(SPMD),TRUE)
+  # SPMD not implemented
+  LDFLAGS +=
+else
+  FFLAGS  += -WF,-DHIDE_MPI
+endif
+
+endif
+
+#------------------------------------------------------------------------
+# BGL
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),BGL)
+
+CPPDEF     += -DFORTRAN_SAME -DAIX -DBGL
+BGLPATH=/bgl/BlueLight/ppcfloor/bglsys
+cpre = $(null)-WF,-D$(null)
+FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
+
+FC         := blrts_xlf90
+CC         := blrts_xlc
+CFLAGS     := $(cpp_path) $(CPPDEF) -O2 \
+              -I$(BGLPATH)/include
+mod_path   := -I$(MOD_NETCDF)
+FFLAGS     := -I$(BGLPATH)/include \
+               $(cpp_path) $(mod_path) $(FPPFLAGS) -qarch=440 \
+		-qspillsize=2500 -g -qfullpath 
+FREEFLAGS  := -qsuffix=f=f90:cpp=F90
+FIXEDFLAGS := -qfixed=132
+LDFLAGS    := -L$(BGLPATH)/lib -lmpich.rts -lmsglayer.rts \
+              -lrts.rts -ldevices.rts
+
+ifeq ($(DEBUG),TRUE)
+  FFLAGS += -qinitauto=FF911299 -qflttrap=ov:zero:inv:en
+else
+  # Check for override of default Fortran compiler optimizations
+  ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+    # Inline when not debugging
+    FORTRAN_OPTIMIZATION := -O3 -qstrict -Q
+  endif
+  FFLAGS += $(FORTRAN_OPTIMIZATION)
+endif
+
+ifneq ($(strip $(LAPACK_LIBDIR)),)
+  LDFLAGS += -L$(LAPACK_LIBDIR) -llapack -lblas
+endif
+
+endif
+
+#------------------------------------------------------------------------
+
+# Default linker is the Fortran compiler
+ifeq ($(strip $(LINKER)),)
+  LINKER := $(FC)
+endif
+
+# For compiling and linking with external ESMF.
+# If linking to external ESMF library then include esmf.mk to provide the macros:
+# ESMF_F90COMPILEPATHS
+# ESMF_F90LINKPATHS
+# ESMF_F90LINKRPATHS
+# ESMF_F90ESMFLINKLIBS
+ifneq ($(strip $(ESMF_LIBDIR)),)
+  include $(ESMF_LIBDIR)/esmf.mk
+  FFLAGS  += $(ESMF_F90COMPILEPATHS)
+  LDFLAGS += $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) $(ESMF_F90ESMFLINKLIBS)
+endif
+
+# Append user defined compiler and load flags to Makefile defaults
+CFLAGS   += $(USER_CFLAGS)
+FFLAGS   += $(USER_FFLAGS)
+LDFLAGS  += $(USER_LDFLAGS)
+
+clean:
+	rm -f Depends Srcfiles *.o *.mod *.stb *.f90 $(MODEL_EXEDIR)/$(EXENAME)
+
+realclean: clean
+
+include $(CURDIR)/Depends

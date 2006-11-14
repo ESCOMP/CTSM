@@ -1,0 +1,5 @@
+-spmd -smp
+-maxpft 4
+-bgc casa
+-s
+-smp

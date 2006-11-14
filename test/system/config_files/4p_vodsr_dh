@@ -1,0 +1,7 @@
+-spmd -smp
+-debug
+-maxpft 4
+-rtm on
+-dust on
+-voc on
+-s

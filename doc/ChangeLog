@@ -1,3 +1,156 @@
+===============================================================
+Tag name: clm3_expa_78
+Originator(s): mvertens
+Date: Mon Nov 13 20:22:05 MST 2006
+One-line Summary: introduced new offline build/run scripts and testing suite
+
+Purpose of changes: New build/run scripts were introduced in order to make it easier 
+to run the offline clm on platforms other than the NCAR IBMs. In addition a new testing
+suite was introduced that will make it much easier to add new tests and trace the status
+of current tests. The new test suite can also be run on a much wider set of platforms
+than the NCAR IBMs. Both the new build/run scripts and the new offline test suite were
+based on the current CAM build/run scripts and CAM test suite.
+
+Bugs fixed (include bugzilla ID): None
+
+Describe any changes made to build system: New build system based on a new "configure" utility
+
+Describe any changes made to the namelist: The namelist generation is the same. For the
+the new build/run scripts, sample namelists can be found in the scripts bld/run-*.csh.
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: myself
+
+List all subroutines eliminated:
+   D   bld/offline
+   D   bld/offline/tests
+   D   bld/offline/tests/CLM_namelist.pm
+   D   bld/offline/tests/compare.csh
+   D   bld/offline/tests/config_machine_specs.csh
+   D   bld/offline/tests/CLM_lab.pm
+   D   bld/offline/tests/CLM_test.pm
+   D   bld/offline/tests/CLM.pm
+   D   bld/offline/tests/test-model.pl
+   D   bld/offline/tests/model_specs.csh
+   D   bld/offline/tests/CLM_run.pm
+   D   bld/offline/tests/test_batch.csh
+   D   bld/offline/tests/Makefile
+   D   bld/offline/tests/configure.csh
+   D   bld/offline/tests/lab_default.pm
+   D   bld/offline/mkSrcfiles
+   D   bld/offline/mkDepends
+   D   bld/offline/jobscript.csh
+   D   bld/offline/Makefile
+
+List all subroutines added and what they do:
+   A   test/system
+   A   test/system/TCB.sh
+   A   test/system/tests_pretag_bluevista
+   A   test/system/config_files
+   A   test/system/config_files/4p_casa_h
+   A   test/system/config_files/4p_casa_m
+   A   test/system/config_files/4p_casa_o
+   A   test/system/config_files/17p_vodsr_h
+   A   test/system/config_files/17p_vodsr_m
+   A   test/system/config_files/17p_vodsr_o
+   A   test/system/config_files/4p_vodsr_dh
+   A   test/system/config_files/17p_cnn_h
+   A   test/system/config_files/4p_vodsr_dm
+   A   test/system/config_files/17p_cnn_dh
+   A   test/system/config_files/17p_cnn_m
+   A   test/system/config_files/4p_vodsr_do
+   A   test/system/config_files/17p_cnn_o
+   A   test/system/config_files/10p_dgvm_h
+   A   test/system/config_files/4p_casa_dh
+   A   test/system/config_files/17p_cnn_dm
+   A   test/system/config_files/17p_cnn_do
+   A   test/system/config_files/10p_dgvm_dh
+   A   test/system/config_files/10p_dgvm_m
+   A   test/system/config_files/4p_casa_dm
+   A   test/system/config_files/10p_dgvm_o
+   A   test/system/config_files/4p_casa_do
+   A   test/system/config_files/README
+   A   test/system/config_files/10p_dgvm_dm
+   A   test/system/config_files/10p_dgvm_do
+   A   test/system/config_files/17p_vodsr_dh
+   A   test/system/config_files/17p_vodsr_dm
+   A   test/system/config_files/17p_vodsr_do
+   A   test/system/config_files/4p_vodsr_h
+   A   test/system/config_files/4p_vodsr_m
+   A   test/system/config_files/4p_vodsr_o
+   A   test/system/gen_test_table.sh
+   A   test/system/TBL.sh
+   A   test/system/CLM_compare.sh
+   A   test/system/nl_files
+   A   test/system/nl_files/t31_cnall
+   A   test/system/nl_files/t31_dgvm
+   A   test/system/nl_files/t31
+   A   test/system/input_tests_master
+   A   test/system/TBR.sh
+   A   test/system/tests_pretag_bangkok
+   A   test/system/tests_pretag_bluesky
+   A   test/system/TER.sh
+   A   test/system/test_driver.sh
+   A   test/system/tests_pretag_tempest
+   A   test/system/CLM_runcmnd.sh
+   A   test/system/TSM.sh
+
+List all existing files that have been modified, and describe the changes:
+
+Summary of testing:
+
+  bluesky:
+   001 sm111 TSM.sh 4p_vodsr_dh t31 48 ...............................PASS
+   002 er111 TER.sh 4p_vodsr_dh t31 10+38 ............................PASS
+   003 br111 TBR.sh 4p_vodsr_dh t31 24+24 ............................FAIL! rc= 11
+   004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................SKIPPED*
+   005 sm114 TSM.sh 4p_vodsr_h t31 48 ................................PASS
+   006 sm121 TSM.sh 17p_vodsr_dh t31 48 ..............................PASS
+   007 er121 TER.sh 17p_vodsr_dh t31 10+38 ...........................PASS
+   008 br121 TBR.sh 17p_vodsr_dh t31 24+24 ...........................FAIL! rc= 11
+   009 bl121 TBL.sh 17p_vodsr_dh t31 48 ..............................SKIPPED*
+   010 sm124 TSM.sh 17p_vodsr_h t31 48 ...............................PASS
+   011 sm211 TSM.sh 17p_cnn_dh t31_cnall 48 ..........................PASS
+   012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................PASS
+   013 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24 .......................FAIL! rc= 11
+   014 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................SKIPPED*
+   015 sm311 TSM.sh 4p_casa_dh t31_dgvm 48 ...........................PASS
+   016 er311 TER.sh 4p_casa_dh t31_dgvm 10+38 ........................PASS
+   017 br311 TBR.sh 4p_casa_dh t31_dgvm 24+24 ........................FAIL! rc= 11
+   018 bl311 TBL.sh 4p_casa_dh t31_dgvm 48 ...........................SKIPPED*
+   019 sm411 TSM.sh 10p_dgvm_dh t31_dgvm 48 ..........................PASS
+   020 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38 .......................PASS
+   021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................FAIL! rc= 11
+   022 bl411 TBL.sh 10p_dgvm_dh t31_dgvm 48 ..........................SKIPPED*
+   
+   Note, the branch tests failed only in the differences to the time_bounds variable
+   upon branching - all other variables stayed the same. This has been reported as
+   bug #290.
+
+  bangkok/lf95: (new tests will be added in later tags)
+   001 sm112 TSM.sh 4p_vodsr_dm t31 48 ...............................PASS
+   002 er112 TER.sh 4p_vodsr_dm t31 10+38 ............................FAIL! rc= 11
+   003 br112 TBR.sh 4p_vodsr_dm t31 24+24 ............................FAIL! rc= 11
+   004 bl112 TBL.sh 4p_vodsr_dm t31 48 ...............................SKIPPED*
+   005 sm115 TSM.sh 4p_vodsr_m t31 48 ................................PASS
+
+   Note, the branch tests failed only in the differences to the time_bounds variable
+   upon branching - all other variables stayed the same. This has been reported as
+   bug #290.
+
+   Note, the restart test fails in rtm (the exact same restart test passes on bluesky).
+   This has been reported as bug #291. 
+
+  tempest: (tests must still be done)
+
+CLM tag used for the baseline comparison tests if applicable:
+
+Summarize any changes to answers: NONE
+	
+===============================================================
 
 ===============================================================
 Tag name: clm3_expa_77

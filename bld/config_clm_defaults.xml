@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+
+<config_bld>
+
+<comment>
+This is a configuration file for building CLM.  It is the file format
+produced by the configure script to store a build configuration.  It
+may also be read by the configure script (via setting the -defaults
+option) to provide a default build configuration.
+
+This file may be edited by hand to quickly customize a configuration.  If
+hand editing is done it should be recognized that XML parser used to read
+this file is not able to check the file for valid syntax.  Also, the
+current parser places some restrictions on the normally valid XML syntax:
+1. Attribute values must be enclosed in DOUBLE QUOTED STRINGS!!!
+</comment>
+
+<comment>
+clm_bld    CAM build directory, contains .o and .mod files
+clm_exedir Directory where CAM executable will be created
+clm_root   Root directory of CAM distribution
+usr_src    User source directories to prepend to the filepath.  Multiple directories
+           are specified as a comma separated list with no embedded white space.
+</comment>
+
+<directories
+clm_bld="."
+clm_exedir="."
+clm_root=""
+usr_src=""
+/>
+
+<comment>
+cpl     Is flux coupler used?  [ on | off ]
+bgc     BGC mode:  [ none | cn | casa | dgvm ]
+supln   Turn on CN supplemental nitrogen: [ on | off ]
+rtm     Turn on RTM : [on | off ]
+voc     Turn on VOC : [on | off ]
+dust    Turn on DUST: [on | off ]
+</comment>
+
+<cppvars
+cpl="off"
+bgc="none"
+supln="off"
+voc="off"
+dust="off"
+rtm="off"
+maxpft="4"
+/>
+
+<comment>
+clm_exe    Name of CAM executable
+cppdefs    User specified CPP defines to append to Makefile defaults.
+cc         User specified C compiler overrides Makefile default (linux only).
+cflags     User specified C compiler options to append to Makefile defaults.
+fc         User specified Fortran compiler overrides Makefile default.
+debug      Switch to enable debugging options for Fortran compiler.
+fflags     User specified Fortran compiler flags to append to Makefile defaults.
+fopt       User specified Fortran optimization flags to override Makefile defaults.
+ldflags    User specified load options to append to Makefile defaults.
+spmd       Switch to enable or disable building SPMD version of CAM.
+smp        Switch to enable or disable building SMP version of CAM.
+nc_inc     Directory containing NetCDF include files.
+nc_lib     Directory containing NetCDF library.
+nc_mod     Directory containing NetCDF module files.
+esmf_mod   Directory containing ESMF module files (if linking to external ESMF)
+esmf_lib   Directory containing ESMF library      (if linking to external ESMF)
+mpi_inc    Directory containing MPI include files.
+mpi_lib    Directory containing MPI library.
+mpi_lib_name Name of MPI library.
+target_os  OS for which CAM is being built.
+</comment>
+
+<makefile
+clm_exe="clm"
+cppdefs=""
+cc=""
+fc=""
+debug="0"
+cflags=""
+fflags=""
+fopt=""
+ldflags=""
+spmd=""
+smp=""
+nc_inc=""
+nc_lib=""
+nc_mod=""
+mpi_inc=""
+mpi_lib=""
+mpi_lib_name=""
+target_os=""
+esmf_mod=""
+esmf_lib=""
+/>
+
+</config_bld>
+
+
+
+
+
+

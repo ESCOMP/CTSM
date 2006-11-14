@@ -1,0 +1,4 @@
+-spmd 
+-maxpft 10
+-bgc dgvm
+-s

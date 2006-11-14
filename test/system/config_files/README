@@ -1,0 +1,15 @@
+vo    => voc  is on
+ds    => dust is on
+r     => rtm  is on
+
+_cnn  => bgc is in cn   mode with suplemental nitrogen on
+_casa => bgc is in casa mode
+_dgvm => bgc is in dgvm mode
+
+_dh   => debug on, hybrid   on
+_dm   => debug on, mpi only on 
+_do   => debug on, omp only on
+
+_h    => debug off, hybrid   on
+_m    => debug off, mpi only on
+_o    => debug off, omp only on

@@ -1,0 +1,5 @@
+-smp
+-maxpft 17
+-bgc cn
+-supln on 
+-s
