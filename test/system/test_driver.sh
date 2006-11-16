@@ -44,7 +44,7 @@ cat > ./${submit_script} << EOF
 # @ node_usage  = shared
 # @ job_type    = parallel
 # @ tasks_per_node = 8
-# @ account_no = 93300379
+# @ account_no = 93300370
 # Export all Environment variables
 # @ environment = COPY_ALL
 # @ queue

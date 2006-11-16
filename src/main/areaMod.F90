@@ -457,6 +457,7 @@ end subroutine map_maparray
 !
 ! !REVISION HISTORY:
 ! 2006.06.28  T Craig  Creation.
+! 2006.08.23  P Worley Performance optimizations
 !
 !EOP
 !

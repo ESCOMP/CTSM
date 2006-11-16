@@ -180,7 +180,8 @@ contains
 !
 ! !REVISION HISTORY:
 ! 2002.09.11  Forrest Hoffman  Creation.
-! 2005.12.15  T Craig Updated for finemesh
+! 2005.12.15  T Craig  Updated for finemesh
+! 2006.08.18  P Worley Performance optimizations
 !
 !EOP
 !------------------------------------------------------------------------------

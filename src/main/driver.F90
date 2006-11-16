@@ -689,9 +689,7 @@ subroutine driver2(caldayp1, declinp1, rstwr)
 
 #if ( !defined SCAM )
   call t_startf('clm_driver_io')
-  call t_startf('wrapup')
   call htapes_wrapup()
-  call t_stopf('wrapup')
   call t_stopf('clm_driver_io')
 #endif
 

@@ -172,6 +172,7 @@ contains
     integer :: mon     ! Current month
     integer :: day     ! Current day
     integer :: tod     ! Current time of day (sec)
+    integer :: ier     ! MPI error return
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -190,23 +191,51 @@ contains
 
     ! Map MCT to land data type
 
+    call t_startf ('lnd_import')
     call lnd_import_mct( x2l_l, atm_a2l )
+    call t_stopf ('lnd_import')
+
+    call t_startf ('clm_mapa2l')
     call clm_mapa2l(atm_a2l, clm_a2l)
+    call t_stopf ('clm_mapa2l')
     
     ! Run clm
 
     rstwr = eshr_timemgr_clockAlarmIsOnRes( SyncClock )
+
+#if ( defined SPMD ) && ( defined TIMING_BARRIERS )
+    call t_startf ('sync_clm_run1')
+    call mpi_barrier (mpicom, ier)
+    call t_stopf ('sync_clm_run11')
+#endif
+    call t_startf ('clm_run1')
     call clm_run1( )
+    call t_stopf ('clm_run1')
+
+#if ( defined SPMD ) && ( defined TIMING_BARRIERS )
+    call t_startf ('sync_clm_run2')
+    call mpi_barrier (mpicom, ier)
+    call t_stopf ('sync_clm_run2')
+#endif
+    call t_startf ('clm_run2')
     call clm_run2( rstwr )
+    call t_stopf ('clm_run2')
 
     ! Map land data type to MCT
 
+    call t_startf ('clm_mapl2a')
     call clm_mapl2a(clm_l2a, atm_l2a)
+    call t_stopf ('clm_mapl2a')
+
+    call t_startf ('lnd_export')
     call lnd_export_mct( atm_l2a, l2x_l )
+    call t_stopf ('lnd_export')
 
     ! Advance clm time step
 
+    call t_startf ('clm2_adv_timestep')
     call advance_timestep()
+    call t_stopf ('clm2_adv_timestep')
 	
   end subroutine lnd_run_mct
 

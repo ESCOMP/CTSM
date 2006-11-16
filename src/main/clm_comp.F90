@@ -199,13 +199,13 @@ contains
 
     ! Call land model driver1
     
-    call t_startf('clm_driver1')
     call driver1(doalb, caldayp1, declinp1)
-    call t_stopf('clm_driver1')
 
     ! Determine gridcell averaged properties to send to atm (l2as and l2af derived types)
 
+    call t_startf('clm_map2gcell')
     call clm_map2gcell( )
+    call t_stopf('clm_map2gcell')
 
   end subroutine clm_run1
 
@@ -243,8 +243,6 @@ contains
 
     ! Call land model driver2
     
-    call t_startf('clm_driver2')
-
     dtime = get_step_size()
     caldayp1 = get_curr_calday( offset=int(dtime) )
     call shr_orb_decl( caldayp1, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
@@ -253,8 +251,6 @@ contains
     else
        call driver2(caldayp1, declinp1)
     endif
-
-    call t_stopf('clm_driver2')
 
   end subroutine clm_run2
 

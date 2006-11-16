@@ -1,4 +1,83 @@
 ===============================================================
+Tag name: clm3_expa_79
+Originator(s): nanr
+Date: Wed Nov 15 14:29:37 MST 2006
+One-line Summary: Add Pat Whorley's timing changes.
+
+Purpose of changes: 
+These changes are improvements to the timing calls from Pat Whorley.  
+They give a better picture of CLM timing.  Pat added comments and 
+a few modifications to the t_startf/t_stopf calls.  
+
+Bugs fixed (include bugzilla ID):  None
+
+Describe any changes made to build system:  None
+
+Describe any changes made to the namelist:  updated pft namelist to point to new pft-physiology file:
+$CSMDATA/pftdata/pft-physiology.c060426
+
+List any changes to the defaults for the boundary datasets:  None
+
+Describe any substantial timing or memory changes:  None
+
+Code reviewed by: myself
+
+List all subroutines eliminated:  None
+
+List all subroutines added and what they do:  None
+
+List all existing files that have been modified, and describe the changes:
+
+M      test/system/nl_files/t31_cnall
+M      test/system/test_driver.sh
+M      src/main/clm_comp.F90
+M      src/main/driver.F90
+M      src/main/lnd_comp_mct.F90
+M      src/main/decompMod.F90
+M      src/main/areaMod.F90
+
+Summary of testing:
+
+  bluesky:
+   001 sm111 TSM.sh 4p_vodsr_dh t31 48 ...............................PASS
+   002 er111 TER.sh 4p_vodsr_dh t31 10+38 ............................PASS
+   003 br111 TBR.sh 4p_vodsr_dh t31 24+24 ............................FAIL! rc= 11
+   004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................SKIPPED*
+   005 sm114 TSM.sh 4p_vodsr_h t31 48 ................................PASS
+   006 sm121 TSM.sh 17p_vodsr_dh t31 48 ..............................PASS
+   007 er121 TER.sh 17p_vodsr_dh t31 10+38 ...........................PASS
+   008 br121 TBR.sh 17p_vodsr_dh t31 24+24 ...........................FAIL! rc= 11
+   009 bl121 TBL.sh 17p_vodsr_dh t31 48 ..............................SKIPPED*
+   010 sm124 TSM.sh 17p_vodsr_h t31 48 ...............................PASS
+   011 sm211 TSM.sh 17p_cnn_dh t31_cnall 48 ..........................PASS
+   012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................PASS
+   013 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24 .......................FAIL! rc= 11
+   014 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................SKIPPED*
+   015 sm311 TSM.sh 4p_casa_dh t31_dgvm 48 ...........................PASS
+   016 er311 TER.sh 4p_casa_dh t31_dgvm 10+38 ........................PASS
+   017 br311 TBR.sh 4p_casa_dh t31_dgvm 24+24 ........................FAIL! rc= 11
+   018 bl311 TBL.sh 4p_casa_dh t31_dgvm 48 ...........................SKIPPED*
+   019 sm411 TSM.sh 10p_dgvm_dh t31_dgvm 48 ..........................PASS
+   020 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38 .......................PASS
+   021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................FAIL! rc= 11
+   022 bl411 TBL.sh 10p_dgvm_dh t31_dgvm 48 ..........................SKIPPED*
+   
+   Note, the branch tests failed only in the differences to the time_bounds variable
+   upon branching - all other variables stayed the same. This has been reported as
+   bug #290.
+
+  tempest:      (tests must still be done)
+  bangkok/lf95: (tests must still be done)
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_78
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers:  NONE
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_78
 Originator(s): mvertens
 Date: Mon Nov 13 20:22:05 MST 2006
