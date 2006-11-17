@@ -93,6 +93,10 @@ contains
     real(r8), pointer :: qflx_drain(:)    !sub-surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)    !qflx_surf at glaciers, wetlands, lakes
     real(r8), pointer :: qflx_evap_tot_col(:) !pft quantity averaged to the column (assuming one pft)
+    real(r8) ,pointer :: soilalpha(:)     !factor that reduces ground saturated specific humidity (-)
+    real(r8), pointer :: zwt(:)           !water table depth
+    real(r8), pointer :: fcov(:)          !fractional area with water table at surface
+    real(r8), pointer :: qcharge(:)       !aquifer recharge rate (mm/s)
 !
 ! local pointers to implicit out multi-level arrays
 !
@@ -140,6 +144,10 @@ contains
     h2osoi_ice   => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq   => clm3%g%l%c%cws%h2osoi_liq
     qflx_evap_tot_col => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
+    soilalpha    => clm3%g%l%c%cws%soilalpha
+    zwt          => clm3%g%l%c%cws%zwt
+    fcov         => clm3%g%l%c%cws%fcov
+    qcharge      => clm3%g%l%c%cws%qcharge
 
     ! Assign local pointers to derived type pft members
 
@@ -228,6 +236,10 @@ contains
        rootr_column(c,:) = spval
        snowice(c)        = spval
        snowliq(c)        = spval
+       soilalpha(c)      = spval
+       zwt(c)            = spval
+       fcov(c)           = spval
+       qcharge(c)        = spval
        h2osoi_vol(c,:)   = spval
        h2osoi_ice(c,:)   = spval
        h2osoi_liq(c,:)   = spval

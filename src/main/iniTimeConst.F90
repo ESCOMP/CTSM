@@ -28,6 +28,7 @@ subroutine iniTimeConst
                            albsat, albdry
   use clm_varctl  , only : nsrest, fsurdat
   use pftvarcon   , only : ncorn, nwheat, noveg, ntree, roota_par, rootb_par,  &
+                           smpso, smpsc, &
                            z0mr, displar, dleaf, rhol, rhos, taul, taus, xl, &
                            qe25, vcmx25, mp, c3psn, slatop, dsladlai, leafcn, flnr, woody, &
                            lflitcn, frootcn, livewdcn, deadwdcn, froot_leaf, stem_leaf, croot_stem, &
@@ -94,8 +95,9 @@ subroutine iniTimeConst
   real(r8), pointer :: tkmg(:,:)          ! thermal conductivity, soil minerals  [W/m-K] (new) (nlevsoi) 
   real(r8), pointer :: tkdry(:,:)         ! thermal conductivity, dry soil (W/m/Kelvin) (nlevsoi) 
   real(r8), pointer :: tksatu(:,:)        ! thermal conductivity, saturated soil [W/m-K] (new) (nlevsoi) 
-  real(r8), pointer :: wtfact(:)          ! Fraction of model area with high water table
+  real(r8), pointer :: wtfact(:)          ! maximum saturated fraction for a gridcell
   real(r8), pointer :: smpmin(:)          ! restriction for min of soil potential (mm) (new)
+  real(r8), pointer :: hkdepth(:)         ! Length scale for Ksat decrease (m)
   integer , pointer :: isoicol(:)         ! soil color class
   real(r8), pointer :: gwc_thr(:)         ! threshold soil moisture based on clay content
   real(r8), pointer :: mss_frc_cly_vld(:) ! [frc] Mass fraction clay limited to 0.20
@@ -116,7 +118,6 @@ subroutine iniTimeConst
   real(r8) :: tkm              ! mineral conductivity
   real(r8) :: xksat            ! maximum hydraulic conductivity of soil [mm/s]
   real(r8) :: scalez = 0.025_r8   ! Soil layer thickness discretization (m)
-  real(r8) :: hkdepth = 0.5_r8    ! Length scale for Ksat decrease (m)
   real(r8) :: clay,sand        ! temporaries
   real(r8) :: slope,intercept        ! temporary, for rooting distribution
   integer  :: begp, endp       ! per-proc beginning and ending pft indices
@@ -130,7 +131,8 @@ subroutine iniTimeConst
   integer ,allocatable :: soic2d(:,:)   ! read in - soil color
   real(r8),allocatable :: sand3d(:,:,:) ! read in - soil texture: percent sand
   real(r8),allocatable :: clay3d(:,:,:) ! read in - soil texture: percent clay
-  real(r8),allocatable :: ndep(:,:)     ! read in -  annual nitrogen deposition rate (gN/m2/yr)
+  real(r8),allocatable :: ndep(:,:)     ! read in - annual nitrogen deposition rate (gN/m2/yr)
+  real(r8),allocatable :: gti(:,:)      ! read in - fmax
   integer  :: dimid,varid      ! netCDF id's
 #if ( defined SCAM )
   integer  :: ret, time_index
@@ -145,12 +147,11 @@ subroutine iniTimeConst
     if (masterproc) write (6,*) 'Attempting to initialize time invariant variables'
 
 
-  allocate(soic2d(lsmlon,lsmlat),ndep(lsmlon,lsmlat))
+  allocate(soic2d(lsmlon,lsmlat),ndep(lsmlon,lsmlat), gti(lsmlon,lsmlat))
   allocate(sand3d(lsmlon,lsmlat,nlevsoi),clay3d(lsmlon,lsmlat,nlevsoi))
 
   ! Assign local pointers to derived subtypes components (gridcell-level)
 
-  wtfact          => clm3%g%gps%wtfact
   ixyg            => ldecomp%gdc2i
   jxyg            => ldecomp%gdc2j
 
@@ -179,6 +180,8 @@ subroutine iniTimeConst
   tkdry           => clm3%g%l%c%cps%tkdry
   csol            => clm3%g%l%c%cps%csol
   smpmin          => clm3%g%l%c%cps%smpmin
+  hkdepth         => clm3%g%l%c%cps%hkdepth
+  wtfact          => clm3%g%l%c%cps%wtfact
   isoicol         => clm3%g%l%c%cps%isoicol
   gwc_thr         => clm3%g%l%c%cps%gwc_thr
   mss_frc_cly_vld => clm3%g%l%c%cps%mss_frc_cly_vld
@@ -222,6 +225,14 @@ subroutine iniTimeConst
         mxsoil_color = 8  
      end if
 
+     ! Read fmax
+
+     call check_ret(nf_inq_varid(ncid, 'FMAX', varid), subname)
+     call check_ret(nf_get_var_double(ncid, varid, gti), subname)
+
+     write (6,*) 'Successfully read fmax boundary data .....'
+     write (6,*)
+
      ! Red in soil color, sand and clay fraction
 
 #if ( defined SCAM )
@@ -245,11 +256,13 @@ subroutine iniTimeConst
      write (6,*) 'Successfully read soil color, sand and clay boundary data .....'
      write (6,*)
   end if
+
 #if (defined SPMD)
   call mpi_bcast( soic2d  , size(soic2d)  , MPI_INTEGER, 0, mpicom, ier )
   call mpi_bcast( sand3d  , size(sand3d)  , MPI_REAL8  , 0, mpicom, ier )
   call mpi_bcast( clay3d  , size(clay3d)  , MPI_REAL8  , 0, mpicom, ier )
   call mpi_bcast( mxsoil_color,        1  , MPI_INTEGER, 0, mpicom, ier )
+  call mpi_bcast( gti     , size(gti)     , MPI_REAL8  , 0, mpicom, ier )
 #endif
 
   ! Determine saturated and dry soil albedos for n color classes and 
@@ -335,6 +348,8 @@ subroutine iniTimeConst
       pftcon%dsladlai(m) = dsladlai(m)
       pftcon%leafcn(m) = leafcn(m)
       pftcon%flnr(m) = flnr(m)
+      pftcon%smpso(m) = smpso(m)
+      pftcon%smpsc(m) = smpsc(m)
       pftcon%woody(m) = woody(m)
       pftcon%lflitcn(m) = lflitcn(m)
       pftcon%frootcn(m) = frootcn(m)
@@ -478,14 +493,6 @@ subroutine iniTimeConst
    ! Initialize soil color, thermal and hydraulic properties
    ! --------------------------------------------------------------------
 
-   ! Grid level initialization
-   do g = begg, endg
-
-      ! Initialize fraction of model area with high water table
-      wtfact(g) = 0.3_r8
-
-   end do
-
    ! Column level initialization
 !dir$ concurrent
 !cdir nodep
@@ -498,6 +505,9 @@ subroutine iniTimeConst
 
       ! Initialize restriction for min of soil potential (mm)
       smpmin(c) = -1.e8_r8
+
+      hkdepth(c) = 1._r8/2.5_r8    ! chen and kumar watertable
+      wtfact(c) = gti(i,j)/100.
 
       ! Soil color
       isoicol(c) = soic2d(i,j)

@@ -46,7 +46,7 @@ contains
     use clmtype
     use clm_atmlnd         , only : clm_a2l
     use clm_varpar         , only : nlevsoi
-    use clm_varcon         , only : cpair, vkc, grav
+    use clm_varcon         , only : cpair, vkc, grav, denice, denh2o
     use shr_const_mod      , only : SHR_CONST_RGAS
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
 !
@@ -98,6 +98,11 @@ contains
     real(r8), pointer :: psnsun(:)         ! sunlit leaf photosynthesis (umol CO2 /m**2/ s)
     real(r8), pointer :: psnsha(:)         ! shaded leaf photosynthesis (umol CO2 /m**2/ s)
     real(r8), pointer :: z0mg_col(:)       ! roughness length, momentum [m]
+    real(r8), pointer :: h2osoi_ice(:,:)   ! ice lens (kg/m2)
+    real(r8), pointer :: h2osoi_liq(:,:)   ! liquid water (kg/m2)
+    real(r8), pointer :: dz(:,:)           ! layer depth (m)
+    real(r8), pointer :: watsat(:,:)       ! volumetric soil water at saturation (porosity)
+    real(r8), pointer :: frac_sno(:)       ! fraction of ground covered by snow (0 to 1)
 !
 ! local pointers to implicit inout arguments
 !
@@ -166,6 +171,8 @@ contains
     real(r8) :: z0mg_pft(lbp:ubp)
     real(r8) :: z0hg_pft(lbp:ubp)
     real(r8) :: z0qg_pft(lbp:ubp)
+    real(r8) :: www                    ! surface soil wetness [-]
+    real(r8) :: rsoil                  ! Sellers (1996) soil evaporation resistance [s/m]
 !------------------------------------------------------------------------------
 
     ! Assign local pointers to derived type members (gridcell-level)
@@ -201,6 +208,11 @@ contains
     cgrnd => clm3%g%l%c%p%pef%cgrnd
     dqgdT => clm3%g%l%c%cws%dqgdT
     htvp => clm3%g%l%c%cps%htvp
+    watsat         => clm3%g%l%c%cps%watsat
+    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
+    dz             => clm3%g%l%c%cps%dz
+    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
+    frac_sno       => clm3%g%l%c%cps%frac_sno
 
     ! Assign local pointers to derived type members (pft-level)
 
@@ -330,7 +342,17 @@ contains
        rah     = 1._r8/(temp1(p)*ustar(p))
        raw     = 1._r8/(temp2(p)*ustar(p))
        raih    = forc_rho(g)*cpair/rah
-       raiw    = forc_rho(g)/raw
+
+       ! Soil evaporation resistance
+       www     = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)/watsat(c,1)
+       www     = min(max(www,0.0_r8),1._r8)
+       if (dqh(p) .gt. 0._r8) then   !dew
+         rsoil = 0._r8
+       else
+         rsoil   = (1._r8 - frac_sno(c)) * exp(8.206 - 4.255*www)
+       end if
+
+       raiw    = forc_rho(g)/(raw+rsoil)
        ram1(p) = ram  !pass value to global variable
 
        ! Output to pft-level data structures

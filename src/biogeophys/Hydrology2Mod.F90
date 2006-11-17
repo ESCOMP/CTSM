@@ -111,6 +111,10 @@ contains
 !
     real(r8), pointer :: dz(:,:)          ! layer thickness depth (m)
     real(r8), pointer :: zi(:,:)          ! interface depth (m)
+    real(r8), pointer :: zwt(:)           ! water table depth
+    real(r8), pointer :: fcov(:)          ! fractional area with water table at surface
+    real(r8), pointer :: wa(:)            ! water in the unconfined aquifer (m)
+    real(r8), pointer :: qcharge(:)       ! aquifer recharge rate (mm/s)
 !
 ! local pointers to implicit out arguments
 !
@@ -142,11 +146,7 @@ contains
     integer  :: filter_nosnowc(ubc-lbc+1)  ! column filter for non-snow points
     integer  :: nstep                      ! time step number
     real(r8) :: dtime                      ! land model time step (sec)
-    real(r8) :: zwice(lbc:ubc)             ! the sum of ice mass of soil (kg/m2)
     real(r8) :: vol_liq(lbc:ubc,1:nlevsoi) ! partial volume of liquid water in layer
-    real(r8) :: s(lbc:ubc,1:nlevsoi)       ! wetness of soil (including ice)
-    real(r8) :: zwt(lbc:ubc)               ! water table depth
-    real(r8) :: fcov(lbc:ubc)              ! fractional area with water table at surface
     real(r8) :: dwat(lbc:ubc,1:nlevsoi)    ! change in soil water
     real(r8) :: hk(lbc:ubc,1:nlevsoi)      ! hydraulic conductivity (mm h2o/s)
     real(r8) :: dhkdw(lbc:ubc,1:nlevsoi)   ! d(hk)/d(vol_liq)
@@ -184,6 +184,10 @@ contains
     wf            => clm3%g%l%c%cps%wf
     snowice       => clm3%g%l%c%cws%snowice
     snowliq       => clm3%g%l%c%cws%snowliq
+    zwt           => clm3%g%l%c%cws%zwt
+    fcov          => clm3%g%l%c%cws%fcov
+    wa            => clm3%g%l%c%cws%wa
+    qcharge       => clm3%g%l%c%cws%qcharge
     watsat        => clm3%g%l%c%cps%watsat
     sucsat        => clm3%g%l%c%cps%sucsat
     bsw           => clm3%g%l%c%cps%bsw
@@ -224,7 +228,7 @@ contains
     ! Determine soil hydrology
 
     call SurfaceRunoff(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
-         zwice, vol_liq, s, zwt, fcov)
+         vol_liq)
 
     call Infiltration(lbc, ubc,  num_soilc, filter_soilc)
 
@@ -232,7 +236,7 @@ contains
          vol_liq, dwat, hk, dhkdw)
 
     call Drainage(lbc, ubc, num_soilc, filter_soilc, &
-         zwice, vol_liq, s, zwt, fcov, hk, dhkdw, dwat)
+         vol_liq, hk)
 
 #if (!defined COUP_CAM)
 
@@ -356,7 +360,7 @@ contains
        c = filter_nolakec(fc)
        if (snl(c) < 0) t_snow(c) = t_snow(c)/abs(snl(c))
        t_grnd(c) = t_soisno(c,snl(c)+1)
-       endwb(c) = h2ocan(c) + h2osno(c)
+       endwb(c) = h2ocan(c) + h2osno(c) + wa(c)
     end do
 
     do j = 1, nlevsoi
@@ -383,6 +387,8 @@ contains
           qflx_surf(c) = 0._r8
           qflx_infl(c) = 0._r8
           qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) - qflx_evap_tot(c) - (endwb(c)-begwb(c))/dtime
+          fcov(c) = spval
+          qcharge(c) = spval
        end if
     end do
 

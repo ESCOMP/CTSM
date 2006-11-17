@@ -548,10 +548,10 @@ contains
 ! (3) Re-adjust the ice and liquid mass, and the layer temperature
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
+    use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use clm_time_manager, only : get_step_size
-    use clm_varcon  , only : tfrz, hfus
+    use clm_varcon  , only : tfrz, hfus, grav
     use clm_varpar  , only : nlevsno, nlevsoi
 !
 ! !ARGUMENTS:
@@ -595,6 +595,10 @@ contains
     real(r8), pointer :: h2osoi_liq(:,:)  !liquid water (kg/m2) (new)
     real(r8), pointer :: h2osoi_ice(:,:)  !ice lens (kg/m2) (new)
     real(r8), pointer :: tssbef(:,:)      !temperature at previous time step [K]
+    real(r8), pointer :: sucsat(:,:)      !minimum soil suction (mm)
+    real(r8), pointer :: watsat(:,:)      !volumetric soil water at saturation (porosity)
+    real(r8), pointer :: bsw(:,:)         !Clapp and Hornberger "b"
+    real(r8), pointer :: dz(:,:)          !layer thickness (m)
 !
 ! local pointers to original implicit inout arrays
 !
@@ -608,17 +612,19 @@ contains
 !
 ! !OTHER LOCAL VARIABLES:
 !
-    integer  :: j,c                      !do loop index
+    integer  :: j,c,g                    !do loop index
     integer  :: fc                       !lake filtered column indices
     real(r8) :: dtime                    !land model time step (sec)
     real(r8) :: heatr                    !energy residual or loss after melting or freezing
     real(r8) :: temp1                    !temporary variables [kg/m2]
-    real(r8) :: hm                       !energy residual [W/m2]
-    real(r8) :: xm                       !melting or freezing within a time step [kg/m2]
+    real(r8) :: hm(lbc:ubc,-nlevsno+1:nlevsoi) !energy residual [W/m2]
+    real(r8) :: xm(lbc:ubc,-nlevsno+1:nlevsoi) !melting or freezing within a time step [kg/m2]
     real(r8) :: wmass0(lbc:ubc,-nlevsno+1:nlevsoi)
     real(r8) :: wice0 (lbc:ubc,-nlevsno+1:nlevsoi)
     real(r8) :: wliq0 (lbc:ubc,-nlevsno+1:nlevsoi)
+    real(r8) :: supercool(lbc:ubc,nlevsoi) !supercooled water in soil (kg/m2) 
     real(r8) :: propor,tinc
+    real(r8) :: smp                      !frozen water potential (mm)
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (column-level)
@@ -633,6 +639,10 @@ contains
     imelt        => clm3%g%l%c%cps%imelt
     t_soisno     => clm3%g%l%c%ces%t_soisno
     tssbef       => clm3%g%l%c%ces%tssbef
+    bsw          => clm3%g%l%c%cps%bsw
+    sucsat       => clm3%g%l%c%cps%sucsat
+    watsat       => clm3%g%l%c%cps%watsat
+    dz           => clm3%g%l%c%cps%dz
 
     ! Get step size
 
@@ -648,7 +658,7 @@ contains
        xmf(c) = 0._r8
     end do
 
-    do j = -nlevsno+1,nlevsoi
+    do j = -nlevsno+1,nlevsoi       ! all layers
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec
@@ -657,15 +667,24 @@ contains
 
              ! Initialization
              imelt(c,j) = 0
-             hm = 0._r8
-             xm = 0._r8
+             hm(c,j) = 0._r8
+             xm(c,j) = 0._r8
              wice0(c,j) = h2osoi_ice(c,j)
              wliq0(c,j) = h2osoi_liq(c,j)
              wmass0(c,j) = h2osoi_ice(c,j) + h2osoi_liq(c,j)
+          endif   ! end of snow layer if-block
+       end do   ! end of column-loop
+    enddo   ! end of level-loop
+
+    do j = -nlevsno+1,0             ! snow layers 
+!dir$ concurrent
+!cdir nodep
+       do fc = 1,num_nolakec
+          c = filter_nolakec(fc)
+          if (j >= snl(c)+1) then
 
              ! Melting identification
              ! If ice exists above melt point, melt some to liquid.
-
              if (h2osoi_ice(c,j) > 0._r8 .AND. t_soisno(c,j) > tfrz) then
                 imelt(c,j) = 1
                 t_soisno(c,j) = tfrz
@@ -677,57 +696,95 @@ contains
                 imelt(c,j) = 2
                 t_soisno(c,j) = tfrz
              endif
+          endif   ! end of snow layer if-block
+       end do   ! end of column-loop
+    enddo   ! end of level-loop
 
-             ! If snow exists, but its thickness is less than the critical value (0.01 m)
-             if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8 .AND. j == 1) then
-                if (t_soisno(c,j) > tfrz) then
-                   imelt(c,j) = 1
-                   t_soisno(c,j) = tfrz
-                endif
+    do j = 1,nlevsoi             ! soil layers 
+!dir$ concurrent
+!cdir nodep
+       do fc = 1,num_nolakec
+          c = filter_nolakec(fc)
+          if (h2osoi_ice(c,j) > 0. .AND. t_soisno(c,j) > tfrz) then
+             imelt(c,j) = 1
+             t_soisno(c,j) = tfrz
+          endif
+
+          ![from Zhao (1997) and Koren (1999)]
+          !Increasing ice content decreases the water potential. But the decreasing of water
+          !potential is limited by the water potential calculated from soil temperature: smp
+          supercool(c,j) = 0.0_r8
+          if(t_soisno(c,j) < tfrz) then
+             smp = hfus*(tfrz-t_soisno(c,j))/(grav*t_soisno(c,j)) * 1000._r8  !(mm)
+             supercool(c,j) = watsat(c,j)*(smp/sucsat(c,j))**(-1._r8/bsw(c,j))
+             supercool(c,j) = supercool(c,j)*dz(c,j)*1000._r8       ! (mm)
+          endif
+
+          if (h2osoi_liq(c,j) > supercool(c,j) .AND. t_soisno(c,j) < tfrz) then
+             imelt(c,j) = 2
+             t_soisno(c,j) = tfrz
+          endif
+
+          ! If snow exists, but its thickness is less than the critical value (0.01 m)
+          if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8 .AND. j == 1) then
+             if (t_soisno(c,j) > tfrz) then
+                imelt(c,j) = 1
+                t_soisno(c,j) = tfrz
              endif
+          endif
+       end do
+    enddo
+
+    do j = -nlevsno+1,nlevsoi       ! all layers
+!dir$ concurrent
+!cdir nodep
+       do fc = 1,num_nolakec
+          c = filter_nolakec(fc)
+
+          if (j >= snl(c)+1) then
 
              ! Calculate the energy surplus and loss for melting and freezing
              if (imelt(c,j) > 0) then
                 tinc = t_soisno(c,j)-tssbef(c,j)
                 if (j > snl(c)+1) then
-                   hm = brr(c,j) - tinc/fact(c,j)
+                   hm(c,j) = brr(c,j) - tinc/fact(c,j)
                 else
-                   hm = hs(c) + dhsdT(c)*tinc + brr(c,j) - tinc/fact(c,j)
+                   hm(c,j) = hs(c) + dhsdT(c)*tinc + brr(c,j) - tinc/fact(c,j)
                 endif
              endif
 
-             ! These two errors were checked carefully.  They result from the
+             ! These two errors were checked carefully (Y. Dai).  They result from the
              ! computed error of "Tridiagonal-Matrix" in subroutine "thermal".
-             if (imelt(c,j) == 1 .AND. hm < 0._r8) then
-                hm = 0._r8
+             if (imelt(c,j) == 1 .AND. hm(c,j) < 0._r8) then
+                hm(c,j) = 0._r8
                 imelt(c,j) = 0
              endif
-             if (imelt(c,j) == 2 .AND. hm > 0._r8) then
-                hm = 0._r8
+             if (imelt(c,j) == 2 .AND. hm(c,j) > 0._r8) then
+                hm(c,j) = 0._r8
                 imelt(c,j) = 0
              endif
 
              ! The rate of melting and freezing
 
-             if (imelt(c,j) > 0 .and. abs(hm) > .0_r8) then
-                xm = hm*dtime/hfus                           ! kg/m2
+             if (imelt(c,j) > 0 .and. abs(hm(c,j)) > 0._r8) then
+                xm(c,j) = hm(c,j)*dtime/hfus                           ! kg/m2
 
                 ! If snow exists, but its thickness is less than the critical value
                 ! (1 cm). Note: more work is needed to determine how to tune the
                 ! snow depth for this case
                 if (j == 1) then
-                   if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8 .AND. xm > 0._r8) then
+                   if (snl(c)+1 == 1 .AND. h2osno(c) > 0._r8 .AND. xm(c,j) > 0._r8) then
                       temp1 = h2osno(c)                           ! kg/m2
-                      h2osno(c) = max(0._r8,temp1-xm)
+                      h2osno(c) = max(0._r8,temp1-xm(c,j))
                       propor = h2osno(c)/temp1
                       snowdp(c) = propor * snowdp(c)
-                      heatr = hm - hfus*(temp1-h2osno(c))/dtime   ! W/m2
+                      heatr = hm(c,j) - hfus*(temp1-h2osno(c))/dtime   ! W/m2
                       if (heatr > 0._r8) then
-                         xm = heatr*dtime/hfus                    ! kg/m2
-                         hm = heatr                               ! W/m2
+                         xm(c,j) = heatr*dtime/hfus                    ! kg/m2
+                         hm(c,j) = heatr                               ! W/m2
                       else
-                         xm = 0._r8
-                         hm = 0._r8
+                         xm(c,j) = 0._r8
+                         hm(c,j) = 0._r8
                       endif
                       qflx_snomelt(c) = max(0._r8,(temp1-h2osno(c)))/dtime   ! kg/(m2 s)
                       xmf(c) = hfus*qflx_snomelt(c)
@@ -735,12 +792,20 @@ contains
                 endif
 
                 heatr = 0._r8
-                if (xm > 0._r8) then
-                   h2osoi_ice(c,j) = max(0._r8, wice0(c,j)-xm)
-                   heatr = hm - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
-                else if (xm < 0._r8) then
-                   h2osoi_ice(c,j) = min(wmass0(c,j), wice0(c,j)-xm)
-                   heatr = hm - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
+                if (xm(c,j) > 0._r8) then
+                   h2osoi_ice(c,j) = max(0._r8, wice0(c,j)-xm(c,j))
+                   heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
+                else if (xm(c,j) < 0._r8) then
+                   if (j <= 0) then
+                      h2osoi_ice(c,j) = min(wmass0(c,j), wice0(c,j)-xm(c,j))  ! snow
+                   else
+                      if (wmass0(c,j) < supercool(c,j)) then
+                         h2osoi_ice(c,j) = 0._r8
+                      else
+                         h2osoi_ice(c,j) = min(wmass0(c,j) - supercool(c,j),wice0(c,j)-xm(c,j))
+                      endif
+                   endif
+                   heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                 endif
 
                 h2osoi_liq(c,j) = max(0._r8,wmass0(c,j)-h2osoi_ice(c,j))
@@ -751,7 +816,9 @@ contains
                    else
                       t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr/(1._r8-fact(c,j)*dhsdT(c))
                    endif
-                   if (h2osoi_liq(c,j)*h2osoi_ice(c,j)>0._r8) t_soisno(c,j) = tfrz
+                   if (j <= 0) then    ! snow
+                      if (h2osoi_liq(c,j)*h2osoi_ice(c,j)>0._r8) t_soisno(c,j) = tfrz
+                   end if
                 endif
 
                 xmf(c) = xmf(c) + hfus * (wice0(c,j)-h2osoi_ice(c,j))/dtime

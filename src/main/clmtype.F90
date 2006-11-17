@@ -221,7 +221,8 @@ type pft_epc_type
    integer , pointer :: nwheat(:) 		!value for wheat
    integer , pointer :: noveg(:) 	        !value for not vegetated
    integer , pointer :: ntree(:) 		!value for last type of tree
-   real(r8), pointer :: smpmax(:)               !Wilting point potential in mm
+   real(r8), pointer :: smpso(:)                !soil water potential at full stomatal opening (mm)
+   real(r8), pointer :: smpsc(:)                !soil water potential at full stomatal closure (mm)
    real(r8), pointer :: foln(:) 	        !foliage nitrogen (%)
    real(r8), pointer :: dleaf(:) 		!characteristic leaf dimension (m)
    real(r8), pointer :: c3psn(:) 		!photosynthetic pathway: 0. = c4, 1. = c3
@@ -871,6 +872,9 @@ type column_pstate_type
    real(r8), pointer :: watopt(:,:)           !btran parameter for btran = 1
    real(r8), pointer :: hksat(:,:)            !hydraulic conductivity at saturation (mm H2O /s) (nlevsoi) 
    real(r8), pointer :: sucsat(:,:)           !minimum soil suction (mm) (nlevsoi) 
+   real(r8), pointer :: hkdepth(:)            !Length scale for Ksat decrease (m)
+   real(r8), pointer :: wtfact(:)             !maximum saturated fraction for a gridcell
+   real(r8), pointer :: fracice(:,:)          !fractional impermeability (-)
    real(r8), pointer :: csol(:,:)             !heat capacity, soil solids (J/m**3/Kelvin) (nlevsoi) 
    real(r8), pointer :: tkmg(:,:)             !thermal conductivity, soil minerals  [W/m-K] (new) (nlevsoi) 
    real(r8), pointer :: tkdry(:,:)            !thermal conductivity, dry soil (W/m/Kelvin) (nlevsoi) 
@@ -949,6 +953,12 @@ type column_wstate_type
    real(r8), pointer :: dqgdT(:)              !d(qg)/dT
    real(r8), pointer :: snowice(:)            !average snow ice lens
    real(r8), pointer :: snowliq(:)            !average snow liquid water
+   real(r8) ,pointer :: soilalpha(:)          !factor that reduces ground saturated specific humidity (-)
+   real(r8), pointer :: zwt(:)                !water table depth
+   real(r8), pointer :: fcov(:)               !fractional area with water table at surface
+   real(r8), pointer :: wa(:)                 !water in the unconfined aquifer (m)
+   real(r8), pointer :: wt(:)                 !total water storage (unsaturated soil water + groundwater) (mm)
+   real(r8), pointer :: qcharge(:)            !aquifer recharge rate (mm/s)
 end type column_wstate_type
 
 !----------------------------------------------------
@@ -1360,7 +1370,6 @@ end type landunit_dflux_type
 !----------------------------------------------------
 type gridcell_pstate_type
    type(column_pstate_type):: cps_a   !column-level physical state variables averaged to gridcell
-   real(r8), pointer :: wtfact(:)      !Fraction of model area with high water table
 end type gridcell_pstate_type
 
 !----------------------------------------------------

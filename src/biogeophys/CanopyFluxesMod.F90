@@ -163,8 +163,10 @@ contains
    real(r8), pointer :: sucsat(:,:)    ! minimum soil suction (mm)
    real(r8), pointer :: bsw(:,:)       ! Clapp and Hornberger "b"
    real(r8), pointer :: rootfr(:,:)    ! fraction of roots in each soil layer
-   real(r8), pointer :: smpmax(:)      ! wilting point potential in mm
    real(r8), pointer :: dleaf(:)       ! characteristic leaf dimension (m)
+   real(r8), pointer :: smpso(:)       ! soil water potential at full stomatal opening (mm)
+   real(r8), pointer :: smpsc(:)       ! soil water potential at full stomatal closure (mm)
+   real(r8), pointer :: frac_sno(:)    ! fraction of ground covered by snow (0 to 1)
 !
 ! local pointers to implicit inout arguments
 !
@@ -274,7 +276,7 @@ contains
    real(r8) :: air(lbp:ubp),bir(lbp:ubp),cir(lbp:ubp)  ! atmos. radiation temporay set
    real(r8) :: dc1,dc2               ! derivative of energy flux [W/m2/K]
    real(r8) :: delt                  ! temporary
-   real(r8) :: delq                  ! temporary
+   real(r8) :: delq(lbp:ubp)         ! temporary
    real(r8) :: del(lbp:ubp)          ! absolute change in leaf temp in current iteration [K]
    real(r8) :: del2(lbp:ubp)         ! change in leaf temperature in previous iteration [K]
    real(r8) :: dele(lbp:ubp)         ! change in latent heat flux from leaf [K]
@@ -328,6 +330,8 @@ contains
    real(r8) :: z0qv_loc(lbp:ubp)     ! temporary copy
    logical  :: found                 ! error flag for canopy above forcing hgt
    integer  :: index                 ! pft index for error
+   real(r8) :: www                   ! surface soil wetness [-]
+   real(r8) :: rsoil                 ! Sellers (1996) soil evaporation resistance [s/m]
 !------------------------------------------------------------------------------
 
    ! Assign local pointers to derived type members (gridcell-level)
@@ -363,6 +367,7 @@ contains
    dqgdT          => clm3%g%l%c%cws%dqgdT
    htvp           => clm3%g%l%c%cps%htvp
    z0mg           => clm3%g%l%c%cps%z0mg
+   frac_sno       => clm3%g%l%c%cps%frac_sno
 
    ! Assign local pointers to derived type members (pft-level)
 
@@ -427,8 +432,9 @@ contains
       
    ! Assign local pointers to derived type members (ecophysiological)
 
-   smpmax         => pftcon%smpmax
    dleaf          => pftcon%dleaf
+   smpso          => pftcon%smpso
+   smpsc          => pftcon%smpsc
 
    ! Determine step size
 
@@ -477,20 +483,12 @@ contains
             eff_porosity = watsat(c,j)-vol_ice
             vol_liq = min(eff_porosity, h2osoi_liq(c,j)/(dz(c,j)*denh2o))
             s_node = max(vol_liq/eff_porosity,0.01_r8)
-            smp_node = max(smpmax(ivt(p)), -sucsat(c,j)*s_node**(-bsw(c,j)))
-            ! the following code block preserves the CLM treatment of BTRAN 
-            ! calculation for use with the CN code.
-#if (defined CN)
-            rresis(p,j) = (1._r8-smp_node/smpmax(ivt(p)))/(1._r8+sucsat(c,j)/smpmax(ivt(p)))
-#else
-            rresis(p,j) = min( max(vol_liq-watdry(c,j),0._r8) / (watopt(c,j)-watdry(c,j)), 1._r8 )
-#endif
+            smp_node = max(smpsc(ivt(p)), -sucsat(c,j)*s_node**(-bsw(c,j)))
+            rresis(p,j) = min( (smp_node - smpsc(ivt(p))) / (smpso(ivt(p)) - smpsc(ivt(p))), 1._r8)
             rootr(p,j) = rootfr(p,j)*rresis(p,j)
             btran(p) = btran(p) + rootr(p,j)
          else
-            rresis(p,j) = 0.01_r8 
-            rootr(p,j) = rootfr(p,j)*rresis(p,j)
-            btran(p) = btran(p) + rootr(p,j)
+            rootr(p,j) = 0._r8
          end if
       end do
    end do
@@ -545,6 +543,7 @@ contains
       ur(p) = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
       dth(p) = thm(c)-taf(p)
       dqh(p) = forc_q(g)-qaf(p)
+      delq(p) = qg(c) - qaf(p)
       dthv(p) = dth(p)*(1._r8+0.61_r8*forc_q(g))+0.61_r8*forc_th(g)*dqh(p)
       zldis(p) = forc_hgt_u(g) - displa(p)
 
@@ -628,11 +627,7 @@ contains
          ! Parameterization for variation of csoilc with canopy density from
          ! X. Zeng, University of Arizona
 
-#if (defined CN)
          w = exp(-(elai(p)+esai(p)))
-#else
-         w = exp(-(elai(p)+esai(p)))
-#endif
          csoilcn = (vkc/(0.13_r8*(z0mg(c)*uaf/1.5e-5_r8)**0.45_r8))*w + csoilc*(1._r8-w)
          rah(p,2) = 1._r8/(csoilcn*uaf)
          raw(p,2) = rah(p,2)
@@ -704,7 +699,17 @@ contains
 
          wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
          wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
-         wtgq(p) = frac_veg_nosno(p)/raw(p,2)                        ! ground
+
+         ! Soil evaporation resistance
+         www     = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)/watsat(c,1)
+         www     = min(max(www,0.0_r8),1._r8)
+         if (delq(p) .lt. 0._r8) then  !dew
+           rsoil = 0._r8
+         else
+           rsoil   = (1._r8 - frac_sno(c)) * exp(8.206_r8 - 4.255_r8*www)
+         end if
+
+         wtgq(p) = frac_veg_nosno(p)/(raw(p,2)+rsoil)
          wtsqi   = 1._r8/(wtaq+wtlq+wtgq(p))
 
          wtgq0    = wtgq(p)*wtsqi      ! ground
@@ -790,6 +795,7 @@ contains
 
          dth(p) = thm(c)-taf(p)
          dqh(p) = forc_q(g)-qaf(p)
+         delq(p) = wtalq(p)*qg(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(g)
 
          tstar = temp1(p)*dth(p)
          qstar = temp2(p)*dqh(p)
@@ -856,11 +862,10 @@ contains
       ! Fluxes from ground to canopy space
 
       delt    = wtal(p)*t_grnd(c)-wtl0(p)*t_veg(p)-wta0(p)*thm(c)
-      delq    = wtalq(p)*qg(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(g)
       taux(p) = -forc_rho(g)*forc_u(g)/ram1(p)
       tauy(p) = -forc_rho(g)*forc_v(g)/ram1(p)
       eflx_sh_grnd(p) = cpair*forc_rho(g)*wtg(p)*delt
-      qflx_evap_soi(p) = forc_rho(g)*wtgq(p)*delq
+      qflx_evap_soi(p) = forc_rho(g)*wtgq(p)*delq(p)
 
       ! 2 m height air temperature
 

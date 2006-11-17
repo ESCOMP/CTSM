@@ -349,6 +349,25 @@ contains
 
     ! Hydrology
 
+    call add_fld1d (fname='SoilAlpha',  units='unitless',  &
+         avgflag='A', long_name='factor limiting ground evap', &
+         ptr_col=clm3%g%l%c%cws%soilalpha)
+    call add_fld1d (fname='FCOV',  units='unitless',  &
+         avgflag='A', long_name='fractional area with water table at surface', &
+         ptr_col=clm3%g%l%c%cws%fcov)
+    call add_fld1d (fname='ZWT',  units='m',  &
+         avgflag='A', long_name='water table depth', &
+         ptr_col=clm3%g%l%c%cws%zwt)
+    call add_fld1d (fname='WA',  units='mm',  &
+         avgflag='A', long_name='water in the unconfined aquifer', &
+         ptr_col=clm3%g%l%c%cws%wa)
+    call add_fld1d (fname='WT',  units='mm',  &
+         avgflag='A', long_name='total water storage (unsaturated soil water + groundwater)', &
+         ptr_col=clm3%g%l%c%cws%wt)
+    call add_fld1d (fname='QCHARGE',  units='mm/s',  &
+         avgflag='A', long_name='aquifer recharge rate', &
+         ptr_col=clm3%g%l%c%cws%qcharge)
+
     call add_fld1d (fname='H2OSNO',  units='mm',  &
          avgflag='A', long_name='snow depth (liquid water)', &
          ptr_col=clm3%g%l%c%cws%h2osno)

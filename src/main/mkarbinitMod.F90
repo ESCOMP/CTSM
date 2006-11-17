@@ -52,6 +52,10 @@ contains
     real(r8), pointer :: bsw2(:,:)         ! Clapp and Hornberger "b" for CN code
     real(r8), pointer :: psisat(:,:)       ! soil water potential at saturation for CN code (MPa)
     real(r8), pointer :: vwcsat(:,:)       ! volumetric water content at saturation for CN code (m3/m3)
+    real(r8), pointer :: zi(:,:)           ! interface level below a "z" level (m)
+    real(r8), pointer :: wa(:)             ! water in the unconfined aquifer (m)
+    real(r8), pointer :: wt(:)             ! total water storage (unsaturated soil water + groundwater) (mm)
+    real(r8), pointer :: zwt(:)            ! water table depth (m)
 !
 ! local pointers to implicit out arguments
 !
@@ -108,6 +112,10 @@ contains
     t_soisno   => clm3%g%l%c%ces%t_soisno
     t_lake     => clm3%g%l%c%ces%t_lake
     t_grnd     => clm3%g%l%c%ces%t_grnd
+    zi         => clm3%g%l%c%cps%zi
+    wa         => clm3%g%l%c%cws%wa
+    wt         => clm3%g%l%c%cws%wt
+    zwt        => clm3%g%l%c%cws%zwt
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
@@ -228,6 +236,21 @@ contains
     h2osoi_liq(begc:endc,-nlevsno+1:nlevsoi) = spval
     h2osoi_ice(begc:endc,-nlevsno+1:nlevsoi) = spval
 
+    wa(begc:endc)  = 5000._r8
+    wt(begc:endc)  = 5000._r8
+    zwt(begc:endc) = 0._r8
+
+!dir$ concurrent
+!cdir nodep
+    do c = begc,endc
+       l = clandunit(c)
+       if (.not. lakpoi(l)) then  !not lake
+          wa(c)  = 4800._r8   ! water in aquifer
+          wt(c)  = wa(c)
+          zwt(c) = (25._r8 + zi(c,nlevsoi)) - wa(c)/0.2_r8 /1000._r8
+       end if
+    end do
+
     do j = 1,nlevsoi
 !dir$ concurrent
 !cdir nodep
@@ -237,7 +260,7 @@ contains
 
              ! volumetric water
              if (ltype(l) == istsoil) then
-                h2osoi_vol(c,j) = 0.3_r8
+                h2osoi_vol(c,j) = 0.4_r8
              else
                 h2osoi_vol(c,j) = 1.0_r8
              endif

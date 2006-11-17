@@ -67,7 +67,7 @@ contains
     use clmtype
     use clm_atmlnd         , only : clm_a2l
     use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, &
-                                    istice, istwet, zlnd, zsno
+                                    istice, istwet, zlnd, zsno, spval
     use clm_varpar         , only : nlevsoi, nlevsno
     use QSatMod            , only : QSat
 !
@@ -152,6 +152,7 @@ contains
     real(r8), pointer :: cgrnds(:)        !deriv. of soil sensible heat flux wrt soil temp [w/m2/k]
     real(r8), pointer :: cgrndl(:)        !deriv. of soil latent heat flux wrt soil temp [w/m**2/k]
     real(r8) ,pointer :: tssbef(:,:)      !soil/snow temperature before update
+    real(r8) ,pointer :: soilalpha(:)     !factor that reduces ground saturated specific humidity (-)
 !
 !EOP
 !
@@ -211,6 +212,7 @@ contains
     dz            => clm3%g%l%c%cps%dz
     h2osoi_ice    => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq    => clm3%g%l%c%cws%h2osoi_liq
+    soilalpha     => clm3%g%l%c%cws%soilalpha
     sucsat        => clm3%g%l%c%cps%sucsat
     t_soisno      => clm3%g%l%c%ces%t_soisno
     tssbef        => clm3%g%l%c%ces%tssbef
@@ -276,6 +278,9 @@ contains
           psit = max(smpmin(c), psit)
           hr   = exp(psit/roverg/t_grnd(c))
           qred = (1._r8-frac_sno(c))*hr + frac_sno(c)
+          soilalpha(c) = qred
+       else
+          soilalpha(c) = spval
        end if
 
        call QSat(t_grnd(c), forc_pbot(g), eg, degdT, qsatg, qsatgdT)

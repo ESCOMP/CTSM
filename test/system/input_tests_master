@@ -57,24 +57,24 @@ sm214 TSM.sh 17p_cnn_h t31_cnall 48
 sm215 TSM.sh 17p_cnn_m t31_cnall 48
 sm216 TSM.sh 17p_cnn_o t31_cnall 48
 
-sm311 TSM.sh 4p_casa_dh t31_dgvm 48
-er311 TER.sh 4p_casa_dh t31_dgvm 10+38
-br311 TBR.sh 4p_casa_dh t31_dgvm 24+24
-bl311 TBL.sh 4p_casa_dh t31_dgvm 48
+sm311 TSM.sh 4p_casa_dh t31_casa 48
+er311 TER.sh 4p_casa_dh t31_casa 10+38
+br311 TBR.sh 4p_casa_dh t31_casa 24+24
+bl311 TBL.sh 4p_casa_dh t31_casa 48
 
-sm312 TSM.sh 4p_casa_dm t31_dgvm 48
-er312 TER.sh 4p_casa_dm t31_dgvm 10+38
-br312 TBR.sh 4p_casa_dm t31_dgvm 24+24
-bl312 TBL.sh 4p_casa_dm t31_dgvm 48
+sm312 TSM.sh 4p_casa_dm t31_casa 48
+er312 TER.sh 4p_casa_dm t31_casa 10+38
+br312 TBR.sh 4p_casa_dm t31_casa 24+24
+bl312 TBL.sh 4p_casa_dm t31_casa 48
 
-sm313 TSM.sh 4p_casa_do t31_dgvm 48
-er313 TER.sh 4p_casa_do t31_dgvm 10+38
-br313 TBR.sh 4p_casa_do t31_dgvm 24+24
-bl313 TBL.sh 4p_casa_do t31_dgvm 48
+sm313 TSM.sh 4p_casa_do t31_casa 48
+er313 TER.sh 4p_casa_do t31_casa 10+38
+br313 TBR.sh 4p_casa_do t31_casa 24+24
+bl313 TBL.sh 4p_casa_do t31_casa 48
 
-sm314 TSM.sh 4p_casa_h t31_dgvm 48
-sm315 TSM.sh 4p_casa_m t31_dgvm 48
-sm316 TSM.sh 4p_casa_o t31_dgvm 48
+sm314 TSM.sh 4p_casa_h t31_casa 48
+sm315 TSM.sh 4p_casa_m t31_casa 48
+sm316 TSM.sh 4p_casa_o t31_casa 48
 
 sm411 TSM.sh 10p_dgvm_dh t31_dgvm 48
 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38

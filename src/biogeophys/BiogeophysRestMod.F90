@@ -203,6 +203,51 @@ contains
        end if
     end if
 
+    ! column water state variable - wa
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='WA', xtype=nf_double,  &
+            dim1name='column', &
+            long_name='water in the unconfined aquifer', units='mm')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='WA', data=cptr%cws%wa, &
+            dim1name='column', &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! column water state variable - wt
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='WT', xtype=nf_double,  &
+            dim1name='column', &
+            long_name='total water storage', units='mm')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='WT', data=cptr%cws%wt, &
+            dim1name='column', &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! column water state variable - zwt
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='ZWT', xtype=nf_double,  &
+            dim1name='column', &
+            long_name='water table depth', units='m')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='ZWT', data=cptr%cws%zwt, &
+            dim1name='column', &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
     ! column type physical state variable - frac_sno
 
     if (flag == 'define') then

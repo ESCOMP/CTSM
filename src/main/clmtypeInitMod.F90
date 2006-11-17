@@ -604,7 +604,8 @@ contains
     allocate(pftcon%nwheat(0:numpft))
     allocate(pftcon%noveg(0:numpft))
     allocate(pftcon%ntree(0:numpft))
-    allocate(pftcon%smpmax(0:numpft))
+    allocate(pftcon%smpso(0:numpft)) 
+    allocate(pftcon%smpsc(0:numpft)) 
     allocate(pftcon%foln(0:numpft))
     allocate(pftcon%dleaf(0:numpft))
     allocate(pftcon%c3psn(0:numpft))
@@ -653,10 +654,8 @@ contains
     pftcon%nwheat(:) = bigint
     pftcon%noveg(:) = bigint
     pftcon%ntree(:) = bigint
-    ! 3/4/05 PET: changed smpmax from -1.5e5 (-1.46 MPa) to -2.57e5 (-2.5 MPa)
-    ! based on the literature compilation put together by Mike White for
-    ! his dissertation
-    pftcon%smpmax(:) = -2.57e5_r8
+    pftcon%smpso(:) = nan
+    pftcon%smpsc(:) = nan
     pftcon%foln(:) = nan
     pftcon%dleaf(:) = nan
     pftcon%c3psn(:) = nan
@@ -2258,6 +2257,9 @@ contains
     allocate(cps%tkdry(beg:end,nlevsoi))
     allocate(cps%tksatu(beg:end,nlevsoi))
     allocate(cps%smpmin(beg:end))
+    allocate(cps%hkdepth(beg:end))
+    allocate(cps%wtfact(beg:end))
+    allocate(cps%fracice(beg:end,nlevsoi))
     allocate(cps%gwc_thr(beg:end))
     allocate(cps%mss_frc_cly_vld(beg:end))
     allocate(cps%mbl_bsn_fct(beg:end))
@@ -2311,6 +2313,9 @@ contains
     cps%tkdry(beg:end,1:nlevsoi) = nan
     cps%tksatu(beg:end,1:nlevsoi) = nan
     cps%smpmin(beg:end) = nan
+    cps%hkdepth(beg:end) = nan
+    cps%wtfact(beg:end) = nan
+    cps%fracice(beg:end,1:nlevsoi) = nan
     cps%gwc_thr(beg:end) = nan
     cps%mss_frc_cly_vld(beg:end) = nan
     cps%mbl_bsn_fct(beg:end) = nan
@@ -2426,6 +2431,12 @@ contains
     allocate(cws%dqgdT(beg:end))
     allocate(cws%snowice(beg:end))
     allocate(cws%snowliq(beg:end))
+    allocate(cws%soilalpha(beg:end))
+    allocate(cws%zwt(beg:end))
+    allocate(cws%fcov(beg:end))
+    allocate(cws%wa(beg:end))
+    allocate(cws%wt(beg:end))
+    allocate(cws%qcharge(beg:end))
 
     cws%h2osno(beg:end) = nan
     cws%h2osoi_liq(beg:end,-nlevsno+1:nlevsoi)= nan
@@ -2436,6 +2447,12 @@ contains
     cws%dqgdT(beg:end) = nan
     cws%snowice(beg:end) = nan
     cws%snowliq(beg:end) = nan
+    cws%soilalpha(beg:end) = nan
+    cws%zwt(beg:end) = nan
+    cws%fcov(beg:end) = nan
+    cws%wa(beg:end) = nan
+    cws%wt(beg:end) = nan
+    cws%qcharge(beg:end) = nan
 
   end subroutine init_column_wstate_type
 
@@ -3029,9 +3046,6 @@ contains
 !
 !EOP
 !------------------------------------------------------------------------
-
-    allocate(gps%wtfact(beg:end))
-    gps%wtfact(beg:end) = nan
 
   end subroutine init_gridcell_pstate_type
 

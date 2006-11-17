@@ -1,20 +1,316 @@
 ===============================================================
+Tag name: clm3_expa_80
+Originator(s): nanr
+Date:  Thu Nov 16 13:38:09 MST 2006
+One-line Summary:  Merge Keith Oleson's Hydrology changes to the clm trunk.
+
+Purpose of changes:  New hydrology for CLM
+
+Bugs fixed (include bugzilla ID): Bug #249
+
+Describe any changes made to build system:  None
+
+Describe any changes made to the namelist:
+
+  This tag requires a new variable 'fmax' found in new surface datasets.  
+  Code is not backward compatible.
+
+  fsurdat, fatmgrid, and fatmlndfrc are t31 only.  We need to produce
+  new datasets at other resolutions.
+
+  OLD Namelist:
+   fsurdat        = '$CSMDATA/surfdata/surfdata_48x96_060404.nc'
+   fatmgrid       = '$CSMDATA/griddata/griddata_48x96_060404.nc'
+   fatmlndfrc     = '$CSMDATA/griddata/fracdata_48x96_gx1v3_060404.nc'
+   fpftcon        = '$CSMDATA/pftdata/pft-physiology-cn16.c040719'
+   frivinp_rtm    = '$CSMDATA/rtmdata/rdirc.05'
+
+  NEW Namelist:
+   fsurdat        = "$CSMDATA/surfdata/surfdata_048x096_061108.nc"
+   fatmgrid       = "$CSMDATA/griddata/griddata_48x96_060829.nc"
+   fatmlndfrc     = "$CSMDATA/griddata/fracdata_48x96_gx3v5_060829.nc"
+   fpftcon        = "$CSMDATA/pftdata/pft-physiology.c060426"
+   frivinp_rtm    = "$CSMDATA/rtmdata/rdirc.05.061026"
+
+List any changes to the defaults for the boundary datasets:
+
+  This tag requires a new variable 'fmax' found in new surface datasets.  
+  Code is not backward compatible.
+
+  OLD:
+     Vegetation_type_raw_data_filename = "mksrf_pft.050425.nc" ;
+     Soil_color_raw_data_file_name = "mksrf_soilcol.050425.nc" ;
+     Inland_water_raw_data_file_name = "mksrf_lanwat.050425.nc" ;
+     Glacier_raw_data_file_name = "mksrf_glacier.050425.nc" ;
+     Urban_raw_data_file_name = "mksrf_urban.050425.nc" ;
+     Lai_raw_data_file_name = "mksrf_lai.050425.nc" ;
+  NEW:
+     Vegetation_type_raw_data_filename = "mksrf_pft.060929.nc" ;
+     Soil_color_raw_data_file_name = "mksrf_soilcol.060929.nc" ;
+     Inland_water_raw_data_file_name = "mksrf_lanwat.060929.nc" ;
+     Glacier_raw_data_file_name = "mksrf_glacier.060929.nc" ;
+     Fmax_raw_data_file_name = "mksrf_fmax.061020.nc" ;
+     Urban_raw_data_file_name = "mksrf_urban.060929.nc" ;
+     Lai_raw_data_file_name = "mksrf_lai.060929.nc" ;
+
+Describe any substantial timing or memory changes: Unknown; Needs to be tested.
+
+Code reviewed by: myself (testing suite), David Lawrence, Keith Oleson
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do:
+
+A      test/system/nl_files/t31_casa	! Addition to testing suite
+
+List all existing files that have been modified, and describe the changes:
+
+test suite mods:
+M      test/system/input_tests_master
+M      test/system/test_driver.sh
+M      bld/run-ibm.csh
+M      test/system/nl_files/t31_cnall
+        1. pointing to new pft file, 
+	2. starting at first day of the year.
+Inputdataset Changes:
+M      tools/mksurfdata/mksrfdat.namelist
+	test suite mods
+Hydrology mods: 
+
+M      src/main/clm_varcon.F90
+
+Removed CN ifdef for csoilc.
+
+M      src/main/clmtypeInitMod.F90
+
+Added allocation and initialization for two new pft-physiology variables and
+several hydrology variables.
+Removed smpmax.
+
+M      src/main/iniTimeConst.F90
+
+Read in new fmax surface dataset.
+Initialize hkdepth (decay factor).
+
+M      src/main/histFileMod.F90
+
+Changed string from CLM2 to CLM3.
+
+M      src/main/surfFileMod.F90
+
+Removed statements contained within CN ifdef (OK'd by P. Thornton) that:
+
+! the following test prevents the assignment of temperate deciduous
+                  ! vegetation types in the tropics
+                  ! 1. broadleaf deciduous temperate tree -> broadleaf deciduous tropical tree
+                  ! 2. broadleaf deciduous temperate shrub -> broadleaf deciduous tropical tree
+                  ! this reassignment from shrub to tree is necessary because there is currently no
+                  ! tropical deciduous broadleaf shrub type defined.
+
+M      src/main/pftvarcon.F90
+
+Added statements to take care of two new pft-physiology variables.
+
+M      src/main/clmtype.F90
+
+Added pointers for new pft-physiology variables and hydrology variables.
+
+M      src/main/histFldsMod.F90
+
+Added the following new hydrology fields:
+
+      call add_fld1d (fname='FCOV',  units='unitless',  &
+           avgflag='A', long_name='fractional area with water table at surface', &
+           ptr_col=clm3%g%l%c%cws%fcov)
+      call add_fld1d (fname='ZWT',  units='m',  &
+           avgflag='A', long_name='water table depth', &
+           ptr_col=clm3%g%l%c%cws%zwt)
+      call add_fld1d (fname='WA',  units='mm',  &
+           avgflag='A', long_name='water in the unconfined aquifer', &
+           ptr_col=clm3%g%l%c%cws%wa)
+      call add_fld1d (fname='WT',  units='mm',  &
+           avgflag='A', long_name='total water storage (unsaturated soil water + groundwater)', &
+           ptr_col=clm3%g%l%c%cws%wt)
+      call add_fld1d (fname='QCHARGE',  units='mm/s',  &
+           avgflag='A', long_name='aquifer recharge rate', &
+           ptr_col=clm3%g%l%c%cws%qcharge)
+
+M      src/main/mkarbinitMod.F90
+
+Added arbitrary initialization for water table variables and changed soil water 
+initialization from 0.3 to 0.4
+
+M      src/biogeophys/BalanceCheckMod.F90
+
+Added aquifer water to water balance check
+
+M      src/biogeophys/SoilTemperatureMod.F90
+
+Subroutine PhaseChange was changed to accomodate the presence of supercooled liquid water
+in the soil at temperatures less than freezing. Also incorporates the concepth of 
+fractional permeable area (Niu and Yang, 2006, J. Hydrometeorol., 7, 937-952).
+
+M      src/biogeophys/Biogeophysics1Mod.F90
+
+Added statements to set soilalpha as an output variable.
+
+M      src/biogeophys/Biogeophysics2Mod.F90
+
+Added index for landunit.
+
+M      src/biogeophys/Hydrology2Mod.F90
+
+Added aquifer water to ending water balance.
+Added pointers to hydrology variables.
+Added arguments to subroutines SurfaceRunoff and Drainage.
+
+M      src/biogeophys/BiogeophysRestMod.F90
+
+Added wa, wt, zwt to restart/initial file
+
+M      src/biogeophys/SoilHydrologyMod.F90
+
+Changes to subroutines SurfaceRunoff, SoilWater, and Drainage.  
+New parameterizations are based on 
+Niu et al., 2006, J. Geophys. Res., in press (Groundwater)
+Niu et al., 2005, J. Geophys. Res., 110, doi:10.1029/2005JD006111 (Runoff)
+Niu and Yang, 2006, J. Hydrometeorol., 7, 937-952 (Frozen soil)
+
+M      src/biogeophys/HydrologyLakeMod.F90
+
+Set hydrology variables to special value for lakes.
+
+M      src/biogeophys/BareGroundFluxesMod.F90
+
+Added soil resistance function for soil evaporation.
+
+M      src/biogeophys/CanopyFluxesMod.F90
+
+New parameterization for soil moisture limitation function (P. Thornton).
+Removed CN ifdef for csoilc.
+
+Summary of testing:
+
+  bluesky:
+
+	001 sm111 TSM.sh 4p_vodsr_dh t31 48 ...............................PASS
+	002 er111 TER.sh 4p_vodsr_dh t31 10+38 ............................PASS
+	003 br111 TBR.sh 4p_vodsr_dh t31 24+24 ............................FAIL! rc= 11
+	004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................SKIPPED*
+	005 sm114 TSM.sh 4p_vodsr_h t31 48 ................................PASS
+	006 sm121 TSM.sh 17p_vodsr_dh t31 48 ..............................PASS
+	007 er121 TER.sh 17p_vodsr_dh t31 10+38 ...........................PASS
+	008 br121 TBR.sh 17p_vodsr_dh t31 24+24 ...........................FAIL! rc= 11
+	009 bl121 TBL.sh 17p_vodsr_dh t31 48 ..............................SKIPPED*
+	010 sm124 TSM.sh 17p_vodsr_h t31 48 ...............................PASS
+	011 sm211 TSM.sh 17p_cnn_dh t31_cnall 48 ..........................PASS
+	012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................PASS
+	013 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24 .......................FAIL! rc= 11
+	014 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................SKIPPED*
+	015 sm311 TSM.sh 4p_casa_dh t31_casa 48 ...........................PASS
+	016 er311 TER.sh 4p_casa_dh t31_casa 10+38 ........................PASS
+	017 br311 TBR.sh 4p_casa_dh t31_casa 24+24 ........................FAIL! rc= 11
+	018 bl311 TBL.sh 4p_casa_dh t31_casa 48 ...........................SKIPPED*
+	019 sm411 TSM.sh 10p_dgvm_dh t31_dgvm 48 ..........................PASS
+	020 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38 .......................PASS
+	021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................FAIL! rc= 11
+	022 bl411 TBL.sh 10p_dgvm_dh t31_dgvm 48 ..........................SKIPPED*
+
+  NOTE:  the branch tests failed only in the differences to the time_bounds variable
+         upon branching - all other variables stayed the same. This has been reported as
+         bug #290.
+  tempest:
+  bangkok/lf95:
+
+CLM tag used for the baseline comparison tests if applicable:  None
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:  all
+    - what platforms/compilers:  all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):  new climate
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+      clm3_expa_60 was the baseline tag
+      the testing source was:
+      /home/bluesky/oleson/hydro01_clm3_expa_60/bld/offline/mods_hydp2_off_communn_hk15
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/main
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/biogeophys
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/biogeochem
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/riverroute
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/csm_share/shr
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/utils/timing
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/utils/esmf_wrf_timemgr
+   - platform/compilers:  bluesky
+   - configuration (CPP ifdefs):
+      #define SPMD
+      #define OFFLINE
+      #define LSMLON       128
+      #define LSMLAT       64
+      #define MAXPATCH_PFT 4
+      #define RTM
+      #undef  DUST
+      #undef  VOC
+      #undef  DGVM
+      #undef  CN
+      #undef  SUPLN
+   - build-namelist command (or complete namelist):
+         &clmexp
+         caseid         = 'hydp2_off_communn_hk16'
+         ctitle         = 'offline run with clm3_expa_60, same as hydp2_off_con but with version 3 of P. Lawrence sfc dataset and new community hydrology with soil ice and recharge fix and hkdepth=2.5 and gridcell fmax and WT fix and ws fix and Sellers rsoil and r
+soil dew fix and starts 1948'
+         finidat        = ' '
+         fsurdat        = '/fis/cgd/tss/oleson/plawren_datasets3/surfdata_064x128_hydro_060426.nc'
+         fatmlndfrc     = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/fracdata_64x128_gx1v3_060401.nc'
+         fpftcon        = '/home/bluesky/oleson/hydro01_clm3_expa_60/bld/offline/mods_hydp2_off_commun/pft-physiology.c060426'
+         frivinp_rtm    = '/fs/cgd/csm/inputdata/lnd/clm2/rtmdata/rdirc.05'
+         offline_atmdir = '/cgd/tss/oleson/ncepdata.tqian'
+         nsrest         =  0
+         nelapse        =  -6570
+         dtime          =  1200
+         start_ymd      =  19480101
+         start_tod      =  0
+         irad           = -1
+         wrtdia         = .true.
+         mss_irt        =  1095
+         hist_dov2xy    = .true.
+         hist_nhtfrq    =  0
+         hist_mfilt     =  1
+         hist_crtinic   = 'YEARLY'
+         /
+
+   - MSS location of output:
+        mss:/OLESON/csm/hydp2_off_communn_hk16
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+http://www.cgd.ucar.edu/tss/clm/diagnostics/lmwg_hydro/hydp2_off_communn_hk16c-obs/setsIndex.html
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_79
 Originator(s): nanr
 Date: Wed Nov 15 14:29:37 MST 2006
 One-line Summary: Add Pat Whorley's timing changes.
 
 Purpose of changes: 
-These changes are improvements to the timing calls from Pat Whorley.  
-They give a better picture of CLM timing.  Pat added comments and 
-a few modifications to the t_startf/t_stopf calls.  
+Pat Whorley's improvements to the timing calls to give a better picture of 
+CLM timing.  Pat added comments and a few modifications to the t_startf/t_stopf calls.  
 
 Bugs fixed (include bugzilla ID):  None
 
 Describe any changes made to build system:  None
 
 Describe any changes made to the namelist:  updated pft namelist to point to new pft-physiology file:
-$CSMDATA/pftdata/pft-physiology.c060426
+$CSMDATA/pftdata/pft-physiology.c060426.   
+
 
 List any changes to the defaults for the boundary datasets:  None
 
@@ -42,29 +338,30 @@ Summary of testing:
    001 sm111 TSM.sh 4p_vodsr_dh t31 48 ...............................PASS
    002 er111 TER.sh 4p_vodsr_dh t31 10+38 ............................PASS
    003 br111 TBR.sh 4p_vodsr_dh t31 24+24 ............................FAIL! rc= 11
-   004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................SKIPPED*
+   004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................PASS
    005 sm114 TSM.sh 4p_vodsr_h t31 48 ................................PASS
    006 sm121 TSM.sh 17p_vodsr_dh t31 48 ..............................PASS
    007 er121 TER.sh 17p_vodsr_dh t31 10+38 ...........................PASS
    008 br121 TBR.sh 17p_vodsr_dh t31 24+24 ...........................FAIL! rc= 11
-   009 bl121 TBL.sh 17p_vodsr_dh t31 48 ..............................SKIPPED*
+   009 bl121 TBL.sh 17p_vodsr_dh t31 48 ..............................PASS
    010 sm124 TSM.sh 17p_vodsr_h t31 48 ...............................PASS
-   011 sm211 TSM.sh 17p_cnn_dh t31_cnall 48 ..........................PASS
-   012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................PASS
+   011 sm211 TSM.sh 17p_cnn_dh t31_cnall 48 ..........................FAIL! rc= 11
+   012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................FAIL! rc= 11
    013 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24 .......................FAIL! rc= 11
-   014 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................SKIPPED*
+   014 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................FAIL! rc= 11
    015 sm311 TSM.sh 4p_casa_dh t31_dgvm 48 ...........................PASS
    016 er311 TER.sh 4p_casa_dh t31_dgvm 10+38 ........................PASS
    017 br311 TBR.sh 4p_casa_dh t31_dgvm 24+24 ........................FAIL! rc= 11
-   018 bl311 TBL.sh 4p_casa_dh t31_dgvm 48 ...........................SKIPPED*
+   018 bl311 TBL.sh 4p_casa_dh t31_dgvm 48 ...........................PASS
    019 sm411 TSM.sh 10p_dgvm_dh t31_dgvm 48 ..........................PASS
    020 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38 .......................PASS
    021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................FAIL! rc= 11
-   022 bl411 TBL.sh 10p_dgvm_dh t31_dgvm 48 ..........................SKIPPED*
+   022 bl411 TBL.sh 10p_dgvm_dh t31_dgvm 48 ..........................PASS
    
-   Note, the branch tests failed only in the differences to the time_bounds variable
-   upon branching - all other variables stayed the same. This has been reported as
-   bug #290.
+   TESTING NOTE 1:  the branch tests failed only in the differences to the time_bounds variable
+   		    upon branching - all other variables stayed the same. This has been reported as
+   		    bug #290.
+   TESTING NOTE 2:  The new pft file (added for hydro changes (clm3_expa_80) caused the t31_cnall tests to fail.
 
   tempest:      (tests must still be done)
   bangkok/lf95: (tests must still be done)

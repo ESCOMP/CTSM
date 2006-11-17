@@ -158,7 +158,7 @@ contains
 !
 ! !OTHER LOCAL VARIABLES:
 !
-    integer  :: p,c,g,j,pi           ! indices
+    integer  :: p,c,g,j,pi,l         ! indices
     integer  :: fc,fp                ! lake filtered column and pft indices
     real(r8) :: dtime                ! land model time step (sec)
     real(r8) :: egsmax(lbc:ubc)      ! max. evaporation which soil can provide at one time step

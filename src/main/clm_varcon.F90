@@ -74,11 +74,7 @@ module clm_varcon
 
   real(r8) :: zlnd = 0.01_r8      !Roughness length for soil [m]
   real(r8) :: zsno = 0.0024_r8    !Roughness length for snow [m]
-#if (defined CN)
   real(r8) :: csoilc = 0.004_r8   !Drag coefficient for soil under canopy [-]
-#else
-  real(r8) :: csoilc = 0.004_r8   !Drag coefficient for soil under canopy [-]
-#endif
   real(r8) :: capr   = 0.34_r8    !Tuning factor to turn first layer T into surface T
   real(r8) :: cnfac  = 0.5_r8     !Crank Nicholson factor between 0 and 1
   real(r8) :: ssi    = 0.033_r8   !Irreducible water saturation of snow

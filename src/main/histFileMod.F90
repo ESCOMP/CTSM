@@ -1814,7 +1814,7 @@ contains
     call check_ret(&
          nf_put_att_text (nfid(t), NF_GLOBAL, 'host', len_trim(str), trim(str)), subname)
 
-    str = 'Community Land Model: CLM2'
+    str = 'Community Land Model: CLM3'
     call check_ret(&
          nf_put_att_text (nfid(t), NF_GLOBAL, 'source', len_trim(str), trim(str)), subname)
 

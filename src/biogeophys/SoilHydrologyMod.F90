@@ -36,32 +36,16 @@ contains
 !
 ! !INTERFACE:
   subroutine SurfaceRunoff (lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
-       zwice, vol_liq, s, zwt, fcov)
+       vol_liq)
 !
 ! !DESCRIPTION:
 ! Calculate surface runoff
-! The original code was provide by Robert E. Dickinson based on
-! following clues:  exponential decrease of Ksat, a water table
-! level determination level including highland and lowland levels
-! and fractional area of wetland (water table above the surface).
-! Runoff is parameterized from the lowlands in terms of precip
-! incident on wet areas and a base flow, where these are estimated
-! using ideas from TOPMODEL.
-! The original scheme was modified by Z.-L. Yang and G.-Y. Niu,
-! o  using a new method to determine water table depth and
-!    the fractional wet area (fcov)
-! o  computing runoff (surface and subsurface) from this
-!    fraction and the remaining fraction (i.e. 1-fcov)
-! o  for the 1-fcov part, using BATS1e method to compute
-!    surface and subsurface runoff.
-! The original code on soil moisture and runoff were provided by
-! R. E. Dickinson in July 1996.
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
     use clm_varcon, only : denice, denh2o, wimp
-    use clm_varpar, only : nlevsoi, maxpatch_pft
+    use clm_varpar, only : nlevsoi
 !
 ! !ARGUMENTS:
     implicit none
@@ -69,11 +53,7 @@ contains
     integer , intent(in)  :: lbp, ubp                   ! pft bounds   
     integer , intent(in)  :: num_soilc                  ! number of column soil points in column filter
     integer , intent(in)  :: filter_soilc(ubc-lbc+1)    ! column filter for soil points
-    real(r8), intent(out) :: zwice(lbc:ubc)             ! the sum of ice mass of soil (kg/m2)
     real(r8), intent(out) :: vol_liq(lbc:ubc,1:nlevsoi) ! partial volume of liquid water in layer
-    real(r8), intent(out) :: s(lbc:ubc,1:nlevsoi)       ! wetness of soil (including ice)
-    real(r8), intent(out) :: zwt(lbc:ubc)               ! water table depth
-    real(r8), intent(out) :: fcov(lbc:ubc)              ! fractional area with water table at surface
 !
 ! !CALLED FROM:
 ! subroutine BiogeophysicsLake in module BiogeophysicsLakeMod
@@ -86,73 +66,65 @@ contains
 ! 2/26/02, Peter Thornton: Migrated to new data structures.
 ! 4/26/05, David Lawrence: Made surface runoff for dry soils a function
 !   of rooting fraction in top three soil layers.
+! 10/2/06  Keith Oleson: Completely new routine for community hydrology
 !
 ! !LOCAL VARIABLES:
 !
 ! local pointers to original implicit in arguments
 !
-    integer , pointer :: cgridcell(:)      !gridcell index for each column
-    real(r8), pointer :: wtfact(:)         !Fraction of model area with high water table
     real(r8), pointer :: qflx_top_soil(:)  !net water input into soil from top (mm/s)
     real(r8), pointer :: watsat(:,:)       !volumetric soil water at saturation (porosity)
+    real(r8), pointer :: hkdepth(:)        !length scale for ksat decrease (m)
+    real(r8), pointer :: zwt(:)            ! water table depth
+    real(r8), pointer :: fcov(:)           ! fractional area with water table at surface
     real(r8), pointer :: dz(:,:)           !layer depth (m)
-    real(r8), pointer :: zi(:,:)           !interface level below a "z" level (m)
     real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
-    integer , pointer :: npfts(:)          !column's number of pfts - ADD   
-    real(r8), pointer :: wtcol(:)          !weight relative to column for each pft 
-    integer , pointer :: pfti(:)           !beginning pft index for each column 
-    real(r8), pointer :: rootfr(:,:)       !fraction of roots in each soil layer 
+    real(r8), pointer :: wtfact(:)         !maximum saturated fraction for a gridcell
+    real(r8), pointer :: hksat(:,:)           ! hydraulic conductivity at saturation (mm H2O /s)
+    real(r8), pointer :: bsw(:,:)             ! Clapp and Hornberger "b"
+    real(r8), pointer :: sucsat(:,:)          ! minimum soil suction (mm)
 !
 ! local pointers to original implicit out arguments
 !
     real(r8), pointer :: qflx_surf(:)      !surface runoff (mm H2O /s)
     real(r8), pointer :: eff_porosity(:,:) !effective porosity = porosity - vol_ice
+    real(r8), pointer :: fracice(:,:)      !fractional impermeability (-)
 !
 !EOP
 !
 ! !OTHER LOCAL VARIABLES:
 !
-    integer :: p,c,g,j,fc                 ! indices
-    integer  :: pi                        ! pft index  
-    real(r8):: vol_ice(lbc:ubc,1:nlevsoi) ! partial volume of ice lens in layer
-    real(r8):: zmean(lbc:ubc)             ! The surface soil layers contributing to runoff
-    real(r8):: wmean(lbc:ubc)             ! The averaged soil wetness in surface soil layers
-    real(r8):: infil_fact_col(lbc:ubc)    ! Infiltration enhancement factor for pft's 
-    real(r8):: infil_fact(lbp:ubp)        ! Infiltration enhancement factor 
-    real(r8), parameter:: fz = 1._r8      ! coefficient for water table depth
+    integer :: c,j,fc,g                    !indices
+    real(r8) :: vol_ice(lbc:ubc,1:nlevsoi) !partial volume of ice lens in layer
+    real(r8) :: fff(lbc:ubc)               !saturated hydraulic conductivity decay factor (m-1)
+    real(r8) :: icefrac(lbc:ubc,1:nlevsoi) !fraction of ice (-)
+    real(r8) :: s1                         !variable to calculate qinmax
+    real(r8) :: su                         !variable to calculate qinmax
+    real(r8) :: v                          !variable to calculate qinmax
+    real(r8) :: qinmax                     !maximum infiltration capability (mm/s)
+
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtype components (gridcell-level)
 
-    wtfact        => clm3%g%gps%wtfact
-
     ! Assign local pointers to derived subtype components (column-level)
 
-    cgridcell     => clm3%g%l%c%gridcell
     qflx_top_soil => clm3%g%l%c%cwf%qflx_top_soil
     qflx_surf     => clm3%g%l%c%cwf%qflx_surf
     watsat        => clm3%g%l%c%cps%watsat
+    hkdepth       => clm3%g%l%c%cps%hkdepth
     dz            => clm3%g%l%c%cps%dz
-    zi            => clm3%g%l%c%cps%zi
     h2osoi_ice    => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq    => clm3%g%l%c%cws%h2osoi_liq
+    fcov          => clm3%g%l%c%cws%fcov
     eff_porosity  => clm3%g%l%c%cps%eff_porosity
-    npfts         => clm3%g%l%c%npfts   
-    wtcol         => clm3%g%l%c%p%wtcol   
-    pfti          => clm3%g%l%c%pfti   
-    rootfr        => clm3%g%l%c%p%pps%rootfr
-
-    ! Porosity of soil, partial volume of ice and liquid and
-    ! water table depth
-
-!dir$ concurrent
-!cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
-       zwice(c) = 0._r8
-       wmean(c) = 0._r8
-    end do
+    wtfact        => clm3%g%l%c%cps%wtfact
+    zwt           => clm3%g%l%c%cws%zwt
+    fracice       => clm3%g%l%c%cps%fracice
+    hksat         => clm3%g%l%c%cps%hksat
+    bsw           => clm3%g%l%c%cps%bsw
+    sucsat        => clm3%g%l%c%cps%sucsat
 
     do j = 1,nlevsoi
 !dir$ concurrent
@@ -161,90 +133,43 @@ contains
           c = filter_soilc(fc)
 
           ! Porosity of soil, partial volume of ice and liquid
-
-          zwice(c) = zwice(c) + h2osoi_ice(c,j)
+   
           vol_ice(c,j) = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
           eff_porosity(c,j) = watsat(c,j)-vol_ice(c,j)
           vol_liq(c,j) = min(eff_porosity(c,j), h2osoi_liq(c,j)/(dz(c,j)*denh2o))
 
-          ! Wetness of soil
+          icefrac(c,j) = min(1._r8,h2osoi_ice(c,j)/(h2osoi_ice(c,j)+h2osoi_liq(c,j)))
 
-          s(c,j) = min(1._r8,(vol_ice(c,j)+vol_liq(c,j))/watsat(c,j))
+          fracice(c,j) = max(0._r8,exp(-3._r8*(1._r8-icefrac(c,j)))- exp(-3._r8))
 
-          ! Averaged soil wetness in surface soil layers
-
-          wmean(c) = wmean(c) + s(c,j)*dz(c,j)
        end do
+    end do
+
+    ! Saturation fraction
+
+!dir$ concurrent
+!cdir nodep
+    do fc = 1, num_soilc
+       c = filter_soilc(fc)
+       fff(c)  = 1._r8 / hkdepth(c)
+       fcov(c) = (1._r8 - fracice(c,1)) * wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c)) + fracice(c,1)
     end do
 
 !dir$ concurrent
 !cdir nodep
     do fc = 1, num_soilc
        c = filter_soilc(fc)
-       g = cgridcell(c)
 
-       ! Determine water table depth
+       ! Maximum infiltration capacity
+       s1        = max(0.01_r8,vol_liq(c,1)/max(wimp,eff_porosity(c,1)))
+       su        = max(0._r8,(s1-fcov(c)*1._r8) / (1._r8-fcov(c)))
+       v         = -bsw(c,1)*sucsat(c,1)/(0.5_r8*dz(c,1)*1000._r8)
+       qinmax    = (1._r8+v*(su-1._r8))*hksat(c,1)
 
-       zwt(c) = fz * (zi(c,nlevsoi) - wmean(c))
+       ! Surface runoff
+       qflx_surf(c) =  fcov(c) * qflx_top_soil(c) + &
+                       (1._r8-fcov(c)) * max(0._r8, qflx_top_soil(c)-qinmax)
 
-       ! Determine saturation fraction
-
-       fcov(c) = wtfact(g) * min(1._r8,exp(-zwt(c)))
-
-       ! Re-initialize wmean and initialize zmean to zero for use below
-
-       wmean(c) = 0._r8
-       zmean(c) = 0._r8
-       infil_fact_col(c) = 0._r8  
-    end do
-
-    do pi = 1,maxpatch_pft    
-!dir$ concurrent
-!cdir nodep
-       do fc = 1, num_soilc       
-          c = filter_soilc(fc)    
-          if (pi <= npfts(c)) then    
-             p = pfti(c) + pi - 1    
-             infil_fact(p) = 0._r8
-             do j = 1, 3
-                infil_fact(p)=rootfr(p,j) + infil_fact(p)
-             end do
-             infil_fact_col(c) = infil_fact_col(c) + infil_fact(p) * wtcol(p)    
-          end if    
-       end do    
-    end do    
-
-    do j = 1, 3
-!dir$ concurrent
-!cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
-          zmean(c) = zmean(c) + dz(c,j)
-          wmean(c) = wmean(c) + s(c,j) * dz(c,j)
-       end do
-    end do
-
-    ! If top soil layer is impermeable then all qflx_top_soil goes to surface runoff
-
-!dir$ concurrent
-!cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
-       wmean(c) = wmean(c) / zmean(c)
-       if (eff_porosity(c,1) < wimp) then
-          qflx_surf(c) =  max(0._r8, fcov(c) * qflx_top_soil(c)) + &
-                          max(0._r8, (1._r8-fcov(c)) * qflx_top_soil(c))
-       else
-#if (defined CN)
-          ! keep the saturated fraction qflx_over, but turn off the
-          ! unsaturated fraction
-			 qflx_surf(c) =  max(0._r8, fcov(c) * qflx_top_soil(c))
-#else
-          qflx_surf(c) =  max(0._r8, fcov(c) * qflx_top_soil(c)) + &
-            max(0._r8,(1._r8-fcov(c))*  &
-            min(1._r8,wmean(c)**(4+16*infil_fact_col(c)))*qflx_top_soil(c))  
-#endif
-       end if
     end do
 
   end subroutine SurfaceRunoff
@@ -442,6 +367,8 @@ contains
     real(r8), pointer :: t_soisno(:,:)        ! soil temperature (Kelvin)
     real(r8), pointer :: rootr_pft(:,:)       ! effective fraction of roots in each soil layer
     integer , pointer :: pfti(:)              ! beginning pft index for each column
+    real(r8), pointer :: fracice(:,:)         ! fractional impermeability (-)
+    real(r8), pointer :: h2osoi_vol(:,:)      ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
 !
 ! local pointers to original implicit inout arguments
 !
@@ -496,7 +423,9 @@ contains
     rootr_col         => clm3%g%l%c%cps%rootr_column
     t_soisno          => clm3%g%l%c%ces%t_soisno
     h2osoi_liq        => clm3%g%l%c%cws%h2osoi_liq
+    h2osoi_vol        => clm3%g%l%c%cws%h2osoi_vol
     qflx_infl         => clm3%g%l%c%cwf%qflx_infl
+    fracice           => clm3%g%l%c%cps%fracice
     qflx_tran_veg_col => clm3%g%l%c%cwf%pwf_a%qflx_tran_veg
     pfti              => clm3%g%l%c%pfti
 
@@ -592,43 +521,21 @@ contains
           ! Set hydraulic conductivity to zero if effective porosity 5% in any of
           ! two neighbor layers or liquid content (theta) less than 0.001
 
-          if (      (eff_porosity(c,j) < wimp) &
-               .or. (eff_porosity(c,min(nlevsoi,j+1)) < wimp) &
-               .or. (vol_liq(c,j) <= 1.e-3_r8)) then
-             hk(c,j) = 0._r8
-             dhkdw(c,j) = 0._r8
-          else
-             s1 = 0.5_r8*(vol_liq(c,j)+vol_liq(c,min(nlevsoi,j+1))) / &
-                  (0.5_r8*(watsat(c,j)+watsat(c,min(nlevsoi,j+1))))
-             s2 = hksat(c,j)*s1**(2._r8*bsw(c,j)+2._r8)
-             hk(c,j) = s1*s2
-             dhkdw(c,j) = (2._r8*bsw(c,j)+3._r8)*s2*0.5_r8/watsat(c,j)
-             if (j == nlevsoi) dhkdw(c,j) = dhkdw(c,j) * 2._r8
-          end if
+          s1 = 0.5_r8*(h2osoi_vol(c,j) + h2osoi_vol(c,min(nlevsoi, j+1))) / &
+               (0.5_r8*(watsat(c,j)+watsat(c,min(nlevsoi, j+1))))
+          s1 = min(1._r8, s1)
+          s2 = hksat(c,j)*s1**(2._r8*bsw(c,j)+2._r8)
+          hk(c,j) = (1._r8-0.5_r8*(fracice(c,j)+fracice(c,min(nlevsoi, j+1))))*s1*s2
+          dhkdw(c,j) = (1._r8-0.5_r8*(fracice(c,j)+fracice(c,min(nlevsoi, j+1))))* &
+                       (2._r8*bsw(c,j)+3._r8)*s2*0.5_r8/watsat(c,j)
+          if(j == nlevsoi) dhkdw(c,j) = dhkdw(c,j) * 2._r8
 
-          ! Evaluate hydraulic conductivity, soil matric potential,
-          ! d(smp)/d(vol_liq), and d(hk)/d(vol_liq).
+          s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
+          s_node = min(1.0_r8, s_node)
+          smp(c,j) = -sucsat(c,j)*s_node**(-bsw(c,j))
+          smp(c,j) = max(smpmin(c), smp(c,j))
+          dsmpdw(c,j) = -bsw(c,j)*smp(c,j)/(s_node*watsat(c,j))
 
-          if (t_soisno(c,j) > SHR_CONST_TKFRZ) then
-
-             s_node = max(vol_liq(c,j)/watsat(c,j), 0.01_r8)
-             s_node = min(1.0_r8, s_node)
-             smp(c,j) = -sucsat(c,j)*s_node**(-bsw(c,j))
-             smp(c,j) = max(smpmin(c), smp(c,j))        ! Limit soil suction
-             dsmpdw(c,j) = -bsw(c,j)*smp(c,j)/(s_node*watsat(c,j))
-
-          else
-
-             ! When ice is present, the matric potential is only related to temperature
-             ! by (Fuchs et al., 1978: Soil Sci. Soc. Amer. J. 42(3):379-385)
-             ! Unit 1 Joule = 1 (kg m2/s2), J/kg /(m/s2) ==> m ==> 1e3 mm
-
-             smp(c,j) = 1.e3_r8 * SHR_CONST_LATICE/SHR_CONST_G * &
-                  (t_soisno(c,j)-SHR_CONST_TKFRZ)/t_soisno(c,j)
-             smp(c,j) = max(smpmin(c), smp(c,j))        ! Limit soil suction
-             dsmpdw(c,j) = 0._r8
-
-          end if
        end do
     end do
 
@@ -689,8 +596,8 @@ contains
        qin    = -hk(c,j-1)*num/den
        dqidw0 = -(-hk(c,j-1)*dsmpdw(c,j-1) + num*dhkdw(c,j-1))/den
        dqidw1 = -( hk(c,j-1)*dsmpdw(c,j)   + num*dhkdw(c,j-1))/den
-       qout   =  hk(c,j)
-       dqodw1 =  dhkdw(c,j)
+       qout   =  0._r8
+       dqodw1 =  0._r8
        rmx(c,j) =  qin - qout - qflx_tran_veg_col(c)*rootr_col(c,j)
        amx(c,j) = -dqidw0
        bmx(c,j) =  dzmm(c,j)/dtime - dqidw1 + dqodw1
@@ -722,8 +629,7 @@ contains
 ! !IROUTINE: Drainage
 !
 ! !INTERFACE:
-  subroutine Drainage(lbc, ubc, num_soilc, filter_soilc, &
-       zwice, vol_liq, s, zwt, fcov, hk, dhkdw, dwat)
+  subroutine Drainage(lbc, ubc, num_soilc, filter_soilc, vol_liq, hk)
 !
 ! !DESCRIPTION:
 ! Calculate subsurface drainage
@@ -748,7 +654,7 @@ contains
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
     use clm_time_manager, only : get_step_size
-    use clm_varcon  , only: pondmx
+    use clm_varcon  , only: pondmx, tfrz
     use clm_varpar  , only : nlevsoi
 !
 ! !ARGUMENTS:
@@ -756,14 +662,8 @@ contains
     integer , intent(in) :: lbc, ubc                   ! column bounds
     integer , intent(in) :: num_soilc                  ! number of column soil points in column filter
     integer , intent(in) :: filter_soilc(ubc-lbc+1)    ! column filter for soil points
-    real(r8), intent(in) :: zwice(lbc:ubc)             ! the sum of ice mass of soil (kg/m2)
     real(r8), intent(in) :: vol_liq(lbc:ubc,1:nlevsoi) ! partial volume of liquid water in layer
-    real(r8), intent(in) :: s(lbc:ubc,1:nlevsoi)       ! wetness of soil (including ice)
-    real(r8), intent(in) :: zwt(lbc:ubc)               ! water table depth
-    real(r8), intent(in) :: fcov(lbc:ubc)              ! fractional area with water table at surface
     real(r8), intent(in) :: hk(lbc:ubc,1:nlevsoi)      ! hydraulic conductivity (mm h2o/s)
-    real(r8), intent(in) :: dhkdw(lbc:ubc,1:nlevsoi)   ! d(hk)/d(vol_liq)
-    real(r8), intent(in) :: dwat(lbc:ubc,1:nlevsoi)    ! change in soil water
 !
 ! !CALLED FROM:
 !
@@ -773,53 +673,100 @@ contains
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 ! 4/26/05, Peter Thornton and David Lawrence: Turned off drainage from
 ! middle soil layers for both wet and dry fractions.
+! 10/2/06 Keith Oleson: Completely new routine for community hydrology
 !
 ! !LOCAL VARIABLES:
 !
 ! local pointers to original implicit in arguments
 !
-    integer , pointer:: snl(:)            !number of snow layers
-    real(r8), pointer:: qflx_snowcap(:)   !excess precipitation due to snow capping (mm H2O /s) [+]
-    real(r8), pointer:: qflx_dew_grnd(:)  !ground surface dew formation (mm H2O /s) [+]
-    real(r8), pointer:: qflx_dew_snow(:)  !surface dew added to snow pack (mm H2O /s) [+]
-    real(r8), pointer:: qflx_sub_snow(:)  !sublimation rate from snow pack (mm H2O /s) [+]
-    real(r8), pointer:: dz(:,:)           !layer depth (m)
-    real(r8), pointer:: bsw(:,:)          !Clapp and Hornberger "b"
-    real(r8), pointer:: eff_porosity(:,:) !effective porosity = porosity - vol_ice
+    integer , pointer :: snl(:)            !number of snow layers
+    real(r8), pointer :: qflx_snowcap(:)   !excess precipitation due to snow capping (mm H2O /s) [+]
+    real(r8), pointer :: qflx_dew_grnd(:)  !ground surface dew formation (mm H2O /s) [+]
+    real(r8), pointer :: qflx_dew_snow(:)  !surface dew added to snow pack (mm H2O /s) [+]
+    real(r8), pointer :: qflx_sub_snow(:)  !sublimation rate from snow pack (mm H2O /s) [+]
+    real(r8), pointer :: dz(:,:)           !layer depth (m)
+    real(r8), pointer :: bsw(:,:)          !Clapp and Hornberger "b"
+    real(r8), pointer :: eff_porosity(:,:) !effective porosity = porosity - vol_ice
+    real(r8), pointer :: t_soisno(:,:)     !soil temperature (Kelvin)
+    real(r8), pointer :: hksat(:,:)        !hydraulic conductivity at saturation (mm H2O /s)
+    real(r8), pointer :: sucsat(:,:)       !minimum soil suction (mm)
+    real(r8), pointer :: z(:,:)            !layer depth (m)
+    real(r8), pointer :: zi(:,:)           !interface level below a "z" level (m)
+    real(r8), pointer :: watsat(:,:)       !volumetric soil water at saturation (porosity)
+    real(r8), pointer :: hkdepth(:)        !length scale for ksat decrease (m)
+    real(r8), pointer :: zwt(:)            !water table depth (m)
+    real(r8), pointer :: wa(:)             !water in the unconfined aquifer (mm)
+    real(r8), pointer :: wt(:)             !total water storage (unsaturated soil water + groundwater) (mm)
+    real(r8), pointer :: qcharge(:)        !aquifer recharge rate (mm/s)
+
+!   real(r8), pointer :: londeg(:)         !longitude (degrees)
+!   real(r8), pointer :: latdeg(:)         !latitude (degrees)
+!   integer , pointer :: cgridcell(:)      !gridcell index for each column
+
 !
 ! local pointers to original implicit inout arguments
 !
-    real(r8), pointer:: h2osoi_ice(:,:)   !ice lens (kg/m2)
-    real(r8), pointer:: h2osoi_liq(:,:)   !liquid water (kg/m2)
+    real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
+    real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
 !
 ! local pointers to original implicit out arguments
 !
-    real(r8), pointer:: qflx_drain(:)     !sub-surface runoff (mm H2O /s)
-    real(r8), pointer:: qflx_qrgwl(:)     !qflx_surf at glaciers, wetlands, lakes
-    real(r8), pointer:: eflx_impsoil(:)   !implicit evaporation for soil temperature equation
+    real(r8), pointer :: qflx_drain(:)     !sub-surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_qrgwl(:)     !qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
+    real(r8), pointer :: eflx_impsoil(:)   !implicit evaporation for soil temperature equation
 !
 !EOP
 !
 ! !OTHER LOCAL VARIABLES:
 !
     integer  :: c,j,fc                   !indices
+
+!   integer  :: g                        !indices
+
     real(r8) :: dtime                    !land model time step (sec)
     real(r8) :: xs(lbc:ubc)              !excess soil water above saturation
     real(r8) :: dzmm(lbc:ubc,1:nlevsoi)  !layer thickness (mm)
     real(r8) :: watmin                   !minimum soil moisture
-    real(r8) :: hksum(lbc:ubc)           !summation of hydraulic cond for layers 6->9
-    real(r8) :: zsat(lbc:ubc)            !hydraulic conductivity weighted soil thickness
-    real(r8) :: wsat(lbc:ubc)            !hydraulic conductivity weighted soil wetness
-    real(r8) :: qflx_drain_wet(lbc:ubc)  !subsurface runoff from "wet" part (mm h2o/s)
-    real(r8) :: qflx_drain_dry(lbc:ubc)  !subsurface runoff from "dry" part (mm h2o/s)
-    real(r8) :: dzksum(lbc:ubc)          !hydraulic conductivity weighted soil thickness
+    integer  :: jwt(lbc:ubc)             !soil layer index of the layer right above the water table (-)
+    real(r8) :: rsub_bot(lbc:ubc)        !subsurface runoff - bottom drainage (mm/s)
+    real(r8) :: rsub_sat(lbc:ubc)        !subsurface runoff - saturation excess (mm/s)
+    real(r8) :: rsub_top(lbc:ubc)        !subsurface runoff - topographic control (mm/s)
+    real(r8) :: fff(lbc:ubc)             !saturated hydraulic conductivity decay factor (m-1)
+    real(r8) :: xsi(lbc:ubc)             !excess soil water above saturation at layer i (mm)
+    real(r8) :: xs1(lbc:ubc)             !excess soil water above saturation at layer 1 (mm)
+    real(r8) :: smpfz(1:nlevsoi)         !wetness of soil (including ice) (-)
+    real(r8) :: wtsub                    !summation of hk*dzmm
+    real(r8) :: rous                     !aquifer yield
+    real(r8) :: wh                       !
+    real(r8) :: wh_zwt                   !water head at the water table depth (m)
+    real(r8) :: ws                       !
+    real(r8) :: s_node                   !
+    real(r8) :: dzsum                    !
+    real(r8) :: ka                       !
+    real(r8) :: dza                      !
 !-----------------------------------------------------------------------
 
+!   latdeg        => clm3%g%latdeg
+!   londeg        => clm3%g%londeg
+
     ! Assign local pointers to derived subtypes components (column-level)
+
+!   cgridcell     => clm3%g%l%c%gridcell
 
     snl           => clm3%g%l%c%cps%snl
     dz            => clm3%g%l%c%cps%dz
     bsw           => clm3%g%l%c%cps%bsw
+    t_soisno      => clm3%g%l%c%ces%t_soisno
+    hksat         => clm3%g%l%c%cps%hksat
+    sucsat        => clm3%g%l%c%cps%sucsat
+    z             => clm3%g%l%c%cps%z
+    zi            => clm3%g%l%c%cps%zi
+    watsat        => clm3%g%l%c%cps%watsat
+    hkdepth       => clm3%g%l%c%cps%hkdepth
+    zwt           => clm3%g%l%c%cws%zwt
+    wa            => clm3%g%l%c%cws%wa
+    wt            => clm3%g%l%c%cws%wt
+    qcharge       => clm3%g%l%c%cws%qcharge
     eff_porosity  => clm3%g%l%c%cps%eff_porosity
     qflx_snowcap  => clm3%g%l%c%cwf%pwf_a%qflx_snowcap
     qflx_dew_grnd => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
@@ -848,58 +795,142 @@ contains
        end do
     end do
 
-    ! The amount of streamflow is assumed maintained by flow from the
-    ! lowland water table with different levels contributing according to
-    ! their thickness and saturated hydraulic conductivity, i.e. a given
-    ! layer below the water table interface loses water at a rate per unit
-    ! depth given by qflx_drain*hk/(sum over all layers below this water table
-    ! of hk*dz). Because this is a slow smooth process, and not strongly
-    ! coupled to water in any one layer, it should remain stable for
-    ! explicit time differencing. Hence, for simplicity it is removed
-    ! explicitly prior to the main soil water calculation.
-    ! Another assumption: no subsurface runoff for ice mixed soil
-    ! Zong-Liang Yang & G.-Y. Niu
-
 !dir$ concurrent
 !cdir nodep
     do fc = 1, num_soilc
        c = filter_soilc(fc)
-       qflx_drain(c) = 0._r8          ! subsurface runoff
-       qflx_drain_wet(c) = 0._r8      ! subsurface runoff
-       qflx_drain_dry(c) = 0._r8      ! subsurface runoff
-       hksum(c) = 0._r8
+       qflx_drain(c) = 0._r8 
+       rsub_bot(c)   = 0._r8
+       rsub_sat(c)   = 0._r8
+       rsub_top(c)   = 0._r8
     end do
 
-    do j = 6,nlevsoi-1
-!dir$ concurrent
-!cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
-          hksum(c) = hksum(c) + hk(c,j)
-       end do
-    end do
-
+    ! Topographic runoff
 !dir$ concurrent
 !cdir nodep
     do fc = 1, num_soilc
        c = filter_soilc(fc)
-       if (zwice(c) <= 0._r8 .AND. hksum(c) > 0._r8) then
-          zsat(c) = 0._r8
-          wsat(c) = 0._r8
-          dzksum(c) = 0._r8
+       fff(c)         = 1._r8/ hkdepth(c)
+
+       if(h2osoi_ice(c,nlevsoi) <= h2osoi_liq(c,nlevsoi)) then  ! non-permafrost
+         rsub_top(c)    = 4.5e-4_r8 * exp(-fff(c)*zwt(c))
        end if
+
     end do
 
-    do j = 6,nlevsoi-1
+    ! The layer index of the first unsaturated layer, i.e., the layer right above
+    ! the water table
+
+!dir$ concurrent
+!cdir nodep
+    do fc = 1, num_soilc
+       c = filter_soilc(fc)
+       jwt(c) = nlevsoi
+       do j = 2,nlevsoi
+          if(zwt(c) <= zi(c,j)) then
+             jwt(c) = j-1
+             exit
+          end if
+       enddo
+    end do
+
+    rous = 0.2_r8
+
+!dir$ concurrent
+!cdir nodep
+    do fc = 1, num_soilc
+       c = filter_soilc(fc)
+
+       ! Matric potential at the layer above the water table
+       if(t_soisno(c,1) < tfrz) then  ! for frozen soil
+          s_node = 0._r8
+          dzsum  = 0._r8
+          do j = 1, jwt(c)
+             dzsum  = dzsum + dzmm(c,j)
+             s_node = s_node + dzmm(c,j)*vol_liq(c,j)/watsat(c,j)
+          end do
+          s_node = s_node / dzsum
+       else
+          s_node = vol_liq(c,jwt(c))/watsat(c,jwt(c))
+       endif
+
+       s_node = max(s_node, 0.01_r8)
+       s_node = min(1.0_r8, s_node)
+       smpfz(jwt(c)) = -sucsat(c,jwt(c))*s_node**(-bsw(c,jwt(c)))
+       smpfz(jwt(c)) = max(-80000.0_r8, smpfz(jwt(c)))           ! not less than 80 meters
+
+       ! Water head at the water table
+       if(jwt(c) == nlevsoi) then
+          dza = fff(c)*(zwt(c)-z(c,jwt(c)))
+          ka = hk(c,jwt(c)) * (1.0_r8-exp(-dza))/dza
+          wh_zwt  = -zwt(c) * 1000._r8  ! (mm)
+       else
+          ka = hk(c,jwt(c))
+          wh_zwt  = -sucsat(c,jwt(c)+1) - zwt(c) * 1000._r8  ! (mm)
+       endif
+
+       ! Recharge rate qcharge to groundwater
+       wh      = smpfz(jwt(c))  - z(c,jwt(c))*1.e3_r8   !(mm)
+       qcharge(c) = -ka * (wh_zwt-wh)  /((zwt(c)-z(c,jwt(c)))*1000._r8)
+
+       ! To limit qcharge  (for the first several timesteps)
+       qcharge(c) = max(-10.0_r8/dtime,qcharge(c))
+       qcharge(c) = min( 10.0_r8/dtime,qcharge(c))
+
+       ! To limit qcharge in permafrost areas
+       if(h2osoi_ice(c,nlevsoi) > h2osoi_liq(c,nlevsoi)) then
+          qcharge(c) = 0._r8
+       endif
+
+       ! Water storage in aquifer + soil
+       wt(c)  = wt(c) + (qcharge(c) - rsub_top(c)) * dtime     !(mm)
+
+       if(jwt(c) == nlevsoi) then             ! water table is below the soil collumn
+          wa(c)  = wa(c) + (qcharge(c) -rsub_top(c)) * dtime     !(mm)
+          wt(c)  = wa(c)
+          zwt(c)     = (zi(c,nlevsoi) + 25._r8) - wa(c)/1000._r8/rous      !(m)
+          h2osoi_liq(c,nlevsoi) = h2osoi_liq(c,nlevsoi) - qcharge(c) * dtime
+          h2osoi_liq(c,nlevsoi) = h2osoi_liq(c,nlevsoi) + max(0._r8,(wa(c)-5000._r8))
+          wa(c)  = min(wa(c), 5000._r8)
+       else                                ! water table within soil layers
+          if (jwt(c) == nlevsoi-1) then
+
+             zwt(c) = zi(c,nlevsoi)- (wt(c)-rous*1000._r8*25._r8) /eff_porosity(c,nlevsoi)/1000._r8
+
+          else
+             ws = 0._r8   ! water used to fill soil air pores
+             do j = jwt(c)+2,nlevsoi
+               ws = ws + (eff_porosity(c,j)-vol_liq(c,j)) * 1000._r8 * dz(c,j)
+             enddo
+             zwt(c) = zi(c,jwt(c)+1)-(wt(c)-rous*1000_r8*25._r8-ws) /eff_porosity(c,jwt(c)+1)/1000._r8
+          endif
+
+          wtsub = 0._r8
+          do j = jwt(c)+1, nlevsoi
+             wtsub = wtsub + hk(c,j)*dzmm(c,j)
+          end do
+
+          do j = jwt(c)+1, nlevsoi           ! Removing subsurface runoff
+             h2osoi_liq(c,j) = h2osoi_liq(c,j) - rsub_top(c)*dtime*hk(c,j)*dzmm(c,j)/wtsub
+          end do
+       end if
+
+       zwt(c) = max(0.05_r8,zwt(c))
+       zwt(c) = min(80._r8,zwt(c))           ! in [m]
+
+    end do
+
+    !  excessive water above saturation added to
+    !  the above unsaturated layer like a bucket
+
+    do j = nlevsoi,2,-1
 !dir$ concurrent
 !cdir nodep
        do fc = 1, num_soilc
           c = filter_soilc(fc)
-          if (zwice(c) <= 0._r8 .AND. hksum(c) > 0._r8) then
-             zsat(c) = zsat(c) + dz(c,j)*hk(c,j)
-             wsat(c) = wsat(c) + s(c,j)*dz(c,j)*hk(c,j)
-             dzksum(c) = dzksum(c) + hk(c,j)*dz(c,j)
-          end if
+          xsi(c)            = max(h2osoi_liq(c,j)-eff_porosity(c,j)*dzmm(c,j),0._r8)
+          h2osoi_liq(c,j)   = min(eff_porosity(c,j)*dzmm(c,j), h2osoi_liq(c,j))
+          h2osoi_liq(c,j-1) = h2osoi_liq(c,j-1) + xsi(c)
        end do
     end do
 
@@ -907,29 +938,15 @@ contains
 !cdir nodep
     do fc = 1, num_soilc
        c = filter_soilc(fc)
-       if (zwice(c) <= 0._r8 .AND. hksum(c) > 0._r8) then
-          wsat(c) = wsat(c) / zsat(c)
-          qflx_drain_dry(c) = 0.0_r8
-          qflx_drain_wet(c) = 0.0_r8
-          qflx_drain(c) = qflx_drain_dry(c) + qflx_drain_wet(c)
-       end if
-    end do
-
-    do j = 6, nlevsoi-1
-!dir$ concurrent
-!cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
-          if (zwice(c) <= 0._r8 .AND. hksum(c) > 0._r8) then
-             h2osoi_liq(c,j) = h2osoi_liq(c,j) - dtime*qflx_drain(c)*dz(c,j)*hk(c,j)/dzksum(c)
-          end if
-       end do
+       xs1(c)          = max(h2osoi_liq(c,1)-(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1)),0._r8)
+       h2osoi_liq(c,1) = min(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1), h2osoi_liq(c,1))
+       rsub_sat(c)     = xs1(c) / dtime
     end do
 
     ! Limit h2osoi_liq to be greater than or equal to watmin.
     ! Get water needed to bring h2osoi_liq equal watmin from lower layer.
 
-    watmin = 0.0_r8
+    watmin = 0.01_r8
 
     do j = 1, nlevsoi-1
 !dir$ concurrent
@@ -957,27 +974,8 @@ contains
           xs(c) = 0._r8
        end if
        h2osoi_liq(c,j) = h2osoi_liq(c,j) + xs(c)
-       qflx_drain(c) = qflx_drain(c) - xs(c)/dtime
-    end do
-
-    ! Determine water in excess of saturation
-
-!dir$ concurrent
-!cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
-       xs(c) = max(0._r8, h2osoi_liq(c,1)-(pondmx + eff_porosity(c,1)*dzmm(c,1)))
-       if (xs(c) > 0._r8) h2osoi_liq(c,1) = pondmx + eff_porosity(c,1)*dzmm(c,1)
-    end do
-
-    do j = 2,nlevsoi
-!dir$ concurrent
-!cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
-          xs(c) = xs(c) + max(h2osoi_liq(c,j) - eff_porosity(c,j)*dzmm(c,j), 0._r8)  ! [mm]
-          h2osoi_liq(c,j) = min(eff_porosity(c,j)*dzmm(c,j), h2osoi_liq(c,j))
-       end do
+       wa(c) = wa(c) - xs(c)
+       wt(c) = wt(c) - xs(c)
     end do
 
 !dir$ concurrent
@@ -987,8 +985,7 @@ contains
 
        ! Sub-surface runoff and drainage
 
-       qflx_drain(c) = qflx_drain(c) + xs(c)/dtime &
-            + hk(c,nlevsoi) + dhkdw(c,nlevsoi)*dwat(c,nlevsoi) ! [mm/s]
+       qflx_drain(c) = rsub_sat(c) + rsub_top(c)
 
        ! Set imbalance for snow capping
 

@@ -70,7 +70,7 @@ setenv LIB_NETCDF /usr/local/lib64/r4i4
 ## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
 ## Contains the source code for the CLM distribution.
 ## (the root directory contains the subdirectory "models")
-set clmroot   = /fis/cgd/...
+set clmroot   = /fis/cgd/tss/nanr/clm/hydro/clm_trunk.061107
 
 ## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
 ## Contains the initial and boundary data for the CLM distribution.

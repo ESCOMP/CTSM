@@ -74,6 +74,7 @@ contains
     real(r8), pointer :: h2osoi_ice(:,:)       ! ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)       ! liquid water (kg/m2)
     real(r8), pointer :: h2ocan_pft(:)         ! canopy water (mm H2O) (pft-level) 
+    real(r8), pointer :: wa(:)                 !water in the unconfined aquifer (m)
 !
 ! local pointers to original implicit out variables
 !
@@ -92,6 +93,7 @@ contains
     h2osoi_liq         => clm3%g%l%c%cws%h2osoi_liq
     begwb              => clm3%g%l%c%cwbal%begwb
     h2ocan_col         => clm3%g%l%c%cws%pws_a%h2ocan
+    wa                 => clm3%g%l%c%cws%wa
 
     ! Assign local pointers to derived type members (pft-level)
 
@@ -105,8 +107,7 @@ contains
 !cdir nodep
     do f = 1, num_nolakec
        c = filter_nolakec(f)
-       begwb(c) = h2ocan_col(c) + h2osno(c)
-       
+       begwb(c) = h2ocan_col(c) + h2osno(c) + wa(c)
     end do
     do j = 1, nlevsoi
 !dir$ concurrent
@@ -271,6 +272,7 @@ contains
        errh2o(c) = endwb(c) - begwb(c) &
             - (forc_rain(g) + forc_snow(g) - qflx_evap_tot(c) - qflx_surf(c) &
             - qflx_qrgwl(c) - qflx_drain(c)) * dtime
+
     end do
 
     found = .false.
