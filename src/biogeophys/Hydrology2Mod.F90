@@ -296,7 +296,7 @@ contains
 !cdir nodep
     do fc = 1, num_snowc
        c = filter_snowc(fc)
-       if (snl(c) > -nlevsno) then
+       if (snl(c) == 0) then
           snowage(c) = 0._r8
        end if
     end do
