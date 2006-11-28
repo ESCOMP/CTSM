@@ -1,4 +1,99 @@
 ===============================================================
+Tag name: clm3_expa_82
+Originator(s): nanr	
+Date: Mon Nov 27 21:51:23 MST 2006
+One-line Summary:  Fix water balance error
+
+Purpose of changes: Fix water balance error in calculation of btran.  In certain situations not enough
+water was being drawn out of the soil according to the calculated transpiration.  
+
+Bugs fixed (include bugzilla ID): 263
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none.
+
+Code reviewed by: Keith Oleson, Dave Lawrence
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M	CanopyFluxesMod.F90 
+
+   OLD: real(r8), parameter :: btran0 = 1.0e-10_r8  ! initial value
+   NEW: real(r8), parameter :: btran0 = 0.0_r8  ! initial value
+
+   do j = 1,nlevsoi
+      do f = 1, fn
+         p = filterp(f)
+         if (btran(p) .gt. btran0) then
+           rootr(p,j) = rootr(p,j)/btran(p)
+         else				! NEW
+           rootr(p,j) = 0._r8		! NEW
+         end if				
+      end do
+   end do
+
+Summary of testing: test_driver.sh
+
+  bluesky:
+	001 sm111 TSM.sh 4p_vodsr_dh t31 48 ...............................PASS
+	002 er111 TER.sh 4p_vodsr_dh t31 10+38 ............................PASS
+	003 br111 TBR.sh 4p_vodsr_dh t31 24+24 ............................FAIL! rc= 11
+	004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................SKIPPED*
+	005 sm114 TSM.sh 4p_vodsr_h t31 48 ................................PASS
+	006 sm121 TSM.sh 17p_vodsr_dh t31 48 ..............................PASS
+	007 er121 TER.sh 17p_vodsr_dh t31 10+38 ...........................PASS
+	008 br121 TBR.sh 17p_vodsr_dh t31 24+24 ...........................FAIL! rc= 11
+	009 bl121 TBL.sh 17p_vodsr_dh t31 48 ..............................SKIPPED*
+	010 sm124 TSM.sh 17p_vodsr_h t31 48 ...............................PASS
+	011 sm211 TSM.sh 17p_cnn_dh t31_cnall 48 ..........................PASS
+	012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................PASS
+	013 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24 .......................FAIL! rc= 11
+	014 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................SKIPPED*
+	015 sm311 TSM.sh 4p_casa_dh t31_casa 48 ...........................PASS
+	016 er311 TER.sh 4p_casa_dh t31_casa 10+38 ........................PASS
+	017 br311 TBR.sh 4p_casa_dh t31_casa 24+24 ........................FAIL! rc= 11
+	018 bl311 TBL.sh 4p_casa_dh t31_casa 48 ...........................SKIPPED*
+	019 sm411 TSM.sh 10p_dgvm_dh t31_dgvm 48 ..........................PASS
+	020 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38 .......................PASS
+	021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................FAIL! rc= 11
+	022 bl411 TBL.sh 10p_dgvm_dh t31_dgvm 48 ..........................SKIPPED*
+
+  NOTE:  the branch tests failed only in the differences to the time_bounds variable
+         upon branching - all other variables stayed the same. This has been reported as
+         bug #290.
+
+  tempest:  Needs to be tested.
+  bangkok/lf95:  Needs to be tested.
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:	All
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): roundoff
+
+	Keith Oleson ran a 20-year global offline simulation and didn't get a single water balance error warning. 
+	The annual mean min and max ERRH2O for the new simulation is -3.75e-13 and
+	6.7e-14.  Previously it was -4.15e-15 and 1.28e-7.
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+	http://www.cgd.ucar.edu/tss/clm/diagnostics/lmwg_hydro/hydp2_off_communn_hk20a-hydp2_off_communn_hk16d/setsIndex.html
+	The hk20 simulation is the one with the fix.
+
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_81
 Originator(s): nanr	
 Date: Mon Nov 27 19:56:25 MST 2006

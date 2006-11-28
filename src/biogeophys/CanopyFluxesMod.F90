@@ -77,7 +77,7 @@ contains
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd         , only : clm_a2l
-    use clm_time_manager       , only : get_step_size
+    use clm_time_manager   , only : get_step_size
     use clm_varpar         , only : nlevsoi, nlevsno
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, &
                                     denh2o, tfrz, csoilc
@@ -164,9 +164,9 @@ contains
    real(r8), pointer :: bsw(:,:)       ! Clapp and Hornberger "b"
    real(r8), pointer :: rootfr(:,:)    ! fraction of roots in each soil layer
    real(r8), pointer :: dleaf(:)       ! characteristic leaf dimension (m)
-   real(r8), pointer :: smpso(:)       ! soil water potential at full stomatal opening (mm)
-   real(r8), pointer :: smpsc(:)       ! soil water potential at full stomatal closure (mm)
-   real(r8), pointer :: frac_sno(:)    ! fraction of ground covered by snow (0 to 1)
+   real(r8), pointer :: smpso(:)       !soil water potential at full stomatal opening (mm)
+   real(r8), pointer :: smpsc(:)       !soil water potential at full stomatal closure (mm)
+   real(r8), pointer :: frac_sno(:)    !fraction of ground covered by snow (0 to 1)
 !
 ! local pointers to implicit inout arguments
 !
@@ -218,7 +218,7 @@ contains
 !
 ! !OTHER LOCAL VARIABLES:
 !
-   real(r8), parameter :: btran0 = 1.0e-10_r8  ! initial value
+   real(r8), parameter :: btran0 = 0.0_r8  ! initial value
    real(r8), parameter :: zii = 1000.0_r8      ! convective boundary layer height [m]
    real(r8), parameter :: beta = 1.0_r8        ! coefficient of conective velocity [-]
    real(r8), parameter :: delmax = 1.0_r8      ! maxchange in  leaf temperature [K]
@@ -484,6 +484,7 @@ contains
             vol_liq = min(eff_porosity, h2osoi_liq(c,j)/(dz(c,j)*denh2o))
             s_node = max(vol_liq/eff_porosity,0.01_r8)
             smp_node = max(smpsc(ivt(p)), -sucsat(c,j)*s_node**(-bsw(c,j)))
+
             rresis(p,j) = min( (smp_node - smpsc(ivt(p))) / (smpso(ivt(p)) - smpsc(ivt(p))), 1._r8)
             rootr(p,j) = rootfr(p,j)*rresis(p,j)
             btran(p) = btran(p) + rootr(p,j)
@@ -500,7 +501,11 @@ contains
 !cdir nodep
       do f = 1, fn
          p = filterp(f)
-         rootr(p,j) = rootr(p,j)/btran(p)
+         if (btran(p) .gt. btran0) then
+           rootr(p,j) = rootr(p,j)/btran(p)
+         else
+           rootr(p,j) = 0._r8
+         end if
       end do
    end do
 
@@ -700,7 +705,7 @@ contains
          wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
          wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
 
-         ! Soil evaporation resistance
+         !Soil evaporation resistance
          www     = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)/watsat(c,1)
          www     = min(max(www,0.0_r8),1._r8)
          if (delq(p) .lt. 0._r8) then  !dew
