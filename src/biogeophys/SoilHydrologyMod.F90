@@ -23,6 +23,10 @@ module SoilHydrologyMod
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
+! 11/27/06 Keith Oleson, Dave Lawrence: Modify subroutine arguments for SurfaceRunoff and 
+!   Drainage to pass icefrac in/out.  Make surface runoff a function of ice content in soil layers.
+!   Make soil matric potential a function of liquid water content and effective porosity only.
+!   Remove qcharge limit in "permafrost areas".
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -36,7 +40,7 @@ contains
 !
 ! !INTERFACE:
   subroutine SurfaceRunoff (lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
-       vol_liq)
+       vol_liq, icefrac)
 !
 ! !DESCRIPTION:
 ! Calculate surface runoff
@@ -54,6 +58,7 @@ contains
     integer , intent(in)  :: num_soilc                  ! number of column soil points in column filter
     integer , intent(in)  :: filter_soilc(ubc-lbc+1)    ! column filter for soil points
     real(r8), intent(out) :: vol_liq(lbc:ubc,1:nlevsoi) ! partial volume of liquid water in layer
+    real(r8), intent(out) :: icefrac(lbc:ubc,1:nlevsoi) ! fraction of ice in layer (-)
 !
 ! !CALLED FROM:
 ! subroutine BiogeophysicsLake in module BiogeophysicsLakeMod
@@ -98,7 +103,6 @@ contains
     integer :: c,j,fc,g                    !indices
     real(r8) :: vol_ice(lbc:ubc,1:nlevsoi) !partial volume of ice lens in layer
     real(r8) :: fff(lbc:ubc)               !saturated hydraulic conductivity decay factor (m-1)
-    real(r8) :: icefrac(lbc:ubc,1:nlevsoi) !fraction of ice (-)
     real(r8) :: s1                         !variable to calculate qinmax
     real(r8) :: su                         !variable to calculate qinmax
     real(r8) :: v                          !variable to calculate qinmax
@@ -629,7 +633,8 @@ contains
 ! !IROUTINE: Drainage
 !
 ! !INTERFACE:
-  subroutine Drainage(lbc, ubc, num_soilc, filter_soilc, vol_liq, hk)
+  subroutine Drainage(lbc, ubc, num_soilc, filter_soilc, vol_liq, hk, &
+          icefrac)
 !
 ! !DESCRIPTION:
 ! Calculate subsurface drainage
@@ -664,6 +669,7 @@ contains
     integer , intent(in) :: filter_soilc(ubc-lbc+1)    ! column filter for soil points
     real(r8), intent(in) :: vol_liq(lbc:ubc,1:nlevsoi) ! partial volume of liquid water in layer
     real(r8), intent(in) :: hk(lbc:ubc,1:nlevsoi)      ! hydraulic conductivity (mm h2o/s)
+    real(r8), intent(in) :: icefrac(lbc:ubc,1:nlevsoi) ! fraction of ice in layer
 !
 ! !CALLED FROM:
 !
@@ -742,6 +748,8 @@ contains
     real(r8) :: ws                       !
     real(r8) :: s_node                   !
     real(r8) :: dzsum                    !
+    real(r8) :: icefracsum               !summation of icefrac*dzmm
+    real(r8) :: fracice_rsub(lbc:ubc)    !fractional impermeability of layers (-)
     real(r8) :: ka                       !
     real(r8) :: dza                      !
 !-----------------------------------------------------------------------
@@ -803,19 +811,7 @@ contains
        rsub_bot(c)   = 0._r8
        rsub_sat(c)   = 0._r8
        rsub_top(c)   = 0._r8
-    end do
-
-    ! Topographic runoff
-!dir$ concurrent
-!cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
-       fff(c)         = 1._r8/ hkdepth(c)
-
-       if(h2osoi_ice(c,nlevsoi) <= h2osoi_liq(c,nlevsoi)) then  ! non-permafrost
-         rsub_top(c)    = 4.5e-4_r8 * exp(-fff(c)*zwt(c))
-       end if
-
+       fracice_rsub(c) = 0._r8
     end do
 
     ! The layer index of the first unsaturated layer, i.e., the layer right above
@@ -834,6 +830,22 @@ contains
        enddo
     end do
 
+    ! Topographic runoff
+!dir$ concurrent
+!cdir nodep
+    do fc = 1, num_soilc
+       c = filter_soilc(fc)
+       fff(c)         = 1._r8/ hkdepth(c)
+       dzsum = 0._r8
+       icefracsum = 0._r8
+       do j = jwt(c), nlevsoi
+          dzsum  = dzsum + dzmm(c,j)
+          icefracsum = icefracsum + icefrac(c,j) * dzmm(c,j)
+       end do
+       fracice_rsub(c) = max(0._r8,exp(-3._r8*(1._r8-(icefracsum/dzsum)))- exp(-3._r8))
+       rsub_top(c)    = (1._r8 - fracice_rsub(c)) * 4.5e-4_r8 * exp(-fff(c)*zwt(c))
+    end do
+
     rous = 0.2_r8
 
 !dir$ concurrent
@@ -842,17 +854,7 @@ contains
        c = filter_soilc(fc)
 
        ! Matric potential at the layer above the water table
-       if(t_soisno(c,1) < tfrz) then  ! for frozen soil
-          s_node = 0._r8
-          dzsum  = 0._r8
-          do j = 1, jwt(c)
-             dzsum  = dzsum + dzmm(c,j)
-             s_node = s_node + dzmm(c,j)*vol_liq(c,j)/watsat(c,j)
-          end do
-          s_node = s_node / dzsum
-       else
-          s_node = vol_liq(c,jwt(c))/watsat(c,jwt(c))
-       endif
+       s_node = vol_liq(c,jwt(c))/eff_porosity(c,jwt(c))
 
        s_node = max(s_node, 0.01_r8)
        s_node = min(1.0_r8, s_node)
@@ -876,11 +878,6 @@ contains
        ! To limit qcharge  (for the first several timesteps)
        qcharge(c) = max(-10.0_r8/dtime,qcharge(c))
        qcharge(c) = min( 10.0_r8/dtime,qcharge(c))
-
-       ! To limit qcharge in permafrost areas
-       if(h2osoi_ice(c,nlevsoi) > h2osoi_liq(c,nlevsoi)) then
-          qcharge(c) = 0._r8
-       endif
 
        ! Water storage in aquifer + soil
        wt(c)  = wt(c) + (qcharge(c) - rsub_top(c)) * dtime     !(mm)

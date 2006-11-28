@@ -206,7 +206,7 @@ contains
 #if ( defined SPMD ) && ( defined TIMING_BARRIERS )
     call t_startf ('sync_clm_run1')
     call mpi_barrier (mpicom, ier)
-    call t_stopf ('sync_clm_run11')
+    call t_stopf ('sync_clm_run1')
 #endif
     call t_startf ('clm_run1')
     call clm_run1( )

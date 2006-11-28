@@ -1,4 +1,159 @@
 ===============================================================
+Tag name: clm3_expa_81
+Originator(s): nanr	
+Date: Mon Nov 27 19:56:25 MST 2006
+One-line Summary:  Changes to water table calculations for frozen soil 
+
+Purpose of changes: Improve water table calculations for frozen soil.  
+Correct typo in Pat Worley's timing code.  Correct run-ibm.csh script.
+
+Bugs fixed (include bugzilla ID): 304, 303 
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by:  Keith Oleson, David Lawrence
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M      bld/run-ibm.csh
+
+	OLD:  set clmroot   = /fis/cgd/tss/nanr/clm/hydro/clm_trunk.061107
+	NEW:  set clmroot   = /fis/cgd/.......
+
+	OLD:  fpftcon        = '$CSMDATA/pftdata/pft-physiology-cn16.c040719'
+	NEW:  fpftcon        = '$CSMDATA/pftdata/pft-physiology.c060426'
+
+M      src/main/lnd_comp_mct.F90
+
+	OLD:  call t_stopf ('sync_clm_run11') 
+	NEW:  call t_stopf ('sync_clm_run1')
+
+M      src/biogeophys/Hydrology2Mod.F90
+
+Modify subroutine calls to SurfaceRunoff and Drainage to pass icefrac in/out
+
+M      src/biogeophys/SoilHydrologyMod.F90
+
+Modify subroutine arguments for SurfaceRunoff and Drainage to pass icefrac in/out.
+Make surface runoff a function of ice content in soil layers. 
+Make soil matric potential a function of liquid water content and effective porosity only.
+Remove qcharge limit in "permafrost areas".
+
+Summary of testing:
+
+  bluesky: test_driver.sh
+
+	tests of CCSM will use source code from:
+	/fs/cgd/csm/collections/ccsm3_1_beta40
+	see /fis/cgd/tss/nanr/clm/hydro/clm3_expa_80_nr/test/system/td.187162.log for more detailed output
+
+	001 sm111 TSM.sh 4p_vodsr_dh t31 48 ...............................PASS
+	002 er111 TER.sh 4p_vodsr_dh t31 10+38 ............................PASS
+	003 br111 TBR.sh 4p_vodsr_dh t31 24+24 ............................FAIL! rc= 11
+	004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................SKIPPED*
+	005 sm114 TSM.sh 4p_vodsr_h t31 48 ................................PASS
+	006 sm121 TSM.sh 17p_vodsr_dh t31 48 ..............................PASS
+	007 er121 TER.sh 17p_vodsr_dh t31 10+38 ...........................PASS
+	008 br121 TBR.sh 17p_vodsr_dh t31 24+24 ...........................FAIL! rc= 11
+	009 bl121 TBL.sh 17p_vodsr_dh t31 48 ..............................SKIPPED*
+	010 sm124 TSM.sh 17p_vodsr_h t31 48 ...............................PASS
+	011 sm211 TSM.sh 17p_cnn_dh t31_cnall 48 ..........................PASS
+	012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................PASS
+	013 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24 .......................FAIL! rc= 11
+	014 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................SKIPPED*
+	015 sm311 TSM.sh 4p_casa_dh t31_casa 48 ...........................PASS
+	016 er311 TER.sh 4p_casa_dh t31_casa 10+38 ........................PASS
+	017 br311 TBR.sh 4p_casa_dh t31_casa 24+24 ........................FAIL! rc= 11
+	018 bl311 TBL.sh 4p_casa_dh t31_casa 48 ...........................SKIPPED*
+	019 sm411 TSM.sh 10p_dgvm_dh t31_dgvm 48 ..........................PASS
+	020 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38 .......................PASS
+	021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................FAIL! rc= 11
+	022 bl411 TBL.sh 10p_dgvm_dh t31_dgvm 48 ..........................SKIPPED*
+
+  NOTE:  the branch tests failed only in the differences to the time_bounds variable
+         upon branching - all other variables stayed the same. This has been reported as
+         bug #290.
+
+  tempest: Needs to be tested
+  bangkok/lf95:  Needs to be tested
+
+  Summarize any changes to answers, i.e.,
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+	small changes in climate in some frozen soil regions, but mainly affects runoff.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):  clm3_expa_60 was the baseline tag
+   - testing source:
+      /home/bluesky/oleson/hydro01_clm3_expa_60/bld/offline/mods_hydp2_off_communn_hk26
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/main
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/biogeophys
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/biogeochem
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/riverroute
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/csm_share/shr
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/utils/timing
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/utils/esmf_wrf_timemgr
+   - platform/compilers: bluesky
+   - configuration (CPP ifdefs): 
+      #define SPMD
+      #define OFFLINE
+      #define LSMLON       128
+      #define LSMLAT       64
+      #define MAXPATCH_PFT 4
+      #define RTM
+      #undef  DUST
+      #undef  VOC
+      #undef  DGVM
+      #undef  CN
+      #undef  SUPLN
+   - build-namelist command (or complete namelist):
+
+ &clmexp
+ caseid         = 'hydp2_off_communn_hk26'
+ ctitle         = 'offline run with clm3_expa_60, same as hydp2_off_con but with version 3 of P. Lawrence sfc dataset,new comm
+unity hydrology,soil ice and recharge fix,hkdepth=2.5,gridcell fmax,WT fix,ws fix,Sellers rsoil,rsoil dew fix,s_node fix,my fr
+ozen soil fixes,starts 1948'
+ finidat        = ' '
+ fsurdat        = '/fis/cgd/tss/oleson/plawren_datasets3/surfdata_064x128_hydro_060426.nc'
+ fatmlndfrc     = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/fracdata_64x128_gx1v3_060401.nc'
+ fpftcon        = '/home/bluesky/oleson/hydro01_clm3_expa_60/bld/offline/mods_hydp2_off_communn_hk23/pft-physiology.c060426'
+ frivinp_rtm    = '/fs/cgd/csm/inputdata/lnd/clm2/rtmdata/rdirc.05'
+ offline_atmdir = '/cgd/tss/oleson/ncepdata.tqian'
+ nsrest         =  1
+ nelapse        =  -6570
+ dtime          =  1200
+ start_ymd      =  19480101
+ start_tod      =  0
+ irad           = -1
+ wrtdia         = .true.
+ mss_irt        =  1095
+ hist_dov2xy    = .true.
+ hist_nhtfrq    =  0
+ hist_mfilt     =  1
+ hist_crtinic   = 'YEARLY'
+ /
+
+   MSS location of control simulations used to validate new climate:
+
+   	mss:/OLESON/csm/hydp2_off_communn_hk26
+  
+   URL for LMWG diagnostics output used to validate new climate:
+
+	http://www.cgd.ucar.edu/tss/clm/diagnostics/lmwg_hydro/hydp2_off_communn_hk26d-obs/setsIndex.html
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_80
 Originator(s): nanr
 Date:  Thu Nov 16 13:38:09 MST 2006

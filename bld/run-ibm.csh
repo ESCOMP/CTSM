@@ -70,7 +70,7 @@ setenv LIB_NETCDF /usr/local/lib64/r4i4
 ## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
 ## Contains the source code for the CLM distribution.
 ## (the root directory contains the subdirectory "models")
-set clmroot   = /fis/cgd/tss/nanr/clm/hydro/clm_trunk.061107
+set clmroot   = /fis/cgd/.......
 
 ## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
 ## Contains the initial and boundary data for the CLM distribution.
@@ -126,7 +126,7 @@ cat >! lnd.stdin << EOF
  fsurdat        = "$CSMDATA/surfdata/surfdata_048x096_061108.nc"
  fatmgrid       = "$CSMDATA/griddata/griddata_48x96_060829.nc"
  fatmlndfrc     = "$CSMDATA/griddata/fracdata_48x96_gx3v5_060829.nc"
- fpftcon        = '$CSMDATA/pftdata/pft-physiology-cn16.c040719'
+ fpftcon        = '$CSMDATA/pftdata/pft-physiology.c060426'
  fndepdat       = "$CSMDATA/ndepdata/1890/regrid_ndep_clm.nc"
  frivinp_rtm    = "$CSMDATA/rtmdata/rdirc.05.061026"
  offline_atmdir = "$CSMDATA/NCEPDATA"

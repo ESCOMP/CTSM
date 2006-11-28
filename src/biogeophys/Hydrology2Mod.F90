@@ -16,13 +16,15 @@ module Hydrology2Mod
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: Hydrology2        ! Calcultes soil/snow hydrology
+  public :: Hydrology2        ! Calculates soil/snow hydrology
 !
 ! !REVISION HISTORY:
 ! 2/28/02 Peter Thornton: Migrated to new data structures.
 ! 7/12/03 Forrest Hoffman ,Mariana Vertenstein : Migrated to vector code
 ! 11/05/03 Peter Thornton: Added calculation of soil water potential
-! for use in CN phenology code.
+!   for use in CN phenology code.
+! 11/27/06 Keith Oleson, Dave Lawrence: Modify subroutine calls to SurfaceRunoff and Drainage 
+!   to pass icefrac in/out
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -147,6 +149,7 @@ contains
     integer  :: nstep                      ! time step number
     real(r8) :: dtime                      ! land model time step (sec)
     real(r8) :: vol_liq(lbc:ubc,1:nlevsoi) ! partial volume of liquid water in layer
+    real(r8) :: icefrac(lbc:ubc,1:nlevsoi) ! ice fraction in layer
     real(r8) :: dwat(lbc:ubc,1:nlevsoi)    ! change in soil water
     real(r8) :: hk(lbc:ubc,1:nlevsoi)      ! hydraulic conductivity (mm h2o/s)
     real(r8) :: dhkdw(lbc:ubc,1:nlevsoi)   ! d(hk)/d(vol_liq)
@@ -228,7 +231,7 @@ contains
     ! Determine soil hydrology
 
     call SurfaceRunoff(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
-         vol_liq)
+         vol_liq, icefrac)
 
     call Infiltration(lbc, ubc,  num_soilc, filter_soilc)
 
@@ -236,7 +239,7 @@ contains
          vol_liq, dwat, hk, dhkdw)
 
     call Drainage(lbc, ubc, num_soilc, filter_soilc, &
-         vol_liq, hk)
+         vol_liq, hk, icefrac)
 
 #if (!defined COUP_CAM)
 
