@@ -96,13 +96,14 @@ set wrkdir  = /ptmp/$LOGNAME
 set blddir  = $wrkdir/$case/bld
 set rundir  = $wrkdir/$case
 set cfgdir  = $clmroot/bld
+set usr_src = $clmroot/bld/empty
 
 ## Ensure that run and build directories exist
 mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
 mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
 ## If an executable doesn't exist, build one.
-set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust"
+set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust -usr_src $usr_src"
 if ($spmd == on) set flags = "$flags -spmd"
 if ($smp  == on) set flags = "$flags -smp"
 if ( ! -x $blddir/clm ) then
@@ -120,13 +121,13 @@ cd $rundir                      || echo "cd $blddir failed" && exit 1
 
 cat >! lnd.stdin << EOF
  &clm_inparm
- caseid         = $case
- ctitle         = $case
+ caseid         = '$case'
+ ctitle         = '$case'
  finidat        = ' '
  fsurdat        = "$CSMDATA/surfdata/surfdata_048x096_061108.nc"
  fatmgrid       = "$CSMDATA/griddata/griddata_48x96_060829.nc"
  fatmlndfrc     = "$CSMDATA/griddata/fracdata_48x96_gx3v5_060829.nc"
- fpftcon        = '$CSMDATA/pftdata/pft-physiology.c060426'
+ fpftcon        = '$CSMDATA/pftdata/pft-physiology.c061129'
  fndepdat       = "$CSMDATA/ndepdata/1890/regrid_ndep_clm.nc"
  frivinp_rtm    = "$CSMDATA/rtmdata/rdirc.05.061026"
  offline_atmdir = "$CSMDATA/NCEPDATA"
@@ -150,14 +151,17 @@ EOF
 cd $rundir                    || echo "cd $rundir failed" && exit 1
 echo "running CLM in $rundir"
 
+setenv LID "`date +%y%m%d-%H%M%S`"
+
 if ($spmd == on) then
+
   #uncomment the line below to run on bluesky with MPI
-  #poe $blddir/clm              || echo "CLM run failed" && exit 1
+  #poe $blddir/clm >&! clm.log.$LID              || echo "CLM run failed" && exit 1
 
   #uncomment the line below to run on bluevista with MPI
-  #mpirun.lsf $blddir/clm       || echo "CLM run failed" && exit 1
+  #mpirun.lsf $blddir/clm >&! clm.log.$LID       || echo "CLM run failed" && exit 1
 else 
-  $blddir/clm                   || echo "CLM run failed" && exit 1
+  $blddir/clm  >&! clm.log.$LID                  || echo "CLM run failed" && exit 1
 endif
 
 exit 0

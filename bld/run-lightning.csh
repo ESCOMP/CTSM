@@ -59,13 +59,15 @@ set wrkdir   = /ptmp/$LOGNAME
 set blddir   = $wrkdir/$case/bld
 set rundir   = $wrkdir/$case
 set cfgdir   = $clmroot/bld
+set usr_src  = $clmroot/bld/empty
+
 
 ## Ensure that run and build directories exist
 mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
 mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
 ## If an executable doesn't exist, build one.
-set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust"
+set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust -usr_src $usr_src"
 if ($spmd == on) set flags = "$flags -spmd"
 if ( ! -x $blddir/clm ) then
     echo "cd $blddir"
@@ -88,7 +90,7 @@ cat >! lnd.stdin << EOF
  fsurdat        = "$CSMDATA/surfdata/surfdata_048x096_061108.nc"
  fatmgrid       = "$CSMDATA/griddata/griddata_48x96_060829.nc"
  fatmlndfrc     = "$CSMDATA/griddata/fracdata_48x96_gx3v5_060829.nc"
- fpftcon        = '$CSMDATA/pftdata/pft-physiology-cn16.c040719'
+ fpftcon        = '$CSMDATA/pftdata/pft-physiology.c061129'
  fndepdat       = "$CSMDATA/ndepdata/1890/regrid_ndep_clm.nc"
  frivinp_rtm    = "$CSMDATA/rtmdata/rdirc.05.061026"
  offline_atmdir = "$CSMDATA/NCEPDATA"

@@ -1,4 +1,148 @@
 ===============================================================
+Tag name: clm3_expa_84
+Originator(s):  nanr
+Date: Fri Dec  1 10:32:28 MST 2006
+One-line Summary: Modify stomatal open/close values for ENF/DNF/EBF
+
+Purpose of changes: Make stomatal open/close values consistent with White et al. (2000)
+	update run script namelists to point to new physiology files.
+
+Bugs fixed (include bugzilla ID): 
+	Bug #265
+	mksurfdata was missing the mkfmax.F90 file from clm3_expa_76, so I added mkfmax.F90
+	Bug #300 - Uncorporated most of Keith Oleson's recommended changes to the run scripts
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: 
+
+	A new pft physiology file is required: pft-physiology.c061129
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: Keith Oleson
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: 
+	tools/mksurfdata/mkfmax.F90 	(documented in clm3_expa_76 but not added)
+	/bld/empty			empty directory was added as template for run scripts (Bug 300)
+
+List all existing files that have been modified, and describe the changes: None
+
+M      test/system/nl_files/t31_cnall		! namelist change for new pft file
+M      test/system/nl_files/t31_dgvm		! namelist change for new pft file
+M      test/system/nl_files/t31			! namelist change for new pft file
+M      test/system/nl_files/t31_casa		! namelist change for new pft file
+A      tools/mksurfdata/mkfmax.F90		! adding fmax tool
+M      bld/run-pc.csh				! namelist change for new pft file
+M      bld/run-sgi.csh				! namelist change for new pft file
+M      bld/run-lightning.csh			! namelist change for new pft file
+M      bld/run-ibm.csh				! namelist change for new pft file
+A      bld/empty				! empty directory for run script 
+
+Summary of testing:  bluesky
+
+	001 sm111 TSM.sh 4p_vodsr_dh t31 48 ...............................PASS
+	002 er111 TER.sh 4p_vodsr_dh t31 10+38 ............................PASS
+	003 br111 TBR.sh 4p_vodsr_dh t31 24+24 ............................FAIL! rc= 11
+	004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................SKIPPED*
+	005 sm114 TSM.sh 4p_vodsr_h t31 48 ................................PASS
+	006 sm121 TSM.sh 17p_vodsr_dh t31 48 ..............................PASS
+	007 er121 TER.sh 17p_vodsr_dh t31 10+38 ...........................PASS
+	008 br121 TBR.sh 17p_vodsr_dh t31 24+24 ...........................FAIL! rc= 11
+	009 bl121 TBL.sh 17p_vodsr_dh t31 48 ..............................SKIPPED*
+	010 sm124 TSM.sh 17p_vodsr_h t31 48 ...............................PASS
+	011 sm211 TSM.sh 17p_cnn_dh t31_cnall 48 ..........................PASS
+	012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................PASS
+	013 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24 .......................FAIL! rc= 11
+	014 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................SKIPPED*
+	015 sm311 TSM.sh 4p_casa_dh t31_casa 48 ...........................PASS
+	016 er311 TER.sh 4p_casa_dh t31_casa 10+38 ........................PASS
+	017 br311 TBR.sh 4p_casa_dh t31_casa 24+24 ........................FAIL! rc= 11
+	018 bl311 TBL.sh 4p_casa_dh t31_casa 48 ...........................SKIPPED*
+	019 sm411 TSM.sh 10p_dgvm_dh t31_dgvm 48 ..........................PASS
+	020 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38 .......................PASS
+	021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................FAIL! rc= 11
+	022 bl411 TBL.sh 10p_dgvm_dh t31_dgvm 48 ..........................SKIPPED*
+
+   Note, the branch tests failed only in the differences to the time_bounds variable
+   upon branching - all other variables stayed the same. This has been reported as
+   bug #290.
+
+CLM tag used for the baseline comparison tests if applicable: None
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): small changes in climate 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository): clm3_expa_60 was the baseline tag, 
+      the testing source was:
+      /home/bluesky/oleson/hydro01_clm3_expa_60/bld/offline/mods_hydp2_off_communn_hk30
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/main
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/biogeophys
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/biogeochem
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/riverroute
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/csm_share/shr
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/utils/timing
+      /home/bluesky/oleson/hydro01_clm3_expa_60/src/utils/esmf_wrf_timemgr
+   - platform/compilers: bluesky
+   - configuration (CPP ifdefs): 
+      #define SPMD
+      #define OFFLINE
+      #define LSMLON       128
+      #define LSMLAT       64
+      #define MAXPATCH_PFT 4
+      #define RTM
+      #undef  DUST
+      #undef  VOC
+      #undef  DGVM
+      #undef  CN
+      #undef  SUPLN
+   - build-namelist command (or complete namelist):
+
+ &clmexp
+ caseid         = 'hydp2_off_communn_hk30'
+ ctitle         = 'offline run with clm3_expa_60, same as hydp2_off_communn_hk26 but with new smpso and smpsc values for DNF,ENF,EBF'
+ finidat        = ' '
+ fsurdat        = '/fis/cgd/tss/oleson/plawren_datasets3/surfdata_064x128_hydro_060426.nc'
+ fatmlndfrc     = '$CSMDATA/griddata/fracdata_64x128_gx1v3_060401.nc'
+ fpftcon        = '/home/bluesky/oleson/hydro01_clm3_expa_60/bld/offline/mods_hydp2_off_communn_hk30/pft-physiology.c061129'
+ frivinp_rtm    = '$CSMDATA/rtmdata/rdirc.05'
+ offline_atmdir = '/cgd/tss/oleson/ncepdata.tqian'
+ nsrest         =  0
+ nelapse        =  -6570
+ dtime          =  1200
+ start_ymd      =  19480101
+ start_tod      =  0
+ irad           = -1
+ wrtdia         = .true.
+ mss_irt        =  1095
+ hist_dov2xy    = .true.
+ hist_nhtfrq    =  0
+ hist_mfilt     =  1
+ hist_crtinic   = 'YEARLY'
+ /
+
+   - MSS location of output:
+        mss:/OLESON/csm/hydp2_off_communn_hk30
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+	http://www.cgd.ucar.edu/tss/clm/diagnostics/lmwg_hydro/hydp2_off_communn_hk30aa-hydp2_off_communn_hk26aa/setsIndex.html
+
+===============================================================
 Tag name: clm3_expa_83
 Originator(s): nanr
 Date:  Tue Nov 28 13:45:11 MST 2006
