@@ -74,7 +74,7 @@ contains
 ! !USES:
     use clmtype
     use clm_atmlnd        , only : clm_a2l
-    use clm_time_manager      , only : get_step_size
+    use clm_time_manager  , only : get_step_size
     use clm_varcon        , only : hvap, cpair, grav, vkc, tfrz, sb
     use clm_varpar        , only : nlevsno, nlevsoi, max_pft_per_col
     use SoilTemperatureMod, only : SoilTemperature
@@ -294,10 +294,7 @@ contains
           if ( pi <= npfts(c) ) then
              p = pfti(c) + pi - 1
              if (pwtgcell(p)>0._r8) then
-                if (qflx_evap_soi(p) > 0._r8) then
-                   topsoil_evap_tot(c) = topsoil_evap_tot(c) + qflx_evap_soi(p) * wtcol(p)
-                   sumwt(c) = sumwt(c) + wtcol(p)
-                end if
+                topsoil_evap_tot(c) = topsoil_evap_tot(c) + qflx_evap_soi(p) * wtcol(p)
              end if
           end if
        end do
@@ -309,9 +306,6 @@ contains
 !cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
-       if (sumwt(c) > 0._r8) then
-          topsoil_evap_tot(c) = topsoil_evap_tot(c) / sumwt(c)
-       end if
        if (topsoil_evap_tot(c) > egsmax(c)) then
           egirat(c) = (egsmax(c)/topsoil_evap_tot(c))
        else
@@ -327,19 +321,10 @@ contains
        g = pgridcell(p)
        j = snl(c)+1
 
-       ! Calculate the ratio of soil evaporation for this PFT relative
-       ! to the column total of all evaporating PFTs
-
-       if (qflx_evap_soi(p) > 0._r8 .and. topsoil_evap_tot(c) > 0._r8) then
-          evaprat(p) = qflx_evap_soi(p)/topsoil_evap_tot(c)
-       else
-          evaprat(p) = 0._r8
-       end if
-
        ! Correct soil fluxes for possible evaporation in excess of top layer water
        ! excess energy is added to the sensible heat flux from soil
 
-       if (egirat(c) < 1.0_r8 .AND. qflx_evap_soi(p) > 0._r8) then
+       if (egirat(c) < 1.0_r8) then
           save_qflx_evap_soi = qflx_evap_soi(p)
           qflx_evap_soi(p) = qflx_evap_soi(p) * egirat(c)
           eflx_sh_grnd(p) = eflx_sh_grnd(p) + (save_qflx_evap_soi - qflx_evap_soi(p))*htvp(c)
@@ -366,7 +351,13 @@ contains
        qflx_dew_grnd(p) = 0._r8
 
        if (qflx_evap_soi(p) >= 0._r8) then
-          qflx_evap_grnd(p) = min(evaprat(p)*h2osoi_liq(c,j)/dtime, qflx_evap_soi(p))
+          ! for evaporation partitioning between liquid evap and ice sublimation, 
+	  ! use the ratio of liquid to (liquid+ice) in the top layer to determine split
+	  if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0.) then
+             qflx_evap_grnd(p) = max(qflx_evap_soi(p)*(h2osoi_liq(c,j)/(h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
+	  else
+	     qflx_evap_grnd(p) = 0.
+	  end if
           qflx_sub_snow(p) = qflx_evap_soi(p) - qflx_evap_grnd(p)
        else
           if (t_grnd(c) < tfrz) then

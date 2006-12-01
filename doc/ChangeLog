@@ -1,4 +1,103 @@
 ===============================================================
+Tag name:  clm3_expa_85
+Originator(s): nanr
+Date: Fri Dec  1 11:46:26 MST 2006
+One-line Summary: change in topsoil evaporation.
+
+Purpose of changes:  Change in topsoil evaporation sums the contributions of qflx_evap_soi over
+all pft, regardless of sign of the pft
+
+Bugs fixed (include bugzilla ID): 264
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Peter Thornton
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+        M      src/biogeophys/Biogeophysics2Mod.F90
+
+1. (around line 297) Changed calculation of topsoil_evap_tot(c) to sum the contributions of qflx_evap_soi(p) over all PFTs, regardle
+ss of the sign of the PFT-level flux term.  Previously, this summation was only done over the positive PFT-level evaporation fluxes
+(excluded condensation terms).
+
+2. Change (1) eliminates the need for rescaling the topsoil_evap_tot(c) using sumwt(c), so this code was removed (around line 308).
+ Calculation of egirat(c) looks the same, but is now based on the modified topsoil_evap_tot(c), which includes both evaporation and
+condensation terms.
+
+3. Removed control on positive qflx_evap_soi(p) in block where PFT-level fluxes are being modified to avoid evaporation in excess of
+ top-layer water.  Now both evaporation and condensation terms are scaled by egirat(c).
+
+4. Removed calculation of evaprat(p)(around line 323).  Changed calculation of split between soil evaporation and ice sublimation to
+ eliminate use of evaprat(p), instead using the ratio of liquid/(liquid+ice) in top layer to partition total evaporation loss into w
+ater evaporation and ice sublimation (around line 354).
+
+Summary of testing:
+
+  bluesky:
+	001 sm111 TSM.sh 4p_vodsr_dh t31 48 ...............................PASS
+	002 er111 TER.sh 4p_vodsr_dh t31 10+38 ............................PASS
+	003 br111 TBR.sh 4p_vodsr_dh t31 24+24 ............................FAIL! rc= 11
+	004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................SKIPPED*
+	005 sm114 TSM.sh 4p_vodsr_h t31 48 ................................PASS
+	006 sm121 TSM.sh 17p_vodsr_dh t31 48 ..............................PASS
+	007 er121 TER.sh 17p_vodsr_dh t31 10+38 ...........................PASS
+	008 br121 TBR.sh 17p_vodsr_dh t31 24+24 ...........................FAIL! rc= 11
+	009 bl121 TBL.sh 17p_vodsr_dh t31 48 ..............................SKIPPED*
+	010 sm124 TSM.sh 17p_vodsr_h t31 48 ...............................PASS
+	011 sm211 TSM.sh 17p_cnn_dh t31_cnall 48 ..........................PASS
+	012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................PASS
+	013 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24 .......................FAIL! rc= 11
+	014 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................SKIPPED*
+	015 sm311 TSM.sh 4p_casa_dh t31_casa 48 ...........................PASS
+	016 er311 TER.sh 4p_casa_dh t31_casa 10+38 ........................PASS
+	017 br311 TBR.sh 4p_casa_dh t31_casa 24+24 ........................FAIL! rc= 11
+	018 bl311 TBL.sh 4p_casa_dh t31_casa 48 ...........................SKIPPED*
+	019 sm411 TSM.sh 10p_dgvm_dh t31_dgvm 48 ..........................PASS
+	020 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38 .......................PASS
+	021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................FAIL! rc= 11
+	022 bl411 TBL.sh 10p_dgvm_dh t31_dgvm 48 ..........................SKIPPED*
+  tempest:
+  bangkok/lf95:
+
+CLM tag used for the baseline comparison tests if applicable:  None
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:	All
+    - what platforms/compilers:	All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+	new physics.  Same climate; larger than roundoff differences.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_84
 Originator(s):  nanr
 Date: Fri Dec  1 10:32:28 MST 2006
