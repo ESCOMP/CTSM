@@ -507,7 +507,7 @@ subroutine iniTimeConst
       smpmin(c) = -1.e8_r8
 
       hkdepth(c) = 1._r8/2.5_r8    ! chen and kumar watertable
-      wtfact(c) = gti(i,j)/100.
+      wtfact(c) = gti(i,j)
 
       ! Soil color
       isoicol(c) = soic2d(i,j)

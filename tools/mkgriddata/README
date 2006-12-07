@@ -29,3 +29,27 @@ input topographic dataset.
 
 5) move (and rename if appropriate) generated  grid dataset
   (e.g. to /fis/cgd/csm/inputdata/clm/griddata) 
+
+
+Notes:
+
+1. File naming conventions need explanation.  An input file from 1.9x2.5 will
+produce an output file of 096x144.  The output griddata file must be renamed to 
+the FV naming convention (1.9x2.5) when it is archived under /fs/cgd/csm/inputdata/lnd/clm2/griddata/.
+
+e.g., cp surfdata_096x144.nc /fs/cgd/csm/inputdata/lnd/clm2/surfdata/surfdata_1.9x2.5_061130.nc
+
+2.  Grid files should have LATIXY of 90 at the poles.  The displaced pole (89.*) should not appear in 
+FV grid files, although 90+/-0.25 is used for mapping and domain files.  FV Grid files with something other
+than 90 at the poles are incorrect and should not be used.
+
+e.g., 
+griddata_1.9x2.5_060711.nc====================bad
+ -89.5263157894737,  // LATIXY(1,1)
+
+griddata_1x1.25_060404.nc=====================good
+ -90,  // LATIXY(1,1)
+
+griddata_1x1.25_060711.nc=====================bad
+ -89.75,  // LATIXY(1,1)
+

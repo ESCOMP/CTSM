@@ -243,8 +243,8 @@ contains
 
 ! !ARGUMENTS:
     implicit none
-    type(domain_type),intent(in)  :: ddomain
-    type(domain_type),intent(out) :: ldomain
+    type(domain_type),intent(inout) :: ddomain
+    type(domain_type),intent(out)   :: ldomain
 !
 ! !REVISION HISTORY:
 ! Author: T Craig
@@ -369,10 +369,10 @@ contains
 ! Read a grid file
 !
 ! !USES:
-  include 'netcdf.inc'
+    implicit none
+    include 'netcdf.inc'
 !
 ! !ARGUMENTS:
-    implicit none
     type(domain_type),intent(inout) :: domain
     character(len=*) ,intent(in)    :: fname
     character(len=*) ,intent(in),optional :: type
@@ -1044,9 +1044,9 @@ contains
 
 ! !ARGUMENTS:
     implicit none
-    type(domain_type),intent(in) :: domain
-    character(len=*) ,intent(in) :: fname
-    integer, intent(in), optional :: itype
+    type(domain_type),intent(inout)       :: domain
+    character(len=*) ,intent(in)          :: fname
+    integer          ,intent(in),optional :: itype
 !
 ! !REVISION HISTORY:
 ! Author: T Craig
