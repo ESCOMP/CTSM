@@ -21,6 +21,9 @@ module iobinary
   use spmdMod        , only : masterproc
 #endif
   use decompMod      , only : map_sn2dc, map_dc2sn
+#if (defined RTM)
+  use RunoffMod      , only : map_rof_sn2dc, map_rof_dc2sn
+#endif
   use abortutils     , only : endrun
   use clmtype        , only : nameg, namel, namec, namep, lndrof, ocnrof, allrof
 !
@@ -96,6 +99,10 @@ contains
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then
           call map_sn2dc(iglobsn, iglobdc, clmlevel)
+#if (defined RTM)
+       elseif (clmlevel == allrof .or. clmlevel == lndrof .or. clmlevel == ocnrof) then
+          call map_rof_sn2dc(iglobsn, iglobdc, clmlevel)
+#endif
        else
           iglobdc(:) = iglobsn(:)
        end if
@@ -150,6 +157,10 @@ contains
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then
           call map_sn2dc(rglobsn, rglobdc, clmlevel)
+#if (defined RTM)
+       elseif (clmlevel == allrof .or. clmlevel == lndrof .or. clmlevel == ocnrof) then
+          call map_rof_sn2dc(rglobsn, rglobdc, clmlevel)
+#endif
        else
           rglobdc(:) = rglobsn(:)
        end if
@@ -207,6 +218,9 @@ contains
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then
           call map_sn2dc(iglobsn, iglobdc, clmlevel, lb, ub)
+       elseif (clmlevel == allrof .or. clmlevel == lndrof .or. clmlevel == ocnrof) then
+          write(6,*) 'readin_2darray_int error, not supported for runoff'
+          call endrun()
        else
           iglobdc(:,:) = iglobsn(:,:)
        end if
@@ -265,6 +279,9 @@ contains
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then
           call map_sn2dc(rglobsn, rglobdc, clmlevel, lb, ub)
+       elseif (clmlevel == allrof .or. clmlevel == lndrof .or. clmlevel == ocnrof) then
+          write(6,*) 'readin_2darray_real error, not supported for runoff'
+          call endrun()
        else
           rglobdc(:,:) = rglobsn(:,:)
        end if
@@ -322,6 +339,10 @@ contains
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then
           call map_dc2sn(iglobdc, iglobsn, clmlevel)
+#if (defined RTM)
+       elseif (clmlevel == allrof .or. clmlevel == lndrof .or. clmlevel == ocnrof) then
+          call map_rof_dc2sn(iglobdc, iglobsn, clmlevel)
+#endif
        else
           iglobsn(:) = iglobdc(:)
        end if
@@ -379,6 +400,10 @@ contains
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then
           call map_dc2sn(rglobdc, rglobsn, clmlevel)
+#if (defined RTM)
+       elseif (clmlevel == allrof .or. clmlevel == lndrof .or. clmlevel == ocnrof) then
+          call map_rof_dc2sn(rglobdc, rglobsn, clmlevel)
+#endif
        else
           rglobsn(:) = rglobdc(:)
        end if
@@ -439,6 +464,9 @@ contains
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then
           call map_dc2sn(iglobdc, iglobsn, clmlevel, lb, ub)
+       elseif (clmlevel == allrof .or. clmlevel == lndrof .or. clmlevel == ocnrof) then
+          write(6,*) 'wrtout_2darray_int error, not supported for runoff'
+          call endrun()
        else
           iglobsn(:,:) = iglobdc(:,:)
        end if
@@ -487,7 +515,7 @@ contains
        ub = ubound(rarr, dim=1)
        allocate (rglobdc(lb:ub,nsize), rglobsn(lb:ub,nsize), stat=ier)
        if (ier /=0) then
-          write(6,*)'readin_2d_array_real allocation error'; call endrun()
+          write(6,*)'wrtout_2d_array_real allocation error'; call endrun()
        end if
     endif
 #if (defined SPMD)
@@ -499,6 +527,9 @@ contains
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then
           call map_dc2sn(rglobdc, rglobsn, clmlevel, lb, ub)
+       elseif (clmlevel == allrof .or. clmlevel == lndrof .or. clmlevel == ocnrof) then
+          write(6,*) 'wrtout_2darray_real error, not supported for runoff'
+          call endrun()
        else
           rglobsn(:,:) = rglobdc(:,:)
        end if

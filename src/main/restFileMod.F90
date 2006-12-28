@@ -873,9 +873,6 @@ contains
 #if (defined RTM)
        call get_proc_rof_global(nrof_rtm, nrof_lnd, nrof_ocn)
 #endif
-
-#if ( !defined SCAM )
-
        call check_dim(ncid, 'gridcell', numg)
        call check_dim(ncid, 'landunit', numl)
        call check_dim(ncid, 'column'  , numc)
@@ -888,8 +885,6 @@ contains
        ! datasets created with CASA enabled so do not normally do this.
        ! call check_dim(ncid, 'nlive'   , nlive)
        ! call check_dim(ncid, 'npools'  , npools)
-#endif
-
 #endif
     end if
 

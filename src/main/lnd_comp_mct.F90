@@ -66,11 +66,13 @@ contains
     use clm_atmlnd       , only : clm_mapl2a, clm_l2a, atm_l2a
     use domainMod        , only : alocdomain
     use clm_comp         , only : clm_init0, clm_init1, clm_init2
-    use clm_varctl       , only : finidat       
-    use shr_InputInfo_mod, only : shr_inputInfo_initType
+    use clm_varctl       , only : finidat,single_column
+    use shr_inputinfo_mod, only : shr_inputInfo_initType,       &
+                                  shr_inputInfo_initGetData
     use eshr_timemgr_mod , only : eshr_timemgr_clockType, eshr_timemgr_clockInfoType, &
                                   eshr_timemgr_clockGet
     use controlMod       , only : control_setNL
+    use domainMod        , only : adomain
 !
 ! !ARGUMENTS:
     integer        ,              intent(in)    :: LNDID	
@@ -113,6 +115,10 @@ contains
     ! clm_init1 and clm_init2 performs rest of initialization	
 
     call clm_init0( CCSMInit )
+
+    ! If in SCM mode and no land then exit out of initialization
+    if ( single_column .and. adomain%frac(1)==0) return        
+
     call clm_init1( SyncClock )
     call clm_init2()
 

@@ -1,8 +1,5 @@
 #include <misc.h>
 #include <preproc.h>
-#if ( defined SCAM )
-#include <max.h>
-#endif
 
 module controlMod
 
@@ -125,9 +122,6 @@ module controlMod
                             hist_fexcl4, hist_fexcl5, hist_fexcl6
   use shr_const_mod, only : SHR_CONST_CDAY
   use abortutils   , only : endrun
-#if ( defined SCAM )
-  use scamMod      , only : scam_clm_default_opts
-#endif
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -372,6 +366,9 @@ contains
     wrtdia = .false.
     csm_doflxave = .true.
     pertlim = 0._r8
+    single_column=.false.
+    scmlat=-999.
+    scmlon=-999.
 
 #if (defined RTM)
     ! If rtm_nsteps is not set in the namelist then
@@ -409,10 +406,6 @@ contains
        ! Read namelist from standard input. 
        ! ----------------------------------------------------------------------
 
-#if ( defined SCAM )
-       call scam_clm_default_opts( pftfile_out=fpftcon, srffile_out=fsurdat, &
-                                   inifile_out=finidat, dtime_out=dtime )
-#else
        if ( len_trim(NLFilename) == 0  )then
           call endrun( subname//' error: nlfilename not set' )
        end if
@@ -427,7 +420,6 @@ contains
           endif
        end do
        call relavu( unitn )
-#endif
 
        ! ----------------------------------------------------------------------
        ! Consistency checks on input namelist.
@@ -455,10 +447,7 @@ contains
           call endrun()
        end if
        if (fpftdyn /= ' ') then
-#if (defined SCAM) 
-          write(6,*)'dynamic landuse is currently not supported with SCAM option'
-          call endrun()
-#elif (defined DGVM)
+#if (defined DGVM)
           write(6,*)'dynamic landuse is currently not supported with DGVM option'
           call endrun()
 #elif (defined CASA)          
@@ -478,7 +467,9 @@ contains
                                        case_desc=ctitle, mss_irt=mss_irt, &
                                        mss_wpass=mss_wpass,               &
                                        brnch_retain_casename=brnch_retain_casename,  &
-                                       archive_dir=drvarchdir )
+                                       archive_dir=drvarchdir,&
+                                       single_column=single_column ,      &
+				       scmlat=scmlat,scmlon=scmlon)
        archive_dir = shr_string_getParentDir( drvarchdir )//'/lnd/'
        if (      shr_inputInfo_initIsStartup(  CCSMInit ) )then
           nsrest = 0
@@ -726,6 +717,9 @@ contains
     call mpi_bcast (csm_doflxave, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (rtm_nsteps  , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (wrtdia      , 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (scmlat,       1, MPI_REAL8,   0, mpicom, ier)
+    call mpi_bcast (scmlon,       1, MPI_REAL8,   0, mpicom, ier)
 
     ! history file variables
 

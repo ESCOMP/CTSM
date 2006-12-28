@@ -67,7 +67,7 @@ contains
 ! !USES:
     use clm_varpar, only : lsmlon, lsmlat, maxpatch
     use clm_varpar, only : clm_varpar_init
-    use domainMod , only : ldomain, adomain, ndomains, domain_check
+    use domainMod , only : ldomain, adomain, ndomains, domain_check,domain_copy
     use surfrdMod , only : surfrd,surfrd_get_grid,surfrd_get_frac,&
                            surfrd_get_topo
     use clm_varctl, only : fsurdat, fatmgrid, fatmlndfrc, &
@@ -87,9 +87,7 @@ contains
     integer  :: ier                       ! error status
     integer  :: i,j,n1,n2,n               ! loop indices
     integer  :: numnests                  ! number of nested land grids
-    integer , pointer     :: n_ovr(:,:)   ! num of cells for each dst
-    integer , pointer     :: i_ovr(:,:,:) ! i index, map input cell
-    integer , pointer     :: j_ovr(:,:,:) ! j index, map input cell
+    real(r8) :: rmaxlon,rmaxlat           ! local min/max vars
 !-----------------------------------------------------------------------
 
     ! ------------------------------------------------------------------------
@@ -198,6 +196,34 @@ contains
 !    !--- generate ldomain from ndomains, wtxy from nwtxys ---
 !    call tcx(ndomains,ldomain,nwtxys,wtxy,nvegxys,vegxy)
     ldomain => ndomains(1)
+
+    !--- check if grids are "close", adjust, continue, or end  ---
+    !--- set ldomain == adomain if lats/lons < 0.001 different ---
+    !--- exit if lats/lon > 0.001 and < 1.0 different          ---
+    !--- continue if lat/lons > 1.0 different                  ---
+    if (adomain%ni == ldomain%ni .and. adomain%nj == ldomain%nj) then
+       rmaxlon = 0.0_r8
+       rmaxlat = 0.0_r8
+       do n = 1,adomain%ns
+          rmaxlon = max(rmaxlon,abs(adomain%lonc(n)-ldomain%lonc(n)))
+          rmaxlat = max(rmaxlat,abs(adomain%latc(n)-ldomain%latc(n)))
+       enddo
+       if (rmaxlon < 0.001_r8 .and. rmaxlat < 0.001_r8) then
+          if (masterproc) write(6,*) 'initialize1: set ldomain == adomain', &
+             ':continue',rmaxlon,rmaxlat
+          call domain_copy(adomain,ldomain)
+       elseif (rmaxlon < 1.0_r8 .and. rmaxlat < 1.0_r8) then
+          if (masterproc) write(6,*) 'initialize1: adomain/ldomain mismatch', &
+             ':error',rmaxlon,rmaxlat
+          call endrun()
+       else
+          if (masterproc) write(6,*) 'initialize1: adomain/ldomain different', &
+              ':continue',rmaxlon,rmaxlat
+       endif
+    else
+       if (masterproc) write(6,*) 'initialize1: adomain/ldomain different ', &
+          'sizes:continue'
+    endif
 
   end subroutine initialize1
 
@@ -503,7 +529,6 @@ contains
        call mkarbinit()
     end if
        
-#if (!defined SCAM)
     ! For restart run, read binary history restart
 
     if (nsrest == 1) then
@@ -513,7 +538,6 @@ contains
        end if
        call restFile_read_binary( fnamer_bin )
     end if
-#endif
 
     ! ------------------------------------------------------------------------
     ! Initialization of dynamic pft weights
@@ -549,7 +573,7 @@ contains
     ! restart file is read in
     ! ------------------------------------------------------------------------
 
-#if (defined CASA) && (!defined SCAM) 
+#if (defined CASA)
     ! Initialize CASA 
 
     call initCASA()
@@ -560,7 +584,6 @@ contains
     ! Initialize history and accumator buffers
     ! ------------------------------------------------------------------------
 
-#if (!defined SCAM) 
     ! Initialize master history list. 
 
     call initHistFlds()
@@ -571,7 +594,6 @@ contains
     ! information, so this call must be made after the restart information has been read.
 
     if (nsrest == 0 .or. nsrest == 3) call htapes_build ()
-#endif
 
     ! Initialize clmtype variables that are obtained from accumulated fields.
     ! This routine is called in an initial run at nstep=0 for cam and csm mode
@@ -692,11 +714,9 @@ contains
     if (nsrest == 0 .and. finidat /= ' ') then
        do_restread = .true.
     end if
-#if (!defined SCAM)
     if (nsrest == 1 .or. nsrest == 3) then
        do_restread = .true.
     end if
-#endif
   end function do_restread
   
 end module initializeMod

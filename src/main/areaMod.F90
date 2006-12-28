@@ -28,6 +28,7 @@ module areaMod
   implicit none
   private
 
+#if (1 == 0)
   type gridmap_type
      private
      ! lower level in hierarchy
@@ -44,14 +45,13 @@ module areaMod
      real(r8)         ,pointer :: w_ovr(:,:,:) ! wt of overlap input cell
   end type gridmap_type
   public gridmap_type
+#endif
 
   type map_type
      private
      ! lower level in hierarchy
      character(len=32)         :: name
      character(len=16)         :: type        ! global, dst, src, etc
-!     type(domain_type),pointer :: domain_i    ! domain_i
-!     type(domain_type),pointer :: domain_o    ! domain_o
      integer                   :: ni_i,nj_i   ! size of src grid ni,nj
      integer                   :: ni_o,nj_o   ! size of dst grid ni,nj
      integer                   :: nwts        ! size of row, col, S (local)
@@ -73,17 +73,21 @@ module areaMod
   public :: map_init
   public :: map_setptrs
   public :: map_setmapsFM
-  public :: map_maparray
+  public :: map_setmapsAR
+  public :: map_maparrayl
+  public :: map_maparrayg
   public :: map_setgatm
+#if (1 == 0)
   public :: gridmap_checkmap
-  public :: areaini        ! area averaging initialization
-  public :: areaave        ! area averaging of field from input to output grids
+  public :: gridmap_setptrs
+#endif
   interface celledge
      module procedure celledge_regional
      module procedure celledge_global  
   end interface
   public :: celledge
   public :: cellarea
+
 !
 ! !REVISION HISTORY:
 ! Created by Sam Levis
@@ -93,12 +97,18 @@ module areaMod
 !EOP
 !
 ! PRIVATE MEMBER FUNCTIONS:
+#if (1 == 0)
+  !--- no longer used, kept for reference
+  private :: areaini        ! area averaging initialization
+  private :: areaave        ! area averaging of field from input to output grids
   private :: areamap   ! weights and indices for area of overlap between grids
   private :: areaovr   ! area of overlap between grid cells
+#endif
 !-----------------------------------------------------------------------
 
 contains
 
+#if (1 == 0)
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -164,6 +174,7 @@ contains
   gridmap%w_ovr = nan
 
 end subroutine gridmap_init
+#endif
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -225,6 +236,7 @@ end subroutine gridmap_init
 
 end subroutine map_init
 !------------------------------------------------------------------------------
+#if (1 == 0)
 !BOP
 !
 ! !IROUTINE: gridmap_setptrs
@@ -294,6 +306,7 @@ end subroutine map_init
     endif
 
 end subroutine gridmap_setptrs
+#endif
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -367,10 +380,10 @@ end subroutine map_setptrs
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: map_maparray
+! !IROUTINE: map_maparrayl
 !
 ! !INTERFACE:
-  subroutine map_maparray(begg_i, endg_i, begg_o, endg_o, nflds, &
+  subroutine map_maparrayl(begg_i, endg_i, begg_o, endg_o, nflds, &
                               fld_i, fld_o, map)
 !
 ! !DESCRIPTION:
@@ -402,20 +415,20 @@ end subroutine map_setptrs
 !------------------------------------------------------------------------------
 
     if (trim(map%type) /= trim(map_typelocal)) then
-       write(6,*) 'map_maparray WARNING: map type not correct, ', &
+       write(6,*) 'map_maparrayl WARNING: map type not correct, ', &
                    map%name,map%type
     endif
 
     ! check for errors in overlap
 
     if (minval(map%src) < begg_i .or. maxval(map%src) > endg_i) then
-       write(6,*) 'map_maparray ERROR: src out of bounds:', &
+       write(6,*) 'map_maparrayl ERROR: src out of bounds:', &
                    minval(map%src),maxval(map%src),begg_i,endg_i
        call endrun()
     endif
 
     if (minval(map%dst) < begg_o .or. maxval(map%dst) > endg_o) then
-       write(6,*) 'map_maparray ERROR: dst out of bounds:', &
+       write(6,*) 'map_maparrayl ERROR: dst out of bounds:', &
                    minval(map%dst),maxval(map%dst),begg_o,endg_o
        call endrun()
     endif
@@ -435,7 +448,63 @@ end subroutine map_setptrs
     enddo
     enddo
 
-end subroutine map_maparray
+end subroutine map_maparrayl
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: map_maparrayg
+!
+! !INTERFACE:
+  subroutine map_maparrayg(fld_i, fld_o, map)
+!
+! !DESCRIPTION:
+! This subroutine maps arrays, global 1d with 1d map type
+!
+! !USES:
+!
+! !ARGUMENTS:
+  implicit none
+  real(r8), intent(in)            :: fld_i(:,:)
+  real(r8), intent(out)           :: fld_o(:,:)
+  type(map_type), intent(in)      :: map
+!
+! !REVISION HISTORY:
+! 2005.11.15  T Craig  Creation.
+! 2006.3.30   P Worley Restructuring for improved vector performance
+!
+!EOP
+
+! !LOCAL VARIABLES:
+  integer :: g_o ,g_i              ! gridcell indices
+  integer :: n,ifld,nflds          ! loop counters
+  real(r8):: wtx                   ! wt for map
+
+!
+!------------------------------------------------------------------------------
+
+    if (trim(map%type) /= trim(map_typeglobal)) then
+       write(6,*) 'map_maparrayg WARNING: map type not correct, ', &
+                   map%name,map%type
+    endif
+
+    nflds = size(fld_i,dim=2)
+    ! initialize field on output grid to zero everywhere
+
+    fld_o(:,:) = 0._r8
+
+    ! map flds
+
+    do ifld = 1,nflds
+    do n = 1,map%nwts
+       g_i = map%src(n)
+       g_o = map%dst(n)
+       wtx = map%S(n)
+       fld_o(g_o,ifld) = fld_o(g_o,ifld) + wtx * fld_i(g_i,ifld)
+    enddo
+    enddo
+
+end subroutine map_maparrayg
 
 !------------------------------------------------------------------------------
 !BOP
@@ -1029,6 +1098,315 @@ end subroutine map_setmapsFM
 !------------------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: map_setmapsAR
+!
+! !INTERFACE:
+  subroutine map_setmapsAR (domain_i, domain_o, sMat, &
+                      fracin, fracout)
+!
+! !DESCRIPTION:
+! area averaging initialization
+! This subroutine is used for area-average mapping of a field from one
+! grid to another.
+!
+! !USES:
+    use clm_mct_mod
+!
+! !ARGUMENTS:
+    implicit none
+    type(domain_type) ,intent(in)        :: domain_i   ! input domain
+    type(domain_type) ,intent(in)        :: domain_o   ! output domain
+    type(mct_sMat)    ,intent(inout)     :: sMat       ! mct sparse matrix plux
+    real(r8), intent(in),optional,target :: fracin(:)
+    real(r8), intent(in),optional,target :: fracout(:)
+!
+! !REVISION HISTORY:
+! Created by Gordon Bonan
+! 2005.11.20 Updated by T Craig
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    integer          :: nlon_i       !input  grid: max number of longitude pts
+    integer          :: nlat_i       !input  grid: number of latitude  points
+    real(r8),pointer :: area_i(:)    !input grid: cell area
+    real(r8),pointer :: fland_i(:)   !input grid: cell frac
+    real(r8),pointer :: lone_i(:)    !input grid: longitude, E edge (degrees)
+    real(r8),pointer :: lonw_i(:)    !input grid: longitude, W edge (degrees)
+    real(r8),pointer :: latn_i(:)    !input grid: latitude, N edge (degrees)
+    real(r8),pointer :: lats_i(:)    !input grid: latitude, S edge (degrees)
+    integer          :: nlon_o       !output grid: max number of longitude pts
+    integer          :: nlat_o       !output grid: number of latitude  points
+    real(r8),pointer :: area_o(:)    !output grid: cell area
+    real(r8),pointer :: fland_o(:)   !output grid: cell frac
+    real(r8),pointer :: lone_o(:)    !output grid: longitude, E edge  (degrees)
+    real(r8),pointer :: lonw_o(:)    !output grid: longitude, W edge  (degrees)
+    real(r8),pointer :: latn_o(:)    !output grid: latitude, N edge (degrees)
+    real(r8),pointer :: lats_o(:)    !output grid: latitude, S edge (degrees
+    integer          :: nwts         !local num of weights
+    integer          :: n,ns,nw,k    !loop counters
+    integer nb,na          !grid sizes
+    integer io,jo,no       !output grid loop index
+    integer indexo         !output grid lat. index according to orientn
+    integer ii,ji,ni       !input  grid loop index
+    integer indexi         !input grid lat. index according to orientn
+    real(r8) lonw          !west longitudes of overlap
+    real(r8) lone          !east longitudes of overlap
+    real(r8) dx            !difference in longitudes
+    real(r8) lats          !south latitudes of overlap
+    real(r8) latn          !north latitudes of overlap
+    real(r8) dy            !difference in latitudes
+    real(r8) deg2rad       !pi/180
+    real(r8) a_ovr         !area of overlap
+    integer  noffsetl      !local, number of offsets to test, 0=none, default=1
+    real(r8) offset        !value of offset used to shift x-grid 360 degrees
+    real(r8) :: sum        !local sum of wts
+    integer  :: igrow,igcol,iwgt   ! mct smat field indices
+    integer  :: nr         !mct field index
+    real(r8) :: wt         !mct weight
+
+    real(r8),pointer :: fld_i(:), fld_o(:)    !dummy fields for testing
+    real(r8) :: sum_fldo               !global sum of dummy output field
+    real(r8) :: sum_fldi               !global sum of dummy input field
+    real(r8) :: relerr = 0.001_r8      !relative error for error checks
+    real(r8) :: dx_i                   !input grid  longitudinal range
+    real(r8) :: dy_i                   !input grid  latitudinal  range
+    real(r8) :: dx_o                   !output grid longitudinal range
+    real(r8) :: dy_o                   !output grid latitudinal  range
+    integer  :: ier                    !error status
+!------------------------------------------------------------------------
+
+    !--- set pointers into domain ---
+    call domain_setptrs(domain_i,ni=nlon_i,nj=nlat_i,area=area_i, &
+       latn=latn_i,lats=lats_i,lone=lone_i,lonw=lonw_i,frac=fland_i)
+    call domain_setptrs(domain_o,ni=nlon_o,nj=nlat_o,area=area_o, &
+       latn=latn_o,lats=lats_o,lone=lone_o,lonw=lonw_o,frac=fland_o)
+
+    if (present(fracin)) then
+       fland_i => fracin
+    else
+       write(6,*) 'map_setmapsAR ERROR: fracin required'
+       call endrun()
+    endif
+    if (present(fracout)) then
+       fland_o => fracout
+    else
+       write(6,*) 'map_setmapsAR ERROR: fracout required'
+       call endrun()
+    endif
+
+    ! Dynamically allocate memory
+
+    na = nlon_i*nlat_i
+    nb = nlon_o*nlat_o
+    noffsetl = 1
+
+    ! Get indices and weights for mapping from input grid to output grid
+
+    do k = 1,2    ! k = 1 compute num of wts, k = 2 set wts
+       if (k == 2) then
+          call mct_sMat_init(sMat, nb, na, nwts)
+          igrow = mct_sMat_indexIA(sMat,'grow')
+          igcol = mct_sMat_indexIA(sMat,'gcol')
+          iwgt  = mct_sMat_indexRA(sMat,'weight')
+       endif
+       nw = 0
+       deg2rad = SHR_CONST_PI / 180._r8
+
+       !------ output grid -------
+       do jo = 1, nlat_o
+          if (latn_o((nlat_o-1)*nlon_o + 1) > latn_o(1)) then
+             indexo  = jo          !south to north at the center of cell
+          else
+             indexo  = nlat_o+1-jo !north to south at the center of cell
+          end if
+       do io = 1, nlon_o
+          ns = nw + 1
+
+          !------ input grid -------
+          sum = 0._r8
+          do ji = 1, nlat_i
+             if (latn_i((nlat_i-1)*nlon_i + 1) > latn_i(1)) then
+                indexi  = ji          !south to north at the center of cell
+             else
+                indexi  = nlat_i+1-ji !north to south at the center of cell
+             end if
+             !--- lats overlap ---
+             ni = (indexi-1)*nlon_i + 1
+             no = (indexo-1)*nlon_o + 1
+             if ( lats_i(ni)<latn_o(no) .and. &
+                  latn_i(ni)>lats_o(no)) then
+
+             !------ offset -------
+             do n = 0,noffsetl   ! loop through offsets
+                if (lonw_i(1) < lonw_o(1)) then
+                   offset = (n*360)
+                else
+                   offset = -(n*360)
+                end if
+
+             do ii = 1, nlon_i
+                ni = (indexi-1)*nlon_i + ii
+                no = (indexo-1)*nlon_o + io
+                !--- lons overlap ---
+                if (k == 1) then
+                   if (lonw_i(ni)+offset < lone_o(no) .and. &
+                       lone_i(ni)+offset > lonw_o(no)) then
+                       
+                      !------- found overlap ------
+                      if (fland_i(ni) > 0._r8 .and. fland_o(no) > 0._r8 ) then
+                         nw = nw + 1
+                      endif
+                   endif
+                elseif (k == 2) then
+                   if (lonw_i(ni)+offset < lone_o(no) .and. &
+                       lone_i(ni)+offset > lonw_o(no)) then
+
+                      ! determine area of overlap
+                      lone = min(lone_o(no),lone_i(ni)+offset)*deg2rad 
+                      lonw = max(lonw_o(no),lonw_i(ni)+offset)*deg2rad 
+                      dx = max(0.0_r8,(lone-lonw))
+                      latn = min(latn_o(no),latn_i(ni))*deg2rad 
+                      lats = max(lats_o(no),lats_i(ni))*deg2rad 
+                      dy = max(0.0_r8,(sin(latn)-sin(lats)))
+                      a_ovr = dx*dy*re*re
+
+                      sum = sum + a_ovr
+
+                      !------- found overlap ------
+                      if (fland_i(ni) > 0._r8 .and. fland_o(no) > 0._r8 ) then
+                         nw = nw + 1
+                         ! make sure nw <= nwts
+                         if (nw > nwts) then
+                            write (6,*) 'AREAOVR error: nw= ', &
+                               nw,' exceeded nwts ceiling = ', &
+                               nwts,' for output lon,lat = ',io,indexo
+                            call endrun
+                         end if
+
+                         ! save cell indices, area
+                         sMat%data%iAttr(igrow,nw) = no
+                         sMat%data%iAttr(igcol,nw) = ni
+                         sMat%data%rAttr(iwgt ,nw) = a_ovr
+                      endif
+                   endif
+             end if   ! found overlap lon
+             end do   ! ii
+             enddo    ! offset loop
+          end if   ! found overlap lat
+          end do   ! ji
+
+          !--- normalize ---
+          if (k == 2) then
+             do n = ns,nw
+                if (sum > 0._r8) then
+                   sMat%data%rAttr(iwgt,n) = sMat%data%rAttr(iwgt,n) / sum
+                else 
+                   sMat%data%rAttr(iwgt,n) = 0._r8
+                endif
+             enddo
+           endif
+
+       end do  ! io
+       end do  ! jo
+
+       nwts = nw
+
+    enddo   ! k loop
+
+    ! Error check: global sum fld_o = global sum fld_i.
+    ! This true only if both grids span the same domain.
+
+    dx_i = lone_i(nlon_i) - lonw_i(1)
+    dx_o = lone_o(nlon_o) - lonw_o(1)
+
+    if (latn_i((nlat_i-1)*nlon_i + 1) > latn_i(1)) then      !South to North grid
+       dy_i = latn_i((nlat_i-1)*nlon_i + 1) - lats_i(1)
+    else                                      !North to South grid
+       dy_i = latn_i(1) - lats_i((nlat_i-1)*nlon_i + 1)
+    end if
+    if (latn_o((nlat_o-1)*nlon_o + 1) > latn_o(1)) then      !South to North grid
+       dy_o = latn_o((nlat_o-1)*nlon_o + 1) - lats_o(1)
+    else                                      !North to South grid
+       dy_o = latn_o(1) - lats_o((nlat_o-1)*nlon_o + 1)
+    end if
+
+    if (abs(dx_i-dx_o)>relerr .or. abs(dy_i-dy_o)>relerr) then
+       if (masterproc) then
+          write (6,*) 'MAP_SETMAPSAR warning: lats/lons not overlapping'
+          write (6,*) '   input  grid of ',nlon_i,' x ',nlat_i,' dx,dy= ',dx_i,dy_i
+          write (6,*) '   output grid of ',nlon_o,' x ',nlat_o,' dx,dy= ',dx_o,dy_o
+       endif
+       return
+    end if
+
+    ! check for area/mask consistency
+
+    sum_fldi = 0._r8
+    do ni = 1, na
+       sum_fldi = sum_fldi + area_i(ni)*fland_i(ni)
+    end do
+
+    sum_fldo = 0._r8
+    do no = 1, nb
+       sum_fldo = sum_fldo + area_o(no)*fland_o(no)
+    end do
+
+    if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
+       if (masterproc) then
+          write (6,*) 'MAP_SETMAPSAR warning: masks/areas not conserved'
+          write (6,'(a30,e20.10)') 'global sum output area = ',sum_fldo
+          write (6,'(a30,e20.10)') 'global sum input  area = ',sum_fldi
+        endif
+        return
+    end if
+
+    ! check for conservation
+
+    allocate(fld_i(na),fld_o(nb))
+
+    sum_fldi = 0._r8
+    do ni = 1, na
+       fld_i(ni) = ni * fland_i(ni)
+       sum_fldi = sum_fldi + area_i(ni)*fld_i(ni)
+    end do
+
+    fld_o = 0._r8
+    do n = 1,mct_sMat_lsize(sMat)
+       no = sMat%data%iAttr(igrow,n)
+       ni = sMat%data%iAttr(igcol,n)
+       wt = sMat%data%rAttr(iwgt ,n)
+       fld_o(no) = fld_o(no) + wt*fld_i  (ni)
+    enddo
+
+    sum_fldo = 0._r8
+    do no = 1, nb
+       sum_fldo = sum_fldo + area_o(no)*fld_o(no)
+    end do
+
+    if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
+       if (masterproc) then
+          write (6,*) 'MAP_SETMAPSAR error: input field not conserved'
+          write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
+          write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
+        endif
+!       call endrun
+    else
+       if (masterproc) then
+          write (6,*) 'MAP_SETMAPSAR: input field conserved'
+          write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
+          write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
+       endif
+    end if
+
+    deallocate(fld_i,fld_o)
+
+  end subroutine map_setmapsAR
+
+!------------------------------------------------------------------------------
+#if (1 == 0)
+!BOP
+!
 ! !IROUTINE: gridmap_checkmap
 !
 ! !INTERFACE:
@@ -1154,7 +1532,7 @@ end subroutine map_setmapsFM
     endif
 
 end subroutine gridmap_checkmap
-
+#endif
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -1332,6 +1710,7 @@ end subroutine gridmap_checkmap
 
 end subroutine map_checkmap
 
+#if (1 == 0)
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -1575,13 +1954,13 @@ end subroutine map_checkmap
 
   end subroutine areaini
 
-!------------------------------------------------------------------------
+!------------------------------------------------------------------------------
 !BOP
 !
 ! !IROUTINE: areaave
 !
 ! !INTERFACE:
-  subroutine areaave (fld_i , fld_o , gridmap, scale_i)
+  subroutine areaave (fld_i , fld_o , gridmap)
 !
 ! !DESCRIPTION:
 ! Mapping of field from input to output grids, 2d global fields
@@ -1593,7 +1972,6 @@ end subroutine map_checkmap
     real(r8)          ,intent(in) :: fld_i(:)     !input grid : field
     real(r8)          ,intent(out):: fld_o(:)     !field for output grid
     type(gridmap_type),intent(in) :: gridmap      ! gridmap
-    real(r8),optional ,intent(in) :: scale_i(:)   !input scale field
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan
@@ -1642,11 +2020,7 @@ end subroutine map_checkmap
                 ii = i_ovr(io,jo,n)
                 ji = j_ovr(io,jo,n)
                 ni = (ji-1)*nlon_i + ii
-                if (present(scale_i)) then
-                   fld_o(no) = fld_o(no) + w_ovr(io,jo,n)*fld_i(ni)*scale_i(ni)
-                else
-                   fld_o(no) = fld_o(no) + w_ovr(io,jo,n)*fld_i(ni)
-                endif
+                fld_o(no) = fld_o(no) + w_ovr(io,jo,n)*fld_i(ni)
           end do
        end do
 !$OMP END PARALLEL DO
@@ -2116,6 +2490,7 @@ end subroutine map_checkmap
     return
   end subroutine areaovr
 
+#endif
 !------------------------------------------------------------------------
 !BOP
 !

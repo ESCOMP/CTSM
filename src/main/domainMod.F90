@@ -61,6 +61,7 @@ module domainMod
 ! !PUBLIC MEMBER FUNCTIONS:
   public domain_init          ! allocates/nans domain types
   public domain_clean         ! deallocates domain types
+  public domain_copy          ! copy one domain to another
   public domain_setptrs       ! sets external pointer arrays into domain
   public domain_check         ! write out domain info
 !
@@ -231,6 +232,56 @@ end subroutine domain_clean
 !------------------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: domain_copy
+!
+! !INTERFACE:
+  subroutine domain_copy(domain1,domain2)
+!
+! !DESCRIPTION:
+! This subroutine sets domain2 == domain1
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    type(domain_type),intent(in)    :: domain1        ! domain datatype
+    type(domain_type),intent(inout) :: domain2        ! domain datatype
+!
+! !REVISION HISTORY:
+!   Created by T Craig
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    integer ier
+!
+!------------------------------------------------------------------------------
+    call domain_clean(domain2)
+    call domain_init(domain2,domain1%ni,domain1%nj,domain1%nbeg,domain1%nend)
+
+    if (masterproc) then
+       write(6,*) 'domain_copy: copying ',domain1%ni,domain1%nj
+    endif
+    domain2%edges    = domain1%edges
+    domain2%mask     = domain1%mask
+    domain2%frac     = domain1%frac
+    domain2%topo     = domain1%topo
+    domain2%latc     = domain1%latc
+    domain2%lonc     = domain1%lonc
+    domain2%area     = domain1%area
+    domain2%lats     = domain1%lats
+    domain2%latn     = domain1%latn
+    domain2%lonw     = domain1%lonw
+    domain2%lone     = domain1%lone
+
+    domain2%domain_set = domain1%domain_set
+    domain2%regional   = domain1%regional
+    domain2%decomped   = domain1%decomped
+
+end subroutine domain_copy
+!------------------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: domain_setptrs
 !
 ! !INTERFACE:
@@ -363,6 +414,7 @@ end subroutine domain_setptrs
 !
 !------------------------------------------------------------------------------
 
+  if (masterproc) then
     write(6,*) '  domain_check domain_set= ',trim(domain%domain_set)
     write(6,*) '  domain_check decomped  = ',domain%decomped
     write(6,*) '  domain_check regional  = ',domain%regional
@@ -381,6 +433,7 @@ end subroutine domain_setptrs
     write(6,*) '  domain_check lats = ',minval(domain%lats),maxval(domain%lats)
     write(6,*) '  domain_check lonw = ',minval(domain%lonw),maxval(domain%lonw)
     write(6,*) ' '
+  endif
 
 end subroutine domain_check
 !------------------------------------------------------------------------------

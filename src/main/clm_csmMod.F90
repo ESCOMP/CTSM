@@ -937,7 +937,7 @@ contains
 
      ! debug write statements (remove)
 
-    if (masterproc) write(6,*)'co2_type = ', co2_type, ' co2_ppmv = ', co2_ppmv
+!    if (masterproc) write(6,*)'co2_type = ', co2_type, ' co2_ppmv = ', co2_ppmv
 
   end subroutine csm_recv
 

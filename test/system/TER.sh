@@ -143,7 +143,7 @@ for compare_file in ${files_to_compare}; do
     if [ $rc -eq 0 ]; then
         echo "TER.sh: comparison successful; output in ${rundir}/cprnc.${compare_file}.out"
     else
-	echo "TER.sh: error from CLM_compare.sh= $rc; see ${rundir}/cprnc.${compare_file} for details" 
+	echo "TER.sh: error from CLM_compare.sh= $rc; see ${rundir}/cprnc.${compare_file}.out for details" 
 	all_comparisons_good="FALSE"
     fi
 done

@@ -56,7 +56,7 @@ program mksrfdat
     character(len=256) :: fdyndat    ! dynamic landuse data file name
     character(len=256) :: fname      ! generic filename
     character(len=256) :: loc_fn     ! local file name
-    character(len=  7) :: resol      ! resolution for file name
+    character(len=  9) :: resol      ! resolution for file name
     integer  :: t1                   ! timer
     real(r8),parameter :: p5  = 0.5_r8   ! constant
     real(r8),parameter :: p25 = 0.25_r8  ! constant
@@ -454,7 +454,7 @@ program mksrfdat
 
     ! Create netCDF surface dataset.  
 
-    write (resol,'(i3.3,"x",i3.3)') lsmlat,lsmlon
+    write (resol,'(i4.4,"x",i4.4)') lsmlat,lsmlon
     fsurdat = './surfdata_'//trim(resol)//'.nc'
 
     call mkfile(ldomain%ni, ldomain%nj, fsurdat, dynlanduse = .false.)

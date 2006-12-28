@@ -476,7 +476,7 @@ contains
 !
 ! !USES:
     use spmdMod, only : masterproc
-    use clm_time_manager, only: get_curr_date, get_curr_time
+    use clm_time_manager, only: get_prev_time
 !
 ! !ARGUMENTS:
     implicit none
@@ -529,7 +529,7 @@ contains
 
     ! Determine elapased time since reference date
 
-    call get_curr_time(day, sec)
+    call get_prev_time(day, sec)
 
     ! Set number of time samples in each history file and
     ! time of a beginning of current averaging interval.

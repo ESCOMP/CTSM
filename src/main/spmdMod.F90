@@ -28,6 +28,7 @@ module spmdMod
   integer, public :: iam             ! processor number
   integer, public :: npes            ! number of processors for clm
   integer, public :: mpicom          ! communicator group for clm
+  integer, public :: comp_id         ! component id
 
 #ifdef SPMD
 #include <mpif.h>  
@@ -47,6 +48,9 @@ contains
 ! MPI initialization (number of cpus, processes, tids, etc)
 !
 ! !USES
+#if (defined COUP_CSM)
+    use cpl_comm_mod, only : cpl_comm_mph_cid
+#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -70,6 +74,11 @@ contains
     ! Initialize mpi communicator group
 
     mpicom = clm_mpicom
+
+    comp_id = 1
+#if (defined COUP_CSM)
+    comp_id = cpl_comm_mph_cid
+#endif
 
     ! Initialize mpi
 
@@ -122,9 +131,14 @@ contains
 
     ! spmd is not defined
 
+    mpicom = clm_mpicom
     iam = 0
     masterproc = .true.
     npes = 1
+    comp_id = 1
+#if (defined COUP_CSM)
+    comp_id = cpl_comm_mph_cid
+#endif
 	
 #endif   
 

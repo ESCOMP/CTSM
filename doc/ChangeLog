@@ -1,4 +1,146 @@
 ===============================================================
+Tag name: clm3_expa_87
+Originator(s): tcraig, jet
+Date: Wed Dec 27 05:03:01 GMT 2006
+One-line Summary: merge fme branch, merge refactor_scam branch
+
+Purpose of changes: bug fixes, reduce memory usage, improve memory scaling,
+	add mct package, update scam
+
+Bugs fixed (include bugzilla ID): 
+	#133 adomain,ldomain compare
+	#290 time bounds problem in history file
+	#291 fix rtm history bug on bangkok
+	#301 modify decomp info in i/o
+	#321 merge refactor_scam branch
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: memory reduce, amount TBD
+
+Code reviewed by: tcraig
+
+List all subroutines eliminated: many routines in areaMod removed
+	rename seq_mct_mod.F90 to clm_mct_mod.F90
+	add getnetcdfdata.F90
+
+List all subroutines added and what they do: added MCT package and interpolation
+	routines that use MCT mapping datatypes
+
+List all existing files that have been modified, and describe the changes:
+
+         test/system/TBL.sh
+	 test/system/TBR.sh
+	 test/system/test_driver.sh
+	 test/system/TER.sh
+	 bld/offline/mkSrcfiles
+	 bld/offline/tests/CLM_namelist.pm
+	 bld/offline/tests/compare.csh
+	 bld/offline/tests/config_machine_specs.csh
+	 bld/offline/tests/CLM_lab.pm
+	 bld/offline/tests/CLM_test.pm
+	 bld/offline/tests/CLM.pm
+	 bld/offline/tests/test-model.pl
+	 bld/offline/tests/model_specs.csh
+	 bld/offline/tests/CLM_run.pm
+	 bld/offline/tests/test_batch.csh
+	 bld/offline/tests/Makefile
+	 bld/offline/tests/configure.csh
+         bld/offline/tests/lab_default.pm
+	 bld/offline/mkDepends
+	 bld/offline/jobscript.csh
+	 bld/offline/Makefile
+         src/biogeochem/STATICEcosysDynMod.F90
+         src/SVN_EXTERNAL_DIRECTORIES
+	 src/main/inicFileMod.F90
+	 src/main/driver.F90
+	 src/main/ncdio.F90
+	 src/main/atmdrvMod.F90
+	 src/main/initializeMod.F90
+	 src/main/iniTimeConst.F90
+	 src/main/histFileMod.F90
+	 src/main/clm_atmlnd.F90
+	 src/main/clm_csmMod.F90
+	 src/main/restFileMod.F90
+	 src/main/controlMod.F90
+	 src/main/clm_varctl.F90
+	 src/main/getnetcdfdata.F90
+	 src/main/lnd_comp_mct.F90
+	 src/main/program_off.F90
+	 src/main/spmdMod.F90
+	 src/main/surfrdMod.F90
+	 src/main/domainMod.F90
+	 src/main/decompMod.F90
+	 src/main/areaMod.F90
+	 src/main/iobinary.F90
+	 src/main/clmtype.F90
+	 src/main/clm_mct_mod.F90
+	 src/riverroute/RtmMod.F90
+	 src/riverroute/RunoffMod.F90
+
+  fix minor bug in TBL, TBR, TER reporting non bfb errors
+  include mods from john truesdale for refactor_scam branch
+  add MCT package to utils and SVN_EXTERNALS
+  add mpicom to smpdMod.F90 default for mct
+  add map_setmapAR to areaMod.F90
+  refactor clm mapping datatypes and subroutines in general
+  remove 9 of 15 global arrays from decomp type
+  add MCT datatypes and mapping to atmdrv and rtm
+	
+Summary of testing:
+  fme05_clm3_expa_78 vs clm3_expa_78, cam3_3_40, ccsm3_1_beta40
+  (mods on top of clm3_expa_78)
+    bluesky:   all clm pass except BL fail due to changes in atmdrv mapping
+	       all cam pass
+    tempest:   all cam pass
+    bangkok:   all clm pass except BL fail due to changes in atmdrv mapping
+    lightning: ccsm ERS.f45_g35.B2 bfb with ccsm3_1_beta40
+    bluevista: ccsm ERS.f45_g35.B2 bfb with ccsm3_1_beta40
+	       cam finemesh test is bfb
+
+  fme06_clm3_expa_79 vs clm3_expa_79, cam3_3_44, ccsm3_1_beta40
+  (merge in scam_refactor02_clm3_expa_79)
+    bluesky:   all clm pass except BL fail due to changes in atmdrv mapping
+	       clm *211 test fail (due to failures in clm3_expa_79)
+	       all cam pass
+    tempest:   all cam pass
+    bangkok:   all cam pass
+    lightning: ccsm ERS.f45_g35.B2 bfb with ccsm3_1_beta40
+    bluevista: ccsm ERS.f45_g35.B2 bfb with ccsm3_1_beta40
+	       cam finemesh test is bfb
+
+  clm3_expa_87 == fme07_clm3_expa_86 vs clm3_expa_86, ccsm3_1_hydro01
+  (merge in clm3_expa_86, cam testing not possible)
+    bluesky:   all clm pass except BL fail due to changes in atmdrv mapping
+    bangkok:   all clm pass except BL fail due to changes in atmdrv mapping
+    bluevista: ccsm ERS.f19_g14.B2 bfb with ccsm3_1_beta40
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_86
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+	roundoff differences introduced in rtm and atmdrv due to change in
+	  interpolation order of operations.  verified this carefully during
+	  development with print statements.
+	also, with BL tests, history fields are typically different in only the 15th digit 
+	  after several timesteps
+	verified bfb in ccsm vs ccsm3_1_hydro01 tag (includes clm3_expa_86)
+	all cam tests pass with fme mods bfb including BL
+
+===============================================================
+===============================================================
 Tag name: clm3_expa_86
 Originator(s): nanr
 Date: Thu Dec  7 10:22:11 MST 2006

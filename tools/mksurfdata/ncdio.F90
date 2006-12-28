@@ -137,6 +137,7 @@ contains
 
     if (ret /= NF_NOERR) then
        write(6,*)'netcdf error from ',trim(calling)
+       write(6,*)'error ',ret,' = ',nf_strerror(ret)
        call abort()
     end if
 

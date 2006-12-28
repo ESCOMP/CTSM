@@ -9,11 +9,8 @@ module decompMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-#ifdef SPMD
-  use spmdMod     , only : masterproc, iam, npes, mpicom
-#else
-  use spmdMod     , only : masterproc, iam, npes
-#endif
+  use spmdMod     , only : masterproc, iam, npes, mpicom, comp_id
+  use clm_mct_mod
   use shr_sys_mod , only : shr_sys_flush
   use abortutils  , only : endrun
 !
@@ -95,23 +92,19 @@ module decompMod
   type decomp_type
      integer,pointer :: gsn2gdc(:)    ! 1d gsn to 1d gdc
      integer,pointer :: gdc2gsn(:)    ! 1d gdc to 1d gsn
-     integer,pointer :: glo2gsn(:)    ! 1d glo to 1d gsn
-     integer,pointer :: gsn2glo(:)    ! 1d gsn to 1d glo
      integer,pointer :: glo2gdc(:)    ! 1d glo to 1d gdc
      integer,pointer :: gdc2glo(:)    ! 1d gdc to 1d glo
-     integer,pointer :: gsn2i(:)      ! 1d gsn to 2d sn i index
-     integer,pointer :: gsn2j(:)      ! 1d gsn to 2d sn j index
      integer,pointer :: gdc2i(:)      ! 1d gdc to 2d sn i index
      integer,pointer :: gdc2j(:)      ! 1d gdc to 2d sn j index
-     integer,pointer :: glo2i(:)      ! 1d glo to 2d sn j index
-     integer,pointer :: glo2j(:)      ! 1d glo to 2d sn j index
-     integer,pointer :: ij2gsn(:,:)   ! 2d sn i,j index to 1d gsn
-     integer,pointer :: ij2gdc(:,:)   ! 2d sn i,j index to 1d gdc
-     integer,pointer :: ij2glo(:,:)   ! 2d sn i,j index to 1d glo
   end type decomp_type
   public decomp_type
   type(decomp_type),public,target :: ldecomp
   type(decomp_type),public,target :: adecomp
+
+  type(mct_gsMap)    ,public :: gsMap_lnd_gdc2glo
+  integer,allocatable,public ::  perm_lnd_gdc2glo(:)
+  type(mct_gsMap)    ,public :: gsMap_atm_gdc2glo
+  integer,allocatable,public ::  perm_atm_gdc2glo(:)
 
   interface map_dc2sn
      module procedure map_dc2sn_sl_real
@@ -165,14 +158,21 @@ contains
     integer :: cid,pid                ! indices
     integer, pointer :: lcid(:)       ! temporary for setting adecomp
     integer, pointer :: acid(:)       ! temporary for setting adecomp
-    integer :: n,m                    ! indices
+    integer :: n,m,np                 ! indices
     integer :: ilunits, icols, ipfts  ! temporaries
     integer :: ier                    ! error code
     integer :: cnt                    ! local counter
+    integer, parameter :: dbug=1      ! 0 = min, 1=normal, 2=much, 3=max
+    integer :: npmin,npmax,npint      ! do loop values for printing
+    integer :: clmin,clmax,clint      ! do loop values for printing
+    integer :: beg,end,lsize,gsize    ! used for gsmap init
+    integer, pointer :: gindex(:)     ! global index for gsmap init
 
     integer, pointer :: lncnt(:)      ! lnd cell count per atm cell
     integer, pointer :: lnoff(:)      ! atm cell offset in lnmap
     integer, pointer :: lnmap(:)      ! map from atm cell to lnd cells
+    integer, pointer :: lglo2gsn(:)   ! map from glo 2 gsn temporary
+    integer, pointer :: aglo2gsn(:)   ! map from glo 2 gsn temporary
     integer :: lnidx
 
 ! !CALLED FROM:
@@ -295,6 +295,20 @@ contains
        endif
     enddo
 
+!    !--- count total pfts, like loop below, in case you need them "early"
+!    nump  = 0
+!    do an = 1,ans
+!       if (adomain%mask(an) == 1) then
+!          do lnidx = 0,lncnt(an)-1
+!             ln = lnmap(lnoff(an)+lnidx)          
+!             call subgrid_get_gcellinfo (ln, wtxy, nlunits=ilunits, &
+!                                  ncols=icols, npfts=ipfts)
+!             nump = nump + ipfts
+!          enddo
+!       endif
+!    enddo
+!    if (masterproc) write(6,*) 'precompute total pfts ',nump
+
     !--- assign gridcells to clumps (and thus pes) ---
     allocate(lcid(lns),acid(ans))
     lcid = 0
@@ -407,91 +421,53 @@ contains
     ! Allocate dynamic memory for adecomp, ldecomp derived type
 
     allocate(adecomp%gdc2gsn(anumg), adecomp%gsn2gdc(anumg), &
-             adecomp%gdc2glo(anumg), adecomp%gsn2glo(anumg), &
-             adecomp%gdc2i  (anumg), adecomp%gsn2i  (anumg), &
-             adecomp%gdc2j  (anumg), adecomp%gsn2j  (anumg), &
+             adecomp%gdc2glo(anumg), adecomp%glo2gdc(ani*anj), &
+             adecomp%gdc2i  (anumg), adecomp%gdc2j  (anumg), &
              stat=ier)
     if (ier /= 0) then
        write (6,*) 'decomp_init(): allocation error1 for adecomp'
        call endrun()
     end if
 
-    allocate(adecomp%ij2gsn (ani,anj), adecomp%ij2gdc (ani,anj), &
-             adecomp%ij2glo (ani,anj),                           &
-             adecomp%glo2gsn(ani*anj), adecomp%glo2gdc(ani*anj), &
-             adecomp%glo2i  (ani*anj), adecomp%glo2j  (ani*anj), &
-             stat=ier)
-    if (ier /= 0) then
-       write (6,*) 'decomp_init(): allocation error2 for adecomp'
-       call endrun()
-    end if
-
     adecomp%gdc2gsn(:)  = 0
+    adecomp%gsn2gdc(:)  = 0
     adecomp%gdc2glo(:)  = 0
+    adecomp%glo2gdc(:)  = 0
     adecomp%gdc2i(:)    = 0
     adecomp%gdc2j(:)    = 0
-    adecomp%gsn2gdc(:)  = 0
-    adecomp%gsn2glo(:)  = 0
-    adecomp%gsn2i(:)    = 0
-    adecomp%gsn2j(:)    = 0
-    adecomp%glo2gsn(:)  = 0
-    adecomp%glo2gdc(:)  = 0
-    adecomp%glo2i(:)    = 0
-    adecomp%glo2j(:)    = 0
-    adecomp%ij2gsn(:,:) = 0
-    adecomp%ij2gdc(:,:) = 0
-    adecomp%ij2glo(:,:) = 0
 
     allocate(ldecomp%gdc2gsn(numg), ldecomp%gsn2gdc(numg), &
-             ldecomp%gdc2glo(numg), ldecomp%gsn2glo(numg), &
-             ldecomp%gdc2i  (numg), ldecomp%gsn2i  (numg), &
-             ldecomp%gdc2j  (numg), ldecomp%gsn2j  (numg), &
+             ldecomp%gdc2glo(numg), ldecomp%glo2gdc(lni*lnj), &
+             ldecomp%gdc2i  (numg), ldecomp%gdc2j  (numg), &
              stat=ier)
     if (ier /= 0) then
        write (6,*) 'decomp_init(): allocation error1 for ldecomp'
        call endrun()
     end if
 
-    allocate(ldecomp%ij2gsn (lni,lnj), ldecomp%ij2gdc (lni,lnj), &
-             ldecomp%ij2glo (lni,lnj),                           &
-             ldecomp%glo2gsn(lni*lnj), ldecomp%glo2gdc(lni*lnj), &
-             ldecomp%glo2i  (lni*lnj), ldecomp%glo2j  (lni*lnj), &
-             stat=ier)
-    if (ier /= 0) then
-       write (6,*) 'decomp_init(): allocation error2 for ldecomp'
-       call endrun()
-    end if
-
     ldecomp%gdc2gsn(:)  = 0
+    ldecomp%gsn2gdc(:)  = 0
     ldecomp%gdc2glo(:)  = 0
+    ldecomp%glo2gdc(:)  = 0
     ldecomp%gdc2i(:)    = 0
     ldecomp%gdc2j(:)    = 0
-    ldecomp%gsn2gdc(:)  = 0
-    ldecomp%gsn2glo(:)  = 0
-    ldecomp%gsn2i(:)    = 0
-    ldecomp%gsn2j(:)    = 0
-    ldecomp%glo2gsn(:)  = 0
-    ldecomp%glo2gdc(:)  = 0
-    ldecomp%glo2i(:)    = 0
-    ldecomp%glo2j(:)    = 0
-    ldecomp%ij2gsn(:,:) = 0
-    ldecomp%ij2gdc(:,:) = 0
-    ldecomp%ij2glo(:,:) = 0
+
+    !--- temporaries for decomp mappings
+    allocate(aglo2gsn(ani*anj),lglo2gsn(lni*lnj),stat=ier)
+    if (ier /= 0) then
+       write (6,*) 'decomp_init(): allocation error for al-glo2gsn'
+       call endrun()
+    end if
+    aglo2gsn(:) = 0
+    lglo2gsn(:) = 0
 
     ag = 0
     do aj = 1,anj
     do ai = 1,ani
        an = (aj-1)*ani + ai
-       adecomp%ij2glo(ai,aj) = an
-       adecomp%glo2i(an) = ai
-       adecomp%glo2j(an) = aj
        if (acid(an) > 0) then
           ag  = ag  + 1
-          adecomp%ij2gsn(ai,aj) = ag
-          adecomp%gsn2i(ag) = ai
-          adecomp%gsn2j(ag) = aj
-          adecomp%glo2gsn(an) = ag
-          adecomp%gsn2glo(ag) = an
+          aglo2gsn(an) = ag
        endif
     enddo
     enddo
@@ -501,16 +477,9 @@ contains
     do lj = 1,lnj
     do li = 1,lni
        ln = (lj-1)*lni + li
-       ldecomp%ij2glo(li,lj) = ln
-       ldecomp%glo2i(ln) = li
-       ldecomp%glo2j(ln) = lj
        if (lcid(ln) > 0) then
           lg = lg + 1
-          ldecomp%ij2gsn(li,lj) = lg
-          ldecomp%gsn2i(lg) = li
-          ldecomp%gsn2j(lg) = lj
-          ldecomp%glo2gsn(ln) = lg
-          ldecomp%gsn2glo(lg) = ln
+          lglo2gsn(ln) = lg
        endif
     enddo
     enddo
@@ -529,11 +498,10 @@ contains
                 ag = ag + 1
                 adecomp%gdc2i(ag) = ai
                 adecomp%gdc2j(ag) = aj
-                adecomp%gdc2gsn(ag) = adecomp%ij2gsn(ai,aj)
-                adecomp%gdc2glo(ag) = adecomp%ij2glo(ai,aj)
-                adecomp%ij2gdc(ai,aj) = ag
-                adecomp%gsn2gdc(adecomp%ij2gsn(ai,aj)) = ag
-                adecomp%glo2gdc(adecomp%ij2glo(ai,aj)) = ag
+                adecomp%gdc2gsn(ag) = aglo2gsn(an)
+                adecomp%gdc2glo(ag) = an
+                adecomp%gsn2gdc(aglo2gsn(an)) = ag
+                adecomp%glo2gdc(an) = ag
              endif
           enddo
           enddo
@@ -545,11 +513,10 @@ contains
                 lg = lg + 1
                 ldecomp%gdc2i(lg) = li
                 ldecomp%gdc2j(lg) = lj
-                ldecomp%gdc2gsn(lg) = ldecomp%ij2gsn(li,lj)
-                ldecomp%gdc2glo(lg) = ldecomp%ij2glo(li,lj)
-                ldecomp%ij2gdc(li,lj) = lg
-                ldecomp%gsn2gdc(ldecomp%ij2gsn(li,lj)) = lg
-                ldecomp%glo2gdc(ldecomp%ij2glo(li,lj)) = lg
+                ldecomp%gdc2gsn(lg) = lglo2gsn(ln)
+                ldecomp%gdc2glo(lg) = ln
+                ldecomp%gsn2gdc(lglo2gsn(ln)) = lg
+                ldecomp%glo2gdc(ln) = lg
              endif
           enddo
           enddo
@@ -557,8 +524,39 @@ contains
     enddo
     enddo
 
+    deallocate(aglo2gsn,lglo2gsn)
     deallocate(acid,lcid)
     deallocate(lncnt,lnoff,lnmap)
+
+    ! set gsMap_lnd_gdc2glo, perm_lnd_gdc2glo
+    call get_proc_bounds(beg, end)
+    allocate(gindex(beg:end))
+    do n = beg,end
+       gindex(n) = ldecomp%gdc2glo(n)
+    enddo
+    lsize = end-beg+1
+    gsize = lni * lnj
+    allocate(perm_lnd_gdc2glo(lsize),stat=ier)
+    call mct_indexset(perm_lnd_gdc2glo)
+    call mct_indexsort(lsize,perm_lnd_gdc2glo,gindex)
+    call mct_permute(gindex,perm_lnd_gdc2glo,lsize)
+    call mct_gsMap_init(gsMap_lnd_gdc2glo, gindex, mpicom, comp_id, lsize, gsize )
+    deallocate(gindex)
+
+    ! set gsMap_atm_gdc2glo, perm_atm_gdc2glo
+    call get_proc_bounds_atm(beg, end)
+    allocate(gindex(beg:end))
+    do n = beg,end
+       gindex(n) = adecomp%gdc2glo(n)
+    enddo
+    lsize = end-beg+1
+    gsize = ani * anj
+    allocate(perm_atm_gdc2glo(lsize),stat=ier)
+    call mct_indexset(perm_atm_gdc2glo)
+    call mct_indexsort(lsize,perm_atm_gdc2glo,gindex)
+    call mct_permute(gindex,perm_atm_gdc2glo,lsize)
+    call mct_gsMap_init(gsMap_atm_gdc2glo, gindex, mpicom, comp_id, lsize, gsize )
+    deallocate(gindex)
 
     ! Diagnostic output
 
@@ -579,7 +577,6 @@ contains
        write (6,*)
     end if
 
-
     ! Write out clump and proc info, one pe at a time, 
     ! barrier to control pes overwriting each other on stdout
 
@@ -587,7 +584,26 @@ contains
 #if (defined SPMD)
     call mpi_barrier(mpicom,ier)
 #endif
-    do pid = 0,npes-1
+     npmin = 0
+     npmax = npes-1
+     npint = 1
+     if (dbug == 0) then
+        npmax = 0
+     elseif (dbug == 1) then
+        npmax = min(npes-1,4)
+     elseif (dbug == 2) then
+        npint = npes/8
+     endif
+     do np = npmin,npmax,npint
+       pid = np
+       if (dbug == 1) then
+          if (np == 2) pid=npes/2-1
+          if (np == 3) pid=npes-2
+          if (np == 4) pid=npes-1
+       endif
+       pid = max(pid,0)
+       pid = min(pid,npes-1)
+
        if (iam == pid) then
           write(6,*)
           write(6,*)'proc= ',pid,' beg atmcell = ',procinfo%abegg, &
@@ -598,14 +614,23 @@ contains
                ' total gridcells per proc= ',procinfo%ncells
           write(6,*)'proc= ',pid,' beg landunit= ',procinfo%begl, &
                ' end landunit= ',procinfo%endl,                   &
-               ' total landunits per proc = ',procinfo%nlunits
+               ' total landunits per proc= ',procinfo%nlunits
           write(6,*)'proc= ',pid,' beg column  = ',procinfo%begc, &
                ' end column  = ',procinfo%endc,                   &
                ' total columns per proc  = ',procinfo%ncols
           write(6,*)'proc= ',pid,' beg pft     = ',procinfo%begp, &
                ' end pft     = ',procinfo%endp,                   &
                ' total pfts per proc     = ',procinfo%npfts
-          do n = 1,procinfo%nclumps
+          write(6,*)'proc= ',pid,' nclumps = ',procinfo%nclumps
+
+          clmin = 1
+          clmax = procinfo%nclumps
+          if (dbug == 1) then
+            clmax = 1
+          elseif (dbug == 0) then
+            clmax = -1
+          endif
+          do n = clmin,clmax
              cid = procinfo%cid(n)
              write(6,*)'proc= ',pid,' clump no = ',n, &
                   ' clump id= ',procinfo%cid(n),    &
@@ -634,7 +659,6 @@ contains
        call mpi_barrier(mpicom,ier)
 #endif
     end do
-
     call shr_sys_flush(6)
 
   end subroutine decomp_init

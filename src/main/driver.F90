@@ -277,7 +277,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
   ! ============================================================================
   call pftdyn_wbal_init()
 
-#if (!defined SCAM) && (!defined DGVM)
+#if (!defined DGVM)
   ! ============================================================================
   ! Update weights and reset filters if dynamic land use
   ! This needs to be done outside the clumps loop, but after BeginWaterBalance()
@@ -686,12 +686,9 @@ subroutine driver2(caldayp1, declinp1, rstwr)
   ! ============================================================================
   ! Create history and write history tapes if appropriate
   ! ============================================================================
-
-#if ( !defined SCAM )
   call t_startf('clm_driver_io')
   call htapes_wrapup()
   call t_stopf('clm_driver_io')
-#endif
 
   ! ============================================================================
   ! Write to DGVM history buffer if appropriate
@@ -708,7 +705,6 @@ subroutine driver2(caldayp1, declinp1, rstwr)
   ! Write restart/initial files if appropriate
   ! ============================================================================
 
-#if ( !defined SCAM )
   if (present(rstwr)) then
      write_restart = rstwr
   else
@@ -729,7 +725,6 @@ subroutine driver2(caldayp1, declinp1, rstwr)
      call restFile_write( filer )
      call t_stopf('clm_driver_io')
   end if
-#endif
 
 
 end subroutine driver2

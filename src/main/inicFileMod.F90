@@ -101,7 +101,6 @@ contains
           call check_ret(nf_open(loc_fni, nf_nowrite, ncid), subname)
 	  write(6,*)trim(subname),': opened netcdf file ',loc_fni
 	  call shr_sys_flush(6)
-#if ( !defined SCAM )
           call check_dim(ncid, 'gridcell', numg)
           call check_dim(ncid, 'landunit', numl)
           call check_dim(ncid, 'column'  , numc)
@@ -109,7 +108,6 @@ contains
           call check_dim(ncid, 'levsno'  , nlevsno)
           call check_dim(ncid, 'levsoi'  , nlevsoi)
           call check_dim(ncid, 'levlak'  , nlevlak) 
-#endif
           opened_finidat = .true.
        else
           call check_ret(nf_open(loc_fni, nf_nowrite, ncid), subname)

@@ -68,6 +68,12 @@ module clm_varctl
   logical :: wrtdia                             ! true => write global average diagnostics to std out
   logical :: csm_doflxave                       ! true => only communicate with flux coupler on albedo calc time steps
 !
+! single column control variables
+!
+  logical :: single_column                      ! true => single column mode
+  real(r8):: scmlat			        ! single column lat
+  real(r8):: scmlon			        ! single column lon
+!
 ! Rtm control variables
 !
   integer :: rtm_nsteps                         ! if > 1, average rtm over rtm_nsteps time steps

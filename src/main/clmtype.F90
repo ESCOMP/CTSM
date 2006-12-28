@@ -11,6 +11,7 @@ module clmtype
 ! !DESCRIPTION: 
 ! Define derived type hierarchy. Includes declaration of
 ! the clm derived type and 1d mapping arrays. 
+! All variaible are local only, no global information.
 !
 !   1 => default
 ! landunits types can have values of (see clm_varcon.F90)
@@ -1602,7 +1603,7 @@ end type model_dflux_type
 
 type pft_type
 
-   ! g/l/c/p hierarchy, point to arrays in subgrid_type, global glo arrays
+   ! g/l/c/p hierarchy, local g/l/c/p cells only
    integer, pointer :: column(:)        !index into column level quantities
    real(r8), pointer :: wtcol(:)	!weight (relative to column) 
    integer, pointer :: landunit(:)      !index into landunit level quantities
@@ -1658,12 +1659,11 @@ type column_type
 
    type(pft_type)   :: p       !plant functional type (pft) data structure 
 
-   ! g/l/c/p hierarchy, point to arrays in subgrid_type, global glo arrays
+   ! g/l/c/p hierarchy, local g/l/c/p cells only
    integer , pointer :: landunit(:)     !index into landunit level quantities
    real(r8), pointer :: wtlunit(:) 	!weight (relative to landunit)
    integer , pointer :: gridcell(:)     !index into gridcell level quantities
    real(r8), pointer :: wtgcell(:) 	!weight (relative to gridcell)
-
    integer , pointer :: pfti(:)         !beginning pft index for each column
    integer , pointer :: pftf(:)         !ending pft index for each column
    integer , pointer :: npfts(:)        !number of pfts for each column
@@ -1713,10 +1713,9 @@ type landunit_type
 
    type(column_type) :: c    !column data structure (soil/snow/canopy columns)
 
-   ! g/l/c/p hierarchy, point to arrays in subgrid_type, global glo arrays
+   ! g/l/c/p hierarchy, local g/l/c/p cells only
    integer , pointer :: gridcell(:)     !index into gridcell level quantities
    real(r8), pointer :: wtgcell(:)      !weight (relative to gridcell)
-
    integer , pointer :: coli(:)         !beginning column index per landunit
    integer , pointer :: colf(:)         !ending column index for each landunit
    integer , pointer :: ncolumns(:)     !number of columns for each landunit
@@ -1762,7 +1761,7 @@ type gridcell_type
 
    type(landunit_type) :: l	        !geomorphological landunits
 
-   ! g/l/c/p hierarchy, point to arrays in subgrid_type, global glo arrays
+   ! g/l/c/p hierarchy, local g/l/c/p cells only
    integer, pointer :: luni(:)          !beginning landunit index 
    integer, pointer :: lunf(:)          !ending landunit index 
    integer, pointer :: nlandunits(:)    !number of landunit for each gridcell

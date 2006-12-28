@@ -26,7 +26,7 @@ subroutine iniTimeConst
   use clm_varcon  , only : istice, istdlak, istwet, isturb, &
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
                            albsat, albdry
-  use clm_varctl  , only : nsrest, fsurdat
+  use clm_varctl  , only : nsrest, fsurdat,scmlon,scmlat,single_column
   use pftvarcon   , only : ncorn, nwheat, noveg, ntree, roota_par, rootb_par,  &
                            smpso, smpsc, &
                            z0mr, displar, dleaf, rhol, rhos, taul, taus, xl, &
@@ -45,9 +45,7 @@ subroutine iniTimeConst
   use pftvarcon   , only : pftconrd
   use ncdio
   use spmdMod
-#if ( defined SCAM )
   use getnetcdfdata
-#endif
 !
 ! !ARGUMENTS:
   implicit none
@@ -134,10 +132,8 @@ subroutine iniTimeConst
   real(r8),allocatable :: ndep(:,:)     ! read in - annual nitrogen deposition rate (gN/m2/yr)
   real(r8),allocatable :: gti(:,:)      ! read in - fmax
   integer  :: dimid,varid      ! netCDF id's
-#if ( defined SCAM )
   integer  :: ret, time_index
   real(r8) :: nlevsoidata(nlevsoi)
-#endif
   integer  :: ier                                ! error status
   character(len=256) :: locfn                    ! local filename
   character(len= 32) :: subname = 'iniTimeConst' ! subroutine name
@@ -235,14 +231,14 @@ subroutine iniTimeConst
 
      ! Red in soil color, sand and clay fraction
 
-#if ( defined SCAM )
+     if (single_column) then
      time_index=1
-     call getncdata (ncid, initLatIdx, initLonIdx, time_index,'SOIL_COLOR' , soic2d     , ret)
-     call getncdata (ncid, initLatIdx, initLonIdx, time_index,'PCT_SAND'   , nlevsoidata, ret)
+     call getncdata (ncid, scmlat, scmlon, time_index,'SOIL_COLOR' , soic2d     , ret)
+     call getncdata (ncid, scmlat, scmlon, time_index,'PCT_SAND'   , nlevsoidata, ret)
      sand3d(1,1,:) = nlevsoidata(:)
-     call getncdata (ncid, initLatIdx, initLonIdx, time_index,'PCT_CLAY'   , nlevsoidata, ret)
+     call getncdata (ncid, scmlat, scmlon, time_index,'PCT_CLAY'   , nlevsoidata, ret)
      clay3d(1,1,:) = nlevsoidata(:)
-#else
+  else
      call check_ret(nf_inq_varid(ncid, 'SOIL_COLOR', varid), subname)
      call check_ret(nf_get_var_int(ncid, varid, soic2d), subname)
      
@@ -251,7 +247,7 @@ subroutine iniTimeConst
      
      call check_ret(nf_inq_varid(ncid, 'PCT_CLAY', varid), subname)
      call check_ret(nf_get_var_double(ncid, varid, clay3d), subname)
-#endif
+  endif
      call check_ret(nf_close(ncid), subname)
      write (6,*) 'Successfully read soil color, sand and clay boundary data .....'
      write (6,*)

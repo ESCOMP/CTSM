@@ -1,9 +1,5 @@
 #include <misc.h>
 #include <preproc.h>
-#if ( defined SCAM )
-#include <max.h>
-#endif
-
 module STATICEcosysdynMOD
 
 #if (!defined DGVM)
@@ -19,9 +15,7 @@ module STATICEcosysdynMOD
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils,   only: endrun
-#if ( defined SCAM )
-  use scamMod, only :initlonidx,initlatidx
-#endif
+  use clm_varctl,   only :scmlat,scmlon,single_column
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -332,9 +326,7 @@ contains
 #endif
     use clm_time_manager, only : get_nstep
     use ncdio       , only : check_ret
-#if ( defined SCAM )
     use getnetcdfdata
-#endif
 
 !
 ! !ARGUMENTS:
@@ -365,9 +357,7 @@ contains
     real(r8), allocatable :: msai(:,:,:)  ! sai read from input files
     real(r8), allocatable :: mhgtt(:,:,:) ! top vegetation height
     real(r8), allocatable :: mhgtb(:,:,:) ! bottom vegetation height
-#if ( defined SCAM )
     real(r8), allocatable :: coldata(:) ! temporary for getncdata calls
-#endif
     character(len=32) :: subname = 'readMonthlyVegetation'
 !-----------------------------------------------------------------------
 
@@ -385,7 +375,7 @@ contains
     if (ier /= 0) then
        write(6,*)subname, 'allocation error '; call endrun()
     end if
-#if ( defined SCAM )
+    if (single_column) then
     if (all_pfts_on_srfdat) then
        allocate(coldata(0:numpft), stat=ier)
     else
@@ -394,7 +384,7 @@ contains
     if (ier /= 0) then
        write(6,*)subname, 'allocation error '; call endrun()
     end if
-#endif
+    endif
     ! Determine necessary indices
 
     call get_proc_bounds(begp=begp,endp=endp)
@@ -416,40 +406,37 @@ contains
 
           call check_ret(nf_inq_dimid (ncid, 'lsmlon', dimid), subname)
           call check_ret(nf_inq_dimlen(ncid, dimid, nlon_i), subname)
-#if ( !defined SCAM)
-          if (nlon_i /= lsmlon) then
-             write(6,*)subname,' parameter lsmlon= ',lsmlon,'does not equal input nlat_i= ',nlon_i
-             call endrun()
-          end if
-#endif
-
+          if (.not.single_column) then
+             if (nlon_i /= lsmlon) then
+                write(6,*)subname,' parameter lsmlon= ',lsmlon,'does not equal input nlat_i= ',nlon_i
+                call endrun()
+             end if
+          endif
           call check_ret(nf_inq_dimid(ncid, 'lsmlat', dimid), subname)
           call check_ret(nf_inq_dimlen(ncid, dimid, nlat_i), subname)
 
-#if ( !defined SCAM )
-          if (nlat_i /= lsmlat) then
-             write(6,*)subname,' parameter lsmlat= ',lsmlat,'does not equal input nlat_i= ',nlat_i
-             call endrun()
-          end if
-#endif
-
+          if (.not.single_column ) then
+             if (nlat_i /= lsmlat) then
+                write(6,*)subname,' parameter lsmlat= ',lsmlat,'does not equal input nlat_i= ',nlat_i
+                call endrun()
+             end if
+          endif
           call check_ret(nf_inq_dimid(ncid, 'lsmpft', dimid), subname)
           call check_ret(nf_inq_dimlen(ncid, dimid, npft_i), subname)
 
-#if ( !defined SCAM )
-          if (all_pfts_on_srfdat) then
-             if (npft_i /= numpft+1) then
-                write(6,*)subname,' parameter numpft+1 = ',numpft+1,'does not equal input npft_i= ',npft_i
-                call endrun()
+          if (.not. single_column ) then
+             if (all_pfts_on_srfdat) then
+                if (npft_i /= numpft+1) then
+                   write(6,*)subname,' parameter numpft+1 = ',numpft+1,'does not equal input npft_i= ',npft_i
+                   call endrun()
+                end if
+             else
+                if (npft_i /= maxpatch_pft) then
+                   write(6,*)subname,' parameter maxpatch_pft = ',maxpatch_pft,'does not equal input npft_i= ',npft_i
+                   call endrun()
+                end if
              end if
-          else
-             if (npft_i /= maxpatch_pft) then
-                write(6,*)subname,' parameter maxpatch_pft = ',maxpatch_pft,'does not equal input npft_i= ',npft_i
-                call endrun()
-             end if
-          end if
-#endif
-
+          endif
           call check_ret(nf_inq_dimid(ncid, 'time', dimid), subname)
           call check_ret(nf_inq_dimlen(ncid, dimid, ntim), subname)
 
@@ -458,19 +445,19 @@ contains
           beg4d(3) = 1         ; len4d(3) = npft_i
           beg4d(4) = months(k) ; len4d(4) = 1
 
-#if ( defined SCAM )
-          call getncdata (ncid, initLatIdx, initLonIdx, months(k),'MONTHLY_LAI', coldata, IER)
+          if (single_column) then
+          call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_LAI', coldata, IER)
           mlai(1,1,:)=coldata
           
-          call getncdata (ncid, initLatIdx, initLonIdx, months(k),'MONTHLY_SAI', coldata, IER)
+          call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_SAI', coldata, IER)
           msai(1,1,:)=coldata
 
-          call getncdata (ncid, initLatIdx, initLonIdx, months(k),'MONTHLY_HEIGHT_TOP', coldata, IER)
+          call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_HEIGHT_TOP', coldata, IER)
           mhgtt(1,1,:) = coldata
 
-          call getncdata (ncid, initLatIdx, initLonIdx, months(k),'MONTHLY_HEIGHT_BOT', coldata, IER)
+          call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_HEIGHT_BOT', coldata, IER)
           mhgtb(1,1,:) = coldata
-#else
+       else
           call check_ret(nf_inq_varid(ncid, 'MONTHLY_LAI', varid), subname)
           call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, mlai), subname)
 
@@ -482,8 +469,7 @@ contains
 
           call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_BOT', varid), subname)
           call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, mhgtb), subname)
-#endif
-
+       endif
           call check_ret(nf_close(ncid), subname)
 
           write (6,*) 'Successfully read monthly vegetation data for'
@@ -551,10 +537,9 @@ contains
     end do   ! end of loop over months
 
     deallocate(mlai, msai, mhgtt, mhgtb)
-#if ( defined SCAM )
+    if (single_column) then
     deallocate(coldata)
-#endif
-
+    endif
   end subroutine readMonthlyVegetation
 
 #endif

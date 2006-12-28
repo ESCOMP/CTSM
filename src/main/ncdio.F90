@@ -1,8 +1,5 @@
 #include <misc.h>
 #include <preproc.h>
-#if ( defined SCAM )
-#include <max.h>
-#endif
 
 module ncdio
 
@@ -26,9 +23,9 @@ module ncdio
   use clm_varcon     , only : spval,ispval
   use shr_sys_mod    , only : shr_sys_flush
   use abortutils     , only : endrun
-#if ( defined SCAM )
-  use scamMod, only :initlonidx,initlatidx
-#endif
+  use clm_varctl     , only : scmlon,scmlat
+  use clm_varpar     , only : lsmlon, lsmlat
+  use getnetcdfdata
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -61,9 +58,7 @@ module ncdio
      module procedure ncd_ioglobal_real_3d
   end interface
   private :: get_size_dim1      ! obtain size of first dimension
-#ifdef SCAM
   private :: scam_field_offsets ! get offset to proper lat/lon gridcell for SCAM
-#endif
 !-----------------------------------------------------------------------
 
 contains
@@ -344,10 +339,8 @@ contains
     integer, pointer :: iglobdc(:)      ! global decomposition initial data
     integer, pointer :: iglobsn(:)      ! global s->n initial data
     integer, pointer :: fldxy(:,:)      ! grid-average single-level field
-#if ( defined SCAM )
     integer :: data_offset              ! offset to single grid point for column model
     integer :: ndata                    ! count of pft's or columns to read
-#endif
     character(len=256):: str            ! temporary
     character(len=32) :: subname='NCD_IOLOCAL_INT_1D' ! subroutine name
     logical :: varpresent               ! if true, variable is on tape
@@ -424,14 +417,14 @@ contains
       if (masterproc) then
         call check_var(ncid, varname, varid, varpresent)
         if (varpresent) then
-#if ( defined SCAM )
+        if (lsmlon == 1 .and. lsmlat ==1) then
            call scam_field_offsets(ncid,dim1name,data_offset,ndata)
            start(1) = data_offset; count(1) = ndata
            call check_ret(nf_get_vara_int(ncid, varid, start, count, iglobsn), subname)
-#else
+        else
            call check_ret(nf_get_var_int(ncid, varid, iglobsn), subname)
            call map_sn2dc(iglobsn, iglobdc, dim1name)
-#endif
+        end if
         end if
      end if
 
@@ -442,11 +435,11 @@ contains
        end if
        if (varpresent) call scatter_data_from_master(data, iglobdc, clmlevel=dim1name)
 #else
-#if ( defined SCAM )
-       if (varpresent) data(:) = iglobsn(:)
-#else
-       if (varpresent) data(:) = iglobdc(:)
-#endif
+       if (lsmlon == 1 .and. lsmlat ==1) then
+          if (varpresent) data(:) = iglobsn(:)
+       else
+          if (varpresent) data(:) = iglobdc(:)
+       endif
 #endif
        if (present(readvar)) readvar = varpresent
 
@@ -502,10 +495,8 @@ contains
     integer :: ier                      ! error status
     integer :: start(3)                 ! starting indices for netcdf field
     integer :: count(3)                 ! count values for netcdf field
-#if ( defined SCAM )
     integer :: data_offset              ! offset to single grid point for column model
     integer :: ndata                    ! count of pft's or columns to read
-#endif
     real(r8), pointer :: rglobdc(:)     ! global decomposition initial data
     real(r8), pointer :: rglobsn(:)     ! global s->n initial data
     real(r8), pointer :: fldxy(:,:)     ! grid-average single-level field
@@ -620,11 +611,11 @@ contains
        if (masterproc) then
           call check_var(ncid, varname, varid, varpresent)
           if (varpresent) then
-#if ( defined SCAM )
+          if (lsmlon == 1 .and. lsmlat ==1) then
              call scam_field_offsets(ncid,dim1name,data_offset,ndata)
              start(1) = data_offset; count(1) = ndata
              call check_ret(nf_get_vara_double(ncid, varid, start, count, rglobsn), subname)
-#else
+          else
           if (present(nlonxy) .and. present(nlatxy)) then
 
              ! Write xy output
@@ -690,7 +681,7 @@ contains
              call check_ret(nf_get_var_double(ncid, varid, rglobsn), subname)
              call map_sn2dc(rglobsn, rglobdc, dim1name)
           end if
-#endif
+          end if !  (lsmlon lsmlat = 1)
           endif
        end if
 #ifdef SPMD
@@ -700,11 +691,11 @@ contains
        end if
        if (varpresent) call scatter_data_from_master(data, rglobdc, clmlevel=dim1name)
 #else
-#if ( defined SCAM )
-       if (varpresent) data(:) = rglobsn(:)
-#else
-       if (varpresent) data(:) = rglobdc(:)
-#endif
+       if (lsmlon == 1 .and. lsmlat ==1) then
+          if (varpresent) data(:) = rglobsn(:)
+       else
+          if (varpresent) data(:) = rglobdc(:)
+       endif
 #endif
        if (present(readvar)) readvar = varpresent
     end if
@@ -761,10 +752,8 @@ contains
     integer, pointer :: iglobdc(:,:)    ! global decomposition initial data
     integer, pointer :: iglobsn(:,:)    ! global s->n initial data
     integer, pointer :: fldxy(:,:,:)    ! temporary
-#if ( defined SCAM )
     integer :: data_offset              ! offset to single grid point for column model
     integer :: ndata                    ! count of pft's or columns to read
-#endif
     character(len=256):: str            ! temporary
     character(len=32) :: subname='NCD_IOLOCAL_INT_2D' ! subroutine name
     logical :: varpresent               ! if true, variable is on tape
@@ -868,15 +857,15 @@ contains
        if (masterproc) then
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
-#if ( defined SCAM )
+         if (lsmlon == 1 .and. lsmlat ==1) then
             call scam_field_offsets(ncid,dim1name,data_offset,ndata)
             start(1) = 1;  count(1) = ub2-lb2+1
             start(2) = data_offset;  count(2) = ndata
             call check_ret(nf_get_vara_int(ncid, varid, start, count, iglobsn), subname)
-#else
+         else
             call check_ret(nf_get_var_int(ncid, varid, iglobsn), subname)
             call map_sn2dc(iglobsn, iglobdc, dim1name, lb2, ub2)
-#endif
+         end if
          end if
        end if
 
@@ -887,11 +876,11 @@ contains
        end if
        if (varpresent) call scatter_data_from_master(datap, iglobdc, clmlevel=dim1name)
 #else
-#if ( defined SCAM )
-       if (varpresent) datap(:,:) = iglobsn(:,:)
-#else
-       if (varpresent) datap(:,:) = iglobdc(:,:)
-#endif
+       if (lsmlon == 1 .and. lsmlat ==1) then
+          if (varpresent) datap(:,:) = iglobsn(:,:)
+       else
+          if (varpresent) datap(:,:) = iglobdc(:,:)
+       endif
 #endif
        if (varpresent) then
           do j = lb2,ub2
@@ -956,10 +945,8 @@ contains
     integer :: varid                    ! variable id
     integer :: lb1,ub1,lb2,ub2          ! bounds of data
     integer :: nsize                    ! size of global array second dimension         
-#if ( defined SCAM )
     integer :: data_offset              ! offset to single grid point for column model
     integer :: ndata                    ! count of pft's or columns to read
-#endif
     real(r8), pointer :: datap(:,:)     ! permutted 2d data
     real(r8), pointer :: rglobdc(:,:)   ! global decomposition initial data
     real(r8), pointer :: rglobsn(:,:)   ! global s->n initial data
@@ -1066,15 +1053,15 @@ contains
        if (masterproc) then
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
-#if ( defined SCAM )
+         if (lsmlon == 1 .and. lsmlat ==1) then
             call scam_field_offsets(ncid,dim1name,data_offset,ndata)
             start(1) = 1;  count(1) = ub2-lb2+1
             start(2) = data_offset;  count(2) = ndata
             call check_ret(nf_get_vara_double(ncid, varid, start, count, rglobsn), subname)
-#else
+         else
             call check_ret(nf_get_var_double(ncid, varid, rglobsn), subname)
             call map_sn2dc(rglobsn, rglobdc, dim1name, lb2, ub2)
-#endif
+         end if
          end if
        end if
 
@@ -1085,11 +1072,11 @@ contains
        end if
        if (varpresent) call scatter_data_from_master(datap, rglobdc, clmlevel=dim1name)
 #else
-#if ( defined SCAM )
-       if (varpresent) datap(:,:) = rglobsn(:,:)
-#else
-       if (varpresent) datap(:,:) = rglobdc(:,:)
-#endif
+       if (lsmlon == 1 .and. lsmlat ==1) then
+          if (varpresent) datap(:,:) = rglobsn(:,:)
+       else
+          if (varpresent) datap(:,:) = rglobdc(:,:)
+       endif
 #endif
        if (varpresent) then
           do j = lb2,ub2
@@ -1750,7 +1737,6 @@ contains
     end select
 
   end function get_size_dim1
-#if ( defined SCAM )
 !------------------------------------------------------------------------
 !BOP
 !
@@ -1766,7 +1752,6 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use decompMod   , only : get_proc_bounds
     use nanMod
-    use wrap_nf
 !
 ! !ARGUMENTS:
     implicit none
@@ -1805,36 +1790,91 @@ contains
     integer, save :: begl, endl              ! per-proc beg/end land indices
     integer, save :: begg, endg              ! per-proc beg/end gridcell ind
     logical, save :: firsttime = .true.      ! determine offsets once.
+    integer latidx,lonidx,ret
+    real(r8) closelat,closelon
 
 !------------------------------------------------------------------------
     if ( firsttime) then
+       call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+
        call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
-       call wrap_inq_dimid (ncid, 'column', dimid)
-       call wrap_inq_dimlen (ncid, dimid, totcols)
-       call wrap_inq_dimid (ncid, 'pft', dimid)
-       call wrap_inq_dimlen (ncid, dimid, totpfts)
+       ret = nf_inq_dimid (ncid, 'column', dimid)
+       if(ret==NF_NOERR) return
+       if (ret/=NF_EBADDIM) call handle_err (ret)
+
+       ret = nf_inq_dimlen (ncid, dimid, totcols)
+       if (ret/=NF_NOERR) call handle_err (ret)
+
+       ret = nf_inq_dimid (ncid, 'pft', dimid)
+       if(ret==NF_NOERR) return
+       if (ret/=NF_EBADDIM) call handle_err (ret)
+
+       ret = nf_inq_dimlen (ncid, dimid, totpfts)
+       if (ret/=NF_NOERR) call handle_err (ret)
 
        allocate (pfts1dlon(totpfts))
        allocate (pfts1dlat(totpfts))
-       call wrap_inq_varid (ncid, 'pfts1d_ixy', varid)
-       call wrap_get_var_realx (ncid, varid, pfts1dlon)
-       call wrap_inq_varid (ncid, 'pfts1d_jxy', varid)
-       call wrap_get_var_realx (ncid, varid, pfts1dlat)
+       
+       ret =  nf_inq_varid (ncid, 'pfts1d_ixy', varid)
+       if (ret/=NF_NOERR) then
+         write(6,*)'inq_varid: id for pfts1d_ixy not found'
+         call handle_err (ret)
+       end if
+
+       ret = nf_get_var_double (ncid, varid, pfts1dlon)
+       if (ret/=NF_NOERR) then
+         write(6,*)'GET_VAR_REALX: error reading pfts1dlon, varid =', varid
+         call handle_err (ret)
+       end if
+
+       ret =  nf_inq_varid (ncid, 'pfts1d_jxy', varid)
+       if (ret/=NF_NOERR) then
+         write(6,*)'inq_varid: id for pfts1d_jxy not found'
+         call handle_err (ret)
+       end if
+
+       ret = nf_get_var_double (ncid, varid, pfts1dlat)
+       if (ret/=NF_NOERR) then
+         write(6,*)'GET_VAR_REALX: error reading pfts1dlat, varid =', varid
+         call handle_err (ret)
+       end if
+
 
        allocate (cols1dlon(totcols))
        allocate (cols1dlat(totcols))
-       call wrap_inq_varid (ncid, 'cols1d_ixy', varid)
-       call wrap_get_var_realx (ncid, varid, cols1dlon)
-       call wrap_inq_varid (ncid, 'cols1d_jxy', varid)
-       call wrap_get_var_realx (ncid, varid, cols1dlat)
+
+       ret =  nf_inq_varid (ncid, 'cols1d_ixy', varid)
+       if (ret/=NF_NOERR) then
+         write(6,*)'inq_varid: id for cols1d_ixy not found'
+         call handle_err (ret)
+       end if
+
+       ret = nf_get_var_double (ncid, varid, cols1dlon)
+       if (ret/=NF_NOERR) then
+         write(6,*)'GET_VAR_REALX: error reading cols1dlon, varid =', varid
+         call handle_err (ret)
+       end if
+
+       ret =  nf_inq_varid (ncid, 'cols1d_jxy', varid)
+       if (ret/=NF_NOERR) then
+         write(6,*)'inq_varid: id for cols1d_jxy not found'
+         call handle_err (ret)
+       end if
+
+       ret = nf_get_var_double (ncid, varid, cols1dlat)
+       if (ret/=NF_NOERR) then
+         write(6,*)'GET_VAR_REALX: error reading cols1dlat, varid =', varid
+         call handle_err (ret)
+       end if
+
        cols(:)=nan
        pfts(:)=nan
        col_offset=nan
        pi_offset=nan
        i=1
        do cc = 1, totcols
-          if (cols1dlon(cc).eq.initLonIdx.and.cols1dlat(cc).eq.initLatIdx) then
+          if (cols1dlon(cc).eq.lonidx.and.cols1dlat(cc).eq.latidx) then
              cols(i)=cc
              i=i+1
           end if
@@ -1844,7 +1884,7 @@ contains
           call endrun
        end if
        if (i.eq.1) then
-          write(6,*)'couldnt find any columns for this latitude ',initLatIdx,' and longitude ',initLonIdx
+          write(6,*)'couldnt find any columns for this latitude ',latidx,' and longitude ',lonidx
           call endrun
        else
           col_offset=cols(1)
@@ -1852,7 +1892,7 @@ contains
 
        i=1
        do cc = 1, totpfts
-          if (pfts1dlon(cc).eq.initLonIdx.and.pfts1dlat(cc).eq.initLatIdx) then
+          if (pfts1dlon(cc).eq.lonidx.and.pfts1dlat(cc).eq.latidx) then
              pfts(i)=cc
              i=i+1
           end if
@@ -1862,7 +1902,7 @@ contains
           call endrun
        end if
        if (i.eq.1) then
-          write(6,*)'couldnt find any pfts for this latitude ',initLatIdx,' and longitude ',initLonIdx
+          write(6,*)'couldnt find any pfts for this latitude ',latidx,' and longitude ',lonidx
           call endrun
        else
           pi_offset=pfts(1)
@@ -1886,6 +1926,5 @@ contains
        write(6,*)'error calculation array offsets for SCAM'; call endrun()
     endif
   end subroutine scam_field_offsets
-#endif
 
 end module ncdio

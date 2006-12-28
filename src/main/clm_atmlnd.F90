@@ -287,7 +287,7 @@ end subroutine init_lnd2atm_type
 !
 ! !USES:
   use decompMod, only : get_proc_bounds, get_proc_bounds_atm
-  use areaMod  , only : map_maparray, map1dl_a2l, map1dl_l2a, map_setptrs
+  use areaMod  , only : map_maparrayl, map1dl_a2l, map1dl_l2a, map_setptrs
   use decompMod, only : ldecomp,adecomp
   use domainMod, only : llocdomain,alocdomain
   use QSatMod,   only : QSat
@@ -379,9 +379,9 @@ end subroutine init_lnd2atm_type
 !  asrc(:,xx) = a2l_src%forc_ndep(:)  
 
 #if (defined OFFLINE)
-  call map_maparray(begg_s, endg_s, begg_d, endg_d, 1, a2l_src%flfall, a2l_dst%flfall, map1dl_a2l)
+  call map_maparrayl(begg_s, endg_s, begg_d, endg_d, 1, a2l_src%flfall, a2l_dst%flfall, map1dl_a2l)
 #endif
-  call map_maparray(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_a2l)
+  call map_maparrayl(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_a2l)
 
   ix = 0
   ix=ix+1; a2l_dst%forc_t(:)     =   adst(:,ix)
@@ -561,7 +561,7 @@ end subroutine clm_mapa2l
 !
 ! !USES:
   use decompMod, only : get_proc_bounds, get_proc_bounds_atm
-  use areaMod  , only : map_maparray, map1dl_l2a
+  use areaMod  , only : map_maparrayl, map1dl_l2a
 !
 ! !ARGUMENTS:
   implicit none
@@ -641,7 +641,7 @@ end subroutine clm_mapa2l
   end do !m
 #endif
 
-  call map_maparray(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_l2a)
+  call map_maparrayl(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_l2a)
 
   ix = 0
   ix=ix+1; l2a_dst%t_rad(:)          = adst(:,ix)

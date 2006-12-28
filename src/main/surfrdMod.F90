@@ -1,8 +1,5 @@
 #include <misc.h>
 #include <preproc.h>
-#if ( defined SCAM )
-#include <max.h>
-#endif
 
 module surfrdMod
 
@@ -26,18 +23,14 @@ module surfrdMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
   use abortutils  , only : endrun
-#if ( defined SCAM )
-  use scamMod     , only : initlonidx,initlatidx
   use clm_varpar  , only : lsmlon, lsmlat
-#endif
   use clm_varpar  , only : nlevsoi, numpft, &
                            maxpatch_pft, maxpatch_cft, maxpatch, &
                            npatch_urban, npatch_lake, npatch_wet, npatch_glacier
   use ncdio
   use spmdMod                         
-#if ( defined SCAM )
+  use clm_varctl,   only : scmlat, scmlon, single_column
   use getnetcdfdata
-#endif
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -257,9 +250,7 @@ contains
     integer :: ier                 ! error status
     integer,allocatable :: numlon(:)  ! local numlon from file
     character(len=256)  :: locfn   ! local file name
-#if ( defined SCAM )
     integer :: ret, time_index
-#endif
     logical :: AREAset             ! true if area read from grid file
     logical :: NSEWset             ! true if lat/lon NSEW read from grid file
     logical :: EDGEset             ! true if EDGE NSEW read from grid file
@@ -280,15 +271,15 @@ contains
        call getfil( filename, locfn, 0 )
        call check_ret( nf_open(locfn, 0, ncid), subname )
 
-#if ( ! defined SCAM )
-       call check_ret(nf_inq_dimid (ncid, 'lsmlon', dimid), subname)
-       call check_ret(nf_inq_dimlen(ncid, dimid, ni), subname)
-       call check_ret(nf_inq_dimid (ncid, 'lsmlat', dimid), subname)
-       call check_ret(nf_inq_dimlen(ncid, dimid, nj), subname)
-#else
-       ni = lsmlon
-       nj = lsmlat
-#endif
+       if (.not. single_column) then
+          call check_ret(nf_inq_dimid (ncid, 'lsmlon', dimid), subname)
+          call check_ret(nf_inq_dimlen(ncid, dimid, ni), subname)
+          call check_ret(nf_inq_dimid (ncid, 'lsmlat', dimid), subname)
+          call check_ret(nf_inq_dimlen(ncid, dimid, nj), subname)
+       else
+          ni = lsmlon
+          nj = lsmlat
+       endif
 
     endif
 
@@ -336,57 +327,57 @@ contains
           call check_ret(nf_get_var_double(ncid, varid, domain%area), subname)
        endif
 
-#if ( defined SCAM )
-       time_index=1
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LONGXY'  , domain%lonc, RET)
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LATIXY'  , domain%latc, RET)
-       domain%mask = 1
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LANDMASK', domain%mask, RET)
-       domain%pftm = domain%mask
-       where (domain%mask <= 0)
-          domain%pftm = -1
-       endwhere
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LANDFRAC', domain%frac, RET)
-#else
-
-       ! if NUMLON is on file, make sure it's not a reduced grid.
-       ier = nf_inq_varid (ncid, 'NUMLON', varid)
-       if (ier == NF_NOERR) then
-          allocate(numlon(domain%nj))
-          call check_ret(nf_get_var_int(ncid, varid, numlon), subname)
-          if (minval(numlon) /= maxval(numlon)) then
-             write(6,*) 'ERROR surfrdMod: NUMLON no longer supported ', &
-                         minval(numlon),maxval(numlon)
-             call endrun
-          endif
-          deallocate(numlon)
-       endif
-
-       call check_ret(nf_inq_varid(ncid, 'LONGXY' , varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, domain%lonc), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'LATIXY', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, domain%latc), subname)
-
-! set mask to 1 everywhere by default, override if LANDMASK exists
-! if landmask exists, use it to set pftm (for older datasets)
-! pftm should be overwritten below for newer datasets
-       domain%mask = 1
-       ier = nf_inq_varid(ncid, 'LANDMASK', varid)
-       if (ier == NF_NOERR) then
-          call check_ret(nf_get_var_int(ncid, varid, domain%mask), subname)
+       if (single_column) then
+          time_index=1
+          call getncdata (ncid, scmlat, scmlon, time_index,'LONGXY'  , domain%lonc, RET)
+          call getncdata (ncid, scmlat, scmlon, time_index,'LATIXY'  , domain%latc, RET)
+          domain%mask = 1
+          call getncdata (ncid, scmlat, scmlon, time_index,'LANDMASK', domain%mask, RET)
           domain%pftm = domain%mask
           where (domain%mask <= 0)
              domain%pftm = -1
           endwhere
-       endif
+          call getncdata (ncid, scmlat, scmlon, time_index,'LANDFRAC', domain%frac, RET)
+       else
 
-       ier = nf_inq_varid (ncid, 'PFTDATA_MASK', varid)
-       if (ier == NF_NOERR) then
-          call check_ret(nf_get_var_int(ncid, varid, domain%pftm), subname)
-       endif
+       ! if NUMLON is on file, make sure it's not a reduced grid.
+          ier = nf_inq_varid (ncid, 'NUMLON', varid)
+          if (ier == NF_NOERR) then
+             allocate(numlon(domain%nj))
+             call check_ret(nf_get_var_int(ncid, varid, numlon), subname)
+             if (minval(numlon) /= maxval(numlon)) then
+                write(6,*) 'ERROR surfrdMod: NUMLON no longer supported ', &
+                     minval(numlon),maxval(numlon)
+                call endrun
+             endif
+             deallocate(numlon)
+          endif
 
-#endif
+          call check_ret(nf_inq_varid(ncid, 'LONGXY' , varid), subname)
+          call check_ret(nf_get_var_double(ncid, varid, domain%lonc), subname)
+          
+          call check_ret(nf_inq_varid(ncid, 'LATIXY', varid), subname)
+          call check_ret(nf_get_var_double(ncid, varid, domain%latc), subname)
+          
+! set mask to 1 everywhere by default, override if LANDMASK exists
+! if landmask exists, use it to set pftm (for older datasets)
+! pftm should be overwritten below for newer datasets
+          domain%mask = 1
+          ier = nf_inq_varid(ncid, 'LANDMASK', varid)
+          if (ier == NF_NOERR) then
+             call check_ret(nf_get_var_int(ncid, varid, domain%mask), subname)
+             domain%pftm = domain%mask
+             where (domain%mask <= 0)
+                domain%pftm = -1
+             endwhere
+          endif
+
+          ier = nf_inq_varid (ncid, 'PFTDATA_MASK', varid)
+          if (ier == NF_NOERR) then
+             call check_ret(nf_get_var_int(ncid, varid, domain%pftm), subname)
+          endif
+
+       endif
 
 !tcx fix, this or a test/abort should be added so overlaps can be computed
 !tcx fix, this is demonstrated not bfb in cam bl311 test.
@@ -483,9 +474,7 @@ contains
     integer,allocatable :: numlon(:)  ! local numlon from file
     real(r8),allocatable:: lonc(:),latc(:)  ! local lat/lon
     character(len=256)  :: locfn   ! local file name
-#if ( defined SCAM )
     integer :: ret, time_index
-#endif
     character(len=32) :: subname = 'surfrd_get_frac'     ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -499,15 +488,15 @@ contains
        call getfil( filename, locfn, 0 )
        call check_ret( nf_open(locfn, 0, ncid), subname )
 
-#if ( ! defined SCAM )
-       call check_ret(nf_inq_dimid (ncid, 'lsmlon', dimid), subname)
-       call check_ret(nf_inq_dimlen(ncid, dimid, ni), subname)
-       call check_ret(nf_inq_dimid (ncid, 'lsmlat', dimid), subname)
-       call check_ret(nf_inq_dimlen(ncid, dimid, nj), subname)
-#else
-       ni = lsmlon
-       nj = lsmlat
-#endif
+       if (.not. single_column) then
+          call check_ret(nf_inq_dimid (ncid, 'lsmlon', dimid), subname)
+          call check_ret(nf_inq_dimlen(ncid, dimid, ni), subname)
+          call check_ret(nf_inq_dimid (ncid, 'lsmlat', dimid), subname)
+          call check_ret(nf_inq_dimlen(ncid, dimid, nj), subname)
+       else
+          ni = lsmlon
+          nj = lsmlat
+       endif
 
        ns = ni*nj
 
@@ -518,55 +507,55 @@ contains
 
        allocate(latc(ni*nj),lonc(ni*nj))
 
-#if ( defined SCAM )
-       time_index=1
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LONGXY'  , lonc, RET)
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LATIXY'  , latc, RET)
-       do n = 1,ns
-          if (abs(latc(n)-domain%latc(n)) > eps .or. &
-              abs(lonc(n)-domain%lonc(n)) > eps) then
-             write(6,*) trim(subname),' ERROR: landfrac file mismatch lat,lon',latc(n),domain%latc(n),lonc(n),domain%lonc(n),eps
-             call endrun()
-          endif
-       enddo
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LANDMASK', domain%mask, RET)
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LANDFRAC', domain%frac, RET)
-#else
+       if (single_column) then
+          time_index=1
+          call getncdata (ncid, scmlat, scmlon, time_index,'LONGXY'  , lonc, RET)
+          call getncdata (ncid, scmlat, scmlon, time_index,'LATIXY'  , latc, RET)
+          do n = 1,ns
+             if (abs(latc(n)-domain%latc(n)) > eps .or. &
+                  abs(lonc(n)-domain%lonc(n)) > eps) then
+                write(6,*) trim(subname),' ERROR: landfrac file mismatch lat,lon',latc(n),domain%latc(n),lonc(n),domain%lonc(n),eps
+                call endrun()
+             endif
+          enddo
+          call getncdata (ncid, scmlat, scmlon, time_index,'LANDMASK', domain%mask, RET)
+          call getncdata (ncid, scmlat, scmlon, time_index,'LANDFRAC', domain%frac, RET)
+       else
 
-       ! if NUMLON is on file, make sure it's not a reduced grid.
-       ier = nf_inq_varid (ncid, 'NUMLON', varid)
-       if (ier == NF_NOERR) then
-          allocate(numlon(domain%nj))
-          call check_ret(nf_get_var_int(ncid, varid, numlon), subname)
-          if (minval(numlon) /= maxval(numlon)) then
-             write(6,*) 'ERROR surfrdMod: NUMLON no longer supported ', &
-                         minval(numlon),maxval(numlon)
-             call endrun
+          ! if NUMLON is on file, make sure it's not a reduced grid.
+          ier = nf_inq_varid (ncid, 'NUMLON', varid)
+          if (ier == NF_NOERR) then
+             allocate(numlon(domain%nj))
+             call check_ret(nf_get_var_int(ncid, varid, numlon), subname)
+             if (minval(numlon) /= maxval(numlon)) then
+                write(6,*) 'ERROR surfrdMod: NUMLON no longer supported ', &
+                     minval(numlon),maxval(numlon)
+                call endrun
+             endif
+             deallocate(numlon)
           endif
-          deallocate(numlon)
+
+          call check_ret(nf_inq_varid(ncid, 'LONGXY' , varid), subname)
+          call check_ret(nf_get_var_double(ncid, varid, lonc), subname)
+          
+          call check_ret(nf_inq_varid(ncid, 'LATIXY', varid), subname)
+          call check_ret(nf_get_var_double(ncid, varid, latc), subname)
+          
+          do n = 1,ns
+             if (abs(latc(n)-domain%latc(n)) > eps .or. &
+                  abs(lonc(n)-domain%lonc(n)) > eps) then
+                write(6,*) trim(subname),' ERROR: landfrac file mismatch lat,lon',latc(n),domain%latc(n),lonc(n),domain%lonc(n),eps
+                call endrun()
+             endif
+          enddo
+          
+          call check_ret(nf_inq_varid(ncid, 'LANDMASK', varid), subname)
+          call check_ret(nf_get_var_int(ncid, varid, domain%mask), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'LANDFRAC', varid), subname)
+          call check_ret(nf_get_var_double(ncid, varid, domain%frac), subname)
+
        endif
-
-       call check_ret(nf_inq_varid(ncid, 'LONGXY' , varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, lonc), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'LATIXY', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, latc), subname)
-
-       do n = 1,ns
-          if (abs(latc(n)-domain%latc(n)) > eps .or. &
-              abs(lonc(n)-domain%lonc(n)) > eps) then
-             write(6,*) trim(subname),' ERROR: landfrac file mismatch lat,lon',latc(n),domain%latc(n),lonc(n),domain%lonc(n),eps
-             call endrun()
-          endif
-       enddo
-
-       call check_ret(nf_inq_varid(ncid, 'LANDMASK', varid), subname)
-       call check_ret(nf_get_var_int(ncid, varid, domain%mask), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'LANDFRAC', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, domain%frac), subname)
-
-#endif
 
        deallocate(latc,lonc)
 
@@ -620,9 +609,7 @@ contains
     integer,allocatable :: numlon(:)  ! local numlon from file
     real(r8),allocatable:: lonc(:),latc(:)  ! local lat/lon
     character(len=256)  :: locfn   ! local file name
-#if ( defined SCAM )
     integer :: ret, time_index
-#endif
     character(len=32) :: subname = 'surfrd_get_topo'     ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -636,15 +623,15 @@ contains
        call getfil( filename, locfn, 0 )
        call check_ret( nf_open(locfn, 0, ncid), subname )
 
-#if ( ! defined SCAM )
-       call check_ret(nf_inq_dimid (ncid, 'lsmlon', dimid), subname)
-       call check_ret(nf_inq_dimlen(ncid, dimid, ni), subname)
-       call check_ret(nf_inq_dimid (ncid, 'lsmlat', dimid), subname)
-       call check_ret(nf_inq_dimlen(ncid, dimid, nj), subname)
-#else
-       ni = lsmlon
-       nj = lsmlat
-#endif
+       if (single_column) then
+          call check_ret(nf_inq_dimid (ncid, 'lsmlon', dimid), subname)
+          call check_ret(nf_inq_dimlen(ncid, dimid, ni), subname)
+          call check_ret(nf_inq_dimid (ncid, 'lsmlat', dimid), subname)
+          call check_ret(nf_inq_dimlen(ncid, dimid, nj), subname)
+       else
+          ni = lsmlon
+          nj = lsmlat
+       endif
 
        ns = ni*nj
 
@@ -655,10 +642,10 @@ contains
 
        allocate(latc(ns),lonc(ns))
 
-#if ( defined SCAM )
+       if (single_column) then
        time_index=1
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LONGXY'  , lonc, RET)
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'LATIXY'  , latc, RET)
+       call getncdata (ncid, scmlat, scmlon, time_index,'LONGXY'  , lonc, RET)
+       call getncdata (ncid, scmlat, scmlon, time_index,'LATIXY'  , latc, RET)
        do n = 1,ns
           if (abs(latc(n)-domain%latc(n)) > eps .or. &
               abs(lonc(n)-domain%lonc(n)) > eps) then
@@ -666,8 +653,8 @@ contains
              call endrun()
           endif
        enddo
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'TOPO', domain%topo, RET)
-#else
+       call getncdata (ncid, scmlat, scmlon, time_index,'TOPO', domain%topo, RET)
+    else
 
        ! if NUMLON is on file, make sure it's not a reduced grid.
        ier = nf_inq_varid (ncid, 'NUMLON', varid)
@@ -699,7 +686,7 @@ contains
        call check_ret(nf_inq_varid(ncid, 'TOPO', varid), subname)
        call check_ret(nf_get_var_double(ncid, varid, domain%topo), subname)
 
-#endif
+    endif
 
        deallocate(latc,lonc)
 
@@ -748,10 +735,8 @@ contains
 ! !LOCAL VARIABLES:
     integer  :: n,ns                       ! indices
     integer  :: dimid,varid                ! netCDF id's
-#if ( defined SCAM )
     integer  :: ret, time_index
     real(r8) :: nlevsoidata(nlevsoi)
-#endif
     logical  :: found                      ! temporary for error check
     integer  :: nindx                      ! temporary for error check
     integer  :: ier                        ! error status
@@ -760,6 +745,7 @@ contains
     real(r8),allocatable :: pctwet(:)      ! percent of grid cell is wetland
     real(r8),allocatable :: pcturb(:)      ! percent of grid cell is urbanized
     character(len=32) :: subname = 'surfrd_wtxy_special'  ! subroutine name
+    real(r8) closelat,closelon
 !!-----------------------------------------------------------------------
 
 
@@ -774,13 +760,13 @@ contains
 
        ! Obtain non-grid surface properties of surface dataset other than percent pft
 
-#if ( defined SCAM )
+       if (single_column) then
        time_index=1
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index, 'PCT_WETLAND', pctwet     , ret)
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index, 'PCT_LAKE'   , pctlak     , ret)
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index, 'PCT_GLACIER', pctgla     , ret)
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index, 'PCT_URBAN'  , pcturb     , ret)
-#else
+       call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_WETLAND', pctwet     , ret)
+       call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_LAKE'   , pctlak     , ret)
+       call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_GLACIER', pctgla     , ret)
+       call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_URBAN'  , pcturb     , ret)
+    else
        call check_ret(nf_inq_varid(ncid, 'PCT_WETLAND', varid), subname)
        call check_ret(nf_get_var_double(ncid, varid, pctwet), subname)
 
@@ -792,7 +778,7 @@ contains
 
        call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
        call check_ret(nf_get_var_double(ncid, varid, pcturb), subname)
-#endif 
+    endif
 
        ! Error check: glacier, lake, wetland, urban sum must be less than 100
 
@@ -909,12 +895,10 @@ contains
     real(r8),allocatable :: pctpft_lunit(:,:)   ! % of vegetated lunit area PFTs
     integer  :: ier                             ! error status
     real(r8),allocatable :: pctpft(:,:)         ! percent of vegetated gridcell area for PFTs
-#if ( defined SCAM )
     integer  :: ret, time_index
     real(r8),allocatable :: rmaxpatchdata(:)
     integer ,allocatable :: imaxpatchdata(:)
     real(r8) :: numpftp1data(0:numpft)         
-#endif
     character(len=32) :: subname = 'surfrd_wtxy_veg_rank'  ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -941,21 +925,22 @@ contains
           end if
 
           call check_dim(ncid, 'lsmpft', maxpatch_pft)
-#if ( defined SCAM )
-          allocate(rmaxpatchdata(maxpatch_pft))
-          allocate(imaxpatchdata(maxpatch_pft))
-          call getncdata (ncid, initLatIdx, initLonIdx, time_index,'PFT', imaxpatchdata, ret)
-          pft(1,:)=imaxpatchdata(:)
-          call getncdata (ncid, initLatIdx, initLonIdx, time_index,'PCT_PFT', rmaxpatchdata, ret)
-          pctpft_lunit(1,:)=rmaxpatchdata(:)
-          deallocate(rmaxpatchdata,imaxpatchdata)
-#else
-          call check_ret(nf_inq_varid(ncid, 'PFT', varid), subname)
-          call check_ret(nf_get_var_int(ncid, varid, pft), subname)
-
-          call check_ret(nf_inq_varid(ncid, 'PCT_PFT', varid), subname)
-          call check_ret(nf_get_var_double(ncid, varid, pctpft_lunit), subname)
-#endif
+          if (single_column) then
+             time_index=1
+             allocate(rmaxpatchdata(maxpatch_pft))
+             allocate(imaxpatchdata(maxpatch_pft))
+             call getncdata (ncid, scmlat, scmlon, time_index,'PFT', imaxpatchdata, ret)
+             pft(1,:)=imaxpatchdata(:)
+             call getncdata (ncid, scmlat, scmlon, time_index,'PCT_PFT', rmaxpatchdata, ret)
+             pctpft_lunit(1,:)=rmaxpatchdata(:)
+             deallocate(rmaxpatchdata,imaxpatchdata)
+          else
+             call check_ret(nf_inq_varid(ncid, 'PFT', varid), subname)
+             call check_ret(nf_get_var_int(ncid, varid, pft), subname)
+             
+             call check_ret(nf_inq_varid(ncid, 'PCT_PFT', varid), subname)
+             call check_ret(nf_get_var_double(ncid, varid, pctpft_lunit), subname)
+          endif
 
           ! Error check: valid PFTs and sum of cover must equal 100
 
@@ -986,13 +971,13 @@ contains
        if (all_pfts_on_srfdat) then
 
           call check_dim(ncid, 'lsmpft', numpft+1)
-#if ( defined SCAM )
-          call getncdata (ncid, initLatIdx, initLonIdx, time_index,'PCT_PFT', numpftp1data, ret)
-          pctpft(1,:) = numpftp1data(:)
-#else
-          call check_ret(nf_inq_varid(ncid, 'PCT_PFT', varid), subname)
-          call check_ret(nf_get_var_double(ncid, varid, pctpft), subname)
-#endif
+          if (single_column) then
+             call getncdata (ncid, scmlat, scmlon, time_index,'PCT_PFT', numpftp1data, ret)
+             pctpft(1,:) = numpftp1data(:)
+          else
+             call check_ret(nf_inq_varid(ncid, 'PCT_PFT', varid), subname)
+             call check_ret(nf_get_var_double(ncid, varid, pctpft), subname)
+          endif
 
           ! 1. pctpft must go back to %vegetated landunit instead of %gridcell
           ! 2. pctpft bare = 100 when landmask = 1 and 100% special landunit
@@ -1295,10 +1280,8 @@ contains
     integer  :: ier                            ! error status	
     real(r8) :: sumpct                         ! sum of %pft over maxpatch_pft
     real(r8),allocatable :: pctpft(:,:)        ! percent of vegetated gridcell area for PFTs
-#if (defined SCAM)
     integer  :: ret, time_index
     real(r8) :: numpftp1data(0:numpft)         
-#endif
     character(len=32) :: subname = 'surfrd_wtxy_veg_all'  ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -1307,13 +1290,13 @@ contains
 
     if (masterproc) then
        call check_dim(ncid, 'lsmpft', numpft+1)
-#if ( defined SCAM )
-       call getncdata (ncid, initLatIdx, initLonIdx, time_index,'PCT_PFT', numpftp1data, ret)
-       pctpft(1,:) = numpftp1data(:)
-#else
-       call check_ret(nf_inq_varid(ncid, 'PCT_PFT', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, pctpft), subname)
-#endif
+       if (single_column) then
+          call getncdata (ncid, scmlat, scmlon, time_index,'PCT_PFT', numpftp1data, ret)
+          pctpft(1,:) = numpftp1data(:)
+       else
+          call check_ret(nf_inq_varid(ncid, 'PCT_PFT', varid), subname)
+          call check_ret(nf_get_var_double(ncid, varid, pctpft), subname)
+       endif
     end if
 
 #if (defined SPMD)

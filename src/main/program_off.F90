@@ -55,6 +55,7 @@ PROGRAM program_off
   use clm_time_manager, only : is_last_step, advance_timestep, get_nstep
   use atmdrvMod       , only : atmdrv, atmdrv_init
   use abortutils      , only : endrun
+  use clm_mct_mod
   use spmdMod  
   use ESMF_Mod
 !
@@ -129,6 +130,7 @@ PROGRAM program_off
   mpicom_glob = 1
 #endif
   call spmd_init(mpicom_glob)
+  call mct_world_init(1,mpicom_glob,mpicom,comp_id)
 
   ! -----------------------------------------------------------------
   ! Initialize ESMF (needed for time-manager)
