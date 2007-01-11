@@ -1,4 +1,89 @@
 ===============================================================
+Tag name: clm3_expa_88
+Originator(s): nanr
+Date: Thu Jan 11 12:31:51 MST 2007
+One-line Summary:  Minor formatting change in tools.
+		   Correctons to ChangLog
+		
+
+Purpose of changes: 
+1.	Update formatted write in tools/ mkgriddata.F90 and tools/mksrfdat.F90 
+	to accomodate 4 digit lat/lons.
+2.	Add note to ChangeLog to explain commit by nanr (10/27) that was not tagged.
+3.	correct Changelog for tag clm3_expa_80.  The changes listed below never happened.
+	surfFileMod.F90 was actually removed from the trunk in a previous tag (clm3_expa_66)
+	and renamed surfrdMod.F90.  So this modification probably reflects the status of the branch 
+	Keith Oleson was working on.
+		M      src/main/surfFileMod.F90
+
+		Removed statements contained within CN ifdef (OK'd by P. Thornton) that:
+
+		! the following test prevents the assignment of temperate deciduous
+                  		! vegetation types in the tropics
+                  		! 1. broadleaf deciduous temperate tree -> broadleaf deciduous tropical tree
+                  		! 2. broadleaf deciduous temperate shrub -> broadleaf deciduous tropical tree
+                  		! this reassignment from shrub to tree is necessary because there is currently no
+                  		! tropical deciduous broadleaf shrub type defined.
+
+
+Bugs fixed (include bugzilla ID):  none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: nanr
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M      tools/mksurfdata/mksrfdat.F90
+M      tools/mkgriddata/mkgriddata.F90
+	
+   Changed formatting strings to accomodate 4 char lat/lons.
+	OLD:  write (resol,'(i3.3,"x",i3.3)') lsmlat,lsmlon
+	NEW:  write (resol,'(i4.4,"x",i4.4)') lsmlat,lsmlon
+
+Summary of testing:  none.  Changes only to tools and ChangeLog
+
+  bluesky:
+  tempest:
+  bangkok/lf95:
+
+CLM tag used for the baseline comparison tests if applicable: none
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in: none
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate: NA
+   
+   URL for LMWG diagnostics output used to validate new climate: NA
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_87
 Originator(s): tcraig, jet
 Date: Wed Dec 27 05:03:01 GMT 2006
@@ -961,16 +1046,25 @@ M      src/main/histFileMod.F90
 
 Changed string from CLM2 to CLM3.
 
-M      src/main/surfFileMod.F90
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Start Revision:  
+   ChangLog modified by nanr (1/11/07):  
+   surfFileMod.F90 was removed from the trunk in clm3_expa_66 and renamed surfrdMod.F90.
+   Therefore, these changes did not actually happen in the code base.
 
-Removed statements contained within CN ifdef (OK'd by P. Thornton) that:
+	M      src/main/surfFileMod.F90
 
-! the following test prevents the assignment of temperate deciduous
-                  ! vegetation types in the tropics
-                  ! 1. broadleaf deciduous temperate tree -> broadleaf deciduous tropical tree
-                  ! 2. broadleaf deciduous temperate shrub -> broadleaf deciduous tropical tree
-                  ! this reassignment from shrub to tree is necessary because there is currently no
-                  ! tropical deciduous broadleaf shrub type defined.
+	Removed statements contained within CN ifdef (OK'd by P. Thornton) that:
+
+	! the following test prevents the assignment of temperate deciduous
+                 ! vegetation types in the tropics
+                 ! 1. broadleaf deciduous temperate tree -> broadleaf deciduous tropical tree
+                 ! 2. broadleaf deciduous temperate shrub -> broadleaf deciduous tropical tree
+                 ! this reassignment from shrub to tree is necessary because there is currently no
+                 ! tropical deciduous broadleaf shrub type defined.
+
+End Revision:   
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 M      src/main/pftvarcon.F90
 
@@ -1577,6 +1671,11 @@ following should be filled in:
 	
 ===============================================================
 
+NOTE (1/11/07):  This note documents a commit done by nanr (r2316) that committed 
+	changes to /tools/mksurfdata files without a tag.  Changes introduced fmax variable to mksrfdat.F90.
+	mkfmax.F90 was added in clm3_expa_84.  Changes were only to /tools and not to clm code.
+
+M	/tools/mksrfdat.F90
 	
 ===============================================================
 Tag name: clm3_expa_75

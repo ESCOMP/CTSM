@@ -509,7 +509,7 @@ program mksrfdat
 
     if (mksrf_fdynuse /= ' ') then
 
-       write (resol,'(i3.3,"x",i3.3)') lsmlon,lsmlat
+       write (resol,'(i4.4,"x",i4.4)') lsmlon,lsmlat
        fdyndat = './surface-data.dynpft.'//trim(resol)//'.nc'
 
        ! Define dimensions and global attributes
@@ -721,7 +721,7 @@ program mksrfdat
        enddo
        enddo
 
-       write (resol,'(i3.3,"x",i3.3)') dbllat,dbllon
+       write (resol,'(i4.4,"x",i4.4)') dbllat,dbllon
        fdfile = './surfdata_'//trim(resol)//'.double.nc'
 
        call mkfile(dbldomain%ni, dbldomain%nj, fdfile, dynlanduse = .false.)

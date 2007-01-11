@@ -32,7 +32,7 @@ program mkgriddata
     integer  :: lsmlon, lsmlat       ! clm grid resolution
     integer  :: i,j,k,m              ! indices
     integer  :: ier                  ! error status
-    character(len= 7) :: resol       ! resolution for file name
+    character(len= 9) :: resol       ! resolution for file name
     character(len=64) :: fgriddat    ! output filename
     character(len=64) :: ffracdat    ! output filename
     character(len=64) :: ftopodat    ! output filename
@@ -100,7 +100,7 @@ program mkgriddata
     lsmlon = ldomain%ni
     lsmlat = ldomain%nj
 
-    write (resol,'(i3.3,"x",i3.3)') lsmlat,lsmlon
+    write (resol,'(i4.4,"x",i4.4)') lsmlat,lsmlon
     fgriddat = './griddata_'//trim(resol)//'.nc'
     ffracdat = './fracdata_'//trim(resol)//'.nc'
     ftopodat = './topodata_'//trim(resol)//'.nc'
