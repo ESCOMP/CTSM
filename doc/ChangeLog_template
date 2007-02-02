@@ -27,7 +27,6 @@ List all existing files that have been modified, and describe the changes:
 Summary of testing:
 
   bluesky:
-  tempest:
   bangkok/lf95:
 
 CLM tag used for the baseline comparison tests if applicable:

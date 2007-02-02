@@ -54,6 +54,19 @@ LDFLAGS = -L$(LIB_NETCDF) -q64 -lnetcdf
 endif
 
 #------------------------------------------------------------------------
+# Darwin
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),Darwin)
+LIB_NETCDF := /usr/local/lib
+FC      = xlf90
+FFLAGS  = -c -I$(INC_NETCDF) -qsuffix=f=f90 -O2 -qmaxmem=-1 -qsuffix=f=f90:cpp=F90 \
+	  -WF,-DAIX -g -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C -qfullpath \
+	  -qhalt=e
+LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+endif
+
+#------------------------------------------------------------------------
 # OSF1
 #------------------------------------------------------------------------
 

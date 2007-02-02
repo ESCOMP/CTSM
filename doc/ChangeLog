@@ -1,4 +1,84 @@
 ===============================================================
+Tag name: clm3_expa_89
+Originator(s): erik,oleson
+Date: Feb/02/2007
+One-line Summary: 
+
+Purpose of changes: Use new water table rise calculation in SoilHydrology
+
+Bugs fixed (include bugzilla ID): 345, 353
+
+Describe any changes made to build system: None (although added Darwin to mksrfdat build Makefile)
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: Keith Oleson
+
+List all subroutines eliminated: None
+
+Remove bld/offline directory tree
+
+List all subroutines added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M      bld/Makefile.in ---- Add -DFORTRANUNDERSCORE so can compile mpi-serial on IRIX
+
+Change run scripts so that spmd and smp settings work for both on AND off
+
+M      bld/run-pc.csh ----------------------- Also add LD_LIBRARY_PATH setting
+M      bld/run-sgi.csh
+M      bld/run-lightning.csh
+
+M      src/main/spmdMod.F90 ------------------ Remove #ifdef around #include <mpif.h> so will
+	run serial (this is a partial fix to bug 337. The longer term fix is to remove all
+	#ifdef SPMD as we can use the mpi-serial code to make the serial and SPMD code the same.
+
+M      src/biogeophys/SoilHydrologyMod.F90 --- New drainage formulation from Keith Oleson
+
+Summary of testing:
+
+  bluesky: -- All but comparision to previous version
+  tempest: -- All but comparison to previous version and the following restart tests
+	(These tests fail on previous versions as well -- documented as bug 361)
+002 er111 TER.sh 4p_vodsr_dh t31 10+38 ............................FAIL! rc= 11
+003 br111 TBR.sh 4p_vodsr_dh t31 24+24 ............................FAIL! rc= 11
+005 sm116 TSM.sh 4p_vodsr_o t31 48 ................................FAIL! rc= 4
+007 er121 TER.sh 17p_vodsr_dh t31 10+38 ...........................FAIL! rc= 11
+008 br121 TBR.sh 17p_vodsr_dh t31 24+24 ...........................FAIL! rc= 11
+012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................FAIL! rc= 11
+013 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24 .......................FAIL! rc= 11
+016 er311 TER.sh 4p_casa_dh t31_casa 10+38 ........................FAIL! rc= 11
+017 br311 TBR.sh 4p_casa_dh t31_casa 24+24 ........................FAIL! rc= 11
+020 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38 .......................FAIL! rc= 11
+021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................FAIL! rc= 11
+	(We are going to remove tempest as a standard test for CLM)
+
+  bangkok/lf95: -- All but comparision to previous version
+
+CLM tag used for the baseline comparison tests if applicable: none
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change (similar climate)
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers: Cray-XT3/jaguar
+   - configuration (CPP ifdefs): default
+   - build-namelist command (or complete namelist):
+   - MSS location of output: /CCSM/csm/b31.020ws/lnd/hist
+
+   URL for LMWG diagnostics output used to validate new climate: Not yet prepared
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_88
 Originator(s): nanr
 Date: Thu Jan 11 12:31:51 MST 2007

@@ -214,7 +214,7 @@ endif
 
 ifeq ($(UNAMES),IRIX64)
 
-CPPDEF      += -DIRIX64
+CPPDEF      += -DIRIX64 -DFORTRANUNDERSCORE
 FC          := f90
 CC          := cc
 CFLAGS      := -64 $(cpp_path) $(CPPDEF) -O2

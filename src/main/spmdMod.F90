@@ -30,9 +30,7 @@ module spmdMod
   integer, public :: mpicom          ! communicator group for clm
   integer, public :: comp_id         ! component id
 
-#ifdef SPMD
 #include <mpif.h>  
-#endif
 
 contains
 

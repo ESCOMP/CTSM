@@ -50,6 +50,7 @@ switch ( $OS )
        setenv LIB_MPI ${mpich}/lib
        setenv PATH ${LAHEY}/bin:${mpich}/bin:${PATH}
        setenv MOD_NETCDF $INC_NETCDF
+       setenv LD_LIBRARY_PATH "${LAHEY}/lib:/lib/i686:/usr/local/lib"
      else
        if ( $OPT_BLD == "pgf90-gcc" ) then
          setenv USER_CC gcc
@@ -61,6 +62,7 @@ switch ( $OS )
        setenv LIB_NETCDF /usr/local/netcdf-pgi-hpf-cc/lib
        setenv PGI /usr/local/pgi-pgcc-pghf
        setenv PATH ${PGI}/linux86/6.1/bin:${PATH}
+       setenv LD_LIBRARY_PATH "${PGI}/linux86/lib:${PGI}/linux86/liblf:/lib/i686:/usr/local/lib"
 
      endif
      breaksw;
@@ -110,7 +112,8 @@ mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
 ## If an executable doesn't exist, build one.
 set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust -usr_src $usr_src"
-if ($spmd == on) set flags = "$flags -spmd"
+if ($spmd == on ) set flags = "$flags -spmd"
+if ($spmd == off) set flags = "$flags -nospmd"
 if ( ! -x $blddir/clm ) then
     echo "cd $blddir"
     cd $blddir                  || echo "cd $blddir failed" && exit 1

@@ -897,7 +897,7 @@ contains
           else
              ws = 0._r8   ! water used to fill soil air pores
              do j = jwt(c)+2,nlevsoi
-               ws = ws + (eff_porosity(c,j)-vol_liq(c,j)) * 1000._r8 * dz(c,j)
+               ws = ws + eff_porosity(c,j) * 1000._r8 * dz(c,j)
              enddo
              zwt(c) = zi(c,jwt(c)+1)-(wt(c)-rous*1000_r8*25._r8-ws) /eff_porosity(c,jwt(c)+1)/1000._r8
           endif

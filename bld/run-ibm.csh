@@ -104,8 +104,10 @@ mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
 ## If an executable doesn't exist, build one.
 set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust -usr_src $usr_src"
-if ($spmd == on) set flags = "$flags -spmd"
-if ($smp  == on) set flags = "$flags -smp"
+if ($spmd == on ) set flags = "$flags -spmd"
+if ($spmd == off) set flags = "$flags -nospmd"
+if ($smp  == on ) set flags = "$flags -smp"
+if ($smp  == off) set flags = "$flags -nosmp"
 if ( ! -x $blddir/clm ) then
     echo "cd $blddir"
     cd $blddir                  || echo "cd $blddir failed" && exit 1
