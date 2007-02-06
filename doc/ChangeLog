@@ -1,4 +1,86 @@
 ===============================================================
+Tag name:  clm3_expa_90
+Originator(s):  nanr
+Date:  Tue Feb  6 13:17:55 MST 2007
+One-line Summary:  Changed creategridMod.F90 to read variables from 10min USGS file.
+
+Purpose of changes:  
+Added htopo and landfract to retrieve landfrac and topography for processing USGS-gtopo30_10min_c050419.nc
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by:  nanr
+
+List all subroutines eliminated:  none
+
+List all subroutines added and what they do:  none
+
+List all existing files that have been modified, and describe the changes:
+
+M      creategridMod.F90
+
+   Added lines to creategridMod.F90 to read variables from USGS-gtopo30-10min_c050419.nc 
+
+    ier = nf_inq_varid (ncid, 'landfract', varid)
+    if (ier == NF_NOERR) then
+       if (landfracset) write(6,*) trim(subname),' WARNING, overwriting frac'
+       landfracset = .true.
+       write(6,*) trim(subname),' read landfract'
+       call check_ret(nf_inq_varid (ncid, 'landfract', varid), subname)
+       call check_ret(nf_get_var_double (ncid, varid, domain%frac), subname)
+    endif
+
+    ier = nf_inq_varid (ncid, 'htopo', varid)
+    if (ier == NF_NOERR) then
+       if (toposet) write(6,*) trim(subname),' WARNING, overwriting topo'
+       toposet = .true.
+       write(6,*) trim(subname),' read htopo'
+       call check_ret(nf_inq_varid (ncid, 'htopo', varid), subname)
+       call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
+    endif
+
+
+Summary of testing:  none. Affects tools/mkgriddata only.
+
+  bluesky:
+  tempest:
+  bangkok/lf95:
+
+CLM tag used for the baseline comparison tests if applicable:
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate: 
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name: clm3_expa_89
 Originator(s): erik,oleson
 Date: Feb/02/2007

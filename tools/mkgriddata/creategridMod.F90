@@ -623,6 +623,15 @@ contains
        call check_ret(nf_get_var_double (ncid, varid, domain%frac), subname)
     endif
 
+    ier = nf_inq_varid (ncid, 'landfract', varid)
+    if (ier == NF_NOERR) then
+       if (landfracset) write(6,*) trim(subname),' WARNING, overwriting frac'
+       landfracset = .true.
+       write(6,*) trim(subname),' read landfract'
+       call check_ret(nf_inq_varid (ncid, 'landfract', varid), subname)
+       call check_ret(nf_get_var_double (ncid, varid, domain%frac), subname)
+    endif
+
     ier = nf_inq_varid (ncid, 'mask', varid)
     if (ier == NF_NOERR) then
        if (maskset) write(6,*) trim(subname),' WARNING, overwriting mask'
@@ -675,6 +684,15 @@ contains
        toposet = .true.
        write(6,*) trim(subname),' read TOPO'
        call check_ret(nf_inq_varid (ncid, 'TOPO', varid), subname)
+       call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
+    endif
+
+    ier = nf_inq_varid (ncid, 'htopo', varid)
+    if (ier == NF_NOERR) then
+       if (toposet) write(6,*) trim(subname),' WARNING, overwriting topo'
+       toposet = .true.
+       write(6,*) trim(subname),' read htopo'
+       call check_ret(nf_inq_varid (ncid, 'htopo', varid), subname)
        call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
     endif
 
