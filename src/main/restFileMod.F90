@@ -841,9 +841,10 @@ contains
 ! Check dimensions of restart file
 !
 ! !USES:
-    use decompMod, only : get_proc_bounds, get_proc_global
+    use decompMod,  only : get_proc_bounds, get_proc_global
+    use clm_varpar, only : nlevsno, nlevsoi, nlevlak
 #if (defined RTM)
-    use RunoffMod, only : get_proc_rof_global
+    use RunoffMod,  only : get_proc_rof_global
 #endif
     implicit none
 !

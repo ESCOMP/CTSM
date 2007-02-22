@@ -46,6 +46,7 @@ contains
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
+    use clm_varpar   , only : nlevsoi
     use subgridAveMod, only : p2c
 
 !
@@ -75,6 +76,7 @@ contains
     real(r8), pointer :: h2osoi_liq(:,:)       ! liquid water (kg/m2)
     real(r8), pointer :: h2ocan_pft(:)         ! canopy water (mm H2O) (pft-level) 
     real(r8), pointer :: wa(:)                 !water in the unconfined aquifer (m)
+
 !
 ! local pointers to original implicit out variables
 !
@@ -210,6 +212,7 @@ contains
     real(r8), pointer :: errsol(:)          ! solar radiation conservation error (W/m**2)
     real(r8), pointer :: errlon(:)          ! longwave radiation conservation error (W/m**2)
     real(r8), pointer :: errseb(:)          ! surface energy conservation error (W/m**2)
+    real(r8), pointer :: errsoi_col(:)      ! column-level soil/lake energy conservation error (W/m**2)
 !
 !EOP
 !
@@ -239,6 +242,7 @@ contains
     qflx_drain        => clm3%g%l%c%cwf%qflx_drain
     qflx_evap_tot     => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
     errh2o            => clm3%g%l%c%cwbal%errh2o
+    errsoi_col        => clm3%g%l%c%cebal%errsoi
 
     ! Assign local pointers to derived type scalar members (pft-level)
 
@@ -361,6 +365,23 @@ contains
        write(6,100)'surface flux energy balance error',nstep,index,errseb(index)
        write(6,*)'clm model is stopping'
        call endrun()
+    end if
+
+    ! Soil energy balance check
+
+    found = .false.
+    do c = lbc, ubc
+       if (abs(errsoi_col(c)) > 1.0e-7_r8 ) then
+          found = .true.
+          index = c
+       end if
+    end do
+    if ( found ) then
+       write(6,100)'soil balance error',nstep,index,errsoi_col(index)
+       if (abs(errsoi_col(index)) > .10_r8) then
+          write(6,*)'clm model is stopping'
+          call endrun()
+       end if
     end if
 
 100 format (1x,a14,' nstep =',i10,' point =',i6,' imbalance =',f8.2,' W/m2')

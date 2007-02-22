@@ -16,7 +16,7 @@ module clmtypeInitMod
   use shr_sys_mod , only: shr_sys_flush
   use nanMod
   use clmtype
-  use clm_varpar, only: maxpatch_pft
+  use clm_varpar, only: maxpatch_pft, nlevsno, nlevsoi, numrad, nlevlak, numpft, ndst, nvoc
 !
 ! !PUBLIC TYPES:
   implicit none

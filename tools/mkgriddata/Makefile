@@ -28,8 +28,44 @@ ifeq ($(INC_NETCDF),$(null))
 INC_NETCDF := /usr/local/include
 endif
 
+CPPDEF := -DNO_SHR_VMATH -DOFFLINE
+
 # Determine platform 
 UNAMES := $(shell uname -s)
+
+# Load dependency search path.
+dirs := . $(shell cat Filepath)
+
+# Set cpp search path, include netcdf
+cpp_dirs := $(dirs) $(INC_NETCDF) $(INC_MPI)
+
+# Expand any tildes in directory names. Change spaces to colons.
+VPATH    := $(foreach dir,$(cpp_dirs),$(wildcard $(dir))) 
+VPATH    := $(subst $(space),:,$(VPATH))               
+
+#Primary Target: build the tool
+all: $(EXENAME)
+
+# Get list of files and build dependency file for all .o files
+#   using perl scripts mkSrcfiles and mkDepends
+
+SOURCES   := $(shell cat Srcfiles)
+
+OBJS      := $(addsuffix .o, $(basename $(SOURCES)))
+
+
+# Newer makes set the CURDIR variable.
+CURDIR := $(shell pwd)
+
+ifeq ($(CLM_ROOT),$(null))
+   ROOTDIR := $(CURDIR)/../../
+else
+   ROOTDIR := $(CLM_ROOT)
+endif
+
+$(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Filepath
+	$(ROOTDIR)/bld/mkDepends Filepath Srcfiles > $@
+
 
 # Architecture-specific flags and rules
 #------------------------------------------------------------------------
@@ -37,9 +73,11 @@ UNAMES := $(shell uname -s)
 #------------------------------------------------------------------------
 
 ifeq ($(UNAMES),IRIX64)
+CPPDEF  += -DIRIX64
 FC      = f90
-FFLAGS  = -64 -c -r8 -i4 -I$(INC_NETCDF) -O2 -DIRIX64
+FFLAGS  = -64 -c -r8 -i4 -I$(INC_NETCDF) -O2 $(CPPDEF)
 LDFLAGS = -64 -L$(LIB_NETCDF) -lnetcdf
+CFLAGS  := -c -64 -g -O2 $(CPPDEF)
 endif
 
 #------------------------------------------------------------------------
@@ -47,20 +85,46 @@ endif
 #------------------------------------------------------------------------
 
 ifeq ($(UNAMES),AIX)
+CPPDEF += -DAIX -DFORTRAN_SAME
+cpre = $(null)-WF,-D$(null)
+FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
 LIB_NETCDF := /usr/local/lib64/r4i4
 FC      = xlf90
-FFLAGS  = -c -I$(INC_NETCDF) -q64 -qsuffix=f=f90 -O2 -qmaxmem=-1 -qsuffix=f=f90:cpp=F90 -WF,-DAIX -g
+FFLAGS  = -c -I$(INC_NETCDF) -q64 -qsuffix=f=f90 -O2 -qmaxmem=-1 -qsuffix=f=f90:cpp=F90 \
+	   $(FPPFLAGS)  -g
+CFLAGS  := -c -q64 -g -O2
 LDFLAGS = -L$(LIB_NETCDF) -q64 -lnetcdf
 endif
+
+#------------------------------------------------------------------------
+# Darwin
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),Darwin)
+CPPDEF += -DAIX -DDarwin -DFORTRAN_SAME
+cpre = $(null)-WF,-D$(null)
+FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
+LIB_NETCDF := /usr/local/lib
+CFLAGS  := -c -I/usr/include -I/usr/include/malloc -g -O2 $(CPPDEF)
+FC      = xlf90
+FFLAGS  = -c -I$(INC_NETCDF) -qsuffix=f=f90 -O2 -qmaxmem=-1 -qsuffix=f=f90:cpp=F90 \
+          -WF,-DAIX -g -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C -qfullpath \
+          -qhalt=e $(FPPFLAGS) -I.
+LDFLAGS = -L$(LIB_NETCDF) -lnetcdf -lSystemStubs -lSystemStubs_profile
+
+endif
+
 
 #------------------------------------------------------------------------
 # OSF1
 #------------------------------------------------------------------------
 
 ifeq ($(UNAMES),OSF1)
+CPPDEF += -DOSF1
 FC      = f90
-FFLAGS  = -c -I$(INC_NETCDF) -DOSF1
+FFLAGS  = -c -I$(INC_NETCDF) $(CPPDEF)
 LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+CFLAGS := -c $(CPPDEF)
 endif
 
 #-----------------------------------------------------------------------
@@ -68,9 +132,11 @@ endif
 #-----------------------------------------------------------------------
 
 ifeq ($(UNAMES),SunOS)
+CPPDEF += -DSUNOS
 FC      = f90
-FFLAGS  = -c -I$(INC_NETCDF) -DSUNOS -stackvar
+FFLAGS  = -c -I$(INC_NETCDF) $(CPPDEF) -stackvar
 LDFLAGS = -L$(LIB_NETCDF) -L$(HOME)/lib -lnetcdf
+CFLAGS := -c $(CPPDEF)
 endif
 
 #------------------------------------------------------------------------
@@ -83,21 +149,27 @@ ifeq ($(UNAMES),Linux)
   else
     FC := $(USER_FC)
   endif
+  CPPDEF := -DLINUX
 
   ifeq ($(FC),pgf90)
+    FFLAGS := -c -I$(INC_NETCDF) $(CPPDEF)
+    CFLAGS := -c $(CPPDEF)
     ifeq ($(DEBUG),TRUE)
-      FFLAGS = -c -I$(INC_NETCDF) -DLINUX -g -Ktrap=fp -Mbounds
+      FFLAGS += -g -Ktrap=fp -Mbounds
     else
-      FFLAGS = -c -I$(INC_NETCDF) -DLINUX -fast
+      FFLAGS += -fast
+      CFLAGS += -fast
     endif
     LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
   endif
 
   ifeq ($(FC),lf95)
+    FFLAGS =  -c -I$(INC_NETCDF) $(CPPDEF)
+    CFLAGS := -c $(CPPDEF)
     ifeq ($(DEBUG),TRUE)
-      FFLAGS =  -c -I$(INC_NETCDF) -DLINUX -g --chk a,e,s,u
+      FFLAGS += -g --chk a,e,s,u
     else
-      FFLAGS =  -c -I$(INC_NETCDF) -DLINUX -O
+      FFLAGS += -O
     endif
     LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
   endif
@@ -107,14 +179,13 @@ endif
 # Default rules and macros
 #------------------------------------------------------------------------
 
-OBJS := fileutils.o shr_kind_mod.o  shr_const_mod.o shr_sys_mod.o ncdio.o domainMod.o \
-        areaMod.o mkvarctl.o mkvarsur.o creategridMod.o mkgriddata.o nanMod.o
-
 .SUFFIXES:
-.SUFFIXES: .F90 .o
+.SUFFIXES: .F90 .c .o
 
 .F90.o:
 	$(FC) $(FFLAGS) $<
+.c.o:
+	$(CC) $(CFLAGS) $<
 
 $(EXENAME): $(OBJS)
 	$(FC) -o $@ $(OBJS) $(LDFLAGS)
@@ -122,15 +193,4 @@ $(EXENAME): $(OBJS)
 clean:
 	$(RM) -f $(OBJS) *.mod $(EXEDIR)/$(EXENAME)
 
-fileutils.o:
-shr_kind_mod.o: 
-shr_const_mod.o: shr_kind_mod.o
-shr_sys_mod.o:   shr_kind_mod.o
-nanMod.o:        shr_kind_mod.o
-domainMod.o:     shr_kind_mod.o nanMod.o
-areaMod.o:       shr_kind_mod.o shr_const_mod.o nanMod.o domainMod.o
-ncdio.o:         shr_kind_mod.o shr_sys_mod.o mkvarsur.o
-mkvarctl.o:      shr_kind_mod.o
-mkvarsur.o:      shr_kind_mod.o domainMod.o
-creategridMod.o: shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o domainMod.o 
-mkgriddata.o:    shr_kind_mod.o shr_sys_mod.o fileutils.o mkvarsur.o mkvarctl.o areaMod.o ncdio.o creategridMod.o 
+include $(CURDIR)/Depends

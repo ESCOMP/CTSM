@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the testing of CLM in Sequential CCSM
 #
-# usage on bluesky, bangkok, calgary, tempest, bluevista, lightning: 
+# usage on bluesky, bangkok, calgary, tempest, bluevista, lightning, blueice, jaguar: 
 # ./test_driver.sh
 #
 # valid arguments: 
@@ -145,6 +145,67 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
+    ##blueice
+    bl* )
+    submit_script="test_driver_blueice${cur_time}.sh"
+
+    account_name=`grep -i "^${LOGNAME}:" /etc/project.ncar | cut -f 1 -d "," | cut -f 2 -d ":" `
+    if [ ! -n "${account_name}" ]; then
+	echo "ERROR: unable to locate an account number to charge for this job under user: $LOGNAME"
+	exit 2
+    fi
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+#BSUB -a poe                      # use LSF poe elim
+#BSUB -x                          # exclusive use of node (not_shared)
+#BSUB -n 8                        # total tasks needed
+#BSUB -R "span[ptile=8]"          # max number of tasks (MPI) per node
+#BSUB -o test_dr.o%J              # output filename
+#BSUB -e test_dr.o%J              # error filename
+#BSUB -q premium                  # queue
+#BSUB -W 4:28                     
+#BSUB -P $account_name      
+
+if [ -n "\$LSB_JOBID" ]; then   #batch job
+    export JOBID=\${LSB_JOBID}
+    initdir=\${LS_SUBCWD}
+    interactive="NO"
+else
+    interactive="YES"
+fi
+
+##omp threads
+export CLM_THREADS=4
+export CLM_RESTART_THREADS=8
+
+##mpi tasks
+export CLM_TASKS=8
+export CLM_RESTART_TASKS=4
+
+export INC_NETCDF=/usr/local/apps/netcdf-3.6.1/include
+export LIB_NETCDF=/usr/local/apps/netcdf-3.6.1/lib
+export AIXTHREAD_SCOPE=S
+export MALLOCMULTIHEAP=true
+export OMP_DYNAMIC=false
+export XLSMPOPTS="stack=40000000"
+export MAKE_CMD="gmake -j"
+export CFG_STRING=""
+export CCSM_MACH="blueice"
+export MACH_WORKSPACE="/ptmp"
+export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
+dataroot="/fs/cgd/csm"
+echo_arg=""
+input_file="tests_pretag_blueice"
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+
+
     ##lightning
     ln* )
     submit_script="test_driver_lightning_${cur_time}.sh"
@@ -277,9 +338,9 @@ EOF
     ;;
 
 
-    ##robin/phoenix
-    ro* ) 
-    submit_script="test_driver_robin_${cur_time}.sh"
+    ##jaguar
+    jaguar* ) 
+    submit_script="test_driver_jaguar_${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -287,13 +348,15 @@ cat > ./${submit_script} << EOF
 #
 
 # Name of the queue (CHANGE THIS if needed)
-# #PBS -q debug
+# #PBS -q batch
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l walltime=02:58:00,mppe=8
+#PBS -l walltime=04:00:00,size=8
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
 #PBS -j oe
+# Use sh
+#PBS -S /bin/sh
 # Export all Environment variables
 #PBS -V
 #PBS -A CLI017
@@ -306,13 +369,13 @@ fi
 
 if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
     interactive="NO"
-    input_file="tests_posttag_phoenix"
     echo_arg=""
 else
     interactive="YES"
-    input_file="tests_posttag_robin"
     echo_arg="-e"
 fi
+
+input_file="tests_pretag_jaguar"
 
 ##omp threads
 export CLM_THREADS=1
@@ -322,25 +385,24 @@ export CLM_RESTART_THREADS=2
 export CLM_TASKS=8
 export CLM_RESTART_TASKS=4
 
-. /opt/modules/modules/init/sh
-module purge
-module load open
-module load PrgEnv.5407
-module unload mpt
-module load mpt.2.4.0.6
-module load pbs
-module load netcdf/3.5.1_r4
+. /opt/modules/default/init/sh
+module switch pgi pgi/6.1.5
+#module load netcdf/3.6.0
 
-netcdf=\$NETCDF_SV2
+netcdf="/apps/netcdf/3.6.0/xt3_pgi60"
 export LIB_NETCDF=\${netcdf}/lib
 export INC_NETCDF=\${netcdf}/include
 export MOD_NETCDF=\${netcdf}/include
-export CFG_STRING="-pcols 258 -target_os unicosmp -cppdefs \"-DSYSUNICOS\" "
-export CCSM_MACH="phoenix"
+export INC_MPI=\${MPICH_DIR_FTN_DEFAULT64}/include
+export LIB_MPI=\${MPICH_DIR_FTN_DEFAULT64}/lib
+export CCSM_MACH="jaguar"
+export CFG_STRING="-fc ftn -cc cc -fflags '-target=catamount'"
+export CFG_STRING="${CFG_STRING} -cppdefs '-DCATAMOUNT'"
+export CFG_STRING="${CFG_STRING} -cflags '-target=catamount'"
 
-export MAKE_CMD="gmake -j 2"   ##using hyper-threading on calgary
-export MACH_WORKSPACE="/scratch/scr101"
-export CPRNC_EXE=/spin/proj/ccsm/models/atm/cam/bin/newcprnc/cprnc
+export MAKE_CMD="gmake -j 2"
+export MACH_WORKSPACE="/tmp/work"
+export CPRNC_EXE=/spin/proj/ccsm/bin/jaguar/newcprnc
 dataroot="/spin/proj/ccsm"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -549,7 +611,7 @@ for test_id in \${test_list}; do
         status_out="\${status_out}."
     done
 
-    echo \$echo_arg "\$status_out\c" >> \${clm_status}
+    echo -n \$echo_arg "\$status_out" >> \${clm_status}
 
     if [ \$interactive = "YES" ]; then
         \${CLM_SCRIPTDIR}/\${test_cmd}
@@ -635,7 +697,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bluesky, bangkok, tempest, bluevista, lightning, robin: "
+    echo "usage on bluesky, bangkok, tempest, bluevista, blueice, lightning, jaguar: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
@@ -661,14 +723,17 @@ case $hostname in
     ##bluevista
     bv* )  bsub < ${submit_script};;
 
+    ##blueice
+    bl* )  bsub < ${submit_script};;
+
     ##lightning
     ln* )  bsub < ${submit_script};;
 
     ##bangkok,calgary
     ba* | b0* | ca* | c0* )  qsub ${submit_script};;
 
-    ##robin/phoenix
-    ro* )  qsub ${submit_script};;
+    ##jaguar
+    jaguar* )  qsub ${submit_script};;
 
     ##tempest
     te* )  qsub ${submit_script};;

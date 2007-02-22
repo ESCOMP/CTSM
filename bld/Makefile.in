@@ -278,6 +278,7 @@ ifeq ($(findstring ftn,$(FC)),ftn)
   PGI_FC := TRUE
   USER_CC := cc
   PGI_CC := TRUE
+  USER_LDFLAGS += -lgmalloc -time -Wl,--allow-multiple-definition
 endif
 
 # Set the C compiler (default: pgcc if using PGI Fortran compiler, cc otherwise)
@@ -310,6 +311,9 @@ CFLAGS = $(cpp_path) $(CPPDEF)
 ifeq ($(PGI_CC),TRUE)
   CFLAGS += -fast
 endif
+ifeq ($(findstring ftn,$(FC)),ftn)
+  CFLAGS += -DFORTRANUNDERSCORE
+endif
 
 # Set search path for module files for external libraries.
 mod_path  := -I$(MOD_NETCDF)
@@ -318,7 +322,6 @@ mod_path  := -I$(MOD_NETCDF)
 
 ifeq ($(PGI_FC),TRUE)
 
-  CPPDEF     += -DNO_R16
   FFLAGS     := $(cpp_path) $(mod_path) $(CPPDEF) -i4 -Mdalign -Mextend -byteswapio
   FREEFLAGS  := -Mfree
   FIXEDFLAGS :=
@@ -414,7 +417,6 @@ endif
 ifeq ($(FC),pathf90)
 
   CC         := pathcc
-  CPPDEF     += -DNO_R16
   FFLAGS     := $(cpp_path) $(mod_path) $(CPPDEF) -extend_source -ftpp -fno-second-underscore
   FREEFLAGS  :=
   FIXEDFLAGS :=
@@ -441,7 +443,7 @@ endif
 
 ifeq ($(FC),g95)
 
-  CPPDEF     += -DG95 -DNO_R16 -DDISABLE_TIMERS -DNO_CRAY_POINTERS
+  CPPDEF     += -DG95 -DDISABLE_TIMERS -DNO_CRAY_POINTERS
   FFLAGS     := $(cpp_path) $(mod_path) $(CPPDEF) -i4 -fno-second-underscore -fstatic  
   FREEFLAGS  := 
   FIXEDFLAGS :=
@@ -741,7 +743,7 @@ endif
 
 ifeq ($(UNAMES),Darwin)
 
-CPPDEF     += -DAIX -DDarwin -DFORTRAN_SAME
+CPPDEF     += -DAIX -DDarwin -DFORTRAN_SAME -DNO_SHR_VMATH
 
 cpre = $(null)-WF,-D$(null)
 FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
@@ -749,7 +751,7 @@ FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
 FC := xlf90_r
 
 CC         := xlc
-CFLAGS     := $(cpp_path) $(CPPDEF) -O2
+CFLAGS     := -I/usr/include -I/usr/include/malloc $(cpp_path) $(CPPDEF) -O2
 mod_path   := -I$(MOD_NETCDF)
 FFLAGS     := $(cpp_path) $(mod_path) $(FPPFLAGS) -qspillsize=2500 
 FREEFLAGS  := -qsuffix=f=f90:cpp=F90
@@ -779,6 +781,9 @@ ifeq ($(SPMD),TRUE)
 else
   FFLAGS  += -WF,-DHIDE_MPI
 endif
+
+gptl.o: gptl.c
+	$(CC) -c -I/usr/include -I/usr/include/malloc $(CPPDEF) -O2 $<
 
 endif
 

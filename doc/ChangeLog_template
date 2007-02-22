@@ -18,6 +18,8 @@ Describe any substantial timing or memory changes:
 
 Code reviewed by:
 
+List any svn externals directories updated (csm_share, mct, etc.):
+
 List all subroutines eliminated:
 
 List all subroutines added and what they do:
@@ -26,7 +28,7 @@ List all existing files that have been modified, and describe the changes:
 
 Summary of testing:
 
-  bluesky:
+  bluevista:
   bangkok/lf95:
 
 CLM tag used for the baseline comparison tests if applicable:

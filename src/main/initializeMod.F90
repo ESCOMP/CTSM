@@ -258,7 +258,6 @@ contains
     use clm_varctl      , only : finidat, fpftdyn, fndepdyn
     use clmtypeInitMod  , only : initClmtype
     use domainMod       , only : ldomain, adomain
-    use domainMod       , only : llon,llat
     use domainMod       , only : llocdomain, alocdomain
     use domainMod       , only : domain_check, domain_clean
     use decompMod       , only : adecomp,ldecomp, decomp_domg2l
@@ -270,7 +269,7 @@ contains
     use filterMod       , only : allocFilters, setFilters
     use pftdynMod       , only : pftdyn_init, pftdyn_interp
     use histFldsMod     , only : initHistFlds
-    use histFileMod     , only : htapes_build
+    use histFileMod     , only : htapes_build, hist_allocGlobal
     use restFileMod     , only : restFile_getfile, &
                                  restFile_open, restFile_close, &
                                  restFile_read, restFile_read_binary
@@ -380,14 +379,8 @@ contains
     call domain_clean(adomain)
 #endif
 
-    allocate(llon(ldomain%ni),llat(ldomain%nj))
-    do j = 1,ldomain%nj
-       k = (j-1)*ldomain%ni + 1
-       llat(j) = ldomain%latc(k)
-    enddo
-    do i = 1,ldomain%ni
-       llon(i) = ldomain%lonc(i)
-    enddo
+   
+    call hist_allocGlobal( ldomain )  ! allocate and set global domain data needed for history module
 
     call get_proc_bounds    (begg    , endg)
     call decomp_domg2l(ldomain,llocdomain,ldecomp,begg,endg)

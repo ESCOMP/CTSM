@@ -45,7 +45,7 @@ contains
     use clmtype
     use ncdio
     use decompMod     , only : get_proc_bounds
-    use clm_varpar    , only : nlevsoi
+    use clm_varpar    , only : nlevsoi, nlevsno
     use clm_varcon    , only : denice, denh2o
     use clm_varctl    , only : allocate_all_vegpfts, nsrest
     use initSurfAlbMod, only : do_initsurfalb

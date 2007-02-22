@@ -194,6 +194,7 @@
 
   call t_startf('lnd_timeloop')
   do
+     call t_startf('clm_driver1')
 
      ! doalb is true when the next time step is a radiation time step
 

@@ -244,7 +244,7 @@ contains
      if (irt/=0) then
         if (pass(1:1) /= ' ')then
            call shr_file_put( ier, locfn, fulpath, passwd=pass, rtpd=irt, &
-                              async=.true., remove=lremov )
+                              async=.false., remove=lremov )
         else
            call shr_file_put( ier, locfn, fulpath, rtpd=irt, async=.true., &
                               remove=lremov )

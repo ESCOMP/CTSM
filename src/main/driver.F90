@@ -203,6 +203,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
   integer  :: begg, endg    ! clump beginning and ending gridcell indices
   type(column_type)  , pointer :: cptr    ! pointer to column derived subtype
 !-----------------------------------------------------------------------
+  call t_startf( "driver1" )
 
   ! Set pointers into derived type
 
@@ -543,6 +544,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 #if !defined (USE_OMP)
 !!CSD$ END PARALLEL DO
 #endif
+  call t_stopf( "driver1" )
 
 end subroutine driver1
 
@@ -595,6 +597,7 @@ subroutine driver2(caldayp1, declinp1, rstwr)
   logical :: write_restart
 !-----------------------------------------------------------------------
 
+  call t_startf( "driver2" )
   ! ============================================================================
   ! Write global average diagnostics to standard output
   ! ============================================================================
@@ -682,6 +685,8 @@ subroutine driver2(caldayp1, declinp1, rstwr)
 !$OMP END PARALLEL DO
   end if
 #endif
+
+  call t_stopf( "driver2" )
 
   ! ============================================================================
   ! Create history and write history tapes if appropriate

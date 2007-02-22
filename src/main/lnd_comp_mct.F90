@@ -3,7 +3,7 @@
 
 module lnd_comp_mct
 
-#if (defined COUP_CAM)
+#if (defined COUP_CAM) && (defined SEQ_MCT)
 
 !---------------------------------------------------------------------------
 !BOP

@@ -10,7 +10,6 @@ module domainMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use nanMod
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -70,6 +69,7 @@ contains
 ! This subroutine allocates and nans the domain type
 !
 ! !USES:
+  use nanMod,       only : nan, bigint
 !
 ! !ARGUMENTS:
     implicit none
@@ -140,6 +140,7 @@ end subroutine domain_init
 ! This subroutine deallocates the domain type
 !
 ! !USES:
+  use nanMod,       only : bigint
 !
 ! !ARGUMENTS:
     implicit none

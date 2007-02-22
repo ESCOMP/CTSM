@@ -22,7 +22,7 @@ subroutine iniTimeConst
   use clmtype
   use decompMod   , only : get_proc_bounds, get_proc_global, ldecomp
   use clm_atmlnd  , only : clm_a2l
-  use clm_varpar  , only : nlevsoi, nlevlak, lsmlon, lsmlat, numpft
+  use clm_varpar  , only : nlevsoi, nlevlak, lsmlon, lsmlat, numpft, numrad
   use clm_varcon  , only : istice, istdlak, istwet, isturb, &
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
                            albsat, albdry
@@ -223,31 +223,36 @@ subroutine iniTimeConst
 
      ! Read fmax
 
-     call check_ret(nf_inq_varid(ncid, 'FMAX', varid), subname)
-     call check_ret(nf_get_var_double(ncid, varid, gti), subname)
+     if (.not. single_column) then
+        call check_ret(nf_inq_varid(ncid, 'FMAX', varid), subname)
+        call check_ret(nf_get_var_double(ncid, varid, gti), subname)
+     else
+        time_index=1
+        call getncdata (ncid, scmlat, scmlon, time_index,'FMAX', gti, ret)
+     end if
 
      write (6,*) 'Successfully read fmax boundary data .....'
      write (6,*)
 
      ! Red in soil color, sand and clay fraction
 
-     if (single_column) then
-     time_index=1
-     call getncdata (ncid, scmlat, scmlon, time_index,'SOIL_COLOR' , soic2d     , ret)
-     call getncdata (ncid, scmlat, scmlon, time_index,'PCT_SAND'   , nlevsoidata, ret)
-     sand3d(1,1,:) = nlevsoidata(:)
-     call getncdata (ncid, scmlat, scmlon, time_index,'PCT_CLAY'   , nlevsoidata, ret)
-     clay3d(1,1,:) = nlevsoidata(:)
-  else
-     call check_ret(nf_inq_varid(ncid, 'SOIL_COLOR', varid), subname)
-     call check_ret(nf_get_var_int(ncid, varid, soic2d), subname)
+     if (.not. single_column) then
+        call check_ret(nf_inq_varid(ncid, 'SOIL_COLOR', varid), subname)
+        call check_ret(nf_get_var_int(ncid, varid, soic2d), subname)
+        
+        call check_ret(nf_inq_varid(ncid, 'PCT_SAND', varid), subname)
+        call check_ret(nf_get_var_double(ncid, varid, sand3d), subname)
      
-     call check_ret(nf_inq_varid(ncid, 'PCT_SAND', varid), subname)
-     call check_ret(nf_get_var_double(ncid, varid, sand3d), subname)
-     
-     call check_ret(nf_inq_varid(ncid, 'PCT_CLAY', varid), subname)
-     call check_ret(nf_get_var_double(ncid, varid, clay3d), subname)
-  endif
+        call check_ret(nf_inq_varid(ncid, 'PCT_CLAY', varid), subname)
+        call check_ret(nf_get_var_double(ncid, varid, clay3d), subname)
+     else
+        time_index=1
+        call getncdata (ncid, scmlat, scmlon, time_index,'SOIL_COLOR' , soic2d     , ret)
+        call getncdata (ncid, scmlat, scmlon, time_index,'PCT_SAND'   , nlevsoidata, ret)
+        sand3d(1,1,:) = nlevsoidata(:)
+        call getncdata (ncid, scmlat, scmlon, time_index,'PCT_CLAY'   , nlevsoidata, ret)
+        clay3d(1,1,:) = nlevsoidata(:)
+     endif
      call check_ret(nf_close(ncid), subname)
      write (6,*) 'Successfully read soil color, sand and clay boundary data .....'
      write (6,*)

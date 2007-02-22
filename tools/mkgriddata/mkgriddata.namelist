@@ -1,13 +1,3 @@
 &clmexp
- mksrf_fclmgrid = '/fs/cgd/csm/inputdata/lnd/clm2/srfdata/cam/clms_3.1_4x5_c050523.nc'
+ mksrf_fcamtopo = '/fs/cgd/csm/inputdata/atm/cam/topo/USGS-gtopo30_48x96_c050520.nc'
 /
-
-
-
-
-
-
-
-
-
-

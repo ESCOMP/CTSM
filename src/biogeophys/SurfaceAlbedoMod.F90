@@ -59,6 +59,7 @@ contains
 !
 ! !USES:
     use clmtype
+    use clm_varpar      , only : numrad
     use shr_orb_mod
     use clm_time_manager, only : get_nstep
 !

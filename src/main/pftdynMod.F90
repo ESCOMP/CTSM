@@ -9,12 +9,14 @@ module pftdynMod
 ! !MODULE: pftdynMod
 !
 ! !USES:
-  use ncdio
   use spmdMod
-  use domainMod , only : llocdomain
-  use clm_varsur, only : pctspec
-  use clm_varpar, only : max_pft_per_col
+  use clmtype
+  use ncdio       , only : check_ret, check_dim
+  use domainMod   , only : llocdomain
+  use clm_varsur  , only : pctspec
+  use clm_varpar  , only : max_pft_per_col
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use abortutils  , only : endrun
 !
 ! !DESCRIPTION:
 ! Determine pft weights at current time using dynamic landuse datasets.
@@ -66,6 +68,7 @@ contains
     use decompMod   , only : get_proc_global, ldecomp
     use clm_time_manager, only : get_curr_date
     use clm_varctl  , only : fpftdyn
+    use clm_varpar  , only : lsmlon, lsmlat, numpft
     use fileutils   , only : getfil
 #ifdef SPMD
     use spmdGathScatMod, only : gather_data_to_master
@@ -302,6 +305,7 @@ contains
     use clm_time_manager, only : get_curr_date, get_curr_calday
     use decompMod   , only : get_proc_global, ldecomp
     use clm_varcon  , only : istsoil
+    use clm_varpar  , only : numpft, lsmlon, lsmlat
 !
 ! !ARGUMENTS:
     implicit none
@@ -449,6 +453,7 @@ contains
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use decompMod   , only : ldecomp
+    use clm_varpar  , only : numpft, lsmlon, lsmlat
 !
 ! !ARGUMENTS:
     implicit none

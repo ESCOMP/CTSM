@@ -60,6 +60,7 @@ contains
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
+    use clm_varpar   , only : nvoc
     use clm_atmlnd   , only : clm_a2l
     use shr_const_mod, only : SHR_CONST_RGAS
 !

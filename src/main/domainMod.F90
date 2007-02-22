@@ -54,9 +54,6 @@ module domainMod
   type(domain_type),public         :: alocdomain
   type(domain_type),public         :: llocdomain
 
-  real(r8),pointer,public          :: llon(:)   ! land lons, 1d global
-  real(r8),pointer,public          :: llat(:)   ! land lats, 1d global
-
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public domain_init          ! allocates/nans domain types
@@ -256,16 +253,28 @@ end subroutine domain_clean
     integer ier
 !
 !------------------------------------------------------------------------------
-    call domain_clean(domain2)
-    call domain_init(domain2,domain1%ni,domain1%nj,domain1%nbeg,domain1%nend)
+    !!! Don't clean and reinitialize domain as we'll keep some data the same
+!   call domain_clean(domain2)
+!   call domain_init(domain2,domain1%ni,domain1%nj,domain1%nbeg,domain1%nend)
+    !!!
+    if (domain1%ni /= domain2%ni .or. domain1%nj /= domain2%nj) then
+       write(6,*) 'domain_copy: error on size',domain1%ni,domain1%nj,domain2%ni,domain2%nj
+       call endrun()
+    endif
 
     if (masterproc) then
        write(6,*) 'domain_copy: copying ',domain1%ni,domain1%nj
     endif
     domain2%edges    = domain1%edges
-    domain2%mask     = domain1%mask
-    domain2%frac     = domain1%frac
-    domain2%topo     = domain1%topo
+    !!! Don't copy mask, frac, topo, pftm, nara, ntop or gatm
+!   domain2%mask     = domain1%mask
+!   domain2%frac     = domain1%frac
+!   domain2%topo     = domain1%topo
+!   domain2%pftm     = domain1%pftm
+!   domain2%nara     = domain1%nara
+!   domain2%ntop     = domain1%ntop
+!   domain2%gatm     = domain1%gatm
+    !!!
     domain2%latc     = domain1%latc
     domain2%lonc     = domain1%lonc
     domain2%area     = domain1%area
@@ -432,6 +441,10 @@ end subroutine domain_setptrs
     write(6,*) '  domain_check lone = ',minval(domain%lone),maxval(domain%lone)
     write(6,*) '  domain_check lats = ',minval(domain%lats),maxval(domain%lats)
     write(6,*) '  domain_check lonw = ',minval(domain%lonw),maxval(domain%lonw)
+    write(6,*) '  domain_check pftm = ',minval(domain%pftm),maxval(domain%pftm)
+    write(6,*) '  domain_check nara = ',minval(domain%nara),maxval(domain%nara)
+    write(6,*) '  domain_check ntop = ',minval(domain%ntop),maxval(domain%ntop)
+    write(6,*) '  domain_check gatm = ',minval(domain%gatm),maxval(domain%gatm)
     write(6,*) ' '
   endif
 

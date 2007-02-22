@@ -803,7 +803,7 @@ subroutine CNC13GapPftToColumn (num_soilc, filter_soilc)
 !
 ! !USES:
   use clmtype
-  use clm_varpar, only : max_pft_per_col
+  use clm_varpar, only : max_pft_per_col, maxpatch_pft
 !
 ! !ARGUMENTS:
   implicit none

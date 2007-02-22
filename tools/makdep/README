@@ -1,3 +1,0 @@
-This code is an alternative dependency generator to cpp.  Running gnumake
-will create an executable named "makdep" in $(HOME)/bin.  This directory will
-need to be in one's $PATH in order to build ccm with the standard Makefile.

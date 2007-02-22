@@ -46,6 +46,7 @@ contains
     use clmtype
     use clm_atmlnd, only : clm_a2l
     use ncdio
+    use clm_varpar, only : numrad
     use decompMod , only : get_proc_bounds
 !
 ! !ARGUMENTS:

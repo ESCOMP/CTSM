@@ -234,6 +234,7 @@ contains
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
 !------------------------------------------------------------------------
 
+    call t_startf( "atmdrv" )
     ! Determine necessary indices
 
     call get_proc_bounds_atm(begg, endg)
@@ -450,6 +451,7 @@ contains
     elseif (kda == 1 .and. mcsec == 0) then
        open_data = .true.     !for next time step
     endif
+    call t_stopf( "atmdrv" )
 
   end subroutine atmdrv
 

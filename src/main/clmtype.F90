@@ -50,6 +50,8 @@ module clmtype
 !
 ! !PUBLIC TYPES:
   implicit none
+
+  private
 !                              
 ! !REVISION HISTORY:
 ! Created by Peter Thornton and Mariana Vertenstein
@@ -60,7 +62,7 @@ module clmtype
 !----------------------------------------------------
 ! energy balance structure
 !----------------------------------------------------
-type energy_balance_type
+type, public :: energy_balance_type
    real(r8), pointer :: errsoi(:)        !soil/lake energy conservation error (W/m**2)
    real(r8), pointer :: errseb(:)        !surface energy conservation error (W/m**2)
    real(r8), pointer :: errsol(:)        !solar radiation conservation error (W/m**2)
@@ -70,7 +72,7 @@ end type energy_balance_type
 !----------------------------------------------------
 ! water balance structure
 !----------------------------------------------------
-type water_balance_type
+type, public :: water_balance_type
    real(r8), pointer :: begwb(:)         !water mass begining of the time step
    real(r8), pointer :: endwb(:)         !water mass end of the time step
    real(r8), pointer :: errh2o(:)        !water conservation error (mm H2O)
@@ -79,7 +81,7 @@ end type water_balance_type
 !----------------------------------------------------
 ! carbon balance structure
 !----------------------------------------------------
-type carbon_balance_type
+type, public :: carbon_balance_type
    real(r8), pointer :: begcb(:)         !carbon mass, beginning of time step (gC/m**2)
    real(r8), pointer :: endcb(:)         !carbon mass, end of time step (gC/m**2)
    real(r8), pointer :: errcb(:)         !carbon balance error for the timestep (gC/m**2)
@@ -88,7 +90,7 @@ end type carbon_balance_type
 !----------------------------------------------------
 ! nitrogen balance structure
 !----------------------------------------------------
-type nitrogen_balance_type
+type, public :: nitrogen_balance_type
    real(r8), pointer :: begnb(:)         !nitrogen mass, beginning of time step (gN/m**2)
    real(r8), pointer :: endnb(:)         !nitrogen mass, end of time step (gN/m**2)
    real(r8), pointer :: errnb(:)         !nitrogen balance error for the timestep (gN/m**2)
@@ -105,7 +107,7 @@ end type nitrogen_balance_type
 !----------------------------------------------------
 ! pft physical state variables structure
 !----------------------------------------------------
-type pft_pstate_type
+type, public :: pft_pstate_type
    integer , pointer :: frac_veg_nosno(:)       !fraction of vegetation not covered by snow (0 OR 1) [-] 
    integer , pointer :: frac_veg_nosno_alb(:)   !fraction of vegetation not covered by snow (0 OR 1) [-] 
    real(r8), pointer :: emv(:) 		        !vegetation emissivity
@@ -217,7 +219,7 @@ end type pft_pstate_type
 !----------------------------------------------------
 ! pft ecophysiological constants structure
 !----------------------------------------------------
-type pft_epc_type
+type, public :: pft_epc_type
    integer , pointer :: ncorn(:) 		!value for corn
    integer , pointer :: nwheat(:) 		!value for wheat
    integer , pointer :: noveg(:) 	        !value for not vegetated
@@ -274,7 +276,7 @@ end type pft_epc_type
 !----------------------------------------------------
 ! pft DGVM-specific ecophysiological constants structure
 !----------------------------------------------------
-type pft_dgvepc_type
+type, public :: pft_dgvepc_type
    real(r8), pointer :: respcoeff(:)       !maintenance respiration coefficient [-]
    real(r8), pointer :: flam(:)            !flammability threshold [units?]
    real(r8), pointer :: resist(:)          !fire resistance index [units?]
@@ -313,7 +315,7 @@ end type pft_dgvepc_type
 !----------------------------------------------------
 ! pft ecophysiological variables structure
 !----------------------------------------------------
-type pft_epv_type
+type, public :: pft_epv_type
    real(r8), pointer :: dormant_flag(:)         !dormancy flag
    real(r8), pointer :: days_active(:)          !number of days since last dormancy
    real(r8), pointer :: onset_flag(:)           !onset flag
@@ -362,7 +364,7 @@ end type pft_epv_type
 !----------------------------------------------------
 ! pft energy state variables structure
 !----------------------------------------------------
-type pft_estate_type
+type, public :: pft_estate_type
    real(r8), pointer :: t_ref2m(:)          !2 m height surface air temperature (Kelvin)
    real(r8), pointer :: t_ref2m_min(:)      !daily minimum of average 2 m height surface air temperature (K)
    real(r8), pointer :: t_ref2m_max(:)      !daily maximum of average 2 m height surface air temperature (K)
@@ -375,14 +377,14 @@ end type pft_estate_type
 !----------------------------------------------------
 ! pft water state variables structure
 !----------------------------------------------------
-type pft_wstate_type
+type, public :: pft_wstate_type
    real(r8), pointer ::	h2ocan(:)         !canopy water (mm H2O)
 end type pft_wstate_type
 
 !----------------------------------------------------
 ! pft carbon state variables structure
 !----------------------------------------------------
-type pft_cstate_type
+type, public :: pft_cstate_type
    real(r8), pointer :: leafc(:)              ! (gC/m2) leaf C
    real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
    real(r8), pointer :: leafc_xfer(:)         ! (gC/m2) leaf C transfer
@@ -416,7 +418,7 @@ end type pft_cstate_type
 !----------------------------------------------------
 ! pft nitrogen state variables structure
 !----------------------------------------------------
-type pft_nstate_type
+type, public :: pft_nstate_type
    real(r8), pointer :: leafn(:)              ! (gN/m2) leaf N 
    real(r8), pointer :: leafn_storage(:)      ! (gN/m2) leaf N storage
    real(r8), pointer :: leafn_xfer(:)         ! (gN/m2) leaf N transfer
@@ -448,14 +450,14 @@ end type pft_nstate_type
 !----------------------------------------------------
 ! pft VOC state variables structure
 !----------------------------------------------------
-type pft_vstate_type
+type, public :: pft_vstate_type
    real(r8), pointer :: dummy_entry(:)
 end type pft_vstate_type
 
 !----------------------------------------------------
 ! pft DGVM state variables structure
 !----------------------------------------------------
-type pft_dgvstate_type
+type, public :: pft_dgvstate_type
    real(r8), pointer :: agdd0(:)               !accumulated growing degree days above 0 deg C
    real(r8), pointer :: agdd5(:)               !accumulated growing degree days above -5
    real(r8), pointer :: agddtw(:)              !accumulated growing degree days above twmax
@@ -500,7 +502,7 @@ end type pft_dgvstate_type
 !----------------------------------------------------
 ! pft energy flux variables structure
 !----------------------------------------------------
-type pft_eflux_type
+type, public :: pft_eflux_type
    real(r8), pointer :: sabg(:) 	     !solar radiation absorbed by ground (W/m**2)
    real(r8), pointer :: sabv(:) 	     !solar radiation absorbed by vegetation (W/m**2)
    real(r8), pointer :: fsa(:) 		     !solar radiation absorbed (total) (W/m**2)
@@ -553,7 +555,7 @@ end type pft_eflux_type
 !----------------------------------------------------
 ! pft momentum flux variables structure
 !----------------------------------------------------
-type pft_mflux_type
+type, public :: pft_mflux_type
    real(r8),pointer ::  taux(:)           !wind (shear) stress: e-w (kg/m/s**2)
    real(r8),pointer ::  tauy(:)           !wind (shear) stress: n-s (kg/m/s**2)
 end type pft_mflux_type
@@ -561,7 +563,7 @@ end type pft_mflux_type
 !----------------------------------------------------
 ! pft water flux variables structure
 !----------------------------------------------------
-type pft_wflux_type
+type, public :: pft_wflux_type
    real(r8), pointer :: qflx_prec_intr(:) !interception of precipitation [mm/s]
    real(r8), pointer :: qflx_prec_grnd(:) !water onto ground including canopy runoff [kg/(m2 s)]
    real(r8), pointer :: qflx_rain_grnd(:) !rain on ground after interception (mm H2O/s) [+]
@@ -581,7 +583,7 @@ end type pft_wflux_type
 !----------------------------------------------------
 ! pft carbon flux variables structure
 !----------------------------------------------------
-type pft_cflux_type
+type, public :: pft_cflux_type
    real(r8), pointer ::	psnsun(:) 	  !sunlit leaf photosynthesis (umol CO2 /m**2/ s)
    real(r8), pointer ::	psnsha(:) 	  !shaded leaf photosynthesis (umol CO2 /m**2/ s)
    real(r8), pointer ::	fpsn(:) 	  !photosynthesis (umol CO2 /m**2 /s)
@@ -735,7 +737,7 @@ end type pft_cflux_type
 !----------------------------------------------------
 ! pft nitrogen flux variables structure
 !----------------------------------------------------
-type pft_nflux_type
+type, public :: pft_nflux_type
    ! new variables for CN code
    ! gap mortality fluxes
    real(r8), pointer :: m_leafn_to_litter(:)                ! leaf N mortality (gN/m2/s)
@@ -828,7 +830,7 @@ end type pft_nflux_type
 !----------------------------------------------------
 ! pft VOC flux variables structure
 !----------------------------------------------------
-type pft_vflux_type
+type, public :: pft_vflux_type
    real(r8), pointer :: vocflx_tot(:)     !total VOC flux into atmosphere [ug C m-2 h-1]
    real(r8), pointer :: vocflx(:,:)       !(nvoc) VOC flux [ug C m-2 h-1]
    real(r8), pointer :: vocflx_1(:)       !vocflx(1) (for history output) [ug C m-2 h-1]
@@ -841,7 +843,7 @@ end type pft_vflux_type
 !----------------------------------------------------
 ! pft dust flux variables structure
 !----------------------------------------------------
-type pft_dflux_type
+type, public :: pft_dflux_type
    real(r8), pointer :: flx_mss_vrt_dst(:,:)    !(ndst)  !surface dust emission (kg/m**2/s) [ + = to atm]
    real(r8), pointer :: flx_mss_vrt_dst_tot(:)  !total dust flux into atmosphere
    real(r8), pointer :: vlc_trb(:,:)            !(ndst) turbulent deposition velocity (m/s)
@@ -863,7 +865,7 @@ end type pft_dflux_type
 !----------------------------------------------------
 ! column physical state variables structure
 !----------------------------------------------------
-type column_pstate_type
+type, public :: column_pstate_type
    type(pft_pstate_type) :: pps_a            !pft-level pstate variables averaged to the column
    integer , pointer :: snl(:)  	      !number of snow layers
    integer , pointer :: isoicol(:) 	      !soil color class
@@ -928,7 +930,7 @@ end type column_pstate_type
 !----------------------------------------------------
 ! column energy state variables structure
 !----------------------------------------------------
-type column_estate_type
+type, public :: column_estate_type
    type(pft_estate_type):: pes_a	      !pft-level energy state variables averaged to the column
    real(r8), pointer :: t_grnd(:)  	      !ground temperature (Kelvin)
    real(r8), pointer :: dt_grnd(:)	      !change in t_grnd, last iteration (Kelvin)
@@ -943,7 +945,7 @@ end type column_estate_type
 !----------------------------------------------------
 ! column water state variables structure
 !----------------------------------------------------
-type column_wstate_type
+type, public :: column_wstate_type
    type(pft_wstate_type):: pws_a             !pft-level water state variables averaged to the column
    real(r8), pointer :: h2osno(:)             !snow water (mm H2O)
    real(r8), pointer :: h2osoi_liq(:,:)       !liquid water (kg/m2) (new) (-nlevsno+1:nlevsoi)    
@@ -965,7 +967,7 @@ end type column_wstate_type
 !----------------------------------------------------
 ! column carbon state variables structure
 !----------------------------------------------------
-type column_cstate_type
+type, public :: column_cstate_type
    type(pft_cstate_type):: pcs_a	!pft-level carbon state variables averaged to the column
    ! NOTE: the soilc variable is used by the original CLM C-cycle code,
    ! and is not used by the CN code
@@ -991,7 +993,7 @@ end type column_cstate_type
 !----------------------------------------------------
 ! column nitrogen state variables structure
 !----------------------------------------------------
-type column_nstate_type
+type, public :: column_nstate_type
    type(pft_nstate_type):: pns_a	!pft-level nitrogen state variables averaged to the column
    ! BGC variables
    real(r8), pointer :: cwdn(:)               ! (gN/m2) coarse woody debris N
@@ -1014,28 +1016,28 @@ end type column_nstate_type
 !----------------------------------------------------
 ! column VOC state variables structure
 !----------------------------------------------------
-type column_vstate_type
+type, public :: column_vstate_type
    type(pft_vstate_type):: pvs_a	!pft-level VOC state variables averaged to the column
 end type column_vstate_type
 
 !----------------------------------------------------
 ! column DGVM state variables structure
 !----------------------------------------------------
-type column_dgvstate_type
+type, public :: column_dgvstate_type
    type(pft_dgvstate_type):: pdgvs_a
 end type column_dgvstate_type
 
 !----------------------------------------------------
 ! column dust state variables structure
 !----------------------------------------------------
-type column_dstate_type
+type, public :: column_dstate_type
    real(r8), pointer :: dummy_entry(:)
 end type column_dstate_type
 
 !----------------------------------------------------
 ! column energy flux variables structure
 !----------------------------------------------------
-type column_eflux_type
+type, public :: column_eflux_type
    type(pft_eflux_type):: pef_a	!pft-level energy flux variables averaged to the column
    real(r8), pointer :: eflx_snomelt(:) !snow melt heat flux (W/m**2)
    real(r8), pointer :: eflx_impsoil(:)	!implicit evaporation for soil temperature equation
@@ -1044,14 +1046,14 @@ end type column_eflux_type
 !----------------------------------------------------
 ! column momentum flux variables structure
 !----------------------------------------------------
-type column_mflux_type
+type, public :: column_mflux_type
    type(pft_mflux_type)::  pmf_a    !pft-level momentum flux variables averaged to the column
 end type column_mflux_type
 
 !----------------------------------------------------
 ! column water flux variables structure
 !----------------------------------------------------
-type column_wflux_type
+type, public :: column_wflux_type
    type(pft_wflux_type):: pwf_a	!pft-level water flux variables averaged to the column
    real(r8), pointer :: qflx_infl(:)	!infiltration (mm H2O /s)
    real(r8), pointer :: qflx_surf(:)	!surface runoff (mm H2O /s)
@@ -1066,7 +1068,7 @@ end type column_wflux_type
 !----------------------------------------------------
 ! column carbon flux variables structure
 !----------------------------------------------------
-type column_cflux_type
+type, public :: column_cflux_type
    type(pft_cflux_type):: pcf_a		!pft-level carbon flux variables averaged to the column
    ! new variables for CN code
    ! column-level gap mortality fluxes
@@ -1144,7 +1146,7 @@ end type column_cflux_type
 !----------------------------------------------------
 ! column nitrogen flux variables structure
 !----------------------------------------------------
-type column_nflux_type
+type, public :: column_nflux_type
    type(pft_nflux_type):: pnf_a	        !pft-level nitrogen flux variables averaged to the column
    ! new variables for CN code
    ! deposition fluxes
@@ -1232,14 +1234,14 @@ end type column_nflux_type
 !----------------------------------------------------
 ! column VOC flux variables structure
 !----------------------------------------------------
-type column_vflux_type
+type, public :: column_vflux_type
    type(pft_vflux_type):: pvf_a		!pft-level VOC flux variables averaged to the column
 end type column_vflux_type
 
 !----------------------------------------------------
 ! column dust flux variables structure
 !----------------------------------------------------
-type column_dflux_type	
+type, public :: column_dflux_type	
    type(pft_dflux_type):: pdf_a		!pft-level dust flux variables averaged to the column
 end type column_dflux_type
 !----------------------------------------------------
@@ -1256,105 +1258,105 @@ end type column_dflux_type
 ! note - landunit type can be vegetated (includes bare soil), deep lake, 
 ! shallow lake, wetland, glacier or urban
 !----------------------------------------------------
-type landunit_pstate_type
+type, public :: landunit_pstate_type
    type(column_pstate_type):: cps_a             !column-level physical state variables averaged to landunit
 end type landunit_pstate_type
 
 !----------------------------------------------------
 ! landunit energy state variables structure
 !----------------------------------------------------
-type landunit_estate_type
+type, public :: landunit_estate_type
    type(column_estate_type)::	ces_a	     !column-level energy state variables averaged to landunit
 end type landunit_estate_type
 
 !----------------------------------------------------
 ! landunit water state variables structure
 !----------------------------------------------------
-type landunit_wstate_type
+type, public :: landunit_wstate_type
    type(column_wstate_type)::	cws_a	      !column-level water state variables averaged to landunit
 end type landunit_wstate_type
 
 !----------------------------------------------------
 ! landunit carbon state variables structure
 !----------------------------------------------------
-type landunit_cstate_type
+type, public :: landunit_cstate_type
    type(column_cstate_type)::	ccs_a	      !column-level carbon state variables averaged to landunit
 end type landunit_cstate_type
 
 !----------------------------------------------------
 ! landunit nitrogen state variables structure
 !----------------------------------------------------
-type landunit_nstate_type
+type, public :: landunit_nstate_type
    type(column_nstate_type)::	cns_a	      !column-level nitrogen state variables averaged to landunit
 end type landunit_nstate_type
 
 !----------------------------------------------------
 ! landunit VOC state variables structure
 !----------------------------------------------------
-type landunit_vstate_type
+type, public :: landunit_vstate_type
    type(column_vstate_type)::	cvs_a	      !column-level VOC state variables averaged to landunit
 end type landunit_vstate_type
 
 !----------------------------------------------------
 ! landunit DGVM state variables structure
 !----------------------------------------------------
-type landunit_dgvstate_type
+type, public :: landunit_dgvstate_type
    real(r8):: dummy_entry
 end type landunit_dgvstate_type
 
 !----------------------------------------------------
 ! landunit dust state variables structure
 !----------------------------------------------------
-type landunit_dstate_type
+type, public :: landunit_dstate_type
    type(column_dstate_type)::	cds_a		!column-level dust state variables averaged to landunit
 end type landunit_dstate_type
 
 !----------------------------------------------------
 ! landunit energy flux variables structure
 !----------------------------------------------------
-type landunit_eflux_type
+type, public :: landunit_eflux_type
    type(column_eflux_type)::	cef_a		!column-level energy flux variables averaged to landunit
 end type landunit_eflux_type
 
 !----------------------------------------------------
 ! landunit momentum flux variables structure
 !----------------------------------------------------
-type landunit_mflux_type
+type, public :: landunit_mflux_type
    type(pft_mflux_type)::	pmf_a		!pft-level momentum flux variables averaged to landunit
 end type landunit_mflux_type
 
 !----------------------------------------------------
 ! landunit water flux variables structure
 !----------------------------------------------------
-type landunit_wflux_type
+type, public :: landunit_wflux_type
    type(column_wflux_type)::	cwf_a		!column-level water flux variables averaged to landunit
 end type landunit_wflux_type
 
 !----------------------------------------------------
 ! landunit carbon flux variables structure
 !----------------------------------------------------
-type landunit_cflux_type
+type, public :: landunit_cflux_type
    type(column_cflux_type)::	ccf_a		!column-level carbon flux variables averaged to landunit
 end type landunit_cflux_type
 
 !----------------------------------------------------
 ! landunit nitrogen flux variables structure
 !----------------------------------------------------
-type landunit_nflux_type
+type, public :: landunit_nflux_type
    type(column_nflux_type)::	cnf_a		!column-level nitrogen flux variables averaged to landunit
 end type landunit_nflux_type
 
 !----------------------------------------------------
 ! landunit VOC flux variables structure
 !----------------------------------------------------
-type landunit_vflux_type
+type, public :: landunit_vflux_type
    type(pft_vflux_type)::	pvf_a		!pft-level VOC flux variables averaged to landunit
 end type landunit_vflux_type
 
 !----------------------------------------------------
 ! landunit dust flux variables structure
 !----------------------------------------------------
-type landunit_dflux_type
+type, public :: landunit_dflux_type
    type(pft_dflux_type)::	pdf_a		!pft-level dust flux variables averaged to landunit
 end type landunit_dflux_type
 !----------------------------------------------------
@@ -1369,56 +1371,56 @@ end type landunit_dflux_type
 !----------------------------------------------------
 ! gridcell physical state variables structure
 !----------------------------------------------------
-type gridcell_pstate_type
+type, public :: gridcell_pstate_type
    type(column_pstate_type):: cps_a   !column-level physical state variables averaged to gridcell
 end type gridcell_pstate_type
 
 !----------------------------------------------------
 ! gridcell energy state variables structure
 !----------------------------------------------------
-type gridcell_estate_type
+type, public :: gridcell_estate_type
    type(column_estate_type)::	ces_a	!column-level energy state variables averaged to gridcell
 end type gridcell_estate_type
 
 !----------------------------------------------------
 ! gridcell water state variables structure
 !----------------------------------------------------
-type gridcell_wstate_type
+type, public :: gridcell_wstate_type
    type(column_wstate_type)::	cws_a	!column-level water state variables averaged to gridcell
 end type gridcell_wstate_type
 
 !----------------------------------------------------
 ! gridcell carbon state variables structure
 !----------------------------------------------------
-type gridcell_cstate_type
+type, public :: gridcell_cstate_type
    type(column_cstate_type)::	ccs_a	!column-level carbon state variables averaged to gridcell
 end type gridcell_cstate_type
 
 !----------------------------------------------------
 ! gridcell nitrogen state variables structure
 !----------------------------------------------------
-type gridcell_nstate_type
+type, public :: gridcell_nstate_type
    type(column_nstate_type)::	cns_a	!column-level nitrogen state variables averaged to gridcell
 end type gridcell_nstate_type
 
 !----------------------------------------------------
 ! gridcell VOC state variables structure
 !----------------------------------------------------
-type gridcell_vstate_type
+type, public :: gridcell_vstate_type
    type(column_vstate_type)::	cvs_a	!column-level VOC state variables averaged to gridcell
 end type gridcell_vstate_type
 
 !----------------------------------------------------
 ! gridcell dust state variables structure
 !----------------------------------------------------
-type gridcell_dstate_type
+type, public :: gridcell_dstate_type
    type(column_dstate_type)::	cds_a	!column-level dust state variables averaged to gridcell
 end type gridcell_dstate_type
 
 !----------------------------------------------------
 ! gridcell DGVM state variables structure
 !----------------------------------------------------
-type gridcell_dgvstate_type
+type, public :: gridcell_dgvstate_type
    real(r8), pointer :: afirefrac(:)   ! fraction of gridcell affected by fire
    real(r8), pointer :: acfluxfire(:)  ! C flux to atmosphere from biomass burning
    real(r8), pointer :: bmfm(:,:)      ! biomass (NPP) for each naturally-vegetated pft
@@ -1432,21 +1434,21 @@ end type gridcell_dgvstate_type
 !----------------------------------------------------
 ! gridcell energy flux variables structure
 !----------------------------------------------------
-type gridcell_eflux_type
+type, public :: gridcell_eflux_type
    type(column_eflux_type)::	cef_a		!column-level energy flux variables averaged to gridcell
 end type gridcell_eflux_type
 
 !----------------------------------------------------
 ! gridcell momentum flux variables structure
 !----------------------------------------------------
-type gridcell_mflux_type
+type, public :: gridcell_mflux_type
    type(pft_mflux_type)::	pmf_a		!pft-level momentum flux variables averaged to gridcell
 end type gridcell_mflux_type
 
 !----------------------------------------------------
 ! gridcell water flux variables structure
 !----------------------------------------------------
-type gridcell_wflux_type
+type, public :: gridcell_wflux_type
 !FTO
    real(r8), pointer :: qchan2(:)               !history file RTM river (channel) flow (m**3 H2O /s) 
    real(r8), pointer :: qchocn2(:)              !history file RTM river (channel) flow into ocean (m**3/s)
@@ -1457,28 +1459,28 @@ end type gridcell_wflux_type
 !----------------------------------------------------
 ! gridcell carbon flux variables structure
 !----------------------------------------------------
-type gridcell_cflux_type
+type, public :: gridcell_cflux_type
    type(column_cflux_type)::	ccf_a		!column-level carbon flux variables averaged to gridcell
 end type gridcell_cflux_type
 
 !----------------------------------------------------
 ! gridcell nitrogen flux variables structure
 !----------------------------------------------------
-type gridcell_nflux_type
+type, public :: gridcell_nflux_type
    type(column_nflux_type)::	cnf_a		!column-level nitrogen flux variables averaged to gridcell
 end type gridcell_nflux_type
 
 !----------------------------------------------------
 ! gridcell VOC flux variables structure
 !----------------------------------------------------
-type gridcell_vflux_type
+type, public :: gridcell_vflux_type
    type(pft_vflux_type)::	pvf_a		!pft-level VOC flux variables averaged to gridcell
 end type gridcell_vflux_type
 
 !----------------------------------------------------
 ! gridcell dust flux variables structure
 !----------------------------------------------------
-type gridcell_dflux_type
+type, public :: gridcell_dflux_type
    type(pft_dflux_type)::	pdf_a		!pft-level dust flux variables averaged to gridcell
 end type gridcell_dflux_type
 !----------------------------------------------------
@@ -1493,98 +1495,98 @@ end type gridcell_dflux_type
 !----------------------------------------------------
 ! CLM physical state variables structure
 !----------------------------------------------------
-type model_pstate_type
+type, public :: model_pstate_type
    type(column_pstate_type) ::	cps_a	!column-level physical state variables globally averaged
 end type model_pstate_type
 
 !----------------------------------------------------
 ! CLM energy state variables structure
 !----------------------------------------------------
-type model_estate_type
+type, public :: model_estate_type
    type(column_estate_type)::	ces_a		!column-level energy state variables globally averaged
 end type model_estate_type
 
 !----------------------------------------------------
 ! CLM water state variables structure
 !----------------------------------------------------
-type model_wstate_type
+type, public :: model_wstate_type
    type(column_wstate_type)::	cws_a		!column-level water state variables globally averaged
 end type model_wstate_type
 
 !----------------------------------------------------
 ! CLM carbon state variables structure
 !----------------------------------------------------
-type model_cstate_type
+type, public :: model_cstate_type
    type(column_cstate_type)::	ccs_a		!column-level carbon state variables globally averaged
 end type model_cstate_type
 
 !----------------------------------------------------
 ! CLM nitrogen state variables structure
 !----------------------------------------------------
-type model_nstate_type
+type, public :: model_nstate_type
    type(column_nstate_type)::	cns_a		!column-level nitrogen state variables globally averaged
 end type model_nstate_type
 
 !----------------------------------------------------
 ! CLM VOC state variables structure
 !----------------------------------------------------
-type model_vstate_type
+type, public :: model_vstate_type
    type(column_vstate_type)::	cvs_a		!column-level VOC state variables globally averaged
 end type model_vstate_type
 
 !----------------------------------------------------
 ! CLM dust state variables structure
 !----------------------------------------------------
-type model_dstate_type
+type, public :: model_dstate_type
    type(column_dstate_type)::	cds_a		!column-level dust state variables globally averaged
 end type model_dstate_type
 
 !----------------------------------------------------
 ! CLM energy flux variables structure
 !----------------------------------------------------
-type model_eflux_type
+type, public :: model_eflux_type
    type(column_eflux_type)::	cef_a		!column-level energy flux variables globally averaged
 end type model_eflux_type
 
 !----------------------------------------------------
 ! CLM momentum flux variables structure
 !----------------------------------------------------
-type model_mflux_type
+type, public :: model_mflux_type
    type(pft_mflux_type)::	pmf_a		!pft-level momentum flux variables globally averaged
 end type model_mflux_type
 
 !----------------------------------------------------
 ! CLM water flux variables structure
 !----------------------------------------------------
-type model_wflux_type
+type, public :: model_wflux_type
    type(column_wflux_type)::	cwf_a		!column-level water flux variables globally averaged
 end type model_wflux_type
 
 !----------------------------------------------------
 ! CLM carbon flux variables structure
 !----------------------------------------------------
-type model_cflux_type
+type, public :: model_cflux_type
    type(column_cflux_type)::	ccf_a		!column-level carbon flux variables globally averaged
 end type model_cflux_type
 
 !----------------------------------------------------
 ! CLM nitrogen flux variables structure
 !----------------------------------------------------
-type model_nflux_type
+type, public :: model_nflux_type
    type(column_nflux_type)::	cnf_a		!column-level nitrogen flux variables globally averaged
 end type model_nflux_type
 
 !----------------------------------------------------
 ! CLM VOC flux variables structure
 !----------------------------------------------------
-type model_vflux_type
+type, public :: model_vflux_type
    type(pft_vflux_type)::	pvf_a		!pft-level VOC flux variables globally averaged
 end type model_vflux_type
 
 !----------------------------------------------------
 ! CLM dust flux variables structure
 !----------------------------------------------------
-type model_dflux_type
+type, public :: model_dflux_type
    type(pft_dflux_type)::	pdf_a		!pft-level dust flux variables globally averaged
 end type model_dflux_type
 
@@ -1601,7 +1603,7 @@ end type model_dflux_type
 ! define the pft structure
 !----------------------------------------------------
 
-type pft_type
+type, public :: pft_type
 
    ! g/l/c/p hierarchy, local g/l/c/p cells only
    integer, pointer :: column(:)        !index into column level quantities
@@ -1655,7 +1657,7 @@ end type pft_type
 ! define the column structure
 !----------------------------------------------------
 
-type column_type
+type, public :: column_type
 
    type(pft_type)   :: p       !plant functional type (pft) data structure 
 
@@ -1709,7 +1711,7 @@ end type column_type
 ! define the geomorphological land unit structure
 !----------------------------------------------------
 
-type landunit_type
+type, public :: landunit_type
 
    type(column_type) :: c    !column data structure (soil/snow/canopy columns)
 
@@ -1757,7 +1759,7 @@ end type landunit_type
 ! define the gridcell structure
 !----------------------------------------------------
 
-type gridcell_type
+type, public :: gridcell_type
 
    type(landunit_type) :: l	        !geomorphological landunits
 
@@ -1815,7 +1817,7 @@ end type gridcell_type
 ! define the top-level (model) structure 
 !----------------------------------------------------
 
-type model_type
+type, public :: model_type
    ! lower level in hierarch
    type(gridcell_type) :: g    !gridicell data structure
    integer  :: ngridcells      !number of gridcells for this process
@@ -1854,27 +1856,27 @@ end type model_type
 !----------------------------------------------------
 ! Declare single instance of clmtype
 !----------------------------------------------------
-type(model_type)    , target     , save :: clm3
+type(model_type)    , public, target     , save :: clm3
 
 !----------------------------------------------------
 ! Declare single instance of array of ecophysiological constant types
 !----------------------------------------------------
-type(pft_epc_type), target, save :: pftcon
+type(pft_epc_type), public, target, save :: pftcon
 
 !----------------------------------------------------
 ! Declare single instance of array of dgvm ecophysiological constant types
 !----------------------------------------------------
-type(pft_dgvepc_type), target, save :: dgv_pftcon
+type(pft_dgvepc_type), public, target, save :: dgv_pftcon
 
-character(len=8), parameter :: nameg  = 'gridcell'  ! name of gridcells
-character(len=8), parameter :: namel  = 'landunit'  ! name of landunits
-character(len=8), parameter :: namec  = 'column'    ! name of columns
-character(len=8), parameter :: namep  = 'pft'       ! name of pfts
-character(len=8), parameter :: ocnrof = 'ocnrof'    ! name of river routing 
+character(len=8), parameter, public :: nameg  = 'gridcell'  ! name of gridcells
+character(len=8), parameter, public :: namel  = 'landunit'  ! name of landunits
+character(len=8), parameter, public :: namec  = 'column'    ! name of columns
+character(len=8), parameter, public :: namep  = 'pft'       ! name of pfts
+character(len=8), parameter, public :: ocnrof = 'ocnrof'    ! name of river routing 
                                                     ! ocean runoff
-character(len=8), parameter :: lndrof = 'lndrof'    ! name of river routing 
+character(len=8), parameter, public :: lndrof = 'lndrof'    ! name of river routing 
                                                     ! land channel runoff
-character(len=8), parameter :: allrof = 'allrof'    ! name of river routing 
+character(len=8), parameter, public :: allrof = 'allrof'    ! name of river routing 
                                                     ! all channel runoff
 
 !

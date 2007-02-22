@@ -115,6 +115,7 @@ module histFileMod
   public :: update_hbuf             ! Updates history buffer for all fields and tapes
   public :: htapes_wrapup           ! Write and/or dispose history tape(s)
   public :: restart_history         ! Read/write history file restart data
+  public :: hist_allocGlobal        ! Global history data allocation
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -239,6 +240,9 @@ module histFileMod
   character(len= 8) :: logname                   ! user name
   character(len=max_chars) :: locfnh(max_tapes)  ! local history file names
   logical :: htapes_defined = .false.            ! flag indicates history contents have been defined
+  real(r8),pointer,private :: llon(:)            ! land lons, 1d global
+  real(r8),pointer,private :: llat(:)            ! land lats, 1d global
+
 !
 ! NetCDF  Id's
 !
@@ -1720,7 +1724,7 @@ contains
     use clmtype
     use ncdio
     use decompMod   , only : get_proc_global
-    use clm_varpar  , only : lsmlon, lsmlat, nlevsoi
+    use clm_varpar  , only : lsmlon, lsmlat, nlevsoi, nlevlak, numrad, rtmlon, rtmlat
     use clm_varctl  , only : caseid, ctitle, frivinp_rtm, fsurdat, finidat, fpftcon
     use domainMod   , only : llocdomain
 #if (defined RTM)
@@ -2001,7 +2005,7 @@ contains
     use clmtype
     use subgridAveMod, only : c2g
     use decompMod    , only : get_proc_bounds, get_proc_global, ldecomp
-    use domainMod   , only : llocdomain,llon,llat
+    use domainMod   , only : llocdomain
 #if (defined RTM)
     use RunoffMod   , only : runoff,get_proc_rof_global
 #endif	
@@ -2120,8 +2124,7 @@ contains
 
          call ncd_defvar(varname='landmask', xtype=nf_int, &
               dim1name='lon', dim2name='lat', &
-              long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
+              long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t))
          call ncd_defvar(varname='pftmask' , xtype=nf_int, &
               dim1name='lon', dim2name='lat', &
               long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
@@ -2240,7 +2243,8 @@ contains
             flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
        call ncd_iolocal(varname='landmask', data=llocdomain%mask, &
             dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj, &
+            imissing=0)
        call ncd_iolocal(varname='pftmask' , data=llocdomain%pftm, &
             dim1name='gridcell', ncid=nfid(t), &
             flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
@@ -2265,6 +2269,7 @@ contains
 !
 ! !USES:
     use ncdio
+    use clmtype
 !
 ! !ARGUMENTS:
     implicit none
@@ -2452,6 +2457,7 @@ contains
 !
 ! !USES:
     use ncdio
+    use clmtype
     use decompMod   , only : get_proc_bounds, ldecomp
 !
 ! !ARGUMENTS:
@@ -2754,6 +2760,7 @@ contains
     use clm_time_manager , only : get_nstep, get_curr_date, get_curr_time, get_prev_date
     use shr_const_mod, only : SHR_CONST_CDAY
     use ncdio
+    use clmtype
     use shr_sys_mod  , only : shr_sys_flush
 !
 ! !ARGUMENTS:
@@ -4050,5 +4057,43 @@ contains
     subs_dim(num_subs) =  subdim
 
   end subroutine add_subscript
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: hist_allocGlobal
+!
+! !INTERFACE:
+  subroutine hist_allocGlobal( ldomain )
+!
+! !DESCRIPTION: Initialized global memory needed for history handling.
+!
+! !USES:
+    use domainMod  , only : domain_type
+    use spmdMod    , only : masterproc
+!
+! !ARGUMENTS:
+!
+  type(domain_type), intent(IN) :: ldomain  ! Global land domain
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer  :: i,j,k                 ! indices
+
+    if ( masterproc )then
+       allocate(llon(ldomain%ni),llat(ldomain%nj))
+       do j = 1,ldomain%nj
+          k = (j-1)*ldomain%ni + 1
+          llat(j) = ldomain%latc(k)
+       enddo
+       do i = 1,ldomain%ni
+          llon(i) = ldomain%lonc(i)
+       enddo
+    end if
+end subroutine hist_allocGlobal
+
 
 end module histFileMod

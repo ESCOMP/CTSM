@@ -1,4 +1,163 @@
 ===============================================================
+Tag name: clm3_expa_91
+Originator(s): erik
+Date: Wed Feb 21 13:19:51 MST 2007
+One-line Summary: Fix SCAM mode, add more machines for test_driver, have tools use csm_share, 
+	make clmtype private (except for data exporting), fix several bugs
+
+Purpose of changes: Fix SCAM mode so can make a new CAM tag.
+
+Bugs fixed (include bugzilla ID): 252, 310, 370, 377, 385 (partial -- 302, 357, 389)
+
+Describe any changes made to build system: Remove -DNO_R16 from Makefile
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: MSS writes are now synchronous instead of
+	asynchronous
+
+Code reviewed by: slevis
+
+List any externals updated: Update to csm_share3_070220
+
+List all subroutines eliminated:
+
+Remove makdep -- as MkDepends replaces it
+Remove cprlndnc -- as newcprnc replaces it
+
+D      tools/makdep
+D      tools/makdep/main.c
+D      tools/makdep/Makefile
+D      tools/makdep/README
+D      tools/cprlndnc
+D      tools/cprlndnc/cprtps.F
+D      tools/cprlndnc/lenchr.F
+D      tools/cprlndnc/precision.F
+D      tools/cprlndnc/printstats.F
+D      tools/cprlndnc/wrap_nf.F
+D      tools/cprlndnc/stats.F
+D      tools/cprlndnc/ismax.F
+D      tools/cprlndnc/initstats.F
+D      tools/cprlndnc/nldat.F
+D      tools/cprlndnc/cpr.F
+D      tools/cprlndnc/prhddiff.F
+D      tools/cprlndnc/header.F
+D      tools/cprlndnc/Makefile
+D      doc/BranchLog
+D      doc/ChangeSum
+
+Delete files that tools use that are copied from main src directories (so we don't have
+to maintain separate copies of code)
+
+D      Deleting       tools/mkgriddata/fileutils.F90
+D      Deleting       tools/mkgriddata/nanMod.F90
+D      Deleting       tools/mkgriddata/shr_const_mod.F90
+D      Deleting       tools/mkgriddata/shr_kind_mod.F90
+D      Deleting       tools/mkgriddata/shr_sys_mod.F90
+D      Deleting       tools/mksurfdata/fileutils.F90
+D      Deleting       tools/mksurfdata/nanMod.F90
+D      Deleting       tools/mksurfdata/shr_const_mod.F90
+D      Deleting       tools/mksurfdata/shr_kind_mod.F90
+D      Deleting       tools/mksurfdata/shr_sys_mod.F90
+D      Deleting       tools/mksurfdata/shr_timer_mod.F90
+
+List all subroutines added and what they do:
+
+A      test/system/TSMtools.sh -- for testing of the tools (not tested yet)
+A      test/system/TCBtools.sh -- for build testing of the tools (not tested yet)
+A      test/system/tests_pretag_blueice -- for running on blueice (does work)
+A      test/system/tests_pretag_jaguar -- for running on jaguar (doesn't work yet)
+A      test/system/tests_posttag_lightning -- for running on lightning (doesn't work yet)
+
+Files added so that tools build uses copies of files in main directories rather than separate copies
+
+A      tools/mkgriddata/Filepath
+A      tools/mkgriddata/Srcfiles
+A      tools/mkgriddata/misc.h
+A      tools/mkgriddata/preproc.h
+A      tools/mksurfdata/Filepath
+A      tools/mksurfdata/Srcfiles
+A      tools/mksurfdata/misc.h
+A      tools/mksurfdata/preproc.h
+
+List all existing files that have been modified, and describe the changes:
+
+Add check for soil energy balance:
+
+M      src/biogeophys/BalanceCheckMod.F90
+
+Bigint bug fix (don't copy over static fields with bigint values when copying a domain)
+
+M      src/main/domainMod.F90
+
+SCAM fixes (read datasets differently for SCAM)
+
+M      src/main/surfrdMod.F90
+M      src/main/ndepFileMod.F90
+M      src/main/iniTimeConst.F90
+
+Change so that tools use main copies of code rather than own particular copy:
+
+M      tools/mkgriddata/Makefile
+M      tools/mkgriddata/mkgriddata.namelist
+M      tools/mksurfdata/Makefile
+M      tools/mksurfdata/domainMod.F90
+
+Make MSS write's synchronous instead of asynchronous: Required for LSF queing systems
+
+M      src/main/fileutils.F90
+
+Landmask bug fix: (landmask now output globally with no missing or fill values)
+
+M      src/main/histFileMod.F90
+M      src/main/initializeMod.F90
+M      src/main/ncdio.F90
+
+Timers
+
+M      src/main/program_csm.F90
+M      src/main/driver.F90
+
+Make clmtype private -- so only exports it's data not data it uses.
+
+M      src/biogeochem/CNGapMortalityMod.F90
+M      src/biogeochem/VOCEmissionMod.F90
+M      src/biogeochem/CNrestMod.F90
+M      src/biogeochem/CNC13FluxMod.F90
+M      src/biogeochem/CNSetValueMod.F90
+M      src/main/atmdrvMod.F90
+M      src/main/clmtypeInitMod.F90
+M      src/main/pftdynMod.F90
+M      src/main/restFileMod.F90
+M      src/main/clmtype.F90
+M      src/biogeophys/SnowHydrologyMod.F90
+M      src/biogeophys/SurfaceAlbedoMod.F90
+M      src/biogeophys/BiogeophysRestMod.F90
+M      src/biogeophys/DriverInitMod.F90
+
+Miscellaneous:
+
+M      bld/Makefile.in  --- Remove NO_R16 CPP token, some changes to start work on jaguar
+M      test/system/test_driver.sh -- add more machines
+M      test/system/CLM_runcmnd.sh -- add more machines
+
+Summary of testing:
+
+  bluevista: 	All PASS -- except TBL tests because of csm_share shr_const_mod TKFRZ change
+  bangkok/lf95: All PASS -- except TBL tests because of csm_share shr_const_mod TKFRZ change
+  blueice: 	All PASS -- except TBL tests because of csm_share shr_const_mod TKFRZ change
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_90
+
+  Summarize any changes to answers: larger than roundoff (all config/all machines)
+
+  (No simulations were performed as CCSM scientists deemed the change to be
+   insignificant)
+
+===============================================================
+===============================================================
 Tag name:  clm3_expa_90
 Originator(s):  nanr
 Date:  Tue Feb  6 13:17:55 MST 2007

@@ -19,7 +19,6 @@ module ncdio
 #else
   use spmdMod        , only : masterproc
 #endif
-  use clmtype
   use clm_varcon     , only : spval,ispval
   use shr_sys_mod    , only : shr_sys_flush
   use abortutils     , only : endrun
@@ -300,7 +299,7 @@ contains
 ! !INTERFACE:
 
   subroutine ncd_iolocal_int_1d(varname, data, dim1name, &
-       flag, ncid, nlonxy, nlatxy, nt, readvar)
+       flag, ncid, nlonxy, nlatxy, nt, readvar, imissing)
 !
 ! !DESCRIPTION:
 ! I/O for 1d int field
@@ -322,6 +321,7 @@ contains
     integer         , optional, intent(in) :: nlatxy    ! 2d latitude size
     integer         , optional, intent(in) :: nt        ! time sample index
     logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
+    integer         , optional, intent(in) :: imissing  ! value to set missing data to
 
 ! !REVISION HISTORY:
 !
@@ -386,7 +386,11 @@ contains
                 write(6,*)subname,' error: 1d clm output type must be ',&
                      'at gridcell level if 2d xy output is requested'; call endrun()
              end if
-             fldxy(:,:) = ispval
+             if ( .not. present(imissing) )then
+                fldxy(:,:) = ispval
+             else
+                fldxy(:,:) = imissing
+             end if
 !dir$ concurrent
 !cdir nodep
              do k = 1,nsize
@@ -1751,7 +1755,8 @@ contains
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use decompMod   , only : get_proc_bounds
-    use nanMod
+    use clm_varpar  , only : maxpatch
+    use nanMod      , only : nan
 !
 ! !ARGUMENTS:
     implicit none

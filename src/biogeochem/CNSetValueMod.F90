@@ -109,6 +109,8 @@ subroutine CNSetPps(num, filter, val, pps)
 !
 ! !DESCRIPTION:
 ! Set pft physical state variables
+! !USES:
+    use clm_varpar  , only : numrad
 !
 ! !ARGUMENTS:
     implicit none

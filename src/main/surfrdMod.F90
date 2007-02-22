@@ -28,6 +28,7 @@ module surfrdMod
                            maxpatch_pft, maxpatch_cft, maxpatch, &
                            npatch_urban, npatch_lake, npatch_wet, npatch_glacier
   use ncdio
+  use clmtype
   use spmdMod                         
   use clm_varctl,   only : scmlat, scmlon, single_column
   use getnetcdfdata
@@ -310,21 +311,37 @@ contains
        ier = nf_inq_varid (ncid, 'LATN', varid)
        if (ier == NF_NOERR) then
           NSEWset = .true.
-          call check_ret(nf_inq_varid(ncid, 'LATN', varid), subname)
-          call check_ret(nf_get_var_double(ncid, varid, domain%latn), subname)
-          call check_ret(nf_inq_varid(ncid, 'LONE', varid), subname)
-          call check_ret(nf_get_var_double(ncid, varid, domain%lone), subname)
-          call check_ret(nf_inq_varid(ncid, 'LATS', varid), subname)
-          call check_ret(nf_get_var_double(ncid, varid, domain%lats), subname)
-          call check_ret(nf_inq_varid(ncid, 'LONW', varid), subname)
-          call check_ret(nf_get_var_double(ncid, varid, domain%lonw), subname)
+          if ( .not. single_column )then
+             call check_ret(nf_inq_varid(ncid, 'LATN', varid), subname)
+             call check_ret(nf_get_var_double(ncid, varid, domain%latn), subname)
+             call check_ret(nf_inq_varid(ncid, 'LONE', varid), subname)
+             call check_ret(nf_get_var_double(ncid, varid, domain%lone), subname)
+             call check_ret(nf_inq_varid(ncid, 'LATS', varid), subname)
+             call check_ret(nf_get_var_double(ncid, varid, domain%lats), subname)
+             call check_ret(nf_inq_varid(ncid, 'LONW', varid), subname)
+             call check_ret(nf_get_var_double(ncid, varid, domain%lonw), subname)
+          else
+             call getncdata (ncid, scmlat, scmlon, timeidx=1, varName='LATN', &
+                             outData=domain%latn, status=ret)
+             call getncdata (ncid, scmlat, scmlon, timeidx=1, varName='LONE', &
+                             outData=domain%lone, status=ret)
+             call getncdata (ncid, scmlat, scmlon, timeidx=1, varName='LATS', &
+                             outData=domain%lats, status=ret)
+             call getncdata (ncid, scmlat, scmlon, timeidx=1, varName='LONW', &
+                             outData=domain%lonw, status=ret)
+          end if
        endif
 
        ier = nf_inq_varid (ncid, 'AREA', varid)
        if (ier == NF_NOERR) then
           AREAset = .true.
-          call check_ret(nf_inq_varid(ncid, 'AREA', varid), subname)
-          call check_ret(nf_get_var_double(ncid, varid, domain%area), subname)
+          if ( .not. single_column )then
+             call check_ret(nf_inq_varid(ncid, 'AREA', varid), subname)
+             call check_ret(nf_get_var_double(ncid, varid, domain%area), subname)
+          else
+             call getncdata (ncid, scmlat, scmlon, timeidx=1, varName='AREA', &
+                             outData=domain%area, status=ret)
+          end if
        endif
 
        if (single_column) then
@@ -714,6 +731,7 @@ contains
 !
 ! !USES:
     use pftvarcon   , only : noveg
+    use domainMod   , only : domain_type
 !
 ! !ARGUMENTS:
     implicit none
@@ -761,24 +779,24 @@ contains
        ! Obtain non-grid surface properties of surface dataset other than percent pft
 
        if (single_column) then
-       time_index=1
-       call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_WETLAND', pctwet     , ret)
-       call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_LAKE'   , pctlak     , ret)
-       call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_GLACIER', pctgla     , ret)
-       call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_URBAN'  , pcturb     , ret)
-    else
-       call check_ret(nf_inq_varid(ncid, 'PCT_WETLAND', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, pctwet), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_LAKE', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, pctlak), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLACIER', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, pctgla), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, pcturb), subname)
-    endif
+          time_index=1
+          call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_WETLAND', pctwet     , ret)
+          call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_LAKE'   , pctlak     , ret)
+          call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_GLACIER', pctgla     , ret)
+          call getncdata (ncid, scmlat, scmlon, time_index, 'PCT_URBAN'  , pcturb     , ret)
+       else
+          call check_ret(nf_inq_varid(ncid, 'PCT_WETLAND', varid), subname)
+          call check_ret(nf_get_var_double(ncid, varid, pctwet), subname)
+   
+          call check_ret(nf_inq_varid(ncid, 'PCT_LAKE', varid), subname)
+          call check_ret(nf_get_var_double(ncid, varid, pctlak), subname)
+   
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLACIER', varid), subname)
+          call check_ret(nf_get_var_double(ncid, varid, pctgla), subname)
+   
+          call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
+          call check_ret(nf_get_var_double(ncid, varid, pcturb), subname)
+       endif
 
        ! Error check: glacier, lake, wetland, urban sum must be less than 100
 
@@ -857,6 +875,7 @@ contains
     use clm_varsur, only : all_pfts_on_srfdat	
     use clm_varctl, only : create_crop_landunit
     use pftvarcon   , only : crop, noveg
+    use domainMod   , only : domain_type
 !
 ! !ARGUMENTS:
     implicit none
@@ -1256,6 +1275,7 @@ contains
 ! Determine wtxy and veg arrays for non-dynamic landuse mode
 !
 ! !USES:
+    use domainMod   , only : domain_type
 !
 ! !ARGUMENTS:
     implicit none
@@ -1394,6 +1414,7 @@ contains
 !
 ! !USES:
     use pftvarcon   , only : crop, noveg
+    use domainMod   , only : domain_type
 !
 ! !ARGUMENTS:
     implicit none

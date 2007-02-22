@@ -16,6 +16,7 @@ module ndepFileMod
 ! !USES
   use abortutils, only : endrun
   use ncdio
+  use clmtype
   use spmdMod     
   use shr_kind_mod, only: r8 => shr_kind_r8
 !
@@ -60,7 +61,7 @@ contains
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varctl  , only : fndepdat                      
+    use clm_varctl  , only : fndepdat, single_column
     use fileutils   , only : getfil
 !
 ! !ARGUMENTS:
@@ -100,11 +101,20 @@ contains
           call getfil (fndepdat, locfn, 0)
           call check_ret(nf_open(locfn, 0, ncid), subname)
 
-          call check_dim(ncid, 'lon' , lsmlon)
-          call check_dim(ncid, 'lat' , lsmlat)
+          if ( .not. single_column )then
+             call check_dim(ncid, 'lon' , lsmlon)
+             call check_dim(ncid, 'lat' , lsmlat)
+          else
+             lsmlon = 1
+             lsmlat = 1
+          end if
 
-          call check_ret(nf_inq_varid(ncid, 'NDEP_year', varid), subname) 
-          call check_ret(nf_get_var_double(ncid, varid, ndep), subname)
+          if ( .not. single_column )then
+             call check_ret(nf_inq_varid(ncid, 'NDEP_year', varid), subname) 
+             call check_ret(nf_get_var_double(ncid, varid, ndep), subname)
+          else
+             call endrun('ndeprd not implemented for SCAM' )
+          end if
           
        endif 
 
