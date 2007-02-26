@@ -1,4 +1,47 @@
 ===============================================================
+Tag name: clm3_expa_92
+Originator(s): erik,mvertens,mvr
+Date: Mon Feb 26 15:59:16 MST 2007
+One-line Summary: When running with Sequential CCSM -- use date for albedo calculation
+
+Purpose of changes: To work with cam3_4_01
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: erik,mvr,mvertens
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M      src/main/clm_comp.F90
+M      src/main/lnd_comp_mct.F90
+
+Have sequential CCSM give CLM the date of the next radiation calculation so that
+it can calculate albedo's for that specific time-step. This is needed to work with
+cam3_4_01.
+
+Summary of testing:
+
+  bluevista: Pass
+  bangkok/lf95: Pass
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_91
+
+===============================================================
+===============================================================
 Tag name: clm3_expa_91
 Originator(s): erik
 Date: Wed Feb 21 13:19:51 MST 2007

@@ -4,6 +4,7 @@
 module clm_comp
 
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_sys_mod , only : shr_sys_abort
   implicit none
 
   SAVE
@@ -157,7 +158,7 @@ contains
 ! !IROUTINE: clm_run1
 !
 ! !INTERFACE:
-  subroutine clm_run1( )
+  subroutine clm_run1( nextsw_cday, dosend )
 !
 ! !DESCRIPTION:
 ! land model run1 phase
@@ -171,11 +172,14 @@ contains
     use clm_atmlnd      , only : clm_map2gcell
 !
 ! !ARGUMENTS:
+    real(r8), intent(in) , optional :: nextsw_cday
+    logical , intent(out), optional :: dosend
 !
 ! !LOCAL VARIABLES:
-    logical  :: doalb                 ! true if surface albedo calculation time step
-    real(r8) :: dtime                 ! time step increment (sec)
     integer  :: nstep                 ! model time step
+    integer  :: dtime                 ! time step increment (sec)
+    logical  :: doalb                 ! true if surface albedo calculation time step from atm
+    real(r8) :: caldayp1_clm          ! calendar day for nstep+1 for clm (debug need only)
     real(r8) :: caldayp1              ! calendar day for nstep+1
     real(r8) :: declinp1              ! solar declination angle in radians for nstep+1
     real(r8) :: eccf                  ! earth orbit eccentricity factor
@@ -190,11 +194,24 @@ contains
 
     nstep = get_nstep()
     doalb = ((irad==1) .or. (mod(nstep,irad)==0 .and. nstep/=0))
+    dtime = get_step_size()
+
+    if (present(nextsw_cday) .and. present(dosend)) then
+       caldayp1 = nextsw_cday
+       if (doalb) then
+          caldayp1_clm = get_curr_calday( offset=dtime )
+          if (caldayp1_clm /= caldayp1) then
+             write(6,*)'caldayp1_atm= ',nextsw_cday,' caldayp1_atm= ',caldayp1_clm
+             call shr_sys_abort('caldayp1 from atm and clm do not match')
+          end if
+       end if
+       dosend = doalb
+    else
+       caldayp1 = get_curr_calday( offset=int(dtime) )
+    endif
 
     ! Determine declination angle for next time step
     
-    dtime = get_step_size()
-    caldayp1 = get_curr_calday( offset=int(dtime) )
     call shr_orb_decl( caldayp1, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
 
     ! Call land model driver1
@@ -221,10 +238,10 @@ contains
 ! land model run2 phase
 !
 ! !USES:
-    use shr_orb_mod , only : shr_orb_decl
+    use shr_orb_mod     , only : shr_orb_decl
     use clm_time_manager, only : get_nstep, get_step_size, get_curr_calday
-    use clm_varorb  , only : eccen, mvelpp, lambm0, obliqr
-    use driver      , only : driver2
+    use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
+    use driver          , only : driver2
 !
 ! !ARGUMENTS:
     logical,optional,intent(in) :: rstwr    ! true => write restart file this step
