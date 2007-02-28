@@ -20,7 +20,8 @@ subroutine iniTimeConst
   use shr_kind_mod, only : r8 => shr_kind_r8
   use nanMod
   use clmtype
-  use decompMod   , only : get_proc_bounds, get_proc_global, ldecomp
+  use decompMod   , only : get_proc_bounds, get_proc_global
+  use decompMod   , only : gsMap_lnd_gdc2glo, perm_lnd_gdc2glo
   use clm_atmlnd  , only : clm_a2l
   use clm_varpar  , only : nlevsoi, nlevlak, lsmlon, lsmlat, numpft, numrad
   use clm_varcon  , only : istice, istdlak, istwet, isturb, &
@@ -64,8 +65,6 @@ subroutine iniTimeConst
 ! local pointers to implicit in arguments
 !
   integer , pointer :: ivt(:)             !  vegetation type index
-  integer , pointer :: ixyg(:)            ! xy lon index (gridcell-level)
-  integer , pointer :: jxyg(:)            ! xy lat index (gridcell-level)
   integer , pointer :: pcolumn(:)         ! column index of corresponding pft
   integer , pointer :: pgridcell(:)       ! gridcell index of corresponding pft
   integer , pointer :: clandunit(:)       ! landunit index of column
@@ -109,7 +108,7 @@ subroutine iniTimeConst
 !
 ! !OTHER LOCAL VARIABLES:
   integer  :: ncid             ! netCDF file id 
-  integer  :: i,j,ib,lev,bottom      ! indices
+  integer  :: n,i,j,ib,lev,bottom      ! indices
   integer  :: g,l,c,p          ! indices
   integer  :: m                ! vegetation type index
   real(r8) :: bd               ! bulk density of dry soil material [kg/m^3]
@@ -126,11 +125,14 @@ subroutine iniTimeConst
   integer  :: numl             ! total number of landunits across all processors
   integer  :: numc             ! total number of columns across all processors
   integer  :: nump             ! total number of pfts across all processors
-  integer ,allocatable :: soic2d(:,:)   ! read in - soil color
-  real(r8),allocatable :: sand3d(:,:,:) ! read in - soil texture: percent sand
-  real(r8),allocatable :: clay3d(:,:,:) ! read in - soil texture: percent clay
-  real(r8),allocatable :: ndep(:,:)     ! read in - annual nitrogen deposition rate (gN/m2/yr)
-  real(r8),allocatable :: gti(:,:)      ! read in - fmax
+  real(r8),pointer :: arrayl(:)   ! generic global array
+  integer ,pointer :: irrayg(:)   ! generic global array
+  integer ,pointer :: soic2d(:)   ! read in - soil color
+  real(r8),pointer :: sand3d(:,:) ! read in - soil texture: percent sand
+  real(r8),pointer :: clay3d(:,:) ! read in - soil texture: percent clay
+  real(r8),pointer :: ndep(:)     ! read in - annual nitrogen deposition rate (gN/m2/yr)
+  real(r8),pointer :: gti(:)      ! read in - fmax
+  integer  :: start(3),count(3)   ! netcdf start/count arrays
   integer  :: dimid,varid      ! netCDF id's
   integer  :: ret, time_index
   real(r8) :: nlevsoidata(nlevsoi)
@@ -140,16 +142,13 @@ subroutine iniTimeConst
   integer :: mxsoil_color                        ! maximum number of soil color classes
 !------------------------------------------------------------------------
 
-    if (masterproc) write (6,*) 'Attempting to initialize time invariant variables'
+  if (masterproc) write (6,*) 'Attempting to initialize time invariant variables'
 
+  call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+  call get_proc_global(numg, numl, numc, nump)
 
-  allocate(soic2d(lsmlon,lsmlat),ndep(lsmlon,lsmlat), gti(lsmlon,lsmlat))
-  allocate(sand3d(lsmlon,lsmlat,nlevsoi),clay3d(lsmlon,lsmlat,nlevsoi))
-
-  ! Assign local pointers to derived subtypes components (gridcell-level)
-
-  ixyg            => ldecomp%gdc2i
-  jxyg            => ldecomp%gdc2j
+  allocate(soic2d(begg:endg),ndep(begg:endg), gti(begg:endg))
+  allocate(sand3d(begg:endg,nlevsoi),clay3d(begg:endg,nlevsoi))
 
   ! Assign local pointers to derived subtypes components (landunit-level)
 
@@ -196,10 +195,10 @@ subroutine iniTimeConst
   clayfrac        => clm3%g%l%c%p%pps%clayfrac
 #endif
 
-  ! Determine necessary subgrid bounds
-
-  call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-  call get_proc_global(numg, numl, numc, nump)
+!  ! Determine necessary subgrid bounds
+!
+!  call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+!  call get_proc_global(numg, numl, numc, nump)
 
   ! --------------------------------------------------------------------
   ! Read soil color, sand and clay from surface dataset 
@@ -220,51 +219,65 @@ subroutine iniTimeConst
      else
         mxsoil_color = 8  
      end if
+  endif
+#if (defined SPMD)
+  call mpi_bcast( mxsoil_color,        1  , MPI_INTEGER, 0, mpicom, ier )
+#endif
 
-     ! Read fmax
-
-     if (.not. single_column) then
-        call check_ret(nf_inq_varid(ncid, 'FMAX', varid), subname)
-        call check_ret(nf_get_var_double(ncid, varid, gti), subname)
-     else
-        time_index=1
-        call getncdata (ncid, scmlat, scmlon, time_index,'FMAX', gti, ret)
-     end if
-
+  ! Read fmax
+  if (.not. single_column) then
+     call ncd_iolocal(ncid, 'FMAX', 'read', gti, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
+  else
+     time_index=1
+     call getncdata (ncid, scmlat, scmlon, time_index,'FMAX', gti, ret)
+  end if
+  if (masterproc) then
      write (6,*) 'Successfully read fmax boundary data .....'
      write (6,*)
+  endif
 
      ! Red in soil color, sand and clay fraction
 
-     if (.not. single_column) then
-        call check_ret(nf_inq_varid(ncid, 'SOIL_COLOR', varid), subname)
-        call check_ret(nf_get_var_int(ncid, varid, soic2d), subname)
-        
-        call check_ret(nf_inq_varid(ncid, 'PCT_SAND', varid), subname)
-        call check_ret(nf_get_var_double(ncid, varid, sand3d), subname)
-     
-        call check_ret(nf_inq_varid(ncid, 'PCT_CLAY', varid), subname)
-        call check_ret(nf_get_var_double(ncid, varid, clay3d), subname)
-     else
+  if (single_column) then
+     if (masterproc) then
         time_index=1
         call getncdata (ncid, scmlat, scmlon, time_index,'SOIL_COLOR' , soic2d     , ret)
         call getncdata (ncid, scmlat, scmlon, time_index,'PCT_SAND'   , nlevsoidata, ret)
-        sand3d(1,1,:) = nlevsoidata(:)
+        sand3d(1,:) = nlevsoidata(:)
         call getncdata (ncid, scmlat, scmlon, time_index,'PCT_CLAY'   , nlevsoidata, ret)
-        clay3d(1,1,:) = nlevsoidata(:)
-     endif
-     call check_ret(nf_close(ncid), subname)
-     write (6,*) 'Successfully read soil color, sand and clay boundary data .....'
-     write (6,*)
-  end if
-
+        clay3d(1,:) = nlevsoidata(:)
+    end if
 #if (defined SPMD)
-  call mpi_bcast( soic2d  , size(soic2d)  , MPI_INTEGER, 0, mpicom, ier )
-  call mpi_bcast( sand3d  , size(sand3d)  , MPI_REAL8  , 0, mpicom, ier )
-  call mpi_bcast( clay3d  , size(clay3d)  , MPI_REAL8  , 0, mpicom, ier )
-  call mpi_bcast( mxsoil_color,        1  , MPI_INTEGER, 0, mpicom, ier )
-  call mpi_bcast( gti     , size(gti)     , MPI_REAL8  , 0, mpicom, ier )
+    call mpi_bcast( soic2d  , size(soic2d)  , MPI_INTEGER, 0, mpicom, ier )
+    call mpi_bcast( sand3d  , size(sand3d)  , MPI_REAL8  , 0, mpicom, ier )
+    call mpi_bcast( clay3d  , size(clay3d)  , MPI_REAL8  , 0, mpicom, ier )
 #endif
+
+  else
+     call ncd_iolocal(ncid, 'SOIL_COLOR', 'read', soic2d, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
+
+     allocate(arrayl(begg:endg))
+     do n = 1,nlevsoi
+        start(1) = 1
+        count(1) = lsmlon
+        start(2) = 1
+        count(2) = lsmlat
+        start(3) = n
+        count(3) = 1
+        call ncd_iolocal(ncid,'PCT_SAND','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
+        sand3d(begg:endg,n) = arrayl(begg:endg)
+        call ncd_iolocal(ncid,'PCT_CLAY','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
+        clay3d(begg:endg,n) = arrayl(begg:endg)
+     enddo
+     deallocate(arrayl)
+
+     if (masterproc) then
+        call check_ret(nf_close(ncid), subname)
+        write (6,*) 'Successfully read soil color, sand and clay boundary data'
+        write (6,*)
+     endif
+
+  endif
 
   ! Determine saturated and dry soil albedos for n color classes and 
   ! numrad wavebands (1=vis, 2=nir)
@@ -298,10 +311,9 @@ subroutine iniTimeConst
 !dir$ concurrent
 !cdir nodep
   do p = begp,endp
-     i = ixyg(pgridcell(p))
-     j = jxyg(pgridcell(p))
-     sandfrac(p) = sand3d(i,j,1)/100.0_r8
-     clayfrac(p) = clay3d(i,j,1)/100.0_r8
+     g = pgridcell(p)
+     sandfrac(p) = sand3d(g,1)/100.0_r8
+     clayfrac(p) = clay3d(g,1)/100.0_r8
   end do
 #endif
 
@@ -483,9 +495,7 @@ subroutine iniTimeConst
       ! nitrogen deposition (forcing flux from atmosphere)
       ! convert rate from 1/yr -> 1/s
       
-      i = ixyg(g)
-      j = jxyg(g)
-      forc_ndep(g) = ndep(i,j)/(86400._r8 * 365._r8)
+      forc_ndep(g) = ndep(g)/(86400._r8 * 365._r8)
       
    end do
 
@@ -500,18 +510,17 @@ subroutine iniTimeConst
    do c = begc, endc
 
       ! Set gridcell and landunit indices
-      i = ixyg(cgridcell(c))
-      j = jxyg(cgridcell(c))
+      g = cgridcell(c)
       l = clandunit(c)
 
       ! Initialize restriction for min of soil potential (mm)
       smpmin(c) = -1.e8_r8
 
       hkdepth(c) = 1._r8/2.5_r8    ! chen and kumar watertable
-      wtfact(c) = gti(i,j)
+      wtfact(c) = gti(g)
 
       ! Soil color
-      isoicol(c) = soic2d(i,j)
+      isoicol(c) = soic2d(g)
 
       ! Soil hydraulic and thermal properties
       if (ltype(l)==istdlak .or. ltype(l)==istwet .or. &
@@ -533,8 +542,8 @@ subroutine iniTimeConst
          end do
       else
          do lev = 1,nlevsoi
-            clay = clay3d(i,j,lev)
-            sand = sand3d(i,j,lev)
+            clay = clay3d(g,lev)
+            sand = sand3d(g,lev)
             watsat(c,lev) = 0.489_r8 - 0.00126_r8*sand
             bd = (1._r8-watsat(c,lev))*2.7e3_r8
             xksat = 0.0070556_r8 *( 10._r8**(-0.884_r8+0.0153_r8*sand) ) ! mm/s
@@ -566,7 +575,7 @@ subroutine iniTimeConst
       end if
 
       ! Initialize terms needed for dust model
-      clay = clay3d(i,j,1)
+      clay = clay3d(g,1)
       gwc_thr(c) = 0.17_r8 + 0.14_r8*clay*0.01_r8
       mss_frc_cly_vld(c) = min(clay*0.01_r8, 0.20_r8)
 
@@ -646,7 +655,7 @@ subroutine iniTimeConst
    call CNiniSpecial()
 #endif
 
-   deallocate(soic2d,ndep,sand3d,clay3d)
+   deallocate(soic2d,ndep,sand3d,clay3d,gti)
 
    if (masterproc) write (6,*) 'Successfully initialized time invariant variables'
 

@@ -22,6 +22,12 @@ module clm_varsur
 !
 ! surface boundary data
 !
+!  integer , allocatable :: gvegxy(:,:) ! vegetation type
+!  real(r8), allocatable,target :: gwtxy(:,:)  ! subgrid weights
+
+  integer , allocatable :: lvegxy(:,:) ! vegetation type
+  real(r8), allocatable,target :: lwtxy(:,:)  ! subgrid weights
+
   real(r8),allocatable :: pctspec(:)         ! percent of spec lunits wrt gcell
   logical  :: all_pfts_on_srfdat = .false.   ! true=>old format dataset 
 !

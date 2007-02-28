@@ -19,7 +19,7 @@ module RtmMod
   use spmdMod     , only : masterproc,npes,iam,mpicom,comp_id,MPI_REAL8
   use clm_varpar  , only : lsmlon, lsmlat, rtmlon, rtmlat
   use shr_sys_mod , only : shr_sys_flush
-  use domainMod   , only : domain_type, domain_init, domain_clean
+  use domainMod   , only : latlon_type, latlon_init, domain_clean
   use abortutils  , only : endrun
   use RunoffMod   , only : runoff
   use RunoffMod   , only : gsMap_rtm_gdc2glo,perm_rtm_gdc2glo,sMatP_l2r
@@ -28,7 +28,6 @@ module RtmMod
 ! !PUBLIC TYPES:
   implicit none
   private
-  type (domain_type) , public :: rdomain            ! rtm grid 
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public Rtmini        ! Initialize RTM grid and land mask
@@ -88,18 +87,19 @@ contains
 !
 ! !USES:
     use shr_const_mod, only : SHR_CONST_PI
-    use domainMod    , only : ldomain,domain_check
+    use domainMod    , only : llatlon,ldomain,domain_check
     use areaMod      , only : celledge, cellarea, map_setmapsAR
     use clm_varctl   , only : frivinp_rtm
     use clm_varctl   , only : rtm_nsteps
     use clm_varcon   , only : re
     use decompMod    , only : get_proc_bounds, get_proc_global, ldecomp
-    use decompMod    , only : gsMap_lnd_gdc2glo
+    use decompMod    , only : gsMap_lnd_gdc2glo, perm_lnd_gdc2glo
     use clm_time_manager, only : get_curr_date
     use clm_time_manager, only : get_step_size
 #if (defined SPMD)
     use spmdMod
 #endif
+    use spmdGathScatMod
 !
 ! !ARGUMENTS:
     implicit none
@@ -158,16 +158,24 @@ contains
     real(r8) :: wt                         ! mct wt
     real(r8),pointer :: lfield(:)          ! tmp lnd field
     real(r8),pointer :: rfield(:)          ! tmp rtm field
+    real(r8),pointer :: glatc(:),glonc(:)  ! global lat/lon
+    real(r8),pointer :: gfrac(:)           ! global frac
+    real(r8),pointer :: lfrac(:)           ! global land frac
+    integer ,pointer :: gmask(:)           ! global mask
+    type(latlon_type):: rlatlon            ! rtm grid 
 
 !-----------------------------------------------------------------------
 
     !--- Allocate rtm grid variables
-    call domain_init(rdomain,rtmlon,rtmlat)
+    call latlon_init(rlatlon,rtmlon,rtmlat)
 
     !--- Allocate inputs and outputs to rtm at 1/2 degree resolution
 
     allocate (dwnstrm_index  (rtmlon*rtmlat), &
               runoff%rlat(rtmlat), runoff%rlon(rtmlon), &
+              glatc(rtmlon*rtmlat), glonc(rtmlon*rtmlat), &
+              gfrac(rtmlon*rtmlat), lfrac(lsmlon*lsmlat), &
+              gmask(rtmlon*rtmlat), &
               stat=ier)
     if (ier /= 0) then
        write(6,*)'Rtmgridini: Allocation error for ',&
@@ -196,10 +204,10 @@ contains
     ! If the river direction file is modified - the river station
     ! part must also be modified
 
-    rdomain%edges(1:4) = rtmedge(1:4)
+    rlatlon%edges(1:4) = rtmedge(1:4)
     open (1,file=frivinp_rtm)
     do n = 1,rtmlon*rtmlat
-       read(1,*) rdomain%latc(n),rdomain%lonc(n),tempg(n)
+       read(1,*) glatc(n),glonc(n),tempg(n)
        rdirc(n) = nint(tempg(n))
     enddo
     do n = 1,50
@@ -220,10 +228,12 @@ contains
 
     do j=1,rtmlat
        n = (j-1)*rtmlon + 1
-       runoff%rlat(j) = rdomain%latc(n)
+       runoff%rlat(j) = glatc(n)
+       rlatlon%latc(j) = glatc(n)
     enddo
     do i=1,rtmlon
-       runoff%rlon(i) = rdomain%lonc(i)
+       runoff%rlon(i) = glonc(n)
+       rlatlon%lonc(j) = glonc(n)
     enddo
 
     !--- Set dwnstrm_index from rdirc values
@@ -258,16 +268,18 @@ contains
 
     !--- Determine RTM celledges and areas 
 
-    call celledge (rdomain, &
-                   rdomain%edges(1), rdomain%edges(2), &
-                   rdomain%edges(3), rdomain%edges(4))
+    call celledge (rlatlon, &
+                   rlatlon%edges(1), rlatlon%edges(2), &
+                   rlatlon%edges(3), rlatlon%edges(4))
 
-    call cellarea (rdomain)
 
     !--- Set sMat0_l2r, full mapping weights for l2r, just on root pe
     !--- for now use lfield to "ignore" non-active land cells in sMat0_l2r
     !--- Later these will be "reduced" to just the useful weights
     !--- Compute rdomain%frac on root pe and bcast 
+
+    call get_proc_bounds(begg, endg)
+    call gather_data_to_master(ldomain%frac,lfrac,gsmap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
 
     if (masterproc) then
        allocate(lfield(lsmlon*lsmlat),rfield(rtmlon*rtmlat))
@@ -277,45 +289,43 @@ contains
        enddo
        rfield = 1._r8
 
-       call map_setmapsAR(ldomain,rdomain,sMat0_l2r, &
+       call map_setmapsAR(llatlon,rlatlon,sMat0_l2r, &
           fracin=lfield, fracout=rfield)
        igrow = mct_sMat_indexIA(sMat0_l2r,'grow')
        igcol = mct_sMat_indexIA(sMat0_l2r,'gcol')
        iwgt  = mct_sMat_indexRA(sMat0_l2r,'weight')
-       rdomain%frac = 0._r8
+       gfrac = 0._r8
        do n = 1,mct_sMat_lsize(sMat0_l2r)
           nr = sMat0_l2r%data%iAttr(igrow,n)
           ns = sMat0_l2r%data%iAttr(igcol,n)
           wt = sMat0_l2r%data%rAttr(iwgt ,n)
-          rdomain%frac(nr) = rdomain%frac(nr) + wt*ldomain%frac(ns)
+          gfrac(nr) = gfrac(nr) + lfrac(ns)
        enddo
        deallocate(lfield,rfield)
     endif
 #ifdef SPMD
-    call mpi_bcast(rdomain%frac,size(rdomain%frac),MPI_REAL8,0,mpicom,ier)
+    call mpi_bcast(gfrac,size(gfrac),MPI_REAL8,0,mpicom,ier)
 #endif
 
     !--- Determine rtm ocn/land mask, 0=none, 1=land, 2=ocean
 
-    rdomain%mask = 0             ! assume neither land nor ocn
+    gmask = 0             ! assume neither land nor ocn
 
     do n=1,rtmlon*rtmlat         ! set downstream value first
        nr = dwnstrm_index(n)
        if (nr /= 0) then         ! assume downstream cell is ocn
-          rdomain%mask(nr) = 2
+          gmask(nr) = 2
        end if
     enddo
 
     do n=1,rtmlon*rtmlat         ! override downstream setting from local info
        nr = dwnstrm_index(n)
        if (nr /= 0) then         ! n is always land if dwnstrm_index exists
-          rdomain%mask(n) = 1
+          gmask(n) = 1
        else                      ! n is ocn if no dwnstrm_index and some frac
-          if (rdomain%frac(n)>0._r8) rdomain%mask(n) = 2
+          if (gfrac(n)>0._r8) gmask(n) = 2
        end if
     enddo
-
-    call domain_check(rdomain)
 
    !--- Compute river basins, actually compute ocean outlet gridcell
    !--- iocn = final downstream cell, index is global 1d ocean gridcell
@@ -325,26 +335,26 @@ contains
     nocn = 0
     do nr=1,rtmlon*rtmlat
        n = nr
-       if (rdomain%mask(n) == 1) then    ! land
+       if (gmask(n) == 1) then    ! land
           g = 0
-          do while (rdomain%mask(n) == 1 .and. g < rtmlon*rtmlat)  ! follow downstream
+          do while (gmask(n) == 1 .and. g < rtmlon*rtmlat)  ! follow downstream
              n = dwnstrm_index(n)
              g = g + 1
           end do
-          if (rdomain%mask(n) == 2) then  ! found ocean outlet
+          if (gmask(n) == 2) then  ! found ocean outlet
              iocn(nr) = n                 ! set ocean outlet or nr to n
              nocn(n) = nocn(n) + 1        ! one more land cell for n
-          elseif (rdomain%mask(n) == 1) then  ! no ocean outlet, warn user, ignore cell
+          elseif (gmask(n) == 1) then  ! no ocean outlet, warn user, ignore cell
              write(6,*) 'rtmini WARNING no downstream ocean cell - IGNORED', &
-               g,nr,rdomain%mask(nr),dwnstrm_index(nr), &
-               n,rdomain%mask(n),dwnstrm_index(n)
+               g,nr,gmask(nr),dwnstrm_index(nr), &
+               n,gmask(n),dwnstrm_index(n)
           else 
              write(6,*) 'rtmini ERROR downstream cell is non-ocean,non-land', &
-               g,nr,rdomain%mask(nr),dwnstrm_index(nr), &
-               n,rdomain%mask(n),dwnstrm_index(n)
+               g,nr,gmask(nr),dwnstrm_index(nr), &
+               n,gmask(n),dwnstrm_index(n)
              call endrun()
           endif
-       elseif (rdomain%mask(n) == 2) then  ! ocean, give to self
+       elseif (gmask(n) == 2) then  ! ocean, give to self
           iocn(nr) = n
           nocn(n) = nocn(n) + 1
        endif
@@ -532,7 +542,7 @@ contains
           runoff%gdc2i(nr) = i         
           runoff%gdc2j(nr) = j         
           runoff%gdc2gsn(nr) = numr
-          runoff%mask(nr) = rdomain%mask(n)   ! global for hist file
+          runoff%mask(nr) = gmask(n)   ! global for hist file
        endif
     enddo
     enddo
@@ -544,15 +554,20 @@ contains
 
     do nr = begr,endr
        n = runoff%gdc2glo(nr)
+       i = runoff%gdc2i(nr)
+       j = runoff%gdc2j(nr)
        if (n <= 0 .or. n > rtmlon*rtmlat) then
           write(6,*) 'Rtmini ERROR gdc2glo ',nr,runoff%gdc2glo(nr)
           call endrun()
        endif
        runoff%runoff(nr) = 0._r8
        runoff%dvolrdt(nr) = 0._r8
-       runoff%lonc(nr) = rdomain%lonc(n)
-       runoff%latc(nr) = rdomain%latc(n)
-       runoff%area(nr) = 1.e6_r8 *rdomain%area(n)   ! convert to m2
+       runoff%lonc(nr) = glonc(n)
+       runoff%latc(nr) = glatc(n)
+
+       dx = (rlatlon%lone(i) - rlatlon%lonw(i)) * deg2rad
+       dy = sin(rlatlon%latn(j)*deg2rad) - sin(rlatlon%lats(j)*deg2rad)
+       runoff%area(nr) = 1.e6_r8 * dx*dy*re*re
        if (dwnstrm_index(n) == 0) then
           runoff%dsi(nr) = 0
        else
@@ -634,8 +649,7 @@ contains
     !--- clean up temporaries
 
     deallocate(tempg,rdirc,iocn,nocn)
-    deallocate(pocn,nop,dwnstrm_index)
-    call domain_clean(rdomain)
+    deallocate(pocn,nop,dwnstrm_index,glatc,glonc,gfrac,lfrac,gmask)
 
    !--- initialization rtm gsmap
 
@@ -656,7 +670,7 @@ contains
     !--- root pe only
 
    if (masterproc) then
-       na = ldomain%ni * ldomain%nj
+       na = llatlon%ni * llatlon%nj
        nb = rtmlon * rtmlat
        igrow = mct_sMat_indexIA(sMat0_l2r,'grow')
        igcol = mct_sMat_indexIA(sMat0_l2r,'gcol')
@@ -721,7 +735,7 @@ contains
 ! !USES:
     use decompMod      , only : get_proc_bounds, get_proc_global
     use decompMod      , only : gsMap_lnd_gdc2glo, perm_lnd_gdc2glo
-    use domainMod      , only : llocdomain
+    use domainMod      , only : ldomain
 !
 ! !ARGUMENTS:
     implicit none
@@ -758,7 +772,7 @@ contains
        nr = mct_aVect_indexRA(av_lndr,'rtminput',perrWith='Rtmriverflux')
        do n = begg,endg
           n2 = n-begg+1
-          av_lndr%rAttr(nr,n2) = rtmin_avg(n)*llocdomain%frac(n)
+          av_lndr%rAttr(nr,n2) = rtmin_avg(n)*ldomain%frac(n)
        enddo
 
        call mct_aVect_permute  (av_lndr,perm_lnd_gdc2glo)

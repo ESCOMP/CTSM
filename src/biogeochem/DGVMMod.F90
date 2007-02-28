@@ -306,7 +306,7 @@ contains
     use ncdio
     use decompMod    , only : get_proc_bounds, get_proc_global
     use clm_varpar   , only : lsmlon, lsmlat, maxpatch_pft
-    use domainMod    , only : llocdomain
+    use domainMod    , only : ldomain
     use decompMod    , only : ldecomp
     use clm_varctl   , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
                               frivinp_rtm, archive_dir, mss_wpass, mss_irt
@@ -637,19 +637,19 @@ contains
     ! Write variables
     ! -----------------------------------------------------------------------
 
-    call ncd_ioglobal(varname='edgen', data=llocdomain%edges(1), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edgee', data=llocdomain%edges(2), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edges', data=llocdomain%edges(3), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edgew', data=llocdomain%edges(4), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgen', data=ldomain%edges(1), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgee', data=ldomain%edges(2), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edges', data=ldomain%edges(3), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgew', data=ldomain%edges(4), ncid=ncid, flag='write')
 
     ! Write surface grid (coordinate variables, latitude, longitude, surface type).
 
     allocate(lonvar(lsmlon),latvar(lsmlat),data(numg))
 
 #ifdef SPMD
-    call gather_data_to_master (llocdomain%lonc, data, clmlevel='gridcell')
+    call gather_data_to_master (ldomain%lonc, data, clmlevel='gridcell')
 #else
-    data(1:numg) = llocdomain%lonc(1:numg)
+    data(1:numg) = ldomain%lonc(1:numg)
 #endif
     lonvar = spval
     do n = 1,lsmlon
@@ -660,9 +660,9 @@ contains
     enddo
 
 #ifdef SPMD
-    call gather_data_to_master (llocdomain%latc, data, clmlevel='gridcell')
+    call gather_data_to_master (ldomain%latc, data, clmlevel='gridcell')
 #else
-    data(1:numg) = llocdomain%latc(1:numg)
+    data(1:numg) = ldomain%latc(1:numg)
 #endif
     latvar = spval
     do n = 1,lsmlon
@@ -677,15 +677,15 @@ contains
        call ncd_ioglobal(varname='lat', data=latvar, ncid=ncid, flag='write')
     endif
 
-    call ncd_iolocal(varname='longxy'  , data=llocdomain%lonc, ncid=ncid, &
+    call ncd_iolocal(varname='longxy'  , data=ldomain%lonc, ncid=ncid, &
          flag='write', dim1name='gridcell', &
-         nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
-    call ncd_iolocal(varname='latixy'  , data=llocdomain%latc, ncid=ncid, &
+         nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+    call ncd_iolocal(varname='latixy'  , data=ldomain%latc, ncid=ncid, &
          flag='write', dim1name='gridcell', &
-         nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
-    call ncd_iolocal(varname='landmask', data=llocdomain%mask, ncid=ncid, &
+         nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+    call ncd_iolocal(varname='landmask', data=ldomain%mask, ncid=ncid, &
          flag='write', dim1name='gridcell', &
-         nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+         nlonxy=ldomain%ni, nlatxy=ldomain%nj)
 
     deallocate(lonvar,latvar,data)
 

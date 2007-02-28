@@ -47,11 +47,13 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
+    call t_startf('clm_init0')
     if ( present(CCSMInit) )then
        call initialize1( CCSMInit )
     else
        call initialize1( )
     end if
+    call t_stopf('clm_init0')
 
   end subroutine clm_init0
 
@@ -83,11 +85,13 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
+   call t_startf('clm_init1')
    if (present(SyncClock)) then	
       call initialize2( SyncClock )
    else
       call initialize2()
    end if
+   call t_stopf('clm_init1')
 
   end subroutine clm_init1
 
@@ -129,6 +133,7 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
+    call t_startf('clm_init2')
     if (get_nstep() == 0 .or. nsrest == 0) then
 
        ! Initialize albedos (correct pft filters are needed)
@@ -149,6 +154,7 @@ contains
        call clm_map2gcell(init=.true.)
 
     end if
+    call t_stopf('clm_init2')
 
   end subroutine clm_init2
 
@@ -190,6 +196,8 @@ contains
 !EOP
 !---------------------------------------------------------------------------
 
+    call t_startf('clm_run1')
+
     ! Determine doalb (true when the next time step is a radiation time step) 
 
     nstep = get_nstep()
@@ -216,13 +224,17 @@ contains
 
     ! Call land model driver1
     
+    call t_startf('driver1')
     call driver1(doalb, caldayp1, declinp1)
+    call t_stopf('driver1')
 
     ! Determine gridcell averaged properties to send to atm (l2as and l2af derived types)
 
     call t_startf('clm_map2gcell')
     call clm_map2gcell( )
     call t_stopf('clm_map2gcell')
+
+    call t_stopf('clm_run1')
 
   end subroutine clm_run1
 
@@ -258,16 +270,22 @@ contains
     real(r8) :: declinp1              ! solar declination angle in radians for nstep+1
 !---------------------------------------------------------------------------
 
+    call t_startf('clm_run2')
+
     ! Call land model driver2
     
     dtime = get_step_size()
     caldayp1 = get_curr_calday( offset=int(dtime) )
     call shr_orb_decl( caldayp1, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
+    call t_startf('driver2')
     if (present(rstwr)) then
        call driver2(caldayp1, declinp1, rstwr)
     else
        call driver2(caldayp1, declinp1)
     endif
+    call t_stopf('driver2')
+
+    call t_stopf('clm_run2')
 
   end subroutine clm_run2
 

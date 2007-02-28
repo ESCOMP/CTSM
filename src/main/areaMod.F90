@@ -16,7 +16,7 @@ module areaMod
 ! !USES:
   use clm_varcon   , only : re
   use clm_varpar   , only : numrad
-  use domainMod    , only : domain_type, domain_setptrs
+  use domainMod    , only : domain_type, domain_setptrs, latlon_type
   use shr_const_mod, only : SHR_CONST_PI
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_sys_mod  , only : shr_sys_flush
@@ -27,25 +27,6 @@ module areaMod
 ! !PUBLIC TYPES:
   implicit none
   private
-
-#if (1 == 0)
-  type gridmap_type
-     private
-     ! lower level in hierarchy
-     character(len=32)         :: name
-     character(len=16)         :: type        ! global, dst, src, etc
-!     type(domain_type),pointer :: domain_i    ! domain_i
-!     type(domain_type),pointer :: domain_o    ! domain_o
-     integer                   :: ni_i,nj_i    ! size of src grid ni,nj
-     integer                   :: ni_o,nj_o    ! size of dst grid ni,nj
-     integer                   :: mx_ovr       ! max num of overlapping cells
-     integer          ,pointer :: n_ovr(:,:)   ! number of overlapping cells
-     integer          ,pointer :: i_ovr(:,:,:) ! i index of overlap input cell
-     integer          ,pointer :: j_ovr(:,:,:) ! j index of overlap input cell
-     real(r8)         ,pointer :: w_ovr(:,:,:) ! wt of overlap input cell
-  end type gridmap_type
-  public gridmap_type
-#endif
 
   type map_type
      private
@@ -72,18 +53,18 @@ module areaMod
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: map_init
   public :: map_setptrs
+!  public :: map_setmapsFM_global
   public :: map_setmapsFM
   public :: map_setmapsAR
   public :: map_maparrayl
   public :: map_maparrayg
-  public :: map_setgatm
-#if (1 == 0)
-  public :: gridmap_checkmap
-  public :: gridmap_setptrs
-#endif
+!  public :: map_setgatm
+  public :: map_setgatm_UNITY
   interface celledge
-     module procedure celledge_regional
-     module procedure celledge_global  
+     module procedure domain_celledge_regional
+     module procedure domain_celledge_global  
+     module procedure latlon_celledge_regional
+     module procedure latlon_celledge_global  
   end interface
   public :: celledge
   public :: cellarea
@@ -97,84 +78,10 @@ module areaMod
 !EOP
 !
 ! PRIVATE MEMBER FUNCTIONS:
-#if (1 == 0)
-  !--- no longer used, kept for reference
-  private :: areaini        ! area averaging initialization
-  private :: areaave        ! area averaging of field from input to output grids
-  private :: areamap   ! weights and indices for area of overlap between grids
-  private :: areaovr   ! area of overlap between grid cells
-#endif
 !-----------------------------------------------------------------------
 
 contains
 
-#if (1 == 0)
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: gridmap_init
-!
-! !INTERFACE:
-  subroutine gridmap_init(gridmap,domain_i,domain_o,mwts,name,type)
-!
-! !DESCRIPTION:
-! This subroutine initializes the gridmap datatype
-!
-! !USES:
-!
-! !ARGUMENTS:
-  implicit none
-  type(gridmap_type), intent(inout)       :: gridmap
-  type(domain_type) , intent(in),target   :: domain_i
-  type(domain_type) , intent(in),target   :: domain_o
-  integer           , intent(in)          :: mwts     ! max number of wts
-  character(len=*)  , intent(in),optional :: name
-  character(len=*)  , intent(in),optional :: type
-!
-! !REVISION HISTORY:
-! 2005.11.15  T Craig  Creation.
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-  integer ni,nj  ! size of domain_o
-  integer ier    ! error flag
-!------------------------------------------------------------------------------
-
-!  gridmap%domain_i => domain_i
-!  gridmap%domain_o => domain_o
-  gridmap%ni_i = domain_i%ni
-  gridmap%nj_i = domain_i%nj
-  gridmap%ni_o = domain_o%ni
-  gridmap%nj_o = domain_o%nj
-  if (present(name)) then
-    gridmap%name = trim(name)
-  else
-    gridmap%name = 'unset'
-  endif
-  if (present(type)) then
-    gridmap%type = trim(type)
-  else
-    gridmap%type = 'unset'
-  endif
-
-  ni = domain_o%ni
-  nj = domain_o%nj
-  gridmap%mx_ovr = mwts
-  allocate(gridmap%n_ovr(ni,nj)     , gridmap%i_ovr(ni,nj,mwts), &
-           gridmap%j_ovr(ni,nj,mwts), gridmap%w_ovr(ni,nj,mwts),stat=ier)
-  if (ier /= 0) then
-     write(6,*) 'gridmap_init ERROR: allocate gridmap'
-     call endrun()
-  endif
-
-  gridmap%n_ovr = bigint
-  gridmap%i_ovr = -1
-  gridmap%j_ovr = -1
-  gridmap%w_ovr = nan
-
-end subroutine gridmap_init
-#endif
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -235,78 +142,6 @@ end subroutine gridmap_init
   map%S   = nan
 
 end subroutine map_init
-!------------------------------------------------------------------------------
-#if (1 == 0)
-!BOP
-!
-! !IROUTINE: gridmap_setptrs
-!
-! !INTERFACE:
-  subroutine gridmap_setptrs(gridmap,name,type,ni_i,nj_i,ni_o,nj_o, &
-     mx_ovr,n_ovr,i_ovr,j_ovr,w_ovr)
-!
-! !DESCRIPTION:
-! This subroutine sets external pointer arrays to arrays in gridmap
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    type(gridmap_type),intent(in)       :: gridmap
-    character(len=*) ,optional          :: name     
-    character(len=*) ,optional          :: type
-    integer          ,optional          :: ni_i,nj_i
-    integer          ,optional          :: ni_o,nj_o
-    integer          ,optional          :: mx_ovr
-    integer          ,optional,pointer  :: n_ovr(:,:)
-    integer          ,optional,pointer  :: i_ovr(:,:,:)
-    integer          ,optional,pointer  :: j_ovr(:,:,:)
-    real(r8)         ,optional,pointer  :: w_ovr(:,:,:)
-!
-! !REVISION HISTORY:
-!   Created by T Craig
-!
-!EOP
-!
-! LOCAL VARIABLES:
-!
-!------------------------------------------------------------------------------
-    if (present(name)) then
-      name = gridmap%name
-    endif
-    if (present(type)) then
-      type = gridmap%type
-    endif
-    if (present(ni_i)) then
-      ni_i = gridmap%ni_i
-    endif
-    if (present(nj_i)) then
-      nj_i = gridmap%nj_i
-    endif
-    if (present(ni_o)) then
-      ni_o = gridmap%ni_o
-    endif
-    if (present(nj_o)) then
-      nj_o = gridmap%nj_o
-    endif
-    if (present(mx_ovr)) then
-      mx_ovr = gridmap%mx_ovr
-    endif
-    if (present(n_ovr)) then
-      n_ovr => gridmap%n_ovr
-    endif
-    if (present(i_ovr)) then
-      i_ovr => gridmap%i_ovr
-    endif
-    if (present(j_ovr)) then
-      j_ovr => gridmap%j_ovr
-    endif
-    if (present(w_ovr)) then
-      w_ovr => gridmap%w_ovr
-    endif
-
-end subroutine gridmap_setptrs
-#endif
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -506,6 +341,8 @@ end subroutine map_maparrayl
 
 end subroutine map_maparrayg
 
+#if (1 == 0)
+!tcx DO NOT DELETE THIS YET
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -847,13 +684,55 @@ end subroutine map_maparrayg
     deallocate(nocnt,nooff,nomap)
 
 end subroutine map_setgatm
+#endif
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: map_setmapsFM
+! !IROUTINE: map_setgatm_UNITY
 !
 ! !INTERFACE:
-  subroutine map_setmapsFM(domain_a, domain_l, map1dl_a2l, map1dl_l2a, name)
+  subroutine map_setgatm_UNITY(gatm,latlon_a,amask)
+!
+! !DESCRIPTION:
+! Set gatm index assuming unity.  unique for finemesh.
+!
+! !USES:
+  use domainMod, only : latlon_type
+!
+! !ARGUMENTS:
+  implicit none
+  integer, pointer               :: gatm(:)
+  type(latlon_type), intent(in)  :: latlon_a
+  integer          , intent(in)  :: amask(:)
+
+! !REVISION HISTORY:
+! 2006.06.28  T Craig  Creation.
+! 2006.08.23  P Worley Performance optimizations
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+  integer :: ns,n
+!
+!------------------------------------------------------------------------
+
+    ns = latlon_a%ns
+    allocate(gatm(ns))
+    gatm = -1
+    do n = 1,ns
+       if (amask(n) /= 0) then
+          gatm(n)=n
+       endif
+    enddo
+
+end subroutine map_setgatm_UNITY
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: map_setmapsFM_global
+!
+! !INTERFACE:
+  subroutine map_setmapsFM_global(domain_a, domain_l, gatm_l, map1dl_a2l, map1dl_l2a, name)
 !
 ! !DESCRIPTION:
 ! Set course to fine mesh maps and reverse.  domain_a should be coarse
@@ -872,6 +751,7 @@ end subroutine map_setgatm
   implicit none
   type(domain_type),intent(in)    :: domain_a
   type(domain_type),intent(in)    :: domain_l
+  integer          ,intent(in)    :: gatm_l(:)
   type(map_type)   ,intent(inout) :: map1dl_a2l
   type(map_type)   ,intent(inout) :: map1dl_l2a
   character(len=*) ,optional,intent(in) :: name
@@ -892,7 +772,7 @@ end subroutine map_setgatm
     real(r8),pointer :: nara_l(:)    !output grid: cell equiv upscale area
     real(r8),pointer :: topo_l(:)    !output grid: cell topo/elevation
     real(r8),pointer :: ntop_l(:)    !output grid: cell equiv downscale topo
-    integer ,pointer :: gatm_l(:)    !output grid: atm grid cell overlapping
+!    integer ,pointer :: gatm_l(:)
     real(r8),pointer :: frac_l(:)    !output grid: cell frac
 
     integer          :: n_a2l       !a2l nwts
@@ -928,8 +808,9 @@ end subroutine map_setgatm
        topo=topo_a)
     call domain_setptrs(domain_l,ns=ns_l, &
        area=area_l, frac=frac_l, &
-       nara=nara_l,topo=topo_l,ntop=ntop_l, &
-       gatm=gatm_l)
+       nara=nara_l,topo=topo_l,ntop=ntop_l)
+!       nara=nara_l,topo=topo_l,ntop=ntop_l, &
+!       gatm=gatm_l)
 
     !--- allocate temporaries
 
@@ -945,7 +826,7 @@ end subroutine map_setgatm
     do nlg = 1, ns_l
        nag = gatm_l(nlg)
        if (nag > ns_a) then
-          write(6,*) 'map_setmapsFM ERROR nag > ns_a ',nag,ns_a
+          write(6,*) 'map_setmapsFM_global ERROR nag > ns_a ',nag,ns_a
           call endrun()
        endif
        if (nag > 0) then
@@ -960,9 +841,9 @@ end subroutine map_setgatm
 
     !--- initialize and allocate maps
 
-    call map_init(map1dl_a2l,domain_a,domain_l,na2l,name='setmapsFM_a2l', &
+    call map_init(map1dl_a2l,domain_a,domain_l,na2l,name='setmapsFM_global_a2l', &
                   type=map_typelocal)
-    call map_init(map1dl_l2a,domain_l,domain_a,nl2a,name='setmapsFM_l2a', &
+    call map_init(map1dl_l2a,domain_l,domain_a,nl2a,name='setmapsFM_global_l2a', &
                   type=map_typelocal)
 
     !--- set pointers to the maps
@@ -990,13 +871,13 @@ end subroutine map_setgatm
        if (nlg < 1 .or. nlg > ns_l .or. &
            nag < 1 .or. nag > ns_a .or. &
            na  < abegg .or. na > aendg) then
-          write(6,*) 'map_setmapsFM ERROR in index ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          write(6,*) 'map_setmapsFM_global ERROR in index ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
           call endrun()
        endif
 
        na2l = na2l + 1
        if (na2l > n_a2l) then
-          write(6,*) 'map_setmapsFM ERROR na2l > n_a2l ',na2l,n_a2l
+          write(6,*) 'map_setmapsFM_global ERROR na2l > n_a2l ',na2l,n_a2l
           call endrun()
        endif
        src_a2l(na2l) = na
@@ -1006,7 +887,7 @@ end subroutine map_setgatm
        nl2a = nl2a + 1
        cnta(nag) = cnta(nag) + 1
        if (nl2a > n_l2a .or. cnta(nag) > ncnta(nag)) then
-          write(6,*) 'map_setmapsFM ERROR nl2a > n_l2a ',nl2a,n_l2a,cnta(nag),ncnta(nag)
+          write(6,*) 'map_setmapsFM_global ERROR nl2a > n_l2a ',nl2a,n_l2a,cnta(nag),ncnta(nag)
           call endrun()
        endif
        src_l2a(nl2a) = nl
@@ -1015,7 +896,7 @@ end subroutine map_setgatm
           wts_l2a(nl2a) = 1.0_r8
        else
           if (asum(nag) <= 0.0_r8) then
-             write(6,*) 'map_setmapsFM ERROR asum <= 0 ',nlg,nag,asum(nag)
+             write(6,*) 'map_setmapsFM_global ERROR asum <= 0 ',nlg,nag,asum(nag)
              call endrun()
           endif
           wts_l2a(nl2a) = (area_l(nlg)/asum(nag))
@@ -1045,11 +926,11 @@ end subroutine map_setgatm
           ntop_l(nlg) = topo_a(nag)
        else
           if (asum(nag) <= 0.0_r8) then
-             write(6,*) 'map_setmapsFM ERROR2 asum <= 0 ',nlg,nag,asum(nag)
+             write(6,*) 'map_setmapsFM_global ERROR2 asum <= 0 ',nlg,nag,asum(nag)
              call endrun()
           endif
           if (tsum(nag) <  0.0_r8) then
-             write(6,*) 'map_setmapsFM ERROR2 tsum < 0 ',nlg,nag,tsum(nag)
+             write(6,*) 'map_setmapsFM_global ERROR2 tsum < 0 ',nlg,nag,tsum(nag)
              call endrun()
           endif
           nara_l(nlg)   = (area_l(nlg)/asum(nag))*area_a(nag)
@@ -1080,7 +961,7 @@ end subroutine map_setgatm
        if (asum(nag) > 0.0_r8) then
           if (abs(asum(nag)-area_a(nag)) > eps .or. &
               abs(tsum(nag)/area_a(nag) - topo_a(nag)) > eps) then
-                 write(6,*) ' map_setmapsFM ERROR: ERROR in nara,ntop, ',asum(nag),area_a(nag),tsum(nag),topo_a(nag),eps
+                 write(6,*) ' map_setmapsFM_global ERROR: ERROR in nara,ntop, ',asum(nag),area_a(nag),tsum(nag),topo_a(nag),eps
                  call endrun()
           endif
        endif
@@ -1093,8 +974,673 @@ end subroutine map_setgatm
     call map_checkmap(map1dl_a2l)
     call map_checkmap(map1dl_l2a)
 
+end subroutine map_setmapsFM_global
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: map_setmapsFM
+!
+! !INTERFACE:
+  subroutine map_setmapsFM(domain_a, domain_l, gatm_l, map1dl_a2l, map1dl_l2a, name)
+!
+! !DESCRIPTION:
+! Set course to fine mesh maps and reverse.  domain_a should be coarse
+! (atm) mesh, domain_l is fine (land) mesh.
+! Simple overlap algorithm
+!   - Find every fine gridcell within coarse gridcell
+!   - Keep "real" cells unless there are none
+!   - Weights based on areas of cells used, sum(weights)==1
+!   - Use a2l mapping to set l2a mapping
+!
+! !USES:
+  use decompMod, only : ldecomp, adecomp
+  use decompMod, only : get_proc_bounds, get_proc_bounds_atm
+!
+! !ARGUMENTS:
+  implicit none
+  type(domain_type),intent(in)    :: domain_a
+  type(domain_type),intent(in)    :: domain_l
+  integer          ,intent(in)    :: gatm_l(:)
+  type(map_type)   ,intent(inout) :: map1dl_a2l
+  type(map_type)   ,intent(inout) :: map1dl_l2a
+  character(len=*) ,optional,intent(in) :: name
+!
+! !REVISION HISTORY:
+! 2005.12.01  T Craig  Creation.
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer           :: ns_a
+    integer           :: ns_l
+    integer           :: na,nag
+    integer           :: nl,nlg
+    real(r8),pointer :: area_a(:)    !input grid: cell area
+    real(r8),pointer :: topo_a(:)    !input grid: cell topo/elevation
+    real(r8),pointer :: frac_a(:)    !input grid: cell frac
+    integer ,pointer :: mask_l(:)    !output grid: cell mask
+    real(r8),pointer :: area_l(:)    !output grid: cell area
+    real(r8),pointer :: nara_l(:)    !output grid: cell equiv upscale area
+    real(r8),pointer :: topo_l(:)    !output grid: cell topo/elevation
+    real(r8),pointer :: ntop_l(:)    !output grid: cell equiv downscale topo
+!    integer ,pointer :: gatm_l(:)
+    real(r8),pointer :: frac_l(:)    !output grid: cell frac
+
+    integer          :: n_a2l       !a2l nwts
+    integer          :: mo_a2l      !a2l dstmo
+    integer ,pointer :: src_a2l(:)  !a2l src indices
+    integer ,pointer :: dst_a2l(:)  !a2l dst indices
+    real(r8),pointer :: wts_a2l(:)  !a2l wts indices
+    integer          :: n_l2a       !l2a nwts
+    integer          :: mo_l2a      !l2a dstmo
+    integer ,pointer :: src_l2a(:)  !l2a src indices
+    integer ,pointer :: dst_l2a(:)  !l2a dst indices
+    real(r8),pointer :: wts_l2a(:)  !l2a wts indices
+
+    integer          :: na2l,nl2a
+    integer          :: begg,endg
+    integer          :: abegg,aendg
+    integer ,pointer :: ncnta(:)    !number of overlap points in l2a
+    integer ,pointer :: cnta(:)     !number of overlap points in l2a
+    real(r8),pointer :: asum(:)     !number of overlap points in l2a
+    real(r8),pointer :: tsum(:)     !number of overlap points in l2a
+    real(r8),parameter:: eps = 1.0e-8  ! eps for check
+!
+!------------------------------------------------------------------------
+
+    !--- get local beg/end
+
+    call get_proc_bounds    ( begg,  endg)
+    call get_proc_bounds_atm(abegg, aendg)
+
+    !--- set pointers into domains, initialize gridmap a2l gridmap ---
+
+    call domain_setptrs(domain_a,ns=ns_a,area=area_a, &
+       frac=frac_a, topo=topo_a)
+    call domain_setptrs(domain_l,ns=ns_l, &
+       area=area_l, mask=mask_l, frac=frac_l, &
+       nara=nara_l,topo=topo_l,ntop=ntop_l)
+!       nara=nara_l,topo=topo_l,ntop=ntop_l, &
+!       gatm=gatm_l)
+
+    !--- allocate temporaries
+
+    allocate(ncnta(abegg:aendg),asum(abegg:aendg),tsum(abegg:aendg),cnta(abegg:aendg))
+
+    !--- count local number of wts needed, na2l, nl2a
+    !--- also set global arrays ncnta and asum for later computations
+
+    na2l = 0
+    nl2a = 0
+    ncnta = 0
+    asum = 0.0_r8
+    do nl = begg,endg
+       nlg = ldecomp%gdc2glo(nl)
+       nag = gatm_l(nlg)
+       if (nag <= 0) then
+          write(6,*) 'map_setmapsFM ERROR nag0 <= 0',nl,nlg,nag
+          call endrun()
+       endif
+       na  = adecomp%glo2gdc(nag)
+       if (nlg < 1 .or. nlg > ns_l .or. &
+           nag < 1 .or. nag > ns_a .or. &
+           na  < abegg .or. na > aendg) then
+          write(6,*) 'map_setmapsFM ERROR in index0 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          call endrun()
+       endif
+       ncnta(na) = ncnta(na) + 1
+       asum(na) = asum(na) + area_l(nl)
+       na2l = na2l + 1
+       nl2a = nl2a + 1
+    enddo
+
+    !--- initialize and allocate maps
+
+    call map_init(map1dl_a2l,domain_a,domain_l,na2l,name='setmapsFM_a2l', &
+                  type=map_typelocal)
+    call map_init(map1dl_l2a,domain_l,domain_a,nl2a,name='setmapsFM_l2a', &
+                  type=map_typelocal)
+
+    !--- set pointers to the maps
+
+    call map_setptrs(map1dl_a2l,src=src_a2l,dst=dst_a2l,wts=wts_a2l, &
+                     nwts=n_a2l,dstmo=mo_a2l)
+    call map_setptrs(map1dl_l2a,src=src_l2a,dst=dst_l2a,wts=wts_l2a, &
+                     nwts=n_l2a,dstmo=mo_l2a)
+
+    !--- set dstmo in maps
+
+    map1dl_a2l%dstmo = 1
+    map1dl_l2a%dstmo = maxval(ncnta)
+
+    !--- set src,dst,wts in maps
+
+    na2l = 0
+    nl2a = 0
+    cnta = 0
+    do nl = begg,endg
+       nlg = ldecomp%gdc2glo(nl)
+       nag = gatm_l(nlg)
+       if (nag <= 0) then
+          write(6,*) 'map_setmapsFM ERROR nag1 <= 0',nl,nlg,nag
+          call endrun()
+       endif
+       na  = adecomp%glo2gdc(nag)
+       if (nlg < 1 .or. nlg > ns_l .or. &
+           nag < 1 .or. nag > ns_a .or. &
+           na  < abegg .or. na > aendg) then
+          write(6,*) 'map_setmapsFM ERROR in index1 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          call endrun()
+       endif
+
+       na2l = na2l + 1
+       if (na2l > n_a2l) then
+          write(6,*) 'map_setmapsFM ERROR na2l > n_a2l ',na2l,n_a2l
+          call endrun()
+       endif
+       src_a2l(na2l) = na
+       dst_a2l(na2l) = nl
+       wts_a2l(na2l) = 1.0_r8
+
+       nl2a = nl2a + 1
+       cnta(na) = cnta(na) + 1
+       if (nl2a > n_l2a .or. cnta(na) > ncnta(na)) then
+          write(6,*) 'map_setmapsFM ERROR nl2a > n_l2a ',nl2a,n_l2a,cnta(na),ncnta(na)
+          call endrun()
+       endif
+       src_l2a(nl2a) = nl
+       dst_l2a(nl2a) = na
+       if (ncnta(na) == 1) then
+          wts_l2a(nl2a) = 1.0_r8
+       else
+          if (asum(na) <= 0.0_r8) then
+             write(6,*) 'map_setmapsFM ERROR asum <= 0 ',nlg,nag,asum(na)
+             call endrun()
+          endif
+          wts_l2a(nl2a) = (area_l(nl)/asum(na))
+       endif
+    enddo
+
+    !--- update ldomain arrays based on upscale/downscale stuff
+
+    tsum = 0.0_r8
+    do nl = begg,endg
+       nlg = ldecomp%gdc2glo(nl)
+       nag = gatm_l(nlg)
+       if (nag <= 0) then
+          write(6,*) 'map_setmapsFM ERROR nag2 <= 0',nl,nlg,nag
+          call endrun()
+       endif
+       na  = adecomp%glo2gdc(nag)
+       if (nlg < 1 .or. nlg > ns_l .or. &
+           nag < 1 .or. nag > ns_a .or. &
+           na  < abegg .or. na > aendg) then
+          write(6,*) 'map_setmapsFM ERROR in index2 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          call endrun()
+       endif
+       if (frac_l(nl) > 0.0_r8) then
+          ntop_l(nl) = topo_l(nl)                      ! set topo ovr lnd
+       else
+          ntop_l(nl) = max(0.0_r8,topo_l(nl))          ! set topo ovr ocn 
+       endif
+       tsum(na) = tsum(na) + ntop_l(nl)*area_l(nl)   ! area wt topo avg
+    enddo
+
+    do nl = begg,endg
+       nlg = ldecomp%gdc2glo(nl)
+       nag = gatm_l(nlg)
+       if (nag <= 0) then
+          write(6,*) 'map_setmapsFM ERROR nag3 <= 0',nl,nlg,nag
+          call endrun()
+       endif
+       na  = adecomp%glo2gdc(nag)
+       if (nlg < 1 .or. nlg > ns_l .or. &
+           nag < 1 .or. nag > ns_a .or. &
+           na  < abegg .or. na > aendg) then
+          write(6,*) 'map_setmapsFM ERROR in index3 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          call endrun()
+       endif
+       if (ncnta(na) == 1) then
+          nara_l(nl) = area_a(na)
+          ntop_l(nl) = topo_a(na)
+       else
+          if (asum(na) <= 0.0_r8) then
+             write(6,*) 'map_setmapsFM ERROR2 asum <= 0 ',nl,na,asum(na)
+             call endrun()
+          endif
+          if (tsum(na) <  0.0_r8) then
+             write(6,*) 'map_setmapsFM ERROR2 tsum < 0 ',nl,na,tsum(na)
+             call endrun()
+          endif
+          nara_l(nl)   = (area_l(nl)/asum(na))*area_a(na)
+!-v-v-v-v-v- land topo elevation adjustment for downscaling -v-v-v-v-
+          if (topo_a(na) > 0.) then
+             ntop_l(nl)   = (ntop_l(nl)/(tsum(na)/asum(na)))*topo_a(na)
+          else
+             ntop_l(nl)   = (ntop_l(nl)-(tsum(na)/asum(na)))+topo_a(na)
+          endif
+!-^-^-^-^-^- land topo elevation adjustment for downscaling -^-^-^-^-
+       endif
+    enddo
+
+    !--- check that areas and topos match up
+
+    asum = 0.0_r8
+    tsum = 0.0_r8
+    do nl = begg,endg
+       nlg = ldecomp%gdc2glo(nl)
+       nag = gatm_l(nlg)
+       if (nag <= 0) then
+          write(6,*) 'map_setmapsFM ERROR nag4 <= 0',nl,nlg,nag
+          call endrun()
+       endif
+       na  = adecomp%glo2gdc(nag)
+       if (nlg < 1 .or. nlg > ns_l .or. &
+           nag < 1 .or. nag > ns_a .or. &
+           na  < abegg .or. na > aendg) then
+          write(6,*) 'map_setmapsFM ERROR in index4 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          call endrun()
+       endif
+       asum(na) = asum(na) + nara_l(nl)
+       tsum(na) = tsum(na) + nara_l(nl)*ntop_l(nl)
+    enddo
+
+    do na = abegg, aendg
+       if (asum(na) > 0.0_r8) then
+          if (abs(asum(na)-area_a(na)) > eps .or. &
+              abs(tsum(na)/area_a(na) - topo_a(na)) > eps) then
+                 write(6,*) ' map_setmapsFM ERROR: ERROR in nara,ntop, ',asum(na),area_a(na),tsum(na),topo_a(na),eps
+                 call endrun()
+          endif
+       endif
+    enddo
+
+    !--- clean up
+
+    deallocate(ncnta,cnta,asum,tsum)
+
+    call map_checkmap(map1dl_a2l)
+    call map_checkmap(map1dl_l2a)
+
+    ! Set ldomain mask and frac based on adomain and mapping.
+    ! Want ldomain%frac to match adomain%frac but scale by effective area.
+    ! so the implied area of an ldomain cell is the actual area *
+    ! scaled frac which aggregated over all land cells under an atm cell,
+    ! will match the area associated with the atm cell.
+
+#if (1 == 0)
+    do n1 = 1,ldomain%ns
+!       if (gatm(n1) /= ldomain%gatm(n1)) then
+!          write(6,*) 'tcx diff gatm ',n1,gatm(n1),ldomain%gatm(n1)
+!       endif
+       n2 = gatm(n1)
+       if (n2 <= 0) then
+          ldomain%mask(n1) = 0
+          ldomain%frac(n1) = 0.
+       else
+          if (n2 > adomain%ns) then
+            write(6,*) 'initialization1 ERROR n2 out of range n1,n2 = ',n1,n2
+            call endrun()
+          endif
+          ldomain%mask(n1) = 1
+          ldomain%frac(n1) = adomain%frac(n2)*  &
+                            (ldomain%nara(n1)/ldomain%area(n1))
+       endif
+    enddo
+#else
+    do nl = begg,endg
+       nlg = ldecomp%gdc2glo(nl)
+       nag = gatm_l(nlg)
+       if (nag <= 0) then
+          write(6,*) 'initialize2 nag <= 0 ERROR ',nl,nlg,nag
+          call endrun()
+       endif
+       na = adecomp%glo2gdc(nag)
+       if (nlg < 1 .or. nlg > ns_l .or. &
+           nag < 1 .or. nag > ns_a .or. &
+           na  < abegg .or. na > aendg) then
+          write(6,*) 'initialize2 index ERROR ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          call endrun()
+       endif
+       mask_l(nl) = 1
+       frac_l(nl) = frac_a(na)* (nara_l(nl)/area_l(nl))
+    enddo
+#endif
+
 end subroutine map_setmapsFM
 
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: map_setmapsAR
+!
+! !INTERFACE:
+  subroutine map_setmapsAR (latlon_i, latlon_o, sMat, &
+                      fracin, fracout)
+!
+! !DESCRIPTION:
+! area averaging initialization
+! This subroutine is used for area-average mapping of a field from one
+! grid to another.
+!
+! !USES:
+    use clm_mct_mod
+!
+! !ARGUMENTS:
+    implicit none
+    type(latlon_type) ,intent(in)   :: latlon_i   ! input domain
+    type(latlon_type) ,intent(in)   :: latlon_o   ! output domain
+    type(mct_sMat)    ,intent(inout)     :: sMat       ! mct sparse matrix plux
+    real(r8), intent(in),target :: fracin(:)
+    real(r8), intent(in),target :: fracout(:)
+!
+! !REVISION HISTORY:
+! Created by Gordon Bonan
+! 2005.11.20 Updated by T Craig
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    integer          :: nlon_i       !input  grid: max number of longitude pts
+    integer          :: nlat_i       !input  grid: number of latitude  points
+    real(r8),pointer :: dx_i(:)      !input grid: dx length
+    real(r8),pointer :: dy_i(:)      !input grid: dy length
+    real(r8),pointer :: fland_i(:)   !input grid: cell frac
+    real(r8),pointer :: lone_i(:)    !input grid: longitude, E edge (degrees)
+    real(r8),pointer :: lonw_i(:)    !input grid: longitude, W edge (degrees)
+    real(r8),pointer :: latn_i(:)    !input grid: latitude, N edge (degrees)
+    real(r8),pointer :: lats_i(:)    !input grid: latitude, S edge (degrees)
+    integer          :: nlon_o       !output grid: max number of longitude pts
+    integer          :: nlat_o       !output grid: number of latitude  points
+    real(r8),pointer :: dx_o(:)      !output grid: dx length
+    real(r8),pointer :: dy_o(:)      !output grid: dy length
+    real(r8),pointer :: fland_o(:)   !output grid: cell frac
+    real(r8),pointer :: lone_o(:)    !output grid: longitude, E edge  (degrees)
+    real(r8),pointer :: lonw_o(:)    !output grid: longitude, W edge  (degrees)
+    real(r8),pointer :: latn_o(:)    !output grid: latitude, N edge (degrees)
+    real(r8),pointer :: lats_o(:)    !output grid: latitude, S edge (degrees
+    integer          :: nwts         !local num of weights
+    integer          :: n,ns,nw,k    !loop counters
+    integer nb,na          !grid sizes
+    integer i,j            !loop indices
+    integer io,jo,no       !output grid loop index
+    integer indexo         !output grid lat. index according to orientn
+    integer ii,ji,ni       !input  grid loop index
+    integer indexi         !input grid lat. index according to orientn
+    real(r8) lonw          !west longitudes of overlap
+    real(r8) lone          !east longitudes of overlap
+    real(r8) dx            !difference in longitudes
+    real(r8) lats          !south latitudes of overlap
+    real(r8) latn          !north latitudes of overlap
+    real(r8) dy            !difference in latitudes
+    real(r8) deg2rad       !pi/180
+    real(r8) a_ovr         !area of overlap
+    integer  noffsetl      !local, number of offsets to test, 0=none, default=1
+    real(r8) offset        !value of offset used to shift x-grid 360 degrees
+    real(r8) :: sum        !local sum of wts
+    integer  :: igrow,igcol,iwgt   ! mct smat field indices
+    integer  :: nr         !mct field index
+    real(r8) :: wt         !mct weight
+
+    real(r8),pointer :: fld_i(:), fld_o(:)    !dummy fields for testing
+    real(r8) :: sum_fldo               !global sum of dummy output field
+    real(r8) :: sum_fldi               !global sum of dummy input field
+    real(r8) :: relerr = 0.001_r8      !relative error for error checks
+    real(r8) :: sdx_i                   !input grid  longitudinal range
+    real(r8) :: sdy_i                   !input grid  latitudinal  range
+    real(r8) :: sdx_o                   !output grid longitudinal range
+    real(r8) :: sdy_o                   !output grid latitudinal  range
+    integer  :: ier                    !error status
+!------------------------------------------------------------------------
+
+    nlon_i =  latlon_i%ni
+    nlat_i =  latlon_i%nj
+    latn_i => latlon_i%latn
+    lats_i => latlon_i%lats
+    lonw_i => latlon_i%lonw
+    lone_i => latlon_i%lone
+    fland_i => fracin
+
+    nlon_o =  latlon_o%ni
+    nlat_o =  latlon_o%nj
+    latn_o => latlon_o%latn
+    lats_o => latlon_o%lats
+    lonw_o => latlon_o%lonw
+    lone_o => latlon_o%lone
+    fland_o => fracout
+
+    ! Dynamically allocate memory
+
+    na = nlon_i*nlat_i
+    nb = nlon_o*nlat_o
+    noffsetl = 1
+
+    ! Get indices and weights for mapping from input grid to output grid
+
+    do k = 1,2    ! k = 1 compute num of wts, k = 2 set wts
+       if (k == 2) then
+          call mct_sMat_init(sMat, nb, na, nwts)
+          igrow = mct_sMat_indexIA(sMat,'grow')
+          igcol = mct_sMat_indexIA(sMat,'gcol')
+          iwgt  = mct_sMat_indexRA(sMat,'weight')
+       endif
+       nw = 0
+       deg2rad = SHR_CONST_PI / 180._r8
+
+       !------ output grid -------
+       do jo = 1, nlat_o
+          if (latn_o(2) > latn_o(1)) then
+             indexo  = jo          !south to north at the center of cell
+          else
+             indexo  = nlat_o+1-jo !north to south at the center of cell
+          end if
+       do io = 1, nlon_o
+          ns = nw + 1
+
+          !------ input grid -------
+          sum = 0._r8
+          do ji = 1, nlat_i
+             if (latn_i(2) > latn_i(1)) then
+                indexi  = ji          !south to north at the center of cell
+             else
+                indexi  = nlat_i+1-ji !north to south at the center of cell
+             end if
+             !--- lats overlap ---
+             if ( lats_i(ji)<latn_o(jo) .and. &
+                  latn_i(ji)>lats_o(jo)) then
+
+             !------ offset -------
+             do n = 0,noffsetl   ! loop through offsets
+                if (lonw_i(1) < lonw_o(1)) then
+                   offset = (n*360)
+                else
+                   offset = -(n*360)
+                end if
+
+             do ii = 1, nlon_i
+                ni = (indexi-1)*nlon_i + ii
+                no = (indexo-1)*nlon_o + io
+                !--- lons overlap ---
+                if (k == 1) then
+                   if (lonw_i(ii)+offset < lone_o(io) .and. &
+                       lone_i(ii)+offset > lonw_o(io)) then
+                       
+                      !------- found overlap ------
+                      if (fland_i(ni) > 0._r8 .and. fland_o(no) > 0._r8 ) then
+                         nw = nw + 1
+                      endif
+                   endif
+                elseif (k == 2) then
+                   if (lonw_i(ii)+offset < lone_o(io) .and. &
+                       lone_i(ii)+offset > lonw_o(io)) then
+
+                      ! determine area of overlap
+                      lone = min(lone_o(io),lone_i(ii)+offset)*deg2rad 
+                      lonw = max(lonw_o(io),lonw_i(ii)+offset)*deg2rad 
+                      dx = max(0.0_r8,(lone-lonw))
+                      latn = min(latn_o(jo),latn_i(ji))*deg2rad 
+                      lats = max(lats_o(jo),lats_i(ji))*deg2rad 
+                      dy = max(0.0_r8,(sin(latn)-sin(lats)))
+                      a_ovr = dx*dy*re*re
+
+                      sum = sum + a_ovr
+
+                      !------- found overlap ------
+                      if (fland_i(ni) > 0._r8 .and. fland_o(no) > 0._r8 ) then
+                         nw = nw + 1
+                         ! make sure nw <= nwts
+                         if (nw > nwts) then
+                            write (6,*) 'AREAOVR error: nw= ', &
+                               nw,' exceeded nwts ceiling = ', &
+                               nwts,' for output lon,lat = ',io,indexo
+                            call endrun
+                         end if
+
+                         ! save cell indices, area
+                         sMat%data%iAttr(igrow,nw) = no
+                         sMat%data%iAttr(igcol,nw) = ni
+                         sMat%data%rAttr(iwgt ,nw) = a_ovr
+                      endif
+                   endif
+             end if   ! found overlap lon
+             end do   ! ii
+             enddo    ! offset loop
+          end if   ! found overlap lat
+          end do   ! ji
+
+          !--- normalize ---
+          if (k == 2) then
+             do n = ns,nw
+                if (sum > 0._r8) then
+                   sMat%data%rAttr(iwgt,n) = sMat%data%rAttr(iwgt,n) / sum
+                else 
+                   sMat%data%rAttr(iwgt,n) = 0._r8
+                endif
+             enddo
+           endif
+
+       end do  ! io
+       end do  ! jo
+
+       nwts = nw
+
+    enddo   ! k loop
+
+    ! Error check: global sum fld_o = global sum fld_i.
+    ! This true only if both grids span the same domain.
+
+    sdx_i = lone_i(nlon_i) - lonw_i(1)
+    sdx_o = lone_o(nlon_o) - lonw_o(1)
+
+    sdy_i = max(abs(latn_i(nlat_i)-lats_i(1)),abs(lats_i(nlat_i)-latn_i(1)))
+    sdy_o = max(abs(latn_o(nlat_o)-lats_o(1)),abs(lats_o(nlat_o)-latn_o(1)))
+
+    if (abs(sdx_i-sdx_o)>relerr .or. abs(sdy_i-sdy_o)>relerr) then
+       if (masterproc) then
+          write (6,*) 'MAP_SETMAPSAR warning: lats/lons not overlapping'
+          write (6,*) '   input  grid of ',nlon_i,' x ',nlat_i,' dx,dy= ',sdx_i,sdy_i
+          write (6,*) '   output grid of ',nlon_o,' x ',nlat_o,' dx,dy= ',sdx_o,sdy_o
+       endif
+       return
+    end if
+
+
+    ! Compute dx,dy for checking areas later
+
+    allocate(dx_i(nlon_i),dy_i(nlat_i),dx_o(nlon_o),dy_o(nlat_o))
+
+    do i = 1,nlon_i
+       dx_i(i) = (lone_i(i) - lonw_i(i))*deg2rad
+    enddo
+    do j = 1,nlat_i
+       dy_i(j) = sin(latn_i(j)*deg2rad) - sin(lats_i(j)*deg2rad)
+    enddo
+
+    do i = 1,nlon_o
+       dx_o(i) = (lone_o(i) - lonw_o(i))*deg2rad
+    enddo
+    do j = 1,nlat_o
+       dy_o(j) = sin(latn_o(j)*deg2rad) - sin(lats_o(j)*deg2rad)
+    enddo
+
+    ! check for area/mask consistency
+
+    sum_fldi = 0._r8
+    do j = 1,nlat_i
+    do i = 1,nlon_i
+       ni = (j-1)*nlon_i + i
+       sum_fldi = sum_fldi + dx_i(i)*dy_i(j)*fland_i(ni)
+    end do
+    end do
+
+    sum_fldo = 0._r8
+    do j = 1,nlat_o
+    do i = 1,nlon_o
+       no = (j-1)*nlon_o + i
+       sum_fldo = sum_fldo + dx_o(i)*dy_o(j)*fland_o(no)
+    end do
+    end do
+
+    if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
+       if (masterproc) then
+          write (6,*) 'MAP_SETMAPSAR warning: masks/areas not conserved'
+          write (6,'(a30,e20.10)') 'global sum output area = ',sum_fldo
+          write (6,'(a30,e20.10)') 'global sum input  area = ',sum_fldi
+        endif
+        return
+    end if
+
+    ! check for conservation
+
+    allocate(fld_i(na),fld_o(nb))
+
+    sum_fldi = 0._r8
+    do j = 1,nlat_i
+    do i = 1,nlon_i
+       ni = (j-1)*nlon_i + i
+       fld_i(ni) = ni * fland_i(ni)
+       sum_fldi = sum_fldi + dx_i(i)*dy_i(j)*fld_i(ni)
+    end do
+    end do
+
+    fld_o = 0._r8
+    do n = 1,mct_sMat_lsize(sMat)
+       no = sMat%data%iAttr(igrow,n)
+       ni = sMat%data%iAttr(igcol,n)
+       wt = sMat%data%rAttr(iwgt ,n)
+       fld_o(no) = fld_o(no) + wt*fld_i(ni)
+    enddo
+
+    sum_fldo = 0._r8
+    do j = 1,nlat_o
+    do i = 1,nlon_o
+       no = (j-1)*nlon_o + i
+       sum_fldo = sum_fldo + dx_o(i)*dy_o(j)*fld_o(no)
+    end do
+    end do
+
+    if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
+       if (masterproc) then
+          write (6,*) 'MAP_SETMAPSAR error: input field not conserved'
+          write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
+          write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
+        endif
+    else
+       if (masterproc) then
+          write (6,*) 'MAP_SETMAPSAR: input field conserved'
+          write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
+          write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
+       endif
+    end if
+
+    deallocate(dx_i,dy_i,dx_o,dy_o)
+    deallocate(fld_i,fld_o)
+
+  end subroutine map_setmapsAR
+
+!------------------------------------------------------------------------------
+#if (1 == 0)
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -1402,136 +1948,6 @@ end subroutine map_setmapsFM
     deallocate(fld_i,fld_o)
 
   end subroutine map_setmapsAR
-
-!------------------------------------------------------------------------------
-#if (1 == 0)
-!BOP
-!
-! !IROUTINE: gridmap_checkmap
-!
-! !INTERFACE:
-  subroutine gridmap_checkmap(gridmap)
-!
-! !DESCRIPTION:
-! Checks the gridmap for consistency
-!
-! !USES:
-!
-! !ARGUMENTS:
-  implicit none
-  type(gridmap_type),intent(in) :: gridmap
-!
-! !REVISION HISTORY:
-! 2005.12.01  T Craig  Creation.
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-    integer          :: nlon_i       !input  grid: max number of longitude pts
-    integer          :: nlat_i       !input  grid: number of latitude  points
-    integer          :: nlon_o       !output grid: max number of longitude pts
-    integer          :: nlat_o       !output grid: number of latitude  points
-    integer          :: mx_ovr       !max overlapping cells
-    integer ,pointer :: n_ovr(:,:)   !lon index, overlapping input cell
-    integer ,pointer :: i_ovr(:,:,:) !lon index, overlapping input cell
-    integer ,pointer :: j_ovr(:,:,:) !lat index, overlapping input cell
-    real(r8),pointer :: w_ovr(:,:,:) !overlap weights for input cells
-    integer          :: i,j,n        !loop counters
-    real(r8)         :: sum          !running sum
-    real(r8)         :: rmin,rmax    !local min/max values
-    integer          :: imin,imax    !local min/max values
-!
-!------------------------------------------------------------------------
-
-    !--- set pointers into domains ---
-    call gridmap_setptrs(gridmap,ni_i=nlon_i,nj_i=nlat_i, &
-                                 ni_o=nlon_o,nj_o=nlat_o)
-    call gridmap_setptrs(gridmap,mx_ovr=mx_ovr,n_ovr=n_ovr,i_ovr=i_ovr, &
-       j_ovr=j_ovr,w_ovr=w_ovr)
-
-    if (masterproc) then
-       write(6,*) ' '
-       write(6,*) 'gridmap_checkmap name          = ',trim(gridmap%name)
-       write(6,*) 'gridmap_checkmap type          = ',trim(gridmap%type)
-       write(6,*) 'gridmap_checkmap src grid      = ',nlon_i,nlat_i
-       write(6,*) 'gridmap_checkmap dst grid      = ',nlon_o,nlat_o
-       write(6,*) 'gridmap_checkmap mx_ovr        = ',mx_ovr
-       write(6,*) 'gridmap_checkmap n_ovr min/max = ',minval(n_ovr),maxval(n_ovr)
-    endif
-
-    imin = bigint
-    imax = -1
-    do j = 1,nlat_o
-    do i = 1,nlon_o
-    if (n_ovr(i,j) > 0) then
-       imin = min(imin,n_ovr(i,j))
-       imax = max(imax,n_ovr(i,j))
-    endif
-    enddo
-    enddo
-    if (masterproc) then
-       write(6,*) 'gridmap_checkmap n_ovr nonzero = ',imin,imax
-    endif
-
-    imin = bigint
-    imax = -1
-    do j = 1,nlat_o
-    do i = 1,nlon_o
-    do n = 1,n_ovr(i,j)
-       imin = min(imin,i_ovr(i,j,n))
-       imax = max(imax,i_ovr(i,j,n))
-    enddo
-    enddo
-    enddo
-    if (masterproc) then
-       write(6,*) 'gridmap_checkmap i_ovr min/max = ',imin,imax
-    endif
-
-    imin = bigint
-    imax = -1
-    do j = 1,nlat_o
-    do i = 1,nlon_o
-    do n = 1,n_ovr(i,j)
-       imin = min(imin,j_ovr(i,j,n))
-       imax = max(imax,j_ovr(i,j,n))
-    enddo
-    enddo
-    enddo
-    if (masterproc) then
-       write(6,*) 'gridmap_checkmap j_ovr min/max = ',imin,imax
-    endif
-
-    rmin =  1.0e30
-    rmax = -1.0e30
-    do j = 1,nlat_o
-    do i = 1,nlon_o
-    do n = 1,n_ovr(i,j)
-       rmin = min(rmin,w_ovr(i,j,n))
-       rmax = max(rmax,w_ovr(i,j,n))
-    enddo
-    enddo
-    enddo
-    if (masterproc) then
-       write(6,*) 'gridmap_checkmap w_ovr min/max = ',rmin,rmax
-    endif
-
-    rmin =  1.0e30
-    rmax = -1.0e30
-    do j = 1,nlat_o
-    do i = 1,nlon_o
-       sum = 0.0_r8
-       do n = 1,n_ovr(i,j)
-          sum = sum + w_ovr(i,j,n)
-       enddo
-       rmin = min(rmin,sum)
-       rmax = max(rmax,sum)
-    enddo
-    enddo
-    if (masterproc) then
-       write(6,*) 'gridmap_checkmap wsum min/max = ',rmin,rmax
-    endif
-
-end subroutine gridmap_checkmap
 #endif
 !------------------------------------------------------------------------------
 !BOP
@@ -1710,787 +2126,6 @@ end subroutine gridmap_checkmap
 
 end subroutine map_checkmap
 
-#if (1 == 0)
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: areaini
-!
-! !INTERFACE:
-  subroutine areaini (domain_i, domain_o, gridmap, &
-                      fracin, fracout, name )
-!
-! !DESCRIPTION:
-! area averaging initialization
-! This subroutine is used for area-average mapping of a field from one
-! grid to another.
-!
-!    areaini  - initializes indices and weights for area-averaging from
-!               input grid to output grid
-!    areamap  - called by areaini: finds indices and weights
-!    areaovr  - called by areamap: finds if cells overlap and area of overlap
-!    areaave  - does area-averaging from input grid to output grid
-!
-! To map from one grid to another, must first call areaini to build
-! the indices and weights (iovr_ovr, jovr_ovr, wovr_ovr). Then must
-! call areaave to get new field on output grid.
-!
-! Not all grid cells on the input grid will be used in the area-averaging
-! of a field to the output grid. Only input grid cells with [fland_i] = 1
-! contribute to output grid cell average. If [fland_i] = 0, input grid cell
-! does not contribute to output grid cell. This distinction is not usually
-! required for atm -> land mapping, because all cells on the atm grid have
-! data. But when going from land -> atm, only land grid cells have data.
-! Non-land grid cells on surface grid do not have data. So if output grid cell
-! overlaps with land and non-land cells (input grid), can only use land
-! grid cells when computing area-average.
-!
-! o Input and output grids can be ANY resolution BUT:
-!
-!   a. Grid orientation -- Grids can be oriented south to north
-!      (i.e. cell(lat+1) is north of cell(lat)) or from north to
-!      south (i.e. cell(lat+1) is south of cell(lat)). Both grids must be
-!      oriented from west to east, i.e., cell(lon+1) must be east of cell(lon)
-!
-!   b. Grid domain -- Grids do not have to be global. Both grids are defined
-!      by their north, east, south, and west edges (edge_i and edge_o in
-!      this order, i.e., edge_i(1) is north and edge_i(4) is west).
-!
-!      For partial grids, northern and southern edges are any latitude
-!      between 90 (North Pole) and -90 (South Pole). Western and eastern
-!      edges are any longitude between -180 and 180, with longitudes
-!      west of Greenwich negative.
-!
-!      For global grids, northern and southern edges are 90 (North Pole)
-!      and -90 (South Pole). The grids do not have to start at the
-!      same longitude, i.e., one grid can start at Dateline and go east;
-!      the other grid can start at Greenwich and go east. Longitudes for
-!      the western edge of the cells must increase continuously and span
-!      360 degrees. Examples
-!
-!                              West edge    East edge
-!                            ---------------------------------------------------
-!      Dateline            :        -180 to 180        (negative W of Greenwich)
-!      Greenwich (centered):    0 - dx/2 to 360 - dx/2
-!
-!   c. Both grids can have variable number of longitude points for each
-!      latitude strip. However, the western edge of the first point in each
-!      latitude must be the same for all latitudes. Likewise, for the
-!      eastern edge of the last point. That is, each latitude strip must span
-!      the same longitudes, but the number of points to do this can be different
-!
-!   d. One grid can be a sub-set (i.e., smaller domain) than the other grid.
-!      In this way, an atmospheric dataset for the entire globe can be
-!      used in a simulation for a region 30N to 50N and 130W to 70W -- the
-!      code will extract the appropriate data. The two grids do not have to
-!      be the same resolution. Area-averaging will work for full => partial
-!      grid but obviously will not work for partial => full grid.
-!
-! o Field values fld_i on an  input grid with dimensions nlon_i and nlat_i =>
-!   field values fld_o on an output grid with dimensions nlon_o and nlat_o as
-!
-!   fld_o(io,jo) =
-!   fld_i(i_ovr(io,jo,    1),j_ovr(io,jo,    1)) * w_ovr(io,jo,   1)
-!                             ... + ... +
-!   fld_i(i_ovr(io,jo,mx_ovr),j_ovr(io,jo,mx_ovr)) * w_ovr(io,jo,mx_ovr)
-!
-! o Error checks:
-!
-!   Overlap weights of input cells sum to 1 for each output cell.
-!   Global sum of dummy field is conserved for input => output area-average.
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    type(domain_type) ,intent(in)        :: domain_i   ! input domain
-    type(domain_type) ,intent(in)        :: domain_o   ! output domain
-    type(gridmap_type),intent(inout)     :: gridmap    ! gridmap
-    real(r8), intent(in),optional,target :: fracin(:)
-    real(r8), intent(in),optional,target :: fracout(:)
-    character(len=*),intent(in),optional :: name
-!
-! !REVISION HISTORY:
-! Created by Gordon Bonan
-! 2005.11.20 Updated by T Craig
-!
-!EOP
-!
-! LOCAL VARIABLES:
-    integer          :: nlon_i       !input  grid: max number of longitude pts
-    integer          :: nlat_i       !input  grid: number of latitude  points
-    real(r8),pointer :: area_i(:)    !input grid: cell area
-    real(r8),pointer :: fland_i(:)   !input grid: cell frac
-    real(r8),pointer :: lone_i(:)    !input grid: longitude, E edge (degrees)
-    real(r8),pointer :: lonw_i(:)    !input grid: longitude, W edge (degrees)
-    real(r8),pointer :: latn_i(:)    !input grid: latitude, N edge (degrees)
-    real(r8),pointer :: lats_i(:)    !input grid: latitude, S edge (degrees)
-    integer          :: nlon_o       !output grid: max number of longitude pts
-    integer          :: nlat_o       !output grid: number of latitude  points
-    real(r8),pointer :: area_o(:)    !output grid: cell area
-    real(r8),pointer :: fland_o(:)   !output grid: cell frac
-    real(r8),pointer :: lone_o(:)    !output grid: longitude, E edge  (degrees)
-    real(r8),pointer :: lonw_o(:)    !output grid: longitude, W edge  (degrees)
-    real(r8),pointer :: latn_o(:)    !output grid: latitude, N edge (degrees)
-    real(r8),pointer :: lats_o(:)    !output grid: latitude, S edge (degrees)
-
-    real(r8),allocatable :: fld_o(:) !output grid: dummy field
-    real(r8),allocatable :: fld_i(:) !input grid: dummy field
-    real(r8) :: sum_fldo               !global sum of dummy output field
-    real(r8) :: sum_fldi               !global sum of dummy input field
-    real(r8) :: relerr = 0.00001_r8    !relative error for error checks
-    integer  :: mwts                   !max number of wts per cell in map
-    integer  :: ii,ji,ni               !input  grid loop index
-    integer  :: io,jo,no               !output grid loop index
-    real(r8) :: dx_i                   !input grid  longitudinal range
-    real(r8) :: dy_i                   !input grid  latitudinal  range
-    real(r8) :: dx_o                   !output grid longitudinal range
-    real(r8) :: dy_o                   !output grid latitudinal  range
-    character(len=32) :: lname         !gridmap name, local variable
-    integer  :: ier                    !error status
-!------------------------------------------------------------------------
-
-    !--- set pointers into domain ---
-    call domain_setptrs(domain_i,ni=nlon_i,nj=nlat_i,area=area_i, &
-       latn=latn_i,lats=lats_i,lone=lone_i,lonw=lonw_i,frac=fland_i)
-    call domain_setptrs(domain_o,ni=nlon_o,nj=nlat_o,area=area_o, &
-       latn=latn_o,lats=lats_o,lone=lone_o,lonw=lonw_o,frac=fland_o)
-
-    lname = 'areaini'
-    if (present(name)) then
-       lname = trim(name)
-    endif
-
-    !--- get mx_ovr, allocate gridmap, set local pointers to gridmap ---
-    call areaovr(domain_i,domain_o,noffset=1,mx_ovr=mwts)
-    call gridmap_init(gridmap,domain_i,domain_o,mwts,name=lname,type=map_typeglobal)
-
-    if (present(fracin)) then
-       fland_i => fracin
-    else
-       write(6,*) 'areaini ERROR: fracin required'
-       call endrun()
-    endif
-    if (present(fracout)) then
-       fland_o => fracout
-    else
-       write(6,*) 'areaini ERROR: fracout required'
-       call endrun()
-    endif
-
-    ! Dynamically allocate memory
-
-    allocate (fld_o(nlon_o*nlat_o), fld_i(nlon_i*nlat_i), stat=ier)
-    if (ier /= 0) then
-       write (6,*) 'areaini(): allocation error'
-       call endrun
-    end if
-
-    ! Get indices and weights for mapping from input grid to output grid
-
-    call areamap (domain_i , domain_o , gridmap, &
-                  fland_i  , fland_o )
-
-    ! Error check: global sum fld_o = global sum fld_i.
-    ! This true only if both grids span the same domain.
-
-    dx_i = lone_i(nlon_i) - lonw_i(1)
-    dx_o = lone_o(nlon_o) - lonw_o(1)
-
-    if (latn_i((nlat_i-1)*nlon_i + 1) > latn_i(1)) then      !South to North grid
-       dy_i = latn_i((nlat_i-1)*nlon_i + 1) - lats_i(1)
-    else                                      !North to South grid
-       dy_i = latn_i(1) - lats_i((nlat_i-1)*nlon_i + 1)
-    end if
-    if (latn_o((nlat_o-1)*nlon_o + 1) > latn_o(1)) then      !South to North grid
-       dy_o = latn_o((nlat_o-1)*nlon_o + 1) - lats_o(1)
-    else                                      !North to South grid
-       dy_o = latn_o(1) - lats_o((nlat_o-1)*nlon_o + 1)
-    end if
-
-    if (abs(dx_i-dx_o)>relerr .or. abs(dy_i-dy_o)>relerr) then
-       write (6,*) 'AREAINI warning: conservation check not valid for'
-       write (6,*) '   input  grid of ',nlon_i,' x ',nlat_i
-       write (6,*) '   output grid of ',nlon_o,' x ',nlat_o
-       return
-    end if
-
-    ! make dummy input field and sum globally
-
-    sum_fldi = 0._r8
-    do ji = 1, nlat_i
-       do ii = 1, nlon_i
-          ni = (ji-1)*nlon_i + ii
-          fld_i(ni) = ((ji-1)*nlon_i + ii) * fland_i(ni)
-          sum_fldi = sum_fldi + area_i(ni)*fld_i(ni)
-       end do
-    end do
-
-    ! area-average output field from input field
-
-    call areaave (fld_i , fld_o , gridmap)
-
-    ! global sum of output field -- must multiply by fraction of output
-    ! grid that is land as determined by input grid
-
-    sum_fldo = 0._r8
-    do jo = 1, nlat_o
-       do io = 1, nlon_o
-          no = (jo-1)*nlon_o + io
-          sum_fldo = sum_fldo + area_o(no)*fld_o(no) * fland_o(no)
-       end do
-    end do
-
-    ! check for conservation
-
-    if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
-       write (6,*) 'AREAINI error: input field not conserved'
-       write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-       write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-       call endrun
-    end if
-
-    deallocate (fld_o, fld_i)
-
-  end subroutine areaini
-
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: areaave
-!
-! !INTERFACE:
-  subroutine areaave (fld_i , fld_o , gridmap)
-!
-! !DESCRIPTION:
-! Mapping of field from input to output grids, 2d global fields
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    real(r8)          ,intent(in) :: fld_i(:)     !input grid : field
-    real(r8)          ,intent(out):: fld_o(:)     !field for output grid
-    type(gridmap_type),intent(in) :: gridmap      ! gridmap
-!
-! !REVISION HISTORY:
-! Created by Gordon Bonan
-!
-!EOP
-!
-! LOCAL VARIABLES:
-    integer  :: nlat_i    !input grid : number of latitude points
-    integer  :: nlon_i    !input grid : max number longitude points
-    integer  :: nlat_o    !output grid: number of latitude points
-    integer  :: nlon_o    !output grid: max number of longitude points
-    integer          :: mx_ovr       !max overlapping cells
-    integer ,pointer :: n_ovr(:,:)   !lon index, overlapping input cell
-    integer ,pointer :: i_ovr(:,:,:) !lon index, overlapping input cell
-    integer ,pointer :: j_ovr(:,:,:) !lat index, overlapping input cell
-    real(r8),pointer :: w_ovr(:,:,:) !overlap weights for input cells
-    integer io,jo,no      !index for output grid
-    integer ii,ji,ni      !index for input grid
-    integer n             !overlapping cell index
-!------------------------------------------------------------------------
-!dir$ inlinenever areaave
-
-    call gridmap_setptrs(gridmap,ni_i=nlon_i,nj_i=nlat_i, &
-                                 ni_o=nlon_o,nj_o=nlat_o)
-    call gridmap_setptrs(gridmap,mx_ovr=mx_ovr,n_ovr=n_ovr,i_ovr=i_ovr,j_ovr=j_ovr,w_ovr=w_ovr)
-
-    if (trim(gridmap%type) /= trim(map_typeglobal)) then
-       write(6,*) 'areaave WARNING: gridmap type not global, ',gridmap%name,gridmap%type
-    endif
-
-    ! initialize field on output grid to zero everywhere
-
-!$OMP PARALLEL DO PRIVATE (io)
-    do io = 1, nlon_o*nlat_o
-       fld_o(io) = 0._r8
-    end do
-!$OMP END PARALLEL DO
-
-    ! loop through overlapping cells on input grid to make area-average
-
-    do n = 1, mx_ovr
-!$OMP PARALLEL DO PRIVATE (jo,io,no,ii,ji,ni)
-       do jo = 1, nlat_o
-          do io =1, nlon_o
-                no = (jo-1)*nlon_o + io
-                ii = i_ovr(io,jo,n)
-                ji = j_ovr(io,jo,n)
-                ni = (ji-1)*nlon_i + ii
-                fld_o(no) = fld_o(no) + w_ovr(io,jo,n)*fld_i(ni)
-          end do
-       end do
-!$OMP END PARALLEL DO
-    end do
-
-    return
-  end subroutine areaave
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: areamap
-!
-! !INTERFACE:
-  subroutine areamap (domain_i, domain_o, gridmap, &
-                      fland_i  , fland_o )
-!
-! !DESCRIPTION:
-! Weights and indices for area of overlap between grids
-! Get indices and weights for area-averaging between input and output grids.
-! For each output grid cell find:
-!    o number of input grid cells that overlap with output grid cell (n_ovr)
-!    o longitude index (1 <= i_ovr <= nlon_i) of the overlapping input grid cell
-!    o latitude index  (1 <= j_ovr <= nlat_i) of the overlapping input grid cell
-!    o fractional overlap of input grid cell (w_ovr)
-! so that for
-! field values fld_i on an  input grid with dimensions nlon_i and nlat_i
-! field values fld_o on an output grid with dimensions nlon_o and nlat_o are
-! fld_o(io,jo) =
-! fld_i(i_ovr(io,jo,     1),j_ovr(io,jo,     1)) * w_ovr(io,jo,     1) +
-!                             ... + ... +
-! fld_i(i_ovr(io,jo,mx_ovr),j_ovr(io,jo,mx_ovr)) * w_ovr(io,jo,mx_ovr)
-!
-! Note: mx_ovr is some number greater than n_ovr. Weights of zero are
-! used for the excess points
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    type(domain_type), intent(in) :: domain_i
-    type(domain_type), intent(in) :: domain_o
-    type(gridmap_type),intent(inout) :: gridmap
-
-    real(r8),intent(in) :: fland_i(:)     ! input grid : mask (0, 1)
-    real(r8),intent(in) :: fland_o(:)     ! output grid: fraction that is land
-!
-! !REVISION HISTORY:
-! Created by Gordon Bonan
-!
-!EOP
-!
-! LOCAL VARIABLES:
-    integer          :: mx_ovr      ! max num input cells that overlap 
-    integer ,pointer :: n_ovr(:,:)  ! number of overlapping input cells
-    integer ,pointer :: i_ovr(:,:,:)! lon index, overlapping input cell
-    integer ,pointer :: j_ovr(:,:,:)! lat index, overlapping input cell
-    real(r8),pointer :: w_ovr(:,:,:)! overlap weights for input cells
-    integer :: io,jo,no             !output grid loop index
-    integer :: ii,ji,ni             !input  grid loop index
-    integer :: n                    !weights index loop
-    real(r8) :: f_ovr               !sum of overlap weights
-    real(r8) :: relerr = 0.00001_r8 !max error: sum overlap weights ne 1
-    real(r8) :: dx_i                !input grid  longitudinal range
-    real(r8) :: dy_i                !input grid  latitudinal  range
-    real(r8) :: dx_o                !output grid longitudinal range
-    real(r8) :: dy_o                !output grid latitudinal  range
-    integer  :: nlon_i              !input size, i
-    integer  :: nlat_i              !input size, j
-    real(r8),pointer :: lone_i(:)   !input grid: longitude, E edge (degrees)
-    real(r8),pointer :: lonw_i(:)   !input grid: longitude, W edge (degrees)
-    real(r8),pointer :: latn_i(:)   !input grid: latitude, N edge (degrees)
-    real(r8),pointer :: lats_i(:)   !input grid: latitude, S edge (degrees)
-    integer  :: nlon_o              !output size, i
-    integer  :: nlat_o              !output size, j
-    real(r8),pointer :: lone_o(:)   !output grid: longitude, E edge (degrees)
-    real(r8),pointer :: lonw_o(:)   !output grid: longitude, W edge (degrees)
-    real(r8),pointer :: latn_o(:)   !output grid: latitude, N edge (degrees)
-    real(r8),pointer :: lats_o(:)   !output grid: latitude, S edge (degrees)
-    real(r8),pointer :: area_o(:)   ! output grid: cell area
-!------------------------------------------------------------------------
-
-    call domain_setptrs(domain_i,ni=nlon_i,nj=nlat_i, &
-       latn=latn_i,lats=lats_i,lone=lone_i,lonw=lonw_i)
-    call domain_setptrs(domain_o,ni=nlon_o,nj=nlat_o, &
-       latn=latn_o,lats=lats_o,lone=lone_o,lonw=lonw_o,area=area_o)
-    call gridmap_setptrs(gridmap,mx_ovr=mx_ovr,n_ovr=n_ovr, &
-       i_ovr=i_ovr,j_ovr=j_ovr,w_ovr=w_ovr)
-
-    ! --------------------------------------------------------------------
-    ! Initialize overlap weights on output grid to zero for maximum
-    ! number of overlapping points. Set lat and lon indices of overlapping
-    ! input cells to dummy values. Set number of overlapping cells to zero
-    ! --------------------------------------------------------------------
-
-    do n = 1, mx_ovr
-       do jo = 1, nlat_o
-          do io = 1, nlon_o
-             i_ovr(io,jo,n) = 1
-             j_ovr(io,jo,n) = 1
-             w_ovr(io,jo,n) = 0._r8
-          end do
-       end do
-    end do
-
-    do jo = 1, nlat_o
-       do io = 1, nlon_o
-          n_ovr(io,jo) = 0
-       end do
-    end do
-
-    call areaovr (domain_i, domain_o, &
-                  noffset=1, &
-                  n_ovr=n_ovr, i_ovr=i_ovr, j_ovr=j_ovr, w_ovr=w_ovr  )
-
-    ! --------------------------------------------------------------------
-    ! Normalize areas of overlap to get fractional contribution of each
-    ! overlapping grid cell (input grid) to grid cell average on output grid.
-    ! Normally, do this by dividing area of overlap by area of output grid cell.
-    ! But, only have data for land cells on input grid. So if output grid cell
-    ! overlaps with land and non-land cells (input grid), do not have valid
-    ! non-land data for area-average. Instead, weight by area of land using
-    ! [fland_i], which has a value of one for land and zero for ocean. If
-    ! [fland_i] = 1, input grid cell contributes to output grid cell average.
-    ! If [fland_i] = 0, input grid cell does not contribute to output grid cell
-    ! average.
-    ! --------------------------------------------------------------------
-
-    do jo = 1, nlat_o
-       do io = 1, nlon_o
-          no = (jo-1)*nlon_o + io
-
-          ! find total land area of overlapping input cells
-
-          f_ovr = 0._r8
-          do n = 1, n_ovr(io,jo)
-             ii = i_ovr(io,jo,n)
-             ji = j_ovr(io,jo,n)
-             ni = (ji-1)*nlon_i + ii
-             f_ovr = f_ovr + w_ovr(io,jo,n)*fland_i(ni)
-          end do
-
-          ! make sure area of overlap is less than or equal to output grid cell area
-
-          if ((f_ovr-area_o(no))/area_o(no) > relerr) then
-             write (6,*) 'AREAMAP error: area not conserved for lon,lat = ',io,jo,no
-             write (6,'(a30,e20.10)') 'sum of overlap area = ',f_ovr
-             write (6,'(a30,e20.10)') 'area of output grid = ',area_o(no)
-             call endrun
-          end if
-
-          ! make weights
-
-          do n = 1, n_ovr(io,jo)
-             ii = i_ovr(io,jo,n)
-             ji = j_ovr(io,jo,n)
-             ni = (ji-1)*nlon_i + ii
-             if (f_ovr > 0._r8) then
-                w_ovr(io,jo,n) = w_ovr(io,jo,n)*fland_i(ni) / f_ovr
-             else
-                w_ovr(io,jo,n) = 0._r8
-             end if
-          end do
-
-       end do
-    end do
-
-    ! --------------------------------------------------------------------
-    ! Error check: overlap weights for input grid cells must sum to 1. This
-    ! is always true if both grids span the same domain. However, if one
-    ! grid is a subset of the other grid, this is only true when mapping
-    ! from the full grid to the subset. When input grid covers a smaller
-    ! domain than the output grid, this test is not valid.
-    ! --------------------------------------------------------------------
-
-    dx_i = lone_i(nlon_i) - lonw_i(1)
-    dx_o = lone_o(nlon_o) - lonw_o(1)
-
-    if (latn_i((nlat_i-1)*nlon_i + 1) > latn_i(1)) then      !South to North grid
-       dy_i = latn_i((nlat_i-1)*nlon_i + 1) - lats_i(1)
-    else                                      !North to South grid
-       dy_i = latn_i(1) - lats_i((nlat_i-1)*nlon_i + 1)
-    end if
-    if (latn_o((nlat_o-1)*nlon_o + 1) > latn_o(1)) then      !South to North grid
-       dy_o = latn_o((nlat_o-1)*nlon_o + 1) - lats_o(1)
-    else                                      !North to South grid
-       dy_o = latn_o(1) - lats_o((nlat_o-1)*nlon_o + 1)
-    end if
-
-    if (abs(dx_i-dx_o)>relerr .or. abs(dy_i-dy_o)>relerr) then
-       if (dx_i<dx_o .or. dy_i<dy_o) then
-          write (6,*) 'AREAMAP warning: area-average not valid for '
-          write (6,*) '   input  grid of ',nlon_i,' x ',nlat_i
-          write (6,*) '   output grid of ',nlon_o,' x ',nlat_o
-          return
-       end if
-    end if
-
-    do jo = 1, nlat_o
-       do io = 1, nlon_o
-          no = (jo-1)*nlon_o + io
-          f_ovr = 0._r8
-
-          do n = 1, mx_ovr
-             f_ovr = f_ovr + w_ovr(io,jo,n)
-          end do
-
-          ! error check only valid if output grid cell has land. non-land cells
-          ! will have weights equal to zero
-
-          if (fland_o(no) > 0._r8) then
-             if (abs(f_ovr-1._r8) > relerr) then
-                write (6,*) 'AREAMAP error: area not conserved for lon,lat = ',io,jo,no
-                write (6,'(a30,e20.10)') 'sum of overlap weights = ',f_ovr
-                call endrun
-             end if
-          end if
-
-       end do
-    end do
-
-    return
-  end subroutine areamap
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: areaovr
-!
-! !INTERFACE:
-  subroutine areaovr (domain_i, domain_o, &
-                      noffset, &
-                      mx_ovr , n_ovr  , i_ovr    , j_ovr , w_ovr )
-!
-! !DESCRIPTION:
-! Find area of overlap between grid cells
-! For each output grid cell: find overlapping input grid cell and area of
-! input grid cell that overlaps with output grid cell. Cells overlap if:
-!
-! southern edge of input grid < northern edge of output grid AND
-! northern edge of input grid > southern edge of output grid
-!
-! western edge of input grid < eastern edge of output grid AND
-! eastern edge of input grid > western edge of output grid
-!
-!           lon_o(io,jo)      lon_o(io+1,jo)
-!
-!              |                   |
-!              --------------------- lat_o(jo+1)
-!              |                   |
-!              |                   |
-!    xxxxxxxxxxxxxxx lat_i(ji+1)   |
-!    x         |   x               |
-!    x  input  |   x   output      |
-!    x  cell   |   x    cell       |
-!    x  ii,ji  |   x   io,jo       |
-!    x         |   x               |
-!    x         ----x---------------- lat_o(jo  )
-!    x             x
-!    xxxxxxxxxxxxxxx lat_i(ji  )
-!    x             x
-! lon_i(ii,ji) lon_i(ii+1,ji)
-!
-!
-! The above diagram assumes both grids are oriented South to North. Other
-! combinations of North to South and South to North grids are possible:
-!
-!     Input Grid    Output Grid
-!     -------------------------
-! (1)   S to N        S to N
-! (2)   N to S        N to S
-! (3)   S to N        N to S
-! (4)   N to S        S to N
-!
-! The code has been modified to allow for North to South grids. Verification
-! that these changes work are:
-!    o (1) and (4) give same results for output grid
-!    o (2) and (3) give same results for output grid
-!    o (2) and (4) give same results for output grid when output grid inverted
-!
-! !USES:
-!
-! !ARGUMENTS:
-    implicit none
-    type(domain_type),intent(in) :: domain_i
-    type(domain_type),intent(in) :: domain_o
-
-    integer , intent(in)   ,optional :: noffset      ! number of offsets to 
-                                                     ! try to find overlaps
-    integer , intent(inout),optional :: mx_ovr       !max num of overlap points
-    integer , intent(inout),optional :: n_ovr(:,:)   !number of overlap pts
-    integer , intent(inout),optional :: i_ovr(:,:,:) !lon index of overlap pts
-    integer , intent(inout),optional :: j_ovr(:,:,:) !lat index of overlap pts
-    real(r8), intent(inout),optional :: w_ovr(:,:,:) !weight of overlap pts
-!
-! !REVISION HISTORY:
-! Created by Gordon Bonan
-!
-!EOP
-!
-! LOCAL VARIABLES:
-    integer           :: nlon_i       !input grid : max lon points
-    integer           :: nlat_i       !input grid : lat points
-    real(r8), pointer :: lone_i(:)    !input grid : cell E edge lon (deg)
-    real(r8), pointer :: lonw_i(:)    !input grid : cell W edge lon (deg)
-    real(r8), pointer :: latn_i(:)    !input grid : cell N edge lat (deg)
-    real(r8), pointer :: lats_i(:)    !input grid : cell S edge lat (deg)
-    integer           :: nlon_o       !output grid: max lon points
-    integer           :: nlat_o       !output grid: lat points
-    real(r8), pointer :: lone_o(:)    !output grid: cell E edge lon (deg)
-    real(r8), pointer :: lonw_o(:)    !output grid: cell W edge lon (deg)
-    real(r8), pointer :: latn_o(:)    !output grid: cell N edge lat (deg)
-    real(r8), pointer :: lats_o(:)    !output grid: cell S edge lat (deg)
-
-    integer, parameter :: mx_ovr_ceiling = 100000 !emergency limit
-    integer io,jo,no       !output grid loop index
-    integer indexo         !output grid lat. index according to orientn
-    integer ii,ji,ni       !input  grid loop index
-    integer indexi         !input grid lat. index according to orientn
-    real(r8) lonw          !west longitudes of overlap
-    real(r8) lone          !east longitudes of overlap
-    real(r8) dx            !difference in longitudes
-    real(r8) lats          !south latitudes of overlap
-    real(r8) latn          !north latitudes of overlap
-    real(r8) dy            !difference in latitudes
-    integer  size3         !size of 3rd dim in map arrays
-    real(r8) deg2rad       !pi/180
-    real(r8) a_ovr         !area of overlap
-    integer  n             !overlapping cell index
-    integer  noffsetl      !local, number of offsets to test, 0=none, default=1
-    real(r8) offset        !value of offset used to shift x-grid 360 degrees
-    integer ,allocatable :: n_ovrl(:,:)   ! local copy of novr
-    real(r8),allocatable :: lonw_il(:)    ! local copy of lonw_i with offset
-    real(r8),allocatable :: lone_il(:)    ! local copy of lone_i with offset
-    integer ier            ! error flag
-!------------------------------------------------------------------------
- 
-    call domain_setptrs(domain_i,ni=nlon_i,nj=nlat_i, &
-                        lats=lats_i,latn=latn_i,lonw=lonw_i,lone=lone_i)
-    call domain_setptrs(domain_o,ni=nlon_o,nj=nlat_o, &
-                        lats=lats_o,latn=latn_o,lonw=lonw_o,lone=lone_o)
-
-    allocate(n_ovrl(nlon_o,nlat_o),lonw_il(nlon_i*nlat_i), &
-                                  lone_il(nlon_i*nlat_i),stat=ier)
-    if (ier /= 0) then
-       write (6,*) 'areaovr(): allocation error'
-       call endrun
-    end if
-
-    deg2rad = SHR_CONST_PI / 180._r8
-    noffsetl = 1
-    if (present(noffset)) then
-       noffsetl = noffset
-    endif
-    size3 = mx_ovr_ceiling
-    if (present(w_ovr)) then
-      size3 = size(w_ovr,3)
-    endif
-    n_ovrl(:,:) = 0
-
-    do n = 0,noffsetl   ! loop through offsets
-
-       if (lonw_i(1) < lonw_o(1)) then
-          offset = (n*360)
-       else
-          offset = -(n*360)
-       end if
-       do ji = 1, nlat_i
-       do ii = 1, nlon_i
-          ni = (ji-1)*nlon_i + ii
-          lonw_il(ni) = lonw_i(ni) + offset
-          lone_il(ni) = lone_i(ni) + offset
-       end do
-       end do
-
-       ! for all output grid cells-
-
-       do jo = 1, nlat_o
-
-       if (latn_o((nlat_o-1)*nlon_o + 1) > latn_o(1)) then
-          indexo  = jo          !south to north at the center of cell
-       else
-          indexo  = nlat_o+1-jo !north to south at the center of cell
-       end if
-
-       do io = 1, nlon_o
-
-          ! loop through all input grid cells to find overlap with output grid
-
-          do ji = 1, nlat_i
-
-          if (latn_i((nlat_i-1)*nlon_i + 1) > latn_i(1)) then
-             indexi  = ji          !south to north at the center of cell
-          else
-             indexi  = nlat_i+1-ji !north to south at the center of cell
-          end if
-
-          ! lats overlap
-
-          if ( lats_i((indexi-1)*nlon_i + 1)<latn_o((indexo-1)*nlon_o + 1) .and. &
-               latn_i((indexi-1)*nlon_i + 1)>lats_o((indexo-1)*nlon_o + 1) ) then
-
-          do ii = 1, nlon_i
-
-             ! lons overlap
-
-             ni = (indexi-1)*nlon_i + ii
-             no = (indexo-1)*nlon_o + io
-
-             if (lonw_il(ni)<lone_o(no) .and. &
-                 lone_il(ni)>lonw_o(no)) then
-
-                ! increment number of overlapping cells.
-                ! make sure 0 < n_ovrl < size3, not bigger than dimension
-
-                n_ovrl(io,indexo) = n_ovrl(io,indexo) + 1
-                if (n_ovrl(io,indexo) > mx_ovr_ceiling) then
-                   write (6,*) 'AREAOVR error: n_ovr= ', &
-                      n_ovrl(io,indexo),' exceeded mx_ovr_ceiling = ', &
-                      mx_ovr_ceiling,' for output lon,lat = ',io,indexo
-                   call endrun
-                end if
-                if (n_ovrl(io,indexo) > size3) then
-                   write (6,*) 'AREAOVR error: n_ovr= ', &
-                      n_ovrl(io,indexo),' exceeded size of arrays = ', &
-                      size3,' for output lon,lat = ',io,indexo
-                   call endrun
-                end if
-
-                if (present(i_ovr).and.present(j_ovr).and.present(w_ovr)) then
-                   ! determine area of overlap
-
-                   lone = min(lone_o(no),lone_il(ni))*deg2rad 
-                   lonw = max(lonw_o(no),lonw_il(ni))*deg2rad 
-                   dx = max(0.0_r8,(lone-lonw))
-                   latn = min(latn_o(no),latn_i(ni))*deg2rad 
-                   lats = max(lats_o(no),lats_i(ni))*deg2rad 
-                   dy = max(0.0_r8,(sin(latn)-sin(lats)))
-                   a_ovr = dx*dy*re*re
-
-                   ! save lat, lon, area
-
-                   i_ovr(io,indexo,n_ovrl(io,indexo)) = ii
-                   j_ovr(io,indexo,n_ovrl(io,indexo)) = indexi
-                   w_ovr(io,indexo,n_ovrl(io,indexo)) = a_ovr
-                endif
-
-             end if
-          end do
-          end if
-          end do
-
-       end do
-       end do
-
-    enddo   ! offset loop
-
-    if (present(n_ovr)) then
-       n_ovr = n_ovrl
-    endif
-    if (present(mx_ovr)) then
-       mx_ovr = maxval(n_ovrl)
-    endif
-
-    deallocate(n_ovrl,lonw_il,lone_il)
-
-    return
-  end subroutine areaovr
-
-#endif
 !------------------------------------------------------------------------
 !BOP
 !
@@ -2584,10 +2219,10 @@ end subroutine map_checkmap
 !------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: celledge_regional
+! !IROUTINE: domain_celledge_regional
 !
 ! !INTERFACE:
-  subroutine celledge_regional (domain, edgen, edgee, edges, edgew)
+  subroutine domain_celledge_regional (domain, edgen, edgee, edges, edgew)
 !
 ! !DESCRIPTION:
 ! Southern and western edges of grid cells - regional grid
@@ -2645,7 +2280,7 @@ end subroutine map_checkmap
 !------------------------------------------------------------------------
 
     if (domain%decomped) then
-       write(6,*) 'ERROR celledge not supported for decomped domains'
+       write(6,*) 'ERROR domain_celledge not supported for decomped domains'
        call endrun
     endif
 
@@ -2712,15 +2347,15 @@ end subroutine map_checkmap
 
     return
 
-  end subroutine celledge_regional
+  end subroutine domain_celledge_regional
 
 !------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: celledge_global
+! !IROUTINE: domain_celledge_global
 !
 ! !INTERFACE:
-  subroutine celledge_global (domain)
+  subroutine domain_celledge_global (domain)
 !
 ! !DESCRIPTION:
 !
@@ -2751,7 +2386,7 @@ end subroutine map_checkmap
 !------------------------------------------------------------------------
 
     if (domain%decomped) then
-       write(6,*) 'ERROR celledge not supported for decomped domains'
+       write(6,*) 'ERROR domain_celledge not supported for decomped domains'
        call endrun
     endif
 
@@ -2799,7 +2434,195 @@ end subroutine map_checkmap
     domain%regional = .false.
 
     return
-  end subroutine celledge_global
+  end subroutine domain_celledge_global
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: latlon_celledge_regional
+!
+! !INTERFACE:
+  subroutine latlon_celledge_regional (latlon, edgen, edgee, edges, edgew)
+!
+! !DESCRIPTION:
+! Southern and western edges of grid cells - regional grid
+! (can become global as special case)
+! Latitudes -- southern/northern edges for each latitude strip.
+! For grids oriented South to North, the southern
+! and northern edges of latitude strip [j] are:
+!        southern = lats(j  )
+!        northern = lats(j+1)
+! For grids oriented North to South: the southern
+! and northern edges of latitude strip [j] are:
+!        northern = lats(j  )
+!        southern = lats(j+1)
+! In both cases, [lats] must be dimensioned lats(lat+1)
+! Longitudes -- western edges. Longitudes for the western edge of the
+! cells must increase continuously and span 360 degrees. Assume that
+! grid starts at Dateline with western edge on Dateline Western edges
+! correspond to [lonc] (longitude at center of cell) and range from
+! -180 to 180 with negative longitudes west of Greenwich.
+! Partial grids that do not span 360 degrees are allowed so long as they
+! have the convention of Grid 1 with
+!      western edge of grid: >= -180 and < 180
+!      eastern edge of grid: > western edge  and <= 180
+! [lonw] must be dimensioned lonw(lon+1,lat) because each latitude
+! strip can have variable longitudinal resolution
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    type(latlon_type),intent(inout) :: latlon
+    real(r8), intent(in) :: edgen             !northern edge of grid (degrees)
+    real(r8), intent(in) :: edgee             !eastern edge of grid (degrees)
+    real(r8), intent(in) :: edges             !southern edge of grid (degrees)
+    real(r8), intent(in) :: edgew             !western edge of grid (degrees)
+
+!
+! !REVISION HISTORY:
+! Created by Mariana Vertenstein
+! 2005.11.20 Updated to latlon datatype by T Craig
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    integer  :: nlon              
+    integer  :: nlat              
+    real(r8),pointer :: lonc(:) 
+    real(r8),pointer :: latc(:) 
+    real(r8),pointer :: lats(:)   
+    real(r8),pointer :: latn(:)   
+    real(r8),pointer :: lonw(:)   
+    real(r8),pointer :: lone(:)   
+    integer i,j             !indices
+    real(r8) dx             !cell width
+!------------------------------------------------------------------------
+
+    nlon = latlon%ni
+    nlat = latlon%nj
+    lonc => latlon%lonc
+    latc => latlon%latc
+    lats => latlon%lats
+    latn => latlon%latn
+    lonw => latlon%lonw
+    lone => latlon%lone
+
+    ! Latitudes
+    ! Assumes lats are constant on an i line
+
+    if (nlat == 1) then                      ! single latitude
+       lats(:)    = edges
+       latn(:)    = edgen
+    elseif (latc(2) > latc(1)) then  ! South to North grid
+       lats(:) = edges
+       latn(:) = edgen
+       do j = 2, nlat
+          lats(j) = (latc(j-1) + latc(j)) / 2._r8
+          latn(j-1) = lats(j)
+       end do
+    else                                     ! North to South grid
+       lats(:) = edges
+       latn(:) = edgen
+       do j = 2, nlat
+          latn(j)    = (latc(j-1) + latc(j)) / 2._r8
+          lats(j-1) = latn(j)
+       end do
+    end if
+
+    ! Longitudes
+    ! Western edge of first grid cell -- since grid starts with western
+    ! edge on Dateline, lonw(1,j)=-180. This is the same as [edgew].
+
+    lonw(:) = edgew
+    lone(:) = edgee
+    dx = (edgee - edgew) / nlon
+    do i = 2, nlon
+       lonw(i)    = lonw(i) + (i-1)*dx
+       lone(i-1) = lonw(i)
+    end do
+
+    latlon%regional = .true.
+    latlon%edges(1) = edgen
+    latlon%edges(2) = edgee
+    latlon%edges(3) = edges
+    latlon%edges(4) = edgew
+
+    return
+
+  end subroutine latlon_celledge_regional
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: latlon_celledge_global
+!
+! !INTERFACE:
+  subroutine latlon_celledge_global (latlon)
+!
+! !DESCRIPTION:
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    type(latlon_type),intent(inout) :: latlon
+
+!
+! !REVISION HISTORY:
+! Created by Mariana Vertenstein
+! 2005.11.20 Updated to latlon datatype by T Craig
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    integer  :: nlon              
+    integer  :: nlat              
+    real(r8),pointer :: lonc(:) 
+    real(r8),pointer :: latc(:) 
+    real(r8),pointer :: lats(:)   
+    real(r8),pointer :: latn(:)   
+    real(r8),pointer :: lonw(:)   
+    real(r8),pointer :: lone(:)   
+    integer i,j             !indices
+    real(r8) dx             !cell width
+!------------------------------------------------------------------------
+
+    nlon = latlon%ni
+    nlat = latlon%nj
+    lonc => latlon%lonc
+    latc => latlon%latc
+    lats => latlon%lats
+    latn => latlon%latn
+    lonw => latlon%lonw
+    lone => latlon%lone
+
+    ! Latitudes
+    lats(:) = -90._r8
+    latn(:) =  90._r8
+    do j = 2, nlat   
+       lats(j) = (latc(j-1) + latc(j)) / 2._r8
+       latn(j-1) = lats(j)
+    end do
+
+    ! Longitudes
+
+    if (lonc(1) >= 0._r8) then
+       dx = 360._r8/(nlon)
+       lonw(:) = -dx/2._r8
+       lone(:) = -dx/2._r8 + (nlon)*dx
+       do i = 2, nlon
+          lonw(i)    = -dx/2._r8 + (i-1)*dx
+          lone(i-1) = lonw(i)
+       end do
+    else
+       write(6,*)'global non-regional grids currently only supported ', &
+            'for grids starting at greenwich and centered on Greenwich'
+       call endrun
+    endif
+
+    return
+  end subroutine latlon_celledge_global
 
 !-----------------------------------------------------------------------
 

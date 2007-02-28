@@ -51,6 +51,10 @@ module clm_mct_mod
    use m_AttrVect           ,only: mct_aVect_copy         => Copy
    use m_AttrVect           ,only: mct_aVect_permute      => Permute
    use m_AttrVect           ,only: mct_aVect_unpermute    => Unpermute
+   use m_AttrVect           ,only: mct_aVect_exportRattr  => exportRattr
+   use m_AttrVect           ,only: mct_aVect_importRattr  => importRattr
+   use m_AttrVect           ,only: mct_aVect_exportIattr  => exportIattr
+   use m_AttrVect           ,only: mct_aVect_importIattr  => importIattr
    use m_AttrVectComms      ,only: mct_aVect_scatter      => scatter
    use m_AttrVectComms      ,only: mct_aVect_gather       => gather 
    use m_AttrVectComms      ,only: mct_aVect_bcast        => bcast  
@@ -75,6 +79,8 @@ module clm_mct_mod
    use m_GlobalSegMap       ,only: mct_gsMap_clean        => clean
    use m_GlobalSegMap       ,only: mct_gsMap_lsize        => lsize
    use m_GlobalSegMap       ,only: mct_gsMap_gsize        => gsize
+   use m_GlobalSegMap       ,only: mct_gsMap_ngseg        => ngseg
+   use m_GlobalSegMap       ,only: mct_gsMap_nlseg        => nlseg
 
    use m_Rearranger         ,only: mct_rearr              => Rearranger
    use m_Rearranger         ,only: mct_rearr_init         => init

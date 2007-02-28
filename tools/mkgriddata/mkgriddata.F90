@@ -43,6 +43,7 @@ program mkgriddata
          mksrf_fnavyoro, &
          mksrf_frawtopo, &
          mksrf_fcamfile, &
+         mksrf_fclmgrid, &
          mksrf_fccsmdom, &
          mksrf_fcamtopo, &
          mksrf_lsmlon  , &

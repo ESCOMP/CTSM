@@ -203,8 +203,6 @@ subroutine driver1 (doalb, caldayp1, declinp1)
   integer  :: begg, endg    ! clump beginning and ending gridcell indices
   type(column_type)  , pointer :: cptr    ! pointer to column derived subtype
 !-----------------------------------------------------------------------
-  call t_startf( "driver1" )
-
   ! Set pointers into derived type
 
   cptr => clm3%g%l%c
@@ -276,6 +274,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
   ! ============================================================================
   ! Initialize h2ocan_loss to zero
   ! ============================================================================
+  call t_startf('pftdynwts')
   call pftdyn_wbal_init()
 
 #if (!defined DGVM)
@@ -300,6 +299,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      call ndepdyn_interp()
   end if
 #endif       
+  call t_stopf('pftdynwts')
 
 !$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
 #if !defined (USE_OMP)
@@ -455,7 +455,6 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 
      call t_startf('snowage')
      call SnowAge(begc, endc)
-     call t_stopf('snowage')
 
      ! ============================================================================
      ! ! Fraction of soil covered by snow (Z.-L. Yang U. Texas)
@@ -466,6 +465,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      do c = begc,endc
         cptr%cps%frac_sno(c) = cptr%cps%snowdp(c) / (10._r8*zlnd + cptr%cps%snowdp(c))
      end do
+     call t_stopf('snowage')
 
      ! ============================================================================
      ! Ecosystem dynamics: Uses CN, DGVM, or static parameterizations
@@ -544,7 +544,6 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 #if !defined (USE_OMP)
 !!CSD$ END PARALLEL DO
 #endif
-  call t_stopf( "driver1" )
 
 end subroutine driver1
 
@@ -597,13 +596,14 @@ subroutine driver2(caldayp1, declinp1, rstwr)
   logical :: write_restart
 !-----------------------------------------------------------------------
 
-  call t_startf( "driver2" )
   ! ============================================================================
   ! Write global average diagnostics to standard output
   ! ============================================================================
 
+  call t_startf('wrtdiag')
   nstep = get_nstep()
   call write_diagnostic(wrtdia, nstep)
+  call t_stopf('wrtdiag')
 
 #if (defined RTM)
   ! ============================================================================
@@ -651,6 +651,7 @@ subroutine driver2(caldayp1, declinp1, rstwr)
   ! ============================================================================
 
 #if (defined DGVM)
+  call t_startf('d2dgvm')
   dtime = get_step_size()
   call get_curr_date(yrp1, monp1, dayp1, secp1, offset=int(dtime))
   if (monp1==1 .and. dayp1==1 .and. secp1==dtime .and. nstep>0)  then
@@ -684,16 +685,14 @@ subroutine driver2(caldayp1, declinp1, rstwr)
 #endif
 !$OMP END PARALLEL DO
   end if
+  call t_stopf('d2dgvm')
 #endif
-
-  call t_stopf( "driver2" )
 
   ! ============================================================================
   ! Create history and write history tapes if appropriate
   ! ============================================================================
   call t_startf('clm_driver_io')
   call htapes_wrapup()
-  call t_stopf('clm_driver_io')
 
   ! ============================================================================
   ! Write to DGVM history buffer if appropriate
@@ -717,19 +716,16 @@ subroutine driver2(caldayp1, declinp1, rstwr)
   end if
      
   if (write_restart) then
-     call t_startf('clm_driver_io')
      filer = restFile_filename(type='netcdf')
      call restFile_write( filer )
      filer = restFile_filename(type='binary')
      call restFile_write_binary( filer )
-     call t_stopf('clm_driver_io')
   else if (do_inicwrite()) then
-     call t_startf('clm_driver_io')
      dtime = get_step_size()
      filer = restFile_filename(type='netcdf', offset=int(dtime))
      call restFile_write( filer )
-     call t_stopf('clm_driver_io')
   end if
+  call t_stopf('clm_driver_io')
 
 
 end subroutine driver2
@@ -855,6 +851,7 @@ logical function do_restwrite()
 ! Determine if restart dataset is to be written at this time step
 !
 ! !USES:
+  use restFileMod , only : rest_flag
 #if (defined COUP_CSM)
   use clm_csmMod  , only : csmstop_next, csmrstrt
 #else
@@ -878,6 +875,7 @@ logical function do_restwrite()
   ! Write restart if end of run or if time to dispose master history file
 
   if (is_last_step() .or. if_writrest) do_restwrite = .true.
+  if (.not.rest_flag) do_restwrite = .false.
 
 #elif (defined COUP_CSM)
 

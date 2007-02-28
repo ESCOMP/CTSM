@@ -194,8 +194,6 @@
 
   call t_startf('lnd_timeloop')
   do
-     call t_startf('clm_driver1')
-
      ! doalb is true when the next time step is a radiation time step
 
      nstep = get_nstep()
@@ -213,7 +211,6 @@
 
         ! Determine if time to stop
         if (csmstop_now) then
-           call t_stopf('clm_driver1')
            exit
         end if
      end if

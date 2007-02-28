@@ -102,10 +102,6 @@ module clm_csmMod
   integer :: numl                             ! total number of landunits across all processors
   integer :: numc                             ! total number of columns across all processors
   integer :: nump                             ! total number of pfts across all processors
-#if (1 == 0)
-  integer :: beg_lnd_rof,end_lnd_rof          ! beginning,ending landrunoff points
-  integer :: beg_ocn_rof,end_ocn_rof          ! beginning,ending oceaan
-#endif
 !
 ! Flux averaging arrays and counters
 !
@@ -250,7 +246,7 @@ contains
 ! Initialize send/recv clm and rtm contracts with flux coupler
 !
 ! !USES:
-    use domainMod    , only : alocdomain
+    use domainMod    , only : adomain
     use decompMod    , only : adecomp
     use decompMod    , only : get_proc_bounds, get_proc_global
     use RunoffMod    , only : get_proc_rof_bounds, runoff
@@ -301,9 +297,9 @@ contains
     endif
 
     ibuffs(:)  = 0                                   ! initialize ibuffs
-    ibuffs(cpl_fields_ibuf_gsize  ) = alocdomain%ni*alocdomain%nj ! global array size
-    ibuffs(cpl_fields_ibuf_gisize ) = alocdomain%ni     ! global number of lons
-    ibuffs(cpl_fields_ibuf_gjsize ) = alocdomain%nj     ! global number of lats
+    ibuffs(cpl_fields_ibuf_gsize  ) = adomain%ni*adomain%nj ! global array size
+    ibuffs(cpl_fields_ibuf_gisize ) = adomain%ni     ! global number of lons
+    ibuffs(cpl_fields_ibuf_gjsize ) = adomain%nj     ! global number of lats
     ibuffs(cpl_fields_ibuf_lsize  ) = endg-begg+1
     ibuffs(cpl_fields_ibuf_lisize ) = endg-begg+1
     ibuffs(cpl_fields_ibuf_ljsize ) = 1
@@ -315,13 +311,13 @@ contains
     do n = begg, endg	
 !        i = adecomp%gdc2i(n)
 !        j = adecomp%gdc2j(n)
-!        gi = (j-1)*alocdomain%ni + i
+!        gi = (j-1)*adomain%ni + i
         gi = adecomp%gdc2glo(n)
-        Gbuf(n,cpl_fields_grid_lon)   = alocdomain%lonc(n)
-        Gbuf(n,cpl_fields_grid_lat)   = alocdomain%latc(n)
-        Gbuf(n,cpl_fields_grid_area)  = alocdomain%area(n)/(re*re)
-        Gbuf(n,cpl_fields_grid_frac)  = alocdomain%frac(n)
-        Gbuf(n,cpl_fields_grid_mask)  = float(alocdomain%mask(n))
+        Gbuf(n,cpl_fields_grid_lon)   = adomain%lonc(n)
+        Gbuf(n,cpl_fields_grid_lat)   = adomain%latc(n)
+        Gbuf(n,cpl_fields_grid_area)  = adomain%area(n)/(re*re)
+        Gbuf(n,cpl_fields_grid_frac)  = adomain%frac(n)
+        Gbuf(n,cpl_fields_grid_mask)  = float(adomain%mask(n))
         Gbuf(n,cpl_fields_grid_index) = gi
     end do
 
@@ -673,7 +669,7 @@ contains
     use clm_varctl, only : co2_type
     use clm_varcon, only : rair, o2_molar_const, co2_ppmv_const, c13ratio
     use clmtype   , only : nameg
-    use domainMod , only : alocdomain
+    use domainMod , only : adomain
 !
 ! !ARGUMENTS:
     implicit none
@@ -747,10 +743,10 @@ contains
         end do
 #if (defined SPMD)
         call gather_data_to_master(bufRloc, bufRglob, clmlevel=nameg)
-        call gather_data_to_master(alocdomain%area, area, clmlevel=nameg)
+        call gather_data_to_master(adomain%area, area, clmlevel=nameg)
 #else
         bufRglob(:,:) = bufRloc(:,:)
-        area(:) = alocdomain%area(:)
+        area(:) = adomain%area(:)
 #endif
         if (masterproc) then
            write(6,*)
@@ -957,7 +953,7 @@ contains
     use clm_varcon  , only : sb
     use clm_time_manager, only : get_curr_date, get_nstep
     use clmtype     , only : nameg
-    use domainMod   , only : alocdomain
+    use domainMod   , only : adomain
 !
 ! !ARGUMENTS:
     implicit none
@@ -1099,10 +1095,10 @@ contains
        end do
 #if (defined SPMD)
        call gather_data_to_master(bufSloc, bufSglob, clmlevel=nameg)
-       call gather_data_to_master(alocdomain%area, area, clmlevel=nameg)
+       call gather_data_to_master(adomain%area, area, clmlevel=nameg)
 #else
        bufSglob(:,:) = bufSloc(:,:)
-       area(:) = alocdomain%area(:)
+       area(:) = adomain%area(:)
 #endif
 
        if (masterproc) then

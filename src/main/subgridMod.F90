@@ -192,13 +192,13 @@ end subroutine subgrid_get_indexes
 ! !IROUTINE: subgrid_get_gcellinfo
 !
 ! !INTERFACE:
-  subroutine subgrid_get_gcellinfo (nw, wtxy, &
+  subroutine subgrid_get_gcellinfo (nw, &
                              nlunits, ncols, npfts, &
                              nveg, wtveg, &
                              ncrop, wtcrop, &
                              nlake, wtlake, &
                              nwetland, wtwetland, &
-                             nglacier, wtglacier )
+                             nglacier, wtglacier)
 !
 ! !DESCRIPTION:
 ! Obtain gridcell properties
@@ -207,11 +207,11 @@ end subroutine subgrid_get_indexes
   use clm_varpar  , only : numpft, maxpatch_pft, &
                            npatch_lake, npatch_glacier, npatch_wet, npatch_crop
   use clm_varctl  , only : allocate_all_vegpfts
+  use clm_varsur  , only : wtxy => lwtxy
 
 ! !ARGUMENTS
     implicit none
     integer , intent(in)  :: nw                   ! wtxy cell index
-    real(r8), intent(in)  :: wtxy(:,:)            ! subgrid pft weights
     integer , optional, intent(out) :: nlunits    ! number of landunits
     integer , optional, intent(out) :: ncols      ! number of columns 
     integer , optional, intent(out) :: npfts      ! number of pfts 
@@ -244,7 +244,7 @@ end subroutine subgrid_get_indexes
 !------------------------------------------------------------------------------
 
     ! Initialize pfts, columns and landunits counters for gridcell
-    
+
     ipfts   = 0
     icols   = 0
     ilunits = 0

@@ -3,7 +3,7 @@
 
 module spmdGathScatMod
 
-#if (defined SPMD)
+!!if (defined SPMD)
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -14,6 +14,7 @@ module spmdGathScatMod
 !
 ! !USES:
   use spmdMod
+  use clm_mct_mod
   use abortutils, only : endrun
 !
 ! !PUBLIC TYPES:
@@ -27,6 +28,8 @@ module spmdGathScatMod
      module procedure scatter_1darray_real
      module procedure scatter_2darray_int
      module procedure scatter_2darray_real
+     module procedure scatter_gs_1darray_int
+     module procedure scatter_gs_1darray_real
   end interface
 
   interface gather_data_to_master
@@ -34,6 +37,8 @@ module spmdGathScatMod
      module procedure gather_1darray_real
      module procedure gather_2darray_int
      module procedure gather_2darray_real
+     module procedure gather_gs_1darray_int
+     module procedure gather_gs_1darray_real
   end interface
 
   interface allgather_data
@@ -198,6 +203,138 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
+! !IROUTINE: scatter_gs_1darray_int
+!
+! !INTERFACE:
+  subroutine scatter_gs_1darray_int (ilocal, iglobal, gsmap, perm, lbeg, lend)
+!
+! !DESCRIPTION:
+! Wrapper routine to scatter integer 1d array
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    integer, pointer              :: ilocal(:)   !local read data (out)
+    integer, pointer              :: iglobal(:)  !global read data (in)
+    type(mct_gsMap) , intent(in ) :: gsmap       !global seg map
+    integer, pointer              :: perm(:)     !gsmap permuter
+    integer, optional,intent(in ) :: lbeg,lend   !beg/end indices of rlocal
+!
+! !REVISION HISTORY:
+! Author: T Craig
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer :: n,lsize,lb,ub
+    type(mct_aVect) :: AVi, AVo   ! attribute vectors
+    integer,pointer :: ivect(:) ! local vector
+
+!-----------------------------------------------------------------------
+
+  if (masterproc) then
+     lsize = size(iglobal)
+     call mct_aVect_init(AVi,iList='array',lsize=lsize)
+     call mct_aVect_importIattr(AVi,"array",iglobal,lsize)
+  endif
+  call mct_aVect_scatter(AVi, AVo, gsmap, 0, mpicom)
+  call mct_aVect_unpermute(AVo, perm, dieWith='scatter_gs_1darray_real')
+
+  lsize = size(ilocal)
+  lb = 1
+  ub = lsize
+  if (present(lbeg)) then
+     lb = lbeg
+  endif
+  if (present(lend)) then
+     ub = lend
+  endif
+
+  allocate(ivect(lsize))
+  call mct_aVect_exportIattr(AVo,"array",ivect,lsize)
+
+  do n = lb,ub
+     ilocal(n) = ivect(n-lb+1)
+  enddo
+
+  deallocate(ivect)
+  if (masterproc) then
+     call mct_aVect_clean(AVi)
+  endif
+  call mct_aVect_clean(AVo)
+
+  end subroutine scatter_gs_1darray_int
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: scatter_gs_1darray_real
+!
+! !INTERFACE:
+  subroutine scatter_gs_1darray_real (rlocal, rglobal, gsmap, perm, lbeg, lend)
+!
+! !DESCRIPTION:
+! Wrapper routine to scatter real 1d array
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    real(r8), pointer             :: rlocal(:)   !local read data (out)
+    real(r8), pointer             :: rglobal(:)  !global read data (in)
+    type(mct_gsMap)  ,intent(in ) :: gsmap       !global seg map
+    integer,  pointer             :: perm(:)     !gsmap permuter
+    integer, optional,intent(in ) :: lbeg,lend   !beg/end indices of rlocal
+!
+! !REVISION HISTORY:
+! Author: T Craig
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer :: n,lsize,lb,ub
+    type(mct_aVect) :: AVi, AVo   ! attribute vectors
+    real(r8),pointer :: rvect(:) ! local vector
+
+!-----------------------------------------------------------------------
+
+  if (masterproc) then
+     lsize = size(rglobal)
+     call mct_aVect_init(AVi,rList='array',lsize=lsize)
+     call mct_aVect_importRattr(AVi,"array",rglobal,lsize)
+  endif
+  call mct_aVect_scatter(AVi, AVo, gsmap, 0, mpicom)
+  call mct_aVect_unpermute(AVo, perm, dieWith='scatter_gs_1darray_real')
+
+  lsize = size(rlocal)
+  lb = 1
+  ub = lsize
+  if (present(lbeg)) then
+     lb = lbeg
+  endif
+  if (present(lend)) then
+     ub = lend
+  endif
+
+  allocate(rvect(lsize))
+  call mct_aVect_exportRattr(AVo,"array",rvect,lsize)
+
+  do n = lb,ub
+     rlocal(n) = rvect(n-lb+1)
+  enddo
+
+  deallocate(rvect)
+  if (masterproc) then
+     call mct_aVect_clean(AVi)
+  endif
+  call mct_aVect_clean(AVo)
+
+  end subroutine scatter_gs_1darray_real
+
+!-----------------------------------------------------------------------
+!BOP
+!
 ! !IROUTINE: scatter_1darray_int
 !
 ! !INTERFACE:
@@ -210,8 +347,8 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    integer, pointer, dimension(:) :: ilocal(:)   !local read data
-    integer, pointer, dimension(:) :: iglobal(:)  !global read data
+    integer,pointer,  dimension(:) :: ilocal(:)   !local read data
+    integer,pointer,  dimension(:) :: iglobal(:)  !global read data
     character(len=*), intent(in) :: clmlevel      !type of input data
 !
 ! !REVISION HISTORY:
@@ -392,6 +529,141 @@ contains
        call endrun
     endif
   end subroutine scatter_2darray_real
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: gather_gs_1darray_int
+!
+! !INTERFACE:
+  subroutine gather_gs_1darray_int (ilocal, iglobal, gsmap, perm, lbeg, lend)
+!
+! !DESCRIPTION:
+! Wrapper routine to gather integer 1d array
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    integer, pointer              :: ilocal(:)   !local read data (in)
+    integer, pointer              :: iglobal(:)  !global read data (out)
+    type(mct_gsMap) , intent(in ) :: gsmap       !global seg map
+    integer, pointer              :: perm(:)     !gsmap permuter
+    integer, optional,intent(in ) :: lbeg,lend   !beg/end indices of rlocal
+!
+! !REVISION HISTORY:
+! Author: T Craig
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer :: n,lsize,lb,ub
+    type(mct_aVect) :: AVi, AVo   ! attribute vectors
+    integer,pointer :: ivect(:) ! local vector
+
+!-----------------------------------------------------------------------
+
+  lsize = size(ilocal)
+
+  allocate(ivect(lsize))
+  lb = 1
+  ub = lsize
+  if (present(lbeg)) then
+     lb = lbeg
+  endif
+  if (present(lend)) then
+     ub = lend
+  endif
+
+  do n = lb,ub
+     ivect(n-lb+1) = ilocal(n)
+  enddo
+
+  call mct_aVect_init(AVi,iList='array',lsize=lsize)
+  call mct_aVect_importIattr(AVi,"array",ivect,lsize)
+
+  call mct_aVect_permute(AVi, perm, dieWith='gather_gs_1darray_real')
+  call mct_aVect_gather(AVi, AVo, gsmap, 0, mpicom)
+
+  lsize = size(iglobal)
+
+  if (masterproc) then
+     call mct_aVect_exportIattr(AVo,"array",iglobal,lsize)
+  endif
+
+  deallocate(ivect)
+  call mct_aVect_clean(AVi)
+  call mct_aVect_clean(AVo)
+
+  end subroutine gather_gs_1darray_int
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: gather_gs_1darray_real
+!
+! !INTERFACE:
+  subroutine gather_gs_1darray_real (rlocal, rglobal, gsmap, perm, lbeg, lend)
+!
+! !DESCRIPTION:
+! Wrapper routine to gather real 1d array
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    real(r8), pointer             :: rlocal(:)   !local read data (in)
+    real(r8), pointer             :: rglobal(:)  !global read data (out)
+    type(mct_gsMap)  ,intent(in ) :: gsmap       !global seg map
+    integer,  pointer             :: perm(:)     !gsmap permuter
+    integer, optional,intent(in ) :: lbeg,lend   !beg/end indices of rlocal
+!
+! !REVISION HISTORY:
+! Author: T Craig
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer :: n,lsize,lb,ub
+    type(mct_aVect) :: AVi, AVo   ! attribute vectors
+    real(r8),pointer :: rvect(:) ! local vector
+
+!-----------------------------------------------------------------------
+
+
+  lsize = size(rlocal)
+
+  allocate(rvect(lsize))
+  lb = 1
+  ub = lsize
+  if (present(lbeg)) then
+     lb = lbeg
+  endif
+  if (present(lend)) then
+     ub = lend
+  endif
+
+  do n = lb,ub
+     rvect(n-lb+1) = rlocal(n)
+  enddo
+
+  call mct_aVect_init(AVi,rList='array',lsize=lsize)
+  call mct_aVect_importRattr(AVi,"array",rvect,lsize)
+
+  call mct_aVect_permute(AVi, perm, dieWith='gather_gs_1darray_real')
+  call mct_aVect_gather(AVi, AVo, gsmap, 0, mpicom)
+
+  lsize = size(rglobal)
+
+  if (masterproc) then
+     call mct_aVect_exportRattr(AVo,"array",rglobal,lsize)
+  endif
+
+  deallocate(rvect)
+  call mct_aVect_clean(AVi)
+  call mct_aVect_clean(AVo)
+
+  end subroutine gather_gs_1darray_real
 
 !-----------------------------------------------------------------------
 !BOP
@@ -761,6 +1033,6 @@ contains
     endif
   end subroutine allgather_2darray_real
 
-#endif
+!!endif
 
 end module spmdGathScatMod

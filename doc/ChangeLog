@@ -1,3 +1,164 @@
+
+===============================================================
+Tag name: clm3_expa_92
+Originator(s): tcraig
+Date: Tue Feb 27 16:53:41 MST 2007	
+One-line Summary: merge fmf branch to trunk (low memory mods)
+
+Purpose of changes: reduce memory and improve memory scaling
+
+Bugs fixed (include bugzilla ID):
+
+Describe any changes made to build system: began adding support
+  for frost in Makefile and added a run-frost.csh (not yet
+  fully validated)
+
+Describe any changes made to the namelist: added new optional namelist
+  input, nsegspc (number of segments per clump for new decomp.  default
+  is 20, 1 will produce poor loadbalance, infinity yields too many
+  segments per pe but good load balance.  performance asymptotes for
+  several configurations at about 5-10 segments/pe, use 20 as default.)
+
+List any changes to the defaults for the boundary datasets: NONE
+
+Describe any substantial timing or memory changes: significant reduction
+  in memory use and improved memory scaling.
+
+Code reviewed by:
+
+List any svn externals directories updated (csm_share, mct, etc.): update
+  to mct external, MCT2_3_0_070206
+
+List all subroutines eliminated:
+
+List all subroutines added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+- implement new 1d decomp based on ngsegspc rather than balancing pfts,
+  ngsegspc is the number of segments per clump.  the 1d gridcells will
+  be divided into clumps and segments per clump so there will be
+  a total number of segments, clumps*nsegspc, each of about equal number
+  of gridcells, that will be distributed round-robin to pes.  pfts are
+  derived later and will hopefully end up being nearly as well load
+  balanced as the previous method without having to precompute pfts
+  and requiring much less memory.  see above for more info on the namelist 
+  input and default.
+- reorganize initialization, split decomp_init into three phases,
+  atm (coarse), lnd (finemesh), and glcp (subgrid).
+- add new datatype, latlon to hold some global grid info
+- now all domain info is local (although initialization still needs
+  to be modified)
+- remove some dead code
+- add new timers (bug #302)
+- split gatm out of domain type
+- create simple setgatm_UNITY routine, finemesh capability now disabled,
+  must fix setgatm in future version
+- move wtxy, vegxy, and pctspec to clm_varsur, allocate as local arrays
+  now (begg:endg) and modify surfrd to handle local data only both for
+  I/O and initialization.
+- implement gather/scatter routines in spmdGathScatMod that use gsmaps.
+- update MCT and share
+- port to frost
+- get rid of some of the global decomps use in code, still more to do
+- memory cleanup in STATICEcosysDynMod
+- implement new ncdio methods for reading to local gridcell data using gsmaps
+- clean up atmdrv, use newer low mem datatypes, reduce memory
+- clean up rtm, use newer low mem datatypes, reduce memory
+- remove history "lat/lon" fields
+
+M      test/system/test_driver.sh
+M      tools/mkgriddata/mkgriddata.F90
+M      bld/configure
+M      bld/Makefile.in
+A  +   bld/run-frost.csh
+M      src/biogeochem/CASAMod.F90
+M      src/biogeochem/STATICEcosysDynMod.F90
+M      src/biogeochem/DGVMMod.F90
+M      src/main/spmdGathScatMod.F90
+M      src/main/abortutils.F90
+M      src/main/clm_comp.F90
+M      src/main/driver.F90
+M      src/main/ncdio.F90
+M      src/main/atmdrvMod.F90
+M      src/main/subgridMod.F90
+M      src/main/initializeMod.F90
+M      src/main/pftdynMod.F90
+M      src/main/iniTimeConst.F90
+M      src/main/histFileMod.F90
+M      src/main/program_csm.F90
+M      src/main/clm_atmlnd.F90
+M      src/main/clm_varsur.F90
+M      src/main/clm_csmMod.F90
+M      src/main/restFileMod.F90
+M      src/main/controlMod.F90
+M      src/main/clm_varctl.F90
+M      src/main/ndepFileMod.F90
+M      src/main/initGridCellsMod.F90
+M      src/main/lnd_comp_mct.F90
+M      src/main/program_off.F90
+M      src/main/surfrdMod.F90
+M      src/main/domainMod.F90
+M      src/main/decompMod.F90
+M      src/main/areaMod.F90
+M      src/main/clm_mct_mod.F90
+M      src/SVN_EXTERNAL_DIRECTORIES
+M      src/riverroute/RtmMod.F90
+	
+Summary of testing:
+
+  bluevista: all pass except
+    004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................FAIL! rc= 7
+    009 bl121 TBL.sh 17p_vodsr_dh t31 48 ..............................FAIL! rc= 7
+  bangkok/lf95: all pass except
+    004 bl112 TBL.sh 4p_vodsr_dm t31 48 ...............................FAIL! rc= 7
+    009 bl122 TBL.sh 17p_vodsr_dm t31 48 ..............................FAIL! rc= 7
+  Due to roundoff change in rtm, only rtm fields affected, otherwise bfb
+
+  Also tested version in CCSM vs ccsm3_1_beta45
+    ERS.f45_g35.B.bluevista16
+    ERS.f45_g35.B2.lightning
+    Both PASS and bfb versus beta45 except for rtm roundoff difference and
+      associated error growth through ocean coupling
+
+  Also tested mods merged to clm3_expa_91 with cam3_4_00, all
+    CAM tests pass on bangkok, bluevista, and tempest including scam.
+  Tested on bangkok with cam3_4_01 and updated to clm3_expa_92, all
+    CAM tests pass on bangkok.  bluevista and tempest not tested
+    due to time constraints and earlier adequate testing with 
+    clm3_expa_91 and cam3_4_00.
+	
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_89
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: anything with RTM on
+    - what platforms/compilers: all 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+        roundoff change in RTM due to roundoff change in cell area calculation
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?  tested in multiple systems, review growth of diffs in 
+     stand-alone clm, only rtm fields affected, diffs remain roundoff for
+     48 timesteps, no coupling to other fields or error growth in system.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+
+
 ===============================================================
 Tag name: clm3_expa_92
 Originator(s): erik,mvertens,mvr

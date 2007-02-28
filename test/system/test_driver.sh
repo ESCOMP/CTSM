@@ -101,7 +101,6 @@ cat > ./${submit_script} << EOF
 #
 
 #BSUB -a poe                    # use LSF poe elim
-#BSUB -x                          # exclusive use of node (not_shared)
 #BSUB -n 32                       # total tasks needed
 #BSUB -R "span[ptile=16]"          # max number of tasks (MPI) per node
 #BSUB -o test_dr.o%J              # output filename
@@ -109,6 +108,10 @@ cat > ./${submit_script} << EOF
 #BSUB -q premium                  # queue
 #BSUB -W 4:28                     
 #BSUB -P $account_name      
+#BSUB -x                          # exclusive use of node (not_shared)
+##BSUB -q share
+##BSUB -W 2:00
+##BSUB -P 00000000
 
 if [ -n "\$LSB_JOBID" ]; then   #batch job
     export JOBID=\${LSB_JOBID}
@@ -611,7 +614,7 @@ for test_id in \${test_list}; do
         status_out="\${status_out}."
     done
 
-    echo -n \$echo_arg "\$status_out" >> \${clm_status}
+    echo \$echo_arg "\$status_out\c" >> \${clm_status}
 
     if [ \$interactive = "YES" ]; then
         \${CLM_SCRIPTDIR}/\${test_cmd}

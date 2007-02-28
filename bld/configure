@@ -859,9 +859,12 @@ EOF
     } elsif (-f "$cfg/libmpich.a") {
 	$cfg{'mpi_lib'} = $cfg;
 	$cfg{'mpi_lib_name'} = 'mpich';
+    } elsif (-f "$cfg/libmpich.rts.a") {
+	$cfg{'mpi_lib'} = $cfg;
+	$cfg{'mpi_lib_name'} = 'mpich';
     } else {
 	die <<"EOF";
-** Cannot find libmpi.a, libmpi.so or libmpich.a in specified directory: $cfg
+** Cannot find libmpi.a, libmpi.so libmpich.a or libmpich.rts.a in specified directory: $cfg
 ** 
 ** The MPI library directory is determined from the following set of options listed
 ** from highest to lowest precedence:

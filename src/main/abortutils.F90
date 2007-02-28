@@ -65,7 +65,7 @@ CONTAINS
 
 #if defined(NEC_SX)
    call mesput("ENDRUN", len("ENDRUN"), 1)
-#elif defined(AIX)
+#elif defined(AIX) && !defined(BGL)
    close(5)    ! needed to prevent batch jobs from hanging in xl__trbk
    call xl__trbk()
 #endif

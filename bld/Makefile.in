@@ -805,11 +805,13 @@ CFLAGS     := $(cpp_path) $(CPPDEF) -O2 \
 mod_path   := -I$(MOD_NETCDF)
 FFLAGS     := -I$(BGLPATH)/include \
                $(cpp_path) $(mod_path) $(FPPFLAGS) -qarch=440 \
-		-qspillsize=2500 -g -qfullpath 
+		-qspillsize=2500 -g -qfullpath -qdebug=function_trace 
 FREEFLAGS  := -qsuffix=f=f90:cpp=F90
 FIXEDFLAGS := -qfixed=132
-LDFLAGS    := -L$(BGLPATH)/lib -lmpich.rts -lmsglayer.rts \
-              -lrts.rts -ldevices.rts
+LDFLAGS    := -L/contrib/bgl/lib -lmass -lmassv \
+              -Wl,--allow-multiple-definition \
+              -L$(BGLPATH)/lib -lmpich.rts -lmsglayer.rts \
+              -lrts.rts -ldevices.rts -llapack440 -lblas440 -lstackmonitor 
 
 ifeq ($(DEBUG),TRUE)
   FFLAGS += -qinitauto=FF911299 -qflttrap=ov:zero:inv:en

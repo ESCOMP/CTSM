@@ -115,7 +115,6 @@ module histFileMod
   public :: update_hbuf             ! Updates history buffer for all fields and tapes
   public :: htapes_wrapup           ! Write and/or dispose history tape(s)
   public :: restart_history         ! Read/write history file restart data
-  public :: hist_allocGlobal        ! Global history data allocation
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -1726,7 +1725,7 @@ contains
     use decompMod   , only : get_proc_global
     use clm_varpar  , only : lsmlon, lsmlat, nlevsoi, nlevlak, numrad, rtmlon, rtmlat
     use clm_varctl  , only : caseid, ctitle, frivinp_rtm, fsurdat, finidat, fpftcon
-    use domainMod   , only : llocdomain
+    use domainMod   , only : ldomain
 #if (defined RTM)
     use RunoffMod   , only : get_proc_rof_global
 #endif	
@@ -1981,10 +1980,10 @@ contains
     call ncd_ioglobal(varname='levsoi', data=zsoi, ncid=nfid(t), flag='write')
     call ncd_ioglobal(varname='levlak', data=zlak, ncid=nfid(t), flag='write')
 
-    call ncd_ioglobal(varname='edgen', data=llocdomain%edges(1), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edgee', data=llocdomain%edges(2), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edges', data=llocdomain%edges(3), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edgew', data=llocdomain%edges(4), ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edgen', data=ldomain%edges(1), ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edgee', data=ldomain%edges(2), ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edges', data=ldomain%edges(3), ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edgew', data=ldomain%edges(4), ncid=nfid(t), flag='write')
 
   end subroutine htape_create
 
@@ -2005,7 +2004,7 @@ contains
     use clmtype
     use subgridAveMod, only : c2g
     use decompMod    , only : get_proc_bounds, get_proc_global, ldecomp
-    use domainMod   , only : llocdomain
+    use domainMod   , only : ldomain,llatlon,gatm
 #if (defined RTM)
     use RunoffMod   , only : runoff,get_proc_rof_global
 #endif	
@@ -2206,10 +2205,10 @@ contains
        deallocate(histi)
 
        if (masterproc) then
-          call ncd_ioglobal(varname='lon', data=llon, ncid=nfid(t), flag='write')
+          call ncd_ioglobal(varname='lon', data=llatlon%lonc, ncid=nfid(t), flag='write')
        endif
        if (masterproc) then
-          call ncd_ioglobal(varname='lat', data=llat, ncid=nfid(t), flag='write')
+          call ncd_ioglobal(varname='lat', data=llatlon%latc, ncid=nfid(t), flag='write')
        endif
 
 #if (defined RTM)
@@ -2220,37 +2219,37 @@ contains
           call ncd_ioglobal(varname='latrof', data=runoff%rlat, ncid=nfid(t), flag='write')
        endif
 #endif
-       call ncd_iolocal(varname='longxy'  , data=llocdomain%lonc, &
+       call ncd_iolocal(varname='longxy'  , data=ldomain%lonc, &
             dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
-       call ncd_iolocal(varname='latixy'  , data=llocdomain%latc, &
+            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+       call ncd_iolocal(varname='latixy'  , data=ldomain%latc, &
             dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
-       call ncd_iolocal(varname='area'    , data=llocdomain%area, &
+            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+       call ncd_iolocal(varname='area'    , data=ldomain%area, &
             dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
-       call ncd_iolocal(varname='areaupsc', data=llocdomain%nara, &
+            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+       call ncd_iolocal(varname='areaupsc', data=ldomain%nara, &
             dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
-       call ncd_iolocal(varname='topo    ', data=llocdomain%topo, &
+            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+       call ncd_iolocal(varname='topo    ', data=ldomain%topo, &
             dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
-       call ncd_iolocal(varname='topodnsc', data=llocdomain%ntop, &
+            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+       call ncd_iolocal(varname='topodnsc', data=ldomain%ntop, &
             dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
-       call ncd_iolocal(varname='landfrac', data=llocdomain%frac, &
+            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+       call ncd_iolocal(varname='landfrac', data=ldomain%frac, &
             dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
-       call ncd_iolocal(varname='landmask', data=llocdomain%mask, &
+            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+       call ncd_iolocal(varname='landmask', data=ldomain%mask, &
             dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj, &
+            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj, &
             imissing=0)
-       call ncd_iolocal(varname='pftmask' , data=llocdomain%pftm, &
+       call ncd_iolocal(varname='pftmask' , data=ldomain%pftm, &
             dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
-       call ncd_iolocal(varname='indxupsc', data=llocdomain%gatm, &
+            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+       call ncd_iolocal(varname='indxupsc', data=gatm, &
             dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
     end if
 
   end subroutine htape_timeconst
@@ -4059,41 +4058,5 @@ contains
   end subroutine add_subscript
 
 !-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: hist_allocGlobal
-!
-! !INTERFACE:
-  subroutine hist_allocGlobal( ldomain )
-!
-! !DESCRIPTION: Initialized global memory needed for history handling.
-!
-! !USES:
-    use domainMod  , only : domain_type
-    use spmdMod    , only : masterproc
-!
-! !ARGUMENTS:
-!
-  type(domain_type), intent(IN) :: ldomain  ! Global land domain
-! !REVISION HISTORY:
-! Created by Erik Kluzek
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-    integer  :: i,j,k                 ! indices
-
-    if ( masterproc )then
-       allocate(llon(ldomain%ni),llat(ldomain%nj))
-       do j = 1,ldomain%nj
-          k = (j-1)*ldomain%ni + 1
-          llat(j) = ldomain%latc(k)
-       enddo
-       do i = 1,ldomain%ni
-          llon(i) = ldomain%lonc(i)
-       enddo
-    end if
-end subroutine hist_allocGlobal
-
 
 end module histFileMod

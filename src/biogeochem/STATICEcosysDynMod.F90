@@ -314,16 +314,17 @@ contains
 !
 ! !USES:
     use clmtype
-    use decompMod   , only : get_proc_bounds, ldecomp
+    use decompMod   , only : get_proc_bounds, ldecomp, gsmap_lnd_gdc2glo, perm_lnd_gdc2glo
     use clm_varpar  , only : lsmlon, lsmlat, maxpatch_pft, maxpatch, npatch_crop, numpft
     use clm_varsur  , only : all_pfts_on_srfdat
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
-#if (defined SPMD)
+!!if (defined SPMD)
     use spmdMod     , only : masterproc, mpicom, MPI_REAL8
-#else
-    use spmdMod     , only : masterproc
-#endif
+!!else
+!!    use spmdMod     , only : masterproc
+!!endif
+    use spmdGathScatMod
     use clm_time_manager, only : get_nstep
     use ncdio       , only : check_ret
     use getnetcdfdata
@@ -344,7 +345,7 @@ contains
 !
 ! LOCAL VARIABLES:
     character(len=256) :: locfn           ! local file name
-    integer :: i,j,k,l,m,p,ivt            ! indices
+    integer :: g,n,i,j,k,l,m,p,ivt        ! indices
     integer :: ncid,dimid,varid           ! input netCDF id's
     integer :: beg4d(4),len4d(4)          ! netCDF variable edges
     integer :: ntim                       ! number of input data time samples
@@ -352,29 +353,43 @@ contains
     integer :: nlat_i                     ! number of input data latitudes
     integer :: npft_i                     ! number of input data pft types
     integer :: begp,endp                  ! beg and end local p index
+    integer :: begg,endg                  ! beg and end local g index
     integer :: ier                        ! error code
-    real(r8), allocatable :: mlai(:,:,:)  ! lai read from input files
-    real(r8), allocatable :: msai(:,:,:)  ! sai read from input files
-    real(r8), allocatable :: mhgtt(:,:,:) ! top vegetation height
-    real(r8), allocatable :: mhgtb(:,:,:) ! bottom vegetation height
-    real(r8), allocatable :: coldata(:) ! temporary for getncdata calls
+    integer :: nps,npe                    ! start/end numpft limits
+    real(r8), pointer :: mlai(:,:)  ! lai read from input files
+    real(r8), pointer :: msai(:,:)  ! sai read from input files
+    real(r8), pointer :: mhgtt(:,:) ! top vegetation height
+    real(r8), pointer :: mhgtb(:,:) ! bottom vegetation height
+    real(r8), pointer :: arrayg(:)  ! temp global array
+    real(r8), pointer :: arrayl(:)  ! temp local array
+    real(r8), pointer :: coldata(:) ! temporary for getncdata calls
     character(len=32) :: subname = 'readMonthlyVegetation'
 !-----------------------------------------------------------------------
 
+    ! Determine necessary indices
+
+    call get_proc_bounds(begg=begg,endg=endg,begp=begp,endp=endp)
+
     if (all_pfts_on_srfdat) then
-       allocate(mlai(lsmlon,lsmlat,0:numpft), &
-                msai(lsmlon,lsmlat,0:numpft), &
-                mhgtt(lsmlon,lsmlat,0:numpft), &
-                mhgtb(lsmlon,lsmlat,0:numpft), stat=ier)
+       nps = 0
+       npe = numpft
+       allocate(mlai(begg:endg,0:numpft), &
+                msai(begg:endg,0:numpft), &
+                mhgtt(begg:endg,0:numpft), &
+                mhgtb(begg:endg,0:numpft), stat=ier)
     else
-       allocate(mlai(lsmlon,lsmlat,maxpatch_pft), &
-                msai(lsmlon,lsmlat,maxpatch_pft), &
-                mhgtt(lsmlon,lsmlat,maxpatch_pft), &
-                mhgtb(lsmlon,lsmlat,maxpatch_pft), stat=ier)
+       nps = 1
+       npe = maxpatch_pft
+       allocate(mlai(begg:endg,maxpatch_pft), &
+                msai(begg:endg,maxpatch_pft), &
+                mhgtt(begg:endg,maxpatch_pft), &
+                mhgtb(begg:endg,maxpatch_pft), stat=ier)
     end if
+
     if (ier /= 0) then
-       write(6,*)subname, 'allocation error '; call endrun()
+       write(6,*)subname, 'allocation big error '; call endrun()
     end if
+
     if (single_column) then
     if (all_pfts_on_srfdat) then
        allocate(coldata(0:numpft), stat=ier)
@@ -385,9 +400,6 @@ contains
        write(6,*)subname, 'allocation error '; call endrun()
     end if
     endif
-    ! Determine necessary indices
-
-    call get_proc_bounds(begp=begp,endp=endp)
 
     ! ----------------------------------------------------------------------
     ! Open monthly vegetation file
@@ -440,57 +452,91 @@ contains
           call check_ret(nf_inq_dimid(ncid, 'time', dimid), subname)
           call check_ret(nf_inq_dimlen(ncid, dimid, ntim), subname)
 
-          beg4d(1) = 1         ; len4d(1) = nlon_i
-          beg4d(2) = 1         ; len4d(2) = nlat_i
-          beg4d(3) = 1         ; len4d(3) = npft_i
-          beg4d(4) = months(k) ; len4d(4) = 1
+       endif   ! masterproc
 
-          if (single_column) then
-          call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_LAI', coldata, IER)
-          mlai(1,1,:)=coldata
+       if (single_column) then
+          if (masterproc) then
+             call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_LAI', coldata, IER)
+             mlai(1,:)=coldata
           
-          call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_SAI', coldata, IER)
-          msai(1,1,:)=coldata
+             call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_SAI', coldata, IER)
+             msai(1,:)=coldata
 
-          call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_HEIGHT_TOP', coldata, IER)
-          mhgtt(1,1,:) = coldata
+             call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_HEIGHT_TOP', coldata, IER)
+             mhgtt(1,:) = coldata
 
-          call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_HEIGHT_BOT', coldata, IER)
-          mhgtb(1,1,:) = coldata
-       else
-          call check_ret(nf_inq_varid(ncid, 'MONTHLY_LAI', varid), subname)
-          call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, mlai), subname)
+             call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_HEIGHT_BOT', coldata, IER)
+             mhgtb(1,:) = coldata
+          endif
+#if ( defined SPMD )
+          ! pass surface data to all processors
+          call mpi_bcast (mlai , size(mlai) , MPI_REAL8, 0, mpicom, ier)
+          call mpi_bcast (msai , size(msai) , MPI_REAL8, 0, mpicom, ier)
+          call mpi_bcast (mhgtt, size(mhgtt), MPI_REAL8, 0, mpicom, ier)
+          call mpi_bcast (mhgtb, size(mhgtb), MPI_REAL8, 0, mpicom, ier)
+#endif
+      else
 
-          call check_ret(nf_inq_varid(ncid, 'MONTHLY_SAI', varid), subname)
-          call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, msai), subname)
+          allocate(arrayg(lsmlon*lsmlat),arrayl(begg:endg),stat=ier)
+          if (ier /= 0) then
+             write(6,*)subname, 'allocation array error '; call endrun()
+          end if
 
-          call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_TOP', varid), subname)
-          call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, mhgtt), subname)
+          do n = nps,npe
 
-          call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_BOT', varid), subname)
-          call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, mhgtb), subname)
+             if (masterproc) then
+                beg4d(1) = 1         ; len4d(1) = nlon_i
+                beg4d(2) = 1         ; len4d(2) = nlat_i
+                beg4d(3) = n         ; len4d(3) = 1
+                beg4d(4) = months(k) ; len4d(4) = 1
+                if (nps == 0) beg4d(3) = n+1     ! shift by "1" if index starts at zero
+
+                call check_ret(nf_inq_varid(ncid, 'MONTHLY_LAI', varid), subname)
+                call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
+             endif
+             call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+             mlai(begg:endg,n) = arrayl(begg:endg)
+
+             if (masterproc) then
+                call check_ret(nf_inq_varid(ncid, 'MONTHLY_SAI', varid), subname)
+                call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
+             endif
+             call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+             msai(begg:endg,n) = arrayl(begg:endg)
+
+             if (masterproc) then
+                call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_TOP', varid), subname)
+                call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
+             endif
+             call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+             mhgtt(begg:endg,n) = arrayl(begg:endg)
+
+             if (masterproc) then
+                call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_BOT', varid), subname)
+                call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
+             endif
+             call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+             mhgtb(begg:endg,n) = arrayl(begg:endg)
+
+          enddo
+          deallocate(arrayg,arrayl)
+
        endif
-          call check_ret(nf_close(ncid), subname)
 
+       if (masterproc) then
+          call check_ret(nf_close(ncid), subname)
           write (6,*) 'Successfully read monthly vegetation data for'
           write (6,*) 'month ', months(k)
           write (6,*)
+       end if
 
-       end if ! end of if-masterproc if block
-
-#if ( defined SPMD )
-       ! pass surface data to all processors
-       call mpi_bcast (mlai , size(mlai) , MPI_REAL8, 0, mpicom, ier)
-       call mpi_bcast (msai , size(msai) , MPI_REAL8, 0, mpicom, ier)
-       call mpi_bcast (mhgtt, size(mhgtt), MPI_REAL8, 0, mpicom, ier)
-       call mpi_bcast (mhgtb, size(mhgtb), MPI_REAL8, 0, mpicom, ier)
-#endif
 
        ! store data directly in clmtype structure
        ! only vegetated pfts have nonzero values
 
        do p = begp,endp
 
+          g = clm3%g%l%c%p%gridcell(p)
           i = ldecomp%gdc2i(clm3%g%l%c%p%gridcell(p))
           j = ldecomp%gdc2j(clm3%g%l%c%p%gridcell(p))
 
@@ -503,10 +549,10 @@ contains
              if (ivt /= noveg) then     ! vegetated pft
                 do l = 0, numpft
                    if (l == ivt) then
-                      mlai2t(p,k) = mlai(i,j,l)
-                      msai2t(p,k) = msai(i,j,l)
-                      mhvt2t(p,k) = mhgtt(i,j,l)
-                      mhvb2t(p,k) = mhgtb(i,j,l)
+                      mlai2t(p,k) = mlai(g,l)
+                      msai2t(p,k) = msai(g,l)
+                      mhvt2t(p,k) = mhgtt(g,l)
+                      mhvb2t(p,k) = mhgtb(g,l)
                    end if
                 end do
              else                        ! non-vegetated pft
@@ -520,10 +566,10 @@ contains
 
              m = clm3%g%l%c%p%mxy(p)
              if (m <= maxpatch_pft) then ! vegetated pft
-                mlai2t(p,k) = mlai(i,j,m)
-                msai2t(p,k) = msai(i,j,m)
-                mhvt2t(p,k) = mhgtt(i,j,m)
-                mhvb2t(p,k) = mhgtb(i,j,m)
+                mlai2t(p,k) = mlai(g,m)
+                msai2t(p,k) = msai(g,m)
+                mhvt2t(p,k) = mhgtt(g,m)
+                mhvb2t(p,k) = mhgtb(g,m)
              else                        ! non-vegetated pft
                 mlai2t(p,k) = 0._r8
                 msai2t(p,k) = 0._r8

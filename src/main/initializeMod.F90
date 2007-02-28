@@ -17,6 +17,7 @@ module initializeMod
   use shr_sys_mod     , only : shr_sys_flush
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest
+  use clm_varsur      , only : lwtxy,lvegxy
 ! !PUBLIC TYPES:
   implicit none
   save
@@ -37,8 +38,6 @@ module initializeMod
   private do_restread
 !-----------------------------------------------------------------------
 ! !PRIVATE DATA:
-  integer , allocatable, private :: vegxy(:,:) ! vegetation type
-  real(r8), allocatable, private :: wtxy(:,:)  ! subgrid weights
 
 contains
 
@@ -67,9 +66,17 @@ contains
 ! !USES:
     use clm_varpar, only : lsmlon, lsmlat, maxpatch
     use clm_varpar, only : clm_varpar_init
-    use domainMod , only : ldomain, adomain, ndomains, domain_check,domain_copy
+    use decompMod , only : decomp_atm_init, decomp_domg2l
+    use decompMod , only : adecomp,ldecomp
+    use decompMod , only : get_proc_clumps, get_clump_bounds, &
+                           get_proc_bounds, get_proc_bounds_atm, &
+                           decomp_lnd_init, decomp_glcp_init
+    use domainMod , only : domain_check,domain_setsame, domain_clean, domain_type
+    use domainMod , only : adomain,ldomain
+    use domainMod , only : alatlon,llatlon,gatm,amask,latlon_check, latlon_setsame
+    use areaMod   , only : map_setgatm_UNITY
     use surfrdMod , only : surfrd,surfrd_get_grid,surfrd_get_frac,&
-                           surfrd_get_topo
+                           surfrd_get_topo, surfrd_get_latlon
     use clm_varctl, only : fsurdat, fatmgrid, fatmlndfrc, &
                            fatmtopo, flndtopo
     use controlMod, only : control_init, control_print
@@ -85,9 +92,14 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer  :: ier                       ! error status
-    integer  :: i,j,n1,n2,n               ! loop indices
-    integer  :: numnests                  ! number of nested land grids
+    integer  :: i,j,n1,n2,n,k             ! loop indices
+    integer  :: nl,nlg                ! gdc and glo lnd indices
     real(r8) :: rmaxlon,rmaxlat           ! local min/max vars
+    logical  :: samegrids             ! are atm and lnd grids same?
+    integer  :: begg, endg            ! clump beg and ending gridcell indices
+    integer  :: begg_atm, endg_atm    ! proc beg and ending gridcell indices
+    type(domain_type) :: lgdomain   ! generic "global" domain for i/o
+    type(domain_type) :: agdomain   ! generic "global" domain for i/o
 !-----------------------------------------------------------------------
 
     ! ------------------------------------------------------------------------
@@ -115,115 +127,166 @@ contains
     ! Initialize the subgrid hierarchy
     ! ------------------------------------------------------------------------
 
+    if (masterproc) then
+       write (6,*) 'Attempting to read alatlon from fatmgrid'
+       call shr_sys_flush(6)
+    endif
+
+    call surfrd_get_latlon(alatlon, fatmgrid, amask, fatmlndfrc)
+    call latlon_check(alatlon)
+    if (masterproc) then
+       write (6,*) 'amask size/min/max ',size(amask),minval(amask),maxval(amask)
+       call shr_sys_flush(6)
+    endif
+
+    if (masterproc) then
+       write (6,*) 'Attempting to read llatlon from fsurdat'
+       call shr_sys_flush(6)
+    endif
+
+    call surfrd_get_latlon(llatlon, fsurdat)
+    call latlon_check(llatlon)
+
+    lsmlon = llatlon%ni
+    lsmlat = llatlon%nj
+
+    if (llatlon%ni < alatlon%ni .or. llatlon%nj < alatlon%nj) then
+       if (masterproc) write(6,*) 'ERROR llatlon size > alatlon size: ', &
+          n,llatlon%ni, llatlon%nj, alatlon%ni, alatlon%nj
+       call endrun()
+    endif
+
+    !--- check if grids are "close", adjust, continue, or end  ---
+    !--- set llatlon== alatlon if lats/lons < 0.001 different ---
+    !--- exit if lats/lon > 0.001 and < 1.0 different          ---
+    !--- continue if lat/lons > 1.0 different                  ---
+    samegrids = .false.
+    if (alatlon%ni == llatlon%ni .and. alatlon%nj == llatlon%nj) then
+       rmaxlon = 0.0_r8
+       rmaxlat = 0.0_r8
+       do n = 1,alatlon%ni
+          rmaxlon = max(rmaxlon,abs(alatlon%lonc(n)-llatlon%lonc(n)))
+       enddo
+       do n = 1,alatlon%nj
+          rmaxlat = max(rmaxlat,abs(alatlon%latc(n)-llatlon%latc(n)))
+       enddo
+       if (rmaxlon < 0.001_r8 .and. rmaxlat < 0.001_r8) then
+          if (masterproc) write(6,*) 'initialize1: set llatlon =~ alatlon', &
+             ':continue',rmaxlon,rmaxlat
+          call latlon_setsame(alatlon,llatlon)
+          samegrids = .true.
+       elseif (rmaxlon < 1.0_r8 .and. rmaxlat < 1.0_r8) then
+          if (masterproc) write(6,*) 'initialize1: alatlon/llatlon mismatch', &
+             ':error',rmaxlon,rmaxlat
+          call endrun()
+       else
+          if (masterproc) write(6,*) 'initialize1: alatlon/llatlon different', &
+              ':continue',rmaxlon,rmaxlat
+       endif
+    else
+       if (masterproc) write(6,*) 'initialize1: alatlon/llatlon different ', &
+          'sizes:continue'
+    endif
+
+    call decomp_atm_init(alatlon,amask)
+
+    !--- set gatm "unity".  doesn't support finemesh grids yet
+    if (llatlon%ni /= alatlon%ni .or. llatlon%nj /= alatlon%nj) then
+       if (masterproc) write(6,*) 'ERROR llatlon size /= alatlon size: ', &
+          n,llatlon%ni, llatlon%nj, alatlon%ni, alatlon%nj
+       call endrun()
+    else
+       call map_setgatm_UNITY(gatm,alatlon,amask)
+    endif
+
     !--- Read atm grid ---
 
     if (masterproc) then
-       write (6,*) 'Attempting to read adomain from fatmgrid'
+       write (6,*) 'Attempting to read agdomain from fatmgrid'
        call shr_sys_flush(6)
     endif
-    call surfrd_get_grid(adomain, fatmgrid)
+    call surfrd_get_grid(agdomain, fatmgrid)
 
     if (masterproc) then
        write (6,*) 'Attempting to read atm landfrac from fatmlndfrc'
        call shr_sys_flush(6)
     endif
-    call surfrd_get_frac(adomain, fatmlndfrc)
+    call surfrd_get_frac(agdomain, fatmlndfrc)
 
     if (fatmtopo /= " ") then
     if (masterproc) then
        write (6,*) 'Attempting to read atm topo from fatmtopo'
        call shr_sys_flush(6)
     endif
-    call surfrd_get_topo(adomain, fatmtopo)
+    call surfrd_get_topo(agdomain, fatmtopo)
     endif
 
+    if (masterproc) then
+       write(6,*) 'agdomain status:'
+       call domain_check(agdomain)
+    endif
+
+    ! Set "local" domains
+    call get_proc_bounds_atm(begg_atm, endg_atm)
+    call decomp_domg2l(agdomain,adomain,adecomp,begg_atm,endg_atm)
     if (masterproc) then
        write(6,*) 'adomain status:'
        call domain_check(adomain)
     endif
 
-    !--- Read nested land grids ---
+    call domain_clean(agdomain)
 
-    numnests = 1
-    allocate(ndomains(numnests))
-
-    do n = 1,numnests
-
-       if (masterproc) then
-          write (6,*) 'Attempting to read ndomain from fsurdat ',n,trim(fsurdat)
-          call shr_sys_flush(6)
-       endif
-       call surfrd_get_grid(ndomains(n), fsurdat)
-
-       lsmlon = ndomains(n)%ni
-       lsmlat = ndomains(n)%nj
-
-       if (flndtopo /= " ") then
-       if (masterproc) then
-          write (6,*) 'Attempting to read lnd topo from flndtopo ',n,trim(flndtopo)
-          call shr_sys_flush(6)
-       endif
-       call surfrd_get_topo(ndomains(n), flndtopo)
-       endif
-
-       if (masterproc) then
-          write(6,*) 'ndomains status:',n
-          call domain_check(ndomains(n))
-       endif
-
-       if (ndomains(n)%ni < adomain%ni .or. ndomains(n)%nj < adomain%nj) then
-          if (masterproc) write(6,*) 'ERROR ndomains(n) size > adomain size: ', &
-             n,ndomains(n)%ni, ndomains(n)%nj, adomain%ni, adomain%nj
-          call endrun()
-       endif
-
-       ! Allocate surface grid dynamic memory (for wtxy and vegxy arrays)
-
-       allocate (vegxy(lsmlon*lsmlat,maxpatch), &
-                 wtxy(lsmlon*lsmlat,maxpatch),  &
-                 stat=ier)   
-       if (ier /= 0) then
-          write(6,*)'initialize allocation error'; call endrun()
-       endif
-
-       ! Read surface dataset and set up vegetation type [vegxy] and 
-       ! weight [wtxy] arrays for [maxpatch] subgrid patches.
-    
-       call surfrd (vegxy, wtxy, fsurdat, ndomains(n))
-
-    enddo
-
-!    !--- generate ldomain from ndomains, wtxy from nwtxys ---
-!    call tcx(ndomains,ldomain,nwtxys,wtxy,nvegxys,vegxy)
-    ldomain => ndomains(1)
-
-    !--- check if grids are "close", adjust, continue, or end  ---
-    !--- set ldomain == adomain if lats/lons < 0.001 different ---
-    !--- exit if lats/lon > 0.001 and < 1.0 different          ---
-    !--- continue if lat/lons > 1.0 different                  ---
-    if (adomain%ni == ldomain%ni .and. adomain%nj == ldomain%nj) then
-       rmaxlon = 0.0_r8
-       rmaxlat = 0.0_r8
-       do n = 1,adomain%ns
-          rmaxlon = max(rmaxlon,abs(adomain%lonc(n)-ldomain%lonc(n)))
-          rmaxlat = max(rmaxlat,abs(adomain%latc(n)-ldomain%latc(n)))
-       enddo
-       if (rmaxlon < 0.001_r8 .and. rmaxlat < 0.001_r8) then
-          if (masterproc) write(6,*) 'initialize1: set ldomain == adomain', &
-             ':continue',rmaxlon,rmaxlat
-          call domain_copy(adomain,ldomain)
-       elseif (rmaxlon < 1.0_r8 .and. rmaxlat < 1.0_r8) then
-          if (masterproc) write(6,*) 'initialize1: adomain/ldomain mismatch', &
-             ':error',rmaxlon,rmaxlat
-          call endrun()
-       else
-          if (masterproc) write(6,*) 'initialize1: adomain/ldomain different', &
-              ':continue',rmaxlon,rmaxlat
-       endif
-    else
-       if (masterproc) write(6,*) 'initialize1: adomain/ldomain different ', &
-          'sizes:continue'
+    if (masterproc) then
+       write (6,*) 'Attempting to read lgdomain from fsurdat ',trim(fsurdat)
+       call shr_sys_flush(6)
     endif
+    call surfrd_get_grid(lgdomain, fsurdat)
+
+    if (flndtopo /= " ") then
+    if (masterproc) then
+       write (6,*) 'Attempting to read lnd topo from flndtopo ',n,trim(flndtopo)
+       call shr_sys_flush(6)
+    endif
+    call surfrd_get_topo(lgdomain, flndtopo)
+    endif
+
+    if (masterproc) then
+       call domain_check(lgdomain)
+    endif
+
+    ! Initialize clump and processor decomposition 
+    call decomp_lnd_init(alatlon%ns,alatlon%ni,alatlon%nj,llatlon%ns,llatlon%ni,llatlon%nj)
+
+    call get_proc_bounds    (begg    , endg)
+    call decomp_domg2l(lgdomain,ldomain,ldecomp,begg,endg)
+    if (masterproc) then
+       write(6,*) 'ldomain status:'
+       call domain_check(ldomain)
+    endif
+
+    call domain_clean(lgdomain)
+
+    if (samegrids) then
+       if (masterproc) write(6,*) 'initialize1: samegrids true, set ldomain =~ adomain'
+       call domain_setsame(adomain,ldomain)
+    endif
+
+    ! Allocate surface grid dynamic memory (for wtxy and vegxy arrays)
+
+    call get_proc_bounds    (begg    , endg)
+    allocate (lvegxy(begg:endg,maxpatch), &
+              lwtxy(begg:endg,maxpatch),  &
+              stat=ier)   
+    if (ier /= 0) then
+       write(6,*)'initialize allocation error'; call endrun()
+    endif
+
+    ! Read surface dataset and set up vegetation type [vegxy] and 
+    ! weight [wtxy] arrays for [maxpatch] subgrid patches.
+    
+    call surfrd (fsurdat, ldomain)
+
+    call decomp_glcp_init(alatlon%ns,alatlon%ni,alatlon%nj,llatlon%ns,llatlon%ni,llatlon%nj)
 
   end subroutine initialize1
 
@@ -257,19 +320,18 @@ contains
     use initGridCellsMod, only : initGridCells
     use clm_varctl      , only : finidat, fpftdyn, fndepdyn
     use clmtypeInitMod  , only : initClmtype
+    use domainMod       , only : gatm
     use domainMod       , only : ldomain, adomain
-    use domainMod       , only : llocdomain, alocdomain
-    use domainMod       , only : domain_check, domain_clean
-    use decompMod       , only : adecomp,ldecomp, decomp_domg2l
+    use decompMod       , only : adecomp,ldecomp
     use areaMod         , only : map1dl_a2l, map1dl_l2a
-    use areaMod         , only : map_setmapsFM,map_setgatm
+    use areaMod         , only : map_setmapsFM
     use decompMod       , only : get_proc_clumps, get_clump_bounds, &
                                  get_proc_bounds, get_proc_bounds_atm, &
-                                 decomp_init
+                                 decomp_lnd_init
     use filterMod       , only : allocFilters, setFilters
     use pftdynMod       , only : pftdyn_init, pftdyn_interp
     use histFldsMod     , only : initHistFlds
-    use histFileMod     , only : htapes_build, hist_allocGlobal
+    use histFileMod     , only : htapes_build
     use restFileMod     , only : restFile_getfile, &
                                  restFile_open, restFile_close, &
                                  restFile_read, restFile_read_binary
@@ -338,56 +400,10 @@ contains
 !----------------------------------------------------------------------
 
     ! Compute gatm, ldomain/adomain overlap point
-    call map_setgatm(adomain,ldomain)
-
-    ! Initialize clump and processor decomposition 
-    call decomp_init(wtxy)   
+!    call map_setgatm(adomain,ldomain)
 
     ! Set the a2l and l2a maps
-    call map_setmapsFM(adomain,ldomain,map1dl_a2l,map1dl_l2a)
-
-    ! Set ldomain mask and frac based on adomain and mapping.
-    ! Want ldomain%frac to match adomain%frac but scale by effective area.
-    ! so the implied area of an ldomain cell is the actual area *
-    ! scaled frac which aggregated over all land cells under an atm cell,
-    ! will match the area associated with the atm cell.
-
-    do n1 = 1,ldomain%ns
-       n2 = ldomain%gatm(n1)
-       if (n2 <= 0) then
-          ldomain%mask(n1) = 0
-          ldomain%frac(n1) = 0.
-       else
-          if (n2 > adomain%ns) then
-            write(6,*) 'initialization1 ERROR n2 out of range n1,n2 = ',n1,n2
-            call endrun()
-          endif
-          ldomain%mask(n1) = 1
-          ldomain%frac(n1) = adomain%frac(n2)*  &
-                            (ldomain%nara(n1)/ldomain%area(n1))
-       endif
-    enddo
-
-    ! Set "local" domains
-    call get_proc_bounds_atm(begg_atm, endg_atm)
-    call decomp_domg2l(adomain,alocdomain,adecomp,begg_atm,endg_atm)
-    if (masterproc) then
-       write(6,*) 'alocdomain status:'
-       call domain_check(alocdomain)
-    endif
-#if (! defined OFFLINE)
-    call domain_clean(adomain)
-#endif
-
-   
-    call hist_allocGlobal( ldomain )  ! allocate and set global domain data needed for history module
-
-    call get_proc_bounds    (begg    , endg)
-    call decomp_domg2l(ldomain,llocdomain,ldecomp,begg,endg)
-    if (masterproc) then
-       write(6,*) 'llocdomain status:'
-       call domain_check(llocdomain)
-    endif
+    call map_setmapsFM(adomain,ldomain,gatm,map1dl_a2l,map1dl_l2a)
 
     ! Allocate memory and initialize values of clmtype data structures
 
@@ -403,11 +419,11 @@ contains
 
     ! Build hierarchy and topological info for derived typees
 
-    call initGridCells(vegxy, wtxy)
+    call initGridCells()
 
     ! Deallocate surface grid dynamic memory (for wtxy and vegxy arrays)
 
-    deallocate (vegxy, wtxy)
+    deallocate (lvegxy, lwtxy)
 
     ! ------------------------------------------------------------------------
     ! Initialize time constant variables 
@@ -482,10 +498,6 @@ contains
     if (masterproc) write(6,*)'Successfully initialized RTM'
     call shr_sys_flush(6)
 #endif
-
-    ! Need ldomain for rtmini
-
-    call domain_clean(ldomain)
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields

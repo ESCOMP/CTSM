@@ -132,6 +132,8 @@ PROGRAM program_off
   call spmd_init(mpicom_glob)
   call mct_world_init(1,mpicom_glob,mpicom,comp_id)
 
+  call t_startf('init')
+
   ! -----------------------------------------------------------------
   ! Initialize ESMF (needed for time-manager)
   ! -----------------------------------------------------------------
@@ -177,24 +179,50 @@ PROGRAM program_off
   if (masterproc) write (6,*) 'Attempting to set up atmospheric grid '
   call atmdrv_init()
   if (masterproc) write (6,*) 'Successfully set up atmospheric grid '
+
+  call t_stopf('init')
   
   ! -----------------------------------------------------------------
   ! Time stepping loop
   ! -----------------------------------------------------------------
 
-  call t_startf('total')
+#if (defined SPMD)
+  call t_startf('barrieri')
+  call mpi_barrier(mpicom,ier)
+  call t_stopf('barrieri')
+#endif
+  call t_startf('runtotal')
 
   do
      ! Current atmospheric state and fluxes for all [atmlon] x [atmlat] points.
 
      nstep = get_nstep()
+     call t_startf('atmdrv')
      call atmdrv(nstep)
+     call t_stopf('atmdrv')
 
+#if (defined SPMD)
+!  call t_startf('barrierd1')
+!  call mpi_barrier(mpicom,ier)
+!  call t_stopf('barrierd1')
+#endif
      ! Run
 
      call clm_run1()
+
+#if (defined SPMD)
+!  call t_startf('barrier12')
+!  call mpi_barrier(mpicom,ier)
+!  call t_stopf('barrier12')
+#endif
+
      call clm_run2()
 
+#if (defined SPMD)
+!  call t_startf('barrier2p')
+!  call mpi_barrier(mpicom,ier)
+!  call t_stopf('barrier2p')
+#endif
      ! Determine if time to stop
 
      if (is_last_step()) exit
@@ -204,11 +232,15 @@ PROGRAM program_off
      call advance_timestep()
 
   end do
-  call t_stopf('total')
+  call t_stopf('runtotal')
 
   ! -----------------------------------------------------------------
   ! Exit gracefully
   ! -----------------------------------------------------------------
+
+#if (defined BGL)
+     call print_stack_size()
+#endif
 
   if (masterproc) then
      write(6,*)'SUCCESFULLY TERMINATING CLM MODEL at nstep= ',get_nstep()

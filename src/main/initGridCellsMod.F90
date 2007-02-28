@@ -14,8 +14,10 @@ module initGridCellsMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
-  use spmdMod     , only : masterproc
+  use spmdMod     , only : masterproc,iam
   use abortutils  , only : endrun
+  use clm_varsur  , only : wtxy  => lwtxy
+  use clm_varsur  , only : vegxy => lvegxy
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -48,7 +50,7 @@ contains
 ! !IROUTINE: initGridcells
 !
 ! !INTERFACE:
-  subroutine initGridcells (vegxy, wtxy) 
+  subroutine initGridcells () 
 !
 ! !DESCRIPTION: 
 ! Initialize sub-grid mapping and allocates space for derived type hierarchy.
@@ -57,7 +59,7 @@ contains
 ! !USES
     use clmtype     , only : clm3, gridcell_type, landunit_type, &
                              column_type, pft_type
-    use domainMod   , only : llocdomain, alocdomain
+    use domainMod   , only : ldomain, adomain, gatm
     use decompMod   , only : ldecomp, adecomp, get_proc_global, get_proc_bounds
     use clm_varcon  , only : istsoil, istice, istwet, istdlak, isturb
     use subgridMod  , only : gcelldc, gcellsn, subgrid_alloc
@@ -68,8 +70,8 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    integer , intent(in) :: vegxy(:,:) ! PFT type 
-    real(r8), intent(in) :: wtxy(:,:)  ! subgrid patch weights
+!    integer , intent(in) :: vegxy(:,:) ! PFT type 
+!    real(r8), intent(in) :: wtxy(:,:)  ! subgrid patch weights
 !
 ! !REVISION HISTORY:
 ! Created by Peter Thornton and Mariana Vertenstein
@@ -94,7 +96,11 @@ contains
     integer :: numc           ! total number of columns across all processors 
     integer :: nump           ! total number of pfts across all processors 
     integer :: begg,endg      ! local beg/end gridcells gdc
+    integer :: begl,endl      ! local beg/end landunits
+    integer :: begc,endc      ! local beg/end columns 
+    integer :: begp,endp      ! local beg/end pfts
     logical :: my_gcell       ! is gdc gridcell on my pe
+    integer :: nwtxy          ! wtxy cell index
 
     type(gridcell_type), pointer  :: gptr ! pointer to gridcell derived subtype
     type(landunit_type), pointer  :: lptr ! pointer to landunit derived subtype
@@ -112,7 +118,7 @@ contains
     ! Get total global number of grid cells, landunits, columns and pfts 
     
     call get_proc_global(numg,numl,numc,nump)
-    call get_proc_bounds(begg,endg)
+    call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
     ! Dynamic memory allocation
 
@@ -121,14 +127,25 @@ contains
 
     ! For each land gridcell on global grid determine landunit, column and pft properties
 
+#if (1 == 1)
+    li    = begl-1
+    ci    = begc-1
+    pi    = begp-1
+
+    !----- Set clm3 variables -----
+    do gdc = begg,endg
+#else
     li    = 0
     ci    = 0
     pi    = 0
 
     !----- Set clm3 variables -----
     do gdc = 1,numg
+#endif
 
        glo = ldecomp%gdc2glo(gdc)
+!       nwtxy = glo
+       nwtxy = gdc
 
        my_gcell = .false.
        if (gdc >= begg .and. gdc <= endg) then
@@ -138,41 +155,47 @@ contains
        ! Determine naturally vegetated landunit
 
        call set_landunit_veg_compete(               &
-            ltype=istsoil, wtxy=wtxy, vegxy=vegxy,  &
-            nw=glo, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
+!            ltype=istsoil, wtxy=wtxy, vegxy=vegxy,  &
+            ltype=istsoil, &
+            nw=nwtxy, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
 
        ! Determine crop landunit
 
        call set_landunit_crop_noncompete(           &
-            ltype=istsoil, wtxy=wtxy, vegxy=vegxy,  &
-            nw=glo, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
+!            ltype=istsoil, wtxy=wtxy, vegxy=vegxy,  &
+            ltype=istsoil, &
+            nw=nwtxy, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
 
        ! Determine lake, wetland and glacier landunits 
 
        call set_landunit_wet_ice_lake(              &
-            ltype=istdlak, wtxy=wtxy, vegxy=vegxy,  &
-            nw=glo, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
+!            ltype=istdlak, wtxy=wtxy, vegxy=vegxy,  &
+            ltype=istdlak, &
+            nw=nwtxy, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
 
        call set_landunit_wet_ice_lake(              &
-            ltype=istwet, wtxy=wtxy, vegxy=vegxy,   &
-            nw=glo, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
+!            ltype=istwet, wtxy=wtxy, vegxy=vegxy,   &
+            ltype=istwet, &
+            nw=nwtxy, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
 
        call set_landunit_wet_ice_lake(              &
-            ltype=istice, wtxy=wtxy, vegxy=vegxy,   &
-            nw=glo, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
+!            ltype=istice, wtxy=wtxy, vegxy=vegxy,   &
+            ltype=istice, &
+            nw=nwtxy, gi=gdc, li=li, ci=ci, pi=pi, setdata=my_gcell)
 
        ! Set clm3 lats/lons
 
        if (my_gcell) then
-          gptr%latdeg(gdc) = llocdomain%latc(gdc) 
-          gptr%londeg(gdc) = llocdomain%lonc(gdc) 
+          gptr%latdeg(gdc) = ldomain%latc(gdc) 
+          gptr%londeg(gdc) = ldomain%lonc(gdc) 
           gptr%lat(gdc)    = gptr%latdeg(gdc) * SHR_CONST_PI/180._r8  
           gptr%lon(gdc)    = gptr%londeg(gdc) * SHR_CONST_PI/180._r8
-          gptr%area(gdc)   = llocdomain%area(gdc)
+          gptr%area(gdc)   = ldomain%area(gdc)
 
-          na = adecomp%glo2gdc(llocdomain%gatm(gdc))
-          gptr%londeg_a(gdc) = alocdomain%lonc(na)
-          gptr%latdeg_a(gdc) = alocdomain%latc(na)
+!          na = adecomp%glo2gdc(ldomain%gatm(gdc))
+          na = adecomp%glo2gdc(gatm(glo))
+          gptr%londeg_a(gdc) = adomain%lonc(na)
+          gptr%latdeg_a(gdc) = adomain%latc(na)
           gptr%lon_a   (gdc) = gptr%londeg_a(gdc) * SHR_CONST_PI/180._r8  
           gptr%lat_a   (gdc) = gptr%latdeg_a(gdc) * SHR_CONST_PI/180._r8  
        endif
@@ -540,7 +563,8 @@ end subroutine clm_ptrs_check
 ! !IROUTINE: set_landunit_veg_compete
 !
 ! !INTERFACE:
-  subroutine set_landunit_veg_compete (ltype, wtxy, vegxy, &
+!  subroutine set_landunit_veg_compete (ltype, wtxy, vegxy, &
+  subroutine set_landunit_veg_compete (ltype, &
                            nw, gi, li, ci, pi, setdata)
 !
 ! !DESCRIPTION: 
@@ -557,8 +581,8 @@ end subroutine clm_ptrs_check
 ! !ARGUMENTS:
     implicit none
     integer , intent(in)    :: ltype             ! landunit type
-    real(r8), intent(in)    :: wtxy(:,:)         ! subgrid patch weights
-    integer , intent(in)    :: vegxy(:,:)        ! PFT types 
+!    real(r8), intent(in)    :: wtxy(:,:)         ! subgrid patch weights
+!    integer , intent(in)    :: vegxy(:,:)        ! PFT types 
     integer , intent(in)    :: nw                ! cell index
     integer , intent(in)    :: gi                ! gridcell index
     integer , intent(inout) :: li                ! landunit index
@@ -587,7 +611,8 @@ end subroutine clm_ptrs_check
 
     ! Set decomposition properties
 
-    call subgrid_get_gcellinfo(nw, wtxy, nveg=npfts, wtveg=wtlunit2gcell)
+!    call subgrid_get_gcellinfo(nw, wtxy, nveg=npfts, wtveg=wtlunit2gcell)
+    call subgrid_get_gcellinfo(nw, nveg=npfts, wtveg=wtlunit2gcell)
 
     if (npfts > 0) then
 
@@ -672,7 +697,8 @@ end subroutine clm_ptrs_check
 ! !IROUTINE: set_landunit_wet_ice_lake
 !
 ! !INTERFACE:
-  subroutine set_landunit_wet_ice_lake (ltype, wtxy, vegxy, &
+!  subroutine set_landunit_wet_ice_lake (ltype, wtxy, vegxy, &
+  subroutine set_landunit_wet_ice_lake (ltype, &
                            nw, gi, li, ci, pi, setdata)
 !
 ! !DESCRIPTION: 
@@ -688,8 +714,8 @@ end subroutine clm_ptrs_check
 ! !ARGUMENTS:
     implicit none
     integer , intent(in)    :: ltype             ! landunit type
-    real(r8), intent(in)    :: wtxy(:,:)         ! subgrid patch weights
-    integer , intent(in)    :: vegxy(:,:)        ! PFT types 
+!    real(r8), intent(in)    :: wtxy(:,:)         ! subgrid patch weights
+!    integer , intent(in)    :: vegxy(:,:)        ! PFT types 
     integer , intent(in)    :: nw                ! cell index
     integer , intent(in)    :: gi                ! gridcell index
     integer , intent(inout) :: li                ! landunit index
@@ -720,13 +746,16 @@ end subroutine clm_ptrs_check
     ! Set decomposition properties
 
     if (ltype == istwet) then
-       call subgrid_get_gcellinfo(nw, wtxy, nwetland=npfts, wtwetland=wtlunit2gcell)
+!       call subgrid_get_gcellinfo(nw, wtxy, nwetland=npfts, wtwetland=wtlunit2gcell)
+       call subgrid_get_gcellinfo(nw, nwetland=npfts, wtwetland=wtlunit2gcell)
        m = npatch_wet
     else if (ltype == istdlak) then
-       call subgrid_get_gcellinfo(nw, wtxy, nlake=npfts, wtlake=wtlunit2gcell)
+!       call subgrid_get_gcellinfo(nw, wtxy, nlake=npfts, wtlake=wtlunit2gcell)
+       call subgrid_get_gcellinfo(nw, nlake=npfts, wtlake=wtlunit2gcell)
        m = npatch_lake
     else if (ltype == istice) then 
-       call subgrid_get_gcellinfo(nw, wtxy, nglacier=npfts, wtglacier=wtlunit2gcell)
+!       call subgrid_get_gcellinfo(nw, wtxy, nglacier=npfts, wtglacier=wtlunit2gcell)
+       call subgrid_get_gcellinfo(nw, nglacier=npfts, wtglacier=wtlunit2gcell)
        m = npatch_glacier
     else
        write(6,*)' set_landunit_wet_ice_lake: ltype of ',ltype,' not valid'
@@ -809,7 +838,8 @@ end subroutine clm_ptrs_check
 ! !IROUTINE: set_landunit_crop_noncompete
 !
 ! !INTERFACE:
-  subroutine set_landunit_crop_noncompete (ltype, wtxy, vegxy, &
+!  subroutine set_landunit_crop_noncompete (ltype, wtxy, vegxy, &
+  subroutine set_landunit_crop_noncompete (ltype, &
                            nw, gi, li, ci, pi, setdata)
 !
 ! !DESCRIPTION: 
@@ -824,8 +854,8 @@ end subroutine clm_ptrs_check
 ! !ARGUMENTS:
     implicit none
     integer , intent(in)    :: ltype             ! landunit type
-    real(r8), intent(in)    :: wtxy(:,:)         ! subgrid patch weights
-    integer , intent(in)    :: vegxy(:,:)        ! PFT types 
+!    real(r8), intent(in)    :: wtxy(:,:)         ! subgrid patch weights
+!    integer , intent(in)    :: vegxy(:,:)        ! PFT types 
     integer , intent(in)    :: nw                ! cell index
     integer , intent(in)    :: gi                ! gridcell index
     integer , intent(inout) :: li                ! landunit index
@@ -851,7 +881,8 @@ end subroutine clm_ptrs_check
 
     ! Set decomposition properties
 
-    call subgrid_get_gcellinfo(nw, wtxy, ncrop=npfts, wtcrop=wtlunit2gcell)
+!    call subgrid_get_gcellinfo(nw, wtxy, ncrop=npfts, wtcrop=wtlunit2gcell)
+    call subgrid_get_gcellinfo(nw, ncrop=npfts, wtcrop=wtlunit2gcell)
 
     if (npfts > 0) then
 

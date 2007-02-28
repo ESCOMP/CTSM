@@ -1056,7 +1056,7 @@ contains
     use decompMod    , only : get_proc_bounds, get_proc_global
     use ncdio        , only : check_ret,ncd_defvar,ncd_ioglobal,ncd_iolocal
     use subgridAveMod, only : p2g
-    use domainMod    , only : llocdomain
+    use domainMod    , only : ldomain
     use decompMod    , only : ldecomp
     use clm_varpar   , only : lsmlon, lsmlat
     use spmdMod      , only : masterproc
@@ -1176,9 +1176,9 @@ contains
     allocate(lonvar(lsmlon),latvar(lsmlat),data(numg))
 
 #ifdef SPMD
-    call gather_data_to_master (llocdomain%lonc, data, clmlevel='gridcell')
+    call gather_data_to_master (ldomain%lonc, data, clmlevel='gridcell')
 #else
-    data(1:numg) = llocdomain%lonc(1:numg)
+    data(1:numg) = ldomain%lonc(1:numg)
 #endif
     lonvar = spval
     do n = 1,lsmlon
@@ -1189,9 +1189,9 @@ contains
     enddo
 
 #ifdef SPMD
-    call gather_data_to_master (llocdomain%latc, data, clmlevel='gridcell')
+    call gather_data_to_master (ldomain%latc, data, clmlevel='gridcell')
 #else
-    data(1:numg) = llocdomain%latc(1:numg)
+    data(1:numg) = ldomain%latc(1:numg)
 #endif
     latvar = spval
     do n = 1,lsmlon
@@ -1205,12 +1205,12 @@ contains
        call ncd_ioglobal(varname='longitude', data=lonvar, ncid=ncid, flag='write')
        call ncd_ioglobal(varname='latitude', data=latvar, ncid=ncid, flag='write')
     endif
-    call ncd_iolocal(varname='landfrac', data=llocdomain%frac, ncid=ncid, &
+    call ncd_iolocal(varname='landfrac', data=ldomain%frac, ncid=ncid, &
          flag='write', dim1name='gridcell', &
-         nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
-    call ncd_iolocal(varname='landmask', data=llocdomain%mask, ncid=ncid, &
+         nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+    call ncd_iolocal(varname='landmask', data=ldomain%mask, ncid=ncid, &
          flag='write', dim1name='gridcell', &
-         nlonxy=llocdomain%ni, nlatxy=llocdomain%nj)
+         nlonxy=ldomain%ni, nlatxy=ldomain%nj)
     deallocate(lonvar,latvar,data)
 
     allocate(histi(begp:endp, 1),histo(begg:endg,1),hist1do(begg:endg), stat=ier)

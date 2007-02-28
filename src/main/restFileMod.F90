@@ -21,6 +21,9 @@ module restFileMod
   implicit none
   save
 !
+  logical, public :: &
+       rest_flag = .true.     ! namelist true => restart on
+!
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: restFile_read
   public :: restFile_write

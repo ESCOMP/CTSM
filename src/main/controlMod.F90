@@ -81,6 +81,7 @@ module controlMod
 !    o hist_fexcl6   = 8  character name of fields for second auxillary history file
 !    o hist_crtinic  = 8  character frequency to generate initial dataset
 !                         ['6-HOURLY','DAILY','MONTHLY','YEARLY','NONE']
+!    o rest_flag     = logical, turns off restart file writing [.TRUE., .FALSE.]
 !    o rpntpath      = 256 character full UNIX pathname of the local restart pointer file.
 !                      This file must exist when the model is restarted.
 !                      This file is overwritten every time new restart data files are output.
@@ -100,6 +101,7 @@ module controlMod
 ! === rtm control variables ===
 !
 !    o rtm_nsteps  = if > 1, average rtm over rtm_nsteps time steps
+!    o nsegspc     = number of segments per clump for decomposition
 !
 ! When coupled to CAM: base calendar info, nstep, nestep, nsrest, and time
 ! step are input to the land model from CAM. The values in the clm_inparm namelist
@@ -120,6 +122,7 @@ module controlMod
                             hist_fincl4, hist_fincl5, hist_fincl6, &
                             hist_fexcl1, hist_fexcl2, hist_fexcl3, &
                             hist_fexcl4, hist_fexcl5, hist_fexcl6
+  use restFileMod  , only : rest_flag
   use shr_const_mod, only : SHR_CONST_CDAY
   use abortutils   , only : endrun
 !
@@ -279,7 +282,7 @@ contains
          hist_fincl4,  hist_fincl5, hist_fincl6, &
          hist_fexcl1,  hist_fexcl2, hist_fexcl3, &
          hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
-         hist_crtinic, rpntpath
+         hist_crtinic, rpntpath, rest_flag
 
     ! clm bgc info
 
@@ -294,7 +297,7 @@ contains
 
     namelist /clm_inparm/  &
          clump_pproc, irad, wrtdia, csm_doflxave, rtm_nsteps, pertlim, &
-         create_crop_landunit
+         create_crop_landunit, nsegspc
          
     ! ----------------------------------------------------------------------
     ! Default values
@@ -369,6 +372,7 @@ contains
     single_column=.false.
     scmlat=-999.
     scmlon=-999.
+    nsegspc = 20
 
 #if (defined RTM)
     ! If rtm_nsteps is not set in the namelist then
@@ -716,6 +720,7 @@ contains
     call mpi_bcast (irad        , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (csm_doflxave, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (rtm_nsteps  , 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (nsegspc     , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (wrtdia      , 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (scmlat,       1, MPI_REAL8,   0, mpicom, ier)
@@ -743,6 +748,7 @@ contains
     call mpi_bcast (hist_fincl4, (max_namlen+2)*size(hist_fincl4), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl5, (max_namlen+2)*size(hist_fincl5), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fincl6, (max_namlen+2)*size(hist_fincl6), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (rest_flag, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! restart file variables
 
@@ -917,6 +923,7 @@ contains
 #endif
     write(6,*) '   maxpatch_pft         = ',maxpatch_pft
     write(6,*) '   allocate_all_vegpfts = ',allocate_all_vegpfts
+    write(6,*) '   nsegspc              = ',nsegspc
 
   end subroutine control_print
 

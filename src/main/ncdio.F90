@@ -25,6 +25,8 @@ module ncdio
   use clm_varctl     , only : scmlon,scmlat
   use clm_varpar     , only : lsmlon, lsmlat
   use getnetcdfdata
+  use clm_mct_mod
+  use spmdGathScatMod
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -45,6 +47,8 @@ module ncdio
      module procedure ncd_iolocal_real_1d
      module procedure ncd_iolocal_int_2d
      module procedure ncd_iolocal_real_2d
+     module procedure ncd_iolocal_gs_real
+     module procedure ncd_iolocal_gs_int
   end interface
   interface ncd_ioglobal
      module procedure ncd_ioglobal_int_var
@@ -157,6 +161,7 @@ contains
 
     if (ret /= NF_NOERR) then
        write(6,*)'netcdf error from ',trim(calling)
+       write(6,*)'netcdf strerror = ',trim(NF_STRERROR(ret))
        call endrun()
     end if
 
@@ -1099,6 +1104,136 @@ contains
     if (masterproc) deallocate (rglobdc, rglobsn)
 
   end subroutine ncd_iolocal_real_2d
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_iolocal_gs_real
+!
+! !INTERFACE:
+  subroutine ncd_iolocal_gs_real(ncid, varname, flag, data, beg, end, gsmap, perm, start, count)
+!
+! !DESCRIPTION:
+! Netcdf i/o of 2d initial real field out to netCDF file
+!
+! !USES:
+#ifdef SPMD
+  use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
+#endif
+!
+! !ARGUMENTS:
+    implicit none
+    integer          ,intent(in)  :: ncid       ! input unit
+    character(len=*) ,intent(in)  :: varname    ! variable name
+    character(len=*) ,intent(in)  :: flag       ! 'read' or 'write'
+    real(r8),pointer              :: data(:)    ! local decomposition input data (out)
+    integer          ,intent(in)  :: beg        ! local start index
+    integer          ,intent(in)  :: end        ! local end index
+    type(mct_gsMap)  ,intent(in)  :: gsmap      ! gsmap associate with data decomp
+    integer,pointer               :: perm(:)    ! permute array assoicated with gsmap
+    integer, optional,intent(in)  :: start(:)   ! netcdf start index
+    integer, optional,intent(in)  :: count(:)   ! netcdf count index
+
+!
+! !REVISION HISTORY:
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+  integer varid
+  real(r8), pointer :: arrayg(:)
+  integer           :: gsize      ! array global size from gsmap
+  character(len=32) :: subname='NCD_IOGLOBAL_GS_REAL' ! subroutine name
+!-----------------------------------------------------------------------
+
+   gsize = mct_gsmap_gsize(gsmap)
+   if (flag == 'read') then
+      if (masterproc) then
+         allocate(arrayg(gsize))
+         call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+         if (present(start).and.present(count)) then
+            call check_ret(nf_get_vara_double(ncid, varid, start, count, arrayg), subname)
+         else
+            call check_ret(nf_get_var_double(ncid, varid, arrayg), subname)
+         endif
+      endif
+      call scatter_data_from_master(data,arrayg,gsMap,perm,beg,end)
+      if (masterproc) then
+         deallocate(arrayg)
+      endif
+   else
+      if (masterproc) then
+         write(6,*) subname,' error: unsupported flag ',trim(flag)
+         call endrun()
+      endif
+   endif
+
+  end subroutine ncd_iolocal_gs_real
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_iolocal_gs_int
+!
+! !INTERFACE:
+  subroutine ncd_iolocal_gs_int(ncid, varname, flag, data, beg, end, gsmap, perm, start, count)
+!
+! !DESCRIPTION:
+! Netcdf i/o of 2d initial real field out to netCDF file
+!
+! !USES:
+#ifdef SPMD
+  use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
+#endif
+!
+! !ARGUMENTS:
+    implicit none
+    integer          ,intent(in)  :: ncid       ! input unit
+    character(len=*) ,intent(in)  :: varname    ! variable name
+    character(len=*) ,intent(in)  :: flag       ! 'read' or 'write'
+    integer,pointer               :: data(:)    ! local decomposition input data
+    integer          ,intent(in)  :: beg        ! local start index
+    integer          ,intent(in)  :: end        ! local end index
+    type(mct_gsMap)  ,intent(in)  :: gsmap      ! gsmap associate with data decomp
+    integer, pointer              :: perm(:)    ! permute array assoicated with gsmap
+    integer, optional,intent(in)  :: start(:)   ! netcdf start index
+    integer, optional,intent(in)  :: count(:)   ! netcdf count index
+
+!
+! !REVISION HISTORY:
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+  integer varid
+  integer, pointer  :: arrayg(:)
+  integer           :: gsize      ! array global size from gsmap
+  character(len=32) :: subname='NCD_IOGLOBAL_GS_INT' ! subroutine name
+!-----------------------------------------------------------------------
+
+   gsize = mct_gsmap_gsize(gsmap)
+   if (flag == 'read') then
+      if (masterproc) then
+         allocate(arrayg(gsize))
+         call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+         if (present(start).and.present(count)) then
+            call check_ret(nf_get_vara_int(ncid, varid, start, count, arrayg), subname)
+         else
+            call check_ret(nf_get_var_int(ncid, varid, arrayg), subname)
+         endif
+      endif
+      call scatter_data_from_master(data,arrayg,gsMap,perm,beg,end)
+      if (masterproc) then
+         deallocate(arrayg)
+      endif
+   else
+      if (masterproc) then
+         write(6,*) subname,' error: unsupported flag ',trim(flag)
+         call endrun()
+      endif
+   endif
+
+  end subroutine ncd_iolocal_gs_int
 
 !-----------------------------------------------------------------------
 !BOP

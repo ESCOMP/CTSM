@@ -12,7 +12,7 @@ module pftdynMod
   use spmdMod
   use clmtype
   use ncdio       , only : check_ret, check_dim
-  use domainMod   , only : llocdomain
+  use domainMod   , only : ldomain
   use clm_varsur  , only : pctspec
   use clm_varpar  , only : max_pft_per_col
   use shr_kind_mod, only : r8 => shr_kind_r8
@@ -43,7 +43,7 @@ module pftdynMod
   real(r8), pointer   :: wtpft2(:,:)   
   real(r8), pointer   :: wtpft(:,:)
   real(r8), pointer   :: wtcol_old(:)
-  integer , pointer,save :: lmask(:)           ! llocdomain landmask
+  integer , pointer,save :: lmask(:)           ! ldomain landmask
   integer :: nt1
   integer :: nt2
   integer :: ncid
@@ -106,15 +106,18 @@ contains
     character(len= 32) :: subname='pftdyn_init' ! subroutine name
  !-----------------------------------------------------------------------
 
+    write(6,*) 'tcraig memory must be reduced, pctspec now local'
+    call endrun()
+
     allocate(pctgla(lsmlon,lsmlat),pctlak(lsmlon,lsmlat))
     allocate(pctwet(lsmlon,lsmlat),pcturb(lsmlon,lsmlat))
     allocate(landmask_pftdyn(lsmlon,lsmlat))
     allocate(lmask(lsmlon*lsmlat))
 
 #ifdef SPMD
-    call gather_data_to_master (llocdomain%mask, lmask, clmlevel='gridcell')
+    call gather_data_to_master (ldomain%mask, lmask, clmlevel='gridcell')
 #else
-    lmask = llocdomain%mask
+    lmask = ldomain%mask
 #endif
 
     ! Set pointers into derived type

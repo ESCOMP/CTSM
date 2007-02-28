@@ -78,6 +78,10 @@ module clm_varctl
 !
   integer :: rtm_nsteps                         ! if > 1, average rtm over rtm_nsteps time steps
 !
+! Decomp control variables
+!
+  integer :: nsegspc                            ! number of segments per clump for decomp
+!
 ! Derived variables (run, history and restart file)
 !
   character(len=256) :: rpntdir                 ! directory name for local restart pointer file

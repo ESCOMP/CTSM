@@ -63,11 +63,12 @@ contains
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varctl  , only : fndepdat, single_column
     use fileutils   , only : getfil
+    use decompMod   , only : get_proc_bounds,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo
 !
 ! !ARGUMENTS:
     implicit none
     include 'netcdf.inc'
-    real(r8), intent(out) :: ndep(:,:)         ! annual nitrogen deposition rate (gN/m2/yr)
+    real(r8), pointer :: ndep(:)         ! annual nitrogen deposition rate (gN/m2/yr)
 !
 ! !CALLED FROM:
 ! subroutine initialize in module initializeMod
@@ -80,21 +81,24 @@ contains
 ! !LOCAL VARIABLES:
     character(len=256) :: locfn                          ! local file name
     integer  :: ncid,dimid,varid                         ! netCDF id's
+    integer  :: begg,endg                                ! start/stop gridcells
     integer  :: ier                                      ! error status 
     character(len=32) :: subname = 'ndeprd'              ! subroutine name
 !-----------------------------------------------------------------------
 
-    if (masterproc) then
+    call get_proc_bounds(begg,endg)
 
-       ! Initialize data to zero - no nitrogen deposition
+    ! Initialize data to zero - no nitrogen deposition
 
-       ndep(:,:)   = 0._r8
+    ndep(:)   = 0._r8
        
-       ! read data if file was specified in namelist
+    ! read data if file was specified in namelist
        
-       if (fndepdat /= ' ') then
+    if (fndepdat /= ' ') then
 
-          ! Obtain netcdf file and read surface data
+       ! Obtain netcdf file and read surface data
+
+       if (masterproc) then
 
           write (6,*) 'Attempting to read nitrogen deposition data .....'
 
@@ -108,21 +112,15 @@ contains
              lsmlon = 1
              lsmlat = 1
           end if
-
-          if ( .not. single_column )then
-             call check_ret(nf_inq_varid(ncid, 'NDEP_year', varid), subname) 
-             call check_ret(nf_get_var_double(ncid, varid, ndep), subname)
-          else
-             call endrun('ndeprd not implemented for SCAM' )
-          end if
-          
        endif 
 
-    endif                     !end of if-masterproc block
+       if ( .not. single_column )then
+          call ncd_iolocal(ncid,'NDEP_year','read',ndep,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo)
+       else
+          call endrun('ndeprd not implemented for SCAM' )
+       end if
 
-#ifdef SPMD 
-    call mpi_bcast (ndep, size(ndep), MPI_REAL8, 0, mpicom, ier)
-#endif
+    endif
 
     if ( masterproc )then
        write (6,*) 'Successfully read nitrogen deposition data'

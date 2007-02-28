@@ -21,7 +21,9 @@ module domainMod
   private
 !
   public :: domain_type
+  public :: latlon_type
 
+  !--- this typically contains local domain info with arrays dim begg:endg ---
   type domain_type
      integer          :: ns         ! global size of domain
      integer          :: ni,nj      ! global axis if 2d (nj=1 if unstructured)
@@ -39,36 +41,58 @@ module domainMod
      real(r8),pointer :: latn(:)    ! grid cell latitude, N edge (deg)
      real(r8),pointer :: lonw(:)    ! grid cell longitude, W edge (deg)
      real(r8),pointer :: lone(:)    ! grid cell longitude, E edge (deg)
-     character*16     :: domain_set ! flag to check if domain is set
+     character*16     :: set        ! flag to check if domain is set
      !--- following are valid only for land domain ---
      integer ,pointer :: pftm(:)    ! pft  mask: 1=real, 0=fake, -1=notset
      real(r8),pointer :: nara(:)    ! normalized area in upscaling (km**2),
      real(r8),pointer :: ntop(:)    ! normalized topo for downscaling (m)
-     integer ,pointer :: gatm(:)    ! overlapping atm gridcell, 1d glo
+!     integer ,pointer :: gatm(:)    ! overlapping atm gridcell, 1d glo
   end type domain_type
 
-  type(domain_type),public,pointer :: ldomain
-  type(domain_type),public,pointer :: ndomains(:)
-  type(domain_type),public,target  :: adomain
+  !--- this contains global info about a grid, lats and lons are 1d
+  !--- global arrays of size ni or nj which assume regular lat/lon grids only
+  type latlon_type
+     integer          :: ns         ! global size of domain
+     integer          :: ni,nj      ! global axis if 2d (nj=1 if unstructured)
+     character*16     :: set        ! flag to check if domain is set
+     logical          :: regional   ! regional or global grid
+     real(r8)         :: edges(4)   ! global edges (N,E,S,W)
+     real(r8),pointer :: latc(:)    ! latitude of 1d grid cell (deg)
+     real(r8),pointer :: lonc(:)    ! longitude of 1d grid cell (deg)
+     real(r8),pointer :: lats(:)    ! latitude of 1d south grid cell edge (deg)
+     real(r8),pointer :: latn(:)    ! latitude of 1d north grid cell edge (deg)
+     real(r8),pointer :: lonw(:)    ! longitude of 1d west grid cell edge (deg)
+     real(r8),pointer :: lone(:)    ! longitude of 1d east grid cell edge (deg)
+  end type latlon_type
 
-  type(domain_type),public         :: alocdomain
-  type(domain_type),public         :: llocdomain
+  type(domain_type),public    :: adomain
+  type(domain_type),public    :: ldomain
+
+  type(latlon_type),public    :: alatlon
+  type(latlon_type),public    :: llatlon
+
+  integer ,pointer,public     :: gatm(:)   ! gatm pulled out of domain
+  integer ,pointer,public     :: amask(:)  ! global atm mask
 
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public domain_init          ! allocates/nans domain types
   public domain_clean         ! deallocates domain types
-  public domain_copy          ! copy one domain to another
+  public domain_setsame          ! copy one domain to another
   public domain_setptrs       ! sets external pointer arrays into domain
   public domain_check         ! write out domain info
+  public latlon_init          ! allocates/nans domain types
+  public latlon_check         ! write out domain info
+  public latlon_clean         ! deallocate domain info
+  public latlon_setsame          ! copy one domain to another
 !
 !
 ! !REVISION HISTORY:
 ! Originally clm_varsur by Mariana Vertenstein
 ! Migrated from clm_varsur to domainMod by T Craig
 !
-  character*16,parameter :: domain_set   = 'domain_set      '
-  character*16,parameter :: domain_unset = 'NOdomain_unsetNO'
+  character*16,parameter :: set   = 'domain_set      '
+  character*16,parameter :: unset = 'NOdomain_unsetNO'
 !
 !EOP
 !------------------------------------------------------------------------------
@@ -114,14 +138,14 @@ contains
        endif
     endif
 
-    if (domain%domain_set == domain_set) then
+    if (domain%set == set) then
        call domain_clean(domain)
     endif
 
     allocate(domain%mask(nb:ne),domain%frac(nb:ne),domain%latc(nb:ne), &
              domain%pftm(nb:ne),domain%area(nb:ne),domain%lonc(nb:ne), &
              domain%nara(nb:ne),domain%topo(nb:ne),domain%ntop(nb:ne), &
-             domain%gatm(nb:ne), &
+!             domain%gatm(nb:ne), &
              stat=ier)
     if (ier /= 0) then
        write(6,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
@@ -140,7 +164,7 @@ contains
     domain%nbeg     = nb
     domain%nend     = ne
     domain%edges    = nan
-    domain%mask     = bigint
+    domain%mask     = -9999
     domain%frac     = -1.0e36
     domain%topo     = 0._r8
     domain%latc     = nan
@@ -151,18 +175,18 @@ contains
     domain%lonw     = nan
     domain%lone     = nan
 
-    domain%domain_set = domain_set
-    domain%regional   = .false.
+    domain%set      = set
+    domain%regional = .false.
     if (domain%nbeg == 1 .and. domain%nend == domain%ns) then
        domain%decomped = .false.
     else
        domain%decomped = .true.
     endif
 
-    domain%pftm     = bigint
+    domain%pftm     = -9999
     domain%nara     = 0._r8
     domain%ntop     = -1.0e36
-    domain%gatm     = bigint
+!    domain%gatm     = -9999
 
 end subroutine domain_init
 !------------------------------------------------------------------------------
@@ -191,14 +215,14 @@ end subroutine domain_init
     integer ier
 !
 !------------------------------------------------------------------------------
-    if (domain%domain_set == domain_set) then
+    if (domain%set == set) then
        if (masterproc) then
           write(6,*) 'domain_clean: cleaning ',domain%ni,domain%nj
        endif
        deallocate(domain%mask,domain%frac,domain%latc, &
                   domain%lonc,domain%area,domain%pftm, &
                   domain%nara,domain%topo,domain%ntop, &
-                  domain%gatm, &
+!                  domain%gatm, &
                   stat=ier)
        if (ier /= 0) then
           write(6,*) 'domain_clean ERROR: deallocate mask, frac, lat, lon, area '
@@ -221,7 +245,7 @@ end subroutine domain_init
     domain%nj         = bigint
     domain%nbeg       = bigint
     domain%nend       = bigint
-    domain%domain_set = domain_unset
+    domain%set        = unset
     domain%decomped   = .true.
     domain%regional   = .false.
 
@@ -229,13 +253,14 @@ end subroutine domain_clean
 !------------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: domain_copy
+! !IROUTINE: domain_setsame
 !
 ! !INTERFACE:
-  subroutine domain_copy(domain1,domain2)
+  subroutine domain_setsame(domain1,domain2)
 !
 ! !DESCRIPTION:
-! This subroutine sets domain2 == domain1
+! This subroutine copies parts of domain2 = domain1 specifically for
+! setting a finemesh lats/lons to coarsemesh grid
 !
 ! !USES:
 !
@@ -253,17 +278,13 @@ end subroutine domain_clean
     integer ier
 !
 !------------------------------------------------------------------------------
-    !!! Don't clean and reinitialize domain as we'll keep some data the same
-!   call domain_clean(domain2)
-!   call domain_init(domain2,domain1%ni,domain1%nj,domain1%nbeg,domain1%nend)
-    !!!
     if (domain1%ni /= domain2%ni .or. domain1%nj /= domain2%nj) then
-       write(6,*) 'domain_copy: error on size',domain1%ni,domain1%nj,domain2%ni,domain2%nj
+       write(6,*) 'domain_setsame: error on size',domain1%ni,domain1%nj,domain2%ni,domain2%nj
        call endrun()
     endif
 
     if (masterproc) then
-       write(6,*) 'domain_copy: copying ',domain1%ni,domain1%nj
+       write(6,*) 'domain_setsame: copying ',domain1%ni,domain1%nj
     endif
     domain2%edges    = domain1%edges
     !!! Don't copy mask, frac, topo, pftm, nara, ntop or gatm
@@ -274,7 +295,7 @@ end subroutine domain_clean
 !   domain2%nara     = domain1%nara
 !   domain2%ntop     = domain1%ntop
 !   domain2%gatm     = domain1%gatm
-    !!!
+
     domain2%latc     = domain1%latc
     domain2%lonc     = domain1%lonc
     domain2%area     = domain1%area
@@ -283,11 +304,11 @@ end subroutine domain_clean
     domain2%lonw     = domain1%lonw
     domain2%lone     = domain1%lone
 
-    domain2%domain_set = domain1%domain_set
-    domain2%regional   = domain1%regional
-    domain2%decomped   = domain1%decomped
+    domain2%set      = domain1%set
+    domain2%regional = domain1%regional
+    domain2%decomped = domain1%decomped
 
-end subroutine domain_copy
+end subroutine domain_setsame
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -380,9 +401,9 @@ end subroutine domain_copy
     if (present(ntop)) then
       ntop => domain%ntop
     endif
-    if (present(gatm)) then
-      gatm => domain%gatm
-    endif
+!    if (present(gatm)) then
+!      gatm => domain%gatm
+!    endif
     if (present(lats)) then
       lats => domain%lats
     endif
@@ -424,7 +445,7 @@ end subroutine domain_setptrs
 !------------------------------------------------------------------------------
 
   if (masterproc) then
-    write(6,*) '  domain_check domain_set= ',trim(domain%domain_set)
+    write(6,*) '  domain_check set       = ',trim(domain%set)
     write(6,*) '  domain_check decomped  = ',domain%decomped
     write(6,*) '  domain_check regional  = ',domain%regional
     write(6,*) '  domain_check ns        = ',domain%ns
@@ -444,11 +465,206 @@ end subroutine domain_setptrs
     write(6,*) '  domain_check pftm = ',minval(domain%pftm),maxval(domain%pftm)
     write(6,*) '  domain_check nara = ',minval(domain%nara),maxval(domain%nara)
     write(6,*) '  domain_check ntop = ',minval(domain%ntop),maxval(domain%ntop)
-    write(6,*) '  domain_check gatm = ',minval(domain%gatm),maxval(domain%gatm)
     write(6,*) ' '
   endif
 
 end subroutine domain_check
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: latlon_init
+!
+! !INTERFACE:
+  subroutine latlon_init(latlon,ni,nj)
+!
+! !DESCRIPTION:
+! This subroutine allocates and nans the latlon type
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    type(latlon_type) :: latlon        ! latlon datatype
+    integer           :: ni,nj         ! grid size, 2d
+!
+! !REVISION HISTORY:
+!   Created by T Craig
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    integer ier
+!
+!------------------------------------------------------------------------------
+
+    if (latlon%set == set) then
+       call latlon_clean(latlon)
+    endif
+
+    allocate(latlon%latc(nj),latlon%lonc(ni), &
+             latlon%lats(nj),latlon%latn(nj), &
+             latlon%lonw(ni),latlon%lone(ni), &
+             stat=ier)
+    if (ier /= 0) then
+       write(6,*) 'latlon_init ERROR: allocate '
+       call endrun()
+    endif
+
+    latlon%ns       = ni*nj
+    latlon%ni       = ni
+    latlon%nj       = nj
+    latlon%latc     = nan
+    latlon%lonc     = nan
+    latlon%lats     = nan
+    latlon%latn     = nan
+    latlon%lonw     = nan
+    latlon%lone     = nan
+    latlon%edges    = nan
+
+    latlon%set      = set
+    latlon%regional = .false.
+
+end subroutine latlon_init
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: latlon_clean
+!
+! !INTERFACE:
+  subroutine latlon_clean(latlon)
+!
+! !DESCRIPTION:
+! This subroutine allocates and nans the latlon type
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    type(latlon_type) :: latlon        ! latlon datatype
+!
+! !REVISION HISTORY:
+!   Created by T Craig
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    integer ier
+!
+!------------------------------------------------------------------------------
+
+    if (latlon%set == unset) then
+       return
+    endif
+
+    deallocate(latlon%latc,latlon%lonc, &
+               latlon%lats,latlon%latn, &
+               latlon%lonw,latlon%lone, &
+               stat=ier)
+    if (ier /= 0) then
+       write(6,*) 'latlon_clean ERROR: deallocate '
+       call endrun()
+    endif
+
+    latlon%ns       = bigint
+    latlon%ni       = bigint
+    latlon%nj       = bigint
+    latlon%edges    = nan
+
+    latlon%set      = unset
+    latlon%regional = .false.
+
+end subroutine latlon_clean
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: latlon_setsame
+!
+! !INTERFACE:
+  subroutine latlon_setsame(latlon1,latlon2)
+!
+! !DESCRIPTION:
+! This subroutine copies parts of latlon2 = latlon1 specifically for
+! setting a finemesh lats/lons to coarsemesh grid
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    type(latlon_type),intent(in)    :: latlon1        ! latlon datatype
+    type(latlon_type),intent(inout) :: latlon2        ! latlon datatype
+!
+! !REVISION HISTORY:
+!   Created by T Craig
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    integer ier
+!
+!------------------------------------------------------------------------------
+
+    if (latlon1%ni /= latlon2%ni .or. latlon1%nj /= latlon2%nj) then
+       write(6,*) 'latlon_setsame: error on size',latlon1%ni,latlon1%nj,latlon2%ni,latlon2%nj
+       call endrun()
+    endif
+
+    if (masterproc) then
+       write(6,*) 'latlon_setsame: copying ',latlon1%ni,latlon1%nj
+    endif
+    latlon2%edges    = latlon1%edges
+    latlon2%latc     = latlon1%latc
+    latlon2%lonc     = latlon1%lonc
+    latlon2%lats     = latlon1%lats
+    latlon2%latn     = latlon1%latn
+    latlon2%lonw     = latlon1%lonw
+    latlon2%lone     = latlon1%lone
+
+    latlon2%set      = latlon1%set
+    latlon2%regional = latlon1%regional
+
+end subroutine latlon_setsame
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: latlon_check
+!
+! !INTERFACE:
+  subroutine latlon_check(latlon)
+!
+! !DESCRIPTION:
+! This subroutine write latlon info
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    type(latlon_type),intent(in)  :: latlon        ! latlon datatype
+!
+! !REVISION HISTORY:
+!   Created by T Craig
+!
+!EOP
+!
+! LOCAL VARIABLES:
+!
+!------------------------------------------------------------------------------
+
+  if (masterproc .and. latlon%set == set) then
+    write(6,*) '  latlon_check ns        = ',latlon%ns
+    write(6,*) '  latlon_check ni,nj     = ',latlon%ni,latlon%nj
+    write(6,*) '  latlon_check set       = ',latlon%set
+    write(6,*) '  latlon_check regional  = ',latlon%regional
+    write(6,*) '  latlon_check edgeNESW  = ',latlon%edges
+    write(6,*) '  latlon_check lonc = ',minval(latlon%lonc),maxval(latlon%lonc)
+    write(6,*) '  latlon_check latc = ',minval(latlon%latc),maxval(latlon%latc)
+    write(6,*) '  latlon_check lonw = ',minval(latlon%lonw),maxval(latlon%lonw)
+    write(6,*) '  latlon_check lone = ',minval(latlon%lone),maxval(latlon%lone)
+    write(6,*) '  latlon_check lats = ',minval(latlon%lats),maxval(latlon%lats)
+    write(6,*) '  latlon_check latn = ',minval(latlon%latn),maxval(latlon%latn)
+    write(6,*) ' '
+  endif
+
+end subroutine latlon_check
 !------------------------------------------------------------------------------
 
 end module domainMod
