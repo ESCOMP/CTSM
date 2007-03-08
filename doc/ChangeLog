@@ -1,3 +1,97 @@
+===============================================================
+Tag name: clm3_expa_94
+Originator(s): nanr, Keith Oleson, Peter Thornton
+Date: 	Thu Mar  8 14:22:36 MST 2007
+One-line Summary:  BTRAN modification
+
+Purpose of changes:  Change BTRAN calculation to improve prognostic
+	LAI estimation in high latitudes.
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: Keith Oleson, Peter Thornton, Dave Lawrence
+
+List any svn externals directories updated (csm_share, mct, etc.): nanr
+
+List all subroutines eliminated: nanr
+
+List all subroutines added and what they do: nanr
+
+List all existing files that have been modified, and describe the changes:
+M      src/biogeophys/CanopyFluxesMod.F90
+
+Changing calculation of rootr to allow non-zero rootr (and btran) in partially frozen layers.
+
+Summary of testing:
+
+  bluevista:
+
+	001 sm111 TSM.sh 4p_vodsr_dh t31 48 ...............................PASS
+	002 er111 TER.sh 4p_vodsr_dh t31 10+38 ............................PASS
+	003 br111 TBR.sh 4p_vodsr_dh t31 24+24 ............................PASS
+	004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................SKIPPED*
+	005 sm114 TSM.sh 4p_vodsr_h t31 48 ................................PASS
+	006 sm121 TSM.sh 17p_vodsr_dh t31 48 ..............................PASS
+	007 er121 TER.sh 17p_vodsr_dh t31 10+38 ...........................PASS
+	008 br121 TBR.sh 17p_vodsr_dh t31 24+24 ...........................PASS
+	009 bl121 TBL.sh 17p_vodsr_dh t31 48 ..............................SKIPPED*
+	010 sm124 TSM.sh 17p_vodsr_h t31 48 ...............................PASS
+	011 sm211 TSM.sh 17p_cnn_dh t31_cnall 48 ..........................PASS
+	012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................PASS
+	013 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24 .......................PASS
+	014 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................SKIPPED*
+	015 sm311 TSM.sh 4p_casa_dh t31_casa 48 ...........................PASS
+	016 er311 TER.sh 4p_casa_dh t31_casa 10+38 ........................PASS
+	017 br311 TBR.sh 4p_casa_dh t31_casa 24+24 ........................PASS
+	018 bl311 TBL.sh 4p_casa_dh t31_casa 48 ...........................SKIPPED*
+	019 sm411 TSM.sh 10p_dgvm_dh t31_dgvm 48 ..........................PASS
+	020 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38 .......................PASS
+	021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................PASS
+	022 bl411 TBL.sh 10p_dgvm_dh t31_dgvm 48 ..........................SKIPPED*
+
+  bangkok/lf95:
+
+CLM tag used for the baseline comparison tests if applicable: none
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+	-larger than roundoff.  Climate changes unknown.
+	-Improves prognostic LAI estimation in high latitudes.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository): clm3_expa_89
+   - platform/compilers:  bluevista
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+	/OLESON/csm/hydp2_off_communn_hk38
+   
+   URL for LMWG diagnostics output used to validate new climate:
+
+http://www.cgd.ucar.edu/tss/clm/diagnostics/lmwg_hydro/hydp2_off_communn_hk38aa-hydp2_off_communn_expa89aa/setsIndex.html
+
+	
+===============================================================
 
 ===============================================================
 Tag name: clm3_expa_92

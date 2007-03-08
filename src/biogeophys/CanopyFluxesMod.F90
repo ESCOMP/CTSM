@@ -478,19 +478,35 @@ contains
 
          ! Root resistance factors
          
-         if (t_soisno(c,j) > tfrz) then
-            vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
-            eff_porosity = watsat(c,j)-vol_ice
-            vol_liq = min(eff_porosity, h2osoi_liq(c,j)/(dz(c,j)*denh2o))
+!KO         if (t_soisno(c,j) > tfrz) then
+!KO            vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
+!KO            eff_porosity = watsat(c,j)-vol_ice
+!KO            vol_liq = min(eff_porosity, h2osoi_liq(c,j)/(dz(c,j)*denh2o))
+!KO            s_node = max(vol_liq/eff_porosity,0.01_r8)
+!KO            smp_node = max(smpsc(ivt(p)), -sucsat(c,j)*s_node**(-bsw(c,j)))
+
+!KO            rresis(p,j) = min( (smp_node - smpsc(ivt(p))) / (smpso(ivt(p)) - smpsc(ivt(p))), 1._r8)
+!KO            rootr(p,j) = rootfr(p,j)*rresis(p,j)
+!KO            btran(p) = btran(p) + rootr(p,j)
+!KO         else
+!KO            rootr(p,j) = 0._r8
+!KO         end if
+!KO
+         vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
+         eff_porosity = watsat(c,j)-vol_ice
+         vol_liq = min(eff_porosity, h2osoi_liq(c,j)/(dz(c,j)*denh2o))
+         if (vol_liq .le. 0._r8) then
+            rootr(p,j) = 0._r8
+         else
             s_node = max(vol_liq/eff_porosity,0.01_r8)
             smp_node = max(smpsc(ivt(p)), -sucsat(c,j)*s_node**(-bsw(c,j)))
 
-            rresis(p,j) = min( (smp_node - smpsc(ivt(p))) / (smpso(ivt(p)) - smpsc(ivt(p))), 1._r8)
+            rresis(p,j) = min( (eff_porosity/watsat(c,j))* &
+                          (smp_node - smpsc(ivt(p))) / (smpso(ivt(p)) - smpsc(ivt(p))), 1._r8)
             rootr(p,j) = rootfr(p,j)*rresis(p,j)
             btran(p) = btran(p) + rootr(p,j)
-         else
-            rootr(p,j) = 0._r8
-         end if
+         endif 
+!KO
       end do
    end do
 
