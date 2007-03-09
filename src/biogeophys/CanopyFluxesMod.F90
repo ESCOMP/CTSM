@@ -477,21 +477,7 @@ contains
          l = plandunit(p)
 
          ! Root resistance factors
-         
-!KO         if (t_soisno(c,j) > tfrz) then
-!KO            vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
-!KO            eff_porosity = watsat(c,j)-vol_ice
-!KO            vol_liq = min(eff_porosity, h2osoi_liq(c,j)/(dz(c,j)*denh2o))
-!KO            s_node = max(vol_liq/eff_porosity,0.01_r8)
-!KO            smp_node = max(smpsc(ivt(p)), -sucsat(c,j)*s_node**(-bsw(c,j)))
 
-!KO            rresis(p,j) = min( (smp_node - smpsc(ivt(p))) / (smpso(ivt(p)) - smpsc(ivt(p))), 1._r8)
-!KO            rootr(p,j) = rootfr(p,j)*rresis(p,j)
-!KO            btran(p) = btran(p) + rootr(p,j)
-!KO         else
-!KO            rootr(p,j) = 0._r8
-!KO         end if
-!KO
          vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
          eff_porosity = watsat(c,j)-vol_ice
          vol_liq = min(eff_porosity, h2osoi_liq(c,j)/(dz(c,j)*denh2o))
@@ -506,7 +492,6 @@ contains
             rootr(p,j) = rootfr(p,j)*rresis(p,j)
             btran(p) = btran(p) + rootr(p,j)
          endif 
-!KO
       end do
    end do
 
@@ -1015,6 +1000,7 @@ contains
      real(r8), pointer :: leafcn(:)      ! leaf C:N (gC/gN)
      real(r8), pointer :: flnr(:)        ! fraction of leaf N in the Rubisco enzyme (gN Rubisco / gN leaf)
      real(r8), pointer :: sla(:)         ! specific leaf area, projected area basis (m^2/gC)
+     real(r8), pointer :: fnitr(:)       ! foliage nitrogen limitation factor (-)
 !
 ! local pointers to implicit inout variables
 !
@@ -1133,6 +1119,7 @@ contains
      mp        => pftcon%mp
      leafcn    => pftcon%leafcn
      flnr      => pftcon%flnr
+     fnitr     => pftcon%fnitr
 
      ! Set constant values
 
@@ -1184,7 +1171,11 @@ contains
            ! new calculations for vcmax, 1/26/04
            lnc(p) = 1._r8 / (sla(p) * leafcn(ivt(p)))
 		   act = act25 * f1(q10act,tc)
+#if (defined CN)
            vcmx(p) = lnc(p) * flnr(ivt(p)) * fnr * act / f2(tc) * btran(p)
+#else
+           vcmx(p) = lnc(p) * flnr(ivt(p)) * fnr * act / f2(tc) * btran(p) * fnitr(ivt(p))
+#endif
            
 #if (defined DGVM)
            vcmxpot = vcmx25(ivt(p)) * f1(avcmx,tc) / f2(tc)

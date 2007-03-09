@@ -606,6 +606,7 @@ contains
     allocate(pftcon%ntree(0:numpft))
     allocate(pftcon%smpso(0:numpft)) 
     allocate(pftcon%smpsc(0:numpft)) 
+    allocate(pftcon%fnitr(0:numpft))
     allocate(pftcon%foln(0:numpft))
     allocate(pftcon%dleaf(0:numpft))
     allocate(pftcon%c3psn(0:numpft))
@@ -656,6 +657,7 @@ contains
     pftcon%ntree(:) = bigint
     pftcon%smpso(:) = nan
     pftcon%smpsc(:) = nan
+    pftcon%fnitr(:) = nan
     pftcon%foln(:) = nan
     pftcon%dleaf(:) = nan
     pftcon%c3psn(:) = nan

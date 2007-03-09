@@ -87,7 +87,7 @@ cat >! lnd.stdin << EOF
  fsurdat        = '$CSMDATA/surfdata/surfdata_360x720_070122.nc'
  fatmgrid       = '$CSMDATA/griddata/griddata_360x720_070122.nc'
  fatmlndfrc     = '$CSMDATA/griddata/fracdata_360x720_070122.nc'
- fpftcon        = '$CSMDATA/pftdata/pft-physiology.c061129'
+ fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
  frivinp_rtm    = '$CSMDATA/rtmdata/rdirc.05.061026'
  offline_atmdir = '$CSMDATA/NCEPDATA'
  nsrest         =  0

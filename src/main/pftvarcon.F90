@@ -48,6 +48,7 @@ module pftvarcon
   real(r8):: sla(0:numpft)         ! specific leaf area [m2 leaf g-1 carbon]
   real(r8):: smpso(0:numpft)       !soil water potential at full stomatal opening (mm)
   real(r8):: smpsc(0:numpft)       !soil water potential at full stomatal closure (mm)
+  real(r8):: fnitr(0:numpft)       !foliage nitrogen limitation factor (-)
   ! begin new pft parameters for CN code
   real(r8):: slatop(0:numpft)      !SLA at top of canopy [m^2/gC]
   real(r8):: dsladlai(0:numpft)    !dSLA/dLAI [m^2/gC]
@@ -171,7 +172,7 @@ contains
                taul(i,2) , taus(i,1) , taus(i,2) , xl(i)     , &
                roota_par(i), rootb_par(i), slatop(i), dsladlai(i), &
 					leafcn(i), flnr(i), &
-                                        smpso(i), smpsc(i), &
+                                        smpso(i), smpsc(i), fnitr(i), &
                woody(i), lflitcn(i), frootcn(i), livewdcn(i), &
                deadwdcn(i), froot_leaf(i), stem_leaf(i), croot_stem(i), &
                flivewd(i), fcur(i), lf_flab(i), lf_fcel(i), lf_flig(i), &
@@ -186,7 +187,7 @@ contains
                taul(i,2) , taus(i,1) , taus(i,2) , xl(i)     , &
                roota_par(i), rootb_par(i), slatop(i), dsladlai(i), &
 					leafcn(i), flnr(i), &
-                                        smpso(i), smpsc(i)
+                                        smpso(i), smpsc(i), fnitr(i)
 #endif 
           if (ier /= 0) then
              write(6,*)'pftconrd: error in reading in pft data'
@@ -228,6 +229,7 @@ contains
     crop(noveg) = 0._r8
     smpso(noveg) = 0._r8
     smpsc(noveg) = 0._r8
+    fnitr(noveg) = 0._r8
     slatop(noveg) = 0._r8
     dsladlai(noveg) = 0._r8
     leafcn(noveg) = 1._r8
@@ -276,6 +278,7 @@ contains
     call mpi_bcast (crop, size(crop), MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (smpso, size(smpso), MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (smpsc, size(smpsc), MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast (fnitr, size(fnitr), MPI_REAL8, 0, mpicom, ier)
 
     ! begin variables used only for CN code
     call mpi_bcast (slatop, size(slatop), MPI_REAL8, 0, mpicom, ier)

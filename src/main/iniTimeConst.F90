@@ -29,7 +29,7 @@ subroutine iniTimeConst
                            albsat, albdry
   use clm_varctl  , only : nsrest, fsurdat,scmlon,scmlat,single_column
   use pftvarcon   , only : ncorn, nwheat, noveg, ntree, roota_par, rootb_par,  &
-                           smpso, smpsc, &
+                           smpso, smpsc, fnitr, &
                            z0mr, displar, dleaf, rhol, rhos, taul, taus, xl, &
                            qe25, vcmx25, mp, c3psn, slatop, dsladlai, leafcn, flnr, woody, &
                            lflitcn, frootcn, livewdcn, deadwdcn, froot_leaf, stem_leaf, croot_stem, &
@@ -363,6 +363,7 @@ subroutine iniTimeConst
       pftcon%flnr(m) = flnr(m)
       pftcon%smpso(m) = smpso(m)
       pftcon%smpsc(m) = smpsc(m)
+      pftcon%fnitr(m) = fnitr(m)
       pftcon%woody(m) = woody(m)
       pftcon%lflitcn(m) = lflitcn(m)
       pftcon%frootcn(m) = frootcn(m)

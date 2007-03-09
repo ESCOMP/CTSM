@@ -226,6 +226,7 @@ type, public :: pft_epc_type
    integer , pointer :: ntree(:) 		!value for last type of tree
    real(r8), pointer :: smpso(:)                !soil water potential at full stomatal opening (mm)
    real(r8), pointer :: smpsc(:)                !soil water potential at full stomatal closure (mm)
+   real(r8), pointer :: fnitr(:)                !foliage nitrogen limitation factor (-)
    real(r8), pointer :: foln(:) 	        !foliage nitrogen (%)
    real(r8), pointer :: dleaf(:) 		!characteristic leaf dimension (m)
    real(r8), pointer :: c3psn(:) 		!photosynthetic pathway: 0. = c4, 1. = c3
