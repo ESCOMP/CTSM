@@ -207,7 +207,7 @@ end subroutine subgrid_get_indexes
   use clm_varpar  , only : numpft, maxpatch_pft, &
                            npatch_lake, npatch_glacier, npatch_wet, npatch_crop
   use clm_varctl  , only : allocate_all_vegpfts
-  use clm_varsur  , only : wtxy => lwtxy
+  use clm_varsur  , only : wtxy
 
 ! !ARGUMENTS
     implicit none

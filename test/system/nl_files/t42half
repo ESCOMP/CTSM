@@ -1,0 +1,34 @@
+#!/bin/sh 
+#
+cat > lnd.stdin << EOF
+ &clm_inparm
+ caseid         = 'clmrun'
+ ctitle         = 'clmrun'
+ finidat        = ' '
+ fsurdat        = '$CSMDATA/surfdata/surfdata_360x720_070122.nc'
+ flndtopo       = '$CSMDATA/griddata/topodata_360x720_c060528.nc'
+ fatmgrid       = '$CSMDATA/griddata/griddata_64x128_060829.nc'
+ fatmlndfrc     = '$CSMDATA/griddata/fracdata_64x128_USGS_070110.nc'
+ fatmtopo       = '$CSMDATA/griddata/topodata_64x128_060829.nc'
+ fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
+ frivinp_rtm    = "$CSMDATA/rtmdata/rdirc.05.061026"
+ offline_atmdir = "$CSMDATA/NCEPDATA"
+ nrevsn         = "$nrevsn"
+ nsrest         =  $restart_type
+ nelapse        =  $run_length
+ dtime          =  1800
+ rtm_nsteps     =  2 
+ start_ymd      =  19971231
+ start_tod      =  0
+ irad           = -1
+ wrtdia         = .true.
+ mss_irt        =  0
+ hist_dov2xy    = .true.
+ hist_nhtfrq    =  3
+ hist_mfilt     =  1
+ hist_ndens     =  1
+ hist_crtinic   = 'MONTHLY'
+ brnch_retain_casename = .true.
+ /
+EOF
+

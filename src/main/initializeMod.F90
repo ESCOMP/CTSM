@@ -17,7 +17,7 @@ module initializeMod
   use shr_sys_mod     , only : shr_sys_flush
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest
-  use clm_varsur      , only : lwtxy,lvegxy
+  use clm_varsur      , only : wtxy,vegxy
 ! !PUBLIC TYPES:
   implicit none
   save
@@ -73,8 +73,9 @@ contains
                            decomp_lnd_init, decomp_glcp_init
     use domainMod , only : domain_check,domain_setsame, domain_clean, domain_type
     use domainMod , only : adomain,ldomain
-    use domainMod , only : alatlon,llatlon,gatm,amask,latlon_check, latlon_setsame
-    use areaMod   , only : map_setgatm_UNITY
+    use domainMod , only : alatlon,llatlon,gatm,amask,pftm
+    use domainMod , only : latlon_check, latlon_setsame
+    use areaMod   , only : map_setgatm
     use surfrdMod , only : surfrd,surfrd_get_grid,surfrd_get_frac,&
                            surfrd_get_topo, surfrd_get_latlon
     use clm_varctl, only : fsurdat, fatmgrid, fatmlndfrc, &
@@ -144,7 +145,7 @@ contains
        call shr_sys_flush(6)
     endif
 
-    call surfrd_get_latlon(llatlon, fsurdat)
+    call surfrd_get_latlon(llatlon, fsurdat, pftm, pftmflag=.true.)
     call latlon_check(llatlon)
 
     lsmlon = llatlon%ni
@@ -190,6 +191,7 @@ contains
 
     call decomp_atm_init(alatlon,amask)
 
+#if (1 == 0)
     !--- set gatm "unity".  doesn't support finemesh grids yet
     if (llatlon%ni /= alatlon%ni .or. llatlon%nj /= alatlon%nj) then
        if (masterproc) write(6,*) 'ERROR llatlon size /= alatlon size: ', &
@@ -198,8 +200,13 @@ contains
     else
        call map_setgatm_UNITY(gatm,alatlon,amask)
     endif
+#endif
+    call map_setgatm(gatm,alatlon,llatlon,amask,pftm)
 
-    !--- Read atm grid ---
+    ! Initialize clump and processor decomposition 
+    call decomp_lnd_init(alatlon%ns,alatlon%ni,alatlon%nj,llatlon%ns,llatlon%ni,llatlon%nj)
+
+    !--- Read atm grid -------------------------------------------------------------------
 
     if (masterproc) then
        write (6,*) 'Attempting to read agdomain from fatmgrid'
@@ -236,6 +243,8 @@ contains
 
     call domain_clean(agdomain)
 
+    !--- Read lnd grid -------------------------------------------------------------------
+
     if (masterproc) then
        write (6,*) 'Attempting to read lgdomain from fsurdat ',trim(fsurdat)
        call shr_sys_flush(6)
@@ -244,7 +253,7 @@ contains
 
     if (flndtopo /= " ") then
     if (masterproc) then
-       write (6,*) 'Attempting to read lnd topo from flndtopo ',n,trim(flndtopo)
+       write (6,*) 'Attempting to read lnd topo from flndtopo ',trim(flndtopo)
        call shr_sys_flush(6)
     endif
     call surfrd_get_topo(lgdomain, flndtopo)
@@ -253,9 +262,6 @@ contains
     if (masterproc) then
        call domain_check(lgdomain)
     endif
-
-    ! Initialize clump and processor decomposition 
-    call decomp_lnd_init(alatlon%ns,alatlon%ni,alatlon%nj,llatlon%ns,llatlon%ni,llatlon%nj)
 
     call get_proc_bounds    (begg    , endg)
     call decomp_domg2l(lgdomain,ldomain,ldecomp,begg,endg)
@@ -266,6 +272,8 @@ contains
 
     call domain_clean(lgdomain)
 
+    !--- overwrite ldomain if same grids --------------------------------------------
+
     if (samegrids) then
        if (masterproc) write(6,*) 'initialize1: samegrids true, set ldomain =~ adomain'
        call domain_setsame(adomain,ldomain)
@@ -274,8 +282,8 @@ contains
     ! Allocate surface grid dynamic memory (for wtxy and vegxy arrays)
 
     call get_proc_bounds    (begg    , endg)
-    allocate (lvegxy(begg:endg,maxpatch), &
-              lwtxy(begg:endg,maxpatch),  &
+    allocate (vegxy(begg:endg,maxpatch), &
+              wtxy(begg:endg,maxpatch),  &
               stat=ier)   
     if (ier /= 0) then
        write(6,*)'initialize allocation error'; call endrun()
@@ -399,10 +407,8 @@ contains
     integer           :: perpetual_ymd      ! Perpetual date (YYYYMMDD)
 !----------------------------------------------------------------------
 
-    ! Compute gatm, ldomain/adomain overlap point
-!    call map_setgatm(adomain,ldomain)
-
     ! Set the a2l and l2a maps
+
     call map_setmapsFM(adomain,ldomain,gatm,map1dl_a2l,map1dl_l2a)
 
     ! Allocate memory and initialize values of clmtype data structures
@@ -423,7 +429,7 @@ contains
 
     ! Deallocate surface grid dynamic memory (for wtxy and vegxy arrays)
 
-    deallocate (lvegxy, lwtxy)
+    deallocate (vegxy, wtxy)
 
     ! ------------------------------------------------------------------------
     ! Initialize time constant variables 

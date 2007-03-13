@@ -20,7 +20,7 @@ module areaMod
   use shr_const_mod, only : SHR_CONST_PI
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_sys_mod  , only : shr_sys_flush
-  use spmdMod      , only : masterproc
+  use spmdMod      , only : iam,masterproc
   use nanMod      
   use abortutils   , only : endrun
 !
@@ -53,13 +53,13 @@ module areaMod
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: map_init
   public :: map_setptrs
-!  public :: map_setmapsFM_global
   public :: map_setmapsFM
   public :: map_setmapsAR
   public :: map_maparrayl
   public :: map_maparrayg
-!  public :: map_setgatm
-  public :: map_setgatm_UNITY
+  public :: map_setgatm
+!  public :: map_setmapsFM_global
+!  public :: map_setgatm_UNITY
   interface celledge
      module procedure domain_celledge_regional
      module procedure domain_celledge_global  
@@ -340,6 +340,311 @@ end subroutine map_maparrayl
     enddo
 
 end subroutine map_maparrayg
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: map_setgatm
+!
+! !INTERFACE:
+  subroutine map_setgatm(gatm, alatlon, llatlon, amask, pftm)
+!
+! !DESCRIPTION:
+! Set gatm index in ldomain.  unique for finemesh.
+!
+! !USES:
+!
+  use domainMod, only : latlon_type
+!
+! !ARGUMENTS:
+  implicit none
+  integer, pointer               :: gatm(:)
+  type(latlon_type), intent(in)  :: alatlon
+  type(latlon_type), intent(in)  :: llatlon
+  integer          , intent(in)  :: amask(:)
+  integer          , intent(in)  :: pftm(:)
+!
+! !REVISION HISTORY:
+! 2006.06.28  T Craig  Creation.
+! 2006.08.23  P Worley Performance optimizations
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer          :: nlon_a       !input  grid: max number of longitude pts
+    integer          :: nlat_a       !input  grid: number of latitude  points
+    integer          :: ns_a         !input  grid: total number of cells
+!    integer ,pointer :: mask_a(:)    !input grid: mask
+    real(r8),pointer :: lon_a(:)     !input grid: longitude (degrees)
+    real(r8),pointer :: lat_a(:)     !input grid: latitude  (degrees)
+    real(r8),pointer :: lone_a(:)    !input grid: longitude, E edge (degrees)
+    real(r8),pointer :: lonw_a(:)    !input grid: longitude, W edge (degrees)
+    real(r8),pointer :: latn_a(:)    !input grid: latitude , N edge (degrees)
+    real(r8),pointer :: lats_a(:)    !input grid: latitude , S edge (degrees)
+    integer          :: nlon_l       !output grid: max number of longitude pts
+    integer          :: nlat_l       !output grid: number of latitude  points
+    integer          :: ns_l         !output grid: total number of cells
+!    integer ,pointer :: gatm_l(:)    !output grid: atm grid cell overlapping
+    real(r8),pointer :: lon_l(:)     !output grid: longitude (degrees)
+    real(r8),pointer :: lat_l(:)     !output grid: latitude  (degrees)
+    real(r8),pointer :: lone_l(:)    !output grid: longitude, E edge (degrees)
+    real(r8),pointer :: lonw_l(:)    !output grid: longitude, W edge (degrees)
+    real(r8),pointer :: latn_l(:)    !output grid: latitude , N edge (degrees)
+    real(r8),pointer :: lats_l(:)    !output grid: latitude , S edge (degrees)
+!    integer ,pointer :: pftm_l(:)    !output grid: cell frac
+    integer          :: n            !loop counters
+    integer          :: ia,ja,na     !indices for atm grid
+    integer          :: il,jl,nl     !indices for lnd grid
+    integer          :: if,jf,nf     !found indices
+    integer          :: noffset=1    !noffset
+    real(r8)         :: doffset =360_r8 !offset value
+    real(r8)         :: offset       !offset*n_offset
+    logical          :: found        !local logical 
+    logical          :: overlapgrid  !are atm and lnd grids 1:1
+    logical          :: latlongrid   !are atm and lnd grids regular lat/lon
+    real(r8),parameter :: relerr = 1.0e-6    ! error limit
+    integer          :: cnt,cnt0,cmax  !counters
+!tcx fix, lat_l_local should be removed when limit no longer needed
+    real(r8)         :: lat_l_local  !local copy of lat_l(il,jl), adjusted
+    real(r8),parameter:: eps = 1.0e-8  ! eps for check
+
+    integer, pointer :: ilfound(:)     ! list over overlap i indices
+    integer, pointer :: jlfound(:)     ! list over overlap j indices
+    integer, pointer :: nocnt(:)      ! lnd cell count per atm cell
+    integer, pointer :: nooff(:)      ! atm cell offset in nomap
+    integer, pointer :: nomap(:)      ! map from atm cell to lnd cells
+    integer :: noidx
+!
+!------------------------------------------------------------------------
+
+    !--- set pointers into domains, initialize gridmap a2l gridmap ---
+
+    ns_a   =  alatlon%ns
+    nlon_a =  alatlon%ni
+    nlat_a =  alatlon%nj
+    lat_a  => alatlon%latc
+    lon_a  => alatlon%lonc
+    latn_a => alatlon%latn
+    lats_a => alatlon%lats
+    lone_a => alatlon%lone
+    lonw_a => alatlon%lonw
+
+    ns_l   =  llatlon%ns
+    nlon_l =  llatlon%ni
+    nlat_l =  llatlon%nj
+    lat_l  => llatlon%latc
+    lon_l  => llatlon%lonc
+    latn_l => llatlon%latn
+    lats_l => llatlon%lats
+    lone_l => llatlon%lone
+    lonw_l => llatlon%lonw
+
+    allocate(gatm(ns_l))
+
+    !--- search for the overlap, input to output, 1:1 "disaggregation" ---
+    !--- this is the coarse to fine map where there should be exactly
+    !--- one coarse overlap point for each fine point 
+    !--- three possible search algorithms, overlapgrid, latlongrid, neither
+    !--- figure out which search scheme to use
+
+    !--- overlapgrid means both grids are identical to relerr
+    overlapgrid = .false.
+    if (nlon_a == nlon_l .and. nlat_a == nlat_l) then
+       overlapgrid = .true.
+       do jl = 1, nlat_l
+          if (abs( lat_l(jl)- lat_a(jl)) > relerr .or. &
+              abs(latn_l(jl)-latn_a(jl)) > relerr .or. &
+              abs(lats_l(jl)-lats_a(jl)) > relerr) then
+             overlapgrid = .false.
+          endif
+       enddo
+       do il = 1, nlon_l
+          if (abs( lon_l(il)- lon_a(il)) > relerr .or. &
+              abs(lone_l(il)-lone_a(il)) > relerr .or. &
+              abs(lonw_l(il)-lonw_a(il)) > relerr) then
+             overlapgrid = .false.
+          endif
+       enddo
+    endif
+
+    !--- latlongrid means atm grid is regular latlon grid
+    !--- always true for now, may not be in the future
+    latlongrid = .true.
+
+    if (masterproc) write(6,*) 'setgatm overlapgrid,latlongrid = ',overlapgrid,latlongrid
+
+!pw major restructuring follows
+    if (overlapgrid) then
+       gatm = -1
+       do nl = 1,ns_l
+          if (pftm(nl) >= 0) then       ! only real or fake points
+             if (amask(nl) /= 0) then
+                gatm(nl)=nl
+             endif
+          endif
+       enddo
+
+    elseif (latlongrid) then
+!pw Still need restructuring for vectorization.
+
+       allocate(ilfound(nlon_l),jlfound(nlat_l))
+       ilfound = 0
+       jlfound = 0
+
+       do jl = 1, nlat_l
+          found  = .false.
+          lat_l_local = min(max(lat_l(jl),-90.0_r8),90.0_r8)  !limit [-90,90]
+          do ja = 1,nlat_a
+             if ((ja == 1 .and. lat_l_local <= latn_a(ja) .and.   &
+                                lat_l_local >= lats_a(ja)) .or.   &
+                 (ja >  1 .and. lat_l_local <= latn_a(ja) .and.   &
+                                lat_l_local >  lats_a(ja))) then
+                if (found) then
+                   write(6,*) 'map_setgatm WARNING: found > 1 pt j ', &
+                      jl,ja,jlfound(jl),lat_l(jl),lat_l_local
+                   call endrun()
+                endif
+                jlfound(jl) = ja
+                found = .true.
+             endif
+          enddo  ! ja
+       enddo !jl
+
+       do il = 1, nlon_l
+          found  = .false.
+          do ia = 1,nlon_a
+          do n = -noffset,noffset
+             offset = n*doffset
+             if ((ia == 1 .and. lon_l(il)+offset <= lone_a(ia) .and.   &
+                                lon_l(il)+offset >= lonw_a(ia)) .or.   &
+                 (ia >  1 .and. lon_l(il)+offset <= lone_a(ia) .and.   &
+                                lon_l(il)+offset >  lonw_a(ia))) then
+                if (found) then
+                   write(6,*) 'map_setgatm WARNING: found > 1 pt i ', &
+                      il,ia,ilfound(il),lon_l(il)+offset
+                   call endrun()
+                endif
+                ilfound(il) = ia
+                found = .true.
+             endif
+          enddo  ! n, offset
+          enddo  ! ia
+       enddo
+
+       gatm = -1
+       do jl = 1,nlat_l
+       do il = 1,nlon_l
+          nl = (jl-1)*nlon_l + il
+          if (pftm(nl) >= 0) then       ! only real or fake points
+             if = ilfound(il)
+             jf = jlfound(jl)
+             nf = (jf-1)*nlon_a + if
+             if (if == 0 .or. jf == 0) then
+                write(6,*) 'map_setgatm ERROR: pt not found, ', &
+                   il,lon_l(il), '_l', &
+                   minval(lon_l),maxval(lon_l),           &
+                   minval(lat_l),maxval(lat_l),'_awe',    &
+                   minval(lonw_a),maxval(lonw_a),         &
+                   minval(lone_a),maxval(lone_a),'_asn',  &
+                   minval(lats_a),maxval(lats_a),         &
+                   minval(latn_a),maxval(latn_a)
+                call endrun()
+             endif
+             if (amask(nf) /= 0) then
+                gatm(nl)=nf
+             endif
+          endif
+       enddo
+       enddo
+
+       deallocate(ilfound,jlfound)
+
+    else
+!pw Still need restructuring for vectorization
+
+       write(6,*) 'map_setgatm ERROR: irregular lat lon grid not supported'
+       call endrun()
+
+    endif
+!pw major restructuring ends
+
+    !--- remove fake land if there is at least one real land overlap point ---
+    allocate(nocnt(ns_a),nooff(ns_a),nomap(ns_l))
+
+    nocnt = 0
+    do nl = 1,ns_l
+       na = gatm(nl)
+       if (na > 0) then
+          nocnt(na) = nocnt(na) + 1
+       endif
+    enddo
+
+    nooff(1) = 1
+    do na = 2,ns_a
+       nooff(na) = nooff(na-1) + nocnt(na-1)
+    enddo
+
+    nocnt = 0
+    nomap = -1
+    do nl = 1,ns_l
+       na = gatm(nl)
+       if (na > 0) then
+         nomap(nooff(na)+nocnt(na)) = nl
+         nocnt(na) = nocnt(na) + 1
+       endif
+    enddo
+
+    do na = 1,ns_a
+       found = .false.        ! check if any points are real land
+       do noidx = 0,nocnt(na)-1
+          nl = nomap(nooff(na)+noidx)
+          if (pftm(nl) > 0 ) then
+             found = .true.
+          endif
+       enddo
+       if (found) then        ! if so, keep only real land points
+!dir$ concurrent
+          do noidx = 0,nocnt(na)-1
+             nl = nomap(nooff(na)+noidx)
+             if (pftm(nl) <= 0 ) then
+                gatm(nl) = -1
+             endif
+       enddo
+       endif
+    enddo
+
+    !--- check that valid fine grid points have coarse mapping gridpoints
+    if (masterproc) then
+       nocnt = 0
+       do nl = 1,ns_l
+          na = gatm(nl)
+          if (na > 0) then
+             nocnt(na) = nocnt(na) + 1
+          endif
+       enddo
+
+       found = .true.
+       do na = 1,ns_a
+          if ((amask(na) /= 0) .and. (nocnt(na) == 0)) then
+             found = .false.
+          endif
+       enddo
+       if (.not. found) then
+          do na = 1,ns_a
+             if ((amask(na) /= 0) .and. (nocnt(na) == 0)) then
+                write(6,*) 'map_setgatm ERROR: invalid f->c index ', &
+                   na,amask(na)
+                call endrun()
+             endif
+          enddo
+       endif
+
+    endif
+
+    deallocate(nocnt,nooff,nomap)
+
+end subroutine map_setgatm
+!------------------------------------------------------------------------------
 
 #if (1 == 0)
 !tcx DO NOT DELETE THIS YET
@@ -685,6 +990,7 @@ end subroutine map_maparrayg
 
 end subroutine map_setgatm
 #endif
+#if (1 == 0)
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -726,6 +1032,8 @@ end subroutine map_setgatm
     enddo
 
 end subroutine map_setgatm_UNITY
+#endif
+#if (1 == 0)
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -975,6 +1283,7 @@ end subroutine map_setgatm_UNITY
     call map_checkmap(map1dl_l2a)
 
 end subroutine map_setmapsFM_global
+#endif
 
 !------------------------------------------------------------------------------
 !BOP
@@ -996,6 +1305,7 @@ end subroutine map_setmapsFM_global
 ! !USES:
   use decompMod, only : ldecomp, adecomp
   use decompMod, only : get_proc_bounds, get_proc_bounds_atm
+  use clm_varsur, only : wtxy
 !
 ! !ARGUMENTS:
   implicit none
@@ -1024,7 +1334,6 @@ end subroutine map_setmapsFM_global
     real(r8),pointer :: nara_l(:)    !output grid: cell equiv upscale area
     real(r8),pointer :: topo_l(:)    !output grid: cell topo/elevation
     real(r8),pointer :: ntop_l(:)    !output grid: cell equiv downscale topo
-!    integer ,pointer :: gatm_l(:)
     real(r8),pointer :: frac_l(:)    !output grid: cell frac
 
     integer          :: n_a2l       !a2l nwts
@@ -1061,8 +1370,6 @@ end subroutine map_setmapsFM_global
     call domain_setptrs(domain_l,ns=ns_l, &
        area=area_l, mask=mask_l, frac=frac_l, &
        nara=nara_l,topo=topo_l,ntop=ntop_l)
-!       nara=nara_l,topo=topo_l,ntop=ntop_l, &
-!       gatm=gatm_l)
 
     !--- allocate temporaries
 
@@ -1096,7 +1403,6 @@ end subroutine map_setmapsFM_global
     enddo
 
     !--- initialize and allocate maps
-
     call map_init(map1dl_a2l,domain_a,domain_l,na2l,name='setmapsFM_a2l', &
                   type=map_typelocal)
     call map_init(map1dl_l2a,domain_l,domain_a,nl2a,name='setmapsFM_l2a', &
@@ -1215,7 +1521,11 @@ end subroutine map_setmapsFM_global
           endif
           nara_l(nl)   = (area_l(nl)/asum(na))*area_a(na)
 !-v-v-v-v-v- land topo elevation adjustment for downscaling -v-v-v-v-
-          if (topo_a(na) > 0.) then
+!----------- want avg land topo to be equal to atm topo and want the
+!----------- variability in finemesh land topo to be preserved
+          if (tsum(na) == 0.) then
+             ntop_l(nl)   = ntop_l(nl)+topo_a(na)
+          elseif (topo_a(na) > 0.) then
              ntop_l(nl)   = (ntop_l(nl)/(tsum(na)/asum(na)))*topo_a(na)
           else
              ntop_l(nl)   = (ntop_l(nl)-(tsum(na)/asum(na)))+topo_a(na)
@@ -1257,7 +1567,6 @@ end subroutine map_setmapsFM_global
     enddo
 
     !--- clean up
-
     deallocate(ncnta,cnta,asum,tsum)
 
     call map_checkmap(map1dl_a2l)
@@ -1269,26 +1578,6 @@ end subroutine map_setmapsFM_global
     ! scaled frac which aggregated over all land cells under an atm cell,
     ! will match the area associated with the atm cell.
 
-#if (1 == 0)
-    do n1 = 1,ldomain%ns
-!       if (gatm(n1) /= ldomain%gatm(n1)) then
-!          write(6,*) 'tcx diff gatm ',n1,gatm(n1),ldomain%gatm(n1)
-!       endif
-       n2 = gatm(n1)
-       if (n2 <= 0) then
-          ldomain%mask(n1) = 0
-          ldomain%frac(n1) = 0.
-       else
-          if (n2 > adomain%ns) then
-            write(6,*) 'initialization1 ERROR n2 out of range n1,n2 = ',n1,n2
-            call endrun()
-          endif
-          ldomain%mask(n1) = 1
-          ldomain%frac(n1) = adomain%frac(n2)*  &
-                            (ldomain%nara(n1)/ldomain%area(n1))
-       endif
-    enddo
-#else
     do nl = begg,endg
        nlg = ldecomp%gdc2glo(nl)
        nag = gatm_l(nlg)
@@ -1306,7 +1595,6 @@ end subroutine map_setmapsFM_global
        mask_l(nl) = 1
        frac_l(nl) = frac_a(na)* (nara_l(nl)/area_l(nl))
     enddo
-#endif
 
 end subroutine map_setmapsFM
 
@@ -1985,31 +2273,18 @@ end subroutine map_setmapsFM
     real(r8),pointer :: wts(:)       !weight
     integer          :: n            !loop counters
     real(r8),pointer :: rsum(:)      !local array for deriving values
-    integer ,pointer :: isum(:)      !local array for deriving values
-    real(r8),pointer :: rloc(:)      !local array for deriving values
-    integer ,pointer :: iloc(:)      !local array for deriving values
     real(r8)         :: rmin,rmax    !local min/max values
+    real(r8)         :: smin,smax    !local min/max values
     integer          :: imin,imax    !local min/max values
-    integer          :: begg,endg    !local beg/end
-    integer ,pointer :: igv1(:)      ! integer gather vector
-    integer ,pointer :: igv2(:)      ! integer gather vector
-    real(r8),pointer :: rgv1(:)      ! real gather vector
-    real(r8),pointer :: rgv2(:)      ! real gather vector
+    integer          :: nmin,nmax,nsum  !local min/max/sum values
     integer          :: ier          ! error flag
 !
 !------------------------------------------------------------------------
 
     !--- get general info ---
-    call get_proc_bounds    ( begg,  endg)
     call map_setptrs(map,ni_i=nlon_i,nj_i=nlat_i, &
                          ni_o=nlon_o,nj_o=nlat_o)
     call map_setptrs(map,nwts=nwts,src=src,dst=dst,wts=wts,dstmo=dstmo)
-
-    !--- allocate temporaries ---
-    allocate(igv1(0:npes-1),igv2(0:npes-1))
-    allocate(rgv1(0:npes-1),rgv2(0:npes-1))
-    allocate(rsum(begg:endg),isum(begg:endg))
-    allocate(rloc(nwts),iloc(nwts))
 
     if (masterproc) then
        write(6,*) ' '
@@ -2017,112 +2292,119 @@ end subroutine map_setmapsFM
        write(6,*) 'map_checkmap type          = ',trim(map%type)
        write(6,*) 'map_checkmap src grid      = ',nlon_i,nlat_i
        write(6,*) 'map_checkmap dst grid      = ',nlon_o,nlat_o
-!       write(6,*) 'map_checkmap begg/endg     = ',begg,endg
-!       write(6,*) 'map_checkmap nwts          = ',iam,nwts
        write(6,*) 'map_checkmap dstmo         = ',dstmo
-!       write(6,*) 'map_checkmap src min/max   = ',minval(src),maxval(src)
-!       write(6,*) 'map_checkmap dst min/max   = ',minval(dst),maxval(dst)
-!       write(6,*) 'map_checkmap wts min/max   = ',minval(wts),maxval(wts)
     endif
 
 #if (defined SPMD)
-    call mpi_gather(nwts,1,MPI_INTEGER,igv1,1,MPI_INTEGER,0,mpicom,ier)
+    call mpi_reduce(nwts,nmin,1,MPI_INTEGER,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_gather nwts error: ',ier
+       write(6,*)'mpi_reduce nwts error: ',ier
+    endif
+    call mpi_reduce(nwts,nmax,1,MPI_INTEGER,MPI_MAX,0,mpicom,ier)
+    if (ier /= 0) then
+       write(6,*)'mpi_reduce nwts error: ',ier
+    endif
+    call mpi_reduce(nwts,nsum,1,MPI_INTEGER,MPI_SUM,0,mpicom,ier)
+    if (ier /= 0) then
+       write(6,*)'mpi_reduce nwts error: ',ier
     endif
 #else
-    igv1(0) = nwts
+    nmin = nwts
+    nmax = nwts
+    nsum = nwts
 #endif
     if (masterproc) then
-!       write(6,*) 'map_checkmap nwts list     = ',igv1
-       write(6,*) 'map_checkmap nwts gmin/max = ',minval(igv1),maxval(igv1)
-       do n = 1,npes-1
-          igv1(0) = igv1(0) + igv1(n)
-       enddo
-       write(6,*) 'map_checkmap nwts gsum     = ',igv1(0)
+       write(6,*) 'map_checkmap nwts gmin/max = ',nmin,nmax
+       write(6,*) 'map_checkmap nwts gsum     = ',nsum
     endif
 
     imin = minval(src)
     imax = maxval(src)
 #if (defined SPMD)
-    call mpi_gather(imin,1,MPI_INTEGER,igv1,1,MPI_INTEGER,0,mpicom,ier)
+    call mpi_reduce(imin,nmin,1,MPI_INTEGER,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_gather src min error: ',ier
+       write(6,*)'mpi_reduce src min error: ',ier
     endif
-    call mpi_gather(imax,1,MPI_INTEGER,igv2,1,MPI_INTEGER,0,mpicom,ier)
+    call mpi_reduce(imax,nmax,1,MPI_INTEGER,MPI_MAX,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_gather src max error: ',ier
+       write(6,*)'mpi_reduce src max error: ',ier
     endif
 #else
-    igv1(0) = imin
-    igv2(0) = imax
+    nmin = imin
+    nmax = imax
 #endif
     if (masterproc) then
-       write(6,*) 'map_checkmap src gmin/max  = ',minval(igv1),maxval(igv2)
+       write(6,*) 'map_checkmap src gmin/max  = ',nmin,nmax
     endif
 
     imin = minval(dst)
     imax = maxval(dst)
 #if (defined SPMD)
-    call mpi_gather(imin,1,MPI_INTEGER,igv1,1,MPI_INTEGER,0,mpicom,ier)
+    call mpi_reduce(imin,nmin,1,MPI_INTEGER,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_gather dst min error: ',ier
+       write(6,*)'mpi_reduce dst min error: ',ier
     endif
-    call mpi_gather(imax,1,MPI_INTEGER,igv2,1,MPI_INTEGER,0,mpicom,ier)
+    call mpi_reduce(imax,nmax,1,MPI_INTEGER,MPI_MAX,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_gather dst max error: ',ier
+       write(6,*)'mpi_reduce dst max error: ',ier
     endif
 #else
-    igv1(0) = imin
-    igv2(0) = imax
+    nmin = imin
+    nmax = imax
 #endif
     if (masterproc) then
-       write(6,*) 'map_checkmap dst gmin/max  = ',minval(igv1),maxval(igv2)
+       write(6,*) 'map_checkmap dst gmin/max  = ',nmin,nmax
     endif
 
     rmin = minval(wts)
     rmax = maxval(wts)
 #if (defined SPMD)
-    call mpi_gather(rmin,1,MPI_REAL8,rgv1,1,MPI_REAL8,0,mpicom,ier)
+    call mpi_reduce(rmin,smin,1,MPI_REAL8,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_gather wts min error: ',ier
+       write(6,*)'mpi_reduce wts min error: ',ier
     endif
-    call mpi_gather(rmax,1,MPI_REAL8,rgv2,1,MPI_REAL8,0,mpicom,ier)
+    call mpi_reduce(rmax,smax,1,MPI_REAL8,MPI_MAX,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_gather wts max error: ',ier
+       write(6,*)'mpi_reduce wts max error: ',ier
     endif
 #else
-    rgv1(0) = rmin
-    rgv2(0) = rmax
+    smin = rmin
+    smax = rmax
 #endif
     if (masterproc) then
-       write(6,*) 'map_checkmap wts gmin/max  = ',minval(rgv1),maxval(rgv2)
+       write(6,*) 'map_checkmap wts gmin/max  = ',smin,smax
     endif
 
+    imin = minval(dst)
+    imax = maxval(dst)
+    allocate(rsum(imin:imax))
     rsum = 0.0_r8
     do n = 1,nwts
+       if (dst(n) < imin .or. dst(n) > imax) then
+          write(6,*) 'map_checkmap dst index error ',n,dst(n),imin,imax
+          call endrun()
+       endif
        rsum(dst(n)) = rsum(dst(n)) + wts(n)
     enddo
     rmin = minval(rsum)
     rmax = maxval(rsum)
+    deallocate(rsum)
 #if (defined SPMD)
-    call mpi_gather(rmin,1,MPI_REAL8,rgv1,1,MPI_REAL8,0,mpicom,ier)
+    call mpi_reduce(rmin,smin,1,MPI_REAL8,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_gather swts min error: ',ier
+       write(6,*)'mpi_reduce swts min error: ',ier
     endif
-    call mpi_gather(rmax,1,MPI_REAL8,rgv2,1,MPI_REAL8,0,mpicom,ier)
+    call mpi_reduce(rmax,smax,1,MPI_REAL8,MPI_MAX,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_gather swts max error: ',ier
+       write(6,*)'mpi_reduce swts max error: ',ier
     endif
 #else
-    rgv1(0) = rmin
-    rgv2(0) = rmax
+    smin = rmin
+    smax = rmax
 #endif
     if (masterproc) then
-       write(6,*) 'map_checkmap swts gmin/max = ',minval(rgv1),maxval(rgv2)
+       write(6,*) 'map_checkmap swts gmin/max  = ',smin,smax
     endif
-
-    deallocate(rloc,iloc,igv1,igv2,rgv1,rgv2)
 
 end subroutine map_checkmap
 

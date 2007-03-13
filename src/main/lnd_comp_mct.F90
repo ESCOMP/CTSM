@@ -239,13 +239,13 @@ contains
 
     ! Map MCT to land data type
 
-    call t_startf ('lnd_import')
+    call t_startf ('lc_lnd_import')
     call lnd_import_mct( x2l_l, atm_a2l )
-    call t_stopf ('lnd_import')
+    call t_stopf ('lc_lnd_import')
 
-    call t_startf ('clm_mapa2l')
+    call t_startf ('lc_clm_mapa2l')
     call clm_mapa2l(atm_a2l, clm_a2l)
-    call t_stopf ('clm_mapa2l')
+    call t_stopf ('lc_clm_mapa2l')
     
     ! Loop over time steps in coupling interval
 
@@ -259,28 +259,28 @@ contains
     call mpi_barrier (mpicom, ier)
     call t_stopf ('sync_clm_run1')
 #endif
-       call t_startf ('clm_run1')
+       call t_startf ('lc_clm_run1')
        call clm_run1(infobuf_l%rbuf(rbuf_nextsw_cday), dosend)
-       call t_stopf ('clm_run1')
+       call t_stopf ('lc_clm_run1')
 
 #if ( defined SPMD ) && ( defined TIMING_BARRIERS )
        call t_startf ('sync_clm_run2')
        call mpi_barrier (mpicom, ier)
        call t_stopf ('sync_clm_run2')
 #endif
-       call t_startf ('clm_run2')
+       call t_startf ('lc_clm_run2')
        call clm_run2( rstwr )
-       call t_stopf ('clm_run2')
+       call t_stopf ('lc_clm_run2')
 
        ! Map land data type to MCT
        
-       call t_startf ('clm_mapl2a')
+       call t_startf ('lc_clm_mapl2a')
        call clm_mapl2a(clm_l2a, atm_l2a)
-       call t_stopf ('clm_mapl2a')
+       call t_stopf ('lc_clm_mapl2a')
        
-       call t_startf ('lnd_export')
+       call t_startf ('lc_lnd_export')
        call lnd_export_mct( atm_l2a, l2x_l )
-       call t_stopf ('lnd_export')
+       call t_stopf ('lc_lnd_export')
        
        ! Compute snapshot attribute vector for accumulation
        
@@ -290,9 +290,9 @@ contains
        
        ! Advance clm time step
        
-       call t_startf ('clm2_adv_timestep')
+       call t_startf ('lc_clm2_adv_timestep')
        call advance_timestep()
-       call t_stopf ('clm2_adv_timestep')
+       call t_stopf ('lc_clm2_adv_timestep')
 	
        ! ***For now - force data to be sent back every time step***
        dosend = .true.

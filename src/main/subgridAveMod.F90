@@ -995,7 +995,7 @@ contains
           end if
        end do
        if (found) then
-          write(6,*)'p2g_2d error: sumwt is greater than 1.0 at g= ',index,' j= ',j
+          write(6,*)'p2g_2d error: sumwt gt 1.0 at g/sumwt = ',index,sumwt(index)
           call endrun()
        end if
     end do

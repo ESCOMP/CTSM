@@ -20,13 +20,10 @@ module clm_varsur
 !
 ! land model grid - moved to domainMod
 !
-! surface boundary data
+! surface boundary data, these are all "gdc" local 
 !
-!  integer , allocatable :: gvegxy(:,:) ! vegetation type
-!  real(r8), allocatable,target :: gwtxy(:,:)  ! subgrid weights
-
-  integer , allocatable :: lvegxy(:,:) ! vegetation type
-  real(r8), allocatable,target :: lwtxy(:,:)  ! subgrid weights
+  integer , allocatable :: vegxy(:,:) ! vegetation type
+  real(r8), allocatable,target :: wtxy(:,:)  ! subgrid weights
 
   real(r8),allocatable :: pctspec(:)         ! percent of spec lunits wrt gcell
   logical  :: all_pfts_on_srfdat = .false.   ! true=>old format dataset 

@@ -105,13 +105,14 @@ cat > ./${submit_script} << EOF
 #BSUB -R "span[ptile=16]"          # max number of tasks (MPI) per node
 #BSUB -o test_dr.o%J              # output filename
 #BSUB -e test_dr.o%J              # error filename
+#BSUB -J clmtest
 #BSUB -q premium                  # queue
 #BSUB -W 4:28                     
 #BSUB -P $account_name      
 #BSUB -x                          # exclusive use of node (not_shared)
 ##BSUB -q share
 ##BSUB -W 2:00
-##BSUB -P 00000000
+##BSUB -P 00000006
 
 if [ -n "\$LSB_JOBID" ]; then   #batch job
     export JOBID=\${LSB_JOBID}
@@ -172,6 +173,7 @@ cat > ./${submit_script} << EOF
 #BSUB -q premium                  # queue
 #BSUB -W 4:28                     
 #BSUB -P $account_name      
+#BSUB -J clmtest
 
 if [ -n "\$LSB_JOBID" ]; then   #batch job
     export JOBID=\${LSB_JOBID}
@@ -232,6 +234,7 @@ cat > ./${submit_script} << EOF
 #BSUB -q regular                  # queue
 #BSUB -W 1:58                     
 #BSUB -P $account_name      
+#BSUB -J clmtest
 
 if [ -n "\$LSB_JOBID" ]; then   #batch job
     export JOBID=\${LSB_JOBID}

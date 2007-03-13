@@ -336,7 +336,7 @@ contains
     integer  :: begl, endl       ! per-proc beginning and ending landunit indices
     integer  :: begg, endg       ! per-proc gridcell ending gridcell indices
     integer  :: ier              ! error status
-    real(r8) :: wt1, wt2         ! time interpolation weights
+    real(r8) :: wt1              ! time interpolation weights
     real(r8), allocatable :: ndep(:,:)       ! input ndep
     type(gridcell_type), pointer :: gptr         ! pointer to gridcell derived subtype
     character(len=32) :: subname='ndepdyn_interp' ! subroutine name
@@ -414,7 +414,6 @@ contains
     cday = get_curr_calday() 
 
     wt1 = ((days_per_year + 1._r8) - cday)/days_per_year
-    wt2 = 1._r8 - wt1
     
     ! assign interpolated flux field to forc_ndep
     ! convert units from gN/yr -> gN/s
@@ -422,7 +421,9 @@ contains
 !dir$ concurrent
 !cdir nodep
     do g = begg,endg
-       clm_a2l%forc_ndep(g) = (ndepdyn1(g)*wt1 + ndepdyn2(g)* wt2)/(86400._r8 * 365._r8)
+!      --- recoded for roundoff error, tcraig 3/07 from k.lindsay
+!      clm_a2l%forc_ndep(g) = (ndepdyn1(g)*wt1 + ndepdyn2(g)* wt2)/(86400._r8 * 365._r8)
+       clm_a2l%forc_ndep(g) = (ndepdyn2(g) + wt1*(ndepdyn1(g)-ndepdyn2(g)))/(86400._r8 * 365._r8)
     end do
 
   end subroutine ndepdyn_interp

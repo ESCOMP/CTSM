@@ -1,3 +1,108 @@
+
+===============================================================
+Tag name: clm3_expa_96
+Originator(s): tcraig
+Date: Mon Mar 12 16:41:58 MDT 2007
+One-line Summary: fixed finemesh, pftdyn modes, add new tests
+
+Purpose of changes: restore finemesh and pftdyn modes, improve
+	test coverage
+
+Bugs fixed (include bugzilla ID): 389 (partial)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: reduced memory use in pftdyn
+
+Code reviewed by:
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all subroutines eliminated: none
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+        M      test/system/tests_pretag_bluevista
+	A  +   test/system/nl_files/10x15_pftdyn
+	A  +   test/system/nl_files/t31_dgvm_long
+	A  +   test/system/nl_files/t42half
+	M      test/system/input_tests_master
+	M      test/system/tests_pretag_blueice
+	M      test/system/tests_pretag_jaguar
+	M      test/system/tests_pretag_bangkok
+	M      test/system/test_driver.sh
+	M      test/system/tests_posttag_lightning
+	M      src/main/subgridMod.F90
+	M      src/main/initializeMod.F90
+	M      src/main/pftdynMod.F90
+	M      src/main/clm_varsur.F90
+	M      src/main/ndepFileMod.F90
+	M      src/main/subgridAveMod.F90
+	M      src/main/initGridCellsMod.F90
+	M      src/main/lnd_comp_mct.F90
+	M      src/main/program_off.F90
+	M      src/main/surfrdMod.F90
+	M      src/main/domainMod.F90
+	M      src/main/decompMod.F90
+	M      src/main/areaMod.F90
+
+- rename lvegxy,lwtxy to vegxy, wtxy
+- implement general setgatm, get finemesh working again
+- refactor pftdynMod for low memory implementation, validate pfydyn mode
+- modify ndep and pftdyn from x = x1*wt1 + x2*wt2 to x = x2 + wt1*(x1-x2)
+  as suggested by k.lindsay, improves roundoff performance
+- clean up some old code
+- add new tests configurations (10x15_pftdyn, t31_dgvm_long, t42half), 
+- update pretag lists, add new tests
+		
+Summary of testing: 
+
+  bluevista:
+	     all clm tests pass except bl for new cases including new tests 
+	     all cam tests pass except bl (due to clm changes in expa_94/95)
+	     ccsm passes ERS.f45_g35.B.bluevista16 (answers change due to expa_94/95)
+  bangkok/lf95: 
+	     all clm tests pass including new tests in list
+	     all cam tests pass except bl (due to clm changes in expa_94/95)
+  tempest:
+	     all cam tests pass except bl (due to clm changes in expa_94/95)
+  lightning: 
+	     ccsm passes ERS.f45_g35.B2.lightning (answers change due to expa_94/95)
+
+CLM tag used for the baseline comparison tests if applicable:
+	clm3_expa_95, cam3_4_03, ccsm3_1_beta45
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+	answers are bfb with clm3_expa_95 in clm.  cam and ccsm could not
+	be tested for bfb due to lagging clm version in latest cam and ccsm tags
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: 
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
 ===============================================================
 Tag name: clm3_expa_95
 Originator(s): nanr, Keith Oleson, Peter Thornton

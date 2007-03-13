@@ -11,8 +11,9 @@ module pftdynMod
 ! !USES:
   use spmdMod
   use clmtype
-  use ncdio       , only : check_ret, check_dim
-  use domainMod   , only : ldomain
+  use decompMod   , only : gsmap_lnd_gdc2glo,perm_lnd_gdc2glo
+  use decompMod   , only : get_proc_bounds
+  use ncdio
   use clm_varsur  , only : pctspec
   use clm_varpar  , only : max_pft_per_col
   use shr_kind_mod, only : r8 => shr_kind_r8
@@ -41,9 +42,7 @@ module pftdynMod
   integer , pointer   :: yearspft(:)
   real(r8), pointer   :: wtpft1(:,:)   
   real(r8), pointer   :: wtpft2(:,:)   
-  real(r8), pointer   :: wtpft(:,:)
   real(r8), pointer   :: wtcol_old(:)
-  integer , pointer,save :: lmask(:)           ! ldomain landmask
   integer :: nt1
   integer :: nt2
   integer :: ncid
@@ -64,8 +63,6 @@ contains
 ! that bound the initial model date
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use decompMod   , only : get_proc_global, ldecomp
     use clm_time_manager, only : get_curr_date
     use clm_varctl  , only : fpftdyn
     use clm_varpar  , only : lsmlon, lsmlat, numpft
@@ -91,43 +88,27 @@ contains
     integer  :: sec                             ! seconds into current date for nstep+1
     integer  :: ier                             ! error status
     logical  :: found                           ! true => input dataset bounding dates found
-    integer  :: numg                            ! total number of gridcells across all procs
-    integer  :: numl                            ! total number of landunits across all procs
-    integer  :: numc                            ! total number of columns across all procs
-    integer  :: nump                            ! total number of pfts across all procs
-    real(r8), allocatable :: pctgla(:,:)        ! percent of gcell is glacier
-    real(r8), allocatable :: pctlak(:,:)        ! percent of gcell is lake
-    real(r8), allocatable :: pctwet(:,:)        ! percent of gcell is wetland
-    real(r8), allocatable :: pcturb(:,:)        ! percent of gcell is urbanized
-    integer , allocatable :: landmask_pftdyn(:,:)  ! input landmask
-    real(r8), allocatable :: pctpft(:,:,:)      ! input pctpft
+    integer  :: begg,endg                       ! beg/end indices for land gridcells
+    integer  :: begl,endl                       ! beg/end indices for land landunits
+    integer  :: begc,endc                       ! beg/end indices for land columns
+    integer  :: begp,endp                       ! beg/end indices for land pfts
+    real(r8), pointer :: pctgla(:)          ! percent of gcell is glacier
+    real(r8), pointer :: pctlak(:)          ! percent of gcell is lake
+    real(r8), pointer :: pctwet(:)          ! percent of gcell is wetland
+    real(r8), pointer :: pcturb(:)          ! percent of gcell is urbanized
     type(gridcell_type), pointer :: gptr        ! pointer to gridcell derived subtype
     character(len=256) :: locfn                 ! local file name
     character(len= 32) :: subname='pftdyn_init' ! subroutine name
  !-----------------------------------------------------------------------
 
-    write(6,*) 'tcraig memory must be reduced, pctspec now local'
-    call endrun()
+    call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
-    allocate(pctgla(lsmlon,lsmlat),pctlak(lsmlon,lsmlat))
-    allocate(pctwet(lsmlon,lsmlat),pcturb(lsmlon,lsmlat))
-    allocate(landmask_pftdyn(lsmlon,lsmlat))
-    allocate(lmask(lsmlon*lsmlat))
-
-#ifdef SPMD
-    call gather_data_to_master (ldomain%mask, lmask, clmlevel='gridcell')
-#else
-    lmask = ldomain%mask
-#endif
+    allocate(pctgla(begg:endg),pctlak(begg:endg))
+    allocate(pctwet(begg:endg),pcturb(begg:endg))
 
     ! Set pointers into derived type
 
     gptr => clm3%g
-
-    ! Get relevant sizes
-
-    call get_proc_global(numg, numl, numc, nump)
-
 
     ! pctspec must be saved between time samples
     ! position to first time sample - assume that first time sample must match starting date
@@ -136,20 +117,20 @@ contains
 
     ! read data PCT_PFT corresponding to correct year
 
-    allocate(wtpft1(numg,0:numpft), wtpft2(numg,0:numpft), wtpft(numg,0:numpft), stat=ier)
+    allocate(wtpft1(begg:endg,0:numpft), wtpft2(begg:endg,0:numpft), stat=ier)
     if (ier /= 0) then
-       write(6,*)'pctpft_dyn_init allocation error for wtpft1, wtpft2, wtpft'
+       write(6,*)'pctpft_dyn_init allocation error for wtpft1, wtpft2'
        call endrun()
     end if
 
-    allocate(wtcol_old(nump),stat=ier)
+    allocate(wtcol_old(begp:endp),stat=ier)
     if (ier /= 0) then
        write(6,*)'pctpft_dyn_init allocation error for wtcol_old'
        call endrun()
     end if
 
     if (masterproc) then
-       
+
        ! Obtain file
 
        write (6,*) 'Attempting to read pft dynamic landuse data .....'
@@ -161,134 +142,90 @@ contains
        call check_ret(nf_inq_dimid(ncid, 'time', varid), subname)
        call check_ret(nf_inq_dimlen(ncid, varid, ntimes), subname)
 
-       allocate (yearspft(ntimes), stat=ier)
-       if (ier /= 0) then
-          write(6,*)'pctpft_dyn_init allocation error for yearspft'; call endrun()
-       end if
-
-       call check_ret(nf_inq_varid(ncid, 'YEAR', varid), subname)
-       call check_ret(nf_get_var_int(ncid, varid, yearspft), subname)
-
-       ! Consistency checks
-
-       call check_ret(nf_inq_varid(ncid, 'LANDMASK', varid), subname)
-       call check_ret(nf_get_var_int(ncid, varid, landmask_pftdyn), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_WETLAND', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, pctwet), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_LAKE', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, pctlak), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLACIER', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, pctgla), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
-       call check_ret(nf_get_var_double(ncid, varid, pcturb), subname)
-
-       do j = 1,lsmlat
-          do i = 1,lsmlon
-             n = (j-1)*lsmlon + i
-             if (pctlak(i,j)+pctwet(i,j)+pcturb(i,j)+pctgla(i,j) /= pctspec(n)) then 
-                write(6,*)'mismatch between input pctspec = ',&
-                     pctlak(i,j)+pctwet(i,j)+pcturb(i,j)+pctgla(i,j),&
-                     ' and that obtained from surface dataset ', pctspec(n),' at i,j= ',i,j
-                call endrun()
-             end if
-             if (landmask_pftdyn(i,j) /= lmask(ldecomp%glo2gdc(n))) then
-                write(6,*)'mismatch between input landmask = ', landmask_pftdyn(i,j), & 
-                     ' and that obtained from surface dataset ', lmask(ldecomp%glo2gdc(n)),&
-                     ' at i,j= ',i,j
-                call endrun()
-             end if
-          end do
-       end do   
-
-       ! Determine if current date spans the years
-       ! If current year is less than first dynamic PFT timeseries year,
-       ! then use the first year from dynamic pft file for both nt1 and nt2,
-       ! forcing constant weights until the model year enters the dynamic
-       ! pft dataset timeseries range.
-       ! If current year is equal to or greater than the last dynamic pft
-       ! timeseries year, then use the last year for both nt1 and nt2, 
-       ! forcing constant weights for the remainder of the simulation.
-       ! This mechanism permits the introduction of a dynamic pft period in the middle
-       ! of a simulation, with constant weights before and after the dynamic period.
-
-       call get_curr_date(year, mon, day, sec)
-
-       if (year < yearspft(1)) then
-          nt1 = 1
-          nt2 = 1
-       else if (year >= yearspft(ntimes)) then
-          nt1 = ntimes
-          nt2 = ntimes
-       else
-          found = .false.
-          do n = 1,ntimes-1 
-             if (year == yearspft(n)) then
-                nt1 = n
-                nt2 = nt1 + 1
-                found = .true.
-             end if   
-          end do
-          if (.not. found) then
-             write(6,*)'pftdyn_init error: model year not found in pftdyn timeseries'
-             write(6,*)'model year = ',year
-             call endrun()
-          end if
-       end if
-            
-       ! Get pctpft time samples bracketing the current time
+       ! Consistency check
 
        call check_dim(ncid, 'lsmpft', numpft+1)
 
-       allocate (pctpft(lsmlon,lsmlat,0:numpft), stat=ier)
-       if (ier /= 0) then
-          write(6,*)subname,' allocation error for pctpft'; call endrun()
-       end if
+    endif
 
-       call pftdyn_getdata(nt1, pctpft)
-       do m = 0,numpft
-!dir$ concurrent
-!cdir nodep
-          do g = 1,numg
-             i = ldecomp%gdc2i(g)
-             j = ldecomp%gdc2j(g)
-             wtpft1(g,m) = pctpft(i,j,m)/100._r8
-          end do
-       end do
-       
-       call pftdyn_getdata(nt2, pctpft)
-       do m = 0,numpft
-!dir$ concurrent
-!cdir nodep
-          do g = 1,numg
-             i = ldecomp%gdc2i(g)
-             j = ldecomp%gdc2j(g)
-             wtpft2(g,m) = pctpft(i,j,m)/100._r8
-          end do
-       end do
+    call mpi_bcast(ntimes,1,MPI_INTEGER,0,mpicom,ier)
 
-       deallocate(pctpft)
-
-    end if   ! end of if-masterproc block
-
-#if (defined SPMD)
-    call mpi_bcast (nt1   , 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (nt2   , 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (ntimes, 1, MPI_INTEGER, 0, mpicom, ier)
-#endif
-    if (.not. masterproc) then
-       allocate(yearspft(ntimes))
+    allocate (yearspft(ntimes), stat=ier)
+    if (ier /= 0) then
+       write(6,*)'pctpft_dyn_init allocation error for yearspft'; call endrun()
     end if
-#if (defined SPMD)
-    call mpi_bcast (yearspft, size(yearspft), MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (wtpft1  , size(wtpft1)  , MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (wtpft2  , size(wtpft2)  , MPI_REAL8, 0, mpicom, ier)
-#endif    
 
-    deallocate(pctgla,pctlak,pctwet,pcturb,landmask_pftdyn)
+    if (masterproc) then
+       call check_ret(nf_inq_varid(ncid, 'YEAR', varid), subname)
+       call check_ret(nf_get_var_int(ncid, varid, yearspft), subname)
+    endif
+
+    call mpi_bcast(yearspft,ntimes,MPI_INTEGER,0,mpicom,ier)
+
+    call ncd_iolocal(ncid, 'PCT_WETLAND', 'read', pctwet, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
+    call ncd_iolocal(ncid, 'PCT_LAKE'   , 'read', pctlak, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
+    call ncd_iolocal(ncid, 'PCT_GLACIER', 'read', pctgla, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
+    call ncd_iolocal(ncid, 'PCT_URBAN'  , 'read', pcturb, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
+
+    ! Consistency check
+    do g = begg,endg
+       if (pctlak(g)+pctwet(g)+pcturb(g)+pctgla(g) /= pctspec(g)) then 
+          write(6,*)'mismatch between input pctspec = ',&
+                     pctlak(g)+pctwet(g)+pcturb(g)+pctgla(g),&
+                    ' and that obtained from surface dataset ', pctspec(g),' at g= ',g
+           call endrun()
+       end if
+    end do
+
+    ! Determine if current date spans the years
+    ! If current year is less than first dynamic PFT timeseries year,
+    ! then use the first year from dynamic pft file for both nt1 and nt2,
+    ! forcing constant weights until the model year enters the dynamic
+    ! pft dataset timeseries range.
+    ! If current year is equal to or greater than the last dynamic pft
+    ! timeseries year, then use the last year for both nt1 and nt2, 
+    ! forcing constant weights for the remainder of the simulation.
+    ! This mechanism permits the introduction of a dynamic pft period in the middle
+    ! of a simulation, with constant weights before and after the dynamic period.
+
+    call get_curr_date(year, mon, day, sec)
+
+    if (year < yearspft(1)) then
+       nt1 = 1
+       nt2 = 1
+    else if (year >= yearspft(ntimes)) then
+       nt1 = ntimes
+       nt2 = ntimes
+    else
+       found = .false.
+       do n = 1,ntimes-1 
+          if (year == yearspft(n)) then
+             nt1 = n
+             nt2 = nt1 + 1
+             found = .true.
+          end if   
+       end do
+       if (.not. found) then
+          write(6,*)'pftdyn_init error: model year not found in pftdyn timeseries'
+          write(6,*)'model year = ',year
+          call endrun()
+       end if
+    end if
+
+    ! Get pctpft time samples bracketing the current time
+
+    call pftdyn_getdata(nt1, wtpft1, begg,endg,0,numpft)
+    call pftdyn_getdata(nt2, wtpft2, begg,endg,0,numpft)
+    do m = 0,numpft
+!dir$ concurrent
+!cdir nodep
+       do g = begg,endg
+          wtpft1(g,m) = wtpft1(g,m)/100._r8
+          wtpft2(g,m) = wtpft2(g,m)/100._r8
+       end do
+    end do
+       
+    deallocate(pctgla,pctlak,pctwet,pcturb)
 
   end subroutine pftdyn_init
 
@@ -304,9 +241,7 @@ contains
 ! Time interpolate dynamic landuse data to get pft weights for model time
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_time_manager, only : get_curr_date, get_curr_calday
-    use decompMod   , only : get_proc_global, ldecomp
     use clm_varcon  , only : istsoil
     use clm_varpar  , only : numpft, lsmlon, lsmlat
 !
@@ -322,13 +257,12 @@ contains
     integer  :: day              ! day of month (1, ..., 31) for nstep+1
     integer  :: sec              ! seconds into current date for nstep+1
     real(r8) :: cday             ! current calendar day (1.0 = 0Z on Jan 1)
-    integer  :: numg             ! total number of gridcells across all processors
-    integer  :: numl             ! total number of landunits across all processors
-    integer  :: numc             ! total number of columns across all processors
-    integer  :: nump             ! total number of pfts across all processors
     integer  :: ier              ! error status
-    real(r8) :: wt1, wt2         ! time interpolation weights
-    real(r8), allocatable :: pctpft(:,:,:)       ! input pctpft
+    real(r8) :: wt1              ! time interpolation weights
+    integer  :: begg,endg                       ! beg/end indices for land gridcells
+    integer  :: begl,endl                       ! beg/end indices for land landunits
+    integer  :: begc,endc                       ! beg/end indices for land columns
+    integer  :: begp,endp                       ! beg/end indices for land pfts
     type(gridcell_type), pointer :: gptr         ! pointer to gridcell derived subtype
     type(landunit_type), pointer :: lptr         ! pointer to landunit derived subtype
     type(pft_type)     , pointer :: pptr         ! pointer to pft derived subtype
@@ -341,9 +275,7 @@ contains
     lptr => clm3%g%l
     pptr => clm3%g%l%c%p
 
-    ! Get relevant sizes
-
-    call get_proc_global(numg, numl, numc, nump)
+    call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
     ! Interpolat pctpft to current time step - output in pctpft_intp
     ! Map interpolated pctpft to subgrid weights
@@ -376,37 +308,23 @@ contains
           write(6,*)subname,' error - current year is past input data boundary'
        end if
        
-       if (masterproc) then
-          do m = 0,numpft
+       do m = 0,numpft
 !dir$ concurrent
 !cdir nodep
-             do g = 1,numg
-                wtpft1(g,m) = wtpft2(g,m)
-             end do
+          do g = begg,endg
+             wtpft1(g,m) = wtpft2(g,m)
           end do
+       end do
 
-          allocate(pctpft(lsmlon,lsmlat,0:numpft), stat=ier)
-          if (ier /= 0) then
-             write(6,*)subname,' allocation error for pctpft'; call endrun()
-          end if
-          call pftdyn_getdata(nt2, pctpft)
+       call pftdyn_getdata(nt2, wtpft2, begg,endg,0,numpft)
 
-          do m = 0,numpft
+       do m = 0,numpft
 !dir$ concurrent
 !cdir nodep
-             do g = 1,numg
-                i = ldecomp%gdc2i(g)
-                j = ldecomp%gdc2j(g)
-                wtpft2(g,m) = pctpft(i,j,m)/100._r8
-             end do
+          do g = begg,endg
+             wtpft2(g,m) = wtpft2(g,m)/100._r8
           end do
-          deallocate(pctpft)
-       end if  ! end of if-masterproc if-block
-
-#if (defined SPMD)
-       call mpi_bcast (wtpft1, size(wtpft1), MPI_REAL8, 0, mpicom, ier)
-       call mpi_bcast (wtpft2, size(wtpft2), MPI_REAL8, 0, mpicom, ier)
-#endif
+       end do
     
     end if  ! end of need new data if-block 
 
@@ -415,25 +333,18 @@ contains
     cday = get_curr_calday() 
 
     wt1 = ((days_per_year + 1._r8) - cday)/days_per_year
-    wt2 = 1._r8 - wt1
 
-    do m = 0,numpft
 !dir$ concurrent
 !cdir nodep
-       do g = 1,numg
-          wtpft(g,m) = wtpft1(g,m)*wt1 + wtpft2(g,m)* wt2
-       end do
-    end do
-    
-!dir$ concurrent
-!cdir nodep
-    do p = 1,nump
+    do p = begp,endp
        g = pptr%gridcell(p)
        l = pptr%landunit(p)
        if (lptr%itype(l) == istsoil) then
           m = pptr%itype(p)
           wtcol_old(p)      = pptr%wtcol(p)
-          pptr%wtgcell(p)   = wtpft(g,m)
+!         --- recoded for roundoff performance, tcraig 3/07 from k.lindsay
+!         pptr%wtgcell(p)   = wtpft1(g,m)*wt1 + wtpft2(g,m)*wt2
+          pptr%wtgcell(p)   = wtpft2(g,m) + wt1*(wtpft1(g,m)-wtpft2(g,m))
           pptr%wtlunit(p)   = pptr%wtgcell(p) / lptr%wtgcell(l)
           pptr%wtcol(p)     = pptr%wtgcell(p) / lptr%wtgcell(l)
        end if
@@ -447,68 +358,72 @@ contains
 ! !ROUTINE: pftdyn_get_data
 !
 ! !INTERFACE:
-  subroutine pftdyn_getdata(ntime, pctpft)
+  subroutine pftdyn_getdata(ntime, pctpft, lb1,ub1,lb2,ub2)
 !
 ! !DESCRIPTION:
 ! Obtain dynamic landuse data (pctpft) and make sure that
 ! percentage of PFTs sum to 100% cover for vegetated landunit
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use decompMod   , only : ldecomp
     use clm_varpar  , only : numpft, lsmlon, lsmlat
 !
 ! !ARGUMENTS:
     implicit none
     include 'netcdf.inc'
     integer , intent(in)  :: ntime
-    real(r8), intent(out) :: pctpft(:,:,:)
+    integer , intent(in)  :: lb1,ub1,lb2,ub2
+    real(r8), intent(out) :: pctpft(lb1:ub1,lb2:ub2)
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
     integer  :: i,j,m,n
-    integer  :: err, ierr, jerr, sumerr
-    integer  :: varid                             ! netcdf variable id
-    real(r8) :: sumpct                            ! temporary
-    integer  :: beg4d(4), end4d(4), len4d(4)      ! input sizes
+    integer  :: begg,endg         
+    integer  :: err, ierr
+    real(r8) :: sumpct,sumerr                     ! temporary
+    integer  :: start(4), count(4)                ! input sizes
+    real(r8),pointer :: arrayl(:)                 ! temporary array
     character(len=32) :: subname='pftdyn_getdata' ! subroutine name
 !-----------------------------------------------------------------------
     
-    beg4d(1) = 1     ;  len4d(1) = lsmlon
-    beg4d(2) = 1     ;  len4d(2) = lsmlat
-    beg4d(3) = 1     ;  len4d(3) = numpft+1
-    beg4d(4) = ntime ;  len4d(4) = 1
-    
-    call check_ret(nf_inq_varid(ncid, 'PCT_PFT', varid), subname)
-    call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, pctpft), subname)
+    call get_proc_bounds(begg,endg)
+
+    allocate(arrayl(begg:endg))
+    do n = 0,numpft
+       start(1) = 1
+       count(1) = lsmlon
+       start(2) = 1
+       count(2) = lsmlat
+       start(3) = n+1      ! dataset is 1:numpft+1, not 0:numpft
+       count(3) = 1
+       start(4) = ntime 
+       count(4) = 1
+       call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo, start, count)
+       pctpft(begg:endg,n) = arrayl(begg:endg)
+    enddo
+    deallocate(arrayl)
 
     err = 0
-    do j = 1,lsmlat
-       do i = 1,lsmlon
-          n = (j-1)*lsmlon + i
-          if (lmask(ldecomp%glo2gdc(n)) == 1 .and. pctspec(n) < 100._r8) then
-             sumpct = 0._r8
-             do m = 1, numpft+1
-                sumpct = sumpct + pctpft(i,j,m) * 100._r8/(100._r8-pctspec(n))
-             end do
-             if (abs(sumpct - 100._r8) > 0.1_r8) then
-                err = 1; ierr = i; jerr = j; sumerr = sumpct
-             end if
-             if (sumpct < -0.000001_r8) then
-                err = 2; ierr = i; jerr = j; sumerr = sumpct
-             end if
+    do n = begg,endg
+       if (pctspec(n) < 100._r8) then
+          sumpct = 0._r8
+          do m = 0, numpft
+             sumpct = sumpct + pctpft(n,m) * 100._r8/(100._r8-pctspec(n))
+          end do
+          if (abs(sumpct - 100._r8) > 0.1_r8) then
+             err = 1; ierr = n; sumerr = sumpct
           end if
-       end do
+          if (sumpct < -0.000001_r8) then
+             err = 2; ierr = n; sumerr = sumpct
+          end if
+       end if
     end do
     if (err == 1) then
-       write(6,*) subname,' error: sum(pct) over numpft+1 is not = 100.'
-       write(6,*) sumerr, ierr, jerr
+       write(6,*) subname,' error: sum(pct) over numpft+1 is not = 100.',sumerr,ierr,pctspec(ierr),pctpft(ierr,:)
        call endrun()
     else if (err == 2) then
-        write(6,*)subname,' error: sum(pct) over numpft+1 is < 0.'
-        write(6,*) sumerr, ierr, jerr
-        call endrun()
+       write(6,*)subname,' error: sum(pct) over numpft+1 is < 0.',sumerr,ierr,pctspec(ierr),pctpft(ierr,:)
+       call endrun()
     end if
     
   end subroutine pftdyn_getdata
@@ -526,8 +441,6 @@ contains
 ! Called in every timestep.
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use decompMod   , only : get_proc_bounds
 !
 ! !ARGUMENTS:
     implicit none
@@ -575,8 +488,6 @@ contains
 ! dynamic pft-weights.
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use decompMod   , only : get_proc_bounds
     use clm_varcon  , only : istsoil
     use clm_time_manager, only : get_step_size
 !

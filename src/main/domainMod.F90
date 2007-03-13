@@ -46,7 +46,6 @@ module domainMod
      integer ,pointer :: pftm(:)    ! pft  mask: 1=real, 0=fake, -1=notset
      real(r8),pointer :: nara(:)    ! normalized area in upscaling (km**2),
      real(r8),pointer :: ntop(:)    ! normalized topo for downscaling (m)
-!     integer ,pointer :: gatm(:)    ! overlapping atm gridcell, 1d glo
   end type domain_type
 
   !--- this contains global info about a grid, lats and lons are 1d
@@ -73,6 +72,7 @@ module domainMod
 
   integer ,pointer,public     :: gatm(:)   ! gatm pulled out of domain
   integer ,pointer,public     :: amask(:)  ! global atm mask
+  integer, pointer,public     :: pftm(:)   ! pft mask for lnd grid
 
 !
 ! !PUBLIC MEMBER FUNCTIONS:

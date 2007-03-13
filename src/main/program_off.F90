@@ -187,9 +187,7 @@ PROGRAM program_off
   ! -----------------------------------------------------------------
 
 #if (defined SPMD)
-  call t_startf('barrieri')
-  call mpi_barrier(mpicom,ier)
-  call t_stopf('barrieri')
+!  call t_barrierf('barrieri',mpicom)
 #endif
   call t_startf('runtotal')
 
@@ -202,26 +200,20 @@ PROGRAM program_off
      call t_stopf('atmdrv')
 
 #if (defined SPMD)
-!  call t_startf('barrierd1')
-!  call mpi_barrier(mpicom,ier)
-!  call t_stopf('barrierd1')
+!  call t_barrierf('barrier1b',mpicom)
 #endif
      ! Run
 
      call clm_run1()
 
 #if (defined SPMD)
-!  call t_startf('barrier12')
-!  call mpi_barrier(mpicom,ier)
-!  call t_stopf('barrier12')
+!  call t_barrierf('barrier2b',mpicom)
 #endif
 
      call clm_run2()
 
 #if (defined SPMD)
-!  call t_startf('barrier2p')
-!  call mpi_barrier(mpicom,ier)
-!  call t_stopf('barrier2p')
+!  call t_barrierf('barrierd2p',mpicom)
 #endif
      ! Determine if time to stop
 

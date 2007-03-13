@@ -38,6 +38,44 @@ sm124 TSM.sh 17p_vodsr_h t31 48
 sm125 TSM.sh 17p_vodsr_m t31 48
 sm126 TSM.sh 17p_vodsr_o t31 48
 
+sm131 TSM.sh 4p_vodsr_dh t42half 48
+er131 TER.sh 4p_vodsr_dh t42half 10+38
+br131 TBR.sh 4p_vodsr_dh t42half 24+24
+bl131 TBL.sh 4p_vodsr_dh t42half 48
+
+sm132 TSM.sh 4p_vodsr_dm t42half 48
+er132 TER.sh 4p_vodsr_dm t42half 10+38
+br132 TBR.sh 4p_vodsr_dm t42half 24+24
+bl132 TBL.sh 4p_vodsr_dm t42half 48
+
+sm133 TSM.sh 4p_vodsr_do t42half 48
+er133 TER.sh 4p_vodsr_do t42half 10+38
+br133 TBR.sh 4p_vodsr_do t42half 24+24
+bl133 TBL.sh 4p_vodsr_do t42half 48
+
+sm134 TSM.sh 4p_vodsr_h t42half 48
+sm135 TSM.sh 4p_vodsr_m t42half 48
+sm136 TSM.sh 4p_vodsr_o t42half 48
+
+sm141 TSM.sh 17p_vodsr_dh 10x15_pftdyn 48
+er141 TER.sh 17p_vodsr_dh 10x15_pftdyn 10+38
+br141 TBR.sh 17p_vodsr_dh 10x15_pftdyn 24+24
+bl141 TBL.sh 17p_vodsr_dh 10x15_pftdyn 48
+
+sm142 TSM.sh 17p_vodsr_dm 10x15_pftdyn 48
+er142 TER.sh 17p_vodsr_dm 10x15_pftdyn 10+38
+br142 TBR.sh 17p_vodsr_dm 10x15_pftdyn 24+24
+bl142 TBL.sh 17p_vodsr_dm 10x15_pftdyn 48
+
+sm143 TSM.sh 17p_vodsr_do 10x15_pftdyn 48
+er143 TER.sh 17p_vodsr_do 10x15_pftdyn 10+38
+br143 TBR.sh 17p_vodsr_do 10x15_pftdyn 24+24
+bl143 TBL.sh 17p_vodsr_do 10x15_pftdyn 48
+
+sm144 TSM.sh 17p_vodsr_h 10x15_pftdyn 48
+sm145 TSM.sh 17p_vodsr_m 10x15_pftdyn 48
+sm146 TSM.sh 17p_vodsr_o 10x15_pftdyn 48
+
 sm211 TSM.sh 17p_cnn_dh t31_cnall 48
 er211 TER.sh 17p_cnn_dh t31_cnall 10+38
 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24
@@ -94,3 +132,6 @@ bl413 TBL.sh 10p_dgvm_do t31_dgvm 48
 sm414 TSM.sh 10p_dgvm_h t31_dgvm 48
 sm415 TSM.sh 10p_dgvm_m t31_dgvm 48
 sm416 TSM.sh 10p_dgvm_o t31_dgvm 48
+
+sm417 TSM.sh 10p_dgvm_h t31_dgvm_long -200
+er417 TER.sh 10p_dgvm_h t31_dgvm_long -80+-120

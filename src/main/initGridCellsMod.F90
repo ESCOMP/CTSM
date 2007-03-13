@@ -14,10 +14,9 @@ module initGridCellsMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
-  use spmdMod     , only : masterproc,iam
+  use spmdMod     , only : masterproc,iam,mpicom
   use abortutils  , only : endrun
-  use clm_varsur  , only : wtxy  => lwtxy
-  use clm_varsur  , only : vegxy => lvegxy
+  use clm_varsur  , only : wtxy, vegxy
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -63,6 +62,7 @@ contains
     use decompMod   , only : ldecomp, adecomp, get_proc_global, get_proc_bounds
     use clm_varcon  , only : istsoil, istice, istwet, istdlak, isturb
     use subgridMod  , only : gcelldc, gcellsn, subgrid_alloc
+    use subgridMod  , only : subgrid_get_gcellinfo
     use shr_const_mod,only : SHR_CONST_PI
 #ifdef SPMD
   use spmdGathScatMod, only : gather_data_to_master

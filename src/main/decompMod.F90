@@ -719,7 +719,6 @@ contains
 !
 ! !USES:
     use domainMod , only : gatm
-    use subgridMod, only : subgrid_get_gcellinfo
 !
 ! !ARGUMENTS:
     implicit none
@@ -963,6 +962,7 @@ contains
     integer :: lg,ln,li,lj        ! indices
     integer :: ag,an,ai,aj        ! indices
     integer :: abegg,aendg,anumg  ! atm num gridcells
+    integer :: begg,endg          ! lnd num gridcells
     integer :: cid,pid                ! indices
     integer :: n,m,np                 ! indices
     integer :: icells, ilunits, icols, ipfts  ! temporaries
@@ -1020,6 +1020,7 @@ contains
 
     !--- assign gridcells to clumps (and thus pes) ---
     call get_proc_bounds_atm(abegg, aendg)
+    call get_proc_bounds(begg, endg)
     allocate(allvecg(nclumps,4),allvecl(nclumps,4))   ! 3 = gcells,lunit,cols,pfts
     allvecg  = 0
     allvecl = 0
@@ -1272,8 +1273,6 @@ contains
           write(6,*)'proc= ',pid,' atm ngseg   = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo), &
                ' atm nlseg   = ',mct_gsMap_nlseg(gsMap_atm_gdc2glo,iam)
           write(6,*)'proc= ',pid,' nclumps = ',procinfo%nclumps
-
-!          write(6,*)'tcx proc,pfts,ag,as,lg,ls = ',pid,procinfo%npfts,procinfo%aendg-procinfo%abegg+1,mct_gsMap_nlseg(gsMap_atm_gdc2glo,iam),procinfo%ncells,mct_gsMap_nlseg(gsMap_lnd_gdc2glo,iam)
 
           clmin = 1
           clmax = procinfo%nclumps
