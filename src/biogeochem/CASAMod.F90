@@ -260,9 +260,7 @@ contains
     use clm_varctl   , only : nsrest
     use clm_varpar   , only : lsmlon, lsmlat, max_pft_per_gcell
     use spmdMod      , only : masterproc
-#if (defined SPMD) 
     use spmdGathScatMod, only : scatter_data_from_master
-#endif
     use clm_time_manager , only : get_step_size
     use shr_sys_mod, only : shr_sys_flush
 !
@@ -681,11 +679,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -703,11 +697,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -725,11 +715,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -747,11 +733,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -769,11 +751,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -791,11 +769,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp, endp
@@ -813,11 +787,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -835,11 +805,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -857,11 +823,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -879,11 +841,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp, endp
@@ -901,11 +859,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -923,11 +877,7 @@ contains
              rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
           end do
        end if
-#if (defined SPMD)
        call scatter_data_from_master(rloc, rglob, clmlevel=namep)
-#else
-       rloc(:) = rglob(:)
-#endif
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -1060,9 +1010,7 @@ contains
     use decompMod    , only : ldecomp
     use clm_varpar   , only : lsmlon, lsmlat
     use spmdMod      , only : masterproc
-#ifdef SPMD
     use spmdGathScatMod, only : gather_data_to_master
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -1175,11 +1123,7 @@ contains
 
     allocate(lonvar(lsmlon),latvar(lsmlat),data(numg))
 
-#ifdef SPMD
     call gather_data_to_master (ldomain%lonc, data, clmlevel='gridcell')
-#else
-    data(1:numg) = ldomain%lonc(1:numg)
-#endif
     lonvar = spval
     do n = 1,lsmlon
     do m = 1,lsmlat
@@ -1188,11 +1132,7 @@ contains
     enddo
     enddo
 
-#ifdef SPMD
     call gather_data_to_master (ldomain%latc, data, clmlevel='gridcell')
-#else
-    data(1:numg) = ldomain%latc(1:numg)
-#endif
     latvar = spval
     do n = 1,lsmlon
     do m = 1,lsmlat

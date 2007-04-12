@@ -251,7 +251,7 @@ contains
 
     ! clm time manager info
 
-#if (!defined COUP_CAM)
+#if (! defined OFFLINE) || (! defined COUP_CSM)
     namelist /clm_inparm/  &
          ctitle, caseid, nsrest,  &
          calendar, nelapse, nestep, start_ymd, start_tod,  &
@@ -460,7 +460,7 @@ contains
 #endif       
        end if
 
-#if (defined COUP_CAM)
+#if (defined SEQ_MCT) || (defined SEQ_ESMF)
        ! Override select set of namelist values with sequential driver input
 
        if ( .not. present(CCSMInit) )then
@@ -622,9 +622,7 @@ contains
     ! Broadcast all control information if appropriate
     ! ----------------------------------------------------------------------
 
-#if (defined SPMD)
     call control_spmd()
-#endif
     
     if (masterproc) then
        write(6,*) 'Successfully initialized run control settings'
@@ -633,7 +631,6 @@ contains
 
   end subroutine control_init
 
-#if (defined SPMD)
 
 !------------------------------------------------------------------------
 !BOP
@@ -678,7 +675,7 @@ contains
 
     call mpi_bcast (dtime    , 1, MPI_INTEGER  , 0, mpicom, ier)
 
-#if (defined OFFLINE) || (defined COUP_CSM)
+#if (! defined OFFLINE) || (! defined COUP_CSM)
     call mpi_bcast (nestep   , 1, MPI_INTEGER  , 0, mpicom, ier)
     call mpi_bcast (nelapse  , 1, MPI_INTEGER  , 0, mpicom, ier)
     call mpi_bcast (start_ymd, 1, MPI_INTEGER  , 0, mpicom, ier)
@@ -775,7 +772,6 @@ contains
 #endif
 
   end subroutine control_spmd
-#endif
 
 !------------------------------------------------------------------------
 !BOP
@@ -849,10 +845,10 @@ contains
     if (nsrest /= 0) write(6,*) '   restart data   = ',trim(nrevsn)
 #if (defined OFFLINE)
     if (offline_atmdir /= ' ') then
-       write(6,*) '   atmosperic forcing data    = ',trim(offline_atmdir)
+       write(6,*) '   atmospheric forcing data    = ',trim(offline_atmdir)
     end if
-#elif (defined COUP_CAM)
-    write(6,*) '   atmosperhic forcing data is from sequential ccsm model'
+#elif (defined SEQ_MCT) || (defined SEQ_ESMF)
+    write(6,*) '   atmospheric forcing data is from sequential ccsm model'
 #elif (defined COUP_CSM)
     write(6,*) '   atmospheric forcint data is from ccsm flux coupler'
 #endif

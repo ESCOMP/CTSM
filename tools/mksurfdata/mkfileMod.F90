@@ -254,6 +254,9 @@ contains
             long_name='monthly height bottom', units='meters')
     end if
        
+    call ncd_defvar(ncid=ncid, varname='time', xtype=nf_int,  &
+            dim1name='time', &
+            long_name='month', units='month')
     if (dynlanduse) then
        call ncd_defvar(ncid=ncid, varname='YEAR', xtype=nf_int,  &
             dim1name='time', &

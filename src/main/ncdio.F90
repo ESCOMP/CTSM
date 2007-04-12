@@ -13,18 +13,12 @@ module ncdio
 !
 ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-#ifdef SPMD
   use spmdMod        , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER, &
                               MPI_LOGICAL
-#else
-  use spmdMod        , only : masterproc
-#endif
   use clm_varcon     , only : spval,ispval
   use shr_sys_mod    , only : shr_sys_flush
   use abortutils     , only : endrun
-  use clm_varctl     , only : scmlon,scmlat
-  use clm_varpar     , only : lsmlon, lsmlat
-  use getnetcdfdata
+  use clm_varctl     , only : scmlon,scmlat, single_column
   use clm_mct_mod
   use spmdGathScatMod
 !
@@ -311,9 +305,7 @@ contains
 !
 ! !USES:
   use decompMod, only : map_dc2sn, map_sn2dc, ldecomp
-#ifdef SPMD
   use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -365,11 +357,7 @@ contains
 
     if (flag == 'write') then
 
-#ifdef SPMD
        call gather_data_to_master (data, iglobdc, clmlevel=dim1name)
-#else
-       iglobdc(:) = data(:)
-#endif
        if (masterproc) then
 
           call check_ret(nf_inq_varid(ncid, varname, varid), subname)
@@ -426,7 +414,7 @@ contains
       if (masterproc) then
         call check_var(ncid, varname, varid, varpresent)
         if (varpresent) then
-        if (lsmlon == 1 .and. lsmlat ==1) then
+        if (single_column) then
            call scam_field_offsets(ncid,dim1name,data_offset,ndata)
            start(1) = data_offset; count(1) = ndata
            call check_ret(nf_get_vara_int(ncid, varid, start, count, iglobsn), subname)
@@ -437,19 +425,11 @@ contains
         end if
      end if
 
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)subname,' error from mpi_bcast'; call endrun()
        end if
        if (varpresent) call scatter_data_from_master(data, iglobdc, clmlevel=dim1name)
-#else
-       if (lsmlon == 1 .and. lsmlat ==1) then
-          if (varpresent) data(:) = iglobsn(:)
-       else
-          if (varpresent) data(:) = iglobdc(:)
-       endif
-#endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -475,9 +455,7 @@ contains
 #ifdef RTM
   use RunoffMod      , only : runoff
 #endif
-#ifdef SPMD
   use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -528,11 +506,7 @@ contains
 
     if (flag == 'write') then
 
-#ifdef SPMD
        call gather_data_to_master (data, rglobdc, clmlevel=dim1name)
-#else
-       rglobdc(:) = data(:)
-#endif
        if (masterproc) then
 
           ! Define variable if it has not already been defined on the tape
@@ -620,7 +594,7 @@ contains
        if (masterproc) then
           call check_var(ncid, varname, varid, varpresent)
           if (varpresent) then
-          if (lsmlon == 1 .and. lsmlat ==1) then
+          if (single_column) then
              call scam_field_offsets(ncid,dim1name,data_offset,ndata)
              start(1) = data_offset; count(1) = ndata
              call check_ret(nf_get_vara_double(ncid, varid, start, count, rglobsn), subname)
@@ -690,22 +664,14 @@ contains
              call check_ret(nf_get_var_double(ncid, varid, rglobsn), subname)
              call map_sn2dc(rglobsn, rglobdc, dim1name)
           end if
-          end if !  (lsmlon lsmlat = 1)
+          end if !  (single_column)
           endif
        end if
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)subname,' error from mpi_bcast'; call endrun()
        end if
        if (varpresent) call scatter_data_from_master(data, rglobdc, clmlevel=dim1name)
-#else
-       if (lsmlon == 1 .and. lsmlat ==1) then
-          if (varpresent) data(:) = rglobsn(:)
-       else
-          if (varpresent) data(:) = rglobdc(:)
-       endif
-#endif
        if (present(readvar)) readvar = varpresent
     end if
 
@@ -726,9 +692,7 @@ contains
 !
 ! !USES:
   use decompMod, only : map_dc2sn, map_sn2dc, ldecomp
-#ifdef SPMD
   use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -805,11 +769,7 @@ contains
              datap(j,k) = data(k,j)
           end do
        end do
-#ifdef SPMD
        call gather_data_to_master (datap, iglobdc, clmlevel=dim1name)
-#else
-       iglobdc(:,:) = datap(:,:)
-#endif
 
        if (masterproc) then
 
@@ -866,7 +826,7 @@ contains
        if (masterproc) then
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
-         if (lsmlon == 1 .and. lsmlat ==1) then
+         if (single_column)then
             call scam_field_offsets(ncid,dim1name,data_offset,ndata)
             start(1) = 1;  count(1) = ub2-lb2+1
             start(2) = data_offset;  count(2) = ndata
@@ -878,19 +838,11 @@ contains
          end if
        end if
 
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)trim(subname),' error from mpi_bcast'; call endrun()
        end if
        if (varpresent) call scatter_data_from_master(datap, iglobdc, clmlevel=dim1name)
-#else
-       if (lsmlon == 1 .and. lsmlat ==1) then
-          if (varpresent) datap(:,:) = iglobsn(:,:)
-       else
-          if (varpresent) datap(:,:) = iglobdc(:,:)
-       endif
-#endif
        if (varpresent) then
           do j = lb2,ub2
 !dir$ concurrent
@@ -923,9 +875,7 @@ contains
 !
 ! !USES:
   use decompMod, only : map_dc2sn, map_sn2dc, ldecomp
-#ifdef SPMD
   use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -1002,11 +952,7 @@ contains
              datap(j,k) = data(k,j)
           end do
        end do
-#ifdef SPMD
        call gather_data_to_master (datap, rglobdc, clmlevel=trim(dim1name))
-#else
-       rglobdc(:,:) = datap(:,:)
-#endif
 
        if (masterproc) then
 
@@ -1062,7 +1008,7 @@ contains
        if (masterproc) then
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
-         if (lsmlon == 1 .and. lsmlat ==1) then
+         if (single_column)then
             call scam_field_offsets(ncid,dim1name,data_offset,ndata)
             start(1) = 1;  count(1) = ub2-lb2+1
             start(2) = data_offset;  count(2) = ndata
@@ -1074,19 +1020,11 @@ contains
          end if
        end if
 
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)trim(subname),' error from mpi_bcast'; call endrun()
        end if
        if (varpresent) call scatter_data_from_master(datap, rglobdc, clmlevel=dim1name)
-#else
-       if (lsmlon == 1 .and. lsmlat ==1) then
-          if (varpresent) datap(:,:) = rglobsn(:,:)
-       else
-          if (varpresent) datap(:,:) = rglobdc(:,:)
-       endif
-#endif
        if (varpresent) then
           do j = lb2,ub2
 !dir$ concurrent
@@ -1117,9 +1055,7 @@ contains
 ! Netcdf i/o of 2d initial real field out to netCDF file
 !
 ! !USES:
-#ifdef SPMD
   use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -1182,9 +1118,7 @@ contains
 ! Netcdf i/o of 2d initial real field out to netCDF file
 !
 ! !USES:
-#ifdef SPMD
   use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -1287,7 +1221,6 @@ contains
           call check_var(ncid, varname, varid, varpresent)
           if (varpresent) call check_ret(nf_get_var_int(ncid, varid, data), subname)
        end if
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
@@ -1298,7 +1231,6 @@ contains
              write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
           end if
        end if
-#endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1357,7 +1289,6 @@ contains
           call check_var(ncid, varname, varid, varpresent)
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, data), subname)
        end if
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
@@ -1368,7 +1299,6 @@ contains
              write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
           end if
        end if
-#endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1427,7 +1357,6 @@ contains
           call check_var(ncid, varname, varid, varpresent)
           if (varpresent) call check_ret(nf_get_var_int(ncid, varid, data), subname)
        end if
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
@@ -1438,7 +1367,6 @@ contains
              write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
           end if
        end if
-#endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1497,7 +1425,6 @@ contains
           call check_var(ncid, varname, varid, varpresent)
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, data), subname)
        end if
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
@@ -1508,7 +1435,6 @@ contains
              write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
           end if
        end if
-#endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1568,7 +1494,6 @@ contains
           call check_var(ncid, varname, varid, varpresent)
           if (varpresent) call check_ret(nf_get_var_int(ncid, varid, data), subname)
        end if
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
@@ -1579,7 +1504,6 @@ contains
              write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
           end if
        end if
-#endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1642,7 +1566,6 @@ contains
           call check_var(ncid, varname, varid, varpresent)
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, data), subname)
        end if
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
@@ -1653,7 +1576,6 @@ contains
              write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
           end if
        end if
-#endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1717,7 +1639,6 @@ contains
           call check_var(ncid, varname, varid, varpresent)
           if (varpresent) call check_ret(nf_get_var_int(ncid, varid, data), subname)
        end if
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
@@ -1728,7 +1649,6 @@ contains
              write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
           end if
        end if
-#endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1792,7 +1712,6 @@ contains
           call check_var(ncid, varname, varid, varpresent)
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, data), subname)
        end if
-#ifdef SPMD
        call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
        if (ier /= 0) then
           write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
@@ -1803,7 +1722,6 @@ contains
              write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
           end if
        end if
-#endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1941,17 +1859,17 @@ contains
 
        ret = nf_inq_dimid (ncid, 'column', dimid)
        if(ret==NF_NOERR) return
-       if (ret/=NF_EBADDIM) call handle_err (ret)
+       if (ret/=NF_EBADDIM) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
 
        ret = nf_inq_dimlen (ncid, dimid, totcols)
-       if (ret/=NF_NOERR) call handle_err (ret)
+       if (ret/=NF_NOERR) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
 
        ret = nf_inq_dimid (ncid, 'pft', dimid)
        if(ret==NF_NOERR) return
-       if (ret/=NF_EBADDIM) call handle_err (ret)
+       if (ret/=NF_EBADDIM) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
 
        ret = nf_inq_dimlen (ncid, dimid, totpfts)
-       if (ret/=NF_NOERR) call handle_err (ret)
+       if (ret/=NF_NOERR) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
 
        allocate (pfts1dlon(totpfts))
        allocate (pfts1dlat(totpfts))
@@ -1959,25 +1877,25 @@ contains
        ret =  nf_inq_varid (ncid, 'pfts1d_ixy', varid)
        if (ret/=NF_NOERR) then
          write(6,*)'inq_varid: id for pfts1d_ixy not found'
-         call handle_err (ret)
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
        end if
 
        ret = nf_get_var_double (ncid, varid, pfts1dlon)
        if (ret/=NF_NOERR) then
          write(6,*)'GET_VAR_REALX: error reading pfts1dlon, varid =', varid
-         call handle_err (ret)
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
        end if
 
        ret =  nf_inq_varid (ncid, 'pfts1d_jxy', varid)
        if (ret/=NF_NOERR) then
          write(6,*)'inq_varid: id for pfts1d_jxy not found'
-         call handle_err (ret)
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
        end if
 
        ret = nf_get_var_double (ncid, varid, pfts1dlat)
        if (ret/=NF_NOERR) then
          write(6,*)'GET_VAR_REALX: error reading pfts1dlat, varid =', varid
-         call handle_err (ret)
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
        end if
 
 
@@ -1987,25 +1905,25 @@ contains
        ret =  nf_inq_varid (ncid, 'cols1d_ixy', varid)
        if (ret/=NF_NOERR) then
          write(6,*)'inq_varid: id for cols1d_ixy not found'
-         call handle_err (ret)
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
        end if
 
        ret = nf_get_var_double (ncid, varid, cols1dlon)
        if (ret/=NF_NOERR) then
          write(6,*)'GET_VAR_REALX: error reading cols1dlon, varid =', varid
-         call handle_err (ret)
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
        end if
 
        ret =  nf_inq_varid (ncid, 'cols1d_jxy', varid)
        if (ret/=NF_NOERR) then
          write(6,*)'inq_varid: id for cols1d_jxy not found'
-         call handle_err (ret)
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
        end if
 
        ret = nf_get_var_double (ncid, varid, cols1dlat)
        if (ret/=NF_NOERR) then
          write(6,*)'GET_VAR_REALX: error reading cols1dlat, varid =', varid
-         call handle_err (ret)
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
        end if
 
        cols(:)=nan

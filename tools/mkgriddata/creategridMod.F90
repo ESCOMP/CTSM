@@ -3,7 +3,7 @@ module creategridMod
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: mkgridMod
+! !MODULE: creategridMod
 !
 ! !DESCRIPTION:
 ! Routines to create land model grid
@@ -94,8 +94,12 @@ contains
 !-----------------------------------------------------------------------
 
     if (trim(type) == 'internal') then
-       if (mksrf_lsmlon==0 .and. mksrf_lsmlat==0) then
+       if (mksrf_lsmlon==-1 .and. mksrf_lsmlat==-1) then
           write(6,*) 'must specify mksrf_lsmlon/lat with internal type'
+          stop
+       endif
+       if (mksrf_edgen ==-999. .or. mksrf_edges ==-999. .or. mksrf_edgee ==-999. .or. mksrf_edgew ==-999.) then
+          write(6,*) 'must specify mksrf_edgen/edges/edgen/edgew with internal type'
           stop
        endif
 
@@ -115,7 +119,7 @@ contains
        dx = (ldomain%edgee - ldomain%edgew) / lsmlon
        dy = (ldomain%edgen - ldomain%edges) / lsmlat
 
-       if (dx < 0._r8 .or. dy < 0._r8) then
+       if (dx <= 0._r8 .or. dy <= 0._r8) then
           write(6,*) 'creategrid ERROR edges wrong sign NESN:',ldomain%edgen,ldomain%edgee,ldomain%edges,ldomain%edgen
           stop
        endif

@@ -198,13 +198,13 @@ case $hostname in
     else
         if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
             ##mpi only
-            cmnd="mpiexec -n ${CLM_TASKS} "
+            cmnd="mpirun -np ${CLM_TASKS} "
         elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
             ##hybrid
-            cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpiexec -n ${CLM_TASKS} "
+            cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -np ${CLM_TASKS} "
         else
             ##mpi only
-            cmnd="mpiexec -n ${CLM_TASKS} "
+            cmnd="mpirun -np ${CLM_TASKS} "
         fi
     fi ;;
 

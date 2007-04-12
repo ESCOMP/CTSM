@@ -617,10 +617,10 @@ contains
     ! Write out clump and proc info, one pe at a time, 
     ! barrier to control pes overwriting each other on stdout
 
+#ifndef UNICOSMP
     call shr_sys_flush(6)
-#if (defined SPMD)
-    call mpi_barrier(mpicom,ier)
 #endif
+    call mpi_barrier(mpicom,ier)
      npmin = 0
      npmax = npes-1
      npint = 1
@@ -696,9 +696,7 @@ contains
           end do
        end if
        call shr_sys_flush(6)
-#if (defined SPMD)
        call mpi_barrier(mpicom,ier)
-#endif
     end do
     call shr_sys_flush(6)
 
@@ -1228,9 +1226,7 @@ contains
     ! barrier to control pes overwriting each other on stdout
 
     call shr_sys_flush(6)
-#if (defined SPMD)
     call mpi_barrier(mpicom,ier)
-#endif
      npmin = 0
      npmax = npes-1
      npint = 1
@@ -1305,10 +1301,10 @@ contains
                   ' total pfts per clump     = ',clumps(cid)%npfts
           end do
        end if
+#ifndef UNICOSMP
        call shr_sys_flush(6)
-#if (defined SPMD)
-       call mpi_barrier(mpicom,ier)
 #endif
+       call mpi_barrier(mpicom,ier)
     end do
     call shr_sys_flush(6)
 
@@ -1607,9 +1603,7 @@ contains
     ! barrier to control pes overwriting each other on stdout
 
     call shr_sys_flush(6)
-#if (defined SPMD)
     call mpi_barrier(mpicom,ier)
-#endif
      npmin = 0
      npmax = npes-1
      npint = 1
@@ -1640,11 +1634,11 @@ contains
           write(6,*)'proc= ',pid,' nclumps = ',procinfo%nclumps
        end if
        call shr_sys_flush(6)
-#if (defined SPMD)
        call mpi_barrier(mpicom,ier)
-#endif
     end do
+#ifndef UNICOSMP
     call shr_sys_flush(6)
+#endif
 
   end subroutine decomp_atm_init
 

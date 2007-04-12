@@ -13,9 +13,10 @@ module STATICEcosysdynMOD
 ! Static Ecosystem dynamics: phenology, vegetation.
 !
 ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8
-  use abortutils,   only: endrun
-  use clm_varctl,   only :scmlat,scmlon,single_column
+  use shr_kind_mod,    only : r8 => shr_kind_r8
+  use abortutils,      only : endrun
+  use clm_varctl,      only : scmlat,scmlon,single_column
+  use spmdGathScatMod, only : scatter_data_from_master
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -245,11 +246,7 @@ contains
 !
 ! !USES:
     use clm_varctl  , only : fsurdat
-#ifdef COUP_CAM
     use clm_time_manager, only : get_curr_date, get_step_size, get_perp_date, is_perpetual
-#else
-    use clm_time_manager, only : get_curr_date, get_step_size
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -274,15 +271,11 @@ contains
 
     dtime = get_step_size()
 
-#ifdef COUP_CAM
     if ( is_perpetual() ) then
        call get_perp_date(kyr, kmo, kda, ksec, offset=int(dtime))
     else
        call get_curr_date(kyr, kmo, kda, ksec, offset=int(dtime))
     end if
-#else
-    call get_curr_date(kyr, kmo, kda, ksec, offset=int(dtime))
-#endif
 
     t = (kda-0.5_r8) / ndaypm(kmo)
     it(1) = t + 0.5_r8
@@ -319,16 +312,9 @@ contains
     use clm_varsur  , only : all_pfts_on_srfdat
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
-!!if (defined SPMD)
     use spmdMod     , only : masterproc, mpicom, MPI_REAL8
-!!else
-!!    use spmdMod     , only : masterproc
-!!endif
-    use spmdGathScatMod
     use clm_time_manager, only : get_nstep
     use ncdio       , only : check_ret
-    use getnetcdfdata
-
 !
 ! !ARGUMENTS:
     implicit none
@@ -355,14 +341,16 @@ contains
     integer :: begp,endp                  ! beg and end local p index
     integer :: begg,endg                  ! beg and end local g index
     integer :: ier                        ! error code
-    integer :: nps,npe                    ! start/end numpft limits
+    integer :: closelatidx,closelonidx
+    real(r8):: closelat,closelon
+
+    integer :: nps,npe              ! start/end numpft limits
     real(r8), pointer :: mlai(:,:)  ! lai read from input files
     real(r8), pointer :: msai(:,:)  ! sai read from input files
     real(r8), pointer :: mhgtt(:,:) ! top vegetation height
     real(r8), pointer :: mhgtb(:,:) ! bottom vegetation height
     real(r8), pointer :: arrayg(:)  ! temp global array
     real(r8), pointer :: arrayl(:)  ! temp local array
-    real(r8), pointer :: coldata(:) ! temporary for getncdata calls
     character(len=32) :: subname = 'readMonthlyVegetation'
 !-----------------------------------------------------------------------
 
@@ -389,17 +377,6 @@ contains
     if (ier /= 0) then
        write(6,*)subname, 'allocation big error '; call endrun()
     end if
-
-    if (single_column) then
-    if (all_pfts_on_srfdat) then
-       allocate(coldata(0:numpft), stat=ier)
-    else
-       allocate(coldata(maxpatch_pft), stat=ier)
-    end if
-    if (ier /= 0) then
-       write(6,*)subname, 'allocation error '; call endrun()
-    end if
-    endif
 
     ! ----------------------------------------------------------------------
     ! Open monthly vegetation file
@@ -451,77 +428,77 @@ contains
           endif
           call check_ret(nf_inq_dimid(ncid, 'time', dimid), subname)
           call check_ret(nf_inq_dimlen(ncid, dimid, ntim), subname)
+ 
+       else
+
+          nlon_i = lsmlon
+          nlat_i = lsmlon
+          npft_i = numpft+1
 
        endif   ! masterproc
 
        if (single_column) then
+          call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+          beg4d(1) = closelonidx  ; len4d(1) = 1
+          beg4d(2) = closelatidx  ; len4d(2) = 1
+          beg4d(3) = 1         ; len4d(3) = npft_i
+          beg4d(4) = months(k) ; len4d(4) = 1
+       else
+          beg4d(1) = 1         ; len4d(1) = nlon_i
+          beg4d(2) = 1         ; len4d(2) = nlat_i
+          beg4d(3) = 1         ; len4d(3) = npft_i
+          beg4d(4) = months(k) ; len4d(4) = 1
+       endif
+
+       allocate(arrayg(lsmlon*lsmlat),arrayl(begg:endg),stat=ier)
+       if (ier /= 0) then
+          write(6,*)subname, 'allocation array error '; call endrun()
+       end if
+
+       do n = nps,npe
+
           if (masterproc) then
-             call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_LAI', coldata, IER)
-             mlai(1,:)=coldata
-          
-             call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_SAI', coldata, IER)
-             msai(1,:)=coldata
-
-             call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_HEIGHT_TOP', coldata, IER)
-             mhgtt(1,:) = coldata
-
-             call getncdata (ncid, scmlat, scmlon, months(k),'MONTHLY_HEIGHT_BOT', coldata, IER)
-             mhgtb(1,:) = coldata
-          endif
-#if ( defined SPMD )
-          ! pass surface data to all processors
-          call mpi_bcast (mlai , size(mlai) , MPI_REAL8, 0, mpicom, ier)
-          call mpi_bcast (msai , size(msai) , MPI_REAL8, 0, mpicom, ier)
-          call mpi_bcast (mhgtt, size(mhgtt), MPI_REAL8, 0, mpicom, ier)
-          call mpi_bcast (mhgtb, size(mhgtb), MPI_REAL8, 0, mpicom, ier)
-#endif
-      else
-
-          allocate(arrayg(lsmlon*lsmlat),arrayl(begg:endg),stat=ier)
-          if (ier /= 0) then
-             write(6,*)subname, 'allocation array error '; call endrun()
-          end if
-
-          do n = nps,npe
-
-             if (masterproc) then
+             beg4d(3) = n          ; len4d(3) = 1
+             beg4d(4) = months(k)  ; len4d(4) = 1
+             if (nps == 0) beg4d(3) = n+1     ! shift by "1" if index starts at zero
+             if (single_column) then
+                beg4d(1) = closelonidx; len4d(1) = 1
+                beg4d(2) = closelatidx; len4d(2) = 1
+             else
                 beg4d(1) = 1         ; len4d(1) = nlon_i
                 beg4d(2) = 1         ; len4d(2) = nlat_i
-                beg4d(3) = n         ; len4d(3) = 1
-                beg4d(4) = months(k) ; len4d(4) = 1
-                if (nps == 0) beg4d(3) = n+1     ! shift by "1" if index starts at zero
+             end if
 
-                call check_ret(nf_inq_varid(ncid, 'MONTHLY_LAI', varid), subname)
-                call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
-             endif
-             call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
-             mlai(begg:endg,n) = arrayl(begg:endg)
+             call check_ret(nf_inq_varid(ncid, 'MONTHLY_LAI', varid), subname)
+             call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
+          endif
+          call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+          mlai(begg:endg,n) = arrayl(begg:endg)
 
-             if (masterproc) then
-                call check_ret(nf_inq_varid(ncid, 'MONTHLY_SAI', varid), subname)
-                call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
-             endif
-             call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
-             msai(begg:endg,n) = arrayl(begg:endg)
+          if (masterproc) then
+             call check_ret(nf_inq_varid(ncid, 'MONTHLY_SAI', varid), subname)
+             call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
+          endif
+          call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+          msai(begg:endg,n) = arrayl(begg:endg)
 
-             if (masterproc) then
-                call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_TOP', varid), subname)
-                call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
-             endif
-             call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
-             mhgtt(begg:endg,n) = arrayl(begg:endg)
+          if (masterproc) then
+             call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_TOP', varid), subname)
+             call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
+          endif
+          call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+          mhgtt(begg:endg,n) = arrayl(begg:endg)
 
-             if (masterproc) then
-                call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_BOT', varid), subname)
-                call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
-             endif
-             call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
-             mhgtb(begg:endg,n) = arrayl(begg:endg)
+          if (masterproc) then
+             call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_BOT', varid), subname)
+             call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
+          endif
+          call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+          mhgtb(begg:endg,n) = arrayl(begg:endg)
 
-          enddo
-          deallocate(arrayg,arrayl)
+       enddo
+       deallocate(arrayg,arrayl)
 
-       endif
 
        if (masterproc) then
           call check_ret(nf_close(ncid), subname)
@@ -583,9 +560,6 @@ contains
     end do   ! end of loop over months
 
     deallocate(mlai, msai, mhgtt, mhgtb)
-    if (single_column) then
-    deallocate(coldata)
-    endif
   end subroutine readMonthlyVegetation
 
 #endif

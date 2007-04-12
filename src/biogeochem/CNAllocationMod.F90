@@ -414,20 +414,6 @@ subroutine CNAllocation (lbc, ubc, &
          avail_retransn(p) = 0.0_r8
       end if
 
-#if (defined LOCAL_DEBUG)
-      if (masterproc) then
-         write(6,*) 'gpp = ',gpp(p)
-         write(6,*) 'cpool = ',cpool(p)
-         write(6,*) 'availc = ',availc(p)
-         write(6,*) 'plant_ndemand = ',plant_ndemand(p)
-         write(6,*) 'tempsum_plant_ndemand = ',tempsum_plant_ndemand(p)
-         write(6,*) 'annsum_plant_ndemand = ',annsum_plant_ndemand(p)
-         write(6,*) 'annsum_retrnasn = ',annsum_retransn(p)
-         write(6,*) 'avail_retransn = ',avail_retransn(p)
-         write(6,*) 'retransn = ',retransn(p)
-      end if
-#endif
-
       ! make sure available retrans N doesn't exceed storage
       avail_retransn(p) = min(avail_retransn(p), retransn(p)/dt)
 
@@ -442,15 +428,6 @@ subroutine CNAllocation (lbc, ubc, &
          retransn_to_npool(p) = plant_ndemand(p)
       end if
       plant_ndemand(p) = plant_ndemand(p) - retransn_to_npool(p)
-
-#if (defined LOCAL_DEBUG)
-      if (masterproc) then
-         write(6,*) 'avail_retransn = ',avail_retransn(p)
-         write(6,*) 'plant_ndemand = ',plant_ndemand(p)
-         write(6,*) 'p=',p
-         call shr_sys_flush(6)
-      end if
-#endif
 
    end do ! end pft loop
 
@@ -525,17 +502,6 @@ subroutine CNAllocation (lbc, ubc, &
       else
          fpg(c) = 1.0_r8
       end if
-
-#if (defined LOCAL_DEBUG)
-      if (masterproc) then
-         write(6,*) 'sminn = ',sminn(c)
-         write(6,*) 'col_plant_ndemand = ',col_plant_ndemand(c)
-         write(6,*) 'potential_immob = ',potential_immob(c)
-         write(6,*) 'actual immob = ',actual_immob(c)
-         write(6,*) 'sminn_to_plant = ',sminn_to_plant(c)
-         write(6,*) 'supplement N = ',supplement_to_sminn(c)
-      end if
-#endif
 
    end do ! end of column loop
 

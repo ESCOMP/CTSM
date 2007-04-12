@@ -16,7 +16,7 @@ module abortutils
 !EOP
 !-----------------------------------------------------------------------
 
-#if (defined OFFLINE) || (defined COUP_CSM)
+#if (defined OFFLINE) || (defined COUP_CSM) || (defined CAM)
 
    private
    save
@@ -40,9 +40,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! $Id: abortutils.F90,v 1.1.12.3 2005/09/09 19:48:29 mvertens Exp $
 !-----------------------------------------------------------------------
-#if (defined SPMD || defined COUP_CSM)
-   use mpiinc
-#endif
+   use spmdMod,     only: mpicom
    use shr_sys_mod, only: shr_sys_flush
 !
 ! !ARGUMENTS:
@@ -72,13 +70,9 @@ CONTAINS
 
    call shr_sys_flush( 6 )   ! Flush all output to standard output
 
-#if (defined SPMD) || (defined COUP_CSM)
    ! passing an argument of 1 to mpi_abort will lead to a STOPALL output
    ! error code of 257
-   call mpi_abort (MPI_COMM_WORLD, 1)
-#else
-   call abort
-#endif
+   call mpi_abort (mpicom, 1)
 
 end subroutine endrun
 

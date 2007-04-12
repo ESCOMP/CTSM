@@ -24,6 +24,7 @@ module RtmMod
   use RunoffMod   , only : runoff
   use RunoffMod   , only : gsMap_rtm_gdc2glo,perm_rtm_gdc2glo,sMatP_l2r
   use clm_mct_mod
+  use perf_mod
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -96,9 +97,7 @@ contains
     use decompMod    , only : gsMap_lnd_gdc2glo, perm_lnd_gdc2glo
     use clm_time_manager, only : get_curr_date
     use clm_time_manager, only : get_step_size
-#if (defined SPMD)
     use spmdMod
-#endif
     use spmdGathScatMod
 !
 ! !ARGUMENTS:
@@ -303,9 +302,7 @@ contains
        enddo
        deallocate(lfield,rfield)
     endif
-#ifdef SPMD
     call mpi_bcast(gfrac,size(gfrac),MPI_REAL8,0,mpicom,ier)
-#endif
 
     !--- Determine rtm ocn/land mask, 0=none, 1=land, 2=ocean
 
@@ -452,9 +449,7 @@ contains
           'numrl = ',runoff%numrl,'numro = ',runoff%numro
     endif
     call shr_sys_flush(6)
-#if (defined SPMD)
     call mpi_barrier(mpicom,ier)
-#endif
     npmin = 0
     npmax = npes-1
     npint = 1
@@ -486,9 +481,7 @@ contains
              ' numro= ',runoff%lnumro
        endif
        call shr_sys_flush(6)
-#if (defined SPMD)
        call mpi_barrier(mpicom,ier)
-#endif
     enddo
 
     !--- allocate runoff variables
@@ -622,9 +615,7 @@ contains
        dtovermax = max(dtovermax,dtover)
     enddo
     dtover = dtovermax
-#if (defined SPMD)
     call mpi_allreduce(dtover,dtovermax,1,MPI_REAL8,MPI_MAX,mpicom,ier)
-#endif
     if (dtovermax > 0._r8) then
        delt_rtm_max = (1.0_r8/dtovermax)*cfl_scale
     else
@@ -814,9 +805,7 @@ contains
     use decompMod      , only : get_proc_bounds, get_proc_global, ldecomp
     use clm_varctl     , only : rtm_nsteps
     use clm_time_manager   , only : get_step_size, get_nstep
-#if (defined SPMD)
     use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master, allgather_data
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -858,11 +847,7 @@ contains
     integer :: nstep                          ! time step index
 !-----------------------------------------------------------------------
 
-#if (defined TIMING_BARRIERS)
-    call t_startf ('sync_clmrtm')
-    call mpi_barrier (mpicom, ier)
-    call t_stopf ('sync_clmrtm')
-#endif
+    call t_barrierf('sync_clmrtm', mpicom)
 
    ! Assign local pointers to derived type members
 

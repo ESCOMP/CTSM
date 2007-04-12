@@ -13,13 +13,9 @@ module iobinary
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-#if (defined SPMD)
   use spmdMod        , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER, &
                               MPI_LOGICAL
   use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
-#else
-  use spmdMod        , only : masterproc
-#endif
   use decompMod      , only : map_sn2dc, map_dc2sn
 #if (defined RTM)
   use RunoffMod      , only : map_rof_sn2dc, map_rof_dc2sn
@@ -107,11 +103,7 @@ contains
           iglobdc(:) = iglobsn(:)
        end if
     end if
-#if (defined SPMD)
     call scatter_data_from_master(iarr, iglobdc, clmlevel=clmlevel)
-#else
-    iarr(:) = iglobdc(:)
-#endif
     if (masterproc) deallocate(iglobdc, iglobsn)
 
   end subroutine readin_1darray_int
@@ -165,11 +157,7 @@ contains
           rglobdc(:) = rglobsn(:)
        end if
     endif
-#if (defined SPMD)
     call scatter_data_from_master(rarr, rglobdc, clmlevel=clmlevel)
-#else
-    rarr(:) = rglobdc(:)
-#endif
     if (masterproc)deallocate(rglobdc, rglobsn)
 
   end subroutine readin_1darray_real
@@ -225,11 +213,7 @@ contains
           iglobdc(:,:) = iglobsn(:,:)
        end if
     endif
-#if (defined SPMD)
     call scatter_data_from_master(iarr, iglobdc, clmlevel=clmlevel)
-#else
-    iarr(:,:) = iglobdc(:,:)
-#endif
     if (masterproc) deallocate(iglobdc, iglobsn)
 
   end subroutine readin_2darray_int
@@ -286,11 +270,7 @@ contains
           rglobdc(:,:) = rglobsn(:,:)
        end if
     endif
-#if (defined SPMD)
     call scatter_data_from_master(rarr, rglobdc, clmlevel=clmlevel)
-#else
-    rarr(:,:) = rglobdc(:,:)
-#endif
     if (masterproc) deallocate(rglobdc, rglobsn)
 
   end subroutine readin_2darray_real
@@ -330,11 +310,7 @@ contains
           write(6,*)'wrtout_1d_array_int allocation error'; call endrun()
        end if
     endif
-#if (defined SPMD)
     call gather_data_to_master(iarr, iglobdc, clmlevel=clmlevel)
-#else
-    iglobdc(:) = iarr(:)
-#endif
     if (masterproc) then
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then
@@ -391,11 +367,7 @@ contains
           write(6,*)'wrtout_1d_array_real allocation error'; call endrun()
        end if
     endif
-#if (defined SPMD)
     call gather_data_to_master(rarr, rglobdc, clmlevel=clmlevel)
-#else
-    rglobdc(:) = rarr(:)
-#endif
     if (masterproc) then
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then
@@ -455,11 +427,7 @@ contains
           write(6,*)'wrtout_2d_array_int allocation error'; call endrun()
        end if
     endif
-#if (defined SPMD)
     call gather_data_to_master(iarr, iglobdc, clmlevel=clmlevel)
-#else
-    iglobdc(:,:) = iarr(:,:)
-#endif
     if (masterproc) then
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then
@@ -518,11 +486,7 @@ contains
           write(6,*)'wrtout_2d_array_real allocation error'; call endrun()
        end if
     endif
-#if (defined SPMD)
     call gather_data_to_master(rarr, rglobdc, clmlevel=clmlevel)
-#else
-    rglobdc(:,:) = rarr(:,:)
-#endif
     if (masterproc) then
        if (clmlevel == nameg .or. clmlevel == namel .or. &
            clmlevel == namec .or. clmlevel == namep) then

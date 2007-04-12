@@ -21,6 +21,7 @@ module atmdrvMod
   use clm_mct_mod
   use decompMod    , only : gsMap_atm_gdc2glo, perm_atm_gdc2glo
   use shr_sys_mod  , only : shr_sys_flush
+  use perf_mod
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -659,9 +660,7 @@ contains
     ! Calculate temporal resolution of the dataset in minutes and
     ! reset time index
 
-#if (defined SPMD)
     call mpi_bcast (ntim, 1, MPI_INTEGER, 0, mpicom, ier)
-#endif
     atmmin = ndaypm(kmo) * minpday / ntim
     itim = 0
 

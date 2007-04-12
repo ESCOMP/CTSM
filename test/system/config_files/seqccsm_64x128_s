@@ -1,0 +1,6 @@
+-nospmd -nosmp
+-dyn eul
+-res 64x128
+-camiop
+-debug
+-s

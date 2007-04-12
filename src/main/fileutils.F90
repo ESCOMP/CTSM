@@ -246,7 +246,7 @@ contains
            call shr_file_put( ier, locfn, fulpath, passwd=pass, rtpd=irt, &
                               async=.false., remove=lremov )
         else
-           call shr_file_put( ier, locfn, fulpath, rtpd=irt, async=.true., &
+           call shr_file_put( ier, locfn, fulpath, rtpd=irt, async=.false., &
                               remove=lremov )
         end if
 
@@ -318,7 +318,7 @@ contains
 ! !DESCRIPTION:
 ! Get next available Fortran unit number.
 ! If COUP_CSM of OFFLINE is defined,  get next available Fortran unit
-! number itst. Set lsmiou(itst). If COUP_CAM is defined, use CAM function
+! number itst. Set lsmiou(itst). If SEQ_MCT or SEQ_ESMF is defined, use CAM function
 ! navu to get available unit number, in which case lsmiou is not needed.
 !
 ! !USES:
@@ -352,7 +352,7 @@ contains
 ! Close and release Fortran unit no longer in use!
 ! If COUP_CSM or OFFLINE is defined, close and release Fortran unit
 ! number iunit and set lsmiou(iunit) to false.
-! If COUP_CAM is defined, use CAM function relunit to close/release
+! If SEQ_MCT or SEQ_ESMF is defined, use CAM function relunit to close/release
 ! unit number.
 !
 ! !USES:

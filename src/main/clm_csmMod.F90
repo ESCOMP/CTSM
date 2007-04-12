@@ -26,19 +26,15 @@ module clm_csmMod
   use clm_varpar
   use clm_atmlnd      , only : clm_mapa2l, clm_mapl2a
   use clm_atmlnd      , only : atm_a2l, clm_a2l, clm_l2a, atm_l2a
-#if (defined SPMD)
   use spmdMod         , only : masterproc, mpicom
   use spmdGathScatMod , only : gather_data_to_master
-#else
-  use spmdMod         , only : masterproc
-#endif
-  use mpiinc
   use cpl_fields_mod
   use cpl_contract_mod
   use cpl_interface_mod
   use RunoffMod        , only : runoff
   use shr_sys_mod      , only : shr_sys_irtc, shr_sys_flush 
   use abortutils       , only : endrun
+  use perf_mod
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -741,13 +737,8 @@ contains
               bufRloc(n,g) = bufR(g,n)
            end do
         end do
-#if (defined SPMD)
         call gather_data_to_master(bufRloc, bufRglob, clmlevel=nameg)
         call gather_data_to_master(adomain%area, area, clmlevel=nameg)
-#else
-        bufRglob(:,:) = bufRloc(:,:)
-        area(:) = adomain%area(:)
-#endif
         if (masterproc) then
            write(6,*)
 
@@ -1093,13 +1084,8 @@ contains
              bufSloc(n,g) = bufS(g,n)
           end do
        end do
-#if (defined SPMD)
        call gather_data_to_master(bufSloc, bufSglob, clmlevel=nameg)
        call gather_data_to_master(adomain%area, area, clmlevel=nameg)
-#else
-       bufSglob(:,:) = bufSloc(:,:)
-       area(:) = adomain%area(:)
-#endif
 
        if (masterproc) then
           write(6,*)

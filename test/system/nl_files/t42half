@@ -5,14 +5,14 @@ cat > lnd.stdin << EOF
  caseid         = 'clmrun'
  ctitle         = 'clmrun'
  finidat        = ' '
- fsurdat        = '$CSMDATA/surfdata/surfdata_360x720_070122.nc'
- flndtopo       = '$CSMDATA/griddata/topodata_360x720_c060528.nc'
- fatmgrid       = '$CSMDATA/griddata/griddata_64x128_060829.nc'
- fatmlndfrc     = '$CSMDATA/griddata/fracdata_64x128_USGS_070110.nc'
- fatmtopo       = '$CSMDATA/griddata/topodata_64x128_060829.nc'
- fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
- frivinp_rtm    = "$CSMDATA/rtmdata/rdirc.05.061026"
- offline_atmdir = "$CSMDATA/NCEPDATA"
+ fsurdat        = '$CSMDATA/lnd/clm2/surfdata/surfdata_360x720_070122.nc'
+ flndtopo       = '$CSMDATA/lnd/clm2/griddata/topodata_360x720_c060528.nc'
+ fatmgrid       = '$CSMDATA/lnd/clm2/griddata/griddata_64x128_060829.nc'
+ fatmlndfrc     = '$CSMDATA/lnd/clm2/griddata/fracdata_64x128_USGS_070110.nc'
+ fatmtopo       = '$CSMDATA/lnd/clm2/griddata/topodata_64x128_060829.nc'
+ fpftcon        = '$CSMDATA/lnd/clm2/pftdata/pft-physiology.c070207'
+ frivinp_rtm    = "$CSMDATA/lnd/clm2/rtmdata/rdirc.05.061026"
+ offline_atmdir = "$CSMDATA/lnd/clm2/NCEPDATA"
  nrevsn         = "$nrevsn"
  nsrest         =  $restart_type
  nelapse        =  $run_length
@@ -29,6 +29,8 @@ cat > lnd.stdin << EOF
  hist_ndens     =  1
  hist_crtinic   = 'MONTHLY'
  brnch_retain_casename = .true.
+ /
+ &prof_inparm
  /
 EOF
 

@@ -3,7 +3,6 @@
 
 module spmdGathScatMod
 
-!!if (defined SPMD)
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -13,6 +12,7 @@ module spmdGathScatMod
 ! Perform SPMD gather and scatter operations.
 !
 ! !USES:
+  use shr_kind_mod, only: r8 => shr_kind_r8
   use spmdMod
   use clm_mct_mod
   use abortutils, only : endrun
@@ -1032,7 +1032,5 @@ contains
        call endrun
     endif
   end subroutine allgather_2darray_real
-
-!!endif
 
 end module spmdGathScatMod

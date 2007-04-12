@@ -1,0 +1,4 @@
+-spmd -smp
+-debug
+-maxpft 17
+-s

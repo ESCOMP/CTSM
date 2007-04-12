@@ -19,20 +19,20 @@ sm114 TSM.sh 4p_vodsr_h t31 48
 sm115 TSM.sh 4p_vodsr_m t31 48
 sm116 TSM.sh 4p_vodsr_o t31 48
 
-sm121 TSM.sh 17p_vodsr_dh t31 48
-er121 TER.sh 17p_vodsr_dh t31 10+38
-br121 TBR.sh 17p_vodsr_dh t31 24+24
-bl121 TBL.sh 17p_vodsr_dh t31 48
+sm127 TSM.sh 17p_vodsr_dh t31 48
+er127 TER.sh 17p_vodsr_dh t31 10+38
+br127 TBR.sh 17p_vodsr_dh t31 24+24
+bl127 TBL.sh 17p_vodsr_dh t31 48
 
-sm122 TSM.sh 17p_vodsr_dm t31 48
-er122 TER.sh 17p_vodsr_dm t31 10+38
-br122 TBR.sh 17p_vodsr_dm t31 24+24
-bl122 TBL.sh 17p_vodsr_dm t31 48
+sm128 TSM.sh 17p_vodsr_dm t31 48
+er128 TER.sh 17p_vodsr_dm t31 10+38
+br128 TBR.sh 17p_vodsr_dm t31 24+24
+bl128 TBL.sh 17p_vodsr_dm t31 48
 
-sm123 TSM.sh 17p_vodsr_do t31 48
-er123 TER.sh 17p_vodsr_do t31 10+38
-br123 TBR.sh 17p_vodsr_do t31 24+24
-bl123 TBL.sh 17p_vodsr_do t31 48
+sm129 TSM.sh 17p_vodsr_do t31 48
+er129 TER.sh 17p_vodsr_do t31 10+38
+br129 TBR.sh 17p_vodsr_do t31 24+24
+bl129 TBL.sh 17p_vodsr_do t31 48
 
 sm124 TSM.sh 17p_vodsr_h t31 48
 sm125 TSM.sh 17p_vodsr_m t31 48
@@ -57,24 +57,24 @@ sm134 TSM.sh 4p_vodsr_h t42half 48
 sm135 TSM.sh 4p_vodsr_m t42half 48
 sm136 TSM.sh 4p_vodsr_o t42half 48
 
-sm141 TSM.sh 17p_vodsr_dh 10x15_pftdyn 48
-er141 TER.sh 17p_vodsr_dh 10x15_pftdyn 10+38
-br141 TBR.sh 17p_vodsr_dh 10x15_pftdyn 24+24
-bl141 TBL.sh 17p_vodsr_dh 10x15_pftdyn 48
+sm141 TSM.sh 17p__dh 10x15_pftdyn 48
+er141 TER.sh 17p__dh 10x15_pftdyn 10+38
+br141 TBR.sh 17p__dh 10x15_pftdyn 24+24
+bl141 TBL.sh 17p__dh 10x15_pftdyn 48
 
-sm142 TSM.sh 17p_vodsr_dm 10x15_pftdyn 48
-er142 TER.sh 17p_vodsr_dm 10x15_pftdyn 10+38
-br142 TBR.sh 17p_vodsr_dm 10x15_pftdyn 24+24
-bl142 TBL.sh 17p_vodsr_dm 10x15_pftdyn 48
+sm142 TSM.sh 17p__dm 10x15_pftdyn 48
+er142 TER.sh 17p__dm 10x15_pftdyn 10+38
+br142 TBR.sh 17p__dm 10x15_pftdyn 24+24
+bl142 TBL.sh 17p__dm 10x15_pftdyn 48
 
-sm143 TSM.sh 17p_vodsr_do 10x15_pftdyn 48
-er143 TER.sh 17p_vodsr_do 10x15_pftdyn 10+38
-br143 TBR.sh 17p_vodsr_do 10x15_pftdyn 24+24
-bl143 TBL.sh 17p_vodsr_do 10x15_pftdyn 48
+sm143 TSM.sh 17p__do 10x15_pftdyn 48
+er143 TER.sh 17p__do 10x15_pftdyn 10+38
+br143 TBR.sh 17p__do 10x15_pftdyn 24+24
+bl143 TBL.sh 17p__do 10x15_pftdyn 48
 
-sm144 TSM.sh 17p_vodsr_h 10x15_pftdyn 48
-sm145 TSM.sh 17p_vodsr_m 10x15_pftdyn 48
-sm146 TSM.sh 17p_vodsr_o 10x15_pftdyn 48
+sm144 TSM.sh 17p__h 10x15_pftdyn 48
+sm145 TSM.sh 17p__m 10x15_pftdyn 48
+sm146 TSM.sh 17p__o 10x15_pftdyn 48
 
 sm211 TSM.sh 17p_cnn_dh t31_cnall 48
 er211 TER.sh 17p_cnn_dh t31_cnall 10+38
@@ -94,6 +94,11 @@ bl213 TBL.sh 17p_cnn_do t31_cnall 48
 sm214 TSM.sh 17p_cnn_h t31_cnall 48
 sm215 TSM.sh 17p_cnn_m t31_cnall 48
 sm216 TSM.sh 17p_cnn_o t31_cnall 48
+
+sm252 TSM.sh 17p_cnn_dm 10x15_cnall 48
+er252 TER.sh 17p_cnn_dm 10x15_cnall 10+38
+br252 TBR.sh 17p_cnn_dm 10x15_cnall 24+24
+bl252 TBL.sh 17p_cnn_dm 10x15_cnall 48
 
 sm311 TSM.sh 4p_casa_dh t31_casa 48
 er311 TER.sh 4p_casa_dh t31_casa 10+38
@@ -135,3 +140,55 @@ sm416 TSM.sh 10p_dgvm_o t31_dgvm 48
 
 sm417 TSM.sh 10p_dgvm_h t31_dgvm_long -200
 er417 TER.sh 10p_dgvm_h t31_dgvm_long -80+-120
+
+sm451 TSM.sh 10p_dgvm_dm 10x15_dgvm 48
+er451 TER.sh 10p_dgvm_dm 10x15_dgvm 10+38
+br451 TBR.sh 10p_dgvm_dm 10x15_dgvm 24+24
+bl451 TBL.sh 10p_dgvm_dm 10x15_dgvm 48
+
+sm551 TSM.sh _dh 10x15 48
+er551 TER.sh _dh 10x15 10+38
+bl551 TBL.sh _dh 10x15 48
+br551 TBR.sh _dh 10x15 24+24
+
+sm552 TSM.sh _ds 10x15 24
+er552 TER.sh _ds 10x15 12+12
+bl552 TBL.sh _ds 10x15 24
+br552 TBR.sh _ds 10x15 24+24
+
+sm563 TSM.sh _h 1.9x2.5 -10
+er563 TER.sh _h 1.9x2.5 -5+-5
+bl563 TBL.sh _h 1.9x2.5 -10
+br563 TBR.sh _h 1.9x2.5 -10+-10
+
+sm573 TSM.sh _s singlept -10
+er573 TER.sh _s singlept -5+-5
+bl573 TBL.sh _s singlept -10
+br573 TBR.sh _s singlept -10+-10
+
+sm583 TSM.sh _dh regional -10
+er583 TER.sh _dh regional -5+-5
+bl583 TBL.sh _dh regional -10
+br583 TBR.sh _dh regional -10+-10
+
+sm611 TSMtools.sh mkgriddata namelist
+sm671 TSMtools.sh mkgriddata singlept
+
+sm711 TSMtools.sh mksurfdata namelist
+bl711 TBLtools.sh mksurfdata namelist
+
+sm771 TSMtools.sh mksurfdata singlept
+bl771 TBLtools.sh mksurfdata singlept
+
+sm811 TSMtools.sh interpinic runoptions
+
+sm921 TSMseqccsm.sh seqccsm_4x5_dh   seqccsm 48
+bl921 TSMseqccsm.sh seqccsm_4x5_dh   seqccsm 48
+
+sm951 TSMseqccsm.sh seqccsm_10x15_dm seqccsm 48
+bl951 TSMseqccsm.sh seqccsm_10x15_dm seqccsm 48
+
+sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7
+bl982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7
+
+sm061 TSMconccsm.sh ERS f19_g13

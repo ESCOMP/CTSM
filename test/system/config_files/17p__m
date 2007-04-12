@@ -1,0 +1,3 @@
+-spmd -nosmp
+-maxpft 17
+-s

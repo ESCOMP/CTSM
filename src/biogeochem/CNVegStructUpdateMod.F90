@@ -219,14 +219,6 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
          frac_veg_nosno_alb(p) = 0
       end if
 
-#if (defined LOCAL_DEBUG)
-      if (masterproc) then
-         write(6,*) 'tlai, tsai = ', tlai(p), tsai(p)
-         write(6,*) 'elai, esai = ', elai(p), esai(p)
-         write(6,*) 'htop, hbot = ', htop(p), hbot(p)
-      end if
-#endif
-
    end do
 
 end subroutine CNVegStructUpdate

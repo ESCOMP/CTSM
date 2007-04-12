@@ -66,11 +66,7 @@ contains
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
                                  SnowWater, BuildSnowFilter
     use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff
-#if (defined COUP_CAM)
     use clm_time_manager    , only : get_step_size, get_nstep, is_perpetual
-#else
-    use clm_time_manager    , only : get_step_size, get_nstep
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -241,22 +237,6 @@ contains
     call Drainage(lbc, ubc, num_soilc, filter_soilc, &
          vol_liq, hk, icefrac)
 
-#if (!defined COUP_CAM)
-
-    ! Natural compaction and metamorphosis.
-
-    call SnowCompaction(lbc, ubc, num_snowc, filter_snowc)
-
-    ! Combine thin snow elements
-
-    call CombineSnowLayers(lbc, ubc, num_snowc, filter_snowc)
-
-    ! Divide thick snow elements
-
-    call DivideSnowLayers(lbc, ubc, num_snowc, filter_snowc)
-
-#else
-
     if (.not. is_perpetual()) then
 
        ! Natural compaction and metamorphosis.
@@ -287,8 +267,6 @@ contains
        end do
 
     end if
-
-#endif
 
     ! Set empty snow layers to zero
 

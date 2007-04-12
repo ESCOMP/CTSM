@@ -67,9 +67,7 @@ contains
     use clm_varctl  , only : fpftdyn
     use clm_varpar  , only : lsmlon, lsmlat, numpft
     use fileutils   , only : getfil
-#ifdef SPMD
     use spmdGathScatMod, only : gather_data_to_master
-#endif
 !
 ! !ARGUMENTS:
     implicit none

@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 1 ]; then
+if [ $# -ne 2 ]; then
     echo "TSMtools.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TSMtools.$1
+test_name=TSMtools.$1.$2
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -50,25 +50,33 @@ if [ $rc -ne 0 ]; then
     exit 4
 fi
 
-if [ ! -f ${cfgdir}/$1.namelist ]; then
-    echo "TSMtools.sh: namelist options file ${cfgdir}/$1.namelist not found" 
+echo "TSMtools.sh: running $1; output in ${rundir}/test.log" 
+
+if [ ! -f "${cfgdir}/$1.$2" ]; then
+    echo "TSMtools.sh: error ${cfgdir}/$1.$2 input run file not found"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 5
 fi
 
+if [ $2 == "runoptions" ]; then
+  echo "${CLM_TESTDIR}/TCBtools.$1/$1 "`cat ${cfgdir}/$1.$2`
+  cp $cfgdir/*.nc .
+  ${CLM_TESTDIR}/TCBtools.$1/$1  `cat ${cfgdir}/$1.$2` >> test.log 2>&1
+  rc=$?
+else
+  echo "${CLM_TESTDIR}/TCBtools.$1/$1 < ${cfgdir}/$1.$2"
+  ${CLM_TESTDIR}/TCBtools.$1/$1 < ${cfgdir}/$1.$2 >> test.log 2>&1
+  rc=$?
+fi
 
-echo "TSMtools.sh: running $1; output in ${CLM_TESTDIR}/${test_name}/test.log" 
-
-${CLM_TESTDIR}/TCB.$1/$1 < ${cfgdir/$1.namelist >> test.log 2>&1
-rc=$?
-if [ $rc -eq 0 ] && grep -c "TERMINATING $1" test.log > /dev/null; then
+if [ $rc -eq 0 ] && grep -ci "success" test.log > /dev/null; then
     echo "TSMtools.sh: smoke test passed" 
     echo "PASS" > TestStatus
 else
     echo "TSMtools.sh: error running $1, error= $rc" 
     echo "TSMtools.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"
     echo "FAIL.job${JOBID}" > TestStatus
-    exit 8
+    exit 6
 fi
 
 exit 0

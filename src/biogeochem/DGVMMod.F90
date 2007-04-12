@@ -316,9 +316,7 @@ contains
     use fileutils    , only : set_filename, putfil, get_filename
     use shr_sys_mod  , only : shr_sys_getenv
     use spmdMod      , only : masterproc
-#ifdef SPMD
     use spmdGathScatMod, only : gather_data_to_master
-#endif
     use shr_const_mod, only : SHR_CONST_CDAY
 !
 ! !ARGUMENTS:
@@ -646,11 +644,7 @@ contains
 
     allocate(lonvar(lsmlon),latvar(lsmlat),data(numg))
 
-#ifdef SPMD
     call gather_data_to_master (ldomain%lonc, data, clmlevel='gridcell')
-#else
-    data(1:numg) = ldomain%lonc(1:numg)
-#endif
     lonvar = spval
     do n = 1,lsmlon
     do m = 1,lsmlat
@@ -659,11 +653,7 @@ contains
     enddo
     enddo
 
-#ifdef SPMD
     call gather_data_to_master (ldomain%latc, data, clmlevel='gridcell')
-#else
-    data(1:numg) = ldomain%latc(1:numg)
-#endif
     latvar = spval
     do n = 1,lsmlon
     do m = 1,lsmlat

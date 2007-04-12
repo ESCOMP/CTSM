@@ -1,3 +1,233 @@
+===============================================================
+Tag name:  clm3_expa_97
+Originator(s):  erik (KLUZEK ERIK 1326 CGD)
+Date:  Wed Apr 11 12:18:32 MDT 2007
+One-line Summary: Remove SPMD, update to clm proc tag, update timing, improve testing
+
+Purpose of changes:
+     Remove SPMD #ifdefs -- use mpi-serial code
+     Remove COUP_CAM #ifdefs for SEQ_MCT || SEQ_ESMF
+     Remove LOCAL_DEBUG CPP #ifdefs
+     Update to prof05_clm3_expa_92 tag (timing changes, SCAM fixes)
+     Update timing library to latest
+     Fix bugs
+     Improve test suite
+     Change scripts so will rebuild each time (only configure first time if config file DNE)
+     Change tool Makefile to be consistent and have USER_ overload options.
+     Add script to update ChangeLog
+
+Bugs fixed (include bugzilla ID):  337, 361, 389(partial), 407, 408, 417, 428
+     337 -- SPMD
+     361 -- IRIX
+     389 -- Testing
+     407 -- Single gridcell
+     408 -- mksurfdata,mkgriddata compiling
+     417 -- write last file to mss correctly
+     428 -- pdt-dyn mode now restarts correctly
+
+Describe any changes made to build system: Remove HIDE_MPI, remove 
+     stuff left over from CAM Makefile, put FORTRAN name definition in configure
+     remove LOCAL_DEBUG CPP #ifdefs
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: mvertens, oleson, thornton (all just briefly)
+
+List any svn externals directories updated (csm_share, mct, etc.):
+        Update csm_share to share3_070321
+        Update timing    to timing_070328
+
+List all subroutines eliminated:
+
+D      bld/run-sgi.csh --------------------> Remove SGI run script
+D      test/system/tests_pretag_bluesky ---> Remove since bluesky is gone
+D      tools/mksurfdata/mksrfdat.namelist -> Change name to mksurfdata.namelist
+
+   -------> Rename interpinic files to *.F90
+
+D      tools/interpinic/fmain.f90
+D      tools/interpinic/wrap_nf.f90
+D      tools/interpinic/shr_kind_mod.f90
+D      tools/interpinic/interpinic.f90
+D      tools/interpinic/addglobal.f90
+
+   --------> Remove file no longer needed by SCAM or for SPMD mode
+D      src/main/getnetcdfdata.F90
+D      src/main/mpiinc.F90
+
+
+List all subroutines added and what they do:
+
+------- Add concurrent and sequential CCSM tests, add more resolutions, improve tools tests
+A      test/system/TSMconccsm.sh   ----------- Concurrent CCSM test
+--------------------> New configurations to test
+A      test/system/config_files/scam_ds
+A      test/system/config_files/_h
+A      test/system/config_files/_dh
+A      test/system/config_files/_m
+A      test/system/config_files/_o
+A      test/system/config_files/_dm
+A      test/system/config_files/_do
+A      test/system/config_files/_s
+A      test/system/config_files/_ds
+A      test/system/config_files/seqccsm_4x5_dh
+A      test/system/config_files/seqccsm_64x128_s
+A      test/system/config_files/seqccsm_10x15_dm
+A      test/system/config_files/17p__m
+A      test/system/config_files/17p__o
+A      test/system/config_files/17p__dh
+A      test/system/config_files/17p__dm
+A      test/system/config_files/17p__do
+A      test/system/config_files/17p__h
+A      test/system/TSMseqccsm.sh ------------- Sequential CCSM test
+--------------------> New namelists and resolutions to test
+A      test/system/nl_files/scam
+A      test/system/nl_files/1.9x2.5
+A      test/system/nl_files/singlept
+A      test/system/nl_files/10x15_cnall
+A      test/system/nl_files/10x15_dgvm
+A      test/system/nl_files/seqccsm
+A      test/system/nl_files/regional
+A      test/system/nl_files/scam_prep
+A      test/system/nl_files/10x15
+A      test/system/README
+A      test/system/TCBseqccsm.sh --------> Sequential CCSM configure/build
+A      test/system/TSCscam.sh -----------> Sequential CCSM SCAM mode configure/build
+A      test/system/TCTconccsm.sh --------> CCSM create-test
+A      test/system/TBLtools.sh ----------> Compare tools to baseline version
+
+----------- add singlept and regional tests
+A      tools/mksurfdata/mksurfdata.singlept
+A      tools/mksurfdata/mksurfdata.regional
+A  +   tools/mksurfdata/mksurfdata.namelist
+
+----------- Get improved code from Sam Levis (change names to *.F90)
+
+A      tools/interpinic/interpinic.runoptions
+A  +   tools/interpinic/fmain.F90
+A      tools/interpinic/clmi_1999-01-02_10x15_c070330.nc <---- Test file
+A  +   tools/interpinic/wrap_nf.F90
+A      tools/interpinic/Filepath
+A  +   tools/interpinic/interpinic.F90
+A  +   tools/interpinic/addglobal.F90
+A      tools/interpinic/Srcfiles
+----------- add singlept and regional tests
+A      tools/mkgriddata/mkgriddata.singlept
+A      tools/mkgriddata/mkgriddata.regional
+
+----------- Help to update ChangeLog
+A      doc/UpDateChangeLog.pl
+
+----------- New code needed for SCAM mode
+A  +   src/main/setlatlonidx.F90
+
+
+List all existing files that have been modified, and describe the changes:
+
+----------- Improve test system (tweak tests, add new tests to various machines)
+M      test/system/tests_pretag_bluevista
+M      test/system/nl_files/t31_cnall
+M      test/system/nl_files/t31_dgvm
+M      test/system/nl_files/t31_casa
+M      test/system/nl_files/10x15_pftdyn
+M      test/system/nl_files/t31_dgvm_long
+M      test/system/nl_files/t42half
+M      test/system/nl_files/t31
+M      test/system/CLM_runcmnd.sh ------- Use mpirun instead of mpiexec on bangkok/calgary
+M      test/system/tests_pretag_blueice
+M      test/system/input_tests_master
+M      test/system/tests_pretag_jaguar
+M      test/system/TSMtools.sh
+M      test/system/tests_pretag_bangkok
+M      test/system/TCBtools.sh
+M      test/system/test_driver.sh
+M      test/system/tests_pretag_tempest
+M      test/system/tests_posttag_lightning
+
+----------- Get tools to build
+M      tools/mksurfdata/mklaiMod.F90
+M      tools/mksurfdata/mkfileMod.F90
+M      tools/mksurfdata/creategridMod.F90
+M      tools/mksurfdata/Srcfiles
+M      tools/mksurfdata/Makefile ------ Make makefile consistent and add USER_ options
+M      tools/interpinic/Makefile ------ Make makefile consistent and add USER_ options
+M      tools/mkgriddata/mkgriddata.F90
+M      tools/mkgriddata/creategridMod.F90
+M      tools/mkgriddata/Srcfiles
+M      tools/mkgriddata/Makefile ------ Make makefile consistent and add USER_ options
+
+----------- Improvements to run scripts and build system
+     Change scripts so will rebuild each time (only configure first time if config file DNE), remove left over
+     features from CAM Makefile.
+M      bld/run-pc.csh
+M      bld/configure
+M      bld/run-lightning.csh
+M      bld/Makefile.in
+M      bld/run-ibm.csh
+M      bld/run-frost.csh
+
+----------- Source code changes, removing SPMD #ifdef, LOCAL_DEBUG, get SCAM mode working with new CAM, change
+            to work with new timing library, fix code bugs above.  Remove COUP_CAM #ifdefs for SEQ_MCT || SEQ_ESMF
+M      src/biogeochem/CASAMod.F90
+M      src/biogeochem/CNPhenologyMod.F90
+M      src/biogeochem/STATICEcosysDynMod.F90
+M      src/biogeochem/DGVMMod.F90
+M      src/biogeochem/CNAllocationMod.F90
+M      src/biogeochem/CNVegStructUpdateMod.F90
+M      src/main/spmdGathScatMod.F90
+M      src/main/abortutils.F90
+M      src/main/clm_comp.F90
+M      src/main/driver.F90
+M      src/main/ncdio.F90
+M      src/main/atmdrvMod.F90
+M      src/main/fileutils.F90
+M      src/main/pftdynMod.F90
+M      src/main/iniTimeConst.F90
+M      src/main/histFileMod.F90
+M      src/main/program_csm.F90
+M      src/main/restFileMod.F90
+M      src/main/clm_csmMod.F90
+M      src/main/controlMod.F90
+M      src/main/ndepFileMod.F90
+M      src/main/initGridCellsMod.F90
+M      src/main/lnd_comp_mct.F90
+M      src/main/program_off.F90
+M      src/main/pftvarcon.F90
+M      src/main/spmdMod.F90
+M      src/main/surfrdMod.F90
+M      src/main/decompMod.F90
+M      src/main/areaMod.F90
+M      src/main/iobinary.F90
+M      src/main/do_close_dispose.F90
+M      src/riverroute/RtmMod.F90
+M      src/biogeophys/Hydrology2Mod.F90
+M      src/biogeophys/BiogeophysRestMod.F90
+
+Summary of testing:
+
+  tempest: ALL PASS
+  bluevista:
+019 bl141 TBL.sh 17p_vodsr_dh 10x15_pftdyn 48 .....................FAIL! rc= 7
+022 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................FAIL! rc= 6
+059 sm061 TSMconccsm.sh ERS f19_g13 ...............................FAIL! rc= 5
+  bangkok/lf95:
+033 sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7 ....FAIL! rc= 4
+
+TBL test fails because of restart trouble with pftdyn.
+Concurrent CCSM test fails because of a problem with ccsm3_5_beta01 for datm7.
+bangkok scam test fails as is says that scm_crm_mode is not initialized in
+CAM code.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_96
+ (had to add in new tests, and set SOM4)
+
+Changes Answers: No
+
+===============================================================
 
 ===============================================================
 Tag name: clm3_expa_96

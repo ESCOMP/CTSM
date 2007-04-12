@@ -46,7 +46,6 @@ contains
 ! Read a grid file
 !
 ! !USES:
-  include 'netcdf.inc'
 !
 ! !ARGUMENTS:
     implicit none
@@ -59,6 +58,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
+  include 'netcdf.inc'
     integer :: nlon,nlat                       !size
     real(r8), allocatable :: lon1d(:)          !local array for 1d lon
     real(r8), allocatable :: lat1d(:)          !local array for 1d lat
@@ -395,8 +395,8 @@ contains
 
 ! !ARGUMENTS:
     implicit none
-    type(domain_type),intent(in) :: domain
-    character(len=*) ,intent(in) :: fname
+    type(domain_type),intent(inout) :: domain
+    character(len=*) ,intent(in)    :: fname
 !
 ! !REVISION HISTORY:
 ! Author: T Craig

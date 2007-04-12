@@ -21,6 +21,9 @@ module interpinic
   integer :: numpfts        ! input file number of pfts 
   integer :: numpftso       ! output file number of pfts 
 
+  ! Variable needed in various subroutines of this module
+
+  logical :: do_dgvmo       !true => output initial file has dgvm data
 
   ! RTM river routing model
 
@@ -74,7 +77,6 @@ contains
     logical :: do_rtmi             !true => input initial file has rtm data
     logical :: do_rtmo             !true => output initial file has rtm data
     logical :: do_dgvmi            !true => input initial file has dgvm data
-    logical :: do_dgvmo            !true => output initial file has dgvm data
     ! --------------------------------------------------------------------
 
     write (6,*) 'Mapping clm initial data from input to output initial files'
@@ -219,6 +221,10 @@ contains
                 
     call interp_ml_real('T_LAKE', ncidi, 'T_LAKE', ncido, nlev=nlevlak, nvec=numcols, nveco=numcolso)
                 
+    call interp_sl_real('WA', ncidi, 'WA', ncido, nvec=numcols, nveco=numcolso)
+    call interp_sl_real('WT', ncidi, 'WT', ncido, nvec=numcols, nveco=numcolso)
+    call interp_sl_real('ZWT', ncidi, 'ZWT', ncido, nvec=numcols, nveco=numcolso)
+                
     call interp_sl_real('T_GRND', ncidi, 'T_GRND', ncido, nvec=numcols, nveco=numcolso)
                 
     call interp_sl_real('T_VEG', ncidi, 'T_VEG', ncido, nvec=numpfts, nveco=numpftso)
@@ -259,7 +265,7 @@ contains
                              
        call interp_sl_real ('CPOOL_SLOW', ncidi, 'CPOOL_SLOW', ncido, nvec=numpfts, nveco=numpftso)
                              
-       call interp_sl_real ('PRESENT', ncidi, 'PRESENT', ncido, nvec=numpfts, nveco=numpftso)
+       call interp_sl_int ('PRESENT', ncidi, 'PRESENT', ncido, nvec=numpfts, nveco=numpftso)
                              
        call interp_sl_real ('NIND', ncidi, 'NIND', ncido, nvec=numpfts, nveco=numpftso)
                              
@@ -424,8 +430,14 @@ contains
     ! --------------------------------------------------------------------
 
     ! ------------------------ local variables --------------------------
-    integer :: n,no                        !indices
+    integer :: i,j,k,n,no,ni,noo                !indices
     integer :: varid                       !variable id
+    integer keepi1(10), keepo1(10)
+    integer , allocatable :: keepo2(:)
+!   integer , allocatable :: ixyo(:) !slevis: for diagnostic work
+!   integer , allocatable :: jxyo(:) !slevis: for diagnostic work
+    integer , allocatable :: vtypei(:)
+    integer , allocatable :: vtypeo(:)
     integer , allocatable :: typei(:)
     integer , allocatable :: typeo(:)
     real(r8), allocatable :: lati(:)
@@ -443,6 +455,11 @@ contains
 
     allocate (rbufsli(nvec))
     allocate (rbufslo(nveco))
+    allocate (keepo2(nveco))
+!   allocate (ixyo(nveco)) !slevis: for diagnostic work
+!   allocate (jxyo(nveco)) !slevis: for diagnostic work
+    allocate (vtypei(nvec))
+    allocate (vtypeo(nveco))
     allocate (typei(nvec))
     allocate (typeo(nveco))
     allocate (lati(nvec))
@@ -463,6 +480,8 @@ contains
        call wrap_inq_varid (ncidi, 'cols1d_wtxy', varid)
        call wrap_get_var_double(ncidi, varid, wti)
     else if (nvec == numpfts) then
+       call wrap_inq_varid (ncidi, 'pfts1d_itypveg', varid)
+       call wrap_get_var_int(ncidi, varid, vtypei)
        call wrap_inq_varid (ncidi, 'pfts1d_ityplun', varid)
        call wrap_get_var_int(ncidi, varid, typei)
        call wrap_inq_varid (ncidi, 'pfts1d_lon', varid)
@@ -483,6 +502,12 @@ contains
        call wrap_inq_varid (ncido, 'cols1d_wtxy', varid)
        call wrap_get_var_double(ncido, varid, wto)
     else if (nveco == numpftso) then
+!      call wrap_inq_varid (ncido, 'pfts1d_ixy', varid) !slevis start
+!      call wrap_get_var_int(ncido, varid, ixyo)
+!      call wrap_inq_varid (ncido, 'pfts1d_jxy', varid)
+!      call wrap_get_var_int(ncido, varid, jxyo)        !slevis end
+       call wrap_inq_varid (ncido, 'pfts1d_itypveg', varid)
+       call wrap_get_var_int(ncido, varid, vtypeo)
        call wrap_inq_varid (ncido, 'pfts1d_ityplun', varid)
        call wrap_get_var_int(ncido, varid, typeo)
        call wrap_inq_varid (ncido, 'pfts1d_lon', varid)
@@ -502,7 +527,14 @@ contains
     if (varnameo=='T_VEG') rbufslo(:) = 283.
     if (varnameo=='T_GRND') rbufslo(:) = 283.
 
+    keepo2(:) = 0
     do no = 1, nveco
+    if (keepo2(no) == 0) then
+    if (.not. do_dgvmo                          .or. &
+        (do_dgvmo                              .and. &
+         ( nveco==numcolso                      .or. & !column variable
+          (nveco==numpftso .and. vtypeo(no)>14) .or. & !pft var + crop
+          (nveco==numpftso .and. typeo(no)>1)  ))) then!pft var + not veg lunit
        if (wto(no)>0.) then
           dist(:) = spval !initialize before each use
           do n = 1, nvec
@@ -515,14 +547,18 @@ contains
           end do          !output data land loop
           distmin = minval(dist)
           if (distmin==spval) then
-             write(*,*) 'distmin=',spval
+             write(*,*) 'distmin, no, varnameo=',spval, no, varnameo
              stop
           end if
           count = 0
           do n = 1, nvec
              if (dist(n)==distmin) then
                 count = count + 1
-                rbufslo(no) = rbufsli(n)
+                if (varnameo=='HTOP' .or. varnameo=='FPCGRID') then
+                   rbufslo(no) = rbufslo(no)
+                else
+                   rbufslo(no) = rbufsli(n)
+                end if
              end if       ! found nearest neighbor
              if (count == 1) exit
           end do          !output data land loop
@@ -531,6 +567,68 @@ contains
              stop
           end if
        end if             !output data with positive weight
+    else if (nveco==numpftso .and. typeo(no)==1 .and. vtypeo(no)<15) then
+       i = 0
+       do noo = 1, nveco
+          if (typeo(noo)==1 .and. vtypeo(noo)<15 .and. &
+              lato(noo)==lato(no) .and. lono(noo)==lono(no)) then
+             i = i + 1
+             if (i>10) then
+                write(*,*) 'i>10 WHY???'
+                stop
+             end if
+             keepo1(i) = noo
+             keepo2(noo) = 1 !use keepo2 to skip the pfts already done
+          end if
+       end do
+       dist(:) = spval !initialize before each use
+       do n = 1, nvec
+          if (wti(n)>0. .and. typei(n) == 1 .and. vtypei(n)<15) then
+             dy = 3.14/180.* abs(lato(no)-lati(n))*6.37e6
+             dx = 3.14/180.* abs(lono(no)-loni(n))*6.37e6 * &
+                  0.5*(cos(lato(no)*3.14/180.)+cos(lati(n)*3.14/180.))
+             dist(n) = sqrt(dx*dx + dy*dy)
+          end if
+       end do          !input data land loop
+       distmin = minval(dist)
+       if (distmin==spval) then
+          write(*,*) 'distmin=',spval
+          stop
+       end if
+       count = 0
+       do n = 1, nvec
+          if (dist(n)==distmin) then
+             count = count + 1
+             j = 0
+             do ni = 1, nvec
+                if (typei(ni)==1 .and. vtypei(ni)<15 .and. lati(ni)==lati(n) .and. loni(ni)==loni(n)) then
+                   j = j + 1
+                   if (j>10) then
+                      write(*,*) 'j>10 WHY???'
+                      stop
+                   end if
+                   keepi1(j) = ni
+                end if
+             end do
+             if (j/=i) then
+                write(6,*) 'j/=i, where j,i=', j,i
+                stop
+             end if
+          end if       !found nearest neighbor
+          if (count == 1) exit
+       end do          !input data loop
+       do k = 1, i
+          rbufslo(keepo1(k)) = rbufsli(keepi1(k))
+       end do          !loop to write input to output
+       if (count < 1) then
+          write(*,*) 'subroutine interp_sl_real: no data was written'
+          stop
+       end if
+    else
+       write(*,*) 'subroutine interp_sl_real: no data written to typeo,vtypeo,no=', typeo(no),vtypeo(no),no
+       stop
+    end if
+    end if                !check whether to skip this no value 
     end do                !output data land loop
 
     call wrap_inq_varid (ncido, trim(varnameo), varid)
@@ -540,6 +638,11 @@ contains
 
     deallocate(rbufsli)
     deallocate(rbufslo)
+    deallocate(keepo2)
+!   deallocate(ixyo) !slevis
+!   deallocate(jxyo) !slevis
+    deallocate(vtypei)
+    deallocate(vtypeo)
     deallocate(typei)
     deallocate(typeo)
     deallocate(lati)
@@ -569,8 +672,12 @@ contains
     ! --------------------------------------------------------------------
 
     ! ------------------------ local variables --------------------------
-    integer :: n,no                             !indices
+    integer :: i,j,k,n,no,ni,noo                !indices
     integer :: varid                            !variable id
+    integer keepi1(10), keepo1(10)
+    integer , allocatable :: keepo2(:)
+    integer , allocatable :: vtypei(:)
+    integer , allocatable :: vtypeo(:)
     integer , allocatable :: typei(:)
     integer , allocatable :: typeo(:)
     real(r8), allocatable :: lati(:)
@@ -588,6 +695,9 @@ contains
 
     allocate (ibufsli(nvec))
     allocate (ibufslo(nveco))
+    allocate (keepo2(nveco))
+    allocate (vtypei(nvec))
+    allocate (vtypeo(nveco))
     allocate (typei(nvec))
     allocate (typeo(nveco))
     allocate (lati(nvec))
@@ -608,6 +718,8 @@ contains
        call wrap_inq_varid (ncidi, 'cols1d_wtxy', varid)
        call wrap_get_var_double(ncidi, varid, wti)
     else if (nvec == numpfts) then
+       call wrap_inq_varid (ncidi, 'pfts1d_itypveg', varid)
+       call wrap_get_var_int(ncidi, varid, vtypei)
        call wrap_inq_varid (ncidi, 'pfts1d_ityplun', varid)
        call wrap_get_var_int(ncidi, varid, typei)
        call wrap_inq_varid (ncidi, 'pfts1d_lon', varid)
@@ -628,6 +740,8 @@ contains
        call wrap_inq_varid (ncido, 'cols1d_wtxy', varid)
        call wrap_get_var_double(ncido, varid, wto)
     else if (nveco == numpftso) then
+       call wrap_inq_varid (ncido, 'pfts1d_itypveg', varid)
+       call wrap_get_var_int(ncido, varid, vtypeo)
        call wrap_inq_varid (ncido, 'pfts1d_ityplun', varid)
        call wrap_get_var_int(ncido, varid, typeo)
        call wrap_inq_varid (ncido, 'pfts1d_lon', varid)
@@ -645,7 +759,14 @@ contains
 
     ibufslo(:) = 0
 
+    keepo2(:) = 0
     do no = 1, nveco
+    if (keepo2(no) == 0) then
+    if (.not. do_dgvmo                          .or. &
+        (do_dgvmo                              .and. &
+         ( nveco==numcolso                      .or. & !column variable
+          (nveco==numpftso .and. vtypeo(no)>14) .or. & !pft var + crop
+          (nveco==numpftso .and. typeo(no)>1)  ))) then!pft var + not veg lunit
        if (wto(no)>0.) then
           dist(:) = spval !initialize before each use
           do n = 1, nvec
@@ -665,7 +786,13 @@ contains
           do n = 1, nvec
              if (dist(n)==distmin) then
                 count = count + 1
-                ibufslo(no) = ibufsli(n)
+                if (varnameo=='PRESENT') then
+                   ibufslo(no) = 0
+                else if (varnameo=='ITYPVEG') then
+                   ibufslo(no) = vtypeo(no)
+                else
+                   ibufslo(no) = ibufsli(n)
+                end if
              end if       !found nearest neighbor
              if (count == 1) exit
           end do          !input data land loop
@@ -674,6 +801,68 @@ contains
              stop
           end if
        end if             !input data with positive weight
+    else if (nveco==numpftso .and. typeo(no)==1 .and. vtypeo(no)<15) then
+       i = 0
+       do noo = 1, nveco
+          if (typeo(noo)==1 .and. vtypeo(noo)<15 .and. &
+              lato(noo)==lato(no) .and. lono(noo)==lono(no)) then
+             i = i + 1
+             if (i>10) then
+                write(*,*) 'i>10 WHY???'
+                stop
+             end if
+             keepo1(i) = noo
+             keepo2(noo) = 1 !use keepo2 to skip the pfts already done
+          end if
+       end do
+       dist(:) = spval !initialize before each use
+       do n = 1, nvec
+          if (wti(n)>0. .and. typei(n) == 1 .and. vtypei(n)<15) then
+             dy = 3.14/180.* abs(lato(no)-lati(n))*6.37e6
+             dx = 3.14/180.* abs(lono(no)-loni(n))*6.37e6 * &
+                  0.5*(cos(lato(no)*3.14/180.)+cos(lati(n)*3.14/180.))
+             dist(n) = sqrt(dx*dx + dy*dy)
+          end if
+       end do          !input data land loop
+       distmin = minval(dist)
+       if (distmin==spval) then
+          write(*,*) 'distmin=',spval
+          stop
+       end if
+       count = 0
+       do n = 1, nvec
+          if (dist(n)==distmin) then
+             count = count + 1
+             j = 0
+             do ni = 1, nvec
+                if (typei(ni)==1 .and. vtypei(ni)<15 .and. lati(ni)==lati(n) .and. loni(ni)==loni(n)) then
+                   j = j + 1
+                   if (j>10) then
+                      write(*,*) 'j>10 WHY???'
+                      stop
+                   end if
+                   keepi1(j) = ni
+                end if
+             end do
+             if (j/=i) then
+                write(6,*) 'j/=i, where j,i=', j,i
+                stop
+             end if
+          end if       !found nearest neighbor
+          if (count == 1) exit
+       end do          !input data oop
+       do k = 1, i
+          ibufslo(keepo1(k)) = ibufsli(keepi1(k))
+       end do          !loop to write input to output
+       if (count < 1) then
+          write(*,*) 'subroutine interp_sl_int: no data was written'
+          stop
+       end if
+    else
+       write(*,*) 'subroutine interp_sl_int: no data written to typeo,vtypeo,no=', typeo(no),vtypeo(no),no
+       stop
+    end if
+    end if                !check whether to skip this no value
     end do                !input data land loop
 
     call wrap_inq_varid (ncido, trim(varnameo), varid)
@@ -683,6 +872,9 @@ contains
 
     deallocate (ibufsli)
     deallocate (ibufslo)
+    deallocate (keepo2)
+    deallocate (vtypei)
+    deallocate (vtypeo)
     deallocate (typei)
     deallocate (typeo)
     deallocate (lati)

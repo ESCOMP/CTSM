@@ -68,13 +68,10 @@
   use abortutils      , only : endrun
   use spmdMod       
   use ESMF_Mod
+  use perf_mod
 !
 ! !ARGUMENTS:
   implicit none
-#include <gptl.inc>
-#if (defined HAVE_PAPI)
-#include <f77papi.h>
-#endif
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -104,50 +101,11 @@
 #endif
 
   ! -----------------------------------------------------------------
-  ! Initialize timing library
-  ! -----------------------------------------------------------------
-
-  ! Set options and initialize timing library.  Use the new "GPTL"
-  ! initialization function calls instead of the old "t_" subroutines to
-  ! enable CAM to gracefully abort in case of a failure return.  Failures can
-  ! happen particularly when enabling PAPI timers and everything was not set
-  ! up exactly correctly when building the PAPI lib, or CAM.
-  ! 
-  ! For logical settings, 2nd arg 0 to gptlsetoption means disable, 
-  ! non-zero means enable
-  !
-  ! Turn off CPU timing (expensive)
-
-  if (gptlsetoption (gptlcpu, 0) < 0) call endrun ('CLM: gptlsetoption')
-
-  ! Compile-time setting of max timer depth
-
-#ifdef GPTLDEPTHLIMIT
-  if (gptlsetoption (gptldepthlimit, GPTLDEPTHLIMIT) < 0) call endrun ('CLM: gptlsetoption')
-#endif
-
-  ! Next 2 calls only work if PAPI is enabled.  These examples enable counting
-  ! of total cycles and floating point ops, respectively
-  !
-  !   if (gptlsetoption (PAPI_TOT_CYC, 1) < 0) call endrun ('CLM: gptlsetoption')
-  !   if (gptlsetoption (PAPI_FP_OPS, 1)  < 0) call endrun ('CLM: gptlsetoption')
-  !
-  ! Initialize the timing lib.  This call must occur after all gptlsetoption
-  ! calls and before all other timing lib calls.
-
-  if (gptlinitialize () < 0) call endrun ('CLM: gptlinitialize')
-
-  ! -----------------------------------------------------------------
   ! Initialize MPI
   ! -----------------------------------------------------------------
 
-#ifdef SPMD
   call csm_setup(mpicom_top)
   call spmd_init(mpicom_top)
-#else
-  write(6,*)'SPMD must to be defined when running in COUP_CSM mode
-  call endrun()
-#endif
 
   ! -----------------------------------------------------------------
   ! Initialize ESMF
@@ -165,6 +123,13 @@
       call control_setNL( nlfilename )                     ! Set namelist
       call shr_file_chStdout('lnd')                        ! redir unit 6
    end if
+
+  ! -----------------------------------------------------------------
+  ! Initialize timing library
+  ! -----------------------------------------------------------------
+
+  call t_initf(nlfilename, LogPrint=masterproc, Mpicom=mpicom_top, &
+               MasterTask=masterproc)
 
   ! -----------------------------------------------------------------
   ! Initialize land model
@@ -244,7 +209,8 @@
   if (masterproc) then
      write(6,*)'SUCCESFULLY TERMINATING CLM MODEL at nstep= ',get_nstep()
   endif
-  call t_prf(iam)
+  call t_prf('timing_all',mpicom_top)
+  call t_finalizef()
   call csm_shutdown()
 
   stop

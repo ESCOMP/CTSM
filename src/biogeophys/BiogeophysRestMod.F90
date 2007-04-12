@@ -134,7 +134,7 @@ contains
                dim1name='pft', &
                long_name='pft weight relative to corresponding column', units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_iolocal(varname='PFT_WTCOL', data=pptr%wtlunit, &
+          call ncd_iolocal(varname='PFT_WTCOL', data=pptr%wtcol, &
                dim1name='pft', &
                ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then

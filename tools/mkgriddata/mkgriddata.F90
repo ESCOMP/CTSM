@@ -55,6 +55,12 @@ program mkgriddata
 !-----------------------------------------------------------------------
 
     !--- read namelist ---
+    mksrf_lsmlon = -1
+    mksrf_lsmlat = -1
+    mksrf_edgen  = -999.
+    mksrf_edges  = -999.
+    mksrf_edgee  = -999.
+    mksrf_edgew  = -999.
 
     write(6,*) 'Attempting to initialize control settings .....'
 

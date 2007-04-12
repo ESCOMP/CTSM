@@ -1,0 +1,1 @@
+-i /fs/cgd/csm/inputdata/lnd/clm2/inidata_3.1/ccsm/clmi_0000-01-01_1.9x2.5_gx1v4_c070311.nc -o clmi_1999-01-02_10x15_c070330.nc

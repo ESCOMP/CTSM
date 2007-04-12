@@ -2,7 +2,7 @@ areaMod.F90
 creategridMod.F90
 domainMod.F90
 mkfileMod.F90
-mkfmax.F90*
+mkfmax.F90
 mkglacier.F90
 mklaiMod.F90
 mklanwat.F90
@@ -15,9 +15,10 @@ mkurban.F90
 mkvarctl.F90
 mkvarpar.F90
 mkvarsur.F90
-ncdio.F90 
-nanMod.F90 
+ncdio.F90
+nanMod.F90
 fileutils.F90
+spmdMod.F90
 abortutils.F90
 shr_file_mod.F90
 shr_sys_mod.F90
@@ -25,6 +26,7 @@ shr_timer_mod.F90
 shr_kind_mod.F90
 shr_const_mod.F90
 shr_mpi_mod.F90
+system_cmd.c
 collective.c
 comm.c
 fort.F90

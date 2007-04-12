@@ -66,18 +66,21 @@ set usr_src  = $clmroot/bld/empty
 mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
 mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
-## If an executable doesn't exist, build one.
+## Build (or re-build) executable
 set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust -usr_src $usr_src"
-if ($spmd == on ) set flags = "$flags -spmd"
+if ($spmd == on)  set flags = "$flags -spmd"
 if ($spmd == off) set flags = "$flags -nospmd"
-if ( ! -x $blddir/clm ) then
-    echo "cd $blddir"
-    cd $blddir                  || echo "cd $blddir failed" && exit 1
+echo "cd $blddir"
+cd $blddir                  || echo "cd $blddir failed" && exit 1
+if ( ! -f $blddir/config_cache.xml ) then
     echo "flags to configure are $flags"
     $cfgdir/configure $flags    || echo "configure failed" && exit 1
-    echo "building CLM in $blddir ..."
-    rm -f Depends
+    echo "Building CLM in $blddir ..."
     gmake -j8 >&! MAKE.out      || echo "CLM build failed: see $blddir/MAKE.out" && exit 1
+else
+    echo "Re-building CLM in $blddir ..."
+    rm -f Depends
+    gmake -j8 >&! REMAKE.out      || echo "CLM build failed: see $blddir/REMAKE.out" && exit 1
 endif
 
 ## Create the namelist
@@ -107,6 +110,8 @@ cat >! lnd.stdin << EOF
  hist_nhtfrq    =  -24
  hist_mfilt     =  1
  hist_crtinic   = 'MONTHLY'
+ /
+ &prof_inparm
  /
 EOF
 

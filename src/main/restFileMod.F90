@@ -526,7 +526,7 @@ contains
    if (masterproc) then
 
       lremove = .true.
-#if (defined OFFLINE) || (defined COUP_CAM)
+#if (defined OFFLINE) || (defined SEQ_MCT) || (defined SEQ_ESMF)
       if (is_last_step()) lremove = .false.
 #elif (defined COUP_CSM)
       if (csmstop_next) lremove = .false.
@@ -720,9 +720,7 @@ contains
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_time_manager, only : get_nstep, get_curr_date
-#ifdef SPMD
     use spmdMod     , only : mpicom, MPI_LOGICAL
-#endif
     use clm_varctl  , only : caseid, ctitle, version, fsurdat
     use clm_varpar  , only : numrad, rtmlon, rtmlat, nlevlak, nlevsno, nlevsoi
     use shr_sys_mod , only : shr_sys_getenv

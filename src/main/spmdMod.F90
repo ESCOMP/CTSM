@@ -20,7 +20,7 @@ module spmdMod
   use shr_kind_mod, only: r8 => shr_kind_r8
   implicit none
   save
-  public  
+  private
 
   ! Default settings valid even if there is no spmd 
 
@@ -29,6 +29,26 @@ module spmdMod
   integer, public :: npes            ! number of processors for clm
   integer, public :: mpicom          ! communicator group for clm
   integer, public :: comp_id         ! component id
+
+  !
+  ! Public methods
+  !
+  public :: spmd_init                ! Initialization
+
+  !
+  ! Values from mpif.h that can be used
+  !
+  public :: MPI_INTEGER
+  public :: MPI_REAL8
+  public :: MPI_LOGICAL
+  public :: MPI_SUM
+  public :: MPI_MIN
+  public :: MPI_MAX
+  public :: MPI_STATUS_SIZE
+  public :: MPI_ANY_SOURCE
+  public :: MPI_CHARACTER
+  public :: MPI_COMM_WORLD
+  public :: MPI_MAX_PROCESSOR_NAME
 
 #include <mpif.h>  
 
@@ -59,7 +79,6 @@ contains
 !
 !EOP
 !
-#ifdef SPMD
 ! !LOCAL VARIABLES:
     integer :: i,j         ! indices
     integer :: ier         ! return error status
@@ -124,21 +143,6 @@ contains
 200 format(/,35('-'))
 220 format(/,"NODE#",2x,"NAME")
 250 format("(",i3,")",2x,100a1)
-
-#else
-
-    ! spmd is not defined
-
-    mpicom = clm_mpicom
-    iam = 0
-    masterproc = .true.
-    npes = 1
-    comp_id = 1
-#if (defined COUP_CSM)
-    comp_id = cpl_comm_mph_cid
-#endif
-	
-#endif   
 
   end subroutine spmd_init
 

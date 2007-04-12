@@ -1,57 +1,102 @@
-# Makefile to build interpinic on various platforms
-# Note: If netcdf library is not built in the standard location, 
-# you must set the environment variables INC_NETCDF and LIB_NETCDF
+#-----------------------------------------------------------------------
+# This Makefile is for building cprnc on AIX, Compaq, Linux (with pgf90 or 
+# lf95 compiler), IRIX or SUN platforms. The code produces output nearly 
+# identical to that of tools/cprnc. The latter code can be jettisoned when
+# test-model goes away. Since test-model relies on cprnc, and demands certain
+# quirky features of it (e.g. no .f90 files), the old cprnc code cannot be
+# abandoned until test-model is also abandoned.
+#
+# These macros can be changed by setting environment variables:
+#
+# LIB_NETCDF --- Library directory location of netcdf. (defaults to /usr/local/lib)
+# INC_NETCDF --- Include directory location of netcdf. (defaults to /usr/local/include)
+# USER_FC ------ Allow user to override the default Fortran compiler specified in Makefile.
+# USER_CC ------ Allow user to override the default C compiler specified in Makefile (linux only).
+# USER_LINKER -- Allow user to override the default linker specified in Makefile.
+# USER_CPPDEFS - Additional CPP defines.
+# USER_CFLAGS -- Additional C compiler flags that the user wishes to set.
+# USER_FFLAGS -- Additional Fortran compiler flags that the user wishes to set.
+# USER_LDLAGS -- Additional load flags that the user wishes to set.
+#
+#------------------------------------------------------------------------
 
-EXEDIR = .
+# Set up special characters
+null  :=
+
 EXENAME = interpinic
 RM = rm
 
-.SUFFIXES:
-.SUFFIXES: .f90 .o
-
-# Check for the NetCDF library and include directories 
+# Check for the netcdf library and include directories 
 ifeq ($(LIB_NETCDF),$(null))
-   LIB_NETCDF := /usr/local/lib
+LIB_NETCDF := /usr/local/lib
 endif
 
 ifeq ($(INC_NETCDF),$(null))
-   INC_NETCDF := /usr/local/include
+INC_NETCDF := /usr/local/include
 endif
+
+# Set user specified Fortran compiler
+ifneq ($(strip $(USER_FC)),)
+  FC := $(USER_FC)
+endif
+# Set user specified C compiler
+ifneq ($(strip $(USER_CC)),)
+  CC := $(USER_CC)
+endif
+
+
+CPPDEF := -DNO_SHR_VMATH -DOFFLINE $(USER_CPPDEFS)
 
 # Determine platform 
 UNAMES := $(shell uname -s)
-UNAMEM := $(findstring CRAY,$(shell uname -m))
 
-# Architecture-specific flags and rules
-#
-#------------------------------------------------------------------------
-# Cray 
-#------------------------------------------------------------------------
+# Load dependency search path.
+dirs := . $(shell cat Filepath)
 
-ifeq ($(UNAMEM),CRAY)
-FC = f90
-FFLAGS = -c -I$(INC_NETCDF)
-LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+# Set cpp search path, include netcdf
+cpp_dirs := $(dirs) $(INC_NETCDF) $(INC_MPI)
+cpp_path := $(foreach dir,$(cpp_dirs),-I$(dir)) # format for command line
+
+# Expand any tildes in directory names. Change spaces to colons.
+VPATH    := $(foreach dir,$(cpp_dirs),$(wildcard $(dir))) 
+VPATH    := $(subst $(space),:,$(VPATH))               
+
+#Primary Target: build the tool
+all: $(EXENAME)
+
+# Get list of files and build dependency file for all .o files
+#   using perl scripts mkSrcfiles and mkDepends
+
+SOURCES   := $(shell cat Srcfiles)
+
+OBJS      := $(addsuffix .o, $(basename $(SOURCES)))
+
+# Newer makes set the CURDIR variable.
+CURDIR := $(shell pwd)
+
+ifeq ($(CLM_ROOT),$(null))
+   ROOTDIR := $(CURDIR)/../../
+else
+   ROOTDIR := $(CLM_ROOT)
 endif
 
+$(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Filepath
+	$(ROOTDIR)/bld/mkDepends Filepath Srcfiles > $@
+
+
+# Architecture-specific flags and rules
 #------------------------------------------------------------------------
 # SGI
 #------------------------------------------------------------------------
 
 ifeq ($(UNAMES),IRIX64)
-FC = f90
-FFLAGS = -64 -c -trapuv -I$(INC_NETCDF) -g -C -DEBUG:trap_uninitialized=ON
+CPPDEF  += -DIRIX64
+FC      = f90
+FFLAGS  = -64 -c -r8 -i4 -I$(INC_NETCDF) -O2 $(CPPDEF)
 LDFLAGS = -64 -L$(LIB_NETCDF) -lnetcdf
-endif
-
-#------------------------------------------------------------------------
-# SUN
-#------------------------------------------------------------------------
-
-ifeq ($(UNAMES),SunOS)
-FC = f90
-FFLAGS = -c -stackvar -f -I$(INC_NETCDF) -g
-LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+CFLAGS  := -64 -g -O2 $(CPPDEF) -DFORTRANUNDERSCORE
+FFLAGS += $(cpp_path)
+CFLAGS += $(cpp_path)
 endif
 
 #------------------------------------------------------------------------
@@ -59,10 +104,36 @@ endif
 #------------------------------------------------------------------------
 
 ifeq ($(UNAMES),AIX)
-LIB_NETCDF := /usr/local/apps/netcdf-3.5/lib32/r4i4
-FC = xlf90
-FFLAGS = -c -I$(INC_NETCDF) -qsuffix=f=f90 -g -qfullpath
-LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+CPPDEF += -DAIX -DFORTRAN_SAME
+cpre = $(null)-WF,-D$(null)
+FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
+LIB_NETCDF := /usr/local/lib64/r4i4
+FC      = xlf90
+FFLAGS  = -c -I$(INC_NETCDF) -q64 -qsuffix=f=f90 -O2 -qmaxmem=-1 -qsuffix=f=f90:cpp=F90 \
+	   $(FPPFLAGS)  -g
+CFLAGS  := -q64 -g $(CPPDEF) -O2
+LDFLAGS = -L$(LIB_NETCDF) -q64 -lnetcdf
+FFLAGS += $(cpp_path)
+CFLAGS += $(cpp_path)
+endif
+
+#------------------------------------------------------------------------
+# Darwin
+#------------------------------------------------------------------------
+
+ifeq ($(UNAMES),Darwin)
+CPPDEF += -DAIX -DDarwin -DFORTRAN_SAME
+cpre = $(null)-WF,-D$(null)
+FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
+LIB_NETCDF := /usr/local/lib
+CFLAGS  := -I/usr/include -I/usr/include/malloc -g -O2 $(CPPDEF)
+FC      = xlf90
+FFLAGS  = -c -I$(INC_NETCDF) -qsuffix=f=f90 -O2 -qmaxmem=-1 -qsuffix=f=f90:cpp=F90 \
+	  -WF,-DAIX -g -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C -qfullpath \
+	  -qhalt=e $(FPPFLAGS) -I.
+LDFLAGS = -L$(LIB_NETCDF) -lnetcdf -lSystemStubs -lSystemStubs_profile
+FFLAGS += $(cpp_path)
+CFLAGS += $(cpp_path)
 endif
 
 #------------------------------------------------------------------------
@@ -70,9 +141,27 @@ endif
 #------------------------------------------------------------------------
 
 ifeq ($(UNAMES),OSF1)
-FC = f90
-FFLAGS = -c -I$(INC_NETCDF)
+CPPDEF += -DOSF1
+FC      = f90
+FFLAGS  = -c -I$(INC_NETCDF) $(CPPDEF)
 LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+CFLAGS := $(CPPDEF)
+FFLAGS += $(cpp_path)
+CFLAGS += $(cpp_path)
+endif
+
+#-----------------------------------------------------------------------
+# SUN
+#-----------------------------------------------------------------------
+
+ifeq ($(UNAMES),SunOS)
+CPPDEF += -DSUNOS
+FC      = f90
+FFLAGS  = -c -I$(INC_NETCDF) $(CPPDEF) -stackvar
+LDFLAGS = -L$(LIB_NETCDF) -L$(HOME)/lib -lnetcdf
+CFLAGS := $(CPPDEF)
+FFLAGS += $(cpp_path)
+CFLAGS += $(cpp_path)
 endif
 
 #------------------------------------------------------------------------
@@ -80,28 +169,76 @@ endif
 #------------------------------------------------------------------------
 
 ifeq ($(UNAMES),Linux)
-FC = pgf90
-FFLAGS =  -c -I$(INC_NETCDF) -fast
-LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+  ifeq ($(USER_FC),$(null))
+    FC := pgf90
+  endif
+  CPPDEF += -DLINUX -DFORTRANUNDERSCORE
+  CFLAGS := $(CPPDEF)
+
+  ifeq ($(FC),pgf90)
+    FFLAGS := -c -I$(INC_NETCDF) $(CPPDEF)
+    CC     := pgcc
+    ifeq ($(DEBUG),TRUE)
+      FFLAGS += -g -Ktrap=fp -Mbounds
+    else
+      FFLAGS += -fast
+      CFLAGS += -fast
+    endif
+    LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+  endif
+
+  ifeq ($(FC),lf95)
+    FFLAGS =  -c -I$(INC_NETCDF) $(CPPDEF)
+    ifeq ($(DEBUG),TRUE)
+      FFLAGS += -g --chk a,e,s,u
+    else
+      FFLAGS += -O
+    endif
+    LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+  endif
+  ifeq ($(FC),pathf90)
+    FFLAGS =  -c -I$(INC_NETCDF) $(CPPDEF) -extend_source -ftpp -fno-second-underscore
+    ifeq ($(DEBUG),TRUE)
+      FFLAGS += -g
+    else
+      FFLAGS += -O
+    endif
+    LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+  endif
+  FFLAGS += $(cpp_path)
+  CFLAGS += $(cpp_path)
 endif
 
 #------------------------------------------------------------------------
 # Default rules and macros
 #------------------------------------------------------------------------
 
-OBJS := shr_kind_mod.o interpinic.o fmain.o addglobal.o wrap_nf.o 
+.SUFFIXES:
+.SUFFIXES: .F90 .c .o
 
-.f90.o:
+# Append user defined compiler and load flags to Makefile defaults
+CFLAGS   += $(USER_CFLAGS)
+FFLAGS   += $(USER_FFLAGS)
+LDFLAGS  += $(USER_LDFLAGS)
+
+# Set user specified linker
+ifneq ($(strip $(USER_LINKER)),)
+  LINKER := $(USER_LINKER)
+else
+  LINKER := $(FC)
+endif
+
+.F90.o:
 	$(FC) $(FFLAGS) $<
 
-$(EXEDIR)/$(EXENAME): $(OBJS)
-	$(FC) -o $@ $(OBJS) $(LDFLAGS)
+.c.o:
+	$(CC) -c $(CFLAGS) $<
+
+
+$(EXENAME): $(OBJS)
+	$(LINKER) -o $@ $(OBJS) $(LDFLAGS)
 
 clean:
-	$(RM) -f $(OBJS) *.mod $(EXEDIR)/$(EXENAME)
+	$(RM) -f $(OBJS) *.mod Depends
 
-addglobal.o: addglobal.f90
-interpinic.o : shr_kind_mod.o interpinic.f90
-fmain.o : interpinic.o fmain.f90
-shr_kind_mod.o: shr_kind_mod.f90
-wrap_nf.o: shr_kind_mod.o wrap_nf.f90 
+include $(CURDIR)/Depends

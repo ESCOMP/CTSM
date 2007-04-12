@@ -46,7 +46,6 @@ subroutine iniTimeConst
   use pftvarcon   , only : pftconrd
   use ncdio
   use spmdMod
-  use getnetcdfdata
 !
 ! !ARGUMENTS:
   implicit none
@@ -140,6 +139,10 @@ subroutine iniTimeConst
   character(len=256) :: locfn                    ! local filename
   character(len= 32) :: subname = 'iniTimeConst' ! subroutine name
   integer :: mxsoil_color                        ! maximum number of soil color classes
+
+  integer :: closelatidx,closelonidx
+  real(r8):: closelat,closelon
+
 !------------------------------------------------------------------------
 
   if (masterproc) write (6,*) 'Attempting to initialize time invariant variables'
@@ -220,65 +223,42 @@ subroutine iniTimeConst
         mxsoil_color = 8  
      end if
   endif
-#if (defined SPMD)
   call mpi_bcast( mxsoil_color,        1  , MPI_INTEGER, 0, mpicom, ier )
-#endif
+  count(1) = lsmlon
+  count(2) = lsmlat
+  if (single_column) then
+     call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+     start(1) = closelonidx
+     start(2) = closelatidx
+  else
+     start(1) = 1
+     start(2) = 1
+  end if
+  start(3) = 1
+  count(3) = 1
 
   ! Read fmax
-  if (.not. single_column) then
-     call ncd_iolocal(ncid, 'FMAX', 'read', gti, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
-  else
-     time_index=1
-     call getncdata (ncid, scmlat, scmlon, time_index,'FMAX', gti, ret)
-  end if
+  call ncd_iolocal(ncid, 'FMAX', 'read', gti, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo,start(:2),count(:2))
+
+  ! Red in soil color, sand and clay fraction
+
+  call ncd_iolocal(ncid, 'SOIL_COLOR', 'read', soic2d, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo,start(:2),count(:2))
+
+  allocate(arrayl(begg:endg))
+  do n = 1,nlevsoi
+     start(3) = n
+     call ncd_iolocal(ncid,'PCT_SAND','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
+     sand3d(begg:endg,n) = arrayl(begg:endg)
+     call ncd_iolocal(ncid,'PCT_CLAY','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
+     clay3d(begg:endg,n) = arrayl(begg:endg)
+  enddo
+  deallocate(arrayl)
+
   if (masterproc) then
-     write (6,*) 'Successfully read fmax boundary data .....'
+     call check_ret(nf_close(ncid), subname)
+     write (6,*) 'Successfully read soil color, sand and clay boundary data'
      write (6,*)
   endif
-
-     ! Red in soil color, sand and clay fraction
-
-  if (single_column) then
-     if (masterproc) then
-        time_index=1
-        call getncdata (ncid, scmlat, scmlon, time_index,'SOIL_COLOR' , soic2d     , ret)
-        call getncdata (ncid, scmlat, scmlon, time_index,'PCT_SAND'   , nlevsoidata, ret)
-        sand3d(1,:) = nlevsoidata(:)
-        call getncdata (ncid, scmlat, scmlon, time_index,'PCT_CLAY'   , nlevsoidata, ret)
-        clay3d(1,:) = nlevsoidata(:)
-    end if
-#if (defined SPMD)
-    call mpi_bcast( soic2d  , size(soic2d)  , MPI_INTEGER, 0, mpicom, ier )
-    call mpi_bcast( sand3d  , size(sand3d)  , MPI_REAL8  , 0, mpicom, ier )
-    call mpi_bcast( clay3d  , size(clay3d)  , MPI_REAL8  , 0, mpicom, ier )
-#endif
-
-  else
-     call ncd_iolocal(ncid, 'SOIL_COLOR', 'read', soic2d, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
-
-     allocate(arrayl(begg:endg))
-     do n = 1,nlevsoi
-        start(1) = 1
-        count(1) = lsmlon
-        start(2) = 1
-        count(2) = lsmlat
-        start(3) = n
-        count(3) = 1
-        call ncd_iolocal(ncid,'PCT_SAND','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
-        sand3d(begg:endg,n) = arrayl(begg:endg)
-        call ncd_iolocal(ncid,'PCT_CLAY','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
-        clay3d(begg:endg,n) = arrayl(begg:endg)
-     enddo
-     deallocate(arrayl)
-
-     if (masterproc) then
-        call check_ret(nf_close(ncid), subname)
-        write (6,*) 'Successfully read soil color, sand and clay boundary data'
-        write (6,*)
-     endif
-
-  endif
-
   ! Determine saturated and dry soil albedos for n color classes and 
   ! numrad wavebands (1=vis, 2=nir)
 

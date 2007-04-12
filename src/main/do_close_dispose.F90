@@ -42,7 +42,7 @@ subroutine do_close_dispose (ntapes, hist_ntimes, hist_mfilt, &
   integer t                         !history tape index
 !------------------------------------------------------------------------
 
-#if (defined OFFLINE) || (defined COUP_CAM)
+#if (defined OFFLINE) || (defined SEQ_MCT) || (defined SEQ_ESMF)
 
   if (is_last_step()) then
 

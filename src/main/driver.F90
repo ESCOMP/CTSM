@@ -97,18 +97,11 @@ module driver
   use filterMod           , only : filter, setFilters
   use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal 
   use clm_varcon          , only : zlnd
-#if (defined COUP_CAM)
   use clm_time_manager        , only : get_step_size, get_curr_calday, &
                                    get_curr_date, get_ref_date, get_nstep, is_perpetual
-#else
-  use clm_time_manager        , only : get_step_size, get_curr_calday, &
-                                   get_curr_date, get_ref_date, get_nstep
-#endif
   use histFileMod         , only : update_hbuf, htapes_wrapup
   use restFileMod         , only : restFile_write, restFile_write_binary, restFile_filename
-#if (defined COUP_CAM)
   use inicFileMod         , only : inicfile_perp  
-#endif
   use accFldsMod          , only : updateAccFlds
   use DriverInitMod       , only : DriverInit
   use BalanceCheckMod     , only : BeginWaterBalance, BalanceCheck
@@ -149,6 +142,8 @@ module driver
   use RtmMod              , only : Rtmriverflux
 #endif
   use abortutils          , only : endrun
+  use perf_mod
+
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -181,7 +176,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 ! !CALLED FROM:
 ! program program_off (if COUP_OFFLINE cpp variable is defined)
 ! program program_csm (if COUP_CSM cpp variable is defined)
-! subroutine atm_lnddrv in module atm_lndMod (if COUP_CAM cpp variable
+! subroutine atm_lnddrv in module atm_lndMod (if SEQ_MCT or SEQ_ESMF cpp variable
 !   is defined)
 !
 ! !REVISION HISTORY:
@@ -563,7 +558,7 @@ subroutine driver2(caldayp1, declinp1, rstwr)
 ! !CALLED FROM:
 ! program program_off (if COUP_OFFLINE cpp variable is defined)
 ! program program_csm (if COUP_CSM cpp variable is defined)
-! module clm_camMod (if COUP_CAM cpp variable is defined)
+! module clm_camMod (if SEQ_MCT or SEQ_ESMF cpp variable is defined)
 !
 ! !REVISION HISTORY:
 ! 2005.05.22  Mariana Vertenstein creation
@@ -615,7 +610,7 @@ subroutine driver2(caldayp1, declinp1, rstwr)
   call t_stopf('clmrtm')
 #endif
 
-#if (defined COUP_CAM)
+#if (defined SEQ_MCT) || (defined SEQ_ESMF)
   ! ============================================================================
   ! Read initial snow and soil moisture data at each time step
   ! ============================================================================
@@ -746,12 +741,8 @@ subroutine write_diagnostic (wrtdia, nstep)
 ! !USES:
   use clm_atmlnd , only : clm_l2a
   use decompMod  , only : get_proc_bounds, get_proc_global
-#if (defined SPMD)
   use spmdMod    , only : masterproc, npes, MPI_REAL8, MPI_ANY_SOURCE, &
                           MPI_STATUS_SIZE, mpicom
-#else
-  use spmdMod    , only : masterproc
-#endif
   use shr_sys_mod, only : shr_sys_flush
   use abortutils , only : endrun
 !
@@ -779,25 +770,18 @@ subroutine write_diagnostic (wrtdia, nstep)
   real(r8):: psum                    ! partial sum of ts
   real(r8):: tsum                    ! sum of ts
   real(r8):: tsxyav                  ! average ts for diagnostic output
-#if (defined SPMD)
   integer :: status(MPI_STATUS_SIZE) ! mpi status
-#endif
 !------------------------------------------------------------------------
 
-#if (!defined COUP_CAM)
+#if (!defined SEQ_MCT) && (!defined SEQ_ESMF)
 
   call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
   call get_proc_global(numg, numl, numc, nump)
 
   if (wrtdia) then
 
-#if (defined TIMING_BARRIERS)
-     call t_startf ('sync_write_diag')
-     call mpi_barrier (mpicom, ier)
-     call t_stopf ('sync_write_diag')
-#endif
+     call t_barrierf('sync_write_diag', mpicom)
      psum = sum(clm_l2a%t_rad(begg:endg))
-#if (defined SPMD)
      if (masterproc) then
         tsum = psum
         do p = 1, npes-1
@@ -815,9 +799,6 @@ subroutine write_diagnostic (wrtdia, nstep)
            call endrun
         end if
      end if
-#else
-     tsum = psum
-#endif
      if (masterproc) then
         tsxyav = tsum / numg
         write (6,1000) nstep, tsxyav

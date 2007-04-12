@@ -1,0 +1,32 @@
+#!/bin/sh 
+#
+cat > lnd.stdin << EOF
+ &clm_inparm
+ caseid         = 'clmrun'
+ ctitle         = 'clmrun'
+ finidat        = ' '
+ fsurdat        = "$CSMDATA/lnd/clm2/surfdata/surfdata_1x1pt_brazil_navy_070404.nc"
+ fatmgrid       = "$CSMDATA/lnd/clm2/griddata/griddata_1x1pt_brazil_navy_070404.nc"
+ fatmlndfrc     = "$CSMDATA/lnd/clm2/griddata/fracdata_1x1pt_brazil_navy_070404.nc"
+ fpftcon        = "$CSMDATA/lnd/clm2/pftdata/pft-physiology.c070207"
+ offline_atmdir = "$CSMDATA/lnd/clm2/NCEPDATA"
+ nrevsn         = "$nrevsn"
+ nsrest         =  $restart_type
+ nelapse        =  $run_length
+ dtime          =  3600
+ start_ymd      =  19990101
+ start_tod      =  0
+ irad           = -1
+ wrtdia         = .true.
+ mss_irt        =  0
+ hist_dov2xy    = .true.
+ hist_nhtfrq    =  3
+ hist_mfilt     =  1
+ hist_ndens     =  1
+ hist_crtinic   = 'MONTHLY'
+ brnch_retain_casename = .true.
+ /
+ &prof_inparm
+ /
+EOF
+

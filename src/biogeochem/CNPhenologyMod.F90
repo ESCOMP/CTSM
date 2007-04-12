@@ -1528,12 +1528,6 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
          ! calculate fine root N litterfall (no retranslocation of fine root N)
          frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
 
-#if (defined LOCAL_DEBUG)
-         if (masterproc) then
-            write(6,*) 'tempsum_retransn = ',tempsum_retransn(p)
-            write(6,*) 'leafn_to_retransn = ',leafn_to_retransn(p)
-         end if
-#endif
       end if
 
    end do

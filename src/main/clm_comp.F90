@@ -5,6 +5,8 @@ module clm_comp
 
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_abort
+  use perf_mod
+
   implicit none
 
   SAVE

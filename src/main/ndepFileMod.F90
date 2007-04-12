@@ -18,6 +18,7 @@ module ndepFileMod
   use ncdio
   use clmtype
   use spmdMod     
+  use clm_varpar,   only: lsmlat, lsmlon
   use shr_kind_mod, only: r8 => shr_kind_r8
 !
 ! !PUBLIC TYPES:
@@ -279,19 +280,15 @@ contains
 
     end if   ! end of if-masterproc block
 
-#if (defined SPMD)
     call mpi_bcast (nt1   , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (nt2   , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (ntimes, 1, MPI_INTEGER, 0, mpicom, ier)
-#endif
     if (.not. masterproc) then
        allocate(yearsndep(ntimes))
     end if
-#if (defined SPMD)
     call mpi_bcast (yearsndep, size(yearsndep), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (ndepdyn1  , size(ndepdyn1)  , MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (ndepdyn2  , size(ndepdyn2)  , MPI_REAL8, 0, mpicom, ier)
-#endif    
 
     deallocate(landmask_ndepdyn)
 
@@ -402,10 +399,8 @@ contains
           deallocate(ndep)
        end if  ! end of if-masterproc if-block
 
-#if (defined SPMD)
        call mpi_bcast (ndepdyn1, size(ndepdyn1), MPI_REAL8, 0, mpicom, ier)
        call mpi_bcast (ndepdyn2, size(ndepdyn2), MPI_REAL8, 0, mpicom, ier)
-#endif
     
     end if  ! end of need new data if-block 
 

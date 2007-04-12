@@ -1,0 +1,12 @@
+
+
+Important environment variables
+
+BL_ROOTDIR ------------- Root directory of CLM baseline code to compare to (if not set BL test will not be performed)
+BL_TESTDIR ------------- Root directory of where to put baseline tests
+CLM_INPUT_TESTS -------- Filename of file with list of tests to perform
+CLM_TESTDIR ------------ Root directory of where to put most tests
+CLM_RETAIN_FILES ------- If set to TRUE -- don't cleanup files after testing
+CLM_CCSMROOT ----------- Root directory of CCSM source code to use
+CLM_SEQCCSMROOT -------- Root directory of Sequential CCSM source code to use
+

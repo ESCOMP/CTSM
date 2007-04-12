@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the testing of CLM in Sequential CCSM
 #
-# usage on bluesky, bangkok, calgary, tempest, bluevista, lightning, blueice, jaguar: 
+# usage on bangkok, calgary, tempest, bluevista, lightning, blueice, jaguar: 
 # ./test_driver.sh
 #
 # valid arguments: 
@@ -19,71 +19,11 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
+seqccsm_vers="cam3_4_07"
+conccsm_vers="ccsm3_5_beta01"
 
 hostname=`hostname`
 case $hostname in
-
-    ##bluesky
-    bs* )
-    submit_script="test_driver_bluesky_${cur_time}.sh"
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-# Name of the queue (CHANGE THIS if needed)
-# bluesky
-# @ class       = share
-# Number of nodes (CHANGE THIS if needed)
-# @ node        = 1
-# Switch to use (CHANGE THIS if needed)
-# @ network.MPI = csss,shared,us
-# @ output      = test_dr.o\$(jobid)
-# @ error       = test_dr.o\$(jobid)
-# @ node_usage  = shared
-# @ job_type    = parallel
-# @ tasks_per_node = 8
-## @ account_no = 93300370
-# Export all Environment variables
-# @ environment = COPY_ALL
-# @ queue
-#
-
-if [ -n "\$LOADL_JOB_NAME" ]; then   #batch job
-    export JOBID=\`echo \${LOADL_JOB_NAME} | cut -f2 -d'.'\`
-    initdir=\${LOADL_STEP_INITDIR}
-    interactive="NO"
-else
-    interactive="YES"
-fi
-
-##omp threads
-export CLM_THREADS=4
-export CLM_RESTART_THREADS=3
-
-##mpi tasks; ignored by load-leveller!
-export CLM_TASKS=8
-export CLM_RESTART_TASKS=4
-
-export INC_NETCDF=/usr/local/include
-export LIB_NETCDF=/usr/local/lib64/r4i4
-export AIXTHREAD_SCOPE=S
-export MALLOCMULTIHEAP=true
-export OMP_DYNAMIC=false
-export XLSMPOPTS="stack=40000000"
-export MAKE_CMD="gmake -j 32"
-export CFG_STRING=""
-export CCSM_MACH="bluesky32"
-export MACH_WORKSPACE="/ptmp"
-export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
-dataroot="/fs/cgd/csm"
-echo_arg=""
-input_file="tests_pretag_bluesky"
-
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
 
     ##bluevista
     bv* )
@@ -130,14 +70,17 @@ export CLM_RESTART_THREADS=8
 export CLM_TASKS=8
 export CLM_RESTART_TASKS=4
 
+export CLM_COMPSET="I"
+
 export INC_NETCDF=/usr/local/include
 export LIB_NETCDF=/usr/local/lib64/r4i4
 export AIXTHREAD_SCOPE=S
 export MALLOCMULTIHEAP=true
 export OMP_DYNAMIC=false
 export XLSMPOPTS="stack=40000000"
-export MAKE_CMD="gmake -j"
+export MAKE_CMD="gmake -j 8"
 export CFG_STRING=""
+export TOOLS_MAKE_STRING=""
 export CCSM_MACH="bluevista16"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
@@ -191,14 +134,17 @@ export CLM_RESTART_THREADS=8
 export CLM_TASKS=8
 export CLM_RESTART_TASKS=4
 
+export CLM_COMPSET="I"
+
 export INC_NETCDF=/usr/local/apps/netcdf-3.6.1/include
 export LIB_NETCDF=/usr/local/apps/netcdf-3.6.1/lib
 export AIXTHREAD_SCOPE=S
 export MALLOCMULTIHEAP=true
 export OMP_DYNAMIC=false
 export XLSMPOPTS="stack=40000000"
-export MAKE_CMD="gmake -j"
+export MAKE_CMD="gmake -j 8"
 export CFG_STRING=""
+export TOOLS_MAKE_STRING=""
 export CCSM_MACH="blueice"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
@@ -252,6 +198,8 @@ export CLM_RESTART_THREADS=2
 export CLM_TASKS=4
 export CLM_RESTART_TASKS=2
 
+export CLM_COMPSET="I"
+
 export INC_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/include
 export LIB_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/lib
 mpich=/contrib/2.6/mpich-gm/1.2.6..14a-pathscale-2.4-64
@@ -259,9 +207,10 @@ export INC_MPI=\${mpich}/include
 export LIB_MPI=\${mpich}/lib
 export PS=/contrib/2.6/pathscale/2.4
 export PATH=\${mpich}/bin:\${PS}/bin:\${PATH}
-export LD_LIBRARY_PATH=\${PS}/lib/2.4:\${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=\${PS}/lib/2.4:/opt/pathscale/lib/2.4/32:\${LD_LIBRARY_PATH}
 export MAKE_CMD="gmake -j 2"
 export CFG_STRING="-fc pathf90 -linker mpif90 "
+export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=mpif90"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
 dataroot="/fs/cgd/csm"
@@ -312,6 +261,8 @@ export CLM_RESTART_THREADS=2
 export CLM_TASKS=4
 export CLM_RESTART_TASKS=2
 
+export CLM_COMPSET="I"
+
 if [ "\$CLM_FC" = "PGI" ]; then
     export PGI=/usr/local/pgi-pgcc-pghf-6.1-3
     export INC_NETCDF=/usr/local/netcdf-3.6.1-beta3-pgi-hpf-cc-6.0-5/include
@@ -322,17 +273,19 @@ if [ "\$CLM_FC" = "PGI" ]; then
     export PATH=\${PGI}/linux86/6.1/bin:\${mpich}/bin:\${PATH}
     export LD_LIBRARY_PATH=\${PGI}/linux86/6.1/lib:\${LD_LIBRARY_PATH}
     export CFG_STRING=""
+    export TOOLS_MAKE_STRING=""
 else
     export LAHEY=/usr/local/lf9562
-    export INC_NETCDF=/usr/local/netcdf-3.6.1beta3-gcc-4.0.2-g77-lf9562/include
-    export LIB_NETCDF=/usr/local/netcdf-3.6.1beta3-gcc-4.0.2-g77-lf9562/lib
-    mpich=/usr/local/mpich-1.2.7p1-gcc-g++-4.0.2-8-lf9562
+    export INC_NETCDF=/usr/local/netcdf-gcc-lf95/include
+    export LIB_NETCDF=/usr/local/netcdf-gcc-lf95/lib
+    mpich=/usr/local/mpich-gcc-g++-lf95
     export INC_MPI=\${mpich}/include
     export LIB_MPI=\${mpich}/lib
     export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
     export CFG_STRING="-fc lf95 "
+    export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95"
 fi
-export MAKE_CMD="gmake -j"   ##using hyper-threading on calgary
+export MAKE_CMD="gmake -j 2"   ##using hyper-threading on calgary
 export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
 dataroot="/fs/cgd/csm"
@@ -391,6 +344,8 @@ export CLM_RESTART_THREADS=2
 export CLM_TASKS=8
 export CLM_RESTART_TASKS=4
 
+export CLM_COMPSET="I"
+
 . /opt/modules/default/init/sh
 module switch pgi pgi/6.1.5
 #module load netcdf/3.6.0
@@ -404,7 +359,8 @@ export LIB_MPI=\${MPICH_DIR_FTN_DEFAULT64}/lib
 export CCSM_MACH="jaguar"
 export CFG_STRING="-fc ftn -cc cc -fflags '-target=catamount'"
 export CFG_STRING="${CFG_STRING} -cppdefs '-DCATAMOUNT'"
-export CFG_STRING="${CFG_STRING} -cflags '-target=catamount'"
+export CFG_STRING="${CFG_STRING} -cflags '-target=catamount' "
+export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc USER_CPPDEFS='-DCATAMOUNT' USER_CFLAGS='-target=catamount' USER_FFLAGS='-target=catamount'"
 
 export MAKE_CMD="gmake -j 2"
 export MACH_WORKSPACE="/tmp/work"
@@ -446,6 +402,8 @@ export CLM_RESTART_THREADS=8
 export CLM_TASKS=4
 export CLM_RESTART_TASKS=2
 
+export CLM_COMPSET="I"
+
 export INC_NETCDF=/usr/local/include
 export LIB_NETCDF=/usr/local/lib64/r4i4
 mpich=/opt/mpt/mpt/usr
@@ -462,6 +420,7 @@ module purge
 module load MIPSpro mpt
 export MAKE_CMD="gmake -j 16"
 export CFG_STRING=""
+export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
 dataroot="/fs/cgd/csm"
@@ -493,7 +452,7 @@ fi
 ##establish script dir and clm_root
 if [ -f \${initdir}/test_driver.sh ]; then
     export CLM_SCRIPTDIR=\`cd \${initdir}; pwd \`
-    export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../../../../.. ; pwd \`
+    export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../..; pwd \`
 else
     if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/test/system/test_driver.sh ]; then
 	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/test/system; pwd \`
@@ -532,7 +491,7 @@ if [ ! -d \$CLM_TESTDIR ]; then
 fi
 
 ##set our own environment vars
-export CSMDATA=\${dataroot}/inputdata/lnd/clm2
+export CSMDATA=\${dataroot}/inputdata
 export MPI_TYPE_MAX=100000
 
 ##process other env vars possibly coming in
@@ -540,7 +499,10 @@ if [ -z "\$CLM_RETAIN_FILES" ]; then
     export CLM_RETAIN_FILES=FALSE
 fi
 if [ -z "\$CLM_CCSMROOT" ]; then
-    export CLM_CCSMROOT=\`ls -1td \${dataroot}/collections/ccsm3_1_beta* | head -1\`
+    export CLM_CCSMROOT="\${dataroot}/collections/${conccsm_vers}"
+fi
+if [ -z "\$CLM_SEQCCSMROOT" ]; then
+    export CLM_SEQCCSMROOT="\${dataroot}/models/atm/cam/${seqccsm_vers}"
 fi
 if [ -n "\${CLM_INPUT_TESTS}" ]; then
     input_file=\$CLM_INPUT_TESTS
@@ -564,6 +526,8 @@ echo "\$input_file" >> \${clm_status}
 echo "" >> \${clm_status}
 echo "tests of CCSM will use source code from:" >> \${clm_status}
 echo "\$CLM_CCSMROOT" >> \${clm_status}
+echo "tests of Sequential-CCSM will use source code from:" >> \${clm_status}
+echo "\$CLM_SEQCCSMROOT" >> \${clm_status}
 if [ \$interactive = "NO" ]; then
     echo "see \${clm_log} for more detailed output" >> \${clm_status}
 fi
@@ -703,7 +667,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bluesky, bangkok, tempest, bluevista, blueice, lightning, jaguar: "
+    echo "usage on bangkok, tempest, bluevista, blueice, lightning, jaguar: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
@@ -723,9 +687,6 @@ esac
 
 echo "submitting..."
 case $hostname in
-    ##bluesky
-    bs* )  llsubmit ${submit_script};;
-
     ##bluevista
     bv* )  bsub < ${submit_script};;
 

@@ -4,18 +4,18 @@
 # This makefile assumes the existence the file:
 #
 # Filepath      The directories, listed one per line, that contain the source
-#               code required to build CAM.  This list is used to set the
+#               code required to build CLM.  This list is used to set the
 #               VPATH variable which is used by GNU make to search for
 #               dependencies (after it looks in the directory from which
 #               it was invoked).  This list of directories, prepended with ./,
 #               is also used to construct the list of search directories 
 #               used by the preprocessor (as specified by -I command-line options).
 #
-# The following macros are set by CAM's configure script.  They should only be hand edited
+# The following macros are set by CLM's configure script.  They should only be hand edited
 # by experts.
 #
 # UNAMES        Result of the "uname -s" command on the target platform.
-# ROOTDIR       Root directory for the CAM source distribution.
+# ROOTDIR       Root directory for the CLM source distribution.
 # EXENAME       Name of the executable.
 # MODEL_EXEDIR  Directory to build the executable in.
 # INC_NETCDF    Directory containing the NetCDF include files.
@@ -24,7 +24,6 @@
 # INC_MPI       Directory containing the MPI include files.
 # LIB_MPI       Directory containing the MPI library.
 # MPI_LIB_NAME  Name of MPI library.
-# LAPACK_LIBDIR Directory containing the LAPACK library.
 # ESMF_LIBDIR   Directory containing the ESMF library (for use with external library only).
 # DEBUG         Set to TRUE to turn on compiler debugging options.  Default: FALSE 
 # SPMD          Whether to build in SPMD mode or not. 	[values TRUE FALSE]
@@ -150,7 +149,7 @@ debug: $(OBJS)
 
 ifeq ($(UNAMES),AIX)
 
-CPPDEF     += -DAIX -DFORTRAN_SAME
+CPPDEF     += -DAIX
 ifeq ($(SMP),TRUE)
   # THREADED_PTHREADS is used by the timing library
   CPPDEF   += -DTHREADED_PTHREADS
@@ -198,12 +197,6 @@ endif
 
 ifeq ($(SPMD),TRUE)
   LDFLAGS += -lmpi_r
-else
-  FFLAGS  += -WF,-DHIDE_MPI
-endif
-
-ifneq ($(strip $(LAPACK_LIBDIR)),)
-  LDFLAGS += -L$(LAPACK_LIBDIR) -llapack -lblas
 endif
 
 endif
@@ -214,7 +207,7 @@ endif
 
 ifeq ($(UNAMES),IRIX64)
 
-CPPDEF      += -DIRIX64 -DFORTRANUNDERSCORE
+CPPDEF      += -DIRIX64
 FC          := f90
 CC          := cc
 CFLAGS      := -64 $(cpp_path) $(CPPDEF) -O2
@@ -247,8 +240,6 @@ endif
 ifeq ($(SPMD),TRUE)
   FFLAGS  += -I$(INC_MPI)
   LDFLAGS += -L$(LIB_MPI) -lmpi
-else
-  FFLAGS  += -DHIDE_MPI
 endif
 
 endif
@@ -377,15 +368,6 @@ ifeq ($(FC),lf95)
     endif
   endif
 
-binary_io.o: binary_io.F90
-	$(FC) -c $(SPEC_FFLAGS) $<
-wrap_nf.o: wrap_nf.F90
-	$(FC) -c $(SPEC_FFLAGS) $<
-wrap_mpi.o: wrap_mpi.F90
-	$(FC) -c $(SPEC_FFLAGS) $<
-apex_subs.o: apex_subs.F90
-	$(FC) -c $(SPEC_FFLAGS) $<
-
 endif
 
 ifeq ($(findstring ifort,$(FC)),ifort)
@@ -465,8 +447,6 @@ endif
 
 ifeq ($(SPMD),TRUE)
   LDFLAGS += -L$(LIB_MPI) -l$(MPI_LIB_NAME)
-else
-  FFLAGS  += -DHIDE_MPI
 endif
 
 endif
@@ -483,9 +463,6 @@ VER = rev285
 CPPDEF     += -USX -DFORTRANUNDERSCORE -DNEC_SX -D_SX -DDISABLE_TIMERS
 ifeq ($(SMP),TRUE)
   CPPDEF   += -DTHREADED_OMP
-endif
-ifeq ($(SPMD),FALSE)
-  CPPDEF   += -DHIDE_MPI
 endif
 CPPFLAGS   := $(CPPDEF) $(cpp_path)
 
@@ -525,20 +502,11 @@ ifeq ($(SPMD),TRUE)
   LDFLAGS += -L$(LIB_MPI) -lmpi
 endif
 
-wv_saturation.o:        wv_saturation.F90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi rexp=estblf $<
-
-wv_saturation.f90:	wv_saturation.F90
-	$(CPP)	$(CPPFLAGS) $< > wv_saturation.f90
-
 FrictionVelocityMod.o:	FrictionVelocityMod.F90
 	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi $<
 
 shr_orb_mod.f90:        shr_orb_mod.F90
 	$(CPP)  $(CPPFLAGS) $< > shr_orb_mod.f90
-
-zenith.o:       zenith.F90 shr_orb_mod.f90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi expin=shr_orb_mod.f90 rexp=shr_orb_cosz $<
 
 # inlining for CLM
 
@@ -571,9 +539,6 @@ ifeq ($(UNAMES),ES)
 CPPDEF     += -USX -DFORTRANUNDERSCORE -DNEC_SX -D_SX -DDISABLE_TIMERS
 ifeq ($(SMP),TRUE)
   CPPDEF   += -DTHREADED_OMP
-endif
-ifeq ($(SPMD),FALSE)
-  CPPDEF   += -DHIDE_MPI
 endif
 CPPFLAGS   := $(CPPDEF) $(cpp_path)
 
@@ -613,31 +578,11 @@ ifeq ($(SPMD),TRUE)
   LDFLAGS  += -L$(LIB_MPI) -lmpi
 endif
 
-ifeq ($(SPMD),TRUE)
-#...jps....added for MPI Global Memory usage
-phys_grid.o:        phys_grid.F90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -gmalloc $<
-
-# (mitsuo) add "-gmalloc"
-spmd_dyn.o: spmd_dyn.F90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -gmalloc $<
-
-endif
-
-wv_saturation.o:        wv_saturation.F90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi rexp=estblf $<
-
-wv_saturation.f90:	wv_saturation.F90
-	$(CPP)	$(CPPFLAGS) $< > wv_saturation.f90
-
 FrictionVelocityMod.o:	FrictionVelocityMod.F90
 	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi $<
 
 shr_orb_mod.f90:        shr_orb_mod.F90
 	$(CPP)  $(CPPFLAGS) $< > shr_orb_mod.f90
-
-zenith.o:       zenith.F90 shr_orb_mod.f90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi expin=shr_orb_mod.f90 rexp=shr_orb_cosz $<
 
 # inlining for CLM
 
@@ -696,9 +641,6 @@ FOPT := -Ofp1,nomodinline
 ifneq ($(F_OPTIMIZATION_OVERRIDE),$(null))
   FOPT += $F_OPTIMIZATION_OVERRIDE
 endif
-ifeq ($(SPMD),FALSE)
-  FPPFLAGS += -DHIDE_MPI
-endif
 ifeq ($(SMP),FALSE)
   FOPT += -Otask0 -xomp
 else
@@ -727,13 +669,6 @@ ifeq ($(DEBUG),TRUE)
   FFLAGS += -G1
 endif
 
-# Specific targets for chunking reproducibility
-vertical_diffusion.o : 
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -Ofp0 $<
-
-# Specific targets for CLM2 for good performance
-wv_saturation.o FrictionVelocityMod.o QSatMod.o shr_orb_mod.o :
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -Omodinline $<
 endif
 
 
@@ -778,8 +713,6 @@ endif
 ifeq ($(SPMD),TRUE)
   # SPMD not implemented
   LDFLAGS +=
-else
-  FFLAGS  += -WF,-DHIDE_MPI
 endif
 
 gptl.o: gptl.c
@@ -822,10 +755,6 @@ else
     FORTRAN_OPTIMIZATION := -O3 -qstrict -Q
   endif
   FFLAGS += $(FORTRAN_OPTIMIZATION)
-endif
-
-ifneq ($(strip $(LAPACK_LIBDIR)),)
-  LDFLAGS += -L$(LAPACK_LIBDIR) -llapack -lblas
 endif
 
 endif

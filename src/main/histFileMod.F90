@@ -2010,9 +2010,7 @@ contains
 #endif	
     use clm_varpar   , only : lsmlon, lsmlat, nlevsoi
     use ncdio
-#ifdef SPMD
-  use spmdGathScatMod, only : gather_data_to_master
-#endif
+    use spmdGathScatMod, only : gather_data_to_master
 !
 ! !ARGUMENTS:
     implicit none
@@ -3000,11 +2998,7 @@ contains
 #endif
     use clm_varctl, only : archive_dir, nsrest, mss_irt
     use fileutils , only : set_filename, getfil
-#if (defined SPMD)
     use spmdMod   , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER, MPI_CHARACTER
-#else
-    use spmdMod   , only : masterproc
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -3194,7 +3188,6 @@ contains
 
      endif  ! end of if-masterproc block
 
-#if ( defined SPMD)
      if (flag == 'read') then
 
         ! Broadcast history information from masterprocessor
@@ -3227,7 +3220,6 @@ contains
            end do
         end do
      endif
-#endif
 
      ! Allocate memory for history buffers - read only
 

@@ -3,7 +3,7 @@
 
 module lnd_comp_mct
   
-#if (defined COUP_CAM) && (defined SEQ_MCT)
+#if (defined SEQ_MCT)
 
 !---------------------------------------------------------------------------
 !BOP
@@ -15,12 +15,13 @@ module lnd_comp_mct
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_abort
-  use seq_mct_mod
+  use mct_mod
   use seq_flds_mod
   use seq_flds_indices
   use seq_cdata_mod
   use seq_infobuf_mod
   use spmdMod
+  use perf_mod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -254,20 +255,12 @@ contains
 
        ! Run clm 
 
-#if ( defined SPMD ) && ( defined TIMING_BARRIERS )
-    call t_startf ('sync_clm_run1')
-    call mpi_barrier (mpicom, ier)
-    call t_stopf ('sync_clm_run1')
-#endif
+       call t_barrierf('sync_clm_run1', mpicom)
        call t_startf ('lc_clm_run1')
        call clm_run1(infobuf_l%rbuf(rbuf_nextsw_cday), dosend)
        call t_stopf ('lc_clm_run1')
 
-#if ( defined SPMD ) && ( defined TIMING_BARRIERS )
-       call t_startf ('sync_clm_run2')
-       call mpi_barrier (mpicom, ier)
-       call t_stopf ('sync_clm_run2')
-#endif
+       call t_barrierf('sync_clm_run2', mpicom)
        call t_startf ('lc_clm_run2')
        call clm_run2( rstwr )
        call t_stopf ('lc_clm_run2')

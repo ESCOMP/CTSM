@@ -124,11 +124,7 @@ contains
 ! !USES:
     use fileutils , only : opnfil, getfil, relavu, getavu
     use clm_varctl, only : fpftcon
-#ifdef SPMD
     use spmdMod   , only : masterproc, mpicom, MPI_REAL8
-#else
-    use spmdMod   , only : masterproc
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -260,7 +256,6 @@ contains
     resist(noveg) = 1._r8
     ! end variables used only for CN code
 
-#ifdef SPMD
     call mpi_bcast (z0mr, size(z0mr), MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (displar, size(displar), MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (dleaf, size(dleaf), MPI_REAL8, 0, mpicom, ier)
@@ -309,7 +304,6 @@ contains
     call mpi_bcast (season_decid, size(season_decid), MPI_REAL8, 0, mpicom, ier)
     call mpi_bcast (resist, size(resist), MPI_REAL8, 0, mpicom, ier)
     ! end variables used only for CN code
-#endif
 
     if (masterproc) then
        write (6,*) 'Successfully read PFT physiological data'

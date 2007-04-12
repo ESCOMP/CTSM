@@ -280,6 +280,9 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
      call check_ret(nf_inq_varid(ncido, 'MONTHLY_HEIGHT_BOT', varid), subname)
      call check_ret(nf_put_vara_double(ncido, varid, beg4d, len4d, mhgtb_o), subname)
 
+     call check_ret(nf_inq_varid(ncido, 'time', varid), subname)
+     call check_ret(nf_put_vara_int(ncido, varid, beg4d(4), len4d(4), m), subname)
+
      call check_ret(nf_sync(ncido), subname)
 
      ! -----------------------------------------------------------------

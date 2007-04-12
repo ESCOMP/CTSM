@@ -5,18 +5,16 @@ cat > lnd.stdin << EOF
  caseid         = 'clmrun'
  ctitle         = 'clmrun'
  finidat        = ' '
- fsurdat        = "$CSMDATA/surfdata/surfdata_048x096_061108.nc"
- fatmgrid       = "$CSMDATA/griddata/griddata_48x96_060829.nc"
- fatmlndfrc     = "$CSMDATA/griddata/fracdata_48x96_gx3v5_060829.nc"
- fpftcon        = "$CSMDATA/pftdata/pft-physiology.c070207"
- fndepdat       = "$CSMDATA/ndepdata/1890/regrid_ndep_clm.nc"
- frivinp_rtm    = "$CSMDATA/rtmdata/rdirc.05.061026"
- offline_atmdir = "$CSMDATA/NCEPDATA"
+ fsurdat        = "$CSMDATA/lnd/clm2/surfdata/surfdata_048x096_061108.nc"
+ fatmgrid       = "$CSMDATA/lnd/clm2/griddata/griddata_48x96_060829.nc"
+ fatmlndfrc     = "$CSMDATA/lnd/clm2/griddata/fracdata_48x96_gx3v5_060829.nc"
+ fpftcon        = "$CSMDATA/lnd/clm2/pftdata/pft-physiology.c070207"
+ fndepdat       = "$CSMDATA/lnd/clm2/ndepdata/1890/regrid_ndep_clm.nc"
+ offline_atmdir = "$CSMDATA/lnd/clm2/NCEPDATA"
  nrevsn         = "$nrevsn"
  nsrest         =  $restart_type
  nelapse        =  $run_length
  dtime          =  1800
- rtm_nsteps     =  2 
  start_ymd      =  19980101
  start_tod      =  0
  irad           = -1
@@ -28,6 +26,8 @@ cat > lnd.stdin << EOF
  hist_ndens     =  1
  hist_crtinic   = 'MONTHLY'
  brnch_retain_casename = .true.
+ /
+ &prof_inparm
  /
 EOF
 

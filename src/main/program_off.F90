@@ -46,7 +46,7 @@ PROGRAM program_off
 !   the models are coupled.
 !
 ! !USES:
-  use shr_kind_mod    , only : r8 => shr_kind_r8
+  use shr_kind_mod    , only : r8 => shr_kind_r8, SHR_KIND_CL
   use shr_sys_mod     , only : shr_sys_flush
   use shr_orb_mod          
   use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr, obliq, &
@@ -55,16 +55,14 @@ PROGRAM program_off
   use clm_time_manager, only : is_last_step, advance_timestep, get_nstep
   use atmdrvMod       , only : atmdrv, atmdrv_init
   use abortutils      , only : endrun
+  use controlMod      , only : control_setNL
   use clm_mct_mod
   use spmdMod  
   use ESMF_Mod
+  use perf_mod
 !
 ! !ARGUMENTS:
     implicit none
-#include <gptl.inc>
-#if (defined HAVE_PAPI)
-#include <f77papi.h>
-#endif
 !
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan and Mariana Vertenstein
@@ -82,53 +80,17 @@ PROGRAM program_off
   real(r8) :: eccf         ! earth orbit eccentricity factor
   logical  :: mpi_running  ! true => MPI is initialized 
   integer  :: mpicom_glob  ! MPI communicator
+
+  character(len=SHR_KIND_CL) :: nlfilename = "lnd.stdin"
 !-----------------------------------------------------------------------
-
-  ! -----------------------------------------------------------------
-  ! Initialize timing library
-  ! -----------------------------------------------------------------
-
-  ! Set options and initialize timing library.  Use the new "GPTL"
-  ! initialization function calls instead of the old "t_" subroutines to
-  ! enable CAM to gracefully abort in case of a failure return.  Failures can
-  ! happen particularly when enabling PAPI timers and everything was not set
-  ! up exactly correctly when building the PAPI lib, or CAM.
-  ! 
-  ! For logical settings, 2nd arg 0 to gptlsetoption means disable, 
-  ! non-zero means enable
-  !
-  ! Turn off CPU timing (expensive)
-
-  if (gptlsetoption (gptlcpu, 0) < 0) call endrun ('CLM: gptlsetoption')
-
-  ! Compile-time setting of max timer depth
-
-#ifdef GPTLDEPTHLIMIT
-  if (gptlsetoption (gptldepthlimit, GPTLDEPTHLIMIT) < 0) call endrun ('CLM: gptlsetoption')
-#endif
-
-  ! Next 2 calls only work if PAPI is enabled.  These examples enable counting
-  ! of total cycles and floating point ops, respectively
-  !
-  !   if (gptlsetoption (PAPI_TOT_CYC, 1) < 0) call endrun ('CLM: gptlsetoption')
-  !   if (gptlsetoption (PAPI_FP_OPS, 1)  < 0) call endrun ('CLM: gptlsetoption')
-  !
-  ! Initialize the timing lib.  This call must occur after all gptlsetoption
-  ! calls and before all other timing lib calls.
-
-  if (gptlinitialize () < 0) call endrun ('CLM: gptlinitialize')
 
   ! -----------------------------------------------------------------
   ! Initialize MPI
   ! -----------------------------------------------------------------
 
-#if (defined SPMD)
   call mpi_initialized (mpi_running, ier)
   if (.not. mpi_running) call mpi_init(ier)
   mpicom_glob = MPI_COMM_WORLD
-#else
-  mpicom_glob = 1
-#endif
   call spmd_init(mpicom_glob)
   call mct_world_init(1,mpicom_glob,mpicom,comp_id)
 
@@ -139,6 +101,14 @@ PROGRAM program_off
   ! -----------------------------------------------------------------
 
   call ESMF_Initialize()
+
+  ! -----------------------------------------------------------------
+  ! Initialize timing library, and set full path to namelist
+  ! -----------------------------------------------------------------
+
+  call control_setNL( nlfilename )     ! Set namelist
+  call t_initf(nlfilename, LogPrint=masterproc, Mpicom=mpicom, &
+               MasterTask=masterproc)
 
   ! -----------------------------------------------------------------
   ! Initialize Orbital parameters
@@ -186,9 +156,7 @@ PROGRAM program_off
   ! Time stepping loop
   ! -----------------------------------------------------------------
 
-#if (defined SPMD)
 !  call t_barrierf('barrieri',mpicom)
-#endif
   call t_startf('runtotal')
 
   do
@@ -199,22 +167,16 @@ PROGRAM program_off
      call atmdrv(nstep)
      call t_stopf('atmdrv')
 
-#if (defined SPMD)
 !  call t_barrierf('barrier1b',mpicom)
-#endif
      ! Run
 
      call clm_run1()
 
-#if (defined SPMD)
 !  call t_barrierf('barrier2b',mpicom)
-#endif
 
      call clm_run2()
 
-#if (defined SPMD)
 !  call t_barrierf('barrierd2p',mpicom)
-#endif
      ! Determine if time to stop
 
      if (is_last_step()) exit
@@ -237,7 +199,8 @@ PROGRAM program_off
   if (masterproc) then
      write(6,*)'SUCCESFULLY TERMINATING CLM MODEL at nstep= ',get_nstep()
   endif
-  call t_prf(iam)
+  call t_prf('timing_all',mpicom)
+  call t_finalizef()
 
   ! Finalize ESMF
   call ESMF_Finalize()

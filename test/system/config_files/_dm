@@ -1,0 +1,3 @@
+-spmd -nosmp
+-debug
+-s

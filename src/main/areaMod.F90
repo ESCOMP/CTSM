@@ -2295,7 +2295,6 @@ end subroutine map_setmapsFM
        write(6,*) 'map_checkmap dstmo         = ',dstmo
     endif
 
-#if (defined SPMD)
     call mpi_reduce(nwts,nmin,1,MPI_INTEGER,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
        write(6,*)'mpi_reduce nwts error: ',ier
@@ -2308,11 +2307,6 @@ end subroutine map_setmapsFM
     if (ier /= 0) then
        write(6,*)'mpi_reduce nwts error: ',ier
     endif
-#else
-    nmin = nwts
-    nmax = nwts
-    nsum = nwts
-#endif
     if (masterproc) then
        write(6,*) 'map_checkmap nwts gmin/max = ',nmin,nmax
        write(6,*) 'map_checkmap nwts gsum     = ',nsum
@@ -2320,7 +2314,6 @@ end subroutine map_setmapsFM
 
     imin = minval(src)
     imax = maxval(src)
-#if (defined SPMD)
     call mpi_reduce(imin,nmin,1,MPI_INTEGER,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
        write(6,*)'mpi_reduce src min error: ',ier
@@ -2329,17 +2322,12 @@ end subroutine map_setmapsFM
     if (ier /= 0) then
        write(6,*)'mpi_reduce src max error: ',ier
     endif
-#else
-    nmin = imin
-    nmax = imax
-#endif
     if (masterproc) then
        write(6,*) 'map_checkmap src gmin/max  = ',nmin,nmax
     endif
 
     imin = minval(dst)
     imax = maxval(dst)
-#if (defined SPMD)
     call mpi_reduce(imin,nmin,1,MPI_INTEGER,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
        write(6,*)'mpi_reduce dst min error: ',ier
@@ -2348,17 +2336,12 @@ end subroutine map_setmapsFM
     if (ier /= 0) then
        write(6,*)'mpi_reduce dst max error: ',ier
     endif
-#else
-    nmin = imin
-    nmax = imax
-#endif
     if (masterproc) then
        write(6,*) 'map_checkmap dst gmin/max  = ',nmin,nmax
     endif
 
     rmin = minval(wts)
     rmax = maxval(wts)
-#if (defined SPMD)
     call mpi_reduce(rmin,smin,1,MPI_REAL8,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
        write(6,*)'mpi_reduce wts min error: ',ier
@@ -2367,10 +2350,6 @@ end subroutine map_setmapsFM
     if (ier /= 0) then
        write(6,*)'mpi_reduce wts max error: ',ier
     endif
-#else
-    smin = rmin
-    smax = rmax
-#endif
     if (masterproc) then
        write(6,*) 'map_checkmap wts gmin/max  = ',smin,smax
     endif
@@ -2389,7 +2368,6 @@ end subroutine map_setmapsFM
     rmin = minval(rsum)
     rmax = maxval(rsum)
     deallocate(rsum)
-#if (defined SPMD)
     call mpi_reduce(rmin,smin,1,MPI_REAL8,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
        write(6,*)'mpi_reduce swts min error: ',ier
@@ -2398,10 +2376,6 @@ end subroutine map_setmapsFM
     if (ier /= 0) then
        write(6,*)'mpi_reduce swts max error: ',ier
     endif
-#else
-    smin = rmin
-    smax = rmax
-#endif
     if (masterproc) then
        write(6,*) 'map_checkmap swts gmin/max  = ',smin,smax
     endif
@@ -2473,12 +2447,10 @@ end subroutine map_checkmap
        edgew = domain%edges(4)
 
        gsum = lsum
-#if (defined SPMD)
        if (domain%decomped) then
           call mpi_reduce(lsum,gsum,1,MPI_REAL8,MPI_SUM,masterproc, &
                           mpicom,ier)
        endif
-#endif
 
        if (masterproc) then
 

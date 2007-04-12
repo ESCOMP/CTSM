@@ -82,8 +82,6 @@ OPTIONS
                         pathname if the program is not in your path (or fix your path).
      -h                 Print usage to STDOUT.
      -i                 ***DEPRECATED***  Interactive prompting mode no longer supported.
-     -lapack_libdir <dir>  
-                        Directory containing LAPACK library.
      -ldflags <string>  A string of user specified load options.  Appended to
                         Makefile defaults.
      -linker <name>     User specified linker.  Overrides Makefile default of $(FC).
@@ -93,6 +91,7 @@ OPTIONS
      -nc_inc <dir>      Directory containing netCDF include files.
      -nc_lib <dir>      Directory containing netCDF library.
      -nc_mod <dir>      Directory containing netCDF module files.
+     -prog_seasalt <name> Turn on prognostic sea-salt (PROGSSLT cppdef token) [on | off ] (default is off)
      -rtm <name>        Turn on RTM  [on | off ] (default is off)
      -s                 Turns on silent mode - only fatal messages issued.
      -[no]smp           Switch on [off] SMP parallelism.
@@ -152,7 +151,6 @@ GetOptions(
     "fopt=s"                    => \$opts{'fopt'},
     "gmake=s"                   => \$opts{'gmake'},
     "h|help"                    => \$help,
-    "lapack_libdir=s"           => \$opts{'lapack_libdir'},
     "ldflags=s"                 => \$opts{'ldflags'},
     "linker=s"                  => \$opts{'linker'},
     "mpi_inc=s"                 => \$opts{'mpi_inc'},
@@ -164,6 +162,7 @@ GetOptions(
     "nc_mod=s"                  => \$opts{'nc_mod'},
     "nlat=s"                    => \$opts{'nlat'},
     "nlon=s"                    => \$opts{'nlon'},
+    "prog_seasalt=s"            => \$opts{'progsslt'}, 
     "rtm=s"                     => \$opts{'rtm'}, 
     "s|silent"                  => \$silent,
     "smp!"                      => \$opts{'smp'},
@@ -381,6 +380,17 @@ if (defined $opts{'supln'}) {
 }
 $cfg{'supln'} = $cfg;
 if ($print>=2) { print "Using $cfg{'bgc'} supplemental nitrogen for cn mode.$eol"; }
+
+if (defined $opts{'progsslt'}) {
+    $cfg = $opts{'progsslt'};
+} elsif (defined $usr_defaults{'progsslt'}) {
+    $cfg = $usr_defaults{'progsslt'};
+} else {
+    $cfg = $bld_defaults{'progsslt'};
+}
+$cfg{'progsslt'} = $cfg;
+if ($print>=2) { print "Using $cfg{'progsslt'} for prognostic sea-salt.$eol"; }
+
 
 if (defined $opts{'rtm'}) {
     $cfg = $opts{'rtm'};
@@ -616,12 +626,26 @@ if (defined $opts{'cppdefs'}) {
 
 $cfg{'cppdefs'} = $cfg;
 
+# Fortran name mangling
+if ( $cfg{target_os} eq 'aix'  or  $cfg{target_os} eq 'darwin'  or  $cfg{target_os} eq 'bgl' ) {
+    $cfg .= " -DFORTRAN_SAME";
+}
+elsif ( $cfg{target_os} eq 'irix'      or  $cfg{target_os} eq 'linux'   or
+        $cfg{target_os} eq 'super-us'  or  $cfg{target_os} eq 'es'      or
+        $cfg{target_os} eq 'unicosmp'  or  $cfg{target_os} eq 'solaris' or
+        $cfg{target_os} eq 'dec_osf'   ) {
+    $cfg .= " -DFORTRANUNDERSCORE";
+}
+
 $cfg .= " -DMAXPATCH_PFT=$cfg{maxpft}";
 
 if ($cfg{'ccsm'}) {
     $cfg .= " -DCOUP_CSM";
 } else {
     $cfg .= " -DOFFLINE";
+}
+if ($cfg{'progsslt'} eq 'on') { 
+    $cfg .= " -DPROGSSLT";
 }
 if ($cfg{'rtm'} eq 'on') { 
     $cfg .= " -DRTM";
@@ -633,7 +657,7 @@ if ($cfg{'voc'} eq 'on') {
     $cfg .= " -DVOC";
 }
 if ($cfg{'bgc'} eq 'cn') { 
-    $cfg .= " -DCN";
+    $cfg .= " -DCN -DSOM4";
 }
 if ($cfg{'bgc'} eq 'casa') { 
     $cfg .= " -DCASA";
@@ -762,39 +786,6 @@ EOF
    }
 
     if ($print>=2) { print "Found netCDF module files in $cfg{'nc_mod'}$eol"; }
-}
-
-# LAPACK library
-$cfg{'lapack_libdir'} = '';
-
-if ($clm_build) {
-    if (defined $opts{'lapack_libdir'}) {
-	$cfg = $opts{'lapack_libdir'};
-    } elsif (defined $usr_defaults{'lapack_libdir'}) {
-	$cfg = $usr_defaults{'lapack_libdir'};
-    } elsif (defined $ENV{LAPACK_LIBDIR}) {
-	$cfg = $ENV{LAPACK_LIBDIR};
-    } else {
-	$cfg = '';
-    }
-
-    if ($cfg ne '') {
-	if (-f "$cfg/liblapack.a") {
-	    $cfg{'lapack_libdir'} = $cfg;
-	    if ($print>=2 ) { print "Found LAPACK library in $cfg{'lapack_libdir'}$eol"; }
-	} else {
-	    die <<"EOF";
-** Cannot find liblapack.a in specified directory: $cfg
-** 
-** The LAPACK library directory is determined from the following set of options listed
-** from highest to lowest precedence:
-** * by the command-line option -lapack_libdir
-** * by a default configuration file, specified by -defaults 
-** * by the environment variable LAPACK_LIBDIR
-** * by the default $cfg{'nc_lib'}
-EOF
-        }
-    }
 }
 
 # MPI library
@@ -1098,6 +1089,7 @@ usr_src="$cfg{'usr_src'}"
 <comment>
 bgc      BGC mode: none or cn or casa
 supln    Turn on CN supplemental nitrogen (only applies to bgc setting of cn) [on | off]. 
+progsslt Turn on PROGSSLT [on | off].
 rtm      Turn on RTM  [on | off].
 dust     Turn on DUST [on | off].
 voc      Turn on VOC  [on | off].
@@ -1107,6 +1099,7 @@ maxpft   Value of maxpatch_pft.
 <cppvars
 bgc="$cfg{'bgc'}"
 supln="$cfg{'supln'}"
+progsslt="$cfg{'progsslt'}"
 rtm="$cfg{'rtm'}"
 dust="$cfg{'dust'}"
 voc="$cfg{'voc'}"
@@ -1132,7 +1125,6 @@ nc_mod     Directory containing NetCDF module files.
 mpi_inc    Directory containing MPI include files.
 mpi_lib    Directory containing MPI library.
 mpi_lib_name Name of MPI library.
-lapack_libdir Directory containing LAPACK library.
 esmf_libdir   Directory containing ESMF library      (if linking to external ESMF)
 target_os  OS for which CLM is being built.
 </comment>
@@ -1156,7 +1148,6 @@ nc_mod="$cfg{'nc_mod'}"
 mpi_inc="$cfg{'mpi_inc'}"
 mpi_lib="$cfg{'mpi_lib'}"
 mpi_lib_name="$cfg{'mpi_lib_name'}"
-lapack_libdir="$cfg{'lapack_libdir'}"
 esmf_libdir="$cfg{'esmf_libdir'}"
 target_os="$cfg{'target_os'}"
 />
@@ -1332,7 +1323,6 @@ MOD_NETCDF   := $cfg{'nc_mod'}
 INC_MPI      := $cfg{'mpi_inc'}
 LIB_MPI      := $cfg{'mpi_lib'}
 MPI_LIB_NAME := $cfg{'mpi_lib_name'}
-LAPACK_LIBDIR:= $cfg{'lapack_libdir'}
 ESMF_LIBDIR  := $cfg{'esmf_libdir'}
 DEBUG        := $debug
 SPMD         := $spmd
@@ -1558,6 +1548,17 @@ sub validate_options {
 	    or die "** invalid value of $opt ($old) specified in $source\n".
                    "** expected one of: @expect\n";
     }
+
+    # prognostic sea-salt
+    $opt = 'progsslt';
+    @expect = ('on', 'off');
+    if (defined $opts->{$opt}) {
+	$old = $opts->{$opt};
+	$opts->{$opt} = valid_option($old, @expect)
+	    or die "** invalid value of $opt ($old) specified in $source\n".
+                   "** expected one of: @expect\n";
+    }
+
 
     # rtm
     $opt = 'rtm';

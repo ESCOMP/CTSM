@@ -64,9 +64,7 @@ contains
     use subgridMod  , only : gcelldc, gcellsn, subgrid_alloc
     use subgridMod  , only : subgrid_get_gcellinfo
     use shr_const_mod,only : SHR_CONST_PI
-#ifdef SPMD
-  use spmdGathScatMod, only : gather_data_to_master
-#endif
+    use spmdGathScatMod, only : gather_data_to_master
 !
 ! !ARGUMENTS:
     implicit none
@@ -209,21 +207,12 @@ contains
 
     ! Compute gcellsn indexes
 
-#ifdef SPMD
     call gather_data_to_master (gptr%luni, gcelldc%g_li, clmlevel='gridcell')
     call gather_data_to_master (gptr%coli, gcelldc%g_ci, clmlevel='gridcell')
     call gather_data_to_master (gptr%pfti, gcelldc%g_pi, clmlevel='gridcell')
     call gather_data_to_master (gptr%nlandunits, gcelldc%g_ln, clmlevel='gridcell')
     call gather_data_to_master (gptr%ncolumns, gcelldc%g_cn, clmlevel='gridcell')
     call gather_data_to_master (gptr%npfts, gcelldc%g_pn, clmlevel='gridcell')
-#else
-    gcelldc%g_li = gptr%luni
-    gcelldc%g_ci = gptr%coli
-    gcelldc%g_pi = gptr%pfti
-    gcelldc%g_ln = gptr%nlandunits
-    gcelldc%g_cn = gptr%ncolumns
-    gcelldc%g_pn = gptr%npfts
-#endif
 
     li    = 1
     ci    = 1

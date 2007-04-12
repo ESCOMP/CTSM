@@ -51,19 +51,19 @@ cp $cfgdir/*.h      .
 #
 # Add cfgdir path to begining of each path in Filepath
 #
+touch Filepath
 while read filepath_arg; do
-    filepath_string="${filepath_string}${filepath_arg} "
+    echo "${cfgdir}/${filepath_arg}" >> Filepath
 done < ${cfgdir}/Filepath
 
-echo $filepath_string > Filepath
 
 attempt=1
 still_compiling="TRUE"
 while [ $still_compiling = "TRUE" ]; do
 
     echo "TCBtools.sh: call to make:" 
-    echo "        ${MAKE_CMD}" 
-    ${MAKE_CMD} >> test.log 2>&1
+    echo "        ${MAKE_CMD} ${TOOLS_MAKE_STRING}" 
+    ${MAKE_CMD} ${TOOLS_MAKE_STRING} >> test.log 2>&1
     rc=$?
     if [ $rc -eq 0 ]; then
 	echo "TCBtools.sh: make was successful" 
