@@ -15,7 +15,6 @@ shr_kind_mod.F90
 shr_mpi_mod.F90
 shr_file_mod.F90
 shr_sys_mod.F90
-system_cmd.c
 collective.c
 comm.c
 fort.F90

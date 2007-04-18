@@ -19,21 +19,23 @@
 #BSUB -o clm.o%J
 #BSUB -e clm.e%J
 #BSUB -q regular
+#BSUB -W 0:10                   # wall clock limit
+#BSUB -P xxxxxxxx               # Project number to charge to
 #
 #=======================================================================
 
-setenv INC_NETCDF /contrib/2.6/netcdf/3.6.0-p1-pathscale-2.2.1-64/include
-setenv LIB_NETCDF /contrib/2.6/netcdf/3.6.0-p1-pathscale-2.2.1-64/lib
-set mpich=/contrib/2.6/mpich-gm/1.2.6..14a-pathscale-2.2.1-64
+setenv INC_NETCDF /contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/include
+setenv LIB_NETCDF /contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/lib
+set mpich=/contrib/2.6/mpich-gm/1.2.6..14a-pathscale-2.4-64
 setenv INC_MPI ${mpich}/include
 setenv LIB_MPI ${mpich}/lib
-set ps=/contrib/2.6/pathscale/2.2.1
-setenv PATH ${mpich}/bin:${ps}/bin:${PATH}
-setenv LD_LIBRARY_PATH ${ps}/lib/2.2.1:${LD_LIBRARY_PATH}
+set ps=/contrib/2.6/pathscale/2.4
+setenv PATH ${mpich}/bin:${ps}/bin:/usr/bin:/bin:${PATH}
+setenv LD_LIBRARY_PATH ${ps}/lib/2.4:${LD_LIBRARY_PATH}
 
 ## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
 ## Contains the source code for the CLM distribution.
-## (the root directory contains the subdirectory "models")
+## (the root directory contains the subdirectory "src")
 set clmroot   = /fis/cgd/...
 
 ## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
@@ -59,7 +61,7 @@ set wrkdir   = /ptmp/$LOGNAME
 set blddir   = $wrkdir/$case/bld
 set rundir   = $wrkdir/$case
 set cfgdir   = $clmroot/bld
-set usr_src  = $clmroot/bld/empty
+set usr_src  = $clmroot/bld/usr.src
 
 
 ## Ensure that run and build directories exist
@@ -67,7 +69,8 @@ mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
 mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
 ## Build (or re-build) executable
-set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust -usr_src $usr_src"
+set flags = "-fc pathf90 -linker mpif90 "
+set flags = "$flags -maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust -usr_src $usr_src"
 if ($spmd == on)  set flags = "$flags -spmd"
 if ($spmd == off) set flags = "$flags -nospmd"
 echo "cd $blddir"
@@ -88,16 +91,16 @@ cd $rundir                      || echo "cd $blddir failed" && exit 1
 
 cat >! lnd.stdin << EOF
  &clm_inparm
- caseid         = $case
- ctitle         = $case
+ caseid         = "$case"
+ ctitle         = "$case"
  finidat        = ' '
  fsurdat        = "$CSMDATA/surfdata/surfdata_048x096_061108.nc"
  fatmgrid       = "$CSMDATA/griddata/griddata_48x96_060829.nc"
  fatmlndfrc     = "$CSMDATA/griddata/fracdata_48x96_gx3v5_060829.nc"
  fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
- fndepdat       = "$CSMDATA/ndepdata/1890/regrid_ndep_clm.nc"
+ fndepdat       = "$CSMDATA/ndepdata/ndep_clm_2000_48x96_c060414.nc"
  frivinp_rtm    = "$CSMDATA/rtmdata/rdirc.05.061026"
- offline_atmdir = "$CSMDATA/NCEPDATA"
+ offline_atmdir = "$CSMDATA/NCEPDATA.Qian-etal-JHM06.c051024"
  nsrest         =  0
  nelapse        =  48
  dtime          =  1800

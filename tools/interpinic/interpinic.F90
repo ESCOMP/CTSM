@@ -574,7 +574,7 @@ contains
               lato(noo)==lato(no) .and. lono(noo)==lono(no)) then
              i = i + 1
              if (i>10) then
-                write(*,*) 'i>10 WHY???'
+                write(*,*) 'i>10 WHY?'
                 stop
              end if
              keepo1(i) = noo
@@ -604,7 +604,7 @@ contains
                 if (typei(ni)==1 .and. vtypei(ni)<15 .and. lati(ni)==lati(n) .and. loni(ni)==loni(n)) then
                    j = j + 1
                    if (j>10) then
-                      write(*,*) 'j>10 WHY???'
+                      write(*,*) 'j>10 WHY?'
                       stop
                    end if
                    keepi1(j) = ni
@@ -808,7 +808,7 @@ contains
               lato(noo)==lato(no) .and. lono(noo)==lono(no)) then
              i = i + 1
              if (i>10) then
-                write(*,*) 'i>10 WHY???'
+                write(*,*) 'i>10 WHY?'
                 stop
              end if
              keepo1(i) = noo
@@ -838,7 +838,7 @@ contains
                 if (typei(ni)==1 .and. vtypei(ni)<15 .and. lati(ni)==lati(n) .and. loni(ni)==loni(n)) then
                    j = j + 1
                    if (j>10) then
-                      write(*,*) 'j>10 WHY???'
+                      write(*,*) 'j>10 WHY?'
                       stop
                    end if
                    keepi1(j) = ni

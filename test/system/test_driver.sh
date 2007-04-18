@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the testing of CLM in Sequential CCSM
 #
-# usage on bangkok, calgary, tempest, bluevista, lightning, blueice, jaguar: 
+# usage on bangkok, calgary, tempest, bluevista, lightning, blueice, jaguar, robin: 
 # ./test_driver.sh
 #
 # valid arguments: 
@@ -150,7 +150,7 @@ export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
 dataroot="/fs/cgd/csm"
 echo_arg=""
-input_file="tests_pretag_blueice"
+input_file="tests_posttag_blueice"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -174,11 +174,11 @@ cat > ./${submit_script} << EOF
 
 #BSUB -a mpich_gm            #lightning requirement
 #BSUB -x                          # exclusive use of node (not_shared)
-#BSUB -n 4                       # total tasks needed
+#BSUB -n 8                       # total tasks needed
 #BSUB -o test_dr.o%J              # output filename
 #BSUB -e test_dr.o%J              # error filename
 #BSUB -q regular                  # queue
-#BSUB -W 1:58                     
+#BSUB -W 4:00                     
 #BSUB -P $account_name      
 #BSUB -J clmtest
 
@@ -195,8 +195,8 @@ export CLM_THREADS=1
 export CLM_RESTART_THREADS=2
 
 ##mpi tasks
-export CLM_TASKS=4
-export CLM_RESTART_TASKS=2
+export CLM_TASKS=8
+export CLM_RESTART_TASKS=4
 
 export CLM_COMPSET="I"
 
@@ -358,13 +358,83 @@ export INC_MPI=\${MPICH_DIR_FTN_DEFAULT64}/include
 export LIB_MPI=\${MPICH_DIR_FTN_DEFAULT64}/lib
 export CCSM_MACH="jaguar"
 export CFG_STRING="-fc ftn -cc cc -fflags '-target=catamount'"
-export CFG_STRING="${CFG_STRING} -cppdefs '-DCATAMOUNT'"
+export CFG_STRING="${CFG_STRING} -cppdefs '-DCATAMOUNT -DSYSCATAMOUNT'"
 export CFG_STRING="${CFG_STRING} -cflags '-target=catamount' "
-export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc USER_CPPDEFS='-DCATAMOUNT' USER_CFLAGS='-target=catamount' USER_FFLAGS='-target=catamount'"
-
+export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc USER_CPPDEFS='-DCATAMOUNT -DSYSCATAMOUNT' USER_CFLAGS='-target=catamount' USER_FFLAGS='-target=catamount'"
 export MAKE_CMD="gmake -j 2"
 export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/spin/proj/ccsm/bin/jaguar/newcprnc
+dataroot="/spin/proj/ccsm"
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+    ##robin/phoenix
+    ro* )
+    submit_script="test_driver_robin_${cur_time}.sh"
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+# Name of the queue (CHANGE THIS if needed)
+# #PBS -q debug
+# Number of nodes (CHANGE THIS if needed)
+#PBS -l walltime=02:58:00,mppe=8
+# output file base name
+#PBS -N test_dr
+# Put standard error and standard out in same file
+#PBS -j oe
+# Export all Environment variables
+#PBS -V
+#PBS -A CLI017
+# End of options
+
+if [ -n "\$PBS_JOBID" ]; then    #batch job
+    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
+    initdir=\${PBS_O_WORKDIR}
+fi
+
+if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
+    interactive="NO"
+    input_file="tests_posttag_phoenix"
+    echo_arg=""
+else
+    interactive="YES"
+    input_file="tests_posttag_robin"
+    echo_arg="-e"
+fi
+
+##omp threads
+export CLM_THREADS=1
+export CLM_RESTART_THREADS=2
+
+##mpi tasks
+export CLM_TASKS=8
+export CLM_RESTART_TASKS=4
+
+export CLM_COMPSET="I"
+
+. /opt/modules/modules/init/sh
+module purge
+module load open
+module load PrgEnv.5407
+module unload mpt
+module load mpt.2.4.0.6
+module load pbs
+module load netcdf/3.5.1_r4
+
+netcdf=\$NETCDF_SV2
+export LIB_NETCDF=\${netcdf}/lib
+export INC_NETCDF=\${netcdf}/include
+export MOD_NETCDF=\${netcdf}/include
+export CFG_STRING="-target_os unicosmp -cppdefs \"-DSYSUNICOS\" "
+export TOOLS_MAKE_STRING="USER_CPPDEFS='-DSYSUNICOS'"
+export CCSM_MACH="phoenix"
+
+export MAKE_CMD="gmake -j 2"
+export MACH_WORKSPACE="/scratch/scr101"
+export CPRNC_EXE=/spin/proj/ccsm/models/atm/cam/bin/newcprnc/cprnc
 dataroot="/spin/proj/ccsm"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -667,7 +737,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bangkok, tempest, bluevista, blueice, lightning, jaguar: "
+    echo "usage on bangkok, tempest, bluevista, blueice, lightning, jaguar, robin: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
@@ -701,6 +771,9 @@ case $hostname in
 
     ##jaguar
     jaguar* )  qsub ${submit_script};;
+
+    ##robin/phoenix
+    ro* )  qsub ${submit_script};;
 
     ##tempest
     te* )  qsub ${submit_script};;

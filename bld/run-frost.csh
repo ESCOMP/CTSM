@@ -24,7 +24,7 @@ setenv LIB_MPI /bgl/BlueLight/ppcfloor/bglsys/lib
 
 ## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
 ## Contains the source code for the CLM distribution.
-## (the root directory contains the subdirectory "models")
+## (the root directory contains the subdirectory "src")
 set clmroot   = ~/fmf_clm3_expa_88
 
 ## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
@@ -50,7 +50,7 @@ set wrkdir   = /ptmp/$LOGNAME
 set blddir   = $wrkdir/$case/bld
 set rundir   = $wrkdir/$case
 set cfgdir   = $clmroot/bld
-set usr_src  = $clmroot/bld/empty
+set usr_src  = $clmroot/bld/usr.src
 
 
 ## Ensure that run and build directories exist
@@ -76,12 +76,6 @@ endif
 ## Create the namelist
 cd $rundir                      || echo "cd $blddir failed" && exit 1
 
-# fsurdat        = '$CSMDATA/surfdata/surfdata_10min_USGS_070206.nc'
-# fatmgrid       = '$CSMDATA/griddata/griddata_10min_USGS_070206.nc'
-# fatmlndfrc     = '$CSMDATA/griddata/fracdata_10min_USGS_070206.nc'
-# fpftcon        = '$CSMDATA/pftdata/pft-physiology-cn16.c040719'
-# fndepdat       = '$CSMDATA/ndepdata/1890/regrid_ndep_clm.nc'
-
 cat >! lnd.stdin << EOF
  &clm_inparm
  caseid         = '$case'
@@ -92,7 +86,7 @@ cat >! lnd.stdin << EOF
  fatmlndfrc     = '$CSMDATA/griddata/fracdata_360x720_070122.nc'
  fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
  frivinp_rtm    = '$CSMDATA/rtmdata/rdirc.05.061026'
- offline_atmdir = '$CSMDATA/NCEPDATA'
+ offline_atmdir = '$CSMDATA/NCEPDATA.Qian-etal-JHM06.c051024'
  nsrest         =  0
  nelapse        =  48
  dtime          =  1800

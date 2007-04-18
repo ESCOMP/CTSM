@@ -282,10 +282,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    rf_l3s3 = 0.29_r8
    rf_s1s2 = 0.28_r8
    rf_s2s3 = 0.46_r8
-   rf_s3s4 = 1.0
-#if (defined SOM4)
-	rf_s3s4 = 0.55
-#endif
+   rf_s3s4 = 0.55
 
    ! set the cellulose and lignin fractions for coarse woody debris
    cwd_fcel = 0.76_r8
@@ -302,12 +299,8 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    k_l3 = -log(1.0_r8-0.014_r8)
    k_s1 = -log(1.0_r8-0.07_r8)
    k_s2 = -log(1.0_r8-0.014_r8)
-   k_s3 = -log(1.0_r8-0.0005_r8)
-   k_s4 = -log(1.0_r8-0.0_r8)
-#if (defined SOM4)
-	k_s3 = -log(1.0_r8-0.0014_r8)
+   k_s3 = -log(1.0_r8-0.0014_r8)
    k_s4 = -log(1.0_r8-0.0001_r8)
-#endif
    k_frag = -log(1.0_r8-0.001_r8)
 
    ! calculate the new discrete-time decay rate for model timestep

@@ -1,4 +1,109 @@
 ===============================================================
+Tag name:  clm3_expa_98
+Originator(s):  erik (KLUZEK ERIK 1326 CGD)
+Date:  Wed Apr 18 09:51:53 MDT 2007
+One-line Summary: Move externals to top, make SOM4 the default, rename setidx file, use new datafiles, 
+    remove NUMLONS read, tweak testing, remove shell_cmd, remove read of old surfdata file
+
+Purpose of changes: Some simple cleanup preparing for CLM3.5 release
+
+Bugs fixed (include bugzilla ID): 440, 441
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Use new datasets
+
+List any changes to the defaults for the boundary datasets: Use new NCEP forcing datasets,
+  and new Nitrogen deposition datasets
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+	Directories are the same -- but SVN externals themselves moved to top level
+
+List all subroutines eliminated:
+
+D      test/system/tests_pretag_blueice > Rename to posttag filename
+D      bld/empty -----------------------> Rename to usr.src
+D      src/main/setlatlonidx.F90 -------> Rename to scam_setlatlonidx.F90 filename
+D      src/main/system_cmd.c
+D      src/main/cfort.h
+D      src/SVN_EXTERNAL_DIRECTORIES ----> Move to top layer
+
+List all subroutines added and what they do:
+
+  -------------------> Files renamed from above
+A  +   test/system/tests_posttag_blueice
+A  +   bld/usr.src
+A  +   SVN_EXTERNAL_DIRECTORIES
+A  +   src/main/scam_setlatlonidx.F90
+
+  -------------------> New files
+A      test/system/config_files/10p_dgvm_s -------> New DGVM test
+A  +   test/system/tests_posttag_blueice ---------> Rename
+A      test/system/tests_posttag_robin -----------> Add tests for robin/phoenix
+A      test/system/tests_posttag_phoenix
+A      test/system/nl_files/singlept_dgvm_long ---> Add new singlept DGVM test
+  -------------------> Add new documentation README files
+A      tools/README
+A      bld/README
+A      Copyright ----> CCSM Copyright file
+A      README
+
+List all existing files that have been modified, and describe the changes:
+
+  -------------------> Tweak testing -- use new datasets, increase diversity of testing
+M      test/system/tests_pretag_bluevista
+M      test/system/nl_files/t31_cnall
+M      test/system/nl_files/1.9x2.5
+M      test/system/nl_files/t31_dgvm
+M      test/system/nl_files/singlept
+M      test/system/nl_files/10x15_cnall
+M      test/system/nl_files/10x15_dgvm
+M      test/system/nl_files/t31_casa
+M      test/system/nl_files/regional
+M      test/system/nl_files/10x15_pftdyn
+M      test/system/nl_files/t31_dgvm_long
+M      test/system/nl_files/t42half
+M      test/system/nl_files/t31
+M      test/system/nl_files/10x15
+M      test/system/input_tests_master
+M      test/system/test_driver.sh
+   ---------------------> Remove system_cmd.c from list of source files needed to compile
+M      tools/mksurfdata/Srcfiles
+M      tools/interpinic/interpinic.F90 <--- fix interpinic compile on bluevista
+M      tools/mkgriddata/Srcfiles
+   ---------------------> Use new datasets, make sure works
+M      bld/run-pc.csh
+M      bld/configure ---- Remove SOM4 CPP declaration
+M      bld/run-lightning.csh
+M      bld/run-ibm.csh
+M      bld/run-frost.csh
+   ---------------------> Make SOM4 the default remove other option, remove read of NUMLON
+   ---------------------> Remove read of old surfdata sets, remove shell_cmd
+M      src/biogeochem/CNDecompMod.F90
+M      src/biogeochem/STATICEcosysDynMod.F90
+M      src/main/ncdio.F90
+M      src/main/fileutils.F90 -----> Remove shell_cmd as unused now.
+M      src/main/iniTimeConst.F90
+M      src/main/clm_varsur.F90
+M      src/main/surfrdMod.F90
+
+Summary of testing:
+
+  bluevista:    All PASS, except
+062 sm061 TSMconccsm.sh ERS f19_g13 ...............................FAIL! rc= 7
+  bangkok/lf95: All PASS
+  tempest:      All PASS, except
+033 sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7 ....FAIL! rc= 4
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_97
+
+===============================================================
+===============================================================
 Tag name:  clm3_expa_97
 Originator(s):  erik (KLUZEK ERIK 1326 CGD)
 Date:  Wed Apr 11 12:18:32 MDT 2007

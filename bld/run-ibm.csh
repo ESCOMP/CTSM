@@ -20,17 +20,6 @@
 ## @ queue tells load leveler to submit the job
 ## @ environment tells load leveler to export all Environment variables
 
-#@ class          = csl_rg8
-#@ node           = 2
-#@ tasks_per_node = 2
-#@ output         = out.$(jobid)
-#@ error          = out.$(jobid)
-#@ job_type       = parallel
-#@ network.MPI    = csss,not_shared,us
-#@ node_usage     = not_shared
-#@ environment = COPY_ALL
-#@ queue
-
 ## Setting LSF options for batch queue submission.
 #BSUB -a poe                    # use LSF openmp elim
 #BSUB -x                        # exclusive use of node (not_shared)
@@ -40,6 +29,7 @@
 #BSUB -e out.%J                 # error filename
 #BSUB -q regular                # queue
 #BSUB -W 0:10                   # wall clock limit
+#BSUB -P xxxxxxxx               # Project number to charge to
 
 ## POE Environment.  Set these for interactive jobs.  They're ignored by LoadLeveler
 ## MP_NODES is the number of nodes.  
@@ -69,7 +59,7 @@ setenv LIB_NETCDF /usr/local/lib64/r4i4
 
 ## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
 ## Contains the source code for the CLM distribution.
-## (the root directory contains the subdirectory "models")
+## (the root directory contains the subdirectory "src")
 set clmroot   = /fis/cgd/.......
 
 ## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
@@ -96,7 +86,7 @@ set wrkdir  = /ptmp/$LOGNAME
 set blddir  = $wrkdir/$case/bld
 set rundir  = $wrkdir/$case
 set cfgdir  = $clmroot/bld
-set usr_src = $clmroot/bld/empty
+set usr_src = $clmroot/bld/usr.src
 
 ## Ensure that run and build directories exist
 mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
@@ -133,9 +123,9 @@ cat >! lnd.stdin << EOF
  fatmgrid       = "$CSMDATA/griddata/griddata_48x96_060829.nc"
  fatmlndfrc     = "$CSMDATA/griddata/fracdata_48x96_gx3v5_060829.nc"
  fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
- fndepdat       = "$CSMDATA/ndepdata/1890/regrid_ndep_clm.nc"
+ fndepdat       = "$CSMDATA/ndepdata/ndep_clm_2000_48x96_c060414.nc"
  frivinp_rtm    = "$CSMDATA/rtmdata/rdirc.05.061026"
- offline_atmdir = "$CSMDATA/NCEPDATA"
+ offline_atmdir = "$CSMDATA/NCEPDATA.Qian-etal-JHM06.c051024"
  nsrest         =  0
  nelapse        =  48
  dtime          =  1800
@@ -162,11 +152,7 @@ setenv LID "`date +%y%m%d-%H%M%S`"
 
 if ($spmd == on) then
 
-  #uncomment the line below to run on bluesky with MPI
-  #poe $blddir/clm >&! clm.log.$LID              || echo "CLM run failed" && exit 1
-
-  #uncomment the line below to run on bluevista with MPI
-  #mpirun.lsf $blddir/clm >&! clm.log.$LID       || echo "CLM run failed" && exit 1
+  mpirun.lsf $blddir/clm >&! clm.log.$LID       || echo "CLM run failed" && exit 1
 else 
   $blddir/clm  >&! clm.log.$LID                  || echo "CLM run failed" && exit 1
 endif

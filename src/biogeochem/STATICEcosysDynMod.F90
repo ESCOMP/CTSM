@@ -309,7 +309,6 @@ contains
     use clmtype
     use decompMod   , only : get_proc_bounds, ldecomp, gsmap_lnd_gdc2glo, perm_lnd_gdc2glo
     use clm_varpar  , only : lsmlon, lsmlat, maxpatch_pft, maxpatch, npatch_crop, numpft
-    use clm_varsur  , only : all_pfts_on_srfdat
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
     use spmdMod     , only : masterproc, mpicom, MPI_REAL8
@@ -358,21 +357,12 @@ contains
 
     call get_proc_bounds(begg=begg,endg=endg,begp=begp,endp=endp)
 
-    if (all_pfts_on_srfdat) then
-       nps = 0
-       npe = numpft
-       allocate(mlai(begg:endg,0:numpft), &
-                msai(begg:endg,0:numpft), &
-                mhgtt(begg:endg,0:numpft), &
-                mhgtb(begg:endg,0:numpft), stat=ier)
-    else
-       nps = 1
-       npe = maxpatch_pft
-       allocate(mlai(begg:endg,maxpatch_pft), &
-                msai(begg:endg,maxpatch_pft), &
-                mhgtt(begg:endg,maxpatch_pft), &
-                mhgtb(begg:endg,maxpatch_pft), stat=ier)
-    end if
+    nps = 0
+    npe = numpft
+    allocate(mlai(begg:endg,0:numpft), &
+             msai(begg:endg,0:numpft), &
+             mhgtt(begg:endg,0:numpft), &
+             mhgtb(begg:endg,0:numpft), stat=ier)
 
     if (ier /= 0) then
        write(6,*)subname, 'allocation big error '; call endrun()
@@ -414,16 +404,9 @@ contains
           call check_ret(nf_inq_dimlen(ncid, dimid, npft_i), subname)
 
           if (.not. single_column ) then
-             if (all_pfts_on_srfdat) then
-                if (npft_i /= numpft+1) then
-                   write(6,*)subname,' parameter numpft+1 = ',numpft+1,'does not equal input npft_i= ',npft_i
-                   call endrun()
-                end if
-             else
-                if (npft_i /= maxpatch_pft) then
-                   write(6,*)subname,' parameter maxpatch_pft = ',maxpatch_pft,'does not equal input npft_i= ',npft_i
-                   call endrun()
-                end if
+             if (npft_i /= numpft+1) then
+                write(6,*)subname,' parameter numpft+1 = ',numpft+1,'does not equal input npft_i= ',npft_i
+                call endrun()
              end if
           endif
           call check_ret(nf_inq_dimid(ncid, 'time', dimid), subname)
@@ -438,7 +421,7 @@ contains
        endif   ! masterproc
 
        if (single_column) then
-          call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+          call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
           beg4d(1) = closelonidx  ; len4d(1) = 1
           beg4d(2) = closelatidx  ; len4d(2) = 1
           beg4d(3) = 1         ; len4d(3) = npft_i
@@ -520,39 +503,22 @@ contains
           ! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] pfts
           ! as determined in subroutine surfrd
 
-          if (all_pfts_on_srfdat) then
 
-             ivt = clm3%g%l%c%p%itype(p)
-             if (ivt /= noveg) then     ! vegetated pft
-                do l = 0, numpft
-                   if (l == ivt) then
-                      mlai2t(p,k) = mlai(g,l)
-                      msai2t(p,k) = msai(g,l)
-                      mhvt2t(p,k) = mhgtt(g,l)
-                      mhvb2t(p,k) = mhgtb(g,l)
-                   end if
-                end do
-             else                        ! non-vegetated pft
-                mlai2t(p,k) = 0._r8
-                msai2t(p,k) = 0._r8
-                mhvt2t(p,k) = 0._r8
-                mhvb2t(p,k) = 0._r8
-             end if
-
-          else
-
-             m = clm3%g%l%c%p%mxy(p)
-             if (m <= maxpatch_pft) then ! vegetated pft
-                mlai2t(p,k) = mlai(g,m)
-                msai2t(p,k) = msai(g,m)
-                mhvt2t(p,k) = mhgtt(g,m)
-                mhvb2t(p,k) = mhgtb(g,m)
-             else                        ! non-vegetated pft
-                mlai2t(p,k) = 0._r8
-                msai2t(p,k) = 0._r8
-                mhvt2t(p,k) = 0._r8
-                mhvb2t(p,k) = 0._r8
-             end if
+          ivt = clm3%g%l%c%p%itype(p)
+          if (ivt /= noveg) then     ! vegetated pft
+             do l = 0, numpft
+                if (l == ivt) then
+                   mlai2t(p,k) = mlai(g,l)
+                   msai2t(p,k) = msai(g,l)
+                   mhvt2t(p,k) = mhgtt(g,l)
+                   mhvb2t(p,k) = mhgtb(g,l)
+                end if
+             end do
+          else                        ! non-vegetated pft
+             mlai2t(p,k) = 0._r8
+             msai2t(p,k) = 0._r8
+             mhvt2t(p,k) = 0._r8
+             mhvb2t(p,k) = 0._r8
           end if
 
        end do   ! end of loop over pfts

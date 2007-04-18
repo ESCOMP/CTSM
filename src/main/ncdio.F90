@@ -1853,7 +1853,7 @@ contains
 
 !------------------------------------------------------------------------
     if ( firsttime) then
-       call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+       call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
 
        call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 

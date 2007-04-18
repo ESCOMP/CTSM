@@ -1,0 +1,8 @@
+General directory structure:
+
+convert_ascii ---- Convert ASCII datasets to netCDF.
+interpinic ------- Interpolate initial datasets to a different resolution.
+mkgriddata ------- Create grid datasets.
+mksurfdata ------- Create surface datasets.
+newcprnc --------- Compare output history files.
+

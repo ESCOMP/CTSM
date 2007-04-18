@@ -1,4 +1,13 @@
+clm/test/system/README						4/13/2007
 
+Scripts for testing CLM with many different configurations and run-time options.
+To use...
+
+
+test_driver.sh
+
+(will then ask if you want to submit the script to the batch que)
+Intended for use on NCAR machines: bangkok.cgd, calgary.cgd, tempest, bluevista, lightning, blueice
 
 Important environment variables
 
@@ -10,3 +19,15 @@ CLM_RETAIN_FILES ------- If set to TRUE -- don't cleanup files after testing
 CLM_CCSMROOT ----------- Root directory of CCSM source code to use
 CLM_SEQCCSMROOT -------- Root directory of Sequential CCSM source code to use
 
+Important files:
+
+test_driver.sh ------- Main test script
+nl_files ------------- Directory with various namelists to test
+config_files --------- Directory with varios configurations to test
+input_tests_master --- Master list of tests
+tests_pretag_* ------- Tests for specific machines to do by default before a tag is done
+tests_posttag_* ------ Tests for specific machines to do for more extensive testing after a tag is done
+CLM_runcmd.sh -------- Figures out the run command to run the model
+CLM_compare.sh ------- Compares output history files between two cases
+T*.sh ---------------- Basic test script to do a specific type of test
+gen_test_table.sh ---- Creates HTML table of tests

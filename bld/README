@@ -1,0 +1,26 @@
+clm/bld/README                               4/13/2007
+
+CLM build and configure directory and scripts.
+
+Important files/directories:
+
+--------- Configure and build scripts
+
+configure ---------------- Configure script -- creates Makefile and files needed to build CLM
+Makefile.in -------------- Base Makefile for building CLM
+config_clm_defaults.xml -- XML file of defaults for CLM
+system_defaults.xml ------ XML file of system defaults
+XML ---------------------- Directory of source code to read XML files
+
+---------- Scripts to figure out dependencies between source files (used by Makefile)
+mkDepends
+mkSrcfiles
+---------- Directory to put modified source files in
+usr.src
+
+---------- Scripts to configure, build and run on various platforms
+run-frost.csh
+run-ibm.csh
+run-lightning.csh
+run-pc.csh
+

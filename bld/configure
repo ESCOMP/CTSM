@@ -657,7 +657,7 @@ if ($cfg{'voc'} eq 'on') {
     $cfg .= " -DVOC";
 }
 if ($cfg{'bgc'} eq 'cn') { 
-    $cfg .= " -DCN -DSOM4";
+    $cfg .= " -DCN";
 }
 if ($cfg{'bgc'} eq 'casa') { 
     $cfg .= " -DCASA";

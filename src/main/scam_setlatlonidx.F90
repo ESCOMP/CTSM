@@ -1,4 +1,4 @@
-subroutine setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
+subroutine scam_setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
                         closelatidx, closelonidx)
 !------------------------------------------------------------------------
 ! File: setlatlon.F 
@@ -82,7 +82,7 @@ subroutine setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
 
   STATUS = nf_get_vara_double (ncid, lat_varID, strt, cnt, lats)
   if (STATUS/=NF_NOERR) then
-     write(6,*)'Error: setlatlonidx: error reading lat varid =', lat_varID
+     write(6,*)'Error: scam_setlatlonidx: error reading lat varid =', lat_varID
      call endrun
   end if
 
@@ -104,7 +104,7 @@ subroutine setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
 
   STATUS = nf_get_vara_double (ncid, lon_varID, strt, cnt, lons)
   if (STATUS/=NF_NOERR) then
-     write(6,*)'Error: setlatlonidx: error reading lon varid =', lon_varID
+     write(6,*)'Error: scam_setlatlonidx: error reading lon varid =', lon_varID
      call endrun
   end if
 
@@ -121,6 +121,6 @@ subroutine setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
   closelat=lats(closelatidx)
 
   return
-end subroutine setlatlonidx
+end subroutine scam_setlatlonidx
 
 

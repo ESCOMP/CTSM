@@ -32,8 +32,7 @@ module fileutils
 !
 !EOP
 !
-! !PRIVATE MEMBER FUNCTIONS:
-  private:: shell_cmd
+! !PRIVATE MEMBER FUNCTIONS: None
 !-----------------------------------------------------------------------
 
 contains
@@ -372,49 +371,5 @@ contains
     call shr_file_freeUnit(iunit)
 
   end subroutine relavu
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: shell_cmd
-!
-! !INTERFACE:
-  subroutine shell_cmd(text, ier)
-!
-! !DESCRIPTION:
-! Invoke shell command
-!
-! !ARGUMENTS:
-    implicit none
-    character(len=*), intent(in) :: text
-    integer         , intent(out):: ier
-!
-! !REVISION HISTORY:
-! Created by CAM core group
-! Modified for clm2 by Mariana Vertenstein
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-#if ( defined UNICOSMP )
-   integer, external :: ishell ! System routine, execute shell command
-#elif ( defined IRIX64 )
-   integer, external :: system_cmd  ! Wrapper to "C" system command
-#elif (!defined AIX)
-   integer, external :: system ! System routine, execute shell command
-#endif
-!------------------------------------------------------------------------
-
-#if ( defined UNICOSMP )
-   ier = ishell(trim(text))
-#elif ( defined AIX )
-   call system(trim(text), ier)
-#elif ( defined IRIX64 )
-   ier = system_cmd(trim(text))
-#else
-   ier = system(trim(text))
-#endif
-
- end subroutine shell_cmd
 
 end module fileutils

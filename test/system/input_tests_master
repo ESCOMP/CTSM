@@ -1,5 +1,7 @@
 <id>  <run command>
 
+cb111 TCB.sh 4p_vodsr_dh
+
 sm111 TSM.sh 4p_vodsr_dh t31 48
 er111 TER.sh 4p_vodsr_dh t31 10+38
 br111 TBR.sh 4p_vodsr_dh t31 24+24
@@ -18,6 +20,8 @@ bl113 TBL.sh 4p_vodsr_do t31 48
 sm114 TSM.sh 4p_vodsr_h t31 48
 sm115 TSM.sh 4p_vodsr_m t31 48
 sm116 TSM.sh 4p_vodsr_o t31 48
+
+cb127 TCB.sh 17p_vodsr_dh
 
 sm127 TSM.sh 17p_vodsr_dh t31 48
 er127 TER.sh 17p_vodsr_dh t31 10+38
@@ -38,6 +42,8 @@ sm124 TSM.sh 17p_vodsr_h t31 48
 sm125 TSM.sh 17p_vodsr_m t31 48
 sm126 TSM.sh 17p_vodsr_o t31 48
 
+cb131 TCB.sh 4p_vodsr_dh
+
 sm131 TSM.sh 4p_vodsr_dh t42half 48
 er131 TER.sh 4p_vodsr_dh t42half 10+38
 br131 TBR.sh 4p_vodsr_dh t42half 24+24
@@ -57,6 +63,8 @@ sm134 TSM.sh 4p_vodsr_h t42half 48
 sm135 TSM.sh 4p_vodsr_m t42half 48
 sm136 TSM.sh 4p_vodsr_o t42half 48
 
+cb141 TCB.sh 17p__dh
+
 sm141 TSM.sh 17p__dh 10x15_pftdyn 48
 er141 TER.sh 17p__dh 10x15_pftdyn 10+38
 br141 TBR.sh 17p__dh 10x15_pftdyn 24+24
@@ -75,6 +83,8 @@ bl143 TBL.sh 17p__do 10x15_pftdyn 48
 sm144 TSM.sh 17p__h 10x15_pftdyn 48
 sm145 TSM.sh 17p__m 10x15_pftdyn 48
 sm146 TSM.sh 17p__o 10x15_pftdyn 48
+
+cb211 TCB.sh 17p_cnn_dh
 
 sm211 TSM.sh 17p_cnn_dh t31_cnall 48
 er211 TER.sh 17p_cnn_dh t31_cnall 10+38
@@ -100,6 +110,8 @@ er252 TER.sh 17p_cnn_dm 10x15_cnall 10+38
 br252 TBR.sh 17p_cnn_dm 10x15_cnall 24+24
 bl252 TBL.sh 17p_cnn_dm 10x15_cnall 48
 
+cb311 TCB.sh 4p_casa_dh
+
 sm311 TSM.sh 4p_casa_dh t31_casa 48
 er311 TER.sh 4p_casa_dh t31_casa 10+38
 br311 TBR.sh 4p_casa_dh t31_casa 24+24
@@ -118,6 +130,8 @@ bl313 TBL.sh 4p_casa_do t31_casa 48
 sm314 TSM.sh 4p_casa_h t31_casa 48
 sm315 TSM.sh 4p_casa_m t31_casa 48
 sm316 TSM.sh 4p_casa_o t31_casa 48
+
+cb411 TCB.sh 10p_dgvm_dh
 
 sm411 TSM.sh 10p_dgvm_dh t31_dgvm 48
 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38
@@ -145,6 +159,11 @@ sm451 TSM.sh 10p_dgvm_dm 10x15_dgvm 48
 er451 TER.sh 10p_dgvm_dm 10x15_dgvm 10+38
 br451 TBR.sh 10p_dgvm_dm 10x15_dgvm 24+24
 bl451 TBL.sh 10p_dgvm_dm 10x15_dgvm 48
+
+sm471 TSM.sh 10p_dgvm_s singlept_dgvm_long -730
+er471 TER.sh 10p_dgvm_s singlept_dgvm_long -334+-396
+bl471 TBL.sh 10p_dgvm_s singlept_dgvm_long -730
+
 
 sm551 TSM.sh _dh 10x15 48
 er551 TER.sh _dh 10x15 10+38

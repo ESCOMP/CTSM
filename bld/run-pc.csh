@@ -7,7 +7,7 @@
 #  Generic batch submission script for PC-linux using PBS.  
 #
 #-----------------------------------------------------------------------
-# Batch options for machine with PBS batch system. (anchorage)
+# Batch options for machine with PBS batch system. (bangkok/calgary)
 # Usage for Lahey compiler (default): 
 #   qsub run-pc.csh
 # Usage for pgf90 compiler with pgcc: 
@@ -42,10 +42,10 @@ switch ( $OS )
      if ( ! $?OPT_BLD ) then
        setenv USER_FC lf95
        setenv LAHEY /usr/local/lf9562
-       set netcdf = /usr/local/netcdf-3.6.1beta3-gcc-4.0.2-g77-lf9562
+       set netcdf = /usr/local/netcdf-gcc-lf95
        setenv INC_NETCDF ${netcdf}/include
        setenv LIB_NETCDF ${netcdf}/lib
-       set mpich = /usr/local/mpich-1.2.7p1-gcc-g++-4.0.2-8-lf9562
+       set mpich = /usr/local/mpich-gcc-g++-lf95
        setenv INC_MPI ${mpich}/include
        setenv LIB_MPI ${mpich}/lib
        setenv PATH ${LAHEY}/bin:${mpich}/bin:${PATH}
@@ -78,7 +78,7 @@ limit stacksize unlimited
 
 ## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
 ## Contains the source code for the CLM distribution.
-## (the root directory contains the subdirectory "models")
+## (the root directory contains the subdirectory "src")
 set clmroot   = /fis/cgd/...
 
 ## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
@@ -104,7 +104,7 @@ set wrkdir   = /ptmp/$LOGNAME
 set blddir   = $wrkdir/$case/bld
 set rundir   = $wrkdir/$case
 set cfgdir   = $clmroot/bld
-set usr_src  = $clmroot/bld/empty
+set usr_src  = $clmroot/bld/usr.src
 
 ## Ensure that run and build directories exist
 mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
@@ -139,9 +139,9 @@ cat >! lnd.stdin << EOF
  fatmgrid       = "$CSMDATA/griddata/griddata_48x96_060829.nc"
  fatmlndfrc     = "$CSMDATA/griddata/fracdata_48x96_gx3v5_060829.nc"
  fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
- fndepdat       = "$CSMDATA/ndepdata/1890/regrid_ndep_clm.nc"
+ fndepdat       = "$CSMDATA/ndepdata/ndep_clm_2000_48x96_c060414.nc"
  frivinp_rtm    = "$CSMDATA/rtmdata/rdirc.05.061026"
- offline_atmdir = "$CSMDATA/NCEPDATA"
+ offline_atmdir = "$CSMDATA/NCEPDATA.Qian-etal-JHM06.c051024"
  nsrest         =  0
  nelapse        =  48
  dtime          =  1800
@@ -164,7 +164,7 @@ cd $rundir                      || echo "cd $rundir failed" && exit 1
 echo "running CLM in $rundir"
 
 if ($spmd == on) then
-  mpiexec -n $procs $blddir/clm || echo "CLM run failed" && exit 1
+  mpirun -np $procs $blddir/clm || echo "CLM run failed" && exit 1
 else
   $blddir/clm                   || echo "CLM run failed" && exit 1
 endif

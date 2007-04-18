@@ -9,8 +9,8 @@ cat > lnd.stdin << EOF
  fatmgrid       = "$CSMDATA/lnd/clm2/griddata/griddata_48x96_060829.nc"
  fatmlndfrc     = "$CSMDATA/lnd/clm2/griddata/fracdata_48x96_gx3v5_060829.nc"
  fpftcon        = "$CSMDATA/lnd/clm2/pftdata/pft-physiology.c070207"
- fndepdat       = "$CSMDATA/lnd/clm2/ndepdata/1890/regrid_ndep_clm.nc"
- offline_atmdir = "$CSMDATA/lnd/clm2/NCEPDATA"
+ fndepdat       = "$CSMDATA/lnd/clm2/ndepdata/ndep_clm_1890_48x96_c060414.nc"
+ offline_atmdir = "$CSMDATA/lnd/clm2/NCEPDATA.Qian-etal-JHM06.c051024"
  nrevsn         = "$nrevsn"
  nsrest         =  $restart_type
  nelapse        =  $run_length

@@ -26,7 +26,6 @@ module clm_varsur
   real(r8), allocatable,target :: wtxy(:,:)  ! subgrid weights
 
   real(r8),allocatable :: pctspec(:)         ! percent of spec lunits wrt gcell
-  logical  :: all_pfts_on_srfdat = .false.   ! true=>old format dataset 
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein

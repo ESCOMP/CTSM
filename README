@@ -1,0 +1,48 @@
+clm/README                                          4/13/2007
+
+Community Land Surface Model (CLM) source code, tools, build and
+test scripts.
+
+General directory structure:
+
+doc ---- Documentation
+bld ---- configure script, Makefile and run scripts to run model
+src ---- Source code
+test --- Testing scripts
+tools -- Offline tools to prepare input datasets
+
+Source code directory structure:
+
+src/biogeochem ----- Biogeochemisty
+src/main ----------- Main control and high level code
+src/riverroute ----- Riverrouting model (RTM)
+src/biogeophys ----- Biogeophysics (Hydrology)
+
+-------------------------------------- General utility code shared between CCSM models
+src/csm_share
+src/csm_share/dshr
+src/csm_share/eshr
+src/csm_share/flds
+src/csm_share/flds/dust
+src/csm_share/flds/default
+src/csm_share/flds/gensom
+src/csm_share/unit_testers ------------- Unit tests for csm_share code
+src/csm_share/unit_testers/nl
+src/csm_share/shr
+src/csm_share/cpl
+
+src/utils ---------------------------- Utility code directory
+
+-------------------------------------- ESMF-WRF time-management library
+src/utils/esmf_wrf_timemgr
+src/utils/esmf_wrf_timemgr/unittests ---- Unit testers
+-------------------------------------- CCSM code timing library
+src/utils/timing
+-------------------------------------- Model Coupling Toolkit code
+src/utils/mct
+src/utils/mct/mct
+src/utils/mct/mpi-serial
+src/utils/mct/doc
+src/utils/mct/doc/texsrc
+src/utils/mct/mpeu
+

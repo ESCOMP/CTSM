@@ -95,7 +95,6 @@ contains
 !    o real % abundance PFTs (as a percent of vegetated area)
 !
 ! !USES:
-    use clm_varsur  , only : all_pfts_on_srfdat
     use clm_varctl  , only : allocate_all_vegpfts
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
@@ -148,16 +147,6 @@ contains
        call check_ret( nf_open(locfn, 0, ncid), subname )
     end if
 
-    ! If PFT variable is on surface dataset then not all pfts are
-    ! on the surface dataset and old surface dataset form is assumed
-
-    if (masterproc) then
-       all_pfts_on_srfdat = .true.
-       ier = nf_inq_varid (ncid, 'PFT', varid)
-       if (ier == NF_NOERR) all_pfts_on_srfdat = .false.
-    end if
-    call mpi_bcast (all_pfts_on_srfdat, 1, MPI_LOGICAL, 0, mpicom, ier)
-     
     ! Obtain surface dataset special landunit info
 
     call surfrd_wtxy_special(ncid, domain)
@@ -251,7 +240,6 @@ contains
     integer :: ni,nj               ! size of grid on file
     integer :: ncid,dimid,varid    ! netCDF id's
     integer :: ier                 ! error status
-    integer,allocatable :: numlon(:)  ! local numlon from file
     character(len=256)  :: locfn   ! local file name
     integer :: ret, time_index
     logical :: AREAset             ! true if area read from grid file
@@ -325,7 +313,7 @@ contains
        cnt1=domain%nj
 
        if (single_column) then
-          call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+          call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
           strt3(1)=closelonidx
           strt3(2)=closelatidx
           strt1=closelatidx
@@ -351,19 +339,6 @@ contains
           AREAset = .true.
           call check_ret(nf_inq_varid(ncid, 'AREA', varid), subname)
           call check_ret(nf_get_vara_double(ncid, varid,strt3,cnt3, domain%area), subname)
-       endif
-
-       ! if NUMLON is on file, make sure it's not a reduced grid.
-       ier = nf_inq_varid (ncid, 'NUMLON', varid)
-       if (ier == NF_NOERR) then
-          allocate(numlon(domain%nj))
-          call check_ret(nf_get_vara_int(ncid, varid,strt1,cnt1, numlon), subname)
-          if (minval(numlon) /= maxval(numlon)) then
-             write(6,*) 'ERROR surfrdMod: NUMLON no longer supported ', &
-                  minval(numlon),maxval(numlon)
-             call endrun
-          endif
-          deallocate(numlon)
        endif
 
        call check_ret(nf_inq_varid(ncid, 'LONGXY' , varid), subname)
@@ -566,7 +541,7 @@ contains
        count2(2)  = nj
 
        if (single_column) then
-          call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+          call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
           start2(1) = closelonidx
           start2(2) = closelatidx
        endif
@@ -740,7 +715,6 @@ contains
     integer :: ncid,dimid,varid    ! netCDF id's
     integer :: ier                 ! error status
     real(r8):: eps = 1.0e-12_r8    ! lat/lon error tolerance
-    integer,allocatable :: numlon(:)  ! local numlon from file
     real(r8),allocatable:: lonc(:),latc(:)  ! local lat/lon
     character(len=256)  :: locfn   ! local file name
     integer :: ret, time_index
@@ -793,24 +767,11 @@ contains
        cnt1=domain%nj
 
        if (single_column) then
-          call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+          call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
           strt3(1)=closelonidx
           strt3(2)=closelatidx
           strt1=closelatidx
           cnt1=1
-       endif
-
-       ! if NUMLON is on file, make sure it's not a reduced grid.
-       ier = nf_inq_varid (ncid, 'NUMLON', varid)
-       if (ier == NF_NOERR) then
-          allocate(numlon(domain%nj))
-          call check_ret(nf_get_vara_int(ncid, varid,strt1,cnt1, numlon), subname)
-          if (minval(numlon) /= maxval(numlon)) then
-             write(6,*) 'ERROR surfrdMod: NUMLON no longer supported ', &
-                  minval(numlon),maxval(numlon)
-             call endrun
-          endif
-          deallocate(numlon)
        endif
 
        call check_ret(nf_inq_varid(ncid, 'LONGXY' , varid), subname)
@@ -881,7 +842,6 @@ contains
     integer :: ncid,dimid,varid    ! netCDF id's
     integer :: ier                 ! error status
     real(r8):: eps = 1.0e-12_r8    ! lat/lon error tolerance
-    integer,allocatable :: numlon(:)  ! local numlon from file
     real(r8),allocatable:: lonc(:),latc(:)  ! local lat/lon
     character(len=256)  :: locfn   ! local file name
     integer :: ret, time_index
@@ -934,25 +894,11 @@ contains
        cnt1=domain%nj
 
        if (single_column) then
-          call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+          call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
           strt3(1)=closelonidx
           strt3(2)=closelatidx
           strt1=closelatidx
           cnt1=1
-       endif
-
-       ! if NUMLON is on file, make sure it's not a reduced grid.
-       ier = nf_inq_varid (ncid, 'NUMLON', varid)
-       if (ier == NF_NOERR) then
-
-          allocate(numlon(domain%nj))
-          call check_ret(nf_get_vara_int(ncid, varid,strt1,cnt1, numlon), subname)
-          if (minval(numlon) /= maxval(numlon)) then
-             write(6,*) 'ERROR surfrdMod: NUMLON no longer supported ', &
-                         minval(numlon),maxval(numlon)
-             call endrun
-          endif
-          deallocate(numlon)
        endif
 
        call check_ret(nf_inq_varid(ncid, 'LONGXY' , varid), subname)
@@ -1058,7 +1004,7 @@ contains
     cnt3(3)=1
 
     if (single_column) then
-       call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+       call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
        strt3(1)=closelonidx
        strt3(2)=closelatidx
     endif
@@ -1134,7 +1080,6 @@ contains
 ! Determine wtxy and veg arrays for non-dynamic landuse mode
 !
 ! !USES:
-    use clm_varsur, only : all_pfts_on_srfdat	
     use clm_varctl, only : create_crop_landunit
     use pftvarcon   , only : crop, noveg
     use domainMod   , only : domain_type
@@ -1180,7 +1125,6 @@ contains
     real(r8),allocatable :: pctpft(:,:)         ! percent of vegetated gridcell area for PFTs
     real(r8),pointer :: arrayl(:)               ! local array
     integer ,pointer :: irrayg(:)               ! global array
-    integer ,pointer :: irrayl(:)               ! local array
     integer  :: ret, time_index
     real(r8),allocatable :: rmaxpatchdata(:)
     integer ,allocatable :: imaxpatchdata(:)
@@ -1205,288 +1149,218 @@ contains
     allocate(pctpft(begg:endg,0:numpft))
     allocate(wsti(maxpatch_pft))
 
-    !-----------------------------------------------------------------
-    ! Old style surface dataset
-    !-----------------------------------------------------------------
-
-    if (.not. all_pfts_on_srfdat) then
-
-       if (create_crop_landunit) then
-          write(6,*)'surfrd error: create_crop_landunit is only valid when surface dataset has all pfts'
-          call endrun()
-       end if
-
-       if (masterproc) then
-          call check_dim(ncid, 'lsmpft', maxpatch_pft)
-          call check_ret(nf_inq_varid(ncid, 'PFT', varid), subname)
-          call check_ret(nf_get_vara_int(ncid, varid, strt3, cnt3, pft), subname)
-             
-          call check_ret(nf_inq_varid(ncid, 'PCT_PFT', varid), subname)
-          call check_ret(nf_get_vara_double(ncid, varid, strt3, cnt3, pctpft_lunit), subname)
-       end if
-       allocate(arrayl(begg:endg),irrayl(begg:endg))
-       do n = 1,maxpatch_pft
-          start(1) = 1
-          count(1) = domain%ni
-          start(2) = 1
-          count(2) = domain%nj
-          start(3) = n
-          count(3) = 1
-          if (single_column) then
-             call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
-             start(1)=closelonidx
-             start(2)=closelatidx
-          endif
-
-          call ncd_iolocal(ncid, 'PFT', 'read', irrayl, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo, start, count)
-          pft(begg:endg,n) = irrayl(begg:endg)
-
-          call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo, start, count)
-          pctpft_lunit(begg:endg,n) = arrayl(begg:endg)
-       enddo
-       deallocate(arrayl,irrayl)
-       ! Error check: valid PFTs and sum of cover must equal 100
-
-       sumvec(:) = abs(sum(pctpft_lunit,dim=2)-100._r8)
-       do nl = begg,endg
-          do m = 1, maxpatch_pft
-             if (pft(nl,m)<0 .or. pft(nl,m)>numpft) then
-                write(6,*)'surfrd error: invalid PFT for nl,m=',nl,m,pft(nl,m)
-                call endrun()
-             end if
-          end do
-          if (sumvec(nl) > 1.e-04_r8 .and. domain%pftm(nl) >= 0) then
-             write(6,*)'surfrd error: PFT cover not equal to 100 for nl=',nl
-             do m=1,maxpatch_pft
-                write(6,*)'m= ',m,' pft= ',pft(nl,m)
-             end do
-             write(6,*)'sumvec= ',sumvec(nl)
-             call endrun()
-          end if
-       end do
-
+    if (masterproc) then
+       call check_dim(ncid, 'lsmpft', numpft+1)
     end if
+    allocate(arrayl(begg:endg))
+    do n = 0,numpft
+       start(1) = 1
+       count(1) = domain%ni
+       start(2) = 1
+       count(2) = domain%nj
+       start(3) = n+1	 ! dataset is 1:numpft+1, not 0:numpft
+       count(3) = 1
+       if (single_column) then
+          call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+          start(1)=closelonidx
+          start(2)=closelatidx
+       endif
+       call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo, start, count)
+       pctpft(begg:endg,n) = arrayl(begg:endg)
+    enddo
+    deallocate(arrayl)
 
-    !-----------------------------------------------------------------
-    ! New format surface dataset
-    !-----------------------------------------------------------------
+    ! 1. pctpft must go back to %vegetated landunit instead of %gridcell
+    ! 2. pctpft bare = 100 when landmask = 1 and 100% special landunit
+    ! NB: (1) and (2) do not apply to crops.
+    ! For now keep all cfts (< 4 anyway) instead of 4 most dominant cfts
 
-    if (all_pfts_on_srfdat) then
+    do nl = begg,endg
 
-       if (masterproc) then
-          call check_dim(ncid, 'lsmpft', numpft+1)
-       end if
-       allocate(arrayl(begg:endg))
-       do n = 0,numpft
-          start(1) = 1
-          count(1) = domain%ni
-          start(2) = 1
-          count(2) = domain%nj
-          start(3) = n+1	 ! dataset is 1:numpft+1, not 0:numpft
-          count(3) = 1
-          if (single_column) then
-             call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
-             start(1)=closelonidx
-             start(2)=closelatidx
-          endif
-          call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo, start, count)
-          pctpft(begg:endg,n) = arrayl(begg:endg)
-       enddo
-       deallocate(arrayl)
+       cft(nl,:) = 0
+       pctcft_lunit(nl,:) = 0._r8
+       cropcount = 0
 
-       ! 1. pctpft must go back to %vegetated landunit instead of %gridcell
-       ! 2. pctpft bare = 100 when landmask = 1 and 100% special landunit
-       ! NB: (1) and (2) do not apply to crops.
-       ! For now keep all cfts (< 4 anyway) instead of 4 most dominant cfts
+       if (pctspec(nl) < 100._r8) then
 
-       do nl = begg,endg
+          do m = 0, numpft
+             if (create_crop_landunit) then
+                ! Separate crop landunit is to be created
 
-          cft(nl,:) = 0
-          pctcft_lunit(nl,:) = 0._r8
-          cropcount = 0
-
-          if (pctspec(nl) < 100._r8) then
-
-             do m = 0, numpft
-                if (create_crop_landunit) then
-                   ! Separate crop landunit is to be created
-
-                   if (crop(m) == 1._r8 .and. pctpft(nl,m) > 0._r8) then
-                      cropcount = cropcount + 1
-                      if (cropcount > maxpatch_cft) then
-                         write(6,*) 'ERROR surfrdMod: cropcount>maxpatch_cft'
-                         call endrun()
-                      end if
-                      cft(nl,cropcount) = m
-                      pctcft_lunit(nl,cropcount) = pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
-                      pctpft(nl,m) = 0.0_r8
-                   else if (crop(m) == 0._r8) then
-                      pctpft(nl,m) = pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
+                if (crop(m) == 1._r8 .and. pctpft(nl,m) > 0._r8) then
+                   cropcount = cropcount + 1
+                   if (cropcount > maxpatch_cft) then
+                      write(6,*) 'ERROR surfrdMod: cropcount>maxpatch_cft'
+                      call endrun()
                    end if
-
-                else
-                   ! Separate crop landunit is not created
-
+                   cft(nl,cropcount) = m
+                   pctcft_lunit(nl,cropcount) = pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
+                   pctpft(nl,m) = 0.0_r8
+                else if (crop(m) == 0._r8) then
                    pctpft(nl,m) = pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
                 end if
-             end do
 
-          else if (pctspec(nl) == 100._r8) then
+             else
+                ! Separate crop landunit is not created
 
-             pctpft(nl,0)        = 100._r8
-             pctpft(nl,1:numpft) =   0._r8
+                pctpft(nl,m) = pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
+             end if
+          end do
 
-          else
+       else if (pctspec(nl) == 100._r8) then
 
-             write(6,*)subname, 'error: pcturb+pctgla+pctlak+pctwet = ',pctspec(nl), &
-                  ' must be less than or equal to 100'
+          pctpft(nl,0)        = 100._r8
+          pctpft(nl,1:numpft) =   0._r8
+
+       else
+
+          write(6,*)subname, 'error: pcturb+pctgla+pctlak+pctwet = ',pctspec(nl), &
+               ' must be less than or equal to 100'
+          call endrun()
+
+       end if
+    end do
+
+    ! Find pft and pct arrays 
+    ! Save percent cover by PFT [wst] and total percent cover [wst_sum]
+
+    do nl = begg,endg
+
+       wst_sum = 0._r8
+       sumpct = 0
+       do m = 0, numpft
+          wst(m) = pctpft(nl,m)
+          wst_sum = wst_sum + pctpft(nl,m)
+       end do
+
+       if (domain%pftm(nl) >= 0) then
+
+          ! Rank [wst] in ascendg order to obtain the top [maxpatch_pft] PFTs
+
+          call surfrd_mkrank (numpft, wst, miss, wsti, maxpatch_pft)
+
+          ! Fill in [pft] and [pctpft] with data for top [maxpatch_pft] PFTs.
+          ! If land model grid cell is ocean, set to no PFTs.
+          ! If land model grid cell is land then:
+          !  1. If [pctlnd_o] = 0, there is no PFT data from the input grid.
+          !     Since need land data, use bare ground.
+          !  2. If [pctlnd_o] > 0, there is PFT data from the input grid but:
+          !     a. use the chosen PFT so long as it is not a missing value
+          !     b. missing value means no more PFTs with cover > 0
+                   
+          do m = 1, maxpatch_pft
+             if (wsti(m) /=  miss) then
+                pft(nl,m) = wsti(m)
+                pctpft_lunit(nl,m) = wst(wsti(m))
+             else
+                pft(nl,m) = noveg
+                pctpft_lunit(nl,m) = 0._r8
+             end if
+             sumpct = sumpct + pctpft_lunit(nl,m)
+          end do
+
+       else                               ! model grid wants ocean
+
+          do m = 1, maxpatch_pft
+             pft(nl,m) = 0
+             pctpft_lunit(nl,m) = 0._r8
+          end do
+
+       end if
+
+       ! Correct for the case of more than [maxpatch_pft] PFTs present
+                
+       if (sumpct < wst_sum) then
+          diff  = wst_sum - sumpct
+          sumpct = 0._r8
+          do m = 1, maxpatch_pft
+             pctpft_lunit(nl,m) = pctpft_lunit(nl,m) + diff/maxpatch_pft
+             sumpct = sumpct + pctpft_lunit(nl,m)
+          end do
+       end if
+
+       ! Error check: make sure have a valid PFT
+
+       do m = 1,maxpatch_pft
+          if (pft(nl,m) < 0 .or. pft(nl,m) > numpft) then
+             write (6,*)'surfrd error: invalid PFT at gridcell nl=',nl,pft(nl,m)
              call endrun()
-
           end if
        end do
 
-      ! Find pft and pct arrays 
-      ! Save percent cover by PFT [wst] and total percent cover [wst_sum]
+       ! As done in mksrfdatMod.F90 for other percentages, truncate pctpft to
+       ! ensure that weight relative to landunit is not nonzero
+       ! (i.e. a very small number such as 1e-16) where it really should be zero
+       ! The following if-block is here to preserve roundoff level differences
+       ! between the call to surfrd_wtxy_veg_all and surfrd_wtxy_veg_rank
 
-       do nl = begg,endg
-
-          wst_sum = 0._r8
-          sumpct = 0
-          do m = 0, numpft
-             wst(m) = pctpft(nl,m)
-             wst_sum = wst_sum + pctpft(nl,m)
+       if (maxpatch_pft < numpft+1) then
+          do m=1,maxpatch_pft
+             pctpft_lunit(nl,m) = float(nint(pctpft_lunit(nl,m)))
           end do
-
-          if (domain%pftm(nl) >= 0) then
-
-             ! Rank [wst] in ascendg order to obtain the top [maxpatch_pft] PFTs
-
-             call surfrd_mkrank (numpft, wst, miss, wsti, maxpatch_pft)
-
-             ! Fill in [pft] and [pctpft] with data for top [maxpatch_pft] PFTs.
-             ! If land model grid cell is ocean, set to no PFTs.
-             ! If land model grid cell is land then:
-             !  1. If [pctlnd_o] = 0, there is no PFT data from the input grid.
-             !     Since need land data, use bare ground.
-             !  2. If [pctlnd_o] > 0, there is PFT data from the input grid but:
-             !     a. use the chosen PFT so long as it is not a missing value
-             !     b. missing value means no more PFTs with cover > 0
+          do m=1,maxpatch_cft
+             pctcft_lunit(nl,m) = float(nint(pctcft_lunit(nl,m)))
+          end do
+       end if
                    
-             do m = 1, maxpatch_pft
-                if (wsti(m) /=  miss) then
-                   pft(nl,m) = wsti(m)
-                   pctpft_lunit(nl,m) = wst(wsti(m))
-                else
-                   pft(nl,m) = noveg
-                   pctpft_lunit(nl,m) = 0._r8
-                end if
-                sumpct = sumpct + pctpft_lunit(nl,m)
-             end do
+       ! Make sure sum of PFT cover == 100 for land points. If not,
+       ! subtract excess from most dominant PFT.
 
-          else                               ! model grid wants ocean
-
-             do m = 1, maxpatch_pft
-                pft(nl,m) = 0
-                pctpft_lunit(nl,m) = 0._r8
-             end do
-
+       rmax = -9999._r8
+       k1 = -9999
+       k2 = -9999
+       sumpct = 0._r8
+       do m = 1, maxpatch_pft
+          sumpct = sumpct + pctpft_lunit(nl,m)
+          if (pctpft_lunit(nl,m) > rmax) then
+             k1 = m
+             rmax = pctpft_lunit(nl,m)
           end if
-
-          ! Correct for the case of more than [maxpatch_pft] PFTs present
-                
-          if (sumpct < wst_sum) then
-             diff  = wst_sum - sumpct
-             sumpct = 0._r8
-             do m = 1, maxpatch_pft
-                pctpft_lunit(nl,m) = pctpft_lunit(nl,m) + diff/maxpatch_pft
-                sumpct = sumpct + pctpft_lunit(nl,m)
-             end do
+       end do
+       do m = 1, maxpatch_cft
+          sumpct = sumpct + pctcft_lunit(nl,m)
+          if (pctcft_lunit(nl,m) > rmax) then
+             k2 = m
+             rmax = pctcft_lunit(nl,m)
           end if
-
-          ! Error check: make sure have a valid PFT
-
-          do m = 1,maxpatch_pft
-             if (pft(nl,m) < 0 .or. pft(nl,m) > numpft) then
-                write (6,*)'surfrd error: invalid PFT at gridcell nl=',nl,pft(nl,m)
-                call endrun()
-             end if
-          end do
-
-          ! As done in mksrfdatMod.F90 for other percentages, truncate pctpft to
-          ! ensure that weight relative to landunit is not nonzero
-          ! (i.e. a very small number such as 1e-16) where it really should be zero
-          ! The following if-block is here to preserve roundoff level differences
-          ! between the call to surfrd_wtxy_veg_all and surfrd_wtxy_veg_rank
-
-          if (maxpatch_pft < numpft+1) then
-             do m=1,maxpatch_pft
-                pctpft_lunit(nl,m) = float(nint(pctpft_lunit(nl,m)))
-             end do
-             do m=1,maxpatch_cft
-                pctcft_lunit(nl,m) = float(nint(pctcft_lunit(nl,m)))
-             end do
-          end if
-                   
-          ! Make sure sum of PFT cover == 100 for land points. If not,
-          ! subtract excess from most dominant PFT.
-
-          rmax = -9999._r8
-          k1 = -9999
-          k2 = -9999
-          sumpct = 0._r8
-          do m = 1, maxpatch_pft
-             sumpct = sumpct + pctpft_lunit(nl,m)
-             if (pctpft_lunit(nl,m) > rmax) then
-                k1 = m
-                rmax = pctpft_lunit(nl,m)
-             end if
-          end do
-          do m = 1, maxpatch_cft
-             sumpct = sumpct + pctcft_lunit(nl,m)
-             if (pctcft_lunit(nl,m) > rmax) then
-                k2 = m
-                rmax = pctcft_lunit(nl,m)
-             end if
-          end do
-          if (k1 == -9999 .and. k2 == -9999) then
-             write(6,*)'surfrd error: largest PFT patch not found'
+       end do
+       if (k1 == -9999 .and. k2 == -9999) then
+          write(6,*)'surfrd error: largest PFT patch not found'
+          call endrun()
+       else if (domain%pftm(nl) >= 0) then
+          if (sumpct < 95 .or. sumpct > 105._r8) then
+             write(6,*)'surfrd error: sum of PFT cover =',sumpct,' at nl=',nl
              call endrun()
-          else if (domain%pftm(nl) >= 0) then
-             if (sumpct < 95 .or. sumpct > 105._r8) then
-                write(6,*)'surfrd error: sum of PFT cover =',sumpct,' at nl=',nl
-                call endrun()
-             else if (sumpct /= 100._r8 .and. k2 /= -9999) then
-                pctcft_lunit(nl,k2) = pctcft_lunit(nl,k2) - (sumpct-100._r8)
-             else if (sumpct /= 100._r8) then
-                pctpft_lunit(nl,k1) = pctpft_lunit(nl,k1) - (sumpct-100._r8)
-             end if
+          else if (sumpct /= 100._r8 .and. k2 /= -9999) then
+             pctcft_lunit(nl,k2) = pctcft_lunit(nl,k2) - (sumpct-100._r8)
+          else if (sumpct /= 100._r8) then
+             pctpft_lunit(nl,k1) = pctpft_lunit(nl,k1) - (sumpct-100._r8)
           end if
+       end if
 
-          ! Error check: make sure PFTs sum to 100% cover
+       ! Error check: make sure PFTs sum to 100% cover
 
-          sumpct = 0._r8
-          do m = 1, maxpatch_pft
-             sumpct = sumpct + pctpft_lunit(nl,m)
-          end do
-          do m = 1, maxpatch_cft
-             sumpct = sumpct + pctcft_lunit(nl,m)
-          end do
-          if (domain%pftm(nl) >= 0) then
-             if (abs(sumpct - 100._r8) > 0.000001_r8) then
-                write(6,*)'surfrdMod error: sum(pct) over maxpatch_pft is not = 100.'
-                write(6,*)sumpct, nl
-                call endrun()
-             end if
-             if (sumpct < -0.000001_r8) then
-                write(6,*)'surfrdMod error: sum(pct) over maxpatch_pft is < 0.'
-                write(6,*)sumpct, nl
-                call endrun()
-             end if
+       sumpct = 0._r8
+       do m = 1, maxpatch_pft
+          sumpct = sumpct + pctpft_lunit(nl,m)
+       end do
+       do m = 1, maxpatch_cft
+          sumpct = sumpct + pctcft_lunit(nl,m)
+       end do
+       if (domain%pftm(nl) >= 0) then
+          if (abs(sumpct - 100._r8) > 0.000001_r8) then
+             write(6,*)'surfrdMod error: sum(pct) over maxpatch_pft is not = 100.'
+             write(6,*)sumpct, nl
+             call endrun()
           end if
+          if (sumpct < -0.000001_r8) then
+             write(6,*)'surfrdMod error: sum(pct) over maxpatch_pft is < 0.'
+             write(6,*)sumpct, nl
+             call endrun()
+          end if
+       end if
 
-       end do   ! end of latitude loop
-
-    end if
+    end do   ! end of latitude loop
 
     ! Determine array [veg], which sets the PFT type for each of the [maxpatch]
     ! patches and array [wtxy], which sets the relative abundance of the PFT.
@@ -1620,7 +1494,7 @@ contains
        start(3) = n+1         ! dataset is 1:numpft+1, not 0:numpft
        count(3) = 1
        if (single_column) then
-          call setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+          call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
           start(1)=closelonidx
           start(2)=closelatidx
        endif
