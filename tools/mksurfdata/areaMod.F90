@@ -16,7 +16,7 @@ module areaMod
   use shr_const_mod, only : SHR_CONST_PI, SHR_CONST_REARTH
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_sys_mod  , only : shr_sys_flush
-  use nanMod      
+  use nanMod       , only : nan, bigint
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -26,14 +26,16 @@ module areaMod
      private
      ! lower level in hierarchy
      character(len=32)         :: name
-     character(len=16)         :: type        ! global, dst, src, etc
-     type(domain_type),pointer :: domain_i    ! domain_i
-     type(domain_type),pointer :: domain_o    ! domain_o
-     integer                   :: mx_ovr       ! max num of overlapping cells
-     integer          ,pointer :: n_ovr(:,:)   ! number of overlapping cells
-     integer          ,pointer :: i_ovr(:,:,:) ! i index of overlap input cell
-     integer          ,pointer :: j_ovr(:,:,:) ! j index of overlap input cell
-     real(r8)         ,pointer :: w_ovr(:,:,:) ! wt of overlap input cell
+     character(len=16)         :: type               ! global, dst, src, etc
+     type(domain_type),pointer :: domain_i           ! domain_i
+     type(domain_type),pointer :: domain_o           ! domain_o
+     integer                   :: mx_ovr             ! max num of overlapping cells
+     integer          ,pointer :: n_ovr(:,:)         ! number of overlapping cells
+     integer          ,pointer :: i_ovr(:,:,:)       ! i index of overlap input cell
+     integer          ,pointer :: j_ovr(:,:,:)       ! j index of overlap input cell
+     real(r8)         ,pointer :: a_ovr(:,:,:)       ! area of overlap input cell
+     real(r8)         ,pointer :: w_ovr(:,:,:)       ! wt of overlap input cell
+     real(r8)         ,pointer :: scale_pft_i(:,:)   ! PFT wt of overlap input cell
   end type gridmap_type
   public gridmap_type
 
@@ -47,12 +49,12 @@ module areaMod
 !
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: gridmap_init
   public :: gridmap_clean
   public :: gridmap_setptrs
-  public :: gridmap_checkmap
   public :: areaini        ! area averaging initialization
   public :: areaave        ! area averaging of field from input to output grids
+  public :: areaini_pft    ! area averaging initialization for plant function type average
+  public :: areaave_pft    ! area averaging of field from input to output grids with pft
   interface celledge
      module procedure celledge_regional
      module procedure celledge_global  
@@ -73,8 +75,12 @@ module areaMod
 !EOP
 !
 ! PRIVATE MEMBER FUNCTIONS:
-  private :: areamap   ! weights and indices for area of overlap between grids
-  private :: areaovr   ! area of overlap between grid cells
+  private :: gridmap_init
+  private :: gridmap_init_pft   ! Initialize plant function type weigts
+  private :: gridmap_checkmap
+  private :: areaave_internal   ! area averaging of field from input to output grids
+  private :: areamap            ! weights and indices for area of overlap between grids
+  private :: areaovr            ! area of overlap between grid cells
   real(r8):: re = SHR_CONST_REARTH*0.001  ! radius of earth (km)
   logical :: masterproc=.true.
 !-----------------------------------------------------------------------
@@ -109,6 +115,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
+  character(len=*), parameter :: subName = "gridmap_init"
   integer ni,nj  ! size of domain_o
   integer ier    ! error flag
 !------------------------------------------------------------------------------
@@ -130,9 +137,10 @@ contains
   nj = domain_o%nj
   gridmap%mx_ovr = mwts
   allocate(gridmap%n_ovr(ni,nj)     , gridmap%i_ovr(ni,nj,mwts), &
-           gridmap%j_ovr(ni,nj,mwts), gridmap%w_ovr(ni,nj,mwts),stat=ier)
+           gridmap%j_ovr(ni,nj,mwts), gridmap%w_ovr(ni,nj,mwts), &
+           gridmap%a_ovr(ni,nj,mwts), stat=ier)
   if (ier /= 0) then
-     write(6,*) 'gridmap_init ERROR: allocate gridmap'
+     write(6,*) subName//' ERROR: allocate gridmap'
      stop
   endif
 
@@ -140,8 +148,56 @@ contains
   gridmap%i_ovr = bigint
   gridmap%j_ovr = bigint
   gridmap%w_ovr = nan
+  gridmap%a_ovr = nan
 
 end subroutine gridmap_init
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: gridmap_init_pft
+!
+! !INTERFACE:
+  subroutine gridmap_init_pft(gridmap,ni,nj)
+!
+! !DESCRIPTION:
+! This subroutine initializes the pft weights in the gridmap datatype
+!
+! !USES:
+!
+! !ARGUMENTS:
+  implicit none
+  type(gridmap_type), intent(inout) :: gridmap
+  integer,            intent(in)    :: ni,nj                  ! size of pftin
+!
+! !REVISION HISTORY:
+! 2007.01.29  E Kluzek  Creation.
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+  character(len=*), parameter :: subName = "gridmap_init_pft"
+  integer :: nio,njo          ! size of domain_o
+  integer :: mwts             ! maximum number of overlap areas in output cell
+  integer :: ier              ! error status
+  logical, save :: first_time = .true.
+
+  if ( first_time )then
+     allocate( gridmap%scale_pft_i(ni,nj), stat=ier )
+     if (ier /= 0) then
+        write(6,*) subName//' ERROR: allocate gridmap scale_pft_i'
+        stop
+     endif
+     nio = size(gridmap%w_ovr,1)
+     njo = size(gridmap%w_ovr,2)
+     call gridmap_setptrs( gridmap, mx_ovr=mwts )
+
+     first_time = .false.
+  end if
+  gridmap%scale_pft_i(:,:) = nan
+  gridmap%w_ovr(:,:,:)     = nan
+end subroutine gridmap_init_pft
+
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -165,6 +221,7 @@ end subroutine gridmap_init
 !EOP
 !
 ! !LOCAL VARIABLES:
+  character(len=*), parameter :: subName = "gridmap_clean"
   integer ier    ! error flag
 !------------------------------------------------------------------------------
 
@@ -174,11 +231,28 @@ end subroutine gridmap_init
   gridmap%type = 'unset'
   gridmap%mx_ovr = bigint
   deallocate(gridmap%n_ovr, gridmap%i_ovr, &
-             gridmap%j_ovr, gridmap%w_ovr, stat=ier)
+             gridmap%j_ovr, stat=ier)
   if (ier /= 0) then
-     write(6,*) 'gridmap_clean ERROR: deallocate gridmap'
+     write(6,*) SubName//' ERROR: deallocate gridmap'
      stop
   endif
+  deallocate(gridmap%a_ovr, stat=ier)
+  if (ier /= 0) then
+     write(6,*) SubName//' ERROR: deallocate gridmap a_ovr'
+     stop
+  endif
+  deallocate(gridmap%w_ovr, stat=ier)
+  if (ier /= 0) then
+     write(6,*) SubName//' ERROR: deallocate gridmap w_ovr'
+     stop
+  endif
+  if ( associated( gridmap%scale_pft_i) )then
+     deallocate(gridmap%scale_pft_i, stat=ier)
+     if (ier /= 0) then
+        write(6,*) SubName//' ERROR: deallocate gridmap scale_pft_i'
+        stop
+     endif
+  end if
 
 end subroutine gridmap_clean
 !------------------------------------------------------------------------------
@@ -188,7 +262,7 @@ end subroutine gridmap_clean
 !
 ! !INTERFACE:
   subroutine gridmap_setptrs(gridmap,name,type,domain_i,domain_o, &
-     mx_ovr,n_ovr,i_ovr,j_ovr,w_ovr)
+     mx_ovr,n_ovr,i_ovr,j_ovr,a_ovr,w_ovr,scale_pft_i)
 !
 ! !DESCRIPTION:
 ! This subroutine sets external pointer arrays to arrays in gridmap
@@ -206,7 +280,9 @@ end subroutine gridmap_clean
     integer          ,optional,pointer  :: n_ovr(:,:)
     integer          ,optional,pointer  :: i_ovr(:,:,:)
     integer          ,optional,pointer  :: j_ovr(:,:,:)
+    real(r8)         ,optional,pointer  :: a_ovr(:,:,:)
     real(r8)         ,optional,pointer  :: w_ovr(:,:,:)
+    real(r8)         ,optional,pointer  :: scale_pft_i(:,:)
 !
 ! !REVISION HISTORY:
 !   Created by T Craig
@@ -214,6 +290,7 @@ end subroutine gridmap_clean
 !EOP
 !
 ! LOCAL VARIABLES:
+    character(len=*), parameter :: subName = "gridmap_setptrs"
 !
 !------------------------------------------------------------------------------
     if (present(name)) then
@@ -240,8 +317,18 @@ end subroutine gridmap_clean
     if (present(j_ovr)) then
       j_ovr => gridmap%j_ovr
     endif
+    if (present(a_ovr)) then
+      a_ovr => gridmap%a_ovr
+    endif
     if (present(w_ovr)) then
       w_ovr => gridmap%w_ovr
+    endif
+    if (present(scale_pft_i)) then
+      if ( .not. associated(gridmap%scale_pft_i) )then
+         write(6,*) subName//" ERROR:: scale_pft_i asked for but NOT allocated yet"
+         stop
+      end if
+      scale_pft_i => gridmap%scale_pft_i
     endif
 
 end subroutine gridmap_setptrs
@@ -276,6 +363,7 @@ end subroutine gridmap_setptrs
     integer ,pointer :: n_ovr(:,:)   !lon index, overlapping input cell
     integer ,pointer :: i_ovr(:,:,:) !lon index, overlapping input cell
     integer ,pointer :: j_ovr(:,:,:) !lat index, overlapping input cell
+    real(r8),pointer :: a_ovr(:,:,:) !overlap areas for input cells
     real(r8),pointer :: w_ovr(:,:,:) !overlap weights for input cells
     integer          :: i,j,n        !loop counters
     real(r8)         :: sum          !running sum
@@ -287,7 +375,7 @@ end subroutine gridmap_setptrs
     call domain_setptrs(gridmap%domain_i,ni=nlon_i,nj=nlat_i)
     call domain_setptrs(gridmap%domain_o,ni=nlon_o,nj=nlat_o)
     call gridmap_setptrs(gridmap,mx_ovr=mx_ovr,n_ovr=n_ovr,i_ovr=i_ovr, &
-       j_ovr=j_ovr,w_ovr=w_ovr)
+       j_ovr=j_ovr,a_ovr=a_ovr,w_ovr=w_ovr)
 
     if (masterproc) then
        write(6,*) ' '
@@ -299,6 +387,7 @@ end subroutine gridmap_setptrs
        write(6,*) 'gridmap_checkmap n_ovr min/max = ',minval(n_ovr),maxval(n_ovr)
        write(6,*) 'gridmap_checkmap i_ovr min/max = ',minval(i_ovr),maxval(i_ovr)
        write(6,*) 'gridmap_checkmap j_ovr min/max = ',minval(j_ovr),maxval(j_ovr)
+       write(6,*) 'gridmap_checkmap a_ovr min/max = ',minval(a_ovr),maxval(a_ovr)
        write(6,*) 'gridmap_checkmap w_ovr min/max = ',minval(w_ovr),maxval(w_ovr)
     endif
     rmin =  1.0e30
@@ -412,7 +501,7 @@ end subroutine gridmap_checkmap
 ! !ARGUMENTS:
     implicit none
     type(domain_type) ,intent(in)        :: domain_i   ! input domain
-    type(domain_type) ,intent(in)        :: domain_o   ! output domain
+    type(domain_type) ,intent(inout)     :: domain_o   ! output domain
     type(gridmap_type),intent(inout)     :: gridmap    ! gridmap
     real(r8), intent(in),optional,target :: fracin(:,:)
     real(r8), intent(in),optional,target :: fracout(:,:)
@@ -465,6 +554,7 @@ end subroutine gridmap_checkmap
        latn=latn_i,lats=lats_i,lone=lone_i,lonw=lonw_i,frac=fland_i)
     call domain_setptrs(domain_o,ni=nlon_o,nj=nlat_o,area=area_o, &
        latn=latn_o,lats=lats_o,lone=lone_o,lonw=lonw_o,frac=fland_o)
+    domain_o%frac = fland_o
 
     lname = 'areaini'
     if (present(name)) then
@@ -565,10 +655,122 @@ end subroutine gridmap_checkmap
 !------------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: areaave
+! !IROUTINE: areaini_pft
 !
 ! !INTERFACE:
-  subroutine areaave (fld_i , fld_o , gridmap, scale_i)
+  subroutine areaini_pft( gridmap, ni, nj, pctpft_i, pft_indx )
+!
+! !DESCRIPTION:
+! Initialize the Plant function type weights
+!
+! !USES:
+    use mkvarpar, only: numpft
+!
+! !ARGUMENTS:
+    type(gridmap_type),intent(inout) :: gridmap                  ! gridmap
+    integer,           intent(in)    :: ni                       ! size of longitude of pft index
+    integer,           intent(in)    :: nj                       ! size of latitude of pft index
+    real(r8),          intent(in)    :: pctpft_i(ni,nj,0:numpft) ! plant function type %'s
+    integer,           intent(in)    :: pft_indx                 ! PFT index
+!
+! !REVISION HISTORY:
+! 2007.01.29 Created by Erik Kluek
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    character(len=*), parameter :: subName = "areaini_pft"
+    integer  :: nlon_o                   !output  grid: max number of longitude pts
+    integer  :: nlat_o                   !output  grid: number of latitude  points
+    integer  :: nlon_i                   !input  grid: max number of longitude pts
+    integer  :: nlat_i                   !input  grid: number of latitude  points
+    integer  :: mwts                     !max number of wts per cell in map
+    integer  :: ier                      !allocate error status
+    integer  :: ii                       !input  grid longitude loop index
+    integer  :: ji                       !input  grid latitude  loop index
+    integer  :: io                       !output  grid longitude loop index
+    integer  :: jo                       !output  grid latitude  loop index
+    integer  :: n                        !weight index
+    integer  :: p                        !plant function type loop index
+    integer, pointer :: i_ovr(:,:,:)     !longitude index of overlap areas
+    integer, pointer :: j_ovr(:,:,:)     !latitude index of overlap areas
+    real(r8),pointer :: a_ovr_o(:,:,:)   !output grid: overlap areas
+    real(r8),pointer :: w_ovr(:,:,:)     !output grid: overlap wts
+    real(r8),pointer :: scale_pft_i(:,:) !input grid: PFT
+    real(r8),pointer :: sumpft(:,:)      !input grid: sum of weights
+
+    call domain_setptrs(gridmap%domain_i,ni=nlon_i,nj=nlat_i)
+    if ( (ni /= nlon_i) .or. (nj /= nlat_i) )then
+       write (6,*) subName//' error: size of input PFT does not match internal LAI grid'
+       stop
+    end if
+    if ( (pft_indx < 0) .or. (pft_indx > numpft) )then
+       write (6,*) subName//' error: pft_indx is out of range'
+       stop
+    end if
+    call gridmap_init_pft(gridmap,ni,nj)
+    call gridmap_setptrs(gridmap,mx_ovr=mwts, a_ovr=a_ovr_o,scale_pft_i=scale_pft_i, &
+                         w_ovr=w_ovr, i_ovr=i_ovr,j_ovr=j_ovr )
+    call domain_setptrs(gridmap%domain_o,ni=nlon_o,nj=nlat_o)
+    allocate( sumpft(nlon_o,nlat_o), stat=ier )
+    if (ier /= 0) then
+       write(6,*) subName//' ERROR: allocate sumpft'
+       stop
+    endif
+    do ji = 1, nlat_i
+    do ii = 1, nlon_i
+       scale_pft_i(ii,ji) = pctpft_i(ii,ji,pft_indx)
+    end do
+    end do
+    sumpft(:,:) = 0.0_r8
+    do n = 1, mwts
+    do jo = 1, nlat_o
+    do io = 1, nlon_o
+       ii = i_ovr(io,jo,n)
+       ji = j_ovr(io,jo,n)
+       sumpft(io,jo) = sumpft(io,jo) + a_ovr_o(io,jo,n)*scale_pft_i(ii,ji)
+#ifndef LINUX
+       if ( scale_pft_i(ii,ji) == nan )then
+          write (6,*) subName//' error: scale_pft_i == nan! at i, j=', ii,ji
+          write (6,*) pctpft_i(ii,ji,pft_indx)
+          stop
+       end if
+#endif
+    end do
+    end do
+    end do
+    ! Normalize weights by their sum (sum of weights includes a_ovr weights multiplied in)
+    do n = 1, mwts
+    do jo = 1, nlat_o
+    do io = 1, nlon_o
+       if ( sumpft(io,jo) > 0.0_r8 ) then
+          w_ovr(io,jo,n) = a_ovr_o(io,jo,n)/sumpft(io,jo)
+       else
+          w_ovr(io,jo,n) = 0.0_r8
+       end if
+    end do
+    end do
+    end do
+    if ( any(w_ovr== nan) )then
+       write (6,*) subName//' error: w_ovr == nan!'
+       stop
+    end if
+    deallocate( sumpft   )
+    nullify( a_ovr_o     )
+    nullify( i_ovr       )
+    nullify( j_ovr       )
+    nullify( w_ovr       )
+    nullify( scale_pft_i )
+
+  end subroutine areaini_pft
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: areaave_internal
+!
+! !INTERFACE:
+  subroutine areaave_internal (fld_i , fld_o , gridmap, scale_i)
 !
 ! !DESCRIPTION:
 ! Mapping of field from input to output grids, 2d global fields
@@ -603,7 +805,7 @@ end subroutine gridmap_checkmap
     integer ii            !longitude index for input grid
     integer n             !overlapping cell index
 !------------------------------------------------------------------------
-!dir$ inlinenever areaave
+!dir$ inlinenever areaave_internal
 
     call domain_setptrs(gridmap%domain_i,ni=nlon_i,nj=nlat_i)
     call domain_setptrs(gridmap%domain_o,ni=nlon_o,nj=nlat_o)
@@ -638,9 +840,83 @@ end subroutine gridmap_checkmap
           end do
        end do
     end do
+    nullify( w_ovr )
+    nullify( n_ovr )
+    nullify( i_ovr )
+    nullify( j_ovr )
+
+    return
+  end subroutine areaave_internal
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: areaave
+!
+! !INTERFACE:
+  subroutine areaave(fld_i , fld_o , gridmap)
+!
+! !DESCRIPTION:
+! Mapping of field from input to output grids, 2d global fields
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    real(r8)          ,intent(in) :: fld_i(:,:)   !input grid : field
+    real(r8)          ,intent(out):: fld_o(:,:)   !field for output grid
+    type(gridmap_type),intent(in) :: gridmap      ! gridmap
+!
+! !REVISION HISTORY:
+! Created by Gordon Bonan
+!
+!EOP
+!
+! LOCAL VARIABLES:
+!------------------------------------------------------------------------
+!dir$ inlinenever areaave
+
+    call areaave_internal (fld_i , fld_o , gridmap )
 
     return
   end subroutine areaave
+
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: areaave_pft
+!
+! !INTERFACE:
+  subroutine areaave_pft (fld_i , fld_o , gridmap)
+!
+! !DESCRIPTION:
+! Mapping of field from input to output grids, 2d global fields
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    real(r8)          ,intent(in) :: fld_i(:,:)   !input grid : field
+    real(r8)          ,intent(out):: fld_o(:,:)   !field for output grid
+    type(gridmap_type),intent(in) :: gridmap      ! gridmap
+!
+! !REVISION HISTORY:
+! Created by Gordon Bonan
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    real(r8),pointer :: scale_pft_i(:,:)  !PFT %
+!------------------------------------------------------------------------
+!dir$ inlinenever areaave_pft
+
+    call gridmap_setptrs(gridmap, scale_pft_i=scale_pft_i)
+    call areaave_internal (fld_i , fld_o , gridmap, scale_i=scale_pft_i )
+    nullify( scale_pft_i )
+
+    return
+  end subroutine areaave_pft
 
 !------------------------------------------------------------------------
 !BOP
@@ -691,6 +967,7 @@ end subroutine gridmap_checkmap
     integer ,pointer :: n_ovr(:,:)  ! number of overlapping input cells
     integer ,pointer :: i_ovr(:,:,:)! lon index, overlapping input cell
     integer ,pointer :: j_ovr(:,:,:)! lat index, overlapping input cell
+    real(r8),pointer :: a_ovr(:,:,:)! overlap areas for input cells
     real(r8),pointer :: w_ovr(:,:,:)! overlap weights for input cells
     integer :: io                   !output grid longitude loop index
     integer :: ii                   !input  grid longitude loop index
@@ -723,7 +1000,7 @@ end subroutine gridmap_checkmap
     call domain_setptrs(domain_o,ni=nlon_o,nj=nlat_o, &
        latn=latn_o,lats=lats_o,lone=lone_o,lonw=lonw_o,area=area_o)
     call gridmap_setptrs(gridmap,mx_ovr=mx_ovr,n_ovr=n_ovr, &
-       i_ovr=i_ovr,j_ovr=j_ovr,w_ovr=w_ovr)
+       i_ovr=i_ovr,j_ovr=j_ovr,a_ovr=a_ovr,w_ovr=w_ovr)
 
     ! --------------------------------------------------------------------
     ! Initialize overlap weights on output grid to zero for maximum
@@ -737,6 +1014,7 @@ end subroutine gridmap_checkmap
              i_ovr(io,jo,n) = 1
              j_ovr(io,jo,n) = 1
              w_ovr(io,jo,n) = 0._r8
+             a_ovr(io,jo,n) = 0._r8
           end do
        end do
     end do
@@ -749,7 +1027,7 @@ end subroutine gridmap_checkmap
 
     call areaovr (domain_i, domain_o, &
                   noffset=1, &
-                  n_ovr=n_ovr, i_ovr=i_ovr, j_ovr=j_ovr, w_ovr=w_ovr  )
+                  n_ovr=n_ovr, i_ovr=i_ovr, j_ovr=j_ovr, a_ovr=a_ovr  )
 
     ! --------------------------------------------------------------------
     ! Normalize areas of overlap to get fractional contribution of each
@@ -773,7 +1051,8 @@ end subroutine gridmap_checkmap
           do n = 1, n_ovr(io,jo)
              ii = i_ovr(io,jo,n)
              ji = j_ovr(io,jo,n)
-             f_ovr = f_ovr + w_ovr(io,jo,n)*fland_i(ii,ji)
+             a_ovr(io,jo,n) = a_ovr(io,jo,n)*fland_i(ii,ji)
+             f_ovr = f_ovr + a_ovr(io,jo,n)
           end do
 
           ! make sure area of overlap is less than or equal to output grid cell area
@@ -791,7 +1070,7 @@ end subroutine gridmap_checkmap
              ii = i_ovr(io,jo,n)
              ji = j_ovr(io,jo,n)
              if (f_ovr > 0._r8) then
-                w_ovr(io,jo,n) = w_ovr(io,jo,n)*fland_i(ii,ji) / f_ovr
+                w_ovr(io,jo,n) = a_ovr(io,jo,n) / f_ovr
              else
                 w_ovr(io,jo,n) = 0._r8
              end if
@@ -852,6 +1131,8 @@ end subroutine gridmap_checkmap
 
        end do
     end do
+    nullify( n_ovr, i_ovr, j_ovr, a_ovr, w_ovr, lone_i, lonw_i, latn_i, lats_i )
+    nullify( lone_o, lonw_o, latn_o, lats_o, area_o )
 
     return
   end subroutine areamap
@@ -864,7 +1145,7 @@ end subroutine gridmap_checkmap
 ! !INTERFACE:
   subroutine areaovr (domain_i, domain_o, &
                       noffset, &
-                      mx_ovr , n_ovr  , i_ovr    , j_ovr , w_ovr )
+                      mx_ovr , n_ovr  , i_ovr    , j_ovr , a_ovr )
 !
 ! !DESCRIPTION:
 ! Find area of overlap between grid cells
@@ -925,7 +1206,7 @@ end subroutine gridmap_checkmap
     integer , intent(inout),optional :: n_ovr(:,:)   !number of overlap pts
     integer , intent(inout),optional :: i_ovr(:,:,:) !lon index of overlap pts
     integer , intent(inout),optional :: j_ovr(:,:,:) !lat index of overlap pts
-    real(r8), intent(inout),optional :: w_ovr(:,:,:) !weight of overlap pts
+    real(r8), intent(inout),optional :: a_ovr(:,:,:) !area of overlap pts
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan
@@ -961,7 +1242,6 @@ end subroutine gridmap_checkmap
     real(r8) dy            !difference in latitudes
     integer  size3         !size of 3rd dim in map arrays
     real(r8) deg2rad       !pi/180
-    real(r8) a_ovr         !area of overlap
     integer  n             !overlapping cell index
     integer  noffsetl      !local, number of offsets to test, 0=none, default=1
     real(r8) offset        !value of offset used to shift x-grid 360 degrees
@@ -989,8 +1269,8 @@ end subroutine gridmap_checkmap
        noffsetl = noffset
     endif
     size3 = mx_ovr_ceiling
-    if (present(w_ovr)) then
-      size3 = size(w_ovr,3)
+    if (present(a_ovr)) then
+      size3 = size(a_ovr,3)
     endif
     n_ovrl(:,:) = 0
 
@@ -1059,7 +1339,7 @@ end subroutine gridmap_checkmap
                    stop
                 end if
 
-                if (present(i_ovr).and.present(j_ovr).and.present(w_ovr)) then
+                if (present(i_ovr).and.present(j_ovr).and.present(a_ovr)) then
                    ! determine area of overlap
 
                    lone = min(lone_o(io,indexo),lone_il(ii,indexi))*deg2rad 
@@ -1068,13 +1348,12 @@ end subroutine gridmap_checkmap
                    latn = min(latn_o(io,indexo),latn_i(ii,indexi))*deg2rad 
                    lats = max(lats_o(io,indexo),lats_i(ii,indexi))*deg2rad 
                    dy = max(0.0_r8,(sin(latn)-sin(lats)))
-                   a_ovr = dx*dy*re*re
 
                    ! save lat, lon, area
 
                    i_ovr(io,indexo,n_ovrl(io,indexo)) = ii
                    j_ovr(io,indexo,n_ovrl(io,indexo)) = indexi
-                   w_ovr(io,indexo,n_ovrl(io,indexo)) = a_ovr
+                   a_ovr(io,indexo,n_ovrl(io,indexo)) = dx*dy*re*re
                 endif
 
              end if
@@ -1095,6 +1374,7 @@ end subroutine gridmap_checkmap
     endif
 
     deallocate(n_ovrl,lonw_il,lone_il)
+    nullify( lats_i, latn_i, lonw_i, lone_i, lats_o, latn_o, lonw_o, lone_o )
 
     return
   end subroutine areaovr
@@ -1169,6 +1449,7 @@ end subroutine gridmap_checkmap
             ' but summed area of grid cells is ',global
        stop
     end if
+    nullify( lats, latn, lonw, lone, area )
 
     return
   end subroutine cellarea_regional
@@ -1224,6 +1505,7 @@ end subroutine gridmap_checkmap
           area(i,j) = dx*dy*re*re
        end do
     end do
+    nullify( lats, latn, lonw, lone, area )
 
     return
   end subroutine cellarea_global
@@ -1337,6 +1619,7 @@ end subroutine gridmap_checkmap
           lone(i-1,j) = lonw(i,j)
        end do
     end do
+    nullify( longxy, latixy, lats, latn, lonw, lone )
 
     return
 
@@ -1415,6 +1698,7 @@ end subroutine gridmap_checkmap
             'for grids starting at greenwich and centered on Greenwich'
        stop
     endif
+    nullify( longxy, latixy, lats, latn, lonw, lone )
 
     return
   end subroutine celledge_global
@@ -1488,6 +1772,7 @@ end subroutine gridmap_checkmap
       lone(i-1,j) = lonw(i,j)
     enddo
     enddo
+    nullify( longxy, latixy, lats, latn, lonw, lone )
 
     return
   end subroutine celledge_global_new

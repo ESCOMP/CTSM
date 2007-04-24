@@ -13,7 +13,6 @@ module CNCStateUpdate3Mod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use shr_sys_mod , only: shr_sys_flush
     use clm_varcon  , only: istsoil
     use spmdMod     , only: masterproc
     use clm_varpar  , only: nlevsoi

@@ -32,7 +32,7 @@ module clm_csmMod
   use cpl_contract_mod
   use cpl_interface_mod
   use RunoffMod        , only : runoff
-  use shr_sys_mod      , only : shr_sys_irtc, shr_sys_flush 
+  use shr_sys_mod      , only : shr_sys_irtc
   use abortutils       , only : endrun
   use perf_mod
 !

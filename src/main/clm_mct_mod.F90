@@ -280,7 +280,9 @@ subroutine mct_aVect_info(flag,aVect,comm,pe,fld,istr)
 
    endif
 
+#ifndef UNICOSMP
    call shr_sys_flush(6)
+#endif
 
 end subroutine mct_aVect_info
 

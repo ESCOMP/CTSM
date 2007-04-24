@@ -626,7 +626,7 @@ else
   CPPFLAGS += -DTHREADED_OMP
 endif
 ifeq ($(SSP),FALSE)
-  COPT += -h gen_private_callee
+  COPT += -h
 else
   COPT += -h ssp
   CPPFLAGS += -DSSP
@@ -648,8 +648,6 @@ else
   FPPFLAGS += -DUSE_OMP
 endif
 ifeq ($(SSP),FALSE)
-  FOPT += -Ogen_private_callee
-else
   FOPT += -Ossp
   FPPFLAGS += -DSSP
 endif
@@ -659,7 +657,7 @@ FFLAGS     := $(cpp_path) $(mod_path) $(FPPFLAGS) $(FOPT) -r a -dy -rm -em
 FREEFLAGS  := -f free
 FIXEDFLAGS := -f fixed -N 132
 
-LDFLAGS := -L. -lsci
+LDFLAGS := -p$(MOD_NETCDF)
 ifeq ($(SSP),TRUE)
   LDFLAGS += -Ossp
 endif
@@ -668,6 +666,14 @@ ifeq ($(DEBUG),TRUE)
   CFLAGS += -Gp
   FFLAGS += -G1
 endif
+
+FrictionVelocityMod.o :
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -Omodinline $<
+QSatMod.o :
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -Omodinline $<
+shr_orb_mod.o :
+	$(FC) -c $(FREEFLAGS) $(FFLAGS) -Omodinline $<
+
 
 endif
 

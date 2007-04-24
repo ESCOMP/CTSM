@@ -112,7 +112,9 @@ contains
     if (masterproc) then
        write (6,*) 'Attempting to initialize the land model .....'
        write (6,*)
+#ifndef UNICOSMP
        call shr_sys_flush(6)
+#endif
     endif
 
     call clm_varpar_init ()
@@ -130,19 +132,25 @@ contains
 
     if (masterproc) then
        write (6,*) 'Attempting to read alatlon from fatmgrid'
+#ifndef UNICOSMP
        call shr_sys_flush(6)
+#endif
     endif
 
     call surfrd_get_latlon(alatlon, fatmgrid, amask, fatmlndfrc)
     call latlon_check(alatlon)
     if (masterproc) then
        write (6,*) 'amask size/min/max ',size(amask),minval(amask),maxval(amask)
+#ifndef UNICOSMP
        call shr_sys_flush(6)
+#endif
     endif
 
     if (masterproc) then
        write (6,*) 'Attempting to read llatlon from fsurdat'
+#ifndef UNICOSMP
        call shr_sys_flush(6)
+#endif
     endif
 
     call surfrd_get_latlon(llatlon, fsurdat, pftm, pftmflag=.true.)
@@ -210,20 +218,26 @@ contains
 
     if (masterproc) then
        write (6,*) 'Attempting to read agdomain from fatmgrid'
+#ifndef UNICOSMP
        call shr_sys_flush(6)
+#endif
     endif
     call surfrd_get_grid(agdomain, fatmgrid)
 
     if (masterproc) then
        write (6,*) 'Attempting to read atm landfrac from fatmlndfrc'
+#ifndef UNICOSMP
        call shr_sys_flush(6)
+#endif
     endif
     call surfrd_get_frac(agdomain, fatmlndfrc)
 
     if (fatmtopo /= " ") then
     if (masterproc) then
        write (6,*) 'Attempting to read atm topo from fatmtopo'
+#ifndef UNICOSMP
        call shr_sys_flush(6)
+#endif
     endif
     call surfrd_get_topo(agdomain, fatmtopo)
     endif
@@ -247,14 +261,18 @@ contains
 
     if (masterproc) then
        write (6,*) 'Attempting to read lgdomain from fsurdat ',trim(fsurdat)
+#ifndef UNICOSMP
        call shr_sys_flush(6)
+#endif
     endif
     call surfrd_get_grid(lgdomain, fsurdat)
 
     if (flndtopo /= " ") then
     if (masterproc) then
        write (6,*) 'Attempting to read lnd topo from flndtopo ',trim(flndtopo)
+#ifndef UNICOSMP
        call shr_sys_flush(6)
+#endif
     endif
     call surfrd_get_topo(lgdomain, flndtopo)
     endif
@@ -502,7 +520,9 @@ contains
     if (masterproc) write(6,*)'Attempting to initialize RTM'
     call Rtmini()
     if (masterproc) write(6,*)'Successfully initialized RTM'
+#ifndef UNICOSMP
     call shr_sys_flush(6)
+#endif
 #endif
 
     ! ------------------------------------------------------------------------

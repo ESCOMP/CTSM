@@ -21,7 +21,7 @@ contains
 ! !IROUTINE: mkpft
 !
 ! !INTERFACE:
-subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o)
+subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o, pct_pft_i)
 !
 ! !DESCRIPTION:
 ! Make PFT data
@@ -52,6 +52,7 @@ subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o)
   real(r8), intent(out):: pctlnd_o(lsmlon,lsmlat) ! output grid:%land/gridcell
   real(r8), intent(out):: pctpft_o(lsmlon,lsmlat,0:numpft)  ! PFT cover 
                                                   ! (% of vegetated area)
+  real(r8), optional, pointer :: pct_pft_i(:,:,:) ! Plant function type on input grid
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
@@ -159,6 +160,7 @@ subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o)
 
   mask_i = mask_i   / 100._r8
   mask_o = pctlnd_o / 100._r8
+  ldomain%frac = mask_o
   call gridmap_clean(tgridmap)
   call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
@@ -222,6 +224,14 @@ subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o)
   end do
   end do
 
+  ! Send back percent plat function types on input grid if asked for
+
+  if ( present(pct_pft_i) )then
+     allocate(pct_pft_i(nlon_i,nlat_i,0:numpft), stat=ier)
+     if (ier/=0) call abort()
+     pct_pft_i(:,:,:) =  pctpft_i(:,:,:)
+  end if
+
   ! -----------------------------------------------------------------
   ! Error check1
   ! Compare global sum fld_o to global sum fld_i.
@@ -249,7 +259,8 @@ subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o)
   do ii = 1, nlon_i
      garea_i = garea_i + tdomain%area(ii,ji)
      do m = 0, numpft
-        gpft_i(m) = gpft_i(m) + pctpft_i(ii,ji,m)*tdomain%area(ii,ji)
+        gpft_i(m) = gpft_i(m) + pctpft_i(ii,ji,m)*tdomain%area(ii,ji) * &
+                                tdomain%frac(ii,ji)
      end do
   end do
   end do
@@ -262,7 +273,8 @@ subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o)
   do io = 1, ldomain%numlon(jo)
      garea_o = garea_o + ldomain%area(io,jo)
      do m = 0, numpft
-        gpft_o(m) = gpft_o(m) + pctpft_o(io,jo,m)*ldomain%area(io,jo)
+        gpft_o(m) = gpft_o(m) + pctpft_o(io,jo,m)*ldomain%area(io,jo) * &
+                                ldomain%frac(io,jo)
      end do
   end do
   end do

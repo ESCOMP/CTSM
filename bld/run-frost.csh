@@ -86,7 +86,7 @@ cat >! lnd.stdin << EOF
  fatmlndfrc     = '$CSMDATA/griddata/fracdata_360x720_070122.nc'
  fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
  frivinp_rtm    = '$CSMDATA/rtmdata/rdirc.05.061026'
- offline_atmdir = '$CSMDATA/NCEPDATA.Qian-etal-JHM06.c051024'
+ offline_atmdir = '$CSMDATA/NCEPDATA.Qian.T62.c051024'
  nsrest         =  0
  nelapse        =  48
  dtime          =  1800

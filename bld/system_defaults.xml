@@ -2,6 +2,15 @@
 
 <system_defaults>
 
+<comment>
+This is the system defaults file for building CLM. This file gives the defaults for 
+specific platforms for various compilation modes (currently, spmd and smp mode)
+</comment>
+
+<comment>
+Default for SPMD (Distributed memory mode) mode for each platform.
+</comment>
+
 <spmd
 aix="1"
 darwin="0"
@@ -14,6 +23,10 @@ super-ux="1"
 unicosmp="1"
 bgl="1"
 />
+
+<comment>
+Default for SMP (Shared Memory Parallelism) mode for each platform.
+</comment>
 
 <smp
 aix="1"

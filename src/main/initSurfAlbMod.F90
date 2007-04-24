@@ -48,7 +48,6 @@ contains
 ! albedo subroutines.
 !
 ! !USES:
-    use shr_sys_mod         , only : shr_sys_flush
     use shr_kind_mod        , only : r8 => shr_kind_r8
     use shr_orb_mod         , only : shr_orb_decl
     use shr_const_mod       , only : SHR_CONST_PI

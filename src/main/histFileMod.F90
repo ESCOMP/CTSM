@@ -13,10 +13,9 @@ module histFileMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_getenv, shr_sys_flush
+  use shr_sys_mod , only : shr_sys_getenv
   use abortutils  , only : endrun
   use clm_varcon  , only : spval,ispval
-  use shr_sys_mod , only : shr_sys_flush 
   implicit none
   save
   private
@@ -2906,7 +2905,9 @@ contains
                   ' for history time interval beginning at ', tape(t)%begtime, &
                   ' and ending at ',time
              write(6,*)
+#ifndef UNICOSMP
              call shr_sys_flush(6)
+#endif
 
              ! Update beginning time of next interval
 

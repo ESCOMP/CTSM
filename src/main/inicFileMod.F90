@@ -100,7 +100,9 @@ contains
           call getfil(finidat, loc_fni, 0)
           call check_ret(nf_open(loc_fni, nf_nowrite, ncid), subname)
 	  write(6,*)trim(subname),': opened netcdf file ',loc_fni
+#ifndef UNICOSMP
 	  call shr_sys_flush(6)
+#endif
           call check_dim(ncid, 'gridcell', numg)
           call check_dim(ncid, 'landunit', numl)
           call check_dim(ncid, 'column'  , numc)

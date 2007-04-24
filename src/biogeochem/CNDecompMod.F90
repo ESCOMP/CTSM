@@ -13,7 +13,6 @@ module CNDecompMod
 ! for coupled carbon-nitrogen code.
 !
 ! !USES:
-   use shr_sys_mod  , only: shr_sys_flush
    use shr_kind_mod , only: r8 => shr_kind_r8
    use shr_const_mod, only: SHR_CONST_TKFRZ
    use clm_varpar   , only: nlevsoi

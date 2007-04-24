@@ -213,7 +213,7 @@ subroutine mksoitex(lsmlon, lsmlat, fname, ndiag, pctglac_o, sand_o, clay_o)
   sum_fldi = 0.0_r8
   do ji = 1, nlat_i
   do ii = 1, nlon_i
-    fld_i(ii,ji) = ((ji-1)*nlon_i + ii)
+    fld_i(ii,ji) = ((ji-1)*nlon_i + ii) * tdomain%mask(ii,ji)
     sum_fldi = sum_fldi + tdomain%area(ii,ji) * fld_i(ii,ji)
   enddo
   enddo
@@ -223,7 +223,7 @@ subroutine mksoitex(lsmlon, lsmlat, fname, ndiag, pctglac_o, sand_o, clay_o)
   sum_fldo = 0.
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
-     fld_o(io,jo) = fld_o(io,jo)
+     fld_o(io,jo) = fld_o(io,jo)*mask_o(io,jo)
      sum_fldo = sum_fldo + ldomain%area(io,jo) * fld_o(io,jo)
   end do
   end do
@@ -277,7 +277,7 @@ subroutine mksoitex(lsmlon, lsmlat, fname, ndiag, pctglac_o, sand_o, clay_o)
              ' not assigned to soil type for input grid lon,lat,layer = ',ii,ji,l
            call abort()
 101        continue
-           gast_i(m) = gast_i(m) + tdomain%area(ii,ji)
+           gast_i(m) = gast_i(m) + tdomain%area(ii,ji) * tdomain%frac(ii,ji)
         end do
      end do
   end do
@@ -307,7 +307,7 @@ subroutine mksoitex(lsmlon, lsmlat, fname, ndiag, pctglac_o, sand_o, clay_o)
              ' not assigned to soil type for output grid lon,lat,layer = ',io,jo,l
            call abort()
 102        continue
-           gast_o(m) = gast_o(m) + ldomain%area(io,jo)
+           gast_o(m) = gast_o(m) + ldomain%area(io,jo) * ldomain%frac(io,jo)
         end do
      end do
   end do

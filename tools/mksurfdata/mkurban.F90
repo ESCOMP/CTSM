@@ -177,7 +177,8 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   do ji = 1, nlat_i
   do ii = 1, nlon_i
      garea_i = garea_i + tdomain%area(ii,ji)
-     gurbn_i = gurbn_i + urbn_i(ii,ji)*tdomain%area(ii,ji)/100.
+     gurbn_i = gurbn_i + urbn_i(ii,ji)*(tdomain%area(ii,ji)/100.) * &
+                         tdomain%frac(ii,ji)
   end do
   end do
 
@@ -189,7 +190,8 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
      garea_o = garea_o + ldomain%area(io,jo)
-     gurbn_o = gurbn_o + urbn_o(io,jo)*ldomain%area(io,jo)/100.
+     gurbn_o = gurbn_o + urbn_o(io,jo)*(ldomain%area(io,jo)/100.) * &
+                         tdomain%frac(io,jo)
   end do
   end do
 

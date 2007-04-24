@@ -1,6 +1,6 @@
 clm/README                                          4/13/2007
 
-Community Land Surface Model (CLM) source code, tools, build and
+Community Land Surface Model (CLM) source code, tools, offline-build and
 test scripts.
 
 General directory structure:
@@ -11,7 +11,27 @@ src ---- Source code
 test --- Testing scripts
 tools -- Offline tools to prepare input datasets
 
+=============================================================================================
+Important files in main directories:
+=============================================================================================
+
+bld/configure ---- Script to create Makefile and needed files to build offline CLM
+bld/run-ibm.csh -- Complete script to build and run offline CLM on an IBM-SP (bluevista.ucar.edu)
+bld/run-pc.csh --- Complete script to build and run offline CLM on an Linux-PC (bangkok.cgd.ucar.edu)
+
+test/system/test_driver.sh --- Script for general software testing of offline CLM
+
+tools/mkgriddata --- Directory to build program to create grid dataset at any resolution.
+tools/mksurfdata --- Directory to build program to create surface dataset at any resolution.
+tools/interpinic --- Directory to build program to interpolate initial conditions to any resolution.
+doc/KnownBugs ------ List of known bugs
+doc/ChangeLog ------ Detailed list of changes for each model version
+doc/README.DGVM ---- Documentation on using the Dynamic Vegetation mode (DGVM)
+bld/README --------- Description of how to use the configure and build/run scripts
+
+=============================================================================================
 Source code directory structure:
+=============================================================================================
 
 src/biogeochem ----- Biogeochemisty
 src/main ----------- Main control and high level code

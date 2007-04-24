@@ -443,12 +443,16 @@ contains
 
     !--- Write per-processor runoff bounds depending on dbug level
 
+#ifndef UNICOSMP
     call shr_sys_flush(6)
+#endif
     if (masterproc) then
        write(6,*) 'total runoff cells numr = ',runoff%numr, &
           'numrl = ',runoff%numrl,'numro = ',runoff%numro
     endif
+#ifndef UNICOSMP
     call shr_sys_flush(6)
+#endif
     call mpi_barrier(mpicom,ier)
     npmin = 0
     npmax = npes-1
@@ -480,7 +484,9 @@ contains
              ' begro= ',runoff%begro,' endro= ',runoff%endro, &
              ' numro= ',runoff%lnumro
        endif
+#ifndef UNICOSMP
        call shr_sys_flush(6)
+#endif
        call mpi_barrier(mpicom,ier)
     enddo
 
@@ -699,7 +705,7 @@ contains
 
 #ifdef CPP_VECTOR
    !--- initialize the vector parts of the sMat
-   call cpl_mct_sMatP_Vecinit(sMatP_l2r)
+   call mct_sMatP_Vecinit(sMatP_l2r)
 #endif
 
    !--- clean up the root sMat0 datatypes

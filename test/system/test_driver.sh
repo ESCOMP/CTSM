@@ -3,8 +3,16 @@
 
 # test_driver.sh:  driver script for the testing of CLM in Sequential CCSM
 #
-# usage on bangkok, calgary, tempest, bluevista, lightning, blueice, jaguar, robin: 
+# usage on bangkok, calgary, tempest, bluevista, lightning, blueice, jaguar: 
 # ./test_driver.sh
+#
+# usage on robin/phoenix: (run build on robin interactively first, then submit to phoenix)
+#                         (must also ensure that JOBID is the same so build will be used)
+#
+#    setenv CLM_JOBID 101
+#    ./test_driver.sh -i
+#    setenv CLM_TESTDIR /tmp/work/$USER/test-driver.$CLM_JOBID
+#    ./test_driver.sh -f
 #
 # valid arguments: 
 # -i    interactive usage
@@ -354,12 +362,10 @@ netcdf="/apps/netcdf/3.6.0/xt3_pgi60"
 export LIB_NETCDF=\${netcdf}/lib
 export INC_NETCDF=\${netcdf}/include
 export MOD_NETCDF=\${netcdf}/include
-export INC_MPI=\${MPICH_DIR_FTN_DEFAULT64}/include
-export LIB_MPI=\${MPICH_DIR_FTN_DEFAULT64}/lib
+export INC_MPI=\${MPICH_DIR}/include
+export LIB_MPI=\${MPICH_DIR}/lib
 export CCSM_MACH="jaguar"
-export CFG_STRING="-fc ftn -cc cc -fflags '-target=catamount'"
-export CFG_STRING="${CFG_STRING} -cppdefs '-DCATAMOUNT -DSYSCATAMOUNT'"
-export CFG_STRING="${CFG_STRING} -cflags '-target=catamount' "
+export CFG_STRING="-fc ftn -fflags '-target=catamount' -cflags '-target=catamount' "
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc USER_CPPDEFS='-DCATAMOUNT -DSYSCATAMOUNT' USER_CFLAGS='-target=catamount' USER_FFLAGS='-target=catamount'"
 export MAKE_CMD="gmake -j 2"
 export MACH_WORKSPACE="/tmp/work"
@@ -433,7 +439,7 @@ export TOOLS_MAKE_STRING="USER_CPPDEFS='-DSYSUNICOS'"
 export CCSM_MACH="phoenix"
 
 export MAKE_CMD="gmake -j 2"
-export MACH_WORKSPACE="/scratch/scr101"
+export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/spin/proj/ccsm/models/atm/cam/bin/newcprnc/cprnc
 dataroot="/spin/proj/ccsm"
 EOF
@@ -507,11 +513,17 @@ esac
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat >> ./${submit_script} << EOF
 
+if [ -n "\${CLM_JOBID}" ]; then
+    export JOBID=\${CLM_JOBID}
+fi
 ##check if interactive job
+
 if [ "\$interactive" = "YES" ]; then
 
-    echo "test_driver.sh: interactive run - setting JOBID to \$\$"
-    export JOBID=\$\$
+    if [ -z "\${JOBID}" ]; then
+       export JOBID=\$\$
+    fi
+    echo "test_driver.sh: interactive run - setting JOBID to \$JOBID"
     if [ \$0 = "test_driver.sh" ]; then
 	initdir="."
     else
@@ -625,6 +637,11 @@ for test_id in \${test_list}; do
     for arg in \${master_line}; do
         status_out="\${status_out}\${arg} "
     done
+
+    if [ -z "\$status_out" ]; then
+	echo "No test matches \$test_id in \${CLM_SCRIPTDIR}/input_tests_master"
+        exit 3
+    fi
 
     test_cmd=\${status_out#* }
 

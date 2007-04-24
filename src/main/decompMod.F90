@@ -695,10 +695,14 @@ contains
                   ' total pfts per clump     = ',clumps(cid)%npfts
           end do
        end if
+#ifndef UNICOSMP
        call shr_sys_flush(6)
+#endif
        call mpi_barrier(mpicom,ier)
     end do
+#ifndef UNICOSMP
     call shr_sys_flush(6)
+#endif
 
   end subroutine decomp_init
 #endif

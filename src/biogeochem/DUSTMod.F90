@@ -26,6 +26,8 @@ module DUSTMod
   use clm_varpar  , only : dst_src_nbr, ndst, sz_nbr
   use clm_varcon  , only : grav, istsoil
   use abortutils  , only : endrun
+  use subgridAveMod, only: p2l_1d
+  use clm_varcon, only: spval
 !  
 ! !PUBLIC TYPES
   implicit none
@@ -61,7 +63,7 @@ contains
 ! !IROUTINE: DustEmission
 !
 ! !INTERFACE:
-  subroutine DustEmission (lbp, ubp, num_nolakep, filter_nolakep)
+  subroutine DustEmission (lbp, ubp, lbc,ubc,lbl,ubl,num_nolakep, filter_nolakep)
 !
 ! !DESCRIPTION: 
 ! Dust mobilization. This code simulates dust mobilization due to wind
@@ -76,7 +78,7 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbp, ubp                    ! pft bounds
+    integer, intent(in) :: lbp, ubp,lbc,ubc,ubl,lbl                    ! pft bounds
     integer, intent(in) :: num_nolakep                 ! number of column non-lake points in pft filter
     integer, intent(in) :: filter_nolakep(num_nolakep) ! pft filter for non-lake points
 !
@@ -132,12 +134,19 @@ contains
     real(r8) :: lnd_frc_mbl(lbp:ubp)
     real(r8) :: bd
     real(r8) :: gwc_sfc
+    real(r8) :: ttlai(lbp:ubp)
+    real(r8) :: tlai_lu(lbl:ubl)
 !    
 ! constants
 !
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
     real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
     real(r8), parameter :: vai_mbl_thr = 0.1_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
+    real(r8), pointer :: wtlunit(:)         ! weight of pft relative to landunit
+    real(r8) :: sumwt(lbl:ubl)              ! sum of weights
+    logical  :: found                       ! temporary for error check
+    integer  :: index
+
 !------------------------------------------------------------------------
 
     ! Assign local pointers to derived type scalar members (gridcell-level)
@@ -170,16 +179,49 @@ contains
     u10             => clm3%g%l%c%p%pps%u10
     flx_mss_vrt_dst => clm3%g%l%c%p%pdf%flx_mss_vrt_dst
     flx_mss_vrt_dst_tot => clm3%g%l%c%p%pdf%flx_mss_vrt_dst_tot
+   !local pointers from subgridAveMod/p2l_1d
+    wtlunit         => clm3%g%l%c%p%wtlunit
 
-    ! Loop through pfts
+    ttlai(:) = 0._r8
+! make lai average at landunit level
+    do fp = 1,num_nolakep
+       p = filter_nolakep(fp)
+       ttlai(p) = tlai(p)+tsai(p)
+    enddo
+
+    tlai_lu(:) = spval
+    sumwt(:) = 0._r8
+    do p = lbp,ubp
+       if (ttlai(p) /= spval .and. wtlunit(p) /= 0._r8) then
+          c = pcolumn(p)
+          l = plandunit(p)
+          if (sumwt(l) == 0._r8) tlai_lu(l) = 0._r8
+          tlai_lu(l) = tlai_lu(l) + ttlai(p) * wtlunit(p)
+          sumwt(l) = sumwt(l) + wtlunit(p)
+       end if
+    end do
+    found = .false.
+    do l = lbl,ubl
+       if (sumwt(l) > 1.0_r8 + 1.e-6_r8) then
+          found = .true.
+          index = l
+          exit
+       else if (sumwt(l) /= 0._r8) then
+          tlai_lu(l) = tlai_lu(l)/sumwt(l)
+       end if
+    end do
+    if (found) then
+       write(6,*) 'p2l_1d error: sumwt is greater than 1.0 at l= ',index
+       call endrun()
+    end if
+
+! Loop through pfts
+
+! initialize variables which get passed to the atmosphere
+    flx_mss_vrt_dst(lbp:ubp,:)=0._r8
 
 !dir$ concurrent
 !cdir nodep
-
-! initialize variables which get passed to the atmosphere
-	flx_mss_vrt_dst(lbp:ubp,:)=0.
-
-!
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        c = pcolumn(p)
@@ -193,8 +235,8 @@ contains
        ! if ice sheet, wetland, or lake, no dust allowed
        
        if (ityplun(l) == istsoil) then
-          if (tlai(p)+tsai(p) < vai_mbl_thr) then
-             lnd_frc_mbl(p) = 1.0_r8 - (tlai(p)+tsai(p))/vai_mbl_thr
+          if (tlai_lu(l) < vai_mbl_thr) then
+             lnd_frc_mbl(p) = 1.0_r8 - (tlai_lu(l))/vai_mbl_thr
           else
              lnd_frc_mbl(p) = 0.0_r8
           endif
@@ -738,7 +780,7 @@ contains
 
     ! Set a fundamental statistic for each bin
 
-    dmt_vma = 3.500e-6_r8 ! [m] Mass median diameter analytic She84 p.75 Table1--changed nmm
+    dmt_vma = 3.5000e-6_r8 ! [m] Mass median diameter analytic She84 p.75 Table1
 
     ! Compute analytic size statistics
     ! Convert mass median diameter to number median diameter (call vma2nma)

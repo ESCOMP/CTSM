@@ -16,7 +16,7 @@ module abortutils
 !EOP
 !-----------------------------------------------------------------------
 
-#if (defined OFFLINE) || (defined COUP_CSM) || (defined CAM)
+#if (defined OFFLINE) || (defined COUP_CSM) || (defined SEQ_ESMF) || (defined SEQ_MCT)
 
    private
    save
@@ -68,7 +68,9 @@ CONTAINS
    call xl__trbk()
 #endif
 
+#ifndef UNICOSMP
    call shr_sys_flush( 6 )   ! Flush all output to standard output
+#endif
 
    ! passing an argument of 1 to mpi_abort will lead to a STOPALL output
    ! error code of 257

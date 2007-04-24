@@ -59,7 +59,7 @@ ${CLM_SCRIPTDIR}/TSMseqccsm.sh $3 $4 $5
 rc=$?
 
 #remove temporarily staged files
-if [ $CAM_RETAIN_FILES != "TRUE" ]; then
+if [ "$CAM_RETAIN_FILES" != "TRUE" ]; then
     rm ../camrun.*
 fi
 

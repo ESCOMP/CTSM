@@ -47,7 +47,6 @@ PROGRAM program_off
 !
 ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8, SHR_KIND_CL
-  use shr_sys_mod     , only : shr_sys_flush
   use shr_orb_mod          
   use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr, obliq, &
                                iyear_AD, nmvelp

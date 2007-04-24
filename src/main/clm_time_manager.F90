@@ -6,7 +6,6 @@ module clm_time_manager
    use shr_kind_mod, only: r8 => shr_kind_r8
    use spmdMod     , only: masterproc, iam
    use abortutils  , only: endrun
-   use shr_sys_mod , only: shr_sys_flush
    use ESMF_Mod
 
    implicit none

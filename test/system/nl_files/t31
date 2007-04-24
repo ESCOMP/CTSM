@@ -11,7 +11,7 @@ cat > lnd.stdin << EOF
  fpftcon        = "$CSMDATA/lnd/clm2/pftdata/pft-physiology.c070207"
  fndepdyn       = "$CSMDATA/lnd/clm2/ndepdata/fndep_clm_1890-2100_48x96_c050608.nc"
  frivinp_rtm    = "$CSMDATA/lnd/clm2/rtmdata/rdirc.05.061026"
- offline_atmdir = "$CSMDATA/lnd/clm2/NCEPDATA.Qian-etal-JHM06.c051024"
+ offline_atmdir = "$CSMDATA/lnd/clm2/NCEPDATA.Qian.T62.c051024"
  nrevsn         = "$nrevsn"
  nsrest         =  $restart_type
  nelapse        =  $run_length

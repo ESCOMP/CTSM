@@ -1,4 +1,4 @@
-clm/bld/README                               4/13/2007
+clm/bld/README                              4/13/2007
 
 CLM build and configure directory and scripts.
 
@@ -7,6 +7,7 @@ Important files/directories:
 --------- Configure and build scripts
 
 configure ---------------- Configure script -- creates Makefile and files needed to build CLM
+  ----- configure --help - Configure help mode -- sends information on all configure options
 Makefile.in -------------- Base Makefile for building CLM
 config_clm_defaults.xml -- XML file of defaults for CLM
 system_defaults.xml ------ XML file of system defaults
@@ -23,4 +24,16 @@ run-frost.csh
 run-ibm.csh
 run-lightning.csh
 run-pc.csh
+
+NOTE:  To use the run-scripts you HAVE to set the following:
+
+o Project number for Batch script.
+o Setting of clmroot to full path of the root to your clm directory.
+
+NOTE2: On non-NCAR machines you will also have to do the following.
+
+o Convert batch notation to the syntax for the specific machine you are using.
+o Set INC_NETCDF and LIB_NETCDF to include and library path for NetCDF.
+o Set CSMDATA to the path of where you place your input data.
+o On non-supported platforms, you will also have to extend the configure and Makefile.in files.
 

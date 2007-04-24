@@ -251,7 +251,7 @@ contains
 
     ! clm time manager info
 
-#if (! defined OFFLINE) || (! defined COUP_CSM)
+#if (defined OFFLINE) || (defined COUP_CSM)
     namelist /clm_inparm/  &
          ctitle, caseid, nsrest,  &
          calendar, nelapse, nestep, start_ymd, start_tod,  &
@@ -675,7 +675,7 @@ contains
 
     call mpi_bcast (dtime    , 1, MPI_INTEGER  , 0, mpicom, ier)
 
-#if (! defined OFFLINE) || (! defined COUP_CSM)
+#if (defined OFFLINE) || (defined COUP_CSM)
     call mpi_bcast (nestep   , 1, MPI_INTEGER  , 0, mpicom, ier)
     call mpi_bcast (nelapse  , 1, MPI_INTEGER  , 0, mpicom, ier)
     call mpi_bcast (start_ymd, 1, MPI_INTEGER  , 0, mpicom, ier)

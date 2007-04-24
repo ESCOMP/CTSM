@@ -1,4 +1,177 @@
 ===============================================================
+Tag name:  clm3_expa_99
+Originator(s):  erik (KLUZEK ERIK 1326 CGD)
+Date:  Tue Apr 24 13:27:10 MDT 2007
+One-line Summary: Update to mklai02_clm3_expa_98, mklai changes, dust changes, TKFRZ fix from Keith O., fix CASA
+
+Purpose of changes: Answer changing code changes moved onto the clm trunk: 
+    mklai changes for mksurfdata -- reviewed by Sam L., and Nan R. extensively
+    changes for DUST mode from Natalie M. and Francis V.
+    TKFRZ fix from Keith O.
+    Fix CASA' from problem Sam L. found with a suggested fix by Inez Fung
+
+Bugs fixed (include bugzilla ID): 389 (partial), 442, 443, 445, 450
+
+Describe any changes made to build system: Fix build for jaguar and phoenix
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: nanr, slevis, dlawren, oleson, and bonan reviewed the mklai changes
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: Documentation files
+
+A  +   doc/README.DGVM
+A  +   doc/KnownBugs
+
+List all existing files that have been modified, and describe the changes:
+
+---------------------> Improve testing
+M      test/system/nl_files/t31_cnall
+M      test/system/nl_files/singlept_dgvm_long
+M      test/system/nl_files/1.9x2.5
+M      test/system/nl_files/t31_dgvm
+M      test/system/nl_files/singlept
+M      test/system/nl_files/10x15_cnall
+M      test/system/nl_files/10x15_dgvm
+M      test/system/nl_files/t31_casa
+M      test/system/nl_files/regional
+M      test/system/nl_files/10x15_pftdyn
+M      test/system/nl_files/t31_dgvm_long
+M      test/system/nl_files/t42half
+M      test/system/nl_files/t31
+M      test/system/nl_files/10x15
+M      test/system/tests_posttag_robin
+M      test/system/input_tests_master
+M      test/system/tests_pretag_jaguar
+M      test/system/tests_posttag_phoenix
+M      test/system/test_driver.sh
+M      test/system/TSCscam.sh
+
+---------------------> Change calculation of LAI,SAI,Canopy-top/bottom so weighted by %-PFT
+M      tools/mksurfdata/mkfmax.F90
+M      tools/mksurfdata/mklaiMod.F90
+M      tools/mksurfdata/mkglacier.F90
+M      tools/mksurfdata/mkurban.F90
+M      tools/mksurfdata/mksoitex.F90
+M      tools/mksurfdata/areaMod.F90
+M      tools/mksurfdata/mksrfdat.F90
+M      tools/mksurfdata/Srcfiles
+M      tools/mksurfdata/mksoicol.F90
+M      tools/mksurfdata/mkpftMod.F90
+
+---------------------> Use new default files at T42, add and correct documentation
+M      bld/run-pc.csh
+M      bld/run-lightning.csh
+M      bld/Makefile.in
+M      bld/run-ibm.csh
+M      bld/config_clm_defaults.xml
+M      bld/system_defaults.xml
+M      bld/run-frost.csh
+
+---------------------> Remove uneeded shr_sys_flush, put #ifndef UNICOSMP around shr_sys_flush(6), correct MCT vector calls
+                       needed for phoenix/robin build.
+
+M      src/biogeochem/CNCStateUpdate2Mod.F90
+M      src/biogeochem/CNGapMortalityMod.F90
+M      src/biogeochem/CNC13StateUpdate2Mod.F90
+M      src/biogeochem/CNFireMod.F90
+M      src/biogeochem/CASAMod.F90 -------------------> Fix CASA by uncommenting lines according to Inez Fung
+M      src/biogeochem/CNPrecisionControlMod.F90
+M      src/biogeochem/DUSTMod.F90 -------------------> Changes from Natalie M. and Francis Vitt for CAM/CLM3.5 Aerosols
+M      src/biogeochem/CNPhenologyMod.F90
+M      src/biogeochem/CNCStateUpdate1Mod.F90
+M      src/biogeochem/CNDecompMod.F90
+M      src/biogeochem/CNCStateUpdate3Mod.F90
+M      src/biogeochem/CNC13StateUpdate1Mod.F90
+M      src/biogeochem/CNC13StateUpdate3Mod.F90
+M      src/biogeochem/CNAllocationMod.F90
+M      src/biogeochem/CNC13FluxMod.F90
+M      src/biogeochem/CNEcosystemDynMod.F90
+M      src/biogeochem/CNVegStructUpdateMod.F90
+M      src/main/inicFileMod.F90
+M      src/main/abortutils.F90
+M      src/main/driver.F90
+M      src/main/ncdio.F90
+M      src/main/atmdrvMod.F90 -----------------------> Changes from Keith O. to fix TKFRZ change
+M      src/main/initializeMod.F90
+M      src/main/clmtypeInitMod.F90
+M      src/main/histFileMod.F90
+M      src/main/clm_csmMod.F90
+M      src/main/controlMod.F90 ----------------------> Fix #ifdef's so extra namelist items only on for COUP_CSM or OFFLINE
+M      src/main/initSurfAlbMod.F90
+M      src/main/clm_time_manager.F90
+M      src/main/initGridCellsMod.F90
+M      src/main/program_off.F90
+M      src/main/surfrdMod.F90
+M      src/main/decompMod.F90
+M      src/main/areaMod.F90
+M      src/main/clm_mct_mod.F90
+M      src/riverroute/RtmMod.F90
+M      src/biogeophys/SurfaceRadiationMod.F90
+M      src/biogeophys/SurfaceAlbedoMod.F90
+M      src/biogeophys/Hydrology2Mod.F90
+M      src/biogeophys/CanopyFluxesMod.F90
+
+Summary of testing:
+
+  bluevista: All PASS except
+004 bl111 TBL.sh 4p_vodsr_dh t31 48 ...............................FAIL! rc=
+009 bl127 TBL.sh 17p_vodsr_dh t31 48 ..............................FAIL! rc=
+014 bl131 TBL.sh 4p_vodsr_dh t42half 48 ...........................FAIL! rc=
+019 bl141 TBL.sh 17p__dh 10x15_pftdyn 48 ..........................FAIL! rc=
+024 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................FAIL! rc=
+028 bl311 TBL.sh 4p_casa_dh t31_casa 48 ...........................FAIL! rc=
+032 bl411 TBL.sh 10p_dgvm_dh t31_dgvm 48 ..........................FAIL! rc=
+037 bl471 TBL.sh 10p_dgvm_s singlept_dgvm_long -730 ...............FAIL! rc=
+041 bl563 TBL.sh _h 1.9x2.5 -10 ...................................FAIL! rc=
+045 bl552 TBL.sh _ds 10x15 24 .....................................FAIL! rc=
+049 bl573 TBL.sh _s singlept -10 ..................................FAIL! rc=
+053 bl583 TBL.sh _dh regional -10 .................................FAIL! rc=
+057 bl711 TBLtools.sh mksurfdata namelist .........................FAIL! rc=
+059 bl771 TBLtools.sh mksurfdata singlept .........................FAIL! rc=
+062 sm061 TSMconccsm.sh ERS f19_g13 ...............................FAIL! rc= 7
+  lightning: All PASS except
+004 bl112 TBL.sh 4p_vodsr_dm t31 48 ...............................FAIL! rc=
+009 bl142 TBL.sh 17p__dm 10x15_pftdyn 48 ..........................FAIL! rc=
+014 bl252 TBL.sh 17p_cnn_dm 10x15_cnall 48 ........................FAIL! rc=
+018 bl451 TBL.sh 10p_dgvm_dm 10x15_dgvm 48 ........................FAIL! rc=
+019 sm551 TSM.sh _dh 10x15 48 .....................................FAIL! rc= 8
+020 er551 TER.sh _dh 10x15 10+38 ..................................FAIL! rc= 5
+021 br551 TBR.sh _dh 10x15 24+24 ..................................FAIL! rc= 5
+022 bl551 TBL.sh _dh 10x15 48 .....................................FAIL! rc=
+026 bl573 TBL.sh _s singlept -10 ..................................FAIL! rc=
+029 bl771 TBLtools.sh mksurfdata singlept .........................FAIL! rc=
+  bangkok/lf95:
+004 bl112 TBL.sh 4p_vodsr_dm t31 48 ...............................FAIL! rc=
+009 bl142 TBL.sh 17p__dm 10x15_pftdyn 48 ..........................FAIL! rc=
+014 bl252 TBL.sh 17p_cnn_dm 10x15_cnall 48 ........................FAIL! rc=
+018 bl312 TBL.sh 4p_casa_dm t31_casa 48 ...........................FAIL! rc=
+022 bl451 TBL.sh 10p_dgvm_dm 10x15_dgvm 48 ........................FAIL! rc=
+026 bl551 TBL.sh _dh 10x15 48 .....................................FAIL! rc=
+030 bl573 TBL.sh _s singlept -10 ..................................FAIL! rc=
+033 sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7 ....FAIL! rc= 4
+  robin: All compile tests pass
+
+CLM tag used for the baseline comparison tests if applicable: clm3_expa_98
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers:
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: new LAI, TKFRZ change is roundoff different, Dust and CASA changes are significant
+
+===============================================================
+===============================================================
 Tag name:  clm3_expa_98
 Originator(s):  erik (KLUZEK ERIK 1326 CGD)
 Date:  Wed Apr 18 09:51:53 MDT 2007

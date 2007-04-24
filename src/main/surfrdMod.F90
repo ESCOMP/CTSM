@@ -21,7 +21,6 @@ module surfrdMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
   use abortutils  , only : endrun
   use clm_varpar  , only : lsmlon, lsmlat
   use clm_varpar  , only : nlevsoi, numpft, &

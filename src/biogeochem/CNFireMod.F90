@@ -17,7 +17,6 @@ module CNFireMod
   use shr_const_mod, only: SHR_CONST_PI,SHR_CONST_TKFRZ,shr_const_cday
   use clm_varcon   , only: istsoil
   use spmdMod      , only: masterproc
-  use shr_sys_mod  , only: shr_sys_flush
   use pft2colMod   , only: p2c
   implicit none
   save

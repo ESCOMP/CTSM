@@ -1,0 +1,205 @@
+Known Bugs in CLM3.5						April/24/2007
+
+====================================================================================
+Bug Number: 449
+Problem with create_crop_landunit
+
+As reported to me by Bill Sacks at UW-Madison:
+The crop(:) array in pftvarcon needs to be initialized before surfrd is called
+for create_crop_landunit to work properly, but crop(:) is set in pftconrd,
+which is called after surfrd. Thus, surfrd sees a crop(:) array that is set to
+0 for all PFTs, and so it doesn't put anything on the crop landunit. I have
+done a simple work-around to solve this problem, making crop(:) a parameter,
+and thus initializing it at compile-time.
+
+====================================================================================
+Bug Number: 448
+Problem compiling on Darwin with XLF compilers:
+
+There's a problem running the Dependency generator on Darwin OS X 10.4.9 using
+XLF compilers.
+This is with cam and clm for clm3_expa_98 and as of cam3.4.10.
+
+The file assert.H is mistakenly matched from mct/mpeu so that there is an
+explcit dependence on assert.h for gptl.c.
+
+You can get around this problem by editing Depends by hand and removing that
+dependence. Or you can modify mkDepends to explicitly remove this file when
+creating Depends.
+
+====================================================================================
+Bug Number: 402
+Leap-year calendar does NOT work:
+
+If you try to turn on a GREGORIAN calander in your namelist -- it will NOT
+work. You can get around this by modifying code to turn off the NO_LEAP_CALENDAR
+or by linking with the full version of ESMF rather than the wrf time-manager
+implimentation.
+
+====================================================================================
+Bug number: 421
+newcprnc can NOT be used to compare restart or initial-condition (IC) files:
+
+Because restart and IC files do NOT contain a time-dimension the utility
+newcprnc can NOT be used to compare them.
+
+====================================================================================
+Bug number: 447
+Problem running on Cray-X1
+
+Offline CLM will NOT run on Cray-X1 because of calls to shr_sys_flush(6) without
+unit 6 being explicitly opened. 
+
+
+====================================================================================
+Bug number: 444
+Problem running with Pathscale:
+
+Doesn't run on lightning with pathscale.
+
+Here's the config line:
+
+/fis/cgd/home/erik/clm_trunk/test/system/../../bld/configure -fc pathf90
+-linker mpif90 -spmd -smp -debug -s
+
+Here's the namelist:
+ &clm_inparm
+ caseid         = 'clmrun'
+ ctitle         = 'clmrun'
+ finidat        = ' '
+ fsurdat        =
+"/fs/cgd/csm/inputdata/lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc"
+ fatmgrid       =
+"/fs/cgd/csm/inputdata/lnd/clm2/griddata/griddata_10x15_USGS_070110.nc"
+ fatmlndfrc     =
+"/fs/cgd/csm/inputdata/lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc"
+ fpftcon        =
+"/fs/cgd/csm/inputdata/lnd/clm2/pftdata/pft-physiology.c070207"
+ offline_atmdir =
+"/fs/cgd/csm/inputdata/lnd/clm2/NCEPDATA.Qian-etal-JHM06.c051024"
+ nrevsn         = ""
+ nsrest         =  0
+ nelapse        =  48
+ dtime          =  3600
+ start_ymd      =  19990115
+ start_tod      =  0
+ irad           = -1
+ wrtdia         = .true.
+ mss_irt        =  0
+ hist_dov2xy    = .true.
+ hist_nhtfrq    =  3
+ hist_mfilt     =  1
+ hist_ndens     =  1
+ hist_crtinic   = 'NONE'
+ brnch_retain_casename = .true.
+ /
+ &prof_inparm
+ /
+
+Here's the logfile:
+
+tep =  3  for history tim
+ e interval beginning at  0.E+0  and ending at  0.125
+
+
+ HTAPES_WRAPUP: Closing local history file ./clmrun.clm2.h0.1999-01-15-10800.nc
+at nstep =  3
+
+ writing restart file ./clmrun.clm2.r.1999-01-15-10800.nc for model date =
+1999-01-15-10800
+
+
+
+ restFile_open: writing restart dataset at
+./clmrun.clm2.r.1999-01-15-10800.ncat nstep =  3
+
+ Successfully wrote local restart file ./clmrun.clm2.r.1999-01-15-10800.nc
+------------------------------------------------------------
+
+ (OPNFIL): Successfully opened file /home/lightning/erik/lnd.clmrun.rpointer on
+unit=  1
+ Successfully wrote local restart pointer file
+ Successfully wrote out restart data at nstep =  3
+------------------------------------------------------------
+ (OPNFIL): Successfully opened file ./clmrun.clm2.r.1999-01-15-10800 on unit= 
+1
+ Successfully wrote local restart file ./clmrun.clm2.r.1999-01-15-10800
+------------------------------------------------------------
+
+
+------------------------------------------------------------
+ nstep=  4  date=  19990115  sec=  14400
+------------------------------------------------------------
+
+ Error: Forcing height is below canopy height for pft index  905
+ ENDRUN: called without a message string
+ Error: Forcing height is below canopy height for pft index  851
+ ENDRUN: called without a message string
+[7] MPI Abort by user Aborting program !
+[7] Aborting program!
+[7] MPI Abort by user Aborting program !
+[7] Aborting program!
+[7] Aborting program!
+[7] Aborting program!
+ Error: Forcing height is below canopy height for pft index  632
+ ENDRUN: called without a message string
+ Error: Forcing height is below canopy height for pft index  688
+ ENDRUN: called without a message string
+[5] MPI Abort by user Aborting program !
+[5] Aborting program!
+[5] MPI Abort by user Aborting program !
+[5] Aborting program!
+[5] Aborting program!
+[5] Aborting program!
+ Error: Forcing height is below canopy height for pft index  337
+ ENDRUN: called without a message string
+ Error: Forcing height is below canopy height for pft index  277
+ ENDRUN: called without a message string
+[2] MPI Abort by user Aborting program !
+[2] Aborting program!
+[2] MPI Abort by user Aborting program !
+[2] Aborting program!
+[2] Aborting program!
+[2] Aborting program!
+
+====================================================================================
+Bug number: 366
+RTM log error checks:
+
+Some of the clm-rtm mapping checks are obsolete, so new checks need to be
+implemented (per T. Craig). One example is:
+
+Attempting to initialize RTM
+Columns in RTM = 720
+Rows in RTM = 360
+read river direction data
+MAP_SETMAPSAR warning: masks/areas not conserved
+global sum output area = 0.5100996991E+09
+global sum input area =  0.2071386276E+09
+
+====================================================================================
+Bug number: 251
+Potential floating point errors in src/biogeophys/SurfaceAlbedoMod.F90:
+
+There is the potential for a floating point error to occur in TwoStream.F90 due
+to taking the exponential of a large number. 
+          s1 = exp(-h*vai(p))
+          s2 = exp(-twostext(p)*vai(p))
+A fix has been implemented by P. Thornton but the fix is encased in a CN cpp. 
+This fix should probably be implemented universally in the code but tested to
+determine if there are any non-bfb changes in non-CN mode.
+
+This is in SurfaceAlbedoMod.F90 in biogeophys
+
+#if (defined CN)          
+          ! PET, 3/1/04: added this test to avoid floating point errors in
+exp()
+          t1 = min(h*vai(p), 40._r8)
+          s1 = exp(-t1)
+          t1 = min(twostext(p)*vai(p), 40._r8)
+          s2 = exp(-t1)
+#else
+          s1 = exp(-h*vai(p))
+          s2 = exp(-twostext(p)*vai(p))
+#endif
+====================================================================================

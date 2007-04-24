@@ -16,9 +16,9 @@ current parser places some restrictions on the normally valid XML syntax:
 </comment>
 
 <comment>
-clm_bld    CAM build directory, contains .o and .mod files
-clm_exedir Directory where CAM executable will be created
-clm_root   Root directory of CAM distribution
+clm_bld    CLM build directory, contains .o and .mod files
+clm_exedir Directory where CLM executable will be created
+clm_root   Root directory of CLM distribution
 usr_src    User source directories to prepend to the filepath.  Multiple directories
            are specified as a comma separated list with no embedded white space.
 </comment>
@@ -50,7 +50,7 @@ maxpft="4"
 />
 
 <comment>
-clm_exe    Name of CAM executable
+clm_exe    Name of CLM executable
 cppdefs    User specified CPP defines to append to Makefile defaults.
 cc         User specified C compiler overrides Makefile default (linux only).
 cflags     User specified C compiler options to append to Makefile defaults.
@@ -59,8 +59,8 @@ debug      Switch to enable debugging options for Fortran compiler.
 fflags     User specified Fortran compiler flags to append to Makefile defaults.
 fopt       User specified Fortran optimization flags to override Makefile defaults.
 ldflags    User specified load options to append to Makefile defaults.
-spmd       Switch to enable or disable building SPMD version of CAM.
-smp        Switch to enable or disable building SMP version of CAM.
+spmd       Switch to enable or disable building SPMD version of CLM.
+smp        Switch to enable or disable building SMP version of CLM.
 nc_inc     Directory containing NetCDF include files.
 nc_lib     Directory containing NetCDF library.
 nc_mod     Directory containing NetCDF module files.
@@ -69,7 +69,7 @@ esmf_lib   Directory containing ESMF library      (if linking to external ESMF)
 mpi_inc    Directory containing MPI include files.
 mpi_lib    Directory containing MPI library.
 mpi_lib_name Name of MPI library.
-target_os  OS for which CAM is being built.
+target_os  OS for which CLM is being built.
 </comment>
 
 <makefile

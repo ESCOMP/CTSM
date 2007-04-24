@@ -84,7 +84,6 @@ contains
     use QSatMod            , only : QSat
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use spmdMod            , only : masterproc
-    use shr_sys_mod        , only : shr_sys_flush
 !
 ! !ARGUMENTS:
     implicit none

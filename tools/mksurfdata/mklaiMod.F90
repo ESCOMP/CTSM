@@ -12,6 +12,17 @@ module mklaiMod
 !
 !EOP
 !-----------------------------------------------------------------------
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_sys_mod , only : shr_sys_flush
+  use areaMod     , only : gridmap_type
+
+  implicit none
+
+  private
+
+  public  :: mklai
+
+  private :: pft_laicheck
 
 contains
 
@@ -21,7 +32,7 @@ contains
 ! !IROUTINE: mklai
 !
 ! !INTERFACE:
-subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
+subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido, ni, nj, pctpft_i )
 !
 ! !DESCRIPTION:
 ! Make LAI/SAI/height data
@@ -29,23 +40,25 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
 ! for improved efficiency
 !
 ! !USES:
-  use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
   use fileutils   , only : getfil
   use domainMod   , only : domain_type,domain_clean,domain_setptrs
   use creategridMod, only : read_domain
-  use mkvarpar	
+  use mkvarpar	  , only : numpft
   use mkvarsur    , only : ldomain
   use mkvarctl    
-  use areaMod     , only : areaini,areaave,gridmap_type,gridmap_clean  
+  use areaMod     , only : areaini,areaave, gridmap_clean, &
+                           areaave_pft, areaini_pft
   use ncdio
 !
 ! !ARGUMENTS:
   implicit none
   integer , intent(in) :: lsmlon, lsmlat          ! clm grid resolution
-  character(len=*), intent(in) :: fname           ! input dataset file name
+  character(len=256), intent(in) :: fname         ! input dataset file name
   integer , intent(in) :: ndiag                   ! unit number for diag out
   integer , intent(in) :: ncido                   ! output netcdf file id
+  integer , intent(in) :: ni                      ! number of long dimension of pft index
+  integer , intent(in) :: nj                      ! number of lat dimension of pft index
+  real(r8), intent(in) :: pctpft_i(ni,nj,0:numpft)! % plant function types on input grid
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
@@ -88,11 +101,11 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
   real(r8), allocatable :: mask_o(:,:)        ! output grid: mask (0, 1)
   real(r8), allocatable :: fld_i(:,:)         ! input grid: dummy field
   real(r8), allocatable :: fld_o(:,:)         ! output grid: dummy field
-  real(r8) :: sum_fldi                        ! global sum of dummy input fld
-  real(r8) :: sum_fldo                        ! global sum of dummy output fld
   real(r8) :: garea_i                         ! input  grid: global area
   real(r8) :: garea_o                         ! output grid: global area
 
+  integer,  allocatable :: laimask(:,:,:)     ! lai+sai output mask for each plant function type
+  integer  :: mwts                            ! number of weights
   integer  :: ii,ji                           ! indices
   integer  :: io,jo                           ! indices
   integer  :: k,l,n,m                         ! indices
@@ -160,8 +173,14 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
      write(6,*)'mklai allocation error'; call abort()
   end if
 
-  allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat))
-  allocate( fld_i(nlon_i,nlat_i), fld_o(lsmlon,lsmlat))
+  allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat), stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mklai allocation error'; call abort()
+  end if
+  allocate( fld_i(nlon_i,nlat_i), fld_o(lsmlon,lsmlat), stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mklai allocation error'; call abort()
+  end if
 
   mask_i = 1.0_r8
   mask_o = 1.0_r8
@@ -173,6 +192,11 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
   call gridmap_clean(tgridmap)
   call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
 
+  allocate( laimask(ni,nj,0:numpft), stat=ier )
+  if (ier /= 0) then
+     write(6,*)'mklai allocation error'; call abort()
+  end if
+  laimask(:,:,:) = 0
   do m = 1, ntim
 
      ! Get input data for the month
@@ -200,22 +224,30 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
      mhgtb_o(:,:,:) = 0.
 
      do l = 0, numpft
+        ! Calculate weights for this PFT type
+        call areaini_pft(tgridmap,ni,nj,pctpft_i=pctpft_i,pft_indx=l)
+
         fld_i(:,:) = mlai_i(:,:,l)
-        call areaave(fld_i,fld_o,tgridmap)
+        call areaave_pft(fld_i,fld_o,tgridmap)
         mlai_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = msai_i(:,:,l)
-        call areaave(fld_i,fld_o,tgridmap)
+        call areaave_pft(fld_i,fld_o,tgridmap)
         msai_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = mhgtt_i(:,:,l)
-        call areaave(fld_i,fld_o,tgridmap)
+        call areaave_pft(fld_i,fld_o,tgridmap)
         mhgtt_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = mhgtb_i(:,:,l)
-        call areaave(fld_i,fld_o,tgridmap)
+        call areaave_pft(fld_i,fld_o,tgridmap)
         mhgtb_o(:,:,l) = fld_o(:,:)
 
+        do ji = 1, nlat_i
+        do ii = 1, nlon_i
+           if ( (mlai_i(ii,ji,l)+msai_i(ii,ji,l)) > 0.0_r8 ) laimask(ii,ji,l) = 1
+        end do
+        end do
 !tcx?        where (ldomain%mask(:,:) == 0)
 !           mlai_o (:,:,l) = 0.
 !           msai_o (:,:,l) = 0.
@@ -223,41 +255,6 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
 !           mhgtb_o(:,:,l) = 0.
 !        endwhere
      enddo
-
-     ! Global sum of output field -- must multiply by fraction of
-     ! output grid that is land as determined by input grid
-
-     sum_fldi = 0.0_r8
-     do ji = 1, nlat_i
-     do ii = 1, nlon_i
-        fld_i(ii,ji) = ((ji-1)*nlon_i + ii) * tdomain%mask(ii,ji)
-        sum_fldi = sum_fldi + tdomain%area(ii,ji) * fld_i(ii,ji)
-     enddo
-     enddo
-
-     call areaave(fld_i,fld_o,tgridmap)
-
-     sum_fldo = 0.
-     do jo = 1, ldomain%nj
-     do io = 1, ldomain%numlon(jo)
-        fld_o(io,jo) = fld_o(io,jo)*mask_o(io,jo)
-        sum_fldo = sum_fldo + ldomain%area(io,jo) * fld_o(io,jo)
-     end do
-     end do
-
-     ! -----------------------------------------------------------------
-     ! Error check1
-     ! Compare global sum fld_o to global sum fld_i.
-     ! -----------------------------------------------------------------
-
-     if ( trim(mksrf_gridtype) == 'global') then
-        if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-           write (6,*) 'MKLAI error: input field not conserved'
-           write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-           write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-           stop
-        end if
-     end if
 
      ! -----------------------------------------------------------------
      ! Output model resolution LAI/SAI/HEIGHT data
@@ -307,10 +304,14 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
      do l = 0, numpft
      do ji = 1, nlat_i
      do ii = 1, nlon_i
-        glai_i(l)  = glai_i(l) + mlai_i(ii,ji,l)*tdomain%area(ii,ji)
-        gsai_i(l)  = gsai_i(l) + msai_i(ii,ji,l)*tdomain%area(ii,ji)
-        ghgtt_i(l) = ghgtt_i(l)+ mhgtt_i(ii,ji,l)*tdomain%area(ii,ji)
-        ghgtb_i(l) = ghgtb_i(l)+ mhgtb_i(ii,ji,l)*tdomain%area(ii,ji)
+        glai_i(l)  = glai_i(l) + mlai_i(ii,ji,l)*tdomain%area(ii,ji) * &
+                                 tdomain%frac(ii,ji)
+        gsai_i(l)  = gsai_i(l) + msai_i(ii,ji,l)*tdomain%area(ii,ji) * &
+                                 tdomain%frac(ii,ji)
+        ghgtt_i(l) = ghgtt_i(l)+ mhgtt_i(ii,ji,l)*tdomain%area(ii,ji) * &
+                                 tdomain%frac(ii,ji)
+        ghgtb_i(l) = ghgtb_i(l)+ mhgtb_i(ii,ji,l)*tdomain%area(ii,ji) * &
+                                 tdomain%frac(ii,ji)
      end do
      end do
      end do
@@ -332,10 +333,14 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
      do l = 0, numpft
      do jo = 1, ldomain%nj
      do io = 1, ldomain%numlon(jo)
-        glai_o(l)  = glai_o(l) + mlai_o(io,jo,l)*ldomain%area(io,jo)
-        gsai_o(l)  = gsai_o(l) + msai_o(io,jo,l)*ldomain%area(io,jo)
-        ghgtt_o(l) = ghgtt_o(l)+ mhgtt_o(io,jo,l)*ldomain%area(io,jo)
-        ghgtb_o(l) = ghgtb_o(l)+ mhgtb_o(io,jo,l)*ldomain%area(io,jo)
+        glai_o(l)  = glai_o(l) + mlai_o(io,jo,l)*ldomain%area(io,jo) * &
+                                 ldomain%frac(io,jo)
+        gsai_o(l)  = gsai_o(l) + msai_o(io,jo,l)*ldomain%area(io,jo) * &
+                                 ldomain%frac(io,jo)
+        ghgtt_o(l) = ghgtt_o(l)+ mhgtt_o(io,jo,l)*ldomain%area(io,jo) * &
+                                 ldomain%frac(io,jo)
+        ghgtb_o(l) = ghgtb_o(l)+ mhgtb_o(io,jo,l)*ldomain%area(io,jo) * &
+                                 ldomain%frac(io,jo)
      end do
      end do
      end do
@@ -368,6 +373,10 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
 
   call check_ret(nf_close(ncidi), subname)
 
+  ! consistency check that PFT and LAI+SAI make sense
+
+  !call pft_laicheck( ni, nj, pft_i, laimask )
+
   ! Deallocate dynamic memory
 
   call domain_clean(tdomain)
@@ -379,6 +388,43 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido)
 
 end subroutine mklai
 
+subroutine pft_laicheck( ni, nj, pctpft_i, laimask )
+  use mkvarpar	  , only : numpft
+! consistency check that PFT and LAI+SAI make sense
+!
+! !ARGUMENTS:
+  implicit none
+  integer ,           intent(in) :: ni, nj                  ! input PFT grid resolution
+  real(r8),           intent(in) :: pctpft_i(ni,nj,0:numpft)! % plant function types
+  integer,            intent(in) :: laimask(ni,nj,0:numpft) ! mask where LAI+SAI > 0
+
+  character(len=*), parameter :: subName="pft_laicheck"
+  integer :: ii, ji, l, n, nc      ! Indices
+
+  do l  = 0, numpft
+     n  = 0
+     nc = 0
+     do ji = 1, nj
+     do ii = 1, ni
+        if ( pctpft_i(ii,ji,l) > 0.0_r8 ) nc = nc + 1
+        if ( (pctpft_i(ii,ji,l) > 0.0_r8) .and. (laimask(ii,ji,l) /= 1) )then
+           write (6,*) subName//' :: warning: pft and LAI+SAI mask not consistent!'
+           write (6,*) 'ii,jj,l   = ', ii, ji, l
+           write (6,*) 'pctpft_i  = ',pctpft_i(ii,ji,l)
+           write (6,*) 'laimask   = ', laimask(ii,ji,l)
+           n = n + 1
+        end if
+     end do
+     end do
+     if ( n > max(4,nc/4) ) then
+        write (6,*) subName//' :: pft/LAI+SAI inconsistency over more than 25% land-cover'
+        write (6,*) '# inconsistent points, total PFT pts, total LAI+SAI pts = ', &
+                     n, nc, sum(laimask(:,:,l))
+        stop
+     end if
+  end do
+
+end subroutine pft_laicheck
+  
+
 end module mklaiMod
-
-

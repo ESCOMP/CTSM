@@ -1,0 +1,42 @@
+README.DGVM					      April/24/2007
+
+
+Documentation on using the DGVM with CLM3.5, from Dr. Sam Levis (slevis@ucar.edu).
+
+Here's the list of values in my modified pft-physiology file:
+
+0.62 Boreal NETree
+0.41 Boreal BDTree
+0.63 Temp. NET
+0.35 Temp. BET
+0.36 Temp. BDT
+0.69 Trop. BET
+0.31 Trop. BDT
+0.39 C3 Grass Arctic
+0.24 C3 Grass non-Arctic
+0.24 C4 Grass
+
+PFTs not listed here do not take part in the dgvm calculations (eg,
+shrubs, crops, etc).
+
+1) Running with the default values results in overestimated plant
+productivity in both CLM3.5 and CLM3.5-DGVM due to the switch from
+CLM3.0's single-leaf to CLM3.5's two-leaf photosynthesis model, which
+works optimally with CLM-CN. The DGVM was calibrated using the
+single-leaf model. With the two-leaf model the DGVM simulates very high
+LAI and NPP and very fast tree growth. It also overestimates tree cover
+at the expense of grasses and grasses at the expense of bare ground.
+Despite all that, CLM3.5-DGVM plant distributions look better, generally
+speaking, than CLM3.0-DGVM plant distributions due to the improved
+simulation of the hydrological cycle.
+
+2) Running with the modified list above slows vegetation growth and lowers
+simulated LAI and NPP. However, LAI and NPP remain overestimated. Most
+pft distributions look better than with the default values. However, the
+complex competition between boreal needleleaf evergreen and boreal
+deciduous trees as simulated with prior versions of the CLM is difficult
+to reproduce. We have chosen to refrain from further model calibration
+at this point. Users may adjust the above values as they see fit for
+their modeling purposes. In later versions of the CLM, the DGVM is
+intended to operate in tandem with the CN model, which should help
+overcome these problems.

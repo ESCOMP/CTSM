@@ -5,20 +5,8 @@
 ##------------
 ##
 ## This is an example script to build and run the default CLM configuration
-## on an IBM SP. 
+## on an IBM SP.  This is setup to run on NCAR's machine bluevista.
 ##
-## Setting LoadLeveler options for batch queue submission.
-## @ class is the queue in which to run the job.
-##     To see a list of available queues, type "llclass" interactively.
-## @ node is the number of nodes. @tasks_per_node should be set to 1 because
-##     of the hybrid OpenMP/MPI configuration of CLM.
-## @ output and @error are the names of file written to the directory from
-##     which the script is submitted containing STDOUT and STDERR respectively
-## @ job_type = parallel declares that multiple nodes will be used.
-## @ network.MPI: Has to do with network connection between nodes.  Best to leave alone.
-## @ node_usage = not_shared acquires dedicated access to nodes for the job.
-## @ queue tells load leveler to submit the job
-## @ environment tells load leveler to export all Environment variables
 
 ## Setting LSF options for batch queue submission.
 #BSUB -a poe                    # use LSF openmp elim
@@ -31,7 +19,7 @@
 #BSUB -W 0:10                   # wall clock limit
 #BSUB -P xxxxxxxx               # Project number to charge to
 
-## POE Environment.  Set these for interactive jobs.  They're ignored by LoadLeveler
+## POE Environment.  Set these for interactive jobs.  They're ignored in batch submission.
 ## MP_NODES is the number of nodes.  
 setenv MP_NODES 1
 setenv MP_TASKS_PER_NODE 8
@@ -73,7 +61,6 @@ set smp      = off      # settings are [on   | off       ] (default is off)
 set maxpft   = 4        # settings are 4->17               (default is 4)
 set bgc      = none     # settings are [none | cn | casa ] (default is none)
 set supln    = off      # settings are [on   | off       ] (default is off)
-set rtm      = off      # settings are [on   | off       ] (default is off)
 set dust     = off      # settings are [on   | off       ] (default is off)   
 set voc      = off      # settings are [on   | off       ] (default is off)   
 
@@ -93,11 +80,18 @@ mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
 mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
 ## Build (or re-build) executable
-set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust -usr_src $usr_src"
+set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -dust $dust -usr_src $usr_src"
 if ($spmd == on ) set flags = "$flags -spmd"
 if ($spmd == off) set flags = "$flags -nospmd"
 if ($smp  == on ) set flags = "$flags -smp"
 if ($smp  == off) set flags = "$flags -nosmp"
+
+if ( $bgc == cn )then
+   set fsurdat="surfdata_064x128_070406.nc"
+else
+   set fsurdat="surfdata_64x128_1870_cn_c070413.nc"
+endif
+
 echo "cd $blddir"
 cd $blddir                  || echo "cd $blddir failed" && exit 1
 if ( ! -f $blddir/config_cache.xml ) then
@@ -118,14 +112,13 @@ cat >! lnd.stdin << EOF
  &clm_inparm
  caseid         = '$case'
  ctitle         = '$case'
- finidat        = ' '
- fsurdat        = "$CSMDATA/surfdata/surfdata_048x096_061108.nc"
- fatmgrid       = "$CSMDATA/griddata/griddata_48x96_060829.nc"
- fatmlndfrc     = "$CSMDATA/griddata/fracdata_48x96_gx3v5_060829.nc"
+ finidat        = '$CSMDATA/inidata_3.1/offline/clmi_0000-01-01_064x128_c070403.nc'
+ fsurdat        = "$CSMDATA/surfdata/$fsurdat"
+ fatmgrid       = "$CSMDATA/griddata/griddata_64x128_060829.nc"
+ fatmlndfrc     = "$CSMDATA/griddata/fracdata_64x128_USGS_070110.nc"
  fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
- fndepdat       = "$CSMDATA/ndepdata/ndep_clm_2000_48x96_c060414.nc"
- frivinp_rtm    = "$CSMDATA/rtmdata/rdirc.05.061026"
- offline_atmdir = "$CSMDATA/NCEPDATA.Qian-etal-JHM06.c051024"
+ fndepdat       = "$CSMDATA/ndepdata/ndep_clm_2000_64x128_c060414.nc"
+ offline_atmdir = "$CSMDATA/NCEPDATA.Qian.T62.c051024"
  nsrest         =  0
  nelapse        =  48
  dtime          =  1800

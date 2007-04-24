@@ -57,7 +57,6 @@ contains
 !    -> DivideSnowLayers:      subdivide snow layers that are thicker than maximum
 !
 ! !USES:
-    use shr_sys_mod , only: shr_sys_flush
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd      , only : clm_a2l

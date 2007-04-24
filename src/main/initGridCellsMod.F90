@@ -13,7 +13,6 @@ module initGridCellsMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_flush
   use spmdMod     , only : masterproc,iam,mpicom
   use abortutils  , only : endrun
   use clm_varsur  , only : wtxy, vegxy

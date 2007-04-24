@@ -104,6 +104,7 @@ subroutine mkfmax(lsmlon, lsmlat, fname, ndiag, fmax_o)
 
   call gridmap_clean(tgridmap)
   call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
+  ldomain%frac = mask_o
 
   ! Area-average percent cover on input grid to output grid 
   ! and correct according to land landmask
@@ -185,7 +186,8 @@ subroutine mkfmax(lsmlon, lsmlat, fname, ndiag, fmax_o)
   do ji = 1, nlat_i
   do ii = 1, nlon_i
      garea_i = garea_i + tdomain%area(ii,ji)
-     gfmax_i = gfmax_i + fmax_i(ii,ji)*tdomain%area(ii,ji)/100.
+     gfmax_i = gfmax_i + fmax_i(ii,ji)*(tdomain%area(ii,ji)/100.) * &
+                                        tdomain%frac(ii,ji)
   end do
   end do
 
@@ -197,7 +199,12 @@ subroutine mkfmax(lsmlon, lsmlat, fname, ndiag, fmax_o)
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
      garea_o = garea_o + ldomain%area(io,jo)
-     gfmax_o = gfmax_o + fmax_o(io,jo)*ldomain%area(io,jo)/100.
+     gfmax_o = gfmax_o + fmax_o(io,jo)*(ldomain%area(io,jo)/100.) * &
+                                        ldomain%frac(io,jo)
+     if ( (ldomain%frac(io,jo) < 0.0) .or. (ldomain%frac(io,jo) > 1.0001) )then
+        write(6,*) "ERROR:: frac out of range: ", ldomain%frac(io,jo), io, jo
+        stop
+     end if
   end do
   end do
 

@@ -20,7 +20,7 @@ program mksrfdat
     use creategridMod, only : read_domain,write_domain
     use domainMod   , only : domain_setptrs, domain_type, domain_init
     use mkfileMod   , only : mkfile
-    use mkvarpar
+    use mkvarpar    , only : numpft, nlevsoi
     use mkvarsur
     use mkvarctl
     use areaMod
@@ -40,6 +40,7 @@ program mksrfdat
     integer  :: lsmlon, lsmlat       ! clm grid resolution
     integer  :: nsoicol              ! number of model color classes
     integer  :: i,j,k,m,n            ! indices
+    integer  :: ni, nj               ! size of pft index
     integer  :: ier                  ! error status
     integer  :: ndiag,nfdyn          ! unit numbers
     integer  :: ncid                 ! netCDF id
@@ -66,6 +67,7 @@ program mksrfdat
     real(r8), allocatable  :: pctlnd_pft_dyn(:,:)  ! PFT data: % of gridcell for dyn landuse PFTs
     integer , allocatable  :: pftdata_mask(:,:)    ! mask indicating real or fake land type
     real(r8), allocatable  :: pctpft(:,:,:)        ! PFT data: land fraction per gridcell
+    real(r8), pointer      :: pctpft_i(:,:,:)      ! PFT data: % fraction on input grid
     real(r8), allocatable  :: pctgla(:,:)          ! percent of grid cell that is glacier  
     real(r8), allocatable  :: pctlak(:,:)          ! percent of grid cell that is lake     
     real(r8), allocatable  :: pctwet(:,:)          ! percent of grid cell that is wetland  
@@ -164,21 +166,14 @@ program mksrfdat
     write (6,'(72a1)') ("-",i=1,60)
 
     ! ----------------------------------------------------------------------
-    ! Open diagnostic output log file
+    ! Error check namelist input
     ! ----------------------------------------------------------------------
-    
-    loc_fn = './surface-data.log'
-    ndiag = getavu()
-    call opnfil (loc_fn, ndiag, 'f')
     
     if (mksrf_fgrid /= ' ')then
        fgrddat = mksrf_fgrid
        write(6,*)'mksrf_fgrid = ',mksrf_fgrid
-       write (ndiag,*)'using fractional land data from file= ', &
-            trim(mksrf_fgrid),' to create the surface dataset'
     else
        write (6,*)'must specify mksrf_fgrid'
-       write (ndiag,*)'must specify mksrf_fgrid'
        stop
     endif
 
@@ -188,20 +183,8 @@ program mksrfdat
     else
        write(6,*)'mksrf_gridtype = ',trim(mksrf_gridtype)
        write (6,*)'illegal mksrf_gridtype, must be global or regional '
-       write (ndiag,*)'illegal mksrf_gridtype, must be global or regional '
        stop
     endif
-
-    write (ndiag,*) 'PFTs from:         ',trim(mksrf_fvegtyp)
-    write (ndiag,*) 'fmax from:         ',trim(mksrf_fmax)
-    write (ndiag,*) 'glaciers from:     ',trim(mksrf_fglacier)
-    write (ndiag,*) 'urban from:        ',trim(mksrf_furban)
-    write (ndiag,*) 'inland water from: ',trim(mksrf_flanwat)
-    write (ndiag,*) 'soil texture from: ',trim(mksrf_fsoitex)
-    write (ndiag,*) 'soil color from:   ',trim(mksrf_fsoicol)
-
-    write(6,*) ' timer_a1 init-----'
-    call shr_timer_print(t1)
 
     ! ----------------------------------------------------------------------
     ! Interpolate input dataset to model resolution
@@ -249,9 +232,40 @@ program mksrfdat
     write(6,*) ' timer_a2 init-----'
     call shr_timer_print(t1)
 
+    ! ----------------------------------------------------------------------
+    ! Open diagnostic output log file
+    ! ----------------------------------------------------------------------
+    
+    write (resol,'(i4.4,"x",i4.4)') lsmlat,lsmlon
+    loc_fn= './surfdata_'//trim(resol)//'.log'
+    ndiag = getavu()
+    call opnfil (loc_fn, ndiag, 'f')
+    
+    if (mksrf_fgrid /= ' ')then
+       write (ndiag,*)'using fractional land data from file= ', &
+            trim(mksrf_fgrid),' to create the surface dataset'
+    endif
+
+    if (trim(mksrf_gridtype) == 'global' .or. &
+        trim(mksrf_gridtype) == 'regional') then
+       write(6,*)'mksrf_gridtype = ',trim(mksrf_gridtype)
+    endif
+
+    write (ndiag,*) 'PFTs from:         ',trim(mksrf_fvegtyp)
+    write (ndiag,*) 'fmax from:         ',trim(mksrf_fmax)
+    write (ndiag,*) 'glaciers from:     ',trim(mksrf_fglacier)
+    write (ndiag,*) 'urban from:        ',trim(mksrf_furban)
+    write (ndiag,*) 'inland water from: ',trim(mksrf_flanwat)
+    write (ndiag,*) 'soil texture from: ',trim(mksrf_fsoitex)
+    write (ndiag,*) 'soil color from:   ',trim(mksrf_fsoicol)
+
+    write(6,*) ' timer_a1 init-----'
+    call shr_timer_print(t1)
+
+
     ! Make PFTs [pctpft] from dataset [fvegtyp] (1/2 degree PFT data)
 
-    call mkpft(lsmlon, lsmlat, mksrf_fvegtyp, ndiag, pctlnd_pft, pctpft)
+    call mkpft(lsmlon, lsmlat, mksrf_fvegtyp, ndiag, pctlnd_pft, pctpft, pctpft_i)
 
     write(6,*) ' timer_b mkpft-----'
     call shr_timer_print(t1)
@@ -454,7 +468,6 @@ program mksrfdat
 
     ! Create netCDF surface dataset.  
 
-    write (resol,'(i4.4,"x",i4.4)') lsmlat,lsmlon
     fsurdat = './surfdata_'//trim(resol)//'.nc'
 
     call mkfile(ldomain%ni, ldomain%nj, fsurdat, dynlanduse = .false.)
@@ -490,7 +503,14 @@ program mksrfdat
     ! Write to netcdf file is done inside mklai routine
     ! ----------------------------------------------------------------------
 
-    call mklai(lsmlon, lsmlat, mksrf_flai, ndiag, ncid)
+    if ( .not. associated(pctpft_i) )then
+       write(6,*)'error: pctpft_i is not allocated at this point'
+       call abort()
+    end if
+    ni = size(pctpft_i,1)
+    nj = size(pctpft_i,2)
+    call mklai(lsmlon, lsmlat, mksrf_flai, ndiag, ncid, ni, nj, pctpft_i)
+    deallocate( pctpft_i )
 
     write(6,*) ' timer_j mklai-----'
     call shr_timer_print(t1)
@@ -500,7 +520,7 @@ program mksrfdat
     call check_ret(nf_close(ncid), subname)
 
     write (6,'(72a1)') ("-",i=1,60)
-    write (6,'(a46,f5.1,a4,f5.1,a5)') 'land model surface data set successfully created for ', &
+    write (6,'(a52,f5.1,a4,f5.1,a5)') 'land model surface data set successfully created for ', &
          360./lsmlon,' by ',180./lsmlat,' grid'
 
     ! ----------------------------------------------------------------------
@@ -798,7 +818,7 @@ program mksrfdat
  
        write (6,'(72a1)') ("-",i=1,60)
        write (6, *) 'Generated file ',trim(fdfile)
-       write (6,'(a46,f5.1,a4,f5.1,a5)') 'land model surface data set successfully created for ', &
+       write (6,'(a52,f5.1,a4,f5.1,a5)') 'land model surface data set successfully created for ', &
           360./dbllon,' by ',180./dbllat,' double grid'
     endif
 

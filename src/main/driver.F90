@@ -89,7 +89,6 @@ module driver
 !
 ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
-  use shr_sys_mod         , only : shr_sys_flush
   use clmtype
   use clm_varctl          , only : wrtdia, fpftdyn, fndepdyn
   use spmdMod             , only : masterproc
@@ -389,7 +388,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 
 #if (defined DUST)
      ! Dust mobilization (C. Zender's modified codes)
-     call DustEmission(begp, endp, &
+     call DustEmission(begp, endp, begc, endc, begl, endl, &
                        filter(nc)%num_nolakep, filter(nc)%nolakep)
 
      ! Dust dry deposition (C. Zender's modified codes)
@@ -802,14 +801,18 @@ subroutine write_diagnostic (wrtdia, nstep)
      if (masterproc) then
         tsxyav = tsum / numg
         write (6,1000) nstep, tsxyav
+#ifndef UNICOSMP
         call shr_sys_flush(6)
+#endif
      end if
 
   else
 
      if (masterproc) then
         write(6,*)'clm2: completed timestep ',nstep
+#ifndef UNICOSMP
         call shr_sys_flush(6)
+#endif
      end if
 
   endif

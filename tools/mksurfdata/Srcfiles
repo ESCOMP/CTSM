@@ -8,6 +8,7 @@ mklaiMod.F90
 mklanwat.F90
 mkpftMod.F90
 mkrank.F90
+spmdMod.F90
 mksoicol.F90
 mksoitex.F90
 mksrfdat.F90
@@ -18,7 +19,6 @@ mkvarsur.F90
 ncdio.F90
 nanMod.F90
 fileutils.F90
-spmdMod.F90
 abortutils.F90
 shr_file_mod.F90
 shr_sys_mod.F90
@@ -37,4 +37,3 @@ recv.c
 req.c
 send.c
 time.c
-

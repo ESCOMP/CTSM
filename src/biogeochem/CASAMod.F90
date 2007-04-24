@@ -18,7 +18,6 @@ module CASAMod
   use abortutils  , only : endrun
   use clmtype
   use clm_atmlnd  , only : clm_a2l
-  use shr_sys_mod , only : shr_sys_flush
   use clm_varcon  , only : denh2o, hvap, istsoil, tfrz, spval
   use clm_varpar  , only : numpft, nlevsoi
 !
@@ -262,7 +261,6 @@ contains
     use spmdMod      , only : masterproc
     use spmdGathScatMod, only : scatter_data_from_master
     use clm_time_manager , only : get_step_size
-    use shr_sys_mod, only : shr_sys_flush
 !
 ! !ARGUMENTS:
     implicit none
@@ -2002,13 +2000,11 @@ contains
        leafmass  = Tpool_C(p,LEAF)*1.e-3_r8 ! (kg C/m2 ground)
        plai(p)   = leafmass * sla(ivt(p))! m2 leaf/m2 ground
 
-       !iyf 2002/07/22
-       !iyf The following limits on PLAI should no longer be necessary:
        !iyf    upper limit is placed here on leaf mass in this subroutine above
        !iyf    lower limit is placed on CLoss in casa_litterfall.F
 
-       !c            if(plai(p) >= plai_max(ivt(p)))plai(p) = plai_max(ivt(p))
-       !c            if(plai(p) <= plai_min(ivt(p)))plai(p) = plai_min(ivt(p))
+       if(plai(p) >= plai_max(ivt(p)))plai(p) = plai_max(ivt(p))
+       if(plai(p) <= plai_min(ivt(p)))plai(p) = plai_min(ivt(p))
 
     end do
 

@@ -126,7 +126,9 @@ contains
        ret = nf_inq_varid (ncid, varname, varid)
        if (ret/=NF_NOERR) then
           write(6,*)'CHECK_VAR: variable ',trim(varname),' is not on initial dataset'
+#ifndef UNICOSMP
           call shr_sys_flush(6)
+#endif
           readvar = .false.
        end if
     end if

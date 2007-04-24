@@ -20,7 +20,6 @@ module atmdrvMod
   use spmdMod      , only : masterproc, mpicom, comp_id, MPI_REAL8, MPI_INTEGER, iam
   use clm_mct_mod
   use decompMod    , only : gsMap_atm_gdc2glo, perm_atm_gdc2glo
-  use shr_sys_mod  , only : shr_sys_flush
   use perf_mod
 !
 ! !PUBLIC TYPES:
@@ -325,7 +324,7 @@ contains
                 if (atm_a2l%forc_t(g) <= SHR_CONST_TKFRZ) then
                    atm_a2l%flfall(g) = 0._r8
                 else if (atm_a2l%forc_t(g) <= SHR_CONST_TKFRZ+2._r8) then
-                   atm_a2l%flfall(g) = -54.632_r8 + 0.2_r8 * atm_a2l%forc_t(g)
+                   atm_a2l%flfall(g) = -0.2_r8*SHR_CONST_TKFRZ + 0.2_r8*atm_a2l%forc_t(g)
                 else
                    atm_a2l%flfall(g) = 0.4_r8
                 endif
@@ -496,7 +495,7 @@ contains
 
 #ifdef CPP_VECTOR
     !--- initialize the vector parts of the sMat
-    call cpl_mct_sMatP_Vecinit(sMatP_l2r)
+    call mct_sMatP_Vecinit(sMatP_d2a)
 #endif
 
     !--- clean up the root sMat0 datatypes

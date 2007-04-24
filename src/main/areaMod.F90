@@ -19,7 +19,6 @@ module areaMod
   use domainMod    , only : domain_type, domain_setptrs, latlon_type
   use shr_const_mod, only : SHR_CONST_PI
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use shr_sys_mod  , only : shr_sys_flush
   use spmdMod      , only : iam,masterproc
   use nanMod      
   use abortutils   , only : endrun

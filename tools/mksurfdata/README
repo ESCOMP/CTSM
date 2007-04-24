@@ -1,4 +1,4 @@
-The routines in this directory create a surface dataset.
+The routines in this directory create a surface ataset.
 The output grid is read in from the input namelist and
 can correspond to either a global or regional grid (depending
 on the setting of the namelist variables mksrf_gridtype).
@@ -12,7 +12,7 @@ and generate the surface dataset:
 
 2) run gmake
 
-3) create namelist file (default mksrfdat.namelist) for
+3) create namelist file (default mksurfdat.namelist) for
 
     ! ======================================
     ! Must specify settings for either:
@@ -36,7 +36,7 @@ and generate the surface dataset:
     ! ======================================================================
 
 4) run code (e.g.):
-        mksrfdata < mksrfdat.namelist >&! mksrfdat.out
+        mksurfdata < mksurfdat.namelist >&! mksurfdat.out
 
 5) move (and rename if appropriate) generated surface dataset
    to /fis/cgd/csm/inputdata/clm/surfdata, etc. 

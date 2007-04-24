@@ -177,7 +177,8 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, glac_o)
   do ji = 1, nlat_i
   do ii = 1, nlon_i
      garea_i = garea_i + tdomain%area(ii,ji)
-     gglac_i = gglac_i + glac_i(ii,ji)*tdomain%area(ii,ji)/100.
+     gglac_i = gglac_i + glac_i(ii,ji)*(tdomain%area(ii,ji)/100.) * &
+                         tdomain%frac(ii,ji)
   end do
   end do
 
@@ -189,7 +190,8 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, glac_o)
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
      garea_o = garea_o + ldomain%area(io,jo)
-     gglac_o = gglac_o + glac_o(io,jo)*ldomain%area(io,jo)/100.
+     gglac_o = gglac_o + glac_o(io,jo)*(ldomain%area(io,jo)/100.) * &
+                         ldomain%frac(io,jo)
   end do
   end do
 

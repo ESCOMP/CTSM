@@ -216,7 +216,7 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
   sum_fldi = 0.0_r8
   do ji = 1, nlat_i
   do ii = 1, nlon_i
-    fld_i(ii,ji) = ((ji-1)*nlon_i + ii)
+    fld_i(ii,ji) = ((ji-1)*nlon_i + ii) * tdomain%mask(ii,ji)
     sum_fldi = sum_fldi + tdomain%area(ii,ji) * fld_i(ii,ji)
   enddo
   enddo
@@ -226,7 +226,7 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
   sum_fldo = 0.
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
-     fld_o(io,jo) = fld_o(io,jo)
+     fld_o(io,jo) = fld_o(io,jo)*mask_o(io,jo)
      sum_fldo = sum_fldo + ldomain%area(io,jo) * fld_o(io,jo)
   end do
   end do
@@ -256,7 +256,7 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
   do ji = 1, nlat_i
      do ii = 1, nlon_i
         k = soil_color_i(ii,ji)
-        gast_i(k) = gast_i(k) + tdomain%area(ii,ji)
+        gast_i(k) = gast_i(k) + tdomain%area(ii,ji) * tdomain%frac(ii,ji)
      end do
   end do
 
@@ -266,7 +266,7 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
   do jo = 1, ldomain%nj
      do io = 1, ldomain%numlon(jo)
         k = soil_color_o(io,jo)
-        gast_o(k) = gast_o(k) + ldomain%area(io,jo)
+        gast_o(k) = gast_o(k) + ldomain%area(io,jo) * ldomain%frac(io,jo)
      end do
   end do
 
