@@ -131,7 +131,7 @@ contains
     real(r8), pointer :: ram1(:)          ! aerodynamical resistance (s/m)
     real(r8), pointer :: fpsn(:)          ! photosynthesis (umol CO2 /m**2 /s)
     real(r8), pointer :: rootr(:,:)       ! effective fraction of roots in each soil layer
-    real(r8), pointer :: rresis(:,:)      !root resistance by layer (0-1)  (nlevsoi)	
+    real(r8), pointer :: rresis(:,:)      ! root resistance by layer (0-1)  (nlevsoi)	
 !
 !EOP
 !
@@ -305,7 +305,7 @@ contains
           thvstar = tstar*(1._r8+0.61_r8*forc_q(g)) + 0.61_r8*forc_th(g)*qstar
           zeta = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
-          if (zeta >= 0._r8) then                      !stable
+          if (zeta >= 0._r8) then                   !stable
              zeta = min(2._r8,max(zeta,0.01_r8))
              um(p) = max(ur(p),0.1_r8)
           else                                      !unstable

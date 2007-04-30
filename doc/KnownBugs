@@ -1,5 +1,40 @@
 Known Bugs in CLM3.5						April/24/2007
 
+
+====================================================================================
+Bug Number: 452
+Problem with support of number of soil-colors NOT equal to 8 or 20
+
+The mksurfdata tools file mksoicol.F90 sets nsoicol to the max value found in
+the input soilcolor file:
+  nsoicol = maxval(soil_color_i)  
+
+However, the code will fail if  nsoicol does not equal 20 or 8 (which it might
+in paleo cases).  perhaps the code should be extended to handle a case where
+nsoicol is not 20 or 8.
+
+====================================================================================
+Bug Number: 361
+Problem with exact restarts on SGI
+
+Restarts do NOT work correctly and do NOT give exact answers as a simulation that runs continusly.
+
+These are the list of tests from test/system/test_driver.sh that fail, because of
+this. TER tests are exact restart tests and TBR tests are branch tests -- testing
+that answers are exact when namelist items remain unchanged.
+
+002 er111 TER.sh 4p_vodsr_dh t31 10+38 ............................FAIL! rc= 11
+003 br111 TBR.sh 4p_vodsr_dh t31 24+24 ............................FAIL! rc= 11
+005 sm116 TSM.sh 4p_vodsr_o t31 48 ................................FAIL! rc= 4
+007 er121 TER.sh 17p_vodsr_dh t31 10+38 ...........................FAIL! rc= 11
+008 br121 TBR.sh 17p_vodsr_dh t31 24+24 ...........................FAIL! rc= 11
+012 er211 TER.sh 17p_cnn_dh t31_cnall 10+38 .......................FAIL! rc= 11
+013 br211 TBR.sh 17p_cnn_dh t31_cnall 24+24 .......................FAIL! rc= 11
+016 er311 TER.sh 4p_casa_dh t31_casa 10+38 ........................FAIL! rc= 11
+017 br311 TBR.sh 4p_casa_dh t31_casa 24+24 ........................FAIL! rc= 11
+020 er411 TER.sh 10p_dgvm_dh t31_dgvm 10+38 .......................FAIL! rc= 11
+021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................FAIL! rc= 11
+
 ====================================================================================
 Bug Number: 449
 Problem with create_crop_landunit
@@ -55,7 +90,7 @@ unit 6 being explicitly opened.
 Bug number: 444
 Problem running with Pathscale:
 
-Doesn't run on lightning with pathscale.
+Doesn't run on lightning with pathscale for a particular configuration.
 
 Here's the config line:
 

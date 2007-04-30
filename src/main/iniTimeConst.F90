@@ -93,7 +93,7 @@ subroutine iniTimeConst
   real(r8), pointer :: tksatu(:,:)        ! thermal conductivity, saturated soil [W/m-K] (new) (nlevsoi) 
   real(r8), pointer :: wtfact(:)          ! maximum saturated fraction for a gridcell
   real(r8), pointer :: smpmin(:)          ! restriction for min of soil potential (mm) (new)
-  real(r8), pointer :: hkdepth(:)         ! Length scale for Ksat decrease (m)
+  real(r8), pointer :: hkdepth(:)         ! decay factor (m)
   integer , pointer :: isoicol(:)         ! soil color class
   real(r8), pointer :: gwc_thr(:)         ! threshold soil moisture based on clay content
   real(r8), pointer :: mss_frc_cly_vld(:) ! [frc] Mass fraction clay limited to 0.20
@@ -240,7 +240,7 @@ subroutine iniTimeConst
   ! Read fmax
   call ncd_iolocal(ncid, 'FMAX', 'read', gti, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo,start(:2),count(:2))
 
-  ! Red in soil color, sand and clay fraction
+  ! Read in soil color, sand and clay fraction
 
   call ncd_iolocal(ncid, 'SOIL_COLOR', 'read', soic2d, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo,start(:2),count(:2))
 
@@ -256,7 +256,7 @@ subroutine iniTimeConst
 
   if (masterproc) then
      call check_ret(nf_close(ncid), subname)
-     write (6,*) 'Successfully read soil color, sand and clay boundary data'
+     write (6,*) 'Successfully read fmax, soil color, sand and clay boundary data'
      write (6,*)
   endif
   ! Determine saturated and dry soil albedos for n color classes and 
@@ -497,7 +497,10 @@ subroutine iniTimeConst
       ! Initialize restriction for min of soil potential (mm)
       smpmin(c) = -1.e8_r8
 
-      hkdepth(c) = 1._r8/2.5_r8    ! chen and kumar watertable
+      ! Decay factor (m)
+      hkdepth(c) = 1._r8/2.5_r8
+
+      ! Maximum saturated fraction
       wtfact(c) = gti(g)
 
       ! Soil color

@@ -114,13 +114,13 @@ contains
     real(r8), pointer :: z0mr(:)          !ratio of momentum roughness length to canopy top height (-)
     real(r8), pointer :: displar(:)       !ratio of displacement height to canopy top height (-)
     real(r8), pointer :: htop(:)          !canopy top (m)
-    real(r8), pointer :: dz(:,:)           !layer depth (m)
-    real(r8), pointer :: t_soisno(:,:)     !soil temperature (Kelvin)
-    real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
-    real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
-    real(r8), pointer :: watsat(:,:)       !volumetric soil water at saturation (porosity)
-    real(r8), pointer :: sucsat(:,:)       !minimum soil suction (mm)
-    real(r8), pointer :: bsw(:,:)          !Clapp and Hornberger "b"
+    real(r8), pointer :: dz(:,:)          !layer depth (m)
+    real(r8), pointer :: t_soisno(:,:)    !soil temperature (Kelvin)
+    real(r8), pointer :: h2osoi_liq(:,:)  !liquid water (kg/m2)
+    real(r8), pointer :: h2osoi_ice(:,:)  !ice lens (kg/m2)
+    real(r8), pointer :: watsat(:,:)      !volumetric soil water at saturation (porosity)
+    real(r8), pointer :: sucsat(:,:)      !minimum soil suction (mm)
+    real(r8), pointer :: bsw(:,:)         !Clapp and Hornberger "b"
 !
 ! local pointers to implicit out arguments
 !

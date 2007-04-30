@@ -67,7 +67,7 @@ restart_type=0
 export restart_type
 
 clm_nrevsn=' '
-export_clm_revsn
+export $clm_revsn
 
 ${CLM_SCRIPTDIR}/nl_files/$2 
 rc=$?

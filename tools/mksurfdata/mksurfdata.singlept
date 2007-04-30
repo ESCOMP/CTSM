@@ -4,7 +4,7 @@
  mksrf_fvegtyp      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_pft.060929.nc'
  mksrf_fsoicol      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_soilcol.060929.nc'
  mksrf_flanwat      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_lanwat.060929.nc'
- mksrf_fmax         = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_fmax.061020.nc'
+ mksrf_fmax         = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_fmax.070406.nc'
  mksrf_fglacier     = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_glacier.060929.nc'
  mksrf_furban       = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_urban.060929.nc'
  mksrf_flai         = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_lai.060929.nc'

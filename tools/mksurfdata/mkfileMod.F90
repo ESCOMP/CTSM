@@ -74,11 +74,11 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Source', len_trim(str), trim(str)), subname)
 
-    str = '$Name: clm3_expa_48_brnchT_fmesh13 $'
+    str = '$HeadURL$'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Version', len_trim(str), trim(str)), subname)
 
-    str = '$Id: mkfileMod.F90,v 1.1.2.4.2.1 2005/12/22 16:25:37 tcraig Exp $'
+    str = '$Id$'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Revision_Id', len_trim(str), trim(str)), subname)
 

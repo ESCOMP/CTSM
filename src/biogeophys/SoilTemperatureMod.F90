@@ -542,7 +542,8 @@ contains
 !     i.e., the layer temperature is great than the freezing point
 !     and the ice mass is not equal to zero (i.e. melting),
 !     or the layer temperature is less than the freezing point
-!     and the liquid water mass is not equal to zero (i.e. freezing).
+!     and the liquid water mass is greater than the allowable supercooled 
+!     liquid water calculated from freezing point depression (i.e. freezing).
 ! (2) Assess the rate of phase change from the energy excess (or deficit)
 !     after setting the layer temperature to freezing point.
 ! (3) Re-adjust the ice and liquid mass, and the layer temperature
@@ -573,6 +574,7 @@ contains
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 ! 2/14/02, Peter Thornton: Migrated to new data structures.
 ! 7/01/03, Mariana Vertenstein: Migrated to vector code
+! 04/25/07 Keith Oleson: CLM3.5 Hydrology
 !
 ! !LOCAL VARIABLES:
 !
@@ -585,7 +587,7 @@ contains
 !
     real(r8), pointer :: snowdp(:)        !snow height (m)
 !
-! local pointers tooriginal implicit out scalars
+! local pointers to original implicit out scalars
 !
     real(r8), pointer :: qflx_snomelt(:)  !snow melt (mm H2O /s)
     real(r8), pointer :: eflx_snomelt(:)  !snow melt heat flux (W/m**2)
@@ -612,19 +614,20 @@ contains
 !
 ! !OTHER LOCAL VARIABLES:
 !
-    integer  :: j,c,g                    !do loop index
-    integer  :: fc                       !lake filtered column indices
-    real(r8) :: dtime                    !land model time step (sec)
-    real(r8) :: heatr                    !energy residual or loss after melting or freezing
-    real(r8) :: temp1                    !temporary variables [kg/m2]
-    real(r8) :: hm(lbc:ubc,-nlevsno+1:nlevsoi) !energy residual [W/m2]
-    real(r8) :: xm(lbc:ubc,-nlevsno+1:nlevsoi) !melting or freezing within a time step [kg/m2]
-    real(r8) :: wmass0(lbc:ubc,-nlevsno+1:nlevsoi)
-    real(r8) :: wice0 (lbc:ubc,-nlevsno+1:nlevsoi)
-    real(r8) :: wliq0 (lbc:ubc,-nlevsno+1:nlevsoi)
-    real(r8) :: supercool(lbc:ubc,nlevsoi) !supercooled water in soil (kg/m2) 
-    real(r8) :: propor,tinc
-    real(r8) :: smp                      !frozen water potential (mm)
+    integer  :: j,c,g                              !do loop index
+    integer  :: fc                                 !lake filtered column indices
+    real(r8) :: dtime                              !land model time step (sec)
+    real(r8) :: heatr                              !energy residual or loss after melting or freezing
+    real(r8) :: temp1                              !temporary variables [kg/m2]
+    real(r8) :: hm(lbc:ubc,-nlevsno+1:nlevsoi)     !energy residual [W/m2]
+    real(r8) :: xm(lbc:ubc,-nlevsno+1:nlevsoi)     !melting or freezing within a time step [kg/m2]
+    real(r8) :: wmass0(lbc:ubc,-nlevsno+1:nlevsoi) !initial mass of ice and liquid (kg/m2)
+    real(r8) :: wice0 (lbc:ubc,-nlevsno+1:nlevsoi) !initial mass of ice (kg/m2)
+    real(r8) :: wliq0 (lbc:ubc,-nlevsno+1:nlevsoi) !initial mass of liquid (kg/m2)
+    real(r8) :: supercool(lbc:ubc,nlevsoi)         !supercooled water in soil (kg/m2) 
+    real(r8) :: propor                             !proportionality constant (-)
+    real(r8) :: tinc                               !t(n+1)-t(n) (K)
+    real(r8) :: smp                                !frozen water potential (mm)
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (column-level)
@@ -710,9 +713,7 @@ contains
              t_soisno(c,j) = tfrz
           endif
 
-          ![from Zhao (1997) and Koren (1999)]
-          !Increasing ice content decreases the water potential. But the decreasing of water
-          !potential is limited by the water potential calculated from soil temperature: smp
+          ! from Zhao (1997) and Koren (1999)
           supercool(c,j) = 0.0_r8
           if(t_soisno(c,j) < tfrz) then
              smp = hfus*(tfrz-t_soisno(c,j))/(grav*t_soisno(c,j)) * 1000._r8  !(mm)

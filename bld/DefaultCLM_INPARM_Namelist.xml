@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+
+<!--
+
+       DefaultCLM_INPARM_Namelist.xml                        Jan/2002
+
+       Values to use by default for creation of CLM model namelists.
+       The element names are the same as the corresponding namelist
+       variables.  Values that depend on the model configuration use
+       attributes to express the dependency.  The recognized attributes
+       are: ic_ymd, ic_tod, DYNAMICS, RESOLUTION, PLEV, and PHYSICS.
+
+       $Id$
+-->
+<clm_inparm>
+
+<!-- Root directory of initial and boundary datasets from CAM distribution -->
+<csmdata>/fs/cgd/csm/inputdata</csmdata>
+
+<!-- The default filenames are given relative to the root directory
+     for the CLM2 data in the CAM distribution, i.e.,
+     {csmdata} where {csmdata} is the content of the
+     csmdata element.
+-->
+
+<!-- Plant function types (relative to {csmdata}) -->
+<fpftcon>lnd/clm2/pftdata/pft-physiology.c070207</fpftcon>
+
+<!-- Initial condition datasets (relative to {csmdata}) -->
+<finidat RESOLUTION="64x128"   >lnd/clm2/inidata_3.1/offline/clmi_0000-01-01_064x128_c070403.nc</finidat>
+
+<!-- Surface datasets (relative to {csmdata}) -->
+<fsurdat RESOLUTION="128x256"   >lnd/clm2/surfdata/surfdata_128x256_070209.nc</fsurdat>
+<fsurdat RESOLUTION="64x128"    >lnd/clm2/surfdata/surfdata_064x128_070406.nc</fsurdat>
+<fsurdat RESOLUTION="48x96"     >lnd/clm2/surfdata/surfdata_048x096_061108.nc</fsurdat>
+<fsurdat RESOLUTION="32x64"     >lnd/clm2/surfdata/surfdata_32x64_USGS_070110.nc</fsurdat>
+<fsurdat RESOLUTION="8x16"      >lnd/clm2/surfdata/surfdata_8x16_USGS_070110.nc</fsurdat>
+
+<fsurdat RESOLUTION="0.9x1.25"  >lnd/clm2/surfdata/surfdata_0.9x1.25_USGS_070110.nc</fsurdat>
+<fsurdat RESOLUTION="1x1.25"    >lnd/clm2/surfdata/surfdata_1x1.25_USGS_070208.nc</fsurdat>
+<fsurdat RESOLUTION="1.9x2.5"   >lnd/clm2/surfdata/surfdata_1.9x2.5_070309.nc</fsurdat>
+<fsurdat RESOLUTION="2x2.5"     >lnd/clm2/surfdata/surfdata_2x2.5_USGS_070206.nc</fsurdat>
+<fsurdat RESOLUTION="4x5"       >lnd/clm2/surfdata/surfdata_4x5_USGS_070208.nc</fsurdat>
+<fsurdat RESOLUTION="10x15"     >lnd/clm2/surfdata/surfdata_10x15_USGS_070110.nc</fsurdat>
+ 
+<!-- Grid datasets (relative to {csmdata}) -->
+<fatmgrid RESOLUTION="128x256"   >lnd/clm2/griddata/griddata_128x256_060829.nc</fatmgrid>
+<fatmgrid RESOLUTION="64x128"    >lnd/clm2/griddata/griddata_64x128_060829.nc</fatmgrid>
+<fatmgrid RESOLUTION="48x96"     >lnd/clm2/griddata/griddata_48x96_060829.nc</fatmgrid>
+<fatmgrid RESOLUTION="32x64"     >lnd/clm2/griddata/griddata_32x64_USGS_070110.nc</fatmgrid>
+<fatmgrid RESOLUTION="8x16"      >lnd/clm2/griddata/griddata_8x16_USGS_070110.nc</fatmgrid>
+
+<fatmgrid RESOLUTION="0.9x1.25"  >lnd/clm2/griddata/griddata_0.9x1.25_USGS_070110.nc</fatmgrid>
+<fatmgrid RESOLUTION="1x1.25"    >lnd/clm2/griddata/griddata_1x1.25_060404.nc</fatmgrid>
+<fatmgrid RESOLUTION="1.9x2.5"   >lnd/clm2/griddata/griddata_1.9x2.5_060404.nc</fatmgrid>
+<fatmgrid RESOLUTION="2x2.5"     >lnd/clm2/griddata/griddata_2x2.5_060502.nc</fatmgrid>
+<fatmgrid RESOLUTION="4x5"       >lnd/clm2/griddata/griddata_4x5_060404.nc</fatmgrid>
+<fatmgrid RESOLUTION="10x15"     >lnd/clm2/griddata/griddata_10x15_USGS_070110.nc</fatmgrid>
+
+<!-- Fraction datasets (relative to {csmdata}) -->
+
+<fatmlndfrc RESOLUTION="128x256"    >lnd/clm2/griddata/fracdata_128x256_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc RESOLUTION="64x128"     >lnd/clm2/griddata/fracdata_64x128_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc RESOLUTION="48x96"      >lnd/clm2/griddata/fracdata_48x96_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc RESOLUTION="32x64"     >lnd/clm2/griddata/fracdata_32x64_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc RESOLUTION="8x16"      >lnd/clm2/griddata/fracdata_8x16_USGS_070110.nc</fatmlndfrc>
+
+<fatmlndfrc RESOLUTION="0.9x1.25"  >lnd/clm2/griddata/fracdata_0.9x1.25_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc RESOLUTION="1x1.25"    >lnd/clm2/griddata/fracdata_1x1.25_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc RESOLUTION="1.9x2.5"   >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v4_060808.nc</fatmlndfrc>
+<fatmlndfrc RESOLUTION="2x2.5"     >lnd/clm2/griddata/fracdata_2x2.5_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc RESOLUTION="4x5"       >lnd/clm2/griddata/fracdata_4x5_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc RESOLUTION="10x15"     >lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc</fatmlndfrc>
+
+</clm_inparm>

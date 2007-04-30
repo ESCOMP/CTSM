@@ -812,10 +812,10 @@ contains
        str = 'Community Land Model: CLM3'
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'source', len_trim(str), trim(str)), subname)
 
-       str = '$Name: clm3_expa_48_brnchT_fmesh13 $'
+       str = '$HeadURL$'
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'version', len_trim(str), trim(str)), subname)
 
-       str = '$Id: restFileMod.F90,v 1.19.14.12.2.1 2005/11/14 17:15:28 tcraig Exp $'
+       str = '$Id$'
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'revision_id', len_trim(str), trim(str)), subname)
 
        str = ctitle

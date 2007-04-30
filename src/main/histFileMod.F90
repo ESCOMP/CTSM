@@ -1820,11 +1820,11 @@ contains
     call check_ret(&
          nf_put_att_text (nfid(t), NF_GLOBAL, 'source', len_trim(str), trim(str)), subname)
 
-    str = '$Name: clm3_expa_48_brnchT_fmesh13 $'
+    str = '$HeadURL'
     call check_ret(&
          nf_put_att_text (nfid(t), NF_GLOBAL, 'version', len_trim(str), trim(str)), subname)
      
-    str = '$Id: histFileMod.F90,v 1.19.14.12.2.7 2005/12/07 05:01:16 tcraig Exp $'
+    str = '$Id$'
     call check_ret(&
          nf_put_att_text (nfid(t), NF_GLOBAL, 'revision_id', len_trim(str), trim(str)), subname)
 

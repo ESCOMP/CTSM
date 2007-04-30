@@ -106,8 +106,6 @@ contains
 ! o2 partial pressures are hardwired, but they should be coming in from
 ! forc_pco2 and forc_po2. Keeping the same hardwired values as in CLM2 to
 ! assure bit-for-bit results in the first comparisons.
-! 4/26/05, David Lawrence and Peter Thornton: modified csoilcn to reduce 
-!   ground evaporation under canopies.
 !
 ! !LOCAL VARIABLES:
 !
@@ -163,9 +161,9 @@ contains
    real(r8), pointer :: bsw(:,:)       ! Clapp and Hornberger "b"
    real(r8), pointer :: rootfr(:,:)    ! fraction of roots in each soil layer
    real(r8), pointer :: dleaf(:)       ! characteristic leaf dimension (m)
-   real(r8), pointer :: smpso(:)       !soil water potential at full stomatal opening (mm)
-   real(r8), pointer :: smpsc(:)       !soil water potential at full stomatal closure (mm)
-   real(r8), pointer :: frac_sno(:)    !fraction of ground covered by snow (0 to 1)
+   real(r8), pointer :: smpso(:)       ! soil water potential at full stomatal opening (mm)
+   real(r8), pointer :: smpsc(:)       ! soil water potential at full stomatal closure (mm)
+   real(r8), pointer :: frac_sno(:)    ! fraction of ground covered by snow (0 to 1)
 !
 ! local pointers to implicit inout arguments
 !
@@ -211,19 +209,19 @@ contains
    real(r8), pointer :: qflx_evap_soi(:)   ! soil evaporation (mm H2O/s) (+ = to atm)
    real(r8), pointer :: fpsn(:)            ! photosynthesis (umol CO2 /m**2 /s)
    real(r8), pointer :: rootr(:,:)         ! effective fraction of roots in each soil layer
-   real(r8), pointer :: rresis(:,:)        !root resistance by layer (0-1)  (nlevsoi)	
+   real(r8), pointer :: rresis(:,:)        ! root resistance by layer (0-1)  (nlevsoi)	
 !
 !EOP
 !
 ! !OTHER LOCAL VARIABLES:
 !
    real(r8), parameter :: btran0 = 0.0_r8  ! initial value
-   real(r8), parameter :: zii = 1000.0_r8      ! convective boundary layer height [m]
-   real(r8), parameter :: beta = 1.0_r8        ! coefficient of conective velocity [-]
-   real(r8), parameter :: delmax = 1.0_r8      ! maxchange in  leaf temperature [K]
-   real(r8), parameter :: dlemin = 0.1_r8      ! max limit for energy flux convergence [w/m2]
-   real(r8), parameter :: dtmin = 0.01_r8      ! max limit for temperature convergence [K]
-   integer , parameter :: itmax = 40        ! maximum number of iteration [-]
+   real(r8), parameter :: zii = 1000.0_r8  ! convective boundary layer height [m]
+   real(r8), parameter :: beta = 1.0_r8    ! coefficient of conective velocity [-]
+   real(r8), parameter :: delmax = 1.0_r8  ! maxchange in  leaf temperature [K]
+   real(r8), parameter :: dlemin = 0.1_r8  ! max limit for energy flux convergence [w/m2]
+   real(r8), parameter :: dtmin = 0.01_r8  ! max limit for temperature convergence [K]
+   integer , parameter :: itmax = 40       ! maximum number of iteration [-]
    integer , parameter :: itmin = 2         ! minimum number of iteration [-]
    real(r8) :: dtime                 ! land model time step (sec)
    real(r8) :: zldis(lbp:ubp)        ! reference height "minus" zero displacement height [m]
@@ -658,9 +656,9 @@ contains
          ! Sensible heat conductance for air, leaf and ground
          ! Moved the original subroutine in-line...
 
-         wta    = 1._r8/rah(p,1)                ! air
+         wta    = 1._r8/rah(p,1)             ! air
          wtl    = (elai(p)+esai(p))/rb(p)    ! leaf
-         wtg(p) = 1._r8/rah(p,2)                ! ground
+         wtg(p) = 1._r8/rah(p,2)             ! ground
          wtshi  = 1._r8/(wta+wtl+wtg(p))
 
          wtl0(p) = wtl*wtshi         ! leaf

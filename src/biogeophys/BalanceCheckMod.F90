@@ -75,7 +75,7 @@ contains
     real(r8), pointer :: h2osoi_ice(:,:)       ! ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)       ! liquid water (kg/m2)
     real(r8), pointer :: h2ocan_pft(:)         ! canopy water (mm H2O) (pft-level) 
-    real(r8), pointer :: wa(:)                 !water in the unconfined aquifer (m)
+    real(r8), pointer :: wa(:)                 ! water in the unconfined aquifer (mm)
 
 !
 ! local pointers to original implicit out variables
@@ -148,14 +148,9 @@ contains
 ! error = abs(Net radiation - change of internal energy - Sensible heat
 !             - Latent heat)
 !
-! The error should be less than 0.02 W/m$^2$ in each time integration
-! interval.
-!
 ! The error for water balance:
 !
 ! error = abs(precipitation - change of water storage - evaporation - runoff)
-!
-! The error should be less than 0.001 mm in each time integration interval.
 !
 ! !USES:
     use clmtype

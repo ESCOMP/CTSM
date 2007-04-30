@@ -876,7 +876,7 @@ type, public :: column_pstate_type
    real(r8), pointer :: watopt(:,:)           !btran parameter for btran = 1
    real(r8), pointer :: hksat(:,:)            !hydraulic conductivity at saturation (mm H2O /s) (nlevsoi) 
    real(r8), pointer :: sucsat(:,:)           !minimum soil suction (mm) (nlevsoi) 
-   real(r8), pointer :: hkdepth(:)            !Length scale for Ksat decrease (m)
+   real(r8), pointer :: hkdepth(:)            !decay factor (m)
    real(r8), pointer :: wtfact(:)             !maximum saturated fraction for a gridcell
    real(r8), pointer :: fracice(:,:)          !fractional impermeability (-)
    real(r8), pointer :: csol(:,:)             !heat capacity, soil solids (J/m**3/Kelvin) (nlevsoi) 
@@ -960,7 +960,7 @@ type, public :: column_wstate_type
    real(r8) ,pointer :: soilalpha(:)          !factor that reduces ground saturated specific humidity (-)
    real(r8), pointer :: zwt(:)                !water table depth
    real(r8), pointer :: fcov(:)               !fractional area with water table at surface
-   real(r8), pointer :: wa(:)                 !water in the unconfined aquifer (m)
+   real(r8), pointer :: wa(:)                 !water in the unconfined aquifer (mm)
    real(r8), pointer :: wt(:)                 !total water storage (unsaturated soil water + groundwater) (mm)
    real(r8), pointer :: qcharge(:)            !aquifer recharge rate (mm/s)
 end type column_wstate_type

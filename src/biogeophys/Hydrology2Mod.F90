@@ -23,8 +23,7 @@ module Hydrology2Mod
 ! 7/12/03 Forrest Hoffman ,Mariana Vertenstein : Migrated to vector code
 ! 11/05/03 Peter Thornton: Added calculation of soil water potential
 !   for use in CN phenology code.
-! 11/27/06 Keith Oleson, Dave Lawrence: Modify subroutine calls to SurfaceRunoff and Drainage 
-!   to pass icefrac in/out
+! 04/25/07 Keith Oleson: CLM3.5 Hydrology 
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -65,7 +64,7 @@ contains
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
                                  SnowWater, BuildSnowFilter
     use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff
-    use clm_time_manager    , only : get_step_size, get_nstep, is_perpetual
+    use clm_time_manager, only : get_step_size, get_nstep, is_perpetual
 !
 ! !ARGUMENTS:
     implicit none
@@ -108,9 +107,9 @@ contains
 !
     real(r8), pointer :: dz(:,:)          ! layer thickness depth (m)
     real(r8), pointer :: zi(:,:)          ! interface depth (m)
-    real(r8), pointer :: zwt(:)           ! water table depth
+    real(r8), pointer :: zwt(:)           ! water table depth (m)
     real(r8), pointer :: fcov(:)          ! fractional area with water table at surface
-    real(r8), pointer :: wa(:)            ! water in the unconfined aquifer (m)
+    real(r8), pointer :: wa(:)            ! water in the unconfined aquifer (mm)
     real(r8), pointer :: qcharge(:)       ! aquifer recharge rate (mm/s)
 !
 ! local pointers to implicit out arguments
@@ -267,7 +266,7 @@ contains
 
     end if
 
-    ! Set empty snow layers to zero
+    ! Set snow age to zero if no snow
 
 !dir$ concurrent
 !cdir nodep
@@ -277,6 +276,9 @@ contains
           snowage(c) = 0._r8
        end if
     end do
+
+    ! Set empty snow layers to zero
+
     do j = -nlevsno+1,0
 !dir$ concurrent
 !cdir nodep

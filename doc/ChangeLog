@@ -1,4 +1,80 @@
 ===============================================================
+Tag name:  clm3_4_1
+Originator(s):  erik (KLUZEK ERIK 1326 CGD)
+Date: Mon Apr 30 14:18:46 MDT 2007
+One-line Summary: Add documentation to code from Keith Oleson, and set keywords on files so Version will be given
+
+Purpose of changes: Add documentation to code and set keywords on files that keep track of versions on output NetCDF files
+
+Bugs fixed (include bugzilla ID): 453, 458
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do:
+
+A         DefaultCLM_INPARM_Namelist.xml   ! Add XML file that CAM will use to reference what datasets to point to
+
+	This file will later be used by both CCSM and CLM
+
+List all existing files that have been modified, and describe the changes:
+
+M      test/system/TER.sh
+M      test/system/TSM.sh
+
+ ----------------> Remove files with RCS keywords, and activate keywords for files that use them
+M      src/main/abortutils.F90
+MM     src/main/histFileMod.F90
+MM     src/main/restFileMod.F90
+M      src/main/scam_setlatlonidx.F90
+M      src/main/decompMod.F90
+M      tools/mkgriddata/creategridMod.F90
+M      tools/mksurfdata/mkfileMod.F90
+M      tools/mksurfdata/mksurfdata.namelist
+M      tools/mksurfdata/mksurfdata.regional
+M      tools/mksurfdata/mksurfdata.singlept
+M      tools/interpinic/interpinic.F90
+M      tools/interpinic/addglobal.F90
+M      tools/interpinic/clmi_1999-01-02_10x15_c070330.nc   ! Put descriptive data on file
+
+ ----------------> Add documentation to code from Keith Oleson
+M      src/main/iniTimeConst.F90
+M      src/main/clmtype.F90
+M      src/main/histFldsMod.F90
+M      src/main/mkarbinitMod.F90
+M      src/biogeophys/BalanceCheckMod.F90
+M      src/biogeophys/SoilTemperatureMod.F90
+M      src/biogeophys/Biogeophysics1Mod.F90
+M      src/biogeophys/Hydrology1Mod.F90
+M      src/biogeophys/Hydrology2Mod.F90
+M      src/biogeophys/SoilHydrologyMod.F90
+M      src/biogeophys/BareGroundFluxesMod.F90
+M      src/biogeophys/CanopyFluxesMod.F90
+
+Summary of testing:
+
+  bluevista:
+062 sm061 TSMconccsm.sh ERS f19_g13 ...............................FAIL! rc= 7
+  lightning: All PASS except
+019 sm551 TSM.sh _dh 10x15 48 .....................................FAIL! rc= 8
+020 er551 TER.sh _dh 10x15 10+38 ..................................FAIL! rc= 5
+021 br551 TBR.sh _dh 10x15 24+24 ..................................FAIL! rc= 5
+  bangkok/lf95:
+033 sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7 ....FAIL! rc= 4
+
+===============================================================
+===============================================================
 Tag name:  clm3_expa_99
 Originator(s):  erik (KLUZEK ERIK 1326 CGD)
 Date:  Tue Apr 24 13:27:10 MDT 2007

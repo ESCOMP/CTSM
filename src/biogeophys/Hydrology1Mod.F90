@@ -118,8 +118,8 @@ contains
     real(r8), pointer :: qflx_prec_intr(:)     ! interception of precipitation [mm/s]
     real(r8), pointer :: qflx_prec_grnd(:)     ! water onto ground including canopy runoff [kg/(m2 s)]
     real(r8), pointer :: qflx_snowcap(:)       ! excess precipitation due to snow capping (mm H2O /s) [+]
-    real(r8), pointer :: qflx_snow_grnd_pft(:) !snow on ground after interception (mm H2O/s) [+]
-    real(r8), pointer :: qflx_snow_grnd_col(:) !snow on ground after interception (mm H2O/s) [+]
+    real(r8), pointer :: qflx_snow_grnd_pft(:) ! snow on ground after interception (mm H2O/s) [+]
+    real(r8), pointer :: qflx_snow_grnd_col(:) ! snow on ground after interception (mm H2O/s) [+]
     real(r8), pointer :: qflx_rain_grnd(:)     ! rain on ground after interception (mm H2O/s) [+]
     real(r8), pointer :: fwet(:)               ! fraction of canopy that is wet (0 to 1)
     real(r8), pointer :: fdry(:)               ! fraction of foliage that is green and dry [-] (new)

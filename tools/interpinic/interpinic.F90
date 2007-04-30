@@ -86,6 +86,8 @@ contains
     call wrap_open (fin , NF_NOWRITE, ncidi)
     call wrap_open (fout, NF_WRITE,   ncido)
 
+    call addglobal (ncido, cmdline)
+
     ! Determine if input initial file has RTM or DGVM data
 
     ret = nf_inq_varid (ncidi, 'RTMVOLR', varid)

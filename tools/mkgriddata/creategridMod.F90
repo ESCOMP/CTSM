@@ -962,13 +962,13 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Source', len_trim(str), trim(str)), subname)
 
-!    str = '$Name: clm3_expa_48_brnchT_fmesh13 $'
-!    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
-!         'Version', len_trim(str), trim(str)), subname)
+    str = '$HeadURL$'
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'Version', len_trim(str), trim(str)), subname)
 
-!    str = '$Id: creategridMod.F90,v 1.1.2.1.2.1 2005/12/22 16:25:18 tcraig Exp $'
-!    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
-!         'Revision_Id', len_trim(str), trim(str)), subname)
+    str = '$Id$'
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'Revision_Id', len_trim(str), trim(str)), subname)
 
     ! ----------------------------------------------------------------------
     ! Define variables

@@ -53,7 +53,7 @@ contains
     real(r8), pointer :: psisat(:,:)       ! soil water potential at saturation for CN code (MPa)
     real(r8), pointer :: vwcsat(:,:)       ! volumetric water content at saturation for CN code (m3/m3)
     real(r8), pointer :: zi(:,:)           ! interface level below a "z" level (m)
-    real(r8), pointer :: wa(:)             ! water in the unconfined aquifer (m)
+    real(r8), pointer :: wa(:)             ! water in the unconfined aquifer (mm)
     real(r8), pointer :: wt(:)             ! total water storage (unsaturated soil water + groundwater) (mm)
     real(r8), pointer :: zwt(:)            ! water table depth (m)
 !
@@ -245,9 +245,9 @@ contains
     do c = begc,endc
        l = clandunit(c)
        if (.not. lakpoi(l)) then  !not lake
-          wa(c)  = 4800._r8   ! water in aquifer
+          wa(c)  = 4800._r8
           wt(c)  = wa(c)
-          zwt(c) = (25._r8 + zi(c,nlevsoi)) - wa(c)/0.2_r8 /1000._r8
+          zwt(c) = (25._r8 + zi(c,nlevsoi)) - wa(c)/0.2_r8 /1000._r8  ! One meter below soil column
        end if
     end do
 
