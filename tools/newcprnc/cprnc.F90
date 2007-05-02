@@ -218,6 +218,7 @@ program cprnc
 ! Call the routine which loops through variables in time and prints stats
 !
    call timeloop (nfid, nvars, numcases, ntime)
+   write(6,*) "successfully compared the two files"
    stop 0
 end program cprnc
 

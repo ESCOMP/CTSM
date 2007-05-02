@@ -83,7 +83,7 @@ contains
 !    o real latitude  of grid cell (degrees)
 !    o real longitude of grid cell (degrees)
 !    o integer surface type: 0 = ocean or 1 = land
-!    o integer soil color (1 to 9) for use with soil albedos
+!    o integer soil color (1 to 20) for use with soil albedos
 !    o real soil texture, %sand, for thermal and hydraulic properties
 !    o real soil texture, %clay, for thermal and hydraulic properties
 !    o real % of cell covered by lake    for use as subgrid patch

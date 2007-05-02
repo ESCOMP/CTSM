@@ -11,9 +11,7 @@
 # Usage for Lahey compiler (default): 
 #   qsub run-pc.csh
 # Usage for pgf90 compiler with pgcc: 
-#   env OPT_BLD=pgf90-pgcc qsub run-pc.csh
-# Usage for pgf90 compiler with gcc: 
-#   env OPT_BLD=pgf90-gcc qsub run-pc.csh
+#   env OPT_BLD=PGI qsub run-pc.csh
 #-----------------------------------------------------------------------
 #
 # Name of the queue (CHANGE THIS if needed)
@@ -52,17 +50,16 @@ switch ( $OS )
        setenv MOD_NETCDF $INC_NETCDF
        setenv LD_LIBRARY_PATH "${LAHEY}/lib:/lib/i686:/usr/local/lib"
      else
-       if ( $OPT_BLD == "pgf90-gcc" ) then
-         setenv USER_CC gcc
-       endif
-       setenv INC_MPI /usr/local/mpich-pgi-pgcc-pghf/include
-       setenv LIB_MPI /usr/local/mpich-pgi-pgcc-pghf/lib
-       setenv INC_NETCDF /usr/local/netcdf-pgi-hpf-cc/include
+       set mpich = /usr/local/mpich-pgi-pgcc-pghf
+       setenv INC_MPI ${mpich}/include
+       setenv LIB_MPI ${mpich}/lib
+       set netcdf = /usr/local/netcdf-pgi-hpf-cc
+       setenv INC_NETCDF ${netcdf}/include
+       setenv LIB_NETCDF ${netcdf}/lib
        setenv MOD_NETCDF $INC_NETCDF
-       setenv LIB_NETCDF /usr/local/netcdf-pgi-hpf-cc/lib
        setenv PGI /usr/local/pgi-pgcc-pghf
-       setenv PATH ${PGI}/linux86/6.1/bin:${PATH}
-       setenv LD_LIBRARY_PATH "${PGI}/linux86/lib:${PGI}/linux86/liblf:/lib/i686:/usr/local/lib"
+       setenv PATH ${PGI}/linux86/6.1/bin:${mpich}/bin:${PATH}
+       setenv LD_LIBRARY_PATH "${PGI}/linux86/6.1/lib:\${LD_LIBRARY_PATH}"
 
      endif
      breaksw;
@@ -79,20 +76,20 @@ limit stacksize unlimited
 ## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
 ## Contains the source code for the CLM distribution.
 ## (the root directory contains the subdirectory "src")
-set clmroot   = /fis/cgd/...
+set clmroot   = /fs/cgd/...
 
 ## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
 ## Contains the initial and boundary data for the CLM distribution.
 setenv CSMDATA /fs/cgd/csm/inputdata/lnd/clm2
 
 ## Default configuration settings:
-## By default spmd is off
 set spmd     = on       # settings are [on   | off       ] (default is off)
 set maxpft   = 4        # settings are 4->17               (default is 4)
 set bgc      = none     # settings are [none | cn | casa ] (default is none)
 set supln    = off      # settings are [on   | off       ] (default is off)
 set dust     = off      # settings are [on   | off       ] (default is off)   
 set voc      = off      # settings are [on   | off       ] (default is off)   
+set rtm      = off      # settings are [on   | off       ] (default is off)   
 
 ## $wrkdir is a working directory where the model will be built and run.
 ## $blddir is the directory where model will be compiled.
@@ -110,14 +107,14 @@ mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
 mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
 ## Build (or re-build) executable
-set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -dust $dust -usr_src $usr_src"
+set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust -usr_src $usr_src"
 if ($spmd == on ) set flags = "$flags -spmd"
 if ($spmd == off) set flags = "$flags -nospmd"
 
 if ( $bgc == cn )then
-   set fsurdat="surfdata_064x128_070406.nc"
-else
    set fsurdat="surfdata_64x128_1870_cn_c070413.nc"
+else
+   set fsurdat="surfdata_64x128_c070501.nc"
 endif
 
 echo "cd $blddir"
@@ -138,15 +135,16 @@ cd $rundir                      || echo "cd $blddir failed" && exit 1
 
 cat >! lnd.stdin << EOF
  &clm_inparm
- caseid         = $case
- ctitle         = $case
+ caseid         = '$case'
+ ctitle         = '$case'
  finidat        = '$CSMDATA/inidata_3.1/offline/clmi_0000-01-01_064x128_c070403.nc'
- fsurdat        = "$CSMDATA/surfdata/$fsurdat"
- fatmgrid       = "$CSMDATA/griddata/griddata_64x128_060829.nc"
- fatmlndfrc     = "$CSMDATA/griddata/fracdata_64x128_USGS_070110.nc"
+ fsurdat        = '$CSMDATA/surfdata/$fsurdat'
+ fatmgrid       = '$CSMDATA/griddata/griddata_64x128_060829.nc'
+ fatmlndfrc     = '$CSMDATA/griddata/fracdata_64x128_USGS_070110.nc'
  fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
- fndepdat       = "$CSMDATA/ndepdata/ndep_clm_2000_64x128_c060414.nc"
- offline_atmdir = "$CSMDATA/NCEPDATA.Qian.T62.c051024"
+ fndepdat       = '$CSMDATA/ndepdata/ndep_clm_2000_64x128_c060414.nc'
+ offline_atmdir = '$CSMDATA/NCEPDATA.Qian.T62.c051024'
+ frivinp_rtm    = '$CSMDATA/rtmdata/rdirc.05.061026'
  nsrest         =  0
  nelapse        =  48
  dtime          =  1800

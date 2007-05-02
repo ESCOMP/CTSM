@@ -13,8 +13,8 @@ PROGRAM program_off
 !
 ! !DESCRIPTION:
 ! "off-line" code to mimic coupling to an atmospheric model.
-! This program is an "off-line" driver for clm2.
-! This code can be used to run the clm2 uncoupled from any atmospheric model.
+! This program is an "off-line" driver for clm3.
+! This code can be used to run the clm3 uncoupled from any atmospheric model.
 ! The appropriate atmospheric forcing is provided in module [atmdrvMod.F90]
 ! o If running as an offline driver, the land surface model may use
 !   a different grid than the input atmospheric data. The atmospheric
@@ -166,16 +166,16 @@ PROGRAM program_off
      call atmdrv(nstep)
      call t_stopf('atmdrv')
 
-!  call t_barrierf('barrier1b',mpicom)
+     !  call t_barrierf('barrier1b',mpicom)
      ! Run
 
      call clm_run1()
 
-!  call t_barrierf('barrier2b',mpicom)
+     !  call t_barrierf('barrier2b',mpicom)
 
      call clm_run2()
 
-!  call t_barrierf('barrierd2p',mpicom)
+     !  call t_barrierf('barrierd2p',mpicom)
      ! Determine if time to stop
 
      if (is_last_step()) exit

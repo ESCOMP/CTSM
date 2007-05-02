@@ -1,4 +1,175 @@
 ===============================================================
+Tag name:  clm3_4_2
+Originator(s):  erik (Erik Kluzek)
+Date: Wed May  2 15:09:41 MDT 2007
+Date:One-line Summary: Use new surfdatasets, add new tests, fix newcprnc makefile, fix bugs, and documentation, add script to query XML file 
+
+Purpose of changes: Bug-fixes in preparation of clm3_5_00
+
+        Use new surface datasets created by Nan R.
+        Add new sets of regression tests
+	Fix so that newcprnc will work on pathscale
+        Fix so that newcprnc can be tested
+        Fix so that PGI mode can be tested on bangkok
+        Fix so that run-pc script runs for both lahey and pgi
+        Fix some documentation
+        Add script to query the Namelist XML file
+
+Bugs fixed (include bugzilla ID): 461, 463, 468
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: surface datasets updated
+
+List any changes to the defaults for the boundary datasets: surface datasets updated
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, had nanr review query script
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all subroutines eliminated: Remove convert_ascii as no longer needed
+   (Can use earlier CLM versions if needed in the future)
+
+List all subroutines added and what they do:
+
+---------> Add a set of regression tests that will do almost all tests in the list
+A test/system/tests_posttag_hybrid_regression
+A test/system/tests_posttag_purempi_regression
+---------> Add a script to query the contents to the DefaultCLM_INPARM_Namelist.xml file
+---------> to ensure it is read correctly. Also can be used to copy files as well.
+A bld/queryDefaultNamelist.pl
+---------> Add files so that newcprnc uses the standard tools Makefile and can be tested by
+---------> test_driver.sh
+A tools/newcprnc/misc.h
+A tools/newcprnc/Filepath
+A tools/newcprnc/newcprnc.runoptions
+A tools/newcprnc/preproc.h
+A tools/newcprnc/cprnc.F90
+A tools/newcprnc/Srcfiles
+
+List all existing files that have been modified, and describe the changes:
+
+M test/system/nl_files/t31_cnall
+M test/system/nl_files/t31_dgvm
+M test/system/nl_files/1.9x2.5
+M test/system/nl_files/10x15_cnall
+M test/system/nl_files/10x15_dgvm
+M test/system/nl_files/t31_casa
+M test/system/nl_files/10x15_pftdyn
+M test/system/nl_files/t31_dgvm_long
+M test/system/nl_files/t31
+M test/system/nl_files/10x15
+M test/system/input_tests_master
+M test/system/README
+M test/system/tests_pretag_bangkok
+M test/system/test_driver.sh
+M test/system/tests_pretag_tempest
+M tools/newcprnc/Makefile ----> Use standard tools Makefile
+---------> Update datasets get right surface dataset, get working on bangkok
+M bld/run-pc.csh
+M bld/DefaultCLM_INPARM_Namelist.xml
+M bld/run-lightning.csh
+M bld/run-ibm.csh
+M bld/run-frost.csh
+---------> Add an update date option
+M doc/UpDateChangeLog.pl
+---------> Fix minor problems in documenation
+M src/biogeochem/DGVMMod.F90
+M src/main/initializeMod.F90
+M src/main/scam_setlatlonidx.F90
+M src/main/program_off.F90
+M src/main/surfrdMod.F90
+
+Summary of testing:
+
+All standard tests PASS (10x15, and 1.9x2.5 tests are different because of new surfdata files)*
+
+  bluevista: All tests PASS except
+  For regression tests the following fail because of changes in surfdata sets
+054 bl551 TBL.sh _dh 10x15 48 .....................................FAIL! rc= 7
+058 bl563 TBL.sh _h 1.9x2.5 -10 ...................................FAIL! rc= 7
+062 bl552 TBL.sh _ds 10x15 24 .....................................FAIL! rc= 7
+082 sm061 TSMconccsm.sh ERS f19_g13 ...............................FAIL! rc= 4
+
+  blueice: All tests PASS except
+  For regression tests the following fail because of changes in surfdata sets
+054 bl551 TBL.sh _dh 10x15 48 .....................................FAIL! rc= 7
+058 bl563 TBL.sh _h 1.9x2.5 -10 ...................................FAIL! rc= 7
+062 bl552 TBL.sh _ds 10x15 24 .....................................FAIL! rc= 7
+082 sm061 TSMconccsm.sh ERS f19_g13 ...............................FAIL! rc= 4
+
+  For regression tests the following fail because of changes in surfdata sets
+
+054 bl551 TBL.sh _dh 10x15 48 .....................................FAIL! rc= 7
+058 bl563 TBL.sh _h 1.9x2.5 -10 ...................................FAIL! rc= 7
+062 bl552 TBL.sh _ds 10x15 24 .....................................FAIL! rc= 7
+082 sm061 TSMconccsm.sh ERS f19_g13 ...............................FAIL! rc= 4
+
+  lightning: All PASS except (because of earlier reported bug 444)
+
+019 sm551 TSM.sh _dh 10x15 48 .....................................FAIL! rc= 8
+020 er551 TER.sh _dh 10x15 10+38 ..................................FAIL! rc= 5
+021 br551 TBR.sh _dh 10x15 24+24 ..................................FAIL! rc= 5
+
+  jaguar: Build of first test works (need datasets to do more testing)
+  robin/phoenix: Build of all standard tests work (need datasets to do more testing)
+  bangkok: All standard tests PASS*
+
+PGI testing:
+
+011 sm132 TSM.sh 4p_vodsr_dm t42half 48 ...........................FAIL! rc= 8
+012 er132 TER.sh 4p_vodsr_dm t42half 10+38 ........................FAIL! rc= 5
+013 br132 TBR.sh 4p_vodsr_dm t42half 24+24 ........................FAIL! rc= 5
+014 bl132 TBL.sh 4p_vodsr_dm t42half 48 ...........................FAIL! rc= 4
+015 sm135 TSM.sh 4p_vodsr_m t42half 48 ............................FAIL! rc= 8
+022 er212 TER.sh 17p_cnn_dm t31_cnall 10+38 .......................FAIL! rc= 9
+038 sm471 TSM.sh 10p_dgvm_s singlept_dgvm_long -730 ...............FAIL! rc= 8
+039 er471 TER.sh 10p_dgvm_s singlept_dgvm_long -334+-396 ..........FAIL! rc= 5
+040 bl471 TBL.sh 10p_dgvm_s singlept_dgvm_long -730 ...............FAIL! rc= 4
+046 er564 TER.sh _m 1.9x2.5 -5+-5 .................................FAIL! rc= 9
+060 bl711 TBLtools.sh mksurfdata namelist .........................FAIL! rc= 7
+062 bl771 TBLtools.sh mksurfdata singlept .........................FAIL! rc= 7
+063 sm811 TSMtools.sh interpinic runoptions .......................FAIL! rc= 6
+068 sm061 TSMconccsm.sh ERS f19_g13 ...............................FAIL! rc= 4
+
+Test 046 and 022 restart testis fail because restart IC file was NOT in the right place
+Tests 038-040 "singlept_dgvm_long" test fails because needs more input NCEPDATA
+Test 063 interpinic FAIL's because file using does NOT exist on bangkok
+
+Lahey testing:
+
+011 sm132 TSM.sh 4p_vodsr_dm t42half 48 ...........................FAIL! rc= 8
+012 er132 TER.sh 4p_vodsr_dm t42half 10+38 ........................FAIL! rc= 5
+013 br132 TBR.sh 4p_vodsr_dm t42half 24+24 ........................FAIL! rc= 5
+014 bl132 TBL.sh 4p_vodsr_dm t42half 48 ...........................FAIL! rc= 4
+015 sm135 TSM.sh 4p_vodsr_m t42half 48 ............................FAIL! rc= 8
+022 er212 TER.sh 17p_cnn_dm t31_cnall 10+38 .......................FAIL! rc= 11
+023 br212 TBR.sh 17p_cnn_dm t31_cnall 24+24 .......................FAIL! rc= 11
+029 bl312 TBL.sh 4p_casa_dm t31_casa 48 ...........................FAIL! rc= 7
+034 bl412 TBL.sh 10p_dgvm_dm t31_dgvm 48 ..........................FAIL! rc= 7
+044 bl552 TBL.sh _ds 10x15 24 .....................................FAIL! rc= 7
+048 bl564 TBL.sh _m 1.9x2.5 -10 ...................................FAIL! rc= 7
+063 sm811 TSMtools.sh interpinic runoptions .......................FAIL! rc= 6
+066 sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7 ....FAIL! rc= 4
+067 bl982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7 ....FAIL! rc= 2
+068 sm061 TSMconccsm.sh ERS f19_g13 ...............................FAIL! rc= 4
+
+Test 022 (CN restart test) fails -- because answers are different! (Documented as bug 469)
+TBL tests fail because of change in surfdata files
+Tests 038-040 "singlept_dgvm_long" test fails because needs more input NCEPDATA
+Test 063 interpinic FAIL's because file using does NOT exist on bangkok
+Tests 067-068 fail because of a variable defined in CAM is not initialized.
+
+  tempest: All standard tests PASS*
+
+  CCSM tests FAIL because we currently don't have a version of CCSM that will work with 
+  this version of CLM (because of the timing library updates and incomptabilities).
+  run scripts work on bluevista and bangkok (for Lahey and PGI)
+
+===============================================================
+===============================================================
 Tag name:  clm3_4_1
 Originator(s):  erik (KLUZEK ERIK 1326 CGD)
 Date: Mon Apr 30 14:18:46 MDT 2007

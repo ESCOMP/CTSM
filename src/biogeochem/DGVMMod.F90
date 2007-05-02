@@ -454,7 +454,7 @@ contains
        call check_ret(&
             nf_put_att_text (ncid, NF_GLOBAL, 'host', len_trim(str), trim(str)), subname)
        
-       str = 'Community Land Model: CLM2'
+       str = 'Community Land Model: CLM3'
        call check_ret(&
             nf_put_att_text (ncid, NF_GLOBAL, 'source', len_trim(str), trim(str)), subname)
        
@@ -895,7 +895,7 @@ contains
 !
 ! !DESCRIPTION:
 ! Determine new subgrid weights and areas
-! In CLM2 with satellite data, the number of veg pfts is determined once
+! In CLM3 with satellite data, the number of veg pfts is determined once
 ! and is less than maxpatch_pft (4) in some cells.
 ! In LSM with LPJ, the number of veg patches could be dynamic. Until we
 ! implement it as such, we will make all grid cells have 10 veg patches.

@@ -156,6 +156,9 @@ sm416 TSM.sh 10p_dgvm_o t31_dgvm 48
 sm417 TSM.sh 10p_dgvm_h t31_dgvm_long -200
 er417 TER.sh 10p_dgvm_h t31_dgvm_long -80+-120
 
+sm418 TSM.sh 10p_dgvm_m t31_dgvm_long -200
+er418 TER.sh 10p_dgvm_m t31_dgvm_long -80+-120
+
 sm451 TSM.sh 10p_dgvm_dm 10x15_dgvm 48
 er451 TER.sh 10p_dgvm_dm 10x15_dgvm 10+38
 br451 TBR.sh 10p_dgvm_dm 10x15_dgvm 24+24
@@ -164,7 +167,6 @@ bl451 TBL.sh 10p_dgvm_dm 10x15_dgvm 48
 sm471 TSM.sh 10p_dgvm_s singlept_dgvm_long -730
 er471 TER.sh 10p_dgvm_s singlept_dgvm_long -334+-396
 bl471 TBL.sh 10p_dgvm_s singlept_dgvm_long -730
-
 
 sm551 TSM.sh _dh 10x15 48
 er551 TER.sh _dh 10x15 10+38
@@ -181,6 +183,11 @@ er563 TER.sh _h 1.9x2.5 -5+-5
 bl563 TBL.sh _h 1.9x2.5 -10
 br563 TBR.sh _h 1.9x2.5 -10+-10
 
+sm564 TSM.sh _m 1.9x2.5 -10
+er564 TER.sh _m 1.9x2.5 -5+-5
+bl564 TBL.sh _m 1.9x2.5 -10
+br564 TBR.sh _m 1.9x2.5 -10+-10
+
 sm573 TSM.sh _s singlept -10
 er573 TER.sh _s singlept -5+-5
 bl573 TBL.sh _s singlept -10
@@ -190,6 +197,12 @@ sm583 TSM.sh _dh regional -10
 er583 TER.sh _dh regional -5+-5
 bl583 TBL.sh _dh regional -10
 br583 TBR.sh _dh regional -10+-10
+
+sm584 TSM.sh _dm regional -10
+er584 TER.sh _dm regional -5+-5
+bl584 TBL.sh _dm regional -10
+br584 TBR.sh _dm regional -10+-10
+
 
 sm611 TSMtools.sh mkgriddata namelist
 sm671 TSMtools.sh mkgriddata singlept
@@ -201,6 +214,8 @@ sm771 TSMtools.sh mksurfdata singlept
 bl771 TBLtools.sh mksurfdata singlept
 
 sm811 TSMtools.sh interpinic runoptions
+
+sm812 TSMtools.sh newcprnc runoptions
 
 sm921 TSMseqccsm.sh seqccsm_4x5_dh   seqccsm 48
 bl921 TSMseqccsm.sh seqccsm_4x5_dh   seqccsm 48

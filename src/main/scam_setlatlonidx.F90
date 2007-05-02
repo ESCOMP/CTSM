@@ -1,7 +1,10 @@
 subroutine scam_setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
                         closelatidx, closelonidx)
 !------------------------------------------------------------------------
-! File: setlatlon.F 
+! File: scam_setlatlon.F 
+!     Returns the latitude and longitude index for use when CLM is running
+!     with the Siongle Column Atmospheric Model (SCAM)
+!
 ! Author: John Truesdale (jet@ucar.edu)
 !
 !------------------------------------------------------------------------

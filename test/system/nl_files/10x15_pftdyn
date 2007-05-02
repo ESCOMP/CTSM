@@ -5,9 +5,9 @@ cat > lnd.stdin << EOF
  caseid         = 'clmrun'
  ctitle         = 'clmrun'
  finidat        = ' '
- fsurdat        = "$CSMDATA/lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc"
+ fsurdat        = "$CSMDATA/lnd/clm2/surfdata/surfdata_10x15_c070501.nc"
  fpftdyn        = "$CSMDATA/lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc"
- fatmgrid       = "$CSMDATA/lnd/clm2/griddata/griddata_10x15_USGS_070110.nc"
+ fatmgrid       = "$CSMDATA/lnd/clm2/griddata/griddata_10x15_070212.nc"
  fatmlndfrc     = "$CSMDATA/lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc"
  fpftcon        = "$CSMDATA/lnd/clm2/pftdata/pft-physiology.c070207"
  offline_atmdir = "$CSMDATA/lnd/clm2/NCEPDATA.Qian.T62.c051024"

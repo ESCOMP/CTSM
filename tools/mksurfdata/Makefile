@@ -1,10 +1,6 @@
 #-----------------------------------------------------------------------
-# This Makefile is for building cprnc on AIX, Compaq, Linux (with pgf90 or 
-# lf95 compiler), IRIX or SUN platforms. The code produces output nearly 
-# identical to that of tools/cprnc. The latter code can be jettisoned when
-# test-model goes away. Since test-model relies on cprnc, and demands certain
-# quirky features of it (e.g. no .f90 files), the old cprnc code cannot be
-# abandoned until test-model is also abandoned.
+# This Makefile is for building clm tools on AIX, Compaq, Linux (with pgf90 or
+# lf95 compiler), IRIX or SUN platforms.
 #
 # These macros can be changed by setting environment variables:
 #

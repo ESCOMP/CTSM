@@ -32,7 +32,6 @@ set clmroot   = ~/fmf_clm3_expa_88
 setenv CSMDATA /ptmp/tcraig/inputdata/lnd/clm2
 
 ## Default configuration settings:
-## By default spmd is off
 set spmd     = on       # settings are [on   | off       ] (default is off)
 set maxpft   = 17       # settings are 4->17               (default is 4)
 set bgc      = none     # settings are [none | cn | casa ] (default is none)

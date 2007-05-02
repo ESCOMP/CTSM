@@ -707,7 +707,7 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    version = 'CLM MODEL version 3.1'
+    version = 'CLM MODEL version 3.5'
     if ( masterproc )then
       write (6,*) trim(version)
       write (6,*)

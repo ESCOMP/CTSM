@@ -14,11 +14,11 @@
 -->
 <clm_inparm>
 
-<!-- Root directory of initial and boundary datasets from CAM distribution -->
+<!-- Root directory of initial and boundary datasets from CCSM distribution -->
 <csmdata>/fs/cgd/csm/inputdata</csmdata>
 
 <!-- The default filenames are given relative to the root directory
-     for the CLM2 data in the CAM distribution, i.e.,
+     for the CLM2 data in the CCSM distribution, i.e.,
      {csmdata} where {csmdata} is the content of the
      csmdata element.
 -->
@@ -30,32 +30,32 @@
 <finidat RESOLUTION="64x128"   >lnd/clm2/inidata_3.1/offline/clmi_0000-01-01_064x128_c070403.nc</finidat>
 
 <!-- Surface datasets (relative to {csmdata}) -->
-<fsurdat RESOLUTION="128x256"   >lnd/clm2/surfdata/surfdata_128x256_070209.nc</fsurdat>
-<fsurdat RESOLUTION="64x128"    >lnd/clm2/surfdata/surfdata_064x128_070406.nc</fsurdat>
-<fsurdat RESOLUTION="48x96"     >lnd/clm2/surfdata/surfdata_048x096_061108.nc</fsurdat>
-<fsurdat RESOLUTION="32x64"     >lnd/clm2/surfdata/surfdata_32x64_USGS_070110.nc</fsurdat>
-<fsurdat RESOLUTION="8x16"      >lnd/clm2/surfdata/surfdata_8x16_USGS_070110.nc</fsurdat>
+<fsurdat RESOLUTION="128x256"   >lnd/clm2/surfdata/surfdata_128x256_c070501.nc</fsurdat>
+<fsurdat RESOLUTION="64x128"    >lnd/clm2/surfdata/surfdata_64x128_c070501.nc</fsurdat>
+<fsurdat RESOLUTION="48x96"     >lnd/clm2/surfdata/surfdata_48x96_c070501.nc</fsurdat>
+<fsurdat RESOLUTION="32x64"     >lnd/clm2/surfdata/surfdata_32x64_c070501.nc</fsurdat>
+<fsurdat RESOLUTION="8x16"      >lnd/clm2/surfdata/surfdata_8x16_c070501.nc</fsurdat>
 
-<fsurdat RESOLUTION="0.9x1.25"  >lnd/clm2/surfdata/surfdata_0.9x1.25_USGS_070110.nc</fsurdat>
-<fsurdat RESOLUTION="1x1.25"    >lnd/clm2/surfdata/surfdata_1x1.25_USGS_070208.nc</fsurdat>
-<fsurdat RESOLUTION="1.9x2.5"   >lnd/clm2/surfdata/surfdata_1.9x2.5_070309.nc</fsurdat>
-<fsurdat RESOLUTION="2x2.5"     >lnd/clm2/surfdata/surfdata_2x2.5_USGS_070206.nc</fsurdat>
-<fsurdat RESOLUTION="4x5"       >lnd/clm2/surfdata/surfdata_4x5_USGS_070208.nc</fsurdat>
-<fsurdat RESOLUTION="10x15"     >lnd/clm2/surfdata/surfdata_10x15_USGS_070110.nc</fsurdat>
+<fsurdat RESOLUTION="0.9x1.25"  >lnd/clm2/surfdata/surfdata_0.9x1.25_c070501.nc</fsurdat>
+<fsurdat RESOLUTION="1x1.25"    >lnd/clm2/surfdata/surfdata_1x1.25_c070501.nc</fsurdat>
+<fsurdat RESOLUTION="1.9x2.5"   >lnd/clm2/surfdata/surfdata_1.9x2.5_c070501.nc</fsurdat>
+<fsurdat RESOLUTION="2x2.5"     >lnd/clm2/surfdata/surfdata_2x2.5_c070501.nc</fsurdat>
+<fsurdat RESOLUTION="4x5"       >lnd/clm2/surfdata/surfdata_4x5_c070501.nc</fsurdat>
+<fsurdat RESOLUTION="10x15"     >lnd/clm2/surfdata/surfdata_10x15_c070501.nc</fsurdat>
  
 <!-- Grid datasets (relative to {csmdata}) -->
 <fatmgrid RESOLUTION="128x256"   >lnd/clm2/griddata/griddata_128x256_060829.nc</fatmgrid>
 <fatmgrid RESOLUTION="64x128"    >lnd/clm2/griddata/griddata_64x128_060829.nc</fatmgrid>
 <fatmgrid RESOLUTION="48x96"     >lnd/clm2/griddata/griddata_48x96_060829.nc</fatmgrid>
-<fatmgrid RESOLUTION="32x64"     >lnd/clm2/griddata/griddata_32x64_USGS_070110.nc</fatmgrid>
-<fatmgrid RESOLUTION="8x16"      >lnd/clm2/griddata/griddata_8x16_USGS_070110.nc</fatmgrid>
+<fatmgrid RESOLUTION="32x64"     >lnd/clm2/griddata/griddata_32x64_070212.nc</fatmgrid>
+<fatmgrid RESOLUTION="8x16"      >lnd/clm2/griddata/griddata_8x16_070212.nc</fatmgrid>
 
-<fatmgrid RESOLUTION="0.9x1.25"  >lnd/clm2/griddata/griddata_0.9x1.25_USGS_070110.nc</fatmgrid>
+<fatmgrid RESOLUTION="0.9x1.25"  >lnd/clm2/griddata/griddata_0.9x1.25_070212.nc</fatmgrid>
 <fatmgrid RESOLUTION="1x1.25"    >lnd/clm2/griddata/griddata_1x1.25_060404.nc</fatmgrid>
 <fatmgrid RESOLUTION="1.9x2.5"   >lnd/clm2/griddata/griddata_1.9x2.5_060404.nc</fatmgrid>
 <fatmgrid RESOLUTION="2x2.5"     >lnd/clm2/griddata/griddata_2x2.5_060502.nc</fatmgrid>
 <fatmgrid RESOLUTION="4x5"       >lnd/clm2/griddata/griddata_4x5_060404.nc</fatmgrid>
-<fatmgrid RESOLUTION="10x15"     >lnd/clm2/griddata/griddata_10x15_USGS_070110.nc</fatmgrid>
+<fatmgrid RESOLUTION="10x15"     >lnd/clm2/griddata/griddata_10x15_070212.nc</fatmgrid>
 
 <!-- Fraction datasets (relative to {csmdata}) -->
 

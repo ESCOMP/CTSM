@@ -1,7 +1,7 @@
 #!/bin/sh 
 #
 
-# test_driver.sh:  driver script for the testing of CLM in Sequential CCSM
+# test_driver.sh:  driver script for the offline testing of CLM
 #
 # usage on bangkok, calgary, tempest, bluevista, lightning, blueice, jaguar: 
 # ./test_driver.sh
@@ -49,15 +49,15 @@ cat > ./${submit_script} << EOF
 #
 
 #BSUB -a poe                    # use LSF poe elim
-#BSUB -n 32                       # total tasks needed
-#BSUB -R "span[ptile=16]"          # max number of tasks (MPI) per node
-#BSUB -o test_dr.o%J              # output filename
-#BSUB -e test_dr.o%J              # error filename
+#BSUB -n 32                     # total tasks needed
+#BSUB -R "span[ptile=16]"       # max number of tasks (MPI) per node
+#BSUB -o test_dr.o%J            # output filename
+#BSUB -e test_dr.o%J            # error filename
 #BSUB -J clmtest
-#BSUB -q premium                  # queue
+#BSUB -q premium                # queue
 #BSUB -W 4:28                     
 #BSUB -P $account_name      
-#BSUB -x                          # exclusive use of node (not_shared)
+#BSUB -x                        # exclusive use of node (not_shared)
 ##BSUB -q share
 ##BSUB -W 2:00
 ##BSUB -P 00000006
@@ -181,11 +181,11 @@ cat > ./${submit_script} << EOF
 #
 
 #BSUB -a mpich_gm            #lightning requirement
-#BSUB -x                          # exclusive use of node (not_shared)
-#BSUB -n 8                       # total tasks needed
-#BSUB -o test_dr.o%J              # output filename
-#BSUB -e test_dr.o%J              # error filename
-#BSUB -q regular                  # queue
+#BSUB -x                     # exclusive use of node (not_shared)
+#BSUB -n 8                   # total tasks needed
+#BSUB -o test_dr.o%J         # output filename
+#BSUB -e test_dr.o%J         # error filename
+#BSUB -q regular             # queue
 #BSUB -W 4:00                     
 #BSUB -P $account_name      
 #BSUB -J clmtest
@@ -272,10 +272,10 @@ export CLM_RESTART_TASKS=2
 export CLM_COMPSET="I"
 
 if [ "\$CLM_FC" = "PGI" ]; then
-    export PGI=/usr/local/pgi-pgcc-pghf-6.1-3
-    export INC_NETCDF=/usr/local/netcdf-3.6.1-beta3-pgi-hpf-cc-6.0-5/include
-    export LIB_NETCDF=/usr/local/netcdf-3.6.1-beta3-pgi-hpf-cc-6.0-5/lib
-    mpich=/usr/local/mpich-1.2.7p1-pgi-pgcc-pghf-6.1-3
+    export PGI=/usr/local/pgi-pgcc-pghf
+    export INC_NETCDF=/usr/local/netcdf-pgi/include
+    export LIB_NETCDF=/usr/local/netcdf-pgi/lib
+    mpich=/usr/local/mpich-pgi-pgcc-pghf
     export INC_MPI=\${mpich}/include
     export LIB_MPI=\${mpich}/lib
     export PATH=\${PGI}/linux86/6.1/bin:\${mpich}/bin:\${PATH}

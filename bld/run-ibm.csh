@@ -55,7 +55,6 @@ set clmroot   = /fis/cgd/.......
 setenv CSMDATA /fs/cgd/csm/inputdata/lnd/clm2
 
 ## Default configuration settings:
-## By default both spmd and smp are off
 set spmd     = on       # settings are [on   | off       ] (default is off)
 set smp      = off      # settings are [on   | off       ] (default is off)
 set maxpft   = 4        # settings are 4->17               (default is 4)
@@ -63,6 +62,7 @@ set bgc      = none     # settings are [none | cn | casa ] (default is none)
 set supln    = off      # settings are [on   | off       ] (default is off)
 set dust     = off      # settings are [on   | off       ] (default is off)   
 set voc      = off      # settings are [on   | off       ] (default is off)   
+set rtm      = off      # settings are [on   | off       ] (default is off)   
 
 ## $wrkdir is a working directory where the model will be built and run.
 ## $blddir is the directory where model will be compiled.
@@ -80,16 +80,16 @@ mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
 mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
 ## Build (or re-build) executable
-set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -dust $dust -usr_src $usr_src"
+set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust -usr_src $usr_src"
 if ($spmd == on ) set flags = "$flags -spmd"
 if ($spmd == off) set flags = "$flags -nospmd"
 if ($smp  == on ) set flags = "$flags -smp"
 if ($smp  == off) set flags = "$flags -nosmp"
 
 if ( $bgc == cn )then
-   set fsurdat="surfdata_064x128_070406.nc"
-else
    set fsurdat="surfdata_64x128_1870_cn_c070413.nc"
+else
+   set fsurdat="surfdata_64x128_c070501.nc"
 endif
 
 echo "cd $blddir"
@@ -119,6 +119,7 @@ cat >! lnd.stdin << EOF
  fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
  fndepdat       = "$CSMDATA/ndepdata/ndep_clm_2000_64x128_c060414.nc"
  offline_atmdir = "$CSMDATA/NCEPDATA.Qian.T62.c051024"
+ frivinp_rtm    = '$CSMDATA/rtmdata/rdirc.05.061026'
  nsrest         =  0
  nelapse        =  48
  dtime          =  1800
