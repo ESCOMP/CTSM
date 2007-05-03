@@ -1,4 +1,221 @@
 ===============================================================
+Tag name:  clm3_5_00
+Originator(s):  erik (Erik Kluzek)
+Date: Thu May  3 12:03:53 MDT 2007
+Date:One-line Summary: New surface datasets, improved canopy integration, and various improvements to Hydrology
+
+Purpose of changes (Since CLM3.0):
+
+  CLM3.5 is considerably different to CLM3.0, particularly with respect to its 
+  simulation of the hydrologic cycle.   The modifications consist of new surface 
+  datasets based on Moderate Resolution Imaging Spectroradiometer (MODIS) products 
+  (Lawrence and Chase 2007), an improved canopy integration scheme 
+  (Thornton and Zimmermann 2007), scaling of canopy interception (Lawrence et al. 2007), 
+  a simple TOPMODEL-based model for surface and sub-surface runoff (Niu et al. 2005), a 
+  simple groundwater model for determining water table depth (Niu et al. 2007), and a 
+  new frozen soil scheme (Niu and Yang 2006).  
+
+  There are four additional modifications.  Three of these, an improved description of 
+  soil water availability, a resistance term to reduce excessive soil evaporation, and the
+  introduction of a factor to simulate nitrogen limitation on plant productivity, can be 
+  categorized as new or improved parameterizations from the perspective of CLM3.  The 
+  other may be categorized as fixing an algorithmically defective existing parameterization
+  (correction to snowage calculation so that snowage increases monotonically) 
+  (Dickinson et al. 2006).
+
+  See:
+
+  http://www.cgd.ucar.edu/tss/clm/distribution/clm3.5/
+
+  for more information, and for technical and scientific papers that describe CLM3.5.
+
+  Lastly, we are distributing a new forcing dataset with the new code.  This
+  dataset was derived by combining observation-based analyses of monthly precipitation and
+  surface air temperature with intramonthly variations from the NCEP/NCAR reanalysis 
+  (Qian et al., 2006)
+
+  If you would like to run CLM-CN, please contact Peter Thornton (thornton@ucar.edu).
+  If you would like to run CLM-DGVM, please contact Sam Levis (slevis@ucar.edu).
+  If you would like to run CLM-CASA', please contact Forrest Hoffman (hof@ornl.gov).
+
+Describe any bug fixes:
+
+  o A revision of RTM-subcycling and corrections to a few land-locked grid cells.
+  o A more efficient soil evaporation calculation based on PFT demand.
+  o A fix to aggregation of LAI from high-resolution source data to CLM surface data.
+  o Changing Temperature of freezing of water from 273.16 (triple point of water) to 273.15.
+
+Summarize any software engineering improvements:
+
+  o Add option to run CLM at a finer resolution than the atmospheric model coupled to
+     (Tony Craig and others)
+  o MCT (Model Coupling Toolkit) used to describe decompositions and do redistributions.
+  o Remove dependences on CAM modules and data structures.
+  o Use csm_share clocks and CCSMInit objects for simulation time information and
+    initialization information needed by all CCSM models.
+  o Update time-management to ESMF_2_2_2r interfaces and use the WRF implementation of
+    ESMF time-management modules.
+  o Made restart datasets double precision NetCDF rather than binary 
+    (except history restarts).
+  o Add interface layers to link to Sequential CCSM (formally standalone CAM) using MCT.
+  o Parallelize RTM, by Tony Craig and Pat Worley.
+  o Add a new testing suite to do automated testing for any code changes.
+  o Improve memory scaling with a new decomposition from Tony Craig.
+  o Move make surface dataset capability to an offline tool (mksurfdata).
+  o Add an offline tool to create grid datasets needed for initialization (mkgriddata).
+  o Add ability to run concurrent CCSM in single-executable mode.
+  o Running with SCAM (Single Column Atmospheric Model) mode modularized better.
+
+Versions of any externally defined libraries: (under src/utils)
+
+  o csm_share:        share3_070321 (add flds, eshr and dshr directories, 
+                                     add shr_inputinfo_mod, eshr_timemgr_mod, 
+                                     other modules for shared data work)
+  o esmf_wrf_timemgr: esmf_wrf_timemgr_060616 (or can link to full ESMF_2_2_2r)
+  o timing:           timing_070328 (extensive updates and utilize PAPI and new namelist)
+  o mct:              MCT2_3_0_070206 (allow to build with code, Cray mods, misc.)
+
+Describe any changes made to build system: 
+
+  o A configure script was created to create files needed to build the model. 
+  o There are also cshell run scripts for different platforms to: 
+       configure, build and run the model.
+  o Remove SPMD CPP token -- use src/utils/mct/mpi-serial library for serial mode.
+  o Remove HIDE_MPI token.
+  o Remove CAM and COUP_CAM CPP tokens -- replace with SEQ_MCT and SEQ_ESMF.
+  o Remove NOCOMPETE CPP token.
+  o Most SCAM #ifdef's removed.
+  o Remove TIMING_BARRIERS CPP token -- add option to prof_inparm namelist.
+  o See src/utils/timing for new tokens added for timing library 
+     (HAVE_PAPI, THREADED_OMP, DIAG, HASH).
+  o MCT included with offline CLM.
+
+  Build features added -- but unsupported for public release:
+
+  o Port to jaguar.ccs.ornl.gov (Cray XT3/XT4)
+  o Port to Bluegene/L (frost.ucar.edu) (add BGL CPP token)
+  o Port to lightning.ucar.edu (frost.ucar.edu with Pathscale)
+  o Add SINGLE_EXEC CPP token for running concurrent CCSM in single-executable mode.
+  o Add CN CPP token and CN BGC code.
+  o Add NO_FIRE CPP token for use by CN mode.
+  o Add AD_SPINUP and EXIT_SPINUP CPP token for initial spinup of CN.
+  o Add DUST and PROGSST CPP tokens.
+  o Add COUP_WRF CPP token.
+
+Describe any changes made to the namelist:
+
+  Main namelist name changed from clmexp to clm_inparm
+
+  Option to run clm at a finer mesh than the atmosphere added several namelist items.
+
+  flndtopo        = 256 character land topography file name
+  fatmgrid        = 256 character atmosphere grid data file name
+  fatmlndfrc      = 256 character landfrac (on atm grid) file name
+  fatmtopo        = 256 character atmosphere topography file name
+
+  Decomposition/performance control:
+
+  nsegspc         = Number of segments per clump for new decomp. 
+                    1 will produce poor loadbalance, infinity yields too many
+                    segments per pe but good load balance. (default 20)
+
+  All mksrf_* options moved to the mksurfdata offline tool. So instead of
+  creating surface datasets by running clm -- you run the mksurfdata tool
+  to create them.
+
+  mksrf_* = Removed from namelist.
+
+  Miscellaneous:
+
+  rest_flag            = logical, turns restart file writing on (default .true.)
+  wrtdia               = true if want output written  (default .false.)
+  create_crop_landunit = true => separate crop landunit is not created by default
+                         (currently broken see KnownBugs) (default .false.)
+
+  New prof_inparm namelist added for timing library.
+
+   profile_single_file  = Write timing output to single file or file per task 
+                          (default single)
+   profile_disable      = Turn timing off. (default .false.)
+   profile_barrier      = Turn MPI barriers on in t_barrierf calls. (default .false.)
+   profile_depth_limit  = Integer indicating maximum number of levels of timer nesting 
+                          (default 99999)
+   profile_detail_limit = integer indicating maximum detail level to profile (default 0)
+   profile_timer        = integer indicating which timer to use
+      GPTLwall           = 1
+      GPTLcpu            = 2
+      GPTLabort_on_error = 3
+      GPTLoverhead       = 4
+      GPTLdepthlimit     = 5
+      GPTLgettimeofday   = 6
+      GPTLnanotime       = 7
+      GPTLrtc            = 8
+      GPTLmpiwtime       = 9
+      GPTLclockgettime   = 10
+      GPTLpapitime       = 11
+      (default is 9, except on UNICOSMP where it is 8)
+
+  Namelist items added -- but unsupported in public release:
+
+  co2_type             = values of 'prognostic','diagnostic','constant' 
+                         (only constant mode for OFFLINE)
+
+  CASA':
+
+  spunup   =  0=no, 1=yes (used with nsrest/=1 only)   (default 0)
+  lalloc   =  0=fixed allocation, 1=dynamic allocation (default 1)
+  lnpp     =  1=gpp*gppfact,2=fn(lgrow)*gppfact        (default 2)
+  q10      =  temperature dependence                   (default 2.0)
+  fcpool   =  Carbon Pool initial state filename
+
+List any changes to the defaults for the boundary datasets:
+
+ Use following files for T42 resolution:
+
+ finidat        = '$CSMDATA/inidata_3.1/offline/clmi_0000-01-01_064x128_c070403.nc'
+ fsurdat        = '$CSMDATA/surfdata/$fsurdat'
+ fatmgrid       = '$CSMDATA/griddata/griddata_64x128_060829.nc'
+ fatmlndfrc     = '$CSMDATA/griddata/fracdata_64x128_USGS_070110.nc'
+ fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
+ offline_atmdir = '$CSMDATA/NCEPDATA.Qian.T62.c051024'
+ frivinp_rtm    = '$CSMDATA/rtmdata/rdirc.05.061026'
+
+ Only needed for CN mode:
+
+ fndepdat       = '$CSMDATA/ndepdata/ndep_clm_2000_64x128_c060414.nc'
+
+Code reviewed by: 
+   bonan, dlawren, erik, mvertens, nanr, oleson, pworley, slevis, tcraig, thornton
+
+Summary of testing: Other than bugs documented in KnownBugs works on following machines:
+
+   bluevista.ucar.edu ---- IBM/SP running AIX
+   blueice.ucar.edu ------ IBM/SP running AIX
+   bangkok.cgd.ucar.edu -- Linux cluster (both PGI and Lahey compilers)
+   tempest.ucar.edu ------ SGI running IRIX
+   lightning.ucar.edu ---- Linux cluster (using Pathscale compiler)
+   jaguar.ccs.ornl.edu --- Cray XT3/XT4 (using Cray-specific PGI compiler) (builds)
+   phoenix.ccs.ornl.edu -- Cray X1 (using Cray-specific PGI compiler) (builds)
+
+  MSS location of control simulations used to validate new climate:
+
+	OFFLINE: /OLESON/csm/hydp2_off_communn_hk44
+        CAM/CLM: /OLESON/csm/hydp2_communn_hk44a
+        CCSM:    /CCSM/csm/b31.020ws
+   
+  URL for LMWG diagnostics output used to validate new climate:
+
+OFFLINE:
+http://www.cgd.ucar.edu/tss/clm/diagnostics/lmwg_hydro/hydp2_off_communn_hk44a-hyd_off_con3d/setsIndex.html
+
+CAM/CLM:
+http://www.cgd.ucar.edu/tss/clm/diagnostics/lmwg_hydro/hydp2_communn_hk44aa-hyd_sstb/setsIndex.html
+
+CCSM:
+http://www.cgd.ucar.edu/tss/clm/diagnostics/ccsm2_prod/b31.020wsb-b31.002b/setsIndex.html
+
+===============================================================
+===============================================================
 Tag name:  clm3_4_2
 Originator(s):  erik (Erik Kluzek)
 Date: Wed May  2 15:09:41 MDT 2007
