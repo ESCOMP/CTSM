@@ -3,7 +3,6 @@
 cfgdir=${CLM_SCRIPTDIR}/../../bld
 fpftcon=`$cfgdir/queryDefaultNamelist.pl -silent -csmdata $CSMDATA -var fpftcon`
 offline_atmdir=`$cfgdir/queryDefaultNamelist.pl -silent -csmdata $CSMDATA -var offline_atmdir`
-
 cat > lnd.stdin << EOF
  &clm_inparm
  caseid         = 'clmrun'
@@ -17,17 +16,19 @@ cat > lnd.stdin << EOF
  nrevsn         = "$nrevsn"
  nsrest         =  $restart_type
  nelapse        =  $run_length
- dtime          =  1800
- start_ymd      =  19971231
+ dtime          =  3600
+ start_ymd      =  19981231
+ cycle_begyr    =  1998
+ cycle_nyr      =  1
  start_tod      =  0
  irad           = -1
  wrtdia         = .true.
  mss_irt        =  0
  hist_dov2xy    = .true.
- hist_nhtfrq    =  0
+ hist_nhtfrq    =  3
  hist_mfilt     =  1
  hist_ndens     =  1
- hist_crtinic   = 'MONTHLY'
+ hist_crtinic   = 'NONE'
  brnch_retain_casename = .true.
  /
  &prof_inparm

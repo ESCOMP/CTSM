@@ -1,15 +1,26 @@
 #!/bin/sh 
 #
+res="10x15"
+mask="USGS"
+cfgdir=${CLM_SCRIPTDIR}/../../bld
+
+finidat=`$cfgdir/queryDefaultNamelist.pl -res $res -options "mask=USGS" -silent -csmdata $CSMDATA -var finidat`
+fsurdat=`$cfgdir/queryDefaultNamelist.pl -res $res -silent -csmdata $CSMDATA -var fsurdat`
+fatmgrid=`$cfgdir/queryDefaultNamelist.pl -res $res -silent -csmdata $CSMDATA -var fatmgrid`
+fatmlndfrc=`$cfgdir/queryDefaultNamelist.pl -res $res -options "mask=USGS" -silent -csmdata $CSMDATA -var fatmlndfrc`
+fpftcon=`$cfgdir/queryDefaultNamelist.pl -silent -csmdata $CSMDATA -var fpftcon`
+offline_atmdir=`$cfgdir/queryDefaultNamelist.pl -silent -csmdata $CSMDATA -var offline_atmdir`
+
 cat > lnd.stdin << EOF
  &clm_inparm
  caseid         = 'clmrun'
  ctitle         = 'clmrun'
- finidat        = ' '
- fsurdat        = "$CSMDATA/lnd/clm2/surfdata/surfdata_10x15_c070501.nc"
- fatmgrid       = "$CSMDATA/lnd/clm2/griddata/griddata_10x15_070212.nc"
- fatmlndfrc     = "$CSMDATA/lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc"
- fpftcon        = "$CSMDATA/lnd/clm2/pftdata/pft-physiology.c070207"
- offline_atmdir = "$CSMDATA/lnd/clm2/NCEPDATA.Qian.T62.c051024"
+ $finidat
+ $fsurdat
+ $fatmgrid
+ $fatmlndfrc
+ $fpftcon
+ $offline_atmdir
  nrevsn         = "$nrevsn"
  nsrest         =  $restart_type
  nelapse        =  $run_length

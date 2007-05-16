@@ -168,7 +168,7 @@ contains
 
        call CNVegStructUpdate(num_soilp, filter_soilp)
 
-       call CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
+!       call CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
        
        call CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
        

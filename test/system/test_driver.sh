@@ -186,7 +186,7 @@ cat > ./${submit_script} << EOF
 #BSUB -o test_dr.o%J         # output filename
 #BSUB -e test_dr.o%J         # error filename
 #BSUB -q regular             # queue
-#BSUB -W 4:00                     
+#BSUB -W 6:00                     
 #BSUB -P $account_name      
 #BSUB -J clmtest
 

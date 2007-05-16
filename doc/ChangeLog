@@ -1,4 +1,146 @@
 ===============================================================
+Tag name:  clm3_5_01
+Originator(s):  erik (KLUZEK ERIK 1326 CGD)
+Date: Wed May 16 14:14:59 MDT 2007
+Date:Date:Date:One-line Summary: Move newcn06 branch to trunk
+
+Purpose of changes: Move newcn06-02_clm3_5_00 branch tag to trunk
+
+Bugs fixed (include bugzilla ID): 471, 474, 475, 478, 479
+  Add time to lightning test, add mkgriddata namelist back in,
+  add new clmi dataset for cam, fix lonrof (from Tony), fix long-line
+  in interpinic.
+
+Describe any changes made to build system: Add new options to configure
+
+  -ad_spinup    Turn on AD_SPINUP mode for bgc setting of CN [on | off]
+  -exit_spinup  Turn on EXIT_SPINUP mode for bgc setting of CN [on | off]
+  -pergro       Switch enables building CLM for perturbation growth tests.
+
+Describe any changes made to the namelist: New options added to namelist, use query for datasets
+
+  New namelist items:
+
+      cycle_begyr     = integer, first year of offline atm data (e.g. 1948)
+      cycle_nyr       = integer, number of years of offline atm data to cycle
+
+  Use queryDefaultNamelist.pl to get datasets for namelists for test and run scripts
+
+List any changes to the defaults for the boundary datasets:
+
+	Add new clmi datasets and add datasets for OFFLINE mode to namelist xml file
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: erik,thornton
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do:
+
+A      test/system/nl_files/singlept_long
+A  +   tools/mkgriddata/mkgriddata.namelist --- Add back namelist that was missing
+A  +   src/biogeochem/CASASummaryMod.F90
+A  +   src/main/CASAiniTimeVarMod.F90
+
+List all existing files that have been modified, and describe the changes:
+
+-------> Add new tests for CN and cycle_ namelist items and use query script for filenames in namelists
+M test/system/tests_posttag_purempi_regression
+M test/system/tests_posttag_hybrid_regression
+M test/system/tests_pretag_bluevista
+M test/system/nl_files/10x15_cnall
+M test/system/nl_files/10x15_pftdyn
+M test/system/nl_files/t31_cnall
+M test/system/nl_files/singlept_dgvm_long
+M test/system/nl_files/t31_dgvm
+M test/system/nl_files/1.9x2.5
+M test/system/nl_files/singlept
+M test/system/nl_files/10x15_dgvm
+M test/system/nl_files/t31_casa
+M test/system/nl_files/regional
+M test/system/nl_files/t31_dgvm_long
+M test/system/nl_files/t42half
+M test/system/nl_files/t31
+M test/system/nl_files/10x15
+M test/system/input_tests_master
+--------> 
+M bld/run-pc.csh
+M bld/DefaultCLM_INPARM_Namelist.xml
+M bld/configure
+M bld/queryDefaultNamelist.pl
+M bld/run-lightning.csh
+M bld/run-ibm.csh
+M bld/config_clm_defaults.xml
+M bld/run-frost.csh
+--------> Changes to CN mode (also add ability to do pftdyn mode in CN and add cycle_* namelist variables
+M src/main/clmtypeInitMod.F90
+M src/main/clmtype.F90
+M src/main/histFldsMod.F90
+M src/main/CASAiniTimeVarMod.F90
+M src/main/CNiniTimeVar.F90
+M src/main/driver.F90
+M src/main/atmdrvMod.F90
+M src/main/initializeMod.F90
+M src/main/pftdynMod.F90
+M src/main/histFileMod.F90
+M src/main/restFileMod.F90
+M src/main/controlMod.F90
+M src/main/clm_varctl.F90
+M src/main/CNiniSpecial.F90
+M src/main/surfrdMod.F90
+M src/main/decompMod.F90
+M src/biogeophys/BareGroundFluxesMod.F90
+M src/biogeophys/CanopyFluxesMod.F90
+M src/biogeophys/SurfaceAlbedoMod.F90
+M src/biogeophys/Hydrology2Mod.F90
+M src/biogeophys/BiogeophysicsLakeMod.F90
+M src/biogeochem/CASASummaryMod.F90
+M src/biogeochem/CNNStateUpdate1Mod.F90
+M src/biogeochem/CNBalanceCheckMod.F90
+M src/biogeochem/CASAMod.F90
+M src/biogeochem/CNSummaryMod.F90
+M src/biogeochem/CNPhenologyMod.F90
+M src/biogeochem/CNCStateUpdate1Mod.F90
+M src/biogeochem/CNDecompMod.F90
+M src/biogeochem/CNC13StateUpdate1Mod.F90
+M src/biogeochem/CNrestMod.F90
+M src/biogeochem/CNAnnualUpdateMod.F90
+M src/biogeochem/C13SummaryMod.F90
+M src/biogeochem/CNAllocationMod.F90
+M src/biogeochem/CNEcosystemDynMod.F90
+M src/biogeochem/CNSetValueMod.F90
+M src/riverroute/RtmMod.F90
+M tools/mksurfdata/mksrfdat.fdynfile
+M tools/interpinic/addglobal.F90
+-------------> Tweak namelists
+M tools/mkgriddata/mkgriddata.regional
+M tools/mkgriddata/mkgriddata.singlept
+
+Summary of testing:
+
+  bluevista: All PASS except
+024 bl211 TBL.sh 17p_cnn_dh t31_cnall 48 ..........................FAIL! rc= 7
+028 bl252 TBL.sh 17p_cnn_dm 10x15_cnall 48 ........................FAIL! rc= 7
+067 sm061 TSMconccsm.sh ERS f19_g13 ...............................FAIL! rc= 7
+
+  bangkok/lf95: All PASS except
+
+014 bl252 TBL.sh 17p_cnn_dm 10x15_cnall 48 ........................FAIL! rc= 7
+034 sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7 ....FAIL! rc= 4
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers:
+    - what code configurations: CN-mode only
+    - what platforms/compilers: All
+    - nature of change (changes to CN climate)
+
+===============================================================
+===============================================================
 Tag name:  clm3_5_00
 Originator(s):  erik (Erik Kluzek)
 Date: Thu May  3 12:03:53 MDT 2007

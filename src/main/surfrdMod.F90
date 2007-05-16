@@ -1376,19 +1376,6 @@ contains
           do m = 1, maxpatch_pft
              vegxy(nl,m)  = pft(nl,m)
              wtxy(nl,m) = pctpft_lunit(nl,m) * (100._r8-pctspec(nl))/10000._r8
-#if (defined CN)
-             ! the following test prevents the assignment of temperate deciduous
-             ! vegetation types in the tropics
-             ! 1. broadleaf deciduous temperate tree -> broadleaf deciduous tropical tree
-
-             if (vegxy(nl,m) == 7 .and. abs(domain%latc(nl)) < 23.5_r8) vegxy(nl,m) = 6
-
-             ! 2. broadleaf deciduous temperate shrub -> broadleaf deciduous tropical tree
-             ! this reassignment from shrub to tree is necessary because there is currently no
-             ! tropical deciduous broadleaf shrub type defined.
-
-              if (vegxy(nl,m) == 10 .and. abs(domain%latc(nl)) < 23.5_r8) vegxy(nl,m) = 6
-#endif
           end do
 
           ! Crop landunit
@@ -1534,46 +1521,6 @@ contains
              wtxy(nl,m) = pctpft(nl,m-1) / 100._r8
           end do
 
-#if (defined CN)
-          ! the following test prevents the assignment of temperate deciduous
-          ! vegetation types in the tropics
-          ! 1. broadleaf deciduous temperate tree (type7) -> broadleaf deciduous tropical tree (type6)
-          ! N.B. the veg and wtxy arrays start at 1, so index 1 corresponds to
-          ! veg type 0.  So in this case I want to trap on veg types 7 and 10, 
-          ! which are indices 8 and 11. Moving to vegtype6, or index 7
-          mp7 = 7
-          mp8 = 8
-          mp11 = 11
-          if (abs(domain%latc(nl)) < 23.5_r8 .and. wtxy(nl,mp8) > 0._r8) then
-             if (masterproc) then
-                write(6,*)'surfrdMod warning: reassigning temperate tree -> tropical tree'
-                write(6,*)'nl,lat,veg7wt,veg6wt,type'
-                write(6,*) nl,domain%latc(nl),wtxy(nl,mp8),wtxy(nl,mp7),vegxy(nl,mp8)
-             end if
-             wtxy(nl,mp7) = wtxy(nl,mp7) + wtxy(nl,mp8)
-             wtxy(nl,mp8) = 0._r8
-             if (masterproc) then
-                write(6,*) nl,domain%latc(nl),wtxy(nl,mp8),wtxy(nl,mp7)
-             end if
-          end if
-
-          ! 2. broadleaf deciduous temperate shrub (type10) -> broadleaf deciduous tropical tree (type6)
-          ! this reassignment from shrub to tree is necessary because there is currently no
-          ! tropical deciduous broadleaf shrub type defined.
-
-          if (abs(domain%latc(nl)) < 23.5_r8 .and. wtxy(nl,mp11) > 0._r8) then
-             if (masterproc) then
-                write(6,*)'surfrdMod warning: reassigning temperate shrub -> tropical tree'
-                write(6,*)'nl,lat,veg10wt,veg6wt,type'
-                write(6,*) nl,domain%latc(nl),wtxy(nl,mp11),wtxy(nl,mp7),vegxy(nl,mp11)
-             end if
-             wtxy(nl,mp7) = wtxy(nl,mp7) + wtxy(nl,mp11)
-             wtxy(nl,mp11) = 0._r8
-             if (masterproc) then
-                write(6,*) nl,domain%latc(nl),wtxy(nl,mp11),wtxy(nl,mp7)
-             end if
-          end if
-#endif
        end if
     end do
 

@@ -193,6 +193,9 @@ er573 TER.sh _s singlept -5+-5
 bl573 TBL.sh _s singlept -10
 br573 TBR.sh _s singlept -10+-10
 
+sm574 TSM.sh _s singlept_long -366
+bl574 TBL.sh _s singlept_long -10
+
 sm583 TSM.sh _dh regional -10
 er583 TER.sh _dh regional -5+-5
 bl583 TBL.sh _dh regional -10

@@ -1,17 +1,32 @@
 #!/bin/sh 
 #
+cfgdir=${CLM_SCRIPTDIR}/../../bld
+res="48x96"
+mask="gx3v5"
+
+finidat=`$cfgdir/queryDefaultNamelist.pl -res $res -options "mask=$mask" -silent -csmdata $CSMDATA -var finidat`
+fsurdat=`$cfgdir/queryDefaultNamelist.pl -res $res -silent -csmdata $CSMDATA -var fsurdat`
+fatmgrid=`$cfgdir/queryDefaultNamelist.pl -res $res -silent -csmdata $CSMDATA -var fatmgrid`
+fatmlndfrc=`$cfgdir/queryDefaultNamelist.pl -res $res -options "mask=$mask" -silent -csmdata $CSMDATA -var fatmlndfrc`
+fndepdyn=`$cfgdir/queryDefaultNamelist.pl -res $res -silent -csmdata $CSMDATA -options "BGC=cn" -var fndepdyn`
+fpftcon=`$cfgdir/queryDefaultNamelist.pl -silent -csmdata $CSMDATA -var fpftcon`
+offline_atmdir=`$cfgdir/queryDefaultNamelist.pl -silent -csmdata $CSMDATA -var offline_atmdir`
+frivinp_rtm=`$cfgdir/queryDefaultNamelist.pl -res $res -options "RTM=on" -silent -csmdata $CSMDATA -var frivinp_rtm`
+
+
 cat > lnd.stdin << EOF
  &clm_inparm
  caseid         = 'clmrun'
  ctitle         = 'clmrun'
- finidat        = ' '
- fsurdat        = "$CSMDATA/lnd/clm2/surfdata/surfdata_48x96_c070501.nc"
- fatmgrid       = "$CSMDATA/lnd/clm2/griddata/griddata_48x96_060829.nc"
- fatmlndfrc     = "$CSMDATA/lnd/clm2/griddata/fracdata_48x96_gx3v5_060829.nc"
- fpftcon        = "$CSMDATA/lnd/clm2/pftdata/pft-physiology.c070207"
- fndepdyn       = "$CSMDATA/lnd/clm2/ndepdata/fndep_clm_1890-2100_48x96_c050608.nc"
- frivinp_rtm    = "$CSMDATA/lnd/clm2/rtmdata/rdirc.05.061026"
- offline_atmdir = "$CSMDATA/lnd/clm2/NCEPDATA.Qian.T62.c051024"
+ $finidat
+ $fsurdat
+ $fatmgrid
+ $fatmlndfrc
+ $fndepdyn
+ $fpftcon
+ $fndepdyn
+ $offline_atmdir
+ $frivinp_rtm
  nrevsn         = "$nrevsn"
  nsrest         =  $restart_type
  nelapse        =  $run_length

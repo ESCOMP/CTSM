@@ -366,7 +366,7 @@ contains
 !
 ! !USES:
     use nanMod
-    use clm_varctl  , only : offline_atmdir
+    use clm_varctl  , only : offline_atmdir, cycle_begyr, cycle_nyr
     use domainMod   , only : alatlon, latlon_type, latlon_check, latlon_clean
     use surfrdMod   , only : surfrd_get_latlon
     use decompMod   , only : adecomp
@@ -399,6 +399,7 @@ contains
     integer :: ier                !error status
     character(len=32) :: subname = 'atmdrv_init'
     integer :: atmlon,atmlat      !size of alatlon
+    integer :: cycle_yr           !atm driver file year when cycling
     real(r8), allocatable :: mask_d(:)   !dummy field: atm grid mask
     real(r8), allocatable :: mask_a(:)   !dummy field: land model grid mask
     character(len=256) :: str     ! string
@@ -416,13 +417,30 @@ contains
     ! Read offline grid data and allocate dynamic memory
     ! ----------------------------------------------------------------------
 
-    ! Build [month]-[year] extension for file name to be read
-    ! append extension to path name to get full file name
-
-    call get_curr_date(kyr, kmo, kda, mcsec)
-    write (ext,'(i4.4,"-",i2.2)') kyr,kmo
-    filenam = trim(offline_atmdir) // '/' // ext // '.nc'
-
+    if ( masterproc )then
+       ! Build [month]-[year] extension for file name to be read
+       ! append extension to path name to get full file name
+   
+       call get_curr_date(kyr, kmo, kda, mcsec)
+          
+       if (cycle_begyr /= -9999999) then
+           ! using offline atm file cycling
+           cycle_yr = mod((kyr-cycle_begyr),cycle_nyr)+cycle_begyr
+           write (ext,'(i4.4,"-",i2.2)') cycle_yr,kmo
+       else
+          ! if no cycling is specified, assume the model year matches
+          ! an existing offline data file year
+           write (ext,'(i4.4,"-",i2.2)') kyr,kmo
+       end if
+       
+       filenam = trim(offline_atmdir) // '/' // ext // '.nc'
+       call getfil(filenam, locfn, 1)
+       inquire (file = locfn, exist = lexist)
+       if (.not. lexist) then
+          write(6,*) 'ATMDRV_INIT error: could not find initial atm datafile'
+          call endrun
+       endif
+    end if
     call surfrd_get_latlon(dlatlon, filenam)
     call latlon_check(dlatlon)
 
@@ -526,7 +544,7 @@ contains
 ! Open atmospheric forcing netCDF file
 !
 ! !USES:
-    use clm_varctl, only : offline_atmdir
+    use clm_varctl, only : offline_atmdir,cycle_begyr,cycle_nyr
     use fileutils , only : getfil
     use ncdio
 !
@@ -562,6 +580,7 @@ contains
              (/ 31,28,31,30,31,30,31,31,30,31,30,31 /)
     integer :: minpday = 1440         !minutes per day
     character(len=32) :: subname = 'atm_openfil'
+    integer :: cycle_yr               !atm driver file year when cycling
 !------------------------------------------------------------------------
 
     if (masterproc) then
@@ -573,46 +592,24 @@ contains
        ! end of the set of files to be cycled, then the next file will
        ! not exists and will have to rewind to beginning of data set
 
-       write (ext,'(i4.4,"-",i2.2)') kyr,kmo
+       if (cycle_begyr /= -9999999) then
+          ! using offline atm file cycling
+	  cycle_yr = mod((kyr-cycle_begyr),cycle_nyr)+cycle_begyr
+          write (ext,'(i4.4,"-",i2.2)') cycle_yr,kmo
+       else
+          ! if no cycling is specified, assume the model year matches
+	  ! an existing offline data file year
+	  write (ext,'(i4.4,"-",i2.2)') kyr,kmo
+       end if
+       
        filenam = trim(offline_atmdir) //'/'// ext // '.nc'
        locfnlast = locfn
        call getfil(filenam, locfn, 1)
        inquire (file = locfn, exist = lexist)
-
-       ! If file exists...
-       !   makes sure that if run was restarted within the same month
-       !   that the original 'initial' run was started, then nmo will
-       !   not count that month twice
-       ! If file doesn't exist...
-       !   rewind to beginning of data set (by repeating the process of
-       !   creating extension, appending to path name and looking for
-       !   the file
-
-       if (lexist) then
-          if (locfn /= locfnlast) nmo = nmo + 1 !months past base date
-          pyr = nmo / 12      !years past base date
-       elseif (nmo == 0) then
-          write(6,*) 'ATM_OPENFILE error: could not find initial atm datafile'
+       if (.not. lexist) then
+          write(6,*) 'ATMDRV_INIT error: could not find atm datafile'
           call endrun
-       else
-          mmo = mmo + 1       !(months-1) past end of data
-          cyc = mmo / (pyr*12) !cycles since end of data
-          nyr = kyr - pyr * (cyc + 1) !rewind to beginning of dataset
-          write (ext,'(i4.4,"-",i2.2)') kyr,kmo
-          filenam = trim(offline_atmdir) //'/'// ext // '.nc'
-          call getfil(filenam, locfn, 1)
-          inquire (file = locfn, exist = lexist)
-          if (.not. lexist) then
-             if (nmo < 12) then
-                write(6,*) 'ATM_OPENFILE error: You must supply at least a'
-                write(6,*) 'year of input data if you wish to'
-                write(6,*) 'cycle through it more than once'
-             else
-                write(6,*) 'ATM_OPENFILE error: Not finding ',locfn
-             end if
-             call endrun
-          end if
-       end if
+       endif
 
        ! Open netCDF data file and get lengths of lat,lon,time dimensions
        ! Do this only at the first timestep of the run or of the month

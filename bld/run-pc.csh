@@ -91,6 +91,8 @@ set dust     = off      # settings are [on   | off       ] (default is off)
 set voc      = off      # settings are [on   | off       ] (default is off)   
 set rtm      = off      # settings are [on   | off       ] (default is off)   
 
+set res      = 48x96    # settings are [48x96, 64x128, 4x5, 10x15, 1.9x2.5, etc.]
+
 ## $wrkdir is a working directory where the model will be built and run.
 ## $blddir is the directory where model will be compiled.
 ## $rundir is the directory where the model will be run.
@@ -111,15 +113,10 @@ set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $
 if ($spmd == on ) set flags = "$flags -spmd"
 if ($spmd == off) set flags = "$flags -nospmd"
 
-if ( $bgc == cn )then
-   set fsurdat="surfdata_64x128_1870_cn_c070413.nc"
-else
-   set fsurdat="surfdata_64x128_c070501.nc"
-endif
-
 echo "cd $blddir"
 cd $blddir                  || echo "cd $blddir failed" && exit 1
-if ( ! -f $blddir/config_cache.xml ) then
+set config = "$blddir/config_cache.xml"
+if ( ! -f $config ) then
     echo "flags to configure are $flags"
     $cfgdir/configure $flags    || echo "configure failed" && exit 1
     echo "Building CLM in $blddir ..."
@@ -133,18 +130,27 @@ endif
 ## Create the namelist
 cd $rundir                      || echo "cd $blddir failed" && exit 1
 
+set finidat        = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -options "MASK=USGS" -config $config -csmdata $CSMDATA -var finidat`
+set fsurdat        = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var fsurdat`
+set fatmgrid       = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var fatmgrid`
+set fatmlndfrc     = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -options "MASK=USGS" -config $config -csmdata $CSMDATA -var fatmlndfrc`
+set fpftcon        = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var fpftcon`
+set fndepdat       = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var fndepdat`
+set offline_atmdir = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var offline_atmdir`
+set frivinp_rtm    = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var frivinp_rtm`
+
 cat >! lnd.stdin << EOF
  &clm_inparm
  caseid         = '$case'
  ctitle         = '$case'
- finidat        = '$CSMDATA/inidata_3.1/offline/clmi_0000-01-01_064x128_c070403.nc'
- fsurdat        = '$CSMDATA/surfdata/$fsurdat'
- fatmgrid       = '$CSMDATA/griddata/griddata_64x128_060829.nc'
- fatmlndfrc     = '$CSMDATA/griddata/fracdata_64x128_USGS_070110.nc'
- fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
- fndepdat       = '$CSMDATA/ndepdata/ndep_clm_2000_64x128_c060414.nc'
- offline_atmdir = '$CSMDATA/NCEPDATA.Qian.T62.c051024'
- frivinp_rtm    = '$CSMDATA/rtmdata/rdirc.05.061026'
+ $finidat
+ $fsurdat
+ $fatmgrid
+ $fatmlndfrc
+ $fpftcon
+ $fndepdat
+ $offline_atmdir
+ $frivinp_rtm
  nsrest         =  0
  nelapse        =  48
  dtime          =  1800

@@ -729,7 +729,7 @@ contains
     use RunoffMod   , only : get_proc_rof_global
 #endif
 #if (defined CASA)
-  use CASAMod       , only : nlive, npools
+  use CASAMod       , only : nlive, npools, npool_types
 #endif
 !
 ! !ARGUMENTS:
@@ -784,6 +784,7 @@ contains
 #if (defined CASA)
        call check_ret(nf_def_dim (ncid, 'nlive'   , nlive          , dimid), subname)
        call check_ret(nf_def_dim (ncid, 'npools'  , npools         , dimid), subname)
+       call check_ret(nf_def_dim (ncid, 'npool_types', npool_types , dimid), subname)
 #endif
 #if (defined RTM)
        call check_ret( nf_def_dim(ncid, 'ocnrof'  , nrof_ocn       , dimid), subname )
@@ -887,6 +888,7 @@ contains
        ! datasets created with CASA enabled so do not normally do this.
        ! call check_dim(ncid, 'nlive'   , nlive)
        ! call check_dim(ncid, 'npools'  , npools)
+       ! call check_dim(ncid, 'npool_types'  , npool_types)
 #endif
     end if
 

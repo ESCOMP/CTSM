@@ -299,6 +299,12 @@ subroutine CNSetPcs (num, filter, val, pcs)
       pcs%storvegc(i) = val
       pcs%totvegc(i) = val
       pcs%totpftc(i) = val
+
+#if (defined CLAMP)
+      ! CLAMP variables
+      pcs%woodc(i) = val
+#endif
+
    end do
 
 end subroutine CNSetPcs
@@ -521,6 +527,16 @@ subroutine CNSetPcf(num, filter, val, pcf)
       pcf%pft_cinputs(i) = val
       pcf%pft_coutputs(i) = val
       pcf%pft_fire_closs(i) = val
+
+#if (defined CLAMP)
+      !CLAMP
+      pcf%frootc_alloc(i) = val
+      pcf%frootc_loss(i) = val
+      pcf%leafc_alloc(i) = val
+      pcf%leafc_loss(i) = val
+      pcf%woodc_alloc(i) = val
+      pcf%woodc_loss(i) = val
+#endif
    end do
 
 end subroutine CNSetPcf
@@ -680,6 +696,7 @@ subroutine CNSetCps(num, filter, val, cps)
       cps%fpg(i) = val
       cps%annsum_counter(i) = val
       cps%cannsum_npp(i) = val
+      cps%cannavg_t2m(i) = val
       cps%wf(i) = val
       cps%me(i) = val
       cps%fire_prob(i) = val
@@ -750,6 +767,7 @@ subroutine CNSetCcs(num, filter, val, ccs)
       ccs%totsomc(i) = val
       ccs%totecosysc(i) = val
       ccs%totcolc(i) = val
+
    end do
 
 end subroutine CNSetCcs
@@ -904,6 +922,14 @@ subroutine CNSetCcf(num, filter, val, ccf)
       ccf%col_cinputs(i) = val
       ccf%col_coutputs(i) = val
       ccf%col_fire_closs(i) = val
+
+#if (defined CLAMP)
+      !CLAMP
+      ccf%cwdc_hr(i) = val
+      ccf%cwdc_loss(i) = val
+      ccf%litterc_loss(i) = val
+#endif
+
   end do
 
 end subroutine CNSetCcf

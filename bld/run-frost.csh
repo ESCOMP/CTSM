@@ -61,7 +61,8 @@ set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $
 if ($spmd == on) set flags = "$flags -spmd"
 echo "cd $blddir"
 cd $blddir                  || echo "cd $blddir failed" && exit 1
-if ( ! -f $blddir/config_cache.xml ) then
+set config="$blddir/config_cache.xml"
+if ( ! -f "$config" )then
     echo "flags to configure are $flags"
     $cfgdir/configure $flags    || echo "configure failed" && exit 1
     echo "Building CLM in $blddir ..."
@@ -75,17 +76,25 @@ endif
 ## Create the namelist
 cd $rundir                      || echo "cd $blddir failed" && exit 1
 
+set fatmgrid       = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var fatmgrid`
+set fsurdat        = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var fsurdat`
+set fatmlndfrc     = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var fatmlndfrc`
+set fpftcon        = `$cfgdir/queryDefaultNamelist.pl -silent -config $config -csmdata $CSMDATA -var fpftcon`
+set frivinp_rtm    = `$cfgdir/queryDefaultNamelist.pl -silent -config $config -csmdata $CSMDATA -var frivinp_rtm`
+set offline_atmdir = `$cfgdir/queryDefaultNamelist.pl -silent -config $config -csmdata $CSMDATA -var offline_atmdir`
+
+
 cat >! lnd.stdin << EOF
  &clm_inparm
  caseid         = '$case'
  ctitle         = '$case'
  finidat        = ' '
- fsurdat        = '$CSMDATA/surfdata/surfdata_360x720_070122.nc'
- fatmgrid       = '$CSMDATA/griddata/griddata_360x720_070122.nc'
- fatmlndfrc     = '$CSMDATA/griddata/fracdata_360x720_070122.nc'
- fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'
- frivinp_rtm    = '$CSMDATA/rtmdata/rdirc.05.061026'
- offline_atmdir = '$CSMDATA/NCEPDATA.Qian.T62.c051024'
+ $fsurdat
+ $fatmgrid
+ $fatmlndfrc
+ $fpftcon
+ $frivinp_rtm
+ $offline_atmdir
  nsrest         =  0
  nelapse        =  48
  dtime          =  1800

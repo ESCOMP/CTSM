@@ -1,5 +1,10 @@
 #!/bin/sh 
 #
+cfgdir=${CLM_SCRIPTDIR}/../../bld
+
+fpftcon=`$cfgdir/queryDefaultNamelist.pl -silent -csmdata $CSMDATA -var fpftcon`
+offline_atmdir=`$cfgdir/queryDefaultNamelist.pl -silent -csmdata $CSMDATA -var offline_atmdir`
+
 cat > lnd.stdin << EOF
  &clm_inparm
  caseid         = 'clmrun'
@@ -8,8 +13,8 @@ cat > lnd.stdin << EOF
  fsurdat        = "$CSMDATA/lnd/clm2/surfdata/surfdata_5x5pt_amazon_navy_070404.nc"
  fatmgrid       = "$CSMDATA/lnd/clm2/griddata/griddata_5x5pt_amazon_navy_070404.nc"
  fatmlndfrc     = "$CSMDATA/lnd/clm2/griddata/fracdata_5x5pt_amazon_navy_070404.nc"
- fpftcon        = "$CSMDATA/lnd/clm2/pftdata/pft-physiology.c070207"
- offline_atmdir = "$CSMDATA/lnd/clm2/NCEPDATA.Qian.T62.c051024"
+ $fpftcon
+ $offline_atmdir
  nrevsn         = "$nrevsn"
  nsrest         =  $restart_type
  nelapse        =  $run_length

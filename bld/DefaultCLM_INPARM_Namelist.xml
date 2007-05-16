@@ -8,7 +8,8 @@
        The element names are the same as the corresponding namelist
        variables.  Values that depend on the model configuration use
        attributes to express the dependency.  The recognized attributes
-       are: ic_ymd, ic_tod, DYNAMICS, RESOLUTION, PLEV, and PHYSICS.
+       are: RESOLUTION, mask, ic_ymd, ic_tod, sim_year and all configuration
+       attributes from the config_cache.xml file (with keys converted to upper-case).
 
        $Id$
 -->
@@ -27,9 +28,16 @@
 <fpftcon>lnd/clm2/pftdata/pft-physiology.c070207</fpftcon>
 
 <!-- Initial condition datasets (relative to {csmdata}) -->
-<finidat RESOLUTION="64x128"   >lnd/clm2/inidata_3.1/offline/clmi_0000-01-01_064x128_c070403.nc</finidat>
+
+<finidat RESOLUTION="1.9x2.5"   mask="gx1v4" ic_ymd=101 ic_tod=0>lnd/clm2/inidata_3.1/ccsm/clmi_0000-01-01_1.9x2.5_gxv14_c070403.nc
+</finidat>
+<finidat RESOLUTION="1.9x2.5"   mask="gx1v4" ic_ymd=901 ic_tod=0>lnd/clm2/inidata_3.1/cam/clmi_0000-09-01_1.9x2.5_gx1v4_c070309.nc
+</finidat>
+<finidat RESOLUTION="64x128"    mask="USGS"  ic_ymd=101 ic_tod=0>lnd/clm2/inidata_3.1/offline/clmi_0000-01-01_064x128_c070403.nc
+</finidat>
 
 <!-- Surface datasets (relative to {csmdata}) -->
+<fsurdat RESOLUTION="360x720"   >lnd/clm2/surfdata/surfdata_360x720_070122.nc</fsurdat>
 <fsurdat RESOLUTION="128x256"   >lnd/clm2/surfdata/surfdata_128x256_c070501.nc</fsurdat>
 <fsurdat RESOLUTION="64x128"    >lnd/clm2/surfdata/surfdata_64x128_c070501.nc</fsurdat>
 <fsurdat RESOLUTION="48x96"     >lnd/clm2/surfdata/surfdata_48x96_c070501.nc</fsurdat>
@@ -44,6 +52,7 @@
 <fsurdat RESOLUTION="10x15"     >lnd/clm2/surfdata/surfdata_10x15_c070501.nc</fsurdat>
  
 <!-- Grid datasets (relative to {csmdata}) -->
+<fatmgrid RESOLUTION="360x720"   >lnd/clm2/griddata/griddata_360x720_070122.nc</fatmgrid>
 <fatmgrid RESOLUTION="128x256"   >lnd/clm2/griddata/griddata_128x256_060829.nc</fatmgrid>
 <fatmgrid RESOLUTION="64x128"    >lnd/clm2/griddata/griddata_64x128_060829.nc</fatmgrid>
 <fatmgrid RESOLUTION="48x96"     >lnd/clm2/griddata/griddata_48x96_060829.nc</fatmgrid>
@@ -57,19 +66,90 @@
 <fatmgrid RESOLUTION="4x5"       >lnd/clm2/griddata/griddata_4x5_060404.nc</fatmgrid>
 <fatmgrid RESOLUTION="10x15"     >lnd/clm2/griddata/griddata_10x15_070212.nc</fatmgrid>
 
+<!-- Land topo datasets (when running land at different resolution than atm coupling) (relative to {csmdata}) -->
+<flndtopo RESOLUTION="360x720"   >lnd/clm2/griddata/topodata_360x720_c060528.nc</flndtopo>
+<flndtopo RESOLUTION="128x256"   >lnd/clm2/griddata/topodata_128x256_060829.nc</flndtopo>
+<flndtopo RESOLUTION="64x128"    >lnd/clm2/griddata/topodata_64x128_060829.nc</flndtopo>
+
+<!-- Atmosphere topo datasets (when running land at different resolution than atm coupling) (relative to {csmdata}) -->
+<fatmtopo RESOLUTION="360x720"   >lnd/clm2/griddata/topodata_360x720_c060528.nc</fatmtopo>
+<fatmtopo RESOLUTION="128x256"   >lnd/clm2/griddata/topodata_128x256_060829.nc</fatmtopo>
+<fatmtopo RESOLUTION="64x128"    >lnd/clm2/griddata/topodata_64x128_060829.nc</fatmtopo>
+
 <!-- Fraction datasets (relative to {csmdata}) -->
 
-<fatmlndfrc RESOLUTION="128x256"    >lnd/clm2/griddata/fracdata_128x256_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc RESOLUTION="64x128"     >lnd/clm2/griddata/fracdata_64x128_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc RESOLUTION="48x96"      >lnd/clm2/griddata/fracdata_48x96_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc RESOLUTION="32x64"     >lnd/clm2/griddata/fracdata_32x64_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc RESOLUTION="8x16"      >lnd/clm2/griddata/fracdata_8x16_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc RESOLUTION="360x720" mask="USGS"  >lnd/clm2/griddata/fracdata_360x720_070122.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="128x256" mask="USGS"  >lnd/clm2/griddata/fracdata_128x256_USGS_070110.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="128x256" mask="gx1v3" >lnd/clm2/griddata/fracdata_128x256_gx1v3_060829.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="128x256" mask="gx1v4" >lnd/clm2/griddata/fracdata_128x256_gx1v4_060829.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="64x128"  mask="USGS"  >lnd/clm2/griddata/fracdata_64x128_USGS_070110.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="64x128"  mask="gx1v3" >lnd/clm2/griddata/fracdata_64x128_gx1v3_060829.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="64x128"  mask="gx1v4" >lnd/clm2/griddata/fracdata_64x128_gx1v4_060829.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="64x128"  mask="gx3v5" >lnd/clm2/griddata/fracdata_64x128_gx3v5_060829.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="48x96"   mask="USGS"  >lnd/clm2/griddata/fracdata_48x96_USGS_070110.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="48x96"   mask="gx3v5" >lnd/clm2/griddata/fracdata_48x96_gx3v5_060829.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="32x64"   mask="USGS"  >lnd/clm2/griddata/fracdata_32x64_USGS_070110.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="8x16"    mask="USGS"  >lnd/clm2/griddata/fracdata_8x16_USGS_070110.nc
+</fatmlndfrc>
 
-<fatmlndfrc RESOLUTION="0.9x1.25"  >lnd/clm2/griddata/fracdata_0.9x1.25_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc RESOLUTION="1x1.25"    >lnd/clm2/griddata/fracdata_1x1.25_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc RESOLUTION="1.9x2.5"   >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v4_060808.nc</fatmlndfrc>
-<fatmlndfrc RESOLUTION="2x2.5"     >lnd/clm2/griddata/fracdata_2x2.5_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc RESOLUTION="4x5"       >lnd/clm2/griddata/fracdata_4x5_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc RESOLUTION="10x15"     >lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc RESOLUTION="0.9x1.25" mask="USGS"  >lnd/clm2/griddata/fracdata_0.9x1.25_USGS_070110.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="1x1.25"   mask="USGS"  >lnd/clm2/griddata/fracdata_1x1.25_USGS_070110.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="1x1.25"   mask="gx1v3" >lnd/clm2/griddata/fracdata_1x1.25_gx1v3_060404.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="1x1.25"   mask="gx1v4" >lnd/clm2/griddata/fracdata_1x1.25_gx1v4_060711.nc
+</fatmlndfrc>
+
+<fatmlndfrc RESOLUTION="1.9x2.5" mask="USGS"  >lnd/clm2/griddata/fracdata_1.9x2.5_USGS_061130.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="1.9x2.5" mask="gx1v3" >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v3_060404.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="1.9x2.5" mask="gx1v4" >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v4_060808.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="1.9x2.5" mask="gx1v5" >lnd/clm2/griddata/fracdata_1.9x2.5_gxv5_070316.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="2x2.5"   mask="USGS"  >lnd/clm2/griddata/fracdata_2x2.5_USGS_070110.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="4x5"     mask="USGS"  >lnd/clm2/griddata/fracdata_4x5_USGS_070110.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="4x5"     mask="gx3v5" >lnd/clm2/griddata/fracdata_4x5_gx3v5_060404.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="10x15"   mask="USGS"  >lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc
+</fatmlndfrc>
+
+<!--NCEP atmosphere forcing dataset directory (relative to {csmdata}) -->
+<offline_atmdir CLMOFFLINE="on">lnd/clm2/NCEPDATA.Qian.T62.c051024</offline_atmdir>
+
+<!--CN Nitrogen deposition dataset for a fixed year (relative to {csmdata}) -->
+
+<fndepdat RESOLUTION="1.9x2.5" BGC="cn" sim_year="2100"      >lnd/clm2/ndepdata/ndep_clm_2100_1.9x2.5_c070118.nc</fndepdat>
+<fndepdat RESOLUTION="64x128"  BGC="cn" sim_year="2100"      >lnd/clm2/ndepdata/ndep_clm_2100_64x128_c060414.nc</fndepdat>
+<fndepdat RESOLUTION="48x96"   BGC="cn" sim_year="2100"      >lnd/clm2/ndepdata/ndep_clm_2100_48x96_c060414.nc</fndepdat>
+<fndepdat RESOLUTION="1.9x2.5" BGC="cn" sim_year="2000"      >lnd/clm2/ndepdata/ndep_clm_2000_1.9x2.5_c070118.nc</fndepdat>
+<fndepdat RESOLUTION="64x128"  BGC="cn" sim_year="2000"      >lnd/clm2/ndepdata/ndep_clm_2000_64x128_c060414.nc</fndepdat>
+<fndepdat RESOLUTION="48x96"   BGC="cn" sim_year="2000"      >lnd/clm2/ndepdata/ndep_clm_2000_48x96_c060414.nc</fndepdat>
+<fndepdat RESOLUTION="1.9x2.5" BGC="cn" sim_year="1890"      >lnd/clm2/ndepdata/ndep_clm_1890_1.9x2.5_c070118.nc</fndepdat>
+<fndepdat RESOLUTION="64x128"  BGC="cn" sim_year="1890"      >lnd/clm2/ndepdata/ndep_clm_1890_64x128_c060414.nc</fndepdat>
+<fndepdat RESOLUTION="48x96"   BGC="cn" sim_year="1890"      >lnd/clm2/ndepdata/ndep_clm_1890_48x96_c060414.nc</fndepdat>
+
+<!--CN Nitrogen deposition dataset for a series of years (relative to {csmdata}) -->
+
+<fndepdyn RESOLUTION="64x128"  BGC="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_64x128_c070214.nc</fndepdyn>
+<fndepdyn RESOLUTION="48x96"   BGC="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_48x96_c050608.nc</fndepdyn>
+
+<!-- River Transport Model 1/2 degree grid river routing file (relative to {csmdata}) -->
+<frivinp_rtm RTM="on">lnd/clm2/rtmdata/rdirc.05.061026</frivinp_rtm>
 
 </clm_inparm>

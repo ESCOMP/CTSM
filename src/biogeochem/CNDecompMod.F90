@@ -72,6 +72,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    real(r8), pointer :: t_soisno(:,:)    ! soil temperature (Kelvin)  (-nlevsno+1:nlevsoi)
    real(r8), pointer :: psisat(:,:)      ! soil water potential at saturation for CN code (MPa)
    real(r8), pointer :: soilpsi(:,:)     ! soil water potential in each soil layer (MPa)
+   real(r8), pointer :: dz(:,:)          ! soil layer thickness (m)
    real(r8), pointer :: cwdc(:)          ! (gC/m2) coarse woody debris C
    real(r8), pointer :: litr1c(:)        ! (kgC/m2) litter labile C
    real(r8), pointer :: litr2c(:)        ! (kgC/m2) litter cellulose C
@@ -199,12 +200,15 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    real(r8):: immob(lbc:ubc)        !potential N immobilization
    real(r8):: ratio        !temporary variable
    real(r8):: dnp          !denitrification proportion
+   integer :: nlevdecomp ! bottom layer to consider for decomp controls
+   real(r8):: spinup_scalar         !multiplier for AD_SPINUP algorithm
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays
    t_soisno              => clm3%g%l%c%ces%t_soisno
    psisat                => clm3%g%l%c%cps%psisat
    soilpsi               => clm3%g%l%c%cps%soilpsi
+   dz                    => clm3%g%l%c%cps%dz
    cwdc                  => clm3%g%l%c%ccs%cwdc
    litr1c                => clm3%g%l%c%ccs%litr1c
    litr2c                => clm3%g%l%c%ccs%litr2c
@@ -313,53 +317,41 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    k_frag = 1.0_r8-exp(-k_frag*dtd)
    
    ! The following code implements the acceleration part of the AD spinup
-   ! algorithm, by multiplying all of the decomposition base rates by 10.0.
+   ! algorithm, by multiplying all of the SOM decomposition base rates by 10.0.
 
 #if (defined AD_SPINUP)
-	k_l1 = k_l1 * 10._r8
-   k_l2 = k_l2 * 10._r8
-   k_l3 = k_l3 * 10._r8
-   k_s1 = k_s1 * 10._r8
-   k_s2 = k_s2 * 10._r8
-   k_s3 = k_s3 * 10._r8
-   k_s4 = k_s4 * 10._r8
-   k_frag = k_frag * 10._r8
+   spinup_scalar = 20._r8
+   k_s1 = k_s1 * spinup_scalar
+   k_s2 = k_s2 * spinup_scalar
+   k_s3 = k_s3 * spinup_scalar
+   k_s4 = k_s4 * spinup_scalar
 #endif
 
-   ! calculate a weighting function by soil depth that depends on the
-   ! fine root distribution per pft and depth and the pft weight on the column.
-   ! This will be used to weight the temperature and water potential scalars
-   ! for decomposition control.  There is currently no depth
-   ! information associated with the litter and soil C and N pools,
-   ! but the exponential decrease in fine root distribution with
-   ! depth is a useful surrogate for the vertical distribution of
-   ! soil organic matter.
-   ! This uses the generic pft->column averaging routine, 2d version
+   ! calculate function to weight the temperature and water potential scalars
+   ! for decomposition control.  
 
    allocate(fr(lbc:ubc,nlevsoi))
-   call p2c(nlevsoi,num_soilc,filter_soilc,rootfr,fr)
 
    ! the following normalizes values in fr so that they
-   ! sum to 1.0 across all soil levels on a column
-
+   ! sum to 1.0 across top nlevdecomp levels on a column
    frw(lbc:ubc) = 0._r8
-   do j = 1,nlevsoi
+   nlevdecomp=5
+   do j=1,nlevdecomp
 !dir$ concurrent
 !cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
-         frw(c) = frw(c) + fr(c,j)
+         frw(c) = frw(c) + dz(c,j)
       end do
    end do
-
-   do j = 1,nlevsoi
+   do j = 1,nlevdecomp
 !dir$ concurrent
 !dir$ prefervector
 !cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
          if (frw(c) /= 0._r8) then
-            fr(c,j) = fr(c,j) / frw(c)
+            fr(c,j) = dz(c,j) / frw(c)
          else
             fr(c,j) = 0._r8
          end if
@@ -376,7 +368,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    ! used to get the base decomp rates were controlled at 25 C.
 
    t_scalar(:) = 0._r8
-   do j = 1,nlevsoi
+   do j = 1,nlevdecomp
 !dir$ concurrent
 !cdir nodep
       do fc = 1,num_soilc
@@ -398,7 +390,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
 
    minpsi = -10.0_r8;
    w_scalar(:) = 0._r8
-   do j = 1,nlevsoi
+   do j = 1,nlevdecomp
 !dir$ concurrent
 !cdir nodep
       do fc = 1,num_soilc

@@ -78,6 +78,7 @@ subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: tempsum_npp(:)           ! temporary sum NPP (gC/m2/yr)
    real(r8), pointer :: annsum_npp(:)            ! annual sum NPP (gC/m2/yr)
    real(r8), pointer :: cannsum_npp(:)           ! column annual sum NPP (gC/m2/yr)
+   real(r8), pointer :: cannavg_t2m(:)    !annual average of 2m air temperature, averaged from pft-level (K)
 !
 ! local pointers to implicit out scalars
 !
@@ -101,6 +102,7 @@ subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
    tempsum_npp           => clm3%g%l%c%p%pepv%tempsum_npp
    annsum_npp            => clm3%g%l%c%p%pepv%annsum_npp
    cannsum_npp           => clm3%g%l%c%cps%cannsum_npp
+   cannavg_t2m           => clm3%g%l%c%cps%cannavg_t2m
    pcolumn               => clm3%g%l%c%p%column
 
    ! set time steps
@@ -121,7 +123,7 @@ subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       c = pcolumn(p)
-      if (annsum_counter(c) > 365._r8 * 86400._r8) then
+      if (annsum_counter(c) >= 365._r8 * 86400._r8) then
          ! update annual plant ndemand accumulator
          annsum_plant_ndemand(p)  = tempsum_plant_ndemand(p)
          tempsum_plant_ndemand(p) = 0._r8
@@ -142,13 +144,14 @@ subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
    ! use p2c routine to get selected column-average pft-level fluxes and states
    call p2c(num_soilc, filter_soilc, annsum_npp, cannsum_npp)
+   call p2c(num_soilc, filter_soilc, annavg_t2m, cannavg_t2m)
 
    ! column loop
 !dir$ concurrent
 !cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
-      if (annsum_counter(c) > 365._r8 * 86400._r8) annsum_counter(c) = 0._r8
+      if (annsum_counter(c) >= 365._r8 * 86400._r8) annsum_counter(c) = 0._r8
    end do
 
 end subroutine CNAnnualUpdate

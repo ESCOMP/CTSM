@@ -1732,7 +1732,7 @@ contains
     use fileutils   , only : get_filename
     use clm_time_manager, only : get_ref_date
 #if (defined CASA)
-    use CASAMod,    only : nlive, npools
+    use CASAMod,    only : nlive, npools, npool_types
 #endif
 !
 ! !ARGUMENTS:
@@ -1876,6 +1876,7 @@ contains
 #if (defined CASA)
     call check_ret(nf_def_dim (nfid(t), 'nlive', nlive , dimid), subname)
     call check_ret(nf_def_dim (nfid(t), 'npools', npools , dimid), subname)
+    call check_ret(nf_def_dim (nfid(t), 'npool_t', npool_types, dimid), subname)
 #endif
     do n = 1,num_subs
        call check_ret(nf_def_dim (nfid(t), subs_name(n), subs_dim(n), dimid), subname)
@@ -3827,7 +3828,7 @@ contains
     use decompMod , only : get_proc_bounds
     use clm_varpar, only : lsmlon, lsmlat, nlevsoi, nlevlak, numrad 
 #if (defined CASA)
-    use CASAMod,    only : nlive, npools
+    use CASAMod,    only : nlive, npools, npool_types
 #endif
 !
 ! !ARGUMENTS:
@@ -3884,12 +3885,14 @@ contains
        num2d = nlive
     case ('npools')
        num2d = npools
+    case ('npool_t')
+       num2d = npool_types
 #endif
     case default
        write(6,*)'ADD_FLD2D error: unsupported 2d type ',type2d
        write(6,*)'currently supported types for multi level fields are [levsoi,levlak,numrad', &
 #if (defined CASA)
-          ',nlive,npools', &
+          ',nlive,npools,npool_t', &
 #endif
           ']'
        call endrun()

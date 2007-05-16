@@ -13,30 +13,49 @@
 #
 #=======================================================================
 
+use Cwd;
 use strict;
 #use diagnostics;
-use XML::Lite;
 use Getopt::Long;
 use English;
 
 #-----------------------------------------------------------------------------------------------
 
+#Figure out where configure directory is and where can use the XML/Lite module from
 my $ProgName;
 ($ProgName = $PROGRAM_NAME) =~ s!(.*)/!!; # name of program
 my $ProgDir = $1;                         # name of directory where program lives
 
+my $cwd = getcwd();  # current working directory
+my $cfgdir;
+
+if ($ProgDir) { $cfgdir = $ProgDir; }
+else { $cfgdir = $cwd; }
+(-f "$cfgdir/XML/Lite.pm")  or  die <<"EOF";
+** Cannot find perl module \"XML/Lite.pm\" in directory \"$cfgdir\" **
+EOF
+
+#-----------------------------------------------------------------------------------------------
+# Add $cfgdir to the list of paths that Perl searches for modules
+unshift @INC, $cfgdir;
+require XML::Lite;
+
 # Defaults
-my $file = "DefaultCLM_INPARM_Namelist.xml";
 my $namelist = "clm_inparm";
+my $file = "$cfgdir/DefaultCLM_INPARM_Namelist.xml";
+my $config = "config_cache.xml";
+
 
 sub usage {
     die <<EOF;
 SYNOPSIS
      $ProgName [options]
 OPTIONS
+     -config "file"                       CLM build configuration file created by configure.
      -csmdata "dir"                       Directory for head of csm inputdata
      -file "file"                         Input xml file to read in by default ($file)
      -help  [or -h]                       Display this help
+     -justvalue                           Just display the values (NOT key = value)
      -var "varname"                       Variable name to match
      -namelist "namelistname"             Namelist name to read in by default ($namelist)
      -onlyfiles                           Only output filenames
@@ -73,19 +92,71 @@ EXAMPLES
 EOF
 }
 
+#-------------------------------------------------------------------------------
+
+sub convert_keys_touppercase
+{
+   my (%hash) = @_;
+
+   my %outhash;
+   foreach my $key ( keys(%hash) ) {
+      $_ = $key;
+      tr/a-z/A-Z/;
+      $outhash{$_} = $hash{$key};
+   }
+   return( %outhash );
+}
+
+#-------------------------------------------------------------------------------
+
+sub read_cfg_file
+{
+    my ($file) = @_;
+
+    if ( ! -f "$file" ) {
+      die "file $file does not exist\n";
+    }
+    my $xml = XML::Lite->new( $file );
+    my $root = $xml->root_element();
+
+    # Check for valid root node
+    my $name = $root->get_name();
+    $name eq "config_bld" or die
+        "file $file is not a CLM configuration file\n";
+
+    # Get source and build directories
+    my $dirs = $xml->elements_by_name( "directories" );
+    my %dirs = $dirs->get_attributes();
+    my %DIRS = convert_keys_touppercase( %dirs );
+
+    # Get cppvars
+    my $cppvars = $xml->elements_by_name( "cppvars" );
+    my %cppvars = $cppvars->get_attributes();
+    my %CPPVARS = convert_keys_touppercase( %cppvars );
+
+    # Get settings for Makefile (parallelism and library locations)
+    my $make = $xml->elements_by_name( "makefile" );
+    my %make = $make->get_attributes();
+    my %MAKE = convert_keys_touppercase( %make );
+
+    return %DIRS, %CPPVARS, %MAKE;
+}
+
 #-----------------------------------------------------------------------------------------------
 
-  my %opts = ( file      => $file,
-               namelist  => $namelist,
-               var       => undef,
-               res       => undef,
-               csmdata   => undef,
-               test      => undef,
-               onlyfiles => undef,
-               scpto     => undef,
-               silent    => undef,
-               help      => undef,
-               options   => undef,
+  my %opts = ( file       => $file,
+               namelist   => $namelist,
+               var        => undef,
+               res        => undef,
+               config     => undef,
+               csmdata    => undef,
+               test       => undef,
+               onlyfiles  => undef,
+               justvalues => undef,
+               scpto      => undef,
+               silent     => undef,
+               help       => undef,
+               options    => undef,
              );
 
   GetOptions(
@@ -93,10 +164,12 @@ EOF
         "n|namelist=s" => \$opts{'namelist'},
         "v|var=s"      => \$opts{'var'},
         "r|res=s"      => \$opts{'res'},
+        "config=s"     => \$opts{'config'},
         "csmdata=s"    => \$opts{'csmdata'},
         "options=s"    => \$opts{'options'},
         "t|test"       => \$opts{'test'},
         "onlyfiles"    => \$opts{'onlyfiles'},
+        "justvalues"   => \$opts{'justvalues'},
         "scpto=s"      => \$opts{'scpto'},
         "s|silent"     => \$opts{'silent'},
         "h|elp"        => \$opts{'help'},
@@ -112,6 +185,10 @@ EOF
   }
   $file = $opts{'file'};
   $namelist = $opts{'namelist'}; 
+  my %bld;
+  if ( defined( $opts{'config'} ) ) {
+     %bld = read_cfg_file( $opts{'config'} );
+  }
 
   # Set if should do extra printing or not (if silent mode is not set)
   my $printing = 1;
@@ -201,18 +278,42 @@ EOF
                }
             }
          }
+         # Match any options from the build config file
+         if ( defined($opts{'config'}) ) {
+            foreach my $optionkey ( keys(%bld) ) {
+               if ( ($key eq "$optionkey") && ($atts{$key} ne $bld{$optionkey} ) ) {
+                  $print = undef;
+               }
+            }
+         }
       }
     }
     my $isafile;
     #
-    # if is a file (has slashes and isn't csmdata or a var with dir in name
+    # If is a directory (has slashes, is csmdata or a var with dir in name)
+    if ( $value =~ /\// && (($name eq "csmdata") || ($name =~ /dir/))  ) {
+      if ( $name eq "csmdata" ) {
+         $value = $opts{'csmdata'};
+      }
+      if ( $name eq "offline_atmdir" ) {
+         $value = "$opts{'csmdata'}/$value";
+      }
+      # Test that this directory exists
+      if ( defined($opts{'test'})  && defined($print) ) { 
+         print "Test that directory $value exists\n" if $printing;
+         if ( ! -d "$value" ) {
+            die "($ProgName) ERROR:: directory $value does NOT exist!\n";
+         }
+      }
     #
-    if ( $value =~ /\// && ($name ne "csmdata") && ($name !~ /dir/) ) {
+    # Otherwise if it is a file (has slashes in value)
+    #
+    } elsif ( $value =~ /\// ) {
       my $filename = $value;
       $value = "$opts{'csmdata'}/$value";
       # Test that this file exists
       if ( defined($opts{'test'})  && defined($print) ) { 
-         print "Test that $value exists\n" if $printing;
+         print "Test that file $value exists\n" if $printing;
          if ( ! -f "$value" ) {
             die "($ProgName) ERROR:: file $value does NOT exist!\n";
          }
@@ -223,10 +324,13 @@ EOF
          system( "scp $value $opts{'scpto'}/$filename" )
       }
       $isafile = 1;
-      $value = "\'$value\'";
     # For settings that are NOT files
     } else {
       $isafile = 0;
+    }
+    # If appears to be a string -- add quotes around the value
+    if ( $value =~ /[^0-9.de+-]/ ) {
+      $value = "\'$value\'";
     }
     # If onlyfiles option set do NOT print if is NOT a file
     if ( defined($opts{'onlyfiles'}) && (! $isafile) ) {
@@ -234,7 +338,13 @@ EOF
     }
     # Print out
     if ( defined($print) ) { 
-       print "$name = $value\n";
+       if ( ! defined($opts{'justvalues'})  ) {
+          print "$name = ";
+       }
+       print "$value\n";
     }
+  }
+  if ( $printing && defined($opts{'test'}) ) {
+     print "\n\nTesting was successful\n\n"
   }
  

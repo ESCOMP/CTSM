@@ -60,6 +60,8 @@ module controlMod
 ! === offline forcing data ===
 !
 !    o offline_atmdir  = 256 character directory for input atm data files (can be Mass Store)
+!    o cycle_begyr     = integer, first year of offline atm data (e.g. 1948)
+!    o cycle_nyr       = integer, number of years of offline atm data to cycle
 !
 ! === history and restart files ===
 !
@@ -270,7 +272,7 @@ contains
     namelist /clm_inparm/  &
          finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
          fpftcon, frivinp_rtm,  &
-         fpftdyn, fndepdat, fndepdyn, nrevsn, offline_atmdir 
+         fpftdyn, fndepdat, fndepdyn, nrevsn, offline_atmdir, cycle_begyr, cycle_nyr
 
     ! clm history, restart, archive options
 
@@ -338,6 +340,8 @@ contains
     ! offline mode
 
     offline_atmdir   = ' '
+    cycle_begyr = iundef
+    cycle_nyr   = iundef
 
     ! landunit generation
 
@@ -547,6 +551,16 @@ contains
 #if (defined OFFLINE)
        if (offline_atmdir == ' ') then
           write(6,*)'error: atmos  input data file must be specified'; call endrun()
+       end if
+       if (cycle_begyr /= iundef) then
+          if (cycle_nyr == iundef) then
+	     write(6,*)'error: if cycle_begyr is set, cycle_nyr must also be set'; call endrun()
+	  end if
+       end if
+       if (cycle_nyr /= iundef) then
+          if (cycle_begyr == iundef) then
+	     write(6,*)'error: if cycle_nyr is set, cycle_begyr must also be set'; call endrun()
+	  end if
        end if
 #endif
 
@@ -846,6 +860,10 @@ contains
 #if (defined OFFLINE)
     if (offline_atmdir /= ' ') then
        write(6,*) '   atmospheric forcing data    = ',trim(offline_atmdir)
+    end if
+    if (cycle_begyr /= -9999999) then
+       write(6,*) '   first year of atmospheric forcing data for cycling = ',cycle_begyr
+       write(6,*) '   number of years in atmospheric forcing data cycle  = ',cycle_nyr
     end if
 #elif (defined SEQ_MCT) || (defined SEQ_ESMF)
     write(6,*) '   atmospheric forcing data is from sequential ccsm model'

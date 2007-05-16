@@ -612,6 +612,7 @@ contains
        write (6,*) '  lnd gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_lnd_gdc2glo)
        write (6,*) '  atm gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo)
        write (6,*)
+       call shr_sys_flush(6)
     end if
 
     ! Write out clump and proc info, one pe at a time, 
@@ -1304,6 +1305,7 @@ contains
                   ' end pft     = ',clumps(cid)%endp, &
                   ' total pfts per clump     = ',clumps(cid)%npfts
           end do
+          call shr_sys_flush(6)
        end if
 #ifndef UNICOSMP
        call shr_sys_flush(6)

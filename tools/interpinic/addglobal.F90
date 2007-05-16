@@ -18,7 +18,8 @@ subroutine addglobal (ncid, cmdline)
   character(len=10) :: time
   character(len= 5) :: zone
   character(len=18) :: datetime
-  character(len=256) :: version = "$HeadURL$"
+  character(len=256) :: version = &
+  "$HeadURL$"
   character(len=256) :: revision_id = "$Id$"
   character(len=16) :: logname
   character(len=16) :: hostname

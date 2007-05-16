@@ -377,10 +377,20 @@ subroutine CNAllocation (lbc, ubc, &
 
       f1 = froot_leaf(ivt(p))
       f2 = croot_stem(ivt(p))
-      ! modified wood allocation to be 2.1 at npp=800 gC/m2/yr, 0.1 at npp=0,
-      ! constrained so that it does not go lower than 0.1 (under negative annsum_npp)
-      !f3 = stem_leaf(ivt(p))
-      f3 = max(0.1_r8, 0.1_r8 + 0.004_r8*annsum_npp(p))
+     
+      ! modified wood allocation to be 2.2 at npp=800 gC/m2/yr, 0.2 at npp=0,
+      ! constrained so that it does not go lower than 0.2 (under negative annsum_npp)
+      ! There was an error in this formula in previous version, where the coefficient
+      ! was 0.004 instead of 0.0025.
+      ! This variable allocation is only for trees. Shrubs have a constant
+      ! allocation as specified in the pft-physiology file.  The value is also used
+      ! as a trigger here: -1.0 means to use the dynamic allocation (trees).
+      if (stem_leaf(ivt(p)) == -1._r8) then
+      	f3 = max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p))
+      else
+      	f3 = stem_leaf(ivt(p))
+      end if
+      
       f4 = flivewd(ivt(p))
       g1 = grperc
       g2 = grpnow
@@ -516,10 +526,20 @@ subroutine CNAllocation (lbc, ubc, &
       ! set some local allocation variables
       f1 = froot_leaf(ivt(p))
       f2 = croot_stem(ivt(p))
-      ! modified wood allocation to be 2.1 at npp=800 gC/m2/yr, 0.1 at npp=0
-      ! constrained so that it does not go lower than 0.1 (under negative annsum_npp)
-      !f3 = stem_leaf(ivt(p))
-      f3 = max(0.1_r8, 0.1_r8 + 0.004_r8*annsum_npp(p))
+
+      ! modified wood allocation to be 2.2 at npp=800 gC/m2/yr, 0.2 at npp=0,
+      ! constrained so that it does not go lower than 0.2 (under negative annsum_npp)
+      ! There was an error in this formula in previous version, where the coefficient
+      ! was 0.004 instead of 0.0025.
+      ! This variable allocation is only for trees. Shrubs have a constant
+      ! allocation as specified in the pft-physiology file.  The value is also used
+      ! as a trigger here: -1.0 means to use the dynamic allocation (trees).
+      if (stem_leaf(ivt(p)) == -1._r8) then
+      	f3 = max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p))
+      else
+      	f3 = stem_leaf(ivt(p))
+      end if
+      
       f4 = flivewd(ivt(p))
       g1 = grperc
       g2 = grpnow

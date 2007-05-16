@@ -376,6 +376,9 @@ contains
 #if (defined CASA)
     use CASAMod         , only : initCASA
     use CASAPhenologyMod, only : initCASAPhenology
+#if (defined CLAMP)
+    use CASAiniTimeVarMod,only : CASAiniTimeVar
+#endif
 #endif
 #if (defined RTM) 
     use RtmMod          , only : Rtmini
@@ -544,6 +547,10 @@ contains
     if (nsrest == 0) then
        call CNiniTimeVar()
     end if
+#elif (defined CASA)
+#if (defined CLAMP)
+   call CASAiniTimeVar()
+#endif
 #endif
 
     ! ------------------------------------------------------------------------

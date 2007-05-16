@@ -148,7 +148,7 @@ contains
     real(r8) :: hk(lbc:ubc,1:nlevsoi)      ! hydraulic conductivity (mm h2o/s)
     real(r8) :: dhkdw(lbc:ubc,1:nlevsoi)   ! d(hk)/d(vol_liq)
     real(r8) :: psi,vwc,fsat               ! temporary variables for soilpsi calculation
-#if (defined DGVM) || (defined CN)
+#if (defined DGVM) || (defined CN) || (defined CASA)
     real(r8) :: watdry                     ! temporary
     real(r8) :: rwat(lbc:ubc)              ! soil water wgted by depth to maximum depth of 0.5 m
     real(r8) :: swat(lbc:ubc)              ! same as rwat but at saturation
@@ -374,7 +374,7 @@ contains
        end if
     end do
 
-#if (defined CN)
+#if (defined CN) || (defined CASA)
     do j = 1, nlevsoi
 !dir$ concurrent
 !cdir nodep
@@ -397,7 +397,7 @@ contains
     end do
 #endif
 
-#if (defined DGVM) || (defined CN)
+#if (defined DGVM) || (defined CN) || (defined CASA)
     ! Available soil water up to a depth of 0.5 m.
     ! Potentially available soil water (=whc) up to a depth of 0.5 m.
     ! Water content as fraction of whc up to a depth of 0.5 m.

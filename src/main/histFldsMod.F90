@@ -55,7 +55,7 @@ contains
     use histFileMod, only : add_subscript, add_fld1d, add_fld2d, &
                             masterlist_printflds
 #if (defined CASA)
-    use CASAMod    , only : nlive, npools
+    use CASAMod    , only : nlive, npools, npool_types
 #endif
 !
 ! !ARGUMENTS:
@@ -131,6 +131,14 @@ contains
          avgflag='A', long_name='2m specific humidity', &
          ptr_pft=clm3%g%l%c%p%pes%q_ref2m)
 
+#if (defined CLAMP)
+    ! Relative humidity
+
+    call add_fld1d (fname='RH2M', units='%',  &
+         avgflag='A', long_name='2m relative humidity', &
+         ptr_pft=clm3%g%l%c%p%pes%rh_ref2m)
+#endif
+
     ! Surface radiation
 
     call add_fld1d (fname='SABV', units='watt/m^2',  &
@@ -204,6 +212,99 @@ contains
     call add_fld1d (fname='FIRE', units='watt/m^2',  &
          avgflag='A', long_name='emitted infrared (longwave) radiation', &
          ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_out)
+
+    call add_fld1d (fname='PARSUN', units='W/m^2', &
+         avgflag='A', long_name='average absorbed PAR for sunlit leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%parsun, default='inactive')
+
+    call add_fld1d (fname='PARSHA', units='W/m^2', &
+         avgflag='A', long_name='average absorbed PAR for shaded leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%parsha, default='inactive')
+
+    call add_fld1d (fname='DLRAD', units='W/m^2', &
+         avgflag='A', long_name='downward longwave radiation below the canopy', &
+         ptr_pft=clm3%g%l%c%p%pef%dlrad, default='inactive')
+
+    call add_fld1d (fname='ULRAD', units='W/m^2', &
+         avgflag='A', long_name='upward longwave radiation above the canopy', &
+         ptr_pft=clm3%g%l%c%p%pef%ulrad, default='inactive')
+
+    call add_fld1d (fname='EFLX_LH_TOT', units='W/m^2', &
+         avgflag='A', long_name='total latent heat flux [+ to atm]', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_tot, default='inactive')
+
+    call add_fld1d (fname='EFLX_SOIL_GRND', units='W/m^2', &
+         avgflag='A', long_name='soil heat flux [+ into soil]', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd, default='inactive')
+
+    call add_fld1d (fname='CGRND', units='W/m^2/K', &
+         avgflag='A', long_name='deriv. of soil energy flux wrt to soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%cgrnd, default='inactive')
+
+    call add_fld1d (fname='CGRNDL', units='W/m^2/K', &
+         avgflag='A', long_name='deriv. of soil latent heat flux wrt soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%cgrndl, default='inactive')
+
+    call add_fld1d (fname='CGRNDS', units='W/m^2/K', &
+         avgflag='A', long_name='deriv. of soil sensible heat flux wrt soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%cgrnds, default='inactive')
+
+    call add_fld1d (fname='EFLX_GNET', units='W/m^2', &
+         avgflag='A', long_name='net heat flux into ground', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_gnet, default='inactive')
+
+    call add_fld1d (fname='DGNETDT', units='W/m^2/K', &
+         avgflag='A', long_name='derivative of net ground heat flux wrt soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%dgnetdT, default='inactive')
+
+    call add_fld2d (fname='SUN_ADD', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy absorbed direct from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_add, default='inactive')
+
+    call add_fld2d (fname='TOT_AID', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='total canopy absorbed indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%tot_aid, default='inactive')
+
+    call add_fld2d (fname='SUN_AID', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy absorbed indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_aid, default='inactive')
+
+    call add_fld2d (fname='SUN_AII', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy absorbed indirect from indirect', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_aii, default='inactive')
+
+    call add_fld2d (fname='SHA_AID', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy absorbed indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_aid, default='inactive')
+
+    call add_fld2d (fname='SHA_AII', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy absorbed indirect from indirect', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_aii, default='inactive')
+
+    call add_fld2d (fname='SUN_ATOT', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy total absorbed', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_atot, default='inactive')
+
+    call add_fld2d (fname='SHA_ATOT', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy total absorbed', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_atot, default='inactive')
+
+    call add_fld2d (fname='SUN_ALF', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy total absorbed by leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_alf, default='inactive')
+
+    call add_fld2d (fname='SHA_ALF', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy total absored by leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_alf, default='inactive')
+
+    call add_fld2d (fname='SUN_APERLAI', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy total absorbed per unit LAI', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_aperlai, default='inactive')
+
+    call add_fld2d (fname='SHA_APERLAI', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy total absorbed per unit LAI', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_aperlai, default='inactive')
+                                                                       
 
     ! Surface energy fluxes
 
@@ -579,6 +680,13 @@ contains
     !-------------------------------
     ! C state variables - native to PFT 
     !-------------------------------
+#if (defined CLAMP)
+        ! add history fields for all CLAMP CN variables
+
+        call add_fld1d (fname='WOODC', units='gC/m^2', &
+             avgflag='A', long_name='wood C', &
+             ptr_pft=clm3%g%l%c%p%pcs%woodc)
+#endif
     
     call add_fld1d (fname='LEAFC', units='gC/m^2', &
          avgflag='A', long_name='leaf C', &
@@ -803,6 +911,16 @@ contains
     !-------------------------------
     ! C state variables - native to column
     !-------------------------------
+#if (defined CLAMP)
+     ! add history fields for all CLAMP CN variables
+     call add_fld1d (fname='SOILC', units='gC/m^2', &
+          avgflag='A', long_name='soil C', &
+          ptr_col=clm3%g%l%c%ccs%totsomc)
+
+     call add_fld1d (fname='LITTERC', units='gC/m^2', &
+          avgflag='A', long_name='litter C', &
+          ptr_col=clm3%g%l%c%ccs%totlitc)
+#endif
     
     call add_fld1d (fname='CWDC', units='gC/m^2', &
          avgflag='A', long_name='coarse woody debris C', &
@@ -836,6 +954,10 @@ contains
          avgflag='A', long_name='soil organic matter C (slowest pool)', &
          ptr_col=clm3%g%l%c%ccs%soil4c)
     
+    call add_fld1d (fname='SEEDC', units='gC/m^2', &
+         avgflag='A', long_name='pool for seeding new PFTs', &
+         ptr_col=clm3%g%l%c%ccs%seedc)
+    
     call add_fld1d (fname='COL_CTRUNC', units='gC/m^2', &
          avgflag='A', long_name='column-level sink for C truncation', &
          ptr_col=clm3%g%l%c%ccs%col_ctrunc)
@@ -855,6 +977,19 @@ contains
     call add_fld1d (fname='TOTCOLC', units='gC/m^2', &
          avgflag='A', long_name='total column carbon, incl veg and cpool', &
          ptr_col=clm3%g%l%c%ccs%totcolc)
+
+    call add_fld1d (fname='PROD10C', units='gC/m^2', &
+         avgflag='A', long_name='10-yr wood product C', &
+         ptr_col=clm3%g%l%c%ccs%prod10c)
+
+    call add_fld1d (fname='PROD100C', units='gC/m^2', &
+         avgflag='A', long_name='100-yr wood product C', &
+         ptr_col=clm3%g%l%c%ccs%prod100c)
+
+    call add_fld1d (fname='TOTPRODC', units='gC/m^2', &
+         avgflag='A', long_name='total wood product C', &
+         ptr_col=clm3%g%l%c%ccs%totprodc)
+
     
     !-------------------------------
     ! C13 state variables - native to column
@@ -892,6 +1027,10 @@ contains
          avgflag='A', long_name='C13 soil organic matter C (slowest pool)', &
          ptr_col=clm3%g%l%c%cc13s%soil4c)
     
+    call add_fld1d (fname='C13_SEEDC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 pool for seeding new PFTs', &
+         ptr_col=clm3%g%l%c%ccs%seedc)
+    
     call add_fld1d (fname='C13_COL_CTRUNC', units='gC13/m^2', &
          avgflag='A', long_name='C13 column-level sink for C truncation', &
          ptr_col=clm3%g%l%c%cc13s%col_ctrunc)
@@ -911,6 +1050,18 @@ contains
     call add_fld1d (fname='C13_TOTCOLC', units='gC13/m^2', &
          avgflag='A', long_name='C13 total column carbon, incl veg and cpool', &
          ptr_col=clm3%g%l%c%cc13s%totcolc)
+
+    call add_fld1d (fname='C13_PROD10C', units='gC13/m^2', &
+         avgflag='A', long_name='C13 10-yr wood product C', &
+         ptr_col=clm3%g%l%c%cc13s%prod10c)
+
+    call add_fld1d (fname='C13_PROD100C', units='gC13/m^2', &
+         avgflag='A', long_name='C13 100-yr wood product C', &
+         ptr_col=clm3%g%l%c%cc13s%prod100c)
+
+    call add_fld1d (fname='C13_TOTPRODC', units='gC13/m^2', &
+         avgflag='A', long_name='C13 total wood product C', &
+         ptr_col=clm3%g%l%c%cc13s%totprodc)
 
     !-------------------------------
     ! N state variables - native to PFT
@@ -1076,9 +1227,53 @@ contains
          avgflag='A', long_name='total column-level N', &
          ptr_col=clm3%g%l%c%cns%totcoln)
 
+    call add_fld1d (fname='SEEDN', units='gN/m^2', &
+         avgflag='A', long_name='pool for seeding new PFTs ', &
+         ptr_col=clm3%g%l%c%cns%prod10n)
+
+    call add_fld1d (fname='PROD10N', units='gN/m^2', &
+         avgflag='A', long_name='10-yr wood product N', &
+         ptr_col=clm3%g%l%c%cns%prod10n)
+
+    call add_fld1d (fname='PROD100N', units='gN/m^2', &
+         avgflag='A', long_name='100-yr wood product N', &
+         ptr_col=clm3%g%l%c%cns%prod100n)
+
+    call add_fld1d (fname='TOTPRODN', units='gN/m^2', &
+         avgflag='A', long_name='total wood product N', &
+         ptr_col=clm3%g%l%c%cns%totprodn)
+
     !-------------------------------
     ! C flux variables - native to PFT
     !-------------------------------
+
+#if (defined CLAMP)
+     ! add history fields for all CLAMP CN variables
+
+     call add_fld1d (fname='WOODC_ALLOC', units='gC/m^2/s', &
+          avgflag='A', long_name='wood C allocation', &
+          ptr_pft=clm3%g%l%c%p%pcf%woodc_alloc)
+
+     call add_fld1d (fname='WOODC_LOSS', units='gC/m^2/s', &
+          avgflag='A', long_name='wood C loss', &
+          ptr_pft=clm3%g%l%c%p%pcf%woodc_loss)
+
+     call add_fld1d (fname='LEAFC_LOSS', units='gC/m^2/s', &
+          avgflag='A', long_name='leaf C loss', &
+          ptr_pft=clm3%g%l%c%p%pcf%leafc_loss)
+
+     call add_fld1d (fname='LEAFC_ALLOC', units='gC/m^2/s', &
+          avgflag='A', long_name='leaf C allocation', &
+          ptr_pft=clm3%g%l%c%p%pcf%leafc_alloc)
+
+     call add_fld1d (fname='FROOTC_LOSS', units='gC/m^2/s', &
+          avgflag='A', long_name='fine root C loss', &
+          ptr_pft=clm3%g%l%c%p%pcf%frootc_loss)
+
+     call add_fld1d (fname='FROOTC_ALLOC', units='gC/m^2/s', &
+          avgflag='A', long_name='fine root C allocation', &
+          ptr_pft=clm3%g%l%c%p%pcf%frootc_alloc)
+#endif
 
     call add_fld1d (fname='PSNSUN', units='umolCO2/m^2/s', &
          avgflag='A', long_name='sunlit leaf photosynthesis', &
@@ -1983,6 +2178,34 @@ contains
     !-------------------------------
     ! C flux variables - native to column 
     !-------------------------------
+#if (defined CLAMP)
+        ! add history fields for all CLAMP CN variables
+
+        call add_fld1d (fname='CWDC_HR', units='gC/m^2/s', &
+             avgflag='A', long_name='coarse woody debris C heterotrophic respiration', &
+             ptr_col=clm3%g%l%c%ccf%cwdc_hr)
+
+        call add_fld1d (fname='CWDC_LOSS', units='gC/m^2/s', &
+             avgflag='A', long_name='coarse woody debris C loss', &
+             ptr_col=clm3%g%l%c%ccf%cwdc_loss)
+
+        call add_fld1d (fname='LITTERC_HR', units='gC/m^2/s', &
+             avgflag='A', long_name='litter C heterotrophic respiration', &
+             ptr_col=clm3%g%l%c%ccf%lithr)
+
+        call add_fld1d (fname='LITTERC_LOSS', units='gC/m^2/s', &
+             avgflag='A', long_name='litter C loss', &
+             ptr_col=clm3%g%l%c%ccf%litterc_loss)
+
+        call add_fld1d (fname='SOILC_HR', units='gC/m^2/s', &
+             avgflag='A', long_name='soil C heterotrophic respiration', &
+             ptr_col=clm3%g%l%c%ccf%somhr)
+
+        call add_fld1d (fname='SOILC_LOSS', units='gC/m^2/s', &
+             avgflag='A', long_name='soil C loss', &
+             ptr_col=clm3%g%l%c%ccf%somhr)
+
+#endif
 
     call add_fld1d (fname='M_LEAFC_TO_LITR1C', units='gC/m^2/s', &
          avgflag='A', long_name='leaf C mortality to litter 1 C', &
@@ -2231,6 +2454,58 @@ contains
     call add_fld1d (fname='COL_FIRE_CLOSS', units='gC/m^2/s', &
          avgflag='A', long_name='total column-level fire C loss', &
          ptr_col=clm3%g%l%c%ccf%col_fire_closs)
+
+    call add_fld1d (fname='DWT_SEEDC_TO_LEAF', units='gC/m^2/s', &
+         avgflag='A', long_name='seed source to PFT-level leaf', &
+         ptr_col=clm3%g%l%c%ccf%dwt_seedc_to_leaf)
+
+    call add_fld1d (fname='DWT_SEEDC_TO_DEADSTEM', units='gC/m^2/s', &
+         avgflag='A', long_name='seed source to PFT-level deadstem', &
+         ptr_col=clm3%g%l%c%ccf%dwt_seedc_to_deadstem)
+
+    call add_fld1d (fname='DWT_CONV_CFLUX', units='gC/m^2/s', &
+         avgflag='A', long_name='conversion C flux (immediate loss to atm)', &
+         ptr_col=clm3%g%l%c%ccf%dwt_conv_cflux)
+
+    call add_fld1d (fname='DWT_PROD10C_GAIN', units='gC/m^2/s', &
+         avgflag='A', long_name='addition to 10-yr wood product pool', &
+         ptr_col=clm3%g%l%c%ccf%dwt_prod10c_gain)
+
+    call add_fld1d (fname='DWT_PROD10C_LOSS', units='gC/m^2/s', &
+         avgflag='A', long_name='loss from 10-yr wood product pool', &
+         ptr_col=clm3%g%l%c%ccf%dwt_prod10c_loss)
+
+    call add_fld1d (fname='DWT_PROD100C_GAIN', units='gC/m^2/s', &
+         avgflag='A', long_name='addition to 100-yr wood product pool', &
+         ptr_col=clm3%g%l%c%ccf%dwt_prod100c_gain)
+
+    call add_fld1d (fname='DWT_PROD100C_LOSS', units='gC/m^2/s', &
+         avgflag='A', long_name='loss from 100-yr wood product pool', &
+         ptr_col=clm3%g%l%c%ccf%dwt_prod100c_loss)
+
+    call add_fld1d (fname='DWT_FROOTC_TO_LITR1C', units='gC/m^2/s', &
+         avgflag='A', long_name='fine root to litter due to landcover change', &
+         ptr_col=clm3%g%l%c%ccf%dwt_frootc_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='DWT_FROOTC_TO_LITR2C', units='gC/m^2/s', &
+         avgflag='A', long_name='fine root to litter due to landcover change', &
+         ptr_col=clm3%g%l%c%ccf%dwt_frootc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='DWT_FROOTC_TO_LITR3C', units='gC/m^2/s', &
+         avgflag='A', long_name='fine root to litter due to landcover change', &
+         ptr_col=clm3%g%l%c%ccf%dwt_frootc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='DWT_LIVECROOTC_TO_CWDC', units='gC/m^2/s', &
+         avgflag='A', long_name='live coarse root to CWD due to landcover change', &
+         ptr_col=clm3%g%l%c%ccf%dwt_livecrootc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='DWT_DEADCROOTC_TO_CWDC', units='gC/m^2/s', &
+         avgflag='A', long_name='dead coarse root to CWD due to landcover change', &
+         ptr_col=clm3%g%l%c%ccf%dwt_deadcrootc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='DWT_CLOSS', units='gC/m^2/s', &
+         avgflag='A', long_name='total carbon loss from product pools and conversion', &
+         ptr_col=clm3%g%l%c%ccf%dwt_closs)
 
     !-------------------------------
     ! C13 flux variables - native to column 
@@ -2483,6 +2758,58 @@ contains
     call add_fld1d (fname='C13_COL_FIRE_CLOSS', units='gC13/m^2/s', &
          avgflag='A', long_name='C13 total column-level fire C loss', &
          ptr_col=clm3%g%l%c%cc13f%col_fire_closs)
+
+    call add_fld1d (fname='C13_DWT_SEEDC_TO_LEAF', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 seed source to PFT-level leaf', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_seedc_to_leaf)
+
+    call add_fld1d (fname='C13_DWT_SEEDC_TO_DEADSTEM', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 seed source to PFT-level deadstem', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_seedc_to_deadstem)
+
+    call add_fld1d (fname='C13_DWT_CONV_CFLUX', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 conversion C flux (immediate loss to atm)', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_conv_cflux)
+
+    call add_fld1d (fname='C13_DWT_PROD10C_GAIN', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 addition to 10-yr wood product pool', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_prod10c_gain)
+
+    call add_fld1d (fname='C13_DWT_PROD10C_LOSS', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 loss from 10-yr wood product pool', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_prod10c_loss)
+
+    call add_fld1d (fname='C13_DWT_PROD100C_GAIN', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 addition to 100-yr wood product pool', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_prod100c_gain)
+
+    call add_fld1d (fname='C13_DWT_PROD100C_LOSS', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 loss from 100-yr wood product pool', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_prod100c_loss)
+
+    call add_fld1d (fname='C13_DWT_FROOTC_TO_LITR1C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 fine root to litter due to landcover change', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_frootc_to_litr1c, default='inactive')
+
+    call add_fld1d (fname='C13_DWT_FROOTC_TO_LITR2C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 fine root to litter due to landcover change', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_frootc_to_litr2c, default='inactive')
+
+    call add_fld1d (fname='C13_DWT_FROOTC_TO_LITR3C', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 fine root to litter due to landcover change', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_frootc_to_litr3c, default='inactive')
+
+    call add_fld1d (fname='C13_DWT_LIVECROOTC_TO_CWDC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 live coarse root to CWD due to landcover change', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_livecrootc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='C13_DWT_DEADCROOTC_TO_CWDC', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 dead coarse root to CWD due to landcover change', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_deadcrootc_to_cwdc, default='inactive')
+
+    call add_fld1d (fname='C13_DWT_CLOSS', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 total carbon loss from product pools and conversion', &
+         ptr_col=clm3%g%l%c%cc13f%dwt_closs)
 
     !-------------------------------
     ! N flux variables - native to PFT
@@ -3068,6 +3395,58 @@ contains
          avgflag='A', long_name='total column-level fire N loss', &
          ptr_col=clm3%g%l%c%cnf%col_fire_nloss)
 
+    call add_fld1d (fname='DWT_SEEDN_TO_LEAF', units='gN/m^2/s', &
+         avgflag='A', long_name='seed source to PFT-level leaf', &
+         ptr_col=clm3%g%l%c%cnf%dwt_seedn_to_leaf)
+
+    call add_fld1d (fname='DWT_SEEDN_TO_DEADSTEM', units='gN/m^2/s', &
+         avgflag='A', long_name='seed source to PFT-level deadstem', &
+         ptr_col=clm3%g%l%c%cnf%dwt_seedn_to_deadstem)
+
+    call add_fld1d (fname='DWT_CONV_NFLUX', units='gN/m^2/s', &
+         avgflag='A', long_name='conversion N flux (immediate loss to atm)', &
+         ptr_col=clm3%g%l%c%cnf%dwt_conv_nflux)
+
+    call add_fld1d (fname='DWT_PROD10N_GAIN', units='gN/m^2/s', &
+         avgflag='A', long_name='addition to 10-yr wood product pool', &
+         ptr_col=clm3%g%l%c%cnf%dwt_prod10n_gain)
+
+    call add_fld1d (fname='DWT_PROD10N_LOSS', units='gN/m^2/s', &
+         avgflag='A', long_name='loss from 10-yr wood product pool', &
+         ptr_col=clm3%g%l%c%cnf%dwt_prod10n_loss)
+
+    call add_fld1d (fname='DWT_PROD100N_GAIN', units='gN/m^2/s', &
+         avgflag='A', long_name='addition to 100-yr wood product pool', &
+         ptr_col=clm3%g%l%c%cnf%dwt_prod100n_gain)
+
+    call add_fld1d (fname='DWT_PROD100N_LOSS', units='gN/m^2/s', &
+         avgflag='A', long_name='loss from 100-yr wood product pool', &
+         ptr_col=clm3%g%l%c%cnf%dwt_prod100n_loss)
+
+    call add_fld1d (fname='DWT_FROOTN_TO_LITR1N', units='gN/m^2/s', &
+         avgflag='A', long_name='fine root to litter due to landcover change', &
+         ptr_col=clm3%g%l%c%cnf%dwt_frootn_to_litr1n, default='inactive')
+
+    call add_fld1d (fname='DWT_FROOTN_TO_LITR2N', units='gN/m^2/s', &
+         avgflag='A', long_name='fine root to litter due to landcover change', &
+         ptr_col=clm3%g%l%c%cnf%dwt_frootn_to_litr2n, default='inactive')
+
+    call add_fld1d (fname='DWT_FROOTN_TO_LITR3N', units='gN/m^2/s', &
+         avgflag='A', long_name='fine root to litter due to landcover change', &
+         ptr_col=clm3%g%l%c%cnf%dwt_frootn_to_litr3n, default='inactive')
+
+    call add_fld1d (fname='DWT_LIVECROOTN_TO_CWDN', units='gN/m^2/s', &
+         avgflag='A', long_name='live coarse root to CWD due to landcover change', &
+         ptr_col=clm3%g%l%c%cnf%dwt_livecrootn_to_cwdn, default='inactive')
+
+    call add_fld1d (fname='DWT_DEADCROOTN_TO_CWDN', units='gN/m^2/s', &
+         avgflag='A', long_name='dead coarse root to CWD due to landcover change', &
+         ptr_col=clm3%g%l%c%cnf%dwt_deadcrootn_to_cwdn, default='inactive')
+
+    call add_fld1d (fname='DWT_NLOSS', units='gN/m^2/s', &
+         avgflag='A', long_name='total nitrogen loss from product pools and conversion', &
+         ptr_col=clm3%g%l%c%cnf%dwt_nloss)
+
     !-------------------------------
     ! PFT ecophysiological variables (pepv) 
     !-------------------------------
@@ -3223,6 +3602,10 @@ contains
     call add_fld1d (fname='PREV_FROOTC_TO_LITTER', units='gC/m^2/s', &
          avgflag='A', long_name='previous timestep froot C litterfall flux', &
          ptr_pft=clm3%g%l%c%p%pepv%prev_frootc_to_litter, default='inactive')
+
+    call add_fld1d (fname='ANNSUM_NPP', units='gC/m^2/yr', &
+         avgflag='A', long_name='annual sum of NPP', &
+         ptr_pft=clm3%g%l%c%p%pepv%annsum_npp, default='inactive')
 
     call add_fld1d (fname='RC13_CANAIR', units='proportion', &
          avgflag='A', long_name='C13/C(12+13) for canopy air', &
@@ -3464,6 +3847,10 @@ contains
          avgflag='A', long_name='annual sum of column-level NPP', &
          ptr_col=clm3%g%l%c%cps%cannsum_npp)
 
+    call add_fld1d (fname='CANNAVG_T2M', units='K', &
+         avgflag='A', long_name='annual average of 2m air temperature', &
+         ptr_col=clm3%g%l%c%cps%cannavg_t2m)
+
     call add_fld2d (fname='FRAC_ICEOLD', units='proportion', type2d='levsoi', &
          avgflag='A', long_name='fraction of ice relative to the tot water', &
          ptr_col=clm3%g%l%c%cps%frac_iceold, default='inactive')
@@ -3513,102 +3900,6 @@ contains
          ptr_col=clm3%g%l%c%cps%ann_farea_burned)
 
     !-------------------------------
-    ! Energy flux variables not already defined by default - native PFT 
-    !-------------------------------
-
-    call add_fld1d (fname='PARSUN', units='W/m^2', &
-         avgflag='A', long_name='average absorbed PAR for sunlit leaves', &
-         ptr_pft=clm3%g%l%c%p%pef%parsun, default='inactive')
-
-    call add_fld1d (fname='PARSHA', units='W/m^2', &
-         avgflag='A', long_name='average absorbed PAR for shaded leaves', &
-         ptr_pft=clm3%g%l%c%p%pef%parsha, default='inactive')
-
-    call add_fld1d (fname='DLRAD', units='W/m^2', &
-         avgflag='A', long_name='downward longwave radiation below the canopy', &
-         ptr_pft=clm3%g%l%c%p%pef%dlrad, default='inactive')
-
-    call add_fld1d (fname='ULRAD', units='W/m^2', &
-         avgflag='A', long_name='upward longwave radiation above the canopy', &
-         ptr_pft=clm3%g%l%c%p%pef%ulrad, default='inactive')
-
-    call add_fld1d (fname='EFLX_LH_TOT', units='W/m^2', &
-         avgflag='A', long_name='total latent heat flux [+ to atm]', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_tot, default='inactive')
-
-    call add_fld1d (fname='EFLX_SOIL_GRND', units='W/m^2', &
-         avgflag='A', long_name='soil heat flux [+ into soil]', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd, default='inactive')
-
-    call add_fld1d (fname='CGRND', units='W/m^2/K', &
-         avgflag='A', long_name='deriv. of soil energy flux wrt to soil temp', &
-         ptr_pft=clm3%g%l%c%p%pef%cgrnd, default='inactive')
-
-    call add_fld1d (fname='CGRNDL', units='W/m^2/K', &
-         avgflag='A', long_name='deriv. of soil latent heat flux wrt soil temp', &
-         ptr_pft=clm3%g%l%c%p%pef%cgrndl, default='inactive')
-
-    call add_fld1d (fname='CGRNDS', units='W/m^2/K', &
-         avgflag='A', long_name='deriv. of soil sensible heat flux wrt soil temp', &
-         ptr_pft=clm3%g%l%c%p%pef%cgrnds, default='inactive')
-
-    call add_fld1d (fname='EFLX_GNET', units='W/m^2', &
-         avgflag='A', long_name='net heat flux into ground', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_gnet, default='inactive')
-
-    call add_fld1d (fname='DGNETDT', units='W/m^2/K', &
-         avgflag='A', long_name='derivative of net ground heat flux wrt soil temp', &
-         ptr_pft=clm3%g%l%c%p%pef%dgnetdT, default='inactive')
-
-    call add_fld2d (fname='SUN_ADD', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy absorbed direct from direct', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_add, default='inactive')
-
-    call add_fld2d (fname='TOT_AID', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='total canopy absorbed indirect from direct', &
-         ptr_pft=clm3%g%l%c%p%pef%tot_aid, default='inactive')
-
-    call add_fld2d (fname='SUN_AID', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy absorbed indirect from direct', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_aid, default='inactive')
-
-    call add_fld2d (fname='SUN_AII', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy absorbed indirect from indirect', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_aii, default='inactive')
-
-    call add_fld2d (fname='SHA_AID', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='shade canopy absorbed indirect from direct', &
-         ptr_pft=clm3%g%l%c%p%pef%sha_aid, default='inactive')
-
-    call add_fld2d (fname='SHA_AII', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='shade canopy absorbed indirect from indirect', &
-         ptr_pft=clm3%g%l%c%p%pef%sha_aii, default='inactive')
-
-    call add_fld2d (fname='SUN_ATOT', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy total absorbed', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_atot, default='inactive')
-
-    call add_fld2d (fname='SHA_ATOT', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='shade canopy total absorbed', &
-         ptr_pft=clm3%g%l%c%p%pef%sha_atot, default='inactive')
-
-    call add_fld2d (fname='SUN_ALF', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy total absorbed by leaves', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_alf, default='inactive')
-
-    call add_fld2d (fname='SHA_ALF', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='shade canopy total absored by leaves', &
-         ptr_pft=clm3%g%l%c%p%pef%sha_alf, default='inactive')
-
-    call add_fld2d (fname='SUN_APERLAI', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy total absorbed per unit LAI', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_aperlai, default='inactive')
-
-    call add_fld2d (fname='SHA_APERLAI', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='shade canopy total absorbed per unit LAI', &
-         ptr_pft=clm3%g%l%c%p%pef%sha_aperlai, default='inactive')
-                                                                       
-    !-------------------------------
     ! Water flux variables not already defined by default  - native PFT
     !-------------------------------
 
@@ -3652,7 +3943,7 @@ contains
          avgflag='A', long_name='net CO2 flux', &
          ptr_pft=clm3%g%l%c%p%pps%co2flux, set_lake=0._r8)
 
-    call add_fld1d (fname='NPP', units='g/m2/s',  &
+    call add_fld1d (fname='FNPP', units='g/m2/s',  &
          avgflag='A', long_name='net primary production', &
          ptr_pft=clm3%g%l%c%p%pps%fnpp, set_lake=0._r8)
 
@@ -3751,6 +4042,10 @@ contains
         avgflag='A', long_name='Amt. of Carbon lost by pool', &
         ptr_pft=clm3%g%l%c%p%pps%Closs, set_lake=0._r8)
 
+   call add_fld2d (fname='CTRANS', units='g/m2/s', type2d='npool_t', & 
+        avgflag='A', long_name='Amt. of Carbon transferred out of pool types', &
+        ptr_pft=clm3%g%l%c%p%pps%Ctrans, set_lake=0._r8)
+
    call add_fld2d (fname='RESP_C', units='g/m2/s', type2d='npools', &  
         avgflag='A', long_name='Amt. of Carbon lost to atm by pool', &
         ptr_pft=clm3%g%l%c%p%pps%Resp_C, set_lake=0._r8)
@@ -3773,6 +4068,114 @@ contains
 !!$         avgflag='A', long_name='Total Nitrogen for pool', &
 !!$         ptr_pft=clm3%g%l%c%p%pps%Tpool_N, set_lake=0.)
 
+#if (defined CLAMP)
+   ! Summary variables added for the C-LAMP Experiments
+
+    call add_fld1d (fname='AGNPP', units='gC/m2/s',  &
+         avgflag='A', long_name='above-ground net primary production', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_agnpp, set_lake=0._r8)
+
+    call add_fld1d (fname='AR', units='gC/m2/s',  &
+         avgflag='A', long_name='autotrophic respiration', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_ar, set_lake=0._r8)
+
+    call add_fld1d (fname='BGNPP', units='gC/m2/s',  &
+         avgflag='A', long_name='below-ground net primary production', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_bgnpp, set_lake=0._r8)
+
+    call add_fld1d (fname='CWDC', units='gC/m2',  &
+         avgflag='A', long_name='coarse woody debris C', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_cwdc, set_lake=0._r8)
+
+    call add_fld1d (fname='CWDC_HR', units='gC/m2/s',  &
+         avgflag='A', long_name='coarse woody debris heterotrophic respiration', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_cwdc_hr, set_lake=0._r8)
+
+    call add_fld1d (fname='CWDC_LOSS', units='gC/m2/s',  &
+         avgflag='A', long_name='coarse woody debris C loss', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_cwdc_loss, set_lake=0._r8)
+
+    call add_fld1d (fname='FROOTC', units='gC/m2',  &
+         avgflag='A', long_name='fine root C', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_frootc, set_lake=0._r8)
+
+    call add_fld1d (fname='FROOTC_ALLOC', units='gC/m2/s',  &
+         avgflag='A', long_name='fine root C allocation', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_frootc_alloc, set_lake=0._r8)
+
+    call add_fld1d (fname='FROOTC_LOSS', units='gC/m2/s',  &
+         avgflag='A', long_name='fine root C loss', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_frootc_loss, set_lake=0._r8)
+
+    call add_fld1d (fname='GPP', units='gC/m2/s',  &
+         avgflag='A', long_name='gross primary production', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_gpp, set_lake=0._r8)
+
+    call add_fld1d (fname='HR', units='gC/m2/s',  &
+         avgflag='A', long_name='total heterotrophic respiration', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_hr, set_lake=0._r8)
+
+    call add_fld1d (fname='LEAFC', units='gC/m2',  &
+         avgflag='A', long_name='leaf C', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_leafc, set_lake=0._r8)
+
+    call add_fld1d (fname='LEAFC_ALLOC', units='gC/m2/s',  &
+         avgflag='A', long_name='leaf C allocation', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_leafc_alloc, set_lake=0._r8)
+
+    call add_fld1d (fname='LEAFC_LOSS', units='gC/m2/s',  &
+         avgflag='A', long_name='leaf C loss', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_leafc_loss, set_lake=0._r8)
+
+    call add_fld1d (fname='LITTERC', units='gC/m2',  &
+         avgflag='A', long_name='litter C', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_litterc, set_lake=0._r8)
+
+    call add_fld1d (fname='LITTERC_HR', units='gC/m2/s',  &
+         avgflag='A', long_name='litter heterotrophic respiration', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_litterc_hr, set_lake=0._r8)
+
+    call add_fld1d (fname='LITTERC_LOSS', units='gC/m2/s',  &
+         avgflag='A', long_name='litter C loss', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_litterc_loss, set_lake=0._r8)
+
+    call add_fld1d (fname='NEE', units='gC/m2/s',  &
+         avgflag='A', long_name='net ecosystem exchange (GPP, Re, and fire)', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_nee, set_lake=0._r8)
+
+    call add_fld1d (fname='NEP', units='gC/m2/s',  &
+         avgflag='A', long_name='net ecosystem production', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_nep, set_lake=0._r8)
+
+    call add_fld1d (fname='NPP', units='gC/m2/s',  &
+         avgflag='A', long_name='net primary production', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_npp, set_lake=0._r8)
+
+    call add_fld1d (fname='SOILC', units='gC/m2',  &
+         avgflag='A', long_name='total soil organic matter C (excluding CWDC and LITTERC)', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_soilc, set_lake=0._r8)
+
+    call add_fld1d (fname='SOILC_HR', units='gC/m2/s',  &
+         avgflag='A', long_name='soil heterotrophic respiration', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_soilc_hr, set_lake=0._r8)
+
+    call add_fld1d (fname='SOILC_LOSS', units='gC/m2/s',  &
+         avgflag='A', long_name='soil C loss', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_soilc_loss, set_lake=0._r8)
+
+    call add_fld1d (fname='WOODC', units='gC/m2',  &
+         avgflag='A', long_name='wood C', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_woodc, set_lake=0._r8)
+
+    call add_fld1d (fname='WOODC_ALLOC', units='gC/m2/s',  &
+         avgflag='A', long_name='wood C allocation', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_woodc_alloc, set_lake=0._r8)
+
+    call add_fld1d (fname='WOODC_LOSS', units='gC/m2/s',  &
+         avgflag='A', long_name='wood C loss', &
+         ptr_pft=clm3%g%l%c%p%pps%casa_woodc_loss, set_lake=0._r8)
+
+#endif
 #endif
 
     ! Print masterlist of history fields

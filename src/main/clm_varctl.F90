@@ -52,6 +52,12 @@ module clm_varctl
   character(len=256) :: frivinp_rtm             ! RTM input data file name
   character(len=256) :: offline_atmdir          ! directory for input offline model atm data forcing files (Mass Store ok)
 !
+! offline atmosphere data cycling controls
+!
+  integer :: cycle_begyr                        ! first year of offline atm data (e.g. 1948)
+  integer :: cycle_nyr                          ! number of years of offline atm data to cycle
+  
+!
 ! Landunit logic
 !
   logical :: create_crop_landunit               ! true => separate crop landunit is not created by default

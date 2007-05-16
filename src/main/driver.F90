@@ -94,7 +94,7 @@ module driver
   use spmdMod             , only : masterproc
   use decompMod           , only : get_proc_clumps, get_clump_bounds
   use filterMod           , only : filter, setFilters
-  use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal 
+  use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal, pftdyn_cnbal 
   use clm_varcon          , only : zlnd
   use clm_time_manager        , only : get_step_size, get_curr_calday, &
                                    get_curr_date, get_ref_date, get_nstep, is_perpetual
@@ -121,6 +121,7 @@ module driver
 	                           resetweightsdgvm, resettimeconstdgvm 
 #elif (defined CN)
   use CNEcosystemDynMod   , only : CNEcosystemDyn
+  use CNAnnualUpdateMod   , only : CNAnnualUpdate
   use CNBalanceCheckMod   , only : BeginCBalance, BeginNBalance, &
                                    CBalanceCheck, NBalanceCheck
   use ndepFileMod         , only : ndepdyn_interp
@@ -136,6 +137,9 @@ module driver
 #if (defined CASA)
   use CASAPhenologyMod    , only : CASAPhenology
   use CASAMod             , only : Casa
+#if (defined CLAMP)
+  use CASASummaryMod      , only : CASASummary
+#endif
 #endif
 #if (defined RTM)
   use RtmMod              , only : Rtmriverflux
@@ -188,7 +192,8 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 !EOP
 !
 ! !LOCAL VARIABLES:
-  integer  :: nc, c         ! indices
+  real(r8) :: t1, t2, t3 ! temporary for mass balance checks
+  integer  :: nc, fc, c, fp, p         ! indices
   integer  :: nclumps       ! number of clumps on this processor
   integer  :: nstep         ! time step number
   integer  :: begp, endp    ! clump beginning and ending pft indices
@@ -248,13 +253,8 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 #if (defined CN)
      if (doalb) then
         call t_startf('begcnbal')
-        
-        call BeginCBalance(filter(nc)%num_soilc,filter(nc)%soilc, &
-             filter(nc)%num_soilp, filter(nc)%soilp)
-             
-        call BeginNBalance(filter(nc)%num_soilc,filter(nc)%soilc, &
-             filter(nc)%num_soilp, filter(nc)%soilp)
-             
+        call BeginCBalance(filter(nc)%num_soilc,filter(nc)%soilc)
+        call BeginNBalance(filter(nc)%num_soilc,filter(nc)%soilc)
         call t_stopf('begcnbal')
      end if 
 #endif
@@ -279,6 +279,9 @@ subroutine driver1 (doalb, caldayp1, declinp1)
   if (doalb .and. fpftdyn /= ' ') then
      call pftdyn_interp()
      call pftdyn_wbal()
+#if (defined CN)
+     call pftdyn_cnbal()
+#endif
      call setFilters()
   end if
 #endif
@@ -469,6 +472,9 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      call t_startf('casa')
      call CASAPhenology(begp, endp, filter(nc)%num_soilp, filter(nc)%soilp)
      call Casa(begp, endp, filter(nc)%num_soilp, filter(nc)%soilp)
+#if (defined CLAMP)
+     call CASASummary(begp, endp, filter(nc)%num_soilp, filter(nc)%soilp)
+#endif
      call t_stopf('casa')
 #endif
 
@@ -489,7 +495,12 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      ! fully prognostic canopy structure and C-N biogeochemistry
      call CNEcosystemDyn(begc,endc,begp,endp,filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
-                  filter(nc)%soilp, doalb)          
+                  filter(nc)%soilp, doalb)
+     if (doalb) then 
+	    call CNAnnualUpdate(filter(nc)%num_soilc,&
+                  filter(nc)%soilc, filter(nc)%num_soilp, &
+                  filter(nc)%soilp)
+     end if         
 #else
      ! Prescribed biogeography,
      ! prescribed canopy structure, some prognostic carbon fluxes
@@ -510,13 +521,8 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 #if (defined CN)
      if (doalb) then
         call t_startf('cnbalchk')
-        
-        call CBalanceCheck(filter(nc)%num_soilc,filter(nc)%soilc, &
-             filter(nc)%num_soilp, filter(nc)%soilp)
-          
-        call NBalanceCheck(filter(nc)%num_soilc,filter(nc)%soilc, &
-             filter(nc)%num_soilp, filter(nc)%soilp)
-          
+        call CBalanceCheck(filter(nc)%num_soilc,filter(nc)%soilc)
+        call NBalanceCheck(filter(nc)%num_soilc,filter(nc)%soilc)
         call t_stopf('cnbalchk')
      end if
 #endif

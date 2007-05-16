@@ -60,6 +60,11 @@ module CASAMod
   integer, parameter :: SOILMIC = 10
   integer, parameter :: SLOW    = 11
   integer, parameter :: PASSIVE = 12
+  integer, parameter :: npool_types = 4
+  integer, parameter :: LIVE_TYPE = 1
+  integer, parameter :: LITTER_TYPE = 2
+  integer, parameter :: SOIL_TYPE = 3
+  integer, parameter :: CWD_TYPE = 4
 
   ! Tracer Definitions 
 
@@ -71,6 +76,21 @@ module CASAMod
 
   integer, parameter :: nresp_pools = 14
   integer resp_pool_index(2,nresp_pools)   ! Indices of Respiring Pools in the
+  integer pool_type_index(npools)          ! Index of pool type
+  ! type definitions for pools in the order specified above
+  data pool_type_index/            &
+       LIVE_TYPE, &
+       LIVE_TYPE, &
+       LIVE_TYPE, &
+       LITTER_TYPE, &
+       LITTER_TYPE, &
+       LITTER_TYPE, &
+       LITTER_TYPE, &
+       CWD_TYPE, &
+       LITTER_TYPE, &
+       LITTER_TYPE, &
+       SOIL_TYPE, &
+       SOIL_TYPE/
   ! order that respiration is called
   data resp_pool_index/            &
        SLOW     ,PASSIVE, &
@@ -606,12 +626,12 @@ contains
        if (ier /= 0) then
           call endrun('allocation error for vege_scale and wood_scale')
        end if
-       allocate(rloc(begp:endp), stat=ier)
+       allocate(rloc(begg:endg), stat=ier)
        if (ier /= 0) then
           call endrun('allocation error for rloc')
        end if
        if (masterproc) then
-          allocate(rbufxy(lsmlon, lsmlat), rglob(nump), stat=ier)
+          allocate(rbufxy(lsmlon, lsmlat), rglob(numg), stat=ier)
           if (ier /= 0) then
              call endrun('allocation error for rbufxy, rglob')
           end if
@@ -673,15 +693,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
-          Tpool_C(p,LEAF) = rloc(p) * vege_scale(p)
+          Tpool_C(p,LEAF) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_WOOD
@@ -691,15 +711,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
-          Tpool_C(p,WOOD) = rloc(p) * wood_scale(p)
+          Tpool_C(p,WOOD) = rloc(pgridcell(p)) * wood_scale(p)
        end do
 
        ! TPOOL_C_FROOT
@@ -709,15 +729,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
-          Tpool_C(p,FROOT) = rloc(p) * vege_scale(p)
+          Tpool_C(p,FROOT) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SURFMET
@@ -727,15 +747,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
-          Tpool_C(p,SURFMET) = rloc(p) * vege_scale(p)
+          Tpool_C(p,SURFMET) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SURFSTR
@@ -745,15 +765,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
-          Tpool_C(p,SURFSTR) = rloc(p) * vege_scale(p)
+          Tpool_C(p,SURFSTR) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SOILMET
@@ -763,15 +783,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp, endp
-          Tpool_C(p,SOILMET) = rloc(p) * vege_scale(p)
+          Tpool_C(p,SOILMET) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SOILSTR
@@ -781,15 +801,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
-          Tpool_C(p,SOILSTR) = rloc(p) * vege_scale(p)
+          Tpool_C(p,SOILSTR) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_CWD
@@ -799,15 +819,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
-          Tpool_C(p,CWD) = rloc(p) * wood_scale(p)
+          Tpool_C(p,CWD) = rloc(pgridcell(p)) * wood_scale(p)
        end do
 
        ! TPOOL_C_SURFMIC
@@ -817,15 +837,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
-          Tpool_C(p,SURFMIC) = rloc(p) * vege_scale(p)
+          Tpool_C(p,SURFMIC) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SOILMIC
@@ -835,15 +855,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp, endp
-          Tpool_C(p,SOILMIC) = rloc(p) * vege_scale(p)
+          Tpool_C(p,SOILMIC) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SLOW
@@ -853,15 +873,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
-          Tpool_C(p,SLOW) = rloc(p) * vege_scale(p)
+          Tpool_C(p,SLOW) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_PASSIVE
@@ -871,15 +891,15 @@ contains
           if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
 !dir$ concurrent
 !cdir nodep
-          do p = 1, nump
-             rglob(p) = rbufxy(ixy(pgridcell(p)),jxy(pgridcell(p)))
+          do n = 1, numg
+             rglob(n) = rbufxy(ixy(n),jxy(n))
           end do
        end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=namep)
+       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
-          Tpool_C(p,PASSIVE) = rloc(p) * vege_scale(p)
+          Tpool_C(p,PASSIVE) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! Close netcdf file
@@ -2451,6 +2471,7 @@ contains
     !============================================================
 
     real(r8), pointer :: Closs(:,:)   ! C lost to atm
+    real(r8), pointer :: Ctrans(:,:)  ! C transfers out of pool types
     real(r8), pointer :: eff(:,:)
     real(r8), pointer :: frac_donor(:,:)
 
@@ -2462,10 +2483,12 @@ contains
 
     ! ------------------------ local variables -----------------
 
-    integer f,l,p   
-    integer irtype
+    integer f,l,p,n
+    integer irtype,iptype
     integer donor_pool
     integer recvr_pool
+    integer donor_type
+    integer recvr_type
 
     real(r8) Out
 
@@ -2480,17 +2503,30 @@ contains
 !-----------------------------------------------------------------------
 
     Closs      => clm3%g%l%c%p%pps%Closs
+    Ctrans     => clm3%g%l%c%p%pps%Ctrans
     Resp_C     => clm3%g%l%c%p%pps%Resp_C
     Tpool_C    => clm3%g%l%c%p%pps%Tpool_C
     eff        => clm3%g%l%c%p%pps%eff
     frac_donor => clm3%g%l%c%p%pps%frac_donor
 
+    ! Loop over all pool types to initialize transfer to zero
+    do iptype = 1, npool_types
+!dir$ concurrent
+!cdir nodep
+       do f = 1,num_soilp
+          p = filter_soilp(f)
+          Ctrans(p,iptype) = 0._r8
+       end do
+    end do
 
     ! Loop over all respiring pools
     do irtype = 1, nresp_pools
 
        donor_pool = resp_pool_index(1,irtype)
        recvr_pool = resp_pool_index(2,irtype)
+
+       donor_type = pool_type_index(donor_pool)
+       recvr_type = pool_type_index(recvr_pool)
 
        ! Loop over pfts
 !dir$ concurrent
@@ -2499,6 +2535,12 @@ contains
           p = filter_soilp(f)
 
           Out  = Closs(p,donor_pool) * frac_donor(p,irtype)
+
+          ! accumulate total pool transfers by pool type
+          if (donor_type .ne. recvr_type) then
+             Ctrans(p,donor_type) = Ctrans(p,donor_type) + (Out * eff(p,irtype))
+          end if
+
           Tpool_C(p,donor_pool) = Tpool_C(p,donor_pool) &
                - Out
           Tpool_C(p,recvr_pool) = Tpool_C(p,recvr_pool)  &
@@ -2513,6 +2555,28 @@ contains
 
        end do      ! end number of points
     end do         ! end number of pools
+
+    ! Stuff the total C lost by live pools into live pool type transfers
+    do n = 1, nlive
+!dir$ concurrent
+!cdir nodep
+       do f = 1,num_soilp
+          p = filter_soilp(f)
+          Ctrans(p,pool_type_index(n)) = Ctrans(p,pool_type_index(n)) + &
+                                         Closs(p,n)
+       end do
+    end do
+
+    ! Add in the respired C to transfers out of pool types
+    do n = nlive+1, npools
+!dir$ concurrent
+!cdir nodep
+       do f = 1,num_soilp
+          p = filter_soilp(f)
+          Ctrans(p,pool_type_index(n)) = Ctrans(p,pool_type_index(n)) + &
+                                         Resp_C(p,n)
+       end do
+    end do
 
   end subroutine casa_respire
 

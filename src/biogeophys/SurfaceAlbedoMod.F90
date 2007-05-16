@@ -724,7 +724,7 @@ contains
           p3 = b + tmp0
           p4 = b - tmp0
           
-#if (defined CN)          
+#if (defined CN)
           ! PET, 3/1/04: added this test to avoid floating point errors in exp()
           t1 = min(h*vai(p), 40._r8)
           s1 = exp(-t1)

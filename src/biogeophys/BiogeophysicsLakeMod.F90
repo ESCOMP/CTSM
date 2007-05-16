@@ -152,6 +152,9 @@ contains
     real(r8), pointer :: t_veg(:)           ! vegetation temperature (Kelvin)
     real(r8), pointer :: t_ref2m(:)         ! 2 m height surface air temperature (Kelvin)
     real(r8), pointer :: q_ref2m(:)         ! 2 m height surface specific humidity (kg/kg)
+#if (defined CLAMP)
+    real(r8), pointer :: rh_ref2m(:)        ! 2 m height surface relative humidity (%)
+#endif
     real(r8), pointer :: taux(:)            ! wind (shear) stress: e-w (kg/m/s**2)
     real(r8), pointer :: tauy(:)            ! wind (shear) stress: n-s (kg/m/s**2)
     real(r8), pointer :: qmelt(:)           ! snow melt [mm/s]
@@ -253,6 +256,12 @@ contains
     real(r8) :: phidum                  ! temporary value of phi
     real(r8) :: u2m                     ! 2 m wind speed (m/s)
     real(r8) :: fm(lbp:ubp)             ! needed for BGC only to diagnose 10m wind speed
+#if (defined CLAMP)
+    real(r8) :: e_ref2m                 ! 2 m height surface saturated vapor pressure [Pa]
+    real(r8) :: de2mdT                  ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
+    real(r8) :: qsat_ref2m              ! 2 m height surface saturated specific humidity [kg/kg]
+    real(r8) :: dqsat2mdT               ! derivative of 2 m height surface saturated specific humidity on t_ref2m
+#endif
 !
 ! Constants for lake temperature model
 !
@@ -298,6 +307,9 @@ contains
     sabg           => clm3%g%l%c%p%pef%sabg
     t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
     q_ref2m        => clm3%g%l%c%p%pes%q_ref2m
+#if (defined CLAMP)
+    rh_ref2m       => clm3%g%l%c%p%pes%rh_ref2m
+#endif
     t_veg          => clm3%g%l%c%p%pes%t_veg
     eflx_lwrad_out => clm3%g%l%c%p%pef%eflx_lwrad_out
     eflx_lwrad_net => clm3%g%l%c%p%pef%eflx_lwrad_net
@@ -541,6 +553,13 @@ contains
 
        ! 2 m height specific humidity
        q_ref2m(p) = forc_q(g) + temp2(p)*dqh(p)*(1._r8/temp22m(p) - 1._r8/temp2(p))
+
+#if (defined CLAMP)
+       ! 2 m height relative humidity
+
+       call QSat(t_ref2m(p), forc_pbot(g), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
+       rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
+#endif
 
        ! Energy residual used for melting snow
        if (h2osno(c) > 0._r8 .AND. t_grnd(c) >= tfrz) then

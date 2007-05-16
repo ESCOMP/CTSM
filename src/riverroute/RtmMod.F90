@@ -231,8 +231,9 @@ contains
        rlatlon%latc(j) = glatc(n)
     enddo
     do i=1,rtmlon
+       n = i
        runoff%rlon(i) = glonc(n)
-       rlatlon%lonc(j) = glonc(n)
+       rlatlon%lonc(i) = glonc(n)
     enddo
 
     !--- Set dwnstrm_index from rdirc values

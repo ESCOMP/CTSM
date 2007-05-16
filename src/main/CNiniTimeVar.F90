@@ -49,6 +49,7 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: forc_hgt_u(:)     !observational height of wind [m] (new)
    real(r8), pointer :: annsum_counter(:) ! seconds since last annual accumulator turnover
    real(r8), pointer :: cannsum_npp(:)    ! annual sum of NPP, averaged from pft-level (gC/m2/yr)
+   real(r8), pointer :: cannavg_t2m(:)    !annual average of 2m air temperature, averaged from pft-level (K)
    real(r8), pointer :: cwdc(:)               ! (gC/m2) coarse woody debris C
    real(r8), pointer :: litr1c(:)             ! (gC/m2) litter labile C
    real(r8), pointer :: litr2c(:)             ! (gC/m2) litter cellulose C
@@ -135,8 +136,8 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: tempavg_t2m(:)        ! temporary average 2m air temperature (K)
    real(r8), pointer :: gpp(:)                ! GPP flux before downregulation (gC/m2/s)
    real(r8), pointer :: availc(:)             ! C flux available for allocation (gC/m2/s)
-   real(r8), pointer :: xsmrpool_recover(:)      ! C flux assigned to recovery of negative cpool (gC/m2/s)
-   real(r8), pointer :: xsmrpool_c13ratio(:)      ! C flux assigned to recovery of negative cpool (gC/m2/s)
+   real(r8), pointer :: xsmrpool_recover(:)   ! C flux assigned to recovery of negative cpool (gC/m2/s)
+   real(r8), pointer :: xsmrpool_c13ratio(:)  ! C flux assigned to recovery of negative cpool (gC/m2/s)
    real(r8), pointer :: alloc_pnow(:)         ! fraction of current allocation to display as new growth (DIM)
    real(r8), pointer :: c_allometry(:)        ! C allocation index (DIM)
    real(r8), pointer :: n_allometry(:)        ! N allocation index (DIM)
@@ -152,12 +153,12 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: downreg(:)            ! fractional reduction in GPP due to N limitation (DIM)
    real(r8), pointer :: tempsum_npp(:)        ! temporary annual sum of NPP
    real(r8), pointer :: annsum_npp(:)         ! annual sum of NPP
-	real(r8), pointer :: rc13_canair(:)          !C13O2/C12O2 in canopy air
-   real(r8), pointer :: rc13_psnsun(:)          !C13O2/C12O2 in sunlit canopy psn flux
-   real(r8), pointer :: rc13_psnsha(:)          !C13O2/C12O2 in shaded canopy psn flux
-   real(r8), pointer :: alphapsnsun(:)          !sunlit 13c fractionation ([])
-   real(r8), pointer :: alphapsnsha(:)          !shaded 13c fractionation ([])
-   real(r8), pointer :: qflx_drain(:) 	       ! sub-surface runoff (mm H2O /s)
+   real(r8), pointer :: rc13_canair(:)        !C13O2/C12O2 in canopy air
+   real(r8), pointer :: rc13_psnsun(:)        !C13O2/C12O2 in sunlit canopy psn flux
+   real(r8), pointer :: rc13_psnsha(:)        !C13O2/C12O2 in shaded canopy psn flux
+   real(r8), pointer :: alphapsnsun(:)        !sunlit 13c fractionation ([])
+   real(r8), pointer :: alphapsnsha(:)        !shaded 13c fractionation ([])
+   real(r8), pointer :: qflx_drain(:)         ! sub-surface runoff (mm H2O /s)
    ! new variables for fire
    real(r8), pointer :: wf(:)                 ! soil moisture in top 0.5 m
    real(r8), pointer :: me(:)                 ! moisture of extinction (proportion)
@@ -171,6 +172,12 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: totecosysc(:)         ! (gC/m2) total ecosystem carbon, incl veg but excl cpool
    real(r8), pointer :: totlitc(:)            ! (gC/m2) total litter carbon
    real(r8), pointer :: totsomc(:)            ! (gC/m2) total soil organic matter carbon
+
+#if (defined CLAMP)
+   ! new CLAMP state variables
+   real(r8), pointer :: woodc(:)              ! (gC/m2) pft-level wood C
+#endif
+
    real(r8), pointer :: col_ntrunc(:)         ! (gN/m2) column-level sink for N truncation
    real(r8), pointer :: totcoln(:)            ! (gN/m2) total column nitrogen, incl veg
    real(r8), pointer :: totecosysn(:)         ! (gN/m2) total ecosystem nitrogen, incl veg
@@ -192,7 +199,7 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: lncsun(:)             ! leaf N concentration per unit projected LAI (gN leaf/m^2)
    real(r8), pointer :: vcmxsha(:)            ! shaded leaf Vcmax (umolCO2/m^2/s)
    real(r8), pointer :: vcmxsun(:)            ! sunlit leaf Vcmax (umolCO2/m^2/s)
-	! 4/14/05: PET
+   ! 4/14/05: PET
    ! Adding isotope code
    real(r8), pointer :: cwdc13(:)               ! (gC/m2) coarse woody debris C
    real(r8), pointer :: litr1c13(:)             ! (gC/m2) litter labile C
@@ -227,6 +234,19 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: c13xsmrpool(:)          ! (gC/m2) temporary photosynthate C pool
    real(r8), pointer :: c13_pft_ctrunc(:)       ! (gC/m2) C truncation term
    real(r8), pointer :: totvegc13(:)            ! (gC/m2) total vegetation carbon, excluding cpool
+   ! dynamic landuse variables
+   real(r8), pointer :: seedc(:)              ! (gC/m2) column-level pool for seeding new PFTs
+   real(r8), pointer :: prod10c(:)            ! (gC/m2) wood product C pool, 10-year lifespan
+   real(r8), pointer :: prod100c(:)           ! (gC/m2) wood product C pool, 100-year lifespan
+   real(r8), pointer :: totprodc(:)           ! (gC/m2) total wood product C
+   real(r8), pointer :: seedc13(:)              ! (gC/m2) column-level pool for seeding new PFTs
+   real(r8), pointer :: prod10c13(:)          ! (gC/m2) wood product C13 pool, 10-year lifespan
+   real(r8), pointer :: prod100c13(:)         ! (gC/m2) wood product C13 pool, 100-year lifespan
+   real(r8), pointer :: totprodc13(:)         ! (gC/m2) total wood product C13
+   real(r8), pointer :: seedn(:)              ! (gN/m2) column-level pool for seeding new PFTs
+   real(r8), pointer :: prod10n(:)            ! (gN/m2) wood product N pool, 10-year lifespan
+   real(r8), pointer :: prod100n(:)           ! (gN/m2) wood product N pool, 100-year lifespan
+   real(r8), pointer :: totprodn(:)           ! (gN/m2) total wood product N
 !
 ! !LOCAL VARIABLES:
    integer :: g,l,c,p      ! indices
@@ -247,6 +267,7 @@ subroutine CNiniTimeVar()
     clandunit                      => clm3%g%l%c%landunit
     annsum_counter                 => clm3%g%l%c%cps%annsum_counter
     cannsum_npp                    => clm3%g%l%c%cps%cannsum_npp
+    cannavg_t2m                    => clm3%g%l%c%cps%cannavg_t2m
     wf                             => clm3%g%l%c%cps%wf
     me                             => clm3%g%l%c%cps%me
     fire_prob                      => clm3%g%l%c%cps%fire_prob
@@ -263,6 +284,21 @@ subroutine CNiniTimeVar()
     soil2c                         => clm3%g%l%c%ccs%soil2c
     soil3c                         => clm3%g%l%c%ccs%soil3c
     soil4c                         => clm3%g%l%c%ccs%soil4c
+    
+    ! dynamic landuse variables
+    seedc                          => clm3%g%l%c%ccs%seedc
+    prod10c                        => clm3%g%l%c%ccs%prod10c
+    prod100c                       => clm3%g%l%c%ccs%prod100c
+    totprodc                       => clm3%g%l%c%ccs%totprodc
+    seedc13                        => clm3%g%l%c%cc13s%seedc
+    prod10c13                      => clm3%g%l%c%cc13s%prod10c
+    prod100c13                     => clm3%g%l%c%cc13s%prod100c
+    totprodc13                     => clm3%g%l%c%cc13s%totprodc
+    seedn                          => clm3%g%l%c%cns%seedn
+    prod10n                        => clm3%g%l%c%cns%prod10n
+    prod100n                       => clm3%g%l%c%cns%prod100n
+    totprodn                       => clm3%g%l%c%cns%totprodn
+    
     cwdn                           => clm3%g%l%c%cns%cwdn
     litr1n                         => clm3%g%l%c%cns%litr1n
     litr2n                         => clm3%g%l%c%cns%litr2n
@@ -277,12 +313,13 @@ subroutine CNiniTimeVar()
     totecosysc                     => clm3%g%l%c%ccs%totecosysc
     totlitc                        => clm3%g%l%c%ccs%totlitc
     totsomc                        => clm3%g%l%c%ccs%totsomc
+
     col_ntrunc                     => clm3%g%l%c%cns%col_ntrunc
     totcoln                        => clm3%g%l%c%cns%totcoln
     totecosysn                     => clm3%g%l%c%cns%totecosysn
     totlitn                        => clm3%g%l%c%cns%totlitn
     totsomn                        => clm3%g%l%c%cns%totsomn
-	! 4/14/05: PET
+   ! 4/14/05: PET
    ! Adding isotope code
     cwdc13                           => clm3%g%l%c%cc13s%cwdc
     litr1c13                         => clm3%g%l%c%cc13s%litr1c
@@ -319,6 +356,12 @@ subroutine CNiniTimeVar()
     gresp_xfer                     => clm3%g%l%c%p%pcs%gresp_xfer
     cpool                          => clm3%g%l%c%p%pcs%cpool
     xsmrpool                       => clm3%g%l%c%p%pcs%xsmrpool
+
+#if (defined CLAMP)
+    ! CLAMP variable
+    woodc                          => clm3%g%l%c%p%pcs%woodc
+#endif
+
     leafn                          => clm3%g%l%c%p%pns%leafn
     leafn_storage                  => clm3%g%l%c%p%pns%leafn_storage
     leafn_xfer                     => clm3%g%l%c%p%pns%leafn_xfer
@@ -459,6 +502,7 @@ subroutine CNiniTimeVar()
          ! column physical state variables
          annsum_counter(c) = 0._r8
          cannsum_npp(c)    = 0._r8
+         cannavg_t2m(c)    = 280._r8
          wf(c) = 1.0_r8  ! it needs to be non zero so the first time step has no fires
          me(c) = 0._r8
          fire_prob(c) = 0._r8
@@ -478,12 +522,13 @@ subroutine CNiniTimeVar()
          soil1c(c) = 0._r8
          soil2c(c) = 0._r8
          soil3c(c) = 0._r8
-         soil4c(c) = 0._r8
+         soil4c(c) = 10._r8
          col_ctrunc(c) = 0._r8
          totlitc(c)    = 0._r8
          totsomc(c)    = 0._r8
          totecosysc(c) = 0._r8
          totcolc(c)    = 0._r8
+
          ! 4/14/05: PET
          ! Adding isotope code
          cwdc13(c)   = cwdc(c)   * c13ratio
@@ -511,6 +556,62 @@ subroutine CNiniTimeVar()
          totsomn(c)    = 0._r8
          totecosysn(c) = 0._r8
          totcoln(c)    = 0._r8
+
+	 ! dynamic landcover state variables
+     seedc(c)  = 0._r8
+	 prod10c(c)    = 0._r8
+	 prod100c(c)   = 0._r8
+	 totprodc(c)   = 0._r8
+     seedc13(c)    = 0._r8
+	 prod10c13(c)  = 0._r8
+	 prod100c13(c) = 0._r8
+	 totprodc13(c) = 0._r8
+	 seedn(c)      = 0._r8
+	 prod10n(c)    = 0._r8
+	 prod100n(c)   = 0._r8
+	 totprodn(c)   = 0._r8
+	 
+	 ! also initialize dynamic landcover fluxes so that they have
+	 ! real values on first timestep, prior to calling pftdyn_cnbal
+	 clm3%g%l%c%ccf%dwt_seedc_to_leaf(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_seedc_to_deadstem(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_conv_cflux(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_prod10c_gain(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_prod10c_loss(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_prod100c_gain(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_prod100c_loss(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_frootc_to_litr1c(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_frootc_to_litr2c(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_frootc_to_litr3c(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_livecrootc_to_cwdc(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_deadcrootc_to_cwdc(c) = 0._r8
+	 clm3%g%l%c%ccf%dwt_closs(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_seedc_to_leaf(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_seedc_to_deadstem(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_conv_cflux(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_prod10c_gain(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_prod10c_loss(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_prod100c_gain(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_prod100c_loss(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_frootc_to_litr1c(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_frootc_to_litr2c(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_frootc_to_litr3c(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_livecrootc_to_cwdc(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_deadcrootc_to_cwdc(c) = 0._r8
+	 clm3%g%l%c%cc13f%dwt_closs(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_seedn_to_leaf(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_seedn_to_deadstem(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_conv_nflux(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_prod10n_gain(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_prod10n_loss(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_prod100n_gain(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_prod100n_loss(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_frootn_to_litr1n(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_frootn_to_litr2n(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_frootn_to_litr3n(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_livecrootn_to_cwdn(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_deadcrootn_to_cwdn(c) = 0._r8
+	 clm3%g%l%c%cnf%dwt_nloss(c) = 0._r8
       end if
    end do
 
@@ -527,11 +628,11 @@ subroutine CNiniTimeVar()
             leafc_storage(p) = 0._r8
          else
             if (evergreen(ivt(p)) == 1._r8) then
-               leafc(p) = 10._r8
+               leafc(p) = 1._r8
                leafc_storage(p) = 0._r8
             else
                leafc(p) = 0._r8
-               leafc_storage(p) = 10._r8
+               leafc_storage(p) = 1._r8
             end if
          end if
          
@@ -547,7 +648,7 @@ subroutine CNiniTimeVar()
          ! roughness length is not zero in canopy flux calculation
 
          if (woody(ivt(p)) == 1._r8) then
-            deadstemc(p) = 1._r8
+            deadstemc(p) = 0.1_r8
          else
             deadstemc(p) = 0._r8
          end if
@@ -571,13 +672,18 @@ subroutine CNiniTimeVar()
          ! calculate totvegc explicitly so that it is available for the isotope 
          ! code on the first time step.
          totvegc(p)  = leafc(p) + leafc_storage(p) + leafc_xfer(p) + frootc(p) +  &
-         	frootc_storage(p) + frootc_xfer(p) + livestemc(p) + livestemc_storage(p) +  &
+            frootc_storage(p) + frootc_xfer(p) + livestemc(p) + livestemc_storage(p) +  &
             livestemc_xfer(p) + deadstemc(p) + deadstemc_storage(p) + deadstemc_xfer(p) +  &
             livecrootc(p) + livecrootc_storage(p) + livecrootc_xfer(p) + deadcrootc(p) +  &
             deadcrootc_storage(p) + deadcrootc_xfer(p) + gresp_storage(p) +  &
             gresp_xfer(p) + cpool(p)
 
-			! 4/14/05: PET
+#if (defined CLAMP)
+         ! CLAMP variables
+         woodc(p)    = 0._r8
+#endif
+
+         ! 4/14/05: PET
          ! Adding isotope code
          leafc13(p)               = leafc(p)               * c13ratio
          leafc13_storage(p)       = leafc_storage(p)       * c13ratio
@@ -606,13 +712,13 @@ subroutine CNiniTimeVar()
          ! calculate totvegc explicitly so that it is available for the isotope 
          ! code on the first time step.
          totvegc13(p)  = leafc13(p) + leafc13_storage(p) + leafc13_xfer(p) + frootc13(p) +  &
-         	frootc13_storage(p) + frootc13_xfer(p) + livestemc13(p) + livestemc13_storage(p) +  &
+            frootc13_storage(p) + frootc13_xfer(p) + livestemc13(p) + livestemc13_storage(p) +  &
             livestemc13_xfer(p) + deadstemc13(p) + deadstemc13_storage(p) + deadstemc13_xfer(p) +  &
             livecrootc13(p) + livecrootc13_storage(p) + livecrootc13_xfer(p) + deadcrootc13(p) +  &
             deadcrootc13_storage(p) + deadcrootc13_xfer(p) + c13_gresp_storage(p) +  &
             c13_gresp_xfer(p) + c13pool(p)
                                 
-			! nitrogen state variables
+         ! nitrogen state variables
          if (ivt(p) == noveg) then
             leafn(p) = 0._r8
             leafn_storage(p) = 0._r8
@@ -716,6 +822,8 @@ subroutine CNiniTimeVar()
          rc13_psnsha(p) = 0._r8
          alphapsnsun(p) = 0._r8
          alphapsnsha(p) = 0._r8
+		 
+		 
 
       end if   ! end of if-istsoil block
    end do   ! end of loop over pfts  

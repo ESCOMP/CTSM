@@ -231,6 +231,14 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: totpftc(:)            ! (gC/m2) total pft-level carbon, including cpool
    real(r8), pointer :: totvegc(:)            ! (gC/m2) total vegetation carbon, excluding cpool
    real(r8), pointer :: tempsum_npp(:)          !temporary annual sum of NPP (gC/m2/yr)
+   ! for landcover change
+   real(r8), pointer :: dwt_closs(:)          ! (gC/m2/s) total carbon loss from product pools and conversion
+   real(r8), pointer :: dwt_conv_cflux(:)     ! (gC/m2/s) conversion C flux (immediate loss to atm)
+   real(r8), pointer :: dwt_prod10c_loss(:)   ! (gC/m2/s) loss from 10-yr wood product pool
+   real(r8), pointer :: dwt_prod100c_loss(:)  ! (gC/m2/s) loss from 100-yr wood product pool
+   real(r8), pointer :: prod10c(:)            ! (gC/m2) wood product C pool, 10-year lifespan
+   real(r8), pointer :: prod100c(:)           ! (gC/m2) wood product C pool, 100-year lifespan
+   real(r8), pointer :: totprodc(:)           ! (gC/m2) total wood product C
 !
 !
 ! local pointers to implicit in/out scalars
@@ -274,6 +282,16 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     somhr                          => clm3%g%l%c%cc13f%somhr
     sr                             => clm3%g%l%c%cc13f%sr
     totfire                        => clm3%g%l%c%cc13f%totfire
+    
+    ! dynamic landcover pointers
+    dwt_closs                      => clm3%g%l%c%cc13f%dwt_closs
+    dwt_conv_cflux                 => clm3%g%l%c%cc13f%dwt_conv_cflux
+    dwt_prod10c_loss               => clm3%g%l%c%cc13f%dwt_prod10c_loss
+    dwt_prod100c_loss              => clm3%g%l%c%cc13f%dwt_prod100c_loss
+    prod10c                        => clm3%g%l%c%cc13s%prod10c
+    prod100c                       => clm3%g%l%c%cc13s%prod100c
+    totprodc                       => clm3%g%l%c%cc13s%totprodc
+    
     cwdc                           => clm3%g%l%c%cc13s%cwdc
     litr1c                         => clm3%g%l%c%cc13s%litr1c
     litr2c                         => clm3%g%l%c%cc13s%litr2c
@@ -670,11 +688,17 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          m_cwdc_to_fire(c)    + &
          col_pft_fire_closs(c)
 
+      ! column-level carbon losses due to landcover change
+      dwt_closs(c) = &
+         dwt_conv_cflux(c) + &
+	 dwt_prod10c_loss(c) + &
+	 dwt_prod100c_loss(c)
+
       ! net ecosystem production, excludes fire flux, positive for sink (NEP)
       nep(c) = col_gpp(c) - er(c)
 
       ! net ecosystem exchange of carbon, includes fire flux, positive for source (NEE)
-      nee(c) = -nep(c) + col_fire_closs(c)
+      nee(c) = -nep(c) + col_fire_closs(c) + dwt_closs(c)
 
       ! total litter carbon (TOTLITC)
       totlitc(c) = &
@@ -689,11 +713,17 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          soil3c(c) + &
          soil4c(c)
 
+      ! total wood product carbon
+      totprodc(c) = &
+         prod10c(c) + &
+	 prod100c(c)	 
+
       ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
       totecosysc(c) = &
          cwdc(c) + &
          totlitc(c) + &
          totsomc(c) + &
+	 totprodc(c) + &
          col_totvegc(c)
 
       ! total column carbon, including veg and cpool (TOTCOLC)
@@ -701,6 +731,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          cwdc(c) + &
          totlitc(c) + &
          totsomc(c) + &
+	 totprodc(c) + &
          col_totpftc(c)
 
    end do ! end of columns loop

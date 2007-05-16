@@ -806,7 +806,7 @@ contains
 !
 ! !USES:
 #if (defined CASA)
-    use CASAMod   , only : npools, nresp_pools, nlive
+    use CASAMod   , only : npools, nresp_pools, nlive, npool_types
     use clm_varcon, only : spval
 #endif
 ! !ARGUMENTS:
@@ -880,6 +880,7 @@ contains
     
 #if (defined CASA)
     allocate(pps%Closs(beg:end,npools))  ! C lost to atm
+    allocate(pps%Ctrans(beg:end,npool_types))  ! C transfers out of pool types
     allocate(pps%Resp_C(beg:end,npools))
     allocate(pps%Tpool_C(beg:end,npools))! Total C pool size
     allocate(pps%eff(beg:end,nresp_pools))
@@ -921,6 +922,35 @@ contains
                                     ! passed daily to CASA to get NPP
     allocate(pps%sandfrac(beg:end))
     allocate(pps%clayfrac(beg:end))
+#if (defined CLAMP)
+    ! Summary variables added for the C-LAMP Experiments
+    allocate(pps%casa_agnpp(beg:end))
+    allocate(pps%casa_ar(beg:end))
+    allocate(pps%casa_bgnpp(beg:end))
+    allocate(pps%casa_cwdc(beg:end))
+    allocate(pps%casa_cwdc_hr(beg:end))
+    allocate(pps%casa_cwdc_loss(beg:end))
+    allocate(pps%casa_frootc(beg:end))
+    allocate(pps%casa_frootc_alloc(beg:end))
+    allocate(pps%casa_frootc_loss(beg:end))
+    allocate(pps%casa_gpp(beg:end))
+    allocate(pps%casa_hr(beg:end))
+    allocate(pps%casa_leafc(beg:end))
+    allocate(pps%casa_leafc_alloc(beg:end))
+    allocate(pps%casa_leafc_loss(beg:end))
+    allocate(pps%casa_litterc(beg:end))
+    allocate(pps%casa_litterc_hr(beg:end))
+    allocate(pps%casa_litterc_loss(beg:end))
+    allocate(pps%casa_nee(beg:end))
+    allocate(pps%casa_nep(beg:end))
+    allocate(pps%casa_npp(beg:end))
+    allocate(pps%casa_soilc(beg:end))
+    allocate(pps%casa_soilc_hr(beg:end))
+    allocate(pps%casa_soilc_loss(beg:end))
+    allocate(pps%casa_woodc(beg:end))
+    allocate(pps%casa_woodc_alloc(beg:end))
+    allocate(pps%casa_woodc_loss(beg:end))
+#endif
 #endif
 
     pps%frac_veg_nosno(beg:end) = bigint
@@ -983,6 +1013,7 @@ contains
 
 #if (defined CASA)
     pps%Closs(beg:end,:npools) = spval   !init w/ spval the variables that
+    pps%Ctrans(beg:end,:npool_types) = spval   !init w/ spval the variables that
     pps%Resp_C(beg:end,:npools) = nan    !go to history, because CASA
     pps%Tpool_C(beg:end,:npools) = spval !routines do not get called on
     pps%livefr(beg:end,:nlive) = spval   !first timestep of nsrest=0 and
@@ -1023,6 +1054,34 @@ contains
     pps%ndegday(beg:end) = nan
     pps%sandfrac(beg:end) = nan
     pps%clayfrac(beg:end) = nan
+#if (defined CLAMP)
+    ! Summary variables added for the C-LAMP Experiments
+    pps%casa_agnpp(beg:end) = nan
+    pps%casa_ar(beg:end) = nan
+    pps%casa_bgnpp(beg:end) = nan
+    pps%casa_cwdc(beg:end) = nan
+    pps%casa_cwdc_hr(beg:end) = nan
+    pps%casa_cwdc_loss(beg:end) = nan
+    pps%casa_frootc(beg:end) = nan
+    pps%casa_frootc_alloc(beg:end) = nan
+    pps%casa_frootc_loss(beg:end) = nan
+    pps%casa_gpp(beg:end) = nan
+    pps%casa_hr(beg:end) = nan
+    pps%casa_leafc(beg:end) = nan
+    pps%casa_leafc_alloc(beg:end) = nan
+    pps%casa_leafc_loss(beg:end) = nan
+    pps%casa_litterc(beg:end) = nan
+    pps%casa_litterc_loss(beg:end) = nan
+    pps%casa_nee(beg:end) = nan
+    pps%casa_nep(beg:end) = nan
+    pps%casa_npp(beg:end) = nan
+    pps%casa_soilc(beg:end) = nan
+    pps%casa_soilc_hr(beg:end) = nan
+    pps%casa_soilc_loss(beg:end) = nan
+    pps%casa_woodc(beg:end) = nan
+    pps%casa_woodc_alloc(beg:end) = nan
+    pps%casa_woodc_loss(beg:end) = nan
+#endif
 #endif
 
   end subroutine init_pft_pstate_type
@@ -1091,9 +1150,9 @@ contains
     allocate(pepv%annsum_npp(beg:end))
     ! 4/21/05, PET
     ! Adding isotope code
-	 allocate(pepv%rc13_canair(beg:end))
-	 allocate(pepv%rc13_psnsun(beg:end))
-	 allocate(pepv%rc13_psnsha(beg:end))
+    allocate(pepv%rc13_canair(beg:end))
+    allocate(pepv%rc13_psnsun(beg:end))
+    allocate(pepv%rc13_psnsha(beg:end))
 
     pepv%dormant_flag(beg:end) = nan
     pepv%days_active(beg:end) = nan
@@ -1275,6 +1334,9 @@ contains
     allocate(pes%t_ref2m_min_inst(beg:end))
     allocate(pes%t_ref2m_max_inst(beg:end))
     allocate(pes%q_ref2m(beg:end))
+#if (defined CLAMP)
+    allocate(pes%rh_ref2m(beg:end))
+#endif
     allocate(pes%t_veg(beg:end))
 
     pes%t_ref2m(beg:end) = nan
@@ -1283,6 +1345,9 @@ contains
     pes%t_ref2m_min_inst(beg:end) = nan
     pes%t_ref2m_max_inst(beg:end) = nan
     pes%q_ref2m(beg:end) = nan
+#if (defined CLAMP)
+    pes%rh_ref2m(beg:end) = nan
+#endif
     pes%t_veg(beg:end) = nan
 
   end subroutine init_pft_estate_type
@@ -1364,6 +1429,11 @@ contains
     allocate(pcs%totvegc(beg:end))
     allocate(pcs%totpftc(beg:end))
 
+#if (defined CLAMP)
+    !CLAMP
+    allocate(pcs%woodc(beg:end))
+#endif
+
     pcs%leafc(beg:end) = nan
     pcs%leafc_storage(beg:end) = nan
     pcs%leafc_xfer(beg:end) = nan
@@ -1391,6 +1461,11 @@ contains
     pcs%storvegc(beg:end) = nan
     pcs%totvegc(beg:end) = nan
     pcs%totpftc(beg:end) = nan
+
+#if (defined CLAMP)
+    !CLAMP
+    pcs%woodc(beg:end) = nan
+#endif
 
   end subroutine init_pft_cstate_type
 
@@ -1828,6 +1903,16 @@ contains
     allocate(pcf%pft_coutputs(beg:end))
     allocate(pcf%pft_fire_closs(beg:end))
 
+#if (defined CLAMP)
+    !CLAMP
+    allocate(pcf%frootc_alloc(beg:end))
+    allocate(pcf%frootc_loss(beg:end))
+    allocate(pcf%leafc_alloc(beg:end))
+    allocate(pcf%leafc_loss(beg:end))
+    allocate(pcf%woodc_alloc(beg:end))
+    allocate(pcf%woodc_loss(beg:end))
+#endif
+
     pcf%psnsun(beg:end) = nan
     pcf%psnsha(beg:end) = nan
     pcf%fpsn(beg:end) = nan
@@ -1960,6 +2045,16 @@ contains
     pcf%pft_cinputs(beg:end) = nan
     pcf%pft_coutputs(beg:end) = nan
     pcf%pft_fire_closs(beg:end) = nan
+
+#if (defined CLAMP)
+    !CLAMP
+    pcf%frootc_alloc(beg:end) = nan
+    pcf%frootc_loss(beg:end) = nan
+    pcf%leafc_alloc(beg:end) = nan
+    pcf%leafc_loss(beg:end) = nan
+    pcf%woodc_alloc(beg:end) = nan
+    pcf%woodc_loss(beg:end) = nan
+#endif
 
   end subroutine init_pft_cflux_type
 
@@ -2295,6 +2390,7 @@ contains
     allocate(cps%fpg(beg:end))
     allocate(cps%annsum_counter(beg:end))
     allocate(cps%cannsum_npp(beg:end))
+    allocate(cps%cannavg_t2m(beg:end))
     allocate(cps%me(beg:end))
     allocate(cps%fire_prob(beg:end))
     allocate(cps%mean_fire_prob(beg:end))
@@ -2351,6 +2447,7 @@ contains
     cps%fpg(beg:end) = nan
     cps%annsum_counter(beg:end) = nan
     cps%cannsum_npp(beg:end) = nan
+    cps%cannavg_t2m(beg:end) = nan
     cps%me(beg:end) = nan
     cps%fire_prob(beg:end) = nan
     cps%mean_fire_prob(beg:end) = nan
@@ -2488,7 +2585,11 @@ contains
     allocate(ccs%soil2c(beg:end))
     allocate(ccs%soil3c(beg:end))
     allocate(ccs%soil4c(beg:end))
+    allocate(ccs%seedc(beg:end))
     allocate(ccs%col_ctrunc(beg:end))
+    allocate(ccs%prod10c(beg:end))
+    allocate(ccs%prod100c(beg:end))
+    allocate(ccs%totprodc(beg:end))
     allocate(ccs%totlitc(beg:end))
     allocate(ccs%totsomc(beg:end))
     allocate(ccs%totecosysc(beg:end))
@@ -2503,7 +2604,11 @@ contains
     ccs%soil2c(beg:end) = nan
     ccs%soil3c(beg:end) = nan
     ccs%soil4c(beg:end) = nan
+    ccs%seedc(beg:end) = nan
     ccs%col_ctrunc(beg:end) = nan
+    ccs%prod10c(beg:end) = nan
+    ccs%prod100c(beg:end) = nan
+    ccs%totprodc(beg:end) = nan
     ccs%totlitc(beg:end) = nan
     ccs%totsomc(beg:end) = nan
     ccs%totecosysc(beg:end) = nan
@@ -2543,6 +2648,10 @@ contains
     allocate(cns%soil4n(beg:end))
     allocate(cns%sminn(beg:end))
     allocate(cns%col_ntrunc(beg:end))
+    allocate(cns%seedn(beg:end))
+    allocate(cns%prod10n(beg:end))
+    allocate(cns%prod100n(beg:end))
+    allocate(cns%totprodn(beg:end))
     allocate(cns%totlitn(beg:end))
     allocate(cns%totsomn(beg:end))
     allocate(cns%totecosysn(beg:end))
@@ -2558,6 +2667,10 @@ contains
     cns%soil4n(beg:end) = nan
     cns%sminn(beg:end) = nan
     cns%col_ntrunc(beg:end) = nan
+    cns%seedn(beg:end) = nan
+    cns%prod10n(beg:end) = nan
+    cns%prod100n(beg:end) = nan
+    cns%totprodn(beg:end) = nan
     cns%totlitn(beg:end) = nan
     cns%totsomn(beg:end) = nan
     cns%totecosysn(beg:end) = nan
@@ -2710,6 +2823,19 @@ contains
     allocate(ccf%soil3_hr(beg:end))
     allocate(ccf%soil3c_to_soil4c(beg:end))
     allocate(ccf%soil4_hr(beg:end))
+    allocate(ccf%dwt_seedc_to_leaf(beg:end))
+    allocate(ccf%dwt_seedc_to_deadstem(beg:end))
+    allocate(ccf%dwt_conv_cflux(beg:end))
+    allocate(ccf%dwt_prod10c_gain(beg:end))
+    allocate(ccf%dwt_prod10c_loss(beg:end))
+    allocate(ccf%dwt_prod100c_gain(beg:end))
+    allocate(ccf%dwt_prod100c_loss(beg:end))
+    allocate(ccf%dwt_frootc_to_litr1c(beg:end))
+    allocate(ccf%dwt_frootc_to_litr2c(beg:end))
+    allocate(ccf%dwt_frootc_to_litr3c(beg:end))
+    allocate(ccf%dwt_livecrootc_to_cwdc(beg:end))
+    allocate(ccf%dwt_deadcrootc_to_cwdc(beg:end))
+    allocate(ccf%dwt_closs(beg:end))
     allocate(ccf%lithr(beg:end))
     allocate(ccf%somhr(beg:end))
     allocate(ccf%hr(beg:end))
@@ -2723,6 +2849,13 @@ contains
     allocate(ccf%col_cinputs(beg:end))
     allocate(ccf%col_coutputs(beg:end))
     allocate(ccf%col_fire_closs(beg:end))
+
+#if (defined CLAMP)
+    !CLAMP
+    allocate(ccf%cwdc_hr(beg:end))
+    allocate(ccf%cwdc_loss(beg:end))
+    allocate(ccf%litterc_loss(beg:end))
+#endif
 
     ccf%m_leafc_to_litr1c(beg:end) = nan
     ccf%m_leafc_to_litr2c(beg:end) = nan
@@ -2775,6 +2908,19 @@ contains
     ccf%soil3_hr(beg:end) = nan
     ccf%soil3c_to_soil4c(beg:end) = nan
     ccf%soil4_hr(beg:end) = nan
+    ccf%dwt_seedc_to_leaf(beg:end) = nan
+    ccf%dwt_seedc_to_deadstem(beg:end) = nan
+    ccf%dwt_conv_cflux(beg:end) = nan
+    ccf%dwt_prod10c_gain(beg:end) = nan
+    ccf%dwt_prod10c_loss(beg:end) = nan
+    ccf%dwt_prod100c_gain(beg:end) = nan
+    ccf%dwt_prod100c_loss(beg:end) = nan
+    ccf%dwt_frootc_to_litr1c(beg:end) = nan
+    ccf%dwt_frootc_to_litr2c(beg:end) = nan
+    ccf%dwt_frootc_to_litr3c(beg:end) = nan
+    ccf%dwt_livecrootc_to_cwdc(beg:end) = nan
+    ccf%dwt_deadcrootc_to_cwdc(beg:end) = nan
+    ccf%dwt_closs(beg:end) = nan
     ccf%lithr(beg:end) = nan
     ccf%somhr(beg:end) = nan
     ccf%hr(beg:end) = nan
@@ -2788,6 +2934,13 @@ contains
     ccf%col_cinputs(beg:end) = nan
     ccf%col_coutputs(beg:end) = nan
     ccf%col_fire_closs(beg:end) = nan
+
+#if (defined CLAMP)
+    !CLAMP
+    ccf%cwdc_hr(beg:end) = nan
+    ccf%cwdc_loss(beg:end) = nan
+    ccf%litterc_loss(beg:end) = nan
+#endif
 
   end subroutine init_column_cflux_type
 
@@ -2874,6 +3027,19 @@ contains
     allocate(cnf%sminn_to_denit_s4(beg:end))
     allocate(cnf%sminn_to_denit_excess(beg:end))
     allocate(cnf%sminn_leached(beg:end))
+    allocate(cnf%dwt_seedn_to_leaf(beg:end))
+    allocate(cnf%dwt_seedn_to_deadstem(beg:end))
+    allocate(cnf%dwt_conv_nflux(beg:end))
+    allocate(cnf%dwt_prod10n_gain(beg:end))
+    allocate(cnf%dwt_prod10n_loss(beg:end))
+    allocate(cnf%dwt_prod100n_gain(beg:end))
+    allocate(cnf%dwt_prod100n_loss(beg:end))
+    allocate(cnf%dwt_frootn_to_litr1n(beg:end))
+    allocate(cnf%dwt_frootn_to_litr2n(beg:end))
+    allocate(cnf%dwt_frootn_to_litr3n(beg:end))
+    allocate(cnf%dwt_livecrootn_to_cwdn(beg:end))
+    allocate(cnf%dwt_deadcrootn_to_cwdn(beg:end))
+    allocate(cnf%dwt_nloss(beg:end))
     allocate(cnf%potential_immob(beg:end))
     allocate(cnf%actual_immob(beg:end))
     allocate(cnf%sminn_to_plant(beg:end))
@@ -2946,6 +3112,19 @@ contains
     cnf%sminn_to_denit_s4(beg:end) = nan
     cnf%sminn_to_denit_excess(beg:end) = nan
     cnf%sminn_leached(beg:end) = nan
+    cnf%dwt_seedn_to_leaf(beg:end) = nan
+    cnf%dwt_seedn_to_deadstem(beg:end) = nan
+    cnf%dwt_conv_nflux(beg:end) = nan
+    cnf%dwt_prod10n_gain(beg:end) = nan
+    cnf%dwt_prod10n_loss(beg:end) = nan
+    cnf%dwt_prod100n_gain(beg:end) = nan
+    cnf%dwt_prod100n_loss(beg:end) = nan
+    cnf%dwt_frootn_to_litr1n(beg:end) = nan
+    cnf%dwt_frootn_to_litr2n(beg:end) = nan
+    cnf%dwt_frootn_to_litr3n(beg:end) = nan
+    cnf%dwt_livecrootn_to_cwdn(beg:end) = nan
+    cnf%dwt_deadcrootn_to_cwdn(beg:end) = nan
+    cnf%dwt_nloss(beg:end) = nan
     cnf%potential_immob(beg:end) = nan
     cnf%actual_immob(beg:end) = nan
     cnf%sminn_to_plant(beg:end) = nan

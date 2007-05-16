@@ -154,6 +154,59 @@ subroutine CNiniSpecial ()
       clm3%g%l%c%cc13f%pcf_a%psnsun(c) = 0._r8
       clm3%g%l%c%cc13f%pcf_a%psnsha(c) = 0._r8
       
+	  ! adding dynpft code
+	  clm3%g%l%c%ccs%seedc(c) = 0._r8
+	  clm3%g%l%c%ccs%prod10c(c) = 0._r8	  
+	  clm3%g%l%c%ccs%prod100c(c) = 0._r8	  
+	  clm3%g%l%c%ccs%totprodc(c) = 0._r8	  
+	  clm3%g%l%c%cc13s%seedc(c) = 0._r8
+	  clm3%g%l%c%cc13s%prod10c(c) = 0._r8	  
+	  clm3%g%l%c%cc13s%prod100c(c) = 0._r8	  
+	  clm3%g%l%c%cc13s%totprodc(c) = 0._r8	  
+	  clm3%g%l%c%cns%seedn(c) = 0._r8
+	  clm3%g%l%c%cns%prod10n(c) = 0._r8	  
+	  clm3%g%l%c%cns%prod100n(c) = 0._r8	  
+	  clm3%g%l%c%cns%totprodn(c) = 0._r8	  
+	  clm3%g%l%c%ccf%dwt_seedc_to_leaf(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_seedc_to_deadstem(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_conv_cflux(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_prod10c_gain(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_prod10c_loss(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_prod100c_gain(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_prod100c_loss(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_frootc_to_litr1c(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_frootc_to_litr2c(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_frootc_to_litr3c(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_livecrootc_to_cwdc(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_deadcrootc_to_cwdc(c) = 0._r8
+	  clm3%g%l%c%ccf%dwt_closs(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_seedc_to_leaf(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_seedc_to_deadstem(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_conv_cflux(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_prod10c_gain(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_prod10c_loss(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_prod100c_gain(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_prod100c_loss(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_frootc_to_litr1c(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_frootc_to_litr2c(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_frootc_to_litr3c(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_livecrootc_to_cwdc(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_deadcrootc_to_cwdc(c) = 0._r8
+	  clm3%g%l%c%cc13f%dwt_closs(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_seedn_to_leaf(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_seedn_to_deadstem(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_conv_nflux(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_prod10n_gain(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_prod10n_loss(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_prod100n_gain(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_prod100n_loss(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_frootn_to_litr1n(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_frootn_to_litr2n(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_frootn_to_litr3n(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_livecrootn_to_cwdn(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_deadcrootn_to_cwdn(c) = 0._r8
+	  clm3%g%l%c%cnf%dwt_nloss(c) = 0._r8
+      
    end do
 
    ! deallocate special landunit filters

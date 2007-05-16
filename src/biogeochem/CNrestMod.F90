@@ -845,6 +845,20 @@ contains
     !--------------------------------
     ! pft carbon state variables 
     !--------------------------------
+
+#if (defined CLAMP)
+    	! woodc
+    	if (flag == 'define') then
+       		call ncd_defvar(ncid=ncid, varname='woodc', xtype=nf_double,  &
+            		dim1name='pft',long_name='',units='')
+    	else if (flag == 'read' .or. flag == 'write') then
+       		call ncd_iolocal(varname='woodc', data=pptr%pcs%woodc, &
+            		dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+       		if (flag=='read' .and. .not. readvar) then
+  			if (is_restart()) call endrun
+       		end if	
+    	end if
+#endif
     
     ! leafc
     if (flag == 'define') then
@@ -1805,6 +1819,80 @@ contains
     !--------------------------------
     ! pft carbon flux variables
     !--------------------------------
+
+#if (defined CLAMP)
+         ! woodc_alloc
+         if (flag == 'define') then
+            call ncd_defvar(ncid=ncid, varname='woodc_alloc', xtype=nf_double,  &
+                 dim1name='pft',long_name='',units='')
+         else if (flag == 'read' .or. flag == 'write') then
+            call ncd_iolocal(varname='woodc_alloc', data=pptr%pcf%woodc_alloc, &
+                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            if (flag=='read' .and. .not. readvar) then
+  	       if (is_restart()) call endrun
+            end if	
+         end if
+
+         ! woodc_loss
+         if (flag == 'define') then
+            call ncd_defvar(ncid=ncid, varname='woodc_loss', xtype=nf_double,  &
+                 dim1name='pft',long_name='',units='')
+         else if (flag == 'read' .or. flag == 'write') then
+            call ncd_iolocal(varname='woodc_loss', data=pptr%pcf%woodc_loss, &
+                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            if (flag=='read' .and. .not. readvar) then
+  	       if (is_restart()) call endrun
+            end if	
+         end if
+
+         ! leafc_loss
+         if (flag == 'define') then
+            call ncd_defvar(ncid=ncid, varname='leafc_loss', xtype=nf_double,  &
+                 dim1name='pft',long_name='',units='')
+         else if (flag == 'read' .or. flag == 'write') then
+            call ncd_iolocal(varname='leafc_loss', data=pptr%pcf%leafc_loss, &
+                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            if (flag=='read' .and. .not. readvar) then
+  	       if (is_restart()) call endrun
+            end if	
+         end if
+
+         ! leafc_alloc
+         if (flag == 'define') then
+            call ncd_defvar(ncid=ncid, varname='leafc_alloc', xtype=nf_double,  &
+                 dim1name='pft',long_name='',units='')
+         else if (flag == 'read' .or. flag == 'write') then
+            call ncd_iolocal(varname='leafc_alloc', data=pptr%pcf%leafc_alloc, &
+                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            if (flag=='read' .and. .not. readvar) then
+  	       if (is_restart()) call endrun
+            end if	
+         end if
+
+         ! frootc_loss
+         if (flag == 'define') then
+            call ncd_defvar(ncid=ncid, varname='frootc_loss', xtype=nf_double,  &
+                 dim1name='pft',long_name='',units='')
+         else if (flag == 'read' .or. flag == 'write') then
+            call ncd_iolocal(varname='frootc_loss', data=pptr%pcf%frootc_loss, &
+                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            if (flag=='read' .and. .not. readvar) then
+  	       if (is_restart()) call endrun
+            end if	
+         end if
+
+         ! frootc_alloc
+         if (flag == 'define') then
+            call ncd_defvar(ncid=ncid, varname='frootc_alloc', xtype=nf_double,  &
+                 dim1name='pft',long_name='',units='')
+         else if (flag == 'read' .or. flag == 'write') then
+            call ncd_iolocal(varname='frootc_alloc', data=pptr%pcf%frootc_alloc, &
+                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            if (flag=='read' .and. .not. readvar) then
+  	       if (is_restart()) call endrun
+            end if	
+         end if
+#endif
 
     ! psnsun
     if (flag == 'define') then
@@ -5828,6 +5916,18 @@ contains
        end if	
     end if
 
+    ! cannavg_t2m
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='cannavg_t2m', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='cannavg_t2m', data=cptr%cps%cannavg_t2m, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
     ! wf
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='wf', xtype=nf_double,  &
@@ -6012,6 +6112,18 @@ contains
        end if	
     end if
     
+    ! seedc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='seedc', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='seedc', data=cptr%ccs%seedc, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
     ! col_ctrunc
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='col_ctrunc', xtype=nf_double,  &
@@ -6066,6 +6178,42 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totcolc', data=cptr%ccs%totcolc, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! prod10c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='prod10c', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='prod10c', data=cptr%ccs%prod10c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! prod100c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='prod100c', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='prod100c', data=cptr%ccs%prod100c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! totprodc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='totprodc', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='totprodc', data=cptr%ccs%totprodc, &
             dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -6172,6 +6320,18 @@ contains
        end if	
     end if
     
+    ! seedc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='seedc_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='seedc_13', data=cptr%cc13s%seedc, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
     ! col_ctrunc
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='col_ctrunc_13', xtype=nf_double,  &
@@ -6226,6 +6386,42 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totcolc_13', data=cptr%cc13s%totcolc, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! prod10c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='prod10c_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='prod10c_13', data=cptr%cc13s%prod10c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! prod100c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='prod100c_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='prod100c_13', data=cptr%cc13s%prod100c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! totprodc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='totprodc_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='totprodc_13', data=cptr%cc13s%totprodc, &
             dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -6404,9 +6600,95 @@ contains
        end if	
     end if
 
+    ! seedn
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='seedn', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='seedn', data=cptr%cns%seedn, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! prod10n
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='prod10n', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='prod10n', data=cptr%cns%prod10n, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! prod100n
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='prod100n', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='prod100n', data=cptr%cns%prod100n, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! totprodn
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='totprodn', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='totprodn', data=cptr%cns%totprodn, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
     !--------------------------------
     ! column carbon flux variables
     !--------------------------------
+
+#if (defined CLAMP)
+        ! cwdc_hr
+        if (flag == 'define') then
+           call ncd_defvar(ncid=ncid, varname='cwdc_hr', xtype=nf_double,  &
+                dim1name='column',long_name='',units='')
+        else if (flag == 'read' .or. flag == 'write') then
+           call ncd_iolocal(varname='cwdc_hr', data=cptr%ccf%cwdc_hr, &
+                dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+           if (flag=='read' .and. .not. readvar) then
+  	      if (is_restart()) call endrun
+           end if	
+        end if
+
+        ! cwdc_loss
+        if (flag == 'define') then
+           call ncd_defvar(ncid=ncid, varname='cwdc_loss', xtype=nf_double,  &
+                dim1name='column',long_name='',units='')
+        else if (flag == 'read' .or. flag == 'write') then
+           call ncd_iolocal(varname='cwdc_loss', data=cptr%ccf%cwdc_loss, &
+                dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+           if (flag=='read' .and. .not. readvar) then
+  	      if (is_restart()) call endrun
+           end if	
+        end if
+
+        ! litterc_loss
+        if (flag == 'define') then
+           call ncd_defvar(ncid=ncid, varname='litterc_loss', xtype=nf_double,  &
+                dim1name='column',long_name='',units='')
+        else if (flag == 'read' .or. flag == 'write') then
+           call ncd_iolocal(varname='litterc_loss', data=cptr%ccf%litterc_loss, &
+                dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+           if (flag=='read' .and. .not. readvar) then
+  	      if (is_restart()) call endrun
+           end if	
+        end if
+#endif
 
     ! m_leafc_to_litr1c
     if (flag == 'define') then
@@ -7170,6 +7452,162 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_fire_closs', data=cptr%ccf%col_fire_closs, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_seedc_to_leaf
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_seedc_to_leaf', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_seedc_to_leaf', data=cptr%ccf%dwt_seedc_to_leaf, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_seedc_to_deadstem
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_seedc_to_deadstem', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_seedc_to_deadstem', data=cptr%ccf%dwt_seedc_to_deadstem, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_conv_cflux
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_conv_cflux', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_conv_cflux', data=cptr%ccf%dwt_conv_cflux, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod10c_gain
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod10c_gain', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod10c_gain', data=cptr%ccf%dwt_prod10c_gain, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod10c_loss
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod10c_loss', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod10c_loss', data=cptr%ccf%dwt_prod10c_loss, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod100c_gain
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod100c_gain', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod100c_gain', data=cptr%ccf%dwt_prod100c_gain, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod100c_loss
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod100c_loss', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod100c_loss', data=cptr%ccf%dwt_prod100c_loss, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_frootc_to_litr1c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_frootc_to_litr1c', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_frootc_to_litr1c', data=cptr%ccf%dwt_frootc_to_litr1c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_frootc_to_litr2c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_frootc_to_litr2c', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_frootc_to_litr2c', data=cptr%ccf%dwt_frootc_to_litr2c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_frootc_to_litr3c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_frootc_to_litr3c', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_frootc_to_litr3c', data=cptr%ccf%dwt_frootc_to_litr3c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_livecrootc_to_cwdc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_livecrootc_to_cwdc', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_livecrootc_to_cwdc', data=cptr%ccf%dwt_livecrootc_to_cwdc, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_deadcrootc_to_cwdc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_deadcrootc_to_cwdc', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_deadcrootc_to_cwdc', data=cptr%ccf%dwt_deadcrootc_to_cwdc, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_closs
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_closs', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_closs', data=cptr%ccf%dwt_closs, &
             dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -7942,6 +8380,162 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_fire_closs_13', data=cptr%cc13f%col_fire_closs, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_seedc_to_leaf
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_seedc_to_leaf_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_seedc_to_leaf_13', data=cptr%cc13f%dwt_seedc_to_leaf, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_seedc_to_deadstem
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_seedc_to_deadstem_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_seedc_to_deadstem_13', data=cptr%cc13f%dwt_seedc_to_deadstem, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_conv_cflux
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_conv_cflux_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_conv_cflux_13', data=cptr%cc13f%dwt_conv_cflux, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod10c_gain
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod10c_gain_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod10c_gain_13', data=cptr%cc13f%dwt_prod10c_gain, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod10c_loss
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod10c_loss_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod10c_loss_13', data=cptr%cc13f%dwt_prod10c_loss, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod100c_gain
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod100c_gain_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod100c_gain_13', data=cptr%cc13f%dwt_prod100c_gain, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod100c_loss
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod100c_loss_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod100c_loss_13', data=cptr%cc13f%dwt_prod100c_loss, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_frootc_to_litr1c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_frootc_to_litr1c_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_frootc_to_litr1c_13', data=cptr%cc13f%dwt_frootc_to_litr1c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_frootc_to_litr2c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_frootc_to_litr2c_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_frootc_to_litr2c_13', data=cptr%cc13f%dwt_frootc_to_litr2c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_frootc_to_litr3c
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_frootc_to_litr3c_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_frootc_to_litr3c_13', data=cptr%cc13f%dwt_frootc_to_litr3c, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_livecrootc_to_cwdc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_livecrootc_to_cwdc_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_livecrootc_to_cwdc_13', data=cptr%cc13f%dwt_livecrootc_to_cwdc, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_deadcrootc_to_cwdc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_deadcrootc_to_cwdc_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_deadcrootc_to_cwdc_13', data=cptr%cc13f%dwt_deadcrootc_to_cwdc, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_closs
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_closs_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_closs_13', data=cptr%cc13f%dwt_closs, &
             dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -8804,6 +9398,162 @@ contains
        end if	
     end if
 
+    ! dwt_seedn_to_leaf
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_seedn_to_leaf', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_seedn_to_leaf', data=cptr%cnf%dwt_seedn_to_leaf, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_seedn_to_deadstem
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_seedn_to_deadstem', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_seedn_to_deadstem', data=cptr%cnf%dwt_seedn_to_deadstem, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_conv_nflux
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_conv_nflux', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_conv_nflux', data=cptr%cnf%dwt_conv_nflux, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod10n_gain
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod10n_gain', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod10n_gain', data=cptr%cnf%dwt_prod10n_gain, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod10n_loss
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod10n_loss', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod10n_loss', data=cptr%cnf%dwt_prod10n_loss, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod100n_gain
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod100n_gain', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod100n_gain', data=cptr%cnf%dwt_prod100n_gain, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_prod100n_loss
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_prod100n_loss', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_prod100n_loss', data=cptr%cnf%dwt_prod100n_loss, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_frootn_to_litr1n
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_frootn_to_litr1n', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_frootn_to_litr1n', data=cptr%cnf%dwt_frootn_to_litr1n, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_frootn_to_litr2n
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_frootn_to_litr2n', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_frootn_to_litr2n', data=cptr%cnf%dwt_frootn_to_litr2n, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_frootn_to_litr3n
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_frootn_to_litr3n', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_frootn_to_litr3n', data=cptr%cnf%dwt_frootn_to_litr3n, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_livecrootn_to_cwdn
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_livecrootn_to_cwdn', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_livecrootn_to_cwdn', data=cptr%cnf%dwt_livecrootn_to_cwdn, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_deadcrootn_to_cwdn
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_deadcrootn_to_cwdn', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_deadcrootn_to_cwdn', data=cptr%cnf%dwt_deadcrootn_to_cwdn, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! dwt_nloss
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='dwt_nloss', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='dwt_nloss', data=cptr%cnf%dwt_nloss, &
+            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
     !--------------------------------
     ! gridcell a2l variables
     !--------------------------------
@@ -8822,31 +9572,19 @@ contains
 
 #if (defined EXIT_SPINUP)
     if (flag == 'read') then
-       m = 10.0_r8
+       m = 20._r8
        do c = begc, endc
-          clm3%g%l%c%ccs%cwdc(c)   = clm3%g%l%c%ccs%cwdc(c)   * m
-          clm3%g%l%c%ccs%litr1c(c) = clm3%g%l%c%ccs%litr1c(c) * m
-          clm3%g%l%c%ccs%litr2c(c) = clm3%g%l%c%ccs%litr2c(c) * m
-          clm3%g%l%c%ccs%litr3c(c) = clm3%g%l%c%ccs%litr3c(c) * m
           clm3%g%l%c%ccs%soil1c(c) = clm3%g%l%c%ccs%soil1c(c) * m
           clm3%g%l%c%ccs%soil2c(c) = clm3%g%l%c%ccs%soil2c(c) * m
           clm3%g%l%c%ccs%soil3c(c) = clm3%g%l%c%ccs%soil3c(c) * m
           clm3%g%l%c%ccs%soil4c(c) = clm3%g%l%c%ccs%soil4c(c) * m
           
           ! adding code for 13C, 12/25/05, PET 
-          clm3%g%l%c%cc13s%cwdc(c)   = clm3%g%l%c%cc13s%cwdc(c)   * m
-          clm3%g%l%c%cc13s%litr1c(c) = clm3%g%l%c%cc13s%litr1c(c) * m
-          clm3%g%l%c%cc13s%litr2c(c) = clm3%g%l%c%cc13s%litr2c(c) * m
-          clm3%g%l%c%cc13s%litr3c(c) = clm3%g%l%c%cc13s%litr3c(c) * m
           clm3%g%l%c%cc13s%soil1c(c) = clm3%g%l%c%cc13s%soil1c(c) * m
           clm3%g%l%c%cc13s%soil2c(c) = clm3%g%l%c%cc13s%soil2c(c) * m
           clm3%g%l%c%cc13s%soil3c(c) = clm3%g%l%c%cc13s%soil3c(c) * m
           clm3%g%l%c%cc13s%soil4c(c) = clm3%g%l%c%cc13s%soil4c(c) * m
           
-          clm3%g%l%c%cns%cwdn(c)   = clm3%g%l%c%cns%cwdn(c)   * m
-          clm3%g%l%c%cns%litr1n(c) = clm3%g%l%c%cns%litr1n(c) * m
-          clm3%g%l%c%cns%litr2n(c) = clm3%g%l%c%cns%litr2n(c) * m
-          clm3%g%l%c%cns%litr3n(c) = clm3%g%l%c%cns%litr3n(c) * m
           clm3%g%l%c%cns%soil1n(c) = clm3%g%l%c%cns%soil1n(c) * m
           clm3%g%l%c%cns%soil2n(c) = clm3%g%l%c%cns%soil2n(c) * m
           clm3%g%l%c%cns%soil3n(c) = clm3%g%l%c%cns%soil3n(c) * m

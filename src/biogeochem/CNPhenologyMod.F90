@@ -78,6 +78,8 @@ subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp)
    ! each of the following phenology type routines includes a filter
    ! to operate only on the relevant pfts
 
+   call CNPhenologyClimate(num_soilp, filter_soilp)
+   
    call CNEvergreenPhenology(num_soilp, filter_soilp)
 
    call CNSeasonDecidPhenology(num_soilp, filter_soilp)
@@ -101,6 +103,76 @@ subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp)
    call CNLitterToColumn(num_soilc, filter_soilc)
 
 end subroutine CNPhenology
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: CNPhenologyClimate
+!
+! !INTERFACE:
+subroutine CNPhenologyClimate (num_soilp, filter_soilp)
+!
+! !DESCRIPTION:
+! For coupled carbon-nitrogen code (CN).
+!
+! !USES:
+   use clmtype
+   use clm_varctl, only: irad
+   use clm_time_manager, only: get_step_size
+!
+! !ARGUMENTS:
+   implicit none
+   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+!
+! !CALLED FROM:
+! subroutine CNPhenology
+!
+! !REVISION HISTORY:
+! 3/13/07: Created by Peter Thornton
+!
+! !LOCAL VARIABLES:
+! local pointers to implicit in scalars
+!
+   integer , pointer :: ivt(:)       ! pft vegetation type
+   ! ecophysiological constants
+   real(r8), pointer :: t_ref2m(:)            ! 2m air temperature (K)
+   real(r8), pointer :: tempavg_t2m(:)     ! temp. avg 2m air temperature (K)
+!
+! local pointers to implicit in/out scalars
+!
+!
+! local pointers to implicit out scalars
+!
+! !OTHER LOCAL VARIABLES:
+   integer :: p                      ! indices
+   integer :: fp             !lake filter pft index
+   integer :: dtime          !time step (s)
+   real(r8):: dt             !radiation time step delta t (seconds)
+   real(r8):: fracday        !dtime as a fraction of day
+!EOP
+!-----------------------------------------------------------------------
+
+   ! assign local pointers to derived type arrays
+   ivt       => clm3%g%l%c%p%itype
+   t_ref2m                       => clm3%g%l%c%p%pes%t_ref2m
+   tempavg_t2m                   => clm3%g%l%c%p%pepv%tempavg_t2m
+
+   ! set time steps
+   dtime = get_step_size()
+   dt = float(irad)*dtime
+   fracday = dt/86400.0_r8
+
+
+!dir$ concurrent
+!cdir nodep
+   do fp = 1,num_soilp
+      p = filter_soilp(fp)
+	  tempavg_t2m(p) = tempavg_t2m(p) + t_ref2m(p) * (fracday/365._r8)
+   end do
+
+end subroutine CNPhenologyClimate
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -209,7 +281,6 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    integer , pointer :: pcolumn(:)            ! pft's column index
    integer , pointer :: pgridcell(:)          ! pft's gridcell index
    real(r8), pointer :: latdeg(:)             ! latitude (radians)
-   real(r8), pointer :: t_ref2m(:)            ! 2m air temperature (K)
    real(r8), pointer :: decl(:)               ! solar declination (radians)
    real(r8), pointer :: t_soisno(:,:)         ! soil temperature (Kelvin)  (-nlevsno+1:nlevsoi)
    real(r8), pointer :: soilpsi(:,:)          ! soil water potential in each soil layer (MPa)
@@ -243,7 +314,6 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    real(r8), pointer :: dayl(:)            ! daylength (seconds)
    real(r8), pointer :: prev_dayl(:)       ! daylength from previous albedo timestep (seconds)
    real(r8), pointer :: annavg_t2m(:)      ! annual average 2m air temperature (K)
-   real(r8), pointer :: tempavg_t2m(:)     ! temp. avg 2m air temperature (K)
    real(r8), pointer :: prev_leafc_to_litter(:)  ! previous timestep leaf C litterfall flux (gC/m2/s)
    real(r8), pointer :: prev_frootc_to_litter(:) ! previous timestep froot C litterfall flux (gC/m2/s)
    real(r8), pointer :: lgsf(:)            ! long growing season factor [0-1]
@@ -312,7 +382,6 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    pcolumn                       => clm3%g%l%c%p%column
    pgridcell                     => clm3%g%l%c%p%gridcell
    latdeg                        => clm3%g%latdeg
-   t_ref2m                       => clm3%g%l%c%p%pes%t_ref2m
    decl                          => clm3%g%l%c%cps%decl
    t_soisno                      => clm3%g%l%c%ces%t_soisno
    leafc_storage                 => clm3%g%l%c%p%pcs%leafc_storage
@@ -344,7 +413,6 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    dayl                          => clm3%g%l%c%p%pepv%dayl
    prev_dayl                     => clm3%g%l%c%p%pepv%prev_dayl
    annavg_t2m                    => clm3%g%l%c%p%pepv%annavg_t2m
-   tempavg_t2m                   => clm3%g%l%c%p%pepv%tempavg_t2m
    prev_leafc_to_litter          => clm3%g%l%c%p%pepv%prev_leafc_to_litter
    prev_frootc_to_litter         => clm3%g%l%c%p%pepv%prev_frootc_to_litter
    bglfr                         => clm3%g%l%c%p%pepv%bglfr
@@ -395,7 +463,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 
    ! critical daylength from Biome-BGC, v4.1.2
    crit_dayl = 39300._r8
-   ndays_on = 15._r8
+   ndays_on = 30._r8
    ndays_off = 15._r8
 
    ! transfer parameters
@@ -415,7 +483,6 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
          bglfr(p) = 0._r8
          bgtr(p) = 0._r8
          lgsf(p) = 0._r8
-         tempavg_t2m(p) = tempavg_t2m(p) + t_ref2m(p) * (fracday/365._r8)
 
          ! onset gdd sum from Biome-BGC, v4.1.2
          crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
@@ -530,7 +597,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
             ! if the gdd flag is set, and if the soil is above freezing
             ! then accumulate growing degree days for onset trigger
 
-            soilt = t_soisno(c,2)
+            soilt = t_soisno(c,3)
             if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
                onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
             end if
@@ -612,7 +679,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
    use clmtype
    use clm_varctl, only: irad
    use clm_time_manager, only: get_step_size
-   use shr_const_mod, only: SHR_CONST_TKFRZ
+   use shr_const_mod, only: SHR_CONST_TKFRZ, SHR_CONST_PI
 !
 ! !ARGUMENTS:
    implicit none
@@ -632,7 +699,9 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 !
    integer , pointer :: ivt(:)                ! pft vegetation type
    integer , pointer :: pcolumn(:)            ! pft's column index
-   real(r8), pointer :: t_ref2m(:)            ! 2m air temperature (K)
+   integer , pointer :: pgridcell(:)          ! pft's gridcell index
+   real(r8), pointer :: latdeg(:)             ! latitude (radians)
+   real(r8), pointer :: decl(:)               ! solar declination (radians)
    real(r8), pointer :: leafc_storage(:)      ! (kgC/m2) leaf C storage
    real(r8), pointer :: frootc_storage(:)     ! (kgC/m2) fine root C storage
    real(r8), pointer :: livestemc_storage(:)  ! (kgC/m2) live stem C storage
@@ -665,10 +734,10 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
    real(r8), pointer :: onset_swi(:)       ! onset soil water index
    real(r8), pointer :: offset_flag(:)     ! offset flag
    real(r8), pointer :: offset_counter(:)  ! offset counter (seconds)
+   real(r8), pointer :: dayl(:)            ! daylength (seconds)
    real(r8), pointer :: offset_fdd(:)      ! offset freezing degree days counter
    real(r8), pointer :: offset_swi(:)      ! offset soil water index
    real(r8), pointer :: annavg_t2m(:)      ! annual average 2m air temperature (K)
-   real(r8), pointer :: tempavg_t2m(:)     ! temp. avg 2m air temperature (K)
    real(r8), pointer :: lgsf(:)            ! long growing season factor [0-1]
    real(r8), pointer :: bglfr(:)           ! background litterfall rate (1/s)
    real(r8), pointer :: bgtr(:)            ! background transfer growth rate (1/s)
@@ -733,6 +802,8 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
    real(r8):: ndays_off       ! number of days to complete offset
    real(r8):: soilt           ! temperature of top soil layer
    real(r8):: psi             ! water stress of top soil layer
+   real(r8):: lat             !latitude (radians)
+   real(r8):: temp            !temporary variable for daylength calculation
    real(r8):: fstor2tran      ! fraction of storage to move to transfer
                               ! on each onset
 !EOP
@@ -740,7 +811,9 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
    ! Assign local pointers to derived type arrays (in)
     ivt                            => clm3%g%l%c%p%itype
     pcolumn                        => clm3%g%l%c%p%column
-    t_ref2m                        => clm3%g%l%c%p%pes%t_ref2m
+    pgridcell                      => clm3%g%l%c%p%gridcell
+    latdeg                         => clm3%g%latdeg
+    decl                           => clm3%g%l%c%cps%decl
     leafc_storage                  => clm3%g%l%c%p%pcs%leafc_storage
     frootc_storage                 => clm3%g%l%c%p%pcs%frootc_storage
     livestemc_storage              => clm3%g%l%c%p%pcs%livestemc_storage
@@ -771,10 +844,10 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
     onset_swi                      => clm3%g%l%c%p%pepv%onset_swi
     offset_flag                    => clm3%g%l%c%p%pepv%offset_flag
     offset_counter                 => clm3%g%l%c%p%pepv%offset_counter
+    dayl                           => clm3%g%l%c%p%pepv%dayl
     offset_fdd                     => clm3%g%l%c%p%pepv%offset_fdd
     offset_swi                     => clm3%g%l%c%p%pepv%offset_swi
     annavg_t2m                     => clm3%g%l%c%p%pepv%annavg_t2m
-    tempavg_t2m                    => clm3%g%l%c%p%pepv%tempavg_t2m
     prev_leafc_to_litter           => clm3%g%l%c%p%pepv%prev_leafc_to_litter
     prev_frootc_to_litter          => clm3%g%l%c%p%pepv%prev_frootc_to_litter
     lgsf                           => clm3%g%l%c%p%pepv%lgsf
@@ -834,7 +907,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
    ! crit_onset_gdd = 1000.0   ! c4 grass value
    crit_onset_swi = 15.0_r8
    soilpsi_on = -2.0_r8
-   ndays_on = 15.0_r8
+   ndays_on = 30.0_r8
 
    ! offset parameters
    crit_offset_fdd = 15.0_r8
@@ -855,8 +928,16 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
          soilt = t_soisno(c,3)
          psi = soilpsi(c,3)
 
+         ! use solar declination information stored during Surface Albedo()
+         ! and latitude from gps to calcluate daylength (convert latitude from degrees to radians)
+         ! the constant 13750.9871 is the number of seconds per radian of hour-angle
+
+         lat = (SHR_CONST_PI/180._r8)*latdeg(pgridcell(p))
+         temp = -(sin(lat)*sin(decl(c)))/(cos(lat) * cos(decl(c)))
+         temp = min(1._r8,max(-1._r8,temp))
+         dayl(p) = 2.0_r8 * 13750.9871_r8 * acos(temp)
+
          ! onset gdd sum from Biome-BGC, v4.1.2
-         tempavg_t2m(p) = tempavg_t2m(p) + t_ref2m(p) * (fracday/365._r8)
          crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
 
 
@@ -970,6 +1051,11 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 
                 if (onset_gddflag(p) == 1._r8 .and. onset_gdd(p) < crit_onset_gdd) onset_flag(p) = 0._r8
             end if
+            
+            ! only allow onset if dayl > 6hrs
+            if (onset_flag(p) == 1._r8 .and. dayl(p) <= 21600._r8) then
+                onset_flag(p) = 0._r8
+            end if
 
             ! if this is the beginning of the onset period
             ! then reset the phenology flags and indices
@@ -1047,6 +1133,11 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
                ! if freezing degree day sum is greater than critical value, initiate offset
                if (offset_fdd(p) > crit_offset_fdd .and. onset_flag(p) == 0._r8) offset_flag(p) = 1._r8
             end if
+            
+            ! force offset if daylength is < 6 hrs
+            if (dayl(p) <= 21600._r8) then
+            	offset_flag(p) = 1._r8
+            end if
 
             ! if this is the beginning of the offset period
             ! then reset flags and indices
@@ -1067,7 +1158,9 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
          end if
 
          ! calculate long growing season factor (lgsf)
-         lgsf(p) = min(days_active(p)/365._r8, 1._r8)
+         ! only begin to calculate a lgsf greater than 0.0 once the number
+         ! of days active exceeds 365.
+         lgsf(p) = max(min((days_active(p)-365._r8)/365._r8, 1._r8),0._r8)
 
          ! set background litterfall rate, when not in the phenological offset period
          if (offset_flag(p) == 1._r8) then
@@ -1085,7 +1178,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
          else
             ! the background transfer rate is calculated as the rate that would result
             ! in complete turnover of the storage pools in one year at steady state,
-            ! once lgsf has reached 1.0 (after 365 days active).
+            ! once lgsf has reached 1.0 (after 730 days active).
 
             bgtr(p) = (1._r8/(365._r8*86400._r8))*lgsf(p)
 

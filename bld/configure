@@ -55,6 +55,8 @@ OPTIONS
      User supplied values are denoted in angle brackets (<>).  Any value that contains
      white-space must be quoted.  Single letter options may NOT be bundled.
 
+     -ad_spinup <name>  Turn on AD_SPINUP mode for bgc setting of CN [on | off]
+                        (default is off).
      -bgc <name>        Build CLM with bgc package [ none | cn | casa | dgvm ]
                         (default: none, which gives the standard CLM configuration)
      -cache <file>      Name of output configuration file (default: $cfg_filename).
@@ -73,6 +75,8 @@ OPTIONS
      -defaults <file>   Use a configuration cache file to provide defaults.
      -dust <name>       Turn on DUST [on | off ] (default is off).
      -esmf_libdir <dir> Directory containing ESMF library and esmf.mk file.
+     -exit_spinup <name> Turn on EXIT_SPINUP mode for bgc setting of CN [on | off]
+                        (default is off).
      -fc <name>         User specified Fortran compiler.  Overrides Makefile default.
      -fflags <string>   A string of user specified Fortran compiler flags.  Appended to
                         Makefile defaults.  See -fopt to override optimization flags.
@@ -91,6 +95,7 @@ OPTIONS
      -nc_inc <dir>      Directory containing netCDF include files.
      -nc_lib <dir>      Directory containing netCDF library.
      -nc_mod <dir>      Directory containing netCDF module files.
+     -pergro            Switch enables building CLM for perturbation growth tests.
      -prog_seasalt <name> Turn on prognostic sea-salt (PROGSSLT cppdef token) [on | off ] (default is off)
      -rtm <name>        Turn on RTM  [on | off ] (default is off)
      -s                 Turns on silent mode - only fatal messages issued.
@@ -157,11 +162,14 @@ GetOptions(
     "mpi_lib=s"                 => \$opts{'mpi_lib'},
     "maxpft=s"                  => \$opts{'maxpft'},
     "supln=s"                   => \$opts{'supln'}, 
+    "ad_spinup=s"               => \$opts{'ad_spinup'}, 
+    "exit_spinup=s"             => \$opts{'exit_spinup'}, 
     "nc_inc=s"                  => \$opts{'nc_inc'},
     "nc_lib=s"                  => \$opts{'nc_lib'},
     "nc_mod=s"                  => \$opts{'nc_mod'},
     "nlat=s"                    => \$opts{'nlat'},
     "nlon=s"                    => \$opts{'nlon'},
+    "pergro=s"                  => \$opts{'pergro'}, 
     "prog_seasalt=s"            => \$opts{'progsslt'}, 
     "rtm=s"                     => \$opts{'rtm'}, 
     "s|silent"                  => \$silent,
@@ -249,8 +257,21 @@ if (defined $defaults && -s $defaults) {
 # scripts the CLM Makefile is not written since the CCSM build does not use it.
 # Many of the checks to ensure that a working CLM Makefile is produced are disabled
 # when the ccsm option is set.
-$cfg{'ccsm'} = (defined $opts{'ccsm'}) ? 1 : 0;
-my $clm_build = $cfg{'ccsm'} ? 0 : 1;
+my $clm_build;
+if (defined $opts{'ccsm'}) {
+  $cfg{'coup_csm'} = "on";
+  $clm_build = 0;
+} else {
+  $cfg{'coup_csm'} = "off";
+  $clm_build = 1;
+}
+
+my $clm_build;
+if ( $cfg{'coup_csm'} eq "off" ) {
+   $clm_build = 1;
+} else {
+   $clm_build = 0;
+}
 
 #-----------------------------------------------------------------------------------------------
 # CLM root directory.  
@@ -379,7 +400,63 @@ if (defined $opts{'supln'}) {
     $cfg = $bld_defaults{'supln'};
 }
 $cfg{'supln'} = $cfg;
+if ( ($cfg eq "on" ) && ($cfg{'bgc'} ne "cn") ) {
+   die <<"EOF";
+** Cannot turn supln mode on -- without cn for bgc mode
+** 
+** Set the bgc mode by the following means from highest to lowest precedence:
+** * by the command-line option -bgc cn
+** * by a default configuration file, specified by -defaults 
+EOF
+}
 if ($print>=2) { print "Using $cfg{'bgc'} supplemental nitrogen for cn mode.$eol"; }
+
+if (defined $opts{'ad_spinup'}) {
+    $cfg = $opts{'ad_spinup'};
+} elsif (defined $usr_defaults{'ad_spinup'}) {
+    $cfg = $usr_defaults{'ad_spinup'};
+} else {
+    $cfg = $bld_defaults{'ad_spinup'};
+}
+if ( ($cfg eq "on" ) && ($cfg{'bgc'} ne "cn") ) {
+   die <<"EOF";
+** Cannot turn ad_spinup mode on -- without cn for bgc mode
+** 
+** Set the bgc mode by the following means from highest to lowest precedence:
+** * by the command-line option -bgc cn
+** * by a default configuration file, specified by -defaults 
+EOF
+}
+$cfg{'ad_spinup'} = $cfg;
+if ($print>=2) { print "Using $cfg{'bgc'} AD_SPINUP for cn mode.$eol"; }
+
+if (defined $opts{'exit_spinup'}) {
+    $cfg = $opts{'exit_spinup'};
+} elsif (defined $usr_defaults{'exit_spinup'}) {
+    $cfg = $usr_defaults{'exit_spinup'};
+} else {
+    $cfg = $bld_defaults{'exit_spinup'};
+}
+if ( ($cfg eq "on" ) && ($cfg{'bgc'} ne "cn") ) {
+   die <<"EOF";
+** Cannot turn exit_spinup mode on -- without cn for bgc mode
+** 
+** Set the bgc mode by the following means from highest to lowest precedence:
+** * by the command-line option -bgc cn
+** * by a default configuration file, specified by -defaults 
+EOF
+}
+if ( ($cfg eq "on") && ($cfg{'ad_spinup'} eq "on") ) {
+   die <<"EOF";
+** Cannot turn exit_spinup mode on -- when ad_spinup mode is also on
+** 
+** Set the ad_spinup mode by the following means from highest to lowest precedence:
+** * by the command-line option -ad_spinup off
+** * by a default configuration file, specified by -defaults 
+EOF
+}
+$cfg{'exit_spinup'} = $cfg;
+if ($print>=2) { print "Using $cfg{'bgc'} EXIT_SPINUP for cn mode.$eol"; }
 
 if (defined $opts{'progsslt'}) {
     $cfg = $opts{'progsslt'};
@@ -431,6 +508,62 @@ if (defined $opts{'maxpft'}) {
 }
 $cfg{'maxpft'} = $cfg;
 if ($print>=2) { print "Using $cfg{'maxpft'} for maxpatch_pft.$eol"; }
+
+#PERGRO option
+
+if (defined $opts{'pergro'}) {
+    $cfg = $opts{'pergro'};
+} elsif (defined $usr_defaults{'pergro'}) {
+    $cfg = $usr_defaults{'pergro'};
+} else {
+    $cfg = $bld_defaults{'pergro'};
+}
+$cfg{'pergro'} = $cfg;
+
+if ($print>=2) { print "Using $cfg{'pergro'} pergro.$eol"; }
+
+#CLM offline option
+
+if (defined $usr_defaults{'clmoffline'}) {
+    $cfg = $usr_defaults{'clmoffline'};
+} else {
+    $cfg = $bld_defaults{'clmoffline'};
+}
+if ( $cfg{'coup_csm'} eq "on" ) {
+  $cfg = "off";
+}
+$cfg{'clmoffline'} = $cfg;
+
+if ($print>=2) { print "Using $cfg{'clmoffline'} clmoffline.$eol"; }
+
+#Sequential CCSM option
+
+if (defined $usr_defaults{'seqccsm'}) {
+    $cfg = $usr_defaults{'seqccsm'};
+} else {
+    $cfg = $bld_defaults{'seqccsm'};
+}
+if ( ($cfg{'coup_csm'} eq "on") || ($cfg{'clmoffline'} eq "on") ) {
+  $cfg = "off";
+}
+
+$cfg{'seqccsm'} = $cfg;
+
+if ($print>=2) { print "Using $cfg{'seqccsm'} seqccsm.$eol"; }
+
+#SCAM (Single Column mode) option
+
+if (defined $usr_defaults{'scam'}) {
+    $cfg = $usr_defaults{'scam'};
+} else {
+    $cfg = $bld_defaults{'scam'};
+}
+if ( ($cfg{'coup_csm'} eq "on") || ($cfg{'clmoffline'} eq "on") ) {
+  $cfg = "off";
+}
+$cfg{'scam'} = $cfg;
+
+if ($print>=2) { print "Using $cfg{'scam'} scam.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # Read system defaults file.
@@ -639,9 +772,10 @@ elsif ( $cfg{target_os} eq 'irix'      or  $cfg{target_os} eq 'linux'   or
 
 $cfg .= " -DMAXPATCH_PFT=$cfg{maxpft}";
 
-if ($cfg{'ccsm'}) {
+if ( $cfg{'coup_csm'} eq "on" ) {
     $cfg .= " -DCOUP_CSM";
-} else {
+}
+if ( $cfg{'clmoffline'} eq "on" ) {
     $cfg .= " -DOFFLINE";
 }
 if ($cfg{'progsslt'} eq 'on') { 
@@ -668,10 +802,16 @@ if ($cfg{'bgc'} eq 'dgvm') {
 if ($cfg{'supln'} eq 'on') { 
     $cfg .= " -DSUPLN";
 }
+if ($cfg{'ad_spinup'} eq 'on') { 
+    $cfg .= " -DAD_SPINUP";
+}
+if ($cfg{'exit_spinup'} eq 'on') { 
+    $cfg .= " -DEXIT_SPINUP";
+}
 
 # -DSPMD only added to $cfg(make_cppdefs) for CCSM build.  The CLM Makefile
 # has a separate SPMD macro.
-if ( $cfg{'ccsm'} && $cfg{'spmd'} ) {
+if ( ($cfg{'coup_csm'} eq "on") && $cfg{'spmd'} ) {
     $cfg .= " -DSPMD";
 }
 
@@ -906,7 +1046,7 @@ EOF
 #-----------------------------------------------------------------------------------------------
 # Write configuration files:
 
-if ( $cfg{'ccsm'}) {
+if ( $cfg{'coup_csm'} eq "on" ) {
     # Write the filepath file for ccsm.
     write_filepath_ccsm("$cfg{'clm_bld'}/$fp_filename", %cfg);
     if ($print) { print "creating $cfg{'clm_bld'}/$fp_filename\n"; }
@@ -1087,23 +1227,37 @@ usr_src="$cfg{'usr_src'}"
 />
 
 <comment>
-bgc      BGC mode: none or cn or casa
-supln    Turn on CN supplemental nitrogen (only applies to bgc setting of cn) [on | off]. 
-progsslt Turn on PROGSSLT [on | off].
-rtm      Turn on RTM  [on | off].
-dust     Turn on DUST [on | off].
-voc      Turn on VOC  [on | off].
-maxpft   Value of maxpatch_pft.
+bgc           BGC mode: none or cn or casa
+supln         Turn on CN supplemental nitrogen (only applies to bgc setting of cn) [on | off]. 
+ad_spinup     Turn on CN AD_SPINUP (only applies to bgc setting of cn) [on | off]. 
+exit_spinup   Turn on CN EXIT_SPINUP (only applies to bgc setting of cn) [on | off]. 
+progsslt      Turn on PROGSSLT [on | off].
+rtm           Turn on RTM  [on | off].
+dust          Turn on DUST [on | off].
+voc           Turn on VOC  [on | off].
+maxpft        Value of maxpatch_pft.
+pergro        Use modifications that allow perturbation growth testing: [on | off]
+clmoffline    CLM offline mode: [on | off]
+seqccsm       Sequential CCSM mode [on | off]
+scam          Single column mode:  [on | off]
+coup_csm      Concurrent CCSM (Community Climate System Model):  [on | off]
 </comment>
 
 <cppvars
 bgc="$cfg{'bgc'}"
 supln="$cfg{'supln'}"
+ad_spinup="$cfg{'ad_spinup'}"
+exit_spinup="$cfg{'exit_spinup'}"
 progsslt="$cfg{'progsslt'}"
 rtm="$cfg{'rtm'}"
 dust="$cfg{'dust'}"
 voc="$cfg{'voc'}"
 maxpft="$cfg{'maxpft'}"
+pergro="$cfg{'pergro'}"
+clmoffline="$cfg{'clmoffline'}"
+seqccsm="$cfg{'seqccsm'}"
+scam="$cfg{'scam'}"
+coup_csm="$cfg{'coup_csm'}"
 />
 
 <comment>
@@ -1270,7 +1424,7 @@ sub write_misc_h
 #define MISC_SET
 #undef COUP_CSM
 EOF
-    if ($cfg{'ccsm'}) {
+    if ($cfg{'coup_csm'} eq "on" ) {
 	print $fh "#define COUP_CSM\n";
     } else {
 	print $fh "#undef COUP_CSM\n";
@@ -1592,6 +1746,26 @@ sub validate_options {
 
     # supln
     $opt = 'supln';
+    @expect = ('on', 'off');
+    if (defined $opts->{$opt}) {
+	$old = $opts->{$opt};
+	$opts->{$opt} = valid_option($old, @expect)
+	    or die "** invalid value of $opt ($old) specified in $source\n".
+                   "** expected one of: @expect\n";
+    }
+
+    # ad_spinup
+    $opt = 'ad_spinup';
+    @expect = ('on', 'off');
+    if (defined $opts->{$opt}) {
+	$old = $opts->{$opt};
+	$opts->{$opt} = valid_option($old, @expect)
+	    or die "** invalid value of $opt ($old) specified in $source\n".
+                   "** expected one of: @expect\n";
+    }
+
+    # exit_spinup
+    $opt = 'exit_spinup';
     @expect = ('on', 'off');
     if (defined $opts->{$opt}) {
 	$old = $opts->{$opt};
