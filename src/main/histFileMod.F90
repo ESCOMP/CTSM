@@ -2728,7 +2728,7 @@ contains
 ! !IROUTINE: htapes_wrapup
 !
 ! !INTERFACE:
-  subroutine htapes_wrapup ()
+  subroutine htapes_wrapup( rstwr, nlend )
 !
 ! !DESCRIPTION:
 ! Write and/or dispose history tape(s)
@@ -2751,17 +2751,20 @@ contains
 !   date = yyyy/mm+1/01 with mscur = 0.
 !
 ! !USES:
-    use clm_varctl   , only : archive_dir, mss_wpass, mss_irt
-    use fileutils    , only : set_filename, putfil
-    use spmdMod      , only : masterproc
-    use clm_time_manager , only : get_nstep, get_curr_date, get_curr_time, get_prev_date
-    use shr_const_mod, only : SHR_CONST_CDAY
+    use clm_varctl      , only : archive_dir, mss_wpass, mss_irt
+    use fileutils       , only : set_filename, putfil
+    use spmdMod         , only : masterproc
+    use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
+    use shr_const_mod   , only : SHR_CONST_CDAY
     use ncdio
     use clmtype
-    use shr_sys_mod  , only : shr_sys_flush
+    use shr_sys_mod     , only : shr_sys_flush
+    use do_close_dispose, only : do_disp
 !
 ! !ARGUMENTS:
     implicit none
+    logical, optional, intent(in) :: rstwr    ! true => write restart file this step
+    logical, optional, intent(in) :: nlend    ! true => end of run on this step
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -2930,7 +2933,13 @@ contains
 
     ! Determine if file needs to be closed and disposed
 
-    call do_close_dispose (ntapes, tape(:)%ntimes, tape(:)%mfilt, if_stop, if_disphist, if_remvhist)
+    if (present(rstwr) .and. present(nlend)) then
+       call do_disp (ntapes, tape(:)%ntimes, tape(:)%mfilt, &
+            if_stop, if_disphist, if_remvhist, rstwr, nlend)
+    else
+       call do_disp (ntapes, tape(:)%ntimes, tape(:)%mfilt, &
+            if_stop, if_disphist, if_remvhist)
+    end if
 
     ! Close open history file and dispose to mass store
     ! Auxilary files may have been closed and saved off without being full,
@@ -4056,3 +4065,4 @@ contains
 !-----------------------------------------------------------------------
 
 end module histFileMod
+

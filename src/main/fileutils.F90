@@ -316,9 +316,6 @@ contains
 !
 ! !DESCRIPTION:
 ! Get next available Fortran unit number.
-! If COUP_CSM of OFFLINE is defined,  get next available Fortran unit
-! number itst. Set lsmiou(itst). If SEQ_MCT or SEQ_ESMF is defined, use CAM function
-! navu to get available unit number, in which case lsmiou is not needed.
 !
 ! !USES:
    use shr_file_mod, only : shr_file_getUnit
@@ -349,10 +346,6 @@ contains
 !
 ! !DESCRIPTION:
 ! Close and release Fortran unit no longer in use!
-! If COUP_CSM or OFFLINE is defined, close and release Fortran unit
-! number iunit and set lsmiou(iunit) to false.
-! If SEQ_MCT or SEQ_ESMF is defined, use CAM function relunit to close/release
-! unit number.
 !
 ! !USES:
    use shr_file_mod, only : shr_file_freeUnit

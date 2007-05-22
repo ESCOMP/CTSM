@@ -1,7 +1,7 @@
 &camexp
  NDENS    = 1,1
- MFILT    = 1,10
- mss_irt=0
+ MFILT    = 1,20
+ mss_irt  = 0
  nhtfrq   = 0,1
  fincl2='Ps','u','v','t','q','omega','phis','Prec','lhflx','shflx',
         'Tsair','Tg','divq3d','divT3d','dcldice','dcldliq','beta',

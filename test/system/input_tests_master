@@ -226,7 +226,7 @@ bl921 TSMseqccsm.sh seqccsm_4x5_dh   seqccsm 48
 sm951 TSMseqccsm.sh seqccsm_10x15_dm seqccsm 48
 bl951 TSMseqccsm.sh seqccsm_10x15_dm seqccsm 48
 
-sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7
-bl982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7
+sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 3
+bl982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 3
 
 sm061 TSMconccsm.sh ERS f19_g13

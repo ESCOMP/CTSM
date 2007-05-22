@@ -66,7 +66,8 @@ OPTIONS
      -clm_exe <name>    Name of the CLM executable.
      -clm_exedir <dir>  Directory where CLM executable will be created.
      -cc <name>         User specified C compiler (linux only).  Overrides Makefile default.
-     -ccsm              Building CLM from within CCSM scripts
+     -ccsm_con          Building CLM from within cpl6 concurrent CCSM scripts
+     -ccsm_seq          Building CLM utilizing sequential driver (alternative to offline mode)
      -cflags <string>   A string of user specified C compiler options.  Appended to
                         Makefile defaults.
      -cppdefs <string>  A string of user specified CPP defines.  Appended to
@@ -141,7 +142,8 @@ GetOptions(
     "cache=s"                   => \$cfg_filename,
     "cachedir=s"                => \$opts{'cachedir'},
     "cc=s"                      => \$opts{'cc'},
-    "ccsm"                      => \$opts{'ccsm'},
+    "ccsm_con"                  => \$opts{'ccsm_con'},
+    "ccsm_seq"                  => \$opts{'ccsm_seq'},
     "cflags=s"                  => \$opts{'cflags'},
     "clm_bld=s"                 => \$opts{'clm_bld'},
     "clm_exe=s"                 => \$opts{'clm_exe'},
@@ -272,6 +274,10 @@ if ( $cfg{'coup_csm'} eq "off" ) {
 } else {
    $clm_build = 0;
 }
+
+#-----------------------------------------------------------------------------------------------
+# Determine if ccsm sequential
+$cfg{'ccsm_seq'} = (defined $opts{'ccsm_seq'}) ? 1 : 0;
 
 #-----------------------------------------------------------------------------------------------
 # CLM root directory.  
@@ -1336,6 +1342,7 @@ sub write_filepath
 # Shared utilities.
     print $fh "$srcdir/csm_share/shr\n";
     print $fh "$srcdir/csm_share/eshr\n";
+    print $fh "$srcdir/csm_share/dshr\n";
     print $fh "$srcdir/utils/timing\n";
     print $fh "$srcdir/utils/mct/mpeu\n";
     print $fh "$srcdir/utils/mct/mct\n";
@@ -1346,7 +1353,19 @@ sub write_filepath
        print $fh "$srcdir/utils/esmf_wrf_timemgr\n";
     }
 
-# Land model
+if ($cfg{'ccsm_seq'}) {
+    # Driver
+    print $fh "$srcdir/drv/seq_mct\n";
+
+    # Datm7 
+    print $fh "$srcdir/datm7\n";
+
+    # Ocn/Ice Stubs
+    print $fh "$srcdir/socn\n";
+    print $fh "$srcdir/sice\n";
+}
+
+# CLM
     print $fh "$srcdir/main\n";
     print $fh "$srcdir/biogeophys\n";
     print $fh "$srcdir/biogeochem\n";

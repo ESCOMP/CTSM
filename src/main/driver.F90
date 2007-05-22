@@ -96,7 +96,7 @@ module driver
   use filterMod           , only : filter, setFilters
   use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal, pftdyn_cnbal 
   use clm_varcon          , only : zlnd
-  use clm_time_manager        , only : get_step_size, get_curr_calday, &
+  use clm_time_manager    , only : get_step_size, get_curr_calday, &
                                    get_curr_date, get_ref_date, get_nstep, is_perpetual
   use histFileMod         , only : update_hbuf, htapes_wrapup
   use restFileMod         , only : restFile_write, restFile_write_binary, restFile_filename
@@ -175,12 +175,6 @@ subroutine driver1 (doalb, caldayp1, declinp1)
   logical , intent(in) :: doalb    ! true if time for surface albedo calc
   real(r8), intent(in) :: caldayp1 ! calendar day for nstep+1
   real(r8), intent(in) :: declinp1 ! declination angle for next time step
-!
-! !CALLED FROM:
-! program program_off (if COUP_OFFLINE cpp variable is defined)
-! program program_csm (if COUP_CSM cpp variable is defined)
-! subroutine atm_lnddrv in module atm_lndMod (if SEQ_MCT or SEQ_ESMF cpp variable
-!   is defined)
 !
 ! !REVISION HISTORY:
 ! 2002.10.01  Mariana Vertenstein latest update to new data structures
@@ -552,18 +546,15 @@ end subroutine driver1
 ! !ROUTINE: driver2
 !
 ! !INTERFACE:
-subroutine driver2(caldayp1, declinp1, rstwr)
+subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
 !
 ! !ARGUMENTS:
   implicit none
   real(r8),          intent(in) :: caldayp1 ! calendar day for nstep+1
   real(r8),          intent(in) :: declinp1 ! declination angle for next time step
   logical, optional, intent(in) :: rstwr    ! true => write restart file this step
-!
-! !CALLED FROM:
-! program program_off (if COUP_OFFLINE cpp variable is defined)
-! program program_csm (if COUP_CSM cpp variable is defined)
-! module clm_camMod (if SEQ_MCT or SEQ_ESMF cpp variable is defined)
+  logical, optional, intent(in) :: nlend    ! true => end of run on this step
+  character(len=*), optional, intent(in) :: rdate  ! restart file time stamp for name
 !
 ! !REVISION HISTORY:
 ! 2005.05.22  Mariana Vertenstein creation
@@ -621,7 +612,9 @@ subroutine driver2(caldayp1, declinp1, rstwr)
   ! ============================================================================
 
   call t_startf('inicperp')
-  if (is_perpetual()) call inicfile_perp()
+  if (is_perpetual()) then
+     call inicfile_perp()
+  end if
   call t_stopf('inicperp')
 #endif
 
@@ -691,8 +684,14 @@ subroutine driver2(caldayp1, declinp1, rstwr)
   ! ============================================================================
   ! Create history and write history tapes if appropriate
   ! ============================================================================
+
   call t_startf('clm_driver_io')
-  call htapes_wrapup()
+
+  if (present(nlend) .and. present(rstwr)) then 	
+     call htapes_wrapup( rstwr, nlend )
+  else
+     call htapes_wrapup()
+  end if
 
   ! ============================================================================
   ! Write to DGVM history buffer if appropriate
@@ -716,17 +715,43 @@ subroutine driver2(caldayp1, declinp1, rstwr)
   end if
      
   if (write_restart) then
-     filer = restFile_filename(type='netcdf')
-     call restFile_write( filer )
-     filer = restFile_filename(type='binary')
-     call restFile_write_binary( filer )
+
+     if (present(rdate)) then
+        filer = restFile_filename(type='netcdf', rdate=rdate)
+     else
+        filer = restFile_filename(type='netcdf') 
+     end if
+     if (present(nlend)) then
+        call restFile_write( filer, nlend )
+     else
+        call restFile_write( filer)
+     end if
+
+     if (present(rdate)) then
+        filer = restFile_filename(type='binary', rdate=rdate )
+     else
+        filer = restFile_filename(type='binary')
+     end if
+     if (present(nlend)) then
+        call restFile_write_binary( filer, nlend )
+     else
+        call restFile_write_binary( filer )
+     end if
+
   else if (do_inicwrite()) then
+
      dtime = get_step_size()
      filer = restFile_filename(type='netcdf', offset=int(dtime))
-     call restFile_write( filer )
-  end if
-  call t_stopf('clm_driver_io')
 
+     if (present(nlend)) then
+        call restFile_write( filer, nlend )
+     else
+        call restFile_write( filer)
+     end if
+
+  end if
+
+  call t_stopf('clm_driver_io')
 
 end subroutine driver2
 
@@ -825,7 +850,7 @@ subroutine write_diagnostic (wrtdia, nstep)
 
 1000 format (1x,'nstep = ',i10,'   TS = ',e21.15)
 
-#endif
+#endif 
 
 end subroutine write_diagnostic
 

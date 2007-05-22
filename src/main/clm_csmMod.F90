@@ -863,10 +863,10 @@ contains
         atm_a2l%forc_pbot(g)    = bufR(g,index_c2l_Sa_pbot)      ! ptcmxy  Atm state Pa
         atm_a2l%forc_t(g)       = bufR(g,index_c2l_Sa_tbot)      ! forc_txy  Atm state K
         atm_a2l%forc_lwrad(g)   = bufR(g,index_c2l_Faxa_lwdn)    ! flwdsxy Atm flux  W/m^2
-        forc_rainc               = bufR(g,index_c2l_Faxa_rainc)   ! mm/s
-        forc_rainl               = bufR(g,index_c2l_Faxa_rainl)   ! mm/s
-        forc_snowc               = bufR(g,index_c2l_Faxa_snowc)   ! mm/s
-        forc_snowl               = bufR(g,index_c2l_Faxa_snowl)   ! mm/s
+        forc_rainc              = bufR(g,index_c2l_Faxa_rainc)   ! mm/s
+        forc_rainl              = bufR(g,index_c2l_Faxa_rainl)   ! mm/s
+        forc_snowc              = bufR(g,index_c2l_Faxa_snowc)   ! mm/s
+        forc_snowl              = bufR(g,index_c2l_Faxa_snowl)   ! mm/s
         atm_a2l%forc_solad(g,2) = bufR(g,index_c2l_Faxa_swndr)   ! forc_sollxy  Atm flux  W/m^2
         atm_a2l%forc_solad(g,1) = bufR(g,index_c2l_Faxa_swvdr)   ! forc_solsxy  Atm flux  W/m^2
         atm_a2l%forc_solai(g,2) = bufR(g,index_c2l_Faxa_swndf)   ! forc_solldxy Atm flux  W/m^2

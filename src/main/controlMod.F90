@@ -251,6 +251,10 @@ contains
     ! Namelist Variables
     ! ----------------------------------------------------------------------
 
+#if (defined OFFLINE)
+    namelist /clm_inparm/ offline_atmdir
+#endif
+
     ! clm time manager info
 
 #if (defined OFFLINE) || (defined COUP_CSM)
@@ -258,11 +262,12 @@ contains
          ctitle, caseid, nsrest,  &
          calendar, nelapse, nestep, start_ymd, start_tod,  &
          stop_ymd, stop_tod, ref_ymd, ref_tod
+#endif
 
     ! Archive options
+
     namelist /clm_inparm/ archive_dir, mss_wpass, mss_irt, &
          brnch_retain_casename 
-#endif
 
     ! clm input datasets
 
@@ -292,6 +297,7 @@ contains
     namelist /clm_inparm/  &
          lnpp, lalloc, q10, spunup, fcpool
 #endif
+
     namelist /clm_inparm / &
          co2_type
 
@@ -713,6 +719,7 @@ contains
     call mpi_bcast (fndepdat, len(fndepdat), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdyn, len(fndepdyn), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
+
 #if (defined RTM)
     call mpi_bcast (frivinp_rtm, len(frivinp_rtm), MPI_CHARACTER, 0, mpicom, ier)
 #endif

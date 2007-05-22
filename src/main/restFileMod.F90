@@ -59,7 +59,7 @@ contains
 ! !IROUTINE: restFile_write
 !
 ! !INTERFACE:
-  subroutine restFile_write( file )
+  subroutine restFile_write( file, nlend )
 !
 ! !DESCRIPTION:
 ! Read/write CLM restart file.
@@ -88,7 +88,8 @@ contains
 ! !ARGUMENTS:
     implicit none
     include 'netcdf.inc'
-    character(len=*), intent(in) :: file  ! output netcdf restart file
+    character(len=*) , intent(in) :: file  ! output netcdf restart file
+    logical, optional, intent(in) :: nlend	
 !
 ! !CALLED FROM:
 ! subroutine driver
@@ -159,7 +160,11 @@ contains
     ! Close and archive restart file
     
     call restFile_close( ncid )
-    call restFile_archive( file )
+    if (present(nlend)) then	
+       call restFile_archive( file, nlend )
+    else
+       call restFile_archive( file )
+    end if
     
     ! Write restart pointer file
     
@@ -309,7 +314,7 @@ contains
 ! !IROUTINE: restFile_write_binary
 !
 ! !INTERFACE:
-  subroutine restFile_write_binary( file )
+  subroutine restFile_write_binary( file, nlend )
 !
 ! !DESCRIPTION:
 ! Read a CLM restart file.
@@ -320,7 +325,8 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    character(len=*), intent(in) :: file   ! binary restart file
+    character(len=*) , intent(in) :: file   ! binary restart file
+    logical, optional, intent(in) :: nlend
 !
 ! !CALLED FROM:
 ! subroutine driver
@@ -341,7 +347,11 @@ contains
     call restart_history(nio, flag='write')
     if (masterproc) then
        call relavu (nio)
-       call restFile_archive( file )
+       if (present(nlend)) then
+          call restFile_archive( file, nlend )
+       else
+          call restFile_archive( file )
+       end if
     end if
 
   end subroutine restFile_write_binary
@@ -490,7 +500,7 @@ contains
 ! !IROUTINE: restFile_archive
 !
 ! !INTERFACE:
-  subroutine restFile_archive( file )
+  subroutine restFile_archive( file, nlend )
 !
 ! !DESCRIPTION:
 ! Close and archive restart file and write restart pointer file if
@@ -506,7 +516,8 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    character(len=*), intent(in) :: file  ! local output filename
+    character(len=*) , intent(in) :: file  ! local output filename
+    logical, optional, intent(in) :: nlend
 !
 ! !CALLED FROM:
 ! subroutine restart in this module
@@ -526,8 +537,14 @@ contains
    if (masterproc) then
 
       lremove = .true.
-#if (defined OFFLINE) || (defined SEQ_MCT) || (defined SEQ_ESMF)
+#if (defined OFFLINE) 
       if (is_last_step()) lremove = .false.
+#elif (defined SEQ_MCT) || (defined SEQ_ESMF)
+      if (present(nlend)) then
+         if (nlend) lremove = .false.
+      else
+         call endrun('restFile_archive error: must pass nlend as argument for SEQ_MCT or SEQ_ESMF')
+      end if
 #elif (defined COUP_CSM)
       if (csmstop_next) lremove = .false.
 #endif
@@ -643,7 +660,7 @@ contains
 ! !IROUTINE: restFile_filename
 !
 ! !INTERFACE:
-  character(len=256) function restFile_filename( type, offset )
+  character(len=256) function restFile_filename( type, offset, rdate )
 !
 ! !DESCRIPTION:
 !
@@ -653,10 +670,11 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    character(*), intent(in) :: type         ! output type "binary" or "netcdf"
-    integer, optional, intent(in) :: offset  ! offset from current time in seconds
-                                             ! positive for future times and 
-                                             ! negative for previous times
+    character(len=*)          , intent(in) :: type    ! output type "binary" or "netcdf"
+    integer         , optional, intent(in) :: offset  ! offset from current time in seconds
+                                                      ! positive for future times and 
+                                                      ! negative for previous times
+    character(len=*), optional, intent(in) :: rdate   ! input date for restart file name 
 !
 ! !CALLED FROM:
 ! subroutine restart in this module
@@ -680,12 +698,16 @@ contains
     ! for an initial run and have "restart" type of capabilities for that run
 
     if (masterproc) then
-       if (present(offset)) then
-          call get_curr_date (yr, mon, day, sec, offset=offset)
+       if (present(rdate)) then
+          cdate = rdate
        else
-          call get_curr_date (yr, mon, day, sec)
+          if (present(offset)) then
+             call get_curr_date (yr, mon, day, sec, offset=offset)
+          else
+             call get_curr_date (yr, mon, day, sec)
+          end if
+          write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
        end if
-       write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
        
        if (trim(type) == 'binary') then
           restFile_filename = "./"//trim(caseid)//".clm2.r."//trim(cdate)

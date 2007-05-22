@@ -16,8 +16,6 @@ module abortutils
 !EOP
 !-----------------------------------------------------------------------
 
-#if (defined OFFLINE) || (defined COUP_CSM) || (defined SEQ_ESMF) || (defined SEQ_MCT)
-
    private
    save
 
@@ -73,7 +71,5 @@ CONTAINS
    call mpi_abort (mpicom, 1)
 
 end subroutine endrun
-
-#endif
 
 end module abortutils

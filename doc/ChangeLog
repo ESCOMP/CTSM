@@ -1,4 +1,115 @@
 ===============================================================
+Tag name: clm3_5_02
+Originator(s): mvertens (Mariana Vertenstein)
+Date: Tue May 22 11:23:13 MDT 2007
+One-line Summary: put in hourly coupling with sequential driver
+
+Purpose of changes: To only communicate with sequential driver on
+CAM shortwave time step. Also added the functionality to run in
+an "I" configuration through the sequential driver (dtam7, stub-ice,
+stub-ocn, clm). This will become the default way in the near future.
+
+Bugs fixed (include bugzilla ID): None
+
+Describe any changes made to build system: 
+   M  configure
+      - added option to run through sequential system - now
+        can invoke configure with either -con_ccsm or -seq_ccsm
+        as inputs (rather than just -ccsm)
+   A  run-pc-seq.csh
+      - script to run with datm7 (this will eventually need to be
+        migrated into a clm build-namelist functionality)
+   A  run-ibm-seq.csh
+      - script to run with datm7 (this will eventually need to be
+        migrated into a clm build-namelist functionality)
+
+Describe any changes made to the namelist: None 
+None for the default offine mode. The datm7-clm mode, however,
+will require new namelist settings for the sequential driver and
+datm7.  
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: Myself
+
+List any svn externals directories updated (csm_share, mct, etc.):
+modified csm_share:
+src/csm_share    https://svn-ccsm-models.cgd.ucar.edu/csm_share/branch_tags/cpl7_share3_070410_tags/cpl709_share3_070410
+
+added the following:
+src/drv/seq_mct  https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq1_0_32
+src/datm7        https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm7_070503
+src/socn         https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_0_5/socn
+src/sice         https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_0_5/sice 
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+   M  src/main/abortutils.F90
+      - removed following cpp #if-def
+        #if (defined OFFLINE) || (defined COUP_CSM) || (defined SEQ_ESMF) || (defined SEQ_MCT)
+   M  src/main/clm_comp.F90
+      - clm_run1 - removed optional arguments for nextsw_cday and dosend (these calculations 
+	now occur in lnd_comp_mct.F90
+      - clm_run2 - added optional arguments nlend and rdate that are now obtained from SyncClock
+        to determine name stamp on restart file and flag if run is ending on this time step
+      - removed various timing library start/stop calls that are now in lnd_comp_mct.F90
+   M  src/main/driver.F90
+      - added optional arguments nlend and rdate to driver2 (that are passed from clm_run2 - see above)
+   M  src/main/fileutils.F90
+      - removed old comments
+   M  src/main/histFileMod.F90
+      - added optional arguments nlend and rstwr that are passed down from driver2 that will only be
+        invoked in sequential driver mode
+   M  src/main/clm_csmMod.F90
+      - formatting 
+   M  src/main/restFileMod.F90
+      - added nlend as optional argument to restFile_write and restFile_write_binary
+      - added rdate as optional argument to restFile_filename 
+      - modified logic for nlend in restFile_archive for (defined SEQ_MCT) || (defined SEQ_ESMF)
+        these last modifications will become irrelevant when long term archiver gets implemented in 
+        offline clm
+   M  src/main/controlMod.F90
+      - moved offline_atmdir to its own separate #ifdef
+        #if (defined OFFLINE)
+            namelist /clm_inparm/ offline_atmdir
+        #endif
+   M  src/main/lnd_comp_mct.F90
+       - made numerous changes to only couple to sequential driver on atmosphere short wave timesteps
+         the calendar used for the next radiation computation is determined via the following:
+             call eshr_timemgr_clockGet( SyncClock, nextsw_cday=nextsw_cday )
+       - all fluxes are averaged between dosend=.true. times 
+       - the time stamp of the restart file is determined from the sync clock
+       - the coordination with the sync clock is now determined at the end of the time loop due
+         to the fact that the sync clock is advanced at the beginning of the driver time loop 
+   M  src/main/do_close_dispose.F90
+       - numerous changes were made to this file 
+         added optional arguments rstwr and nlend and generalized code to respond to these arguments
+
+Summary of testing:
+   - Note that CLM_SEQCCSMROOT was set to a checked out version of the cam branch 
+     https://svn-ccsm-models.cgd.ucar.edu/cam1/branch_tags/seqflxave_cam3_4_01/seqflxave16_cam3_4_12
+   - The folloiwng files were modified to fix a SCAM problem account for the fact that the driver time step is now
+     one hour:
+        M  nl_files/scam_prep
+        M  input_tests_master
+
+  bluevista:
+067 sm061 TSMconccsm.sh ERS f19_g13 ...............................FAIL! rc= 7
+  bangkok/lf95:
+034 sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 7 ....FAIL! rc= 4
+
+CLM tag used for the baseline comparison tests if applicable: clm3_5_01
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in: Results were bfb for all offline tests
+	
+===============================================================
+===============================================================
 Tag name:  clm3_5_01
 Originator(s):  erik (KLUZEK ERIK 1326 CGD)
 Date: Wed May 16 14:14:59 MDT 2007
