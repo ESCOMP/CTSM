@@ -119,6 +119,7 @@ module clm_mct_mod
    use m_die                ,only: mct_perr_die           => mp_perr_die
 
    use m_Permuter           ,only: mct_permute            => Permute
+   use m_Permuter           ,only: mct_unpermute          => unPermute
 
    use m_MergeSorts         ,only: mct_indexset           => IndexSet
    use m_MergeSorts         ,only: mct_indexsort          => IndexSort

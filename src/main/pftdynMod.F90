@@ -161,10 +161,10 @@ contains
 
     call mpi_bcast(yearspft,ntimes,MPI_INTEGER,0,mpicom,ier)
 
-    call ncd_iolocal(ncid, 'PCT_WETLAND', 'read', pctwet, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
-    call ncd_iolocal(ncid, 'PCT_LAKE'   , 'read', pctlak, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
-    call ncd_iolocal(ncid, 'PCT_GLACIER', 'read', pctgla, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
-    call ncd_iolocal(ncid, 'PCT_URBAN'  , 'read', pcturb, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo)
+    call ncd_iolocal(ncid, 'PCT_WETLAND', 'read', pctwet, grlnd)
+    call ncd_iolocal(ncid, 'PCT_LAKE'   , 'read', pctlak, grlnd)
+    call ncd_iolocal(ncid, 'PCT_GLACIER', 'read', pctgla, grlnd)
+    call ncd_iolocal(ncid, 'PCT_URBAN'  , 'read', pcturb, grlnd)
 
     ! Consistency check
     do g = begg,endg
@@ -398,7 +398,7 @@ contains
        count(3) = 1
        start(4) = ntime 
        count(4) = 1
-       call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo, start, count)
+       call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, grlnd, start, count)
        pctpft(begg:endg,n) = arrayl(begg:endg)
     enddo
     deallocate(arrayl)

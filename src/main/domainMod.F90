@@ -28,19 +28,16 @@ module domainMod
      integer          :: ns         ! global size of domain
      integer          :: ni,nj      ! global axis if 2d (nj=1 if unstructured)
      integer          :: nbeg,nend  ! local beg/end indices
+     character(len=8) :: clmlevel   ! grid type
      logical          :: decomped   ! decomposed locally or global copy
      logical          :: regional   ! regional or global grid
-     real(r8)         :: edges(4)   ! global edges (N,E,S,W)
+     logical          :: areaset    ! has area been set
      integer ,pointer :: mask(:)    ! land mask: 1 = land, 0 = ocean
      real(r8),pointer :: frac(:)    ! fractional land
      real(r8),pointer :: topo(:)    ! topography
      real(r8),pointer :: latc(:)    ! latitude of grid cell (deg)
      real(r8),pointer :: lonc(:)    ! longitude of grid cell (deg)
      real(r8),pointer :: area(:)    ! grid cell area (km**2)
-     real(r8),pointer :: lats(:)    ! grid cell latitude, S edge (deg)
-     real(r8),pointer :: latn(:)    ! grid cell latitude, N edge (deg)
-     real(r8),pointer :: lonw(:)    ! grid cell longitude, W edge (deg)
-     real(r8),pointer :: lone(:)    ! grid cell longitude, E edge (deg)
      character*16     :: set        ! flag to check if domain is set
      !--- following are valid only for land domain ---
      integer ,pointer :: pftm(:)    ! pft  mask: 1=real, 0=fake, -1=notset
@@ -105,7 +102,7 @@ contains
 ! !IROUTINE: domain_init
 !
 ! !INTERFACE:
-  subroutine domain_init(domain,ni,nj,nbeg,nend)
+  subroutine domain_init(domain,ni,nj,nbeg,nend,clmlevel)
 !
 ! !DESCRIPTION:
 ! This subroutine allocates and nans the domain type
@@ -117,6 +114,7 @@ contains
     type(domain_type) :: domain        ! domain datatype
     integer           :: ni,nj         ! grid size, 2d
     integer,optional  :: nbeg,nend     ! beg/end indices
+    character(len=*),optional:: clmlevel      ! grid type
 !
 ! !REVISION HISTORY:
 !   Created by T Craig
@@ -145,17 +143,14 @@ contains
     allocate(domain%mask(nb:ne),domain%frac(nb:ne),domain%latc(nb:ne), &
              domain%pftm(nb:ne),domain%area(nb:ne),domain%lonc(nb:ne), &
              domain%nara(nb:ne),domain%topo(nb:ne),domain%ntop(nb:ne), &
-!             domain%gatm(nb:ne), &
              stat=ier)
     if (ier /= 0) then
        write(6,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
        call endrun()
     endif
-    allocate(domain%lats(nb:ne),domain%latn(nb:ne),domain%lonw(nb:ne),domain%lone(nb:ne), &
-       stat=ier)
-    if (ier /= 0) then
-       write(6,*) 'domain_init ERROR: allocate lats, latn, lonw, lone'
-       call endrun()
+
+    if (present(clmlevel)) then
+       domain%clmlevel = clmlevel
     endif
 
     domain%ns       = ni*nj
@@ -163,20 +158,16 @@ contains
     domain%nj       = nj
     domain%nbeg     = nb
     domain%nend     = ne
-    domain%edges    = nan
     domain%mask     = -9999
     domain%frac     = -1.0e36
     domain%topo     = 0._r8
     domain%latc     = nan
     domain%lonc     = nan
     domain%area     = nan
-    domain%lats     = nan
-    domain%latn     = nan
-    domain%lonw     = nan
-    domain%lone     = nan
 
     domain%set      = set
     domain%regional = .false.
+    domain%areaset  = .false.
     if (domain%nbeg == 1 .and. domain%nend == domain%ns) then
        domain%decomped = .false.
     else
@@ -186,7 +177,6 @@ contains
     domain%pftm     = -9999
     domain%nara     = 0._r8
     domain%ntop     = -1.0e36
-!    domain%gatm     = -9999
 
 end subroutine domain_init
 !------------------------------------------------------------------------------
@@ -222,16 +212,9 @@ end subroutine domain_init
        deallocate(domain%mask,domain%frac,domain%latc, &
                   domain%lonc,domain%area,domain%pftm, &
                   domain%nara,domain%topo,domain%ntop, &
-!                  domain%gatm, &
                   stat=ier)
        if (ier /= 0) then
           write(6,*) 'domain_clean ERROR: deallocate mask, frac, lat, lon, area '
-          call endrun()
-       endif
-       deallocate(domain%lats,domain%latn,domain%lonw,domain%lone, &
-          stat=ier)
-       if (ier /= 0) then
-          write(6,*) 'domain_clean ERROR: deallocate lats, latn, lonw, lone'
           call endrun()
        endif
     else
@@ -240,6 +223,7 @@ end subroutine domain_init
        endif
     endif
 
+    domain%clmlevel   = unset
     domain%ns         = bigint
     domain%ni         = bigint
     domain%nj         = bigint
@@ -248,6 +232,7 @@ end subroutine domain_init
     domain%set        = unset
     domain%decomped   = .true.
     domain%regional   = .false.
+    domain%areaset    = .false.
 
 end subroutine domain_clean
 !------------------------------------------------------------------------------
@@ -286,7 +271,6 @@ end subroutine domain_clean
     if (masterproc) then
        write(6,*) 'domain_setsame: copying ',domain1%ni,domain1%nj
     endif
-    domain2%edges    = domain1%edges
     !!! Don't copy mask, frac, topo, pftm, nara, ntop or gatm
 !   domain2%mask     = domain1%mask
 !   domain2%frac     = domain1%frac
@@ -299,13 +283,10 @@ end subroutine domain_clean
     domain2%latc     = domain1%latc
     domain2%lonc     = domain1%lonc
     domain2%area     = domain1%area
-    domain2%lats     = domain1%lats
-    domain2%latn     = domain1%latn
-    domain2%lonw     = domain1%lonw
-    domain2%lone     = domain1%lone
 
     domain2%set      = domain1%set
     domain2%regional = domain1%regional
+    domain2%areaset  = domain1%areaset 
     domain2%decomped = domain1%decomped
 
 end subroutine domain_setsame
@@ -316,8 +297,8 @@ end subroutine domain_setsame
 !
 ! !INTERFACE:
   subroutine domain_setptrs(domain,ns,ni,nj,nbeg,nend,decomped,regional, &
-     mask,pftm, &
-     frac,topo,latc,lonc,area,nara,ntop,gatm,lats,latn,lonw,lone)
+     mask,pftm,clmlevel, &
+     frac,topo,latc,lonc,area,nara,ntop)
 !
 ! !DESCRIPTION:
 ! This subroutine sets external pointer arrays to arrays in domain
@@ -328,6 +309,7 @@ end subroutine domain_setsame
     implicit none
     type(domain_type),intent(in)  :: domain    ! domain datatype
     integer ,optional :: ns,ni,nj,nbeg,nend    ! grid size, 2d, beg/end
+    character(len=*),optional :: clmlevel      ! grid type
     logical, optional :: decomped              ! decomped or global
     logical, optional :: regional              ! regional or global
     integer ,optional,pointer  :: mask(:)  
@@ -339,11 +321,6 @@ end subroutine domain_setsame
     real(r8),optional,pointer  :: area(:)  
     real(r8),optional,pointer  :: nara(:)  
     real(r8),optional,pointer  :: ntop(:)  
-    integer ,optional,pointer  :: gatm(:)  
-    real(r8),optional,pointer  :: lats(:)  
-    real(r8),optional,pointer  :: latn(:)  
-    real(r8),optional,pointer  :: lonw(:)  
-    real(r8),optional,pointer  :: lone(:)  
 !
 ! !REVISION HISTORY:
 !   Created by T Craig
@@ -367,6 +344,9 @@ end subroutine domain_setsame
     endif
     if (present(nend)) then
       nend = domain%nend
+    endif
+    if (present(clmlevel)) then
+      clmlevel = domain%clmlevel
     endif
     if (present(decomped)) then
       decomped = domain%decomped
@@ -401,21 +381,6 @@ end subroutine domain_setsame
     if (present(ntop)) then
       ntop => domain%ntop
     endif
-!    if (present(gatm)) then
-!      gatm => domain%gatm
-!    endif
-    if (present(lats)) then
-      lats => domain%lats
-    endif
-    if (present(latn)) then
-      latn => domain%latn
-    endif
-    if (present(lonw)) then
-      lonw => domain%lonw
-    endif
-    if (present(lone)) then
-      lone => domain%lone
-    endif
 
 end subroutine domain_setptrs
 !------------------------------------------------------------------------------
@@ -448,20 +413,17 @@ end subroutine domain_setptrs
     write(6,*) '  domain_check set       = ',trim(domain%set)
     write(6,*) '  domain_check decomped  = ',domain%decomped
     write(6,*) '  domain_check regional  = ',domain%regional
+    write(6,*) '  domain_check areaset   = ',domain%areaset
     write(6,*) '  domain_check ns        = ',domain%ns
     write(6,*) '  domain_check ni,nj     = ',domain%ni,domain%nj
+    write(6,*) '  domain_check clmlevel  = ',trim(domain%clmlevel)
     write(6,*) '  domain_check nbeg,nend = ',domain%nbeg,domain%nend
-    write(6,*) '  domain_check edgeNESW  = ',domain%edges
     write(6,*) '  domain_check lonc = ',minval(domain%lonc),maxval(domain%lonc)
     write(6,*) '  domain_check latc = ',minval(domain%latc),maxval(domain%latc)
     write(6,*) '  domain_check mask = ',minval(domain%mask),maxval(domain%mask)
     write(6,*) '  domain_check frac = ',minval(domain%frac),maxval(domain%frac)
     write(6,*) '  domain_check topo = ',minval(domain%topo),maxval(domain%topo)
     write(6,*) '  domain_check area = ',minval(domain%area),maxval(domain%area)
-    write(6,*) '  domain_check latn = ',minval(domain%latn),maxval(domain%latn)
-    write(6,*) '  domain_check lone = ',minval(domain%lone),maxval(domain%lone)
-    write(6,*) '  domain_check lats = ',minval(domain%lats),maxval(domain%lats)
-    write(6,*) '  domain_check lonw = ',minval(domain%lonw),maxval(domain%lonw)
     write(6,*) '  domain_check pftm = ',minval(domain%pftm),maxval(domain%pftm)
     write(6,*) '  domain_check nara = ',minval(domain%nara),maxval(domain%nara)
     write(6,*) '  domain_check ntop = ',minval(domain%ntop),maxval(domain%ntop)

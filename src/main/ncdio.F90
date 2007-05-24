@@ -15,12 +15,14 @@ module ncdio
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use spmdMod        , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER, &
                               MPI_LOGICAL
+  use clmtype        , only : gratm, grlnd, nameg, namel, namec, namep, allrof
   use clm_varcon     , only : spval,ispval
   use shr_sys_mod    , only : shr_sys_flush
   use abortutils     , only : endrun
-  use clm_varctl     , only : scmlon,scmlat, single_column
+  use clm_varctl     , only : single_column
   use clm_mct_mod
   use spmdGathScatMod
+  use decompMod      , only : get_clmlevel_gsize
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -41,8 +43,8 @@ module ncdio
      module procedure ncd_iolocal_real_1d
      module procedure ncd_iolocal_int_2d
      module procedure ncd_iolocal_real_2d
-     module procedure ncd_iolocal_gs_real
-     module procedure ncd_iolocal_gs_int
+     module procedure ncd_iolocal_gs_real1d
+     module procedure ncd_iolocal_gs_int1d
   end interface
   interface ncd_ioglobal
      module procedure ncd_ioglobal_int_var
@@ -54,8 +56,8 @@ module ncdio
      module procedure ncd_ioglobal_int_3d
      module procedure ncd_ioglobal_real_3d
   end interface
-  private :: get_size_dim1      ! obtain size of first dimension
   private :: scam_field_offsets ! get offset to proper lat/lon gridcell for SCAM
+  logical,parameter,private :: lbcast_def = .false.  ! lbcast default
 !-----------------------------------------------------------------------
 
 contains
@@ -125,7 +127,7 @@ contains
     if (masterproc) then
        ret = nf_inq_varid (ncid, varname, varid)
        if (ret/=NF_NOERR) then
-          write(6,*)'CHECK_VAR: variable ',trim(varname),' is not on initial dataset'
+          write(6,*)'CHECK_VAR: variable ',trim(varname),' is not on dataset'
 #ifndef UNICOSMP
           call shr_sys_flush(6)
 #endif
@@ -156,8 +158,7 @@ contains
 !-----------------------------------------------------------------------
 
     if (ret /= NF_NOERR) then
-       write(6,*)'netcdf error from ',trim(calling)
-       write(6,*)'netcdf strerror = ',trim(NF_STRERROR(ret))
+       write(6,*)'netcdf error from ',trim(calling),':',trim(NF_STRERROR(ret))
        call endrun()
     end if
 
@@ -207,7 +208,7 @@ contains
     integer :: itmp           ! temporary
     logical :: switchdim      ! true=> permute dim1 and dim2 for output
     character(len=256) :: str ! temporary
-    character(len=32) :: subname='NCD_DEFVAR_REAL' ! subroutine name
+    character(len=*),parameter :: subname='ncd_defvar_real' ! subroutine name
 !-----------------------------------------------------------------------
 
     if (.not. masterproc) return
@@ -298,7 +299,6 @@ contains
 ! !IROUTINE: ncd_iolocal_int_1d
 !
 ! !INTERFACE:
-
   subroutine ncd_iolocal_int_1d(varname, data, dim1name, &
        flag, ncid, nlonxy, nlatxy, nt, readvar, imissing)
 !
@@ -306,8 +306,6 @@ contains
 ! I/O for 1d int field
 !
 ! !USES:
-  use decompMod, only : map_dc2sn, map_sn2dc, ldecomp
-  use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
 !
 ! !ARGUMENTS:
     implicit none
@@ -320,126 +318,70 @@ contains
     integer         , optional, intent(in) :: nlatxy    ! 2d latitude size
     integer         , optional, intent(in) :: nt        ! time sample index
     logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
-    integer         , optional, intent(in) :: imissing  ! value to set missing data to
-
+    integer         , optional, intent(in) :: imissing  ! missing value
+!
 ! !REVISION HISTORY:
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: i,j,k,n,ixy,jxy          ! indices
-    integer :: ndims                    ! dimension counter
-    integer :: dimid(3)                 ! dimension ids
-    integer :: varid                    ! variable id
-    integer :: nsize                    ! size of global array
+    integer :: gsize                    ! size of global array
     integer :: ier                      ! error status
     integer :: start(3)                 ! starting indices for netcdf field
     integer :: count(3)                 ! count values for netcdf field
-    integer, pointer :: iglobdc(:)      ! global decomposition initial data
-    integer, pointer :: iglobsn(:)      ! global s->n initial data
-    integer, pointer :: fldxy(:,:)      ! grid-average single-level field
-    integer :: data_offset              ! offset to single grid point for column model
-    integer :: ndata                    ! count of pft's or columns to read
-    character(len=256):: str            ! temporary
-    character(len=32) :: subname='NCD_IOLOCAL_INT_1D' ! subroutine name
-    logical :: varpresent               ! if true, variable is on tape
+    integer :: lmissing                 ! local missing value
+    character(len=8) :: clmlevel        ! clmlevel
+    character(len=*),parameter :: subname='ncd_iolocal_int_1d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    ! Get size of dim1name
+    if ((present(nlonxy) .and. .not.present(nlatxy)) .or. &
+        (present(nlatxy) .and. .not.present(nlonxy))) then
+       write(6,*) trim(subname),' error nlonxy/nlatxy must be both or neither present '
+       call endrun()
+    endif
 
-    if (masterproc) then
-       nsize = get_size_dim1(dim1name)
-       allocate (iglobdc(nsize), iglobsn(nsize), stat=ier)
-       if (ier /= 0) then
-          write(6,*)trim(subname),' allocation error'; call endrun()
-       end if
-    end if
+    if (present(imissing)) then
+       lmissing = imissing
+    else
+       lmissing = ispval
+    endif
 
-    ! Write field either as 1d field or as xy field
+    clmlevel = dim1name
+    if (present(nlonxy) .and. present(nlatxy)) then
+       if (dim1name == nameg .or. dim1name == grlnd) then
+          clmlevel = grlnd
+       elseif (dim1name == allrof .or. dim1name == gratm) then
+          ! continue, acceptable and default behavior for now
+       else
+          if (masterproc) write(6,*) trim(subname),' warning use dim1name and nlonxy/nlatxy ',trim(dim1name),nlonxy,nlatxy
+       endif
+    endif
 
-    if (flag == 'write') then
+    gsize = get_clmlevel_gsize(clmlevel)
 
-       call gather_data_to_master (data, iglobdc, clmlevel=dim1name)
-       if (masterproc) then
+    start = 1
+    count = 1
+    if (present(nlonxy) .and. present(nlatxy)) then
+       count(1) = nlonxy
+       count(2) = nlatxy
+       if (present(nt)) then
+          start(3) = nt
+       endif
+    else
+       count(1) = gsize
+       if (present(nt)) then
+          start(2) = nt
+       endif
+    endif
 
-          call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+    call ncd_iolocal_gs_int1d(ncid, varname, flag, data, clmlevel, start, count, ier, lmissing)
 
-          if (present(nlonxy) .and. present(nlatxy)) then
-
-             ! Write xy field
-
-             start(1) = 1;  count(1) = nlonxy
-             start(2) = 1;  count(2) = nlatxy
-             if (present(nt)) then
-                start(3) = nt;  count(3) = 1
-             end if
-             allocate(fldxy(nlonxy,nlatxy), stat=ier)
-             if (ier /= 0) then
-                write(6,*)subname,' allocation error for fldxy'; call endrun()
-             end if
-             if (dim1name /= 'gridcell') then
-                write(6,*)subname,' error: 1d clm output type must be ',&
-                     'at gridcell level if 2d xy output is requested'; call endrun()
-             end if
-             if ( .not. present(imissing) )then
-                fldxy(:,:) = ispval
-             else
-                fldxy(:,:) = imissing
-             end if
-!dir$ concurrent
-!cdir nodep
-             do k = 1,nsize
-                ixy = ldecomp%gdc2i(k)
-                jxy = ldecomp%gdc2j(k)
-                fldxy(ixy,jxy) = iglobdc(k)
-             end do
-             call check_ret(nf_put_vara_int(ncid, varid, start, count, fldxy), subname)
-             deallocate(fldxy)
-
-          else
-
-             ! Write 1d field
-
-             start(1) = 1; count(1) = nsize
-             if (present(nt)) then
-                start(2) = nt; count(2) = 1
-             end if
-             call map_dc2sn(iglobdc, iglobsn, dim1name)
-             call check_ret(nf_put_vara_int(ncid, varid, start, count, iglobsn), subname)
-
-          end if
-
-       end if   ! end of if-masterproc block
-
-    else if (flag == 'read') then
-
-      if (masterproc) then
-        call check_var(ncid, varname, varid, varpresent)
-        if (varpresent) then
-        if (single_column) then
-           call scam_field_offsets(ncid,dim1name,data_offset,ndata)
-           start(1) = data_offset; count(1) = ndata
-           call check_ret(nf_get_vara_int(ncid, varid, start, count, iglobsn), subname)
-        else
-           call check_ret(nf_get_var_int(ncid, varid, iglobsn), subname)
-           call map_sn2dc(iglobsn, iglobdc, dim1name)
-        end if
-        end if
-     end if
-
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)subname,' error from mpi_bcast'; call endrun()
-       end if
-       if (varpresent) call scatter_data_from_master(data, iglobdc, clmlevel=dim1name)
-       if (present(readvar)) readvar = varpresent
-
-    end if
-
-    if (masterproc) deallocate (iglobdc, iglobsn)
+    if (present(readvar)) then
+       readvar = .false.
+       if (ier == 0) readvar = .true.
+    endif
 
   end subroutine ncd_iolocal_int_1d
-
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -447,17 +389,12 @@ contains
 !
 ! !INTERFACE:
   subroutine ncd_iolocal_real_1d(varname, data, dim1name, &
-       flag, ncid, nlonxy, nlatxy, nt, readvar)
+       flag, ncid, nlonxy, nlatxy, nt, readvar, missing)
 !
 ! !DESCRIPTION:
 ! I/O for 1d int field
 !
 ! !USES:
-  use decompMod, only : map_dc2sn, map_sn2dc, ldecomp
-#ifdef RTM
-  use RunoffMod      , only : runoff
-#endif
-  use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
 !
 ! !ARGUMENTS:
     implicit none
@@ -470,214 +407,68 @@ contains
     integer         , optional, intent(in) :: nlatxy    ! 2d latitude size
     integer         , optional, intent(in) :: nt        ! time sample index
     logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
+    real(r8)        , optional, intent(in) :: missing   ! missing value
 !
 ! !REVISION HISTORY:
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: i,j,k,n,ixy,jxy          ! indices
-    integer :: ndims                    ! dimension counter
-    integer :: dimid(3)                 ! dimension ids
-    integer :: varid                    ! variable id
-    integer :: nsize                    ! size of global array
+    integer :: gsize                    ! size of global array
     integer :: ier                      ! error status
     integer :: start(3)                 ! starting indices for netcdf field
     integer :: count(3)                 ! count values for netcdf field
-    integer :: data_offset              ! offset to single grid point for column model
-    integer :: ndata                    ! count of pft's or columns to read
-    real(r8), pointer :: rglobdc(:)     ! global decomposition initial data
-    real(r8), pointer :: rglobsn(:)     ! global s->n initial data
-    real(r8), pointer :: fldxy(:,:)     ! grid-average single-level field
-    character(len=256):: str            ! temporary
-    character(len=32) :: subname='NCD_IOLOCAL_REAL_1D' ! subroutine name
-    logical :: varpresent               ! if true, variable is on tape
+    real(r8):: lmissing                 ! local missing value
+    character(len=8) :: clmlevel        ! clmlevel
+    character(len=*),parameter :: subname='ncd_iolocal_real_1d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    ! Get size of dim1name
+    if ((present(nlonxy) .and. .not.present(nlatxy)) .or. &
+        (present(nlatxy) .and. .not.present(nlonxy))) then
+       write(6,*) trim(subname),' error nlonxy/nlatxy must be both or neither present '
+       call endrun()
+    endif
 
-    if (masterproc) then
-       nsize = get_size_dim1(dim1name)
-       allocate (rglobdc(nsize), rglobsn(nsize), stat=ier)
-       if (ier /= 0) then
-          write(6,*)subname,' allocation error'; call endrun()
-       end if
-    end if
+    if (present(missing)) then
+       lmissing = missing
+    else
+       lmissing = spval
+    endif
 
-    ! Write field either as 1d field as or xy field
+    clmlevel = dim1name
+    if (present(nlonxy) .and. present(nlatxy)) then
+       if (dim1name == nameg .or. dim1name == grlnd) then
+          clmlevel = grlnd
+       elseif (dim1name == allrof .or. dim1name == gratm) then
+          ! continue, acceptable and default behavior for now
+       else
+          write(6,*) trim(subname),' warning use dim1name and nlonxy/nlatxy ',trim(dim1name),nlonxy,nlatxy
+       endif
+    endif
 
-    if (flag == 'write') then
+    gsize = get_clmlevel_gsize(clmlevel)
 
-       call gather_data_to_master (data, rglobdc, clmlevel=dim1name)
-       if (masterproc) then
+    start = 1
+    count = 1
+    if (present(nlonxy) .and. present(nlatxy)) then
+       count(1) = nlonxy
+       count(2) = nlatxy
+       if (present(nt)) then
+          start(3) = nt
+       endif
+    else
+       count(1) = gsize
+       if (present(nt)) then
+          start(2) = nt
+       endif
+    endif
 
-          ! Define variable if it has not already been defined on the tape
+    call ncd_iolocal_gs_real1d(ncid, varname, flag, data, clmlevel, start, count, ier, lmissing)
 
-          call check_ret(nf_inq_varid(ncid, varname, varid), subname)
-
-          if (present(nlonxy) .and. present(nlatxy)) then
-
-             ! Write xy output
-
-             start(1) = 1;  count(1) = nlonxy
-             start(2) = 1;  count(2) = nlatxy
-             if (present(nt)) then
-                start(3) = nt;  count(3) = 1
-             end if
-             allocate(fldxy(nlonxy,nlatxy), stat=ier)
-             if (ier /= 0) then
-                write(6,*)subname,' error: allocation error for fldxy'; call endrun()
-             end if
-             fldxy(:,:) = spval
-             select case (dim1name)
-#ifdef RTM
-             case('allrof')
-!dir$ concurrent
-!cdir nodep
-                do k = 1,nsize
-                      ixy = runoff%gdc2i(k)
-                      jxy = runoff%gdc2j(k)
-                      fldxy(ixy,jxy) = rglobdc(k)
-                end do
-             case('lndrof')
-!dir$ concurrent
-!cdir nodep
-                do k = 1,nsize
-                   if (runoff%mask(k) == 1) then
-                      ixy = runoff%gdc2i(k)
-                      jxy = runoff%gdc2j(k)
-                      fldxy(ixy,jxy) = rglobdc(k)
-                   endif
-                end do
-             case('ocnrof')
-!dir$ concurrent
-!cdir nodep
-                do k = 1,nsize
-                   if (runoff%mask(k) == 2) then
-                      ixy = runoff%gdc2i(k)
-                      jxy = runoff%gdc2j(k)
-                      fldxy(ixy,jxy) = rglobdc(k)
-                   endif
-                end do
-#endif
-             case default
-                if (dim1name /= 'gridcell') then
-                   write(6,*)subname,' error: 1d clm output type must be ',&
-                        'at gridcell level if 2d xy output is requested'; call endrun()
-                end if
-!dir$ concurrent
-!cdir nodep
-                do k = 1,nsize
-                   ixy = ldecomp%gdc2i(k)
-                   jxy = ldecomp%gdc2j(k)
-                   fldxy(ixy,jxy) = rglobdc(k)
-                end do
-             end select
-             call check_ret(nf_put_vara_double(ncid, varid, start, count, fldxy), subname)
-             deallocate(fldxy)
-
-          else
-
-             ! Write one-dimensional output
-
-             start(1) = 1; count(1) = nsize
-             if (present(nt)) then
-                start(2) = nt; count(2) = 1
-             end if
-             call map_dc2sn(rglobdc, rglobsn, dim1name)
-             call check_ret(nf_put_vara_double(ncid, varid, start, count, rglobsn), subname)
-
-          end if
-
-       end if   ! end of if-masterproc block
-
-    else if (flag == 'read') then
-
-       if (masterproc) then
-          call check_var(ncid, varname, varid, varpresent)
-          if (varpresent) then
-          if (single_column) then
-             call scam_field_offsets(ncid,dim1name,data_offset,ndata)
-             start(1) = data_offset; count(1) = ndata
-             call check_ret(nf_get_vara_double(ncid, varid, start, count, rglobsn), subname)
-          else
-          if (present(nlonxy) .and. present(nlatxy)) then
-
-             ! Write xy output
-
-             start(1) = 1;  count(1) = nlonxy
-             start(2) = 1;  count(2) = nlatxy
-             if (present(nt)) then
-                start(3) = nt;  count(3) = 1
-             end if
-             allocate(fldxy(nlonxy,nlatxy), stat=ier)
-             if (ier /= 0) then
-                write(6,*)subname,' error: allocation error for fldxy'; call endrun()
-             end if
-             call check_ret(nf_get_vara_double(ncid, varid, start, count, fldxy), subname)
-             rglobdc(:) = 0._r8
-             select case (dim1name)
-#ifdef RTM
-             case('allrof')
-!dir$ concurrent
-!cdir nodep
-                do k = 1,nsize
-                      ixy = runoff%gdc2i(k)
-                      jxy = runoff%gdc2j(k)
-                      rglobdc(k) = fldxy(ixy,jxy)
-                end do
-             case('lndrof')
-!dir$ concurrent
-!cdir nodep
-                do k = 1,nsize
-                   if (runoff%mask(k) == 1) then
-                      ixy = runoff%gdc2i(k)
-                      jxy = runoff%gdc2j(k)
-                      rglobdc(k) = fldxy(ixy,jxy)
-                   endif
-                end do
-             case('ocnrof')
-!dir$ concurrent
-!cdir nodep
-                do k = 1,nsize
-                   if (runoff%mask(k) == 2) then
-                      ixy = runoff%gdc2i(k)
-                      jxy = runoff%gdc2j(k)
-                      rglobdc(k) = fldxy(ixy,jxy)
-                   endif
-                end do
-#endif
-             case default
-                if (dim1name /= 'gridcell') then
-                   write(6,*)subname,' error: 1d clm output type must be ',&
-                        'at gridcell level if 2d xy output is requested'; call endrun()
-                end if
-!dir$ concurrent
-!cdir nodep
-                do k = 1,nsize
-                   ixy = ldecomp%gdc2i(k)
-                   jxy = ldecomp%gdc2j(k)
-                   rglobdc(k) = fldxy(ixy,jxy)
-                end do
-             end select
-             deallocate(fldxy)
-
-          else
-             call check_ret(nf_get_var_double(ncid, varid, rglobsn), subname)
-             call map_sn2dc(rglobsn, rglobdc, dim1name)
-          end if
-          end if !  (single_column)
-          endif
-       end if
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)subname,' error from mpi_bcast'; call endrun()
-       end if
-       if (varpresent) call scatter_data_from_master(data, rglobdc, clmlevel=dim1name)
-       if (present(readvar)) readvar = varpresent
-    end if
-
-    if (masterproc) deallocate (rglobdc, rglobsn)
+    if (present(readvar)) then
+       readvar = .false.
+       if (ier == 0) readvar = .true.
+    endif
 
   end subroutine ncd_iolocal_real_1d
 !-----------------------------------------------------------------------
@@ -687,14 +478,12 @@ contains
 !
 ! !INTERFACE:
   subroutine ncd_iolocal_int_2d(varname, data, dim1name, dim2name, &
-             lowerb2, upperb2, flag, ncid, nlonxy, nlatxy, nt, readvar)
+             lowerb2, upperb2, flag, ncid, nlonxy, nlatxy, nt, readvar, imissing)
 !
 ! !DESCRIPTION:
 ! Netcdf i/o of 2d initial integer field out to netCDF file
 !
 ! !USES:
-  use decompMod, only : map_dc2sn, map_sn2dc, ldecomp
-  use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
 !
 ! !ARGUMENTS:
     implicit none
@@ -708,36 +497,37 @@ contains
     integer         , optional, intent(in) :: nlatxy    ! 2d latitude size
     integer         , optional, intent(in) :: nt        ! time sample index
     integer         , optional, intent(in) :: lowerb2,upperb2 ! lower and upper bounds of second dimension
-    logical         , optional, intent(out):: readvar  ! true => variable is on initial dataset (read only)
+    logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
+    integer         , optional, intent(in) :: imissing  ! missing value
 !
 ! !REVISION HISTORY:
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: j,k,ixy,jxy              ! indices
+    integer :: k                        ! index
+    integer :: gsize                    ! size of global array
     integer :: ier                      ! error status
-    integer :: ndims                    ! dimension counter
-    integer :: start(4), count(4)       ! bounds for io
-    integer :: dimid(4)                 ! dimension ids
-    integer :: varid                    ! variable id
-    integer :: lb1,ub1,lb2,ub2          ! bounds of data
-    integer :: nsize                    ! size of global array second dimension
-    integer, pointer :: datap(:,:)      ! permutted 2d data
-    integer, pointer :: iglobdc(:,:)    ! global decomposition initial data
-    integer, pointer :: iglobsn(:,:)    ! global s->n initial data
-    integer, pointer :: fldxy(:,:,:)    ! temporary
-    integer :: data_offset              ! offset to single grid point for column model
-    integer :: ndata                    ! count of pft's or columns to read
-    character(len=256):: str            ! temporary
-    character(len=32) :: subname='NCD_IOLOCAL_INT_2D' ! subroutine name
-    logical :: varpresent               ! if true, variable is on tape
+    integer :: start(4)                 ! starting indices for netcdf field
+    integer :: count(4)                 ! count values for netcdf field
+    integer :: lb1,ub1                  ! lower/upper bound of dim 1
+    integer :: lb2,ub2                  ! lower/upper bound of dim 2
+    integer :: lmissing                 ! local missing value
+    integer,pointer  :: data1d(:)       ! 1 level data
+    character(len=8) :: clmlevel        ! clmlevel
+    character(len=*),parameter :: subname='ncd_iolocal_int_2d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    ! Dynamic memory allocation (note that data is permutted)
+    if ((present(nlonxy) .and. .not.present(nlatxy)) .or. &
+        (present(nlatxy) .and. .not.present(nlonxy))) then
+       write(6,*) trim(subname),' error nlonxy/nlatxy must be both or neither present '
+       call endrun()
+    endif
 
     lb1 = lbound(data, dim=1)
     ub1 = ubound(data, dim=1)
+    allocate(data1d(lb1:ub1))
+
     if (present(lowerb2)) then
        lb2 = lowerb2
     else
@@ -748,121 +538,55 @@ contains
     else
        ub2 = ubound(data, dim=2)
     end if
-    allocate (datap(lb2:ub2,lb1:ub1), stat=ier)
-    if (ier /= 0) then
-       write(6,*)subname,' allocation error'; call endrun()
-    end if
-    if (masterproc) then
-       nsize = get_size_dim1(dim1name)
-       allocate (iglobsn(lb2:ub2,nsize), iglobdc(lb2:ub2,nsize), stat=ier)
-       if (ier /= 0) then
-          write(6,*)subname,' allocation error'; call endrun()
-       end if
-    end if
 
-    if (flag == 'write') then
+    if (present(imissing)) then
+       lmissing = imissing
+    else
+       lmissing = ispval
+    endif
 
-       ! Permute 2d data for output and write out permuted data
+    clmlevel = dim1name
+    if (present(nlonxy) .and. present(nlatxy)) then
+       if (dim1name == nameg .or. dim1name == grlnd) then
+          clmlevel = grlnd
+       else
+          write(6,*) trim(subname),' error in dim1name and nlonxy/nlatxy ',trim(dim1name),nlonxy,nlatxy
+          call endrun()
+       endif
+    endif
 
-       do j = lb2,ub2
-!dir$ concurrent
-!cdir nodep
-          do k = lb1,ub1
-             datap(j,k) = data(k,j)
-          end do
-       end do
-       call gather_data_to_master (datap, iglobdc, clmlevel=dim1name)
+    gsize = get_clmlevel_gsize(clmlevel)
 
-       if (masterproc) then
+    do k = lb2,ub2
+       start = 1
+       count = 1
+       if (present(nlonxy) .and. present(nlatxy)) then
+          count(1) = nlonxy
+          count(2) = nlatxy
+          start(3) = k-lb2+1
+          if (present(nt)) then
+             start(4) = nt
+          endif
+       else
+          start(1) = k-lb2+1
+          count(2) = gsize
+          if (present(nt)) then
+             start(3) = nt
+          endif
+       endif
+       if (flag == 'write') data1d(:) = data(:,k)
+       call ncd_iolocal_gs_int1d(ncid, varname, flag, data1d, clmlevel, start, count, ier, lmissing)
+       if (flag == 'read') data(:,k) = data1d(:)
+    enddo
 
-          call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+    deallocate(data1d)
 
-          if (present(nlonxy) .and. present(nlatxy)) then
-
-             start(1) = 1;  count(1) = nlonxy
-             start(2) = 1;  count(2) = nlatxy
-             start(3) = 1;  count(3) = ub2-lb2+1
-             if (present(nt)) then
-                start(4) = nt;  count(4) = 1
-             end if
-             allocate(fldxy(nlonxy,nlatxy,lb2:ub2), stat=ier)
-             if (ier /= 0) then
-                write (6,*)subname,' allocation error for fldxy'; call endrun()
-             end if
-             if (dim1name /= 'gridcell') then
-                write(6,*)subname,' error: 1d clm output type must be ',&
-                     'at gridcell level if 2d xy output is requested'; call endrun()
-             end if
-             fldxy(:,:,:) = ispval
-             do j = lb2,ub2
-!dir$ concurrent
-!cdir nodep
-                do k = 1,nsize
-                   ixy = ldecomp%gdc2i(k)
-                   jxy = ldecomp%gdc2j(k)
-                   fldxy(ixy,jxy,j) = iglobdc(j,k)
-                end do
-             end do
-             call check_ret(nf_put_vara_int(ncid, varid, start, count, fldxy), subname)
-             deallocate(fldxy)
-
-          else
-
-             start(1) = 1;  count(1) = ub2-lb2+1
-             start(2) = 1;  count(2) = nsize
-             if (present(nt)) then
-                start(3) = nt;  count(3) = 1
-             end if
-             call map_dc2sn(iglobdc, iglobsn, dim1name, lb2, ub2)
-             call check_ret(nf_put_vara_int(ncid, varid, start, count, iglobsn), subname)
-
-          end if
-
-       end if   ! end of if-masterproc block
-
-    else if (flag == 'read') then
-
-       ! Determine if will read variable, read permutted variable data
-       ! from netcdf file and unpermute the data
-
-       if (masterproc) then
-         call check_var(ncid, varname, varid, varpresent)
-         if (varpresent) then
-         if (single_column)then
-            call scam_field_offsets(ncid,dim1name,data_offset,ndata)
-            start(1) = 1;  count(1) = ub2-lb2+1
-            start(2) = data_offset;  count(2) = ndata
-            call check_ret(nf_get_vara_int(ncid, varid, start, count, iglobsn), subname)
-         else
-            call check_ret(nf_get_var_int(ncid, varid, iglobsn), subname)
-            call map_sn2dc(iglobsn, iglobdc, dim1name, lb2, ub2)
-         end if
-         end if
-       end if
-
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)trim(subname),' error from mpi_bcast'; call endrun()
-       end if
-       if (varpresent) call scatter_data_from_master(datap, iglobdc, clmlevel=dim1name)
-       if (varpresent) then
-          do j = lb2,ub2
-!dir$ concurrent
-!cdir nodep
-             do k = lb1,ub1
-                data(k,j) = datap(j,k)
-             end do
-          end do
-       end if
-       if (present(readvar)) readvar = varpresent
-
-    end if
-
-    deallocate(datap)
-    if (masterproc) deallocate (iglobdc, iglobsn)
+    if (present(readvar)) then
+       readvar = .false.
+       if (ier == 0) readvar = .true.
+    endif
 
   end subroutine ncd_iolocal_int_2d
-
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -870,14 +594,12 @@ contains
 !
 ! !INTERFACE:
   subroutine ncd_iolocal_real_2d(varname, data, dim1name, dim2name, &
-             lowerb2, upperb2, flag, ncid, nlonxy, nlatxy, nt, readvar)
+             lowerb2, upperb2, flag, ncid, nlonxy, nlatxy, nt, readvar, missing)
 !
 ! !DESCRIPTION:
 ! Netcdf i/o of 2d initial integer field out to netCDF file
 !
 ! !USES:
-  use decompMod, only : map_dc2sn, map_sn2dc, ldecomp
-  use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
 !
 ! !ARGUMENTS:
     implicit none
@@ -891,36 +613,37 @@ contains
     integer         , optional, intent(in) :: nlatxy    ! 2d latitude size
     integer         , optional, intent(in) :: nt        ! time sample index
     integer         , optional, intent(in) :: lowerb2,upperb2 ! lower and upper bounds of second dimension
-    logical         , optional, intent(out):: readvar  ! true => variable is on initial dataset (read only)
+    logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
+    real(r8)        , optional, intent(in) :: missing   ! missing value
 !
 ! !REVISION HISTORY:
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: j,k,ixy,jxy              ! indices
+    integer :: k                        ! index
+    integer :: gsize                    ! size of global array
     integer :: ier                      ! error status
-    integer :: ndims                    ! dimension counter
-    integer :: start(4), count(4)       ! bounds for io
-    integer :: dimid(4)                 ! dimension ids
-    integer :: varid                    ! variable id
-    integer :: lb1,ub1,lb2,ub2          ! bounds of data
-    integer :: nsize                    ! size of global array second dimension         
-    integer :: data_offset              ! offset to single grid point for column model
-    integer :: ndata                    ! count of pft's or columns to read
-    real(r8), pointer :: datap(:,:)     ! permutted 2d data
-    real(r8), pointer :: rglobdc(:,:)   ! global decomposition initial data
-    real(r8), pointer :: rglobsn(:,:)   ! global s->n initial data
-    real(r8), pointer :: fldxy(:,:,:)   ! temporary
-    character(len=256):: str            ! temporary
-    logical :: varpresent               ! if true, variable is on tape
-    character(len=32) :: subname='NCD_IOLOCAL_REAL_2D' ! subroutine name
+    integer :: start(4)                 ! starting indices for netcdf field
+    integer :: count(4)                 ! count values for netcdf field
+    integer :: lb1,ub1                  ! lower/upper bound of dim 1
+    integer :: lb2,ub2                  ! lower/upper bound of dim 2
+    real(r8):: lmissing                 ! local missing value
+    real(r8),pointer :: data1d(:)       ! 1 level data
+    character(len=8) :: clmlevel        ! clmlevel
+    character(len=*),parameter :: subname='ncd_iolocal_real_2d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    ! Dynamic memory allocation (note that data is permutted)
+    if ((present(nlonxy) .and. .not.present(nlatxy)) .or. &
+        (present(nlatxy) .and. .not.present(nlonxy))) then
+       write(6,*) trim(subname),' error nlonxy/nlatxy must be both or neither present '
+       call endrun()
+    endif
 
     lb1 = lbound(data, dim=1)
     ub1 = ubound(data, dim=1)
+    allocate(data1d(lb1:ub1))
+
     if (present(lowerb2)) then
        lb2 = lowerb2
     else
@@ -931,127 +654,62 @@ contains
     else
        ub2 = ubound(data, dim=2)
     end if
-    allocate (datap(lb2:ub2,lb1:ub1), stat=ier)
-    if (ier /= 0) then
-       write(6,*)subname,' allocation error'; call endrun()
-    end if
-    if (masterproc) then
-       nsize = get_size_dim1(dim1name)
-       allocate (rglobsn(lb2:ub2,nsize), rglobdc(lb2:ub2,nsize), stat=ier)
-       if (ier /= 0) then
-          write(6,*)subname,' allocation error'; call endrun()
-       end if
-    end if
 
-    if (flag == 'write') then
+    if (present(missing)) then
+       lmissing = missing
+    else
+       lmissing = spval
+    endif
 
-       ! Permute 2d data for output and write out permuted data
+    clmlevel = dim1name
+    if (present(nlonxy) .and. present(nlatxy)) then
+       if (dim1name == nameg .or. dim1name == grlnd) then
+          clmlevel = grlnd
+       else
+          write(6,*) trim(subname),' error in dim1name and nlonxy/nlatxy ',trim(dim1name),nlonxy,nlatxy
+          call endrun()
+       endif
+    endif
 
-       do j = lb2,ub2
-!dir$ concurrent
-!cdir nodep
-          do k = lb1,ub1
-             datap(j,k) = data(k,j)
-          end do
-       end do
-       call gather_data_to_master (datap, rglobdc, clmlevel=trim(dim1name))
+    gsize = get_clmlevel_gsize(clmlevel)
 
-       if (masterproc) then
+    do k = lb2,ub2
+       start = 1
+       count = 1
+       if (present(nlonxy) .and. present(nlatxy)) then
+          count(1) = nlonxy
+          count(2) = nlatxy
+          start(3) = k-lb2+1
+          if (present(nt)) then
+             start(4) = nt
+          endif
+       else
+          start(1) = k-lb2+1
+          count(2) = gsize
+          if (present(nt)) then
+             start(3) = nt
+          endif
+       endif
+       if (flag == 'write') data1d(:) = data(:,k)
+       call ncd_iolocal_gs_real1d(ncid, varname, flag, data1d, clmlevel, start, count, ier, lmissing)
+       if (flag == 'read') data(:,k) = data1d(:)
+    enddo
 
-          call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+    deallocate(data1d)
 
-          if (present(nlonxy) .and. present(nlatxy)) then
-
-             start(1) = 1;  count(1) = nlonxy
-             start(2) = 1;  count(2) = nlatxy
-             start(3) = 1;  count(3) = ub2-lb2+1
-             if (present(nt)) then
-                start(4) = nt;  count(4) = 1
-             end if
-             allocate(fldxy(nlonxy,nlatxy,lb2:ub2), stat=ier)
-             if (ier /= 0) then
-                write (6,*)subname,' error : allocation error for fldxy'; call endrun()
-             end if
-             if (dim1name /= 'gridcell') then
-                write(6,*)subname,' error: 1d clm output type must be ',&
-                     'at gridcell level if 2d xy output is requested'; call endrun()
-             end if
-             fldxy(:,:,:) = spval
-             do j = lb2,ub2
-!dir$ concurrent
-!cdir nodep
-                do k = 1,nsize
-                   ixy = ldecomp%gdc2i(k)
-                   jxy = ldecomp%gdc2j(k)
-                   fldxy(ixy,jxy,j) = rglobdc(j,k)
-                end do
-             end do
-             call check_ret(nf_put_vara_double(ncid, varid, start, count, fldxy), subname)
-             deallocate(fldxy)
-
-          else
-
-             start(1) = 1;  count(1) = ub2-lb2+1
-             start(2) = 1;  count(2) = nsize
-             if (present(nt)) then
-                start(3) = nt;  count(3) = 1
-             end if
-             call map_dc2sn(rglobdc, rglobsn, dim1name, lb2, ub2)
-             call check_ret(nf_put_vara_double(ncid, varid, start, count, rglobsn), subname)
-
-          end if
-       end if   ! end of if-masterproc block
-
-    else if (flag == 'read') then
-
-       ! Determine if will read variable, read permutted variable data
-       ! from netcdf file and unpermute the data
-
-       if (masterproc) then
-         call check_var(ncid, varname, varid, varpresent)
-         if (varpresent) then
-         if (single_column)then
-            call scam_field_offsets(ncid,dim1name,data_offset,ndata)
-            start(1) = 1;  count(1) = ub2-lb2+1
-            start(2) = data_offset;  count(2) = ndata
-            call check_ret(nf_get_vara_double(ncid, varid, start, count, rglobsn), subname)
-         else
-            call check_ret(nf_get_var_double(ncid, varid, rglobsn), subname)
-            call map_sn2dc(rglobsn, rglobdc, dim1name, lb2, ub2)
-         end if
-         end if
-       end if
-
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)trim(subname),' error from mpi_bcast'; call endrun()
-       end if
-       if (varpresent) call scatter_data_from_master(datap, rglobdc, clmlevel=dim1name)
-       if (varpresent) then
-          do j = lb2,ub2
-!dir$ concurrent
-!cdir nodep
-             do k = lb1,ub1
-                data(k,j) = datap(j,k)
-             end do
-          end do
-       end if
-       if (present(readvar)) readvar = varpresent
-
-    end if
-
-    deallocate(datap)
-    if (masterproc) deallocate (rglobdc, rglobsn)
+    if (present(readvar)) then
+       readvar = .false.
+       if (ier == 0) readvar = .true.
+    endif
 
   end subroutine ncd_iolocal_real_2d
-
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: ncd_iolocal_gs_real
+! !IROUTINE: ncd_iolocal_gs_real1d
 !
 ! !INTERFACE:
-  subroutine ncd_iolocal_gs_real(ncid, varname, flag, data, beg, end, gsmap, perm, start, count)
+  subroutine ncd_iolocal_gs_real1d(ncid, varname, flag, data, clmlevel, start, count, status, missing)
 !
 ! !DESCRIPTION:
 ! Netcdf i/o of 2d initial real field out to netCDF file
@@ -1065,13 +723,15 @@ contains
     character(len=*) ,intent(in)  :: varname    ! variable name
     character(len=*) ,intent(in)  :: flag       ! 'read' or 'write'
     real(r8),pointer              :: data(:)    ! local decomposition input data (out)
-    integer          ,intent(in)  :: beg        ! local start index
-    integer          ,intent(in)  :: end        ! local end index
-    type(mct_gsMap)  ,intent(in)  :: gsmap      ! gsmap associate with data decomp
-    integer,pointer               :: perm(:)    ! permute array assoicated with gsmap
+    character(len=*) ,intent(in)  :: clmlevel   ! type of grid
     integer, optional,intent(in)  :: start(:)   ! netcdf start index
     integer, optional,intent(in)  :: count(:)   ! netcdf count index
-
+    integer, optional,intent(out) :: status    ! return code
+    real(r8),optional,intent(in)  :: missing    ! missing value
+    !--- rcodes:
+    !      0  : success
+    !    -99  : general error
+    !     -5  : var not found on read
 !
 ! !REVISION HISTORY:
 !
@@ -1081,23 +741,63 @@ contains
   integer varid
   real(r8), pointer :: arrayg(:)
   integer           :: gsize      ! array global size from gsmap
-  character(len=32) :: subname='NCD_IOGLOBAL_GS_REAL' ! subroutine name
+  integer           :: lstart(4),lcount(4)  ! local start/count arrays
+  logical           :: varpresent ! if true, variable is on tape
+  integer           :: rcode      ! local return code
+  integer           :: ier        ! error code
+  integer :: data_offset              ! offset to single grid point for column model
+  integer :: ndata                    ! count of pft's or columns to read
+  character(len=*),parameter :: subname='ncd_iolocal_gs_real1d' ! subroutine name
 !-----------------------------------------------------------------------
 
-   gsize = mct_gsmap_gsize(gsmap)
+   rcode = 0
+   lstart = 1
+   lcount = 1
+   if (present(start).and.present(count)) then
+      lstart(1:size(start)) = start(1:size(start))
+      lcount(1:size(count)) = count(1:size(count))
+   endif
+   gsize = get_clmlevel_gsize(clmlevel)
+   if (masterproc) then
+      allocate(arrayg(gsize))
+   endif
+
    if (flag == 'read') then
       if (masterproc) then
-         allocate(arrayg(gsize))
-         call check_ret(nf_inq_varid(ncid, varname, varid), subname)
-         if (present(start).and.present(count)) then
-            call check_ret(nf_get_vara_double(ncid, varid, start, count, arrayg), subname)
+         call check_var(ncid, varname, varid, varpresent)
+         if (varpresent) then
+            if (single_column) then
+!tcx
+!               call scam_field_offsets(ncid,clmlevel,data_offset,ndata)
+!               lstart(1) = data_offset; lcount(1) = ndata
+!               call check_ret(nf_get_vara_double(ncid, varid, lstart, lcount, arrayg), subname)
+               call scam_field_offsets(ncid,clmlevel,lstart,lcount)
+               call check_ret(nf_get_vara_double(ncid, varid, lstart, lcount, arrayg), subname)
+            else
+               if (present(start).and.present(count)) then
+                  call check_ret(nf_get_vara_double(ncid, varid, start, count, arrayg), subname)
+               else
+                  call check_ret(nf_get_var_double(ncid, varid, arrayg), subname)
+               endif
+            endif
          else
-            call check_ret(nf_get_var_double(ncid, varid, arrayg), subname)
+            rcode = -5
          endif
       endif
-      call scatter_data_from_master(data,arrayg,gsMap,perm,beg,end)
+      call scatter_data_from_master(data,arrayg,clmlevel)
+   elseif (flag == 'write') then
+      if (present(missing)) then
+         call gather_data_to_master(data,arrayg,clmlevel,missing)
+      else
+         call gather_data_to_master(data,arrayg,clmlevel)
+      endif
       if (masterproc) then
-         deallocate(arrayg)
+         call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+         if (present(start).and.present(count)) then
+            call check_ret(nf_put_vara_double(ncid, varid, start, count, arrayg), subname)
+         else
+            call check_ret(nf_put_var_double(ncid, varid, arrayg), subname)
+         endif
       endif
    else
       if (masterproc) then
@@ -1106,15 +806,24 @@ contains
       endif
    endif
 
-  end subroutine ncd_iolocal_gs_real
+   if (masterproc) then
+      deallocate(arrayg)
+   endif
+
+   if (present(status)) then
+      call mpi_bcast(rcode, 1, MPI_INTEGER, 0, mpicom, ier)
+      status = rcode
+   endif
+
+  end subroutine ncd_iolocal_gs_real1d
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: ncd_iolocal_gs_int
+! !IROUTINE: ncd_iolocal_gs_int1d
 !
 ! !INTERFACE:
-  subroutine ncd_iolocal_gs_int(ncid, varname, flag, data, beg, end, gsmap, perm, start, count)
+  subroutine ncd_iolocal_gs_int1d(ncid, varname, flag, data, clmlevel, start, count, status, imissing)
 !
 ! !DESCRIPTION:
 ! Netcdf i/o of 2d initial real field out to netCDF file
@@ -1127,14 +836,16 @@ contains
     integer          ,intent(in)  :: ncid       ! input unit
     character(len=*) ,intent(in)  :: varname    ! variable name
     character(len=*) ,intent(in)  :: flag       ! 'read' or 'write'
+    character(len=*) ,intent(in)  :: clmlevel   ! type of grid
     integer,pointer               :: data(:)    ! local decomposition input data
-    integer          ,intent(in)  :: beg        ! local start index
-    integer          ,intent(in)  :: end        ! local end index
-    type(mct_gsMap)  ,intent(in)  :: gsmap      ! gsmap associate with data decomp
-    integer, pointer              :: perm(:)    ! permute array assoicated with gsmap
     integer, optional,intent(in)  :: start(:)   ! netcdf start index
     integer, optional,intent(in)  :: count(:)   ! netcdf count index
-
+    integer, optional,intent(out) :: status    ! return code
+    integer, optional,intent(in)  :: imissing   ! missing value
+    !--- rcodes:
+    !      0  : success
+    !    -99  : general error
+    !     -5  : var not found on read
 !
 ! !REVISION HISTORY:
 !
@@ -1144,23 +855,63 @@ contains
   integer varid
   integer, pointer  :: arrayg(:)
   integer           :: gsize      ! array global size from gsmap
-  character(len=32) :: subname='NCD_IOGLOBAL_GS_INT' ! subroutine name
+  integer           :: lstart(4),lcount(4)  ! local start/count arrays
+  logical           :: varpresent ! if true, variable is on tape
+  integer           :: rcode      ! local return code
+  integer           :: ier        ! error code
+  integer           :: data_offset! offset to single grid point for column model
+  integer           :: ndata      ! count of pft's or columns to read
+  character(len=*),parameter :: subname='ncd_iolocal_gs_int1d' ! subroutine name
 !-----------------------------------------------------------------------
 
-   gsize = mct_gsmap_gsize(gsmap)
+   rcode = 0
+   lstart = 1
+   lcount = 1
+   if (present(start).and.present(count)) then
+      lstart(1:size(start)) = start(1:size(start))
+      lcount(1:size(count)) = count(1:size(count))
+   endif
+   gsize = get_clmlevel_gsize(clmlevel)
+   if (masterproc) then
+      allocate(arrayg(gsize))
+   endif
+
    if (flag == 'read') then
       if (masterproc) then
-         allocate(arrayg(gsize))
-         call check_ret(nf_inq_varid(ncid, varname, varid), subname)
-         if (present(start).and.present(count)) then
-            call check_ret(nf_get_vara_int(ncid, varid, start, count, arrayg), subname)
+         call check_var(ncid, varname, varid, varpresent)
+         if (varpresent) then
+            if (single_column) then
+!tcx
+!               call scam_field_offsets(ncid,clmlevel,data_offset,ndata)
+!               lstart(1) = data_offset; lcount(1) = ndata
+!               call check_ret(nf_get_vara_int(ncid, varid, lstart, lcount, arrayg), subname)
+               call scam_field_offsets(ncid,clmlevel,lstart,lcount)
+               call check_ret(nf_get_vara_int(ncid, varid, lstart, lcount, arrayg), subname)
+            else
+               if (present(start).and.present(count)) then
+                  call check_ret(nf_get_vara_int(ncid, varid, start, count, arrayg), subname)
+               else
+                  call check_ret(nf_get_var_int(ncid, varid, arrayg), subname)
+               endif
+            endif
          else
-            call check_ret(nf_get_var_int(ncid, varid, arrayg), subname)
+            rcode = -5
          endif
       endif
-      call scatter_data_from_master(data,arrayg,gsMap,perm,beg,end)
+      call scatter_data_from_master(data,arrayg,clmlevel)
+   elseif (flag == 'write') then
+      if (present(imissing)) then
+         call gather_data_to_master(data,arrayg,clmlevel,imissing)
+      else
+         call gather_data_to_master(data,arrayg,clmlevel)
+      endif
       if (masterproc) then
-         deallocate(arrayg)
+         call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+         if (present(start).and.present(count)) then
+            call check_ret(nf_put_vara_int(ncid, varid, start, count, arrayg), subname)
+         else
+            call check_ret(nf_put_var_int(ncid, varid, arrayg), subname)
+         endif
       endif
    else
       if (masterproc) then
@@ -1169,7 +920,16 @@ contains
       endif
    endif
 
-  end subroutine ncd_iolocal_gs_int
+   if (masterproc) then
+      deallocate(arrayg)
+   endif
+
+   if (present(status)) then
+      call mpi_bcast(rcode, 1, MPI_INTEGER, 0, mpicom, ier)
+      status = rcode
+   endif
+
+  end subroutine ncd_iolocal_gs_int1d
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1177,7 +937,7 @@ contains
 ! !IROUTINE: ncd_ioglobal_int_var
 !
 ! !INTERFACE:
-  subroutine ncd_ioglobal_int_var(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_ioglobal_int_var(varname, data, flag, ncid, readvar, nt, bcast)
 !
 ! !DESCRIPTION:
 ! I/O of integer variable
@@ -1191,6 +951,7 @@ contains
     integer         , intent(inout) :: data             ! local decomposition data
     logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
     integer         , optional, intent(in) :: nt        ! time sample index
+    logical         , optional, intent(in) :: bcast     ! bcast on read?
 !
 ! !REVISION HISTORY:
 !
@@ -1198,12 +959,19 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer :: ier                            ! error status
-    integer :: dimid(1)                       ! dimension id
-    integer :: start(1), count(1)             ! output bounds
+    integer :: start(4), count(4)             ! output bounds
     integer :: varid                          ! variable id
     logical :: varpresent                     ! if true, variable is on tape
-    character(len=32) :: subname='NCD_IOGLOBAL_INT_VAR' ! subroutine name
+    logical :: lbcast                   ! local copy of bcast flag
+    character(len=*),parameter :: subname='ncd_ioglobal_int_var' ! subroutine name
 !-----------------------------------------------------------------------
+
+    start = 1
+    count = 1
+    lbcast = lbcast_def
+    if (present(bcast)) then
+       lbcast = bcast
+    endif
 
     if (flag == 'write') then
 
@@ -1221,18 +989,27 @@ contains
 
        if (masterproc) then
           call check_var(ncid, varname, varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_int(ncid, varid, data), subname)
+          if (varpresent) then
+             if (single_column) then
+                call scam_field_offsets(ncid,'undefined',start,count)
+                call check_ret(nf_get_vara_int(ncid, varid, start, count, data), subname)
+             else
+                call check_ret(nf_get_var_int(ncid, varid, data), subname)
+             endif
+          endif
        end if
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
-       end if
-       if (varpresent) then
-          call mpi_bcast(data, 1, MPI_INTEGER, 0, mpicom, ier)
+       if (lbcast) then
+          call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
           if (ier /= 0) then
-             write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
           end if
-       end if
+          if (varpresent) then
+             call mpi_bcast(data, 1, MPI_INTEGER, 0, mpicom, ier)
+             if (ier /= 0) then
+                write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             end if
+          end if
+       endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1245,7 +1022,7 @@ contains
 ! !IROUTINE: ncd_ioglobal_real_var
 !
 ! !INTERFACE:
-  subroutine ncd_ioglobal_real_var(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_ioglobal_real_var(varname, data, flag, ncid, readvar, nt, bcast)
 !
 ! !DESCRIPTION:
 ! I/O of real variable
@@ -1259,6 +1036,7 @@ contains
     real(r8)        , intent(inout) :: data             ! local decomposition data
     logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
     integer         , optional, intent(in) :: nt        ! time sample index
+    logical         , optional, intent(in) :: bcast     ! bcast on read?
 !
 ! !REVISION HISTORY:
 !
@@ -1266,12 +1044,19 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer :: ier                            ! error status
-    integer :: dimid(1)                       ! dimension id
-    integer :: start(1), count(1)             ! output bounds
+    integer :: start(4), count(4)             ! output bounds
     integer :: varid                          ! variable id
     logical :: varpresent                     ! if true, variable is on tape
-    character(len=32) :: subname='NCD_IOGLOBAL_REAL_VAR' ! subroutine name
+    logical :: lbcast                   ! local copy of bcast flag
+    character(len=*),parameter :: subname='ncd_ioglobal_real_var' ! subroutine name
 !-----------------------------------------------------------------------
+
+    start = 1
+    count = 1
+    lbcast = lbcast_def
+    if (present(bcast)) then
+       lbcast = bcast
+    endif
 
     if (flag == 'write') then
 
@@ -1289,18 +1074,27 @@ contains
 
        if (masterproc) then
           call check_var(ncid, varname, varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, data), subname)
+          if (varpresent) then
+             if (single_column) then
+                call scam_field_offsets(ncid,'undefined',start,count)
+                call check_ret(nf_get_vara_double(ncid, varid, start, count, data), subname)
+             else
+                call check_ret(nf_get_var_double(ncid, varid, data), subname)
+             endif
+          endif
        end if
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
-       end if
-       if (varpresent) then
-          call mpi_bcast(data, 1, MPI_REAL8, 0, mpicom, ier)
+       if (lbcast) then
+          call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
           if (ier /= 0) then
-             write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
           end if
-       end if
+          if (varpresent) then
+             call mpi_bcast(data, 1, MPI_REAL8, 0, mpicom, ier)
+             if (ier /= 0) then
+                write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             end if
+          end if
+       endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1313,7 +1107,7 @@ contains
 ! !IROUTINE: ncd_ioglobal_int_1d
 !
 ! !INTERFACE:
-  subroutine ncd_ioglobal_int_1d(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_ioglobal_int_1d(varname, data, flag, ncid, readvar, nt, bcast)
 !
 ! !DESCRIPTION:
 ! Master I/O for 1d integer data
@@ -1326,6 +1120,7 @@ contains
     integer         , intent(inout) :: data(:)          ! local decomposition data
     logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
     integer         , optional, intent(in) :: nt        ! time sample index
+    logical         , optional, intent(in) :: bcast     ! bcast on read?
 !
 ! !REVISION HISTORY:
 !
@@ -1333,12 +1128,19 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer :: varid                          ! netCDF variable id
-    integer :: dimid(2), ndims                ! dimension ids
-    integer :: start(2), count(2)             ! output bounds
+    integer :: start(4), count(4)             ! output bounds
     integer :: ier                            ! error code
     logical :: varpresent                     ! if true, variable is on tape
-    character(len=32) :: subname='NCD_IOGLOBAL_INT_1D' ! subroutine name
+    logical :: lbcast                   ! local copy of bcast flag
+    character(len=*),parameter :: subname='ncd_ioglobal_int_1d' ! subroutine name
 !-----------------------------------------------------------------------
+
+    start = 1
+    count = 1
+    lbcast = lbcast_def
+    if (present(bcast)) then
+       lbcast = bcast
+    endif
 
     if (flag == 'write') then
 
@@ -1357,18 +1159,27 @@ contains
 
        if (masterproc) then
           call check_var(ncid, varname, varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_int(ncid, varid, data), subname)
+          if (varpresent) then
+             if (single_column) then
+                call scam_field_offsets(ncid,'undefined',start,count)
+                call check_ret(nf_get_vara_int(ncid, varid, start, count, data), subname)
+             else
+                call check_ret(nf_get_var_int(ncid, varid, data), subname)
+             endif
+          endif
        end if
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
-       endif
-       if (varpresent) then
-          call mpi_bcast(data, size(data), MPI_INTEGER, 0, mpicom, ier)
+       if (lbcast) then
+          call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
           if (ier /= 0) then
-             write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
+          endif
+          if (varpresent) then
+             call mpi_bcast(data, size(data), MPI_INTEGER, 0, mpicom, ier)
+             if (ier /= 0) then
+                write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             end if
           end if
-       end if
+       endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1381,7 +1192,7 @@ contains
 ! !IROUTINE: ncd_ioglobal_real_1d
 !
 ! !INTERFACE:
-  subroutine ncd_ioglobal_real_1d(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_ioglobal_real_1d(varname, data, flag, ncid, readvar, nt, bcast)
 !
 ! !DESCRIPTION:
 ! Master I/O for 1d real data
@@ -1394,6 +1205,7 @@ contains
     real(r8)        , intent(inout) :: data(:)          ! local decomposition input data
     logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
     integer         , optional, intent(in) :: nt        ! time sample index
+    logical         , optional, intent(in) :: bcast     ! bcast on read?
 !
 ! !REVISION HISTORY:
 !
@@ -1402,11 +1214,18 @@ contains
 ! !LOCAL VARIABLES:
     integer :: varid                          ! netCDF variable id
     integer :: ier                            ! error code
-    integer :: dimid(2), ndims                ! dimension ids
-    integer :: start(2), count(2)             ! output bounds
+    integer :: start(4), count(4)             ! output bounds
     logical :: varpresent                     ! if true, variable is on tape
-    character(len=32) :: subname='NCD_IOGLOBAL_REAL_1D' ! subroutine name
+    logical :: lbcast                   ! local copy of bcast flag
+    character(len=*),parameter :: subname='ncd_ioglobal_real_1d' ! subroutine name
 !-----------------------------------------------------------------------
+
+    start = 1
+    count = 1
+    lbcast = lbcast_def
+    if (present(bcast)) then
+       lbcast = bcast
+    endif
 
     if (flag == 'write') then
 
@@ -1425,18 +1244,27 @@ contains
 
        if (masterproc) then
           call check_var(ncid, varname, varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, data), subname)
+          if (varpresent) then
+             if (single_column) then
+                call scam_field_offsets(ncid,'undefined',start,count)
+                call check_ret(nf_get_vara_double(ncid, varid, start, count, data), subname)
+             else
+                call check_ret(nf_get_var_double(ncid, varid, data), subname)
+             endif
+          endif
        end if
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
-       endif
-       if (varpresent) then
-          call mpi_bcast(data, size(data), MPI_REAL8, 0, mpicom, ier)
+       if (lbcast) then
+          call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
           if (ier /= 0) then
-             write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
+          endif
+          if (varpresent) then
+             call mpi_bcast(data, size(data), MPI_REAL8, 0, mpicom, ier)
+             if (ier /= 0) then
+                write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             end if
           end if
-       end if
+       endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1449,7 +1277,7 @@ contains
 ! !IROUTINE: ncd_ioglobal_int_2d
 !
 ! !INTERFACE:
-  subroutine ncd_ioglobal_int_2d(varname, data, flag, ncid, readvar, nt)
+  subroutine ncd_ioglobal_int_2d(varname, data, flag, ncid, readvar, nt, bcast)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global 2d integer array
@@ -1462,6 +1290,7 @@ contains
     integer         , intent(inout) :: data(:,:)        ! local decomposition input data
     logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
     integer         , optional, intent(in) :: nt        ! time sample index
+    logical         , optional, intent(in) :: bcast     ! bcast on read?
 !
 ! !REVISION HISTORY:
 !
@@ -1469,12 +1298,19 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer :: varid                          ! netCDF variable id
-    integer :: dimid(3), ndims                ! dimension ids
-    integer :: start(3), count(3)             ! output bounds
+    integer :: start(4), count(4)             ! output bounds
     integer :: ier                            ! error code
     logical :: varpresent                     ! if true, variable is on tape
-    character(len=32) :: subname='NCD_IOGLOBAL_2D_INT_IO' ! subroutine name
+    logical :: lbcast                   ! local copy of bcast flag
+    character(len=*),parameter :: subname='ncd_ioglobal_2d_int_io' ! subroutine name
 !-----------------------------------------------------------------------
+
+    start = 1
+    count = 1
+    lbcast = lbcast_def
+    if (present(bcast)) then
+       lbcast = bcast
+    endif
 
     if (flag == 'write') then
 
@@ -1494,18 +1330,25 @@ contains
 
        if (masterproc) then
           call check_var(ncid, varname, varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_int(ncid, varid, data), subname)
+          if (single_column) then
+             call scam_field_offsets(ncid,'undefined',start,count)
+             call check_ret(nf_get_vara_int(ncid, varid, start, count, data), subname)
+          else
+             call check_ret(nf_get_var_int(ncid, varid, data), subname)
+          endif
        end if
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
-       endif
-       if (varpresent) then
-          call mpi_bcast(data, size(data), MPI_INTEGER, 0, mpicom, ier)
+       if (lbcast) then
+          call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
           if (ier /= 0) then
-             write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
+          endif
+          if (varpresent) then
+             call mpi_bcast(data, size(data), MPI_INTEGER, 0, mpicom, ier)
+             if (ier /= 0) then
+                write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             end if
           end if
-       end if
+       endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1518,8 +1361,7 @@ contains
 ! !IROUTINE: ncd_ioglobal_real_2d
 !
 ! !INTERFACE:
-  subroutine ncd_ioglobal_real_2d(varname, data, long_name, units, flag, &
-                                  ncid, readvar, nt)
+  subroutine ncd_ioglobal_real_2d(varname, data, flag, ncid, readvar, nt, bcast)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global 2d real array
@@ -1530,10 +1372,9 @@ contains
     integer         , intent(in)    :: ncid             ! input unit
     character(len=*), intent(in)    :: varname          ! variable name
     real(r8)        , intent(inout) :: data(:,:)        ! local decomposition input data
-    character(len=*), optional, intent(in) :: long_name ! variable long name
-    character(len=*), optional, intent(in) :: units     ! variable units
     logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
     integer         , optional, intent(in) :: nt        ! time sample index
+    logical         , optional, intent(in) :: bcast     ! bcast on read?
 !
 ! !REVISION HISTORY:
 !
@@ -1542,11 +1383,18 @@ contains
 ! !LOCAL VARIABLES:
     integer :: varid                          ! netCDF variable id
     integer :: ier                            ! error code
-    integer :: dimid(3), ndims                ! dimension ids
-    integer :: start(3), count(3)             ! output bounds
+    integer :: start(4), count(4)             ! output bounds
     logical :: varpresent                     ! if true, variable is on tape
-    character(len=32) :: subname='NCD_IOGLOBAL_REAL_2D' ! subroutine name
+    logical :: lbcast                   ! local copy of bcast flag
+    character(len=*),parameter :: subname='ncd_ioglobal_real_2d' ! subroutine name
 !-----------------------------------------------------------------------
+
+    start = 1
+    count = 1
+    lbcast = lbcast_def
+    if (present(bcast)) then
+       lbcast = bcast
+    endif
 
     if (flag == 'write') then
 
@@ -1566,18 +1414,25 @@ contains
 
        if (masterproc) then
           call check_var(ncid, varname, varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, data), subname)
+          if (single_column) then
+             call scam_field_offsets(ncid,'undefined',start,count)
+             call check_ret(nf_get_vara_double(ncid, varid, start, count, data), subname)
+          else
+             call check_ret(nf_get_var_double(ncid, varid, data), subname)
+          endif
        end if
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
-       endif
-       if (varpresent) then
-          call mpi_bcast(data, size(data), MPI_REAL8, 0, mpicom, ier)
+       if (lbcast) then
+          call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
           if (ier /= 0) then
-             write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
+          endif
+          if (varpresent) then
+             call mpi_bcast(data, size(data), MPI_REAL8, 0, mpicom, ier)
+             if (ier /= 0) then
+                write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             end if
           end if
-       end if
+       endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1590,8 +1445,7 @@ contains
 ! !IROUTINE: ncd_ioglobal_int_3d
 !
 ! !INTERFACE:
-  subroutine ncd_ioglobal_int_3d(varname, data, long_name, units, flag, &
-                                 ncid, readvar, nt)
+  subroutine ncd_ioglobal_int_3d(varname, data, flag, ncid, readvar, nt, bcast)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global 3d integer array
@@ -1602,10 +1456,9 @@ contains
     integer         , intent(in)    :: ncid             ! input unit
     character(len=*), intent(in)    :: varname          ! variable name
     integer         , intent(inout) :: data(:,:,:)      ! local decomposition input data
-    character(len=*), optional, intent(in) :: long_name ! variable long name
-    character(len=*), optional, intent(in) :: units     ! variable units
     logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
     integer         , optional, intent(in) :: nt        ! time sample index
+    logical         , optional, intent(in) :: bcast     ! bcast on read?
 !
 ! !REVISION HISTORY:
 !
@@ -1613,12 +1466,19 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer :: varid                    ! netCDF variable id
-    integer :: dimid(4), ndims          ! dimension ids
     integer :: start(4), count(4)       ! output bounds
     integer :: ier                      ! error code
     logical :: varpresent               ! if true, variable is on tape
-    character(len=32) :: subname='NCD_IOGLOBAL_3D_INT_IO' ! subroutine name
+    logical :: lbcast                   ! local copy of bcast flag
+    character(len=*),parameter :: subname='ncd_ioglobal_3d_int_io' ! subroutine name
 !-----------------------------------------------------------------------
+
+    start = 1
+    count = 1
+    lbcast = lbcast_def
+    if (present(bcast)) then
+       lbcast = bcast
+    endif
 
     if (flag == 'write') then
 
@@ -1639,18 +1499,27 @@ contains
 
        if (masterproc) then
           call check_var(ncid, varname, varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_int(ncid, varid, data), subname)
+          if (varpresent) then
+             if (single_column) then
+                call scam_field_offsets(ncid,'undefined',start,count)
+                call check_ret(nf_get_vara_int(ncid, varid, start, count, data), subname)
+             else
+                call check_ret(nf_get_var_int(ncid, varid, data), subname)
+             endif
+          endif
        end if
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
-       endif
-       if (varpresent) then
-          call mpi_bcast(data, size(data), MPI_INTEGER, 0, mpicom, ier)
+       if (lbcast) then
+          call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
           if (ier /= 0) then
-             write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
+          endif
+          if (varpresent) then
+             call mpi_bcast(data, size(data), MPI_INTEGER, 0, mpicom, ier)
+             if (ier /= 0) then
+                write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             end if
           end if
-       end if
+       endif
        if (present(readvar)) readvar = varpresent
 
     end if
@@ -1663,8 +1532,7 @@ contains
 ! !IROUTINE: ncd_ioglobal_real_3d
 !
 ! !INTERFACE:
-  subroutine ncd_ioglobal_real_3d(varname, data, long_name, units, flag, &
-                                  ncid, readvar, nt)
+  subroutine ncd_ioglobal_real_3d(varname, data, flag, ncid, readvar, nt, bcast)
 !
 ! !DESCRIPTION:
 ! netcdf I/O of global 3d real array
@@ -1675,10 +1543,9 @@ contains
     integer         , intent(in)    :: ncid             ! input unit
     character(len=*), intent(in)    :: varname          ! variable name
     real(r8)        , intent(inout) :: data(:,:,:)      ! local decomposition input data
-    character(len=*), optional, intent(in) :: long_name ! variable long name
-    character(len=*), optional, intent(in) :: units     ! variable units
     logical         , optional, intent(out):: readvar   ! true => variable is on initial dataset (read only)
     integer         , optional, intent(in) :: nt        ! time sample index
+    logical         , optional, intent(in) :: bcast     ! bcast on read?
 !
 ! !REVISION HISTORY:
 !
@@ -1687,11 +1554,18 @@ contains
 ! !LOCAL VARIABLES:
     integer :: varid                    ! netCDF variable id
     integer :: ier                      ! error code
-    integer :: dimid(4), ndims          ! dimension ids
     integer :: start(4), count(4)       ! output bounds
     logical :: varpresent               ! if true, variable is on tape
-    character(len=32) :: subname='NCD_IOGLOBAL_REAL_3D' ! subroutine name
+    logical :: lbcast                   ! local copy of bcast flag
+    character(len=*),parameter :: subname='ncd_ioglobal_real_3d' ! subroutine name
 !-----------------------------------------------------------------------
+
+    start = 1
+    count = 1
+    lbcast = lbcast_def
+    if (present(bcast)) then
+       lbcast = bcast
+    endif
 
     if (flag == 'write') then
 
@@ -1712,97 +1586,39 @@ contains
 
        if (masterproc) then
           call check_var(ncid, varname, varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, data), subname)
+          if (varpresent) then
+             if (single_column) then
+                call scam_field_offsets(ncid,'undefined',start,count)
+                call check_ret(nf_get_vara_double(ncid, varid, start, count, data), subname)
+             else
+                call check_ret(nf_get_var_double(ncid, varid, data), subname)
+             endif
+          endif
        end if
-       call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
-       if (ier /= 0) then
-          write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
-       endif
-       if (varpresent) then
-          call mpi_bcast(data, size(data), MPI_REAL8, 0, mpicom, ier)
+       if (lbcast) then
+          call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
           if (ier /= 0) then
-             write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             write(6,*)trim(subname),' error from mpi_bcast for varpresent'; call endrun()
+          endif
+          if (varpresent) then
+             call mpi_bcast(data, size(data), MPI_REAL8, 0, mpicom, ier)
+             if (ier /= 0) then
+                write(6,*)trim(subname),' error from mpi_bcast for data'; call endrun()
+             end if
           end if
-       end if
+       endif
        if (present(readvar)) readvar = varpresent
 
     end if
 
   end subroutine ncd_ioglobal_real_3d
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: get_size_dim1
-!
-! !INTERFACE:
-  integer function get_size_dim1 (dim1name)
-!
-! !DESCRIPTION:
-! Determine 1d size from dim1name
-!
-! !USES:
-  use decompMod, only : get_proc_global
-#ifdef RTM
-  use RunoffMod, only : get_proc_rof_global
-#endif
-!
-! !ARGUMENTS:
-    implicit none
-    character(len=*), intent(in) :: dim1name    !type of clm 1d array
-!
-! !REVISION HISTORY:
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-    integer :: nump        ! total number of pfts across all processors
-    integer :: numc        ! total number of columns across all processors
-    integer :: numl        ! total number of landunits across all processors
-    integer :: numg        ! total number of gridcells across all processors
-#ifdef RTM
-    integer :: num_rtm     ! total number of all rtm cells on all procs
-    integer :: num_lndrof  ! total number of land runoff across all procs
-    integer :: num_ocnrof  ! total number of ocean runoff across all procs
-#endif
-!-----------------------------------------------------------------------
-    ! Determine necessary indices
-
-    call get_proc_global(numg, numl, numc, nump)
-#ifdef RTM
-    call get_proc_rof_global(num_rtm, num_lndrof, num_ocnrof)
-#endif
-
-    select case (dim1name)
-    case('gridcell')
-       get_size_dim1 = numg
-    case('landunit')
-       get_size_dim1 = numl
-    case('column')
-       get_size_dim1 = numc
-    case('pft')
-       get_size_dim1 = nump
-#ifdef RTM
-    case('allrof')
-       get_size_dim1 = num_rtm
-    case('lndrof')
-       get_size_dim1 = num_rtm
-    case('ocnrof')
-       get_size_dim1 = num_rtm
-#endif
-    case default
-       write(6,*) 'GET1DSIZE does not match dim1 type: ', trim(dim1name)
-       call endrun()
-    end select
-
-  end function get_size_dim1
 !------------------------------------------------------------------------
 !BOP
 !
 ! !IROUTINE: subroutine scam_field_offsets
 !
 ! !INTERFACE:
-  subroutine scam_field_offsets(ncid,dim1name,data_offset, ndata)
+  subroutine scam_field_offsets(ncid,dim1name,start,count)
 !
 ! !DESCRIPTION: 
 ! Read/Write initial data from/to netCDF instantaneous initial data file 
@@ -1812,6 +1628,222 @@ contains
     use decompMod   , only : get_proc_bounds
     use clm_varpar  , only : maxpatch
     use nanMod      , only : nan
+    use clm_varctl  , only : scmlon,scmlat,single_column
+!
+! !ARGUMENTS:
+    implicit none
+    character(len=*), intent(in) :: dim1name ! dimension 1 name
+    integer, intent(in)    :: ncid             ! netCDF dataset id
+    integer, intent(inout) :: start(:)
+    integer, intent(inout) :: count(:)
+!
+! !CALLED FROM: subroutine inicfields
+!
+! !REVISION HISTORY:
+! Created by John Truesdale
+
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer :: data_offset      ! offset into land array 1st column 
+    integer :: ndata            ! number of column (or pft points to read)
+    real(r8) , pointer :: cols1dlon(:)       ! holds cols1d_ixy var
+    real(r8) , pointer :: cols1dlat(:)       ! holds cols1d_jxy var
+    real(r8) , pointer :: pfts1dlon(:)       ! holds pfts1d_ixy var
+    real(r8) , pointer :: pfts1dlat(:)       ! holds pfts1d_jxy var
+    integer cols(maxpatch)                   ! grid cell columns for scam
+    integer pfts(maxpatch)                   ! grid cell pfts for scam
+    integer :: cc,i                          ! index variable
+    integer :: totpfts                       ! total number of pfts
+    integer :: totcols                       ! total number of columns
+    integer, save :: col_offset              ! offset into land array of 
+                                             ! starting column
+    integer, save :: pi_offset               ! offset into land array of 
+                                             ! starting pft needed for scam
+    integer :: dimid                         ! netCDF dimension id
+    integer :: varid                         ! netCDF variable id
+    integer, save :: begp, endp              ! per-proc beg/end pft indices
+    integer, save :: begc, endc              ! per-proc beg/end col indices 
+    integer, save :: begl, endl              ! per-proc beg/end land indices
+    integer, save :: begg, endg              ! per-proc beg/end gridcell ind
+    logical, save :: firsttime = .true.      ! determine offsets once.
+    integer latidx,lonidx,ret
+    real(r8) closelat,closelon
+    character(len=32) :: subname = 'scam_field_offsets'
+
+!------------------------------------------------------------------------
+    call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+    start(1) = lonidx
+    count(1) = 1
+    start(2) = latidx
+    count(2) = 1
+    write(6,*) trim(subname),' scam_setlatlonidx ',lonidx,latidx
+
+    if ( firsttime) then
+       write(6,*) trim(subname),' firsttime=',firsttime
+       call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+
+       call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+       write(6,*) trim(subname),' beg,end=',begg, endg, begl, endl, begc, endc, begp, endp
+
+       ret = nf_inq_dimid (ncid, 'column', dimid)
+       write(6,*) trim(subname),' column ret=',ret,nf_noerr
+       if(ret==NF_NOERR) return
+       if (ret/=NF_EBADDIM) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+
+       ret = nf_inq_dimlen (ncid, dimid, totcols)
+       if (ret/=NF_NOERR) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+
+       ret = nf_inq_dimid (ncid, 'pft', dimid)
+       write(6,*) trim(subname),' pft ret=',ret,nf_noerr
+       if(ret==NF_NOERR) return
+       if (ret/=NF_EBADDIM) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+
+       ret = nf_inq_dimlen (ncid, dimid, totpfts)
+       if (ret/=NF_NOERR) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+
+       write(6,*) trim(subname),' totals ',totcols,totpfts
+
+       allocate (pfts1dlon(totpfts))
+       allocate (pfts1dlat(totpfts))
+       
+       ret =  nf_inq_varid (ncid, 'pfts1d_ixy', varid)
+       if (ret/=NF_NOERR) then
+         write(6,*)'inq_varid: id for pfts1d_ixy not found'
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+         return
+       end if
+
+       ret = nf_get_var_double (ncid, varid, pfts1dlon)
+       if (ret/=NF_NOERR) then
+         write(6,*)'GET_VAR_REALX: error reading pfts1dlon, varid =', varid
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+         return
+       end if
+
+       ret =  nf_inq_varid (ncid, 'pfts1d_jxy', varid)
+       if (ret/=NF_NOERR) then
+         write(6,*)'inq_varid: id for pfts1d_jxy not found'
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+         return
+       end if
+
+       ret = nf_get_var_double (ncid, varid, pfts1dlat)
+       if (ret/=NF_NOERR) then
+         write(6,*)'GET_VAR_REALX: error reading pfts1dlat, varid =', varid
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+         return
+       end if
+
+
+       allocate (cols1dlon(totcols))
+       allocate (cols1dlat(totcols))
+
+       ret =  nf_inq_varid (ncid, 'cols1d_ixy', varid)
+       if (ret/=NF_NOERR) then
+         write(6,*)'inq_varid: id for cols1d_ixy not found'
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+         return
+       end if
+
+       ret = nf_get_var_double (ncid, varid, cols1dlon)
+       if (ret/=NF_NOERR) then
+         write(6,*)'GET_VAR_REALX: error reading cols1dlon, varid =', varid
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+         return
+       end if
+
+       ret =  nf_inq_varid (ncid, 'cols1d_jxy', varid)
+       if (ret/=NF_NOERR) then
+         write(6,*)'inq_varid: id for cols1d_jxy not found'
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+         return
+       end if
+
+       ret = nf_get_var_double (ncid, varid, cols1dlat)
+       if (ret/=NF_NOERR) then
+         write(6,*)'GET_VAR_REALX: error reading cols1dlat, varid =', varid
+         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+         return
+       end if
+
+       cols(:)=nan
+       pfts(:)=nan
+       col_offset=nan
+       pi_offset=nan
+       i=1
+       do cc = 1, totcols
+          if (cols1dlon(cc).eq.lonidx.and.cols1dlat(cc).eq.latidx) then
+             cols(i)=cc
+             i=i+1
+          end if
+       end do
+       if (endc-begc+1.ne.i-1) then
+          write(6,*)'error in number of columns read for this gridcell',endc,begc,i
+!          call endrun
+       end if
+       if (i.eq.1) then
+          write(6,*)'couldnt find any columns for this latitude ',latidx,' and longitude ',lonidx
+!          call endrun
+       else
+          col_offset=cols(1)
+       end if
+
+       i=1
+       do cc = 1, totpfts
+          if (pfts1dlon(cc).eq.lonidx.and.pfts1dlat(cc).eq.latidx) then
+             pfts(i)=cc
+             i=i+1
+          end if
+       end do
+       if (endp-begp+1.ne.i-1) then
+          write(6,*)'error in number of pfts read for this gridcell',endp,begp,i
+!          call endrun
+       end if
+       if (i.eq.1) then
+          write(6,*)'couldnt find any pfts for this latitude ',latidx,' and longitude ',lonidx
+!          call endrun
+       else
+          pi_offset=pfts(1)
+       end if
+
+       deallocate (pfts1dlon)
+       deallocate (pfts1dlat)
+       deallocate (cols1dlon)
+       deallocate (cols1dlat)
+       firsttime = .false.
+    endif
+
+    write(6,*) trim(subname),' offsets ',pi_offset,col_offset
+    
+    if (dim1name == 'pft') then
+       data_offset = pi_offset
+       ndata = endp-begp+1
+    else if (dim1name == 'column') then
+       data_offset = col_offset
+       ndata = endc-begc+1
+    else
+       write(6,*)'error calculation array offsets for SCAM'
+!       call endrun()
+    endif
+  end subroutine scam_field_offsets
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: subroutine scam_field_offsets_old
+!
+! !INTERFACE:
+  subroutine scam_field_offsets_old(ncid,dim1name,data_offset, ndata)
+!
+! !DESCRIPTION: 
+! Read/Write initial data from/to netCDF instantaneous initial data file 
+!
+! !USES:
+    use shr_kind_mod, only : r8 => shr_kind_r8
+    use decompMod   , only : get_proc_bounds
+    use clm_varpar  , only : maxpatch
+    use nanMod      , only : nan
+    use clm_varctl  , only : scmlon,scmlat,single_column
 !
 ! !ARGUMENTS:
     implicit none
@@ -1985,6 +2017,6 @@ contains
     else
        write(6,*)'error calculation array offsets for SCAM'; call endrun()
     endif
-  end subroutine scam_field_offsets
+  end subroutine scam_field_offsets_old
 
 end module ncdio

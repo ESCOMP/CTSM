@@ -311,9 +311,9 @@ contains
     use clm_varpar  , only : lsmlon, lsmlat, maxpatch_pft, maxpatch, npatch_crop, numpft
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
-    use spmdMod     , only : masterproc, mpicom, MPI_REAL8
+    use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
     use clm_time_manager, only : get_nstep
-    use ncdio       , only : check_ret
+    use ncdio       , only : check_ret,ncd_iolocal
 !
 ! !ARGUMENTS:
     implicit none
@@ -330,7 +330,7 @@ contains
 !
 ! LOCAL VARIABLES:
     character(len=256) :: locfn           ! local file name
-    integer :: g,n,i,j,k,l,m,p,ivt        ! indices
+    integer :: g,n,k,l,m,p,ivt            ! indices
     integer :: ncid,dimid,varid           ! input netCDF id's
     integer :: beg4d(4),len4d(4)          ! netCDF variable edges
     integer :: ntim                       ! number of input data time samples
@@ -348,7 +348,6 @@ contains
     real(r8), pointer :: msai(:,:)  ! sai read from input files
     real(r8), pointer :: mhgtt(:,:) ! top vegetation height
     real(r8), pointer :: mhgtb(:,:) ! bottom vegetation height
-    real(r8), pointer :: arrayg(:)  ! temp global array
     real(r8), pointer :: arrayl(:)  ! temp local array
     character(len=32) :: subname = 'readMonthlyVegetation'
 !-----------------------------------------------------------------------
@@ -420,68 +419,48 @@ contains
 
        endif   ! masterproc
 
+       call mpi_bcast (nlon_i, 1, MPI_INTEGER, 0, mpicom, ier)
+       call mpi_bcast (nlat_i, 1, MPI_INTEGER, 0, mpicom, ier)
+       call mpi_bcast (npft_i, 1, MPI_INTEGER, 0, mpicom, ier)
+       call mpi_bcast (ntim  , 1, MPI_INTEGER, 0, mpicom, ier)
+
        if (single_column) then
           call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
-          beg4d(1) = closelonidx  ; len4d(1) = 1
-          beg4d(2) = closelatidx  ; len4d(2) = 1
-          beg4d(3) = 1         ; len4d(3) = npft_i
-          beg4d(4) = months(k) ; len4d(4) = 1
-       else
-          beg4d(1) = 1         ; len4d(1) = nlon_i
-          beg4d(2) = 1         ; len4d(2) = nlat_i
-          beg4d(3) = 1         ; len4d(3) = npft_i
-          beg4d(4) = months(k) ; len4d(4) = 1
        endif
 
-       allocate(arrayg(lsmlon*lsmlat),arrayl(begg:endg),stat=ier)
+       allocate(arrayl(begg:endg),stat=ier)
        if (ier /= 0) then
           write(6,*)subname, 'allocation array error '; call endrun()
        end if
 
        do n = nps,npe
+          beg4d(1) = 1         ; len4d(1) = nlon_i
+          beg4d(2) = 1         ; len4d(2) = nlat_i
+          beg4d(3) = n         ; len4d(3) = 1
+          beg4d(4) = months(k) ; len4d(4) = 1
+          if (single_column) then
+             beg4d(1) = closelonidx; len4d(1) = 1
+             beg4d(2) = closelatidx; len4d(2) = 1
+          else
+             beg4d(1) = 1         ; len4d(1) = nlon_i
+             beg4d(2) = 1         ; len4d(2) = nlat_i
+          end if
+          if (nps == 0) beg4d(3) = n+1     ! shift by "1" if index starts at zero
 
-          if (masterproc) then
-             beg4d(3) = n          ; len4d(3) = 1
-             beg4d(4) = months(k)  ; len4d(4) = 1
-             if (nps == 0) beg4d(3) = n+1     ! shift by "1" if index starts at zero
-             if (single_column) then
-                beg4d(1) = closelonidx; len4d(1) = 1
-                beg4d(2) = closelatidx; len4d(2) = 1
-             else
-                beg4d(1) = 1         ; len4d(1) = nlon_i
-                beg4d(2) = 1         ; len4d(2) = nlat_i
-             end if
-
-             call check_ret(nf_inq_varid(ncid, 'MONTHLY_LAI', varid), subname)
-             call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
-          endif
-          call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+          call ncd_iolocal(ncid,'MONTHLY_LAI','read',arrayl,grlnd,beg4d,len4d)
           mlai(begg:endg,n) = arrayl(begg:endg)
 
-          if (masterproc) then
-             call check_ret(nf_inq_varid(ncid, 'MONTHLY_SAI', varid), subname)
-             call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
-          endif
-          call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+          call ncd_iolocal(ncid,'MONTHLY_SAI','read',arrayl,grlnd,beg4d,len4d)
           msai(begg:endg,n) = arrayl(begg:endg)
 
-          if (masterproc) then
-             call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_TOP', varid), subname)
-             call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
-          endif
-          call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+          call ncd_iolocal(ncid,'MONTHLY_HEIGHT_TOP','read',arrayl,grlnd,beg4d,len4d)
           mhgtt(begg:endg,n) = arrayl(begg:endg)
 
-          if (masterproc) then
-             call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_BOT', varid), subname)
-             call check_ret(nf_get_vara_double(ncid, varid, beg4d, len4d, arrayg), subname)
-          endif
-          call scatter_data_from_master(arrayl,arrayg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,begg,endg)
+          call ncd_iolocal(ncid,'MONTHLY_HEIGHT_BOT','read',arrayl,grlnd,beg4d,len4d)
           mhgtb(begg:endg,n) = arrayl(begg:endg)
-
        enddo
-       deallocate(arrayg,arrayl)
 
+       deallocate(arrayl)
 
        if (masterproc) then
           call check_ret(nf_close(ncid), subname)
@@ -497,8 +476,6 @@ contains
        do p = begp,endp
 
           g = clm3%g%l%c%p%gridcell(p)
-          i = ldecomp%gdc2i(clm3%g%l%c%p%gridcell(p))
-          j = ldecomp%gdc2j(clm3%g%l%c%p%gridcell(p))
 
           ! Assign lai/sai/hgtt/hgtb to the top [maxpatch_pft] pfts
           ! as determined in subroutine surfrd

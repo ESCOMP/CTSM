@@ -734,7 +734,7 @@ contains
                long_name='', units='time steps')
        else if (flag == 'read' .or. flag == 'write') then
           call ncd_ioglobal(varname=varname, data=accum(nf)%period, &
-               ncid=ncid, flag=flag, readvar=readvar)
+               ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) call endrun()
           end if

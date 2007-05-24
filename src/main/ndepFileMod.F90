@@ -64,7 +64,7 @@ contains
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varctl  , only : fndepdat, single_column
     use fileutils   , only : getfil
-    use decompMod   , only : get_proc_bounds,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo
+    use decompMod   , only : get_proc_bounds
 !
 ! !ARGUMENTS:
     implicit none
@@ -116,7 +116,7 @@ contains
        endif 
 
        if ( .not. single_column )then
-          call ncd_iolocal(ncid,'NDEP_year','read',ndep,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo)
+          call ncd_iolocal(ncid,'NDEP_year','read',ndep,grlnd)
        else
           call endrun('ndeprd not implemented for SCAM' )
        end if
@@ -143,7 +143,7 @@ contains
 !
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
-    use decompMod   , only : get_proc_global, ldecomp
+    use decompMod   , only : get_proc_bounds
     use clm_time_manager, only : get_curr_date
     use clm_varctl  , only : fndepdyn
     use fileutils   , only : getfil
@@ -165,18 +165,12 @@ contains
     integer  :: sec                             ! seconds into current date for nstep+1
     integer  :: ier                             ! error status
     logical  :: found                           ! true => input dataset bounding dates found
-    integer  :: numg                            ! total number of gridcells across all procs
-    integer  :: numl                            ! total number of landunits across all procs
-    integer  :: numc                            ! total number of columns across all procs
-    integer  :: nump                            ! total number of pfts across all procs
-    integer , allocatable :: landmask_ndepdyn(:,:) ! input landmask
-    real(r8), allocatable :: ndep(:,:)          ! input ndep
+    integer  :: begg,endg                       ! local beg/end indices
+!    real(r8), allocatable :: ndep(:,:)          ! input ndep
     type(gridcell_type), pointer :: gptr        ! pointer to gridcell derived subtype
     character(len=256) :: locfn                 ! local file name
     character(len= 32) :: subname='ndepdyn_init' ! subroutine name
  !-----------------------------------------------------------------------
-
-    allocate(landmask_ndepdyn(lsmlon,lsmlat))
 
     ! Set pointers into derived type
 
@@ -184,10 +178,9 @@ contains
 
     ! Get relevant sizes
 
-    call get_proc_global(numg, numl, numc, nump)
+    call get_proc_bounds(begg,endg)
 
-
-    allocate(ndepdyn1(numg), ndepdyn2(numg), ndepdyn(numg), stat=ier)
+    allocate(ndepdyn1(begg:endg), ndepdyn2(begg:endg), ndepdyn(begg:endg), stat=ier)
     if (ier /= 0) then
        write(6,*)'ndepdyn_init allocation error for ndepdyn1, ndepdyn2, ndepdyn'
        call endrun()
@@ -249,35 +242,6 @@ contains
           end if
        end if
             
-       ! Get ndep time samples bracketing the current time
-
-       allocate (ndep(lsmlon,lsmlat), stat=ier)
-       if (ier /= 0) then
-          write(6,*)subname,' allocation error for ndep'; call endrun()
-       end if
-
-       call ndepdyn_getdata(nt1, ndep)
-
-!dir$ concurrent
-!cdir nodep
-       do g = 1,numg
-          i = ldecomp%gdc2i(g)
-          j = ldecomp%gdc2j(g)
-          ndepdyn1(g) = ndep(i,j)
-       end do
-       
-       call ndepdyn_getdata(nt2, ndep)
-
-!dir$ concurrent
-!cdir nodep
-       do g = 1,numg
-          i = ldecomp%gdc2i(g)
-          j = ldecomp%gdc2j(g)
-          ndepdyn2(g) = ndep(i,j)
-       end do
-
-       deallocate(ndep)
-
     end if   ! end of if-masterproc block
 
     call mpi_bcast (nt1   , 1, MPI_INTEGER, 0, mpicom, ier)
@@ -287,10 +251,10 @@ contains
        allocate(yearsndep(ntimes))
     end if
     call mpi_bcast (yearsndep, size(yearsndep), MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (ndepdyn1  , size(ndepdyn1)  , MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (ndepdyn2  , size(ndepdyn2)  , MPI_REAL8, 0, mpicom, ier)
 
-    deallocate(landmask_ndepdyn)
+    ! Get ndep time samples bracketing the current time
+    call ndepdyn_getdata(nt1, ndepdyn1)
+    call ndepdyn_getdata(nt2, ndepdyn2)
 
   end subroutine ndepdyn_init
 
@@ -308,7 +272,7 @@ contains
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_time_manager, only : get_curr_date, get_curr_calday
-    use decompMod   , only : get_proc_global, get_proc_bounds, ldecomp
+    use decompMod   , only : get_proc_bounds
     use clm_atmlnd  , only : clm_a2l
     use clm_varcon  , only : istsoil
 !
@@ -324,13 +288,6 @@ contains
     integer  :: day              ! day of month (1, ..., 31) for nstep+1
     integer  :: sec              ! seconds into current date for nstep+1
     real(r8) :: cday             ! current calendar day (1.0 = 0Z on Jan 1)
-    integer  :: numg             ! total number of gridcells across all processors
-    integer  :: numl             ! total number of landunits across all processors
-    integer  :: numc             ! total number of columns across all processors
-    integer  :: nump             ! total number of pfts across all processors
-    integer  :: begp, endp       ! per-proc beginning and ending pft indices
-    integer  :: begc, endc       ! per-proc beginning and ending column indices
-    integer  :: begl, endl       ! per-proc beginning and ending landunit indices
     integer  :: begg, endg       ! per-proc gridcell ending gridcell indices
     integer  :: ier              ! error status
     real(r8) :: wt1              ! time interpolation weights
@@ -345,8 +302,7 @@ contains
 
     ! Get relevant sizes
 
-    call get_proc_global(numg, numl, numc, nump)
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+    call get_proc_bounds(begg, endg)
 
     ! Interpolat ndep to current time step - output in ndep
 
@@ -376,32 +332,14 @@ contains
           write(6,*)subname,' error - current year is past input data boundary'
        end if
        
-       if (masterproc) then
 !dir$ concurrent
 !cdir nodep
-          do g = 1,numg
-             ndepdyn1(g) = ndepdyn2(g)
-          end do
+       do g = begg,endg
+          ndepdyn1(g) = ndepdyn2(g)
+       end do
 
-          allocate(ndep(lsmlon,lsmlat), stat=ier)
-          if (ier /= 0) then
-             write(6,*)subname,' allocation error for ndep'; call endrun()
-          end if
-          call ndepdyn_getdata(nt2, ndep)
+       call ndepdyn_getdata(nt2, ndepdyn2)
 
-!dir$ concurrent
-!cdir nodep
-          do g = 1,numg
-             i = ldecomp%gdc2i(g)
-             j = ldecomp%gdc2j(g)
-             ndepdyn2(g) = ndep(i,j)
-          end do
-          deallocate(ndep)
-       end if  ! end of if-masterproc if-block
-
-       call mpi_bcast (ndepdyn1, size(ndepdyn1), MPI_REAL8, 0, mpicom, ier)
-       call mpi_bcast (ndepdyn2, size(ndepdyn2), MPI_REAL8, 0, mpicom, ier)
-    
     end if  ! end of need new data if-block 
 
     ! Interpolate ndep to current time
@@ -435,21 +373,19 @@ contains
 ! Obtain dynamic ndep 
 !
 ! !USES:
+    use clmtype     , only : grlnd
     use shr_kind_mod, only : r8 => shr_kind_r8
 !
 ! !ARGUMENTS:
     implicit none
     include 'netcdf.inc'
     integer , intent(in)  :: ntime
-    real(r8), intent(out) :: ndep(:,:)
+    real(r8), pointer     :: ndep(:)
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer  :: i,j,m
-    integer  :: err, ierr, jerr, sumerr
-    integer  :: varid                             ! netcdf variable id
-    integer  :: beg3d(3), end3d(3), len3d(3)      ! input sizes
+    integer  :: beg3d(3), len3d(3)      ! input sizes
     character(len=32) :: subname='ndepdyn_getdata' ! subroutine name
 !-----------------------------------------------------------------------
     
@@ -457,8 +393,7 @@ contains
     beg3d(2) = 1     ;  len3d(2) = lsmlat
     beg3d(3) = ntime ;  len3d(3) = 1
     
-    call check_ret(nf_inq_varid(ncid, 'NDEP_year', varid), subname)
-    call check_ret(nf_get_vara_double(ncid, varid, beg3d, len3d, ndep), subname)
+    call ncd_iolocal(ncid,'NDEP_year','read',ndep,grlnd,beg3d,len3d)
 
   end subroutine ndepdyn_getdata
 

@@ -1,4 +1,168 @@
 ===============================================================
+Tag name: clm3_5_03
+Originator(s): tcraig
+Date: Wed May 23 18:57:17 MDT 2007
+One-line Summary: reduce memory, partial I/O refactor, downscaling implementation
+
+Purpose of changes:
+
+Bugs fixed (include bugzilla ID):
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: reduced memory usage
+
+Code reviewed by:
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all subroutines eliminated: removed dead code
+
+List all subroutines added and what they do:
+  A  +   src/main/decompInitMod.F90
+- split decompMod.F90 into decompMod.F90 and decompInitMod.F90
+
+List all existing files that have been modified, and describe the changes:
+  M      test/system/test_driver.sh
+  M      src/biogeochem/CASAMod.F90
+  M      src/biogeochem/STATICEcosysDynMod.F90
+  M      src/biogeochem/DGVMRestMod.F90
+  M      src/biogeochem/DGVMMod.F90
+  M      src/main/spmdGathScatMod.F90
+  M      src/main/accumulMod.F90
+  M      src/main/ncdio.F90
+  M      src/main/atmdrvMod.F90
+  M      src/main/subgridRestMod.F90
+  M      src/main/subgridMod.F90
+  M      src/main/initializeMod.F90
+  M      src/main/clmtypeInitMod.F90
+  M      src/main/pftdynMod.F90
+  M      src/main/iniTimeConst.F90
+  M      src/main/histFileMod.F90
+  M      src/main/clm_atmlnd.F90
+  M      src/main/restFileMod.F90
+  M      src/main/clm_csmMod.F90
+  M      src/main/clm_time_manager.F90
+  M      src/main/ndepFileMod.F90
+  M      src/main/initGridCellsMod.F90
+  M      src/main/surfrdMod.F90
+  M      src/main/domainMod.F90
+  M      src/main/decompMod.F90
+  M      src/main/areaMod.F90
+  M      src/main/iobinary.F90
+  M      src/main/clmtype.F90
+  M      src/main/clm_mct_mod.F90
+  M      src/main/histFldsMod.F90
+  M      src/riverroute/RtmMod.F90
+  M      src/riverroute/RunoffMod.F90
+SOFTWARE:
+- clean up dead code
+- initialize g,l,c,p gsmaps in glcp_init
+- split decompMod to decompMod + decompInitMod
+- change interface to gsmap gather/scatter/ncdio_local
+- start migration of I/O
+- rewrite spmdGathScat for gsmaps
+- refactor ncdio for gsmaps and make more general
+- get rid of gcell dc/sn and subgrid type completely
+- remove map_dc2sn and sn2dc from decompMod and rtm
+- get rid of lndrof and ocnrof as grid types
+- modify histFileMod
+- rtm fields now "global", need to put masking back in
+- rewrite iobinary to take advantage of new gather/scatter
+- add unpermute to clm_mct_mod
+- fix error in writing of indxupsc
+- implement non-mct masking in gs gather 
+- convert surfrd to use ncd_ioglobal and ncd_iolocal
+- change default ncd_ioglobal bcast to false
+- get rid of global domains
+- get rid of old celledge and cellarea routines
+- remove edge and latnews from domain, use latlon type
+- get rid of decompInit_domg2l
+- add areaset flag to domain
+- modify CASAMod to use ncd_local to read data
+- get rid of all uses of gdc2i, gdc2i, gdc2gsn, gsn2gdc and remove from decomp type
+- modify STATICEcosysDynMod to use ncd_iolocal to read data
+- modify ndepfile reading to reduce memory and use ncd_iolocal
+- add gindex and gindex_a to gptr clmtype
+- change 1d lon/lat writing in dgvm and casa to history file, use llatlon
+- fix rtm lat/lon bug, #478
+- update ccsm tag in test_driver (EK)
+DOWNSCALING:
+- implement downscaling in clm_mapa2l
+- add new vars and dims to history file
+- leave placeholder for lapse rate being passed to clm
+- include precip refractionation flux in coupling latent heat flux
+	
+	
+Summary of testing:
+
+CLM:
+  bluevista pretag: all pass except
+    014 bl131 TBL.sh 4p_vodsr_dh t42half 48 - changes in downscaling
+    065 sm921 TSMseqccsm.sh seqccsm_4x5_dh seqccsm 48 - csm_share compatability
+    066 sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 3 - csm_share 
+        compatability, passes when pointed to seqflxave16_cam3_4_12 tag
+  tempest pretag: all pass
+  bangkok/lf95 pretag: all pass except
+    033 sm951 TSMseqccsm.sh seqccsm_10x15_dm seqccsm 48 - csm_share 
+        compatability, passes when pointed to seqflxave16_cam3_4_12 tag
+    034 sm982 TSCscam.sh seqccsm_64x128_s scam_prep scam_ds scam 3 -  csm_share
+        compatability
+  lightning posttag: all pass except
+    019 sm551 TSM.sh _dh 10x15 48 - science fails
+        Error: Forcing height is below canopy height for pft index  688
+        ENDRUN: called without a message string
+    020 er551 TER.sh _dh 10x15 10+38 - sm551 fail
+    021 br551 TBR.sh _dh 10x15 24+24 - sm551 fail
+    022 bl551 TBL.sh _dh 10x15 48 - sm551 fail
+
+CAM:
+  bluevista pretag: all pass except
+    043 br531 TBR.sh s32c11dh pghgsul 6+3s - fails in out of the box 
+        seqflxave16_clm3_4_12,	assuming it's a pre-existing condition
+  tempest pretag: all pass except
+    034 br531 TBR.sh s32c11dh pghgsul 6+3s
+  bangkok pretag: all pass except
+    037 br511 TBR.sh s8c8mdm ttrac 6+3s
+		
+CLM tag used for the baseline comparison tests: clm3_5_02
+CAM tag used for the baseline comparison tests: seqflxave16_clm3_4_12
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:  
+  everything is bfb except for downscaling when coarse and finemesh are 
+  on different grids.  
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):  
+      larger than roundoff.  implemented a much improved downscaling package consistent 
+      with finemesh testing project.  expect different answers but only when
+      coarse and finemesh grids are not identical.  shown via testing.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+
+===============================================================
 Tag name: clm3_5_02
 Originator(s): mvertens (Mariana Vertenstein)
 Date: Tue May 22 11:23:13 MDT 2007

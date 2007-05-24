@@ -14,8 +14,15 @@ module histFileMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_getenv
+  use shr_sys_mod , only : shr_sys_flush
   use abortutils  , only : endrun
   use clm_varcon  , only : spval,ispval
+  use clmtype     , only : gratm, grlnd, nameg, namel, namec, namep, allrof
+  use decompMod   , only : get_proc_bounds, get_proc_global
+  use decompMod   , only : get_proc_bounds_atm, get_proc_global_atm
+#if (defined RTM)
+  use RunoffMod   , only : get_proc_rof_bounds, get_proc_rof_global
+#endif
   implicit none
   save
   private
@@ -238,8 +245,6 @@ module histFileMod
   character(len= 8) :: logname                   ! user name
   character(len=max_chars) :: locfnh(max_tapes)  ! local history file names
   logical :: htapes_defined = .false.            ! flag indicates history contents have been defined
-  real(r8),pointer,private :: llon(:)            ! land lons, 1d global
-  real(r8),pointer,private :: llat(:)            ! land lats, 1d global
 
 !
 ! NetCDF  Id's
@@ -315,11 +320,6 @@ contains
 ! into a type entry in the global master field list (masterlist).
 !
 ! !USES:
-    use clmtype  , only : nameg, namel, namec, namep, lndrof, ocnrof, allrof
-    use decompMod, only : get_proc_bounds, get_proc_global
-#if (defined RTM)
-    use RunoffMod, only : get_proc_rof_bounds, get_proc_rof_global
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -350,22 +350,25 @@ contains
     integer :: begc, endc   ! per-proc beginning and ending column indices
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
+    integer :: begg_atm, endg_atm   ! per-proc atm cells ending gridcell indices
+    integer :: numa         ! total number of atm cells across all processors
     integer :: numg         ! total number of gridcells across all processors
     integer :: numl         ! total number of landunits across all processors
     integer :: numc         ! total number of columns across all processors
     integer :: nump         ! total number of pfts across all processors
-    integer :: beg_lndrof, end_lndrof, num_lndrof  ! land  runoff bounds
-    integer :: beg_ocnrof, end_ocnrof, num_ocnrof  ! ocean runoff bounds
-    integer :: beg_rof, end_rof, num_rtm      ! total num of rtm cells on all procs
+    integer :: num_rtm      ! total runoff points
+    integer :: beg_rof, end_rof  ! total num of rtm cells on all procs
 !------------------------------------------------------------------------
 
     ! Determine bounds
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
+    call get_proc_bounds_atm(begg_atm, endg_atm)
+    call get_proc_global_atm(numa)
 #if (defined RTM)
     call get_proc_rof_bounds(beg_rof, end_rof)
-    call get_proc_rof_global(num_rtm, num_lndrof, num_ocnrof)
+    call get_proc_rof_global(num_rtm)
 #endif
     ! Ensure that new field is not all blanks
 
@@ -414,6 +417,14 @@ contains
     masterlist(f)%field%l2g_scale_type = l2g_scale_type
 
     select case (type1d)
+    case (gratm)
+       masterlist(f)%field%beg1d = begg_atm
+       masterlist(f)%field%end1d = endg_atm
+       masterlist(f)%field%num1d = numa
+    case (grlnd)
+       masterlist(f)%field%beg1d = begg
+       masterlist(f)%field%end1d = endg
+       masterlist(f)%field%num1d = numg
     case (nameg)
        masterlist(f)%field%beg1d = begg
        masterlist(f)%field%end1d = endg
@@ -432,14 +443,6 @@ contains
        masterlist(f)%field%num1d = nump
 #if (defined RTM)
     case (allrof)
-       masterlist(f)%field%beg1d = beg_rof
-       masterlist(f)%field%end1d = end_rof
-       masterlist(f)%field%num1d = num_rtm
-    case (lndrof)
-       masterlist(f)%field%beg1d = beg_rof
-       masterlist(f)%field%end1d = end_rof
-       masterlist(f)%field%num1d = num_rtm
-    case (ocnrof)
        masterlist(f)%field%beg1d = beg_rof
        masterlist(f)%field%end1d = end_rof
        masterlist(f)%field%num1d = num_rtm
@@ -900,12 +903,6 @@ contains
 ! the master field list to the active list for the tape.
 !
 ! !USES:
-    use decompMod , only : get_proc_bounds, get_proc_global
-    use clmtype   , only : nameg, namel, namec, namep, lndrof, ocnrof, allrof
-    use decompMod , only : get_proc_bounds, get_proc_global
-#if (defined RTM)
-    use RunoffMod , only : get_proc_rof_bounds, get_proc_rof_global
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -926,6 +923,8 @@ contains
     integer :: begc, endc           ! per-proc beginning and ending column indices
     integer :: begl, endl           ! per-proc beginning and ending landunit indices
     integer :: begg, endg           ! per-proc gridcell ending gridcell indices
+    integer :: begg_atm, endg_atm   ! per-proc atm cells ending gridcell indices
+    integer :: numa                 ! total number of atm cells across all processors
     integer :: numg                 ! total number of gridcells across all processors
     integer :: numl                 ! total number of landunits across all processors
     integer :: numc                 ! total number of columns across all processors
@@ -934,14 +933,8 @@ contains
     integer :: beg1d_out,end1d_out  ! history output per-proc 1d beginning and ending indices
     integer :: num1d_out            ! history output 1d size
 #if (defined RTM)
-    integer :: beg_roflnd           ! per-proc beginning land runoff index
-    integer :: end_roflnd           ! per-proc ending land runoff index
-    integer :: beg_rofocn           ! per-proc beginning ocean runoff index
-    integer :: end_rofocn           ! per-proc ending ocean runoff index
     integer :: beg_rof              ! per-proc beginning land runoff index
     integer :: end_rof              ! per-proc ending land runoff index
-    integer :: num_roflnd           ! total number of land runoff points across all procs
-    integer :: num_rofocn           ! total number of ocean runoff points across all procs
     integer :: num_rtm              ! total number of rtm cells on all procs
 #endif
 !-----------------------------------------------------------------------
@@ -965,9 +958,11 @@ contains
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
+    call get_proc_bounds_atm(begg_atm, endg_atm)
+    call get_proc_global_atm(numa)
 #if (defined RTM)
     call get_proc_rof_bounds(beg_rof, end_rof)
-    call get_proc_rof_global(num_rtm, num_roflnd, num_rofocn)
+    call get_proc_rof_global(num_rtm)
 #endif
 
     ! Modify type1d_out if necessary
@@ -1009,6 +1004,14 @@ contains
        beg1d_out = begg
        end1d_out = endg
        num1d_out = numg
+    else if (type1d_out == grlnd) then
+       beg1d_out = begg
+       end1d_out = endg
+       num1d_out = numg
+    else if (type1d_out == gratm) then
+       beg1d_out = begg_atm
+       end1d_out = endg_atm
+       num1d_out = numa
     else if (type1d_out == namel) then
        beg1d_out = begl
        end1d_out = endl
@@ -1023,14 +1026,6 @@ contains
        num1d_out = nump
 #if (defined RTM)
     else if (type1d_out == allrof) then
-       beg1d_out = beg_rof
-       end1d_out = end_rof
-       num1d_out = num_rtm
-    else if (type1d_out == lndrof) then
-       beg1d_out = beg_rof
-       end1d_out = end_rof
-       num1d_out = num_rtm
-    else if (type1d_out == ocnrof) then
        beg1d_out = beg_rof
        end1d_out = end_rof
        num1d_out = num_rtm
@@ -1080,7 +1075,6 @@ contains
 ! into its history buffer for appropriate tapes.
 !
 ! !USES:
-    use decompMod , only : get_proc_bounds, get_proc_global
 !
 ! !ARGUMENTS:
     implicit none
@@ -1721,13 +1715,9 @@ contains
 ! !USES:
     use clmtype
     use ncdio
-    use decompMod   , only : get_proc_global
     use clm_varpar  , only : lsmlon, lsmlat, nlevsoi, nlevlak, numrad, rtmlon, rtmlat
     use clm_varctl  , only : caseid, ctitle, frivinp_rtm, fsurdat, finidat, fpftcon
-    use domainMod   , only : ldomain
-#if (defined RTM)
-    use RunoffMod   , only : get_proc_rof_global
-#endif	
+    use domainMod   , only : llatlon,alatlon
     use clm_varcon  , only : zsoi, zlak
     use fileutils   , only : get_filename
     use clm_time_manager, only : get_ref_date
@@ -1881,8 +1871,10 @@ contains
     do n = 1,num_subs
        call check_ret(nf_def_dim (nfid(t), subs_name(n), subs_dim(n), dimid), subname)
     end do
-    call check_ret(nf_def_dim (nfid(t), 'lon'   , lsmlon, dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'lat'   , lsmlat, dimid), subname)
+    call check_ret(nf_def_dim (nfid(t), 'lon'   , llatlon%ni, dimid), subname)
+    call check_ret(nf_def_dim (nfid(t), 'lat'   , llatlon%nj, dimid), subname)
+    call check_ret(nf_def_dim (nfid(t), 'lonatm', alatlon%ni, dimid), subname)
+    call check_ret(nf_def_dim (nfid(t), 'latatm', alatlon%nj, dimid), subname)
 #if (defined RTM)
     call check_ret(nf_def_dim (nfid(t), 'lonrof', rtmlon, dimid), subname)
     call check_ret(nf_def_dim (nfid(t), 'latrof', rtmlat, dimid), subname)
@@ -1980,10 +1972,10 @@ contains
     call ncd_ioglobal(varname='levsoi', data=zsoi, ncid=nfid(t), flag='write')
     call ncd_ioglobal(varname='levlak', data=zlak, ncid=nfid(t), flag='write')
 
-    call ncd_ioglobal(varname='edgen', data=ldomain%edges(1), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edgee', data=ldomain%edges(2), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edges', data=ldomain%edges(3), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edgew', data=ldomain%edges(4), ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edgen', data=llatlon%edges(1), ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edgee', data=llatlon%edges(2), ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edges', data=llatlon%edges(3), ncid=nfid(t), flag='write')
+    call ncd_ioglobal(varname='edgew', data=llatlon%edges(4), ncid=nfid(t), flag='write')
 
   end subroutine htape_create
 
@@ -2003,10 +1995,10 @@ contains
 ! !USES:
     use clmtype
     use subgridAveMod, only : c2g
-    use decompMod    , only : get_proc_bounds, get_proc_global, ldecomp
-    use domainMod   , only : ldomain,llatlon,gatm
+    use decompMod    , only :ldecomp
+    use domainMod    , only : ldomain,llatlon,adomain,alatlon,gatm
 #if (defined RTM)
-    use RunoffMod   , only : runoff,get_proc_rof_global
+    use RunoffMod    , only : runoff
 #endif	
     use clm_varpar   , only : lsmlon, lsmlat, nlevsoi
     use ncdio
@@ -2029,13 +2021,6 @@ contains
     integer :: begc, endc   ! per-proc beginning and ending column indices
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
-    integer :: numg         ! total number of gridcells across all processors
-    integer :: numl         ! total number of landunits across all processors
-    integer :: numc         ! total number of columns across all processors
-    integer :: nump         ! total number of pfts across all processors
-    integer :: num_roflnd   ! total number of land runoff points across all procs
-    integer :: num_rofocn   ! total number of ocn runoff points across all procs
-    integer :: num_rtm      ! total number of rtm cell on all procs
     character(len=max_chars) :: long_name ! variable long name
     character(len=max_namlen):: varname   ! variable name
     character(len=max_namlen):: units     ! variable units
@@ -2084,6 +2069,12 @@ contains
          call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, dim1name='lat', &
               long_name='coordinate latitude', units='degrees_north', &
               ncid=nfid(t))
+         call ncd_defvar(varname='lonatm', xtype=tape(t)%ncprec, dim1name='lonatm', &
+              long_name='atm coordinate longitude', units='degrees_east', &
+              ncid=nfid(t))
+         call ncd_defvar(varname='latatm', xtype=tape(t)%ncprec, dim1name='latatm', &
+              long_name='atm coordinate latitude', units='degrees_north', &
+              ncid=nfid(t))
 #if (defined RTM)
          call ncd_defvar(varname='lonrof', xtype=tape(t)%ncprec, dim1name='lonrof', &
               long_name='runoff coordinate longitude', units='degrees_east', ncid=nfid(t))
@@ -2130,6 +2121,18 @@ contains
               dim1name='lon', dim2name='lat', &
               long_name='upscaling atm global grid index', ncid=nfid(t), &
               imissing_value=ispval, ifill_value=ispval)
+         call ncd_defvar(varname='longxyatm',   xtype=tape(t)%ncprec, &
+              dim1name='lonatm', dim2name='latatm', &
+              long_name='atm longitude', units='degrees_east',  ncid=nfid(t), &
+              missing_value=spval, fill_value=spval)
+         call ncd_defvar(varname='latixyatm',   xtype=tape(t)%ncprec, &
+              dim1name='lonatm', dim2name='latatm',&
+              long_name='atm latitude', units='degrees_north', ncid=nfid(t), &
+              missing_value=spval, fill_value=spval)
+         call ncd_defvar(varname='areaatm',     xtype=tape(t)%ncprec, &
+              dim1name='lonatm', dim2name='latatm',&
+              long_name='atm grid cell areas', units='km^2', ncid=nfid(t), &
+              missing_value=spval, fill_value=spval)
        end if
 
     else if (mode == 'write') then
@@ -2140,10 +2143,6 @@ contains
        cptr => clm3%g%l%c
 
        call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-       call get_proc_global(numg, numl, numc, nump)
-#if (defined RTM)
-       call get_proc_rof_global(num_rtm, num_roflnd, num_rofocn)
-#endif
 
        allocate(histi(begc:endc,nlevsoi), stat=ier)
        if (ier /= 0) then
@@ -2208,6 +2207,12 @@ contains
        if (masterproc) then
           call ncd_ioglobal(varname='lat', data=llatlon%latc, ncid=nfid(t), flag='write')
        endif
+       if (masterproc) then
+          call ncd_ioglobal(varname='lonatm', data=alatlon%lonc, ncid=nfid(t), flag='write')
+       endif
+       if (masterproc) then
+          call ncd_ioglobal(varname='latatm', data=alatlon%latc, ncid=nfid(t), flag='write')
+       endif
 
 #if (defined RTM)
        if (masterproc) then
@@ -2245,9 +2250,17 @@ contains
        call ncd_iolocal(varname='pftmask' , data=ldomain%pftm, &
             dim1name='gridcell', ncid=nfid(t), &
             flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
-       call ncd_iolocal(varname='indxupsc', data=gatm, &
-            dim1name='gridcell', ncid=nfid(t), &
-            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+!       call ncd_iolocal(varname='indxupsc', data=gatm, &
+!            dim1name='gridcell', ncid=nfid(t), &
+!            flag='write', nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+       call ncd_ioglobal(varname='indxupsc', data=gatm, &
+            flag='write', ncid=nfid(t))
+       call ncd_iolocal(ncid=nfid(t),varname='longxyatm',flag='write', &
+            data=adomain%lonc, clmlevel=gratm)
+       call ncd_iolocal(ncid=nfid(t),varname='latixyatm',flag='write', &
+            data=adomain%latc, clmlevel=gratm)
+       call ncd_iolocal(ncid=nfid(t),varname='areaatm',flag='write', &
+            data=adomain%area, clmlevel=gratm)
     end if
 
   end subroutine htape_timeconst
@@ -2348,9 +2361,17 @@ contains
              write(6,*)subname,' error: unknown time averaging flag (avgflag)=',avgflag; call endrun()
           end select
 
-          if (type1d_out == 'lndrof' .or. type1d_out == 'ocnrof' .or. type1d_out == 'allrof') then
+          if (type1d_out == allrof) then
 
              dim1name = 'lonrof'; dim2name = 'latrof'
+             call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
+                  dim1name=dim1name, dim2name=dim2name, dim3name='time', &
+                  long_name=long_name, units=units, cell_method=avgstr, missing_value=spval, fill_value=spval)
+
+
+          elseif (type1d_out == gratm) then
+
+             dim1name = 'lonatm'; dim2name = 'latatm'
              call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                   dim1name=dim1name, dim2name=dim2name, dim3name='time', &
                   long_name=long_name, units=units, cell_method=avgstr, missing_value=spval, fill_value=spval)
@@ -2402,7 +2423,12 @@ contains
 
           ! Write history output.  Always output land and ocean runoff on xy grid.
 
-          if (type1d_out == 'lndrof' .or. type1d_out == 'ocnrof' .or. type1d_out == 'allrof') then
+          if (type1d_out == allrof) then
+
+             call ncd_iolocal(flag='write', varname=varname, dim1name=type1d_out, &
+                  data=hist1do, ncid=nfid(t), nlonxy=nlonxy, nlatxy=nlatxy, nt=nt)
+
+          elseif (type1d_out == gratm) then
 
              call ncd_iolocal(flag='write', varname=varname, dim1name=type1d_out, &
                   data=hist1do, ncid=nfid(t), nlonxy=nlonxy, nlatxy=nlatxy, nt=nt)
@@ -2455,7 +2481,8 @@ contains
 ! !USES:
     use ncdio
     use clmtype
-    use decompMod   , only : get_proc_bounds, ldecomp
+    use decompMod   , only : ldecomp
+    use domainMod   , only : ldomain
 !
 ! !ARGUMENTS:
     implicit none
@@ -2627,11 +2654,11 @@ contains
        call ncd_iolocal(varname='grid1d_lon', data=gptr%londeg, dim1name='gridcell', ncid=ncid, flag='write')
        call ncd_iolocal(varname='grid1d_lat', data=gptr%latdeg, dim1name='gridcell', ncid=ncid, flag='write')
        do g=begg,endg
-         igarr(g)= ldecomp%gdc2i(g)
+         igarr(g)= mod(ldecomp%gdc2glo(g)-1,ldomain%ni) + 1
        enddo
        call ncd_iolocal(varname='grid1d_ixy', data=igarr      , dim1name='gridcell', ncid=ncid, flag='write')
        do g=begg,endg
-         igarr(g)= ldecomp%gdc2j(g)
+         igarr(g)= (ldecomp%gdc2glo(g) - 1)/ldomain%ni + 1
        enddo
        call ncd_iolocal(varname='grid1d_jxy', data=igarr      , dim1name='gridcell', ncid=ncid, flag='write')
 
@@ -2646,11 +2673,11 @@ contains
        enddo
        call ncd_iolocal(varname='land1d_lat', data=rlarr, dim1name='landunit', ncid=ncid, flag='write')
        do l=begl,endl
-         ilarr(l) = ldecomp%gdc2i(lptr%gridcell(l))
+         ilarr(l) = mod(ldecomp%gdc2glo(lptr%gridcell(l))-1,ldomain%ni) + 1
        enddo
        call ncd_iolocal(varname='land1d_ixy', data=ilarr, dim1name='landunit', ncid=ncid, flag='write')
        do l=begl,endl
-         ilarr(l) = ldecomp%gdc2j(lptr%gridcell(l))
+         ilarr(l) = (ldecomp%gdc2glo(lptr%gridcell(l))-1)/ldomain%ni + 1
        enddo
        call ncd_iolocal(varname='land1d_jxy', data=ilarr, dim1name='landunit', ncid=ncid, flag='write')
        call ncd_iolocal(varname='land1d_gi'       , data=lptr%gridcell, dim1name='landunit', ncid=ncid, flag='write')
@@ -2668,11 +2695,11 @@ contains
        enddo
        call ncd_iolocal(varname='cols1d_lat', data=rcarr, dim1name='column', ncid=ncid, flag='write')
        do c=begc,endc
-         icarr(c) = ldecomp%gdc2i(cptr%gridcell(c))
+         icarr(c) = mod(ldecomp%gdc2glo(cptr%gridcell(c))-1,ldomain%ni) + 1
        enddo
        call ncd_iolocal(varname='cols1d_ixy', data=icarr, dim1name='column', ncid=ncid, flag='write')
        do c=begc,endc
-         icarr(c) = ldecomp%gdc2j(cptr%gridcell(c))
+         icarr(c) = (ldecomp%gdc2glo(cptr%gridcell(c))-1)/ldomain%ni + 1
        enddo
        call ncd_iolocal(varname='cols1d_jxy', data=icarr, dim1name='column', ncid=ncid, flag='write')
        call ncd_iolocal(varname='cols1d_gi'     , data=cptr%gridcell, dim1name='column', ncid=ncid, flag='write')
@@ -2695,11 +2722,11 @@ contains
        enddo
        call ncd_iolocal(varname='pfts1d_lat', data=rparr, dim1name='pft', ncid=ncid, flag='write')
        do p=begp,endp
-         iparr(p) = ldecomp%gdc2i(pptr%gridcell(p))
+         iparr(p) = mod(ldecomp%gdc2glo(pptr%gridcell(p))-1,ldomain%ni) + 1
        enddo
        call ncd_iolocal(varname='pfts1d_ixy', data=iparr, dim1name='pft', ncid=ncid, flag='write')
        do p=begp,endp
-         iparr(p) = ldecomp%gdc2j(pptr%gridcell(p))
+         iparr(p) = (ldecomp%gdc2glo(pptr%gridcell(p))-1)/ldomain%ni + 1
        enddo
        call ncd_iolocal(varname='pfts1d_jxy', data=iparr, dim1name='pft', ncid=ncid, flag='write')
        call ncd_iolocal(varname='pfts1d_gi'       , data=pptr%gridcell, dim1name='pft', ncid=ncid, flag='write')
@@ -2758,7 +2785,6 @@ contains
     use shr_const_mod   , only : SHR_CONST_CDAY
     use ncdio
     use clmtype
-    use shr_sys_mod     , only : shr_sys_flush
     use do_close_dispose, only : do_disp
 !
 ! !ARGUMENTS:
@@ -3002,11 +3028,6 @@ contains
 ! !USES:
     use iobinary
     use ncdio
-    use clmtype   , only : nameg, namel, namec, namep, ocnrof, lndrof, allrof
-    use decompMod , only : get_proc_bounds, get_proc_global
-#if (defined RTM)
-    use RunoffMod , only : get_proc_rof_bounds, get_proc_rof_global
-#endif
     use clm_varctl, only : archive_dir, nsrest, mss_irt
     use fileutils , only : set_filename, getfil
     use spmdMod   , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER, MPI_CHARACTER
@@ -3045,19 +3066,15 @@ contains
     integer :: begc, endc   ! per-proc beginning and ending column indices
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
+    integer :: begg_atm, endg_atm   ! per-proc atm cells ending gridcell indices
+    integer :: numa                 ! total number of atm cells across all processors
     integer :: numg         ! total number of gridcells across all processors
     integer :: numl         ! total number of landunits across all processors
     integer :: numc         ! total number of columns across all processors
     integer :: nump         ! total number of pfts across all processors
 #if (defined RTM)
-    integer :: beg_roflnd   ! per-proc beginning land runoff index
-    integer :: end_roflnd   ! per-proc ending land runoff index
-    integer :: beg_rofocn   ! per-proc beginning ocean runoff index
-    integer :: end_rofocn   ! per-proc ending ocean runoff index
     integer :: beg_rof      ! per-proc beginning ocean runoff index
     integer :: end_rof      ! per-proc ending ocean runoff index
-    integer :: num_roflnd   ! total number of land runoff points across all procs
-    integer :: num_rofocn   ! total number of ocean runoff points across all procs
     integer :: num_rtm      ! total number of rtm cell on all procs
 #endif
     character(len=32) :: subname = 'restart_history'
@@ -3080,9 +3097,11 @@ contains
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     call get_proc_global(numg, numl, numc, nump)
+    call get_proc_bounds_atm(begg_atm, endg_atm)
+    call get_proc_global_atm(numa)
 #if (defined RTM)
     call get_proc_rof_bounds(beg_rof, end_rof)
-    call get_proc_rof_global(num_rtm, num_roflnd, num_rofocn)
+    call get_proc_rof_global(num_rtm)
 #endif
 
     ! Read/write history file data only for restart run (not for branch run)
@@ -3240,6 +3259,14 @@ contains
 
               type1d_out = tape(t)%hlist(f)%field%type1d_out
               select case (type1d_out)
+              case (gratm)
+                 num1d_out = numa
+                 beg1d_out = begg_atm
+                 end1d_out = endg_atm
+              case (grlnd)
+                 num1d_out = numg
+                 beg1d_out = begg
+                 end1d_out = endg
               case (nameg)
                  num1d_out = numg
                  beg1d_out = begg
@@ -3258,14 +3285,6 @@ contains
                  end1d_out = endp
 #if (defined RTM)
               case (allrof)
-                 num1d_out = num_rtm
-                 beg1d_out = beg_rof
-                 end1d_out = end_rof
-              case (lndrof)
-                 num1d_out = num_rtm
-                 beg1d_out = beg_rof
-                 end1d_out = end_rof
-              case (ocnrof)
                  num1d_out = num_rtm
                  beg1d_out = beg_rof
                  end1d_out = end_rof
@@ -3291,6 +3310,14 @@ contains
 
               type1d = tape(t)%hlist(f)%field%type1d
               select case (type1d)
+              case (gratm)
+                 num1d = numa
+                 beg1d = begg_atm
+                 end1d = endg_atm
+              case (grlnd)
+                 num1d = numg
+                 beg1d = begg
+                 end1d = endg
               case (nameg)
                  num1d = numg
                  beg1d = begg
@@ -3309,14 +3336,6 @@ contains
                  end1d = endp
 #if (defined RTM)
               case (allrof)
-                 num1d = num_rtm
-                 beg1d = beg_rof
-                 end1d = end_rof
-              case (lndrof)
-                 num1d = num_rtm
-                 beg1d = beg_rof
-                 end1d = end_rof
-              case (ocnrof)
                  num1d = num_rtm
                  beg1d = beg_rof
                  end1d = end_rof
@@ -3358,60 +3377,33 @@ contains
               nacs       => tape(t)%hlist(f)%nacs
               hbuf       => tape(t)%hlist(f)%hbuf
 
-              if (num2d == 1) then
-                 allocate(ibuf1d(num1d_out))
-                 allocate(rbuf1d(num1d_out))
-                 if (flag == 'read') then
-                    call readin (nio, ibuf1d, clmlevel=type1d_out)
-                    call readin (nio, rbuf1d, clmlevel=type1d_out)
+              allocate(ibuf2d(beg1d_out:end1d_out,num2d))
+              allocate(rbuf2d(beg1d_out:end1d_out,num2d))
+              if (flag == 'read') then
+                 call bin_iolocal (nio, ibuf2d, clmlevel=type1d_out, flag='read')
+                 call bin_iolocal (nio, rbuf2d, clmlevel=type1d_out, flag='read')
+                 do lev = 1,num2d
 !dir$ concurrent
 !cdir nodep
                     do k = beg1d_out,end1d_out
-                       nacs(k,1) = ibuf1d(k)
-                       hbuf(k,1) = rbuf1d(k)
+                       nacs(k,lev) = ibuf2d(k,lev)
+                       hbuf(k,lev) = rbuf2d(k,lev)
                     end do
-                 else if (flag == 'write') then
+                 end do
+              else if (flag == 'write') then
+                 do lev = 1,num2d
 !dir$ concurrent
 !cdir nodep
                     do k = beg1d_out,end1d_out
-                       ibuf1d(k) = nacs(k,1)
-                       rbuf1d(k) = hbuf(k,1)
+                       ibuf2d(k,lev) = nacs(k,lev)
+                       rbuf2d(k,lev) = hbuf(k,lev)
                     end do
-                    call wrtout (nio, ibuf1d, clmlevel=type1d_out)
-                    call wrtout (nio, rbuf1d, clmlevel=type1d_out)
-                 endif
-                 deallocate(ibuf1d)
-                 deallocate(rbuf1d)
-              else
-                 allocate(ibuf2d(num2d,num1d_out))
-                 allocate(rbuf2d(num2d,num1d_out))
-                 if (flag == 'read') then
-                    call readin (nio, ibuf2d, clmlevel=type1d_out)
-                    call readin (nio, rbuf2d, clmlevel=type1d_out)
-                    do lev = 1,num2d
-!dir$ concurrent
-!cdir nodep
-                       do k = beg1d_out,end1d_out
-                          nacs(k,lev) = ibuf2d(lev,k)
-                          hbuf(k,lev) = rbuf2d(lev,k)
-                       end do
-                    end do
-                 else if (flag == 'write') then
-                    do lev = 1,num2d
-!dir$ concurrent
-!cdir nodep
-                       do k = beg1d_out,end1d_out
-                          ibuf2d(lev,k) = nacs(k,lev)
-                          rbuf2d(lev,k) = hbuf(k,lev)
-                       end do
-                    end do
-                    call wrtout (nio, ibuf2d, clmlevel=type1d_out)
-                    call wrtout (nio, rbuf2d, clmlevel=type1d_out)
-                 endif
-                 deallocate(ibuf2d)
-                 deallocate(rbuf2d)
+                 end do
+                 call bin_iolocal (nio, ibuf2d, clmlevel=type1d_out, flag='write')
+                 call bin_iolocal (nio, rbuf2d, clmlevel=type1d_out, flag='write')
               endif
-
+              deallocate(ibuf2d)
+              deallocate(rbuf2d)
            end do   ! end of fields do-loop
         end if   ! end of if-end-of-history-interval block
      end do   ! end of tape do-loop
@@ -3639,8 +3631,7 @@ contains
 ! !INTERFACE:
   subroutine add_fld1d (fname, units, avgflag, long_name, &
                         ptr_gcell, ptr_lunit, ptr_col, ptr_pft, &
-                        ptr_rofall, ptr_roflnd, &
-                        ptr_rofocn, p2c_scale_type, c2l_scale_type, &
+                        ptr_rof, ptr_atm, p2c_scale_type, c2l_scale_type, &
                         l2g_scale_type, set_lake, default, typexy)
 !
 ! !DESCRIPTION:
@@ -3655,7 +3646,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use decompMod , only : get_proc_bounds
+    use domainMod , only : alatlon
     use clm_varpar, only : lsmlon, lsmlat, rtmlon, rtmlat
 !
 ! !ARGUMENTS:
@@ -3668,9 +3659,8 @@ contains
     real(r8)        , optional, pointer    :: ptr_lunit(:)   ! pointer to landunit array
     real(r8)        , optional, pointer    :: ptr_col(:)     ! pointer to column array
     real(r8)        , optional, pointer    :: ptr_pft(:)     ! pointer to pft array
-    real(r8)        , optional, pointer    :: ptr_rofall(:)  ! pointer to channel runoff
-    real(r8)        , optional, pointer    :: ptr_roflnd(:)  ! pointer to land channel runoff
-    real(r8)        , optional, pointer    :: ptr_rofocn(:)  ! pointer to ocean runoff
+    real(r8)        , optional, pointer    :: ptr_rof(:)     ! pointer to channel runoff
+    real(r8)        , optional, pointer    :: ptr_atm(:)     ! pointer to atm array
     real(r8)        , optional, intent(in) :: set_lake       ! value to set lakes to
     character(len=*), optional, intent(in) :: p2c_scale_type ! scale type for subgrid averaging of pfts to column
     character(len=*), optional, intent(in) :: c2l_scale_type ! scale type for subgrid averaging of columns to landunits
@@ -3707,10 +3697,25 @@ contains
 
     hpindex = pointer_index()
 
+    ! Set output grid(xy) type and number of longitudes and latitudes of 
+    ! output grid, default is clm
+
+    xytype = 'clm'
+    xynlon = lsmlon
+    xynlat = lsmlat
+
     if (present(ptr_gcell)) then
 
        type1d = nameg
        clmptr_rs(hpindex)%ptr => ptr_gcell
+
+    else if (present(ptr_atm)) then
+
+       type1d = gratm
+       clmptr_rs(hpindex)%ptr => ptr_atm
+       xytype = 'atm'
+       xynlon = alatlon%ni
+       xynlat = alatlon%nj
 
     else if (present(ptr_lunit)) then
 
@@ -3745,45 +3750,27 @@ contains
        end if
 
 #if (defined RTM)
-    else if (present(ptr_rofall)) then
+    else if (present(ptr_rof)) then
 
        type1d = allrof
-       clmptr_rs(hpindex)%ptr => ptr_rofall
+       clmptr_rs(hpindex)%ptr => ptr_rof
+       xytype = 'rof'
+       xynlon = rtmlon
+       xynlat = rtmlat
 
-    else if (present(ptr_roflnd)) then
-
-       type1d = lndrof
-       clmptr_rs(hpindex)%ptr => ptr_roflnd
-
-    else if (present(ptr_rofocn)) then
-
-       type1d = ocnrof
-       clmptr_rs(hpindex)%ptr => ptr_rofocn
 #endif
     else
 
        write(6,*)'ADDFLD_1D error: must specify a valid pointer index'
        write(6,*)'choices are [ptr_pft, ptr_lunit, ptr_col, ptr_pft] ', &
-             'and if RTM is defined also [ptr_roflnd.ptr_rofocn,ptr_rofall]'
+             'and if RTM is defined also [ptr_rof]'
        call endrun()
 
     end if
 
-    ! Set output grid(xy) type and number of longitudes and latitudes of output grid
-
-    xytype = 'clm'
-    xynlon = lsmlon
-    xynlat = lsmlat
-
     if (present(typexy)) then
-       if (typexy == 'rof') then
-          xytype = typexy
-          xynlon = rtmlon
-          xynlat = rtmlat
-       else
-          write(6,*)'ADD_FLD1D error: currently only an optional xy grid type of [rof] is accepted'
-          call endrun()
-       end if
+       write(6,*)'ADD_FLD1D error: typexy no longer supported'
+       call endrun()
     end if
 
     ! Set scaling factor
@@ -3834,7 +3821,6 @@ contains
 !
 ! !USES:
     use clmtype
-    use decompMod , only : get_proc_bounds
     use clm_varpar, only : lsmlon, lsmlat, nlevsoi, nlevlak, numrad 
 #if (defined CASA)
     use CASAMod,    only : nlive, npools, npool_types

@@ -76,17 +76,15 @@ module clm_csmMod
   type(cpl_contract)    :: contractR          ! Contract for recvs from cpl
   type(cpl_contract)    :: contractS          ! Contract for sends to   cpl
   type(cpl_contract)    :: contractSr         ! Contract for runoff sends to cpl
-  real(r8), allocatable :: Gbuf(:,:)          ! Temporary generic buffer
-  real(r8), allocatable :: bufS(:,:)          ! Send buffer for land
-  real(r8), allocatable :: bufR(:,:)          ! Recv buffer for land
-  real(r8), allocatable :: bufSr(:,:)         ! Send buffer for runoff
-  real(r8), pointer     :: bufSglob(:,:)      ! Send global sum buffer for land
-  real(r8), pointer     :: bufRglob(:,:)      ! Recv global sum buffer for land
-  real(r8), pointer     :: bufSloc(:,:)       ! Send local sum buffer for land
-  real(r8), pointer     :: bufRloc(:,:)       ! Recv local sum buffer for land
-  real(r8), pointer     :: fieldS(:)          ! Global sum send field
-  real(r8), pointer     :: fieldR(:)          ! Global sum receive field
-  real(r8), pointer     :: area(:)            ! Global area field
+  real(r8), pointer :: Gbuf(:,:)          ! Temporary generic buffer
+  real(r8), pointer :: bufS(:,:)          ! Send buffer for land
+  real(r8), pointer :: bufR(:,:)          ! Recv buffer for land
+  real(r8), pointer :: bufSr(:,:)         ! Send buffer for runoff
+  real(r8), pointer :: bufSglob(:,:)      ! Send global sum buffer for land
+  real(r8), pointer :: bufRglob(:,:)      ! Recv global sum buffer for land
+  real(r8), pointer :: fieldS(:)          ! Global sum send field
+  real(r8), pointer :: fieldR(:)          ! Global sum receive field
+  real(r8), pointer :: area(:)            ! Global area field
 
   integer :: csm_nptg                         ! Loc sizes, grid coupling buffers
   integer :: csm_nptr                         ! Loc sizes, roff coupling buffers
@@ -305,9 +303,6 @@ contains
     allocate(Gbuf(begg:endg,cpl_fields_grid_total))
 
     do n = begg, endg	
-!        i = adecomp%gdc2i(n)
-!        j = adecomp%gdc2j(n)
-!        gi = (j-1)*adomain%ni + i
         gi = adecomp%gdc2glo(n)
         Gbuf(n,cpl_fields_grid_lon)   = adomain%lonc(n)
         Gbuf(n,cpl_fields_grid_lat)   = adomain%latc(n)
@@ -347,16 +342,15 @@ contains
     do n = runoff%begr,runoff%endr
        if (runoff%mask(n) == 2) then
           ni = ni + 1
-          gi = runoff%gdc2glo(n)
           if (ni > runoff%lnumro) then
-             write(6,*)'clm_csmMod: ERROR runoff count',n,ni,runoff%lnumro,gi
+             write(6,*)'clm_csmMod: ERROR runoff count',n,ni,runoff%lnumro
              call endrun()
           endif
           Gbuf(ni,cpl_fields_grid_lon  ) = runoff%lonc(n)
           Gbuf(ni,cpl_fields_grid_lat  ) = runoff%latc(n)
           Gbuf(ni,cpl_fields_grid_area ) = runoff%area(n)*1.0e-6_r8/(re*re)
           Gbuf(ni,cpl_fields_grid_mask ) = 1.0_r8 - float(runoff%mask(n))
-          Gbuf(ni,cpl_fields_grid_index) = gi
+          Gbuf(ni,cpl_fields_grid_index) = runoff%gindex(n)
        endif
     end do
     if (ni /= runoff%lnumro) then
@@ -705,7 +699,7 @@ contains
 
         if (masterproc) then
            if (.not. associated(bufRglob)) then
-              allocate(bufRglob(nrecv,numg), stat=ier)
+              allocate(bufRglob(numg,nrecv), stat=ier)
               if (ier /= 0) then
                  write(6,*)'clm_csmMod: allocation error for bufRglob'; call endrun
               end if
@@ -723,81 +717,71 @@ contains
               endif
            end if
         end if
-        if (.not. associated(bufRloc)) then
-           allocate(bufRloc(nrecv,begg:endg), stat=ier)
-           if (ier /= 0) then
-              write(6,*)'clm_csmMod: allocation error for bufRloc'; call endrun
-           end if
-        end if
 
         ! Find attribute vector indices
 
-        do g = begg,endg
-           do n = 1,nrecv
-              bufRloc(n,g) = bufR(g,n)
-           end do
-        end do
-        call gather_data_to_master(bufRloc, bufRglob, clmlevel=nameg)
+        call gather_data_to_master(bufR, bufRglob, clmlevel=nameg)
         call gather_data_to_master(adomain%area, area, clmlevel=nameg)
+
         if (masterproc) then
            write(6,*)
 
            if (index_c2l_Sa_co2prog /= 0) then
-              fieldR(:) = bufRglob(index_c2l_Sa_co2prog,:)
+              fieldR(:) = bufRglob(:,index_c2l_Sa_co2prog)
               write(6,100) 'lnd','recv', index_c2l_Sa_co2prog, global_sum_fld1d(fieldR,area), ' co2prog'
            end if
 
            if (index_c2l_Sa_co2diag /= 0) then
-              fieldR(:) = bufRglob(index_c2l_Sa_co2diag,:)
+              fieldR(:) = bufRglob(:,index_c2l_Sa_co2diag)
               write(6,100) 'lnd','recv', index_c2l_Sa_co2diag, global_sum_fld1d(fieldR,area), ' co2diag'
            end if
 
-           fieldR(:) = bufRglob(index_c2l_Sa_z,:)
+           fieldR(:) = bufRglob(:,index_c2l_Sa_z)
            write(6,100) 'lnd','recv', index_c2l_Sa_z, global_sum_fld1d(fieldR,area), ' hgt'
 
-           fieldR(:) = bufRglob(index_c2l_Sa_u,:)
+           fieldR(:) = bufRglob(:,index_c2l_Sa_u)
            write(6,100) 'lnd','recv', index_c2l_Sa_u, global_sum_fld1d(fieldR,area), ' u'
 
-           fieldR(:) = bufRglob(index_c2l_Sa_v,:)
+           fieldR(:) = bufRglob(:,index_c2l_Sa_v)
            write(6,100) 'lnd','recv', index_c2l_Sa_v, global_sum_fld1d(fieldR,area), ' v'
 
-           fieldR(:) = bufRglob(index_c2l_Sa_ptem,:)
+           fieldR(:) = bufRglob(:,index_c2l_Sa_ptem)
            write(6,100) 'lnd','recv', index_c2l_Sa_ptem, global_sum_fld1d(fieldR,area), ' th'
 
-           fieldR(:) = bufRglob(index_c2l_Sa_shum,:)
+           fieldR(:) = bufRglob(:,index_c2l_Sa_shum)
            write(6,100) 'lnd','recv', index_c2l_Sa_shum, global_sum_fld1d(fieldR,area), ' q'
 
-           fieldR(:) = bufRglob(index_c2l_Sa_pbot,:)
+           fieldR(:) = bufRglob(:,index_c2l_Sa_pbot)
            write(6,100) 'lnd','recv', index_c2l_Sa_pbot, global_sum_fld1d(fieldR,area), ' pbot'
 
-           fieldR(:) = bufRglob(index_c2l_Sa_tbot,:)
+           fieldR(:) = bufRglob(:,index_c2l_Sa_tbot)
            write(6,100) 'lnd','recv', index_c2l_Sa_tbot, global_sum_fld1d(fieldR,area), ' t'
 
-           fieldR(:) = bufRglob(index_c2l_Faxa_lwdn,:)
+           fieldR(:) = bufRglob(:,index_c2l_Faxa_lwdn)
            write(6,100) 'lnd','recv', index_c2l_Faxa_lwdn, global_sum_fld1d(fieldR,area), ' lwrad'
 
-           fieldR(:) = bufRglob(index_c2l_Faxa_rainc,:)
+           fieldR(:) = bufRglob(:,index_c2l_Faxa_rainc)
            write(6,100) 'lnd','recv', index_c2l_Faxa_rainc, global_sum_fld1d(fieldR,area), ' rainc'
 
-           fieldR(:) = bufRglob(index_c2l_Faxa_rainl,:)
+           fieldR(:) = bufRglob(:,index_c2l_Faxa_rainl)
            write(6,100) 'lnd','recv', index_c2l_Faxa_rainl, global_sum_fld1d(fieldR,area), ' rainl'
 
-           fieldR(:) = bufRglob(index_c2l_Faxa_snowc,:)
+           fieldR(:) = bufRglob(:,index_c2l_Faxa_snowc)
            write(6,100) 'lnd','recv', index_c2l_Faxa_snowc, global_sum_fld1d(fieldR,area), ' snowc'
 
-           fieldR(:) = bufRglob(index_c2l_Faxa_snowl,:)
+           fieldR(:) = bufRglob(:,index_c2l_Faxa_snowl)
            write(6,100) 'lnd','recv', index_c2l_Faxa_snowl, global_sum_fld1d(fieldR,area), ' snowl'
 
-           fieldR(:) = bufRglob(index_c2l_Faxa_swndr,:)
+           fieldR(:) = bufRglob(:,index_c2l_Faxa_swndr)
            write(6,100) 'lnd','recv', index_c2l_Faxa_swndr, global_sum_fld1d(fieldR,area),' soll '
 
-           fieldR(:) = bufRglob(index_c2l_Faxa_swvdr,:)
+           fieldR(:) = bufRglob(:,index_c2l_Faxa_swvdr)
            write(6,100) 'lnd','recv', index_c2l_Faxa_swvdr, global_sum_fld1d(fieldR,area),' sols '
 
-           fieldR(:) = bufRglob(index_c2l_Faxa_swndf,:)
+           fieldR(:) = bufRglob(:,index_c2l_Faxa_swndf)
            write(6,100) 'lnd','recv', index_c2l_Faxa_swndf, global_sum_fld1d(fieldR,area),' solld'
 
-           fieldR(:) = bufRglob(index_c2l_Faxa_swvdf,:)
+           fieldR(:) = bufRglob(:,index_c2l_Faxa_swvdf)
            write(6,100) 'lnd','recv', index_c2l_Faxa_swvdf, global_sum_fld1d(fieldR,area),' solsd'
 
 100        format('comm_diag ',a3,1x,a4,1x,i3,es26.19,a)
@@ -1054,7 +1038,7 @@ contains
 
        if (masterproc) then
           if (.not. associated(bufSglob)) then
-             allocate(bufSglob(nsend,numg), stat=ier)
+             allocate(bufSglob(numg,nsend), stat=ier)
              if (ier /= 0) then
                 write(6,*)'clm_csmMod: allocation error for bufSglob'; call endrun
              end if
@@ -1072,62 +1056,51 @@ contains
              end if
           endif
        end if
-       if (.not. associated(bufSloc)) then
-          allocate(bufSloc(nsend,begg:endg), stat=ier)
-          if (ier /= 0) then
-             write(6,*)'clm_csmMod: allocation error for bufSloc'; call endrun
-          end if
-       end if
 
-       do g = begg,endg
-          do n = 1,nsend
-             bufSloc(n,g) = bufS(g,n)
-          end do
-       end do
-       call gather_data_to_master(bufSloc, bufSglob, clmlevel=nameg)
+       call gather_data_to_master(bufS, bufSglob, clmlevel=nameg)
        call gather_data_to_master(adomain%area, area, clmlevel=nameg)
 
        if (masterproc) then
           write(6,*)
           
-          fieldS(:) = bufSglob(index_l2c_Sl_t,:)
+          fieldS(:) = bufSglob(:,index_l2c_Sl_t)
           write(6,100) 'lnd','send', index_l2c_Sl_t, global_sum_fld1d(fieldS,area),' trad'
 
-          fieldS(:) = bufSglob(index_l2c_Sl_avsdr,:)
+          fieldS(:) = bufSglob(:,index_l2c_Sl_avsdr)
           write(6,100) 'lnd','send', index_l2c_Sl_avsdr, global_sum_fld1d(fieldS,area),' asdir'
 
-          fieldS(:) = bufSglob(index_l2c_Sl_anidr,:)
+          fieldS(:) = bufSglob(:,index_l2c_Sl_anidr)
           write(6,100) 'lnd','send', index_l2c_Sl_anidr, global_sum_fld1d(fieldS,area),' aldir'
 
-          fieldS(:) = bufSglob(index_l2c_Sl_avsdf,:)
+          fieldS(:) = bufSglob(:,index_l2c_Sl_avsdf)
           write(6,100) 'lnd','send', index_l2c_Sl_avsdf, global_sum_fld1d(fieldS,area),' asdif'
 
-          fieldS(:) = bufSglob(index_l2c_Sl_anidf,:)
+          fieldS(:) = bufSglob(:,index_l2c_Sl_anidf)
           write(6,100) 'lnd','send', index_l2c_Sl_anidf, global_sum_fld1d(fieldS,area),' aldif'
 
-          fieldS(:) = bufSglob(index_l2c_Fall_taux,:)
+          fieldS(:) = bufSglob(:,index_l2c_Fall_taux)
           write(6,100) 'lnd','send', index_l2c_Fall_taux, global_sum_fld1d(fieldS,area),' taux'
 
-          fieldS(:) = bufSglob(index_l2c_Fall_tauy,:)
+          fieldS(:) = bufSglob(:,index_l2c_Fall_tauy)
           write(6,100) 'lnd','send', index_l2c_Fall_tauy, global_sum_fld1d(fieldS,area),' tauy'
 
-          fieldS(:) = bufSglob(index_l2c_Fall_lat,:)
+          fieldS(:) = bufSglob(:,index_l2c_Fall_lat)
           write(6,100) 'lnd','send', index_l2c_Fall_lat, global_sum_fld1d(fieldS,area),' lhflx'
 
-          fieldS(:) = bufSglob(index_l2c_Fall_sen,:)
+          fieldS(:) = bufSglob(:,index_l2c_Fall_sen)
           write(6,100) 'lnd','send', index_l2c_Fall_sen, global_sum_fld1d(fieldS,area),' shflx'
 
-          fieldS(:) = bufSglob(index_l2c_Fall_lwup,:)
+          fieldS(:) = bufSglob(:,index_l2c_Fall_lwup)
           write(6,100) 'lnd','send', index_l2c_Fall_lwup, global_sum_fld1d(fieldS,area),' lwup'
 
-          fieldS(:) = bufSglob(index_l2c_Fall_evap,:)
+          fieldS(:) = bufSglob(:,index_l2c_Fall_evap)
           write(6,100) 'lnd','send', index_l2c_Fall_evap, global_sum_fld1d(fieldS,area),' qflx'
 
-          fieldS(:) = bufSglob(index_l2c_Fall_swnet,:)
+          fieldS(:) = bufSglob(:,index_l2c_Fall_swnet)
           write(6,100) 'lnd','send', index_l2c_Fall_swnet, global_sum_fld1d(fieldS,area),' swabs'
 
           if (index_l2c_Fall_nee /= 0) then
-             fieldS(:) = bufSglob(index_l2c_Fall_nee,:)
+             fieldS(:) = bufSglob(:,index_l2c_Fall_nee)
              write(6,100) 'lnd','send', index_l2c_Fall_nee, global_sum_fld1d(fieldS,area),' nee'
           end if
 
@@ -1488,7 +1461,7 @@ contains
             long_name='ccsm send flag (integer)', units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_ioglobal(varname='ccsm_dosend_int', data=dosend_int, &
-            ncid=ncid, flag=flag, readvar=readvar)
+            ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) then
              call endrun()

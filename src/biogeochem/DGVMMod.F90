@@ -306,7 +306,7 @@ contains
     use ncdio
     use decompMod    , only : get_proc_bounds, get_proc_global
     use clm_varpar   , only : lsmlon, lsmlat, maxpatch_pft
-    use domainMod    , only : ldomain
+    use domainMod    , only : ldomain,llatlon
     use decompMod    , only : ldecomp
     use clm_varctl   , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
                               frivinp_rtm, archive_dir, mss_wpass, mss_irt
@@ -316,7 +316,6 @@ contains
     use fileutils    , only : set_filename, putfil, get_filename
     use shr_sys_mod  , only : shr_sys_getenv
     use spmdMod      , only : masterproc
-    use spmdGathScatMod, only : gather_data_to_master
     use shr_const_mod, only : SHR_CONST_CDAY
 !
 ! !ARGUMENTS:
@@ -346,7 +345,6 @@ contains
    real(r8), pointer :: acfluxfire_gcell(:) ! gridcell C flux to atmosphere from biomass burning
    real(r8), pointer :: bmfm_gcell(:,:)     ! gridcell biomass
    real(r8), pointer :: afmicr_gcell(:,:)   ! gridcell microbial respiration
-   real(r8), pointer :: data(:)             ! temporary global array
 !
 !EOP
 !
@@ -370,8 +368,6 @@ contains
     integer :: nbsec                   ! seconds components of a date
     integer :: dimid                   ! dimension, variable id
     real(r8):: time                    ! current time
-    real(r8),pointer :: lonvar(:)      ! only used for full grid
-    real(r8),pointer :: latvar(:)      ! only used for full grid
     character(len=256) :: str          ! temporary string
     character(len=  8) :: curdate      ! current date
     character(len=  8) :: curtime      ! current time
@@ -635,36 +631,16 @@ contains
     ! Write variables
     ! -----------------------------------------------------------------------
 
-    call ncd_ioglobal(varname='edgen', data=ldomain%edges(1), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edgee', data=ldomain%edges(2), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edges', data=ldomain%edges(3), ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='edgew', data=ldomain%edges(4), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgen', data=llatlon%edges(1), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgee', data=llatlon%edges(2), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edges', data=llatlon%edges(3), ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='edgew', data=llatlon%edges(4), ncid=ncid, flag='write')
 
     ! Write surface grid (coordinate variables, latitude, longitude, surface type).
 
-    allocate(lonvar(lsmlon),latvar(lsmlat),data(numg))
-
-    call gather_data_to_master (ldomain%lonc, data, clmlevel='gridcell')
-    lonvar = spval
-    do n = 1,lsmlon
-    do m = 1,lsmlat
-       g = ldecomp%glo2gdc((m-1)*lsmlon + n)
-       if (g > 0 .and. g < lsmlon*lsmlat) lonvar(n) = data(g)
-    enddo
-    enddo
-
-    call gather_data_to_master (ldomain%latc, data, clmlevel='gridcell')
-    latvar = spval
-    do n = 1,lsmlon
-    do m = 1,lsmlat
-       g = ldecomp%glo2gdc((m-1)*lsmlon + n)
-       if (g > 0 .and. g < lsmlon*lsmlat) latvar(m) = data(g)
-    enddo
-    enddo
-
     if (masterproc) then
-       call ncd_ioglobal(varname='lon', data=lonvar, ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='lat', data=latvar, ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='lon', data=llatlon%lonc, ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='lat', data=llatlon%latc, ncid=ncid, flag='write')
     endif
 
     call ncd_iolocal(varname='longxy'  , data=ldomain%lonc, ncid=ncid, &
@@ -676,8 +652,6 @@ contains
     call ncd_iolocal(varname='landmask', data=ldomain%mask, ncid=ncid, &
          flag='write', dim1name='gridcell', &
          nlonxy=ldomain%ni, nlatxy=ldomain%nj)
-
-    deallocate(lonvar,latvar,data)
 
     ! Write current date, current seconds, current day, current nstep
 
@@ -924,8 +898,6 @@ contains
 !
 ! local pointers to implicit in arguments
 !
-   integer , pointer :: ixy(:)            ! gridcell lon index (gridcell level)
-   integer , pointer :: jxy(:)            ! gridcell lat index (gridcell level)
    integer , pointer :: ltype(:)          ! landunit type
    logical , pointer :: ifspecial(:)      ! true=>landunit is not vegetated
    real(r8), pointer :: lwtgcell(:)       ! weight (relative to gridcell) for this landunit
@@ -947,11 +919,6 @@ contains
     integer  :: fn,filterg(lbg:ubg) ! local gridcell filter for error check
     real(r8) :: sumwt(lbg:ubg)      ! consistency check
 !-----------------------------------------------------------------------
-
-    ! Assign local pointers to derived subtypes components (gridcell-level)
-
-    ixy        => ldecomp%gdc2i
-    jxy        => ldecomp%gdc2j
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 
@@ -1009,7 +976,7 @@ contains
     if (fn > 0) then
        g = filterg(1)
        write(6,*) 'resetWeightsDGVM: sumwt of pfts for grid cell ',&
-         'i,j = ',ixy(g),jxy(g),' not equal to 1'
+         'gdc,glo = ',g,ldecomp%gdc2glo(g),' not equal to 1'
        write(6,*) 'sum of pft weights for gridcell =',sumwt(g)
        call endrun
     end if

@@ -198,11 +198,6 @@ subroutine iniTimeConst
   clayfrac        => clm3%g%l%c%p%pps%clayfrac
 #endif
 
-!  ! Determine necessary subgrid bounds
-!
-!  call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-!  call get_proc_global(numg, numl, numc, nump)
-
   ! --------------------------------------------------------------------
   ! Read soil color, sand and clay from surface dataset 
   ! --------------------------------------------------------------------
@@ -223,7 +218,8 @@ subroutine iniTimeConst
         mxsoil_color = 8  
      end if
   endif
-  call mpi_bcast( mxsoil_color,        1  , MPI_INTEGER, 0, mpicom, ier )
+  call mpi_bcast( mxsoil_color, 1, MPI_INTEGER, 0, mpicom, ier )
+
   count(1) = lsmlon
   count(2) = lsmlat
   if (single_column) then
@@ -238,18 +234,17 @@ subroutine iniTimeConst
   count(3) = 1
 
   ! Read fmax
-  call ncd_iolocal(ncid, 'FMAX', 'read', gti, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo,start(:2),count(:2))
+  call ncd_iolocal(ncid, 'FMAX', 'read', gti, grlnd,start(:2),count(:2))
 
   ! Read in soil color, sand and clay fraction
-
-  call ncd_iolocal(ncid, 'SOIL_COLOR', 'read', soic2d, begg, endg, gsMap_lnd_gdc2glo, perm_lnd_gdc2glo,start(:2),count(:2))
+  call ncd_iolocal(ncid, 'SOIL_COLOR', 'read', soic2d, grlnd,start(:2),count(:2))
 
   allocate(arrayl(begg:endg))
   do n = 1,nlevsoi
      start(3) = n
-     call ncd_iolocal(ncid,'PCT_SAND','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
+     call ncd_iolocal(ncid,'PCT_SAND','read',arrayl,grlnd,start,count)
      sand3d(begg:endg,n) = arrayl(begg:endg)
-     call ncd_iolocal(ncid,'PCT_CLAY','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
+     call ncd_iolocal(ncid,'PCT_CLAY','read',arrayl,grlnd,start,count)
      clay3d(begg:endg,n) = arrayl(begg:endg)
   enddo
   deallocate(arrayl)

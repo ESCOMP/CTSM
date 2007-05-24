@@ -14,6 +14,7 @@ contains
     use clmtype
     use ncdio           
     use decompMod    , only : get_proc_bounds, ldecomp
+    use domainMod    , only : ldomain
     use clm_time_manager , only : get_curr_date
     use spmdMod      , only : masterproc
 !
@@ -33,7 +34,6 @@ contains
     integer :: day                 ! current day (1 -> 31)
     integer :: mcsec               ! seconds of current date
     integer :: mcdate              ! current date
-    logical :: readvar             ! determine if variable is on initial file
     integer :: begp, endp          ! per-proc beg/end pft indices
     integer :: begc, endc          ! per-proc beg/end column indices
     integer :: begl, endl          ! per-proc beg/end landunit indices
@@ -85,8 +85,8 @@ contains
        else if (flag == 'write') then
           call get_curr_date (yr, mon, day, mcsec)
           mcdate = yr*10000 + mon*100 + day
-          call ncd_ioglobal(varname='mcdate', data=mcdate, ncid=ncid, flag=flag, readvar=readvar)
-          call ncd_ioglobal(varname='mcsec' , data=mcsec , ncid=ncid, flag=flag, readvar=readvar)
+          call ncd_ioglobal(varname='mcdate', data=mcdate, ncid=ncid, flag=flag)
+          call ncd_ioglobal(varname='mcsec' , data=mcsec , ncid=ncid, flag=flag)
        end if
     end if
 
@@ -103,11 +103,11 @@ contains
             dim1name='gridcell', long_name='2d latitude index of corresponding gridcell')
     else if (flag == 'write') then
        do g=begg,endg
-          igarr(g) = ldecomp%gdc2i(g)
+          igarr(g)= mod(ldecomp%gdc2glo(g)-1,ldomain%ni) + 1
        enddo
        call ncd_iolocal(varname='grid1d_ixy', data=igarr      , dim1name='gridcell', ncid=ncid, flag=flag)
        do g=begg,endg
-          igarr(g) = ldecomp%gdc2j(g)
+          igarr(g)= (ldecomp%gdc2glo(g) - 1)/ldomain%ni + 1
        enddo
        call ncd_iolocal(varname='grid1d_jxy', data=igarr      , dim1name='gridcell', ncid=ncid, flag=flag)
        call ncd_iolocal(varname='grid1d_lon', data=gptr%londeg, dim1name='gridcell', ncid=ncid, flag=flag)
@@ -141,11 +141,11 @@ contains
        enddo
        call ncd_iolocal(varname='land1d_lat'    , data=rlarr        , dim1name='landunit', ncid=ncid, flag=flag)
        do l=begl,endl
-          ilarr(l) = ldecomp%gdc2i(lptr%gridcell(l))
+          ilarr(l) = mod(ldecomp%gdc2glo(lptr%gridcell(l))-1,ldomain%ni) + 1
        enddo
        call ncd_iolocal(varname='land1d_ixy'    , data=ilarr        , dim1name='landunit', ncid=ncid, flag=flag)
        do l=begl,endl
-          ilarr(l) = ldecomp%gdc2j(lptr%gridcell(l))
+          ilarr(l) = (ldecomp%gdc2glo(lptr%gridcell(l))-1)/ldomain%ni + 1
        enddo
        call ncd_iolocal(varname='land1d_jxy'    , data=ilarr        , dim1name='landunit', ncid=ncid, flag=flag)
        call ncd_iolocal(varname='land1d_wtxy'   , data=lptr%wtgcell , dim1name='landunit', ncid=ncid, flag=flag)
@@ -184,11 +184,11 @@ contains
        enddo
        call ncd_iolocal(varname='cols1d_lat'  , data=rcarr        , dim1name='column', ncid=ncid, flag=flag)
        do c=begc,endc
-          icarr(c) = ldecomp%gdc2i(cptr%gridcell(c))
+          icarr(c) = mod(ldecomp%gdc2glo(cptr%gridcell(c))-1,ldomain%ni) + 1
        enddo
        call ncd_iolocal(varname='cols1d_ixy'  , data=icarr        , dim1name='column', ncid=ncid, flag=flag)
        do c=begc,endc
-          icarr(c) = ldecomp%gdc2j(cptr%gridcell(c))
+          icarr(c) = (ldecomp%gdc2glo(cptr%gridcell(c))-1)/ldomain%ni + 1
        enddo
        call ncd_iolocal(varname='cols1d_jxy'  , data=icarr        , dim1name='column', ncid=ncid, flag=flag)
        call ncd_iolocal(varname='cols1d_wtxy' , data=cptr%wtgcell , dim1name='column', ncid=ncid, flag=flag)
@@ -238,11 +238,11 @@ contains
        enddo
        call ncd_iolocal(varname='pfts1d_lat'    , data=rparr        , dim1name='pft', ncid=ncid, flag=flag)
        do p=begp,endp
-          iparr(p) = ldecomp%gdc2i(pptr%gridcell(p))
+          iparr(p) = mod(ldecomp%gdc2glo(pptr%gridcell(p))-1,ldomain%ni) + 1
        enddo
        call ncd_iolocal(varname='pfts1d_ixy'    , data=iparr        , dim1name='pft', ncid=ncid, flag=flag)
        do p=begp,endp
-          iparr(p) = ldecomp%gdc2j(pptr%gridcell(p))
+          iparr(p) = (ldecomp%gdc2glo(pptr%gridcell(p))-1)/ldomain%ni + 1
        enddo
        call ncd_iolocal(varname='pfts1d_jxy'    , data=iparr        , dim1name='pft', ncid=ncid, flag=flag)
        call ncd_iolocal(varname='pfts1d_wtxy'   , data=pptr%wtgcell , dim1name='pft', ncid=ncid, flag=flag)

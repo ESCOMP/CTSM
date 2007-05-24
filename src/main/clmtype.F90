@@ -1869,12 +1869,14 @@ type, public :: gridcell_type
    integer, pointer :: npfts(:)         !number of pfts for each gridcell
 
    ! topological mapping functionality, local 1d gdc arrays
+   integer , pointer :: gindex(:)       !global index
    real(r8), pointer :: area(:)         !total land area, gridcell (km^2)
    real(r8), pointer :: lat(:)          !latitude (radians)
    real(r8), pointer :: lon(:)          !longitude (radians)
    real(r8), pointer :: latdeg(:)       !latitude (degrees)
    real(r8), pointer :: londeg(:)       !longitude (degrees)
-   real(r8), pointer :: lat_a(:)        !"atm" latitude (radians) for albedo
+   integer , pointer :: gindex_a(:)     !"atm" global index
+   real(r8), pointer :: lat_a(:) 	!"atm" latitude (radians) for albedo
    real(r8), pointer :: lon_a(:)        !"atm" longitude (radians) for albedo
    real(r8), pointer :: latdeg_a(:)     !"atm" latitude (degrees) for albedo
    real(r8), pointer :: londeg_a(:)     !"atm" longitude (degrees) for albedo
@@ -1962,16 +1964,13 @@ type(pft_epc_type), public, target, save :: pftcon
 !----------------------------------------------------
 type(pft_dgvepc_type), public, target, save :: dgv_pftcon
 
+character(len=8), parameter, public :: gratm  = 'atmgrid'   ! name of atmgrid
+character(len=8), parameter, public :: grlnd  = 'lndgrid'   ! name of atmgrid
 character(len=8), parameter, public :: nameg  = 'gridcell'  ! name of gridcells
 character(len=8), parameter, public :: namel  = 'landunit'  ! name of landunits
 character(len=8), parameter, public :: namec  = 'column'    ! name of columns
 character(len=8), parameter, public :: namep  = 'pft'       ! name of pfts
-character(len=8), parameter, public :: ocnrof = 'ocnrof'    ! name of river routing 
-                                                    ! ocean runoff
-character(len=8), parameter, public :: lndrof = 'lndrof'    ! name of river routing 
-                                                    ! land channel runoff
-character(len=8), parameter, public :: allrof = 'allrof'    ! name of river routing 
-                                                    ! all channel runoff
+character(len=8), parameter, public :: allrof = 'allrof'    ! name of rtm, runoff
 
 !
 !EOP

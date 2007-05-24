@@ -465,7 +465,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='PRESENT', xtype=nf_int,  &
             dim1name='pft', long_name='if pft is present is patch, 1=>yes,=>no)')
     else if (flag == 'read' .or. flag == 'write') then
-       allocate (iptemp(nump), stat=ier)
+       allocate (iptemp(begp:endp), stat=ier)
        if (ier /= 0) then
           write(6,*) 'DGVMRest: allocation error '; call endrun()
        end if

@@ -155,7 +155,7 @@ contains
 !
 ! !USES:
     use nanMod
-    use decompMod   , only : adecomp, get_proc_bounds_atm
+    use decompMod   , only : get_proc_bounds_atm
     use clm_atmlnd  , only : clm_mapa2l, atm_a2l, clm_a2l
     use clm_varctl  , only : offline_atmdir, pertlim
     use clm_varcon  , only : rair, cpair, co2_ppmv_const, o2_molar_const, tcrit, c13ratio
@@ -172,7 +172,7 @@ contains
 !EOP
 !
 ! LOCAL VARIABLES:
-    integer :: i,j,n,k,g,g1           !indices
+    integer :: k,g,g1,n               !indices
     integer :: itimlast               !last time index used in atmrd
     real(r8):: calday                 !calendar day at Greenwich (1.00 -> 365.99)
     integer :: kda                    !day (1 -> 31)
@@ -235,12 +235,12 @@ contains
 
        if (masterproc) then
           write (6,*)
-          write (6,'(72a1)') ("-",i=1,60)
+          write (6,'(72a1)') ("-",n=1,60)
           write (6,*)'nstep= ',nstep,' date= ',mcdate,' sec= ',mcsec
           if ( len_trim(locfn) > 0 )then
              write (6,*)'ATMDRV: attempting to read data from ',trim(locfn)
           end if
-          write (6,'(72a1)') ("-",i=1,60)
+          write (6,'(72a1)') ("-",n=1,60)
           write (6,*)
        endif
        call atm_readdata (locfn, kmo, itim)
@@ -258,18 +258,15 @@ contains
        ! Map data fields to atm model: [datlon] x [datlat] grid ->
        ! [numland] vector of land points -> [numpatch] vector of subgrid patches
 
-!$OMP PARALLEL DO PRIVATE (g,i,j,n)
+!$OMP PARALLEL DO PRIVATE (g)
 #if !defined (USE_OMP)
-!CSD$ PARALLEL DO PRIVATE (g,i,j,n)
+!CSD$ PARALLEL DO PRIVATE (g)
 #endif
 !dir$ concurrent
 !cdir nodep
 
        do g = begg, endg
           g1 = g - begg + 1
-          i = adecomp%gdc2i(g)
-          j = adecomp%gdc2j(g)
-          n = adecomp%gdc2glo(g)
 
           !States
           atm_a2l%forc_t(g) = aV_atm_d2a%rAttr(if_txy,g1)
@@ -370,7 +367,7 @@ contains
     use domainMod   , only : alatlon, latlon_type, latlon_check, latlon_clean
     use surfrdMod   , only : surfrd_get_latlon
     use decompMod   , only : adecomp
-    use areaMod     , only : celledge, cellarea,map_setmapsAR
+    use areaMod     , only : map_setmapsAR
     use fileutils   , only : getfil
     use clm_time_manager, only : get_curr_date
     use ncdio

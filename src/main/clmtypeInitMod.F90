@@ -437,11 +437,13 @@ contains
    allocate(g%coli(beg:end),g%colf(beg:end),g%ncolumns  (beg:end))
    allocate(g%pfti(beg:end),g%pftf(beg:end),g%npfts     (beg:end))
 
+   allocate(g%gindex(beg:end))
    allocate(g%area(beg:end))
    allocate(g%lat(beg:end))
    allocate(g%lon(beg:end))
    allocate(g%latdeg(beg:end))
    allocate(g%londeg(beg:end))
+   allocate(g%gindex_a(beg:end))
    allocate(g%lat_a(beg:end))
    allocate(g%lon_a(beg:end))
    allocate(g%latdeg_a(beg:end))

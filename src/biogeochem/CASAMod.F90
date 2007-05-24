@@ -273,13 +273,12 @@ contains
 !
 ! !USES:
     use fileutils    , only : getfil
-    use ncdio        , only : check_ret,check_dim,check_var
+    use ncdio        , only : check_ret,check_dim,check_var,ncd_iolocal
     use shr_const_mod, only : SHR_CONST_CDAY
-    use decompMod    , only : get_proc_bounds, get_proc_global, ldecomp
+    use decompMod    , only : get_proc_bounds, get_proc_global
     use clm_varctl   , only : nsrest
     use clm_varpar   , only : lsmlon, lsmlat, max_pft_per_gcell
     use spmdMod      , only : masterproc
-    use spmdGathScatMod, only : scatter_data_from_master
     use clm_time_manager , only : get_step_size
 !
 ! !ARGUMENTS:
@@ -316,8 +315,6 @@ contains
     real(r8), pointer :: vege_scale(:)
     real(r8), pointer :: wood_scale(:)
     real(r8), pointer :: rloc(:)
-    real(r8), pointer :: rglob(:)
-    real(r8), pointer :: rbufxy(:,:)
 
     ! pointers
 
@@ -328,8 +325,6 @@ contains
     integer , pointer :: pfti(:)      ! initial pft on gridcell
     integer , pointer :: ltype(:)     ! landunit type for corresponding pft
     integer , pointer :: ivt(:)       ! pft vegetation type
-    integer , pointer :: ixy(:)       ! gridcell ixy
-    integer , pointer :: jxy(:)       ! gridcell jxy
     real(r8), pointer :: wtgcell(:)   ! pft weight relative to gridcell
     real(r8), pointer :: XSCpool(:)
     real(r8), pointer :: eff(:,:)
@@ -371,8 +366,6 @@ contains
     pfti       => clm3%g%pfti
     ltype      => clm3%g%l%itype
     ivt        => clm3%g%l%c%p%itype
-    ixy        => ldecomp%gdc2i
-    jxy        => ldecomp%gdc2j
     wtgcell    => clm3%g%l%c%p%wtgcell
     eff        => clm3%g%l%c%p%pps%eff  
     frac_donor => clm3%g%l%c%p%pps%frac_donor
@@ -630,12 +623,6 @@ contains
        if (ier /= 0) then
           call endrun('allocation error for rloc')
        end if
-       if (masterproc) then
-          allocate(rbufxy(lsmlon, lsmlat), rglob(numg), stat=ier)
-          if (ier /= 0) then
-             call endrun('allocation error for rbufxy, rglob')
-          end if
-       end if
 
        ! Compute vegetated and woody scale factor to adjust initial carbon
        ! pools accounting for bare ground patches.  This will scale up initial
@@ -687,17 +674,7 @@ contains
        end if
 
        ! TPOOL_C_LEAF
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_LEAF', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_LEAF','read',rloc,nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -705,17 +682,7 @@ contains
        end do
 
        ! TPOOL_C_WOOD
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_WOOD', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_WOOD','read',rloc,nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -723,17 +690,7 @@ contains
        end do
 
        ! TPOOL_C_FROOT
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_FROOT', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_FROOT','read',rloc,nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -741,53 +698,19 @@ contains
        end do
 
        ! TPOOL_C_SURFMET
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_SURFMET', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
-!dir$ concurrent
-!cdir nodep
+       call ncd_iolocal(ncid,'TPOOL_C_SURFMET','read',rloc,nameg)
        do p = begp,endp
           Tpool_C(p,SURFMET) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SURFSTR
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_SURFSTR', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
-!dir$ concurrent
-!cdir nodep
+       call ncd_iolocal(ncid,'TPOOL_C_SURFSTR','read',rloc,nameg)
        do p = begp,endp
           Tpool_C(p,SURFSTR) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SOILMET
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_SOILMET', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SOILMET','read',rloc,nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp, endp
@@ -795,17 +718,7 @@ contains
        end do
 
        ! TPOOL_C_SOILSTR
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_SOILSTR', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SOILSTR','read',rloc,nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -813,17 +726,7 @@ contains
        end do
 
        ! TPOOL_C_CWD
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_CWD', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_CWD','read',rloc,nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -831,17 +734,7 @@ contains
        end do
 
        ! TPOOL_C_SURFMIC
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_SURFMIC', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SURFMIC','read',rloc,nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -849,17 +742,7 @@ contains
        end do
 
        ! TPOOL_C_SOILMIC
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_SOILMIC', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SOILMIC','read',rloc,nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp, endp
@@ -867,17 +750,7 @@ contains
        end do
 
        ! TPOOL_C_SLOW
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_SLOW', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SLOW','read',rloc,nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -885,17 +758,7 @@ contains
        end do
 
        ! TPOOL_C_PASSIVE
-
-       if (masterproc) then
-          call check_var(ncid, 'TPOOL_C_PASSIVE', varid, varpresent)
-          if (varpresent) call check_ret(nf_get_var_double(ncid, varid, rbufxy), subname)
-!dir$ concurrent
-!cdir nodep
-          do n = 1, numg
-             rglob(n) = rbufxy(ixy(n),jxy(n))
-          end do
-       end if
-       call scatter_data_from_master(rloc, rglob, clmlevel=nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_PASSIVE','read',rloc,nameg)
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -911,7 +774,6 @@ contains
        deallocate(sumwts, vege_wts, wood_wts)
        deallocate(vege_scale, wood_scale)
        deallocate(rloc)
-       if (masterproc) deallocate(rbufxy, rglob)
 
        call casa_write_cpool()
 
@@ -1024,11 +886,9 @@ contains
     use decompMod    , only : get_proc_bounds, get_proc_global
     use ncdio        , only : check_ret,ncd_defvar,ncd_ioglobal,ncd_iolocal
     use subgridAveMod, only : p2g
-    use domainMod    , only : ldomain
-    use decompMod    , only : ldecomp
+    use domainMod    , only : ldomain, llatlon
     use clm_varpar   , only : lsmlon, lsmlat
     use spmdMod      , only : masterproc
-    use spmdGathScatMod, only : gather_data_to_master
 !
 ! !ARGUMENTS:
     implicit none
@@ -1048,8 +908,6 @@ contains
     integer :: nump          ! total number of pfts across all processors
     integer :: ier           ! error flag
     integer :: n,m,g         ! index
-    real(r8), pointer :: lonvar(:), latvar(:)
-    real(r8), pointer :: data(:)
     real(r8), pointer :: histi(:,:)
     real(r8), pointer :: histo(:,:)
     real(r8), pointer :: hist1do(:)
@@ -1139,37 +997,17 @@ contains
        call check_ret(nf_enddef(ncid), subname)
     end if
 
-    allocate(lonvar(lsmlon),latvar(lsmlat),data(numg))
-
-    call gather_data_to_master (ldomain%lonc, data, clmlevel='gridcell')
-    lonvar = spval
-    do n = 1,lsmlon
-    do m = 1,lsmlat
-       g = ldecomp%glo2gdc((m-1)*lsmlon + n)
-       if (g > 0 .and. g < lsmlon*lsmlat) lonvar(n) = data(g)
-    enddo
-    enddo
-
-    call gather_data_to_master (ldomain%latc, data, clmlevel='gridcell')
-    latvar = spval
-    do n = 1,lsmlon
-    do m = 1,lsmlat
-       g = ldecomp%glo2gdc((m-1)*lsmlon + n)
-       if (g > 0 .and. g < lsmlon*lsmlat) latvar(m) = data(g)
-    enddo
-    enddo
-
     if (masterproc) then
-       call ncd_ioglobal(varname='longitude', data=lonvar, ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='latitude', data=latvar, ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='longitude', data=llatlon%lonc, ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='latitude', data=llatlon%latc, ncid=ncid, flag='write')
     endif
+
     call ncd_iolocal(varname='landfrac', data=ldomain%frac, ncid=ncid, &
          flag='write', dim1name='gridcell', &
          nlonxy=ldomain%ni, nlatxy=ldomain%nj)
     call ncd_iolocal(varname='landmask', data=ldomain%mask, ncid=ncid, &
          flag='write', dim1name='gridcell', &
          nlonxy=ldomain%ni, nlatxy=ldomain%nj)
-    deallocate(lonvar,latvar,data)
 
     allocate(histi(begp:endp, 1),histo(begg:endg,1),hist1do(begg:endg), stat=ier)
     if (ier /= 0) then
@@ -2061,9 +1899,6 @@ contains
 !cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
-
-       !         i = clm3%g%l%c%p%ixy(pgridcell(p))
-       !         j = clm3%g%l%c%p%jxy(pgridcell(p))
 
        ! temperature dependence
        bgtemp(p) = (Q10 ** ((soilt(p) - 30.0_r8) / 10.0_r8))

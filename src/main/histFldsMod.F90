@@ -48,7 +48,8 @@ contains
     use clmtype
     use clm_varcon , only : spval
     use clm_varctl , only : nsrest
-    use clm_atmlnd , only : clm_a2l
+    use clm_atmlnd , only : clm_a2l, atm_a2l
+    use clm_atmlnd , only : adiag_arain, adiag_asnow, adiag_aflux, adiag_lflux
 #if (defined RTM)
     use RunoffMod  , only : runoff
 #endif
@@ -545,21 +546,21 @@ contains
 #if (defined RTM)
     ! RTM River Routing
 
-    call add_fld1d (fname='QCHANR', units='m3/s',  typexy='rof', &
+    call add_fld1d (fname='QCHANR', units='m3/s',  &
          avgflag='A', long_name='RTM river flow', &
-         ptr_roflnd=runoff%runoff)
+         ptr_rof=runoff%runofflnd)
 
-    call add_fld1d (fname='QCHOCNR', units='m3/s', typexy='rof', &
+    call add_fld1d (fname='QCHOCNR', units='m3/s', &
          avgflag='A', long_name='RTM river discharge into ocean', &
-         ptr_rofocn=runoff%runoff)
+         ptr_rof=runoff%runoffocn)
 
-    call add_fld1d (fname='DVOLRDT_LND', units='mm/s',  typexy='rof', &
+    call add_fld1d (fname='DVOLRDT_LND', units='mm/s',  &
          avgflag='A', long_name='RTM land change in storage', &
-         ptr_roflnd=runoff%dvolrdt)
+         ptr_rof=runoff%dvolrdtlnd)
 
-    call add_fld1d (fname='DVOLRDT_OCN', units='mm/s',  typexy='rof', &
+    call add_fld1d (fname='DVOLRDT_OCN', units='mm/s',  &
          avgflag='A', long_name='RTM ocean change of storage', &
-         ptr_rofocn=runoff%dvolrdt)
+         ptr_rof=runoff%dvolrdtocn)
 #endif
 
     ! Water and energy balance checks
@@ -581,6 +582,30 @@ contains
          ptr_col=clm3%g%l%c%cwbal%errh2o)
 
     ! Atmospheric forcing
+
+    call add_fld1d (fname='RAINATM', units='mm/s',  &
+         avgflag='A', long_name='atmospheric rain forcing', &
+         ptr_atm=atm_a2l%forc_rain)
+
+    call add_fld1d (fname='SNOWATM', units='mm/s',  &
+         avgflag='A', long_name='atmospheric snow forcing', &
+         ptr_atm=atm_a2l%forc_snow)
+
+    call add_fld1d (fname='RAINFM2A', units='mm/s',  &
+         avgflag='A', long_name='land rain on atm grid', &
+         ptr_atm=adiag_arain)
+
+    call add_fld1d (fname='SNOWFM2A', units='mm/s',  &
+         avgflag='A', long_name='land snow on atm grid', &
+         ptr_atm=adiag_asnow)
+
+    call add_fld1d (fname='FLUXFM2A', units='W/m2',  &
+         avgflag='A', long_name='heat flux for rain to snow conversion', &
+         ptr_atm=adiag_aflux)
+
+    call add_fld1d (fname='FLUXFMLND', units='W/m2',  &
+         avgflag='A', long_name='heat flux from rain to snow conversion', &
+         ptr_gcell=adiag_lflux)
 
     call add_fld1d (fname='RAIN', units='mm/s',  &
          avgflag='A', long_name='atmospheric rain', &

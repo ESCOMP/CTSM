@@ -18,6 +18,7 @@ module initializeMod
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest
   use clm_varsur      , only : wtxy,vegxy
+  use clmtype         , only : gratm, grlnd, nameg, namel, namec, namep, allrof
 ! !PUBLIC TYPES:
   implicit none
   save
@@ -66,16 +67,16 @@ contains
 ! !USES:
     use clm_varpar, only : lsmlon, lsmlat, maxpatch
     use clm_varpar, only : clm_varpar_init
-    use decompMod , only : decomp_atm_init, decomp_domg2l
+    use decompInitMod, only : decompInit_atm, &
+                           decompInit_lnd, decompInit_glcp
     use decompMod , only : adecomp,ldecomp
     use decompMod , only : get_proc_clumps, get_clump_bounds, &
-                           get_proc_bounds, get_proc_bounds_atm, &
-                           decomp_lnd_init, decomp_glcp_init
-    use domainMod , only : domain_check,domain_setsame, domain_clean, domain_type
+                           get_proc_bounds, get_proc_bounds_atm
+    use domainMod , only : domain_check,domain_setsame
     use domainMod , only : adomain,ldomain
     use domainMod , only : alatlon,llatlon,gatm,amask,pftm
     use domainMod , only : latlon_check, latlon_setsame
-    use areaMod   , only : map_setgatm
+    use areaMod   , only : cellarea, map_setgatm
     use surfrdMod , only : surfrd,surfrd_get_grid,surfrd_get_frac,&
                            surfrd_get_topo, surfrd_get_latlon
     use clm_varctl, only : fsurdat, fatmgrid, fatmlndfrc, &
@@ -92,15 +93,13 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer  :: ier                       ! error status
-    integer  :: i,j,n1,n2,n,k             ! loop indices
+    integer  :: ier                   ! error status
+    integer  :: i,j,n1,n2,n,k,nr      ! loop indices
     integer  :: nl,nlg                ! gdc and glo lnd indices
-    real(r8) :: rmaxlon,rmaxlat           ! local min/max vars
+    real(r8) :: rmaxlon,rmaxlat       ! local min/max vars
     logical  :: samegrids             ! are atm and lnd grids same?
     integer  :: begg, endg            ! clump beg and ending gridcell indices
     integer  :: begg_atm, endg_atm    ! proc beg and ending gridcell indices
-    type(domain_type) :: lgdomain   ! generic "global" domain for i/o
-    type(domain_type) :: agdomain   ! generic "global" domain for i/o
 !-----------------------------------------------------------------------
 
     ! ------------------------------------------------------------------------
@@ -197,32 +196,25 @@ contains
           'sizes:continue'
     endif
 
-    call decomp_atm_init(alatlon,amask)
+    call decompInit_atm(alatlon,amask)
 
-#if (1 == 0)
-    !--- set gatm "unity".  doesn't support finemesh grids yet
-    if (llatlon%ni /= alatlon%ni .or. llatlon%nj /= alatlon%nj) then
-       if (masterproc) write(6,*) 'ERROR llatlon size /= alatlon size: ', &
-          n,llatlon%ni, llatlon%nj, alatlon%ni, alatlon%nj
-       call endrun()
-    else
-       call map_setgatm_UNITY(gatm,alatlon,amask)
-    endif
-#endif
     call map_setgatm(gatm,alatlon,llatlon,amask,pftm)
 
     ! Initialize clump and processor decomposition 
-    call decomp_lnd_init(alatlon%ns,alatlon%ni,alatlon%nj,llatlon%ns,llatlon%ni,llatlon%nj)
+    call decompInit_lnd(alatlon%ns,alatlon%ni,alatlon%nj,llatlon%ns,llatlon%ni,llatlon%nj)
 
-    !--- Read atm grid -------------------------------------------------------------------
+    !--- Read atm grid -----------------------------------------------------
+
+    ! Set "local" domains
+    call get_proc_bounds_atm(begg_atm, endg_atm)
 
     if (masterproc) then
-       write (6,*) 'Attempting to read agdomain from fatmgrid'
+       write (6,*) 'Attempting to read adomain from fatmgrid'
 #ifndef UNICOSMP
        call shr_sys_flush(6)
 #endif
     endif
-    call surfrd_get_grid(agdomain, fatmgrid)
+    call surfrd_get_grid(adomain, fatmgrid, begg_atm, endg_atm, gratm)
 
     if (masterproc) then
        write (6,*) 'Attempting to read atm landfrac from fatmlndfrc'
@@ -230,7 +222,7 @@ contains
        call shr_sys_flush(6)
 #endif
     endif
-    call surfrd_get_frac(agdomain, fatmlndfrc)
+    call surfrd_get_frac(adomain, fatmlndfrc)
 
     if (fatmtopo /= " ") then
     if (masterproc) then
@@ -239,33 +231,36 @@ contains
        call shr_sys_flush(6)
 #endif
     endif
-    call surfrd_get_topo(agdomain, fatmtopo)
+    call surfrd_get_topo(adomain, fatmtopo)
     endif
 
-    if (masterproc) then
-       write(6,*) 'agdomain status:'
-       call domain_check(agdomain)
+    !--- compute area
+    if (.not. adomain%areaset) then
+       do nr = begg_atm,endg_atm
+          n = adecomp%gdc2glo(nr)
+          i = mod(n-1,adomain%ni) + 1
+          j = (n-1)/adomain%ni + 1
+          adomain%area(nr) = cellarea(alatlon,i,j)
+       enddo
+       adomain%areaset = .true.
     endif
 
-    ! Set "local" domains
-    call get_proc_bounds_atm(begg_atm, endg_atm)
-    call decomp_domg2l(agdomain,adomain,adecomp,begg_atm,endg_atm)
     if (masterproc) then
        write(6,*) 'adomain status:'
        call domain_check(adomain)
     endif
 
-    call domain_clean(agdomain)
+    !--- Read lnd grid -----------------------------------------------------
 
-    !--- Read lnd grid -------------------------------------------------------------------
+    call get_proc_bounds(begg, endg)
 
     if (masterproc) then
-       write (6,*) 'Attempting to read lgdomain from fsurdat ',trim(fsurdat)
+       write (6,*) 'Attempting to read ldomain from fsurdat ',trim(fsurdat)
 #ifndef UNICOSMP
        call shr_sys_flush(6)
 #endif
     endif
-    call surfrd_get_grid(lgdomain, fsurdat)
+    call surfrd_get_grid(ldomain, fsurdat, begg, endg, grlnd)
 
     if (flndtopo /= " ") then
     if (masterproc) then
@@ -274,23 +269,25 @@ contains
        call shr_sys_flush(6)
 #endif
     endif
-    call surfrd_get_topo(lgdomain, flndtopo)
+    call surfrd_get_topo(ldomain, flndtopo)
+    endif
+
+    !--- compute area
+    if (.not. ldomain%areaset) then
+       do nr = begg,endg
+          n = ldecomp%gdc2glo(nr)
+          i = mod(n-1,ldomain%ni) + 1
+          j = (n-1)/ldomain%ni + 1
+          ldomain%area(nr) = cellarea(alatlon,i,j)
+       enddo
+       ldomain%areaset = .true.
     endif
 
     if (masterproc) then
-       call domain_check(lgdomain)
-    endif
-
-    call get_proc_bounds    (begg    , endg)
-    call decomp_domg2l(lgdomain,ldomain,ldecomp,begg,endg)
-    if (masterproc) then
-       write(6,*) 'ldomain status:'
        call domain_check(ldomain)
     endif
 
-    call domain_clean(lgdomain)
-
-    !--- overwrite ldomain if same grids --------------------------------------------
+    !--- overwrite ldomain if same grids -----------------------------------
 
     if (samegrids) then
        if (masterproc) write(6,*) 'initialize1: samegrids true, set ldomain =~ adomain'
@@ -312,7 +309,7 @@ contains
     
     call surfrd (fsurdat, ldomain)
 
-    call decomp_glcp_init(alatlon%ns,alatlon%ni,alatlon%nj,llatlon%ns,llatlon%ni,llatlon%nj)
+    call decompInit_glcp(alatlon%ns,alatlon%ni,alatlon%nj,llatlon%ns,llatlon%ni,llatlon%nj)
 
   end subroutine initialize1
 
@@ -342,7 +339,8 @@ contains
     use eshr_timemgr_mod, only : eshr_timemgr_clockType, eshr_timemgr_clockInfoType, &
                                  eshr_timemgr_clockGet
     use clm_atmlnd      , only : init_atm2lnd_type, init_lnd2atm_type, &
-                                 clm_a2l, clm_l2a, atm_a2l, atm_l2a
+                                 clm_a2l, clm_l2a, atm_a2l, atm_l2a, &
+                                 init_adiag_type
     use initGridCellsMod, only : initGridCells
     use clm_varctl      , only : finidat, fpftdyn, fndepdyn
     use clmtypeInitMod  , only : initClmtype
@@ -352,8 +350,7 @@ contains
     use areaMod         , only : map1dl_a2l, map1dl_l2a
     use areaMod         , only : map_setmapsFM
     use decompMod       , only : get_proc_clumps, get_clump_bounds, &
-                                 get_proc_bounds, get_proc_bounds_atm, &
-                                 decomp_lnd_init
+                                 get_proc_bounds, get_proc_bounds_atm
     use filterMod       , only : allocFilters, setFilters
     use pftdynMod       , only : pftdyn_init, pftdyn_interp
     use histFldsMod     , only : initHistFlds
@@ -443,6 +440,8 @@ contains
     call get_proc_bounds_atm(begg_atm, endg_atm)
     call init_atm2lnd_type  (begg_atm, endg_atm, atm_a2l)
     call init_lnd2atm_type  (begg_atm, endg_atm, atm_l2a)
+
+    call init_adiag_type()
 
     ! Build hierarchy and topological info for derived typees
 
