@@ -1,4 +1,57 @@
 ===============================================================
+Tag name: clm3_5_04
+Originator(s): mvertens
+Date: Tue Jun  5 09:59:48 MDT 2007
+One-line Summary: lnd_comp_mct.F90 change to work with sequential diagnostics
+
+Purpose of changes: addition of water and energy diagnostics in sequential driver
+required this fix (the new diagnostics will not be part of this tag)
+
+Bugs fixed (include bugzilla ID): none
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: myself
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all subroutines eliminated: noen
+
+List all subroutines added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+  M  lnd_comp_mct.F90
+     - added an mct_aVect_permute call at the end of lnd_import_mct.F90 and
+       also changed the sign of l2x_l%rAttr(index_l2x_Fall_swnet,i) (note
+       that in cpl6 the sign should be changed as well in clm_csmMod.F90) 
+
+Summary of testing:
+
+CLM:
+  bluevista: none
+  bangkok/lf95: none 
+
+CAM:
+  bluevista pretag: none
+  tempest pretag: none
+  bangkok pretag: all pass except
+    037 br511 TBR.sh s8c8mdm ttrac 6+3s
+
+CLM tag used for the baseline comparison tests: na
+CAM tag used for the baseline comparison tests: seqflxave16_cam3_4_12 
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+  everything is bfb (clm3_5_04 will be utilized on seqflxave17_cam3_4_12)
+	
+===============================================================
+===============================================================
 Tag name: clm3_5_03
 Originator(s): tcraig
 Date: Wed May 23 18:57:17 MDT 2007
@@ -130,7 +183,7 @@ CAM:
     037 br511 TBR.sh s8c8mdm ttrac 6+3s
 		
 CLM tag used for the baseline comparison tests: clm3_5_02
-CAM tag used for the baseline comparison tests: seqflxave16_clm3_4_12
+CAM tag used for the baseline comparison tests: seqflxave16_cam3_4_12
 
 IF tag changes answers relative to baseline comparison the
 following should be filled in:  
@@ -160,8 +213,7 @@ following should be filled in:
    
    URL for LMWG diagnostics output used to validate new climate:
 	
-===============================================================
-
+==============================================================
 ===============================================================
 Tag name: clm3_5_02
 Originator(s): mvertens (Mariana Vertenstein)

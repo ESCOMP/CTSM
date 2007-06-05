@@ -495,7 +495,7 @@ contains
        l2x_l%rAttr(index_l2x_Fall_sen,i)    = -l2a%eflx_sh_tot(g)
        l2x_l%rAttr(index_l2x_Fall_lwup,i)   = -l2a%eflx_lwrad_out(g)
        l2x_l%rAttr(index_l2x_Fall_evap,i)   = -l2a%qflx_evap_tot(g)
-       l2x_l%rAttr(index_l2x_Fall_swnet,i)  = -l2a%fsa(g)
+       l2x_l%rAttr(index_l2x_Fall_swnet,i)  =  l2a%fsa(g)
        if (index_l2x_Fall_nee /= 0) then
           l2x_l%rAttr(index_l2x_Fall_nee,i) = -l2a%nee(g)  
        end if
@@ -644,6 +644,8 @@ contains
         a2l%forc_pc13o2(g) = co2_ppmv * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
 	 
      end do
+
+     call mct_aVect_permute(x2l_l, perm)
 
    end subroutine lnd_import_mct
 
