@@ -1003,11 +1003,9 @@ contains
     endif
 
     call ncd_iolocal(varname='landfrac', data=ldomain%frac, ncid=ncid, &
-         flag='write', dim1name='gridcell', &
-         nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+         flag='write', dim1name=grlnd)
     call ncd_iolocal(varname='landmask', data=ldomain%mask, ncid=ncid, &
-         flag='write', dim1name='gridcell', &
-         nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+         flag='write', dim1name=grlnd)
 
     allocate(histi(begp:endp, 1),histo(begg:endg,1),hist1do(begg:endg), stat=ier)
     if (ier /= 0) then
@@ -1020,8 +1018,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_LEAF', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_LEAF', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     ! TPOOL_C_WOOD
     histi(begp:endp,1) = Tpool_C(begp:endp,WOOD)
@@ -1029,8 +1027,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_WOOD', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_WOOD', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     ! TPOOL_C_CWD
     histi(begp:endp,1) = Tpool_C(begp:endp,CWD)
@@ -1038,8 +1036,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_CWD', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_CWD', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     ! TPOOL_C_FROOT
     histi(begp:endp,1) = Tpool_C(begp:endp,FROOT)
@@ -1047,8 +1045,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_FROOT', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_FROOT', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SURFMET
     histi(begp:endp,1) = Tpool_C(begp:endp,SURFMET)
@@ -1056,8 +1054,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SURFMET', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_SURFMET', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SURFSTR
     histi(begp:endp,1) = Tpool_C(begp:endp,SURFSTR)
@@ -1065,8 +1063,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SURFSTR', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_SURFSTR', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SOILMET
     histi(begp:endp,1) = Tpool_C(begp:endp,SOILMET)
@@ -1074,8 +1072,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SOILMET', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_SOILMET', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SOILSTR
     histi(begp:endp,1) = Tpool_C(begp:endp,SOILSTR)
@@ -1083,8 +1081,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SOILSTR', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_SOILSTR', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SURFMIC
     histi(begp:endp,1) = Tpool_C(begp:endp,SURFMIC)
@@ -1092,8 +1090,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SURFMIC', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_SURFMIC', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SOILMIC
     histi(begp:endp,1) = Tpool_C(begp:endp,SOILMIC)
@@ -1101,8 +1099,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SOILMIC', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_SOILMIC', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     ! TPOOL_C_SLOW
     histi(begp:endp,1) = Tpool_C(begp:endp,SLOW)
@@ -1110,8 +1108,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_SLOW', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_SLOW', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     ! TPOOL_C_PASSIVE
     histi(begp:endp,1) = Tpool_C(begp:endp,PASSIVE)
@@ -1119,8 +1117,8 @@ contains
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, 1, &
        histi, histo, 'unity', 'unity', 'unity')
        hist1do(begg:endg) = histo(begg:endg, 1)
-    call ncd_iolocal(flag='write', varname='TPOOL_C_PASSIVE', dim1name=nameg, &
-       data=hist1do, ncid=ncid, nlonxy=lsmlon, nlatxy=lsmlat)
+    call ncd_iolocal(flag='write', varname='TPOOL_C_PASSIVE', dim1name=grlnd, &
+       data=hist1do, ncid=ncid)
 
     deallocate(hist1do)
     deallocate(histo)
@@ -2466,7 +2464,7 @@ contains
             long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livefr', data=pptr%pps%livefr, &
-            dim1name='pft', dim2name='nlive', &
+            dim1name=namep, dim2name='nlive', &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
@@ -2480,7 +2478,7 @@ contains
             long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='Tpool_C', data=pptr%pps%Tpool_C, &
-            dim1name='pft', dim2name='npools', &
+            dim1name=namep, dim2name='npools', &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read') then
           if (.not. readvar) then
@@ -2504,7 +2502,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='lgrow', data=pptr%pps%lgrow, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2516,7 +2514,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='iseabeg', data=pptr%pps%iseabeg, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2528,7 +2526,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='nstepbeg', data=pptr%pps%nstepbeg, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2540,7 +2538,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='degday', data=pptr%pps%degday, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2552,7 +2550,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='ndegday', data=pptr%pps%ndegday, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2564,7 +2562,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='tday', data=pptr%pps%tday, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2576,7 +2574,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='tcount', data=pptr%pps%tcount, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2588,7 +2586,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='tdayavg', data=pptr%pps%tdayavg, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2600,7 +2598,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='stressCD', data=pptr%pps%stressCD, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2614,7 +2612,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='stressT', data=pptr%pps%stressT, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2626,7 +2624,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='stressW', data=pptr%pps%stressW, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2640,7 +2638,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='XSCpool', data=pptr%pps%XSCpool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2652,7 +2650,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='eflx_lwrad_net', data=pptr%pef%eflx_lwrad_net, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2664,7 +2662,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='eflx_lh_grnd', data=pptr%pef%eflx_lh_grnd, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2676,7 +2674,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='eflx_lh_vege', data=pptr%pef%eflx_lh_vege, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if
@@ -2688,7 +2686,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='eflx_lh_vegt', data=pptr%pef%eflx_lh_vegt, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun
        end if

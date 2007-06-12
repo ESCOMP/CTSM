@@ -353,8 +353,8 @@ contains
                                  get_proc_bounds, get_proc_bounds_atm
     use filterMod       , only : allocFilters, setFilters
     use pftdynMod       , only : pftdyn_init, pftdyn_interp
-    use histFldsMod     , only : initHistFlds
-    use histFileMod     , only : htapes_build
+    use histFldsMod     , only : hist_initFlds
+    use histFileMod     , only : hist_htapes_build
     use restFileMod     , only : restFile_getfile, &
                                  restFile_open, restFile_close, &
                                  restFile_read, restFile_read_binary
@@ -623,14 +623,14 @@ contains
 
     ! Initialize master history list. 
 
-    call initHistFlds()
+    call hist_initFlds()
 
     ! Initialize active history fields. This is only done if not a restart run. 
     ! If a restart run, then this information has already been obtained from the 
-    ! restart data read above. Note that routine htapes_build needs time manager 
+    ! restart data read above. Note that routine hist_htapes_build needs time manager 
     ! information, so this call must be made after the restart information has been read.
 
-    if (nsrest == 0 .or. nsrest == 3) call htapes_build ()
+    if (nsrest == 0 .or. nsrest == 3) call hist_htapes_build()
 
     ! Initialize clmtype variables that are obtained from accumulated fields.
     ! This routine is called in an initial run at nstep=0 for cam and csm mode

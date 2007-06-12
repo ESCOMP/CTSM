@@ -1965,7 +1965,7 @@ type(pft_epc_type), public, target, save :: pftcon
 type(pft_dgvepc_type), public, target, save :: dgv_pftcon
 
 character(len=8), parameter, public :: gratm  = 'atmgrid'   ! name of atmgrid
-character(len=8), parameter, public :: grlnd  = 'lndgrid'   ! name of atmgrid
+character(len=8), parameter, public :: grlnd  = 'lndgrid'   ! name of lndgrid
 character(len=8), parameter, public :: nameg  = 'gridcell'  ! name of gridcells
 character(len=8), parameter, public :: namel  = 'landunit'  ! name of landunits
 character(len=8), parameter, public :: namec  = 'column'    ! name of columns

@@ -279,7 +279,7 @@ contains
 !
 ! !USES:
     use fileutils  , only : relavu, opnfil, getfil, getavu
-    use histFileMod, only : restart_history 
+    use histFileMod, only : hist_restart
 !
 ! !ARGUMENTS:
     implicit none
@@ -301,7 +301,7 @@ contains
        nio = getavu()
        call opnfil (file, nio, 'u')
     end if
-    call restart_history(nio, flag='read')
+    call hist_restart(nio, flag='read')
     if (masterproc) then
        call relavu (nio)
     end if
@@ -321,7 +321,7 @@ contains
 !
 ! !USES:
     use fileutils  , only : relavu, opnfil, getfil, getavu
-    use histFileMod, only : restart_history 
+    use histFileMod, only : hist_restart
 !
 ! !ARGUMENTS:
     implicit none
@@ -344,7 +344,7 @@ contains
        nio = getavu()
        call opnfil (file, nio, 'u')
     end if
-    call restart_history(nio, flag='write')
+    call hist_restart(nio, flag='write')
     if (masterproc) then
        call relavu (nio)
        if (present(nlend)) then

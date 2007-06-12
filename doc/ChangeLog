@@ -1,3 +1,95 @@
+
+===============================================================
+Tag name: clm3_5_05
+Originator(s): tcraig
+Date: Mon Jun 11 05:03:39 MDT 2007	
+One-line Summary: seq clm mods and first hist refactor mods
+
+Purpose of changes: Fix problems with clm seq mode and improve
+	clm seq mode performance with new datm7 and csm_share tags.
+	Also bring in first mods for history refactor
+
+Bugs fixed (include bugzilla ID):
+
+Describe any changes made to build system: for seq-clm mode
+
+Describe any changes made to the namelist: for seq-clm mode
+
+List any changes to the defaults for the boundary datasets:
+
+Describe any substantial timing or memory changes: 
+
+Code reviewed by: mvertens
+
+List any svn externals directories updated (csm_share, mct, etc.):
+	datm7_070610
+	share3_070610
+
+List all subroutines eliminated:
+
+List all subroutines added and what they do:
+
+List all existing files that have been modified, and describe the changes:
+
+M      test/system/test_driver.sh
+M      bld/configure
+M      bld/Makefile.in
+M      bld/config_clm_defaults.xml
+M      bld/run-pc-seq.csh
+M      bld/run-ibm-seq.csh
+M      SVN_EXTERNAL_DIRECTORIES
+M      doc/ChangeLog
+M      src/biogeochem/CASAMod.F90
+M      src/biogeochem/DGVMRestMod.F90
+M      src/biogeochem/DGVMMod.F90
+M      src/biogeochem/CNrestMod.F90
+M      src/main/inicFileMod.F90
+M      src/main/driver.F90
+M      src/main/ncdio.F90
+M      src/main/subgridRestMod.F90
+M      src/main/initializeMod.F90
+M      src/main/histFileMod.F90
+M      src/main/restFileMod.F90
+M      src/main/program_off.F90
+M      src/main/decompMod.F90
+M      src/main/clmtype.F90
+M      src/main/histFldsMod.F90
+M      src/biogeophys/BiogeophysRestMod.F90
+
+- get seqclm updates from mv
+- rename hist interfaces to hist_*
+- remove typexy, nlonxy,nlatxy from history field_info type,
+  now use the type1d and type1d_out strings to
+  trigger the input/output "type" and behavior.
+  fix code so it works properly using type1d*.
+  typexy was already not used.  calls to history
+  routines had to change in several modules.
+- clean up hist file write statements, add subname consistently
+- modify calls to histFile for change to nlonxy,nlatxy,type1d*
+- use clmtypes namep, grlnd, etc instead of 'pft','gridcell',etc.
+
+Summary of testing:
+
+  clm:
+    bluevista: clm pretag passes
+    tempest: clm pretag passes except sm812, the test can't find the binary
+    lightning: clm posttag passes except *551 which is known to be broken
+    bangkok/lf95: clm pretag passes except sm982;
+       The variable (scm_crm_mode) has an undefined value.
+       Error occurs at or near line 350 of radiation.radiation_init_        
+	
+  ccsm:
+    bluevista:
+	PASS  ERS_OS.f19_g15.B2.bluevista16 
+	PASS  ERS_OS.f19_g15.B2.bluevista16.compare.ccsm3_5_beta04 
+	PASS  ERS_OS.f45_g35.A.bluevista16 
+	PASS  ERS_OS.f45_g35.A.bluevista16.compare.ccsm3_5_beta04 
+
+CLM tag used for the baseline comparison tests if applicable: clm3_5_03, ccsm3_5_beta04, seqflxave16_cam3_4_12
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:  bfb
+
 ===============================================================
 Tag name: clm3_5_04
 Originator(s): mvertens

@@ -644,14 +644,11 @@ contains
     endif
 
     call ncd_iolocal(varname='longxy'  , data=ldomain%lonc, ncid=ncid, &
-         flag='write', dim1name='gridcell', &
-         nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+         flag='write', dim1name=grlnd)
     call ncd_iolocal(varname='latixy'  , data=ldomain%latc, ncid=ncid, &
-         flag='write', dim1name='gridcell', &
-         nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+         flag='write', dim1name=grlnd)
     call ncd_iolocal(varname='landmask', data=ldomain%mask, ncid=ncid, &
-         flag='write', dim1name='gridcell', &
-         nlonxy=ldomain%ni, nlatxy=ldomain%nj)
+         flag='write', dim1name=grlnd)
 
     ! Write current date, current seconds, current day, current nstep
 
@@ -668,17 +665,17 @@ contains
 
     ! Write time dependent variables to DGVM history file
 
-    call ncd_iolocal(varname='BURN', dim1name='gridcell', data=afirefrac_gcell, &
-         nlonxy=lsmlon, nlatxy=lsmlat, nt=1, ncid=ncid, flag='write')
+    call ncd_iolocal(varname='BURN', dim1name=grlnd, data=afirefrac_gcell, &
+         nt=1, ncid=ncid, flag='write')
 
-    call ncd_iolocal(varname='CFLUXFIRE', dim1name='gridcell', data=acfluxfire_gcell, &
-         nlonxy=lsmlon, nlatxy=lsmlat, nt=1, ncid=ncid, flag='write')
+    call ncd_iolocal(varname='CFLUXFIRE', dim1name=grlnd, data=acfluxfire_gcell, &
+         nt=1, ncid=ncid, flag='write')
 
-    call ncd_iolocal(varname='NPP', dim1name='gridcell', dim2name='pft', data=bmfm_gcell, &
-         nlonxy=lsmlon, nlatxy=lsmlat, nt=1, ncid=ncid, flag='write')
+    call ncd_iolocal(varname='NPP', dim1name=grlnd, dim2name='pft', data=bmfm_gcell, &
+         nt=1, ncid=ncid, flag='write')
 
-    call ncd_iolocal(varname='Rh', dim1name='gridcell', dim2name='pft', data=afmicr_gcell, &
-         nlonxy=lsmlon, nlatxy=lsmlat, nt=1, ncid=ncid, flag='write')
+    call ncd_iolocal(varname='Rh', dim1name=grlnd, dim2name='pft', data=afmicr_gcell, &
+         nt=1, ncid=ncid, flag='write')
 
     ! Note that checking on if-not ifspecial status below guarantees that the m index will
     ! always lie between 1 and maxpatch_pft
@@ -691,8 +688,8 @@ contains
        l = plandunit(p)
        if (.not. ifspecial(l)) ibuf2dg(g,mxy(p)) = ivt(p)
     end do
-    call ncd_iolocal(varname='PFT', dim1name='gridcell', dim2name='pft', data=ibuf2dg, &
-         nlonxy=lsmlon, nlatxy=lsmlat, nt=1, ncid=ncid, flag='write')
+    call ncd_iolocal(varname='PFT', dim1name=grlnd, dim2name='pft', data=ibuf2dg, &
+         nt=1, ncid=ncid, flag='write')
 
     rbuf2dg(:,:) = 0._r8
 !dir$ concurrent
@@ -702,8 +699,8 @@ contains
        l = plandunit(p)
        if (.not. ifspecial(l)) rbuf2dg(g,mxy(p)) = fpcgrid(p)*100._r8
     end do
-    call ncd_iolocal(varname='FPCGRID', dim1name='gridcell', dim2name='pft', data=rbuf2dg, &
-         nlonxy=lsmlon, nlatxy=lsmlat, nt=1, ncid=ncid, flag='write')
+    call ncd_iolocal(varname='FPCGRID', dim1name=grlnd, dim2name='pft', data=rbuf2dg, &
+         nt=1, ncid=ncid, flag='write')
 
     rbuf2dg(:,:) = 0._r8
 !dir$ concurrent
@@ -713,8 +710,8 @@ contains
        l = plandunit(p)
        if (.not. ifspecial(l)) rbuf2dg(g,mxy(p)) = lm_ind(p)
     end do
-    call ncd_iolocal(varname='LCIND', dim1name='gridcell', dim2name='pft', data=rbuf2dg, &
-         nlonxy=lsmlon, nlatxy=lsmlat, nt=1, ncid=ncid, flag='write')
+    call ncd_iolocal(varname='LCIND', dim1name=grlnd, dim2name='pft', data=rbuf2dg, &
+         nt=1, ncid=ncid, flag='write')
 
     rbuf2dg(:,:) = 0._r8
 !dir$ concurrent
@@ -724,8 +721,8 @@ contains
        l = plandunit(p)
        if (.not. ifspecial(l)) rbuf2dg(g,mxy(p)) = rm_ind(p)
     end do
-    call ncd_iolocal(varname='RCIND', dim1name='gridcell', dim2name='pft', data=rbuf2dg, &
-         nlonxy=lsmlon, nlatxy=lsmlat, nt=1, ncid=ncid, flag='write')
+    call ncd_iolocal(varname='RCIND', dim1name=grlnd, dim2name='pft', data=rbuf2dg, &
+         nt=1, ncid=ncid, flag='write')
 
     rbuf2dg(:,:) = 0._r8
 !dir$ concurrent
@@ -735,8 +732,8 @@ contains
        l = plandunit(p)
        if (.not. ifspecial(l)) rbuf2dg(g,mxy(p)) = sm_ind(p)
     end do
-    call ncd_iolocal(varname='SCIND', dim1name='gridcell', dim2name='pft', data=rbuf2dg, &
-         nlonxy=lsmlon, nlatxy=lsmlat, nt=1, ncid=ncid, flag='write')
+    call ncd_iolocal(varname='SCIND', dim1name=grlnd, dim2name='pft', data=rbuf2dg, &
+         nt=1, ncid=ncid, flag='write')
 
     rbuf2dg(:,:) = 0._r8
 !dir$ concurrent
@@ -746,8 +743,8 @@ contains
        l = plandunit(p)
        if (.not. ifspecial(l)) rbuf2dg(g,mxy(p)) = hm_ind(p)
     end do
-    call ncd_iolocal(varname='HCIND', dim1name='gridcell', dim2name='pft', data=rbuf2dg, &
-         nlonxy=lsmlon, nlatxy=lsmlat, nt=1, ncid=ncid, flag='write')
+    call ncd_iolocal(varname='HCIND', dim1name=grlnd, dim2name='pft', data=rbuf2dg, &
+         nt=1, ncid=ncid, flag='write')
 
     rbuf2dg(:,:) = 0._r8
 !dir$ concurrent
@@ -757,8 +754,8 @@ contains
        l = plandunit(p)
        if (.not. ifspecial(l)) rbuf2dg(g,mxy(p)) = nind(p)
     end do
-    call ncd_iolocal(varname='NIND',dim1name='gridcell', dim2name='pft', data=rbuf2dg, &
-         nlonxy=lsmlon, nlatxy=lsmlat, nt=1, ncid=ncid, flag='write')
+    call ncd_iolocal(varname='NIND',dim1name=grlnd, dim2name='pft', data=rbuf2dg, &
+         nt=1, ncid=ncid, flag='write')
 
     ! Deallocate dynamic memory
 

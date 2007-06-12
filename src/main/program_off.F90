@@ -93,8 +93,6 @@ PROGRAM program_off
   call spmd_init(mpicom_glob)
   call mct_world_init(1,mpicom_glob,mpicom,comp_id)
 
-  call t_startf('init')
-
   ! -----------------------------------------------------------------
   ! Initialize ESMF (needed for time-manager)
   ! -----------------------------------------------------------------
@@ -108,6 +106,7 @@ PROGRAM program_off
   call control_setNL( nlfilename )     ! Set namelist
   call t_initf(nlfilename, LogPrint=masterproc, Mpicom=mpicom, &
                MasterTask=masterproc)
+  call t_startf('init')
 
   ! -----------------------------------------------------------------
   ! Initialize Orbital parameters

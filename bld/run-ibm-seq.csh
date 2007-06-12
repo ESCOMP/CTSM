@@ -116,10 +116,8 @@ cat >! lnd_in << EOF
  /
 EOF
 
-cat >! dshr_datm_in << EOF
+cat >! datm_dshr_in << EOF
  &dshr_nml
- caseName       = '$case'
- caseDesc       = '$case'
  restPfile      = 'rpointer.atm '
  dataMode       = 'CLMNCEP'
  domainFile     = 'domain.lnd.1.9x2.5_gx1v4.060810.nc'
@@ -135,7 +133,7 @@ cat >! datm_in << EOF
 EOF
 
 ## If an executable doesn't exist, build one.
-set flags = "-ccsm_seq -maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust"
+set flags = "-mode ccsm_seq -maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust"
 if ($spmd == on ) set flags = "$flags -spmd"
 if ($spmd == off) set flags = "$flags -nospmd"
 if ($smp  == on ) set flags = "$flags -smp"

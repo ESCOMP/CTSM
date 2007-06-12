@@ -30,6 +30,7 @@ module decompMod
                                  ! across all processors
   public get_proc_global_atm     ! total atm cells on all pes
   public get_clmlevel_gsize      ! get global size associated with clmlevel
+  public get_clmlevel_dsize      ! get global size associated with clmlevel
   public get_clmlevel_gsmap      ! get gsmap associated with clmlevel
 !
 ! !DESCRIPTION:
@@ -450,6 +451,89 @@ contains
     end select
 
   end function get_clmlevel_gsize
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: get_clmlevel_dsize
+!
+! !INTERFACE:
+  subroutine get_clmlevel_dsize (clmlevel,dims,s1,s2,s3,s4)
+!
+! !DESCRIPTION:
+! Determine number of dims and size of dims from clmlevel
+!
+! !USES:
+  use clmtype  , only : gratm, grlnd, nameg, namel, namec, namep, allrof
+  use domainMod, only : adomain,ldomain
+#ifdef RTM
+  use clm_varpar,only : rtmlon,rtmlat
+#endif
+!
+! !ARGUMENTS:
+    implicit none
+    character(len=*), intent(in ) :: clmlevel    !type of clm 1d array
+    integer,          intent(out) :: dims        ! number of dimensions
+    integer,optional, intent(out) :: s1          ! size of dim1
+    integer,optional, intent(out) :: s2          ! size of dim2
+    integer,optional, intent(out) :: s3          ! size of dim3
+    integer,optional, intent(out) :: s4          ! size of dim4
+
+!
+! !REVISION HISTORY:
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer :: ls(4)
+
+!-----------------------------------------------------------------------
+    ! Determine necessary indices
+
+    dims = 1
+    ls = 1
+
+    select case (clmlevel)
+    case(gratm)
+       dims = 2
+       ls(1) = adomain%ni
+       ls(2) = adomain%nj
+    case(grlnd)
+       dims = 2
+       ls(1) = ldomain%ni
+       ls(2) = ldomain%nj
+    case(nameg)
+       ls(1) = numg
+    case(namel)
+       ls(1) = numl
+    case(namec)
+       ls(1) = numc
+    case(namep)
+       ls(1) = nump
+#ifdef RTM
+    case(allrof)
+       dims = 2
+       ls(1) = rtmlon
+       ls(2) = rtmlat
+#endif
+    case default
+       write(6,*) 'get_clmlevel_dsize does not match clmlevel type: ', trim(clmlevel)
+       call endrun()
+    end select
+
+    if (present(s1)) then
+       s1 = ls(1)
+    endif
+    if (present(s2)) then
+       s2 = ls(2)
+    endif
+    if (present(s3)) then
+       s3 = ls(3)
+    endif
+    if (present(s4)) then
+       s4 = ls(4)
+    endif
+
+  end subroutine get_clmlevel_dsize
 !-----------------------------------------------------------------------
 !BOP
 !

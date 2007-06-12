@@ -116,39 +116,39 @@ contains
        end if
     end if
 
-    call ncd_iolocal(varname='ZSNO', data=cptr%cps%z, dim1name='column', dim2name='levsno', &
+    call ncd_iolocal(varname='ZSNO', data=cptr%cps%z, dim1name=nameg, dim2name='levsno', &
          lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='DZSNO', data=cptr%cps%dz, dim1name='column', dim2name='levsno', &
+    call ncd_iolocal(varname='DZSNO', data=cptr%cps%dz, dim1name=nameg, dim2name='levsno', &
          lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='ZISNO', data=cptr%cps%zi, dim1name='column', dim2name='levsno', &
+    call ncd_iolocal(varname='ZISNO', data=cptr%cps%zi, dim1name=nameg, dim2name='levsno', &
          lowerb2=-nlevsno, upperb2=-1, ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='H2OSNO', data=cptr%cws%h2osno, dim1name='column', &
+    call ncd_iolocal(varname='H2OSNO', data=cptr%cws%h2osno, dim1name=nameg, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='SNOWDP', data=cptr%cps%snowdp, dim1name='column', &
+    call ncd_iolocal(varname='SNOWDP', data=cptr%cps%snowdp, dim1name=nameg, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='SNOWAGE', data=cptr%cps%snowage, dim1name='column', &
+    call ncd_iolocal(varname='SNOWAGE', data=cptr%cps%snowage, dim1name=nameg, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='SNLSNO', data=cptr%cps%snl, dim1name='column', &
+    call ncd_iolocal(varname='SNLSNO', data=cptr%cps%snl, dim1name=nameg, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='H2OSOI_LIQ', data=cptr%cws%h2osoi_liq, dim1name='column', dim2name='levtot', &
+    call ncd_iolocal(varname='H2OSOI_LIQ', data=cptr%cws%h2osoi_liq, dim1name=nameg, dim2name='levtot', &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='H2OSOI_ICE', data=cptr%cws%h2osoi_ice, dim1name='column', dim2name='levtot', &
+    call ncd_iolocal(varname='H2OSOI_ICE', data=cptr%cws%h2osoi_ice, dim1name=nameg, dim2name='levtot', &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 

@@ -66,7 +66,7 @@ module driver
 !  -> write_diagnostic    output diagnostic if appropriate
 !   + Rtmriverflux        calls RTM river routing model [RTM]
 !  -> updateAccFlds       update accumulated fields
-!  -> update_hbuf         accumulate history fields for time interval
+!  -> hist_update_hbuf    accumulate history fields for time interval
 !
 !  Begin DGVM calculations at end of model year [DGVM]
 !    ==== Begin Loop over clumps ====
@@ -98,7 +98,7 @@ module driver
   use clm_varcon          , only : zlnd
   use clm_time_manager    , only : get_step_size, get_curr_calday, &
                                    get_curr_date, get_ref_date, get_nstep, is_perpetual
-  use histFileMod         , only : update_hbuf, htapes_wrapup
+  use histFileMod         , only : hist_update_hbuf, hist_htapes_wrapup
   use restFileMod         , only : restFile_write, restFile_write_binary, restFile_filename
   use inicFileMod         , only : inicfile_perp  
   use accFldsMod          , only : updateAccFlds
@@ -631,7 +631,7 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
   ! ============================================================================
 
   call t_startf('hbuf')
-  call update_hbuf()
+  call hist_update_hbuf()
   call t_stopf('hbuf')
 
   ! ============================================================================
@@ -639,7 +639,7 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
   ! LPJ is called at last time step of year. Then reset vegetation distribution
   ! and some counters for the next year.
   ! NOTE: monp1, dayp1, and secp1 correspond to nstep+1
-  ! NOTE: lpjreset must be called after update_accum and update_hbuf
+  ! NOTE: lpjreset must be called after update_accum and hist_update_hbuf
   ! in order to have the correct values of the accumulated variables
   ! ============================================================================
 
@@ -688,9 +688,9 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
   call t_startf('clm_driver_io')
 
   if (present(nlend) .and. present(rstwr)) then 	
-     call htapes_wrapup( rstwr, nlend )
+     call hist_htapes_wrapup( rstwr, nlend )
   else
-     call htapes_wrapup()
+     call hist_htapes_wrapup()
   end if
 
   ! ============================================================================
@@ -803,8 +803,6 @@ subroutine write_diagnostic (wrtdia, nstep)
   integer :: status(MPI_STATUS_SIZE) ! mpi status
 !------------------------------------------------------------------------
 
-#if (!defined SEQ_MCT) && (!defined SEQ_ESMF)
-
   call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
   call get_proc_global(numg, numl, numc, nump)
 
@@ -849,8 +847,6 @@ subroutine write_diagnostic (wrtdia, nstep)
   endif
 
 1000 format (1x,'nstep = ',i10,'   TS = ',e21.15)
-
-#endif 
 
 end subroutine write_diagnostic
 

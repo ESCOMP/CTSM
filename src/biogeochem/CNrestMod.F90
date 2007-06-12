@@ -98,7 +98,7 @@ contains
             dim1name='pft',long_name='sunlit projected leaf area index',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='laisun', data=pptr%pps%laisun, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -110,7 +110,7 @@ contains
             dim1name='pft',long_name='sunlit projected leaf area index',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='laisha', data=pptr%pps%laisha, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -122,7 +122,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='slasun', data=pptr%pps%slasun, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -134,7 +134,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='slasha', data=pptr%pps%slasha, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -146,7 +146,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='lncsun', data=pptr%pps%lncsun, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -158,7 +158,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='lncsha', data=pptr%pps%lncsha, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -170,7 +170,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='vcmxsun', data=pptr%pps%vcmxsun, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -182,7 +182,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='vcmxsha', data=pptr%pps%vcmxsha, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -194,7 +194,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cisun', data=pptr%pps%cisun, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -206,7 +206,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cisha', data=pptr%pps%cisha, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -218,7 +218,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='alphapsnsun', data=pptr%pps%alphapsnsun, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -230,7 +230,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='alphapsnsha', data=pptr%pps%alphapsnsha, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -245,7 +245,7 @@ contains
             long_name='effective extinction coefficient for indirect from direct',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='eff_kid', data=pptr%pps%eff_kid, &
-            dim1name='pft', dim2name='numrad', &
+            dim1name=namep, dim2name='numrad', &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -259,7 +259,7 @@ contains
             long_name='effective extinction coefficient for indirect from indirect',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='eff_kii', data=pptr%pps%eff_kii, &
-            dim1name='pft', dim2name='numrad', &
+            dim1name=namep, dim2name='numrad', &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -273,7 +273,7 @@ contains
             long_name='fraction sun canopy absorbed indirect from direct',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sun_faid', data=pptr%pps%sun_faid, &
-            dim1name='pft', dim2name='numrad', &
+            dim1name=namep, dim2name='numrad', &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -287,7 +287,7 @@ contains
             long_name='fraction sun canopy absorbed indirect from indirect',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sun_faii', data=pptr%pps%sun_faii, &
-            dim1name='pft', dim2name='numrad', &
+            dim1name=namep, dim2name='numrad', &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -301,7 +301,7 @@ contains
             long_name='fraction shade canopy absorbed indirect from direct',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sha_faid', data=pptr%pps%sha_faid, &
-            dim1name='pft', dim2name='numrad', &
+            dim1name=namep, dim2name='numrad', &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -315,7 +315,7 @@ contains
             long_name='fraction shade canopy absorbed indirect from direct',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sha_faii', data=pptr%pps%sha_faii, &
-            dim1name='pft', dim2name='numrad', &
+            dim1name=namep, dim2name='numrad', &
             ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -332,7 +332,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dormant_flag', data=pptr%pepv%dormant_flag, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -344,7 +344,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='days_active', data=pptr%pepv%days_active, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -356,7 +356,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='onset_flag', data=pptr%pepv%onset_flag, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -368,7 +368,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='onset_counter', data=pptr%pepv%onset_counter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -380,7 +380,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='onset_gddflag', data=pptr%pepv%onset_gddflag, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -392,7 +392,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='onset_fdd', data=pptr%pepv%onset_fdd, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -404,7 +404,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='onset_gdd', data=pptr%pepv%onset_gdd, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -416,7 +416,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='onset_swi', data=pptr%pepv%onset_swi, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -428,7 +428,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='offset_flag', data=pptr%pepv%offset_flag, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -440,7 +440,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='offset_counter', data=pptr%pepv%offset_counter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -452,7 +452,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='offset_fdd', data=pptr%pepv%offset_fdd, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -464,7 +464,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='offset_swi', data=pptr%pepv%offset_swi, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -476,7 +476,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='lgsf', data=pptr%pepv%lgsf, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -488,7 +488,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='bglfr', data=pptr%pepv%bglfr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -500,7 +500,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='bgtr', data=pptr%pepv%bgtr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -512,7 +512,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dayl', data=pptr%pepv%dayl, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -524,7 +524,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='prev_dayl', data=pptr%pepv%prev_dayl, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -536,7 +536,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='annavg_t2m', data=pptr%pepv%annavg_t2m, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -548,7 +548,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='tempavg_t2m', data=pptr%pepv%tempavg_t2m, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -560,7 +560,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gpp_pepv', data=pptr%pepv%gpp, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -572,7 +572,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='availc', data=pptr%pepv%availc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -584,7 +584,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='xsmrpool_recover', data=pptr%pepv%xsmrpool_recover, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -596,7 +596,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='xsmrpool_c13ratio', data=pptr%pepv%xsmrpool_c13ratio, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -608,7 +608,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='alloc_pnow', data=pptr%pepv%alloc_pnow, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -620,7 +620,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='c_allometry', data=pptr%pepv%c_allometry, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -632,7 +632,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='n_allometry', data=pptr%pepv%n_allometry, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -644,7 +644,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='plant_ndemand', data=pptr%pepv%plant_ndemand, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -656,7 +656,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='tempsum_plant_ndemand', data=pptr%pepv%tempsum_plant_ndemand, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -668,7 +668,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='annsum_plant_ndemand', data=pptr%pepv%annsum_plant_ndemand, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -680,7 +680,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='tempsum_retransn', data=pptr%pepv%tempsum_retransn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -692,7 +692,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='annsum_retransn', data=pptr%pepv%annsum_retransn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -704,7 +704,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='avail_retransn', data=pptr%pepv%avail_retransn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -716,7 +716,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='plant_nalloc', data=pptr%pepv%plant_nalloc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -728,7 +728,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='plant_calloc', data=pptr%pepv%plant_calloc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -740,7 +740,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='excess_cflux', data=pptr%pepv%excess_cflux, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -752,7 +752,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='downreg', data=pptr%pepv%downreg, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -764,7 +764,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='prev_leafc_to_litter', data=pptr%pepv%prev_leafc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -776,7 +776,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='prev_frootc_to_litter', data=pptr%pepv%prev_frootc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -788,7 +788,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='tempsum_npp', data=pptr%pepv%tempsum_npp, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -800,7 +800,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='annsum_npp', data=pptr%pepv%annsum_npp, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -812,7 +812,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='rc13_canair', data=pptr%pepv%rc13_canair, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -824,7 +824,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='rc13_psnsun', data=pptr%pepv%rc13_psnsun, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -836,7 +836,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='rc13_psnsha', data=pptr%pepv%rc13_psnsha, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -853,7 +853,7 @@ contains
             		dim1name='pft',long_name='',units='')
     	else if (flag == 'read' .or. flag == 'write') then
        		call ncd_iolocal(varname='woodc', data=pptr%pcs%woodc, &
-            		dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            		dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        		if (flag=='read' .and. .not. readvar) then
   			if (is_restart()) call endrun
        		end if	
@@ -866,7 +866,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc', data=pptr%pcs%leafc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -878,7 +878,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_storage', data=pptr%pcs%leafc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -890,7 +890,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_xfer', data=pptr%pcs%leafc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -902,7 +902,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc', data=pptr%pcs%frootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -914,7 +914,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_storage', data=pptr%pcs%frootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -926,7 +926,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_xfer', data=pptr%pcs%frootc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -938,7 +938,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc', data=pptr%pcs%livestemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -950,7 +950,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc_storage', data=pptr%pcs%livestemc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -962,7 +962,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc_xfer', data=pptr%pcs%livestemc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -974,7 +974,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemc', data=pptr%pcs%deadstemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -986,7 +986,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemc_storage', data=pptr%pcs%deadstemc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -998,7 +998,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemc_xfer', data=pptr%pcs%deadstemc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1010,7 +1010,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc', data=pptr%pcs%livecrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1022,7 +1022,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc_storage', data=pptr%pcs%livecrootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1034,7 +1034,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc_xfer', data=pptr%pcs%livecrootc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1046,7 +1046,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootc', data=pptr%pcs%deadcrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1058,7 +1058,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootc_storage', data=pptr%pcs%deadcrootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1070,7 +1070,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootc_xfer', data=pptr%pcs%deadcrootc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1082,7 +1082,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gresp_storage', data=pptr%pcs%gresp_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1094,7 +1094,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gresp_xfer', data=pptr%pcs%gresp_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1106,7 +1106,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool', data=pptr%pcs%cpool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1118,7 +1118,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='xsmrpool', data=pptr%pcs%xsmrpool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1130,7 +1130,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_ctrunc', data=pptr%pcs%pft_ctrunc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1142,7 +1142,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dispvegc', data=pptr%pcs%dispvegc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1154,7 +1154,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='storvegc', data=pptr%pcs%storvegc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1166,7 +1166,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totvegc', data=pptr%pcs%totvegc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1178,7 +1178,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totpftc', data=pptr%pcs%totpftc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1194,7 +1194,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_13', data=pptr%pc13s%leafc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1206,7 +1206,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_storage_13', data=pptr%pc13s%leafc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1218,7 +1218,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_xfer_13', data=pptr%pc13s%leafc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1230,7 +1230,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_13', data=pptr%pc13s%frootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1242,7 +1242,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_storage_13', data=pptr%pc13s%frootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1254,7 +1254,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_xfer_13', data=pptr%pc13s%frootc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1266,7 +1266,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc_13', data=pptr%pc13s%livestemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1278,7 +1278,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc_storage_13', data=pptr%pc13s%livestemc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1290,7 +1290,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc_xfer_13', data=pptr%pc13s%livestemc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1302,7 +1302,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemc_13', data=pptr%pc13s%deadstemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1314,7 +1314,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemc_storage_13', data=pptr%pc13s%deadstemc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1326,7 +1326,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemc_xfer_13', data=pptr%pc13s%deadstemc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1338,7 +1338,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc_13', data=pptr%pc13s%livecrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1350,7 +1350,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc_storage_13', data=pptr%pc13s%livecrootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1362,7 +1362,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc_xfer_13', data=pptr%pc13s%livecrootc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1374,7 +1374,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootc_13', data=pptr%pc13s%deadcrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1386,7 +1386,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootc_storage_13', data=pptr%pc13s%deadcrootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1398,7 +1398,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootc_xfer_13', data=pptr%pc13s%deadcrootc_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1410,7 +1410,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gresp_storage_13', data=pptr%pc13s%gresp_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1422,7 +1422,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gresp_xfer_13', data=pptr%pc13s%gresp_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1434,7 +1434,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_13', data=pptr%pc13s%cpool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1446,7 +1446,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='xsmrpool_13', data=pptr%pc13s%xsmrpool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1458,7 +1458,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_ctrunc_13', data=pptr%pc13s%pft_ctrunc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1470,7 +1470,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dispvegc_13', data=pptr%pc13s%dispvegc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1482,7 +1482,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='storvegc_13', data=pptr%pc13s%storvegc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1494,7 +1494,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totvegc_13', data=pptr%pc13s%totvegc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1506,7 +1506,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totpftc_13', data=pptr%pc13s%totpftc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1522,7 +1522,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafn', data=pptr%pns%leafn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1534,7 +1534,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafn_storage', data=pptr%pns%leafn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1546,7 +1546,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafn_xfer', data=pptr%pns%leafn_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1558,7 +1558,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootn', data=pptr%pns%frootn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1570,7 +1570,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootn_storage', data=pptr%pns%frootn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1582,7 +1582,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootn_xfer', data=pptr%pns%frootn_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1594,7 +1594,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemn', data=pptr%pns%livestemn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1606,7 +1606,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemn_storage', data=pptr%pns%livestemn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1618,7 +1618,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemn_xfer', data=pptr%pns%livestemn_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1630,7 +1630,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemn', data=pptr%pns%deadstemn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1642,7 +1642,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemn_storage', data=pptr%pns%deadstemn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1654,7 +1654,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemn_xfer', data=pptr%pns%deadstemn_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1666,7 +1666,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootn', data=pptr%pns%livecrootn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1678,7 +1678,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootn_storage', data=pptr%pns%livecrootn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1690,7 +1690,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootn_xfer', data=pptr%pns%livecrootn_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1702,7 +1702,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootn', data=pptr%pns%deadcrootn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1714,7 +1714,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootn_storage', data=pptr%pns%deadcrootn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1726,7 +1726,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootn_xfer', data=pptr%pns%deadcrootn_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1738,7 +1738,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='retransn', data=pptr%pns%retransn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1750,7 +1750,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool', data=pptr%pns%npool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1762,7 +1762,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_ntrunc', data=pptr%pns%pft_ntrunc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1774,7 +1774,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dispvegn', data=pptr%pns%dispvegn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1786,7 +1786,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='storvegn', data=pptr%pns%storvegn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1798,7 +1798,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totvegn', data=pptr%pns%totvegn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1810,7 +1810,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totpftn', data=pptr%pns%totpftn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1827,7 +1827,7 @@ contains
                  dim1name='pft',long_name='',units='')
          else if (flag == 'read' .or. flag == 'write') then
             call ncd_iolocal(varname='woodc_alloc', data=pptr%pcf%woodc_alloc, &
-                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
             if (flag=='read' .and. .not. readvar) then
   	       if (is_restart()) call endrun
             end if	
@@ -1839,7 +1839,7 @@ contains
                  dim1name='pft',long_name='',units='')
          else if (flag == 'read' .or. flag == 'write') then
             call ncd_iolocal(varname='woodc_loss', data=pptr%pcf%woodc_loss, &
-                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
             if (flag=='read' .and. .not. readvar) then
   	       if (is_restart()) call endrun
             end if	
@@ -1851,7 +1851,7 @@ contains
                  dim1name='pft',long_name='',units='')
          else if (flag == 'read' .or. flag == 'write') then
             call ncd_iolocal(varname='leafc_loss', data=pptr%pcf%leafc_loss, &
-                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
             if (flag=='read' .and. .not. readvar) then
   	       if (is_restart()) call endrun
             end if	
@@ -1863,7 +1863,7 @@ contains
                  dim1name='pft',long_name='',units='')
          else if (flag == 'read' .or. flag == 'write') then
             call ncd_iolocal(varname='leafc_alloc', data=pptr%pcf%leafc_alloc, &
-                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
             if (flag=='read' .and. .not. readvar) then
   	       if (is_restart()) call endrun
             end if	
@@ -1875,7 +1875,7 @@ contains
                  dim1name='pft',long_name='',units='')
          else if (flag == 'read' .or. flag == 'write') then
             call ncd_iolocal(varname='frootc_loss', data=pptr%pcf%frootc_loss, &
-                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
             if (flag=='read' .and. .not. readvar) then
   	       if (is_restart()) call endrun
             end if	
@@ -1887,7 +1887,7 @@ contains
                  dim1name='pft',long_name='',units='')
          else if (flag == 'read' .or. flag == 'write') then
             call ncd_iolocal(varname='frootc_alloc', data=pptr%pcf%frootc_alloc, &
-                 dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+                 dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
             if (flag=='read' .and. .not. readvar) then
   	       if (is_restart()) call endrun
             end if	
@@ -1900,7 +1900,7 @@ contains
             dim1name='pft',long_name='sunlit leaf photosynthesis',units='umol CO2/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='psnsun', data=pptr%pcf%psnsun, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1912,7 +1912,7 @@ contains
             dim1name='pft',long_name='shaded leaf photosynthesis',units='umol CO2/m2/s')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='psnsha', data=pptr%pcf%psnsha, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1926,7 +1926,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_to_litter', data=pptr%pcf%m_leafc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1938,7 +1938,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_storage_to_litter', data=pptr%pcf%m_leafc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1950,7 +1950,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_xfer_to_litter', data=pptr%pcf%m_leafc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1962,7 +1962,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_to_litter', data=pptr%pcf%m_frootc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1974,7 +1974,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_storage_to_litter', data=pptr%pcf%m_frootc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1986,7 +1986,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_xfer_to_litter', data=pptr%pcf%m_frootc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -1998,7 +1998,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_to_litter', data=pptr%pcf%m_livestemc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2010,7 +2010,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_storage_to_litter', data=pptr%pcf%m_livestemc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2022,7 +2022,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_xfer_to_litter', data=pptr%pcf%m_livestemc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2034,7 +2034,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_to_litter', data=pptr%pcf%m_deadstemc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2046,7 +2046,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_storage_to_litter', data=pptr%pcf%m_deadstemc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2058,7 +2058,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_xfer_to_litter', data=pptr%pcf%m_deadstemc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2070,7 +2070,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_to_litter', data=pptr%pcf%m_livecrootc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2082,7 +2082,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_storage_to_litter', data=pptr%pcf%m_livecrootc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2094,7 +2094,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_xfer_to_litter', data=pptr%pcf%m_livecrootc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2106,7 +2106,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_to_litter', data=pptr%pcf%m_deadcrootc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2118,7 +2118,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_storage_to_litter', data=pptr%pcf%m_deadcrootc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2130,7 +2130,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_xfer_to_litter', data=pptr%pcf%m_deadcrootc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2142,7 +2142,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_storage_to_litter', data=pptr%pcf%m_gresp_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2154,7 +2154,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_xfer_to_litter', data=pptr%pcf%m_gresp_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2168,7 +2168,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_to_fire', data=pptr%pcf%m_leafc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2180,7 +2180,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_storage_to_fire', data=pptr%pcf%m_leafc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2192,7 +2192,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_xfer_to_fire', data=pptr%pcf%m_leafc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2204,7 +2204,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_to_fire', data=pptr%pcf%m_frootc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2216,7 +2216,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_storage_to_fire', data=pptr%pcf%m_frootc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2228,7 +2228,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_xfer_to_fire', data=pptr%pcf%m_frootc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2240,7 +2240,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_to_fire', data=pptr%pcf%m_livestemc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2252,7 +2252,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_storage_to_fire', data=pptr%pcf%m_livestemc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2264,7 +2264,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_xfer_to_fire', data=pptr%pcf%m_livestemc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2276,7 +2276,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_to_fire', data=pptr%pcf%m_deadstemc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2288,7 +2288,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_to_litter_fire', data=pptr%pcf%m_deadstemc_to_litter_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2300,7 +2300,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_storage_to_fire', data=pptr%pcf%m_deadstemc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2312,7 +2312,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_xfer_to_fire', data=pptr%pcf%m_deadstemc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2324,7 +2324,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_to_fire', data=pptr%pcf%m_livecrootc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2336,7 +2336,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_storage_to_fire', data=pptr%pcf%m_livecrootc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2348,7 +2348,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_xfer_to_fire', data=pptr%pcf%m_livecrootc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2360,7 +2360,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_to_fire', data=pptr%pcf%m_deadcrootc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2372,7 +2372,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_to_litter_fire', data=pptr%pcf%m_deadcrootc_to_litter_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2384,7 +2384,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_storage_to_fire', data=pptr%pcf%m_deadcrootc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2396,7 +2396,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_xfer_to_fire', data=pptr%pcf%m_deadcrootc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2408,7 +2408,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_storage_to_fire', data=pptr%pcf%m_gresp_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2420,7 +2420,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_xfer_to_fire', data=pptr%pcf%m_gresp_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2434,7 +2434,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_xfer_to_leafc', data=pptr%pcf%leafc_xfer_to_leafc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2446,7 +2446,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_xfer_to_frootc', data=pptr%pcf%frootc_xfer_to_frootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2458,7 +2458,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc_xfer_to_livestemc', data=pptr%pcf%livestemc_xfer_to_livestemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2470,7 +2470,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemc_xfer_to_deadstemc', data=pptr%pcf%deadstemc_xfer_to_deadstemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2482,7 +2482,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc_xfer_to_livecrootc', data=pptr%pcf%livecrootc_xfer_to_livecrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2494,7 +2494,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootc_xfer_to_deadcrootc', data=pptr%pcf%deadcrootc_xfer_to_deadcrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2508,7 +2508,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_to_litter', data=pptr%pcf%leafc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2520,7 +2520,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_to_litter', data=pptr%pcf%frootc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2534,7 +2534,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leaf_mr', data=pptr%pcf%leaf_mr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2546,7 +2546,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='froot_mr', data=pptr%pcf%froot_mr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2558,7 +2558,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestem_mr', data=pptr%pcf%livestem_mr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2570,7 +2570,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecroot_mr', data=pptr%pcf%livecroot_mr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2582,7 +2582,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leaf_curmr', data=pptr%pcf%leaf_curmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2594,7 +2594,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='froot_curmr', data=pptr%pcf%froot_curmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2606,7 +2606,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestem_curmr', data=pptr%pcf%livestem_curmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2618,7 +2618,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecroot_curmr', data=pptr%pcf%livecroot_curmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2630,7 +2630,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leaf_xsmr', data=pptr%pcf%leaf_xsmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2642,7 +2642,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='froot_xsmr', data=pptr%pcf%froot_xsmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2654,7 +2654,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestem_xsmr', data=pptr%pcf%livestem_xsmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2666,7 +2666,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecroot_xsmr', data=pptr%pcf%livecroot_xsmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2680,7 +2680,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='psnsun_to_cpool', data=pptr%pcf%psnsun_to_cpool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2692,7 +2692,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='psnshade_to_cpool', data=pptr%pcf%psnshade_to_cpool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2706,7 +2706,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_xsmrpool', data=pptr%pcf%cpool_to_xsmrpool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2718,7 +2718,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_leafc', data=pptr%pcf%cpool_to_leafc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2730,7 +2730,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_leafc_storage', data=pptr%pcf%cpool_to_leafc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2742,7 +2742,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_frootc', data=pptr%pcf%cpool_to_frootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2754,7 +2754,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_frootc_storage', data=pptr%pcf%cpool_to_frootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2766,7 +2766,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_livestemc', data=pptr%pcf%cpool_to_livestemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2778,7 +2778,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_livestemc_storage', data=pptr%pcf%cpool_to_livestemc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2790,7 +2790,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_deadstemc', data=pptr%pcf%cpool_to_deadstemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2802,7 +2802,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_deadstemc_storage', data=pptr%pcf%cpool_to_deadstemc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2814,7 +2814,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_livecrootc', data=pptr%pcf%cpool_to_livecrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2826,7 +2826,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_livecrootc_storage', data=pptr%pcf%cpool_to_livecrootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2838,7 +2838,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_deadcrootc', data=pptr%pcf%cpool_to_deadcrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2850,7 +2850,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_deadcrootc_storage', data=pptr%pcf%cpool_to_deadcrootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2862,7 +2862,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_gresp_storage', data=pptr%pcf%cpool_to_gresp_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2876,7 +2876,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_leaf_gr', data=pptr%pcf%cpool_leaf_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2888,7 +2888,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_leaf_storage_gr', data=pptr%pcf%cpool_leaf_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2900,7 +2900,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_leaf_gr', data=pptr%pcf%transfer_leaf_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2912,7 +2912,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_froot_gr', data=pptr%pcf%cpool_froot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2924,7 +2924,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_froot_storage_gr', data=pptr%pcf%cpool_froot_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2936,7 +2936,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_froot_gr', data=pptr%pcf%transfer_froot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2948,7 +2948,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_livestem_gr', data=pptr%pcf%cpool_livestem_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2960,7 +2960,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_livestem_storage_gr', data=pptr%pcf%cpool_livestem_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2972,7 +2972,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_livestem_gr', data=pptr%pcf%transfer_livestem_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2984,7 +2984,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_deadstem_gr', data=pptr%pcf%cpool_deadstem_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -2996,7 +2996,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_deadstem_storage_gr', data=pptr%pcf%cpool_deadstem_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3008,7 +3008,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_deadstem_gr', data=pptr%pcf%transfer_deadstem_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3020,7 +3020,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_livecroot_gr', data=pptr%pcf%cpool_livecroot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3032,7 +3032,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_livecroot_storage_gr', data=pptr%pcf%cpool_livecroot_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3044,7 +3044,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_livecroot_gr', data=pptr%pcf%transfer_livecroot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3056,7 +3056,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_deadcroot_gr', data=pptr%pcf%cpool_deadcroot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3068,7 +3068,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_deadcroot_storage_gr', data=pptr%pcf%cpool_deadcroot_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3080,7 +3080,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_deadcroot_gr', data=pptr%pcf%transfer_deadcroot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3094,7 +3094,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_storage_to_xfer', data=pptr%pcf%leafc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3106,7 +3106,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_storage_to_xfer', data=pptr%pcf%frootc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3118,7 +3118,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc_storage_to_xfer', data=pptr%pcf%livestemc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3130,7 +3130,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemc_storage_to_xfer', data=pptr%pcf%deadstemc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3142,7 +3142,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc_storage_to_xfer', data=pptr%pcf%livecrootc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3154,7 +3154,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootc_storage_to_xfer', data=pptr%pcf%deadcrootc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3166,7 +3166,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gresp_storage_to_xfer', data=pptr%pcf%gresp_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3180,7 +3180,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc_to_deadstemc', data=pptr%pcf%livestemc_to_deadstemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3192,7 +3192,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc_to_deadcrootc', data=pptr%pcf%livecrootc_to_deadcrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3206,7 +3206,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gpp_pcf', data=pptr%pcf%gpp, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3218,7 +3218,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='mr', data=pptr%pcf%mr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3230,7 +3230,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='current_gr', data=pptr%pcf%current_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3242,7 +3242,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_gr', data=pptr%pcf%transfer_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3254,7 +3254,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='storage_gr', data=pptr%pcf%storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3266,7 +3266,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gr', data=pptr%pcf%gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3278,7 +3278,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='ar', data=pptr%pcf%ar, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3290,7 +3290,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='rr', data=pptr%pcf%rr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3302,7 +3302,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npp', data=pptr%pcf%npp, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3314,7 +3314,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='agnpp', data=pptr%pcf%agnpp, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3326,7 +3326,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='bgnpp', data=pptr%pcf%bgnpp, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3338,7 +3338,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litfall', data=pptr%pcf%litfall, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3350,7 +3350,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='vegfire', data=pptr%pcf%vegfire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3362,7 +3362,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_cinputs', data=pptr%pcf%pft_cinputs, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3374,7 +3374,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_coutputs', data=pptr%pcf%pft_coutputs, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3386,7 +3386,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_fire_closs', data=pptr%pcf%pft_fire_closs, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3403,7 +3403,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_to_litter_13', data=pptr%pc13f%m_leafc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3415,7 +3415,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_storage_to_litter_13', data=pptr%pc13f%m_leafc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3427,7 +3427,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_xfer_to_litter_13', data=pptr%pc13f%m_leafc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3439,7 +3439,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_to_litter_13', data=pptr%pc13f%m_frootc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3451,7 +3451,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_storage_to_litter_13', data=pptr%pc13f%m_frootc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3463,7 +3463,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_xfer_to_litter_13', data=pptr%pc13f%m_frootc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3475,7 +3475,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_to_litter_13', data=pptr%pc13f%m_livestemc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3487,7 +3487,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_storage_to_litter_13', data=pptr%pc13f%m_livestemc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3499,7 +3499,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_xfer_to_litter_13', data=pptr%pc13f%m_livestemc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3511,7 +3511,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_to_litter_13', data=pptr%pc13f%m_deadstemc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3523,7 +3523,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_storage_to_litter_13', data=pptr%pc13f%m_deadstemc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3535,7 +3535,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_xfer_to_litter_13', data=pptr%pc13f%m_deadstemc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3547,7 +3547,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_to_litter_13', data=pptr%pc13f%m_livecrootc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3559,7 +3559,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_storage_to_litter_13', data=pptr%pc13f%m_livecrootc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3571,7 +3571,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_xfer_to_litter_13', data=pptr%pc13f%m_livecrootc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3583,7 +3583,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_to_litter_13', data=pptr%pc13f%m_deadcrootc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3595,7 +3595,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_storage_to_litter_13', data=pptr%pc13f%m_deadcrootc_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3607,7 +3607,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_xfer_to_litter_13', data=pptr%pc13f%m_deadcrootc_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3619,7 +3619,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_storage_to_litter_13', data=pptr%pc13f%m_gresp_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3631,7 +3631,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_xfer_to_litter_13', data=pptr%pc13f%m_gresp_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3645,7 +3645,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_to_fire_13', data=pptr%pc13f%m_leafc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3657,7 +3657,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_storage_to_fire_13', data=pptr%pc13f%m_leafc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3669,7 +3669,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_xfer_to_fire_13', data=pptr%pc13f%m_leafc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3681,7 +3681,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_to_fire_13', data=pptr%pc13f%m_frootc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3693,7 +3693,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_storage_to_fire_13', data=pptr%pc13f%m_frootc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3705,7 +3705,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_xfer_to_fire_13', data=pptr%pc13f%m_frootc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3717,7 +3717,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_to_fire_13', data=pptr%pc13f%m_livestemc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3729,7 +3729,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_storage_to_fire_13', data=pptr%pc13f%m_livestemc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3741,7 +3741,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_xfer_to_fire_13', data=pptr%pc13f%m_livestemc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3753,7 +3753,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_to_fire_13', data=pptr%pc13f%m_deadstemc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3765,7 +3765,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_to_litter_fire_13', data=pptr%pc13f%m_deadstemc_to_litter_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3777,7 +3777,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_storage_to_fire_13', data=pptr%pc13f%m_deadstemc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3789,7 +3789,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_xfer_to_fire_13', data=pptr%pc13f%m_deadstemc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3801,7 +3801,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_to_fire_13', data=pptr%pc13f%m_livecrootc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3813,7 +3813,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_storage_to_fire_13', data=pptr%pc13f%m_livecrootc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3825,7 +3825,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_xfer_to_fire_13', data=pptr%pc13f%m_livecrootc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3837,7 +3837,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_to_fire_13', data=pptr%pc13f%m_deadcrootc_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3849,7 +3849,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_to_litter_fire_13', data=pptr%pc13f%m_deadcrootc_to_litter_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3861,7 +3861,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_storage_to_fire_13', data=pptr%pc13f%m_deadcrootc_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3873,7 +3873,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_xfer_to_fire_13', data=pptr%pc13f%m_deadcrootc_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3885,7 +3885,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_storage_to_fire_13', data=pptr%pc13f%m_gresp_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3897,7 +3897,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_xfer_to_fire_13', data=pptr%pc13f%m_gresp_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3911,7 +3911,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_xfer_to_leafc_13', data=pptr%pc13f%leafc_xfer_to_leafc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3923,7 +3923,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_xfer_to_frootc_13', data=pptr%pc13f%frootc_xfer_to_frootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3935,7 +3935,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc_xfer_to_livestemc_13', data=pptr%pc13f%livestemc_xfer_to_livestemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3947,7 +3947,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemc_xfer_to_deadstemc_13', data=pptr%pc13f%deadstemc_xfer_to_deadstemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3959,7 +3959,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc_xfer_to_livecrootc_13', data=pptr%pc13f%livecrootc_xfer_to_livecrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3971,7 +3971,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootc_xfer_to_deadcrootc_13', data=pptr%pc13f%deadcrootc_xfer_to_deadcrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3985,7 +3985,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_to_litter_13', data=pptr%pc13f%leafc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -3997,7 +3997,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_to_litter_13', data=pptr%pc13f%frootc_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4011,7 +4011,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leaf_mr_13', data=pptr%pc13f%leaf_mr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4023,7 +4023,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='froot_mr_13', data=pptr%pc13f%froot_mr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4035,7 +4035,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestem_mr_13', data=pptr%pc13f%livestem_mr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4047,7 +4047,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecroot_mr_13', data=pptr%pc13f%livecroot_mr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4059,7 +4059,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leaf_curmr_13', data=pptr%pc13f%leaf_curmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4071,7 +4071,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='froot_curmr_13', data=pptr%pc13f%froot_curmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4083,7 +4083,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestem_curmr_13', data=pptr%pc13f%livestem_curmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4095,7 +4095,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecroot_curmr_13', data=pptr%pc13f%livecroot_curmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4107,7 +4107,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leaf_xsmr_13', data=pptr%pc13f%leaf_xsmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4119,7 +4119,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='froot_xsmr_13', data=pptr%pc13f%froot_xsmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4131,7 +4131,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestem_xsmr_13', data=pptr%pc13f%livestem_xsmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4143,7 +4143,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecroot_xsmr_13', data=pptr%pc13f%livecroot_xsmr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4157,7 +4157,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='psnsun_to_cpool_13', data=pptr%pc13f%psnsun_to_cpool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4169,7 +4169,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='psnshade_to_cpool_13', data=pptr%pc13f%psnshade_to_cpool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4183,7 +4183,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_xsmrpool_13', data=pptr%pc13f%cpool_to_xsmrpool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4195,7 +4195,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_leafc_13', data=pptr%pc13f%cpool_to_leafc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4207,7 +4207,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_leafc_storage_13', data=pptr%pc13f%cpool_to_leafc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4219,7 +4219,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_frootc_13', data=pptr%pc13f%cpool_to_frootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4231,7 +4231,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_frootc_storage_13', data=pptr%pc13f%cpool_to_frootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4243,7 +4243,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_livestemc_13', data=pptr%pc13f%cpool_to_livestemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4255,7 +4255,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_livestemc_storage_13', data=pptr%pc13f%cpool_to_livestemc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4267,7 +4267,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_deadstemc_13', data=pptr%pc13f%cpool_to_deadstemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4279,7 +4279,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_deadstemc_storage_13', data=pptr%pc13f%cpool_to_deadstemc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4291,7 +4291,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_livecrootc_13', data=pptr%pc13f%cpool_to_livecrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4303,7 +4303,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_livecrootc_storage_13', data=pptr%pc13f%cpool_to_livecrootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4315,7 +4315,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_deadcrootc_13', data=pptr%pc13f%cpool_to_deadcrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4327,7 +4327,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_deadcrootc_storage_13', data=pptr%pc13f%cpool_to_deadcrootc_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4339,7 +4339,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_to_gresp_storage_13', data=pptr%pc13f%cpool_to_gresp_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4353,7 +4353,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_leaf_gr_13', data=pptr%pc13f%cpool_leaf_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4365,7 +4365,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_leaf_storage_gr_13', data=pptr%pc13f%cpool_leaf_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4377,7 +4377,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_leaf_gr_13', data=pptr%pc13f%transfer_leaf_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4389,7 +4389,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_froot_gr_13', data=pptr%pc13f%cpool_froot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4401,7 +4401,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_froot_storage_gr_13', data=pptr%pc13f%cpool_froot_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4413,7 +4413,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_froot_gr_13', data=pptr%pc13f%transfer_froot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4425,7 +4425,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_livestem_gr_13', data=pptr%pc13f%cpool_livestem_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4437,7 +4437,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_livestem_storage_gr_13', data=pptr%pc13f%cpool_livestem_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4449,7 +4449,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_livestem_gr_13', data=pptr%pc13f%transfer_livestem_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4461,7 +4461,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_deadstem_gr_13', data=pptr%pc13f%cpool_deadstem_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4473,7 +4473,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_deadstem_storage_gr_13', data=pptr%pc13f%cpool_deadstem_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4485,7 +4485,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_deadstem_gr_13', data=pptr%pc13f%transfer_deadstem_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4497,7 +4497,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_livecroot_gr_13', data=pptr%pc13f%cpool_livecroot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4509,7 +4509,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_livecroot_storage_gr_13', data=pptr%pc13f%cpool_livecroot_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4521,7 +4521,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_livecroot_gr_13', data=pptr%pc13f%transfer_livecroot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4533,7 +4533,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_deadcroot_gr_13', data=pptr%pc13f%cpool_deadcroot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4545,7 +4545,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cpool_deadcroot_storage_gr_13', data=pptr%pc13f%cpool_deadcroot_storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4557,7 +4557,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_deadcroot_gr_13', data=pptr%pc13f%transfer_deadcroot_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4571,7 +4571,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_storage_to_xfer_13', data=pptr%pc13f%leafc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4583,7 +4583,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_storage_to_xfer_13', data=pptr%pc13f%frootc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4595,7 +4595,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc_storage_to_xfer_13', data=pptr%pc13f%livestemc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4607,7 +4607,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemc_storage_to_xfer_13', data=pptr%pc13f%deadstemc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4619,7 +4619,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc_storage_to_xfer_13', data=pptr%pc13f%livecrootc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4631,7 +4631,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootc_storage_to_xfer_13', data=pptr%pc13f%deadcrootc_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4643,7 +4643,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gresp_storage_to_xfer_13', data=pptr%pc13f%gresp_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4657,7 +4657,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemc_to_deadstemc_13', data=pptr%pc13f%livestemc_to_deadstemc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4669,7 +4669,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootc_to_deadcrootc_13', data=pptr%pc13f%livecrootc_to_deadcrootc, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4683,7 +4683,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gpp_pc13f_13', data=pptr%pc13f%gpp, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4695,7 +4695,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='mr_13', data=pptr%pc13f%mr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4707,7 +4707,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='current_gr_13', data=pptr%pc13f%current_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4719,7 +4719,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='transfer_gr_13', data=pptr%pc13f%transfer_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4731,7 +4731,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='storage_gr_13', data=pptr%pc13f%storage_gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4743,7 +4743,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gr_13', data=pptr%pc13f%gr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4755,7 +4755,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='ar_13', data=pptr%pc13f%ar, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4767,7 +4767,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='rr_13', data=pptr%pc13f%rr, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4779,7 +4779,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npp_13', data=pptr%pc13f%npp, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4791,7 +4791,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='agnpp_13', data=pptr%pc13f%agnpp, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4803,7 +4803,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='bgnpp_13', data=pptr%pc13f%bgnpp, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4815,7 +4815,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litfall_13', data=pptr%pc13f%litfall, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4827,7 +4827,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='vegfire_13', data=pptr%pc13f%vegfire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4839,7 +4839,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_cinputs_13', data=pptr%pc13f%pft_cinputs, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4851,7 +4851,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_coutputs_13', data=pptr%pc13f%pft_coutputs, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4863,7 +4863,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_fire_closs_13', data=pptr%pc13f%pft_fire_closs, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4879,7 +4879,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafn_to_litter', data=pptr%pnf%m_leafn_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4891,7 +4891,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootn_to_litter', data=pptr%pnf%m_frootn_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4903,7 +4903,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafn_storage_to_litter', data=pptr%pnf%m_leafn_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4915,7 +4915,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootn_storage_to_litter', data=pptr%pnf%m_frootn_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4927,7 +4927,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemn_storage_to_litter', data=pptr%pnf%m_livestemn_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4939,7 +4939,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemn_storage_to_litter', data=pptr%pnf%m_deadstemn_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4951,7 +4951,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootn_storage_to_litter', data=pptr%pnf%m_livecrootn_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4963,7 +4963,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootn_storage_to_litter', data=pptr%pnf%m_deadcrootn_storage_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4975,7 +4975,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafn_xfer_to_litter', data=pptr%pnf%m_leafn_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4987,7 +4987,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootn_xfer_to_litter', data=pptr%pnf%m_frootn_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -4999,7 +4999,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemn_xfer_to_litter', data=pptr%pnf%m_livestemn_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5011,7 +5011,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemn_xfer_to_litter', data=pptr%pnf%m_deadstemn_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5023,7 +5023,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootn_xfer_to_litter', data=pptr%pnf%m_livecrootn_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5035,7 +5035,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootn_xfer_to_litter', data=pptr%pnf%m_deadcrootn_xfer_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5047,7 +5047,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemn_to_litter', data=pptr%pnf%m_livestemn_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5059,7 +5059,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemn_to_litter', data=pptr%pnf%m_deadstemn_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5071,7 +5071,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootn_to_litter', data=pptr%pnf%m_livecrootn_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5083,7 +5083,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootn_to_litter', data=pptr%pnf%m_deadcrootn_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5095,7 +5095,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_retransn_to_litter', data=pptr%pnf%m_retransn_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5107,7 +5107,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafn_to_fire', data=pptr%pnf%m_leafn_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5119,7 +5119,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootn_to_fire', data=pptr%pnf%m_frootn_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5131,7 +5131,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafn_storage_to_fire', data=pptr%pnf%m_leafn_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5143,7 +5143,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootn_storage_to_fire', data=pptr%pnf%m_frootn_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5155,7 +5155,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemn_storage_to_fire', data=pptr%pnf%m_livestemn_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5167,7 +5167,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemn_storage_to_fire', data=pptr%pnf%m_deadstemn_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5179,7 +5179,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootn_storage_to_fire', data=pptr%pnf%m_livecrootn_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5191,7 +5191,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootn_storage_to_fire', data=pptr%pnf%m_deadcrootn_storage_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5203,7 +5203,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafn_xfer_to_fire', data=pptr%pnf%m_leafn_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5215,7 +5215,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootn_xfer_to_fire', data=pptr%pnf%m_frootn_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5227,7 +5227,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemn_xfer_to_fire', data=pptr%pnf%m_livestemn_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5239,7 +5239,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemn_xfer_to_fire', data=pptr%pnf%m_deadstemn_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5251,7 +5251,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootn_xfer_to_fire', data=pptr%pnf%m_livecrootn_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5263,7 +5263,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootn_xfer_to_fire', data=pptr%pnf%m_deadcrootn_xfer_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5275,7 +5275,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemn_to_fire', data=pptr%pnf%m_livestemn_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5287,7 +5287,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemn_to_fire', data=pptr%pnf%m_deadstemn_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5299,7 +5299,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemn_to_litter_fire', data=pptr%pnf%m_deadstemn_to_litter_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5311,7 +5311,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootn_to_fire', data=pptr%pnf%m_livecrootn_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5323,7 +5323,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootn_to_fire', data=pptr%pnf%m_deadcrootn_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5335,7 +5335,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootn_to_litter_fire', data=pptr%pnf%m_deadcrootn_to_litter_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5347,7 +5347,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_retransn_to_fire', data=pptr%pnf%m_retransn_to_fire, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5359,7 +5359,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafn_xfer_to_leafn', data=pptr%pnf%leafn_xfer_to_leafn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5371,7 +5371,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootn_xfer_to_frootn', data=pptr%pnf%frootn_xfer_to_frootn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5383,7 +5383,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemn_xfer_to_livestemn', data=pptr%pnf%livestemn_xfer_to_livestemn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5395,7 +5395,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemn_xfer_to_deadstemn', data=pptr%pnf%deadstemn_xfer_to_deadstemn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5407,7 +5407,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootn_xfer_to_livecrootn', data=pptr%pnf%livecrootn_xfer_to_livecrootn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5419,7 +5419,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootn_xfer_to_deadcrootn', data=pptr%pnf%deadcrootn_xfer_to_deadcrootn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5431,7 +5431,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafn_to_litter', data=pptr%pnf%leafn_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5443,7 +5443,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootn_to_litter', data=pptr%pnf%frootn_to_litter, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5455,7 +5455,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafn_to_retransn', data=pptr%pnf%leafn_to_retransn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5467,7 +5467,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='retransn_to_npool', data=pptr%pnf%retransn_to_npool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5479,7 +5479,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_npool', data=pptr%pnf%sminn_to_npool, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5491,7 +5491,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_leafn', data=pptr%pnf%npool_to_leafn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5503,7 +5503,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_leafn_storage', data=pptr%pnf%npool_to_leafn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5515,7 +5515,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_frootn', data=pptr%pnf%npool_to_frootn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5527,7 +5527,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_frootn_storage', data=pptr%pnf%npool_to_frootn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5539,7 +5539,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_livestemn', data=pptr%pnf%npool_to_livestemn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5551,7 +5551,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_livestemn_storage', data=pptr%pnf%npool_to_livestemn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5563,7 +5563,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_deadstemn', data=pptr%pnf%npool_to_deadstemn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5575,7 +5575,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_deadstemn_storage', data=pptr%pnf%npool_to_deadstemn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5587,7 +5587,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_livecrootn', data=pptr%pnf%npool_to_livecrootn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5599,7 +5599,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_livecrootn_storage', data=pptr%pnf%npool_to_livecrootn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5611,7 +5611,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_deadcrootn', data=pptr%pnf%npool_to_deadcrootn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5623,7 +5623,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='npool_to_deadcrootn_storage', data=pptr%pnf%npool_to_deadcrootn_storage, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5635,7 +5635,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafn_storage_to_xfer', data=pptr%pnf%leafn_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5647,7 +5647,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootn_storage_to_xfer', data=pptr%pnf%frootn_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5659,7 +5659,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemn_storage_to_xfer', data=pptr%pnf%livestemn_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5671,7 +5671,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadstemn_storage_to_xfer', data=pptr%pnf%deadstemn_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5683,7 +5683,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootn_storage_to_xfer', data=pptr%pnf%livecrootn_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5695,7 +5695,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='deadcrootn_storage_to_xfer', data=pptr%pnf%deadcrootn_storage_to_xfer, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5707,7 +5707,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemn_to_deadstemn', data=pptr%pnf%livestemn_to_deadstemn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5719,7 +5719,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livestemn_to_retransn', data=pptr%pnf%livestemn_to_retransn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5731,7 +5731,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootn_to_deadcrootn', data=pptr%pnf%livecrootn_to_deadcrootn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5743,7 +5743,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='livecrootn_to_retransn', data=pptr%pnf%livecrootn_to_retransn, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5755,7 +5755,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='ndeploy', data=pptr%pnf%ndeploy, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5767,7 +5767,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_ninputs', data=pptr%pnf%pft_ninputs, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5779,7 +5779,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_noutputs', data=pptr%pnf%pft_noutputs, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5791,7 +5791,7 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_fire_nloss', data=pptr%pnf%pft_fire_nloss, &
-            dim1name='pft', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5808,7 +5808,7 @@ contains
             long_name='Clapp and Hornberger "b" for CN code', units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='bsw2', data=cptr%cps%bsw2, &
-            dim1name='column', dim2name='levsoi', &
+            dim1name=namec, dim2name='levsoi', &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -5822,7 +5822,7 @@ contains
             long_name='soil water potential at saturation for CN code', units='MPa')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='psisat', data=cptr%cps%psisat, &
-            dim1name='column', dim2name='levsoi', &
+            dim1name=namec, dim2name='levsoi', &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -5836,7 +5836,7 @@ contains
             long_name='volumetric water content at saturation for CN code ', units='m3/m3')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='vwcsat', data=cptr%cps%vwcsat, &
-            dim1name='column', dim2name='levsoi', &
+            dim1name=namec, dim2name='levsoi', &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
@@ -5850,7 +5850,7 @@ contains
             long_name='soil water potential',units='MPa')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soilpsi', data=cptr%cps%soilpsi, &
-            dim1name='column', dim2name='levsoi', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, dim2name='levsoi', ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
           if (is_restart()) call endrun()
        end if
@@ -5862,7 +5862,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='decl', data=cptr%cps%decl, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5874,7 +5874,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='fpi', data=cptr%cps%fpi, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5886,7 +5886,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='fpg', data=cptr%cps%fpg, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5898,7 +5898,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='annsum_counter', data=cptr%cps%annsum_counter, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5910,7 +5910,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cannsum_npp', data=cptr%cps%cannsum_npp, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5922,7 +5922,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cannavg_t2m', data=cptr%cps%cannavg_t2m, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5934,7 +5934,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='wf', data=cptr%cps%wf, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5946,7 +5946,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='me', data=cptr%cps%me, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5958,7 +5958,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='fire_prob', data=cptr%cps%fire_prob, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5970,7 +5970,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='mean_fire_prob', data=cptr%cps%mean_fire_prob, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5982,7 +5982,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='fireseasonl', data=cptr%cps%fireseasonl, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -5994,7 +5994,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='farea_burned', data=cptr%cps%farea_burned, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6006,7 +6006,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='ann_farea_burned', data=cptr%cps%ann_farea_burned, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6022,7 +6022,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cwdc', data=cptr%ccs%cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6034,7 +6034,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr1c', data=cptr%ccs%litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6046,7 +6046,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr2c', data=cptr%ccs%litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6058,7 +6058,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr3c', data=cptr%ccs%litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6070,7 +6070,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil1c', data=cptr%ccs%soil1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6082,7 +6082,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil2c', data=cptr%ccs%soil2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6094,7 +6094,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil3c', data=cptr%ccs%soil3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6106,7 +6106,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil4c', data=cptr%ccs%soil4c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6118,7 +6118,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='seedc', data=cptr%ccs%seedc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6130,7 +6130,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_ctrunc', data=cptr%ccs%col_ctrunc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6142,7 +6142,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totlitc', data=cptr%ccs%totlitc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6154,7 +6154,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totsomc', data=cptr%ccs%totsomc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6166,7 +6166,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totecosysc', data=cptr%ccs%totecosysc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6178,7 +6178,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totcolc', data=cptr%ccs%totcolc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6190,7 +6190,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='prod10c', data=cptr%ccs%prod10c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6202,7 +6202,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='prod100c', data=cptr%ccs%prod100c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6214,7 +6214,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totprodc', data=cptr%ccs%totprodc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6230,7 +6230,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cwdc_13', data=cptr%cc13s%cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6242,7 +6242,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr1c_13', data=cptr%cc13s%litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6254,7 +6254,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr2c_13', data=cptr%cc13s%litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6266,7 +6266,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr3c_13', data=cptr%cc13s%litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6278,7 +6278,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil1c_13', data=cptr%cc13s%soil1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6290,7 +6290,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil2c_13', data=cptr%cc13s%soil2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6302,7 +6302,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil3c_13', data=cptr%cc13s%soil3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6314,7 +6314,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil4c_13', data=cptr%cc13s%soil4c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6326,7 +6326,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='seedc_13', data=cptr%cc13s%seedc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6338,7 +6338,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_ctrunc_13', data=cptr%cc13s%col_ctrunc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6350,7 +6350,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totlitc_13', data=cptr%cc13s%totlitc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6362,7 +6362,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totsomc_13', data=cptr%cc13s%totsomc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6374,7 +6374,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totecosysc_13', data=cptr%cc13s%totecosysc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6386,7 +6386,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totcolc_13', data=cptr%cc13s%totcolc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6398,7 +6398,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='prod10c_13', data=cptr%cc13s%prod10c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6410,7 +6410,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='prod100c_13', data=cptr%cc13s%prod100c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6422,7 +6422,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totprodc_13', data=cptr%cc13s%totprodc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6438,7 +6438,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cwdn', data=cptr%cns%cwdn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6450,7 +6450,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr1n', data=cptr%cns%litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6462,7 +6462,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr2n', data=cptr%cns%litr2n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6474,7 +6474,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr3n', data=cptr%cns%litr3n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6486,7 +6486,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil1n', data=cptr%cns%soil1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6498,7 +6498,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil2n', data=cptr%cns%soil2n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6510,7 +6510,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil3n', data=cptr%cns%soil3n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6522,7 +6522,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil4n', data=cptr%cns%soil4n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6534,7 +6534,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn', data=cptr%cns%sminn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6546,7 +6546,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_ntrunc', data=cptr%cns%col_ntrunc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6558,7 +6558,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totlitn', data=cptr%cns%totlitn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6570,7 +6570,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totsomn', data=cptr%cns%totsomn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6582,7 +6582,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totecosysn', data=cptr%cns%totecosysn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6594,7 +6594,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totcoln', data=cptr%cns%totcoln, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6606,7 +6606,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='seedn', data=cptr%cns%seedn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6618,7 +6618,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='prod10n', data=cptr%cns%prod10n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6630,7 +6630,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='prod100n', data=cptr%cns%prod100n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6642,7 +6642,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totprodn', data=cptr%cns%totprodn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6659,7 +6659,7 @@ contains
                 dim1name='column',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
            call ncd_iolocal(varname='cwdc_hr', data=cptr%ccf%cwdc_hr, &
-                dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
   	      if (is_restart()) call endrun
            end if	
@@ -6671,7 +6671,7 @@ contains
                 dim1name='column',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
            call ncd_iolocal(varname='cwdc_loss', data=cptr%ccf%cwdc_loss, &
-                dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
   	      if (is_restart()) call endrun
            end if	
@@ -6683,7 +6683,7 @@ contains
                 dim1name='column',long_name='',units='')
         else if (flag == 'read' .or. flag == 'write') then
            call ncd_iolocal(varname='litterc_loss', data=cptr%ccf%litterc_loss, &
-                dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+                dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
            if (flag=='read' .and. .not. readvar) then
   	      if (is_restart()) call endrun
            end if	
@@ -6696,7 +6696,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_to_litr1c', data=cptr%ccf%m_leafc_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6708,7 +6708,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_to_litr2c', data=cptr%ccf%m_leafc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6720,7 +6720,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_to_litr3c', data=cptr%ccf%m_leafc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6732,7 +6732,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_to_litr1c', data=cptr%ccf%m_frootc_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6744,7 +6744,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_to_litr2c', data=cptr%ccf%m_frootc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6756,7 +6756,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_to_litr3c', data=cptr%ccf%m_frootc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6768,7 +6768,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_storage_to_litr1c', data=cptr%ccf%m_leafc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6780,7 +6780,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_storage_to_litr1c', data=cptr%ccf%m_frootc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6792,7 +6792,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_storage_to_litr1c', data=cptr%ccf%m_livestemc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6804,7 +6804,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_storage_to_litr1c', data=cptr%ccf%m_deadstemc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6816,7 +6816,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_storage_to_litr1c', data=cptr%ccf%m_livecrootc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6828,7 +6828,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_storage_to_litr1c', data=cptr%ccf%m_deadcrootc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6840,7 +6840,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_xfer_to_litr1c', data=cptr%ccf%m_leafc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6852,7 +6852,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_xfer_to_litr1c', data=cptr%ccf%m_frootc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6864,7 +6864,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_xfer_to_litr1c', data=cptr%ccf%m_livestemc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6876,7 +6876,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_xfer_to_litr1c', data=cptr%ccf%m_deadstemc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6888,7 +6888,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_xfer_to_litr1c', data=cptr%ccf%m_livecrootc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6900,7 +6900,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_xfer_to_litr1c', data=cptr%ccf%m_deadcrootc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6912,7 +6912,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_to_cwdc', data=cptr%ccf%m_livestemc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6924,7 +6924,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_to_cwdc', data=cptr%ccf%m_deadstemc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6936,7 +6936,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_to_cwdc', data=cptr%ccf%m_livecrootc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6948,7 +6948,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_to_cwdc', data=cptr%ccf%m_deadcrootc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6960,7 +6960,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_storage_to_litr1c', data=cptr%ccf%m_gresp_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6972,7 +6972,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_xfer_to_litr1c', data=cptr%ccf%m_gresp_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6984,7 +6984,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_to_cwdc_fire', data=cptr%ccf%m_deadstemc_to_cwdc_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -6996,7 +6996,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_to_cwdc_fire', data=cptr%ccf%m_deadcrootc_to_cwdc_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7008,7 +7008,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_litr1c_to_fire', data=cptr%ccf%m_litr1c_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7020,7 +7020,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_litr2c_to_fire', data=cptr%ccf%m_litr2c_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7032,7 +7032,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_litr3c_to_fire', data=cptr%ccf%m_litr3c_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7044,7 +7044,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_cwdc_to_fire', data=cptr%ccf%m_cwdc_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7056,7 +7056,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_to_litr1c', data=cptr%ccf%leafc_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7068,7 +7068,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_to_litr2c', data=cptr%ccf%leafc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7080,7 +7080,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_to_litr3c', data=cptr%ccf%leafc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7092,7 +7092,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_to_litr1c', data=cptr%ccf%frootc_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7104,7 +7104,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_to_litr2c', data=cptr%ccf%frootc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7116,7 +7116,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_to_litr3c', data=cptr%ccf%frootc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7128,7 +7128,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cwdc_to_litr2c', data=cptr%ccf%cwdc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7140,7 +7140,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cwdc_to_litr3c', data=cptr%ccf%cwdc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7152,7 +7152,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr1_hr', data=cptr%ccf%litr1_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7164,7 +7164,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr1c_to_soil1c', data=cptr%ccf%litr1c_to_soil1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7176,7 +7176,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr2_hr', data=cptr%ccf%litr2_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7188,7 +7188,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr2c_to_soil2c', data=cptr%ccf%litr2c_to_soil2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7200,7 +7200,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr3_hr', data=cptr%ccf%litr3_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7212,7 +7212,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr3c_to_soil3c', data=cptr%ccf%litr3c_to_soil3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7224,7 +7224,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil1_hr', data=cptr%ccf%soil1_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7236,7 +7236,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil1c_to_soil2c', data=cptr%ccf%soil1c_to_soil2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7248,7 +7248,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil2_hr', data=cptr%ccf%soil2_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7260,7 +7260,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil2c_to_soil3c', data=cptr%ccf%soil2c_to_soil3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7272,7 +7272,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil3_hr', data=cptr%ccf%soil3_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7284,7 +7284,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil3c_to_soil4c', data=cptr%ccf%soil3c_to_soil4c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7296,7 +7296,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil4_hr', data=cptr%ccf%soil4_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7308,7 +7308,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='lithr', data=cptr%ccf%lithr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7320,7 +7320,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='somhr', data=cptr%ccf%somhr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7332,7 +7332,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='hr', data=cptr%ccf%hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7344,7 +7344,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sr', data=cptr%ccf%sr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7356,7 +7356,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='er', data=cptr%ccf%er, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7368,7 +7368,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litfire', data=cptr%ccf%litfire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7380,7 +7380,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='somfire', data=cptr%ccf%somfire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7392,7 +7392,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totfire', data=cptr%ccf%totfire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7404,7 +7404,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='nep', data=cptr%ccf%nep, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7416,7 +7416,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='nee', data=cptr%ccf%nee, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7428,7 +7428,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_cinputs', data=cptr%ccf%col_cinputs, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7440,7 +7440,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_coutputs', data=cptr%ccf%col_coutputs, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7452,7 +7452,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_fire_closs', data=cptr%ccf%col_fire_closs, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7464,7 +7464,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_seedc_to_leaf', data=cptr%ccf%dwt_seedc_to_leaf, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7476,7 +7476,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_seedc_to_deadstem', data=cptr%ccf%dwt_seedc_to_deadstem, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7488,7 +7488,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_conv_cflux', data=cptr%ccf%dwt_conv_cflux, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7500,7 +7500,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod10c_gain', data=cptr%ccf%dwt_prod10c_gain, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7512,7 +7512,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod10c_loss', data=cptr%ccf%dwt_prod10c_loss, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7524,7 +7524,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod100c_gain', data=cptr%ccf%dwt_prod100c_gain, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7536,7 +7536,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod100c_loss', data=cptr%ccf%dwt_prod100c_loss, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7548,7 +7548,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_frootc_to_litr1c', data=cptr%ccf%dwt_frootc_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7560,7 +7560,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_frootc_to_litr2c', data=cptr%ccf%dwt_frootc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7572,7 +7572,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_frootc_to_litr3c', data=cptr%ccf%dwt_frootc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7584,7 +7584,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_livecrootc_to_cwdc', data=cptr%ccf%dwt_livecrootc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7596,7 +7596,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_deadcrootc_to_cwdc', data=cptr%ccf%dwt_deadcrootc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7608,7 +7608,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_closs', data=cptr%ccf%dwt_closs, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7624,7 +7624,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_to_litr1c_13', data=cptr%cc13f%m_leafc_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7636,7 +7636,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_to_litr2c_13', data=cptr%cc13f%m_leafc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7648,7 +7648,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_to_litr3c_13', data=cptr%cc13f%m_leafc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7660,7 +7660,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_to_litr1c_13', data=cptr%cc13f%m_frootc_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7672,7 +7672,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_to_litr2c_13', data=cptr%cc13f%m_frootc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7684,7 +7684,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_to_litr3c_13', data=cptr%cc13f%m_frootc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7696,7 +7696,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_storage_to_litr1c_13', data=cptr%cc13f%m_leafc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7708,7 +7708,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_storage_to_litr1c_13', data=cptr%cc13f%m_frootc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7720,7 +7720,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_storage_to_litr1c_13', data=cptr%cc13f%m_livestemc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7732,7 +7732,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_storage_to_litr1c_13', data=cptr%cc13f%m_deadstemc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7744,7 +7744,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_storage_to_litr1c_13', data=cptr%cc13f%m_livecrootc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7756,7 +7756,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_storage_to_litr1c_13', data=cptr%cc13f%m_deadcrootc_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7768,7 +7768,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafc_xfer_to_litr1c_13', data=cptr%cc13f%m_leafc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7780,7 +7780,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootc_xfer_to_litr1c_13', data=cptr%cc13f%m_frootc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7792,7 +7792,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_xfer_to_litr1c_13', data=cptr%cc13f%m_livestemc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7804,7 +7804,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_xfer_to_litr1c_13', data=cptr%cc13f%m_deadstemc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7816,7 +7816,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_xfer_to_litr1c_13', data=cptr%cc13f%m_livecrootc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7828,7 +7828,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_xfer_to_litr1c_13', data=cptr%cc13f%m_deadcrootc_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7840,7 +7840,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemc_to_cwdc_13', data=cptr%cc13f%m_livestemc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7852,7 +7852,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_to_cwdc_13', data=cptr%cc13f%m_deadstemc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7864,7 +7864,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootc_to_cwdc_13', data=cptr%cc13f%m_livecrootc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7876,7 +7876,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_to_cwdc_13', data=cptr%cc13f%m_deadcrootc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7888,7 +7888,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_storage_to_litr1c_13', data=cptr%cc13f%m_gresp_storage_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7900,7 +7900,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_gresp_xfer_to_litr1c_13', data=cptr%cc13f%m_gresp_xfer_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7912,7 +7912,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemc_to_cwdc_fire_13', data=cptr%cc13f%m_deadstemc_to_cwdc_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7924,7 +7924,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootc_to_cwdc_fire_13', data=cptr%cc13f%m_deadcrootc_to_cwdc_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7936,7 +7936,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_litr1c_to_fire_13', data=cptr%cc13f%m_litr1c_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7948,7 +7948,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_litr2c_to_fire_13', data=cptr%cc13f%m_litr2c_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7960,7 +7960,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_litr3c_to_fire_13', data=cptr%cc13f%m_litr3c_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7972,7 +7972,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_cwdc_to_fire_13', data=cptr%cc13f%m_cwdc_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7984,7 +7984,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_to_litr1c_13', data=cptr%cc13f%leafc_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -7996,7 +7996,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_to_litr2c_13', data=cptr%cc13f%leafc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8008,7 +8008,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafc_to_litr3c_13', data=cptr%cc13f%leafc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8020,7 +8020,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_to_litr1c_13', data=cptr%cc13f%frootc_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8032,7 +8032,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_to_litr2c_13', data=cptr%cc13f%frootc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8044,7 +8044,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootc_to_litr3c_13', data=cptr%cc13f%frootc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8056,7 +8056,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cwdc_to_litr2c_13', data=cptr%cc13f%cwdc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8068,7 +8068,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cwdc_to_litr3c_13', data=cptr%cc13f%cwdc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8080,7 +8080,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr1_hr_13', data=cptr%cc13f%litr1_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8092,7 +8092,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr1c_to_soil1c_13', data=cptr%cc13f%litr1c_to_soil1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8104,7 +8104,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr2_hr_13', data=cptr%cc13f%litr2_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8116,7 +8116,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr2c_to_soil2c_13', data=cptr%cc13f%litr2c_to_soil2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8128,7 +8128,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr3_hr_13', data=cptr%cc13f%litr3_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8140,7 +8140,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr3c_to_soil3c_13', data=cptr%cc13f%litr3c_to_soil3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8152,7 +8152,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil1_hr_13', data=cptr%cc13f%soil1_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8164,7 +8164,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil1c_to_soil2c_13', data=cptr%cc13f%soil1c_to_soil2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8176,7 +8176,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil2_hr_13', data=cptr%cc13f%soil2_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8188,7 +8188,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil2c_to_soil3c_13', data=cptr%cc13f%soil2c_to_soil3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8200,7 +8200,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil3_hr_13', data=cptr%cc13f%soil3_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8212,7 +8212,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil3c_to_soil4c_13', data=cptr%cc13f%soil3c_to_soil4c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8224,7 +8224,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil4_hr_13', data=cptr%cc13f%soil4_hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8236,7 +8236,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='lithr_13', data=cptr%cc13f%lithr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8248,7 +8248,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='somhr_13', data=cptr%cc13f%somhr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8260,7 +8260,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='hr_13', data=cptr%cc13f%hr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8272,7 +8272,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sr_13', data=cptr%cc13f%sr, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8284,7 +8284,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='er_13', data=cptr%cc13f%er, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8296,7 +8296,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litfire_13', data=cptr%cc13f%litfire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8308,7 +8308,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='somfire_13', data=cptr%cc13f%somfire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8320,7 +8320,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='totfire_13', data=cptr%cc13f%totfire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8332,7 +8332,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='nep_13', data=cptr%cc13f%nep, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8344,7 +8344,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='nee_13', data=cptr%cc13f%nee, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8356,7 +8356,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_cinputs_13', data=cptr%cc13f%col_cinputs, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8368,7 +8368,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_coutputs_13', data=cptr%cc13f%col_coutputs, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8380,7 +8380,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_fire_closs_13', data=cptr%cc13f%col_fire_closs, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8392,7 +8392,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_seedc_to_leaf_13', data=cptr%cc13f%dwt_seedc_to_leaf, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8404,7 +8404,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_seedc_to_deadstem_13', data=cptr%cc13f%dwt_seedc_to_deadstem, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8416,7 +8416,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_conv_cflux_13', data=cptr%cc13f%dwt_conv_cflux, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8428,7 +8428,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod10c_gain_13', data=cptr%cc13f%dwt_prod10c_gain, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8440,7 +8440,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod10c_loss_13', data=cptr%cc13f%dwt_prod10c_loss, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8452,7 +8452,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod100c_gain_13', data=cptr%cc13f%dwt_prod100c_gain, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8464,7 +8464,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod100c_loss_13', data=cptr%cc13f%dwt_prod100c_loss, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8476,7 +8476,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_frootc_to_litr1c_13', data=cptr%cc13f%dwt_frootc_to_litr1c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8488,7 +8488,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_frootc_to_litr2c_13', data=cptr%cc13f%dwt_frootc_to_litr2c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8500,7 +8500,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_frootc_to_litr3c_13', data=cptr%cc13f%dwt_frootc_to_litr3c, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8512,7 +8512,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_livecrootc_to_cwdc_13', data=cptr%cc13f%dwt_livecrootc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8524,7 +8524,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_deadcrootc_to_cwdc_13', data=cptr%cc13f%dwt_deadcrootc_to_cwdc, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8536,7 +8536,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_closs_13', data=cptr%cc13f%dwt_closs, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8552,7 +8552,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='ndep_to_sminn', data=cptr%cnf%ndep_to_sminn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8564,7 +8564,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='nfix_to_sminn', data=cptr%cnf%nfix_to_sminn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8576,7 +8576,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafn_to_litr1n', data=cptr%cnf%m_leafn_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8588,7 +8588,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafn_to_litr2n', data=cptr%cnf%m_leafn_to_litr2n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8600,7 +8600,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafn_to_litr3n', data=cptr%cnf%m_leafn_to_litr3n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8612,7 +8612,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootn_to_litr1n', data=cptr%cnf%m_frootn_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8624,7 +8624,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootn_to_litr2n', data=cptr%cnf%m_frootn_to_litr2n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8636,7 +8636,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootn_to_litr3n', data=cptr%cnf%m_frootn_to_litr3n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8648,7 +8648,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafn_storage_to_litr1n', data=cptr%cnf%m_leafn_storage_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8660,7 +8660,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootn_storage_to_litr1n', data=cptr%cnf%m_frootn_storage_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8672,7 +8672,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemn_storage_to_litr1n', data=cptr%cnf%m_livestemn_storage_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8684,7 +8684,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemn_storage_to_litr1n', data=cptr%cnf%m_deadstemn_storage_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8696,7 +8696,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootn_storage_to_litr1n', data=cptr%cnf%m_livecrootn_storage_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8708,7 +8708,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootn_storage_to_litr1n', data=cptr%cnf%m_deadcrootn_storage_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8720,7 +8720,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_leafn_xfer_to_litr1n', data=cptr%cnf%m_leafn_xfer_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8732,7 +8732,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_frootn_xfer_to_litr1n', data=cptr%cnf%m_frootn_xfer_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8744,7 +8744,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemn_xfer_to_litr1n', data=cptr%cnf%m_livestemn_xfer_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8756,7 +8756,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemn_xfer_to_litr1n', data=cptr%cnf%m_deadstemn_xfer_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8768,7 +8768,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootn_xfer_to_litr1n', data=cptr%cnf%m_livecrootn_xfer_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8780,7 +8780,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootn_xfer_to_litr1n', data=cptr%cnf%m_deadcrootn_xfer_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8792,7 +8792,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livestemn_to_cwdn', data=cptr%cnf%m_livestemn_to_cwdn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8804,7 +8804,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemn_to_cwdn', data=cptr%cnf%m_deadstemn_to_cwdn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8816,7 +8816,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_livecrootn_to_cwdn', data=cptr%cnf%m_livecrootn_to_cwdn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8828,7 +8828,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootn_to_cwdn', data=cptr%cnf%m_deadcrootn_to_cwdn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8840,7 +8840,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_retransn_to_litr1n', data=cptr%cnf%m_retransn_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8852,7 +8852,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadstemn_to_cwdn_fire', data=cptr%cnf%m_deadstemn_to_cwdn_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8864,7 +8864,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_deadcrootn_to_cwdn_fire', data=cptr%cnf%m_deadcrootn_to_cwdn_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8876,7 +8876,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_litr1n_to_fire', data=cptr%cnf%m_litr1n_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8888,7 +8888,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_litr2n_to_fire', data=cptr%cnf%m_litr2n_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8900,7 +8900,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_litr3n_to_fire', data=cptr%cnf%m_litr3n_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8912,7 +8912,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='m_cwdn_to_fire', data=cptr%cnf%m_cwdn_to_fire, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8924,7 +8924,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafn_to_litr1n', data=cptr%cnf%leafn_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8936,7 +8936,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafn_to_litr2n', data=cptr%cnf%leafn_to_litr2n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8948,7 +8948,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='leafn_to_litr3n', data=cptr%cnf%leafn_to_litr3n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8960,7 +8960,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootn_to_litr1n', data=cptr%cnf%frootn_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8972,7 +8972,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootn_to_litr2n', data=cptr%cnf%frootn_to_litr2n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8984,7 +8984,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='frootn_to_litr3n', data=cptr%cnf%frootn_to_litr3n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -8996,7 +8996,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cwdn_to_litr2n', data=cptr%cnf%cwdn_to_litr2n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9008,7 +9008,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='cwdn_to_litr3n', data=cptr%cnf%cwdn_to_litr3n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9020,7 +9020,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr1n_to_soil1n', data=cptr%cnf%litr1n_to_soil1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9032,7 +9032,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_soil1n_l1', data=cptr%cnf%sminn_to_soil1n_l1, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9044,7 +9044,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr2n_to_soil2n', data=cptr%cnf%litr2n_to_soil2n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9056,7 +9056,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_soil2n_l2', data=cptr%cnf%sminn_to_soil2n_l2, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9068,7 +9068,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='litr3n_to_soil3n', data=cptr%cnf%litr3n_to_soil3n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9080,7 +9080,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_soil3n_l3', data=cptr%cnf%sminn_to_soil3n_l3, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9092,7 +9092,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil1n_to_soil2n', data=cptr%cnf%soil1n_to_soil2n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9104,7 +9104,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_soil2n_s1', data=cptr%cnf%sminn_to_soil2n_s1, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9116,7 +9116,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil2n_to_soil3n', data=cptr%cnf%soil2n_to_soil3n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9128,7 +9128,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_soil3n_s2', data=cptr%cnf%sminn_to_soil3n_s2, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9140,7 +9140,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil3n_to_soil4n', data=cptr%cnf%soil3n_to_soil4n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9152,7 +9152,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_soil4n_s3', data=cptr%cnf%sminn_to_soil4n_s3, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9164,7 +9164,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='soil4n_to_sminn', data=cptr%cnf%soil4n_to_sminn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9176,7 +9176,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_denit_l1s1', data=cptr%cnf%sminn_to_denit_l1s1, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9188,7 +9188,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_denit_l2s2', data=cptr%cnf%sminn_to_denit_l2s2, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9200,7 +9200,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_denit_l3s3', data=cptr%cnf%sminn_to_denit_l3s3, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9212,7 +9212,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_denit_s1s2', data=cptr%cnf%sminn_to_denit_s1s2, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9224,7 +9224,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_denit_s2s3', data=cptr%cnf%sminn_to_denit_s2s3, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9236,7 +9236,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_denit_s3s4', data=cptr%cnf%sminn_to_denit_s3s4, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9248,7 +9248,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_denit_s4', data=cptr%cnf%sminn_to_denit_s4, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9260,7 +9260,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_denit_excess', data=cptr%cnf%sminn_to_denit_excess, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9272,7 +9272,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_leached', data=cptr%cnf%sminn_leached, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9284,7 +9284,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='potential_immob', data=cptr%cnf%potential_immob, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9296,7 +9296,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='actual_immob', data=cptr%cnf%actual_immob, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9308,7 +9308,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='sminn_to_plant', data=cptr%cnf%sminn_to_plant, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9320,7 +9320,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='supplement_to_sminn', data=cptr%cnf%supplement_to_sminn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9332,7 +9332,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='gross_nmin', data=cptr%cnf%gross_nmin, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9344,7 +9344,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='net_nmin', data=cptr%cnf%net_nmin, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9356,7 +9356,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='denit', data=cptr%cnf%denit, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9368,7 +9368,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_ninputs', data=cptr%cnf%col_ninputs, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9380,7 +9380,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_noutputs', data=cptr%cnf%col_noutputs, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9392,7 +9392,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_fire_nloss', data=cptr%cnf%col_fire_nloss, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9404,7 +9404,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_seedn_to_leaf', data=cptr%cnf%dwt_seedn_to_leaf, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9416,7 +9416,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_seedn_to_deadstem', data=cptr%cnf%dwt_seedn_to_deadstem, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9428,7 +9428,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_conv_nflux', data=cptr%cnf%dwt_conv_nflux, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9440,7 +9440,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod10n_gain', data=cptr%cnf%dwt_prod10n_gain, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9452,7 +9452,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod10n_loss', data=cptr%cnf%dwt_prod10n_loss, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9464,7 +9464,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod100n_gain', data=cptr%cnf%dwt_prod100n_gain, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9476,7 +9476,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_prod100n_loss', data=cptr%cnf%dwt_prod100n_loss, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9488,7 +9488,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_frootn_to_litr1n', data=cptr%cnf%dwt_frootn_to_litr1n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9500,7 +9500,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_frootn_to_litr2n', data=cptr%cnf%dwt_frootn_to_litr2n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9512,7 +9512,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_frootn_to_litr3n', data=cptr%cnf%dwt_frootn_to_litr3n, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9524,7 +9524,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_livecrootn_to_cwdn', data=cptr%cnf%dwt_livecrootn_to_cwdn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9536,7 +9536,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_deadcrootn_to_cwdn', data=cptr%cnf%dwt_deadcrootn_to_cwdn, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9548,7 +9548,7 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='dwt_nloss', data=cptr%cnf%dwt_nloss, &
-            dim1name='column', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	
@@ -9564,7 +9564,7 @@ contains
             dim1name='gridcell',long_name='observational height of wind',units='m')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='forc_hgt_u', data=clm_a2l%forc_hgt_u, &
-            dim1name='gridcell', ncid=ncid, flag=flag, readvar=readvar) 
+            dim1name=nameg, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
        end if	

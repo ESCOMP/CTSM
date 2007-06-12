@@ -112,7 +112,7 @@ mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
 mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
 ## If an executable doesn't exist, build one.
-set flags = "-ccsm_seq -maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust "
+set flags = "-mode ccsm_seq -maxpft $maxpft -bgc $bgc -supln $supln -rtm $rtm -voc $voc -dust $dust "
 if ($spmd == on ) set flags = "$flags -spmd"
 if ($spmd == off) set flags = "$flags -nospmd"
 if ( ! -x $blddir/clm ) then

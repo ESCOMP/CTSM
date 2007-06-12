@@ -22,7 +22,7 @@ module ncdio
   use clm_varctl     , only : single_column
   use clm_mct_mod
   use spmdGathScatMod
-  use decompMod      , only : get_clmlevel_gsize
+  use decompMod      , only : get_clmlevel_gsize,get_clmlevel_dsize
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -325,6 +325,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
+    integer :: dims                     ! dimensions
     integer :: gsize                    ! size of global array
     integer :: ier                      ! error status
     integer :: start(3)                 ! starting indices for netcdf field
@@ -358,20 +359,20 @@ contains
     endif
 
     gsize = get_clmlevel_gsize(clmlevel)
-
     start = 1
     count = 1
-    if (present(nlonxy) .and. present(nlatxy)) then
-       count(1) = nlonxy
-       count(2) = nlatxy
+    call get_clmlevel_dsize(clmlevel,dims,count(1),count(2))
+    if (dims == 1) then
+       if (present(nt)) then
+          start(2) = nt
+       endif
+    elseif (dims == 2) then
        if (present(nt)) then
           start(3) = nt
        endif
     else
-       count(1) = gsize
-       if (present(nt)) then
-          start(2) = nt
-       endif
+       write(6,*) trim(subname),' error dims incorrect ',clmlevel,dims
+       call endrun
     endif
 
     call ncd_iolocal_gs_int1d(ncid, varname, flag, data, clmlevel, start, count, ier, lmissing)
@@ -414,6 +415,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
+    integer :: dims                     ! dimensions
     integer :: gsize                    ! size of global array
     integer :: ier                      ! error status
     integer :: start(3)                 ! starting indices for netcdf field
@@ -447,21 +449,37 @@ contains
     endif
 
     gsize = get_clmlevel_gsize(clmlevel)
-
     start = 1
     count = 1
-    if (present(nlonxy) .and. present(nlatxy)) then
-       count(1) = nlonxy
-       count(2) = nlatxy
+    call get_clmlevel_dsize(clmlevel,dims,count(1),count(2))
+    if (dims == 1) then
+       if (present(nt)) then
+          start(2) = nt
+       endif
+    elseif (dims == 2) then
        if (present(nt)) then
           start(3) = nt
        endif
     else
-       count(1) = gsize
-       if (present(nt)) then
-          start(2) = nt
-       endif
+       write(6,*) trim(subname),' error dims incorrect ',clmlevel,dims
+       call endrun
     endif
+
+! tcx
+!    start = 1
+!    count = 1
+!    if (present(nlonxy) .and. present(nlatxy)) then
+!       count(1) = nlonxy
+!       count(2) = nlatxy
+!       if (present(nt)) then
+!          start(3) = nt
+!       endif
+!    else
+!       count(1) = gsize
+!       if (present(nt)) then
+!          start(2) = nt
+!       endif
+!    endif
 
     call ncd_iolocal_gs_real1d(ncid, varname, flag, data, clmlevel, start, count, ier, lmissing)
 
@@ -506,6 +524,7 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer :: k                        ! index
+    integer :: dims                     ! dimensions
     integer :: gsize                    ! size of global array
     integer :: ier                      ! error status
     integer :: start(4)                 ! starting indices for netcdf field
@@ -556,23 +575,27 @@ contains
     endif
 
     gsize = get_clmlevel_gsize(clmlevel)
+    start = 1
+    count = 1  
+    call get_clmlevel_dsize(clmlevel,dims,count(1),count(2))
 
     do k = lb2,ub2
-       start = 1
-       count = 1
-       if (present(nlonxy) .and. present(nlatxy)) then
-          count(1) = nlonxy
-          count(2) = nlatxy
+       if (dims == 1) then
+          start(1) = k-lb2+1
+          count(1) = 1
+          count(2) = gsize
+          if (present(nt)) then
+             start(3) = nt
+          endif
+       elseif (dims == 2) then
+          ! count set by dsize ok
           start(3) = k-lb2+1
           if (present(nt)) then
              start(4) = nt
           endif
        else
-          start(1) = k-lb2+1
-          count(2) = gsize
-          if (present(nt)) then
-             start(3) = nt
-          endif
+          write(6,*) trim(subname),' error dims incorrect ',clmlevel,dims
+          call endrun
        endif
        if (flag == 'write') data1d(:) = data(:,k)
        call ncd_iolocal_gs_int1d(ncid, varname, flag, data1d, clmlevel, start, count, ier, lmissing)
@@ -622,6 +645,7 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer :: k                        ! index
+    integer :: dims                     ! dimensions
     integer :: gsize                    ! size of global array
     integer :: ier                      ! error status
     integer :: start(4)                 ! starting indices for netcdf field
@@ -672,28 +696,54 @@ contains
     endif
 
     gsize = get_clmlevel_gsize(clmlevel)
+    start = 1
+    count = 1  
+    call get_clmlevel_dsize(clmlevel,dims,count(1),count(2))
 
     do k = lb2,ub2
-       start = 1
-       count = 1
-       if (present(nlonxy) .and. present(nlatxy)) then
-          count(1) = nlonxy
-          count(2) = nlatxy
+       if (dims == 1) then
+          start(1) = k-lb2+1
+          count(1) = 1
+          count(2) = gsize
+          if (present(nt)) then
+             start(3) = nt
+          endif
+       elseif (dims == 2) then
+          ! count set by dsize ok
           start(3) = k-lb2+1
           if (present(nt)) then
              start(4) = nt
           endif
        else
-          start(1) = k-lb2+1
-          count(2) = gsize
-          if (present(nt)) then
-             start(3) = nt
-          endif
+          write(6,*) trim(subname),' error dims incorrect ',clmlevel,dims
+          call endrun
        endif
        if (flag == 'write') data1d(:) = data(:,k)
        call ncd_iolocal_gs_real1d(ncid, varname, flag, data1d, clmlevel, start, count, ier, lmissing)
        if (flag == 'read') data(:,k) = data1d(:)
     enddo
+
+!    do k = lb2,ub2
+!       start = 1
+!       count = 1
+!       if (present(nlonxy) .and. present(nlatxy)) then
+!          count(1) = nlonxy
+!          count(2) = nlatxy
+!          start(3) = k-lb2+1
+!          if (present(nt)) then
+!             start(4) = nt
+!          endif
+!       else
+!          start(1) = k-lb2+1
+!          count(2) = gsize
+!          if (present(nt)) then
+!             start(3) = nt
+!          endif
+!       endif
+!       if (flag == 'write') data1d(:) = data(:,k)
+!       call ncd_iolocal_gs_real1d(ncid, varname, flag, data1d, clmlevel, start, count, ier, lmissing)
+!       if (flag == 'read') data(:,k) = data1d(:)
+!    enddo
 
     deallocate(data1d)
 
@@ -767,10 +817,6 @@ contains
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
             if (single_column) then
-!tcx
-!               call scam_field_offsets(ncid,clmlevel,data_offset,ndata)
-!               lstart(1) = data_offset; lcount(1) = ndata
-!               call check_ret(nf_get_vara_double(ncid, varid, lstart, lcount, arrayg), subname)
                call scam_field_offsets(ncid,clmlevel,lstart,lcount)
                call check_ret(nf_get_vara_double(ncid, varid, lstart, lcount, arrayg), subname)
             else
@@ -881,10 +927,6 @@ contains
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
             if (single_column) then
-!tcx
-!               call scam_field_offsets(ncid,clmlevel,data_offset,ndata)
-!               lstart(1) = data_offset; lcount(1) = ndata
-!               call check_ret(nf_get_vara_int(ncid, varid, lstart, lcount, arrayg), subname)
                call scam_field_offsets(ncid,clmlevel,lstart,lcount)
                call check_ret(nf_get_vara_int(ncid, varid, lstart, lcount, arrayg), subname)
             else

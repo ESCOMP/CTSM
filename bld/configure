@@ -66,8 +66,6 @@ OPTIONS
      -clm_exe <name>    Name of the CLM executable.
      -clm_exedir <dir>  Directory where CLM executable will be created.
      -cc <name>         User specified C compiler (linux only).  Overrides Makefile default.
-     -ccsm_con          Building CLM from within cpl6 concurrent CCSM scripts
-     -ccsm_seq          Building CLM utilizing sequential driver (alternative to offline mode)
      -cflags <string>   A string of user specified C compiler options.  Appended to
                         Makefile defaults.
      -cppdefs <string>  A string of user specified CPP defines.  Appended to
@@ -93,6 +91,7 @@ OPTIONS
      -maxpft <n>        Value of maxpatch_pft (default is 4)
      -mpi_inc <dir>     Directory containing MPI include files.
      -mpi_lib <dir>     Directory containing MPI library.
+     -mode <name>       CLM mode [offline | ccsm_seq | ext_ccsm_con ]
      -nc_inc <dir>      Directory containing netCDF include files.
      -nc_lib <dir>      Directory containing netCDF library.
      -nc_mod <dir>      Directory containing netCDF module files.
@@ -133,6 +132,7 @@ my %opts = (
 	    clm_exe     => undef,
 	    clm_exedir  => undef,
 	    fopt        => undef,
+            mode        => undef, 
 	    smp         => undef,
 	    test        => 0,
 	    verbose     => 0,
@@ -142,8 +142,6 @@ GetOptions(
     "cache=s"                   => \$cfg_filename,
     "cachedir=s"                => \$opts{'cachedir'},
     "cc=s"                      => \$opts{'cc'},
-    "ccsm_con"                  => \$opts{'ccsm_con'},
-    "ccsm_seq"                  => \$opts{'ccsm_seq'},
     "cflags=s"                  => \$opts{'cflags'},
     "clm_bld=s"                 => \$opts{'clm_bld'},
     "clm_exe=s"                 => \$opts{'clm_exe'},
@@ -160,6 +158,7 @@ GetOptions(
     "h|help"                    => \$help,
     "ldflags=s"                 => \$opts{'ldflags'},
     "linker=s"                  => \$opts{'linker'},
+    "mode=s"                    => \$opts{'mode'},
     "mpi_inc=s"                 => \$opts{'mpi_inc'},
     "mpi_lib=s"                 => \$opts{'mpi_lib'},
     "maxpft=s"                  => \$opts{'maxpft'},
@@ -255,29 +254,34 @@ if (defined $defaults && -s $defaults) {
 }
 
 #-----------------------------------------------------------------------------------------------
+# Figure out the mode you will run in
+if (defined $opts{'mode'}) {
+    $cfg = $opts{'mode'};
+} elsif (defined $usr_defaults{'mode'}) {
+    $cfg = $usr_defaults{'mode'};
+} else {
+    $cfg = $bld_defaults{'mode'};
+}
+if ($cfg eq "offline" || $cfg eq "ccsm_seq" || $cfg eq "ext_ccsm_con" ) {
+    $cfg{'mode'} = $cfg;
+} else {
+    die <<"EOF";
+** $cfg is not a supported mode **
+EOF
+}
+
+if ($print>=2) { print "CLM configure mode is $cfg{'mode'}$eol"; }
+
+#-----------------------------------------------------------------------------------------------
 # Building from within ccsm scripts?  Note that when building within the CCSM
 # scripts the CLM Makefile is not written since the CCSM build does not use it.
 # Many of the checks to ensure that a working CLM Makefile is produced are disabled
 # when the ccsm option is set.
-my $clm_build;
-if (defined $opts{'ccsm'}) {
-  $cfg{'coup_csm'} = "on";
-  $clm_build = 0;
-} else {
-  $cfg{'coup_csm'} = "off";
-  $clm_build = 1;
-}
 
-my $clm_build;
-if ( $cfg{'coup_csm'} eq "off" ) {
-   $clm_build = 1;
-} else {
+my $clm_build = 1;
+if ( $cfg{'mode'} eq "ext_ccsm_con" ) {
    $clm_build = 0;
 }
-
-#-----------------------------------------------------------------------------------------------
-# Determine if ccsm sequential
-$cfg{'ccsm_seq'} = (defined $opts{'ccsm_seq'}) ? 1 : 0;
 
 #-----------------------------------------------------------------------------------------------
 # CLM root directory.  
@@ -528,49 +532,6 @@ $cfg{'pergro'} = $cfg;
 
 if ($print>=2) { print "Using $cfg{'pergro'} pergro.$eol"; }
 
-#CLM offline option
-
-if (defined $usr_defaults{'clmoffline'}) {
-    $cfg = $usr_defaults{'clmoffline'};
-} else {
-    $cfg = $bld_defaults{'clmoffline'};
-}
-if ( $cfg{'coup_csm'} eq "on" ) {
-  $cfg = "off";
-}
-$cfg{'clmoffline'} = $cfg;
-
-if ($print>=2) { print "Using $cfg{'clmoffline'} clmoffline.$eol"; }
-
-#Sequential CCSM option
-
-if (defined $usr_defaults{'seqccsm'}) {
-    $cfg = $usr_defaults{'seqccsm'};
-} else {
-    $cfg = $bld_defaults{'seqccsm'};
-}
-if ( ($cfg{'coup_csm'} eq "on") || ($cfg{'clmoffline'} eq "on") ) {
-  $cfg = "off";
-}
-
-$cfg{'seqccsm'} = $cfg;
-
-if ($print>=2) { print "Using $cfg{'seqccsm'} seqccsm.$eol"; }
-
-#SCAM (Single Column mode) option
-
-if (defined $usr_defaults{'scam'}) {
-    $cfg = $usr_defaults{'scam'};
-} else {
-    $cfg = $bld_defaults{'scam'};
-}
-if ( ($cfg{'coup_csm'} eq "on") || ($cfg{'clmoffline'} eq "on") ) {
-  $cfg = "off";
-}
-$cfg{'scam'} = $cfg;
-
-if ($print>=2) { print "Using $cfg{'scam'} scam.$eol"; }
-
 #-----------------------------------------------------------------------------------------------
 # Read system defaults file.
 if (defined $opts{'target_os'}) {
@@ -631,7 +592,6 @@ if ($cfg{'target_os'} eq 'linux') {
 }
 
 # Allow override of Makefile default linker
-
 $cfg = 'default';
 if (defined $opts{'linker'}) {
     $cfg = $opts{'linker'};
@@ -778,11 +738,14 @@ elsif ( $cfg{target_os} eq 'irix'      or  $cfg{target_os} eq 'linux'   or
 
 $cfg .= " -DMAXPATCH_PFT=$cfg{maxpft}";
 
-if ( $cfg{'coup_csm'} eq "on" ) {
-    $cfg .= " -DCOUP_CSM";
-}
-if ( $cfg{'clmoffline'} eq "on" ) {
+if ( $cfg{'mode'} eq "offline" ) {
     $cfg .= " -DOFFLINE";
+}
+if ( $cfg{'mode'} eq "ccsm_seq" ) {
+    $cfg .= " -DSEQ_MCT";
+}
+if ( $cfg{'mode'} eq "ext_ccsm_con" ) {
+    $cfg .= " -DCOUP_CSM";
 }
 if ($cfg{'progsslt'} eq 'on') { 
     $cfg .= " -DPROGSSLT";
@@ -817,7 +780,7 @@ if ($cfg{'exit_spinup'} eq 'on') {
 
 # -DSPMD only added to $cfg(make_cppdefs) for CCSM build.  The CLM Makefile
 # has a separate SPMD macro.
-if ( ($cfg{'coup_csm'} eq "on") && $cfg{'spmd'} ) {
+if ( ($cfg{'mode'} eq "ext_ccsm_con") && $cfg{'spmd'} ) {
     $cfg .= " -DSPMD";
 }
 
@@ -1052,7 +1015,7 @@ EOF
 #-----------------------------------------------------------------------------------------------
 # Write configuration files:
 
-if ( $cfg{'coup_csm'} eq "on" ) {
+if ( $cfg{'mode'} eq "ext_ccsm_con" ) {
     # Write the filepath file for ccsm.
     write_filepath_ccsm("$cfg{'clm_bld'}/$fp_filename", %cfg);
     if ($print) { print "creating $cfg{'clm_bld'}/$fp_filename\n"; }
@@ -1060,7 +1023,6 @@ if ( $cfg{'coup_csm'} eq "on" ) {
     # Write the file for clm's cppdefs needed in ccsm.
     write_cppdefs("$cfg{'clm_bld'}/$cpp_filename", %cfg);
     if ($print) { print "creating $cfg{'clm_bld'}/$cpp_filename\n"; }
-
 } else {
     # Write the filepath file.
     write_filepath("$cfg{'clm_bld'}/$fp_filename", %cfg);
@@ -1243,10 +1205,10 @@ dust          Turn on DUST [on | off].
 voc           Turn on VOC  [on | off].
 maxpft        Value of maxpatch_pft.
 pergro        Use modifications that allow perturbation growth testing: [on | off]
-clmoffline    CLM offline mode: [on | off]
-seqccsm       Sequential CCSM mode [on | off]
-scam          Single column mode:  [on | off]
-coup_csm      Concurrent CCSM (Community Climate System Model):  [on | off]
+mode          CLM mode: [offline | ccsm_seq | ext_ccsm_con | ext_cam ]
+                 offline      => CLM offline mode
+                 ccsm_seq     => CLM sequential CCSM mode (drv/clm/datm7/socn/sice)
+                 ext_ccsm_con => CLM will run as part of "external" concurrent ccsm code
 </comment>
 
 <cppvars
@@ -1260,10 +1222,7 @@ dust="$cfg{'dust'}"
 voc="$cfg{'voc'}"
 maxpft="$cfg{'maxpft'}"
 pergro="$cfg{'pergro'}"
-clmoffline="$cfg{'clmoffline'}"
-seqccsm="$cfg{'seqccsm'}"
-scam="$cfg{'scam'}"
-coup_csm="$cfg{'coup_csm'}"
+mode="$cfg{'mode'}";
 />
 
 <comment>
@@ -1336,7 +1295,6 @@ sub write_filepath
     }
 
 # Source root
-
     my $srcdir = "$cfg{'clm_root'}/src";
 
 # Shared utilities.
@@ -1353,7 +1311,7 @@ sub write_filepath
        print $fh "$srcdir/utils/esmf_wrf_timemgr\n";
     }
 
-if ($cfg{'ccsm_seq'}) {
+if ($cfg{'mode'} eq "ccsm_seq") {
     # Driver
     print $fh "$srcdir/drv/seq_mct\n";
 

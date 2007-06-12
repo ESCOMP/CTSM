@@ -168,7 +168,7 @@ endif
 CC         := mpcc_r
 CFLAGS     := -q64 $(cpp_path) $(CPPDEF) -O2
 mod_path   := -I$(MOD_NETCDF)
-FFLAGS     := -q64 $(cpp_path) $(mod_path) $(FPPFLAGS) -qarch=auto -qspillsize=2500 -g -qfullpath
+FFLAGS     := -q64 $(cpp_path) $(mod_path) $(FPPFLAGS) -qarch=auto -qspillsize=2500 -g -qfullpath 
 FREEFLAGS  := -qsuffix=f=f90:cpp=F90
 FIXEDFLAGS := -qfixed=132
 

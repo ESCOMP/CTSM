@@ -38,12 +38,10 @@ rtm           Turn on RTM : [on | off ]
 voc           Turn on VOC : [on | off ]
 dust          Turn on DUST: [on | off ]
 pergro        Use modifications that allow perturbation growth testing: [on | off]
-clmoffline    CLM offline mode: [on | off]
-seqccsm       Sequential CCSM mode [on | off]
-scam          Single column mode:  [on | off]
-coup_csm      Concurrent CCSM (Community Climate System Model):  [on | off]
-dynamics      Atmosphere dynamics [clmoffline, ccsm, or CAM dynamics mode]
-oceanmodel    Ocean model [none, ccsm, dom, som]
+mode          CLM mode: [offline | ccsm_seq | ext_ccsm_con | ext_cam ]
+                 offline      => CLM offline mode
+                 ccsm_seq     => CLM sequential CCSM mode (drv/clm/datm7/socn/sice)
+                 ext_ccsm_con => CLM will run as part of "external" concurrent ccsm code
 </comment>
 
 <cppvars
@@ -57,16 +55,11 @@ dust="off"
 rtm="off"
 maxpft="4"
 pergro="off"
-clmoffline="on"
-seqccsm="off"
-scam="off"
-coup_csm="off"
-dynamics="clmoffline"
-oceanmodel="none"
+mode="offline"
 />
 
 <comment>
-clm_exe    Name of CLM executable
+clm_exe    Name of CLM executable (only valid for offline or ccsm_seq modes)
 cppdefs    User specified CPP defines to append to Makefile defaults.
 cc         User specified C compiler overrides Makefile default (linux only).
 cflags     User specified C compiler options to append to Makefile defaults.
