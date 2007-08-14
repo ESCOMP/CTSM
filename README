@@ -1,7 +1,35 @@
 clm/README                                          4/13/2007
 
-Community Land Surface Model (CLM) source code, tools, offline-build and
-test scripts.
+Community Land Surface Model (CLM) version 3.5 -- source code, tools, 
+offline-build and test scripts. This gives you everything you need
+to run CLM in a offline mode with NCEP forcing data in place of a
+modeled atmosphere. In order to run with stand-alone CAM or concurrent
+CCSM -- you also need other component models which are NOT provided in
+this release.
+
+What is new in CLM3.5 (compared to CLM3.0)?
+
+CLM3.5 is considerably different to CLM3.0, particularly with respect to its 
+simulation of the hydrologic cycle. The modifications consist of new surface 
+datasets based on Moderate Resolution Imaging Spectroradiometer (MODIS) 
+products (Lawrence and Chase 2007), an improved canopy integration scheme 
+(Thornton and Zimmermann 2007), scaling of canopy interception 
+(Lawrence et al. 2007), a simple TOPMODEL-based model for surface and 
+sub-surface runoff (Niu et al. 2005), a simple groundwater model for 
+determining water table depth (Niu et al. 2007), and a new frozen soil scheme 
+(Niu and Yang 2006). Theree are four additional modifications. Three of these, 
+an improved description of soil water availability, a resistance term to 
+reduce excessive soil evaporation, and the introduction of a factor to 
+simulate nitrogen limitation on plant productivity, can be categorized as new 
+or improved parameterizations from the perspective of CLM3. The other may be 
+categorized as fixing an algorithmically defective existing parameterization 
+(correction to snowage calculation so that snowage increases monotonically) 
+(Dickinson et al. 2006).
+
+Additionally, a number of small problems or bugs have been corrected including 
+a revision of RTM-subcycling and corrections to a few land-locked grid cells, 
+a more efficient soil evaporation calculation based on PFT demand, and a fix 
+to aggregation of LAI from high-resolution source data to CLM surface data. 
 
 General directory structure:
 
@@ -26,7 +54,6 @@ tools/mksurfdata --- Directory to build program to create surface dataset at any
 tools/interpinic --- Directory to build program to interpolate initial conditions to any resolution.
 doc/KnownBugs ------ List of known bugs
 doc/ChangeLog ------ Detailed list of changes for each model version
-doc/README.DGVM ---- Documentation on using the Dynamic Vegetation mode (DGVM)
 bld/README --------- Description of how to use the configure and build/run scripts
 
 =============================================================================================
@@ -54,15 +81,21 @@ src/csm_share/cpl
 src/utils ---------------------------- Utility code directory
 
 -------------------------------------- ESMF-WRF time-management library
+---- This is an implementation of the ESMF_2_2_2r time-manager API created
+---- by the Weather and Research Forecasting Model (WRF) modeling team.
+---- (http://wrf-model.org/)
+---- Alternatively you can link with the full version of ESMF_2_2_2r from
+---- (http:/www.esmf.ucar.edu/)
+---- (use the -esmf_libdir option in configure to link with the full ESMF library)
 src/utils/esmf_wrf_timemgr
 src/utils/esmf_wrf_timemgr/unittests ---- Unit testers
 -------------------------------------- CCSM code timing library
 src/utils/timing
 -------------------------------------- Model Coupling Toolkit code
+---- (http://www-unix.mcs.anl.gov/mct/)
 src/utils/mct
 src/utils/mct/mct
 src/utils/mct/mpi-serial
 src/utils/mct/doc
 src/utils/mct/doc/texsrc
 src/utils/mct/mpeu
-

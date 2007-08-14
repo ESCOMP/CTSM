@@ -207,7 +207,8 @@
   ! -----------------------------------------------------------------
 
   if (masterproc) then
-     write(6,*)'SUCCESFULLY TERMINATING CLM MODEL at nstep= ',get_nstep()
+     write(6,*)'================= SUCCESSFUL TERMINATION OF CLM ================='
+     write(6,*)'================= # completed steps = ',get_nstep(), ' ================='
   endif
   call t_prf('timing_all',mpicom_top)
   call t_finalizef()

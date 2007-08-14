@@ -41,7 +41,8 @@ subroutine addglobal (ncid, cmdline)
   if (nf_inq_attid (ncid, nf_global, 'history', hnum) == nf_noerr) then
      ret = nf_inq_attlen (ncid, nf_global, 'history', hlen)
      if (ret/=NF_NOERR) call handle_error (ret)
-     call wrap_get_att_text (ncid, nf_global, 'history', hist)
+     ret = nf_get_att_text (ncid, nf_global, 'history', hist)
+     if (ret/=NF_NOERR) call handle_error (ret)
   end if
 
   hist = trim (hist) // char(10) // datetime // trim (logname) // ':' // &

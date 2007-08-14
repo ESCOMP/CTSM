@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<!--
+
+       DefaultDATM_IN_Namelist.xml                        Jun/08/2007
+
+       Values to use by default for creation of datm7 namelists
+       when running in CLM-only mode with sequential-CCSM.
+       The element names are the same as the corresponding namelist
+       variables.  Values that depend on the model configuration use
+       attributes to express the dependency.  The recognized attributes
+       are: RESOLUTION, mask, ic_ymd, ic_tod, sim_year and all configuration
+       attributes from the config_cache.xml file (with keys converted to upper-case).
+
+       $Id: DefaultDSHR_NML_Namelist.xml 5597 2007-07-25 20:45:19Z erik $
+-->
+<datm_nml>
+
+<!-- Root directory of initial and boundary datasets from CCSM distribution -->
+<csmdata>/fs/cgd/csm/inputdata</csmdata>
+
+<!-- Model Version -->
+<version>
+$HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01/bld/DefaultDSHR_NML_Namelist.xml $
+</version>
+
+<tn460_factorfn>'unused '</tn460_factorfn>
+
+
+</datm_nml>

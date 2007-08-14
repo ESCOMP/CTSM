@@ -195,7 +195,10 @@ PROGRAM program_off
 #endif
 
   if (masterproc) then
-     write(6,*)'SUCCESFULLY TERMINATING CLM MODEL at nstep= ',get_nstep()
+     write(6,'(1X,"=============== ",A29,    " ===============")') &
+                                   "SUCCESSFUL TERMINATION OF CLM"
+     write(6,'(1X,"=============== ",A20,I9, " ===============")') &
+                                   "# completed steps = ",get_nstep()
   endif
   call t_prf('timing_all',mpicom)
   call t_finalizef()

@@ -1,0 +1,4 @@
+This directory exists as a placeholder for you to put modified source files
+in -- so that you can leave the rest of the source code unchanged. When using
+the run-*.csh scripts any source files in this directory will be used before
+source files of the same name in the ../../src/* directories.

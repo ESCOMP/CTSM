@@ -511,16 +511,19 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      call t_startf('balchk')
      call BalanceCheck(begp, endp, begc, endc)
      call t_stopf('balchk')
-     
-#if (defined CN)
-     if (doalb) then
+#if (defined EXIT_SPINUP)
+     ! skip calls to C and N balance checking during EXIT_SPINUP
+     ! because the system is (intentionally) not conserving mass
+     ! on the first EXIT_SPINUP doalb timestep     
+#elif (defined CN)
+     nstep = get_nstep()
+     if (doalb .and. (nstep > 2) ) then
         call t_startf('cnbalchk')
         call CBalanceCheck(filter(nc)%num_soilc,filter(nc)%soilc)
         call NBalanceCheck(filter(nc)%num_soilc,filter(nc)%soilc)
         call t_stopf('cnbalchk')
      end if
 #endif
-        
 
      ! ============================================================================
      ! Determine albedos for next time step
@@ -846,7 +849,7 @@ subroutine write_diagnostic (wrtdia, nstep)
 
   endif
 
-1000 format (1x,'nstep = ',i10,'   TS = ',e21.15)
+1000 format (1x,'nstep = ',i10,'   TS = ',f21.15)
 
 end subroutine write_diagnostic
 

@@ -61,12 +61,22 @@ fi
 if [ $2 == "runoptions" ]; then
   echo "${CLM_TESTDIR}/TCBtools.$1/$1 "`cat ${cfgdir}/$1.$2`
   cp $cfgdir/*.nc .
-  ${CLM_TESTDIR}/TCBtools.$1/$1  `cat ${cfgdir}/$1.$2` >> test.log 2>&1
-  rc=$?
+  if [ "$debug" != "YES" ]; then
+     ${CLM_TESTDIR}/TCBtools.$1/$1  `cat ${cfgdir}/$1.$2` >> test.log 2>&1
+     rc=$?
+  else
+     echo "success" > test.log
+     rc=0
+  fi
 else
   echo "${CLM_TESTDIR}/TCBtools.$1/$1 < ${cfgdir}/$1.$2"
+  if [ "$debug" != "YES" ]; then
   ${CLM_TESTDIR}/TCBtools.$1/$1 < ${cfgdir}/$1.$2 >> test.log 2>&1
-  rc=$?
+     rc=$?
+  else
+     echo "success" > test.log
+     rc=0
+  fi
 fi
 
 if [ $rc -eq 0 ] && grep -ci "success" test.log > /dev/null; then

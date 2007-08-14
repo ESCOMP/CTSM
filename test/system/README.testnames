@@ -1,0 +1,35 @@
+Test naming conventions:
+
+Test names are:
+
+xxnmi
+
+Where: xx is the two-letter test type 
+       sm=smoke, br=branch, er=exact restart, bl=base-line comparision,
+       cb=configure-build
+
+n is the configuration type:
+
+1 -- numpft=17-Standard, or numpft=4, VOC, DUST, RTM
+2 -- numpft=17, CN
+3 -- numpft=4, CASA
+4 -- numpft=10, DGVM
+5 -- Standard default
+6 -- mkgriddata
+7 -- mksurfdata
+8 -- interpinic or newcprnc
+9 -- External Sequential CCSM CAM
+0 -- External CCSM concurrent
+A -- Sequential CCSM mode
+
+m is the resolution
+
+1 -- 48x96
+2 -- 48x96 debug mode
+3 -- 64x128 with 360x720 fine mesh
+4 -- 10x15 with pftdyn
+5 -- 10x15 with DGVM or without
+6 -- 1.9x2.5
+7 -- 1x1 brazil
+8 -- 5x5 amazon
+9 -- 4x5

@@ -1,3 +1,304 @@
+===============================================================
+Tag name:  clm3_5_06
+Originator(s):  erik (KLUZEK ERIK 1326 CGD)
+Date: Fri Aug 10 15:41:50 MDT 2007
+Date:Date:One-line Summary: Update: interpolation, testing, script namelist build, and scripts. Fix bugs, and fix possible 
+                  divide by zero for eff-porosity
+Purpose of changes: Fix interpolation code so can also do CN
+                    Make co2_ppmv a variable that can be input at run-time
+                    Major refactoring update on testing to remove resolution dependence from namelist generation
+                    Allow build scripts to work with ccsm3_5_beta05 for configure/build
+                    Fix various bugs
+                    Fix possible divide by zero for effective porosity
+                    Add new tests for sequential CCSM that's included
+                    Add initial version of build-namelist to make namelists
+                    Fix bug in CN exit_spinup mode
+
+Bugs fixed (include bugzilla ID): 389, 470, 472, 484, 487, 500, 506, 507, 508, 510, 536, 540, 
+                                  541, 542, 543, 545, 546, 552, 556, 557, 564
+    Fix so scripts now work and use SMT. Move clm3_5_rel02 changes to trunk.
+    Remove references to get_env calls, rpointer files now go in run directory
+    by default. Add co2_ppmv namelist variable. Add new tests for sequential CCSM mode.
+    Fix FPE error in startup for CAM. Fix bug in CN exit_spinup mode when restarting.
+    Get a new 1.9x2.5_gx1v5 dataset for CN. Fix some problems with datm7 for functionalty
+    as well as getting it to work. Get rid of equivalences, don't assign nan to integers.
+    Make sure namelist variables are documented in controlMod.F90.
+
+Known bugs: 251, 449, 482, 512, 546
+	interpinic does NOT work for DGVM
+
+Describe any changes made to build system: Allow CCSM to use configure and query namelist tools in clm.template
+
+Describe any changes made to the namelist: Add co2_ppmv to namelist
+
+	Create build-namelist script to create namelists for users.
+
+List any changes to the defaults for the boundary datasets:
+
+	Several changes.
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by (only some parts): slevis, thornton, mvertens, oleson
+
+List any svn externals directories updated (csm_share, mct, etc.): seq_mct_drv, datm7, csm_share
+
+   src/drv/seq_mct            https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq1_0_42
+   src/datm7                  https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm7_070810
+   src/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_070810
+   src/utils/pio              https://svn-ccsm-models.cgd.ucar.edu/pio/trunk_tags/pio_prod_02 --- Change to fixed tag
+
+List all subroutines eliminated:
+
+Remove namelist scripts -- replace with mknamelist and build-namelist scripts
+
+R test/system/nl_files/1.9x2.5
+R test/system/nl_files/10x15
+R test/system/nl_files/10x15_cnall
+R test/system/nl_files/10x15_dgvm
+R test/system/nl_files/10x15_pftdyn
+R test/system/nl_files/regional
+R test/system/nl_files/seqccsm
+R test/system/nl_files/singlept
+R test/system/nl_files/singlept_dgvm_long
+R test/system/nl_files/singlept_long
+R test/system/nl_files/t31
+R test/system/nl_files/t31_casa
+R test/system/nl_files/t31_cnall
+R test/system/nl_files/t31_dgvm
+R test/system/nl_files/t31_dgvm_long
+R test/system/nl_files/t42half
+
+List all subroutines added and what they do:
+
+A bld/create_newcase ---- Script that will create a new run script for a specific case
+
+Scripts to support new build-namelist script that builds namelists for all modes
+
+---- XML files to support various namelists for different modes
+A bld/DefaultCCSM_INPARM_Namelist.xml
+A bld/DefaultDATM_DSHR_NML_Namelist.xml
+A bld/DefaultDATM_NML_Namelist.xml
+A bld/DefaultPROF_INPARM_Namelist.xml
+A bld/DefaultTIMEMGR_INPARM_Namelist.xml
+
+A bld/DefaultSettings.xml ---- Defaults for build-namelist itself (resolution etc.)
+
+----- Namelist descriptions for the drv_in virtual namelist for each mode (see below)
+A bld/CCSMDrvInNamelistsDescriptions.xml
+A bld/CLMDrvInNamelistsDescriptions.xml
+A bld/SeqCCSMDrvInNamelistsDescriptions.xml
+
+A bld/sample.seqccsm.namelists --- sample sequential CCSM namelists
+A bld/build-namelist
+A bld/SeqCCSM_namelist.pm
+A bld/ccsm_inparm.pm
+A bld/clm_inparm.pm
+A bld/compnl.pm
+A bld/datm_dshr_in.pm
+A bld/datm_in.pm
+A bld/datm_nml.pm
+A bld/drv_in.pm
+A bld/namelist.pm
+A bld/prof_inparm.pm
+A bld/queryDefaultXML.pm   ---- Create subroutines that can be used in different contexts.
+A bld/timemgr_inparm.pm
+
+--- Extend testing, for CN  spinup, run scripts, pergro and sequential-CCSM
+
+A test/system/README.testnames ----- Naming conventions
+----- Test that run scripts in bld directory work
+A test/system/TCSruncase.sh
+A test/system/TSMruncase.sh
+---- CN spinup
+A test/system/TSMcnspinup.sh
+A test/system/config_files/17p__ds
+A test/system/config_files/17p_cn_dh
+A test/system/config_files/17p_cnadspinup_dh
+A test/system/config_files/17p_cnexitspinup_dh
+A test/system/config_files/17p_cnn_ds
+--- PERGRO
+A test/system/config_files/_per_dh
+A test/system/config_files/_per_dm
+A test/system/config_files/_per_ds
+--- Sequential CCSM
+A test/system/config_files/_sc_dh
+A test/system/config_files/_sc_dm
+A test/system/config_files/_sc_do
+A test/system/config_files/_sc_ds
+
+A test/system/mknamelist ----------------- Invoke build-namelist
+A test/system/nl_files/clm_pftdyn -------- build-namelist options for dynamic PFT
+A test/system/nl_files/clm_std ----------- Standard build-namelist options
+
+A test/system/nl_files/ext_ccsm_seq_cam -- CAM build-namelist
+
+Renames in test/system/config_files:
+
+rename TCBseqccsm.sh    to TCBext_ccsmseq_cam.sh
+rename TCTconccsm.sh    to TCText_ccsmcon.sh
+rename TSCscam.sh       to TSCext_ccsmseq_scam.sh
+rename TSMconccsm.sh    to TSMext_ccsmcon.sh
+rename TSMseqccsm.sh    to TSMext_ccsmseq_cam.sh
+rename seqccsm_10x15_dm to ext_ccsm_seq_10x15_dm
+rename seqccsm_4x5_dh   to ext_ccsm_seq_4x5_dh
+rename seqccsm_64x128_s to ext_ccsm_seq_64x128_s
+
+New script:
+
+	bld/build-namelist
+
+	use -help option to give basic functionality. Also examine bld/run-ibm.csh
+        script to see how to use. Works similarly to the cam build-namelist to build
+        all the needed namelists in the correct filenames. This is critical because
+        the sequential CCSM mode is much more complex than the standard offline mode.
+        build-namelist uses the input config_cache.xml file created by the configure
+        script to figure out what the settings are:
+
+        Here's a description of some of the most important options:
+
+     -case "name"            Case identifier up to 32 characters
+     -clm_demand "list"      List of variables to require on clm namelist besides the
+usuals.
+     -config "file"          Read the given config cache file to get the configuration
+                             of the CLM executable.  Default: config_cache.xml.
+     -cycle_beg_year "year"  The begining year to cycle input datasets over.
+     -cycle_end_year "year"  The ending year to cycle input datasets over.
+     -cycle_init_year "year" The simulation year that will correspond to the data 
+                             for cycle_beg_year.
+     -d "directory"          Output directory name of resulant namelists.  
+                             Default: ./
+     -infile "file"          Specify a namelist file to read values from.
+     -lnd_res "Resolution"   Horizontal resolution of fine mesh for land 
+                             (if different than resolution coupling to atmosphere)
+     -mask "land-mask"       Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
+     -namelist "namelist"    Specify namelist settings using FORTRAN namelist syntax,
+e.g.,
+                              -namelist "&clm_inparm hist_dov2xy=.true. /"
+     -res "Resolution"       Horizontal resolution (default, 64x128, 1.9x2.5, 1x1_brazil
+etc.)
+     -runlength "length"     Length of simulation (e.g. default, 10d, 5s, 2y)
+                             (Corresponding to: default, 10 days, 5 steps, or 2 years)
+                             classifiers (d=days, s=steps, y=years)
+     -sim_year year          Year to simulate for input datasets (i.e. 1890, 2000, etc.)
+     -start_type "type"      Type of simulation (arb_ic, startup, continue, or branch)
+
+    NOTE: Both -namelist and -infile parse F90 type namelists (either on command line
+    or from a file respectively). Normal rules for namelists apply. You need to name
+    the namelist you are using for a particular variable. So for example
+
+     build-namelist -namelist \
+     "&timemgr_inparm restart_option="nyears" / &clm_inparm co2_ppmv=450. /"
+
+     will set the restart_option for the timemgr_inparm namelist and co2_ppmv for
+     the clm_inparm namelist. When set this way it will override any defaults for
+     these options.
+
+     NOTE2: drv_in "virtual namelist". In order to facilitate testing and make
+            the different build-time modes exchangeable to the user -- a virtual
+            namelist "drv_in" was created. You can use this namelist to put driver
+            namelist options when you don't know which namelist they belong in.
+
+     For example,
+
+     build-namelist -namelist "&drv_in start_ymd=19990101 /"
+
+     will put the namelist item start_ymd in the timemgr_inparm namelist for 
+     sequential-ccsm or in the clm_inparm namelist for concurrent CCSM or offline
+     modes.
+
+List all existing files that have been modified, and describe the changes:
+
+M bld/DefaultCLM_INPARM_Namelist.xml --- Change files used
+M bld/queryDefaultNamelist.pl ---------- Change to use queryDefaujltXML subs
+M bld/run-ibm.csh -------- use build-namelist
+M bld/run-pc.csh --------- use build-namelist
+M bld/run-lightning.csh -- use build-namelist
+
+M src/biogeochem/CASAMod.F90 ----------- update reference
+M src/biogeochem/DGVMMod.F90 ----------- Mess with SVN keywords
+M src/main/clm_varcon.F90 -------------- Remove co2_ppmv_const
+M src/main/driver.F90 ------------------ Fix CN exit_spinup mode
+M src/main/decompInitMod.F90 ----------- Remove CVS Id's
+M src/main/atmdrvMod.F90 --------------- Add co2_ppmv
+M src/main/program_csm.F90 ------------- Change termination message
+M src/main/clm_csmMod.F90 -------------- Pass co2_ppmv
+M src/main/controlMod.F90 -------------- Add co2_ppmv, remove setting rpointer to $HOME, document vars
+M src/main/clm_varctl.F90 -------------- Add co2_ppmv
+M src/main/lnd_comp_mct.F90 ------------ Add flux averaging, co2_ppmv, format log output
+M src/main/program_off.F90 ------------- Change termination message
+M src/main/spmdMod.F90 ----------------- Change log output
+M src/main/ncdio.F90 ------------------- Don't set integers to nan
+M src/main/histFileMod.F90 ------------- Remove equivalence statements
+M src/biogeophys/BalanceCheckMod.F90 --- Don't check until step 2
+M src/biogeophys/BiogeophysRestMod.F90 - Check water properly bounded on first step
+M src/biogeophys/SoilHydrologyMod.F90 -- Put lower bound to eff_porisity (Oleson)
+
+----- Modify test lists to include new tests, add new tests
+M test/system/tests_driver.sh ----------- Add -d option for testing debug mode
+M test/system/TCB.sh
+M test/system/TBL.sh ----- Refactor to use TSM
+M test/system/TBR.sh ----- Modify so doesn't compare first history file
+M test/system/TER.sh ----- Refactor to use TSM
+M test/system/TSM.sh ----- Use this for all start_types
+M test/system/tests_posttag_blueice
+M test/system/input_tests_master
+M test/system/tests_posttag_robin
+M test/system/tests_posttag_phoenix
+M test/system/tests_pretag_jaguar
+M test/system/tests_pretag_bangkok
+M test/system/tests_posttag_hybrid_regression
+M test/system/tests_posttag_purempi_regression
+M test/system/tests_pretag_tempest
+M test/system/tests_posttag_lightning
+
+
+Change interpinic -- so doesn't use lists of variables for interpolation -- just
+  has rules on variable names and dimensions for what to do. This allows CN files to
+  be interpolated. Algorithm had to be changed for so for a given grid-point may
+  use different input points. Also algorithm changed so that it runs much faster
+  (still takes several hours for CN files -- but moments for other configurations).
+  In DGVM mode it still uses the same point.
+
+  Update much of it to F90 interface for NetCDF.
+M tools/interpinic/interpinic.F90
+M tools/interpinic/interpinic.runoptions
+M tools/interpinic/addglobal.F90
+M tools/interpinic/wrap_nf.F90
+M tools/interpinic/Makefile
+M tools/interpinic/README
+
+Behavior of queryDefaultNamelist.pl -- changed:
+
+  Instead of listing all files for all resolutions and configurations it will only
+  list one for each variable name.
+
+Summary of testing:
+
+  bluevista: All PASS except...
+
+004 blA71 TBL.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ...FAIL! rc= 5
+008 blA91 TBL.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -10 arb_ic ....FAIL! rc= 5
+
+  bangkok/lf95: All PASS except...
+
+004 blA92 TBL.sh _sc_dm clm_std 19990101:NONE:3600 4x5 gx3v5 -10 arb_ic .....FAIL! rc= 5
+008 blA71 TBL.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ...FAIL! rc= 5
+042 sm951 TSMext_ccsmseq_cam.sh seqccsm_10x15_dm seqccsm 48 .......FAIL! rc= 8
+
+  lightning/pathf90: All PASS except...
+
+028 sm551 TSM.sh _dh clm_std 19980115:MONTHLY:1800 10x15 default 48 arb_ic ......................FAIL! rc= 10
+029 er551 TER.sh _dh clm_std 19980115:MONTHLY:1800 10x15 default 10+38 arb_ic ...................FAIL! rc= 5
+030 br551 TBR.sh _dh clm_std 19980115:MONTHLY:1800 10x15 default 24+24 arb_ic ...................FAIL! rc= 5
+
+CLM tag used for the baseline comparison tests if applicable: 
+
+	clm3_5_05 (but with bld and test/system updates)
+
+IF tag changes answers relative to baseline comparison: b4b
+
+===============================================================
 
 ===============================================================
 Tag name: clm3_5_05
@@ -734,7 +1035,7 @@ List any changes to the defaults for the boundary datasets:
  Use following files for T42 resolution:
 
  finidat        = '$CSMDATA/inidata_3.1/offline/clmi_0000-01-01_064x128_c070403.nc'
- fsurdat        = '$CSMDATA/surfdata/$fsurdat'
+ fsurdat        = '$CSMDATA/surfdata/surfdata_64x128_c070501.nc'
  fatmgrid       = '$CSMDATA/griddata/griddata_64x128_060829.nc'
  fatmlndfrc     = '$CSMDATA/griddata/fracdata_64x128_USGS_070110.nc'
  fpftcon        = '$CSMDATA/pftdata/pft-physiology.c070207'

@@ -72,6 +72,7 @@ module lnd_comp_mct
 ! Atmospheric mode  
 !
   logical :: prog_atm
+  logical :: do_fluxave
 
 !===============================================================
 contains
@@ -91,10 +92,10 @@ contains
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use clm_time_manager , only : get_nstep, advance_timestep      
+    use clm_time_manager , only : get_nstep, advance_timestep, get_step_size      
     use clm_atmlnd       , only : clm_mapl2a, clm_l2a, atm_l2a
     use clm_comp         , only : clm_init0, clm_init1, clm_init2
-    use clm_varctl       , only : finidat,single_column
+    use clm_varctl       , only : finidat,single_column, irad
     use controlMod       , only : control_setNL
     use domainMod        , only : amask
 !
@@ -112,10 +113,13 @@ contains
     type(mct_gsMap),              pointer       :: GSMap_lnd
     type(mct_gGrid),              pointer       :: dom_l
     type(shr_InputInfo_initType), pointer       :: CCSMInit
-    integer  :: lsize                             ! size of attribute vector
-    integer  :: i,j                               ! indices
+    integer  :: lsize           ! size of attribute vector
+    integer  :: i,j             ! indices
+    integer  :: dtime_sync
+    integer  :: dtime_clm
     type(eshr_timemgr_clockInfoType) :: clockInfo ! Clock information including orbit
     character(len=32), parameter :: sub = 'lnd_init_mct'
+    character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -131,6 +135,10 @@ contains
     ! Initialize clm MPI communicator 
 
     call spmd_init( mpicom_lnd )
+
+    if (masterproc) then
+       write(6,format) "CLM land model initialization"
+    end if
     
     ! Use CCSMInit to set orbital values
 
@@ -181,8 +189,8 @@ contains
     call mct_aVect_zero(l2x_l_SUM )
 
     if (masterproc) then
-       write(6,*)'LND_INIT_MCT: time averaging the following flux fields over the coupling interval'
-       write(6,*)trim(seq_flds_l2x_fluxes)
+       write(6,format) 'time averaging the following flux fields over the coupling interval'
+       write(6,format) trim(seq_flds_l2x_fluxes)
     end if
 
     ! Map internal data structure into coupling data structure
@@ -197,7 +205,23 @@ contains
     ! Determine atmospheric mode
 
     call shr_inputInfo_initGetData( CCSMInit, prog_atm=prog_atm)
-    if (masterproc) write(6,*)'CLM: prog_atm is ',prog_atm
+    if (masterproc) then
+       if ( prog_atm )then
+          write(6,format) 'Atmospheric input is from a prognostic model'
+       else
+          write(6,format) 'Atmospheric input is from a data model'
+       end if
+    end if
+
+    ! 
+    ! Determine if will do flux average
+    ! Do flux averaging only if the cam time step is NOT equal to the
+    ! sync clock timestep and irad is NOT equal to 1
+    !
+    do_fluxave = .false.
+    call eshr_timemgr_clockGet(SyncClock, Dtime=dtime_sync)
+    dtime_clm = get_step_size()
+    if (irad /= 1 .and. dtime_clm /= dtime_sync) do_fluxave = .true.
 
   end subroutine lnd_init_mct
 
@@ -250,6 +274,8 @@ contains
     logical :: dosend          ! true => send data back to driver
     real(r8):: nextsw_cday
     real(r8):: caldayp1
+    real(r8):: dtime_sync
+    real(r8):: dtime_cam
     character(len=32)            :: rdate ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
 !
@@ -284,10 +310,14 @@ contains
 
        nstep  = get_nstep()
        doalb  = ((irad==1) .or. (mod(nstep,irad)==0 .and. nstep/=0))
-       dosend = doalb
+       if (do_fluxave) then
+          dosend = doalb
+       else
+          dosend = .true.
+       end if
 
        ! Error check
-       ! If not prognostic atm, thenwill always use internal albedo calculation
+       ! If not prognostic atm, then will always use internal albedo calculation
        ! logic and not trigger off of nextsw_cday 
 
        if (prog_atm) then
@@ -302,12 +332,24 @@ contains
        ! Determine if time to write restart
 
        rstwr = .false.
-       if (rstwr_sync .and. doalb) rstwr = .true.
+       if (rstwr_sync) then
+          if (do_fluxave) then
+             if (doalb) rstwr = .true.
+          else
+             rstwr = .true.
+          end if
+       end if
 
        ! Determine if time to end
 
        nlend = .false.
-       if (nlend_sync .and. doalb) nlend = .true.
+       if (nlend_sync) then
+          if (do_fluxave) then
+             if (doalb) nlend = .true.
+          else
+             nlend = .true.
+          end if
+       end if
 
        ! Run clm 
 
@@ -356,10 +398,10 @@ contains
 
     ! Check that internal clock is in sync with master clock
 
-    dtime = get_step_size()
-    if (irad == 1) then
+    if (.not. do_fluxave) then
        call get_curr_date( yr, mon, day, tod )
     else
+       dtime = get_step_size()
        call get_curr_date( yr, mon, day, tod, offset=-dtime )
     end if
     ymd = yr*10000 + mon*100 + day
@@ -527,8 +569,8 @@ contains
 
     !-----------------------------------------------------
     use clm_atmlnd      , only: atm2lnd_type
-    use clm_varctl      , only: co2_type
-    use clm_varcon      , only: rair, o2_molar_const, co2_ppmv_const, c13ratio
+    use clm_varctl      , only: co2_type, co2_ppmv
+    use clm_varcon      , only: rair, o2_molar_const, c13ratio
     use decompMod       , only: get_proc_bounds_atm
     !
     ! Arguments
@@ -545,7 +587,7 @@ contains
     real(r8) :: forc_snowl    ! snowfxl Atm flux  mm/s
     real(r8) :: co2_ppmv_diag ! temporary
     real(r8) :: co2_ppmv_prog ! temporary
-    real(r8) :: co2_ppmv      ! temporary
+    real(r8) :: co2_ppmv_val  ! temporary
     integer  :: begg, endg    ! beginning and ending gridcell indices
     integer  :: co2_type_idx  ! integer flag for co2_type options
     !-----------------------------------------------------
@@ -604,13 +646,13 @@ contains
         if (index_x2l_Sa_co2prog /= 0) then
            co2_ppmv_prog = x2l_l%rAttr(index_x2l_Sa_co2prog,i)   ! co2 atm state prognostic
         else
-           co2_ppmv_prog = co2_ppmv_const
+           co2_ppmv_prog = co2_ppmv
         end if
  
         if (index_x2l_Sa_co2diag /= 0) then
            co2_ppmv_diag = x2l_l%rAttr(index_x2l_Sa_co2diag,i)   ! co2 atm state diagnostic
         else
-           co2_ppmv_diag = co2_ppmv_const
+           co2_ppmv_diag = co2_ppmv
         end if
 
         ! Determine derived quantities for required fields
@@ -634,14 +676,14 @@ contains
         ! Note that forc_pbot is in Pa
 
         if (co2_type_idx == 1) then
-           co2_ppmv = co2_ppmv_prog
+           co2_ppmv_val = co2_ppmv_prog
         else if (co2_type_idx == 2) then
-           co2_ppmv = co2_ppmv_diag 
+           co2_ppmv_val = co2_ppmv_diag 
         else
-           co2_ppmv = co2_ppmv_const      
+           co2_ppmv_val = co2_ppmv
         end if
-        a2l%forc_pco2(g)   = co2_ppmv * 1.e-6_r8 * a2l%forc_pbot(g) 
-        a2l%forc_pc13o2(g) = co2_ppmv * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
+        a2l%forc_pco2(g)   = co2_ppmv_val * 1.e-6_r8 * a2l%forc_pbot(g) 
+        a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
 	 
      end do
 

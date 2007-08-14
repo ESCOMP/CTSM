@@ -1,0 +1,109 @@
+#!/bin/sh 
+#
+
+if [ $# -ne 6 ]; then
+    echo "$0: incorrect number of input arguments" 
+    exit 1
+fi
+
+optfile=$1
+info=$2
+res=${3%^*}
+land_res=${3#*^}
+mask=${4%@*}
+sim_year=${4#*@}
+config_file=$5
+start_type=$6
+
+cfgdir=${CLM_SCRIPTDIR}/../../bld
+
+if [ "$mask" = "$4" ]; then
+   sim_year="default"
+fi
+if [ "$res" = "$3" ]; then
+   land_res="default"
+fi
+
+start_ymd=`echo $info | awk -F: '{print $1}'`
+inithist=`echo  $info | awk -F: '{print $2}'`
+dtime=`echo     $info | awk -F: '{print $3}'`
+if   [ $run_length -ge -2  ] && [ $run_length -le 48   ]; then
+   hist_nhtfrq=3
+elif [ $run_length -gt -30 ] && [ $run_length -lt 1440 ]; then
+   hist_nhtfrq=-24
+else
+   hist_nhtfrq=0
+fi
+
+if [ $run_length -lt 0  ]; then
+  length=`expr 0 - $run_length`
+  runlen="${length}d"
+else
+  runlen="${run_length}s"
+fi
+
+# Get mode from config file
+mode=`grep "mode=" $config_file | awk -F\" '{print $2}'`
+
+#
+# Initialize the following so won't do anything by default
+#
+restart_file=" "
+restbfile=" "
+restsfile=" "
+logfile=" "
+restpfile=" "
+restart_pfile=" "
+#
+# If branch and a sequential-CCSM simulation -- set restart files using
+#
+if [ "$mode" = "ccsm_seq" ] && [ "$6" = "branch" ]; then
+  if [ -f "$drv_restart" ]; then
+     restart_file="restart_file='$drv_restart'"
+     restbfile="restbfile='$restBfile'"
+     restsfile="restsfile='$restSfile'"
+  fi 
+fi
+
+#
+# If sequential-CCSM -- always do the following...
+#
+if [ "$mode" = "ccsm_seq" ]; then
+  restart_pfile="restart_pfile='$drv_rpointer'"
+  logfile="logfilepostfix='.test.log'"
+  restpfile="restpfile='$atm_rpointer'"
+fi
+
+cat > lndinput << EOF
+ &drv_in
+ brnch_retain_casename = .true.
+ mss_irt        =  0
+ start_ymd      = $start_ymd
+ $restart_file
+ $restart_pfile
+ $restbfile
+ $restsfile
+ $restpfile
+ $logfile
+ /
+ &clm_inparm
+ dtime          =  $dtime
+ irad           = -1
+ hist_dov2xy    = .true.
+ hist_nhtfrq    =  $hist_nhtfrq
+ hist_mfilt     =  1
+ hist_ndens     =  1
+ hist_crtinic   = '$inithist'
+ nrevsn         = '$nrevsn'
+ rpntpath       = '$lnd_rpointer'
+ /
+EOF
+
+clmopt=`cat ${CLM_SCRIPTDIR}/nl_files/$1`
+
+echo "$cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \ "
+echo "                 -infile "lndinput" -res $res -lnd_res $land_res -start_type $6 \ "
+echo "                 -csmdata $CSMDATA -runlength $runlen $clmopt "
+$cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \
+                       -infile "lndinput" -res $res -lnd_res $land_res -start_type $6 \
+                       -csmdata $CSMDATA -runlength $runlen $clmopt

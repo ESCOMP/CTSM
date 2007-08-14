@@ -134,7 +134,7 @@ contains
           ! fractional impermeability
    
           vol_ice(c,j) = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
-          eff_porosity(c,j) = watsat(c,j)-vol_ice(c,j)
+          eff_porosity(c,j) = max(0.01_r8,watsat(c,j)-vol_ice(c,j))
           vol_liq(c,j) = min(eff_porosity(c,j), h2osoi_liq(c,j)/(dz(c,j)*denh2o))
 
           icefrac(c,j) = min(1._r8,h2osoi_ice(c,j)/(h2osoi_ice(c,j)+h2osoi_liq(c,j)))

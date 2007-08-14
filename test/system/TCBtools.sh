@@ -63,8 +63,12 @@ while [ $still_compiling = "TRUE" ]; do
 
     echo "TCBtools.sh: call to make:" 
     echo "        ${MAKE_CMD} ${TOOLS_MAKE_STRING}" 
-    ${MAKE_CMD} ${TOOLS_MAKE_STRING} >> test.log 2>&1
-    rc=$?
+    if [ "$debug" != "YES" ]; then
+       ${MAKE_CMD} ${TOOLS_MAKE_STRING} >> test.log 2>&1
+       rc=$?
+    else
+       rc=0
+    fi
     if [ $rc -eq 0 ]; then
 	echo "TCBtools.sh: make was successful" 
 	echo "TCBtools.sh: configure and build test passed"

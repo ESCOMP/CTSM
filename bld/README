@@ -1,6 +1,8 @@
 clm/bld/README                              4/13/2007
 
-CLM build and configure directory and scripts.
+CLM build and configure directory and scripts. Scripts to help
+you prepare to build CLM, actually build CLM and then help you
+to run the model.
 
 Important files/directories:
 
@@ -19,6 +21,8 @@ mkSrcfiles
 ---------- Directory to put modified source files in
 usr.src
 
+---------- Script to create a new case directory and run-script
+create_newcase
 ---------- Scripts to configure, build and run on various platforms
 run-frost.csh
 run-ibm.csh

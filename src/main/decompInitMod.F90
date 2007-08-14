@@ -43,9 +43,6 @@ module decompInitMod
   integer, pointer :: acid(:)       ! temporary for setting adecomp/ldecomp
 
 !------------------------------------------------------------------------------
-! $Id$
-! $Author$
-!------------------------------------------------------------------------------
 
 contains
 

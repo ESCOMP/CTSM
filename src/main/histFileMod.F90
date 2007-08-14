@@ -90,23 +90,6 @@ module histFileMod
   character(len=max_namlen), public :: &
        hist_fexcl6(max_flds)  ! namelist: list of fields to remove
 !
-! Equivalence used to satisfy namelist on a wide variety of platforms
-! NOTE: It is *ASSUMED* that max_tapes is 6
-!
-  equivalence (hist_fincl1,fincl(1,1))
-  equivalence (hist_fincl2,fincl(1,2))
-  equivalence (hist_fincl3,fincl(1,3))
-  equivalence (hist_fincl4,fincl(1,4))
-  equivalence (hist_fincl5,fincl(1,5))
-  equivalence (hist_fincl6,fincl(1,6))
-
-  equivalence (hist_fexcl1,fexcl(1,1))
-  equivalence (hist_fexcl2,fexcl(1,2))
-  equivalence (hist_fexcl3,fexcl(1,3))
-  equivalence (hist_fexcl4,fexcl(1,4))
-  equivalence (hist_fexcl5,fexcl(1,5))
-  equivalence (hist_fexcl6,fexcl(1,6))
-!
 ! Restart
 !
   logical, public :: if_writrest    ! true=> write restart file now
@@ -3073,10 +3056,39 @@ contains
     if (masterproc) then
 
         if (flag == 'write') then
+           fincl(:,1) = hist_fincl1(:)
+           fincl(:,2) = hist_fincl2(:)
+           fincl(:,3) = hist_fincl3(:)
+           fincl(:,4) = hist_fincl4(:)
+           fincl(:,5) = hist_fincl5(:)
+           fincl(:,6) = hist_fincl6(:)
+
+           fexcl(:,1) = hist_fexcl1(:)
+           fexcl(:,2) = hist_fexcl2(:)
+           fexcl(:,3) = hist_fexcl3(:)
+           fexcl(:,4) = hist_fexcl4(:)
+           fexcl(:,5) = hist_fexcl5(:)
+           fexcl(:,6) = hist_fexcl6(:)
+
            varid(:,:) = -999._r8 ! this is done for backwards compatibility of restarts
            write (nio, iostat=ier) ntapes, varid, fincl, fexcl
         else if (flag == 'read') then
            read (nio, iostat=ier) ntapes, varid, fincl, fexcl
+
+           hist_fincl1(:) = fincl(:,1)
+           hist_fincl2(:) = fincl(:,2)
+           hist_fincl3(:) = fincl(:,3)
+           hist_fincl4(:) = fincl(:,4)
+           hist_fincl5(:) = fincl(:,5)
+           hist_fincl6(:) = fincl(:,6)
+
+           hist_fexcl1(:) = fexcl(:,1)
+           hist_fexcl2(:) = fexcl(:,2)
+           hist_fexcl3(:) = fexcl(:,3)
+           hist_fexcl4(:) = fexcl(:,4)
+           hist_fexcl5(:) = fexcl(:,5)
+           hist_fexcl6(:) = fexcl(:,6)
+
         endif
         if (ier /= 0) then
            write (6,*) trim(subname),' ERROR: read/write error 1',ier,' on i/o unit = ',nio

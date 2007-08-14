@@ -157,8 +157,8 @@ contains
     use nanMod
     use decompMod   , only : get_proc_bounds_atm
     use clm_atmlnd  , only : clm_mapa2l, atm_a2l, clm_a2l
-    use clm_varctl  , only : offline_atmdir, pertlim
-    use clm_varcon  , only : rair, cpair, co2_ppmv_const, o2_molar_const, tcrit, c13ratio
+    use clm_varctl  , only : offline_atmdir, pertlim, co2_ppmv
+    use clm_varcon  , only : rair, cpair, o2_molar_const, tcrit, c13ratio
     use clm_time_manager, only : get_step_size, get_curr_calday, get_curr_date
     use fileutils   , only : getfil
 !
@@ -289,11 +289,11 @@ contains
 
           !BGC tracers
 
-          atm_a2l%forc_pco2(g) = co2_ppmv_const * 1.e-6_r8 * atm_a2l%forc_pbot(g)
+          atm_a2l%forc_pco2(g) = co2_ppmv * 1.e-6_r8 * atm_a2l%forc_pbot(g)
           atm_a2l%forc_po2(g)  = o2_molar_const * atm_a2l%forc_pbot(g)
           ! 4/14/05: PET
           ! Adding isotope code
-          atm_a2l%forc_pc13o2(g) = co2_ppmv_const * c13ratio * 1.e-6_r8 * atm_a2l%forc_pbot(g)
+          atm_a2l%forc_pc13o2(g) = co2_ppmv * c13ratio * 1.e-6_r8 * atm_a2l%forc_pbot(g)
 
           !Fluxes
 

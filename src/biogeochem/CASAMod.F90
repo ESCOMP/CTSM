@@ -1904,7 +1904,6 @@ contains
        !...................................................................
        ! moisture dependence 
        ! this is like Water limitation calculation in casa_allocate.F
-       ! see CLM2 code: LitterSOM.F90, Hydrology.F90
        !       moist_resp = 0.25 + 0.75 * clm%wf
        !
        ! there are different parametrizations of moisture dependence

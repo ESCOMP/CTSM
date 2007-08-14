@@ -73,6 +73,8 @@ module clm_varctl
   integer :: irad                               ! solar radiation frequency (iterations)
   logical :: wrtdia                             ! true => write global average diagnostics to std out
   logical :: csm_doflxave                       ! true => only communicate with flux coupler on albedo calc time steps
+  real(r8) :: co2_ppmv                          ! atmospheric CO2 molar ratio (by volume) (umol/mol)
+
 !
 ! single column control variables
 !

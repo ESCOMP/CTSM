@@ -259,7 +259,17 @@ sub find_file {
 
     foreach $dir (@file_paths) {
 	$fname = "$dir/$file";
-	if ( -f  $fname ) { return $fname; }
+	if ( -f  $fname ) { 
+           # The following fixes a bug in Mac OS 10.4.10: Jul/13/2007 EBK
+           # The bug allows assert.H to match the file assert.h with "-f"
+           # If file found return it (make sure NOT darwin or filename NOT assert.h
+           if ( ($^O ne "darwin") || ($file ne "assert.h") ) {
+              return $fname; 
+           # Fix a kludge for Darwin where assert.h is wrongly matched
+           } else {
+              return '';  # file not found
+           }
+        }
     }
     return '';  # file not found
 }

@@ -1,0 +1,122 @@
+sample.seqccsm.namelists                     Aug/3/2008
+
+These are sample namelist for sequential-CCSM running CLM with datm7.
+The following shows all of the namelists needed to run sequential-CCSM
+and all of the current namelist items in those namelists (without values set).
+To get more information on individual namelists examine the code that creates
+that particular namelist.
+
+================================================================================
+
+!
+! Driver namelists
+!
+
+&ccsm_inparm
+ case_name
+ case_desc
+ start_type
+ archive_dir
+ mss_irt 
+ mss_wpass
+ brnch_retain_casename
+ restart_pfile
+ restart_file
+ restart_file_override
+ logfilepostfix
+ outpathroot
+/
+&timemgr_inparm
+ atm_cpl_dt       ! Coupling frequency
+ orb_iyear_ad     ! Year
+ orb_eccen
+ orb_mvelp
+ orb_obliq
+ restart_file_TMGoverRide
+ perpetual_run
+ perpetual_ymd
+ restart_option
+ restart_n
+ calendar
+ start_ymd
+ start_tod
+ stop_n	
+ stop_ymd
+ stop_final_ymd
+ stop_option
+ ref_ymd
+ ref_tod
+/
+&prof_inparm
+ profile_barrier
+ profile_disable
+ profile_single_file
+ profile_depth_limit
+ profile_detail_limit
+ profile_timer
+/
+
+!
+! Data Atmosphere namelists
+!
+
+&datm_dshr_in
+ domainfile
+ infodbug
+ infotime
+ infosleep
+ restpfile
+ restbfile
+ restsfile
+ datamode
+ streams
+/
+&datm_in
+ flux_albic
+ flux_albfb
+ flux_swfact
+ tn460_factorFn
+/
+
+!
+! CLM namelist
+!
+
+&clm_inparm
+ co2_ppmv
+ dtime	
+ finidat
+ fatmgrid
+ fatmlndfrc
+ fndepdat
+ fpftcon
+ fpftdyn
+ fsurdat
+ fatmtopo
+ flndtopo
+ nrevsn
+ fndepdat
+ fndepdyn
+ hist_empty_htapes
+ hist_dov2xy
+ hist_avgflag_pertape
+ hist_type1d_pertape
+ hist_nhtfrq
+ hist_ndens
+ hist_mfilt
+ hist_fincl1
+ hist_fincl2
+ hist_fincl3
+ hist_fincl4
+ hist_fincl5
+ hist_fincl6
+ hist_fexcl1
+ hist_fexcl2
+ hist_fexcl3
+ hist_fexcl4
+ hist_fexcl5
+ hist_fexcl6
+ hist_crtinic
+ rpntpath
+ rest_flag
+/

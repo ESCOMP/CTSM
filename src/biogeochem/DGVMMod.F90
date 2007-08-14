@@ -454,11 +454,8 @@ contains
        call check_ret(&
             nf_put_att_text (ncid, NF_GLOBAL, 'source', len_trim(str), trim(str)), subname)
        
-       str = '$Name$'
-       call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'version', len_trim(str), trim(str)), subname)
-       
-       str = '$Id$'
+       str = &
+       '$Id$'
        call check_ret(&
             nf_put_att_text (ncid, NF_GLOBAL, 'revision_id', len_trim(str), trim(str)), subname)
 

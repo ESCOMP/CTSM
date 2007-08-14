@@ -656,8 +656,8 @@ contains
 !  Receive and map data from flux coupler
 !
 ! !USES:
-    use clm_varctl, only : co2_type
-    use clm_varcon, only : rair, o2_molar_const, co2_ppmv_const, c13ratio
+    use clm_varctl, only : co2_type, co2_ppmv
+    use clm_varcon, only : rair, o2_molar_const, c13ratio
     use clmtype   , only : nameg
     use domainMod , only : adomain
 !
@@ -677,7 +677,7 @@ contains
     real(r8):: forc_snowl    ! snowfxl Atm flux  mm/s
     real(r8):: co2_ppmv_diag ! temporary
     real(r8):: co2_ppmv_prog ! temporary
-    real(r8):: co2_ppmv      ! temporary
+    real(r8):: co2_ppmv_val  ! temporary
     integer :: ier           ! return error code
 !-----------------------------------------------------------------------
 
@@ -861,13 +861,13 @@ contains
         if (index_c2l_Sa_co2prog /= 0) then
            co2_ppmv_prog = bufR(g,index_c2l_Sa_co2prog)   ! co2 atm state prognostic
         else
-           co2_ppmv_prog = co2_ppmv_const
+           co2_ppmv_prog = co2_ppmv
         end if
  
         if (index_c2l_Sa_co2diag /= 0) then
            co2_ppmv_diag = bufR(g,index_c2l_Sa_co2diag)   ! co2 atm state diagnostic
         else
-           co2_ppmv_diag = co2_ppmv_const
+           co2_ppmv_diag = co2_ppmv
         end if
 
         ! Determine derived quantities for required fields
@@ -891,16 +891,16 @@ contains
         ! Note that forc_pbot is in Pa
 
         if (co2_type == 'prognostic') then
-           co2_ppmv = co2_ppmv_prog
+           co2_ppmv_val = co2_ppmv_prog
         else if (co2_type == 'diagnostic') then
-           co2_ppmv = co2_ppmv_diag 
+           co2_ppmv_val = co2_ppmv_diag 
         else
-           co2_ppmv = co2_ppmv_const      
+           co2_ppmv_val = co2_ppmv
         end if
-        atm_a2l%forc_pco2(g) = co2_ppmv * 1.e-6_r8 * atm_a2l%forc_pbot(g) 
+        atm_a2l%forc_pco2(g) = co2_ppmv_val * 1.e-6_r8 * atm_a2l%forc_pbot(g) 
         ! 4/14/05: PET
         ! Adding isotope code
-        atm_a2l%forc_pc13o2(g) = co2_ppmv * c13ratio * 1.e-6_r8 * atm_a2l%forc_pbot(g)
+        atm_a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * atm_a2l%forc_pbot(g)
 
      end do
 
@@ -908,7 +908,7 @@ contains
 
      ! debug write statements (remove)
 
-!    if (masterproc) write(6,*)'co2_type = ', co2_type, ' co2_ppmv = ', co2_ppmv
+!    if (masterproc) write(6,*)'co2_type = ', co2_type, ' co2_ppmv_val = ', co2_ppmv_val
 
   end subroutine csm_recv
 
@@ -1393,10 +1393,6 @@ contains
 !
 !EOP
 ! -----------------------------------------------------------------
-
-    write(6,*)'(cpl_COMPAT): This is revision: $Revision: 1.12.8.19.2.8 $'
-    write(6,*)'              Tag: $Name: clm3_expa_48_brnchT_fmesh13 $'
-    write(6,*)'              of the message compatability interface:'
 
     if ( cpl_min_vers /= expect_min_vers )then
        write(6,*) 'WARNING(cpl_compat):: Minor version of coupler ', &

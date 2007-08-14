@@ -1,0 +1,4 @@
+-nospmd -nosmp
+-debug
+-pergro
+-s

@@ -8,6 +8,8 @@ module interpinic
   use shr_kind_mod, only: r8 => shr_kind_r8
   implicit none
 
+  private
+
   ! Variables read in from input and output initial files
 
   integer :: nlevsno        ! maximum number of snow levels
@@ -20,10 +22,6 @@ module interpinic
 
   integer :: numpfts        ! input file number of pfts 
   integer :: numpftso       ! output file number of pfts 
-
-  ! Variable needed in various subroutines of this module
-
-  logical :: do_dgvmo       !true => output initial file has dgvm data
 
   ! RTM river routing model
 
@@ -44,6 +42,16 @@ module interpinic
   private :: interp_ml_real
   private :: interp_sl_real
   private :: interp_sl_int
+  private :: initDistCols
+  private :: findMinDistPFTs
+
+  ! Private data
+ 
+  real(r8), allocatable, save :: distCols(:,:)               ! Distances between old and new columns
+  integer , allocatable, save :: PFT2colindxi(:)             ! PFT to column index input grid
+  integer , allocatable, save :: PFT2colindxo(:)             ! PFT to column index output grid
+  logical ,              save :: allPFTSfromSameGC = .false. ! Get all PFTS from the same gridcells
+  logical ,              save :: noAbortIfDNE      = .false. ! Do NOT abort if some input data does not exist
 
   SAVE
 
@@ -57,235 +65,295 @@ contains
     ! Read initial data from netCDF instantaneous initial data history file 
     !-----------------------------------------------------------------------
 
+    use netcdf
+
     implicit none
     include 'netcdf.inc'
 
     ! ------------------------ arguments------ -----------------------------
-    character(len=*), intent(in) :: fin   !input  initial dataset
-    character(len=*), intent(in) :: fout   !output initial dataset
-    character(len=*), intent(in) :: cmdline    !command line arguments
+    character(len=256), intent(in) :: fin   !input  initial dataset
+    character(len=256), intent(in) :: fout   !output initial dataset
+    character(len=256), intent(in) :: cmdline    !command line arguments
     ! --------------------------------------------------------------------
 
     ! ------------------------ local variables -----------------------------
     integer :: i,j,k,l,m,n         !loop indices    
     integer :: ncidi               !netCDF dataset id
+    integer :: nvecin              !input vector length
+    integer :: nvars               !number of variables
+    integer :: nvecout             !output vector length
     integer :: ncido               !output net
     integer :: dimid               !netCDF dimension id 
+    integer :: dimidpft            !netCDF dimension id PFT
+    integer :: dimidcols           !netCDF dimension id columns
+    integer :: dimidlak            !netCDF dimension id lake
+    integer :: dimidsoi            !netCDF dimension id soil depth
+    integer :: dimidsno            !netCDF dimension id snow depth
+    integer :: dimidtot            !netCDF dimension id total
+    integer :: dimidrad            !netCDF dimension id numrad
+    integer :: dimidrtmlat         !netCDF dimension id rtmlat
+    integer :: dimidrtmlon         !netCDF dimension id rtmlon
     integer :: varid               !netCDF variable id
+    integer :: xtype               !netCDF variable type
+    integer :: ndims               !netCDF number of dimensions
+    integer :: dimids(3)           !netCDF dimension ids
     integer :: dimlen              !input dimension length       
     integer :: ret                 !netcdf return code
-    logical :: do_rtmi             !true => input initial file has rtm data
-    logical :: do_rtmo             !true => output initial file has rtm data
-    logical :: do_dgvmi            !true => input initial file has dgvm data
-    ! --------------------------------------------------------------------
+    character(len=256) :: varname  !variable name
+    !--------------------------------------------------------------------
 
     write (6,*) 'Mapping clm initial data from input to output initial files'
 
     ! Open input and output initial conditions files
 
-    call wrap_open (fin , NF_NOWRITE, ncidi)
-    call wrap_open (fout, NF_WRITE,   ncido)
+    ret = nf90_open(fin,  NF90_NOWRITE, ncidi )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_open(fout, NF90_WRITE,   ncido )
+    if (ret/=NF90_NOERR) call handle_error (ret)
 
     call addglobal (ncido, cmdline)
 
-    ! Determine if input initial file has RTM or DGVM data
-
-    ret = nf_inq_varid (ncidi, 'RTMVOLR', varid)
-    if (ret == NF_NOERR) then
-       do_rtmi = .true.
-    else
-       do_rtmi = .false.
-    endif
-
-    ret = nf_inq_varid (ncidi, 'ITYPVEG', varid)
-    if (ret == NF_NOERR) then
-       do_dgvmi = .true.
-    else
-       do_dgvmi = .false.
-    endif
-
-    ! Determine if output initial file has RTM or DGVM data
-
-    ret = nf_inq_varid (ncido, 'RTMVOLR', varid)
-    if (ret == NF_NOERR) then
-       if (.not. do_rtmi) then 
-          write(*,*) 'input initial file has no rtm data for the output file'
-          stop
-       end if
-       do_rtmo = .true.
-    else
-       do_rtmo = .false.
-    endif
-
-    ret = nf_inq_varid (ncido, 'ITYPVEG', varid)
-    if (ret == NF_NOERR) then
-       if (.not. do_dgvmi) then 
-          write(*,*) 'input initial file has no dgvm data for the output file'
-          stop
-       end if
-       do_dgvmo = .true.
-    else
-       do_dgvmo = .false.
-    endif
-
-    call wrap_inq_dimid (ncidi, 'column', dimid)
-    call wrap_inq_dimlen(ncidi, dimid, numcols)
-    call wrap_inq_dimid (ncido, 'column', dimid)
-    call wrap_inq_dimlen(ncido, dimid, numcolso)
+    ret = nf90_inq_dimid(ncidi, "column", dimidcols )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncidi, dimidcols, len=numcols)
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inq_dimid(ncido, "column", dimid )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncido, dimid, len=numcolso)
+    if (ret/=NF90_NOERR) call handle_error (ret)
     write (6,*) 'input numcols = ',numcols,' output numcols = ',numcolso
 
-    call wrap_inq_dimid (ncidi, 'pft', dimid)
-    call wrap_inq_dimlen(ncidi, dimid, numpfts)
-    call wrap_inq_dimid (ncido, 'pft', dimid)
-    call wrap_inq_dimlen(ncido, dimid, numpftso)
+    ret = nf90_inq_dimid(ncidi, "pft", dimidpft )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncidi, dimidpft, len=numpfts)
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inq_dimid(ncido, "pft", dimid )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncido, dimid, len=numpftso)
+    if (ret/=NF90_NOERR) call handle_error (ret)
     write (6,*) 'input numpfts = ',numpfts,' output numpfts = ',numpftso
 
-    call wrap_inq_dimid (ncidi, 'levsno', dimid)
-    call wrap_inq_dimlen(ncidi, dimid, nlevsno)
-    call wrap_inq_dimid (ncido, 'levsno', dimid)
-    call wrap_inq_dimlen(ncido, dimid, dimlen)
+    ret = nf90_inq_dimid(ncidi, "levsno", dimidsno )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncidi, dimidsno, len=nlevsno)
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inq_dimid(ncido, "levsno", dimid )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncido, dimid, len=dimlen)
+    if (ret/=NF90_NOERR) call handle_error (ret)
     if (dimlen/=nlevsno) then
        write (6,*) 'error: input and output nlevsno values disagree'
        write (6,*) 'input nlevsno = ',nlevsno,' output nlevsno = ',dimlen
        stop
     end if
 
-    call wrap_inq_dimid (ncidi, 'levsoi', dimid)
-    call wrap_inq_dimlen(ncidi, dimid, nlevsoi)
-    call wrap_inq_dimid (ncido, 'levsoi', dimid)
-    call wrap_inq_dimlen(ncido, dimid, dimlen)
+    ret = nf90_inq_dimid(ncidi, "levsoi", dimidsoi )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncidi, dimidsoi, len=nlevsoi)
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inq_dimid(ncido, "levsoi", dimid )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncido, dimid, len=dimlen)
+    if (ret/=NF90_NOERR) call handle_error (ret)
     if (dimlen/=nlevsoi) then
        write (6,*) 'error: input and output nlevsoi values disagree'
        write (6,*) 'input nlevsoi = ',nlevsoi,' output nlevsoi = ',dimlen
        stop
     end if
 
-    call wrap_inq_dimid (ncidi, 'levlak', dimid)
-    call wrap_inq_dimlen(ncidi, dimid, nlevlak)
-    call wrap_inq_dimid (ncido, 'levlak', dimid)
-    call wrap_inq_dimlen(ncido, dimid, dimlen)
+    ret = nf90_inq_dimid(ncidi, "levlak", dimidlak )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncidi, dimidlak, len=nlevlak)
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inq_dimid(ncido, "levlak", dimid )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncido, dimid, len=dimlen)
+    if (ret/=NF90_NOERR) call handle_error (ret)
     if (dimlen/=nlevlak) then
        write (6,*) 'error: input and output nlevlak values disagree'
        write (6,*) 'input nlevlak = ',nlevlak,' output nlevlak = ',dimlen
        stop
     end if
 
-    call wrap_inq_dimid (ncidi, 'levtot', dimid)
-    call wrap_inq_dimlen(ncidi, dimid, nlevtot)
-    call wrap_inq_dimid (ncido, 'levtot', dimid)
-    call wrap_inq_dimlen(ncido, dimid, dimlen)
+    ret = nf90_inq_dimid(ncidi, "levtot", dimidtot )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncidi, dimidtot, len=nlevtot)
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inq_dimid(ncido, "levtot", dimid )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncido, dimid, len=dimlen)
+    if (ret/=NF90_NOERR) call handle_error (ret)
     if (dimlen/=nlevtot) then
        write (6,*) 'error: input and output nlevtot values disagree'
        write (6,*) 'input nlevtot = ',nlevtot,' output nlevtot = ',dimlen
        stop
     end if
 
-    if (do_rtmi) then
-       call wrap_inq_dimid (ncidi, 'rtmlon', dimid)
-       call wrap_inq_dimlen(ncidi, dimid, dimlen)
+    ret = nf90_inq_dimid(ncidi, "numrad", dimidrad)
+    if (ret/=NF90_NOERR) call handle_error (ret)
+
+    ! If RTM data exists on input file
+    ret = nf_inq_varid (ncidi, 'RTMVOLR', varid)
+    if (ret == NF_NOERR) then
+       ret = nf90_inq_dimid(ncidi, "rtmlon", dimidrtmlon)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_inquire_dimension(ncidi, dimidrtmlon, len=dimlen)
+       if (ret/=NF90_NOERR) call handle_error (ret)
        if (dimlen/=rtmlon) then
           write (6,*) 'error: input rtmlon does not equal ',rtmlon; stop
        end if
-       call wrap_inq_dimid (ncidi, 'rtmlat', dimid)
-       call wrap_inq_dimlen (ncidi, dimid, dimlen)
+       ret = nf90_inq_dimid(ncidi, "rtmlat", dimidrtmlat)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_inquire_dimension(ncidi, dimidrtmlat, len=dimlen)
+       if (ret/=NF90_NOERR) call handle_error (ret)
        if (dimlen/=rtmlat) then
           write (6,*) 'error: input rtmlat does not equal ',rtmlat; stop
        end if
+    else
+       dimidrtmlat = -1
+       dimidrtmlon = -1
     end if
-    if (do_rtmo) then
-       call wrap_inq_dimid (ncido, 'rtmlon', dimid)
-       call wrap_inq_dimlen(ncido, dimid, dimlen)
+    ! If RTM data exists on output file
+    ret = nf_inq_varid (ncido, 'RTMVOLR', varid)
+    if (ret == NF_NOERR) then
+       ret = nf90_inq_dimid(ncido, "rtmlon", dimid)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_inquire_dimension(ncido, dimid, len=dimlen)
+       if (ret/=NF90_NOERR) call handle_error (ret)
        if (dimlen/=rtmlon) then
           write (6,*) 'error: output rtmlon does not equal ',rtmlon; stop
        end if
-       call wrap_inq_dimid (ncido, 'rtmlat', dimid)
-       call wrap_inq_dimlen (ncido, dimid, dimlen)
+       ret = nf90_inq_dimid(ncido, "rtmlat", dimid)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_inquire_dimension(ncido, dimid, len=dimlen)
+       if (ret/=NF90_NOERR) call handle_error (ret)
        if (dimlen/=rtmlat) then
           write (6,*) 'error: output rtmlat does not equal ',rtmlat; stop
        end if
     endif
+    !
+    ! Check if DGVM data exists on the dataset and if so -- use all PFT data from same grid cell
+    ! Otherwise use data for the same veg type from potentially different grid-cells
+    !
+    ret = nf90_inq_varid(ncidi, 'ITYPVEG', varid)
+    if (ret==NF90_ENOTVAR)then
+       allPFTSfromSameGC = .false.
+    else if (ret/=NF90_NOERR)then
+       call handle_error (ret)
+    else
+       allPFTSfromSameGC = .true.
+    end if
+
+    ! Initialize the column distances
+    call initDistCols( ncidi, ncido )
 
     ! Read input initial data and write output initial data
     ! Only examing the snow interfaces above zi=0 => zisno and zsno have
     ! the same level dimension below
 
-    call interp_ml_real('ZISNO', ncidi, 'ZISNO', ncido, nlev=nlevsno, nvec=numcols, nveco=numcolso)
+    ret = nf90_inquire(ncidi, nVariables=nvars )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    do i = 1, nvars
+       varid = i
+       ret = nf_inq_varname(ncidi, varid, varname )
+       if (ret/=NF_NOERR) call handle_error (ret)
 
-    call interp_ml_real('ZSNO', ncidi, 'ZSNO', ncido, nlev=nlevsno, nvec=numcols, nveco=numcolso)
-
-    call interp_ml_real('DZSNO', ncidi, 'DZSNO', ncido, nlev=nlevsno, nvec=numcols, nveco=numcolso)
-
-    call interp_ml_real('H2OSOI_LIQ', ncidi, 'H2OSOI_LIQ', ncido, nlev=nlevtot, nvec=numcols, nveco=numcolso)
-                
-    call interp_ml_real('H2OSOI_ICE', ncidi, 'H2OSOI_ICE', ncido, nlev=nlevtot, nvec=numcols, nveco=numcolso)
-                
-    call interp_ml_real('T_SOISNO', ncidi, 'T_SOISNO', ncido, nlev=nlevtot, nvec=numcols, nveco=numcolso)
-                
-    call interp_ml_real('T_LAKE', ncidi, 'T_LAKE', ncido, nlev=nlevlak, nvec=numcols, nveco=numcolso)
-                
-    call interp_sl_real('WA', ncidi, 'WA', ncido, nvec=numcols, nveco=numcolso)
-    call interp_sl_real('WT', ncidi, 'WT', ncido, nvec=numcols, nveco=numcolso)
-    call interp_sl_real('ZWT', ncidi, 'ZWT', ncido, nvec=numcols, nveco=numcolso)
-                
-    call interp_sl_real('T_GRND', ncidi, 'T_GRND', ncido, nvec=numcols, nveco=numcolso)
-                
-    call interp_sl_real('T_VEG', ncidi, 'T_VEG', ncido, nvec=numpfts, nveco=numpftso)
-                
-    call interp_sl_real('H2OCAN', ncidi, 'H2OCAN', ncido, nvec=numpfts, nveco=numpftso)
-                
-    call interp_sl_real('H2OSNO', ncidi, 'H2OSNO', ncido, nvec=numcols, nveco=numcolso)
-
-    call interp_sl_real('SNOWDP', ncidi, 'SNOWDP', ncido, nvec=numcols, nveco=numcolso)
-                
-    call interp_sl_real('SNOWAGE', ncidi, 'SNOWAGE', ncido, nvec=numcols, nveco=numcolso)
-                
-    call interp_sl_int('SNLSNO', ncidi, 'SNLSNO', ncido, nvec=numcols, nveco=numcolso)
-
-    if (do_rtmi) then
-       call wrap_inq_varid (ncidi, 'RTMVOLR', varid)
-       call wrap_get_var_double (ncidi, varid, volr)
-       if (do_rtmo) then
-          call wrap_inq_varid (ncido, 'RTMVOLR', varid)
-          call wrap_put_var_double (ncido, varid, volr)
-       endif
-    endif
-
-    if (do_dgvmi .and. do_dgvmo) then
-       call interp_sl_int('ITYPVEG', ncidi, 'ITYPVEG', ncido, nvec=numpfts, nveco=numpftso)
-
-       call interp_sl_real('FPCGRID', ncidi, 'FPCGRID', ncido, nvec=numpfts, nveco=numpftso)
-
-       call interp_sl_real ('LAI_IND', ncidi, 'LAI_IND', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_real ('CROWNAREA', ncidi, 'CROWNAREA', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_real ('LITTERAG', ncidi, 'LITTERAG', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_real ('LITTERBG', ncidi, 'LITTERBG', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_real ('CPOOL_FAST', ncidi, 'CPOOL_FAST', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_real ('CPOOL_SLOW', ncidi, 'CPOOL_SLOW', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_int ('PRESENT', ncidi, 'PRESENT', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_real ('NIND', ncidi, 'NIND', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_real ('LM_IND', ncidi, 'LM_IND', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_real ('SM_IND', ncidi, 'SM_IND', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_real ('HM_IND', ncidi, 'HM_IND', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_real ('RM_IND', ncidi, 'RM_IND', ncido, nvec=numpfts, nveco=numpftso)
-                             
-       call interp_sl_real ('HTOP', ncidi, 'HTOP', ncido, nvec=numpfts, nveco=numpftso)
-    end if
+       if ( index(varname,"timemgr_"           ) /= 0 ) cycle
+       if ( index(varname,"PFT_"               ) /= 0 ) cycle
+       if ( index(varname,"1d"                 ) /= 0 ) cycle
+       if ( index(varname,"EFLX_LWRAD_OUT"     ) /= 0 ) cycle
+       if ( index(varname,"FRAC_VEG_NOSNO_ALB" ) /= 0 ) cycle
+       if ( index(varname,"tlai"               ) /= 0 ) cycle
+       if ( index(varname,"tsai"               ) /= 0 ) cycle
+       if ( index(varname,"elai"               ) /= 0 ) cycle
+       if ( index(varname,"esai"               ) /= 0 ) cycle
+       if ( index(varname,"T_REF"              ) /= 0 ) cycle
+       if ( index(varname,"TREF"               ) /= 0 ) cycle
+       if ( index(varname,"t_ref2m"            ) /= 0 ) cycle
+       ret = nf90_inq_varid(ncidi, varname, varid)
+       if (ret==NF90_ENOTVAR)then
+          cycle
+       else if (ret/=NF90_NOERR)then
+          call handle_error (ret)
+       end if
+       ret = nf90_inquire_variable( ncidi, varid, xtype=xtype, ndims=ndims, &
+                                    dimids=dimids )
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ! For 1D variables
+       if ( ndims == 1 ) then
+          if ( dimids(1) == dimidcols )then
+             nvecin  = numcols
+             nvecout = numcolso
+          else if ( dimids(1) == dimidpft )then
+             nvecin  = numpfts
+             nvecout = numpftso
+          else
+             write (6,*) 'Skip 1D variable with unknown dimension: ', trim(varname)
+             cycle
+          end if
+          if ( xtype == NF90_INT )then
+             call interp_sl_int( varname, ncidi, ncido, nvec=nvecin, nveco=nvecout )
+          else if ( xtype == NF90_DOUBLE )then
+             call interp_sl_real( varname, ncidi, ncido, nvec=nvecin, nveco=nvecout )
+          else
+             write (6,*) 'error: variable is not of type double or integer'; stop
+          end if
+       ! For RTM variables
+       else if ( (dimids(2) == dimidrtmlat) .and. (dimids(1) == dimidrtmlon) )then
+          if ( index(varname,"RTMVOLR"  ) /= 1 ) cycle  ! If anything BUT RTMVOLR -- go to next variable
+          ret = nf90_inq_varid(ncidi, varname, varid)
+          if (ret/=NF90_NOERR) call handle_error (ret)
+          ret = nf90_get_var(ncidi, varid, volr)
+          if (ret/=NF90_NOERR) call handle_error (ret)
+          ret = nf90_inq_varid(ncido, varname, varid)
+          if (ret==NF90_ENOTVAR)then
+             cycle
+          else if (ret/=NF90_NOERR)then
+             call handle_error (ret)
+          end if
+          write (6,*) 'RTM variable copied over: ', trim(varname)
+          ret = nf90_put_var(ncidi, varid, volr)
+          if (ret/=NF90_NOERR) call handle_error (ret)
+       ! For 2D variables
+       else if ( ndims == 2 )then
+          if ( xtype /= NF90_DOUBLE )then
+             write (6,*) 'error: variable is not of double type'; stop
+          end if
+          if ( dimids(1) == dimidrad )then
+             write (6,*) 'skipping variable with numrad dimension: ', trim(varname)
+             cycle
+          end if
+          if ( dimids(2) /= dimidcols )then
+             write (6,*) 'error: variable = ', varname
+             write (6,*) 'error: variables second dimension is not recognized'; stop
+          end if
+          if ( dimids(1) == dimidlak )then
+             call interp_ml_real(varname, ncidi, ncido, &
+                                 nlev=nlevlak, nvec=numcols, nveco=numcolso)
+          else if ( dimids(1) == dimidtot )then
+             call interp_ml_real(varname, ncidi, ncido, &
+                                 nlev=nlevtot, nvec=numcols, nveco=numcolso)
+          else if ( dimids(1) == dimidsno )then
+             call interp_ml_real(varname, ncidi, ncido, &
+                                 nlev=nlevsno, nvec=numcols, nveco=numcolso)
+          else if ( dimids(1) == dimidsoi )then
+             call interp_ml_real(varname, ncidi, ncido, &
+                                 nlev=nlevsoi, nvec=numcols, nveco=numcolso)
+          else
+             write (6,*) 'error: variable = ', varname
+             write (6,*) 'error: variables first dimension is not recognized'; stop
+          end if
+       else
+          write (6,*) 'skipping variable NOT 1 or 2D: ', trim(varname)
+       end if
+    end do
 
     ! Close input and output files
 
-    call wrap_close(ncidi)
-    call wrap_close(ncido)
+    ret = nf90_close( ncidi )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_close( ncido )
+    if (ret/=NF90_NOERR) call handle_error (ret)
 
     write (6,*) ' Successfully mapped from input to output initial files'
 
@@ -293,14 +361,239 @@ contains
 
   !=======================================================================
 
-  subroutine interp_ml_real (varnamei, ncidi, varnameo, ncido, nlev, nvec, nveco)
+  subroutine initDistCols( ncidi, ncido )
+    ! Initialize the column distances
+    use netCDF
+    implicit none
+
+    ! ------------------------ arguments ---------------------------------
+    integer , intent(in)  :: ncidi              ! input netCdf id
+    integer , intent(in)  :: ncido              ! output netCDF id  
+    ! --------------------------------------------------------------------
+
+    ! ------------------------ local variables --------------------------
+    integer , allocatable :: typei(:)
+    integer , allocatable :: typeo(:)
+    real(r8), allocatable :: wti(:)
+    real(r8), allocatable :: lati(:)
+    real(r8), allocatable :: lato(:)
+    real(r8), allocatable :: loni(:)
+    real(r8), allocatable :: lono(:)
+    real(r8), allocatable :: latpfti(:)
+    real(r8), allocatable :: latpfto(:)
+    real(r8), allocatable :: lonpfti(:)
+    real(r8), allocatable :: lonpfto(:)
+    real(r8) :: dx,dy
+    integer  :: i, n, no
+    integer  :: ret                !NetCDF return code
+    integer :: varid               !netCDF variable id
+    ! --------------------------------------------------------------------
+
+    !
+    ! Distances for columns
+    !
+    write(6,*) 'Calculating distances for initialization'
+    allocate (distCols(numcols,numcolso))
+
+    allocate (typei(numcols))
+    allocate (typeo(numcolso))
+    allocate (wti(numcols))
+    allocate (lati(numcols))
+    allocate (lato(numcolso))
+    allocate (loni(numcols))
+    allocate (lono(numcolso))
+    call wrap_inq_varid (ncidi, 'cols1d_ityplun', varid)
+    call wrap_get_var_int(ncidi, varid, typei)
+    call wrap_inq_varid (ncidi, 'cols1d_lon', varid)
+    call wrap_get_var_double(ncidi, varid, loni)
+    call wrap_inq_varid (ncidi, 'cols1d_lat', varid)
+    call wrap_get_var_double(ncidi, varid, lati)
+    call wrap_inq_varid (ncidi, 'cols1d_wtxy', varid)
+    call wrap_get_var_double(ncidi, varid, wti)
+
+    call wrap_inq_varid (ncido, 'cols1d_ityplun', varid)
+    call wrap_get_var_int(ncido, varid, typeo)
+    call wrap_inq_varid (ncido, 'cols1d_lon', varid)
+    call wrap_get_var_double(ncido, varid, lono)
+    call wrap_inq_varid (ncido, 'cols1d_lat', varid)
+    call wrap_get_var_double(ncido, varid, lato)
+
+    distCols(:,:) = spval !initialize
+!$OMP PARALLEL DO PRIVATE (no,n,dx,dy)
+    do no = 1, numcolso
+       do n = 1, numcols
+          if (wti(n)>0. .and. typei(n) == typeo(no)) then
+             dy = 3.14/180.* abs(lato(no)-lati(n))*6.37e6
+             dx = 3.14/180.* abs(lono(no)-loni(n))*6.37e6 * &
+                        0.5 * (cos(lato(no)*3.14/180.)+cos(lati(n)*3.14/180.))
+             distCols(n,no) = sqrt(dx*dx + dy*dy)
+          end if
+       end do          !output data land loop
+    end do
+    write(6,*) 'Distances done!'
+    !
+    ! Now find which PFT's match which columns
+    !
+    write(6,*) 'Finding which PFTs match columns!'
+    allocate (PFT2colindxi(numpfts))
+    allocate (PFT2colindxo(numpftso))
+    allocate (latpfti(numpfts))
+    allocate (latpfto(numpftso))
+    allocate (lonpfti(numpfts))
+    allocate (lonpfto(numpftso))
+    call wrap_inq_varid (ncidi, 'pfts1d_lon', varid)
+    !if (ret/=NF90_NOERR) call handle_error (ret)
+    call wrap_get_var_double(ncidi, varid, lonpfti)
+    call wrap_inq_varid (ncidi, 'pfts1d_lat', varid)
+    call wrap_get_var_double(ncidi, varid, latpfti)
+    call wrap_inq_varid (ncido, 'pfts1d_lon', varid)
+    call wrap_get_var_double(ncido, varid, lonpfto)
+    call wrap_inq_varid (ncido, 'pfts1d_lat', varid)
+    call wrap_get_var_double(ncido, varid, latpfto)
+    PFT2colindxi(:) = -1
+    do i = 1, numpfts
+       do n = 1, numcols
+          if ( (lati(n) == latpfti(i)) .and. (loni(n) == lonpfti(i)) )then
+            PFT2colindxi(i) = n
+            exit
+          end if
+       end do
+       if ( PFT2colindxi(i) == -1 )then
+          write(6,*) 'PFT input position does NOT match a column position: PFT # ', i
+          stop
+       end if
+    end do
+    PFT2colindxo(:) = -1
+    do i = 1, numpftso
+       do n = 1, numcolso
+          if ( (lato(n) == latpfto(i)) .and. (lono(n) == lonpfto(i)) )then
+            PFT2colindxo(i) = n
+            exit
+          end if
+       end do
+       if ( PFT2colindxo(i) == -1 )then
+          write(6,*) 'PFT output position does NOT match a column position: PFT # ', i
+          stop
+       end if
+    end do
+    write(6,*) 'Done finding PFT indices!'
+
+    deallocate(latpfti)
+    deallocate(latpfto)
+    deallocate(lonpfti)
+    deallocate(lonpfto)
+
+    deallocate(lati)
+    deallocate(lato)
+    deallocate(loni)
+    deallocate(lono)
+    deallocate(typei)
+    deallocate(typeo)
+    deallocate(wti)
+  end subroutine initDistCols
+
+  !=======================================================================
+
+  subroutine findMinDistPFTs( ncidi, ncido, no, dist, nmin )
+    ! Find the PFT distances based on the column distances already calculated
+
+    use netcdf
 
     implicit none
 
     ! ------------------------ arguments ---------------------------------
-    character(len=*), intent(in) :: varnamei    ! input variable name 
     integer , intent(in)  :: ncidi              ! input netCdf id
-    character(len=*), intent(in) :: varnameo    ! output variable name
+    integer , intent(in)  :: ncido              ! output netCDF id  
+    integer , intent(in)  :: no                 ! vector number
+    real(r8), intent(out) :: dist(numpfts)      ! distances
+    integer,  intent(out) :: nmin               ! index of minimum distance
+    ! --------------------------------------------------------------------
+
+    ! ------------------------ local variables --------------------------
+    integer , allocatable, save :: typei(:)
+    integer , allocatable, save :: typeo(:)
+    integer , allocatable, save :: vtypei(:)
+    integer , allocatable, save :: vtypeo(:)
+    real(r8), allocatable, save :: wti(:)
+    real(r8) :: dx,dy
+    real(r8) :: distmin                          ! Minimum distance
+    logical, save :: first_time = .true.
+    integer  :: n
+    integer  :: ret                              ! NetCDF return code
+    integer  :: varid                            ! netCDF variable id
+    ! --------------------------------------------------------------------
+
+    !
+    ! Distances for PFT's to output index no
+    !
+    if ( first_time ) then
+       allocate (typei (numpfts))
+       allocate (vtypei(numpfts))
+       allocate (wti   (numpfts))
+
+       allocate (typeo (numpftso))
+       allocate (vtypeo(numpftso))
+
+       call wrap_inq_varid (ncidi, 'pfts1d_ityplun', varid)
+       call wrap_get_var_int(ncidi, varid, typei)
+
+       call wrap_inq_varid (ncidi, 'pfts1d_wtxy', varid)
+       call wrap_get_var_double(ncidi, varid, wti)
+
+       ret = nf90_inq_varid( ncidi, 'pfts1d_itypveg', varid )
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_get_var( ncidi, varid, vtypei)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+
+       call wrap_inq_varid (ncido, 'pfts1d_ityplun', varid)
+       call wrap_get_var_int(ncido, varid, typeo)
+
+       ret = nf90_inq_varid( ncidi, 'pfts1d_itypveg', varid )
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_get_var( ncidi, varid, vtypei)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+
+       ret = nf90_inq_varid( ncido, 'pfts1d_itypveg', varid )
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_get_var( ncido, varid, vtypeo)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+
+       first_time = .false.
+    end if
+
+!$OMP PARALLEL DO PRIVATE (n)
+    nmin    = 0
+    distmin = spval
+    do n = 1, numpfts
+       if (wti(n)>0. .and. typei(n) == typeo(no)) then
+          if ( allPFTSfromSameGC .or. (vtypei(n) == vtypeo(no)) )then
+             dist(n) = distCols(PFT2colindxi(n),PFT2colindxo(no))
+             if ( dist(n) < distmin )then
+                distmin = dist(n)
+                nmin    = n
+             end if 
+          else
+             dist(n) = spval
+          end if
+       else
+          dist(n) = spval
+       end if
+    end do
+
+  end subroutine findMinDistPFTs
+
+  !=======================================================================
+
+  subroutine interp_ml_real (varname, ncidi, ncido, nlev, nvec, nveco)
+
+    use netcdf
+
+    implicit none
+    include 'netcdf.inc'
+
+    ! ------------------------ arguments ---------------------------------
+    character(len=*), intent(in) :: varname     ! input variable name 
+    integer , intent(in)  :: ncidi              ! input netCdf id
     integer , intent(in)  :: ncido              ! output netCDF id  
     integer , intent(in)  :: nlev               ! number of levels
     integer , intent(in)  :: nvec               ! number of points
@@ -308,87 +601,51 @@ contains
     ! --------------------------------------------------------------------
 
     ! ------------------------ local variables --------------------------
-    integer :: n,no                             !indices
+    integer :: n,no,l                           !indices
     integer :: varid                            !variable id
-    integer , allocatable :: typei(:)
-    integer , allocatable :: typeo(:)
-    real(r8), allocatable :: lati(:)
-    real(r8), allocatable :: lato(:)
-    real(r8), allocatable :: loni(:)
-    real(r8), allocatable :: lono(:)
-    real(r8), allocatable :: wti(:)
-    real(r8), allocatable :: wto(:)
     real(r8), allocatable :: rbufmli (:,:)      !input array
     real(r8), allocatable :: rbufmlo (:,:)      !output array
-    real(r8), allocatable :: dist(:)
-    real(r8) :: dx,dy,distmin
+    real(r8), allocatable :: origValues(:)      !temporary array of original values
+    real(r8), allocatable :: wto(:)
+    real(r8) :: distmin
     integer :: count
+    integer :: ret                              !netCDF return code
     ! --------------------------------------------------------------------
 
     allocate (rbufmli(nlev,nvec))
     allocate (rbufmlo(nlev,nveco))
-    allocate (typei(nvec))
-    allocate (typeo(nveco))
-    allocate (lati(nvec))
-    allocate (lato(nveco))
-    allocate (loni(nvec))
-    allocate (lono(nveco))
-    allocate (wti(nvec))
     allocate (wto(nveco))
-    allocate (dist(nvec))
 
-    if (nvec == numcols) then
-       call wrap_inq_varid (ncidi, 'cols1d_ityplun', varid)
-       call wrap_get_var_int(ncidi, varid, typei)
-       call wrap_inq_varid (ncidi, 'cols1d_lon', varid)
-       call wrap_get_var_double(ncidi, varid, loni)
-       call wrap_inq_varid (ncidi, 'cols1d_lat', varid)
-       call wrap_get_var_double(ncidi, varid, lati)
-       call wrap_inq_varid (ncidi, 'cols1d_wtxy', varid)
-       call wrap_get_var_double(ncidi, varid, wti)
-    end if
+    call wrap_inq_varid (ncido, 'cols1d_wtxy', varid)
+    call wrap_get_var_double(ncido, varid, wto)
 
-    if (nveco == numcolso) then
-       call wrap_inq_varid (ncido, 'cols1d_ityplun', varid)
-       call wrap_get_var_int(ncido, varid, typeo)
-       call wrap_inq_varid (ncido, 'cols1d_lon', varid)
-       call wrap_get_var_double(ncido, varid, lono)
-       call wrap_inq_varid (ncido, 'cols1d_lat', varid)
-       call wrap_get_var_double(ncido, varid, lato)
-       call wrap_inq_varid (ncido, 'cols1d_wtxy', varid)
-       call wrap_get_var_double(ncido, varid, wto)
-    end if
-
-    call wrap_inq_varid (ncidi, trim(varnamei), varid)
+    call wrap_inq_varid (ncidi, trim(varname), varid)
     call wrap_get_var_double(ncidi, varid, rbufmli)
 
-    ! initialization will be overwritten in subsequent loops
+    if ( nvec /= numcols .or. (nveco /= numcolso) )then
+       write(*,*) 'calling interp_ml_real without nvec=numcols'
+       stop
+    end if
 
-    rbufmlo(:,:) = 0.
+    ret = nf90_inq_varid (ncido, trim(varname), varid)
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_get_var( ncido, varid, rbufmlo )
+    if (ret/=NF90_NOERR) call handle_error (ret)
 
     do no = 1, nveco
        if (wto(no)>0.) then
-          dist(:) = spval !initialize before each use
-          do n = 1, nvec
-             if (wti(n)>0. .and. typei(n) == typeo(no)) then
-                dy = 3.14/180.* abs(lato(no)-lati(n))*6.37e6
-                dx = 3.14/180.* abs(lono(no)-loni(n))*6.37e6 * &
-                     0.5 * (cos(lato(no)*3.14/180.)+cos(lati(n)*3.14/180.))
-                dist(n) = sqrt(dx*dx + dy*dy)
-             end if
-          end do          !output data land loop
-          distmin = minval(dist)
+          distmin = minval( distCols(:,no) )
           if (distmin==spval) then
              write(*,*) 'distmin=',spval
              stop
           end if
           count = 0
           do n = 1, nvec
-             if (dist(n)==distmin) then
+             if (distCols(n,no)==distmin) then
                 count = count + 1
                 rbufmlo(:,no) = rbufmli(:,n)
+                exit
              end if       !found nearest neighbor
-             if (count == 1) exit
           end do          !input data land loop
           if (count < 1) then
              write(*,*) 'no data was written: subroutine interp_ml_real'
@@ -397,261 +654,306 @@ contains
        end if             !output data with positive weight
     end do                !output data land loop
 
-    call wrap_inq_varid (ncido, trim(varnameo), varid)
+    call wrap_inq_varid (ncido, varname, varid)
     call wrap_put_var_double(ncido, varid, rbufmlo)
 
-    write(*,*) 'written variable ',varnameo,' to output initial file'
+    write(*,*) 'written variable ',trim(varname),' to output initial file'
 
     deallocate(rbufmli)
     deallocate(rbufmlo)
-    deallocate(typei)
-    deallocate(typeo)
-    deallocate(lati)
-    deallocate(lato)
-    deallocate(loni)
-    deallocate(lono)
-    deallocate(wti)
     deallocate(wto)
-    deallocate(dist)
 
   end subroutine interp_ml_real
 
   !=======================================================================
 
-  subroutine interp_sl_real (varnamei, ncidi, varnameo, ncido, nvec, nveco)
+  subroutine interp_sl_real (varname, ncidi, ncido, nvec, nveco)
+
+    use netcdf
 
     implicit none
+    include 'netcdf.inc'
 
     ! ------------------------ arguments ---------------------------------
-    character(len=*), intent(in) :: varnamei    ! input variable name 
+    character(len=256), intent(in) :: varname   ! input variable name 
     integer , intent(in)  :: ncidi              ! input netCdf id
-    character(len=*), intent(in) :: varnameo    ! output variable name
     integer , intent(in)  :: ncido              ! output netCDF id  
     integer , intent(in)  :: nvec               ! number of points
     integer , intent(in)  :: nveco              ! number of points
     ! --------------------------------------------------------------------
 
     ! ------------------------ local variables --------------------------
-    integer :: i,j,k,n,no,ni,noo                !indices
+    integer :: i,j,k,n,no,ni,noo,l,g,gg    !indices
     integer :: varid                       !variable id
-    integer keepi1(10), keepo1(10)
-    integer , allocatable :: keepo2(:)
-!   integer , allocatable :: ixyo(:) !slevis: for diagnostic work
-!   integer , allocatable :: jxyo(:) !slevis: for diagnostic work
+    integer :: dimid                       !dimension id
     integer , allocatable :: vtypei(:)
     integer , allocatable :: vtypeo(:)
-    integer , allocatable :: typei(:)
     integer , allocatable :: typeo(:)
-    real(r8), allocatable :: lati(:)
-    real(r8), allocatable :: lato(:)
-    real(r8), allocatable :: loni(:)
-    real(r8), allocatable :: lono(:)
-    real(r8), allocatable :: wti(:)
     real(r8), allocatable :: wto(:)
+    real(r8), allocatable :: wti(:)
     real(r8), allocatable :: rbufsli (:)   !input array
     real(r8), allocatable :: rbufslo (:)   !output array
     real(r8), allocatable :: dist(:)
-    real(r8) :: dx,dy,distmin
+    integer , allocatable :: pft_lio(:)    !PFT to land-unit index
+    integer , allocatable :: pft_gio(:)    !PFT to gridcell index
+    real(r8), allocatable :: lnd_wto (:)   !Land-unit weights
+    real(r8), allocatable :: grd_wto (:)   !Grid-cell weights
+    real(r8), allocatable :: sumwto  (:)   !sum of PFT weights
+    real(r8), allocatable :: sumlwto (:)   !sum of land PFT weights
+    real(r8), allocatable :: normaliz(:)   !normalization weigth
+    real(r8) :: distmin
     integer :: count
+    integer :: ret                         ! NetCDF return code
+    integer :: num                         ! number of gridcells NOT normalized
+    integer :: numgrdso                    ! number of gridcells on output grid
+    integer :: numlduso                    ! number of landcell units on output grid
+    logical, save         :: initialize = .false.
+    logical :: htop_var    = .false.       !If variable name is == htop
+    logical :: fpcgrid_var = .false.       !If variable name is == fpcgrid
     ! --------------------------------------------------------------------
 
     allocate (rbufsli(nvec))
     allocate (rbufslo(nveco))
-    allocate (keepo2(nveco))
-!   allocate (ixyo(nveco)) !slevis: for diagnostic work
-!   allocate (jxyo(nveco)) !slevis: for diagnostic work
-    allocate (vtypei(nvec))
-    allocate (vtypeo(nveco))
-    allocate (typei(nvec))
-    allocate (typeo(nveco))
-    allocate (lati(nvec))
-    allocate (lato(nveco))
-    allocate (loni(nvec))
-    allocate (lono(nveco))
+
     allocate (wti(nvec))
     allocate (wto(nveco))
     allocate (dist(nvec))
 
-   if (nvec == numcols) then
-       call wrap_inq_varid (ncidi, 'cols1d_ityplun', varid)
-       call wrap_get_var_int(ncidi, varid, typei)
-       call wrap_inq_varid (ncidi, 'cols1d_lon', varid)
-       call wrap_get_var_double(ncidi, varid, loni)
-       call wrap_inq_varid (ncidi, 'cols1d_lat', varid)
-       call wrap_get_var_double(ncidi, varid, lati)
+    if (nvec == numpfts) then
+       if ( trim(varname) == 'HTOP'    ) htop_var    = .true.
+       if ( trim(varname) == 'FPCGRID' ) fpcgrid_var = .true.
+    end if
+
+    if (     nvec == numcols) then
        call wrap_inq_varid (ncidi, 'cols1d_wtxy', varid)
        call wrap_get_var_double(ncidi, varid, wti)
     else if (nvec == numpfts) then
-       call wrap_inq_varid (ncidi, 'pfts1d_itypveg', varid)
-       call wrap_get_var_int(ncidi, varid, vtypei)
-       call wrap_inq_varid (ncidi, 'pfts1d_ityplun', varid)
-       call wrap_get_var_int(ncidi, varid, typei)
-       call wrap_inq_varid (ncidi, 'pfts1d_lon', varid)
-       call wrap_get_var_double(ncidi, varid, loni)
-       call wrap_inq_varid (ncidi, 'pfts1d_lat', varid)
-       call wrap_get_var_double(ncidi, varid, lati)
-       call wrap_inq_varid (ncidi, 'pfts1d_wtxy', varid)
-       call wrap_get_var_double(ncidi, varid, wti)
+       if ( htop_var .or. fpcgrid_var )then
+          allocate (vtypei(nvec))
+          call wrap_inq_varid (ncidi, 'pfts1d_itypveg', varid)
+          call wrap_get_var_int(ncidi, varid, vtypei)
+          call wrap_inq_varid (ncidi, 'pfts1d_wtxy', varid)
+          call wrap_get_var_double(ncidi, varid, wti)
+       end if
     end if
 
     if (nveco == numcolso) then
-       call wrap_inq_varid (ncido, 'cols1d_ityplun', varid)
-       call wrap_get_var_int(ncido, varid, typeo)
-       call wrap_inq_varid (ncido, 'cols1d_lon', varid)
-       call wrap_get_var_double(ncido, varid, lono)
-       call wrap_inq_varid (ncido, 'cols1d_lat', varid)
-       call wrap_get_var_double(ncido, varid, lato)
        call wrap_inq_varid (ncido, 'cols1d_wtxy', varid)
        call wrap_get_var_double(ncido, varid, wto)
     else if (nveco == numpftso) then
-!      call wrap_inq_varid (ncido, 'pfts1d_ixy', varid) !slevis start
-!      call wrap_get_var_int(ncido, varid, ixyo)
-!      call wrap_inq_varid (ncido, 'pfts1d_jxy', varid)
-!      call wrap_get_var_int(ncido, varid, jxyo)        !slevis end
-       call wrap_inq_varid (ncido, 'pfts1d_itypveg', varid)
-       call wrap_get_var_int(ncido, varid, vtypeo)
-       call wrap_inq_varid (ncido, 'pfts1d_ityplun', varid)
-       call wrap_get_var_int(ncido, varid, typeo)
-       call wrap_inq_varid (ncido, 'pfts1d_lon', varid)
-       call wrap_get_var_double(ncido, varid, lono)
-       call wrap_inq_varid (ncido, 'pfts1d_lat', varid)
-       call wrap_get_var_double(ncido, varid, lato)
-       call wrap_inq_varid (ncido, 'pfts1d_wtxy', varid)
-       call wrap_get_var_double(ncido, varid, wto)
+       ret = nf90_inq_varid( ncido, 'pfts1d_wtxy', varid )
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_get_var( ncido, varid, wto)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       if ( htop_var .or. fpcgrid_var )then
+          allocate (vtypeo(nveco))
+          allocate (typeo(nveco))
+          call wrap_inq_varid (ncido, 'pfts1d_itypveg', varid)
+          call wrap_get_var_int(ncido, varid, vtypeo)
+          ret = nf90_inq_varid( ncido, 'pfts1d_ityplun', varid )
+          if (ret/=NF90_NOERR) call handle_error (ret)
+          ret = nf90_get_var( ncido, varid, typeo)
+          if (ret/=NF90_NOERR) call handle_error (ret)
+       end if
     end if
 
-    call wrap_inq_varid (ncidi, trim(varnamei), varid)
+    call wrap_inq_varid (ncidi, varname, varid)
     call wrap_get_var_double(ncidi, varid, rbufsli)
+    ret = nf90_inq_varid( ncido, varname, varid )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_get_var( ncido, varid, rbufslo )
+    if (ret/=NF90_NOERR) call handle_error (ret)
 
-    ! initialization will be overwritten in subsequent loops
-
-    rbufslo(:) = 0.
-    if (varnameo=='T_VEG') rbufslo(:) = 283.
-    if (varnameo=='T_GRND') rbufslo(:) = 283.
-
-    keepo2(:) = 0
-    do no = 1, nveco
-    if (keepo2(no) == 0) then
-    if (.not. do_dgvmo                          .or. &
-        (do_dgvmo                              .and. &
-         ( nveco==numcolso                      .or. & !column variable
-          (nveco==numpftso .and. vtypeo(no)>14) .or. & !pft var + crop
-          (nveco==numpftso .and. typeo(no)>1)  ))) then!pft var + not veg lunit
-       if (wto(no)>0.) then
-          dist(:) = spval !initialize before each use
-          do n = 1, nvec
-             if (wti(n)>0. .and. typei(n) == typeo(no)) then
-                dy = 3.14/180.* abs(lato(no)-lati(n))*6.37e6
-                dx = 3.14/180.* abs(lono(no)-loni(n))*6.37e6 * &
-                     0.5*(cos(lato(no)*3.14/180.)+cos(lati(n)*3.14/180.))
-                dist(n) = sqrt(dx*dx + dy*dy)
-             end if
-          end do          !output data land loop
-          distmin = minval(dist)
-          if (distmin==spval) then
-             write(*,*) 'distmin, no, varnameo=',spval, no, varnameo
-             stop
-          end if
-          count = 0
-          do n = 1, nvec
-             if (dist(n)==distmin) then
-                count = count + 1
-                if (varnameo=='HTOP' .or. varnameo=='FPCGRID') then
-                   rbufslo(no) = rbufslo(no)
+    if (      nvec == numcols )then
+       do no = 1, nveco
+          if (wto(no)>0.) then
+!$OMP PARALLEL DO PRIVATE (n)
+             do n = 1, nvec
+                if ( wti(n) == 0. )then
+                   dist(n) = spval
                 else
-                   rbufslo(no) = rbufsli(n)
-                end if
-             end if       ! found nearest neighbor
-             if (count == 1) exit
-          end do          !output data land loop
-          if (count < 1) then
-             write(*,*) 'no data was written: subroutine interp_sl_real'
-             stop
-          end if
-       end if             !output data with positive weight
-    else if (nveco==numpftso .and. typeo(no)==1 .and. vtypeo(no)<15) then
-       i = 0
-       do noo = 1, nveco
-          if (typeo(noo)==1 .and. vtypeo(noo)<15 .and. &
-              lato(noo)==lato(no) .and. lono(noo)==lono(no)) then
-             i = i + 1
-             if (i>10) then
-                write(*,*) 'i>10 WHY?'
-                stop
-             end if
-             keepo1(i) = noo
-             keepo2(noo) = 1 !use keepo2 to skip the pfts already done
-          end if
-       end do
-       dist(:) = spval !initialize before each use
-       do n = 1, nvec
-          if (wti(n)>0. .and. typei(n) == 1 .and. vtypei(n)<15) then
-             dy = 3.14/180.* abs(lato(no)-lati(n))*6.37e6
-             dx = 3.14/180.* abs(lono(no)-loni(n))*6.37e6 * &
-                  0.5*(cos(lato(no)*3.14/180.)+cos(lati(n)*3.14/180.))
-             dist(n) = sqrt(dx*dx + dy*dy)
-          end if
-       end do          !input data land loop
-       distmin = minval(dist)
-       if (distmin==spval) then
-          write(*,*) 'distmin=',spval
-          stop
-       end if
-       count = 0
-       do n = 1, nvec
-          if (dist(n)==distmin) then
-             count = count + 1
-             j = 0
-             do ni = 1, nvec
-                if (typei(ni)==1 .and. vtypei(ni)<15 .and. lati(ni)==lati(n) .and. loni(ni)==loni(n)) then
-                   j = j + 1
-                   if (j>10) then
-                      write(*,*) 'j>10 WHY?'
-                      stop
-                   end if
-                   keepi1(j) = ni
+                   dist(n) = distCols(n,no)
                 end if
              end do
-             if (j/=i) then
-                write(6,*) 'j/=i, where j,i=', j,i
+             distmin = minval(dist)
+             if (distmin==spval) then
+                write(*,*) 'distmin, no, varname=',spval, no, trim(varname)
                 stop
              end if
-          end if       !found nearest neighbor
-          if (count == 1) exit
-       end do          !input data loop
-       do k = 1, i
-          rbufslo(keepo1(k)) = rbufsli(keepi1(k))
-       end do          !loop to write input to output
-       if (count < 1) then
-          write(*,*) 'subroutine interp_sl_real: no data was written'
-          stop
+             count = 0
+             do n = 1, nvec
+                if (dist(n)==distmin) then
+                   count = count + 1
+                   rbufslo(no) = rbufsli(n)
+                   exit
+                end if       ! found nearest neighbor
+             end do          !output data land loop
+             if (count < 1) then
+                write(*,*) 'no data was written: subroutine interp_sl_real'
+                stop
+             end if
+          end if             !output data with positive weight
+       end do
+    else if ( nvec == numpfts )then
+       do no = 1, nveco
+          if (wto(no)>0.) then
+             !
+             ! If variable-name is htop or fpcgrid
+             !
+             if ( (htop_var .or. fpcgrid_var) )then
+                !
+                ! AND this is crop or non-vegetated land-unit -- set to zero
+                !
+                if( (vtypeo(no) > 14) .or. (typeo(no) > 1) )then
+                   rbufslo(no) = 0.0_r8
+                else
+                   !
+                   ! Otherwise calculate it from the nearest neighbor
+                   !
+                   call findMinDistPFTs( ncidi, ncido, no, dist, nmin=n )
+                   if ( n == 0 )then
+                      write(*,*) 'subroutine interp_sl_real: no data written to typeo,no=', &
+                                  typeo(no),no
+                      stop
+                   end if
+                   rbufslo(no) = rbufsli(n)
+                end if
+             !
+             ! Otherwise calculate it from the nearest neighbor
+             !
+             else
+                call findMinDistPFTs( ncidi, ncido, no, dist, nmin=n )
+                if ( n == 0 )then
+                   write(*,*) 'subroutine interp_sl_real: no data written to typeo,no=', &
+                               typeo(no),no
+                   stop
+                end if
+                rbufslo(no) = rbufsli(n)
+             end if          !data type
+          end if             !output data with positive weight
+       end do                !output data land loop
+       !
+       ! If variable-name is fpcgrid -- renormalize so columns in a grid cell sum to 1.0
+       !
+       if ( fpcgrid_var )then
+          write(*,*) '  normalizing variable=',trim(varname)
+          ret = nf90_inq_dimid(ncido, "landunit", dimid )
+          if (ret/=NF90_NOERR) call handle_error (ret)
+          ret = nf90_inquire_dimension(ncido, dimid, len=numlduso)
+          if (ret/=NF90_NOERR) call handle_error (ret)
+
+          ret = nf90_inq_dimid(ncido, "gridcell", dimid )
+          if (ret/=NF90_NOERR) call handle_error (ret)
+          ret = nf90_inquire_dimension(ncido, dimid, len=numgrdso)
+          if (ret/=NF90_NOERR) call handle_error (ret)
+   
+          allocate ( lnd_wto(numlduso) )
+          allocate ( pft_lio(nveco) )
+          allocate ( pft_gio(nveco) )
+   
+          if (ret/=NF90_NOERR) call handle_error (ret)
+          ret = nf90_inq_varid( ncido, "pfts1d_li", varid )
+          if (ret/=NF90_NOERR) call handle_error (ret)
+          ret = nf90_get_var( ncido, varid, pft_lio)
+          if (ret/=NF90_NOERR) call handle_error (ret)
+          ret = nf90_inq_varid( ncido, "land1d_wtxy", varid )
+          if (ret/=NF90_NOERR) call handle_error (ret)
+          ret = nf90_get_var( ncido, varid, lnd_wto)
+          if (ret/=NF90_NOERR) call handle_error (ret)
+          ret = nf90_inq_varid( ncido, "pfts1d_gi", varid )
+          if (ret/=NF90_NOERR) call handle_error (ret)
+          ret = nf90_get_var( ncido, varid, pft_gio)
+          if (ret/=NF90_NOERR) call handle_error (ret)
+   
+          ! Find sum of weights for each grid cell
+          allocate ( sumwto  (numgrdso) )
+          allocate ( sumlwto (numgrdso) )
+          allocate ( normaliz(numgrdso) )
+          sumwto(:numgrdso)  = 0.0_r8
+          sumlwto(:numgrdso) = 0.0_r8
+          do no = 1, nveco
+             l = pft_lio(no)
+             g = pft_gio(no)
+             if ( typeo(no) == 1 ) then
+                sumwto(g)  = sumwto(g)  + rbufslo(no)*lnd_wto(l)
+                sumlwto(g) = sumlwto(g) + rbufslo(no)*lnd_wto(l)
+             else
+                sumwto(g)  = sumwto(g) + wto(no)
+             end if
+          end do
+          num = 0
+          do g = 1, numgrdso
+             if ( abs(sumwto(g) - 1.0_r8) > 1.0e-6_r8 ) num = num + 1
+             if ( sumwto(g) == 0.0_r8 )then
+                write(*,*) 'ERROR: sumwto == 0.0: subroutine interp_sl_real'
+                stop
+             end if
+             if ( sumlwto(g) /= 0.0_r8 )then
+                normaliz(g) = ((1.0_r8 - sumlwto(g)) - sumwto(g) ) / sumlwto(g)
+             else
+                normaliz(g) = 1.0_r8
+             end if
+          end do
+          write(*,*) '  % g-cells NOT norm  =', real(100*num,r8)/real(numgrdso,r8)
+   
+          ! Normalize each output weight by the sum of weights for each grid cell
+          do no = 1, nveco
+             g = pft_gio(no)
+             if ( sumlwto(g) /= 0.0_r8 )then
+                rbufslo(no) = rbufslo(no)*normaliz(g)
+             end if
+          end do
+          ! Re-check
+          sumwto(:numgrdso) = 0.0_r8
+          do no = 1, nveco
+             l = pft_lio(no)
+             g = pft_gio(no)
+             if ( typeo(no) == 1 ) then
+                sumwto(g) = sumwto(g) + rbufslo(no)*lnd_wto(l)
+             else
+                sumwto(g) = sumwto(g) + wto(no)
+             end if
+          end do
+          num = 0
+          do g = 1, numgrdso
+             if ( abs(sumwto(g) - 1.0_r8) > 1.0e-6_r8 )then
+                write(*,*) 'ERROR: sumwto != 1.0: subroutine interp_sl_real'
+                write(*,*) 'g, sum, suml, normal = ', g, sumwto(g), sumlwto(g), normaliz(g)
+                do no = 1, nveco
+                   l  = pft_lio(no)
+                   gg = pft_gio(no)
+                   if ( gg == g )then
+                      write(*,*) 'no, rbufslo, lnd_wto, wto, type: ', no, rbufslo(no), lnd_wto(l), wto(no), typeo(no)
+                   end if
+                end do
+                stop
+             end if
+          end do
+          deallocate(lnd_wto)
+          deallocate(pft_lio)
+          deallocate(pft_gio)
+          deallocate(sumwto)
+          deallocate(sumlwto)
+          deallocate(normaliz)
        end if
+
     else
-       write(*,*) 'subroutine interp_sl_real: no data written to typeo,vtypeo,no=', typeo(no),vtypeo(no),no
+       write(*,*) 'subroutine interp_sl_real: no data written to typeo,vtypeo,no=', &
+                   typeo(no),vtypeo(no),no
        stop
     end if
-    end if                !check whether to skip this no value 
-    end do                !output data land loop
 
-    call wrap_inq_varid (ncido, trim(varnameo), varid)
+    call wrap_inq_varid (ncido, varname, varid)
     call wrap_put_var_double(ncido, varid, rbufslo)
 
-    write(*,*) 'written variable ',varnameo,' to output initial file'
+    write(*,*) 'written variable ', trim(varname),' to output initial file'
 
     deallocate(rbufsli)
     deallocate(rbufslo)
-    deallocate(keepo2)
-!   deallocate(ixyo) !slevis
-!   deallocate(jxyo) !slevis
-    deallocate(vtypei)
-    deallocate(vtypeo)
-    deallocate(typei)
-    deallocate(typeo)
-    deallocate(lati)
-    deallocate(lato)
-    deallocate(loni)
-    deallocate(lono)
-    deallocate(wti)
+
+    if ( allocated(vtypei) ) deallocate(vtypei)
+    if ( allocated(vtypeo) ) deallocate(vtypeo)
+    if ( allocated(typeo) )  deallocate(typeo)
     deallocate(wto)
     deallocate(dist)
 
@@ -659,15 +961,16 @@ contains
 
   !=======================================================================
 
-  subroutine interp_sl_int (varnamei, ncidi, varnameo, ncido, nvec, nveco)
+  subroutine interp_sl_int (varname, ncidi, ncido, nvec, nveco)
+
+    use netcdf
 
     implicit none
     include 'netcdf.inc'
 
     ! ------------------------ arguments ---------------------------------
-    character(len=*), intent(in) :: varnamei
+    character(len=256), intent(in) :: varname
     integer , intent(in)  :: ncidi
-    character(len=*), intent(in) :: varnameo
     integer , intent(in)  :: ncido
     integer , intent(in)  :: nvec               ! number of points
     integer , intent(in)  :: nveco              ! number of points
@@ -676,216 +979,144 @@ contains
     ! ------------------------ local variables --------------------------
     integer :: i,j,k,n,no,ni,noo                !indices
     integer :: varid                            !variable id
-    integer keepi1(10), keepo1(10)
-    integer , allocatable :: keepo2(:)
     integer , allocatable :: vtypei(:)
     integer , allocatable :: vtypeo(:)
-    integer , allocatable :: typei(:)
     integer , allocatable :: typeo(:)
-    real(r8), allocatable :: lati(:)
-    real(r8), allocatable :: lato(:)
-    real(r8), allocatable :: loni(:)
-    real(r8), allocatable :: lono(:)
     real(r8), allocatable :: wti(:)
     real(r8), allocatable :: wto(:)
     integer , allocatable :: ibufsli (:)        !input array
     integer , allocatable :: ibufslo (:)        !output array
     real(r8), allocatable :: dist(:)
-    real(r8) :: dx,dy,distmin
+    real(r8) :: distmin
     integer :: count
+    integer :: ret                              !NetCDF return code
+    logical :: present_var = .false.            !If variable name is == present
+    logical :: itypveg_var = .false.            !If variable name is == itypveg
     ! --------------------------------------------------------------------
 
     allocate (ibufsli(nvec))
     allocate (ibufslo(nveco))
-    allocate (keepo2(nveco))
-    allocate (vtypei(nvec))
-    allocate (vtypeo(nveco))
-    allocate (typei(nvec))
-    allocate (typeo(nveco))
-    allocate (lati(nvec))
-    allocate (lato(nveco))
-    allocate (loni(nvec))
-    allocate (lono(nveco))
-    allocate (wti(nvec))
     allocate (wto(nveco))
     allocate (dist(nvec))
 
+    if (nvec == numpfts) then
+       if ( trim(varname) == 'PRESENT' ) present_var = .true.
+       if ( trim(varname) == 'ITYPVEG' ) itypveg_var = .true.
+    end if
+
     if (nvec == numcols) then
-       call wrap_inq_varid (ncidi, 'cols1d_ityplun', varid)
-       call wrap_get_var_int(ncidi, varid, typei)
-       call wrap_inq_varid (ncidi, 'cols1d_lon', varid)
-       call wrap_get_var_double(ncidi, varid, loni)
-       call wrap_inq_varid (ncidi, 'cols1d_lat', varid)
-       call wrap_get_var_double(ncidi, varid, lati)
+       allocate (wti(nvec))
        call wrap_inq_varid (ncidi, 'cols1d_wtxy', varid)
        call wrap_get_var_double(ncidi, varid, wti)
     else if (nvec == numpfts) then
-       call wrap_inq_varid (ncidi, 'pfts1d_itypveg', varid)
-       call wrap_get_var_int(ncidi, varid, vtypei)
-       call wrap_inq_varid (ncidi, 'pfts1d_ityplun', varid)
-       call wrap_get_var_int(ncidi, varid, typei)
-       call wrap_inq_varid (ncidi, 'pfts1d_lon', varid)
-       call wrap_get_var_double(ncidi, varid, loni)
-       call wrap_inq_varid (ncidi, 'pfts1d_lat', varid)
-       call wrap_get_var_double(ncidi, varid, lati)
-       call wrap_inq_varid (ncidi, 'pfts1d_wtxy', varid)
-       call wrap_get_var_double(ncidi, varid, wti)
+       if ( present_var .or. itypveg_var )then
+          allocate (vtypei(nvec))
+          call wrap_inq_varid (ncidi, 'pfts1d_itypveg', varid)
+          call wrap_get_var_int(ncidi, varid, vtypei)
+       end if
     end if
 
     if (nveco == numcolso) then
+       allocate (typeo(nveco))
        call wrap_inq_varid (ncido, 'cols1d_ityplun', varid)
        call wrap_get_var_int(ncido, varid, typeo)
-       call wrap_inq_varid (ncido, 'cols1d_lon', varid)
-       call wrap_get_var_double(ncido, varid, lono)
-       call wrap_inq_varid (ncido, 'cols1d_lat', varid)
-       call wrap_get_var_double(ncido, varid, lato)
        call wrap_inq_varid (ncido, 'cols1d_wtxy', varid)
        call wrap_get_var_double(ncido, varid, wto)
     else if (nveco == numpftso) then
-       call wrap_inq_varid (ncido, 'pfts1d_itypveg', varid)
-       call wrap_get_var_int(ncido, varid, vtypeo)
-       call wrap_inq_varid (ncido, 'pfts1d_ityplun', varid)
-       call wrap_get_var_int(ncido, varid, typeo)
-       call wrap_inq_varid (ncido, 'pfts1d_lon', varid)
-       call wrap_get_var_double(ncido, varid, lono)
-       call wrap_inq_varid (ncido, 'pfts1d_lat', varid)
-       call wrap_get_var_double(ncido, varid, lato)
-       call wrap_inq_varid (ncido, 'pfts1d_wtxy', varid)
-       call wrap_get_var_double(ncido, varid, wto)
+       if ( present_var .or. itypveg_var )then
+          allocate (typeo(nveco))
+          allocate (vtypeo(nveco))
+          call wrap_inq_varid (ncido, 'pfts1d_itypveg', varid)
+          call wrap_get_var_int(ncido, varid, vtypeo)
+          call wrap_inq_varid (ncido, 'pfts1d_ityplun', varid)
+          call wrap_get_var_int(ncido, varid, typeo)
+          call wrap_inq_varid (ncido, 'pfts1d_wtxy', varid)
+          call wrap_get_var_double(ncido, varid, wto)
+       end if
     end if
 
-    call wrap_inq_varid (ncidi, trim(varnamei), varid)
+    call wrap_inq_varid (ncidi, varname, varid)
     call wrap_get_var_int (ncidi, varid, ibufsli)
 
-    ! initialization will be overwritten in subsequent loops
+    ret = nf90_inq_varid( ncido, varname, varid )
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_get_var( ncido, varid, ibufslo )
+    if (ret/=NF90_NOERR) call handle_error (ret)
 
-    ibufslo(:) = 0
-
-    keepo2(:) = 0
-    do no = 1, nveco
-    if (keepo2(no) == 0) then
-    if (.not. do_dgvmo                          .or. &
-        (do_dgvmo                              .and. &
-         ( nveco==numcolso                      .or. & !column variable
-          (nveco==numpftso .and. vtypeo(no)>14) .or. & !pft var + crop
-          (nveco==numpftso .and. typeo(no)>1)  ))) then!pft var + not veg lunit
-       if (wto(no)>0.) then
-          dist(:) = spval !initialize before each use
-          do n = 1, nvec
-             if (wti(n)>0. .and. typei(n) == typeo(no)) then
-                dy = 3.14/180.* abs(lato(no)-lati(n))*6.37e6
-                dx = 3.14/180.* abs(lono(no)-loni(n))*6.37e6 * &
-                     0.5*(cos(lato(no)*3.14/180.)+cos(lati(n)*3.14/180.))
-                dist(n) = sqrt(dx*dx + dy*dy)
-             end if
-          end do          !input data land loop
-          distmin = minval(dist)
-          if (distmin==spval) then
-             write(*,*) 'distmin=',spval
-             stop
-          end if
-          count = 0
-          do n = 1, nvec
-             if (dist(n)==distmin) then
-                count = count + 1
-                if (varnameo=='PRESENT') then
-                   ibufslo(no) = 0
-                else if (varnameo=='ITYPVEG') then
-                   ibufslo(no) = vtypeo(no)
+    if (      nvec == numcols )then
+       do no = 1, nveco
+          if (wto(no)>0.) then
+!$OMP PARALLEL DO PRIVATE (n)
+             do n = 1, nvec
+                if ( wti(n) == 0. )then
+                   dist(n) = spval
                 else
-                   ibufslo(no) = ibufsli(n)
-                end if
-             end if       !found nearest neighbor
-             if (count == 1) exit
-          end do          !input data land loop
-          if (count < 1) then
-             write(*,*) 'no data was written: subroutine '
-             stop
-          end if
-       end if             !input data with positive weight
-    else if (nveco==numpftso .and. typeo(no)==1 .and. vtypeo(no)<15) then
-       i = 0
-       do noo = 1, nveco
-          if (typeo(noo)==1 .and. vtypeo(noo)<15 .and. &
-              lato(noo)==lato(no) .and. lono(noo)==lono(no)) then
-             i = i + 1
-             if (i>10) then
-                write(*,*) 'i>10 WHY?'
-                stop
-             end if
-             keepo1(i) = noo
-             keepo2(noo) = 1 !use keepo2 to skip the pfts already done
-          end if
-       end do
-       dist(:) = spval !initialize before each use
-       do n = 1, nvec
-          if (wti(n)>0. .and. typei(n) == 1 .and. vtypei(n)<15) then
-             dy = 3.14/180.* abs(lato(no)-lati(n))*6.37e6
-             dx = 3.14/180.* abs(lono(no)-loni(n))*6.37e6 * &
-                  0.5*(cos(lato(no)*3.14/180.)+cos(lati(n)*3.14/180.))
-             dist(n) = sqrt(dx*dx + dy*dy)
-          end if
-       end do          !input data land loop
-       distmin = minval(dist)
-       if (distmin==spval) then
-          write(*,*) 'distmin=',spval
-          stop
-       end if
-       count = 0
-       do n = 1, nvec
-          if (dist(n)==distmin) then
-             count = count + 1
-             j = 0
-             do ni = 1, nvec
-                if (typei(ni)==1 .and. vtypei(ni)<15 .and. lati(ni)==lati(n) .and. loni(ni)==loni(n)) then
-                   j = j + 1
-                   if (j>10) then
-                      write(*,*) 'j>10 WHY?'
-                      stop
-                   end if
-                   keepi1(j) = ni
+                   dist(n) = distCols(n,no)
                 end if
              end do
-             if (j/=i) then
-                write(6,*) 'j/=i, where j,i=', j,i
+             distmin = minval(dist)
+             if (distmin==spval) then
+                write(*,*) 'distmin, no, varname=',spval, no, trim(varname)
                 stop
              end if
-          end if       !found nearest neighbor
-          if (count == 1) exit
-       end do          !input data oop
-       do k = 1, i
-          ibufslo(keepo1(k)) = ibufsli(keepi1(k))
-       end do          !loop to write input to output
-       if (count < 1) then
-          write(*,*) 'subroutine interp_sl_int: no data was written'
-          stop
-       end if
+             count = 0
+             do n = 1, nvec
+                if (dist(n)==distmin) then
+                   count = count + 1
+                   ibufslo(no) = ibufsli(n)
+                   exit
+                end if       ! found nearest neighbor
+             end do          !output data land loop
+             if (count < 1) then
+                write(*,*) 'no data was written: subroutine interp_sl_int'
+                stop
+             end if
+          end if             !output data with positive weight
+       end do
+    else if ( nvec == numpfts )then
+       do no = 1, nveco
+          if (wto(no)>0.) then
+             !
+             ! If variable-name is present or itypveg 
+             ! AND this is crop or non-vegetated land-unit
+             !
+             if ( (present_var .or. itypveg_var) .and. &
+                  ((vtypeo(no) > 14) .or. (typeo(no) > 1)) )then
+                if ( present_var ) ibufslo(no) = 0
+                if ( itypveg_var ) ibufslo(no) = vtypeo(no)
+             !
+             ! Otherwise calculate it from the nearest neighbor
+             !
+             else
+                call findMinDistPFTs( ncidi, ncido, no, dist, nmin=n )
+                if ( n == 0 )then
+                   write(*,*) 'subroutine interp_sl_int: no data written to typeo,no=', &
+                               typeo(no),no
+                   stop
+                end if
+                ibufslo(no) = ibufsli(n)
+             end if          !variable type
+          end if             !output data with positive weight
+       end do                !output data land loop
     else
-       write(*,*) 'subroutine interp_sl_int: no data written to typeo,vtypeo,no=', typeo(no),vtypeo(no),no
+       write(*,*) 'subroutine interp_sl_int: no data written to typeo,vtypeo,no=', &
+                   typeo(no),vtypeo(no),no
        stop
     end if
-    end if                !check whether to skip this no value
-    end do                !input data land loop
 
-    call wrap_inq_varid (ncido, trim(varnameo), varid)
+    call wrap_inq_varid (ncido, varname, varid)
     call wrap_put_var_int (ncido, varid, ibufslo)
 
-    write(*,*) 'written variable ',varnameo,' to output initial file'
+    write(*,*) 'written variable ', trim(varname),' to output initial file'
 
     deallocate (ibufsli)
     deallocate (ibufslo)
-    deallocate (keepo2)
-    deallocate (vtypei)
-    deallocate (vtypeo)
-    deallocate (typei)
-    deallocate (typeo)
-    deallocate (lati)
-    deallocate (lato)
-    deallocate (loni)
-    deallocate (lono)
-    deallocate (wti)
     deallocate (wto)
     deallocate (dist)
+    if ( allocated(vtypei) ) deallocate (vtypei)
+    if ( allocated(vtypeo) ) deallocate (vtypeo)
+    if ( allocated(typeo) )  deallocate (typeo)
+    if ( allocated(wti) )    deallocate (wti)
 
   end subroutine interp_sl_int
 

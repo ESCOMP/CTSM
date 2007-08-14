@@ -29,7 +29,7 @@ use IO::File;
 use FileHandle;
 #-----------------------------------------------------------------------------------------------
 
-my $version = '$Name$';                # CVS tag used to check out CLM distribution
+my $version = '$HeadURL$';                # SVN tag used to check out CLM distribution
 
 autoflush STDOUT, 1;                   # Helps in debugging to have the test description
                                        # echoed before the error messages start
@@ -1020,6 +1020,15 @@ if ( $cfg{'mode'} eq "ext_ccsm_con" ) {
     write_filepath_ccsm("$cfg{'clm_bld'}/$fp_filename", %cfg);
     if ($print) { print "creating $cfg{'clm_bld'}/$fp_filename\n"; }
 
+    # Write the misc.h file 
+    write_misc_h("$cfg{'clm_bld'}/$misc_filename", %cfg);
+    if ($print) { print "creating $cfg{'clm_bld'}/$misc_filename\n"; }
+
+    # Write the preproc.h file.
+    write_preproc_h("$cfg{'clm_bld'}/$preproc_filename", %cfg);
+    if ($print) { print "creating $cfg{'clm_bld'}/$preproc_filename\n"; }
+
+
     # Write the file for clm's cppdefs needed in ccsm.
     write_cppdefs("$cfg{'clm_bld'}/$cpp_filename", %cfg);
     if ($print) { print "creating $cfg{'clm_bld'}/$cpp_filename\n"; }
@@ -1366,6 +1375,11 @@ sub write_filepath_ccsm
     print $fh "\$SHAREROOT/eshr\n";
     print $fh "\$SHAREROOT/cpl\n";
     print $fh "\$CODEROOT/utils/esmf_wrf_timemgr\n";
+# CLM
+    print $fh "\$CODEROOT/lnd/clm2/src/main\n";
+    print $fh "\$CODEROOT/lnd/clm2/src/biogeophys\n";
+    print $fh "\$CODEROOT/lnd/clm2/src/biogeochem\n";
+    print $fh "\$CODEROOT/lnd/clm2/src/riverroute\n";
 
     $fh->close;
 }
@@ -1399,9 +1413,8 @@ sub write_misc_h
     print $fh  <<"EOF";
 #ifndef MISC_SET
 #define MISC_SET
-#undef COUP_CSM
 EOF
-    if ($cfg{'coup_csm'} eq "on" ) {
+    if ($cfg{'mode'} eq "ext_ccsm_con" ) {
 	print $fh "#define COUP_CSM\n";
     } else {
 	print $fh "#undef COUP_CSM\n";

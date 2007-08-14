@@ -12,7 +12,7 @@ module controlMod
 ! Module which initializes run control variables. The following possible
 ! namelist variables are set default values and possibly read in on startup
 !
-! === define run =======================
+! === define run ======================= >>>> Only if mode does NOT = ccsm_seq
 !
 !    o caseid     = 256 character case name
 !    o ctitle     = 256 character case title
@@ -21,6 +21,9 @@ module controlMod
 ! === model time =======================
 !
 !    o dtime      = integer model time step (s)
+!
+! ====================================== >>>> Only if mode does NOT = ccsm_seq
+!
 !    o calendar   = Calendar to use in date calculations.
 !                  'no_leap' (default) or 'gregorian'
 !    o start_ymd  = Starting date for run encoded in yearmmdd format.
@@ -51,13 +54,16 @@ module controlMod
 !    o flndtopo        = 256 character land topography file name
 !    o fatmgrid        = 256 character atmosphere grid data file name
 !    o fatmlndfrc      = 256 character landfrac (on atm grid) file name
-!    o fatmtopo        = 256 character atmosphere topography file name
+!    o fatmtopo        = 256 character atmosphere topography file name (on atm grid)
+!    o flndtopo        = 256 character land topography file name
 !    o fndepdat        = 254 character nitrogen deposition data file name (netCDF)
+!    o fndepdyn        = 254 character nitrogen deposition data file name (netCDF) changing dynamically in time
 !    o fpftcon         = 256 character data file with PFT physiological constants
+!    o fpftdyn         = 256 character data file with PFT physiological constants changing dynamically in time
 !    o frivinp_rtm     = 256 character input data file for rtm
 !    o nrevsn          = 256 character restart file name for use with branch run
 !
-! === offline forcing data ===
+! === offline forcing data === >>> Only for mode=offline
 !
 !    o offline_atmdir  = 256 character directory for input atm data files (can be Mass Store)
 !    o cycle_begyr     = integer, first year of offline atm data (e.g. 1948)
@@ -65,6 +71,8 @@ module controlMod
 !
 ! === history and restart files ===
 !
+!    o hist_empty_htapes = true if do not want ANY output fields on files by default
+!    o hist_avgflag_pertape = averaging flag to use by default for all fields on a file series
 !    o hist_ndens    = integer, can have value of 1 (nc_double) or 2 (nf_float)
 !    o hist_dov2xy   = true if want grid-average history field (false = vector)
 !    o hist_nhtfrq   = integer history interval (+ = iterations,  - = hours, 0=monthly ave)
@@ -87,23 +95,40 @@ module controlMod
 !    o rpntpath      = 256 character full UNIX pathname of the local restart pointer file.
 !                      This file must exist when the model is restarted.
 !                      This file is overwritten every time new restart data files are output.
+! === Biogeochem=CASA =======
+!    o lnpp        = 1=gpp*gppfact,2=fn(lgrow)*gppfact
+!    o lalloc      = 0=fixed allocation, 1=dynamic allocation
+!    o q10         = temperature dependence
+!    o spunup      = 0=no, 1=yes (used with nsrest/=1 only)
+!    o fcpool      = Carbon Pool initial state filename
 !
-! === long term archiving =====
+! === Decomposition   =======
+!
+!    o clump_pproc = clumps per processor
+!    o nsegspc     = number of segments per clump for decomposition
+!
+! === long term archiving ===== >>>> Only for mode=offline or ext_ccsm_con
 !
 !    o archive_dir = 256 character long term archive directory (can be MSS directory)
 !    o mss_irt     = integer mass store retention period (days)
 !    o mss_wpass   = 8 character mass store write password for output data sets
+!    o brnch_retain_casename = logical if a branch simulation can use the same casename as it branches from
 !
 ! === model physics ===
 !
 !    o irad         = integer solar radiation frequency (+ = iteration. - = hour)
 !    o wrtdia       = true if want output written
 !    o csm_doflxave = true => flux averaging is to be performed (only used for csm mode)
+!    o co2_ppmv     = CO2 volume mixing ratio
+!    o pertlim      = perturbation limit (currently NOT used)
+!    o create_croplandunit = logical on if to create crop as separate landunits
+!
+!    >>>>>>>>>>>>> Only for mode=ext_ccsm_con or seq_ccsm
+!    o co2_type     = type of CO2 feedback, choices are constant, prognostic or diagnostic
 !
 ! === rtm control variables ===
 !
 !    o rtm_nsteps  = if > 1, average rtm over rtm_nsteps time steps
-!    o nsegspc     = number of segments per clump for decomposition
 !
 ! When coupled to CAM: base calendar info, nstep, nestep, nsrest, and time
 ! step are input to the land model from CAM. The values in the clm_inparm namelist
@@ -251,10 +276,6 @@ contains
     ! Namelist Variables
     ! ----------------------------------------------------------------------
 
-#if (defined OFFLINE)
-    namelist /clm_inparm/ offline_atmdir
-#endif
-
     ! clm time manager info
 
 #if (defined OFFLINE) || (defined COUP_CSM)
@@ -262,12 +283,12 @@ contains
          ctitle, caseid, nsrest,  &
          calendar, nelapse, nestep, start_ymd, start_tod,  &
          stop_ymd, stop_tod, ref_ymd, ref_tod
-#endif
 
     ! Archive options
 
     namelist /clm_inparm/ archive_dir, mss_wpass, mss_irt, &
          brnch_retain_casename 
+#endif
 
     ! clm input datasets
 
@@ -277,7 +298,12 @@ contains
     namelist /clm_inparm/  &
          finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
          fpftcon, frivinp_rtm,  &
-         fpftdyn, fndepdat, fndepdyn, nrevsn, offline_atmdir, cycle_begyr, cycle_nyr
+         fpftdyn, fndepdat, fndepdyn, nrevsn
+
+#if (defined OFFLINE)
+    namelist /clm_inparm/  &
+          offline_atmdir, cycle_begyr, cycle_nyr
+#endif
 
     ! clm history, restart, archive options
 
@@ -298,14 +324,16 @@ contains
          lnpp, lalloc, q10, spunup, fcpool
 #endif
 
+#if (defined SEQ_MCT) || (defined SEQ_ESMF) || (defined COUP_CSM)
     namelist /clm_inparm / &
          co2_type
+#endif
 
     ! clm other options
 
     namelist /clm_inparm/  &
          clump_pproc, irad, wrtdia, csm_doflxave, rtm_nsteps, pertlim, &
-         create_crop_landunit, nsegspc
+         create_crop_landunit, nsegspc, co2_ppmv
          
     ! ----------------------------------------------------------------------
     ! Default values
@@ -383,6 +411,7 @@ contains
     scmlat=-999.
     scmlon=-999.
     nsegspc = 20
+    co2_ppmv = 355._r8
 
 #if (defined RTM)
     ! If rtm_nsteps is not set in the namelist then
@@ -591,6 +620,10 @@ contains
 
        if (irad < 0) irad = nint(-irad*3600._r8/dtime)
 
+       if ( (co2_ppmv <= 0.0_r8) .or. (co2_ppmv > 3000.0_r8) )then
+          write(6,*)'namelist error: co2_ppmv is out of a reasonable range'
+          call endrun()
+       end if
        ! History and restart files
 
        mss_irt = min(mss_irt,1825)
@@ -604,8 +637,7 @@ contains
        end do
        
        if (rpntpath == 'not_specified') then
-          call shr_sys_getenv('HOME', homedir, ierr)
-          rpntpath = trim(homedir)//'/lnd.'//trim(caseid)//'.rpointer'
+          rpntpath = 'rpointer.lnd'
        endif
        
        if (nsrest == 0) nrevsn = ' '
@@ -743,6 +775,7 @@ contains
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (scmlat,       1, MPI_REAL8,   0, mpicom, ier)
     call mpi_bcast (scmlon,       1, MPI_REAL8,   0, mpicom, ier)
+    call mpi_bcast (co2_ppmv    , 1, MPI_REAL8,   0, mpicom, ier)
 
     ! history file variables
 
@@ -907,6 +940,7 @@ contains
     write(6,*) '   flag for random perturbation test is not set'
 #endif
     write(6,*) '   solar radiation frequency (iterations) = ',irad
+    write(6,*) '   CO2 volume mixing ratio   (umol/mol)   = ', co2_ppmv
 #if (defined COUP_CSM)
     write(6,*) 'communication with the flux coupler'
     if (csm_doflxave) then

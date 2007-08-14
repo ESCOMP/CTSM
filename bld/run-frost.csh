@@ -25,11 +25,11 @@ setenv LIB_MPI /bgl/BlueLight/ppcfloor/bglsys/lib
 ## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
 ## Contains the source code for the CLM distribution.
 ## (the root directory contains the subdirectory "src")
-set clmroot   = ~/fmf_clm3_expa_88
+set clmroot   = ...
 
 ## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
 ## Contains the initial and boundary data for the CLM distribution.
-setenv CSMDATA /ptmp/tcraig/inputdata/lnd/clm2
+setenv CSMDATA /ptmp/tcraig/inputdata
 
 ## Default configuration settings:
 set spmd     = on       # settings are [on   | off       ] (default is off)
@@ -76,25 +76,35 @@ endif
 ## Create the namelist
 cd $rundir                      || echo "cd $blddir failed" && exit 1
 
-set fatmgrid       = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var fatmgrid`
-set fsurdat        = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var fsurdat`
-set fatmlndfrc     = `$cfgdir/queryDefaultNamelist.pl -res $res -silent -config $config -csmdata $CSMDATA -var fatmlndfrc`
-set fpftcon        = `$cfgdir/queryDefaultNamelist.pl -silent -config $config -csmdata $CSMDATA -var fpftcon`
-set frivinp_rtm    = `$cfgdir/queryDefaultNamelist.pl -silent -config $config -csmdata $CSMDATA -var frivinp_rtm`
-set offline_atmdir = `$cfgdir/queryDefaultNamelist.pl -silent -config $config -csmdata $CSMDATA -var offline_atmdir`
+set query_opts = "-res $res -silent -config $config -csmdata $CSMDATA"
 
+set mask       = `$cfgdir/queryDefaultNamelist.pl $query_opts -justvalue -var mask`
+set sim_year   = `$cfgdir/queryDefaultNamelist.pl $query_opts -justvalue -var sim_year`
+
+set query_opts = "$query_opts -options mask=$mask,sim_year=$sim_year"
+set finidat        = `$cfgdir/queryDefaultNamelist.pl $query_opts -var finidat`
+set fsurdat        = `$cfgdir/queryDefaultNamelist.pl $query_opts -var fsurdat`
+set fatmgrid       = `$cfgdir/queryDefaultNamelist.pl $query_opts -var fatmgrid`
+set fatmlndfrc     = `$cfgdir/queryDefaultNamelist.pl $query_opts -var fatmlndfrc`
+set fpftcon        = `$cfgdir/queryDefaultNamelist.pl $query_opts -var fpftcon`
+set fndepdat       = `$cfgdir/queryDefaultNamelist.pl $query_opts -var fndepdat`
+set offline_atmdir = `$cfgdir/queryDefaultNamelist.pl $query_opts -var offline_atmdir`
+set frivinp_rtm    = `$cfgdir/queryDefaultNamelist.pl $query_opts -var frivinp_rtm`
+set co2_ppmv       = `$cfgdir/queryDefaultNamelist.pl $query_opts -var co2_ppmv`
 
 cat >! lnd.stdin << EOF
  &clm_inparm
  caseid         = '$case'
  ctitle         = '$case'
- finidat        = ' '
+ $finidat
  $fsurdat
  $fatmgrid
  $fatmlndfrc
+ $fndepdat
  $fpftcon
  $frivinp_rtm
  $offline_atmdir
+ $co2_ppmv
  nsrest         =  0
  nelapse        =  48
  dtime          =  1800

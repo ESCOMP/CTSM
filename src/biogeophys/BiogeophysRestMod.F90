@@ -44,11 +44,12 @@ contains
 ! !USES:
     use clmtype
     use ncdio
-    use decompMod     , only : get_proc_bounds
-    use clm_varpar    , only : nlevsoi, nlevsno
-    use clm_varcon    , only : denice, denh2o
-    use clm_varctl    , only : allocate_all_vegpfts, nsrest
-    use initSurfAlbMod, only : do_initsurfalb
+    use decompMod       , only : get_proc_bounds
+    use clm_varpar      , only : nlevsoi, nlevsno
+    use clm_varcon      , only : denice, denh2o
+    use clm_varctl      , only : allocate_all_vegpfts, nsrest
+    use initSurfAlbMod  , only : do_initsurfalb
+    use clm_time_manager, only : is_first_step
 !
 ! !ARGUMENTS:
     implicit none
@@ -852,6 +853,29 @@ contains
                                       + cptr%cws%h2osoi_ice(c,j)/(cptr%cps%dz(c,j)*denice)
           end do
        end do
+
+       ! ------------------------------------------------------------
+       ! If initial run -- ensure that water is properly bounded
+       ! ------------------------------------------------------------
+
+       if ( is_first_step() )then
+          do j = 1,nlevsoi
+!dir$ concurrent
+!cdir nodep
+             do c = begc,endc
+                ! soil water should be ... less than saturation
+                if (      cptr%cws%h2osoi_vol(c,j) > cptr%cps%watsat(c,j) )then
+                   cptr%cws%h2osoi_liq(c,j) = (cptr%cps%watsat(c,j) &
+                                - cptr%cws%h2osoi_ice(c,j)/(cptr%cps%dz(c,j)*denice)) * &
+                                  (cptr%cps%dz(c,j)*denh2o)
+                   cptr%cws%h2osoi_vol(c,j) = cptr%cps%watsat(c,j)
+                ! ........................ and greater than zero
+                else if ( cptr%cws%h2osoi_vol(c,j) < 0.0_r8 )then
+                      cptr%cws%h2osoi_vol(c,j) = 0.0_r8
+                end if
+             end do
+          end do
+       end if
     endif
 
   end subroutine BiogeophysRest

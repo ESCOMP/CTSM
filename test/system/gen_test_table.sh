@@ -30,6 +30,8 @@ for input_file in `ls tests_*` ; do
     echo "<TH>arg3 </TH>" >> ./test_table.html
     echo "<TH>arg4 </TH>" >> ./test_table.html
     echo "<TH>arg5 </TH>" >> ./test_table.html
+    echo "<TH>arg6 </TH>" >> ./test_table.html
+    echo "<TH>arg7 </TH>" >> ./test_table.html
     echo "</TR>" >> ./test_table.html
 
     test_list=""

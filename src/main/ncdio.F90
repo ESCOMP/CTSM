@@ -1809,10 +1809,10 @@ contains
          return
        end if
 
-       cols(:)=nan
-       pfts(:)=nan
-       col_offset=nan
-       pi_offset=nan
+       cols(:)=-9999
+       pfts(:)=nan-9999
+       col_offset=nan-9999
+       pi_offset=nan-9999
        i=1
        do cc = 1, totcols
           if (cols1dlon(cc).eq.lonidx.and.cols1dlat(cc).eq.latidx) then

@@ -284,7 +284,7 @@ contains
     if ( found ) then
        write(6,*)'WARNING:  water balance error ',&
             ' nstep = ',nstep,' index= ',index,' errh2o= ',errh2o(index)
-       if (abs(errh2o(index)) > .10_r8) then
+       if (abs(errh2o(index)) > .10_r8 .and. (nstep > 2) ) then
           write(6,*)'clm model is stopping'
           call endrun()
        end if
@@ -322,7 +322,7 @@ contains
           end if
        end if
     end do
-    if ( found ) then
+    if ( found  .and. (nstep > 2) ) then
        write(6,100)'solar radiation balance error',nstep,index,errsol(index)
        write(6,*)'clm model is stopping'
        call endrun()
@@ -339,7 +339,7 @@ contains
           end if
        end if
     end do
-    if ( found ) then
+    if ( found  .and. (nstep > 2) ) then
        write(6,100)'longwave enery balance error',nstep,index,errlon(index)
        write(6,*)'clm model is stopping'
        call endrun()
@@ -356,7 +356,7 @@ contains
           end if
        end if
     end do
-    if ( found ) then
+    if ( found  .and. (nstep > 2) ) then
        write(6,100)'surface flux energy balance error',nstep,index,errseb(index)
        write(6,*)'clm model is stopping'
        call endrun()
@@ -373,7 +373,7 @@ contains
     end do
     if ( found ) then
        write(6,100)'soil balance error',nstep,index,errsoi_col(index)
-       if (abs(errsoi_col(index)) > .10_r8) then
+       if (abs(errsoi_col(index)) > .10_r8 .and. (nstep > 2) ) then
           write(6,*)'clm model is stopping'
           call endrun()
        end if

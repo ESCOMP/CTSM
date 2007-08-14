@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<!--
+
+	CLMDrvInNamelistsDescriptions.xml		Aug/6/2007
+
+	Descriptions of the component namelists for offline CLM.
+	Element names are for the appropriate namelist, and attributes are
+	the namelist items in the given namelist. Element names give the
+	type of value they contain:
+		"s" = string
+		"i" = integer
+		"r" = floating point
+		"l" = logical
+        Any leftover namelist items will cause an error.
+
+-->
+<offline>
+
+<!-- List of namelist items in the clm_inparm namelist-->
+<!-- any items with this keyword name will be moved to the clm_inparm namelist -->
+               <!-- These should all be in LOWER CASE! -->
+<clm_inparm ctitle="s" caseid="s" archive_dir="s"
+            mss_irt="s" mss_wpass="i" brnch_retain_casename="l"
+            calendar="s"  stop_ymd ="i" start_ymd="i" start_tod="i" ref_ymd ="i"
+            ref_tod="i"
+            />
+
+<!-- List of namelist items in the csim_inparm namelist for CSIM ice-->
+<!-- any items with this keyword name will be moved to the csim_inparm namelist -->
+               <!-- These should all be in LOWER CASE! -->
+<prof_inparm profile_disable="l"     profile_barrier="l"      profile_single_file="l"
+             profile_depth_limit="i" profile_detail_limit="i" profile_timer="i"   />
+
+</offline>

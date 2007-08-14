@@ -1,32 +1,3 @@
-subroutine wrap_create (path, cmode, ncid)
-  implicit none
-  include 'netcdf.inc'
-      
-  character*(*) path
-  integer cmode, ncid
-
-  integer ret
-
-  ret = nf_create (path, cmode, ncid)
-  if (ret /= NF_NOERR) call handle_error (ret)
-end subroutine
-
-subroutine wrap_open (path, omode, ncid)
-  implicit none
-  include 'netcdf.inc'
-
-  character*(*) path
-  integer omode
-  integer ncid
-  integer ret
-  
-  ret =      nf_open (path, omode, ncid)
-  if (ret /= NF_NOERR) then
-    write(6,*)'WRAP_OPEN: nf_open failed for file ',path
-    call handle_error (ret)
-  end if
-end subroutine
-
 subroutine wrap_inq_varid (nfid, varname, varid)
   implicit none
   include 'netcdf.inc'
@@ -43,44 +14,6 @@ subroutine wrap_inq_varid (nfid, varname, varid)
   end if
 end subroutine wrap_inq_varid
 
-subroutine wrap_inq_dimname (nfid, dimid, dimname)
-  implicit none
-  include 'netcdf.inc'
-  
-  integer nfid, dimid
-  character*(*) dimname
-  
-  integer ret
-  
-  ret = nf_inq_dimname (nfid, dimid, dimname)
-  if (ret /= NF_NOERR) call handle_error (ret)
-end subroutine
-
-subroutine wrap_inq_dimlen (nfid, dimid, dimlen)
-  implicit none
-  include 'netcdf.inc'
-
-  integer nfid, dimid, dimlen
-
-  integer ret
-
-  ret = nf_inq_dimlen (nfid, dimid, dimlen)
-  if (ret /= NF_NOERR) call handle_error (ret)
-end subroutine wrap_inq_dimlen
-
-subroutine wrap_inq_dimid (nfid, dimname, dimid)
-  implicit none
-  include 'netcdf.inc'
-
-  integer nfid, dimid
-  character*(*) dimname
-
-  integer ret
-
-  ret = nf_inq_dimid (nfid, dimname, dimid)
-  if (ret /= NF_NOERR) call handle_error (ret)
-end subroutine wrap_inq_dimid
-
 subroutine wrap_inq_var (nfid, varid, varname, xtype, ndims, dimids, natts)
   implicit none
   include 'netcdf.inc'
@@ -93,33 +26,6 @@ subroutine wrap_inq_var (nfid, varid, varname, xtype, ndims, dimids, natts)
   ret = nf_inq_var (nfid, varid, varname, xtype, ndims, dimids, natts)
   if (ret /= NF_NOERR) call handle_error (ret)
 end subroutine wrap_inq_var
-
-subroutine wrap_def_dim (nfid, dimname, len, dimid)
-  implicit none
-  include 'netcdf.inc'
-
-  integer nfid, len, dimid
-  character*(*) dimname
-
-  integer ret
-
-  ret = nf_def_dim (nfid, dimname, len, dimid)
-  if (ret /= NF_NOERR) call handle_error (ret)
-end subroutine wrap_def_dim
-
-subroutine wrap_def_var (nfid, name, xtype, nvdims, vdims, varid)
-  implicit none
-  include 'netcdf.inc'
-
-  integer nfid, xtype, nvdims, varid
-  integer vdims(nvdims)
-  character*(*) name
-  
-  integer ret
-
-  ret =      nf_def_var (nfid, name, xtype, nvdims, vdims, varid)
-  if (ret /= NF_NOERR) call handle_error (ret)
-end subroutine
 
 subroutine wrap_get_var_double (nfid, varid, arr)
   implicit none
@@ -252,103 +158,13 @@ subroutine wrap_put_vara_int (nfid, varid, start, count, arr)
   if (ret /= NF_NOERR) call handle_error (ret)
 end subroutine
 
-subroutine wrap_inq (nfid, ndims, nvars, ngatts, unlimdimid)
-  implicit none
-  include 'netcdf.inc'
-  
-  integer nfid, ndims, nvars, ngatts, unlimdimid
-  
-  integer ret
-
-  ret =      nf_inq (nfid, ndims, nvars, ngatts, unlimdimid)
-  if (ret /= NF_NOERR) call handle_error (ret)
-end subroutine
-
-subroutine wrap_inq_dim (nfid, dimid, name, length)
-  implicit none
-  include 'netcdf.inc'
-  
-  integer nfid, dimid, length
-  character*(*) name
-  
-  integer ret
-
-  ret =      nf_inq_dim (nfid, dimid, name, length)
-  if (ret /= NF_NOERR) call handle_error (ret)
-end subroutine
-
-subroutine wrap_inq_attname (nfid, varid, num, attname)
-  implicit none
-  include 'netcdf.inc'
-
-  integer nfid, varid, num
-  character*(*) attname
-
-  integer ret
-
-  ret =      nf_inq_attname (nfid, varid, num, attname)
-  if (ret /= NF_NOERR) call handle_error (ret)
-end subroutine
-
-subroutine wrap_get_att_text (nfid, varid, attname, atttext)
-  implicit none
-  include 'netcdf.inc'
-
-  integer nfid, varid
-  character*(*) attname, atttext
-
-  integer ret
-
-  ret = nf_get_att_text (nfid, varid, attname, atttext)
-  if (ret /= NF_NOERR) call handle_error (ret)
-end subroutine
-
-subroutine wrap_copy_att (nfid, varid, attname, nfido, varido)
-  implicit none
-  include 'netcdf.inc'
-
-  integer nfid, varid, nfido, varido
-  character*(*) attname
-
-  integer ret
-
-  ret = nf_copy_att (nfid, varid, attname, nfido, varido)
-  if (ret /= NF_NOERR) call handle_error (ret)
-end subroutine
-
-subroutine wrap_put_att_text (nfid, varid, attname, atttext)
-  implicit none
-  include 'netcdf.inc'
-  
-  integer nfid, varid
-  character*(*) attname, atttext
-
-  integer ret
-  integer siz
-
-  siz = len_trim(atttext)
-  ret = nf_put_att_text (nfid, varid, attname, siz, atttext)
-  if (ret/=NF_NOERR) call handle_error (ret)
-end subroutine wrap_put_att_text
-
-subroutine wrap_close (ncid)
-  implicit none
-  include 'netcdf.inc'
-
-  integer, intent(in):: ncid
-  
-  integer ret      
-  
-  ret = nf_close (ncid)
-  if (ret/=NF_NOERR) call handle_error (ret)
-end subroutine wrap_close
-
 subroutine handle_error (ret)
   implicit none
   include 'netcdf.inc'
 
   integer ret
 
+  write(6,*) "NetCDF error code = ", ret
   write(6,*) nf_strerror (ret)
   call abort
 end subroutine handle_error

@@ -1,0 +1,301 @@
+#!/usr/bin/env perl
+#-----------------------------------------------------------------------------------------------
+#
+# build-namelist
+#
+# This script builds the namelists for a CLM sequential CCSM simulation.
+#
+#-----------------------------------------------------------------------------------------------
+
+use strict;
+#use warnings;
+#use diagnostics;
+
+use Cwd;
+use Getopt::Long;
+use English;
+#-----------------------------------------------------------------------------------------------
+
+sub usage {
+    die <<EOF;
+SYNOPSIS
+     build-namelist [options]
+OPTIONS
+     -case "name"            Case identifier up to 32 characters
+     -clm_cfg "dir"          Directory containing CLM configuration scripts.
+     -clm_demand "list"      List of variables to require on clm namelist besides the usuals.
+     -config "file"          Read the given config cache file to get the configuration
+                             of the CLM executable.  Default: config_cache.xml.
+     -csmdata "dir"          Head directory location of CCSM input data.
+                             Can also be set by using the CSMDATA environment variable.
+     -cycle_beg_year "year"  The begining year to cycle input datasets over.
+     -cycle_end_year "year"  The ending year to cycle input datasets over.
+     -cycle_init_year "year" The simulation year that will correspond to the data 
+                             for cycle_beg_year.
+     -d "directory"          Output directory name of resulant namelists.  
+                             Default: ./
+     -help [or -h]           Print usage to STDOUT.
+     -ignore_ic_date         Ignore the date on the initial condition files (ic_ymd and ic_tod) 
+                             when determining what input initial condition file to use.
+     -ignore_ic_year         Ignore just the year part of the date on the initial condition files (ic_ymd and ic_tod) 
+                             when determining what input initial condition file to use.
+     -infile "file"          Specify a namelist file to read values from.
+     -lnd_res "Resolution"   Horizontal resolution of fine mesh for land 
+                             (if different than resolution coupling to atmosphere)
+     -mask "land-mask"       Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
+     -namelist "namelist"    Specify namelist settings using FORTRAN namelist syntax, e.g.,
+                              -namelist "&clm_inparm hist_dov2xy=.true. /"
+     -res "Resolution"       Horizontal resolution (default, 64x128, 1.9x2.5, 1x1_brazil etc.)
+     -runlength "length"     Length of simulation (e.g. default, 10d, 5s, 2y)
+                             (Corresponding to: default, 10 days, 5 steps, or 2 years)
+                             classifiers (d=days, s=steps, y=years)
+     -s                      Turns on silent mode - only fatal messages issued.
+     -sim_year year          Year to simulate for input datasets (i.e. 1890, 2000, etc.)
+     -start_type "type"      Type of simulation (arb_ic, startup, continue, or branch)
+     -test                   Enable checking that initial and boundary datasets exist on local filesystem.
+     -v n                    Set verbosity to level n.  1 (default), 2 or 3.
+
+Note: The precedence for setting the values of namelist variables is (highest to lowest):
+      1. interactive prompting,
+      2. namelist values set by specific command-line options, e.g., -case -start_type and -ignore_ic_date,
+      3. values set on the command-line using the -namelist option,
+      4. values read from the file specified by -infile,
+      5. values from defaults files in the CLM configuration
+         script directory.
+
+      Use the "drv_in" 'virtual namelist' to have build-namelist decide which namelist
+      to put driver control information in.
+EOF
+}
+
+#-----------------------------------------------------------------------------------------------
+# Set the directory that contains the CLM configuration scripts.  If the command was
+# issued using a relative or absolute path, that path is in $ProgDir.  Otherwise assume the
+# command was issued from the current working directory.
+
+(my $ProgName = $0) =~ s!(.*)/!!;      # name of this script
+my $ProgDir = $1;                      # name of directory containing this script -- may be a
+                                       # relative or absolute path, or null if the script is in
+                                       # the user's PATH
+my $cmdline = "@ARGV";                 # Command line arguments to script
+my $cwd = getcwd();                    # current working directory
+my $cfgdir;                            # absolute pathname of directory that contains this script
+if ($ProgDir) { 
+    $cfgdir = absolute_path($ProgDir);
+} else {
+    $cfgdir = $cwd;
+}
+
+my $cfg_cache = "config_cache.xml";       # Default name of configuration cache file
+my $outdirname = "$cwd";                  # Default name of output directory name
+
+#-----------------------------------------------------------------------------------------------
+
+# Parse command-line options.
+my %opts = ( config          => $cfg_cache,
+             cfgdir          => $cfgdir,
+	     help            => 0,
+	     interactive     => 0,
+	     dir             => $outdirname,
+             lnd_RESOLUTION  => "default",
+             mask            => "default",
+             RESOLUTION      => "default",
+             sim_year        => "default",
+             cycle_beg_year  => "default",
+             cycle_end_year  => "default",
+             cycle_init_year => "default",
+             csmdata         => "default",
+             version         => "default",
+             runlength       => "default",
+             clm_demand      => undef,
+	     ignore_ic_date  => undef,
+	     ignore_ic_year  => undef,
+	     silent          => 0,
+	     test            => 0,
+	    );
+
+GetOptions(
+    "clm_cfg=s"                 => \$opts{'clm_cfg'},
+    "case=s"                    => \$opts{'case'},
+    "config=s"                  => \$opts{'config'},
+    "clm_demand=s"              => \$opts{'clm_demand'},
+    "csmdata=s"                 => \$opts{'csmdata'},
+    "cycle_beg_year=s"          => \$opts{'cycle_beg_year'},
+    "cycle_end_year=s"          => \$opts{'cycle_end_year'},
+    "cycle_init_year=s"         => \$opts{'cycle_init_year'},
+    "h|help"                    => \$opts{'help'},
+    "i|interactive"             => \$opts{'interactive'},
+    "infile=s"                  => \$opts{'infile'},
+    "namelist=s"                => \$opts{'namelist'},
+    "mask=s"                    => \$opts{'mask'},
+    "lnd_res=s"                 => \$opts{'lnd_RESOLUTION'},
+    "d|dir=s"                   => \$opts{'dir'},
+    "start_type=s"              => \$opts{'start_type'},
+    "ignore_ic_date"            => \$opts{'ignore_ic_date'},
+    "ignore_ic_year"            => \$opts{'ignore_ic_year'},
+    "res=s"                     => \$opts{'RESOLUTION'},
+    "s|silent"                  => \$opts{'silent'},
+    "sim_year=s"                => \$opts{'sim_year'},
+    "runlength=s"               => \$opts{'runlength'},
+    "test"                      => \$opts{'test'},
+    "v|verbose=s"               => \$opts{'verbose'},
+)  or usage();
+
+# Give usage message.
+usage() if $opts{'help'};
+
+# Check for unparsed arguments
+if (@ARGV) {
+    print "ERROR: unrecognized arguments: @ARGV\n";
+    usage();
+}
+
+# Define print levels:
+# 0 - only issue fatal error messages
+# 1 - only informs what files are created (default)
+# 2 - echo verbosely
+$opts{'printlev'} = 1;
+if ($opts{'silent'}) { $opts{'printlev'} = 0; }
+if ($opts{'verbose'}>=2) { $opts{'printlev'} = $opts{'verbose'}; }
+
+# End of line
+my $eol = "\n";
+if ($opts{'interactive'}) { $eol = "\n\n"; }
+$opts{'eol'} = $eol;
+
+#-----------------------------------------------------------------------------------------------
+# Make sure we can find required perl modules and configuration files.
+# Look for them in the directory that contains the configure script.
+
+(-f "$cfgdir/SeqCCSM_namelist.pm")  or  die <<"EOF";
+** Cannot find perl module \"SeqCCSM_namelist.pm\" in directory \"$cfgdir\" **
+EOF
+(-f "$cfgdir/XML/Lite.pm")  or  die <<"EOF";
+** Cannot find perl module \"XML/Lite.pm\" in directory \"$cfgdir\" **
+EOF
+
+if ($opts{'printlev'}>2) {
+  print "Setting CLM configuration script directory to $cfgdir$eol";
+}
+
+#-----------------------------------------------------------------------------------------------
+# Add $cfgdir to the list of paths that Perl searches for modules
+unshift @INC, $cfgdir;
+require XML::Lite;
+require SeqCCSM_namelist;
+
+#-----------------------------------------------------------------------------------------------
+
+# Validate specified option values.
+validate_options("command line", \%opts);
+
+# Command-line option processing:
+
+$opts{'cfgdir'}   = $cfgdir;
+$opts{'cmdline'}  = $cmdline;
+$opts{'ProgName'} = $ProgName;
+my $nl = SeqCCSM_namelist->new( \%opts );
+
+$nl->build;            # Build the model namelist
+
+#-----------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+
+
+sub absolute_path {
+#
+# Convert a pathname into an absolute pathname, expanding any . or .. characters.
+# Assumes pathnames refer to a local filesystem.
+# Assumes the directory separator is "/".
+#
+  my $path = shift;
+  my $cwd = getcwd();  # current working directory
+  my $abspath;         # resulting absolute pathname
+
+# Strip off any leading or trailing whitespace.  (This pattern won't match if
+# there's embedded whitespace.
+  $path =~ s!^\s*(\S*)\s*$!$1!;
+
+# Convert relative to absolute path.
+
+  if ($path =~ m!^\.$!) {          # path is "."
+      return $cwd;
+  } elsif ($path =~ m!^\./!) {     # path starts with "./"
+      $path =~ s!^\.!$cwd!;
+  } elsif ($path =~ m!^\.\.$!) {   # path is ".."
+      $path = "$cwd/..";
+  } elsif ($path =~ m!^\.\./!) {   # path starts with "../"
+      $path = "$cwd/$path";
+  } elsif ($path =~ m!^[^/]!) {    # path starts with non-slash character
+      $path = "$cwd/$path";
+  }
+
+  my ($dir, @dirs2);
+  my @dirs = split "/", $path, -1;   # The -1 prevents split from stripping trailing nulls
+                                     # This enables correct processing of the input "/".
+
+  # Remove any "" that are not leading.
+  for (my $i=0; $i<=$#dirs; ++$i) {
+      if ($i == 0 or $dirs[$i] ne "") {
+	  push @dirs2, $dirs[$i];
+      }
+  }
+  @dirs = ();
+
+  # Remove any "."
+  foreach $dir (@dirs2) {
+      unless ($dir eq ".") {
+	  push @dirs, $dir;
+      }
+  }
+  @dirs2 = ();
+
+  # Remove the "subdir/.." parts.
+  foreach $dir (@dirs) {
+    if ( $dir !~ /\.\./ ) {
+        push @dirs2, $dir;
+    } else {
+        pop @dirs2;   # remove previous dir when current dir is ..
+    }
+  }
+  if ($#dirs2 == 0 and $dirs2[0] eq "") { return "/"; }
+  $abspath = join '/', @dirs2;
+  return( $abspath );
+}
+
+#-------------------------------------------------------------------------------
+
+sub valid_option {
+
+    my ($val, @expect) = @_;
+    my ($expect);
+
+    $val =~ s/^\s+//;
+    $val =~ s/\s+$//;
+    foreach $expect (@expect) {
+	if ($val =~ /^$expect$/i) { return $expect; }
+    }
+    return undef;
+}
+
+#-------------------------------------------------------------------------------
+
+sub validate_options {
+
+    my ($source, $opts) = @_;
+    my ($opt, $old, @expect);
+    
+    # start_type
+    $opt = 'start_type';
+    @expect = ('arb_ic', 'startup', 'continue', 'branch');
+    if (defined $opts->{$opt}) {
+	$old = $opts->{$opt};
+	$opts->{$opt} = valid_option($old, @expect)
+	    or die "invalid value of $opt ($old) specified in $source\n".
+                   "expected one of: @expect\n";
+    }
+
+}
+
+
+__END__

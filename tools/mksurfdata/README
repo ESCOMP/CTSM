@@ -1,4 +1,6 @@
-The routines in this directory create a surface ataset.
+clm/tools/mksurfdata/README		May/12/2007
+
+The routines in this directory create a surface dataset.
 The output grid is read in from the input namelist and
 can correspond to either a global or regional grid (depending
 on the setting of the namelist variables mksrf_gridtype).
@@ -8,11 +10,14 @@ mkgriddata tool.
 The following steps provide a method to create the executable
 and generate the surface dataset:
 
+0) untar your input data
+
 1) cd to this directory 
 
 2) run gmake
 
-3) create namelist file (default mksurfdat.namelist) for
+3) create namelist file :
+   (sample namelists are: mksurfdata.namelist, mksurfdata.regional, or mksurfdata.singlept)
 
     ! ======================================
     ! Must specify settings for either:
@@ -35,8 +40,21 @@ and generate the surface dataset:
     !    mksrf_fdynuse
     ! ======================================================================
 
+   make sure the datasets in the namelist correspond to the full path of where
+   you downloaded your input datasets.
+
+   Sample namelists (using /fs/cgd/csm as the root location where inputdata was untarred) are:
+
+   mksurfdata.namelist   ----- Standard global dataset
+   mksurfdata.regional   ----- Regional dataset 
+                               (assumes you ran the regional namelist for the mkgridata tool)
+   mksurfdata.singlept   ----- Dataset for a single point
+                               (assumes you ran the singlept namelist for the mkgridata tool)
+
+
 4) run code (e.g.):
-        mksurfdata < mksurfdat.namelist >&! mksurfdat.out
+        mksurfdata < mksurfdata.namelist >&! mksurfdat.out
 
 5) move (and rename if appropriate) generated surface dataset
-   to /fis/cgd/csm/inputdata/clm/surfdata, etc. 
+   to /fis/cgd/csm/inputdata/clm/surfdata, etc.
+

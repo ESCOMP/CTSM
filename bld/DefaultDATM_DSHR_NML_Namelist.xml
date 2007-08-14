@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+
+<!--
+
+       DefaultDATM_DSHR_NML_Namelist.xml                        Jun/08/2007
+
+       Values to use by default for creation of dshr_nml datm7 namelists
+       when running in CLM-only mode with sequential-CCSM.
+       The element names are the same as the corresponding namelist
+       variables.  Values that depend on the model configuration use
+       attributes to express the dependency.  The recognized attributes
+       are: RESOLUTION, mask, ic_ymd, ic_tod, sim_year and all configuration
+       attributes from the config_cache.xml file (with keys converted to upper-case).
+
+       $Id$
+-->
+<dshr_nml>
+
+<!-- Root directory of initial and boundary datasets from CCSM distribution -->
+<csmdata>/fs/cgd/csm/inputdata</csmdata>
+
+<!-- Model Version -->
+<version>
+$HeadURL$
+</version>
+
+<!-- mode of operation of datm7 when running with clm-->
+<datamode>'CLMNCEP'</datamode>
+
+<!-- Verbosity level-->
+<infodbug>2</infodbug>
+
+<!-- restart pointer filename -->
+<restpfile>'rpointer.atm'</restpfile>
+
+<!-- Domain files, grids and land mask -->
+<domainfile RESOLUTION="1x1_brazil"  mask="navy" >lnd/clm2/domain.lnd.1x1pt_brazil_navy.070628.nc</domainfile>
+
+<domainfile RESOLUTION="4x5"         mask="gx3v5">atm/datm7/domain.lnd.4x5_gx3v5.060404.nc</domainfile>
+<domainfile RESOLUTION="48x96"       mask="gx3v5">atm/datm7/domain.lnd.T31_gx3v5.051111.nc</domainfile>
+<domainfile RESOLUTION="64x128"      mask="gx1v4">atm/datm7/domain.lnd.T42_gx1v4.060403.nc</domainfile>
+<domainfile RESOLUTION="1.9x2.5"     mask="gx1v4">atm/datm7/domain.lnd.1.9x2.5_gx1v4.060810.nc</domainfile>
+<domainfile RESOLUTION="1.9x2.5"     mask="gx1v5">atm/datm7/domain.lnd.1.9x2.5_gx1v5.070102.nc</domainfile>
+
+<!-- Domain that input data is on -->
+<datadomain>atm/datm7/domain.T62.050609.nc</datadomain>
+
+<!-- XML format streams file of T62 input data for any resolution simulation -->
+<streamsxmlfile>atm/datm7/CLMNCEP/clmncep.T62.stream.c070725.txt</streamsxmlfile>
+
+</dshr_nml>

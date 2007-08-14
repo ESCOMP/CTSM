@@ -16,6 +16,7 @@
 #
 # valid arguments: 
 # -i    interactive usage
+# -d    debug usage -- display tests that will run -- but do NOT actually execute them
 # -f    force batch submission (avoids user prompt)
 # -h    displays this help message
 #
@@ -27,8 +28,8 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="cam3_4_07"
-conccsm_vers="ccsm3_5_beta04"
+seqccsm_vers="cam3_5_06"
+conccsm_vers="ccsm3_5_beta10"
 
 hostname=`hostname`
 case $hostname in
@@ -37,7 +38,7 @@ case $hostname in
     bv* )
     submit_script="test_driver_bluevista_${cur_time}.sh"
 
-    account_name=`grep -i "^${LOGNAME}:" /etc/project.ncar | cut -f 1 -d "," | cut -f 2 -d ":" `
+    account_name=`grep -i "^${LOGNAME}:" /etc/project.ncar | cut -f 2 -d "," | cut -f 3 -d ":" `
     if [ ! -n "${account_name}" ]; then
 	echo "ERROR: unable to locate an account number to charge for this job under user: $LOGNAME"
 	exit 2
@@ -89,7 +90,7 @@ export XLSMPOPTS="stack=40000000"
 export MAKE_CMD="gmake -j 8"
 export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
-export CCSM_MACH="bluevista16"
+export CCSM_MACH="bluevista"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
 dataroot="/fs/cgd/csm"
@@ -317,7 +318,7 @@ cat > ./${submit_script} << EOF
 # Name of the queue (CHANGE THIS if needed)
 # #PBS -q batch
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l walltime=04:00:00,size=8
+#PBS -l walltime=01:00:00,size=32
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
@@ -349,19 +350,29 @@ export CLM_THREADS=1
 export CLM_RESTART_THREADS=2
 
 ##mpi tasks
-export CLM_TASKS=8
-export CLM_RESTART_TASKS=4
+export CLM_TASKS=32
+export CLM_RESTART_TASKS=16
 
 export CLM_COMPSET="I"
 
-. /opt/modules/default/init/sh
-module switch pgi pgi/6.1.5
-#module load netcdf/3.6.0
+source /opt/modules/default/init/sh
+module switch pgi pgi/6.1.6
+module load netcdf/3.6.0
+export PATH="/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
+export PATH="\${PATH}:/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
+export PATH="\${PATH}:\${MPICH_DIR}/bin"
+export PATH="\${PATH}:\${MPICH_DIR_FTN_DEFAULT64}/bin"
+export PATH="\${PATH}:\${PE_DIR}/bin/snos64"
+export PATH="\${PATH}:\${PGI}/linux86-64/default/bin"
+export PATH="\${PATH}:\${SE_DIR}/bin/snos64"
+export PATH="\${PATH}:\${C_DIR}/amd64/bin"
+export PATH="\${PATH}:\${PRGENV_DIR}/bin"
+export PATH="\${PATH}:\${MPT_DIR}/bin"
+export PATH="\${PATH}:\${CATAMOUNT_DIR}/bin/snos64"
 
-netcdf="/apps/netcdf/3.6.0/xt3_pgi60"
-export LIB_NETCDF=\${netcdf}/lib
-export INC_NETCDF=\${netcdf}/include
-export MOD_NETCDF=\${netcdf}/include
+export LIB_NETCDF=\${NETCDF_DIR}/lib
+export INC_NETCDF=\${NETCDF_DIR}/include
+export MOD_NETCDF=\${NETCDF_DIR}/include
 export INC_MPI=\${MPICH_DIR}/include
 export LIB_MPI=\${MPICH_DIR}/lib
 export CCSM_MACH="jaguar"
@@ -370,7 +381,7 @@ export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc USER_CPPDEFS='-DCATAMOUNT -DSYS
 export MAKE_CMD="gmake -j 2"
 export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/spin/proj/ccsm/bin/jaguar/newcprnc
-dataroot="/spin/proj/ccsm"
+dataroot="/tmp/proj/ccsm"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
@@ -502,6 +513,40 @@ export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
 dataroot="/fs/cgd/csm"
 echo_arg=""
 input_file="tests_pretag_tempest"
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+
+    ##spot1
+    spot1* )
+    submit_script="test_driver_spot1_${cur_time}.sh"
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+interactive="YES"
+
+##omp threads
+export CLM_THREADS=1
+export CLM_RESTART_THREADS=1
+
+##mpi tasks
+export CLM_TASKS=1
+export CLM_RESTART_TASKS=1
+
+export CLM_COMPSET="I"
+
+export MAKE_CMD="make -j 4"
+export CFG_STRING=""
+export TOOLS_MAKE_STRING=""
+export MACH_WORKSPACE="$HOME/runs"
+export CPRNC_EXE=$HOME/bin/newcprnc
+dataroot="$HOME"
+echo_arg=""
+input_file="tests_posttag_spot1"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -649,28 +694,28 @@ for test_id in \${test_list}; do
 
     if [ \$interactive = "YES" ]; then
         echo ""
-        echo "************************************************************"
+        echo "***********************************************************************************"
         echo "\${status_out}"
-        echo "************************************************************"
+        echo "***********************************************************************************"
     else
         echo "" >> \${clm_log}
-        echo "************************************************************"\
+        echo "***********************************************************************************"\
             >> \${clm_log}
         echo "\$status_out" >> \${clm_log}
-        echo "************************************************************"\
+        echo "***********************************************************************************"\
             >> \${clm_log}
     fi
 
-    if [ \${#status_out} -gt 64 ]; then
-        status_out=\`echo "\${status_out}" | cut -c1-70\`
+    if [ \${#status_out} -gt 94 ]; then
+        status_out=\`echo "\${status_out}" | cut -c1-100\`
     fi
-    while [ \${#status_out} -lt 67 ]; do
+    while [ \${#status_out} -lt 97 ]; do
         status_out="\${status_out}."
     done
 
     echo \$echo_arg "\$status_out\c" >> \${clm_status}
 
-    if [ \$interactive = "YES" ]; then
+    if [   \$interactive = "YES" ]; then
         \${CLM_SCRIPTDIR}/\${test_cmd}
         rc=\$?
     else
@@ -730,11 +775,27 @@ chmod a+x $submit_script
 arg1=${1##*-}
 case $arg1 in
     [iI]* )
+    debug="NO"
+    interactive="YES"
+    export debug
+    export interactive
+    ./${submit_script}
+    exit 0
+    ;;
+
+    [dD]* )
+    debug="YES"
+    interactive="YES"
+    export debug
+    export interactive
     ./${submit_script}
     exit 0
     ;;
 
     [fF]* )
+    debug="NO"
+    export debug
+    export interactive
     ;;
 
     "" )
@@ -749,6 +810,9 @@ case $arg1 in
 	exit 0
 	;;
     esac
+    debug="NO"
+    export debug
+    export interactive
     ;;
 
     * )

@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 7 ]; then
     echo "TSM.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TSM.$1.$2.$3
+test_name=TSM.$1.$2.$3.$4.$5.$6.${7%+*}
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -60,25 +60,112 @@ fi
 echo "TSM.sh: running clm; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 echo "TSM.sh: obtaining namelist:" 
 
-run_length=${3}
+run_length=${6}
 export run_length
+atm_rpointer="atm.rpointer"
+export atm_rpointer
+drv_rpointer="drv.rpointer"
+export drv_rpointer
+lnd_rpointer="lnd.rpointer"
+export lnd_rpointer
 
-restart_type=0
-export restart_type
+if     [ "$7" = "arb_ic" ]; then
 
-clm_nrevsn=' '
-export $clm_revsn
+   nrevsn=' '
+   export nrevsn
+   drv_restart=' '
+   export drv_restart
+   restBfile='null'
+   export restBfile
+   restSfile='null'
+   export restSfile
 
-${CLM_SCRIPTDIR}/nl_files/$2 
+elif   [ "$7" = "startup" ]; then
+
+   nrevsn=' '
+   export nrevsn
+   drv_restart=' '
+   export drv_restart
+   restBfile='null'
+   export restBfile
+   restSfile='null'
+   export restSfile
+
+elif [ "${7%+*}" = "continue" ]; then
+
+   nrevsn=' '
+   export nrevsn
+   drv_restart=' '
+   export drv_restart
+   restBfile='null'
+   export restBfile
+   restSfile='null'
+   export restSfile
+
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*clm?.*.*     $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*drv.r*       $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.r*     $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/$atm_rpointer $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/$lnd_rpointer $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/$drv_rpointer $rundir/.
+
+elif [ "${7%+*}" = "branch" ]; then
+
+   if [ "$debug" = "YES" ]; then
+       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.clm2.r.1967-01-01-00000
+   fi
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*.clm?.r.* $rundir/.
+   master_clm_restart=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*.clm?.r.* \
+       | tail -1 | head -1`
+   rc=$?
+   if [ $rc -ne 0 ]; then
+      echo "Can not find clm restart file in ${CLM_TESTDIR}/TSM.${7#*+}"
+      exit 6
+   fi
+   nrevsn=${master_clm_restart}
+   export nrevsn
+
+   if [ "$debug" = "YES" ]; then
+       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.drv.r.1967-01-01-00000
+   fi
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*drv.r* $rundir/.
+   drv_restart=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*.drv.r.* \
+       | tail -1 | head -1`
+   export drv_restart
+
+   if [ "$debug" = "YES" ]; then
+       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.datm7.rb.1967-01-01-00000
+   fi
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.rb.* $rundir/.
+   restBfile=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.rb.* \
+       | tail -1 | head -1`
+   export restBfile
+
+   if [ "$debug" = "YES" ]; then
+       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.datm7.rs.1967-01-01-00000
+   fi
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.rs.* $rundir/.
+   restSfile=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.rs.* \
+       | tail -1 | head -1`
+   export restSfile
+   
+else
+    echo "TSM.sh: bad start type = $7, can only handle arb_ic, startup, continue or branch"
+    exit 7
+fi
+
+
+config_file="${CLM_TESTDIR}/TCB.$1/config_cache.xml"
+${CLM_SCRIPTDIR}/mknamelist $2 $3 $4 $5 $config_file ${7%+*}
 rc=$?
 if [ $rc -eq 0 ]; then
     echo "TSM.sh: namelist creation was successful" 
-    cat ${CLM_SCRIPTDIR}/nl_files/$2
+    cat lnd.stdin *_in
 else
     echo "TSM.sh: error building namelist, error= $rc" 
     echo "TSM.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"
     echo "FAIL.job${JOBID}" > TestStatus
-    exit 6
+    exit 8
 fi
 
 echo "TSM.sh calling CLM_runcmnd.sh to build run command" 
@@ -92,17 +179,22 @@ if [ $rc -eq 0 ] && [ -f clm_run_command.txt ]; then
 else
     echo "TSM.sh: error building run command; error from CLM_runcmnd.sh= $rc" 
     echo "FAIL.job${JOBID}" > TestStatus
-    exit 7
+    exit 9
 fi
 
-${cmnd} ${CLM_TESTDIR}/TCB.$1/clm >> test.log 2>&1
+if [ "$debug" != "YES" ]; then
+   ${cmnd} ${CLM_TESTDIR}/TCB.$1/clm >> test.log 2>&1
+else
+   echo "${cmnd} ${CLM_TESTDIR}/TCB.$1/clm"
+   echo "=============== SUCCESSFUL TERMINATION" >> test.log
+fi
 rc=$?
-if [ $rc -eq 0 ] && grep -c "TERMINATING CLM MODEL" test.log > /dev/null; then
+if [ $rc -eq 0 ] && grep -c "=============== SUCCESSFUL TERMINATION" *test.log > /dev/null; then
     echo "TSM.sh: smoke test passed" 
     echo "PASS" > TestStatus
     if [ $CLM_RETAIN_FILES != "TRUE" ]; then
         echo "TSM.sh: removing some unneeded files to save disc space" 
-        if [ -f *.clm*.i.* ]; then
+        if [ -f "*.clm*.i.*" ]; then
             rm *.clm*.i.*
 	fi
     fi
@@ -110,7 +202,7 @@ else
     echo "TSM.sh: error running clm, error= $rc" 
     echo "TSM.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"
     echo "FAIL.job${JOBID}" > TestStatus
-    exit 8
+    exit 10 
 fi
 
 exit 0

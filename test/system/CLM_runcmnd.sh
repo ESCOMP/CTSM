@@ -236,7 +236,7 @@ case $hostname in
     fi ;;
 
     ##jaguar
-    jaguar* )
+    jaguar* | yodjag* )
     ##search config options file for parallelization info; default on XT4 is mpi
     if grep -ic NOSPMD ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
 	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
@@ -292,6 +292,10 @@ case $hostname in
 	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
 	fi
     fi ;;
+    ##spot1
+    spot1* )
+    cmnd=""
+    ;;
 
     * ) 
     echo "CLM_runcmnd.sh: unable to construct run command for unsupported machine $hostname "

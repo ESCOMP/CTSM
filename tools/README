@@ -1,7 +1,42 @@
-General directory structure:
+clm/tools/README					Apr/18/2007
 
-interpinic ------- Interpolate initial datasets to a different resolution.
-mkgriddata ------- Create grid datasets.
-mksurfdata ------- Create surface datasets.
-newcprnc --------- Compare output history files.
+CLM tools for analysis of CLM history files -- or for creation or
+modification of CLM input files.
+	
+I.  General directory structure:
 
+	interpinic ------- Interpolate initial datasets to a different resolution.
+	mkgriddata ------- Create grid datasets.
+	mksurfdata ------- Create surface datasets.
+	newcprnc --------- Compare output history files.
+
+II. Notes on the build system for each of the above tools:
+
+    Each tool has the following files:
+
+	README ------- Specific help for using the specific tool and help on specific files in that directory.
+	Filepath ----- List of directories needed to build the tool (some files in ../src directories are required).
+	Makefile ----- GNU Makefile to build the tool (these are almost identical between tools.
+	Srcfiles ----- List of source files that are needed.
+	misc.h ------- CPP preprocessor file required by some files.
+	preproc.h ---- CPP preprocessor file required by some files.
+
+    Tools also have files with the directory name followed by: namelist, runoptions, regional, or singlept
+    these are sample namelists:
+
+	<directory>.namelist ------ Namelist to create a global file.
+	<directory>.regional ------ Namelist to create a regional file.
+	<directory>.singlept ------ Namelist to create a single-point file.
+	<directory>.runoptions ---- Command line options to use the given tool.
+
+    NOTE: Be sure to change the path of the datasets references by these namelists to point to where you
+    have untarred your datasets.
+
+    To build:
+
+	cd <directory>
+        setenv INC_NETCDF <path-to-NetCDF-include-files>
+        setenv LIB_NETCDF <path-to-NetCDF-library-files>
+	gmake
+
+    The process will create a file called "Depends" which has with the dependencies for the build of each file on other files.

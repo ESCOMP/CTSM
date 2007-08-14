@@ -1,0 +1,4 @@
+-nospmd -nosmp
+-debug
+-maxpft 17
+-s

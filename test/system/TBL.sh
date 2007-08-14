@@ -6,12 +6,12 @@ if [ -z "$BL_ROOT" ] && [ -z "$BL_TESTDIR" ]; then
     exit 255
 fi
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 7 ]; then
     echo "TBL.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TBL.$1.$2.$3
+test_name=TBL.$1.$2.$3.$4.$5.$6.$7
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -47,7 +47,7 @@ fi
 cd ${rundir}
 
 echo "TBL.sh: calling TSM.sh for smoke test"
-${CLM_SCRIPTDIR}/TSM.sh $1 $2 $3
+${CLM_SCRIPTDIR}/TSM.sh $1 $2 $3 $4 $5 $6 $7
 rc=$?
 if [ $rc -ne 0 ]; then
     echo "TBL.sh: error from TSM.sh= $rc" 
@@ -64,7 +64,7 @@ if [ -n "${BL_ROOT}" ]; then
     echo "TBL.sh: calling ****baseline**** TSM.sh for smoke test"
     env CLM_TESTDIR=${BL_TESTDIR} \
 	CLM_SCRIPTDIR=${BL_ROOT}/test/system \
-	${BL_ROOT}/test/system/TSM.sh $1 $2 $3
+	${BL_ROOT}/test/system/TSM.sh $1 $2 $3 $4 $5 $6 $7
     rc=$?
     if [ $rc -ne 0 ]; then
 	echo "TBL.sh: error from *baseline* TSM.sh= $rc" 
@@ -74,8 +74,8 @@ if [ -n "${BL_ROOT}" ]; then
 fi
 
 echo "TBL.sh: starting b4b comparisons " 
-files_to_compare=`cd ${CLM_TESTDIR}/TSM.$1.$2.$3; ls *.clm*h*.nc`
-if [ -z "${files_to_compare}" ]; then
+files_to_compare=`cd ${CLM_TESTDIR}/TSM.$1.$2.$3.$4.$5.$6.$7; ls *.clm*h*.nc`
+if [ -z "${files_to_compare}" ] && [ "$debug" != "YES" ]; then
     echo "TBL.sh: error locating files to compare"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 6
@@ -85,8 +85,8 @@ all_comparisons_good="TRUE"
 for compare_file in ${files_to_compare}; do
 
     ${CLM_SCRIPTDIR}/CLM_compare.sh \
-	${BL_TESTDIR}/TSM.$1.$2.$3/${compare_file} \
-	${CLM_TESTDIR}/TSM.$1.$2.$3/${compare_file}
+	${BL_TESTDIR}/TSM.$1.$2.$3.$4.$5.$6.$7/${compare_file} \
+	${CLM_TESTDIR}/TSM.$1.$2.$3.$4.$5.$6.$7/${compare_file}
     rc=$?
     mv cprnc.out cprnc.${compare_file}.out
     if [ $rc -eq 0 ]; then
@@ -97,10 +97,10 @@ for compare_file in ${files_to_compare}; do
     fi
 done
 
-if [ ${all_comparisons_good} = "TRUE" ]; then
+if [ "${all_comparisons_good}" = "TRUE" ]; then
     echo "TBL.sh: baseline test passed" 
     echo "PASS" > TestStatus
-    if [ $CLM_RETAIN_FILES != "TRUE" ]; then
+    if [ "$CLM_RETAIN_FILES" != "TRUE" ]; then
         echo "TBL.sh: removing some unneeded files to save disc space" 
         rm *.nc
         rm *.r*

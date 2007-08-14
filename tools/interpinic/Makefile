@@ -6,6 +6,7 @@
 #
 # LIB_NETCDF --- Library directory location of netcdf. (defaults to /usr/local/lib)
 # INC_NETCDF --- Include directory location of netcdf. (defaults to /usr/local/include)
+# MOD_NETCDF --- Module directory location of netcdf.  (defaults to $LIB_NETCDF)
 # USER_FC ------ Allow user to override the default Fortran compiler specified in Makefile.
 # USER_CC ------ Allow user to override the default C compiler specified in Makefile (linux only).
 # USER_LINKER -- Allow user to override the default linker specified in Makefile.
@@ -13,6 +14,7 @@
 # USER_CFLAGS -- Additional C compiler flags that the user wishes to set.
 # USER_FFLAGS -- Additional Fortran compiler flags that the user wishes to set.
 # USER_LDLAGS -- Additional load flags that the user wishes to set.
+# SMP ---------- Shared memory Multi-processing (TRUE or FALSE) [default is FALSE]
 #
 #------------------------------------------------------------------------
 
@@ -31,6 +33,10 @@ ifeq ($(INC_NETCDF),$(null))
 INC_NETCDF := /usr/local/include
 endif
 
+ifeq ($(MOD_NETCDF),$(null))
+MOD_NETCDF := $(LIB_NETCDF)
+endif
+
 # Set user specified Fortran compiler
 ifneq ($(strip $(USER_FC)),)
   FC := $(USER_FC)
@@ -38,6 +44,11 @@ endif
 # Set user specified C compiler
 ifneq ($(strip $(USER_CC)),)
   CC := $(USER_CC)
+endif
+
+# Set if Shared memory multi-processing will be used
+ifneq ($(strip $(SMP)),)
+  SMP := FALSE
 endif
 
 
@@ -50,7 +61,7 @@ UNAMES := $(shell uname -s)
 dirs := . $(shell cat Filepath)
 
 # Set cpp search path, include netcdf
-cpp_dirs := $(dirs) $(INC_NETCDF) $(INC_MPI)
+cpp_dirs := $(dirs) $(INC_NETCDF) $(INC_MPI) $(MOD_NETCDF)
 cpp_path := $(foreach dir,$(cpp_dirs),-I$(dir)) # format for command line
 
 # Expand any tildes in directory names. Change spaces to colons.
@@ -88,11 +99,18 @@ $(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Filepath
 ifeq ($(UNAMES),IRIX64)
 CPPDEF  += -DIRIX64
 FC      = f90
-FFLAGS  = -64 -c -r8 -i4 -I$(INC_NETCDF) -O2 $(CPPDEF)
+FFLAGS  = -64 -c -r8 -i4 -I$(INC_NETCDF) -g -C -O2 $(CPPDEF) -DEBUG:trap_uninitialized=ON
 LDFLAGS = -64 -L$(LIB_NETCDF) -lnetcdf
-CFLAGS  := -64 -g -O2 $(CPPDEF) -DFORTRANUNDERSCORE
+CFLAGS  := -64 -g -O2 $(CPPDEF) -C -DFORTRANUNDERSCORE -DEBUG:trap_uninitialized=ON
 FFLAGS += $(cpp_path)
 CFLAGS += $(cpp_path)
+
+ifeq ($(SMP),TRUE)
+  # Only enable OpenMP, not SGI specific parallelism
+  FFLAGS  += -mp -MP:dsm=OFF -MP:old_mp=OFF
+  LDFLAGS += -mp -lmp
+endif
+
 endif
 
 #------------------------------------------------------------------------
@@ -104,13 +122,20 @@ CPPDEF += -DAIX -DFORTRAN_SAME
 cpre = $(null)-WF,-D$(null)
 FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
 LIB_NETCDF := /usr/local/lib64/r4i4
-FC      = xlf90
+FC      = xlf90_r
 FFLAGS  = -c -I$(INC_NETCDF) -q64 -qsuffix=f=f90 -O2 -qmaxmem=-1 -qsuffix=f=f90:cpp=F90 \
-	   $(FPPFLAGS)  -g
-CFLAGS  := -q64 -g $(CPPDEF) -O2
+	   $(FPPFLAGS)  -g -qfullpath -qarch=auto -qspillsize=2500 -qinitauto=FF911299  \
+           -qflttrap=ov:zero:inv:en -C
+CFLAGS  := -q64 -g $(CPPDEF) -O2 -C
 LDFLAGS = -L$(LIB_NETCDF) -q64 -lnetcdf
 FFLAGS += $(cpp_path)
 CFLAGS += $(cpp_path)
+
+ifeq ($(SMP),TRUE)
+  FFLAGS  += -qsmp=omp
+  LDFLAGS += -qsmp=omp
+endif
+
 endif
 
 #------------------------------------------------------------------------
@@ -181,6 +206,12 @@ ifeq ($(UNAMES),Linux)
       CFLAGS += -fast
     endif
     LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+
+    ifeq ($(SMP),TRUE)
+      FFLAGS   += -mp
+      LDFLAGS  += -mp
+    endif
+
   endif
 
   ifeq ($(FC),lf95)
@@ -191,6 +222,15 @@ ifeq ($(UNAMES),Linux)
       FFLAGS += -O
     endif
     LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+    # Threading only works by putting thread memory on the heap rather than the stack
+    # (--threadheap).
+    # As of lf95 version 6.2 the thread stacksize limits are (still) too small to run
+    # even small
+    # resolution problems (FV at 10x15 res fails).
+    ifeq ($(SMP),TRUE)
+      FFLAGS  += --openmp --threadheap 4096
+      LDFLAGS += --openmp --threadheap 4096
+    endif
   endif
   ifeq ($(FC),pathf90)
     FFLAGS =  -c -I$(INC_NETCDF) $(CPPDEF) -extend_source -ftpp -fno-second-underscore
@@ -200,6 +240,10 @@ ifeq ($(UNAMES),Linux)
       FFLAGS += -O
     endif
     LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+    ifeq ($(SMP),TRUE)
+      FFLAGS   += -mp
+      LDFLAGS  += -mp
+    endif
   endif
   FFLAGS += $(cpp_path)
   CFLAGS += $(cpp_path)

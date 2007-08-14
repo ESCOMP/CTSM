@@ -75,7 +75,7 @@ if ( $EDITOR !~ "" ) {
 }
 
 
-my $template      = "ChangeLog_template";
+my $template      = ".ChangeLog_template";
 my $changelog     = "ChangeLog";
 my $changelog_tmp = "ChangeLog.tmp";
 

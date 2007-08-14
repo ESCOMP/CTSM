@@ -1,3 +1,9 @@
+clm/tools/interpinic/README				May/12/2007
+
+Tool to interpolate initial datasets to a different resolution or
+mask.
+
+
 Running gnumake in this directory will create an executable named
 
    "interpinic"  
@@ -8,4 +14,10 @@ where the output clm initial file is overwritten with the interpolated values.
 USAGE:
 
 interpinic -i <input initial data file>  -o <output initial data file>
+
+
+Files:
+
+clmi_1999-01-02_10x15_c070330.nc ---- Sample 10x15 resolution dataset that you can interpolate to
+interpinic.runoptions --------------- Example runoptions using the above file.
 

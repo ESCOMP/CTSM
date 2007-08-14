@@ -299,11 +299,12 @@ ifeq ($(SMP),TRUE)
 endif
 
 CFLAGS = $(cpp_path) $(CPPDEF)
-ifeq ($(PGI_CC),TRUE)
-  CFLAGS += -fast
-endif
 ifeq ($(findstring ftn,$(FC)),ftn)
   CFLAGS += -DFORTRANUNDERSCORE
+else
+  ifeq ($(PGI_CC),TRUE)
+    CFLAGS += -fast
+  endif
 endif
 
 # Set search path for module files for external libraries.
@@ -701,7 +702,8 @@ LDFLAGS    := -lSystemStubs -lSystemStubs_profile
 
 ifeq ($(DEBUG),TRUE)
   # Only turn float-trapping on for debug mode as it's a performance hit.
-  FFLAGS += -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C -qfullpath -qhalt=e
+  # Remove halt on error -- because of problem with field widths -qhalt=e: EBK 7/13/07
+  FFLAGS += -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C -qfullpath
 else
   # Check for override of default Fortran compiler optimizations
   ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
