@@ -35,7 +35,7 @@ input topographic dataset.
    mkgriddata < mkgrdidata.namelist >&! mkgriddata.out
 
 5) move (and rename if appropriate) generated  grid dataset
-  (e.g. to /fis/cgd/csm/inputdata/clm/griddata)
+  (e.g. to /fis/cgd/csm/inputdata/lnd/clm/griddata)
 
 
 Notes:

@@ -251,9 +251,10 @@ bl711 TBLtools.sh mksurfdata namelist
 sm771 TSMtools.sh mksurfdata singlept
 bl771 TBLtools.sh mksurfdata singlept
 
-sm811 TSMtools.sh interpinic runoptions
+smZ11 TSMtools.sh mkdatadomain namelist
+blZ11 TBLtools.sh mkdatadomain namelist
 
-sm812 TSMtools.sh newcprnc runoptions
+sm811 TSMtools.sh interpinic runoptions
 
 sm921 TSMext_ccsmseq_cam.sh ext_ccsm_seq_4x5_dh   ext_ccsm_seq_cam 48
 bl921 TSMext_ccsmseq_cam.sh ext_ccsm_seq_4x5_dh   ext_ccsm_seq_cam 48

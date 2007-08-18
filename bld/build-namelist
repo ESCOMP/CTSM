@@ -170,8 +170,8 @@ $opts{'eol'} = $eol;
 (-f "$cfgdir/SeqCCSM_namelist.pm")  or  die <<"EOF";
 ** Cannot find perl module \"SeqCCSM_namelist.pm\" in directory \"$cfgdir\" **
 EOF
-(-f "$cfgdir/XML/Lite.pm")  or  die <<"EOF";
-** Cannot find perl module \"XML/Lite.pm\" in directory \"$cfgdir\" **
+(-f "$cfgdir/perl5lib/XML/Lite.pm")  or  die <<"EOF";
+** Cannot find perl module \"XML/Lite.pm\" in directory \"$cfgdir/perl5lib\" **
 EOF
 
 if ($opts{'printlev'}>2) {
@@ -180,7 +180,7 @@ if ($opts{'printlev'}>2) {
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir to the list of paths that Perl searches for modules
-unshift @INC, $cfgdir;
+unshift @INC, $cfgdir, "$cfgdir/perl5lib";
 require XML::Lite;
 require SeqCCSM_namelist;
 

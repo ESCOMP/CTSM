@@ -1,0 +1,5 @@
+&domain_nl
+ f_fracdata = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/fracdata_48x96_USGS_070110.nc'
+ f_griddata = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/griddata_48x96_060829.nc'
+ f_domain   = 'domain.camocn.48x96.070807.nc'
+/

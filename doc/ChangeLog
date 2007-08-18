@@ -1,4 +1,57 @@
 ===============================================================
+Tag name:  clm3_5_07
+Originator(s):  erik (Erik Kluzek)
+Date:  Fri Aug 17 21:27:29 MDT 2007
+One-line Summary: Add mkdatadomain tool, add cprnc and perl5lib as externals
+
+Purpose of changes:
+
+	Add in mkdatadomain tool that Mariana created to read in clm
+	input files and convert them to data model domain files.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs: 251, 449, 482, 512, 546
+	interpinic does NOT work for DGVM
+
+Describe any changes made to build system: Use perl5lib version of XML::Lite
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: Add new high resolution
+    surface datasets from Art Mirin
+
++<fsurdat RESOLUTION="0.23x0.31" >lnd/clm2/srfdata/cam/clms_3.1_0.23x0.31_c061107.nc</fsurdat>
++<fsurdat RESOLUTION="0.47x0.63" >lnd/clm2/srfdata/cam/clms_3.1_0.47x0.63_c061107.nc</fsurdat>
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: Mariana, erik
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+	Add perl5lib_070817
+	Add cprnc_070817
+
+List all subroutines eliminated:
+
+	Delete bld/XML directory and use bld/perl5lib/XML
+
+List all subroutines added and what they do: mkdatadomain
+
+List all existing files that have been modified, and describe the changes:
+
+	Add new tests for mkdatadomain to test suite
+
+Summary of testing:
+
+  bluevista: All PASS
+  bangkok/lf95: All PASS
+
+Changes answers relative to baseline: None
+
+===============================================================
+===============================================================
 Tag name:  clm3_5_06
 Originator(s):  erik (KLUZEK ERIK 1326 CGD)
 Date: Fri Aug 10 15:41:50 MDT 2007

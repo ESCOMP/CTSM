@@ -52,6 +52,7 @@ test/system/test_driver.sh --- Script for general software testing of offline CL
 tools/mkgriddata --- Directory to build program to create grid dataset at any resolution.
 tools/mksurfdata --- Directory to build program to create surface dataset at any resolution.
 tools/interpinic --- Directory to build program to interpolate initial conditions to any resolution.
+tools/mkdatadomain - Directory to build program to create datm7 or docn7 domain files from clm files.
 doc/KnownBugs ------ List of known bugs
 doc/ChangeLog ------ Detailed list of changes for each model version
 bld/README --------- Description of how to use the configure and build/run scripts

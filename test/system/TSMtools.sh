@@ -71,7 +71,7 @@ if [ $2 == "runoptions" ]; then
 else
   echo "${CLM_TESTDIR}/TCBtools.$1/$1 < ${cfgdir}/$1.$2"
   if [ "$debug" != "YES" ]; then
-  ${CLM_TESTDIR}/TCBtools.$1/$1 < ${cfgdir}/$1.$2 >> test.log 2>&1
+     ${CLM_TESTDIR}/TCBtools.$1/$1 < ${cfgdir}/$1.$2 >> test.log 2>&1
      rc=$?
   else
      echo "success" > test.log

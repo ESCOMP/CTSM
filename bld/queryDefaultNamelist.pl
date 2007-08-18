@@ -31,13 +31,13 @@ my $cfgdir;
 
 if ($ProgDir) { $cfgdir = $ProgDir; }
 else { $cfgdir = $cwd; }
-(-f "$cfgdir/XML/Lite.pm")  or  die <<"EOF";
-** Cannot find perl module \"XML/Lite.pm\" in directory \"$cfgdir\" **
+(-f "$cfgdir/perl5lib/XML/Lite.pm")  or  die <<"EOF";
+** Cannot find perl module \"XML/Lite.pm\" in directory \"$cfgdir/perl5lib\" **
 EOF
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir to the list of paths that Perl searches for modules
-unshift @INC, $cfgdir;
+unshift @INC, $cfgdir, "$cfgdir/perl5lib";
 require XML::Lite;
 require queryDefaultXML;
 

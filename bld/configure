@@ -235,8 +235,8 @@ if ($ProgDir) {
 (-f "$cfgdir/$bld_defaults")  or  die <<"EOF";
 ** Cannot find configure defaults file \"$bld_defaults\" in directory \"$cfgdir\" **
 EOF
-(-f "$cfgdir/XML/Lite.pm")  or  die <<"EOF";
-** Cannot find perl module \"XML/Lite.pm\" in directory \"$cfgdir\" **
+(-f "$cfgdir/perl5lib/XML/Lite.pm")  or  die <<"EOF";
+** Cannot find perl module \"XML/Lite.pm\" in directory \"$cfgdir/perl5lib\" **
 EOF
 $cfgdir = absolute_path($cfgdir);
 
@@ -244,7 +244,7 @@ if ($print>=2) { print "Setting CLM configuration script directory to $cfgdir$eo
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir to the list of paths that Perl searches for modules
-unshift @INC, $cfgdir;
+unshift @INC, $cfgdir, "$cfgdir/perl5lib";
 require XML::Lite;
 
 # Can read defaults files now that we know where to find XML::Lite

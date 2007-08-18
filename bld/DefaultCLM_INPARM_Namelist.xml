@@ -68,6 +68,8 @@ $HeadURL$
 <fsurdat RESOLUTION="32x64"     >lnd/clm2/surfdata/surfdata_32x64_c070501.nc</fsurdat>
 <fsurdat RESOLUTION="8x16"      >lnd/clm2/surfdata/surfdata_8x16_c070501.nc</fsurdat>
 
+<fsurdat RESOLUTION="0.23x0.31" >lnd/clm2/srfdata/cam/clms_3.1_0.23x0.31_c061107.nc</fsurdat>
+<fsurdat RESOLUTION="0.47x0.63" >lnd/clm2/srfdata/cam/clms_3.1_0.47x0.63_c061107.nc</fsurdat>
 <fsurdat RESOLUTION="0.9x1.25"  >lnd/clm2/surfdata/surfdata_0.9x1.25_c070501.nc</fsurdat>
 <fsurdat RESOLUTION="1x1.25"    >lnd/clm2/surfdata/surfdata_1x1.25_c070501.nc</fsurdat>
 <fsurdat RESOLUTION="1.9x2.5"   >lnd/clm2/surfdata/surfdata_1.9x2.5_c070501.nc</fsurdat>

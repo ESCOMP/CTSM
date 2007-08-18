@@ -6,13 +6,14 @@ modification of CLM input files.
 I.  General directory structure:
 
 	interpinic ------- Interpolate initial datasets to a different resolution.
+        mkdatadomain ----- Create data model domain datasets from clm datasets.
 	mkgriddata ------- Create grid datasets.
 	mksurfdata ------- Create surface datasets.
-	newcprnc --------- Compare output history files.
+	cprnc ------------ Compare output history files.
 
 II. Notes on the build system for each of the above tools:
 
-    Each tool has the following files:
+    Each tool (except cprnc as it's stand-alone) has the following files:
 
 	README ------- Specific help for using the specific tool and help on specific files in that directory.
 	Filepath ----- List of directories needed to build the tool (some files in ../src directories are required).
@@ -20,6 +21,8 @@ II. Notes on the build system for each of the above tools:
 	Srcfiles ----- List of source files that are needed.
 	misc.h ------- CPP preprocessor file required by some files.
 	preproc.h ---- CPP preprocessor file required by some files.
+
+    cprnc has it's own standalone Makefile and doesn't use any code outside of it's directory.
 
     Tools also have files with the directory name followed by: namelist, runoptions, regional, or singlept
     these are sample namelists:

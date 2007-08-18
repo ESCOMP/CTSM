@@ -56,5 +56,5 @@ and generate the surface dataset:
         mksurfdata < mksurfdata.namelist >&! mksurfdat.out
 
 5) move (and rename if appropriate) generated surface dataset
-   to /fis/cgd/csm/inputdata/clm/surfdata, etc.
+   to /fis/cgd/csm/inputdata/lnd/clm/surfdata, etc.
 

@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------
-# This Makefile is for building newcprnc on AIX, Compaq, Linux (with pgf90 or 
+# This Makefile is for building clm tools on AIX, Compaq, Linux (with pgf90 or
 # lf95 compiler), IRIX or SUN platforms.
 #
 # These macros can be changed by setting environment variables:
@@ -19,7 +19,7 @@
 # Set up special characters
 null  :=
 
-EXENAME = newcprnc
+EXENAME = mkdatadomain
 RM = rm
 
 # Check for the netcdf library and include directories 
@@ -41,7 +41,7 @@ ifneq ($(strip $(USER_CC)),)
 endif
 
 
-CPPDEF := $(USER_CPPDEFS)
+CPPDEF := -DNO_SHR_VMATH -DOFFLINE $(USER_CPPDEFS)
 
 # Determine platform 
 UNAMES := $(shell uname -s)
@@ -210,7 +210,7 @@ endif
 #------------------------------------------------------------------------
 
 .SUFFIXES:
-.SUFFIXES: .F90 .o .f90
+.SUFFIXES: .F90 .c .o
 
 # Append user defined compiler and load flags to Makefile defaults
 CFLAGS   += $(USER_CFLAGS)
@@ -225,9 +225,6 @@ else
 endif
 
 .F90.o:
-	$(FC) $(FFLAGS) $<
-
-.f90.o:
 	$(FC) $(FFLAGS) $<
 
 .c.o:
