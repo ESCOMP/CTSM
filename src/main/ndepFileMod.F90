@@ -19,6 +19,7 @@ module ndepFileMod
   use clmtype
   use spmdMod     
   use clm_varpar,   only: lsmlat, lsmlon
+  use clm_varctl,   only: iulog
   use shr_kind_mod, only: r8 => shr_kind_r8
 !
 ! !PUBLIC TYPES:
@@ -101,7 +102,7 @@ contains
 
        if (masterproc) then
 
-          write (6,*) 'Attempting to read nitrogen deposition data .....'
+          write(iulog,*) 'Attempting to read nitrogen deposition data .....'
 
           call getfil (fndepdat, locfn, 0)
           call check_ret(nf_open(locfn, 0, ncid), subname)
@@ -124,8 +125,8 @@ contains
     endif
 
     if ( masterproc )then
-       write (6,*) 'Successfully read nitrogen deposition data'
-       write (6,*)
+       write(iulog,*) 'Successfully read nitrogen deposition data'
+       write(iulog,*)
     end if
 
   end subroutine ndeprd
@@ -182,7 +183,7 @@ contains
 
     allocate(ndepdyn1(begg:endg), ndepdyn2(begg:endg), ndepdyn(begg:endg), stat=ier)
     if (ier /= 0) then
-       write(6,*)'ndepdyn_init allocation error for ndepdyn1, ndepdyn2, ndepdyn'
+       write(iulog,*)'ndepdyn_init allocation error for ndepdyn1, ndepdyn2, ndepdyn'
        call endrun()
     end if
 
@@ -190,7 +191,7 @@ contains
        
        ! Obtain file
 
-       write (6,*) 'Attempting to read dynamic ndep data .....'
+       write(iulog,*) 'Attempting to read dynamic ndep data .....'
        call getfil (fndepdyn, locfn, 0)
        call check_ret(nf_open(locfn, 0, ncid), subname)
 
@@ -201,7 +202,7 @@ contains
 
        allocate (yearsndep(ntimes), stat=ier)
        if (ier /= 0) then
-          write(6,*)'ndepdyn_init allocation error for yearsndep'; call endrun()
+          write(iulog,*)'ndepdyn_init allocation error for yearsndep'; call endrun()
        end if
 
        call check_ret(nf_inq_varid(ncid, 'YEAR', varid), subname)
@@ -236,8 +237,8 @@ contains
              end if   
           end do
           if (.not. found) then
-             write(6,*)'ndepdyn_init error: model year not found in ndepdyn timeseries'
-             write(6,*)'model year = ',year
+             write(iulog,*)'ndepdyn_init error: model year not found in ndepdyn timeseries'
+             write(iulog,*)'model year = ',year
              call endrun()
           end if
        end if
@@ -329,7 +330,7 @@ contains
        end if
        
        if (nt2 > size(yearsndep)) then
-          write(6,*)subname,' error - current year is past input data boundary'
+          write(iulog,*)subname,' error - current year is past input data boundary'
        end if
        
 !dir$ concurrent

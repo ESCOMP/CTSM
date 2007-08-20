@@ -10,6 +10,7 @@ module system_messages
 !
 ! !USES:
   use abortutils, only : endrun
+  use clm_varctl, only : iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -52,9 +53,9 @@ contains
 !EOP
 !-----------------------------------------------------------------------
     if ( ier /= 0 ) then
-       write(6,*)'ERROR trying to allocate memory in routine: ' // trim(routine_name)
-       write(6,*)'  Variable name: ' // trim(array_name)
-       write(6,*)'  Size of allocation ', nsize
+       write(iulog,*)'ERROR trying to allocate memory in routine: ' // trim(routine_name)
+       write(iulog,*)'  Variable name: ' // trim(array_name)
+       write(iulog,*)'  Size of allocation ', nsize
        call endrun
     end if
     return
@@ -84,9 +85,9 @@ contains
 !EOP
 !-----------------------------------------------------------------------
     if ( ier /= NF_NOERR ) then
-       write(6,*)' ERROR from netcdf library call: '
-       write(6,*) nf_strerror( ier )
-       write(6,*)' called from routine ', trim(routine_name)
+       write(iulog,*)' ERROR from netcdf library call: '
+       write(iulog,*) nf_strerror( ier )
+       write(iulog,*)' called from routine ', trim(routine_name)
        call endrun
     endif
     return
@@ -115,8 +116,8 @@ contains
 !EOP
 !-----------------------------------------------------------------------
     if (ier /= 0) then
-       write(6,*)' i/o binary error ',ier
-       write(6,*)' called from routine ', trim(routine_name)
+       write(iulog,*)' i/o binary error ',ier
+       write(iulog,*)' called from routine ', trim(routine_name)
        call endrun
     end if
 

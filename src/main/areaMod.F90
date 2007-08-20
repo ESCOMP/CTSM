@@ -16,6 +16,7 @@ module areaMod
 ! !USES:
   use clm_varcon   , only : re
   use clm_varpar   , only : numrad
+  use clm_varctl   , only : iulog
   use domainMod    , only : domain_type, domain_setptrs, latlon_type
   use shr_const_mod, only : SHR_CONST_PI
   use shr_kind_mod , only : r8 => shr_kind_r8
@@ -128,7 +129,7 @@ contains
   map%nwts = nwts
   allocate(map%src(nwts),map%dst(nwts),map%S(nwts),stat=ier)
   if (ier /= 0) then
-     write(6,*) 'map_init ERROR: allocate map'
+     write(iulog,*) 'map_init ERROR: allocate map'
      call endrun()
   endif
 
@@ -245,20 +246,20 @@ end subroutine map_setptrs
 !------------------------------------------------------------------------------
 
     if (trim(map%type) /= trim(map_typelocal)) then
-       write(6,*) 'map_maparrayl WARNING: map type not correct, ', &
+       write(iulog,*) 'map_maparrayl WARNING: map type not correct, ', &
                    map%name,map%type
     endif
 
     ! check for errors in overlap
 
     if (minval(map%src) < begg_i .or. maxval(map%src) > endg_i) then
-       write(6,*) 'map_maparrayl ERROR: src out of bounds:', &
+       write(iulog,*) 'map_maparrayl ERROR: src out of bounds:', &
                    minval(map%src),maxval(map%src),begg_i,endg_i
        call endrun()
     endif
 
     if (minval(map%dst) < begg_o .or. maxval(map%dst) > endg_o) then
-       write(6,*) 'map_maparrayl ERROR: dst out of bounds:', &
+       write(iulog,*) 'map_maparrayl ERROR: dst out of bounds:', &
                    minval(map%dst),maxval(map%dst),begg_o,endg_o
        call endrun()
     endif
@@ -314,7 +315,7 @@ end subroutine map_maparrayl
 !------------------------------------------------------------------------------
 
     if (trim(map%type) /= trim(map_typeglobal)) then
-       write(6,*) 'map_maparrayg WARNING: map type not correct, ', &
+       write(iulog,*) 'map_maparrayg WARNING: map type not correct, ', &
                    map%name,map%type
     endif
 
@@ -466,7 +467,7 @@ end subroutine map_maparrayg
     !--- always true for now, may not be in the future
     latlongrid = .true.
 
-    if (masterproc) write(6,*) 'setgatm overlapgrid,latlongrid = ',overlapgrid,latlongrid
+    if (masterproc) write(iulog,*) 'setgatm overlapgrid,latlongrid = ',overlapgrid,latlongrid
 
 !pw major restructuring follows
     if (overlapgrid) then
@@ -495,7 +496,7 @@ end subroutine map_maparrayg
                  (ja >  1 .and. lat_l_local <= latn_a(ja) .and.   &
                                 lat_l_local >  lats_a(ja))) then
                 if (found) then
-                   write(6,*) 'map_setgatm WARNING: found > 1 pt j ', &
+                   write(iulog,*) 'map_setgatm WARNING: found > 1 pt j ', &
                       jl,ja,jlfound(jl),lat_l(jl),lat_l_local
                    call endrun()
                 endif
@@ -515,7 +516,7 @@ end subroutine map_maparrayg
                  (ia >  1 .and. lon_l(il)+offset <= lone_a(ia) .and.   &
                                 lon_l(il)+offset >  lonw_a(ia))) then
                 if (found) then
-                   write(6,*) 'map_setgatm WARNING: found > 1 pt i ', &
+                   write(iulog,*) 'map_setgatm WARNING: found > 1 pt i ', &
                       il,ia,ilfound(il),lon_l(il)+offset
                    call endrun()
                 endif
@@ -535,7 +536,7 @@ end subroutine map_maparrayg
              jf = jlfound(jl)
              nf = (jf-1)*nlon_a + if
              if (if == 0 .or. jf == 0) then
-                write(6,*) 'map_setgatm ERROR: pt not found, ', &
+                write(iulog,*) 'map_setgatm ERROR: pt not found, ', &
                    il,lon_l(il), '_l', &
                    minval(lon_l),maxval(lon_l),           &
                    minval(lat_l),maxval(lat_l),'_awe',    &
@@ -557,7 +558,7 @@ end subroutine map_maparrayg
     else
 !pw Still need restructuring for vectorization
 
-       write(6,*) 'map_setgatm ERROR: irregular lat lon grid not supported'
+       write(iulog,*) 'map_setgatm ERROR: irregular lat lon grid not supported'
        call endrun()
 
     endif
@@ -627,7 +628,7 @@ end subroutine map_maparrayg
        if (.not. found) then
           do na = 1,ns_a
              if ((amask(na) /= 0) .and. (nocnt(na) == 0)) then
-                write(6,*) 'map_setgatm ERROR: invalid f->c index ', &
+                write(iulog,*) 'map_setgatm ERROR: invalid f->c index ', &
                    na,amask(na)
                 call endrun()
              endif
@@ -639,353 +640,6 @@ end subroutine map_maparrayg
     deallocate(nocnt,nooff,nomap)
 
 end subroutine map_setgatm
-!------------------------------------------------------------------------------
-
-#if (1 == 0)
-!tcx DO NOT DELETE THIS YET
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: map_setgatm
-!
-! !INTERFACE:
-  subroutine map_setgatm(domain_a, domain_l)
-!
-! !DESCRIPTION:
-! Set gatm index in ldomain.  unique for finemesh.
-!
-! !USES:
-!
-! !ARGUMENTS:
-  implicit none
-  type(domain_type), intent(in)    :: domain_a
-  type(domain_type), intent(in)    :: domain_l
-!
-! !REVISION HISTORY:
-! 2006.06.28  T Craig  Creation.
-! 2006.08.23  P Worley Performance optimizations
-!
-!EOP
-!
-! !LOCAL VARIABLES:
-    integer          :: nlon_a       !input  grid: max number of longitude pts
-    integer          :: nlat_a       !input  grid: number of latitude  points
-    integer          :: ns_a         !input  grid: total number of cells
-    integer ,pointer :: mask_a(:)    !input grid: mask
-    real(r8),pointer :: lon_a(:)     !input grid: longitude (degrees)
-    real(r8),pointer :: lat_a(:)     !input grid: latitude  (degrees)
-    real(r8),pointer :: lone_a(:)    !input grid: longitude, E edge (degrees)
-    real(r8),pointer :: lonw_a(:)    !input grid: longitude, W edge (degrees)
-    real(r8),pointer :: latn_a(:)    !input grid: latitude , N edge (degrees)
-    real(r8),pointer :: lats_a(:)    !input grid: latitude , S edge (degrees)
-    integer          :: nlon_l       !output grid: max number of longitude pts
-    integer          :: nlat_l       !output grid: number of latitude  points
-    integer          :: ns_l         !output grid: total number of cells
-    integer ,pointer :: gatm_l(:)    !output grid: atm grid cell overlapping
-    real(r8),pointer :: lon_l(:)     !output grid: longitude (degrees)
-    real(r8),pointer :: lat_l(:)     !output grid: latitude  (degrees)
-    real(r8),pointer :: lone_l(:)    !output grid: longitude, E edge (degrees)
-    real(r8),pointer :: lonw_l(:)    !output grid: longitude, W edge (degrees)
-    real(r8),pointer :: latn_l(:)    !output grid: latitude , N edge (degrees)
-    real(r8),pointer :: lats_l(:)    !output grid: latitude , S edge (degrees)
-    integer ,pointer :: pftm_l(:)    !output grid: cell frac
-    integer          :: n            !loop counters
-    integer          :: ii,ji,ni     !indices for input grid
-    integer          :: io,jo,no     !indices for output grid
-    integer          :: if,jf,nf     !found indices
-    integer          :: noffset=1    !noffset
-    real(r8)         :: doffset =360_r8 !offset value
-    real(r8)         :: offset       !offset*n_offset
-    logical          :: found        !local logical 
-    logical          :: overlapgrid  !are atm and lnd grids 1:1
-    logical          :: latlongrid   !are atm and lnd grids regular lat/lon
-    real(r8),parameter :: relerr = 1.0e-6    ! error limit
-    integer          :: cnt,cnt0,cmax  !counters
-!tcx fix, lat_l_local should be removed when limit no longer needed
-    real(r8)         :: lat_l_local  !local copy of lat_l(io,jo), adjusted
-    real(r8),parameter:: eps = 1.0e-8  ! eps for check
-
-    integer, pointer :: nocnt(:)      ! lnd cell count per atm cell
-    integer, pointer :: nooff(:)      ! atm cell offset in nomap
-    integer, pointer :: nomap(:)      ! map from atm cell to lnd cells
-    integer :: noidx
-!
-!------------------------------------------------------------------------
-
-    !--- set pointers into domains, initialize gridmap a2l gridmap ---
-
-    call domain_setptrs(domain_a,ns=ns_a,ni=nlon_a,nj=nlat_a, &
-       latc=lat_a,lonc=lon_a,mask=mask_a,  &
-       latn=latn_a,lats=lats_a,lone=lone_a,lonw=lonw_a)
-    call domain_setptrs(domain_l,ns=ns_l,ni=nlon_l,nj=nlat_l, &
-       pftm=pftm_l,latc=lat_l,lonc=lon_l, &
-       gatm=gatm_l,latn=latn_l,lats=lats_l,lone=lone_l,lonw=lonw_l)
-
-    !--- search for the overlap, input to output, 1:1 "disaggregation" ---
-    !--- this is the coarse to fine map where there should be exactly
-    !--- one coarse overlap point for each fine point 
-    !--- three possible search algorithms, overlapgrid, latlongrid, neither
-    !--- figure out which search scheme to use
-
-    !--- overlapgrid means both grids are identical
-    overlapgrid = .false.
-    if (nlon_a == nlon_l .and. nlat_a == nlat_l) then
-       overlapgrid = .true.
-       do no = 1, nlat_l*nlon_l
-          if (abs( lat_l(no)- lat_a(no)) > relerr .or. &
-              abs( lon_l(no)- lon_a(no)) > relerr .or. &
-              abs(lone_l(no)-lone_a(no)) > relerr .or. &
-              abs(lonw_l(no)-lonw_a(no)) > relerr .or. &
-              abs(latn_l(no)-latn_a(no)) > relerr .or. &
-              abs(lats_l(no)-lats_a(no)) > relerr) then
-             overlapgrid = .false.
-          endif
-       enddo
-    endif
-
-    !--- latlongrid means atm grid is regular latlon grid
-    !--- assume true and then set false if not
-    latlongrid = .true.
-    do ni = 1,nlat_a*nlon_a
-       ii = mod((ni-1),nlon_a)+1
-       ji = (int((ni-1)/nlon_a))*nlon_a + 1
-       if (abs( lat_a(ni) -  lat_a(ji)) > relerr .or. &
-           abs(latn_a(ni) - latn_a(ji)) > relerr .or. &
-           abs(lats_a(ni) - lats_a(ji)) > relerr) then
-           latlongrid = .false.
-       endif
-       if (abs( lon_a(ni) -  lon_a(ii)) > relerr .or. &
-           abs(lone_a(ni) - lone_a(ii)) > relerr .or. &
-           abs(lonw_a(ni) - lonw_a(ii)) > relerr) then
-           latlongrid = .false.
-       endif
-    enddo
-
-    if (masterproc) write(6,*) 'setgatm overlapgrid,latlongrid = ',overlapgrid,latlongrid
-
-!pw major restructuring follows
-    if (overlapgrid) then
-       do jo = 1, nlat_l
-       do io = 1, nlon_l
-       no = (jo-1)*nlon_l + io
-       gatm_l(no) = -1
-       if (pftm_l(no) >= 0) then       ! only real or fake points
-          if (mask_a(no) /= 0) then
-             gatm_l(no)=no
-          endif
-       endif
-       enddo
-       enddo
-
-    elseif (latlongrid) then
-!pw Still need restructuring for vectorization.
-
-       do jo = 1, nlat_l
-       do io = 1, nlon_l
-       no = (jo-1)*nlon_l + io
-       gatm_l(no) = -1
-       if (pftm_l(no) >= 0) then       ! only real or fake points
-          found  = .false.
-          lat_l_local = min(max(lat_l(no),-90.0_r8),90.0_r8)  !limit [-90,90]
-
-          do ji = 1,nlat_a
-             ni = (ji-1)*nlon_a + 1
-             if ((ji == 1 .and. lat_l_local <= latn_a(ni) .and.   &
-                                lat_l_local >= lats_a(ni)) .or.   &
-                 (ji >  1 .and. lat_l_local <= latn_a(ni) .and.   &
-                                lat_l_local >  lats_a(ni))) then
-                if (found) then
-                   write(6,*) 'map_setgatm WARNING: found > 1 pt j ', &
-                      io,jo,no,ji,ni,jf,lon_l(no),lat_l(no),lat_l_local
-                   call endrun()
-                endif
-                jf = ji
-                found = .true.
-             endif
-          enddo  ! ji
-          if (found) then     ! move on to i
-             found = .false.
-          else                ! stop
-             write(6,*) 'map_setgatm ERROR: pt not found, ', &
-                io,jo,lon_l(no),lat_l(no),lat_l_local, '_o', &
-                minval(lon_l),maxval(lon_l),           &
-                minval(lat_l),maxval(lat_l),'_iwe',    &
-                minval(lonw_a),maxval(lonw_a),         &
-                minval(lone_a),maxval(lone_a),'_isn',  &
-                minval(lats_a),maxval(lats_a),         &
-                minval(latn_a),maxval(latn_a)
-             call endrun()
-          endif
-          do ii = 1,nlon_a
-          ni = (jf-1)*nlon_a + ii
-          do n = -noffset,noffset
-             offset = n*doffset
-             if (lon_l(no)+offset <= lone_a(ni) .and.   &
-                 lon_l(no)+offset >= lonw_a(ni)) then
-                if (found) then
-                   write(6,*) 'map_setgatm WARNING: found > 1 pt i ', &
-                      io,jo,no,lon_l(no),lat_l(no),lat_l_local
-                   call endrun()
-                endif
-                if = ii
-                found = .true.
-             endif
-          enddo  ! n, offset
-          enddo  ! ii
-          nf = (jf-1)*nlon_a + if
-          if (found) then
-             if (mask_a(nf) /= 0) then
-                gatm_l(no)=nf
-             endif
-          else
-             write(6,*) 'map_setgatm ERROR: pt not found, ', &
-                io,jo,no,lon_l(no),lat_l(no),lat_l_local, '_o', &
-                minval(lon_l),maxval(lon_l),           &
-                minval(lat_l),maxval(lat_l),'_iwe',    &
-                minval(lonw_a),maxval(lonw_a),         &
-                minval(lone_a),maxval(lone_a),'_isn',  &
-                minval(lats_a),maxval(lats_a),         &
-                minval(latn_a),maxval(latn_a)
-             call endrun()
-          endif
-       endif
-       enddo
-       enddo
-
-    else
-!pw Still need restructuring for vectorization
-
-       do jo = 1, nlat_l
-       do io = 1, nlon_l
-       no = (jo-1)*nlon_l + io
-       gatm_l(no) = -1
-       if (pftm_l(no) >= 0) then       ! only real or fake points
-          found  = .false.
-          lat_l_local = min(max(lat_l(no),-90.0_r8),90.0_r8)  !limit [-90,90]
-
-          do n = -noffset,noffset
-          offset = n*doffset
-          do ji = 1,nlat_a
-          do ii = 1,nlon_a
-             ni = (ji-1)*nlon_a + ii
-             if (lon_l(no)+offset <= lone_a(ni) .and.   &
-                 lon_l(no)+offset >= lonw_a(ni) .and.   &
-                 lat_l_local      <= latn_a(ni) .and.   &
-                 lat_l_local      >= lats_a(ni)) then
-                if (found) then
-                   write(6,*) 'map_setgatm WARNING: found > 1 pt', &
-                      io,jo,no,lon_l(no),lat_l(no),lat_l_local
-                   call endrun()
-                endif
-                found = .true.
-                if = ii
-                jf = ji
-             endif
-          enddo  ! ii
-          enddo  ! ji
-          enddo  ! n, offset
-       endif
-
-       nf = (jf-1)*nlon_a + if
-       if (found) then
-          if (mask_a(nf) /= 0) then
-             gatm_l(no)=nf
-          endif
-       else
-          write(6,*) 'map_setgatm ERROR: pt not found, ', &
-             io,jo,no,lon_l(no),lat_l(no),lat_l_local, '_o', &
-             minval(lon_l),maxval(lon_l),           &
-             minval(lat_l),maxval(lat_l),'_iwe',    &
-             minval(lonw_a),maxval(lonw_a),         &
-             minval(lone_a),maxval(lone_a),'_isn',  &
-             minval(lats_a),maxval(lats_a),         &
-             minval(latn_a),maxval(latn_a)
-          call endrun()
-       endif
-
-       enddo
-       enddo
-    endif
-!pw major restructuring ends
-
-    !--- remove fake land if there is at least one real land overlap point ---
-    allocate(nocnt(ns_a),nooff(ns_a),nomap(ns_l))
-
-    nocnt = 0
-    do no = 1,ns_l
-       ni = gatm_l(no)
-       if (ni > 0) then
-          nocnt(ni) = nocnt(ni) + 1
-       endif
-    enddo
-
-    nooff(1) = 1
-    do ni = 2,ns_a
-       nooff(ni) = nooff(ni-1) + nocnt(ni-1)
-    enddo
-
-    nocnt = 0
-    nomap = -1
-    do no = 1,ns_l
-       ni = gatm_l(no)
-       if (ni > 0) then
-         nomap(nooff(ni)+nocnt(ni)) = no
-         nocnt(ni) = nocnt(ni) + 1
-       endif
-    enddo
-
-    do ni = 1,ns_a
-       found = .false.        ! check if any points are real land
-       do noidx = 0,nocnt(ni)-1
-          no = nomap(nooff(ni)+noidx)
-          if (pftm_l(no) > 0 ) then
-             found = .true.
-          endif
-       enddo
-       if (found) then        ! if so, keep only real land points
-!dir$ concurrent
-          do noidx = 0,nocnt(ni)-1
-             no = nomap(nooff(ni)+noidx)
-             if (pftm_l(no) <= 0 ) then
-                gatm_l(no) = -1
-             endif
-       enddo
-       endif
-    enddo
-
-    !--- check that valid fine grid points have coarse mapping gridpoints
-    if (masterproc) then
-       nocnt = 0
-       do no = 1,ns_l
-          ni = gatm_l(no)
-          if (ni > 0) then
-             nocnt(ni) = nocnt(ni) + 1
-          endif
-       enddo
-
-       found = .true.
-       do ni = 1,ns_a
-          if ((mask_a(ni) /= 0) .and. (nocnt(ni) == 0)) then
-             found = .false.
-          endif
-       enddo
-       if (.not. found) then
-          do ni = 1,ns_a
-             if ((mask_a(ni) /= 0) .and. (nocnt(ni) == 0)) then
-                write(6,*) 'map_setgatm ERROR: invalid f->c index ', &
-                   ni,mask_a(ni)
-                call endrun()
-             endif
-          enddo
-       endif
-
-    endif
-
-    deallocate(nocnt,nooff,nomap)
-
-end subroutine map_setgatm
-#endif
-
 !------------------------------------------------------------------------------
 !BOP
 !
@@ -1087,14 +741,14 @@ end subroutine map_setgatm
        nlg = ldecomp%gdc2glo(nl)
        nag = gatm_l(nlg)
        if (nag <= 0) then
-          write(6,*) 'map_setmapsFM ERROR nag0 <= 0',nl,nlg,nag
+          write(iulog,*) 'map_setmapsFM ERROR nag0 <= 0',nl,nlg,nag
           call endrun()
        endif
        na  = adecomp%glo2gdc(nag)
        if (nlg < 1 .or. nlg > ns_l .or. &
            nag < 1 .or. nag > ns_a .or. &
            na  < abegg .or. na > aendg) then
-          write(6,*) 'map_setmapsFM ERROR in index0 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          write(iulog,*) 'map_setmapsFM ERROR in index0 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
           call endrun()
        endif
        ncnta(na) = ncnta(na) + 1
@@ -1130,20 +784,20 @@ end subroutine map_setgatm
        nlg = ldecomp%gdc2glo(nl)
        nag = gatm_l(nlg)
        if (nag <= 0) then
-          write(6,*) 'map_setmapsFM ERROR nag1 <= 0',nl,nlg,nag
+          write(iulog,*) 'map_setmapsFM ERROR nag1 <= 0',nl,nlg,nag
           call endrun()
        endif
        na  = adecomp%glo2gdc(nag)
        if (nlg < 1 .or. nlg > ns_l .or. &
            nag < 1 .or. nag > ns_a .or. &
            na  < abegg .or. na > aendg) then
-          write(6,*) 'map_setmapsFM ERROR in index1 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          write(iulog,*) 'map_setmapsFM ERROR in index1 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
           call endrun()
        endif
 
        na2l = na2l + 1
        if (na2l > n_a2l) then
-          write(6,*) 'map_setmapsFM ERROR na2l > n_a2l ',na2l,n_a2l
+          write(iulog,*) 'map_setmapsFM ERROR na2l > n_a2l ',na2l,n_a2l
           call endrun()
        endif
        src_a2l(na2l) = na
@@ -1153,7 +807,7 @@ end subroutine map_setgatm
        nl2a = nl2a + 1
        cnta(na) = cnta(na) + 1
        if (nl2a > n_l2a .or. cnta(na) > ncnta(na)) then
-          write(6,*) 'map_setmapsFM ERROR nl2a > n_l2a ',nl2a,n_l2a,cnta(na),ncnta(na)
+          write(iulog,*) 'map_setmapsFM ERROR nl2a > n_l2a ',nl2a,n_l2a,cnta(na),ncnta(na)
           call endrun()
        endif
        src_l2a(nl2a) = nl
@@ -1162,7 +816,7 @@ end subroutine map_setgatm
           wts_l2a(nl2a) = 1.0_r8
        else
           if (asum(na) <= 0.0_r8) then
-             write(6,*) 'map_setmapsFM ERROR asum <= 0 ',nlg,nag,asum(na)
+             write(iulog,*) 'map_setmapsFM ERROR asum <= 0 ',nlg,nag,asum(na)
              call endrun()
           endif
           wts_l2a(nl2a) = (area_l(nl)/asum(na))
@@ -1176,14 +830,14 @@ end subroutine map_setgatm
        nlg = ldecomp%gdc2glo(nl)
        nag = gatm_l(nlg)
        if (nag <= 0) then
-          write(6,*) 'map_setmapsFM ERROR nag2 <= 0',nl,nlg,nag
+          write(iulog,*) 'map_setmapsFM ERROR nag2 <= 0',nl,nlg,nag
           call endrun()
        endif
        na  = adecomp%glo2gdc(nag)
        if (nlg < 1 .or. nlg > ns_l .or. &
            nag < 1 .or. nag > ns_a .or. &
            na  < abegg .or. na > aendg) then
-          write(6,*) 'map_setmapsFM ERROR in index2 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          write(iulog,*) 'map_setmapsFM ERROR in index2 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
           call endrun()
        endif
        if (frac_l(nl) > 0.0_r8) then
@@ -1198,14 +852,14 @@ end subroutine map_setgatm
        nlg = ldecomp%gdc2glo(nl)
        nag = gatm_l(nlg)
        if (nag <= 0) then
-          write(6,*) 'map_setmapsFM ERROR nag3 <= 0',nl,nlg,nag
+          write(iulog,*) 'map_setmapsFM ERROR nag3 <= 0',nl,nlg,nag
           call endrun()
        endif
        na  = adecomp%glo2gdc(nag)
        if (nlg < 1 .or. nlg > ns_l .or. &
            nag < 1 .or. nag > ns_a .or. &
            na  < abegg .or. na > aendg) then
-          write(6,*) 'map_setmapsFM ERROR in index3 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          write(iulog,*) 'map_setmapsFM ERROR in index3 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
           call endrun()
        endif
        if (ncnta(na) == 1) then
@@ -1213,11 +867,11 @@ end subroutine map_setgatm
           ntop_l(nl) = topo_a(na)
        else
           if (asum(na) <= 0.0_r8) then
-             write(6,*) 'map_setmapsFM ERROR2 asum <= 0 ',nl,na,asum(na)
+             write(iulog,*) 'map_setmapsFM ERROR2 asum <= 0 ',nl,na,asum(na)
              call endrun()
           endif
           if (tsum(na) <  0.0_r8) then
-             write(6,*) 'map_setmapsFM ERROR2 tsum < 0 ',nl,na,tsum(na)
+             write(iulog,*) 'map_setmapsFM ERROR2 tsum < 0 ',nl,na,tsum(na)
              call endrun()
           endif
           nara_l(nl)   = (area_l(nl)/asum(na))*area_a(na)
@@ -1244,14 +898,14 @@ end subroutine map_setgatm
        nlg = ldecomp%gdc2glo(nl)
        nag = gatm_l(nlg)
        if (nag <= 0) then
-          write(6,*) 'map_setmapsFM ERROR nag4 <= 0',nl,nlg,nag
+          write(iulog,*) 'map_setmapsFM ERROR nag4 <= 0',nl,nlg,nag
           call endrun()
        endif
        na  = adecomp%glo2gdc(nag)
        if (nlg < 1 .or. nlg > ns_l .or. &
            nag < 1 .or. nag > ns_a .or. &
            na  < abegg .or. na > aendg) then
-          write(6,*) 'map_setmapsFM ERROR in index4 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          write(iulog,*) 'map_setmapsFM ERROR in index4 ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
           call endrun()
        endif
        asum(na) = asum(na) + nara_l(nl)
@@ -1262,7 +916,7 @@ end subroutine map_setgatm
        if (asum(na) > 0.0_r8) then
           if (abs(asum(na)-area_a(na)) > eps .or. &
               abs(tsum(na)/area_a(na) - topo_a(na)) > eps) then
-                 write(6,*) ' map_setmapsFM ERROR: ERROR in nara,ntop, ',asum(na),area_a(na),tsum(na),topo_a(na),eps
+                 write(iulog,*) ' map_setmapsFM ERROR: ERROR in nara,ntop, ',asum(na),area_a(na),tsum(na),topo_a(na),eps
                  call endrun()
           endif
        endif
@@ -1284,14 +938,14 @@ end subroutine map_setgatm
        nlg = ldecomp%gdc2glo(nl)
        nag = gatm_l(nlg)
        if (nag <= 0) then
-          write(6,*) 'initialize2 nag <= 0 ERROR ',nl,nlg,nag
+          write(iulog,*) 'initialize2 nag <= 0 ERROR ',nl,nlg,nag
           call endrun()
        endif
        na = adecomp%glo2gdc(nag)
        if (nlg < 1 .or. nlg > ns_l .or. &
            nag < 1 .or. nag > ns_a .or. &
            na  < abegg .or. na > aendg) then
-          write(6,*) 'initialize2 index ERROR ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
+          write(iulog,*) 'initialize2 index ERROR ',nl,nlg,nag,na,ns_l,ns_a,abegg,aendg
           call endrun()
        endif
        mask_l(nl) = 1
@@ -1481,7 +1135,7 @@ end subroutine map_setmapsFM
                          nw = nw + 1
                          ! make sure nw <= nwts
                          if (nw > nwts) then
-                            write (6,*) 'AREAOVR error: nw= ', &
+                            write(iulog,*) 'AREAOVR error: nw= ', &
                                nw,' exceeded nwts ceiling = ', &
                                nwts,' for output lon,lat = ',io,indexo
                             call endrun
@@ -1528,9 +1182,9 @@ end subroutine map_setmapsFM
 
     if (abs(sdx_i-sdx_o)>relerr .or. abs(sdy_i-sdy_o)>relerr) then
        if (masterproc) then
-          write (6,*) 'MAP_SETMAPSAR warning: lats/lons not overlapping'
-          write (6,*) '   input  grid of ',nlon_i,' x ',nlat_i,' dx,dy= ',sdx_i,sdy_i
-          write (6,*) '   output grid of ',nlon_o,' x ',nlat_o,' dx,dy= ',sdx_o,sdy_o
+          write(iulog,*) 'MAP_SETMAPSAR warning: lats/lons not overlapping'
+          write(iulog,*) '   input  grid of ',nlon_i,' x ',nlat_i,' dx,dy= ',sdx_i,sdy_i
+          write(iulog,*) '   output grid of ',nlon_o,' x ',nlat_o,' dx,dy= ',sdx_o,sdy_o
        endif
        return
     end if
@@ -1574,9 +1228,9 @@ end subroutine map_setmapsFM
 
     if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
        if (masterproc) then
-          write (6,*) 'MAP_SETMAPSAR warning: masks/areas not conserved'
-          write (6,'(a30,e20.10)') 'global sum output area = ',sum_fldo
-          write (6,'(a30,e20.10)') 'global sum input  area = ',sum_fldi
+          write(iulog,*) 'MAP_SETMAPSAR warning: masks/areas not conserved'
+          write(iulog,'(a30,e20.10)') 'global sum output area = ',sum_fldo
+          write(iulog,'(a30,e20.10)') 'global sum input  area = ',sum_fldi
         endif
         return
     end if
@@ -1612,15 +1266,15 @@ end subroutine map_setmapsFM
 
     if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
        if (masterproc) then
-          write (6,*) 'MAP_SETMAPSAR error: input field not conserved'
-          write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-          write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
+          write(iulog,*) 'MAP_SETMAPSAR error: input field not conserved'
+          write(iulog,'(a30,e20.10)') 'global sum output field = ',sum_fldo
+          write(iulog,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
         endif
     else
        if (masterproc) then
-          write (6,*) 'MAP_SETMAPSAR: input field conserved'
-          write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-          write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
+          write(iulog,*) 'MAP_SETMAPSAR: input field conserved'
+          write(iulog,'(a30,e20.10)') 'global sum output field = ',sum_fldo
+          write(iulog,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
        endif
     end if
 
@@ -1680,71 +1334,71 @@ end subroutine map_setmapsFM
     call map_setptrs(map,nwts=nwts,src=src,dst=dst,wts=wts,dstmo=dstmo)
 
     if (masterproc) then
-       write(6,*) ' '
-       write(6,*) 'map_checkmap name          = ',trim(map%name)
-       write(6,*) 'map_checkmap type          = ',trim(map%type)
-       write(6,*) 'map_checkmap src grid      = ',nlon_i,nlat_i
-       write(6,*) 'map_checkmap dst grid      = ',nlon_o,nlat_o
-       write(6,*) 'map_checkmap dstmo         = ',dstmo
+       write(iulog,*) ' '
+       write(iulog,*) 'map_checkmap name          = ',trim(map%name)
+       write(iulog,*) 'map_checkmap type          = ',trim(map%type)
+       write(iulog,*) 'map_checkmap src grid      = ',nlon_i,nlat_i
+       write(iulog,*) 'map_checkmap dst grid      = ',nlon_o,nlat_o
+       write(iulog,*) 'map_checkmap dstmo         = ',dstmo
     endif
 
     call mpi_reduce(nwts,nmin,1,MPI_INTEGER,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_reduce nwts error: ',ier
+       write(iulog,*)'mpi_reduce nwts error: ',ier
     endif
     call mpi_reduce(nwts,nmax,1,MPI_INTEGER,MPI_MAX,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_reduce nwts error: ',ier
+       write(iulog,*)'mpi_reduce nwts error: ',ier
     endif
     call mpi_reduce(nwts,nsum,1,MPI_INTEGER,MPI_SUM,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_reduce nwts error: ',ier
+       write(iulog,*)'mpi_reduce nwts error: ',ier
     endif
     if (masterproc) then
-       write(6,*) 'map_checkmap nwts gmin/max = ',nmin,nmax
-       write(6,*) 'map_checkmap nwts gsum     = ',nsum
+       write(iulog,*) 'map_checkmap nwts gmin/max = ',nmin,nmax
+       write(iulog,*) 'map_checkmap nwts gsum     = ',nsum
     endif
 
     imin = minval(src)
     imax = maxval(src)
     call mpi_reduce(imin,nmin,1,MPI_INTEGER,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_reduce src min error: ',ier
+       write(iulog,*)'mpi_reduce src min error: ',ier
     endif
     call mpi_reduce(imax,nmax,1,MPI_INTEGER,MPI_MAX,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_reduce src max error: ',ier
+       write(iulog,*)'mpi_reduce src max error: ',ier
     endif
     if (masterproc) then
-       write(6,*) 'map_checkmap src gmin/max  = ',nmin,nmax
+       write(iulog,*) 'map_checkmap src gmin/max  = ',nmin,nmax
     endif
 
     imin = minval(dst)
     imax = maxval(dst)
     call mpi_reduce(imin,nmin,1,MPI_INTEGER,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_reduce dst min error: ',ier
+       write(iulog,*)'mpi_reduce dst min error: ',ier
     endif
     call mpi_reduce(imax,nmax,1,MPI_INTEGER,MPI_MAX,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_reduce dst max error: ',ier
+       write(iulog,*)'mpi_reduce dst max error: ',ier
     endif
     if (masterproc) then
-       write(6,*) 'map_checkmap dst gmin/max  = ',nmin,nmax
+       write(iulog,*) 'map_checkmap dst gmin/max  = ',nmin,nmax
     endif
 
     rmin = minval(wts)
     rmax = maxval(wts)
     call mpi_reduce(rmin,smin,1,MPI_REAL8,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_reduce wts min error: ',ier
+       write(iulog,*)'mpi_reduce wts min error: ',ier
     endif
     call mpi_reduce(rmax,smax,1,MPI_REAL8,MPI_MAX,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_reduce wts max error: ',ier
+       write(iulog,*)'mpi_reduce wts max error: ',ier
     endif
     if (masterproc) then
-       write(6,*) 'map_checkmap wts gmin/max  = ',smin,smax
+       write(iulog,*) 'map_checkmap wts gmin/max  = ',smin,smax
     endif
 
     imin = minval(dst)
@@ -1753,7 +1407,7 @@ end subroutine map_setmapsFM
     rsum = 0.0_r8
     do n = 1,nwts
        if (dst(n) < imin .or. dst(n) > imax) then
-          write(6,*) 'map_checkmap dst index error ',n,dst(n),imin,imax
+          write(iulog,*) 'map_checkmap dst index error ',n,dst(n),imin,imax
           call endrun()
        endif
        rsum(dst(n)) = rsum(dst(n)) + wts(n)
@@ -1763,14 +1417,14 @@ end subroutine map_setmapsFM
     deallocate(rsum)
     call mpi_reduce(rmin,smin,1,MPI_REAL8,MPI_MIN,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_reduce swts min error: ',ier
+       write(iulog,*)'mpi_reduce swts min error: ',ier
     endif
     call mpi_reduce(rmax,smax,1,MPI_REAL8,MPI_MAX,0,mpicom,ier)
     if (ier /= 0) then
-       write(6,*)'mpi_reduce swts max error: ',ier
+       write(iulog,*)'mpi_reduce swts max error: ',ier
     endif
     if (masterproc) then
-       write(6,*) 'map_checkmap swts gmin/max  = ',smin,smax
+       write(iulog,*) 'map_checkmap swts gmin/max  = ',smin,smax
     endif
 
 end subroutine map_checkmap
@@ -2002,7 +1656,7 @@ end subroutine map_checkmap
           lone(i-1) = lonw(i)
        end do
     else
-       write(6,*)'global non-regional grids currently only supported ', &
+       write(iulog,*)'global non-regional grids currently only supported ', &
             'for grids starting at greenwich and centered on Greenwich'
        call endrun
     endif

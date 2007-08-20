@@ -59,6 +59,7 @@
   use shr_file_mod        
   use controlMod      , only : control_setNL
   use clm_varctl      , only : nsrest, irad, csm_doflxave, finidat
+  use clm_varctl      , only : iulog
   use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
   use clm_time_manager, only : advance_timestep, get_nstep, get_curr_calday, get_step_size
   use clm_csmMod      , only : csmstop_now, csm_setup, csm_shutdown, & 
@@ -207,8 +208,8 @@
   ! -----------------------------------------------------------------
 
   if (masterproc) then
-     write(6,*)'================= SUCCESSFUL TERMINATION OF CLM ================='
-     write(6,*)'================= # completed steps = ',get_nstep(), ' ================='
+     write(iulog,*)'================= SUCCESSFUL TERMINATION OF CLM ================='
+     write(iulog,*)'================= # completed steps = ',get_nstep(), ' ================='
   endif
   call t_prf('timing_all',mpicom_top)
   call t_finalizef()
@@ -226,7 +227,7 @@
 
 !The following is only here since empty file won't compile
 subroutine program_csm_stub
-  write(6,*) 'PROGRAM_CSM: this routine should not be called'
+  write(iulog,*) 'PROGRAM_CSM: this routine should not be called'
   stop 99
 end subroutine program_csm_stub
 

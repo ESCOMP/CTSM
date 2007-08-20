@@ -15,6 +15,7 @@ module domainMod
   use nanMod
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
+  use clm_varctl  , only : iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -145,7 +146,7 @@ contains
              domain%nara(nb:ne),domain%topo(nb:ne),domain%ntop(nb:ne), &
              stat=ier)
     if (ier /= 0) then
-       write(6,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
+       write(iulog,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
        call endrun()
     endif
 
@@ -207,19 +208,19 @@ end subroutine domain_init
 !------------------------------------------------------------------------------
     if (domain%set == set) then
        if (masterproc) then
-          write(6,*) 'domain_clean: cleaning ',domain%ni,domain%nj
+          write(iulog,*) 'domain_clean: cleaning ',domain%ni,domain%nj
        endif
        deallocate(domain%mask,domain%frac,domain%latc, &
                   domain%lonc,domain%area,domain%pftm, &
                   domain%nara,domain%topo,domain%ntop, &
                   stat=ier)
        if (ier /= 0) then
-          write(6,*) 'domain_clean ERROR: deallocate mask, frac, lat, lon, area '
+          write(iulog,*) 'domain_clean ERROR: deallocate mask, frac, lat, lon, area '
           call endrun()
        endif
     else
        if (masterproc) then
-          write(6,*) 'domain_clean WARN: clean domain unecessary '
+          write(iulog,*) 'domain_clean WARN: clean domain unecessary '
        endif
     endif
 
@@ -264,12 +265,12 @@ end subroutine domain_clean
 !
 !------------------------------------------------------------------------------
     if (domain1%ni /= domain2%ni .or. domain1%nj /= domain2%nj) then
-       write(6,*) 'domain_setsame: error on size',domain1%ni,domain1%nj,domain2%ni,domain2%nj
+       write(iulog,*) 'domain_setsame: error on size',domain1%ni,domain1%nj,domain2%ni,domain2%nj
        call endrun()
     endif
 
     if (masterproc) then
-       write(6,*) 'domain_setsame: copying ',domain1%ni,domain1%nj
+       write(iulog,*) 'domain_setsame: copying ',domain1%ni,domain1%nj
     endif
     !!! Don't copy mask, frac, topo, pftm, nara, ntop or gatm
 !   domain2%mask     = domain1%mask
@@ -410,24 +411,24 @@ end subroutine domain_setptrs
 !------------------------------------------------------------------------------
 
   if (masterproc) then
-    write(6,*) '  domain_check set       = ',trim(domain%set)
-    write(6,*) '  domain_check decomped  = ',domain%decomped
-    write(6,*) '  domain_check regional  = ',domain%regional
-    write(6,*) '  domain_check areaset   = ',domain%areaset
-    write(6,*) '  domain_check ns        = ',domain%ns
-    write(6,*) '  domain_check ni,nj     = ',domain%ni,domain%nj
-    write(6,*) '  domain_check clmlevel  = ',trim(domain%clmlevel)
-    write(6,*) '  domain_check nbeg,nend = ',domain%nbeg,domain%nend
-    write(6,*) '  domain_check lonc = ',minval(domain%lonc),maxval(domain%lonc)
-    write(6,*) '  domain_check latc = ',minval(domain%latc),maxval(domain%latc)
-    write(6,*) '  domain_check mask = ',minval(domain%mask),maxval(domain%mask)
-    write(6,*) '  domain_check frac = ',minval(domain%frac),maxval(domain%frac)
-    write(6,*) '  domain_check topo = ',minval(domain%topo),maxval(domain%topo)
-    write(6,*) '  domain_check area = ',minval(domain%area),maxval(domain%area)
-    write(6,*) '  domain_check pftm = ',minval(domain%pftm),maxval(domain%pftm)
-    write(6,*) '  domain_check nara = ',minval(domain%nara),maxval(domain%nara)
-    write(6,*) '  domain_check ntop = ',minval(domain%ntop),maxval(domain%ntop)
-    write(6,*) ' '
+    write(iulog,*) '  domain_check set       = ',trim(domain%set)
+    write(iulog,*) '  domain_check decomped  = ',domain%decomped
+    write(iulog,*) '  domain_check regional  = ',domain%regional
+    write(iulog,*) '  domain_check areaset   = ',domain%areaset
+    write(iulog,*) '  domain_check ns        = ',domain%ns
+    write(iulog,*) '  domain_check ni,nj     = ',domain%ni,domain%nj
+    write(iulog,*) '  domain_check clmlevel  = ',trim(domain%clmlevel)
+    write(iulog,*) '  domain_check nbeg,nend = ',domain%nbeg,domain%nend
+    write(iulog,*) '  domain_check lonc = ',minval(domain%lonc),maxval(domain%lonc)
+    write(iulog,*) '  domain_check latc = ',minval(domain%latc),maxval(domain%latc)
+    write(iulog,*) '  domain_check mask = ',minval(domain%mask),maxval(domain%mask)
+    write(iulog,*) '  domain_check frac = ',minval(domain%frac),maxval(domain%frac)
+    write(iulog,*) '  domain_check topo = ',minval(domain%topo),maxval(domain%topo)
+    write(iulog,*) '  domain_check area = ',minval(domain%area),maxval(domain%area)
+    write(iulog,*) '  domain_check pftm = ',minval(domain%pftm),maxval(domain%pftm)
+    write(iulog,*) '  domain_check nara = ',minval(domain%nara),maxval(domain%nara)
+    write(iulog,*) '  domain_check ntop = ',minval(domain%ntop),maxval(domain%ntop)
+    write(iulog,*) ' '
   endif
 
 end subroutine domain_check
@@ -468,7 +469,7 @@ end subroutine domain_check
              latlon%lonw(ni),latlon%lone(ni), &
              stat=ier)
     if (ier /= 0) then
-       write(6,*) 'latlon_init ERROR: allocate '
+       write(iulog,*) 'latlon_init ERROR: allocate '
        call endrun()
     endif
 
@@ -523,7 +524,7 @@ end subroutine latlon_init
                latlon%lonw,latlon%lone, &
                stat=ier)
     if (ier /= 0) then
-       write(6,*) 'latlon_clean ERROR: deallocate '
+       write(iulog,*) 'latlon_clean ERROR: deallocate '
        call endrun()
     endif
 
@@ -566,12 +567,12 @@ end subroutine latlon_clean
 !------------------------------------------------------------------------------
 
     if (latlon1%ni /= latlon2%ni .or. latlon1%nj /= latlon2%nj) then
-       write(6,*) 'latlon_setsame: error on size',latlon1%ni,latlon1%nj,latlon2%ni,latlon2%nj
+       write(iulog,*) 'latlon_setsame: error on size',latlon1%ni,latlon1%nj,latlon2%ni,latlon2%nj
        call endrun()
     endif
 
     if (masterproc) then
-       write(6,*) 'latlon_setsame: copying ',latlon1%ni,latlon1%nj
+       write(iulog,*) 'latlon_setsame: copying ',latlon1%ni,latlon1%nj
     endif
     latlon2%edges    = latlon1%edges
     latlon2%latc     = latlon1%latc
@@ -612,18 +613,18 @@ end subroutine latlon_setsame
 !------------------------------------------------------------------------------
 
   if (masterproc .and. latlon%set == set) then
-    write(6,*) '  latlon_check ns        = ',latlon%ns
-    write(6,*) '  latlon_check ni,nj     = ',latlon%ni,latlon%nj
-    write(6,*) '  latlon_check set       = ',latlon%set
-    write(6,*) '  latlon_check regional  = ',latlon%regional
-    write(6,*) '  latlon_check edgeNESW  = ',latlon%edges
-    write(6,*) '  latlon_check lonc = ',minval(latlon%lonc),maxval(latlon%lonc)
-    write(6,*) '  latlon_check latc = ',minval(latlon%latc),maxval(latlon%latc)
-    write(6,*) '  latlon_check lonw = ',minval(latlon%lonw),maxval(latlon%lonw)
-    write(6,*) '  latlon_check lone = ',minval(latlon%lone),maxval(latlon%lone)
-    write(6,*) '  latlon_check lats = ',minval(latlon%lats),maxval(latlon%lats)
-    write(6,*) '  latlon_check latn = ',minval(latlon%latn),maxval(latlon%latn)
-    write(6,*) ' '
+    write(iulog,*) '  latlon_check ns        = ',latlon%ns
+    write(iulog,*) '  latlon_check ni,nj     = ',latlon%ni,latlon%nj
+    write(iulog,*) '  latlon_check set       = ',latlon%set
+    write(iulog,*) '  latlon_check regional  = ',latlon%regional
+    write(iulog,*) '  latlon_check edgeNESW  = ',latlon%edges
+    write(iulog,*) '  latlon_check lonc = ',minval(latlon%lonc),maxval(latlon%lonc)
+    write(iulog,*) '  latlon_check latc = ',minval(latlon%latc),maxval(latlon%latc)
+    write(iulog,*) '  latlon_check lonw = ',minval(latlon%lonw),maxval(latlon%lonw)
+    write(iulog,*) '  latlon_check lone = ',minval(latlon%lone),maxval(latlon%lone)
+    write(iulog,*) '  latlon_check lats = ',minval(latlon%lats),maxval(latlon%lats)
+    write(iulog,*) '  latlon_check latn = ',minval(latlon%latn),maxval(latlon%latn)
+    write(iulog,*) ' '
   endif
 
 end subroutine latlon_check

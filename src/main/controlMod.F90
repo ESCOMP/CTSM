@@ -340,7 +340,7 @@ contains
     ! ----------------------------------------------------------------------
 
     if (masterproc) then
-       write(6,*) 'Attempting to initialize run control settings .....'
+       write(iulog,*) 'Attempting to initialize run control settings .....'
     endif
 
     runtyp(0 + 1) = 'initial'
@@ -453,7 +453,7 @@ contains
           call endrun( subname//' error: nlfilename not set' )
        end if
        unitn = getavu()
-       write(6,*) 'Read in clm_inparm namelist from: ', trim(NLFilename)
+       write(iulog,*) 'Read in clm_inparm namelist from: ', trim(NLFilename)
        open( unitn, file=trim(NLFilename), status='old' )
        ierr = 1
        do while ( ierr /= 0 )
@@ -471,14 +471,14 @@ contains
        ! Consistency settings for co2 type
 
        if (co2_type /= 'constant' .and. co2_type /= 'prognostic' .and. co2_type /= 'diagnostic') then
-          write(6,*)'co2_type = ',co2_type,' is not supported'
-          write(6,*)'choices are constant, prognostic or diagnostic'
+          write(iulog,*)'co2_type = ',co2_type,' is not supported'
+          write(iulog,*)'choices are constant, prognostic or diagnostic'
           call endrun()
        end if
 #if (defined OFFLINE)
        if (co2_type /= 'constant') then
-          write(6,*)'co2_type = ',co2_type,' is not supported in offline mode'
-          write(6,*)'choice is only constant'
+          write(iulog,*)'co2_type = ',co2_type,' is not supported in offline mode'
+          write(iulog,*)'choice is only constant'
           call endrun()
        end if
 #endif
@@ -486,15 +486,15 @@ contains
        ! Consistency settings for dynamic land use, etc.
 
        if (fpftdyn /= ' ' .and. create_crop_landunit) then
-          write(6,*)'dynamic landuse is currently not supported with create_crop_landunit option'
+          write(iulog,*)'dynamic landuse is currently not supported with create_crop_landunit option'
           call endrun()
        end if
        if (fpftdyn /= ' ') then
 #if (defined DGVM)
-          write(6,*)'dynamic landuse is currently not supported with DGVM option'
+          write(iulog,*)'dynamic landuse is currently not supported with DGVM option'
           call endrun()
 #elif (defined CASA)          
-          write(6,*)'dynamic landuse is currently not supported with CASA option'
+          write(iulog,*)'dynamic landuse is currently not supported with CASA option'
           call endrun()
 #endif       
        end if
@@ -523,13 +523,13 @@ contains
        end if
 #if (defined RTM) || (defined DGVM)
        if (is_perpetual()) then
-          write(6,*)'RTM or DGVM cannot be defined in perpetual mode'
+          write(iulog,*)'RTM or DGVM cannot be defined in perpetual mode'
           call endrun()
        end if
 #endif
        if (is_perpetual()) then
           if (finidat == ' ') then
-             write(6,*)'must specify initial dataset for perpetual mode'
+             write(iulog,*)'must specify initial dataset for perpetual mode'
              call endrun()
           end if
        end if
@@ -541,7 +541,7 @@ contains
           logid  = ' '
           call shr_sys_getenv('LOGNAME', logid, ierr)
           if (ierr /= 0) then
-             write (6,*) 'error: logname not defined'
+             write(iulog,*) 'error: logname not defined'
              call endrun
           end if
           cap = ' '
@@ -566,18 +566,18 @@ contains
        ! Check that hist_type_1d is not set for primary tape
 
        if (hist_type1d_pertape(1) /= ' ') then
-          write(6,*)'CONTROL_INIT error: hist_type1d_pertape can only be set for tapes 2-6'
+          write(iulog,*)'CONTROL_INIT error: hist_type1d_pertape can only be set for tapes 2-6'
           call endrun()
        end if
 
        ! Check on run type
 
        if (nsrest == iundef) then
-          write(6,*) 'error: must set nsrest'
+          write(iulog,*) 'error: must set nsrest'
           call endrun()
        end if
        if (nsrest == 3 .and. nrevsn == ' ') then
-          write(6,*) 'error: need to set restart data file name'
+          write(iulog,*) 'error: need to set restart data file name'
           call endrun()
        end if
 
@@ -585,16 +585,16 @@ contains
 
 #if (defined OFFLINE)
        if (offline_atmdir == ' ') then
-          write(6,*)'error: atmos  input data file must be specified'; call endrun()
+          write(iulog,*)'error: atmos  input data file must be specified'; call endrun()
        end if
        if (cycle_begyr /= iundef) then
           if (cycle_nyr == iundef) then
-	     write(6,*)'error: if cycle_begyr is set, cycle_nyr must also be set'; call endrun()
+	     write(iulog,*)'error: if cycle_begyr is set, cycle_nyr must also be set'; call endrun()
 	  end if
        end if
        if (cycle_nyr /= iundef) then
           if (cycle_begyr == iundef) then
-	     write(6,*)'error: if cycle_nyr is set, cycle_begyr must also be set'; call endrun()
+	     write(iulog,*)'error: if cycle_nyr is set, cycle_begyr must also be set'; call endrun()
 	  end if
        end if
 #endif
@@ -603,7 +603,7 @@ contains
 
 #if (defined COUP_CSM)
        if (csm_doflxave .and. irad ==1 ) then
-          write(6,*)'error: irad must be greater that one if', &
+          write(iulog,*)'error: irad must be greater that one if', &
             ' flux averaging option is enabled'
           call endrun
        end if
@@ -612,7 +612,7 @@ contains
        ! Check on nitrogen deposition dataset
        
        if (fndepdat /= ' ' .and. fndepdyn /= ' ') then
-          write(6,*)'namelist error: only one of fndepdat or fndepdyn can be defined'
+          write(iulog,*)'namelist error: only one of fndepdat or fndepdyn can be defined'
           call endrun()
        end if
        
@@ -621,7 +621,7 @@ contains
        if (irad < 0) irad = nint(-irad*3600._r8/dtime)
 
        if ( (co2_ppmv <= 0.0_r8) .or. (co2_ppmv > 3000.0_r8) )then
-          write(6,*)'namelist error: co2_ppmv is out of a reasonable range'
+          write(iulog,*)'namelist error: co2_ppmv is out of a reasonable range'
           call endrun()
        end if
        ! History and restart files
@@ -677,8 +677,8 @@ contains
     call control_spmd()
     
     if (masterproc) then
-       write(6,*) 'Successfully initialized run control settings'
-       write(6,*)
+       write(iulog,*) 'Successfully initialized run control settings'
+       write(iulog,*)
     endif
 
   end subroutine control_init
@@ -750,11 +750,9 @@ contains
     call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdat, len(fndepdat), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdyn, len(fndepdyn), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fpftcon , len(fpftcon) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
-
-#if (defined RTM)
     call mpi_bcast (frivinp_rtm, len(frivinp_rtm), MPI_CHARACTER, 0, mpicom, ier)
-#endif
 
     ! Landunit generation
 
@@ -850,135 +848,135 @@ contains
     integer i  !loop index
 !------------------------------------------------------------------------
 
-    write(6,*) 'define run:'
-    write(6,*) '   run type              = ',runtyp(nsrest+1)
-    write(6,*) '   case title            = ',trim(ctitle)
-    write(6,*) 'input data files:'
-    write(6,*) '   PFT physiology = ',trim(fpftcon)
+    write(iulog,*) 'define run:'
+    write(iulog,*) '   run type              = ',runtyp(nsrest+1)
+    write(iulog,*) '   case title            = ',trim(ctitle)
+    write(iulog,*) 'input data files:'
+    write(iulog,*) '   PFT physiology = ',trim(fpftcon)
     if (fsurdat == ' ') then
-       write(6,*) '   fsurdat, surface dataset not set'
+       write(iulog,*) '   fsurdat, surface dataset not set'
     else
-       write(6,*) '   surface data   = ',trim(fsurdat)
+       write(iulog,*) '   surface data   = ',trim(fsurdat)
     end if
     if (flndtopo == ' ') then
-       write(6,*) '   flndtopo not set'
+       write(iulog,*) '   flndtopo not set'
     else
-       write(6,*) '   land topographic data = ',trim(flndtopo)
+       write(iulog,*) '   land topographic data = ',trim(flndtopo)
     end if
     if (fatmgrid == ' ') then
-       write(6,*) '   fatmgrid not set, using fsurdat'
+       write(iulog,*) '   fatmgrid not set, using fsurdat'
        fatmgrid = fsurdat
-       write(6,*) '   atm grid data  = ',trim(fatmgrid)
+       write(iulog,*) '   atm grid data  = ',trim(fatmgrid)
     else
-       write(6,*) '   atm grid data  = ',trim(fatmgrid)
+       write(iulog,*) '   atm grid data  = ',trim(fatmgrid)
     end if
     if (fatmlndfrc == ' ') then
-       write(6,*) '   fatmlndfrc not set, using fatmgrid'
+       write(iulog,*) '   fatmlndfrc not set, using fatmgrid'
        fatmlndfrc = fatmgrid
-       write(6,*) '   land frac data = ',trim(fatmlndfrc)
+       write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     else
-       write(6,*) '   land frac data = ',trim(fatmlndfrc)
+       write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     end if
     if (fatmtopo == ' ') then
-       write(6,*) '   fatmtopo not set'
+       write(iulog,*) '   fatmtopo not set'
     else
-       write(6,*) '   atm topographic data = ',trim(fatmtopo)
+       write(iulog,*) '   atm topographic data = ',trim(fatmtopo)
     end if
     if (fndepdat == ' ') then
-        write(6,*) '   NOT using input data for nitrogen deposition'
+        write(iulog,*) '   NOT using input data for nitrogen deposition'
     else
-        write(6,*) '   nitrogen deposition data = ',trim(fndepdat)
+        write(iulog,*) '   nitrogen deposition data = ',trim(fndepdat)
     endif
     if (fndepdyn == ' ') then
-        write(6,*) '   NOT using dynamic input data for nitrogen deposition'
+        write(iulog,*) '   NOT using dynamic input data for nitrogen deposition'
     else
-        write(6,*) '   dynamic nitrogen deposition data = ',trim(fndepdyn)
+        write(iulog,*) '   dynamic nitrogen deposition data = ',trim(fndepdyn)
     endif
-    if (nsrest == 0 .and. finidat == ' ') write(6,*) '   initial data created by model'
-    if (nsrest == 0 .and. finidat /= ' ') write(6,*) '   initial data   = ',trim(finidat)
-    if (nsrest /= 0) write(6,*) '   restart data   = ',trim(nrevsn)
+    if (nsrest == 0 .and. finidat == ' ') write(iulog,*) '   initial data created by model'
+    if (nsrest == 0 .and. finidat /= ' ') write(iulog,*) '   initial data   = ',trim(finidat)
+    if (nsrest /= 0) write(iulog,*) '   restart data   = ',trim(nrevsn)
 #if (defined OFFLINE)
     if (offline_atmdir /= ' ') then
-       write(6,*) '   atmospheric forcing data    = ',trim(offline_atmdir)
+       write(iulog,*) '   atmospheric forcing data    = ',trim(offline_atmdir)
     end if
     if (cycle_begyr /= -9999999) then
-       write(6,*) '   first year of atmospheric forcing data for cycling = ',cycle_begyr
-       write(6,*) '   number of years in atmospheric forcing data cycle  = ',cycle_nyr
+       write(iulog,*) '   first year of atmospheric forcing data for cycling = ',cycle_begyr
+       write(iulog,*) '   number of years in atmospheric forcing data cycle  = ',cycle_nyr
     end if
 #elif (defined SEQ_MCT) || (defined SEQ_ESMF)
-    write(6,*) '   atmospheric forcing data is from sequential ccsm model'
+    write(iulog,*) '   atmospheric forcing data is from sequential ccsm model'
 #elif (defined COUP_CSM)
-    write(6,*) '   atmospheric forcint data is from ccsm flux coupler'
+    write(iulog,*) '   atmospheric forcint data is from ccsm flux coupler'
 #endif
 #if (defined RTM)
-    if (frivinp_rtm /= ' ') write(6,*) '   RTM river data       = ',trim(frivinp_rtm)
+    if (frivinp_rtm /= ' ') write(iulog,*) '   RTM river data       = ',trim(frivinp_rtm)
 #endif
     if (mss_irt /= 0) then
-       write(6,*) 'Mass store control values'
-       write(6,*)'   mass store path                    = ',trim(archive_dir)
-       write(6,*)'   mass store retention (days)        = ',mss_irt
-       write(6,*)'   mass store write password          = ',mss_wpass
+       write(iulog,*) 'Mass store control values'
+       write(iulog,*)'   mass store path                    = ',trim(archive_dir)
+       write(iulog,*)'   mass store retention (days)        = ',mss_irt
+       write(iulog,*)'   mass store write password          = ',mss_wpass
     endif
-    write(6,*) 'Restart parameters:'
-    write(6,*)'   restart pointer file directory     = ',trim(rpntdir)
-    write(6,*)'   restart pointer file name          = ',trim(rpntfil)
+    write(iulog,*) 'Restart parameters:'
+    write(iulog,*)'   restart pointer file directory     = ',trim(rpntdir)
+    write(iulog,*)'   restart pointer file name          = ',trim(rpntfil)
     if (hist_crtinic == 'MONTHLY') then
-       write(6,*)'initial datasets will be written monthly'
+       write(iulog,*)'initial datasets will be written monthly'
     else if (hist_crtinic == 'YEARLY') then
-       write(6,*)'initial datasets will be written yearly'
+       write(iulog,*)'initial datasets will be written yearly'
     else if (hist_crtinic == 'DAILY') then
-       write(6,*)'initial datasets will be written daily'
+       write(iulog,*)'initial datasets will be written daily'
     else if (hist_crtinic == '6-HOURLY') then
-       write(6,*)'initial datasets will be written 6-hourly'
+       write(iulog,*)'initial datasets will be written 6-hourly'
     else
-       write(6,*)'initial datasets will not be produced'
+       write(iulog,*)'initial datasets will not be produced'
     endif
-    write(6,*) 'model physics parameters:'
+    write(iulog,*) 'model physics parameters:'
 #if (defined PERGRO)
-    write(6,*) '   flag for random perturbation test is set'
+    write(iulog,*) '   flag for random perturbation test is set'
 #else
-    write(6,*) '   flag for random perturbation test is not set'
+    write(iulog,*) '   flag for random perturbation test is not set'
 #endif
-    write(6,*) '   solar radiation frequency (iterations) = ',irad
-    write(6,*) '   CO2 volume mixing ratio   (umol/mol)   = ', co2_ppmv
+    write(iulog,*) '   solar radiation frequency (iterations) = ',irad
+    write(iulog,*) '   CO2 volume mixing ratio   (umol/mol)   = ', co2_ppmv
 #if (defined COUP_CSM)
-    write(6,*) 'communication with the flux coupler'
+    write(iulog,*) 'communication with the flux coupler'
     if (csm_doflxave) then
-       write(6,*)'    data will be sent to the flux coupler ', &
+       write(iulog,*)'    data will be sent to the flux coupler ', &
             'only when an albedo calculation is performed '
-       write(6,*)'     fluxes will be averaged on steps where ', &
+       write(iulog,*)'     fluxes will be averaged on steps where ', &
             'communication with the flux coupler does not occur'
     else
-       write(6,*)'    data will be sent and received to/from ', &
+       write(iulog,*)'    data will be sent and received to/from ', &
             'the flux coupler at every time step except for nstep=1'
     endif
 #endif
 #if (defined RTM)
     if (rtm_nsteps > 1) then
-       write(6,*)'river runoff calculation performed only every ',rtm_nsteps,' nsteps'
+       write(iulog,*)'river runoff calculation performed only every ',rtm_nsteps,' nsteps'
     else
-       write(6,*)'river runoff calculation performed every time step'
+       write(iulog,*)'river runoff calculation performed every time step'
     endif
 #endif
     if (nsrest == 1) then
-       write(6,*) 'restart warning:'
-       write(6,*) '   Namelist not checked for agreement with initial run.'
-       write(6,*) '   Namelist should not differ except for ending time step and run type'
+       write(iulog,*) 'restart warning:'
+       write(iulog,*) '   Namelist not checked for agreement with initial run.'
+       write(iulog,*) '   Namelist should not differ except for ending time step and run type'
     end if
     if (nsrest == 3) then
-       write(6,*) 'branch warning:'
-       write(6,*) '   Namelist not checked for agreement with initial run.'
-       write(6,*) '   Surface data set and reference date should not differ from initial run'
+       write(iulog,*) 'branch warning:'
+       write(iulog,*) '   Namelist not checked for agreement with initial run.'
+       write(iulog,*) '   Surface data set and reference date should not differ from initial run'
     end if
 #if (defined COUP_CSM)
-    write(6,*) '   last time step determined by flux coupler'
+    write(iulog,*) '   last time step determined by flux coupler'
 #endif
 #if (defined PERGRO)
-    write(6,*) '   perturbation limit = ',pertlim
+    write(iulog,*) '   perturbation limit = ',pertlim
 #endif
-    write(6,*) '   maxpatch_pft         = ',maxpatch_pft
-    write(6,*) '   allocate_all_vegpfts = ',allocate_all_vegpfts
-    write(6,*) '   nsegspc              = ',nsegspc
+    write(iulog,*) '   maxpatch_pft         = ',maxpatch_pft
+    write(iulog,*) '   allocate_all_vegpfts = ',allocate_all_vegpfts
+    write(iulog,*) '   nsegspc              = ',nsegspc
 
   end subroutine control_print
 

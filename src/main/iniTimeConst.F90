@@ -28,6 +28,7 @@ subroutine iniTimeConst
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
                            albsat, albdry
   use clm_varctl  , only : nsrest, fsurdat,scmlon,scmlat,single_column
+  use clm_varctl  , only : iulog
   use pftvarcon   , only : ncorn, nwheat, noveg, ntree, roota_par, rootb_par,  &
                            smpso, smpsc, fnitr, &
                            z0mr, displar, dleaf, rhol, rhos, taul, taus, xl, &
@@ -145,7 +146,7 @@ subroutine iniTimeConst
 
 !------------------------------------------------------------------------
 
-  if (masterproc) write (6,*) 'Attempting to initialize time invariant variables'
+  if (masterproc) write(iulog,*) 'Attempting to initialize time invariant variables'
 
   call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
   call get_proc_global(numg, numl, numc, nump)
@@ -203,7 +204,7 @@ subroutine iniTimeConst
   ! --------------------------------------------------------------------
 
   if (masterproc) then
-     write (6,*) 'Attempting to read soil color, sand and clay boundary data .....'
+     write(iulog,*) 'Attempting to read soil color, sand and clay boundary data .....'
      call getfil (fsurdat, locfn, 0)
      call check_ret(nf_open(locfn, 0, ncid), subname)
 
@@ -251,15 +252,15 @@ subroutine iniTimeConst
 
   if (masterproc) then
      call check_ret(nf_close(ncid), subname)
-     write (6,*) 'Successfully read fmax, soil color, sand and clay boundary data'
-     write (6,*)
+     write(iulog,*) 'Successfully read fmax, soil color, sand and clay boundary data'
+     write(iulog,*)
   endif
   ! Determine saturated and dry soil albedos for n color classes and 
   ! numrad wavebands (1=vis, 2=nir)
 
   allocate(albsat(mxsoil_color,numrad), albdry(mxsoil_color,numrad), stat=ier)
   if (ier /= 0) then
-     write (6,*)'iniTimeConst: allocation error for albsat, albdry'
+     write(iulog,*)'iniTimeConst: allocation error for albsat, albdry'
      call endrun()
   end if
 
@@ -278,7 +279,7 @@ subroutine iniTimeConst
      albdry(1:20,2) = (/0.61_r8,0.57_r8,0.53_r8,0.51_r8,0.49_r8,0.48_r8,0.45_r8,0.43_r8,&
                         0.41_r8,0.39_r8,0.37_r8,0.35_r8,0.33_r8,0.31_r8,0.29_r8,0.27_r8,0.25_r8,0.23_r8,0.21_r8,0.16_r8/)
   else
-     write(6,*)'maximum color class = ',mxsoil_color,' is not supported'
+     write(iulog,*)'maximum color class = ',mxsoil_color,' is not supported'
      call endrun
   end if
   
@@ -410,8 +411,8 @@ subroutine iniTimeConst
    ! check that lake and soil levels are the same for now
 
    if (nlevlak /= nlevsoi) then
-      write(6,*)'number of soil levels and number of lake levels must be the same'
-      write(6,*)'nlevsoi= ',nlevsoi,' nlevlak= ',nlevlak
+      write(iulog,*)'number of soil levels and number of lake levels must be the same'
+      write(iulog,*)'nlevsoi= ',nlevsoi,' nlevlak= ',nlevlak
       call endrun
    endif
 
@@ -636,6 +637,6 @@ subroutine iniTimeConst
 
    deallocate(soic2d,ndep,sand3d,clay3d,gti)
 
-   if (masterproc) write (6,*) 'Successfully initialized time invariant variables'
+   if (masterproc) write(iulog,*) 'Successfully initialized time invariant variables'
 
 end subroutine iniTimeConst

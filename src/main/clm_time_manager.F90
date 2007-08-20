@@ -6,6 +6,7 @@ module clm_time_manager
    use shr_kind_mod, only: r8 => shr_kind_r8
    use spmdMod     , only: masterproc, iam
    use abortutils  , only: endrun
+   use clm_varctl  , only: iulog
    use ESMF_Mod
 
    implicit none
@@ -143,11 +144,11 @@ subroutine timemgr_init( calendar_in, start_ymd_in, start_tod_in, ref_ymd_in, &
      start_date = TimeSetymd( start_ymd_in, start_tod_in, "start_date" )
   else
      if ( start_ymd == uninit_int ) then
-        write(6,*)sub,': start_ymd must be specified '
+        write(iulog,*)sub,': start_ymd must be specified '
         call endrun
      end if
      if ( start_tod == uninit_int ) then
-        write(6,*)sub,': start_tod must be specified '
+        write(iulog,*)sub,': start_tod must be specified '
         call endrun
      end if
      start_date = TimeSetymd( start_ymd, start_tod, "start_date" )
@@ -201,19 +202,19 @@ subroutine timemgr_init( calendar_in, start_ymd_in, start_tod_in, ref_ymd_in, &
   ! Error check 
 
   if ( stop_date <= start_date ) then
-     write(6,*)sub, ': stop date must be specified later than start date: '
+     write(iulog,*)sub, ': stop date must be specified later than start date: '
      call ESMF_TimeGet( start_date, yy=yr, mm=mon, dd=day, s=tod )
-     write(6,*) ' Start date (yr, mon, day, tod): ', yr, mon, day, tod
+     write(iulog,*) ' Start date (yr, mon, day, tod): ', yr, mon, day, tod
      call ESMF_TimeGet( stop_date, yy=yr, mm=mon, dd=day, s=tod )
-     write(6,*) ' Stop date  (yr, mon, day, tod): ', yr, mon, day, tod
+     write(iulog,*) ' Stop date  (yr, mon, day, tod): ', yr, mon, day, tod
      call endrun
   end if
   if ( curr_date >= stop_date ) then
-     write(6,*)sub, ': stop date must be specified later than current date: '
+     write(iulog,*)sub, ': stop date must be specified later than current date: '
      call ESMF_TimeGet( curr_date, yy=yr, mm=mon, dd=day, s=tod )
-     write(6,*) ' Current date (yr, mon, day, tod): ', yr, mon, day, tod
+     write(iulog,*) ' Current date (yr, mon, day, tod): ', yr, mon, day, tod
      call ESMF_TimeGet( stop_date, yy=yr, mm=mon, dd=day, s=tod )
-     write(6,*) ' Stop date    (yr, mon, day, tod): ', yr, mon, day, tod
+     write(iulog,*) ' Stop date    (yr, mon, day, tod): ', yr, mon, day, tod
      call endrun
   end if
 
@@ -312,7 +313,7 @@ function TimeSetymd( ymd, tod, desc )
   !---------------------------------------------------------------------------------
 
   if ( (ymd < 0) .or. (tod < 0) .or. (tod > 24*3600) )then
-     write(6,*) sub//': error yymmdd is a negative number or time-of-day out of bounds', &
+     write(iulog,*) sub//': error yymmdd is a negative number or time-of-day out of bounds', &
           ymd, tod
      call endrun
   end if
@@ -345,7 +346,7 @@ integer function TimeGetymd( date, tod )
      call chkrc(rc, sub//': error return from ESMF_TimeGet')
   end if
   if ( yr < 0 )then
-     write(6,*) sub//': error year is less than zero', yr
+     write(iulog,*) sub//': error year is less than zero', yr
      call endrun
   end if
 end function TimeGetymd
@@ -392,7 +393,7 @@ subroutine timemgr_restart_io( ncid, flag )
         else if ( trim(cal) == 'ESMF_CAL_GREGORIAN' ) then
            rst_caltype = gregorian
         else
-           write(6,*)sub,': unrecognized calendar specified: ',calendar
+           write(iulog,*)sub,': unrecognized calendar specified: ',calendar
            call endrun
         end if
      end if
@@ -409,7 +410,7 @@ subroutine timemgr_restart_io( ncid, flag )
         else if ( rst_caltype == gregorian ) then
            calendar = 'ESMF_CAL_GREGORIAN'
         else
-           write(6,*)sub,': unrecognized calendar type in restart file: ',rst_caltype
+           write(iulog,*)sub,': unrecognized calendar type in restart file: ',rst_caltype
            call endrun
         end if
      end if
@@ -600,19 +601,19 @@ subroutine timemgr_restart( stop_ymd_synclock, stop_tod_synclock )
   ! Error check
 
   if ( stop_date <= start_date ) then
-     write(6,*)sub, ': stop date must be specified later than start date: '
+     write(iulog,*)sub, ': stop date must be specified later than start date: '
      call ESMF_TimeGet( start_date, yy=yr, mm=mon, dd=day, s=tod )
-     write(6,*) ' Start date (yr, mon, day, tod): ', yr, mon, day, tod
+     write(iulog,*) ' Start date (yr, mon, day, tod): ', yr, mon, day, tod
      call ESMF_TimeGet( stop_date, yy=yr, mm=mon, dd=day, s=tod )
-     write(6,*) ' Stop date  (yr, mon, day, tod): ', yr, mon, day, tod
+     write(iulog,*) ' Stop date  (yr, mon, day, tod): ', yr, mon, day, tod
      call endrun
   end if
   if ( curr_date >= stop_date ) then
-     write(6,*)sub, ': stop date must be specified later than current date: '
+     write(iulog,*)sub, ': stop date must be specified later than current date: '
      call ESMF_TimeGet( curr_date, yy=yr, mm=mon, dd=day, s=tod )
-     write(6,*) ' Current date (yr, mon, day, tod): ', yr, mon, day, tod
+     write(iulog,*) ' Current date (yr, mon, day, tod): ', yr, mon, day, tod
      call ESMF_TimeGet( stop_date, yy=yr, mm=mon, dd=day, s=tod )
-     write(6,*) ' Stop date    (yr, mon, day, tod): ', yr, mon, day, tod
+     write(iulog,*) ' Stop date    (yr, mon, day, tod): ', yr, mon, day, tod
      call endrun
   end if
 
@@ -688,7 +689,7 @@ subroutine init_calendar( )
 #ifdef COUP_WRF
   rc = -200  ! kaboom
   call chkrc(rc, sub//': error return from ESMF_CalendarSet')
-  write(6,*)'initialized EMSF calendar'
+  write(iulog,*)'initialized EMSF calendar'
 #else
   caltmp = to_upper(calendar)
   if ( trim(caltmp) == 'NO_LEAP' ) then
@@ -696,7 +697,7 @@ subroutine init_calendar( )
   else if ( trim(caltmp) == 'GREGORIAN' ) then
      cal_type = ESMF_CAL_GREGORIAN
   else
-     write(6,*)sub,': unrecognized calendar specified: ',calendar
+     write(iulog,*)sub,': unrecognized calendar specified: ',calendar
      call endrun
   end if
   tm_cal = ESMF_CalendarCreate( name=caltmp, calendarType=cal_type, rc=rc )
@@ -745,7 +746,7 @@ subroutine timemgr_print()
   call chkrc(rc, sub//': error return from ESMF_ClockGet')
   nstep = step_no
 
-  write(6,*)' ********** Time Manager Configuration **********'
+  write(iulog,*)' ********** Time Manager Configuration **********'
 
   call ESMF_TimeIntervalGet( step, s=step_sec, rc=rc )
   call chkrc(rc, sub//': error return from ESMF_TimeIntervalGet')
@@ -763,27 +764,27 @@ subroutine timemgr_print()
        s=curr_tod, rc=rc )
   call chkrc(rc, sub//': error return from ESMF_TimeGet')
 
-  write(6,*)'  Calendar type:            ',trim(calendar)
-  write(6,*)'  Timestep size (seconds):  ', step_sec
-  write(6,*)'  Start date (yr mon day tod):     ', start_yr, start_mon, &
+  write(iulog,*)'  Calendar type:            ',trim(calendar)
+  write(iulog,*)'  Timestep size (seconds):  ', step_sec
+  write(iulog,*)'  Start date (yr mon day tod):     ', start_yr, start_mon, &
        start_day, start_tod
-  write(6,*)'  Stop date (yr mon day tod):      ', stop_yr, stop_mon, &
+  write(iulog,*)'  Stop date (yr mon day tod):      ', stop_yr, stop_mon, &
        stop_day, stop_tod
-  write(6,*)'  Reference date (yr mon day tod): ', ref_yr, ref_mon, &
+  write(iulog,*)'  Reference date (yr mon day tod): ', ref_yr, ref_mon, &
        ref_day, ref_tod
-  write(6,*)'  Current step number:      ', nstep
-  write(6,*)'  Ending step number:       ', nestep
-  write(6,*)'  Current date (yr mon day tod):   ', curr_yr, curr_mon, &
+  write(iulog,*)'  Current step number:      ', nstep
+  write(iulog,*)'  Ending step number:       ', nestep
+  write(iulog,*)'  Current date (yr mon day tod):   ', curr_yr, curr_mon, &
        curr_day, curr_tod
 
   if ( tm_perp_calendar ) then
      call ESMF_TimeGet( tm_perp_date, yy=yr, mm=mon, dd=day, rc=rc )
      call chkrc(rc, sub//': error return from ESMF_TimeGet')
-     write(6,*)'  Use perpetual diurnal cycle date (yr mon day): ', &
+     write(iulog,*)'  Use perpetual diurnal cycle date (yr mon day): ', &
           yr, mon, day
   end if
 
-  write(6,*)' ************************************************'
+  write(iulog,*)' ************************************************'
 
 end subroutine timemgr_print
 
@@ -1156,8 +1157,8 @@ function get_curr_calday(offset)
    call ESMF_TimeGet( date, dayOfYear_r8=get_curr_calday, rc=rc )
    call chkrc(rc, sub//': error return from ESMF_TimeGet')
    if ( (get_curr_calday < 1.0) .or. (get_curr_calday > 366.0) )then
-      write(6,*) 'calday = ', get_curr_calday
-      if ( present(offset) ) write(6,*) 'offset = ', offset
+      write(iulog,*) 'calday = ', get_curr_calday
+      if ( present(offset) ) write(iulog,*) 'offset = ', offset
       call endrun( sub//': error get_curr_calday out of bounds' )
    end if
 
@@ -1188,7 +1189,7 @@ function get_calday(ymd, tod)
    call ESMF_TimeGet( date, dayOfYear_r8=get_calday, rc=rc )
    call chkrc(rc, sub//': error return from ESMF_TimeGet')
    if ( (get_calday < 1.0) .or. (get_calday > 366.0) )then
-      write(6,*) 'calday = ', get_calday
+      write(iulog,*) 'calday = ', get_calday
       call endrun( sub//': error calday out of range' )
    end if
 
@@ -1342,7 +1343,7 @@ subroutine chkrc(rc, mes)
    integer, intent(in)          :: rc   ! return code from time management library
    character(len=*), intent(in) :: mes  ! error message
    if ( rc == ESMF_SUCCESS ) return
-   write(6,*) mes
+   write(iulog,*) mes
    call endrun ('CHKRC')
 end subroutine chkrc
 

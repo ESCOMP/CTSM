@@ -17,6 +17,7 @@ module DGVMEstablishmentMod
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils, only: endrun
+  use clm_varctl, only: iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -516,7 +517,7 @@ contains
     ! Just print out the first error
     if (fn > 0) then
        g = filterg(1)
-       write(6,*) 'Error in Establishment: fpc_total is ',fpc_total(g),' at gridcell ',g
+       write(iulog,*) 'Error in Establishment: fpc_total is ',fpc_total(g),' at gridcell ',g
        call endrun
     end if
 
@@ -586,7 +587,7 @@ contains
     ! Just print out the first error
     if (fn > 0) then
        g = filterg(1)
-       write(6,*) 'Error in Establishment: fpc_total_new =',fpc_total_new(g),&
+       write(iulog,*) 'Error in Establishment: fpc_total_new =',fpc_total_new(g),&
             ' at gridcell ',g
        call endrun
     end if

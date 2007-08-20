@@ -28,6 +28,7 @@ module surfrdMod
                            npatch_urban, npatch_lake, npatch_wet, npatch_glacier
   use clm_varsur  , only : wtxy, vegxy
   use clm_varsur  , only : pctspec
+  use clm_varctl  , only : iulog
   use ncdio
   use clmtype
   use spmdMod                         
@@ -133,9 +134,9 @@ contains
     pctspec(:) = 0._r8
 
     if (masterproc) then
-       write (6,*) 'Attempting to read surface boundary data .....'
+       write(iulog,*) 'Attempting to read surface boundary data .....'
        if (lfsurdat == ' ') then
-          write(6,*)'lfsurdat must be specified'; call endrun()
+          write(iulog,*)'lfsurdat must be specified'; call endrun()
        endif
     endif
 
@@ -164,8 +165,8 @@ contains
 
     if ( masterproc )then
        call check_ret(nf_close(ncid), subname)
-       write (6,*) 'Successfully read surface boundary data'
-       write (6,*)
+       write(iulog,*) 'Successfully read surface boundary data'
+       write(iulog,*)
     end if
 
   end subroutine surfrd
@@ -249,7 +250,7 @@ contains
     if (masterproc) then
 
        if (filename == ' ') then
-          write(6,*) trim(subname),' ERROR: filename must be specified '
+          write(iulog,*) trim(subname),' ERROR: filename must be specified '
           call endrun()
        endif
 
@@ -294,11 +295,11 @@ contains
 !tcx fix, this or a test/abort should be added so overlaps can be computed
 !tcx fix, this is demonstrated not bfb in cam bl311 test.
 !tcx fix, see also lat_o_local in areaMod.F90
-#if (1 == 0)
+#if (defined TCX_REMOVE_SEE_NOTES_ABOVE)
        ! Check lat limited to -90,90
        if (minval(domain%latc) < -90.0_r8 .or. &
            maxval(domain%latc) >  90.0_r8) then
-           write(6,*) trim(subname),' Limiting lat/lon to [-90/90] from ', &
+           write(iulog,*) trim(subname),' Limiting lat/lon to [-90/90] from ', &
               minval(domain%latc),maxval(domain%latc)
            where (domain%latc < -90.0_r8) domain%latc = -90.0_r8
            where (domain%latc >  90.0_r8) domain%latc =  90.0_r8
@@ -371,7 +372,7 @@ contains
     if (masterproc) then
 
        if (filename == ' ') then
-          write(6,*) trim(subname),' ERROR: filename must be specified '
+          write(iulog,*) trim(subname),' ERROR: filename must be specified '
           call endrun()
        endif
 
@@ -401,7 +402,7 @@ contains
        endif
 
        if (ni == 0 .or. nj == 0) then
-          write(6,*) trim(subname),' ERROR: ni or nj not set',ni,nj
+          write(iulog,*) trim(subname),' ERROR: ni or nj not set',ni,nj
           call endrun()
        endif
 
@@ -476,7 +477,7 @@ contains
        if (present(mask)) then
           if (present(mfilename)) then
              if (mfilename == ' ') then
-               write(6,*) trim(subname),' ERROR: mfilename must be specified '
+               write(iulog,*) trim(subname),' ERROR: mfilename must be specified '
                call endrun()
              endif
 
@@ -515,11 +516,11 @@ contains
 !tcx fix, this or a test/abort should be added so overlaps can be computed
 !tcx fix, this is demonstrated not bfb in cam bl311 test.
 !tcx fix, see also lat_o_local in areaMod.F90
-#if (1 == 0)
+#if (defined TCX_REMOVE_SEE_NOTES_ABOVE)
        ! Check lat limited to -90,90
        if (minval(latlon%latc) < -90.0_r8 .or. &
            maxval(latlon%latc) >  90.0_r8) then
-           write(6,*) trim(subname),' Limiting lat/lon to [-90/90] from ', &
+           write(iulog,*) trim(subname),' Limiting lat/lon to [-90/90] from ', &
               minval(latlon%latc),maxval(latlon%latc)
            where (latlon%latc < -90.0_r8) latlon%latc = -90.0_r8
            where (latlon%latc >  90.0_r8) latlon%latc =  90.0_r8
@@ -590,7 +591,7 @@ contains
     if (masterproc) then
 
        if (filename == ' ') then
-          write(6,*) trim(subname),' ERROR: filename must be specified '
+          write(iulog,*) trim(subname),' ERROR: filename must be specified '
           call endrun()
        endif
 
@@ -610,7 +611,7 @@ contains
        ns = ni*nj
 
        if (domain%ni /= ni .or. domain%nj /= nj .or. domain%ns /= ns) then
-          write(6,*) trim(subname),' ERROR: landfrac file mismatch ni,nj',domain%ni,ni,domain%nj,nj,domain%ns,ns
+          write(iulog,*) trim(subname),' ERROR: landfrac file mismatch ni,nj',domain%ni,ni,domain%nj,nj,domain%ns,ns
           call endrun()
        endif
 
@@ -630,7 +631,7 @@ contains
     do n = beg,end
        if (abs(latc(n)-domain%latc(n)) > eps .or. &
            abs(lonc(n)-domain%lonc(n)) > eps) then
-          write(6,*) trim(subname),' ERROR: landfrac file mismatch lat,lon',latc(n),domain%latc(n),lonc(n),domain%lonc(n),eps
+          write(iulog,*) trim(subname),' ERROR: landfrac file mismatch lat,lon',latc(n),domain%latc(n),lonc(n),domain%lonc(n),eps
           call endrun()
        endif
     enddo
@@ -691,7 +692,7 @@ contains
     if (masterproc) then
 
        if (filename == ' ') then
-          write(6,*) trim(subname),' ERROR: filename must be specified '
+          write(iulog,*) trim(subname),' ERROR: filename must be specified '
           call endrun()
        endif
 
@@ -711,7 +712,7 @@ contains
        ns = ni*nj
 
        if (domain%ni /= ni .or. domain%nj /= nj .or. domain%ns /= ns) then
-          write(6,*) trim(subname),' ERROR: topo file mismatch ni,nj',domain%ni,ni,domain%nj,nj,domain%ns,ns
+          write(iulog,*) trim(subname),' ERROR: topo file mismatch ni,nj',domain%ni,ni,domain%nj,nj,domain%ns,ns
           call endrun()
        endif
 
@@ -731,7 +732,7 @@ contains
     do n = beg,end
        if (abs(latc(n)-domain%latc(n)) > eps .or. &
            abs(lonc(n)-domain%lonc(n)) > eps) then
-          write(6,*) trim(subname),' ERROR: topo file mismatch lat,lon',latc(n),domain%latc(n),lonc(n),domain%lonc(n),eps
+          write(iulog,*) trim(subname),' ERROR: topo file mismatch lat,lon',latc(n),domain%latc(n),lonc(n),domain%lonc(n),eps
           call endrun()
        endif
     enddo
@@ -825,7 +826,7 @@ contains
        if (found) exit
     end do
     if ( found ) then
-       write(6,*)'surfrd error: PFT cover>100 for nl=',nindx
+       write(iulog,*)'surfrd error: PFT cover>100 for nl=',nindx
        call endrun()
     end if
 
@@ -841,7 +842,7 @@ contains
        if (found) exit
     end do
     if ( found ) then
-       write (6,*)'surfrd error: urban parameterization not implemented at nl= ',nindx,pcturb(nl)
+       write(iulog,*)'surfrd error: urban parameterization not implemented at nl= ',nindx,pcturb(nl)
        call endrun()
     end if
 
@@ -977,7 +978,7 @@ contains
                 if (crop(m) == 1._r8 .and. pctpft(nl,m) > 0._r8) then
                    cropcount = cropcount + 1
                    if (cropcount > maxpatch_cft) then
-                      write(6,*) 'ERROR surfrdMod: cropcount>maxpatch_cft'
+                      write(iulog,*) 'ERROR surfrdMod: cropcount>maxpatch_cft'
                       call endrun()
                    end if
                    cft(nl,cropcount) = m
@@ -1001,7 +1002,7 @@ contains
 
        else
 
-          write(6,*)subname, 'error: pcturb+pctgla+pctlak+pctwet = ',pctspec(nl), &
+          write(iulog,*)subname, 'error: pcturb+pctgla+pctlak+pctwet = ',pctspec(nl), &
                ' must be less than or equal to 100'
           call endrun()
 
@@ -1070,7 +1071,7 @@ contains
 
        do m = 1,maxpatch_pft
           if (pft(nl,m) < 0 .or. pft(nl,m) > numpft) then
-             write (6,*)'surfrd error: invalid PFT at gridcell nl=',nl,pft(nl,m)
+             write(iulog,*)'surfrd error: invalid PFT at gridcell nl=',nl,pft(nl,m)
              call endrun()
           end if
        end do
@@ -1112,11 +1113,11 @@ contains
           end if
        end do
        if (k1 == -9999 .and. k2 == -9999) then
-          write(6,*)'surfrd error: largest PFT patch not found'
+          write(iulog,*)'surfrd error: largest PFT patch not found'
           call endrun()
        else if (domain%pftm(nl) >= 0) then
           if (sumpct < 95 .or. sumpct > 105._r8) then
-             write(6,*)'surfrd error: sum of PFT cover =',sumpct,' at nl=',nl
+             write(iulog,*)'surfrd error: sum of PFT cover =',sumpct,' at nl=',nl
              call endrun()
           else if (sumpct /= 100._r8 .and. k2 /= -9999) then
              pctcft_lunit(nl,k2) = pctcft_lunit(nl,k2) - (sumpct-100._r8)
@@ -1136,13 +1137,13 @@ contains
        end do
        if (domain%pftm(nl) >= 0) then
           if (abs(sumpct - 100._r8) > 0.000001_r8) then
-             write(6,*)'surfrdMod error: sum(pct) over maxpatch_pft is not = 100.'
-             write(6,*)sumpct, nl
+             write(iulog,*)'surfrdMod error: sum(pct) over maxpatch_pft is not = 100.'
+             write(iulog,*)sumpct, nl
              call endrun()
           end if
           if (sumpct < -0.000001_r8) then
-             write(6,*)'surfrdMod error: sum(pct) over maxpatch_pft is < 0.'
-             write(6,*)sumpct, nl
+             write(iulog,*)'surfrdMod error: sum(pct) over maxpatch_pft is < 0.'
+             write(iulog,*)sumpct, nl
              call endrun()
           end if
        end if
@@ -1190,7 +1191,7 @@ contains
        endif
     end do
     if ( found ) then
-       write (6,*)'surfrd error: WTXY > 1 occurs at nl= ',nindx; call endrun()
+       write(iulog,*)'surfrd error: WTXY > 1 occurs at nl= ',nindx; call endrun()
     end if
 
     deallocate(sumvec,cft,pft)
@@ -1279,13 +1280,13 @@ contains
                 sumpct = sumpct + pctpft(nl,m) * 100._r8/(100._r8-pctspec(nl))
              end do
              if (abs(sumpct - 100._r8) > 0.1e-4_r8) then
-                write(6,*)'surfrdMod error: sum(pct) over numpft+1 is not = 100.'
-                write(6,*) sumpct, sumpct-100._r8, nl
+                write(iulog,*)'surfrdMod error: sum(pct) over numpft+1 is not = 100.'
+                write(iulog,*) sumpct, sumpct-100._r8, nl
                 call endrun()
              end if
              if (sumpct < -0.000001_r8) then
-                write(6,*)'surfrdMod error: sum(pct) over numpft+1 is < 0.'
-                write(6,*) sumpct, nl
+                write(iulog,*)'surfrdMod error: sum(pct) over numpft+1 is < 0.'
+                write(iulog,*) sumpct, nl
                 call endrun()
              end if
           end if
@@ -1408,7 +1409,7 @@ contains
     ! iv(1) = miss indicates no values > 0. this is an error
 
     if (iv(1) == miss) then
-       write (6,*) 'surfrd_mkrank error: iv(1) = missing'
+       write(iulog,*) 'surfrd_mkrank error: iv(1) = missing'
        call endrun
     end if
 

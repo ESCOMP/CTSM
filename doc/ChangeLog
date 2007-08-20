@@ -1,4 +1,173 @@
 ===============================================================
+Tag name: clm3_5_08
+Originator(s): tcraig
+Date: Mon Aug 20 20:04:47 MDT 2007
+One-line Summary: convert 6 to iulog in logfile, updates for I/O
+
+Purpose of changes: improve flexibility of logging, continue
+	development of pio, remove dead code, get finemesh
+	mode working in ccsm, add highmem version of gather/scatter.
+
+Bugs fixed (include bugzilla ID):
+  #446 code cleanup done
+  #447 log files have been improved, some work still to do
+  #558 finemesh is working in ccsm, fv still needs to be tested
+
+Known bugs (include bugzilla ID):
+
+Describe any changes made to build system:
+
+Describe any changes made to the namelist:
+
+List any changes to the defaults for the boundary datasets:
+
+Describe any substantial timing or memory changes:
+
+Code reviewed by:
+
+List any svn externals directories updated (csm_share, mct, etc.):
+	pio is updated but not used by default
+
+List all subroutines eliminated:
+
+List all subroutines added and what they do:
+	A  +   src/main/gen_ncdio_global_subs.csh
+	A  +   src/main/gen_ncdio_local_subs.csh
+	A  +   src/main/gen_spmdgs_subs.csh
+  - add a couple csh scripts to auto-generate code for ncdio.F90
+    and spmdGathScat.  this is just temporary during the current
+    development.
+
+List all existing files that have been modified, and describe the changes:
+        M      test/system/test_driver.sh
+	M      tools/mksurfdata/Srcfiles
+	M      tools/mkgriddata/Srcfiles
+	M      src/biogeochem/CNBalanceCheckMod.F90
+	M      src/biogeochem/CASAMod.F90
+	M      src/biogeochem/DUSTMod.F90
+	M      src/biogeochem/DGVMEstablishmentMod.F90
+	M      src/biogeochem/STATICEcosysDynMod.F90
+	M      src/biogeochem/DGVMRestMod.F90
+	M      src/biogeochem/DGVMModeMod.F90
+	M      src/biogeochem/VOCEmissionMod.F90
+	M      src/main/inicFileMod.F90
+	M      src/main/spmdGathScatMod.F90
+	M      src/main/abortutils.F90
+	M      src/main/accumulMod.F90
+	M      src/main/driver.F90
+	M      src/main/decompInitMod.F90
+	M      src/main/ncdio.F90
+	M      src/main/atmdrvMod.F90
+	M      src/main/accFldsMod.F90
+	M      src/main/fileutils.F90
+	M      src/main/initializeMod.F90
+	M      src/main/pftdynMod.F90
+	M      src/main/iniTimeConst.F90
+	M      src/main/histFileMod.F90
+	M      src/main/program_csm.F90
+	M      src/main/clm_atmlnd.F90
+	M      src/main/system_messages.F90
+	M      src/main/clm_csmMod.F90
+	M      src/main/restFileMod.F90
+	M      src/main/scam_setlatlonidx.F90
+	M      src/main/controlMod.F90
+	M      src/main/initSurfAlbMod.F90
+	M      src/main/clm_time_manager.F90
+	M      src/main/filterMod.F90
+	M      src/main/clm_varctl.F90
+	M      src/main/ndepFileMod.F90
+	M      src/main/subgridAveMod.F90
+	M      src/main/initGridCellsMod.F90
+	M      src/main/lnd_comp_mct.F90
+	M      src/main/program_off.F90
+	M      src/main/pftvarcon.F90
+	M      src/main/spmdMod.F90
+	M      src/main/surfrdMod.F90
+	M      src/main/domainMod.F90
+	M      src/main/decompMod.F90
+	M      src/main/areaMod.F90
+	M      src/main/iobinary.F90
+	M      src/main/clm_mct_mod.F90
+	M      src/main/mkarbinitMod.F90
+	M      src/riverroute/RtmMod.F90
+	M      src/biogeophys/BalanceCheckMod.F90
+	M      src/biogeophys/CanopyFluxesMod.F90
+
+  Summary of changes:
+  - improve flexibility in log file by converting "6" to iulog.  
+    iulog is defined in clm_varctl.F90.
+  - refactor ncdio for optional pio usage and add many new interfaces.  
+  - add lots of pio code (parallel i/o) to ncdio; not used or 
+    validated yet.  
+  - update history file module for new ncdio methods.  
+  - refactor spmdGathScat method to support both lowmem and highmem 2d 
+    gather/scatter.
+  - add some new high level timers.  
+  - clean up dead code.  
+  - fix bugs in clm_csmMod to support running clm finemesh mode in CCSM.
+
+
+Summary of testing:
+
+  clm: vs clm3_5_07
+    bluevista: all pass except
+	blZ11 - compare fails, fails in clm3_5_07
+    bangkok/lf95: all pass except
+	blZ11 - compare failed, fails in clm3_5_07
+	sm982 - hangs, fails in clm3_5_07
+    tempest: all pass except
+	br111
+	bl111
+    lightning: all pass except
+	er551
+	br551
+	bl551
+	blZ11
+	
+  cam: vs cam3_5_08
+    bluevista:
+	br532 - fails in cam3_5_08
+    bangkok/lf95:
+	br511 - fails in cam3_5_08
+    tempest: all pass except
+	br531 - fails in cam3_5_08
+	
+  ccsm: vs ccsm3_5_beta11
+    bluevista: 
+      ERS.f45_g35.B.bluevista    PASS
+      ERS.T42_g35.B.bluevista    PASS
+      ERS.T42_g35.B.bluevista + half_degree_clm_surfdat PASS
+            (finemesh test)
+
+CLM tag used for the baseline comparison tests if applicable:
+    clm3_5_070, cam3_5_08, ccsm3_5_beta11
+
+Changes answers relative to baseline: None
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
 Tag name:  clm3_5_07
 Originator(s):  erik (Erik Kluzek)
 Date:  Fri Aug 17 21:27:29 MDT 2007

@@ -15,6 +15,7 @@ module initSurfalbMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils,   only : endrun
+  use clm_varctl,   only : iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -226,7 +227,7 @@ contains
        ! CN initialization is done only on the soil landunits.
 
        if (.not. present(declinm1)) then
-          write(6,*)'declination for the previous timestep (declinm1) must be ',&
+          write(iulog,*)'declination for the previous timestep (declinm1) must be ',&
                ' present as argument in CN mode'
           call endrun()
        end if

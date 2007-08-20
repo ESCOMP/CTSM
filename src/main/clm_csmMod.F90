@@ -24,15 +24,16 @@ module clm_csmMod
   use shr_kind_mod, only: r8 => shr_kind_r8
   use nanMod
   use clm_varpar
+  use clm_varctl      , only : iulog
   use clm_atmlnd      , only : clm_mapa2l, clm_mapl2a
   use clm_atmlnd      , only : atm_a2l, clm_a2l, clm_l2a, atm_l2a
-  use spmdMod         , only : masterproc, mpicom
+  use spmdMod         , only : masterproc, mpicom, iam
   use spmdGathScatMod , only : gather_data_to_master
   use cpl_fields_mod
   use cpl_contract_mod
   use cpl_interface_mod
   use RunoffMod        , only : runoff
-  use shr_sys_mod      , only : shr_sys_irtc
+  use shr_sys_mod      , only : shr_sys_irtc, shr_sys_flush
   use abortutils       , only : endrun
   use perf_mod
 !
@@ -92,10 +93,13 @@ module clm_csmMod
   integer :: begc, endc                       ! per-proc beginning and ending column indices
   integer :: begl, endl                       ! per-proc beginning and ending landunit indices
   integer :: begg, endg                       ! per-proc gridcell ending gridcell indices
+  integer :: abegg, aendg                     ! per-proc atm gridcell ending gridcell indices
+  integer :: asiz                             ! total number of atm gridcells across all processors
   integer :: numg                             ! total number of gridcells across all processors
   integer :: numl                             ! total number of landunits across all processors
   integer :: numc                             ! total number of columns across all processors
   integer :: nump                             ! total number of pfts across all processors
+  integer :: ier                              ! error code
 !
 ! Flux averaging arrays and counters
 !
@@ -242,7 +246,8 @@ contains
 ! !USES:
     use domainMod    , only : adomain
     use decompMod    , only : adecomp
-    use decompMod    , only : get_proc_bounds, get_proc_global
+    use decompMod    , only : get_proc_bounds, get_proc_bounds_atm
+    use decompMod    , only : get_proc_global, get_proc_global_atm
     use RunoffMod    , only : get_proc_rof_bounds, runoff
     use clm_varctl   , only : csm_doflxave, nsrest, irad
     use clm_varcon   , only : re
@@ -274,7 +279,9 @@ contains
     !---------------------------------------------------------------
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+    call get_proc_bounds_atm(abegg, aendg)
     call get_proc_global(numg, numl, numc, nump)
+    asiz = adomain%ni*adomain%nj
 !    call get_proc_rof_bounds(beg_lnd_rof, end_lnd_rof, beg_ocn_rof, end_ocn_rof)
 
     !---------------------------------------------------------------
@@ -294,15 +301,15 @@ contains
     ibuffs(cpl_fields_ibuf_gsize  ) = adomain%ni*adomain%nj ! global array size
     ibuffs(cpl_fields_ibuf_gisize ) = adomain%ni     ! global number of lons
     ibuffs(cpl_fields_ibuf_gjsize ) = adomain%nj     ! global number of lats
-    ibuffs(cpl_fields_ibuf_lsize  ) = endg-begg+1
-    ibuffs(cpl_fields_ibuf_lisize ) = endg-begg+1
+    ibuffs(cpl_fields_ibuf_lsize  ) = aendg-abegg+1
+    ibuffs(cpl_fields_ibuf_lisize ) = aendg-abegg+1
     ibuffs(cpl_fields_ibuf_ljsize ) = 1
     ibuffs(cpl_fields_ibuf_nfields) = cpl_fields_grid_total
     ibuffs(cpl_fields_ibuf_ncpl   ) = ncpday         ! number of land send/recv calls per day
 
-    allocate(Gbuf(begg:endg,cpl_fields_grid_total))
+    allocate(Gbuf(abegg:aendg,cpl_fields_grid_total))
 
-    do n = begg, endg	
+    do n = abegg, aendg	
         gi = adecomp%gdc2glo(n)
         Gbuf(n,cpl_fields_grid_lon)   = adomain%lonc(n)
         Gbuf(n,cpl_fields_grid_lat)   = adomain%latc(n)
@@ -343,7 +350,7 @@ contains
        if (runoff%mask(n) == 2) then
           ni = ni + 1
           if (ni > runoff%lnumro) then
-             write(6,*)'clm_csmMod: ERROR runoff count',n,ni,runoff%lnumro
+             write(iulog,*)'clm_csmMod: ERROR runoff count',n,ni,runoff%lnumro
              call endrun()
           endif
           Gbuf(ni,cpl_fields_grid_lon  ) = runoff%lonc(n)
@@ -354,7 +361,7 @@ contains
        endif
     end do
     if (ni /= runoff%lnumro) then
-       write(6,*)'clm_csmMod: ERROR runoff total count',ni,runoff%lnumro
+       write(iulog,*)'clm_csmMod: ERROR runoff total count',ni,runoff%lnumro
        call endrun()
     endif
 
@@ -382,23 +389,23 @@ contains
        call compat_check_spval(spval, lambm0,'Long of perhelion')
        call compat_check_spval(spval, mvelpp,'Move long of perh')
 
-       write(6,*)'(CSM_INITIALIZE): eccen:  ', eccen
-       write(6,*)'(CSM_INITIALIZE): obliqr: ', obliqr
-       write(6,*)'(CSM_INITIALIZE): lambm0: ', lambm0
-       write(6,*)'(CSM_INITIALIZE): mvelpp: ', mvelpp
+       write(iulog,*)'(CSM_INITIALIZE): eccen:  ', eccen
+       write(iulog,*)'(CSM_INITIALIZE): obliqr: ', obliqr
+       write(iulog,*)'(CSM_INITIALIZE): lambm0: ', lambm0
+       write(iulog,*)'(CSM_INITIALIZE): mvelpp: ', mvelpp
     end if
 
-    write(6,*)'(CSM_INITIALIZE): there will be ',ncpday, &
+    write(iulog,*)'(CSM_INITIALIZE): there will be ',ncpday, &
          ' send/recv calls per day from the land model to the flux coupler'
-    write(6,*)'(CSM_INITIALIZE):sent l->d control data '
+    write(iulog,*)'(CSM_INITIALIZE):sent l->d control data '
 
     ! Allocate memory for grid and runoff communication
 
     nsend = cpl_interface_contractNumatt(contractS)
-    allocate(bufS(begg:endg,nsend))
+    allocate(bufS(abegg:aendg,nsend))
 
     nrecv = cpl_interface_contractNumatt(contractR)
-    allocate(bufR(begg:endg,nrecv))
+    allocate(bufR(abegg:aendg,nrecv))
 
     nroff = cpl_interface_contractNumatt(contractSr)
     allocate(bufSr(csm_nptr,nroff))
@@ -495,7 +502,7 @@ contains
 
        call clm_mapl2a(clm_l2a, atm_l2a)
 
-       do g = begg,endg
+       do g = abegg,aendg
           bufS(g,index_l2c_Sl_t)     = sqrt(sqrt(atm_l2a%eflx_lwrad_out(g)/sb))
           bufS(g,index_l2c_Sl_snowh) = atm_l2a%h2osno(g)
           bufS(g,index_l2c_Sl_avsdr) = atm_l2a%albd(g,1)
@@ -543,13 +550,13 @@ contains
           ni = ni + 1
           bufSr(ni,index_r2c_Forr_roff) = runoff%runoff(n)/(runoff%area(n)*1.0e-6_r8*1000._r8)
           if (ni > runoff%lnumro) then
-             write(6,*)'clm_csmMod: ERROR runoff count',n,ni,gi
+             write(iulog,*)'clm_csmMod: ERROR runoff count',n,ni,gi
              call endrun()
           endif
        endif
     end do
     if (ni /= runoff%lnumro) then
-       write(6,*)'clm_csmMod: ERROR runoff total count',ni,runoff%lnumro
+       write(iulog,*)'clm_csmMod: ERROR runoff total count',ni,runoff%lnumro
        call endrun()
     endif
 
@@ -634,11 +641,11 @@ contains
     if (mod(nstep,ntspday) == 0) then
        if (ibuffr(cpl_fields_ibuf_stopeod) /= 0) then  !stop at end of day
           csmstop_next = .true.  !will stop on next time step
-          write(6,*)'(CSM_DOSNDRCV) output restart and history files at nstep = ',nstep
+          write(iulog,*)'(CSM_DOSNDRCV) output restart and history files at nstep = ',nstep
        endif
        if (ibuffr(cpl_fields_ibuf_resteod) /= 0) then !write restart at end of day
           csmrstrt = .true.      !will write restart now
-          write(6,*)'(CSM_DOSNDRCV) output restart and history files at nstep = ',nstep
+          write(iulog,*)'(CSM_DOSNDRCV) output restart and history files at nstep = ',nstep
        endif
     endif
 
@@ -658,7 +665,7 @@ contains
 ! !USES:
     use clm_varctl, only : co2_type, co2_ppmv
     use clm_varcon, only : rair, o2_molar_const, c13ratio
-    use clmtype   , only : nameg
+    use clmtype   , only : gratm
     use domainMod , only : adomain
 !
 ! !ARGUMENTS:
@@ -699,20 +706,20 @@ contains
 
         if (masterproc) then
            if (.not. associated(bufRglob)) then
-              allocate(bufRglob(numg,nrecv), stat=ier)
+              allocate(bufRglob(asiz,nrecv), stat=ier)
               if (ier /= 0) then
-                 write(6,*)'clm_csmMod: allocation error for bufRglob'; call endrun
+                 write(iulog,*)'clm_csmMod: allocation error for bufRglob'; call endrun
               end if
               if (.not. associated(fieldR)) then
-                 allocate(fieldR(numg), stat=ier)
+                 allocate(fieldR(asiz), stat=ier)
                  if (ier /= 0) then
-                    write(6,*)'clm_csmMod: allocation error for fieldR'; call endrun
+                    write(iulog,*)'clm_csmMod: allocation error for fieldR'; call endrun
                  end if
               endif
               if (.not. associated(area)) then
-                 allocate(area(numg), stat=ier)
+                 allocate(area(asiz), stat=ier)
                  if (ier /= 0) then
-                    write(6,*)'clm_csmMod: allocation error for area'; call endrun
+                    write(iulog,*)'clm_csmMod: allocation error for area'; call endrun
                  end if
               endif
            end if
@@ -720,72 +727,72 @@ contains
 
         ! Find attribute vector indices
 
-        call gather_data_to_master(bufR, bufRglob, clmlevel=nameg)
-        call gather_data_to_master(adomain%area, area, clmlevel=nameg)
+        call gather_data_to_master(bufR, bufRglob, clmlevel=gratm)
+        call gather_data_to_master(adomain%area, area, clmlevel=gratm)
 
         if (masterproc) then
-           write(6,*)
+           write(iulog,*)
 
            if (index_c2l_Sa_co2prog /= 0) then
               fieldR(:) = bufRglob(:,index_c2l_Sa_co2prog)
-              write(6,100) 'lnd','recv', index_c2l_Sa_co2prog, global_sum_fld1d(fieldR,area), ' co2prog'
+              write(iulog,100) 'lnd','recv', index_c2l_Sa_co2prog, global_sum_fld1d(fieldR,area), ' co2prog'
            end if
 
            if (index_c2l_Sa_co2diag /= 0) then
               fieldR(:) = bufRglob(:,index_c2l_Sa_co2diag)
-              write(6,100) 'lnd','recv', index_c2l_Sa_co2diag, global_sum_fld1d(fieldR,area), ' co2diag'
+              write(iulog,100) 'lnd','recv', index_c2l_Sa_co2diag, global_sum_fld1d(fieldR,area), ' co2diag'
            end if
 
            fieldR(:) = bufRglob(:,index_c2l_Sa_z)
-           write(6,100) 'lnd','recv', index_c2l_Sa_z, global_sum_fld1d(fieldR,area), ' hgt'
+           write(iulog,100) 'lnd','recv', index_c2l_Sa_z, global_sum_fld1d(fieldR,area), ' hgt'
 
            fieldR(:) = bufRglob(:,index_c2l_Sa_u)
-           write(6,100) 'lnd','recv', index_c2l_Sa_u, global_sum_fld1d(fieldR,area), ' u'
+           write(iulog,100) 'lnd','recv', index_c2l_Sa_u, global_sum_fld1d(fieldR,area), ' u'
 
            fieldR(:) = bufRglob(:,index_c2l_Sa_v)
-           write(6,100) 'lnd','recv', index_c2l_Sa_v, global_sum_fld1d(fieldR,area), ' v'
+           write(iulog,100) 'lnd','recv', index_c2l_Sa_v, global_sum_fld1d(fieldR,area), ' v'
 
            fieldR(:) = bufRglob(:,index_c2l_Sa_ptem)
-           write(6,100) 'lnd','recv', index_c2l_Sa_ptem, global_sum_fld1d(fieldR,area), ' th'
+           write(iulog,100) 'lnd','recv', index_c2l_Sa_ptem, global_sum_fld1d(fieldR,area), ' th'
 
            fieldR(:) = bufRglob(:,index_c2l_Sa_shum)
-           write(6,100) 'lnd','recv', index_c2l_Sa_shum, global_sum_fld1d(fieldR,area), ' q'
+           write(iulog,100) 'lnd','recv', index_c2l_Sa_shum, global_sum_fld1d(fieldR,area), ' q'
 
            fieldR(:) = bufRglob(:,index_c2l_Sa_pbot)
-           write(6,100) 'lnd','recv', index_c2l_Sa_pbot, global_sum_fld1d(fieldR,area), ' pbot'
+           write(iulog,100) 'lnd','recv', index_c2l_Sa_pbot, global_sum_fld1d(fieldR,area), ' pbot'
 
            fieldR(:) = bufRglob(:,index_c2l_Sa_tbot)
-           write(6,100) 'lnd','recv', index_c2l_Sa_tbot, global_sum_fld1d(fieldR,area), ' t'
+           write(iulog,100) 'lnd','recv', index_c2l_Sa_tbot, global_sum_fld1d(fieldR,area), ' t'
 
            fieldR(:) = bufRglob(:,index_c2l_Faxa_lwdn)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_lwdn, global_sum_fld1d(fieldR,area), ' lwrad'
+           write(iulog,100) 'lnd','recv', index_c2l_Faxa_lwdn, global_sum_fld1d(fieldR,area), ' lwrad'
 
            fieldR(:) = bufRglob(:,index_c2l_Faxa_rainc)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_rainc, global_sum_fld1d(fieldR,area), ' rainc'
+           write(iulog,100) 'lnd','recv', index_c2l_Faxa_rainc, global_sum_fld1d(fieldR,area), ' rainc'
 
            fieldR(:) = bufRglob(:,index_c2l_Faxa_rainl)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_rainl, global_sum_fld1d(fieldR,area), ' rainl'
+           write(iulog,100) 'lnd','recv', index_c2l_Faxa_rainl, global_sum_fld1d(fieldR,area), ' rainl'
 
            fieldR(:) = bufRglob(:,index_c2l_Faxa_snowc)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_snowc, global_sum_fld1d(fieldR,area), ' snowc'
+           write(iulog,100) 'lnd','recv', index_c2l_Faxa_snowc, global_sum_fld1d(fieldR,area), ' snowc'
 
            fieldR(:) = bufRglob(:,index_c2l_Faxa_snowl)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_snowl, global_sum_fld1d(fieldR,area), ' snowl'
+           write(iulog,100) 'lnd','recv', index_c2l_Faxa_snowl, global_sum_fld1d(fieldR,area), ' snowl'
 
            fieldR(:) = bufRglob(:,index_c2l_Faxa_swndr)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_swndr, global_sum_fld1d(fieldR,area),' soll '
+           write(iulog,100) 'lnd','recv', index_c2l_Faxa_swndr, global_sum_fld1d(fieldR,area),' soll '
 
            fieldR(:) = bufRglob(:,index_c2l_Faxa_swvdr)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_swvdr, global_sum_fld1d(fieldR,area),' sols '
+           write(iulog,100) 'lnd','recv', index_c2l_Faxa_swvdr, global_sum_fld1d(fieldR,area),' sols '
 
            fieldR(:) = bufRglob(:,index_c2l_Faxa_swndf)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_swndf, global_sum_fld1d(fieldR,area),' solld'
+           write(iulog,100) 'lnd','recv', index_c2l_Faxa_swndf, global_sum_fld1d(fieldR,area),' solld'
 
            fieldR(:) = bufRglob(:,index_c2l_Faxa_swvdf)
-           write(6,100) 'lnd','recv', index_c2l_Faxa_swvdf, global_sum_fld1d(fieldR,area),' solsd'
+           write(iulog,100) 'lnd','recv', index_c2l_Faxa_swvdf, global_sum_fld1d(fieldR,area),' solsd'
 
 100        format('comm_diag ',a3,1x,a4,1x,i3,es26.19,a)
-           write(6,*)
+           write(iulog,*)
         endif
      endif
 
@@ -800,12 +807,12 @@ contains
         csmstop_now = .true.
         if (timer_lnd_recvsend) call t_stopf('lnd_recvsend')
         if (timer_lnd_sendrecv) call t_stopf('lnd_sendrecv')
-        write(6,*)'(CSM_RECV) stop now signal from flux coupler'
-        write(6,*)'(CSM_RECV) ibuffr(cpl_fields_ibuf_stopnow) = ',ibuffr(cpl_fields_ibuf_stopnow)
+        write(iulog,*)'(CSM_RECV) stop now signal from flux coupler'
+        write(iulog,*)'(CSM_RECV) ibuffr(cpl_fields_ibuf_stopnow) = ',ibuffr(cpl_fields_ibuf_stopnow)
         if (masterproc) then
-           write(6,9001)
-           write(6,9002) ibuffr(cpl_fields_ibuf_cdate)
-           write(6,9003)
+           write(iulog,9001)
+           write(iulog,9002) ibuffr(cpl_fields_ibuf_cdate)
+           write(iulog,9003)
 9001       format(/////' ===========> Terminating CLM Model')
 9002       format(     '      Date: ',i8)
 9003       format(/////' <=========== CLM Model Terminated')
@@ -827,15 +834,14 @@ contains
      ! Below the units are therefore given in mm/s.
 
      if (co2_type == 'prognostic' .and. index_c2l_Sa_co2prog == 0) then
-        write(6,*)' must have nonzero index_c2l_Sa_co2prog for co2_type equal to prognostic'
+        write(iulog,*)' must have nonzero index_c2l_Sa_co2prog for co2_type equal to prognostic'
         call endrun()
      else if (co2_type == 'diagnostic' .and. index_c2l_Sa_co2diag == 0) then
-        write(6,*)' must have nonzero index_c2l_Sa_co2diag for co2_type equal to diagnostic'
+        write(iulog,*)' must have nonzero index_c2l_Sa_co2diag for co2_type equal to diagnostic'
         call endrun()
      end if
 
-    
-     do g = begg,endg
+     do g = abegg,aendg
 
         ! Determine required receive fields
 
@@ -908,7 +914,7 @@ contains
 
      ! debug write statements (remove)
 
-!    if (masterproc) write(6,*)'co2_type = ', co2_type, ' co2_ppmv_val = ', co2_ppmv_val
+!    if (masterproc) write(iulog,*)'co2_type = ', co2_type, ' co2_ppmv_val = ', co2_ppmv_val
 
   end subroutine csm_recv
 
@@ -927,7 +933,7 @@ contains
     use clm_varctl  , only : csm_doflxave
     use clm_varcon  , only : sb
     use clm_time_manager, only : get_curr_date, get_nstep
-    use clmtype     , only : nameg
+    use clmtype     , only : gratm
     use domainMod   , only : adomain
 !
 ! !ARGUMENTS:
@@ -981,7 +987,7 @@ contains
     call clm_mapl2a(clm_l2a, atm_l2a)
 
     bufS(:,:) = 0.0_r8
-    do g = begg,endg
+    do g = abegg,aendg
        bufS(g,index_l2c_Sl_t)       =  atm_l2a%t_rad(g)
        bufS(g,index_l2c_Sl_snowh)   =  atm_l2a%h2osno(g)
        bufS(g,index_l2c_Sl_avsdr)   =  atm_l2a%albd(g,1)
@@ -1020,13 +1026,13 @@ contains
           ni = ni + 1
           bufSr(ni,index_r2c_Forr_roff) = runoff%runoff(n)/(runoff%area(n)*1.0e-6_r8*1000._r8)
           if (ni > runoff%lnumro) then
-             write(6,*)'clm_csmMod: ERROR runoff count',n,ni,runoff%lnumro
+             write(iulog,*)'clm_csmMod: ERROR runoff count',n,ni,runoff%lnumro
              call endrun()
           endif
        endif
     end do
     if (ni /= runoff%lnumro) then
-       write(6,*)'clm_csmMod: ERROR runoff total count',ni,runoff%lnumro
+       write(iulog,*)'clm_csmMod: ERROR runoff total count',ni,runoff%lnumro
        call endrun()
     endif
 
@@ -1038,73 +1044,73 @@ contains
 
        if (masterproc) then
           if (.not. associated(bufSglob)) then
-             allocate(bufSglob(numg,nsend), stat=ier)
+             allocate(bufSglob(asiz,nsend), stat=ier)
              if (ier /= 0) then
-                write(6,*)'clm_csmMod: allocation error for bufSglob'; call endrun
+                write(iulog,*)'clm_csmMod: allocation error for bufSglob'; call endrun
              end if
           end if
           if (.not. associated(fieldS)) then
-             allocate(fieldS(numg), stat=ier)
+             allocate(fieldS(asiz), stat=ier)
              if (ier /= 0) then
-                write(6,*)'clm_csmMod: allocation error for fieldS'; call endrun
+                write(iulog,*)'clm_csmMod: allocation error for fieldS'; call endrun
              end if
           endif
           if (.not. associated(area)) then
-             allocate(area(numg), stat=ier)
+             allocate(area(asiz), stat=ier)
              if (ier /= 0) then
-                write(6,*)'clm_csmMod: allocation error for area'; call endrun
+                write(iulog,*)'clm_csmMod: allocation error for area'; call endrun
              end if
           endif
        end if
 
-       call gather_data_to_master(bufS, bufSglob, clmlevel=nameg)
-       call gather_data_to_master(adomain%area, area, clmlevel=nameg)
+       call gather_data_to_master(bufS, bufSglob, clmlevel=gratm)
+       call gather_data_to_master(adomain%area, area, clmlevel=gratm)
 
        if (masterproc) then
-          write(6,*)
+          write(iulog,*)
           
           fieldS(:) = bufSglob(:,index_l2c_Sl_t)
-          write(6,100) 'lnd','send', index_l2c_Sl_t, global_sum_fld1d(fieldS,area),' trad'
+          write(iulog,100) 'lnd','send', index_l2c_Sl_t, global_sum_fld1d(fieldS,area),' trad'
 
           fieldS(:) = bufSglob(:,index_l2c_Sl_avsdr)
-          write(6,100) 'lnd','send', index_l2c_Sl_avsdr, global_sum_fld1d(fieldS,area),' asdir'
+          write(iulog,100) 'lnd','send', index_l2c_Sl_avsdr, global_sum_fld1d(fieldS,area),' asdir'
 
           fieldS(:) = bufSglob(:,index_l2c_Sl_anidr)
-          write(6,100) 'lnd','send', index_l2c_Sl_anidr, global_sum_fld1d(fieldS,area),' aldir'
+          write(iulog,100) 'lnd','send', index_l2c_Sl_anidr, global_sum_fld1d(fieldS,area),' aldir'
 
           fieldS(:) = bufSglob(:,index_l2c_Sl_avsdf)
-          write(6,100) 'lnd','send', index_l2c_Sl_avsdf, global_sum_fld1d(fieldS,area),' asdif'
+          write(iulog,100) 'lnd','send', index_l2c_Sl_avsdf, global_sum_fld1d(fieldS,area),' asdif'
 
           fieldS(:) = bufSglob(:,index_l2c_Sl_anidf)
-          write(6,100) 'lnd','send', index_l2c_Sl_anidf, global_sum_fld1d(fieldS,area),' aldif'
+          write(iulog,100) 'lnd','send', index_l2c_Sl_anidf, global_sum_fld1d(fieldS,area),' aldif'
 
           fieldS(:) = bufSglob(:,index_l2c_Fall_taux)
-          write(6,100) 'lnd','send', index_l2c_Fall_taux, global_sum_fld1d(fieldS,area),' taux'
+          write(iulog,100) 'lnd','send', index_l2c_Fall_taux, global_sum_fld1d(fieldS,area),' taux'
 
           fieldS(:) = bufSglob(:,index_l2c_Fall_tauy)
-          write(6,100) 'lnd','send', index_l2c_Fall_tauy, global_sum_fld1d(fieldS,area),' tauy'
+          write(iulog,100) 'lnd','send', index_l2c_Fall_tauy, global_sum_fld1d(fieldS,area),' tauy'
 
           fieldS(:) = bufSglob(:,index_l2c_Fall_lat)
-          write(6,100) 'lnd','send', index_l2c_Fall_lat, global_sum_fld1d(fieldS,area),' lhflx'
+          write(iulog,100) 'lnd','send', index_l2c_Fall_lat, global_sum_fld1d(fieldS,area),' lhflx'
 
           fieldS(:) = bufSglob(:,index_l2c_Fall_sen)
-          write(6,100) 'lnd','send', index_l2c_Fall_sen, global_sum_fld1d(fieldS,area),' shflx'
+          write(iulog,100) 'lnd','send', index_l2c_Fall_sen, global_sum_fld1d(fieldS,area),' shflx'
 
           fieldS(:) = bufSglob(:,index_l2c_Fall_lwup)
-          write(6,100) 'lnd','send', index_l2c_Fall_lwup, global_sum_fld1d(fieldS,area),' lwup'
+          write(iulog,100) 'lnd','send', index_l2c_Fall_lwup, global_sum_fld1d(fieldS,area),' lwup'
 
           fieldS(:) = bufSglob(:,index_l2c_Fall_evap)
-          write(6,100) 'lnd','send', index_l2c_Fall_evap, global_sum_fld1d(fieldS,area),' qflx'
+          write(iulog,100) 'lnd','send', index_l2c_Fall_evap, global_sum_fld1d(fieldS,area),' qflx'
 
           fieldS(:) = bufSglob(:,index_l2c_Fall_swnet)
-          write(6,100) 'lnd','send', index_l2c_Fall_swnet, global_sum_fld1d(fieldS,area),' swabs'
+          write(iulog,100) 'lnd','send', index_l2c_Fall_swnet, global_sum_fld1d(fieldS,area),' swabs'
 
           if (index_l2c_Fall_nee /= 0) then
              fieldS(:) = bufSglob(:,index_l2c_Fall_nee)
-             write(6,100) 'lnd','send', index_l2c_Fall_nee, global_sum_fld1d(fieldS,area),' nee'
+             write(iulog,100) 'lnd','send', index_l2c_Fall_nee, global_sum_fld1d(fieldS,area),' nee'
           end if
 
-          write(6,*)
+          write(iulog,*)
 100       format('comm_diag ',a3,1x,a4,1x,i3,es26.19,a)
        endif
     endif
@@ -1354,11 +1360,11 @@ contains
 ! -----------------------------------------------------------------
 
     if ( spval == data )then
-       write(6,*)'ERROR:(compat_check_spval) msg incompatibility'
-       write(6,*)'ERROR: I expect to recieve the data type: ',string
-       write(6,*)'from CPL, but all I got was the special data flag'
-       write(6,*)'coupler must not be sending this data, you are'
-       write(6,*)'running with an incompatable version of the coupler'
+       write(iulog,*)'ERROR:(compat_check_spval) msg incompatibility'
+       write(iulog,*)'ERROR: I expect to recieve the data type: ',string
+       write(iulog,*)'from CPL, but all I got was the special data flag'
+       write(iulog,*)'coupler must not be sending this data, you are'
+       write(iulog,*)'running with an incompatable version of the coupler'
        call endrun
     end if
 
@@ -1395,20 +1401,20 @@ contains
 ! -----------------------------------------------------------------
 
     if ( cpl_min_vers /= expect_min_vers )then
-       write(6,*) 'WARNING(cpl_compat):: Minor version of coupler ', &
+       write(iulog,*) 'WARNING(cpl_compat):: Minor version of coupler ', &
             'messages different than expected: '
-       write(6,*) 'The version of the coupler being used is: ',&
+       write(iulog,*) 'The version of the coupler being used is: ',&
             cpl_min_vers
-       write(6,*) 'The version I expect is:                  ',&
+       write(iulog,*) 'The version I expect is:                  ',&
             expect_min_vers
     end if
 
     if ( cpl_maj_vers /= expect_maj_vers )then
-       write(6,*) 'ERROR(cpl_compat):: Major version of coupler ', &
+       write(iulog,*) 'ERROR(cpl_compat):: Major version of coupler ', &
             'messages different than expected: '
-       write(6,*) 'The version of the coupler being used is: ',&
+       write(iulog,*) 'The version of the coupler being used is: ',&
             cpl_maj_vers
-       write(6,*) 'The version I expect is:                  ',&
+       write(iulog,*) 'The version I expect is:                  ',&
             expect_maj_vers
        call endrun
     end if
@@ -1504,7 +1510,7 @@ contains
     ! Note: area is in km^2
 
     global_sum_fld1d = 0._r8
-    do g = 1,numg
+    do g = 1,asiz
        global_sum_fld1d = global_sum_fld1d + array(g) * area(g) * 1.e6_r8
     end do
 

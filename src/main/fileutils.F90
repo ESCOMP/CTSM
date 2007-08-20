@@ -13,6 +13,7 @@ module fileutils
 !
 ! !USES:
   use abortutils, only : endrun
+  use clm_varctl, only : iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -150,10 +151,10 @@ contains
      i = 0
 100  locfn = fulpath(i+1:klen)
      if (len_trim(locfn) == 0) then
-        write(6,*)'(GETFIL): local filename has zero length'
+        write(iulog,*)'(GETFIL): local filename has zero length'
         call endrun
      else
-        write(6,*)'(GETFIL): attempting to find local file ',  &
+        write(iulog,*)'(GETFIL): attempting to find local file ',  &
              trim(locfn)
      endif
 
@@ -161,7 +162,7 @@ contains
 
      inquire (file=locfn,exist=lexist)
      if (lexist) then
-        write (6,*) '(GETFIL): using ',trim(locfn), &
+        write(iulog,*) '(GETFIL): using ',trim(locfn), &
              ' in current working directory'
         RETURN
      endif
@@ -172,7 +173,7 @@ contains
         inquire(file=fulpath,exist=lexist)
         if (lexist) then
            locfn = trim(fulpath)
-           write(6,*)'(GETFIL): using ',trim(fulpath)
+           write(iulog,*)'(GETFIL): using ',trim(fulpath)
            return
         endif
         fulpath2 = "mss:"//trim(fulpath)
@@ -184,9 +185,9 @@ contains
 
      call shr_file_get( ierr, locfn, fulpath2 )
      if (ierr==0) then
-        write(6,*)'(GETFIL): File ',trim(locfn),' read in from: ', fulpath2
+        write(iulog,*)'(GETFIL): File ',trim(locfn),' read in from: ', fulpath2
      else  ! all tries to get file have been unsuccessful
-        write(6,*)'(GETFIL): failed getting file from full path: ', fulpath2
+        write(iulog,*)'(GETFIL): failed getting file from full path: ', fulpath2
         if (present(iflag) .and. iflag==0) then
            call endrun ('GETFIL: FAILED to get '//trim(fulpath2))
         else
@@ -198,7 +199,7 @@ contains
 
      inquire (file=locfn,exist=lexist)
      if ( .not. lexist) then
-        write(6,*)'(GETFIL): failed transferring file to local path: ', locfn
+        write(iulog,*)'(GETFIL): failed transferring file to local path: ', locfn
         if (present(iflag) .and. iflag==0) then
            call endrun ('GETFIL: file not transfered to local path' )
         end if
@@ -286,7 +287,7 @@ contains
 !------------------------------------------------------------------------
 
      if (len_trim(locfn) == 0) then
-        write(6,*)'(OPNFIL): local filename has zero length'
+        write(iulog,*)'(OPNFIL): local filename has zero length'
         call endrun
      endif
      if (form=='u' .or. form=='U') then
@@ -296,11 +297,11 @@ contains
      end if
      open (unit=iun,file=locfn,status='unknown',form=ft,iostat=ioe)
      if (ioe /= 0) then
-        write(6,*)'(OPNFIL): failed to open file ',trim(locfn),        &
+        write(iulog,*)'(OPNFIL): failed to open file ',trim(locfn),        &
              &     ' on unit ',iun,' ierr=',ioe
         call endrun
      else
-        write(6,*)'(OPNFIL): Successfully opened file ',trim(locfn),   &
+        write(iulog,*)'(OPNFIL): Successfully opened file ',trim(locfn),   &
              &     ' on unit= ',iun
      end if
 

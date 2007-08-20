@@ -50,6 +50,7 @@ PROGRAM program_off
   use shr_orb_mod          
   use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr, obliq, &
                                iyear_AD, nmvelp
+  use clm_varctl      , only : iulog
   use clm_comp        , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
   use clm_time_manager, only : is_last_step, advance_timestep, get_nstep
   use atmdrvMod       , only : atmdrv, atmdrv_init
@@ -144,9 +145,9 @@ PROGRAM program_off
   ! atmospheric data files are provided, model uses dummy atmospheric
   ! forcing and sets atmospheric grid to land grid.
   
-  if (masterproc) write (6,*) 'Attempting to set up atmospheric grid '
+  if (masterproc) write(iulog,*) 'Attempting to set up atmospheric grid '
   call atmdrv_init()
-  if (masterproc) write (6,*) 'Successfully set up atmospheric grid '
+  if (masterproc) write(iulog,*) 'Successfully set up atmospheric grid '
 
   call t_stopf('init')
   
@@ -195,9 +196,9 @@ PROGRAM program_off
 #endif
 
   if (masterproc) then
-     write(6,'(1X,"=============== ",A29,    " ===============")') &
+     write(iulog,'(1X,"=============== ",A29,    " ===============")') &
                                    "SUCCESSFUL TERMINATION OF CLM"
-     write(6,'(1X,"=============== ",A20,I9, " ===============")') &
+     write(iulog,'(1X,"=============== ",A20,I9, " ===============")') &
                                    "# completed steps = ",get_nstep()
   endif
   call t_prf('timing_all',mpicom)
@@ -213,7 +214,7 @@ end program program_off
 
 !The following is only here since empty file won't compile
 subroutine program_off_stub
-  write(6,*) 'PROGRAM_OFF: this routine should not be called'
+  write(iulog,*) 'PROGRAM_OFF: this routine should not be called'
   return
 end subroutine program_off_stub
 

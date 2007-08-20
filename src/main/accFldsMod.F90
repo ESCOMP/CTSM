@@ -30,6 +30,7 @@ module accFldsMod
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils,   only: endrun
+  use clm_varctl,   only: iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -270,7 +271,7 @@ contains
 
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
-       write(6,*)'update_accum_hist allocation error for rbuf1dp'
+       write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
        call endrun
     endif
 
@@ -515,7 +516,7 @@ contains
 
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
-       write(6,*)'update_accum_hist allocation error for rbufslp'
+       write(iulog,*)'update_accum_hist allocation error for rbufslp'
        call endrun
     endif
 

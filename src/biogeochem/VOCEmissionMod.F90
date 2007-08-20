@@ -14,6 +14,7 @@ module VOCEmissionMod
 ! Volatile organic compound emission
 !
 ! !USES:
+  use clm_varctl, only: iulog
   use abortutils, only: endrun
 !
 ! !PUBLIC TYPES:
@@ -276,7 +277,7 @@ contains
 
        case default
 
-          write(6,*)'only nvocs up to index 5 are currently supported'
+          write(iulog,*)'only nvocs up to index 5 are currently supported'
           call endrun()
 
        end select

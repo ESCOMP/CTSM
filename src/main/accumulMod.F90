@@ -28,6 +28,7 @@ module accumulMod
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils,   only: endrun
+  use clm_varctl,   only: iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -147,7 +148,7 @@ contains
 
     naccflds = naccflds + 1
     if (naccflds > max_accum) then
-       write (6,*) 'ACCUMULINIT error: user-defined accumulation fields ', &
+       write(iulog,*) 'ACCUMULINIT error: user-defined accumulation fields ', &
             'equal to ',naccflds,' exceeds max_accum'
        call endrun
     end if
@@ -184,7 +185,7 @@ contains
        end1d = endp
        num1d = nump
     case default
-       write(6,*)'ACCUMULINIT: unknown subgrid type ',subgrid_type
+       write(iulog,*)'ACCUMULINIT: unknown subgrid type ',subgrid_type
        call endrun ()
     end select
 
@@ -234,27 +235,27 @@ contains
 !------------------------------------------------------------------------
 
     if (masterproc) then
-       write(6,*)
-       write(6,*) 'Initializing variables for time accumulation .....'
-       write(6,'(72a1)') ("-",i=1,60)
-       write(6,*) 'Accumulated fields'
-       write(6,1002)
-       write(6,'(72a1)') ("_",i=1,71)
+       write(iulog,*)
+       write(iulog,*) 'Initializing variables for time accumulation .....'
+       write(iulog,'(72a1)') ("-",i=1,60)
+       write(iulog,*) 'Accumulated fields'
+       write(iulog,1002)
+       write(iulog,'(72a1)') ("_",i=1,71)
        do nf = 1, naccflds
           if (accum(nf)%period /= bigint) then
-             write (6,1003) nf,accum(nf)%name,accum(nf)%units,&
+             write(iulog,1003) nf,accum(nf)%name,accum(nf)%units,&
                   accum(nf)%acctype, accum(nf)%period, accum(nf)%initval, &
                   accum(nf)%desc
           else
-             write (6,1004) nf,accum(nf)%name,accum(nf)%units,&
+             write(iulog,1004) nf,accum(nf)%name,accum(nf)%units,&
                   accum(nf)%acctype, accum(nf)%initval, accum(nf)%desc
           endif
        end do
-       write(6,'(72a1)') ("_",i=1,71)
-       write(6,*)
-       write(6,'(72a1)') ("-",i=1,60)
-       write(6,*) 'Successfully initialized variables for accumulation'
-       write(6,*)
+       write(iulog,'(72a1)') ("_",i=1,71)
+       write(iulog,*)
+       write(iulog,'(72a1)') ("-",i=1,60)
+       write(iulog,*) 'Successfully initialized variables for accumulation'
+       write(iulog,*)
     endif
 
 1002 format(' No',' Name    ',' Units   ',' Type    ','Period',' Inival',' Description')
@@ -306,7 +307,7 @@ contains
        if (name == accum(i)%name) nf = i
     end do
     if (nf == 0) then
-       write(6,*) 'EXTRACT_ACCUM_FIELD_SL error: field name ',name,' not found'
+       write(iulog,*) 'EXTRACT_ACCUM_FIELD_SL error: field name ',name,' not found'
        call endrun
     endif
 
@@ -315,8 +316,8 @@ contains
     beg = accum(nf)%beg1d
     end = accum(nf)%end1d
     if (size(field,dim=1) /= end-beg+1) then
-       write(6,*)'ERROR in extract_accum_field for field ',accum(nf)%name
-       write(6,*)'size of first dimension of field is ',&
+       write(iulog,*)'ERROR in extract_accum_field for field ',accum(nf)%name
+       write(iulog,*)'size of first dimension of field is ',&
             size(field,dim=1),' and should be ',end-beg+1
        call endrun
     endif
@@ -384,7 +385,7 @@ contains
        if (name == accum(i)%name) nf = i
     end do
     if (nf == 0) then
-       write(6,*) 'EXTRACT_ACCUM_FIELD_ML error: field name ',name,' not found'
+       write(iulog,*) 'EXTRACT_ACCUM_FIELD_ML error: field name ',name,' not found'
        call endrun
     endif
 
@@ -394,13 +395,13 @@ contains
     beg = accum(nf)%beg1d
     end = accum(nf)%end1d
     if (size(field,dim=1) /= end-beg+1) then
-       write(6,*)'ERROR in extract_accum_field for field ',accum(nf)%name
-       write(6,*)'size of first dimension of field is ',&
+       write(iulog,*)'ERROR in extract_accum_field for field ',accum(nf)%name
+       write(iulog,*)'size of first dimension of field is ',&
             size(field,dim=1),' and should be ',end-beg+1
        call endrun
     else if (size(field,dim=2) /= numlev) then
-       write(6,*)'ERROR in extract_accum_field for field ',accum(nf)%name
-       write(6,*)'size of second dimension of field iis ',&
+       write(iulog,*)'ERROR in extract_accum_field for field ',accum(nf)%name
+       write(iulog,*)'size of second dimension of field iis ',&
             size(field,dim=2),' and should be ',numlev
        call endrun
     endif
@@ -466,7 +467,7 @@ contains
        if (name == accum(i)%name) nf = i
     end do
     if (nf == 0) then
-       write(6,*) 'UPDATE_ACCUM_FIELD_SL error: field name ',name,' not found'
+       write(iulog,*) 'UPDATE_ACCUM_FIELD_SL error: field name ',name,' not found'
        call endrun
     endif
 
@@ -475,8 +476,8 @@ contains
     beg = accum(nf)%beg1d
     end = accum(nf)%end1d
     if (size(field,dim=1) /= end-beg+1) then
-       write(6,*)'ERROR in UPDATE_ACCUM_FIELD_SL for field ',accum(nf)%name
-       write(6,*)'size of first dimension of field is ',size(field,dim=1),&
+       write(iulog,*)'ERROR in UPDATE_ACCUM_FIELD_SL for field ',accum(nf)%name
+       write(iulog,*)'size of first dimension of field is ',size(field,dim=1),&
             ' and should be ',end-beg+1
        call endrun
     endif
@@ -486,10 +487,10 @@ contains
     if (accum(nf)%acctype /= 'timeavg' .AND. &
         accum(nf)%acctype /= 'runmean' .AND. &
         accum(nf)%acctype /= 'runaccum') then
-       write(6,*) 'UPDATE_ACCUM_FIELD_SL error: incorrect accumulation type'
-       write(6,*) ' was specified for field ',name
-       write(6,*)' accumulation type specified is ',accum(nf)%acctype
-       write(6,*)' only [timeavg, runmean, runaccum] are currently acceptable'
+       write(iulog,*) 'UPDATE_ACCUM_FIELD_SL error: incorrect accumulation type'
+       write(iulog,*) ' was specified for field ',name
+       write(iulog,*)' accumulation type specified is ',accum(nf)%acctype
+       write(iulog,*)' only [timeavg, runmean, runaccum] are currently acceptable'
        call endrun()
     end if
 
@@ -573,7 +574,7 @@ contains
        if (name == accum(i)%name) nf = i
     end do
     if (nf == 0) then
-       write(6,*) 'UPDATE_ACCUM_FIELD_ML error: field name ',name,' not found'
+       write(iulog,*) 'UPDATE_ACCUM_FIELD_ML error: field name ',name,' not found'
        call endrun
     endif
 
@@ -583,13 +584,13 @@ contains
     beg = accum(nf)%beg1d
     end = accum(nf)%end1d
     if (size(field,dim=1) /= end-beg+1) then
-       write(6,*)'ERROR in UPDATE_ACCUM_FIELD_ML for field ',accum(nf)%name
-       write(6,*)'size of first dimension of field is ',size(field,dim=1),&
+       write(iulog,*)'ERROR in UPDATE_ACCUM_FIELD_ML for field ',accum(nf)%name
+       write(iulog,*)'size of first dimension of field is ',size(field,dim=1),&
             ' and should be ',end-beg+1
        call endrun
     else if (size(field,dim=2) /= numlev) then
-       write(6,*)'ERROR in UPDATE_ACCUM_FIELD_ML for field ',accum(nf)%name
-       write(6,*)'size of second dimension of field is ',size(field,dim=2),&
+       write(iulog,*)'ERROR in UPDATE_ACCUM_FIELD_ML for field ',accum(nf)%name
+       write(iulog,*)'size of second dimension of field is ',size(field,dim=2),&
             ' and should be ',numlev
        call endrun
     endif
@@ -599,10 +600,10 @@ contains
     if (accum(nf)%acctype /= 'timeavg' .AND. &
         accum(nf)%acctype /= 'runmean' .AND. &
         accum(nf)%acctype /= 'runaccum') then
-       write(6,*) 'UPDATE_ACCUM_FIELD_ML error: incorrect accumulation type'
-       write(6,*) ' was specified for field ',name
-       write(6,*)' accumulation type specified is ',accum(nf)%acctype
-       write(6,*)' only [timeavg, runmean, runaccum] are currently acceptable'
+       write(iulog,*) 'UPDATE_ACCUM_FIELD_ML error: incorrect accumulation type'
+       write(iulog,*) ' was specified for field ',name
+       write(iulog,*)' accumulation type specified is ',accum(nf)%acctype
+       write(iulog,*)' only [timeavg, runmean, runaccum] are currently acceptable'
        call endrun()
     end if
 

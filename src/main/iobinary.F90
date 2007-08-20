@@ -18,6 +18,7 @@ module iobinary
   use spmdGathScatMod, only : scatter_data_from_master, gather_data_to_master
   use decompMod      , only : get_clmlevel_gsize
   use abortutils     , only : endrun
+  use clm_varctl     , only : iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -75,7 +76,7 @@ contains
 !-----------------------------------------------------------------------
 
     if (flag /= 'read' .and. flag /= 'write') then
-       write(6,*) trim(subname),' error in flag ',trim(flag)
+       write(iulog,*) trim(subname),' error in flag ',trim(flag)
        call endrun()
     endif
 
@@ -83,7 +84,7 @@ contains
     if (masterproc) then
        allocate(arrayg(gsize),stat=ier)
        if (ier /= 0) then
-          write(6,*) trim(subname),'arrayg allocation error'
+          write(iulog,*) trim(subname),'arrayg allocation error'
           call endrun()
        end if
     endif
@@ -95,7 +96,7 @@ contains
 
     allocate(arrayl(lb1:ub1),stat=ier)
     if (ier /= 0) then
-       write(6,*) trim(subname),'arrayg allocation error'
+       write(iulog,*) trim(subname),'arrayg allocation error'
        call endrun()
     end if
 
@@ -110,7 +111,7 @@ contains
          if (flag == 'write') write (iu,iostat=ier) arrayg
          if (flag == 'read' ) read  (iu,iostat=ier) arrayg
          if (ier /= 0 ) then
-            write (6,*) trim(subname),'ier = ',ier,' on i/o unit = ',iu
+            write(iulog,*) trim(subname),'ier = ',ier,' on i/o unit = ',iu
             call endrun()
          endif
       endif
@@ -163,7 +164,7 @@ contains
 !-----------------------------------------------------------------------
 
     if (flag /= 'read' .and. flag /= 'write') then
-       write(6,*) trim(subname),' error in flag ',trim(flag)
+       write(iulog,*) trim(subname),' error in flag ',trim(flag)
        call endrun()
     endif
 
@@ -171,7 +172,7 @@ contains
     if (masterproc) then
        allocate(arrayg(gsize),stat=ier)
        if (ier /= 0) then
-          write(6,*) trim(subname),'arrayg allocation error'
+          write(iulog,*) trim(subname),'arrayg allocation error'
           call endrun()
        end if
     endif
@@ -183,7 +184,7 @@ contains
 
     allocate(arrayl(lb1:ub1),stat=ier)
     if (ier /= 0) then
-       write(6,*) trim(subname),'arrayg allocation error'
+       write(iulog,*) trim(subname),'arrayg allocation error'
        call endrun()
     end if
 
@@ -198,7 +199,7 @@ contains
          if (flag == 'write') write (iu,iostat=ier) arrayg
          if (flag == 'read' ) read  (iu,iostat=ier) arrayg
          if (ier /= 0 ) then
-            write (6,*) trim(subname),'ier = ',ier,' on i/o unit = ',iu
+            write(iulog,*) trim(subname),'ier = ',ier,' on i/o unit = ',iu
             call endrun()
          endif
       endif

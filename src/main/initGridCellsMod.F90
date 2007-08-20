@@ -16,6 +16,7 @@ module initGridCellsMod
   use spmdMod     , only : masterproc,iam,mpicom
   use abortutils  , only : endrun
   use clm_varsur  , only : wtxy, vegxy
+  use clm_varctl  , only : iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -260,7 +261,7 @@ contains
        if (pptr%column(p) /= curc) then
           curc = pptr%column(p)
           if (curc < begc .or. curc > endc) then
-             write(6,*) 'clm_ptrs_compdown ERROR: pcolumn ',p,curc,begc,endc
+             write(iulog,*) 'clm_ptrs_compdown ERROR: pcolumn ',p,curc,begc,endc
              call endrun()
           endif
           cptr%pfti(curc) = p
@@ -270,7 +271,7 @@ contains
        if (pptr%landunit(p) /= curl) then
           curl = pptr%landunit(p)
           if (curl < begl .or. curl > endl) then
-             write(6,*) 'clm_ptrs_compdown ERROR: plandunit ',p,curl,begl,endl
+             write(iulog,*) 'clm_ptrs_compdown ERROR: plandunit ',p,curl,begl,endl
              call endrun()
           endif
           lptr%pfti(curl) = p
@@ -280,7 +281,7 @@ contains
        if (pptr%gridcell(p) /= curg) then
           curg = pptr%gridcell(p)
           if (curg < begg .or. curg > endg) then
-             write(6,*) 'clm_ptrs_compdown ERROR: pgridcell ',p,curg,begg,endg
+             write(iulog,*) 'clm_ptrs_compdown ERROR: pgridcell ',p,curg,begg,endg
              call endrun()
           endif
           gptr%pfti(curg) = p
@@ -295,7 +296,7 @@ contains
        if (cptr%landunit(c) /= curl) then
           curl = cptr%landunit(c)
           if (curl < begl .or. curl > endl) then
-             write(6,*) 'clm_ptrs_compdown ERROR: clandunit ',c,curl,begl,endl
+             write(iulog,*) 'clm_ptrs_compdown ERROR: clandunit ',c,curl,begl,endl
              call endrun()
           endif
           lptr%coli(curl) = c
@@ -305,7 +306,7 @@ contains
        if (cptr%gridcell(c) /= curg) then
           curg = cptr%gridcell(c)
           if (curg < begg .or. curg > endg) then
-             write(6,*) 'clm_ptrs_compdown ERROR: cgridcell ',c,curg,begg,endg
+             write(iulog,*) 'clm_ptrs_compdown ERROR: cgridcell ',c,curg,begg,endg
              call endrun()
           endif
           gptr%coli(curg) = c
@@ -319,7 +320,7 @@ contains
        if (lptr%gridcell(l) /= curg) then
           curg = lptr%gridcell(l)
           if (curg < begg .or. curg > endg) then
-             write(6,*) 'clm_ptrs_compdown ERROR: lgridcell ',l,curg,begg,endg
+             write(iulog,*) 'clm_ptrs_compdown ERROR: lgridcell ',l,curg,begg,endg
              call endrun()
           endif
           gptr%luni(curg) = l
@@ -370,8 +371,8 @@ contains
     cptr => clm3%g%l%c
     pptr => clm3%g%l%c%p
     
-    if (masterproc) write(6,*) ' '
-    if (masterproc) write(6,*) '---clm_ptrs_check:'
+    if (masterproc) write(iulog,*) ' '
+    if (masterproc) write(iulog,*) '---clm_ptrs_check:'
     call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
     !--- check index ranges ---
@@ -383,10 +384,10 @@ contains
     if (minval(gptr%pfti) < begp .or. maxval(gptr%pfti) > endp) error=.true.
     if (minval(gptr%pftf) < begp .or. maxval(gptr%pftf) > endp) error=.true.
     if (error) then
-       write(6,*) '   clm_ptrs_check: g index ranges - ERROR'
+       write(iulog,*) '   clm_ptrs_check: g index ranges - ERROR'
        call endrun()
     endif
-    if (masterproc) write(6,*) '   clm_ptrs_check: g index ranges - OK'
+    if (masterproc) write(iulog,*) '   clm_ptrs_check: g index ranges - OK'
 
     error = .false.
     if (minval(lptr%gridcell) < begg .or. maxval(lptr%gridcell) > endg) error=.true.
@@ -395,10 +396,10 @@ contains
     if (minval(lptr%pfti) < begp .or. maxval(lptr%pfti) > endp) error=.true.
     if (minval(lptr%pftf) < begp .or. maxval(lptr%pftf) > endp) error=.true.
     if (error) then
-       write(6,*) '   clm_ptrs_check: l index ranges - ERROR'
+       write(iulog,*) '   clm_ptrs_check: l index ranges - ERROR'
        call endrun()
     endif
-    if (masterproc) write(6,*) '   clm_ptrs_check: l index ranges - OK'
+    if (masterproc) write(iulog,*) '   clm_ptrs_check: l index ranges - OK'
 
     error = .false.
     if (minval(cptr%gridcell) < begg .or. maxval(cptr%gridcell) > endg) error=.true.
@@ -406,20 +407,20 @@ contains
     if (minval(cptr%pfti) < begp .or. maxval(cptr%pfti) > endp) error=.true.
     if (minval(cptr%pftf) < begp .or. maxval(cptr%pftf) > endp) error=.true.
     if (error) then
-       write(6,*) '   clm_ptrs_check: c index ranges - ERROR'
+       write(iulog,*) '   clm_ptrs_check: c index ranges - ERROR'
        call endrun()
     endif
-    if (masterproc) write(6,*) '   clm_ptrs_check: c index ranges - OK'
+    if (masterproc) write(iulog,*) '   clm_ptrs_check: c index ranges - OK'
 
     error = .false.
     if (minval(pptr%gridcell) < begg .or. maxval(pptr%gridcell) > endg) error=.true.
     if (minval(pptr%landunit) < begl .or. maxval(pptr%landunit) > endl) error=.true.
     if (minval(pptr%column) < begc .or. maxval(pptr%column) > endc) error=.true.
     if (error) then
-       write(6,*) '   clm_ptrs_check: p index ranges - ERROR'
+       write(iulog,*) '   clm_ptrs_check: p index ranges - ERROR'
        call endrun()
     endif
-    if (masterproc) write(6,*) '   clm_ptrs_check: p index ranges - OK'
+    if (masterproc) write(iulog,*) '   clm_ptrs_check: p index ranges - OK'
 
     !--- check that indices in arrays are monotonically increasing ---
     error = .false.
@@ -431,11 +432,11 @@ contains
       if (gptr%pfti(g) < gptr%pfti(g-1)) error = .true.
       if (gptr%pftf(g) < gptr%pftf(g-1)) error = .true.
       if (error) then
-         write(6,*) '   clm_ptrs_check: g mono increasing - ERROR'
+         write(iulog,*) '   clm_ptrs_check: g mono increasing - ERROR'
          call endrun()
       endif
     enddo
-    if (masterproc) write(6,*) '   clm_ptrs_check: g mono increasing - OK'
+    if (masterproc) write(iulog,*) '   clm_ptrs_check: g mono increasing - OK'
 
     error = .false.
     do l=begl+1,endl
@@ -445,11 +446,11 @@ contains
       if (lptr%pfti(l) < lptr%pfti(l-1)) error = .true.
       if (lptr%pftf(l) < lptr%pftf(l-1)) error = .true.
       if (error) then
-         write(6,*) '   clm_ptrs_check: l mono increasing - ERROR'
+         write(iulog,*) '   clm_ptrs_check: l mono increasing - ERROR'
          call endrun()
       endif
     enddo
-    if (masterproc) write(6,*) '   clm_ptrs_check: l mono increasing - OK'
+    if (masterproc) write(iulog,*) '   clm_ptrs_check: l mono increasing - OK'
 
     error = .false.
     do c=begc+1,endc
@@ -458,11 +459,11 @@ contains
       if (cptr%pfti(c) < cptr%pfti(c-1)) error = .true.
       if (cptr%pftf(c) < cptr%pftf(c-1)) error = .true.
       if (error) then
-         write(6,*) '   clm_ptrs_check: c mono increasing - ERROR'
+         write(iulog,*) '   clm_ptrs_check: c mono increasing - ERROR'
          call endrun()
       endif
     enddo
-    if (masterproc) write(6,*) '   clm_ptrs_check: c mono increasing - OK'
+    if (masterproc) write(iulog,*) '   clm_ptrs_check: c mono increasing - OK'
 
     error = .false.
     do p=begp+1,endp
@@ -470,11 +471,11 @@ contains
       if (pptr%landunit(p) < pptr%landunit(p-1)) error = .true.
       if (pptr%column  (p) < pptr%column  (p-1)) error = .true.
       if (error) then
-         write(6,*) '   clm_ptrs_check: p mono increasing - ERROR'
+         write(iulog,*) '   clm_ptrs_check: p mono increasing - ERROR'
          call endrun()
       endif
     enddo
-    if (masterproc) write(6,*) '   clm_ptrs_check: p mono increasing - OK'
+    if (masterproc) write(iulog,*) '   clm_ptrs_check: p mono increasing - OK'
 
     !--- check that the tree is internally consistent ---
     error = .false.
@@ -489,15 +490,15 @@ contains
                 if (pptr%landunit(p) /= l) error = .true.
                 if (pptr%column(p)   /= c) error = .true.
                 if (error) then
-                   write(6,*) '   clm_ptrs_check: tree consistent - ERROR'
+                   write(iulog,*) '   clm_ptrs_check: tree consistent - ERROR'
                    call endrun()
                 endif
              enddo
           enddo
        enddo
     enddo
-    if (masterproc) write(6,*) '   clm_ptrs_check: tree consistent - OK'
-    if (masterproc) write(6,*) ' '
+    if (masterproc) write(iulog,*) '   clm_ptrs_check: tree consistent - OK'
+    if (masterproc) write(iulog,*) ' '
 
 end subroutine clm_ptrs_check
 !------------------------------------------------------------------------
@@ -701,8 +702,8 @@ end subroutine clm_ptrs_check
        call subgrid_get_gcellinfo(nw, nglacier=npfts, wtglacier=wtlunit2gcell)
        m = npatch_glacier
     else
-       write(6,*)' set_landunit_wet_ice_lake: ltype of ',ltype,' not valid'
-       write(6,*)' only istwet, istdlak or istice ltypes are valid'
+       write(iulog,*)' set_landunit_wet_ice_lake: ltype of ',ltype,' not valid'
+       write(iulog,*)' only istwet, istdlak or istice ltypes are valid'
        call endrun()
     end if
 
@@ -715,9 +716,9 @@ end subroutine clm_ptrs_check
        pptr => clm3%g%l%c%p
        
        if (npfts /=1) then
-          write(6,*)' set_landunit_wet_ice_lake: compete landunit must'// &
+          write(iulog,*)' set_landunit_wet_ice_lake: compete landunit must'// &
                     ' have one column and one pft '
-          write(6,*)' current values of ncols, pfts=',ncols,npfts
+          write(iulog,*)' current values of ncols, pfts=',ncols,npfts
           call endrun()
        end if
 

@@ -15,6 +15,7 @@ module CanopyFluxesMod
 !
 ! !USES:
    use abortutils,   only: endrun
+   use clm_varctl,   only: iulog
 !
 ! !PUBLIC TYPES:
    implicit none
@@ -571,7 +572,7 @@ contains
    end do
 
    if (found) then
-      write(6,*)'Error: Forcing height is below canopy height for pft index ',index
+      write(iulog,*)'Error: Forcing height is below canopy height for pft index ',index
       call endrun()
    end if
 
@@ -930,7 +931,7 @@ contains
       rc13_psnsha(p) = rc13_canair(p)/alphapsnsha(p)
       c13_psnsun(p) = psnsun(p) * (rc13_psnsun(p)/(1._r8+rc13_psnsun(p)))
       c13_psnsha(p) = psnsha(p) * (rc13_psnsha(p)/(1._r8+rc13_psnsha(p)))
-      !write(6,*) p,ivt(p),btran(p),psnsun(p),psnsha(p),alphapsnsun(p),alphapsnsha(p)
+      !write(iulog,*) p,ivt(p),btran(p),psnsun(p),psnsha(p),alphapsnsun(p),alphapsnsha(p)
 #endif     
       
    end do
@@ -949,7 +950,7 @@ contains
 
    do f = 1, fn
       p = filterp(f)
-      write(6,*) 'energy balance in canopy ',p,', err=',err(p)
+      write(iulog,*) 'energy balance in canopy ',p,', err=',err(p)
    end do
 
    end subroutine CanopyFluxes
@@ -1340,7 +1341,7 @@ contains
            alphapsn(p) = 1._r8 + (((c3psn(ivt(p)) * (4.4_r8 + (22.6_r8*(ci(p)/co2(p))))) + &
                          ((1._r8 - c3psn(ivt(p))) * 4.4_r8))/1000._r8)
            !alphapsn(p) = 1._r8
-           !write(6,*) 'in StomataCN ',p,ivt(p),c3psn(ivt(p)),ci(p),co2(p),alphapsn(p)
+           !write(iulog,*) 'in StomataCN ',p,ivt(p),c3psn(ivt(p)),ci(p),co2(p),alphapsn(p)
            
         end if
 

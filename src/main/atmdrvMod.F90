@@ -19,6 +19,7 @@ module atmdrvMod
   use abortutils   , only : endrun
   use spmdMod      , only : masterproc, mpicom, comp_id, MPI_REAL8, MPI_INTEGER, iam
   use clm_mct_mod
+  use clm_varctl   , only : iulog
   use decompMod    , only : gsMap_atm_gdc2glo, perm_atm_gdc2glo
   use perf_mod
 !
@@ -234,14 +235,14 @@ contains
        call t_startf('atmdread')
 
        if (masterproc) then
-          write (6,*)
-          write (6,'(72a1)') ("-",n=1,60)
-          write (6,*)'nstep= ',nstep,' date= ',mcdate,' sec= ',mcsec
+          write(iulog,*)
+          write(iulog,'(72a1)') ("-",n=1,60)
+          write(iulog,*)'nstep= ',nstep,' date= ',mcdate,' sec= ',mcsec
           if ( len_trim(locfn) > 0 )then
-             write (6,*)'ATMDRV: attempting to read data from ',trim(locfn)
+             write(iulog,*)'ATMDRV: attempting to read data from ',trim(locfn)
           end if
-          write (6,'(72a1)') ("-",n=1,60)
-          write (6,*)
+          write(iulog,'(72a1)') ("-",n=1,60)
+          write(iulog,*)
        endif
        call atm_readdata (locfn, kmo, itim)
        call t_stopf('atmdread')
@@ -434,7 +435,7 @@ contains
        call getfil(filenam, locfn, 1)
        inquire (file = locfn, exist = lexist)
        if (.not. lexist) then
-          write(6,*) 'ATMDRV_INIT error: could not find initial atm datafile'
+          write(iulog,*) 'ATMDRV_INIT error: could not find initial atm datafile'
           call endrun
        endif
     end if
@@ -481,7 +482,7 @@ contains
     
     allocate( x(datlon,datlat,14), stat=ier)
     if (ier /= 0) then
-       write (6,*) 'atmdrv_init(): allocation error _d'
+       write(iulog,*) 'atmdrv_init(): allocation error _d'
        call endrun
     end if
 
@@ -489,7 +490,7 @@ contains
 
     allocate (mask_d(datlon*datlat),mask_a(atmlon*atmlat), stat=ier)
     if (ier /= 0) then
-       write (6,*) 'mask_d, mask_a allocation error'
+       write(iulog,*) 'mask_d, mask_a allocation error'
        call endrun
     end if
 
@@ -520,9 +521,9 @@ contains
     endif
 
     if ( masterproc )then
-       write (6,*) 'Successfully made atm -> srf interpolation'
-       write (6,*) 'Successfully initialized area-averaging interpolation'
-       write (6,*)
+       write(iulog,*) 'Successfully made atm -> srf interpolation'
+       write(iulog,*) 'Successfully initialized area-averaging interpolation'
+       write(iulog,*)
     end if
 
     call latlon_clean(dlatlon)
@@ -604,7 +605,7 @@ contains
        call getfil(filenam, locfn, 1)
        inquire (file = locfn, exist = lexist)
        if (.not. lexist) then
-          write(6,*) 'ATMDRV_INIT error: could not find atm datafile'
+          write(iulog,*) 'ATMDRV_INIT error: could not find atm datafile'
           call endrun
        endif
 
@@ -623,16 +624,16 @@ contains
        call check_ret(nf_inq_dimlen (ncid, dimid, ntim), subname)
 
        if (ntim == 0) then
-          write (6,*) 'ATM_OPENFILE error: zero input time slices'
+          write(iulog,*) 'ATM_OPENFILE error: zero input time slices'
           call endrun
        end if
        if (nlon /= datlon) then
-          write (6,*) 'ATM_OPENFILE error: nlon = ',nlon, &
+          write(iulog,*) 'ATM_OPENFILE error: nlon = ',nlon, &
                ' in data file not equal to datlon = ',datlon,' first read in'
           call endrun
        end if
        if (nlat /= datlat) then
-          write (6,*) 'ATMRD error: nlat = ',nlat, &
+          write(iulog,*) 'ATMRD error: nlat = ',nlat, &
                ' in data file not equal to datlat = ',datlat,' first read in'
           call endrun
        end if
@@ -641,7 +642,7 @@ contains
 
        status = nf_inq_nvars(ncid, nvar)
        if (status /= nf_noerr) then
-          write (6,*) ' ATM_OPENFILE netcdf error = ',nf_strerror(status)
+          write(iulog,*) ' ATM_OPENFILE netcdf error = ',nf_strerror(status)
           call endrun
        end if
        do i = 1, nvar
@@ -787,10 +788,10 @@ contains
 
        if (itim == ntim) then
           call check_ret(nf_close (ncid), subname)
-          write (6,*) '---------------------------------------'
-          write (6,*) 'ATMRD: closing data for ',trim(fname)
-          write (6,*) '---------------------------------------'
-          write (6,*)
+          write(iulog,*) '---------------------------------------'
+          write(iulog,*) 'ATMRD: closing data for ',trim(fname)
+          write(iulog,*) '---------------------------------------'
+          write(iulog,*)
        end if
 
     endif     !end of if-masterproc block
@@ -814,11 +815,11 @@ contains
           n = (j-1)*datlon + i
           ! FORC_TXY
           if (nint(x(i,j,1)) == -1) then
-             write(6,*)'ATM error: TBOT has not been read by atmrd'
+             write(iulog,*)'ATM error: TBOT has not been read by atmrd'
              atmread_err = .true.
           else if (x(i,j,1) < 50._r8) then
-             write(6,*)'ATM error: TBOT appears to be in deg C'
-             write(6,*)'Converting to Kelvins now'
+             write(iulog,*)'ATM error: TBOT appears to be in deg C'
+             write(iulog,*)'Converting to Kelvins now'
              aV_drv_d2a%rAttr(if_txy,n) = x(i,j,1) + SHR_CONST_TKFRZ
           else
              aV_drv_d2a%rAttr(if_txy,n) = x(i,j,1)
@@ -826,7 +827,7 @@ contains
 
           ! FORC_UXY, FORC_VXY
           if (nint(x(i,j,2)) == -1) then
-             write(6,*)'ATM error: WIND has not been read by atmrd'
+             write(iulog,*)'ATM error: WIND has not been read by atmrd'
              atmread_err = .true.
           else
              aV_drv_d2a%rAttr(if_uxy,n) = x(i,j,2) / sqrt(2._r8)
@@ -845,8 +846,8 @@ contains
           if (nint(x(i,j,3)) == -1) then
              if (nint(x(i,j,4)) == -1) then
                 if (nint(x(i,j,5)) == -1) then
-                   write(6,*)'ATM error: Humidity has not been'
-                   write(6,*)'read by atmrd'
+                   write(iulog,*)'ATM error: Humidity has not been'
+                   write(iulog,*)'read by atmrd'
                    atmread_err = .true.
                 else          !using RH as %
                    if (aV_drv_d2a%rAttr(if_txy,n) > SHR_CONST_TKFRZ) then
@@ -858,12 +859,12 @@ contains
                 aV_drv_d2a%rAttr(if_qxy,n) = 0.622_r8*e / (aV_drv_d2a%rAttr(if_pbotxy,n) - 0.378_r8*e)
              else             !using Tdew
                 if (x(i,j,4) < 50._r8) then
-                   write(6,*)'ATM warning: Tdew appears to be in'
-                   write(6,*)'deg C, so converting to Kelvin'
+                   write(iulog,*)'ATM warning: Tdew appears to be in'
+                   write(iulog,*)'deg C, so converting to Kelvin'
                    x(i,j,4) = x(i,j,4) + SHR_CONST_TKFRZ
                 end if
                 if (x(i,j,4) > aV_drv_d2a%rAttr(if_txy,n)) then
-                   write(6,*)'ATM warning: Dewpt temp > temp!'
+                   write(iulog,*)'ATM warning: Dewpt temp > temp!'
                 end if
                 if (x(i,j,4) > SHR_CONST_TKFRZ) then
                    e = esatw(tdc(x(i,j,4)))
@@ -881,7 +882,7 @@ contains
              qsat = 0.622_r8*e / (aV_drv_d2a%rAttr(if_pbotxy,n) - 0.378_r8*e)
              if (qsat < x(i,j,3)) then
                 aV_drv_d2a%rAttr(if_qxy,n) = qsat
-!                 write(6,*)'ATM warning: qsat < q!'
+!                 write(iulog,*)'ATM warning: qsat < q!'
              else
                 aV_drv_d2a%rAttr(if_qxy,n) = x(i,j,3)
              end if
@@ -903,8 +904,8 @@ contains
                 aV_drv_d2a%rAttr(if_solsd,n) = 0.3_r8 * (0.5_r8 * x(i,j,8))
                 aV_drv_d2a%rAttr(if_solld,n) = aV_drv_d2a%rAttr(if_solsd,n)
              else
-                write(6,*)'ATM error: neither FSDSdir/dif nor'
-                write(6,*)'       FSDS have been read in by atmrd'
+                write(iulog,*)'ATM error: neither FSDSdir/dif nor'
+                write(iulog,*)'       FSDS have been read in by atmrd'
                 atmread_err = .true.
              end if
           else
@@ -921,8 +922,8 @@ contains
                 aV_drv_d2a%rAttr(iprcxy,n) = 0.1_r8 * x(i,j,12)
                 aV_drv_d2a%rAttr(iprlxy,n) = 0.9_r8 * x(i,j,12)
              else
-                write(6,*)'ATM error: neither PRECC/L nor PRECT'
-                write(6,*)'           have been read in by atmrd'
+                write(iulog,*)'ATM error: neither PRECC/L nor PRECT'
+                write(iulog,*)'           have been read in by atmrd'
                 atmread_err = .true.
              end if
           else
@@ -948,7 +949,7 @@ contains
 !$OMP END PARALLEL DO
 
     if (atmread_err) then
-       write(6,*) 'atm_readdata: error reading atm data'
+       write(iulog,*) 'atm_readdata: error reading atm data'
        call endrun
     end if
 

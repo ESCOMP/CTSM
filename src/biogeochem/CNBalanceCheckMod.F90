@@ -17,6 +17,7 @@ module CNBalanceCheckMod
     use clm_varcon  , only: istsoil
     use spmdMod     , only: masterproc
     use clm_varpar  , only: nlevsoi
+    use clm_varctl  , only: iulog
     implicit none
     save
     private
@@ -257,18 +258,18 @@ subroutine CBalanceCheck(num_soilc, filter_soilc)
 
    if (err_found) then
       c = err_index
-      write(6,*)'column cbalance error = ', col_errcb(c), c
-      write(6,*)'begcb       = ',col_begcb(c)
-      write(6,*)'endcb       = ',col_endcb(c)
-      write(6,*)'delta store = ',col_endcb(c)-col_begcb(c)
-      write(6,*)'input mass  = ',col_cinputs(c)*dt
-      write(6,*)'output mass = ',col_coutputs(c)*dt
-      write(6,*)'net flux    = ',(col_cinputs(c)-col_coutputs(c))*dt
-	  write(6,*)'nee         = ',clm3%g%l%c%ccf%nee(c) * dt
-	  write(6,*)'gpp         = ',gpp(c) * dt
-	  write(6,*)'er          = ',er(c) * dt
-	  write(6,*)'col_fire_closs         = ',col_fire_closs(c) * dt
-	  write(6,*)'dwt_closs         = ',dwt_closs(c) * dt
+      write(iulog,*)'column cbalance error = ', col_errcb(c), c
+      write(iulog,*)'begcb       = ',col_begcb(c)
+      write(iulog,*)'endcb       = ',col_endcb(c)
+      write(iulog,*)'delta store = ',col_endcb(c)-col_begcb(c)
+      write(iulog,*)'input mass  = ',col_cinputs(c)*dt
+      write(iulog,*)'output mass = ',col_coutputs(c)*dt
+      write(iulog,*)'net flux    = ',(col_cinputs(c)-col_coutputs(c))*dt
+	  write(iulog,*)'nee         = ',clm3%g%l%c%ccf%nee(c) * dt
+	  write(iulog,*)'gpp         = ',gpp(c) * dt
+	  write(iulog,*)'er          = ',er(c) * dt
+	  write(iulog,*)'col_fire_closs         = ',col_fire_closs(c) * dt
+	  write(iulog,*)'dwt_closs         = ',dwt_closs(c) * dt
       call endrun
    end if
 
@@ -387,13 +388,13 @@ subroutine NBalanceCheck(num_soilc, filter_soilc)
 
    if (err_found) then
       c = err_index
-      write(6,*)'column nbalance error = ', col_errnb(c), c
-      write(6,*)'begnb       = ',col_begnb(c)
-      write(6,*)'endnb       = ',col_endnb(c)
-      write(6,*)'delta store = ',col_endnb(c)-col_begnb(c)
-      write(6,*)'input mass  = ',col_ninputs(c)*dt
-      write(6,*)'output mass = ',col_noutputs(c)*dt
-      write(6,*)'net flux    = ',(col_ninputs(c)-col_noutputs(c))*dt
+      write(iulog,*)'column nbalance error = ', col_errnb(c), c
+      write(iulog,*)'begnb       = ',col_begnb(c)
+      write(iulog,*)'endnb       = ',col_endnb(c)
+      write(iulog,*)'delta store = ',col_endnb(c)-col_begnb(c)
+      write(iulog,*)'input mass  = ',col_ninputs(c)*dt
+      write(iulog,*)'output mass = ',col_noutputs(c)*dt
+      write(iulog,*)'net flux    = ',(col_ninputs(c)-col_noutputs(c))*dt
       call endrun
    end if
 

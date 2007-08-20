@@ -17,6 +17,7 @@ module initializeMod
   use shr_sys_mod     , only : shr_sys_flush
   use abortutils      , only : endrun
   use clm_varctl      , only : nsrest
+  use clm_varctl      , only : iulog
   use clm_varsur      , only : wtxy,vegxy
   use clmtype         , only : gratm, grlnd, nameg, namel, namec, namep, allrof
 ! !PUBLIC TYPES:
@@ -109,10 +110,10 @@ contains
     call header()
 
     if (masterproc) then
-       write (6,*) 'Attempting to initialize the land model .....'
-       write (6,*)
+       write(iulog,*) 'Attempting to initialize the land model .....'
+       write(iulog,*)
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
     endif
 
@@ -130,25 +131,25 @@ contains
     ! ------------------------------------------------------------------------
 
     if (masterproc) then
-       write (6,*) 'Attempting to read alatlon from fatmgrid'
+       write(iulog,*) 'Attempting to read alatlon from fatmgrid'
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
     endif
 
     call surfrd_get_latlon(alatlon, fatmgrid, amask, fatmlndfrc)
     call latlon_check(alatlon)
     if (masterproc) then
-       write (6,*) 'amask size/min/max ',size(amask),minval(amask),maxval(amask)
+       write(iulog,*) 'amask size/min/max ',size(amask),minval(amask),maxval(amask)
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
     endif
 
     if (masterproc) then
-       write (6,*) 'Attempting to read llatlon from fsurdat'
+       write(iulog,*) 'Attempting to read llatlon from fsurdat'
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
     endif
 
@@ -159,7 +160,7 @@ contains
     lsmlat = llatlon%nj
 
     if (llatlon%ni < alatlon%ni .or. llatlon%nj < alatlon%nj) then
-       if (masterproc) write(6,*) 'ERROR llatlon size > alatlon size: ', &
+       if (masterproc) write(iulog,*) 'ERROR llatlon size > alatlon size: ', &
           n,llatlon%ni, llatlon%nj, alatlon%ni, alatlon%nj
        call endrun()
     endif
@@ -179,20 +180,20 @@ contains
           rmaxlat = max(rmaxlat,abs(alatlon%latc(n)-llatlon%latc(n)))
        enddo
        if (rmaxlon < 0.001_r8 .and. rmaxlat < 0.001_r8) then
-          if (masterproc) write(6,*) 'initialize1: set llatlon =~ alatlon', &
+          if (masterproc) write(iulog,*) 'initialize1: set llatlon =~ alatlon', &
              ':continue',rmaxlon,rmaxlat
           call latlon_setsame(alatlon,llatlon)
           samegrids = .true.
        elseif (rmaxlon < 1.0_r8 .and. rmaxlat < 1.0_r8) then
-          if (masterproc) write(6,*) 'initialize1: alatlon/llatlon mismatch', &
+          if (masterproc) write(iulog,*) 'initialize1: alatlon/llatlon mismatch', &
              ':error',rmaxlon,rmaxlat
           call endrun()
        else
-          if (masterproc) write(6,*) 'initialize1: alatlon/llatlon different', &
+          if (masterproc) write(iulog,*) 'initialize1: alatlon/llatlon different', &
               ':continue',rmaxlon,rmaxlat
        endif
     else
-       if (masterproc) write(6,*) 'initialize1: alatlon/llatlon different ', &
+       if (masterproc) write(iulog,*) 'initialize1: alatlon/llatlon different ', &
           'sizes:continue'
     endif
 
@@ -209,26 +210,26 @@ contains
     call get_proc_bounds_atm(begg_atm, endg_atm)
 
     if (masterproc) then
-       write (6,*) 'Attempting to read adomain from fatmgrid'
+       write(iulog,*) 'Attempting to read adomain from fatmgrid'
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
     endif
     call surfrd_get_grid(adomain, fatmgrid, begg_atm, endg_atm, gratm)
 
     if (masterproc) then
-       write (6,*) 'Attempting to read atm landfrac from fatmlndfrc'
+       write(iulog,*) 'Attempting to read atm landfrac from fatmlndfrc'
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
     endif
     call surfrd_get_frac(adomain, fatmlndfrc)
 
     if (fatmtopo /= " ") then
     if (masterproc) then
-       write (6,*) 'Attempting to read atm topo from fatmtopo'
+       write(iulog,*) 'Attempting to read atm topo from fatmtopo'
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
     endif
     call surfrd_get_topo(adomain, fatmtopo)
@@ -246,7 +247,7 @@ contains
     endif
 
     if (masterproc) then
-       write(6,*) 'adomain status:'
+       write(iulog,*) 'adomain status:'
        call domain_check(adomain)
     endif
 
@@ -255,18 +256,18 @@ contains
     call get_proc_bounds(begg, endg)
 
     if (masterproc) then
-       write (6,*) 'Attempting to read ldomain from fsurdat ',trim(fsurdat)
+       write(iulog,*) 'Attempting to read ldomain from fsurdat ',trim(fsurdat)
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
     endif
     call surfrd_get_grid(ldomain, fsurdat, begg, endg, grlnd)
 
     if (flndtopo /= " ") then
     if (masterproc) then
-       write (6,*) 'Attempting to read lnd topo from flndtopo ',trim(flndtopo)
+       write(iulog,*) 'Attempting to read lnd topo from flndtopo ',trim(flndtopo)
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
     endif
     call surfrd_get_topo(ldomain, flndtopo)
@@ -290,7 +291,7 @@ contains
     !--- overwrite ldomain if same grids -----------------------------------
 
     if (samegrids) then
-       if (masterproc) write(6,*) 'initialize1: samegrids true, set ldomain =~ adomain'
+       if (masterproc) write(iulog,*) 'initialize1: samegrids true, set ldomain =~ adomain'
        call domain_setsame(adomain,ldomain)
     endif
 
@@ -301,7 +302,7 @@ contains
               wtxy(begg:endg,maxpatch),  &
               stat=ier)   
     if (ier /= 0) then
-       write(6,*)'initialize allocation error'; call endrun()
+       write(iulog,*)'initialize allocation error'; call endrun()
     endif
 
     ! Read surface dataset and set up vegetation type [vegxy] and 
@@ -519,11 +520,11 @@ contains
     ! Initialize river routing model, after time manager because ts needed
 
 #if (defined RTM)
-    if (masterproc) write(6,*)'Attempting to initialize RTM'
+    if (masterproc) write(iulog,*)'Attempting to initialize RTM'
     call Rtmini()
-    if (masterproc) write(6,*)'Successfully initialized RTM'
+    if (masterproc) write(iulog,*)'Successfully initialized RTM'
 #ifndef UNICOSMP
-    call shr_sys_flush(6)
+    call shr_sys_flush(iulog)
 #endif
 #endif
 
@@ -560,7 +561,7 @@ contains
     ! "mkarbinit, inicfile and restFile". 
 
     if (do_restread()) then
-       if (masterproc) write(6,*)'reading restart file ',fnamer
+       if (masterproc) write(iulog,*)'reading restart file ',fnamer
        call restFile_read( fnamer )
     else if (nsrest == 0 .and. finidat == ' ') then
        call mkarbinit()
@@ -671,18 +672,18 @@ contains
     ! End initialization
 
     if (masterproc) then
-       write (6,*) 'Successfully initialized the land model'
+       write(iulog,*) 'Successfully initialized the land model'
        if (nsrest == 0) then
-          write (6,*) 'begin initial run at: '
+          write(iulog,*) 'begin initial run at: '
        else
-          write (6,*) 'begin continuation run at:'
+          write(iulog,*) 'begin continuation run at:'
        end if
        call get_curr_date(yr, mon, day, ncsec)
-       write (6,*) '   nstep= ',get_nstep(), ' year= ',yr,' month= ',mon,&
+       write(iulog,*) '   nstep= ',get_nstep(), ' year= ',yr,' month= ',mon,&
             ' day= ',day,' seconds= ',ncsec
-       write (6,*)
-       write (6,'(72a1)') ("*",i=1,60)
-       write (6,*)
+       write(iulog,*)
+       write(iulog,'(72a1)') ("*",i=1,60)
+       write(iulog,*)
     endif
 
   end subroutine initialize2
@@ -715,8 +716,8 @@ contains
 
     version = 'CLM MODEL version 3.5'
     if ( masterproc )then
-      write (6,*) trim(version)
-      write (6,*)
+      write(iulog,*) trim(version)
+      write(iulog,*)
     end if
 
   end subroutine header

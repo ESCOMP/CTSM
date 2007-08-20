@@ -10,6 +10,7 @@ module decompMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc, iam, npes, mpicom, comp_id
+  use clm_varctl  , only : iulog
   use clm_mct_mod
   use abortutils  , only : endrun
 !
@@ -446,7 +447,7 @@ contains
        get_clmlevel_gsize = rtmlon*rtmlat
 #endif
     case default
-       write(6,*) 'get_clmlevel_gsize does not match clmlevel type: ', trim(clmlevel)
+       write(iulog,*) 'get_clmlevel_gsize does not match clmlevel type: ', trim(clmlevel)
        call endrun()
     end select
 
@@ -516,7 +517,7 @@ contains
        ls(2) = rtmlat
 #endif
     case default
-       write(6,*) 'get_clmlevel_dsize does not match clmlevel type: ', trim(clmlevel)
+       write(iulog,*) 'get_clmlevel_dsize does not match clmlevel type: ', trim(clmlevel)
        call endrun()
     end select
 
@@ -600,7 +601,7 @@ contains
 
     case default
 
-       write(6,*) 'get_clmlevel_gsmap: Invalid expansion character: ',trim(clmlevel)
+       write(iulog,*) 'get_clmlevel_gsmap: Invalid expansion character: ',trim(clmlevel)
        call endrun
 
     end select

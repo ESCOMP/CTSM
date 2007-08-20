@@ -19,6 +19,7 @@ module RtmMod
   use spmdMod     , only : masterproc,npes,iam,mpicom,comp_id,MPI_REAL8,MPI_INTEGER
   use clm_varpar  , only : lsmlon, lsmlat, rtmlon, rtmlat
   use clm_varcon  , only : re, spval
+  use clm_varctl  , only : iulog
   use shr_sys_mod , only : shr_sys_flush
   use domainMod   , only : latlon_type, latlon_init, latlon_clean
   use abortutils  , only : endrun
@@ -175,7 +176,7 @@ contains
     allocate (glatc(rtmlon*rtmlat), glonc(rtmlon*rtmlat), &
               stat=ier)
     if (ier /= 0) then
-       write(6,*)'Rtmgridini: Allocation error for ',&
+       write(iulog,*)'Rtmgridini: Allocation error for ',&
             'glatc,glonc'
        call endrun
     end if
@@ -183,7 +184,7 @@ contains
     allocate (runoff%rlat(rtmlat), runoff%rlon(rtmlon), &
               stat=ier)
     if (ier /= 0) then
-       write(6,*)'Rtmgridini: Allocation error for ',&
+       write(iulog,*)'Rtmgridini: Allocation error for ',&
             'rlat,rlon'
        call endrun
     end if
@@ -192,7 +193,7 @@ contains
 
     allocate(rdirc(rtmlon*rtmlat),tempg(rtmlon*rtmlat),stat=ier)
     if (ier /= 0) then
-       write(6,*)'Rtmgridini: Allocation error for ',&
+       write(iulog,*)'Rtmgridini: Allocation error for ',&
             'rdirc'
        call endrun
     end if
@@ -231,9 +232,9 @@ contains
 #endif
 
     if (masterproc) then
-       write(6,*)'Columns in RTM = ',rtmlon
-       write(6,*)'Rows in RTM    = ',rtmlat
-       write(6,*)'read river direction data'
+       write(iulog,*)'Columns in RTM = ',rtmlon
+       write(iulog,*)'Rows in RTM    = ',rtmlat
+       write(iulog,*)'read river direction data'
     end if
 
     !--- set 1d lat/lon values
@@ -256,7 +257,7 @@ contains
               gmask(rtmlon*rtmlat), &
               stat=ier)
     if (ier /= 0) then
-       write(6,*)'Rtmgridini: Allocation error for ',&
+       write(iulog,*)'Rtmgridini: Allocation error for ',&
             'dwnstrm_index,gfrac'
        call endrun
     end if
@@ -278,12 +279,12 @@ contains
           if (ir > rtmlon) ir = ir - rtmlon
           !--- check cross pole flow, etc
           if (jr < 1 .or. jr > rtmlat .or. ir < 1 .or. ir > rtmlon) then
-             write(6,*) 'Rtmini ERROR ir jr bounds ',i,j,rdirc(n),ir,jr
+             write(iulog,*) 'Rtmini ERROR ir jr bounds ',i,j,rdirc(n),ir,jr
              call endrun()
           endif
           nr = (jr-1)*rtmlon + ir
           if (n == nr) then
-             write(6,*) 'Rtmini ERROR dwnstrm_index ',i,j,n,rdirc(n),ir,jr,nr
+             write(iulog,*) 'Rtmini ERROR dwnstrm_index ',i,j,n,rdirc(n),ir,jr,nr
              call endrun()
           endif
           dwnstrm_index(n) = nr
@@ -360,7 +361,7 @@ contains
 
     allocate(iocn(rtmlon*rtmlat),nocn(rtmlon*rtmlat),stat=ier)
     if (ier /= 0) then
-       write(6,*)'Rtmgridini: Allocation error for ',&
+       write(iulog,*)'Rtmgridini: Allocation error for ',&
             'iocn,nocn'
        call endrun
     end if
@@ -379,11 +380,11 @@ contains
              iocn(nr) = n                 ! set ocean outlet or nr to n
              nocn(n) = nocn(n) + 1        ! one more land cell for n
           elseif (gmask(n) == 1) then  ! no ocean outlet, warn user, ignore cell
-             write(6,*) 'rtmini WARNING no downstream ocean cell - IGNORED', &
+             write(iulog,*) 'rtmini WARNING no downstream ocean cell - IGNORED', &
                g,nr,gmask(nr),dwnstrm_index(nr), &
                n,gmask(n),dwnstrm_index(n)
           else 
-             write(6,*) 'rtmini ERROR downstream cell is non-ocean,non-land', &
+             write(iulog,*) 'rtmini ERROR downstream cell is non-ocean,non-land', &
                g,nr,gmask(nr),dwnstrm_index(nr), &
                n,gmask(n),dwnstrm_index(n)
              call endrun()
@@ -409,7 +410,7 @@ contains
              if (nop(n) < nop(pemin)) pemin = n
           enddo
           if (pemin > npes-1 .or. pemin < 0) then
-             write(6,*) 'error in decomp for rtm ',nr,npes,pemin
+             write(iulog,*) 'error in decomp for rtm ',nr,npes,pemin
              call endrun()
           endif
           nop(pemin) = nop(pemin) + nocn(nr)
@@ -455,7 +456,7 @@ contains
                 enddo
              endif
              if ((g-k) /= nocn(nr)) then
-                write(6,*) 'Rtmini ERROR rtm cell count ',n,nr,k,g,g-k,nocn(nr)
+                write(iulog,*) 'Rtmini ERROR rtm cell count ',n,nr,k,g,g-k,nocn(nr)
                 call endrun()
              endif
              if (iam == n) then
@@ -486,14 +487,14 @@ contains
     !--- Write per-processor runoff bounds depending on dbug level
 
 #ifndef UNICOSMP
-    call shr_sys_flush(6)
+    call shr_sys_flush(iulog)
 #endif
     if (masterproc) then
-       write(6,*) 'total runoff cells numr = ',runoff%numr, &
+       write(iulog,*) 'total runoff cells numr = ',runoff%numr, &
           'numrl = ',runoff%numrl,'numro = ',runoff%numro
     endif
 #ifndef UNICOSMP
-    call shr_sys_flush(6)
+    call shr_sys_flush(iulog)
 #endif
     call mpi_barrier(mpicom,ier)
     npmin = 0
@@ -516,18 +517,18 @@ contains
        pid = max(pid,0)
        pid = min(pid,npes-1)
        if (iam == pid) then
-          write(6,*) 'rtm decomp info',' proc = ',iam, &
+          write(iulog,*) 'rtm decomp info',' proc = ',iam, &
              ' begr = ',runoff%begr,' endr = ',runoff%endr, &
              ' numr = ',runoff%lnumr
-          write(6,*) '               ',' proc = ',iam, &
+          write(iulog,*) '               ',' proc = ',iam, &
              ' begrl= ',runoff%begrl,' endrl= ',runoff%endrl, &
              ' numrl= ',runoff%lnumrl
-          write(6,*) '               ',' proc = ',iam, &
+          write(iulog,*) '               ',' proc = ',iam, &
              ' begro= ',runoff%begro,' endro= ',runoff%endro, &
              ' numro= ',runoff%lnumro
        endif
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
        call mpi_barrier(mpicom,ier)
     enddo
@@ -541,13 +542,13 @@ contains
              runoff%lonc(begr:endr),  runoff%latc(begr:endr),  &
              runoff%dsi(begr:endr), stat=ier)
     if (ier /= 0) then
-       write(6,*)'Rtmini ERROR allocation of runoff%runoff'
+       write(iulog,*)'Rtmini ERROR allocation of runoff%runoff'
        call endrun
     end if
 
     allocate(rgdc2glo(numr), runoff%mask(numr), stat=ier)
     if (ier /= 0) then
-       write(6,*)'Rtmini ERROR allocation of runoff%gcd2glo'
+       write(iulog,*)'Rtmini ERROR allocation of runoff%gcd2glo'
        call endrun
     end if
 
@@ -560,7 +561,7 @@ contains
               evel    (begr:endr), &
               sfluxin (begr:endr),  stat=ier)
     if (ier /= 0) then
-       write(6,*)'Rtmgridini: Allocation error for ',&
+       write(iulog,*)'Rtmgridini: Allocation error for ',&
             'volr, fluxout, ddist'
        call endrun
     end if
@@ -586,7 +587,7 @@ contains
     enddo
 
     if (numr /= runoff%numr) then
-       write(6,*) 'Rtmini ERROR numr numr ',numr,runoff%numr
+       write(iulog,*) 'Rtmini ERROR numr numr ',numr,runoff%numr
        call endrun()
     endif
 
@@ -602,7 +603,7 @@ contains
        i = mod(n-1,rtmlon) + 1
        j = (n-1)/rtmlon + 1
        if (n <= 0 .or. n > rtmlon*rtmlat) then
-          write(6,*) 'Rtmini ERROR gdc2glo ',nr,rgdc2glo(nr)
+          write(iulog,*) 'Rtmini ERROR gdc2glo ',nr,rgdc2glo(nr)
           call endrun()
        endif
        runoff%lonc(nr) = runoff%rlon(i)
@@ -625,7 +626,7 @@ contains
           runoff%dsi(nr) = 0
        else
           if (rglo2gdc(dwnstrm_index(n)) == 0) then
-             write(6,*) 'Rtmini ERROR glo2gdc dwnstrm ',nr,n,dwnstrm_index(n),rglo2gdc(dwnstrm_index(n))
+             write(iulog,*) 'Rtmini ERROR glo2gdc dwnstrm ',nr,n,dwnstrm_index(n),rglo2gdc(dwnstrm_index(n))
              call endrun()
           endif
           runoff%dsi(nr) = rglo2gdc(dwnstrm_index(n))
@@ -640,7 +641,7 @@ contains
        if (g == 0) then
           ddist(nr) = 0._r8
        elseif (g < begr .or. g > endr) then
-          write(6,*) 'Rtmini: error in ddist calc ',nr,g,begr,endr
+          write(iulog,*) 'Rtmini: error in ddist calc ',nr,g,begr,endr
           call endrun
        else
           dy = deg2rad * abs(runoff%latc(nr)-runoff%latc(g)) * re*1000._r8
@@ -659,7 +660,7 @@ contains
     !--- Compute timestep and subcycling number
 
     if (rtm_nsteps < 1) then
-       write(6,*) 'rtm ERROR in rtm_nsteps',rtm_nsteps
+       write(iulog,*) 'rtm ERROR in rtm_nsteps',rtm_nsteps
        call endrun()
     endif
     delt_rtm = rtm_nsteps*get_step_size()
@@ -679,11 +680,11 @@ contains
     if (dtovermax > 0._r8) then
        delt_rtm_max = (1.0_r8/dtovermax)*cfl_scale
     else
-       write(6,*) 'rtmini error in delt_rtm_max ',delt_rtm_max,dtover
+       write(iulog,*) 'rtmini error in delt_rtm_max ',delt_rtm_max,dtover
        call endrun
     endif
-    if (masterproc) write(6,*) 'rtm max timestep = ',delt_rtm_max,' (sec) for cfl_scale = ',cfl_scale
-    if (masterproc) write(6,*) 'rtm act timestep ~ ',delt_rtm
+    if (masterproc) write(iulog,*) 'rtm max timestep = ',delt_rtm_max,' (sec) for cfl_scale = ',cfl_scale
+    if (masterproc) write(iulog,*) 'rtm act timestep ~ ',delt_rtm
 
     !--- Allocate and initialize rtm input fields on clm decomp
 
@@ -691,7 +692,7 @@ contains
     call get_proc_bounds(begg, endg)
     allocate (rtmin_avg(begg:endg), rtmin_acc(begg:endg), stat=ier)
     if (ier /= 0) then
-       write(6,*)'Rtmlandini: Allocation error for rtmin, rtmin_avg, rtmin_acc'
+       write(iulog,*)'Rtmlandini: Allocation error for rtmin, rtmin_avg, rtmin_acc'
        call endrun
     end if
     rtmin_avg(:) = 0._r8
@@ -769,7 +770,7 @@ contains
    if (masterproc) then
       call mct_sMat_clean(sMat0_l2r)
       call mct_sMat_clean(sMat0_l2r_d)
-      write(6,*) 'Rtmini complete'
+      write(iulog,*) 'Rtmini complete'
    endif
 
   end subroutine Rtmini
@@ -814,6 +815,7 @@ contains
 
     if (do_rtm) then
 
+       call t_startf('clmrtm_l2r')
        ! Map RTM inputs from land model grid to RTM grid (1/2 degree resolution)
 
        ns = mct_gsMap_lsize(gsmap_lnd_gdc2glo, mpicom)
@@ -840,12 +842,13 @@ contains
 
        call mct_aVect_clean(aV_lndr)
        call mct_aVect_clean(aV_rtmr)
+       call t_stopf('clmrtm_l2r')
 
        ! Determine RTM runoff fluxes
 
-       call t_startf('rtm_calc')
+       call t_startf('clmrtm_calc')
        call Rtm()
-       call t_stopf('rtm_calc')
+       call t_stopf('clmrtm_calc')
 
     end if
 
@@ -935,7 +938,7 @@ contains
     nstep = get_nstep()
     if (mod(nstep,rtm_nsteps)==0 .and. nstep>1) then
        if (ncount_rtm*get_step_size() /= delt_rtm) then
-          write(6,*) 'RtmUpdateInput timestep out of sync ',delt_rtm,ncount_rtm*get_step_size()
+          write(iulog,*) 'RtmUpdateInput timestep out of sync ',delt_rtm,ncount_rtm*get_step_size()
 !          call endrun
           delt_rtm = ncount_rtm*get_step_size()
        endif
@@ -994,7 +997,7 @@ contains
     delt = delt_rtm/float(nsub)
 
     if (delt /= delt_save) then
-       if (masterproc) write(6,*) 'rtm delt update from/to',delt_save,delt,nsub_save,nsub
+       if (masterproc) write(iulog,*) 'rtm delt update from/to',delt_save,delt,nsub_save,nsub
     endif
 
     nsub_save = nsub
@@ -1018,7 +1021,7 @@ contains
           nr = runoff%dsi(n)
           if (nr /= 0) then
              if (nr < runoff%begr .or. nr > runoff%endr) then
-                write(6,*) 'Rtm ERROR: non-local communication ',n,nr
+                write(iulog,*) 'Rtm ERROR: non-local communication ',n,nr
                 call endrun()
              endif
              sfluxin(nr) = sfluxin(nr) + fluxout(n)
@@ -1076,7 +1079,7 @@ contains
     ! Global water balance calculation and error check
 
     if (abs((sumdvolr_tot-sumrunof_tot)/sumrunof_tot) > 0.01_r8) then
-       write(6,*) 'RTM Error: sumdvolr= ',sumdvolr_tot,&
+       write(iulog,*) 'RTM Error: sumdvolr= ',sumdvolr_tot,&
             ' not equal to sumrunof= ',sumrunof_tot
        call endrun
     end if

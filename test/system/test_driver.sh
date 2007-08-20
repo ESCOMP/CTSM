@@ -56,7 +56,7 @@ cat > ./${submit_script} << EOF
 #BSUB -e test_dr.o%J            # error filename
 #BSUB -J clmtest
 #BSUB -q premium                # queue
-#BSUB -W 5:00                     
+#BSUB -W 6:00                     
 #BSUB -P $account_name      
 #BSUB -x                        # exclusive use of node (not_shared)
 ##BSUB -q share

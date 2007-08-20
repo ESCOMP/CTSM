@@ -18,6 +18,7 @@ module spmdMod
 !-----------------------------------------------------------------------
 
   use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varctl  , only: iulog
   implicit none
   save
   private
@@ -129,11 +130,11 @@ contains
     call mpi_gatherv (procname(iam),length(iam),MPI_CHARACTER, &
                       procname,length,displ,MPI_CHARACTER,0,mpicom,ier)
     if (masterproc) then
-       write(6,100)npes
-       write(6,200)
-       write(6,220)
+       write(iulog,100)npes
+       write(iulog,200)
+       write(iulog,220)
        do i=0,npes-1
-          write(6,250)i,(procname((i))(j:j),j=1,length(i))
+          write(iulog,250)i,(procname((i))(j:j),j=1,length(i))
        end do
     endif
 

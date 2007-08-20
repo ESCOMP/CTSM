@@ -36,6 +36,7 @@ module lnd_comp_mct
                                eshr_timeMgr_clockIsOnLastStep
   use spmdMod
   use perf_mod
+  use clm_varctl, only : iulog
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -137,7 +138,7 @@ contains
     call spmd_init( mpicom_lnd )
 
     if (masterproc) then
-       write(6,format) "CLM land model initialization"
+       write(iulog,format) "CLM land model initialization"
     end if
     
     ! Use CCSMInit to set orbital values
@@ -189,8 +190,8 @@ contains
     call mct_aVect_zero(l2x_l_SUM )
 
     if (masterproc) then
-       write(6,format) 'time averaging the following flux fields over the coupling interval'
-       write(6,format) trim(seq_flds_l2x_fluxes)
+       write(iulog,format) 'time averaging the following flux fields over the coupling interval'
+       write(iulog,format) trim(seq_flds_l2x_fluxes)
     end if
 
     ! Map internal data structure into coupling data structure
@@ -207,9 +208,9 @@ contains
     call shr_inputInfo_initGetData( CCSMInit, prog_atm=prog_atm)
     if (masterproc) then
        if ( prog_atm )then
-          write(6,format) 'Atmospheric input is from a prognostic model'
+          write(iulog,format) 'Atmospheric input is from a prognostic model'
        else
-          write(6,format) 'Atmospheric input is from a data model'
+          write(iulog,format) 'Atmospheric input is from a data model'
        end if
     end if
 
@@ -324,7 +325,7 @@ contains
           dtime = get_step_size()
           caldayp1 = get_curr_calday(offset=dtime)
           if (doalb .and. (nextsw_cday /= caldayp1)) then
-             write(6,*)'caldayp1_drv= ',nextsw_cday,' caldayp1_clm= ',caldayp1
+             write(iulog,*)'caldayp1_drv= ',nextsw_cday,' caldayp1_clm= ',caldayp1
              if (nstep > 2) call shr_sys_abort('caldayp1 from drv and clm do not match')
           end if
        end if
@@ -408,8 +409,8 @@ contains
     tod = tod
     if ( .not. eshr_timemgr_clockDateInSync( SyncClock, ymd, tod ) )then
        call eshr_timemgr_clockGet( Syncclock, CurrentYMD=ymd_sync, CurrentTOD=tod_sync )
-       write(6,*)' clm ymd=',ymd     ,'  clm tod= ',tod
-       write(6,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
+       write(iulog,*)' clm ymd=',ymd     ,'  clm tod= ',tod
+       write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
        call shr_sys_abort( sub//":: CLM clock not in sync with Master Sync clock" )
     end if
     
@@ -605,10 +606,10 @@ contains
        co2_type_idx = 2
     end if
     if (co2_type == 'prognostic' .and. index_x2l_Sa_co2prog == 0) then
-       write(6,*)' must have nonzero index_x2l_Sa_co2prog for co2_type equal to prognostic'
+       write(iulog,*)' must have nonzero index_x2l_Sa_co2prog for co2_type equal to prognostic'
        call shr_sys_abort()
     else if (co2_type == 'diagnostic' .and. index_x2l_Sa_co2diag == 0) then
-       write(6,*)' must have nonzero index_x2l_Sa_co2diag for co2_type equal to diagnostic'
+       write(iulog,*)' must have nonzero index_x2l_Sa_co2diag for co2_type equal to diagnostic'
        call shr_sys_abort()
     end if
     

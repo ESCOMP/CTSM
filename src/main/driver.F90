@@ -91,7 +91,8 @@ module driver
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use clmtype
   use clm_varctl          , only : wrtdia, fpftdyn, fndepdyn
-  use spmdMod             , only : masterproc
+  use clm_varctl          , only : iulog
+  use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds
   use filterMod           , only : filter, setFilters
   use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal, pftdyn_cnbal 
@@ -587,6 +588,7 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
   integer  :: begg, endg    ! clump beginning and ending gridcell indices
 #endif
   character(len=256) :: filer       ! restart file name
+  integer :: ier
   logical :: write_restart
 !-----------------------------------------------------------------------
 
@@ -604,6 +606,7 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
   ! Route surface and subsurface runoff into rivers
   ! ============================================================================
 
+  call mpi_barrier(mpicom,ier)
   call t_startf('clmrtm')
   call Rtmriverflux()
   call t_stopf('clmrtm')
@@ -659,7 +662,7 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
      nbdate = yr*10000 + mon*100 + day
      kyr = ncdate/10000 - nbdate/10000 + 1
 
-     if (masterproc) write(6,*) 'End of year. DGVM called now: ncdate=', &
+     if (masterproc) write(iulog,*) 'End of year. DGVM called now: ncdate=', &
                      ncdate,' nbdate=',nbdate,' kyr=',kyr,' nstep=', nstep
 
      nclumps = get_proc_clumps()
@@ -689,6 +692,7 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
   ! ============================================================================
 
   call t_startf('clm_driver_io')
+  call t_startf('clm_driver_io_htapes')
 
   if (present(nlend) .and. present(rstwr)) then 	
      call hist_htapes_wrapup( rstwr, nlend )
@@ -696,14 +700,18 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
      call hist_htapes_wrapup()
   end if
 
+  call t_stopf('clm_driver_io_htapes')
+
   ! ============================================================================
   ! Write to DGVM history buffer if appropriate
   ! ============================================================================
 
 #if (defined DGVM)
   if (monp1==1 .and. dayp1==1 .and. secp1==dtime .and. nstep>0)  then
+     call t_startf('clm_driver_io_hdgvm')
      call histDGVM()
-     if (masterproc) write(6,*) 'Annual DGVM calculations are complete'
+     if (masterproc) write(iulog,*) 'Annual DGVM calculations are complete'
+     call t_stopf('clm_driver_io_hdgvm')
   end if
 #endif
 
@@ -719,6 +727,7 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
      
   if (write_restart) then
 
+     call t_startf('clm_driver_io_wrest')
      if (present(rdate)) then
         filer = restFile_filename(type='netcdf', rdate=rdate)
      else
@@ -740,9 +749,11 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
      else
         call restFile_write_binary( filer )
      end if
+     call t_stopf('clm_driver_io_wrest')
 
   else if (do_inicwrite()) then
 
+     call t_startf('clm_driver_io_wrest')
      dtime = get_step_size()
      filer = restFile_filename(type='netcdf', offset=int(dtime))
 
@@ -751,6 +762,7 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
      else
         call restFile_write( filer)
      end if
+     call t_stopf('clm_driver_io_wrest')
 
   end if
 
@@ -818,7 +830,7 @@ subroutine write_diagnostic (wrtdia, nstep)
         do p = 1, npes-1
            call mpi_recv(psum, 1, MPI_REAL8, p, 999, mpicom, status, ier)
            if (ier/=0) then
-              write(6,*) 'write_diagnostic: Error in mpi_recv()'
+              write(iulog,*) 'write_diagnostic: Error in mpi_recv()'
               call endrun
            end if
            tsum = tsum + psum
@@ -826,24 +838,24 @@ subroutine write_diagnostic (wrtdia, nstep)
      else
         call mpi_send(psum, 1, MPI_REAL8, 0, 999, mpicom, ier)
         if (ier/=0) then
-           write(6,*) 'write_diagnostic: Error in mpi_send()'
+           write(iulog,*) 'write_diagnostic: Error in mpi_send()'
            call endrun
         end if
      end if
      if (masterproc) then
         tsxyav = tsum / numg
-        write (6,1000) nstep, tsxyav
+        write(iulog,1000) nstep, tsxyav
 #ifndef UNICOSMP
-        call shr_sys_flush(6)
+        call shr_sys_flush(iulog)
 #endif
      end if
 
   else
 
      if (masterproc) then
-        write(6,*)'clm2: completed timestep ',nstep
+        write(iulog,*)'clm2: completed timestep ',nstep
 #ifndef UNICOSMP
-        call shr_sys_flush(6)
+        call shr_sys_flush(iulog)
 #endif
      end if
 

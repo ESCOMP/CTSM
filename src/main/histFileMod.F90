@@ -16,7 +16,9 @@ module histFileMod
   use shr_sys_mod , only : shr_sys_getenv
   use shr_sys_mod , only : shr_sys_flush
   use abortutils  , only : endrun
+  use ncdio
   use clm_varcon  , only : spval,ispval
+  use clm_varctl  , only : iulog
   use clmtype     , only : gratm, grlnd, nameg, namel, namec, namep, allrof
   use decompMod   , only : get_proc_bounds, get_proc_global
   use decompMod   , only : get_proc_bounds_atm, get_proc_global_atm
@@ -26,7 +28,7 @@ module histFileMod
   implicit none
   save
   private
-  include "netcdf.inc"
+
 !
 ! !PUBLIC TYPES:
 !
@@ -226,10 +228,9 @@ module histFileMod
 !
 ! Other variables
 !
-  character(len=16) :: host                      ! host name
-  character(len= 8) :: logname                   ! user name
   character(len=max_chars) :: locfnh(max_tapes)  ! local history file names
   logical :: htapes_defined = .false.            ! flag indicates history contents have been defined
+  logical :: pioflag = .false.                    ! use pio in ncdio or not
 
 !
 ! NetCDF  Id's
@@ -238,15 +239,6 @@ module histFileMod
   integer :: time_dimid                      ! time dimension id
   integer :: hist_interval_dimid             ! time bounds dimension id
   integer :: strlen_dimid                    ! string dimension id
-  integer :: mcdate_id(max_tapes)            ! current date, yyyymmdd format (mcdate) ids
-  integer :: mcsec_id(max_tapes)             ! current seconds in day (mcsec) ids
-  integer :: mdcur_id(max_tapes)             ! current day (from base day) (mdcur) ids
-  integer :: mscur_id(max_tapes)             ! current seconds of current day (mdcur) ids
-  integer :: nstep_id(max_tapes)             ! current nstep ids
-  integer :: time_var_id(max_tapes)          ! time coordinate variable ids
-  integer :: time_bounds_id(max_tapes)       ! time bounds ids
-  integer :: date_written_id(max_tapes)      ! current system date ids
-  integer :: time_written_id(max_tapes)      ! current system time ids
 !-----------------------------------------------------------------------
 
 contains
@@ -279,10 +271,10 @@ contains
 !-----------------------------------------------------------------------
 
     if (masterproc) then
-       write(6,*) trim(subname),' : number of master fields = ',nfmaster
-       write(6,*)' ******* MASTER FIELD LIST *******'
+       write(iulog,*) trim(subname),' : number of master fields = ',nfmaster
+       write(iulog,*)' ******* MASTER FIELD LIST *******'
        do nf = 1,nfmaster
-          write(6,9000)nf, masterlist(nf)%field%name, masterlist(nf)%field%units
+          write(iulog,9000)nf, masterlist(nf)%field%name, masterlist(nf)%field%units
 9000      format (i5,1x,a32,1x,a16)
        end do
     end if
@@ -357,7 +349,7 @@ contains
     ! Ensure that new field is not all blanks
 
     if (fname == ' ') then
-       write(6,*) trim(subname),' ERROR: blank field name not allowed'
+       write(iulog,*) trim(subname),' ERROR: blank field name not allowed'
        call endrun()
     end if
 
@@ -365,7 +357,7 @@ contains
 
     do n = 1,nfmaster
        if (masterlist(n)%field%name == fname) then
-          write(6,*) trim(subname),' ERROR:', fname, ' already on list'
+          write(iulog,*) trim(subname),' ERROR:', fname, ' already on list'
           call endrun()
        end if
     end do
@@ -378,7 +370,7 @@ contains
     ! Check number of fields in master list against maximum number for master list
 
     if (nfmaster > max_flds) then
-       write(6,*) trim(subname),' ERROR: too many fields for primary history file ', &
+       write(iulog,*) trim(subname),' ERROR: too many fields for primary history file ', &
             '-- max_flds,nfmaster=', max_flds, nfmaster
        call endrun()
     end if
@@ -429,7 +421,7 @@ contains
        masterlist(f)%field%num1d = num_rtm
 #endif
     case default
-       write(6,*) trim(subname),' ERROR: unknown 1d output type= ',type1d
+       write(iulog,*) trim(subname),' ERROR: unknown 1d output type= ',type1d
        call endrun()
     end select
 
@@ -481,22 +473,9 @@ contains
 !-----------------------------------------------------------------------
 
     if (masterproc) then
-       write(6,*)  trim(subname),' Initializing clm2 history files'
-       write(6,'(72a1)') ("-",i=1,60)
+       write(iulog,*)  trim(subname),' Initializing clm2 history files'
+       write(iulog,'(72a1)') ("-",i=1,60)
     endif
-
-    ! Get users logname and machine hostname
-
-    if ( masterproc )then
-       logname = ' '
-       call shr_sys_getenv('LOGNAME', logname, ier)
-       if (ier /= 0 .or. logname=='        ') then
-          write(6,*) trim(subname),' ERROR: Cannot find LOGNAME environment variable'
-          call endrun()
-       end if
-       host = ' '
-       call shr_sys_getenv('HOST', host, ier)
-    end if
 
     ! Override averaging flag for all fields on a particular tape
     ! if namelist input so specifies
@@ -522,7 +501,7 @@ contains
     ! time of a beginning of current averaging interval.
     ! (note - the following entries will be overwritten by history restart)
     ! Determine if xy averaging is done for all fields on the tape, etc
-    ! Note - with netcdf, only 1 (nf_double) and 2 (nf_float) are allowed
+    ! Note - with netcdf, only 1 (ncd_double) and 2 (ncd_float) are allowed
 
     do t=1,ntapes
        tape(t)%ntimes = 0
@@ -532,15 +511,15 @@ contains
        if (hist_nhtfrq(t) == 0) hist_mfilt(t) = 1
        tape(t)%mfilt = hist_mfilt(t)
        if (hist_ndens(t) == 1) then
-          tape(t)%ncprec = nf_double
+          tape(t)%ncprec = ncd_double
        else
-          tape(t)%ncprec = nf_float
+          tape(t)%ncprec = ncd_float
        endif
     end do
 
     if (masterproc) then
-       write(6,*)  trim(subname),' Successfully initialized clm2 history files'
-       write(6,'(72a1)') ("-",i=1,60)
+       write(iulog,*)  trim(subname),' Successfully initialized clm2 history files'
+       write(iulog,'(72a1)') ("-",i=1,60)
     endif
 
   end subroutine hist_htapes_build
@@ -577,7 +556,7 @@ contains
     ! Check validity of input arguments
 
     if (tape_index > max_tapes) then
-       write(6,*) trim(subname),' ERROR: tape index=', tape_index, ' is too big'
+       write(iulog,*) trim(subname),' ERROR: tape index=', tape_index, ' is too big'
        call endrun()
     end if
 
@@ -585,7 +564,7 @@ contains
        if ( avgflag /= ' ' .and. &
             avgflag /= 'A' .and. avgflag /= 'I' .and. &
             avgflag /= 'X' .and. avgflag /= 'M') then
-          write(6,*) trim(subname),' ERROR: unknown averaging flag=', avgflag
+          write(iulog,*) trim(subname),' ERROR: unknown averaging flag=', avgflag
           call endrun()
        endif
     end if
@@ -606,7 +585,7 @@ contains
        end if
     end do
     if (.not. found) then
-       write(6,*) trim(subname),' ERROR: field=', name, ' not found'
+       write(iulog,*) trim(subname),' ERROR: field=', name, ' not found'
        call endrun()
     end if
 
@@ -654,7 +633,7 @@ contains
        case ('M')
           masterlist(f)%avgflag(t) = avgflag
        case default
-          write(6,*) trim(subname),' ERROR: unknown avgflag=',avgflag
+          write(iulog,*) trim(subname),' ERROR: unknown avgflag=',avgflag
           call endrun ()
        end select
     end do
@@ -709,7 +688,7 @@ contains
              if (name == mastername) exit
           end do
           if (name /= mastername) then
-             write(6,*) trim(subname),' ERROR: ', trim(name), ' in fincl(', f, ') ',&
+             write(iulog,*) trim(subname),' ERROR: ', trim(name), ' in fincl(', f, ') ',&
                   'for history tape ',t,' not found'
              call endrun()
           end if
@@ -723,7 +702,7 @@ contains
              if (fexcl(f,t) == mastername) exit
           end do
           if (fexcl(f,t) /= mastername) then
-             write(6,*) trim(subname),' ERROR: ', fexcl(f,t), ' in fexcl(', f, ') ', &
+             write(iulog,*) trim(subname),' ERROR: ', fexcl(f,t), ' in fexcl(', f, ') ', &
                   'for history tape ',t,' not found'
              call endrun()
           end if
@@ -786,7 +765,7 @@ contains
 
              else if (tape(t)%hlist(ff)%field%name == tape(t)%hlist(ff+1)%field%name) then
 
-                write(6,*) trim(subname),' ERROR: Duplicate field ', &
+                write(iulog,*) trim(subname),' ERROR: Duplicate field ', &
                    tape(t)%hlist(ff)%field%name, &
                    't,ff,name=',t,ff,tape(t)%hlist(ff+1)%field%name
                 call endrun()
@@ -797,10 +776,10 @@ contains
 
        if (masterproc) then
           if (tape(t)%nflds > 0) then
-             write(6,*) trim(subname),' : Included fields tape ',t,'=',tape(t)%nflds
+             write(iulog,*) trim(subname),' : Included fields tape ',t,'=',tape(t)%nflds
           end if
           do f = 1,tape(t)%nflds
-             write(6,*) f,' ',tape(t)%hlist(f)%field%name, &
+             write(iulog,*) f,' ',tape(t)%hlist(f)%field%name, &
                   tape(t)%hlist(f)%field%num2d,' ',tape(t)%hlist(f)%avgflag
           end do
        end if
@@ -821,7 +800,7 @@ contains
 
     do t = 1,ntapes
        if (tape(t)%nflds  ==  0) then
-          write(6,*) trim(subname),' ERROR: Tape ',t,' is empty'
+          write(iulog,*) trim(subname),' ERROR: Tape ',t,' is empty'
           call endrun()
        end if
     end do
@@ -830,7 +809,7 @@ contains
     ! the maximum allowed.
 
     if (ntapes > max_tapes) then
-       write(6,*) trim(subname),' ERROR: Too many history files declared, max_tapes=',max_tapes
+       write(iulog,*) trim(subname),' ERROR: Too many history files declared, max_tapes=',max_tapes
        call endrun()
     end if
 
@@ -841,31 +820,31 @@ contains
        if (hist_type1d_pertape(t) /= ' ' .and. (.not. hist_dov2xy(t))) then
           select case (trim(hist_type1d_pertape(t)))
           case ('PFTS','COLS', 'LAND', 'GRID')
-             write(6,*)'history tape ',t,' will have 1d output type of ',hist_type1d_pertape(t)
+             write(iulog,*)'history tape ',t,' will have 1d output type of ',hist_type1d_pertape(t)
           case default
-             write(6,*) trim(subname),' ERROR: unknown namelist type1d per tape=',hist_type1d_pertape(t)
+             write(iulog,*) trim(subname),' ERROR: unknown namelist type1d per tape=',hist_type1d_pertape(t)
              call endrun()
           end select
        end if
     end do
 
     if (masterproc) then
-       write(6,*) 'There will be a total of ',ntapes,' history tapes'
+       write(iulog,*) 'There will be a total of ',ntapes,' history tapes'
        do t=1,ntapes
-          write(6,*)
+          write(iulog,*)
           if (hist_nhtfrq(t) == 0) then
-             write(6,*)'History tape ',t,' write frequency is MONTHLY'
+             write(iulog,*)'History tape ',t,' write frequency is MONTHLY'
           else
-             write(6,*)'History tape ',t,' write frequency = ',hist_nhtfrq(t)
+             write(iulog,*)'History tape ',t,' write frequency = ',hist_nhtfrq(t)
           endif
           if (hist_dov2xy(t)) then
-             write(6,*)'All fields on history tape ',t,' are grid averaged'
+             write(iulog,*)'All fields on history tape ',t,' are grid averaged'
           else
-             write(6,*)'All fields on history tape ',t,' are not grid averaged'
+             write(iulog,*)'All fields on history tape ',t,' are not grid averaged'
           end if
-          write(6,*)'Number of time samples on history tape ',t,' is ',hist_mfilt(t)
-          write(6,*)'Output precision on history tape ',t,'=',hist_ndens(t)
-          write(6,*)
+          write(iulog,*)'Number of time samples on history tape ',t,' is ',hist_mfilt(t)
+          write(iulog,*)'Output precision on history tape ',t,'=',hist_ndens(t)
+          write(iulog,*)
        end do
     end if
 
@@ -928,7 +907,7 @@ contains
     ! Ensure that it is not to late to add a field to the history tape
 
     if (htapes_defined) then
-       write(6,*) trim(subname),' ERROR: attempt to add field ', &
+       write(iulog,*) trim(subname),' ERROR: attempt to add field ', &
             masterlist(f)%field%name, ' after history files are set'
        call endrun()
     end if
@@ -977,7 +956,7 @@ contains
        case ('PFTS')
           tape(t)%hlist(n)%field%type1d_out = namep
        case default
-          write(6,*) trim(subname),' ERROR: unknown input hist_type1d_pertape= ', hist_type1d_pertape(t)
+          write(iulog,*) trim(subname),' ERROR: unknown input hist_type1d_pertape= ', hist_type1d_pertape(t)
           call endrun()
        end select
 
@@ -1017,7 +996,7 @@ contains
        num1d_out = num_rtm
 #endif
     else
-       write(6,*) trim(subname),' ERROR: incorrect value of type1d_out= ',type1d_out
+       write(iulog,*) trim(subname),' ERROR: incorrect value of type1d_out= ',type1d_out
        call endrun()
     end if
 
@@ -1042,7 +1021,7 @@ contains
     case ('A','I','X','M')
        tape(t)%hlist(n)%avgflag = avgflag
     case default
-       write(6,*) trim(subname),' ERROR: unknown avgflag=', avgflag
+       write(iulog,*) trim(subname),' ERROR: unknown avgflag=', avgflag
        call endrun()
     end select
 
@@ -1240,7 +1219,7 @@ contains
              nacs(k,1) = 1
           end do
        case default
-          write(6,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
+          write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun()
        end select
 
@@ -1331,7 +1310,7 @@ contains
              nacs(k,1) = 1
           end do
        case default
-          write(6,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
+          write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun()
        end select
     end if
@@ -1483,7 +1462,7 @@ contains
              end do
           end do
        case default
-          write(6,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
+          write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun()
        end select
 
@@ -1586,7 +1565,7 @@ contains
              end do
           end do
        case default
-          write(6,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
+          write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun()
        end select
     end if
@@ -1705,13 +1684,10 @@ contains
 !
 ! !USES:
     use clmtype
-    use ncdio
     use clm_varpar  , only : lsmlon, lsmlat, nlevsoi, nlevlak, numrad, rtmlon, rtmlat
     use clm_varctl  , only : caseid, ctitle, frivinp_rtm, fsurdat, finidat, fpftcon
     use domainMod   , only : llatlon,alatlon
-    use clm_varcon  , only : zsoi, zlak
     use fileutils   , only : get_filename
-    use clm_time_manager, only : get_ref_date
 #if (defined CASA)
     use CASAMod,    only : nlive, npools, npool_types
 #endif
@@ -1729,8 +1705,6 @@ contains
     integer :: f                   ! field index
     integer :: p,c,l,n             ! indices
     integer :: ier                 ! error code
-    integer :: yr,mon,day,nbsec    ! year,month,day,seconds components of a date
-    integer :: hours,minutes,secs  ! hours,minutes,seconds of hh:mm:ss
     integer :: num2d               ! size of second dimension (e.g. number of vertical levels)
     integer :: dimid               ! dimension id temporary
     integer :: dim1id(1)           ! netCDF dimension id
@@ -1750,8 +1724,6 @@ contains
 #endif
     character(len=  8) :: curdate  ! current date
     character(len=  8) :: curtime  ! current time
-    character(len= 10) :: basedate ! base date (yyyymmdd)
-    character(len=  8) :: basesec  ! base seconds
     character(len=256) :: name     ! name of attribute
     character(len=256) :: units    ! units of attribute
     character(len=256) :: str      ! global attribute string
@@ -1772,201 +1744,92 @@ contains
 
     ! Create new netCDF file. File will be in define mode
 
-    write(6,*) trim(subname),' : Opening netcdf htape ', trim(locfnh(t))
-    call check_ret(nf_create (trim(locfnh(t)), nf_clobber, nfid(t)), subname)
-    call check_ret(nf_set_fill (nfid(t), nf_nofill, omode), subname)
+    if (masterproc) then
+       write(iulog,*) trim(subname),' : Opening netcdf htape ', trim(locfnh(t))
+    endif
+    call ncd_create (trim(locfnh(t)), ncd_clobber, nfid(t), subname, usepio=pioflag)
+    call ncd_setfill(nfid(t), ncd_nofill, omode, subname, usepio=pioflag)
 
     ! Create global attributes. Attributes are used to store information
     ! about the data set. Global attributes are information about the
     ! data set as a whole, as opposed to a single variable
 
     str = 'CF-1.0'
-    call check_ret(&
-         nf_put_att_text (nfid(t), NF_GLOBAL, 'conventions', len_trim(str), trim(str)), subname)
+    call ncd_putatt(nfid(t), ncd_global, 'conventions', trim(str), subname, usepio=pioflag)
 
     call getdatetime(curdate, curtime)
     str = 'created on ' // curdate // ' ' // curtime
-    call check_ret(&
-         nf_put_att_text(nfid(t), NF_GLOBAL, 'history', len_trim(str), trim(str)), subname)
-
-    call shr_sys_getenv('LOGNAME', str, ier)
-    call check_ret(&
-         nf_put_att_text (nfid(t), NF_GLOBAL, 'logname',len_trim(str), trim(str)), subname)
-
-    call shr_sys_getenv('HOST', str, ier)
-    call check_ret(&
-         nf_put_att_text (nfid(t), NF_GLOBAL, 'host', len_trim(str), trim(str)), subname)
+    call ncd_putatt(nfid(t), ncd_global, 'history', trim(str), subname, usepio=pioflag)
 
     str = 'Community Land Model: CLM3'
-    call check_ret(&
-         nf_put_att_text (nfid(t), NF_GLOBAL, 'source', len_trim(str), trim(str)), subname)
+    call ncd_putatt(nfid(t), ncd_global, 'source', trim(str), subname, usepio=pioflag)
 
     str = '$HeadURL'
-    call check_ret(&
-         nf_put_att_text (nfid(t), NF_GLOBAL, 'version', len_trim(str), trim(str)), subname)
+    call ncd_putatt(nfid(t), ncd_global, 'version', trim(str), subname, usepio=pioflag)
      
     str = '$Id$'
-    call check_ret(&
-         nf_put_att_text (nfid(t), NF_GLOBAL, 'revision_id', len_trim(str), trim(str)), subname)
+    call ncd_putatt(nfid(t), ncd_global, 'revision_id', trim(str), subname, usepio=pioflag)
 
     str = ctitle
-    call check_ret(&
-         nf_put_att_text (nfid(t), NF_GLOBAL, 'case_title', len_trim(str), trim(str)), subname)
+    call ncd_putatt(nfid(t), ncd_global, 'case_title', trim(str), subname, usepio=pioflag)
 
     str = caseid
-    call check_ret(&
-         nf_put_att_text (nfid(t), NF_GLOBAL, 'case_id', len_trim(str), trim(str)), subname)
+    call ncd_putatt(nfid(t), ncd_global, 'case_id', trim(str), subname, usepio=pioflag)
 
     str = get_filename(fsurdat)
-    call check_ret(&
-         nf_put_att_text(nfid(t), NF_GLOBAL, 'Surface_dataset', len_trim(str), trim(str)), subname)
+    call ncd_putatt(nfid(t), ncd_global, 'Surface_dataset', trim(str), subname, usepio=pioflag)
 
     if (finidat == ' ') then
        str = 'arbitrary initialization'
     else
        str = get_filename(finidat)
     endif
-    call check_ret(&
-         nf_put_att_text(nfid(t), NF_GLOBAL, 'Initial_conditions_dataset', len_trim(str), trim(str)), subname)
+    call ncd_putatt(nfid(t), ncd_global, 'Initial_conditions_dataset', trim(str), subname, usepio=pioflag)
 
     str = get_filename(fpftcon)
-    call check_ret(&
-         nf_put_att_text(nfid(t), NF_GLOBAL, 'PFT_physiological_constants_dataset', len_trim(str), trim(str)), subname)
+    call ncd_putatt(nfid(t), ncd_global, 'PFT_physiological_constants_dataset', trim(str), subname, usepio=pioflag)
 
     if (frivinp_rtm /= ' ') then
        str = get_filename(frivinp_rtm)
-       call check_ret(&
-            nf_put_att_text(nfid(t), NF_GLOBAL, 'RTM_input_datset', len_trim(str), trim(str)), subname)
+       call ncd_putatt(nfid(t), ncd_global, 'RTM_input_dataset', trim(str), subname, usepio=pioflag)
     endif
 
     ! Define dimensions.
     ! Time is an unlimited dimension. Character string is treated as an array of characters.
 
-    call check_ret(nf_def_dim (nfid(t), 'gridcell', numg   , dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'landunit', numl   , dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'column'  , numc   , dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'pft'     , nump   , dimid), subname)
+    call ncd_defdim( nfid(t), 'gridcell', numg   , dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'landunit', numl   , dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'column'  , numc   , dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'pft'     , nump   , dimid, subname, usepio=pioflag)
 #if (defined RTM)
-    call check_ret(nf_def_dim (nfid(t), 'ocnrof', num_ocnrof, dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'lndrof', num_lndrof, dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'allrof', num_rtm   , dimid), subname)
+    call ncd_defdim( nfid(t), 'ocnrof', num_ocnrof, dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'lndrof', num_lndrof, dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'allrof', num_rtm   , dimid, subname, usepio=pioflag)
 #endif
-    call check_ret(nf_def_dim (nfid(t), 'levsoi', nlevsoi, dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'levlak', nlevlak, dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'numrad', numrad , dimid), subname)
+    call ncd_defdim( nfid(t), 'levsoi', nlevsoi, dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'levlak', nlevlak, dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'numrad', numrad , dimid, subname, usepio=pioflag)
 #if (defined CASA)
-    call check_ret(nf_def_dim (nfid(t), 'nlive', nlive , dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'npools', npools , dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'npool_t', npool_types, dimid), subname)
+    call ncd_defdim( nfid(t), 'nlive', nlive , dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'npools', npools , dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'npool_t', npool_types, dimid, subname, usepio=pioflag)
 #endif
     do n = 1,num_subs
-       call check_ret(nf_def_dim (nfid(t), subs_name(n), subs_dim(n), dimid), subname)
+       call ncd_defdim( nfid(t), subs_name(n), subs_dim(n), dimid, subname, usepio=pioflag)
     end do
-    call check_ret(nf_def_dim (nfid(t), 'lon'   , llatlon%ni, dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'lat'   , llatlon%nj, dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'lonatm', alatlon%ni, dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'latatm', alatlon%nj, dimid), subname)
+    call ncd_defdim( nfid(t), 'lon'   , llatlon%ni, dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'lat'   , llatlon%nj, dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'lonatm', alatlon%ni, dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'latatm', alatlon%nj, dimid, subname, usepio=pioflag)
 #if (defined RTM)
-    call check_ret(nf_def_dim (nfid(t), 'lonrof', rtmlon, dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'latrof', rtmlat, dimid), subname)
+    call ncd_defdim( nfid(t), 'lonrof', rtmlon, dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'latrof', rtmlat, dimid, subname, usepio=pioflag)
 #endif
-    call check_ret(nf_def_dim (nfid(t), 'time', nf_unlimited, time_dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'hist_interval', 2, hist_interval_dimid), subname)
-    call check_ret(nf_def_dim (nfid(t), 'string_length', 8, strlen_dimid), subname)
+    call ncd_defdim( nfid(t), 'time', ncd_unlimited, time_dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'hist_interval', 2, hist_interval_dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'string_length', 8, strlen_dimid, subname, usepio=pioflag)
 
-    write(6,*) trim(subname),' : Successfully defined netcdf history file ',t
-
-    ! Define coordinate variables (including time)
-
-    call get_ref_date(yr, mon, day, nbsec)
-    hours   = nbsec / 3600
-    minutes = (nbsec - hours*3600) / 60
-    secs    = (nbsec - hours*3600 - minutes*60)
-    write(basedate,80) yr,mon,day
-80  format(i4.4,'-',i2.2,'-',i2.2)
-    write(basesec ,90) hours, minutes, secs
-90  format(i2.2,':',i2.2,':',i2.2)
-    dim1id(1) = time_dimid
-    call check_ret(nf_def_var(nfid(t), 'time', ncprec, 1, dim1id, time_var_id(t)), subname)
-    str = 'time'
-    call check_ret(nf_put_att_text (nfid(t), time_var_id(t), 'long_name', len_trim(str), trim(str)), subname)
-    str = 'days since ' // basedate // " " // basesec
-    call check_ret(nf_put_att_text (nfid(t), time_var_id(t), 'units', len_trim(str), trim(str)), subname)
-    str = 'noleap'
-    call check_ret(nf_put_att_text (nfid(t), time_var_id(t), 'calendar', len_trim(str), trim(str)), subname)
-    str = 'time_bounds'
-    call check_ret(nf_put_att_text (nfid(t), time_var_id(t), 'bounds', len_trim(str), trim(str)), subname)
-
-    call ncd_defvar(varname='levsoi', xtype=ncprec, dim1name='levsoi', &
-         long_name='coordinate soil levels', units='m', ncid=nfid(t))
-
-    call ncd_defvar(varname='levlak', xtype=ncprec, dim1name='levlak', &
-         long_name='coordinate lake levels', units='m', ncid=nfid(t))
-
-    call ncd_defvar(varname='edgen', xtype=ncprec, &
-         long_name='northern edge of surface grid', units='degrees_north', ncid=nfid(t))
-    call ncd_defvar(varname='edgee', xtype=ncprec, &
-         long_name='eastern edge of surface grid', units='degrees_east', ncid=nfid(t))
-    call ncd_defvar(varname='edges', xtype=ncprec, &
-         long_name='southern edge of surface grid', units='degrees_north', ncid=nfid(t))
-    call ncd_defvar(varname='edgew', xtype=ncprec, &
-         long_name='western edge of surface grid', units='degrees_east', ncid=nfid(t))
-
-    ! Define time information
-
-    dim1id(1) = time_dimid
-    call check_ret(nf_def_var(nfid(t) , 'mcdate', nf_int, 1, dim1id  , mcdate_id(t)), subname)
-    str = 'current date (YYYYMMDD)'
-    call check_ret(nf_put_att_text (nfid(t), mcdate_id(t), 'long_name', len_trim(str), trim(str)), subname)
-
-    call check_ret(nf_def_var(nfid(t) , 'mcsec' , nf_int, 1, dim1id , mcsec_id(t)), subname)
-    str = 'current seconds of current date'
-    call check_ret(nf_put_att_text (nfid(t), mcsec_id(t), 'long_name', len_trim(str), trim(str)), subname)
-    str = 's'
-    call check_ret(nf_put_att_text (nfid(t), mcsec_id(t), 'units', len_trim(str), trim(str)), subname)
-
-    call check_ret(nf_def_var(nfid(t) , 'mdcur' , nf_int, 1, dim1id , mdcur_id(t)), subname)
-    str = 'current day (from base day)'
-    call check_ret(nf_put_att_text (nfid(t), mdcur_id(t), 'long_name', len_trim(str), trim(str)), subname)
-
-    call check_ret(nf_def_var(nfid(t) , 'mscur' , nf_int, 1, dim1id , mscur_id(t)), subname)
-    str = 'current seconds of current day'
-    call check_ret(nf_put_att_text (nfid(t), mscur_id(t), 'long_name', len_trim(str), trim(str)), subname)
-
-    call check_ret(nf_def_var(nfid(t) , 'nstep' , nf_int, 1, dim1id , nstep_id(t)), subname)
-    str = 'time step'
-    call check_ret(nf_put_att_text (nfid(t), nstep_id(t), 'long_name', len_trim(str), trim(str)), subname)
-
-    dim2id(1) = hist_interval_dimid;  dim2id(2) = time_dimid
-    call check_ret(nf_def_var(nfid(t), 'time_bounds', nf_double, 2, dim2id, time_bounds_id(t)), subname)
-    str = 'history time interval endpoints'
-    call check_ret(nf_put_att_text (nfid(t), time_bounds_id(t), 'long_name', len_trim(str), trim(str)), subname)
-
-    dim2id(1) = strlen_dimid;  dim2id(2) = time_dimid
-    call check_ret(nf_def_var(nfid(t), 'date_written', nf_char, 2, dim2id, date_written_id(t)), subname)
-    call check_ret(nf_def_var(nfid(t), 'time_written', nf_char, 2, dim2id, time_written_id(t)), subname)
-
-    ! Define time constant variables
-
-    if (t == 1) call htape_timeconst(t, mode='define')
-
-    ! Define time variant variables
-
-    call hfields_write(t, mode='define')
-
-    ! Exit define model
-
-    call check_ret(nf_enddef(nfid(t)), subname)
-
-    ! Write out variables
-
-    call ncd_ioglobal(varname='levsoi', data=zsoi, ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='levlak', data=zlak, ncid=nfid(t), flag='write')
-
-    call ncd_ioglobal(varname='edgen', data=llatlon%edges(1), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edgee', data=llatlon%edges(2), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edges', data=llatlon%edges(3), ncid=nfid(t), flag='write')
-    call ncd_ioglobal(varname='edgew', data=llatlon%edges(4), ncid=nfid(t), flag='write')
+    if (masterproc) write(iulog,*) trim(subname),' : Successfully defined netcdf history file ',t
 
   end subroutine htape_create
 
@@ -1985,15 +1848,16 @@ contains
 !
 ! !USES:
     use clmtype
+    use clm_varcon   , only : zsoi, zlak
     use subgridAveMod, only : c2g
-    use decompMod    , only :ldecomp
     use domainMod    , only : ldomain,llatlon,adomain,alatlon,gatm
 #if (defined RTM)
     use RunoffMod    , only : runoff
 #endif	
     use clm_varpar   , only : lsmlon, lsmlat, nlevsoi
-    use ncdio
     use spmdGathScatMod, only : gather_data_to_master
+    use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
+    use clm_time_manager, only : get_ref_date
 !
 ! !ARGUMENTS:
     implicit none
@@ -2006,7 +1870,23 @@ contains
 !EOP
 !
 ! LOCAL VARIABLES:
-    integer :: c,l,lev,ifld,vid,n,m,g     ! indices
+    integer :: c,l,lev,ifld,vid,n,m,g,i,j ! indices
+    integer :: nstep                      ! current step
+    integer :: mcsec                      ! seconds of current date
+    integer :: mdcur                      ! current day
+    integer :: mscur                      ! seconds of current day
+    integer :: mcdate                     ! current date
+    integer :: yr,mon,day,nbsec    ! year,month,day,seconds components of a date
+    integer :: hours,minutes,secs  ! hours,minutes,seconds of hh:mm:ss
+    character(len= 10) :: basedate ! base date (yyyymmdd)
+    character(len=  8) :: basesec  ! base seconds
+    character(len=  8) :: cdate           ! system date
+    character(len=  8) :: ctime           ! system time
+    real(r8):: time                       ! current time
+    real(r8):: timedata(2)                ! time interval boundaries
+    integer :: dim1id(1)                  ! netCDF dimension id
+    integer :: dim2id(2)                  ! netCDF dimension id
+    integer :: varid                      ! netCDF variable id
     integer :: ier                        ! error status
     integer :: begp, endp   ! per-proc beginning and ending pft indices
     integer :: begc, endc   ! per-proc beginning and ending column indices
@@ -2015,6 +1895,7 @@ contains
     character(len=max_chars) :: long_name ! variable long name
     character(len=max_namlen):: varname   ! variable name
     character(len=max_namlen):: units     ! variable units
+    character(len=256):: str              ! global attribute string
     real(r8), pointer :: histi(:,:)       ! temporary
     real(r8), pointer :: histo(:,:)       ! temporary
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
@@ -2022,9 +1903,109 @@ contains
     character(len=*),parameter :: subname = 'htape_timeconst'
 !-----------------------------------------------------------------------
 
+!-------------------------------------------------------------------------------
+!***     Primary time const variables ***
+!***       Written only first time    ***
+!-------------------------------------------------------------------------------
+    if (tape(t)%ntimes == 1) then
     if (mode == 'define') then
+       call ncd_defvar(varname='levsoi', xtype=tape(t)%ncprec, dim1name='levsoi', &
+            long_name='coordinate soil levels', units='m', ncid=nfid(t), usepio=pioflag)
+       call ncd_defvar(varname='levlak', xtype=tape(t)%ncprec, dim1name='levlak', &
+            long_name='coordinate lake levels', units='m', ncid=nfid(t), usepio=pioflag)
+       call ncd_defvar(varname='edgen', xtype=tape(t)%ncprec, &
+            long_name='northern edge of surface grid', units='degrees_north', ncid=nfid(t), usepio=pioflag)
+       call ncd_defvar(varname='edgee', xtype=tape(t)%ncprec, &
+            long_name='eastern edge of surface grid' , units='degrees_east' , ncid=nfid(t), usepio=pioflag)
+       call ncd_defvar(varname='edges', xtype=tape(t)%ncprec, &
+            long_name='southern edge of surface grid', units='degrees_north', ncid=nfid(t), usepio=pioflag)
+       call ncd_defvar(varname='edgew', xtype=tape(t)%ncprec, &
+            long_name='western edge of surface grid' , units='degrees_east' , ncid=nfid(t), usepio=pioflag)
+    elseif (mode == 'write') then
+       call ncd_ioglobal(varname='levsoi', data=zsoi, ncid=nfid(t), flag='write', usepio=pioflag)
+       call ncd_ioglobal(varname='levlak', data=zlak, ncid=nfid(t), flag='write', usepio=pioflag)
+       call ncd_ioglobal(varname='edgen', data=llatlon%edges(1), ncid=nfid(t), flag='write', usepio=pioflag)
+       call ncd_ioglobal(varname='edgee', data=llatlon%edges(2), ncid=nfid(t), flag='write', usepio=pioflag)
+       call ncd_ioglobal(varname='edges', data=llatlon%edges(3), ncid=nfid(t), flag='write', usepio=pioflag)
+       call ncd_ioglobal(varname='edgew', data=llatlon%edges(4), ncid=nfid(t), flag='write', usepio=pioflag)
+    endif
+    endif ! (ntime == 1)
 
-       if (masterproc) then
+!-------------------------------------------------------------------------------
+!***     Primary time varying variables ***
+!***         Written at each time       ***
+!-------------------------------------------------------------------------------
+    if (mode == 'define') then
+       if (tape(t)%ntimes == 1) then     ! just protect define mode
+
+       call get_ref_date(yr, mon, day, nbsec)
+       hours   = nbsec / 3600
+       minutes = (nbsec - hours*3600) / 60
+       secs    = (nbsec - hours*3600 - minutes*60)
+       write(basedate,80) yr,mon,day
+80     format(i4.4,'-',i2.2,'-',i2.2)
+       write(basesec ,90) hours, minutes, secs
+90     format(i2.2,':',i2.2,':',i2.2)
+
+       dim1id(1) = time_dimid
+       str = 'days since ' // basedate // " " // basesec
+       call ncd_defvar(nfid(t), 'time', tape(t)%ncprec, 1, dim1id, varid, subname, long_name='time',units=str, usepio=pioflag)
+       call ncd_putatt(nfid(t), varid, 'calendar', 'noleap', subname, usepio=pioflag)
+       call ncd_putatt(nfid(t), varid, 'bounds', 'time_bounds', subname, usepio=pioflag)
+
+       dim1id(1) = time_dimid
+       call ncd_defvar(nfid(t) , 'mcdate', ncd_int, 1, dim1id , varid, subname, &
+          long_name = 'current date (YYYYMMDD)', usepio=pioflag)
+       call ncd_defvar(nfid(t) , 'mcsec' , ncd_int, 1, dim1id , varid, subname, &
+          long_name = 'current seconds of current date', units='s', usepio=pioflag)
+       call ncd_defvar(nfid(t) , 'mdcur' , ncd_int, 1, dim1id , varid, subname, &
+          long_name = 'current day (from base day)', usepio=pioflag)
+       call ncd_defvar(nfid(t) , 'mscur' , ncd_int, 1, dim1id , varid, subname, &
+          long_name = 'current seconds of current day', usepio=pioflag)
+       call ncd_defvar(nfid(t) , 'nstep' , ncd_int, 1, dim1id , varid, subname, &
+          long_name = 'time step', usepio=pioflag)
+
+       dim2id(1) = hist_interval_dimid;  dim2id(2) = time_dimid
+       call ncd_defvar(nfid(t), 'time_bounds', ncd_double, 2, dim2id, varid, subname, &
+          long_name = 'history time interval endpoints', usepio=pioflag)
+
+       dim2id(1) = strlen_dimid;  dim2id(2) = time_dimid
+       call ncd_defvar(nfid(t), 'date_written', ncd_char, 2, dim2id, varid, subname, usepio=pioflag)
+       call ncd_defvar(nfid(t), 'time_written', ncd_char, 2, dim2id, varid, subname, usepio=pioflag)
+       endif   ! (ntimes == 1)
+
+    elseif (mode == 'write') then
+
+       call get_curr_time (mdcur, mscur)
+       call get_curr_date (yr, mon, day, mcsec)
+       mcdate = yr*10000 + mon*100 + day
+       nstep = get_nstep()
+
+       call ncd_ioglobal('mcdate', mcdate, 'write', nfid(t), nt=tape(t)%ntimes, usepio=pioflag)
+       call ncd_ioglobal('mcsec' , mcsec , 'write', nfid(t), nt=tape(t)%ntimes, usepio=pioflag)
+       call ncd_ioglobal('mdcur' , mdcur , 'write', nfid(t), nt=tape(t)%ntimes, usepio=pioflag)
+       call ncd_ioglobal('mscur' , mscur , 'write', nfid(t), nt=tape(t)%ntimes, usepio=pioflag)
+       call ncd_ioglobal('nstep' , nstep , 'write', nfid(t), nt=tape(t)%ntimes, usepio=pioflag)
+
+       time = mdcur + mscur/86400._r8
+       call ncd_ioglobal('time'  , time  , 'write', nfid(t), nt=tape(t)%ntimes, usepio=pioflag)
+
+       timedata(1) = tape(t)%begtime
+       timedata(2) = time
+       call ncd_ioglobal('time_bounds', timedata, 'write', nfid(t), nt=tape(t)%ntimes, usepio=pioflag)
+
+       call getdatetime (cdate, ctime)
+       call ncd_ioglobal('date_written', cdate, 'write', nfid(t), nt=tape(t)%ntimes, usepio=pioflag)
+       call ncd_ioglobal('time_written', ctime, 'write', nfid(t), nt=tape(t)%ntimes, usepio=pioflag)
+    endif
+
+!-------------------------------------------------------------------------------
+!***      Non-time varying fields    ***
+!***         ONLY ON TAPE 1          ***
+!***      Written only first time    ***
+!-------------------------------------------------------------------------------
+    if (t == 1 .and. tape(t)%ntimes == 1) then
+    if (mode == 'define') then
           do ifld = 1,5
              if (ifld == 1) then
                 varname='ZSOI'
@@ -2043,13 +2024,13 @@ contains
                 long_name='slope of soil water retention curve'; units = 'unitless'
              end if
              if (tape(t)%dov2xy) then
-                call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
+                call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec,&
                      dim1name='lon', dim2name='lat', dim3name='levsoi', &
-                     long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+                     long_name=long_name, units=units, missing_value=spval, fill_value=spval, usepio=pioflag)
              else
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                      dim1name='column', dim2name='levsoi', &
-                     long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+                     long_name=long_name, units=units, missing_value=spval, fill_value=spval, usepio=pioflag)
              end if
           end do
 
@@ -2057,75 +2038,74 @@ contains
 
          call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, dim1name='lon', &
               long_name='coordinate longitude', units='degrees_east', &
-              ncid=nfid(t))
+              ncid=nfid(t), usepio=pioflag)
          call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, dim1name='lat', &
               long_name='coordinate latitude', units='degrees_north', &
-              ncid=nfid(t))
+              ncid=nfid(t), usepio=pioflag)
          call ncd_defvar(varname='lonatm', xtype=tape(t)%ncprec, dim1name='lonatm', &
               long_name='atm coordinate longitude', units='degrees_east', &
-              ncid=nfid(t))
+              ncid=nfid(t), usepio=pioflag)
          call ncd_defvar(varname='latatm', xtype=tape(t)%ncprec, dim1name='latatm', &
               long_name='atm coordinate latitude', units='degrees_north', &
-              ncid=nfid(t))
+              ncid=nfid(t), usepio=pioflag)
 #if (defined RTM)
          call ncd_defvar(varname='lonrof', xtype=tape(t)%ncprec, dim1name='lonrof', &
-              long_name='runoff coordinate longitude', units='degrees_east', ncid=nfid(t))
+              long_name='runoff coordinate longitude', units='degrees_east', ncid=nfid(t), usepio=pioflag)
          call ncd_defvar(varname='latrof', xtype=tape(t)%ncprec, dim1name='latrof', &
-              long_name='runoff coordinate latitude', units='degrees_north', ncid=nfid(t))
+              long_name='runoff coordinate latitude', units='degrees_north', ncid=nfid(t), usepio=pioflag)
 #endif
          call ncd_defvar(varname='longxy',   xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat', &
               long_name='longitude', units='degrees_east',  ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+              missing_value=spval, fill_value=spval, usepio=pioflag)
          call ncd_defvar(varname='latixy',   xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='latitude', units='degrees_north', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+              missing_value=spval, fill_value=spval, usepio=pioflag)
          call ncd_defvar(varname='area',     xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='grid cell areas', units='km^2', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+              missing_value=spval, fill_value=spval, usepio=pioflag)
          call ncd_defvar(varname='areaupsc', xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='normalized grid cell areas related to upscaling', units='km^2', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+              missing_value=spval, fill_value=spval, usepio=pioflag)
          call ncd_defvar(varname='topo',     xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='grid cell topography', units='m', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+              missing_value=spval, fill_value=spval, usepio=pioflag)
          call ncd_defvar(varname='topodnsc', xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='normalized grid cell topography related to downscaling', units='m', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+              missing_value=spval, fill_value=spval, usepio=pioflag)
          call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat', &
               long_name='land fraction', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+              missing_value=spval, fill_value=spval, usepio=pioflag)
 
-         call ncd_defvar(varname='landmask', xtype=nf_int, &
+         call ncd_defvar(varname='landmask', xtype=ncd_int, &
               dim1name='lon', dim2name='lat', &
-              long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t))
-         call ncd_defvar(varname='pftmask' , xtype=nf_int, &
+              long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), usepio=pioflag)
+         call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
               dim1name='lon', dim2name='lat', &
               long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
-         call ncd_defvar(varname='indxupsc', xtype=nf_int, &
+              imissing_value=ispval, ifill_value=ispval, usepio=pioflag)
+         call ncd_defvar(varname='indxupsc', xtype=ncd_int, &
               dim1name='lon', dim2name='lat', &
               long_name='upscaling atm global grid index', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
+              imissing_value=ispval, ifill_value=ispval, usepio=pioflag)
          call ncd_defvar(varname='longxyatm',   xtype=tape(t)%ncprec, &
               dim1name='lonatm', dim2name='latatm', &
               long_name='atm longitude', units='degrees_east',  ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+              missing_value=spval, fill_value=spval, usepio=pioflag)
          call ncd_defvar(varname='latixyatm',   xtype=tape(t)%ncprec, &
               dim1name='lonatm', dim2name='latatm',&
               long_name='atm latitude', units='degrees_north', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
+              missing_value=spval, fill_value=spval, usepio=pioflag)
          call ncd_defvar(varname='areaatm',     xtype=tape(t)%ncprec, &
               dim1name='lonatm', dim2name='latatm',&
               long_name='atm grid cell areas', units='km^2', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       end if
+              missing_value=spval, fill_value=spval, usepio=pioflag)
 
     else if (mode == 'write') then
 
@@ -2138,7 +2118,7 @@ contains
 
        allocate(histi(begc:endc,nlevsoi), stat=ier)
        if (ier /= 0) then
-          write(6,*) trim(subname),' ERROR: allocation error for histi'; call endrun()
+          write(iulog,*) trim(subname),' ERROR: allocation error for histi'; call endrun()
        end if
 
        ! Write time constant fields
@@ -2146,7 +2126,7 @@ contains
        if (tape(t)%dov2xy) then
           allocate(histo(begg:endg,nlevsoi), stat=ier)
           if (ier /= 0) then
-             write(6,*)  trim(subname),' ERROR: allocation error for histo'; call endrun()
+             write(iulog,*)  trim(subname),' ERROR: allocation error for histo'; call endrun()
           end if
        end if
 
@@ -2183,64 +2163,66 @@ contains
                   c2l_scale_type='unity', l2g_scale_type='unity')
 
              call ncd_iolocal(varname=varname, dim1name=grlnd, dim2name='levsoi', &
-                  data=histo, ncid=nfid(t), flag='write')
+                  data=histo, ncid=nfid(t), flag='write', usepio=pioflag)
           else
              call ncd_iolocal(varname=varname, dim1name=namec, dim2name='levsoi', &
-                  data=histi, ncid=nfid(t), flag='write')
+                  data=histi, ncid=nfid(t), flag='write', usepio=pioflag)
           end if
        end do
 
        if (tape(t)%dov2xy) deallocate(histo)
        deallocate(histi)
 
-       if (masterproc) then
-          call ncd_ioglobal(varname='lon', data=llatlon%lonc, ncid=nfid(t), flag='write')
-       endif
-       if (masterproc) then
-          call ncd_ioglobal(varname='lat', data=llatlon%latc, ncid=nfid(t), flag='write')
-       endif
-       if (masterproc) then
-          call ncd_ioglobal(varname='lonatm', data=alatlon%lonc, ncid=nfid(t), flag='write')
-       endif
-       if (masterproc) then
-          call ncd_ioglobal(varname='latatm', data=alatlon%latc, ncid=nfid(t), flag='write')
-       endif
+       call ncd_ioglobal(varname='lon', data=llatlon%lonc, ncid=nfid(t), flag='write', usepio=pioflag)
+       call ncd_ioglobal(varname='lat', data=llatlon%latc, ncid=nfid(t), flag='write', usepio=pioflag)
+       call ncd_ioglobal(varname='lonatm', data=alatlon%lonc, ncid=nfid(t), flag='write', usepio=pioflag)
+       call ncd_ioglobal(varname='latatm', data=alatlon%latc, ncid=nfid(t), flag='write', usepio=pioflag)
 
 #if (defined RTM)
-       if (masterproc) then
-          call ncd_ioglobal(varname='lonrof', data=runoff%rlon, ncid=nfid(t), flag='write')
-       endif
-       if (masterproc) then
-          call ncd_ioglobal(varname='latrof', data=runoff%rlat, ncid=nfid(t), flag='write')
-       endif
+       call ncd_ioglobal(varname='lonrof', data=runoff%rlon, ncid=nfid(t), flag='write', usepio=pioflag)
+       call ncd_ioglobal(varname='latrof', data=runoff%rlat, ncid=nfid(t), flag='write', usepio=pioflag)
 #endif
        call ncd_iolocal(varname='longxy'  , data=ldomain%lonc, &
-            dim1name=grlnd, ncid=nfid(t), flag='write')
+            dim1name=grlnd, ncid=nfid(t), flag='write', usepio=pioflag)
        call ncd_iolocal(varname='latixy'  , data=ldomain%latc, &
-            dim1name=grlnd, ncid=nfid(t), flag='write')
+            dim1name=grlnd, ncid=nfid(t), flag='write', usepio=pioflag)
        call ncd_iolocal(varname='area'    , data=ldomain%area, &
-            dim1name=grlnd, ncid=nfid(t), flag='write')
+            dim1name=grlnd, ncid=nfid(t), flag='write', usepio=pioflag)
        call ncd_iolocal(varname='areaupsc', data=ldomain%nara, &
-            dim1name=grlnd, ncid=nfid(t), flag='write')
+            dim1name=grlnd, ncid=nfid(t), flag='write', usepio=pioflag)
        call ncd_iolocal(varname='topo    ', data=ldomain%topo, &
-            dim1name=grlnd, ncid=nfid(t), flag='write')
+            dim1name=grlnd, ncid=nfid(t), flag='write', usepio=pioflag)
        call ncd_iolocal(varname='topodnsc', data=ldomain%ntop, &
-            dim1name=grlnd, ncid=nfid(t), flag='write')
+            dim1name=grlnd, ncid=nfid(t), flag='write', usepio=pioflag)
        call ncd_iolocal(varname='landfrac', data=ldomain%frac, &
-            dim1name=grlnd, ncid=nfid(t), flag='write')
+            dim1name=grlnd, ncid=nfid(t), flag='write', usepio=pioflag)
        call ncd_iolocal(varname='landmask', data=ldomain%mask, &
-            dim1name=grlnd, ncid=nfid(t), flag='write', imissing=0)
+            dim1name=grlnd, ncid=nfid(t), flag='write', missing=0, usepio=pioflag)
        call ncd_iolocal(varname='pftmask' , data=ldomain%pftm, &
-            dim1name=grlnd, ncid=nfid(t), flag='write')
-       call ncd_ioglobal(varname='indxupsc', data=gatm, &
-            flag='write', ncid=nfid(t))
+            dim1name=grlnd, ncid=nfid(t), flag='write', usepio=pioflag)
+
+       !tc use histo here for nf90, need it to be 2d since it's a 2d var on netcdf
+       allocate(histo(llatlon%ni,llatlon%nj))
+       n = 0
+       do j = 1,llatlon%nj
+       do i = 1,llatlon%ni
+          n = n + 1
+          histo(i,j) = gatm(n)
+       enddo
+       enddo
+!       call ncd_ioglobal(varname='indxupsc', data=gatm, &
+       call ncd_ioglobal(varname='indxupsc', data=histo, &
+            flag='write', ncid=nfid(t), usepio=pioflag)
+       deallocate(histo)
+
        call ncd_iolocal(ncid=nfid(t),varname='longxyatm',flag='write', &
-            data=adomain%lonc, clmlevel=gratm)
+            data=adomain%lonc, clmlevel=gratm, usepio=pioflag)
        call ncd_iolocal(ncid=nfid(t),varname='latixyatm',flag='write', &
-            data=adomain%latc, clmlevel=gratm)
+            data=adomain%latc, clmlevel=gratm, usepio=pioflag)
        call ncd_iolocal(ncid=nfid(t),varname='areaatm',flag='write', &
-            data=adomain%area, clmlevel=gratm)
-    end if
+            data=adomain%area, clmlevel=gratm, usepio=pioflag)
+    end if  ! (define/write mode
+    endif  ! (t == 1 .and. ntimes == 1)
 
   end subroutine htape_timeconst
 
@@ -2257,7 +2239,6 @@ contains
 ! processor. Issue the netcdf call to write the variable.
 !
 ! !USES:
-    use ncdio
     use clmtype
 !
 ! !ARGUMENTS:
@@ -2334,7 +2315,7 @@ contains
           case ('M')
              avgstr = 'minimum'
           case default
-             write(6,*) trim(subname),' ERROR: unknown time averaging flag (avgflag)=',avgflag; call endrun()
+             write(iulog,*) trim(subname),' ERROR: unknown time averaging flag (avgflag)=',avgflag; call endrun()
           end select
 
           if (type1d_out == gratm) then
@@ -2352,24 +2333,24 @@ contains
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                      dim1name=dim1name, dim2name='time', &
                      long_name=long_name, units=units, cell_method=avgstr, &
-                     missing_value=spval, fill_value=spval)
+                     missing_value=spval, fill_value=spval, usepio=pioflag)
              else
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                      dim1name=dim1name, dim2name=type2d, dim3name='time', &
                      long_name=long_name, units=units, cell_method=avgstr, &
-                     missing_value=spval, fill_value=spval)
+                     missing_value=spval, fill_value=spval, usepio=pioflag)
              end if
           else
              if (num2d == 1) then
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                      dim1name=dim1name, dim2name=dim2name, dim3name='time', &
                      long_name=long_name, units=units, cell_method=avgstr, &
-                     missing_value=spval, fill_value=spval)
+                     missing_value=spval, fill_value=spval, usepio=pioflag)
              else
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                      dim1name=dim1name, dim2name=dim2name, dim3name=type2d, dim4name='time', &
                      long_name=long_name, units=units, cell_method=avgstr, &
-                     missing_value=spval, fill_value=spval)
+                     missing_value=spval, fill_value=spval, usepio=pioflag)
              end if
           endif
 
@@ -2384,7 +2365,7 @@ contains
           if (num2d == 1) then
              allocate(hist1do(beg1d_out:end1d_out), stat=ier)
              if (ier /= 0) then
-                write(6,*) trim(subname),' ERROR: allocation'; call endrun()
+                write(iulog,*) trim(subname),' ERROR: allocation'; call endrun()
              end if
              hist1do(beg1d_out:end1d_out) = histo(beg1d_out:end1d_out,1)
           end if
@@ -2394,11 +2375,11 @@ contains
           if (num2d == 1) then
              call ncd_iolocal(flag='write', varname=varname, &
                   dim1name=type1d_out, &
-                  data=hist1do, ncid=nfid(t), nt=nt)
+                  data=hist1do, ncid=nfid(t), nt=nt, usepio=pioflag)
           else
              call ncd_iolocal(flag='write', varname=varname, &
                   dim1name=type1d_out, dim2name=type2d, &
-                  data=histo, ncid=nfid(t), nt=nt)
+                  data=histo, ncid=nfid(t), nt=nt, usepio=pioflag)
           end if
 
           ! Deallocate dynamic memory
@@ -2425,7 +2406,6 @@ contains
 ! Write/define 1d info for history tape.
 !
 ! !USES:
-    use ncdio
     use clmtype
     use decompMod   , only : ldecomp
     use domainMod   , only : ldomain
@@ -2469,113 +2449,109 @@ contains
 
     if (mode == 'define') then
 
-       if (masterproc) then
-
           ! Define gridcell info
 
-          call ncd_defvar(varname='grid1d_lon', xtype=nf_double, dim1name='gridcell', &
-               long_name='gridcell longitude', units='degrees_east', ncid=ncid)
+          call ncd_defvar(varname='grid1d_lon', xtype=ncd_double, dim1name='gridcell', &
+               long_name='gridcell longitude', units='degrees_east', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='grid1d_lat', xtype=nf_double,  dim1name='gridcell', &
-               long_name='gridcell latitude', units='degrees_north', ncid=ncid)
+          call ncd_defvar(varname='grid1d_lat', xtype=ncd_double,  dim1name='gridcell', &
+               long_name='gridcell latitude', units='degrees_north', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='grid1d_ixy', xtype=nf_int, dim1name='gridcell', &
-               long_name='2d longitude index of corresponding gridcell', ncid=ncid)
+          call ncd_defvar(varname='grid1d_ixy', xtype=ncd_int, dim1name='gridcell', &
+               long_name='2d longitude index of corresponding gridcell', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='grid1d_jxy', xtype=nf_int, dim1name='gridcell', &
-               long_name='2d latitude index of corresponding gridcell', ncid=ncid)
+          call ncd_defvar(varname='grid1d_jxy', xtype=ncd_int, dim1name='gridcell', &
+               long_name='2d latitude index of corresponding gridcell', ncid=ncid, usepio=pioflag)
 
           ! Define landunit info
 
-          call ncd_defvar(varname='land1d_lon', xtype=nf_double, dim1name='landunit', &
-               long_name='landunit longitude', units='degrees_east', ncid=ncid)
+          call ncd_defvar(varname='land1d_lon', xtype=ncd_double, dim1name='landunit', &
+               long_name='landunit longitude', units='degrees_east', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='land1d_lat', xtype=nf_double, dim1name='landunit', &
-               long_name='landunit latitude', units='degrees_north', ncid=ncid)
+          call ncd_defvar(varname='land1d_lat', xtype=ncd_double, dim1name='landunit', &
+               long_name='landunit latitude', units='degrees_north', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='land1d_ixy', xtype=nf_int, dim1name='landunit', &
-               long_name='2d longitude index of corresponding landunit', ncid=ncid)
+          call ncd_defvar(varname='land1d_ixy', xtype=ncd_int, dim1name='landunit', &
+               long_name='2d longitude index of corresponding landunit', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='land1d_jxy', xtype=nf_int, dim1name='landunit', &
-               long_name='2d latitude index of corresponding landunit', ncid=ncid)
+          call ncd_defvar(varname='land1d_jxy', xtype=ncd_int, dim1name='landunit', &
+               long_name='2d latitude index of corresponding landunit', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='land1d_gi', xtype=nf_int, dim1name='landunit', &
-               long_name='1d grid index of corresponding landunit', ncid=ncid)
+          call ncd_defvar(varname='land1d_gi', xtype=ncd_int, dim1name='landunit', &
+               long_name='1d grid index of corresponding landunit', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='land1d_wtgcell', xtype=nf_double, dim1name='landunit', &
-               long_name='landunit weight relative to corresponding gridcell', ncid=ncid)
+          call ncd_defvar(varname='land1d_wtgcell', xtype=ncd_double, dim1name='landunit', &
+               long_name='landunit weight relative to corresponding gridcell', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='land1d_ityplunit', xtype=nf_int, dim1name='landunit', &
-               long_name='landunit type (vegetated,urban,lake,wetland or glacier)', ncid=ncid)
+          call ncd_defvar(varname='land1d_ityplunit', xtype=ncd_int, dim1name='landunit', &
+               long_name='landunit type (vegetated,urban,lake,wetland or glacier)', ncid=ncid, usepio=pioflag)
 
           ! Define column info
 
-          call ncd_defvar(varname='cols1d_lon', xtype=nf_double, dim1name='column', &
-               long_name='column longitude', units='degrees_east', ncid=ncid)
+          call ncd_defvar(varname='cols1d_lon', xtype=ncd_double, dim1name='column', &
+               long_name='column longitude', units='degrees_east', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='cols1d_lat', xtype=nf_double, dim1name='column', &
-               long_name='column latitude', units='degrees_north', ncid=ncid)
+          call ncd_defvar(varname='cols1d_lat', xtype=ncd_double, dim1name='column', &
+               long_name='column latitude', units='degrees_north', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='cols1d_ixy', xtype=nf_int, dim1name='column', &
-               long_name='2d longitude index of corresponding column', ncid=ncid)
+          call ncd_defvar(varname='cols1d_ixy', xtype=ncd_int, dim1name='column', &
+               long_name='2d longitude index of corresponding column', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='cols1d_jxy', xtype=nf_int, dim1name='column', &
-               long_name='2d latitude index of corresponding column', ncid=ncid)
+          call ncd_defvar(varname='cols1d_jxy', xtype=ncd_int, dim1name='column', &
+               long_name='2d latitude index of corresponding column', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='cols1d_gi', xtype=nf_int, dim1name='column', &
-               long_name='1d grid index of corresponding column', ncid=ncid)
+          call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name='column', &
+               long_name='1d grid index of corresponding column', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='cols1d_li', xtype=nf_int, dim1name='column', &
-               long_name='1d landunit index of corresponding column', ncid=ncid)
+          call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name='column', &
+               long_name='1d landunit index of corresponding column', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='cols1d_wtgcell', xtype=nf_double, dim1name='column', &
-               long_name='column weight relative to corresponding gridcell', ncid=ncid)
+          call ncd_defvar(varname='cols1d_wtgcell', xtype=ncd_double, dim1name='column', &
+               long_name='column weight relative to corresponding gridcell', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='cols1d_wtlunit', xtype=nf_double, dim1name='column', &
-               long_name='column weight relative to corresponding landunit', ncid=ncid)
+          call ncd_defvar(varname='cols1d_wtlunit', xtype=ncd_double, dim1name='column', &
+               long_name='column weight relative to corresponding landunit', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='cols1d_itype_lunit', xtype=nf_int, dim1name='column', &
-               long_name='column landunit type (vegetated,urban,lake,wetland or glacier)', ncid=ncid)
+          call ncd_defvar(varname='cols1d_itype_lunit', xtype=ncd_int, dim1name='column', &
+               long_name='column landunit type (vegetated,urban,lake,wetland or glacier)', ncid=ncid, usepio=pioflag)
 
           ! Define pft info
 
-          call ncd_defvar(varname='pfts1d_lon', xtype=nf_double, dim1name='pft', &
-               long_name='pft longitude', units='degrees_east', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_lon', xtype=ncd_double, dim1name='pft', &
+               long_name='pft longitude', units='degrees_east', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='pfts1d_lat', xtype=nf_double, dim1name='pft', &
-               long_name='pft latitude', units='degrees_north', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_lat', xtype=ncd_double, dim1name='pft', &
+               long_name='pft latitude', units='degrees_north', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='pfts1d_ixy', xtype=nf_int, dim1name='pft', &
-               long_name='2d longitude index of corresponding pft', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_ixy', xtype=ncd_int, dim1name='pft', &
+               long_name='2d longitude index of corresponding pft', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='pfts1d_jxy', xtype=nf_int, dim1name='pft', &
-               long_name='2d latitude index of corresponding pft', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_jxy', xtype=ncd_int, dim1name='pft', &
+               long_name='2d latitude index of corresponding pft', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='pfts1d_gi', xtype=nf_int, dim1name='pft', &
-               long_name='1d grid index of corresponding pft', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_gi', xtype=ncd_int, dim1name='pft', &
+               long_name='1d grid index of corresponding pft', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='pfts1d_li', xtype=nf_int, dim1name='pft', &
-               long_name='1d landunit index of corresponding pft', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name='pft', &
+               long_name='1d landunit index of corresponding pft', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='pfts1d_ci', xtype=nf_int, dim1name='pft', &
-               long_name='1d column index of corresponding pft', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name='pft', &
+               long_name='1d column index of corresponding pft', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='pfts1d_wtgcell', xtype=nf_double, dim1name='pft', &
-               long_name='pft weight relative to corresponding gridcell', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name='pft', &
+               long_name='pft weight relative to corresponding gridcell', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='pfts1d_wtlunit', xtype=nf_double, dim1name='pft', &
-               long_name='pft weight relative to corresponding landunit', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_wtlunit', xtype=ncd_double, dim1name='pft', &
+               long_name='pft weight relative to corresponding landunit', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='pfts1d_wtcol', xtype=nf_double, dim1name='pft', &
-               long_name='pft weight relative to corresponding column', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_wtcol', xtype=ncd_double, dim1name='pft', &
+               long_name='pft weight relative to corresponding column', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='pfts1d_itype_veg', xtype=nf_int, dim1name='pft', &
-               long_name='pft vegetation type', ncid=ncid)
+          call ncd_defvar(varname='pfts1d_itype_veg', xtype=ncd_int, dim1name='pft', &
+               long_name='pft vegetation type', ncid=ncid, usepio=pioflag)
 
-          call ncd_defvar(varname='pfts1d_itype_lunit', xtype=nf_int, dim1name='pft', &
-               long_name='pft landunit type (vegetated,urban,lake,wetland or glacier)', ncid=ncid)
-
-       end if
+          call ncd_defvar(varname='pfts1d_itype_lunit', xtype=ncd_int, dim1name='pft', &
+               long_name='pft landunit type (vegetated,urban,lake,wetland or glacier)', ncid=ncid, usepio=pioflag)
 
     else if (mode == 'write') then
 
@@ -2598,96 +2574,96 @@ contains
 
        ! Write gridcell info
 
-       call ncd_iolocal(varname='grid1d_lon', data=gptr%londeg, dim1name=nameg, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='grid1d_lat', data=gptr%latdeg, dim1name=nameg, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='grid1d_lon', data=gptr%londeg, dim1name=nameg, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='grid1d_lat', data=gptr%latdeg, dim1name=nameg, ncid=ncid, flag='write', usepio=pioflag)
        do g=begg,endg
          igarr(g)= mod(ldecomp%gdc2glo(g)-1,ldomain%ni) + 1
        enddo
-       call ncd_iolocal(varname='grid1d_ixy', data=igarr      , dim1name=nameg, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='grid1d_ixy', data=igarr      , dim1name=nameg, ncid=ncid, flag='write', usepio=pioflag)
        do g=begg,endg
          igarr(g)= (ldecomp%gdc2glo(g) - 1)/ldomain%ni + 1
        enddo
-       call ncd_iolocal(varname='grid1d_jxy', data=igarr      , dim1name=nameg, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='grid1d_jxy', data=igarr      , dim1name=nameg, ncid=ncid, flag='write', usepio=pioflag)
 
        ! Write landunit info
 
        do l=begl,endl
          rlarr(l) = gptr%londeg(lptr%gridcell(l))
        enddo
-       call ncd_iolocal(varname='land1d_lon', data=rlarr, dim1name=namel, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='land1d_lon', data=rlarr, dim1name=namel, ncid=ncid, flag='write', usepio=pioflag)
        do l=begl,endl
          rlarr(l) = gptr%latdeg(lptr%gridcell(l))
        enddo
-       call ncd_iolocal(varname='land1d_lat', data=rlarr, dim1name=namel, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='land1d_lat', data=rlarr, dim1name=namel, ncid=ncid, flag='write', usepio=pioflag)
        do l=begl,endl
          ilarr(l) = mod(ldecomp%gdc2glo(lptr%gridcell(l))-1,ldomain%ni) + 1
        enddo
-       call ncd_iolocal(varname='land1d_ixy', data=ilarr, dim1name=namel, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='land1d_ixy', data=ilarr, dim1name=namel, ncid=ncid, flag='write', usepio=pioflag)
        do l=begl,endl
          ilarr(l) = (ldecomp%gdc2glo(lptr%gridcell(l))-1)/ldomain%ni + 1
        enddo
-       call ncd_iolocal(varname='land1d_jxy', data=ilarr, dim1name=namel, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='land1d_gi'       , data=lptr%gridcell, dim1name=namel, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='land1d_wtgcell'  , data=lptr%wtgcell , dim1name=namel, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='land1d_ityplunit', data=lptr%itype   , dim1name=namel, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='land1d_jxy', data=ilarr, dim1name=namel, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='land1d_gi'       , data=lptr%gridcell, dim1name=namel, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='land1d_wtgcell'  , data=lptr%wtgcell , dim1name=namel, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='land1d_ityplunit', data=lptr%itype   , dim1name=namel, ncid=ncid, flag='write', usepio=pioflag)
 
        ! Write column info
 
        do c=begc,endc
          rcarr(c) = gptr%londeg(cptr%gridcell(c))
        enddo
-       call ncd_iolocal(varname='cols1d_lon', data=rcarr, dim1name=namec, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='cols1d_lon', data=rcarr, dim1name=namec, ncid=ncid, flag='write', usepio=pioflag)
        do c=begc,endc
          rcarr(c) = gptr%londeg(cptr%gridcell(c))
        enddo
-       call ncd_iolocal(varname='cols1d_lat', data=rcarr, dim1name=namec, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='cols1d_lat', data=rcarr, dim1name=namec, ncid=ncid, flag='write', usepio=pioflag)
        do c=begc,endc
          icarr(c) = mod(ldecomp%gdc2glo(cptr%gridcell(c))-1,ldomain%ni) + 1
        enddo
-       call ncd_iolocal(varname='cols1d_ixy', data=icarr, dim1name=namec, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='cols1d_ixy', data=icarr, dim1name=namec, ncid=ncid, flag='write', usepio=pioflag)
        do c=begc,endc
          icarr(c) = (ldecomp%gdc2glo(cptr%gridcell(c))-1)/ldomain%ni + 1
        enddo
-       call ncd_iolocal(varname='cols1d_jxy', data=icarr, dim1name=namec, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='cols1d_gi'     , data=cptr%gridcell, dim1name=namec, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='cols1d_li'     , data=cptr%landunit, dim1name=namec, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='cols1d_wtgcell', data=cptr%wtgcell , dim1name=namec, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='cols1d_wtlunit', data=cptr%wtlunit , dim1name=namec, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='cols1d_jxy', data=icarr, dim1name=namec, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='cols1d_gi'     , data=cptr%gridcell, dim1name=namec, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='cols1d_li'     , data=cptr%landunit, dim1name=namec, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='cols1d_wtgcell', data=cptr%wtgcell , dim1name=namec, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='cols1d_wtlunit', data=cptr%wtlunit , dim1name=namec, ncid=ncid, flag='write', usepio=pioflag)
        do c=begc,endc
          icarr(c) = lptr%itype(cptr%landunit(c))
        enddo
-       call ncd_iolocal(varname='cols1d_itype_lunit', data=icarr    , dim1name=namec, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='cols1d_itype_lunit', data=icarr    , dim1name=namec, ncid=ncid, flag='write', usepio=pioflag)
 
        ! Write pft info
 
        do p=begp,endp
          rparr(p) = gptr%londeg(pptr%gridcell(p))
        enddo
-       call ncd_iolocal(varname='pfts1d_lon', data=rparr, dim1name=namep, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='pfts1d_lon', data=rparr, dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
        do p=begp,endp
          rparr(p) = gptr%latdeg(pptr%gridcell(p))
        enddo
-       call ncd_iolocal(varname='pfts1d_lat', data=rparr, dim1name=namep, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='pfts1d_lat', data=rparr, dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
        do p=begp,endp
          iparr(p) = mod(ldecomp%gdc2glo(pptr%gridcell(p))-1,ldomain%ni) + 1
        enddo
-       call ncd_iolocal(varname='pfts1d_ixy', data=iparr, dim1name=namep, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='pfts1d_ixy', data=iparr, dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
        do p=begp,endp
          iparr(p) = (ldecomp%gdc2glo(pptr%gridcell(p))-1)/ldomain%ni + 1
        enddo
-       call ncd_iolocal(varname='pfts1d_jxy', data=iparr, dim1name=namep, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='pfts1d_gi'       , data=pptr%gridcell, dim1name=namep, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='pfts1d_li'       , data=pptr%landunit, dim1name=namep, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='pfts1d_ci'       , data=pptr%column  , dim1name=namep, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='pfts1d_wtgcell'  , data=pptr%wtgcell , dim1name=namep, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='pfts1d_wtlunit'  , data=pptr%wtlunit , dim1name=namep, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='pfts1d_wtcol'    , data=pptr%wtcol   , dim1name=namep, ncid=ncid, flag='write')
-       call ncd_iolocal(varname='pfts1d_itype_veg', data=pptr%itype   , dim1name=namep, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='pfts1d_jxy', data=iparr, dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='pfts1d_gi'       , data=pptr%gridcell, dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='pfts1d_li'       , data=pptr%landunit, dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='pfts1d_ci'       , data=pptr%column  , dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='pfts1d_wtgcell'  , data=pptr%wtgcell , dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='pfts1d_wtlunit'  , data=pptr%wtlunit , dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='pfts1d_wtcol'    , data=pptr%wtcol   , dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
+       call ncd_iolocal(varname='pfts1d_itype_veg', data=pptr%itype   , dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
 
        do p=begp,endp
           iparr(p) = lptr%itype(pptr%landunit(p))
        enddo
-       call ncd_iolocal(varname='pfts1d_itype_lunit', data=iparr      , dim1name=namep, ncid=ncid, flag='write')
+       call ncd_iolocal(varname='pfts1d_itype_lunit', data=iparr      , dim1name=namep, ncid=ncid, flag='write', usepio=pioflag)
 
        deallocate(rgarr,rlarr,rcarr,rparr)
        deallocate(igarr,ilarr,icarr,iparr)
@@ -2730,7 +2706,6 @@ contains
     use spmdMod         , only : masterproc
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
     use shr_const_mod   , only : SHR_CONST_CDAY
-    use ncdio
     use clmtype
     use do_close_dispose, only : do_disp
 !
@@ -2752,25 +2727,17 @@ contains
     integer :: day                    ! current day (1 -> 31)
     integer :: mon                    ! current month (1 -> 12)
     integer :: yr                     ! current year (0 -> ...)
-    integer :: mcsec                  ! seconds of current date
     integer :: mdcur                  ! current day
     integer :: mscur                  ! seconds of current day
-    integer :: mcdate                 ! current date
+    integer :: mcsec                  ! current time of day [seconds]
     integer :: daym1                  ! nstep-1 day (1 -> 31)
     integer :: monm1                  ! nstep-1 month (1 -> 12)
     integer :: yrm1                   ! nstep-1 year (0 -> ...)
     integer :: mcsecm1                ! nstep-1 time of day [seconds]
-    integer :: start1                 ! start 1d value
-    integer :: count1                 ! count 1d value
-    integer :: start2(2)              ! start 2d values
-    integer :: count2(2)              ! count 2d values
+    real(r8):: time                   ! current time
     character(len=256) :: rem_dir     ! remote (archive) directory
     character(len=256) :: rem_fn      ! remote (archive) filename
-    character(len=  8) :: cdate       ! system date
-    character(len=  8) :: ctime       ! system time
     character(len=256) :: str         ! global attribute string
-    real(r8):: time                   ! current time
-    real(r8):: timedata(2)            ! time interval boundaries
     logical :: if_stop                ! true => last time step of run
     logical :: if_disphist(max_tapes) ! true => save and dispose history file
     logical :: if_remvhist(max_tapes) ! true => remove local history file after dispose
@@ -2784,15 +2751,12 @@ contains
     ! Set calendar for current time step
 
     call get_curr_date (yr, mon, day, mcsec)
-    mcdate = yr*10000 + mon*100 + day
+    call get_curr_time (mdcur, mscur)
+    time = mdcur + mscur/86400._r8
 
     ! Set calendar for current for previous time step
 
     call get_prev_date (yrm1, monm1, daym1, mcsecm1)
-
-    ! Set elapased time since reference date
-
-    call get_curr_time (mdcur, mscur)
 
     ! Loop over active history tapes, create new history files if necessary
     ! and write data to history files if end of history interval.
@@ -2824,73 +2788,48 @@ contains
 
           ! Create history file if appropriate and build time comment
 
-          ! If first time sample, generate unique history file name, open file
-          ! and write time constant fields to file
+          ! If first time sample, generate unique history file name, open file,
+          ! define dims, vars, etc.
 
           if (tape(t)%ntimes == 1) then
+             locfnh(t) = set_hist_filename (hist_freq=tape(t)%nhtfrq, hist_file=t)
              if (masterproc) then
-                locfnh(t) = set_hist_filename (hist_freq=tape(t)%nhtfrq, hist_file=t)
-                write(6,*) trim(subname),' : Creating history file ', trim(locfnh(t)), &
+                write(iulog,*) trim(subname),' : Creating history file ', trim(locfnh(t)), &
                      ' at nstep = ',get_nstep()
-                call htape_create (t)
              endif
+             call htape_create (t)
 
-             ! Write time constant history variables to primary tape
-             if (t==1) call htape_timeconst(t, mode='write')
+             ! Define generic field variables
+
+             call htape_timeconst(t, mode='define')
+
+             ! Define model field variables
+
+             call hfields_write(t, mode='define')
+
+             ! Exit define model
+             call ncd_enddef(nfid(t), subname, usepio=pioflag)
 
           endif
 
-          ! Write time information to history file
+          ! Write time constant history variables to primary tape
+          call htape_timeconst(t, mode='write')
 
           if (masterproc) then
-
-             start1 = tape(t)%ntimes
-             count1 = 1
-
-             call get_curr_time (mdcur, mscur)
-             call get_curr_date (yr, mon, day, mcsec)
-             mcdate = yr*10000 + mon*100 + day
-
-             call check_ret(nf_put_vara_int (nfid(t), mcdate_id(t), start1, count1, mcdate), subname)
-             call check_ret(nf_put_vara_int (nfid(t), mcsec_id(t), start1, count1, mcsec), subname)
-             call check_ret(nf_put_vara_int (nfid(t), mdcur_id(t), start1, count1, mdcur), subname)
-             call check_ret(nf_put_vara_int (nfid(t), mscur_id(t), start1, count1, mscur), subname)
-             call check_ret(nf_put_vara_int (nfid(t), nstep_id(t), start1, count1, nstep), subname)
-
-             time = mdcur + mscur/86400._r8
-             call check_ret(nf_put_vara_double (nfid(t), time_var_id(t), start1, count1, time), subname)
-
-             start2(1) = 1
-             start2(2) = tape(t)%ntimes
-             count2(1) = 2
-             count2(2) = 1
-             timedata(1) = tape(t)%begtime
-             timedata(2) = time
-             call check_ret(nf_put_vara_double(nfid(t), time_bounds_id(t), start2, count2, timedata), subname)
-
-             start2(1) = 1
-             start2(2) = tape(t)%ntimes
-             count2(1) = 8
-             count2(2) = 1
-             call getdatetime (cdate, ctime)
-             call check_ret(nf_put_vara_text(nfid(t), date_written_id(t), start2, count2, cdate), subname)
-             call check_ret(nf_put_vara_text(nfid(t), time_written_id(t), start2, count2, ctime), subname)
-
-             write(6,*)
-             write(6,*) trim(subname),' : Writing current time sample to local history file ', &
+             write(iulog,*)
+             write(iulog,*) trim(subname),' : Writing current time sample to local history file ', &
                   trim(locfnh(t)),' at nstep = ',get_nstep(), &
                   ' for history time interval beginning at ', tape(t)%begtime, &
                   ' and ending at ',time
-             write(6,*)
+             write(iulog,*)
 #ifndef UNICOSMP
-             call shr_sys_flush(6)
+             call shr_sys_flush(iulog)
 #endif
-
-             ! Update beginning time of next interval
-
-             tape(t)%begtime = time
-
           endif
+
+          ! Update beginning time of next interval
+
+          tape(t)%begtime = time
 
           ! Write history time samples
 
@@ -2920,21 +2859,25 @@ contains
 
     do t = 1, ntapes
        if (if_disphist(t)) then
-          if (masterproc) then
-             if (tape(t)%ntimes /= 0) then
-                write(6,*)
-                write(6,*)  trim(subname),' : Closing local history file ',&
+          if (tape(t)%ntimes /= 0) then
+             if (masterproc) then
+                write(iulog,*)
+                write(iulog,*)  trim(subname),' : Closing local history file ',&
                      trim(locfnh(t)),' at nstep = ', get_nstep()
-                write(6,*)
-                call check_ret(nf_close(nfid(t)), subname)
-                rem_dir = trim(archive_dir) // '/hist/'
-                rem_fn = set_filename(rem_dir, locfnh(t))
+                write(iulog,*)
+             endif
+             call ncd_close(nfid(t), subname, usepio=pioflag)
+             rem_dir = trim(archive_dir) // '/hist/'
+             rem_fn = set_filename(rem_dir, locfnh(t))
+             if (masterproc) then
                 call putfil (locfnh(t), rem_fn, mss_wpass, mss_irt, if_remvhist(t))
-                if (.not.if_stop .and. (tape(t)%ntimes/=tape(t)%mfilt)) then
-                   call check_ret(nf_open (trim(locfnh(t)), NF_WRITE, nfid(t)), subname)
-                end if
-             else
-                write(6,*) trim(subname),' : history tape ',t,': no open file to close'
+             endif
+             if (.not.if_stop .and. (tape(t)%ntimes/=tape(t)%mfilt)) then
+                call ncd_open (trim(locfnh(t)), ncd_write, nfid(t), subname, usepio=pioflag)
+             end if
+          else
+             if (masterproc) then
+                write(iulog,*) trim(subname),' : history tape ',t,': no open file to close'
              end if
           endif
        endif
@@ -2974,7 +2917,6 @@ contains
 !
 ! !USES:
     use iobinary
-    use ncdio
     use clm_varctl, only : archive_dir, nsrest, mss_irt
     use fileutils , only : set_filename, getfil
     use spmdMod   , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER, MPI_CHARACTER
@@ -3091,7 +3033,7 @@ contains
 
         endif
         if (ier /= 0) then
-           write (6,*) trim(subname),' ERROR: read/write error 1',ier,' on i/o unit = ',nio
+           write(iulog,*) trim(subname),' ERROR: read/write error 1',ier,' on i/o unit = ',nio
            call endrun()
         end if
 
@@ -3118,7 +3060,7 @@ contains
                    tape(t)%dov2xy
            endif
            if (ier /= 0) then
-              write (6,*) trim(subname),' ERROR: read/write error 2',ier,' on i/o unit = ',nio
+              write(iulog,*) trim(subname),' ERROR: read/write error 2',ier,' on i/o unit = ',nio
               call endrun()
            end if
            if (flag == 'write') then
@@ -3147,7 +3089,7 @@ contains
               end if
            endif
            if (ier /= 0) then
-              write (6,*) trim(subname),' ERROR: read/write error 3',ier,' on i/o unit = ',nio
+              write(iulog,*) trim(subname),' ERROR: read/write error 3',ier,' on i/o unit = ',nio
               call endrun()
            end if
            do f=1,tape(t)%nflds
@@ -3179,7 +3121,7 @@ contains
                                         tape(t)%hlist(f)%avgflag
               end if
               if (ier /= 0) then
-                 write(6,*) trim(subname),' ERROR: read/write error 4: End or error condition writing ', &
+                 write(iulog,*) trim(subname),' ERROR: read/write error 4: End or error condition writing ', &
                       'history restart field ',f,' from tape ',t
                  call endrun()
               end if
@@ -3257,7 +3199,7 @@ contains
                  end1d_out = end_rof
 #endif
               case default
-                 write(6,*) trim(subname),' ERROR: read unknown 1d output type=',type1d_out
+                 write(iulog,*) trim(subname),' ERROR: read unknown 1d output type=',type1d_out
                  call endrun ()
               end select
 
@@ -3269,7 +3211,7 @@ contains
               allocate (tape(t)%hlist(f)%hbuf(beg1d_out:end1d_out,num2d), &
                         tape(t)%hlist(f)%nacs(beg1d_out:end1d_out,num2d), stat=ier)
               if (ier /= 0) then
-                 write(6,*) trim(subname),' ERROR: allocation error for hbuf,nacs at t,f=',t,f
+                 write(iulog,*) trim(subname),' ERROR: allocation error for hbuf,nacs at t,f=',t,f
                  call endrun()
               endif
               tape(t)%hlist(f)%hbuf(:,:) = 0._r8
@@ -3308,7 +3250,7 @@ contains
                  end1d = end_rof
 #endif
               case default
-                 write(6,*) trim(subname),' ERROR: read unknown 1d type=',type1d
+                 write(iulog,*) trim(subname),' ERROR: read unknown 1d type=',type1d
                  call endrun ()
               end select
 
@@ -3328,9 +3270,9 @@ contains
 
            if (masterproc) then
               if (flag == 'write') then
-                 write(6,*) trim(subname),' : Writing history restart information for tape ',t
+                 write(iulog,*) trim(subname),' : Writing history restart information for tape ',t
               else
-                 write(6,*) trim(subname),' : Reading history restart information for tape ',t
+                 write(iulog,*) trim(subname),' : Reading history restart information for tape ',t
               endif
            endif
 
@@ -3375,44 +3317,32 @@ contains
         end if   ! end of if-end-of-history-interval block
      end do   ! end of tape do-loop
 
-     ! Read names of history files. If history file is not full,
-     ! open history file and obtain time dependent netCDF variable id's
+     ! Read names of history files. If history file is not full, open
 
      if (flag == 'read') then
-        if (masterproc) then
-           do t = 1,ntapes
+        do t = 1,ntapes
+           if (masterproc) then
               read (nio) fnameh(t)
-              if (tape(t)%ntimes /= 0) then
-                 call getfil (fnameh(t), locfnh(t), 0)
-                 call check_ret(nf_open (locfnh(t), nf_write, nfid(t)), subname)
-                 call check_ret(nf_inq_varid(nfid(t), 'mcdate', mcdate_id(t)), subname)
-                 call check_ret(nf_inq_varid(nfid(t), 'mcsec' , mcsec_id(t)), subname)
-                 call check_ret(nf_inq_varid(nfid(t), 'mdcur' , mdcur_id(t)), subname)
-                 call check_ret(nf_inq_varid(nfid(t), 'mscur' , mscur_id(t)), subname)
-                 call check_ret(nf_inq_varid(nfid(t), 'nstep' , nstep_id(t)), subname)
-                 call check_ret(nf_inq_varid(nfid(t), 'time'  , time_var_id(t)), subname)
-                 call check_ret(nf_inq_varid(nfid(t), 'time_bounds' , time_bounds_id(t)), subname)
-                 call check_ret(nf_inq_varid(nfid(t), 'date_written', date_written_id(t)), subname)
-                 call check_ret(nf_inq_varid(nfid(t), 'time_written', time_written_id(t)), subname)
-              end if
-           end do
-        endif
+           endif
+           if (tape(t)%ntimes /= 0) then
+              if (masterproc) call getfil (fnameh(t), locfnh(t), 0)
+              call ncd_open (locfnh(t), ncd_write, nfid(t), subname, usepio=pioflag)
+           end if
+        end do
      endif
 
      ! Write name of current history file(s)
 
      if (flag == 'write') then
-        if (masterproc) then
-           do t = 1,ntapes
-              if (mss_irt == 0) then
-                 filename = locfnh(t)
-              else
-                 rem_dir = trim(archive_dir) // '/hist/'
-                 filename = set_filename(rem_dir, locfnh(t))
-              endif
-              write(nio) filename
-           end do
-        endif
+        do t = 1,ntapes
+           if (mss_irt == 0) then
+              filename = locfnh(t)
+           else
+              rem_dir = trim(archive_dir) // '/hist/'
+              filename = set_filename(rem_dir, locfnh(t))
+           endif
+           if (masterproc) write(nio) filename
+        end do
      endif
 
    end subroutine hist_restart
@@ -3447,7 +3377,7 @@ contains
      length = len (inname)
 
      if (length < max_namlen .or. length > max_namlen+2) then
-        write(6,*) trim(subname),' ERROR: bad length=',length
+        write(iulog,*) trim(subname),' ERROR: bad length=',length
         call endrun()
      end if
 
@@ -3489,7 +3419,7 @@ contains
      length = len (inname)
 
      if (length < max_namlen .or. length > max_namlen+2) then
-        write(6,*) trim(subname),' ERROR: bad length=',length
+        write(iulog,*) trim(subname),' ERROR: bad length=',length
         call endrun()
      end if
 
@@ -3723,7 +3653,7 @@ contains
 
 #endif
     else
-       write(6,*) trim(subname),' ERROR: must specify a valid pointer index,', &
+       write(iulog,*) trim(subname),' ERROR: must specify a valid pointer index,', &
           ' choices are [ptr_atm, ptr_lnd, ptr_gcell, ptr_lunit, ptr_col, ptr_pft] ', &
              'and if RTM is defined also [ptr_rof]'
        call endrun()
@@ -3843,7 +3773,7 @@ contains
        num2d = npool_types
 #endif
     case default
-       write(6,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
+       write(iulog,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
           ' currently supported types for multi level fields are [levsoi,levlak,numrad', &
 #if (defined CASA)
           ',nlive,npools,npool_t', &
@@ -3908,7 +3838,7 @@ contains
        end if
 
     else
-       write(6,*) trim(subname),' ERROR: must specify a valid pointer index,', &
+       write(iulog,*) trim(subname),' ERROR: must specify a valid pointer index,', &
           ' choices are ptr_atm, ptr_lnd, ptr_gcell, ptr_lunit, ptr_col, ptr_pft'
        call endrun()
 
@@ -3965,7 +3895,7 @@ contains
     pointer_index = lastindex
     lastindex = lastindex + 1
     if (lastindex > max_mapflds) then
-       write(6,*) trim(subname),' ERROR: ',&
+       write(iulog,*) trim(subname),' ERROR: ',&
             ' lastindex = ',lastindex,' greater than max_mapflds= ',max_mapflds
        call endrun()
     endif
@@ -3999,7 +3929,7 @@ contains
 
     num_subs = num_subs + 1
     if (num_subs > max_subs) then
-       write(6,*) trim(subname),' ERROR: ',&
+       write(iulog,*) trim(subname),' ERROR: ',&
             ' num_subs = ',num_subs,' greater than max_subs= ',max_subs
        call endrun()
     endif

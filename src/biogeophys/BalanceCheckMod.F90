@@ -14,6 +14,7 @@ module BalanceCheckMod
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils,   only: endrun
+  use clm_varctl,   only: iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -282,10 +283,10 @@ contains
        end if
     end do
     if ( found ) then
-       write(6,*)'WARNING:  water balance error ',&
+       write(iulog,*)'WARNING:  water balance error ',&
             ' nstep = ',nstep,' index= ',index,' errh2o= ',errh2o(index)
        if (abs(errh2o(index)) > .10_r8 .and. (nstep > 2) ) then
-          write(6,*)'clm model is stopping'
+          write(iulog,*)'clm model is stopping'
           call endrun()
        end if
     end if
@@ -323,8 +324,8 @@ contains
        end if
     end do
     if ( found  .and. (nstep > 2) ) then
-       write(6,100)'solar radiation balance error',nstep,index,errsol(index)
-       write(6,*)'clm model is stopping'
+       write(iulog,100)'solar radiation balance error',nstep,index,errsol(index)
+       write(iulog,*)'clm model is stopping'
        call endrun()
     end if
 
@@ -340,8 +341,8 @@ contains
        end if
     end do
     if ( found  .and. (nstep > 2) ) then
-       write(6,100)'longwave enery balance error',nstep,index,errlon(index)
-       write(6,*)'clm model is stopping'
+       write(iulog,100)'longwave enery balance error',nstep,index,errlon(index)
+       write(iulog,*)'clm model is stopping'
        call endrun()
     end if
 
@@ -357,8 +358,8 @@ contains
        end if
     end do
     if ( found  .and. (nstep > 2) ) then
-       write(6,100)'surface flux energy balance error',nstep,index,errseb(index)
-       write(6,*)'clm model is stopping'
+       write(iulog,100)'surface flux energy balance error',nstep,index,errseb(index)
+       write(iulog,*)'clm model is stopping'
        call endrun()
     end if
 
@@ -372,9 +373,9 @@ contains
        end if
     end do
     if ( found ) then
-       write(6,100)'soil balance error',nstep,index,errsoi_col(index)
+       write(iulog,100)'soil balance error',nstep,index,errsoi_col(index)
        if (abs(errsoi_col(index)) > .10_r8 .and. (nstep > 2) ) then
-          write(6,*)'clm model is stopping'
+          write(iulog,*)'clm model is stopping'
           call endrun()
        end if
     end if

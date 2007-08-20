@@ -18,6 +18,7 @@ module DGVMMod
 ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use clm_varpar     , only : maxpatch_pft, lsmlon, lsmlat, nlevsoi
+  use clm_varctl     , only : iulog
   use abortutils     , only : endrun
 !
 ! !PUBLIC TYPES:
@@ -764,7 +765,7 @@ contains
 
     if (masterproc) then
        call check_ret(nf_close(ncid), subname)
-       write(6,*)'(histDGVM): Finished writing clm DGVM history dataset ',&
+       write(iulog,*)'(histDGVM): Finished writing clm DGVM history dataset ',&
             trim(dgvm_fn), 'at nstep = ',get_nstep()
        if (mss_irt > 0) then
           rem_dir = trim(archive_dir) // '/hist/'
@@ -969,9 +970,9 @@ contains
     end do
     if (fn > 0) then
        g = filterg(1)
-       write(6,*) 'resetWeightsDGVM: sumwt of pfts for grid cell ',&
+       write(iulog,*) 'resetWeightsDGVM: sumwt of pfts for grid cell ',&
          'gdc,glo = ',g,ldecomp%gdc2glo(g),' not equal to 1'
-       write(6,*) 'sum of pft weights for gridcell =',sumwt(g)
+       write(iulog,*) 'sum of pft weights for gridcell =',sumwt(g)
        call endrun
     end if
 

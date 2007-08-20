@@ -16,6 +16,7 @@ module pftdynMod
   use ncdio
   use clm_varsur  , only : pctspec
   use clm_varpar  , only : max_pft_per_col
+  use clm_varctl  , only : iulog
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
 !
@@ -118,13 +119,13 @@ contains
 
     allocate(wtpft1(begg:endg,0:numpft), wtpft2(begg:endg,0:numpft), stat=ier)
     if (ier /= 0) then
-       write(6,*)'pctpft_dyn_init allocation error for wtpft1, wtpft2'
+       write(iulog,*)'pctpft_dyn_init allocation error for wtpft1, wtpft2'
        call endrun()
     end if
 
     allocate(wtcol_old(begp:endp),stat=ier)
     if (ier /= 0) then
-       write(6,*)'pctpft_dyn_init allocation error for wtcol_old'
+       write(iulog,*)'pctpft_dyn_init allocation error for wtcol_old'
        call endrun()
     end if
 
@@ -132,7 +133,7 @@ contains
 
        ! Obtain file
 
-       write (6,*) 'Attempting to read pft dynamic landuse data .....'
+       write(iulog,*) 'Attempting to read pft dynamic landuse data .....'
        call getfil (fpftdyn, locfn, 0)
        call check_ret(nf_open(locfn, 0, ncid), subname)
 
@@ -151,7 +152,7 @@ contains
 
     allocate (yearspft(ntimes), stat=ier)
     if (ier /= 0) then
-       write(6,*)'pctpft_dyn_init allocation error for yearspft'; call endrun()
+       write(iulog,*)'pctpft_dyn_init allocation error for yearspft'; call endrun()
     end if
 
     if (masterproc) then
@@ -169,7 +170,7 @@ contains
     ! Consistency check
     do g = begg,endg
        if (pctlak(g)+pctwet(g)+pcturb(g)+pctgla(g) /= pctspec(g)) then 
-          write(6,*)'mismatch between input pctspec = ',&
+          write(iulog,*)'mismatch between input pctspec = ',&
                      pctlak(g)+pctwet(g)+pcturb(g)+pctgla(g),&
                     ' and that obtained from surface dataset ', pctspec(g),' at g= ',g
            call endrun()
@@ -205,8 +206,8 @@ contains
           end if   
        end do
        if (.not. found) then
-          write(6,*)'pftdyn_init error: model year not found in pftdyn timeseries'
-          write(6,*)'model year = ',year
+          write(iulog,*)'pftdyn_init error: model year not found in pftdyn timeseries'
+          write(iulog,*)'model year = ',year
           call endrun()
        end if
     end if
@@ -304,7 +305,7 @@ contains
        end if
        
        if (nt2 > size(yearspft)) then
-          write(6,*)subname,' error - current year is past input data boundary'
+          write(iulog,*)subname,' error - current year is past input data boundary'
        end if
        
        do m = 0,numpft
@@ -419,10 +420,10 @@ contains
        end if
     end do
     if (err == 1) then
-       write(6,*) subname,' error: sum(pct) over numpft+1 is not = 100.',sumerr,ierr,pctspec(ierr),pctpft(ierr,:)
+       write(iulog,*) subname,' error: sum(pct) over numpft+1 is not = 100.',sumerr,ierr,pctspec(ierr),pctpft(ierr,:)
        call endrun()
     else if (err == 2) then
-       write(6,*)subname,' error: sum(pct) over numpft+1 is < 0.',sumerr,ierr,pctspec(ierr),pctpft(ierr,:)
+       write(iulog,*)subname,' error: sum(pct) over numpft+1 is < 0.',sumerr,ierr,pctspec(ierr),pctpft(ierr,:)
        call endrun()
     end if
     
@@ -527,7 +528,7 @@ contains
     ! Allocate loss_h2ocan
     allocate(loss_h2ocan(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for loss_h2ocan'; call endrun()
+          write(iulog,*)subname,' allocation error for loss_h2ocan'; call endrun()
     end if
 
     ! Get time step
@@ -713,99 +714,99 @@ contains
     ! Allocate pft-level mass loss arrays
     allocate(dwt_leafc_seed(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_leafc_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_leafc_seed'; call endrun()
     end if
     allocate(dwt_leafn_seed(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_leafn_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_leafn_seed'; call endrun()
     end if
     allocate(dwt_leafc13_seed(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_leafc13_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_leafc13_seed'; call endrun()
     end if
     allocate(dwt_deadstemc_seed(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_deadstemc_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadstemc_seed'; call endrun()
     end if
     allocate(dwt_deadstemn_seed(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_deadstemn_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadstemn_seed'; call endrun()
     end if
     allocate(dwt_deadstemc13_seed(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_deadstemc13_seed'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadstemc13_seed'; call endrun()
     end if
     allocate(dwt_frootc_to_litter(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_frootc_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_frootc_to_litter'; call endrun()
     end if
     allocate(dwt_livecrootc_to_litter(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_livecrootc_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_livecrootc_to_litter'; call endrun()
     end if
     allocate(dwt_deadcrootc_to_litter(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_deadcrootc_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadcrootc_to_litter'; call endrun()
     end if
     allocate(dwt_frootc13_to_litter(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_frootc13_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_frootc13_to_litter'; call endrun()
     end if
     allocate(dwt_livecrootc13_to_litter(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_livecrootc13_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_livecrootc13_to_litter'; call endrun()
     end if
     allocate(dwt_deadcrootc13_to_litter(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_deadcrootc13_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadcrootc13_to_litter'; call endrun()
     end if
     allocate(dwt_frootn_to_litter(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_frootn_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_frootn_to_litter'; call endrun()
     end if
     allocate(dwt_livecrootn_to_litter(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_livecrootn_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_livecrootn_to_litter'; call endrun()
     end if
     allocate(dwt_deadcrootn_to_litter(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for dwt_deadcrootn_to_litter'; call endrun()
+          write(iulog,*)subname,' allocation error for dwt_deadcrootn_to_litter'; call endrun()
     end if
     allocate(conv_cflux(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for conv_cflux'; call endrun()
+          write(iulog,*)subname,' allocation error for conv_cflux'; call endrun()
     end if
     allocate(prod10_cflux(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for prod10_cflux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod10_cflux'; call endrun()
     end if
     allocate(prod100_cflux(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for prod100_cflux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod100_cflux'; call endrun()
     end if
     allocate(conv_c13flux(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for conv_c13flux'; call endrun()
+          write(iulog,*)subname,' allocation error for conv_c13flux'; call endrun()
     end if
     allocate(prod10_c13flux(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for prod10_c13flux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod10_c13flux'; call endrun()
     end if
     allocate(prod100_c13flux(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for prod100_c13flux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod100_c13flux'; call endrun()
     end if
     allocate(conv_nflux(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for conv_nflux'; call endrun()
+          write(iulog,*)subname,' allocation error for conv_nflux'; call endrun()
     end if
     allocate(prod10_nflux(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for prod10_nflux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod10_nflux'; call endrun()
     end if
     allocate(prod100_nflux(begp:endp), stat=ier)
     if (ier /= 0) then
-          write(6,*)subname,' allocation error for prod100_nflux'; call endrun()
+          write(iulog,*)subname,' allocation error for prod100_nflux'; call endrun()
     end if
 
     ! Get time step

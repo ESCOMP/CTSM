@@ -15,7 +15,8 @@ module DGVMRestMod
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use spmdMod     , only : masterproc
-  use abortutils  , only: endrun
+  use abortutils  , only : endrun
+  use clm_varctl  , only : iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -467,7 +468,7 @@ contains
     else if (flag == 'read' .or. flag == 'write') then
        allocate (iptemp(begp:endp), stat=ier)
        if (ier /= 0) then
-          write(6,*) 'DGVMRest: allocation error '; call endrun()
+          write(iulog,*) 'DGVMRest: allocation error '; call endrun()
        end if
        if (flag == 'write') then
 !dir$ concurrent

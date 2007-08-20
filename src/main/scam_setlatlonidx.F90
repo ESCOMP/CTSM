@@ -9,6 +9,7 @@ subroutine scam_setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
 !
 !------------------------------------------------------------------------
   use shr_kind_mod, only: r8 => shr_kind_r8, i8 => shr_kind_i8
+  use clm_varctl,   only: iulog
   use abortutils,   only: endrun
   
   implicit none
@@ -38,7 +39,7 @@ subroutine scam_setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
   if ( STATUS .NE.  NF_NOERR )  then
      STATUS =  NF_INQ_DIMID ( NCID, 'lsmlat', nlat_dimID )
      if ( STATUS .NE.  NF_NOERR )  then
-        write( 6,* )'ERROR - setlatlon.F:', &
+        write(iulog,* )'ERROR - setlatlon.F:', &
              'Cant get variable dim for lat or lsmlat'
         STATUS = NF_CLOSE( NCID )
         call endrun
@@ -49,7 +50,7 @@ subroutine scam_setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
   if ( STATUS .NE.  NF_NOERR )  then
      STATUS =  NF_INQ_DIMID ( NCID, 'lsmlon', nlon_dimID )
      if ( STATUS .NE.  NF_NOERR )  then
-        write( 6,* )'ERROR - setlatlon.F:', &
+        write(iulog,* )'ERROR - setlatlon.F:', &
              'Cant get variable dim for lon or lsmlon'
         STATUS = NF_CLOSE( NCID )
         call endrun
@@ -70,7 +71,7 @@ subroutine scam_setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
   if ( STATUS .NE. NF_NOERR ) then
      STATUS = NF_INQ_VARID( NCID, 'LATIXY', lat_varID )
      if ( STATUS .NE. NF_NOERR ) then
-        write( 6,* )'ERROR - setlatlon.F:', &
+        write(iulog,* )'ERROR - setlatlon.F:', &
              'Cant get variable ID for lat or LATIXY'
         STATUS = NF_CLOSE( NCID )
         return
@@ -84,7 +85,7 @@ subroutine scam_setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
 
   STATUS = nf_get_vara_double (ncid, lat_varID, strt, cnt, lats)
   if (STATUS/=NF_NOERR) then
-     write(6,*)'Error: scam_setlatlonidx: error reading lat varid =', lat_varID
+     write(iulog,*)'Error: scam_setlatlonidx: error reading lat varid =', lat_varID
      call endrun
   end if
 
@@ -92,7 +93,7 @@ subroutine scam_setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
   if ( STATUS .NE. NF_NOERR ) then
      STATUS = NF_INQ_VARID( NCID, 'LONGXY', lon_varID )
      if ( STATUS .NE. NF_NOERR ) then
-        write( 6,* )'ERROR - setlatlon.F:', &
+        write(iulog,* )'ERROR - setlatlon.F:', &
              'Cant get variable ID for lon'
         STATUS = NF_CLOSE( NCID )
         return
@@ -106,7 +107,7 @@ subroutine scam_setlatlonidx(ncid ,targetlat ,targetlon, closelat, closelon, &
 
   STATUS = nf_get_vara_double (ncid, lon_varID, strt, cnt, lons)
   if (STATUS/=NF_NOERR) then
-     write(6,*)'Error: scam_setlatlonidx: error reading lon varid =', lon_varID
+     write(iulog,*)'Error: scam_setlatlonidx: error reading lon varid =', lon_varID
      call endrun
   end if
 

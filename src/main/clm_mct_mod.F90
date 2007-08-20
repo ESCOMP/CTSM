@@ -34,6 +34,7 @@ module clm_mct_mod
    use shr_kind_mod         ,only: R8 => SHR_KIND_R8
    use shr_kind_mod         ,only: IN => SHR_KIND_IN
    use shr_kind_mod         ,only: CL => SHR_KIND_CL
+   use clm_varctl           ,only: iulog
 
    use m_MCTWorld           ,only: mct_world_init         => init
 
@@ -46,6 +47,8 @@ module clm_mct_mod
    use m_AttrVect           ,only: mct_aVect_indexRA      => indexRA
    use m_AttrVect           ,only: mct_aVect_getIList     => getIList
    use m_AttrVect           ,only: mct_aVect_getRList     => getRList
+   use m_AttrVect           ,only: mct_aVect_expIListToChar => exportIListToChar
+   use m_AttrVect           ,only: mct_aVect_expRListToChar => exportRListToChar
    use m_AttrVect           ,only: mct_aVect_nIAttr       => nIAttr
    use m_AttrVect           ,only: mct_aVect_nRAttr       => nRAttr
    use m_AttrVect           ,only: mct_aVect_copy         => Copy
@@ -81,6 +84,7 @@ module clm_mct_mod
    use m_GlobalSegMap       ,only: mct_gsMap_gsize        => gsize
    use m_GlobalSegMap       ,only: mct_gsMap_ngseg        => ngseg
    use m_GlobalSegMap       ,only: mct_gsMap_nlseg        => nlseg
+   use m_GlobalSegMap       ,only: mct_gsMap_OP           => OrderedPoints
 
    use m_Rearranger         ,only: mct_rearr              => Rearranger
    use m_Rearranger         ,only: mct_rearr_init         => init
@@ -230,10 +234,10 @@ subroutine mct_aVect_info(flag,aVect,comm,pe,fld,istr)
    endif
 
    if (flag >= 1) then
-     if (present(istr)) write(6,*) trim(istr)
-     write(6,F01) "local size =",nsize
-     if (associated(aVect%iList%bf)) write(6,F02) "iList = ",aVect%iList%bf
-     if (associated(aVect%rList%bf)) write(6,F02) "rList = ",aVect%rList%bf
+     if (present(istr)) write(iulog,*) trim(istr)
+     write(iulog,F01) "local size =",nsize
+     if (associated(aVect%iList%bf)) write(iulog,F02) "iList = ",aVect%iList%bf
+     if (associated(aVect%rList%bf)) write(iulog,F02) "rList = ",aVect%rList%bf
    endif
 
    if (flag >= 2) then
@@ -259,15 +263,15 @@ subroutine mct_aVect_info(flag,aVect,comm,pe,fld,istr)
        call mct_aVect_getRList(item,k,aVect)
        itemc = mct_string_toChar(item)
        call mct_string_clean(item)
-       write(6,F03) 'l min/max ',minl(k),maxl(k),k,trim(itemc)
+       write(iulog,F03) 'l min/max ',minl(k),maxl(k),k,trim(itemc)
        if (flag >= 3 .and. commOK) then
          if ((peOK .and. pe_loc == 0) .or. .not.peOK) then
-           write(6,F03) 'g min/max ',ming(k),maxg(k),k,trim(itemc)
+           write(iulog,F03) 'g min/max ',ming(k),maxg(k),k,trim(itemc)
          endif
        endif
        if (flag >= 4 .and. commOK) then
          if ((peOK .and. pe_loc == 0) .or. .not.peOK) then
-           write(6,*) trim(subName),'g min/max ',ming(k),maxg(k),k,trim(itemc)
+           write(iulog,*) trim(subName),'g min/max ',ming(k),maxg(k),k,trim(itemc)
          endif
        endif
      enddo
@@ -282,7 +286,7 @@ subroutine mct_aVect_info(flag,aVect,comm,pe,fld,istr)
    endif
 
 #ifndef UNICOSMP
-   call shr_sys_flush(6)
+   call shr_sys_flush(iulog)
 #endif
 
 end subroutine mct_aVect_info
@@ -337,7 +341,7 @@ subroutine mct_aVect_getRAttr(aVect,str,data,rcode)
    n = mct_aVect_lsize(aVect)
    m = size(data)
    if (n /= m) then
-      write(6,*) subName,"ERROR: size aV,data,attr = ",n,m,trim(str)
+      write(iulog,*) subName,"ERROR: size aV,data,attr = ",n,m,trim(str)
       data = SHR_CONST_SPVAL
       rcode = 1
       return
@@ -345,7 +349,7 @@ subroutine mct_aVect_getRAttr(aVect,str,data,rcode)
    
    k = mct_aVect_indexRA(aVect,trim(str) ,perrWith=subName)
    if ( k < 1) then
-      write(6,*) subName,"ERROR: attribute not found, var = ",trim(str),", k=",k
+      write(iulog,*) subName,"ERROR: attribute not found, var = ",trim(str),", k=",k
       data = SHR_CONST_SPVAL
       rcode = 2
       return
@@ -404,14 +408,14 @@ subroutine mct_aVect_putRAttr(aVect,str,data,rcode)
    n = mct_aVect_lsize(aVect)
    m = size(data)
    if (n /= m) then
-      write(6,*) subName,"ERROR: size aV,data,attr = ",n,m,trim(str)
+      write(iulog,*) subName,"ERROR: size aV,data,attr = ",n,m,trim(str)
       rcode = 1
       return
    end if
    
    k = mct_aVect_indexRA(aVect,trim(str) ,perrWith=subName)
    if ( k < 1) then
-      write(6,*) subName,"ERROR: attribute not found, var = ",trim(str),", k=",k
+      write(iulog,*) subName,"ERROR: attribute not found, var = ",trim(str),", k=",k
       rcode = 2
       return
    end if

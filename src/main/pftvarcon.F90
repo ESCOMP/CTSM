@@ -16,6 +16,7 @@ module pftvarcon
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
   use clm_varpar
+  use clm_varctl  , only : iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -155,7 +156,7 @@ contains
     ! Close and release file.
 
     if (masterproc) then
-       write (6,*) 'Attempting to read PFT physiological data .....'
+       write(iulog,*) 'Attempting to read PFT physiological data .....'
        n = getavu()
        call getfil (fpftcon, locfn, 0)
        call opnfil (locfn, n, 'f')
@@ -186,7 +187,7 @@ contains
                                         smpso(i), smpsc(i), fnitr(i)
 #endif 
           if (ier /= 0) then
-             write(6,*)'pftconrd: error in reading in pft data'
+             write(iulog,*)'pftconrd: error in reading in pft data'
              call endrun()
           end if
        end do
@@ -306,8 +307,8 @@ contains
     ! end variables used only for CN code
 
     if (masterproc) then
-       write (6,*) 'Successfully read PFT physiological data'
-       write (6,*)
+       write(iulog,*) 'Successfully read PFT physiological data'
+       write(iulog,*)
     end if
 
   end subroutine pftconrd

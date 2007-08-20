@@ -16,6 +16,7 @@ module filterMod
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use abortutils, only : endrun
+  use clm_varctl, only : iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -101,7 +102,7 @@ contains
        allocate(filter(nclumps), stat=ier)
     end if
     if (ier /= 0) then
-       write (6,*) 'allocFilters(): allocation error for clumpsfilters'
+       write(iulog,*) 'allocFilters(): allocation error for clumpsfilters'
        call endrun
     end if
 

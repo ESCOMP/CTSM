@@ -25,6 +25,7 @@ module DUSTMod
   use clmtype
   use clm_varpar  , only : dst_src_nbr, ndst, sz_nbr
   use clm_varcon  , only : grav, istsoil
+  use clm_varctl  , only : iulog
   use abortutils  , only : endrun
   use subgridAveMod, only: p2l_1d
   use clm_varcon, only: spval
@@ -211,7 +212,7 @@ contains
        end if
     end do
     if (found) then
-       write(6,*) 'p2l_1d error: sumwt is greater than 1.0 at l= ',index
+       write(iulog,*) 'p2l_1d error: sumwt is greater than 1.0 at l= ',index
        call endrun()
     end if
 
@@ -251,7 +252,7 @@ contains
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        if (lnd_frc_mbl(p)>1.0_r8 .or. lnd_frc_mbl(p)<0.0_r8) then
-          write (6,*)'Error dstmbl: pft= ',p,' lnd_frc_mbl(p)= ',lnd_frc_mbl(p)
+          write(iulog,*)'Error dstmbl: pft= ',p,' lnd_frc_mbl(p)= ',lnd_frc_mbl(p)
           call endrun 
        end if
     end do
@@ -686,14 +687,14 @@ contains
 
     dum = 1.0_r8
     if (abs(0.8427_r8-ERF(dum))/0.8427_r8>0.001_r8) then
-       write (6,*) 'erf(1.0) = ',ERF(dum)
-       write (6,*) 'Dustini: Error function error'
+       write(iulog,*) 'erf(1.0) = ',ERF(dum)
+       write(iulog,*) 'Dustini: Error function error'
        call endrun
     end if
     dum = 0.0_r8
     if (ERF(dum) /= 0.0_r8) then
-       write (6,*) 'erf(0.0) = ',ERF(dum)
-       write (6,*) 'Dustini: Error function error'
+       write(iulog,*) 'erf(0.0) = ',ERF(dum)
+       write(iulog,*) 'Dustini: Error function error'
        call endrun
     end if
 
@@ -721,7 +722,7 @@ contains
     ryn_nbr_frc_thr_prx_opt = 0.38_r8 + 1331.0_r8 * (100.0_r8*dmt_slt_opt)**1.56_r8
 
     if (ryn_nbr_frc_thr_prx_opt < 0.03_r8) then
-       write (6,*) 'dstmbl: ryn_nbr_frc_thr_prx_opt < 0.03'
+       write(iulog,*) 'dstmbl: ryn_nbr_frc_thr_prx_opt < 0.03'
        call endrun
     else if (ryn_nbr_frc_thr_prx_opt < 10.0_r8) then
        ryn_nbr_frc_thr_opt_fnc = -1.0_r8 + 1.928_r8 * (ryn_nbr_frc_thr_prx_opt**0.0922_r8)
@@ -768,7 +769,7 @@ contains
           dmt_dlt(n) = dmt_max(n)-dmt_min(n)            ![m] Width of size bin
        end do
     else
-       write (6,*) 'Dustini error: ndst must equal to 4 with current code'
+       write(iulog,*) 'Dustini error: ndst must equal to 4 with current code'
        call endrun                                      !see more comments above
     end if                                              !end if ndst == 4
 
@@ -892,8 +893,8 @@ contains
           else if (ryn_nbr_grv(m) < 2.0e5_r8) then
              cff_drg_grv(m) = 0.44_r8                         !Sep97 p.463 (8.32)
           else
-             write (6,'(a,es9.2)') "ryn_nbr_grv(m) = ",ryn_nbr_grv(m)
-             write(6,*)'Dustini error: Reynolds number too large in stk_crc_get()'
+             write(iulog,'(a,es9.2)') "ryn_nbr_grv(m) = ",ryn_nbr_grv(m)
+             write(iulog,*)'Dustini error: Reynolds number too large in stk_crc_get()'
              call endrun 
           end if
 
@@ -909,7 +910,7 @@ contains
              vlc_grv(m) = 0.5_r8 * (vlc_grv(m)+vlc_grv_old)  ! [m s-1]
           end if
           if (itr_idx > 20) then
-             write (6,*) 'Dustini error: Terminal velocity not converging ',&
+             write(iulog,*) 'Dustini error: Terminal velocity not converging ',&
                   ' in stk_crc_get(), breaking loop...'
              goto 100                                        !to next iteration
           end if

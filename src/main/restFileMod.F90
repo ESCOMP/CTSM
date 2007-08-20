@@ -14,7 +14,8 @@ module restFileMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc
-  use abortutils,   only : endrun
+  use abortutils  , only : endrun
+  use clm_varctl  , only : iulog
   use ncdio       
 !
 ! !PUBLIC TYPES:
@@ -173,8 +174,8 @@ contains
     ! Write out diagnostic info
 
     if (masterproc) then
-       write (6,*) 'Successfully wrote out restart data at nstep = ',get_nstep()
-       write (6,'(72a1)') ("-",i=1,60)
+       write(iulog,*) 'Successfully wrote out restart data at nstep = ',get_nstep()
+       write(iulog,'(72a1)') ("-",i=1,60)
     end if
     
   end subroutine restFile_write
@@ -259,9 +260,9 @@ contains
     ! Write out diagnostic info
 
     if (masterproc) then
-       write(6,'(72a1)') ("-",i=1,60)
-       write(6,*) 'Successfully read restart data for restart run'
-       write(6,*)
+       write(iulog,'(72a1)') ("-",i=1,60)
+       write(iulog,*) 'Successfully read restart data for restart run'
+       write(iulog,*)
     end if
 
   end subroutine restFile_read
@@ -420,9 +421,9 @@ contains
           ftest = 'xx.'//trim(file)
           status = index(trim(ftest),trim(ctest))
           if (status /= 0 .and. .not.(brnch_retain_casename)) then
-             write(6,*) 'Must change case name on branch run if ',&
+             write(iulog,*) 'Must change case name on branch run if ',&
                   'brnch_retain_casename namelist is not set'
-             write(6,*) 'previous case filename= ',trim(file),&
+             write(iulog,*) 'previous case filename= ',trim(file),&
                   ' current case = ',trim(caseid), &
                   ' ctest = ',trim(ctest), &
                   ' ftest = ',trim(ftest)
@@ -482,14 +483,14 @@ contains
     ! New history files are always created for branch runs.
        
     if (masterproc) then
-       write (6,*) 'Reading restart pointer file....'
+       write(iulog,*) 'Reading restart pointer file....'
        nio = getavu()
        locfn = trim(rpntdir) //'/'// trim(rpntfil)
        call opnfil (locfn, nio, 'f')
        read (nio,'(a256)') pnamer
        call relavu (nio)
-       write (6,*) 'Reading restart data.....'
-       write (6,'(72a1)') ("-",i=1,60)
+       write(iulog,*) 'Reading restart data.....'
+       write(iulog,'(72a1)') ("-",i=1,60)
     end if
 
   end subroutine restFile_read_pfile
@@ -553,9 +554,9 @@ contains
          rem_fn = set_filename(rem_dir, file)
          call putfil( file, rem_fn, mss_wpass, mss_irt, lremove )
       endif
-      write(6,*) 'Successfully wrote local restart file ',trim(file)
-      write(6,'(72a1)') ("-",i=1,60)
-      write(6,*)
+      write(iulog,*) 'Successfully wrote local restart file ',trim(file)
+      write(iulog,'(72a1)') ("-",i=1,60)
+      write(iulog,*)
 
    end if
 
@@ -611,7 +612,7 @@ contains
        endif
        
        call relavu( nio )
-       write(6,*)'Successfully wrote local restart pointer file'
+       write(iulog,*)'Successfully wrote local restart pointer file'
     end if
 
   end subroutine restFile_write_pfile
@@ -635,10 +636,10 @@ contains
           ! Create new netCDF file (in define mode) and set fill mode
           ! to "no fill" to optimize performance
 
-          write(6,*)
-          write(6,*)'restFile_open: writing restart dataset at ',&
+          write(iulog,*)
+          write(iulog,*)'restFile_open: writing restart dataset at ',&
                trim(file), 'at nstep = ',get_nstep()
-          write(6,*)
+          write(iulog,*)
           call check_ret( nf_create(trim(file), nf_clobber, ncid), subname )
           call check_ret( nf_set_fill(ncid, nf_nofill, omode), subname )
 
@@ -646,7 +647,7 @@ contains
        
           ! Open netcdf restart file
 
-          write (6,*) 'Reading restart dataset'
+          write(iulog,*) 'Reading restart dataset'
           call check_ret( nf_open(file, nf_nowrite, ncid), subname )
 
        end if
@@ -714,13 +715,13 @@ contains
        else if (trim(type) == 'netcdf') then
           if (present(offset)) then
              restFile_filename = "./"//trim(caseid)//".clm2.i."//trim(cdate)//".nc"
-             write(6,*)'writing initial file ',trim(restFile_filename),' for model date = ',cdate
+             write(iulog,*)'writing initial file ',trim(restFile_filename),' for model date = ',cdate
           else
              restFile_filename = "./"//trim(caseid)//".clm2.r."//trim(cdate)//".nc"
-             write(6,*)'writing restart file ',trim(restFile_filename),' for model date = ',cdate
+             write(iulog,*)'writing restart file ',trim(restFile_filename),' for model date = ',cdate
           end if
        else
-          write(6,*)'restart file type ',trim(type),' is not supported'; call endrun()
+          write(iulog,*)'restart file type ',trim(type),' is not supported'; call endrun()
        end if
     else
       restfile_filename = 'not_defined'

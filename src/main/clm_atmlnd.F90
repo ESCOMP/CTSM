@@ -15,6 +15,7 @@ module clm_atmlnd
   use clm_varpar  , only : numrad, ndst   !ndst = number of dust bins.
                                           !only used # ifdef DUST
   use clm_varcon  , only : rair, grav, cpair, hfus, tfrz
+  use clm_varctl  , only : iulog
   use decompMod   , only : get_proc_bounds, get_proc_bounds_atm
   use shr_kind_mod, only : r8 => shr_kind_r8
   use nanMod      , only : nan
@@ -384,12 +385,12 @@ end subroutine init_lnd2atm_type
 !------------------------------------------------------------------------------
 
   if (first_call .and. masterproc) then
-    write(6,*) 'clm_mapa2l subroutine'
+    write(iulog,*) 'clm_mapa2l subroutine'
   endif
 
   nradflds = size(a2l_src%forc_solad,dim=2)
   if (nradflds /= numrad) then
-    write(6,*) 'clm_mapa2l ERROR: nradflds ne numrad ',nradflds,numrad
+    write(iulog,*) 'clm_mapa2l ERROR: nradflds ne numrad ',nradflds,numrad
     call endrun()
   endif
 
@@ -468,7 +469,7 @@ end subroutine init_lnd2atm_type
   deallocate(adst)
 
   if (first_call.and.masterproc) then
-    write(6,*) 'clm_mapa2l mapping complete'
+    write(iulog,*) 'clm_mapa2l mapping complete'
   endif
 
 !-topographic downscaling
@@ -477,12 +478,12 @@ end subroutine init_lnd2atm_type
   if (mo > 1) then
 
   if (first_call.and.masterproc) then
-    write(6,*) 'clm_mapa2l downscaling ON'
+    write(iulog,*) 'clm_mapa2l downscaling ON'
   endif
 
   call map_setptrs(map1dl_a2l,nwts=nmap,src=src,dst=dst,dstmo=mo)
   if (mo /= 1) then
-     write(6,*)' clm_mapa2l ERROR: map1dl_a2l mo not 1 ',mo
+     write(iulog,*)' clm_mapa2l ERROR: map1dl_a2l mo not 1 ',mo
      call endrun()
   endif
 
@@ -497,12 +498,12 @@ end subroutine init_lnd2atm_type
 
     hsurf_a = adomain%topo(ns)        ! atm elevation
     hsurf_l = ldomain%ntop(nd)        ! lnd elevation
-! DOWNSCALING turns off topo downscaling
+!tcx DOWNSCALING turns off topo downscaling
 !    hsurf_l = hsurf_a
 
     if (abs(hsurf_a - hsurf_l) .gt. 0.1_r8) then
 
-! DOWNSCALING if atm lapse rate is available
+!tcx DOWNSCALING if atm lapse rate is available
 !       lapse  = a2l_src%lapse(ns)         ! atm lapse rate
        tbot_a = a2l_src%forc_t(ns)        ! atm temp at bot
        thbot_a= a2l_src%forc_th(ns)       ! atm pot temp at bot
@@ -547,18 +548,19 @@ end subroutine init_lnd2atm_type
     pchance(nd) = mod(rand_num(1)+rand_num(2)+rand_num(3),1.0_r8)
     pamount(nd) = -log(max(1.0_r8-(mod(rand_num(4)+rand_num(5)+rand_num(6),1.0_r8)),1.0e-20_r8))
 
-!tcx temporary
-!    pchance(nd) = 0._r8
-!    pamount(nd) = 1._r8
+!tcx DOWNSCALING this will remove random aspects, turn on either or both
+!    pchance(nd) = 0._r8    ! sets all fine gridcells to precip true
+!    pamount(nd) = 1._r8    ! sets all precip gridcells to equal amount
 
   enddo
 
-!  write(6,*) 'tcx mm1 ',minval(a2l_dst%forc_t),maxval(a2l_dst%forc_t)
-!  write(6,*) 'tcx mm2 ',minval(a2l_dst%forc_psrf),maxval(a2l_dst%forc_psrf)
-!  write(6,*) 'tcx mm3 ',minval(a2l_dst%forc_q),maxval(a2l_dst%forc_q)
-!  write(6,*) 'tcx mm4 ',minval(a2l_dst%forc_th),maxval(a2l_dst%forc_th)
-!  write(6,*) 'tcx mm5 ',minval(pchance),maxval(pchance)
-!  write(6,*) 'tcx mm6 ',minval(pamount),maxval(pamount)
+!tcx diagnostics
+!  write(iulog,*) 'tcx mm1 ',minval(a2l_dst%forc_t),maxval(a2l_dst%forc_t)
+!  write(iulog,*) 'tcx mm2 ',minval(a2l_dst%forc_psrf),maxval(a2l_dst%forc_psrf)
+!  write(iulog,*) 'tcx mm3 ',minval(a2l_dst%forc_q),maxval(a2l_dst%forc_q)
+!  write(iulog,*) 'tcx mm4 ',minval(a2l_dst%forc_th),maxval(a2l_dst%forc_th)
+!  write(iulog,*) 'tcx mm5 ',minval(pchance),maxval(pchance)
+!  write(iulog,*) 'tcx mm6 ',minval(pamount),maxval(pamount)
 
   call map_setptrs(map1dl_l2a,nwts=nmap,src=src,dst=dst,wts=wts)
 
@@ -585,7 +587,7 @@ end subroutine init_lnd2atm_type
   do n = 1,nmap
      ns = dst(n)
      nd = src(n)
-! DOWNSCALING turn off precip disaggr completely
+!tcx DOWNSCALING turn off precip disaggr completely
 #if (1 == 1)
      if (pchance(nd) < mu) then
         !--- rain/snow refractionation
@@ -593,11 +595,12 @@ end subroutine init_lnd2atm_type
         dum2 = (a2l_dst%forc_t(nd)-tfrz + 5.0_r8)/(5.0_r8)
         dum2 = max(dum2,0.0_r8)
         dum2 = min(dum2,1.0_r8)
-!
-! DOWNSCALING turn on refractionation and spatial variability
+
+!tcx DOWNSCALING turn on refractionation and spatial variability
         a2l_dst%forc_rain(nd) = (         dum2) * pamount(nd)
         a2l_dst%forc_snow(nd) = (1.0_r8 - dum2) * pamount(nd)
-! DOWNSCALONG turn on just spatial variability, comment out lines above
+!tcx DOWNSCALING turn on just spatial variability but not refractionation
+! comment out lines above and comment in the two lines below
 !        a2l_dst%forc_rain(nd) = a2l_dst%forc_rain(nd)* pamount(nd)
 !        a2l_dst%forc_snow(nd) = a2l_dst%forc_snow(nd)* pamount(nd)
 !
@@ -617,7 +620,8 @@ end subroutine init_lnd2atm_type
   do ns = begg_s, endg_s
      if (rain_l(ns) + snow_l(ns) == 0._r8) then
         if (a2l_src%forc_rain(ns) + a2l_src%forc_snow(ns) /= 0._r8) then
-           write(6,*)' clm_mapa2l ERROR: rain/snow normalization',rain_l(ns),snow_l(ns),a2l_src%forc_rain(ns),a2l_src%forc_snow(ns)
+           write(iulog,*)' clm_mapa2l ERROR: rain/snow normalization',rain_l(ns),snow_l(ns), &
+              a2l_src%forc_rain(ns),a2l_src%forc_snow(ns)
            call endrun()
         endif
      else
@@ -718,15 +722,15 @@ end subroutine init_lnd2atm_type
 !      .or.(abs(sum6 - a2l_src%forc_th(ns))   > 1.0e-6) &
       .or.(abs(dum1)                         > 1.0e-8) &
        ) then
-      write(6,*) 'clm_map2l check ERROR topo ',ns,sum1,adomain%topo(ns)
-      write(6,*) 'clm_map2l check ERROR t    ',ns,sum2,a2l_src%forc_t(ns)
-      write(6,*) 'clm_map2l check ERROR q    ',ns,sum3,a2l_src%forc_q(ns)
-      write(6,*) 'clm_map2l check ERROR hgt  ',ns,sum4,a2l_src%forc_hgt(ns)
-      write(6,*) 'clm_map2l check ERROR pbot ',ns,sum5,a2l_src%forc_pbot(ns)
-      write(6,*) 'clm_map2l check ERROR th   ',ns,sum6,a2l_src%forc_th(ns)
-      write(6,*) 'clm_map2l check ERROR rain ',ns,sum7,a2l_src%forc_rain(ns)
-      write(6,*) 'clm_map2l check ERROR snow ',ns,sum8,a2l_src%forc_snow(ns)
-      write(6,*) 'clm_map2l check ERROR adiag',ns,adiag_arain(ns),adiag_asnow(ns)
+      write(iulog,*) 'clm_map2l check ERROR topo ',ns,sum1,adomain%topo(ns)
+      write(iulog,*) 'clm_map2l check ERROR t    ',ns,sum2,a2l_src%forc_t(ns)
+      write(iulog,*) 'clm_map2l check ERROR q    ',ns,sum3,a2l_src%forc_q(ns)
+      write(iulog,*) 'clm_map2l check ERROR hgt  ',ns,sum4,a2l_src%forc_hgt(ns)
+      write(iulog,*) 'clm_map2l check ERROR pbot ',ns,sum5,a2l_src%forc_pbot(ns)
+      write(iulog,*) 'clm_map2l check ERROR th   ',ns,sum6,a2l_src%forc_th(ns)
+      write(iulog,*) 'clm_map2l check ERROR rain ',ns,sum7,a2l_src%forc_rain(ns)
+      write(iulog,*) 'clm_map2l check ERROR snow ',ns,sum8,a2l_src%forc_snow(ns)
+      write(iulog,*) 'clm_map2l check ERROR adiag',ns,adiag_arain(ns),adiag_asnow(ns)
       call endrun()
     endif
   enddo
@@ -778,7 +782,7 @@ end subroutine clm_mapa2l
 
   nradflds = size(l2a_src%albd,dim=2)
   if (nradflds /= numrad) then
-    write(6,*) 'clm_mapl2a ERROR: nradflds ne numrad ',nradflds,numrad
+    write(iulog,*) 'clm_mapl2a ERROR: nradflds ne numrad ',nradflds,numrad
     call endrun()
   endif
 

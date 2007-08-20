@@ -25,6 +25,11 @@ module clm_varctl
   integer :: nsrest                             ! 0: initial run. 1: restart: 3: branch
   logical, public :: brnch_retain_casename = .false. ! true => allow case name to remain the same for branch run
                                                      ! by default this is not allowed
+
+!
+! Unit Numbers
+!
+  integer :: iulog = 6        ! "stdout" log file unit number, default is 6
 !
 ! Initial file variables
 !

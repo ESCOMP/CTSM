@@ -20,6 +20,7 @@ module CASAMod
   use clm_atmlnd  , only : clm_a2l
   use clm_varcon  , only : denh2o, hvap, istsoil, tfrz, spval
   use clm_varpar  , only : numpft, nlevsoi
+  use clm_varctl  , only : iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -273,7 +274,7 @@ contains
 !
 ! !USES:
     use fileutils    , only : getfil
-    use ncdio        , only : check_ret,check_dim,check_var,ncd_iolocal
+    use ncdio        , only : check_ret,check_dim,ncd_iolocal
     use shr_const_mod, only : SHR_CONST_CDAY
     use decompMod    , only : get_proc_bounds, get_proc_global
     use clm_varctl   , only : nsrest
@@ -593,7 +594,7 @@ contains
 
     if (nsrest == 0 .and. .not. cpool_inic) then
        if (masterproc) &
-          write(6,*)'WARNING: Initializing Tpool_C and XSCpool to 0.0'
+          write(iulog,*)'WARNING: Initializing Tpool_C and XSCpool to 0.0'
        do n = 1, npools
           do p = begp, endp
              Tpool_C(p,n) = 0.0_r8
@@ -667,7 +668,7 @@ contains
 
        if (masterproc) then
           call getfil(fcpool, locfn, 0)
-          write(6,*)'Reading initial carbon pools from ',locfn
+          write(iulog,*)'Reading initial carbon pools from ',locfn
           call check_ret(nf_open(locfn, nf_nowrite, ncid), subname)
           call check_dim(ncid, 'longitude', lsmlon)
           call check_dim(ncid, 'latitude',  lsmlat)
@@ -1009,7 +1010,7 @@ contains
 
     allocate(histi(begp:endp, 1),histo(begg:endg,1),hist1do(begg:endg), stat=ier)
     if (ier /= 0) then
-       write (6,*) 'Allocation error for TPOOL_C write'
+       write(iulog,*) 'Allocation error for TPOOL_C write'
     end if
 
     ! TPOOL_C_LEAF
@@ -2485,11 +2486,11 @@ contains
                 call endrun
              else
                 if (masterproc) &
-                   write(6,*)'WARNING: TPOOL_C not contained on initial/restart dataset'
+                   write(iulog,*)'WARNING: TPOOL_C not contained on initial/restart dataset'
              end if
           else
              if (masterproc) &
-                write(6,*)'TPOOL_C read from initial/restart dataset'
+                write(iulog,*)'TPOOL_C read from initial/restart dataset'
              cpool_inic = .true.
           end if
        end if

@@ -8,6 +8,7 @@ mkvarsur.F90
 nanMod.F90
 ncdio.F90
 spmdMod.F90
+clm_varctl.F90
 abortutils.F90
 shr_const_mod.F90
 shr_timer_mod.F90

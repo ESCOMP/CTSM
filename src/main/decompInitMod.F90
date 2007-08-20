@@ -13,6 +13,7 @@ module decompInitMod
   use clm_mct_mod
   use shr_sys_mod , only : shr_sys_flush
   use abortutils  , only : endrun
+  use clm_varctl  , only : iulog
   use decompMod
 !
 ! !PUBLIC TYPES:
@@ -104,12 +105,12 @@ contains
     if (clump_pproc > 0) then
        nclumps = clump_pproc * npes
        if (nclumps < npes) then
-          write (6,*) 'decompInit_atm(): Number of gridcell clumps= ',nclumps, &
+          write(iulog,*) 'decompInit_atm(): Number of gridcell clumps= ',nclumps, &
                ' is less than the number of processes = ', npes
           call endrun()
        end if
     else
-       write(6,*)'clump_pproc= ',clump_pproc,'  must be greater than 0'
+       write(iulog,*)'clump_pproc= ',clump_pproc,'  must be greater than 0'
        call endrun()
     end if
 
@@ -118,7 +119,7 @@ contains
 
     allocate(procinfo%cid(clump_pproc), stat=ier)
     if (ier /= 0) then
-       write (6,*) 'decompInit_atm(): allocation error for procinfo%cid'
+       write(iulog,*) 'decompInit_atm(): allocation error for procinfo%cid'
        call endrun()
     endif
 
@@ -141,7 +142,7 @@ contains
 
     allocate(clumps(nclumps), stat=ier)
     if (ier /= 0) then
-       write (6,*) 'decompInit_atm(): allocation error for clumps'
+       write(iulog,*) 'decompInit_atm(): allocation error for clumps'
        call endrun()
     end if
     clumps(:)%owner   = -1
@@ -163,14 +164,14 @@ contains
     do n = 1,nclumps
        pid = mod(n-1,npes)
        if (pid < 0 .or. pid > npes-1) then
-          write (6,*) 'decompInit_atm(): round robin pid error ',n,pid,npes
+          write(iulog,*) 'decompInit_atm(): round robin pid error ',n,pid,npes
           call endrun()
        endif
        clumps(n)%owner = pid
        if (iam == pid) then
           cid = cid + 1
           if (cid < 1 .or. cid > clump_pproc) then
-             write (6,*) 'decompInit_atm(): round robin pid error ',n,pid,npes
+             write(iulog,*) 'decompInit_atm(): round robin pid error ',n,pid,npes
              call endrun()
           endif
           procinfo%cid(cid) = n
@@ -187,7 +188,7 @@ contains
     numa = anumg_tot
 
     rnsegspc = min(float(nsegspc),float(anumg_tot)/float(nclumps))
-    if (masterproc) write(6,*) 'precompute total anumg ',anumg_tot,numa,rnsegspc
+    if (masterproc) write(iulog,*) 'precompute total anumg ',anumg_tot,numa,rnsegspc
 
     !--- assign gridcells to clumps (and thus pes) ---
     allocate(acid(ans))
@@ -197,24 +198,9 @@ contains
        if (amask(an) == 1) then
           anumg  = anumg  + 1
 
-#if (1 == 0) 
-          !--- find clump with fewest pfts ---
-          cid = 1
-          do n = 2,nclumps
-             if (clumps(n)%npfts < clumps(cid)%npfts) then
-                cid = n
-             endif
-          enddo
-#endif
-#if (1 == 0)
-          !--- give to clumps in simple round robin
-          cid = mod((anumg-1),nclumps) + 1
-#endif
-#if (1 == 1)
           !--- give to clumps in order based on nsegspc
           cid = int(rnsegspc*float(nclumps*(anumg-1))/float(anumg_tot))
           cid = mod(cid,nclumps) + 1
-#endif
           acid(an) = cid
 
           !--- give atm cell to pe that owns cid ---
@@ -231,12 +217,12 @@ contains
     ! Error check on total number of gridcells
 
     if (anumg /= numa) then
-       write (6,*) 'decompInit_atm(): Number of atm gridcells inconsistent',anumg,numa
+       write(iulog,*) 'decompInit_atm(): Number of atm gridcells inconsistent',anumg,numa
        call endrun()
     end if
 
     if (npes > anumg) then
-       write (6,*) 'decompInit_atm(): Number of processes exceeds number ', &
+       write(iulog,*) 'decompInit_atm(): Number of processes exceeds number ', &
             'of atm grid cells',npes,anumg
        call endrun()
     end if
@@ -246,7 +232,7 @@ contains
     allocate(adecomp%gdc2glo(anumg), adecomp%glo2gdc(ani*anj), &
              stat=ier)
     if (ier /= 0) then
-       write (6,*) 'decompInit_atm(): allocation error1 for adecomp'
+       write(iulog,*) 'decompInit_atm(): allocation error1 for adecomp'
        call endrun()
     end if
 
@@ -292,22 +278,22 @@ contains
     ! Diagnostic output
 
     if (masterproc) then
-       write (6,*)' Atm Grid Characteristics'
-       write (6,*)'   longitude points          = ',ani
-       write (6,*)'   latitude points           = ',anj
-       write (6,*)'   total number of gridcells = ',anumg
-       write (6,*)' Decomposition Characteristics'
-       write (6,*)'   clumps per process        = ',clump_pproc
-       write (6,*)' gsMap Characteristics'
-       write (6,*) '  atm gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo)
-       write (6,*)
+       write(iulog,*)' Atm Grid Characteristics'
+       write(iulog,*)'   longitude points          = ',ani
+       write(iulog,*)'   latitude points           = ',anj
+       write(iulog,*)'   total number of gridcells = ',anumg
+       write(iulog,*)' Decomposition Characteristics'
+       write(iulog,*)'   clumps per process        = ',clump_pproc
+       write(iulog,*)' gsMap Characteristics'
+       write(iulog,*) '  atm gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo)
+       write(iulog,*)
     end if
 
     ! Write out clump and proc info, one pe at a time, 
     ! barrier to control pes overwriting each other on stdout
 
 #ifndef UNICOSMP
-    call shr_sys_flush(6)
+    call shr_sys_flush(iulog)
 #endif
     call mpi_barrier(mpicom,ier)
      npmin = 0
@@ -331,21 +317,21 @@ contains
        pid = min(pid,npes-1)
 
        if (iam == pid) then
-          write(6,*)
-          write(6,*)'proc= ',pid,' beg atmcell = ',procinfo%abegg, &
+          write(iulog,*)
+          write(iulog,*)'proc= ',pid,' beg atmcell = ',procinfo%abegg, &
                ' end atmcell = ',procinfo%aendg,                   &
                ' total atmcells per proc = ',procinfo%aendg-procinfo%abegg+1
-          write(6,*)'proc= ',pid,' atm ngseg   = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo), &
+          write(iulog,*)'proc= ',pid,' atm ngseg   = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo), &
                ' atm nlseg   = ',mct_gsMap_nlseg(gsMap_atm_gdc2glo,iam)
-          write(6,*)'proc= ',pid,' nclumps = ',procinfo%nclumps
+          write(iulog,*)'proc= ',pid,' nclumps = ',procinfo%nclumps
        end if
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
        call mpi_barrier(mpicom,ier)
     end do
 #ifndef UNICOSMP
-    call shr_sys_flush(6)
+    call shr_sys_flush(iulog)
 #endif
 
   end subroutine decompInit_atm
@@ -473,7 +459,7 @@ contains
           enddo
           !--- check that atm cell has at least 1 lnd grid cell
           if (cnt < 1) then
-             write (6,*) 'decompInit_lnd(): map overlap error at ',an,cnt
+             write(iulog,*) 'decompInit_lnd(): map overlap error at ',an,cnt
              call endrun()
           endif
     enddo
@@ -481,7 +467,7 @@ contains
     allocate(ldecomp%gdc2glo(numg), ldecomp%glo2gdc(lni*lnj), &
              stat=ier)
     if (ier /= 0) then
-       write (6,*) 'decompInit_lnd(): allocation error1 for ldecomp'
+       write(iulog,*) 'decompInit_lnd(): allocation error1 for ldecomp'
        call endrun()
     end if
 
@@ -529,24 +515,24 @@ contains
     ! Diagnostic output
 
     if (masterproc) then
-       write (6,*)' Atm Grid Characteristics'
-       write (6,*)'   longitude points          = ',ani
-       write (6,*)'   latitude points           = ',anj
-       write (6,*)'   total number of gridcells = ',numa
-       write (6,*)' Surface Grid Characteristics'
-       write (6,*)'   longitude points          = ',lni
-       write (6,*)'   latitude points           = ',lnj
-       write (6,*)'   total number of gridcells = ',numg
-       write (6,*)' Decomposition Characteristics'
-       write (6,*)'   clumps per process        = ',clump_pproc
-       write (6,*)' gsMap Characteristics'
-       write (6,*) '  lnd gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_lnd_gdc2glo)
-       write (6,*) '  atm gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo)
-       write (6,*)
+       write(iulog,*)' Atm Grid Characteristics'
+       write(iulog,*)'   longitude points          = ',ani
+       write(iulog,*)'   latitude points           = ',anj
+       write(iulog,*)'   total number of gridcells = ',numa
+       write(iulog,*)' Surface Grid Characteristics'
+       write(iulog,*)'   longitude points          = ',lni
+       write(iulog,*)'   latitude points           = ',lnj
+       write(iulog,*)'   total number of gridcells = ',numg
+       write(iulog,*)' Decomposition Characteristics'
+       write(iulog,*)'   clumps per process        = ',clump_pproc
+       write(iulog,*)' gsMap Characteristics'
+       write(iulog,*) '  lnd gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_lnd_gdc2glo)
+       write(iulog,*) '  atm gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo)
+       write(iulog,*)
     end if
 
 #ifndef UNICOSMP
-    call shr_sys_flush(6)
+    call shr_sys_flush(iulog)
 #endif
 
   end subroutine decompInit_lnd
@@ -756,12 +742,12 @@ contains
            clumps(n)%nlunits /= allvecg(n,2) .or. &
            clumps(n)%ncols   /= allvecg(n,3) .or. &
            clumps(n)%npfts   /= allvecg(n,4)) then
-          write(6,*) 'decompInit_glcp(): allvecg error ncells ',iam,n,clumps(n)%ncells ,allvecg(n,1)
-          write(6,*) 'decompInit_glcp(): allvecg error lunits ',iam,n,clumps(n)%nlunits,allvecg(n,2)
-          write(6,*) 'decompInit_glcp(): allvecg error ncols  ',iam,n,clumps(n)%ncols  ,allvecg(n,3)
-          write(6,*) 'decompInit_glcp(): allvecg error pfts   ',iam,n,clumps(n)%npfts  ,allvecg(n,4)
+          write(iulog,*) 'decompInit_glcp(): allvecg error ncells ',iam,n,clumps(n)%ncells ,allvecg(n,1)
+          write(iulog,*) 'decompInit_glcp(): allvecg error lunits ',iam,n,clumps(n)%nlunits,allvecg(n,2)
+          write(iulog,*) 'decompInit_glcp(): allvecg error ncols  ',iam,n,clumps(n)%ncols  ,allvecg(n,3)
+          write(iulog,*) 'decompInit_glcp(): allvecg error pfts   ',iam,n,clumps(n)%npfts  ,allvecg(n,4)
 #ifndef UNICOSMP
-          call shr_sys_flush(6)
+          call shr_sys_flush(iulog)
 #endif
           call shr_sys_abort()
        endif
@@ -828,7 +814,7 @@ contains
           start => pstart
           count => pcount
        else
-          write(6,*) 'decompInit_glcp error in k ',k
+          write(iulog,*) 'decompInit_glcp error in k ',k
           call endrun()
        endif
 
@@ -851,19 +837,19 @@ contains
        i = beg-1
        do g = begg,endg
           if (count(g) <  1) then
-             write(6,*) 'decompInit_glcp warning count g ',k,iam,g,count(g)
+             write(iulog,*) 'decompInit_glcp warning count g ',k,iam,g,count(g)
           endif
           do l = 1,count(g)
              i = i + 1
              if (i < beg .or. i > end) then
-                write(6,*) 'decompInit_glcp error i ',i,beg,end
+                write(iulog,*) 'decompInit_glcp error i ',i,beg,end
                 call endrun()
              endif
              gindex(i) = start(g) + l-1
           enddo
        enddo
       if (i /= end) then
-         write(6,*) 'decompInit_glcp error size ',i,beg,end
+         write(iulog,*) 'decompInit_glcp error size ',i,beg,end
          call endrun()
       endif
 
@@ -871,7 +857,7 @@ contains
       gsize = num
 
       if (size(perm) /= lsize) then
-         write(6,*) 'decompInit_glcp error size perm ',size(perm),lsize
+         write(iulog,*) 'decompInit_glcp error size perm ',size(perm),lsize
          call endrun()
       endif
       call mct_indexset(perm)
@@ -888,26 +874,26 @@ contains
       !--- verify gather/scatter produces same result
       do l = beg,end
          if (tarr2(l) /= gindex(l)) then
-            write(6,*) 'decompInit_glcp error tarr2 ',k,l,gindex(l),tarr2(l)
+            write(iulog,*) 'decompInit_glcp error tarr2 ',k,l,gindex(l),tarr2(l)
             call endrun()
          endif
       enddo
       !--- verify gather of gindex on new gsmap produces ordered indices
       if (masterproc) then
          if (tarr1(1) /= 1) then
-            write(6,*) 'decompInit_glcp error tarr1 ',k,1,tarr1(1)
+            write(iulog,*) 'decompInit_glcp error tarr1 ',k,1,tarr1(1)
             call endrun()
          endif
          do l = 2,ntest
             if (tarr1(l)-tarr1(l-1) /= 1) then
-               write(6,*) 'decompInit_glcp error tarr1 ',k,l,tarr1(l-1),tarr1(l)
+               write(iulog,*) 'decompInit_glcp error tarr1 ',k,l,tarr1(l-1),tarr1(l)
                call endrun()
             endif
          enddo
       endif
       deallocate(tarr1,tarr2)
       if (masterproc) then
-         write(6,*) 'decompInit_glcp gsmap [l,c,p] test passes for ',k
+         write(iulog,*) 'decompInit_glcp gsmap [l,c,p] test passes for ',k
       endif
       !--- end test section      
 
@@ -921,34 +907,34 @@ contains
      ! Diagnostic output
 
     if (masterproc) then
-       write (6,*)' Atm Grid Characteristics'
-       write (6,*)'   longitude points          = ',ani
-       write (6,*)'   latitude points           = ',anj
-       write (6,*)'   total number of gridcells = ',numa
-       write (6,*)' Surface Grid Characteristics'
-       write (6,*)'   longitude points          = ',lni
-       write (6,*)'   latitude points           = ',lnj
-       write (6,*)'   total number of gridcells = ',numg
-       write (6,*)'   total number of landunits = ',numl
-       write (6,*)'   total number of columns   = ',numc
-       write (6,*)'   total number of pfts      = ',nump
-       write (6,*)' Decomposition Characteristics'
-       write (6,*)'   clumps per process        = ',clump_pproc
-       write (6,*)' gsMap Characteristics'
-       write (6,*) '  atm gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo)
-       write (6,*) '  lnd gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_lnd_gdc2glo)
-       write (6,*) '  gce gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_gce_gdc2glo)
-       write (6,*) '  lun gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_lun_gdc2glo)
-       write (6,*) '  col gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_col_gdc2glo)
-       write (6,*) '  pft gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_pft_gdc2glo)
-       write (6,*)
+       write(iulog,*)' Atm Grid Characteristics'
+       write(iulog,*)'   longitude points          = ',ani
+       write(iulog,*)'   latitude points           = ',anj
+       write(iulog,*)'   total number of gridcells = ',numa
+       write(iulog,*)' Surface Grid Characteristics'
+       write(iulog,*)'   longitude points          = ',lni
+       write(iulog,*)'   latitude points           = ',lnj
+       write(iulog,*)'   total number of gridcells = ',numg
+       write(iulog,*)'   total number of landunits = ',numl
+       write(iulog,*)'   total number of columns   = ',numc
+       write(iulog,*)'   total number of pfts      = ',nump
+       write(iulog,*)' Decomposition Characteristics'
+       write(iulog,*)'   clumps per process        = ',clump_pproc
+       write(iulog,*)' gsMap Characteristics'
+       write(iulog,*) '  atm gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo)
+       write(iulog,*) '  lnd gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_lnd_gdc2glo)
+       write(iulog,*) '  gce gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_gce_gdc2glo)
+       write(iulog,*) '  lun gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_lun_gdc2glo)
+       write(iulog,*) '  col gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_col_gdc2glo)
+       write(iulog,*) '  pft gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_pft_gdc2glo)
+       write(iulog,*)
     end if
 
     ! Write out clump and proc info, one pe at a time, 
     ! barrier to control pes overwriting each other on stdout
 
 #ifndef UNICOSMP
-    call shr_sys_flush(6)
+    call shr_sys_flush(iulog)
 #endif
     call mpi_barrier(mpicom,ier)
      npmin = 0
@@ -972,41 +958,41 @@ contains
        pid = min(pid,npes-1)
 
        if (iam == pid) then
-          write(6,*)
-          write(6,*)'proc= ',pid,' beg atmcell = ',procinfo%abegg, &
+          write(iulog,*)
+          write(iulog,*)'proc= ',pid,' beg atmcell = ',procinfo%abegg, &
                ' end atmcell = ',procinfo%aendg,                   &
                ' total atmcells per proc = ',procinfo%aendg-procinfo%abegg+1
-          write(6,*)'proc= ',pid,' beg gridcell= ',procinfo%begg, &
+          write(iulog,*)'proc= ',pid,' beg gridcell= ',procinfo%begg, &
                ' end gridcell= ',procinfo%endg,                   &
                ' total gridcells per proc= ',procinfo%ncells
-          write(6,*)'proc= ',pid,' beg landunit= ',procinfo%begl, &
+          write(iulog,*)'proc= ',pid,' beg landunit= ',procinfo%begl, &
                ' end landunit= ',procinfo%endl,                   &
                ' total landunits per proc= ',procinfo%nlunits
-          write(6,*)'proc= ',pid,' beg column  = ',procinfo%begc, &
+          write(iulog,*)'proc= ',pid,' beg column  = ',procinfo%begc, &
                ' end column  = ',procinfo%endc,                   &
                ' total columns per proc  = ',procinfo%ncols
-          write(6,*)'proc= ',pid,' beg pft     = ',procinfo%begp, &
+          write(iulog,*)'proc= ',pid,' beg pft     = ',procinfo%begp, &
                ' end pft     = ',procinfo%endp,                   &
                ' total pfts per proc     = ',procinfo%npfts
-          write(6,*)'proc= ',pid,' atm ngseg   = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo), &
+          write(iulog,*)'proc= ',pid,' atm ngseg   = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo), &
                ' atm nlseg   = ',mct_gsMap_nlseg(gsMap_atm_gdc2glo,iam), &
                ' size perm = ',size(perm_atm_gdc2glo)
-          write(6,*)'proc= ',pid,' lnd ngseg   = ',mct_gsMap_ngseg(gsMap_lnd_gdc2glo), &
+          write(iulog,*)'proc= ',pid,' lnd ngseg   = ',mct_gsMap_ngseg(gsMap_lnd_gdc2glo), &
                ' lnd nlseg   = ',mct_gsMap_nlseg(gsMap_lnd_gdc2glo,iam), &
                ' size perm = ',size(perm_lnd_gdc2glo)
-          write(6,*)'proc= ',pid,' gce ngseg   = ',mct_gsMap_ngseg(gsMap_gce_gdc2glo), &
+          write(iulog,*)'proc= ',pid,' gce ngseg   = ',mct_gsMap_ngseg(gsMap_gce_gdc2glo), &
                ' gce nlseg   = ',mct_gsMap_nlseg(gsMap_gce_gdc2glo,iam), &
                ' size perm = ',size(perm_gce_gdc2glo)
-          write(6,*)'proc= ',pid,' lun ngseg   = ',mct_gsMap_ngseg(gsMap_lun_gdc2glo), &
+          write(iulog,*)'proc= ',pid,' lun ngseg   = ',mct_gsMap_ngseg(gsMap_lun_gdc2glo), &
                ' lun nlseg   = ',mct_gsMap_nlseg(gsMap_lun_gdc2glo,iam), &
                ' size perm = ',size(perm_lun_gdc2glo)
-          write(6,*)'proc= ',pid,' col ngseg   = ',mct_gsMap_ngseg(gsMap_col_gdc2glo), &
+          write(iulog,*)'proc= ',pid,' col ngseg   = ',mct_gsMap_ngseg(gsMap_col_gdc2glo), &
                ' col nlseg   = ',mct_gsMap_nlseg(gsMap_col_gdc2glo,iam), &
                ' size perm = ',size(perm_col_gdc2glo)
-          write(6,*)'proc= ',pid,' pft ngseg   = ',mct_gsMap_ngseg(gsMap_pft_gdc2glo), &
+          write(iulog,*)'proc= ',pid,' pft ngseg   = ',mct_gsMap_ngseg(gsMap_pft_gdc2glo), &
                ' pft nlseg   = ',mct_gsMap_nlseg(gsMap_pft_gdc2glo,iam), &
                ' size perm = ',size(perm_pft_gdc2glo)
-          write(6,*)'proc= ',pid,' nclumps = ',procinfo%nclumps
+          write(iulog,*)'proc= ',pid,' nclumps = ',procinfo%nclumps
 
           clmin = 1
           clmax = procinfo%nclumps
@@ -1017,22 +1003,22 @@ contains
           endif
           do n = clmin,clmax
              cid = procinfo%cid(n)
-             write(6,*)'proc= ',pid,' clump no = ',n, &
+             write(iulog,*)'proc= ',pid,' clump no = ',n, &
                   ' clump id= ',procinfo%cid(n),    &
                   ' beg gridcell= ',clumps(cid)%begg, &
                   ' end gridcell= ',clumps(cid)%endg, &
                   ' total gridcells per clump= ',clumps(cid)%ncells
-             write(6,*)'proc= ',pid,' clump no = ',n, &
+             write(iulog,*)'proc= ',pid,' clump no = ',n, &
                   ' clump id= ',procinfo%cid(n),    &
                   ' beg landunit= ',clumps(cid)%begl, &
                   ' end landunit= ',clumps(cid)%endl, &
                   ' total landunits per clump = ',clumps(cid)%nlunits
-             write(6,*)'proc= ',pid,' clump no = ',n, &
+             write(iulog,*)'proc= ',pid,' clump no = ',n, &
                   ' clump id= ',procinfo%cid(n),    &
                   ' beg column  = ',clumps(cid)%begc, &
                   ' end column  = ',clumps(cid)%endc, &
                   ' total columns per clump  = ',clumps(cid)%ncols
-             write(6,*)'proc= ',pid,' clump no = ',n, &
+             write(iulog,*)'proc= ',pid,' clump no = ',n, &
                   ' clump id= ',procinfo%cid(n),    &
                   ' beg pft     = ',clumps(cid)%begp, &
                   ' end pft     = ',clumps(cid)%endp, &
@@ -1040,12 +1026,12 @@ contains
           end do
        end if
 #ifndef UNICOSMP
-       call shr_sys_flush(6)
+       call shr_sys_flush(iulog)
 #endif
        call mpi_barrier(mpicom,ier)
     end do
 #ifndef UNICOSMP
-    call shr_sys_flush(6)
+    call shr_sys_flush(iulog)
 #endif
 
   end subroutine decompInit_glcp

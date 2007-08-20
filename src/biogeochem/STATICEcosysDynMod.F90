@@ -16,6 +16,7 @@ module STATICEcosysdynMOD
   use shr_kind_mod,    only : r8 => shr_kind_r8
   use abortutils,      only : endrun
   use clm_varctl,      only : scmlat,scmlon,single_column
+  use clm_varctl,      only : iulog
   use spmdGathScatMod, only : scatter_data_from_master
 !
 ! !PUBLIC TYPES:
@@ -82,7 +83,7 @@ contains
               mhvt2t(begp:endp,2), &
               mhvb2t(begp:endp,2), stat=ier)
     if (ier /= 0) then
-       write (6,*) 'EcosystemDynini allocation error'
+       write(iulog,*) 'EcosystemDynini allocation error'
        call endrun
     end if
 
@@ -364,7 +365,7 @@ contains
              mhgtb(begg:endg,0:numpft), stat=ier)
 
     if (ier /= 0) then
-       write(6,*)subname, 'allocation big error '; call endrun()
+       write(iulog,*)subname, 'allocation big error '; call endrun()
     end if
 
     ! ----------------------------------------------------------------------
@@ -376,8 +377,8 @@ contains
 
        if (masterproc) then
 
-          write (6,*) 'Attempting to read monthly vegetation data .....'
-          write (6,*) 'nstep = ',get_nstep(),' month = ',kmo,' day = ',kda
+          write(iulog,*) 'Attempting to read monthly vegetation data .....'
+          write(iulog,*) 'nstep = ',get_nstep(),' month = ',kmo,' day = ',kda
 
           call getfil(fveg, locfn, 0)
           call check_ret(nf_open(locfn, 0, ncid), subname)
@@ -386,7 +387,7 @@ contains
           call check_ret(nf_inq_dimlen(ncid, dimid, nlon_i), subname)
           if (.not.single_column) then
              if (nlon_i /= lsmlon) then
-                write(6,*)subname,' parameter lsmlon= ',lsmlon,'does not equal input nlat_i= ',nlon_i
+                write(iulog,*)subname,' parameter lsmlon= ',lsmlon,'does not equal input nlat_i= ',nlon_i
                 call endrun()
              end if
           endif
@@ -395,7 +396,7 @@ contains
 
           if (.not.single_column ) then
              if (nlat_i /= lsmlat) then
-                write(6,*)subname,' parameter lsmlat= ',lsmlat,'does not equal input nlat_i= ',nlat_i
+                write(iulog,*)subname,' parameter lsmlat= ',lsmlat,'does not equal input nlat_i= ',nlat_i
                 call endrun()
              end if
           endif
@@ -404,7 +405,7 @@ contains
 
           if (.not. single_column ) then
              if (npft_i /= numpft+1) then
-                write(6,*)subname,' parameter numpft+1 = ',numpft+1,'does not equal input npft_i= ',npft_i
+                write(iulog,*)subname,' parameter numpft+1 = ',numpft+1,'does not equal input npft_i= ',npft_i
                 call endrun()
              end if
           endif
@@ -430,7 +431,7 @@ contains
 
        allocate(arrayl(begg:endg),stat=ier)
        if (ier /= 0) then
-          write(6,*)subname, 'allocation array error '; call endrun()
+          write(iulog,*)subname, 'allocation array error '; call endrun()
        end if
 
        do n = nps,npe
@@ -464,9 +465,9 @@ contains
 
        if (masterproc) then
           call check_ret(nf_close(ncid), subname)
-          write (6,*) 'Successfully read monthly vegetation data for'
-          write (6,*) 'month ', months(k)
-          write (6,*)
+          write(iulog,*) 'Successfully read monthly vegetation data for'
+          write(iulog,*) 'month ', months(k)
+          write(iulog,*)
        end if
 
 

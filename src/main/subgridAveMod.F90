@@ -15,6 +15,7 @@ module subgridAveMod
   use shr_kind_mod, only: r8 => shr_kind_r8
   use clmtype
   use clm_varcon, only : spval
+  use clm_varctl, only : iulog
   use abortutils, only : endrun
 
 ! !PUBLIC TYPES:
@@ -113,7 +114,7 @@ contains
           scale_p2c(p) = 1.0_r8
        end do
     else
-       write(6,*)'p2c_1d error: scale type ',p2c_scale_type,' not supported'
+       write(iulog,*)'p2c_1d error: scale type ',p2c_scale_type,' not supported'
        call endrun()
     end if
 
@@ -173,7 +174,7 @@ contains
        end if
     end do
     if (found) then
-       write(6,*)'p2c error: sumwt is greater than 1.0 at c= ',index
+       write(iulog,*)'p2c error: sumwt is greater than 1.0 at c= ',index
        call endrun()
     end if
 
@@ -229,7 +230,7 @@ contains
           scale_p2c(p) = 1.0_r8
        end do
     else
-       write(6,*)'p2c_2d error: scale type ',p2c_scale_type,' not supported'
+       write(iulog,*)'p2c_2d error: scale type ',p2c_scale_type,' not supported'
        call endrun()
     end if
 
@@ -290,7 +291,7 @@ contains
           end if
        end do
        if (found) then
-          write(6,*)'p2c_2d error: sumwt is greater than 1.0 at c= ',index,' lev= ',j
+          write(iulog,*)'p2c_2d error: sumwt is greater than 1.0 at c= ',index,' lev= ',j
           call endrun()
        end if
     end do 
@@ -498,7 +499,7 @@ contains
           scale_c2l(c) = 1.0_r8
        end do
     else
-       write(6,*)'p2l_1d error: scale type ',c2l_scale_type,' not supported'
+       write(iulog,*)'p2l_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
     if (p2c_scale_type == 'unity') then
@@ -506,7 +507,7 @@ contains
           scale_p2c(p) = 1.0_r8
        end do
     else
-       write(6,*)'p2l_1d error: scale type ',p2c_scale_type,' not supported'
+       write(iulog,*)'p2l_1d error: scale type ',p2c_scale_type,' not supported'
        call endrun()
     end if
 
@@ -568,7 +569,7 @@ contains
        end if
     end do
     if (found) then
-       write(6,*)'p2l_1d error: sumwt is greater than 1.0 at l= ',index
+       write(iulog,*)'p2l_1d error: sumwt is greater than 1.0 at l= ',index
        call endrun()
     end if
 
@@ -630,7 +631,7 @@ contains
           scale_c2l(c) = 1.0_r8
        end do
     else
-       write(6,*)'p2l_2d error: scale type ',c2l_scale_type,' not supported'
+       write(iulog,*)'p2l_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
     if (p2c_scale_type == 'unity') then
@@ -638,7 +639,7 @@ contains
           scale_p2c(p) = 1.0_r8
        end do
     else
-       write(6,*)'p2l_2d error: scale type ',p2c_scale_type,' not supported'
+       write(iulog,*)'p2l_2d error: scale type ',p2c_scale_type,' not supported'
        call endrun()
     end if
 
@@ -701,7 +702,7 @@ contains
           end if
        end do
        if (found) then
-          write(6,*)'p2l_2d error: sumwt is greater than 1.0 at l= ',index,' j= ',j
+          write(iulog,*)'p2l_2d error: sumwt is greater than 1.0 at l= ',index,' j= ',j
           call endrun()
        end if
     end do
@@ -767,7 +768,7 @@ contains
           scale_l2g(l) = 1.0_r8
        end do
     else
-       write(6,*)'p2g_1d error: scale type ',l2g_scale_type,' not supported'
+       write(iulog,*)'p2g_1d error: scale type ',l2g_scale_type,' not supported'
        call endrun()
     end if
     if (c2l_scale_type == 'unity') then
@@ -775,7 +776,7 @@ contains
           scale_c2l(c) = 1.0_r8
        end do
     else
-       write(6,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
+       write(iulog,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
     if (p2c_scale_type == 'unity') then
@@ -783,7 +784,7 @@ contains
           scale_p2c(p) = 1.0_r8
        end do
     else
-       write(6,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
+       write(iulog,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
 
@@ -847,7 +848,7 @@ contains
        end if
     end do
     if (found) then
-       write(6,*)'p2g_1d error: sumwt is greater than 1.0 at g= ',index
+       write(iulog,*)'p2g_1d error: sumwt is greater than 1.0 at g= ',index
        call endrun()
     end if
 
@@ -914,7 +915,7 @@ contains
           scale_l2g(l) = 1.0_r8
        end do
     else
-       write(6,*)'p2g_2d error: scale type ',l2g_scale_type,' not supported'
+       write(iulog,*)'p2g_2d error: scale type ',l2g_scale_type,' not supported'
        call endrun()
     end if
     if (c2l_scale_type == 'unity') then
@@ -922,7 +923,7 @@ contains
           scale_c2l(c) = 1.0_r8
        end do
     else
-       write(6,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
+       write(iulog,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
     if (p2c_scale_type == 'unity') then
@@ -930,7 +931,7 @@ contains
           scale_p2c(p) = 1.0_r8
        end do
     else
-       write(6,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
+       write(iulog,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
 
@@ -995,7 +996,7 @@ contains
           end if
        end do
        if (found) then
-          write(6,*)'p2g_2d error: sumwt gt 1.0 at g/sumwt = ',index,sumwt(index)
+          write(iulog,*)'p2g_2d error: sumwt gt 1.0 at g/sumwt = ',index,sumwt(index)
           call endrun()
        end if
     end do
@@ -1049,7 +1050,7 @@ contains
           scale_c2l(c) = 1.0_r8
        end do
     else
-       write(6,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
+       write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
 
@@ -1113,7 +1114,7 @@ contains
        end if
     end do
     if (found) then
-       write(6,*)'c2l_1d error: sumwt is greater than 1.0 at l= ',index
+       write(iulog,*)'c2l_1d error: sumwt is greater than 1.0 at l= ',index
        call endrun()
     end if
 
@@ -1167,7 +1168,7 @@ contains
           scale_c2l(c) = 1.0_r8
        end do
     else
-       write(6,*)'c2l_2d error: scale type ',c2l_scale_type,' not supported'
+       write(iulog,*)'c2l_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
 
@@ -1235,7 +1236,7 @@ contains
           end if
        end do
        if (found) then
-          write(6,*)'c2l_2d error: sumwt is greater than 1.0 at l= ',index,' lev= ',j
+          write(iulog,*)'c2l_2d error: sumwt is greater than 1.0 at l= ',index,' lev= ',j
           call endrun()
        end if
     end do
@@ -1295,7 +1296,7 @@ contains
           scale_l2g(l) = 1.0_r8
        end do
     else
-       write(6,*)'c2l_1d error: scale type ',l2g_scale_type,' not supported'
+       write(iulog,*)'c2l_1d error: scale type ',l2g_scale_type,' not supported'
        call endrun()
     end if
     if (c2l_scale_type == 'unity') then
@@ -1303,7 +1304,7 @@ contains
           scale_c2l(c) = 1.0_r8
        end do
     else
-       write(6,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
+       write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
 
@@ -1369,7 +1370,7 @@ contains
        end if
     end do
     if (found) then
-       write(6,*)'c2g_1d error: sumwt is greater than 1.0 at g= ',index
+       write(iulog,*)'c2g_1d error: sumwt is greater than 1.0 at g= ',index
        call endrun()
     end if
 
@@ -1429,7 +1430,7 @@ contains
           scale_l2g(l) = 1.0_r8
        end do
     else
-       write(6,*)'c2g_2d error: scale type ',l2g_scale_type,' not supported'
+       write(iulog,*)'c2g_2d error: scale type ',l2g_scale_type,' not supported'
        call endrun()
     end if
     if (c2l_scale_type == 'unity') then
@@ -1437,7 +1438,7 @@ contains
           scale_c2l(c) = 1.0_r8
        end do
     else
-       write(6,*)'c2g_2d error: scale type ',c2l_scale_type,' not supported'
+       write(iulog,*)'c2g_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
 
@@ -1507,7 +1508,7 @@ contains
           end if
        end do
        if (found) then
-          write(6,*)'c2g_2d error: sumwt is greater than 1.0 at g= ',index
+          write(iulog,*)'c2g_2d error: sumwt is greater than 1.0 at g= ',index
           call endrun()
        end if
     end do
@@ -1561,7 +1562,7 @@ contains
           scale_l2g(l) = 1.0_r8
        end do
     else
-       write(6,*)'l2g_1d error: scale type ',l2g_scale_type,' not supported'
+       write(iulog,*)'l2g_1d error: scale type ',l2g_scale_type,' not supported'
        call endrun()
     end if
 
@@ -1625,7 +1626,7 @@ contains
        end if
     end do
     if (found) then
-       write(6,*)'l2g_1d error: sumwt is greater than 1.0 at g= ',index
+       write(iulog,*)'l2g_1d error: sumwt is greater than 1.0 at g= ',index
        call endrun()
     end if
 
@@ -1679,7 +1680,7 @@ contains
           scale_l2g(l) = 1.0_r8
        end do
     else
-       write(6,*)'l2g_2d error: scale type ',l2g_scale_type,' not supported'
+       write(iulog,*)'l2g_2d error: scale type ',l2g_scale_type,' not supported'
        call endrun()
     end if
 
@@ -1747,7 +1748,7 @@ contains
           end if
        end do
        if (found) then
-          write(6,*)'l2g_2d error: sumwt is greater than 1.0 at g= ',index,' lev= ',j
+          write(iulog,*)'l2g_2d error: sumwt is greater than 1.0 at g= ',index,' lev= ',j
           call endrun()
        end if
     end do

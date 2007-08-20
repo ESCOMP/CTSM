@@ -25,6 +25,7 @@ contains
     use clmtype
     use clm_varpar   , only : nlevsoi, nlevsno, nlevlak
     use clm_varcon   , only : bdsno, istice, istwet, istsoil, denice, denh2o, spval, sb
+    use clm_varctl   , only : iulog
     use spmdMod      , only : masterproc
     use decompMod    , only : get_proc_bounds
 !
@@ -85,7 +86,7 @@ contains
     real(r8):: vwc,psi      ! for calculating soilpsi
 !-----------------------------------------------------------------------
 
-    if ( masterproc ) write (6,*) 'Setting initial data to non-spun up values'
+    if ( masterproc ) write(iulog,*) 'Setting initial data to non-spun up values'
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 

@@ -10,6 +10,9 @@ module abortutils
 ! !DESCRIPTION:
 ! Abort the model for abnormal termination
 !
+! !USES:
+  use clm_varctl, only : iulog
+!
 ! !REVISION HISTORY:
 ! Author: CCM Core group
 !
@@ -50,9 +53,9 @@ CONTAINS
 !-----------------------------------------------------------------------
 
    if (present (msg)) then
-      write(6,*)'ENDRUN:', msg
+      write(iulog,*)'ENDRUN:', msg
    else
-      write(6,*)'ENDRUN: called without a message string'
+      write(iulog,*)'ENDRUN: called without a message string'
    end if
 
 #if defined(NEC_SX)
@@ -63,7 +66,7 @@ CONTAINS
 #endif
 
 #ifndef UNICOSMP
-   call shr_sys_flush( 6 )   ! Flush all output to standard output
+   call shr_sys_flush(iulog)   ! Flush all output to standard output
 #endif
 
    ! passing an argument of 1 to mpi_abort will lead to a STOPALL output

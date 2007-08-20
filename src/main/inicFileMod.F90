@@ -15,6 +15,7 @@ module inicFileMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
+  use clm_varctl     , only : iulog
   use ncdio
 
 ! !PUBLIC TYPES:
@@ -99,9 +100,9 @@ contains
        if (.not. opened_finidat) then
           call getfil(finidat, loc_fni, 0)
           call check_ret(nf_open(loc_fni, nf_nowrite, ncid), subname)
-	  write(6,*)trim(subname),': opened netcdf file ',loc_fni
+	  write(iulog,*)trim(subname),': opened netcdf file ',loc_fni
 #ifndef UNICOSMP
-	  call shr_sys_flush(6)
+	  call shr_sys_flush(iulog)
 #endif
           call check_dim(ncid, 'gridcell', numg)
           call check_dim(ncid, 'landunit', numl)
