@@ -11,7 +11,7 @@
        are: RESOLUTION, defaults, mask, ic_ymd, ic_tod, sim_year and all configuration
        attributes from the config_cache.xml file (with keys converted to upper-case).
 
-       $Id$
+       $Id: DefaultCLM_INPARM_Namelist.xml 6088 2007-08-18 03:35:37Z erik $
 -->
 <clm_inparm>
 
@@ -20,11 +20,6 @@
 
 <!-- Default time step -->
 <dtime      >1800</dtime>
-
-<!-- Model Version -->
-<version>
-$HeadURL$
-</version>
 
 <!-- CO2 volume mixing ratio -->
 <co2_ppmv BGC="none" >355.0</co2_ppmv>
@@ -55,7 +50,7 @@ $HeadURL$
 </finidat>
 <finidat RESOLUTION="1.9x2.5"   mask="gx1v4" BGC="none" ic_ymd=     "901" ic_tod="0">lnd/clm2/inidata_3.1/cam/clmi_0000-09-01_1.9x2.5_gx1v4_c070309.nc
 </finidat>
-<finidat RESOLUTION="1x1.25"    mask="gx1v5" BGC="none" ic_ymd=     "101" ic_tod="0">lnd/clm2/inidata_3.1/ccsm/clmi_0000-01-01_1x1.25_gx1v5_c070612.nc
+<finidat RESOLUTION="1x1.25"    mask="gx1v5" BGC="none" ic_ymd="19980101" ic_tod="0">lnd/clm2/inidata_3.1/ccsm/clmi_1998-01-01_1x1.25_gx1v5_c070615.nc
 </finidat>
 <finidat RESOLUTION="64x128"    mask="USGS"  BGC="none" ic_ymd=     "101" ic_tod="0">lnd/clm2/inidata_3.1/offline/clmi_0000-01-01_064x128_c070403.nc
 </finidat>

@@ -1,4 +1,54 @@
 ===============================================================
+Tag name:  clm3_5_09
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Fri Aug 31 13:58:46 MDT 2007
+Date:One-line Summary: Change configure to NOT have csm_share code for ccsm_con option, and add in 1x1.25 file, and update datm7 and csm_share
+
+Purpose of changes: Fix for ccsm3_5_beta12 tag
+
+Bugs fixed (include bugzilla ID):  581, 583
+
+Known bugs (include bugzilla ID): 251, 449, 482, 512, 546
+
+Describe any changes made to build system: Change configure so csm_share NOT included in Filepath for ccsm_con option
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: 
+
+	1x1.25 finidat dataset now uses version used in CCSM simulations
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, jwolfe (configure change)
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+	drvseq1_0_43
+        csm_share3_070824
+        datm7_070824
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M      bld/configure ------------------------ Change ccsm_con mode to NOT include csm_share in Filepath
+                                              (from Jon Wolfe)
+MM     bld/DefaultCLM_INPARM_Namelist.xml  -- new 1x1.25 finidat file
+
+Summary of testing:
+
+  bluevista: Tests all pass (up to test 46)
+  bangkok/lf95: None
+
+CLM tag used for the baseline comparison tests if applicable: clm3_5_08
+
+Changes answers relative to baseline: None
+
+===============================================================
+===============================================================
 Tag name: clm3_5_08
 Originator(s): tcraig
 Date: Mon Aug 20 20:04:47 MDT 2007

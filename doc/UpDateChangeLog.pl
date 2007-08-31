@@ -77,7 +77,9 @@ if ( $EDITOR !~ "" ) {
 
 my $template      = ".ChangeLog_template";
 my $changelog     = "ChangeLog";
+my $changesum     = "ChangeSum";
 my $changelog_tmp = "ChangeLog.tmp";
+my $changesum_tmp = "ChangeSum.tmp";
 
 my $user = $ENV{USER};
 if ( $user !~ /.+/ )  {
@@ -92,6 +94,9 @@ if ( $date !~ /.+/ )  {
   die "ERROR: Could not get date: $date\n";
 }
 
+#
+# Deal with ChangeLog file
+#
 open( FH, ">$changelog_tmp" ) || die "ERROR:: trouble opening file: $changelog_tmp";
 
 #
@@ -146,6 +151,45 @@ while( $_ = <CL> ) {
 close( CL );
 close( FH );
 system( "/bin/mv $changelog_tmp $changelog" );
+#
+# Deal with ChangeSum file
+#
+
+open( FH, ">$changesum_tmp" ) || die "ERROR:: trouble opening file: $changesum_tmp";
+
+open( CS, "<$changesum"     ) || die "ERROR:: trouble opening file: $changesum";
+
+my $update = $opts{'update'};
+
+$date = `date "+%m/%d/%Y"`;
+chomp( $date );
+
+while( $_ = <CS> ) {
+  # Find header line
+  if ( $_ =~ /=====================/ ) {
+     print FH $_;
+     if ( ! $update ) {
+        printf FH "%12.12s %12.12s %10.10s %s\n", $tag, $user, $date, $sum;
+        $_ = <CS>;
+     } else {
+       $_ = <CS>;
+       if ( /^([^ ]+)([ ]+)([^ ]+)([ ]+)([^ ]+)(.+)$/ ) {
+          print FH "${1}${2}${3}${date}${5}${6}\n";
+       }
+       $update = undef;
+     }
+  }
+  print FH $_;
+}
+# Close files and move to final name
+close( CS );
+close( FH );
+system( "/bin/mv $changesum_tmp $changesum" );
+
+#
+# Edit the ChangeLog file
+#
 if ( ! $opts{'update'} ) {
   system( "$EDITOR $changelog" );
+  system( "$EDITOR $changesum" );
 }

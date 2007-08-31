@@ -174,21 +174,6 @@ done a simple work-around to solve this problem, making crop(:) a parameter,
 and thus initializing it at compile-time.
 
 ====================================================================================
-Bug Number: 448
-Problem compiling on Darwin with XLF compilers:
-
-There's a problem running the Dependency generator on Darwin OS X 10.4.9 using
-XLF compilers.
-This is with cam and clm for clm3_expa_98 and as of cam3.4.10.
-
-The file assert.H is mistakenly matched from mct/mpeu so that there is an
-explcit dependence on assert.h for gptl.c.
-
-You can get around this problem by editing Depends by hand and removing that
-dependence. Or you can modify mkDepends to explicitly remove this file when
-creating Depends.
-
-====================================================================================
 Bug Number: 402
 Leap-year calendar does NOT work:
 
@@ -196,13 +181,6 @@ If you try to turn on a GREGORIAN calander in your namelist -- it will NOT
 work. You can get around this by modifying code to turn off the NO_LEAP_CALENDAR
 or by linking with the full version of ESMF rather than the wrf time-manager
 implimentation.
-
-====================================================================================
-Bug number: 421
-newcprnc can NOT be used to compare restart or initial-condition (IC) files:
-
-Because restart and IC files do NOT contain a time-dimension the utility
-newcprnc can NOT be used to compare them.
 
 ====================================================================================
 Bug number: 447

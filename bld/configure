@@ -246,6 +246,7 @@ if ($print>=2) { print "Setting CLM configuration script directory to $cfgdir$eo
 # Add $cfgdir to the list of paths that Perl searches for modules
 unshift @INC, $cfgdir, "$cfgdir/perl5lib";
 require XML::Lite;
+require Build::Config;
 
 # Can read defaults files now that we know where to find XML::Lite
 %bld_defaults = read_cfg_file( "$cfgdir/$bld_defaults" );
@@ -1367,14 +1368,8 @@ sub write_filepath_ccsm
     print $fh "\$CODEROOT/utils/timing\n";
 
 # User specified source code
-    print $fh "\$CASEROOT/SourceMods/src.share\n";
     print $fh "\$CASEROOT/SourceMods/src.clm\n";
 
-# Share code
-    print $fh "\$SHAREROOT/shr\n";
-    print $fh "\$SHAREROOT/eshr\n";
-    print $fh "\$SHAREROOT/cpl\n";
-    print $fh "\$CODEROOT/utils/esmf_wrf_timemgr\n";
 # CLM
     print $fh "\$CODEROOT/lnd/clm2/src/main\n";
     print $fh "\$CODEROOT/lnd/clm2/src/biogeophys\n";
