@@ -16,6 +16,7 @@ module STATICEcosysdynMOD
   use shr_kind_mod,    only : r8 => shr_kind_r8
   use abortutils,      only : endrun
   use clm_varctl,      only : scmlat,scmlon,single_column
+  use shr_scam_mod,    only : shr_scam_GetCloseLatLon
   use clm_varctl,      only : iulog
   use spmdGathScatMod, only : scatter_data_from_master
 !
@@ -426,7 +427,7 @@ contains
        call mpi_bcast (ntim  , 1, MPI_INTEGER, 0, mpicom, ier)
 
        if (single_column) then
-          call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+          call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
        endif
 
        allocate(arrayl(begg:endg),stat=ier)

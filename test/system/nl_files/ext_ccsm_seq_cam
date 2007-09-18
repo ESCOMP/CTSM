@@ -1,12 +1,9 @@
 &camexp
- restart_pfile='./rpointer.drv'
  restart_option='nsteps'
  restart_n=3
  mfilt=1,1,1,1,1,1
- mss_irt=0
  ndens=1,1,1,1,1,1
  nhtfrq=3,3,3,3,3,3
- rest_pfile='./rpointer.cam'
  start_tod=82800
  start_ymd=1231
  /

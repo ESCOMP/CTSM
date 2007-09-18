@@ -3,7 +3,6 @@
  start_ymd = 901
  NDENS    = 1,1,1,1,1,1
  MFILT    = 1,7,1,1,1,1
- mss_irt=0
  nhtfrq   = 1,1,1,1,1,1
  fincl2='TDIFF','QDIFF','LANDFRAC'
  scmlon= 140.

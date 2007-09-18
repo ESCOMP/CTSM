@@ -23,7 +23,8 @@ module ncdio
   use clm_varcon     , only : spval,ispval
   use shr_sys_mod    , only : shr_sys_flush
   use abortutils     , only : endrun
-  use clm_varctl     , only : single_column
+  use clm_varctl     , only : single_column,scmlat,scmlon,scmcloselon,scmcloselat, &
+			      scmcloselonidx,scmcloselatidx
   use clm_varctl     , only : iulog
   use clm_mct_mod
   use spmdGathScatMod
@@ -2098,6 +2099,7 @@ contains
     integer           :: rcode      ! local return code
     integer           :: ier        ! error code
     integer :: data_offset              ! offset to single grid point for column model
+    integer :: ndims
     integer :: ndata                    ! count of pft's or columns to read
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_iolocal_gs_int1d' ! subroutine name
@@ -2137,7 +2139,24 @@ contains
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
             if (single_column) then
-               call scam_field_offsets(ncid,clmlevel,lstart,lcount)
+               lcount(1) = 1
+               lcount(2) = 1
+               if (clmlevel=='column'.or.clmlevel=='pft') then
+                  call check_ret(nf_inq_varndims(ncid, varid, ndims),subname)
+                  if (ndims.gt.2) then
+                     write(6,*) subname,' error: unsupported number of dimensions for variable ',varname
+                     call endrun()
+                  endif
+
+                  if (ndims.eq.2) then
+                     call scam_field_offsets(ncid,clmlevel,lstart(2),lcount(2))
+                  else
+                     call scam_field_offsets(ncid,clmlevel,lstart(1),lcount(1))
+                  endif
+               else
+                  lstart(1) = scmcloselonidx
+                  lstart(2) = scmcloselatidx
+               endif
                call check_ret(nf_get_vara_int(ncid, varid, lstart, lcount, arrayg), subname)
             else
                if (present(start).and.present(count)) then
@@ -2330,7 +2349,22 @@ contains
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
             if (single_column) then
-               call scam_field_offsets(ncid,clmlevel,lstart,lcount)
+               if (clmlevel=='column'.or.clmlevel=='pft') then
+                  call check_ret(nf_inq_varndims(ncid, varid, ndims),subname)
+                  if (ndims.gt.2) then
+                     write(6,*) subname,' error: unsupported number of dimensions for variable ',varname
+                     call endrun()
+                  endif
+
+                  if (ndims.eq.2) then
+                  call scam_field_offsets(ncid,clmlevel,lstart(2),lcount(2))
+                  else
+                  call scam_field_offsets(ncid,clmlevel,lstart(1),lcount(1))
+                  endif
+               else
+                  lstart(1) = scmcloselonidx
+                  lstart(2) = scmcloselatidx
+               endif
                call check_ret(nf_get_vara_int(ncid, varid, lstart, lcount, arrayg), subname)
             else
                if (present(start).and.present(count)) then
@@ -2711,6 +2745,7 @@ contains
     integer           :: ier        ! error code
     integer :: data_offset              ! offset to single grid point for column model
     integer :: ndata                    ! count of pft's or columns to read
+    integer :: ndims                   ! count of pft's or columns to read
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_iolocal_gs_real1d' ! subroutine name
 !-----------------------------------------------------------------------
@@ -2749,7 +2784,21 @@ contains
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
             if (single_column) then
-               call scam_field_offsets(ncid,clmlevel,lstart,lcount)
+               if (clmlevel=='column'.or.clmlevel=='pft') then
+                  call check_ret(nf_inq_varndims(ncid, varid, ndims),subname)
+                  if (ndims.gt.2) then
+                     write(6,*) subname,' error: unsupported number of dimensions for variable ',varname
+                     call endrun()
+                  endif
+                  if (ndims.eq.2) then
+                  call scam_field_offsets(ncid,clmlevel,lstart(2),lcount(2))
+                  else
+                  call scam_field_offsets(ncid,clmlevel,lstart(1),lcount(1))
+                  endif
+               else
+                  lstart(1) = scmcloselonidx
+                  lstart(2) = scmcloselatidx
+               endif
                call check_ret(nf_get_vara_double(ncid, varid, lstart, lcount, arrayg), subname)
             else
                if (present(start).and.present(count)) then
@@ -2942,7 +2991,22 @@ contains
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
             if (single_column) then
-               call scam_field_offsets(ncid,clmlevel,lstart,lcount)
+               if (clmlevel=='column'.or.clmlevel=='pft') then
+                  call check_ret(nf_inq_varndims(ncid, varid, ndims),subname)
+                  if (ndims.gt.2) then
+                     write(6,*) subname,' error: unsupported number of dimensions for variable ',varname
+                     call endrun()
+                  endif
+
+                  if (ndims.eq.2) then
+                  call scam_field_offsets(ncid,clmlevel,lstart(2),lcount(2))
+                  else
+                  call scam_field_offsets(ncid,clmlevel,lstart(1),lcount(1))
+                  endif
+               else
+                  lstart(1) = scmcloselonidx
+                  lstart(2) = scmcloselatidx
+               endif
                call check_ret(nf_get_vara_double(ncid, varid, lstart, lcount, arrayg), subname)
             else
                if (present(start).and.present(count)) then
@@ -3121,7 +3185,10 @@ contains
           call ncd_inqvid(ncid, varname, varid, subname, readvar=varpresent, usepio=lusepio)
           if (varpresent) then
              if (single_column) then
-                call scam_field_offsets(ncid,'undefined',start,count)
+                start(1) = scmcloselonidx
+                count(1) = 1
+                start(2) = scmcloselatidx
+                count(2) = 1
                 if (lusepio) then
 #if (defined BUILDPIO)
 !                   call check_ret_pio(PIO_get_var(ncid, varid, start, count, piodata), subname)
@@ -3291,7 +3358,10 @@ contains
           call ncd_inqvid(ncid, varname, varid, subname, readvar=varpresent, usepio=lusepio)
           if (varpresent) then
              if (single_column) then
-                call scam_field_offsets(ncid,'undefined',start,count)
+                start(1) = scmcloselonidx
+                count(1) = 1
+                start(2) = scmcloselatidx
+                count(2) = 1
                 if (lusepio) then
 #if (defined BUILDPIO)
 !                   call check_ret_pio(PIO_get_var(ncid, varid, start, count, piodata), subname)
@@ -3461,7 +3531,10 @@ contains
           call ncd_inqvid(ncid, varname, varid, subname, readvar=varpresent, usepio=lusepio)
           if (varpresent) then
              if (single_column) then
-                call scam_field_offsets(ncid,'undefined',start,count)
+                start(1) = scmcloselonidx
+                count(1) = 1
+                start(2) = scmcloselatidx
+                count(2) = 1
                 if (lusepio) then
 #if (defined BUILDPIO)
 !                   call check_ret_pio(PIO_get_var(ncid, varid, start, count, piodata), subname)
@@ -3631,7 +3704,10 @@ contains
           call ncd_inqvid(ncid, varname, varid, subname, readvar=varpresent, usepio=lusepio)
           if (varpresent) then
              if (single_column) then
-                call scam_field_offsets(ncid,'undefined',start,count)
+                start(1) = scmcloselonidx
+                count(1) = 1
+                start(2) = scmcloselatidx
+                count(2) = 1
                 if (lusepio) then
 #if (defined BUILDPIO)
 !                   call check_ret_pio(PIO_get_var(ncid, varid, start, count, piodata), subname)
@@ -3803,7 +3879,10 @@ contains
           call ncd_inqvid(ncid, varname, varid, subname, readvar=varpresent, usepio=lusepio)
           if (varpresent) then
              if (single_column) then
-                call scam_field_offsets(ncid,'undefined',start,count)
+                start(1) = scmcloselonidx
+                count(1) = 1
+                start(2) = scmcloselatidx
+                count(2) = 1
                 if (lusepio) then
 #if (defined BUILDPIO)
 !                   call check_ret_pio(PIO_get_var(ncid, varid, start, count, piodata), subname)
@@ -3979,7 +4058,10 @@ contains
           call ncd_inqvid(ncid, varname, varid, subname, readvar=varpresent, usepio=lusepio)
           if (varpresent) then
              if (single_column) then
-                call scam_field_offsets(ncid,'undefined',start,count)
+                start(1) = scmcloselonidx
+                count(1) = 1
+                start(2) = scmcloselatidx
+                count(2) = 1
                 if (lusepio) then
 #if (defined BUILDPIO)
 !                   call check_ret_pio(PIO_get_var(ncid, varid, start, count, piodata), subname)
@@ -4155,7 +4237,10 @@ contains
           call ncd_inqvid(ncid, varname, varid, subname, readvar=varpresent, usepio=lusepio)
           if (varpresent) then
              if (single_column) then
-                call scam_field_offsets(ncid,'undefined',start,count)
+                start(1) = scmcloselonidx
+                count(1) = 1
+                start(2) = scmcloselatidx
+                count(2) = 1
                 if (lusepio) then
 #if (defined BUILDPIO)
 !                   call check_ret_pio(PIO_get_var(ncid, varid, start, count, piodata), subname)
@@ -4333,7 +4418,10 @@ contains
           call ncd_inqvid(ncid, varname, varid, subname, readvar=varpresent, usepio=lusepio)
           if (varpresent) then
              if (single_column) then
-                call scam_field_offsets(ncid,'undefined',start,count)
+                start(1) = scmcloselonidx
+                count(1) = 1
+                start(2) = scmcloselatidx
+                count(2) = 1
                 if (lusepio) then
 #if (defined BUILDPIO)
 !                   call check_ret_pio(PIO_get_var(ncid, varid, start, count, piodata), subname)
@@ -4511,7 +4599,10 @@ contains
           call ncd_inqvid(ncid, varname, varid, subname, readvar=varpresent, usepio=lusepio)
           if (varpresent) then
              if (single_column) then
-                call scam_field_offsets(ncid,'undefined',start,count)
+                start(1) = scmcloselonidx
+                count(1) = 1
+                start(2) = scmcloselatidx
+                count(2) = 1
                 if (lusepio) then
 #if (defined BUILDPIO)
 !                   call check_ret_pio(PIO_get_var(ncid, varid, start, count, piodata), subname)
@@ -4710,24 +4801,26 @@ contains
 ! !IROUTINE: subroutine scam_field_offsets
 !
 ! !INTERFACE:
-  subroutine scam_field_offsets(ncid,dim1name,start,count)
+subroutine scam_field_offsets(ncid,dim1name,data_offset, ndata)
 !
 ! !DESCRIPTION: 
 ! Read/Write initial data from/to netCDF instantaneous initial data file 
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use decompMod   , only : get_proc_bounds
-    use clm_varpar  , only : maxpatch
-    use nanMod      , only : nan
-    use clm_varctl  , only : scmlon,scmlat,single_column
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use decompMod   , only : get_proc_bounds
+  use clm_varpar  , only : maxpatch
+  use nanMod      , only : nan
+  use clm_varctl  , only : scmlon,scmlat,single_column
 !
 ! !ARGUMENTS:
-    implicit none
-    character(len=*), intent(in) :: dim1name ! dimension 1 name
-    integer, intent(in)    :: ncid             ! netCDF dataset id
-    integer, intent(inout) :: start(:)
-    integer, intent(inout) :: count(:)
+  implicit none
+  character(len=*), intent(in) :: dim1name ! dimension 1 name
+  integer, intent(in)  :: ncid             ! netCDF dataset id
+  integer, intent(out) :: data_offset      ! offset into land array 
+! 1st column 
+  integer, intent(out) :: ndata            ! number of column (or 
+! pft points to read)
 !
 ! !CALLED FROM: subroutine inicfields
 !
@@ -4737,188 +4830,101 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: data_offset      ! offset into land array 1st column 
-    integer :: ndata            ! number of column (or pft points to read)
-    real(r8) , pointer :: cols1dlon(:)       ! holds cols1d_ixy var
-    real(r8) , pointer :: cols1dlat(:)       ! holds cols1d_jxy var
-    real(r8) , pointer :: pfts1dlon(:)       ! holds pfts1d_ixy var
-    real(r8) , pointer :: pfts1dlat(:)       ! holds pfts1d_jxy var
-    integer cols(maxpatch)                   ! grid cell columns for scam
-    integer pfts(maxpatch)                   ! grid cell pfts for scam
-    integer :: cc,i                          ! index variable
-    integer :: totpfts                       ! total number of pfts
-    integer :: totcols                       ! total number of columns
-    integer, save :: col_offset              ! offset into land array of 
-                                             ! starting column
-    integer, save :: pi_offset               ! offset into land array of 
-                                             ! starting pft needed for scam
-    integer :: dimid                         ! netCDF dimension id
-    integer :: varid                         ! netCDF variable id
-    integer, save :: begp, endp              ! per-proc beg/end pft indices
-    integer, save :: begc, endc              ! per-proc beg/end col indices 
-    integer, save :: begl, endl              ! per-proc beg/end land indices
-    integer, save :: begg, endg              ! per-proc beg/end gridcell ind
-    logical, save :: firsttime = .true.      ! determine offsets once.
-    integer latidx,lonidx,ret
-    real(r8) closelat,closelon
-    character(len=32) :: subname = 'scam_field_offsets'
+  real(r8) , pointer :: cols1dlon(:)       ! holds cols1d_ixy var
+  real(r8) , pointer :: cols1dlat(:)       ! holds cols1d_jxy var
+  real(r8) , pointer :: pfts1dlon(:)       ! holds pfts1d_ixy var
+  real(r8) , pointer :: pfts1dlat(:)       ! holds pfts1d_jxy var
+  integer cols(maxpatch)                   ! grid cell columns for scam
+  integer pfts(maxpatch)                   ! grid cell pfts for scam
+  integer :: cc,i                          ! index variable
+  integer :: totpfts                       ! total number of pfts
+  integer :: totcols                       ! total number of columns
+  ! starting pft needed for scam
+  integer :: dimid                         ! netCDF dimension id
+  integer :: varid                         ! netCDF variable id
+  integer, save :: begp, endp              ! per-proc beg/end pft indices
+  integer, save :: begc, endc              ! per-proc beg/end col indices 
+  integer, save :: begl, endl              ! per-proc beg/end land indices
+  integer, save :: begg, endg              ! per-proc beg/end gridcell ind
+  logical, save :: firsttime = .true.      ! determine offsets once.
+  integer latidx,lonidx,ret
+  character(len=*),parameter :: subname='scam_field_offsets' ! subroutine name
 
 !------------------------------------------------------------------------
-    call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
-    start(1) = lonidx
-    count(1) = 1
-    start(2) = latidx
-    count(2) = 1
-    write(iulog,*) trim(subname),' scam_setlatlonidx ',lonidx,latidx
 
-    if ( firsttime) then
-       write(iulog,*) trim(subname),' firsttime=',firsttime
-       call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+! find closest land grid cell for this point
+     
+  if (dim1name.eq.'column') then
 
-       call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-       write(iulog,*) trim(subname),' beg,end=',begg, endg, begl, endl, begc, endc, begp, endp
+     call check_ret(nf_inq_dimid (ncid, 'column', dimid), subname)
+     call check_ret(nf_inq_dimlen (ncid, dimid, totcols), subname)
+     allocate (cols1dlon(totcols))
+     allocate (cols1dlat(totcols))
 
-       ret = nf_inq_dimid (ncid, 'column', dimid)
-       write(iulog,*) trim(subname),' column ret=',ret,nf_noerr
-       if(ret==NF_NOERR) return
-       if (ret/=NF_EBADDIM) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+     call check_ret(nf_inq_varid (ncid, 'cols1d_lon', varid), subname)
+     call check_ret(nf_get_var_double (ncid, varid, cols1dlon), subname)
+     call check_ret(nf_inq_varid (ncid, 'cols1d_lat', varid), subname)
+     call check_ret(nf_get_var_double (ncid, varid, cols1dlat), subname)
 
-       ret = nf_inq_dimlen (ncid, dimid, totcols)
-       if (ret/=NF_NOERR) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+     cols(:)=nan
+     data_offset = nan
+     i=1
+     ndata=0
+     do cc = 1, totcols
+        if (cols1dlon(cc).eq.scmcloselon.and.cols1dlat(cc).eq.scmcloselat) then
+           cols(i)=cc
+           ndata=i
+           i=i+1
+        end if
+     end do
+     if (ndata.eq.0) then
+        write(6,*)'couldnt find any columns for this latitude ',latidx,' and longitude ',lonidx
+        call endrun
+     else
+        data_offset=cols(1)
+     end if
 
-       ret = nf_inq_dimid (ncid, 'pft', dimid)
-       write(iulog,*) trim(subname),' pft ret=',ret,nf_noerr
-       if(ret==NF_NOERR) return
-       if (ret/=NF_EBADDIM) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+     deallocate (cols1dlon)
+     deallocate (cols1dlat)
 
-       ret = nf_inq_dimlen (ncid, dimid, totpfts)
-       if (ret/=NF_NOERR) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
+  else if (dim1name.eq.'pft') then
 
-       write(iulog,*) trim(subname),' totals ',totcols,totpfts
+     call check_ret(nf_inq_dimid (ncid, 'pft', dimid), subname)
+     call check_ret(nf_inq_dimlen (ncid, dimid, totpfts), subname)
+     allocate (pfts1dlon(totpfts))
+     allocate (pfts1dlat(totpfts))
+     call check_ret( nf_inq_varid (ncid, 'pfts1d_lon', varid), subname)
+     call check_ret(nf_get_var_double (ncid, varid, pfts1dlon), subname)
+     call check_ret( nf_inq_varid (ncid, 'pfts1d_lat', varid), subname)
+     call check_ret(nf_get_var_double (ncid, varid, pfts1dlat), subname)
 
-       allocate (pfts1dlon(totpfts))
-       allocate (pfts1dlat(totpfts))
-       
-       ret =  nf_inq_varid (ncid, 'pfts1d_ixy', varid)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'inq_varid: id for pfts1d_ixy not found'
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
+     pfts(:)=nan
+     data_offset = nan
+     i=1
+     ndata=0
+     do cc = 1, totpfts
+        if (pfts1dlon(cc).eq.scmcloselon.and.pfts1dlat(cc).eq.scmcloselat) then
+           pfts(i)=cc
+           ndata=i
+           i=i+1
+        end if
+     end do
+     if (ndata.eq.0) then
+        write(6,*)'couldnt find any pfts for this latitude ',scmcloselat,' and longitude ',scmcloselon
+        call endrun
+     else
+        data_offset=pfts(1)
+     end if
 
-       ret = nf_get_var_double (ncid, varid, pfts1dlon)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'GET_VAR_REALX: error reading pfts1dlon, varid =', varid
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
+     deallocate (pfts1dlon)
+     deallocate (pfts1dlat)
 
-       ret =  nf_inq_varid (ncid, 'pfts1d_jxy', varid)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'inq_varid: id for pfts1d_jxy not found'
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
+  else
 
-       ret = nf_get_var_double (ncid, varid, pfts1dlat)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'GET_VAR_REALX: error reading pfts1dlat, varid =', varid
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
+     write(6,*) trim(subname),' error dont know how to handle dimension of ',dim1name
+     call endrun()
 
-
-       allocate (cols1dlon(totcols))
-       allocate (cols1dlat(totcols))
-
-       ret =  nf_inq_varid (ncid, 'cols1d_ixy', varid)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'inq_varid: id for cols1d_ixy not found'
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-       ret = nf_get_var_double (ncid, varid, cols1dlon)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'GET_VAR_REALX: error reading cols1dlon, varid =', varid
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-       ret =  nf_inq_varid (ncid, 'cols1d_jxy', varid)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'inq_varid: id for cols1d_jxy not found'
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-       ret = nf_get_var_double (ncid, varid, cols1dlat)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'GET_VAR_REALX: error reading cols1dlat, varid =', varid
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-       cols(:)=-9999
-       pfts(:)=-9999
-       col_offset=-9999
-       pi_offset=-9999
-       i=1
-       do cc = 1, totcols
-          if (cols1dlon(cc).eq.lonidx.and.cols1dlat(cc).eq.latidx) then
-             cols(i)=cc
-             i=i+1
-          end if
-       end do
-       if (endc-begc+1.ne.i-1) then
-          write(iulog,*)'error in number of columns read for this gridcell',endc,begc,i
-!          call endrun
-       end if
-       if (i.eq.1) then
-          write(iulog,*)'couldnt find any columns for this latitude ',latidx,' and longitude ',lonidx
-!          call endrun
-       else
-          col_offset=cols(1)
-       end if
-
-       i=1
-       do cc = 1, totpfts
-          if (pfts1dlon(cc).eq.lonidx.and.pfts1dlat(cc).eq.latidx) then
-             pfts(i)=cc
-             i=i+1
-          end if
-       end do
-       if (endp-begp+1.ne.i-1) then
-          write(iulog,*)'error in number of pfts read for this gridcell',endp,begp,i
-!          call endrun
-       end if
-       if (i.eq.1) then
-          write(iulog,*)'couldnt find any pfts for this latitude ',latidx,' and longitude ',lonidx
-!          call endrun
-       else
-          pi_offset=pfts(1)
-       end if
-
-       deallocate (pfts1dlon)
-       deallocate (pfts1dlat)
-       deallocate (cols1dlon)
-       deallocate (cols1dlat)
-       firsttime = .false.
-    endif
-
-    write(iulog,*) trim(subname),' offsets ',pi_offset,col_offset
-    
-    if (dim1name == 'pft') then
-       data_offset = pi_offset
-       ndata = endp-begp+1
-    else if (dim1name == 'column') then
-       data_offset = col_offset
-       ndata = endc-begc+1
-    else
-       write(iulog,*)'error calculation array offsets for SCAM'
-!       call endrun()
-    endif
-  end subroutine scam_field_offsets
-!------------------------------------------------------------------------
+  endif
+end subroutine scam_field_offsets
 
 end module ncdio

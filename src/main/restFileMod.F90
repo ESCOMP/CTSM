@@ -15,7 +15,7 @@ module restFileMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
-  use clm_varctl  , only : iulog
+  use clm_varctl  , only : iulog,single_column
   use ncdio       
 !
 ! !PUBLIC TYPES:
@@ -234,7 +234,7 @@ contains
 
     ! Read file
 
-    call restFile_dimcheck( ncid )
+    if (.not.single_column) call restFile_dimcheck( ncid )
     call BiogeophysRest( ncid, flag='read' )
 #if (defined CN)
     call CNRest( ncid, flag='read' )

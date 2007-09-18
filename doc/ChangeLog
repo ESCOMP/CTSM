@@ -1,4 +1,72 @@
 ===============================================================
+Tag name:  clm3_5_10
+Originator(s):  jet
+Date: Tue Sep 18 12:00:23 MDT 2007
+Date:One-line Summary: Fixed scam bugs when reading initial land dataset 
+	and moved scam_setlatlon functionality to shr_scam_mod in 
+	csm_shr repos.  Merged in Mariana's changes to add new boundary
+	dataset file to help scam determine land/ocn/ice fractions.
+
+Purpose of changes: Fix scam bugs and refactor code to allow scam to easily
+        determine land/ocean/ice fractions.
+
+Bugs fixed (include bugzilla ID):  612, 480
+
+Known bugs (include bugzilla ID): 
+
+Describe any changes made to build system: Change configure to include new focndomain file.
+
+Describe any changes made to the namelist: focndomain file added to ocn_in
+
+List any changes to the defaults for the boundary datasets: Mariana created
+	a new focndomain boundary dataset (at the standard resolutions) which 
+	describe the grid fraction of land/ocn/ice
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, mariana
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+	clm3_5_10
+	branches/scm_drvseq1_0_43
+        branches/csm_share3_070824_scm
+
+List all subroutines eliminated: scam_setlatlonidx.F90
+
+List all subroutines added and what they do: moved scm functionality
+	from scam_setlatlonidx.F90 into a csm_share module that can 
+	now be used by all surface models.
+
+List all existing files that have been modified, and describe the changes:
+M      test/system/test_driver.sh  - use latest cam in testing
+M      test/system/nl_files/scam   - fixed scam bug
+M      test/system/nl_files/scam_prep  - fixed scam bug
+M      test/system/nl_files/ext_ccsm_seq_cam  - use latest cam in testing
+M      SVN_EXTERNAL_DIRECTORIES - point to needed external dirs
+M      src/biogeochem/STATICEcosysDynMod.F90 - use new shr code instead of scam_setlatlonidx.F90
+M      src/main/ncdio.F90 - use new shr code instead of scam_setlatlonidx.F90
+M      src/main/initializeMod.F90 - use new shr code instead of scam_setlatlonidx.F90
+M      src/main/iniTimeConst.F90 - use new shr code instead of scam_setlatlonidx.F90
+M      src/main/restFileMod.F90 - use new shr code instead of scam_setlatlonidx.F90
+D      src/main/scam_setlatlonidx.F90 - use new shr code instead of scam_setlatlonidx.F90
+M      src/main/clm_varctl.F90 - use new shr code instead of scam_setlatlonidx.F90
+M      src/main/surfrdMod.F90 - use new shr code instead of scam_setlatlonidx.F90
+Summary of testing:
+
+  bluevista: Everything but ccsm tests pass ( due to requirment on external
+	directories)
+
+  bangkok/lf95: all passed except ccsm - expected due to requirment on external
+	directories
+  tempest  all passed except 034 br531 (failed previous to this commit)
+
+  CLM tag used for the baseline comparison tests if applicable: clm3_5_09
+
+Changes answers relative to baseline: None
+
+===============================================================
+===============================================================
 Tag name:  clm3_5_09
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Fri Aug 31 13:58:46 MDT 2007

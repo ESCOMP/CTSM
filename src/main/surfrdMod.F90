@@ -32,7 +32,8 @@ module surfrdMod
   use ncdio
   use clmtype
   use spmdMod                         
-  use clm_varctl,   only : scmlat, scmlon, single_column
+  use clm_varctl,   only : scmlat, scmlon, single_column, scmcloselat, &
+                           scmcloselon,scmcloselatidx,scmcloselonidx
   use decompMod   , only : get_proc_bounds,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo
 !
 ! !PUBLIC TYPES:
@@ -427,23 +428,15 @@ contains
        call ncd_ioglobal('LATIXY',rdata,'read',ncid)
        latlon%latc(:) = rdata(1,:)
 
-       if (single_column) then
+       latlon%edges(:) = spval
+       ier = nf_inq_varid (ncid, 'EDGEN', varid)
+       if (ier == NF_NOERR) then
           EDGEset = .true.
-          latlon%edges(1) = 90.0_r8
-          latlon%edges(2) = latlon%lonc(1) + 180._r8
-          latlon%edges(3) = -90.0_r8
-          latlon%edges(4) = latlon%lonc(1) - 180._r8
-       else
-          latlon%edges(:) = spval
-          ier = nf_inq_varid (ncid, 'EDGEN', varid)
-          if (ier == NF_NOERR) then
-             EDGEset = .true.
-             call ncd_ioglobal('EDGEN',latlon%edges(1),'read',ncid)
-             call ncd_ioglobal('EDGEE',latlon%edges(2),'read',ncid)
-             call ncd_ioglobal('EDGES',latlon%edges(3),'read',ncid)
-             call ncd_ioglobal('EDGEW',latlon%edges(4),'read',ncid)
-             if (maxval(latlon%edges) > 1.0e35) EDGEset = .false. !read garbage
-          endif
+          call ncd_ioglobal('EDGEN',latlon%edges(1),'read',ncid)
+          call ncd_ioglobal('EDGEE',latlon%edges(2),'read',ncid)
+          call ncd_ioglobal('EDGES',latlon%edges(3),'read',ncid)
+          call ncd_ioglobal('EDGEW',latlon%edges(4),'read',ncid)
+          if (maxval(latlon%edges) > 1.0e35) EDGEset = .false. !read garbage
        endif
 
        ier = nf_inq_varid (ncid, 'LATN', varid)
@@ -793,7 +786,6 @@ contains
     real(r8),pointer :: pctwet(:)      ! percent of grid cell is wetland
     real(r8),pointer :: pcturb(:)      ! percent of grid cell is urbanized
     character(len=32) :: subname = 'surfrd_wtxy_special'  ! subroutine name
-    real(r8) closelat,closelon
 !!-----------------------------------------------------------------------
 
     ns = domain%ns

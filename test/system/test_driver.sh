@@ -28,8 +28,8 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="cam3_5_06"
-conccsm_vers="ccsm3_5_beta10"
+seqccsm_vers="cam3_5_11"
+conccsm_vers="ccsm3_5_beta12"
 
 hostname=`hostname`
 case $hostname in

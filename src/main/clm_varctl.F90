@@ -86,6 +86,10 @@ module clm_varctl
   logical :: single_column                      ! true => single column mode
   real(r8):: scmlat			        ! single column lat
   real(r8):: scmlon			        ! single column lon
+  real(r8):: scmcloselat                        ! single column lat
+  real(r8):: scmcloselon                        ! single column lon
+  integer :: scmcloselatidx                     ! single column lat index
+  integer :: scmcloselonidx                     ! single column lon index
 !
 ! Rtm control variables
 !

@@ -18,6 +18,7 @@ subroutine iniTimeConst
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_scam_mod, only : shr_scam_GetCloseLatLon
   use nanMod
   use clmtype
   use decompMod   , only : get_proc_bounds, get_proc_global
@@ -224,7 +225,7 @@ subroutine iniTimeConst
   count(1) = lsmlon
   count(2) = lsmlat
   if (single_column) then
-     call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+     call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
      start(1) = closelonidx
      start(2) = closelatidx
   else
