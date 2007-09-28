@@ -1,3 +1,64 @@
+==============================================================
+Tag name:  clm3_5_11
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Fri Sep 28 12:03:30 MDT 2007
+Date:One-line Summary: Update datasets in the DefaultCLM file for 0.23x0.31, 0.47x0.63, 0.9x1.25 and add fndepdyn file for 1.9x2.5
+
+Purpose of changes: Needed for CCSM 20th Century simulation needed for ccsm3_5_beta13
+
+Bugs fixed (include bugzilla ID): 585, 589, 593, 611
+
+	Add T42_gx1v5, 0.9x1.25_gx1v5 support.
+        also look in scripts/ccsm_utils/Tools for perl5lib.
+	abort if set -cycle_begyr or cycle_nyrs on namelist rather than on build-namelist command-line.
+
+Known bugs (include bugzilla ID): 251, 449, 512, 546, 608, 618, 622, 624
+
+	New nasty bugs found:
+
+618 	You can't add new fields using: hist_fincl*.
+622	CLM blindly continues even if needed fields are missing from surface dataset.
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Just add more files to XML database
+
+List any changes to the defaults for the boundary datasets: Add new files for: 
+              0.23x0.31, 0.47x0.63, 0.9x1.25, (64x128 with mask=gx1v5) and add fndepdyn file for 1.9x2.5
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: None
+
+List any svn externals directories updated (csm_share, mct, etc.): csm_share updated to trunk_tags/share3_070927
+
+	This is the version needed in ccsm3_5_beta13 tag (previous version causes problems building on tempest)
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M      bld/DefaultCLM_INPARM_Namelist.xml ---- Add new datasets.
+M      bld/clm_inparm.pm --------------------- Abort if try to define cycle_nyr and cycle_begyr on namelist 
+                                               rather than with command line options.
+M      bld/queryDefaultNamelist.pl ----------- Add ability to use perl5lib from under ccsm_utils/scripts/Tools.
+M      bld/build-namelist -------------------- Add ability to use perl5lib from under ccsm_utils/scripts/Tools.
+
+         ------------------------- Remove test blZ11 (can't do the comparision), and update cam tag comparing to.
+M      test/system/tests_pretag_bangkok
+M      test/system/test_driver.sh
+M      test/system/tests_posttag_purempi_regression
+M      test/system/tests_posttag_hybrid_regression
+M      test/system/tests_pretag_bluevista
+M      test/system/tests_posttag_lightning
+
+Summary of testing: None
+
+Changes answers relative to baseline: No clm source code changed
+
+===============================================================
 ===============================================================
 Tag name:  clm3_5_10
 Originator(s):  jet
@@ -12,7 +73,7 @@ Purpose of changes: Fix scam bugs and refactor code to allow scam to easily
 
 Bugs fixed (include bugzilla ID):  612, 480
 
-Known bugs (include bugzilla ID): 
+Known bugs (include bugzilla ID): 251, 449, 512, 546, 608, 618, 622
 
 Describe any changes made to build system: Change configure to include new focndomain file.
 
@@ -76,7 +137,7 @@ Purpose of changes: Fix for ccsm3_5_beta12 tag
 
 Bugs fixed (include bugzilla ID):  581, 583
 
-Known bugs (include bugzilla ID): 251, 449, 482, 512, 546
+Known bugs (include bugzilla ID): 251, 449, 512, 546, 608, 618, 622
 
 Describe any changes made to build system: Change configure so csm_share NOT included in Filepath for ccsm_con option
 
@@ -298,7 +359,7 @@ Purpose of changes:
 
 Bugs fixed (include bugzilla ID): None
 
-Known bugs: 251, 449, 482, 512, 546
+Known bugs: 251, 449, 512, 546, 608, 618
 	interpinic does NOT work for DGVM
 
 Describe any changes made to build system: Use perl5lib version of XML::Lite
@@ -364,8 +425,8 @@ Bugs fixed (include bugzilla ID): 389, 470, 472, 484, 487, 500, 506, 507, 508, 5
     as well as getting it to work. Get rid of equivalences, don't assign nan to integers.
     Make sure namelist variables are documented in controlMod.F90.
 
-Known bugs: 251, 449, 482, 512, 546
-	interpinic does NOT work for DGVM
+Known bugs: 251, 449, 512, 546, 608, 618
+	interpinic does NOT work for DGVM or CASA
 
 Describe any changes made to build system: Allow CCSM to use configure and query namelist tools in clm.template
 

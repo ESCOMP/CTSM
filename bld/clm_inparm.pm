@@ -288,15 +288,17 @@ sub set_output_values {
         # cycle_begyr
         if (defined($optsref->{'cycle_beg_year'})) {
             $opt = $optsref->{'cycle_beg_year'};
-        } elsif (defined($NLref->{'cycle_begyr'})) {
-            $opt = $NLref->{'cycle_begyr'};
+            if (defined($NLref->{'cycle_begyr'})) {
+	      die "ERROR: define cycle_begyr using -cycle_beg_year command line option rather than in namelist.\n";
+            }
         }
         $NLref->{'cycle_begyr'} = $opt;
         # cycle_nyr
         if (defined($optsref->{'cycle_end_year'})) {
             $opt = $optsref->{'cycle_end_year'} - $NLref->{'cycle_begyr'} + 1;
-        } elsif (defined($NLref->{'cycle_nyr'} ) ) {
-            $opt = $NLref->{'cycle_nyr'};
+            if (defined($NLref->{'cycle_nyr'})) {
+	      die "ERROR: define cycle_nyr using -cycle_beg_year and cycle_end_year command line options rather than in namelist.\n";
+            }
         }
         $NLref->{'cycle_nyr'} = $opt;
      }
