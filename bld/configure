@@ -95,7 +95,7 @@ OPTIONS
      -nc_inc <dir>      Directory containing netCDF include files.
      -nc_lib <dir>      Directory containing netCDF library.
      -nc_mod <dir>      Directory containing netCDF module files.
-     -pergro            Switch enables building CLM for perturbation growth tests.
+     -pergro <name>     Switch enables building CLM for perturbation growth tests. [on | off ] (default is off)
      -prog_seasalt <name> Turn on prognostic sea-salt (PROGSSLT cppdef token) [on | off ] (default is off)
      -rtm <name>        Turn on RTM  [on | off ] (default is off)
      -s                 Turns on silent mode - only fatal messages issued.
@@ -235,17 +235,20 @@ if ($ProgDir) {
 (-f "$cfgdir/$bld_defaults")  or  die <<"EOF";
 ** Cannot find configure defaults file \"$bld_defaults\" in directory \"$cfgdir\" **
 EOF
-(-f "$cfgdir/perl5lib/XML/Lite.pm")  or  die <<"EOF";
-** Cannot find perl module \"XML/Lite.pm\" in directory \"$cfgdir/perl5lib\" **
-EOF
 $cfgdir = absolute_path($cfgdir);
 
 if ($print>=2) { print "Setting CLM configuration script directory to $cfgdir$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir to the list of paths that Perl searches for modules
-unshift @INC, $cfgdir, "$cfgdir/perl5lib";
-require XML::Lite;
+my @dirs = ( $cfgdir, "$cfgdir/perl5lib", "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib" );
+unshift @INC, @dirs;
+my $result = eval "require XML::Lite";
+if ( ! defined($result) ) {
+   die <<"EOF";
+** Cannot find perl module \"XML/Lite.pm\" from directories: @dirs **
+EOF
+}
 require Build::Config;
 
 # Can read defaults files now that we know where to find XML::Lite
@@ -576,9 +579,9 @@ $cfg{'fc'} = ($cfg eq 'default') ? '' : $cfg;
 
 if ($print>=2) { print "Setting Fortran compiler to $cfg$eol"; }
 
-# Allow override of Makefile default C compiler (linux platform only)
+# Allow override of Makefile default C compiler (linux or darwin platform only)
 $cfg{'cc'} = '';
-if ($cfg{'target_os'} eq 'linux') {
+if ($cfg{'target_os'} eq 'linux' || $cfg{'target_os'} eq 'darwin' ) {
     $cfg = 'default';
     if (defined $opts{'cc'}) {
 	$cfg = $opts{'cc'};
@@ -777,6 +780,9 @@ if ($cfg{'ad_spinup'} eq 'on') {
 }
 if ($cfg{'exit_spinup'} eq 'on') { 
     $cfg .= " -DEXIT_SPINUP";
+}
+if ( $cfg{'pergro'} eq 'on' ) {
+    $cfg .= " -DPERGRO";
 }
 
 # -DSPMD only added to $cfg(make_cppdefs) for CCSM build.  The CLM Makefile
@@ -1324,6 +1330,7 @@ sub write_filepath
 if ($cfg{'mode'} eq "ccsm_seq") {
     # Driver
     print $fh "$srcdir/drv/seq_mct\n";
+    print $fh "$srcdir/drv/seq_mct/driver\n";
 
     # Datm7 
     print $fh "$srcdir/datm7\n";

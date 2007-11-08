@@ -28,6 +28,7 @@
 <!-- different from 101 are specified; 101 is the "default default".       -->
 <start_ymd RESOLUTION="1.9x2.5" mask="gx1v4" BGC="none">901</start_ymd>
 <start_ymd RESOLUTION="1.9x2.5" mask="gx1v5" BGC="cn"  >25101</start_ymd>
+<start_ymd RESOLUTION="1x1.25"  mask="gx1v5" BGC="none">1998011</start_ymd>
 <start_ymd>101</start_ymd>
 
 <!-- Orbit -->

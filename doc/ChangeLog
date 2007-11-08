@@ -1,3 +1,43 @@
+===============================================================
+Tag name:  clm3_5_12
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date:  Thu Nov  8 13:49:25 MST 2007
+One-line Summary: Tag with new files needed for ccsm3_5_beta17
+
+Purpose of changes: Add new files needed for new resolutions being adding in ccsm3_5_beta17
+
+Bugs fixed (include bugzilla ID): None
+
+Describe any changes made to build system: Small changes to configure from bstrms branch
+
+Describe any changes made to the namelist: Add new files to Default*.xml files
+
+List any changes to the defaults for the boundary datasets: New resolutions added
+
+Describe any substantial timing or memory changes: None
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all existing files that have been modified, and describe the changes:
+
+Move files over from the bstrms3_clm3_5_11 branch with the new resolutions needed.
+
+M      bld/configure
+M      bld/DefaultCLM_INPARM_Namelist.xml
+M      bld/DefaultDATM_NML_Namelist.xml
+M      bld/DefaultSettings.xml
+M      bld/DefaultTIMEMGR_INPARM_Namelist.xml
+M      bld/DefaultPROF_INPARM_Namelist.xml
+M      bld/queryDefaultNamelist.pl
+M      bld/DefaultCCSM_INPARM_Namelist.xml
+M      bld/build-namelist
+M      bld/DefaultDATM_DSHR_NML_Namelist.xml
+
+Summary of testing: None
+
+Changes answers relative to baseline: None
+	
+===============================================================
 ==============================================================
 Tag name:  clm3_5_11
 Originator(s):  erik (Kluzek Erik 1326 CGD)

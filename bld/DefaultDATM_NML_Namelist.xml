@@ -19,11 +19,6 @@
 <!-- Root directory of initial and boundary datasets from CCSM distribution -->
 <csmdata>/fs/cgd/csm/inputdata</csmdata>
 
-<!-- Model Version -->
-<version>
-$HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01/bld/DefaultDSHR_NML_Namelist.xml $
-</version>
-
 <tn460_factorfn>'unused '</tn460_factorfn>
 
 

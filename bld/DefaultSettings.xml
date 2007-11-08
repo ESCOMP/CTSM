@@ -22,6 +22,7 @@
 <mask MODE="offline"      >USGS</mask>
 <mask MODE="ccsm_seq"     >gx1v4</mask>
 <mask MODE="ext_ccsm_con" >gx1v5</mask>
+<mask MODE="ccsm_seq_cam" >USGS</mask>
 
 <!-- Default simulation year -->
 <sim_year   >2000</sim_year>

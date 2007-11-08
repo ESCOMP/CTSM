@@ -34,7 +34,7 @@ else { $cfgdir = $cwd; }
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir to the list of paths that Perl searches for modules
-my @dirs = ( $cfgdir, "$cfgdir/perl5lib", "$cfgdir/../../../../scripts/ccsm_utils/Tools"
+my @dirs = ( $cfgdir, "$cfgdir/perl5lib", "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib"
 );
 unshift @INC, @dirs;
 my $result = eval "require XML::Lite";
@@ -43,6 +43,7 @@ if ( ! defined($result) ) {
 ** Cannot find perl module \"XML/Lite.pm\" from directories: @dirs **
 EOF
 }
+require Build::Config;
 require queryDefaultXML;
 
 # Defaults
@@ -57,21 +58,22 @@ SYNOPSIS
      $ProgName [options]
 OPTIONS
      -config "file"                       CLM build configuration file created by configure.
-     -csmdata "dir"                       Directory for head of csm inputdata
-     -demand                              Demand that something is returned
-     -file "file"                         Input xml file to read in by default ($file)
-     -help  [or -h]                       Display this help
-     -justvalue                           Just display the values (NOT key = value)
-     -var "varname"                       Variable name to match
-     -namelist "namelistname"             Namelist name to read in by default ($namelist)
-     -onlyfiles                           Only output filenames
-     -options "item=value,item2=value2"   Set options to query for when matching
-                                          (comma delimited, with equality to set value)
-     -res  "resolution"                   Resolution to use for files
+     -ccsm                                CCSM mode set csmdata to \$DIN_LOC_ROOT.
+     -csmdata "dir"                       Directory for head of csm inputdata.
+     -demand                              Demand that something is returned.
+     -file "file"                         Input xml file to read in by default ($file).
+     -help  [or -h]                       Display this help.
+     -justvalue                           Just display the values (NOT key = value).
+     -var "varname"                       Variable name to match.
+     -namelist "namelistname"             Namelist name to read in by default ($namelist).
+     -onlyfiles                           Only output filenames.
+     -options "item=value,item2=value2"   Set options to query for when matching.
+                                          (comma delimited, with equality to set value).
+     -res  "resolution"                   Resolution to use for files.
      -scpto "dir"                         Copy files to given directory.
                                           (also enables -onlyfiles, -test and -justvalue options)
-     -silent [or -s]                      Don't do any extra printing
-     -test   [or -t]                      Test that files exists
+     -silent [or -s]                      Don't do any extra printing.
+     -test   [or -t]                      Test that files exists.
 EXAMPLES
 
   To list all fsurdat files that match the resolution: 10x15:
@@ -106,6 +108,7 @@ EOF
                var        => undef,
                res        => undef,
                config     => undef,
+               ccsm       => undef, 
                csmdata    => undef,
                demand     => undef,
                test       => undef,
@@ -124,6 +127,7 @@ EOF
         "v|var=s"      => \$opts{'var'},
         "r|res=s"      => \$opts{'res'},
         "config=s"     => \$opts{'config'},
+        "ccsm"         => \$opts{'ccsm'},
         "csmdata=s"    => \$opts{'csmdata'},
         "demand"       => \$opts{'demand'},
         "options=s"    => \$opts{'options'},
@@ -176,6 +180,9 @@ EOF
      $inputopts{csmdata} = "default";
   } else {
      $inputopts{csmdata} = $opts{csmdata};
+  }
+  if ( defined($opts{ccsm}) ) {
+     $inputopts{csmdata} = '$DIN_LOC_ROOT';
   }
   if ( ! defined($opts{config}) ) {
      $inputopts{config} = "noconfig";

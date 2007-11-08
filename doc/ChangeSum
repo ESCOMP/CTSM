@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ===============================================================================================================================
+   clm3_5_12         erik 11/08/2007 Tag with new files needed for ccsm3_5_beta17
    clm3_5_11         erik 09/28/2007 Update datasets in the DefaultCLM file for 0.23x0.31, 0.47x0.63, 0.9x1.25 and add fndepdyn file for 1.9x2.5
    clm3_5_09         erik 08/31/2007 Change configure to NOT have csm_share code for ccsm_con option, and add in 1x1.25 file, and update datm7 and csm_share
    clm3_5_08       tcraig 08/20/2007 convert 6 to iulog in logfile, updates for I/O

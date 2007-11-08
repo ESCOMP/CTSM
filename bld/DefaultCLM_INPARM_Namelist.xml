@@ -110,14 +110,18 @@
 <flndtopo RESOLUTION="32x64"     mask="USGS"  >lnd/clm2/griddata/topodata_32x64_USGS_070110.nc</flndtopo>
 <flndtopo RESOLUTION="8x16"      mask="USGS"  >lnd/clm2/griddata/topodata_8x16_USGS_070110.nc</flndtopo>
 
-<flndtopo RESOLUTION="0.23x0.31" mask="USGS"  >lnd/clm2/griddata/topodata_0.23x0.31_USGS_c070927.nc</flndtopo>
-<flndtopo RESOLUTION="0.47x0.63" mask="USGS"  >lnd/clm2/griddata/topodata_0.47x0.63_USGS_c070918.nc</flndtopo>
-<flndtopo RESOLUTION="0.9x1.25"  mask="USGS"  >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</flndtopo>
-<flndtopo RESOLUTION="0.9x1.25"  mask="gx1v5" >lnd/clm2/griddata/topodata_0.9x1.25_gx1v5_c070927.nc</flndtopo>
-<flndtopo RESOLUTION="1x1.25"    mask="USGS"  >lnd/clm2/griddata/topodata_1x1.25_USGS_070110.nc</flndtopo>
-<flndtopo RESOLUTION="1.9x2.5"   mask="USGS"  >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</flndtopo>
-<flndtopo RESOLUTION="4x5"       mask="USGS"  >lnd/clm2/griddata/topodata_4x5_USGS_070110.nc</flndtopo>
-<flndtopo RESOLUTION="10x15"     mask="USGS"  >lnd/clm2/griddata/topodata_10x15_USGS_070110.nc</flndtopo>
+<flndtopo RESOLUTION="0.23x0.31" mask="USGS"   >lnd/clm2/griddata/topodata_0.23x0.31_USGS_c070927.nc</flndtopo>
+<flndtopo RESOLUTION="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.23x0.31_tx0.1v2_c070928.nc</flndtopo>
+<flndtopo RESOLUTION="0.47x0.63" mask="USGS"   >lnd/clm2/griddata/topodata_0.47x0.63_USGS_c070918.nc</flndtopo>
+<flndtopo RESOLUTION="0.47x0.63" mask="gx1v5"  >lnd/clm2/griddata/topodata_0.47x0.63_gx1v5_c071004.nc</flndtopo>
+<flndtopo RESOLUTION="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.47x0.63_tx0.1v2_c070928.nc</flndtopo>
+<flndtopo RESOLUTION="0.9x1.25"  mask="USGS"   >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</flndtopo>
+<flndtopo RESOLUTION="0.9x1.25"  mask="gx1v5"  >lnd/clm2/griddata/topodata_0.9x1.25_gx1v5_c070927.nc</flndtopo>
+<flndtopo RESOLUTION="0.9x1.25"  mask="tx0.1v2">lnd/clm2/griddata/topodata_0.9x1.25_tx0.1v2_c070928.nc</flndtopo>
+<flndtopo RESOLUTION="1x1.25"    mask="USGS"   >lnd/clm2/griddata/topodata_1x1.25_USGS_070110.nc</flndtopo>
+<flndtopo RESOLUTION="1.9x2.5"   mask="USGS"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</flndtopo>
+<flndtopo RESOLUTION="4x5"       mask="USGS"   >lnd/clm2/griddata/topodata_4x5_USGS_070110.nc</flndtopo>
+<flndtopo RESOLUTION="10x15"     mask="USGS"   >lnd/clm2/griddata/topodata_10x15_USGS_070110.nc</flndtopo>
 
 <!-- Atmosphere topo datasets (when running land at different resolution than atm coupling) (relative to {csmdata}) -->
 <fatmtopo RESOLUTION="360x720"   mask="USGS"  >lnd/clm2/griddata/topodata_360x720_c060528.nc</fatmtopo>
@@ -129,9 +133,13 @@
 <fatmtopo RESOLUTION="8x16"      mask="USGS"  >lnd/clm2/griddata/topodata_8x16_USGS_070110.nc</fatmtopo>
 
 <fatmtopo RESOLUTION="0.23x0.31" mask="USGS"  >lnd/clm2/griddata/topodata_0.23x0.31_USGS_c070927.nc</fatmtopo>
+<fatmtopo RESOLUTION="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.23x0.31_tx0.1v2_c070928.nc</fatmtopo>
 <fatmtopo RESOLUTION="0.47x0.63" mask="USGS"  >lnd/clm2/griddata/topodata_0.47x0.63_USGS_c070918.nc</fatmtopo>
+<fatmtopo RESOLUTION="0.47x0.63" mask="gx1v5" >lnd/clm2/griddata/topodata_0.47x0.63_gx1v5_c071004.nc</fatmtopo>
+<fatmtopo RESOLUTION="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.47x0.63_tx0.1v2_c070928.nc</fatmtopo>
 <fatmtopo RESOLUTION="0.9x1.25"  mask="USGS"  >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</fatmtopo>
 <fatmtopo RESOLUTION="0.9x1.25"  mask="gx1v5" >lnd/clm2/griddata/topodata_0.9x1.25_gx1v5_c070927.nc</fatmtopo>
+<fatmtopo RESOLUTION="0.9x1.25"  mask="tx0.1v2">lnd/clm2/griddata/topodata_0.9x1.25_tx0.1v2_c070928.nc</fatmtopo>
 <fatmtopo RESOLUTION="1x1.25"    mask="USGS"  >lnd/clm2/griddata/topodata_1x1.25_USGS_070110.nc</fatmtopo>
 <fatmtopo RESOLUTION="1.9x2.5"   mask="USGS"  >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</fatmtopo>
 <fatmtopo RESOLUTION="4x5"       mask="USGS"  >lnd/clm2/griddata/topodata_4x5_USGS_070110.nc</fatmtopo>
@@ -168,11 +176,19 @@
 
 <fatmlndfrc RESOLUTION="0.23x0.31" mask="USGS"  >lnd/clm2/griddata/fracdata_0.23x0.31_USGS_c070927.nc
 </fatmlndfrc>
+<fatmlndfrc RESOLUTION="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.23x0.31_tx0.1v2_c070928.nc
+</fatmlndfrc>
 <fatmlndfrc RESOLUTION="0.47x0.63" mask="USGS"  >lnd/clm2/griddata/fracdata_0.47x0.63_USGS_c070918.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="0.47x0.63" mask="gx1v5" >lnd/clm2/griddata/fracdata_0.47x0.63_gx1v5_c071004.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.47x0.63_tx0.1v2_c070928.nc
 </fatmlndfrc>
 <fatmlndfrc RESOLUTION="0.9x1.25"  mask="USGS"  >lnd/clm2/griddata/fracdata_0.9x1.25_USGS_070110.nc
 </fatmlndfrc>
 <fatmlndfrc RESOLUTION="0.9x1.25"  mask="gx1v5" >lnd/clm2/griddata/fracdata_0.9x1.25_gx1v5_c070927.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="0.9x1.25"  mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.9x1.25_tx0.1v2_c070928.nc
 </fatmlndfrc>
 <fatmlndfrc RESOLUTION="1x1.25"    mask="USGS"  >lnd/clm2/griddata/fracdata_1x1.25_USGS_070110.nc
 </fatmlndfrc>

@@ -19,14 +19,6 @@
 <!-- Root directory of initial and boundary datasets from CCSM distribution -->
 <csmdata>/fs/cgd/csm/inputdata</csmdata>
 
-<!-- Model Version -->
-<version>
-$HeadURL$
-</version>
-
-<!-- mode of operation of datm7 when running with clm-->
-<datamode>'CLMNCEP'</datamode>
-
 <!-- Verbosity level-->
 <infodbug>2</infodbug>
 
@@ -34,18 +26,48 @@ $HeadURL$
 <restpfile>'rpointer.atm'</restpfile>
 
 <!-- Domain files, grids and land mask -->
-<domainfile RESOLUTION="1x1_brazil"  mask="navy" >lnd/clm2/domain.lnd.1x1pt_brazil_navy.070628.nc</domainfile>
+<domainfile RESOLUTION="1x1_brazil"     mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-brazil_navy.070628.nc</domainfile>
+<domainfile RESOLUTION="1x1_tropicAtl"  mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-tropicAtl_test.071010.nc</domainfile>
+<domainfile RESOLUTION="5x5_amazon"     mask="navy" >atm/datm7/domain.clm/domain.lnd.5x5pt-amazon_navy.071010.nc</domainfile>
+<domainfile RESOLUTION="360x720"        mask="USGS" >atm/datm7/domain.clm/domain.lnd.360x720pt-global_USGS.071010.nc</domainfile>
 
-<domainfile RESOLUTION="4x5"         mask="gx3v5">atm/datm7/domain.lnd.4x5_gx3v5.060404.nc</domainfile>
+<domainfile RESOLUTION="8x16"        mask="USGS" >atm/datm7/domain.clm/domain.lnd.T5_USGS.071010.nc</domainfile>
+<domainfile RESOLUTION="32x64"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T21_USGS.071010.nc</domainfile>
 <domainfile RESOLUTION="48x96"       mask="gx3v5">atm/datm7/domain.lnd.T31_gx3v5.051111.nc</domainfile>
+<domainfile RESOLUTION="48x96"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T31_USGS.071010.nc</domainfile>
+<domainfile RESOLUTION="64x128"      mask="USGS" >atm/datm7/domain.clm/domain.lnd.T42_USGS.071010.nc</domainfile>
+<domainfile RESOLUTION="64x128"      mask="gx3v5">atm/datm7/domain.clm/domain.lnd.T42_gx3v5.071010.nc</domainfile>
+<domainfile RESOLUTION="64x128"      mask="gx1v3">atm/datm7/domain.lnd.T42_gx1v3.051111.nc</domainfile>
 <domainfile RESOLUTION="64x128"      mask="gx1v4">atm/datm7/domain.lnd.T42_gx1v4.060403.nc</domainfile>
-<domainfile RESOLUTION="1.9x2.5"     mask="gx1v4">atm/datm7/domain.lnd.1.9x2.5_gx1v4.060810.nc</domainfile>
-<domainfile RESOLUTION="1.9x2.5"     mask="gx1v5">atm/datm7/domain.lnd.1.9x2.5_gx1v5.070102.nc</domainfile>
+<domainfile RESOLUTION="64x128"      mask="gx1v5">atm/datm7/domain.lnd.T42_gx1v5.070831.nc</domainfile>
+<domainfile RESOLUTION="128x256"     mask="USGS" >atm/datm7/domain.clm/domain.lnd.T85_USGS.071010.nc</domainfile>
+<domainfile RESOLUTION="128x256"     mask="gx1v3">atm/datm7/domain.lnd.T85_gx1v3.051111.nc</domainfile>
+<domainfile RESOLUTION="128x256"     mask="gx1v4">atm/datm7/domain.lnd.T85_gx1v4.060403.nc</domainfile>
 
-<!-- Domain that input data is on -->
-<datadomain>atm/datm7/domain.T62.050609.nc</datadomain>
+<domainfile RESOLUTION="0.23x0.31"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.23x0.31_tx0.1v2_070929.nc</domainfile>
+<domainfile RESOLUTION="0.47x0.63"   mask="gx1v5"  >atm/datm7/domain.lnd.fv0.47x0.63_gx1v5_071005.nc</domainfile>
+<domainfile RESOLUTION="0.47x0.63"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.47x0.63_tx0.1v2_070929.nc</domainfile>
+<domainfile RESOLUTION="0.9x1.25"    mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv0.9x1.25_USGS.071010.nc</domainfile>
+<domainfile RESOLUTION="0.9x1.25"    mask="gx1v5"  >atm/datm7/domain.lnd.0.9x1.25_gx1v5.070831.nc</domainfile>
+<domainfile RESOLUTION="0.9x1.25"    mask="tx0.1v2">atm/datm7/domain.lnd.fv0.9x1.25_tx0.1v2_070928.nc</domainfile>
+<domainfile RESOLUTION="1x1.25"      mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv1x1.25_USGS.071010.nc</domainfile>
+<domainfile RESOLUTION="1x1.25"      mask="gx1v3"  >atm/datm7/domain.clm/domain.lnd.fv1x1.25_gx1v3.071010.nc</domainfile>
+<domainfile RESOLUTION="1x1.25"      mask="gx1v4"  >atm/datm7/domain.clm/domain.lnd.fv1x1.25_gx1v4.071010.nc</domainfile>
+<domainfile RESOLUTION="1x1.25"      mask="gx1v5"  >atm/datm7/domain.clm/domain.lnd.fv1x1.25_gx1v5.071010.nc</domainfile>
+<domainfile RESOLUTION="1.9x2.5"     mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv1.9x2.5_USGS.071010.nc</domainfile>
+<domainfile RESOLUTION="1.9x2.5"     mask="gx1v3"  >atm/datm7/domain.clm/domain.lnd.fv1.9x2.5_gx1v3.071010.nc</domainfile>
+<domainfile RESOLUTION="1.9x2.5"     mask="gx1v4"  >atm/datm7/domain.lnd.1.9x2.5_gx1v4.060810.nc</domainfile>
+<domainfile RESOLUTION="1.9x2.5"     mask="gx1v5"  >atm/datm7/domain.lnd.1.9x2.5_gx1v5.070102.nc</domainfile>
+<domainfile RESOLUTION="2x2.5"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2x2.5_USGS.071010.nc</domainfile>
+<domainfile RESOLUTION="4x5"         mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv4x5_USGS.071010.nc</domainfile>
+<domainfile RESOLUTION="4x5"         mask="gx3v5"  >atm/datm7/domain.lnd.4x5_gx3v5.060404.nc</domainfile>
+<domainfile RESOLUTION="10x15"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv10x15_USGS.071010.nc</domainfile>
 
-<!-- XML format streams file of T62 input data for any resolution simulation -->
-<streamsxmlfile>atm/datm7/CLMNCEP/clmncep.T62.stream.c070725.txt</streamsxmlfile>
+<!-- Data source -->
+
+<source >CLMNCEP</source>
+
+<!-- Streams template files -->
+<streamstemplate >datm.streams.template.xml</streamstemplate>
 
 </dshr_nml>

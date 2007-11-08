@@ -24,5 +24,10 @@
 <!-- start-type -->
 <start_type>'startup'</start_type>
 
+<!-- Model Version -->
+<version>
+$HeadURL$
+</version>
+
 </ccsm_inparm>
 
