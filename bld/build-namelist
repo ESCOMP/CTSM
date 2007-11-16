@@ -171,7 +171,10 @@ if ($opts{'printlev'}>2) {
 
 #-----------------------------------------------------------------------------------------------
 # Make sure we can find required perl modules and configuration files.
-my @dirs = ( $cfgdir, "$cfgdir/perl5lib", "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib" );
+my @dirs = ( $cfgdir, "$cfgdir/perl5lib", 
+             "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib",
+             "$cfgdir/../../../../models/utils/perl5lib",
+           );
 
 unshift @INC, @dirs;
 

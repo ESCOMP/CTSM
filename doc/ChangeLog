@@ -1,4 +1,39 @@
 ===============================================================
+Tag name:  clm3_5_13
+Originator(s):  erik (Erik Kluzek)
+Date:  Fri Nov 16 10:17:38 MST 2007
+One-line Summary: Update xml file with file needed for ccsm3_5_beta18
+
+Describe any changes made to build system: Add models/utils/perl5lib to path for perl tools
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: New 0.47x0.63 fraction
+  dataset compatible with CCSM datasets
+
+Describe any substantial timing or memory changes: None
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do:
+
+A      bld/scpDefaultNamelist.pl -- Script to help copy files in xml database.
+
+List all existing files that have been modified, and describe the changes:
+
+M      bld/configure --- add models/util to path
+M      bld/DefaultCLM_INPARM_Namelist.xml -- add new file
+M      bld/queryDefaultNamelist.pl --- add models/util to path
+M      bld/build-namelist --- add models/util to path
+
+Summary of testing: None
+
+Changes answers relative to baseline: No
+
+===============================================================
+===============================================================
 Tag name:  clm3_5_12
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date:  Thu Nov  8 13:49:25 MST 2007

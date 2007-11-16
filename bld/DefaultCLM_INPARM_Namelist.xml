@@ -180,7 +180,7 @@
 </fatmlndfrc>
 <fatmlndfrc RESOLUTION="0.47x0.63" mask="USGS"  >lnd/clm2/griddata/fracdata_0.47x0.63_USGS_c070918.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="0.47x0.63" mask="gx1v5" >lnd/clm2/griddata/fracdata_0.47x0.63_gx1v5_c071004.nc
+<fatmlndfrc RESOLUTION="0.47x0.63" mask="gx1v5" >lnd/clm2/griddata/fracdata_0.47x0.63_gx1v5_c071113.nc
 </fatmlndfrc>
 <fatmlndfrc RESOLUTION="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.47x0.63_tx0.1v2_c070928.nc
 </fatmlndfrc>
