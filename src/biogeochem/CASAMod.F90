@@ -305,7 +305,7 @@ contains
     integer :: numc          ! total number of columns across all processors
     integer :: nump          ! total number of pfts across all processors
     integer :: g,c,i,j,l,m,n,p,pi
-    integer :: ier
+    integer :: ier, ret      ! error return code
 
     real(r8) dtime                  !land model time step (sec)
     real(r8) lnscl
@@ -675,7 +675,8 @@ contains
        end if
 
        ! TPOOL_C_LEAF
-       call ncd_iolocal(ncid,'TPOOL_C_LEAF','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_LEAF','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_LEAF NOT on fcpool file' )
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -683,7 +684,8 @@ contains
        end do
 
        ! TPOOL_C_WOOD
-       call ncd_iolocal(ncid,'TPOOL_C_WOOD','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_WOOD','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_WOOD NOT on fcpool file' )
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -691,7 +693,8 @@ contains
        end do
 
        ! TPOOL_C_FROOT
-       call ncd_iolocal(ncid,'TPOOL_C_FROOT','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_FROOT','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_FROOT NOT on fcpool file' )
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -699,19 +702,22 @@ contains
        end do
 
        ! TPOOL_C_SURFMET
-       call ncd_iolocal(ncid,'TPOOL_C_SURFMET','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SURFMET','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SURFMET NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,SURFMET) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SURFSTR
-       call ncd_iolocal(ncid,'TPOOL_C_SURFSTR','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SURFSTR','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SURFSTR NOT on fcpool file' )
        do p = begp,endp
           Tpool_C(p,SURFSTR) = rloc(pgridcell(p)) * vege_scale(p)
        end do
 
        ! TPOOL_C_SOILMET
-       call ncd_iolocal(ncid,'TPOOL_C_SOILMET','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SOILMET','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILMET NOT on fcpool file' )
 !dir$ concurrent
 !cdir nodep
        do p = begp, endp
@@ -719,7 +725,8 @@ contains
        end do
 
        ! TPOOL_C_SOILSTR
-       call ncd_iolocal(ncid,'TPOOL_C_SOILSTR','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SOILSTR','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILSTR NOT on fcpool file' )
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -727,7 +734,8 @@ contains
        end do
 
        ! TPOOL_C_CWD
-       call ncd_iolocal(ncid,'TPOOL_C_CWD','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_CWD','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_CWD NOT on fcpool file' )
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -735,7 +743,8 @@ contains
        end do
 
        ! TPOOL_C_SURFMIC
-       call ncd_iolocal(ncid,'TPOOL_C_SURFMIC','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SURFMIC','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SURFMIC NOT on fcpool file' )
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -743,7 +752,8 @@ contains
        end do
 
        ! TPOOL_C_SOILMIC
-       call ncd_iolocal(ncid,'TPOOL_C_SOILMIC','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SOILMIC','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILMIC NOT on fcpool file' )
 !dir$ concurrent
 !cdir nodep
        do p = begp, endp
@@ -751,7 +761,8 @@ contains
        end do
 
        ! TPOOL_C_SLOW
-       call ncd_iolocal(ncid,'TPOOL_C_SLOW','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_SLOW','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SLOW  NOT on fcpool file' )
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
@@ -759,7 +770,8 @@ contains
        end do
 
        ! TPOOL_C_PASSIVE
-       call ncd_iolocal(ncid,'TPOOL_C_PASSIVE','read',rloc,nameg)
+       call ncd_iolocal(ncid,'TPOOL_C_PASSIVE','read',rloc,nameg,status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_PASSIVE NOT on fcpool file' )
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp

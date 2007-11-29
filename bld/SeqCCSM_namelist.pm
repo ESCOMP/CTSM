@@ -29,6 +29,7 @@ use clm_inparm;
 use datm_dshr_in;
 use datm_nml;
 use queryDefaultXML;
+#use lnd_modelio;
 
 sub new {
 #
@@ -46,6 +47,7 @@ sub new {
   $self->{'ATMNL'}     = undef;                # Atmospheric model namelist object
   $self->{'ATMSHRNL'}  = undef;                # Atmospheric share model namelist object
   $self->{'LNDNL'}     = undef;                # Land-model namelist object
+  $self->{'LNDIONL'}   = undef;                # Land-model IO namelist object
 
   $self->{'PARSE_FILE'} = $opts{'infile'};     # User supplied input namelist file
   if ( $opts{namelist} ) {                     # namelist settings from the command-line
@@ -63,8 +65,6 @@ sub new {
 
   $self->{'OUTDIR'} = $opts{dir};                 # Output directory for namelists
 
-  my $config_file      = $opts{config};     # config_cache.xml filename
-
   $self->{'optsref'} = $optsref;
 
   $self->{'printlev'} = $opts{'printlev'};   # Print level
@@ -76,22 +76,36 @@ sub new {
   $inputopts{'ProgName'} = $$optsref{'ProgName'};
   $inputopts{'cmdline'}  = $$optsref{'cmdline'};    
   $inputopts{'csmdata'}  = $$optsref{'csmdata'};
-  $inputopts{'config'}   = $config_file;
-  $inputopts{'res'}      = $$optsref{'RESOLUTION'};
+  my $config_file = undef;
+  if ( ! defined($$optsref{'cam_config'} ) ) {
+    my %bld = &queryDefaultXML::read_cfg_file( $$optsref{'config'} );
+    $self->{'MODE'}         = $bld{'MODE'};
+    $inputopts{'config'}    = $$optsref{'config'};
+    $config_file            = $$optsref{'config'};
+    $inputopts{'res'}       = $$optsref{'RESOLUTION'};
+  } else {
+    my %bld = &queryDefaultXML::read_cfg_file( $$optsref{'cam_config'} );
+    $self->{'MODE'}         = "ccsm_seq_cam";
+    $inputopts{'config'}    = $$optsref{'cam_config'};
+    $config_file            = $$optsref{'cam_config'};
+    $inputopts{'res'}       = $bld{'RESOLUTION'};
+    $$optsref{'RESOLUTION'} = $bld{'RESOLUTION'};
+  }
+  $self->{'config'}  = $config_file;
+  $self->{'csmdata'} = $$optsref{'csmdata'};
   my %settings;
   my $default_ref = &queryDefaultXML::ReadDefaultXMLFile( \%inputopts, \%settings );
   my %defaults = %$default_ref;
   foreach my $i ( keys(%defaults) ) {
      if ( $$optsref{$i} eq "default" ) {
         $$optsref{$i} = $defaults{$i}{'value'};
+        print "$i   \t\t= $$optsref{$i}\n" if $self->{'printlev'} > 1;
      }
   }
   if ( $$optsref{'lnd_RESOLUTION'} eq "default" ) {
      $$optsref{'lnd_RESOLUTION'} = $$optsref{'RESOLUTION'};
+     print "lnd_res   \t\t= $$optsref{'RESOLUTION'}\n" if $self->{'printlev'} > 1;
   }
-
-  my %bld = &queryDefaultXML::read_cfg_file( $$optsref{'config'} );
-  $self->{'MODE'} = $bld{'MODE'};
 
 
   if ( $self->{'MODE'} eq "ccsm_seq" ) {
@@ -107,6 +121,7 @@ sub new {
      # atm namelist
      $self->{'ATMNL'}    = datm_nml->new( $self->{'optsref'}, $config_file );
      $self->{'ATMSHRNL'} = datm_dshr_in->new( $self->{'optsref'}, $config_file );
+     #$self->{'LNDIONL'}  = lnd_modelio->new( $self->{'optsref'}, $config_file );
   } else {
      # Timing Profile namelist
      $self->{'PROFNL'} = prof_inparm->new( $self->{'optsref'}, $config_file );
@@ -116,9 +131,10 @@ sub new {
   $self->{'LNDNL'} = clm_inparm->new( $self->{'optsref'}, $config_file );
 
   # Driver "virtual" namelist that will put info in the previous namelists
-  $self->{'DRVNL'} = drv_in->new( $self->{'optsref'}, $self->{'LNDNL'},
-                                  $self->{'PROFNL'},  $self->{'CSMNL'},
-                                  $self->{'TIMNL'},   $self->{'ATMSHRNL'} );
+  $self->{'DRVNL'} = drv_in->new( $self->{'optsref'}, $config_file, 
+                                  $self->{'LNDNL'},   $self->{'PROFNL'},  
+                                  $self->{'CSMNL'},   $self->{'TIMNL'},   
+                                  $self->{'ATMSHRNL'} );
 
   bless( $self, $class );
   return( $self );
@@ -137,6 +153,7 @@ sub interactive {
      $self->{'TIMNL'}->change;
      $self->{'ATMNL'}->change;
      $self->{'ATMSHRNL'}->change;
+     #$self->{'LNDIONL'}->change;
   }
   $self->{'PROFNL'}->change;
   $self->{'LNDNL'}->change;
@@ -155,6 +172,7 @@ sub print {
      $self->{TIMNL}->print;
      $self->{ATMNL}->print;
      $self->{ATMSHRNL}->print;
+     #$self->{'LNDIONL'}->print;
   }
   $self->{PROFNL}->print;
   $self->{LNDNL}->print;
@@ -171,10 +189,11 @@ sub parse {
 
   $self->{DRVNL}->parse(   $file );
   if ( $self->{'MODE'} eq "ccsm_seq" ) {
-     $self->{CSMNL}->parse(    $file );
-     $self->{TIMNL}->parse(    $file );
-     $self->{ATMNL}->parse(    $file );
-     $self->{ATMSHRNL}->parse( $file );
+     $self->{CSMNL}->parse(     $file );
+     $self->{TIMNL}->parse(     $file );
+     $self->{ATMNL}->parse(     $file );
+     $self->{ATMSHRNL}->parse(  $file );
+     #$self->{'LNDIONL'}->parse( $file );
   }
   $self->{PROFNL}->parse(   $file );
   $self->{LNDNL}->parse(    $file );
@@ -192,6 +211,11 @@ sub build {
   my $nm = "$class\:\:build";
 
   my $optsref = $self->{'optsref'};
+
+  # Get values from specified use_case.
+  if (defined $optsref->{'use_case'}) {
+    $self->parse("$$optsref{'use_case_dir'}/$$optsref{'use_case'}.nl");
+  }
 
   # Get values from user specified namelist file
   if ( defined( $self->{'PARSE_FILE'} ) ) {
@@ -213,6 +237,7 @@ sub build {
      $self->{'TIMNL'}->convert_case;
      $self->{'ATMNL'}->convert_case;
      $self->{'ATMSHRNL'}->convert_case;
+     #$self->{'LNDIONL'}->convert_case;
   }
   $self->{'PROFNL'}->convert_case;
   $self->{'LNDNL'}->convert_case;
@@ -255,9 +280,15 @@ sub build {
         my $ymd = $self->{'TIMNL'}->Value( "start_ymd" );
         $$optsref{'cycle_init_year'} = int( $ymd / 10000 );
      }
+     if ( $$optsref{'cam_hist_case'} eq "" ) {
+        $settings{'datamode'} = "CLMNCEP";
+     } else {
+        $settings{'datamode'} = "CAMHIST";
+     }
 
      $self->{'ATMNL'}->set_output_values(    \%settings );
      $self->{'ATMSHRNL'}->set_output_values( \%settings );
+     #$self->{'LNDIONL'}->set_output_values(  \%settings );
   } else {
      if ( $$optsref{'runlength'} ne "default" ) {
         if ( $$optsref{'runlength'} =~ /^([1-9][0-9]*)([sdy])$/ ) {
@@ -289,23 +320,31 @@ sub build {
   if ( $self->{'printlev'} ) { print "Write out namelists to directory: $OUTDIR $eol"; }
 
 
-  my %bld = &queryDefaultXML::read_cfg_file( $$optsref{'config'} );
+  my %bld = &queryDefaultXML::read_cfg_file( $self->{'config'} );
   if ( ($bld{'MODE'} eq "ext_ccsm_con")  && defined($self->{'csmdata'}) ) { 
       $self->{'LNDNL'}->Write_prestage(  $self->{'csmdata'} );
-      $self->{'PROFNL'}->Write_prestage( $self->{'csmdata'}, 'Append' );
-  } else {
-      if ( $bld{'MODE'} eq "ccsm_seq") {
-         # Driver namelists
-         $self->{'CSMNL'}->Write;
-         $self->{'TIMNL'}->Write(  'Append' );
-         # Atmosphere namelists
-         $self->{'ATMNL'}->Write;
-         $self->{'ATMSHRNL'}->Write;
-      }
-      # Land namelist
-      $self->{'LNDNL'}->Write;
-      $self->{'PROFNL'}->Write( 'Append' );
   }
+  my $note = "Comment:\nThis namelist was created using the following command-line:\n   " . 
+             $$optsref{'cfgdir'} . "/" . $$optsref{'ProgName'} . " " . $$optsref{'cmdline'} .
+             "\nFor help on options use " . $$optsref{'cfgdir'} . "/" . $$optsref{'ProgName'} . " -help";
+  if ( $bld{'MODE'} eq "ccsm_seq") {
+     # Driver namelists
+     $self->{'CSMNL'}->Write;
+     $self->{'TIMNL'}->Write(  'Append' );
+     $self->{'CSMNL'}->WriteNote(    $note, 'Append' );
+     # Atmosphere namelists
+     $self->{'ATMNL'}->Write;
+     $self->{'ATMNL'}->WriteNote(    $note, 'Append' );
+     $self->{'ATMSHRNL'}->Write;
+     $self->{'ATMSHRNL'}->WriteNote( $note, 'Append' );
+     # Land IO namelist
+     #$self->{'LNDIONL'}->Write;
+     #$self->{'LNDIONL'}->WriteNote(  $note, 'Append' );
+  }
+  # Land namelist
+  $self->{'LNDNL'}->Write;
+  $self->{'PROFNL'}->Write( 'Append' );
+  $self->{'LNDNL'}->WriteNote( $note, 'Append' );
 }
 
 1   # to make use or require happy

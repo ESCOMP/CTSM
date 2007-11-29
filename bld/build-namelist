@@ -21,6 +21,11 @@ sub usage {
 SYNOPSIS
      build-namelist [options]
 OPTIONS
+     -cam_config "file"      Read the CAM config cache file (rather than the CLM version) to get
+                             build-time configuration information. 
+                             (Default -- not used.)
+     -cam_hist_case "caseid" Use the input CAM simulation caseid to build a streams file with that case id.
+                             (Default -- not used).
      -case "name"            Case identifier up to 32 characters
      -clm_cfg "dir"          Directory containing CLM configuration scripts.
      -clm_demand "list"      List of variables to require on clm namelist besides the usuals.
@@ -34,6 +39,12 @@ OPTIONS
                              for cycle_beg_year.
      -d "directory"          Output directory name of resulant namelists.  
                              Default: ./
+     -datm_data_dir "path"   Directory path to the datm data
+                             (only used when mode=ccsm_seq)
+     -datm_domain "file"     File name of domain file for datm data matching resolution data resolution.
+                             (only used when mode=ccsm_seq)
+     -datm_dom_dir "path"    Directory path to the datm_domain file.
+                             (only used when mode=ccsm_seq)
      -help [or -h]           Print usage to STDOUT.
      -ignore_ic_date         Ignore the date on the initial condition files (ic_ymd and ic_tod) 
                              when determining what input initial condition file to use.
@@ -51,8 +62,10 @@ OPTIONS
                              classifiers (d=days, s=steps, y=years)
      -s                      Turns on silent mode - only fatal messages issued.
      -sim_year year          Year to simulate for input datasets (i.e. 1890, 2000, etc.)
+     -source "source"        Source data to use for datm (for ccsm_seq mode)
      -start_type "type"      Type of simulation (arb_ic, startup, continue, or branch)
      -test                   Enable checking that initial and boundary datasets exist on local filesystem.
+     -use_case "case"        Specify a use case which will provide default values.
      -v n                    Set verbosity to level n.  1 (default), 2 or 3.
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
@@ -60,7 +73,8 @@ Note: The precedence for setting the values of namelist variables is (highest to
       2. namelist values set by specific command-line options, e.g., -case -start_type and -ignore_ic_date,
       3. values set on the command-line using the -namelist option,
       4. values read from the file specified by -infile,
-      5. values from defaults files in the CLM configuration
+      5. values specified by the -use_case option,
+      6. values from defaults files in the CLM configuration
          script directory.
 
       Use the "drv_in" 'virtual namelist' to have build-namelist decide which namelist
@@ -93,6 +107,11 @@ my $outdirname = "$cwd";                  # Default name of output directory nam
 
 # Parse command-line options.
 my %opts = ( config          => $cfg_cache,
+             cam_config      => undef,
+             cam_hist_case   => undef,
+             datm_data_dir   => undef,
+             datm_domain     => undef,
+             datm_dom_dir    => undef,
              cfgdir          => $cfgdir,
 	     help            => 0,
 	     interactive     => 0,
@@ -110,14 +129,21 @@ my %opts = ( config          => $cfg_cache,
              clm_demand      => undef,
 	     ignore_ic_date  => undef,
 	     ignore_ic_year  => undef,
+             source          => "default",
 	     silent          => 0,
 	     test            => 0,
+	     use_case        => undef,
 	    );
 
 GetOptions(
     "clm_cfg=s"                 => \$opts{'clm_cfg'},
     "case=s"                    => \$opts{'case'},
     "config=s"                  => \$opts{'config'},
+    "cam_config=s"              => \$opts{'cam_config'},
+    "cam_hist_case=s"           => \$opts{'cam_hist_case'},
+    "datm_data_dir=s"           => \$opts{'datm_data_dir'},
+    "datm_domain=s"             => \$opts{'datm_domain'},
+    "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
     "clm_demand=s"              => \$opts{'clm_demand'},
     "csmdata=s"                 => \$opts{'csmdata'},
     "cycle_beg_year=s"          => \$opts{'cycle_beg_year'},
@@ -136,8 +162,10 @@ GetOptions(
     "res=s"                     => \$opts{'RESOLUTION'},
     "s|silent"                  => \$opts{'silent'},
     "sim_year=s"                => \$opts{'sim_year'},
+    "source=s"                  => \$opts{'source'},
     "runlength=s"               => \$opts{'runlength'},
     "test"                      => \$opts{'test'},
+    "use_case=s"                => \$opts{'use_case'},
     "v|verbose=s"               => \$opts{'verbose'},
 )  or usage();
 
@@ -171,6 +199,7 @@ if ($opts{'printlev'}>2) {
 
 #-----------------------------------------------------------------------------------------------
 # Make sure we can find required perl modules and configuration files.
+# Add $cfgdir to the list of paths that Perl searches for modules
 my @dirs = ( $cfgdir, "$cfgdir/perl5lib", 
              "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib",
              "$cfgdir/../../../../models/utils/perl5lib",
@@ -184,18 +213,29 @@ if ( ! defined($result) ) {
 ** Cannot process perl module \"SeqCCSM_namelist.pm\" in directory: \"$cfgdir\" **
 EOF
 }
+$result = eval "require SeqCCSM_namelist";
+if ( ! defined($result) ) {
+   die <<"EOF";
+** Cannot process perl module \"SeqCCSM_namelist.pm\" in directory: \"$cfgdir\" **
+EOF
+}
+require XML::Lite;
 require SeqCCSM_namelist;
 
 #-----------------------------------------------------------------------------------------------
 
-# Validate specified option values.
-validate_options("command line", \%opts);
 
 # Command-line option processing:
 
-$opts{'cfgdir'}   = $cfgdir;
-$opts{'cmdline'}  = $cmdline;
-$opts{'ProgName'} = $ProgName;
+$opts{'cfgdir'}       = $cfgdir;
+$opts{'cmdline'}      = $cmdline;
+$opts{'ProgName'}     = $ProgName;
+$opts{'use_case_dir'} = "$cfgdir/use_cases";
+
+# Validate specified option values.
+
+validate_options("command line", \%opts);
+
 my $nl = SeqCCSM_namelist->new( \%opts );
 
 $nl->build;            # Build the model namelist
@@ -291,6 +331,25 @@ sub validate_options {
     $opt = 'start_type';
     @expect = ('arb_ic', 'startup', 'continue', 'branch');
     if (defined $opts->{$opt}) {
+	$old = $opts->{$opt};
+	$opts->{$opt} = valid_option($old, @expect)
+	    or die "invalid value of $opt ($old) specified in $source\n".
+                   "expected one of: @expect\n";
+    }
+
+    # use_case
+    $opt = 'use_case';
+    if (defined $opts->{$opt}) {
+
+	# create the @expect array by listing the files in $use_case_dir
+	# and strip off the ".nl" part of the filename
+	@expect = ();
+	my @files = glob("$opts->{'use_case_dir'}/*.nl");
+	foreach my $file (@files) {
+	    $file =~ m{.*/(.*)\.nl};
+	    push @expect, $1;
+	}
+
 	$old = $opts->{$opt};
 	$opts->{$opt} = valid_option($old, @expect)
 	    or die "invalid value of $opt ($old) specified in $source\n".

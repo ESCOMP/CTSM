@@ -84,7 +84,7 @@ contains
     use clm_atmlnd         , only : clm_a2l
     use clm_time_manager       , only : get_step_size
     use clm_varpar         , only : nlevlak
-    use clm_varcon         , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, &
+    use clm_varcon         , only : hvap, hsub, hfus, cpair, cpliq, cpice, tkwat, tkice, &
                                     sb, vkc, grav, denh2o, tfrz, spval
     use QSatMod            , only : QSat
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
@@ -130,6 +130,7 @@ contains
     real(r8), pointer :: forc_snow(:)       ! snow rate [mm/s]
     real(r8), pointer :: forc_rain(:)       ! rain rate [mm/s]
     real(r8), pointer :: t_grnd(:)          ! ground temperature (Kelvin)
+    real(r8), pointer :: hc_soisno(:)       ! soil plus snow plus lake heat content (MJ/m2)
     real(r8), pointer :: h2osno(:)          ! snow water (mm H2O)
     real(r8), pointer :: snowdp(:)          ! snow height (m)
     real(r8), pointer :: sabg(:)            ! solar radiation absorbed by ground (W/m**2)
@@ -297,6 +298,7 @@ contains
     h2osno         => clm3%g%l%c%cws%h2osno
     snowdp         => clm3%g%l%c%cps%snowdp
     t_grnd         => clm3%g%l%c%ces%t_grnd
+    hc_soisno      => clm3%g%l%c%ces%hc_soisno
     errsoi         => clm3%g%l%c%cebal%errsoi
     qmelt          => clm3%g%l%c%cwf%qmelt
 
@@ -341,6 +343,7 @@ contains
 
        ocvts(c) = 0._r8
        ncvts(c) = 0._r8
+       hc_soisno(c) = 0._r8
 
        ! Surface temperature and fluxes
 
@@ -778,6 +781,11 @@ contains
        do fc = 1, num_lakec
           c = filter_lakec(fc)
           ncvts(c) = ncvts(c) + cwat*t_lake(c,j)*dz(c,j)
+          hc_soisno(c) = hc_soisno(c) + cwat*t_lake(c,j)*dz(c,j) /1.e6_r8
+          if (j == nlevlak) then 
+             hc_soisno(c) = hc_soisno(c) +  &
+                            cpice*h2osno(c)*t_grnd(c)*snowdp(c) /1.e6_r8
+          endif
           fin(c) = fin(c) + phi(c,j)
        end do
     end do

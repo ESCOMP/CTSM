@@ -93,6 +93,7 @@ if [ -z "${files_to_compare}" ] && [ "${debug}" != "YES" ]; then
     echo "FAIL.job${JOBID}" > TestStatus
     exit 10
 fi
+
 if [ "$first_file" = "$files_to_compare" ] && [ "$debug" != "YES" ]; then
     echo "TBR.sh: only one file to compare -- not enough"
     echo "FAIL.job${JOBID}" > TestStatus
@@ -103,11 +104,11 @@ all_comparisons_good="TRUE"
 for compare_file in ${files_to_compare}; do
 
     if [ ! -f $compare_file ]; then
-       echo "TBR.sh: error finding file $compare_file"
+       echo "TBR.sh: error finding file $compare_file in " `pwd`
        exit 12
     fi
     if [ ! -f ${CLM_TESTDIR}/TSM.$1.$2.$3.$4.$5.${full_length}.$7/$compare_file ]; then
-       echo "TBR.sh: error finding file $compare_file"
+       echo "TBR.sh: error finding file $compare_file in ${CLM_TESTDIR}/TSM.$1.$2.$3.$4.$5.${full_length}.$7"
        exit 13
     fi
     if [ "$compare_file" != "$first_file" ]; then

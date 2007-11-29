@@ -62,11 +62,11 @@ echo "TSM.sh: obtaining namelist:"
 
 run_length=${6}
 export run_length
-atm_rpointer="atm.rpointer"
+atm_rpointer="rpointer.atm"
 export atm_rpointer
-drv_rpointer="drv.rpointer"
+drv_rpointer="rpointer.drv"
 export drv_rpointer
-lnd_rpointer="lnd.rpointer"
+lnd_rpointer="rpointer.lnd"
 export lnd_rpointer
 
 if     [ "$7" = "arb_ic" ]; then

@@ -12,7 +12,7 @@
        are: RESOLUTION, mask, ic_ymd, ic_tod, sim_year and all configuration
        attributes from the config_cache.xml file (with keys converted to upper-case).
 
-       $Id$
+       $Id: DefaultDATM_DSHR_NML_Namelist.xml 7496 2007-11-08 20:57:34Z erik $
 -->
 <dshr_nml>
 
@@ -45,7 +45,7 @@
 <domainfile RESOLUTION="128x256"     mask="gx1v4">atm/datm7/domain.lnd.T85_gx1v4.060403.nc</domainfile>
 
 <domainfile RESOLUTION="0.23x0.31"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.23x0.31_tx0.1v2_070929.nc</domainfile>
-<domainfile RESOLUTION="0.47x0.63"   mask="gx1v5"  >atm/datm7/domain.lnd.fv0.47x0.63_gx1v5_071005.nc</domainfile>
+<domainfile RESOLUTION="0.47x0.63"   mask="gx1v5"  >atm/datm7/domain.lnd.fv0.47x0.63_gx1v5.071005.nc</domainfile>
 <domainfile RESOLUTION="0.47x0.63"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.47x0.63_tx0.1v2_070929.nc</domainfile>
 <domainfile RESOLUTION="0.9x1.25"    mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv0.9x1.25_USGS.071010.nc</domainfile>
 <domainfile RESOLUTION="0.9x1.25"    mask="gx1v5"  >atm/datm7/domain.lnd.0.9x1.25_gx1v5.070831.nc</domainfile>

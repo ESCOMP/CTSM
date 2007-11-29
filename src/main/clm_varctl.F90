@@ -25,6 +25,11 @@ module clm_varctl
   integer :: nsrest                             ! 0: initial run. 1: restart: 3: branch
   logical, public :: brnch_retain_casename = .false. ! true => allow case name to remain the same for branch run
                                                      ! by default this is not allowed
+  character(len=256) :: hostname                ! Hostname of machine running on
+  character(len=256) :: username                ! username of user running program
+  character(len=256) :: version                 ! version of program
+  character(len=256) :: source                  ! description of this source
+  character(len=256) :: conventions             ! dataset conventions
 
 !
 ! Unit Numbers
@@ -34,12 +39,6 @@ module clm_varctl
 ! Initial file variables
 !
   character(len= 8) :: hist_crtinic             ! if set to 'MONTHLY' or 'YEARLY', write initial cond. file
-!
-! Long term archive variables
-!
-  character(len=256) :: archive_dir             ! long term archive directory (can be mass store)
-  character(len=  8) :: mss_wpass               ! mass store write password for output files
-  integer            :: mss_irt                 ! mass store retention period
 !
 ! Run input files
 !
@@ -86,10 +85,6 @@ module clm_varctl
   logical :: single_column                      ! true => single column mode
   real(r8):: scmlat			        ! single column lat
   real(r8):: scmlon			        ! single column lon
-  real(r8):: scmcloselat                        ! single column lat
-  real(r8):: scmcloselon                        ! single column lon
-  integer :: scmcloselatidx                     ! single column lat index
-  integer :: scmcloselonidx                     ! single column lon index
 !
 ! Rtm control variables
 !
@@ -103,7 +98,6 @@ module clm_varctl
 !
   character(len=256) :: rpntdir                 ! directory name for local restart pointer file
   character(len=256) :: rpntfil                 ! file name for local restart pointer file
-  character(len=256) :: version                 ! model version number
 !
 ! Error growth perturbation limit
 !

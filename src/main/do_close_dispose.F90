@@ -11,12 +11,11 @@ contains
 ! !ROUTINE: do_disp
 !
 ! !INTERFACE:
-subroutine do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, if_remvhist, &
-	            rstwr, nlend)
+subroutine do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, rstwr, nlend)
 !
 ! !DESCRIPTION:
 ! Determine logic for closeing and/or disposing history file
-! Sets values for if_disphist, if_stop, if_remvhist (arguments)
+! Sets values for if_disphist, if_stop (arguments)
 ! Remove history files unless this is end of run or
 ! history file is not full.
 !
@@ -36,7 +35,6 @@ subroutine do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, if_re
   integer, intent(in)  :: hist_mfilt(ntapes)  !maximum number of time samples per tape
   logical, intent(out) :: if_stop             !true => last time step of run
   logical, intent(out) :: if_disphist(ntapes) !true => save and dispose history file
-  logical, intent(out) :: if_remvhist(ntapes) !true => remove local history file after dispose
   logical, intent(in), optional :: rstwr
   logical, intent(in), optional :: nlend	
 !
@@ -72,28 +70,23 @@ subroutine do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, if_re
   if_stop = stop_now
 
   if (stop_now) then
-     ! End of run -  dispose all history files and do not remove any
+     ! End of run -  dispose all history files
 
      if_disphist(1:ntapes) = .true.
-     if_remvhist(1:ntapes) = .false.
 
   else if (rest_now) then
-     ! Restart - dispose all history files, remove only the ones that are full
+     ! Restart - dispose all history files
 
      do t = 1,ntapes
         if_disphist(t) = .true.
-        if_remvhist(t) = .false.
-        if (hist_ntimes(t)==hist_mfilt(t)) if_remvhist(t) = .true.
      end do
   else
-     ! Dispose and remove only full files
+     ! Dispose
 
      if_disphist(1:ntapes) = .false.
-     if_remvhist(1:ntapes) = .false.
      do t = 1,ntapes
         if (hist_ntimes(t) ==  hist_mfilt(t)) then
            if_disphist(t) = .true.
-           if_remvhist(t) = .true.
         endif
      end do
   endif

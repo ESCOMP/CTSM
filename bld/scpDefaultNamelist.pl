@@ -248,8 +248,8 @@ EOF
   }
   if ( defined($opts{'scpscript'}) ) { 
      close( OUT );
+     chmod( 0755, $opts{'scpscript'} ) || die "ERROR:: error changing execute permission on file: " . $opts{'scpscript'};
   }
   if ( $printing ) {
      print "\n\nSuccessful\n\n"
   }
-

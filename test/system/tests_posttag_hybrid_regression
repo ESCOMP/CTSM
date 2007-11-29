@@ -2,22 +2,23 @@ smA91 erA91 brA91 blA91
 smA71 erA71 brA71 blA71
 smB11
 sm111 er111 br111 bl111 sm114
-sm112 er112 br112 bl112 sm115
-sm113 er113 br113 bl113 sm116
-sm127 er127 br127 bl127 sm124
-sm131 er131 br131 bl131 sm134
-sm141 er141 br141 bl141 sm144
-sm211 er211 br211 bl211 sm214
-sm311 er311 br311 bl311 sm314
-sm411 er411 br411 bl411 sm414
-sm417 er417
-sm471 er471       bl471
-sm551 er551 br551 bl551
-sm563 er563 br563 bl563
-sm552 er552 br552 bl552
-sm573 er573 br573 bl573
-sm574             bl574
-sm583 er583 br583 bl583
+smE11 erE11 brE11 blE11 smE14
+smE12 erE12 brE12 blE12 smE15
+smE13 erE13 brE13 blE13 smE16
+smF27 erF27 brF27 blF27 smF24
+smE31 erE31 brE31 blE31 smE34
+smG41 erG41 brG41 blG41 smG44
+smH11 erH11 brH11 blH11 smH14
+smJ11 erJ11 brJ11 blJ11 smJ14
+smK11 erK11 brK11 blK11 smK14
+smK17 erK17
+smK71 erK71       blK71
+smL51 erL51 brL51 blL51
+smL63 erL63 brL63 blL63
+smL52 erL52 brL52 blL52
+smL73 erL73 brL73 blL73
+smL74             blL74
+smL83 erL83 brL83 blL83
 sm611
 sm671
 sm711             bl711

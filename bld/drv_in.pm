@@ -33,25 +33,26 @@ sub new {
 #
   my $class      = shift;
   my $optsref    = shift;
+  my $config     = shift;
   my $LNDNLref   = shift;
   my $PROFNLref  = shift;
   my $CSMNLref   = shift;
   my $TIMNLref   = shift;
   my $ATMSHRNLref= shift;
 
-  my %bld = &queryDefaultXML::read_cfg_file( $$optsref{'config'} );
+  my %bld = &queryDefaultXML::read_cfg_file( $config );
   my $deffile;
   my $MODE = $bld{'MODE'};
   my %deffiles = ( ccsm_seq     => "SeqCCSMDrvInNamelistsDescriptions.xml",
+                   ccsm_seq_cam => "CAMSeqCCSMDrvInNamelistsDescriptions.xml",
                    offline      => "CLMDrvInNamelistsDescriptions.xml",
-                   ext_ccsm_seq => "CCSMDrvInNamelistsDescriptions.xml"
+                   ext_ccsm_con => "CCSMDrvInNamelistsDescriptions.xml"
                  );
   my $deffile = $deffiles{$MODE};
   my $interactive = 0;
   my $file        = "do_not_write_file";
   my $printlev    = $$optsref{'printlev'};
   my $cfgdir      = $$optsref{'cfgdir'};
-  my $config      = $$optsref{'config'};
   my $self = $class->SUPER::new( "drv_in", $file,  \%drv_in::NL, $printlev );
   $self->{'descript_name'} = $MODE;
   $self->{'descript_file'} = "$cfgdir/$deffile";

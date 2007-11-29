@@ -1,0 +1,5 @@
+-mode ccsm_seq
+-spmd 
+-maxpft 4
+-bgc casa
+-s

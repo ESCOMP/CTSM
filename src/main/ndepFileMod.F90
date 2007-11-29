@@ -84,7 +84,7 @@ contains
     character(len=256) :: locfn                          ! local file name
     integer  :: ncid,dimid,varid                         ! netCDF id's
     integer  :: begg,endg                                ! start/stop gridcells
-    integer  :: ier                                      ! error status 
+    integer  :: ier, ret                                 ! error status 
     character(len=32) :: subname = 'ndeprd'              ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -117,7 +117,8 @@ contains
        endif 
 
        if ( .not. single_column )then
-          call ncd_iolocal(ncid,'NDEP_year','read',ndep,grlnd)
+          call ncd_iolocal(ncid,'NDEP_year','read',ndep,grlnd, status=ret)
+          if (ret /= 0) call endrun( trim(subname)//' ERROR: NDEP_year NOT on ndepdat file' )
        else
           call endrun('ndeprd not implemented for SCAM' )
        end if
@@ -387,6 +388,7 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer  :: beg3d(3), len3d(3)      ! input sizes
+    integer  :: ret                     ! error status
     character(len=32) :: subname='ndepdyn_getdata' ! subroutine name
 !-----------------------------------------------------------------------
     
@@ -394,7 +396,8 @@ contains
     beg3d(2) = 1     ;  len3d(2) = lsmlat
     beg3d(3) = ntime ;  len3d(3) = 1
     
-    call ncd_iolocal(ncid,'NDEP_year','read',ndep,grlnd,beg3d,len3d)
+    call ncd_iolocal(ncid,'NDEP_year','read',ndep,grlnd,beg3d,len3d,status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: NDEP_year NOT on ndepdyn file' )
 
   end subroutine ndepdyn_getdata
 

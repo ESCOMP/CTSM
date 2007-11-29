@@ -1,0 +1,7 @@
+-mode ccsm_seq
+-nospmd -nosmp
+-debug
+-maxpft 17
+-bgc cn
+-supln on 
+-s

@@ -158,7 +158,7 @@ contains
     use nanMod
     use decompMod   , only : get_proc_bounds_atm
     use clm_atmlnd  , only : clm_mapa2l, atm_a2l, clm_a2l
-    use clm_varctl  , only : offline_atmdir, pertlim, co2_ppmv
+    use clm_varctl  , only : offline_atmdir, co2_ppmv
     use clm_varcon  , only : rair, cpair, o2_molar_const, tcrit, c13ratio
     use clm_time_manager, only : get_step_size, get_curr_calday, get_curr_date
     use fileutils   , only : getfil

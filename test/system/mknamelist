@@ -43,7 +43,8 @@ else
 fi
 
 # Get mode from config file
-mode=`grep "mode=" $config_file | awk -F\" '{print $2}'`
+mode=`grep   "mode="   $config_file | awk -F\" '{print $2}'`
+pergro=`grep "pergro=" $config_file | awk -F\" '{print $2}'`
 
 #
 # Initialize the following so won't do anything by default
@@ -52,8 +53,7 @@ restart_file=" "
 restbfile=" "
 restsfile=" "
 logfile=" "
-restpfile=" "
-restart_pfile=" "
+atm_cpl_dt=" "
 #
 # If branch and a sequential-CCSM simulation -- set restart files using
 #
@@ -69,33 +69,40 @@ fi
 # If sequential-CCSM -- always do the following...
 #
 if [ "$mode" = "ccsm_seq" ]; then
-  restart_pfile="restart_pfile='$drv_rpointer'"
   logfile="logfilepostfix='.test.log'"
-  restpfile="restpfile='$atm_rpointer'"
+  atm_cpl_dt="atm_cpl_dt=$dtime"
+fi
+
+#
+# If pergro -- don't set history frequency
+#
+if [ "$pergro" = "on" ]; then
+  hist_freq=" "
+  hist_samp=" "
+else
+  hist_freq=" hist_nhtfrq=$hist_nhtfrq "
+  hist_samp=" hist_mfilt     =  1"
 fi
 
 cat > lndinput << EOF
  &drv_in
  brnch_retain_casename = .true.
- mss_irt        =  0
  start_ymd      = $start_ymd
  $restart_file
- $restart_pfile
  $restbfile
  $restsfile
- $restpfile
  $logfile
+ $atm_cpl_dt
  /
  &clm_inparm
  dtime          =  $dtime
  irad           = -1
  hist_dov2xy    = .true.
- hist_nhtfrq    =  $hist_nhtfrq
- hist_mfilt     =  1
  hist_ndens     =  1
  hist_crtinic   = '$inithist'
+ $hist_samp
  nrevsn         = '$nrevsn'
- rpntpath       = '$lnd_rpointer'
+ $hist_freq
  /
 EOF
 
@@ -103,7 +110,7 @@ clmopt=`cat ${CLM_SCRIPTDIR}/nl_files/$1`
 
 echo "$cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \ "
 echo "                 -infile "lndinput" -res $res -lnd_res $land_res -start_type $6 \ "
-echo "                 -csmdata $CSMDATA -runlength $runlen $clmopt "
+echo "                 -csmdata $CSMDATA -runlength $runlen $clmopt -datm_data_dir $DATM_DATA_DIR"
 $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \
                        -infile "lndinput" -res $res -lnd_res $land_res -start_type $6 \
-                       -csmdata $CSMDATA -runlength $runlen $clmopt
+                       -csmdata $CSMDATA -runlength $runlen $clmopt -datm_data_dir $DATM_DATA_DIR

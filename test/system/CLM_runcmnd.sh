@@ -12,6 +12,7 @@ if [ ! -f ${CLM_SCRIPTDIR}/config_files/$1 ]; then
 fi
 
 hostname=`hostname`
+echo "hostname = $hostname"
 case $hostname in
 
     ##bluesky
@@ -235,8 +236,8 @@ case $hostname in
         fi
     fi ;;
 
-    ##jaguar
-    jaguar* | yodjag* )
+    ##jaguarcnl
+    jaguar* | aprunjag* | yodjag* )
     ##search config options file for parallelization info; default on XT4 is mpi
     if grep -ic NOSPMD ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
 	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
@@ -252,13 +253,13 @@ case $hostname in
     else
         if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
             ##mpi only
-	    cmnd="yod -VN -np ${CLM_TASKS} "
+	    cmnd="aprun -n ${CLM_TASKS} "
         elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
             ##hybrid
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} yod -VN -np ${CLM_TASKS} "
+	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} aprun -VN -np ${CLM_TASKS} "
         else
             ##mpi only
-	    cmnd="yod -VN -np ${CLM_TASKS} "
+	    cmnd="aprun -n ${CLM_TASKS} "
         fi
     fi ;;
 

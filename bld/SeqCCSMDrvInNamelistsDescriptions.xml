@@ -20,10 +20,10 @@
 <!-- List of namelist items in the ccsm_inparm namelist-->
 <!-- any items with this keyword name will be moved to the ccsm_inparm namelist -->
                <!-- These should all be in LOWER CASE! -->
-<ccsm_inparm case_desc="s" case_name="s" start_type="s" archive_dir="s"
-             mss_irt="s" mss_wpass="i" brnch_retain_casename="l"
+<ccsm_inparm case_desc="s" case_name="s" start_type="s"
+             brnch_retain_casename="l"
              restart_file="s" restart_pfile="s" restart_file_override="s"
-             logfilepostfix="s" outpathroot="s"
+             logfilepostfix="s" outpathroot="s" version="s" username="s" hostname="s"
              />
 
 <!-- List of namelist items in the timemgr_inparm namelist-->

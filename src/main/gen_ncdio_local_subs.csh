@@ -545,7 +545,6 @@ cat >> $filename <<EOF
     integer           :: lstart(4),lcount(4)  ! local start/count arrays
     logical           :: varpresent ! if true, variable is on tape
     integer           :: varid      ! varid
-    integer           :: ndims      ! ndims for var
     integer           :: dids(4)    ! dim ids
     character(len=32) :: dname(4)   ! dim names
     integer           :: dlen(4)    ! dim lens

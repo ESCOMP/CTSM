@@ -16,7 +16,6 @@ module STATICEcosysdynMOD
   use shr_kind_mod,    only : r8 => shr_kind_r8
   use abortutils,      only : endrun
   use clm_varctl,      only : scmlat,scmlon,single_column
-  use shr_scam_mod,    only : shr_scam_GetCloseLatLon
   use clm_varctl,      only : iulog
   use spmdGathScatMod, only : scatter_data_from_master
 !
@@ -341,7 +340,7 @@ contains
     integer :: npft_i                     ! number of input data pft types
     integer :: begp,endp                  ! beg and end local p index
     integer :: begg,endg                  ! beg and end local g index
-    integer :: ier                        ! error code
+    integer :: ier,ret                    ! error code
     integer :: closelatidx,closelonidx
     real(r8):: closelat,closelon
 
@@ -427,7 +426,7 @@ contains
        call mpi_bcast (ntim  , 1, MPI_INTEGER, 0, mpicom, ier)
 
        if (single_column) then
-          call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+          call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
        endif
 
        allocate(arrayl(begg:endg),stat=ier)
@@ -449,16 +448,20 @@ contains
           end if
           if (nps == 0) beg4d(3) = n+1     ! shift by "1" if index starts at zero
 
-          call ncd_iolocal(ncid,'MONTHLY_LAI','read',arrayl,grlnd,beg4d,len4d)
+          call ncd_iolocal(ncid,'MONTHLY_LAI','read',arrayl,grlnd,beg4d,len4d,status=ret)
+          if (ret /= 0) call endrun( trim(subname)//' ERROR: MONTHLY_LAI NOT on fveg file' )
           mlai(begg:endg,n) = arrayl(begg:endg)
 
-          call ncd_iolocal(ncid,'MONTHLY_SAI','read',arrayl,grlnd,beg4d,len4d)
+          call ncd_iolocal(ncid,'MONTHLY_SAI','read',arrayl,grlnd,beg4d,len4d,status=ret)
+          if (ret /= 0) call endrun( trim(subname)//' ERROR: MONTHLY_SAI NOT on fveg file' )
           msai(begg:endg,n) = arrayl(begg:endg)
 
-          call ncd_iolocal(ncid,'MONTHLY_HEIGHT_TOP','read',arrayl,grlnd,beg4d,len4d)
+          call ncd_iolocal(ncid,'MONTHLY_HEIGHT_TOP','read',arrayl,grlnd,beg4d,len4d,status=ret)
+          if (ret /= 0) call endrun( trim(subname)//' ERROR: MONTHLY_HEIGHT_TOP NOT on fveg file' )
           mhgtt(begg:endg,n) = arrayl(begg:endg)
 
-          call ncd_iolocal(ncid,'MONTHLY_HEIGHT_BOT','read',arrayl,grlnd,beg4d,len4d)
+          call ncd_iolocal(ncid,'MONTHLY_HEIGHT_BOT','read',arrayl,grlnd,beg4d,len4d,status=ret)
+          if (ret /= 0) call endrun( trim(subname)//' ERROR: MONTHLY_HEIGHT_BOT NOT on fveg file' )
           mhgtb(begg:endg,n) = arrayl(begg:endg)
        enddo
 

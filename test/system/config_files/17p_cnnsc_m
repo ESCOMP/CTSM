@@ -1,0 +1,6 @@
+-mode ccsm_seq
+-spmd 
+-maxpft 17
+-bgc cn
+-supln on 
+-s

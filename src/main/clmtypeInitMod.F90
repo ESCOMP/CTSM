@@ -2488,15 +2488,19 @@ contains
     allocate(ces%t_snow(beg:end))
     allocate(ces%thv(beg:end))
     allocate(ces%thm(beg:end))
+    allocate(ces%hc_soi(beg:end))
+    allocate(ces%hc_soisno(beg:end))
 
-    ces%t_grnd(beg:end) = nan
-    ces%dt_grnd(beg:end) = nan
+    ces%t_grnd(beg:end)    = nan
+    ces%dt_grnd(beg:end)   = nan
     ces%t_soisno(beg:end,-nlevsno+1:nlevsoi) = nan
-    ces%t_lake(beg:end,1:nlevlak)= nan
-    ces%tssbef(beg:end,-nlevsno+1:nlevsoi) = nan
-    ces%t_snow(beg:end) = nan
-    ces%thv(beg:end) = nan
-    ces%thm(beg:end) = nan
+    ces%t_lake(beg:end,1:nlevlak)            = nan
+    ces%tssbef(beg:end,-nlevsno+1:nlevsoi)   = nan
+    ces%t_snow(beg:end)    = nan
+    ces%thv(beg:end)       = nan
+    ces%thm(beg:end)       = nan
+    ces%hc_soi(beg:end)    = nan
+    ces%hc_soisno(beg:end) = nan
 
   end subroutine init_column_estate_type
 

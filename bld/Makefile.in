@@ -269,7 +269,8 @@ ifeq ($(findstring ftn,$(FC)),ftn)
   PGI_FC := TRUE
   USER_CC := cc
   PGI_CC := TRUE
-  USER_LDFLAGS += -lgmalloc -time -Wl,--allow-multiple-definition
+  USER_LDFLAGS += -time -Wl,--allow-multiple-definition -Mnosecond_underscore
+  USER_FFLAGS  += -Mnosecond_underscore
 endif
 
 # Set the C compiler (default: pgcc if using PGI Fortran compiler, cc otherwise)
@@ -373,10 +374,11 @@ endif
 
 ifeq ($(findstring ifort,$(FC)),ifort)
 
-  FFLAGS      := $(cpp_path) $(mod_path) $(CPPDEF) -132 -ftz -g
+  FFLAGS      := $(cpp_path) $(mod_path) $(CPPDEF) -132 -ftz -g -m64
   FREEFLAGS   := -FR
   FIXEDFLAGS  :=
   LDFLAGS     :=
+  CFLAGS      += -m64 -ftz -g
 
   ifeq ($(DEBUG),TRUE)
     FFLAGS    += -CB
@@ -392,6 +394,7 @@ ifeq ($(findstring ifort,$(FC)),ifort)
     FFLAGS    += -openmp
     LDFLAGS   += -openmp
   endif
+  LDFLAGS   += -m64
 
 endif
 
@@ -685,32 +688,57 @@ endif
 
 ifeq ($(UNAMES),Darwin)
 
-CPPDEF     += -DAIX -DDarwin -DFORTRAN_SAME -DNO_SHR_VMATH
+CPPDEF     += -DDarwin -DNO_SHR_VMATH
 
-cpre = $(null)-WF,-D$(null)
-FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
-
-FC := xlf90_r
-
-CC         := xlc
-CFLAGS     := -I/usr/include -I/usr/include/malloc $(cpp_path) $(CPPDEF) -O2
 mod_path   := -I$(MOD_NETCDF)
-FFLAGS     := $(cpp_path) $(mod_path) $(FPPFLAGS) -qspillsize=2500 
-FREEFLAGS  := -qsuffix=f=f90:cpp=F90
-FIXEDFLAGS := -qfixed=132
-LDFLAGS    := -lSystemStubs -lSystemStubs_profile
 
-ifeq ($(DEBUG),TRUE)
-  # Only turn float-trapping on for debug mode as it's a performance hit.
-  # Remove halt on error -- because of problem with field widths -qhalt=e: EBK 7/13/07
-  FFLAGS += -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C -qfullpath
-else
-  # Check for override of default Fortran compiler optimizations
-  ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
-    FORTRAN_OPTIMIZATION := -O3 -qstrict
-  endif
-  FFLAGS += $(FORTRAN_OPTIMIZATION)
+ifeq ($(FC),g95)
+   CPPDEF   += -DG95
+   FFLAGS   := -fno-underscoring $(CPPDEF) $(cpp_path) -I$(MOD_NETCDF) -I$(INC_NETCDF)
+   ifeq ($(DEBUG),TRUE)
+     FFLAGS += -g -fbounds-check
+   else
+     # Check for override of default Fortran compiler optimizations
+     ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+       FORTRAN_OPTIMIZATION := -O2
+     endif
+     FFLAGS += $(FORTRAN_OPTIMIZATION)
+   endif
+
 endif
+ifeq ($(FC),null)
+   CPPDEF     += -DAIX
+   cpre = $(null)-WF,-D$(null)
+   FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
+   FFLAGS     := $(cpp_path) $(mod_path) $(FPPFLAGS) -qspillsize=2500 
+   FREEFLAGS  := -qsuffix=f=f90:cpp=F90
+   FIXEDFLAGS := -qfixed=132
+
+   FC := xlf90_r
+
+   ifeq ($(DEBUG),TRUE)
+     # Only turn float-trapping on for debug mode as it's a performance hit.
+     # Remove halt on error -- because of problem with field widths -qhalt=e: EBK 7/13/07
+     FFLAGS += -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C -qfullpath
+   else
+     # Check for override of default Fortran compiler optimizations
+     ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
+       FORTRAN_OPTIMIZATION := -O3 -qstrict
+     endif
+     FFLAGS += $(FORTRAN_OPTIMIZATION)
+   endif
+
+endif
+
+ifeq ($(CC),gcc)
+   CFLAGS     := $(cpp_path) -O2 $(CPPDEF) -I/Developer/SDKs/MacOSX10.4.0.sdk/usr/include/malloc
+endif
+ifeq ($(CC),null)
+   CC         := xlc
+   CFLAGS     := -I/usr/include -I/usr/include/malloc $(cpp_path) $(CPPDEF) -O2
+endif
+
+LDFLAGS    := -L$(LIB_NETCDF) -lnetcdf -lSystemStubs -lSystemStubs_profile
 
 ifeq ($(SMP),TRUE)
   # SMP not implemented

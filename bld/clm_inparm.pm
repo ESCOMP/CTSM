@@ -120,7 +120,7 @@ sub set_output_values {
   if ( ! defined($NLref->{'fpftcon'})) {
       $opt = $self->default_vals( 'fpftcon' );
   } else {
-      $opt = $self->{'fpftcon'};
+      $opt = $NLref->{'fpftcon'};
   }
   $NLref->{'fpftcon'} = namelist::quote_string($opt);
   $self->requiredVar( "fpftcon", $addquotes );
@@ -309,7 +309,9 @@ sub set_output_values {
      if ( ! defined($NLref->{'finidat'}) ) {
         $NLref->{'finidat'} = "' '";
      } else {
-	die "ERROR: start_type set to arb_ic and yet finidat is also set\n";
+        if ( $NLref->{'finidat'} !~ /^[' "]+$/ ) {
+	   die "ERROR: start_type set to arb_ic and yet finidat is also set\n";
+        }
      }
   } else {
      unless ( defined($NLref->{'finidat'}) ) {

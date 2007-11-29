@@ -25,7 +25,7 @@ contains
     use clmtype
     use clm_varpar   , only : nlevsoi, nlevsno, nlevlak
     use clm_varcon   , only : bdsno, istice, istwet, istsoil, denice, denh2o, spval, sb
-    use clm_varctl   , only : iulog
+    use clm_varctl   , only : iulog, pertlim
     use spmdMod      , only : masterproc
     use decompMod    , only : get_proc_bounds
 !
@@ -84,9 +84,14 @@ contains
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     real(r8):: vwc,psi      ! for calculating soilpsi
+    real(r8):: pertval      ! for calculating temperature perturbation
 !-----------------------------------------------------------------------
 
-    if ( masterproc ) write(iulog,*) 'Setting initial data to non-spun up values'
+    if ( masterproc )then
+        write(iulog,*) 'Setting initial data to non-spun up values'
+        if ( pertlim /= 0.0_r8 ) &
+        write(iulog,*) 'Applying perturbation to initial surface temperature'
+    end if
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 
@@ -216,6 +221,23 @@ contains
           t_lake(c,1:nlevlak) = 277._r8
           t_grnd(c) = t_lake(c,1)
        endif
+       if ( pertlim /= 0.0_r8 )then
+          if (.not. lakpoi(l)) then  !not lake
+             do j = 1, nlevsoi
+                call random_number (pertval)
+                pertval       = 2._r8*pertlim*(0.5_r8 - pertval)
+                t_soisno(c,j) = t_soisno(c,j)*(1._r8 + pertval)
+             end do
+             t_grnd(c) = t_soisno(c,snl(c)+1)
+          else                       !lake
+             do j = 1, nlevlak
+                call random_number (pertval)
+                pertval     = 2._r8*pertlim*(0.5_r8 - pertval)
+                t_lake(c,j) = t_lake(c,j)*(1._r8 + pertval)
+             end do
+             t_grnd(c) = t_lake(c,1)
+          endif
+       end if
 
     end do
 

@@ -1,4 +1,4 @@
 -spmd -smp
 -debug
--pergro
+-pergro on
 -s

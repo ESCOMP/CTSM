@@ -16,15 +16,15 @@ that particular namelist.
  case_name
  case_desc
  start_type
- archive_dir
- mss_irt 
- mss_wpass
  brnch_retain_casename
  restart_pfile
  restart_file
  restart_file_override
  logfilepostfix
  outpathroot
+ version
+ hostname
+ username
 /
 &timemgr_inparm
  atm_cpl_dt       ! Coupling frequency
@@ -117,6 +117,5 @@ that particular namelist.
  hist_fexcl5
  hist_fexcl6
  hist_crtinic
- rpntpath
  rest_flag
 /

@@ -1,0 +1,186 @@
+<streamstemplate>
+
+<!--
+
+    Streams template for datasource=CLMNCEP 
+
+-->
+
+
+<general_comment>
+  ----------------------------------------------------------------------
+  streams template for datm7 in clm
+  ----------------------------------------------------------------------
+  SVN: $Id: datm.template.streams.xml 6994 2007-10-19 23:30:17Z kauff $
+  SVN: $URL: https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk/ccsm_utils/Components/datm.template.streams.xml $
+  ----------------------------------------------------------------------
+</general_comment>
+
+<datm_comment>DATM streams template for use with stand-alone CLM</datm_comment>
+
+<stream datasource="CLMNCEP">
+
+<!-- Comment on description of stream data -->
+
+<comment>Stream description file for CLM-NCEP data</comment>
+
+<!-- Data source names -->
+<dataSource>CLMNCEP</dataSource>
+
+
+<!-- Domain information -->
+<domainInfo>
+   <variableNames>
+       time    time
+       xc      lon
+       yc      lat
+       area    area
+       mask    mask
+   </variableNames>
+   <filePath>%d/atm/datm7</filePath>
+   <fileNames> domain.T62.050609.nc </fileNames>
+</domainInfo>
+
+<fieldInfo>
+   <!-- Field names -->
+   <variableNames>
+      TBOT     tbot
+      WIND     wind
+      QBOT     shum
+      PRECTmms precn
+      FSDS     swdn
+      PSRF     pbot
+   </variableNames>
+   <!-- File path to data -->
+   <filePath>%p</filePath>
+   <!-- data filenames template -->
+   <fileNames>clmncep.T62.%ym.nc</fileNames>
+</fieldInfo>
+
+</stream>
+
+<!--
+
+    Streams template for datasource=CAMHIST.eul64x128_datm6.01
+
+-->
+<stream datasource="CAMHIST.eul64x128_datm6.01">
+
+<!-- Comment on description of stream data -->
+
+<comment>Stream description file for CAM history data from the case eul64x128_datm6.01 at T42 resolution</comment>
+
+<!-- Data source names -->
+<dataSource>CAM</dataSource>
+
+<!-- Domain information -->
+<domainInfo>
+   <variableNames>
+       time    time
+       xc      lon
+       yc      lat
+       area    area
+       mask    mask
+   </variableNames>
+   <filePath>%d/atm/datm7</filePath>
+   <fileNames>domain.T42.050516.nc</fileNames>
+</domainInfo>
+
+<fieldInfo>
+
+   <!-- names -->
+   <variableNames>
+       co2vmr   co2diag
+       FSNS     swnet
+       PRECC    precc
+       PRECL    precl
+       PRECSC   snowc
+       PRECSL   snowl
+       PS       ps
+       PSL      pslv
+       QBOT     shum
+       SOLLD    swndf
+       SOLL     swndr
+       SOLS     swvdr
+       SOLSD    swvdf
+       SRFRAD   srfrad
+       FSNS     swnet
+       TBOT     tbot
+       UBOT     u
+       VBOT     v
+       ZBOT     z
+   </variableNames>
+
+   <!-- File path to data -->
+   <filePath >%d/atm/datm7/CAMHIST</filePath>
+
+   <!-- data filenames template -->
+   <fileNames>eul64x128_datm6.01.cam2.h1.%4y-01-01-00000.nc</fileNames>
+
+</fieldInfo>
+
+</stream>
+
+<!--
+
+    Streams template for datasource=CAMHIST generic
+
+-->
+<stream datasource="CAMHIST.GENERIC">
+
+<!-- Comment on description of stream data -->
+
+<comment>Stream description file for CAM history data from an arbitrary case</comment>
+
+<!-- Data source names -->
+<dataSource>CAM</dataSource>
+
+<!-- Domain information -->
+<domainInfo>
+   <variableNames>
+       time    time
+       xc      lon
+       yc      lat
+       area    area
+       mask    mask
+   </variableNames>
+   <filePath>%d/atm/datm7</filePath>
+   <fileNames> %do </fileNames>
+</domainInfo>
+
+<fieldInfo>
+
+   <!-- names -->
+   <variableNames>
+       co2vmr   co2diag
+       FSNS     swnet
+       PRECC    precc
+       PRECL    precl
+       PRECSC   snowc
+       PRECSL   snowl
+       PS       ps
+       PSL      pslv
+       QBOT     shum
+       SOLLD    swndf
+       SOLL     swndr
+       SOLS     swvdr
+       SOLSD    swvdf
+       SRFRAD   srfrad
+       FSNS     swnet
+       TBOT     tbot
+       UBOT     u
+       VBOT     v
+       ZBOT     z
+   </variableNames>
+
+   <!-- File path to data -->
+   <filePath>%p</filePath>
+
+   <!-- data filenames template -->
+   <fileNames>%c.cam2.h0.%ym.nc</fileNames>
+
+</fieldInfo>
+
+</stream>
+
+</streamstemplate>

@@ -18,7 +18,6 @@ subroutine iniTimeConst
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_scam_mod, only : shr_scam_GetCloseLatLon
   use nanMod
   use clmtype
   use decompMod   , only : get_proc_bounds, get_proc_global
@@ -45,7 +44,6 @@ subroutine iniTimeConst
   use abortutils  , only : endrun
   use fileutils   , only : getfil
   use ndepFileMod , only : ndeprd
-  use pftvarcon   , only : pftconrd
   use ncdio
   use spmdMod
 !
@@ -225,7 +223,7 @@ subroutine iniTimeConst
   count(1) = lsmlon
   count(2) = lsmlat
   if (single_column) then
-     call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
+     call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,closelatidx,closelonidx)
      start(1) = closelonidx
      start(2) = closelatidx
   else
@@ -236,17 +234,21 @@ subroutine iniTimeConst
   count(3) = 1
 
   ! Read fmax
-  call ncd_iolocal(ncid, 'FMAX', 'read', gti, grlnd,start(:2),count(:2))
+  call ncd_iolocal(ncid, 'FMAX', 'read', gti, grlnd,start(:2),count(:2), status=ret)
+  if (ret /= 0) call endrun( trim(subname)//' ERROR: FMAX NOT on surfdata file' ) 
 
   ! Read in soil color, sand and clay fraction
-  call ncd_iolocal(ncid, 'SOIL_COLOR', 'read', soic2d, grlnd,start(:2),count(:2))
+  call ncd_iolocal(ncid, 'SOIL_COLOR', 'read', soic2d, grlnd,start(:2),count(:2),status=ret)
+  if (ret /= 0) call endrun( trim(subname)//' ERROR: SOIL_COLOR NOT on surfdata file' ) 
 
   allocate(arrayl(begg:endg))
   do n = 1,nlevsoi
      start(3) = n
-     call ncd_iolocal(ncid,'PCT_SAND','read',arrayl,grlnd,start,count)
+     call ncd_iolocal(ncid,'PCT_SAND','read',arrayl,grlnd,start,count,status=ret)
+     if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_SAND NOT on surfdata file' ) 
      sand3d(begg:endg,n) = arrayl(begg:endg)
-     call ncd_iolocal(ncid,'PCT_CLAY','read',arrayl,grlnd,start,count)
+     call ncd_iolocal(ncid,'PCT_CLAY','read',arrayl,grlnd,start,count,status=ret)
+     if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_CLAY NOT on surfdata file' ) 
      clay3d(begg:endg,n) = arrayl(begg:endg)
   enddo
   deallocate(arrayl)
@@ -293,13 +295,6 @@ subroutine iniTimeConst
      clayfrac(p) = clay3d(g,1)/100.0_r8
   end do
 #endif
-
-  ! --------------------------------------------------------------------
-  ! Read list of PFTs and their corresponding parameter values
-  ! This is independent of the model resolution
-  ! --------------------------------------------------------------------
-
-  call pftconrd()
 
   ! --------------------------------------------------------------------
   ! If a nitrogen deposition dataset has been specified, read it

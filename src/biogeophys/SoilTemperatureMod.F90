@@ -110,6 +110,8 @@ contains
     real(r8), pointer :: dz(:,:)            ! layer depth (m)
     real(r8), pointer :: z(:,:)             ! layer thickness (m)
     real(r8), pointer :: t_soisno(:,:)      ! soil temperature (Kelvin)
+    real(r8), pointer :: hc_soi(:)          ! soil heat content (MJ/m2)
+    real(r8), pointer :: hc_soisno(:)       ! soil plus snow plus lake heat content (MJ/m2)
 ! 
 ! local pointers to  original implicit inout arguments
 !
@@ -157,6 +159,8 @@ contains
     htvp           => clm3%g%l%c%cps%htvp
     emg            => clm3%g%l%c%cps%emg
     t_grnd         => clm3%g%l%c%ces%t_grnd
+    hc_soi         => clm3%g%l%c%ces%hc_soi
+    hc_soisno      => clm3%g%l%c%ces%hc_soisno
     zi             => clm3%g%l%c%cps%zi
     dz             => clm3%g%l%c%cps%dz
     z              => clm3%g%l%c%cps%z
@@ -323,6 +327,32 @@ contains
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        t_grnd(c) = t_soisno(c,snl(c)+1)
+    end do
+
+
+! Initialize soil heat content
+!dir$ concurrent
+!cdir nodep
+    do fc = 1,num_nolakec
+       c = filter_nolakec(fc)
+       hc_soisno(c) = 0._r8
+       hc_soi(c)    = 0._r8
+    end do
+
+! Calculate soil heat content and soil plus snow heat content
+    do j = -nlevsno+1,nlevsoi
+!dir$ prefervector
+!dir$ concurrent
+!cdir nodep
+       do fc = 1,num_nolakec
+          c = filter_nolakec(fc)
+          if (j >= snl(c)+1) then
+             hc_soisno(c) = hc_soisno(c) + cv(c,j)*t_soisno(c,j) / 1.e6_r8
+          endif
+          if (j >= 1) then
+             hc_soi(c) = hc_soi(c) + cv(c,j)*t_soisno(c,j) / 1.e6_r8
+          end if
+       end do
     end do
 
   end subroutine SoilTemperature

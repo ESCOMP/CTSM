@@ -4,6 +4,8 @@
 #
 #=======================================================================
 use strict;
+use Build::Config;
+
 package queryDefaultXML;
 
 #-------------------------------------------------------------------------------
@@ -38,25 +40,78 @@ sub read_cfg_file
 
     # Check for valid root node
     my $name = $root->get_name();
-    $name eq "config_bld" or die
-        "file $file is not a CLM configuration file\n";
 
-    # Get source and build directories
-    my $dirs = $xml->elements_by_name( "directories" );
-    my %dirs = $dirs->get_attributes();
-    my %DIRS = convert_keys_touppercase( %dirs );
+    my %return_hash;
+    #
+    # If CLM configuration file
+    #
+    if ( $name eq "config_bld" ) {
 
-    # Get cppvars
-    my $cppvars = $xml->elements_by_name( "cppvars" );
-    my %cppvars = $cppvars->get_attributes();
-    my %CPPVARS = convert_keys_touppercase( %cppvars );
+       # Get source and build directories
+       my $dirs = $xml->elements_by_name( "directories" );
+       my %dirs = $dirs->get_attributes();
+       my %DIRS = convert_keys_touppercase( %dirs );
+   
+       # Get cppvars
+       my $cppvars = $xml->elements_by_name( "cppvars" );
+       my %cppvars = $cppvars->get_attributes();
+       my %CPPVARS = convert_keys_touppercase( %cppvars );
 
-    # Get settings for Makefile (parallelism and library locations)
-    my $make = $xml->elements_by_name( "makefile" );
-    my %make = $make->get_attributes();
-    my %MAKE = convert_keys_touppercase( %make );
+       # Get settings for Makefile (parallelism and library locations)
+       my $make = $xml->elements_by_name( "makefile" );
+       my %make = $make->get_attributes();
+       my %MAKE = convert_keys_touppercase( %make );
 
-    return %DIRS, %CPPVARS, %MAKE;
+       %return_hash = ( %DIRS, %CPPVARS, %MAKE );
+    #
+    # If Build::Config type configuration file
+    #
+    } elsif ( $name eq "config_definition" ) {
+       # Use Build::Config object to read config_cache.xml file
+       my $cfg_ref = Build::Config->new($file);
+       my %config;
+       foreach my $item ( $cfg_ref->get_names() ) {
+          my $value      = $cfg_ref->get($item);
+          $config{$item} = $value;
+       }
+       my %cam_config = convert_keys_touppercase( %config );
+       $return_hash{'RESOLUTION'} = $cfg_ref->get( 'hgrid' );
+       $return_hash{'MODE'}       = "ccsm_seq_cam";
+       $return_hash{'BGC'}        = "none";
+       my @deflist = ("DUST", "VOC", "AD_SPINUP", "EXIT_SPINUP", "SUPLN" );
+       foreach my $item ( @deflist ) {
+          $return_hash{$item} = "off";
+       }
+       my $cppdefs = $cfg_ref->get( 'cppdefs' );
+       my @cpp     = split( " ", $cppdefs );
+       foreach my $cpp ( @cpp ) {
+          if (      $cpp =~ /^[ ]*-D([^ ]+)[ ]*$/ ) {
+            $cpp = $1;
+          } elsif ( $cpp =~ /^[ ]*-U([^ ]+)[ ]*$/ ) {
+            next;
+          } else {
+            die "cppdefs: $cppdefs in file: $file is not in a readible format\n";
+          }
+          foreach my $item ( @deflist ) {
+              if ( $cpp eq $item ) {
+                $return_hash{$item} = "on";
+              }
+          }
+          if ( $cpp eq "CN" ) {
+            $return_hash{'BGC'} = "cn";
+          }
+          if ( $cpp eq "CASA" ) {
+            $return_hash{'BGC'} = "casa";
+          }
+          if ( $cpp eq "DGVM" ) {
+            $return_hash{'BGC'} = "dgvm";
+          }
+       }
+    } else {
+       die "file $file is not a CLM or Build::Config configuration file\n";
+    }
+
+    return %return_hash;
 }
 
 #-------------------------------------------------------------------------------

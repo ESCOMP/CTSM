@@ -295,11 +295,15 @@ contains
 
        ! Ground Emissivity
 
+#if (defined PERGRO)
+       emg(c) = 0.965_r8
+#else
        if (h2osno(c)>0._r8 .or. ityplun(l)==istice) then
           emg(c) = 0.97_r8
        else
           emg(c) = 0.96_r8
        end if
+#endif
 
        ! Latent heat. We arbitrarily assume that the sublimation occurs
        ! only as h2osoi_liq = 0

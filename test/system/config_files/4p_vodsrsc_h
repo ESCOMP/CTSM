@@ -1,0 +1,7 @@
+-mode ccsm_seq
+-spmd -smp
+-maxpft 4
+-rtm on
+-dust on
+-voc on
+-s

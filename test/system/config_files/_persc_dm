@@ -1,0 +1,5 @@
+-mode ccsm_seq
+-spmd -nosmp
+-debug
+-pergro on
+-s

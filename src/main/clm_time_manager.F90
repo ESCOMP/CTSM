@@ -60,14 +60,15 @@ module clm_time_manager
       start_tod     = 0,           &! starting time of day for run in seconds
       stop_ymd      = uninit_int,  &! stopping date for run in yearmmdd format
       stop_tod      = 0,           &! stopping time of day for run in seconds
+      stop_final_ymd= 99991231,    &! final stopping date for run in yearmmdd format
       ref_ymd       = uninit_int,  &! reference date for time coordinate in yearmmdd format
       ref_tod       = 0             ! reference time of day for time coordinate in seconds
 
 ! Private module data
 
-   type(ESMF_Calendar), save         :: tm_cal       ! calendar
-   type(ESMF_Clock)   , save, public :: tm_clock     ! model clock   
-   type(ESMF_Time)    , save         :: tm_perp_date ! perpetual date
+   type(ESMF_Calendar)         :: tm_cal       ! calendar
+   type(ESMF_Clock)   , public :: tm_clock     ! model clock   
+   type(ESMF_Time)             :: tm_perp_date ! perpetual date
 
    integer ::&                      ! Data required to restart time manager:
       rst_nstep     = uninit_int,  &! current step number
@@ -123,6 +124,7 @@ subroutine timemgr_init( calendar_in, start_ymd_in, start_tod_in, ref_ymd_in, &
   integer :: yr, mon, day, tod             ! Year, month, day, and second as integers
   type(ESMF_Time) :: start_date            ! start date for run
   type(ESMF_Time) :: stop_date             ! stop date for run
+  type(ESMF_Time) :: final_stop_date       ! final stop date for run
   type(ESMF_Time) :: curr_date             ! temporary date used in logic
   type(ESMF_Time) :: ref_date              ! reference date for time coordinate
   logical :: run_length_specified = .false.
@@ -198,6 +200,11 @@ subroutine timemgr_init( calendar_in, start_ymd_in, start_tod_in, ref_ymd_in, &
         call endrun (sub//': Must specify at least one of stop_ymd, nestep, or nelapse')
      end if
   end if
+
+  ! Bound to final stop date
+
+  final_stop_date = TimeSetymd( stop_final_ymd, 0, "final_stop_date" )
+  if ( stop_date > final_stop_date) stop_date = final_stop_date
 
   ! Error check 
 
@@ -390,7 +397,7 @@ subroutine timemgr_restart_io( ncid, flag )
         cal = to_upper(calendar)
         if ( trim(cal) == 'NO_LEAP' ) then
            rst_caltype = noleap
-        else if ( trim(cal) == 'ESMF_CAL_GREGORIAN' ) then
+        else if ( trim(cal) == 'GREGORIAN' ) then
            rst_caltype = gregorian
         else
            write(iulog,*)sub,': unrecognized calendar specified: ',calendar
@@ -408,7 +415,7 @@ subroutine timemgr_restart_io( ncid, flag )
         if ( rst_caltype == noleap ) then
            calendar = 'NO_LEAP'
         else if ( rst_caltype == gregorian ) then
-           calendar = 'ESMF_CAL_GREGORIAN'
+           calendar = 'GREGORIAN'
         else
            write(iulog,*)sub,': unrecognized calendar type in restart file: ',rst_caltype
            call endrun

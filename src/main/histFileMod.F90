@@ -13,7 +13,6 @@ module histFileMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use shr_sys_mod , only : shr_sys_getenv
   use shr_sys_mod , only : shr_sys_flush
   use abortutils  , only : endrun
   use ncdio
@@ -61,36 +60,36 @@ module histFileMod
        hist_type1d_pertape(max_tapes)  = (/(' ',ni=1,max_tapes)/)   ! namelist: per tape type1d
 
   character(len=max_namlen+2), public :: &
-       fincl(max_flds,max_tapes) = ' '   ! namelist-equivalence list of fields to add
+       fincl(max_flds,max_tapes)         ! namelist-equivalence list of fields to add
 
   character(len=max_namlen+2), public :: &
-       hist_fincl1(max_flds)        ! namelist: list of fields to add
+       hist_fincl1(max_flds) = ' '       ! namelist: list of fields to add
   character(len=max_namlen+2), public :: &
-       hist_fincl2(max_flds)        ! namelist: list of fields to add
+       hist_fincl2(max_flds) = ' '       ! namelist: list of fields to add
   character(len=max_namlen+2), public :: &
-       hist_fincl3(max_flds)        ! namelist: list of fields to add
+       hist_fincl3(max_flds) = ' '       ! namelist: list of fields to add
   character(len=max_namlen+2), public :: &
-       hist_fincl4(max_flds)        ! namelist: list of fields to add
+       hist_fincl4(max_flds) = ' '       ! namelist: list of fields to add
   character(len=max_namlen+2), public :: &
-       hist_fincl5(max_flds)        ! namelist: list of fields to add
+       hist_fincl5(max_flds) = ' '       ! namelist: list of fields to add
   character(len=max_namlen+2), public :: &
-       hist_fincl6(max_flds)        ! namelist: list of fields to add
+       hist_fincl6(max_flds) = ' '       ! namelist: list of fields to add
 
   character(len=max_namlen), public :: &
-       fexcl(max_flds,max_tapes) = ' '   ! namelist-equivalence list of fields to remove
+       fexcl(max_flds,max_tapes)         ! namelist-equivalence list of fields to remove
 
   character(len=max_namlen), public :: &
-       hist_fexcl1(max_flds)  ! namelist: list of fields to remove
+       hist_fexcl1(max_flds) = ' ' ! namelist: list of fields to remove
   character(len=max_namlen), public :: &
-       hist_fexcl2(max_flds)  ! namelist: list of fields to remove
+       hist_fexcl2(max_flds) = ' ' ! namelist: list of fields to remove
   character(len=max_namlen), public :: &
-       hist_fexcl3(max_flds)  ! namelist: list of fields to remove
+       hist_fexcl3(max_flds) = ' ' ! namelist: list of fields to remove
   character(len=max_namlen), public :: &
-       hist_fexcl4(max_flds)  ! namelist: list of fields to remove
+       hist_fexcl4(max_flds) = ' ' ! namelist: list of fields to remove
   character(len=max_namlen), public :: &
-       hist_fexcl5(max_flds)  ! namelist: list of fields to remove
+       hist_fexcl5(max_flds) = ' ' ! namelist: list of fields to remove
   character(len=max_namlen), public :: &
-       hist_fexcl6(max_flds)  ! namelist: list of fields to remove
+       hist_fexcl6(max_flds) = ' ' ! namelist: list of fields to remove
 !
 ! Restart
 !
@@ -103,7 +102,7 @@ module histFileMod
   public :: hist_printflds       ! Print summary of master field list
   public :: hist_htapes_build    ! Initialize history file handler for initial or continue run
   public :: hist_update_hbuf     ! Updates history buffer for all fields and tapes
-  public :: hist_htapes_wrapup   ! Write and/or dispose history tape(s)
+  public :: hist_htapes_wrapup   ! Write history tape(s)
   public :: hist_restart         ! Read/write history file restart data
 !
 ! !REVISION HISTORY:
@@ -485,6 +484,20 @@ contains
           call masterlist_change_timeavg (t)
        end if
     end do
+
+    fincl(:,1) = hist_fincl1(:)
+    fincl(:,2) = hist_fincl2(:)
+    fincl(:,3) = hist_fincl3(:)
+    fincl(:,4) = hist_fincl4(:)
+    fincl(:,5) = hist_fincl5(:)
+    fincl(:,6) = hist_fincl6(:)
+
+    fexcl(:,1) = hist_fexcl1(:)
+    fexcl(:,2) = hist_fexcl2(:)
+    fexcl(:,3) = hist_fexcl3(:)
+    fexcl(:,4) = hist_fexcl4(:)
+    fexcl(:,5) = hist_fexcl5(:)
+    fexcl(:,6) = hist_fexcl6(:)
 
     ! Define field list information for all history files.
     ! Update ntapes to reflect number of active history files
@@ -1685,7 +1698,8 @@ contains
 ! !USES:
     use clmtype
     use clm_varpar  , only : lsmlon, lsmlat, nlevsoi, nlevlak, numrad, rtmlon, rtmlat
-    use clm_varctl  , only : caseid, ctitle, frivinp_rtm, fsurdat, finidat, fpftcon
+    use clm_varctl  , only : caseid, ctitle, frivinp_rtm, fsurdat, finidat, fpftcon, &
+                             version, hostname, username, conventions, source
     use domainMod   , only : llatlon,alatlon
     use fileutils   , only : get_filename
 #if (defined CASA)
@@ -1754,27 +1768,27 @@ contains
     ! about the data set. Global attributes are information about the
     ! data set as a whole, as opposed to a single variable
 
-    str = 'CF-1.0'
-    call ncd_putatt(nfid(t), ncd_global, 'conventions', trim(str), subname, usepio=pioflag)
+    call ncd_putatt(nfid(t), ncd_global, 'conventions', trim(conventions), subname, usepio=pioflag)
 
     call getdatetime(curdate, curtime)
     str = 'created on ' // curdate // ' ' // curtime
     call ncd_putatt(nfid(t), ncd_global, 'history', trim(str), subname, usepio=pioflag)
 
-    str = 'Community Land Model: CLM3'
-    call ncd_putatt(nfid(t), ncd_global, 'source', trim(str), subname, usepio=pioflag)
+    call ncd_putatt(nfid(t), ncd_global, 'source', trim(source), subname, usepio=pioflag)
 
-    str = '$HeadURL'
-    call ncd_putatt(nfid(t), ncd_global, 'version', trim(str), subname, usepio=pioflag)
-     
-    str = '$Id$'
+    call ncd_putatt(nfid(t), ncd_global, 'hostname', trim(hostname), subname, usepio=pioflag)
+
+    call ncd_putatt(nfid(t), ncd_global, 'username', trim(username), subname, usepio=pioflag)
+
+    call ncd_putatt(nfid(t), ncd_global, 'version', trim(version), subname, usepio=pioflag)
+
+    str = &
+    '$Id$'
     call ncd_putatt(nfid(t), ncd_global, 'revision_id', trim(str), subname, usepio=pioflag)
 
-    str = ctitle
-    call ncd_putatt(nfid(t), ncd_global, 'case_title', trim(str), subname, usepio=pioflag)
+    call ncd_putatt(nfid(t), ncd_global, 'case_title', trim(ctitle), subname, usepio=pioflag)
 
-    str = caseid
-    call ncd_putatt(nfid(t), ncd_global, 'case_id', trim(str), subname, usepio=pioflag)
+    call ncd_putatt(nfid(t), ncd_global, 'case_id', trim(caseid), subname, usepio=pioflag)
 
     str = get_filename(fsurdat)
     call ncd_putatt(nfid(t), ncd_global, 'Surface_dataset', trim(str), subname, usepio=pioflag)
@@ -2681,15 +2695,15 @@ contains
   subroutine hist_htapes_wrapup( rstwr, nlend )
 !
 ! !DESCRIPTION:
-! Write and/or dispose history tape(s)
+! Write history tape(s)
 ! Determine if next time step is beginning of history interval and if so:
 !   increment the current time sample counter, open a new history file
 !   and if needed (i.e., when ntim = 1), write history data to current
 !   history file, reset field accumulation counters to zero.
 ! If primary history file is full or at the last time step of the simulation,
-!   write restart dataset and close and dispose all history fiels.
+!   write restart dataset and close all history fiels.
 ! If history file is full or at the last time step of the simulation:
-!   close history file and dispose to mass store (only if file is open)
+!   close history file
 !   and reset time sample counter to zero if file is full.
 ! Daily-averaged data for the first day in September are written on
 !   date = 00/09/02 with mscur = 0.
@@ -2701,7 +2715,6 @@ contains
 !   date = yyyy/mm+1/01 with mscur = 0.
 !
 ! !USES:
-    use clm_varctl      , only : archive_dir, mss_wpass, mss_irt
     use fileutils       , only : set_filename, putfil
     use spmdMod         , only : masterproc
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
@@ -2735,12 +2748,9 @@ contains
     integer :: yrm1                   ! nstep-1 year (0 -> ...)
     integer :: mcsecm1                ! nstep-1 time of day [seconds]
     real(r8):: time                   ! current time
-    character(len=256) :: rem_dir     ! remote (archive) directory
-    character(len=256) :: rem_fn      ! remote (archive) filename
     character(len=256) :: str         ! global attribute string
     logical :: if_stop                ! true => last time step of run
-    logical :: if_disphist(max_tapes) ! true => save and dispose history file
-    logical :: if_remvhist(max_tapes) ! true => remove local history file after dispose
+    logical :: if_disphist(max_tapes) ! true => save history file
     character(len=*),parameter :: subname = 'hist_htapes_wrapup'
 !-----------------------------------------------------------------------
 
@@ -2843,17 +2853,17 @@ contains
 
     end do  ! end loop over history tapes
 
-    ! Determine if file needs to be closed and disposed
+    ! Determine if file needs to be closed
 
     if (present(rstwr) .and. present(nlend)) then
        call do_disp (ntapes, tape(:)%ntimes, tape(:)%mfilt, &
-            if_stop, if_disphist, if_remvhist, rstwr, nlend)
+            if_stop, if_disphist, rstwr, nlend)
     else
        call do_disp (ntapes, tape(:)%ntimes, tape(:)%mfilt, &
-            if_stop, if_disphist, if_remvhist)
+            if_stop, if_disphist )
     end if
 
-    ! Close open history file and dispose to mass store
+    ! Close open history file
     ! Auxilary files may have been closed and saved off without being full,
     ! must reopen the files
 
@@ -2867,11 +2877,6 @@ contains
                 write(iulog,*)
              endif
              call ncd_close(nfid(t), subname, usepio=pioflag)
-             rem_dir = trim(archive_dir) // '/hist/'
-             rem_fn = set_filename(rem_dir, locfnh(t))
-             if (masterproc) then
-                call putfil (locfnh(t), rem_fn, mss_wpass, mss_irt, if_remvhist(t))
-             endif
              if (.not.if_stop .and. (tape(t)%ntimes/=tape(t)%mfilt)) then
                 call ncd_open (trim(locfnh(t)), ncd_write, nfid(t), subname, usepio=pioflag)
              end if
@@ -2917,7 +2922,7 @@ contains
 !
 ! !USES:
     use iobinary
-    use clm_varctl, only : archive_dir, nsrest, mss_irt
+    use clm_varctl, only : nsrest
     use fileutils , only : set_filename, getfil
     use spmdMod   , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER, MPI_CHARACTER
 !
@@ -2933,7 +2938,6 @@ contains
 !
 ! LOCAL VARIABLES:
     character(len=256) :: fnameh(max_tapes)      ! full name of history file
-    character(len=256) :: rem_dir                ! remote (archive) directory
     character(len=256) :: filename               ! generic filename
     character(len=  8) :: type1d                 ! clm pointer 1d type
     character(len=  8) :: type1d_out             ! hbuf 1d type
@@ -3121,8 +3125,8 @@ contains
                                         tape(t)%hlist(f)%avgflag
               end if
               if (ier /= 0) then
-                 write(iulog,*) trim(subname),' ERROR: read/write error 4: End or error condition writing ', &
-                      'history restart field ',f,' from tape ',t
+                 write(iulog,*) trim(subname),' ERROR: read/write error 4: End or error condition ', flag, &
+                      'ing history restart field ',f,' from tape ',t
                  call endrun()
               end if
            end do
@@ -3335,12 +3339,7 @@ contains
 
      if (flag == 'write') then
         do t = 1,ntapes
-           if (mss_irt == 0) then
-              filename = locfnh(t)
-           else
-              rem_dir = trim(archive_dir) // '/hist/'
-              filename = set_filename(rem_dir, locfnh(t))
-           endif
+           filename = locfnh(t)
            if (masterproc) write(nio) filename
         end do
      endif

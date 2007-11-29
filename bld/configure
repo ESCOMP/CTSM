@@ -1699,75 +1699,15 @@ sub validate_options {
                    "** expected one of: @expect\n";
     }
 
-    # prognostic sea-salt
-    $opt = 'progsslt';
-    @expect = ('on', 'off');
-    if (defined $opts->{$opt}) {
-	$old = $opts->{$opt};
-	$opts->{$opt} = valid_option($old, @expect)
-	    or die "** invalid value of $opt ($old) specified in $source\n".
-                   "** expected one of: @expect\n";
-    }
-
-
-    # rtm
-    $opt = 'rtm';
-    @expect = ('on', 'off');
-    if (defined $opts->{$opt}) {
-	$old = $opts->{$opt};
-	$opts->{$opt} = valid_option($old, @expect)
-	    or die "** invalid value of $opt ($old) specified in $source\n".
-                   "** expected one of: @expect\n";
-    }
-
-    # voc
-    $opt = 'voc';
-    @expect = ('on', 'off');
-    if (defined $opts->{$opt}) {
-	$old = $opts->{$opt};
-	$opts->{$opt} = valid_option($old, @expect)
-	    or die "** invalid value of $opt ($old) specified in $source\n".
-                   "** expected one of: @expect\n";
-    }
-
-    # dust
-    $opt = 'dust';
-    @expect = ('on', 'off');
-    if (defined $opts->{$opt}) {
-	$old = $opts->{$opt};
-	$opts->{$opt} = valid_option($old, @expect)
-	    or die "** invalid value of $opt ($old) specified in $source\n".
-                   "** expected one of: @expect\n";
-    }
-
-    # supln
-    $opt = 'supln';
-    @expect = ('on', 'off');
-    if (defined $opts->{$opt}) {
-	$old = $opts->{$opt};
-	$opts->{$opt} = valid_option($old, @expect)
-	    or die "** invalid value of $opt ($old) specified in $source\n".
-                   "** expected one of: @expect\n";
-    }
-
-    # ad_spinup
-    $opt = 'ad_spinup';
-    @expect = ('on', 'off');
-    if (defined $opts->{$opt}) {
-	$old = $opts->{$opt};
-	$opts->{$opt} = valid_option($old, @expect)
-	    or die "** invalid value of $opt ($old) specified in $source\n".
-                   "** expected one of: @expect\n";
-    }
-
-    # exit_spinup
-    $opt = 'exit_spinup';
-    @expect = ('on', 'off');
-    if (defined $opts->{$opt}) {
-	$old = $opts->{$opt};
-	$opts->{$opt} = valid_option($old, @expect)
-	    or die "** invalid value of $opt ($old) specified in $source\n".
-                   "** expected one of: @expect\n";
+    my @optList = ( "progsslt", "rtm", "voc", "dust", "supln", "ad_spinup", "exit_spinup", "pergro" );
+    foreach my $opt ( @optList ) {
+       @expect = ('on', 'off');
+       if (defined $opts->{$opt}) {
+	   $old = $opts->{$opt};
+	   $opts->{$opt} = valid_option($old, @expect)
+	       or die "** invalid value of $opt ($old) specified in $source\n".
+                      "** expected one of: @expect\n";
+       }
     }
 
 }

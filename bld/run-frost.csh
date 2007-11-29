@@ -112,7 +112,6 @@ cat >! lnd.stdin << EOF
  start_tod      =  0
  irad           = -1
  wrtdia         = .true.
- mss_irt        =  0
  hist_dov2xy    = .true.
  hist_nhtfrq    =  1000
  hist_mfilt     =  1

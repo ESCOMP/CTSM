@@ -86,7 +86,7 @@ contains
     integer  :: mon                             ! month (1, ..., 12) for nstep+1
     integer  :: day                             ! day of month (1, ..., 31) for nstep+1
     integer  :: sec                             ! seconds into current date for nstep+1
-    integer  :: ier                             ! error status
+    integer  :: ier, ret                        ! error status
     logical  :: found                           ! true => input dataset bounding dates found
     integer  :: begg,endg                       ! beg/end indices for land gridcells
     integer  :: begl,endl                       ! beg/end indices for land landunits
@@ -162,10 +162,14 @@ contains
 
     call mpi_bcast(yearspft,ntimes,MPI_INTEGER,0,mpicom,ier)
 
-    call ncd_iolocal(ncid, 'PCT_WETLAND', 'read', pctwet, grlnd)
-    call ncd_iolocal(ncid, 'PCT_LAKE'   , 'read', pctlak, grlnd)
-    call ncd_iolocal(ncid, 'PCT_GLACIER', 'read', pctgla, grlnd)
-    call ncd_iolocal(ncid, 'PCT_URBAN'  , 'read', pcturb, grlnd)
+    call ncd_iolocal(ncid, 'PCT_WETLAND', 'read', pctwet, grlnd, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_WETLAND NOT on pftdyn file' )
+    call ncd_iolocal(ncid, 'PCT_LAKE'   , 'read', pctlak, grlnd, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_LAKE NOT on pftdyn file' )
+    call ncd_iolocal(ncid, 'PCT_GLACIER', 'read', pctgla, grlnd, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_GLACIER NOT on pftdyn file' )
+    call ncd_iolocal(ncid, 'PCT_URBAN'  , 'read', pcturb, grlnd, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on pftdyn file' )
 
     ! Consistency check
     do g = begg,endg
@@ -380,7 +384,7 @@ contains
 ! !LOCAL VARIABLES:
     integer  :: i,j,m,n
     integer  :: begg,endg         
-    integer  :: err, ierr
+    integer  :: err, ierr, ret
     real(r8) :: sumpct,sumerr                     ! temporary
     integer  :: start(4), count(4)                ! input sizes
     real(r8),pointer :: arrayl(:)                 ! temporary array
@@ -399,7 +403,8 @@ contains
        count(3) = 1
        start(4) = ntime 
        count(4) = 1
-       call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, grlnd, start, count)
+       call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, grlnd, start, count, status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_PFT NOT on pftdyn file' )
        pctpft(begg:endg,n) = arrayl(begg:endg)
     enddo
     deallocate(arrayl)

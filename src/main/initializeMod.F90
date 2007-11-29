@@ -16,17 +16,12 @@ module initializeMod
   use spmdMod         , only : masterproc
   use shr_sys_mod     , only : shr_sys_flush
   use abortutils      , only : endrun
-  use clm_varctl      , only : single_column,scmlat,scmlon,scmcloselon,&
-			       scmcloselat,scmcloselonidx,scmcloselatidx,&
-                               nsrest
+  use clm_varctl      , only : nsrest
   use clm_varctl      , only : iulog
   use clm_varsur      , only : wtxy,vegxy
   use clmtype         , only : gratm, grlnd, nameg, namel, namec, namep, allrof
-  use ncdio           , only : check_ret
 ! !PUBLIC TYPES:
   implicit none
-  include 'netcdf.inc'
-  character(len=*),parameter :: subname='initializeMod' ! subroutine name
   save
 !
   private    ! By default everything is private
@@ -73,6 +68,7 @@ contains
 ! !USES:
     use clm_varpar, only : lsmlon, lsmlat, maxpatch
     use clm_varpar, only : clm_varpar_init
+    use pftvarcon , only : pftconrd
     use decompInitMod, only : decompInit_atm, &
                            decompInit_lnd, decompInit_glcp
     use decompMod , only : adecomp,ldecomp
@@ -89,8 +85,6 @@ contains
                            fatmtopo, flndtopo
     use controlMod, only : control_init, control_print
     use shr_InputInfo_mod, only : shr_InputInfo_initType
-    use shr_scam_mod, only : shr_scam_getCloseLatLon
-    use fileutils , only : getfil
 !
 ! !ARGUMENTS:
     type(shr_InputInfo_initType), intent(in), optional :: CCSMInit
@@ -108,7 +102,6 @@ contains
     logical  :: samegrids             ! are atm and lnd grids same?
     integer  :: begg, endg            ! clump beg and ending gridcell indices
     integer  :: begg_atm, endg_atm    ! proc beg and ending gridcell indices
-    integer  :: ncid                         ! netcdf id
 !-----------------------------------------------------------------------
 
     ! ------------------------------------------------------------------------
@@ -143,13 +136,6 @@ contains
 #ifndef UNICOSMP
        call shr_sys_flush(iulog)
 #endif
-    endif
-
-    if (single_column) then
-
-       call check_ret( nf_open(fsurdat, 0, ncid), subname )
-       call shr_scam_GetCloseLatLon(ncid,scmlat,scmlon,scmcloselat,&
-                              scmcloselon,scmcloselatidx,scmcloselonidx)
     endif
 
     call surfrd_get_latlon(alatlon, fatmgrid, amask, fatmlndfrc)
@@ -319,6 +305,13 @@ contains
     if (ier /= 0) then
        write(iulog,*)'initialize allocation error'; call endrun()
     endif
+
+    ! --------------------------------------------------------------------
+    ! Read list of PFTs and their corresponding parameter values
+    ! This is independent of the model resolution
+    ! --------------------------------------------------------------------
+
+    call pftconrd()
 
     ! Read surface dataset and set up vegetation type [vegxy] and 
     ! weight [wtxy] arrays for [maxpatch] subgrid patches.

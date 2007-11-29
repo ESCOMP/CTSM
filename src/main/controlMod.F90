@@ -14,9 +14,14 @@ module controlMod
 !
 ! === define run ======================= >>>> Only if mode does NOT = ccsm_seq
 !
-!    o caseid     = 256 character case name
-!    o ctitle     = 256 character case title
-!    o nsrest     = integer flag. 0: initial run. 1: restart: 3: branch
+!    o caseid                = 256 character case name
+!    o ctitle                = 256 character case title
+!    o nsrest                = integer flag. 0: initial run. 1: restart: 3: branch
+!    o version               = 256 character model version description
+!    o username              = 256 character user username
+!    o hostname              = 256 character hostname of machine running on
+!    o brnch_retain_casename = logical if a branch simulation can use the same casename 
+!                              as the case it branches from
 !
 ! === model time =======================
 !
@@ -24,28 +29,30 @@ module controlMod
 !
 ! ====================================== >>>> Only if mode does NOT = ccsm_seq
 !
-!    o calendar   = Calendar to use in date calculations.
-!                  'no_leap' (default) or 'gregorian'
-!    o start_ymd  = Starting date for run encoded in yearmmdd format.
-!                   Default value is read from initial conditions file.
-!    o start_tod  = Starting time of day for run in seconds since 0Z.
-!                   Default value is read from initial conditions file.
-!    o stop_ymd   = Stopping date for run encoded in yearmmdd format.
-!                   No default.
-!    o stop_tod   = Stopping time of day for run in seconds since 0Z.
-!                   Default: 0.
-!    o nelapse    = nnn, Specify the ending time for the run as an interval
-!                   starting at the current time in either timesteps
-!                   (if positive) or days (if negative).
-!                   Either nestep or (stop_ymd,stop_tod) take precedence.
-!    o nestep     = nnnn, Specify the ending time for the run as an interval
-!                   starting at (start_ymd,start_tod) in either timesteps
-!                   (if positive) or days (if negative).
-!                   (stop_ymd,stop_tod) takes precedence if set.
-!    o ref_ymd    = Reference date for time coordinate encoded in yearmmdd format.
-!                   Default value is start_ymd.
-!    o ref_tod    = Reference time of day for time coordinate in seconds since 0Z.
-!                   Default value is start_tod.
+!    o calendar       = Calendar to use in date calculations.
+!                      'no_leap' (default) or 'gregorian'
+!    o start_ymd      = Starting date for run encoded in yearmmdd format.
+!                       Default value is read from initial conditions file.
+!    o start_tod      = Starting time of day for run in seconds since 0Z.
+!                       Default value is read from initial conditions file.
+!    o stop_ymd       = Stopping date for run encoded in yearmmdd format.
+!                       No default.
+!    o stop_tod       = Stopping time of day for run in seconds since 0Z.
+!                       Default: 0.
+!    o stop_final_ymd = Final stopping time. (>>>> only in offline mode)
+!                       Default: 99991231
+!    o nelapse        = nnn, Specify the ending time for the run as an interval
+!                       starting at the current time in either timesteps
+!                       (if positive) or days (if negative).
+!                       Either nestep or (stop_ymd,stop_tod) take precedence.
+!    o nestep         = nnnn, Specify the ending time for the run as an interval
+!                       starting at (start_ymd,start_tod) in either timesteps
+!                       (if positive) or days (if negative).
+!                       (stop_ymd,stop_tod) takes precedence if set.
+!    o ref_ymd        = Reference date for time coordinate encoded in yearmmdd format.
+!                       Default value is start_ymd.
+!    o ref_tod        = Reference time of day for time coordinate in seconds since 0Z.
+!                       Default value is start_tod.
 !
 ! === input data ===
 !
@@ -92,9 +99,6 @@ module controlMod
 !    o hist_crtinic  = 8  character frequency to generate initial dataset
 !                         ['6-HOURLY','DAILY','MONTHLY','YEARLY','NONE']
 !    o rest_flag     = logical, turns off restart file writing [.TRUE., .FALSE.]
-!    o rpntpath      = 256 character full UNIX pathname of the local restart pointer file.
-!                      This file must exist when the model is restarted.
-!                      This file is overwritten every time new restart data files are output.
 ! === Biogeochem=CASA =======
 !    o lnpp        = 1=gpp*gppfact,2=fn(lgrow)*gppfact
 !    o lalloc      = 0=fixed allocation, 1=dynamic allocation
@@ -107,20 +111,13 @@ module controlMod
 !    o clump_pproc = clumps per processor
 !    o nsegspc     = number of segments per clump for decomposition
 !
-! === long term archiving ===== >>>> Only for mode=offline or ext_ccsm_con
-!
-!    o archive_dir = 256 character long term archive directory (can be MSS directory)
-!    o mss_irt     = integer mass store retention period (days)
-!    o mss_wpass   = 8 character mass store write password for output data sets
-!    o brnch_retain_casename = logical if a branch simulation can use the same casename as it branches from
-!
 ! === model physics ===
 !
 !    o irad         = integer solar radiation frequency (+ = iteration. - = hour)
 !    o wrtdia       = true if want output written
 !    o csm_doflxave = true => flux averaging is to be performed (only used for csm mode)
 !    o co2_ppmv     = CO2 volume mixing ratio
-!    o pertlim      = perturbation limit (currently NOT used)
+!    o pertlim      = perturbation limit
 !    o create_croplandunit = logical on if to create crop as separate landunits
 !
 !    >>>>>>>>>>>>> Only for mode=ext_ccsm_con or seq_ccsm
@@ -136,7 +133,6 @@ module controlMod
 !
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8, SHR_KIND_CL
-  use shr_sys_mod  , only : shr_sys_getenv
   use clm_varpar   , only : maxpatch_pft, numpft
   use clm_varctl
   use spmdMod
@@ -259,11 +255,6 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    character(len=256) :: homedir   ! full UNIX filepath name of home directory
-    character(len=256) :: logid     ! logid part of file path name
-    character(len=256) :: cap       ! upper case logid
-    character(len=  1) :: ctmp      ! character temporary
-    character(len=256) :: drvarchdir! driver archive directory
     integer :: i,j,n                ! loop indices
     integer :: iundef               ! integer undefined value
     real(r8):: rundef               ! real undefined value
@@ -280,14 +271,10 @@ contains
 
 #if (defined OFFLINE) || (defined COUP_CSM)
     namelist /clm_inparm/  &
-         ctitle, caseid, nsrest,  &
-         calendar, nelapse, nestep, start_ymd, start_tod,  &
-         stop_ymd, stop_tod, ref_ymd, ref_tod
-
-    ! Archive options
-
-    namelist /clm_inparm/ archive_dir, mss_wpass, mss_irt, &
-         brnch_retain_casename 
+         ctitle, caseid, nsrest, version, hostname, username, &
+         calendar, nelapse, nestep, start_ymd, start_tod,     &
+         stop_ymd, stop_tod, ref_ymd, ref_tod,                &
+         brnch_retain_casename, stop_final_ymd
 #endif
 
     ! clm input datasets
@@ -305,7 +292,7 @@ contains
           offline_atmdir, cycle_begyr, cycle_nyr
 #endif
 
-    ! clm history, restart, archive options
+    ! clm history, restart options
 
     namelist /clm_inparm/  &
          hist_empty_htapes, hist_dov2xy, &
@@ -315,7 +302,7 @@ contains
          hist_fincl4,  hist_fincl5, hist_fincl6, &
          hist_fexcl1,  hist_fexcl2, hist_fexcl3, &
          hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
-         hist_crtinic, rpntpath, rest_flag
+         hist_crtinic, rest_flag
 
     ! clm bgc info
 
@@ -352,9 +339,14 @@ contains
 
     ! control variables
 
-    caseid  = ' '
-    ctitle  = ' '
-    nsrest  = iundef
+    caseid      = ' '
+    ctitle      = ' '
+    nsrest      = iundef
+    username    = ' '
+    hostname    = ' '
+    source      = "Community Land Model CLM3"
+    version     = source
+    conventions = "CF-1.0"
 
     ! initial data
 
@@ -390,28 +382,21 @@ contains
 
     co2_type = 'constant'
 
-    ! long term archive settings
-
-    archive_dir = ' '
-    mss_irt = 0
-    mss_wpass = ' '
-
     ! history file variables
 
     hist_crtinic = 'NONE'
-    rpntpath = 'not_specified'
 
     ! other namelist variables
 
-    irad = -1
-    wrtdia = .false.
-    csm_doflxave = .true.
-    pertlim = 0._r8
-    single_column=.false.
-    scmlat=-999.
-    scmlon=-999.
-    nsegspc = 20
-    co2_ppmv = 355._r8
+    irad          = -1
+    wrtdia        = .false.
+    csm_doflxave  = .true.
+    pertlim       = 0._r8
+    single_column = .false.
+    scmlat        = -999.
+    scmlon        = -999.
+    nsegspc       = 20
+    co2_ppmv      = 355._r8
 
 #if (defined RTM)
     ! If rtm_nsteps is not set in the namelist then
@@ -506,14 +491,13 @@ contains
           call endrun( subname//' error CCSMInit not present but is '// &
                        'required when linking with CAM' )
        end if
-       call shr_inputInfo_initGetData( CCSMInit, case_name=caseid,        &
-                                       case_desc=ctitle, mss_irt=mss_irt, &
-                                       mss_wpass=mss_wpass,               &
+       call shr_inputInfo_initGetData( CCSMInit, case_name=caseid,         &
+                                       case_desc=ctitle,                   &
+                                       version=version, username=username, &
+                                       hostname=hostname,                  &
                                        brnch_retain_casename=brnch_retain_casename,  &
-                                       archive_dir=drvarchdir,&
-                                       single_column=single_column ,      &
+                                       single_column=single_column ,       &
 				       scmlat=scmlat,scmlon=scmlon)
-       archive_dir = shr_string_getParentDir( drvarchdir )//'/lnd/'
        if (      shr_inputInfo_initIsStartup(  CCSMInit ) )then
           nsrest = 0
        else if ( shr_inputInfo_initIsContinue( CCSMInit ) )then
@@ -534,26 +518,6 @@ contains
           end if
        end if
 #endif
-
-       ! Check that if archive directory not input in namelist, set default from caseid
-
-       if (archive_dir == ' ') then
-          logid  = ' '
-          call shr_sys_getenv('LOGNAME', logid, ierr)
-          if (ierr /= 0) then
-             write(iulog,*) 'error: logname not defined'
-             call endrun
-          end if
-          cap = ' '
-          do i = 1, len_trim(logid)
-             cap(i:i) = logid(i:i)
-             ctmp = cap(i:i)
-             if (ichar(logid(i:i))>=97 .and. ichar(logid(i:i))<=122) then
-                cap(i:i) = char(ichar(ctmp) - 32)
-             endif
-          end do
-          archive_dir = 'mss:/' // trim(cap) // '/csm/' // trim(caseid) // '/lnd'
-       end if
 
 #if (defined RTM)
        ! If rtm_nsteps was not entered in the namelist, give it the following default value
@@ -626,8 +590,6 @@ contains
        end if
        ! History and restart files
 
-       mss_irt = min(mss_irt,1825)
-
        do i = 1, max_tapes
           if (hist_nhtfrq(i) == 0) then
              hist_mfilt(i) = 1
@@ -636,9 +598,7 @@ contains
           endif
        end do
        
-       if (rpntpath == 'not_specified') then
-          rpntpath = 'rpointer.lnd'
-       endif
+       rpntpath = 'rpointer.lnd'
        
        if (nsrest == 0) nrevsn = ' '
        if (nsrest == 1) nrevsn = 'set by restart pointer file file'
@@ -655,17 +615,8 @@ contains
        ! Split the full pathname of the restart pointer file into a 
        ! directory name and a file name
        
-       rpntdir = ' '
-       rpntfil = ' '
-       do n = len_trim(rpntpath),1,-1
-          if (rpntpath(n:n) ==  '/') then
-             rpntdir = rpntpath(1:n-1)
-             rpntfil = rpntpath(n+1:len_trim(rpntpath))
-             go to 100
-          endif
-       enddo
-       rpntdir = '.'        ! no "/" found, set path = "."
-       rpntfil = rpntpath   ! no "/" found, use whole input string.
+       rpntdir = '.'        ! set path = "."
+       rpntfil = rpntpath   ! use whole input string.
 100    continue
        
     endif   ! end of if-masterproc if-block
@@ -721,9 +672,12 @@ contains
 
     ! run control variables
 
-    call mpi_bcast (caseid, len(caseid), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (ctitle, len(ctitle), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (nsrest,           1, MPI_INTEGER  , 0, mpicom, ier)
+    call mpi_bcast (caseid,   len(caseid),   MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (ctitle,   len(ctitle),   MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (version,  len(version),  MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hostname, len(hostname), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (username, len(username), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (nsrest,              1,  MPI_INTEGER  , 0, mpicom, ier)
 
     call mpi_bcast (dtime    , 1, MPI_INTEGER  , 0, mpicom, ier)
 
@@ -807,12 +761,6 @@ contains
 
     call mpi_bcast (clump_pproc, 1, MPI_INTEGER, 0, mpicom, ier)
 
-    ! long term archiving variables
-
-    call mpi_bcast (mss_irt, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (mss_wpass, len(mss_wpass), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (archive_dir, len(archive_dir), MPI_CHARACTER, 0, mpicom, ier)
-
     ! error growth perturbation limit
     call mpi_bcast (pertlim, 1, MPI_REAL8, 0, mpicom, ier)
 
@@ -849,8 +797,12 @@ contains
 !------------------------------------------------------------------------
 
     write(iulog,*) 'define run:'
+    write(iulog,*) '   source                = ',trim(source)
+    write(iulog,*) '   version               = ',trim(version)
     write(iulog,*) '   run type              = ',runtyp(nsrest+1)
     write(iulog,*) '   case title            = ',trim(ctitle)
+    write(iulog,*) '   username              = ',trim(username)
+    write(iulog,*) '   hostname              = ',trim(hostname)
     write(iulog,*) 'input data files:'
     write(iulog,*) '   PFT physiology = ',trim(fpftcon)
     if (fsurdat == ' ') then
@@ -911,12 +863,6 @@ contains
 #if (defined RTM)
     if (frivinp_rtm /= ' ') write(iulog,*) '   RTM river data       = ',trim(frivinp_rtm)
 #endif
-    if (mss_irt /= 0) then
-       write(iulog,*) 'Mass store control values'
-       write(iulog,*)'   mass store path                    = ',trim(archive_dir)
-       write(iulog,*)'   mass store retention (days)        = ',mss_irt
-       write(iulog,*)'   mass store write password          = ',mss_wpass
-    endif
     write(iulog,*) 'Restart parameters:'
     write(iulog,*)'   restart pointer file directory     = ',trim(rpntdir)
     write(iulog,*)'   restart pointer file name          = ',trim(rpntfil)
@@ -971,9 +917,8 @@ contains
 #if (defined COUP_CSM)
     write(iulog,*) '   last time step determined by flux coupler'
 #endif
-#if (defined PERGRO)
+    if ( pertlim /= 0.0_r8 ) &
     write(iulog,*) '   perturbation limit = ',pertlim
-#endif
     write(iulog,*) '   maxpatch_pft         = ',maxpatch_pft
     write(iulog,*) '   allocate_all_vegpfts = ',allocate_all_vegpfts
     write(iulog,*) '   nsegspc              = ',nsegspc

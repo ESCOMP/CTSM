@@ -988,6 +988,8 @@ type, public :: column_estate_type
    real(r8), pointer :: t_snow(:)             !vertically averaged snow temperature
    real(r8), pointer :: thv(:)                !virtual potential temperature (kelvin)
    real(r8), pointer :: thm(:)                !intermediate variable (forc_t+0.0098*forc_hgt_t)
+   real(r8), pointer :: hc_soi(:)             !soil heat content (MJ/m2)
+   real(r8), pointer :: hc_soisno(:)          !soil plus snow heat content (MJ/m2)
 end type column_estate_type
 
 !----------------------------------------------------

@@ -13,6 +13,7 @@
 #	parse --------------------- Parse a namelist file into a Perl associative array.
 #	print --------------------- Print namelist to screen.
 #	Write --------------------- Write the namelist out.
+#       WriteNote ----------------- Write a note to the output namelist file.
 #	Write_prestage------------- Write to the ccsm prestage file
 #	convert_case -------------- Convert the keys to lowercase.
 #	quote_string -------------- Make sure a string has quotes around it.
@@ -304,6 +305,12 @@ sub Write_prestage {
     if ( -f $file ) { unlink( $file ); }
     open( OUT, ">$file" ) || die "Can not open prestage namelist file: $file";
   }
+  if ( $self->{'printlev'} > 0 ) {
+     my $name = $self->{'NAME'};
+     print "Write prestage file list for $name to $file\n";
+  }
+  if ( $csmdata !~ m#/$# ) { $csmdata = "$csmdata/"; }
+  $csmdata =~ s/\$/\\\$/;
   my $key;
   foreach $key ( sort( keys(%namelist) ) ) {
     if ( defined($namelist{$key}) ) {
@@ -313,6 +320,32 @@ sub Write_prestage {
       }
     }
   }
+  close( OUT );
+}
+#============================================================================
+
+sub WriteNote {
+#
+# Write out the namelist based on values set in the associative
+# arrays
+#
+  my ($self,$note,$append) = @_;
+
+  my $class = ref($self);
+  my $nm    = "$class::WriteNote";
+
+  my $name = $self->{'NAME'};
+  my $file = $self->{'FILENAME'};
+  if ( defined($append) && $append =~ /Append/i ) {
+    open( OUT, ">>$file" ) || die "Can not open output namelist file: $file";
+  } else {
+    if ( -f $file ) { unlink( $file ); }
+    open( OUT, ">$file" ) || die "Can not open output namelist file: $file";
+  }
+  $note =~ s/\n/\n\#\! /g; 
+  print OUT "#!--------------------------------------------------------------------------------------------------------------------------\n";
+  print OUT "#! ${name}:: $note\n";
+  print OUT "#!--------------------------------------------------------------------------------------------------------------------------\n";
   close( OUT );
 }
 

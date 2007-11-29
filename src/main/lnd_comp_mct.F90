@@ -15,16 +15,18 @@ module lnd_comp_mct
 ! !USES:
 
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use shr_sys_mod      , only : shr_sys_abort
+  use shr_sys_mod      , only : shr_sys_abort, shr_sys_flush
   use shr_orb_mod      , only : shr_orb_params
   use shr_inputinfo_mod, only : shr_inputInfo_initType,       &
                                 shr_inputInfo_initGetData,    &
                                 shr_inputInfo_initPutData
+  use shr_file_mod     , only : shr_file_setLogUnit, shr_file_setLogLevel, &
+                                shr_file_getLogUnit, shr_file_getLogLevel, &
+                                shr_file_getUnit, shr_file_setIO
 
   use mct_mod
   use seq_flds_mod
   use seq_flds_indices
-  use seq_cdata_mod
   use seq_cdata_mod
 
   use eshr_timemgr_mod, only : eshr_timemgr_clockType,         &
@@ -37,6 +39,9 @@ module lnd_comp_mct
   use spmdMod
   use perf_mod
   use clm_varctl, only : iulog
+#ifdef RTM
+  use RunoffMod
+#endif
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -57,9 +62,15 @@ module lnd_comp_mct
   private :: lnd_domain_mct
   private :: lnd_export_mct
   private :: lnd_import_mct
+#ifdef RTM
+  private :: rof_SetgsMap_mct
+  private :: rof_domain_mct
+  private :: rof_export_mct
+#endif
 !
 ! !PRIVATE VARIABLES
-  integer, dimension(:), allocatable :: perm  ! permutation array to reorder points
+  integer, dimension(:), allocatable :: perm    ! permutation array to reorder points
+  integer, dimension(:), allocatable :: perm_r  ! permutation array to reorder points 
 !
 ! Time averaged flux fields
 !  
@@ -72,7 +83,7 @@ module lnd_comp_mct
 !
 ! Atmospheric mode  
 !
-  logical :: prog_atm
+  logical :: atm_prognostic
   logical :: do_fluxave
 
 !===============================================================
@@ -113,11 +124,15 @@ contains
     integer                                     :: mpicom_lnd       	
     type(mct_gsMap),              pointer       :: GSMap_lnd
     type(mct_gGrid),              pointer       :: dom_l
+    type(mct_gsMap),              pointer       :: GSMap_rof
+    type(mct_gGrid),              pointer       :: dom_r
     type(shr_InputInfo_initType), pointer       :: CCSMInit
     integer  :: lsize           ! size of attribute vector
     integer  :: i,j             ! indices
     integer  :: dtime_sync
     integer  :: dtime_clm
+    logical  :: exists               ! true if file exists
+    integer  :: shrlogunit,shrloglev ! old values
     type(eshr_timemgr_clockInfoType) :: clockInfo ! Clock information including orbit
     character(len=32), parameter :: sub = 'lnd_init_mct'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
@@ -133,13 +148,27 @@ contains
     call seq_cdata_setptrs(cdata_l, ID=LNDID, mpicom=mpicom_lnd, &
          gsMap=GSMap_lnd, dom=dom_l, CCSMInit=CCSMInit)
 
+    call seq_cdata_setptrs(cdata_r, &
+         gsMap=gsMap_rof, dom=dom_r) 
+
     ! Initialize clm MPI communicator 
 
     call spmd_init( mpicom_lnd )
 
+    ! Initialize io log unit
+
     if (masterproc) then
+       inquire(file='lnd_modelio.nml',exist=exists)
+       if (exists) then
+          iulog = shr_file_getUnit()
+          call shr_file_setIO('lnd_modelio.nml',iulog)
+       end if
        write(iulog,format) "CLM land model initialization"
     end if
+
+    call shr_file_getLogUnit (shrlogunit)
+    call shr_file_getLogLevel(shrloglev)
+    call shr_file_setLogUnit (iulog)
     
     ! Use CCSMInit to set orbital values
 
@@ -166,16 +195,16 @@ contains
     call clm_init1( SyncClock )
     call clm_init2()
 
-    ! Initialize MCT gsMap
+    ! Initialize lnd gsMap
 
     call lnd_SetgsMap_mct( mpicom_lnd, LNDID, gsMap_lnd ) 	
     lsize = mct_gsMap_lsize(gsMap_lnd, mpicom_lnd)
 
-    ! Initialize MCT domain
+    ! Initialize lnd domain
 
     call lnd_domain_mct( lsize, gsMap_lnd, dom_l )
 
-    ! Initialize MCT attribute vectors
+    ! Initialize lnd attribute vectors
 
     call mct_aVect_init(x2l_l, rList=seq_flds_x2l_fields, lsize=lsize)
     call mct_aVect_zero(x2l_l)
@@ -190,39 +219,72 @@ contains
     call mct_aVect_zero(l2x_l_SUM )
 
     if (masterproc) then
-       write(iulog,format) 'time averaging the following flux fields over the coupling interval'
+       write(iulog,format)'time averaging the following flux fields over the coupling interval'
        write(iulog,format) trim(seq_flds_l2x_fluxes)
     end if
 
-    ! Map internal data structure into coupling data structure
+    ! Create mct land export state
 
     call clm_mapl2a(clm_l2a, atm_l2a)
     call lnd_export_mct( atm_l2a, l2x_l )
+
+#ifdef RTM
+    ! Initialize rof gsMap
+
+    call rof_SetgsMap_mct( mpicom_lnd, LNDID, gsMap_rof ) 
+    lsize = mct_gsMap_lsize(gsMap_rof, mpicom_lnd)
+
+    ! Initialize rof domain
+
+    call rof_domain_mct( lsize, gsMap_rof, dom_r )
+
+    ! Initialize rtm attribute vectors		
+
+    call mct_aVect_init(r2x_r, rList=seq_flds_r2x_fields, lsize=lsize)
+    call mct_aVect_zero(r2x_r)
+
+    ! Create mct river runoff export state
+
+    call rof_export_mct( r2x_r )
+#endif
 
     ! Initialize averaging counter
 
     avg_count = 0
 
-    ! Determine atmospheric mode
+    ! Set land modes
 
-    call shr_inputInfo_initGetData( CCSMInit, prog_atm=prog_atm)
+    call shr_inputInfo_initPutData( CCSMInit, lnd_prognostic=.true.)
+#ifdef RTM
+    call shr_inputInfo_initPutData( CCSMInit, rof_present=.true.)
+#else
+    call shr_inputInfo_initPutData( CCSMInit, rof_present=.false.)
+#endif
+
+    ! Determine atmosphere modes
+
+    call shr_inputInfo_initGetData( CCSMInit, atm_prognostic=atm_prognostic)
     if (masterproc) then
-       if ( prog_atm )then
+       if ( atm_prognostic )then
           write(iulog,format) 'Atmospheric input is from a prognostic model'
        else
           write(iulog,format) 'Atmospheric input is from a data model'
        end if
     end if
 
-    ! 
     ! Determine if will do flux average
     ! Do flux averaging only if the cam time step is NOT equal to the
     ! sync clock timestep and irad is NOT equal to 1
-    !
+
     do_fluxave = .false.
     call eshr_timemgr_clockGet(SyncClock, Dtime=dtime_sync)
     dtime_clm = get_step_size()
     if (irad /= 1 .and. dtime_clm /= dtime_sync) do_fluxave = .true.
+
+    ! Reset shr logging to original values
+
+    call shr_file_setLogUnit (shrlogunit)
+    call shr_file_setLogLevel(shrloglev)
 
   end subroutine lnd_init_mct
 
@@ -277,6 +339,7 @@ contains
     real(r8):: caldayp1
     real(r8):: dtime_sync
     real(r8):: dtime_cam
+    integer :: shrlogunit,shrloglev ! old values
     character(len=32)            :: rdate ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
 !
@@ -285,6 +348,12 @@ contains
 !
 !EOP
 !---------------------------------------------------------------------------
+
+    ! Reset shr logging to my log file
+
+    call shr_file_getLogUnit (shrlogunit)
+    call shr_file_getLogLevel(shrloglev)
+    call shr_file_setLogUnit (iulog)
 
     ! Determine time of next atmospheric shortwave calculation
 
@@ -321,7 +390,7 @@ contains
        ! If not prognostic atm, then will always use internal albedo calculation
        ! logic and not trigger off of nextsw_cday 
 
-       if (prog_atm) then
+       if (atm_prognostic) then
           dtime = get_step_size()
           caldayp1 = get_curr_calday(offset=dtime)
           if (doalb .and. (nextsw_cday /= caldayp1)) then
@@ -397,6 +466,14 @@ contains
     call mct_aVect_zero( l2x_l_SUM) 
     avg_count = 0                   
 
+#ifdef RTM
+    ! Create river runoff output state
+
+    call t_startf ('lc_rof_export')
+    call rof_export_mct( r2x_r )
+    call t_stopf ('lc_rof_export')
+#endif
+       
     ! Check that internal clock is in sync with master clock
 
     if (.not. do_fluxave) then
@@ -414,6 +491,11 @@ contains
        call shr_sys_abort( sub//":: CLM clock not in sync with Master Sync clock" )
     end if
     
+    ! Reset shr logging to my original values
+
+    call shr_file_setLogUnit (shrlogunit)
+    call shr_file_setLogLevel(shrloglev)
+  
   end subroutine lnd_run_mct
 
 !---------------------------------------------------------------------------
@@ -818,6 +900,226 @@ contains
 
   end subroutine lnd_domain_mct
     
+!===============================================================================
+    
+#ifdef RTM
+  subroutine rof_SetgsMap_mct( mpicom_l, LNDID, gsMap_r )
+
+    !-------------------------------------------------------------------
+    use clm_varpar, only : rtmlon, rtmlat
+    !
+    ! Arguments
+    !
+    integer        , intent(in)  :: mpicom_l
+    integer        , intent(in)  :: LNDID
+    type(mct_gsMap), intent(out) :: gsMap_r
+    !
+    ! Local Variables
+    !
+    integer,allocatable :: gindex(:)
+    integer :: n, ni
+    integer :: lsize,gsize
+    integer :: ier
+    !-------------------------------------------------------------------
+
+    ! Build the rof grid numbering for MCT
+    ! NOTE:  Numbering scheme is: West to East and South to North
+    ! starting at south pole.  Should be the same as what's used in SCRIP
+    
+    gsize = rtmlon*rtmlat
+    lsize = runoff%lnumro
+    allocate(gindex(lsize),stat=ier)
+
+    ni = 0
+    do n = runoff%begr,runoff%endr
+       if (runoff%mask(n) == 2) then
+          ni = ni + 1
+          if (ni > runoff%lnumro) then
+             write(iulog,*)'rof_SetgsMap_mct: ERROR runoff count',n,ni,runoff%lnumro
+             call shr_sys_abort()
+          endif
+          gindex(ni) = runoff%gindex(n)
+       endif
+    end do
+    if (ni /= runoff%lnumro) then
+       write(iulog,*)'rof_SetgsMap_mct: ERROR runoff total count',ni,runoff%lnumro
+       call shr_sys_abort()
+    endif
+
+    ! reorder gindex to be in ascending order, initialize a permutation array,
+    ! derive a permutation that puts gindex in ascending order since the
+    ! the default for IndexSort is ascending and finally sort gindex in-place
+
+    allocate(perm_r(lsize),stat=ier)
+    call mct_indexset(perm_r)
+    call mct_indexsort(lsize,perm_r,gindex)
+    call mct_permute(gindex,perm_r,lsize)
+    call mct_gsMap_init( gsMap_r, gindex, mpicom_l, LNDID, lsize, gsize )
+
+    deallocate(gindex)
+
+  end subroutine rof_SetgsMap_mct
+
+!===============================================================================
+
+  subroutine rof_domain_mct( lsize, gsMap_r, dom_r )
+
+    !-------------------------------------------------------------------
+    use clm_varcon, only : re
+    !
+    ! Arguments
+    !
+    integer        , intent(in)    :: lsize
+    type(mct_gsMap), intent(inout) :: gsMap_r
+    type(mct_ggrid), intent(out)   :: dom_r      
+    !
+    ! Local Variables
+    !
+    integer :: n, ni              ! index
+    real(r8), pointer :: data(:)  ! temporary
+    integer , pointer :: idata(:) ! temporary
+    !-------------------------------------------------------------------
+    !
+    ! Initialize mct domain type
+    ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
+    ! Note that in addition land carries around landfrac for the purposes of domain checking
+    ! 
+    call mct_gGrid_init( GGrid=dom_r, CoordChars="lat:lon", OtherChars="area:aream:mask:frac", lsize=lsize )
+    !
+    ! Allocate memory
+    !
+    allocate(data(lsize))
+    !
+    ! Determine global gridpoint number attribute, GlobGridNum, which is set automatically by MCT
+    !
+    call mct_gsMap_orderedPoints(gsMap_r, iam, idata)
+    call mct_gGrid_importIAttr(dom_r,'GlobGridNum',idata,lsize)
+    !
+    ! Determine domain (numbering scheme is: West to East and South to North to South pole)
+    ! Initialize attribute vector with special value
+    !
+    data(:) = -9999.0_R8 
+    call mct_gGrid_importRAttr(dom_r,"lat"  ,data,lsize) 
+    call mct_gGrid_importRAttr(dom_r,"lon"  ,data,lsize) 
+    call mct_gGrid_importRAttr(dom_r,"area" ,data,lsize) 
+    call mct_gGrid_importRAttr(dom_r,"aream",data,lsize) 
+    data(:) = 0.0_R8     
+    call mct_gGrid_importRAttr(dom_r,"mask" ,data,lsize) 
+    !
+    ! Determine bounds numbering consistency
+    !
+    ni = 0
+    do n = runoff%begr,runoff%endr
+       if (runoff%mask(n) == 2) then
+          ni = ni + 1
+          if (ni > runoff%lnumro) then
+             write(iulog,*)'rof_domain_mct: ERROR runoff count',n,ni,runoff%lnumro
+             call shr_sys_abort()
+          endif
+       end if
+    end do
+    if (ni /= runoff%lnumro) then
+       write(iulog,*)'rof_domain_mct: ERROR runoff total count',ni,runoff%lnumro
+       call shr_sys_abort()
+    endif
+    !
+    ! Fill in correct values for domain components
+    ! Note aream will be filled in in the atm-lnd mapper
+    !
+    ni = 0
+    do n = runoff%begr,runoff%endr
+       if (runoff%mask(n) == 2) then
+          ni = ni + 1
+          data(ni) = runoff%lonc(n)
+       end if
+    end do
+    call mct_gGrid_importRattr(dom_r,"lon",data,lsize) 
+
+    ni = 0
+    do n = runoff%begr,runoff%endr
+       if (runoff%mask(n) == 2) then
+          ni = ni + 1
+          data(ni) = runoff%latc(n)
+       end if
+    end do
+    call mct_gGrid_importRattr(dom_r,"lat",data,lsize) 
+
+    ni = 0
+    do n = runoff%begr,runoff%endr
+       if (runoff%mask(n) == 2) then
+          ni = ni + 1
+          data(ni) = runoff%area(n)*1.0e-6_r8/(re*re)
+       end if
+    end do
+    call mct_gGrid_importRattr(dom_r,"area",data,lsize) 
+
+    ni = 0
+    do n = runoff%begr,runoff%endr
+       if (runoff%mask(n) == 2) then
+          ni = ni + 1
+          data(ni) = runoff%area(n)*1.0e-6_r8/(re*re)
+       end if
+    end do
+ 
+    ni = 0
+    do n = runoff%begr,runoff%endr
+       if (runoff%mask(n) == 2) then
+          ni = ni + 1
+          data(ni) = 1.0_r8 - float(runoff%mask(n))
+       end if
+    end do
+    call mct_gGrid_importRattr(dom_r,"mask",data,lsize) 
+    call mct_gGrid_importRattr(dom_r,"frac",data,lsize) 
+
+    ! Permute dom_r to have ascending order
+
+    call mct_gGrid_permute(dom_r, perm_r)
+
+    deallocate(data)
+    deallocate(idata)
+
+  end subroutine rof_domain_mct
+
+!====================================================================================
+
+  subroutine rof_export_mct( r2x_r)
+
+    !-----------------------------------------------------
+    !
+    ! Arguments
+    ! 
+    type(mct_aVect), intent(inout) :: r2x_r
+    !
+    ! Local variables
+    !
+    integer :: ni, n
+    !-----------------------------------------------------
+    
+    ni = 0
+    do n = runoff%begr,runoff%endr
+       if (runoff%mask(n) == 2) then
+          ni = ni + 1
+          r2x_r%rAttr(index_r2x_Forr_roff,ni) = runoff%runoff(n)/(runoff%area(n)*1.0e-6_r8*1000._r8)
+          if (ni > runoff%lnumro) then
+             write(iulog,*)'rof_export_mct: ERROR runoff count',n,ni
+             call shr_sys_abort()
+          endif
+       endif
+    end do
+    if (ni /= runoff%lnumro) then
+       write(iulog,*)'rof_export_mct: ERROR runoff total count',ni,runoff%lnumro
+       call shr_sys_abort()
+    endif
+
+    ! permute before exiting subroutine
+
+    call mct_aVect_permute(r2x_r,perm_r)
+
+  end subroutine rof_export_mct
+#endif
+
+!====================================================================================
+
 #endif
 
 end module lnd_comp_mct

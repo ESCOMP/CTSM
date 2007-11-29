@@ -32,8 +32,7 @@ module surfrdMod
   use ncdio
   use clmtype
   use spmdMod                         
-  use clm_varctl,   only : scmlat, scmlon, single_column, scmcloselat, &
-                           scmcloselon,scmcloselatidx,scmcloselonidx
+  use clm_varctl,   only : scmlat, scmlon, single_column
   use decompMod   , only : get_proc_bounds,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo
 !
 ! !PUBLIC TYPES:
@@ -278,20 +277,22 @@ contains
     call ncd_iolocal(ncid, 'AREA', 'read', domain%area, clmlevel, status=ret)
     if (ret == 0) domain%areaset = .true.
 
-    call ncd_iolocal(ncid, 'LONGXY', 'read', domain%lonc, clmlevel)
-    call ncd_iolocal(ncid, 'LATIXY', 'read', domain%latc, clmlevel)
+    call ncd_iolocal(ncid, 'LONGXY', 'read', domain%lonc, clmlevel, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: LONGXY NOT on file' )
+    call ncd_iolocal(ncid, 'LATIXY', 'read', domain%latc, clmlevel, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: LATIXY NOT on file' )
 
 ! set mask to 1 everywhere by default, override if LANDMASK exists
 ! if landmask exists, use it to set pftm (for older datasets)
 ! pftm should be overwritten below for newer datasets
     domain%mask = 1
-    call ncd_iolocal(ncid, 'LANDMASK', 'read', domain%mask, clmlevel)
+    call ncd_iolocal(ncid, 'LANDMASK', 'read', domain%mask, clmlevel, status=ret)
     domain%pftm = domain%mask
     where (domain%mask <= 0)
        domain%pftm = -1
     endwhere
 
-    call ncd_iolocal(ncid, 'PFTDATA_MASK', 'read', domain%pftm, clmlevel)
+    call ncd_iolocal(ncid, 'PFTDATA_MASK', 'read', domain%pftm, clmlevel, status=ret)
 
 !tcx fix, this or a test/abort should be added so overlaps can be computed
 !tcx fix, this is demonstrated not bfb in cam bl311 test.
@@ -356,7 +357,8 @@ contains
     real(r8),pointer :: rdata(:,:) ! temporary data
     logical :: NSEWset             ! true if lat/lon NSEW read from grid file
     logical :: EDGEset             ! true if EDGE NSEW read from grid file
-    logical :: lpftmflag            ! is mask a pft mask, local copy
+    logical :: lpftmflag           ! is mask a pft mask, local copy
+    logical :: readv               ! read variable in or not
     character(len=32) :: subname = 'surfrd_get_latlon'     ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -422,21 +424,31 @@ contains
 
        allocate(rdata(ni,nj))
 
-       call ncd_ioglobal('LONGXY',rdata,'read',ncid)
+       call ncd_ioglobal('LONGXY',rdata,'read',ncid,readvar=readv)
+       if ( .not. readv ) call endrun( trim(subname)//' ERROR: LONGXY NOT on file' )
        latlon%lonc(:) = rdata(:,1)
 
-       call ncd_ioglobal('LATIXY',rdata,'read',ncid)
+       call ncd_ioglobal('LATIXY',rdata,'read',ncid,readvar=readv)
+       if ( .not. readv ) call endrun( trim(subname)//' ERROR: LONGXY NOT on file' )
        latlon%latc(:) = rdata(1,:)
 
-       latlon%edges(:) = spval
-       ier = nf_inq_varid (ncid, 'EDGEN', varid)
-       if (ier == NF_NOERR) then
+       if (single_column) then
           EDGEset = .true.
-          call ncd_ioglobal('EDGEN',latlon%edges(1),'read',ncid)
-          call ncd_ioglobal('EDGEE',latlon%edges(2),'read',ncid)
-          call ncd_ioglobal('EDGES',latlon%edges(3),'read',ncid)
-          call ncd_ioglobal('EDGEW',latlon%edges(4),'read',ncid)
-          if (maxval(latlon%edges) > 1.0e35) EDGEset = .false. !read garbage
+          latlon%edges(1) = 90.0_r8
+          latlon%edges(2) = latlon%lonc(1) + 180._r8
+          latlon%edges(3) = -90.0_r8
+          latlon%edges(4) = latlon%lonc(1) - 180._r8
+       else
+          latlon%edges(:) = spval
+          ier = nf_inq_varid (ncid, 'EDGEN', varid)
+          if (ier == NF_NOERR) then
+             EDGEset = .true.
+             call ncd_ioglobal('EDGEN',latlon%edges(1),'read',ncid,readvar=readv)
+             call ncd_ioglobal('EDGEE',latlon%edges(2),'read',ncid,readvar=readv)
+             call ncd_ioglobal('EDGES',latlon%edges(3),'read',ncid,readvar=readv)
+             call ncd_ioglobal('EDGEW',latlon%edges(4),'read',ncid,readvar=readv)
+             if (maxval(latlon%edges) > 1.0e35) EDGEset = .false. !read garbage
+          endif
        endif
 
        ier = nf_inq_varid (ncid, 'LATN', varid)
@@ -618,8 +630,10 @@ contains
 
     allocate(latc(beg:end),lonc(beg:end))
 
-    call ncd_iolocal(ncid, 'LONGXY', 'read', lonc, clmlevel)
-    call ncd_iolocal(ncid, 'LATIXY', 'read', latc, clmlevel)
+    call ncd_iolocal(ncid, 'LONGXY', 'read', lonc, clmlevel, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: LONGXY NOT on fracdata file' )
+    call ncd_iolocal(ncid, 'LATIXY', 'read', latc, clmlevel, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: LATIXY NOT on fracdata file' )
 
     do n = beg,end
        if (abs(latc(n)-domain%latc(n)) > eps .or. &
@@ -629,8 +643,10 @@ contains
        endif
     enddo
           
-    call ncd_iolocal(ncid, 'LANDMASK', 'read', domain%mask, clmlevel)
-    call ncd_iolocal(ncid, 'LANDFRAC', 'read', domain%frac, clmlevel)
+    call ncd_iolocal(ncid, 'LANDMASK', 'read', domain%mask, clmlevel, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: LANDMASK NOT on fracdata file' )
+    call ncd_iolocal(ncid, 'LANDFRAC', 'read', domain%frac, clmlevel, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: LANDFRAC NOT on fracdata file' )
 
     deallocate(latc,lonc)
 
@@ -719,8 +735,10 @@ contains
 
     allocate(latc(beg:end),lonc(beg:end))
 
-    call ncd_iolocal(ncid, 'LONGXY', 'read', lonc, clmlevel)
-    call ncd_iolocal(ncid, 'LATIXY', 'read', latc, clmlevel)
+    call ncd_iolocal(ncid, 'LONGXY', 'read', lonc, clmlevel, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: LONGXY  NOT on topodata file' )
+    call ncd_iolocal(ncid, 'LATIXY', 'read', latc, clmlevel, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: LONGXY  NOT on topodata file' )
 
     do n = beg,end
        if (abs(latc(n)-domain%latc(n)) > eps .or. &
@@ -730,7 +748,8 @@ contains
        endif
     enddo
 
-    call ncd_iolocal(ncid, 'TOPO', 'read', domain%topo, clmlevel)
+    call ncd_iolocal(ncid, 'TOPO', 'read', domain%topo, clmlevel, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: LONGXY  NOT on topodata file' )
 
     deallocate(latc,lonc)
 
@@ -786,6 +805,7 @@ contains
     real(r8),pointer :: pctwet(:)      ! percent of grid cell is wetland
     real(r8),pointer :: pcturb(:)      ! percent of grid cell is urbanized
     character(len=32) :: subname = 'surfrd_wtxy_special'  ! subroutine name
+    real(r8) closelat,closelon
 !!-----------------------------------------------------------------------
 
     ns = domain%ns
@@ -800,10 +820,14 @@ contains
 
        ! Obtain non-grid surface properties of surface dataset other than percent pft
 
-    call ncd_iolocal(ncid, 'PCT_WETLAND', 'read', pctwet, grlnd)
-    call ncd_iolocal(ncid, 'PCT_LAKE'   , 'read', pctlak, grlnd)
-    call ncd_iolocal(ncid, 'PCT_GLACIER', 'read', pctgla, grlnd)
-    call ncd_iolocal(ncid, 'PCT_URBAN'  , 'read', pcturb, grlnd)
+    call ncd_iolocal(ncid, 'PCT_WETLAND', 'read', pctwet, grlnd, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_WETLAND  NOT on surfdata file' )
+    call ncd_iolocal(ncid, 'PCT_LAKE'   , 'read', pctlak, grlnd, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_LAKE NOT on surfdata file' )
+    call ncd_iolocal(ncid, 'PCT_GLACIER', 'read', pctgla, grlnd, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_GLACIER NOT on surfdata file' )
+    call ncd_iolocal(ncid, 'PCT_URBAN'  , 'read', pcturb, grlnd, status=ret)
+    if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_URBAN NOT on surfdata file' )
     pctspec = pctwet + pctlak + pctgla + pcturb
 
     ! Error check: glacier, lake, wetland, urban sum must be less than 100
@@ -945,7 +969,8 @@ contains
        count(2) = domain%nj
        start(3) = n+1	 ! dataset is 1:numpft+1, not 0:numpft
        count(3) = 1
-       call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, grlnd, start, count)
+       call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, grlnd, start, count, status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_PFT NOT on surfdata file' )
        pctpft(begg:endg,n) = arrayl(begg:endg)
     enddo
     deallocate(arrayl)
@@ -1254,7 +1279,8 @@ contains
        count(2) = domain%nj
        start(3) = n+1	 ! dataset is 1:numpft+1, not 0:numpft
        count(3) = 1
-       call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, grlnd, start, count)
+       call ncd_iolocal(ncid, 'PCT_PFT', 'read', arrayl, grlnd, start, count, status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: PCT_PFT NOT on surfdata file' )
        pctpft(begg:endg,n) = arrayl(begg:endg)
     enddo
     deallocate(arrayl)

@@ -27,6 +27,8 @@ module interpinic
 
   integer, parameter :: rtmlon = 720  ! # of rtm longitudes
   integer, parameter :: rtmlat = 360  ! # of rtm latitudes
+  integer, parameter :: nlive  = 3    ! # of live pools
+  integer, parameter :: npools = 12   ! # of C pools
   real(r8) :: volr(rtmlon,rtmlat)     ! water volume in cell (m^3)
 
   ! Parameters
@@ -93,6 +95,8 @@ contains
     integer :: dimidrad            !netCDF dimension id numrad
     integer :: dimidrtmlat         !netCDF dimension id rtmlat
     integer :: dimidrtmlon         !netCDF dimension id rtmlon
+    integer :: dimidnlive          !netCDF dimension id nlive
+    integer :: dimidnpools         !netCDF dimension id npools
     integer :: varid               !netCDF variable id
     integer :: xtype               !netCDF variable type
     integer :: ndims               !netCDF number of dimensions
@@ -191,6 +195,28 @@ contains
 
     ret = nf90_inq_dimid(ncidi, "numrad", dimidrad)
     if (ret/=NF90_NOERR) call handle_error (ret)
+
+    ! If CASA data exist on input file
+    ret = nf_inq_varid (ncidi, 'livefr', varid)
+    if (ret == NF_NOERR) then
+       ret = nf90_inq_dimid(ncidi, "nlive", dimidnlive)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_inquire_dimension(ncidi, dimidnlive, len=dimlen)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       if (dimlen/=nlive) then
+          write (6,*) 'error: input nlive does not equal ',nlive; stop
+       end if
+       ret = nf90_inq_dimid(ncidi, "npools", dimidnpools)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_inquire_dimension(ncidi, dimidnpools, len=dimlen)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       if (dimlen/=npools) then
+          write (6,*) 'error: input npools does not equal ',npools; stop
+       end if
+    else
+       dimidnpools = -1
+       dimidnlive  = -1
+    end if
 
     ! If RTM data exists on input file
     ret = nf_inq_varid (ncidi, 'RTMVOLR', varid)
@@ -312,7 +338,7 @@ contains
              call handle_error (ret)
           end if
           write (6,*) 'RTM variable copied over: ', trim(varname)
-          ret = nf90_put_var(ncidi, varid, volr)
+          ret = nf90_put_var(ncido, varid, volr)
           if (ret/=NF90_NOERR) call handle_error (ret)
        ! For 2D variables
        else if ( ndims == 2 )then
@@ -323,7 +349,7 @@ contains
              write (6,*) 'skipping variable with numrad dimension: ', trim(varname)
              cycle
           end if
-          if ( dimids(2) /= dimidcols )then
+          if ( dimids(2) /= dimidcols .and. dimids(2) /= dimidpft )then
              write (6,*) 'error: variable = ', varname
              write (6,*) 'error: variables second dimension is not recognized'; stop
           end if
@@ -339,6 +365,12 @@ contains
           else if ( dimids(1) == dimidsoi )then
              call interp_ml_real(varname, ncidi, ncido, &
                                  nlev=nlevsoi, nvec=numcols, nveco=numcolso)
+          else if ( dimids(1) == dimidnlive)then
+             call interp_ml_real(varname, ncidi, ncido, &
+                                 nlev=nlive, nvec=numpfts, nveco=numpftso)
+          else if ( dimids(1) == dimidnpools)then
+             call interp_ml_real(varname, ncidi, ncido, &
+                                 nlev=npools, nvec=numpfts, nveco=numpftso)
           else
              write (6,*) 'error: variable = ', varname
              write (6,*) 'error: variables first dimension is not recognized'; stop
@@ -548,11 +580,6 @@ contains
        call wrap_inq_varid (ncido, 'pfts1d_ityplun', varid)
        call wrap_get_var_int(ncido, varid, typeo)
 
-       ret = nf90_inq_varid( ncidi, 'pfts1d_itypveg', varid )
-       if (ret/=NF90_NOERR) call handle_error (ret)
-       ret = nf90_get_var( ncidi, varid, vtypei)
-       if (ret/=NF90_NOERR) call handle_error (ret)
-
        ret = nf90_inq_varid( ncido, 'pfts1d_itypveg', varid )
        if (ret/=NF90_NOERR) call handle_error (ret)
        ret = nf90_get_var( ncido, varid, vtypeo)
@@ -605,6 +632,7 @@ contains
     integer :: varid                            !variable id
     real(r8), allocatable :: rbufmli (:,:)      !input array
     real(r8), allocatable :: rbufmlo (:,:)      !output array
+    real(r8), allocatable :: dist(:)
     real(r8), allocatable :: origValues(:)      !temporary array of original values
     real(r8), allocatable :: wto(:)
     real(r8) :: distmin
@@ -615,44 +643,62 @@ contains
     allocate (rbufmli(nlev,nvec))
     allocate (rbufmlo(nlev,nveco))
     allocate (wto(nveco))
+    allocate (dist(nvec))
 
-    call wrap_inq_varid (ncido, 'cols1d_wtxy', varid)
-    call wrap_get_var_double(ncido, varid, wto)
+    if (nveco == numcolso) then
+       call wrap_inq_varid (ncido, 'cols1d_wtxy', varid)
+       call wrap_get_var_double(ncido, varid, wto)
+    else if (nveco == numpftso) then
+       ret = nf90_inq_varid( ncido, 'pfts1d_wtxy', varid )
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_get_var( ncido, varid, wto)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+    end if
 
     call wrap_inq_varid (ncidi, trim(varname), varid)
     call wrap_get_var_double(ncidi, varid, rbufmli)
-
-    if ( nvec /= numcols .or. (nveco /= numcolso) )then
-       write(*,*) 'calling interp_ml_real without nvec=numcols'
-       stop
-    end if
-
     ret = nf90_inq_varid (ncido, trim(varname), varid)
     if (ret/=NF90_NOERR) call handle_error (ret)
     ret = nf90_get_var( ncido, varid, rbufmlo )
     if (ret/=NF90_NOERR) call handle_error (ret)
 
-    do no = 1, nveco
-       if (wto(no)>0.) then
-          distmin = minval( distCols(:,no) )
-          if (distmin==spval) then
-             write(*,*) 'distmin=',spval
-             stop
-          end if
-          count = 0
-          do n = 1, nvec
-             if (distCols(n,no)==distmin) then
-                count = count + 1
-                rbufmlo(:,no) = rbufmli(:,n)
-                exit
-             end if       !found nearest neighbor
-          end do          !input data land loop
-          if (count < 1) then
-             write(*,*) 'no data was written: subroutine interp_ml_real'
-             stop
-          end if
-       end if             !output data with positive weight
-    end do                !output data land loop
+    if (nvec == numcols) then
+       do no = 1, nveco
+          if (wto(no)>0.) then
+             distmin = minval( distCols(:,no) )
+             if (distmin==spval) then
+                write(*,*) 'distmin=',spval
+                stop
+             end if
+             count = 0
+             do n = 1, nvec
+                if (distCols(n,no)==distmin) then
+                   count = count + 1
+                   rbufmlo(:,no) = rbufmli(:,n)
+                   exit
+                end if       !found nearest neighbor
+             end do          !input data land loop
+             if (count < 1) then
+                write(*,*) 'no data was written: subroutine interp_ml_real'
+                stop
+             end if
+          end if             !output data with positive weight
+       end do                !output data land loop
+    else if (nvec == numpfts) then
+       do no = 1, nveco
+          if (wto(no)>0.) then
+             call findMinDistPFTs( ncidi, ncido, no, dist, nmin=n )
+             if ( n == 0 )then
+                write(*,*) 'no data was written: subroutine interp_ml_real'
+                stop
+             end if
+             rbufmlo(:,no) = rbufmli(:,n)
+          end if             !output data with positive weight
+       end do                !output data land loop
+    else
+       write(*,*) 'no data was written: subroutine interp_ml_real'
+       stop
+    end if
 
     call wrap_inq_varid (ncido, varname, varid)
     call wrap_put_var_double(ncido, varid, rbufmlo)
@@ -662,6 +708,7 @@ contains
     deallocate(rbufmli)
     deallocate(rbufmlo)
     deallocate(wto)
+    deallocate(dist)
 
   end subroutine interp_ml_real
 

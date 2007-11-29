@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on bangkok, calgary, tempest, bluevista, lightning, blueice, jaguar: 
+# usage on bangkok, calgary, tempest, bluevista, lightning, blueice, jaguarcnl: 
 # ./test_driver.sh
 #
 # usage on robin/phoenix: (run build on robin interactively first, then submit to phoenix)
@@ -28,8 +28,8 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="cam3_5_14"
-conccsm_vers="ccsm3_5_beta12"
+seqccsm_vers="cam3_5_21"
+conccsm_vers="ccsm3_5_beta17"
 
 hostname=`hostname`
 case $hostname in
@@ -93,6 +93,7 @@ export TOOLS_MAKE_STRING=""
 export CCSM_MACH="bluevista"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
+export DATM_DATA_DIR=/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410
 dataroot="/fs/cgd/csm"
 echo_arg=""
 input_file="tests_pretag_bluevista"
@@ -157,6 +158,7 @@ export TOOLS_MAKE_STRING=""
 export CCSM_MACH="blueice"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
+export DATM_DATA_DIR=/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410
 dataroot="/fs/cgd/csm"
 echo_arg=""
 input_file="tests_posttag_blueice"
@@ -186,7 +188,7 @@ cat > ./${submit_script} << EOF
 #BSUB -n 8                   # total tasks needed
 #BSUB -o test_dr.o%J         # output filename
 #BSUB -e test_dr.o%J         # error filename
-#BSUB -q regular             # queue
+#BSUB -q premium             # queue
 #BSUB -W 6:00                     
 #BSUB -P $account_name      
 #BSUB -J clmtest
@@ -209,19 +211,34 @@ export CLM_RESTART_TASKS=4
 
 export CLM_COMPSET="I"
 
-export INC_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/include
-export LIB_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/lib
-mpich=/contrib/2.6/mpich-gm/1.2.6..14a-pathscale-2.4-64
-export INC_MPI=\${mpich}/include
-export LIB_MPI=\${mpich}/lib
-export PS=/contrib/2.6/pathscale/2.4
-export PATH=\${mpich}/bin:\${PS}/bin:\${PATH}
-export LD_LIBRARY_PATH=\${PS}/lib/2.4:/opt/pathscale/lib/2.4/32:\${LD_LIBRARY_PATH}
-export MAKE_CMD="gmake -j 2"
-export CFG_STRING="-fc pathf90 -linker mpif90 "
-export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=mpif90"
+if [ "\$CLM_FC" = "ifort" ]; then
+   netcdf=/contrib/2.6/netcdf/3.6.2-intel-10.1.008-64
+   export INC_NETCDF=\$netcdf/include
+   export LIB_NETCDF=\$netcdf/lib
+   mpich=/contrib/2.6/mpich-gm/1.2.6..14a-intel-10.1.008-64
+   export INC_MPI=\${mpich}/include
+   export LIB_MPI=\${mpich}/lib
+   export intel=/contrib/2.6/intel/10.1.008
+   export PATH=\${mpich}/bin:\${intel}/bin:\${PATH}
+   export MAKE_CMD="gmake"
+   export CFG_STRING="-fc ifort -cc icc -linker \$mpich/bin/mpif90 "
+   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
+else
+   export INC_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/include
+   export LIB_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/lib
+   mpich=/contrib/2.6/mpich-gm/1.2.6..14a-pathscale-2.4-64
+   export INC_MPI=\${mpich}/include
+   export LIB_MPI=\${mpich}/lib
+   export PS=/contrib/2.6/pathscale/2.4
+   export PATH=\${mpich}/bin:\${PS}/bin:\${PATH}
+   export LD_LIBRARY_PATH=\${PS}/lib/2.4:/opt/pathscale/lib/2.4/32:\${LD_LIBRARY_PATH}
+   export MAKE_CMD="gmake -j 2"
+   export CFG_STRING="-fc pathf90 -linker \${mpich}/bin/mpif90 "
+   export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=\${mpich}/bin/mpif90"
+fi
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
+export DATM_DATA_DIR=/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
 input_file="tests_posttag_lightning"
@@ -297,6 +314,7 @@ fi
 export MAKE_CMD="gmake -j 2"   ##using hyper-threading on calgary
 export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
+export DATM_DATA_DIR=/project/tss/NCEPDATA.datm7.Qian.T62.c060410
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
 input_file="tests_pretag_bangkok"
@@ -306,9 +324,96 @@ EOF
     ;;
 
 
-    ##jaguar
+#    ##jaguar
+#    jaguar* ) 
+#    submit_script="test_driver_jaguar_${cur_time}.sh"
+#
+###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+#cat > ./${submit_script} << EOF
+##!/bin/sh
+##
+#
+## Name of the queue (CHANGE THIS if needed)
+## #PBS -q batch
+## Number of nodes (CHANGE THIS if needed)
+##PBS -l walltime=01:30:00,size=180
+## output file base name
+##PBS -N test_dr
+## Put standard error and standard out in same file
+##PBS -j oe
+## Use sh
+##PBS -S /bin/sh
+## Export all Environment variables
+##PBS -V
+##PBS -A CLI017
+## End of options
+#
+#if [ -n "\$PBS_JOBID" ]; then    #batch job
+#    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
+#    initdir=\${PBS_O_WORKDIR}
+#fi
+#
+#if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
+#    interactive="NO"
+#    echo_arg=""
+#else
+#    interactive="YES"
+#    echo_arg="-e"
+#fi
+#
+#input_file="tests_pretag_jaguar"
+#
+###omp threads
+#export CLM_THREADS=1
+#export CLM_RESTART_THREADS=2
+#
+###mpi tasks
+#export CLM_TASKS=180
+#export CLM_RESTART_TASKS=90
+#
+#export CLM_COMPSET="I"
+#
+#source /opt/modules/default/init/sh
+#module switch pgi pgi/7.0.7
+#module load netcdf/3.6.2
+#module remove xtpe-target-cnl
+#module load   xtpe-target-catamount
+#module remove xt-mpt xt-pe PrgEnv-pgi xt-service xt-libc xt-os xt-catamount xt-boot xt-lustre-ss
+#module load xt-mpt/2.0.24a xt-pe/2.0.24a PrgEnv-pgi/2.0.24a xt-service/2.0.24a xt-libc/2.0.24a xt-os/2.0.24a
+#module load xt-catamount/2.0.24a xt-boot/2.0.24a xt-lustre-ss/2.0.24a
+#export PATH="/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
+#export PATH="\${PATH}:/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
+#export PATH="\${PATH}:\${MPICH_DIR}/bin"
+#export PATH="\${PATH}:\${MPICH_DIR_FTN_DEFAULT64}/bin"
+#export PATH="\${PATH}:\${PE_DIR}/bin/snos64"
+#export PATH="\${PATH}:\${PGI}/linux86-64/default/bin"
+#export PATH="\${PATH}:\${SE_DIR}/bin/snos64"
+#export PATH="\${PATH}:\${C_DIR}/amd64/bin"
+#export PATH="\${PATH}:\${PRGENV_DIR}/bin"
+#export PATH="\${PATH}:\${MPT_DIR}/bin"
+#export PATH="\${PATH}:\${CATAMOUNT_DIR}/bin/snos64"
+#
+#export LIB_NETCDF=\${NETCDF_DIR}/lib
+#export INC_NETCDF=\${NETCDF_DIR}/include
+#export MOD_NETCDF=\${NETCDF_DIR}/include
+#export INC_MPI=\${MPICH_DIR}/include
+#export LIB_MPI=\${MPICH_DIR}/lib
+#export CCSM_MACH="jaguar"
+#export CFG_STRING="-fc ftn -fflags '-target=catamount' -cflags '-target=catamount' -ldflags '-target=catamount' "
+#export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc USER_CPPDEFS='-DCATAMOUNT -DSYSCATAMOUNT' USER_CFLAGS='-target=catamount' USER_FFLAGS='-target=catamount' "
+#export MAKE_CMD="gmake -j 2 "
+#export MACH_WORKSPACE="/tmp/work"
+#export CPRNC_EXE=/spin/proj/ccsm/bin/jaguar/newcprnc
+#export DATM_DATA_DIR=/tmp/proj/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
+#dataroot="/tmp/proj/ccsm"
+#EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+#   ;;
+#
+
+    ##jaguarcnl
     jaguar* ) 
-    submit_script="test_driver_jaguar_${cur_time}.sh"
+    submit_script="test_driver_jaguarcnl_${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -318,7 +423,7 @@ cat > ./${submit_script} << EOF
 # Name of the queue (CHANGE THIS if needed)
 # #PBS -q batch
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l walltime=01:00:00,size=32
+#PBS -l walltime=01:30:00,size=256
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
@@ -350,15 +455,15 @@ export CLM_THREADS=1
 export CLM_RESTART_THREADS=2
 
 ##mpi tasks
-export CLM_TASKS=32
-export CLM_RESTART_TASKS=16
+export CLM_TASKS=256
+export CLM_RESTART_TASKS=128
 
 export CLM_COMPSET="I"
 
 source /opt/modules/default/init/sh
-module switch pgi pgi/6.1.6
-module load netcdf/3.6.0
-export PATH="/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
+module switch pgi pgi/7.0.7
+module load   netcdf/3.6.2
+export PATH="/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguarcnl/bin"
 export PATH="\${PATH}:/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
 export PATH="\${PATH}:\${MPICH_DIR}/bin"
 export PATH="\${PATH}:\${MPICH_DIR_FTN_DEFAULT64}/bin"
@@ -368,20 +473,20 @@ export PATH="\${PATH}:\${SE_DIR}/bin/snos64"
 export PATH="\${PATH}:\${C_DIR}/amd64/bin"
 export PATH="\${PATH}:\${PRGENV_DIR}/bin"
 export PATH="\${PATH}:\${MPT_DIR}/bin"
-export PATH="\${PATH}:\${CATAMOUNT_DIR}/bin/snos64"
 
 export LIB_NETCDF=\${NETCDF_DIR}/lib
 export INC_NETCDF=\${NETCDF_DIR}/include
 export MOD_NETCDF=\${NETCDF_DIR}/include
 export INC_MPI=\${MPICH_DIR}/include
 export LIB_MPI=\${MPICH_DIR}/lib
-export CCSM_MACH="jaguar"
-export CFG_STRING="-fc ftn -fflags '-target=catamount' -cflags '-target=catamount' "
-export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc USER_CPPDEFS='-DCATAMOUNT -DSYSCATAMOUNT' USER_CFLAGS='-target=catamount' USER_FFLAGS='-target=catamount'"
-export MAKE_CMD="gmake -j 2"
+export CCSM_MACH="jaguarcnl"
+export CFG_STRING="-fc ftn "
+export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
+export MAKE_CMD="gmake -j 2 "
 export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/spin/proj/ccsm/bin/jaguar/newcprnc
-dataroot="/tmp/proj/ccsm"
+export DATM_DATA_DIR=/lustre/scratch/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
+dataroot="/lustre/scratch/ccsm"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
@@ -452,6 +557,7 @@ export CCSM_MACH="phoenix"
 export MAKE_CMD="gmake -j 2"
 export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/spin/proj/ccsm/models/atm/cam/bin/newcprnc/cprnc
+export DATM_DATA_DIR=/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
 dataroot="/spin/proj/ccsm"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -510,6 +616,7 @@ export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
+export DATM_DATA_DIR=/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410
 dataroot="/fs/cgd/csm"
 echo_arg=""
 input_file="tests_pretag_tempest"
@@ -544,6 +651,7 @@ export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="$HOME/runs"
 export CPRNC_EXE=$HOME/bin/newcprnc
+export DATM_DATA_DIR=$HOME/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
 dataroot="$HOME"
 echo_arg=""
 input_file="tests_posttag_spot1"
@@ -818,7 +926,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bangkok, tempest, bluevista, blueice, lightning, jaguar, robin: "
+    echo "usage on bangkok, tempest, bluevista, blueice, lightning, jaguar, jaguarcnl, robin: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "

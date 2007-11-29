@@ -114,6 +114,14 @@ contains
          avgflag='A', long_name='ground temperature', &
          ptr_col=clm3%g%l%c%ces%t_grnd)
 
+    call hist_addfld1d (fname='HCSOI',  units='MJ',  &
+         avgflag='A', long_name='soil heat content', &
+         ptr_col=clm3%g%l%c%ces%hc_soi, set_lake=spval)
+
+    call hist_addfld1d (fname='HCSOISNO',  units='MJ',  &
+         avgflag='A', long_name='soil plus snow heat content', &
+         ptr_col=clm3%g%l%c%ces%hc_soisno)
+
     call hist_addfld1d (fname='TSNOW',  units='K',  &
          avgflag='I', long_name='snow temperature', &
          ptr_col=clm3%g%l%c%ces%t_snow, set_lake=spval)

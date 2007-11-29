@@ -1,0 +1,28 @@
+README
+
+Replace any filename indicators as follows.
+
+%c    = input casename
+%d    = location of csmdata (inputdata for all CCSM models)
+%do   = name of domain filename
+%p    = input path
+%y    = year from the range yearfirst to yearlast
+%ym   = year-month from the range yearfirst to yearlast with all 12 months
+
+NOTE:    Streams txt files MUST have begining and ending tags on different lines with the
+         tag content between the two. Whitespace before or after the content
+         of tags is ignored.
+
+Comments on specific tags:
+
+VariableNames:
+
+variableNames are two columns: (variable name in file) (variable name in the code)
+
+domainInfo:
+
+Information on the domain of the data, locations, mask etc.
+
+fieldsInfo:
+
+Information on the fields in the data files, locations, names etc.

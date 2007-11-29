@@ -15,7 +15,7 @@ module restFileMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
-  use clm_varctl  , only : iulog,single_column
+  use clm_varctl  , only : iulog
   use ncdio       
 !
 ! !PUBLIC TYPES:
@@ -38,7 +38,7 @@ module restFileMod
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: restFile_read_pfile     
   private :: restFile_write_pfile    ! Writes restart pointer file
-  private :: restFile_archive        ! Close restart file and write restart pointer file
+  private :: restFile_closeRestart        ! Close restart file and write restart pointer file
   private :: restFile_dimset
   private :: restFile_dimcheck
   private :: restFile_enddef
@@ -158,13 +158,13 @@ contains
 #endif
     call accumulRest( ncid, flag='write' )
     
-    ! Close and archive restart file
+    ! Close restart file and write restart pointer file
     
     call restFile_close( ncid )
     if (present(nlend)) then	
-       call restFile_archive( file, nlend )
+       call restFile_closeRestart( file, nlend )
     else
-       call restFile_archive( file )
+       call restFile_closeRestart( file )
     end if
     
     ! Write restart pointer file
@@ -234,7 +234,7 @@ contains
 
     ! Read file
 
-    if (.not.single_column) call restFile_dimcheck( ncid )
+    call restFile_dimcheck( ncid )
     call BiogeophysRest( ncid, flag='read' )
 #if (defined CN)
     call CNRest( ncid, flag='read' )
@@ -349,9 +349,9 @@ contains
     if (masterproc) then
        call relavu (nio)
        if (present(nlend)) then
-          call restFile_archive( file, nlend )
+          call restFile_closeRestart( file, nlend )
        else
-          call restFile_archive( file )
+          call restFile_closeRestart( file )
        end if
     end if
 
@@ -498,13 +498,13 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: restFile_archive
+! !IROUTINE: restFile_closeRestart
 !
 ! !INTERFACE:
-  subroutine restFile_archive( file, nlend )
+  subroutine restFile_closeRestart( file, nlend )
 !
 ! !DESCRIPTION:
-! Close and archive restart file and write restart pointer file if
+! Close restart file and write restart pointer file if
 ! in write mode, otherwise just close restart file if in read mode
 !
 ! !USES:
@@ -512,7 +512,6 @@ contains
     use clm_csmMod  , only : csmstop_next
 #endif
     use clm_time_manager, only : is_last_step
-    use clm_varctl  , only : mss_irt, mss_wpass, archive_dir
     use fileutils   , only : putfil, set_filename
 !
 ! !ARGUMENTS:
@@ -530,37 +529,22 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer :: i                   !index
-    logical :: lremove             !true => remove file after archive
-    character(len=256) :: rem_fn   !remote (archive) filename
-    character(len=256) :: rem_dir  !remote (archive) directory
 !-----------------------------------------------------------------------
 
    if (masterproc) then
 
-      lremove = .true.
-#if (defined OFFLINE) 
-      if (is_last_step()) lremove = .false.
-#elif (defined SEQ_MCT) || (defined SEQ_ESMF)
-      if (present(nlend)) then
-         if (nlend) lremove = .false.
-      else
-         call endrun('restFile_archive error: must pass nlend as argument for SEQ_MCT or SEQ_ESMF')
+#if (defined SEQ_MCT) || (defined SEQ_ESMF)
+      if ( .not. present(nlend)) then
+         call endrun('restFile_closeRestart error: must pass nlend as argument for SEQ_MCT or SEQ_ESMF')
       end if
-#elif (defined COUP_CSM)
-      if (csmstop_next) lremove = .false.
 #endif
-      if (mss_irt > 0) then
-         rem_dir = trim(archive_dir) // '/rest/'
-         rem_fn = set_filename(rem_dir, file)
-         call putfil( file, rem_fn, mss_wpass, mss_irt, lremove )
-      endif
       write(iulog,*) 'Successfully wrote local restart file ',trim(file)
       write(iulog,'(72a1)') ("-",i=1,60)
       write(iulog,*)
 
    end if
 
- end subroutine restFile_archive
+ end subroutine restFile_closeRestart
 
 !-----------------------------------------------------------------------
 !BOP
@@ -572,11 +556,10 @@ contains
 !
 ! !DESCRIPTION:
 ! Open restart pointer file. Write names of current binary and netcdf
-! restart files. If using mass store, these are the mass store names
-! except if mss_irt=0 (no mass store files written). 
+! restart files.
 !
 ! !USES:
-    use clm_varctl, only : rpntdir, mss_irt, archive_dir, rpntfil
+    use clm_varctl, only : rpntdir, rpntfil
     use fileutils , only : set_filename, relavu
     use fileutils , only : getavu, opnfil
 !
@@ -596,7 +579,6 @@ contains
     integer :: m                    ! index
     integer :: nio                  ! restart pointer file
     character(len=256) :: filename  ! local file name
-    character(len=256) :: rem_dir   ! remote directory
 !-----------------------------------------------------------------------
 
     if (masterproc) then
@@ -604,13 +586,7 @@ contains
        filename= trim(rpntdir) //'/'// trim(rpntfil)
        call opnfil( filename, nio, 'f' )
        
-       if (mss_irt == 0) then
-          write(nio,'(a)') fnamer
-       else
-          rem_dir = trim(archive_dir) // '/rest/'
-          write(nio,'(a)') set_filename( rem_dir, fnamer )
-       endif
-       
+       write(nio,'(a)') fnamer
        call relavu( nio )
        write(iulog,*)'Successfully wrote local restart pointer file'
     end if
@@ -638,7 +614,7 @@ contains
 
           write(iulog,*)
           write(iulog,*)'restFile_open: writing restart dataset at ',&
-               trim(file), 'at nstep = ',get_nstep()
+               trim(file), ' at nstep = ',get_nstep()
           write(iulog,*)
           call check_ret( nf_create(trim(file), nf_clobber, ncid), subname )
           call check_ret( nf_set_fill(ncid, nf_nofill, omode), subname )
@@ -744,9 +720,9 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_time_manager, only : get_nstep, get_curr_date
     use spmdMod     , only : mpicom, MPI_LOGICAL
-    use clm_varctl  , only : caseid, ctitle, version, fsurdat
+    use clm_varctl  , only : caseid, ctitle, version, username, hostname, fsurdat, &
+                             conventions, source
     use clm_varpar  , only : numrad, rtmlon, rtmlat, nlevlak, nlevsno, nlevsoi
-    use shr_sys_mod , only : shr_sys_getenv
     use decompMod   , only : get_proc_bounds, get_proc_global
 #ifdef RTM
 !    use RunoffMod   , only : get_proc_rof_global
@@ -820,36 +796,31 @@ contains
        
        ! Define global attributes
        
-       str = 'CF-1.0'
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'conventions', len_trim(str), trim(str)), subname)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'conventions', len_trim(conventions), trim(conventions)), &
+                                      subname)
 
        call getdatetime(curdate, curtime)
        str = 'created on ' // curdate // ' ' // curtime
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'history', len_trim(str), trim(str)), subname)
 
-       call shr_sys_getenv ('LOGNAME', str, ier)
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'logname', len_trim(str), trim(str)), subname)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'username', len_trim(username), trim(username)), subname)
 
-       call shr_sys_getenv ('HOST', str, ier)
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'host', len_trim(str), trim(str)), subname)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'host', len_trim(hostname), trim(hostname)), subname)
 
-       str = 'Community Land Model: CLM3'
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'source', len_trim(str), trim(str)), subname)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'version', len_trim(version), trim(version)), subname)
 
-       str = '$HeadURL$'
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'version', len_trim(str), trim(str)), subname)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'source', len_trim(source), trim(source)), subname)
 
-       str = '$Id$'
+       str = &
+       '$Id$'
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'revision_id', len_trim(str), trim(str)), subname)
 
-       str = ctitle
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'case_title', len_trim(str), trim(str)), subname)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'case_title', len_trim(ctitle), trim(ctitle)), subname)
 
-       str = caseid
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'case_id', len_trim(str), trim(str)), subname)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'case_id', len_trim(caseid), trim(caseid)), subname)
 
-       str = fsurdat
-       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'surface_dataset', len_trim(str), trim(str)), subname)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, 'surface_dataset', len_trim(fsurdat), trim(fsurdat)), &
+                                      subname)
     end if
 
   end subroutine restFile_dimset

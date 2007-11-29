@@ -1,4 +1,255 @@
 ===============================================================
+Tag name:  clm3_5_14
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Nov 29 12:18:47 MST 2007
+Date:Date:One-line Summary: Use build-streams, and archiving, multiple bug-fixes
+
+Purpose of changes: Move bstrms5_clm3_5_13 to trunk
+
+Remove long-term archiving from clm code. Use Mat's long-term and short-term archiving 
+scripts like cam. Short term script runs at the end of your run script -- then the 
+long-term archiving script is submitted to the batch que at the end. Update to newer 
+version of csm_share that doesn't have any mss_ options. Tune usage of build-namelist. 
+Make streams file on the fly. Remove references to get_env and $HEADUrl$. Fix interpinic 
+for CASA and RTM (from Sam). Change testing from being done in offline mode to 
+seq_ccsm mode. Make default in run scripts to run seq_ccsm mode. Add option to run scripts
+to resubmit itself until reaches a given model date.
+
+Add in HCSOI and HCSOISNO from Dave Lawrence. Add PERGRO test to test suite. Simple PERGRO
+fix from Jerry Olson. Use branch of driver code for seq-ccsm and removing archiving. Add 
+in lnd_comp_mct changes from ccsm4.alpha series.
+
+Bugs fixed (include bugzilla ID): 449 (create_crop), 548 (rm getenv), 579 (cam config),
+                                  595 (interpic-RTM), 608 (interpic-CASA), 618 (hist-files)
+                                  622 (ensures needed vars on input), 624 (compiles on ifort)
+                                  632 (GREGORIAN), 636 (archiving)
+
+Bug fixes: history,restart-override,missing-vars on input
+datasets,more-grids,intel-compile,add-g95,remove getenv,add version,hostname etc. to
+files from CCSMInit namelist,add auto-restart option,GREGORIAN bug,fix
+create_croplandunit bug
+
+Known bugs (include bugzilla ID): 251, 512, 546, 652, 656
+                                  http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Use build-streams for sequential-CCSM
+  Builds the streams files on the fly. This allows running data over any period.
+  Add usecase option to build-namelist to set multiple things (currently only implementing pergro and pergro0)
+  Add notes to namelist files generated with build-namelist so can reconstruct.
+  See details of new build-namelist options in documentation on build-namelist below.
+
+Describe any changes made to the namelist: 
+   Remove mss options (mss_irt, mss_wpass and archive_dir)
+   Remove ability to change restart pointer filename (rpntpath)
+   Add version, hostname, username, stop_final_ymd
+   Actually use pertlim for arbitrary initial conditions if > 0
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+   csm_share to share3_071107
+   stubs     to stubs1_0_6
+   drv       to clm_branch_tags/clm02_drvseq1_044
+   datm7     to datm7_071114
+   perl5lib  to perl5lib_071016
+
+List all subroutines eliminated: None
+
+List all subroutines added and what they do:
+
+     --------- Add files for sequential-CCSM testing
+A  +   test/system/config_files/17p_cnexitspinupsc_dh
+A  +   test/system/config_files/_persc_dh
+A  +   test/system/config_files/_persc_dm
+A  +   test/system/config_files/4p_vodsrsc_dh
+A  +   test/system/config_files/_persc_ds
+A  +   test/system/config_files/17p_cnnsc_h
+A  +   test/system/config_files/4p_vodsrsc_dm
+A  +   test/system/config_files/17p_sc_dh
+A  +   test/system/config_files/17p_cnnsc_m
+A  +   test/system/config_files/4p_vodsrsc_do
+A  +   test/system/config_files/17p_cnnsc_o
+A  +   test/system/config_files/10p_dgvmsc_h
+A  +   test/system/config_files/4p_casasc_dh
+A  +   test/system/config_files/17p_sc_dm
+A  +   test/system/config_files/17p_sc_do
+A  +   test/system/config_files/10p_dgvmsc_m
+A  +   test/system/config_files/4p_casasc_dm
+A  +   test/system/config_files/10p_dgvmsc_o
+A  +   test/system/config_files/17p_sc_ds
+A  +   test/system/config_files/4p_casasc_do
+A  +   test/system/config_files/10p_dgvmsc_s
+A  +   test/system/config_files/17p_cnsc_dh
+A  +   test/system/config_files/17p_sc_h
+A  +   test/system/config_files/4p_casasc_h
+A  +   test/system/config_files/17p_sc_m
+A  +   test/system/config_files/17p_sc_o
+A  +   test/system/config_files/_sc_h
+A  +   test/system/config_files/4p_casasc_m
+A  +   test/system/config_files/4p_casasc_o
+A  +   test/system/config_files/_sc_m
+A  +   test/system/config_files/17p_vodsrsc_h
+A  +   test/system/config_files/_sc_o
+A  +   test/system/config_files/17p_vodsrsc_m
+A  +   test/system/config_files/_sc_s
+A  +   test/system/config_files/17p_vodsrsc_o
+A  +   test/system/config_files/17p_cnadspinupsc_dh
+A  +   test/system/config_files/17p_cnnsc_dh
+A  +   test/system/config_files/17p_cnnsc_dm
+A  +   test/system/config_files/17p_cnnsc_do
+A  +   test/system/config_files/10p_dgvmsc_dh
+A  +   test/system/config_files/17p_cnnsc_ds
+A  +   test/system/config_files/10p_dgvmsc_dm
+A  +   test/system/config_files/17p_vodsrsc_dh
+A  +   test/system/config_files/10p_dgvmsc_do
+A  +   test/system/config_files/17p_vodsrsc_dm
+A  +   test/system/config_files/17p_vodsrsc_do
+A  +   test/system/config_files/4p_vodsrsc_h
+A  +   test/system/config_files/4p_vodsrsc_m
+A  +   test/system/config_files/4p_vodsrsc_o
+A  +   test/system/tests_posttag_spot1 ----------------- Add testing for my laptop
+     --------- PERGRO testing
+A  +   test/system/nl_files/clm_per
+A  +   test/system/nl_files/clm_per0
+A  +   test/system/TSMpergro.sh
+A  +   bld/use_cases
+A  +   bld/use_cases/pergro.nl
+A  +   bld/use_cases/pergro0.nl
+     --------- cpl6 template
+A  +   bld/clm.cpl6.template
+     --------- build-streams
+A  +   bld/streams.txt.readme ---------------- Readme file for build-streams
+A  +   bld/datm.streams.template.xml --------- XML template for streams file
+A  +   bld/build-streams --------------------- Script to build streams file to list input datasets used for datm7
+
+List all existing files that have been modified, and describe the changes:
+
+     --------- Change testing to use sequential CCSM rather than offline add pergro tests
+     --------- Add ifort for lightning and jaguarcnl to testing options
+M      test/system/config_files/_per_dh
+M      test/system/config_files/_per_dm
+M      test/system/config_files/_per_ds
+M      test/system/tests_posttag_phoenix
+M      test/system/tests_pretag_jaguar
+M      test/system/TBR.sh
+M      test/system/tests_pretag_bangkok
+M      test/system/test_driver.sh --------------------- Add jaguarcnl option and get it working
+M      test/system/mknamelist
+M      test/system/tests_posttag_hybrid_regression
+M      test/system/tests_posttag_purempi_regression
+M      test/system/tests_pretag_tempest
+M      test/system/tests_pretag_bluevista
+M      test/system/tests_posttag_blueice
+M      test/system/input_tests_master
+M      test/system/tests_posttag_robin
+M      test/system/TCBext_ccsmseq_cam.sh
+M      test/system/tests_posttag_lightning
+M      test/system/CLM_runcmnd.sh --------------------- Change for jaguarcnl
+M      test/system/TSM.sh ----------------------------- Change restart pointer filenames
+     --------- Add ignore of *.o and *.mod files to tools, change source files list for new csm_share
+ M     tools/mksurfdata
+ M     tools/mksurfdata/mkfmax.F90 ------- remove executable property
+M      tools/mksurfdata/Srcfiles
+ M     tools/interpinic
+M      tools/interpinic/interpinic.F90 --- fix for CASA and RTM (from Sam)
+ M     tools/mkgriddata
+M      tools/mkgriddata/Srcfiles
+ M     tools/mkdatadomain
+     --------- Put calls to archiving scripts add resubmit option and make ccsm_seq the default
+M      bld/run-ibm.csh
+M      bld/run-frost.csh
+M      bld/run-pc.csh
+M      bld/run-lightning.csh
+     --------- Tweak build for using build-streams and changes to csm_share and to use seq_ccsm
+     --------- Add script calls for archiving remove code for archiving
+     --------- Add option to resubmitting to a given model date to run scripts
+M      bld/configure -------------------------------- refactor validation
+M      bld/Makefile.in ------------------------------ add ifort and g95
+M      bld/namelist.pm ------------------------------ add method to write notes on output namelist files
+M      bld/clm_inparm.pm ---------------------------- fix setting of pftcon and only die if arb_ic set and finidat /= ""
+M      bld/queryDefaultXML.pm ----------------------- allow to read CAM config_cache file
+M      bld/datm_dshr_in.pm
+M      bld/sample.seqccsm.namelists
+M      bld/CLMDrvInNamelistsDescriptions.xml
+M      bld/drv_in.pm
+M      bld/CCSMDrvInNamelistsDescriptions.xml
+M      bld/SeqCCSM_namelist.pm
+M      bld/SeqCCSMDrvInNamelistsDescriptions.xml
+M      bld/DefaultDATM_DSHR_NML_Namelist.xml
+M      bld/create_newcase --------------------------- change so changes all occurances of script name, output script has exec set.
+M      bld/build-namelist --------------------------- add cam options, and options needed for building streams files
+
+      -cam_config "file"      Read the CAM config cache file (rather than the CLM version) to get
+                              build-time configuration information.
+                              (Default -- not used.)
+      -cam_hist_case "caseid" Use the input CAM simulation caseid to build a streams file with that case id.
+                              (Default -- not used).
+      -datm_data_dir "path"   Directory path to the datm data
+                              (only used when mode=ccsm_seq)
+      -datm_domain "file"     File name of domain file for datm data matching resolution data resolution.
+                              (only used when mode=ccsm_seq)
+      -datm_dom_dir "path"    Directory path to the datm_domain file.
+                              (only used when mode=ccsm_seq)
+      -source "source"        Source data to use for datm (for ccsm_seq mode)
+      -use_case "case"        Specify a use case which will provide default values. (pergro or pergro0)
+                  
+     --------- Source code changes
+     --------- Call endrun if needed input information isn't on input files
+     --------- remove archiving in code and remove getenv -- use info on shr_inputinfo object
+     --------- Add PERGRO changes and do perturbation if pertlim > 0
+     --------- changes from CCSM4-alpha branch
+     --------- Add hc_soi and hc_soisno
+M      src/biogeochem/CASAMod.F90
+M      src/biogeochem/STATICEcosysDynMod.F90
+M      src/biogeochem/DGVMMod.F90
+M      src/main/ncdio.F90
+M      src/main/atmdrvMod.F90
+M      src/main/initializeMod.F90 -------------- Call pftconrd here rather than in iniTimeConst, CCSM4-alpha changes
+M      src/main/clmtypeInitMod.F90 ------------- Add hc_soi and hc_soisno
+M      src/main/pftdynMod.F90
+M      src/main/iniTimeConst.F90 --------------- Remove pftconrd call from here to initializeMod
+M      src/main/histFileMod.F90 ---------------- Fix history problem so can put additional fields on files, remove archiving, use shr_info
+M      src/main/restFileMod.F90
+M      src/main/controlMod.F90 ----------------- Add new input for offline/ccsm_con modes, remove archiving
+M      src/main/clm_time_manager.F90
+M      src/main/clm_varctl.F90 ----------------- Add version, hostname, username, source and conventions
+M      src/main/ndepFileMod.F90
+M      src/main/lnd_comp_mct.F90 --------------- CCSM4-alpha changes add runoff
+M      src/main/surfrdMod.F90
+M      src/main/gen_ncdio_local_subs.csh
+M      src/main/do_close_dispose.F90
+M      src/main/clmtype.F90 -------------------- Add hc_soi and hc_soisno
+M      src/main/histFldsMod.F90 ---------------- Add hc_soi and hc_soisno
+M      src/main/mkarbinitMod.F90 --------------- Add pertlim to initial conditions if non-zero
+M      src/biogeophys/SoilTemperatureMod.F90 --- Add hc_soi and hc_soisno
+M      src/biogeophys/Biogeophysics1Mod.F90 ---- PERGRO #ifdef from Jerry Olson
+M      src/biogeophys/BiogeophysicsLakeMod.F90 - Add hc_soisno
+
+Summary of testing:
+
+  bluevista:    All PASS except CAM, CCSM_con and TBL tests
+  lightning:    All PASS except TBL tests
+  jaguarcnl:    All PASS except TBL tests
+  bangkok/lf95: All PASS except CAM and TBL tests
+
+  CAM and CCSM_con tests fail because of incomptabilities of csm_share code.
+  TBL tests fail -- because new tests are all with sequential-CCSM which didn't work in previous tag.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_5_13 
+    (with testing changes and other changes to work)
+
+Changes answers relative to baseline: None
+
+	To verify bit-for-bit ran standard offline test case (bl111) on: tempest, bluevista, bangkok
+	(pass on bangkok, and bluevista -- but failed on tempest)
+
+===============================================================
+===============================================================
 Tag name:  clm3_5_13
 Originator(s):  erik (Erik Kluzek)
 Date:  Fri Nov 16 10:17:38 MST 2007
@@ -73,7 +324,7 @@ Summary of testing: None
 Changes answers relative to baseline: None
 	
 ===============================================================
-==============================================================
+===============================================================
 Tag name:  clm3_5_11
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Fri Sep 28 12:03:30 MDT 2007

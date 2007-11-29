@@ -310,12 +310,12 @@ contains
     use domainMod    , only : ldomain,llatlon
     use decompMod    , only : ldecomp
     use clm_varctl   , only : caseid, ctitle, finidat, fsurdat, fpftcon, &
-                              frivinp_rtm, archive_dir, mss_wpass, mss_irt
+                              frivinp_rtm, version, source, hostname,    &
+                              username
     use clm_varcon   , only : spval
     use clm_time_manager , only : get_ref_date, get_nstep, get_curr_date, &
                               get_curr_time
     use fileutils    , only : set_filename, putfil, get_filename
-    use shr_sys_mod  , only : shr_sys_getenv
     use spmdMod      , only : masterproc
     use shr_const_mod, only : SHR_CONST_CDAY
 !
@@ -374,8 +374,6 @@ contains
     character(len=  8) :: curtime      ! current time
     character(len= 10) :: basedate     ! base date (yyyymmdd)
     character(len=  8) :: basesec      ! base seconds
-    character(len=256) :: rem_dir      ! remote (archive) directory
-    character(len=256) :: rem_fn       ! remote (archive) filename
     real(r8), pointer :: rbuf2dg(:,:)  ! temporary
     integer , pointer :: ibuf2dg(:,:)  ! temporary
     character(len=32) :: subname='histDGVM'
@@ -441,19 +439,17 @@ contains
        call check_ret(&
             nf_put_att_text(ncid, NF_GLOBAL,'history', len_trim(str), trim(str)), subname)
 
-       call shr_sys_getenv('LOGNAME', str, ier)
-       if (ier /= 0) call endrun('error: LOGNAME environment variable not defined')
+       call check_ret(&
+            nf_put_att_text (ncid, NF_GLOBAL, 'username',len_trim(username), trim(username)), subname)
        
        call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'logname',len_trim(str), trim(str)), subname)
-       
-       call shr_sys_getenv('HOST', str, ier)
+            nf_put_att_text (ncid, NF_GLOBAL, 'host', len_trim(hostname), trim(hostname)), subname)
+
        call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'host', len_trim(str), trim(str)), subname)
-       
-       str = 'Community Land Model: CLM3'
+            nf_put_att_text (ncid, NF_GLOBAL, 'version', len_trim(version), trim(version)), subname)
+
        call check_ret(&
-            nf_put_att_text (ncid, NF_GLOBAL, 'source', len_trim(str), trim(str)), subname)
+            nf_put_att_text (ncid, NF_GLOBAL, 'source', len_trim(source), trim(source)), subname)
        
        str = &
        '$Id$'
@@ -760,18 +756,13 @@ contains
     deallocate(rbuf2dg, ibuf2dg)
 
     !------------------------------------------------------------------
-    ! Close and archive netcdf DGVM history file
+    ! Close netcdf DGVM history file
     !------------------------------------------------------------------
 
     if (masterproc) then
        call check_ret(nf_close(ncid), subname)
        write(iulog,*)'(histDGVM): Finished writing clm DGVM history dataset ',&
             trim(dgvm_fn), 'at nstep = ',get_nstep()
-       if (mss_irt > 0) then
-          rem_dir = trim(archive_dir) // '/hist/'
-          rem_fn = set_filename(rem_dir, dgvm_fn)
-          call putfil (dgvm_fn, rem_fn, mss_wpass, mss_irt, .true.)
-       end if
     end if
 
   end subroutine histDGVM

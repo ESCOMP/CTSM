@@ -107,6 +107,8 @@ EOF
 my $infile  = "$opts{script_template}";
 my $outfile = "$casedir/$opts{case}.csh";
 
+my $infilename = $infile;
+$infilename  =~ s!(.*)/!!;  # name of input script template file
 print "Convert $infile script template\nTo case script: $outfile\n";
 
 my   $infh = new IO::File;
@@ -129,6 +131,15 @@ while( $_ = <$infh> ) {
   } elsif ( defined($opts{wrkdir}) && /set wrkdir[ ]+ = / ) {
     my $wrkdir = $opts{wrkdir};
     print $outfh "set wrkdir = $wrkdir\n";
+  } elsif ( /^(.*)$infilename(.*)$/ ) {
+    while ( /^(.*)$infilename(.*)$/ ) {
+       my $front = $1;
+       my $back  = $2;
+       my $outfilename = $outfile;
+       $outfilename  =~ s!(.*)/!!;  # name of output file
+       $_ = "${front}${outfilename}${back}";
+    }
+    print $outfh "$_\n";
   } else {
     print $outfh $_;
   }
@@ -137,5 +148,6 @@ while( $_ = <$infh> ) {
 $infh->close;
 $outfh->close;
 
+system( "chmod +x $outfile" );
 print "Created $outfile\n";
 print "\n\n\n$ProgName was successful. Edit $outfile as needed to customize case\n";

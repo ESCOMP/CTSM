@@ -20,10 +20,10 @@
 <!-- List of namelist items in the clm_inparm namelist-->
 <!-- any items with this keyword name will be moved to the clm_inparm namelist -->
                <!-- These should all be in LOWER CASE! -->
-<clm_inparm ctitle="s" caseid="s" archive_dir="s"
-            mss_irt="s" mss_wpass="i" brnch_retain_casename="l"
+<clm_inparm ctitle="s" caseid="s"
+            brnch_retain_casename="l"
             calendar="s"  stop_ymd ="i" start_ymd="i" start_tod="i" ref_ymd ="i"
-            ref_tod="i"
+            ref_tod="i" version="s" logname="s" hostname="s" stop_final_ymd="i"
             />
 
 <!-- List of namelist items in the csim_inparm namelist for CSIM ice-->

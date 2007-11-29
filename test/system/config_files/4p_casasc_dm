@@ -1,0 +1,6 @@
+-mode ccsm_seq
+-spmd 
+-debug
+-maxpft 4
+-bgc casa
+-s
