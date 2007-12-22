@@ -1,0 +1,16 @@
+clm/tools/ncl_scripts					Dec/14/2007
+
+CLM NCL script tools for analysis of CLM history files -- or for creation or
+modification of CLM input files.
+
+In order to make these scripts work in the testing framework the following must
+be done.
+
+1.) Respond to CSMDATA and CLM_ROOT as needed.
+2.) Print a line with "success" after the work is completed.
+	
+Scripts available:
+
+ndepregrid.ncl ---- Regrid the Nitrogen deposition datasets to a different resolution.
+                    Uses bi-linear interpolation.
+

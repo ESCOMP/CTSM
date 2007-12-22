@@ -822,9 +822,9 @@ contains
 
 ! check n/s/e/w/ consistent with center
     write(6,*) trim(subname),' check nesw consistent with center'
+    call shr_sys_flush(6)
     do j = 1, nlat
     do i = 1, nlon
-       call shr_sys_flush(6)
        if (domain%lone(i,j) < domain%longxy(i,j))  then
           domain%lone(i,j) = domain%lone(i,j) + 360.0_r8
           domain%edgee = max(domain%edgee,domain%lone(i,j))
@@ -962,7 +962,8 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Source', len_trim(str), trim(str)), subname)
 
-    str = '$HeadURL$'
+    str = &
+'$HeadURL$'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Version', len_trim(str), trim(str)), subname)
 

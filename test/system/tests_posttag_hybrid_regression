@@ -8,12 +8,14 @@ smE13 erE13 brE13 blE13 smE16
 smF27 erF27 brF27 blF27 smF24
 smE31 erE31 brE31 blE31 smE34
 smG41 erG41 brG41 blG41 smG44
+smH01
 smH11 erH11 brH11 blH11 smH14
 smJ11 erJ11 brJ11 blJ11 smJ14
 smK11 erK11 brK11 blK11 smK14
 smK17 erK17
 smK71 erK71       blK71
 smL51 erL51 brL51 blL51
+smL53 erL53 brL53 blL53
 smL63 erL63 brL63 blL63
 smL52 erL52 brL52 blL52
 smL73 erL73 brL73 blL73
@@ -25,6 +27,7 @@ sm711             bl711
 sm771             bl771
 smZ11
 sm811
+sm812
 sm921             bl921
 sm982             bl982
 sm061

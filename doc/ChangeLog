@@ -1,4 +1,195 @@
 ===============================================================
+Tag name:  clm3_5_15
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Dec 21 20:33:01 MST 2007
+Date:Date:Date:Date:One-line Summary: Fix interpinic for half degree grid, add in large-file support, allow configure to work with ccsm directory structure
+
+Purpose of changes:
+
+Change configure so it will work with the ccsm4_alpha directory structure (especially for
+the test suite). Add in large-file support for main code as well as tools (mksurfdata). 
+Add in tests for create_croplandunit and large-file support. Get interpinic to work for 
+half degree, and optimize and verify it's use of Open-MP. Add tool to interpolate
+Nitrogen deposition files (ndepregrid.ncl). Update run scripts with suggestions from Sam
+(and fix a couple of minor bugs).
+
+interpinic problem: Previous version may have incorrectly found nearest points for PFT data.
+  Data would have been valid -- but possibly NOT from the nearest point.
+  There was also a potential Open-MP problem where answers could change depending on the 
+  number of threads used. The new version corrects both of these problems. The new version
+  should be used to interpolate critical datasets.
+
+Bugs fixed (include bugzilla ID): 656 (interpinic), 660 (large-file), 674 (diff -q in run script), 679 (testing task/thread change)
+
+Known bugs (include bugzilla ID): 251, 512, 546, 652, 664, 672, 675, 676
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Remove mpi include/lib for jaguarcnl
+ (as already included with the ftn command)
+
+  Make ccsm_seq	-- the default way to run.
+
+Describe any changes made to the namelist: Add outnc_large_files option
+
+ outnc_large_files --- TRUE => use NetCDF 64-bit large file format for output files
+                       (history and restart files)
+
+ The NetCDF 64-bit large file format became available in NetCDF3.6.0 and allows larger dimensions as well as allowing
+ output files > 2 GBytes. For more info. on Large File Support (LFS) for NetCDF see...
+
+	http://www.unidata.ucar.edu/software/netcdf/docs/faq.html#lfs
+
+ Since, file offsets are stored with 64-bit words rather than 32-bit words -- file sizes may change slightly with LFS.
+
+List any changes to the defaults for the boundary datasets:
+
+	Added in new clmi files:
+
++<finidat RESOLUTION="0.47x0.63"  mask="gx1v5" BGC="cn" ic_ymd="19800101"
++ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01-00000.071207.nc
++<finidat RESOLUTION="1.9x2.5"   mask="gx1v5" BGC="none" ic_ymd=     "101" ic_tod="0">lnd/clm2/initdata/clmi.F_0000-01-01_1.9x2.5_gx1v5_c071203.nc
++<finidat RESOLUTION="1.9x2.5"   mask="gx1v5" BGC="none" ic_ymd=     "901" ic_tod="0">lnd/clm2/initdata/clmi.F_0000-09-01_1.9x2.5_gx1v5_c071203.nc
+
+	Added in ndep files at half degree
+
++<fndepdat RESOLUTION="0.47x0.63" BGC="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_0.47x0.63_c071213.nc</fndepdat>
++<fndepdat RESOLUTION="0.47x0.63" BGC="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_0.47x0.63_c071213.nc</fndepdat>
++<fndepdat RESOLUTION="0.47x0.63" BGC="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_0.47x0.63_c071213.nc</fndepdat>
++<fndepdyn RESOLUTION="0.47x0.63" BGC="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_0.47x0.63_c071213.nc</fndepdyn>
+
+        Add documentation and delete extra variables from T42 base ndep datasets
+
++<fndepdat RESOLUTION="64x128"    BGC="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_64x128_c071221.nc</fndepdat>
++<fndepdat RESOLUTION="64x128"    BGC="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_64x128_c071221.nc</fndepdat>
++<fndepdat RESOLUTION="64x128"    BGC="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_64x128_c071221.nc</fndepdat>
+
+	Added in urban testing dataset
+
++<fsurdat RESOLUTION="1x1_camdenNJ"  >lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
++<fatmgrid RESOLUTION="1x1_camdenNJ"  >lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
++<fatmlndfrc RESOLUTION="1x1_camdenNJ"  mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc
+
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by:  slevis (interpinic, run-ibm.csh), 
+                   thornton (ndepregrid.ncl, outnc_large_files option)
+
+List any svn externals directories updated (csm_share, mct, etc.):
+  perl5lib to perl5lib_071204 which includes new Decomp module.
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+Add files for testing different tool configurations and ncl scripts, and for testing of 
+create_crop_landunit, large_file support, and an urbin test. Also change offline configuration
+files so they have offline explicitly set as the mode.
+
+A  +   test/system/config_files/tools__ds
+A  +   test/system/config_files/tools__o
+A  +   test/system/TSMncl_tools.sh
+A  +   test/system/nl_files/nl_crcrop
+A  +   test/system/nl_files/nl_std
+A  +   test/system/nl_files/nl_lfiles
+
+Add ncl script to regrid Nitrogen deposition files
+
+A  +   tools/ncl_scripts
+A  +   tools/ncl_scripts/README
+A  +   tools/ncl_scripts/ndepregrid.ncl
+A  +   tools/mkgriddata/mkgriddata.ccsm_dom  ------ add sample script for using CCSM domain files
+
+List all existing files that have been modified, and describe the changes:
+
+
+	Testing system updates...
+
+M      test/system/config_files/*  <-- offline configure files -- explicitly set offline mode
+M      test/system/config_files/README
+M      test/system/tests_posttag_spot1
+M      test/system/tests_pretag_jaguar
+M      test/system/README.testnames
+M      test/system/tests_pretag_bangkok
+M      test/system/TCBtools.sh
+M      test/system/test_driver.sh
+M      test/system/mknamelist
+M      test/system/tests_posttag_hybrid_regression
+M      test/system/tests_posttag_purempi_regression
+M      test/system/tests_pretag_tempest
+M      test/system/tests_pretag_bluevista
+M      test/system/tests_posttag_blueice
+M      test/system/input_tests_master
+M      test/system/README
+M      test/system/TSMtools.sh
+M      test/system/TCBext_ccsmseq_cam.sh
+M      test/system/tests_posttag_lightning
+M      test/system/TBLtools.sh
+M      test/system/TSM.sh
+
+	Update tools makefile and change svn keyword strings
+
+M      tools/mksurfdata/mkvarctl.F90
+M      tools/mksurfdata/README
+M      tools/mksurfdata/mkfileMod.F90
+M      tools/mksurfdata/mksrfdat.F90
+M      tools/mksurfdata/Makefile
+M      tools/interpinic/interpinic.F90
+M      tools/interpinic/Srcfiles
+M      tools/interpinic/Makefile
+M      tools/mkgriddata/creategridMod.F90
+M      tools/mkgriddata/Makefile
+M      tools/mkdatadomain/Makefile
+M      tools/README
+
+M      bld/configure ---------------------- changes to work with ccsm4.alpha directory structure, and jaguarcnl
+M      bld/DefaultCLM_INPARM_Namelist.xml - Add new datasets
+M      bld/Makefile.in -------------------- changes needed for jaguarcnl and Darwin
+M      bld/scpDefaultNamelist.pl ---------- extend to work with ndep files
+       Make changes to run scripts -- move section of things to change to top
+       Remove stuff not used. Add more documentation. Add suggestions from Sam Levis.
+M      bld/run-ibm.csh -------------------- remove -q option to diff 
+M      bld/run-lightning.csh -------------- add bit about comparing rpointer files to see if advancing from run-ibm.csh
+M      bld/run-pc.csh --------------------- add bit about comparing rpointer files to see if advancing from run-ibm.csh
+
+	Add large-file support
+
+M      src/biogeochem/CASAMod.F90
+M      src/biogeochem/DGVMMod.F90
+M      src/main/ncdio.F90
+M      src/main/restFileMod.F90
+M      src/main/controlMod.F90
+M      src/main/clm_varctl.F90
+
+Summary of testing:
+
+  tempest: All PASS
+  bluevista: All PASS, except
+033 smEA1 TSM.sh _sc_ds clm_std 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic .................FAIL! rc= 10 --> Urban not active yet
+034 blEA1 TBL.sh _sc_ds clm_std 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic .................FAIL! rc= 4 ---> Urban not active yet
+066 blL53 TBL.sh _sc_dh clm_std^nl_crcrop 19980115:MONTHLY:1800 10x15 USGS 24 arb_ic ............FAIL! rc= 5 ---> New test
+070 blL63 TBL.sh _sc_h clm_std 19980101:MONTHLY:1800 1.9x2.5 gx1v5 -10 startup ..................FAIL! rc= 7 ---> New clmi file
+074 bl563 TBL.sh _h clm_std 19980101:MONTHLY:1800 1.9x2.5 gx1v5 -10 startup .....................FAIL! rc= 7 ---> New clmi file
+092 bl711 TBLtools.sh mksurfdata tools__ds namelist .............................................FAIL! rc= 4 ---> Test changed
+094 bl771 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 4 ---> Test changed
+099 sm921 TSMext_ccsmseq_cam.sh ext_ccsm_seq_4x5_dh ext_ccsm_seq_cam 48 .........................FAIL! rc= 4
+100 sm982 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  jaguarcnl: ALL PASS, except TBL tests because previous code didn't run on jaguar with recent changes
+  lightning: ALL PASS, except
+035 blL53 TBL.sh _sc_dh clm_std^nl_crcrop 19980115:MONTHLY:1800 10x15 USGS 24 arb_ic ............FAIL! rc= 5 ---> New test
+042 bl771 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 5 ---> New test
+  bangkok/lf95: All PASS, except
+047 sm951 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dm ext_ccsm_seq_cam 48 .......................FAIL! rc= 4
+048 sm982 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+
+  CAM tests fail because of incomptabilities of csm_share code.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_5_14
+
+Changes answers relative to baseline: None -- bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_5_14
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Nov 29 12:18:47 MST 2007

@@ -4,4 +4,5 @@
 -rtm on
 -dust on
 -voc on
+-mode offline
 -s

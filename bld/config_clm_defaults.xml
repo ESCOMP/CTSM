@@ -55,7 +55,7 @@ dust="off"
 rtm="off"
 maxpft="4"
 pergro="off"
-mode="offline"
+mode="ccsm_seq"
 />
 
 <comment>
@@ -105,9 +105,3 @@ esmf_lib=""
 />
 
 </config_bld>
-
-
-
-
-
-

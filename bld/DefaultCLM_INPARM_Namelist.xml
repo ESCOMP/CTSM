@@ -42,9 +42,14 @@
 
 <!-- Initial condition datasets (relative to {csmdata}) -->
 
+<finidat RESOLUTION="0.47x0.63"  mask="gx1v5" BGC="cn" ic_ymd="19800101"
+ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01-00000.071207.nc
+</finidat>
 <finidat RESOLUTION="1.9x2.5"   mask="gx1v4" BGC="none" ic_ymd=     "101" ic_tod="0">lnd/clm2/inidata_3.1/ccsm/clmi_0000-01-01_1.9x2.5_gx1v4_c070403.nc
 </finidat>
-<finidat RESOLUTION="1.9x2.5"   mask="gx1v5" BGC="none" ic_ymd=     "101" ic_tod="0">lnd/clm2/inidata_3.1/ccsm/clmi_0000-01-01_1.9x2.5_gx1v5_c070523.nc
+<finidat RESOLUTION="1.9x2.5"   mask="gx1v5" BGC="none" ic_ymd=     "101" ic_tod="0">lnd/clm2/initdata/clmi.F_0000-01-01_1.9x2.5_gx1v5_c071203.nc
+</finidat>
+<finidat RESOLUTION="1.9x2.5"   mask="gx1v5" BGC="none" ic_ymd=     "901" ic_tod="0">lnd/clm2/initdata/clmi.F_0000-09-01_1.9x2.5_gx1v5_c071203.nc
 </finidat>
 <finidat RESOLUTION="1.9x2.5"   mask="gx1v5" BGC="cn"   ic_ymd=  "250101" ic_tod="0">lnd/clm2/inidata_3.1/ccsm/clmi_0025-01-01_1.9x2.5_gx1v5_cn_c070809.nc
 </finidat>
@@ -75,6 +80,7 @@
 <fsurdat RESOLUTION="5x5_amazon"    >lnd/clm2/surfdata/surfdata_5x5pt_amazon_navy_070404.nc</fsurdat>
 <fsurdat RESOLUTION="1x1_brazil"    >lnd/clm2/surfdata/surfdata_1x1pt_brazil_navy_070404.nc</fsurdat>
 <fsurdat RESOLUTION="1x1_tropicAtl" >lnd/clm2/surfdata/surfdata_1x1pt_tropicAtl_test_070216.nc</fsurdat>
+<fsurdat RESOLUTION="1x1_camdenNJ"  >lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 <fpftdyn RESOLUTION="10x15"         >lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc</fpftdyn>
@@ -100,6 +106,7 @@
 <fatmgrid RESOLUTION="5x5_amazon"    >lnd/clm2/griddata/griddata_5x5pt_amazon_navy_070404.nc</fatmgrid>
 <fatmgrid RESOLUTION="1x1_brazil"    >lnd/clm2/griddata/griddata_1x1pt_brazil_navy_070404.nc</fatmgrid>
 <fatmgrid RESOLUTION="1x1_tropicAtl" >lnd/clm2/griddata/griddata_1x1pt_tropicAtl_test_070218.nc</fatmgrid>
+<fatmgrid RESOLUTION="1x1_camdenNJ"  >lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
 
 <!-- Land topo datasets (when running land at different resolution than atm coupling) (relative to {csmdata}) -->
 <flndtopo RESOLUTION="360x720"   mask="USGS"  >lnd/clm2/griddata/topodata_360x720_c060528.nc</flndtopo>
@@ -132,18 +139,18 @@
 <fatmtopo RESOLUTION="32x64"     mask="USGS"  >lnd/clm2/griddata/topodata_32x64_USGS_070110.nc</fatmtopo>
 <fatmtopo RESOLUTION="8x16"      mask="USGS"  >lnd/clm2/griddata/topodata_8x16_USGS_070110.nc</fatmtopo>
 
-<fatmtopo RESOLUTION="0.23x0.31" mask="USGS"  >lnd/clm2/griddata/topodata_0.23x0.31_USGS_c070927.nc</fatmtopo>
+<fatmtopo RESOLUTION="0.23x0.31" mask="USGS"   >lnd/clm2/griddata/topodata_0.23x0.31_USGS_c070927.nc</fatmtopo>
 <fatmtopo RESOLUTION="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.23x0.31_tx0.1v2_c070928.nc</fatmtopo>
-<fatmtopo RESOLUTION="0.47x0.63" mask="USGS"  >lnd/clm2/griddata/topodata_0.47x0.63_USGS_c070918.nc</fatmtopo>
-<fatmtopo RESOLUTION="0.47x0.63" mask="gx1v5" >lnd/clm2/griddata/topodata_0.47x0.63_gx1v5_c071004.nc</fatmtopo>
+<fatmtopo RESOLUTION="0.47x0.63" mask="USGS"   >lnd/clm2/griddata/topodata_0.47x0.63_USGS_c070918.nc</fatmtopo>
+<fatmtopo RESOLUTION="0.47x0.63" mask="gx1v5"  >lnd/clm2/griddata/topodata_0.47x0.63_gx1v5_c071004.nc</fatmtopo>
 <fatmtopo RESOLUTION="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.47x0.63_tx0.1v2_c070928.nc</fatmtopo>
-<fatmtopo RESOLUTION="0.9x1.25"  mask="USGS"  >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</fatmtopo>
-<fatmtopo RESOLUTION="0.9x1.25"  mask="gx1v5" >lnd/clm2/griddata/topodata_0.9x1.25_gx1v5_c070927.nc</fatmtopo>
+<fatmtopo RESOLUTION="0.9x1.25"  mask="USGS"   >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</fatmtopo>
+<fatmtopo RESOLUTION="0.9x1.25"  mask="gx1v5"  >lnd/clm2/griddata/topodata_0.9x1.25_gx1v5_c070927.nc</fatmtopo>
 <fatmtopo RESOLUTION="0.9x1.25"  mask="tx0.1v2">lnd/clm2/griddata/topodata_0.9x1.25_tx0.1v2_c070928.nc</fatmtopo>
-<fatmtopo RESOLUTION="1x1.25"    mask="USGS"  >lnd/clm2/griddata/topodata_1x1.25_USGS_070110.nc</fatmtopo>
-<fatmtopo RESOLUTION="1.9x2.5"   mask="USGS"  >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</fatmtopo>
-<fatmtopo RESOLUTION="4x5"       mask="USGS"  >lnd/clm2/griddata/topodata_4x5_USGS_070110.nc</fatmtopo>
-<flndtopo RESOLUTION="10x15"     mask="USGS"  >lnd/clm2/griddata/topodata_10x15_USGS_070110.nc</flndtopo>
+<fatmtopo RESOLUTION="1x1.25"    mask="USGS"   >lnd/clm2/griddata/topodata_1x1.25_USGS_070110.nc</fatmtopo>
+<fatmtopo RESOLUTION="1.9x2.5"   mask="USGS"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</fatmtopo>
+<fatmtopo RESOLUTION="4x5"       mask="USGS"   >lnd/clm2/griddata/topodata_4x5_USGS_070110.nc</fatmtopo>
+<flndtopo RESOLUTION="10x15"     mask="USGS"   >lnd/clm2/griddata/topodata_10x15_USGS_070110.nc</flndtopo>
 
 <!-- Fraction datasets (relative to {csmdata}) -->
 
@@ -174,46 +181,46 @@
 <fatmlndfrc RESOLUTION="8x16"    mask="USGS"  >lnd/clm2/griddata/fracdata_8x16_USGS_070110.nc
 </fatmlndfrc>
 
-<fatmlndfrc RESOLUTION="0.23x0.31" mask="USGS"  >lnd/clm2/griddata/fracdata_0.23x0.31_USGS_c070927.nc
+<fatmlndfrc RESOLUTION="0.23x0.31" mask="USGS"   >lnd/clm2/griddata/fracdata_0.23x0.31_USGS_c070927.nc
 </fatmlndfrc>
 <fatmlndfrc RESOLUTION="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.23x0.31_tx0.1v2_c070928.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="0.47x0.63" mask="USGS"  >lnd/clm2/griddata/fracdata_0.47x0.63_USGS_c070918.nc
+<fatmlndfrc RESOLUTION="0.47x0.63" mask="USGS"   >lnd/clm2/griddata/fracdata_0.47x0.63_USGS_c070918.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="0.47x0.63" mask="gx1v5" >lnd/clm2/griddata/fracdata_0.47x0.63_gx1v5_c071113.nc
+<fatmlndfrc RESOLUTION="0.47x0.63" mask="gx1v5"  >lnd/clm2/griddata/fracdata_0.47x0.63_gx1v5_c071113.nc
 </fatmlndfrc>
 <fatmlndfrc RESOLUTION="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.47x0.63_tx0.1v2_c070928.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="0.9x1.25"  mask="USGS"  >lnd/clm2/griddata/fracdata_0.9x1.25_USGS_070110.nc
+<fatmlndfrc RESOLUTION="0.9x1.25"  mask="USGS"   >lnd/clm2/griddata/fracdata_0.9x1.25_USGS_070110.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="0.9x1.25"  mask="gx1v5" >lnd/clm2/griddata/fracdata_0.9x1.25_gx1v5_c070927.nc
+<fatmlndfrc RESOLUTION="0.9x1.25"  mask="gx1v5"  >lnd/clm2/griddata/fracdata_0.9x1.25_gx1v5_c070927.nc
 </fatmlndfrc>
 <fatmlndfrc RESOLUTION="0.9x1.25"  mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.9x1.25_tx0.1v2_c070928.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="1x1.25"    mask="USGS"  >lnd/clm2/griddata/fracdata_1x1.25_USGS_070110.nc
+<fatmlndfrc RESOLUTION="1x1.25"    mask="USGS"   >lnd/clm2/griddata/fracdata_1x1.25_USGS_070110.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="1x1.25"    mask="gx1v3" >lnd/clm2/griddata/fracdata_1x1.25_gx1v3_060404.nc
+<fatmlndfrc RESOLUTION="1x1.25"    mask="gx1v3"  >lnd/clm2/griddata/fracdata_1x1.25_gx1v3_060404.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="1x1.25"    mask="gx1v4" >lnd/clm2/griddata/fracdata_1x1.25_gx1v4_060711.nc
+<fatmlndfrc RESOLUTION="1x1.25"    mask="gx1v4"  >lnd/clm2/griddata/fracdata_1x1.25_gx1v4_060711.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="1x1.25"    mask="gx1v5" >lnd/clm2/griddata/fracdata_1x1.25_gx1v5_070612.nc
+<fatmlndfrc RESOLUTION="1x1.25"    mask="gx1v5"  >lnd/clm2/griddata/fracdata_1x1.25_gx1v5_070612.nc
 </fatmlndfrc>
 
-<fatmlndfrc RESOLUTION="1.9x2.5"  mask="USGS"  >lnd/clm2/griddata/fracdata_1.9x2.5_USGS_061130.nc
+<fatmlndfrc RESOLUTION="1.9x2.5"  mask="USGS"   >lnd/clm2/griddata/fracdata_1.9x2.5_USGS_061130.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="1.9x2.5"  mask="gx1v3" >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v3_060404.nc
+<fatmlndfrc RESOLUTION="1.9x2.5"  mask="gx1v3"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v3_060404.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="1.9x2.5"  mask="gx1v4" >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v4_060808.nc
+<fatmlndfrc RESOLUTION="1.9x2.5"  mask="gx1v4"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v4_060808.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="1.9x2.5"  mask="gx1v5" >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v5_070316.nc
+<fatmlndfrc RESOLUTION="1.9x2.5"  mask="gx1v5"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v5_070316.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="2x2.5"    mask="USGS"  >lnd/clm2/griddata/fracdata_2x2.5_USGS_070110.nc
+<fatmlndfrc RESOLUTION="2x2.5"    mask="USGS"   >lnd/clm2/griddata/fracdata_2x2.5_USGS_070110.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="4x5"      mask="USGS"  >lnd/clm2/griddata/fracdata_4x5_USGS_070110.nc
+<fatmlndfrc RESOLUTION="4x5"      mask="USGS"   >lnd/clm2/griddata/fracdata_4x5_USGS_070110.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="4x5"      mask="gx3v5" >lnd/clm2/griddata/fracdata_4x5_gx3v5_060404.nc
+<fatmlndfrc RESOLUTION="4x5"      mask="gx3v5"  >lnd/clm2/griddata/fracdata_4x5_gx3v5_060404.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="10x15"    mask="USGS"  >lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc
+<fatmlndfrc RESOLUTION="10x15"    mask="USGS"   >lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc
 </fatmlndfrc>
 
 <fatmlndfrc RESOLUTION="5x5_amazon"    mask="navy">lnd/clm2/griddata/fracdata_5x5pt_amazon_navy_070404.nc
@@ -222,27 +229,33 @@
 </fatmlndfrc>
 <fatmlndfrc RESOLUTION="1x1_tropicAtl" mask="test">lnd/clm2/griddata/fracdata_1x1pt_tropicAtl_test_070218.nc
 </fatmlndfrc>
+<fatmlndfrc RESOLUTION="1x1_camdenNJ"  mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc
+</fatmlndfrc>
 
 <!--NCEP atmosphere forcing dataset directory (relative to {csmdata}) -->
 <offline_atmdir MODE="offline">lnd/clm2/NCEPDATA.Qian.T62.c051024</offline_atmdir>
 
 <!--CN Nitrogen deposition dataset for a fixed year (relative to {csmdata}) -->
 
-<fndepdat RESOLUTION="1.9x2.5" BGC="cn" sim_year="2100"      >lnd/clm2/ndepdata/ndep_clm_2100_1.9x2.5_c070118.nc</fndepdat>
-<fndepdat RESOLUTION="64x128"  BGC="cn" sim_year="2100"      >lnd/clm2/ndepdata/ndep_clm_2100_64x128_c060414.nc</fndepdat>
-<fndepdat RESOLUTION="48x96"   BGC="cn" sim_year="2100"      >lnd/clm2/ndepdata/ndep_clm_2100_48x96_c060414.nc</fndepdat>
-<fndepdat RESOLUTION="1.9x2.5" BGC="cn" sim_year="2000"      >lnd/clm2/ndepdata/ndep_clm_2000_1.9x2.5_c070118.nc</fndepdat>
-<fndepdat RESOLUTION="64x128"  BGC="cn" sim_year="2000"      >lnd/clm2/ndepdata/ndep_clm_2000_64x128_c060414.nc</fndepdat>
-<fndepdat RESOLUTION="48x96"   BGC="cn" sim_year="2000"      >lnd/clm2/ndepdata/ndep_clm_2000_48x96_c060414.nc</fndepdat>
-<fndepdat RESOLUTION="1.9x2.5" BGC="cn" sim_year="1890"      >lnd/clm2/ndepdata/ndep_clm_1890_1.9x2.5_c070118.nc</fndepdat>
-<fndepdat RESOLUTION="64x128"  BGC="cn" sim_year="1890"      >lnd/clm2/ndepdata/ndep_clm_1890_64x128_c060414.nc</fndepdat>
-<fndepdat RESOLUTION="48x96"   BGC="cn" sim_year="1890"      >lnd/clm2/ndepdata/ndep_clm_1890_48x96_c060414.nc</fndepdat>
+<fndepdat RESOLUTION="1.9x2.5"   BGC="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_1.9x2.5_c070118.nc</fndepdat>
+<fndepdat RESOLUTION="0.47x0.63" BGC="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_0.47x0.63_c071213.nc</fndepdat>
+<fndepdat RESOLUTION="64x128"    BGC="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_64x128_c071221.nc</fndepdat>
+<fndepdat RESOLUTION="48x96"     BGC="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_48x96_c060414.nc</fndepdat>
+<fndepdat RESOLUTION="1.9x2.5"   BGC="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_1.9x2.5_c070118.nc</fndepdat>
+<fndepdat RESOLUTION="0.47x0.63" BGC="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_0.47x0.63_c071213.nc</fndepdat>
+<fndepdat RESOLUTION="64x128"    BGC="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_64x128_c071221.nc</fndepdat>
+<fndepdat RESOLUTION="48x96"     BGC="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_48x96_c060414.nc</fndepdat>
+<fndepdat RESOLUTION="1.9x2.5"   BGC="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_1.9x2.5_c070118.nc</fndepdat>
+<fndepdat RESOLUTION="0.47x0.63" BGC="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_0.47x0.63_c071213.nc</fndepdat>
+<fndepdat RESOLUTION="64x128"    BGC="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_64x128_c071221.nc</fndepdat>
+<fndepdat RESOLUTION="48x96"     BGC="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_48x96_c060414.nc</fndepdat>
 
 <!--CN Nitrogen deposition dataset for a series of years (relative to {csmdata}) -->
 
-<fndepdyn RESOLUTION="64x128"  BGC="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_64x128_c070214.nc</fndepdyn>
-<fndepdyn RESOLUTION="48x96"   BGC="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_48x96_c050608.nc</fndepdyn>
-<fndepdyn RESOLUTION="1.9x2.5" BGC="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_1.9x2.5_c070925.nc</fndepdyn>
+<fndepdyn RESOLUTION="64x128"    BGC="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_64x128_c070214.nc</fndepdyn>
+<fndepdyn RESOLUTION="48x96"     BGC="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_48x96_c050608.nc</fndepdyn>
+<fndepdyn RESOLUTION="1.9x2.5"   BGC="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_1.9x2.5_c070925.nc</fndepdyn>
+<fndepdyn RESOLUTION="0.47x0.63" BGC="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_0.47x0.63_c071213.nc</fndepdyn>
 
 <!-- River Transport Model 1/2 degree grid river routing file (relative to {csmdata}) -->
 <frivinp_rtm RTM="on">lnd/clm2/rtmdata/rdirc.05.061026</frivinp_rtm>

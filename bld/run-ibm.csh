@@ -11,6 +11,10 @@
 ##
 ## bsub < run-ibm.csh
 ##
+## To run interatively: 
+##
+##    first set spmd=off and smp=on below then
+##    ./run-ibm.csh
 ##
 
 ## Setting LSF options for batch queue submission.
@@ -25,34 +29,40 @@
 #BSUB -W 0:10                   # wall clock limit
 #BSUB -P xxxxxxxx               # Project number to charge to (MAKE SURE YOU CHANGE THIS!!!)
 
-## POE Environment.  Set these for interactive jobs.  They're ignored in batch submission.
-## MP_NODES is the number of nodes.  
-setenv MP_NODES 1
-setenv MP_TASKS_PER_NODE 16
-setenv MP_EUILIB us
-setenv MP_RMPOOL 1
+#===========================================================================
+#=================== THINGS MOST COMONLY CHANGED ===========================
 
-unsetenv MP_PROCS
+## Configuration settings:
+set mode     = ccsm_seq # settings are [offline | ccsm_seq ] (default is ccsm_seq)
+set spmd     = on       # settings are [on   | off         ] (default is on) (off for interactive)
+set smp      = off      # settings are [on   | off         ] (default is off)
+set maxpft   = 4        # settings are 4->17                 (default is 4)
+set bgc      = none     # settings are [none | cn | casa   ] (default is none)
+set supln    = off      # settings are [on   | off         ] (default is off)
+set dust     = off      # settings are [on   | off         ] (default is off)   
+set voc      = off      # settings are [on   | off         ] (default is off)   
+set rtm      = off      # settings are [on   | off         ] (default is off)   
+## IF YOU CHANGE ANY OF THE CONFIGURATION SETTINGS -- DELETE THE $blddir/config_cache.xml AND RESUBMIT
+## (see below)
+#--------------------------------------------------------------------------------------------
+## Run time settings:
+## May also make changes to namelist in build-namelist section below:
+set res        = 48x96    # settings are [48x96   | 64x128  | 4x5  | 10x15 | 1.9x2.5 etc.      ]
+set mask       = gx3v5    # settings are [default | USGS    | navy | gx3v5 | gx1v5   etc.      ]
+set sim_year   = default  # settings are [default | 1890    | 2000 | 2100                      ]
+set start_type = arb_ic   # settings are [arb_ic  | startup | continue | branch                ] (default is arb_ic)
+set runlen     = 2d       # settings are [ integer<sdy> where s=step, d=days, y=years          ] (default is 2d)
+set ret_pd     = 0        # settings are [0 (no archiving), >0 (days to save to archive)       ]
+set resub_date = 0        # settings are [0 (no resubmission), > 0 (date {YYYYMMDD} to run to) ]
+#--------------------------------------------------------------------------------------------
+## Locations of important directories:
+##
 
-setenv MP_STDINMODE 0
-
-# should be set equal to (CPUs-per-node / tasks_per_node)
-# Only activated if smp=on below
-setenv OMP_NUM_THREADS 4
-
-## suggestion from Jim Edwards to reintroduce XLSMPOPTS on 11/13/03
-setenv XLSMPOPTS "stack=256000000"
-setenv AIXTHREAD_SCOPE S
-setenv MALLOCMULTIHEAP true
-setenv OMP_DYNAMIC false
-## Do our best to get sufficient stack memory
-limit stacksize unlimited
-
-## netCDF stuff
+## netCDF stuff (MAKE SURE YOU CHANGE THIS -- IF NOT RUNNING AT NCAR)
 setenv INC_NETCDF /usr/local/include
 setenv LIB_NETCDF /usr/local/lib64/r4i4
 
-## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
+## ROOT OF CLM DISTRIBUTION - probably needs to be customized (changed by create_newcase)
 ## Contains the source code for the CLM distribution.
 ## (the root directory contains the subdirectory "src")
 set clmroot   = /fis/cgd/.......       # (MAKE SURE YOU CHANGE THIS!!!)
@@ -65,44 +75,44 @@ setenv CSMDATA /fs/cgd/csm/inputdata                # (MAKE SURE YOU CHANGE THIS
 ## Contains the location for the datm7 input data
 setenv datm_data_dir /cgd/tss/NCEPDATA.datm7.Qian.T62.c060410   # (MAKE SURE YOU CHANGE THIS!!!)
 
-## Configuration settings:
-set mode     = ccsm_seq # settings are [offline | ccsm_seq ] (default is offline)
-set spmd     = on       # settings are [on   | off         ] (default is off)
-set smp      = off      # settings are [on   | off         ] (default is off)
-set maxpft   = 4        # settings are 4->17                 (default is 4)
-set bgc      = none     # settings are [none | cn | casa   ] (default is none)
-set supln    = off      # settings are [on   | off         ] (default is off)
-set dust     = off      # settings are [on   | off         ] (default is off)   
-set voc      = off      # settings are [on   | off         ] (default is off)   
-set rtm      = off      # settings are [on   | off         ] (default is off)   
-## IF YOU CHANGE ANY OF THE CONFIGURATION SETTINGS -- DELETE THE $blddir/config_cache.xml AND RESUBMIT
-## (see below)
-#--------------------------------------------------------------------------------------------
-
-## Run time settings:
-set res        = 48x96    # settings are [48x96   | 64x128  | 4x5  | 10x15 | 1.9x2.5 etc.      ]
-set mask       = gx3v5    # settings are [default | USGS    | navy | gx3v5 | gx1v5   etc.      ]
-set sim_year   = default  # settings are [default | 1890    | 2000 | 2100                      ]
-set start_type = arb_ic   # settings are [arb_ic  | startup | continue | branch                ] (default is arb_ic)
-set runlen     = 2d       # settings are [ integer<sdy> where s=step, d=days, y=years          ] (default is 2d)
-set ret_pd     = 0        # settings are [0 (no archiving), >0 (days to save to archive)       ]
-set resub_date = 0        # settings are [0 (no resubmission), > 0 (date {YYYYMMDD} to run to) ]
-#--------------------------------------------------------------------------------------------
-
-
-
-
-## $wrkdir is a working directory where the model will be built and run.
-## $blddir is the directory where model will be compiled.
-## $rundir is the directory where the model will be run.
-## $cfgdir is the directory containing the CLM configuration scripts.
-set case    = clmrun
-set wrkdir  = /ptmp/$LOGNAME
+## $wrkdir  is a working directory where the model will be built and run.
+## $blddir  is the directory where model will be compiled.
+## $rundir  is the directory where the model will be run.
+## $cfgdir  is the directory containing the CLM configuration scripts.
+## $casdir  is the directoyr this script is found in.
+## $usr_src is the directory where any modified source code is put.
+set case    = clmrun                  # changed by create_newcase
+set wrkdir  = /ptmp/$LOGNAME          # changed by create_newcase
 set blddir  = $wrkdir/$case/bld
 set rundir  = $wrkdir/$case
 set cfgdir  = $clmroot/bld
-set casdir  = $clmroot/bld/$case
+set casdir  = $clmroot/bld            # changed by create_newcase
 set usr_src = $clmroot/bld/usr.src
+
+# Number of threads to use:
+#
+# should be set equal to (CPUs-per-node / tasks_per_node)
+# Only activated if smp=on above
+setenv OMP_NUM_THREADS 4
+
+#=================== END OF THINGS MOST COMONLY CHANGED ====================
+#===========================================================================
+
+
+## POE Environment.
+## Use batch settings for number of nodes and tasks per node
+setenv MP_EUILIB us
+setenv MP_RMPOOL 1
+
+setenv MP_STDINMODE 0
+
+## suggestion from Jim Edwards to reintroduce XLSMPOPTS on 11/13/03
+setenv XLSMPOPTS "stack=256000000"
+setenv AIXTHREAD_SCOPE S
+setenv MALLOCMULTIHEAP true
+setenv OMP_DYNAMIC false
+## Do our best to get sufficient stack memory
+limit stacksize unlimited
 
 ## Ensure that run and build directories exist
 mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
@@ -187,7 +197,7 @@ endif
 # by checking that rpointer.lnd files are changing
 if ( ! -f rpointer.lnd      && $runstatus == 0 ) set runstatus = 1
 if (   -f rpointer.lnd.orig && $runstatus == 0 )then
-   diff -q rpointer.lnd rpointer.lnd.orig > /dev/null
+   diff rpointer.lnd rpointer.lnd.orig > /dev/null
    if ( $status == 0 ) set runstatus = 1
 endif
 

@@ -450,7 +450,9 @@ endif
 # Flags common to all compilers
 
 ifeq ($(SPMD),TRUE)
-  LDFLAGS += -L$(LIB_MPI) -l$(MPI_LIB_NAME)
+  ifneq ($(LIB_MPI),$(null))
+     LDFLAGS += -L$(LIB_MPI) -l$(MPI_LIB_NAME)
+  endif
 endif
 
 endif
@@ -692,6 +694,11 @@ CPPDEF     += -DDarwin -DNO_SHR_VMATH
 
 mod_path   := -I$(MOD_NETCDF)
 
+# Set the default Fortran compiler
+ifeq ($(strip $(USER_FC)),)
+  FC := xlf90_r
+endif
+
 ifeq ($(FC),g95)
    CPPDEF   += -DG95
    FFLAGS   := -fno-underscoring $(CPPDEF) $(cpp_path) -I$(MOD_NETCDF) -I$(INC_NETCDF)
@@ -706,7 +713,7 @@ ifeq ($(FC),g95)
    endif
 
 endif
-ifeq ($(FC),null)
+ifeq ($(FC),xlf90_r)
    CPPDEF     += -DAIX
    cpre = $(null)-WF,-D$(null)
    FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
@@ -738,7 +745,7 @@ ifeq ($(CC),null)
    CFLAGS     := -I/usr/include -I/usr/include/malloc $(cpp_path) $(CPPDEF) -O2
 endif
 
-LDFLAGS    := -L$(LIB_NETCDF) -lnetcdf -lSystemStubs -lSystemStubs_profile
+LDFLAGS    := -lSystemStubs -lSystemStubs_profile
 
 ifeq ($(SMP),TRUE)
   # SMP not implemented

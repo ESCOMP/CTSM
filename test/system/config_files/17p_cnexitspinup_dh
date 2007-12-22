@@ -4,4 +4,5 @@
 -maxpft 17
 -bgc cn
 -supln off
+-mode offline
 -s

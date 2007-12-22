@@ -2,10 +2,11 @@ module interpinic
 
   !----------------------------------------------------------------------- 
   ! Interpolate initial conditions file from one resolution and/or landmask
-  ! to anoterh resolution and/or landmask
+  ! to another resolution and/or landmask
   !----------------------------------------------------------------------- 
 
-  use shr_kind_mod, only: r8 => shr_kind_r8
+  use shr_kind_mod   , only: r8 => shr_kind_r8
+  use shr_const_mod  , only: SHR_CONST_PI, SHR_CONST_REARTH
   implicit none
 
   private
@@ -33,7 +34,11 @@ module interpinic
 
   ! Parameters
 
-  real(r8), parameter :: spval = 1.e36 ! special value for missing data (ocean)
+  real(r8), parameter :: spval = 1.e36_r8 ! special value for missing data (ocean)
+  real(r8), parameter :: converttorad = SHR_CONST_PI/180._r8
+  real(r8), parameter :: radius_earth = SHR_CONST_REARTH
+  integer,  parameter :: croptype     = 15
+  integer,  parameter :: nonveg       = 2
 
   ! Public methods
 
@@ -46,6 +51,7 @@ module interpinic
   private :: interp_sl_int
   private :: initDistCols
   private :: findMinDistPFTs
+  private :: findMinDistCols
 
   ! Private data
  
@@ -98,6 +104,7 @@ contains
     integer :: dimidnlive          !netCDF dimension id nlive
     integer :: dimidnpools         !netCDF dimension id npools
     integer :: varid               !netCDF variable id
+    integer :: varido              !netCDF variable id
     integer :: xtype               !netCDF variable type
     integer :: ndims               !netCDF number of dimensions
     integer :: dimids(3)           !netCDF dimension ids
@@ -272,6 +279,9 @@ contains
 
     ! Initialize the column distances
     call initDistCols( ncidi, ncido )
+    ! Prepare find distances to function
+    call findMinDistCols( ncidi, ncido, 0, nmin=i, allocate=.true. )
+    call findMinDistPFTs( ncidi, ncido, 0, nmin=i, allocate=.true. )
 
     ! Read input initial data and write output initial data
     ! Only examing the snow interfaces above zi=0 => zisno and zsno have
@@ -296,7 +306,7 @@ contains
        if ( index(varname,"T_REF"              ) /= 0 ) cycle
        if ( index(varname,"TREF"               ) /= 0 ) cycle
        if ( index(varname,"t_ref2m"            ) /= 0 ) cycle
-       ret = nf90_inq_varid(ncidi, varname, varid)
+       ret = nf90_inq_varid(ncido, varname, varido)
        if (ret==NF90_ENOTVAR)then
           cycle
        else if (ret/=NF90_NOERR)then
@@ -404,9 +414,6 @@ contains
     ! --------------------------------------------------------------------
 
     ! ------------------------ local variables --------------------------
-    integer , allocatable :: typei(:)
-    integer , allocatable :: typeo(:)
-    real(r8), allocatable :: wti(:)
     real(r8), allocatable :: lati(:)
     real(r8), allocatable :: lato(:)
     real(r8), allocatable :: loni(:)
@@ -418,50 +425,48 @@ contains
     real(r8) :: dx,dy
     integer  :: i, n, no
     integer  :: ret                !NetCDF return code
-    integer :: varid               !netCDF variable id
+    integer  :: varid              !netCDF variable id
     ! --------------------------------------------------------------------
 
     !
     ! Distances for columns
     !
     write(6,*) 'Calculating distances for initialization'
-    allocate (distCols(numcols,numcolso))
 
-    allocate (typei(numcols))
-    allocate (typeo(numcolso))
-    allocate (wti(numcols))
     allocate (lati(numcols))
     allocate (lato(numcolso))
     allocate (loni(numcols))
     allocate (lono(numcolso))
-    call wrap_inq_varid (ncidi, 'cols1d_ityplun', varid)
-    call wrap_get_var_int(ncidi, varid, typei)
     call wrap_inq_varid (ncidi, 'cols1d_lon', varid)
     call wrap_get_var_double(ncidi, varid, loni)
     call wrap_inq_varid (ncidi, 'cols1d_lat', varid)
     call wrap_get_var_double(ncidi, varid, lati)
-    call wrap_inq_varid (ncidi, 'cols1d_wtxy', varid)
-    call wrap_get_var_double(ncidi, varid, wti)
 
-    call wrap_inq_varid (ncido, 'cols1d_ityplun', varid)
-    call wrap_get_var_int(ncido, varid, typeo)
     call wrap_inq_varid (ncido, 'cols1d_lon', varid)
     call wrap_get_var_double(ncido, varid, lono)
     call wrap_inq_varid (ncido, 'cols1d_lat', varid)
     call wrap_get_var_double(ncido, varid, lato)
 
-    distCols(:,:) = spval !initialize
+    allocate (distCols(numcols,numcolso))
+    ! Convert to radians
+    do n = 1, numcols
+       lati(n) = lati(n)*converttorad
+       loni(n) = loni(n)*converttorad
+    end do
+    do no = 1, numcolso
+       lato(no) = lato(no)*converttorad
+       lono(no) = lono(no)*converttorad
+    end do
+
 !$OMP PARALLEL DO PRIVATE (no,n,dx,dy)
     do no = 1, numcolso
        do n = 1, numcols
-          if (wti(n)>0. .and. typei(n) == typeo(no)) then
-             dy = 3.14/180.* abs(lato(no)-lati(n))*6.37e6
-             dx = 3.14/180.* abs(lono(no)-loni(n))*6.37e6 * &
-                        0.5 * (cos(lato(no)*3.14/180.)+cos(lati(n)*3.14/180.))
-             distCols(n,no) = sqrt(dx*dx + dy*dy)
-          end if
+          dy = abs(lato(no)-lati(n))*radius_earth
+          dx = abs(lono(no)-loni(n))*radius_earth * 0.5_r8 * (cos(lato(no))+cos(lati(n)))
+          distCols(n,no) = sqrt(dx*dx + dy*dy)
        end do          !output data land loop
     end do
+!$OMP END PARALLEL DO
     write(6,*) 'Distances done!'
     !
     ! Now find which PFT's match which columns
@@ -482,6 +487,15 @@ contains
     call wrap_get_var_double(ncido, varid, lonpfto)
     call wrap_inq_varid (ncido, 'pfts1d_lat', varid)
     call wrap_get_var_double(ncido, varid, latpfto)
+    ! Convert to radians
+    do n = 1, numpfts
+       latpfti(n) = latpfti(n)*converttorad
+       lonpfti(n) = lonpfti(n)*converttorad
+    end do
+    do no = 1, numpftso
+       latpfto(no) = latpfto(no)*converttorad
+       lonpfto(no) = lonpfto(no)*converttorad
+    end do
     PFT2colindxi(:) = -1
     do i = 1, numpfts
        do n = 1, numcols
@@ -519,14 +533,67 @@ contains
     deallocate(lato)
     deallocate(loni)
     deallocate(lono)
-    deallocate(typei)
-    deallocate(typeo)
-    deallocate(wti)
   end subroutine initDistCols
 
   !=======================================================================
 
-  subroutine findMinDistPFTs( ncidi, ncido, no, dist, nmin )
+  subroutine findMinDistCols( ncidi, ncido, no, nmin, allocate )
+    ! Find the minimun column distances excluding columns of different type
+
+    use netcdf
+
+    implicit none
+
+    ! ------------------------ arguments ---------------------------------
+    integer , intent(in)  :: ncidi              ! input netCdf id
+    integer , intent(in)  :: ncido              ! output netCDF id  
+    integer , intent(in)  :: no                 ! vector number
+    integer,  intent(out) :: nmin               ! index of minimum distance
+    logical,  intent(in), optional :: allocate  ! if just allocating
+    ! --------------------------------------------------------------------
+
+    ! ------------------------ local variables --------------------------
+    integer , allocatable, save :: typei(:)
+    integer , allocatable, save :: typeo(:)
+    real(r8), allocatable, save :: wti(:)
+    real(r8) :: distmin                          ! Minimum distance
+    integer  :: n
+    integer  :: varid                            ! netCDF variable id
+    ! --------------------------------------------------------------------
+
+    if ( present(allocate) ) then
+       allocate (typei(numcols))
+       allocate (typeo(numcolso))
+       allocate (wti(numcols))
+       call wrap_inq_varid (ncidi, 'cols1d_ityplun', varid)
+       call wrap_get_var_int(ncidi, varid, typei)
+       call wrap_inq_varid (ncidi, 'cols1d_wtxy', varid)
+       call wrap_get_var_double(ncidi, varid, wti)
+       call wrap_inq_varid (ncido, 'cols1d_ityplun', varid)
+       call wrap_get_var_int(ncido, varid, typeo)
+    else
+
+       distmin = spval
+       nmin    = 0
+       do n = 1, numcols
+          if ( (wti(n) > 0.0_r8) .and. (typei(n) == typeo(no)) ) then
+             if ( distCols(n,no) < distmin )then
+                distmin = distCols(n,no)
+                nmin = n
+             end if
+          end if
+       end do
+       if ( distmin == spval )then
+          write(*,*) 'Can not find the closest column: no = ', no
+          stop
+       end if
+    end if
+
+  end subroutine findMinDistCols
+
+  !=======================================================================
+
+  subroutine findMinDistPFTs( ncidi, ncido, no, nmin, allocate )
     ! Find the PFT distances based on the column distances already calculated
 
     use netcdf
@@ -537,8 +604,8 @@ contains
     integer , intent(in)  :: ncidi              ! input netCdf id
     integer , intent(in)  :: ncido              ! output netCDF id  
     integer , intent(in)  :: no                 ! vector number
-    real(r8), intent(out) :: dist(numpfts)      ! distances
     integer,  intent(out) :: nmin               ! index of minimum distance
+    logical,  intent(in), optional :: allocate  ! if just allocating
     ! --------------------------------------------------------------------
 
     ! ------------------------ local variables --------------------------
@@ -547,9 +614,7 @@ contains
     integer , allocatable, save :: vtypei(:)
     integer , allocatable, save :: vtypeo(:)
     real(r8), allocatable, save :: wti(:)
-    real(r8) :: dx,dy
     real(r8) :: distmin                          ! Minimum distance
-    logical, save :: first_time = .true.
     integer  :: n
     integer  :: ret                              ! NetCDF return code
     integer  :: varid                            ! netCDF variable id
@@ -558,7 +623,7 @@ contains
     !
     ! Distances for PFT's to output index no
     !
-    if ( first_time ) then
+    if ( present(allocate) ) then
        allocate (typei (numpfts))
        allocate (vtypei(numpfts))
        allocate (wti   (numpfts))
@@ -585,27 +650,29 @@ contains
        ret = nf90_get_var( ncido, varid, vtypeo)
        if (ret/=NF90_NOERR) call handle_error (ret)
 
-       first_time = .false.
-    end if
-
-!$OMP PARALLEL DO PRIVATE (n)
-    nmin    = 0
-    distmin = spval
-    do n = 1, numpfts
-       if (wti(n)>0. .and. typei(n) == typeo(no)) then
-          if ( allPFTSfromSameGC .or. (vtypei(n) == vtypeo(no)) )then
-             dist(n) = distCols(PFT2colindxi(n),PFT2colindxo(no))
-             if ( dist(n) < distmin )then
-                distmin = dist(n)
-                nmin    = n
-             end if 
-          else
-             dist(n) = spval
-          end if
-       else
-          dist(n) = spval
+       if ( size(PFT2colindxi) /= numpfts  .or. (size(PFT2colindxo) /= numpftso) )then
+          write(6,*) 'PFT2colindxi or PFT2colindxo out of bounds'
+          stop
        end if
-    end do
+    else
+
+       nmin    = 0
+       distmin = spval
+       do n = 1, numpfts
+          if (wti(n)>0. .and. (typei(n) == typeo(no)) ) then
+             if ( allPFTSfromSameGC .or. (typeo(no) >= nonveg) .or. (vtypei(n) == vtypeo(no)) )then
+                if ( distCols(PFT2colindxi(n),PFT2colindxo(no)) < distmin )then
+                   distmin = distCols(PFT2colindxi(n),PFT2colindxo(no))
+                   nmin    = n
+                end if 
+             end if
+          end if
+       end do
+       if ( distmin == spval )then
+          write(*,*) 'Can not find the closest column: no = ', no
+          stop
+       end if
+    end if
 
   end subroutine findMinDistPFTs
 
@@ -632,10 +699,8 @@ contains
     integer :: varid                            !variable id
     real(r8), allocatable :: rbufmli (:,:)      !input array
     real(r8), allocatable :: rbufmlo (:,:)      !output array
-    real(r8), allocatable :: dist(:)
     real(r8), allocatable :: origValues(:)      !temporary array of original values
     real(r8), allocatable :: wto(:)
-    real(r8) :: distmin
     integer :: count
     integer :: ret                              !netCDF return code
     ! --------------------------------------------------------------------
@@ -643,7 +708,6 @@ contains
     allocate (rbufmli(nlev,nvec))
     allocate (rbufmlo(nlev,nveco))
     allocate (wto(nveco))
-    allocate (dist(nvec))
 
     if (nveco == numcolso) then
        call wrap_inq_varid (ncido, 'cols1d_wtxy', varid)
@@ -663,38 +727,23 @@ contains
     if (ret/=NF90_NOERR) call handle_error (ret)
 
     if (nvec == numcols) then
+!$OMP PARALLEL DO PRIVATE (no,n)
        do no = 1, nveco
-          if (wto(no)>0.) then
-             distmin = minval( distCols(:,no) )
-             if (distmin==spval) then
-                write(*,*) 'distmin=',spval
-                stop
-             end if
-             count = 0
-             do n = 1, nvec
-                if (distCols(n,no)==distmin) then
-                   count = count + 1
-                   rbufmlo(:,no) = rbufmli(:,n)
-                   exit
-                end if       !found nearest neighbor
-             end do          !input data land loop
-             if (count < 1) then
-                write(*,*) 'no data was written: subroutine interp_ml_real'
-                stop
-             end if
-          end if             !output data with positive weight
-       end do                !output data land loop
-    else if (nvec == numpfts) then
-       do no = 1, nveco
-          if (wto(no)>0.) then
-             call findMinDistPFTs( ncidi, ncido, no, dist, nmin=n )
-             if ( n == 0 )then
-                write(*,*) 'no data was written: subroutine interp_ml_real'
-                stop
-             end if
+          if (wto(no)>0._r8) then
+             call findMinDistCols( ncidi, ncido, no, nmin=n )
              rbufmlo(:,no) = rbufmli(:,n)
           end if             !output data with positive weight
        end do                !output data land loop
+!$OMP END PARALLEL DO
+    else if (nvec == numpfts) then
+!$OMP PARALLEL DO PRIVATE (no,n)
+       do no = 1, nveco
+          if (wto(no)>0._r8) then
+             call findMinDistPFTs( ncidi, ncido, no, nmin=n )
+             rbufmlo(:,no) = rbufmli(:,n)
+          end if             !output data with positive weight
+       end do                !output data land loop
+!$OMP END PARALLEL DO
     else
        write(*,*) 'no data was written: subroutine interp_ml_real'
        stop
@@ -708,7 +757,6 @@ contains
     deallocate(rbufmli)
     deallocate(rbufmlo)
     deallocate(wto)
-    deallocate(dist)
 
   end subroutine interp_ml_real
 
@@ -740,7 +788,6 @@ contains
     real(r8), allocatable :: wti(:)
     real(r8), allocatable :: rbufsli (:)   !input array
     real(r8), allocatable :: rbufslo (:)   !output array
-    real(r8), allocatable :: dist(:)
     integer , allocatable :: pft_lio(:)    !PFT to land-unit index
     integer , allocatable :: pft_gio(:)    !PFT to gridcell index
     real(r8), allocatable :: lnd_wto (:)   !Land-unit weights
@@ -748,7 +795,6 @@ contains
     real(r8), allocatable :: sumwto  (:)   !sum of PFT weights
     real(r8), allocatable :: sumlwto (:)   !sum of land PFT weights
     real(r8), allocatable :: normaliz(:)   !normalization weigth
-    real(r8) :: distmin
     integer :: count
     integer :: ret                         ! NetCDF return code
     integer :: num                         ! number of gridcells NOT normalized
@@ -764,8 +810,6 @@ contains
 
     allocate (wti(nvec))
     allocate (wto(nveco))
-    allocate (dist(nvec))
-
     if (nvec == numpfts) then
        if ( trim(varname) == 'HTOP'    ) htop_var    = .true.
        if ( trim(varname) == 'FPCGRID' ) fpcgrid_var = .true.
@@ -812,38 +856,18 @@ contains
     if (ret/=NF90_NOERR) call handle_error (ret)
 
     if (      nvec == numcols )then
+!$OMP PARALLEL DO PRIVATE (no,n)
        do no = 1, nveco
-          if (wto(no)>0.) then
-!$OMP PARALLEL DO PRIVATE (n)
-             do n = 1, nvec
-                if ( wti(n) == 0. )then
-                   dist(n) = spval
-                else
-                   dist(n) = distCols(n,no)
-                end if
-             end do
-             distmin = minval(dist)
-             if (distmin==spval) then
-                write(*,*) 'distmin, no, varname=',spval, no, trim(varname)
-                stop
-             end if
-             count = 0
-             do n = 1, nvec
-                if (dist(n)==distmin) then
-                   count = count + 1
-                   rbufslo(no) = rbufsli(n)
-                   exit
-                end if       ! found nearest neighbor
-             end do          !output data land loop
-             if (count < 1) then
-                write(*,*) 'no data was written: subroutine interp_sl_real'
-                stop
-             end if
+          if (wto(no)>0._r8) then
+             call findMinDistCols( ncidi, ncido, no, nmin=n )
+             rbufslo(no) = rbufsli(n)
           end if             !output data with positive weight
        end do
+!$OMP END PARALLEL DO
     else if ( nvec == numpfts )then
+!$OMP PARALLEL DO PRIVATE (no,n)
        do no = 1, nveco
-          if (wto(no)>0.) then
+          if (wto(no)>0._r8) then
              !
              ! If variable-name is htop or fpcgrid
              !
@@ -851,34 +875,25 @@ contains
                 !
                 ! AND this is crop or non-vegetated land-unit -- set to zero
                 !
-                if( (vtypeo(no) > 14) .or. (typeo(no) > 1) )then
+                if( (vtypeo(no) >= croptype) .or. (typeo(no) >= nonveg) )then
                    rbufslo(no) = 0.0_r8
                 else
                    !
                    ! Otherwise calculate it from the nearest neighbor
                    !
-                   call findMinDistPFTs( ncidi, ncido, no, dist, nmin=n )
-                   if ( n == 0 )then
-                      write(*,*) 'subroutine interp_sl_real: no data written to typeo,no=', &
-                                  typeo(no),no
-                      stop
-                   end if
+                   call findMinDistPFTs( ncidi, ncido, no, nmin=n )
                    rbufslo(no) = rbufsli(n)
                 end if
              !
              ! Otherwise calculate it from the nearest neighbor
              !
              else
-                call findMinDistPFTs( ncidi, ncido, no, dist, nmin=n )
-                if ( n == 0 )then
-                   write(*,*) 'subroutine interp_sl_real: no data written to typeo,no=', &
-                               typeo(no),no
-                   stop
-                end if
+                call findMinDistPFTs( ncidi, ncido, no, nmin=n )
                 rbufslo(no) = rbufsli(n)
              end if          !data type
           end if             !output data with positive weight
        end do                !output data land loop
+!$OMP END PARALLEL DO
        !
        ! If variable-name is fpcgrid -- renormalize so columns in a grid cell sum to 1.0
        !
@@ -1002,7 +1017,6 @@ contains
     if ( allocated(vtypeo) ) deallocate(vtypeo)
     if ( allocated(typeo) )  deallocate(typeo)
     deallocate(wto)
-    deallocate(dist)
 
   end subroutine interp_sl_real
 
@@ -1033,8 +1047,6 @@ contains
     real(r8), allocatable :: wto(:)
     integer , allocatable :: ibufsli (:)        !input array
     integer , allocatable :: ibufslo (:)        !output array
-    real(r8), allocatable :: dist(:)
-    real(r8) :: distmin
     integer :: count
     integer :: ret                              !NetCDF return code
     logical :: present_var = .false.            !If variable name is == present
@@ -1044,7 +1056,6 @@ contains
     allocate (ibufsli(nvec))
     allocate (ibufslo(nveco))
     allocate (wto(nveco))
-    allocate (dist(nvec))
 
     if (nvec == numpfts) then
        if ( trim(varname) == 'PRESENT' ) present_var = .true.
@@ -1091,60 +1102,36 @@ contains
     if (ret/=NF90_NOERR) call handle_error (ret)
 
     if (      nvec == numcols )then
+!$OMP PARALLEL DO PRIVATE (no,n)
        do no = 1, nveco
-          if (wto(no)>0.) then
-!$OMP PARALLEL DO PRIVATE (n)
-             do n = 1, nvec
-                if ( wti(n) == 0. )then
-                   dist(n) = spval
-                else
-                   dist(n) = distCols(n,no)
-                end if
-             end do
-             distmin = minval(dist)
-             if (distmin==spval) then
-                write(*,*) 'distmin, no, varname=',spval, no, trim(varname)
-                stop
-             end if
-             count = 0
-             do n = 1, nvec
-                if (dist(n)==distmin) then
-                   count = count + 1
-                   ibufslo(no) = ibufsli(n)
-                   exit
-                end if       ! found nearest neighbor
-             end do          !output data land loop
-             if (count < 1) then
-                write(*,*) 'no data was written: subroutine interp_sl_int'
-                stop
-             end if
+          if (wto(no)>0._r8) then
+             call findMinDistCols( ncidi, ncido, no, nmin=n )
+             ibufslo(no) = ibufsli(n)
           end if             !output data with positive weight
        end do
+!$OMP END PARALLEL DO
     else if ( nvec == numpfts )then
+!$OMP PARALLEL DO PRIVATE (no,n) SHARED(present_var,itypveg_var)
        do no = 1, nveco
-          if (wto(no)>0.) then
+          if (wto(no)>0._r8) then
              !
              ! If variable-name is present or itypveg 
              ! AND this is crop or non-vegetated land-unit
              !
              if ( (present_var .or. itypveg_var) .and. &
-                  ((vtypeo(no) > 14) .or. (typeo(no) > 1)) )then
+                  ((vtypeo(no) >= croptype) .or. (typeo(no) >= nonveg)) )then
                 if ( present_var ) ibufslo(no) = 0
                 if ( itypveg_var ) ibufslo(no) = vtypeo(no)
              !
              ! Otherwise calculate it from the nearest neighbor
              !
              else
-                call findMinDistPFTs( ncidi, ncido, no, dist, nmin=n )
-                if ( n == 0 )then
-                   write(*,*) 'subroutine interp_sl_int: no data written to typeo,no=', &
-                               typeo(no),no
-                   stop
-                end if
+                call findMinDistPFTs( ncidi, ncido, no, nmin=n )
                 ibufslo(no) = ibufsli(n)
              end if          !variable type
           end if             !output data with positive weight
        end do                !output data land loop
+!$OMP END PARALLEL DO
     else
        write(*,*) 'subroutine interp_sl_int: no data written to typeo,vtypeo,no=', &
                    typeo(no),vtypeo(no),no
@@ -1159,7 +1146,6 @@ contains
     deallocate (ibufsli)
     deallocate (ibufslo)
     deallocate (wto)
-    deallocate (dist)
     if ( allocated(vtypei) ) deallocate (vtypei)
     if ( allocated(vtypeo) ) deallocate (vtypeo)
     if ( allocated(typeo) )  deallocate (typeo)

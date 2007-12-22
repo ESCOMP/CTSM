@@ -78,6 +78,7 @@ module controlMod
 !
 ! === history and restart files ===
 !
+!    o outnc_large_files = true if want to create output netCDF files in 64-bit large file format
 !    o hist_empty_htapes = true if do not want ANY output fields on files by default
 !    o hist_avgflag_pertape = averaging flag to use by default for all fields on a file series
 !    o hist_ndens    = integer, can have value of 1 (nc_double) or 2 (nf_float)
@@ -118,7 +119,7 @@ module controlMod
 !    o csm_doflxave = true => flux averaging is to be performed (only used for csm mode)
 !    o co2_ppmv     = CO2 volume mixing ratio
 !    o pertlim      = perturbation limit
-!    o create_croplandunit = logical on if to create crop as separate landunits
+!    o create_crop_landunit = logical on if to create crop as separate landunits
 !
 !    >>>>>>>>>>>>> Only for mode=ext_ccsm_con or seq_ccsm
 !    o co2_type     = type of CO2 feedback, choices are constant, prognostic or diagnostic
@@ -302,7 +303,7 @@ contains
          hist_fincl4,  hist_fincl5, hist_fincl6, &
          hist_fexcl1,  hist_fexcl2, hist_fexcl3, &
          hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
-         hist_crtinic, rest_flag
+         hist_crtinic, rest_flag, outnc_large_files
 
     ! clm bgc info
 
@@ -384,7 +385,8 @@ contains
 
     ! history file variables
 
-    hist_crtinic = 'NONE'
+    outnc_large_files = .false.
+    hist_crtinic      = 'NONE'
 
     ! other namelist variables
 
@@ -731,6 +733,7 @@ contains
 
     ! history file variables
 
+    call mpi_bcast (outnc_large_files, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_empty_htapes, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_dov2xy, size(hist_dov2xy), MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_nhtfrq, size(hist_nhtfrq), MPI_INTEGER, 0, mpicom, ier)
@@ -866,6 +869,9 @@ contains
     write(iulog,*) 'Restart parameters:'
     write(iulog,*)'   restart pointer file directory     = ',trim(rpntdir)
     write(iulog,*)'   restart pointer file name          = ',trim(rpntfil)
+    if ( outnc_large_files ) then
+       write(iulog,*)'Large file support for output files is ON'
+    end if
     if (hist_crtinic == 'MONTHLY') then
        write(iulog,*)'initial datasets will be written monthly'
     else if (hist_crtinic == 'YEARLY') then

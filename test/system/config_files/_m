@@ -1,2 +1,3 @@
 -spmd -nosmp
 -s
+-mode offline

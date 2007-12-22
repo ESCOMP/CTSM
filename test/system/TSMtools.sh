@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
     echo "TSMtools.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TSMtools.$1.$2
+test_name=TSMtools.$1.$2.$3
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -42,7 +42,7 @@ fi
 cd ${rundir}
 
 echo "TSMtools.sh: calling TCBtools.sh to prepare $1 executable" 
-${CLM_SCRIPTDIR}/TCBtools.sh $1
+${CLM_SCRIPTDIR}/TCBtools.sh $1 $2
 rc=$?
 if [ $rc -ne 0 ]; then
     echo "TSMtools.sh: error from TCBtools.sh= $rc" 
@@ -52,26 +52,32 @@ fi
 
 echo "TSMtools.sh: running $1; output in ${rundir}/test.log" 
 
-if [ ! -f "${cfgdir}/$1.$2" ]; then
-    echo "TSMtools.sh: error ${cfgdir}/$1.$2 input run file not found"
+if [ $2 == "tools__o" ]; then
+   toolrun="env OMP_NUM_THREADS=${CLM_THREADS} ${CLM_TESTDIR}/TCBtools.$1.$2/$1"
+else
+   toolrun="${CLM_TESTDIR}/TCBtools.$1.$2/$1"
+fi
+
+if [ ! -f "${cfgdir}/$1.$3" ]; then
+    echo "TSMtools.sh: error ${cfgdir}/$1.$3 input run file not found"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 5
 fi
 
-if [ $2 == "runoptions" ]; then
-  echo "${CLM_TESTDIR}/TCBtools.$1/$1 "`cat ${cfgdir}/$1.$2`
+if [ $3 == "runoptions" ]; then
+  echo "$toolrun "`cat ${cfgdir}/$1.$3`
   cp $cfgdir/*.nc .
   if [ "$debug" != "YES" ]; then
-     ${CLM_TESTDIR}/TCBtools.$1/$1  `cat ${cfgdir}/$1.$2` >> test.log 2>&1
+     $toolrun  `cat ${cfgdir}/$1.$3` >> test.log 2>&1
      rc=$?
   else
      echo "success" > test.log
      rc=0
   fi
 else
-  echo "${CLM_TESTDIR}/TCBtools.$1/$1 < ${cfgdir}/$1.$2"
+  echo "$toolrun < ${cfgdir}/$1.$3"
   if [ "$debug" != "YES" ]; then
-     ${CLM_TESTDIR}/TCBtools.$1/$1 < ${cfgdir}/$1.$2 >> test.log 2>&1
+     $toolrun < ${cfgdir}/$1.$3 >> test.log 2>&1
      rc=$?
   else
      echo "success" > test.log

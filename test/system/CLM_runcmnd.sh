@@ -12,7 +12,6 @@ if [ ! -f ${CLM_SCRIPTDIR}/config_files/$1 ]; then
 fi
 
 hostname=`hostname`
-echo "hostname = $hostname"
 case $hostname in
 
     ##bluesky
@@ -295,7 +294,7 @@ case $hostname in
     fi ;;
     ##spot1
     spot1* )
-    cmnd=""
+    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -np ${CLM_TASKS} "
     ;;
 
     * ) 

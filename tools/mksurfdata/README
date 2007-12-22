@@ -38,6 +38,7 @@ and generate the surface dataset:
     ! ======================================
     !    mksrf_gridtype  (default is 'global')
     !    mksrf_fdynuse
+    !    outnc_large_files
     ! ======================================================================
 
    make sure the datasets in the namelist correspond to the full path of where

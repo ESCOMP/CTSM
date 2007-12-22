@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ===============================================================================================================================
+   clm3_5_15         erik 12/10/2007 Fix interpinic for half degree grid, add in large-file support, allow configure to work with ccsm directory structure
    clm3_5_14         erik 11/27/2007 Use build-streams, and archiving, multiple bug-fixes
    clm3_5_13         erik 11/16/2007 Update xml file with file needed for ccsm3_5_beta18
    clm3_5_12         erik 11/08/2007 Tag with new files needed for ccsm3_5_beta17

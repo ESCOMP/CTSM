@@ -923,7 +923,7 @@ if ($clm_build and $cfg{'spmd'}) {
 	$cfg = $ENV{INC_MPI};
     } else {
 	if ($cfg{'target_os'} eq 'aix' || $cfg{'target_os'} eq 'dec_osf' || $cfg{'target_os'} eq 'unicosmp' ||
-	    $cfg{'target_os'} eq 'bgl') {
+	    $cfg{'target_os'} eq 'bgl' || $cfg{'fc'} eq 'ftn') {
 	    $cfg = '';
 	} else {
 	    $cfg = '/usr/local/include';
@@ -955,7 +955,7 @@ EOF
 	$cfg = $ENV{LIB_MPI};
     } else {
 	if ($cfg{'target_os'} eq 'aix' || $cfg{'target_os'} eq 'dec_osf' || $cfg{'target_os'} eq 'unicosmp' ||
-	    $cfg{'target_os'} eq 'bgl') {
+	    $cfg{'target_os'} eq 'bgl' || $cfg{'fc'} eq 'ftn') {
 	    $cfg = '';
 	} else {
 	    $cfg = '/usr/local/lib';
@@ -1316,39 +1316,62 @@ sub write_filepath
 
 # Source root
     my $srcdir = "$cfg{'clm_root'}/src";
+    if ( ! -d "$srcdir" ) { die "** source directory does not exist: $srcdir\n"; }
 
 # Shared utilities.
-    print $fh "$srcdir/csm_share/shr\n";
-    print $fh "$srcdir/csm_share/eshr\n";
-    print $fh "$srcdir/csm_share/dshr\n";
-    print $fh "$srcdir/utils/timing\n";
-    print $fh "$srcdir/utils/mct/mpeu\n";
-    print $fh "$srcdir/utils/mct/mct\n";
+    my @dirs = ( "csm_share/shr", "csm_share/eshr", "csm_share/dshr", 
+                 "utils/timing",  "utils/mct/mpeu", "utils/mct/mpeu",
+                 "utils/mct/mct" );
     if ( !$cfg{'spmd'}) { 
-       print $fh "$srcdir/utils/mct/mpi-serial\n";
-    }	
+       push( @dirs, "utils/mct/mpi-serial" );
+    }
     unless ($cfg{'esmf_libdir'}) { 
-       print $fh "$srcdir/utils/esmf_wrf_timemgr\n";
+       push( @dirs, "utils/esmf_wrf_timemgr" );
+    }
+    foreach my $dir ( @dirs ) {
+       if ( -d "$srcdir/$dir" ) {
+          print $fh "$srcdir/$dir\n";
+       } elsif ( -d "$srcdir/../../../$dir" ) {
+          print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
+       } else {
+          die "** source directory does not exist: $srcdir/$dir or $srcdir/../../../$dir\n";
+       }
     }
 
 if ($cfg{'mode'} eq "ccsm_seq") {
-    # Driver
-    print $fh "$srcdir/drv/seq_mct\n";
-    print $fh "$srcdir/drv/seq_mct/driver\n";
 
-    # Datm7 
-    print $fh "$srcdir/datm7\n";
+    # Driver, and stub ocean and sea-ice
 
-    # Ocn/Ice Stubs
-    print $fh "$srcdir/socn\n";
-    print $fh "$srcdir/sice\n";
+    my @dirs = ( "drv/seq_mct", "drv/seq_mct/driver", "datm7", "socn", "sice" );
+    foreach my $dir ( @dirs ) {
+       if ( -d "$srcdir/$dir" ) {
+          print $fh "$srcdir/$dir\n";
+       } elsif ( -d "$srcdir/../../../$dir" ) {
+          print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
+       } elsif ( -d "$srcdir/../../../atm/$dir" ) {
+          print $fh absolute_path( "$srcdir/../../../atm/$dir" ) . "\n";
+       } elsif ( -d "$srcdir/../../../ice/$dir" ) {
+          print $fh absolute_path( "$srcdir/../../../ice/$dir" ) . "\n";
+       } elsif ( -d "$srcdir/../../../ocn/$dir" ) {
+          print $fh absolute_path( "$srcdir/../../../ocn/$dir" ) . "\n";
+       } else {
+          die "** source directory does not exist: $srcdir/$dir or $srcdir/../../../$dir or $srcdir/../../../atm|ice|ocn/$dir\n";
+       }
+    }
 }
 
 # CLM
-    print $fh "$srcdir/main\n";
-    print $fh "$srcdir/biogeophys\n";
-    print $fh "$srcdir/biogeochem\n";
-    print $fh "$srcdir/riverroute\n";
+    my @dirs = ( "main", "biogeophys", "biogeochem" );
+    if ( $cfg{'rtm'} eq "on" ) { 
+       push( @dirs, "riverroute" );
+    }
+    foreach my $dir ( @dirs ) {
+       if ( -d "$srcdir/$dir" ) {
+          print $fh "$srcdir/$dir\n";
+       } else {
+          die "** source directory does not exist: $srcdir/$dir\n";
+       }
+    }
 
     $fh->close;
 }

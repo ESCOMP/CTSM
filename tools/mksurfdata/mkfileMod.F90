@@ -34,7 +34,12 @@ contains
     character(len=32) :: subname = 'mkfile'  ! subroutine name
 !-----------------------------------------------------------------------
 
-    call check_ret(nf_create(trim(fname), nf_clobber, ncid), subname)
+    if ( .not. outnc_large_files )then
+       call check_ret(nf_create(trim(fname), nf_clobber, ncid), subname)
+    else
+       call check_ret(nf_create(trim(fname), ior(nf_clobber,nf_64bit_offset), &
+                                ncid), subname)
+    end if
     call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
 
     ! Define dimensions.
@@ -74,7 +79,8 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Source', len_trim(str), trim(str)), subname)
 
-    str = '$HeadURL$'
+    str = &
+'$HeadURL$'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Version', len_trim(str), trim(str)), subname)
 

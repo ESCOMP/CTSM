@@ -50,13 +50,6 @@ if [ $rc -ne 0 ]; then
     exit 4
 fi
 
-if [ ! -f ${CLM_SCRIPTDIR}/nl_files/$2 ]; then
-    echo "TSM.sh: namelist options file ${CLM_SCRIPTDIR}/nl_files/$2 not found" 
-    echo "FAIL.job${JOBID}" > TestStatus
-    exit 5
-fi
-
-
 echo "TSM.sh: running clm; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 echo "TSM.sh: obtaining namelist:" 
 
@@ -169,7 +162,11 @@ else
 fi
 
 echo "TSM.sh calling CLM_runcmnd.sh to build run command" 
-${CLM_SCRIPTDIR}/CLM_runcmnd.sh $1
+if [ "$7" = "arb_ic" ] || [ "$7" = "startup" ]; then
+   ${CLM_SCRIPTDIR}/CLM_runcmnd.sh $1
+else
+   env CLM_THREADS=$CLM_RESTART_THREADS CLM_TASKS=$CLM_RESTART_TASKS ${CLM_SCRIPTDIR}/CLM_runcmnd.sh $1
+fi
 rc=$?
 if [ $rc -eq 0 ] && [ -f clm_run_command.txt ]; then
     read cmnd < clm_run_command.txt

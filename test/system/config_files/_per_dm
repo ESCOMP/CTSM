@@ -1,4 +1,5 @@
 -spmd -nosmp
 -debug
 -pergro on
+-mode offline
 -s

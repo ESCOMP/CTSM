@@ -6,6 +6,7 @@ smE12 erE12 brE12 blE12 smE15
 smF28 erF28 brF28 blF28 smF25
 smE32 erE32 brE32 blE32 smE35
 smG42 erG42 brG42 blG42 smG45
+smH02
 smH12 erH12 brH12 blH12 smH15
 smJ12 erJ12 brJ12 blJ12 smJ15
 smK12 erK12 brK12 blK12 smK15
@@ -22,6 +23,7 @@ sm711             bl711
 sm771             bl771
 smZ11
 sm811
+sm812
 sm951             bl951
 sm982             bl982
 sm061

@@ -27,6 +27,7 @@
 
 <!-- Domain files, grids and land mask -->
 <domainfile RESOLUTION="1x1_brazil"     mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-brazil_navy.070628.nc</domainfile>
+<domainfile RESOLUTION="1x1_camdenNJ"   mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.071220.nc</domainfile>
 <domainfile RESOLUTION="1x1_tropicAtl"  mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-tropicAtl_test.071010.nc</domainfile>
 <domainfile RESOLUTION="5x5_amazon"     mask="navy" >atm/datm7/domain.clm/domain.lnd.5x5pt-amazon_navy.071010.nc</domainfile>
 <domainfile RESOLUTION="360x720"        mask="USGS" >atm/datm7/domain.clm/domain.lnd.360x720pt-global_USGS.071010.nc</domainfile>

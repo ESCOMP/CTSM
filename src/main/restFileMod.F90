@@ -616,7 +616,7 @@ contains
           write(iulog,*)'restFile_open: writing restart dataset at ',&
                trim(file), ' at nstep = ',get_nstep()
           write(iulog,*)
-          call check_ret( nf_create(trim(file), nf_clobber, ncid), subname )
+          call ncd_create(trim(file), nf_clobber, ncid, subname )
           call check_ret( nf_set_fill(ncid, nf_nofill, omode), subname )
 
        else if (flag == 'read') then
@@ -624,7 +624,7 @@ contains
           ! Open netcdf restart file
 
           write(iulog,*) 'Reading restart dataset'
-          call check_ret( nf_open(file, nf_nowrite, ncid), subname )
+          call ncd_open(file, nf_nowrite, ncid, subname )
 
        end if
     end if
@@ -939,7 +939,7 @@ contains
 !-----------------------------------------------------------------------
 
     if (masterproc) then
-       call check_ret(nf_close(ncid), subname)
+       call ncd_close(ncid, subname)
     end if
 
   end subroutine restFile_close

@@ -274,7 +274,7 @@ contains
 !
 ! !USES:
     use fileutils    , only : getfil
-    use ncdio        , only : check_ret,check_dim,ncd_iolocal
+    use ncdio        , only : check_ret,check_dim,ncd_iolocal,ncd_close
     use shr_const_mod, only : SHR_CONST_CDAY
     use decompMod    , only : get_proc_bounds, get_proc_global
     use clm_varctl   , only : nsrest
@@ -780,7 +780,7 @@ contains
 
        ! Close netcdf file
 
-       if (masterproc) call check_ret(nf_close(ncid), subname)
+       if (masterproc) call ncd_close(ncid, subname)
 
        ! Deallocate dynamic memory
 
@@ -897,7 +897,8 @@ contains
 !
 ! !USES:
     use decompMod    , only : get_proc_bounds, get_proc_global
-    use ncdio        , only : check_ret,ncd_defvar,ncd_ioglobal,ncd_iolocal
+    use ncdio        , only : check_ret,ncd_defvar,ncd_ioglobal,ncd_iolocal, ncd_create, &
+                              ncd_close, ncd_clobber
     use subgridAveMod, only : p2g
     use domainMod    , only : ldomain, llatlon
     use clm_varpar   , only : lsmlon, lsmlat
@@ -944,7 +945,7 @@ contains
     call get_proc_global(numg, numl, numc, nump)
 
     if (masterproc) then
-       call check_ret(nf_create('CPOOL_INITIAL.nc', nf_clobber, ncid), subname)
+       call ncd_create('CPOOL_INITIAL.nc',ncd_clobber,ncid,subname)
        call check_ret(nf_set_fill(ncid, nf_nofill, omode), subname)
        call check_ret(nf_def_dim(ncid, 'longitude', lsmlon, dimid), subname)
        call check_ret(nf_def_dim(ncid, 'latitude', lsmlat, dimid), subname)

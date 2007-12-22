@@ -423,7 +423,7 @@ contains
        ! -----------------------------------------------------------------------
 
        dgvm_fn = set_dgvm_filename()
-       call check_ret(nf_create(dgvm_fn, nf_clobber, ncid), subname)
+       call ncd_create(dgvm_fn, ncd_clobber, ncid, subname)
        call check_ret(nf_set_fill(ncid, nf_nofill, omode), subname)
 
        ! -----------------------------------------------------------------------
@@ -760,7 +760,7 @@ contains
     !------------------------------------------------------------------
 
     if (masterproc) then
-       call check_ret(nf_close(ncid), subname)
+       call ncd_close(ncid, subname)
        write(iulog,*)'(histDGVM): Finished writing clm DGVM history dataset ',&
             trim(dgvm_fn), 'at nstep = ',get_nstep()
     end if

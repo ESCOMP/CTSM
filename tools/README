@@ -10,6 +10,7 @@ I.  General directory structure:
 	mkgriddata ------- Create grid datasets.
 	mksurfdata ------- Create surface datasets.
 	cprnc ------------ Compare output history files.
+        ncl_scripts ------ NCL post or pre processing scripts.
 
 II. Notes on the build system for each of the above tools:
 

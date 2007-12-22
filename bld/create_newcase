@@ -130,7 +130,9 @@ while( $_ = <$infh> ) {
     print $outfh "set case = $case\n";
   } elsif ( defined($opts{wrkdir}) && /set wrkdir[ ]+ = / ) {
     my $wrkdir = $opts{wrkdir};
-    print $outfh "set wrkdir = $wrkdir\n";
+    print $outfh "set wrkdir  = $wrkdir\n";
+  } elsif ( /set casdir[ ]+ = / ) {
+    print $outfh "set casdir  = $casedir\n";
   } elsif ( /^(.*)$infilename(.*)$/ ) {
     while ( /^(.*)$infilename(.*)$/ ) {
        my $front = $1;

@@ -40,6 +40,10 @@ module clm_varctl
 !
   character(len= 8) :: hist_crtinic             ! if set to 'MONTHLY' or 'YEARLY', write initial cond. file
 !
+! Output NetCDF files
+!
+  logical :: outnc_large_files                  ! large file support for output NetCDF files
+!
 ! Run input files
 !
   character(len=256) :: finidat                 ! initial conditions file name

@@ -1,4 +1,5 @@
 -smp
 -maxpft 10
 -bgc dgvm
+-mode offline
 -s

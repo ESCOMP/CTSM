@@ -10,17 +10,27 @@ Where: xx is the two-letter test type
 
 n is the configuration type:
 
-1 -- numpft=17-Standard, or numpft=4, VOC, DUST, RTM
-2 -- numpft=17, CN
-3 -- numpft=4, CASA
-4 -- numpft=10, DGVM
-5 -- Standard default
+1 -- offline numpft=17-Standard, or numpft=4, VOC, DUST, RTM
+2 -- offline numpft=17, CN
+3 -- offline numpft=4, CASA
+4 -- offline numpft=10, DGVM
+5 -- offline Standard default
 6 -- mkgriddata
 7 -- mksurfdata
-8 -- interpinic or newcprnc
+8 -- interpinic
 9 -- External Sequential CCSM CAM
 0 -- External CCSM concurrent
-A -- Sequential CCSM mode
+A -- Standard Sequential CCSM mode
+B -- Test run script
+D -- ccsm_seq Pergro
+E -- ccsm_seq numpft=4, VOC, DUST, RTM
+F -- ccsm_seq numpft=17, VOC, DUST, RTM
+G -- ccsm_seq numpft=17
+H -- ccsm_seq numpft=17, CN
+J -- ccsm_seq numpft=4, CASA
+K -- ccsm_seq numpft=10, DGVM
+L -- ccsm_seq Standard default
+M -- ndepregrid
 
 m is the resolution
 
@@ -33,3 +43,5 @@ m is the resolution
 7 -- 1x1 brazil
 8 -- 5x5 amazon
 9 -- 4x5
+0 -- 0.47x0.63
+A -- 1x1 Camden NJ (Urban test)

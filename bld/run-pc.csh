@@ -12,6 +12,7 @@
 #   qsub run-pc.csh
 # Usage for pgf90 compiler with pgcc: 
 #   env OPT_BLD=PGI qsub run-pc.csh
+# Script won't run interactively.
 #-----------------------------------------------------------------------
 #
 # Name of the queue (CHANGE THIS if needed)
@@ -27,67 +28,12 @@
 # End of options
 #=======================================================================
 
-set OS = `uname -s`;
-switch ( $OS )
-  case Linux:
-     if ( ! $?PBS_JOBID ) then
-       echo "${0}: WARNING: Running CLM interactively -- resubmit job to batch que"
-       sleep 5
-     else
-       echo "${0}: Running CLM on Linux using PBS";
-     endif
-     if ( ! $?OPT_BLD ) then
-       setenv USER_FC lf95
-       setenv LAHEY /usr/local/lf9562
-       set netcdf = /usr/local/netcdf-gcc-lf95
-       setenv INC_NETCDF ${netcdf}/include
-       setenv LIB_NETCDF ${netcdf}/lib
-       set mpich = /usr/local/mpich-gcc-g++-lf95
-       setenv INC_MPI ${mpich}/include
-       setenv LIB_MPI ${mpich}/lib
-       setenv PATH ${LAHEY}/bin:${mpich}/bin:${PATH}
-       setenv MOD_NETCDF $INC_NETCDF
-       setenv LD_LIBRARY_PATH "${LAHEY}/lib:/lib/i686:/usr/local/lib"
-     else
-       set mpich = /usr/local/mpich-pgi-pgcc-pghf
-       setenv INC_MPI ${mpich}/include
-       setenv LIB_MPI ${mpich}/lib
-       set netcdf = /usr/local/netcdf-pgi-hpf-cc
-       setenv INC_NETCDF ${netcdf}/include
-       setenv LIB_NETCDF ${netcdf}/lib
-       setenv MOD_NETCDF $INC_NETCDF
-       setenv PGI /usr/local/pgi-pgcc-pghf
-       setenv PATH ${PGI}/linux86/6.1/bin:${mpich}/bin:${PATH}
-       setenv LD_LIBRARY_PATH "${PGI}/linux86/6.1/lib:${LD_LIBRARY_PATH}"
-
-     endif
-     breaksw;
-  default:
-    echo "${0}: This script meant for running CLM on Linux machines";    exit 2;
-endsw
-
-## set this equal to #nodes X #ppn
-set procs = 4
-
-## Do our best to get sufficient stack memory
-limit stacksize unlimited
-
-## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
-## Contains the source code for the CLM distribution.
-## (the root directory contains the subdirectory "src")
-set clmroot   = /fs/cgd/...                # (MAKE SURE YOU CHANGE THIS!!!)
-
-## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
-## Contains the initial and boundary data for the CLM distribution.
-setenv CSMDATA /fs/cgd/csm/inputdata                # (MAKE SURE YOU CHANGE THIS!!!)
-
-## Location of datm data (when running in ccsm_seq mode) - needs to be customized unless running at NCAR.
-## Contains the location for the datm7 input data
-setenv datm_data_dir /project/tss/NCEPDATA.datm7.Qian.T62.c060410  # (MAKE SURE YOU CHANGE THIS!!!)
+#===========================================================================
+#=================== THINGS MOST COMONLY CHANGED ===========================
 
 ## Configuration settings:
 
-set mode     = ccsm_seq # settings are [offline | ccsm_seq ] (default is offline)
+set mode     = ccsm_seq # settings are [offline | ccsm_seq ] (default is ccsm_seq)
 set spmd     = on       # settings are [on   | off         ] (default is off)
 set maxpft   = 4        # settings are 4->17                 (default is 4)
 set bgc      = none     # settings are [none | cn | casa   ] (default is none)
@@ -109,18 +55,93 @@ set runlen     = 2d       # settings are [ integer<sdy> where s=step, d=days, y=
 set ret_pd     = 0        # settings are [0 (no archiving), >0 (days to save to archive)       ]
 set resub_date = 0        # settings are [0 (no resubmission), > 0 (date {YYYYMMDD} to run to) ]
 #--------------------------------------------------------------------------------------------
+## Locations of important directories:
+##
+# Path to Lahey and PGI compilers (CHANGE THIS IF NOT AT NCAR)
+setenv LAHEY /usr/local/lf9562
+setenv PGI /usr/local/pgi-pgcc-pghf
+# Root path to netcdf and mpi for lahey compiler (CHANGE THIS IF NOT AT NCAR)
+set netcdf_lahey = /usr/local/netcdf-gcc-lf95
+set mpich_lahey = /usr/local/mpich-gcc-g++-lf95
+# Root path to netcdf and mpi for PGI compiler (CHANGE THIS IF NOT AT NCAR)
+set mpich = /usr/local/mpich-pgi-pgcc-pghf
+set netcdf = /usr/local/netcdf-pgi-hpf-cc
+## When running off-site also ensure that PATH and LD_LIBRARY_PATH below are correct.
+
+## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
+## Contains the source code for the CLM distribution.
+## (the root directory contains the subdirectory "src")
+set clmroot   = /fs/cgd/...                # (MAKE SURE YOU CHANGE THIS!!!)
+
+## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
+## Contains the initial and boundary data for the CLM distribution.
+setenv CSMDATA /fs/cgd/csm/inputdata                # (MAKE SURE YOU CHANGE THIS!!!)
+
+## Location of datm data (when running in ccsm_seq mode) - needs to be customized unless running at NCAR.
+## Contains the location for the datm7 input data
+setenv datm_data_dir /project/tss/NCEPDATA.datm7.Qian.T62.c060410  # (MAKE SURE YOU CHANGE THIS!!!)
 
 ## $wrkdir is a working directory where the model will be built and run.
 ## $blddir is the directory where model will be compiled.
 ## $rundir is the directory where the model will be run.
 ## $cfgdir is the directory containing the CLM configuration scripts.
+## $casdir  is the directoyr this script is found in.
+## $usr_src is the directory where any modified source code is put.
 set case     = clmrun
 set wrkdir   = /ptmp/$LOGNAME
 set blddir   = $wrkdir/$case/bld
 set rundir   = $wrkdir/$case
 set cfgdir   = $clmroot/bld
-set casdir   = $clmroot/bld/$case
+set casdir   = $clmroot/bld
 set usr_src  = $clmroot/bld/usr.src
+
+#=================== END OF THINGS MOST COMONLY CHANGED ====================
+#===========================================================================
+
+set OS = `uname -s`;
+switch ( $OS )
+  case Linux:
+     if ( ! $?PBS_JOBID ) then
+       echo "${0}: WARNING: Running CLM interactively -- resubmit job to batch que"
+       sleep 5
+     else
+       echo "${0}: Running CLM on Linux using PBS";
+     endif
+     if ( ! $?OPT_BLD ) then
+       # Path to NetCDF and MPI and Lahey compiler
+       setenv USER_FC lf95
+       setenv INC_NETCDF ${netcdf_lahey}/include
+       setenv LIB_NETCDF ${netcdf_lahey}/lib
+       setenv INC_MPI ${mpich_lahey}/include
+       setenv LIB_MPI ${mpich_lahey}/lib
+       # Path to binaries (CHANGE THIS IF RUNNING NOT AT NCAR)
+       setenv PATH ${LAHEY}/bin:${mpich_lahey}/bin:${PATH}
+       setenv MOD_NETCDF $INC_NETCDF
+       # Path to dynamic libraries (CHANGE THIS IF RUNNING NOT AT NCAR)
+       setenv LD_LIBRARY_PATH "${LAHEY}/lib:/lib/i686:/usr/local/lib"
+     else
+       # Path to NetCDF and MPI and PGI compiler
+       setenv INC_MPI ${mpich}/include
+       setenv LIB_MPI ${mpich}/lib
+       setenv INC_NETCDF ${netcdf}/include
+       setenv LIB_NETCDF ${netcdf}/lib
+       setenv MOD_NETCDF $INC_NETCDF
+       # Path to binaries (CHANGE THIS IF RUNNING NOT AT NCAR)
+       setenv PATH ${PGI}/linux86/6.1/bin:${mpich}/bin:${PATH}
+       # Path to dynamic libraries (CHANGE THIS IF RUNNING NOT AT NCAR)
+       setenv LD_LIBRARY_PATH "${PGI}/linux86/6.1/lib:${LD_LIBRARY_PATH}"
+
+     endif
+     breaksw;
+  default:
+    echo "${0}: This script meant for running CLM on Linux machines";    exit 2;
+endsw
+
+## set this equal to #nodes X #ppn
+set procs = 4
+
+## Do our best to get sufficient stack memory
+limit stacksize unlimited
 
 ## Ensure that run and build directories exist
 mkdir -p $rundir                || echo "cannot create $rundir" && exit 3
@@ -195,6 +216,14 @@ if ($spmd == on) then
 else
   $blddir/clm >&! clm.log.$LID                   || echo "CLM run failed" && exit 7
   set runstatus = $status
+endif
+
+# Confirm run-status by making sure clm is advancing
+# by checking that rpointer.lnd files are changing
+if ( ! -f rpointer.lnd      && $runstatus == 0 ) set runstatus = 1
+if (   -f rpointer.lnd.orig && $runstatus == 0 )then
+   diff rpointer.lnd rpointer.lnd.orig > /dev/null
+   if ( $status == 0 ) set runstatus = 1
 endif
 
 ## POST-PROCESSING vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv

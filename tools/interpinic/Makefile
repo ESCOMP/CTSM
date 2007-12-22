@@ -1,6 +1,6 @@
 #-----------------------------------------------------------------------
-# This Makefile is for building clm tools on AIX, Compaq, Linux (with pgf90 or 
-# lf95 compiler), IRIX or SUN platforms.
+# This Makefile is for building clm tools on AIX, Linux (with pgf90 or 
+# lf95 compiler), Darwin or IRIX platforms.
 #
 # These macros can be changed by setting environment variables:
 #
@@ -15,6 +15,7 @@
 # USER_FFLAGS -- Additional Fortran compiler flags that the user wishes to set.
 # USER_LDLAGS -- Additional load flags that the user wishes to set.
 # SMP ---------- Shared memory Multi-processing (TRUE or FALSE) [default is FALSE]
+# OPT ---------- Use optimized options.
 #
 #------------------------------------------------------------------------
 
@@ -99,11 +100,14 @@ $(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Filepath
 ifeq ($(UNAMES),IRIX64)
 CPPDEF  += -DIRIX64
 FC      = f90
-FFLAGS  = -64 -c -r8 -i4 -I$(INC_NETCDF) -g -C -O2 $(CPPDEF) -DEBUG:trap_uninitialized=ON
+FFLAGS  = -64 -c -r8 -i4 -I$(INC_NETCDF) -g -O2 $(CPPDEF)
 LDFLAGS = -64 -L$(LIB_NETCDF) -lnetcdf
 CFLAGS  := -64 -g -O2 $(CPPDEF) -C -DFORTRANUNDERSCORE -DEBUG:trap_uninitialized=ON
 FFLAGS += $(cpp_path)
 CFLAGS += $(cpp_path)
+ifneq ($(OPT),TRUE)
+   FFLAGS += -C -DEBUG:trap_uninitialized=ON
+endif
 
 ifeq ($(SMP),TRUE)
   # Only enable OpenMP, not SGI specific parallelism
@@ -123,9 +127,11 @@ cpre = $(null)-WF,-D$(null)
 FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
 LIB_NETCDF := /usr/local/lib64/r4i4
 FC      = xlf90_r
-FFLAGS  = -c -I$(INC_NETCDF) -q64 -qsuffix=f=f90 -O2 -qmaxmem=-1 -qsuffix=f=f90:cpp=F90 \
-	   $(FPPFLAGS)  -g -qfullpath -qarch=auto -qspillsize=2500 -qinitauto=FF911299  \
-           -qflttrap=ov:zero:inv:en -C
+FFLAGS  = -c -I$(INC_NETCDF) -q64 -qsuffix=f=f90 -O2 -qsuffix=f=f90:cpp=F90 \
+	   $(FPPFLAGS)  -g -qfullpath -qarch=auto -qspillsize=2500 
+ifneq ($(OPT),TRUE)
+   FFLAGS += -qmaxmem=-1 -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C
+endif
 CFLAGS  := -q64 -g $(CPPDEF) -O2 -C
 LDFLAGS = -L$(LIB_NETCDF) -q64 -lnetcdf
 FFLAGS += $(cpp_path)
@@ -149,38 +155,14 @@ FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
 LIB_NETCDF := /usr/local/lib
 CFLAGS  := -I/usr/include -I/usr/include/malloc -g -O2 $(CPPDEF)
 FC      = xlf90
-FFLAGS  = -c -I$(INC_NETCDF) -qsuffix=f=f90 -O2 -qmaxmem=-1 -qsuffix=f=f90:cpp=F90 \
-	  -WF,-DAIX -g -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C -qfullpath \
-	  -qhalt=e $(FPPFLAGS) -I.
+FFLAGS  = -c -I$(INC_NETCDF) -qsuffix=f=f90 -O2 -qsuffix=f=f90:cpp=F90 \
+	  -WF,-DAIX -g -qfullpath -qhalt=e $(FPPFLAGS) -I.
+ifneq ($(OPT),TRUE)
+   FFLAGS  += -qmaxmem=-1 -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C
+else
+   FFLAGS  += -qmaxmem=5000
+endif
 LDFLAGS = -L$(LIB_NETCDF) -lnetcdf -lSystemStubs -lSystemStubs_profile
-FFLAGS += $(cpp_path)
-CFLAGS += $(cpp_path)
-endif
-
-#------------------------------------------------------------------------
-# OSF1
-#------------------------------------------------------------------------
-
-ifeq ($(UNAMES),OSF1)
-CPPDEF += -DOSF1
-FC      = f90
-FFLAGS  = -c -I$(INC_NETCDF) $(CPPDEF)
-LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
-CFLAGS := $(CPPDEF)
-FFLAGS += $(cpp_path)
-CFLAGS += $(cpp_path)
-endif
-
-#-----------------------------------------------------------------------
-# SUN
-#-----------------------------------------------------------------------
-
-ifeq ($(UNAMES),SunOS)
-CPPDEF += -DSUNOS
-FC      = f90
-FFLAGS  = -c -I$(INC_NETCDF) $(CPPDEF) -stackvar
-LDFLAGS = -L$(LIB_NETCDF) -L$(HOME)/lib -lnetcdf
-CFLAGS := $(CPPDEF)
 FFLAGS += $(cpp_path)
 CFLAGS += $(cpp_path)
 endif
@@ -199,7 +181,7 @@ ifeq ($(UNAMES),Linux)
   ifeq ($(FC),pgf90)
     FFLAGS := -c -I$(INC_NETCDF) $(CPPDEF)
     CC     := pgcc
-    ifeq ($(DEBUG),TRUE)
+    ifneq ($(OPT),TRUE)
       FFLAGS += -g -Ktrap=fp -Mbounds
     else
       FFLAGS += -fast
@@ -216,7 +198,7 @@ ifeq ($(UNAMES),Linux)
 
   ifeq ($(FC),lf95)
     FFLAGS =  -c -I$(INC_NETCDF) $(CPPDEF)
-    ifeq ($(DEBUG),TRUE)
+    ifneq ($(OPT),TRUE)
       FFLAGS += -g --chk a,e,s,u
     else
       FFLAGS += -O
@@ -234,7 +216,7 @@ ifeq ($(UNAMES),Linux)
   endif
   ifeq ($(FC),pathf90)
     FFLAGS =  -c -I$(INC_NETCDF) $(CPPDEF) -extend_source -ftpp -fno-second-underscore
-    ifeq ($(DEBUG),TRUE)
+    ifneq ($(OPT),TRUE)
       FFLAGS += -g
     else
       FFLAGS += -O

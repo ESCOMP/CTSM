@@ -98,6 +98,60 @@ EOF
 
 #-----------------------------------------------------------------------------------------------
 
+sub GetListofNeededFiles {
+#
+# Get list of files that are needed to be copied to disk from the XML file.
+#
+  my $inputopts_ref = shift;
+  my $settings_ref  = shift;
+  my $files_ref     = shift;
+  
+  my %inputopts = %$inputopts_ref;
+  my %settings  = %$settings_ref;
+
+  my $defaults_ref = &queryDefaultXML::ReadDefaultXMLFile( $inputopts_ref, $settings_ref );
+  my %defaults = %$defaults_ref;
+  my @keys     = keys(%defaults);
+  my $csmdata  = $defaults{'csmdata'}{'value'};
+  $$inputopts_ref{'csmdata'} = $csmdata;
+  my $printing = $inputopts{'printing'};
+  foreach my $var ( @keys ) {
+     my $value   = $defaults{$var}{'value'};
+     my $isafile = $defaults{$var}{'isfile'};
+     # If is a file
+     if ( $isafile ) {
+        # Test that this file exists
+        if ( -f "$value" ) {
+           print "File $value exists\n" if $printing;
+        } else {
+        # If doesn't exist add it to the list of files to copy
+           $value    =~ m#$csmdata/(.+?)/([^/]+)$#;
+           my $dir   = $1;
+           my $file  = $2;
+           my $cfile = $inputopts{'scpfrom'} . "$dir/$file";
+           my @dfiles;
+           if ( defined($$files_ref{$dir}) ) {
+              my $dir_ref = $$files_ref{$dir};
+              @dfiles     = @$dir_ref;
+              my $match = 0;
+              foreach my $i ( @dfiles ) {
+                if ( $i eq $cfile ) { $match = 1; }
+              }
+              if ( $match == 0 ) { push( @dfiles, $cfile ); }
+           } else {
+              @dfiles = ( "$cfile" );
+           }
+           if ( ! defined($$files_ref{$dir}) ) {
+              print "           ADD $cfile to list to copy\n";
+           }
+           $$files_ref{$dir} = \@dfiles;
+        }
+     }
+  }
+}
+
+#-----------------------------------------------------------------------------------------------
+
   my %opts = ( file       => $file,
                namelist   => $namelist,
                res        => undef,
@@ -145,13 +199,13 @@ EOF
          usage();
      }
   }
-  my $csmdata = "";
   my %inputopts;
   $inputopts{'file'}     = $opts{'file'};
   $inputopts{'namelist'} = $opts{'namelist'};
   $inputopts{'printing'} = $printing;
   $inputopts{'ProgName'} = $ProgName;
   $inputopts{'cmdline'}  = $cmdline;
+  $inputopts{'scpfrom'}  = $opts{'scpfrom'};
   if ( ! defined($opts{'csmdata'}) ) {
      $inputopts{'csmdata'} = "default";
   } else {
@@ -179,41 +233,15 @@ EOF
         #
         foreach my $sim_year ( "1890", "2000", "2100" ) {
            print "Mask = $mask \n" if $printing;
-           $settings{'sim_year'} = "1890";   # 1890, 2000, 2100
-           my $defaults_ref = &queryDefaultXML::ReadDefaultXMLFile( \%inputopts, \%settings );
-           my %defaults = %$defaults_ref;
-           my @keys = keys(%defaults);
-           $csmdata = $inputopts{'csmdata'};
-           foreach my $var ( @keys ) {
-              my $value   = $defaults{$var}{'value'};
-              my $isafile = $defaults{$var}{'isfile'};
-              # If is a file
-              if ( $isafile ) {
-                 # Test that this file exists
-                 if ( -f "$value" ) {
-                    print "File $value exists\n" if $printing;
-                 } else {
-                 # If doesn't exist add it to the list of files to copy
-                    $value    =~ m#$csmdata/(.+?)/([^/]+)$#;
-                    my $dir   = $1;
-                    my $file  = $2;
-                    my $cfile = $opts{'scpfrom'} . "$dir/$file";
-                    my @dfiles;
-                    print "           ADD $cfile to list to copy\n";
-                    if ( defined($files{$dir}) ) {
-                       my $dir_ref = $files{$dir};
-                       @dfiles     = @$dir_ref;
-                       my $match = 0;
-                       foreach my $i ( @dfiles ) {
-                         if ( $i eq $cfile ) { $match = 1; }
-                       }
-                       if ( $match == 0 ) { push( @dfiles, $cfile ); }
-                    } else {
-                       @dfiles = ( "$cfile" );
-                    }
-                    $files{$dir} = \@dfiles;
-                 }
-              }
+           $settings{'sim_year'} = $sim_year;   # 1890, 2000, 2100
+
+           #
+           # Loop over all possible BGC seetings
+           #
+           foreach my $bgc ( "none", "cn", "casa", "dgvm" ) {
+              print "BGC = $bgc\n" if $printing;
+              $settings{'BGC'} = $bgc;
+              &GetListofNeededFiles( \%inputopts, \%settings, \%files );
            }
         }
      }
@@ -222,6 +250,7 @@ EOF
   # Loop over directories that need to have files copied into
   #
   my $hostname;
+  my $csmdata = $inputopts{'csmdata'};
   if ( defined($opts{'scpscript'}) ) { 
      open( OUT, ">".$opts{'scpscript'} ) || die "ERROR: trouble opening output file:" .
                                                  $opts{'scpscript'};

@@ -341,6 +341,8 @@ contains
 ! !DESCRIPTION:
 ! create netcdf file
 !
+! !USES:
+  use clm_varctl     , only : outnc_large_files
 ! !ARGUMENTS:
     implicit none
     character(len=*),intent(in) :: filename  ! file to open
@@ -354,8 +356,9 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    logical :: lusepio           ! local usepio variable
+    logical :: lusepio       ! local usepio variable
     integer :: stride        ! pe stride for num_iotasks
+    integer :: filemode      ! filemode
     integer :: iotype        ! type of output file
     character(len=*),parameter :: subname='ncd_create' ! subroutine name
 
@@ -401,7 +404,12 @@ contains
 
     if (.not. masterproc) return
 
-    call check_ret(nf_create(trim(filename),mode,ncid), &
+    if ( outnc_large_files )then
+      filemode = ior(mode,nf_64bit_offset)
+    else
+      filemode = mode
+    end if
+    call check_ret(nf_create(trim(filename),filemode,ncid), &
        trim(subname)//':'//trim(cstring))
 
  endif

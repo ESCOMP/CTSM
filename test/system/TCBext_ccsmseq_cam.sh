@@ -56,6 +56,8 @@ done < ${CLM_SCRIPTDIR}/config_files/$1
 # Add user-source to CLM directories
 config_string="${config_string} -usr_src ${CLM_ROOT}/src/main,"
 config_string="${config_string}${CLM_ROOT}/src/csm_share/shr,"
+config_string="${config_string}${CLM_ROOT}/src/csm_share/eshr,"
+config_string="${config_string}${CLM_ROOT}/src/csm_share/dshr,"
 config_string="${config_string}${CLM_ROOT}/src/biogeochem,"
 config_string="${config_string}${CLM_ROOT}/src/biogeophys,"
 config_string="${config_string}${CLM_ROOT}/src/riverroute"

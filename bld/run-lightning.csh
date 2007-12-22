@@ -24,30 +24,11 @@
 #
 #=======================================================================
 
-setenv INC_NETCDF /contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/include
-setenv LIB_NETCDF /contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/lib
-set mpich=/contrib/2.6/mpich-gm/1.2.6..14a-pathscale-2.4-64
-setenv INC_MPI ${mpich}/include
-setenv LIB_MPI ${mpich}/lib
-set ps=/contrib/2.6/pathscale/2.4
-setenv PATH ${mpich}/bin:${ps}/bin:/usr/bin:/bin:${PATH}
-setenv LD_LIBRARY_PATH ${ps}/lib/2.4:${LD_LIBRARY_PATH}
-
-## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
-## Contains the source code for the CLM distribution.
-## (the root directory contains the subdirectory "src")
-set clmroot   = /fis/cgd/...
-
-## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
-## Contains the initial and boundary data for the CLM distribution.
-setenv CSMDATA /fs/cgd/csm/inputdata
-
-## Location of datm data (when running in ccsm_seq mode) - needs to be customized unless running at NCAR.
-## Contains the location for the datm7 input data
-setenv datm_data_dir /cgd/tss/NCEPDATA.datm7.Qian.T62.c060410   # (MAKE SURE YOU CHANGE THIS!!!)
+#===========================================================================
+#=================== THINGS MOST COMONLY CHANGED ===========================
 
 ## Default configuration settings:
-set mode     = ccsm_seq # settings are [offline | ccsm_seq ] (default is offline)
+set mode     = ccsm_seq # settings are [offline | ccsm_seq ] (default is ccsm_seq)
 set spmd     = on       # settings are [on   | off         ] (default is off)
 set maxpft   = 4        # settings are 4->17                 (default is 4)
 set bgc      = none     # settings are [none | cn | casa   ] (default is none)
@@ -66,18 +47,51 @@ set ret_pd     = 0        # settings are [0 (no archiving), >0 (days to save to 
 set resub_date = 0        # settings are [0 (no resubmission), > 0 (date {YYYYMMDD} to run to) ]
 #--------------------------------------------------------------------------------------------
 
+## Locations of important directories:
+##
+
+## netCDF stuff (MAKE SURE YOU CHANGE THIS -- IF NOT RUNNING AT NCAR)
+setenv INC_NETCDF /contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/include
+setenv LIB_NETCDF /contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/lib
+## MPI stuff (MAKE SURE YOU CHANGE THIS -- IF NOT RUNNING AT NCAR)
+set mpich=/contrib/2.6/mpich-gm/1.2.6..14a-pathscale-2.4-64
+setenv INC_MPI ${mpich}/include
+setenv LIB_MPI ${mpich}/lib
+## Location of Pathscale compiler (MAKE SURE YOU CHANGE THIS -- IF NOT RUNNING AT NCAR)
+set ps=/contrib/2.6/pathscale/2.4
+## Path to binaries needed in script and dynamic libraries needed
+setenv PATH ${mpich}/bin:${ps}/bin:/usr/bin:/bin:${PATH}
+setenv LD_LIBRARY_PATH ${ps}/lib/2.4:${LD_LIBRARY_PATH}
+
+## ROOT OF CLM DISTRIBUTION - probably needs to be customized.
+## Contains the source code for the CLM distribution.
+## (the root directory contains the subdirectory "src")
+set clmroot   = /fis/cgd/...
+
+## ROOT OF CLM DATA DISTRIBUTION - needs to be customized unless running at NCAR.
+## Contains the initial and boundary data for the CLM distribution.
+setenv CSMDATA /fs/cgd/csm/inputdata
+
+## Location of datm data (when running in ccsm_seq mode) - needs to be customized unless running at NCAR.
+## Contains the location for the datm7 input data
+setenv datm_data_dir /cgd/tss/NCEPDATA.datm7.Qian.T62.c060410   # (MAKE SURE YOU CHANGE THIS!!!)
+
 ## $wrkdir is a working directory where the model will be built and run.
 ## $blddir is the directory where model will be compiled.
 ## $rundir is the directory where the model will be run.
 ## $cfgdir is the directory containing the CLM configuration scripts.
-set case     = clmrun
-set wrkdir   = /ptmp/$LOGNAME
+## $casdir  is the directoyr this script is found in.
+## $usr_src is the directory where any modified source code is put.
+set case     = clmrun                 # changed by create_newcase
+set wrkdir   = /ptmp/$LOGNAME         # changed by create_newcase
 set blddir   = $wrkdir/$case/bld
 set rundir   = $wrkdir/$case
 set cfgdir   = $clmroot/bld
-set casdir   = $clmroot/bld/$case
+set casdir   = $clmroot/bld           # changed by create_newcase
 set usr_src  = $clmroot/bld/usr.src
 
+#=================== END OF THINGS MOST COMONLY CHANGED ====================
+#===========================================================================
 
 ## Ensure that run and build directories exist
 mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
@@ -149,6 +163,14 @@ if ($spmd == on) then
 else
   $blddir/clm                  >&! clm.log.$LID || echo "CLM run failed" && exit 1
   set runstatus = $status
+endif
+
+# Confirm run-status by making sure clm is advancing
+# by checking that rpointer.lnd files are changing
+if ( ! -f rpointer.lnd      && $runstatus == 0 ) set runstatus = 1
+if (   -f rpointer.lnd.orig && $runstatus == 0 )then
+   diff rpointer.lnd rpointer.lnd.orig > /dev/null
+   if ( $status == 0 ) set runstatus = 1
 endif
 
 ## POST-PROCESSING vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv

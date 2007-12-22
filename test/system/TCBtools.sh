@@ -1,12 +1,12 @@
 #!/bin/sh 
 #
 
-if [ $# -ne 1 ]; then
+if [ $# -ne 2 ]; then
     echo "TCBtools.sh: incorrect number of input arguments" 
     exit 1
 fi
 
-test_name=TCBtools.$1
+test_name=TCBtools.$1.$2
 
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
@@ -56,15 +56,29 @@ while read filepath_arg; do
     echo "${cfgdir}/${filepath_arg}" >> Filepath
 done < ${cfgdir}/Filepath
 
+#
+# Figure out configuration
+#
+if [ ! -f ${CLM_SCRIPTDIR}/config_files/$2 ]; then
+    echo "TCB.sh: configure options file ${CLM_SCRIPTDIR}/config_files/$2 not found"
+    echo "FAIL.job${JOBID}" > TestStatus
+    exit 4
+fi
+
+##construct string of args to configure
+config_string=$TOOLS_MAKE_STRING
+while read config_arg; do
+    config_string="${config_string}${config_arg} "
+done < ${CLM_SCRIPTDIR}/config_files/$2
 
 attempt=1
 still_compiling="TRUE"
 while [ $still_compiling = "TRUE" ]; do
 
     echo "TCBtools.sh: call to make:" 
-    echo "        ${MAKE_CMD} ${TOOLS_MAKE_STRING}" 
+    echo "        ${MAKE_CMD} ${config_string}" 
     if [ "$debug" != "YES" ]; then
-       ${MAKE_CMD} ${TOOLS_MAKE_STRING} >> test.log 2>&1
+       ${MAKE_CMD} ${config_string} >> test.log 2>&1
        rc=$?
     else
        rc=0

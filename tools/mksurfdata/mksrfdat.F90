@@ -120,6 +120,7 @@ program mksrfdat
          mksrf_furban,             &
          mksrf_flai,               &
          mksrf_fdynuse,            &
+         outnc_large_files,        &
          do_double_res_too      
 !-----------------------------------------------------------------------
 
@@ -155,7 +156,8 @@ program mksrfdat
     write(6,*) 'Attempting to initialize control settings .....'
 
     do_double_res_too = .false.
-    mksrf_gridtype = 'global'
+    mksrf_gridtype    = 'global'
+    outnc_large_files = .false.
     read(5, clmexp, iostat=ier)
     if (ier /= 0) then
        write(6,*)'error: namelist input resulted in error code ',ier
@@ -185,6 +187,9 @@ program mksrfdat
        write (6,*)'illegal mksrf_gridtype, must be global or regional '
        stop
     endif
+    if ( outnc_large_files )then
+       write(6,*)'Output files in NetCDF 64-bit large_files format'
+    end if
 
     ! ----------------------------------------------------------------------
     ! Interpolate input dataset to model resolution
