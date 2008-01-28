@@ -31,7 +31,6 @@ module initSurfalbMod
 !EOP
 !-----------------------------------------------------------------------
 
-
 contains
 
 !-----------------------------------------------------------------------
@@ -57,6 +56,8 @@ contains
     use decompMod           , only : get_proc_clumps, get_clump_bounds
     use filterMod           , only : filter
     use clm_varpar          , only : nlevsoi, nlevsno, nlevlak
+    use clm_varcon          , only : zlnd, istsoil, isturb, denice, denh2o, &
+                                     icol_roof, icol_road_imperv, icol_road_perv
     use clm_varcon          , only : zlnd, istsoil 
     use clm_time_manager        , only : get_step_size
     use FracWetMod          , only : FracWet
@@ -70,7 +71,8 @@ contains
 #else
     use STATICEcosysDynMod  , only : EcosystemDyn, interpMonthlyVeg
 #endif
-  use abortutils            , only : endrun
+    use UrbanMod            , only : UrbanAlbedo
+    use abortutils          , only : endrun
 !
 ! !ARGUMENTS:
     implicit none
@@ -89,6 +91,7 @@ contains
 ! local pointers to implicit in arguments
 !
     integer , pointer :: plandunit(:)      ! landunit index associated with each pft
+    integer , pointer :: ctype(:)          ! column type
     integer , pointer :: clandunit(:)      ! landunit index associated with each column
     integer,  pointer :: pgridcell(:)      ! gridcell associated with each pft
     integer , pointer :: itypelun(:) 	   ! landunit type
@@ -147,6 +150,7 @@ contains
     h2osoi_vol          => clm3%g%l%c%cws%h2osoi_vol
     snowdp              => clm3%g%l%c%cps%snowdp
     frac_sno            => clm3%g%l%c%cps%frac_sno 
+    ctype               => clm3%g%l%c%itype
     clandunit           => clm3%g%l%c%landunit
 
     ! Assign local pointers to derived subtypes components (pft-level)
@@ -291,18 +295,36 @@ contains
        
        call FracWet(filter(nc)%num_nolakep, filter(nc)%nolakep)
        
-       ! Compute Surface Albedo - all land points (including lake)
+       ! Compute Surface Albedo - all land points (including lake) other than urban
        ! Needs as input fracion of soil covered by snow (Z.-L. Yang U. Texas)
 
 !dir$ concurrent
 !cdir nodep
        do c = begc, endc
-          frac_sno(c) = snowdp(c)/(10._r8*zlnd + snowdp(c))
+          l = clandunit(c)
+          if (itypelun(l) == isturb) then
+             ! From Bonan 1996 (LSM technical note)
+             frac_sno(c) = min( snowdp(c)/0.05_r8, 1._r8)
+          else
+             frac_sno(c) = snowdp(c)/(10._r8*zlnd + snowdp(c))
+          end if
        end do
-       
        call SurfaceAlbedo(begg, endg, begc, endc, begp, endp, &
+                          filter(nc)%num_nourbanc, filter(nc)%nourbanc, &
+                          filter(nc)%num_nourbanp, filter(nc)%nourbanp, &
                           calday, declin)
        
+
+       ! Determine albedos for urban landunits
+
+       if (filter(nc)%num_urbanl > 0) then
+          call UrbanAlbedo(nc, filter(nc)%num_urbanl, filter(nc)%urbanl, &
+                           filter(nc)%num_urbanc, filter(nc)%urbanc, &
+                           filter(nc)%num_urbanp, filter(nc)%urbanp, &
+                           calday, declin)
+
+       end if
+
     end do   ! end of loop over clumps
 
   end subroutine initSurfalb

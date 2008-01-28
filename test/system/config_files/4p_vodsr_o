@@ -1,3 +1,4 @@
+-nospmd
 -smp
 -maxpft 4
 -rtm on

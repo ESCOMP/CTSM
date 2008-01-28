@@ -353,12 +353,11 @@ if [ -n "\$PBS_JOBID" ]; then    #batch job
     initdir=\${PBS_O_WORKDIR}
 fi
 
+echo_arg="-e"
 if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
     interactive="NO"
-    echo_arg=""
 else
     interactive="YES"
-    echo_arg="-e"
 fi
 
 input_file="tests_pretag_jaguar"

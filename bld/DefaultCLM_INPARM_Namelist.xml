@@ -77,10 +77,13 @@ ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01-00000.071207.nc
 <fsurdat RESOLUTION="4x5"       >lnd/clm2/surfdata/surfdata_4x5_c070501.nc</fsurdat>
 <fsurdat RESOLUTION="10x15"     >lnd/clm2/surfdata/surfdata_10x15_c070501.nc</fsurdat>
  
-<fsurdat RESOLUTION="5x5_amazon"    >lnd/clm2/surfdata/surfdata_5x5pt_amazon_navy_070404.nc</fsurdat>
-<fsurdat RESOLUTION="1x1_brazil"    >lnd/clm2/surfdata/surfdata_1x1pt_brazil_navy_070404.nc</fsurdat>
-<fsurdat RESOLUTION="1x1_tropicAtl" >lnd/clm2/surfdata/surfdata_1x1pt_tropicAtl_test_070216.nc</fsurdat>
-<fsurdat RESOLUTION="1x1_camdenNJ"  >lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
+<fsurdat RESOLUTION="5x5_amazon"         >lnd/clm2/surfdata/surfdata_5x5pt_amazon_navy_070404.nc</fsurdat>
+<fsurdat RESOLUTION="1x1_brazil"         >lnd/clm2/surfdata/surfdata_1x1pt_brazil_navy_070404.nc</fsurdat>
+<fsurdat RESOLUTION="1x1_tropicAtl"      >lnd/clm2/surfdata/surfdata_1x1pt_tropicAtl_test_070216.nc</fsurdat>
+<fsurdat RESOLUTION="1x1_camdenNJ"       >lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
+<fsurdat RESOLUTION="1x1_vancouverCAN"   >lnd/clm2/surfdata/surfdata_1x1pt_vancouver_c070831.nc</fsurdat>
+<fsurdat RESOLUTION="1x1_mexicocityMEX"  >lnd/clm2/surfdata/surfdata_1x1pt_mexicocity_c070831.nc</fsurdat>
+<fsurdat RESOLUTION="1x1_asphaltjungleNJ">lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 <fpftdyn RESOLUTION="10x15"         >lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc</fpftdyn>
@@ -103,10 +106,13 @@ ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01-00000.071207.nc
 <fatmgrid RESOLUTION="4x5"       >lnd/clm2/griddata/griddata_4x5_060404.nc</fatmgrid>
 <fatmgrid RESOLUTION="10x15"     >lnd/clm2/griddata/griddata_10x15_070212.nc</fatmgrid>
 
-<fatmgrid RESOLUTION="5x5_amazon"    >lnd/clm2/griddata/griddata_5x5pt_amazon_navy_070404.nc</fatmgrid>
-<fatmgrid RESOLUTION="1x1_brazil"    >lnd/clm2/griddata/griddata_1x1pt_brazil_navy_070404.nc</fatmgrid>
-<fatmgrid RESOLUTION="1x1_tropicAtl" >lnd/clm2/griddata/griddata_1x1pt_tropicAtl_test_070218.nc</fatmgrid>
-<fatmgrid RESOLUTION="1x1_camdenNJ"  >lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
+<fatmgrid RESOLUTION="5x5_amazon"         >lnd/clm2/griddata/griddata_5x5pt_amazon_navy_070404.nc</fatmgrid>
+<fatmgrid RESOLUTION="1x1_brazil"         >lnd/clm2/griddata/griddata_1x1pt_brazil_navy_070404.nc</fatmgrid>
+<fatmgrid RESOLUTION="1x1_tropicAtl"      >lnd/clm2/griddata/griddata_1x1pt_tropicAtl_test_070218.nc</fatmgrid>
+<fatmgrid RESOLUTION="1x1_camdenNJ"       >lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
+<fatmgrid RESOLUTION="1x1_vancouverCAN"   >lnd/clm2/griddata/griddata_1x1pt_vancouverCAN_c071221.nc</fatmgrid>
+<fatmgrid RESOLUTION="1x1_mexicocityMEX"  >lnd/clm2/griddata/griddata_1x1pt_mexicocityMEX_c071221.nc</fatmgrid>
+<fatmgrid RESOLUTION="1x1_asphaltjungleNJ">lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
 
 <!-- Land topo datasets (when running land at different resolution than atm coupling) (relative to {csmdata}) -->
 <flndtopo RESOLUTION="360x720"   mask="USGS"  >lnd/clm2/griddata/topodata_360x720_c060528.nc</flndtopo>
@@ -119,6 +125,7 @@ ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01-00000.071207.nc
 
 <flndtopo RESOLUTION="0.23x0.31" mask="USGS"   >lnd/clm2/griddata/topodata_0.23x0.31_USGS_c070927.nc</flndtopo>
 <flndtopo RESOLUTION="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.23x0.31_tx0.1v2_c070928.nc</flndtopo>
+<flndtopo RESOLUTION="0.23x0.31" mask="gx1v5"  >lnd/clm2/griddata/topodata_0.23x0.31_gx1v5_c071227.nc</flndtopo>
 <flndtopo RESOLUTION="0.47x0.63" mask="USGS"   >lnd/clm2/griddata/topodata_0.47x0.63_USGS_c070918.nc</flndtopo>
 <flndtopo RESOLUTION="0.47x0.63" mask="gx1v5"  >lnd/clm2/griddata/topodata_0.47x0.63_gx1v5_c071004.nc</flndtopo>
 <flndtopo RESOLUTION="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.47x0.63_tx0.1v2_c070928.nc</flndtopo>
@@ -141,6 +148,7 @@ ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01-00000.071207.nc
 
 <fatmtopo RESOLUTION="0.23x0.31" mask="USGS"   >lnd/clm2/griddata/topodata_0.23x0.31_USGS_c070927.nc</fatmtopo>
 <fatmtopo RESOLUTION="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.23x0.31_tx0.1v2_c070928.nc</fatmtopo>
+<fatmtopo RESOLUTION="0.23x0.31" mask="gx1v5"  >lnd/clm2/griddata/topodata_0.23x0.31_gx1v5_c071227.nc</fatmtopo>
 <fatmtopo RESOLUTION="0.47x0.63" mask="USGS"   >lnd/clm2/griddata/topodata_0.47x0.63_USGS_c070918.nc</fatmtopo>
 <fatmtopo RESOLUTION="0.47x0.63" mask="gx1v5"  >lnd/clm2/griddata/topodata_0.47x0.63_gx1v5_c071004.nc</fatmtopo>
 <fatmtopo RESOLUTION="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.47x0.63_tx0.1v2_c070928.nc</fatmtopo>
@@ -185,6 +193,8 @@ ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01-00000.071207.nc
 </fatmlndfrc>
 <fatmlndfrc RESOLUTION="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.23x0.31_tx0.1v2_c070928.nc
 </fatmlndfrc>
+<fatmlndfrc RESOLUTION="0.23x0.31" mask="gx1v5"  >lnd/clm2/griddata/fracdata_0.23x0.31_gx1v5_c071227.nc
+</fatmlndfrc>
 <fatmlndfrc RESOLUTION="0.47x0.63" mask="USGS"   >lnd/clm2/griddata/fracdata_0.47x0.63_USGS_c070918.nc
 </fatmlndfrc>
 <fatmlndfrc RESOLUTION="0.47x0.63" mask="gx1v5"  >lnd/clm2/griddata/fracdata_0.47x0.63_gx1v5_c071113.nc
@@ -223,17 +233,31 @@ ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01-00000.071207.nc
 <fatmlndfrc RESOLUTION="10x15"    mask="USGS"   >lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc
 </fatmlndfrc>
 
-<fatmlndfrc RESOLUTION="5x5_amazon"    mask="navy">lnd/clm2/griddata/fracdata_5x5pt_amazon_navy_070404.nc
+<fatmlndfrc RESOLUTION="5x5_amazon"          mask="navy">lnd/clm2/griddata/fracdata_5x5pt_amazon_navy_070404.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="1x1_brazil"    mask="navy">lnd/clm2/griddata/fracdata_1x1pt_brazil_navy_070404.nc
+<fatmlndfrc RESOLUTION="1x1_brazil"          mask="navy">lnd/clm2/griddata/fracdata_1x1pt_brazil_navy_070404.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="1x1_tropicAtl" mask="test">lnd/clm2/griddata/fracdata_1x1pt_tropicAtl_test_070218.nc
+<fatmlndfrc RESOLUTION="1x1_tropicAtl"       mask="test">lnd/clm2/griddata/fracdata_1x1pt_tropicAtl_test_070218.nc
 </fatmlndfrc>
-<fatmlndfrc RESOLUTION="1x1_camdenNJ"  mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc
+<fatmlndfrc RESOLUTION="1x1_camdenNJ"        mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="1x1_mexicocityMEX"   mask="navy">lnd/clm2/griddata/fracdata_1x1pt_mexicocityMEX_navy_c071221.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="1x1_vancouverCAN"    mask="navy">lnd/clm2/griddata/fracdata_1x1pt_vancouverCAN_navy_c071221.nc
+</fatmlndfrc>
+<fatmlndfrc RESOLUTION="1x1_asphaltjungleNJ" mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc
 </fatmlndfrc>
 
 <!--NCEP atmosphere forcing dataset directory (relative to {csmdata}) -->
-<offline_atmdir MODE="offline">lnd/clm2/NCEPDATA.Qian.T62.c051024</offline_atmdir>
+<offline_atmdir MODE="offline" RESOLUTION="1x1_mexicocityMEX">lnd/clm2/1pt_atmdata/mexicocityMEX.c051206</offline_atmdir>
+<offline_atmdir MODE="offline" RESOLUTION="1x1_vancouverCAN" >lnd/clm2/1pt_atmdata/vancouverCAN.c060920</offline_atmdir>
+<offline_atmdir MODE="offline"                               >lnd/clm2/NCEPDATA.Qian.T62.c051024</offline_atmdir>
+
+<!-- Urban input datasets (relative to {rootdir/bld/urban_input/}) -->
+<furbinp  RESOLUTION="1x1_mexicocityMEX"  >mexicocityMEX_fluxes.txt</furbinp>
+<furbinp  RESOLUTION="1x1_vancouverCAN"   >vancouverCAN_fluxes.txt</furbinp>
+<furbinp  RESOLUTION="1x1_camdenNJ"       >metropolis_fluxes.txt</furbinp>
+<furbinp  RESOLUTION="1x1_asphaltjungleNJ">asphaltjungle_fluxes.txt</furbinp>
 
 <!--CN Nitrogen deposition dataset for a fixed year (relative to {csmdata}) -->
 

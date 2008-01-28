@@ -35,6 +35,7 @@ module clm_varpar
 
 ! Define miscellaneous parameters
 
+  integer, parameter :: numpft      =  16   ! number of plant types
   integer, parameter :: numwat      =   5   ! number of water types (soil, ice, 2 lakes, wetland)
   integer, parameter :: npftpar     =  32   ! number of pft parameters (in LPJ - DGVM only)
   integer, parameter :: numrad      =   2   ! number of solar radiation bands: vis, nir
@@ -49,10 +50,14 @@ module clm_varpar
   integer, parameter :: rtmlat = 360  !number of rtm latitudes
 
 ! Define indices used in surface file read
-! maxpatch_pft  = max number of vegetated pfts in naturally vegetated landunit
-! maxpatch_crop = max number of crop pfts in crop landunit
+! maxpatch_pft     = max number of vegetated pfts in naturally vegetated landunit
+! maxpatch_crop    = max number of crop pfts (columns) in crop landunit
+! maxpatch_urb     = max number of urban pfts (columns) in urban landunit
+! maxpatch_wet     = max number of wetland pfts (columns) in urban landunit
+! maxpathch_lake   = max number of wetland pfts (columns) in lake landunit
+! maxpathch_glacier= max number of wetland pfts (columns) in glacier landunit
 
-  integer, parameter :: numpft         = 16  ! number of plant types
+  integer, parameter :: maxpatch_urb   = 5
   integer, parameter :: maxpatch_cft   = 2
   integer            :: maxpatch_pft
   integer            :: npatch_urban
@@ -62,9 +67,9 @@ module clm_varpar
   integer            :: npatch_crop 
   integer            :: maxpatch    
 
-  integer, parameter :: max_pft_per_gcell = numpft+1 + 4 + maxpatch_cft
-  integer, parameter :: max_pft_per_lu    = max(numpft+1, maxpatch_cft)
-  integer, parameter :: max_pft_per_col   = numpft+1
+  integer, parameter :: max_pft_per_gcell = numpft+1 + 3 + maxpatch_urb + maxpatch_cft
+  integer, parameter :: max_pft_per_lu    = max(numpft+1, maxpatch_cft, maxpatch_urb)
+  integer, parameter :: max_pft_per_col   = max(numpft+1, maxpatch_cft, maxpatch_urb)
 
 
 ! !PUBLIC MEMBER FUNCTIONS:
@@ -106,7 +111,7 @@ contains
   lsmlat         = LSMLAT
   maxpatch_pft   = MAXPATCH_PFT
   npatch_urban   = maxpatch_pft + 1
-  npatch_lake    = npatch_urban + 1
+  npatch_lake    = npatch_urban + maxpatch_urb
   npatch_wet     = npatch_lake  + 1
   npatch_glacier = npatch_wet   + 1
   npatch_crop    = npatch_glacier + maxpatch_cft

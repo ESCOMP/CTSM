@@ -66,8 +66,10 @@ contains
 ! !USES:
     use clmtype
     use clm_atmlnd         , only : clm_a2l
-    use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, &
-                                    istice, istwet, zlnd, zsno, spval
+    use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub,          &
+                                    istice, istwet, istsoil, isturb, zlnd, zsno, &
+                                    icol_roof, icol_sunwall, icol_shadewall,     &
+                                    icol_road_imperv, icol_road_perv, tfrz, spval
     use clm_varpar         , only : nlevsoi, nlevsno
     use QSatMod            , only : QSat
 !
@@ -98,6 +100,7 @@ contains
     integer , pointer :: ityplun(:)       !landunit type
     integer , pointer :: clandunit(:)     !column's landunit index
     integer , pointer :: cgridcell(:)     !column's gridcell index
+    integer , pointer :: ctype(:)         !column type
     real(r8), pointer :: forc_pbot(:)     !atmospheric pressure (Pa)
     real(r8), pointer :: forc_q(:)        !atmospheric specific humidity (kg/kg)
     real(r8), pointer :: forc_t(:)        !atmospheric temperature (Kelvin)
@@ -121,6 +124,10 @@ contains
     real(r8), pointer :: watsat(:,:)      !volumetric soil water at saturation (porosity)
     real(r8), pointer :: sucsat(:,:)      !minimum soil suction (mm)
     real(r8), pointer :: bsw(:,:)         !Clapp and Hornberger "b"
+    real(r8), pointer :: watopt(:,:)      !volumetric soil moisture corresponding to no restriction on ET from urban pervious surface
+    real(r8), pointer :: watdry(:,:)      !volumetric soil moisture corresponding to no restriction on ET from urban pervious surface
+    real(r8), pointer :: rootfr_road_perv(:,:) !fraction of roots in each soil layer for urban pervious road
+    real(r8), pointer :: rootr_road_perv(:,:) !effective fraction of roots in each soil layer for urban pervious road
 !
 ! local pointers to implicit out arguments
 !
@@ -171,7 +178,11 @@ contains
     real(r8) :: fac     !soil wetness of surface layer
     real(r8) :: psit    !negative potential of soil
     real(r8) :: hr      !relative humidity
+    real(r8) :: hr_road_perv  !relative humidity for urban pervious road
     real(r8) :: wx      !partial volume of ice and water of surface layer
+    real(r8) :: eff_porosity  ! effective porosity in layer
+    real(r8) :: vol_ice       ! partial volume of ice lens in layer
+    real(r8) :: vol_liq       ! partial volume of liquid water in layer
 !------------------------------------------------------------------------------
 
    ! Assign local pointers to derived type members (gridcell-level)
@@ -192,6 +203,7 @@ contains
 
     cgridcell     => clm3%g%l%c%gridcell
     clandunit     => clm3%g%l%c%landunit
+    ctype         => clm3%g%l%c%itype
     beta          => clm3%g%l%c%cps%beta
     dqgdT         => clm3%g%l%c%cws%dqgdT
     emg           => clm3%g%l%c%cps%emg
@@ -217,6 +229,10 @@ contains
     t_soisno      => clm3%g%l%c%ces%t_soisno
     tssbef        => clm3%g%l%c%ces%tssbef
     watsat        => clm3%g%l%c%cps%watsat
+    watdry        => clm3%g%l%c%cps%watdry
+    watopt        => clm3%g%l%c%cps%watopt
+    rootfr_road_perv => clm3%g%l%c%cps%rootfr_road_perv
+    rootr_road_perv  => clm3%g%l%c%cps%rootr_road_perv
 
     ! Assign local pointers to derived type members (pft-level)
 
@@ -261,6 +277,10 @@ contains
        l = clandunit(c)
        g = cgridcell(c)
 
+       if (ctype(c) == icol_road_perv) then
+          hr_road_perv = 0._r8
+       end if
+
        ! begin calculations that relate only to the column level
        ! Ground and soil temperatures from previous time step
 
@@ -271,13 +291,37 @@ contains
 
        qred = 1._r8
        if (ityplun(l)/=istwet .AND. ityplun(l)/=istice) then
-          wx   = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)
-          fac  = min(1._r8, wx/watsat(c,1))
-          fac  = max( fac, 0.01_r8 )
-          psit = -sucsat(c,1) * fac ** (-bsw(c,1))
-          psit = max(smpmin(c), psit)
-          hr   = exp(psit/roverg/t_grnd(c))
-          qred = (1._r8-frac_sno(c))*hr + frac_sno(c)
+          if (ityplun(l) == istsoil) then
+             wx   = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)
+             fac  = min(1._r8, wx/watsat(c,1))
+             fac  = max( fac, 0.01_r8 )
+             psit = -sucsat(c,1) * fac ** (-bsw(c,1))
+             psit = max(smpmin(c), psit)
+             hr   = exp(psit/roverg/t_grnd(c))
+             qred = (1.-frac_sno(c))*hr + frac_sno(c)
+          ! Pervious road depends on water in total soil column
+          else if (ctype(c) == icol_road_perv) then
+             do j = 1, nlevsoi
+                if (t_soisno(c,j) >= tfrz) then
+                   vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
+                   eff_porosity = watsat(c,j)-vol_ice
+                   vol_liq = min(eff_porosity, h2osoi_liq(c,j)/(dz(c,j)*denh2o))
+                   fac = min( max(vol_liq-watdry(c,j),0._r8) / (watopt(c,j)-watdry(c,j)), 1._r8 )
+                else
+                   fac = 0._r8
+                end if
+                rootr_road_perv(c,j) = rootfr_road_perv(c,j)*fac
+                hr_road_perv = hr_road_perv + rootr_road_perv(c,j)
+             end do
+             ! Allows for sublimation of snow or dew on snow
+             qred = (1.-frac_sno(c))*hr_road_perv + frac_sno(c)
+             ! Normalize root resistances to get layer contribution to total ET
+             do j = 1, nlevsoi
+               rootr_road_perv(c,j) = rootr_road_perv(c,j)/hr_road_perv
+             end do
+          else if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall) then
+             qred = 0._r8
+          end if
           soilalpha(c) = qred
        else
           soilalpha(c) = spval
@@ -288,22 +332,28 @@ contains
        qg(c) = qred*qsatg
        dqgdT(c) = qred*qsatgdT
 
-       if (qsatg > forc_q(g) .and. forc_q(g) > qred*qsatg) then
-          qg(c) = forc_q(g)
-          dqgdT(c) = 0._r8
+       if (ctype(c) /= icol_roof .and. ctype(c) /= icol_road_imperv &
+           .and. ctype(c) /= icol_road_perv) then
+          if (qsatg > forc_q(g) .and. forc_q(g) > qred*qsatg) then
+             qg(c) = forc_q(g)
+             dqgdT(c) = 0._r8
+          end if
        end if
 
-       ! Ground Emissivity
+       ! Ground emissivity - only calculate for non-urban landunits 
+       ! Urban emissivities are currently read in from data file
 
+       if (ityplun(l) /= isturb) then
 #if (defined PERGRO)
-       emg(c) = 0.965_r8
+          emg(c) = 0.965_r8
 #else
-       if (h2osno(c)>0._r8 .or. ityplun(l)==istice) then
-          emg(c) = 0.97_r8
-       else
-          emg(c) = 0.96_r8
-       end if
+          if (h2osno(c)>0._r8 .or. ityplun(l)==istice) then
+             emg(c) = 0.97_r8
+          else
+             emg(c) = 0.96_r8
+          end if
 #endif
+       end if
 
        ! Latent heat. We arbitrarily assume that the sublimation occurs
        ! only as h2osoi_liq = 0
@@ -338,7 +388,7 @@ contains
        thv(c)  = forc_th(g)*(1._r8+0.61_r8*forc_q(g))
 
     end do ! (end of columns loop)
-
+    
     ! Initialization
 
 !dir$ concurrent

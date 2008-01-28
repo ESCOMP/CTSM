@@ -1,4 +1,4 @@
--spmd 
+-spmd -smp
 -maxpft 4
 -bgc casa
 -mode offline

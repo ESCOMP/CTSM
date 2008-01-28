@@ -47,18 +47,19 @@ PROGRAM program_off
 !
 ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8, SHR_KIND_CL
-  use shr_orb_mod          
+  use shr_orb_mod     , only : shr_orb_params, shr_orb_decl, shr_orb_undef_real
   use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr, obliq, &
                                iyear_AD, nmvelp
   use clm_varctl      , only : iulog
   use clm_comp        , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
-  use clm_time_manager, only : is_last_step, advance_timestep, get_nstep
+  use clm_time_manager, only : is_last_step, advance_timestep, get_nstep, get_curr_calday
   use atmdrvMod       , only : atmdrv, atmdrv_init
   use abortutils      , only : endrun
+  use spmdMod         , only : masterproc, iam, spmd_init, comp_id, mpicom
   use controlMod      , only : control_setNL
   use clm_mct_mod
-  use spmdMod  
   use ESMF_Mod
+  use spmdMod         , only : MPI_COMM_WORLD
   use perf_mod
 !
 ! !ARGUMENTS:
@@ -78,6 +79,8 @@ PROGRAM program_off
 
   logical  :: log_print    ! true=> print diagnostics
   real(r8) :: eccf         ! earth orbit eccentricity factor
+  real(r8) :: declin       ! declination angle (radians) for current time step
+  real(r8) :: calday       ! julian calendar day 
   logical  :: mpi_running  ! true => MPI is initialized 
   integer  :: mpicom_glob  ! MPI communicator
 
@@ -162,8 +165,10 @@ PROGRAM program_off
      ! Current atmospheric state and fluxes for all [atmlon] x [atmlat] points.
 
      nstep = get_nstep()
+     calday = get_curr_calday()
+     call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
      call t_startf('atmdrv')
-     call atmdrv(nstep)
+     call atmdrv( nstep, declin )
      call t_stopf('atmdrv')
 
      !  call t_barrierf('barrier1b',mpicom)

@@ -75,7 +75,8 @@ contains
     use clmtype
     use clm_atmlnd        , only : clm_a2l
     use clm_time_manager  , only : get_step_size
-    use clm_varcon        , only : hvap, cpair, grav, vkc, tfrz, sb
+    use clm_varcon        , only : hvap, cpair, grav, vkc, tfrz, sb, &
+                                   isturb, icol_roof, icol_sunwall, icol_shadewall
     use clm_varpar        , only : nlevsno, nlevsoi, max_pft_per_col
     use SoilTemperatureMod, only : SoilTemperature
     use subgridAveMod     , only : p2c
@@ -102,7 +103,10 @@ contains
 !
 ! local pointers to implicit in arguments
 !
+    integer , pointer :: ctype(:)                ! column type
+    integer , pointer :: ltype(:)                ! landunit type
     integer , pointer :: pcolumn(:)         ! pft's column index
+    integer , pointer :: plandunit(:)            ! pft's landunit index
     integer , pointer :: pgridcell(:)       ! pft's gridcell index
     real(r8), pointer :: pwtgcell(:)        ! pft's weight relative to corresponding column
     integer , pointer :: npfts(:)           ! column's number of pfts 
@@ -128,7 +132,8 @@ contains
     real(r8), pointer :: t_soisno(:,:)      ! soil temperature (Kelvin)
     real(r8), pointer :: h2osoi_ice(:,:)    ! ice lens (kg/m2) (new)
     real(r8), pointer :: h2osoi_liq(:,:)    ! liquid water (kg/m2) (new)
-! 
+    real(r8), pointer :: eflx_building_heat(:)   ! heat flux from urban building interior to walls, roof
+ 
 ! local pointers to implicit inout arguments
 !
     real(r8), pointer :: eflx_sh_grnd(:)    ! sensible heat flux from ground (W/m**2) [+ to atm]
@@ -170,14 +175,20 @@ contains
     real(r8) :: save_qflx_evap_soi   ! temporary storage for qflx_evap_soi
     real(r8) :: topsoil_evap_tot(lbc:ubc)          ! column-level total evaporation from top soil layer
     real(r8) :: fact(lbc:ubc, -nlevsno+1:nlevsoi)  ! used in computing tridiagonal matrix
+    real(r8) :: eflx_lwrad_del(lbp:ubp)            ! update due to eflx_lwrad
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
 
     forc_lwrad => clm_a2l%forc_lwrad
 
+    ! Assign local pointers to derived subtypes components (landunit-level)
+
+    ltype      => clm3%g%l%itype
+
     ! Assign local pointers to derived subtypes components (column-level)
 
+    ctype      => clm3%g%l%c%itype
     npfts      => clm3%g%l%c%npfts
     pfti       => clm3%g%l%c%pfti
     snl        => clm3%g%l%c%cps%snl
@@ -191,10 +202,12 @@ contains
     h2osoi_ice => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq => clm3%g%l%c%cws%h2osoi_liq
     errsoi_col => clm3%g%l%c%cebal%errsoi
+    eflx_building_heat => clm3%g%l%c%cef%eflx_building_heat
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
     pcolumn        => clm3%g%l%c%p%column
+    plandunit      => clm3%g%l%c%p%landunit
     pgridcell      => clm3%g%l%c%p%gridcell
     pwtgcell       => clm3%g%l%c%p%wtgcell
     frac_veg_nosno => clm3%g%l%c%p%pps%frac_veg_nosno
@@ -318,6 +331,7 @@ contains
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        c = pcolumn(p)
+       l = plandunit(p)
        g = pgridcell(p)
        j = snl(c)+1
 
@@ -332,9 +346,22 @@ contains
 
        ! Ground heat flux
 
-       eflx_soil_grnd(p) = sabg(p) + dlrad(p) + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) &
-            - emg(c)*sb*tssbef(c,j)**3*(tssbef(c,j) + 4._r8*tinc(c)) &
-            - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
+       if (ltype(l) /= isturb) then
+          eflx_soil_grnd(p) = sabg(p) + dlrad(p) &
+                              + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) &
+                              - emg(c)*sb*tssbef(c,j)**3*(tssbef(c,j) + 4._r8*tinc(c)) &
+                              - (eflx_sh_grnd(p) + qflx_evap_soi(p)*htvp(c))
+       else
+          ! For all urban columns we use the net longwave radiation (eflx_lwrad_net) since
+          ! the term (emg*sb*tssbef(snl+1)**4) is not the upward longwave flux because of 
+          ! interactions between urban columns.
+
+          eflx_lwrad_del(p) = 4._r8*emg(c)*sb*tssbef(c,j)**3*tinc(c)
+          ! Include transpiration term because needed for pervious road
+          eflx_soil_grnd(p) = sabg(p) + dlrad(p) &
+                              - eflx_lwrad_net(p) - eflx_lwrad_del(p) &
+                              - (eflx_sh_grnd(p) + qflx_evap_soi(p)*htvp(c) + qflx_tran_veg(p)*hvap)
+       end if
 
        ! Total fluxes (vegetation + ground)
 
@@ -375,21 +402,12 @@ contains
           qflx_snowcap(p) = qflx_snowcap(p) + qflx_dew_snow(p) + qflx_dew_grnd(p)
        end if
 
-       ! Outgoing long-wave radiation from vegetation + ground
-       ! For conservation we put the increase of ground longwave to outgoing
-
-       eflx_lwrad_out(p) = ulrad(p) &
-            + (1-frac_veg_nosno(p))*(1._r8-emg(c))*forc_lwrad(g) &
-            + (1-frac_veg_nosno(p))*emg(c)*sb * tssbef(c,j)**4 &
-            + 4._r8*emg(c)*sb*tssbef(c,j)**3*tinc(c)
-
        ! Variables needed by history tape
 
        qflx_evap_can(p)  = qflx_evap_veg(p) - qflx_tran_veg(p)
        eflx_lh_vege(p)   = (qflx_evap_veg(p) - qflx_tran_veg(p)) * hvap
        eflx_lh_vegt(p)   = qflx_tran_veg(p) * hvap
        eflx_lh_grnd(p)   = qflx_evap_soi(p) * htvp(c)
-       eflx_lwrad_net(p) = eflx_lwrad_out(p) - forc_lwrad(g)
 
     end do
 
@@ -401,6 +419,12 @@ contains
        p = filter_nolakep(fp)
        c = pcolumn(p)
        errsoi_pft(p) = eflx_soil_grnd(p) - xmf(c)
+
+       ! For urban sunwall, shadewall, and roof columns, the "soil" energy balance check
+       ! must include the heat flux from the interior of the building.
+       if (ctype(c)==icol_sunwall .or. ctype(c)==icol_shadewall .or. ctype(c)==icol_roof) then
+          errsoi_pft(p) = errsoi_pft(p) + eflx_building_heat(c) 
+       end if
     end do
     do j = -nlevsno+1,nlevsoi
 !dir$ concurrent
@@ -412,6 +436,31 @@ contains
              errsoi_pft(p) = errsoi_pft(p) - (t_soisno(c,j)-tssbef(c,j))/fact(c,j)
           end if
        end do
+    end do
+
+    ! Outgoing long-wave radiation from vegetation + ground
+    ! For conservation we put the increase of ground longwave to outgoing
+    ! For urban pfts, ulrad=0 and (1-fracveg_nosno)=1, and eflx_lwrad_out and eflx_lwrad_net 
+    ! are calculated in UrbanRadiation. The increase of ground longwave is added directly 
+    ! to the outgoing longwave and the net longwave.
+
+    do fp = 1,num_nolakep
+       p = filter_nolakep(fp)
+       c = pcolumn(p)
+       l = plandunit(p)
+       g = pgridcell(p)
+       j = snl(c)+1
+
+       if (ltype(l) /= isturb) then
+          eflx_lwrad_out(p) = ulrad(p) &
+                              + (1-frac_veg_nosno(p))*(1.-emg(c))*forc_lwrad(g) &
+                              + (1-frac_veg_nosno(p))*emg(c)*sb*tssbef(c,j)**4 &
+                              + 4.*emg(c)*sb*tssbef(c,j)**3*tinc(c)
+          eflx_lwrad_net(p) = eflx_lwrad_out(p) - forc_lwrad(g)
+       else
+          eflx_lwrad_out(p) = eflx_lwrad_out(p) + eflx_lwrad_del(p)
+          eflx_lwrad_net(p) = eflx_lwrad_net(p) + eflx_lwrad_del(p)
+       end if
     end do
 
     ! lake balance for errsoi is not over pft

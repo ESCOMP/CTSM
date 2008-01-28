@@ -3666,8 +3666,8 @@ contains
     scale_type_l2g = 'unity'
 
     if (present(p2c_scale_type)) scale_type_p2c = p2c_scale_type
-    if (present(p2c_scale_type)) scale_type_c2l = c2l_scale_type
-    if (present(p2c_scale_type)) scale_type_l2g = l2g_scale_type
+    if (present(c2l_scale_type)) scale_type_c2l = c2l_scale_type
+    if (present(l2g_scale_type)) scale_type_l2g = l2g_scale_type
     if (present(type1d_out)) l_type1d_out = type1d_out
 
     ! Add field to masterlist
@@ -3850,8 +3850,8 @@ contains
     scale_type_l2g = 'unity'
 
     if (present(p2c_scale_type)) scale_type_p2c = p2c_scale_type
-    if (present(p2c_scale_type)) scale_type_c2l = c2l_scale_type
-    if (present(p2c_scale_type)) scale_type_l2g = l2g_scale_type
+    if (present(c2l_scale_type)) scale_type_c2l = c2l_scale_type
+    if (present(l2g_scale_type)) scale_type_l2g = l2g_scale_type
     if (present(type1d_out)) l_type1d_out = type1d_out
 
     ! Add field to masterlist

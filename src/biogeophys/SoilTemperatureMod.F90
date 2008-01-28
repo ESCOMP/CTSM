@@ -63,9 +63,12 @@ contains
     use clmtype
     use clm_atmlnd    , only : clm_a2l
     use clm_time_manager  , only : get_step_size
-    use clm_varcon    , only : sb, capr, cnfac
+    use clm_varctl    , only : iulog
+    use clm_varcon    , only : sb, capr, cnfac, hvap, isturb, &
+                               icol_roof, icol_sunwall, icol_shadewall 
     use clm_varpar    , only : nlevsno, nlevsoi, max_pft_per_col
     use TridiagonalMod, only : Tridiagonal
+!   use UrbanMod      , only : t_building
 !
 ! !ARGUMENTS:
     implicit none
@@ -92,6 +95,10 @@ contains
 ! local pointers to original implicit in arguments
 !
     integer , pointer :: pgridcell(:)       ! pft's gridcell index
+    integer , pointer :: plandunit(:)       ! pft's landunit index
+    integer , pointer :: clandunit(:)       ! column's landunit
+    integer , pointer :: ltype(:)           ! landunit type
+    integer , pointer :: ctype(:)           ! column type
     integer , pointer :: npfts(:)           ! column's number of pfts 
     integer , pointer :: pfti(:)            ! column's beginning pft index 
     real(r8), pointer :: pwtcol(:)          ! weight of pft relative to column
@@ -106,10 +113,14 @@ contains
     integer , pointer :: frac_veg_nosno(:)  ! fraction of vegetation not covered by snow (0 OR 1 now) [-] (new)
     real(r8), pointer :: eflx_sh_grnd(:)    ! sensible heat flux from ground (W/m**2) [+ to atm]
     real(r8), pointer :: qflx_evap_soi(:)   ! soil evaporation (mm H2O/s) (+ = to atm)
+    real(r8), pointer :: qflx_tran_veg(:)   ! vegetation transpiration (mm H2O/s) (+ = to atm)
     real(r8), pointer :: zi(:,:)            ! interface level below a "z" level (m)
     real(r8), pointer :: dz(:,:)            ! layer depth (m)
     real(r8), pointer :: z(:,:)             ! layer thickness (m)
     real(r8), pointer :: t_soisno(:,:)      ! soil temperature (Kelvin)
+    real(r8), pointer :: eflx_lwrad_net(:)  ! net infrared (longwave) rad (W/m**2) [+ = to atm]
+    real(r8), pointer :: tssbef(:,:)        ! temperature at previous time step [K]
+    real(r8), pointer :: t_building(:)      ! internal building temperature (K)
     real(r8), pointer :: hc_soi(:)          ! soil heat content (MJ/m2)
     real(r8), pointer :: hc_soisno(:)       ! soil plus snow plus lake heat content (MJ/m2)
 ! 
@@ -119,40 +130,48 @@ contains
 !
 ! local pointers to original implicit out arguments
 !
-    real(r8), pointer :: eflx_gnet(:)       ! net ground heat flux into the surface (W/m**2)
-    real(r8), pointer :: dgnetdT(:)         ! temperature derivative of ground net heat flux
+    real(r8), pointer :: eflx_gnet(:)          ! net ground heat flux into the surface (W/m**2)
+    real(r8), pointer :: dgnetdT(:)            ! temperature derivative of ground net heat flux
+    real(r8), pointer :: eflx_building_heat(:) ! heat flux from urban building interior to walls, roof (W/m**2)
 !
 !EOP
 !
 ! !OTHER LOCAL VARIABLES:
 !
-    integer  :: j,c,p,g,pi                       !indices
-    integer  :: fc                               !lake filtered column indices
-    integer  :: jtop(lbc:ubc)                    !top level at each column
-    real(r8) :: dtime                            !land model time step (sec)
-    real(r8) :: at (lbc:ubc,-nlevsno+1:nlevsoi)  !"a" vector for tridiagonal matrix
-    real(r8) :: bt (lbc:ubc,-nlevsno+1:nlevsoi)  !"b" vector for tridiagonal matrix
-    real(r8) :: ct (lbc:ubc,-nlevsno+1:nlevsoi)  !"c" vector for tridiagonal matrix
-    real(r8) :: rt (lbc:ubc,-nlevsno+1:nlevsoi)  !"r" vector for tridiagonal solution
-    real(r8) :: cv (lbc:ubc,-nlevsno+1:nlevsoi)  !heat capacity [J/(m2 K)]
-    real(r8) :: tk (lbc:ubc,-nlevsno+1:nlevsoi)  !thermal conductivity [W/(m K)]
-    real(r8) :: fn (lbc:ubc,-nlevsno+1:nlevsoi)  !heat diffusion through the layer interface [W/m2]
-    real(r8) :: fn1(lbc:ubc,-nlevsno+1:nlevsoi)  !heat diffusion through the layer interface [W/m2]
-    real(r8) :: brr(lbc:ubc,-nlevsno+1:nlevsoi)  !temporary
-    real(r8) :: dzm                              !used in computing tridiagonal matrix
-    real(r8) :: dzp                              !used in computing tridiagonal matrix
-    real(r8) :: hs(lbc:ubc)                      !net energy flux into the surface (w/m2)
-    real(r8) :: dhsdT(lbc:ubc)                   !d(hs)/dT
-    real(r8) :: temp1(lbc:ubc)                   !temporary variable
-    real(r8) :: temp2(lbc:ubc)                   !temporary variable
+    integer  :: j,c,p,l,g,pi                     !  indices
+    integer  :: fc                               ! lake filtered column indices
+    integer  :: jtop(lbc:ubc)                    ! top level at each column
+    real(r8) :: dtime                            ! land model time step (sec)
+    real(r8) :: at (lbc:ubc,-nlevsno+1:nlevsoi)  ! "a" vector for tridiagonal matrix
+    real(r8) :: bt (lbc:ubc,-nlevsno+1:nlevsoi)  ! "b" vector for tridiagonal matrix
+    real(r8) :: ct (lbc:ubc,-nlevsno+1:nlevsoi)  ! "c" vector for tridiagonal matrix
+    real(r8) :: rt (lbc:ubc,-nlevsno+1:nlevsoi)  ! "r" vector for tridiagonal solution
+    real(r8) :: cv (lbc:ubc,-nlevsno+1:nlevsoi)  ! heat capacity [J/(m2 K)]
+    real(r8) :: tk (lbc:ubc,-nlevsno+1:nlevsoi)  ! thermal conductivity [W/(m K)]
+    real(r8) :: fn (lbc:ubc,-nlevsno+1:nlevsoi)  ! heat diffusion through the layer interface [W/m2]
+    real(r8) :: fn1(lbc:ubc,-nlevsno+1:nlevsoi)  ! heat diffusion through the layer interface [W/m2]
+    real(r8) :: brr(lbc:ubc,-nlevsno+1:nlevsoi)  ! temporary
+    real(r8) :: dzm                              ! used in computing tridiagonal matrix
+    real(r8) :: dzp                              ! used in computing tridiagonal matrix
+    real(r8) :: hs(lbc:ubc)                      ! net energy flux into the surface (w/m2)
+    real(r8) :: dhsdT(lbc:ubc)                   ! d(hs)/dT
+    real(r8) :: lwrad_emit(lbc:ubc)              ! emitted longwave radiation
+    real(r8) :: dlwrad_emit(lbc:ubc)             ! time derivative of emitted longwave radiation
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
 
     forc_lwrad     => clm_a2l%forc_lwrad
 
+    ! Assign local pointers to derived subtypes components (landunit-level)
+
+    ltype          => clm3%g%l%itype
+    t_building     => clm3%g%l%lps%t_building
+
     ! Assign local pointers to derived subtypes components (column-level)
 
+    ctype          => clm3%g%l%c%itype
+    clandunit      => clm3%g%l%c%landunit
     npfts          => clm3%g%l%c%npfts
     pfti           => clm3%g%l%c%pfti
     snl            => clm3%g%l%c%cps%snl
@@ -165,10 +184,13 @@ contains
     dz             => clm3%g%l%c%cps%dz
     z              => clm3%g%l%c%cps%z
     t_soisno       => clm3%g%l%c%ces%t_soisno
+    eflx_building_heat => clm3%g%l%c%cef%eflx_building_heat
+    tssbef             => clm3%g%l%c%ces%tssbef
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
     pgridcell      => clm3%g%l%c%p%gridcell
+    plandunit      => clm3%g%l%c%p%landunit
     pwtcol         => clm3%g%l%c%p%wtcol
     pwtgcell       => clm3%g%l%c%p%wtgcell  
     frac_veg_nosno => clm3%g%l%c%p%pps%frac_veg_nosno
@@ -177,8 +199,10 @@ contains
     sabg           => clm3%g%l%c%p%pef%sabg
     eflx_sh_grnd   => clm3%g%l%c%p%pef%eflx_sh_grnd
     qflx_evap_soi  => clm3%g%l%c%p%pwf%qflx_evap_soi
+    qflx_tran_veg  => clm3%g%l%c%p%pwf%qflx_tran_veg
     eflx_gnet      => clm3%g%l%c%p%pef%eflx_gnet
     dgnetdT        => clm3%g%l%c%p%pef%dgnetdT
+    eflx_lwrad_net => clm3%g%l%c%p%pef%eflx_lwrad_net
 
     ! Get step size
 
@@ -191,15 +215,15 @@ contains
     call SoilThermProp(lbc, ubc, num_nolakec, filter_nolakec, tk, cv)
 
     ! Net ground heat flux into the surface and its temperature derivative
-    ! Added a pfts loop here to get the average of hs and dhsdT over
+    ! Added a pfts loop here to get the average of hs and dhsdT over 
     ! all PFTs on the column. Precalculate the terms that do not depend on PFT.
 
 !dir$ concurrent
 !cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
-       temp1(c) =    emg(c) * sb * t_grnd(c)**4
-       temp2(c) = 4._r8*emg(c) * sb * t_grnd(c)**3
+       lwrad_emit(c)  =    emg(c) * sb * t_grnd(c)**4
+       dlwrad_emit(c) = 4._r8*emg(c) * sb * t_grnd(c)**3
     end do
 
     hs(lbc:ubc) = 0._r8
@@ -211,13 +235,38 @@ contains
           c = filter_nolakec(fc)
           if ( pi <= npfts(c) ) then
              p = pfti(c) + pi - 1
+             l = plandunit(p)
+             g = pgridcell(p)
              if (pwtgcell(p)>0._r8) then
-                g = pgridcell(p)
-                eflx_gnet(p) = sabg(p) + dlrad(p) + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) &
-                               - temp1(c) - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
-                dgnetdT(p) = - cgrnd(p) - temp2(c)
+                if (ltype(l) /= isturb) then
+                   eflx_gnet(p) = sabg(p) + dlrad(p) &
+                                  + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) - lwrad_emit(c) &
+                                  - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
+                else
+                   ! For urban columns we use the net longwave radiation (eflx_lwrad_net) because of 
+                   ! interactions between urban columns.
+                   
+                   ! Include transpiration term because needed for pervious road
+                   eflx_gnet(p) = sabg(p) + dlrad(p)  &
+                                  - eflx_lwrad_net(p) &
+                                  - (eflx_sh_grnd(p) + qflx_evap_soi(p)*htvp(c) + qflx_tran_veg(p)*hvap)
+!                  write(iulog,*)'p: ',p
+!                  write(iulog,*)'eflx_gnet: ',eflx_gnet(p)
+!                  write(iulog,*)'sabg: ',sabg(p)
+!                  write(iulog,*)'dlrad: ',dlrad(p)
+!                  write(iulog,*)'eflx_lwrad_net: ',eflx_lwrad_net(p)
+!                  write(iulog,*)'eflx_sh_grnd: ',eflx_sh_grnd(p)
+!                  write(iulog,*)'eflx_evap_soi: ',qflx_evap_soi(p)*htvp(c)
+                end if
+                dgnetdT(p) = - cgrnd(p) - dlwrad_emit(c)
                 hs(c) = hs(c) + eflx_gnet(p) * pwtcol(p)
                 dhsdT(c) = dhsdT(c) + dgnetdT(p) * pwtcol(p)
+!               write(iulog,*)'c: ',c
+!               write(iulog,*)'dgnetdT: ',dgnetdT(p)
+!               write(iulog,*)'cgrnd: ',cgrnd(p)
+!               write(iulog,*)'dlwrad_emit: ',dlwrad_emit(c)
+!               write(iulog,*)'hs: ',hs(c)
+!               write(iulog,*)'dhsdT: ',dhsdT(c)
              end if
           end if
        end do
@@ -232,9 +281,14 @@ contains
 !cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
+          l = clandunit(c)
           if (j >= snl(c)+1) then
              if (j == snl(c)+1) then
-                fact(c,j) = dtime/cv(c,j) * dz(c,j) / (0.5_r8*(z(c,j)-zi(c,j-1)+capr*(z(c,j+1)-zi(c,j-1))))
+                if (ctype(c)==icol_sunwall .or. ctype(c)==icol_shadewall .or. ctype(c)==icol_roof) then
+                  fact(c,j) = dtime/cv(c,j)
+                else
+                  fact(c,j) = dtime/cv(c,j) * dz(c,j) / (0.5_r8*(z(c,j)-zi(c,j-1)+capr*(z(c,j+1)-zi(c,j-1))))
+                end if
                 fn(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
              else if (j <= nlevsoi-1) then
                 fact(c,j) = dtime/cv(c,j)
@@ -242,7 +296,15 @@ contains
                 dzm     = (z(c,j)-z(c,j-1))
              else if (j == nlevsoi) then
                 fact(c,j) = dtime/cv(c,j)
-                fn(c,j) = 0._r8
+
+                ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
+                ! the bottom "soil" layer and the equations are derived assuming a prescribed internal
+                ! building temperature. (See Oleson urban notes of 6/18/03).
+                if (ctype(c)==icol_sunwall .or. ctype(c)==icol_shadewall .or. ctype(c)==icol_roof) then
+                   fn(c,j) = tk(c,j) * (t_building(l) - cnfac*t_soisno(c,j))/(zi(c,j) - z(c,j))
+                else
+                   fn(c,j) = 0._r8
+                end if
              end if
           end if
        enddo
@@ -263,16 +325,41 @@ contains
              else if (j <= nlevsoi-1) then
                 dzm     = (z(c,j)-z(c,j-1))
                 dzp     = (z(c,j+1)-z(c,j))
+!               if (c .eq. 1 .and. j .eq. 2) then
+!                 write(iulog,*)'cnfac: ',cnfac
+!                 write(iulog,*)'fact(1,2): ',fact(c,j)
+!                 write(iulog,*)'tk(1,1): ',tk(c,j-1)
+!                 write(iulog,*)'dzm(1,2): ',dzm
+!               end if
+!               if (c .eq. 3 .and. j .eq. 2) then
+!                 write(iulog,*)'cnfac: ',cnfac
+!                 write(iulog,*)'fact(3,2): ',fact(c,j)
+!                 write(iulog,*)'tk(3,1): ',tk(c,j-1)
+!                 write(iulog,*)'dzm(3,2): ',dzm
+!               end if
                 at(c,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
                 bt(c,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
                 ct(c,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
                 rt(c,j) = t_soisno(c,j) + cnfac*fact(c,j)*( fn(c,j) - fn(c,j-1) )
              else if (j == nlevsoi) then
-                dzm     = (z(c,j)-z(c,j-1))
-                at(c,j) =   - (1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
-                bt(c,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
-                ct(c,j) = 0._r8
-                rt(c,j) = t_soisno(c,j) - cnfac*fact(c,j)*fn(c,j-1)
+
+                ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
+                ! the bottom "soil" layer and the equations are derived assuming a prescribed internal
+                ! building temperature. (See Oleson urban notes of 6/18/03).
+                if (ctype(c)==icol_sunwall .or. ctype(c)==icol_shadewall .or. ctype(c)==icol_roof) then
+                   dzm     = ( z(c,j)-z(c,j-1))
+                   dzp     = (zi(c,j)-z(c,j))
+                   at(c,j) =   - (1._r8-cnfac)*fact(c,j)*(tk(c,j-1)/dzm)
+                   bt(c,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j-1)/dzm + tk(c,j)/dzp)
+                   ct(c,j) = 0._r8
+                   rt(c,j) = t_soisno(c,j) + fact(c,j)*( fn(c,j) - cnfac*fn(c,j-1) )
+                else
+                   dzm     = (z(c,j)-z(c,j-1))
+                   at(c,j) =   - (1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
+                   bt(c,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
+                   ct(c,j) = 0._r8
+                   rt(c,j) = t_soisno(c,j) - cnfac*fact(c,j)*fn(c,j-1)
+                end if
              end if
           end if
        enddo
@@ -284,8 +371,20 @@ contains
        c = filter_nolakec(fc)
        jtop(c) = snl(c) + 1
     end do
+!   write(iulog,*)'t_soisno(1) before: ',t_soisno(1,1:10)
+!   write(iulog,*)'at(1): ',at(1,1:10)
+!   write(iulog,*)'bt(1): ',bt(1,1:10)
+!   write(iulog,*)'ct(1): ',ct(1,1:10)
+!   write(iulog,*)'rt(1): ',rt(1,1:10)
+!   write(iulog,*)'t_soisno(3) before: ',t_soisno(3,1:10)
+!   write(iulog,*)'at(3): ',at(3,1:10)
+!   write(iulog,*)'bt(3): ',bt(3,1:10)
+!   write(iulog,*)'ct(3): ',ct(3,1:10)
+!   write(iulog,*)'rt(3): ',rt(3,1:10)
     call Tridiagonal(lbc, ubc, -nlevsno+1, nlevsoi, jtop, num_nolakec, filter_nolakec, &
                      at, bt, ct, rt, t_soisno(lbc:ubc,-nlevsno+1:nlevsoi))
+!   write(iulog,*)'t_soisno(1) after: ',t_soisno(1,1:10)
+!   write(iulog,*)'t_soisno(3) after: ',t_soisno(3,1:10)
 
     ! Melting or Freezing
 
@@ -294,14 +393,33 @@ contains
 !cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
+          l = clandunit(c)
           if (j >= snl(c)+1) then
              if (j <= nlevsoi-1) then
                 fn1(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
              else if (j == nlevsoi) then
-                fn1(c,j) = 0._r8
+
+                ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
+                ! the bottom "soil" layer and the equations are derived assuming a prescribed internal
+                ! building temperature. (See Oleson urban notes of 6/18/03).
+                ! Note new formulation for fn, this will be used below in brr computation
+                if (ctype(c)==icol_sunwall .or. ctype(c)==icol_shadewall .or. ctype(c)==icol_roof) then
+                   fn1(c,j) = tk(c,j) * (t_building(l) - t_soisno(c,j))/(zi(c,j) - z(c,j))
+                   fn(c,j)  = tk(c,j) * (t_building(l) - tssbef(c,j))/(zi(c,j) - z(c,j))
+                else
+                   fn1(c,j) = 0._r8
+                end if
              end if
           end if
        end do
+    end do
+
+    do fc = 1,num_nolakec
+       c = filter_nolakec(fc)
+       l = clandunit(c)
+       if (ltype(l) == isturb) then
+          eflx_building_heat(c) = cnfac*fn(c,nlevsoi) + (1-cnfac)*fn1(c,nlevsoi)
+       end if
     end do
 
     do j = -nlevsno+1,nlevsoi
@@ -383,8 +501,11 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clmtype
     use clm_varcon  , only : denh2o, denice, tfrz, tkwat, tkice, tkair, &
-                             cpice,  cpliq,  istice, istwet
+                             cpice,  cpliq,  istice, istwet, &
+                             icol_roof, icol_sunwall, icol_shadewall, &
+                             icol_road_perv, icol_road_imperv
     use clm_varpar  , only : nlevsno, nlevsoi
+    use clm_varctl  , only : iulog
 !
 ! !ARGUMENTS:
     implicit none
@@ -407,8 +528,9 @@ contains
 !
 ! local pointers to original implicit in scalars
 !
+    integer , pointer :: ctype(:)         ! column type
     integer , pointer :: clandunit(:)     ! column's landunit
-    integer , pointer :: ityplun(:)       ! landunit type
+    integer , pointer :: ltype(:)       ! landunit type
     integer , pointer :: snl(:)           ! number of snow layers
     real(r8), pointer :: h2osno(:)        ! snow water (mm H2O)
 !
@@ -425,6 +547,13 @@ contains
     real(r8), pointer :: t_soisno(:,:)    ! soil temperature (Kelvin)
     real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2)
     real(r8), pointer :: h2osoi_ice(:,:)  ! ice lens (kg/m2)
+    real(r8), pointer :: tk_wall(:,:)     ! thermal conductivity of urban wall
+    real(r8), pointer :: tk_roof(:,:)     ! thermal conductivity of urban roof
+    real(r8), pointer :: tk_improad(:,:)  ! thermal conductivity of urban impervious road
+    real(r8), pointer :: cv_wall(:,:)     ! thermal conductivity of urban wall
+    real(r8), pointer :: cv_roof(:,:)     ! thermal conductivity of urban roof
+    real(r8), pointer :: cv_improad(:,:)  ! thermal conductivity of urban impervious road
+
 !
 !EOP
 !
@@ -442,10 +571,11 @@ contains
 
     ! Assign local pointers to derived subtypes components (landunit-level)
 
-    ityplun    => clm3%g%l%itype
+    ltype    => clm3%g%l%itype
 
     ! Assign local pointers to derived subtypes components (column-level)
 
+    ctype      => clm3%g%l%c%itype
     clandunit  => clm3%g%l%c%landunit
     snl        => clm3%g%l%c%cps%snl
     h2osno     => clm3%g%l%c%cws%h2osno
@@ -460,8 +590,17 @@ contains
     t_soisno   => clm3%g%l%c%ces%t_soisno
     h2osoi_liq => clm3%g%l%c%cws%h2osoi_liq
     h2osoi_ice => clm3%g%l%c%cws%h2osoi_ice
+    tk_wall    => clm3%g%l%lps%tk_wall
+    tk_roof    => clm3%g%l%lps%tk_roof
+    tk_improad => clm3%g%l%lps%tk_improad
+    cv_wall    => clm3%g%l%lps%cv_wall
+    cv_roof    => clm3%g%l%lps%cv_roof
+    cv_improad => clm3%g%l%lps%cv_improad
 
     ! Thermal conductivity of soil from Farouki (1981)
+    ! Urban values are from Masson et al. 2002, Evaluation of the Town Energy Balance (TEB)
+    ! scheme with direct measurements from dry districts in two cities, J. Appl. Meteorol.,
+    ! 41, 1011-1026.
 
     do j = -nlevsno+1,nlevsoi
 !dir$ concurrent
@@ -470,9 +609,88 @@ contains
           c = filter_nolakec(fc)
 
           ! Only examine levels from 1->nlevsoi
-          if (j >= 1) then
+          if (j >= 1) then    
              l = clandunit(c)
-             if (ityplun(l) /= istwet .AND. ityplun(l) /= istice) then
+             if (ctype(c) == icol_sunwall .OR. ctype(c) == icol_shadewall) then
+#if (defined VANCOUVER)
+!KO                if (j >= 1 .and. j <= 2) then 
+!KO                  thk(c,j) = 1.51                 ! dense concrete
+!KO                else if (j >= 3 .and. j<= 9) then
+!KO                  thk(c,j) = 0.67                 ! concrete
+!KO                else
+!KO                  thk(c,j) = 1.51                 ! dense concrete
+!KO                end if
+                thk(c,j) = tk_wall(l,j)
+#elif (defined MEXICOCITY)
+!KO                if (j >= 1 .and. j <= 10) then 
+!KO                  thk(c,j) = 0.88                 ! stone/window
+!KO                end if
+                thk(c,j) = tk_wall(l,j)
+#elif (defined GRANDVIEW)
+                if (j >= 1 .and. j <= 10) then 
+                  thk(c,j) = 0.81
+                end if
+#else
+                ! VANCOUVER DENSE CONCRETE WITH 10TH LAYER INSULATION
+                if (j >= 1 .and. j <= 9) then 
+                  thk(c,j) = 1.51
+                else
+                  thk(c,j) = 0.03
+                end if
+#endif
+             else if (ctype(c) == icol_roof) then
+#if (defined VANCOUVER)
+!KO                if (j >= 1 .and. j <= 4) then 
+!KO                  thk(c,j) = 1.4      ! gravel
+!KO                else if (j == 5) then 
+!KO                  thk(c,j) = 0.03     ! insulation
+!KO                else 
+!KO                  thk(c,j) = 1.51     ! concrete
+!KO                end if
+                thk(c,j) = tk_roof(l,j)
+#elif (defined MEXICOCITY)
+!KO                if (j == 1) then
+!KO                  thk(c,j) = 0.2      ! asphalt roll
+!KO                else if (j >= 2 .and. j <= 6) then
+!KO                  thk(c,j) = 0.93     ! concrete (stone)
+!KO                else if (j >= 7 .and. j <= 9) then
+!KO                  thk(c,j) = 0.03     ! insulation
+!KO                else
+!KO                  thk(c,j) = 0.16     ! gypsum
+!KO                end if
+                thk(c,j) = tk_roof(l,j)
+#else
+                ! VANCOUVER GRAVEL/INSULATION/DENSE CONCRETE
+                if (j >= 1 .and. j <= 6) then 
+                  thk(c,j) = 1.4      ! gravel
+                else if (j == 7) then 
+                  thk(c,j) = 0.03     ! insulation
+                else 
+                  thk(c,j) = 1.51     ! dense concrete
+                end if
+#endif
+             else if (ctype(c) == icol_road_imperv .and. j >= 1 .and. j <= 5) then
+#if (defined VANCOUVER || defined MEXICOCITY)
+!KO                if (j >= 1 .and. j <= 2) then  ! asphalt/concrete
+!KO                  thk(c,j) = 0.82   ! (Masson et al. 2002)
+!KO                else if (j >=3 .and. j <= 5) then  ! stone aggregate
+!KO                  thk(c,j) = 2.1    ! (Masson et al. 2002)
+!KO                end if
+                if (j >= 1 .and. j <= 5) then
+                  thk(c,j) = tk_improad(l,j)
+                end if
+#elif (defined GRANDVIEW)
+                if (j >= 1 .and. j <= 5) then
+                  thk(c,j) = 1.0103
+                end if
+#else
+                if (j >= 1 .and. j <= 2) then  ! asphalt/concrete
+                  thk(c,j) = 0.82   ! (Masson et al. 2002)
+                else if (j >=3 .and. j <= 5) then  ! stone aggregate
+                  thk(c,j) = 2.1    ! (Masson et al. 2002)
+                end if
+#endif
+             else if (ltype(l) /= istwet .AND. ltype(l) /= istice) then
                 satw = (h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice)/(dz(c,j)*watsat(c,j))
                 satw = min(1._r8, satw)
                 if (satw > .1e-6_r8) then
@@ -488,6 +706,9 @@ contains
                 else
                    thk(c,j) = tkdry(c,j)
                 endif
+!               if (ctype(c)==icol_road_imperv) then
+!                 write(iulog,*)'thk: ',thk(c,j)
+!               end if
              else
                 thk(c,j) = tkwat
                 if (t_soisno(c,j) < tfrz) thk(c,j) = tkice
@@ -496,7 +717,7 @@ contains
 
           ! Thermal conductivity of snow, which from Jordan (1991) pp. 18
           ! Only examine levels from snl(c)+1 -> 0 where snl(c) < 1
-          if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0)) then
+          if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0)) then  
              bw = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/dz(c,j)
              thk(c,j) = tkair + (7.75e-5_r8 *bw + 1.105e-6_r8*bw*bw)*(tkice-tkair)
           end if
@@ -513,14 +734,25 @@ contains
           c = filter_nolakec(fc)
           if (j >= snl(c)+1 .AND. j <= nlevsoi-1) then
              tk(c,j) = thk(c,j)*thk(c,j+1)*(z(c,j+1)-z(c,j)) &
-                  /(thk(c,j)*(z(c,j+1)-zi(c,j))+thk(c,j+1)*(zi(c,j)-z(c,j)))
+                       /(thk(c,j)*(z(c,j+1)-zi(c,j))+thk(c,j+1)*(zi(c,j)-z(c,j)))
           else if (j == nlevsoi) then
-             tk(c,j) = 0._r8
+
+             ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
+             ! the bottom "soil" layer and the equations are derived assuming a prescribed internal
+             ! building temperature. (See Oleson urban notes of 6/18/03).
+             if (ctype(c)==icol_sunwall .OR. ctype(c)==icol_shadewall .OR. ctype(c)==icol_roof) then
+                tk(c,j) = thk(c,j)
+             else
+                tk(c,j) = 0._r8
+             end if
           end if
        end do
     end do
 
     ! Soil heat capacity, from de Vires (1963)
+    ! Urban values are from Masson et al. 2002, Evaluation of the Town Energy Balance (TEB)
+    ! scheme with direct measurements from dry districts in two cities, J. Appl. Meteorol.,
+    ! 41, 1011-1026.
 
     do j = 1, nlevsoi
 !dir$ concurrent
@@ -528,9 +760,90 @@ contains
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
-          if (ityplun(l) /= istwet .AND. ityplun(l) /= istice) then
-             cv(c,j) = csol(c,j)*(1-watsat(c,j))*dz(c,j) +   &
-               (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
+          if (ctype(c)==icol_sunwall .OR. ctype(c)==icol_shadewall) then
+#if (defined VANCOUVER)
+!KO             if (j >= 1 .and. j <= 2) then 
+!KO               cv(c,j) = 2.11e6 * dz(c,j)                ! dense concrete
+!KO             else if (j >= 3 .and. j<= 9) then
+!KO               cv(c,j) = 1.00e6 * dz(c,j)                ! concrete
+!KO             else
+!KO               cv(c,j) = 2.11e6 * dz(c,j)                ! dense concrete
+!KO             end if
+             cv(c,j) = cv_wall(l,j) * dz(c,j)
+#elif (defined MEXICOCITY)
+!KO             if (j >= 1 .and. j <= 10) then 
+!KO               cv(c,j) = 1.54e6 * dz(c,j)                ! stone/window
+!KO             end if
+             cv(c,j) = cv_wall(l,j) * dz(c,j)
+#elif (defined GRANDVIEW)
+             if (j >= 1 .and. j <= 10) then 
+               cv(c,j) = 1.00e6 * dz(c,j)
+             end if
+#else
+             ! VANCOUVER DENSE CONCRETE WITH 10TH LAYER INSULATION
+             if (j >= 1 .and. j <= 9) then 
+               cv(c,j) = 2.11e6 * dz(c,j)
+             else
+               cv(c,j) = 0.04e6 * dz(c,j)
+             end if
+#endif
+          else if (ctype(c) == icol_roof) then
+#if (defined VANCOUVER)
+!KO             if (j >= 1 .and. j <= 4) then 
+!KO               cv(c,j) = 1.76e6 * dz(c,j)     ! gravel
+!KO             else if (j == 5) then 
+!KO               cv(c,j) = 0.04e6 * dz(c,j)     ! insulation
+!KO             else 
+!KO               cv(c,j) = 2.21e6 * dz(c,j)     ! concrete
+!KO             end if
+             cv(c,j) = cv_roof(l,j) * dz(c,j)
+#elif (defined MEXICOCITY)
+!KO             if (j == 1) then
+!KO               cv(c,j) = 1.7e6 * dz(c,j)      ! asphalt roll
+!KO             else if (j >= 2 .and. j <= 6) then
+!KO               cv(c,j) = 1.5e6 * dz(c,j)      ! concrete (stone)
+!KO             else if (j >= 7 .and. j <= 9) then
+!KO               cv(c,j) = 0.25e6 * dz(c,j)     ! insulation
+!KO             else
+!KO               cv(c,j) = 0.87e6 * dz(c,j)     ! gypsum
+!KO             end if
+             cv(c,j) = cv_roof(l,j) * dz(c,j)
+#else
+             ! VANCOUVER GRAVEL/INSULATION/DENSE CONCRETE
+             if (j >= 1 .and. j <= 6) then 
+               cv(c,j) = 1.76e6 * dz(c,j)  ! gravel
+             else if (j == 7) then
+               cv(c,j) = 0.04e6 * dz(c,j)  ! insulation
+             else
+               cv(c,j) = 2.11e6 * dz(c,j)  ! dense concrete
+             end if
+#endif
+          else if (ctype(c) == icol_road_imperv .and. j >= 1 .and. j <= 5) then
+#if (defined VANCOUVER || defined MEXICOCITY)
+!KO             if (j >= 1 .and. j <= 2) then  ! asphalt/concrete
+!KO                cv(c,j) = 1.74e6 * dz(c,j)   ! (Masson et al. 2002)
+!KO             else if (j >=3 .and. j <= 5) then  ! stone aggregate
+!KO                cv(c,j) = 2.0e6 * dz(c,j)    ! (Masson et al. 2002)
+!KO             end if
+             if (j >= 1 .and. j <= 5) then
+               cv(c,j) = cv_improad(l,j) * dz(c,j)
+             end if
+#elif (defined GRANDVIEW)
+             if (j >= 1 .and. j <= 5) then
+                cv(c,j) = 1.94e6 * dz(c,j)
+             end if
+#else
+             if (j >= 1 .and. j <= 2) then  ! asphalt/concrete
+                cv(c,j) = 1.74e6 * dz(c,j)  ! (Masson et al 2002)
+             else if (j >=3 .and. j <= 5) then   ! stone aggregate
+                cv(c,j) = 2.0e6 * dz(c,j)   ! (Masson et al 2002)
+             end if
+#endif
+          else if (ltype(l) /= istwet .AND. ltype(l) /= istice) then
+             cv(c,j) = csol(c,j)*(1-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
+!            if (ctype(c)==icol_road_imperv) then
+!              write(iulog,*)'cv: ',cv(c,j)/dz(c,j)
+!            end if
           else
              cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
           endif

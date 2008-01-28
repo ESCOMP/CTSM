@@ -107,13 +107,17 @@ sub set_output_values {
       }
       my $source = $inputopts{'datasource'};
       if ( $source ne "CLMNCEP" && $source ne "CAMHIST.eul64x128_datm6.01" &&
-           $source ne "CAMHIST.GENERIC" ) {
+           $source ne "CAMHIST.GENERIC" && $source ne "CLM1PT" ) {
          die "ERROR($nm):: Bad source option -- need to specify source as one of: " .
-             "CLMNCEP, CAMHIST.eul64x128_datm6.01, or CAMHIST.GENERIC";
+             "CLMNCEP, CAMHIST.eul64x128_datm6.01, CLM1PT, or CAMHIST.GENERIC";
       }
       $inputopts{'ProgName'}   = $$optsref{'ProgName'};
       $inputopts{'ProgDir'}    = "$cfgdir";
-      $inputopts{'res'}        = "";
+      if ( $source ne "CLM1PT" ) {
+         $inputopts{'res'}     = "";
+      } else {
+         $inputopts{'res'}     = $$optsref{'RESOLUTION'};
+      }
       $inputopts{'yearfirst'}  = $beg_year;
       $inputopts{'yearlast'}   = $end_year;
       #my @keys = ( "datm_data_dir", "datm_dom_dir", "cam_hist_case", "datm_domain" );
@@ -131,7 +135,7 @@ sub set_output_values {
       if ( defined($$optsref{'datm_data_dir'}) ) {
          $inputopts{'filepath'}   = $$optsref{'datm_data_dir'};
       } else {
-         if ( $source ne "CAMHIST.eul64x128_datm6.01" ) {
+         if ( $source ne "CAMHIST.eul64x128_datm6.01" && $source ne "CLM1PT" ) {
             die "ERROR($nm):: Need to specify datm_data_dir directory of where " .
                 " datm data is for datasource=$source.\n";
          }

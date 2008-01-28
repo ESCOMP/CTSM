@@ -1,4 +1,4 @@
--spmd 
+-spmd -nosmp
 -debug
 -maxpft 4
 -rtm on

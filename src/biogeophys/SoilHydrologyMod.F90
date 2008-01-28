@@ -36,26 +36,32 @@ contains
 ! !IROUTINE: SurfaceRunoff
 !
 ! !INTERFACE:
-  subroutine SurfaceRunoff (lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
-       vol_liq, icefrac)
+  subroutine SurfaceRunoff (lbc, ubc, lbp, ubp, num_hydrologyc, filter_hydrologyc, &
+                            num_urbanc, filter_urbanc, vol_liq, icefrac)
 !
 ! !DESCRIPTION:
 ! Calculate surface runoff
 !
 ! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
+    use shr_kind_mod    , only : r8 => shr_kind_r8
     use clmtype
-    use clm_varcon, only : denice, denh2o, wimp
-    use clm_varpar, only : nlevsoi
+    use clm_varcon      , only : denice, denh2o, wimp, pondmx_urban, &
+                                 icol_roof, icol_sunwall, icol_shadewall, &
+                                 icol_road_imperv, icol_road_perv
+                             
+    use clm_varpar      , only : nlevsoi, maxpatch_pft
+    use clm_time_manager, only : get_step_size
 !
 ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbc, ubc                   ! column bounds
-    integer , intent(in)  :: lbp, ubp                   ! pft bounds   
-    integer , intent(in)  :: num_soilc                  ! number of column soil points in column filter
-    integer , intent(in)  :: filter_soilc(ubc-lbc+1)    ! column filter for soil points
-    real(r8), intent(out) :: vol_liq(lbc:ubc,1:nlevsoi) ! partial volume of liquid water in layer
-    real(r8), intent(out) :: icefrac(lbc:ubc,1:nlevsoi) ! fraction of ice in layer (-)
+    integer , intent(in)  :: lbc, ubc                     ! column bounds
+    integer , intent(in)  :: lbp, ubp                     ! pft bounds   
+    integer , intent(in)  :: num_hydrologyc               ! number of column soil points in column filter
+    integer , intent(in)  :: filter_hydrologyc(ubc-lbc+1) ! column filter for soil points
+    integer , intent(in)  :: num_urbanc                   ! number of column urban points in column filter
+    integer , intent(in)  :: filter_urbanc(ubc-lbc+1)     ! column filter for urban points
+    real(r8), intent(out) :: vol_liq(lbc:ubc,1:nlevsoi)   ! partial volume of liquid water in layer
+    real(r8), intent(out) :: icefrac(lbc:ubc,1:nlevsoi)   ! fraction of ice in layer (-)
 !
 ! !CALLED FROM:
 ! subroutine Hydrology2 in module Hydrology2Mod
@@ -73,6 +79,8 @@ contains
 !
 ! local pointers to original implicit in arguments
 !
+    integer , pointer :: cgridcell(:)      ! gridcell index for each column
+    integer , pointer :: ctype(:)          ! column type index
     real(r8), pointer :: qflx_top_soil(:)  !net water input into soil from top (mm/s)
     real(r8), pointer :: watsat(:,:)       !volumetric soil water at saturation (porosity)
     real(r8), pointer :: hkdepth(:)        !decay factor (m)
@@ -82,14 +90,16 @@ contains
     real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
     real(r8), pointer :: wtfact(:)         !maximum saturated fraction for a gridcell
-    real(r8), pointer :: hksat(:,:)        !hydraulic conductivity at saturation (mm H2O /s)
-    real(r8), pointer :: bsw(:,:)          !Clapp and Hornberger "b"
-    real(r8), pointer :: sucsat(:,:)       !minimum soil suction (mm)
+    real(r8), pointer :: hksat(:,:)        ! hydraulic conductivity at saturation (mm H2O /s)
+    real(r8), pointer :: bsw(:,:)          ! Clapp and Hornberger "b"
+    real(r8), pointer :: sucsat(:,:)       ! minimum soil suction (mm)
+    integer , pointer :: snl(:)            ! minus number of snow layers
+    real(r8), pointer :: qflx_evap_grnd(:) ! ground surface evaporation rate (mm H2O/s) [+]
 !
 ! local pointers to original implicit out arguments
 !
-    real(r8), pointer :: qflx_surf(:)      !surface runoff (mm H2O /s)
-    real(r8), pointer :: eff_porosity(:,:) !effective porosity = porosity - vol_ice
+    real(r8), pointer :: qflx_surf(:)      ! surface runoff (mm H2O /s)
+    real(r8), pointer :: eff_porosity(:,:) ! effective porosity = porosity - vol_ice
     real(r8), pointer :: fracice(:,:)      !fractional impermeability (-)
 !
 !EOP
@@ -97,6 +107,8 @@ contains
 ! !OTHER LOCAL VARIABLES:
 !
     integer  :: c,j,fc,g                   !indices
+    real(r8) :: dtime                      ! land model time step (sec)
+    real(r8) :: xs(lbc:ubc)                ! excess soil water above urban ponding limit
     real(r8) :: vol_ice(lbc:ubc,1:nlevsoi) !partial volume of ice lens in layer
     real(r8) :: fff(lbc:ubc)               !decay factor (m-1)
     real(r8) :: s1                         !variable to calculate qinmax
@@ -108,6 +120,7 @@ contains
 
     ! Assign local pointers to derived subtype components (column-level)
 
+    ctype         => clm3%g%l%c%itype
     qflx_top_soil => clm3%g%l%c%cwf%qflx_top_soil
     qflx_surf     => clm3%g%l%c%cwf%qflx_surf
     watsat        => clm3%g%l%c%cps%watsat
@@ -123,12 +136,18 @@ contains
     hksat         => clm3%g%l%c%cps%hksat
     bsw           => clm3%g%l%c%cps%bsw
     sucsat        => clm3%g%l%c%cps%sucsat
+    snl            => clm3%g%l%c%cps%snl
+    qflx_evap_grnd => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
+
+    ! Get time step
+
+    dtime = get_step_size()
 
     do j = 1,nlevsoi
 !dir$ concurrent
 !cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
 
           ! Porosity of soil, partial volume of ice and liquid, fraction of ice in each layer,
           ! fractional impermeability
@@ -148,16 +167,16 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
        fff(c)  = 1._r8 / hkdepth(c)
        fcov(c) = (1._r8 - fracice(c,1)) * wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c)) + fracice(c,1)
     end do
 
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
 
        ! Maximum infiltration capacity
        s1        = max(0.01_r8,vol_liq(c,1)/max(wimp,eff_porosity(c,1)))
@@ -171,6 +190,35 @@ contains
 
     end do
 
+    ! Determine water in excess of ponding limit for urban roof and impervious road.
+    ! Excess goes to surface runoff. No surface runoff for sunwall and shadewall.
+
+!dir$ concurrent
+!cdir nodep
+    do fc = 1, num_urbanc
+       c = filter_urbanc(fc)
+       if (ctype(c) == icol_roof .or. ctype(c) == icol_road_imperv) then
+
+          ! If there are snow layers then all qflx_top_soil goes to surface runoff
+          if (snl(c) < 0) then
+             qflx_surf(c) = max(0._r8,qflx_top_soil(c))
+          else
+             xs(c) = max(0._r8, &
+                         h2osoi_liq(c,1)/dtime + qflx_top_soil(c) - qflx_evap_grnd(c) - &
+                         pondmx_urban/dtime)
+             if (xs(c) > 0.) then
+                h2osoi_liq(c,1) = pondmx_urban
+             else
+                h2osoi_liq(c,1) = max(0._r8,h2osoi_liq(c,1)+ &
+                                     (qflx_top_soil(c)-qflx_evap_grnd(c))*dtime)
+             end if
+             qflx_surf(c) = xs(c)
+          end if
+       else if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall) then
+         qflx_surf(c) = 0._r8
+       end if
+    end do
+
   end subroutine SurfaceRunoff
 
 !-----------------------------------------------------------------------
@@ -179,20 +227,25 @@ contains
 ! !IROUTINE: Infiltration
 !
 ! !INTERFACE:
-  subroutine Infiltration(lbc, ubc, num_soilc, filter_soilc)
+  subroutine Infiltration(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
+                          num_urbanc, filter_urbanc)
 !
 ! !DESCRIPTION:
 ! Calculate infiltration into surface soil layer (minus the evaporation)
 !
 ! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
+    use shr_kind_mod, only : r8 => shr_kind_r8
+    use clm_varcon  , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, &
+                             icol_road_perv
     use clmtype
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbc, ubc                   ! column bounds
-    integer, intent(in) :: num_soilc                  ! number of column soil points in column filter
-    integer, intent(in) :: filter_soilc(ubc-lbc+1)    ! column filter for soil points
+    integer, intent(in) :: lbc, ubc                     ! column bounds
+    integer, intent(in) :: num_hydrologyc               ! number of column soil points in column filter
+    integer, intent(in) :: filter_hydrologyc(ubc-lbc+1) ! column filter for soil points
+    integer, intent(in) :: num_urbanc                   ! number of column urban points in column filter
+    integer, intent(in) :: filter_urbanc(ubc-lbc+1)     ! column filter for urban points
 !
 ! !CALLED FROM:
 !
@@ -206,10 +259,11 @@ contains
 !
 ! local pointers to original implicit in arguments
 !
-    integer , pointer :: snl(:)            !minus number of snow layers
-    real(r8), pointer :: qflx_top_soil(:)  !net water input into soil from top (mm/s)
-    real(r8), pointer :: qflx_surf(:)      !surface runoff (mm H2O /s)
-    real(r8), pointer :: qflx_evap_grnd(:) !ground surface evaporation rate (mm H2O/s) [+]
+    integer , pointer :: ctype(:)         ! column type index
+    integer , pointer :: snl(:)           ! minus number of snow layers
+    real(r8), pointer :: qflx_top_soil(:) ! net water input into soil from top (mm/s)
+    real(r8), pointer :: qflx_surf(:)     ! surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_evap_grnd(:)! ground surface evaporation rate (mm H2O/s) [+]
 !
 ! local pointers to original implicit out arguments
 !
@@ -224,6 +278,7 @@ contains
 
     ! Assign local pointers to derived type members (column-level)
 
+    ctype          => clm3%g%l%c%itype
     snl            => clm3%g%l%c%cps%snl
     qflx_top_soil  => clm3%g%l%c%cwf%qflx_top_soil
     qflx_surf      => clm3%g%l%c%cwf%qflx_surf
@@ -234,8 +289,8 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
        if (snl(c) >= 0) then
           qflx_infl(c) = qflx_top_soil(c) - qflx_surf(c) - qflx_evap_grnd(c)
        else
@@ -243,6 +298,17 @@ contains
        end if
     end do
 
+    ! No infiltration for impervious urban surfaces
+
+!dir$ concurrent
+!cdir nodep
+    do fc = 1, num_urbanc
+       c = filter_urbanc(fc)
+       if (ctype(c) /= icol_road_perv) then
+          qflx_infl(c) = 0._r8
+       end if
+    end do
+    
   end subroutine Infiltration
 
 !-----------------------------------------------------------------------
@@ -251,8 +317,9 @@ contains
 ! !IROUTINE: SoilWater
 !
 ! !INTERFACE:
-  subroutine SoilWater(lbc, ubc, num_soilc, &
-       filter_soilc, vol_liq, dwat, hk, dhkdw)
+  subroutine SoilWater(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
+                       num_urbanc, filter_urbanc, &
+                       vol_liq, dwat, hk, dhkdw)
 !
 ! !DESCRIPTION:
 ! Soil hydrology
@@ -319,21 +386,24 @@ contains
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
-    use clm_varcon    , only : wimp
+    use clm_varcon    , only : wimp, icol_roof, icol_road_imperv
     use clm_varpar    , only : nlevsoi, max_pft_per_col
+    use clm_varctl    , only : iulog
     use shr_const_mod , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
     use TridiagonalMod, only : Tridiagonal
     use clm_time_manager  , only : get_step_size
 !
 ! !ARGUMENTS:
     implicit none
-    integer , intent(in)  :: lbc, ubc                   ! column bounds
-    integer , intent(in)  :: num_soilc                  ! number of column soil points in column filter
-    integer , intent(in)  :: filter_soilc(ubc-lbc+1)    ! column filter for soil points
-    real(r8), intent(in)  :: vol_liq(lbc:ubc,1:nlevsoi) ! soil water per unit volume [mm/mm]
-    real(r8), intent(out) :: dwat(lbc:ubc,1:nlevsoi)    ! change of soil water [m3/m3]
-    real(r8), intent(out) :: hk(lbc:ubc,1:nlevsoi)      ! hydraulic conductivity [mm h2o/s]
-    real(r8), intent(out) :: dhkdw(lbc:ubc,1:nlevsoi)   ! d(hk)/d(vol_liq)
+    integer , intent(in)  :: lbc, ubc                     ! column bounds
+    integer , intent(in)  :: num_hydrologyc               ! number of column soil points in column filter
+    integer , intent(in)  :: filter_hydrologyc(ubc-lbc+1) ! column filter for soil points
+    integer , intent(in)  :: num_urbanc                   ! number of column urban points in column filter
+    integer , intent(in)  :: filter_urbanc(ubc-lbc+1)     ! column filter for urban points
+    real(r8), intent(in)  :: vol_liq(lbc:ubc,1:nlevsoi)   ! soil water per unit volume [mm/mm]
+    real(r8), intent(out) :: dwat(lbc:ubc,1:nlevsoi)      ! change of soil water [m3/m3]
+    real(r8), intent(out) :: hk(lbc:ubc,1:nlevsoi)        ! hydraulic conductivity [mm h2o/s]
+    real(r8), intent(out) :: dhkdw(lbc:ubc,1:nlevsoi)     ! d(hk)/d(vol_liq)
 !
 ! !CALLED FROM:
 ! subroutine Hydrology2 in module Hydrology2Mod
@@ -349,6 +419,7 @@ contains
 !
 ! local pointers to original implicit in arguments
 !
+    integer , pointer :: ctype(:)             ! column type index
     integer , pointer :: npfts(:)             ! column's number of pfts - ADD
     real(r8), pointer :: pwtcol(:)            ! weight relative to column for each pft
     real(r8), pointer :: pwtgcell(:)          ! weight relative to gridcell for each pft
@@ -410,6 +481,7 @@ contains
 
     ! Assign local pointers to derived type members (column-level)
 
+    ctype             => clm3%g%l%c%itype
     npfts             => clm3%g%l%c%npfts
     z                 => clm3%g%l%c%cps%z
     dz                => clm3%g%l%c%cps%dz
@@ -445,8 +517,8 @@ contains
     do j = 1, nlevsoi
 !dir$ concurrent
 !cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
           zmm(c,j) = z(c,j)*1.e3_r8
           dzmm(c,j) = dz(c,j)*1.e3_r8
        end do
@@ -464,8 +536,8 @@ contains
     do j = 1, nlevsoi
 !dir$ concurrent
 !cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
           rootr_col(c,j) = 0._r8
        end do
     end do
@@ -474,20 +546,21 @@ contains
        do j = 1,nlevsoi
 !dir$ concurrent
 !cdir nodep
-          do fc = 1, num_soilc
-             c = filter_soilc(fc)
+          do fc = 1, num_hydrologyc
+             c = filter_hydrologyc(fc)
              if (pi <= npfts(c)) then
                 p = pfti(c) + pi - 1
                 if (pwtgcell(p)>0._r8) then
                    rootr_col(c,j) = rootr_col(c,j) + rootr_pft(p,j) * qflx_tran_veg_pft(p) * pwtcol(p)
+!                  write(iulog,*)'qflx_tran_veg_pft: ',qflx_tran_veg_pft(p)
                 end if
              end if
           end do
        end do
 !dir$ concurrent
 !cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
           if (pi <= npfts(c)) then
              p = pfti(c) + pi - 1
              if (pwtgcell(p)>0._r8) then
@@ -500,10 +573,11 @@ contains
     do j = 1, nlevsoi
 !dir$ concurrent
 !cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
           if (temp(c) /= 0._r8) then
              rootr_col(c,j) = rootr_col(c,j)/temp(c)
+!            write(iulog,*)'rootr_col: ',rootr_col(c,j)
           end if
        end do
     end do
@@ -514,8 +588,8 @@ contains
     do j = 1, nlevsoi
 !dir$ concurrent
 !cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
 
           s1 = 0.5_r8*(h2osoi_vol(c,j) + h2osoi_vol(c,min(nlevsoi, j+1))) / &
                (0.5_r8*(watsat(c,j)+watsat(c,min(nlevsoi, j+1))))
@@ -546,8 +620,8 @@ contains
     j = 1
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
        qin    = qflx_infl(c)
        den    = (zmm(c,j+1)-zmm(c,j))
        num    = (smp(c,j+1)-smp(c,j)) - den
@@ -565,8 +639,8 @@ contains
     do j = 2, nlevsoi - 1
 !dir$ concurrent
 !cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
           den    = (zmm(c,j) - zmm(c,j-1))
           num    = (smp(c,j)-smp(c,j-1)) - den
           qin    = -hk(c,j-1)*num/den
@@ -589,8 +663,8 @@ contains
     j = nlevsoi
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
        den    = (zmm(c,j) - zmm(c,j-1))
        num    = (smp(c,j)-smp(c,j-1)) - den
        qin    = -hk(c,j-1)*num/den
@@ -607,7 +681,7 @@ contains
     ! Solve for dwat
 
     jtop(:) = 1
-    call Tridiagonal(lbc, ubc, 1, nlevsoi, jtop, num_soilc, filter_soilc, &
+    call Tridiagonal(lbc, ubc, 1, nlevsoi, jtop, num_hydrologyc, filter_hydrologyc, &
                      amx, bmx, cmx, rmx, dwat(lbc:ubc,1:nlevsoi))
 
     ! Renew the mass of liquid water
@@ -615,8 +689,8 @@ contains
     do j= 1,nlevsoi
 !dir$ concurrent
 !cdir nodep
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_hydrologyc
+          c = filter_hydrologyc(fc)
           h2osoi_liq(c,j) = h2osoi_liq(c,j) + dwat(c,j)*dzmm(c,j)
        end do
     end do
@@ -629,27 +703,30 @@ contains
 ! !IROUTINE: Drainage
 !
 ! !INTERFACE:
-  subroutine Drainage(lbc, ubc, num_soilc, filter_soilc, vol_liq, hk, &
-          icefrac)
+  subroutine Drainage(lbc, ubc, num_hydrologyc, filter_hydrologyc, &
+                      num_urbanc, filter_urbanc, vol_liq, hk, &
+                      icefrac)
 !
 ! !DESCRIPTION:
 ! Calculate subsurface drainage
 !
 ! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
+    use shr_kind_mod, only : r8 => shr_kind_r8
     use clmtype
     use clm_time_manager, only : get_step_size
-    use clm_varcon  , only: pondmx, tfrz
+    use clm_varcon  , only : pondmx, tfrz, icol_roof, icol_road_imperv, icol_road_perv
     use clm_varpar  , only : nlevsoi
 !
 ! !ARGUMENTS:
     implicit none
-    integer , intent(in) :: lbc, ubc                   ! column bounds
-    integer , intent(in) :: num_soilc                  ! number of column soil points in column filter
-    integer , intent(in) :: filter_soilc(ubc-lbc+1)    ! column filter for soil points
-    real(r8), intent(in) :: vol_liq(lbc:ubc,1:nlevsoi) ! partial volume of liquid water in layer
-    real(r8), intent(in) :: hk(lbc:ubc,1:nlevsoi)      ! hydraulic conductivity (mm h2o/s)
-    real(r8), intent(in) :: icefrac(lbc:ubc,1:nlevsoi) ! fraction of ice in layer
+    integer , intent(in) :: lbc, ubc                     ! column bounds
+    integer , intent(in) :: num_hydrologyc               ! number of column soil points in column filter
+    integer , intent(in) :: num_urbanc                   ! number of column urban points in column filter
+    integer , intent(in) :: filter_urbanc(ubc-lbc+1)     ! column filter for urban points
+    integer , intent(in) :: filter_hydrologyc(ubc-lbc+1) ! column filter for soil points
+    real(r8), intent(in) :: vol_liq(lbc:ubc,1:nlevsoi)   ! partial volume of liquid water in layer
+    real(r8), intent(in) :: hk(lbc:ubc,1:nlevsoi)        ! hydraulic conductivity (mm h2o/s)
+    real(r8), intent(in) :: icefrac(lbc:ubc,1:nlevsoi)   ! fraction of ice in layer
 !
 ! !CALLED FROM:
 !
@@ -665,6 +742,7 @@ contains
 !
 ! local pointers to original implicit in arguments
 !
+    integer , pointer :: ctype(:)          !column type index
     integer , pointer :: snl(:)            !number of snow layers
     real(r8), pointer :: qflx_snowcap(:)   !excess precipitation due to snow capping (mm H2O /s) [+]
     real(r8), pointer :: qflx_dew_grnd(:)  !ground surface dew formation (mm H2O /s) [+]
@@ -728,6 +806,9 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
+    ctype         => clm3%g%l%c%itype
+!   cgridcell     => clm3%g%l%c%gridcell
+
     snl           => clm3%g%l%c%cps%snl
     dz            => clm3%g%l%c%cps%dz
     bsw           => clm3%g%l%c%cps%bsw
@@ -762,8 +843,8 @@ contains
     do j = 1,nlevsoi
 !dir$ concurrent
 !cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
           dzmm(c,j) = dz(c,j)*1.e3_r8
        end do
     end do
@@ -772,8 +853,8 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
        qflx_drain(c) = 0._r8 
        rsub_bot(c)   = 0._r8
        rsub_sat(c)   = 0._r8
@@ -786,8 +867,8 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
        jwt(c) = nlevsoi
        do j = 2,nlevsoi
           if(zwt(c) <= zi(c,j)) then
@@ -800,8 +881,8 @@ contains
     ! Topographic runoff
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
        fff(c)         = 1._r8/ hkdepth(c)
        dzsum = 0._r8
        icefracsum = 0._r8
@@ -819,8 +900,8 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
 
        ! Matric potential at the layer above the water table
        s_node = vol_liq(c,jwt(c))/eff_porosity(c,jwt(c))
@@ -892,8 +973,8 @@ contains
     do j = nlevsoi,2,-1
 !dir$ concurrent
 !cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
           xsi(c)            = max(h2osoi_liq(c,j)-eff_porosity(c,j)*dzmm(c,j),0._r8)
           h2osoi_liq(c,j)   = min(eff_porosity(c,j)*dzmm(c,j), h2osoi_liq(c,j))
           h2osoi_liq(c,j-1) = h2osoi_liq(c,j-1) + xsi(c)
@@ -902,8 +983,8 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
        xs1(c)          = max(h2osoi_liq(c,1)-(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1)),0._r8)
        h2osoi_liq(c,1) = min(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1), h2osoi_liq(c,1))
        rsub_sat(c)     = xs1(c) / dtime
@@ -918,8 +999,8 @@ contains
     do j = 1, nlevsoi-1
 !dir$ concurrent
 !cdir nodep
-       do fc = 1, num_soilc
-          c = filter_soilc(fc)
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
           if (h2osoi_liq(c,j) < 0._r8) then
              xs(c) = watmin - h2osoi_liq(c,j)
           else
@@ -933,8 +1014,8 @@ contains
     j = nlevsoi
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
        if (h2osoi_liq(c,j) < watmin) then
           xs(c) = watmin-h2osoi_liq(c,j)
        else
@@ -947,8 +1028,8 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-    do fc = 1, num_soilc
-       c = filter_soilc(fc)
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
 
        ! Sub-surface runoff and drainage
 
@@ -974,6 +1055,35 @@ contains
              h2osoi_ice(c,1) = h2osoi_ice(c,1) - (qflx_sub_snow(c) * dtime)
           end if
        end if
+    end do
+
+    ! No drainage for urban columns (except for pervious road as computed above)
+
+!dir$ concurrent
+!cdir nodep
+    do fc = 1, num_urbanc
+       c = filter_urbanc(fc)
+       if (ctype(c) /= icol_road_perv) then
+         qflx_drain(c) = 0._r8
+         qflx_qrgwl(c) = 0._r8
+         eflx_impsoil(c) = 0._r8
+       end if
+
+       ! Renew the ice and liquid mass due to condensation for urban roof and impervious road
+
+       if (ctype(c) == icol_roof .or. ctype(c) == icol_road_imperv) then
+         if (snl(c)+1 >= 1) then
+            h2osoi_liq(c,1) = h2osoi_liq(c,1) + qflx_dew_grnd(c) * dtime
+            h2osoi_ice(c,1) = h2osoi_ice(c,1) + (qflx_dew_snow(c) * dtime)
+            if (qflx_sub_snow(c)*dtime > h2osoi_ice(c,1)) then
+               qflx_sub_snow(c) = h2osoi_ice(c,1)/dtime
+               h2osoi_ice(c,1) = 0._r8
+            else
+               h2osoi_ice(c,1) = h2osoi_ice(c,1) - (qflx_sub_snow(c) * dtime)
+            end if
+         end if
+       end if
+
     end do
 
   end subroutine Drainage

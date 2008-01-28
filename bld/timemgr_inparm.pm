@@ -95,6 +95,14 @@ sub set_output_values {
   }
   $self->requiredVar( "start_ymd" );
 
+  # Starting time of day
+  unless ( defined($NLref->{'start_tod'}) ) {
+    $opt = $self->default_vals( 'start_tod' );
+    if ( defined($opt) ) {
+       $NLref->{'start_tod'} = $opt;
+    }
+  }
+
   # Orbit (if not coupled)
   if ( $self->{'MODE'} ne "ccsm_seq" ) {
      unless ( defined($NLref->{'orb_obliq'}) and defined($NLref->{'orb_eccen'}) and

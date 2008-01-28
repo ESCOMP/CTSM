@@ -1,0 +1,16 @@
+ &drv_in
+ orb_iyear_ad   = 1950
+ /
+ &clm_inparm
+ wrtdia         = .true.
+ hist_dov2xy    = .true.,.false.
+ hist_crtinic   = 'NONE'
+ hist_fincl1    = 'TBUILD', 'BUILDHEAT', 'TRAFFICFLUX', 'WASTEHEAT','TSNOW:A','SNOWLIQ:A','SNOWICE:A'
+ hist_fincl2    = 'TG','TBOT','FIRE','FIRA','FLDS','FSDS',
+                  'FSR','FSA','FGEV','FSH','FGR','TSOI',
+                  'ERRSOI','BUILDHEAT','SABV','SABG',
+                  'FSDSVD','FSDSND','FSDSVI','FSDSNI',
+                  'FSRVD','FSRND','FSRVI','FSRNI',
+                  'TSA','FCTR','FCEV','QBOT','Q2M','H2OSOI',
+                  'H2OSNO','SOILLIQ','SOILICE'
+ /

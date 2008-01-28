@@ -51,7 +51,7 @@ set res        = 48x96    # settings are [48x96   | 64x128  | 4x5  | 10x15 | 1.9
 set mask       = gx3v5    # settings are [default | USGS    | navy | gx3v5 | gx1v5   etc.      ]
 set sim_year   = default  # settings are [default | 1890    | 2000 | 2100                      ]
 set start_type = arb_ic   # settings are [arb_ic  | startup | continue | branch                ] (default is arb_ic)
-set runlen     = 2d       # settings are [ integer<sdy> where s=step, d=days, y=years          ] (default is 2d)
+set runlen     = 2d       # settings are [ integer<sdy> where s=cpling-step, d=days, y=years   ] (default is 2d)
 set ret_pd     = 0        # settings are [0 (no archiving), >0 (days to save to archive)       ]
 set resub_date = 0        # settings are [0 (no resubmission), > 0 (date {YYYYMMDD} to run to) ]
 #--------------------------------------------------------------------------------------------

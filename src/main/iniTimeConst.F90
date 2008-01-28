@@ -25,6 +25,7 @@ subroutine iniTimeConst
   use clm_atmlnd  , only : clm_a2l
   use clm_varpar  , only : nlevsoi, nlevlak, lsmlon, lsmlat, numpft, numrad
   use clm_varcon  , only : istice, istdlak, istwet, isturb, &
+                           icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv, &
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
                            albsat, albdry
   use clm_varctl  , only : nsrest, fsurdat,scmlon,scmlat,single_column
@@ -68,7 +69,15 @@ subroutine iniTimeConst
   integer , pointer :: pgridcell(:)       ! gridcell index of corresponding pft
   integer , pointer :: clandunit(:)       ! landunit index of column
   integer , pointer :: cgridcell(:)       ! gridcell index of column
+  integer , pointer :: ctype(:)           ! column type index
   integer , pointer :: ltype(:)           ! landunit type index
+  real(r8), pointer :: sandfrac_road(:,:) ! sand fraction of urban road
+  real(r8), pointer :: clayfrac_road(:,:) ! clay fraction of urban road
+  real(r8), pointer :: scalez_wall(:)     ! urban wall layer thickness discretization
+  real(r8), pointer :: scalez_roof(:)     ! urban roof layer thickness discretization
+  real(r8), pointer :: thick_wall(:)      ! total thickness of urban wall
+  real(r8), pointer :: thick_roof(:)      ! total thickness of urban roof
+
 !
 ! local pointers to implicit out arguments
 !
@@ -76,6 +85,7 @@ subroutine iniTimeConst
   real(r8), pointer :: zi(:,:)            ! interface level below a "z" level (m)
   real(r8), pointer :: dz(:,:)            ! layer thickness depth (m)
   real(r8), pointer :: rootfr(:,:)        ! fraction of roots in each soil layer
+  real(r8), pointer :: rootfr_road_perv(:,:) ! fraction of roots in each soil layer for urban pervious road
   real(r8), pointer :: rresis(:,:)        !root resistance by layer (0-1)  (nlevsoi)	
   real(r8), pointer :: dewmx(:)           ! maximum allowed dew [mm]
   real(r8), pointer :: bsw(:,:)           ! Clapp and Hornberger "b" (nlevsoi)  
@@ -114,6 +124,17 @@ subroutine iniTimeConst
   real(r8) :: tkm              ! mineral conductivity
   real(r8) :: xksat            ! maximum hydraulic conductivity of soil [mm/s]
   real(r8) :: scalez = 0.025_r8   ! Soil layer thickness discretization (m)
+#if (defined GRANDVIEW)
+! real(r8) :: scalez_wall = 0.781e-3_r8 ! urban wall layer thickness discretization
+                                        !  this gives a total "soil" depth of about 0.1072m
+! real(r8) :: scalez_roof = 1.455e-3_r8 ! urban roof layer thickness discretization
+                                        !  this gives a total "soil" depth of about 0.2m
+#else
+! real(r8) :: scalez_wall = 1.455e-3_r8 ! urban wall layer thickness discretization
+                                        !  this gives a total "soil" depth of about 0.2m
+! real(r8) :: scalez_roof = 1.455e-3_r8 ! urban roof layer thickness discretization
+                                        !  this gives a total "soil" depth of about 0.2m
+#endif
   real(r8) :: clay,sand        ! temporaries
   real(r8) :: slope,intercept        ! temporary, for rooting distribution
   integer  :: begp, endp       ! per-proc beginning and ending pft indices
@@ -139,6 +160,13 @@ subroutine iniTimeConst
   character(len=256) :: locfn                    ! local filename
   character(len= 32) :: subname = 'iniTimeConst' ! subroutine name
   integer :: mxsoil_color                        ! maximum number of soil color classes
+  real(r8), allocatable :: zurb_wall(:,:)        ! wall (layer node depth)
+  real(r8), allocatable :: zurb_roof(:,:)        ! roof (layer node depth)
+  real(r8), allocatable :: dzurb_wall(:,:)       ! wall (layer thickness)
+  real(r8), allocatable :: dzurb_roof(:,:)       ! roof (layer thickness)
+  real(r8), allocatable :: ziurb_wall(:,:)       ! wall (layer interface)
+  real(r8), allocatable :: ziurb_roof(:,:)       ! roof (layer interface)
+!------------------------------------------------------------------------
 
   integer :: closelatidx,closelonidx
   real(r8):: closelat,closelon
@@ -155,10 +183,17 @@ subroutine iniTimeConst
 
   ! Assign local pointers to derived subtypes components (landunit-level)
 
-  ltype           => clm3%g%l%itype
+  ltype               => clm3%g%l%itype
+  sandfrac_road       => clm3%g%l%lps%sandfrac_road
+  clayfrac_road       => clm3%g%l%lps%clayfrac_road
+  scalez_wall         => clm3%g%l%lps%scalez_wall
+  scalez_roof         => clm3%g%l%lps%scalez_roof
+  thick_wall          => clm3%g%l%lps%thick_wall
+  thick_roof          => clm3%g%l%lps%thick_roof
 
   ! Assign local pointers to derived subtypes components (column-level)
 
+  ctype           => clm3%g%l%c%itype
   clandunit       => clm3%g%l%c%landunit
   cgridcell       => clm3%g%l%c%gridcell
   z               => clm3%g%l%c%cps%z
@@ -171,6 +206,7 @@ subroutine iniTimeConst
   watsat          => clm3%g%l%c%cps%watsat
   watdry          => clm3%g%l%c%cps%watdry  
   watopt          => clm3%g%l%c%cps%watopt  
+  rootfr_road_perv => clm3%g%l%c%cps%rootfr_road_perv
   hksat           => clm3%g%l%c%cps%hksat
   sucsat          => clm3%g%l%c%cps%sucsat
   tkmg            => clm3%g%l%c%cps%tkmg
@@ -197,6 +233,14 @@ subroutine iniTimeConst
   sandfrac        => clm3%g%l%c%p%pps%sandfrac
   clayfrac        => clm3%g%l%c%p%pps%clayfrac
 #endif
+
+  allocate(zurb_wall(begl:endl,nlevsoi), zurb_roof(begl:endl,nlevsoi), &
+           dzurb_wall(begl:endl,nlevsoi), dzurb_roof(begl:endl,nlevsoi), &
+           ziurb_wall(begl:endl,0:nlevsoi), ziurb_roof(begl:endl,0:nlevsoi),  stat=ier)
+  if (ier /= 0) then
+     write (6,*)'iniTimeConst: allocation error for zurb_wall,zurb_roof,dzurb_wall,dzurb_roof,ziurb_wall,ziurb_roof'
+     call endrun()
+  end if
 
   ! --------------------------------------------------------------------
   ! Read soil color, sand and clay from surface dataset 
@@ -400,8 +444,8 @@ subroutine iniTimeConst
    end do
 
    ! --------------------------------------------------------------------
-   ! Define layer structure for soil and lakes
-   ! Vertical profile of snow is initialized in routine iniTimeVar
+   ! Define layer structure for soil, lakes, urban walls and roof 
+   ! Vertical profile of snow is not initialized here 
    ! --------------------------------------------------------------------
 
    ! check that lake and soil levels are the same for now
@@ -455,6 +499,80 @@ subroutine iniTimeConst
    enddo
    zisoi(nlevsoi) = zsoi(nlevsoi) + 0.5_r8*dzsoi(nlevsoi)
 
+   ! Column level initialization for urban wall and roof layers and interfaces
+!dir$ concurrent
+!cdir nodep
+   do l = begl, endl
+
+   ! "0" refers to urban wall/roof surface and "nlevsoi" refers to urban wall/roof bottom
+    if (ltype(l)==isturb) then
+   
+#if (defined VANCOUVER)
+      do j = 1, nlevsoi
+        zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/10.)  !node depths
+      end do
+      do j = 1, nlevsoi
+        zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/10.)  !node depths
+      end do
+#elif (defined MEXICOCITY)
+      do j = 1, nlevsoi
+        zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/10.)  !node depths
+      end do
+      do j = 1, nlevsoi
+        zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/10.)  !node depths
+      end do
+#elif (defined GRANDVIEW)
+!     do j = 1, nlevsoi
+!       zurb_wall(l,j) = (j-0.5)*(0.01072/10.)  !node depths
+!     end do
+!     do j = 1, nlevsoi
+!       zurb_roof(l,j) = scalez_roof(l)*(exp(0.5*(j-0.5))-1.)  !node depths
+!     end do
+      do j = 1, nlevsoi
+        zurb_wall(l,j) = scalez_wall(l)*(exp(0.5*(j-0.5))-1.)  !node depths
+      end do
+      do j = 1, nlevsoi
+        zurb_roof(l,j) = scalez_roof(l)*(exp(0.5*(j-0.5))-1.)  !node depths
+      end do
+#else
+      do j = 1, nlevsoi
+        zurb_wall(l,j) = scalez_wall(l)*(exp(0.5*(j-0.5))-1.)  !node depths
+      end do
+      do j = 1, nlevsoi
+        zurb_roof(l,j) = scalez_roof(l)*(exp(0.5*(j-0.5))-1.)  !node depths
+      end do
+#endif
+
+      dzurb_wall(l,1) = 0.5*(zurb_wall(l,1)+zurb_wall(l,2))    !thickness b/n two interfaces
+      do j = 2,nlevsoi-1
+        dzurb_wall(l,j)= 0.5*(zurb_wall(l,j+1)-zurb_wall(l,j-1)) 
+      enddo
+      dzurb_wall(l,nlevsoi) = zurb_wall(l,nlevsoi)-zurb_wall(l,nlevsoi-1)
+      write(iulog,*)'Total thickness of wall: ',sum(dzurb_wall(l,:))
+      write(iulog,*)'Wall layer thicknesses: ',dzurb_wall(l,:)
+      dzurb_roof(l,1) = 0.5*(zurb_roof(l,1)+zurb_roof(l,2))    !thickness b/n two interfaces
+      do j = 2,nlevsoi-1
+        dzurb_roof(l,j)= 0.5*(zurb_roof(l,j+1)-zurb_roof(l,j-1)) 
+      enddo
+      dzurb_roof(l,nlevsoi) = zurb_roof(l,nlevsoi)-zurb_roof(l,nlevsoi-1)
+      write(iulog,*)'Total thickness of roof: ',sum(dzurb_roof(l,:))
+      write(iulog,*)'Roof layer thicknesses: ',dzurb_roof(l,:)
+
+      ziurb_wall(l,0) = 0.
+      do j = 1, nlevsoi-1
+        ziurb_wall(l,j) = 0.5*(zurb_wall(l,j)+zurb_wall(l,j+1))          !interface depths
+      enddo
+      ziurb_wall(l,nlevsoi) = zurb_wall(l,nlevsoi) + 0.5*dzurb_wall(l,nlevsoi)
+      write(iulog,*)'Wall layer interface depths: ',ziurb_wall(l,:)
+      ziurb_roof(l,0) = 0.
+      do j = 1, nlevsoi-1
+        ziurb_roof(l,j) = 0.5*(zurb_roof(l,j)+zurb_roof(l,j+1))          !interface depths
+      enddo
+      ziurb_roof(l,nlevsoi) = zurb_roof(l,nlevsoi) + 0.5*dzurb_roof(l,nlevsoi)
+      write(iulog,*)'Roof layer interface depths: ',ziurb_roof(l,:)
+    end if
+   end do
+
    ! --------------------------------------------------------------------
    ! Initialize nitrogen deposition values 
    ! for now these are constants by gridcell, eventually they
@@ -499,53 +617,136 @@ subroutine iniTimeConst
       isoicol(c) = soic2d(g)
 
       ! Soil hydraulic and thermal properties
-      if (ltype(l)==istdlak .or. ltype(l)==istwet .or. &
-          ltype(l)==istice .or. ltype(l)==isturb ) then
+        ! Note that urban roof, sunwall and shadewall thermal properties used to 
+        ! derive thermal conductivity and heat capacity are set to special 
+        ! value because thermal conductivity and heat capacity for urban 
+        ! sunwall and shadewall are prescribed in SoilThermProp.F90 in 
+        ! SoilTemperatureMod.F90
+      if (ltype(l)==istdlak .or. ltype(l)==istwet .or. ltype(l)==istice) then
          do lev = 1,nlevsoi
-            bsw(c,lev) = spval
-            bsw2(c,lev) = spval
+            bsw(c,lev)    = spval
+            bsw2(c,lev)   = spval
             psisat(c,lev) = spval
             vwcsat(c,lev) = spval
             watsat(c,lev) = spval
-            hksat(c,lev) = spval
+            hksat(c,lev)  = spval
             sucsat(c,lev) = spval
-            tkmg(c,lev) = spval
+            tkmg(c,lev)   = spval
             tksatu(c,lev) = spval
-            tkdry(c,lev) = spval
-            csol(c,lev) = spval
+            tkdry(c,lev)  = spval
+            csol(c,lev)   = spval
             watdry(c,lev) = spval 
             watopt(c,lev) = spval 
          end do
-      else
+      else if (ltype(l)==isturb) then
+         if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
+             .or. ctype(c) == icol_roof) then
+            do lev = 1,nlevsoi
+               watsat(c,lev) = spval
+               bsw(c,lev)    = spval
+               bsw2(c,lev)   = spval
+               psisat(c,lev) = spval
+               vwcsat(c,lev) = spval
+               hksat(c,lev)  = spval
+               sucsat(c,lev) = spval
+               tkmg(c,lev)   = spval
+               tksatu(c,lev) = spval
+               tkdry(c,lev)  = spval
+               csol(c,lev)   = spval
+               watdry(c,lev) = spval 
+               watopt(c,lev) = spval 
+            end do
+         else if (ctype(c) == icol_road_imperv) then
+            do lev = 1,nlevsoi
+               clay          = clayfrac_road(l,lev)
+               sand          = sandfrac_road(l,lev)
+               watsat(c,lev) = 0.489 - 0.00126*sand
+               bd            = (1.-watsat(c,lev))*2.7e3
+               xksat         = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
+               tkm           = (8.80*sand+2.92*clay)/(sand+clay)        ! W/(m K)
+               
+               bsw(c,lev)    = 2.91 + 0.159*clay
+               bsw2(c,lev)   = -(3.10 + 0.157*clay - 0.003*sand)
+               psisat(c,lev) = -(exp((1.54 - 0.0095*sand + 0.0063*(100.0-sand-clay))*log(10.0))*9.8e-5)
+               vwcsat(c,lev) = (50.5 - 0.142*sand - 0.037*clay)/100.0
+               hksat(c,lev)  = xksat * exp(-zisoi(lev)/hkdepth(c))
+               sucsat(c,lev) = 10. * ( 10.**(1.88-0.0131*sand) )
+               tkmg(c,lev)   = tkm ** (1.- watsat(c,lev))           
+               tksatu(c,lev) = tkmg(c,lev)*0.57**watsat(c,lev)
+               tkdry(c,lev)  = (0.135*bd + 64.7) / (2.7e3 - 0.947*bd)  
+               csol(c,lev)   = (2.128*sand+2.385*clay) / (sand+clay)*1.e6  ! J/(m3 K)
+               watdry(c,lev) = spval 
+               watopt(c,lev) = spval 
+            end do
+         ! Currently, pervious road has same properties as soil
+         else if (ctype(c) == icol_road_perv) then 
+            do lev = 1,nlevsoi
+               clay          = clayfrac_road(l,lev)
+               sand          = sandfrac_road(l,lev)
+               watsat(c,lev) = 0.489 - 0.00126*sand
+               bd            = (1.-watsat(c,lev))*2.7e3
+               xksat         = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
+               tkm           = (8.80*sand+2.92*clay)/(sand+clay)        ! W/(m K)
+               
+               bsw(c,lev)    = 2.91 + 0.159*clay
+               bsw2(c,lev)   = -(3.10 + 0.157*clay - 0.003*sand)
+               psisat(c,lev) = -(exp((1.54 - 0.0095*sand + 0.0063*(100.0-sand-clay))*log(10.0))*9.8e-5)
+               vwcsat(c,lev) = (50.5 - 0.142*sand - 0.037*clay)/100.0
+               hksat(c,lev)  = xksat
+               sucsat(c,lev) = 10. * ( 10.**(1.88-0.0131*sand) )
+               tkmg(c,lev)   = tkm ** (1.- watsat(c,lev))           
+               tksatu(c,lev) = tkmg(c,lev)*0.57**watsat(c,lev)
+               tkdry(c,lev)  = (0.135*bd + 64.7) / (2.7e3 - 0.947*bd)  
+               csol(c,lev)   = (2.128*sand+2.385*clay) / (sand+clay)*1.e6  ! J/(m3 K)
+               watdry(c,lev) = watsat(c,lev) * (316230./sucsat(c,lev)) ** (-1./bsw(c,lev)) 
+               watopt(c,lev) = watsat(c,lev) * (158490./sucsat(c,lev)) ** (-1./bsw(c,lev)) 
+               rootfr_road_perv(c,lev) = 0.1  ! uniform profile
+            end do
+         end if
+      else  ! non-urban soil columns
          do lev = 1,nlevsoi
             clay = clay3d(g,lev)
             sand = sand3d(g,lev)
             watsat(c,lev) = 0.489_r8 - 0.00126_r8*sand
-            bd = (1._r8-watsat(c,lev))*2.7e3_r8
-            xksat = 0.0070556_r8 *( 10._r8**(-0.884_r8+0.0153_r8*sand) ) ! mm/s
-            tkm = (8.80_r8*sand+2.92_r8*clay)/(sand+clay)          ! W/(m K)
-
-            bsw(c,lev) = 2.91_r8 + 0.159_r8*clay
-            bsw2(c,lev) = -(3.10_r8 + 0.157_r8*clay - 0.003_r8*sand)
+            bd            = (1.-watsat(c,lev))*2.7e3_r8
+            xksat         = 0.0070556_r8 *( 10._r8**(-0.884_r8+0.0153_r8*sand) ) ! mm/s
+            tkm           = (8.80_r8*sand+2.92_r8*clay)/(sand+clay)        ! W/(m K)
+            
+            bsw(c,lev)    = 2.91_r8 + 0.159_r8*clay
+            bsw2(c,lev)   = -(3.10_r8 + 0.157_r8*clay - 0.003_r8*sand)
             psisat(c,lev) = -(exp((1.54_r8 - 0.0095_r8*sand + 0.0063_r8*(100.0_r8-sand-clay))*log(10.0_r8))*9.8e-5_r8)
             vwcsat(c,lev) = (50.5_r8 - 0.142_r8*sand - 0.037_r8*clay)/100.0_r8
-            hksat(c,lev) = xksat
+            hksat(c,lev)  = xksat
             sucsat(c,lev) = 10._r8 * ( 10._r8**(1.88_r8-0.0131_r8*sand) )
-            tkmg(c,lev) = tkm ** (1._r8- watsat(c,lev))
+            tkmg(c,lev)   = tkm ** (1._r8- watsat(c,lev))           
             tksatu(c,lev) = tkmg(c,lev)*0.57_r8**watsat(c,lev)
-            tkdry(c,lev) = (0.135_r8*bd + 64.7_r8) / (2.7e3_r8 - 0.947_r8*bd)
-            csol(c,lev) = (2.128_r8*sand+2.385_r8*clay) / (sand+clay)*1.e6_r8  ! J/(m3 K)
+            tkdry(c,lev)  = (0.135_r8*bd + 64.7_r8) / (2.7e3_r8 - 0.947_r8*bd)  
+            csol(c,lev)   = (2.128_r8*sand+2.385_r8*clay) / (sand+clay)*1.e6_r8  ! J/(m3 K)
             watdry(c,lev) = watsat(c,lev) * (316230._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
             watopt(c,lev) = watsat(c,lev) * (158490._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
          end do
       endif
 
-      ! Define lake or non-lake levels layers
+      ! Define lake or non-lake levels, layers and interfaces
       if (ltype(l) == istdlak) then
-         z(c,1:nlevlak) = zlak(1:nlevlak)
+         z(c,1:nlevlak)  = zlak(1:nlevlak)
          dz(c,1:nlevlak) = dzlak(1:nlevlak)
+      else if (ltype(l) == isturb) then
+         if (ctype(c)==icol_sunwall .or. ctype(c)==icol_shadewall) then
+            z(c,1:nlevsoi)  = zurb_wall(l,1:nlevsoi)
+            zi(c,0:nlevsoi) = ziurb_wall(l,0:nlevsoi)
+            dz(c,1:nlevsoi) = dzurb_wall(l,1:nlevsoi)
+         else if (ctype(c)==icol_roof) then
+            z(c,1:nlevsoi)  = zurb_roof(l,1:nlevsoi)
+            zi(c,0:nlevsoi) = ziurb_roof(l,0:nlevsoi)
+            dz(c,1:nlevsoi) = dzurb_roof(l,1:nlevsoi)
+         else
+            z(c,1:nlevsoi)  = zsoi(1:nlevsoi)
+            zi(c,0:nlevsoi) = zisoi(0:nlevsoi)
+            dz(c,1:nlevsoi) = dzsoi(1:nlevsoi)
+         end if
       else
-         z(c,1:nlevsoi) = zsoi(1:nlevsoi)
+         z(c,1:nlevsoi)  = zsoi(1:nlevsoi)
          zi(c,0:nlevsoi) = zisoi(0:nlevsoi)
          dz(c,1:nlevsoi) = dzsoi(1:nlevsoi)
       end if

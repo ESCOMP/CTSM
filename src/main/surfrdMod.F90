@@ -25,7 +25,8 @@ module surfrdMod
   use clm_varpar  , only : lsmlon, lsmlat
   use clm_varpar  , only : nlevsoi, numpft, &
                            maxpatch_pft, maxpatch_cft, maxpatch, &
-                           npatch_urban, npatch_lake, npatch_wet, npatch_glacier
+                           npatch_urban, npatch_lake, npatch_wet, npatch_glacier, &
+                           maxpatch_urb
   use clm_varsur  , only : wtxy, vegxy
   use clm_varsur  , only : pctspec
   use clm_varctl  , only : iulog
@@ -771,7 +772,8 @@ contains
 ! as soil color and percent sand and clay
 !
 ! !USES:
-    use pftvarcon   , only : noveg
+    use pftvarcon     , only : noveg
+    use UrbanInputMod , only : urbinp
     use domainMod   , only : domain_type
 !
 ! !ARGUMENTS:
@@ -792,7 +794,7 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer  :: n,nl,ns                    ! indices
+    integer  :: n,nl,ns,nurb,g             ! indices
     integer  :: begg,endg                  ! gcell beg/end
     integer  :: dimid,varid                ! netCDF id's
     integer  :: ret
@@ -846,27 +848,9 @@ contains
        call endrun()
     end if
 
-    ! Error check that urban parameterization is not yet finished
-
-    found = .false.
-    do nl = begg,endg
-       if (pcturb(nl) /= 0._r8) then
-          found = .true.
-          nindx = nl
-          exit
-       end if
-       if (found) exit
-    end do
-    if ( found ) then
-       write(iulog,*)'surfrd error: urban parameterization not implemented at nl= ',nindx,pcturb(nl)
-       call endrun()
-    end if
-
     ! Determine veg and wtxy for special landunits
 
     do nl = begg,endg
-       vegxy(nl,npatch_urban)  = noveg
-       wtxy(nl,npatch_urban)   = pcturb(nl)/100._r8
 
        vegxy(nl,npatch_lake)   = noveg
        wtxy(nl,npatch_lake)    = pctlak(nl)/100._r8
@@ -876,6 +860,25 @@ contains
 
        vegxy(nl,npatch_glacier)= noveg
        wtxy(nl,npatch_glacier) = pctgla(nl)/100._r8
+
+       ! Initialize urban weights
+
+       do nurb = npatch_urban, npatch_lake-1 
+          vegxy(nl,nurb) = noveg
+          wtxy(nl,nurb)  = pcturb(nl) / 100._r8
+       end do
+       if ( pcturb(nl) > 0.0_r8 )then
+          g = 1
+          if ( nl > 1 )then
+             call endrun( 'ERROR, more than one urban point' )
+          end if
+          wtxy(nl,npatch_urban)   = wtxy(nl,npatch_urban)*urbinp%wtlunit_roof(g)
+          wtxy(nl,npatch_urban+1) = wtxy(nl,npatch_urban+1)*(1 - urbinp%wtlunit_roof(g))/3
+          wtxy(nl,npatch_urban+2) = wtxy(nl,npatch_urban+2)*(1 - urbinp%wtlunit_roof(g))/3
+          wtxy(nl,npatch_urban+3) = wtxy(nl,npatch_urban+3)*(1 - urbinp%wtlunit_roof(g))/3 * (1.-urbinp%wtroad_perv(g))
+          wtxy(nl,npatch_urban+4) = wtxy(nl,npatch_urban+4)*(1 - urbinp%wtlunit_roof(g))/3 * urbinp%wtroad_perv(g)
+       end if
+
     end do
 
    deallocate(pctgla,pctlak,pctwet,pcturb)

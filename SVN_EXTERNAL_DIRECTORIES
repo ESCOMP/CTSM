@@ -9,4 +9,4 @@ src/utils/mct              https://svn-ccsm-models.cgd.ucar.edu/mct/trunk_tags/M
 src/utils/pio              https://svn-ccsm-models.cgd.ucar.edu/pio/trunk_tags/pio_prod_02
 tools/cprnc                https://svn-ccsm-models.cgd.ucar.edu/tools/cprnc/trunk_tags/cprnc_070817
 bld/perl5lib               https://svn-ccsm-models.cgd.ucar.edu/perl5lib/trunk_tags/perl5lib_071204
-bld/archiving              https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts_071107b/ccsm_utils/Tools/archiving
+bld/archiving              https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts_080108/ccsm_utils/Tools/archiving

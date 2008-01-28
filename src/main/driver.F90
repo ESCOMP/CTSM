@@ -28,9 +28,11 @@ module driver
 !  -> Hydrology1          canopy interception and precip on ground
 !     -> FracWet          fraction of wet vegetated surface and dry elai
 !  -> SurfaceRadiation    surface solar radiation
+!  -> UrbanRadiation      surface solar and longwave radiation for Urban landunits
 !  -> Biogeophysics1      leaf temperature and surface fluxes
 !  -> BareGroundFluxes    surface fluxes for bare soil or snow-covered
 !                         vegetation patches
+!  -> UrbanFluxes         surface fluxes for urban landunits
 !     -> MoninObukIni     first-guess Monin-Obukhov length and wind speed
 !     -> FrictionVelocity friction velocity and potential temperature and
 !                         humidity profiles
@@ -60,6 +62,7 @@ module driver
 !  -> SnowAge             update snow age for surface albedo calcualtion
 !  -> BalanceCheck        check for errors in energy and water balances
 !  -> SurfaceAlbedo       albedos for next time step
+!  -> UrbanAlbedo         Urban landunit albedos for next time step
 !  ====  End Loop over clumps  ====
 !
 ! * Average fluxes over time interval and send to flux coupler [COUP_CSM]
@@ -96,7 +99,7 @@ module driver
   use decompMod           , only : get_proc_clumps, get_clump_bounds
   use filterMod           , only : filter, setFilters
   use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal, pftdyn_cnbal 
-  use clm_varcon          , only : zlnd
+  use clm_varcon          , only : zlnd, isturb
   use clm_time_manager    , only : get_step_size, get_curr_calday, &
                                    get_curr_date, get_ref_date, get_nstep, is_perpetual
   use histFileMod         , only : hist_update_hbuf, hist_htapes_wrapup
@@ -146,6 +149,7 @@ module driver
   use RtmMod              , only : Rtmriverflux
 #endif
   use abortutils          , only : endrun
+  use UrbanMod            , only : UrbanAlbedo, UrbanRadiation, UrbanFluxes 
   use perf_mod
 
 !
@@ -187,16 +191,31 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 !EOP
 !
 ! !LOCAL VARIABLES:
-  real(r8) :: t1, t2, t3 ! temporary for mass balance checks
-  integer  :: nc, fc, c, fp, p         ! indices
-  integer  :: nclumps       ! number of clumps on this processor
-  integer  :: nstep         ! time step number
-  integer  :: begp, endp    ! clump beginning and ending pft indices
-  integer  :: begc, endc    ! clump beginning and ending column indices
-  integer  :: begl, endl    ! clump beginning and ending landunit indices
-  integer  :: begg, endg    ! clump beginning and ending gridcell indices
+!
+! local pointers to implicit in arguments
+!
+  integer , pointer :: clandunit(:) ! landunit index associated with each column
+  integer , pointer :: itypelun(:)  ! landunit type
+!
+! !OTHER LOCAL VARIABLES:
+  real(r8) :: t1, t2, t3                  ! temporary for mass balance checks
+  integer  :: nc, fc, c, fp, p, l         ! indices
+  integer  :: nclumps                     ! number of clumps on this processor
+  integer  :: nstep                       ! time step number
+  integer  :: begp, endp                  ! clump beginning and ending pft indices
+  integer  :: begc, endc                  ! clump beginning and ending column indices
+  integer  :: begl, endl                  ! clump beginning and ending landunit indices
+  integer  :: begg, endg                  ! clump beginning and ending gridcell indices
   type(column_type)  , pointer :: cptr    ! pointer to column derived subtype
 !-----------------------------------------------------------------------
+  ! Assign local pointers to derived subtypes components (landunit-level)
+
+  itypelun            => clm3%g%l%itype
+
+  ! Assign local pointers to derived subtypes components (column-level)
+
+  clandunit           => clm3%g%l%c%landunit
+
   ! Set pointers into derived type
 
   cptr => clm3%g%l%c
@@ -333,7 +352,20 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      ! ============================================================================
 
      call t_startf('surfrad')
-     call SurfaceRadiation(begp, endp)
+
+     ! Surface Radiation for non-urban columns
+
+     call SurfaceRadiation(begp, endp, &
+                           filter(nc)%num_nourbanp, filter(nc)%nourbanp)
+
+     ! Surface Radiation for urban columns
+
+     if (filter(nc)%num_urbanl > 0) then
+        call UrbanRadiation(nc, filter(nc)%num_urbanl, filter(nc)%urbanl, &
+                            filter(nc)%num_urbanc, filter(nc)%urbanc, &
+                            filter(nc)%num_urbanp, filter(nc)%urbanp)
+     end if
+
      call t_stopf('surfrad')
 
      ! ============================================================================
@@ -353,9 +385,23 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      ! ============================================================================
 
      call t_startf('bgflux')
+
+     ! BareGroundFluxes for all pfts except lakes and urban landunits
+
      call BareGroundFluxes(begp, endp, &
-                           filter(nc)%num_nolakep, filter(nc)%nolakep)
+                           filter(nc)%num_nolakeurbanp, filter(nc)%nolakeurbanp)
      call t_stopf('bgflux')
+
+     ! Fluxes for all Urban landunits
+
+     if (filter(nc)%num_urbanl > 0) then
+        call t_startf('uflux')
+        call UrbanFluxes(nc, begp, endp, begl, endl, begc, endc, &
+                         filter(nc)%num_urbanl, filter(nc)%urbanl, &
+                         filter(nc)%num_urbanc, filter(nc)%urbanc, &
+                         filter(nc)%num_urbanp, filter(nc)%urbanp)
+        call t_stopf('uflux')
+     end if
 
      ! ============================================================================
      ! Determine non snow-covered vegetation surface temperature and fluxes
@@ -427,7 +473,8 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      call t_startf('hydro2')
      call Hydrology2(begc, endc, begp, endp, &
                      filter(nc)%num_nolakec, filter(nc)%nolakec, &
-                     filter(nc)%num_soilc, filter(nc)%soilc, &
+                     filter(nc)%num_hydrologyc, filter(nc)%hydrologyc, &
+                     filter(nc)%num_urbanc, filter(nc)%urbanc, &
                      filter(nc)%num_snowc, filter(nc)%snowc, &
                      filter(nc)%num_nosnowc, filter(nc)%nosnowc)
      call t_stopf('hydro2')
@@ -442,11 +489,12 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      call t_stopf('hylake')
 
      ! ============================================================================
-     ! Update Snow Age (needed for surface albedo calculation
+     ! Update Snow Age (needed for surface albedo calculation)
      ! ============================================================================
 
      call t_startf('snowage')
-     call SnowAge(begc, endc)
+     call SnowAge(begc, endc, &
+                  filter(nc)%num_nourbanc, filter(nc)%nourbanc)
 
      ! ============================================================================
      ! ! Fraction of soil covered by snow (Z.-L. Yang U. Texas)
@@ -455,7 +503,13 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 !dir$ concurrent
 !cdir nodep
      do c = begc,endc
-        cptr%cps%frac_sno(c) = cptr%cps%snowdp(c) / (10._r8*zlnd + cptr%cps%snowdp(c))
+        l = clandunit(c)
+        if (itypelun(l) == isturb) then
+          ! Urban landunit use Bonan 1996 (LSM Technical Note)
+          cptr%cps%frac_sno(c) = min( cptr%cps%snowdp(c)/0.05_r8, 1._r8)
+        else
+          cptr%cps%frac_sno(c) = cptr%cps%snowdp(c) / (10._r8*zlnd + cptr%cps%snowdp(c))
+        end if
      end do
      call t_stopf('snowage')
 
@@ -525,16 +579,35 @@ subroutine driver1 (doalb, caldayp1, declinp1)
         call t_stopf('cnbalchk')
      end if
 #endif
-
      ! ============================================================================
      ! Determine albedos for next time step
      ! ============================================================================
 
      if (doalb) then
         call t_startf('surfalb')
+
+        ! Albedos for non-urban columns
+
         call SurfaceAlbedo(begg, endg, begc, endc, begp, endp, &
+                           filter(nc)%num_nourbanc, filter(nc)%nourbanc, &
+                           filter(nc)%num_nourbanp, filter(nc)%nourbanp, &
                            caldayp1, declinp1)
+
         call t_stopf('surfalb')
+
+        ! Albedos for urban columns
+
+        call t_startf('urbsurfalb')
+
+        if (filter(nc)%num_urbanl > 0) then
+           call UrbanAlbedo(nc, filter(nc)%num_urbanl, filter(nc)%urbanl, &
+                            filter(nc)%num_urbanc, filter(nc)%urbanc, &
+                            filter(nc)%num_urbanp, filter(nc)%urbanp, &
+                            caldayp1, declinp1)
+        end if
+
+        call t_stopf('urbsurfalb')
+
      end if
 
   end do
@@ -675,6 +748,8 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
         call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
         call lpj(begg, endg, begp, endp, filter(nc)%num_natvegp, filter(nc)%natvegp, kyr)
         call lpjreset(begg, endg, begc, endc, begp, endp, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+                      filter(nc)%num_nourbanc, filter(nc)%nourbanc, &
+                      filter(nc)%num_nourbanp, filter(nc)%nourbanp, &
                       caldayp1, declinp1)
         call resetWeightsDGVM(begg, endg, begc, endc, begp, endp)
         call resetTimeConstDGVM(begp, endp)

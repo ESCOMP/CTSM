@@ -1,8 +1,11 @@
-vo    => voc      is on
-ds    => dust     is on
-r     => rtm      is on
-per   => pergro   is on
-sc    => seq-ccsm is on
+vo    => voc                    is on
+ds    => dust                   is on
+r     => rtm                    is on
+per   => pergro                 is on
+sc    => seq-ccsm               is on
+urb   => urban_solar 	        is on
+van   => VANCOUVER              is on
+mex   => MEXICOCITY             is on
 
 _cnn  => bgc is in cn   mode with suplemental nitrogen on
 _cn   => bgc is in cn   mode with suplemental nitrogen off

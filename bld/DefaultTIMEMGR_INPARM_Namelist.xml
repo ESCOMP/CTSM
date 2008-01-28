@@ -17,8 +17,13 @@
 <atm_cpl_dt>3600</atm_cpl_dt>
 
 <!-- Length of run -->
-<stop_option>'ndays'</stop_option>
-<stop_n>1</stop_n>
+<stop_option RESOLUTION="1x1_mexicocityMEX" mask="navy" >'nsteps'</stop_option>
+<stop_option RESOLUTION="1x1_vancouverCAN"  mask="navy" >'nsteps'</stop_option>
+<stop_option                                            >'ndays'</stop_option>
+
+<stop_n      RESOLUTION="1x1_mexicocityMEX" mask="navy" >159</stop_n>
+<stop_n      RESOLUTION="1x1_vancouverCAN"  mask="navy" >330</stop_n>
+<stop_n                                                 >1</stop_n>
 
 <!-- Length of time for restarts -->
 <restart_option>'monthly'</restart_option>
@@ -26,10 +31,16 @@
 <!-- Starting date.  These match the ic_ymd attributes of the finidat files -->
 <!-- in DefaultCLM_INPARM_Namelist.xml.  Note that only dates that are     -->
 <!-- different from 101 are specified; 101 is the "default default".       -->
-<start_ymd RESOLUTION="1.9x2.5" mask="gx1v4" BGC="none">901</start_ymd>
-<start_ymd RESOLUTION="1.9x2.5" mask="gx1v5" BGC="cn"  >25101</start_ymd>
-<start_ymd RESOLUTION="1x1.25"  mask="gx1v5" BGC="none">1998011</start_ymd>
-<start_ymd>101</start_ymd>
+<start_ymd RESOLUTION="1.9x2.5"           mask="gx1v4" BGC="none">901</start_ymd>
+<start_ymd RESOLUTION="1.9x2.5"           mask="gx1v5" BGC="cn"  >25101</start_ymd>
+<start_ymd RESOLUTION="1x1.25"            mask="gx1v5" BGC="none">1998011</start_ymd>
+<start_ymd RESOLUTION="1x1_mexicocityMEX" mask="navy"            >19931201</start_ymd>
+<start_ymd RESOLUTION="1x1_vancouverCAN"  mask="navy"            >19920812</start_ymd>
+<start_ymd                                                   >101</start_ymd>
+
+<start_tod RESOLUTION="1x1_mexicocityMEX" mask="navy"            >10800</start_tod>
+<start_tod RESOLUTION="1x1_vancouverCAN"  mask="navy"            >72000</start_tod>
+<start_tod                                                   >0</start_tod>
 
 <!-- Orbit -->
 <orb_iyear_ad >2000</orb_iyear_ad>

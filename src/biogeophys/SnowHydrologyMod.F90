@@ -401,7 +401,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_varcon, only : istsoil
+    use clm_varcon, only : istsoil, isturb
 !
 ! !ARGUMENTS:
     implicit none
@@ -422,7 +422,7 @@ contains
 ! local pointers to implicit in arguments
 !
     integer, pointer :: clandunit(:)       !landunit index for each column
-    integer, pointer :: ityplun(:)         !landunit type
+    integer, pointer :: ltype(:)           !landunit type
 !
 ! local pointers to implicit inout arguments
 !
@@ -458,7 +458,7 @@ contains
 
     ! Assign local pointers to derived subtypes (landunit-level)
 
-    ityplun    => clm3%g%l%itype
+    ltype    => clm3%g%l%itype
 
     ! Assign local pointers to derived subtypes (column-level)
 
@@ -490,10 +490,10 @@ contains
        l = clandunit(c)
        do j = msn_old(c)+1,0
           if (h2osoi_ice(c,j) <= .1_r8) then
-             if (ityplun(l) == istsoil) then
+             if (ltype(l) == istsoil .or. ltype(l)==isturb) then
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
-             else if (ityplun(l) /= istsoil .and. j /= 0) then
+             else if (ltype(l) /= istsoil .and. ltype(l) /= isturb .and. j /= 0) then
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
              end if
@@ -548,7 +548,9 @@ contains
           snl(c) = 0
           h2osno(c) = zwice(c)
           if (h2osno(c) <= 0._r8) snowdp(c) = 0._r8
-          if (ityplun(l) == istsoil) h2osoi_liq(c,1) = h2osoi_liq(c,1) + zwliq(c)
+          if (ltype(l) == istsoil .or. ltype(l) == isturb) then
+             h2osoi_liq(c,1) = h2osoi_liq(c,1) + zwliq(c)
+          end if
        end if
     end do
 

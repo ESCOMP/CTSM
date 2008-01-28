@@ -152,10 +152,25 @@ smE34 TSM.sh 4p_vodsrsc_h clm_std 19981231:YEARLY:1800  64x128^360x720 USGS 48 a
 smE35 TSM.sh 4p_vodsrsc_m clm_std 19981231:YEARLY:1800  64x128^360x720 USGS 48 arb_ic
 smE36 TSM.sh 4p_vodsrsc_o clm_std 19981231:YEARLY:1800  64x128^360x720 USGS 48 arb_ic
 
-smEA1 TSM.sh _sc_ds clm_std 19981001:NONE:3600 1x1_camdenNJ navy -90     arb_ic
-erEA1 TER.sh _sc_ds clm_std 19981001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic
-brEA1 TBR.sh _sc_ds clm_std 19981001:NONE:3600 1x1_camdenNJ navy -30+-60 arb_ic
-blEA1 TBL.sh _sc_ds clm_std 19981001:NONE:3600 1x1_camdenNJ navy -90     arb_ic
+smCA1 TSM.sh _sc_ds clm_std^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90     arb_ic
+erCA1 TER.sh _sc_ds clm_std^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic
+brCA1 TBR.sh _sc_ds clm_std^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -30+-60 arb_ic
+blCA1 TBL.sh _sc_ds clm_std^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90     arb_ic
+
+smCA2 TSM.sh _sc_ds clm_std^nl_urb 19971231:NONE:3600 1x1_asphaltjungleNJ navy -90     arb_ic
+erCA2 TER.sh _sc_ds clm_std^nl_urb 19971231:NONE:3600 1x1_asphaltjungleNJ navy -45+-45 arb_ic
+brCA2 TBR.sh _sc_ds clm_std^nl_urb 19971231:NONE:3600 1x1_asphaltjungleNJ navy -30+-60 arb_ic
+blCA2 TBL.sh _sc_ds clm_std^nl_urb 19971231:NONE:3600 1x1_asphaltjungleNJ navy -90     arb_ic
+
+smNB1 TSM.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159     arb_ic
+erNB1 TER.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 59+100  arb_ic
+brNB1 TBR.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 48+111  arb_ic
+blNB1 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159     arb_ic
+
+smOC1 TSM.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330     arb_ic
+erOC1 TER.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 115+115 arb_ic
+brOC1 TBR.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 96+234  arb_ic
+blOC1 TBL.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330     arb_ic
 
 sm141 TSM.sh 17p__dh clm_pftdyn 10001230:MONTHLY:1800 10x15 USGS 48    arb_ic
 er141 TER.sh 17p__dh clm_pftdyn 10001230:MONTHLY:1800 10x15 USGS 10+38 arb_ic

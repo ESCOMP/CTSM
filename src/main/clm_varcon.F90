@@ -18,7 +18,8 @@ module clm_varcon
                            SHR_CONST_CPICE,SHR_CONST_CPDAIR,SHR_CONST_LATVAP, &
                            SHR_CONST_LATSUB,SHR_CONST_LATICE,SHR_CONST_RHOFW, &
                            SHR_CONST_RHOICE,SHR_CONST_TKFRZ,SHR_CONST_REARTH, &
-                           SHR_CONST_PDB
+                           SHR_CONST_PDB, SHR_CONST_PI, SHR_CONST_CDAY,       &
+                           SHR_CONST_RGAS
   use clm_varpar   , only: numrad, nlevsoi, nlevlak
 !
 ! !PUBLIC TYPES:
@@ -30,6 +31,12 @@ module clm_varcon
 !
 !EOP
 !-----------------------------------------------------------------------
+
+  !------------------------------------------------------------------
+  ! Initialize mathmatical constants
+  !------------------------------------------------------------------
+
+  real(r8) :: rpi    = SHR_CONST_PI
 
   !------------------------------------------------------------------
   ! Initialize physical constants
@@ -49,6 +56,7 @@ module clm_varcon
   real(r8) :: hfus   = SHR_CONST_LATICE !Latent heat of fusion for ice [J/kg]
   real(r8) :: denh2o = SHR_CONST_RHOFW  !density of liquid water [kg/m3]
   real(r8) :: denice = SHR_CONST_RHOICE !density of ice [kg/m3]
+  real(r8) :: rgas   = SHR_CONST_RGAS   !universal gas constant [J/K/kmole]
   real(r8) :: tkair  = 0.023_r8     !thermal conductivity of air   [W/m/k]
   real(r8) :: tkice  = 2.290_r8     !thermal conductivity of ice   [W/m/k]
   real(r8) :: tkwat  = 0.6_r8       !thermal conductivity of water [W/m/k]
@@ -60,6 +68,7 @@ module clm_varcon
 
   real(r8) :: re = SHR_CONST_REARTH*0.001_r8 !radius of earth (km)
 
+  real(r8), public, parameter ::  secspday= SHR_CONST_CDAY  ! Seconds per day
   real(r8), public, parameter ::  spval = 1.e36_r8  ! special value for real data
   integer , public, parameter :: ispval = -9999     ! special value for int data
 
@@ -73,6 +82,7 @@ module clm_varcon
   real(r8) :: ssi    = 0.033_r8   !Irreducible water saturation of snow
   real(r8) :: wimp   = 0.05_r8    !Water impremeable if porosity less than wimp
   real(r8) :: pondmx = 10.0_r8    !Ponding depth (mm)
+  real(r8) :: pondmx_urban = 1.0  !Ponding depth for urban roof and impervious road (mm)
   ! 4/14/05: PET
   ! Adding isotope code
   real(r8), parameter :: preind_atm_del13c = -6.0   ! preindustrial value for atmospheric del13C
@@ -97,6 +107,14 @@ module clm_varcon
   integer :: istslak = 4  !shallow lake landunit type
   integer :: istwet  = 5  !wetland      landunit type
   integer :: isturb  = 6  !urban        landunit type
+
+  ! urban column types
+
+  integer :: icol_roof        = 61
+  integer :: icol_sunwall     = 62
+  integer :: icol_shadewall   = 63
+  integer :: icol_road_imperv = 64
+  integer :: icol_road_perv   = 65
 
   !------------------------------------------------------------------
   ! Initialize miscellaneous radiation constants

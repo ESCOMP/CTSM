@@ -1,3 +1,4 @@
+-nospmd
 -smp
 -maxpft 17
 -bgc cn

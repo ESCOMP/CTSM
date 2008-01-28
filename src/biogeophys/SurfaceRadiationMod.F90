@@ -13,13 +13,14 @@ module SurfaceRadiationMod
 !
 ! !USES:
    use shr_kind_mod, only: r8 => shr_kind_r8
+   use shr_sys_mod , only: shr_sys_flush
 !
 ! !PUBLIC TYPES:
-   implicit none
-   save
+  implicit none
+  save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-   public :: SurfaceRadiation ! Solar fluxes absorbed by veg and ground surface
+  public :: SurfaceRadiation ! Solar fluxes absorbed by veg and ground surface
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -40,7 +41,7 @@ contains
 ! !IROUTINE: SurfaceRadiation
 !
 ! !INTERFACE:
-   subroutine SurfaceRadiation(lbp, ubp)
+   subroutine SurfaceRadiation(lbp, ubp, num_nourbanp, filter_nourbanp)
 !
 ! !DESCRIPTION: 
 ! Solar fluxes absorbed by vegetation and ground surface
@@ -67,7 +68,9 @@ contains
 !
 ! !ARGUMENTS:
      implicit none
-     integer, intent(in) :: lbp, ubp      ! pft upper and lower bounds
+     integer, intent(in) :: lbp, ubp                   ! pft upper and lower bounds
+     integer, intent(in) :: num_nourbanp               ! number of pfts in non-urban points in pft filter
+     integer, intent(in) :: filter_nourbanp(ubp-lbp+1) ! pft filter for non-urban points
 !
 ! !CALLED FROM:
 ! subroutine Biogeophysics1 in module Biogeophysics1Mod
@@ -174,8 +177,9 @@ contains
 !
 ! !OTHER LOCAL VARIABLES:
 !
-     integer , parameter :: nband = numrad ! number of solar radiation waveband classes
+     integer , parameter :: nband = numrad    ! number of solar radiation waveband classes
      real(r8), parameter :: mpe = 1.e-06_r8   ! prevents overflow for division by zero
+     integer  :: fp                  ! non-urban filter pft index
      integer  :: p                   ! pft index
      integer  :: c                   ! column index
      integer  :: g                   ! grid cell index
@@ -250,24 +254,24 @@ contains
      fsds_nir_d_ln => clm3%g%l%c%p%pef%fsds_nir_d_ln
      fsr_vis_d_ln  => clm3%g%l%c%p%pef%fsr_vis_d_ln
      fsr_nir_d_ln  => clm3%g%l%c%p%pef%fsr_nir_d_ln
-     eff_kid =>       clm3%g%l%c%p%pps%eff_kid
-     eff_kii =>       clm3%g%l%c%p%pps%eff_kii
-     sun_faid =>      clm3%g%l%c%p%pps%sun_faid
-     sun_faii =>      clm3%g%l%c%p%pps%sun_faii
-     sha_faid =>      clm3%g%l%c%p%pps%sha_faid
-     sha_faii =>      clm3%g%l%c%p%pps%sha_faii
-     sun_add =>       clm3%g%l%c%p%pef%sun_add
-     tot_aid =>       clm3%g%l%c%p%pef%tot_aid
-     sun_aid =>       clm3%g%l%c%p%pef%sun_aid
-     sun_aii =>       clm3%g%l%c%p%pef%sun_aii
-     sha_aid =>       clm3%g%l%c%p%pef%sha_aid
-     sha_aii =>       clm3%g%l%c%p%pef%sha_aii
-     sun_atot =>      clm3%g%l%c%p%pef%sun_atot
-     sha_atot =>      clm3%g%l%c%p%pef%sha_atot
-     sun_alf =>       clm3%g%l%c%p%pef%sun_alf
-     sha_alf =>       clm3%g%l%c%p%pef%sha_alf
-     sun_aperlai =>   clm3%g%l%c%p%pef%sun_aperlai
-     sha_aperlai =>   clm3%g%l%c%p%pef%sha_aperlai
+     eff_kid       => clm3%g%l%c%p%pps%eff_kid
+     eff_kii       => clm3%g%l%c%p%pps%eff_kii
+     sun_faid      => clm3%g%l%c%p%pps%sun_faid
+     sun_faii      => clm3%g%l%c%p%pps%sun_faii
+     sha_faid      => clm3%g%l%c%p%pps%sha_faid
+     sha_faii      => clm3%g%l%c%p%pps%sha_faii
+     sun_add       => clm3%g%l%c%p%pef%sun_add
+     tot_aid       => clm3%g%l%c%p%pef%tot_aid
+     sun_aid       => clm3%g%l%c%p%pef%sun_aid
+     sun_aii       => clm3%g%l%c%p%pef%sun_aii
+     sha_aid       => clm3%g%l%c%p%pef%sha_aid
+     sha_aii       => clm3%g%l%c%p%pef%sha_aii
+     sun_atot      => clm3%g%l%c%p%pef%sun_atot
+     sha_atot      => clm3%g%l%c%p%pef%sha_atot
+     sun_alf       => clm3%g%l%c%p%pef%sun_alf
+     sha_alf       => clm3%g%l%c%p%pef%sha_alf
+     sun_aperlai   => clm3%g%l%c%p%pef%sun_aperlai
+     sha_aperlai   => clm3%g%l%c%p%pef%sha_aperlai
      
      ! Assign local pointers to derived type members (ecophysiological)
 
@@ -283,7 +287,8 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-     do p = lbp,ubp
+     do fp = 1,num_nourbanp
+        p = filter_nourbanp(fp)
         if (pwtgcell(p)>0._r8) then
            sabg(p) = 0._r8
            sabv(p) = 0._r8
@@ -294,7 +299,8 @@ contains
      ! Loop over pfts to calculate fsun, etc
 !dir$ concurrent
 !cdir nodep
-     do p = lbp,ubp
+     do fp = 1,num_nourbanp
+        p = filter_nourbanp(fp)
         if (pwtgcell(p)>0._r8) then
            c = pcolumn(p)
            g = pgridcell(p)
@@ -348,7 +354,8 @@ contains
      do ib = 1, nband
 !dir$ concurrent
 !cdir nodep
-        do p = lbp,ubp
+        do fp = 1,num_nourbanp
+           p = filter_nourbanp(fp)
            if (pwtgcell(p)>0._r8) then
               c = pcolumn(p)
               g = pgridcell(p)
@@ -469,7 +476,8 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-     do p = lbp,ubp
+     do fp = 1,num_nourbanp
+        p = filter_nourbanp(fp)
         if (pwtgcell(p)>0._r8) then
            g = pgridcell(p)
         

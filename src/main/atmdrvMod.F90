@@ -58,23 +58,24 @@ module atmdrvMod
 !
 ! primary field names
 !
-  integer,parameter:: aV_d2a_size=14
+  integer,parameter:: aV_d2a_size=15
   character(len=8) :: aV_d2a_list(av_d2a_size)    ! local aV list for d2a
   data av_d2a_list( 1) /'f_txy   '/     ! bottom level temp (K)
   data av_d2a_list( 2) /'f_uxy   '/     ! bottom level zonal wind (m/s)
   data av_d2a_list( 3) /'f_vxy   '/     ! bottom level meridional wind (m/s)
   data av_d2a_list( 4) /'f_qxy   '/     ! bottom level specific humidity (kg/kg)
-  data av_d2a_list( 5) /'zgcmxy  '/     ! bottom level height above surface (m)
-  data av_d2a_list( 6) /'prcxy   '/     ! convective precip rate (mm H2O/s)
-  data av_d2a_list( 7) /'prlxy   '/     ! large-scale precip rate (mm H2O/s)
-  data av_d2a_list( 8) /'flwdsxy '/     ! downward longwave rad onto surface (W/m**2)
-  data av_d2a_list( 9) /'f_sols  '/     ! vis direct beam solar rad onto srf (W/m**2)
-  data av_d2a_list(10) /'f_soll  '/     ! nir direct beam solar rad onto srf (W/m**2)
-  data av_d2a_list(11) /'f_solsd '/     ! vis diffuse solar rad onto srf (W/m**2)
-  data av_d2a_list(12) /'f_solld '/     ! nir diffuse solar rad onto srf (W/m**2)
-  data av_d2a_list(13) /'f_pbotxy'/     ! bottom level pressure (Pa)
-  data av_d2a_list(14) /'f_psrfxy'/     ! surface pressure (Pa)
-  integer :: if_txy, if_uxy, if_vxy, if_qxy, izgcmxy, iprcxy, iprlxy, iflwdsxy, &
+  data av_d2a_list( 5) /'f_rhxy  '/     ! bottom level relative humidity (%)
+  data av_d2a_list( 6) /'zgcmxy  '/     ! bottom level height above surface (m)
+  data av_d2a_list( 7) /'prcxy   '/     ! convective precip rate (mm H2O/s)
+  data av_d2a_list( 8) /'prlxy   '/     ! large-scale precip rate (mm H2O/s)
+  data av_d2a_list( 9) /'flwdsxy '/     ! downward longwave rad onto surface (W/m**2)
+  data av_d2a_list(10) /'f_sols  '/     ! vis direct beam solar rad onto srf (W/m**2)
+  data av_d2a_list(11) /'f_soll  '/     ! nir direct beam solar rad onto srf (W/m**2)
+  data av_d2a_list(12) /'f_solsd '/     ! vis diffuse solar rad onto srf (W/m**2)
+  data av_d2a_list(13) /'f_solld '/     ! nir diffuse solar rad onto srf (W/m**2)
+  data av_d2a_list(14) /'f_pbotxy'/     ! bottom level pressure (Pa)
+  data av_d2a_list(15) /'f_psrfxy'/     ! surface pressure (Pa)
+  integer :: if_txy, if_uxy, if_vxy, if_qxy, if_rhxy, izgcmxy, iprcxy, iprlxy, iflwdsxy, &
              if_sols, if_soll, if_solsd, if_solld, if_pbotxy, if_psrfxy
 
   type(mct_gsMap) :: gsMap_drv_glo0
@@ -109,7 +110,7 @@ contains
 ! !IROUTINE: atmdrv
 !
 ! !INTERFACE:
-  subroutine atmdrv(nstep)
+  subroutine atmdrv(nstep, declin)
 !
 ! !DESCRIPTION:
 ! This code reads in atmospheric fields from an input file and generates
@@ -156,16 +157,19 @@ contains
 !
 ! !USES:
     use nanMod
+    use clmtype     , only : clm3
     use decompMod   , only : get_proc_bounds_atm
     use clm_atmlnd  , only : clm_mapa2l, atm_a2l, clm_a2l
     use clm_varctl  , only : offline_atmdir, co2_ppmv
     use clm_varcon  , only : rair, cpair, o2_molar_const, tcrit, c13ratio
     use clm_time_manager, only : get_step_size, get_curr_calday, get_curr_date
     use fileutils   , only : getfil
+    use shr_orb_mod , only : shr_orb_cosz
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: nstep    !current time step
+    integer , intent(in) :: nstep    !current time step
+    real(r8), intent(in) :: declin ! declination angle (radians) for current time step
 !
 ! !REVISION HISTORY:
 ! Created by Sam Levis
@@ -190,8 +194,16 @@ contains
     character(len=256), SAVE :: locfn !full file name in case atmdir is in MSS
     real(r8):: coefb        ! Slope of "Alta" expression for dependence of flfall on temp
     real(r8):: coefa        ! Offset of  of "Alta" expression for dependence of flfall on temp
+    real(r8):: coszen       ! cosine of solar zenith angle
+    real(r8), pointer :: lat(:)
+    real(r8), pointer :: lon(:)
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
 !------------------------------------------------------------------------
+
+    ! Assign local pointers to derived subtypes components (gridcell-level)
+
+    lat  => clm3%g%lat
+    lon  => clm3%g%lon
 
     ! Determine necessary indices
 
@@ -275,6 +287,7 @@ contains
           atm_a2l%forc_v(g) = aV_atm_d2a%rAttr(if_vxy,g1)
           atm_a2l%forc_wind(g) = sqrt(aV_atm_d2a%rAttr(if_uxy,g1)**2 + aV_atm_d2a%rAttr(if_vxy,g1)**2)
           atm_a2l%forc_q(g) = aV_atm_d2a%rAttr(if_qxy,g1)
+          atm_a2l%forc_rh(g) = aV_atm_d2a%rAttr(if_rhxy,g1)
           atm_a2l%forc_hgt(g) = aV_atm_d2a%rAttr(izgcmxy,g1)
           atm_a2l%forc_hgt_u(g) = aV_atm_d2a%rAttr(izgcmxy,g1) !observational height of wind [m]
           atm_a2l%forc_hgt_t(g) = aV_atm_d2a%rAttr(izgcmxy,g1) !observational height of temp [m]
@@ -332,7 +345,20 @@ contains
              atm_a2l%forc_snow(g) = 0._r8
              atm_a2l%flfall(g) = 1._r8
           endif
+!KO
+          atm_a2l%rainf(g) = atm_a2l%forc_rain(g) + atm_a2l%forc_snow(g)
+!KO
 
+
+#if (defined PERGRO)
+          ! Add random perturbation to temperature if required
+
+          if (pertlim /= 0.0_r8 .and. do_perturb) then
+             call random_number (pertval)
+             pertval = 2._r8*pertlim*(0.5_r8 - pertval)
+             atm_a2l%forc_t(g) = (atm_a2l%forc_t(g))*(1._r8 + pertval)
+          endif
+#endif
        end do
 
        call clm_mapa2l(atm_a2l, clm_a2l)
@@ -340,6 +366,21 @@ contains
        call t_stopf('atmdinterp')
 
     end if
+
+! Zero out solar forcing components if sun is below the horizon
+    do g = begg, endg
+       coszen = shr_orb_cosz (calday, lat(g), lon(g), declin)
+       write(iulog,*)'g: ',g
+       write(iulog,*)'coszen: ',coszen
+       write(iulog,*)'forc_solar: ',clm_a2l%forc_solar(g)
+       if (coszen <= 0._r8) then
+          clm_a2l%forc_solad(g,1) = 0._r8
+          clm_a2l%forc_solad(g,2) = 0._r8
+          clm_a2l%forc_solai(g,1) = 0._r8
+          clm_a2l%forc_solai(g,2) = 0._r8
+          clm_a2l%forc_solar(g)   = 0._r8
+       end if
+    end do
 
     ! Reset open_data
 
@@ -469,6 +510,7 @@ contains
     if_uxy    = mct_aVect_indexRA(aV_drv_d2a,'f_uxy'   ,perrWith=subName)
     if_vxy    = mct_aVect_indexRA(aV_drv_d2a,'f_vxy'   ,perrWith=subName)
     if_qxy    = mct_aVect_indexRA(aV_drv_d2a,'f_qxy'   ,perrWith=subName)
+    if_rhxy   = mct_aVect_indexRA(aV_drv_d2a,'f_rhxy'  ,perrWith=subName)
     izgcmxy   = mct_aVect_indexRA(aV_drv_d2a,'zgcmxy'  ,perrWith=subName)
     iprcxy    = mct_aVect_indexRA(aV_drv_d2a,'prcxy'   ,perrWith=subName)
     iprlxy    = mct_aVect_indexRA(aV_drv_d2a,'prlxy'   ,perrWith=subName)
@@ -775,7 +817,7 @@ contains
        beg3d(1) = 1     ;  len3d(1) = datlon
        beg3d(2) = 1     ;  len3d(2) = datlat
        beg3d(3) = itim  ;  len3d(3) = 1
-       do k = 1, 14
+       do k = 1, fldsize
           do n = 1, nvar
              if (varnam(n) == fldlst(k)) then
                 call check_ret(nf_get_vara_double(ncid,n,beg3d,len3d,x(1,1,k)), subname)
@@ -824,6 +866,7 @@ contains
           else
              aV_drv_d2a%rAttr(if_txy,n) = x(i,j,1)
           end if
+!         write(iulog,*)'forc_txy_a: ',forc_txy_a(n)
 
           ! FORC_UXY, FORC_VXY
           if (nint(x(i,j,2)) == -1) then
@@ -855,8 +898,11 @@ contains
                    else
                       e = x(i,j,5)/100._r8 * esati(tdc(aV_drv_d2a%rAttr(if_txy,n)))
                    end if
+!KO
+                   aV_drv_d2a%rAttr(if_rhxy,n) = x(i,j,5)
+!KO
+                   aV_drv_d2a%rAttr(if_qxy,n) = 0.622_r8*e / (aV_drv_d2a%rAttr(if_pbotxy,n) - 0.378_r8*e)
                 end if
-                aV_drv_d2a%rAttr(if_qxy,n) = 0.622_r8*e / (aV_drv_d2a%rAttr(if_pbotxy,n) - 0.378_r8*e)
              else             !using Tdew
                 if (x(i,j,4) < 50._r8) then
                    write(iulog,*)'ATM warning: Tdew appears to be in'
@@ -872,6 +918,14 @@ contains
                    e = esati(tdc(x(i,j,4)))
                 end if
                 aV_drv_d2a%rAttr(if_qxy,n) = 0.622_r8*e / (aV_drv_d2a%rAttr(if_pbotxy,n) - 0.378_r8*e)
+                ! Get RH
+                if (aV_drv_d2a%rAttr(if_txy,n) > SHR_CONST_TKFRZ) then
+                   e = esatw(tdc(aV_drv_d2a%rAttr(if_txy,n)))
+                else
+                   e = esati(tdc(aV_drv_d2a%rAttr(if_txy,n)))
+                end if
+                qsat = 0.622_r8*e / (aV_drv_d2a%rAttr(if_pbotxy,n) - 0.378_r8*e)
+                aV_drv_d2a%rAttr(if_rhxy,n) = 100.0_r8*(x(i,j,3)/qsat)
              end if
           else                !using QBOT in kg/kg
              if (aV_drv_d2a%rAttr(if_txy,n) > SHR_CONST_TKFRZ) then
@@ -881,16 +935,26 @@ contains
              end if
              qsat = 0.622_r8*e / (aV_drv_d2a%rAttr(if_pbotxy,n) - 0.378_r8*e)
              if (qsat < x(i,j,3)) then
-                aV_drv_d2a%rAttr(if_qxy,n) = qsat
+                aV_drv_d2a%rAttr(if_qxy,n)  = qsat
+                aV_drv_d2a%rAttr(if_rhxy,n) = 100.0_r8
 !                 write(iulog,*)'ATM warning: qsat < q!'
              else
-                aV_drv_d2a%rAttr(if_qxy,n) = x(i,j,3)
+                aV_drv_d2a%rAttr(if_qxy,n)  = x(i,j,3)
+                aV_drv_d2a%rAttr(if_rhxy,n) = 100.0_r8*(x(i,j,3)/qsat)
              end if
           end if
 
           ! ZGCMXY
           if (nint(x(i,j,6)) == -1) then
+#if (defined VANCOUVER)
+             aV_drv_d2a%rAttr(izgcmxy,n) = 28.5_r8
+#elif (defined MEXICOCITY)
+             aV_drv_d2a%rAttr(izgcmxy,n) = 28.4_r8
+#elif (defined GRANDVIEW)
              aV_drv_d2a%rAttr(izgcmxy,n) = 30._r8
+#else
+             aV_drv_d2a%rAttr(izgcmxy,n) = 30._r8
+#endif
           else
              aV_drv_d2a%rAttr(izgcmxy,n) = x(i,j,6)
           end if
@@ -899,10 +963,17 @@ contains
 
           if (nint(x(i,j,9))==-1.or.nint(x(i,j,10))==-1) then
              if (nint(x(i,j,8)) /= -1) then
+#if (defined VANCOUVER || defined MEXICOCITY || defined GRANDVIEW)
+                aV_drv_d2a%rAttr(if_sols,n)  = 0.5_r8 * x(i,j,8)
+                aV_drv_d2a%rAttr(if_soll,n)  = aV_drv_d2a%rAttr(if_sols,n)
+                aV_drv_d2a%rAttr(if_solsd,n) = 0._r8
+                aV_drv_d2a%rAttr(if_solld,n) = 0._r8
+#else
                 aV_drv_d2a%rAttr(if_sols,n)  = 0.7_r8 * (0.5_r8 * x(i,j,8))
                 aV_drv_d2a%rAttr(if_soll,n)  = aV_drv_d2a%rAttr(if_sols,n)
                 aV_drv_d2a%rAttr(if_solsd,n) = 0.3_r8 * (0.5_r8 * x(i,j,8))
                 aV_drv_d2a%rAttr(if_solld,n) = aV_drv_d2a%rAttr(if_solsd,n)
+#endif
              else
                 write(iulog,*)'ATM error: neither FSDSdir/dif nor'
                 write(iulog,*)'       FSDS have been read in by atmrd'
@@ -914,6 +985,8 @@ contains
              aV_drv_d2a%rAttr(if_solsd,n) = 0.5_r8 * x(i,j,10)
              aV_drv_d2a%rAttr(if_solld,n) = aV_drv_d2a%rAttr(if_solsd,n)
           end if
+!         write(iulog,*)'forc_solsxy_a: ',forc_solsxy_a(n)
+!         write(iulog,*)'forc_sollxy_a: ',forc_solsxy_a(n)
 
           ! PRCXY, PRLXY
 
@@ -933,6 +1006,17 @@ contains
 
           ! FLWDSXY
 
+#if (defined VANCOUVER || defined MEXICOCITY)
+          ! Prata (1996)
+          if (nint(x(i,j,11)) == -1) then
+             e = aV_drv_d2a%rAttr(if_psrfxy,n) * aV_drv_d2a%rAttr(if_qxy,n) / (0.622_r8 + 0.378_r8 * aV_drv_d2a%rAttr(if_qxy,n))
+             ea = 1._r8 - (1.0_r8 + 46.5_r8*(0.01_r8*e/aV_drv_d2a%rAttr(if_txy,n))) * &
+                  exp(-(1.2_r8+3.0_r8*46.5_r8*(0.01_r8*e/aV_drv_d2a%rAttr(if_txy,n)))**0.5_r8)
+             aV_drv_d2a%rAttr(iflwdsxy,n) = ea * sb * aV_drv_d2a%rAttr(if_txy,n)**4
+          else
+             aV_drv_d2a%rAttr(iflwdsxy,n) = x(i,j,11)
+          end if
+#else
           if (nint(x(i,j,11)) == -1) then
              e = aV_drv_d2a%rAttr(if_psrfxy,n) * aV_drv_d2a%rAttr(if_qxy,n) / (0.622_r8 + 0.378_r8 * aV_drv_d2a%rAttr(if_qxy,n))
              ea = 0.70_r8 + 5.95e-05_r8 * 0.01_r8*e * exp(1500.0_r8/aV_drv_d2a%rAttr(if_txy,n))
@@ -940,6 +1024,8 @@ contains
           else
              aV_drv_d2a%rAttr(iflwdsxy,n) = x(i,j,11)
           end if
+#endif
+!         write(iulog,*)'flwdsxy_a: ',flwdsxy_a(n)
 
        end do                 !end loop of latitudes
     end do                    !end loop of longitudes

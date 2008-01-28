@@ -68,6 +68,7 @@ module controlMod
 !    o fpftcon         = 256 character data file with PFT physiological constants
 !    o fpftdyn         = 256 character data file with PFT physiological constants changing dynamically in time
 !    o frivinp_rtm     = 256 character input data file for rtm
+!    o furbinp         = 256 character input data file for urban input
 !    o nrevsn          = 256 character restart file name for use with branch run
 !
 ! === offline forcing data === >>> Only for mode=offline
@@ -149,6 +150,7 @@ module controlMod
   use restFileMod  , only : rest_flag
   use shr_const_mod, only : SHR_CONST_CDAY
   use abortutils   , only : endrun
+  use UrbanInputMod, only : furbinp
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -285,7 +287,7 @@ contains
 
     namelist /clm_inparm/  &
          finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
-         fpftcon, frivinp_rtm,  &
+         fpftcon, frivinp_rtm,  furbinp, &
          fpftdyn, fndepdat, fndepdyn, nrevsn
 
 #if (defined OFFLINE)
@@ -363,6 +365,7 @@ contains
     frivinp_rtm = ' '
     fpftdyn     = ' '
     nrevsn      = ' '
+    furbinp     = ' '
 
     ! offline mode
 
@@ -708,7 +711,10 @@ contains
     call mpi_bcast (fndepdyn, len(fndepdyn), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftcon , len(fpftcon) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (furbinp , len(furbinp) , MPI_CHARACTER, 0, mpicom, ier)
+#if (defined RTM)
     call mpi_bcast (frivinp_rtm, len(frivinp_rtm), MPI_CHARACTER, 0, mpicom, ier)
+#endif
 
     ! Landunit generation
 

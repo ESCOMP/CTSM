@@ -44,6 +44,7 @@ contains
                              nlunits, ncols, npfts, &
                              nveg, wtveg, &
                              ncrop, wtcrop, &
+                             nurban, wturban, &
                              nlake, wtlake, &
                              nwetland, wtwetland, &
                              nglacier, wtglacier)
@@ -53,7 +54,8 @@ contains
 !
 ! !USES
   use clm_varpar  , only : numpft, maxpatch_pft, &
-                           npatch_lake, npatch_glacier, npatch_wet, npatch_crop
+                           npatch_lake, npatch_glacier, npatch_wet, npatch_crop, &
+                           npatch_urban
   use clm_varctl  , only : allocate_all_vegpfts
   use clm_varsur  , only : wtxy
 
@@ -67,6 +69,8 @@ contains
     real(r8), optional, intent(out) :: wtveg      ! weight (relative to gridcell) of naturally vegetated landunit
     integer , optional, intent(out) :: ncrop      ! number of crop pfts in crop landunit
     real(r8), optional, intent(out) :: wtcrop     ! weight (relative to gridcell) of crop landunit
+    integer , optional, intent(out) :: nurban     ! number of urban pfts (columns) in urban landunit
+    real(r8), optional, intent(out) :: wturban    ! weight (relative to gridcell) of urban pfts (columns) in urban la
     integer , optional, intent(out) :: nlake      ! number of lake pfts (columns) in lake landunit
     real(r8), optional, intent(out) :: wtlake     ! weight (relative to gridcell) of lake landunitof lake pfts (columns) in lake landunit
     integer , optional, intent(out) :: nwetland   ! number of wetland pfts (columns) in wetland landunit
@@ -116,6 +120,24 @@ contains
     ipfts = ipfts + npfts_per_lunit
     if (present(nveg )) nveg  = npfts_per_lunit
     if (present(wtveg)) wtveg = wtlunit
+
+    ! Set urban landunit
+
+    npfts_per_lunit = 0
+    wtlunit = 0._r8
+    do m = npatch_urban, npatch_lake-1
+       if (wtxy(nw,m) > 0.0_r8) then
+          npfts_per_lunit = npfts_per_lunit + 1
+          wtlunit = wtlunit + wtxy(nw,m)
+       end if
+    end do
+    if (npfts_per_lunit > 0) then
+       ilunits = ilunits + 1
+       icols   = icols + npfts_per_lunit
+    end if
+    ipfts = ipfts + npfts_per_lunit
+    if (present(nurban )) nurban  = npfts_per_lunit
+    if (present(wturban)) wturban = wtlunit
 
     ! Set lake landunit
 

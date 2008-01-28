@@ -14,7 +14,8 @@ module subgridAveMod
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
   use clmtype
-  use clm_varcon, only : spval
+  use clm_varcon, only : spval, isturb,  icol_roof, icol_sunwall, icol_shadewall, &
+                         icol_road_perv, icol_road_imperv
   use clm_varctl, only : iulog
   use abortutils, only : endrun
 
@@ -486,22 +487,65 @@ contains
     integer , pointer :: plandunit(:)  ! landunit of corresponding pft
     integer , pointer :: npfts(:)      ! number of pfts in landunit
     integer , pointer :: pfti(:)       ! initial pft index in landunit
+    integer , pointer :: clandunit(:)  ! landunit of corresponding column
+    integer , pointer :: ctype(:)      ! column type
+    integer , pointer :: ltype(:)      ! landunit type
+    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    wtlunit   => clm3%g%l%c%p%wtlunit
-    pcolumn   => clm3%g%l%c%p%column
-    plandunit => clm3%g%l%c%p%landunit
-    npfts     => clm3%g%l%npfts
-    pfti      => clm3%g%l%pfti
+    canyon_hwr => clm3%g%l%canyon_hwr
+    ltype      => clm3%g%l%itype
+    ctype      => clm3%g%l%c%itype
+    clandunit  => clm3%g%l%c%landunit
+    wtlunit    => clm3%g%l%c%p%wtlunit
+    pcolumn    => clm3%g%l%c%p%column
+    plandunit  => clm3%g%l%c%p%landunit
+    npfts      => clm3%g%l%npfts
+    pfti       => clm3%g%l%pfti
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
           scale_c2l(c) = 1.0_r8
        end do
+    else if (c2l_scale_type == 'urbanf') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0_r8
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
+    else if (c2l_scale_type == 'urbans') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
     else
        write(iulog,*)'p2l_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
+
     if (p2c_scale_type == 'unity') then
        do p = lbp,ubp
           scale_p2c(p) = 1.0_r8
@@ -618,8 +662,16 @@ contains
     integer , pointer :: plandunit(:)  ! landunit of corresponding pft
     integer , pointer :: npfts(:)      ! number of pfts in landunit
     integer , pointer :: pfti(:)       ! initial pft index in landunit
+    integer , pointer :: clandunit(:)  ! landunit of corresponding column
+    integer , pointer :: ctype(:)      ! column type
+    integer , pointer :: ltype(:)      ! landunit type
+    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
+    canyon_hwr => clm3%g%l%canyon_hwr
+    ltype      => clm3%g%l%itype
+    clandunit  => clm3%g%l%c%landunit
+    ctype      => clm3%g%l%c%itype
     wtlunit   => clm3%g%l%c%p%wtlunit
     pcolumn   => clm3%g%l%c%p%column
     plandunit => clm3%g%l%c%p%landunit
@@ -630,10 +682,45 @@ contains
        do c = lbc,ubc
           scale_c2l(c) = 1.0_r8
        end do
+    else if (c2l_scale_type == 'urbanf') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0_r8
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
+    else if (c2l_scale_type == 'urbans') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
     else
        write(iulog,*)'p2l_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
+
     if (p2c_scale_type == 'unity') then
        do p = lbp,ubp
           scale_p2c(p) = 1.0_r8
@@ -754,8 +841,16 @@ contains
     integer , pointer :: pgridcell(:)  ! gridcell of corresponding pft
     integer , pointer :: npfts(:)      ! number of pfts in gridcell
     integer , pointer :: pfti(:)       ! initial pft index in gridcell
+    integer , pointer :: ctype(:)      ! column type
+    integer , pointer :: clandunit(:)  ! landunit of corresponding column
+    integer , pointer :: ltype(:)      ! landunit type
+    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
+    canyon_hwr => clm3%g%l%canyon_hwr
+    ltype      => clm3%g%l%itype
+    clandunit  => clm3%g%l%c%landunit
+    ctype      => clm3%g%l%c%itype
     wtgcell   => clm3%g%l%c%p%wtgcell
     pcolumn   => clm3%g%l%c%p%column
     pgridcell => clm3%g%l%c%p%gridcell
@@ -771,14 +866,50 @@ contains
        write(iulog,*)'p2g_1d error: scale type ',l2g_scale_type,' not supported'
        call endrun()
     end if
+
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
           scale_c2l(c) = 1.0_r8
+       end do
+    else if (c2l_scale_type == 'urbanf') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0_r8
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
+    else if (c2l_scale_type == 'urbans') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
        end do
     else
        write(iulog,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
+
     if (p2c_scale_type == 'unity') then
        do p = lbp,ubp
           scale_p2c(p) = 1.0_r8
@@ -901,14 +1032,24 @@ contains
     integer , pointer :: pgridcell(:)  ! gridcell of corresponding pft
     integer , pointer :: npfts(:)      ! number of pfts in gridcell
     integer , pointer :: pfti(:)       ! initial pft index in gridcell
+    integer , pointer :: clandunit(:)  ! landunit of corresponding column
+    integer , pointer :: ctype(:)      ! column type
+    integer , pointer :: ltype(:)      ! landunit type
+    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
+    real(r8), pointer :: wtlunit_roof(:) ! weight of roof with respect to landunit
 !------------------------------------------------------------------------
 
-    wtgcell   => clm3%g%l%c%p%wtgcell
-    pcolumn   => clm3%g%l%c%p%column
-    pgridcell => clm3%g%l%c%p%gridcell
-    plandunit => clm3%g%l%c%p%landunit
-    npfts     => clm3%g%npfts
-    pfti      => clm3%g%pfti
+    canyon_hwr   => clm3%g%l%canyon_hwr
+    wtlunit_roof => clm3%g%l%wtlunit_roof
+    ltype        => clm3%g%l%itype
+    clandunit    => clm3%g%l%c%landunit
+    ctype        => clm3%g%l%c%itype
+    wtgcell      => clm3%g%l%c%p%wtgcell
+    pcolumn      => clm3%g%l%c%p%column
+    pgridcell    => clm3%g%l%c%p%gridcell
+    plandunit    => clm3%g%l%c%p%landunit
+    npfts        => clm3%g%npfts
+    pfti         => clm3%g%pfti
 
     if (l2g_scale_type == 'unity') then
        do l = lbl,ubl
@@ -918,14 +1059,50 @@ contains
        write(iulog,*)'p2g_2d error: scale type ',l2g_scale_type,' not supported'
        call endrun()
     end if
+
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
           scale_c2l(c) = 1.0_r8
+       end do
+    else if (c2l_scale_type == 'urbanf') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0_r8
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
+    else if (c2l_scale_type == 'urbans') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
        end do
     else
        write(iulog,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
     end if
+
     if (p2c_scale_type == 'unity') then
        do p = lbp,ubp
           scale_p2c(p) = 1.0_r8
@@ -1038,16 +1215,56 @@ contains
     integer , pointer :: clandunit(:)  ! gridcell of corresponding column
     integer , pointer :: ncolumns(:)   ! number of columns in landunit
     integer , pointer :: coli(:)       ! initial column index in landunit
+    integer , pointer :: ctype(:)      ! column type
+    integer , pointer :: ltype(:)      ! landunit type
+    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    wtlunit   => clm3%g%l%c%wtlunit
-    clandunit => clm3%g%l%c%landunit
-    ncolumns  => clm3%g%l%ncolumns
-    coli      => clm3%g%l%coli
+    ctype      => clm3%g%l%c%itype
+    ltype      => clm3%g%l%itype
+    canyon_hwr => clm3%g%l%canyon_hwr
+    wtlunit    => clm3%g%l%c%wtlunit
+    clandunit  => clm3%g%l%c%landunit
+    ncolumns   => clm3%g%l%ncolumns
+    coli       => clm3%g%l%coli
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
           scale_c2l(c) = 1.0_r8
+       end do
+    else if (c2l_scale_type == 'urbanf') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0_r8
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
+    else if (c2l_scale_type == 'urbans') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
        end do
     else
        write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
@@ -1156,16 +1373,56 @@ contains
     integer , pointer :: clandunit(:)  ! landunit of corresponding column
     integer , pointer :: ncolumns(:)   ! number of columns in landunit
     integer , pointer :: coli(:)       ! initial column index in landunit
+    integer , pointer :: ctype(:)      ! column type
+    integer , pointer :: ltype(:)      ! landunit type
+    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    wtlunit   => clm3%g%l%c%wtlunit
-    clandunit => clm3%g%l%c%landunit
-    ncolumns  => clm3%g%l%ncolumns
-    coli      => clm3%g%l%coli
+    ctype      => clm3%g%l%c%itype
+    ltype      => clm3%g%l%itype
+    canyon_hwr => clm3%g%l%canyon_hwr
+    wtlunit    => clm3%g%l%c%wtlunit
+    clandunit  => clm3%g%l%c%landunit
+    ncolumns   => clm3%g%l%ncolumns
+    coli       => clm3%g%l%coli
 
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
           scale_c2l(c) = 1.0_r8
+       end do
+    else if (c2l_scale_type == 'urbanf') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0_r8
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
+    else if (c2l_scale_type == 'urbans') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
        end do
     else
        write(iulog,*)'c2l_2d error: scale type ',c2l_scale_type,' not supported'
@@ -1283,13 +1540,19 @@ contains
     integer , pointer :: cgridcell(:)  ! gridcell of corresponding column
     integer , pointer :: ncolumns(:)   ! number of columns in gridcell
     integer , pointer :: coli(:)       ! initial column index in gridcell
+    integer , pointer :: ctype(:)      ! column type
+    integer , pointer :: ltype(:)      ! landunit type
+    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    wtgcell   => clm3%g%l%c%wtgcell
-    clandunit => clm3%g%l%c%landunit
-    cgridcell => clm3%g%l%c%gridcell
-    ncolumns  => clm3%g%ncolumns
-    coli      => clm3%g%coli
+    ctype      => clm3%g%l%c%itype
+    ltype      => clm3%g%l%itype
+    canyon_hwr => clm3%g%l%canyon_hwr
+    wtgcell    => clm3%g%l%c%wtgcell
+    clandunit  => clm3%g%l%c%landunit
+    cgridcell  => clm3%g%l%c%gridcell
+    ncolumns   => clm3%g%ncolumns
+    coli       => clm3%g%coli
 
     if (l2g_scale_type == 'unity') then
        do l = lbl,ubl
@@ -1299,9 +1562,44 @@ contains
        write(iulog,*)'c2l_1d error: scale type ',l2g_scale_type,' not supported'
        call endrun()
     end if
+
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
           scale_c2l(c) = 1.0_r8
+       end do
+    else if (c2l_scale_type == 'urbanf') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0_r8
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
+    else if (c2l_scale_type == 'urbans') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
        end do
     else
        write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
@@ -1417,13 +1715,19 @@ contains
     integer , pointer :: cgridcell(:)  ! gridcell of corresponding column
     integer , pointer :: ncolumns(:)   ! number of columns in gridcell
     integer , pointer :: coli(:)       ! initial column index in gridcell
+    integer , pointer :: ctype(:)      ! column type
+    integer , pointer :: ltype(:)      ! landunit type
+    real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
 !------------------------------------------------------------------------
 
-    wtgcell   => clm3%g%l%c%wtgcell
-    clandunit => clm3%g%l%c%landunit
-    cgridcell => clm3%g%l%c%gridcell
-    ncolumns  => clm3%g%ncolumns
-    coli      => clm3%g%coli
+    ctype      => clm3%g%l%c%itype
+    ltype      => clm3%g%l%itype
+    canyon_hwr => clm3%g%l%canyon_hwr
+    wtgcell    => clm3%g%l%c%wtgcell
+    clandunit  => clm3%g%l%c%landunit
+    cgridcell  => clm3%g%l%c%gridcell
+    ncolumns   => clm3%g%ncolumns
+    coli       => clm3%g%coli
 
     if (l2g_scale_type == 'unity') then
        do l = lbl,ubl
@@ -1436,6 +1740,40 @@ contains
     if (c2l_scale_type == 'unity') then
        do c = lbc,ubc
           scale_c2l(c) = 1.0_r8
+       end do
+    else if (c2l_scale_type == 'urbanf') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = 3.0 * canyon_hwr(l) 
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 1.0_r8
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
+    else if (c2l_scale_type == 'urbans') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = (3.0 * canyon_hwr(l)) / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
        end do
     else
        write(iulog,*)'c2g_2d error: scale type ',c2l_scale_type,' not supported'

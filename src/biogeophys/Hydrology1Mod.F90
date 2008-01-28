@@ -54,7 +54,8 @@ contains
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd   , only : clm_a2l
-    use clm_varcon   , only : tfrz, istice, istwet, istsoil
+    use clm_varcon   , only : tfrz, istice, istwet, istsoil, isturb, &
+                              icol_roof, icol_sunwall, icol_shadewall
     use FracWetMod   , only : FracWet
     use clm_time_manager , only : get_step_size
     use subgridAveMod, only : p2c
@@ -90,7 +91,8 @@ contains
     integer , pointer :: pcolumn(:)        ! pft's column
     integer , pointer :: npfts(:)          ! number of pfts in column
     integer , pointer :: pfti(:)           ! column's beginning pft index
-    integer , pointer :: itype(:)          ! landunit type
+    integer , pointer :: ltype(:)          ! landunit type
+    integer , pointer :: ctype(:)          ! column type
     real(r8), pointer :: forc_rain(:)      ! rain rate [mm/s]
     real(r8), pointer :: forc_snow(:)      ! snow rate [mm/s]
     real(r8), pointer :: forc_t(:)         ! atmospheric temperature (Kelvin)
@@ -169,12 +171,13 @@ contains
 
     ! Assign local pointers to derived type members (landunit-level)
 
-    clandunit          => clm3%g%l%c%landunit
-    itype              => clm3%g%l%itype
+    ltype              => clm3%g%l%itype
 
     ! Assign local pointers to derived type members (column-level)
 
     cgridcell          => clm3%g%l%c%gridcell
+    clandunit          => clm3%g%l%c%landunit
+    ctype              => clm3%g%l%c%itype
     pfti               => clm3%g%l%c%pfti
     npfts              => clm3%g%l%c%npfts
     do_capsnow         => clm3%g%l%c%cps%do_capsnow
@@ -227,7 +230,7 @@ contains
        ! Canopy interception and precipitation onto ground surface
        ! Add precipitation to leaf water
 
-       if (itype(l)==istsoil .or. itype(l)==istwet) then
+       if (ltype(l)==istsoil .or. ltype(l)==istwet .or. ltype(l)==isturb) then
 
           qflx_candrip(p) = 0._r8      ! rate of canopy runoff
           qflx_through_snow(p) = 0._r8 ! rain precipitation direct through canopy
@@ -236,58 +239,60 @@ contains
           fracsnow(p) = 0._r8          ! fraction of input precip that is snow
           fracrain(p) = 0._r8          ! fraction of input precip that is rain
 
-          if (frac_veg_nosno(p) == 1 .and. (forc_rain(g) + forc_snow(g)) > 0._r8) then
+          if (ctype(c) /= icol_sunwall .and. ctype(c) /= icol_shadewall) then
+             if (frac_veg_nosno(p) == 1 .and. (forc_rain(g) + forc_snow(g)) > 0._r8) then
 
-             ! determine fraction of input precipitation that is snow and rain
+                ! determine fraction of input precipitation that is snow and rain
 
-             fracsnow(p) = forc_snow(g)/(forc_snow(g) + forc_rain(g))
-             fracrain(p) = forc_rain(g)/(forc_snow(g) + forc_rain(g))
-
-             ! The leaf water capacities for solid and liquid are different,
-             ! generally double for snow, but these are of somewhat less
-             ! significance for the water budget because of lower evap. rate at
-             ! lower temperature.  Hence, it is reasonable to assume that
-             ! vegetation storage of solid water is the same as liquid water.
-             h2ocanmx = dewmx(p) * (elai(p) + esai(p))
-
-             ! Coefficient of interception
-             ! set fraction of potential interception to max 0.25
-             fpi = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
-
-             ! Direct throughfall
-             qflx_through_snow(p) = forc_snow(g) * (1._r8-fpi)
-             qflx_through_rain(p) = forc_rain(g) * (1._r8-fpi)
-
-             ! Intercepted precipitation [mm/s]
-             qflx_prec_intr(p) = (forc_snow(g) + forc_rain(g)) * fpi
-
-             ! Water storage of intercepted precipitation and dew
-             h2ocan(p) = max(0._r8, h2ocan(p) + dtime*qflx_prec_intr(p))
-
-             ! Initialize rate of canopy runoff and snow falling off canopy
-             qflx_candrip(p) = 0._r8
-
-             ! Excess water that exceeds the leaf capacity
-             xrun = (h2ocan(p) - h2ocanmx)/dtime
-
-             ! Test on maximum dew on leaf
-             ! Note if xrun > 0 then h2ocan must be at least h2ocanmx
-             if (xrun > 0._r8) then
-                qflx_candrip(p) = xrun
-                h2ocan(p) = h2ocanmx
+                fracsnow(p) = forc_snow(g)/(forc_snow(g) + forc_rain(g))
+                fracrain(p) = forc_rain(g)/(forc_snow(g) + forc_rain(g))
+                
+                ! The leaf water capacities for solid and liquid are different,
+                ! generally double for snow, but these are of somewhat less
+                ! significance for the water budget because of lower evap. rate at
+                ! lower temperature.  Hence, it is reasonable to assume that
+                ! vegetation storage of solid water is the same as liquid water.
+                h2ocanmx = dewmx(p) * (elai(p) + esai(p))
+                
+                ! Coefficient of interception
+                ! set fraction of potential interception to max 0.25
+                fpi = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
+                
+                ! Direct throughfall
+                qflx_through_snow(p) = forc_snow(g) * (1._r8-fpi)
+                qflx_through_rain(p) = forc_rain(g) * (1._r8-fpi)
+                
+                ! Intercepted precipitation [mm/s]
+                qflx_prec_intr(p) = (forc_snow(g) + forc_rain(g)) * fpi
+                
+                ! Water storage of intercepted precipitation and dew
+                h2ocan(p) = max(0._r8, h2ocan(p) + dtime*qflx_prec_intr(p))
+                
+                ! Initialize rate of canopy runoff and snow falling off canopy
+                qflx_candrip(p) = 0._r8
+                
+                ! Excess water that exceeds the leaf capacity
+                xrun = (h2ocan(p) - h2ocanmx)/dtime
+                
+                ! Test on maximum dew on leaf
+                ! Note if xrun > 0 then h2ocan must be at least h2ocanmx
+                if (xrun > 0._r8) then
+                   qflx_candrip(p) = xrun
+                   h2ocan(p) = h2ocanmx
+                end if
+                
              end if
-
           end if
 
-       else if (itype(l) == istice) then
+       else if (ltype(l) == istice) then
 
-          fracsnow(p) = 0._r8
-          fracrain(p) = 0._r8
-          qflx_prec_intr(p) = 0._r8
-          h2ocan(p) = 0._r8
-          qflx_candrip(p) = 0._r8
+          h2ocan(p)            = 0._r8
+          qflx_candrip(p)      = 0._r8
           qflx_through_snow(p) = 0._r8
           qflx_through_rain(p) = 0._r8
+          qflx_prec_intr(p)    = 0._r8
+          fracsnow(p)          = 0._r8
+          fracrain(p)          = 0._r8
 
        end if
 
@@ -297,12 +302,19 @@ contains
        ! Because the fractionation between rain and snow is indeterminate if
        ! rain + snow = 0, I am adding this very small flux only to the rain
        ! components.
-       if (frac_veg_nosno(p) == 0) then
-          qflx_prec_grnd_snow(p) = forc_snow(g)
-          qflx_prec_grnd_rain(p) = forc_rain(g) + h2ocan_loss(c)
+
+       if (ctype(c) /= icol_sunwall .and. ctype(c) /= icol_shadewall) then
+          if (frac_veg_nosno(p) == 0) then
+             qflx_prec_grnd_snow(p) = forc_snow(g)
+             qflx_prec_grnd_rain(p) = forc_rain(g) + h2ocan_loss(c)
+          else
+             qflx_prec_grnd_snow(p) = qflx_through_snow(p) + (qflx_candrip(p) * fracsnow(p))
+             qflx_prec_grnd_rain(p) = qflx_through_rain(p) + (qflx_candrip(p) * fracrain(p)) + h2ocan_loss(c)
+          end if
+       ! Urban sunwall and shadewall have no intercepted precipitation
        else
-          qflx_prec_grnd_snow(p) = qflx_through_snow(p) + (qflx_candrip(p) * fracsnow(p))
-          qflx_prec_grnd_rain(p) = qflx_through_rain(p) + (qflx_candrip(p) * fracrain(p)) + h2ocan_loss(c)
+          qflx_prec_grnd_snow(p) = 0.
+          qflx_prec_grnd_rain(p) = 0.
        end if
        qflx_prec_grnd(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
 
@@ -360,7 +372,7 @@ contains
           h2osno(c) = h2osno(c) + qflx_snow_grnd_col(c)*dtime  ! snow water equivalent (mm)
        end if
 
-       if (itype(l)==istwet .and. t_grnd(c)>tfrz) then
+       if (ltype(l)==istwet .and. t_grnd(c)>tfrz) then
           h2osno(c)=0._r8
           snowdp(c)=0._r8
           snowage(c)=0._r8

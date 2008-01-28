@@ -50,6 +50,7 @@ sub new {
 
   $self->{'printlev'} = $printlev;
   $self->{'optsref'}  = $optsref;
+  $self->{'cfgdir'}   = $cfgdir;
   $self->{'MODE'}     = $bld{'MODE'};
   $self->{'RTM'}      = $bld{'RTM'};
   $self->{'BGC'}      = $bld{'BGC'};
@@ -195,6 +196,16 @@ sub set_output_values {
   }
   $self->requiredVar( "fatmlndfrc", $addquotes );
   $self->checkinputfile('fatmlndfrc')  if $optsref->{'test'};
+
+  # Urban datasets
+  unless ( defined($NLref->{'furbinp'}) ) {
+      $opt  = $self->default_vals( 'furbinp', $noquote, $use_land );
+      if ( defined($opt) ) {
+         my $cfgdir = $self->{'cfgdir'};
+         $opt = "$cfgdir/urban_input/$opt";
+         $NLref->{'furbinp'} = namelist::quote_string($opt);
+      }
+  }
 
   #
   # Fine mesh grid

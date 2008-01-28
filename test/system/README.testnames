@@ -22,6 +22,7 @@ n is the configuration type:
 0 -- External CCSM concurrent
 A -- Standard Sequential CCSM mode
 B -- Test run script
+C -- ccsm_seq URBAN_SOLAR
 D -- ccsm_seq Pergro
 E -- ccsm_seq numpft=4, VOC, DUST, RTM
 F -- ccsm_seq numpft=17, VOC, DUST, RTM
@@ -31,6 +32,8 @@ J -- ccsm_seq numpft=4, CASA
 K -- ccsm_seq numpft=10, DGVM
 L -- ccsm_seq Standard default
 M -- ndepregrid
+N -- ccsm_seq MEXICOCITY
+O -- ccsm_seq VANCOUVER
 
 m is the resolution
 
@@ -44,4 +47,6 @@ m is the resolution
 8 -- 5x5 amazon
 9 -- 4x5
 0 -- 0.47x0.63
-A -- 1x1 Camden NJ (Urban test)
+A -- 1x1 Camden NJ         (Urban test)
+B -- 1x1 Mexicocity Mexico (Urban test)
+C -- 1x1 Vancouver Canada  (Urban test)

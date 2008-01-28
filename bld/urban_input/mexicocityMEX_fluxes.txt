@@ -1,0 +1,29 @@
+canyon_hwr       1.18
+wtlunit_roof     0.55
+wtroad_perv      0.04
+em_roof          0.90 
+em_improad       0.95 
+em_perroad       0.95 
+em_wall          0.85 
+alb_roof_dir     0.20  0.20
+alb_roof_dif     0.20  0.20
+alb_improad_dir  0.08  0.08
+alb_improad_dif  0.08  0.08
+alb_perroad_dir  0.08  0.08
+alb_perroad_dif  0.08  0.08
+alb_wall_dir     0.25  0.25
+alb_wall_dif     0.25  0.25
+ht_roof          18.8
+wind_hgt_canyon  9.4
+tk_wall          0.88  0.88  0.88  0.88  0.88  0.88  0.88  0.88  0.88  0.88
+tk_roof          0.20  0.93  0.93  0.93  0.93  0.93  0.03  0.03  0.03  0.16
+tk_improad       0.82  0.82  2.10  2.10  2.10
+cv_wall          1.54e6  1.54e6  1.54e6  1.54e6  1.54e6  1.54e6  1.54e6  1.54e6  1.54e6  1.54e6
+cv_roof          1.70e6  1.50e6  1.50e6  1.50e6  1.50e6  1.50e6  0.25e6  0.25e6  0.25e6  0.87e6
+cv_improad       1.74e6  1.74e6  2.00e6  2.00e6  2.00e6
+sandfrac_road    50.0  50.0  50.0  50.0  50.0  50.0  50.0  50.0  50.0  50.0
+clayfrac_road    40.0  40.0  40.0  40.0  40.0  40.0  40.0  40.0  40.0  40.0
+scalez_wall      1.455e-3      
+scalez_roof      1.455e-3
+thick_wall       0.450
+thick_roof       0.185

@@ -11,6 +11,10 @@ input topographic dataset.
 
 2) run gmake
 
+NOTE: In order to successfully build, some source files are required from
+      other clm src directories. See the Filepath for the expected path of
+      required files.
+
 3) create namelist file (default mkgriddata.namelist).
    must specify settings for either
 

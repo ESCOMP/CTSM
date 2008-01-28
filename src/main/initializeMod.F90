@@ -85,6 +85,7 @@ contains
                            fatmtopo, flndtopo
     use controlMod, only : control_init, control_print
     use shr_InputInfo_mod, only : shr_InputInfo_initType
+    use UrbanInputMod    , only : UrbanInput
 !
 ! !ARGUMENTS:
     type(shr_InputInfo_initType), intent(in), optional :: CCSMInit
@@ -296,6 +297,10 @@ contains
        call domain_setsame(adomain,ldomain)
     endif
 
+    ! Initialize urban model input (initialize urbinp data structure)
+
+    call UrbanInput(mode='initialize')
+
     ! Allocate surface grid dynamic memory (for wtxy and vegxy arrays)
 
     call get_proc_bounds    (begg    , endg)
@@ -392,6 +397,9 @@ contains
     use clm_time_manager, only : get_curr_date, get_nstep, advance_timestep, &
                                  timemgr_init, timemgr_restart_io, timemgr_restart
     use fileutils       , only : getfil
+    use UrbanMod        , only : UrbanClumpInit
+    use UrbanInitMod    , only : UrbanInitTimeConst, UrbanInitTimeVar, UrbanInitAero 
+    use UrbanInputMod   , only : UrbanInput
 !
 ! !ARGUMENTS:
    type(eshr_timeMgr_clockType), optional, intent(IN) :: SyncClock ! Synchronization clock
@@ -480,11 +488,15 @@ contains
     call Dustini()
 #endif
 
+    ! Initialize time constant urban variables
+
+    call UrbanInitTimeConst()
+
     ! Initialize time constant variables (this must be called after
     ! DGVMEcosystemDynini() and before initCASA())
 
     call iniTimeConst()
-    
+
     ! ------------------------------------------------------------------------
     ! Obtain restart file if appropriate
     ! ------------------------------------------------------------------------
@@ -573,6 +585,7 @@ contains
        call restFile_read( fnamer )
     else if (nsrest == 0 .and. finidat == ' ') then
        call mkarbinit()
+       call UrbanInitTimeVar( )
     end if
        
     ! For restart run, read binary history restart
@@ -656,6 +669,19 @@ contains
     
     call allocFilters()
     call setFilters()
+
+    ! Calculate urban "town" roughness length and displacement 
+    ! height for urban landunits
+
+    call UrbanInitAero()
+
+    ! Initialize urban radiation model - this uses urbinp data structure
+
+    call UrbanClumpInit()
+
+    ! Finalize urban model initialization
+    
+    call UrbanInput(mode='finalize')
 
 #if (defined DGVM)
     ! Determine new subgrid weights and areas (obtained from fpcgrid) and

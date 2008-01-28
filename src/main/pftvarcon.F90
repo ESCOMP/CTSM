@@ -10,7 +10,7 @@ module pftvarcon
 !
 ! !DESCRIPTION:
 ! Module containing vegetation constants and method to
-! eads and initialize vegetation (PFT) constants.
+! read and initialize vegetation (PFT) constants.
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8

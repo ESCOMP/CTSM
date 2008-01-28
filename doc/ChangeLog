@@ -1,4 +1,242 @@
 ===============================================================
+Tag name:  clm3_5_16
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Jan 28 15:00:53 MST 2008
+Date:One-line Summary: Get point version of Urban code onto trunk (urban code can not restart)
+
+Purpose of changes: Move urban branch onto trunk. Fix bug so hv files are saved. Add
+   high resolution datasets from Art Mirin.
+
+   Urban code was started by Gordon Bonan, and taken up by Mariana Vertenstein and Keith Oleson.
+   This represents work that has been ongoing for several years. Revision dates go back to
+   before 2003.
+
+   Some papers on the work are available from:
+
+   Oleson et.-al. Journal of Applied Meteorology and Climatology, in-Press as of Jan/2008
+
+   http://www.cgd.ucar.edu/tss/staff/oleson/publications/JAMC1597_rev_jul27_2007.pdf
+   http://www.cgd.ucar.edu/tss/staff/oleson/publications/JAMC1598_rev_jul27_2007.pdf
+
+Bugs fixed (include bugzilla ID): 644 (save hv files)
+
+Known bugs (include bugzilla ID): 251, 512, 546, 652, 672, 675, 676, 680, 681, 694
+    http://bugs.cgd.ucar.edu/
+
+    New bug found from clm3_5_15 (694) -- restarts are NOT bit-for-bit on lightning and bangkok/lf95 for offline
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Added furbinp -- for urban datasets
+
+List any changes to the defaults for the boundary datasets: Added more urban datasets.
+      Add 0.23x0.31 datasets from Art Mirin.
+
+Describe any substantial timing or memory changes: Approx 1% slower, memory should be very close
+
+Code reviewed by: oleson
+
+List any svn externals directories updated (csm_share, mct, etc.): bld/archiving
+    bld/archiving to scripts_080108
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+------ Urban point input datasets (ASCII)
+A bld/urban_input/asphaltjungle_fluxes.txt
+A bld/urban_input/metropolis_fluxes.txt
+A bld/urban_input/mexicocityMEX_fluxes.txt
+A bld/urban_input/vancouverCAN_fluxes.txt
+----- Main urban source codes
+A src/biogeophys/UrbanInitMod.F90
+A src/biogeophys/UrbanInputMod.F90
+A src/biogeophys/UrbanMod.F90
+----- Add testing for urban code
+A test/system/tests_posttag_urban ------ List of urban point tests
+A test/system/nl_files/clm_urb1pt ------ Namelist options for CLM1PT datasets
+A test/system/nl_files/nl_urb ---------- Urban namelist
+A test/system/config_files/_mexsc_ds --- Mexicocity, MEX
+A test/system/config_files/_vansc_ds --- Vancouver, CAN
+----- Add tool to convert Urban point datasets to sequential-CCSM mode for datm7
+A tools/ncl_scripts/convertUrbanOffline2Seq.ncl
+
+List all existing files that have been modified, and describe the changes:
+
+-------- Add in urban datasets to build-namelist
+M bld/configure ---------------------------- Move subroutine definition to before first reference
+M bld/datm_dshr_in.pm
+M bld/clm_inparm.pm
+M bld/datm.streams.template.xml ------------ Add in CLM1PT datasets for Urban
+M bld/DefaultTIMEMGR_INPARM_Namelist.xml
+M bld/DefaultSettings.xml
+M bld/DefaultDATM_DSHR_NML_Namelist.xml
+M bld/DefaultCLM_INPARM_Namelist.xml
+M bld/timemgr_inparm.pm
+M bld/run-pc.pm ---------------------------- Remove extra line, set mode in configure, add note about step=coupling step
+M bld/run-ibm.pm --------------------------- Add note about step=coupling step
+M bld/run-lightning.pm --------------------- Add note about step=coupling step
+-------- source code changes to add in urban code
+-------- mostly adding urban and non-urban filters
+M src/biogeochem/DGVMMod.F90 --------------- Add urban filters
+M src/main/atmdrvMod.F90 ------------------- Add RH and rainf, zero out solar if coszen<0, Urban pt CPPs 
+M src/main/clm_varcon.F90 ------------------ Add PI, RGAS, SECSPDAY, urban PFT types, urban ponding depth
+M src/main/clm_varpar.F90 ------------------ Add maxpatch_urb for 5 PFT's
+M src/main/clm_atmlnd.F90 ------------------ Fill RH and rainf
+M src/main/clmtype.F90 --------------------- Add urban state data
+M src/main/clmtypeInitMod.F90 -------------- Initialize urban state data
+M src/main/controlMod.F90 ------------------ Add furbinp namelist item for urban input data
+M src/main/driver.F90 ---------------------- Pass urban filters, call urban modules
+M src/main/filterMod.F90 ------------------- Add urban filters
+M src/main/histFileMod.F90 ----------------- Add scale types needed for urban which needs to calculate area-averages based on urban input
+M src/main/histFldsMod.F90 ----------------- Add new output fields: 
+
+        BUILDHEAT     heat flux from urban building interior to walls and roof            W/m^2  active
+        LWdown        atmospheric longwave radiation                                      W/m^2
+        PSurf         surface pressure                                                    Pa
+        Qh            sensible heat                                                       W/m^2
+        Qle           total evaporation                                                   W/m^2
+        Qstor         storage heat flux (includes snowmelt)                               W/m^2
+        RH            atmospheric relative humidity                                       %
+        Rainf         atmospheric rain                                                    mm/s
+        Rnet          net radiation                                                       W/m^2
+        SWdown        atmospheric incident solar radiation                                W/m^2
+        TBUILD        internal urban building temperature                                 K      active
+        TRAFFICFLUX   sensible heat flux from urban traffic                               W/m^2  active
+        Tair          atmospheric air temperature                                         K
+        WASTEHEAT     sensible heat flux from heating/cooling sources of urban waste heat W/m^2  active
+
+(Fields not mentioned above as active are set to inactive unless asked for. They are "ALMA" variables needed for
+ an urban model intercomparision project.)
+
+M src/main/iniTimeConst.F90 ---------------- Initialize urban data
+M src/main/initGridCellsMod.F90 ------------ Add initialization of urban landunits
+M src/main/initSurfAlbMod.F90 -------------- Call urban albedo calc
+M src/main/initializeMod.F90 --------------- Urban initialization
+M src/main/lnd_comp_mct.F90 ---------------- Add saturation vapor calc to compute RH
+M src/main/mkarbinitMod.F90 ---------------- Initialize urban state
+M src/main/pftvarcon.F90 ------------------- Fix typo
+M src/main/program_off.F90 ----------------- Pass declination angle from orbit to atmdrv (so solar can be nullified for coszen<0)
+M src/main/subgridAveMod.F90 --------------- Setup grid info for urban
+M src/main/subgridMod.F90 ------------------ Set urban landunit
+M src/main/surfrdMod.F90 ------------------- Initialize urban weights -- remove old code that aborted if urban fraction>0
+M src/biogeophys/BalanceCheckMod.F90 ------- Incoming rain does NOT include sun or shade wall, some checks only non-urban
+M src/biogeophys/Biogeophysics1Mod.F90 ----- Take into account type of urban column
+M src/biogeophys/Biogeophysics2Mod.F90 ----- Take into account type of urban column
+M src/biogeophys/FrictionVelocityMod.F90 --- Change index and filters
+M src/biogeophys/Hydrology1Mod.F90 --------- Take into account no water flow through urban buildings and impervious road
+M src/biogeophys/Hydrology2Mod.F90 --------- Send urban filters down, and no water flow in certain urban column types
+M src/biogeophys/SnowHydrologyMod.F90 ------ Urban similar to bare-soil landunit
+M src/biogeophys/SoilHydrologyMod.F90 ------ Determine ponding limits for urban roof and impervious road, no runoff for sun/shade wall
+M src/biogeophys/SoilTemperatureMod.F90 ---- Take into account that urban columns interact
+M src/biogeophys/SurfaceAlbedoMod.F90 ------ Filter urban columns appropriately
+M src/biogeophys/SurfaceRadiationMod.F90 --- Filter urban columns out
+---------- Make MPI and OpenMP settings explicit in configuration files
+M test/system/config_files/17p_vodsr_dm
+M test/system/config_files/17p_vodsr_do
+M test/system/config_files/4p_casa_m
+M test/system/config_files/4p_casa_o
+M test/system/config_files/17p_vodsr_m
+M test/system/config_files/17p_vodsr_o
+M test/system/config_files/4p_vodsr_dm
+M test/system/config_files/17p_cnn_m
+M test/system/config_files/4p_vodsr_do
+M test/system/config_files/17p_cnn_o
+M test/system/config_files/17p_cnn_dm
+M test/system/config_files/17p_cnn_do
+M test/system/config_files/10p_dgvm_m
+M test/system/config_files/4p_casa_dm
+M test/system/config_files/10p_dgvm_o
+M test/system/config_files/4p_casa_do
+M test/system/config_files/10p_dgvm_dm
+M test/system/config_files/README
+M test/system/config_files/10p_dgvm_do
+M test/system/config_files/4p_vodsr_m
+M test/system/config_files/4p_vodsr_o
+---------- Add urban tests to testing system
+M test/system/input_tests_master
+M test/system/README.testnames
+M test/system/mknamelist
+M test/system/test_driver.sh
+M test/system/tests_posttag_bangkok
+M test/system/tests_posttag_blueice
+M test/system/tests_posttag_lightning
+M test/system/tests_posttag_hybrid_regression
+M test/system/tests_posttag_purempi_regression
+M test/system/tests_pretag_bangkok
+M test/system/tests_pretag_bluevista
+---------- Put options on separate lines, explicitly set source
+M test/system/nl_files/clm_pftdyn
+M test/system/nl_files/clm_per
+M test/system/nl_files/clm_per0
+M test/system/nl_files/clm_std
+---------- Add note about need of other directories to build
+M tools/ncl_scripts/README ---------------------- Also add note about new script
+M tools/mksurfdata/README
+M tools/ncl_scripts/README
+M tools/interpinic/README
+M tools/mkgriddata/README
+M tools/mkdatadomain/README
+
+
+Summary of testing:
+
+  bluevista: All PASS except
+034 blCA1 TBL.sh _sc_ds clm_std^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 5
+036 blNB1 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 5
+076 bl563 TBL.sh _h clm_std 19980101:MONTHLY:1800 1.9x2.5 gx1v5 -10 startup .....................FAIL! rc= 7
+101 sm921 TSMext_ccsmseq_cam.sh ext_ccsm_seq_4x5_dh ext_ccsm_seq_cam 48 .........................FAIL! rc= 4
+102 sm982 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  tempest:   ALL PASS
+  jaguarcnl: All PASS except TBL tests which fail because of a problem with the previous version on jaguar.
+004 blA71 TBL.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ...................FAIL! rc= 4
+008 blA92 TBL.sh _sc_dm clm_std 19990101:NONE:3600 4x5 gx3v5 -10 arb_ic .........................FAIL! rc= 5
+012 blE12 TBL.sh 4p_vodsrsc_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic ...............FAIL! rc= 5
+016 blE32 TBL.sh 4p_vodsrsc_dm clm_std 19981231:YEARLY:1800 64x128^360x720 USGS 48 arb_ic .......FAIL! rc= 5
+020 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:MONTHLY:1800 10x15 USGS 48 arb_ic ................FAIL! rc= 5
+024 blH12 TBL.sh 17p_cnnsc_dm clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48 arb_ic ..........FAIL! rc= 5
+028 blJ12 TBL.sh 4p_casasc_dm clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 5
+032 blK12 TBL.sh 10p_dgvmsc_dm clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic .................FAIL! rc= 5
+  bangkok/lf95: All PASS except
+014 blCA2 TBL.sh _sc_ds clm_std^nl_urb 19971231:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 5
+016 blOC1 TBL.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 5
+018 er112 TER.sh 4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 10+38 arb_ic ..............FAIL! rc= 13 <<<<
+020 bl112 TBL.sh 4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic .................FAIL! rc= 7
+051 sm951 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dm ext_ccsm_seq_cam 48 .......................FAIL! rc= 4
+052 sm982 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+
+  lightning/pathf90: All PASS except
+011 blCA1 TBL.sh _sc_ds clm_std^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 5
+013 blCA2 TBL.sh _sc_ds clm_std^nl_urb 19971231:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 5
+015 blNB1 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 5
+017 blOC1 TBL.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 5
+019 er112 TER.sh 4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 10+38 arb_ic ..............FAIL! rc= 13 <<<<
+021 bl112 TBL.sh 4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic .................FAIL! rc= 7
+
+
+Urban TBL point tests do NOT pass because previous model version didn't have urban enabled.
+cam standalone tests require the ccsm4_alpha series version of clm.
+<<<<< Tests are the 694 bug found in clm3_5_15.
+
+
+CLM tag used for the baseline comparison tests if applicable: clm3_5_15
+
+Changes answers relative to baseline: None  bit-for-bit
+   (except albedo's will be different when running in offline mode see below)
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All mode=offline
+    - what platforms/compilers: All
+    - nature of change: Solar now set to zero when coszen<0, which influences
+        some non-common instances near twilight when the dataset shows solar>0
+        but coszen<0. It doesn't change the model results -- because everything is
+        reflected anyway, but it will change how albedo is averaged over those periods.
+
+===============================================================
+===============================================================
 Tag name:  clm3_5_15
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Dec 21 20:33:01 MST 2007

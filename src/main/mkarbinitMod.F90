@@ -24,10 +24,14 @@ contains
     use shr_const_mod, only : SHR_CONST_TKFRZ
     use clmtype
     use clm_varpar   , only : nlevsoi, nlevsno, nlevlak
-    use clm_varcon   , only : bdsno, istice, istwet, istsoil, denice, denh2o, spval, sb
+    use clm_varcon   , only : bdsno, istice, istwet, istsoil, isturb, &
+                              denice, denh2o, spval, sb, icol_road_perv, &
+                              icol_road_imperv, icol_roof, icol_sunwall, &
+                              icol_shadewall
     use clm_varctl   , only : iulog, pertlim
     use spmdMod      , only : masterproc
     use decompMod    , only : get_proc_bounds
+    use shr_sys_mod  , only : shr_sys_flush
 !
 ! !ARGUMENTS:
     implicit none
@@ -43,6 +47,7 @@ contains
 ! local pointers to implicit in arguments
 !
     integer , pointer :: pcolumn(:)        ! column index associated with each pft
+    integer , pointer :: ctype(:)          ! column type
     integer , pointer :: clandunit(:)      ! landunit index associated with each column
     integer , pointer :: ltype(:)          ! landunit type
     logical , pointer :: lakpoi(:)         ! true => landunit is a lake point
@@ -73,7 +78,7 @@ contains
     real(r8), pointer :: snowdp(:)         ! snow height (m)
     real(r8), pointer :: snowage(:)        ! non dimensional snow age [-] (new)
     real(r8), pointer :: eflx_lwrad_out(:) ! emitted infrared (longwave) radiation (W/m**2)
-    real(r8), pointer :: soilpsi(:,:)	 ! soil water potential in each soil layer (MPa)
+    real(r8), pointer :: soilpsi(:,:)      ! soil water potential in each soil layer (MPa)
 !
 !EOP
 !
@@ -100,6 +105,7 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
+    ctype      => clm3%g%l%c%itype
     clandunit  => clm3%g%l%c%landunit
     snl        => clm3%g%l%c%cps%snl
     dz         => clm3%g%l%c%cps%dz
@@ -212,9 +218,63 @@ contains
                 t_soisno(c,j) = 277._r8
              end do
           else
+#if (defined VANCOUVER)
+             if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then 
+             ! Set road top layer to initial air temperature and interpolate other
+             ! layers down to 20C in bottom layer
+               do j = 1, nlevsoi
+                  t_soisno(c,j) = 297.56 - (j-1) * ((297.56-293.16)/(nlevsoi-1)) 
+               end do
+             ! Set wall and roof layers to initial air temperature
+             else if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall .or. ctype(c) == icol_roof) then
+               do j = 1, nlevsoi
+                  t_soisno(c,j) = 297.56
+               end do
+             else
+               do j = 1, nlevsoi
+                  t_soisno(c,j) = 283._r8
+               end do
+             end if
+#elif (defined MEXICOCITY)
+             if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then 
+             ! Set road top layer to initial air temperature and interpolate other
+             ! layers down to 22C in bottom layer
+               do j = 1, nlevsoi
+                  t_soisno(c,j) = 289.46 - (j-1) * ((289.46-295.16)/(nlevsoi-1)) 
+               end do
+             ! Set wall and roof layers to initial air temperature
+             else if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall .or. ctype(c) == icol_roof) then
+               do j = 1, nlevsoi
+                  t_soisno(c,j) = 289.46
+               end do
+             else
+               do j = 1, nlevsoi
+                  t_soisno(c,j) = 283._r8
+               end do
+             end if
+#elif (defined GRANDVIEW)
+             if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then 
+             ! Set road top layer to 18.5C and interpolate other
+             ! layers down to 16.5C in bottom layer
+               do j = 1, nlevsoi
+                  t_soisno(c,j) = 291.66 - (j-1) * ((291.66-289.66)/(nlevsoi-1)) 
+               end do
+             ! Set wall top layer to 18.35C and interpolate other
+             ! layers down to 17.0C in bottom layer
+             else if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall) then
+               do j = 1, nlevsoi
+                  t_soisno(c,j) = 291.51 - (j-1) * ((291.51-290.16)/(nlevsoi-1)) 
+               end do
+             else if (ctype(c) == icol_roof) then
+               do j = 1, nlevsoi
+                  t_soisno(c,j) = 291.56_r8
+               end do
+             end if
+#else
              do j = 1, nlevsoi
                 t_soisno(c,j) = 283._r8
              end do
+#endif
           endif
           t_grnd(c) = t_soisno(c,snl(c)+1)
        else                     !lake
@@ -245,8 +305,19 @@ contains
 !cdir nodep
     do p = begp, endp
        c = pcolumn(p)
+#if (defined VANCOUVER)
+       t_veg(p) = 297.56
+       t_ref2m(p) = 297.56
+#elif (defined MEXICOCITY)
+       t_veg(p) = 289.46
+       t_ref2m(p) = 289.46
+#elif (defined GRANDVIEW)
+       t_veg(p) = 291.56
+       t_ref2m(p) = 291.56
+#else
        t_veg(p) = 283._r8
        t_ref2m(p) = 283._r8
+#endif
        eflx_lwrad_out(p) = sb * (t_grnd(c))**4
     end do
 
@@ -254,6 +325,7 @@ contains
 
     ! volumetric water is set first and liquid content and ice lens are obtained
     ! NOTE: h2osoi_vol, h2osoi_liq and h2osoi_ice only have valid values over soil
+    ! and urban pervious road (other urban columns have zero soil water)
 
     h2osoi_vol(begc:endc,         1:nlevsoi) = spval
     h2osoi_liq(begc:endc,-nlevsno+1:nlevsoi) = spval
@@ -284,11 +356,18 @@ contains
              ! volumetric water
              if (ltype(l) == istsoil) then
                 h2osoi_vol(c,j) = 0.4_r8
+!KO                h2osoi_vol(c,j) = 0.05_r8
+             else if (ltype(l) == isturb) then 
+                if (ctype(c) == icol_road_perv) then
+                   h2osoi_vol(c,j) = 0.3_r8
+                else
+                   h2osoi_vol(c,j) = 0.0_r8
+                end if
              else
                 h2osoi_vol(c,j) = 1.0_r8
              endif
              h2osoi_vol(c,j) = min(h2osoi_vol(c,j),watsat(c,j))
-
+           
              ! soil layers
              if (t_soisno(c,j) <= SHR_CONST_TKFRZ) then
                 h2osoi_ice(c,j)  = dz(c,j)*denice*h2osoi_vol(c,j)

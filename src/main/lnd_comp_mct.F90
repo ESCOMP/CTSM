@@ -654,6 +654,7 @@ contains
     use clm_atmlnd      , only: atm2lnd_type
     use clm_varctl      , only: co2_type, co2_ppmv
     use clm_varcon      , only: rair, o2_molar_const, c13ratio
+    use shr_const_mod   , only: SHR_CONST_TKFRZ
     use decompMod       , only: get_proc_bounds_atm
     !
     ! Arguments
@@ -664,15 +665,39 @@ contains
     ! Local Variables
     !
     integer  :: g,i,nstep,ier
-    real(r8) :: forc_rainc    ! rainxy Atm flux mm/s
-    real(r8) :: forc_rainl    ! rainxy Atm flux mm/s
-    real(r8) :: forc_snowc    ! snowfxy Atm flux  mm/s
-    real(r8) :: forc_snowl    ! snowfxl Atm flux  mm/s
-    real(r8) :: co2_ppmv_diag ! temporary
-    real(r8) :: co2_ppmv_prog ! temporary
-    real(r8) :: co2_ppmv_val  ! temporary
-    integer  :: begg, endg    ! beginning and ending gridcell indices
-    integer  :: co2_type_idx  ! integer flag for co2_type options
+    real(r8) :: forc_rainc           ! rainxy Atm flux mm/s
+    real(r8) :: e                    !vapor pressure (Pa)
+    real(r8) :: qsat                 !saturation specific humidity (kg/kg)
+    real(r8) :: forc_rainl           ! rainxy Atm flux mm/s
+    real(r8) :: forc_snowc           ! snowfxy Atm flux  mm/s
+    real(r8) :: forc_snowl           ! snowfxl Atm flux  mm/s
+    real(r8) :: co2_ppmv_diag        ! temporary
+    real(r8) :: co2_ppmv_prog        ! temporary
+    real(r8) :: co2_ppmv_val         ! temporary
+    integer  :: begg, endg           ! beginning and ending gridcell indices
+    integer  :: co2_type_idx         ! integer flag for co2_type options
+    real(r8) :: esatw                !saturation vapor pressure over water (Pa)
+    real(r8) :: esati                !saturation vapor pressure over ice (Pa)
+    real(r8) :: a0,a1,a2,a3,a4,a5,a6 !coefficients for esat over water
+    real(r8) :: b0,b1,b2,b3,b4,b5,b6 !coefficients for esat over ice
+    real(r8) :: tdc, t               !Kelvins to Celcius function and its input
+
+    parameter (a0=6.107799961_r8    , a1=4.436518521e-01_r8, &
+               a2=1.428945805e-02_r8, a3=2.650648471e-04_r8, &
+               a4=3.031240396e-06_r8, a5=2.034080948e-08_r8, &
+               a6=6.136820929e-11_r8)
+
+    parameter (b0=6.109177956_r8    , b1=5.034698970e-01_r8, &
+               b2=1.886013408e-02_r8, b3=4.176223716e-04_r8, &
+               b4=5.824720280e-06_r8, b5=4.838803174e-08_r8, &
+               b6=1.838826904e-10_r8)
+!
+! function declarations
+!
+    tdc(t) = min( 50._r8, max(-50._r8,(t-SHR_CONST_TKFRZ)) )
+    esatw(t) = 100._r8*(a0+t*(a1+t*(a2+t*(a3+t*(a4+t*(a5+t*a6))))))
+    esati(t) = 100._r8*(b0+t*(b1+t*(b2+t*(b3+t*(b4+t*(b5+t*b6))))))
+
     !-----------------------------------------------------
 
     ! unpermute after rearrange call and before copying into local arrays.
@@ -753,6 +778,18 @@ contains
                             a2l%forc_solad(g,2) + a2l%forc_solai(g,2)
         a2l%forc_rain(g)  = forc_rainc + forc_rainl
         a2l%forc_snow(g)  = forc_snowc + forc_snowl
+        a2l%rainf    (g)  = a2l%forc_rain(g) + a2l%forc_snow(g)
+
+        if (a2l%forc_t(g) > SHR_CONST_TKFRZ) then
+           e = esatw(tdc(a2l%forc_t(g)))
+        else
+           e = esati(tdc(a2l%forc_t(g)))
+        end if
+        qsat           = 0.622_r8*e / (a2l%forc_pbot(g) - 0.378_r8*e)
+        a2l%forc_rh(g) = 100.0_r8*(a2l%forc_q(g) / qsat)
+        ! Make sure relative humidity is properly bounded
+        ! a2l%forc_rh(g) = min( 100.0_r8, a2l%forc_rh(g) )
+        ! a2l%forc_rh(g) = max(   0.0_r8, a2l%forc_rh(g) )
         
         ! Determine derived quantities for optional fields
         ! Note that the following does unit conversions from ppmv to partial pressures (Pa)

@@ -1,3 +1,4 @@
+-nospmd
 -smp
 -maxpft 10
 -bgc dgvm

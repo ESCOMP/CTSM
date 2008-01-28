@@ -59,6 +59,56 @@
 
 </stream>
 
+<stream datasource="CLM1PT">
+
+<!-- Comment on description of stream data -->
+
+<comment>Stream description file for CLM single point data</comment>
+
+<!-- Data source names -->
+<dataSource>CLMNCEP</dataSource>
+
+<!-- Domain information -->
+<domainInfo>
+   <variableNames>
+       time    time
+       xc      lon
+       yc      lat
+       area    area
+       mask    mask
+   </variableNames>
+   <filePath                                >%d/atm/datm7/domain.clm</filePath>
+   <fileNames                               > %do </fileNames>
+   <fileNames RESOLUTION="1x1_mexicocityMEX"> domain.lnd.1x1pt-mexicocityMEX_navy.080115.nc </fileNames>
+   <fileNames RESOLUTION="1x1_vancouverCAN" > domain.lnd.1x1pt-vancouverCAN_navy.080115.nc </fileNames>
+</domainInfo>
+
+<fieldInfo>
+   <!-- Field names -->
+   <variableNames>
+      ZBOT     z
+      TBOT     tbot
+      RH       rh
+      WIND     wind
+      PRECTmms precn
+      FSDS     swdn
+      FSDSdir  swdndr
+      FSDSdif  swdndf
+      PSRF     pbot
+      FLDS     lwdn
+   </variableNames>
+   <!-- File path to data -->
+   <filePath                               >%p</filePath>
+   <filePath RESOLUTION="1x1_mexicocityMEX">%d/atm/datm7/CLM1PT_data/mexicocityMEX.c080124</filePath>
+   <filePath RESOLUTION="1x1_vancouverCAN" >%d/atm/datm7/CLM1PT_data/vancouverCAN.c080124</filePath>
+   <!-- data filenames template -->
+   <fileNames                               > clm1pt-%ym.nc </fileNames>
+   <fileNames RESOLUTION="1x1_mexicocityMEX"> clm1pt-1993-12.nc </fileNames>
+   <fileNames RESOLUTION="1x1_vancouverCAN" > clm1pt-1992-08.nc </fileNames>
+</fieldInfo>
+
+</stream>
+
 <!--
 
     Streams template for datasource=CAMHIST.eul64x128_datm6.01

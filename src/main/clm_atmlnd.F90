@@ -44,6 +44,9 @@ type atm2lnd_type
   real(r8), pointer :: forc_th(:)      !atm potential temperature (Kelvin)
   real(r8), pointer :: forc_vp(:)      !atmospheric vapor pressure (Pa)
   real(r8), pointer :: forc_rho(:)     !density (kg/m**3)
+!KO
+  real(r8), pointer :: forc_rh(:)      !atmospheric relative humidity (%)
+!KO
   real(r8), pointer :: forc_psrf(:)    !surface pressure (Pa)
   real(r8), pointer :: forc_pco2(:)    !CO2 partial pressure (Pa)
   real(r8), pointer :: forc_lwrad(:)   !downwrd IR longwave radiation (W/m**2)
@@ -55,6 +58,9 @@ type atm2lnd_type
   real(r8), pointer :: forc_rain(:)    !rain rate [mm/s]
   real(r8), pointer :: forc_snow(:)    !snow rate [mm/s]
   real(r8), pointer :: forc_ndep(:)    !nitrogen deposition rate (gN/m2/s)
+!KO
+  real(r8), pointer :: rainf(:)        !ALMA rain+snow [mm/s]
+!KO
   ! 4/14/05: PET
   ! Adding isotope code
   real(r8), pointer :: forc_pc13o2(:)  !C13O2 partial pressure (Pa)
@@ -191,6 +197,9 @@ end subroutine init_adiag_type
   allocate(a2l%forc_v(beg:end))
   allocate(a2l%forc_wind(beg:end))
   allocate(a2l%forc_q(beg:end))
+!KO
+  allocate(a2l%forc_rh(beg:end))
+!KO
   allocate(a2l%forc_hgt(beg:end))
   allocate(a2l%forc_hgt_u(beg:end))
   allocate(a2l%forc_hgt_t(beg:end))
@@ -208,6 +217,9 @@ end subroutine init_adiag_type
   allocate(a2l%forc_rain(beg:end))
   allocate(a2l%forc_snow(beg:end))
   allocate(a2l%forc_ndep(beg:end))
+!KO
+  allocate(a2l%rainf(beg:end))
+!KO
   ! 4/14/05: PET
   ! Adding isotope code
   allocate(a2l%forc_pc13o2(beg:end))
@@ -224,6 +236,9 @@ end subroutine init_adiag_type
   a2l%forc_v(beg:end) = ival
   a2l%forc_wind(beg:end) = ival
   a2l%forc_q(beg:end) = ival
+!KO
+  a2l%forc_rh(beg:end) = ival
+!KO
   a2l%forc_hgt(beg:end) = ival
   a2l%forc_hgt_u(beg:end) = ival
   a2l%forc_hgt_t(beg:end) = ival
@@ -241,6 +256,9 @@ end subroutine init_adiag_type
   a2l%forc_rain(beg:end) = ival
   a2l%forc_snow(beg:end) = ival
   a2l%forc_ndep(beg:end) = ival
+!KO
+  a2l%rainf(beg:end) = nan
+!KO
   ! 4/14/05: PET
   ! Adding isotope code
   a2l%forc_pc13o2(beg:end) = ival
@@ -398,7 +416,7 @@ end subroutine init_lnd2atm_type
   call get_proc_bounds_atm(begg_s, endg_s)
   call get_proc_bounds    (begg_d, endg_d)
 
-  nflds = 21+2*numrad
+  nflds = 23+2*numrad
 
   allocate(asrc(begg_s:endg_s,nflds))
   allocate(adst(begg_d:endg_d,nflds))
@@ -409,6 +427,9 @@ end subroutine init_lnd2atm_type
   ix=ix+1; asrc(:,ix) = a2l_src%forc_v(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_wind(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_q(:)  
+!KO
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_rh(:)
+!KO
   ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt_u(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt_t(:)  
@@ -423,6 +444,9 @@ end subroutine init_lnd2atm_type
   ix=ix+1; asrc(:,ix) = a2l_src%forc_solar(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_rain(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_snow(:)  
+!KO
+  ix=ix+1; asrc(:,ix) = a2l_src%rainf(:)  
+!KO
   ix=ix+1; asrc(:,ix) = a2l_src%forc_pc13o2(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_po2(:)  
   do n = 1,numrad
@@ -444,6 +468,9 @@ end subroutine init_lnd2atm_type
   ix=ix+1; a2l_dst%forc_v(:)     =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_wind(:)  =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_q(:)     =   adst(:,ix)
+!KO
+  ix=ix+1; a2l_dst%forc_rh(:)    =   adst(:,ix)
+!KO
   ix=ix+1; a2l_dst%forc_hgt(:)   =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_hgt_u(:) =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_hgt_t(:) =   adst(:,ix)
@@ -458,6 +485,9 @@ end subroutine init_lnd2atm_type
   ix=ix+1; a2l_dst%forc_solar(:) =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_rain(:)  =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_snow(:)  =   adst(:,ix)
+!KO
+  ix=ix+1; a2l_dst%rainf(:)      =   adst(:,ix)
+!KO
   ix=ix+1; a2l_dst%forc_pc13o2(:)=   adst(:,ix)
   ix=ix+1; a2l_dst%forc_po2(:)   =   adst(:,ix)
   do n = 1,numrad

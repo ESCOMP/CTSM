@@ -13,18 +13,35 @@ module clmtype
 ! the clm derived type and 1d mapping arrays. 
 ! All variaible are local only, no global information.
 !
+! -------------------------------------------------------- 
+! gridcell types can have values of 
+! -------------------------------------------------------- 
 !   1 => default
+! -------------------------------------------------------- 
 ! landunits types can have values of (see clm_varcon.F90)
-!          (note shallow lakes not currently implemented)
+! -------------------------------------------------------- 
 !   1  => (istsoil) soil (vegetated or bare soil landunit)
 !   2  => (istice)  land ice
 !   3  => (istdlak) deep lake
+!   4  => (istslak) shall lake (not currently implemented)
 !   5  => (istwet)  wetland
 !   6  => (isturb)  urban 
+! -------------------------------------------------------- 
 ! column types can have values of
-!   1 => in  compete mode
-!   pft type values (see below) => in non-compete mode
+! -------------------------------------------------------- 
+!   1  => (istsoil)      soil (vegetated or bare soil)
+!   2  => (istice)       land ice
+!   3  => (istdlak)      deep lake
+!   4  => (istslak)      shallow lake 
+!   5  => (istwet)       wetland
+!   61 => (icol_roof)        urban roof
+!   62 => (icol_sunwall)     urban sunwall
+!   63 => (icol_shadewall)   urban shadewall
+!   64 => (icol_road_imperv) urban impervious road
+!   65 => (icol_road_perv)   urban pervious road
+! -------------------------------------------------------- 
 ! pft types can have values of
+! -------------------------------------------------------- 
 !   0  => not vegetated
 !   1  => needleleaf evergreen temperate tree
 !   2  => needleleaf evergreen boreal tree
@@ -42,6 +59,7 @@ module clmtype
 !   14 => c4 grass
 !   15 => corn
 !   16 => wheat
+! -------------------------------------------------------- 
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
@@ -564,6 +582,9 @@ type, public :: pft_eflux_type
    real(r8), pointer :: dgnetdT(:)           !derivative of net ground heat flux wrt soil temp (W/m**2 K)
    real(r8), pointer :: eflx_lwrad_out(:)    !emitted infrared (longwave) radiation (W/m**2)
    real(r8), pointer :: eflx_lwrad_net(:)    !net infrared (longwave) rad (W/m**2) [+ = to atm]
+!KO
+   real(r8), pointer :: netrad(:)            !net radiation (W/m**2) [+ = to sfc]
+!KO
    real(r8), pointer :: fsds_vis_d(:)        !incident direct beam vis solar radiation (W/m**2)
    real(r8), pointer :: fsds_nir_d(:)        !incident direct beam nir solar radiation (W/m**2)
    real(r8), pointer :: fsds_vis_i(:)        !incident diffuse vis solar radiation (W/m**2)
@@ -953,6 +974,8 @@ type, public :: column_pstate_type
    real(r8), pointer :: albgrd(:,:)           !ground albedo (direct) (numrad)
    real(r8), pointer :: albgri(:,:)           !ground albedo (diffuse) (numrad)
    real(r8), pointer :: rootr_column(:,:)     !effective fraction of roots in each soil layer (nlevsoi)  
+   real(r8), pointer :: rootfr_road_perv(:,:) !fraction of roots in each soil layer for urban pervious road
+   real(r8), pointer :: rootr_road_perv(:,:)  !effective fraction of roots in each soil layer of urban pervious road
    real(r8), pointer :: wf(:)                 !soil water as frac. of whc for top 0.5 m
    ! new variables for CN code
    real(r8), pointer :: bsw2(:,:)        !Clapp and Hornberger "b" for CN code
@@ -1098,30 +1121,32 @@ end type column_dstate_type
 ! column energy flux variables structure
 !----------------------------------------------------
 type, public :: column_eflux_type
-   type(pft_eflux_type):: pef_a               !pft-level energy flux variables averaged to the column
-   real(r8), pointer :: eflx_snomelt(:) !snow melt heat flux (W/m**2)
-   real(r8), pointer :: eflx_impsoil(:) !implicit evaporation for soil temperature equation
+   type(pft_eflux_type):: pef_a	              ! pft-level energy flux variables averaged to the column
+   real(r8), pointer :: eflx_snomelt(:)       ! snow melt heat flux (W/m**2)
+   real(r8), pointer :: eflx_impsoil(:)	      ! implicit evaporation for soil temperature equation
+   ! Urban variable
+   real(r8), pointer :: eflx_building_heat(:) ! heat flux from urban building interior to urban walls, roof (W/m**2)
 end type column_eflux_type
 
 !----------------------------------------------------
 ! column momentum flux variables structure
 !----------------------------------------------------
 type, public :: column_mflux_type
-   type(pft_mflux_type)::  pmf_a    !pft-level momentum flux variables averaged to the column
+   type(pft_mflux_type)::  pmf_a        ! pft-level momentum flux variables averaged to the column
 end type column_mflux_type
 
 !----------------------------------------------------
 ! column water flux variables structure
 !----------------------------------------------------
 type, public :: column_wflux_type
-   type(pft_wflux_type):: pwf_a         !pft-level water flux variables averaged to the column
-   real(r8), pointer :: qflx_infl(:)    !infiltration (mm H2O /s)
-   real(r8), pointer :: qflx_surf(:)    !surface runoff (mm H2O /s)
-   real(r8), pointer :: qflx_drain(:)   !sub-surface runoff (mm H2O /s)
-   real(r8), pointer :: qflx_top_soil(:)!net water input into soil from top (mm/s)
-   real(r8), pointer :: qflx_snomelt(:) !snow melt (mm H2O /s)
-   real(r8), pointer :: qflx_qrgwl(:)   !qflx_surf at glaciers, wetlands, lakes
-   real(r8), pointer :: qmelt(:)        !snow melt [mm/s]
+   type(pft_wflux_type):: pwf_a	        ! pft-level water flux variables averaged to the column
+   real(r8), pointer :: qflx_infl(:)	! infiltration (mm H2O /s)
+   real(r8), pointer :: qflx_surf(:)	! surface runoff (mm H2O /s)
+   real(r8), pointer :: qflx_drain(:) 	! sub-surface runoff (mm H2O /s)
+   real(r8), pointer :: qflx_top_soil(:)! net water input into soil from top (mm/s)
+   real(r8), pointer :: qflx_snomelt(:) ! snow melt (mm H2O /s)
+   real(r8), pointer :: qflx_qrgwl(:) 	! qflx_surf at glaciers, wetlands, lakes
+   real(r8), pointer :: qmelt(:) 	! snow melt [mm/s]
    real(r8), pointer :: h2ocan_loss(:)  ! mass balance correction term for dynamic weights
 end type column_wflux_type
 
@@ -1356,6 +1381,22 @@ end type column_dflux_type
 !----------------------------------------------------
 type, public :: landunit_pstate_type
    type(column_pstate_type):: cps_a            !column-level physical state variables averaged to landunit
+   ! Urban variables
+   real(r8), pointer :: t_building(:)         ! internal building temperature (K)
+   real(r8), pointer :: t_building_max(:)     ! maximum internal building temperature (K)
+   real(r8), pointer :: t_building_min(:)     ! minimum internal building temperature (K)
+   real(r8), pointer :: tk_wall(:,:)          ! thermal conductivity of urban wall (W/m/K)
+   real(r8), pointer :: tk_roof(:,:)          ! thermal conductivity of urban roof (W/m/K)
+   real(r8), pointer :: tk_improad(:,:)       ! thermal conductivity of urban impervious road (W/m/K)
+   real(r8), pointer :: cv_wall(:,:)          ! heat capacity of urban wall (J/m^3/K)
+   real(r8), pointer :: cv_roof(:,:)          ! heat capacity of urban roof (J/m^3/K)
+   real(r8), pointer :: cv_improad(:,:)       ! heat capacity of urban impervious road (J/m^3/K)
+   real(r8), pointer :: sandfrac_road(:,:)    ! sand fraction of urban road
+   real(r8), pointer :: clayfrac_road(:,:)    ! clay fraction of urban road
+   real(r8), pointer :: scalez_wall(:)        ! layer thickness discretization of urban wall
+   real(r8), pointer :: scalez_roof(:)        ! layer thickness discretization of urban roof
+   real(r8), pointer :: thick_wall(:)         ! total thickness of urban wall (m)
+   real(r8), pointer :: thick_roof(:)         ! total thickness of urban roof (m)
 end type landunit_pstate_type
 
 !----------------------------------------------------
@@ -1411,7 +1452,11 @@ end type landunit_dstate_type
 ! landunit energy flux variables structure
 !----------------------------------------------------
 type, public :: landunit_eflux_type
-   type(column_eflux_type):: cef_a             !column-level energy flux variables averaged to landunit
+   type(column_eflux_type)::	cef_a		! column-level energy flux variables averaged to landunit
+   ! Urban variables
+   real(r8), pointer :: eflx_traffic_factor(:)  ! multiplicative traffic factor for sensible heat flux from urban traffic (-)
+   real(r8), pointer :: eflx_traffic(:)         ! traffic sensible heat flux (W/m**2)
+   real(r8), pointer :: eflx_wasteheat(:)       ! sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
 end type landunit_eflux_type
 
 !----------------------------------------------------
@@ -1808,18 +1853,30 @@ end type column_type
 !----------------------------------------------------
 
 type, public :: landunit_type
-
-   type(column_type) :: c    !column data structure (soil/snow/canopy columns)
+   type(column_type) :: c                 !column data structure (soil/snow/canopy columns)
 
    ! g/l/c/p hierarchy, local g/l/c/p cells only
-   integer , pointer :: gridcell(:)     !index into gridcell level quantities
-   real(r8), pointer :: wtgcell(:)      !weight (relative to gridcell)
-   integer , pointer :: coli(:)         !beginning column index per landunit
-   integer , pointer :: colf(:)         !ending column index for each landunit
-   integer , pointer :: ncolumns(:)     !number of columns for each landunit
-   integer , pointer :: pfti(:)         !beginning pft index for each landunit
-   integer , pointer :: pftf(:)         !ending pft index for each landunit
-   integer , pointer :: npfts(:)        !number of pfts for each landunit
+   integer , pointer :: gridcell(:)       !index into gridcell level quantities
+   real(r8), pointer :: wtgcell(:)        !weight (relative to gridcell)
+   integer , pointer :: coli(:)           !beginning column index per landunit
+   integer , pointer :: colf(:)           !ending column index for each landunit
+   integer , pointer :: ncolumns(:)       !number of columns for each landunit
+   integer , pointer :: pfti(:)           !beginning pft index for each landunit
+   integer , pointer :: pftf(:)           !ending pft index for each landunit
+   integer , pointer :: npfts(:)          !number of pfts for each landunit
+
+   ! Urban canyon related properties
+   real(r8), pointer :: canyon_hwr(:)     ! urban landunit canyon height to width ratio (-)   
+   real(r8), pointer :: wtroad_perv(:)    ! urban landunit weight of pervious road column to total road (-)
+   real(r8), pointer :: wtlunit_roof(:)   ! weight of roof with respect to urban landunit (-)
+
+   ! Urban related info MV - this should be moved to land physical state - MV
+   real(r8), pointer :: ht_roof(:)        ! height of urban roof (m)
+   real(r8), pointer :: wind_hgt_canyon(:)! height above road at which wind in canyon is to be computed (m)
+   real(r8), pointer :: z_0_town(:)       ! urban landunit momentum roughness length (m)
+   real(r8), pointer :: z_d_town(:)       ! urban landunit displacement height (m)
+   real(r8), pointer :: taf(:)            ! urban canopy air temperature (K)
+   real(r8), pointer :: qaf(:)            ! urban canopy air specific humidity (kg/kg)
    
    ! topological mapping functionality
    integer , pointer :: itype(:)        !landunit type

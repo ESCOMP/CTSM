@@ -42,7 +42,9 @@ contains
 !
 ! !INTERFACE:
   subroutine SurfaceAlbedo(lbg, ubg, lbc, ubc, lbp, ubp, &
-       caldayp1, declinp1)
+                           num_nourbanc, filter_nourbanc, &
+                           num_nourbanp, filter_nourbanp, &
+                           caldayp1, declinp1)
 !
 ! !DESCRIPTION:
 ! Surface albedo and two-stream fluxes
@@ -64,11 +66,15 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    integer , intent(in) :: lbg, ubg ! gridcell bounds
-    integer , intent(in) :: lbc, ubc ! column bounds
-    integer , intent(in) :: lbp, ubp ! pft bounds
-    real(r8), intent(in) :: caldayp1 ! calendar day at Greenwich (1.00, ..., 365.99)
-    real(r8), intent(in) :: declinp1 ! declination angle (radians) for next time step
+    integer , intent(in) :: lbg, ubg                   ! gridcell bounds
+    integer , intent(in) :: lbc, ubc                   ! column bounds
+    integer , intent(in) :: lbp, ubp                   ! pft bounds
+    integer , intent(in) :: num_nourbanc               ! number of columns in non-urban filter
+    integer , intent(in) :: filter_nourbanc(ubc-lbc+1) ! column filter for non-urban points
+    integer , intent(in) :: num_nourbanp               ! number of pfts in non-urban filter
+    integer , intent(in) :: filter_nourbanp(ubp-lbp+1) ! pft filter for non-urban points
+    real(r8), intent(in) :: caldayp1                   ! calendar day at Greenwich (1.00, ..., 365.99)
+    real(r8), intent(in) :: declinp1                   ! declination angle (radians) for next time step
 !
 ! !CALLED FROM:
 ! subroutine lpjreset1 in module DGVMMod (only applicable when cpp token DGVM is defined)
@@ -124,8 +130,8 @@ contains
 !
 ! !OTHER LOCAL VARIABLES:
 !
-    real(r8), parameter :: mpe = 1.e-06_r8    ! prevents overflow for division by zero
-    integer  :: fp,g,c,p                   ! indices
+    real(r8), parameter :: mpe = 1.e-06_r8 ! prevents overflow for division by zero
+    integer  :: fp,fc,g,c,p                ! indices
     integer  :: ib                         ! band index
     integer  :: ic                         ! 0=unit incoming direct; 1=unit incoming diffuse
     real(r8) :: wl(lbp:ubp)                ! fraction of LAI+SAI that is LAI
@@ -199,11 +205,11 @@ contains
     end do
 
     ! Save coszen and declination values to  clm3 data structures for
-    ! use in other places in the CN code
+    ! use in other places in the CN and urban code
 
 !dir$ concurrent
 !cdir nodep
-    do c = lbc, ubc
+    do c = lbc,ubc
        g = cgridcell(c)
        coszen_col(c) = coszen_gcell(g)
        coszen(c) = coszen_col(c)
@@ -212,7 +218,8 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-    do p = lbp, ubp
+    do fp = 1,num_nourbanp
+       p = filter_nourbanp(fp)
        g = pgridcell(p)
        coszen_pft(p) = coszen_gcell(g)
     end do
@@ -222,13 +229,15 @@ contains
     do ib = 1, numrad
 !dir$ concurrent
 !cdir nodep
-       do c = lbc,ubc
+       do fc = 1,num_nourbanc
+          c = filter_nourbanc(fc)
           albgrd(c,ib) = 0._r8
           albgri(c,ib) = 0._r8
        end do
 !dir$ concurrent
 !cdir nodep
-       do p = lbp,ubp
+       do fp = 1,num_nourbanp
+          p = filter_nourbanp(fp)
           albd(p,ib) = 1._r8
           albi(p,ib) = 1._r8
           fabd(p,ib) = 0._r8
@@ -258,20 +267,21 @@ contains
     ! Note that snow albedo routine will only compute nonzero snow albedos
     ! where h2osno> 0 and coszen > 0
 
-    ic = 0; call SnowAlbedo(lbc, ubc, coszen_col, ic, albsnd)
-    ic = 1; call SnowAlbedo(lbc, ubc, coszen_col, ic, albsni)
+    ic = 0; call SnowAlbedo(lbc, ubc, num_nourbanc, filter_nourbanc, coszen_col, ic, albsnd)
+    ic = 1; call SnowAlbedo(lbc, ubc, num_nourbanc, filter_nourbanc, coszen_col, ic, albsni)
 
     ! Ground surface albedos
     ! Note that ground albedo routine will only compute nonzero snow albedos
     ! where coszen > 0
 
-    call SoilAlbedo(lbc, ubc, coszen_col, albsnd, albsni)
+    call SoilAlbedo(lbc, ubc, num_nourbanc, filter_nourbanc, coszen_col, albsnd, albsni) 
 
     ! Creat solar-vegetated filter for the following calculations
 
     num_vegsol = 0
     num_novegsol = 0
-    do p = lbp,ubp
+    do fp = 1,num_nourbanp
+       p = filter_nourbanp(fp)
        if (pwtgcell(p)>0._r8) then
           if (coszen_pft(p) > 0._r8) then
              if (itypelun(plandunit(p)) == istsoil .and. (elai(p) + esai(p)) > 0._r8) then                       
@@ -341,7 +351,7 @@ contains
 ! !IROUTINE: SnowAlbedo
 !
 ! !INTERFACE:
-  subroutine SnowAlbedo (lbc, ubc, coszen, ind, alb)
+  subroutine SnowAlbedo (lbc, ubc, num_nourbanc, filter_nourbanc, coszen, ind, alb)
 !
 ! !DESCRIPTION:
 ! Determine snow albedos
@@ -351,10 +361,12 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    integer , intent(in) :: lbc, ubc                 ! column bounds
-    real(r8), intent(in) :: coszen(lbc:ubc)          ! cosine solar zenith angle for next time step
-    integer , intent(in) :: ind                      ! 0=direct beam, 1=diffuse radiation
-    real(r8), intent(out):: alb(lbc:ubc,2)           ! snow albedo by waveband (assume 2 wavebands)
+    integer , intent(in) :: lbc, ubc                   ! column bounds
+    integer , intent(in) :: num_nourbanc               ! number of columns in non-urban points in column filter
+    integer , intent(in) :: filter_nourbanc(ubc-lbc+1) ! column filter for non-urban points
+    real(r8), intent(in) :: coszen(lbc:ubc)            ! cosine solar zenith angle for next time step
+    integer , intent(in) :: ind                        ! 0=direct beam, 1=diffuse radiation
+    real(r8), intent(out):: alb(lbc:ubc,2)             ! snow albedo by waveband (assume 2 wavebands)
 !
 ! !CALLED FROM:
 ! subroutine SurfaceAlbedo in this module
@@ -385,12 +397,13 @@ contains
     real(r8), parameter :: cons  = 0.2_r8  ! constant for visible snow albedo calculation [-]
     real(r8), parameter :: conn  = 0.5_r8  ! constant for nir snow albedo calculation [-]
     real(r8), parameter :: sl    = 2.0_r8  ! factor that helps control alb zenith dependence [-]
-    integer  :: c                       ! index
-    real(r8) :: age                     ! factor to reduce visible snow alb due to snow age [-]
-    real(r8) :: albs                    ! temporary vis snow albedo
-    real(r8) :: albl                    ! temporary nir snow albedo
-    real(r8) :: cff                     ! snow alb correction factor for zenith angle > 60 [-]
-    real(r8) :: czf                     ! solar zenith correction for new snow albedo [-]
+    integer  :: fc                         ! non-urban filter column index
+    integer  :: c                          ! index
+    real(r8) :: age                        ! factor to reduce visible snow alb due to snow age [-]
+    real(r8) :: albs                       ! temporary vis snow albedo
+    real(r8) :: albl                       ! temporary nir snow albedo
+    real(r8) :: cff                        ! snow alb correction factor for zenith angle > 60 [-]
+    real(r8) :: czf                        ! solar zenith correction for new snow albedo [-]
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (column-level)
@@ -409,7 +422,8 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-    do c = lbc, ubc
+    do fc = 1,num_nourbanc
+       c = filter_nourbanc(fc)
        if (coszen(c) > 0._r8 .and. h2osno(c) > 0._r8) then
           age = 1._r8-1._r8/(1._r8+snowage(c))
           albs = snal0*(1._r8-cons*age)
@@ -438,7 +452,7 @@ contains
 ! !IROUTINE: SoilAlbedo
 !
 ! !INTERFACE:
-  subroutine SoilAlbedo (lbc, ubc, coszen, albsnd, albsni)
+  subroutine SoilAlbedo (lbc, ubc, num_nourbanc, filter_nourbanc, coszen, albsnd, albsni)
 !
 ! !DESCRIPTION:
 ! Determine ground surface albedo, accounting for snow
@@ -450,10 +464,12 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    integer , intent(in) :: lbc, ubc                ! column bounds
-    real(r8), intent(in) :: coszen(lbc:ubc)         ! cos solar zenith angle next time step (column-level)
-    real(r8), intent(in) :: albsnd(lbc:ubc,numrad)  ! snow albedo (direct)
-    real(r8), intent(in) :: albsni(lbc:ubc,numrad)  ! snow albedo (diffuse)
+    integer , intent(in) :: lbc, ubc                   ! column bounds
+    integer , intent(in) :: num_nourbanc               ! number of columns in non-urban points in column filter
+    integer , intent(in) :: filter_nourbanc(ubc-lbc+1) ! column filter for non-urban points
+    real(r8), intent(in) :: coszen(lbc:ubc)            ! cos solar zenith angle next time step (column-level)
+    real(r8), intent(in) :: albsnd(lbc:ubc,numrad)     ! snow albedo (direct)
+    real(r8), intent(in) :: albsni(lbc:ubc,numrad)     ! snow albedo (diffuse)
 !
 ! !CALLED FROM:
 ! subroutine SurfaceAlbedo in this module
@@ -484,6 +500,7 @@ contains
 ! !OTHER LOCAL VARIABLES:
 !
     integer, parameter :: nband =numrad ! number of solar radiation waveband classes
+    integer  :: fc            ! non-urban filter column index
     integer  :: c,l           ! indices
     integer  :: ib            ! waveband number (1=vis, 2=nir)
     real(r8) :: inc           ! soil water correction factor for soil albedo
@@ -512,7 +529,8 @@ contains
     do ib = 1, nband
 !dir$ concurrent
 !cdir nodep
-       do c = lbc, ubc
+       do fc = 1,num_nourbanc
+          c = filter_nourbanc(fc)
           if (coszen(c) > 0._r8) then
              l = clandunit(c)
 
@@ -832,7 +850,8 @@ contains
 ! !IROUTINE: SnowAge
 !
 ! !INTERFACE:
-  subroutine SnowAge (lbc, ubc)
+!
+  subroutine SnowAge (lbc, ubc, num_nourbanc, filter_nourbanc)
 !
 ! !DESCRIPTION:
 ! Updates snow age Based on BATS code.
@@ -844,7 +863,9 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
-    integer , intent(in) :: lbc, ubc ! column bounds
+    integer , intent(in) :: lbc, ubc                   ! column bounds
+    integer , intent(in) :: num_nourbanc               ! number of columns in non-urban points in column filter
+    integer , intent(in) :: filter_nourbanc(ubc-lbc+1) ! column filter for non-urban points
 !
 ! !CALLED FROM:
 !
@@ -871,6 +892,7 @@ contains
 !
 ! !OTHER LOCAL VARIABLES:
 !
+    integer  :: fc    ! non-urban filter column index
     integer  :: c     ! index
     real(r8) :: age1  ! snow aging factor due to crystal growth [-]
     real(r8) :: age2  ! snow aging factor due to surface growth [-]
@@ -896,7 +918,8 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-    do c = lbc, ubc
+    do fc = 1,num_nourbanc
+       c = filter_nourbanc(fc)
        if (h2osno(c) <= 0._r8) then
           snow_age(c) = 0._r8
        else if (h2osno(c) > 800._r8) then       ! Over Antarctica

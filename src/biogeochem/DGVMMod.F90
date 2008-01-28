@@ -230,7 +230,9 @@ contains
 !
 ! !INTERFACE:
   subroutine lpjreset(lbg, ubg, lbc, ubc, lbp, ubp, &
-                      num_nolakep, filter_nolakep, &
+                      num_nolakep,  filter_nolakep, &
+                      num_nourbanc, filter_nourbanc, &
+                      num_nourbanp, filter_nourbanp, &
                       caldayp1, declinp1)
 !
 ! !DESCRIPTION:
@@ -248,6 +250,10 @@ contains
     integer , intent(in) :: lbp, ubp       ! pft bounds
     integer , intent(in) :: num_nolakep    ! number of non-lake pfts in filter
     integer , intent(in) :: filter_nolakep(ubp-lbp+1) ! pft filter for non-lake points
+    integer , intent(in) :: num_nourbanc   ! number of non-urban columns in filter
+    integer , intent(in) :: filter_nourbanc(ubp-lbp+1) ! column filter for non-urban points
+    integer , intent(in) :: num_nourbanp   ! number of non-urban pfts in filter
+    integer , intent(in) :: filter_nourbanp(ubp-lbp+1) ! pft filter for non-urban points
     real(r8), intent(in) :: caldayp1       ! calendar day at Greenwich (1.00, ..., 365.99) for nstep+1
     real(r8), intent(in) :: declinp1       ! declination angle for next time step
 !
@@ -287,7 +293,9 @@ contains
          doalb=.false., endofyr=.true.)
 
     call SurfaceAlbedo(lbg, ubg, lbc, ubc, lbp, ubp, &
-         caldayp1, declinp1)
+                       num_nourbanc, filter_nourbanc, &
+                       num_nourbanp, filter_nourbanp, &
+                       caldayp1, declinp1)
 
   end subroutine lpjreset
 

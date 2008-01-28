@@ -1,4 +1,4 @@
--spmd
+-spmd -nosmp
 -maxpft 17
 -rtm on
 -dust on

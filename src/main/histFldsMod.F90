@@ -98,6 +98,11 @@ contains
          avgflag='A', long_name='2m air temperature', &
          ptr_pft=clm3%g%l%c%p%pes%t_ref2m)
 
+    call hist_addfld1d(fname='TBUILD', units='K',  &
+         avgflag='A', long_name='internal urban building temperature', &
+         ptr_lunit=clm3%g%l%lps%t_building, set_lake=0._r8, l2g_scale_type='unity', &
+         default='inactive')
+
     call hist_addfld1d (fname='TREFMNAV', units='K',  &
          avgflag='A', long_name='daily minimum of average 2-m temperature', &
          ptr_pft=clm3%g%l%c%p%pes%t_ref2m_min)
@@ -108,11 +113,11 @@ contains
 
     call hist_addfld1d (fname='TV', units='K',  &
          avgflag='A', long_name='vegetation temperature', &
-         ptr_pft=clm3%g%l%c%p%pes%t_veg)
+         ptr_pft=clm3%g%l%c%p%pes%t_veg, c2l_scale_type='urbans')
 
     call hist_addfld1d (fname='TG',  units='K',  &
          avgflag='A', long_name='ground temperature', &
-         ptr_col=clm3%g%l%c%ces%t_grnd)
+         ptr_col=clm3%g%l%c%ces%t_grnd, c2l_scale_type='urbans')
 
     call hist_addfld1d (fname='HCSOI',  units='MJ',  &
          avgflag='A', long_name='soil heat content', &
@@ -124,11 +129,11 @@ contains
 
     call hist_addfld1d (fname='TSNOW',  units='K',  &
          avgflag='I', long_name='snow temperature', &
-         ptr_col=clm3%g%l%c%ces%t_snow, set_lake=spval)
+         ptr_col=clm3%g%l%c%ces%t_snow, set_lake=spval, c2l_scale_type='urbans') 
 
     call hist_addfld2d (fname='TSOI',  units='K', type2d='levsoi', &
          avgflag='A', long_name='soil temperature', &
-         ptr_col=clm3%g%l%c%ces%t_soisno)
+         ptr_col=clm3%g%l%c%ces%t_soisno, c2l_scale_type='urbans')
 
     call hist_addfld2d (fname='TLAKE',  units='K', type2d='levlak', &
          avgflag='A', long_name='lake temperature', &
@@ -152,11 +157,11 @@ contains
 
     call hist_addfld1d (fname='SABV', units='watt/m^2',  &
          avgflag='A', long_name='solar rad absorbed by veg', &
-         ptr_pft=clm3%g%l%c%p%pef%sabv)
+         ptr_pft=clm3%g%l%c%p%pef%sabv, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='SABG', units='watt/m^2',  &
          avgflag='A', long_name='solar rad absorbed by ground', &
-         ptr_pft=clm3%g%l%c%p%pef%sabg)
+         ptr_pft=clm3%g%l%c%p%pef%sabg, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FSDSVD', units='watt/m^2',  &
          avgflag='A', long_name='direct vis incident solar radiation', &
@@ -176,19 +181,19 @@ contains
 
     call hist_addfld1d (fname='FSRVD', units='watt/m^2',  &
          avgflag='A', long_name='direct vis reflected solar radiation', &
-         ptr_pft=clm3%g%l%c%p%pef%fsr_vis_d)
+         ptr_pft=clm3%g%l%c%p%pef%fsr_vis_d, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FSRND', units='watt/m^2',  &
          avgflag='A', long_name='direct nir reflected solar radiation', &
-         ptr_pft=clm3%g%l%c%p%pef%fsr_nir_d)
+         ptr_pft=clm3%g%l%c%p%pef%fsr_nir_d, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FSRVI', units='watt/m^2',  &
          avgflag='A', long_name='diffuse vis reflected solar radiation', &
-         ptr_pft=clm3%g%l%c%p%pef%fsr_vis_i)
+         ptr_pft=clm3%g%l%c%p%pef%fsr_vis_i, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FSRNI', units='watt/m^2',  &
          avgflag='A', long_name='diffuse nir reflected solar radiation', &
-         ptr_pft=clm3%g%l%c%p%pef%fsr_nir_i)
+         ptr_pft=clm3%g%l%c%p%pef%fsr_nir_i, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FSDSVDLN', units='watt/m^2',  &
          avgflag='A', long_name='direct vis incident solar radiation at local noon', &
@@ -200,154 +205,97 @@ contains
 
     call hist_addfld1d (fname='FSRVDLN', units='watt/m^2',  &
          avgflag='A', long_name='direct vis reflected solar radiation at local noon', &
-         ptr_pft=clm3%g%l%c%p%pef%fsr_vis_d_ln)
+         ptr_pft=clm3%g%l%c%p%pef%fsr_vis_d_ln, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FSRNDLN', units='watt/m^2',  &
          avgflag='A', long_name='direct nir reflected solar radiation at local noon', &
-         ptr_pft=clm3%g%l%c%p%pef%fsr_nir_d_ln)
+         ptr_pft=clm3%g%l%c%p%pef%fsr_nir_d_ln, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FSA', units='watt/m^2',  &
          avgflag='A', long_name='absorbed solar radiation', &
-         ptr_pft=clm3%g%l%c%p%pef%fsa)
+         ptr_pft=clm3%g%l%c%p%pef%fsa, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FSR', units='watt/m^2',  &
          avgflag='A', long_name='reflected solar radiation', &
-         ptr_pft=clm3%g%l%c%p%pef%fsr)
+         ptr_pft=clm3%g%l%c%p%pef%fsr, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FIRA', units='watt/m^2',  &
          avgflag='A', long_name='net infrared (longwave) radiation', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_net)
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_net, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FIRE', units='watt/m^2',  &
          avgflag='A', long_name='emitted infrared (longwave) radiation', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_out)
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_out, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='PARSUN', units='W/m^2', &
-         avgflag='A', long_name='average absorbed PAR for sunlit leaves', &
-         ptr_pft=clm3%g%l%c%p%pef%parsun, default='inactive')
+    call hist_addfld1d (fname='BUILDHEAT', units='watt/m^2',  &
+         avgflag='A', long_name='heat flux from urban building interior to walls and roof', &
+         ptr_col=clm3%g%l%c%cef%eflx_building_heat, set_lake=0._r8, c2l_scale_type='urbanf', &
+         default='inactive')
 
-    call hist_addfld1d (fname='PARSHA', units='W/m^2', &
-         avgflag='A', long_name='average absorbed PAR for shaded leaves', &
-         ptr_pft=clm3%g%l%c%p%pef%parsha, default='inactive')
+    call hist_addfld1d (fname='TRAFFICFLUX', units='watt/m^2',  &
+         avgflag='A', long_name='sensible heat flux from urban traffic', &
+         ptr_lunit=clm3%g%l%lef%eflx_traffic, set_lake=0._r8, l2g_scale_type='unity', &
+         default='inactive')
 
-    call hist_addfld1d (fname='DLRAD', units='W/m^2', &
-         avgflag='A', long_name='downward longwave radiation below the canopy', &
-         ptr_pft=clm3%g%l%c%p%pef%dlrad, default='inactive')
-
-    call hist_addfld1d (fname='ULRAD', units='W/m^2', &
-         avgflag='A', long_name='upward longwave radiation above the canopy', &
-         ptr_pft=clm3%g%l%c%p%pef%ulrad, default='inactive')
-
-    call hist_addfld1d (fname='EFLX_LH_TOT', units='W/m^2', &
-         avgflag='A', long_name='total latent heat flux [+ to atm]', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_tot, default='inactive')
-
-    call hist_addfld1d (fname='EFLX_SOIL_GRND', units='W/m^2', &
-         avgflag='A', long_name='soil heat flux [+ into soil]', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd, default='inactive')
-
-    call hist_addfld1d (fname='CGRND', units='W/m^2/K', &
-         avgflag='A', long_name='deriv. of soil energy flux wrt to soil temp', &
-         ptr_pft=clm3%g%l%c%p%pef%cgrnd, default='inactive')
-
-    call hist_addfld1d (fname='CGRNDL', units='W/m^2/K', &
-         avgflag='A', long_name='deriv. of soil latent heat flux wrt soil temp', &
-         ptr_pft=clm3%g%l%c%p%pef%cgrndl, default='inactive')
-
-    call hist_addfld1d (fname='CGRNDS', units='W/m^2/K', &
-         avgflag='A', long_name='deriv. of soil sensible heat flux wrt soil temp', &
-         ptr_pft=clm3%g%l%c%p%pef%cgrnds, default='inactive')
-
-    call hist_addfld1d (fname='EFLX_GNET', units='W/m^2', &
-         avgflag='A', long_name='net heat flux into ground', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_gnet, default='inactive')
-
-    call hist_addfld1d (fname='DGNETDT', units='W/m^2/K', &
-         avgflag='A', long_name='derivative of net ground heat flux wrt soil temp', &
-         ptr_pft=clm3%g%l%c%p%pef%dgnetdT, default='inactive')
-
-    call hist_addfld2d (fname='SUN_ADD', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy absorbed direct from direct', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_add, default='inactive')
-
-    call hist_addfld2d (fname='TOT_AID', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='total canopy absorbed indirect from direct', &
-         ptr_pft=clm3%g%l%c%p%pef%tot_aid, default='inactive')
-
-    call hist_addfld2d (fname='SUN_AID', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy absorbed indirect from direct', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_aid, default='inactive')
-
-    call hist_addfld2d (fname='SUN_AII', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy absorbed indirect from indirect', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_aii, default='inactive')
-
-    call hist_addfld2d (fname='SHA_AID', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='shade canopy absorbed indirect from direct', &
-         ptr_pft=clm3%g%l%c%p%pef%sha_aid, default='inactive')
-
-    call hist_addfld2d (fname='SHA_AII', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='shade canopy absorbed indirect from indirect', &
-         ptr_pft=clm3%g%l%c%p%pef%sha_aii, default='inactive')
-
-    call hist_addfld2d (fname='SUN_ATOT', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy total absorbed', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_atot, default='inactive')
-
-    call hist_addfld2d (fname='SHA_ATOT', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='shade canopy total absorbed', &
-         ptr_pft=clm3%g%l%c%p%pef%sha_atot, default='inactive')
-
-    call hist_addfld2d (fname='SUN_ALF', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy total absorbed by leaves', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_alf, default='inactive')
-
-    call hist_addfld2d (fname='SHA_ALF', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='shade canopy total absored by leaves', &
-         ptr_pft=clm3%g%l%c%p%pef%sha_alf, default='inactive')
-
-    call hist_addfld2d (fname='SUN_APERLAI', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='sun canopy total absorbed per unit LAI', &
-         ptr_pft=clm3%g%l%c%p%pef%sun_aperlai, default='inactive')
-
-    call hist_addfld2d (fname='SHA_APERLAI', units='W/m^2', type2d='numrad', &
-         avgflag='A', long_name='shade canopy total absorbed per unit LAI', &
-         ptr_pft=clm3%g%l%c%p%pef%sha_aperlai, default='inactive')
-                                                                       
+    call hist_addfld1d (fname='WASTEHEAT', units='watt/m^2',  &
+         avgflag='A', long_name='sensible heat flux from heating/cooling sources of urban waste heat', &
+         ptr_lunit=clm3%g%l%lef%eflx_wasteheat, set_lake=0._r8, l2g_scale_type='unity', &
+         default='inactive')
+!KO
+    call hist_addfld1d (fname='Rnet', units='watt/m^2',  &
+         avgflag='A', long_name='net radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%netrad, c2l_scale_type='urbanf', &
+         default='inactive')
+!KO
 
     ! Surface energy fluxes
 
     call hist_addfld1d (fname='FCTR', units='watt/m^2',  &
          avgflag='A', long_name='canopy transpiration', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_vegt, set_lake=0._r8)
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_vegt, set_lake=0._r8, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FCEV', units='watt/m^2',  &
          avgflag='A', long_name='canopy evaporation', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_vege, set_lake=0._r8)
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_vege, set_lake=0._r8, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FGEV', units='watt/m^2',  &
          avgflag='A', long_name='ground evaporation', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_grnd)
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_grnd, c2l_scale_type='urbanf') 
 
     call hist_addfld1d (fname='FSH', units='watt/m^2',  &
          avgflag='A', long_name='sensible heat', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_tot)
+         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_tot, c2l_scale_type='urbanf')
+!KO
+    call hist_addfld1d (fname='Qh', units='watt/m^2',  &
+         avgflag='A', long_name='sensible heat', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_tot, c2l_scale_type='urbanf', &
+         default = 'inactive')
 
+    call hist_addfld1d (fname='Qle', units='watt/m^2',  &
+         avgflag='A', long_name='total evaporation', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_tot, c2l_scale_type='urbanf', &
+         default = 'inactive')
+
+    call hist_addfld1d (fname='Qstor', units='watt/m^2',  &
+         avgflag='A', long_name='storage heat flux (includes snowmelt)', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd, c2l_scale_type='urbanf', &
+         default = 'inactive')
+!KO
     call hist_addfld1d (fname='FSH_V', units='watt/m^2',  &
          avgflag='A', long_name='sensible heat from veg', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_veg, set_lake=0._r8)
+         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_veg, set_lake=0._r8, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FSH_G', units='watt/m^2',  &
          avgflag='A', long_name='sensible heat from ground', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_grnd )
+         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_grnd, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FGR', units='watt/m^2',  &
          avgflag='A', long_name='heat flux into soil', &
-         ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd)
+         ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='FSM',  units='watt/m^2',  &
          avgflag='A', long_name='snow melt heat flux', &
-         ptr_col=clm3%g%l%c%cef%eflx_snomelt)
+         ptr_col=clm3%g%l%c%cef%eflx_snomelt, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='TAUX', units='kg/m/s^2',  &
          avgflag='A', long_name='zonal surface stress', &
@@ -485,31 +433,32 @@ contains
 
     call hist_addfld1d (fname='H2OSNO',  units='mm',  &
          avgflag='A', long_name='snow depth (liquid water)', &
-         ptr_col=clm3%g%l%c%cws%h2osno)
+         ptr_col=clm3%g%l%c%cws%h2osno, c2l_scale_type='urbans')
 
     call hist_addfld1d (fname='H2OCAN', units='mm',  &
          avgflag='A', long_name='intercepted water', &
-         ptr_pft=clm3%g%l%c%p%pws%h2ocan, set_lake=0._r8)
+         ptr_pft=clm3%g%l%c%p%pws%h2ocan, c2l_scale_type='urbans', &
+         set_lake=0._r8)
 
     call hist_addfld2d (fname='H2OSOI',  units='mm3/mm3', type2d='levsoi', &
          avgflag='A', long_name='volumetric soil water', &
-         ptr_col=clm3%g%l%c%cws%h2osoi_vol)
+         ptr_col=clm3%g%l%c%cws%h2osoi_vol, c2l_scale_type='urbans')
 
     call hist_addfld2d (fname='SOILLIQ',  units='kg/m2', type2d='levsoi', &
          avgflag='A', long_name='soil liquid water', &
-         ptr_col=clm3%g%l%c%cws%h2osoi_liq)
+         ptr_col=clm3%g%l%c%cws%h2osoi_liq, c2l_scale_type='urbans')
 
     call hist_addfld2d (fname='SOILICE',  units='kg/m2', type2d='levsoi', &
          avgflag='A', long_name='soil ice', &
-         ptr_col=clm3%g%l%c%cws%h2osoi_ice)
+         ptr_col=clm3%g%l%c%cws%h2osoi_ice, c2l_scale_type='urbans')
 
     call hist_addfld1d (fname='SNOWLIQ',  units='kg/m2',  &
          avgflag='I', long_name='snow liquid water', &
-         ptr_col=clm3%g%l%c%cws%snowliq)
+         ptr_col=clm3%g%l%c%cws%snowliq, c2l_scale_type='urbans')
 
     call hist_addfld1d (fname='SNOWICE',  units='kg/m2',  &
          avgflag='I', long_name='snow ice', &
-         ptr_col=clm3%g%l%c%cws%snowice)
+         ptr_col=clm3%g%l%c%cws%snowice, c2l_scale_type='urbans')
 
     call hist_addfld1d (fname='QINFL',  units='mm/s',  &
          avgflag='A', long_name='infiltration', &
@@ -575,19 +524,19 @@ contains
 
     call hist_addfld1d (fname='ERRSOI',  units='watt/m^2',  &
          avgflag='A', long_name='soil/lake energy conservation error', &
-         ptr_col=clm3%g%l%c%cebal%errsoi)
+         ptr_col=clm3%g%l%c%cebal%errsoi, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='ERRSEB',  units='watt/m^2',  &
          avgflag='A', long_name='surface energy conservation error', &
-         ptr_pft=clm3%g%l%c%p%pebal%errseb)
+         ptr_pft=clm3%g%l%c%p%pebal%errseb, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='ERRSOL',  units='watt/m^2',  &
          avgflag='A', long_name='solar radiation conservation error', &
-         ptr_pft=clm3%g%l%c%p%pebal%errsol)
+         ptr_pft=clm3%g%l%c%p%pebal%errsol, c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='ERRH2O', units='mm',  &
          avgflag='A', long_name='total water conservation error', &
-         ptr_col=clm3%g%l%c%cwbal%errh2o)
+         ptr_col=clm3%g%l%c%cwbal%errh2o, c2l_scale_type='urbans')
 
     ! Atmospheric forcing
 
@@ -634,6 +583,30 @@ contains
     call hist_addfld1d (fname='WIND', units='m/s',  &
          avgflag='A', long_name='atmospheric wind velocity magnitude', &
          ptr_lnd=clm_a2l%forc_wind)
+!KO
+    call hist_addfld1d (fname='Tair', units='K',  &
+         avgflag='A', long_name='atmospheric air temperature', &
+         ptr_gcell=clm_a2l%forc_t, default='inactive')
+
+    call hist_addfld1d (fname='PSurf', units='Pa',  &
+         avgflag='A', long_name='surface pressure', &
+         ptr_gcell=clm_a2l%forc_pbot, default='inactive')
+
+    call hist_addfld1d (fname='Rainf', units='mm/s',  &
+         avgflag='A', long_name='atmospheric rain', &
+         ptr_gcell=clm_a2l%forc_rain, default='inactive')
+
+    call hist_addfld1d (fname='SWdown', units='watt/m^2',  &
+         avgflag='A', long_name='atmospheric incident solar radiation', &
+         ptr_gcell=clm_a2l%forc_solar, default='inactive')
+
+    call hist_addfld1d (fname='LWdown', units='watt/m^2',  &
+         avgflag='A', long_name='atmospheric longwave radiation', &
+         ptr_gcell=clm_a2l%forc_lwrad, default='inactive')
+
+    call hist_addfld1d (fname='RH', units='%',  &
+         avgflag='A', long_name='atmospheric relative humidity', &
+         ptr_gcell=clm_a2l%forc_rh, default='inactive')
 
     call hist_addfld1d (fname='QBOT', units='kg/kg',  &
          avgflag='A', long_name='atmospheric specific humidity', &
@@ -3932,6 +3905,102 @@ contains
          avgflag='A', long_name='annual total fractional area burned', &
          ptr_col=clm3%g%l%c%cps%ann_farea_burned)
 
+    !-------------------------------
+    ! Energy flux variables not already defined by default - native PFT 
+    !-------------------------------
+
+    call hist_addfld1d (fname='PARSUN', units='W/m^2', &
+         avgflag='A', long_name='average absorbed PAR for sunlit leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%parsun, default='inactive')
+
+    call hist_addfld1d (fname='PARSHA', units='W/m^2', &
+         avgflag='A', long_name='average absorbed PAR for shaded leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%parsha, default='inactive')
+
+    call hist_addfld1d (fname='DLRAD', units='W/m^2', &
+         avgflag='A', long_name='downward longwave radiation below the canopy', &
+         ptr_pft=clm3%g%l%c%p%pef%dlrad, default='inactive', c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='ULRAD', units='W/m^2', &
+         avgflag='A', long_name='upward longwave radiation above the canopy', &
+         ptr_pft=clm3%g%l%c%p%pef%ulrad, default='inactive', c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='EFLX_LH_TOT', units='W/m^2', &
+         avgflag='A', long_name='total latent heat flux [+ to atm]', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_tot, default='inactive', c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='EFLX_SOIL_GRND', units='W/m^2', &
+         avgflag='A', long_name='soil heat flux [+ into soil]', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd, default='inactive', c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='CGRND', units='W/m^2/K', &
+         avgflag='A', long_name='deriv. of soil energy flux wrt to soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%cgrnd, default='inactive', c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='CGRNDL', units='W/m^2/K', &
+         avgflag='A', long_name='deriv. of soil latent heat flux wrt soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%cgrndl, default='inactive', c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='CGRNDS', units='W/m^2/K', &
+         avgflag='A', long_name='deriv. of soil sensible heat flux wrt soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%cgrnds, default='inactive', c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='EFLX_GNET', units='W/m^2', &
+         avgflag='A', long_name='net heat flux into ground', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_gnet, default='inactive', c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='DGNETDT', units='W/m^2/K', &
+         avgflag='A', long_name='derivative of net ground heat flux wrt soil temp', &
+         ptr_pft=clm3%g%l%c%p%pef%dgnetdT, default='inactive', c2l_scale_type='urbanf')
+
+    call hist_addfld2d (fname='SUN_ADD', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy absorbed direct from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_add, default='inactive')
+
+    call hist_addfld2d (fname='TOT_AID', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='total canopy absorbed indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%tot_aid, default='inactive')
+
+    call hist_addfld2d (fname='SUN_AID', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy absorbed indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_aid, default='inactive')
+
+    call hist_addfld2d (fname='SUN_AII', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy absorbed indirect from indirect', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_aii, default='inactive')
+
+    call hist_addfld2d (fname='SHA_AID', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy absorbed indirect from direct', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_aid, default='inactive')
+
+    call hist_addfld2d (fname='SHA_AII', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy absorbed indirect from indirect', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_aii, default='inactive')
+
+    call hist_addfld2d (fname='SUN_ATOT', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy total absorbed', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_atot, default='inactive')
+
+    call hist_addfld2d (fname='SHA_ATOT', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy total absorbed', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_atot, default='inactive')
+
+    call hist_addfld2d (fname='SUN_ALF', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy total absorbed by leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_alf, default='inactive')
+
+    call hist_addfld2d (fname='SHA_ALF', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy total absored by leaves', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_alf, default='inactive')
+
+    call hist_addfld2d (fname='SUN_APERLAI', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='sun canopy total absorbed per unit LAI', &
+         ptr_pft=clm3%g%l%c%p%pef%sun_aperlai, default='inactive')
+
+    call hist_addfld2d (fname='SHA_APERLAI', units='W/m^2', type2d='numrad', &
+         avgflag='A', long_name='shade canopy total absorbed per unit LAI', &
+         ptr_pft=clm3%g%l%c%p%pef%sha_aperlai, default='inactive')
+                                                                       
     !-------------------------------
     ! Water flux variables not already defined by default  - native PFT
     !-------------------------------

@@ -158,6 +158,8 @@ contains
     use clm_atmlnd   , only : clm_a2l
     use subgridAveMod
     use clm_time_manager , only : get_step_size, get_nstep
+    use clm_varcon   , only : isturb, icol_roof, icol_sunwall, icol_shadewall, &
+                              spval, icol_road_perv, icol_road_imperv
 !
 ! !ARGUMENTS:
     implicit none
@@ -179,8 +181,11 @@ contains
 ! local pointers to original implicit in arguments
 !
     integer , pointer :: pgridcell(:)       ! pft's gridcell index
-    real(r8), pointer :: pwtgcell(:)        ! pft's weight relative to corresponding gridcell
+    integer , pointer :: plandunit(:)       ! pft's landunit index
     integer , pointer :: cgridcell(:)       ! column's gridcell index
+    integer , pointer :: ltype(:)           ! landunit type 
+    integer , pointer :: ctype(:)           ! column type 
+    real(r8), pointer :: pwtgcell(:)        ! pft's weight relative to corresponding gridcell
     real(r8), pointer :: forc_rain(:)       ! rain rate [mm/s]
     real(r8), pointer :: forc_snow(:)       ! snow rate [mm/s]
     real(r8), pointer :: forc_lwrad(:)      ! downward infrared (longwave) radiation (W/m**2)
@@ -208,16 +213,21 @@ contains
     real(r8), pointer :: errsol(:)          ! solar radiation conservation error (W/m**2)
     real(r8), pointer :: errlon(:)          ! longwave radiation conservation error (W/m**2)
     real(r8), pointer :: errseb(:)          ! surface energy conservation error (W/m**2)
+!KO
+    real(r8), pointer :: netrad(:)          ! net radiation (positive downward) (W/m**2)
+!KO
     real(r8), pointer :: errsoi_col(:)      ! column-level soil/lake energy conservation error (W/m**2)
 !
 !EOP
 !
 ! !OTHER LOCAL VARIABLES:
-    integer  :: p,c,g                      ! indices
-    real(r8) :: dtime                      ! land model time step (sec)
-    integer  :: nstep                      ! time step number
-    logical  :: found                      ! flag in search loop
-    integer  :: index                      ! index of first found in search loop
+    integer  :: p,c,l,g                     ! indices
+    real(r8) :: dtime                       ! land model time step (sec)
+    integer  :: nstep                       ! time step number
+    logical  :: found                       ! flag in search loop
+    integer  :: indexp,indexc,indexl,indexg ! index of first found in search loop
+    real(r8) :: forc_rain_col(lbc:ubc)      ! column level rain rate [mm/s]
+    real(r8) :: forc_snow_col(lbc:ubc)      ! column level snow rate [mm/s]
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived type scalar members (gridcell-level)
@@ -228,8 +238,13 @@ contains
     forc_solad        => clm_a2l%forc_solad
     forc_solai        => clm_a2l%forc_solai
 
+    ! Assign local pointers to derived type scalar members (landunit-level)
+
+    ltype             => clm3%g%l%itype
+
     ! Assign local pointers to derived type scalar members (column-level)
 
+    ctype             => clm3%g%l%c%itype
     cgridcell         => clm3%g%l%c%gridcell
     endwb             => clm3%g%l%c%cwbal%endwb
     begwb             => clm3%g%l%c%cwbal%begwb
@@ -243,6 +258,7 @@ contains
     ! Assign local pointers to derived type scalar members (pft-level)
 
     pgridcell         => clm3%g%l%c%p%gridcell
+    plandunit         => clm3%g%l%c%p%landunit
     pwtgcell          => clm3%g%l%c%p%wtgcell
     fsa               => clm3%g%l%c%p%pef%fsa
     fsr               => clm3%g%l%c%p%pef%fsr
@@ -256,11 +272,30 @@ contains
     errsol            => clm3%g%l%c%p%pebal%errsol
     errseb            => clm3%g%l%c%p%pebal%errseb
     errlon            => clm3%g%l%c%p%pebal%errlon
+!KO
+    netrad            => clm3%g%l%c%p%pef%netrad
+!KO
 
     ! Get step size and time step
 
     nstep = get_nstep()
     dtime = get_step_size()
+
+    ! Determine column level incoming snow and rain
+    ! Assume no incident precipitation on urban wall columns (as in Hydrology1Mod.F90).
+
+!dir$ concurrent
+!cdir nodep
+    do c = lbc,ubc
+       g = cgridcell(c)
+       if (ctype(c) == icol_sunwall .or.  ctype(c) == icol_shadewall) then
+          forc_rain_col(c) = 0.
+          forc_snow_col(c) = 0.
+       else
+          forc_rain_col(c) = forc_rain(g)
+          forc_snow_col(c) = forc_snow(g)
+       end if
+    end do
 
     ! Water balance check
 
@@ -270,7 +305,7 @@ contains
        g = cgridcell(c)
        
        errh2o(c) = endwb(c) - begwb(c) &
-            - (forc_rain(g) + forc_snow(g) - qflx_evap_tot(c) - qflx_surf(c) &
+            - (forc_rain_col(c) + forc_snow_col(c) - qflx_evap_tot(c) - qflx_surf(c) &
             - qflx_qrgwl(c) - qflx_drain(c)) * dtime
 
     end do
@@ -279,13 +314,39 @@ contains
     do c = lbc, ubc
        if (abs(errh2o(c)) > 1e-7_r8) then
           found = .true.
-          index = c
+          indexc = c
        end if
     end do
     if ( found ) then
        write(iulog,*)'WARNING:  water balance error ',&
-            ' nstep = ',nstep,' index= ',index,' errh2o= ',errh2o(index)
-       if (abs(errh2o(index)) > .10_r8 .and. (nstep > 2) ) then
+            ' nstep = ',nstep,' indexc= ',indexc,' errh2o= ',errh2o(indexc)
+       if ((ctype(indexc) .eq. icol_roof .or. ctype(indexc) .eq. icol_road_imperv .or. &
+            ctype(indexc) .eq. icol_road_perv) .and. abs(errh2o(indexc)) > 1.e-7) then
+          write(iulog,*)'clm urban model is stopping - error is greater than 1.e-7'
+          write(iulog,*)'nstep = ',nstep,' indexc= ',indexc,' errh2o= ',errh2o(indexc)
+          write(iulog,*)'ctype(indexc): ',ctype(indexc)
+          write(iulog,*)'forc_rain    = ',forc_rain_col(indexc)
+          write(iulog,*)'forc_snow    = ',forc_snow_col(indexc)
+          write(iulog,*)'endwb        = ',endwb(indexc)
+          write(iulog,*)'begwb        = ',begwb(indexc)
+          write(iulog,*)'qflx_evap_tot= ',qflx_evap_tot(indexc)
+          write(iulog,*)'qflx_surf    = ',qflx_surf(indexc)
+          write(iulog,*)'qflx_qrgwl   = ',qflx_qrgwl(indexc)
+          write(iulog,*)'qflx_drain   = ',qflx_drain(indexc)
+          write(iulog,*)'clm model is stopping'
+          call endrun()
+       else if (abs(errh2o(indexc)) > .10_r8 .and. (nstep > 2) ) then
+          write(iulog,*)'clm model is stopping - error is greater than .10'
+          write(iulog,*)'nstep = ',nstep,' indexc= ',indexc,' errh2o= ',errh2o(indexc)
+          write(iulog,*)'ctype(indexc): ',ctype(indexc)
+          write(iulog,*)'forc_rain    = ',forc_rain_col(indexc)
+          write(iulog,*)'forc_snow    = ',forc_snow_col(indexc)
+          write(iulog,*)'endwb        = ',endwb(indexc)
+          write(iulog,*)'begwb        = ',begwb(indexc)
+          write(iulog,*)'qflx_evap_tot= ',qflx_evap_tot(indexc)
+          write(iulog,*)'qflx_surf    = ',qflx_surf(indexc)
+          write(iulog,*)'qflx_qrgwl   = ',qflx_qrgwl(indexc)
+          write(iulog,*)'qflx_drain   = ',qflx_drain(indexc)
           write(iulog,*)'clm model is stopping'
           call endrun()
        end if
@@ -298,17 +359,47 @@ contains
     do p = lbp, ubp
        if (pwtgcell(p)>0._r8) then
           g = pgridcell(p)
+          l = plandunit(p)
 
           ! Solar radiation energy balance
-          errsol(p) = fsa(p) + fsr(p) - (forc_solad(g,1) + forc_solad(g,2) &
-                      + forc_solai(g,1) + forc_solai(g,2))
-
+          ! Do not do this check for an urban pft since it will not balance on a per-column
+          ! level because of interactions between columns and since a separate check is done
+          ! in the urban radiation module
+          if (ltype(l) /= isturb) then
+             errsol(p) = fsa(p) + fsr(p) &
+                  - (forc_solad(g,1) + forc_solad(g,2) + forc_solai(g,1) + forc_solai(g,2))
+          else
+             errsol(p) = spval
+          end if
+          
           ! Longwave radiation energy balance
-          errlon(p) = eflx_lwrad_out(p) - eflx_lwrad_net(p) - forc_lwrad(g)
+          ! Do not do this check for an urban pft since it will not balance on a per-column
+          ! level because of interactions between columns and since a separate check is done
+          ! in the urban radiation module
+          if (ltype(l) /= isturb) then
+             errlon(p) = eflx_lwrad_out(p) - eflx_lwrad_net(p) - forc_lwrad(g)
+          else
+             errlon(p) = spval
+          end if
           
           ! Surface energy balance
-          errseb(p) = sabv(p) + sabg(p) + forc_lwrad(g) - eflx_lwrad_out(p) &
-                      - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p)
+          ! Changed to using (eflx_lwrad_net) here instead of (forc_lwrad - eflx_lwrad_out) because
+          ! there are longwave interactions between urban columns (and therefore pfts). 
+          ! For surfaces other than urban, (eflx_lwrad_net) equals (forc_lwrad - eflx_lwrad_out),
+          ! and a separate check is done above for these terms.
+          
+          if (ltype(l) /= isturb) then
+             errseb(p) = sabv(p) + sabg(p) + forc_lwrad(g) - eflx_lwrad_out(p) &
+                         - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p)
+          else
+             errseb(p) = sabv(p) + sabg(p) &
+                         - eflx_lwrad_net(p) &
+                         - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p)
+          end if
+!KO
+          netrad(p) = fsa(p) - eflx_lwrad_net(p)
+!KO
+
        end if
     end do
 
@@ -317,14 +408,23 @@ contains
     found = .false.
     do p = lbp, ubp
        if (pwtgcell(p)>0._r8) then
-          if (abs(errsol(p)) > .10_r8 ) then
+          if ( (errsol(p) /= spval) .and. (abs(errsol(p)) > .10_r8) ) then
              found = .true.
-             index = p
+             indexp = p
+             indexg = pgridcell(p)
           end if
        end if
     end do
     if ( found  .and. (nstep > 2) ) then
-       write(iulog,100)'solar radiation balance error',nstep,index,errsol(index)
+       write(iulog,100)'BalanceCheck: solar radiation balance error', nstep, indexp, errsol(indexp)
+       write(iulog,*)'fsa          = ',fsa(indexp)
+       write(iulog,*)'fsr          = ',fsr(indexp)
+       write(iulog,*)'forc_solad(1)= ',forc_solad(indexg,1)
+       write(iulog,*)'forc_solad(2)= ',forc_solad(indexg,2)
+       write(iulog,*)'forc_solai(1)= ',forc_solai(indexg,1)
+       write(iulog,*)'forc_solai(2)= ',forc_solai(indexg,2)
+       write(iulog,*)'forc_tot     = ',forc_solad(indexg,1)+forc_solad(indexg,2)&
+                                  +forc_solai(indexg,1)+forc_solai(indexg,2)
        write(iulog,*)'clm model is stopping'
        call endrun()
     end if
@@ -334,14 +434,14 @@ contains
     found = .false.
     do p = lbp, ubp
        if (pwtgcell(p)>0._r8) then
-          if (abs(errlon(p)) > .10_r8 ) then
+          if ( (errlon(p) /= spval) .and. (abs(errlon(p)) > .10_r8) ) then
              found = .true.
-             index = p
+             indexp = p
           end if
        end if
     end do
     if ( found  .and. (nstep > 2) ) then
-       write(iulog,100)'longwave enery balance error',nstep,index,errlon(index)
+       write(iulog,100)'longwave enery balance error',nstep,indexp,errlon(indexp)
        write(iulog,*)'clm model is stopping'
        call endrun()
     end if
@@ -353,12 +453,18 @@ contains
        if (pwtgcell(p)>0._r8) then
           if (abs(errseb(p)) > .10_r8 ) then
              found = .true.
-             index = p
+             indexp = p
           end if
        end if
     end do
     if ( found  .and. (nstep > 2) ) then
-       write(iulog,100)'surface flux energy balance error',nstep,index,errseb(index)
+       write(iulog,100)'BalanceCheck: surface flux energy balance error',nstep,indexp,errseb(indexp)
+       write(iulog,*)' sabv           = ',sabv(indexp)
+       write(iulog,*)' sabg           = ',sabg(indexp)
+       write(iulog,*)' eflx_lwrad_net = ',eflx_lwrad_net(indexp)
+       write(iulog,*)' eflx_sh_tot    = ',eflx_sh_tot(indexp)
+       write(iulog,*)' eflx_lh_tot    = ',eflx_lh_tot(indexp)
+       write(iulog,*)' eflx_soil_grnd = ',eflx_soil_grnd(indexp)
        write(iulog,*)'clm model is stopping'
        call endrun()
     end if
@@ -369,12 +475,12 @@ contains
     do c = lbc, ubc
        if (abs(errsoi_col(c)) > 1.0e-7_r8 ) then
           found = .true.
-          index = c
+          indexc = c
        end if
     end do
     if ( found ) then
-       write(iulog,100)'soil balance error',nstep,index,errsoi_col(index)
-       if (abs(errsoi_col(index)) > .10_r8 .and. (nstep > 2) ) then
+       write(iulog,100)'soil balance error',nstep,indexc,errsoi_col(indexc)
+       if (abs(errsoi_col(indexc)) > .10_r8 .and. (nstep > 2) ) then
           write(iulog,*)'clm model is stopping'
           call endrun()
        end if
