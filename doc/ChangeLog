@@ -1,8 +1,124 @@
 ===============================================================
+Tag name:  clm3_5_17
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Wed Feb  6 10:10:17 MST 2008
+One-line Summary: Merge Tony Craig's FMI branch fmi12_clm3_5_16 to the clm trunk
+
+Purpose of changes: Reducing the debug level in some initialization routines, fixing a few diagnostics, 
+        updating timers, improve the write_diagnostic performance, update of rtm init to improve scaling and performance.
+
+Bugs fixed (include bugzilla ID): 597
+
+Known bugs (include bugzilla ID): 251, 512, 546, 652, 672, 675, 676, 680, 681, 694, 696, 698, 701, 702
+    http://bugs.cgd.ucar.edu/
+
+    New bugs found: datm7 restart files NOT being archived (696), cprnc found to have problems (698),
+    version autoinsertion in tools (701), test_driver times out on jaguar (702)
+
+Describe any changes made to build system: Add BUILDPIO CPP variable
+
+Describe any changes made to the namelist: Add new namelist variables dealing with PIO (see below)
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: erik,tcraig
+
+List any svn externals directories updated (csm_share, mct, etc.): pio to pio11_prod
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M      doc/UpDateChangeLog.pl ----------------- Tweak update of date to work correctly for both files
+M      bld/run-frost.csh ---------------------- Tony gets working, add PIO build as commented out, turn querys off, put files
+                                                in explicitly, tests new ncd_ options
+M      src/biogeochem/STATICEcosysDynMod.F90 -- Add timers
+M      src/main/clm_comp.F90 ------------------ Add timers
+M      src/main/driver.F90 -------------------- Add timers, add barrier for diagnostics write, change send/recv into reduce (leave option for old code)
+M      src/main/decompInitMod.F90 ------------- Reduce debug level for initialization
+M      src/main/initializeMod.F90 ------------- Add timers
+M      src/main/histFileMod.F90 --------------- PIO option
+M      src/main/ncdio.F90 --------------------- Work for PIO, new options
+M      src/main/gen_ncdio_global_subs.csh ----- Work for PIO, new options
+M      src/main/gen_ncdio_local_subs.csh ------ Work for PIO, new options
+M      src/main/controlMod.F90 ---------------- Add new namelist items
+
+History experimental options (mostly for PIO which isn't fully implemented yet)
+
+     o hist_pioflag           = logical true if want to turn on hist with pio                    [.FALSE., .TRUE.]
+     o ncd_lowmem2d           = logical true if want to turn on low memory 2d writes in clm hist [.TRUE., .FALSE.]
+     o ncd_pio_def            = logical true if want default pio use setting                     [.FALSE., .TRUE.]
+     o ncd_pio_UseRearranger  = logical true if want to use MCT as Rearranger                    [.TRUE., .FALSE.]
+     o ncd_pio_UseBoxRearr    = logical true if want to use box as Rearranger                    [.FALSE., .TRUE.]
+     o ncd_pio_SerialCDF      = logical true if want to write with pio serial netcdf mode        [.FALSE., .TRUE.]
+     o ncd_pio_IODOF_rootonly = logical true if want to write history in pio from root only      [.FALSE., .TRUE.]
+     o ncd_pio_DebugLevel     = integer pio debug level                                          ( default 2)
+     o ncd_pio_num_iotasks    = integer number of iotasks to use for PIO                         (default all PEs)
+
+M      src/main/clm_varctl.F90 ----------------- New ncd and PIO history options
+M      src/main/program_off.F90 ---------------- Add mpi barrier
+M      src/main/areaMod.F90 -------------------- Improve performance/robustness
+M      src/main/clm_mct_mod.F90 ---------------- Use pelocs
+M      src/riverroute/RtmMod.F90 --------------- Add timers, update of rtm init to improve scaling and performance
+M      test/system/test_driver.sh -------------- Fix for new account names on jaguar/phoenix
+
+Summary of testing:
+
+  bluevista: All PASS except
+021 blE11 TBL.sh 4p_vodsrsc_dh clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic ...............FAIL! rc= 7
+026 blF27 TBL.sh 17p_vodsrsc_dh clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic ..............FAIL! rc= 7
+031 blE31 TBL.sh 4p_vodsrsc_dh clm_std 19981231:YEARLY:1800 64x128^360x720 USGS 48 arb_ic .......FAIL! rc= 7
+101 sm921 TSMext_ccsmseq_cam.sh ext_ccsm_seq_4x5_dh ext_ccsm_seq_cam 48 .........................FAIL! rc= 4
+102 sm982 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  jaguarcnl: All PASS except
+012 blE12 TBL.sh 4p_vodsrsc_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic ...............FAIL! rc= 7
+016 blE32 TBL.sh 4p_vodsrsc_dm clm_std 19981231:YEARLY:1800 64x128^360x720 USGS 48 arb_ic .......FAIL! rc= 7
+  bangkok/lf95: All PASS except
+018 er112 TER.sh 4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 10+38 arb_ic ..............FAIL! rc= 13
+020 bl112 TBL.sh 4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic .................FAIL! rc= 7
+051 sm951 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dm ext_ccsm_seq_cam 48 .......................FAIL! rc= 4
+052 sm982 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  lightning/pathscale: All PASS except
+019 er112 TER.sh 4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 10+38 arb_ic ..............FAIL! rc= 13
+021 bl112 TBL.sh 4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic .................FAIL! rc= 7
+  tempest:  All PASS except
+010 blE11 TBL.sh 4p_vodsrsc_dh clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic ...............FAIL! rc= 7
+
+er112, bl112, sm921, sm951, sm982 tests failed previously
+other bl tests fail because of the changes in RTM
+
+CLM tag used for the baseline comparison tests if applicable: clm3_5_16
+
+Changes answers relative to baseline: Only RTM
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers:
+    - what code configurations: RTM
+    - what platforms/compilers: All
+    - nature of change: Roundoff change
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? Only fields with RTM show differences and only to roundoff level
+
+ RMS DVOLRDT_ 8.8031E-22
+ RMS DVOLRDT_ 3.4573E-23
+ RMS QCHANR   3.6282E-16
+ RMS QCHOCNR  5.4893E-17
+
+The above is on bluevista after running for a day (other fields show RMS difference of zero)
+
+===============================================================
+===============================================================
 Tag name:  clm3_5_16
 Originator(s):  erik (Erik Kluzek)
 Date: Mon Jan 28 15:00:53 MST 2008
-Date:One-line Summary: Get point version of Urban code onto trunk (urban code can not restart)
+One-line Summary: Get point version of Urban code onto trunk (urban code can not restart)
 
 Purpose of changes: Move urban branch onto trunk. Fix bug so hv files are saved. Add
    high resolution datasets from Art Mirin.
@@ -240,7 +356,7 @@ following should be filled in:
 Tag name:  clm3_5_15
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Dec 21 20:33:01 MST 2007
-Date:Date:Date:Date:One-line Summary: Fix interpinic for half degree grid, add in large-file support, allow configure to work with ccsm directory structure
+One-line Summary: Fix interpinic for half degree grid, add in large-file support, allow configure to work with ccsm directory structure
 
 Purpose of changes:
 
@@ -431,7 +547,7 @@ Changes answers relative to baseline: None -- bit-for-bit
 Tag name:  clm3_5_14
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Nov 29 12:18:47 MST 2007
-Date:Date:One-line Summary: Use build-streams, and archiving, multiple bug-fixes
+One-line Summary: Use build-streams, and archiving, multiple bug-fixes
 
 Purpose of changes: Move bstrms5_clm3_5_13 to trunk
 
@@ -1158,7 +1274,7 @@ Changes answers relative to baseline: None
 Tag name:  clm3_5_06
 Originator(s):  erik (KLUZEK ERIK 1326 CGD)
 Date: Fri Aug 10 15:41:50 MDT 2007
-Date:Date:One-line Summary: Update: interpolation, testing, script namelist build, and scripts. Fix bugs, and fix possible 
+One-line Summary: Update: interpolation, testing, script namelist build, and scripts. Fix bugs, and fix possible 
                   divide by zero for eff-porosity
 Purpose of changes: Fix interpolation code so can also do CN
                     Make co2_ppmv a variable that can be input at run-time
@@ -1878,7 +1994,7 @@ following should be filled in: Results were bfb for all offline tests
 Tag name:  clm3_5_01
 Originator(s):  erik (KLUZEK ERIK 1326 CGD)
 Date: Wed May 16 14:14:59 MDT 2007
-Date:Date:Date:One-line Summary: Move newcn06 branch to trunk
+One-line Summary: Move newcn06 branch to trunk
 
 Purpose of changes: Move newcn06-02_clm3_5_00 branch tag to trunk
 

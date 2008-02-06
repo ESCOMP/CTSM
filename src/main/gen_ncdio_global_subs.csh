@@ -111,7 +111,7 @@ cat >> $filename <<EOF
     character(len=*),parameter :: subname='ncd_ioglobal_${TYPE}_${DIM}'
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif

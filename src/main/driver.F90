@@ -234,7 +234,11 @@ subroutine driver1 (doalb, caldayp1, declinp1)
   ! interpolated values.
   ! ============================================================================
 
-  if (doalb) call interpMonthlyVeg()
+  if (doalb) then
+     call t_startf('interpMonthlyVeg')
+     call interpMonthlyVeg()
+     call t_stopf('interpMonthlyVeg')
+  endif
 #endif
 
   ! ============================================================================
@@ -669,8 +673,9 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
   ! Write global average diagnostics to standard output
   ! ============================================================================
 
-  call t_startf('wrtdiag')
   nstep = get_nstep()
+  if (wrtdia) call mpi_barrier(mpicom,ier)
+  call t_startf('wrtdiag')
   call write_diagnostic(wrtdia, nstep)
   call t_stopf('wrtdiag')
 
@@ -862,7 +867,7 @@ subroutine write_diagnostic (wrtdia, nstep)
   use clm_atmlnd , only : clm_l2a
   use decompMod  , only : get_proc_bounds, get_proc_global
   use spmdMod    , only : masterproc, npes, MPI_REAL8, MPI_ANY_SOURCE, &
-                          MPI_STATUS_SIZE, mpicom
+                          MPI_STATUS_SIZE, mpicom, MPI_SUM
   use shr_sys_mod, only : shr_sys_flush
   use abortutils , only : endrun
 !
@@ -891,6 +896,7 @@ subroutine write_diagnostic (wrtdia, nstep)
   real(r8):: tsum                    ! sum of ts
   real(r8):: tsxyav                  ! average ts for diagnostic output
   integer :: status(MPI_STATUS_SIZE) ! mpi status
+  logical,parameter :: old_sendrecv = .false.
 !------------------------------------------------------------------------
 
   call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
@@ -900,23 +906,31 @@ subroutine write_diagnostic (wrtdia, nstep)
 
      call t_barrierf('sync_write_diag', mpicom)
      psum = sum(clm_l2a%t_rad(begg:endg))
-     if (masterproc) then
-        tsum = psum
-        do p = 1, npes-1
-           call mpi_recv(psum, 1, MPI_REAL8, p, 999, mpicom, status, ier)
+     if (old_sendrecv) then
+        if (masterproc) then
+           tsum = psum
+           do p = 1, npes-1
+              call mpi_recv(psum, 1, MPI_REAL8, p, 999, mpicom, status, ier)
+              if (ier/=0) then
+                 write(iulog,*) 'write_diagnostic: Error in mpi_recv()'
+                 call endrun
+              end if
+              tsum = tsum + psum
+           end do
+        else
+           call mpi_send(psum, 1, MPI_REAL8, 0, 999, mpicom, ier)
            if (ier/=0) then
-              write(iulog,*) 'write_diagnostic: Error in mpi_recv()'
+              write(iulog,*) 'write_diagnostic: Error in mpi_send()'
               call endrun
            end if
-           tsum = tsum + psum
-        end do
+        end if
      else
-        call mpi_send(psum, 1, MPI_REAL8, 0, 999, mpicom, ier)
+        call mpi_reduce(psum, tsum, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
         if (ier/=0) then
-           write(iulog,*) 'write_diagnostic: Error in mpi_send()'
+           write(iulog,*) 'write_diagnostic: Error in mpi_reduce()'
            call endrun
         end if
-     end if
+     endif
      if (masterproc) then
         tsxyav = tsum / numg
         write(iulog,1000) nstep, tsxyav

@@ -18,6 +18,7 @@ module STATICEcosysdynMOD
   use clm_varctl,      only : scmlat,scmlon,single_column
   use clm_varctl,      only : iulog
   use spmdGathScatMod, only : scatter_data_from_master
+  use perf_mod,        only : t_startf, t_stopf
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -289,8 +290,10 @@ contains
     timwt(2) = 1._r8-timwt(1)
 
     if (InterpMonths1 /= months(1)) then
+       call t_startf('readMonthlyVeg')
        call readMonthlyVegetation (fsurdat, kmo, kda, months)
        InterpMonths1 = months(1)
+       call t_stopf('readMonthlyVeg')
     end if
 
   end subroutine interpMonthlyVeg

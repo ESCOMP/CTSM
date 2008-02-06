@@ -106,6 +106,21 @@ module clm_varctl
 ! Error growth perturbation limit
 !
   real(r8) :: pertlim                           ! perturbation limit when doing error growth test
+
+
+!
+! History File control
+!
+  logical :: hist_pioflag    ! turns on and off hist with pio
+  logical :: ncd_lowmem2d    ! turns on low memory 2d writes in clm hist
+  logical :: ncd_pio_def     ! default pio use setting
+  logical :: ncd_pio_UseRearranger  ! use MCT or box
+  logical :: ncd_pio_UseBoxRearr    ! use box
+  logical :: ncd_pio_SerialCDF      ! write with pio serial netcdf mode
+  logical :: ncd_pio_IODOF_rootonly ! write history in pio from root only
+  integer :: ncd_pio_DebugLevel     ! pio debug level
+  integer :: ncd_pio_num_iotasks    ! num of iotasks to use
+
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein and Gordon Bonan

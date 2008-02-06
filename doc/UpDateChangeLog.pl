@@ -139,11 +139,11 @@ while( $_ = <CL> ) {
      }
   # If updating the date -- find first occurance of data and change it 
   # Then turn the update option to off
-  } elsif ( ($update ) && ($_ =~ /(Date:)/) ) {
-     $_ = $1;
-     print FH "$_ $date\n";
+  } elsif ( ($update) && ($_ =~ /(Date:)/) ) {
+     print FH "Date: $date\n";
      print "Update $oldTag with new date: $date\n";
      $update = undef;
+     $_ = <CL>;
   }
   print FH $_;
 }
@@ -168,16 +168,19 @@ while( $_ = <CS> ) {
   # Find header line
   if ( $_ =~ /=====================/ ) {
      print FH $_;
-     if ( ! $update ) {
-        printf FH "%12.12s %12.12s %10.10s %s\n", $tag, $user, $date, $sum;
-        $_ = <CS>;
-     } else {
+     my $format = "%12.12s %12.12s %10.10s %s\n";
+     if ( $update ) {
        $_ = <CS>;
-       if ( /^([^ ]+)([ ]+)([^ ]+)([ ]+)([^ ]+)(.+)$/ ) {
-          print FH "${1}${2}${3}${date}${5}${6}\n";
+       if ( /^(.{12}) (.{12}) (.{10}) (.+)$/ ) {
+          $tag  = $1;
+          $user = $2;
+          $sum  = $4;
+       } else {
+          die "ERROR: bad format for ChangeSum file\n";
        }
-       $update = undef;
      }
+     printf FH $format, $tag, $user, $date, $sum;
+     $_ = <CS>;
   }
   print FH $_;
 }
@@ -187,7 +190,7 @@ close( FH );
 system( "/bin/mv $changesum_tmp $changesum" );
 
 #
-# Edit the ChangeLog file
+# Edit the files
 #
 if ( ! $opts{'update'} ) {
   system( "$EDITOR $changelog" );

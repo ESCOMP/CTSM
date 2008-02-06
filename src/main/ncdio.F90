@@ -25,9 +25,14 @@ module ncdio
   use abortutils     , only : endrun
   use clm_varctl     , only : single_column
   use clm_varctl     , only : iulog
+  use clm_varctl     , only : ncd_lowmem2d, ncd_pio_def
+  use clm_varctl     , only : ncd_pio_UseRearranger, ncd_pio_useBoxRearr
+  use clm_varctl     , only : ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly
+  use clm_varctl     , only : ncd_pio_DebugLevel, ncd_pio_num_iotasks
   use clm_mct_mod
   use spmdGathScatMod
   use decompMod      , only : get_clmlevel_gsize,get_clmlevel_dsize
+  use perf_mod       , only : t_startf, t_stopf
 #if (defined BUILDPIO)
   use piolib_mod     ! _EXTERNAL
   use pio_types      ! _EXTERNAL
@@ -121,15 +126,12 @@ module ncdio
 
   logical,parameter,private :: lbcast_def = .false.  ! lbcast default
   integer,parameter,private :: debug = 0             ! local debug level
-  logical,private,parameter :: lowmem2d = .true.
-  logical,parameter,private :: pio_def = .false.
 
 #if (defined BUILDPIO)
-  logical,parameter,private :: pio_UseRearranger = .true.
-  logical,parameter,private :: pio_SerialCDF = .false.
   integer,private           :: pio_num_iotasks
   integer,private           :: pio_num_aggregator
-  integer,private           :: pio_DebugLevel = 2
+  integer,private           :: pio_io_rank
+  logical,private           :: pio_IOproc
 
   type(File_desc_t)         :: pio_File
 
@@ -138,6 +140,7 @@ module ncdio
      logical           :: set
      integer           :: ndims
      integer           :: dimids(4)
+     integer           :: type
      type(IO_desc_t),pointer   :: pio_ioDesc
   end type pio_iodesc_plus_type
   integer,parameter     ,private :: pio_max_iodesc = 50
@@ -187,7 +190,7 @@ contains
     character(len=*),parameter :: subname='check_dim' ! subroutine name
 !-----------------------------------------------------------------------
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -245,7 +248,7 @@ contains
  varid = -1
  readvar = .true.
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -358,6 +361,7 @@ contains
 ! !LOCAL VARIABLES:
     logical :: lusepio       ! local usepio variable
     integer :: stride        ! pe stride for num_iotasks
+    integer :: base          ! base pe for iotasks
     integer :: filemode      ! filemode
     integer :: iotype        ! type of output file
     character(len=*),parameter :: subname='ncd_create' ! subroutine name
@@ -366,7 +370,7 @@ contains
 
  ncid = -1
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -375,30 +379,36 @@ contains
 
  if (lusepio) then
 #if (defined BUILDPIO)
-    call PIO_setDebugLevel(pio_DebugLevel)
-    if (pio_UseRearranger) then
-       if (pio_SerialCDF) then
+    call PIO_setDebugLevel(ncd_pio_DebugLevel)
+    pio_num_iotasks = min(ncd_pio_num_iotasks,npes)
+    pio_num_aggregator = npes
+    if (ncd_pio_UseRearranger) then
+       if (ncd_pio_SerialCDF) then
           iotype = iotype_netcdf_rearrange      ! serial netcdf no rearrange
        else
           iotype = iotype_pnetcdf_rearrange     ! parallel netcdf no rearrange
        endif
     else
-       if (pio_SerialCDF) then
+       if (ncd_pio_SerialCDF) then
           iotype = iotype_netcdf                ! serial netcdf w/ rearrange
        else
           iotype = iotype_pnetcdf               ! parallel netcdf w/ rearrange
        endif
     endif
-    pio_num_iotasks = npes
-    pio_num_aggregator = npes
+!tcx    if (ncd_pio_IODOF_rootonly) pio_num_iotasks = 1
+    base = 0
     stride = max(npes/pio_num_iotasks,1)        ! regular pe stride
-!tcx    if (debug > 1) then
-       write(iulog,*) trim(subname),' iam = ',iam,pio_num_iotasks,pio_num_aggregator,stride,iotype
-!    endif
     call PIO_initFile(iam, mpicom, &
-             pio_num_iotasks,pio_num_aggregator, stride,iotype,pio_File)
+             pio_num_iotasks,pio_num_aggregator, stride,iotype,pio_File,base=base)
     call check_ret_pio(PIO_CreateFile(pio_File,trim(filename)), &
        trim(subname)//':'//trim(cstring))
+    pio_io_rank = pio_File%io_rank
+    pio_IOproc = pio_File%IOproc
+    if (masterproc) then
+       write(iulog,*) trim(subname),' iam = ',iam,'iorank=',pio_io_rank, &
+          'ioproc=',pio_IOproc,'iotasks=',pio_num_iotasks, &
+          'naggr=',pio_num_aggregator,'base/stride=',base,stride,'iotype=',iotype
+    endif
 #endif
  else
 
@@ -447,7 +457,7 @@ contains
 
  ncid = -1
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -457,7 +467,7 @@ contains
  if (lusepio) then
 
 #if (defined BUILDPIO)
-    call PIO_setDebugLevel(pio_DebugLevel)
+    call PIO_setDebugLevel(ncd_pio_DebugLevel)
     call check_ret_pio(PIO_OpenFile(pio_File,trim(filename)), &
        trim(subname)//':'//trim(cstring))
 #endif
@@ -500,7 +510,7 @@ contains
 
 !-----------------------------------------------------------------------
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -549,7 +559,7 @@ contains
 
 !-----------------------------------------------------------------------
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -598,7 +608,7 @@ contains
 
 !-----------------------------------------------------------------------
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -652,7 +662,7 @@ contains
 
  old_mode = -1
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -702,7 +712,7 @@ contains
 
  dimid = -1
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -753,7 +763,7 @@ contains
 
  len = -1
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -804,7 +814,7 @@ contains
 
  dname = ''
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -856,7 +866,7 @@ contains
 
     vdnum = -1
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -887,7 +897,7 @@ contains
 ! !IROUTINE: ncd_inqiodesc
 !
 ! !INTERFACE:
-  subroutine ncd_inqiodesc(ndims,dimids,iodnum,cstring,usepio)
+  subroutine ncd_inqiodesc(ndims,dimids,type,iodnum,cstring,usepio)
 !
 ! !DESCRIPTION:
 ! enddef netcdf file
@@ -896,6 +906,7 @@ contains
     implicit none
     integer         ,intent(in) :: ndims     ! number of dims
     integer         ,intent(in) :: dimids(:) ! dimids
+    integer         ,intent(in) :: type      ! data type
     integer         ,intent(out):: iodnum    ! iodesc num
     character(len=*),intent(in) :: cstring   ! comment string
     logical,optional,intent(in) :: usepio    ! use pio lib
@@ -914,7 +925,7 @@ contains
 
     iodnum = -1
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -926,7 +937,7 @@ contains
        n = 1
        found = .false.
        do while (n <= pio_num_iodesc .and. .not.found)
-          if (ndims == pio_iodesc_list(n)%ndims) then
+          if (ndims == pio_iodesc_list(n)%ndims .and. type == pio_iodesc_list(n)%type) then
              found = .true.
              do m = 1,ndims
                 if (dimids(m) /= pio_iodesc_list(n)%dimids(m)) then
@@ -987,7 +998,7 @@ contains
     readvar = .false.
  endif
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -1066,7 +1077,7 @@ contains
 
  ndims = -1
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -1126,7 +1137,7 @@ contains
 
  vname = ''
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -1186,7 +1197,7 @@ contains
 
  dids = -1
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -1242,7 +1253,7 @@ contains
 
 !-----------------------------------------------------------------------
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -1302,7 +1313,7 @@ contains
 
 !-----------------------------------------------------------------------
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -1358,7 +1369,7 @@ contains
 
 !-----------------------------------------------------------------------
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -1426,7 +1437,7 @@ contains
 
  dimid = -1
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -1435,7 +1446,7 @@ contains
 
  if (lusepio) then
 #if (defined BUILDPIO)
-    call check_ret_pio(PIO_def_dim(pio_File,attrib,value,dimid), &
+    call check_ret_pio(pio_def_dim(pio_File,attrib,value,dimid), &
        trim(subname)//':'//trim(cstring))
 #endif
  else
@@ -1498,7 +1509,7 @@ contains
 
  varid = -1
 
- lusepio = pio_def
+ lusepio = ncd_pio_def
  if (present(usepio)) then
     lusepio = usepio
  endif
@@ -1537,7 +1548,7 @@ contains
        vdnum = pio_num_vardesc
        pio_varDesc_list(vdnum)%name = trim(varname)
 
-       call ncd_inqiodesc(ndims,ldimid,iodnum,lsubname,usepio=lusepio)
+       call ncd_inqiodesc(ndims,ldimid,xtype,iodnum,lsubname,usepio=lusepio)
 
        if (iodnum < 1) then
           ! generate iodesc
@@ -1550,10 +1561,11 @@ contains
           pio_iodesc_list(iodnum)%ndims = ndims
           pio_iodesc_list(iodnum)%dimids = 0
           pio_iodesc_list(iodnum)%dimids(1:ndims) = ldimid(1:ndims)
+          pio_iodesc_list(iodnum)%type = xtype
           pio_iodesc_list(iodnum)%set = .false.
 !tcx          if (masterproc .and. debug > 1) then
           if (masterproc) then
-             write(iulog,*) trim(subname),' creating iodesc at ',trim(varname),vdnum,iodnum,ndims,ldimid(1:ndims)
+             write(iulog,*) trim(subname),' creating iodesc at ',trim(varname),vdnum,iodnum,ndims,ldimid(1:ndims),xtype
          endif
        else
           if (iodnum > pio_num_iodesc) then
@@ -1671,7 +1683,7 @@ contains
     character(len=*),parameter :: subname='ncd_defvar_bygrid' ! subroutine name
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -1775,6 +1787,7 @@ contains
 !-----------------------------------------------------------------------
 !  #include <ncdio_local_subs.inc>
 !-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 !BOP
 !
 ! !IROUTINE: ncd_iolocal_int_1d
@@ -1818,7 +1831,7 @@ contains
     character(len=*),parameter :: subname='ncd_iolocal_int_1d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -1925,13 +1938,19 @@ contains
     character(len=*),parameter :: subname='ncd_iolocal_int_2d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
 
-    if (lusepio .and. lowmem2d) then
-       write(iulog,*) trim(subname),' ERROR usepio and lowmem2d are both true'
+    if (lusepio .and. ncd_lowmem2d) then
+       write(iulog,*) trim(subname),' ERROR usepio and ncd_lowmem2d are both true'
+       call endrun()
+    endif
+
+    if (.not.lusepio .and. .not.ncd_lowmem2d) then
+       write(iulog,*) trim(subname),' ERROR ncd_lowmem2d must be true with non pio runs. ',&
+                                    ' This error will be corrected in the future '
        call endrun()
     endif
 
@@ -1980,7 +1999,7 @@ contains
     count = 1  
     call get_clmlevel_dsize(clmlevel,dims,count(1),count(2))
 
-    if (lowmem2d) then
+    if (ncd_lowmem2d) then
        allocate(data1d(lb1:ub1))
        do k = lb2,ub2
           if (dims == 1) then
@@ -2101,7 +2120,8 @@ contains
     integer,pointer   :: compDOF(:)
     integer,pointer   :: ioDOF(:)
     integer(pio_offset),pointer :: pstart(:),pcount(:)
-    
+    integer ,pointer  :: data1d(:)  ! 1d copy of data starting at index 1
+    integer           :: n1,n1b,n1e,n1s
 #endif
     logical           :: varpresent ! if true, variable is on tape
     integer           :: rcode      ! local return code
@@ -2112,7 +2132,10 @@ contains
     character(len=*),parameter :: subname='ncd_iolocal_gs_int1d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+
+    call t_startf('ncd_lgs1d_total')
+
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -2120,14 +2143,6 @@ contains
     if (masterproc .and. debug > 1) then
        write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel),lusepio
     endif
-
-! tcx remove
-! if (lusepio) then
-!#if (defined BUILDPIO)
-!    if (masterproc) write(iulog,*) trim(subname),' pio not implemented'
-!!    call endrun('pio error')
-!#endif
-! else
 
    rcode = 0
    lstart = 1
@@ -2137,12 +2152,10 @@ contains
       lcount(1:size(count)) = count(1:size(count))
    endif
    gsize = get_clmlevel_gsize(clmlevel)
-   if (masterproc) then
-      allocate(arrayg(gsize))
-   endif
 
    if (flag == 'read') then
       if (masterproc) then
+         allocate(arrayg(gsize))
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
             if (single_column) then
@@ -2160,9 +2173,13 @@ contains
          endif
       endif
       call scatter_data_from_master(data,arrayg,clmlevel)
+      if (masterproc) then
+         deallocate(arrayg)
+      endif
    elseif (flag == 'write') then
       if (lusepio) then
 #if (defined BUILDPIO) 
+         call t_startf('ncd_lgs1d_wptotal')
          call ncd_inqvdesc(varname,vdnum,subname,usepio=lusepio)
          if (vdnum < 1 .or. vdnum > pio_num_vardesc) then
             write(iulog,*) trim(subname),' ERROR in vdnum from inqvdesc ',trim(varname),vdnum
@@ -2181,18 +2198,24 @@ contains
          !--- setup iodesc if it's not set yet ---
          !------------------------
          if (.not. pio_iodesc_plus%set) then
+            call t_startf('ncd_lgs1d_wpsetdof')
             baseTYPE = MPI_INTEGER
             dims(:) = 1
             ndims = pio_iodesc_plus%ndims
             do n = 1,ndims
                call ncd_inqdlen(ncid,pio_iodesc_plus%dimids(n),dims(n),trim(subname),usepio=lusepio)
+               if (dims(n) == 0) dims(n) = 1   ! sometimes for time axis?
             enddo
             lenBLOCKS = 1
 
             call ncd_setDOF(clmlevel,dims,compDOF,ioDOF,pstart,pcount)
 
             !--- pio call ---
-            call pio_initDecomp(pio_File,baseTYPE,dims,lenBLOCKS,compDOF,ioDOF,pstart,pcount,pio_iodesc_plus%pio_ioDesc)
+            if (ncd_pio_UseBoxRearr) then
+               call pio_initDecomp(pio_File,baseTYPE,dims,compDOF,pstart,pcount,pio_iodesc_plus%pio_ioDesc)
+            else
+               call pio_initDecomp(pio_File,baseTYPE,dims,lenBLOCKS,compDOF,ioDOF,pstart,pcount,pio_iodesc_plus%pio_ioDesc)
+            endif
 
             deallocate(compDOF)
             deallocate(IODOF)
@@ -2200,35 +2223,58 @@ contains
             deallocate(pcount)
 
             pio_iodesc_plus%set = .true.
+            call t_stopf('ncd_lgs1d_wpsetdof')
          endif
          !------------------------
          !--- end setup iodesc ---
          !------------------------
 
-         if (masterproc) then
-            write(iulog,*) trim(subname),' write_darray1 ',vdnum,iodnum,pio_iodesc_plus%ndims,pio_iodesc_plus%dimids
-            write(iulog,*) trim(subname),' write_darray2 ',vdnum,iodnum,dims,size(data)
-            call shr_sys_flush(iulog)
-         endif
-         call mpi_barrier(mpicom,ier)
-
          call pio_setVarDesc(pio_iodesc_plus%pio_iodesc,pio_vardesc_plus%pio_vardesc)
-         call PIO_write_darray(pio_File,pio_vardesc_plus%pio_varDesc,data,ier)
+
+         !--- copy data to 1d array ---
+         call t_startf('ncd_lgs1d_wpcopy')
+         n1b = lbound(data,dim=1)
+         n1e = ubound(data,dim=1)
+         n1s = size(data,dim=1)
+         allocate(data1d(n1s),stat=n)
+         call shr_sys_flush(iulog)
+         n = 0
+         do n1 = n1b,n1e
+            n = n + 1
+            data1d(n) = data(n1)
+         enddo
+         call t_stopf('ncd_lgs1d_wpcopy')
+
+         call t_startf('ncd_lgs1d_wpwrit')
+         call PIO_write_darray(pio_File,pio_vardesc_plus%pio_varDesc,data1d,ier)
+         call t_stopf('ncd_lgs1d_wpwrit')
+         deallocate(data1d)
+         call t_stopf('ncd_lgs1d_wptotal')
 #endif 
       else
+         call t_startf('ncd_lgs1d_wtotal')
+         if (masterproc) then
+            allocate(arrayg(gsize))
+         endif
+         call t_startf('ncd_lgs1d_wgath')
          if (present(missing)) then
             call gather_data_to_master(data,arrayg,clmlevel,missing)
          else
             call gather_data_to_master(data,arrayg,clmlevel)
          endif
+         call t_stopf('ncd_lgs1d_wgath')
          if (masterproc) then
             call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+            call t_startf('ncd_lgs1d_wwrit')
             if (present(start).and.present(count)) then
                call check_ret(nf_put_vara_int(ncid, varid, start, count, arrayg), subname)
             else
                call check_ret(nf_put_var_int(ncid, varid, arrayg), subname)
             endif
+            call t_stopf('ncd_lgs1d_wwrit')
+            deallocate(arrayg)
          endif
+         call t_stopf('ncd_lgs1d_wtotal')
       endif
    else
       if (masterproc) then
@@ -2237,17 +2283,12 @@ contains
       endif
    endif
 
-   if (masterproc) then
-      deallocate(arrayg)
-   endif
-
    if (present(status)) then
       call mpi_bcast(rcode, 1, MPI_INTEGER, 0, mpicom, ier)
       status = rcode
    endif
 
-!tcx remove
-! endif
+   call t_stopf('ncd_lgs1d_total')
 
   end subroutine ncd_iolocal_gs_int1d
 !-----------------------------------------------------------------------
@@ -2296,6 +2337,20 @@ contains
     integer           :: dids(4)    ! dim ids
     character(len=32) :: dname(4)   ! dim names
     integer           :: dlen(4)    ! dim lens
+#if (defined BUILDPIO)
+    type(pio_vardesc_plus_type),pointer  :: pio_vardesc_plus
+    type(pio_iodesc_plus_type) ,pointer  :: pio_iodesc_plus
+    integer           :: vdnum      ! vardesc num in list
+    integer           :: basetype   ! pio initdecomp info
+    integer           :: lenblocks  ! pio initdecomp info
+    integer           :: dims(4)    ! pio initdecomp info
+    integer           :: iodnum     ! iodesc num in list
+    integer,pointer   :: compDOF(:)
+    integer,pointer   :: ioDOF(:)
+    integer(pio_offset),pointer :: pstart(:),pcount(:)
+    integer ,pointer  :: data1d(:)  ! 1d copy of data starting at index 1
+    integer           :: n1,n2,n1b,n1e,n1s,n2b,n2e,n2s
+#endif
     integer           :: rcode      ! local return code
     integer           :: ier        ! error code
     integer :: data_offset              ! offset to single grid point for column model
@@ -2304,7 +2359,9 @@ contains
     character(len=*),parameter :: subname='ncd_iolocal_gs_int2d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    call t_startf('ncd_lgs2d_total')
+
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -2312,13 +2369,6 @@ contains
     if (masterproc .and. debug > 1) then
        write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel),lusepio
     endif
-
- if (lusepio) then
-#if (defined BUILDPIO)
-    if (masterproc) write(iulog,*) trim(subname),' pio not implemented'
-!    call endrun('pio error')
-#endif
- else
 
    rcode = 0
    lstart = 1
@@ -2329,12 +2379,10 @@ contains
    endif
    gsize = get_clmlevel_gsize(clmlevel)
    ksize = size(data,dim=2)
-   if (masterproc) then
-      allocate(arrayg(gsize,ksize))
-   endif
 
    if (flag == 'read') then
       if (masterproc) then
+         allocate(arrayg(gsize,ksize))
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
             if (single_column) then
@@ -2352,19 +2400,111 @@ contains
          endif
       endif
       call scatter_data_from_master(data,arrayg,clmlevel)
-   elseif (flag == 'write') then
-      if (present(missing)) then
-         call gather_data_to_master(data,arrayg,clmlevel,missing)
-      else
-         call gather_data_to_master(data,arrayg,clmlevel)
-      endif
       if (masterproc) then
-         call check_ret(nf_inq_varid(ncid, varname, varid), subname)
-         if (present(start).and.present(count)) then
-            call check_ret(nf_put_vara_int(ncid, varid, start, count, arrayg), subname)
-         else
-            call check_ret(nf_put_var_int(ncid, varid, arrayg), subname)
+         deallocate(arrayg)
+      endif
+   elseif (flag == 'write') then
+      if (lusepio) then
+#if (defined BUILDPIO) 
+         call t_startf('ncd_lgs2d_wptotal')
+         call ncd_inqvdesc(varname,vdnum,subname,usepio=lusepio)
+         if (vdnum < 1 .or. vdnum > pio_num_vardesc) then
+            write(iulog,*) trim(subname),' ERROR in vdnum from inqvdesc ',trim(varname),vdnum
+            call endrun()
          endif
+         pio_vardesc_plus => pio_vardesc_list(vdnum)
+
+         iodnum = pio_vardesc_plus%iodnum
+         if (iodnum < 1 .or. iodnum > pio_num_iodesc) then
+            write(iulog,*) trim(subname),' ERROR in iodnum from vardesc ',trim(varname),iodnum
+            call endrun()
+         endif
+         pio_iodesc_plus => pio_iodesc_list(iodnum)
+
+         !------------------------
+         !--- setup iodesc if it's not set yet ---
+         !------------------------
+         if (.not. pio_iodesc_plus%set) then
+            call t_startf('ncd_lgs2d_wpsetdof')
+            baseTYPE = MPI_INTEGER
+            dims(:) = 1
+            ndims = pio_iodesc_plus%ndims
+            do n = 1,ndims
+               call ncd_inqdlen(ncid,pio_iodesc_plus%dimids(n),dims(n),trim(subname),usepio=lusepio)
+               if (dims(n) == 0) dims(n) = 1   ! sometimes for time axis?
+            enddo
+            lenBLOCKS = 1
+
+            call ncd_setDOF(clmlevel,dims,compDOF,ioDOF,pstart,pcount)
+
+            !--- pio call ---
+            if (ncd_pio_UseBoxRearr) then
+               call pio_initDecomp(pio_File,baseTYPE,dims,compDOF,pstart,pcount,pio_iodesc_plus%pio_ioDesc)
+            else
+               call pio_initDecomp(pio_File,baseTYPE,dims,lenBLOCKS,compDOF,ioDOF,pstart,pcount,pio_iodesc_plus%pio_ioDesc)
+            endif
+
+            deallocate(compDOF)
+            deallocate(IODOF)
+            deallocate(pstart)
+            deallocate(pcount)
+
+            pio_iodesc_plus%set = .true.
+            call t_stopf('ncd_lgs2d_wpsetdof')
+         endif
+         !------------------------
+         !--- end setup iodesc ---
+         !------------------------
+
+         call pio_setVarDesc(pio_iodesc_plus%pio_iodesc,pio_vardesc_plus%pio_vardesc)
+
+         call t_startf('ncd_lgs2d_wpcopy')
+         n1b = lbound(data,dim=1)
+         n1e = ubound(data,dim=1)
+         n1s = size  (data,dim=1)
+         n2b = lbound(data,dim=2)
+         n2e = ubound(data,dim=2)
+         n2s = size  (data,dim=2)
+         allocate(data1d(n1s*n2s),stat=n)
+         n = 0
+         do n2 = n2b,n2e
+         do n1 = n1b,n1e
+            n = n + 1
+            data1d(n) = data(n1,n2)
+         enddo
+         enddo
+         call t_stopf('ncd_lgs2d_wpcopy')
+
+         call t_startf('ncd_lgs2d_wpwrit')
+         call PIO_write_darray(pio_File,pio_vardesc_plus%pio_varDesc,data1d,ier)
+         call t_stopf('ncd_lgs2d_wpwrit')
+         deallocate(data1d)
+         call t_stopf('ncd_lgs2d_wptotal')
+#endif 
+      else
+         call t_startf('ncd_lgs2d_wtotal')
+         if (masterproc) then
+            allocate(arrayg(gsize,ksize))
+         endif
+         call t_startf('ncd_lgs2d_wgath')
+         if (present(missing)) then
+            call gather_data_to_master(data,arrayg,clmlevel,missing)
+         else
+            call gather_data_to_master(data,arrayg,clmlevel)
+         endif
+         call t_stopf('ncd_lgs2d_wgath')
+         if (masterproc) then
+            call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+            call t_startf('ncd_lgs2d_wwrit')
+            if (present(start).and.present(count)) then
+               call check_ret(nf_put_vara_int(ncid, varid, start, count, arrayg), subname)
+            else
+               call check_ret(nf_put_var_int(ncid, varid, arrayg), subname)
+            endif
+            call t_stopf('ncd_lgs2d_wwrit')
+            deallocate(arrayg)
+         endif
+         call t_stopf('ncd_lgs2d_wtotal')
       endif
    else
       if (masterproc) then
@@ -2373,16 +2513,12 @@ contains
       endif
    endif
 
-   if (masterproc) then
-      deallocate(arrayg)
-   endif
-
    if (present(status)) then
       call mpi_bcast(rcode, 1, MPI_INTEGER, 0, mpicom, ier)
       status = rcode
    endif
 
- endif
+   call t_stopf('ncd_lgs2d_total')
 
   end subroutine ncd_iolocal_gs_int2d
 !-----------------------------------------------------------------------
@@ -2429,7 +2565,7 @@ contains
     character(len=*),parameter :: subname='ncd_iolocal_real_1d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -2536,13 +2672,19 @@ contains
     character(len=*),parameter :: subname='ncd_iolocal_real_2d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
 
-    if (lusepio .and. lowmem2d) then
-       write(iulog,*) trim(subname),' ERROR usepio and lowmem2d are both true'
+    if (lusepio .and. ncd_lowmem2d) then
+       write(iulog,*) trim(subname),' ERROR usepio and ncd_lowmem2d are both true'
+       call endrun()
+    endif
+
+    if (.not.lusepio .and. .not.ncd_lowmem2d) then
+       write(iulog,*) trim(subname),' ERROR ncd_lowmem2d must be true with non pio runs. ',&
+                                    ' This error will be corrected in the future '
        call endrun()
     endif
 
@@ -2591,7 +2733,7 @@ contains
     count = 1  
     call get_clmlevel_dsize(clmlevel,dims,count(1),count(2))
 
-    if (lowmem2d) then
+    if (ncd_lowmem2d) then
        allocate(data1d(lb1:ub1))
        do k = lb2,ub2
           if (dims == 1) then
@@ -2712,7 +2854,8 @@ contains
     integer,pointer   :: compDOF(:)
     integer,pointer   :: ioDOF(:)
     integer(pio_offset),pointer :: pstart(:),pcount(:)
-    
+    real(r8),pointer  :: data1d(:)  ! 1d copy of data starting at index 1
+    integer           :: n1,n1b,n1e,n1s
 #endif
     logical           :: varpresent ! if true, variable is on tape
     integer           :: rcode      ! local return code
@@ -2723,7 +2866,10 @@ contains
     character(len=*),parameter :: subname='ncd_iolocal_gs_real1d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+
+    call t_startf('ncd_lgs1d_total')
+
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -2731,14 +2877,6 @@ contains
     if (masterproc .and. debug > 1) then
        write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel),lusepio
     endif
-
-! tcx remove
-! if (lusepio) then
-!#if (defined BUILDPIO)
-!    if (masterproc) write(iulog,*) trim(subname),' pio not implemented'
-!!    call endrun('pio error')
-!#endif
-! else
 
    rcode = 0
    lstart = 1
@@ -2748,12 +2886,10 @@ contains
       lcount(1:size(count)) = count(1:size(count))
    endif
    gsize = get_clmlevel_gsize(clmlevel)
-   if (masterproc) then
-      allocate(arrayg(gsize))
-   endif
 
    if (flag == 'read') then
       if (masterproc) then
+         allocate(arrayg(gsize))
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
             if (single_column) then
@@ -2771,9 +2907,13 @@ contains
          endif
       endif
       call scatter_data_from_master(data,arrayg,clmlevel)
+      if (masterproc) then
+         deallocate(arrayg)
+      endif
    elseif (flag == 'write') then
       if (lusepio) then
 #if (defined BUILDPIO) 
+         call t_startf('ncd_lgs1d_wptotal')
          call ncd_inqvdesc(varname,vdnum,subname,usepio=lusepio)
          if (vdnum < 1 .or. vdnum > pio_num_vardesc) then
             write(iulog,*) trim(subname),' ERROR in vdnum from inqvdesc ',trim(varname),vdnum
@@ -2792,18 +2932,24 @@ contains
          !--- setup iodesc if it's not set yet ---
          !------------------------
          if (.not. pio_iodesc_plus%set) then
+            call t_startf('ncd_lgs1d_wpsetdof')
             baseTYPE = MPI_REAL8
             dims(:) = 1
             ndims = pio_iodesc_plus%ndims
             do n = 1,ndims
                call ncd_inqdlen(ncid,pio_iodesc_plus%dimids(n),dims(n),trim(subname),usepio=lusepio)
+               if (dims(n) == 0) dims(n) = 1   ! sometimes for time axis?
             enddo
             lenBLOCKS = 1
 
             call ncd_setDOF(clmlevel,dims,compDOF,ioDOF,pstart,pcount)
 
             !--- pio call ---
-            call pio_initDecomp(pio_File,baseTYPE,dims,lenBLOCKS,compDOF,ioDOF,pstart,pcount,pio_iodesc_plus%pio_ioDesc)
+            if (ncd_pio_UseBoxRearr) then
+               call pio_initDecomp(pio_File,baseTYPE,dims,compDOF,pstart,pcount,pio_iodesc_plus%pio_ioDesc)
+            else
+               call pio_initDecomp(pio_File,baseTYPE,dims,lenBLOCKS,compDOF,ioDOF,pstart,pcount,pio_iodesc_plus%pio_ioDesc)
+            endif
 
             deallocate(compDOF)
             deallocate(IODOF)
@@ -2811,35 +2957,58 @@ contains
             deallocate(pcount)
 
             pio_iodesc_plus%set = .true.
+            call t_stopf('ncd_lgs1d_wpsetdof')
          endif
          !------------------------
          !--- end setup iodesc ---
          !------------------------
 
-         if (masterproc) then
-            write(iulog,*) trim(subname),' write_darray1 ',vdnum,iodnum,pio_iodesc_plus%ndims,pio_iodesc_plus%dimids
-            write(iulog,*) trim(subname),' write_darray2 ',vdnum,iodnum,dims,size(data)
-            call shr_sys_flush(iulog)
-         endif
-         call mpi_barrier(mpicom,ier)
-
          call pio_setVarDesc(pio_iodesc_plus%pio_iodesc,pio_vardesc_plus%pio_vardesc)
-         call PIO_write_darray(pio_File,pio_vardesc_plus%pio_varDesc,data,ier)
+
+         !--- copy data to 1d array ---
+         call t_startf('ncd_lgs1d_wpcopy')
+         n1b = lbound(data,dim=1)
+         n1e = ubound(data,dim=1)
+         n1s = size(data,dim=1)
+         allocate(data1d(n1s),stat=n)
+         call shr_sys_flush(iulog)
+         n = 0
+         do n1 = n1b,n1e
+            n = n + 1
+            data1d(n) = data(n1)
+         enddo
+         call t_stopf('ncd_lgs1d_wpcopy')
+
+         call t_startf('ncd_lgs1d_wpwrit')
+         call PIO_write_darray(pio_File,pio_vardesc_plus%pio_varDesc,data1d,ier)
+         call t_stopf('ncd_lgs1d_wpwrit')
+         deallocate(data1d)
+         call t_stopf('ncd_lgs1d_wptotal')
 #endif 
       else
+         call t_startf('ncd_lgs1d_wtotal')
+         if (masterproc) then
+            allocate(arrayg(gsize))
+         endif
+         call t_startf('ncd_lgs1d_wgath')
          if (present(missing)) then
             call gather_data_to_master(data,arrayg,clmlevel,missing)
          else
             call gather_data_to_master(data,arrayg,clmlevel)
          endif
+         call t_stopf('ncd_lgs1d_wgath')
          if (masterproc) then
             call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+            call t_startf('ncd_lgs1d_wwrit')
             if (present(start).and.present(count)) then
                call check_ret(nf_put_vara_double(ncid, varid, start, count, arrayg), subname)
             else
                call check_ret(nf_put_var_double(ncid, varid, arrayg), subname)
             endif
+            call t_stopf('ncd_lgs1d_wwrit')
+            deallocate(arrayg)
          endif
+         call t_stopf('ncd_lgs1d_wtotal')
       endif
    else
       if (masterproc) then
@@ -2848,17 +3017,12 @@ contains
       endif
    endif
 
-   if (masterproc) then
-      deallocate(arrayg)
-   endif
-
    if (present(status)) then
       call mpi_bcast(rcode, 1, MPI_INTEGER, 0, mpicom, ier)
       status = rcode
    endif
 
-!tcx remove
-! endif
+   call t_stopf('ncd_lgs1d_total')
 
   end subroutine ncd_iolocal_gs_real1d
 !-----------------------------------------------------------------------
@@ -2907,6 +3071,20 @@ contains
     integer           :: dids(4)    ! dim ids
     character(len=32) :: dname(4)   ! dim names
     integer           :: dlen(4)    ! dim lens
+#if (defined BUILDPIO)
+    type(pio_vardesc_plus_type),pointer  :: pio_vardesc_plus
+    type(pio_iodesc_plus_type) ,pointer  :: pio_iodesc_plus
+    integer           :: vdnum      ! vardesc num in list
+    integer           :: basetype   ! pio initdecomp info
+    integer           :: lenblocks  ! pio initdecomp info
+    integer           :: dims(4)    ! pio initdecomp info
+    integer           :: iodnum     ! iodesc num in list
+    integer,pointer   :: compDOF(:)
+    integer,pointer   :: ioDOF(:)
+    integer(pio_offset),pointer :: pstart(:),pcount(:)
+    real(r8),pointer  :: data1d(:)  ! 1d copy of data starting at index 1
+    integer           :: n1,n2,n1b,n1e,n1s,n2b,n2e,n2s
+#endif
     integer           :: rcode      ! local return code
     integer           :: ier        ! error code
     integer :: data_offset              ! offset to single grid point for column model
@@ -2915,7 +3093,9 @@ contains
     character(len=*),parameter :: subname='ncd_iolocal_gs_real2d' ! subroutine name
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    call t_startf('ncd_lgs2d_total')
+
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -2923,13 +3103,6 @@ contains
     if (masterproc .and. debug > 1) then
        write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel),lusepio
     endif
-
- if (lusepio) then
-#if (defined BUILDPIO)
-    if (masterproc) write(iulog,*) trim(subname),' pio not implemented'
-!    call endrun('pio error')
-#endif
- else
 
    rcode = 0
    lstart = 1
@@ -2940,12 +3113,10 @@ contains
    endif
    gsize = get_clmlevel_gsize(clmlevel)
    ksize = size(data,dim=2)
-   if (masterproc) then
-      allocate(arrayg(gsize,ksize))
-   endif
 
    if (flag == 'read') then
       if (masterproc) then
+         allocate(arrayg(gsize,ksize))
          call check_var(ncid, varname, varid, varpresent)
          if (varpresent) then
             if (single_column) then
@@ -2963,19 +3134,111 @@ contains
          endif
       endif
       call scatter_data_from_master(data,arrayg,clmlevel)
-   elseif (flag == 'write') then
-      if (present(missing)) then
-         call gather_data_to_master(data,arrayg,clmlevel,missing)
-      else
-         call gather_data_to_master(data,arrayg,clmlevel)
-      endif
       if (masterproc) then
-         call check_ret(nf_inq_varid(ncid, varname, varid), subname)
-         if (present(start).and.present(count)) then
-            call check_ret(nf_put_vara_double(ncid, varid, start, count, arrayg), subname)
-         else
-            call check_ret(nf_put_var_double(ncid, varid, arrayg), subname)
+         deallocate(arrayg)
+      endif
+   elseif (flag == 'write') then
+      if (lusepio) then
+#if (defined BUILDPIO) 
+         call t_startf('ncd_lgs2d_wptotal')
+         call ncd_inqvdesc(varname,vdnum,subname,usepio=lusepio)
+         if (vdnum < 1 .or. vdnum > pio_num_vardesc) then
+            write(iulog,*) trim(subname),' ERROR in vdnum from inqvdesc ',trim(varname),vdnum
+            call endrun()
          endif
+         pio_vardesc_plus => pio_vardesc_list(vdnum)
+
+         iodnum = pio_vardesc_plus%iodnum
+         if (iodnum < 1 .or. iodnum > pio_num_iodesc) then
+            write(iulog,*) trim(subname),' ERROR in iodnum from vardesc ',trim(varname),iodnum
+            call endrun()
+         endif
+         pio_iodesc_plus => pio_iodesc_list(iodnum)
+
+         !------------------------
+         !--- setup iodesc if it's not set yet ---
+         !------------------------
+         if (.not. pio_iodesc_plus%set) then
+            call t_startf('ncd_lgs2d_wpsetdof')
+            baseTYPE = MPI_REAL8
+            dims(:) = 1
+            ndims = pio_iodesc_plus%ndims
+            do n = 1,ndims
+               call ncd_inqdlen(ncid,pio_iodesc_plus%dimids(n),dims(n),trim(subname),usepio=lusepio)
+               if (dims(n) == 0) dims(n) = 1   ! sometimes for time axis?
+            enddo
+            lenBLOCKS = 1
+
+            call ncd_setDOF(clmlevel,dims,compDOF,ioDOF,pstart,pcount)
+
+            !--- pio call ---
+            if (ncd_pio_UseBoxRearr) then
+               call pio_initDecomp(pio_File,baseTYPE,dims,compDOF,pstart,pcount,pio_iodesc_plus%pio_ioDesc)
+            else
+               call pio_initDecomp(pio_File,baseTYPE,dims,lenBLOCKS,compDOF,ioDOF,pstart,pcount,pio_iodesc_plus%pio_ioDesc)
+            endif
+
+            deallocate(compDOF)
+            deallocate(IODOF)
+            deallocate(pstart)
+            deallocate(pcount)
+
+            pio_iodesc_plus%set = .true.
+            call t_stopf('ncd_lgs2d_wpsetdof')
+         endif
+         !------------------------
+         !--- end setup iodesc ---
+         !------------------------
+
+         call pio_setVarDesc(pio_iodesc_plus%pio_iodesc,pio_vardesc_plus%pio_vardesc)
+
+         call t_startf('ncd_lgs2d_wpcopy')
+         n1b = lbound(data,dim=1)
+         n1e = ubound(data,dim=1)
+         n1s = size  (data,dim=1)
+         n2b = lbound(data,dim=2)
+         n2e = ubound(data,dim=2)
+         n2s = size  (data,dim=2)
+         allocate(data1d(n1s*n2s),stat=n)
+         n = 0
+         do n2 = n2b,n2e
+         do n1 = n1b,n1e
+            n = n + 1
+            data1d(n) = data(n1,n2)
+         enddo
+         enddo
+         call t_stopf('ncd_lgs2d_wpcopy')
+
+         call t_startf('ncd_lgs2d_wpwrit')
+         call PIO_write_darray(pio_File,pio_vardesc_plus%pio_varDesc,data1d,ier)
+         call t_stopf('ncd_lgs2d_wpwrit')
+         deallocate(data1d)
+         call t_stopf('ncd_lgs2d_wptotal')
+#endif 
+      else
+         call t_startf('ncd_lgs2d_wtotal')
+         if (masterproc) then
+            allocate(arrayg(gsize,ksize))
+         endif
+         call t_startf('ncd_lgs2d_wgath')
+         if (present(missing)) then
+            call gather_data_to_master(data,arrayg,clmlevel,missing)
+         else
+            call gather_data_to_master(data,arrayg,clmlevel)
+         endif
+         call t_stopf('ncd_lgs2d_wgath')
+         if (masterproc) then
+            call check_ret(nf_inq_varid(ncid, varname, varid), subname)
+            call t_startf('ncd_lgs2d_wwrit')
+            if (present(start).and.present(count)) then
+               call check_ret(nf_put_vara_double(ncid, varid, start, count, arrayg), subname)
+            else
+               call check_ret(nf_put_var_double(ncid, varid, arrayg), subname)
+            endif
+            call t_stopf('ncd_lgs2d_wwrit')
+            deallocate(arrayg)
+         endif
+         call t_stopf('ncd_lgs2d_wtotal')
       endif
    else
       if (masterproc) then
@@ -2984,16 +3247,12 @@ contains
       endif
    endif
 
-   if (masterproc) then
-      deallocate(arrayg)
-   endif
-
    if (present(status)) then
       call mpi_bcast(rcode, 1, MPI_INTEGER, 0, mpicom, ier)
       status = rcode
    endif
 
- endif
+   call t_stopf('ncd_lgs2d_total')
 
   end subroutine ncd_iolocal_gs_real2d
 !------------------------------------------------------------------------
@@ -3007,7 +3266,6 @@ contains
 !      and manually included.  this section ends at "end include ..."
 !-----------------------------------------------------------------------
 !  #include <ncdio_global_subs.inc>
-
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -3054,7 +3312,7 @@ contains
     character(len=*),parameter :: subname='ncd_ioglobal_int_var'
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -3224,7 +3482,7 @@ contains
     character(len=*),parameter :: subname='ncd_ioglobal_real_var'
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -3394,7 +3652,7 @@ contains
     character(len=*),parameter :: subname='ncd_ioglobal_int_1d'
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -3564,7 +3822,7 @@ contains
     character(len=*),parameter :: subname='ncd_ioglobal_real_1d'
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -3734,7 +3992,7 @@ contains
     character(len=*),parameter :: subname='ncd_ioglobal_char_1d'
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -3906,7 +4164,7 @@ contains
     character(len=*),parameter :: subname='ncd_ioglobal_int_2d'
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -4082,7 +4340,7 @@ contains
     character(len=*),parameter :: subname='ncd_ioglobal_real_2d'
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -4258,7 +4516,7 @@ contains
     character(len=*),parameter :: subname='ncd_ioglobal_int_3d'
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -4436,7 +4694,7 @@ contains
     character(len=*),parameter :: subname='ncd_ioglobal_real_3d'
 !-----------------------------------------------------------------------
 
-    lusepio = pio_def
+    lusepio = ncd_pio_def
     if (present(usepio)) then
        lusepio = usepio
     endif
@@ -4640,22 +4898,32 @@ contains
     count = 1
     count(1:ndims) = dims(1:ndims)
 
-    found = .false.
-    do n = ndims,1,-1
-       if (.not.found .and. dims(n) >= npes) then
-          found = .true.
-          count(n) = dims(n) / npes
-          start(n) = iam*count(n) + 1
-          m = mod(dims(n),npes)
-          start(n) = start(n) + min(iam,m)
-          if (iam < m) count(n) = count(n) + 1
+    if (ncd_pio_IODOF_rootonly) then
+       if (iam /= 0) then
+          count = 0
        endif
-    enddo
+    else
+       found = .false.
+       do n = ndims,1,-1
+          if (.not.found .and. dims(n) >= pio_num_iotasks) then
+             found = .true.
+             if (pio_IOproc) then
+                count(n) = dims(n) / pio_num_iotasks
+                start(n) = pio_io_rank*count(n) + 1
+                m = mod(dims(n),pio_num_iotasks)
+                start(n) = start(n) + min(pio_io_rank,m)
+                if (pio_io_rank < m) count(n) = count(n) + 1
+             else
+                count = 0
+             endif
+          endif
+       enddo
+       if (.not.found) then
+          write(iulog,*) trim(subname),' ERROR: start,count not computed for num_iotasks = ', &
+             pio_num_iotasks,' and dims = ',dims
+          call endrun()
+       endif
 
-    if (.not.found) then
-       write(iulog,*) trim(subname),' ERROR: start,count not computed for npes = ', &
-          npes,' and dims = ',dims
-       call endrun()
     endif
 
     iosize = 1
@@ -4692,19 +4960,19 @@ contains
        enddo
     enddo
 
+    if (debug > 1) then
     do m = 0,npes-1
     if (iam == m) then
-!tcx    if (masterproc .and. debug > 1) then
        write(iulog,*) trim(subname),' sizes1 = ',iam,gsize,gsmap_gsize,gsmap_lsize
        write(iulog,*) trim(subname),' sizes2 = ',iam,fullsize,npes,vsize,iosize
        write(iulog,*) trim(subname),' dims = ',iam,(start(n),count(n),dims(n),n=1,4)
        write(iulog,*) trim(subname),' compDOF = ',iam,size(compDOF),minval(compDOF),maxval(compDOF)
        write(iulog,*) trim(subname),' ioDOF = ',iam,size(ioDOF),minval(ioDOF),maxval(ioDOF)
        call shr_sys_flush(iulog)
-!    endif
     endif
     call mpi_barrier(mpicom,ier)
     enddo
+    endif
 
     deallocate(gsmOP)
 

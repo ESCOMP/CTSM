@@ -17,7 +17,7 @@ module histFileMod
   use abortutils  , only : endrun
   use ncdio
   use clm_varcon  , only : spval,ispval
-  use clm_varctl  , only : iulog
+  use clm_varctl  , only : iulog, hist_pioflag
   use clmtype     , only : gratm, grlnd, nameg, namel, namec, namep, allrof
   use decompMod   , only : get_proc_bounds, get_proc_global
   use decompMod   , only : get_proc_bounds_atm, get_proc_global_atm
@@ -229,7 +229,7 @@ module histFileMod
 !
   character(len=max_chars) :: locfnh(max_tapes)  ! local history file names
   logical :: htapes_defined = .false.            ! flag indicates history contents have been defined
-  logical :: pioflag = .false.                    ! use pio in ncdio or not
+  logical :: pioflag                             ! use pio in ncdio or not
 
 !
 ! NetCDF  Id's
@@ -2756,6 +2756,7 @@ contains
 
     ! get current step
 
+    pioflag = hist_pioflag
     nstep = get_nstep()
 
     ! Set calendar for current time step

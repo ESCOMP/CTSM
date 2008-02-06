@@ -1,6 +1,7 @@
 Tag                   Who      Date  Summary
 ===============================================================================================================================
-   clm3_5_16         erik 01/24/2008 Get point version of Urban code onto trunk (urban code can not restart)
+   clm3_5_17         erik 02/06/2008 Merge Tony Craig's FMI branch fmi12_clm3_5_16 to the clm trunk
+   clm3_5_16         erik 01/28/2008 Get point version of Urban code onto trunk (urban code can not restart)
    clm3_5_15         erik 12/10/2007 Fix interpinic for half degree grid, add in large-file support, allow configure to work with ccsm directory structure
    clm3_5_14         erik 11/27/2007 Use build-streams, and archiving, multiple bug-fixes
    clm3_5_13         erik 11/16/2007 Update xml file with file needed for ccsm3_5_beta18

@@ -141,19 +141,29 @@ contains
        ! Initialize albedos (correct pft filters are needed)
 
        if (finidat == ' ' .or. do_initsurfalb) then
+          call t_startf('init_orb')
           calday = get_curr_calday()
+          call t_startf('init_orbd1')
           call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
+          call t_stopf('init_orbd1')
           
           dtime = get_step_size()
           caldaym1 = get_curr_calday(offset=-int(dtime))
+          call t_startf('init_orbd2')
           call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
+          call t_stopf('init_orbd2')
           
+          call t_startf('init_orbSA')
           call initSurfAlb( calday, declin, declinm1 )
+          call t_stopf('init_orbSA')
+          call t_stopf('init_orb')
        end if
 
        ! Determine gridcell averaged properties to send to atm
 
+       call t_startf('init_map2gc')
        call clm_map2gcell(init=.true.)
+       call t_stopf('init_map2gc')
 
     end if
     call t_stopf('clm_init2')

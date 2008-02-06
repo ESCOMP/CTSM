@@ -85,6 +85,7 @@ module clm_mct_mod
    use m_GlobalSegMap       ,only: mct_gsMap_ngseg        => ngseg
    use m_GlobalSegMap       ,only: mct_gsMap_nlseg        => nlseg
    use m_GlobalSegMap       ,only: mct_gsMap_OP           => OrderedPoints
+   use m_GlobalSegMap       ,only: mct_gsMap_pelocs       => pelocs
 
    use m_Rearranger         ,only: mct_rearr              => Rearranger
    use m_Rearranger         ,only: mct_rearr_init         => init

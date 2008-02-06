@@ -165,6 +165,8 @@ PROGRAM program_off
      ! Current atmospheric state and fluxes for all [atmlon] x [atmlat] points.
 
      nstep = get_nstep()
+
+     call mpi_barrier(mpicom,ier)
      calday = get_curr_calday()
      call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
      call t_startf('atmdrv')

@@ -1009,9 +1009,10 @@ end subroutine map_setmapsFM
     integer nb,na          !grid sizes
     integer i,j            !loop indices
     integer io,jo,no       !output grid loop index
-    integer indexo         !output grid lat. index according to orientn
     integer ii,ji,ni       !input  grid loop index
-    integer indexi         !input grid lat. index according to orientn
+    integer nji, njilap    !counter and number of j overlaps
+    integer,pointer  :: jilap(:) ! j overlap indices
+    integer,pointer  :: iilaps(:),iilape(:)  ! i start/end overlap indices
     real(r8) lonw          !west longitudes of overlap
     real(r8) lone          !east longitudes of overlap
     real(r8) dx            !difference in longitudes
@@ -1028,8 +1029,10 @@ end subroutine map_setmapsFM
     real(r8) :: wt         !mct weight
 
     real(r8),pointer :: fld_i(:), fld_o(:)    !dummy fields for testing
-    real(r8) :: sum_fldo               !global sum of dummy output field
     real(r8) :: sum_fldi               !global sum of dummy input field
+    real(r8) :: sum_fldo               !global sum of dummy output field
+    real(r8) :: sum_areo               !global sum of dummy output field
+    real(r8) :: sum_arei               !global sum of dummy input field
     real(r8) :: relerr = 0.001_r8      !relative error for error checks
     real(r8) :: sdx_i                   !input grid  longitudinal range
     real(r8) :: sdy_i                   !input grid  latitudinal  range
@@ -1062,6 +1065,32 @@ end subroutine map_setmapsFM
 
     ! Get indices and weights for mapping from input grid to output grid
 
+    allocate(jilap(nlat_i))
+    allocate(iilaps(nlon_o),iilape(nlon_o))
+
+    ! Find start/end indices for i overlap to save time later, set default never
+    iilaps = nlon_i
+    iilape = 1
+    do io = 1, nlon_o
+       !------ offset -------
+       do n = 0,noffsetl   ! loop through offsets
+          if (lonw_i(1) < lonw_o(1)) then
+             offset = (n*360)
+          else
+             offset = -(n*360)
+          end if
+
+          do ii = 1, nlon_i
+             !--- lons overlap ---
+             if (lonw_i(ii)+offset < lone_o(io) .and. &
+                 lone_i(ii)+offset > lonw_o(io)) then
+                 if (ii < iilaps(io)) iilaps(io) = ii
+                 if (ii > iilape(io)) iilape(io) = ii
+             endif
+          enddo
+       enddo
+    enddo
+
     do k = 1,2    ! k = 1 compute num of wts, k = 2 set wts
        if (k == 2) then
           call mct_sMat_init(sMat, nb, na, nwts)
@@ -1074,25 +1103,23 @@ end subroutine map_setmapsFM
 
        !------ output grid -------
        do jo = 1, nlat_o
-          if (latn_o(2) > latn_o(1)) then
-             indexo  = jo          !south to north at the center of cell
-          else
-             indexo  = nlat_o+1-jo !north to south at the center of cell
-          end if
+          njilap = 0
+          do ji = 1, nlat_i
+             !--- lats overlap ---
+             if ( lats_i(ji)<latn_o(jo) .and. &
+                  latn_i(ji)>lats_o(jo)) then
+                njilap = njilap + 1
+                jilap(njilap) = ji
+             endif
+          enddo
+
        do io = 1, nlon_o
           ns = nw + 1
 
           !------ input grid -------
           sum = 0._r8
-          do ji = 1, nlat_i
-             if (latn_i(2) > latn_i(1)) then
-                indexi  = ji          !south to north at the center of cell
-             else
-                indexi  = nlat_i+1-ji !north to south at the center of cell
-             end if
-             !--- lats overlap ---
-             if ( lats_i(ji)<latn_o(jo) .and. &
-                  latn_i(ji)>lats_o(jo)) then
+          do nji = 1, njilap
+             ji = jilap(nji)
 
              !------ offset -------
              do n = 0,noffsetl   ! loop through offsets
@@ -1102,9 +1129,10 @@ end subroutine map_setmapsFM
                    offset = -(n*360)
                 end if
 
-             do ii = 1, nlon_i
-                ni = (indexi-1)*nlon_i + ii
-                no = (indexo-1)*nlon_o + io
+!             do ii = 1, nlon_i
+              do ii = iilaps(io),iilape(io)
+                ni = (ji-1)*nlon_i + ii
+                no = (jo-1)*nlon_o + io
                 !--- lons overlap ---
                 if (k == 1) then
                    if (lonw_i(ii)+offset < lone_o(io) .and. &
@@ -1137,7 +1165,7 @@ end subroutine map_setmapsFM
                          if (nw > nwts) then
                             write(iulog,*) 'AREAOVR error: nw= ', &
                                nw,' exceeded nwts ceiling = ', &
-                               nwts,' for output lon,lat = ',io,indexo
+                               nwts,' for output lon,lat = ',io,jo
                             call endrun
                          end if
 
@@ -1147,10 +1175,9 @@ end subroutine map_setmapsFM
                          sMat%data%rAttr(iwgt ,nw) = a_ovr
                       endif
                    endif
-             end if   ! found overlap lon
+                end if   ! found overlap lon
              end do   ! ii
              enddo    ! offset loop
-          end if   ! found overlap lat
           end do   ! ji
 
           !--- normalize ---
@@ -1170,6 +1197,10 @@ end subroutine map_setmapsFM
        nwts = nw
 
     enddo   ! k loop
+
+    deallocate(jilap)
+    deallocate(iilaps,iilape)
+
 
     ! Error check: global sum fld_o = global sum fld_i.
     ! This true only if both grids span the same domain.
@@ -1208,43 +1239,18 @@ end subroutine map_setmapsFM
        dy_o(j) = sin(latn_o(j)*deg2rad) - sin(lats_o(j)*deg2rad)
     enddo
 
-    ! check for area/mask consistency
-
-    sum_fldi = 0._r8
-    do j = 1,nlat_i
-    do i = 1,nlon_i
-       ni = (j-1)*nlon_i + i
-       sum_fldi = sum_fldi + dx_i(i)*dy_i(j)*fland_i(ni)
-    end do
-    end do
-
-    sum_fldo = 0._r8
-    do j = 1,nlat_o
-    do i = 1,nlon_o
-       no = (j-1)*nlon_o + i
-       sum_fldo = sum_fldo + dx_o(i)*dy_o(j)*fland_o(no)
-    end do
-    end do
-
-    if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
-       if (masterproc) then
-          write(iulog,*) 'MAP_SETMAPSAR warning: masks/areas not conserved'
-          write(iulog,'(a30,e20.10)') 'global sum output area = ',sum_fldo
-          write(iulog,'(a30,e20.10)') 'global sum input  area = ',sum_fldi
-        endif
-        return
-    end if
-
     ! check for conservation
 
     allocate(fld_i(na),fld_o(nb))
 
     sum_fldi = 0._r8
+    sum_arei = 0._r8
     do j = 1,nlat_i
     do i = 1,nlon_i
        ni = (j-1)*nlon_i + i
-       fld_i(ni) = ni * fland_i(ni)
-       sum_fldi = sum_fldi + dx_i(i)*dy_i(j)*fld_i(ni)
+       fld_i(ni) = ni
+       sum_fldi = sum_fldi + fld_i(ni)*dx_i(i)*dy_i(j)*fland_i(ni)
+       sum_arei = sum_arei + dx_i(i)*dy_i(j)*fland_i(ni)
     end do
     end do
 
@@ -1257,26 +1263,36 @@ end subroutine map_setmapsFM
     enddo
 
     sum_fldo = 0._r8
+    sum_areo = 0._r8
     do j = 1,nlat_o
     do i = 1,nlon_o
        no = (j-1)*nlon_o + i
        sum_fldo = sum_fldo + dx_o(i)*dy_o(j)*fld_o(no)
+       sum_areo = sum_areo + dx_o(i)*dy_o(j)*fland_o(no)
     end do
     end do
 
     if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
-       if (masterproc) then
-          write(iulog,*) 'MAP_SETMAPSAR error: input field not conserved'
-          write(iulog,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-          write(iulog,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-        endif
+       if ( abs(sum_arei-sum_areo)/(sum_arei+sum_areo) > relerr ) then
+          if (masterproc) then
+             write(iulog,*) 'MAP_SETMAPSAR: no conservation check done, mask incompatable'
+             write(iulog,'(a30,e20.10)') 'global sum input  field = ',sum_arei
+             write(iulog,'(a30,e20.10)') 'global sum output field = ',sum_areo
+          endif
+       else
+          if (masterproc) then
+             write(iulog,*) 'MAP_SETMAPSAR error: conservation check fail'
+             write(iulog,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
+             write(iulog,'(a30,e20.10)') 'global sum output field = ',sum_fldo
+           endif
+       endif
     else
        if (masterproc) then
-          write(iulog,*) 'MAP_SETMAPSAR: input field conserved'
-          write(iulog,'(a30,e20.10)') 'global sum output field = ',sum_fldo
+          write(iulog,*) 'MAP_SETMAPSAR: conservation check passed'
           write(iulog,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
+          write(iulog,'(a30,e20.10)') 'global sum output field = ',sum_fldo
        endif
-    end if
+    endif
 
     deallocate(dx_i,dy_i,dx_o,dy_o)
     deallocate(fld_i,fld_o)

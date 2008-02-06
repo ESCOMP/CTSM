@@ -101,6 +101,19 @@ module controlMod
 !    o hist_crtinic  = 8  character frequency to generate initial dataset
 !                         ['6-HOURLY','DAILY','MONTHLY','YEARLY','NONE']
 !    o rest_flag     = logical, turns off restart file writing [.TRUE., .FALSE.]
+!
+! === Parallel history writing options (experiemental, and mostly to due with PIO)
+!
+!    o hist_pioflag           = logical true if want to turn on hist with pio                    [.FALSE., .TRUE.]
+!    o ncd_lowmem2d           = logical true if want to turn on low memory 2d writes in clm hist [.TRUE., .FALSE.]
+!    o ncd_pio_def            = logical true if want default pio use setting                     [.FALSE., .TRUE.]
+!    o ncd_pio_UseRearranger  = logical true if want to use MCT as Rearranger                    [.TRUE., .FALSE.]
+!    o ncd_pio_UseBoxRearr    = logical true if want to use box as Rearranger                    [.FALSE., .TRUE.]
+!    o ncd_pio_SerialCDF      = logical true if want to write with pio serial netcdf mode        [.FALSE., .TRUE.]
+!    o ncd_pio_IODOF_rootonly = logical true if want to write history in pio from root only      [.FALSE., .TRUE.]
+!    o ncd_pio_DebugLevel     = integer pio debug level
+!    o ncd_pio_num_iotasks    = integer number of iotasks to use for PIO
+!
 ! === Biogeochem=CASA =======
 !    o lnpp        = 1=gpp*gppfact,2=fn(lgrow)*gppfact
 !    o lalloc      = 0=fixed allocation, 1=dynamic allocation
@@ -305,7 +318,10 @@ contains
          hist_fincl4,  hist_fincl5, hist_fincl6, &
          hist_fexcl1,  hist_fexcl2, hist_fexcl3, &
          hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
-         hist_crtinic, rest_flag, outnc_large_files
+         hist_crtinic, rest_flag, outnc_large_files, &
+         hist_pioflag, ncd_lowmem2d, ncd_pio_def, &
+         ncd_pio_UseRearranger, ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, &
+         ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, ncd_pio_num_iotasks
 
     ! clm bgc info
 
@@ -324,6 +340,7 @@ contains
     namelist /clm_inparm/  &
          clump_pproc, irad, wrtdia, csm_doflxave, rtm_nsteps, pertlim, &
          create_crop_landunit, nsegspc, co2_ppmv
+
          
     ! ----------------------------------------------------------------------
     ! Default values
@@ -402,6 +419,20 @@ contains
     scmlon        = -999.
     nsegspc       = 20
     co2_ppmv      = 355._r8
+
+    ! Defaults for History / PIO options
+    ! TODO: Remove the ones NOT really needed, put BUILDPIO #ifdef around ones that require PIO, make sure function correctly.
+
+    hist_pioflag           = .false.    ! turns on and off hist with pio
+    ncd_lowmem2d           = .true.     ! turns on low memory 2d writes in clm hist
+    ncd_pio_def            = .false.    ! default pio use setting
+    ncd_pio_UseRearranger  = .true.     ! use MCT or box
+    ncd_pio_UseBoxRearr    = .false.    ! use box
+    ncd_pio_SerialCDF      = .false.    ! write with pio serial netcdf mode
+    ncd_pio_IODOF_rootonly = .false.    ! write history in pio from root only
+    ncd_pio_DebugLevel     = 2          ! pio debug level
+    ncd_pio_num_iotasks    = 999999999  ! all pes default
+
 
 #if (defined RTM)
     ! If rtm_nsteps is not set in the namelist then
@@ -617,6 +648,12 @@ contains
        endif
 #endif
 
+       if (hist_pioflag .and. ncd_lowmem2d) then
+          ncd_lowmem2d = .false.
+          write(iulog,*) 'control: resetting ncd_lowmem2d to false'
+       endif
+
+
        ! Split the full pathname of the restart pointer file into a 
        ! directory name and a file name
        
@@ -736,6 +773,15 @@ contains
     call mpi_bcast (scmlat,       1, MPI_REAL8,   0, mpicom, ier)
     call mpi_bcast (scmlon,       1, MPI_REAL8,   0, mpicom, ier)
     call mpi_bcast (co2_ppmv    , 1, MPI_REAL8,   0, mpicom, ier)
+    call mpi_bcast (hist_pioflag, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (ncd_lowmem2d, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (ncd_pio_def , 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (ncd_pio_UseRearranger , 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (ncd_pio_UseBoxRearr   , 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (ncd_pio_SerialCDF     , 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (ncd_pio_IODOF_rootonly, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (ncd_pio_DebugLevel    , 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (ncd_pio_num_iotasks   , 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! history file variables
 
@@ -934,6 +980,18 @@ contains
     write(iulog,*) '   maxpatch_pft         = ',maxpatch_pft
     write(iulog,*) '   allocate_all_vegpfts = ',allocate_all_vegpfts
     write(iulog,*) '   nsegspc              = ',nsegspc
+
+!tcx for debugging
+    write(iulog,*) 'history/PIO parameters:'
+    write(iulog,*) '   hist_pioflag           = ', hist_pioflag
+    write(iulog,*) '   ncd_lowmem2d           = ', ncd_lowmem2d
+    write(iulog,*) '   ncd_pio_def            = ', ncd_pio_def
+    write(iulog,*) '   ncd_pio_UseRearranger  = ', ncd_pio_UseRearranger
+    write(iulog,*) '   ncd_pio_UseBoxRearr    = ', ncd_pio_UseBoxRearr
+    write(iulog,*) '   ncd_pio_SerialCDF      = ', ncd_pio_SerialCDF
+    write(iulog,*) '   ncd_pio_IODOF_rootonly = ', ncd_pio_IODOF_rootonly
+    write(iulog,*) '   ncd_pio_DebugLevel     = ', ncd_pio_DebugLevel
+    write(iulog,*) '   ncd_pio_num_iotasks    = ', ncd_pio_num_iotasks
 
   end subroutine control_print
 

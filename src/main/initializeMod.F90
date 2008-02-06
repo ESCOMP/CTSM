@@ -20,6 +20,7 @@ module initializeMod
   use clm_varctl      , only : iulog
   use clm_varsur      , only : wtxy,vegxy
   use clmtype         , only : gratm, grlnd, nameg, namel, namec, namep, allrof
+  use perf_mod        , only : t_startf, t_stopf
 ! !PUBLIC TYPES:
   implicit none
   save
@@ -109,6 +110,7 @@ contains
     ! Initialize run control variables, timestep
     ! ------------------------------------------------------------------------
 
+    call t_startf('init_control')
     call header()
 
     if (masterproc) then
@@ -127,6 +129,9 @@ contains
     end if
 
     if (masterproc) call control_print()
+
+    call t_stopf('init_control')
+    call t_startf('init_grids')
 
     ! ------------------------------------------------------------------------
     ! Initialize the subgrid hierarchy
@@ -303,6 +308,9 @@ contains
 
     ! Allocate surface grid dynamic memory (for wtxy and vegxy arrays)
 
+    call t_stopf('init_grids')
+    call t_startf('init_surdat')
+
     call get_proc_bounds    (begg    , endg)
     allocate (vegxy(begg:endg,maxpatch), &
               wtxy(begg:endg,maxpatch),  &
@@ -324,6 +332,8 @@ contains
     call surfrd (fsurdat, ldomain)
 
     call decompInit_glcp(alatlon%ns,alatlon%ni,alatlon%nj,llatlon%ns,llatlon%ni,llatlon%nj)
+
+    call t_stopf('init_surdat')
 
   end subroutine initialize1
 
@@ -444,10 +454,13 @@ contains
 
     ! Set the a2l and l2a maps
 
+    call t_startf('init_mapsFM')
     call map_setmapsFM(adomain,ldomain,gatm,map1dl_a2l,map1dl_l2a)
+    call t_stopf('init_mapsFM')
 
     ! Allocate memory and initialize values of clmtype data structures
 
+    call t_startf('init_clmtype')
     call initClmtype()
 
     call get_proc_bounds    (begg    , endg)
@@ -467,6 +480,7 @@ contains
     ! Deallocate surface grid dynamic memory (for wtxy and vegxy arrays)
 
     deallocate (vegxy, wtxy)
+    call t_stopf('init_clmtype')
 
     ! ------------------------------------------------------------------------
     ! Initialize time constant variables 
@@ -475,17 +489,23 @@ contains
     ! Initialize Ecosystem Dynamics 
 
 #if (defined DGVM)
+    call t_startf('init_dgvm')
     call DGVMEcosystemDynini()
+    call t_stopf('init_dgvm')
 #elif defined (CN)
     ! currently no call required
 #else
+    call t_startf('init_ecosys')
     call EcosystemDynini()
+    call t_stopf('init_ecosys')
 #endif
 
     ! Initialize dust emissions model 
 
 #if (defined DUST) 
+    call t_startf('init_dust')
     call Dustini()
+    call t_stopf('init_dust')
 #endif
 
     ! Initialize time constant urban variables
@@ -495,6 +515,7 @@ contains
     ! Initialize time constant variables (this must be called after
     ! DGVMEcosystemDynini() and before initCASA())
 
+    call t_startf('init_io1')
     call iniTimeConst()
 
     ! ------------------------------------------------------------------------
@@ -537,15 +558,19 @@ contains
        end if
     end if
 
+    call t_stopf('init_io1')
+
     ! Initialize river routing model, after time manager because ts needed
 
 #if (defined RTM)
+    call t_startf('init_rtm')
     if (masterproc) write(iulog,*)'Attempting to initialize RTM'
     call Rtmini()
     if (masterproc) write(iulog,*)'Successfully initialized RTM'
 #ifndef UNICOSMP
     call shr_sys_flush(iulog)
 #endif
+    call t_stopf('init_rtm')
 #endif
 
     ! ------------------------------------------------------------------------
@@ -556,7 +581,9 @@ contains
     ! The time manager needs to be initialized before this called is made, since
     ! the step size is needed.
 
+    call t_startf('init_accflds')
     call initAccFlds()
+    call t_stopf('init_accflds')
 
     ! ------------------------------------------------------------------------
     ! Set arbitrary initial conditions for time varying fields 
@@ -564,12 +591,16 @@ contains
     ! ------------------------------------------------------------------------
     
 #if (defined CN)
+    call t_startf('init_cninitim')
     if (nsrest == 0) then
        call CNiniTimeVar()
     end if
+    call t_stopf('init_cninitim')
 #elif (defined CASA)
 #if (defined CLAMP)
-   call CASAiniTimeVar()
+    call t_startf('init_casainitim')
+    call CASAiniTimeVar()
+    call t_stopf('init_casainitim')
 #endif
 #endif
 
@@ -579,6 +610,8 @@ contains
 
     ! No weight related information can be contained in the routines,  
     ! "mkarbinit, inicfile and restFile". 
+
+    call t_startf('init_io2')
 
     if (do_restread()) then
        if (masterproc) write(iulog,*)'reading restart file ',fnamer
@@ -598,6 +631,8 @@ contains
        call restFile_read_binary( fnamer_bin )
     end if
 
+    call t_stopf('init_io2')
+
     ! ------------------------------------------------------------------------
     ! Initialization of dynamic pft weights
     ! ------------------------------------------------------------------------
@@ -606,8 +641,10 @@ contains
     ! Otherwise these are read in for a restart run
     
     if (fpftdyn /= ' ') then
+       call t_startf('init_pftdyn')
        call pftdyn_init()
        if (nsrest == 0) call pftdyn_interp()
+       call t_stopf('init_pftdyn')
     end if
 
     ! ------------------------------------------------------------------------
@@ -615,8 +652,10 @@ contains
     ! ------------------------------------------------------------------------
 
     if (fndepdyn /= ' ') then
+       call t_startf('init_ndepdyn')
        call ndepdyn_init()
        call ndepdyn_interp()
+       call t_stopf('init_ndepdyn')
     end if
 
     ! ------------------------------------------------------------------------
@@ -624,7 +663,9 @@ contains
     ! ------------------------------------------------------------------------
 
 #if (defined OFFLINE)
+    call t_startf('init_advts')
     if (nsrest == 0) call advance_timestep()
+    call t_stopf('init_advts')
 #endif
 
     ! ------------------------------------------------------------------------
@@ -633,16 +674,19 @@ contains
     ! ------------------------------------------------------------------------
 
 #if (defined CASA)
+    call t_startf('init_casa')
     ! Initialize CASA 
 
     call initCASA()
     call initCASAPhenology()
+    call t_stopf('init_casa')
 #endif
 
     ! ------------------------------------------------------------------------
     ! Initialize history and accumator buffers
     ! ------------------------------------------------------------------------
 
+    call t_startf('init_hist1')
     ! Initialize master history list. 
 
     call hist_initFlds()
@@ -661,14 +705,20 @@ contains
 
     call initAccClmtype()
 
+    call t_stopf('init_hist1')
+
     ! --------------------------------------------------------------
     ! Note - everything below this point needs updated weights
     ! --------------------------------------------------------------
 
     ! Initialize filters
     
+    call t_startf('init_filters')
+
     call allocFilters()
     call setFilters()
+
+    call t_stopf('init_filters')
 
     ! Calculate urban "town" roughness length and displacement 
     ! height for urban landunits
@@ -684,6 +734,7 @@ contains
     call UrbanInput(mode='finalize')
 
 #if (defined DGVM)
+    call t_startf('init_dgvmw')
     ! Determine new subgrid weights and areas (obtained from fpcgrid) and
     ! reset DGVM time constant variables for input pft types
 
@@ -701,10 +752,12 @@ contains
 !CSD$ END PARALLEL DO
 #endif
 !$OMP END PARALLEL DO
+    call t_stopf('init_dgvmw')
 #endif
 
     ! End initialization
 
+    call t_startf('init_wlog')
     if (masterproc) then
        write(iulog,*) 'Successfully initialized the land model'
        if (nsrest == 0) then
@@ -719,6 +772,7 @@ contains
        write(iulog,'(72a1)') ("*",i=1,60)
        write(iulog,*)
     endif
+    call t_stopf('init_wlog')
 
   end subroutine initialize2
 

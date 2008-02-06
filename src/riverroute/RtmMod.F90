@@ -1,5 +1,7 @@
 #include <misc.h>
 #include <preproc.h>
+#define L2R_Decomp
+#undef  L2R_Decomp
 
 module RtmMod
 
@@ -17,6 +19,7 @@ module RtmMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use spmdMod     , only : masterproc,npes,iam,mpicom,comp_id,MPI_REAL8,MPI_INTEGER
+  use spmdMod     , only : MPI_MAX,MPI_SUM
   use clm_varpar  , only : lsmlon, lsmlat, rtmlon, rtmlat
   use clm_varcon  , only : re, spval
   use clm_varctl  , only : iulog
@@ -99,7 +102,6 @@ contains
     use clm_time_manager, only : get_curr_date
     use clm_time_manager, only : get_step_size
     use clmtype      , only : grlnd
-    use spmdMod
     use spmdGathScatMod
 !
 ! !ARGUMENTS:
@@ -130,7 +132,17 @@ contains
     integer ,allocatable :: nocn(:)           ! number of rtm cells in basin
     integer ,allocatable :: pocn(:)           ! pe number assigned to basin
     integer ,allocatable :: nop(:)            ! number of rtm cells on a pe
-    integer  :: pemin                         ! pe with min number of rtm cells
+    integer ,allocatable :: nba(:)            ! number of basins on each pe
+    integer ,allocatable :: nrs(:)            ! begr on each pe
+    integer ,allocatable :: baslc(:)          ! basin overlap land cell
+    integer ,allocatable :: basnp(:)          ! basin pe number
+    integer ,allocatable :: basin(:)          ! basin to rtm mapping
+    integer  :: nbas                          ! number of basins
+    integer  :: nrtm                          ! num of rtm points
+    integer  :: baspe                         ! pe with min number of rtm cells
+    integer  :: maxrtm                        ! max num of rtms per pe for decomp
+    integer  :: minbas,maxbas                 ! used for decomp search
+    integer  :: nl,nloops                     ! used for decomp search
     integer  :: ier                           ! error code
     integer  :: mon                           ! month (1, ..., 12)
     integer  :: day                           ! day of month (1, ..., 31)
@@ -168,6 +180,7 @@ contains
 
 !-----------------------------------------------------------------------
 
+    call t_startf('rtmi_grid')
     !--- Allocate rtm grid variables
     call latlon_init(rlatlon,rtmlon,rtmlat)
 
@@ -300,40 +313,46 @@ contains
                    rlatlon%edges(1), rlatlon%edges(2), &
                    rlatlon%edges(3), rlatlon%edges(4))
 
+    call t_stopf('rtmi_grid')
 
     !--- Set sMat0_l2r, full mapping weights for l2r, just on root pe
     !--- for now use lfield to "ignore" non-active land cells in sMat0_l2r
     !--- Later these will be "reduced" to just the useful weights
-    !--- Compute rdomain%frac on root pe and bcast 
+    !--- Compute gfrac on root pe and bcast 
 
+    !--- Change 9/2007, compute on all pes for decomp based on overlap
+
+    call t_startf('rtmi_setl2r')
     call get_proc_bounds(begg, endg)
     call gather_data_to_master(ldomain%frac,lfrac,grlnd)
+    call mpi_bcast(lfrac,size(lfrac),MPI_REAL8,0,mpicom,ier)
 
-    if (masterproc) then
-       allocate(lfield(lsmlon*lsmlat),rfield(rtmlon*rtmlat))
-       lfield = 0._r8
-       do n = 1,lsmlon*lsmlat
-          if (ldecomp%glo2gdc(n) > 0) lfield(n) = 1._r8
-       enddo
-       rfield = 1._r8
+    allocate(lfield(lsmlon*lsmlat),rfield(rtmlon*rtmlat))
+    lfield = 0._r8
+    do n = 1,lsmlon*lsmlat
+       if (ldecomp%glo2gdc(n) > 0) lfield(n) = 1._r8
+    enddo
+    rfield = 1._r8
 
-       call map_setmapsAR(llatlon,rlatlon,sMat0_l2r, &
-          fracin=lfield, fracout=rfield)
-       igrow = mct_sMat_indexIA(sMat0_l2r,'grow')
-       igcol = mct_sMat_indexIA(sMat0_l2r,'gcol')
-       iwgt  = mct_sMat_indexRA(sMat0_l2r,'weight')
-       gfrac = 0._r8
-       do n = 1,mct_sMat_lsize(sMat0_l2r)
-          nr = sMat0_l2r%data%iAttr(igrow,n)
-          ns = sMat0_l2r%data%iAttr(igcol,n)
-          wt = sMat0_l2r%data%rAttr(iwgt ,n)
-          gfrac(nr) = gfrac(nr) + lfrac(ns)
-       enddo
-       deallocate(lfield,rfield)
-    endif
-    call mpi_bcast(gfrac,size(gfrac),MPI_REAL8,0,mpicom,ier)
+    call map_setmapsAR(llatlon,rlatlon,sMat0_l2r, &
+       fracin=lfield, fracout=rfield)
+    igrow = mct_sMat_indexIA(sMat0_l2r,'grow')
+    igcol = mct_sMat_indexIA(sMat0_l2r,'gcol')
+    iwgt  = mct_sMat_indexRA(sMat0_l2r,'weight')
+    gfrac = 0._r8
+    do n = 1,mct_sMat_lsize(sMat0_l2r)
+       nr = sMat0_l2r%data%iAttr(igrow,n)
+       ns = sMat0_l2r%data%iAttr(igcol,n)
+       wt = sMat0_l2r%data%rAttr(iwgt ,n)
+       gfrac(nr) = gfrac(nr) + lfrac(ns)
+    enddo
+    deallocate(lfield,rfield)
+
+    call t_stopf('rtmi_setl2r')
 
     !--- Determine rtm ocn/land mask, 0=none, 1=land, 2=ocean
+
+    call t_startf('rtmi_decomp')
 
     gmask = 0             ! assume neither land nor ocn
 
@@ -366,6 +385,7 @@ contains
        call endrun
     end if
 
+    call t_startf('rtmi_dec_basins')
     iocn = 0
     nocn = 0
     do nr=1,rtmlon*rtmlat
@@ -394,31 +414,147 @@ contains
           nocn(n) = nocn(n) + 1
        endif
     enddo
+    call t_stopf('rtmi_dec_basins')
 
     !--- Now allocate those basins to pes
     !--- pocn is the pe that gets the basin associated with ocean outlet nr
     !--- nop is a running count of the number of rtm cells/pe 
 
-    allocate(pocn(rtmlon*rtmlat),nop(0:npes-1),rglo2gdc(rtmlon*rtmlat),runoff%num_rtm(0:npes-1))
-    nop = 0
-    pocn = -99
-    rglo2gdc = 0
+    call t_startf('rtmi_dec_distr')
+
+    nbas = 0
+    nrtm = 0
     do nr=1,rtmlon*rtmlat
-       if (nocn(nr) /= 0) then
-          pemin = 0
-          do n = 1,npes-1
-             if (nop(n) < nop(pemin)) pemin = n
-          enddo
-          if (pemin > npes-1 .or. pemin < 0) then
-             write(iulog,*) 'error in decomp for rtm ',nr,npes,pemin
-             call endrun()
-          endif
-          nop(pemin) = nop(pemin) + nocn(nr)
-          pocn(nr) = pemin
+       if (nocn(nr) > 0) then
+          nbas = nbas + 1
+          nrtm = nrtm + nocn(nr)
        endif
     enddo
 
-    deallocate(nop)
+    allocate(pocn(rtmlon*rtmlat), &
+             nop(0:npes-1),nba(0:npes-1),nrs(0:npes-1), &
+             rglo2gdc(rtmlon*rtmlat),runoff%num_rtm(0:npes-1))
+
+!------- compute l2r based decomp, comment out to turn off
+#if (defined L2R_Decomp)
+    allocate(basin(rtmlon*rtmlat),basnp(nbas),baslc(nbas))
+
+    ! use pocn as temporary storage
+    pocn = -99
+    basnp = -99
+    igrow = mct_sMat_indexIA(sMat0_l2r,'grow')
+    igcol = mct_sMat_indexIA(sMat0_l2r,'gcol')
+    iwgt  = mct_sMat_indexRA(sMat0_l2r,'weight')
+    do n = 1,mct_sMat_lsize(sMat0_l2r)
+       nr = sMat0_l2r%data%iAttr(igrow,n)
+       ns = sMat0_l2r%data%iAttr(igcol,n)
+!       wt = sMat0_l2r%data%rAttr(iwgt ,n)
+       if (ldecomp%glo2gdc(ns) > 0)  then
+          pocn(nr) = ns          ! set ocean overlap to one of the lnd cells
+       endif
+    enddo
+
+    n = 0
+    do nr = 1,rtmlon*rtmlat
+       if (nocn(nr) > 0) then
+          n = n + 1
+          if (n > nbas) then
+             write(iulog,*) ' ERROR: basin decomp out of bounds ',n,nbas
+             call endrun()
+          endif
+          basin(nr) = n
+          baslc(n) = pocn(nr)  ! set basin land cell to the oceancell overlap
+       endif
+    enddo
+    if (n /= nbas) then
+       write(iulog,*) ' ERROR: basin decomp sum incorrect ',n,nbas
+       call endrun()
+    endif
+
+    call mct_gsmap_pelocs(gsmap_lnd_gdc2glo,nbas,baslc,basnp)
+    deallocate(baslc)
+#endif
+
+    nop = 0
+    nba = 0
+    nrs = 0
+    pocn = -99
+    rglo2gdc = 0
+    baspe = 0
+    maxrtm = int(float(nrtm)/float(npes)*0.445) + 1
+    call shr_sys_flush(iulog)
+    nloops = 3
+    minbas = nrtm
+    do nl=1,nloops
+       maxbas = minbas - 1
+       minbas = maxval(nocn)/(2**nl)
+       if (nl == nloops) minbas = min(minbas,1)
+    do nr=1,rtmlon*rtmlat
+!       if (nocn(nr) /= 0) then
+       if (nocn(nr) > 0 .and. nocn(nr) >= minbas .and. nocn(nr) <= maxbas) then
+! Decomp options
+!   find min pe (implemented but scales poorly)
+!   use increasing thresholds (implemented, ok load balance for l2r or calc)
+!   distribute basins using above methods but work from max to min basin size
+!   distribute basins to minimize l2r time, basins put on pes associated 
+!      with lnd forcing, need to know l2r map and lnd decomp
+!
+#if (defined L2R_Decomp)
+!--------------
+! put it on a pe that is associated with the land decomp if valid
+          if (basnp(basin(nr)) >= 0 .and. basnp(basin(nr)) <= npes-1) then
+             baspe = basnp(basin(nr))
+          else
+#endif
+!--------------
+! find min pe
+!             baspe = 0
+!             do n = 1,npes-1
+!                if (nop(n) < nop(baspe)) baspe = n
+!             enddo
+!--------------
+! find next pe below maxrtm threshhold and increment
+             do while (nop(baspe) > maxrtm)
+                baspe = baspe + 1
+                if (baspe > npes-1) then
+                   baspe = 0
+                   maxrtm = max(maxrtm*1.5, maxrtm+1.0)   ! 3 loop, .445 and 1.5 chosen carefully
+                endif
+             enddo
+#if (defined L2R_Decomp)
+          endif
+#endif
+!--------------
+          if (baspe > npes-1 .or. baspe < 0) then
+             write(iulog,*) 'error in decomp for rtm ',nr,npes,baspe
+             call endrun()
+          endif
+          nop(baspe) = nop(baspe) + nocn(nr)
+          nba(baspe) = nba(baspe) + 1
+          pocn(nr) = baspe
+       endif
+    enddo ! nr
+    enddo ! nl
+
+#if (defined L2R_Decomp)
+    deallocate(basin,basnp)
+#endif
+
+    ! set pocn for land cells, was set for ocean above
+    do nr=1,rtmlon*rtmlat
+       if (iocn(nr) > 0) then
+          pocn(nr) = pocn(iocn(nr))
+          if (pocn(nr) < 0 .or. pocn(nr) > npes-1) then
+             write(iulog,*) 'Rtmini ERROR pocn lnd setting ',nr,iocn(nr),iocn(iocn(nr)),pocn(iocn(nr)),pocn(nr),npes
+             call endrun()
+          endif
+       endif
+    enddo
+
+    if (masterproc) write(iulog,*) 'rtm cells and basins total  = ',nrtm,nbas
+    if (masterproc) write(iulog,*) 'rtm cells per basin avg/max = ',nrtm/nbas,maxval(nocn)
+    if (masterproc) write(iulog,*) 'rtm cells per pe    min/max = ',minval(nop),maxval(nop)
+    if (masterproc) write(iulog,*) 'basins    per pe    min/max = ',minval(nba),maxval(nba)
 
     !--- Count and distribute cells to rglo2gdc
 
@@ -429,7 +565,52 @@ contains
     runoff%lnumro = 0
     runoff%lnumrl = 0
     runoff%num_rtm = 0
-    g = 0
+
+    do n = 0,npes-1
+       if (iam == n) then
+          runoff%begr  = runoff%numr  + 1
+          runoff%begrl = runoff%numrl + 1
+          runoff%begro = runoff%numro + 1
+       endif
+
+       runoff%num_rtm(n) = runoff%num_rtm(n) + nop(n)
+       runoff%numr  = runoff%numr  + nop(n)
+       runoff%numro = runoff%numro + nba(n)
+       runoff%numrl = runoff%numrl + nop(n) - nba(n)
+
+       if (iam == n) then
+          runoff%lnumr  = runoff%lnumr  + nop(n)
+          runoff%lnumro = runoff%lnumro + nba(n)
+          runoff%lnumrl = runoff%lnumrl + nop(n) - nba(n)
+          runoff%endr  = runoff%begr  + runoff%lnumr  - 1
+          runoff%endro = runoff%begro + runoff%lnumro - 1
+          runoff%endrl = runoff%begrl + runoff%lnumrl - 1
+       endif
+    enddo
+
+    ! nrs is begr on each pe
+    nrs(0) = 1
+    do n = 1,npes-1
+       nrs(n) = nrs(n-1) + nop(n-1)
+    enddo
+
+    ! reuse nba for nop-like counter here
+    ! pocn -99 is unused cell
+    nba = 0
+    do nr = 1,rtmlon*rtmlat
+       if (pocn(nr) >= 0) then
+          rglo2gdc(nr) = nrs(pocn(nr)) + nba(pocn(nr))
+          nba(pocn(nr)) = nba(pocn(nr)) + 1          
+       endif
+    enddo
+    do n = 0,npes-1
+       if (nba(n) /= nop(n)) then
+          write(iulog,*) 'Rtmini ERROR rtm cell count ',n,nba(n),nop(n)
+          call endrun()
+       endif
+    enddo
+
+#if (1 == 0)
     do n = 0,npes-1
        if (iam == n) then
           runoff%begr  = runoff%numr  + 1
@@ -472,9 +653,11 @@ contains
           runoff%endrl = runoff%begrl + runoff%lnumrl - 1
        endif
     enddo
-
+#endif
+    deallocate(nop,nba,nrs)
     deallocate(iocn,nocn)
     deallocate(pocn)
+    call t_stopf('rtmi_dec_distr')
 
     !--- set some local values
 
@@ -484,7 +667,11 @@ contains
     begr = runoff%begr
     endr = runoff%endr
 
+    call t_stopf('rtmi_decomp')
+
     !--- Write per-processor runoff bounds depending on dbug level
+
+    call t_startf('rtmi_print')
 
 #ifndef UNICOSMP
     call shr_sys_flush(iulog)
@@ -533,7 +720,11 @@ contains
        call mpi_barrier(mpicom,ier)
     enddo
 
+    call t_stopf('rtmi_print')
+
     !--- allocate runoff variables
+
+    call t_startf('rtmi_vars')
 
     allocate(runoff%runoff(begr:endr),runoff%dvolrdt(begr:endr), &
              runoff%runofflnd(begr:endr),runoff%dvolrdtlnd(begr:endr), &
@@ -701,8 +892,11 @@ contains
     !--- clean up temporaries
 
     deallocate(dwnstrm_index,gmask)
+    call t_stopf('rtmi_vars')
 
    !--- initialization rtm gsmap
+
+    call t_startf('rtmi_mctdata')
 
     allocate(runoff%gindex(begr:endr))
     do n = begr,endr
@@ -767,11 +961,13 @@ contains
 
    !--- clean up the root sMat0 datatypes
 
+   call mct_sMat_clean(sMat0_l2r)
    if (masterproc) then
-      call mct_sMat_clean(sMat0_l2r)
       call mct_sMat_clean(sMat0_l2r_d)
       write(iulog,*) 'Rtmini complete'
    endif
+
+    call t_stopf('rtmi_mctdata')
 
   end subroutine Rtmini
 
@@ -806,6 +1002,9 @@ contains
     logical  :: do_rtm                     ! true => perform rtm calculation
     integer  :: begg,endg
     logical  :: usevector = .false.
+    real(r8) :: suml,sumr,sumlt,sumrt      ! water diagnostics
+    integer  :: ier
+    integer,parameter :: dbug = 1
     type(mct_aVect)    :: aV_lndr,aV_rtmr
 !-----------------------------------------------------------------------
 
@@ -823,11 +1022,14 @@ contains
        ns = mct_gsMap_lsize(gsMap_rtm_gdc2glo, mpicom)
        call mct_aVect_init(aV_rtmr,rlist='rtminput',lsize=ns)
 
+       suml = 0._r8
+       sumr = 0._r8
        call get_proc_bounds(begg, endg)
        nr = mct_aVect_indexRA(av_lndr,'rtminput',perrWith='Rtmriverflux')
        do n = begg,endg
           n2 = n-begg+1
           av_lndr%rAttr(nr,n2) = rtmin_avg(n)*ldomain%frac(n)
+          suml = suml + av_lndr%rAttr(nr,n2)*ldomain%area(n)
        enddo
 
        call mct_aVect_permute  (av_lndr,perm_lnd_gdc2glo)
@@ -838,7 +1040,18 @@ contains
        do n = runoff%begr,runoff%endr
           n2 = n-runoff%begr+1
           totrunin(n) = av_rtmr%rAttr(nr,n2)
+          sumr = sumr + totrunin(n)*runoff%area(n)*1.0e-6_r8   ! area m2 to km2
        enddo
+
+       if (dbug > 1) then
+          call mpi_reduce(suml, sumlt, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
+          call mpi_reduce(sumr, sumrt, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
+          if (masterproc .and. sumlt+sumrt > 0._r8) then
+             if (abs(sumlt - sumrt)/(sumlt+sumrt) > 1.0e-6) then
+                write(iulog,*) 'WARNING: l2r water not conserved ',sumlt,sumrt
+             endif
+          endif
+       endif
 
        call mct_aVect_clean(aV_lndr)
        call mct_aVect_clean(aV_rtmr)
@@ -850,6 +1063,12 @@ contains
        call Rtm()
        call t_stopf('clmrtm_calc')
 
+    else
+       ! for clean timing log output
+       call t_startf('clmrtm_l2r')
+       call t_stopf('clmrtm_l2r')
+       call t_startf('clmrtm_calc')
+       call t_stopf('clmrtm_calc')
     end if
 
   end subroutine Rtmriverflux
@@ -938,7 +1157,7 @@ contains
     nstep = get_nstep()
     if (mod(nstep,rtm_nsteps)==0 .and. nstep>1) then
        if (ncount_rtm*get_step_size() /= delt_rtm) then
-          write(iulog,*) 'RtmUpdateInput timestep out of sync ',delt_rtm,ncount_rtm*get_step_size()
+          if (masterproc) write(iulog,*) 'RtmUpdateInput timestep out of sync ',delt_rtm,ncount_rtm*get_step_size()
 !          call endrun
           delt_rtm = ncount_rtm*get_step_size()
        endif
@@ -985,12 +1204,13 @@ contains
     integer  :: i, j, n, ns              !loop indices
     integer  :: ir,jr,nr                    !neighbor indices
     real(r8) :: dvolrdt                     !change in storage (m3/s)
-    real(r8) :: sumdvolr_tot                !global sum (m3/s)
-    real(r8) :: sumrunof_tot                !global sum (m3/s)
+    real(r8) :: sumfin,sumfex,sumrin,sumdvt !internal conservation checks
+    real(r8) :: sum1,sum2                   !internal checks
     integer  :: nsub                        !subcyling for cfl
     integer, save :: nsub_save              !previous nsub
     real(r8) :: delt                        !delt associated with subcycling
     real(r8), save :: delt_save             !previous delt
+    integer,parameter :: dbug = 1           !local debug flag
 !-----------------------------------------------------------------------
 
     nsub = int(delt_rtm/delt_rtm_max) + 1
@@ -1003,8 +1223,10 @@ contains
     nsub_save = nsub
     delt_save = delt
 
-    sumdvolr_tot = 0._r8
-    sumrunof_tot = 0._r8
+    sumfin = 0._r8
+    sumfex = 0._r8
+    sumrin = 0._r8
+    sumdvt = 0._r8
 
     runoff%runoff = 0._r8
     runoff%runofflnd = spval
@@ -1019,7 +1241,7 @@ contains
        sfluxin = 0._r8
        do n = runoff%begr,runoff%endr
           nr = runoff%dsi(n)
-          if (nr /= 0) then
+          if (runoff%mask(n) == 1) then
              if (nr < runoff%begr .or. nr > runoff%endr) then
                 write(iulog,*) 'Rtm ERROR: non-local communication ',n,nr
                 call endrun()
@@ -1028,8 +1250,28 @@ contains
           endif
        enddo
 
+       if (dbug > 1) then
+          sum1 = 0._r8
+          sum2 = 0._r8
+          do n = runoff%begr,runoff%endr
+             sum1 = sum1 + sfluxin(n)
+             sum2 = sum2 + fluxout(n)
+          enddo
+          if (abs(sum1-sum2)/(sum1+sum2) > 1e-12) then
+             write(iulog,*) 'RTM Warning: fluxin = ',sum1,&
+                  ' not equal to fluxout = ',sum2
+          endif
+       endif
+
        do n = runoff%begr,runoff%endr
-          dvolrdt = sfluxin(n) - fluxout(n) + 0.001_r8*totrunin(n)*runoff%area(n)
+          dvolrdt = sfluxin(n) + 0.001_r8*totrunin(n)*runoff%area(n) - fluxout(n)
+
+          if (dbug > 1) then
+             sumfin = sumfin + sfluxin(n)
+             sumfex = sumfex + fluxout(n)
+             sumrin = sumrin + 0.001_r8*totrunin(n)*runoff%area(n)
+             sumdvt = sumdvt + dvolrdt
+          endif
 
           if (runoff%mask(n) == 1) then         ! land points
              volr(n)     = volr(n) + dvolrdt*delt
@@ -1055,9 +1297,6 @@ contains
           endif
           runoff%dvolrdt(n) = runoff%dvolrdt(n) + 1000._r8*dvolrdt/runoff%area(n)
 
-          sumdvolr_tot = sumdvolr_tot + dvolrdt
-          sumrunof_tot = sumrunof_tot + 0.001_r8*totrunin(n)*runoff%area(n)
-
        enddo
 
     enddo
@@ -1078,11 +1317,13 @@ contains
 
     ! Global water balance calculation and error check
 
-    if (abs((sumdvolr_tot-sumrunof_tot)/sumrunof_tot) > 0.01_r8) then
-       write(iulog,*) 'RTM Error: sumdvolr= ',sumdvolr_tot,&
-            ' not equal to sumrunof= ',sumrunof_tot
-       call endrun
-    end if
+    if (dbug > 1) then
+       if (abs((sumdvt-sumrin)/(sumdvt+sumrin)) > 1.0e-6) then
+          write(iulog,*) 'RTM Warning: water balance dvt,rin,fin,fex = ', &
+             sumdvt,sumrin,sumfin,sumfex
+!          call endrun
+       endif
+    endif
 
   end subroutine Rtm
 

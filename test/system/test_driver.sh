@@ -345,7 +345,7 @@ cat > ./${submit_script} << EOF
 #PBS -S /bin/sh
 # Export all Environment variables
 #PBS -V
-#PBS -A CLI017
+#PBS -A CLI017dev
 # End of options
 
 if [ -n "\$PBS_JOBID" ]; then    #batch job
@@ -420,7 +420,7 @@ cat > ./${submit_script} << EOF
 #PBS -j oe
 # Export all Environment variables
 #PBS -V
-#PBS -A CLI017
+#PBS -A CLI017dev
 # End of options
 
 if [ -n "\$PBS_JOBID" ]; then    #batch job

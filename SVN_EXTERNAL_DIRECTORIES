@@ -6,7 +6,7 @@ src/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_
 src/utils/esmf_wrf_timemgr https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_060616
 src/utils/timing           https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_070525
 src/utils/mct              https://svn-ccsm-models.cgd.ucar.edu/mct/trunk_tags/MCT2_3_0_070524
-src/utils/pio              https://svn-ccsm-models.cgd.ucar.edu/pio/trunk_tags/pio_prod_02
+src/utils/pio              https://svn-ccsm-models.cgd.ucar.edu/pio/trunk_tags/pio11_prod
 tools/cprnc                https://svn-ccsm-models.cgd.ucar.edu/tools/cprnc/trunk_tags/cprnc_070817
 bld/perl5lib               https://svn-ccsm-models.cgd.ucar.edu/perl5lib/trunk_tags/perl5lib_071204
 bld/archiving              https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts_080108/ccsm_utils/Tools/archiving

@@ -78,7 +78,7 @@ contains
     integer :: cid,pid                ! indices
     integer :: n,m,np                 ! indices
     integer :: ier                    ! error code
-    integer, parameter :: dbug=3      ! 0 = min, 1=normal, 2=much, 3=max
+    integer, parameter :: dbug=1      ! 0 = min, 1=normal, 2=much, 3=max
     integer :: npmin,npmax,npint      ! do loop values for printing
     integer :: clmin,clmax,clint      ! do loop values for printing
     integer :: beg,end,lsize,gsize    ! used for gsmap init
@@ -575,7 +575,7 @@ contains
     integer :: icells, ilunits, icols, ipfts  ! temporaries
     integer :: ier                    ! error code
     integer :: cnt                    ! local counter
-    integer, parameter :: dbug=3      ! 0 = min, 1=normal, 2=much, 3=max
+    integer, parameter :: dbug=1      ! 0 = min, 1=normal, 2=much, 3=max
     integer :: npmin,npmax,npint      ! do loop values for printing
     integer :: clmin,clmax,clint      ! do loop values for printing
     integer :: lsize,gsize            ! used for gsmap init
