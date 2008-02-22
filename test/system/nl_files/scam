@@ -9,7 +9,3 @@
  scmlat= -20.
  iopfile = '../camrun.cam2.h1.0000-09-01-00000.nc'
 /
-&clmexp
- rpntpath='./rpointer.clm'
- /
-

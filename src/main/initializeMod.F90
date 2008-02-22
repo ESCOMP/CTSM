@@ -50,7 +50,7 @@ contains
 ! !IROUTINE: initialize1
 !
 ! !INTERFACE:
-  subroutine initialize1( CCSMInit )
+  subroutine initialize1( )
 !
 ! !DESCRIPTION:
 ! Land model initialization.
@@ -85,11 +85,9 @@ contains
     use clm_varctl, only : fsurdat, fatmgrid, fatmlndfrc, &
                            fatmtopo, flndtopo
     use controlMod, only : control_init, control_print
-    use shr_InputInfo_mod, only : shr_InputInfo_initType
     use UrbanInputMod    , only : UrbanInput
 !
 ! !ARGUMENTS:
-    type(shr_InputInfo_initType), intent(in), optional :: CCSMInit
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
@@ -122,11 +120,7 @@ contains
     endif
 
     call clm_varpar_init ()
-    if ( present(CCSMInit) )then
-       call control_init ( CCSMInit )
-    else
-       call control_init ( )
-    end if
+    call control_init ( )
 
     if (masterproc) call control_print()
 
@@ -343,7 +337,7 @@ contains
 ! !IROUTINE: initialize2
 !
 ! !INTERFACE:
-  subroutine initialize2( SyncClock )
+  subroutine initialize2( )
 !
 ! !DESCRIPTION:
 ! Land model initialization.
@@ -360,8 +354,6 @@ contains
 ! o Initializes accumulation variables.
 !
 ! !USES:
-    use eshr_timemgr_mod, only : eshr_timemgr_clockType, eshr_timemgr_clockInfoType, &
-                                 eshr_timemgr_clockGet
     use clm_atmlnd      , only : init_atm2lnd_type, init_lnd2atm_type, &
                                  clm_a2l, clm_l2a, atm_a2l, atm_l2a, &
                                  init_adiag_type
@@ -411,8 +403,6 @@ contains
     use UrbanInitMod    , only : UrbanInitTimeConst, UrbanInitTimeVar, UrbanInitAero 
     use UrbanInputMod   , only : UrbanInput
 !
-! !ARGUMENTS:
-   type(eshr_timeMgr_clockType), optional, intent(IN) :: SyncClock ! Synchronization clock
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
@@ -531,31 +521,12 @@ contains
     ! ------------------------------------------------------------------------
 
     if (nsrest == 0) then  
-       if (present(SyncClock)) then	
-          call eshr_timemgr_clockGet(                                          &
-               SyncClock, start_ymd=start_ymd,                                 &
-               start_tod=start_tod, ref_ymd=ref_ymd,                           &
-               ref_tod=ref_tod, stop_ymd=stop_ymd, stop_tod=stop_tod,          &
-               perpetual_run=perpetual_run, perpetual_ymd=perpetual_ymd,       &
-               calendar=calendar )
-          call timemgr_init(                                                   &
-               calendar_in=calendar, start_ymd_in=start_ymd,                   &
-               start_tod_in=start_tod, ref_ymd_in=ref_ymd,                     &
-               ref_tod_in=ref_tod, stop_ymd_in=stop_ymd, stop_tod_in=stop_tod, &
-               perpetual_run_in=perpetual_run, perpetual_ymd_in=perpetual_ymd )
-       else
-          call timemgr_init()
-       end if
+       call timemgr_init()
     else
        call restFile_open( flag='read', file=fnamer, ncid=ncid )
        call timemgr_restart_io( ncid=ncid, flag='read' )
        call restFile_close( ncid=ncid )
-       if (present(SyncClock)) then	
-          call eshr_timemgr_clockGet( SyncClock, stop_ymd=stop_ymd, stop_tod=stop_tod )
-          call timemgr_restart( stop_ymd, stop_tod )
-       else
-          call timemgr_restart()
-       end if
+       call timemgr_restart()
     end if
 
     call t_stopf('init_io1')

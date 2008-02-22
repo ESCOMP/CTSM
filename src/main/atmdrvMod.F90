@@ -370,9 +370,6 @@ contains
 ! Zero out solar forcing components if sun is below the horizon
     do g = begg, endg
        coszen = shr_orb_cosz (calday, lat(g), lon(g), declin)
-       write(iulog,*)'g: ',g
-       write(iulog,*)'coszen: ',coszen
-       write(iulog,*)'forc_solar: ',clm_a2l%forc_solar(g)
        if (coszen <= 0._r8) then
           clm_a2l%forc_solad(g,1) = 0._r8
           clm_a2l%forc_solad(g,2) = 0._r8

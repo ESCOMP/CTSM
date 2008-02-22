@@ -772,6 +772,7 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
   ! ============================================================================
 
   call t_startf('clm_driver_io')
+#ifndef _NOIO
   call t_startf('clm_driver_io_htapes')
 
   if (present(nlend) .and. present(rstwr)) then 	
@@ -845,7 +846,7 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
      call t_stopf('clm_driver_io_wrest')
 
   end if
-
+#endif
   call t_stopf('clm_driver_io')
 
 end subroutine driver2

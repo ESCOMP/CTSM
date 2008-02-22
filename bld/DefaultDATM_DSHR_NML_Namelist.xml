@@ -26,7 +26,7 @@
 <restpfile>'rpointer.atm'</restpfile>
 
 <!-- Domain files, grids and land mask -->
-<domainfile RESOLUTION="1x1_brazil"          mask="navy" >lnd/clm2/domain.lnd.1x1pt_brazil_navy.070628.nc</domainfile>
+<domainfile RESOLUTION="1x1_brazil"          mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-brazil_navy.080214.nc</domainfile>
 <domainfile RESOLUTION="1x1_camdenNJ"        mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.071220.nc</domainfile>
 <domainfile RESOLUTION="1x1_asphaltjungleNJ" mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.071220.nc</domainfile>
 <domainfile RESOLUTION="1x1_mexicocityMEX"   mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-mexicocityMEX_navy.080115.nc</domainfile>

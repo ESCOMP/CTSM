@@ -9,9 +9,6 @@ module clm_varorb
   ! Orbital information needed as input to orbit_parms
 
   real(r8) :: eccen    ! Earth's eccentricity factor (unitless) (typically 0 to 0.1)
-  real(r8) :: obliq    ! Earth's obliquity angle (degree's) (-90 to +90) (typically 22-26)
-  real(r8) :: nmvelp   ! Earth's moving vernal equinox at perhelion (degree's) (0 to 360.0)
-  integer  :: iyear_AD ! Year (AD) to simulate above earth's orbital parameters for
 
   ! Orbital information after processed by orbit_params
 

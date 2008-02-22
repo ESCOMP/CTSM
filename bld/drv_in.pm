@@ -46,7 +46,8 @@ sub new {
   my %deffiles = ( ccsm_seq     => "SeqCCSMDrvInNamelistsDescriptions.xml",
                    ccsm_seq_cam => "CAMSeqCCSMDrvInNamelistsDescriptions.xml",
                    offline      => "CLMDrvInNamelistsDescriptions.xml",
-                   ext_ccsm_con => "CCSMDrvInNamelistsDescriptions.xml"
+                   ext_ccsm_con => "CCSMDrvInNamelistsDescriptions.xml",
+                   ext_ccsm_seq => "ExtSeqCCSMDrvInNamelistsDescriptions.xml"
                  );
   my $deffile = $deffiles{$MODE};
   my $interactive = 0;
@@ -59,13 +60,15 @@ sub new {
   $self->{'cfgdir'}        = $cfgdir;
   $self->{'config'}        = $config;
 
-  if ( ref($PROFNLref) ne "prof_inparm" ) {
-    die "ERROR($class): Object sent to drv_in constructor not a prof_inparm object\n";
+  if ( $MODE ne "ext_ccsm_seq" ) {
+     if ( ref($PROFNLref) ne "prof_inparm" ) {
+       die "ERROR($class): Object sent to drv_in constructor not a prof_inparm object\n";
+     }
+     $self->{'PROFNL'}       = $PROFNLref;
   }
   if ( ref($LNDNLref) ne "clm_inparm" ) {
     die "ERROR($class): Object sent to drv_in constructor not a clm_inparm object\n";
   }
-  $self->{'PROFNL'}       = $PROFNLref;
   $self->{'LNDNL'}        = $LNDNLref;
   if ( $MODE eq "ccsm_seq" ) {
      if ( ref($CSMNLref) ne "ccsm_inparm" ) {
@@ -102,8 +105,8 @@ sub set_output_values {
   # Loop through each of the namelist items
   # Move any namelist items from DRV_IN namelist to given namelist
   #
-  my %namelists = ( ccsm_inparm=>"CSMNL",  timemgr_inparm=>"TIMNL", 
-                    prof_inparm=>"PROFNL", clm_inparm    =>"LNDNL",
+  my %namelists = ( seq_infodata_inparm=>"CSMNL",  seq_timemgr_inparm=>"TIMNL", 
+                    prof_inparm=>"PROFNL",         clm_inparm=>"LNDNL",
                     datm_dshr_in=>"ATMSHRNL" );
   my $move_namelists = "";
   foreach my $namel ( keys( %namelists ) ) {

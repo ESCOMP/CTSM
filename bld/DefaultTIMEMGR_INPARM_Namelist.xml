@@ -11,7 +11,7 @@
 
 
 -->
-<timemgr_inparm>
+<seq_timemgr_inparm>
 
 <!-- Coupling time step -->
 <atm_cpl_dt>3600</atm_cpl_dt>
@@ -42,7 +42,7 @@
 <start_tod RESOLUTION="1x1_vancouverCAN"  mask="navy"            >72000</start_tod>
 <start_tod                                                   >0</start_tod>
 
-<!-- Orbit -->
-<orb_iyear_ad >2000</orb_iyear_ad>
+<!-- if should write a restart at the end of the run -->
+<end_restart >.true.</end_restart>
 
-</timemgr_inparm>
+</seq_timemgr_inparm>

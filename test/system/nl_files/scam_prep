@@ -8,6 +8,3 @@
         'dqfxcldi','CLAT','T','Q'
  inithist = 'CAMIOP'
  /
-&clmexp
- rpntpath='./rpointer.clm'
- /

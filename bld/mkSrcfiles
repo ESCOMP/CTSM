@@ -16,6 +16,7 @@ open(SRC,"> Srcfiles")     or die "Can't open Srcfiles\n";
 
 if ( open(FILEPATH,"< Filepath") ) {
     @paths = <FILEPATH>;
+    close( FILEPATH );
 } else {
     @paths = ();
 }
@@ -40,6 +41,7 @@ foreach $dir (@paths) {
 foreach $file ( sort keys %src ) {
   print SRC "$file\n";
 }
+close( SRC );
 
 #--------------------------------------------------------------------------------------
 

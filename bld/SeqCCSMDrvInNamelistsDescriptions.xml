@@ -17,24 +17,26 @@
 -->
 <ccsm_seq>
 
-<!-- List of namelist items in the ccsm_inparm namelist-->
-<!-- any items with this keyword name will be moved to the ccsm_inparm namelist -->
+<!-- List of namelist items in the seq_infodata_inparm namelist-->
+<!-- any items with this keyword name will be moved to the seq_infodata namelist -->
                <!-- These should all be in LOWER CASE! -->
-<ccsm_inparm case_desc="s" case_name="s" start_type="s"
-             brnch_retain_casename="l"
-             restart_file="s" restart_pfile="s" restart_file_override="s"
-             logfilepostfix="s" outpathroot="s" version="s" username="s" hostname="s"
+<seq_infodata_inparm case_desc="s"      case_name="s"      start_type="s"
+                     brnch_retain_casename="l"
+                     restart_file="s"   restart_pfile="s"
+                     logfilepostfix="s" outpathroot="s"
+                     orb_obliq="r"      orb_eccen="r"
+                     orb_mvelp="r"      orb_iyear_ad="i"
              />
 
-<!-- List of namelist items in the timemgr_inparm namelist-->
-<!-- any items with this keyword name will be moved to the timemgr_inparm namelist -->
+<!-- List of namelist items in the seq_timmgr_inparm namelist-->
+<!-- any items with this keyword name will be moved to the seq_timmgr_inparm namelist -->
                <!-- These should all be in LOWER CASE! -->
-<timemgr_inparm calendar="s"  stop_option="s" stop_n="i" stop_ymd ="i"
-                stop_tod="i"  stop_final_ymd="i" restart_option ="s"
-                restart_n="i" start_ymd="i" start_tod="i" ref_ymd ="i"
-                ref_tod="i"   perpetual_run="l" perpetual_ymd ="i"
-                atm_cpl_dt="i" orb_obliq="r" orb_eccen="r"
-                orb_mvelp="r"  orb_iyear_ad="i" restart_file_tgroverride="s"  />
+<seq_timemgr_inparm calendar="s"    stop_option="s"    stop_n="i"          stop_ymd ="i"
+                    stop_tod="i"    stop_final_ymd="i" restart_option ="s"
+                    restart_n="i"   start_ymd="i"      start_tod="i"       ref_ymd ="i"
+                    ref_tod="i"     perpetual_run="l"  perpetual_ymd ="i"
+                    atm_cpl_dt="i"
+              /> 
 
 <!-- List of namelist items in the datm_dshr_in  namelist for datm7 data atmosphere -->
 <!-- any items with this keyword name will be moved to the datm_dshr_in namelist -->

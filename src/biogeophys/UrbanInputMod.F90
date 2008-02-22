@@ -58,8 +58,8 @@ module UrbanInputMod
   end type urbinp_t
   public urbinp_t
 
-  type (urbinp_t)   , public :: urbinp  ! urban input derived type
-  character(len=256), public :: furbinp ! urban input data
+  type (urbinp_t)   , public :: urbinp        ! urban input derived type
+  character(len=256), public :: furbinp = ' ' ! urban input data
 !
 !EOP
 !-----------------------------------------------------------------------

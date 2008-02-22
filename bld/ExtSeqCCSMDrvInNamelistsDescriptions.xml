@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<!--
+
+	ExtSeqCCSMDrvInNamelistsDescriptions.xml				Aug/31/2007
+
+	Descriptions of the component namelists for external sequential CCSM.
+	Element names are for the appropriate namelist, and attributes are
+	the namelist items in the given namelist. Element names give the
+	type of value they contain:
+		"s" = string
+		"i" = integer
+		"r" = floating point
+		"l" = logical
+        Any leftover namelist items will cause an error.
+
+-->
+<ext_ccsm_seq>
+
+<!-- List of namelist items in the clm_inparm namelist-->
+<!-- any items with this keyword name will be moved to the clm_inparm namelist -->
+               <!-- These should all be in LOWER CASE! -->
+<clm_inparm dtime="i" />
+
+<!-- List of namelist items in the ccsm_inparm namelist-->
+<!-- any items with this keyword name will be moved to the ccsm_inparm namelist -->
+               <!-- These should all be in LOWER CASE! -->
+<ccsm_inparm />
+
+<!-- List of namelist items in the timemgr_inparm namelist-->
+<!-- any items with this keyword name will be moved to the timemgr_inparm namelist -->
+               <!-- These should all be in LOWER CASE! -->
+<timemgr_inparm />
+
+<!-- List of namelist items in the datm_dshr_in  namelist for datm7 data atmosphere -->
+<!-- any items with this keyword name will be moved to the datm_dshr_in namelist -->
+               <!-- These should all be in LOWER CASE! -->
+<datm_dshr_in />
+
+<!-- List of namelist items in the prof_inparm namelist for timing profile -->
+<!-- any items with this keyword name will be moved to the prof_inparm  namelist -->
+               <!-- These should all be in LOWER CASE! -->
+<prof_inparm />
+
+
+</ext_ccsm_seq>

@@ -1,4 +1,209 @@
 ===============================================================
+Tag name:  clm3_5_18
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Feb 21 22:57:39 MST 2008
+One-line Summary: Update to latest seq-ccsm4.alpha tag
+
+Purpose of changes: Get clm trunk to work with latest ccsm4.alpha24 tag
+
+Bugs fixed (include bugzilla ID): 678 (get clm to work with latest cpl7)
+
+Known bugs (include bugzilla ID): 251, 512, 546, 652, 672, 675, 676, 680, 
+        681, 694, 696, 697, 698, 701, 702, 707, 708
+    http://bugs.cgd.ucar.edu/
+
+  New bugs: 697-- username,version,hostname NOT in seq-driver namelists
+            707-- bug on new xlf90 compiler on bluevista for running with CAM
+            708-- bug on new xlf90 compiler on bluevista for running with CASA
+
+Describe any changes made to build system: minor change in configure script
+  name of mode ext_cam changed to ext_ccsm_seq in configure script
+
+Describe any changes made to the namelist: Sequential driver namelists change
+
+ccsm_inparm namelist changes to seq_infodata_inparm 
+   (remove restart_override, username, version, hostname)
+timemgr_inparm namelist changes to seq_timemgr_inparm
+   (remove restart_overrideTMG, stop_final_ymd [use stop_ymd instead] )
+
+List any changes to the defaults for the boundary datasets: 
+    Add 2.65x3.33 datasets, newer 1x1_brazil domain file
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: mvertens (original version on seq branch)
+
+List any svn externals directories updated (csm_share, mct, etc.): 
+
+drv, datm7, sice, socn, csm_share_, and mct
+
+src/drv	      drvseq2_0_07
+src/datm7     drva_datm7_070824_tags/drva07_datm7_071129
+src/sice      stubs1_0_7
+src/socn      stubs1_0_7
+src/csm_share drva_share3_070903_tags/loga25_share3_071107
+src/utils/mct seqa_MCT2 _3_0_070524_tags/seqa07_MCT2_4_2_071026
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+A  +   bld/ExtSeqCCSMDrvInNamelistsDescriptions.xml -- for moving drv_in namelist items
+A  +   bld/clm.cpl7.template ------------------------- for running with cpl7
+
+List all existing files that have been modified, and describe the changes:
+
+------------- Get external CAM tests working, and with changes to seq-ccsm
+M      test/system/TSMext_ccsmseq_cam.sh
+M      test/system/test_driver.sh
+M      test/system/tests_posttag_hybrid_regression
+M      test/system/tests_posttag_purempi_regression
+M      test/system/nl_files/scam
+M      test/system/nl_files/scam_prep
+M      test/system/nl_files/ext_ccsm_seq_cam
+M      test/system/TSM.sh
+
+------------- Now need clm_varpar.F90 in tools
+M      tools/mksurfdata/Srcfiles
+M      tools/mkgriddata/Srcfiles
+
+------------- Add ext_ccsm_seq, add 2.65x3.33 datasets, change for new seq-ccsm namelists
+              switch 1x1_brazil domain file
+M      bld/configure
+M      bld/DefaultCLM_INPARM_Namelist.xml
+M      bld/run-ibm.csh
+M      bld/clm_inparm.pm
+M      bld/DefaultTIMEMGR_INPARM_Namelist.xml
+M      bld/sample.seqccsm.namelists
+M      bld/run-pc.csh
+M      bld/timemgr_inparm.pm
+M      bld/DefaultCCSM_INPARM_Namelist.xml
+M      bld/drv_in.pm
+M      bld/run-lightning.csh
+M      bld/mkSrcfiles
+M      bld/SeqCCSM_namelist.pm
+M      bld/ccsm_inparm.pm
+M      bld/SeqCCSMDrvInNamelistsDescriptions.xml
+M      bld/DefaultDATM_DSHR_NML_Namelist.xml
+
+------------- Don't allow seq_ccsm datatypes to go below lnd_comp_mct, fix scam
+M      src/main/clm_comp.F90 ------------- Remove SyncClock, CCSMInit
+M      src/main/driver.F90 --------------- Remove SyncClock, CCSMInit
+M      src/main/decompInitMod.F90 -------- Use endrun rather than shr_sys_abort
+M      src/main/ncdio.F90 ---------------- fixes for scam
+M      src/main/atmdrvMod.F90 ------------ remove unneeded printing
+M      src/main/clmtypeInitMod.F90 ------- explicit use only's
+M      src/main/initializeMod.F90 -------- remove CCSMInit and EClock
+M      src/main/controlMod.F90 ----------- move initialization to timemgr/clm_varctl 
+                                           set methods
+M      src/main/clm_time_manager.F90 ----- Make namelist input private, add set method
+M      src/main/clm_varctl.F90 ----------- Add set and initialization methods
+M      src/main/clm_varorb.F90 ----------- Remove values not needed
+M      src/main/lnd_comp_mct.F90 --------- Update to new structures/logic
+                                           On time-step 0 also advance to time-step 1
+M      src/main/program_off.F90 ---------- Move orbital info/dtime to this level
+M      src/main/spmdMod.F90 -------------- Change print format
+M      src/biogeophys/UrbanInputMod.F90 -- Initialize filename
+
+Summary of testing:
+
+  bluevista:
+004 blA71 TBL.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ...................FAIL! rc= 5
+008 blA91 TBL.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -10 arb_ic .........................FAIL! rc= 5
+011 blD91 TBL.sh _persc_ds clm_per 19981231:YEARLY:1200 4x5 gx3v5 144 arb_ic ....................FAIL! rc= 5
+014 blG71 TBL.sh 17p_sc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic .........FAIL! rc= 5
+016 blH71 TBL.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic ......FAIL! rc= 5
+021 blE11 TBL.sh 4p_vodsrsc_dh clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic ...............FAIL! rc= 5
+026 blF27 TBL.sh 17p_vodsrsc_dh clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic ..............FAIL! rc= 5 
+031 blE31 TBL.sh 4p_vodsrsc_dh clm_std 19981231:YEARLY:1800 64x128^360x720 USGS 48 arb_ic
+.......FAIL! rc= 5 
+034 blCA1 TBL.sh _sc_ds clm_std^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 5
+036 blNB1 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 5
+040 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:MONTHLY:1800 10x15 USGS 48 arb_ic ................FAIL! rc= 5
+046 blH11 TBL.sh 17p_cnnsc_dh clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48 arb_ic ..........FAIL! rc= 5
+050 blH52 TBL.sh 17p_cnnsc_dm clm_std 19980115:MONTHLY:1800 10x15 USGS@1890 48 arb_ic ...........FAIL! rc= 5
+052 smJ11 TSM.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 4 <<<< bug 708
+053 erJ11 TER.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 10+38 arb_ic ...............FAIL! rc= 5 <<<< bug 708
+054 brJ11 TBR.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 24+24 arb_ic ...............FAIL! rc= 5 <<<< bug 708
+055 blJ11 TBL.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 4
+059 blK11 TBL.sh 10p_dgvmsc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic .................FAIL! rc= 5
+064 blK71 TBL.sh 10p_dgvmsc_s clm_std 19971231:NONE:1800 1x1_brazil navy -670 arb_ic ............FAIL! rc= 5
+068 blL53 TBL.sh _sc_dh clm_std^nl_crcrop 19980115:MONTHLY:1800 10x15 USGS 24 arb_ic ............FAIL! rc= 5
+072 blL63 TBL.sh _sc_h clm_std 19980101:MONTHLY:1800 1.9x2.5 gx1v5 -10 startup ..................FAIL! rc= 5
+076 bl563 TBL.sh _h clm_std 19980101:MONTHLY:1800 1.9x2.5 gx1v5 -10 startup .....................FAIL! rc= 5
+080 blL52 TBL.sh _sc_ds clm_std 19980115:MONTHLY:1800 10x15 USGS 24 arb_ic ......................FAIL! rc= 5
+084 blL73 TBL.sh _sc_s clm_std 19980101:6_HOURLY:1800 1x1_brazil navy -10 arb_ic ................FAIL! rc= 5
+089 blL83 TBL.sh _sc_dh clm_std 19980115:DAILY:3600 5x5_amazon navy -10 arb_ic ..................FAIL! rc= 5
+101 sm921 TSMext_ccsmseq_cam.sh ext_ccsm_seq_4x5_dh ext_ccsm_seq_cam 48 .........................FAIL! rc= 4 <<<<< bug 707
+102 sm982 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4 <<<<<< bug 707
+  CAM tests all PASS except
+060 sm711 TSM.sh h5x8adm adia 9s ..................................FAIL! rc= 6
+062 sc001 TSC.sh e64bfbiop scm_prep scm64bfbiop scm_b4b_o1 7s .....FAIL! rc= 5
+
+First was a Build-namelist error, next was core-dump.
+
+  tempest:
+004 blA71 TBL.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ...................FAIL! rc= 5
+007 blD91 TBL.sh _persc_ds clm_per 19981231:YEARLY:1200 4x5 gx3v5 144 arb_ic ....................FAIL! rc= 5
+010 blE11 TBL.sh 4p_vodsrsc_dh clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic ...............FAIL! rc= 5
+014 blA92 TBL.sh _sc_dm clm_std 19990101:NONE:3600 4x5 gx3v5 -10 arb_ic .........................FAIL! rc= 5
+016 blG71 TBL.sh 17p_sc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic .........FAIL! rc= 5
+018 blH71 TBL.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic ......FAIL! rc= 5
+  lightning/pathscale:
+004 blA91 TBL.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -10 arb_ic .........................FAIL! rc= 5
+008 blA71 TBL.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ...................FAIL! rc= 5
+011 blCA1 TBL.sh _sc_ds clm_std^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 5
+013 blCA2 TBL.sh _sc_ds clm_std^nl_urb 19971231:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 5
+015 blNB1 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 5
+017 blOC1 TBL.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 5
+019 er112 TER.sh 4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 10+38 arb_ic ..............FAIL! rc= 13 <<<< bug 694
+026 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:MONTHLY:1800 10x15 USGS 48 arb_ic ................FAIL! rc= 5
+031 blH52 TBL.sh 17p_cnnsc_dm clm_std 19980115:MONTHLY:1800 10x15 USGS@1890 48 arb_ic ...........FAIL! rc= 5
+035 blK51 TBL.sh 10p_dgvmsc_dm clm_std 19981231:NONE:1800 10x15 USGS 48 arb_ic ..................FAIL! rc= 5
+039 blL51 TBL.sh _sc_dh clm_std 19980115:MONTHLY:1800 10x15 USGS 48 arb_ic ......................FAIL! rc= 5
+043 blL53 TBL.sh _sc_dh clm_std^nl_crcrop 19980115:MONTHLY:1800 10x15 USGS 24 arb_ic ............FAIL! rc= 5
+047 blL73 TBL.sh _sc_s clm_std 19980101:6_HOURLY:1800 1x1_brazil navy -10 arb_ic ................FAIL! rc= 5
+  jaguarcnl:
+008 blA92 TBL.sh _sc_dm clm_std 19990101:NONE:3600 4x5 gx3v5 -10 arb_ic .........................FAIL! rc= 7
+012 blE12 TBL.sh 4p_vodsrsc_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic ...............FAIL! rc= 7
+016 blE32 TBL.sh 4p_vodsrsc_dm clm_std 19981231:YEARLY:1800 64x128^360x720 USGS 48 arb_ic .......FAIL! rc= 7
+020 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:MONTHLY:1800 10x15 USGS 48 arb_ic ................FAIL! rc= 7
+024 blH12 TBL.sh 17p_cnnsc_dm clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48 arb_ic ..........FAIL! rc= 7
+028 blJ12 TBL.sh 4p_casasc_dm clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 7
+  bangkok/lf95:
+004 blA92 TBL.sh _sc_dm clm_std 19990101:NONE:3600 4x5 gx3v5 -10 arb_ic .........................FAIL! rc= 7
+008 blA71 TBL.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ...................FAIL! rc= 7
+011 blD91 TBL.sh _persc_ds clm_per 19981231:YEARLY:1200 4x5 gx3v5 144 arb_ic ....................FAIL! rc= 7
+014 blCA2 TBL.sh _sc_ds clm_std^nl_urb 19971231:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 7
+016 blOC1 TBL.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 7
+018 er112 TER.sh 4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 10+38 arb_ic ..............FAIL! rc= 13 <<<<<< 694
+025 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:MONTHLY:1800 10x15 USGS 48 arb_ic ................FAIL! rc= 7
+030 blH52 TBL.sh 17p_cnnsc_dm clm_std 19980115:MONTHLY:1800 10x15 USGS@1890 48 arb_ic ...........FAIL! rc= 7
+034 blJ12 TBL.sh 4p_casasc_dm clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 7
+038 blK51 TBL.sh 10p_dgvmsc_dm clm_std 19981231:NONE:1800 10x15 USGS 48 arb_ic ..................FAIL! rc= 7
+042 blL51 TBL.sh _sc_dh clm_std 19980115:MONTHLY:1800 10x15 USGS 48 arb_ic ......................FAIL! rc= 7
+047 blL73 TBL.sh _sc_s clm_std 19980101:6_HOURLY:1800 1x1_brazil navy -10 arb_ic ................FAIL! rc= 7
+052 sm982 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+
+TBL _sc tests fail because of addition of area-corrected fluxes and addition of running
+  time-step 1 when time-step 0 is done on initialization.
+er111/112 tests fail due to previous bug 694
+sm921/982 test fail on bluevista due to new bug 707 on (compiler bug on bluevista)
+
+CLM tag used for the baseline comparison tests if applicable: clm3_5_17
+
+Changes answers relative to baseline: Yes -- greater than roundoff
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Any mode with sequential-CCSM
+    - what platforms/compilers: ALL
+    - nature of change: larger than roundoff
+
+Fluxes in driver are corrected by ratio's of area's from different components.
+Also at time-step 0 you also run time-step 1 -- rather than just time-step 0.
+
+===============================================================
+===============================================================
 Tag name:  clm3_5_17
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Wed Feb  6 10:10:17 MST 2008

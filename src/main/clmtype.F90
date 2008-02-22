@@ -63,7 +63,6 @@ module clmtype
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varpar
   use domainMod   , only: domain_type
 !
 ! !PUBLIC TYPES:

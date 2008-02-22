@@ -37,7 +37,7 @@ sub new {
   my $printlev = $$optsref{'printlev'};
   my $cfgdir      = $$optsref{'cfgdir'};
 
-  my $self = $class->SUPER::new( "timemgr_inparm", \%timemgr_inparm::NL, $interactive, $file,
+  my $self = $class->SUPER::new( "seq_timemgr_inparm", \%timemgr_inparm::NL, $interactive, $file,
                                  "$cfgdir/DefaultTIMEMGR_INPARM_Namelist.xml", $config, 
                                  $printlev );
 
@@ -103,21 +103,16 @@ sub set_output_values {
     }
   }
 
-  # Orbit (if not coupled)
-  if ( $self->{'MODE'} ne "ccsm_seq" ) {
-     unless ( defined($NLref->{'orb_obliq'}) and defined($NLref->{'orb_eccen'}) and
-	      defined($NLref->{'orb_mvelp'}) ) {
-         unless ( defined($NLref->{'orb_iyear_ad'}) ) {
-	     $NLref->{'orb_iyear_ad'} = $self->default_vals( 'orb_iyear_ad' );
-         }
-     }
-  }
-
   # Coupling frequency
   unless ( defined($NLref->{'atm_cpl_dt'}) ) {
       $NLref->{'atm_cpl_dt'} = $self->default_vals( 'atm_cpl_dt' );
   }
   $self->requiredVar( "atm_cpl_dt" );
+
+  # end restart
+  unless ( defined($NLref->{'end_restart'}) ) {
+      $NLref->{'end_restart'} = $self->default_vals( 'end_restart' );
+  }
 
 }
 

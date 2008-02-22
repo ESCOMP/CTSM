@@ -749,7 +749,7 @@ contains
 #ifndef UNICOSMP
           call shr_sys_flush(iulog)
 #endif
-          call shr_sys_abort()
+          call endrun()
        endif
     enddo
 

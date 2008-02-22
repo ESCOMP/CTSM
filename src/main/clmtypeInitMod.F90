@@ -12,10 +12,10 @@ module clmtypeInitMod
 ! Allocate clmtype components and initialize them to signaling NaN.
 !
 ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8
-  use nanMod
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use nanMod      , only : nan, bigint
   use clmtype
-  use clm_varpar, only: maxpatch_pft, nlevsno, nlevsoi, numrad, nlevlak, numpft, ndst, nvoc
+  use clm_varpar  , only: maxpatch_pft, nlevsno, nlevsoi, numrad, nlevlak, numpft, ndst, nvoc
 !
 ! !PUBLIC TYPES:
   implicit none

@@ -34,7 +34,7 @@ sub new {
   my $interactive = $$optsref{'interactive'};
   my %bld = &queryDefaultXML::read_cfg_file( $$optsref{'config'} );
   my $outfile;
-  if ( $bld{'MODE'} eq "ccsm_seq" ) {
+  if ( $bld{'MODE'} =~ /ccsm_seq/ ) {
      $outfile = "lnd_in";
   } else  {
      $outfile = "lnd.stdin";
@@ -81,9 +81,9 @@ sub set_output_values {
   my $name      = $self->{'NAME'};
   my $addquotes = 1;
 
-  # If not seq-ccsm`
+  # If not seq-ccsm
 
-  if ( $self->{'MODE'} ne "ccsm_seq" ) {
+  if ( $self->{'MODE'} !~ /ccsm_seq/ ) {
 
      # start_ymd
 
@@ -229,7 +229,7 @@ sub set_output_values {
 
   # If not seq-ccsm`
 
-  if ( $self->{'MODE'} ne "ccsm_seq" ) {
+  if ( $self->{'MODE'} !~ /ccsm_seq/ ) {
 
      # nsrest
 

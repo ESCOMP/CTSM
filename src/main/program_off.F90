@@ -48,8 +48,7 @@ PROGRAM program_off
 ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8, SHR_KIND_CL
   use shr_orb_mod     , only : shr_orb_params, shr_orb_decl, shr_orb_undef_real
-  use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr, obliq, &
-                               iyear_AD, nmvelp
+  use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
   use clm_varctl      , only : iulog
   use clm_comp        , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
   use clm_time_manager, only : is_last_step, advance_timestep, get_nstep, get_curr_calday
@@ -72,8 +71,10 @@ PROGRAM program_off
 !
 ! !LOCAL VARIABLES:
   integer  :: nstep     ! time step index
-  real(r8) :: dtime     ! time step increment (sec)
   integer  :: ier       ! error code
+  real(r8) :: obliq     ! Earth's obliquity angle (degree's) (-90 to +90) (typically 22-26)
+  real(r8) :: nmvelp    ! Earth's moving vernal equinox at perhelion (degree's) (0 to 360.0)
+  integer  :: iyear_AD  ! Year (AD) to simulate above earth's orbital parameters for
 
 ! Orbital information after call to routine shr_orbit_params
 

@@ -28,8 +28,8 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="cam3_5_18"
-conccsm_vers="ccsm3_9_beta01"
+seqccsm_vers="ccsm4_0_alpha23"
+conccsm_vers="ccsm3_9_beta02"
 
 hostname=`hostname`
 case $hostname in
@@ -69,6 +69,7 @@ if [ -n "\$LSB_JOBID" ]; then   #batch job
     interactive="NO"
 else
     interactive="YES"
+    export LSB_MCPU_HOSTS="\$hostname 16"
 fi
 
 ##omp threads
@@ -134,6 +135,7 @@ if [ -n "\$LSB_JOBID" ]; then   #batch job
     interactive="NO"
 else
     interactive="YES"
+    export LSB_MCPU_HOSTS="\$hostname 8"
 fi
 
 ##omp threads
@@ -199,6 +201,7 @@ if [ -n "\$LSB_JOBID" ]; then   #batch job
     interactive="NO"
 else
     interactive="YES"
+    export LSB_MCPU_HOSTS="\$hostname 8"
 fi
 
 ##omp threads
@@ -651,7 +654,7 @@ if [ -z "\$CLM_CCSMROOT" ]; then
     export CLM_CCSMROOT="\${dataroot}/collections/${conccsm_vers}"
 fi
 if [ -z "\$CLM_SEQCCSMROOT" ]; then
-    export CLM_SEQCCSMROOT="\${dataroot}/models/atm/cam/${seqccsm_vers}"
+    export CLM_SEQCCSMROOT="\${dataroot}/collections/${seqccsm_vers}"
 fi
 if [ -n "\${CLM_INPUT_TESTS}" ]; then
     input_file=\$CLM_INPUT_TESTS

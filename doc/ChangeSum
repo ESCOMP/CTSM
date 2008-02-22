@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ===============================================================================================================================
+   clm3_5_18         erik 02/21/2008 Update to latest seq-ccsm4.alpha tag
    clm3_5_17         erik 02/06/2008 Merge Tony Craig's FMI branch fmi12_clm3_5_16 to the clm trunk
    clm3_5_16         erik 01/28/2008 Get point version of Urban code onto trunk (urban code can not restart)
    clm3_5_15         erik 12/10/2007 Fix interpinic for half degree grid, add in large-file support, allow configure to work with ccsm directory structure

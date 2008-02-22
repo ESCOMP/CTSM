@@ -12,27 +12,25 @@ that particular namelist.
 ! Driver namelists
 !
 
-&ccsm_inparm
+&seq_infodata_inparm
  case_name
  case_desc
  start_type
  brnch_retain_casename
  restart_pfile
  restart_file
- restart_file_override
  logfilepostfix
  outpathroot
  version
  hostname
  username
-/
-&timemgr_inparm
- atm_cpl_dt       ! Coupling frequency
  orb_iyear_ad     ! Year
  orb_eccen
  orb_mvelp
  orb_obliq
- restart_file_TMGoverRide
+/
+&seq_timemgr_inparm
+ atm_cpl_dt       ! Coupling frequency
  perpetual_run
  perpetual_ymd
  restart_option
@@ -42,7 +40,6 @@ that particular namelist.
  start_tod
  stop_n	
  stop_ymd
- stop_final_ymd
  stop_option
  ref_ymd
  ref_tod

@@ -4991,8 +4991,6 @@ contains
 ! Read/Write initial data from/to netCDF instantaneous initial data file 
 !
 ! !USES:
-    use shr_kind_mod, only : r8 => shr_kind_r8
-    use decompMod   , only : get_proc_bounds
     use clm_varpar  , only : maxpatch
     use nanMod      , only : nan
     use clm_varctl  , only : scmlon,scmlat,single_column
@@ -5000,9 +4998,9 @@ contains
 ! !ARGUMENTS:
     implicit none
     character(len=*), intent(in) :: dim1name ! dimension 1 name
-    integer, intent(in)    :: ncid             ! netCDF dataset id
-    integer, intent(inout) :: start(:)
-    integer, intent(inout) :: count(:)
+    integer, intent(in)    :: ncid           ! netCDF dataset id
+    integer, intent(inout) :: start(:)       ! start index
+    integer, intent(inout) :: count(:)       ! count to retrieve
 !
 ! !CALLED FROM: subroutine inicfields
 !
@@ -5012,188 +5010,113 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer :: data_offset      ! offset into land array 1st column 
-    integer :: ndata            ! number of column (or pft points to read)
+    integer :: data_offset                   ! offset into land array 1st column 
+    integer :: ndata                         ! number of column (or pft points to read)
     real(r8) , pointer :: cols1dlon(:)       ! holds cols1d_ixy var
     real(r8) , pointer :: cols1dlat(:)       ! holds cols1d_jxy var
     real(r8) , pointer :: pfts1dlon(:)       ! holds pfts1d_ixy var
     real(r8) , pointer :: pfts1dlat(:)       ! holds pfts1d_jxy var
-    integer cols(maxpatch)                   ! grid cell columns for scam
-    integer pfts(maxpatch)                   ! grid cell pfts for scam
+    integer :: cols(maxpatch)                ! grid cell columns for scam
+    integer :: pfts(maxpatch)                ! grid cell pfts for scam
     integer :: cc,i                          ! index variable
     integer :: totpfts                       ! total number of pfts
     integer :: totcols                       ! total number of columns
-    integer, save :: col_offset              ! offset into land array of 
-                                             ! starting column
-    integer, save :: pi_offset               ! offset into land array of 
-                                             ! starting pft needed for scam
     integer :: dimid                         ! netCDF dimension id
     integer :: varid                         ! netCDF variable id
-    integer, save :: begp, endp              ! per-proc beg/end pft indices
-    integer, save :: begc, endc              ! per-proc beg/end col indices 
-    integer, save :: begl, endl              ! per-proc beg/end land indices
-    integer, save :: begg, endg              ! per-proc beg/end gridcell ind
-    logical, save :: firsttime = .true.      ! determine offsets once.
-    integer latidx,lonidx,ret
-    real(r8) closelat,closelon
+    integer :: ret                           ! return code
+    integer :: latidx,lonidx,ret             ! latitude/longitude indices
+    real(r8):: closelat,closelon             ! closest latitude and longitude indices
     character(len=32) :: subname = 'scam_field_offsets'
 
 !------------------------------------------------------------------------
-    call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
-    start(1) = lonidx
-    count(1) = 1
-    start(2) = latidx
-    count(2) = 1
-    write(iulog,*) trim(subname),' scam_setlatlonidx ',lonidx,latidx
 
-    if ( firsttime) then
-       write(iulog,*) trim(subname),' firsttime=',firsttime
-       call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+    ! find closest land grid cell for this point
 
-       call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-       write(iulog,*) trim(subname),' beg,end=',begg, endg, begl, endl, begc, endc, begp, endp
+     call scam_setlatlonidx(ncid,scmlat,scmlon,closelat,closelon,latidx,lonidx)
+     
+    if (dim1name == 'column') then
 
-       ret = nf_inq_dimid (ncid, 'column', dimid)
-       write(iulog,*) trim(subname),' column ret=',ret,nf_noerr
-       if(ret==NF_NOERR) return
-       if (ret/=NF_EBADDIM) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-
-       ret = nf_inq_dimlen (ncid, dimid, totcols)
-       if (ret/=NF_NOERR) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-
-       ret = nf_inq_dimid (ncid, 'pft', dimid)
-       write(iulog,*) trim(subname),' pft ret=',ret,nf_noerr
-       if(ret==NF_NOERR) return
-       if (ret/=NF_EBADDIM) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-
-       ret = nf_inq_dimlen (ncid, dimid, totpfts)
-       if (ret/=NF_NOERR) print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-
-       write(iulog,*) trim(subname),' totals ',totcols,totpfts
-
-       allocate (pfts1dlon(totpfts))
-       allocate (pfts1dlat(totpfts))
-       
-       ret =  nf_inq_varid (ncid, 'pfts1d_ixy', varid)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'inq_varid: id for pfts1d_ixy not found'
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-       ret = nf_get_var_double (ncid, varid, pfts1dlon)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'GET_VAR_REALX: error reading pfts1dlon, varid =', varid
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-       ret =  nf_inq_varid (ncid, 'pfts1d_jxy', varid)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'inq_varid: id for pfts1d_jxy not found'
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-       ret = nf_get_var_double (ncid, varid, pfts1dlat)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'GET_VAR_REALX: error reading pfts1dlat, varid =', varid
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-
+       call check_ret(nf_inq_dimid  (ncid, 'column', dimid),   subname)
+       call check_ret(nf_inq_dimlen (ncid, dimid,    totcols), subname)
        allocate (cols1dlon(totcols))
        allocate (cols1dlat(totcols))
-
-       ret =  nf_inq_varid (ncid, 'cols1d_ixy', varid)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'inq_varid: id for cols1d_ixy not found'
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-       ret = nf_get_var_double (ncid, varid, cols1dlon)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'GET_VAR_REALX: error reading cols1dlon, varid =', varid
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-       ret =  nf_inq_varid (ncid, 'cols1d_jxy', varid)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'inq_varid: id for cols1d_jxy not found'
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-       ret = nf_get_var_double (ncid, varid, cols1dlat)
-       if (ret/=NF_NOERR) then
-         write(iulog,*)'GET_VAR_REALX: error reading cols1dlat, varid =', varid
-         print *, 'NETCDF ERROR: ', NF_STRERROR(ret)
-         return
-       end if
-
-       cols(:)=-9999
-       pfts(:)=-9999
-       col_offset=-9999
-       pi_offset=-9999
-       i=1
+       
+       call check_ret(nf_inq_varid      (ncid, 'cols1d_lon', varid),     subname)
+       call check_ret(nf_get_var_double (ncid, varid,        cols1dlon), subname)
+       call check_ret(nf_inq_varid      (ncid, 'cols1d_lat', varid),     subname)
+       call check_ret(nf_get_var_double (ncid, varid,        cols1dlat), subname)
+       
+       cols(:)     = nan
+       data_offset = nan
+       i = 1
+       ndata = 0
        do cc = 1, totcols
-          if (cols1dlon(cc).eq.lonidx.and.cols1dlat(cc).eq.latidx) then
+          if (cols1dlon(cc) == closelon.and.cols1dlat(cc) == closelat) then
              cols(i)=cc
+             ndata  =i
              i=i+1
           end if
        end do
-       if (endc-begc+1.ne.i-1) then
-          write(iulog,*)'error in number of columns read for this gridcell',endc,begc,i
-!          call endrun
-       end if
-       if (i.eq.1) then
+       if (ndata == 0) then
           write(iulog,*)'couldnt find any columns for this latitude ',latidx,' and longitude ',lonidx
-!          call endrun
+          call endrun
        else
-          col_offset=cols(1)
+          data_offset=cols(1)
        end if
-
-       i=1
-       do cc = 1, totpfts
-          if (pfts1dlon(cc).eq.lonidx.and.pfts1dlat(cc).eq.latidx) then
-             pfts(i)=cc
-             i=i+1
-          end if
-       end do
-       if (endp-begp+1.ne.i-1) then
-          write(iulog,*)'error in number of pfts read for this gridcell',endp,begp,i
-!          call endrun
-       end if
-       if (i.eq.1) then
-          write(iulog,*)'couldnt find any pfts for this latitude ',latidx,' and longitude ',lonidx
-!          call endrun
-       else
-          pi_offset=pfts(1)
-       end if
-
-       deallocate (pfts1dlon)
-       deallocate (pfts1dlat)
+       
        deallocate (cols1dlon)
        deallocate (cols1dlat)
-       firsttime = .false.
+       
+       start(1) = data_offset
+       count(1) = ndata
+       
+    else if (dim1name == 'pft') then
+       
+       call check_ret(nf_inq_dimid  (ncid, 'pft', dimid),   subname)
+       call check_ret(nf_inq_dimlen (ncid, dimid, totpfts), subname)
+       allocate (pfts1dlon(totpfts))
+       allocate (pfts1dlat(totpfts))
+       call check_ret( nf_inq_varid     (ncid, 'pfts1d_lon', varid),     subname)
+       call check_ret(nf_get_var_double (ncid, varid,        pfts1dlon), subname)
+       call check_ret( nf_inq_varid     (ncid, 'pfts1d_lat', varid),     subname)
+       call check_ret(nf_get_var_double (ncid, varid,        pfts1dlat), subname)
+       
+       pfts(:)     = nan
+       data_offset = nan
+       i     = 1
+       ndata = 0
+       do cc = 1, totpfts
+          if (pfts1dlon(cc) == closelon.and.pfts1dlat(cc) == closelat) then
+             pfts(i)=cc
+             ndata  =i
+             i=i+1
+          end if
+       end do
+       if (ndata == 0) then
+          write(iulog,*)'couldnt find any pfts for this latitude ',closelat,' and longitude ',closelon
+          call endrun
+       else
+          data_offset=pfts(1)
+       end if
+       
+       deallocate (pfts1dlon)
+       deallocate (pfts1dlat)
+       
+       start(1) = data_offset
+       count(1) = ndata
+       
+    else
+       
+       start(1) = lonidx
+       count(1) = 1
+       start(2) = latidx
+       count(2) = 1
+       write(iulog,*) trim(subname),' scam_setlatlonidx ',lonidx,latidx
+       
     endif
 
-    write(iulog,*) trim(subname),' offsets ',pi_offset,col_offset
-    
-    if (dim1name == 'pft') then
-       data_offset = pi_offset
-       ndata = endp-begp+1
-    else if (dim1name == 'column') then
-       data_offset = col_offset
-       ndata = endc-begc+1
-    else
-       write(iulog,*)'error calculation array offsets for SCAM'
-!       call endrun()
-    endif
   end subroutine scam_field_offsets
+
 !------------------------------------------------------------------------
 
 end module ncdio

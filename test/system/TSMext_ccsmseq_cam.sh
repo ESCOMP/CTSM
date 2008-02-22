@@ -60,18 +60,16 @@ fi
 echo "TSMext_ccsmseq_cam.sh: running external sequential-CCSM with CAM; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 echo "TSMext_ccsmseq_cam.sh: obtaining namelist:" 
 
-echo "TSM.sh: call to build-namelist:"
+echo "TSMext_ccsmseq_cam.sh.sh: call to build-namelist:"
 echo "        ${CLM_SEQCCSMROOT}/models/atm/cam/bld/build-namelist -s -runtype startup \
     -ignore_ic_date \
     -config ${CLM_TESTDIR}/TCBext_ccsmseq_cam.$1/config_cache.xml -infile ${CLM_SCRIPTDIR}/nl_files/$2 \
-    -cam_cfg ${CLM_SEQCCSMROOT}/models/atm/cam/bld \
     -namelist \"&timemgr_inparm stop_n=$3 stop_option=\'nsteps\' /\""
 
 ${CLM_SEQCCSMROOT}/models/atm/cam/bld/build-namelist -s -runtype startup \
     -ignore_ic_date \
     -config ${CLM_TESTDIR}/TCBext_ccsmseq_cam.$1/config_cache.xml \
     -infile ${CLM_SCRIPTDIR}/nl_files/$2 \
-    -cam_cfg ${CLM_SEQCCSMROOT}/models/atm/cam/bld \
     -namelist "&timemgr_inparm stop_n=$3 stop_option='nsteps' /" > test.log
 rc=$?
 if [ $rc -eq 0 ]; then
@@ -84,16 +82,25 @@ else
     exit 6
 fi
 
-echo "TSMext_ccsmseq_cam.sh calling CLM_runcmnd.sh to build run command" 
-${CLM_SCRIPTDIR}/CLM_runcmnd.sh $1
+echo "TSMext_ccsmseq_cam.sh calling CAM_runcmnd.sh to build run command" 
+export CAM_SCRIPTDIR=${CLM_SCRIPTDIR}
+export CAM_THREADS=${CLM_THREADS}
+export CAM_TASKS=${CLM_TASKS}
+
+echo "CAM_SCRIPTDIR=${CLM_SCRIPTDIR}"
+echo "CAM_THREADS=${CLM_THREADS}"
+echo "CAM_TASKS=${CLM_TASKS}"
+echo "LSB_MCPU_HOSTS=${LSB_MCPU_HOSTS}"
+
+${CLM_SEQCCSMROOT}/models/atm/cam/test/system/CAM_runcmnd.sh $1
 rc=$?
-if [ $rc -eq 0 ] && [ -f clm_run_command.txt ]; then
-    read cmnd < clm_run_command.txt
+if [ $rc -eq 0 ] && [ -f cam_run_command.txt ]; then
+    read cmnd < cam_run_command.txt
     echo "TSMext_ccsmseq_cam.sh: cam run command:" 
     echo "        $cmnd ${CLM_TESTDIR}/TCBext_ccsmseq_cam.$1/cam"  
-    rm clm_run_command.txt
+    rm cam_run_command.txt
 else
-    echo "TSMext_ccsmseq_cam.sh: error building run command; error from CLM_runcmnd.sh= $rc" 
+    echo "TSMext_ccsmseq_cam.sh: error building run command; error from CAM_runcmnd.sh= $rc" 
     echo "FAIL.job${JOBID}" > TestStatus
     exit 7
 fi

@@ -122,7 +122,7 @@ sub new {
      $self->{'ATMNL'}    = datm_nml->new( $self->{'optsref'}, $config_file );
      $self->{'ATMSHRNL'} = datm_dshr_in->new( $self->{'optsref'}, $config_file );
      #$self->{'LNDIONL'}  = lnd_modelio->new( $self->{'optsref'}, $config_file );
-  } else {
+  } elsif ( $self->{'MODE'} ne "ext_ccsm_seq" ) {
      # Timing Profile namelist
      $self->{'PROFNL'} = prof_inparm->new( $self->{'optsref'}, $config_file );
   }
@@ -155,7 +155,9 @@ sub interactive {
      $self->{'ATMSHRNL'}->change;
      #$self->{'LNDIONL'}->change;
   }
-  $self->{'PROFNL'}->change;
+  if ( $self->{'MODE'} ne "ext_ccsm_seq" ) {
+     $self->{'PROFNL'}->change;
+  }
   $self->{'LNDNL'}->change;
 }
 
@@ -174,7 +176,9 @@ sub print {
      $self->{ATMSHRNL}->print;
      #$self->{'LNDIONL'}->print;
   }
-  $self->{PROFNL}->print;
+  if ( $self->{'MODE'} ne "ext_ccsm_seq" ) {
+     $self->{PROFNL}->print;
+  }
   $self->{LNDNL}->print;
 }
 
@@ -195,7 +199,9 @@ sub parse {
      $self->{ATMSHRNL}->parse(  $file );
      #$self->{'LNDIONL'}->parse( $file );
   }
-  $self->{PROFNL}->parse(   $file );
+  if ( $self->{'MODE'} ne "ext_ccsm_seq" ) {
+     $self->{PROFNL}->parse(   $file );
+  }
   $self->{LNDNL}->parse(    $file );
 }
 
@@ -239,7 +245,9 @@ sub build {
      $self->{'ATMSHRNL'}->convert_case;
      #$self->{'LNDIONL'}->convert_case;
   }
-  $self->{'PROFNL'}->convert_case;
+  if ( $self->{'MODE'} ne "ext_ccsm_seq" ) {
+     $self->{'PROFNL'}->convert_case;
+  }
   $self->{'LNDNL'}->convert_case;
 
   # Run type is set in SeqCCSM namelist.  Land model namelist only needs to know
@@ -307,7 +315,9 @@ sub build {
   $self->{'LNDNL'}->set_output_values(  \%settings );
 
   # Performance profiling namelist
-  $self->{'PROFNL'}->set_output_values( \%settings );
+  if ( $self->{'MODE'} ne "ext_ccsm_seq" ) {
+     $self->{'PROFNL'}->set_output_values( \%settings );
+  }
 
   # Allow for additional settings interactively
   if ( defined($self->{'INTERACTIVE'}) && $self->{'INTERACTIVE'} ) {

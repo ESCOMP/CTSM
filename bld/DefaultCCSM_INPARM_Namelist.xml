@@ -11,7 +11,7 @@
 
 
 -->
-<ccsm_inparm>
+<seq_infodata_inparm>
 
 <!-- Root directory of initial and boundary datasets from CCSM distribution.
      Filepaths are all relative to this root directory.
@@ -29,5 +29,8 @@
 $HeadURL$
 </version>
 
-</ccsm_inparm>
+<!-- Orbit -->
+<orb_iyear_ad >2000</orb_iyear_ad>
+
+</seq_infodata_inparm>
 

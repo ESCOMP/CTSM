@@ -16,26 +16,19 @@ module lnd_comp_mct
 
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use shr_sys_mod      , only : shr_sys_abort, shr_sys_flush
-  use shr_orb_mod      , only : shr_orb_params
-  use shr_inputinfo_mod, only : shr_inputInfo_initType,       &
-                                shr_inputInfo_initGetData,    &
-                                shr_inputInfo_initPutData
   use shr_file_mod     , only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                 shr_file_getLogUnit, shr_file_getLogLevel, &
                                 shr_file_getUnit, shr_file_setIO
+  use abortutils       , only : endrun
 
   use mct_mod
+  use esmf_mod
   use seq_flds_mod
   use seq_flds_indices
   use seq_cdata_mod
+  use seq_infodata_mod
+  use seq_timemgr_mod
 
-  use eshr_timemgr_mod, only : eshr_timemgr_clockType,         &
-                               eshr_timemgr_clockInfoType,     &
-                               eshr_timemgr_clockInfoGet,      &
-                               eshr_timemgr_clockGet,          & 
-                               eshr_timemgr_clockDateInSync,   &
-                               eshr_timemgr_clockAlarmIsOnRes, &
-                               eshr_timeMgr_clockIsOnLastStep
   use spmdMod
   use perf_mod
   use clm_varctl, only : iulog
@@ -84,7 +77,6 @@ module lnd_comp_mct
 ! Atmospheric mode  
 !
   logical :: atm_prognostic
-  logical :: do_fluxave
 
 !===============================================================
 contains
@@ -96,27 +88,29 @@ contains
 ! !IROUTINE: lnd_init_mct
 !
 ! !INTERFACE:
-  subroutine lnd_init_mct( cdata_l, x2l_l, l2x_l, &
-                           cdata_r,        r2x_r, SyncClock, NLFilename )
+  subroutine lnd_init_mct( EClock, cdata_l, x2l_l, l2x_l, &
+                                   cdata_r,        r2x_r, NLFilename )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use clm_time_manager , only : get_nstep, advance_timestep, get_step_size      
+    use clm_time_manager , only : get_nstep, advance_timestep, get_step_size, set_timemgr_init
     use clm_atmlnd       , only : clm_mapl2a, clm_l2a, atm_l2a
     use clm_comp         , only : clm_init0, clm_init1, clm_init2
-    use clm_varctl       , only : finidat,single_column, irad
+    use clm_varctl       , only : finidat,single_column, irad, set_clmvarctl
     use controlMod       , only : control_setNL
-    use domainMod        , only : amask
+    use domainMod        , only : amask, adomain
+    use clm_varpar       , only : rtmlon, rtmlat
+    use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
 !
 ! !ARGUMENTS:
+    type(ESMF_Clock),             intent(in)    :: EClock
     type(seq_cdata),              intent(inout) :: cdata_l
     type(mct_aVect),              intent(inout) :: x2l_l, l2x_l
     type(seq_cdata),              intent(inout) :: cdata_r
     type(mct_aVect),              intent(inout) ::        r2x_r
-    type(eshr_timemgr_clockType), intent(in)    :: SyncClock
     character(len=*), optional,   intent(in)    :: NLFilename 
 !
 ! !LOCAL VARIABLES:
@@ -126,14 +120,30 @@ contains
     type(mct_gGrid),              pointer       :: dom_l
     type(mct_gsMap),              pointer       :: GSMap_rof
     type(mct_gGrid),              pointer       :: dom_r
-    type(shr_InputInfo_initType), pointer       :: CCSMInit
+    type(seq_infodata_type),      pointer       :: infodata
     integer  :: lsize           ! size of attribute vector
     integer  :: i,j             ! indices
     integer  :: dtime_sync
     integer  :: dtime_clm
     logical  :: exists               ! true if file exists
+    real(r8) :: scmlat
+    real(r8) :: scmlon
+    character(len=SHR_KIND_CL) :: caseid
+    character(len=SHR_KIND_CL) :: ctitle
+    character(len=SHR_KIND_CL) :: starttype
+    character(len=SHR_KIND_CL) :: calendar
+    integer  :: nsrest
+    integer :: startype
+    integer :: perpetual_ymd
+    integer :: ref_ymd
+    integer :: ref_tod
+    integer :: start_ymd
+    integer :: start_tod
+    integer :: stop_ymd
+    integer :: stop_tod
+    logical :: brnch_retain_casename
+    logical :: perpetual_run
     integer  :: shrlogunit,shrloglev ! old values
-    type(eshr_timemgr_clockInfoType) :: clockInfo ! Clock information including orbit
     character(len=32), parameter :: sub = 'lnd_init_mct'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
 !
@@ -142,11 +152,10 @@ contains
 !
 !EOP
 !-----------------------------------------------------------------------
-
     ! Set cdata data
 
     call seq_cdata_setptrs(cdata_l, ID=LNDID, mpicom=mpicom_lnd, &
-         gsMap=GSMap_lnd, dom=dom_l, CCSMInit=CCSMInit)
+         gsMap=GSMap_lnd, dom=dom_l, infodata=infodata)
 
     call seq_cdata_setptrs(cdata_r, &
          gsMap=gsMap_rof, dom=dom_r) 
@@ -154,6 +163,13 @@ contains
     ! Initialize clm MPI communicator 
 
     call spmd_init( mpicom_lnd )
+
+#if (defined _MEMTRACE)
+    if(masterproc) then
+       write(iulog,*) TRIM(Sub) // ':start::'
+       call memmon_print_usage()
+    endif
+#endif                      
 
     ! Initialize io log unit
 
@@ -170,10 +186,10 @@ contains
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (iulog)
     
-    ! Use CCSMInit to set orbital values
+    ! Use infodata to set orbital values
 
-    call eshr_timemgr_clockGet( SyncClock, info=clockInfo )
-    call lnd_setorb_mct( clockInfo )
+    call seq_infodata_GetData( infodata, orb_eccen=eccen, orb_mvelpp=mvelpp, &
+         orb_lambm0=lambm0, orb_obliqr=obliqr )
 
     ! Consistency check on namelist filename	
 
@@ -182,18 +198,59 @@ contains
     ! Initialize clm
     ! clm_init0 reads namelist, grid and surface data
     ! clm_init1 and clm_init2 performs rest of initialization	
+    call seq_timemgr_EClockGetData(EClock,                               &
+                                   start_ymd=start_ymd,                  &
+                                   start_tod=start_tod, ref_ymd=ref_ymd, &
+                                   ref_tod=ref_tod, stop_ymd=stop_ymd,   &
+                                   stop_tod=stop_tod,                    &
+                                   calendar=calendar )
+    call seq_infodata_GetData(infodata, perpetual=perpetual_run,                &
+                              perpetual_ymd=perpetual_ymd, case_name=caseid,    &
+                              case_desc=ctitle, single_column=single_column,    &
+                              scmlat=scmlat, scmlon=scmlon,                     &
+                              brnch_retain_casename=brnch_retain_casename,      &
+                              start_type=starttype                              &
+                                )
+    call set_timemgr_init( calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
+                           ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd,         &
+                           stop_tod_in=stop_tod,  stop_final_ymd_in=stop_ymd,                    &
+                           perpetual_run_in=perpetual_run, perpetual_ymd_in=perpetual_ymd )
+    if (     trim(starttype) == trim(seq_infodata_start_type_start)) then
+       nsrest = 0
+    else if (trim(starttype) == trim(seq_infodata_start_type_cont) ) then
+       nsrest = 1
+    else if (trim(starttype) == trim(seq_infodata_start_type_brnch)) then
+       nsrest = 3
+    else
+       call endrun( sub//' ERROR: unknown starttype' )
+    end if
 
-    call clm_init0( CCSMInit )
+    call set_clmvarctl(    caseid_in=caseid, ctitle_in=ctitle,               &
+                           brnch_retain_casename_in=brnch_retain_casename,   &
+                           single_column_in=single_column, scmlat_in=scmlat, &
+                           scmlon_in=scmlon, nsrest_in=nsrest )
+
+    call clm_init0( )
 
     ! If in SCM mode and no land then exit out of initialization
 
     if ( single_column .and. amask(1)==0) then
-       call shr_inputInfo_initPutData( CCSMInit, lnd_present=.false.)
+       call seq_infodata_PutData(infodata, lnd_present=.false.)
        return
     end if
 
-    call clm_init1( SyncClock )
+    call clm_init1( )
     call clm_init2()
+
+    ! Check that clm internal dtime aligns with clm coupling interval
+
+    call seq_timemgr_EClockGetData(EClock, dtime=dtime_sync )
+    dtime_clm = get_step_size()
+    if(masterproc) write(iulog,*)'dtime_sync= ',dtime_sync,' dtime_clm= ',dtime_clm,' mod = ',mod(dtime_sync,dtime_clm)
+    if (mod(dtime_sync,dtime_clm) /= 0) then
+       write(iulog,*)'clm dtime ',dtime_clm,' and Eclock dtime ',dtime_sync,' never align'
+       call shr_sys_abort()
+    end if
 
     ! Initialize lnd gsMap
 
@@ -254,16 +311,18 @@ contains
 
     ! Set land modes
 
-    call shr_inputInfo_initPutData( CCSMInit, lnd_prognostic=.true.)
+    call seq_infodata_PutData( infodata, lnd_prognostic=.true.)
+    call seq_infodata_PutData( infodata, lnd_nx = adomain%ni, lnd_ny = adomain%nj)
 #ifdef RTM
-    call shr_inputInfo_initPutData( CCSMInit, rof_present=.true.)
+    call seq_infodata_PutData( infodata, rof_present=.true.)
+    call seq_infodata_PutData( infodata, rof_nx = rtmlon, rof_ny = rtmlat)
 #else
-    call shr_inputInfo_initPutData( CCSMInit, rof_present=.false.)
+    call seq_infodata_PutData( infodata, rof_present=.false.)
 #endif
 
     ! Determine atmosphere modes
 
-    call shr_inputInfo_initGetData( CCSMInit, atm_prognostic=atm_prognostic)
+    call seq_infodata_GetData(infodata, atm_prognostic=atm_prognostic)
     if (masterproc) then
        if ( atm_prognostic )then
           write(iulog,format) 'Atmospheric input is from a prognostic model'
@@ -272,19 +331,18 @@ contains
        end if
     end if
 
-    ! Determine if will do flux average
-    ! Do flux averaging only if the cam time step is NOT equal to the
-    ! sync clock timestep and irad is NOT equal to 1
-
-    do_fluxave = .false.
-    call eshr_timemgr_clockGet(SyncClock, Dtime=dtime_sync)
-    dtime_clm = get_step_size()
-    if (irad /= 1 .and. dtime_clm /= dtime_sync) do_fluxave = .true.
-
     ! Reset shr logging to original values
 
     call shr_file_setLogUnit (shrlogunit)
     call shr_file_setLogLevel(shrloglev)
+
+#if (defined _MEMTRACE)
+    if(masterproc) then
+       write(iulog,*) TRIM(Sub) // ':end::'
+       call memmon_print_usage()
+       call memmon_reset_addr()
+    endif
+#endif
 
   end subroutine lnd_init_mct
 
@@ -294,7 +352,7 @@ contains
 ! !IROUTINE: lnd_run_mct
 !
 ! !INTERFACE:
-  subroutine lnd_run_mct( cdata_l, x2l_l, l2x_l, cdata_r, r2x_r, SyncClock )
+  subroutine lnd_run_mct( EClock, cdata_l, x2l_l, l2x_l, cdata_r, r2x_r)
 !
 ! !DESCRIPTION:
 ! Run clm model
@@ -308,15 +366,14 @@ contains
     use clm_varctl      ,only : irad
 !
 ! !ARGUMENTS:
+    type(ESMF_Clock)            , intent(in)    :: EClock
     type(seq_cdata)             , intent(in)    :: cdata_l
     type(mct_aVect)             , intent(inout) :: x2l_l
     type(mct_aVect)             , intent(inout) :: l2x_l
     type(seq_cdata)             , intent(in)    :: cdata_r
     type(mct_aVect)             , intent(inout) :: r2x_r
-    type(eshr_timemgr_clockType), intent(in)    :: SyncClock
 !
 ! !LOCAL VARIABLES:
-    integer :: ier             ! error return
     integer :: ymd_sync        ! Sync date (YYYYMMDD)
     integer :: yr_sync         ! Sync current year
     integer :: mon_sync        ! Sync current month
@@ -329,17 +386,16 @@ contains
     integer :: tod             ! CLM current time of day (sec)
     integer :: dtime           ! time step increment (sec)
     integer :: nstep           ! time step index
-    logical :: rstwr           ! .true. ==> write restart file before returning
-    logical :: nlend           ! .true. ==> last time-step
-    logical :: doalb           ! .true. ==> do albedo calculation on this time step
     logical :: rstwr_sync      ! .true. ==> write restart file before returning
+    logical :: rstwr           ! .true. ==> write restart file before returning
     logical :: nlend_sync      ! Flag signaling last time-step
+    logical :: nlend           ! .true. ==> last time-step
     logical :: dosend          ! true => send data back to driver
-    real(r8):: nextsw_cday
-    real(r8):: caldayp1
-    real(r8):: dtime_sync
-    real(r8):: dtime_cam
-    integer :: shrlogunit,shrloglev ! old values
+    logical :: doalb           ! .true. ==> do albedo calculation on this time step
+    real(r8):: nextsw_cday     ! calday from clock of next radiation computation
+    real(r8):: caldayp1        ! clm calday plus dtime offset
+    integer :: shrlogunit,shrloglev       ! old values
+    type(seq_infodata_type),pointer :: infodata
     character(len=32)            :: rdate ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
 !
@@ -349,6 +405,13 @@ contains
 !EOP
 !---------------------------------------------------------------------------
 
+#if (defined _MEMTRACE)
+    if(masterproc) then
+       write(iulog,*) TRIM(Sub) // ':start::'
+       call memmon_print_usage()
+    endif
+#endif
+
     ! Reset shr logging to my log file
 
     call shr_file_getLogUnit (shrlogunit)
@@ -357,11 +420,15 @@ contains
 
     ! Determine time of next atmospheric shortwave calculation
 
-    call eshr_timemgr_clockGet( SyncClock, nextsw_cday=nextsw_cday )
+    call seq_cdata_setptrs(cdata_l, infodata=infodata)
+    call seq_timemgr_EClockGetData(EClock, &
+         curr_ymd=ymd, curr_tod=tod_sync,  &
+         curr_yr=yr_sync, curr_mon=mon_sync, curr_day=day_sync)
+    call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
 
-    call eshr_timemgr_clockGet(SyncClock, year=yr_sync, month=mon_sync, day=day_sync, CurrentTOD=tod_sync)
-    nlend_sync = eshr_timeMgr_clockIsOnLastStep( SyncClock )
-    rstwr_sync = eshr_timeMgr_clockAlarmIsOnRes( SyncClock )
+    write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync,mon_sync,day_sync,tod_sync
+    nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
+    rstwr_sync = seq_timemgr_RestartAlarmIsOn( EClock )
     
     ! Map MCT to land data type
 
@@ -378,48 +445,35 @@ contains
     dosend = .false.
     do while(.not. dosend)
 
-       nstep  = get_nstep()
-       doalb  = ((irad==1) .or. (mod(nstep,irad)==0 .and. nstep/=0))
-       if (do_fluxave) then
-          dosend = doalb
-       else
-          dosend = .true.
-       end if
+       ! Determine if dosend
+       ! When time is not updated at the beginning of the loop - then return only if
+       ! are in sync with clock before time is updated
 
-       ! Error check
+       call get_curr_date( yr, mon, day, tod )
+       ymd = yr*10000 + mon*100 + day
+       tod = tod
+       dosend = (seq_timemgr_EClockDateInSync( EClock, ymd, tod))
+
+       ! Determine doalb
        ! If not prognostic atm, then will always use internal albedo calculation
-       ! logic and not trigger off of nextsw_cday 
+       ! logic and not trigger off of nextsw_cday - not that clm namelist irad will now
+       ! ONLY be used with a datm model - not with cam
 
        if (atm_prognostic) then
           dtime = get_step_size()
           caldayp1 = get_curr_calday(offset=dtime)
-          if (doalb .and. (nextsw_cday /= caldayp1)) then
-             write(iulog,*)'caldayp1_drv= ',nextsw_cday,' caldayp1_clm= ',caldayp1
-             if (nstep > 2) call shr_sys_abort('caldayp1 from drv and clm do not match')
-          end if
+          doalb = (nextsw_cday == caldayp1) 
+       else
+          nstep = get_nstep()
+          doalb = ((irad==1) .or. (mod(nstep,irad)==0 .and. nstep/=0))
        end if
 
-       ! Determine if time to write restart
+       ! Determine if time to write cam restart and stop
 
        rstwr = .false.
-       if (rstwr_sync) then
-          if (do_fluxave) then
-             if (doalb) rstwr = .true.
-          else
-             rstwr = .true.
-          end if
-       end if
-
-       ! Determine if time to end
-
+       if (rstwr_sync .and. dosend) rstwr = .true.
        nlend = .false.
-       if (nlend_sync) then
-          if (do_fluxave) then
-             if (doalb) nlend = .true.
-          else
-             nlend = .true.
-          end if
-       end if
+       if (nlend_sync .and. dosend) nlend = .true.
 
        ! Run clm 
 
@@ -427,8 +481,6 @@ contains
        call t_startf ('clm_run1')
        call clm_run1( )
        call t_stopf ('clm_run1')
-
-       write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync,mon_sync,day_sync,tod_sync
 
        call t_barrierf('sync_clm_run2', mpicom)
        call t_startf ('clm_run2')
@@ -447,16 +499,24 @@ contains
        
        ! Compute snapshot attribute vector for accumulation
        
-       call mct_aVect_copy( l2x_l, l2x_l_SNAP )
-       call mct_aVect_accum( aVin=l2x_l_SNAP, aVout=l2x_l_SUM )
-       avg_count = avg_count + 1
+! don't accumulate on first coupling freq ts0 and ts1
+! for consistency with ccsm3 when flxave is off
+       nstep = get_nstep()
+       if (nstep <= 1) then
+          call mct_aVect_copy( l2x_l, l2x_l_SUM )
+          avg_count = 1
+       else
+          call mct_aVect_copy( l2x_l, l2x_l_SNAP )
+          call mct_aVect_accum( aVin=l2x_l_SNAP, aVout=l2x_l_SUM )
+          avg_count = avg_count + 1
+       endif
        
        ! Advance clm time step
        
        call t_startf ('lc_clm2_adv_timestep')
        call advance_timestep()
        call t_stopf ('lc_clm2_adv_timestep')
-	
+
     end do
 
     ! Finish accumulation of attribute vector and average and zero out partial sum and counter
@@ -476,16 +536,12 @@ contains
        
     ! Check that internal clock is in sync with master clock
 
-    if (.not. do_fluxave) then
-       call get_curr_date( yr, mon, day, tod )
-    else
-       dtime = get_step_size()
-       call get_curr_date( yr, mon, day, tod, offset=-dtime )
-    end if
+    dtime = get_step_size()
+    call get_curr_date( yr, mon, day, tod, offset=-dtime )
     ymd = yr*10000 + mon*100 + day
     tod = tod
-    if ( .not. eshr_timemgr_clockDateInSync( SyncClock, ymd, tod ) )then
-       call eshr_timemgr_clockGet( Syncclock, CurrentYMD=ymd_sync, CurrentTOD=tod_sync )
+    if ( .not. seq_timemgr_EClockDateInSync( EClock, ymd, tod ) )then
+       call seq_timemgr_EclockGetData( EClock, curr_ymd=ymd_sync, curr_tod=tod_sync )
        write(iulog,*)' clm ymd=',ymd     ,'  clm tod= ',tod
        write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
        call shr_sys_abort( sub//":: CLM clock not in sync with Master Sync clock" )
@@ -496,6 +552,14 @@ contains
     call shr_file_setLogUnit (shrlogunit)
     call shr_file_setLogLevel(shrloglev)
   
+#if (defined _MEMTRACE)
+    if(masterproc) then
+       write(iulog,*) TRIM(Sub) // ':end::'
+       call memmon_print_usage()
+       call memmon_reset_addr()
+    endif
+#endif
+
   end subroutine lnd_run_mct
 
 !---------------------------------------------------------------------------
@@ -811,37 +875,6 @@ contains
 
    end subroutine lnd_import_mct
 
-!---------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: lnd_setorb_mct
-!
-! !INTERFACE:
-  subroutine lnd_setorb_mct( ClockInfo )
-!
-! !DESCRIPTION:
-! Determine clm orbital parameters
-!
-! !USES:
-    use clm_varorb      , only : iyear_AD, eccen, obliq, nmvelp, obliqr, &
-                                 lambm0, mvelpp
-!
-! !ARGUMENTS: 
-    type(eshr_timemgr_clockInfoType), intent(in) :: ClockInfo
-
-!
-!EOP
-!-----------------------------------------------------------------------
-
-    ! Get orbital information from clockInfo object
-    call eshr_timemgr_clockInfoGet( ClockInfo, orb_eccen=eccen, orb_mvelp=nmvelp, &
-                                    orb_iyear_AD=iyear_AD, orb_obliq=obliq )
-    ! Set orbital parameters based on the above values
-    call shr_orb_params( iyear_AD, eccen, obliq, nmvelp,     &
-                         obliqr, lambm0, mvelpp,   Log_Print=.false. )
-
-  end subroutine lnd_setorb_mct
-
 !===============================================================================
 
   subroutine lnd_domain_mct( lsize, gsMap_l, dom_l )
@@ -869,7 +902,8 @@ contains
     ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
     ! Note that in addition land carries around landfrac for the purposes of domain checking
     ! 
-    call mct_gGrid_init( GGrid=dom_l, CoordChars="lat:lon", OtherChars="area:aream:mask:frac", lsize=lsize )
+    call mct_gGrid_init( GGrid=dom_l, CoordChars=trim(seq_flds_dom_coord), &
+       OtherChars=trim(seq_flds_dom_other), lsize=lsize )
     !
     ! Allocate memory
     !
@@ -1021,7 +1055,8 @@ contains
     ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
     ! Note that in addition land carries around landfrac for the purposes of domain checking
     ! 
-    call mct_gGrid_init( GGrid=dom_r, CoordChars="lat:lon", OtherChars="area:aream:mask:frac", lsize=lsize )
+    call mct_gGrid_init( GGrid=dom_r, CoordChars=trim(seq_flds_dom_coord), &
+      OtherChars=trim(seq_flds_dom_other), lsize=lsize )
     !
     ! Allocate memory
     !
@@ -1094,15 +1129,7 @@ contains
     do n = runoff%begr,runoff%endr
        if (runoff%mask(n) == 2) then
           ni = ni + 1
-          data(ni) = runoff%area(n)*1.0e-6_r8/(re*re)
-       end if
-    end do
- 
-    ni = 0
-    do n = runoff%begr,runoff%endr
-       if (runoff%mask(n) == 2) then
-          ni = ni + 1
-          data(ni) = 1.0_r8 - float(runoff%mask(n))
+          data(ni) = 1.0_r8
        end if
     end do
     call mct_gGrid_importRattr(dom_r,"mask",data,lsize) 

@@ -132,7 +132,7 @@ cat >! lndinput << EOF
  &drv_in
  start_ymd      =  19980101
  start_tod      =  0
- stop_final_ymd = $stop_final
+ stop_ymd       = $stop_final
  /
  &clm_inparm
  dtime          =  1800

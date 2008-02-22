@@ -97,6 +97,7 @@ elif [ "${7%+*}" = "continue" ]; then
 
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*clm?.*.*     $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*drv.r*       $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*cpl.r*       $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.r*     $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/$atm_rpointer $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/$lnd_rpointer $rundir/.
@@ -119,10 +120,10 @@ elif [ "${7%+*}" = "branch" ]; then
    export nrevsn
 
    if [ "$debug" = "YES" ]; then
-       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.drv.r.1967-01-01-00000
+       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.cpl.r.1967-01-01-00000
    fi
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/*drv.r* $rundir/.
-   drv_restart=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*.drv.r.* \
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*cpl.r* $rundir/.
+   drv_restart=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*.cpl.r.* \
        | tail -1 | head -1`
    export drv_restart
 

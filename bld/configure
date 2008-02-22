@@ -91,7 +91,7 @@ OPTIONS
      -maxpft <n>        Value of maxpatch_pft (default is 4)
      -mpi_inc <dir>     Directory containing MPI include files.
      -mpi_lib <dir>     Directory containing MPI library.
-     -mode <name>       CLM mode [offline | ccsm_seq | ext_ccsm_con ]
+     -mode <name>       CLM mode [offline | ccsm_seq | ext_ccsm_con || ext_ccsm_seq]
      -nc_inc <dir>      Directory containing netCDF include files.
      -nc_lib <dir>      Directory containing netCDF library.
      -nc_mod <dir>      Directory containing netCDF module files.
@@ -270,7 +270,7 @@ if (defined $opts{'mode'}) {
 } else {
     $cfg = $bld_defaults{'mode'};
 }
-if ($cfg eq "offline" || $cfg eq "ccsm_seq" || $cfg eq "ext_ccsm_con" ) {
+if ($cfg eq "offline" || $cfg eq "ccsm_seq" || $cfg eq "ext_ccsm_con" || $cfg eq "ext_ccsm_seq" ) {
     $cfg{'mode'} = $cfg;
 } else {
     die <<"EOF";
@@ -287,7 +287,7 @@ if ($print>=2) { print "CLM configure mode is $cfg{'mode'}$eol"; }
 # when the ccsm option is set.
 
 my $clm_build = 1;
-if ( $cfg{'mode'} eq "ext_ccsm_con" ) {
+if ( $cfg{'mode'} eq "ext_ccsm_con" || $cfg{'mode'} eq "ext_ccsm_con" ) {
    $clm_build = 0;
 }
 
@@ -755,6 +755,9 @@ if ( $cfg{'mode'} eq "ccsm_seq" ) {
 if ( $cfg{'mode'} eq "ext_ccsm_con" ) {
     $cfg .= " -DCOUP_CSM";
 }
+if ( $cfg{'mode'} eq "ext_ccsm_seq" ) {
+    $cfg .= " -DSEQ_MCT";
+}
 if ($cfg{'progsslt'} eq 'on') { 
     $cfg .= " -DPROGSSLT";
 }
@@ -791,7 +794,7 @@ if ( $cfg{'pergro'} eq 'on' ) {
 
 # -DSPMD only added to $cfg(make_cppdefs) for CCSM build.  The CLM Makefile
 # has a separate SPMD macro.
-if ( ($cfg{'mode'} eq "ext_ccsm_con") && $cfg{'spmd'} ) {
+if ( ($cfg{'mode'} eq "ext_ccsm_con" || $cfg{'mode'} eq "ext_ccsm_seq") && $cfg{'spmd'} ) {
     $cfg .= " -DSPMD";
 }
 
@@ -1026,7 +1029,7 @@ EOF
 #-----------------------------------------------------------------------------------------------
 # Write configuration files:
 
-if ( $cfg{'mode'} eq "ext_ccsm_con" ) {
+if ( $cfg{'mode'} eq "ext_ccsm_con" || $cfg{'mode'} eq "ext_ccsm_seq") {
     # Write the filepath file for ccsm.
     write_filepath_ccsm("$cfg{'clm_bld'}/$fp_filename", %cfg);
     if ($print) { print "creating $cfg{'clm_bld'}/$fp_filename\n"; }
@@ -1225,10 +1228,11 @@ dust          Turn on DUST [on | off].
 voc           Turn on VOC  [on | off].
 maxpft        Value of maxpatch_pft.
 pergro        Use modifications that allow perturbation growth testing: [on | off]
-mode          CLM mode: [offline | ccsm_seq | ext_ccsm_con | ext_cam ]
+mode          CLM mode: [offline | ccsm_seq | ext_ccsm_con | ext_ccsm_seq ]
                  offline      => CLM offline mode
                  ccsm_seq     => CLM sequential CCSM mode (drv/clm/datm7/socn/sice)
                  ext_ccsm_con => CLM will run as part of "external" concurrent ccsm code
+                 ext_ccsm_seq => CLM will run as part of "external" sequential ccsm code
 </comment>
 
 <cppvars
@@ -1506,7 +1510,7 @@ sub write_misc_h
 #ifndef MISC_SET
 #define MISC_SET
 EOF
-    if ($cfg{'mode'} eq "ext_ccsm_con" ) {
+    if ($cfg{'mode'} eq "ext_ccsm_con") {
 	print $fh "#define COUP_CSM\n";
     } else {
 	print $fh "#undef COUP_CSM\n";

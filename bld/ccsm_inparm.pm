@@ -37,7 +37,7 @@ sub new {
   my $printlev    = $$optsref{'printlev'};
   my $cfgdir      = $$optsref{'cfgdir'};
 
-  my $self = $class->SUPER::new( "ccsm_inparm", \%ccsm_inparm::NL, $interactive, $file,
+  my $self = $class->SUPER::new( "seq_infodata_inparm", \%ccsm_inparm::NL, $interactive, $file,
                                  "$cfgdir/DefaultCCSM_INPARM_Namelist.xml", $config, 
                                  $printlev );
 
@@ -120,6 +120,16 @@ sub set_output_values {
   $NLref->{'outpathroot'} = namelist::quote_string($opt);
   if ( $opt !~ /^['"]+\// ) {
      $self->requiredVar( "outpathroot", $addquotes );
+  }
+
+  # Orbit (if not coupled)
+  if ( $self->{'MODE'} ne "ccsm_seq" ) {
+     unless ( defined($NLref->{'orb_obliq'}) and defined($NLref->{'orb_eccen'}) and
+              defined($NLref->{'orb_mvelp'}) ) {
+         unless ( defined($NLref->{'orb_iyear_ad'}) ) {
+             $NLref->{'orb_iyear_ad'} = $self->default_vals( 'orb_iyear_ad' );
+         }
+     }
   }
 
 }

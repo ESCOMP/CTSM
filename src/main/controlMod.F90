@@ -148,7 +148,7 @@ module controlMod
 !
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8, SHR_KIND_CL
-  use clm_varpar   , only : maxpatch_pft, numpft
+  use clm_varpar   , only : maxpatch_pft
   use clm_varctl
   use spmdMod
   use decompMod    , only : clump_pproc
@@ -182,7 +182,6 @@ module controlMod
 !
 ! PRIVATE TYPES:
 ! Namelist variables only used locally
-  character(len=256) :: rpntpath                         ! full UNIX pathname of restart pointer file
   character(len=  7) :: runtyp(4)                        ! run type
   character(len=SHR_KIND_CL) :: NLFilename = 'lnd.stdin' ! Namelist filename
 #if (defined _OPENMP)
@@ -240,29 +239,21 @@ contains
 ! !IROUTINE: control_init
 !
 ! !INTERFACE:
-  subroutine control_init( CCSMInit )
+  subroutine control_init( )
 !
 ! !DESCRIPTION:
 ! Initialize CLM run control information
 !
 ! !USES:
-    use clm_time_manager
+    use clm_time_manager , only : set_timemgr_init, is_perpetual, get_timemgr_defaults
 #if (defined CASA)
     use CASAMod          , only : lnpp, lalloc, q10, spunup, fcpool
 #endif
-    use shr_inputinfo_mod, only : shr_inputInfo_initType,       &
-                                  shr_inputInfo_initGetData,    &
-                                  shr_inputInfo_initIsBranch,   &
-                                  shr_inputInfo_initIsContinue, &
-                                  shr_inputInfo_initIsStartup
     use fileutils        , only : getavu, relavu
     use shr_string_mod   , only : shr_string_getParentDir
 
     implicit none
 !
-! !ARGUMENTS:
-    type(shr_InputInfo_initType), intent(in), optional :: CCSMInit   ! Input CCSM info
-
     include 'netcdf.inc'
 !
 ! !REVISION HISTORY:
@@ -271,9 +262,8 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
+    character(len=32)  :: starttype ! infodata start type
     integer :: i,j,n                ! loop indices
-    integer :: iundef               ! integer undefined value
-    real(r8):: rundef               ! real undefined value
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
     character(len=32) :: subname = 'control_init'  ! subroutine name
@@ -286,6 +276,16 @@ contains
     ! clm time manager info
 
 #if (defined OFFLINE) || (defined COUP_CSM)
+    integer          :: nestep             ! Step (or day) number to advance to
+    integer          :: nelapse            ! Number of step (or days) to advance
+    integer          :: start_ymd          ! Start date       (YYYYMMDD)
+    integer          :: start_tod          ! Start time of day (sec)
+    integer          :: ref_ymd            ! Reference date   (YYYYMMDD)
+    integer          :: ref_tod            ! Reference time of day (sec)
+    integer          :: stop_ymd           ! Stop date        (YYYYMMDD)
+    integer          :: stop_final_ymd     ! Final stop date  (YYYYMMDD)
+    integer          :: stop_tod           ! Stop time of day (sec)
+    character(len=SHR_KIND_CL) :: calendar ! Calendar type
     namelist /clm_inparm/  &
          ctitle, caseid, nsrest, version, hostname, username, &
          calendar, nelapse, nestep, start_ymd, start_tod,     &
@@ -295,6 +295,7 @@ contains
 
     ! clm input datasets
 
+    integer :: dtime    ! Integer time-step
     namelist / clm_inparm/ &
 	 dtime	
 
@@ -354,93 +355,6 @@ contains
     runtyp(1 + 1) = 'restart'
     runtyp(3 + 1) = 'branch '
 
-    iundef = -9999999
-    rundef = -9999999._r8
-
-    ! control variables
-
-    caseid      = ' '
-    ctitle      = ' '
-    nsrest      = iundef
-    username    = ' '
-    hostname    = ' '
-    source      = "Community Land Model CLM3"
-    version     = source
-    conventions = "CF-1.0"
-
-    ! initial data
-
-    fsurdat     = ' '
-    fatmgrid    = ' '
-    fatmlndfrc  = ' '
-    fatmtopo    = ' '
-    flndtopo    = ' '
-    fndepdat    = ' '
-    fndepdyn    = ' '
-    finidat     = ' '
-    fpftcon     = ' '
-    frivinp_rtm = ' '
-    fpftdyn     = ' '
-    nrevsn      = ' '
-    furbinp     = ' '
-
-    ! offline mode
-
-    offline_atmdir   = ' '
-    cycle_begyr = iundef
-    cycle_nyr   = iundef
-
-    ! landunit generation
-
-    create_crop_landunit = .false.
-    if (maxpatch_pft == numpft+1) then
-       allocate_all_vegpfts = .true.
-    else
-       allocate_all_vegpfts = .false.
-    end if
-
-    ! bgc
-
-    co2_type = 'constant'
-
-    ! history file variables
-
-    outnc_large_files = .false.
-    hist_crtinic      = 'NONE'
-
-    ! other namelist variables
-
-    irad          = -1
-    wrtdia        = .false.
-    csm_doflxave  = .true.
-    pertlim       = 0._r8
-    single_column = .false.
-    scmlat        = -999.
-    scmlon        = -999.
-    nsegspc       = 20
-    co2_ppmv      = 355._r8
-
-    ! Defaults for History / PIO options
-    ! TODO: Remove the ones NOT really needed, put BUILDPIO #ifdef around ones that require PIO, make sure function correctly.
-
-    hist_pioflag           = .false.    ! turns on and off hist with pio
-    ncd_lowmem2d           = .true.     ! turns on low memory 2d writes in clm hist
-    ncd_pio_def            = .false.    ! default pio use setting
-    ncd_pio_UseRearranger  = .true.     ! use MCT or box
-    ncd_pio_UseBoxRearr    = .false.    ! use box
-    ncd_pio_SerialCDF      = .false.    ! write with pio serial netcdf mode
-    ncd_pio_IODOF_rootonly = .false.    ! write history in pio from root only
-    ncd_pio_DebugLevel     = 2          ! pio debug level
-    ncd_pio_num_iotasks    = 999999999  ! all pes default
-
-
-#if (defined RTM)
-    ! If rtm_nsteps is not set in the namelist then
-    ! will be given default value below
-
-    rtm_nsteps = -999
-#endif
-
 #if (defined CASA)
     lnpp = 2
     lalloc = 1
@@ -469,6 +383,14 @@ contains
        ! ----------------------------------------------------------------------
        ! Read namelist from standard input. 
        ! ----------------------------------------------------------------------
+#if (defined OFFLINE) || (defined COUP_CSM)
+       call get_timemgr_defaults( nestep_out=nestep, nelapse_out=nelapse,           &
+                                  start_ymd_out=start_ymd, start_tod_out=start_tod, &
+                                  ref_ymd_out=ref_ymd, ref_tod_out=ref_tod,         &
+                                  stop_ymd_out=stop_ymd, stop_tod_out=stop_tod,     &
+                                  stop_final_ymd_out=stop_final_ymd,                &
+                                  calendar_out=calendar, dtime_out=dtime )
+#endif
 
        if ( len_trim(NLFilename) == 0  )then
           call endrun( subname//' error: nlfilename not set' )
@@ -489,58 +411,17 @@ contains
        ! Consistency checks on input namelist.
        ! ----------------------------------------------------------------------
 
-       ! Consistency settings for co2 type
-
-       if (co2_type /= 'constant' .and. co2_type /= 'prognostic' .and. co2_type /= 'diagnostic') then
-          write(iulog,*)'co2_type = ',co2_type,' is not supported'
-          write(iulog,*)'choices are constant, prognostic or diagnostic'
-          call endrun()
-       end if
-#if (defined OFFLINE)
-       if (co2_type /= 'constant') then
-          write(iulog,*)'co2_type = ',co2_type,' is not supported in offline mode'
-          write(iulog,*)'choice is only constant'
-          call endrun()
-       end if
+#if (defined OFFLINE) || (defined COUP_CSM)
+       call set_timemgr_init( nestep_in=nestep, nelapse_in=nelapse,           &
+                              start_ymd_in=start_ymd, start_tod_in=start_tod, &
+                              ref_ymd_in=ref_ymd, ref_tod_in=ref_tod,         &
+                              stop_ymd_in=stop_ymd, stop_tod_in=stop_tod,     &
+                              stop_final_ymd_in=stop_final_ymd,               &
+                              calendar_in=calendar, dtime_in=dtime )
+#else
+       call set_timemgr_init( dtime_in=dtime )
 #endif
 
-       ! Consistency settings for dynamic land use, etc.
-
-       if (fpftdyn /= ' ' .and. create_crop_landunit) then
-          write(iulog,*)'dynamic landuse is currently not supported with create_crop_landunit option'
-          call endrun()
-       end if
-       if (fpftdyn /= ' ') then
-#if (defined DGVM)
-          write(iulog,*)'dynamic landuse is currently not supported with DGVM option'
-          call endrun()
-#elif (defined CASA)          
-          write(iulog,*)'dynamic landuse is currently not supported with CASA option'
-          call endrun()
-#endif       
-       end if
-
-#if (defined SEQ_MCT) || (defined SEQ_ESMF)
-       ! Override select set of namelist values with sequential driver input
-
-       if ( .not. present(CCSMInit) )then
-          call endrun( subname//' error CCSMInit not present but is '// &
-                       'required when linking with CAM' )
-       end if
-       call shr_inputInfo_initGetData( CCSMInit, case_name=caseid,         &
-                                       case_desc=ctitle,                   &
-                                       version=version, username=username, &
-                                       hostname=hostname,                  &
-                                       brnch_retain_casename=brnch_retain_casename,  &
-                                       single_column=single_column ,       &
-				       scmlat=scmlat,scmlon=scmlon)
-       if (      shr_inputInfo_initIsStartup(  CCSMInit ) )then
-          nsrest = 0
-       else if ( shr_inputInfo_initIsContinue( CCSMInit ) )then
-          nsrest = 1
-       else if ( shr_inputInfo_initIsBranch(   CCSMInit ) )then
-          nsrest = 3
-       end if
 #if (defined RTM) || (defined DGVM)
        if (is_perpetual()) then
           write(iulog,*)'RTM or DGVM cannot be defined in perpetual mode'
@@ -553,15 +434,6 @@ contains
              call endrun()
           end if
        end if
-#endif
-
-#if (defined RTM)
-       ! If rtm_nsteps was not entered in the namelist, give it the following default value
-
-       if (rtm_nsteps == -999) then
-          rtm_nsteps = (3600*3)/dtime ! 3 hours
-       endif
-#endif
 
        ! Check that hist_type_1d is not set for primary tape
 
@@ -570,60 +442,6 @@ contains
           call endrun()
        end if
 
-       ! Check on run type
-
-       if (nsrest == iundef) then
-          write(iulog,*) 'error: must set nsrest'
-          call endrun()
-       end if
-       if (nsrest == 3 .and. nrevsn == ' ') then
-          write(iulog,*) 'error: need to set restart data file name'
-          call endrun()
-       end if
-
-       ! Check on offline mode 
-
-#if (defined OFFLINE)
-       if (offline_atmdir == ' ') then
-          write(iulog,*)'error: atmos  input data file must be specified'; call endrun()
-       end if
-       if (cycle_begyr /= iundef) then
-          if (cycle_nyr == iundef) then
-	     write(iulog,*)'error: if cycle_begyr is set, cycle_nyr must also be set'; call endrun()
-	  end if
-       end if
-       if (cycle_nyr /= iundef) then
-          if (cycle_begyr == iundef) then
-	     write(iulog,*)'error: if cycle_nyr is set, cycle_begyr must also be set'; call endrun()
-	  end if
-       end if
-#endif
-
-       ! Check on ccsm mode 
-
-#if (defined COUP_CSM)
-       if (csm_doflxave .and. irad ==1 ) then
-          write(iulog,*)'error: irad must be greater that one if', &
-            ' flux averaging option is enabled'
-          call endrun
-       end if
-#endif
-
-       ! Check on nitrogen deposition dataset
-       
-       if (fndepdat /= ' ' .and. fndepdyn /= ' ') then
-          write(iulog,*)'namelist error: only one of fndepdat or fndepdyn can be defined'
-          call endrun()
-       end if
-       
-       ! Model physics
-
-       if (irad < 0) irad = nint(-irad*3600._r8/dtime)
-
-       if ( (co2_ppmv <= 0.0_r8) .or. (co2_ppmv > 3000.0_r8) )then
-          write(iulog,*)'namelist error: co2_ppmv is out of a reasonable range'
-          call endrun()
-       end if
        ! History and restart files
 
        do i = 1, max_tapes
@@ -634,34 +452,9 @@ contains
           endif
        end do
        
-       rpntpath = 'rpointer.lnd'
-       
-       if (nsrest == 0) nrevsn = ' '
-       if (nsrest == 1) nrevsn = 'set by restart pointer file file'
-       
-#if (defined DGVM)
-       hist_crtinic = 'YEARLY'
-#else
-       if (trim(hist_crtinic) /= 'MONTHLY'  .and. trim(hist_crtinic) /= 'YEARLY' .and. &
-            trim(hist_crtinic) /= '6-HOURLY' .and. trim(hist_crtinic) /= 'DAILY'  ) then
-          hist_crtinic = 'NONE'
-       endif
-#endif
-
-       if (hist_pioflag .and. ncd_lowmem2d) then
-          ncd_lowmem2d = .false.
-          write(iulog,*) 'control: resetting ncd_lowmem2d to false'
-       endif
-
-
-       ! Split the full pathname of the restart pointer file into a 
-       ! directory name and a file name
-       
-       rpntdir = '.'        ! set path = "."
-       rpntfil = rpntpath   ! use whole input string.
-100    continue
-       
     endif   ! end of if-masterproc if-block
+
+    call clmvarctl_init( masterproc, dtime )
 
     ! ----------------------------------------------------------------------
     ! Broadcast all control information if appropriate
@@ -694,7 +487,6 @@ contains
 !
 ! !USES:
 !
-    use clm_time_manager
 #if (defined CASA)
     use CASAMod, only : lnpp, lalloc, q10, spunup
 #endif
@@ -720,20 +512,6 @@ contains
     call mpi_bcast (hostname, len(hostname), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (username, len(username), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (nsrest,              1,  MPI_INTEGER  , 0, mpicom, ier)
-
-    call mpi_bcast (dtime    , 1, MPI_INTEGER  , 0, mpicom, ier)
-
-#if (defined OFFLINE) || (defined COUP_CSM)
-    call mpi_bcast (nestep   , 1, MPI_INTEGER  , 0, mpicom, ier)
-    call mpi_bcast (nelapse  , 1, MPI_INTEGER  , 0, mpicom, ier)
-    call mpi_bcast (start_ymd, 1, MPI_INTEGER  , 0, mpicom, ier)
-    call mpi_bcast (start_tod, 1, MPI_INTEGER  , 0, mpicom, ier)
-    call mpi_bcast (stop_ymd , 1, MPI_INTEGER  , 0, mpicom, ier)
-    call mpi_bcast (stop_tod , 1, MPI_INTEGER  , 0, mpicom, ier)
-    call mpi_bcast (ref_ymd  , 1, MPI_INTEGER  , 0, mpicom, ier)
-    call mpi_bcast (ref_tod  , 1, MPI_INTEGER  , 0, mpicom, ier)
-    call mpi_bcast (calendar ,len(calendar), MPI_CHARACTER, 0, mpicom, ier)
-#endif
 
     ! initial file variables
 
@@ -810,7 +588,7 @@ contains
 
     ! restart file variables
 
-    call mpi_bcast (rpntpath, len(rpntpath), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (rpntfil, len(rpntfil), MPI_CHARACTER, 0, mpicom, ier)
 
     ! clump decomposition variables
 

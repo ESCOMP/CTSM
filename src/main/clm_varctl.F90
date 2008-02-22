@@ -14,112 +14,121 @@ module clm_varctl
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
 !
-! !PUBLIC TYPES:
+!
+! !PUBLIC MEMBER FUNCTIONS:
   implicit none
+  public :: set_clmvarctl     ! Set variables
+  public :: clmvarctl_init    ! Initialize and check values after namelist input
+
+  private
   save
+!
+! !PUBLIC TYPES:
+!
+  integer, parameter, private ::  iundef = -9999999
+  integer, parameter, private ::  rundef = -9999999._r8
 !
 ! Run control variables
 !
-  character(len=256) :: caseid                  ! case id
-  character(len=256) :: ctitle                  ! case title
-  integer :: nsrest                             ! 0: initial run. 1: restart: 3: branch
-  logical, public :: brnch_retain_casename = .false. ! true => allow case name to remain the same for branch run
-                                                     ! by default this is not allowed
-  character(len=256) :: hostname                ! Hostname of machine running on
-  character(len=256) :: username                ! username of user running program
-  character(len=256) :: version                 ! version of program
-  character(len=256) :: source                  ! description of this source
-  character(len=256) :: conventions             ! dataset conventions
+  character(len=256), public :: caseid  = ' '                          ! case id
+  character(len=256), public :: ctitle  = ' '                          ! case title
+  integer, public :: nsrest             = iundef                       ! 0: initial run. 1: restart: 3: branch
+  logical, public :: brnch_retain_casename = .false.                   ! true => allow case name to remain the same for branch run
+                                                                       ! by default this is not allowed
+  character(len=256), public :: hostname = ' '                         ! Hostname of machine running on
+  character(len=256), public :: username = ' '                         ! username of user running program
+  character(len=256), public :: source   = "Community Land Model CLM3" ! description of this source
+  character(len=256), public :: version  = "Community Land Model CLM3" ! version of program
+  character(len=256), public :: conventions = "CF-1.0"                 ! dataset conventions
 
 !
 ! Unit Numbers
 !
-  integer :: iulog = 6        ! "stdout" log file unit number, default is 6
+  integer, public :: iulog = 6        ! "stdout" log file unit number, default is 6
 !
 ! Initial file variables
 !
-  character(len= 8) :: hist_crtinic             ! if set to 'MONTHLY' or 'YEARLY', write initial cond. file
+  character(len= 8), public :: hist_crtinic = 'NONE'    ! if set to 'MONTHLY' or 'YEARLY', write initial cond. file
 !
 ! Output NetCDF files
 !
-  logical :: outnc_large_files                  ! large file support for output NetCDF files
+  logical, public :: outnc_large_files = .false.        ! large file support for output NetCDF files
 !
 ! Run input files
 !
-  character(len=256) :: finidat                 ! initial conditions file name
-  character(len=256) :: fsurdat                 ! surface data file name
-  character(len=256) :: fatmgrid                ! atm grid file name
-  character(len=256) :: fatmlndfrc              ! lnd frac file on atm grid
-  character(len=256) :: fatmtopo                ! topography on atm grid
-  character(len=256) :: flndtopo                ! topography on lnd grid
-  character(len=256) :: fndepdat                ! static nitrogen deposition data file name
-  character(len=256) :: fndepdyn                ! dynamic nitrogen deposition data file name
-  character(len=256) :: fpftdyn                 ! dynamic landuse dataset
-  character(len=256) :: fpftcon                 ! ASCII data file with PFT physiological constants
-  character(len=256) :: nrevsn                  ! restart data file name for branch run
-  character(len=256) :: frivinp_rtm             ! RTM input data file name
-  character(len=256) :: offline_atmdir          ! directory for input offline model atm data forcing files (Mass Store ok)
+  character(len=256), public :: finidat    = ' '        ! initial conditions file name
+  character(len=256), public :: fsurdat    = ' '        ! surface data file name
+  character(len=256), public :: fatmgrid   = ' '        ! atm grid file name
+  character(len=256), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
+  character(len=256), public :: fatmtopo   = ' '        ! topography on atm grid
+  character(len=256), public :: flndtopo   = ' '        ! topography on lnd grid
+  character(len=256), public :: fndepdat   = ' '        ! static nitrogen deposition data file name
+  character(len=256), public :: fndepdyn   = ' '        ! dynamic nitrogen deposition data file name
+  character(len=256), public :: fpftdyn    = ' '        ! dynamic landuse dataset
+  character(len=256), public :: fpftcon    = ' '        ! ASCII data file with PFT physiological constants
+  character(len=256), public :: nrevsn     = ' '        ! restart data file name for branch run
+  character(len=256), public :: frivinp_rtm  = ' '      ! RTM input data file name
+  character(len=256), public :: offline_atmdir = ' '    ! directory for input offline model atm data forcing files (Mass Store ok)
 !
 ! offline atmosphere data cycling controls
 !
-  integer :: cycle_begyr                        ! first year of offline atm data (e.g. 1948)
-  integer :: cycle_nyr                          ! number of years of offline atm data to cycle
+  integer, public :: cycle_begyr = iundef               ! first year of offline atm data (e.g. 1948)
+  integer, public :: cycle_nyr   = iundef               ! number of years of offline atm data to cycle
   
 !
 ! Landunit logic
 !
-  logical :: create_crop_landunit               ! true => separate crop landunit is not created by default
-  logical :: allocate_all_vegpfts               ! true => allocate memory for all possible vegetated pfts on
-                                                ! vegetated landunit if at least one pft has nonzero weight
+  logical, public :: create_crop_landunit = .false.     ! true => separate crop landunit is not created by default
+  logical, public :: allocate_all_vegpfts = .false.     ! true => allocate memory for all possible vegetated pfts on
+                                                        ! vegetated landunit if at least one pft has nonzero weight
 !
 ! BGC logic
 !
-  character(len=16) :: co2_type                 ! values of 'prognostic','diagnostic','constant'
+  character(len=16), public :: co2_type = 'constant'    ! values of 'prognostic','diagnostic','constant'
 !
 ! Physics
 !
-  integer :: irad                               ! solar radiation frequency (iterations)
-  logical :: wrtdia                             ! true => write global average diagnostics to std out
-  logical :: csm_doflxave                       ! true => only communicate with flux coupler on albedo calc time steps
-  real(r8) :: co2_ppmv                          ! atmospheric CO2 molar ratio (by volume) (umol/mol)
+  integer,  public :: irad         = -1                 ! solar radiation frequency (iterations)
+  logical,  public :: wrtdia       = .false.            ! true => write global average diagnostics to std out
+  logical,  public :: csm_doflxave = .true.             ! true => only communicate with flux coupler on albedo calc time steps
+  real(r8), public :: co2_ppmv     = 355._r8            ! atmospheric CO2 molar ratio (by volume) (umol/mol)
 
 !
 ! single column control variables
 !
-  logical :: single_column                      ! true => single column mode
-  real(r8):: scmlat			        ! single column lat
-  real(r8):: scmlon			        ! single column lon
+  logical,  public :: single_column = .false.           ! true => single column mode
+  real(r8), public:: scmlat         = rundef            ! single column lat
+  real(r8), public:: scmlon         = rundef            ! single column lon
 !
 ! Rtm control variables
 !
-  integer :: rtm_nsteps                         ! if > 1, average rtm over rtm_nsteps time steps
+  integer, public :: rtm_nsteps = iundef                ! if > 1, average rtm over rtm_nsteps time steps
 !
 ! Decomp control variables
 !
-  integer :: nsegspc                            ! number of segments per clump for decomp
+  integer, public :: nsegspc = 20                       ! number of segments per clump for decomp
 !
 ! Derived variables (run, history and restart file)
 !
-  character(len=256) :: rpntdir                 ! directory name for local restart pointer file
-  character(len=256) :: rpntfil                 ! file name for local restart pointer file
+  character(len=256), public :: rpntdir = '.'            ! directory name for local restart pointer file
+  character(len=256), public :: rpntfil = 'rpointer.lnd' ! file name for local restart pointer file
 !
 ! Error growth perturbation limit
 !
-  real(r8) :: pertlim                           ! perturbation limit when doing error growth test
-
-
+  real(r8), public :: pertlim = 0.0_r8                  ! perturbation limit when doing error growth test
 !
 ! History File control
+! TODO: Remove the ones NOT really needed, put BUILDPIO #ifdef around ones that require PIO, make sure function correctly.
 !
-  logical :: hist_pioflag    ! turns on and off hist with pio
-  logical :: ncd_lowmem2d    ! turns on low memory 2d writes in clm hist
-  logical :: ncd_pio_def     ! default pio use setting
-  logical :: ncd_pio_UseRearranger  ! use MCT or box
-  logical :: ncd_pio_UseBoxRearr    ! use box
-  logical :: ncd_pio_SerialCDF      ! write with pio serial netcdf mode
-  logical :: ncd_pio_IODOF_rootonly ! write history in pio from root only
-  integer :: ncd_pio_DebugLevel     ! pio debug level
-  integer :: ncd_pio_num_iotasks    ! num of iotasks to use
+  logical, public :: hist_pioflag           = .false.   ! turns on and off hist with pio
+  logical, public :: ncd_lowmem2d           = .true.    ! turns on low memory 2d writes in clm hist
+  logical, public :: ncd_pio_def            = .false.   ! default pio use setting
+  logical, public :: ncd_pio_UseRearranger  = .true.    ! use MCT or box
+  logical, public :: ncd_pio_UseBoxRearr    = .false.   ! use box
+  logical, public :: ncd_pio_SerialCDF      = .false.   ! write with pio serial netcdf mode
+  logical, public :: ncd_pio_IODOF_rootonly = .false.   ! write history in pio from root only
+  integer, public :: ncd_pio_DebugLevel     = 2         ! pio debug level
+  integer, public :: ncd_pio_num_iotasks    = 999999999 ! num of iotasks to use
 
 !
 ! !REVISION HISTORY:
@@ -128,5 +137,185 @@ module clm_varctl
 !
 !EOP
 !-----------------------------------------------------------------------
+  logical, private :: clmvarctl_isset = .false.
+
+!===============================================================
+contains
+!===============================================================
+
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: set_clmvarctl
+!
+! !INTERFACE:
+  subroutine set_clmvarctl( caseid_in, ctitle_in, brnch_retain_casename_in, &
+                            single_column_in, scmlat_in, scmlon_in, nsrest_in )
+!
+! !DESCRIPTION:
+!      Set input control variables.
+!
+! !USES:
+  use shr_sys_mod, only : shr_sys_abort
+!
+! !ARGUMENTS:
+  character(len=256), optional, intent(IN) :: caseid_in                ! case id
+  character(len=256), optional, intent(IN) :: ctitle_in                ! case title
+  logical,            optional, intent(IN) :: brnch_retain_casename_in ! true => allow case name to remain the same for branch run
+  logical,            optional, intent(IN) :: single_column_in         ! true => single column mode
+  real(r8),           optional, intent(IN) :: scmlat_in                ! single column lat
+  real(r8),           optional, intent(IN) :: scmlon_in                ! single column lon
+  integer,            optional, intent(IN) :: nsrest_in                ! 0: initial run. 1: restart: 3: branch
+!
+! !LOCAL VARIABLES:
+   character(len=32) :: subname = 'set_clmvarctl'  ! subroutine name
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!EOP
+!-----------------------------------------------------------------------
+    if ( clmvarctl_isset )then
+       call shr_sys_abort( subname//' ERROR:: control variables already set -- can not call this subroutine' )
+    end if
+    if ( present(caseid_in       ) ) caseid        = caseid_in
+    if ( present(ctitle_in       ) ) ctitle        = ctitle_in
+    if ( present(single_column_in) ) single_column = single_column_in
+    if ( present(scmlat_in       ) ) scmlat        = scmlat_in
+    if ( present(scmlon_in       ) ) scmlon        = scmlon_in
+    if ( present(nsrest_in       ) ) nsrest        = nsrest_in
+    if ( present(brnch_retain_casename_in) ) brnch_retain_casename = brnch_retain_casename_in
+
+  end subroutine set_clmvarctl
+
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: clmvarctl_init
+!
+! !INTERFACE:
+  subroutine clmvarctl_init( masterproc, dtime )
+!
+! !DESCRIPTION:
+!      Check that values are correct, and finish setting variables based on other variables.
+!
+! !USES:
+  use shr_sys_mod  , only : shr_sys_abort
+  use clm_varpar   , only : maxpatch_pft, numpft
+!
+! !ARGUMENTS:
+  logical, intent(IN) :: masterproc  ! proc 0 logical for printing msgs
+  integer, intent(IN) :: dtime       ! timestep in seconds
+!
+! !LOCAL VARIABLES:
+   character(len=32) :: subname = 'clmvarctl_init'  ! subroutine name
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!EOP
+!-----------------------------------------------------------------------
+
+    ! landunit generation
+
+    if (maxpatch_pft == numpft+1) then
+       allocate_all_vegpfts = .true.
+    else
+       allocate_all_vegpfts = .false.
+    end if
+
+    if (masterproc) then
+
+       ! Consistency settings for co2 type
+
+       if (co2_type /= 'constant' .and. co2_type /= 'prognostic' .and. co2_type /= 'diagnostic') then
+          write(iulog,*)'co2_type = ',co2_type,' is not supported'
+          call shr_sys_abort( subname//' ERROR:: choices are constant, prognostic or diagnostic' )
+       end if
+#if (defined OFFLINE)
+       if (co2_type /= 'constant') then
+          write(iulog,*)'co2_type = ',co2_type,' is not supported in offline mode'
+          call shr_sys_abort( subname//' ERROR:: choice is only constant' )
+       end if
+#endif
+       ! Consistency settings for dynamic land use, etc.
+
+       if (fpftdyn /= ' ' .and. create_crop_landunit) &
+          call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with create_crop_landunit option' )
+       if (fpftdyn /= ' ') then
+#if (defined DGVM)
+          call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with DGVM option' )
+#elif (defined CASA)
+          call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with CASA option' )
+#endif
+       end if
+#if (defined RTM)
+       ! If rtm_nsteps was not entered in the namelist, give it the following default value
+
+       if (rtm_nsteps == iundef) rtm_nsteps = (3600*3)/dtime ! 3 hours
+#endif
+
+       ! Check on run type
+
+       if (nsrest == iundef) call shr_sys_abort( subname//' ERROR:: must set nsrest' )
+       if (nsrest == 3 .and. nrevsn == ' ') &
+          call shr_sys_abort( subname//' ERROR: need to set restart data file name' )
+
+       ! Check on offline mode
+
+#if (defined OFFLINE)
+       if (offline_atmdir == ' ') &
+          call shr_sys_abort( subname//' ERROR: atmos  input data file must be specified' )
+       if (cycle_begyr /= iundef) then
+          if (cycle_nyr == iundef) &
+             call shr_sys_abort( subname//' ERROR: if cycle_begyr is set, cycle_nyr must also be set' )
+       end if
+       if (cycle_nyr /= iundef) then
+          if (cycle_begyr == iundef) &
+             call shr_sys_abort( subname//' ERROR: if cycle_nyr is set, cycle_begyr must also be set' )
+       end if
+#endif
+       ! Check on ccsm mode
+
+#if (defined COUP_CSM)
+       if (csm_doflxave .and. irad ==1 ) &
+          call shr_sys_abort( subname//' ERROR: irad must be greater that one if flux averaging option is enabled' )
+#endif
+
+       ! Check on nitrogen deposition dataset
+
+       if (fndepdat /= ' ' .and. fndepdyn /= ' ') &
+          call shr_sys_abort( subname//' ERROR: only one of fndepdat or fndepdyn can be defined' )
+
+       ! Model physics
+
+       if (irad < 0) irad = nint(-irad*3600._r8/dtime)
+
+       if ( (co2_ppmv <= 0.0_r8) .or. (co2_ppmv > 3000.0_r8) ) &
+          call shr_sys_abort( subname//' ERROR: co2_ppmv is out of a reasonable range' )
+
+       if (nsrest == 0) nrevsn = ' '
+       if (nsrest == 1) nrevsn = 'set by restart pointer file file'
+
+#if (defined DGVM)
+       hist_crtinic = 'YEARLY'
+#else
+       if (trim(hist_crtinic) /= 'MONTHLY'  .and. trim(hist_crtinic) /= 'YEARLY' .and. &
+            trim(hist_crtinic) /= '6-HOURLY' .and. trim(hist_crtinic) /= 'DAILY'  ) &
+          hist_crtinic = 'NONE'
+#endif
+       if ( single_column .and. (scmlat == rundef  .or. scmlon == rundef ) ) &
+          call shr_sys_abort( subname//' ERROR:: single column mode on -- but scmlat and scmlon are NOT set' )
+
+       if (hist_pioflag .and. ncd_lowmem2d) then
+          ncd_lowmem2d = .false.
+          write(iulog,*) 'control: resetting ncd_lowmem2d to false'
+       endif
+
+    endif   ! end of if-masterproc if-block
+
+    clmvarctl_isset = .true.
+
+  end subroutine clmvarctl_init
 
 end module clm_varctl

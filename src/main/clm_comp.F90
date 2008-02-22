@@ -28,7 +28,7 @@ contains
 ! !IROUTINE: clm_init0
 !
 ! !INTERFACE:
-  subroutine clm_init0( CCSMInit )
+  subroutine clm_init0( )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
@@ -36,10 +36,8 @@ contains
 !
 ! !USES:
     use initializeMod,     only : initialize1
-    use shr_InputInfo_mod, only : shr_InputInfo_initType
 !
 ! !ARGUMENTS:
-    type(shr_InputInfo_initType), intent(in), optional :: CCSMInit
 !
 ! !LOCAL VARIABLES:
 !
@@ -50,11 +48,7 @@ contains
 !-----------------------------------------------------------------------
 
     call t_startf('clm_init0')
-    if ( present(CCSMInit) )then
-       call initialize1( CCSMInit )
-    else
-       call initialize1( )
-    end if
+    call initialize1( )
     call t_stopf('clm_init0')
 
   end subroutine clm_init0
@@ -66,7 +60,7 @@ contains
 ! !IROUTINE: clm_init1
 !
 ! !INTERFACE:
-  subroutine clm_init1( SyncClock )
+  subroutine clm_init1( )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
@@ -74,10 +68,8 @@ contains
 !
 ! !USES:
     use initializeMod,   only : initialize2
-    use eshr_timemgr_mod,only : eshr_timemgr_clockType
 !
 ! !ARGUMENTS:
-   type(eshr_timeMgr_clockType), optional, intent(IN) :: SyncClock ! Synchronization clock
 !
 ! !LOCAL VARIABLES:
 !
@@ -88,11 +80,7 @@ contains
 !-----------------------------------------------------------------------
 
    call t_startf('clm_init1')
-   if (present(SyncClock)) then	
-      call initialize2( SyncClock )
-   else
-      call initialize2()
-   end if
+   call initialize2()
    call t_stopf('clm_init1')
 
   end subroutine clm_init1
