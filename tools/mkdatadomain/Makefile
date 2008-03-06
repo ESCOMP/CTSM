@@ -78,7 +78,7 @@ CURDIR := $(shell pwd)
 ifeq ($(CLM_ROOT),$(null))
    ROOTDIR := $(CURDIR)/../../
 else
-   ROOTDIR := $(CLM_ROOT)
+   ROOTDIR := $(shell ls -1d $(CLM_ROOT)/models/lnd/clm*)
 endif
 
 $(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Filepath

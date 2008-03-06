@@ -43,7 +43,7 @@
 <!-- Initial condition datasets (relative to {csmdata}) -->
 
 <finidat RESOLUTION="0.47x0.63"  mask="gx1v5" BGC="cn" ic_ymd="19800101"
-ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01-00000.071207.nc
+ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01.fv0.47x0.63_gx1v5.c080301.nc
 </finidat>
 <finidat RESOLUTION="1.9x2.5"   mask="gx1v4" BGC="none" ic_ymd=     "101" ic_tod="0">lnd/clm2/inidata_3.1/ccsm/clmi_0000-01-01_1.9x2.5_gx1v4_c070403.nc
 </finidat>

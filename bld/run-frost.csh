@@ -49,6 +49,7 @@ set wrkdir   = /ptmp/$LOGNAME
 set blddir   = $wrkdir/$case/bld
 set rundir   = $wrkdir/$case
 set cfgdir   = $clmroot/bld
+set arcdir   = $clmroot/../../../../scripts/ccsm_utils/Tools/archiving
 set usr_src  = $clmroot/bld/usr.src
 
 

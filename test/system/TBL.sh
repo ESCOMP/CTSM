@@ -63,8 +63,8 @@ if [ -n "${BL_ROOT}" ]; then
 
     echo "TBL.sh: calling ****baseline**** TSM.sh for smoke test"
     env CLM_TESTDIR=${BL_TESTDIR} \
-	CLM_SCRIPTDIR=${BL_ROOT}/test/system \
-	${BL_ROOT}/test/system/TSM.sh $1 $2 $3 $4 $5 $6 $7
+	CLM_SCRIPTDIR=${BL_ROOT}/models/lnd/clm*/test/system \
+	${BL_ROOT}/models/lnd/clm*/test/system/TSM.sh $1 $2 $3 $4 $5 $6 $7
     rc=$?
     if [ $rc -ne 0 ]; then
 	echo "TBL.sh: error from *baseline* TSM.sh= $rc" 

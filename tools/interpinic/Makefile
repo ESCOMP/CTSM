@@ -85,7 +85,7 @@ CURDIR := $(shell pwd)
 ifeq ($(CLM_ROOT),$(null))
    ROOTDIR := $(CURDIR)/../../
 else
-   ROOTDIR := $(CLM_ROOT)
+   ROOTDIR := $(shell ls -1d $(CLM_ROOT)/models/lnd/clm*)
 endif
 
 $(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Filepath
@@ -128,9 +128,10 @@ FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
 LIB_NETCDF := /usr/local/lib64/r4i4
 FC      = xlf90_r
 FFLAGS  = -c -I$(INC_NETCDF) -q64 -qsuffix=f=f90 -O2 -qsuffix=f=f90:cpp=F90 \
-	   $(FPPFLAGS)  -g -qfullpath -qarch=auto -qspillsize=2500 
+	   $(FPPFLAGS)  -g -qfullpath -qarch=auto -qspillsize=2500  \
+           -qflttrap=ov:zero:inv:en
 ifneq ($(OPT),TRUE)
-   FFLAGS += -qmaxmem=-1 -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C
+   FFLAGS += -qmaxmem=-1 -qinitauto=FF911299 -C
 endif
 CFLAGS  := -q64 -g $(CPPDEF) -O2 -C
 LDFLAGS = -L$(LIB_NETCDF) -q64 -lnetcdf

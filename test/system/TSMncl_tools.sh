@@ -29,7 +29,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=${CLM_ROOT}/tools/ncl_scripts
+cfgdir=`ls -1d ${CLM_ROOT}/models/lnd/clm*/tools/ncl_scripts`
 rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}

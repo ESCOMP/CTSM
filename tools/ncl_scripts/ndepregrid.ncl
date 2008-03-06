@@ -40,14 +40,14 @@ begin
   end if
   csmdata  = getenv("CSMDATA");
   clmroot  = getenv("CLM_ROOT");
-  querynml = "/bld/queryDefaultNamelist.pl -silent -justvalue -options sim_year="+sim_year;
+  querynml = "bld/queryDefaultNamelist.pl -silent -justvalue -options sim_year="+sim_year;
   if ( .not. ismissing(csmdata) )then
      querynml = querynml+" -csmdata "+csmdata;
   end if
   if ( ismissing(clmroot) )then
-     querynml = "../.."+querynml;
+     querynml = "../../"+querynml;
   else
-     querynml = clmroot+querynml;
+     querynml = clmroot+"/models/lnd/clm*/"+querynml;
   end if
 
   sdate     = systemfunc( "date +%y%m%d" );

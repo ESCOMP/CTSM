@@ -28,8 +28,8 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_alpha23"
-conccsm_vers="ccsm3_9_beta02"
+seqccsm_vers="ccsm4_0_alpha25"
+conccsm_vers="ccsm3_9_beta03"
 
 hostname=`hostname`
 case $hostname in
@@ -604,10 +604,10 @@ fi
 ##establish script dir and clm_root
 if [ -f \${initdir}/test_driver.sh ]; then
     export CLM_SCRIPTDIR=\`cd \${initdir}; pwd \`
-    export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../..; pwd \`
+    export CLM_ROOT=\`cd \${CLM_SCRIPTDIR}/../../../../..; pwd \`
 else
-    if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/test/system/test_driver.sh ]; then
-	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/test/system; pwd \`
+    if [ -n "\${CLM_ROOT}" ] && [ -f \${CLM_ROOT}/models/lnd/clm*/test/system/test_driver.sh ]; then
+	export CLM_SCRIPTDIR=\`cd \${CLM_ROOT}/models/lnd/clm*/test/system; pwd \`
     else
 	echo "ERROR: unable to determine script directory "
 	echo "       if initiating batch job from directory other than the one containing test_driver.sh, "

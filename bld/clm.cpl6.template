@@ -36,7 +36,7 @@ endif
 
 set cfgdir = $CASEROOT/Buildnml_Prestage/clmconf
 cd $cfgdir
-$CODEROOT/lnd/clm2/bld/configure -s -spmd -mode ext_ccsm_con -rtm on -bgc $bgc -maxpft $pft -clm_bld $cfgdir \
+$CODEROOT/lnd/clm*/bld/configure -s -spmd -mode ext_ccsm_con -rtm on -bgc $bgc -maxpft $pft -clm_bld $cfgdir \
                                   $targetos -usr_src $CASEROOT/SourceMods/src.clm
 
 # ---------------------------------------------------------------------------
@@ -60,41 +60,41 @@ set options = "-config $config -justvalue -silent -csmdata $DIN_LOC_ROOT"
 set options = "$options -res $res -options mask=$OCN_GRID,sim_year=$sim_year"
 
 if ($CLM_ARB_IC == off )then
-   set finidat    = `$CODEROOT/lnd/clm2/bld/queryDefaultNamelist.pl $options -demand -var finidat`
+   set finidat    = `$CODEROOT/lnd/clm*/bld/queryDefaultNamelist.pl $options -demand -var finidat`
    if ( $status != 0 ) exit 1
 else
-   set finidat    = `$CODEROOT/lnd/clm2/bld/queryDefaultNamelist.pl $options         -var finidat`
+   set finidat    = `$CODEROOT/lnd/clm*/bld/queryDefaultNamelist.pl $options         -var finidat`
    if ( $status != 0   ) exit 1
    if ( $finidat == "" ) set finidat = " "
 endif
-set pftdat     = `$CODEROOT/lnd/clm2/bld/queryDefaultNamelist.pl    $options -demand -var fpftcon`
+set pftdat     = `$CODEROOT/lnd/clm*/bld/queryDefaultNamelist.pl    $options -demand -var fpftcon`
 if ( $status != 0 ) exit 1
 
-set rdirdat    = `$CODEROOT/lnd/clm2/bld/queryDefaultNamelist.pl    $options -demand -var frivinp_rtm`
+set rdirdat    = `$CODEROOT/lnd/clm*/bld/queryDefaultNamelist.pl    $options -demand -var frivinp_rtm`
 if ( $status != 0 ) exit 1
 
-set fsurdat    = `$CODEROOT/lnd/clm2/bld/queryDefaultNamelist.pl    $options -demand -var fsurdat`
+set fsurdat    = `$CODEROOT/lnd/clm*/bld/queryDefaultNamelist.pl    $options -demand -var fsurdat`
 if ( $status != 0 ) exit 1
 
-set fatmgrid   = `$CODEROOT/lnd/clm2/bld/queryDefaultNamelist.pl    $options -demand -var fatmgrid`
+set fatmgrid   = `$CODEROOT/lnd/clm*/bld/queryDefaultNamelist.pl    $options -demand -var fatmgrid`
 if ( $status != 0 ) exit 1
 
-set fatmlndfrc = `$CODEROOT/lnd/clm2/bld/queryDefaultNamelist.pl    $options -demand -var fatmlndfrc`
+set fatmlndfrc = `$CODEROOT/lnd/clm*/bld/queryDefaultNamelist.pl    $options -demand -var fatmlndfrc`
 if ( $status != 0 ) exit 1
 
 set fndepdyn   = " "
 set fndepdat   = " "
 if ($CLM_BGC == CN && $CLM_DYNNDEP == "transient") then
-   set fndepdyn = `$CODEROOT/lnd/clm2/bld/queryDefaultNamelist.pl $options -demand -var fndepdyn`
+   set fndepdyn = `$CODEROOT/lnd/clm*/bld/queryDefaultNamelist.pl $options -demand -var fndepdyn`
    if ( $status != 0 ) exit 1
 else if ($CLM_BGC == CN )then
-   set fndepdat = `$CODEROOT/lnd/clm2/bld/queryDefaultNamelist.pl $options -demand -var fndepdat`
+   set fndepdat = `$CODEROOT/lnd/clm*/bld/queryDefaultNamelist.pl $options -demand -var fndepdat`
    if ( $status != 0 ) exit 1
 endif
 
 set fpftdyn    = " "
 if ($CLM_DYNPFT  == "transient") then
-   set fpftdyn = `$CODEROOT/lnd/clm2/bld/queryDefaultNamelist.pl  $options -demand -var fpftdyn`
+   set fpftdyn = `$CODEROOT/lnd/clm*/bld/queryDefaultNamelist.pl  $options -demand -var fpftdyn`
    if ( $status != 0 ) exit 1
 endif
 
@@ -142,7 +142,7 @@ endif
 #endif
 #set bnflags="-case $CASE -start_type $RUNTYPE -config $config -mask $OCN_GRID"
 #set bnflags="$bnflags -sim_year $sim_year -infile lndinput -runlength 9999d"
-#$CODEROOT/lnd/clm2/bld/build-namelist $bnflags || exit -1
+#$CODEROOT/lnd/clm*/bld/build-namelist $bnflags || exit -1
 #------------------------------ end build-namelist version ------------------------------------------------------
  
 cat >! $CASEROOT/Buildnml_Prestage/clm.buildnml_prestage.csh << EOF1

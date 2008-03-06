@@ -1,4 +1,4 @@
-clm/README                                          4/13/2007
+clm/README                                          3/06/2008
 
 Community Land Surface Model (CLM) version 3.5 -- source code, tools, 
 offline-build and test scripts. This gives you everything you need
@@ -33,53 +33,59 @@ to aggregation of LAI from high-resolution source data to CLM surface data.
 
 General directory structure:
 
-doc ---- Documentation
-bld ---- configure script, Makefile and run scripts to run model
-src ---- Source code
-test --- Testing scripts
-tools -- Offline tools to prepare input datasets
+models/lnd/clm/doc ---- Documentation
+models/lnd/clm/bld ---- configure script, Makefile and run scripts to run model
+models/lnd/clm/src ---- CLM Source code
+models/lnd/clm/test --- CLM Testing scripts
+models/lnd/clm/tools -- CLM Offline tools to prepare input datasets
+
+scripts --------------- CPL7 scripts
+
+models/atm/datm7 ------ CCSM Data model version 7 source code
+models/ice/sice ------- CCSM stub sea-ice model source code
+models/ocn/socn ------- CCSM stub ocean model source code
+models/utils ---------- CCSM utility codes 
+                        (Model Coupling Toolkit (MCT)
+                        (Earth System Model Framework)
+                        (timing -- code timing utility)
 
 =============================================================================================
 Important files in main directories:
 =============================================================================================
 
-bld/configure ---- Script to create Makefile and needed files to build offline CLM
-bld/run-ibm.csh -- Complete script to build and run offline CLM on an IBM-SP (bluevista.ucar.edu)
-bld/run-pc.csh --- Complete script to build and run offline CLM on an Linux-PC (bangkok.cgd.ucar.edu)
+models/lnd/clm/bld/configure ---- Script to create Makefile and needed files to build offline CLM
+models/lnd/clm/bld/run-ibm.csh -- Complete script to build and run offline CLM on an IBM-SP (bluevista.ucar.edu)
+models/lnd/clm/bld/run-pc.csh --- Complete script to build and run offline CLM on an Linux-PC (bangkok.cgd.ucar.edu)
 
-test/system/test_driver.sh --- Script for general software testing of offline CLM
+models/lnd/clm/test/system/test_driver.sh --- Script for general software testing of offline CLM
 
-tools/mkgriddata --- Directory to build program to create grid dataset at any resolution.
-tools/mksurfdata --- Directory to build program to create surface dataset at any resolution.
-tools/interpinic --- Directory to build program to interpolate initial conditions to any resolution.
-tools/mkdatadomain - Directory to build program to create datm7 or docn7 domain files from clm files.
-doc/KnownBugs ------ List of known bugs
-doc/ChangeLog ------ Detailed list of changes for each model version
-bld/README --------- Description of how to use the configure and build/run scripts
+models/lnd/clm/tools/mkgriddata --- Directory to build program to create grid dataset at any resolution.
+models/lnd/clm/tools/mksurfdata --- Directory to build program to create surface dataset at any resolution.
+models/lnd/clm/tools/interpinic --- Directory to build program to interpolate initial conditions to any resolution.
+models/lnd/clm/tools/mkdatadomain - Directory to build program to create datm7 or docn7 domain files from clm files.
+KnownBugs ------------------------- List of known bugs
+ChangeLog ------------------------- Detailed list of changes for each model version
+ChangeSum ------------------------- Summary one-line list of changes for each model version
+models/lnd/clm/bld/README --------- Description of how to use the configure and build/run scripts
 
 =============================================================================================
 Source code directory structure:
 =============================================================================================
 
-src/biogeochem ----- Biogeochemisty
-src/main ----------- Main control and high level code
-src/riverroute ----- Riverrouting model (RTM)
-src/biogeophys ----- Biogeophysics (Hydrology)
+models/lnd/clm/src/biogeochem ----- Biogeochemisty
+models/lnd/clm/src/main ----------- Main control and high level code
+models/lnd/clm/src/riverroute ----- Riverrouting model (RTM)
+models/lnd/clm/src/biogeophys ----- Biogeophysics (Hydrology)
 
 -------------------------------------- General utility code shared between CCSM models
-src/csm_share
-src/csm_share/dshr
-src/csm_share/eshr
-src/csm_share/flds
-src/csm_share/flds/dust
-src/csm_share/flds/default
-src/csm_share/flds/gensom
-src/csm_share/unit_testers ------------- Unit tests for csm_share code
-src/csm_share/unit_testers/nl
-src/csm_share/shr
-src/csm_share/cpl
+models/csm_share
+models/csm_share/dshr
+models/csm_share/eshr
+models/csm_share/unit_testers ------------- Unit tests for csm_share code
+models/csm_share/shr
+models/csm_share/cpl
 
-src/utils ---------------------------- Utility code directory
+models/utils ---------------------------- Utility code directory
 
 -------------------------------------- ESMF-WRF time-management library
 ---- This is an implementation of the ESMF_2_2_2r time-manager API created
@@ -88,15 +94,15 @@ src/utils ---------------------------- Utility code directory
 ---- Alternatively you can link with the full version of ESMF_2_2_2r from
 ---- (http:/www.esmf.ucar.edu/)
 ---- (use the -esmf_libdir option in configure to link with the full ESMF library)
-src/utils/esmf_wrf_timemgr
-src/utils/esmf_wrf_timemgr/unittests ---- Unit testers
+models/utils/esmf_wrf_timemgr
+models/utils/esmf_wrf_timemgr/unittests ---- Unit testers
 -------------------------------------- CCSM code timing library
-src/utils/timing
+models/utils/timing
 -------------------------------------- Model Coupling Toolkit code
 ---- (http://www-unix.mcs.anl.gov/mct/)
-src/utils/mct
-src/utils/mct/mct
-src/utils/mct/mpi-serial
-src/utils/mct/doc
-src/utils/mct/doc/texsrc
-src/utils/mct/mpeu
+models/utils/mct
+models/utils/mct/mct
+models/utils/mct/mpi-serial
+models/utils/mct/doc
+models/utils/mct/doc/texsrc
+models/utils/mct/mpeu

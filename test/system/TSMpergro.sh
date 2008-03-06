@@ -29,7 +29,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=${CLM_SCRIPTDIR}/../../bld
+cfgdir=${CLM_SCRIPTDIR}/../../../../../bld
 rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}

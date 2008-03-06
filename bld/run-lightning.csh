@@ -88,6 +88,7 @@ set blddir   = $wrkdir/$case/bld
 set rundir   = $wrkdir/$case
 set cfgdir   = $clmroot/bld
 set casdir   = $clmroot/bld           # changed by create_newcase
+set arcdir   = $clmroot/../../../scripts/ccsm_utils/Tools/archiving
 set usr_src  = $clmroot/bld/usr.src
 
 #=================== END OF THINGS MOST COMONLY CHANGED ====================
@@ -173,6 +174,9 @@ if (   -f rpointer.lnd.orig && $runstatus == 0 )then
    if ( $status == 0 ) set runstatus = 1
 endif
 
+# Get date from restart pointer file
+set end_date=`perl -e '$_ = <>; /\.r\.([0-9]+)-([0-9]+)-([0-9]+)-[0-9]+\.nc/; print "${1}${2}${3}";' rpointer.lnd`
+
 ## POST-PROCESSING vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ## see the README in the archiving dir for more info how to use these scripts
 if ( $ret_pd > 0 ) then
@@ -194,11 +198,11 @@ if ( $ret_pd > 0 ) then
    setenv ARCH_CASE $case                #casename - required
 
    ## call to short-term archive script
-   $cfgdir/archiving/st_archive.sh
+   $arcdir/st_archive.sh
 
    ## call to long-term archive script - will spawn batch job
    cd $casdir
-   $cfgdir/archiving/lt_archive.sh -f
+   $arcdir/lt_archive.sh -f
 
 endif
 
@@ -206,7 +210,7 @@ endif
 # Resubmit another run script
 # -------------------------------------------------------------------------
 
-if ( $runstatus == 0 && $resub_date > 0 ) then
+if ( $runstatus == 0 && $resub_date > 0 && $resub_date > $end_date ) then
   echo "Resubmit job until reach $resub_date"
   cd $casdir
   sed '1,/^set *start_type = .*/s//set start_type = continue/' \

@@ -79,7 +79,7 @@ setenv datm_data_dir /cgd/tss/NCEPDATA.datm7.Qian.T62.c060410   # (MAKE SURE YOU
 ## $blddir  is the directory where model will be compiled.
 ## $rundir  is the directory where the model will be run.
 ## $cfgdir  is the directory containing the CLM configuration scripts.
-## $casdir  is the directoyr this script is found in.
+## $casdir  is the directory this script is found in.
 ## $usr_src is the directory where any modified source code is put.
 set case    = clmrun                  # changed by create_newcase
 set wrkdir  = /ptmp/$LOGNAME          # changed by create_newcase
@@ -87,6 +87,7 @@ set blddir  = $wrkdir/$case/bld
 set rundir  = $wrkdir/$case
 set cfgdir  = $clmroot/bld
 set casdir  = $clmroot/bld            # changed by create_newcase
+set arcdir  = $clmroot/../../../scripts/ccsm_utils/Tools/archiving
 set usr_src = $clmroot/bld/usr.src
 
 # Number of threads to use:
@@ -201,6 +202,9 @@ if (   -f rpointer.lnd.orig && $runstatus == 0 )then
    if ( $status == 0 ) set runstatus = 1
 endif
 
+# Get date from restart pointer file
+set end_date=`perl -e '$_ = <>; /\.r\.([0-9]+)-([0-9]+)-([0-9]+)-[0-9]+\.nc/; print "${1}${2}${3}";' rpointer.lnd`
+
 
 ## POST-PROCESSING vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ## see the README in the archiving dir for more info how to use these scripts
@@ -223,11 +227,11 @@ if ( $ret_pd > 0 ) then
    setenv ARCH_CASE $case                #casename - required
 
    ## call to short-term archive script
-   $cfgdir/archiving/st_archive.sh
+   $arcdir/st_archive.sh
 
    ## call to long-term archive script - will spawn batch job
    cd $casdir
-   $cfgdir/archiving/lt_archive.sh -f
+   $arcdir/lt_archive.sh -f
 
 endif
 
@@ -235,7 +239,7 @@ endif
 # Resubmit another run script
 # -------------------------------------------------------------------------
 
-if ( $runstatus == 0 && $resub_date > 0 ) then
+if ( $runstatus == 0 && $resub_date > 0 && $resub_date > $end_date ) then
   echo "Resubmit job until reach $resub_date"
   cd $casdir
   sed '1,/^set *start_type = .*/s//set start_type = continue/' \

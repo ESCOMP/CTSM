@@ -67,6 +67,21 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to temp file ^^^^^^^^^^^^^^^^^^^
 
     ;;
+   ##blueice
+    bl* )
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to temp file vvvvvvvvvvvvvvvvvvv
+## 8 32-way tasks -- this MUST be in sync with the tasks/threads in the test_driver.sh script
+## this is also setup to be consistent with the compset specified in test_driver.sh
+cat > ${CLM_TESTDIR}/${test_name}/pes.tmp << EOF
+set ntasks_atm =  1; set nthrds_atm = 1
+set ntasks_lnd =  4; set nthrds_lnd = 8
+set ntasks_ice =  1; set nthrds_ice = 1
+set ntasks_ocn =  1; set nthrds_ocn = 1
+set ntasks_cpl =  1; set nthrds_cpl = 1
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to temp file ^^^^^^^^^^^^^^^^^^^
+
+    ;;
    ## default
     * )
     echo "TCText_ccsmcon.sh: bad hostname (= $hostname) being run on -- use one of the hosts in the TCText_ccsmcon.sh script"
@@ -81,19 +96,6 @@ if [ $rc -ne 0 ]; then
     echo "TCText_ccsmcon.sh: create_test failed, error= $rc"
     exit 5
 else
-
-    # modify Filepath to point to clm source code -wait, couldn't ccsm scripts take care of this?!?!?
-    #============================================================
-    cd ${CLM_TESTDIR}/${1}.${2}.${CLM_COMPSET}.${CCSM_MACH}.${JOBID}/Buildexe
-    sed "s#.CODEROOT/lnd/clm2#${CLM_ROOT}#; s#.CODEROOT/csm_share#${CLM_ROOT}/src/csm_share#; s#.CODEROOT/utils#${CLM_ROOT}/src/utils#; " \
-           clm.buildexe.csh > clm.buildexe.csh.tmp
-    rc=$?
-    if [ $rc -ne 0 ]; then
-        echo "TCText_ccsmcon.sh: error attempting to make Filepath point to clm source, error= $rc"
-        exit 6
-    fi
-    mv clm.buildexe.csh.tmp clm.buildexe.csh; chmod 755 clm.buildexe.csh
-
     echo "TCText_ccsmcon.sh: ccsm create test completed successfully"
 fi
 exit 0

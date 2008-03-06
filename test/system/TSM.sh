@@ -29,7 +29,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
-cfgdir=${CLM_SCRIPTDIR}/../../bld
+cfgdir=${CLM_SCRIPTDIR}/../../../../../bld
 rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
@@ -106,7 +106,7 @@ elif [ "${7%+*}" = "continue" ]; then
 elif [ "${7%+*}" = "branch" ]; then
 
    if [ "$debug" = "YES" ]; then
-       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.clm2.r.1967-01-01-00000
+       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.clm3.r.1967-01-01-00000
    fi
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*.clm?.r.* $rundir/.
    master_clm_restart=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*.clm?.r.* \

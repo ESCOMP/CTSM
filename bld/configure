@@ -1466,16 +1466,35 @@ sub write_filepath_ccsm
 
     $fh->open(">$file") or die "** can't open filepath file: $file\n";
 
-    print $fh "\$CODEROOT/utils/timing\n";
-
-# User specified source code
-    print $fh "\$CASEROOT/SourceMods/src.clm\n";
-
-# CLM
-    print $fh "\$CODEROOT/lnd/clm2/src/main\n";
-    print $fh "\$CODEROOT/lnd/clm2/src/biogeophys\n";
-    print $fh "\$CODEROOT/lnd/clm2/src/biogeochem\n";
-    print $fh "\$CODEROOT/lnd/clm2/src/riverroute\n";
+    # User specified source code
+    my $CASEROOT = $ENV{'CASEROOT'};
+    my $dir      = "SourceMods/src.clm";
+    if ( -d "$CASEROOT/$dir" ) {
+       print $fh "\$CASEROOT/$dir\n";
+    } else {
+       die "** source directory does not exist: $CASEROOT/$dir\n";
+    }
+    # timing library
+    my $srcdir = absolute_path( "$cfg{'clm_root'}/../.." );
+    my $dir    = "utils/timing";
+    if ( -d "$srcdir/$dir" ) {
+       print $fh "\$CODEROOT/$dir\n";
+    } else {
+       die "** source directory does not exist: $srcdir/$dir\n";
+    }
+    my $srcdir = "$cfg{'clm_root'}/src";
+    my $subdir = "";
+    if ( $srcdir =~ /models\/(lnd\/clm.*\/src)/ ) {
+       $subdir = $1;
+    }
+    my @dirs   = ( "main", "biogeophys", "biogeochem", "riverroute" );
+    foreach my $dir ( @dirs ) {
+      if ( -d "$srcdir/$dir" ) {
+         print $fh "\$CODEROOT/$subdir/$dir\n";
+      } else {
+         die "** source directory does not exist: $srcdir/$dir\n";
+      }
+    }
 
     $fh->close;
 }

@@ -15,7 +15,7 @@ redistributed under the terms indicated below.
 
 Code            Institution(s)    Copyright    
 ------------------------------------------------------------------------------
-ESMF            UCAR and others   Copyright 2002-2007, University Corporation 
+ESMF            UCAR and others   Copyright 2002-2008, University Corporation 
                                   for Atmospheric Research, Massachusetts 
                                   Institute of Technology, Geophysical Fluid 
                                   Dynamics Laboratory, University of Michigan,
@@ -48,20 +48,20 @@ http://old-www.nersc.gov/research/SCG/acpi/MPH/MPH4/copyright
 
 Code            Institution(s)    Copyright    
 ------------------------------------------------------------------------------
-MCT             Argonne National  Copyright 2000, 2007, University of Chicago.  
+MCT             Argonne National  Copyright 2000, 2008, University of Chicago.  
                 Laboratory        
 Terms of Use/Disclaimer:  
 http://www.ccsm.ucar.edu/management/MCTcopyright.html
 
 Code            Institution(s)    Copyright    
 ------------------------------------------------------------------------------
-install.sh      M.I.T.            1991, 2003, 2007, M.I.T.
+install.sh      M.I.T.            1991, 2003, 2008, M.I.T.
 Terms of Use/Disclaimer:  
 http://stuff.mit.edu/afs/sipb/project/xmt/src/COPYRIGHT
 
 Code            Institution(s)    Copyright    
 ------------------------------------------------------------------------------
-autconf         Free Software     2003, 2007
+autconf         Free Software     2003, 2008
                 Foundation, Inc.
 Terms of Use/Disclaimer:  
 http://www.gnu.org/licenses/info/GPLv2orLater.html
@@ -69,20 +69,20 @@ http://www.gnu.org/licenses/info/GPLv2orLater.html
 
 Code            Institution(s)    Copyright    
 ------------------------------------------------------------------------------
-ICSSP           N/A               Copyright 2003, 2007 Steve Klein and Mark Webb
+ICSSP           N/A               Copyright 2003, 2008 Steve Klein and Mark Webb
 Terms of Use/Disclaimer:  
 http://gcss-dime.giss.nasa.gov/simulator.html
 
 Code            Institution(s)    Copyright    
 ------------------------------------------------------------------------------
-QT Free         Trolltech (r)     Copyright 2003, 2007 Trolltech. 
+QT Free         Trolltech (r)     Copyright 2003, 2008 Trolltech. 
 Editions
 Terms of Use/Disclaimer:  
 http://www.trolltech.com/licenses/qpl-annotated.html
 
 Code            Institution(s)    Copyright    
 ------------------------------------------------------------------------------
-XML/Lite        Wadsack-Allen     Copyright 2001-2003, 2007
+XML/Lite        Wadsack-Allen     Copyright 2001-2003, 2008
                 Digital Group
 Terms of Use/Disclaimer:  
 http://aspn.activestate.com/ASPN/CodeDoc/XML-Lite/Lite.html

@@ -28,9 +28,12 @@ module interpinic
 
   integer, parameter :: rtmlon = 720  ! # of rtm longitudes
   integer, parameter :: rtmlat = 360  ! # of rtm latitudes
+  real(r8) :: volr(rtmlon,rtmlat)     ! water volume in cell (m^3)
+
+  ! Other parameter sizes
   integer, parameter :: nlive  = 3    ! # of live pools
   integer, parameter :: npools = 12   ! # of C pools
-  real(r8) :: volr(rtmlon,rtmlat)     ! water volume in cell (m^3)
+  integer, parameter :: numrad = 2    ! # of radiation bands
 
   ! Parameters
 
@@ -74,6 +77,9 @@ contains
     !-----------------------------------------------------------------------
 
     use netcdf
+#ifdef AIX
+    use IEEE_ARITHMETIC, only: IEEE_IS_NAN
+#endif
 
     implicit none
     include 'netcdf.inc'
@@ -111,6 +117,7 @@ contains
     integer :: dimlen              !input dimension length       
     integer :: ret                 !netcdf return code
     character(len=256) :: varname  !variable name
+    real(r8), allocatable :: rbufmlo (:,:) !output array
     !--------------------------------------------------------------------
 
     write (6,*) 'Mapping clm initial data from input to output initial files'
@@ -224,6 +231,17 @@ contains
        dimidnpools = -1
        dimidnlive  = -1
     end if
+
+    ! numrad dimension
+
+    ret = nf90_inquire_dimension(ncido, dimidrad, len=dimlen)
+    if (ret/=NF90_NOERR) call handle_error (ret)
+    if (dimlen/=numrad) then
+       write (6,*) 'error: output numrad dimension size does not equal ',numrad; stop
+    end if
+#ifdef AIX
+    allocate( rbufmlo(numrad,numpftso) )
+#endif
 
     ! If RTM data exists on input file
     ret = nf_inq_varid (ncidi, 'RTMVOLR', varid)
@@ -347,6 +365,13 @@ contains
           else if (ret/=NF90_NOERR)then
              call handle_error (ret)
           end if
+!$OMP PARALLEL DO PRIVATE (i,j)
+          do j  = 1, rtmlat
+             do l  = 1, rtmlon
+                if ( IEEE_IS_NAN(volr(l,j)) ) volr(l,j) = spval
+             end do
+          end do
+!$OMP END PARALLEL DO
           write (6,*) 'RTM variable copied over: ', trim(varname)
           ret = nf90_put_var(ncido, varid, volr)
           if (ret/=NF90_NOERR) call handle_error (ret)
@@ -356,7 +381,32 @@ contains
              write (6,*) 'error: variable is not of double type'; stop
           end if
           if ( dimids(1) == dimidrad )then
+#ifdef AIX
+             if ( dimids(2) == dimidpft )then
+                ret = nf90_inq_varid(ncido, varname, varid)
+                if (ret==NF90_ENOTVAR)then
+                   cycle
+                else if (ret/=NF90_NOERR)then
+                   call handle_error (ret)
+                end if
+                ret = nf90_get_var(ncido, varid, rbufmlo)
+                if (ret/=NF90_NOERR) call handle_error (ret)
+!$OMP PARALLEL DO PRIVATE (n,k)
+                do n  = 1, numpftso
+                   do k = 1, numrad
+                      if ( IEEE_IS_NAN(rbufmlo(k,n)) ) rbufmlo(k,n) = spval
+                   end do
+                end do
+!$OMP END PARALLEL DO
+                ret = nf90_put_var(ncido, varid, rbufmlo)
+                if (ret/=NF90_NOERR) call handle_error (ret)
+                write (6,*) 'copied and cleaned variable with numrad dimension: ', trim(varname)
+             else
+                write (6,*) 'skipping variable with numrad dimension: ', trim(varname)
+             end if
+#else
              write (6,*) 'skipping variable with numrad dimension: ', trim(varname)
+#endif
              cycle
           end if
           if ( dimids(2) /= dimidcols .and. dimids(2) /= dimidpft )then
@@ -732,6 +782,8 @@ contains
           if (wto(no)>0._r8) then
              call findMinDistCols( ncidi, ncido, no, nmin=n )
              rbufmlo(:,no) = rbufmli(:,n)
+          else
+             rbufmlo(:,no) = spval
           end if             !output data with positive weight
        end do                !output data land loop
 !$OMP END PARALLEL DO
@@ -741,6 +793,8 @@ contains
           if (wto(no)>0._r8) then
              call findMinDistPFTs( ncidi, ncido, no, nmin=n )
              rbufmlo(:,no) = rbufmli(:,n)
+          else
+             rbufmlo(:,no) = spval
           end if             !output data with positive weight
        end do                !output data land loop
 !$OMP END PARALLEL DO
@@ -765,6 +819,9 @@ contains
   subroutine interp_sl_real (varname, ncidi, ncido, nvec, nveco)
 
     use netcdf
+#ifdef AIX
+    use IEEE_ARITHMETIC, only: IEEE_IS_NAN
+#endif
 
     implicit none
     include 'netcdf.inc'
@@ -861,6 +918,8 @@ contains
           if (wto(no)>0._r8) then
              call findMinDistCols( ncidi, ncido, no, nmin=n )
              rbufslo(no) = rbufsli(n)
+          else
+             rbufslo(no) = spval
           end if             !output data with positive weight
        end do
 !$OMP END PARALLEL DO
@@ -889,8 +948,15 @@ contains
              !
              else
                 call findMinDistPFTs( ncidi, ncido, no, nmin=n )
+#ifdef AIX
+                if ( IEEE_IS_NAN(rbufsli(n)) ) then
+                   rbufsli(n) = spval
+                end if
+#endif
                 rbufslo(no) = rbufsli(n)
              end if          !data type
+          else
+             rbufslo(no) = spval
           end if             !output data with positive weight
        end do                !output data land loop
 !$OMP END PARALLEL DO

@@ -54,13 +54,14 @@ while read config_arg; do
 done < ${CLM_SCRIPTDIR}/config_files/$1
 
 # Add user-source to CLM directories
-config_string="${config_string} -usr_src ${CLM_ROOT}/src/main,"
-config_string="${config_string}${CLM_ROOT}/src/csm_share/shr,"
-config_string="${config_string}${CLM_ROOT}/src/csm_share/eshr,"
-config_string="${config_string}${CLM_ROOT}/src/csm_share/dshr,"
-config_string="${config_string}${CLM_ROOT}/src/biogeochem,"
-config_string="${config_string}${CLM_ROOT}/src/biogeophys,"
-config_string="${config_string}${CLM_ROOT}/src/riverroute"
+clmsrc=`ls -1d ${CLM_ROOT}/models/lnd/clm*/src`
+config_string="${config_string} -usr_src ${clmsrc}/main,"
+config_string="${config_string}${CLM_ROOT}/models/csm_share/shr,"
+config_string="${config_string}${CLM_ROOT}/models/csm_share/eshr,"
+config_string="${config_string}${CLM_ROOT}/models/csm_share/dshr,"
+config_string="${config_string}${clmsrc}/biogeochem,"
+config_string="${config_string}${clmsrc}/biogeophys,"
+config_string="${config_string}${clmsrc}/riverroute"
 
 echo "TCBext_ccsmseq_cam.sh: building external seq-ccsm executable with CAM; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 

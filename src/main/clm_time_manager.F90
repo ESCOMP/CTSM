@@ -11,7 +11,6 @@ module clm_time_manager
 
    implicit none
    private
-   save
 
 ! Public methods
 
@@ -48,17 +47,17 @@ module clm_time_manager
 
 ! Private data for input
 
-   character(len=ESMF_MAXSTR) ::&
+   character(len=ESMF_MAXSTR), save ::&
       calendar   = 'NO_LEAP'     ! Calendar to use in date calculations.
                                  ! 'NO_LEAP' or 'GREGORIAN'
    integer, parameter :: uninit_int = -999999999
 
 ! Input in all modes
-   integer ::&
+   integer, save ::&
       dtime         = uninit_int    ! timestep in seconds
 
 ! Input in only in ccsm and offline modes
-   integer ::&
+   integer, save ::&
       nestep        = uninit_int,  &! final timestep (or day if negative) number
       nelapse       = uninit_int,  &! number of timesteps (or days if negative) to extend a run
       start_ymd     = uninit_int,  &! starting date for run in yearmmdd format
@@ -68,11 +67,11 @@ module clm_time_manager
       stop_final_ymd= 99991231,    &! final stopping date for run in yearmmdd format
       ref_ymd       = uninit_int,  &! reference date for time coordinate in yearmmdd format
       ref_tod       = 0             ! reference time of day for time coordinate in seconds
-   type(ESMF_Calendar)         :: tm_cal       ! calendar
-   type(ESMF_Clock)            :: tm_clock     ! model clock   
-   type(ESMF_Time)             :: tm_perp_date ! perpetual date
+   type(ESMF_Calendar), save   :: tm_cal       ! calendar
+   type(ESMF_Clock),    save   :: tm_clock     ! model clock   
+   type(ESMF_Time),     save   :: tm_perp_date ! perpetual date
 
-   integer ::&                      ! Data required to restart time manager:
+   integer, save ::&                ! Data required to restart time manager:
       rst_nstep     = uninit_int,  &! current step number
       rst_step_days = uninit_int,  &! days component of timestep size
       rst_step_sec  = uninit_int,  &! timestep size seconds
@@ -83,15 +82,15 @@ module clm_time_manager
       rst_curr_ymd  = uninit_int,  &! current date
       rst_curr_tod  = uninit_int,  &! current time of day
       rst_perp_ymd  = uninit_int    ! perpetual date
-   character(len=ESMF_MAXSTR) :: rst_calendar    ! Calendar
-   logical ::&
+   character(len=ESMF_MAXSTR), save :: rst_calendar    ! Calendar
+   logical, save ::&
       rst_perp_cal  = .false.                    ! true when using perpetual calendar
 
-   integer :: perpetual_ymd         = uninit_int ! Perpetual calendar date (YYYYMMDD)
-   logical :: tm_first_restart_step = .false.    ! true for first step of a restart or branch run
-   logical :: tm_perp_calendar      = .false.    ! true when using perpetual calendar
-   integer :: cal_type              = uninit_int ! calendar type
-   logical :: timemgr_set           = .false.    ! true when timemgr initialized
+   integer, save :: perpetual_ymd         = uninit_int ! Perpetual calendar date (YYYYMMDD)
+   logical, save :: tm_first_restart_step = .false.    ! true for first step of a restart or branch run
+   logical, save :: tm_perp_calendar      = .false.    ! true when using perpetual calendar
+   integer, save :: cal_type              = uninit_int ! calendar type
+   logical, save :: timemgr_set           = .false.    ! true when timemgr initialized
 
 ! Private module methods
 
