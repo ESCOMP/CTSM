@@ -23,7 +23,7 @@
 <clm_inparm ctitle="s" caseid="s"
             brnch_retain_casename="l"
             calendar="s"  stop_ymd ="i" start_ymd="i" start_tod="i" ref_ymd ="i"
-            ref_tod="i" version="s" logname="s" hostname="s" stop_final_ymd="i"
+            ref_tod="i" model_version="s" logname="s" hostname="s" stop_final_ymd="i"
             />
 
 <!-- List of namelist items in the csim_inparm namelist for CSIM ice-->

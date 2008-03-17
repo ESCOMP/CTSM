@@ -1,4 +1,4 @@
-clm/tools/mksurfdata/README		May/12/2007
+models/lnd/clm/tools/mksurfdata/README		Mar/13/2008
 
 The routines in this directory create a surface dataset.
 The output grid is read in from the input namelist and
@@ -62,4 +62,17 @@ NOTE: In order to successfully build, some source files are required from
 
 5) move (and rename if appropriate) generated surface dataset
    to /fis/cgd/csm/inputdata/lnd/clm/surfdata, etc.
+
+
+Important files:
+
+  Makefile ---------------- GNU makefile
+  Srcfiles ---------------- List of source files needed (includes files outside this directory)
+  Filepath ---------------- Filepath location to source files needed
+  misc.h ------------------ CPP preprocess file required by outside source code
+  preproc.h --------------- CPP preprocess file required by outside source code
+  mksrfdat.fdynfile ------- Sample namelist to create a dynamic PFT surface dataset (PFT changes in time)
+  mksurfdata.namelist ----- Samele global grid namelist
+  mksurfdata.regional ----- Samele regional grid namelist
+  mksurfdata.singlept ----- Samele single-point namelist
 

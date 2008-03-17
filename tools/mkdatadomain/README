@@ -47,3 +47,13 @@ NOTE: In order to successfully build, some source files are required from
 5) move (and rename if appropriate) generated surface dataset
    to /fis/cgd/csm/inputdata/atm/datm7/CLMNCEP, etc.
 
+Important files:
+
+  Makefile ---------------- GNU makefile
+  Srcfiles ---------------- List of source files needed (includes files outside this directory)
+  Filepath ---------------- Filepath location to source files needed
+  misc.h ------------------ CPP preprocess file required by outside source code
+  preproc.h --------------- CPP preprocess file required by outside source code
+  mkdatadomain.namelist --- sample namelist
+
+

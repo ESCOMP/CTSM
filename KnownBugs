@@ -4,94 +4,6 @@ Known Bugs in CLM3.5.19			                          Mar/6/2008
 Bug Number: 452
 Problem with support of number of soil-colors NOT equal to 8 or 20
 
- t42half test using PGI fails with the following
-
-
- Successfully set up atmospheric grid
- (GETFIL): attempting to find local file 1997-12.nc
- (GETFIL): using
- /fs/cgd/csm/inputdata/lnd/clm2/NCEPDATA.Qian.T62.c051024/1997-12.nc
-
-------------------------------------------------------------
- nstep=             1  date=      19971231  sec=          1200
- ATMDRV: attempting to read data from
- /fs/cgd/csm/inputdata/lnd/clm2/NCEPDATA.Qian.T62.c051024/1997-12.nc
-------------------------------------------------------------
-
- clm_mapa2l subroutine
- clm_mapa2l mapping complete
- clm_mapa2l downscaling ON
- nstep =          1   TS = 0.268762129015005E+03
- nstep =          2   TS = 0.268874818048030E+03
- rtm delt update from/to    0.000000000000000         1200.000000000000
-            0            2
- nstep =          3   TS = 0.268531388645297E+03
-Killed
-p3_17921:  p4_error: net_recv read:  probable EOF on socket: 1
-p2_17905:  p4_error: net_recv read:  probable EOF on socket: 1
-rm_l_3_17922: (177.468647) net_send: could not write to fd=5, errno = 32
-rm_l_2_17906: (177.606602) net_send: could not write to fd=5, errno = 32
-rm_l_1_18809: (177.747336) net_send: could not write to fd=6, errno = 9
-rm_l_1_18809:  p4_error: net_send write: -1
-    p4_error: latest msg from perror: Bad file descriptor
- HTAPES_WRAPUP: Creating history file ./clmrun.clm2.h0.1997-12-31-03600.nc
-  at nstep =             3
- Opening netcdf htape ./clmrun.clm2.h0.1997-12-31-03600.nc
- HTAPE_CREATE: Successfully defined netcdf history file             1
-p2_17905: (179.610358) net_send: could not write to fd=5, errno = 32
-p3_17921: (179.475951) net_send: could not write to fd=5, errno = 32
-
-
-Here's the namelist:
-
- &clm_inparm
- caseid         = 'clmrun'
- ctitle         = 'clmrun'
- finidat        = ' '
- fsurdat        =
-'/fs/cgd/csm/inputdata/lnd/clm2/surfdata/surfdata_360x720_070122.nc'
- flndtopo       =
-'/fs/cgd/csm/inputdata/lnd/clm2/griddata/topodata_360x720_c060528.nc'
- fatmgrid       =
-'/fs/cgd/csm/inputdata/lnd/clm2/griddata/griddata_64x128_060829.nc'
- fatmlndfrc     =
-'/fs/cgd/csm/inputdata/lnd/clm2/griddata/fracdata_64x128_USGS_070110.nc'
- fatmtopo       =
-'/fs/cgd/csm/inputdata/lnd/clm2/griddata/topodata_64x128_060829.nc'
- fpftcon        =
-'/fs/cgd/csm/inputdata/lnd/clm2/pftdata/pft-physiology.c070207'
- frivinp_rtm    = "/fs/cgd/csm/inputdata/lnd/clm2/rtmdata/rdirc.05.061026"
- offline_atmdir = "/fs/cgd/csm/inputdata/lnd/clm2/NCEPDATA.Qian.T62.c051024"
- nrevsn         = ""
- nsrest         =  0
- nelapse        =  48
- dtime          =  1200
- rtm_nsteps     =  2
- start_ymd      =  19971231
- start_tod      =  0
- irad           = -1
- wrtdia         = .true.
- mss_irt        =  0
- hist_dov2xy    = .true.
- hist_nhtfrq    =  3
- hist_mfilt     =  1
- hist_ndens     =  1
- hist_crtinic   = 'MONTHLY'
- brnch_retain_casename = .true.
- /
- &prof_inparm
- /
-
-
-And config line:
-
-/fs/cgd/data0/erik/clm_trunk/test/system/../../bld/configure -spmd -debug
--maxpft 4 -rtm on -dust on -voc on -s
-
-====================================================================================
-Bug Number: 452
-Problem with support of number of soil-colors NOT equal to 8 or 20
-
 The mksurfdata tools file mksoicol.F90 sets nsoicol to the max value found in
 the input soilcolor file:
   nsoicol = maxval(soil_color_i)  
@@ -154,4 +66,78 @@ exp()
           s1 = exp(-h*vai(p))
           s2 = exp(-twostext(p)*vai(p))
 #endif
+====================================================================================
+Bug number: 652
+Output different for different number of threads PGF90 
+
+PGI Version 6.1.6, and NetCDF Version 3.6.2. Works on other platforms/compilers and
+also works with PGI-7.0-7.
+
+====================================================================================
+Bug number: 546
+clm-offline-tools: interpinic does NOT work for DGVM
+
+interpinic does NOT work for DGVM. OK as CNDV will replace DGVM.
+
+====================================================================================
+Bug number: 512
+clmtools: clm3.5_rel03 mksurfdata does NOT work with PGI compiler!
+
+mksurfdata does not work with the PGI compiler.
+
+The following error occurs: (this is for the singlept test -- but same problem
+happens with other namelists). This also occurs on clm development trunk as
+well.
+
+ (GETFIL): attempting to find local file mksrf_lai.060929.nc
+ (GETFIL): using /fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_lai.060929.nc
+ read_domain read lon and lat dims
+ read_domain initialized domain
+ read_domain read LONGXY and LATIXY fields
+ read_domain read EDGE[NESW]
+ read_domain read LANDMASK
+ read_domain compute lat[ns],lon[we] from edge[nesw]
+ celledge, using celledge_regional
+ read_domain compute cellarea with edge[nesw]
+ cellarea, using cellarea_global
+ AREAINI warning: conservation check not valid for
+    input  grid of           720  x           360
+    output grid of             1  x             1
+ AREAINI warning: conservation check not valid for
+    input  grid of           720  x           360
+    output grid of             1  x             1
+ areaini_pft error: w_ovr == nan!
+FORTRAN STOP
+
+====================================================================================
+Bug number: 694
+Problem with exact restarts for offline code -- er112 (4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 10+38 arb_ic) 
+on bangkok lf95 and lightning pathscale.
+
+Restarts are NOT exact for offline code.
+====================================================================================
+Bug number: 680
+Small spike in initial input precipitation for a startup run in I case with datm7
+
+datm7 interpolates between the end point and the beginning point of input data on
+startup -- so it's data is a bit off from the offline case.
+
+This is reported from Sam Levis. There appears to be a small spike in input
+precipitation for a startup run for an I case using datm7 and cpl6. This has a
+residual effect for the climate of certain CN variables for up to 10 years of a
+startup simulation? 
+
+Here's the particulars from Sam...
+diagnostics at
+http://www.cgd.ucar.edu/tss/clm/diagnostics/clm3cn/ncep/clm3.5CNncep1870-2004-clm3.5CNncepCTRL/setsIndex.html
+transient started as startup with clm.i file from CTRL 2060101
+CTRL continued from 2060101
+
+Transient case: /blhome/slevis/ccsm_runs/ccsm3_5_beta14/clm3.5CNncep1870-2004
+mss:/SLEVIS/csm/clm3.5CNncep1870-2004
+I've started a new transient from CTRL 2460101
+
+Control case: /blhome/slevis/ccsm_runs/ccsm3_5_beta14
+mss:/SLEVIS/csm/clm3.5CNncepCTRL
+
 ====================================================================================

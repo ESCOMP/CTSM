@@ -122,6 +122,22 @@ sub set_output_values {
      $self->requiredVar( "outpathroot", $addquotes );
   }
 
+  # Username, version, hostname
+  unless ( defined($NLref->{'username'}) ) {
+    my $user = $ENV{'USER'};
+    chomp( $user );
+    $NLref->{'username'} = namelist::quote_string($user);
+  }
+  unless ( defined($NLref->{'hostname'}) ) {
+    my $host = `hostname`;
+    chomp( $host );
+    $NLref->{'hostname'} = namelist::quote_string($host);
+  }
+  unless ( defined($NLref->{'model_version'}) ) {
+    my $version = $self->default_vals( 'model_version' );
+    $NLref->{'model_version'} = namelist::quote_string($version);
+  }
+
   # Orbit (if not coupled)
   if ( $self->{'MODE'} ne "ccsm_seq" ) {
      unless ( defined($NLref->{'orb_obliq'}) and defined($NLref->{'orb_eccen'}) and

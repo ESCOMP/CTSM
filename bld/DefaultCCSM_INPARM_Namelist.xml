@@ -25,9 +25,9 @@
 <start_type>'startup'</start_type>
 
 <!-- Model Version -->
-<version>
-$HeadURL$
-</version>
+<model_version>
+$HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01/bld/DefaultCLM_INPARM_Namelist.xml$
+</model_version>
 
 <!-- Orbit -->
 <orb_iyear_ad >2000</orb_iyear_ad>

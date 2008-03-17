@@ -1,15 +1,15 @@
-clm/tools/README					Apr/18/2007
+models/lnd/clm/tools/README					Mar/13/2008
 
 CLM tools for analysis of CLM history files -- or for creation or
 modification of CLM input files.
 	
 I.  General directory structure:
 
-	interpinic ------- Interpolate initial datasets to a different resolution.
+	interpinic ------- Interpolate initial datasets to a different resolution. (has optimized and OMP option)
         mkdatadomain ----- Create data model domain datasets from clm datasets.
 	mkgriddata ------- Create grid datasets.
 	mksurfdata ------- Create surface datasets.
-	cprnc ------------ Compare output history files.
+	cprnc ------------ Compare output history files. (stand-alone tool)
         ncl_scripts ------ NCL post or pre processing scripts.
 
 II. Notes on the build system for each of the above tools:

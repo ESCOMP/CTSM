@@ -5024,7 +5024,7 @@ contains
     integer :: dimid                         ! netCDF dimension id
     integer :: varid                         ! netCDF variable id
     integer :: ret                           ! return code
-    integer :: latidx,lonidx,ret             ! latitude/longitude indices
+    integer :: latidx,lonidx                 ! latitude/longitude indices
     real(r8):: closelat,closelon             ! closest latitude and longitude indices
     character(len=32) :: subname = 'scam_field_offsets'
 

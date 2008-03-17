@@ -1,4 +1,4 @@
-clm/bld/README                              4/13/2007
+models/lnd/clm/bld/README                              3/13/2008
 
 CLM build and configure directory and scripts. Scripts to help
 you prepare to build CLM, actually build CLM and then help you
@@ -13,7 +13,7 @@ configure ---------------- Configure script -- creates Makefile and files needed
 Makefile.in -------------- Base Makefile for building CLM
 config_clm_defaults.xml -- XML file of defaults for CLM
 system_defaults.xml ------ XML file of system defaults
-XML ---------------------- Directory of source code to read XML files
+perl5lib ----------------- Directory with perl5 scripts to read XML, configure, build-streams etc.
 
 ---------- Scripts to figure out dependencies between source files (used by Makefile)
 mkDepends
@@ -39,5 +39,6 @@ NOTE2: On non-NCAR machines you will also have to do the following.
 o Convert batch notation to the syntax for the specific machine you are using.
 o Set INC_NETCDF and LIB_NETCDF to include and library path for NetCDF.
 o Set CSMDATA to the path of where you place your input data.
+o Set datm_data_dir to the path of where the datm7 CLMNCEP data is.
 o On non-supported platforms, you will also have to extend the configure and Makefile.in files.
 

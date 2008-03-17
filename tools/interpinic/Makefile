@@ -174,12 +174,16 @@ endif
 
 ifeq ($(UNAMES),Linux)
   ifeq ($(USER_FC),$(null))
-    FC := pgf90
+    FC    := pgf90
+    PGF90 := TRUE
+  endif
+  ifeq ($(USER_FC),ftn)
+    PGF90 := TRUE
   endif
   CPPDEF += -DLINUX -DFORTRANUNDERSCORE
   CFLAGS := $(CPPDEF)
 
-  ifeq ($(FC),pgf90)
+  ifeq ($(PGF90),TRUE)
     FFLAGS := -c -I$(INC_NETCDF) $(CPPDEF)
     CC     := pgcc
     ifneq ($(OPT),TRUE)

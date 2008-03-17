@@ -255,7 +255,7 @@ case $hostname in
 	    cmnd="aprun -n ${CLM_TASKS} "
         elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
             ##hybrid
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} aprun -VN -np ${CLM_TASKS} "
+	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} aprun -n ${CLM_TASKS} -d ${CLM_THREADS}"
         else
             ##mpi only
 	    cmnd="aprun -n ${CLM_TASKS} "

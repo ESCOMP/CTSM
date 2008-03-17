@@ -200,7 +200,7 @@ sub ReadDefaultXMLFile {
       $$opts_ref{'csmdata'} = $value;
     }
     # If Version
-    if ( $name eq "version" ) {
+    if ( $name eq "model_version" ) {
        if ( $value =~ 
             /(URL: https:\/\/[a-zA-Z0-9._-]+\/)([a-zA-Z0-9\/._-]+)(\/bld\/.+)/
 ) {
@@ -261,7 +261,7 @@ sub ReadDefaultXMLFile {
     #
     # If is a directory (has slashes, is csmdata or a var with dir in name)
     if ( $value =~ /\// && (($name eq "csmdata") || ($name =~ /dir/)) && 
-         ($name ne "version") ) {
+         ($name ne "model_version") ) {
       if ( $name eq "csmdata" ) {
          $value = $$opts_ref{'csmdata'};
          $isadir = 1;
@@ -274,7 +274,7 @@ sub ReadDefaultXMLFile {
     #
     # Otherwise if it is a file (has slashes in value)
     #
-    } elsif ( $value =~ /\// && ($name ne "version") ) {
+    } elsif ( $value =~ /\// && ($name ne "model_version") ) {
       $value = "$$opts_ref{'csmdata'}/$value";
       $isafile = 1;
     # For settings that are NOT files

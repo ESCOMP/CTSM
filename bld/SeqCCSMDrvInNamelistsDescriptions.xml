@@ -21,7 +21,8 @@
 <!-- any items with this keyword name will be moved to the seq_infodata namelist -->
                <!-- These should all be in LOWER CASE! -->
 <seq_infodata_inparm case_desc="s"      case_name="s"      start_type="s"
-                     brnch_retain_casename="l"
+                     brnch_retain_casename="l"             hostname="s"
+                     model_version="s"  username="s" 
                      restart_file="s"   restart_pfile="s"
                      logfilepostfix="s" outpathroot="s"
                      orb_obliq="r"      orb_eccen="r"

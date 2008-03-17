@@ -1,4 +1,4 @@
-clm/tools/mkgriddata/README		May/12/2007
+models/lnd/clm/tools/mkgriddata/README		Mar/13/2008
 
 The files in this directory enable a user to create
 a regular regional or global grid and associated 
@@ -53,4 +53,16 @@ e.g., cp surfdata_096x144.nc /fs/cgd/csm/inputdata/lnd/clm2/surfdata/surfdata_1.
 2.  Grid files should have LATIXY of 90 at the poles.  The displaced pole (89.*) should not appear in
 FV grid files, although 90+/-0.25 is used for mapping and domain files.  FV Grid files with something other
 than 90 at the poles are incorrect and should not be used.
+
+Important files:
+
+  Makefile ---------------- GNU makefile
+  Srcfiles ---------------- List of source files needed (includes files outside this directory)
+  Filepath ---------------- Filepath location to source files needed
+  misc.h ------------------ CPP preprocess file required by outside source code
+  preproc.h --------------- CPP preprocess file required by outside source code
+  mkgriddata.ccsm_dom ----- Sample namelist reading in a CCSM domain file
+  mkgriddata.namelist ----- Sample namelist for a global grid
+  mkgriddata.regional ----- Sample namelist for a regional grid
+  mkgriddata.singlept ----- Sample namelist for a single-point grid
 

@@ -33,7 +33,7 @@ to aggregation of LAI from high-resolution source data to CLM surface data.
 
 General directory structure:
 
-models/lnd/clm/doc ---- Documentation
+models/lnd/clm/doc ---- Documentation of CLM
 models/lnd/clm/bld ---- configure script, Makefile and run scripts to run model
 models/lnd/clm/src ---- CLM Source code
 models/lnd/clm/test --- CLM Testing scripts
@@ -106,3 +106,19 @@ models/utils/mct/mpi-serial
 models/utils/mct/doc
 models/utils/mct/doc/texsrc
 models/utils/mct/mpeu
+
+
+=============================================================================================
+    QUICKSTART: using the CPL7 scripts:
+=============================================================================================
+
+         cd scripts
+         ./create_newcase            # get help on how to run create_newcase
+         ./create_newcase -case testI -mach blueice -res f19_g15 -compset I    # create new "I" case for blueice at 1.9x2.5_gx1v5 res
+                                     # "I" case is clm active, datm7, and inactive ice/ocn
+         cd testI
+         configure -mach blueice     # create scripts
+         testI.build                 # build model and create namelists
+         bsub < testI.run            # submit script
+                                     # (NOTE: edit env_run to set RESUBMIT to number of times to automatically resubmit)
+

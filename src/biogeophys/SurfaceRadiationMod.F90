@@ -380,7 +380,7 @@ contains
               
               ! New sunlit.shaded canopy algorithm
               
-              if (coszen(c) > 0._r8 .and. elai(p) > 0._r8) then
+              if (coszen(c) > 0._r8 .and. elai(p) > 0._r8 .and. gdir(p) > 0._r8 ) then
                  
                  ! 1. calculate flux of direct beam radiation absorbed in the 
                  ! sunlit canopy as direct (sun_add), and the flux of direct

@@ -132,6 +132,9 @@ contains
     character(len=SHR_KIND_CL) :: ctitle
     character(len=SHR_KIND_CL) :: starttype
     character(len=SHR_KIND_CL) :: calendar
+    character(len=SHR_KIND_CL) :: hostname     ! hostname of machine running on
+    character(len=SHR_KIND_CL) :: version      ! Model version
+    character(len=SHR_KIND_CL) :: username     ! user running the model
     integer  :: nsrest
     integer :: startype
     integer :: perpetual_ymd
@@ -143,6 +146,7 @@ contains
     integer :: stop_tod
     logical :: brnch_retain_casename
     logical :: perpetual_run
+    integer :: lbnum
     integer  :: shrlogunit,shrloglev ! old values
     character(len=32), parameter :: sub = 'lnd_init_mct'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
@@ -166,8 +170,8 @@ contains
 
 #if (defined _MEMTRACE)
     if(masterproc) then
-       write(iulog,*) TRIM(Sub) // ':start::'
-       call memmon_print_usage()
+       lbnum=1
+       call memmon_dump_fort('memmon.out','lnd_init_mct:start::',lbnum)
     endif
 #endif                      
 
@@ -209,7 +213,8 @@ contains
                               case_desc=ctitle, single_column=single_column,    &
                               scmlat=scmlat, scmlon=scmlon,                     &
                               brnch_retain_casename=brnch_retain_casename,      &
-                              start_type=starttype                              &
+                              start_type=starttype, model_version=version,      &
+                              hostname=hostname, username=username              &
                                 )
     call set_timemgr_init( calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
                            ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd,         &
@@ -225,10 +230,11 @@ contains
        call endrun( sub//' ERROR: unknown starttype' )
     end if
 
-    call set_clmvarctl(    caseid_in=caseid, ctitle_in=ctitle,               &
-                           brnch_retain_casename_in=brnch_retain_casename,   &
-                           single_column_in=single_column, scmlat_in=scmlat, &
-                           scmlon_in=scmlon, nsrest_in=nsrest )
+    call set_clmvarctl(    caseid_in=caseid, ctitle_in=ctitle,                     &
+                           brnch_retain_casename_in=brnch_retain_casename,         &
+                           single_column_in=single_column, scmlat_in=scmlat,       &
+                           scmlon_in=scmlon, nsrest_in=nsrest, version_in=version, &
+                           hostname_in=hostname, username_in=username )
 
     call clm_init0( )
 
@@ -339,7 +345,8 @@ contains
 #if (defined _MEMTRACE)
     if(masterproc) then
        write(iulog,*) TRIM(Sub) // ':end::'
-       call memmon_print_usage()
+       lbnum=1
+       call memmon_dump_fort('memmon.out','lnd_int_mct:end::',lbnum)
        call memmon_reset_addr()
     endif
 #endif
@@ -395,6 +402,7 @@ contains
     real(r8):: nextsw_cday     ! calday from clock of next radiation computation
     real(r8):: caldayp1        ! clm calday plus dtime offset
     integer :: shrlogunit,shrloglev       ! old values
+    integer :: lbnum
     type(seq_infodata_type),pointer :: infodata
     character(len=32)            :: rdate ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
@@ -407,8 +415,8 @@ contains
 
 #if (defined _MEMTRACE)
     if(masterproc) then
-       write(iulog,*) TRIM(Sub) // ':start::'
-       call memmon_print_usage()
+       lbnum=1
+       call memmon_dump_fort('memmon.out','lnd_run_mct:start::',lbnum)
     endif
 #endif
 
@@ -554,8 +562,8 @@ contains
   
 #if (defined _MEMTRACE)
     if(masterproc) then
-       write(iulog,*) TRIM(Sub) // ':end::'
-       call memmon_print_usage()
+       lbnum=1
+       call memmon_dump_fort('memmon.out','lnd_run_mct:end::',lbnum)
        call memmon_reset_addr()
     endif
 #endif

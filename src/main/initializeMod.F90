@@ -773,7 +773,6 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    version = 'CLM MODEL version 3.5'
     if ( masterproc )then
       write(iulog,*) trim(version)
       write(iulog,*)

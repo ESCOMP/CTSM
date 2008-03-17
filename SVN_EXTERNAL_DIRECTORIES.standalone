@@ -1,10 +1,10 @@
 doc                           https://svn-ccsm-models.cgd.ucar.edu/doc/trunk_tags/doc_060127
-scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/branch_tags/seqmct_scripts_070823_tags/seqmct45_scripts_080108
-models/drv/seq_mct            https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq2_0_10
+scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_080311
+models/drv/seq_mct            https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq2_0_12
 models/atm/datm7              https://svn-ccsm-models.cgd.ucar.edu/datm7/branch_tags/drva_datm7_070824_tags/drva07_datm7_071129
 models/ocn//socn              https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_0_7/socn
 models/ice//sice              https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_0_7/sice
-models/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/branch_tags/loga_share3_070903_tags/loga25_share3_071107
+models/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/branch_tags/loga_share3_070903_tags/loga26_share3_071107
 models/utils/esmf_wrf_timemgr https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_060616
 models/utils/timing           https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_070525
 models/utils/mct              https://svn-ccsm-models.cgd.ucar.edu/mct/branch_tags/seqa_MCT2_3_0_070524_tags/seqa07_MCT2_4_2_071026

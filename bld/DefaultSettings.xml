@@ -40,8 +40,8 @@
 <cycle_end_year MODE="ccsm_seq"                                >2004</cycle_end_year>
 
 <!-- Model Version -->
-<version>
+<model_version>
 $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01/bld/DefaultCLM_INPARM_Namelist.xml $
-</version>
+</model_version>
 
 </default_settings>

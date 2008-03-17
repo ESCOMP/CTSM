@@ -30,16 +30,16 @@ module clm_varctl
 !
 ! Run control variables
 !
-  character(len=256), public :: caseid  = ' '                          ! case id
-  character(len=256), public :: ctitle  = ' '                          ! case title
-  integer, public :: nsrest             = iundef                       ! 0: initial run. 1: restart: 3: branch
-  logical, public :: brnch_retain_casename = .false.                   ! true => allow case name to remain the same for branch run
-                                                                       ! by default this is not allowed
-  character(len=256), public :: hostname = ' '                         ! Hostname of machine running on
-  character(len=256), public :: username = ' '                         ! username of user running program
-  character(len=256), public :: source   = "Community Land Model CLM3" ! description of this source
-  character(len=256), public :: version  = "Community Land Model CLM3" ! version of program
-  character(len=256), public :: conventions = "CF-1.0"                 ! dataset conventions
+  character(len=256), public :: caseid  = ' '                            ! case id
+  character(len=256), public :: ctitle  = ' '                            ! case title
+  integer, public :: nsrest             = iundef                         ! 0: initial run. 1: restart: 3: branch
+  logical, public :: brnch_retain_casename = .false.                     ! true => allow case name to remain the same for branch run
+                                                                         ! by default this is not allowed
+  character(len=256), public :: hostname = ' '                           ! Hostname of machine running on
+  character(len=256), public :: username = ' '                           ! username of user running program
+  character(len=256), public :: source   = "Community Land Model CLM3.5" ! description of this source
+  character(len=256), public :: version  = " "                           ! version of program
+  character(len=256), public :: conventions = "CF-1.0"                   ! dataset conventions
 
 !
 ! Unit Numbers
@@ -149,8 +149,9 @@ contains
 ! !IROUTINE: set_clmvarctl
 !
 ! !INTERFACE:
-  subroutine set_clmvarctl( caseid_in, ctitle_in, brnch_retain_casename_in, &
-                            single_column_in, scmlat_in, scmlon_in, nsrest_in )
+  subroutine set_clmvarctl( caseid_in, ctitle_in, brnch_retain_casename_in,    &
+                            single_column_in, scmlat_in, scmlon_in, nsrest_in, &
+                            version_in, hostname_in, username_in )
 !
 ! !DESCRIPTION:
 !      Set input control variables.
@@ -166,6 +167,9 @@ contains
   real(r8),           optional, intent(IN) :: scmlat_in                ! single column lat
   real(r8),           optional, intent(IN) :: scmlon_in                ! single column lon
   integer,            optional, intent(IN) :: nsrest_in                ! 0: initial run. 1: restart: 3: branch
+  character(len=256), optional, intent(IN) :: version_in               ! model version
+  character(len=256), optional, intent(IN) :: hostname_in              ! hostname running on
+  character(len=256), optional, intent(IN) :: username_in              ! username running job
 !
 ! !LOCAL VARIABLES:
    character(len=32) :: subname = 'set_clmvarctl'  ! subroutine name
@@ -185,6 +189,9 @@ contains
     if ( present(scmlon_in       ) ) scmlon        = scmlon_in
     if ( present(nsrest_in       ) ) nsrest        = nsrest_in
     if ( present(brnch_retain_casename_in) ) brnch_retain_casename = brnch_retain_casename_in
+    if ( present(version_in      ) ) version       = version_in
+    if ( present(username_in     ) ) username      = username_in
+    if ( present(hostname_in     ) ) hostname      = hostname_in
 
   end subroutine set_clmvarctl
 

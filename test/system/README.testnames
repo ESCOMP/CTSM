@@ -50,3 +50,15 @@ m is the resolution
 A -- 1x1 Camden NJ         (Urban test)
 B -- 1x1 Mexicocity Mexico (Urban test)
 C -- 1x1 Vancouver Canada  (Urban test)
+
+i is the specific test (usually this implies...)
+
+1 -- hybrid
+2 -- mpi-only
+3 -- OpenMP only
+4 -- serial
+5 -- hybrid second test
+6 -- mpi-only second test
+7 -- OpenMP only second test
+
+

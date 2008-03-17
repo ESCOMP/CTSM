@@ -17,7 +17,7 @@ module controlMod
 !    o caseid                = 256 character case name
 !    o ctitle                = 256 character case title
 !    o nsrest                = integer flag. 0: initial run. 1: restart: 3: branch
-!    o version               = 256 character model version description
+!    o model_version         = 256 character model version description
 !    o username              = 256 character user username
 !    o hostname              = 256 character hostname of machine running on
 !    o brnch_retain_casename = logical if a branch simulation can use the same casename 
@@ -149,8 +149,15 @@ module controlMod
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8, SHR_KIND_CL
   use clm_varpar   , only : maxpatch_pft
-  use clm_varctl
-  use spmdMod
+  use clm_varctl   , only : caseid, ctitle, nsrest, brnch_retain_casename, hostname, model_version=>version,    &
+                            iulog, hist_crtinic, outnc_large_files, finidat, fsurdat, fatmgrid, fatmlndfrc,     &
+                            fatmtopo, flndtopo, fndepdat, fndepdyn, fpftdyn, fpftcon, nrevsn, frivinp_rtm,      &
+                            offline_atmdir, cycle_begyr, cycle_nyr, create_crop_landunit, allocate_all_vegpfts, &
+                            co2_type, irad, wrtdia, csm_doflxave, co2_ppmv, rtm_nsteps, nsegspc, pertlim,       &
+                            hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, username,           &
+                            ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
+                            ncd_pio_num_iotasks
+  use spmdMod      , only : masterproc
   use decompMod    , only : clump_pproc
   use histFileMod  , only : max_tapes, max_namlen, &
                             hist_empty_htapes, hist_dov2xy, &
@@ -251,6 +258,7 @@ contains
 #endif
     use fileutils        , only : getavu, relavu
     use shr_string_mod   , only : shr_string_getParentDir
+    use clm_varctl       , only : clmvarctl_init
 
     implicit none
 !
@@ -287,7 +295,7 @@ contains
     integer          :: stop_tod           ! Stop time of day (sec)
     character(len=SHR_KIND_CL) :: calendar ! Calendar type
     namelist /clm_inparm/  &
-         ctitle, caseid, nsrest, version, hostname, username, &
+         ctitle, caseid, nsrest, model_version, hostname, username, &
          calendar, nelapse, nestep, start_ymd, start_tod,     &
          stop_ymd, stop_tod, ref_ymd, ref_tod,                &
          brnch_retain_casename, stop_final_ymd
@@ -488,9 +496,10 @@ contains
 ! !USES:
 !
 #if (defined CASA)
-    use CASAMod, only : lnpp, lalloc, q10, spunup
+    use CASAMod,    only : lnpp, lalloc, q10, spunup
 #endif
-    use spmdMod, only : mpicom
+    use spmdMod,    only : mpicom, MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
+    use clm_varctl, only : single_column, scmlat, scmlon, rpntfil
 !
 ! !ARGUMENTS:
     implicit none
@@ -506,12 +515,12 @@ contains
 
     ! run control variables
 
-    call mpi_bcast (caseid,   len(caseid),   MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (ctitle,   len(ctitle),   MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (version,  len(version),  MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (hostname, len(hostname), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (username, len(username), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (nsrest,              1,  MPI_INTEGER  , 0, mpicom, ier)
+    call mpi_bcast (caseid,         len(caseid),        MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (ctitle,         len(ctitle),        MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (model_version,  len(model_version), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hostname,       len(hostname),      MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (username,       len(username),      MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (nsrest,                     1,      MPI_INTEGER  , 0, mpicom, ier)
 
     ! initial file variables
 
@@ -617,6 +626,9 @@ contains
 ! !DESCRIPTION:
 ! Write out run control variables
 !
+! !USES:
+!
+    use clm_varctl, only : source, rpntdir, rpntfil
 ! !ARGUMENTS:
     implicit none
 !
@@ -631,7 +643,7 @@ contains
 
     write(iulog,*) 'define run:'
     write(iulog,*) '   source                = ',trim(source)
-    write(iulog,*) '   version               = ',trim(version)
+    write(iulog,*) '   model_version         = ',trim(model_version)
     write(iulog,*) '   run type              = ',runtyp(nsrest+1)
     write(iulog,*) '   case title            = ',trim(ctitle)
     write(iulog,*) '   username              = ',trim(username)
