@@ -664,7 +664,7 @@ contains
 !
 ! !USES:
     use clm_varctl, only : co2_type, co2_ppmv
-    use clm_varcon, only : rair, o2_molar_const, c13ratio
+    use clm_varcon, only : rair, o2_molar_const, c13ratio, forc_hgt_min
     use clmtype   , only : gratm
     use domainMod , only : adomain
 !
@@ -844,7 +844,6 @@ contains
      do g = abegg,aendg
 
         ! Determine required receive fields
-
         atm_a2l%forc_hgt(g)     = bufR(g,index_c2l_Sa_z)         ! zgcmxy  Atm state m
         atm_a2l%forc_u(g)       = bufR(g,index_c2l_Sa_u)         ! forc_uxy  Atm state m/s
         atm_a2l%forc_v(g)       = bufR(g,index_c2l_Sa_v)         ! forc_vxy  Atm state m/s
@@ -877,7 +876,10 @@ contains
         end if
 
         ! Determine derived quantities for required fields
+        ! First, set forcing height to maximum of atmospheric model forcing height
+        ! and a prescribed minimum height 
 
+	atm_a2l%forc_hgt(g)   = max(atm_a2l%forc_hgt(g), forc_hgt_min)
         atm_a2l%forc_hgt_u(g) = atm_a2l%forc_hgt(g)    !observational height of wind [m]
         atm_a2l%forc_hgt_t(g) = atm_a2l%forc_hgt(g)    !observational height of temperature [m]
         atm_a2l%forc_hgt_q(g) = atm_a2l%forc_hgt(g)    !observational height of humidity [m]

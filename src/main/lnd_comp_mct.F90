@@ -725,7 +725,7 @@ contains
     !-----------------------------------------------------
     use clm_atmlnd      , only: atm2lnd_type
     use clm_varctl      , only: co2_type, co2_ppmv
-    use clm_varcon      , only: rair, o2_molar_const, c13ratio
+    use clm_varcon      , only: rair, o2_molar_const, c13ratio, forc_hgt_min
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use decompMod       , only: get_proc_bounds_atm
     !
@@ -836,7 +836,10 @@ contains
         end if
 
         ! Determine derived quantities for required fields
+        ! First, set forcing height to maximum of atmospheric model forcing height
+        ! and a prescribed minimum height 
 
+	a2l%forc_hgt(g)   = max(a2l%forc_hgt(g), forc_hgt_min)
         a2l%forc_hgt_u(g) = a2l%forc_hgt(g)    !observational height of wind [m]
         a2l%forc_hgt_t(g) = a2l%forc_hgt(g)    !observational height of temperature [m]
         a2l%forc_hgt_q(g) = a2l%forc_hgt(g)    !observational height of humidity [m]
