@@ -187,7 +187,7 @@ cat > ./${submit_script} << EOF
 
 #BSUB -a mpich_gm            #lightning requirement
 #BSUB -x                     # exclusive use of node (not_shared)
-#BSUB -n 8                   # total tasks needed
+#BSUB -n 16                  # total tasks needed
 #BSUB -o test_dr.o%J         # output filename
 #BSUB -e test_dr.o%J         # error filename
 #BSUB -q premium             # queue
@@ -209,8 +209,8 @@ export CLM_THREADS=1
 export CLM_RESTART_THREADS=2
 
 ##mpi tasks
-export CLM_TASKS=8
-export CLM_RESTART_TASKS=4
+export CLM_TASKS=16
+export CLM_RESTART_TASKS=8
 
 export CLM_COMPSET="I"
 
@@ -235,7 +235,7 @@ else
    export PS=/contrib/2.6/pathscale/2.4
    export PATH=\${mpich}/bin:\${PS}/bin:\${PATH}
    export LD_LIBRARY_PATH=\${PS}/lib/2.4:/opt/pathscale/lib/2.4/32:\${LD_LIBRARY_PATH}
-   export MAKE_CMD="gmake -j 2"
+   export MAKE_CMD="gmake -j 4"
    export CFG_STRING="-fc pathf90 -linker \${mpich}/bin/mpif90 "
    export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=\${mpich}/bin/mpif90 "
 fi
@@ -339,7 +339,7 @@ cat > ./${submit_script} << EOF
 # Name of the queue (CHANGE THIS if needed)
 # #PBS -q batch
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l walltime=02:30:00,size=260
+#PBS -l walltime=02:30:00,size=280
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
@@ -370,7 +370,7 @@ export CLM_THREADS=1
 export CLM_RESTART_THREADS=2
 
 ##mpi tasks
-export CLM_TASKS=260
+export CLM_TASKS=280
 export CLM_RESTART_TASKS=140
 
 export CLM_COMPSET="I"
@@ -396,7 +396,7 @@ export MOD_NETCDF=\${NETCDF_DIR}/include
 export CCSM_MACH="jaguarcnl"
 export CFG_STRING="-fc ftn "
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
-export MAKE_CMD="gmake -j 2 "
+export MAKE_CMD="gmake -j 5 "
 export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/spin/proj/ccsm/bin/jaguar/newcprnc
 export DATM_DATA_DIR=/lustre/scratch/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410

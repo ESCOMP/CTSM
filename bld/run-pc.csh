@@ -52,8 +52,8 @@ set sim_year   = default    # settings are [default | 1890    | 2000 | 2100     
 set start_type = arb_ic     # settings are [arb_ic  | startup | continue | branch                ] (default is arb_ic)
 set runlen     = 2d         # settings are [ integer<sdy> where s=cpling-step, d=days, y=years   ] (default is 2d)
 set start_ymd  = 19980101   # Start date [yyyymmdd]
-set cycle_init = 1998       # Initial year to use atm data from
-set cycle_beg  = 1948       # Begining year to cycle through for input atm data
+set cycle_init = 2003       # Initial year to use atm data from
+set cycle_beg  = 2003       # Begining year to cycle through for input atm data
 set cycle_end  = 2004       # Ending   year to cycle through for input atm data
 set ret_pd     = 0          # settings are [0 (no archiving), >0 (days to save to archive)       ]
 set resub_date = 0          # settings are [0 (no resubmission), > 0 (date {YYYYMMDD} to run to) ]

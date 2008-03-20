@@ -1,35 +1,12 @@
 clm/README                                          3/06/2008
 
-Community Land Surface Model (CLM) version 3.5 -- source code, tools, 
+Community Land Surface Model (CLM) version 3.6 -- source code, tools, 
 offline-build and test scripts. This gives you everything you need
-to run CLM in a offline mode with NCEP forcing data in place of a
-modeled atmosphere. In order to run with stand-alone CAM or concurrent
-CCSM -- you also need other component models which are NOT provided in
-this release.
+to run CLM in sequential CCSM mode with datm7 to provide NCEP 
+forcing data in place of a modeled atmosphere.
 
-What is new in CLM3.5 (compared to CLM3.0)?
+What is new in CLM3.6 (compared to CLM3.6)?
 
-CLM3.5 is considerably different to CLM3.0, particularly with respect to its 
-simulation of the hydrologic cycle. The modifications consist of new surface 
-datasets based on Moderate Resolution Imaging Spectroradiometer (MODIS) 
-products (Lawrence and Chase 2007), an improved canopy integration scheme 
-(Thornton and Zimmermann 2007), scaling of canopy interception 
-(Lawrence et al. 2007), a simple TOPMODEL-based model for surface and 
-sub-surface runoff (Niu et al. 2005), a simple groundwater model for 
-determining water table depth (Niu et al. 2007), and a new frozen soil scheme 
-(Niu and Yang 2006). Theree are four additional modifications. Three of these, 
-an improved description of soil water availability, a resistance term to 
-reduce excessive soil evaporation, and the introduction of a factor to 
-simulate nitrogen limitation on plant productivity, can be categorized as new 
-or improved parameterizations from the perspective of CLM3. The other may be 
-categorized as fixing an algorithmically defective existing parameterization 
-(correction to snowage calculation so that snowage increases monotonically) 
-(Dickinson et al. 2006).
-
-Additionally, a number of small problems or bugs have been corrected including 
-a revision of RTM-subcycling and corrections to a few land-locked grid cells, 
-a more efficient soil evaporation calculation based on PFT demand, and a fix 
-to aggregation of LAI from high-resolution source data to CLM surface data. 
 
 General directory structure:
 

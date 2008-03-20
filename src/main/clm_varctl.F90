@@ -37,7 +37,7 @@ module clm_varctl
                                                                          ! by default this is not allowed
   character(len=256), public :: hostname = ' '                           ! Hostname of machine running on
   character(len=256), public :: username = ' '                           ! username of user running program
-  character(len=256), public :: source   = "Community Land Model CLM3.5" ! description of this source
+  character(len=256), public :: source   = "Community Land Model CLM3.6" ! description of this source
   character(len=256), public :: version  = " "                           ! version of program
   character(len=256), public :: conventions = "CF-1.0"                   ! dataset conventions
 

@@ -591,6 +591,8 @@ contains
           domain%lonw(i,j) = xv(1,i,j)
        enddo
        enddo
+       domain%edgee = maxval(domain%lone)
+       domain%edgew = minval(domain%lonw)
        deallocate(xv,yv)
     endif
 

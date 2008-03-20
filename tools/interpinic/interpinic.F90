@@ -365,6 +365,7 @@ contains
           else if (ret/=NF90_NOERR)then
              call handle_error (ret)
           end if
+#ifdef AIX
 !$OMP PARALLEL DO PRIVATE (i,j)
           do j  = 1, rtmlat
              do l  = 1, rtmlon
@@ -372,6 +373,7 @@ contains
              end do
           end do
 !$OMP END PARALLEL DO
+#endif
           write (6,*) 'RTM variable copied over: ', trim(varname)
           ret = nf90_put_var(ncido, varid, volr)
           if (ret/=NF90_NOERR) call handle_error (ret)

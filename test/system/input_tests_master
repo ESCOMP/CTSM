@@ -525,7 +525,6 @@ sm774 TSMtools.sh mksurfdata   tools__ds singlept
 bl774 TBLtools.sh mksurfdata   tools__ds singlept
 
 smZ14 TSMtools.sh mkdatadomain tools__ds namelist
-blZ14 TBLtools.sh mkdatadomain tools__ds namelist
 
 sm814 TSMtools.sh interpinic   tools__ds runoptions
 sm813 TSMtools.sh interpinic   tools__o  runoptions
