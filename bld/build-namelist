@@ -200,26 +200,23 @@ if ($opts{'printlev'}>2) {
 #-----------------------------------------------------------------------------------------------
 # Make sure we can find required perl modules and configuration files.
 # Add $cfgdir to the list of paths that Perl searches for modules
-my @dirs = ( $cfgdir, "$cfgdir/perl5lib", 
-             "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib",
+my @dirs = ( $cfgdir, "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib",
              "$cfgdir/../../../../models/utils/perl5lib",
            );
 
 unshift @INC, @dirs;
 
+require XML::Lite;
+require Build::Config;
+require Streams::Template;
+
 my $result = eval "require SeqCCSM_namelist";
 if ( ! defined($result) ) {
    die <<"EOF";
-** Cannot process perl module \"SeqCCSM_namelist.pm\" in directory: \"$cfgdir\" **
+** Cannot process perl module \"SeqCCSM_namelist.pm\" with directories: @dirs **
 EOF
 }
-$result = eval "require SeqCCSM_namelist";
-if ( ! defined($result) ) {
-   die <<"EOF";
-** Cannot process perl module \"SeqCCSM_namelist.pm\" in directory: \"$cfgdir\" **
-EOF
-}
-require XML::Lite;
+
 require SeqCCSM_namelist;
 
 #-----------------------------------------------------------------------------------------------

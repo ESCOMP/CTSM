@@ -10,4 +10,3 @@ models/utils/timing           https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_
 models/utils/mct              https://svn-ccsm-models.cgd.ucar.edu/mct/branch_tags/seqa_MCT2_3_0_070524_tags/seqa07_MCT2_4_2_071026
 models/utils/pio              https://svn-ccsm-models.cgd.ucar.edu/pio/trunk_tags/pio11_prod
 models/lnd/clm/tools/cprnc    https://svn-ccsm-models.cgd.ucar.edu/tools/cprnc/trunk_tags/cprnc_070817
-models/lnd/clm/bld/perl5lib   https://svn-ccsm-models.cgd.ucar.edu/perl5lib/trunk_tags/perl5lib_071204

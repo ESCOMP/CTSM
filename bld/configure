@@ -241,8 +241,7 @@ if ($print>=2) { print "Setting CLM configuration script directory to $cfgdir$eo
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir to the list of paths that Perl searches for modules
-my @dirs = ( $cfgdir, "$cfgdir/perl5lib",
-             "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib",
+my @dirs = ( $cfgdir, "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib",
              "$cfgdir/../../../../models/utils/perl5lib",
            );
 
@@ -287,7 +286,7 @@ if ($print>=2) { print "CLM configure mode is $cfg{'mode'}$eol"; }
 # when the ccsm option is set.
 
 my $clm_build = 1;
-if ( $cfg{'mode'} eq "ext_ccsm_con" || $cfg{'mode'} eq "ext_ccsm_con" ) {
+if ( $cfg{'mode'} eq "ext_ccsm_con" || $cfg{'mode'} eq "ext_ccsm_seq" ) {
    $clm_build = 0;
 }
 
