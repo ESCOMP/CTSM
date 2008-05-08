@@ -1,0 +1,30 @@
+Tag                   Who      Date  Summary
+===============================================================================================================================
+   clm3_6_03         erik 05/08/2008 Fix so listen to next_swcday to calculate albedo rather than using irad
+   clm3_6_02         erik 03/25/2008 Minor fix in configure remove perl5lib version under models/lnd/clm/bld
+   clm3_6_01         erik 03/20/2008 40 m forcing height changes for clm
+   clm3_6_00         erik 03/20/2008 Fully implement sequential-ccsm mode, upgrade configure, build-namelist and testing, 
+                                     upgrade interpolation tool, add mkdatadomain, write to iulog rather than 6 explicitly, 
+                                     SCAM update, Update datasets, add archiving, and build-streams, add in point version 
+                                     of Urban model, change directory structure to mimic CCSM
+   clm3_5_20         erik 03/17/2008 Bug fixes before spinning off clm3_6_00, put in changes from ccsm4a01_clm3_5_18 to ccsm4a04_clm3_5_18
+   clm3_5_19         erik 03/06/2008 Change directory structure to mimic CCSM, fix so no NaNS on BGC interpinic output, new half degree CN clmi dataset
+   clm3_5_18         erik 02/21/2008 Update to latest seq-ccsm4.alpha tag
+   clm3_5_17         erik 02/06/2008 Merge Tony Craig's FMI branch fmi12_clm3_5_16 to the clm trunk
+   clm3_5_16         erik 01/28/2008 Get point version of Urban code onto trunk (urban code can not restart)
+   clm3_5_15         erik 12/10/2007 Fix interpinic for half degree grid, add in large-file support, allow configure to work with ccsm directory structure
+   clm3_5_14         erik 11/27/2007 Use build-streams, and archiving, multiple bug-fixes
+   clm3_5_13         erik 11/16/2007 Update xml file with file needed for ccsm3_5_beta18
+   clm3_5_12         erik 11/08/2007 Tag with new files needed for ccsm3_5_beta17
+   clm3_5_11         erik 09/28/2007 Update datasets in the DefaultCLM file for 0.23x0.31, 0.47x0.63, 0.9x1.25 and add fndepdyn file for 1.9x2.5
+   clm3_5_10         jet  09/18/2007 SCAM update
+   clm3_5_09         erik 08/31/2007 Change configure to NOT have csm_share code for ccsm_con option, and add in 1x1.25 file, and update datm7 and csm_share
+   clm3_5_08       tcraig 08/20/2007 convert 6 to iulog in logfile, updates for I/O
+   clm3_5_07         erik 08/17/2007 Add mkdatadomain tool, add cprnc and perl5lib as externals
+   clm3_5_06         erik 08/10/2007 Update: interpolation, testing, script namelist build, and scripts. Fix bugs, and fix possible 
+   clm3_5_05       tcraig 07/11/2007 seq clm mods and first hist refactor mods
+   clm3_5_04     mvertens 06/05/2007 lnd_comp_mct.F90 change to work with sequential diagnostics
+   clm3_5_03       tcraig 05/23/2007 reduce memory, partial I/O refactor, downscaling implementation
+   clm3_5_02     mvertens 05/22/2007 put in hourly coupling with sequential driver
+   clm3_5_01         erik 05/16/2007 Move newcn06 branch to trunk
+   clm3_5_00         erik 05/03/2007 New surface datasets, improved canopy integration, and various improvements to Hydrology

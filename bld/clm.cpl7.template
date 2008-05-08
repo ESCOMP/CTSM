@@ -6,7 +6,7 @@ if !(-d $CASEROOT/Buildexe) mkdir $CASEROOT/Buildexe
 
 # --- set hybrid run initial dataset 
 set datainit = " "
-if ($RUN_TYPE == hybrid) set datainit = ${RUN_REFCASE}.clm2.i.${RUN_REFDATE}-00000.nc 
+if ($RUN_TYPE == hybrid) set datainit = ${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-00000.nc 
 
 # --- set branch run restart dataset 
 set nrevsn = " "
@@ -56,9 +56,22 @@ if ($CCSM_IPCC == "1870-2000_control") then
 endif
 
 #set options = "-config $config -justvalue -ccsm -silent "
-set options = "-config $config -justvalue -silent -csmdata $DIN_LOC_ROOT"
+ set options = "-config $config -justvalue -silent -csmdata $DIN_LOC_ROOT"
 
-set res = $LND_GRID
+if ($LND_GRID =~ *T*) then
+   if ($GRID =~ T85*) then
+      set res = 128x256 
+   else if ($GRID =~ T42*) then
+      set res =  64x128 
+   else if ($GRID =~ T31*) then
+      set res =   48x96 
+   else
+      echo "grid $GRID is not suported"
+      exit 99
+   endif
+else 
+   set res = $LND_GRID
+endif
 
 if ($ATM_GRID == $OCN_GRID) then
   if ($ATM_GRID == 1.9x2.5  ) then
@@ -140,7 +153,7 @@ endif
 # dtime            =  $CLM_DTIME
 # irad             =  $iradsw
 # hist_nhtfrq      =  0
-# hist_crtinic     = 'YEARLY'
+# hist_crtinic     = 'NONE'
 # nrevsn           = '$nrevsn'
 # finidat          = '$finidat'
 # fsurdat          = '$fsurdat'
@@ -294,7 +307,7 @@ cat >! lnd_in << EOF
  irad             =  $iradsw
  rtm_nsteps       =  $RTM_NSTEPS
  hist_nhtfrq      =  0
- hist_crtinic     = 'YEARLY'
+ hist_crtinic     = 'NONE'
  nrevsn           = '\$nrevsn'
  /
 EOF

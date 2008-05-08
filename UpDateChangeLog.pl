@@ -150,7 +150,7 @@ while( $_ = <CL> ) {
 # Close files and move to final name
 close( CL );
 close( FH );
-system( "/bin/mv $changelog_tmp $changelog" );
+system( "/bin/mv    $changelog_tmp $changelog" );
 #
 # Deal with ChangeSum file
 #
@@ -187,7 +187,7 @@ while( $_ = <CS> ) {
 # Close files and move to final name
 close( CS );
 close( FH );
-system( "/bin/mv $changesum_tmp $changesum" );
+system( "/bin/mv    $changesum_tmp $changesum" );
 
 #
 # Edit the files
@@ -196,3 +196,7 @@ if ( ! $opts{'update'} ) {
   system( "$EDITOR $changelog" );
   system( "$EDITOR $changesum" );
 }
+system( "/bin/cp -fp $changelog models/lnd/clm/doc/." );
+system( "/bin/cp -fp $changesum models/lnd/clm/doc/." );
+system( "/bin/chmod 0444 models/lnd/clm/doc/$changelog" );
+system( "/bin/chmod 0444 models/lnd/clm/doc/$changesum" );

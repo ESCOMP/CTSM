@@ -1473,14 +1473,6 @@ sub write_filepath_ccsm
     } else {
        die "** source directory does not exist: $CASEROOT/$dir\n";
     }
-    # timing library
-    my $srcdir = absolute_path( "$cfg{'clm_root'}/../.." );
-    my $dir    = "utils/timing";
-    if ( -d "$srcdir/$dir" ) {
-       print $fh "\$CODEROOT/$dir\n";
-    } else {
-       die "** source directory does not exist: $srcdir/$dir\n";
-    }
     my $srcdir = "$cfg{'clm_root'}/src";
     my $subdir = "";
     if ( $srcdir =~ /models\/(lnd\/clm.*\/src)/ ) {

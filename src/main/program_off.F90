@@ -49,7 +49,7 @@ PROGRAM program_off
   use shr_kind_mod    , only : r8 => shr_kind_r8, SHR_KIND_CL
   use shr_orb_mod     , only : shr_orb_params, shr_orb_decl, shr_orb_undef_real
   use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
-  use clm_varctl      , only : iulog
+  use clm_varctl      , only : iulog, irad
   use clm_comp        , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
   use clm_time_manager, only : is_last_step, advance_timestep, get_nstep, get_curr_calday
   use atmdrvMod       , only : atmdrv, atmdrv_init
@@ -84,6 +84,7 @@ PROGRAM program_off
   real(r8) :: calday       ! julian calendar day 
   logical  :: mpi_running  ! true => MPI is initialized 
   integer  :: mpicom_glob  ! MPI communicator
+  logical  :: doalb        ! true if surface albedo calculation time step
 
   character(len=SHR_KIND_CL) :: nlfilename = "lnd.stdin"
 !-----------------------------------------------------------------------
@@ -166,6 +167,8 @@ PROGRAM program_off
      ! Current atmospheric state and fluxes for all [atmlon] x [atmlat] points.
 
      nstep = get_nstep()
+     ! doalb is true when the next time step is a radiation time step
+     doalb = ((irad==1 .and. nstep/=0) .or. (mod(nstep,irad)==0 .and. nstep/=0))
 
      call mpi_barrier(mpicom,ier)
      calday = get_curr_calday()
@@ -177,7 +180,7 @@ PROGRAM program_off
      !  call t_barrierf('barrier1b',mpicom)
      ! Run
 
-     call clm_run1()
+     call clm_run1( doalb )
 
      !  call t_barrierf('barrier2b',mpicom)
 

@@ -164,7 +164,7 @@ contains
 ! !IROUTINE: clm_run1
 !
 ! !INTERFACE:
-  subroutine clm_run1( )
+  subroutine clm_run1( doalb )
 !
 ! !DESCRIPTION:
 ! land model run1 phase
@@ -178,11 +178,10 @@ contains
     use clm_atmlnd      , only : clm_map2gcell
 !
 ! !ARGUMENTS:
+    logical, intent(IN)  :: doalb     ! true if surface albedo calculation time step from atm
 !
 ! !LOCAL VARIABLES:
-    integer  :: nstep                 ! model time step
     integer  :: dtime                 ! time step increment (sec)
-    logical  :: doalb                 ! true if surface albedo calculation time step from atm
     real(r8) :: caldayp1              ! calendar day for nstep+1
     real(r8) :: declinp1              ! solar declination angle in radians for nstep+1
     real(r8) :: eccf                  ! earth orbit eccentricity factor
@@ -194,10 +193,6 @@ contains
 !---------------------------------------------------------------------------
 
     ! Set default values first 
-    ! Determine doalb (true when the next time step is a radiation time step) 
-
-    nstep = get_nstep()
-    doalb = ((irad==1) .or. (mod(nstep,irad)==0 .and. nstep/=0))
 
     dtime = get_step_size()
     caldayp1 = get_curr_calday( offset=int(dtime) )

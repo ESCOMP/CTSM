@@ -487,7 +487,7 @@ contains
 
        call t_barrierf('sync_clm_run1', mpicom)
        call t_startf ('clm_run1')
-       call clm_run1( )
+       call clm_run1( doalb )
        call t_stopf ('clm_run1')
 
        call t_barrierf('sync_clm_run2', mpicom)

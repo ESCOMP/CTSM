@@ -181,7 +181,7 @@
         end if
      end if
 
-     call clm_run1()
+     call clm_run1( doalb )
 
      ! Average fluxes over interval if appropriate
      ! Surface states sent to the flux coupler states are not time averaged

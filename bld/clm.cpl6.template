@@ -6,7 +6,7 @@ if !(-d $CASEROOT/Buildexe) mkdir $CASEROOT/Buildexe
 
 # --- set hybrid run initial dataset 
 set datainit = " "
-if ($RUN_TYPE == hybrid) set datainit = ${RUN_REFCASE}.clm2.i.${RUN_REFDATE}-00000.nc 
+if ($RUN_TYPE == hybrid) set datainit = ${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-00000.nc 
 
 # --- set branch run restart dataset 
 set nrevsn = " "
@@ -114,7 +114,7 @@ endif
 # dtime            =  $dtime 
 # irad             =  $iradsw
 # hist_nhtfrq      =  0
-# hist_crtinic     = 'YEARLY'
+# hist_crtinic     = 'NONE'
 # nrevsn           = '$nrevsn'
 # finidat          = '$finidat'
 # fsurdat          = '$fsurdat'
@@ -270,7 +270,7 @@ cat >! lnd.stdin << EOF
  irad             =  $iradsw
  csm_doflxave     = .true.
  hist_nhtfrq      =  0
- hist_crtinic     = 'YEARLY'
+ hist_crtinic     = 'NONE'
  nrevsn           = '\$nrevsn'
  finidat          = '\$finidat'
  fsurdat          = '\$fsurdat'
