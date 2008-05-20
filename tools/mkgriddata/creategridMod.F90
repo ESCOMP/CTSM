@@ -811,6 +811,12 @@ contains
        endwhere
     endif
 
+    ! Reset landfrac to zero where landmask has been set to zero
+
+    where (domain%mask(:,:) == 0)
+       domain%frac(:,:) = 0
+    endwhere
+
     if (.not.llneswset) then
        llneswset = .true.
        if (edgeneswset) then

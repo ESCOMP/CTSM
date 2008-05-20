@@ -260,7 +260,7 @@ contains
     enddo
     enddo
 
-    ! set gsMap_atm_gdc2glo, perm_atm_gdc2glo
+    ! set gsMap_atm_gdc2glo
     call get_proc_bounds_atm(beg, end)
     allocate(gindex(beg:end))
     do n = beg,end
@@ -268,10 +268,6 @@ contains
     enddo
     lsize = end-beg+1
     gsize = ani * anj
-    allocate(perm_atm_gdc2glo(lsize),stat=ier)
-    call mct_indexset(perm_atm_gdc2glo)
-    call mct_indexsort(lsize,perm_atm_gdc2glo,gindex)
-    call mct_permute(gindex,perm_atm_gdc2glo,lsize)
     call mct_gsMap_init(gsMap_atm_gdc2glo, gindex, mpicom, comp_id, lsize, gsize )
     deallocate(gindex)
 
@@ -497,7 +493,7 @@ contains
     deallocate(lcid)
     deallocate(lncnt,lnoff,lnmap)
 
-    ! set gsMap_lnd_gdc2glo, perm_lnd_gdc2glo
+    ! set gsMap_lnd_gdc2glo
     call get_proc_bounds(beg, end)
     allocate(gindex(beg:end))
     do n = beg,end
@@ -505,10 +501,6 @@ contains
     enddo
     lsize = end-beg+1
     gsize = lni * lnj
-    allocate(perm_lnd_gdc2glo(lsize),stat=ier)
-    call mct_indexset(perm_lnd_gdc2glo)
-    call mct_indexsort(lsize,perm_lnd_gdc2glo,gindex)
-    call mct_permute(gindex,perm_lnd_gdc2glo,lsize)
     call mct_gsMap_init(gsMap_lnd_gdc2glo, gindex, mpicom, comp_id, lsize, gsize )
     deallocate(gindex)
 
@@ -598,7 +590,6 @@ contains
     integer, pointer :: pstart(:),pcount(:)
     integer :: beg,end,num
     type(mct_gsmap),pointer :: gsmap
-    integer, pointer :: perm(:)
     integer, pointer :: start(:),count(:)
     integer, pointer :: tarr1(:),tarr2(:)
     integer :: ntest
@@ -770,7 +761,6 @@ contains
     ! compute glo ordered start indices from the counts
     ! scatter the subgrid start indices back out to the gdc gridcells
     ! set the local gindex array for the subgrid from the subgrid start and count arrays
-    ! initialize the permuter and gsmap from the gindex
 
     do k = 1,4
        if (k == 1) then
@@ -779,8 +769,6 @@ contains
           end = endg
           num = numg
           gsmap => gsmap_gce_gdc2glo
-          allocate(perm_gce_gdc2glo(end-beg+1))
-          perm => perm_gce_gdc2glo
           start => gstart
           count => gcount
        elseif (k == 2) then
@@ -789,8 +777,6 @@ contains
           end = endl
           num = numl
           gsmap => gsmap_lun_gdc2glo
-          allocate(perm_lun_gdc2glo(end-beg+1))
-          perm => perm_lun_gdc2glo
           start => lstart
           count => lcount
        elseif (k == 3) then
@@ -799,8 +785,6 @@ contains
           end = endc
           num = numc
           gsmap => gsmap_col_gdc2glo
-          allocate(perm_col_gdc2glo(end-beg+1))
-          perm => perm_col_gdc2glo
           start => cstart
           count => ccount
        elseif (k == 4) then
@@ -809,8 +793,6 @@ contains
           end = endp
           num = nump
           gsmap => gsmap_pft_gdc2glo
-          allocate(perm_pft_gdc2glo(end-beg+1))
-          perm => perm_pft_gdc2glo
           start => pstart
           count => pcount
        else
@@ -856,15 +838,7 @@ contains
       lsize = end-beg+1
       gsize = num
 
-      if (size(perm) /= lsize) then
-         write(iulog,*) 'decompInit_glcp error size perm ',size(perm),lsize
-         call endrun()
-      endif
-      call mct_indexset(perm)
-      call mct_indexsort(lsize,perm,gindex)
-      call mct_permute(gindex,perm,lsize)
       call mct_gsMap_init(gsMap, gindex, mpicom, comp_id, lsize, gsize )
-      call mct_unpermute(gindex,perm,lsize)
 
       !--- test gsmap ---
       ntest = mct_gsMap_gsize(gsMap)
@@ -975,23 +949,17 @@ contains
                ' end pft     = ',procinfo%endp,                   &
                ' total pfts per proc     = ',procinfo%npfts
           write(iulog,*)'proc= ',pid,' atm ngseg   = ',mct_gsMap_ngseg(gsMap_atm_gdc2glo), &
-               ' atm nlseg   = ',mct_gsMap_nlseg(gsMap_atm_gdc2glo,iam), &
-               ' size perm = ',size(perm_atm_gdc2glo)
+               ' atm nlseg   = ',mct_gsMap_nlseg(gsMap_atm_gdc2glo,iam)
           write(iulog,*)'proc= ',pid,' lnd ngseg   = ',mct_gsMap_ngseg(gsMap_lnd_gdc2glo), &
-               ' lnd nlseg   = ',mct_gsMap_nlseg(gsMap_lnd_gdc2glo,iam), &
-               ' size perm = ',size(perm_lnd_gdc2glo)
+               ' lnd nlseg   = ',mct_gsMap_nlseg(gsMap_lnd_gdc2glo,iam)
           write(iulog,*)'proc= ',pid,' gce ngseg   = ',mct_gsMap_ngseg(gsMap_gce_gdc2glo), &
-               ' gce nlseg   = ',mct_gsMap_nlseg(gsMap_gce_gdc2glo,iam), &
-               ' size perm = ',size(perm_gce_gdc2glo)
+               ' gce nlseg   = ',mct_gsMap_nlseg(gsMap_gce_gdc2glo,iam)
           write(iulog,*)'proc= ',pid,' lun ngseg   = ',mct_gsMap_ngseg(gsMap_lun_gdc2glo), &
-               ' lun nlseg   = ',mct_gsMap_nlseg(gsMap_lun_gdc2glo,iam), &
-               ' size perm = ',size(perm_lun_gdc2glo)
+               ' lun nlseg   = ',mct_gsMap_nlseg(gsMap_lun_gdc2glo,iam)
           write(iulog,*)'proc= ',pid,' col ngseg   = ',mct_gsMap_ngseg(gsMap_col_gdc2glo), &
-               ' col nlseg   = ',mct_gsMap_nlseg(gsMap_col_gdc2glo,iam), &
-               ' size perm = ',size(perm_col_gdc2glo)
+               ' col nlseg   = ',mct_gsMap_nlseg(gsMap_col_gdc2glo,iam)
           write(iulog,*)'proc= ',pid,' pft ngseg   = ',mct_gsMap_ngseg(gsMap_pft_gdc2glo), &
-               ' pft nlseg   = ',mct_gsMap_nlseg(gsMap_pft_gdc2glo,iam), &
-               ' size perm = ',size(perm_pft_gdc2glo)
+               ' pft nlseg   = ',mct_gsMap_nlseg(gsMap_pft_gdc2glo,iam)
           write(iulog,*)'proc= ',pid,' nclumps = ',procinfo%nclumps
 
           clmin = 1

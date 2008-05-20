@@ -33,7 +33,6 @@
 #=================== THINGS MOST COMONLY CHANGED ===========================
 
 ## Configuration settings:
-set mode     = ccsm_seq # settings are [offline | ccsm_seq ] (default is ccsm_seq)
 set spmd     = on       # settings are [on   | off         ] (default is on) (off for interactive)
 set smp      = off      # settings are [on   | off         ] (default is off)
 set maxpft   = 4        # settings are 4->17                 (default is 4)
@@ -81,7 +80,7 @@ setenv UTILROOT $clmroot/../../../scripts/ccsm_utils
 ## Contains the initial and boundary data for the CLM distribution.
 setenv CSMDATA /fs/cgd/csm/inputdata                # (MAKE SURE YOU CHANGE THIS!!!)
 
-## Location of datm data (when running in ccsm_seq mode) - needs to be customized unless running at NCAR.
+## Location of datm data - needs to be customized unless running at NCAR.
 ## Contains the location for the datm7 input data
 setenv datm_data_dir /cgd/tss/NCEPDATA.datm7.Qian.T62.c060410   # (MAKE SURE YOU CHANGE THIS!!!)
 
@@ -131,7 +130,7 @@ mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
 mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
 
 ## Build (or re-build) executable
-set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust -usr_src $usr_src -mode $mode"
+set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust -usr_src $usr_src"
 if ($spmd == on ) set flags = "$flags -spmd"
 if ($spmd == off) set flags = "$flags -nospmd"
 if ($smp  == on ) set flags = "$flags -smp"
@@ -150,7 +149,7 @@ if ( ! -f $config ) then
     echo "Building CLM in $blddir ..."
     gmake -j8 >&! MAKE.out      || echo "CLM build failed: see $blddir/MAKE.out" && exit 1
 else
-    echo "Re-building CLM in $blddir ..."
+    cho "Re-building CLM in $blddir ..."
     rm -f Depends
     gmake -j8 >&! REMAKE.out      || echo "CLM build failed: see $blddir/REMAKE.out" && exit 1
 endif
@@ -187,7 +186,7 @@ endif
 set stop_final = 99991231
 if ( $resub_date > 0    ) set stop_final = $resub_date
 set set_restart_option = " "
-if ( $mode == ccsm_seq ) set_restart_option = " restart_option = 'yearly'"
+set_restart_option = " restart_option = 'yearly'"
 cat >! lndinput << EOF
  &drv_in
  $set_restart_option

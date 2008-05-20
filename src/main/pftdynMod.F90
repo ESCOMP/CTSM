@@ -11,7 +11,7 @@ module pftdynMod
 ! !USES:
   use spmdMod
   use clmtype
-  use decompMod   , only : gsmap_lnd_gdc2glo,perm_lnd_gdc2glo
+  use decompMod   , only : gsmap_lnd_gdc2glo
   use decompMod   , only : get_proc_bounds
   use ncdio
   use clm_varsur  , only : pctspec

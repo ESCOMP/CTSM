@@ -1,7 +1,0 @@
--spmd -smp
--mode offline
--debug
--maxpft 17
--bgc cn
--supln on 
--s

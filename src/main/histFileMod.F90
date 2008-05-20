@@ -2889,14 +2889,6 @@ contains
        endif
     end do
 
-    ! Determine if time to write restarts before resetting number of
-    ! time samples below
-
-#if (defined OFFLINE) 
-    if_writrest = .false.
-    if (tape(1)%ntimes == tape(1)%mfilt) if_writrest = .true.
-#endif
-
     ! Reset number of time samples to zero if file is full
 
     do t = 1, ntapes

@@ -87,24 +87,6 @@ $(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Filepath
 
 # Architecture-specific flags and rules
 #------------------------------------------------------------------------
-# SGI
-#------------------------------------------------------------------------
-
-ifeq ($(UNAMES),IRIX64)
-CPPDEF  += -DIRIX64
-FC      = f90
-FFLAGS  = -64 -c -r8 -i4 -I$(INC_NETCDF) -g -O2 $(CPPDEF)
-LDFLAGS = -64 -L$(LIB_NETCDF) -lnetcdf
-CFLAGS  := -64 -g -O2 $(CPPDEF) -C -DFORTRANUNDERSCORE -DEBUG:trap_uninitialized=ON
-FFLAGS += $(cpp_path)
-CFLAGS += $(cpp_path)
-ifneq ($(OPT),TRUE)
-   FFLAGS += -C -DEBUG:trap_uninitialized=ON
-endif
-
-endif
-
-#------------------------------------------------------------------------
 # AIX
 #------------------------------------------------------------------------
 
@@ -166,7 +148,6 @@ ifeq ($(UNAMES),Linux)
   CFLAGS := $(CPPDEF)
 
   ifeq ($(PGF90),TRUE)
-    FFLAGS := -c -I$(INC_NETCDF) $(CPPDEF)
     CC     := pgcc
     ifneq ($(OPT),TRUE)
       FFLAGS += -g -Ktrap=fp -Mbounds
@@ -174,29 +155,25 @@ ifeq ($(UNAMES),Linux)
       FFLAGS += -fast
       CFLAGS += -fast
     endif
-    LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
-
   endif
 
   ifeq ($(FC),lf95)
-    FFLAGS =  -c -I$(INC_NETCDF) $(CPPDEF)
     ifneq ($(OPT),TRUE)
       FFLAGS += -g --chk a,e,s,u
     else
       FFLAGS += -O
     endif
-    LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
   endif
   ifeq ($(FC),pathf90)
-    FFLAGS =  -c -I$(INC_NETCDF) $(CPPDEF) -extend_source -ftpp -fno-second-underscore
+    FFLAGS =  -extend_source -ftpp -fno-second-underscore
     ifneq ($(OPT),TRUE)
       FFLAGS += -g
     else
       FFLAGS += -O
     endif
-    LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
   endif
-  FFLAGS += $(cpp_path)
+  LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+  FFLAGS += -c -I$(INC_NETCDF) $(CPPDEF) $(cpp_path)
   CFLAGS += $(cpp_path)
 endif
 

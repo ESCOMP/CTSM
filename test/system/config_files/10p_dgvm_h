@@ -1,5 +1,0 @@
--spmd -smp
--mode offline
--maxpft 10
--bgc dgvm
--s

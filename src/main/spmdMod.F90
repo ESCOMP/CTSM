@@ -98,13 +98,6 @@ contains
     comp_id = cpl_comm_mph_cid
 #endif
 
-    ! Initialize mpi
-
-#ifdef OFFLINE
-    call mpi_initialized (mpi_running, ier)
-    if (.not. mpi_running) call mpi_init (ier)
-#endif
-
     ! Get my processor id
 
     call mpi_comm_rank(mpicom, iam, ier)

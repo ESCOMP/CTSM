@@ -420,7 +420,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize clmtype variables that are associated with
 ! time accumulated fields. This routine is called in an initial run
-! at nstep=0 for cam and csm mode and at nstep=1 for offline mode.
+! at nstep=0 for cam and csm mode.
 ! This routine is also always called for a restart run and
 ! therefore must be called after the restart file is read in
 ! and the accumulated fields are obtained.

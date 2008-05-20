@@ -3829,13 +3829,6 @@ contains
          avgflag='A', long_name='soil water as frac. of whc for top 0.5 m', &
          ptr_col=clm3%g%l%c%cps%wf, default='inactive')
 
-    call hist_addfld1d (fname='DECL', units='radians', &
-         avgflag='A', long_name='solar declination angle', &
-         ptr_col=clm3%g%l%c%cps%decl, default='inactive')
-
-    call hist_addfld1d (fname='COSZEN', units='none', &
-         avgflag='A', long_name='cosine of solar zenith angle', &
-         ptr_col=clm3%g%l%c%cps%coszen, default='inactive')
 
     call hist_addfld1d (fname='FPI', units='proportion', &
          avgflag='A', long_name='fraction of potential immobilization', &
@@ -4039,6 +4032,14 @@ contains
 
     
 #endif
+
+    call hist_addfld1d (fname='DECL', units='radians', &
+         avgflag='A', long_name='solar declination angle', &
+         ptr_col=clm3%g%l%c%cps%decl, default='inactive')
+
+    call hist_addfld1d (fname='COSZEN', units='none', &
+         avgflag='A', long_name='cosine of solar zenith angle', &
+         ptr_col=clm3%g%l%c%cps%coszen, default='inactive')
 
 #if (defined CASA)
     call hist_addfld1d (fname='CO2FLUX', units='g/m2/s',  &

@@ -192,12 +192,6 @@ cat >! $CASEROOT/Buildnml_Prestage/clm.buildnml_prestage.csh << EOF1
 #  Create namelist and prestage data script
 # ---------------------------------------------------------------------------
 
-source \$CASEROOT/env_conf         || exit -1
-source \$CASEROOT/env_run          || exit -1
-source \$CASEROOT/env_mach.\$MACH  || exit -1
-source \$CASEROOT/env_pes.\$MACH   || exit -1
-
-
 # Prestage data
 #--------------------------------------------------------------------
 
@@ -320,11 +314,6 @@ EOF1
 
 cat >! $CASEROOT/Buildexe/clm.buildexe.csh << EOF2
 #! /bin/csh -f 
-
-source \$CASEROOT/env_conf || exit -1
-source \$CASEROOT/env_run  || exit -1
-source \$CASEROOT/env_mach.\$MACH  || exit -1
-source \$CASEROOT/env_pes.\$MACH   || exit -1
 
 # Use namelist filename instead of redirecting from stdin
 echo "Use NLFILE rather than stdin for CLM"

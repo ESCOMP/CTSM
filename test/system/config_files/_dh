@@ -1,4 +1,0 @@
--spmd -smp
--debug
--mode offline
--s

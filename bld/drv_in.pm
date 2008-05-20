@@ -45,7 +45,6 @@ sub new {
   my $MODE = $bld{'MODE'};
   my %deffiles = ( ccsm_seq     => "SeqCCSMDrvInNamelistsDescriptions.xml",
                    ccsm_seq_cam => "CAMSeqCCSMDrvInNamelistsDescriptions.xml",
-                   offline      => "CLMDrvInNamelistsDescriptions.xml",
                    ext_ccsm_con => "CCSMDrvInNamelistsDescriptions.xml",
                    ext_ccsm_seq => "ExtSeqCCSMDrvInNamelistsDescriptions.xml"
                  );

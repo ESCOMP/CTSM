@@ -27,7 +27,7 @@ module RtmMod
   use domainMod   , only : latlon_type, latlon_init, latlon_clean
   use abortutils  , only : endrun
   use RunoffMod   , only : runoff
-  use RunoffMod   , only : gsMap_rtm_gdc2glo,perm_rtm_gdc2glo,sMatP_l2r
+  use RunoffMod   , only : gsMap_rtm_gdc2glo,sMatP_l2r
   use clm_mct_mod
   use perf_mod
 !
@@ -98,7 +98,7 @@ contains
     use clm_varctl   , only : frivinp_rtm
     use clm_varctl   , only : rtm_nsteps
     use decompMod    , only : get_proc_bounds, get_proc_global, ldecomp
-    use decompMod    , only : gsMap_lnd_gdc2glo, perm_lnd_gdc2glo
+    use decompMod    , only : gsMap_lnd_gdc2glo
     use clm_time_manager, only : get_curr_date
     use clm_time_manager, only : get_step_size
     use clmtype      , only : grlnd
@@ -163,7 +163,7 @@ contains
     integer  :: pid,np,npmin,npmax,npint      ! log loop control
     integer,parameter  :: dbug = 1            ! 0 = none, 1=normal, 2=much, 3=max
 
-    integer lsize,gsize                    ! temporary for permute
+    integer lsize,gsize                    ! sizes to initialize GsMap
     integer  :: na,nb,ns                   ! mct sizes
     integer  :: igrow,igcol,iwgt           ! mct field indices
     integer  :: ii,ji,ni,no,gi,go          ! tmps
@@ -904,12 +904,7 @@ contains
     enddo
     lsize = endr-begr+1
     gsize = rtmlon * rtmlat
-    allocate(perm_rtm_gdc2glo(lsize),stat=ier)
-    call mct_indexset(perm_rtm_gdc2glo)
-    call mct_indexsort(lsize,perm_rtm_gdc2glo,runoff%gindex)
-    call mct_permute(runoff%gindex,perm_rtm_gdc2glo,lsize)
     call mct_gsMap_init( gsMap_rtm_gdc2glo, runoff%gindex, mpicom, comp_id, lsize, gsize )
-    call mct_unpermute(runoff%gindex,perm_rtm_gdc2glo,lsize)
 
     !--- initialize sMat0_l2r_d, from sMat0_l2r - remove unused weights
     !--- root pe only
@@ -984,7 +979,7 @@ contains
 !
 ! !USES:
     use decompMod      , only : get_proc_bounds, get_proc_global
-    use decompMod      , only : gsMap_lnd_gdc2glo, perm_lnd_gdc2glo
+    use decompMod      , only : gsMap_lnd_gdc2glo
     use domainMod      , only : ldomain
 !
 ! !ARGUMENTS:
@@ -1032,9 +1027,7 @@ contains
           suml = suml + av_lndr%rAttr(nr,n2)*ldomain%area(n)
        enddo
 
-       call mct_aVect_permute  (av_lndr,perm_lnd_gdc2glo)
        call mct_Smat_AvMult    (av_lndr,sMatP_l2r,av_rtmr,vector=usevector)
-       call mct_aVect_unpermute(av_rtmr,perm_rtm_gdc2glo)
  
        nr = mct_aVect_indexRA(av_rtmr,'rtminput',perrWith='Rtmriverflux')
        do n = runoff%begr,runoff%endr

@@ -1,7 +1,0 @@
--nospmd
--smp
--debug
--maxpft 4
--bgc casa
--mode offline
--s

@@ -1,8 +1,0 @@
--nospmd
--smp
--maxpft 4
--rtm on
--dust on
--voc on
--mode offline
--s

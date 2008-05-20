@@ -5,7 +5,6 @@ smCA4             blCA4
 smCA8             blCA8
 smNB4             blNB4
 smOC4             blOC4
-sm112 er112 br112 bl112 sm116
 smG42 erG42 brG42 blG42 smG46
 smH52 erH52 brH52 blH52
 smK51 erK51 brK51 blK51
@@ -18,3 +17,4 @@ smM14
 smZ14
 sm814
 sm813
+erP11

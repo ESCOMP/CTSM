@@ -3,16 +3,8 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on bangkok, calgary, tempest, bluevista, lightning, blueice, jaguarcnl: 
+# usage on bangkok, calgary, bluevista, lightning, blueice, jaguar: 
 # ./test_driver.sh
-#
-# usage on robin/phoenix: (run build on robin interactively first, then submit to phoenix)
-#                         (must also ensure that JOBID is the same so build will be used)
-#
-#    setenv CLM_JOBID 101
-#    ./test_driver.sh -i
-#    setenv CLM_TESTDIR /tmp/work/$USER/test-driver.$CLM_JOBID
-#    ./test_driver.sh -f
 #
 # valid arguments: 
 # -i    interactive usage
@@ -28,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_alpha29"
+seqccsm_vers="ccsm4_0_alpha30"
 conccsm_vers="ccsm3_9_beta03"
 
 hostname=`hostname`
@@ -239,6 +231,7 @@ else
    export CFG_STRING="-fc pathf90 -linker \${mpich}/bin/mpif90 "
    export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=\${mpich}/bin/mpif90 "
 fi
+export CCSM_MACH="lightning"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
 export DATM_DATA_DIR=/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410
@@ -314,6 +307,7 @@ else
     export CFG_STRING="-fc lf95 "
     export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
 fi
+export CCSM_MACH="bangkok"
 export MAKE_CMD="gmake -j 2"   ##using hyper-threading on calgary
 export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
@@ -327,9 +321,9 @@ EOF
     ;;
 
 
-    ##jaguarcnl
+    ##jaguar
     jaguar* ) 
-    submit_script="test_driver_jaguarcnl_${cur_time}.sh"
+    submit_script="test_driver_jaguar_${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -367,180 +361,48 @@ input_file="tests_pretag_jaguar"
 
 ##omp threads
 export CLM_THREADS=1
-export CLM_RESTART_THREADS=2
+export CLM_RESTART_THREADS=4
 
 ##mpi tasks
 export CLM_TASKS=280
-export CLM_RESTART_TASKS=140
+export CLM_RESTART_TASKS=70
 
 export CLM_COMPSET="I"
 
 source /opt/modules/default/init/sh
-module switch pgi pgi/7.0.7
+module purge
+module load   PrgEnv-pgi Base-opts
+module switch xt-mpt xt-mpt/2.0.49a
+module load   torque moab
 module load   netcdf/3.6.2
 module load   ncl
 export PATH="/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
 export PATH="\${PATH}:\${MPICH_DIR}/bin"
-export PATH="\${PATH}:\${MPICH_DIR_FTN_DEFAULT64}/bin"
 export PATH="\${PATH}:\${PE_DIR}/bin/snos64"
 export PATH="\${PATH}:\${PGI}/linux86-64/default/bin"
 export PATH="\${PATH}:\${SE_DIR}/bin/snos64"
 export PATH="\${PATH}:\${C_DIR}/amd64/bin"
 export PATH="\${PATH}:\${PRGENV_DIR}/bin"
 export PATH="\${PATH}:\${MPT_DIR}/bin"
-export PATH="\${PATH}:/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguarcnl/bin"
+export PATH="\${PATH}:/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
 
 export LIB_NETCDF=\${NETCDF_DIR}/lib
 export INC_NETCDF=\${NETCDF_DIR}/include
 export MOD_NETCDF=\${NETCDF_DIR}/include
-export CCSM_MACH="jaguarcnl"
+export CCSM_MACH="jaguar"
 export CFG_STRING="-fc ftn "
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
-export MAKE_CMD="gmake -j 5 "
+export MAKE_CMD="gmake -j 9 "
 export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/spin/proj/ccsm/bin/jaguar/newcprnc
-export DATM_DATA_DIR=/lustre/scratch/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
-dataroot="/lustre/scratch/ccsm"
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
-    ##robin/phoenix
-    ro* )
-    submit_script="test_driver_robin_${cur_time}.sh"
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-# Name of the queue (CHANGE THIS if needed)
-# #PBS -q debug
-# Number of nodes (CHANGE THIS if needed)
-#PBS -l walltime=02:58:00,mppe=8
-# output file base name
-#PBS -N test_dr
-# Put standard error and standard out in same file
-#PBS -j oe
-# Export all Environment variables
-#PBS -V
-#PBS -A CLI017dev
-# End of options
-
-if [ -n "\$PBS_JOBID" ]; then    #batch job
-    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
-    initdir=\${PBS_O_WORKDIR}
-fi
-
-if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
-    interactive="NO"
-    input_file="tests_posttag_phoenix"
-    echo_arg=""
-else
-    interactive="YES"
-    input_file="tests_posttag_robin"
-    echo_arg="-e"
-fi
-
-##omp threads
-export CLM_THREADS=1
-export CLM_RESTART_THREADS=2
-
-##mpi tasks
-export CLM_TASKS=8
-export CLM_RESTART_TASKS=4
-
-export CLM_COMPSET="I"
-
-. /opt/modules/modules/init/sh
-module purge
-module load open
-module load PrgEnv.5407
-module unload mpt
-module load mpt.2.4.0.6
-module load pbs
-module load netcdf/3.5.1_r4
-
-netcdf=\$NETCDF_SV2
-export LIB_NETCDF=\${netcdf}/lib
-export INC_NETCDF=\${netcdf}/include
-export MOD_NETCDF=\${netcdf}/include
-export CFG_STRING="-target_os unicosmp -cppdefs \"-DSYSUNICOS\" "
-export TOOLS_MAKE_STRING="USER_CPPDEFS='-DSYSUNICOS' "
-export CCSM_MACH="phoenix"
-
-export MAKE_CMD="gmake -j 2"
-export MACH_WORKSPACE="/tmp/work"
-export CPRNC_EXE=/spin/proj/ccsm/models/atm/cam/bin/newcprnc/cprnc
-export DATM_DATA_DIR=/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
-dataroot="/spin/proj/ccsm"
+export DATM_DATA_DIR=/tmp/proj/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
+dataroot="/tmp/proj/ccsm"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##tempest
-    te* )
-    submit_script="test_driver_tempest_${cur_time}.sh"
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-#QSUB -q ded_16        # Name of the queue (CHANGE THIS if needed)
-#QSUB -l mpp_p=20      # Maximum number of processes (CHANGE THIS if needed)
-#QSUB -x               # Export all Environment variables
-#QSUB -eo              # Put standard error and standard out in same file
-#QSUB -J y             # Put job log in its own file
-#QSUB                  # End of options
-
-if [ -n "\$QSUB_REQID" ]; then  #batch job
-    export JOBID=\`echo \${QSUB_REQID} | cut -f1 -d'.'\`
-    initdir=\${QSUB_WORKDIR}
-    interactive="NO"
-else
-    interactive="YES"
-fi
-
-##omp threads
-export CLM_THREADS=4
-export CLM_RESTART_THREADS=8
-
-##mpi tasks
-export CLM_TASKS=4
-export CLM_RESTART_TASKS=2
-
-export CLM_COMPSET="I"
-
-export INC_NETCDF=/usr/local/include
-export LIB_NETCDF=/usr/local/lib64/r4i4
-mpich=/opt/mpt/mpt/usr
-export INC_MPI=\${mpich}/include
-export LIB_MPI=\${mpich}/lib64
-export OMP_DYNAMIC="FALSE"
-export _DSM_PLACEMENT="ROUND_ROBIN"
-export _DSM_WAIT="SPIN"
-export MPC_GANG="OFF"
-export MP_SLAVE_STACKSIZE="40000000"
-## MIPSpro module required for f90
-. /opt/modules/modules/init/sh
-module purge
-module load MIPSpro mpt
-export MAKE_CMD="gmake -j 16"
-export CFG_STRING=""
-export TOOLS_MAKE_STRING=""
-export MACH_WORKSPACE="/ptmp"
-export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
-export DATM_DATA_DIR=/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410
-dataroot="/fs/cgd/csm"
-echo_arg=""
-input_file="tests_pretag_tempest"
-
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
-
-    ##spot1
-    spot1* )
+    ##aluminum
+    aluminum* )
     submit_script="test_driver_spot1_${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -560,6 +422,7 @@ export CLM_RESTART_TASKS=1
 
 export CLM_COMPSET="I"
 
+export CCSM_MACH="none"
 #export INC_NETCDF=/usr/local/netcdf-3.6.1..0-p1_g95-4.0.3/include
 #export LIB_NETCDF=/usr/local/netcdf-3.6.1..0-p1_g95-4.0.3/lib
 export MAKE_CMD="make -j 4"
@@ -843,7 +706,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bangkok, tempest, bluevista, blueice, lightning, jaguar, jaguarcnl, robin: "
+    echo "usage on bangkok, bluevista, blueice, lightning, jaguar: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
@@ -877,12 +740,6 @@ case $hostname in
 
     ##jaguar
     jaguar* )  qsub ${submit_script};;
-
-    ##robin/phoenix
-    ro* )  qsub ${submit_script};;
-
-    ##tempest
-    te* )  qsub ${submit_script};;
 
 esac
 exit 0

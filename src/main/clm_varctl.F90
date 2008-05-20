@@ -68,13 +68,6 @@ module clm_varctl
   character(len=256), public :: fpftcon    = ' '        ! ASCII data file with PFT physiological constants
   character(len=256), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=256), public :: frivinp_rtm  = ' '      ! RTM input data file name
-  character(len=256), public :: offline_atmdir = ' '    ! directory for input offline model atm data forcing files (Mass Store ok)
-!
-! offline atmosphere data cycling controls
-!
-  integer, public :: cycle_begyr = iundef               ! first year of offline atm data (e.g. 1948)
-  integer, public :: cycle_nyr   = iundef               ! number of years of offline atm data to cycle
-  
 !
 ! Landunit logic
 !
@@ -239,12 +232,6 @@ contains
           write(iulog,*)'co2_type = ',co2_type,' is not supported'
           call shr_sys_abort( subname//' ERROR:: choices are constant, prognostic or diagnostic' )
        end if
-#if (defined OFFLINE)
-       if (co2_type /= 'constant') then
-          write(iulog,*)'co2_type = ',co2_type,' is not supported in offline mode'
-          call shr_sys_abort( subname//' ERROR:: choice is only constant' )
-       end if
-#endif
        ! Consistency settings for dynamic land use, etc.
 
        if (fpftdyn /= ' ' .and. create_crop_landunit) &
@@ -268,20 +255,6 @@ contains
        if (nsrest == 3 .and. nrevsn == ' ') &
           call shr_sys_abort( subname//' ERROR: need to set restart data file name' )
 
-       ! Check on offline mode
-
-#if (defined OFFLINE)
-       if (offline_atmdir == ' ') &
-          call shr_sys_abort( subname//' ERROR: atmos  input data file must be specified' )
-       if (cycle_begyr /= iundef) then
-          if (cycle_nyr == iundef) &
-             call shr_sys_abort( subname//' ERROR: if cycle_begyr is set, cycle_nyr must also be set' )
-       end if
-       if (cycle_nyr /= iundef) then
-          if (cycle_begyr == iundef) &
-             call shr_sys_abort( subname//' ERROR: if cycle_nyr is set, cycle_begyr must also be set' )
-       end if
-#endif
        ! Check on ccsm mode
 
 #if (defined COUP_CSM)

@@ -38,8 +38,7 @@ rtm           Turn on RTM : [on | off ]
 voc           Turn on VOC : [on | off ]
 dust          Turn on DUST: [on | off ]
 pergro        Use modifications that allow perturbation growth testing: [on | off]
-mode          CLM mode: [offline | ccsm_seq | ext_ccsm_con | ext_cam ]
-                 offline      => CLM offline mode
+mode          CLM mode: [ccsm_seq | ext_ccsm_con | ext_cam ]
                  ccsm_seq     => CLM sequential CCSM mode (drv/clm/datm7/socn/sice)
                  ext_ccsm_con => CLM will run as part of "external" concurrent ccsm code
 </comment>
@@ -59,7 +58,7 @@ mode="ccsm_seq"
 />
 
 <comment>
-clm_exe    Name of CLM executable (only valid for offline or ccsm_seq modes)
+clm_exe    Name of CLM executable (only valid for ccsm_seq mode)
 cppdefs    User specified CPP defines to append to Makefile defaults.
 cc         User specified C compiler overrides Makefile default (linux only).
 cflags     User specified C compiler options to append to Makefile defaults.

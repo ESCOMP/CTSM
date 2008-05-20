@@ -84,13 +84,12 @@ cat >> $filename <<EOF
     character(len=256) :: istring    ! int field list string
     character(len=8)   :: fname      ! arbitrary field name
     type(mct_gsMap),pointer       :: gsmap   ! global seg map
-    integer, pointer,dimension(:) :: perm    ! mct permuter
     character(len=*),parameter :: subname = 'scatter_${DIM}array_${TYPE}'
 
 !-----------------------------------------------------------------------
 
     call t_startf(trim(subname)//'_total')
-    call get_clmlevel_gsmap(clmlevel,gsmap,perm)
+    call get_clmlevel_gsmap(clmlevel,gsmap)
 
     lb1 = lbound(alocal,dim=1)
     ub1 = ubound(alocal,dim=1)
@@ -131,7 +130,6 @@ cat >> $filename <<EOF
     if (debug > 1) call t_startf(trim(subname)//'_scat')
 
     call mct_aVect_scatter(AVi, AVo, gsmap, 0, mpicom)
-    call mct_aVect_unpermute(AVo, perm, dieWith=subname)
 
     if (debug > 1) call t_stopf(trim(subname)//'_scat')
     if (debug > 1) call t_startf(trim(subname)//'_upck')
@@ -193,14 +191,12 @@ cat >> $filename <<EOF
     character(len=256) :: istring    ! int field list string
     character(len=8)   :: fname      ! arbitrary field name
     type(mct_gsMap),pointer       :: gsmap   ! global seg map
-    integer, pointer,dimension(:) :: perm    ! mct permuter
     character(len=*),parameter :: subname = 'gather_${DIM}array_${TYPE}'
 
 !-----------------------------------------------------------------------
 
     call t_startf(trim(subname)//'_total')
-
-    call get_clmlevel_gsmap(clmlevel,gsmap,perm)
+    call get_clmlevel_gsmap(clmlevel,gsmap)
 
     lsize = size(alocal,dim=1)
     lb1 = lbound(alocal,dim=1)
@@ -253,7 +249,6 @@ cat >> $filename <<EOF
     if (debug > 1) call t_stopf(trim(subname)//'_pack')
     if (debug > 1) call t_startf(trim(subname)//'_gath')
 
-    call mct_aVect_permute(AVi, perm, dieWith=subname)
     if (present(missing)) then
 ! tcx wait for update in mct, then get rid of "mask"
 !       call mct_aVect_gather(AVi, AVo, gsmap, 0, mpicom, missing = missing)

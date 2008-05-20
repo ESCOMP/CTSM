@@ -429,17 +429,6 @@ contains
     integer  :: ncid                         ! netcdf id
     logical ,parameter :: a2ltrue = .true.   ! local
     logical ,parameter :: a2lfalse = .false. ! local
-    !
-    character(len=80) :: calendar           ! Calendar type
-    integer           :: start_ymd          ! Start date (YYYYMMDD)
-    integer           :: start_tod          ! Start time of day (sec)
-    integer           :: ref_ymd            ! Reference date (YYYYMMDD)
-    integer           :: ref_tod            ! Reference time of day (sec)
-    integer           :: stop_ymd           ! Stop date (YYYYMMDD)
-    integer           :: stop_tod           ! Stop time of day (sec)
-    logical           :: log_print          ! Flag to print out log information or not
-    logical           :: perpetual_run      ! If in perpetual mode or not
-    integer           :: perpetual_ymd      ! Perpetual date (YYYYMMDD)
 !----------------------------------------------------------------------
 
     ! Set the a2l and l2a maps
@@ -630,16 +619,6 @@ contains
     end if
 
     ! ------------------------------------------------------------------------
-    ! Start offline run at nstep = 1
-    ! ------------------------------------------------------------------------
-
-#if (defined OFFLINE)
-    call t_startf('init_advts')
-    if (nsrest == 0) call advance_timestep()
-    call t_stopf('init_advts')
-#endif
-
-    ! ------------------------------------------------------------------------
     ! Initialization of model parameterizations that are needed after
     ! restart file is read in
     ! ------------------------------------------------------------------------
@@ -670,9 +649,9 @@ contains
     if (nsrest == 0 .or. nsrest == 3) call hist_htapes_build()
 
     ! Initialize clmtype variables that are obtained from accumulated fields.
-    ! This routine is called in an initial run at nstep=0 for cam and csm mode
-    ! and at nstep=1 for offline mode. This routine is also always called for a
-    ! restart run and must therefore be called after the restart file is read in
+    ! This routine is called in an initial run at nstep=0 for cam and csm mode.
+    ! This routine is also always called for a restart run and must 
+    ! therefore be called after the restart file is read in
 
     call initAccClmtype()
 

@@ -208,33 +208,6 @@ case $hostname in
         fi
     fi ;;
 
-    ##phoenix
-    ph* )
-    ##search config options file for parallelization info; default on cray is mpi
-    if grep -ic NOSPMD ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##serial
-	    cmnd=""
-	elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##open-mp only
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
-	else
-            ##serial
-	    cmnd=""
-	fi
-    else
-        if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##mpi only
-	    cmnd="aprun -c core=unlimited -A -n ${CLM_TASKS} "
-        elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##hybrid
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} aprun -c core=unlimited -A -n ${CLM_TASKS} "
-        else
-            ##mpi only
-	    cmnd="aprun -c core=unlimited -A -n ${CLM_TASKS} "
-        fi
-    fi ;;
-
     ##jaguarcnl
     jaguar* | aprunjag* | yodjag* )
     ##search config options file for parallelization info; default on XT4 is mpi
@@ -262,38 +235,8 @@ case $hostname in
         fi
     fi ;;
 
-    ##tempest
-
-    ##tempest
-    te* )
-    ##search config options file for parallelization info; default on irix64 is open-mp
-    if grep -ic NOSPMD ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##serial
-	    cmnd=""
-	else
-            ##open-mp only
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
-	fi
-    elif grep -ic SPMD ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##mpi only
-	    cmnd="mpirun -np ${CLM_TASKS} "
-	else
-            ##hybrid
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -np ${CLM_TASKS} "
-	fi
-    else
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##serial
-	    cmnd=""
-	else
-            ##open-mp only
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
-	fi
-    fi ;;
-    ##spot1
-    spot1* )
+    ##aluminum
+    aluminum* )
     cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -np ${CLM_TASKS} "
     ;;
 

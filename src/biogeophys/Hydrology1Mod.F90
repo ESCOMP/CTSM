@@ -96,9 +96,6 @@ contains
     real(r8), pointer :: forc_rain(:)      ! rain rate [mm/s]
     real(r8), pointer :: forc_snow(:)      ! snow rate [mm/s]
     real(r8), pointer :: forc_t(:)         ! atmospheric temperature (Kelvin)
-#if (defined OFFLINE)
-    real(r8), pointer :: flfall(:)         ! fraction of liquid water within falling precipitation
-#endif
     logical , pointer :: do_capsnow(:)     ! true => do snow capping
     real(r8), pointer :: t_grnd(:)         ! ground temperature (Kelvin)
     real(r8), pointer :: dewmx(:)          ! Maximum allowed dew [mm]
@@ -165,9 +162,6 @@ contains
     forc_rain          => clm_a2l%forc_rain
     forc_snow          => clm_a2l%forc_snow
     forc_t             => clm_a2l%forc_t
-#if (defined OFFLINE)
-    flfall             => clm_a2l%flfall
-#endif
 
     ! Assign local pointers to derived type members (landunit-level)
 
@@ -324,13 +318,8 @@ contains
           qflx_rain_grnd(p) = 0._r8
        else
           qflx_snowcap(p) = 0._r8
-#if (defined OFFLINE)
-          qflx_snow_grnd_pft(p) = qflx_prec_grnd(p)*(1._r8-flfall(g)) ! ice onto ground (mm/s)
-          qflx_rain_grnd(p)     = qflx_prec_grnd(p)*flfall(g)      ! liquid water onto ground (mm/s)
-#else
           qflx_snow_grnd_pft(p) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
           qflx_rain_grnd(p)     = qflx_prec_grnd_rain(p)           ! liquid water onto ground (mm/s)
-#endif
        end if
 
     end do ! (end pft loop)

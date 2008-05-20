@@ -1,4 +1,0 @@
--nospmd -smp
--debug
--mode offline
--s

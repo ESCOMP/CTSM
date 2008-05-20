@@ -1,8 +1,0 @@
--spmd -smp
--ad_spinup on
--debug
--maxpft 17
--bgc cn
--supln off
--mode offline
--s

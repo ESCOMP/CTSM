@@ -1,5 +1,0 @@
--spmd -smp
--debug
--pergro on
--mode offline
--s

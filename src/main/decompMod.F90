@@ -101,18 +101,12 @@ module decompMod
   type(decomp_type),public,target :: adecomp
 
   type(mct_gsMap)  ,public,target :: gsMap_atm_gdc2glo
-  integer,pointer  ,public        ::  perm_atm_gdc2glo(:)
   type(mct_gsMap)  ,public,target :: gsMap_lnd_gdc2glo
-  integer,pointer  ,public        ::  perm_lnd_gdc2glo(:)
 
   type(mct_gsMap)  ,public,target :: gsMap_gce_gdc2glo
-  integer,pointer  ,public        ::  perm_gce_gdc2glo(:)
   type(mct_gsMap)  ,public,target :: gsMap_lun_gdc2glo
-  integer,pointer  ,public        ::  perm_lun_gdc2glo(:)
   type(mct_gsMap)  ,public,target :: gsMap_col_gdc2glo
-  integer,pointer  ,public        ::  perm_col_gdc2glo(:)
   type(mct_gsMap)  ,public,target :: gsMap_pft_gdc2glo
-  integer,pointer  ,public        ::  perm_pft_gdc2glo(:)
 
 !------------------------------------------------------------------------------
 ! 
@@ -541,7 +535,7 @@ contains
 ! !IROUTINE: get_clmlevel_gsmap
 !
 ! !INTERFACE:
-  subroutine get_clmlevel_gsmap (clmlevel, gsmap, perm)
+  subroutine get_clmlevel_gsmap (clmlevel, gsmap)
 !
 ! !DESCRIPTION:
 ! Compute arguments for gatherv, scatterv for vectors
@@ -550,14 +544,13 @@ contains
     use clmtype  , only : gratm, grlnd, nameg, namel, namec, namep, allrof
 
 #if (defined RTM)
-    use RunoffMod, only : gsMap_rtm_gdc2glo, perm_rtm_gdc2glo
+    use RunoffMod, only : gsMap_rtm_gdc2glo
 #endif
 !
 ! !ARGUMENTS:
     implicit none
     character(len=*), intent(in) :: clmlevel     ! type of input data
     type(mct_gsmap), pointer :: gsmap
-    integer        , pointer :: perm(:)
 
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -571,32 +564,25 @@ contains
     select case (clmlevel)
     case(gratm)
        gsmap => gsmap_atm_gdc2glo
-       perm  =>  perm_atm_gdc2glo
 
     case(grlnd)
        gsmap => gsmap_lnd_gdc2glo
-       perm  =>  perm_lnd_gdc2glo
 
     case(nameg)
        gsmap => gsmap_gce_gdc2glo
-       perm  =>  perm_gce_gdc2glo
 
     case(namel)
        gsmap => gsmap_lun_gdc2glo
-       perm  =>  perm_lun_gdc2glo
 
     case(namec)
        gsmap => gsmap_col_gdc2glo
-       perm  =>  perm_col_gdc2glo
 
     case(namep)
        gsmap => gsmap_pft_gdc2glo
-       perm  =>  perm_pft_gdc2glo
 
 #if (defined RTM)
     case(allrof)
        gsmap => gsmap_rtm_gdc2glo
-       perm  =>  perm_rtm_gdc2glo
 #endif
 
     case default

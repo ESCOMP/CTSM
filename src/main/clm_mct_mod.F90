@@ -52,8 +52,6 @@ module clm_mct_mod
    use m_AttrVect           ,only: mct_aVect_nIAttr       => nIAttr
    use m_AttrVect           ,only: mct_aVect_nRAttr       => nRAttr
    use m_AttrVect           ,only: mct_aVect_copy         => Copy
-   use m_AttrVect           ,only: mct_aVect_permute      => Permute
-   use m_AttrVect           ,only: mct_aVect_unpermute    => Unpermute
    use m_AttrVect           ,only: mct_aVect_exportRattr  => exportRattr
    use m_AttrVect           ,only: mct_aVect_importRattr  => importRattr
    use m_AttrVect           ,only: mct_aVect_exportIattr  => exportIattr
@@ -72,7 +70,6 @@ module clm_mct_mod
    use m_GeneralGrid        ,only: mct_gGrid_importRattr  => importRattr	
    use m_GeneralGrid        ,only: mct_gGrid_exportIattr  => exportIattr	
    use m_GeneralGrid        ,only: mct_gGrid_importIattr  => importIattr	
-   use m_GeneralGrid        ,only: mct_gGrid_permute      => permute
    use m_GeneralGridComms   ,only: mct_gGrid_scatter      => scatter
    use m_GeneralGridComms   ,only: mct_gGrid_gather       => gather 
    use m_GeneralGridComms   ,only: mct_gGrid_bcast        => bcast  
@@ -122,9 +119,6 @@ module clm_mct_mod
    use m_string             ,only: mct_string_clean       => clean
    use m_string             ,only: mct_string_toChar      => toChar 
    use m_die                ,only: mct_perr_die           => mp_perr_die
-
-   use m_Permuter           ,only: mct_permute            => Permute
-   use m_Permuter           ,only: mct_unpermute          => unPermute
 
    use m_MergeSorts         ,only: mct_indexset           => IndexSet
    use m_MergeSorts         ,only: mct_indexsort          => IndexSort

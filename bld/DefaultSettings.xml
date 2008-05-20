@@ -19,7 +19,6 @@
 <RESOLUTION >64x128</RESOLUTION>
 
 <!-- Default land/ocean mask type -->
-<mask MODE="offline"      >USGS</mask>
 <mask MODE="ccsm_seq"     >gx1v4</mask>
 <mask MODE="ext_ccsm_con" >gx1v5</mask>
 <mask MODE="ccsm_seq_cam" >USGS</mask>
@@ -30,13 +29,11 @@
 <!-- Default begining year for cycling over input atmospheric data -->
 <cycle_beg_year                 RESOLUTION="1x1_mexicocityMEX" >1993</cycle_beg_year>
 <cycle_beg_year                 RESOLUTION="1x1_vancouverCAN"  >1992</cycle_beg_year>
-<cycle_beg_year MODE="offline"                                 >1998</cycle_beg_year>
 <cycle_beg_year MODE="ccsm_seq"                                >2003</cycle_beg_year>
 
 <!-- Default ending year for cycling over input atmospheric data -->
 <cycle_end_year                 RESOLUTION="1x1_mexicocityMEX" >1993</cycle_end_year>
 <cycle_end_year                 RESOLUTION="1x1_vancouverCAN"  >1992</cycle_end_year>
-<cycle_end_year MODE="offline"                                 >1999</cycle_end_year>
 <cycle_end_year MODE="ccsm_seq"                                >2004</cycle_end_year>
 
 <!-- Model Version -->

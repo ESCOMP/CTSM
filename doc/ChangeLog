@@ -1,4 +1,200 @@
 ===============================================================
+Tag name:  clm3_6_04
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date:  Tue May 20 10:04:51 MDT 2008
+One-line Summary: Remove all MCT permutes, fix cpl7 script issues, remove offline mode, add ability to run over a range of years
+
+Purpose of changes:
+
+Update scripts/datm version to fix cpl7 script issues. Remove all mct permutes. Change scripts/datm to allow 
+various number of years. Remove offline mode! Fix stop time bug. Move use statements in clm_comp_mct to 
+individual subroutines. Remove phoenix,tempest unsupported platforms. Update perl5lib. Remove source 
+statements in clm.cpl7.template.csh file.
+
+In cpl7 scripts add the following options to env_conf, which can be set at create_newcase or edit env_conf before running configure
+
+env_conf:setenv DATM_CLMNCEP_YR_ALIGN  "1"      # integer; year align (what simulation year corresponds to starting year below)
+env_conf:setenv DATM_CLMNCEP_YR_START  "1948"   # integer; starting year to loop data over
+env_conf:setenv DATM_CLMNCEP_YR_END    "1948"   # integer; ending year to loop data over
+
+The default "I" case is 1948 to 1948, but new compsets set these to the data range of 1948 to 2004.
+
+* I_1948-2004    (shortname I4804)
+* I_CN_1948-2004 (shortname ICN4804)
+
+Bugs fixed (include bugzilla ID): 759 (mkgriddata incompatibility between MASK and FRAC, 744 (ability to set year range)
+
+Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
+                                  698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+    http://bugs.cgd.ucar.edu/
+
+Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
+                                          652 (threads different answers with older PGI versions)
+
+Describe any changes made to build system: Remove the offline mode.
+
+Describe any changes made to the namelist: Remove offline specific namelist items: offline_atmdir, cycle_begyr, cycle_nyr
+
+List any changes to the defaults for the boundary datasets: Just remove offline_atmdir
+
+Describe any substantial timing or memory changes: Not tested
+
+Code reviewed by: self, mvertens, slevis, oleson and kauff (for script changes)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm7, csm_share
+
+Move to new ccsm4 trunk versions. Get versions with new cpl7 capabilities to set year range for CLMNCEP option in datm7
+
++scripts                       scripts4_080519
++models/drv/seq_mct            drvseq2_0_22
++models/atm/datm7              datm7_080519
++models/csm_share              share3_080514
+
+List all files eliminated:
+
+>>>>>>>>>>>>>>>>> Remove offline test configurations
+D      models/lnd/clm/test/system/config_files/_per_dh
+D      models/lnd/clm/test/system/config_files/_per_dm
+D      models/lnd/clm/test/system/config_files/_per_ds
+D      models/lnd/clm/test/system/config_files/_h
+D      models/lnd/clm/test/system/config_files/_m
+D      models/lnd/clm/test/system/config_files/_o
+D      models/lnd/clm/test/system/config_files/17p_vodsr_dh
+D      models/lnd/clm/test/system/config_files/_s
+D      models/lnd/clm/test/system/config_files/17p_cn_dh
+D      models/lnd/clm/test/system/config_files/17p_vodsr_dm
+D      models/lnd/clm/test/system/config_files/17p_vodsr_do
+D      models/lnd/clm/test/system/config_files/17p__h
+D      models/lnd/clm/test/system/config_files/4p_casa_h
+D      models/lnd/clm/test/system/config_files/17p__m
+D      models/lnd/clm/test/system/config_files/17p__o
+D      models/lnd/clm/test/system/config_files/4p_casa_m
+D      models/lnd/clm/test/system/config_files/4p_casa_o
+D      models/lnd/clm/test/system/config_files/17p_vodsr_h
+D      models/lnd/clm/test/system/config_files/17p_cnexitspinup_dh
+D      models/lnd/clm/test/system/config_files/17p_vodsr_m
+D      models/lnd/clm/test/system/config_files/17p_vodsr_o
+D      models/lnd/clm/test/system/config_files/17p_cnadspinup_dh
+D      models/lnd/clm/test/system/config_files/4p_vodsr_dh
+D      models/lnd/clm/test/system/config_files/17p_cnn_h
+D      models/lnd/clm/test/system/config_files/17p_cnn_dh
+D      models/lnd/clm/test/system/config_files/4p_vodsr_dm
+D      models/lnd/clm/test/system/config_files/17p__dh
+D      models/lnd/clm/test/system/config_files/17p_cnn_m
+D      models/lnd/clm/test/system/config_files/4p_vodsr_do
+D      models/lnd/clm/test/system/config_files/17p_cnn_o
+D      models/lnd/clm/test/system/config_files/10p_dgvm_h
+D      models/lnd/clm/test/system/config_files/4p_casa_dh
+D      models/lnd/clm/test/system/config_files/17p_cnn_dm
+D      models/lnd/clm/test/system/config_files/17p__dm
+D      models/lnd/clm/test/system/config_files/17p_cnn_do
+D      models/lnd/clm/test/system/config_files/10p_dgvm_dh
+D      models/lnd/clm/test/system/config_files/17p__do
+D      models/lnd/clm/test/system/config_files/10p_dgvm_m
+D      models/lnd/clm/test/system/config_files/4p_casa_dm
+D      models/lnd/clm/test/system/config_files/_dh
+D      models/lnd/clm/test/system/config_files/10p_dgvm_o
+D      models/lnd/clm/test/system/config_files/17p_cnn_ds
+D      models/lnd/clm/test/system/config_files/4p_casa_do
+D      models/lnd/clm/test/system/config_files/17p__ds
+D      models/lnd/clm/test/system/config_files/10p_dgvm_dm
+D      models/lnd/clm/test/system/config_files/10p_dgvm_s
+D      models/lnd/clm/test/system/config_files/10p_dgvm_do
+D      models/lnd/clm/test/system/config_files/_dm
+D      models/lnd/clm/test/system/config_files/_do
+D      models/lnd/clm/test/system/config_files/_ds
+D      models/lnd/clm/test/system/config_files/4p_vodsr_h
+D      models/lnd/clm/test/system/config_files/4p_vodsr_m
+D      models/lnd/clm/test/system/config_files/4p_vodsr_o
+D      models/lnd/clm/bld/CLMDrvInNamelistsDescriptions.xml ------- Remove offline build namelist description
+>>>>>>>>>>>>>>>>>>>> Remove offline specific modules
+D      models/lnd/clm/src/main/atmdrvMod.F90
+D      models/lnd/clm/src/main/program_off.F90
+D      models/lnd/clm/test/system/tests_pretag_tempest ------------ Remove tempest testing
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>>>> Add tests for running cpl7 with scripts in the scripts directory
+A      models/lnd/clm/test/system/TSM_ccsmseq.sh
+A      models/lnd/clm/test/system/TCT_ccsmseq.sh
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>>>>>> Remove phoenix, tempest, offline tests, add cpl7 script testing
+M      models/lnd/clm/test/system/TCText_ccsmcon.sh
+M      models/lnd/clm/test/system/tests_pretag_jaguar
+M      models/lnd/clm/test/system/tests_pretag_bangkok
+M      models/lnd/clm/test/system/test_driver.sh ------------------------- Remove phoenix and tempest, change jaguarcnl to jaguar
+M      models/lnd/clm/test/system/tests_posttag_purempi_regression
+M      models/lnd/clm/test/system/tests_posttag_hybrid_regression
+M      models/lnd/clm/test/system/tests_pretag_bluevista
+M      models/lnd/clm/test/system/tests_posttag_blueice
+M      models/lnd/clm/test/system/input_tests_master
+M      models/lnd/clm/test/system/tests_posttag_lightning
+M      models/lnd/clm/test/system/CLM_runcmnd.sh
+>>>>>>>>>>>>>>>>>>>  Remove SGI, get Linux to work with various compilers
+M      models/lnd/clm/tools/mksurfdata/Makefile
+M      models/lnd/clm/tools/interpinic/Makefile
+M      models/lnd/clm/tools/mkgriddata/creategridMod.F90 ----- Make MASK and FRAC compatable when running with camfile
+M      models/lnd/clm/tools/mkgriddata/Makefile
+M      models/lnd/clm/tools/mkdatadomain/Makefile
+>>>>>>>>>>>>>>>>>>>  Remove offline mode
+M      models/lnd/clm/bld/configure
+M      models/lnd/clm/bld/DefaultCLM_INPARM_Namelist.xml
+M      models/lnd/clm/bld/run-ibm.csh
+M      models/lnd/clm/bld/config_clm_defaults.xml
+M      models/lnd/clm/bld/clm_inparm.pm
+M      models/lnd/clm/bld/DefaultSettings.xml
+M      models/lnd/clm/bld/queryDefaultXML.pm
+M      models/lnd/clm/bld/run-frost.csh
+M      models/lnd/clm/bld/run-pc.csh
+M      models/lnd/clm/bld/clm.cpl7.template ------------ Remove source statements as unneeded
+M      models/lnd/clm/bld/drv_in.pm
+M      models/lnd/clm/bld/run-lightning.csh
+>>>>>>>>>>>>>>>>>>>  Remove all MCT permutes, remove OFFLINE #ifdefs
+M      models/lnd/clm/src/biogeochem/STATICEcosysDynMod.F90
+M      models/lnd/clm/src/main/spmdGathScatMod.F90
+M      models/lnd/clm/src/main/driver.F90
+M      models/lnd/clm/src/main/decompInitMod.F90
+M      models/lnd/clm/src/main/ncdio.F90
+M      models/lnd/clm/src/main/accFldsMod.F90
+M      models/lnd/clm/src/main/initializeMod.F90
+M      models/lnd/clm/src/main/gen_spmdgs_subs.csh
+M      models/lnd/clm/src/main/pftdynMod.F90
+M      models/lnd/clm/src/main/iniTimeConst.F90
+M      models/lnd/clm/src/main/histFileMod.F90
+M      models/lnd/clm/src/main/clm_atmlnd.F90
+M      models/lnd/clm/src/main/controlMod.F90
+M      models/lnd/clm/src/main/clm_time_manager.F90 ---------- Fix stop time bug, remove stop_final_ymd
+M      models/lnd/clm/src/main/clm_varctl.F90
+M      models/lnd/clm/src/main/lnd_comp_mct.F90 -------------- Move use statements from top to individual subroutines, remove permutes
+M      models/lnd/clm/src/main/spmdMod.F90
+M      models/lnd/clm/src/main/surfrdMod.F90
+M      models/lnd/clm/src/main/decompMod.F90
+M      models/lnd/clm/src/main/do_close_dispose.F90
+M      models/lnd/clm/src/main/clm_mct_mod.F90
+M      models/lnd/clm/src/main/histFldsMod.F90
+M      models/lnd/clm/src/riverroute/RtmMod.F90
+M      models/lnd/clm/src/riverroute/RunoffMod.F90
+M      models/lnd/clm/src/biogeophys/Hydrology1Mod.F90
+
+Summary of testing:
+
+  bluevista: All PASS except
+052 smJ11 TSM.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 4 (bug 708)
+053 erJ11 TER.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 10+38 arb_ic ...............FAIL! rc= 5 (bug 708)
+054 brJ11 TBR.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 24+24 arb_ic ...............FAIL! rc= 5 (bug 708)
+055 blJ11 TBL.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 4 (bug 708)
+
+Also tested on lightning with pathscale and ifort compilers, but testing did not complete as ran out of disk quota.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_02
+
+Changes answers relative to baseline: No bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_03
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date:  Thu May  8 12:55:58 MDT 2008
@@ -56,8 +252,22 @@ M      UpDateChangeLog.pl ---------------------------- Also copy ChangeLog to mo
 Summary of testing:
 
   bluevista: All PASS except
-  blueice:   All PASS except
-  lightning: All PASS except
+052 smJ11 TSM.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 4
+053 erJ11 TER.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 10+38 arb_ic ...............FAIL! rc= 5
+054 brJ11 TBR.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 24+24 arb_ic ...............FAIL! rc= 5
+  blueice:   All PASS except (up to 41)
+026 sm111 TSM.sh 4p_vodsr_dh clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic .................FAIL! rc= 4
+027 er111 TER.sh 4p_vodsr_dh clm_std 19981231:YEARLY:1800 48x96 gx3v5 10+38 arb_ic ..............FAIL! rc= 5
+028 br111 TBR.sh 4p_vodsr_dh clm_std 19981231:YEARLY:1800 48x96 gx3v5 24+24 arb_ic ..............FAIL! rc= 5
+029 bl111 TBL.sh 4p_vodsr_dh clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic .................FAIL! rc= 4
+030 sm115 TSM.sh 4p_vodsr_h clm_std 19981231:YEARLY:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 4
+  lightning: All PASS except (up to 22)
+019 er112 TER.sh 4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 10+38 arb_ic ..............FAIL! rc= 13
+  bangkok:   All PASS except (up to 19)
+018 er113 TER.sh 4p_vodsr_do clm_std 19981231:YEARLY:1800 48x96 gx3v5 10+38 arb_ic ..............FAIL! rc= 13
+019 br113 TBR.sh 4p_vodsr_do clm_std 19981231:YEARLY:1800 48x96 gx3v5 24+24 arb_ic ..............FAIL! rc= 13
+
+The FAILS are all bug 694 -- restarts for offline.
 
 CLM tag used for the baseline comparison tests if applicable: clm3_6_02
 

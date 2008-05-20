@@ -4870,12 +4870,11 @@ contains
     integer :: ier                           ! error status
     logical :: found                         ! found flag
     type(mct_gsMap),pointer       :: gsmap   ! global seg map
-    integer, pointer,dimension(:) :: perm    ! mct permuter
     integer, pointer,dimension(:) :: gsmOP   ! gsmap ordered points
     character(len=32) :: subname = 'ncd_setDOF'
 !-----------------------------------------------
 
-    call get_clmlevel_gsmap(clmlevel,gsmap,perm)
+    call get_clmlevel_gsmap(clmlevel,gsmap)
 
     ndims = size(dims)
     gsize = get_clmlevel_gsize(clmlevel)

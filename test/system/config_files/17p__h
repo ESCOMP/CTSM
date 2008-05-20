@@ -1,4 +1,0 @@
--spmd -smp
--maxpft 17
--mode offline
--s

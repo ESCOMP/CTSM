@@ -31,7 +31,7 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
 	    echo "        results are in: ${CLM_TESTDIR}/${test_name}" 
 	    exit 2
 	else
-	    echo "TCTexternal conccsm.sh: this external concurrent CCSM create test failed under job ${prev_jobid} - moving those results to "
+	    echo "TCText_conccsm.sh: this external concurrent CCSM create test failed under job ${prev_jobid} - moving those results to "
 	    echo "        ${CLM_TESTDIR}/${test_name}_FAIL.job$prev_jobid and trying again"
             cp -rp ${CLM_TESTDIR}/${test_name} ${CLM_TESTDIR}/${test_name}_FAIL.job$prev_jobid
         fi

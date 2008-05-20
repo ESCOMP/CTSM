@@ -254,11 +254,6 @@ ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01.fv0.47x0.63_gx1v5.c080301.nc
 <fatmlndfrc RESOLUTION="1x1_asphaltjungleNJ" mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc
 </fatmlndfrc>
 
-<!--NCEP atmosphere forcing dataset directory (relative to {csmdata}) -->
-<offline_atmdir MODE="offline" RESOLUTION="1x1_mexicocityMEX">lnd/clm2/1pt_atmdata/mexicocityMEX.c051206</offline_atmdir>
-<offline_atmdir MODE="offline" RESOLUTION="1x1_vancouverCAN" >lnd/clm2/1pt_atmdata/vancouverCAN.c060920</offline_atmdir>
-<offline_atmdir MODE="offline"                               >lnd/clm2/NCEPDATA.Qian.T62.c051024</offline_atmdir>
-
 <!-- Urban input datasets (relative to {rootdir/bld/urban_input/}) -->
 <furbinp  RESOLUTION="1x1_mexicocityMEX"  >mexicocityMEX_fluxes.txt</furbinp>
 <furbinp  RESOLUTION="1x1_vancouverCAN"   >vancouverCAN_fluxes.txt</furbinp>

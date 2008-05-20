@@ -21,7 +21,7 @@ subroutine iniTimeConst
   use nanMod
   use clmtype
   use decompMod   , only : get_proc_bounds, get_proc_global
-  use decompMod   , only : gsMap_lnd_gdc2glo, perm_lnd_gdc2glo
+  use decompMod   , only : gsMap_lnd_gdc2glo
   use clm_atmlnd  , only : clm_a2l
   use clm_varpar  , only : nlevsoi, nlevlak, lsmlon, lsmlat, numpft, numrad
   use clm_varcon  , only : istice, istdlak, istwet, isturb, &

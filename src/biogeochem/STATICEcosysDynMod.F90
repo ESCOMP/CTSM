@@ -311,7 +311,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use decompMod   , only : get_proc_bounds, ldecomp, gsmap_lnd_gdc2glo, perm_lnd_gdc2glo
+    use decompMod   , only : get_proc_bounds, ldecomp, gsmap_lnd_gdc2glo
     use clm_varpar  , only : lsmlon, lsmlat, maxpatch_pft, maxpatch, npatch_crop, numpft
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil

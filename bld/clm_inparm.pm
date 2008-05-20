@@ -284,34 +284,6 @@ sub set_output_values {
         }
         $NLref->{'csm_doflxave'} = $opt;
 
-     #
-     # Offline only
-     #
-     } elsif ( $self->{'MODE'} eq "offline" ) {
-        # offline_atmdir
-        if (defined($NLref->{'offline_atmdir'})) {
-            $opt = $NLref->{'offline_atmdir'};
-        } else {
-            $opt = $self->default_vals( 'offline_atmdir' );
-        }
-        $NLref->{'offline_atmdir'} = namelist::quote_string($opt);
-        $self->requiredVar( "offline_atmdir", $addquotes );
-        # cycle_begyr
-        if (defined($optsref->{'cycle_beg_year'})) {
-            $opt = $optsref->{'cycle_beg_year'};
-            if (defined($NLref->{'cycle_begyr'})) {
-	      die "ERROR: define cycle_begyr using -cycle_beg_year command line option rather than in namelist.\n";
-            }
-        }
-        $NLref->{'cycle_begyr'} = $opt;
-        # cycle_nyr
-        if (defined($optsref->{'cycle_end_year'})) {
-            $opt = $optsref->{'cycle_end_year'} - $NLref->{'cycle_begyr'} + 1;
-            if (defined($NLref->{'cycle_nyr'})) {
-	      die "ERROR: define cycle_nyr using -cycle_beg_year and cycle_end_year command line options rather than in namelist.\n";
-            }
-        }
-        $NLref->{'cycle_nyr'} = $opt;
      }
   }
 

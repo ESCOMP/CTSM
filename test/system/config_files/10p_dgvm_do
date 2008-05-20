@@ -1,7 +1,0 @@
--nospmd
--smp 
--debug
--maxpft 10
--bgc dgvm
--mode offline
--s

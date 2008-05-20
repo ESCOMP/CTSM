@@ -10,11 +10,6 @@ Where: xx is the two-letter test type
 
 n is the configuration type:
 
-1 -- offline numpft=17-Standard, or numpft=4, VOC, DUST, RTM
-2 -- offline numpft=17, CN
-3 -- offline numpft=4, CASA
-4 -- offline numpft=10, DGVM
-5 -- offline Standard default
 6 -- mkgriddata
 7 -- mksurfdata
 8 -- interpinic
@@ -34,6 +29,7 @@ L -- ccsm_seq Standard default
 M -- ndepregrid
 N -- ccsm_seq MEXICOCITY
 O -- ccsm_seq VANCOUVER
+P -- ccsm_seq standard scripts
 
 m is the resolution
 

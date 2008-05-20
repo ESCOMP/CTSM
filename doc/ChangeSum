@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ===============================================================================================================================
+   clm3_6_04         erik 05/20/2008 Remove all MCT permutes, fix cpl7 script issues, remove offline mode, add ability to run over a range of years
    clm3_6_03         erik 05/08/2008 Fix so listen to next_swcday to calculate albedo rather than using irad
    clm3_6_02         erik 03/25/2008 Minor fix in configure remove perl5lib version under models/lnd/clm/bld
    clm3_6_01         erik 03/20/2008 40 m forcing height changes for clm

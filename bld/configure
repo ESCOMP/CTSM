@@ -91,7 +91,7 @@ OPTIONS
      -maxpft <n>        Value of maxpatch_pft (default is 4)
      -mpi_inc <dir>     Directory containing MPI include files.
      -mpi_lib <dir>     Directory containing MPI library.
-     -mode <name>       CLM mode [offline | ccsm_seq | ext_ccsm_con || ext_ccsm_seq]
+     -mode <name>       CLM mode [ccsm_seq | ext_ccsm_con || ext_ccsm_seq]
      -nc_inc <dir>      Directory containing netCDF include files.
      -nc_lib <dir>      Directory containing netCDF library.
      -nc_mod <dir>      Directory containing netCDF module files.
@@ -269,7 +269,7 @@ if (defined $opts{'mode'}) {
 } else {
     $cfg = $bld_defaults{'mode'};
 }
-if ($cfg eq "offline" || $cfg eq "ccsm_seq" || $cfg eq "ext_ccsm_con" || $cfg eq "ext_ccsm_seq" ) {
+if ($cfg eq "ccsm_seq" || $cfg eq "ext_ccsm_con" || $cfg eq "ext_ccsm_seq" ) {
     $cfg{'mode'} = $cfg;
 } else {
     die <<"EOF";
@@ -745,9 +745,6 @@ elsif ( $cfg{target_os} eq 'irix'      or  $cfg{target_os} eq 'linux'   or
 
 $cfg .= " -DMAXPATCH_PFT=$cfg{maxpft}";
 
-if ( $cfg{'mode'} eq "offline" ) {
-    $cfg .= " -DOFFLINE";
-}
 if ( $cfg{'mode'} eq "ccsm_seq" ) {
     $cfg .= " -DSEQ_MCT";
 }
@@ -1227,8 +1224,7 @@ dust          Turn on DUST [on | off].
 voc           Turn on VOC  [on | off].
 maxpft        Value of maxpatch_pft.
 pergro        Use modifications that allow perturbation growth testing: [on | off]
-mode          CLM mode: [offline | ccsm_seq | ext_ccsm_con | ext_ccsm_seq ]
-                 offline      => CLM offline mode
+mode          CLM mode: [ccsm_seq | ext_ccsm_con | ext_ccsm_seq ]
                  ccsm_seq     => CLM sequential CCSM mode (drv/clm/datm7/socn/sice)
                  ext_ccsm_con => CLM will run as part of "external" concurrent ccsm code
                  ext_ccsm_seq => CLM will run as part of "external" sequential ccsm code

@@ -12,7 +12,7 @@ module controlMod
 ! Module which initializes run control variables. The following possible
 ! namelist variables are set default values and possibly read in on startup
 !
-! === define run ======================= >>>> Only if mode does NOT = ccsm_seq
+! === define run ======================= >>>> Only for mode = ext_ccsm_con
 !
 !    o caseid                = 256 character case name
 !    o ctitle                = 256 character case title
@@ -27,7 +27,7 @@ module controlMod
 !
 !    o dtime      = integer model time step (s)
 !
-! ====================================== >>>> Only if mode does NOT = ccsm_seq
+! === define run ======================= >>>> Only for mode = ext_ccsm_con
 !
 !    o calendar       = Calendar to use in date calculations.
 !                      'no_leap' (default) or 'gregorian'
@@ -35,20 +35,9 @@ module controlMod
 !                       Default value is read from initial conditions file.
 !    o start_tod      = Starting time of day for run in seconds since 0Z.
 !                       Default value is read from initial conditions file.
-!    o stop_ymd       = Stopping date for run encoded in yearmmdd format.
-!                       No default.
-!    o stop_tod       = Stopping time of day for run in seconds since 0Z.
-!                       Default: 0.
-!    o stop_final_ymd = Final stopping time. (>>>> only in offline mode)
-!                       Default: 99991231
 !    o nelapse        = nnn, Specify the ending time for the run as an interval
 !                       starting at the current time in either timesteps
 !                       (if positive) or days (if negative).
-!                       Either nestep or (stop_ymd,stop_tod) take precedence.
-!    o nestep         = nnnn, Specify the ending time for the run as an interval
-!                       starting at (start_ymd,start_tod) in either timesteps
-!                       (if positive) or days (if negative).
-!                       (stop_ymd,stop_tod) takes precedence if set.
 !    o ref_ymd        = Reference date for time coordinate encoded in yearmmdd format.
 !                       Default value is start_ymd.
 !    o ref_tod        = Reference time of day for time coordinate in seconds since 0Z.
@@ -70,12 +59,6 @@ module controlMod
 !    o frivinp_rtm     = 256 character input data file for rtm
 !    o furbinp         = 256 character input data file for urban input
 !    o nrevsn          = 256 character restart file name for use with branch run
-!
-! === offline forcing data === >>> Only for mode=offline
-!
-!    o offline_atmdir  = 256 character directory for input atm data files (can be Mass Store)
-!    o cycle_begyr     = integer, first year of offline atm data (e.g. 1948)
-!    o cycle_nyr       = integer, number of years of offline atm data to cycle
 !
 ! === history and restart files ===
 !
@@ -142,7 +125,7 @@ module controlMod
 !
 !    o rtm_nsteps  = if > 1, average rtm over rtm_nsteps time steps
 !
-! When coupled to CAM: base calendar info, nstep, nestep, nsrest, and time
+! When coupled to CAM: base calendar info, nstep, nsrest, and time
 ! step are input to the land model from CAM. The values in the clm_inparm namelist
 ! are not used. 
 !
@@ -152,7 +135,7 @@ module controlMod
   use clm_varctl   , only : caseid, ctitle, nsrest, brnch_retain_casename, hostname, model_version=>version,    &
                             iulog, hist_crtinic, outnc_large_files, finidat, fsurdat, fatmgrid, fatmlndfrc,     &
                             fatmtopo, flndtopo, fndepdat, fndepdyn, fpftdyn, fpftcon, nrevsn, frivinp_rtm,      &
-                            offline_atmdir, cycle_begyr, cycle_nyr, create_crop_landunit, allocate_all_vegpfts, &
+                            create_crop_landunit, allocate_all_vegpfts, &
                             co2_type, irad, wrtdia, csm_doflxave, co2_ppmv, rtm_nsteps, nsegspc, pertlim,       &
                             hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, username,           &
                             ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
@@ -283,22 +266,17 @@ contains
 
     ! clm time manager info
 
-#if (defined OFFLINE) || (defined COUP_CSM)
-    integer          :: nestep             ! Step (or day) number to advance to
+#if (defined COUP_CSM)
     integer          :: nelapse            ! Number of step (or days) to advance
     integer          :: start_ymd          ! Start date       (YYYYMMDD)
     integer          :: start_tod          ! Start time of day (sec)
     integer          :: ref_ymd            ! Reference date   (YYYYMMDD)
     integer          :: ref_tod            ! Reference time of day (sec)
-    integer          :: stop_ymd           ! Stop date        (YYYYMMDD)
-    integer          :: stop_final_ymd     ! Final stop date  (YYYYMMDD)
-    integer          :: stop_tod           ! Stop time of day (sec)
     character(len=SHR_KIND_CL) :: calendar ! Calendar type
     namelist /clm_inparm/  &
          ctitle, caseid, nsrest, model_version, hostname, username, &
-         calendar, nelapse, nestep, start_ymd, start_tod,     &
-         stop_ymd, stop_tod, ref_ymd, ref_tod,                &
-         brnch_retain_casename, stop_final_ymd
+         calendar, nelapse, start_ymd, start_tod, ref_ymd, ref_tod, &
+         brnch_retain_casename
 #endif
 
     ! clm input datasets
@@ -311,11 +289,6 @@ contains
          finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
          fpftcon, frivinp_rtm,  furbinp, &
          fpftdyn, fndepdat, fndepdyn, nrevsn
-
-#if (defined OFFLINE)
-    namelist /clm_inparm/  &
-          offline_atmdir, cycle_begyr, cycle_nyr
-#endif
 
     ! clm history, restart options
 
@@ -391,12 +364,10 @@ contains
        ! ----------------------------------------------------------------------
        ! Read namelist from standard input. 
        ! ----------------------------------------------------------------------
-#if (defined OFFLINE) || (defined COUP_CSM)
-       call get_timemgr_defaults( nestep_out=nestep, nelapse_out=nelapse,           &
+#if (defined COUP_CSM)
+       call get_timemgr_defaults( nelapse_out=nelapse,           &
                                   start_ymd_out=start_ymd, start_tod_out=start_tod, &
                                   ref_ymd_out=ref_ymd, ref_tod_out=ref_tod,         &
-                                  stop_ymd_out=stop_ymd, stop_tod_out=stop_tod,     &
-                                  stop_final_ymd_out=stop_final_ymd,                &
                                   calendar_out=calendar, dtime_out=dtime )
 #endif
 
@@ -419,12 +390,10 @@ contains
        ! Consistency checks on input namelist.
        ! ----------------------------------------------------------------------
 
-#if (defined OFFLINE) || (defined COUP_CSM)
-       call set_timemgr_init( nestep_in=nestep, nelapse_in=nelapse,           &
+#if (defined COUP_CSM)
+       call set_timemgr_init( nelapse_in=nelapse,           &
                               start_ymd_in=start_ymd, start_tod_in=start_tod, &
                               ref_ymd_in=ref_ymd, ref_tod_in=ref_tod,         &
-                              stop_ymd_in=stop_ymd, stop_tod_in=stop_tod,     &
-                              stop_final_ymd_in=stop_final_ymd,               &
                               calendar_in=calendar, dtime_in=dtime )
 #else
        call set_timemgr_init( dtime_in=dtime )
@@ -692,15 +661,7 @@ contains
     if (nsrest == 0 .and. finidat == ' ') write(iulog,*) '   initial data created by model'
     if (nsrest == 0 .and. finidat /= ' ') write(iulog,*) '   initial data   = ',trim(finidat)
     if (nsrest /= 0) write(iulog,*) '   restart data   = ',trim(nrevsn)
-#if (defined OFFLINE)
-    if (offline_atmdir /= ' ') then
-       write(iulog,*) '   atmospheric forcing data    = ',trim(offline_atmdir)
-    end if
-    if (cycle_begyr /= -9999999) then
-       write(iulog,*) '   first year of atmospheric forcing data for cycling = ',cycle_begyr
-       write(iulog,*) '   number of years in atmospheric forcing data cycle  = ',cycle_nyr
-    end if
-#elif (defined SEQ_MCT) || (defined SEQ_ESMF)
+#if (defined SEQ_MCT) || (defined SEQ_ESMF)
     write(iulog,*) '   atmospheric forcing data is from sequential ccsm model'
 #elif (defined COUP_CSM)
     write(iulog,*) '   atmospheric forcint data is from ccsm flux coupler'

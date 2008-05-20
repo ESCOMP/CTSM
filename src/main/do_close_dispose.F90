@@ -59,9 +59,6 @@ subroutine do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, rstwr
   else
      call shr_sys_abort('do_close_dispose error: must specify nlend and rstwr')
   end if
-#elif (defined OFFLINE)
-  if (is_last_step()                 ) stop_now = .true.
-  if (hist_ntimes(1) == hist_mfilt(1)) rest_now = .true.
 #elif (defined COUP_CSM)
   if (csmstop_next) stop_now = .true.
   if (csmrstrt    ) rest_now = .true.

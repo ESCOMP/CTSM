@@ -20,7 +20,6 @@ smK18 erK18
 smK74 erK74       blK74
 smL52 erL52 brL52 blL52
 smL61 erL61 brL61 blL61
-sm562 er562 br562 bl562
 smL52 erL52 brL52 blL52
 smL74 erL74 brL74 blL74
 smL78             blL78
@@ -37,3 +36,5 @@ smZ14
 sm921
 sm984
 sm061
+erP61
+erP11

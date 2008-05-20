@@ -28,9 +28,6 @@ module clm_atmlnd
 ! atmosphere -> land variables structure
 !----------------------------------------------------
 type atm2lnd_type
-#if (defined OFFLINE)
-  real(r8), pointer :: flfall(:)       !frac of liquid water in falling precip
-#endif
   real(r8), pointer :: forc_t(:)       !atmospheric temperature (Kelvin)
   real(r8), pointer :: forc_u(:)       !atm wind speed, east direction (m/s)
   real(r8), pointer :: forc_v(:)       !atm wind speed, north direction (m/s)
@@ -189,9 +186,6 @@ end subroutine init_adiag_type
   integer  :: beg_atm, end_atm
 !------------------------------------------------------------------------
 
-#if (defined OFFLINE)
-  allocate(a2l%flfall(beg:end))
-#endif
   allocate(a2l%forc_t(beg:end))
   allocate(a2l%forc_u(beg:end))
   allocate(a2l%forc_v(beg:end))
@@ -228,9 +222,6 @@ end subroutine init_adiag_type
 ! ival = nan      ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
 
-#if (defined OFFLINE)
-  a2l%flfall(beg:end) = ival
-#endif
   a2l%forc_t(beg:end) = ival
   a2l%forc_u(beg:end) = ival
   a2l%forc_v(beg:end) = ival
@@ -457,9 +448,6 @@ end subroutine init_lnd2atm_type
 !-forc_ndep cannot be updated here, array will be trashed and CN will fail ---
 !  asrc(:,xx) = a2l_src%forc_ndep(:)  
 
-#if (defined OFFLINE)
-  call map_maparrayl(begg_s, endg_s, begg_d, endg_d, 1, a2l_src%flfall, a2l_dst%flfall, map1dl_a2l)
-#endif
   call map_maparrayl(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_a2l)
 
   ix = 0

@@ -265,9 +265,6 @@ sub ReadDefaultXMLFile {
       if ( $name eq "csmdata" ) {
          $value = $$opts_ref{'csmdata'};
          $isadir = 1;
-      } elsif ( $name eq "offline_atmdir" ) {
-         $value = "$$opts_ref{'csmdata'}/$value";
-         $isadir = 1;
       } else {
          $isadir = 1;
       }

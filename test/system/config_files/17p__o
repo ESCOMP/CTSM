@@ -1,4 +1,0 @@
--nospmd -smp
--maxpft 17
--mode offline
--s

@@ -986,14 +986,7 @@ logical function do_restwrite()
 
   do_restwrite = .false.
 
-#if (defined OFFLINE)
-
-  ! Write restart if end of run or if time to dispose master history file
-
-  if (is_last_step() .or. if_writrest) do_restwrite = .true.
-  if (.not.rest_flag) do_restwrite = .false.
-
-#elif (defined COUP_CSM)
+#if (defined COUP_CSM)
 
   ! Write restart only if coupler says to
 

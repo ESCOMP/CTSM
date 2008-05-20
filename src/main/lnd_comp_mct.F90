@@ -13,28 +13,7 @@ module lnd_comp_mct
 ! !DESCRIPTION:
 !
 ! !USES:
-
-  use shr_kind_mod     , only : r8 => shr_kind_r8
-  use shr_sys_mod      , only : shr_sys_abort, shr_sys_flush
-  use shr_file_mod     , only : shr_file_setLogUnit, shr_file_setLogLevel, &
-                                shr_file_getLogUnit, shr_file_getLogLevel, &
-                                shr_file_getUnit, shr_file_setIO
-  use abortutils       , only : endrun
-
-  use mct_mod
-  use esmf_mod
-  use seq_flds_mod
-  use seq_flds_indices
-  use seq_cdata_mod
-  use seq_infodata_mod
-  use seq_timemgr_mod
-
-  use spmdMod
-  use perf_mod
-  use clm_varctl, only : iulog
-#ifdef RTM
-  use RunoffMod
-#endif
+  use mct_mod          , only : mct_aVect
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -62,8 +41,6 @@ module lnd_comp_mct
 #endif
 !
 ! !PRIVATE VARIABLES
-  integer, dimension(:), allocatable :: perm    ! permutation array to reorder points
-  integer, dimension(:), allocatable :: perm_r  ! permutation array to reorder points 
 !
 ! Time averaged flux fields
 !  
@@ -96,6 +73,7 @@ contains
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
+    use shr_kind_mod     , only : r8 => shr_kind_r8
     use clm_time_manager , only : get_nstep, advance_timestep, get_step_size, set_timemgr_init
     use clm_atmlnd       , only : clm_mapl2a, clm_l2a, atm_l2a
     use clm_comp         , only : clm_init0, clm_init1, clm_init2
@@ -104,6 +82,21 @@ contains
     use domainMod        , only : amask, adomain
     use clm_varpar       , only : rtmlon, rtmlat
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
+    use abortutils       , only : endrun
+    use esmf_mod         , only : ESMF_Clock
+    use clm_varctl       , only : iulog
+    use shr_file_mod     , only : shr_file_setLogUnit, shr_file_setLogLevel, &
+                                  shr_file_getLogUnit, shr_file_getLogLevel, &
+                                  shr_file_getUnit, shr_file_setIO
+    use seq_cdata_mod    , only : seq_cdata, seq_cdata_setptrs
+    use spmdMod          , only : masterproc, spmd_init
+    use seq_timemgr_mod  , only : seq_timemgr_EClockGetData
+    use seq_infodata_mod , only : seq_infodata_type, seq_infodata_GetData, seq_infodata_PutData, &
+                                  seq_infodata_start_type_start, seq_infodata_start_type_cont,   &
+                                  seq_infodata_start_type_brnch
+    use mct_mod          , only : mct_aVect, mct_gsMap, mct_gGrid, mct_aVect_init, mct_aVect_zero
+    use seq_flds_mod
+    use seq_flds_indices
 !
 ! !ARGUMENTS:
     type(ESMF_Clock),             intent(in)    :: EClock
@@ -218,8 +211,8 @@ contains
                                 )
     call set_timemgr_init( calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
                            ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd,         &
-                           stop_tod_in=stop_tod,  stop_final_ymd_in=stop_ymd,                    &
-                           perpetual_run_in=perpetual_run, perpetual_ymd_in=perpetual_ymd )
+                           stop_tod_in=stop_tod,  perpetual_run_in=perpetual_run,                &
+                           perpetual_ymd_in=perpetual_ymd )
     if (     trim(starttype) == trim(seq_infodata_start_type_start)) then
        nsrest = 0
     else if (trim(starttype) == trim(seq_infodata_start_type_cont) ) then
@@ -255,7 +248,7 @@ contains
     if(masterproc) write(iulog,*)'dtime_sync= ',dtime_sync,' dtime_clm= ',dtime_clm,' mod = ',mod(dtime_sync,dtime_clm)
     if (mod(dtime_sync,dtime_clm) /= 0) then
        write(iulog,*)'clm dtime ',dtime_clm,' and Eclock dtime ',dtime_sync,' never align'
-       call shr_sys_abort()
+       call endrun( sub//' ERROR: time out of sync' )
     end if
 
     ! Initialize lnd gsMap
@@ -365,12 +358,26 @@ contains
 ! Run clm model
 !
 ! !USES:
+    use shr_kind_mod    ,only : r8 => shr_kind_r8
     use clm_atmlnd      ,only : clm_mapl2a, clm_mapa2l
     use clm_atmlnd      ,only : clm_l2a, atm_l2a, atm_a2l, clm_a2l
     use clm_comp        ,only : clm_run1, clm_run2
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep 
+    use abortutils      ,only : endrun
     use clm_varctl      ,only : irad
+    use esmf_mod        ,only : ESMF_Clock
+    use clm_varctl      ,only : iulog
+    use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
+                                shr_file_getLogUnit, shr_file_getLogLevel
+    use seq_cdata_mod   ,only : seq_cdata, seq_cdata_setptrs
+    use seq_timemgr_mod ,only : seq_timemgr_EClockGetData, seq_timemgr_StopAlarmIsOn, &
+                                seq_timemgr_RestartAlarmIsOn, seq_timemgr_EClockDateInSync
+    use seq_infodata_mod,only : seq_infodata_type, seq_infodata_GetData
+    use spmdMod         ,only : masterproc, mpicom
+    use perf_mod        ,only : t_startf, t_stopf, t_barrierf
+    use mct_mod         ,only : mct_aVect, mct_aVect_accum, mct_aVect_copy, mct_aVect_avg, &
+                                mct_aVect_zero
 !
 ! !ARGUMENTS:
     type(ESMF_Clock)            , intent(in)    :: EClock
@@ -552,7 +559,7 @@ contains
        call seq_timemgr_EclockGetData( EClock, curr_ymd=ymd_sync, curr_tod=tod_sync )
        write(iulog,*)' clm ymd=',ymd     ,'  clm tod= ',tod
        write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
-       call shr_sys_abort( sub//":: CLM clock not in sync with Master Sync clock" )
+       call endrun( sub//":: CLM clock not in sync with Master Sync clock" )
     end if
     
     ! Reset shr logging to my original values
@@ -603,8 +610,10 @@ contains
     !
     ! Uses
     !
-    use decompMod, only : get_proc_bounds_atm, adecomp
-    use domainMod, only : adomain
+    use shr_kind_mod , only : r8 => shr_kind_r8
+    use decompMod    , only : get_proc_bounds_atm, adecomp
+    use domainMod    , only : adomain
+    use mct_mod      , only : mct_gsMap, mct_gsMap_init
     !
     ! Arguments
     !
@@ -637,14 +646,6 @@ contains
     lsize = endg-begg+1
     gsize = adomain%ni*adomain%nj
 
-    ! reorder gindex to be in ascending order, initialize a permutation array,
-    ! derive a permutation that puts gindex in ascending order since the
-    ! the default for IndexSort is ascending and finally sort gindex in-place
-
-    allocate(perm(lsize),stat=ier)
-    call mct_indexset(perm)
-    call mct_indexsort(lsize,perm,gindex)
-    call mct_permute(gindex,perm,lsize)
     call mct_gsMap_init( gsMap_lnd, gindex, mpicom_lnd, LNDID, lsize, gsize )
 
     deallocate(gindex)
@@ -656,10 +657,12 @@ contains
   subroutine lnd_export_mct( l2a, l2x_l )   
 
     !-----------------------------------------------------
+    use shr_kind_mod    , only : r8 => shr_kind_r8
     use clm_time_manager, only : get_nstep  
     use clm_atmlnd      , only : lnd2atm_type
     use domainMod       , only : adomain
     use decompMod       , only : get_proc_bounds_atm, adecomp
+    use seq_flds_indices
 
     type(lnd2atm_type), intent(inout) :: l2a
     type(mct_aVect)   , intent(inout) :: l2x_l
@@ -712,10 +715,6 @@ contains
 #endif
     end do
 
-    ! permute before using the Rearrange call.
-
-    call mct_aVect_permute(l2x_l,perm)
-
   end subroutine lnd_export_mct
 
 !====================================================================================
@@ -723,11 +722,16 @@ contains
   subroutine lnd_import_mct( x2l_l, a2l )
 
     !-----------------------------------------------------
+    use shr_kind_mod    , only: r8 => shr_kind_r8
     use clm_atmlnd      , only: atm2lnd_type
     use clm_varctl      , only: co2_type, co2_ppmv
     use clm_varcon      , only: rair, o2_molar_const, c13ratio, forc_hgt_min
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use decompMod       , only: get_proc_bounds_atm
+    use abortutils      , only: endrun
+    use clm_varctl      , only: iulog
+    use mct_mod         , only: mct_aVect
+    use seq_flds_indices
     !
     ! Arguments
     !
@@ -753,6 +757,7 @@ contains
     real(r8) :: a0,a1,a2,a3,a4,a5,a6 !coefficients for esat over water
     real(r8) :: b0,b1,b2,b3,b4,b5,b6 !coefficients for esat over ice
     real(r8) :: tdc, t               !Kelvins to Celcius function and its input
+    character(len=32), parameter :: sub = 'lnd_import_mct'
 
     parameter (a0=6.107799961_r8    , a1=4.436518521e-01_r8, &
                a2=1.428945805e-02_r8, a3=2.650648471e-04_r8, &
@@ -772,10 +777,6 @@ contains
 
     !-----------------------------------------------------
 
-    ! unpermute after rearrange call and before copying into local arrays.
-
-    call mct_aVect_unpermute(x2l_l, perm)
-
     call get_proc_bounds_atm(begg, endg)
 
     co2_type_idx = 0
@@ -785,11 +786,9 @@ contains
        co2_type_idx = 2
     end if
     if (co2_type == 'prognostic' .and. index_x2l_Sa_co2prog == 0) then
-       write(iulog,*)' must have nonzero index_x2l_Sa_co2prog for co2_type equal to prognostic'
-       call shr_sys_abort()
+       call endrun( sub//' ERROR: must have nonzero index_x2l_Sa_co2prog for co2_type equal to prognostic' )
     else if (co2_type == 'diagnostic' .and. index_x2l_Sa_co2diag == 0) then
-       write(iulog,*)' must have nonzero index_x2l_Sa_co2diag for co2_type equal to diagnostic'
-       call shr_sys_abort()
+       call endrun( sub//' ERROR: must have nonzero index_x2l_Sa_co2diag for co2_type equal to diagnostic' )
     end if
     
     ! Note that the precipitation fluxes received  from the coupler
@@ -882,8 +881,6 @@ contains
 	 
      end do
 
-     call mct_aVect_permute(x2l_l, perm)
-
    end subroutine lnd_import_mct
 
 !===============================================================================
@@ -891,9 +888,15 @@ contains
   subroutine lnd_domain_mct( lsize, gsMap_l, dom_l )
 
     !-------------------------------------------------------------------
-    use clm_varcon, only : re
-    use domainMod , only : adomain
-    use decompMod , only : get_proc_bounds_atm, adecomp
+    use shr_kind_mod, only : r8 => shr_kind_r8
+    use clm_varcon  , only : re
+    use domainMod   , only : adomain
+    use decompMod   , only : get_proc_bounds_atm, adecomp
+    use spmdMod     , only : iam
+    use mct_mod     , only : mct_gsMap, mct_gGrid, mct_gGrid_importIAttr, &
+                             mct_gGrid_importRAttr, mct_gGrid_init,       &
+                             mct_gsMap_orderedPoints
+    use seq_flds_mod
     !
     ! Arguments
     !
@@ -973,10 +976,6 @@ contains
     end do
     call mct_gGrid_importRattr(dom_l,"frac",data,lsize) 
 
-    ! Permute dom_l to have ascending order
-
-    call mct_gGrid_permute(dom_l, perm)
-
     deallocate(data)
     deallocate(idata)
 
@@ -988,7 +987,12 @@ contains
   subroutine rof_SetgsMap_mct( mpicom_l, LNDID, gsMap_r )
 
     !-------------------------------------------------------------------
-    use clm_varpar, only : rtmlon, rtmlat
+    use shr_kind_mod, only : r8 => shr_kind_r8
+    use clm_varpar  , only : rtmlon, rtmlat
+    use RunoffMod   , only : runoff
+    use abortutils  , only : endrun
+    use clm_varctl  , only : iulog
+    use mct_mod     , only : mct_gsMap, mct_gsMap_init
     !
     ! Arguments
     !
@@ -1002,6 +1006,7 @@ contains
     integer :: n, ni
     integer :: lsize,gsize
     integer :: ier
+    character(len=32), parameter :: sub = 'rof_SetgsMap_mct'
     !-------------------------------------------------------------------
 
     ! Build the rof grid numbering for MCT
@@ -1017,25 +1022,17 @@ contains
        if (runoff%mask(n) == 2) then
           ni = ni + 1
           if (ni > runoff%lnumro) then
-             write(iulog,*)'rof_SetgsMap_mct: ERROR runoff count',n,ni,runoff%lnumro
-             call shr_sys_abort()
+             write(iulog,*) sub, ' : ERROR runoff count',n,ni,runoff%lnumro
+             call endrun( sub//' ERROR: runoff > expected' )
           endif
           gindex(ni) = runoff%gindex(n)
        endif
     end do
     if (ni /= runoff%lnumro) then
-       write(iulog,*)'rof_SetgsMap_mct: ERROR runoff total count',ni,runoff%lnumro
-       call shr_sys_abort()
+       write(iulog,*) sub, ' : ERROR runoff total count',ni,runoff%lnumro
+       call endrun( sub//' ERROR: runoff not equal to expected' )
     endif
 
-    ! reorder gindex to be in ascending order, initialize a permutation array,
-    ! derive a permutation that puts gindex in ascending order since the
-    ! the default for IndexSort is ascending and finally sort gindex in-place
-
-    allocate(perm_r(lsize),stat=ier)
-    call mct_indexset(perm_r)
-    call mct_indexsort(lsize,perm_r,gindex)
-    call mct_permute(gindex,perm_r,lsize)
     call mct_gsMap_init( gsMap_r, gindex, mpicom_l, LNDID, lsize, gsize )
 
     deallocate(gindex)
@@ -1047,7 +1044,16 @@ contains
   subroutine rof_domain_mct( lsize, gsMap_r, dom_r )
 
     !-------------------------------------------------------------------
-    use clm_varcon, only : re
+    use shr_kind_mod, only : r8 => shr_kind_r8
+    use clm_varcon  , only : re
+    use RunoffMod   , only : runoff
+    use abortutils  , only : endrun
+    use clm_varctl  , only : iulog
+    use spmdMod     , only : iam
+    use mct_mod     , only : mct_gsMap, mct_gGrid, mct_gGrid_importIAttr, &
+                             mct_gGrid_importRAttr, mct_gGrid_init, mct_gsMap_orderedPoints
+    use seq_flds_mod
+    use seq_flds_indices
     !
     ! Arguments
     !
@@ -1060,6 +1066,7 @@ contains
     integer :: n, ni              ! index
     real(r8), pointer :: data(:)  ! temporary
     integer , pointer :: idata(:) ! temporary
+    character(len=32), parameter :: sub = 'rof_domain_mct'
     !-------------------------------------------------------------------
     !
     ! Initialize mct domain type
@@ -1096,14 +1103,14 @@ contains
        if (runoff%mask(n) == 2) then
           ni = ni + 1
           if (ni > runoff%lnumro) then
-             write(iulog,*)'rof_domain_mct: ERROR runoff count',n,ni,runoff%lnumro
-             call shr_sys_abort()
+             write(iulog,*) sub, ' : ERROR runoff count',n,ni,runoff%lnumro
+             call endrun( sub//' ERROR: runoff > expected' )
           endif
        end if
     end do
     if (ni /= runoff%lnumro) then
-       write(iulog,*)'rof_domain_mct: ERROR runoff total count',ni,runoff%lnumro
-       call shr_sys_abort()
+       write(iulog,*) sub, ' : ERROR runoff total count',ni,runoff%lnumro
+       call endrun( sub//' ERROR: runoff not equal to expected' )
     endif
     !
     ! Fill in correct values for domain components
@@ -1146,10 +1153,6 @@ contains
     call mct_gGrid_importRattr(dom_r,"mask",data,lsize) 
     call mct_gGrid_importRattr(dom_r,"frac",data,lsize) 
 
-    ! Permute dom_r to have ascending order
-
-    call mct_gGrid_permute(dom_r, perm_r)
-
     deallocate(data)
     deallocate(idata)
 
@@ -1159,6 +1162,12 @@ contains
 
   subroutine rof_export_mct( r2x_r)
 
+    use shr_kind_mod, only : r8 => shr_kind_r8
+    use RunoffMod   , only : runoff
+    use abortutils  , only : endrun
+    use clm_varctl  , only : iulog
+    use mct_mod     , only : mct_aVect
+    use seq_flds_indices
     !-----------------------------------------------------
     !
     ! Arguments
@@ -1168,6 +1177,7 @@ contains
     ! Local variables
     !
     integer :: ni, n
+    character(len=32), parameter :: sub = 'rof_export_mct'
     !-----------------------------------------------------
     
     ni = 0
@@ -1176,19 +1186,15 @@ contains
           ni = ni + 1
           r2x_r%rAttr(index_r2x_Forr_roff,ni) = runoff%runoff(n)/(runoff%area(n)*1.0e-6_r8*1000._r8)
           if (ni > runoff%lnumro) then
-             write(iulog,*)'rof_export_mct: ERROR runoff count',n,ni
-             call shr_sys_abort()
+             write(iulog,*) sub, ' : ERROR runoff count',n,ni
+             call endrun( sub//' : ERROR runoff > expected' )
           endif
        endif
     end do
     if (ni /= runoff%lnumro) then
-       write(iulog,*)'rof_export_mct: ERROR runoff total count',ni,runoff%lnumro
-       call shr_sys_abort()
+       write(iulog,*) sub, ' : ERROR runoff total count',ni,runoff%lnumro
+       call endrun( sub//' : ERROR runoff not equal to expected' )
     endif
-
-    ! permute before exiting subroutine
-
-    call mct_aVect_permute(r2x_r,perm_r)
 
   end subroutine rof_export_mct
 #endif

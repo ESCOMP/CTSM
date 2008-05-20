@@ -56,15 +56,13 @@ module clm_time_manager
    integer, save ::&
       dtime         = uninit_int    ! timestep in seconds
 
-! Input in only in ccsm and offline modes
+! Input in only in concurrent CCSM mode
    integer, save ::&
-      nestep        = uninit_int,  &! final timestep (or day if negative) number
       nelapse       = uninit_int,  &! number of timesteps (or days if negative) to extend a run
       start_ymd     = uninit_int,  &! starting date for run in yearmmdd format
       start_tod     = 0,           &! starting time of day for run in seconds
       stop_ymd      = uninit_int,  &! stopping date for run in yearmmdd format
       stop_tod      = 0,           &! stopping time of day for run in seconds
-      stop_final_ymd= 99991231,    &! final stopping date for run in yearmmdd format
       ref_ymd       = uninit_int,  &! reference date for time coordinate in yearmmdd format
       ref_tod       = 0             ! reference time of day for time coordinate in seconds
    type(ESMF_Calendar), save   :: tm_cal       ! calendar
@@ -91,6 +89,7 @@ module clm_time_manager
    logical, save :: tm_perp_calendar      = .false.    ! true when using perpetual calendar
    integer, save :: cal_type              = uninit_int ! calendar type
    logical, save :: timemgr_set           = .false.    ! true when timemgr initialized
+   integer, save :: nestep                = uninit_int ! ending time-step
 
 ! Private module methods
 
@@ -106,22 +105,20 @@ contains
 !=========================================================================================
 
 subroutine get_timemgr_defaults( calendar_out,      start_ymd_out,     start_tod_out, ref_ymd_out,        &
-                                 ref_tod_out,       stop_ymd_out,      stop_tod_out,  stop_final_ymd_out, &
-                                 nelapse_out,       nestep_out,        dtime_out )
+                                 ref_tod_out,       stop_ymd_out,      stop_tod_out,  nelapse_out,        &
+                                 dtime_out )
 
   !---------------------------------------------------------------------------------
   ! get time manager startup default values
   ! 
   ! Arguments
   character(len=*), optional, intent(OUT) :: calendar_out       ! Calendar type
-  integer         , optional, intent(OUT) :: nestep_out         ! Step (or day) number to advance to
   integer         , optional, intent(OUT) :: nelapse_out        ! Number of step (or days) to advance
   integer         , optional, intent(OUT) :: start_ymd_out      ! Start date       (YYYYMMDD)
   integer         , optional, intent(OUT) :: start_tod_out      ! Start time of day (sec)
   integer         , optional, intent(OUT) :: ref_ymd_out        ! Reference date   (YYYYMMDD)
   integer         , optional, intent(OUT) :: ref_tod_out        ! Reference time of day (sec)
   integer         , optional, intent(OUT) :: stop_ymd_out       ! Stop date        (YYYYMMDD)
-  integer         , optional, intent(OUT) :: stop_final_ymd_out ! Final stop date  (YYYYMMDD)
   integer         , optional, intent(OUT) :: stop_tod_out       ! Stop time of day (sec)
   integer         , optional, intent(OUT) :: dtime_out          ! Time-step (sec)
   !
@@ -134,10 +131,8 @@ subroutine get_timemgr_defaults( calendar_out,      start_ymd_out,     start_tod
   if (present(ref_ymd_out)       ) ref_ymd_out        = ref_ymd
   if (present(ref_tod_out)       ) ref_tod_out        = ref_tod
   if (present(stop_ymd_out)      ) stop_ymd_out       = stop_ymd
-  if (present(stop_final_ymd_out)) stop_final_ymd_out = stop_final_ymd
   if (present(stop_tod_out)      ) stop_tod_out       = stop_tod
   if (present(nelapse_out)       ) nelapse_out        = nelapse
-  if (present(nestep_out)        ) nestep_out         = nestep
   if (present(dtime_out)         ) dtime_out          = dtime
 
 end subroutine get_timemgr_defaults
@@ -145,23 +140,20 @@ end subroutine get_timemgr_defaults
 !=========================================================================================
 
 subroutine set_timemgr_init( calendar_in,      start_ymd_in,     start_tod_in, ref_ymd_in,        &
-                             ref_tod_in,       stop_ymd_in,      stop_tod_in,  stop_final_ymd_in, &
-                             perpetual_run_in, perpetual_ymd_in, nelapse_in,   nestep_in,         &
-                             dtime_in )
+                             ref_tod_in,       stop_ymd_in,      stop_tod_in,  perpetual_run_in,  &
+                             perpetual_ymd_in, nelapse_in,       dtime_in )
 
   !---------------------------------------------------------------------------------
   ! set time manager startup values
   ! 
   ! Arguments
   character(len=*), optional, intent(IN) :: calendar_in       ! Calendar type
-  integer         , optional, intent(IN) :: nestep_in         ! Step (or day) number to advance to
   integer         , optional, intent(IN) :: nelapse_in        ! Number of step (or days) to advance
   integer         , optional, intent(IN) :: start_ymd_in      ! Start date       (YYYYMMDD)
   integer         , optional, intent(IN) :: start_tod_in      ! Start time of day (sec)
   integer         , optional, intent(IN) :: ref_ymd_in        ! Reference date   (YYYYMMDD)
   integer         , optional, intent(IN) :: ref_tod_in        ! Reference time of day (sec)
   integer         , optional, intent(IN) :: stop_ymd_in       ! Stop date        (YYYYMMDD)
-  integer         , optional, intent(IN) :: stop_final_ymd_in ! Final stop date  (YYYYMMDD)
   integer         , optional, intent(IN) :: stop_tod_in       ! Stop time of day (sec)
   logical         , optional, intent(IN) :: perpetual_run_in  ! If in perpetual mode or not
   integer         , optional, intent(IN) :: perpetual_ymd_in  ! Perpetual date   (YYYYMMDD)
@@ -185,9 +177,7 @@ subroutine set_timemgr_init( calendar_in,      start_ymd_in,     start_tod_in, r
          perpetual_ymd    = perpetual_ymd_in
       end if
   end if
-  if (present(stop_final_ymd_in)) stop_final_ymd   = stop_final_ymd_in
   if (present(nelapse_in)       ) nelapse          = nelapse_in
-  if (present(nestep_in)        ) nestep           = nestep_in
   if (present(dtime_in)         ) dtime            = dtime_in
 
 end subroutine set_timemgr_init
@@ -207,7 +197,6 @@ subroutine timemgr_init( )
   integer :: yr, mon, day, tod             ! Year, month, day, and second as integers
   type(ESMF_Time) :: start_date            ! start date for run
   type(ESMF_Time) :: stop_date             ! stop date for run
-  type(ESMF_Time) :: final_stop_date       ! final stop date for run
   type(ESMF_Time) :: curr_date             ! temporary date used in logic
   type(ESMF_Time) :: ref_date              ! reference date for time coordinate
   logical :: run_length_specified = .false.
@@ -252,15 +241,6 @@ subroutine timemgr_init( )
      if ( current < stop_date ) stop_date = current
      run_length_specified = .true.
   end if
-  if ( nestep /= uninit_int ) then
-     if ( nestep >= 0 ) then
-        current = start_date + step_size*nestep
-     else
-        current = start_date - day_step_size*nestep
-     end if
-     if ( current < stop_date ) stop_date = current
-     run_length_specified = .true.
-  end if
   if ( nelapse /= uninit_int ) then
      if ( nelapse >= 0 ) then
         current = curr_date + step_size*nelapse
@@ -271,13 +251,8 @@ subroutine timemgr_init( )
      run_length_specified = .true.
   end if
   if ( .not. run_length_specified ) then
-     call endrun (sub//': Must specify at least one of stop_ymd, nestep, or nelapse')
+     call endrun (sub//': Must specify stop_ymd or nelapse')
   end if
-
-  ! Bound to final stop date
-
-  final_stop_date = TimeSetymd( stop_final_ymd, 0, "final_stop_date" )
-  if ( stop_date > final_stop_date) stop_date = final_stop_date
 
   ! Error check 
 
@@ -603,7 +578,6 @@ subroutine timemgr_restart( )
   character(len=*), parameter :: sub = 'timemgr_restart'
   integer :: rc                            ! return code
   integer :: yr, mon, day, tod             ! Year, month, day, and second as integers
-  type(ESMF_Time) :: final_stop_date       ! final stop date for run
   type(ESMF_Time) :: start_date            ! start date for run
   type(ESMF_Time) :: ref_date              ! reference date for run
   type(ESMF_Time) :: curr_date             ! date of data in restart file
@@ -645,14 +619,6 @@ subroutine timemgr_restart( )
      current = TimeSetymd( stop_ymd, stop_tod, "stop_date" )
      if ( current < stop_date ) stop_date = current
      run_length_specified = .true.
-  else if ( nestep /= uninit_int ) then
-     if ( nestep >= 0 ) then
-        current = start_date + step_size*nestep
-     else
-        current = start_date - day_step_size*nestep
-     end if
-     if ( current < stop_date ) stop_date = current
-     run_length_specified = .true.
   else if ( nelapse /= uninit_int ) then
      if ( nelapse >= 0 ) then
         current = curr_date + step_size*nelapse
@@ -663,13 +629,8 @@ subroutine timemgr_restart( )
      run_length_specified = .true.
   end if
   if ( .not. run_length_specified ) then
-     call endrun (sub//': Must specify at least one of stop_ymd, nestep, or nelapse')
+     call endrun (sub//': Must specify stop_ymd or nelapse')
   end if
-
-  ! Bound to final stop date
-
-  final_stop_date = TimeSetymd( stop_final_ymd, 0, "final_stop_date" )
-  if ( stop_date > final_stop_date) stop_date = final_stop_date
 
   ! Error check
 
@@ -1468,13 +1429,11 @@ subroutine timemgr_spmdbcast( )
 
   call mpi_bcast (dtime    , 1, MPI_INTEGER  , 0, mpicom, ier)
 
-#if (defined OFFLINE) || (defined COUP_CSM)
-  call mpi_bcast (nestep   ,            1, MPI_INTEGER  , 0, mpicom, ier)
+#if (defined COUP_CSM)
   call mpi_bcast (nelapse  ,            1, MPI_INTEGER  , 0, mpicom, ier)
   call mpi_bcast (start_ymd,            1, MPI_INTEGER  , 0, mpicom, ier)
   call mpi_bcast (start_tod,            1, MPI_INTEGER  , 0, mpicom, ier)
   call mpi_bcast (stop_ymd ,            1, MPI_INTEGER  , 0, mpicom, ier)
-  call mpi_bcast (stop_final_ymd ,      1, MPI_INTEGER  , 0, mpicom, ier)
   call mpi_bcast (stop_tod ,            1, MPI_INTEGER  , 0, mpicom, ier)
   call mpi_bcast (ref_ymd  ,            1, MPI_INTEGER  , 0, mpicom, ier)
   call mpi_bcast (ref_tod  ,            1, MPI_INTEGER  , 0, mpicom, ier)
