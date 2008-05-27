@@ -58,45 +58,14 @@ endif
 #set options = "-config $config -justvalue -ccsm -silent "
  set options = "-config $config -justvalue -silent -csmdata $DIN_LOC_ROOT"
 
-if ($LND_GRID =~ *T*) then
-   if ($GRID =~ T85*) then
-      set res = 128x256 
-   else if ($GRID =~ T42*) then
-      set res =  64x128 
-   else if ($GRID =~ T31*) then
-      set res =   48x96 
-   else
-      echo "grid $GRID is not suported"
-      exit 99
-   endif
-else 
-   set res = $LND_GRID
-endif
+set res = $LND_GRID
 
 if ($ATM_GRID == $OCN_GRID) then
-  if ($ATM_GRID == 1.9x2.5  ) then
-     set grid_mask = gx1v5    
-  else if ($ATM_GRID == 0.9x1.25 ) then
-     set grid_mask = gx1v5 
-  else if ($ATM_GRID == 0.47x0.63) then
-     set grid_mask = gx1v5
-  else if ($ATM_GRID == 0.23x0.31) then
-     set grid_mask = gx1v5
-  else if ($ATM_GRID == 4x5  ) then
-     set grid_mask = USGS
-  else if ($ATM_GRID == T31) then
-     set grid_mask = USGS
-  else if ($ATM_GRID == T42) then
-     set grid_mask = USGS
-  else if ($ATM_GRID == T85) then
-     set grid_mask = USGS
-  else
-     echo "ATM_GRID $ATM_GRID is not currently supported when atm/ocn grids are same"
-  endif
-  set options = "$options -res $res -options mask=$grid_mask,sim_year=$sim_year"
+  set mask = "USGS"
 else
-  set options = "$options -res $res -options mask=$OCN_GRID,sim_year=$sim_year"
+  set mask = "$OCN_GRID"
 endif
+set options = "$options -res $res -options mask=$mask,sim_year=$sim_year"
 
 if ($CLM_ARB_IC == off )then
    set finidat    = `$CODEROOT/lnd/clm*/bld/queryDefaultNamelist.pl $options -demand -var finidat`
@@ -179,7 +148,7 @@ endif
 #else
 #   set RUNTYPE = $RUN_TYPE
 #endif
-#set bnflags="-case $CASE -start_type $RUNTYPE -config $config -mask $OCN_GRID"
+#set bnflags="-case $CASE -start_type $RUNTYPE -config $config -mask $mask"
 #set bnflags="$bnflags -sim_year $sim_year -infile lndinput -runlength 9999d"
 #$CODEROOT/lnd/clm*/bld/build-namelist $bnflags || exit -1
 #cat lnd.stdin

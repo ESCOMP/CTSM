@@ -13,6 +13,7 @@ module lnd_comp_mct
 ! !DESCRIPTION:
 !
 ! !USES:
+  use shr_kind_mod     , only : r8 => shr_kind_r8
   use mct_mod          , only : mct_aVect
 !
 ! !PUBLIC MEMBER FUNCTIONS:

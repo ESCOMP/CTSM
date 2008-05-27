@@ -1,4 +1,73 @@
 ===============================================================
+Tag name:  clm3_6_05
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date:  Tue May 27 13:23:21 MDT 2008
+One-line Summary: Fix to compile with PGI-6, update scripts, fix cpl7.template for new scripts LND_GRID, fix 2.65x3.33 frac dataset.
+
+Purpose of changes: A tag for cam and ccsm4_beta31.
+
+Bugs fixed (include bugzilla ID): 762 (PGI-6 bug), 759 (2.65 res)
+
+Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
+                                  698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+    http://bugs.cgd.ucar.edu/
+
+Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
+                                          652 (threads different answers with older PGI versions)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: Update 2.65x3.33 fractional dataset
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): csm_share, scripts and mct
++scripts                       to scripts4_080519
++models/csm_share              to share3_080514
++models/utils/mct              to MCT2_5_0_080415
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>>>>>>> Add in some new tests for 2.65x3.33 grid
+M models/lnd/clm/test/system/README.testnames
+M models/lnd/clm/test/system/tests_pretag_bangkok
+M models/lnd/clm/test/system/tests_posttag_hybrid_regression
+M models/lnd/clm/test/system/input_tests_master
+M models/lnd/clm/test/system/tests_posttag_lightning
+M models/lnd/clm/bld/clm.cpl7.template ------------------------ Remove logic for determining "T*" grid names
+M models/lnd/clm/src/main/lnd_comp_mct.F90 -------------------- Put shr_kind_mod to top of module
+
+Summary of testing:
+
+  bluevista: All PASS except
+052 smJ11 TSM.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 4 (bug 708)
+053 erJ11 TER.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 10+38 arb_ic ...............FAIL! rc= 5 (bug 708)
+054 brJ11 TBR.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 24+24 arb_ic ...............FAIL! rc= 5 (bug 708)
+055 blJ11 TBL.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 4 (bug 708)
+096 smM14 TSMncl_tools.sh ndepregrid ............................................................FAIL! rc= 6 
+>>>>>>>>>>>>> Error loading libX11.a so couldn't load ncl
+  lightning/pathf90: ALL PASS up to 028
+  jaguarcnl: All PASS except
+038 erP61 TSM_ccsmseq.sh ERS f19_g13 I4804 ......................................................FAIL! rc= 4
+039 erP11 TSM_ccsmseq.sh ERS T31_g35 ICN4804 ....................................................FAIL! rc= 4
+>>>>>>>>>>>>>>> Error in scripts for CLMNCEP data directory name
+  bangkok/lf95: All PASS
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_04
+
+Changes answers relative to baseline: No -- bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_04
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date:  Tue May 20 10:04:51 MDT 2008

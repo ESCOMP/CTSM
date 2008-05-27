@@ -308,6 +308,9 @@ erL82 TER.sh _sc_dm clm_std 19980115:DAILY:3600 5x5_amazon navy -5+-5   arb_ic
 blL82 TBL.sh _sc_dm clm_std 19980115:DAILY:3600 5x5_amazon navy -10     arb_ic
 brL82 TBR.sh _sc_dm clm_std 19980115:DAILY:3600 5x5_amazon navy -10+-10 arb_ic
 
+smLD1 TSM.sh _sc_dh clm_std 19990101:NONE:1800 2.65x3.33 USGS -10   arb_ic
+erLD1 TER.sh _sc_dh clm_std 19990101:NONE:1800 2.65x3.33 USGS -5+-5 arb_ic
+
 sm614 TSMtools.sh mkgriddata   tools__ds namelist
 sm674 TSMtools.sh mkgriddata   tools__ds singlept
 sm694 TSMtools.sh mkgriddata   tools__ds ccsm_dom
