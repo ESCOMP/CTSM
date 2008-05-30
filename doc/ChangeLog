@@ -1,4 +1,65 @@
 ===============================================================
+Tag name:  clm3_6_06
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date:  Fri May 30 11:01:28 MDT 2008
+One-line Summary: Small fix needed for ccsm4_alpha30
+
+Purpose of changes: Fix bug 766 so use gx1v5 for some resolutions when OCN_GRID==ATM_GRID -- needed for ccsm4_alpha30
+
+Bugs fixed (include bugzilla ID): 766 (bug when OCN_GRID==ATM_GRID), 767 (2.65x3.33 bug for seq-ccsm)
+
+Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
+                                  698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
+                                  717 (archiving bug -- only archive 1000 files at a time), 768 (cpl6 tests on blueice)
+    http://bugs.cgd.ucar.edu/
+
+Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
+                                      652 (threads different answers with older PGI versions)
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: Add 2.65x3.33 datm7 domain dataset
+
+Describe any substantial timing or memory changes: none
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts
+
+   Update to scripts4_080529
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M models/lnd/clm/test/system/tests_pretag_jaguar ------------ Do cpl7 I and ICN tests rather than I4804/ICN4804 tests
+M models/lnd/clm/test/system/test_driver.sh ----------------- Make ptiles=32 for blueice
+M models/lnd/clm/test/system/input_tests_master ------------- Add I and ICN tests for seq-ccsm with cpl7 scripts
+M models/lnd/clm/tools/mkdatadomain/mkdatadomain.namelist --- Make datm the default output type
+M models/lnd/clm/bld/DefaultDATM_DSHR_NML_Namelist.xml ------ Add domain dataset for 2.65x3.33 resolution
+M models/lnd/clm/bld/clm.cpl7.template ---------------------- Change so if OCN_GRID==ATM_GRID, use gx1v5 for soem resolutions
+
+Summary of testing:
+
+  blueice: All PASS except
+023 erA92 TER.sh _sc_dm clm_std 19990101:NONE:3600 4x5 gx3v5 -5+-5 arb_ic .......................FAIL! rc= 7 >>> Random machine bug?
+062 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dm ext_ccsm_seq_cam 48 .......................FAIL! rc= 8 >>> bug 768
+063 sm061 TSMext_ccsmcon.sh ERS f19_g13 .........................................................FAIL! rc= 7 >>> bug 768
+>>>>> 62 and 63 fail because tests are setup for 32 TASKS rather than 8 being used on blueice (bug 768)
+  jaguar: All PASS (A38 and 39 failed, because was using 1948-2004 data range, changed this but did not retest)
+  lightning/ifort: All PASS
+  bangkok/lf95: All PASS (43 and 44 because of missing file -- moved file over)
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_05
+
+Changes answers relative to baseline: No -- bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_05
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date:  Tue May 27 13:23:21 MDT 2008
@@ -10,7 +71,8 @@ Bugs fixed (include bugzilla ID): 762 (PGI-6 bug), 759 (2.65 res)
 
 Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
                                   698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
-                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  717 (archiving bug -- only archive 1000 files at a time), 766 (bug when OCN_GRID==ATM_GRID), 
+                                  767 (2.65x3.33 bug for seq-ccsm), 768 (cpl6 tests on blueice)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 

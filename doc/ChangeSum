@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ===============================================================================================================================
+   clm3_6_06         erik 05/30/2008 Small fix needed for ccsm4_alpha30 (use gx1v5 for some resolutions when OCN_GRID==ATM_GRID)
    clm3_6_05         erik 05/27/2008 Fix to compile with PGI-6, update scripts, fix cpl7.template for new scripts LND_GRID, fix 2.65x3.33 frac dataset.
    clm3_6_04         erik 05/20/2008 Remove all MCT permutes, fix cpl7 script issues, remove offline mode, add ability to run over a range of years
    clm3_6_03         erik 05/08/2008 Fix so listen to next_swcday to calculate albedo rather than using irad

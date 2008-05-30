@@ -113,7 +113,7 @@ cat > ./${submit_script} << EOF
 #BSUB -a poe                      # use LSF poe elim
 #BSUB -x                          # exclusive use of node (not_shared)
 #BSUB -n 8                        # total tasks needed
-#BSUB -R "span[ptile=8]"          # max number of tasks (MPI) per node
+#BSUB -R "span[ptile=32]"         # max number of tasks (MPI) per node
 #BSUB -o test_dr.o%J              # output filename
 #BSUB -e test_dr.o%J              # error filename
 #BSUB -q premium                  # queue

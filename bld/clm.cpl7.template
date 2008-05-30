@@ -61,7 +61,9 @@ endif
 set res = $LND_GRID
 
 if ($ATM_GRID == $OCN_GRID) then
-  set mask = "USGS"
+   set mask = USGS
+   if ($ATM_GRID == 1.9x2.5 || $ATM_GRID == 0.9x1.25 || $ATM_GRID == 0.47x0.63 || $ATM_GRID == 0.23x0.31 ) \
+      set mask = gx1v5
 else
   set mask = "$OCN_GRID"
 endif

@@ -32,7 +32,8 @@ List all existing files that have been modified, and describe the changes:
 Summary of testing:
 
   bluevista:
-  jaguarcnl:
+  jaguar:
+  lightning/pathscale:
   bangkok/lf95:
 
 CLM tag used for the baseline comparison tests if applicable:
