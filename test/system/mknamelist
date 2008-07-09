@@ -45,11 +45,6 @@ if [ $run_length -lt 0  ]; then
 else
   runlen="${run_length}s"
 fi
-
-# Get mode from config file
-mode=`grep   "mode="   $config_file | awk -F\" '{print $2}'`
-pergro=`grep "pergro=" $config_file | awk -F\" '{print $2}'`
-
 #
 # Initialize the following so won't do anything by default
 #
@@ -61,7 +56,7 @@ atm_cpl_dt=" "
 #
 # If branch and a sequential-CCSM simulation -- set restart files using
 #
-if [ "$mode" = "ccsm_seq" ] && [ "$6" = "branch" ]; then
+if [ "$6" = "branch" ]; then
   if [ -f "$drv_restart" ]; then
      restart_file="restart_file='$drv_restart'"
      restbfile="restbfile='$restBfile'"
@@ -70,22 +65,22 @@ if [ "$mode" = "ccsm_seq" ] && [ "$6" = "branch" ]; then
 fi
 
 #
-# If sequential-CCSM -- always do the following...
+# For sequential-CCSM -- always do the following...
 #
-if [ "$mode" = "ccsm_seq" ]; then
-  logfile="logfilepostfix='.test.log'"
-  atm_cpl_dt="atm_cpl_dt=$dtime"
-fi
+logfile="logfilepostfix='.test.log'"
+atm_cpl_dt="atm_cpl_dt=$dtime"
 
 #
 # If pergro -- don't set history frequency
 #
-if [ "$pergro" = "on" ]; then
+pergro=`grep 'id="pergro"' config_cache.xml | awk '{print $3}'`
+if [ "$pergro" = 'value="on"' ]; then
+  echo "pergro is on"
   hist_freq=" "
   hist_samp=" "
 else
   hist_freq=" hist_nhtfrq=$hist_nhtfrq "
-  hist_samp=" hist_mfilt     =  1"
+  hist_samp=" hist_mfilt=1"
 fi
 
 
@@ -93,16 +88,23 @@ clmopt=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile`
 clmnl=${CLM_SCRIPTDIR}/nl_files/$nlfile
 
 source=`grep source ${CLM_SCRIPTDIR}/nl_files/$optfile | awk '{print $NF}'`
-if [ "$mode" = "ccsm_seq" ] && [ "$source" = "CLMNCEP" ]; then
+if [ "$source" = "CLMNCEP" ]; then
    clmopt="$clmopt -datm_data_dir $DATM_DATA_DIR"
 fi
 
 echo "$cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \ "
 echo "                 -infile $clmnl -res $res -lnd_res $land_res -start_type $6 \ "
 echo "                 -csmdata $CSMDATA -runlength $runlen $clmopt \ "
-echo "                 -namelist \"\&drv_in start_ymd=$start_ymd $restart_file $restbfile $restsfile $logfile $atm_cpl_dt / \&clm_inparm dtime=$dtime hist_crtinic='$inithist' $hist_samp nrevsn='$nrevsn' $hist_freq /\""
+echo "                 -namelist \"&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / "
+echo "                             &seq_infodata_inparm $restart_file $logfile / "
+echo "                             &shr_nml $restbfile $restsfile / "
+echo "                             &clm_inparm dtime=$dtime hist_crtinic='$inithist' "
+echo "                             $hist_samp nrevsn='$nrevsn' $hist_freq /\""
 
 $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \
                        -infile $clmnl -res $res -lnd_res $land_res -start_type $6 \
                        -csmdata $CSMDATA -runlength $runlen $clmopt \
-                       -namelist "\&drv_in start_ymd=$start_ymd $restart_file $restbfile $restsfile $logfile $atm_cpl_dt / \&clm_inparm dtime=$dtime hist_crtinic='$inithist' $hist_samp nrevsn='$nrevsn' $hist_freq /"
+                       -namelist "&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / \
+                                  &seq_infodata_inparm $restart_file $logfile / \
+                                  &shr_nml $restbfile $restsfile / \
+                                  &clm_inparm dtime=$dtime hist_crtinic='$inithist' $hist_samp nrevsn='$nrevsn' $hist_freq /"

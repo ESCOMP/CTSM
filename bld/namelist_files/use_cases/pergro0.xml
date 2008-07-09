@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<pertlim>0.0</pertlim>
+
+<hist_empty_htapes>.true.</hist_empty_htapes>
+
+<hist_nhtfrq>1</hist_nhtfrq>
+
+<hist_fincl1>'TSOI'</hist_fincl1>
+
+<hist_mfilt>720</hist_mfilt> 
+
+</namelist_defaults>
+

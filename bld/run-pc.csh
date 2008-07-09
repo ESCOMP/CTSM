@@ -249,7 +249,7 @@ echo "running CLM in $rundir log output to $rundir/clm.log.$LID"
 
 
 if ($spmd == on) then
-  mpirun -np $procs $blddir/clm >&! clm.log.$LID || echo "CLM run failed" && exit 7
+  mpiexec -np $procs $blddir/clm >&! clm.log.$LID || echo "CLM run failed" && exit 7
   set runstatus = $status
 else
   $blddir/clm >&! clm.log.$LID                   || echo "CLM run failed" && exit 7

@@ -5,9 +5,9 @@
 ##------------
 ##
 ## This is an example script to build and run the default CLM configuration
-## on an IBM SP.  This is setup to run on NCAR's machine bluevista.
+## on an IBM SP.  This is setup to run on NCAR's machine bluefire.
 ##
-## To submit this on bluevista:
+## To submit this on bluefire:
 ##
 ## bsub < run-ibm.csh
 ##
@@ -22,7 +22,7 @@
 #BSUB -x                        # exclusive use of node (not_shared)
 ## Number of tasks and tasks per node (CHANGE THIS IF YOU TURN smp on)
 #BSUB -n 16                     # total number of MPI-tasks (processors) needed
-#BSUB -R "span[ptile=16]"       # max number of tasks (MPI) per node
+#BSUB -R "span[ptile=64]"       # max number of tasks (MPI) per node
 #BSUB -o out.%J                 # output filename
 #BSUB -e out.%J                 # error filename
 #BSUB -q regular                # queue
@@ -223,10 +223,20 @@ if ( -f rpointer.lnd ) \cp rpointer.lnd rpointer.lnd.orig
 
 echo "running CLM in $rundir log file out to $rundir/clm.log.$LID"
 
+if ($spmd == on && $smp == on) then
+  setenv TARGET_CPU_LIST "-1"
+  set launch = "/usr/local/bin/hybrid_launch"
+else if ($spmd == on) then
+  setenv TARGET_CPU_RANGE "-1"
+  set launch = "/usr/local/bin/launch"
+else
+  set launch = ""
+endif
+if ( ! -f $launch ) set launch = ""
 
 if ($spmd == on) then
 
-  mpirun.lsf $blddir/clm >&! clm.log.$LID       || echo "CLM run failed" && exit 1
+  mpirun.lsf $launch $blddir/clm >&! clm.log.$LID       || echo "CLM run failed" && exit 1
   set runstatus = $status
 else 
   $blddir/clm  >&! clm.log.$LID                 || echo "CLM run failed" && exit 1

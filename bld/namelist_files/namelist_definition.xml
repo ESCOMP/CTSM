@@ -1,0 +1,818 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet type="text/xsl" href="namelist_definition.xsl"?>
+
+<namelist_definition>
+
+<!-- ========================================================================================  -->
+<!-- CLM Namelist -->
+<!-- ========================================================================================  -->
+
+<entry id="clump_pproc" type="integer" category="performance"
+       group="clm_inparm" valid_values="" >
+Clumps per processor.
+<default>Default: Number of threads per process; or 1 if no OMP.</default>
+</entry>
+
+<entry id="co2_ppmv" type="real" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+Atmospheric CO2 molar ratio (by volume) (umol/mol)
+<default>Default: 355.</default>
+</entry>
+
+<entry id="co2_type" type="char*16" category="clm_physics"
+       group="clm_inparm" valid_values="constant,prognostic,diagnostic" >
+Type of CO2 feedback.
+<default>Default: 'constant' for BGC mode</default>
+</entry>
+
+<entry id="create_crop_landunit" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+on if to create crop as separate landunits
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="outnc_large_files" type="logical" category="history"
+       group="clm_inparm" valid_values="" >
+on to output NetCDF files in large-file format
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="csm_doflxave" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+true => flux averaging is to be performed (only used for concurrent CCSM mode)
+<default>Default: TRUE</default>
+</entry>
+
+<entry id="dtime" type="real"  category="clm_physics" 
+       group="clm_inparm" valid_values="">
+Time step, seconds
+</entry>
+
+<entry id="fatmgrid" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of atmosphere grid data file.
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="fatmlndfrc" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of landfrac data file (on atm grid).
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="fatmtopo" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of atmosphere topography data file (on atm grid).
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="finidat" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of initial conditions file.
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="flndtopo" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of land topography file.
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="fndepdat" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of nitrogen deposition data file.
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="fndepdyn" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of dynamic nitrogen deposition data file.
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="fpftcon" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of PFT data file.
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="fpftdyn" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of time varying PFT data file.
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="frivinp_rtm" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of input datafile for rtm.
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="fsurdat" type="char*256" input_pathname="abs" category="datasets"
+       group="clm_inparm" valid_values="" >
+Full pathname of surface data file.
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="furbinp" type="char*256"  input_pathname="abs" category="datasets" 
+       group="clm_inparm" valid_values="" >
+Urban input data file name
+</entry>
+
+<entry id="hist_avgflag_pertape" type="char*1(6)" category="history"
+       group="clm_inparm" valid_values="" >
+Per file averaging flag.
+<default>Default: ' ',' ',' ',' ',' ',' '</default>
+</entry>
+
+<entry id="hist_crtinic" type="char*8" category="history"
+       group="clm_inparm" valid_values="6_HOURLY,DAILY,MONTHLY,YEARLY,NONE" >
+Frequency to generate initial dataset.
+<default>Default: 'YEARLY' for DGVM; 'NONE' otherwise.</default>
+<default>NOTE: 6_HOURLY should actually be 6-HOURLY</default>
+</entry>
+
+<entry id="hist_dov2xy" type="logical(6)" category="history"
+       group="clm_inparm" valid_values="" >
+TRUE implies do grid averaging.  One value for each output history file.
+<default>Default: All TRUE.</default>
+</entry>
+
+<entry id="hist_empty_htapes" type="logical" category="history"
+       group="clm_inparm" valid_values="" >
+TRUE indicates no default history fields.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="hist_fexcl1" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history file 1.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_fexcl2" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history file 2.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_fexcl3" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history file 3.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_fexcl4" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history file 4.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_fexcl5" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history file 5.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_fexcl6" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to exclude from history file 6.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_fincl1" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history file 1.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_fincl2" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history file 2.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_fincl3" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history file 3.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_fincl4" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history file 4.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_fincl5" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history file 5.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_fincl6" type="char*34(1000)" category="history"
+       group="clm_inparm" valid_values="" >
+Fields to add to history file 6.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hist_mfilt" type="integer(6)" category="history"
+       group="clm_inparm" valid_values="" >
+Per file maximum number of time samples.
+<default>Default: 30,30,30,30,30,30</default>
+</entry>
+
+<entry id="hist_ndens" type="integer(6)" category="history"
+       group="clm_inparm" valid_values="1,2" >
+Per file history output precision.
+<default>Default: 2,2,2,2,2,2</default>
+</entry>
+
+<entry id="hist_nhtfrq" type="integer(6)" category="history"
+       group="clm_inparm" valid_values="" >
+Per file history write frequency (0=monthly)
+<default>Default: 0,-24,-24,-24,-24,-24</default>
+</entry>
+
+<entry id="hist_type1d_pertape" type="char*32(6)" category="history"
+       group="clm_inparm" valid_values="" >
+Per file type1d
+<default>Default: ' ',' ',' ',' ',' ',' '</default>
+</entry>
+
+<entry id="irad" type="integer" category="radiation"
+       group="clm_inparm" valid_values="" >
+Solar radiation frequency (+ = iteration. - = hour).
+<default>Default: -1</default>
+</entry>
+
+<entry id="nrevsn" type="char*256" input_pathname="abs" category="restart"
+       group="clm_inparm" valid_values="" >
+Full pathname of master restart file for branch run.
+<default>Default: none.</default>
+</entry>
+
+<entry id="nsegspc" type="integer" category="performance"
+       group="clm_inparm" valid_values="" >
+number of segments per clump for decomposition
+<default>Default: 20</default>
+</entry>
+
+<entry id="pertlim" type="real" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+Perturbation limit when doing error growth test
+<default>Default: 0.</default>
+</entry>
+
+<entry id="rest_flag" type="logical" category="restart"
+       group="clm_inparm" valid_values="" >
+FALSE implies don't write any restart files.
+<default>Default: TRUE</default>
+</entry>
+
+<entry id="rpntpath" type="char*256" input_pathname="abs" category="restart"
+       group="clm_inparm" valid_values="" >
+Full pathname of restart pointer file.
+<default>Default: 'rpointer.lnd'</default>
+</entry>
+
+<entry id="rtm_nsteps" type="integer" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If greater than one, average rtm over rtm_nsteps time steps
+</entry>
+
+<entry id="wrtdia" type="logical" category="history"
+       group="clm_inparm" valid_values="" >
+TRUE if want output written
+<default>Default: FALSE</default>
+</entry>
+
+
+<!-- ========================================================================================  -->
+<!-- CPL7 Driver Namelist -->
+<!-- ========================================================================================  -->
+
+<!-- Control info -->
+
+<entry id="aqua_planet" type="logical"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+If true, run model in "aqua planet" mode. Only one of
+<varname>atm_adiabatic</varname>, <varname>atm_ideal_phys</varname>, or
+<varname>aqua_planet</varname> can be true.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="atm_adiabatic" type="logical"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+If true, do not run model physics, only run the dynamical core.
+Only one of
+<varname>atm_adiabatic</varname>, <varname>atm_ideal_phys</varname>, or
+<varname>aqua_planet</varname> can be true.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="atm_cdf64" type="logical"  category="history"
+       group="seq_infodata_inparm" valid_values="" >
+Use netcdf 64 bit offset, large file support.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="atm_ideal_phys" type="logical"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+If true run the idealized Held&amp;Suarez physics package.
+Only one of
+<varname>atm_adiabatic</varname>, <varname>atm_ideal_phys</varname>, or
+<varname>aqua_planet</varname> can be true.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="bfbflag" type="logical"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+bit for bit flag
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="brnch_retain_casename" type="logical"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+If true, use the pre-existing case name for a branch run.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="case_desc" type="char*256"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Case title.
+<default>Default: none.</default>
+</entry>
+
+<entry id="case_name" type="char*80"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Case identifier.  Normally used as part of the archive path name.  By
+default also used in output filenames (see
+the <varname>hfilename_spec</varname> namelist option).
+<default>Default: set by build-namelist. </default>
+</entry>
+
+<entry id="cpl_cdf64" type="logical"  category="history"
+       group="seq_infodata_inparm" valid_values="" >
+Use netcdf 64 bit offset, large file support.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="flux_albav" type="logical" category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+T => no diurnal cycle in ocn albedos.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="flux_epbal" type="char*256" category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Selects E,P,R adjustment technique.
+<default>Default: 'off'</default>
+</entry>
+
+<entry id="ice_cdf64" type="logical"  category="history"
+       group="seq_infodata_inparm" valid_values="" >
+Use netcdf 64 bit offset, large file support.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="info_debug" type="integer" category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Debug flag.
+<default>Default: 1</default>
+</entry>
+
+<entry id="lnd_cdf64" type="logical"  category="history"
+       group="seq_infodata_inparm" valid_values="" >
+Use netcdf 64 bit offset, large file support.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="logfilepostfix" type="char*80" category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Postfix for output log files.
+<default>Default: '.log'</default>
+</entry>
+
+<entry id="ocean_tight_coupling" type="logical"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Couple ocean on atm timestep.
+<default>Default: TRUE</default>
+</entry>
+
+<entry id="ocn_cdf64" type="logical"  category="history"
+       group="seq_infodata_inparm" valid_values="" >
+Use netcdf 64 bit offset, large file support.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="orb_eccen" type="real"  category="radiation"
+       group="seq_infodata_inparm" valid_values="" >
+Earth's eccentricity of orbit. (unitless: typically 0. to 0.1). Setting is
+Required if <varname>orb_iyear_ad</varname> not set.  Not used when running
+as part of CCSM.
+<default>Default: none</default>
+</entry>
+
+<entry id="orb_iyear_ad" type="integer"  category="radiation"
+       group="seq_infodata_inparm" valid_values="" >
+Year (AD) used to compute earth's orbital parameters. If not set, then use
+the values from
+the <varname>orb_eccen</varname>, <varname>orb_mvelp</varname>,
+and <varname>orb_obliq</varname> namelist parameters.  If only
+<varname>orb_iyear_ad</varname> is set, orbital parameters will be computed
+automatically (based on Berger, 1977).  If one
+of <varname>orb_eccen</varname>, <varname>orb_mvelp</varname>, or
+<varname>orb_obliq</varname> is set, all three must be set.  If all four of
+the above are set by the user, <varname>orb_iyear_ad</varname> takes
+precedence.  Setting is Required
+unless <varname>orb_eccen</varname>, <varname>orb_mvelp</varname>,
+and <varname>orb_obliq</varname> are set.  Not used when running as part of
+CCSM.
+<default>Default: 1990.</default>
+</entry>
+
+<entry id="orb_mvelp" type="real"  category="radiation"
+       group="seq_infodata_inparm" valid_values="" >
+Earth's moving vernal equinox at perihelion (degrees: 0. to 360.0).
+Setting is Required if <varname>orb_iyear_ad</varname> not set.  Not used
+when running as part of CCSM.
+<default>Default: none</default>
+</entry>
+
+<entry id="orb_obliq" type="real"  category="radiation"
+       group="seq_infodata_inparm" valid_values="" >
+Earth's orbital  angle of obliquity  (degrees: -90. to +90., typically 22. to 26.).
+Setting is Required if <varname>orb_iyear_ad</varname> not set.  Not used
+when running as part of CCSM.
+<default>Default: none</default>
+</entry>
+
+<entry id="outpathroot" type="char*256" category="history"
+       group="seq_infodata_inparm" valid_values="" >
+Root output files
+<default>Default: './'</default>
+</entry>
+
+<entry id="perpetual" type="logical"  category="time_mgr"
+       group="seq_infodata_inparm" valid_values="" >
+Set to TRUE to specify that the run will use a perpetual calendar, i.e., a
+diurnal cycle will be present for the fixed calendar day specified
+by <varname>perpetual_ymd</varname>.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="perpetual_ymd" type="integer"  category="time_mgr"
+       group="seq_infodata_inparm" valid_values="" >
+Perpetual date encoded in an integer as (year*1000 + month*100 + day).
+If <varname>aqua_planet</varname> = .true. then perpetual_ymd is ignored
+and the perpetual date is set to 321.
+<default>Default: none.</default>
+</entry>
+
+<entry id="restart_file" type="char*256" category="restart"
+       group="seq_infodata_inparm" valid_values="" >
+Restart filename.
+<default>Default: none</default>
+</entry>
+
+<entry id="restart_file_override" type="char*256" category="restart"
+       group="seq_infodata_inparm" valid_values="" >
+List of namelist variables that may be overridden on a restart run.
+<default>Default: none</default>
+</entry>
+
+<entry id="restart_pfile" type="char*256" category="restart"
+       group="seq_infodata_inparm" valid_values="" >
+Restart pointer filename.
+<default>Default: 'rpointer.drv'</default>
+</entry>
+
+<entry id="samegrid" type="logical" category="driver"
+       group="seq_infodata_inparm" valid_values="">
+are ocean and ice grids same lat/lon/size
+<default>Default: TRUE</default>
+</entry>
+
+<entry id="scmlat" type="real" category="scam"
+       group="seq_infodata_inparm" valid_values="">
+Latitude value of single column.
+<default>Default: none.</default>
+</entry>
+
+<entry id="scmlon" type="real" category="scam"
+       group="seq_infodata_inparm" valid_values="">
+Longitude value of single column.
+<default>Default: none.</default>
+</entry>
+
+<entry id="single_column" type="logical" category="scam"
+       group="seq_infodata_inparm" valid_values="">
+Set to TRUE to turn on single column mode.
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="start_type" type="char*8"  category="driver"
+       group="seq_infodata_inparm" valid_values="startup,continue,branch" >
+Run type.  'startup' is an initial run.  'continue' is a restart run.
+'branch' is a restart run in which properties of the output history files
+may be changed.
+<default>Default: 'startup'</default>
+</entry>
+
+<entry id="model_version" type="char*256"  category="history"
+       group="seq_infodata_inparm" valid_values="" >
+Model version.
+<default>Default: none.</default>
+</entry>
+
+<entry id="hostname" type="char*80"  category="history"
+       group="seq_infodata_inparm" valid_values="" >
+Name of the machine you are running the model on.
+<default>Default: none.</default>
+</entry>
+
+<entry id="username" type="char*80"  category="history"
+       group="seq_infodata_inparm" valid_values="" >
+Name of user running the model.
+<default>Default: none.</default>
+</entry>
+
+<!-- Time Manager -->
+
+<entry id="atm_cpl_dt" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Coupling interval between the atmosphere and other system components.  This
+is how frequently information can be communicated between the atmosphere
+and the surface models.
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="atm_cpl_offset" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+</entry>
+
+<entry id="calendar" type="char*80"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="NO_LEAP,GREGORIAN" >
+Calendar type "NO_LEAP" for consistent 365-days per year or "GREGORIAN" to
+include leap-years. Note that if "GREGORIAN" is selected
+leap-years will be used in the time manager, but the calculation of the
+earth's orbit still assumes 365 day years.  Valid values are "NO_LEAP" or
+"GREGORIAN".
+<default>Default: "NO_LEAP"</default>
+</entry>
+
+<entry id="end_restart" type="logical"  category="restart"
+       group="seq_timemgr_inparm" valid_values="" >
+Write restart at end of run.
+<default>Default: TRUE</default>
+</entry>
+
+<entry id="ice_cpl_dt" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="ice_cpl_offset" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+</entry>
+
+<entry id="lnd_cpl_dt" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="lnd_cpl_offset" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+</entry>
+
+<entry id="ocn_cpl_dt" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="ocn_cpl_offset" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+</entry>
+
+<entry id="ref_tod" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Reference time-of-day expressed as seconds past midnight.  Used in
+conjuction with <varname>ref_ymd</varname> to set the reference time.
+<default>Default: set to <varname>start_tod</varname>.</default>
+</entry>
+
+<entry id="ref_ymd" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Reference date encoded in an integer as (year*1000 + month*100 + day).
+Used in
+conjuction with <varname>ref_tod</varname> to set the reference time which
+is used to define a time coordinate for the output history files.  The
+convention for the unit string of a time coordinate is of the form
+"time-unit since reference-time", for example, "days since 1990-01-01
+00:00:00".  The reference-time part of this string is specified by the
+<varname>ref_ymd</varname> and <varname>ref_tod</varname> variables.
+
+<default>Default: set to <varname>start_ymd</varname>.</default>
+</entry>
+
+<entry id="restart_n" type="integer"  category="restart"
+       group="seq_timemgr_inparm" valid_values="" >
+Set the restart interval as a number of elapsed time units which are specified
+by <varname>restart_option</varname>.
+<default>Default: 1</default>
+</entry>
+
+<entry id="restart_option" type="char*8"  category="restart"
+       group="seq_timemgr_inparm" valid_values="none,nsteps,ndays,nmonths,nyears,monthly,yearly,end" >
+Set the interval between writing restart files
+using one of the options 'nsteps',
+'ndays', 'nmonths', or 'nyears', in conjuction
+with <varname>stop_n</varname> to set the number of time units.
+A convenience option allows specifying that restart files be written at the
+end of each month or at the end of each year by using the options
+'monthly' or 'yearly' respectively.  It is also possible to request that no
+restart files be written via the option 'none', or that restart files be
+written only at the end of the run via the option 'end'.
+<default>Default: 'monthly'</default>
+</entry>
+
+<entry id="start_tod" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Start time-of-day expressed as seconds past midnight.  Used in
+conjuction with <varname>start_ymd</varname> to set the start time.
+<default>Default: 0.</default>
+</entry>
+
+<entry id="start_ymd" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Start date encoded in an integer as (year*1000 + month*100 + day).
+Used in
+conjuction with <varname>start_tod</varname> to set the start date of
+the simulation.
+<default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="stop_n" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Set the length of run as a number of elapsed time units which are specified
+by <varname>stop_option</varname>.
+<default>Default: 1</default>
+</entry>
+
+<entry id="stop_option" type="char*8"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="nsteps,ndays,nmonths,nyears,date" >
+Set the length of run as an elapsed time using one of the options 'nsteps',
+'ndays', 'nmonths', or 'nyears', in conjuction
+with <varname>stop_n</varname> to set the number of elapsed time units.
+Alternatively, set the final simulation time in absolute terms by using the
+option 'date' in conjuction with <varname>stop_ymd</varname>,
+and <varname>stop_tod</varname> to specify a date and time of day at which
+the simulation should stop.
+<default>Default: 'ndays'</default>
+</entry>
+
+<entry id="stop_tod" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Stop time-of-day expressed as seconds past midnight.  Used in
+conjuction with <varname>stop_ymd</varname> to set the stop time.
+<default>Default: 0.</default>
+</entry>
+
+<entry id="stop_ymd" type="integer"  category="time_mgr"
+       group="seq_timemgr_inparm" valid_values="" >
+Stop date encoded in an integer as (year*1000 + month*100 + day).
+Used in conjuction with <varname>stop_tod</varname> to set the stop date of
+the simulation.
+<default>Default: none.</default>
+</entry>
+
+<!-- Time profiler -->
+
+<entry id="profile_barrier" type="logical"  category="performance"
+       group="prof_inparm" valid_values="" >
+Flag to turn on barriers before running a performance section.
+<default>Default: .false.</default>
+</entry>
+
+<entry id="profile_disable" type="logical"  category="performance"
+       group="prof_inparm" valid_values="" >
+Flag to turn all performance OFF or on.
+<default>Default: .true.</default>
+</entry>
+
+<entry id="profile_single_file" type="logical"  category="performance"
+       group="prof_inparm" valid_values="" >
+Flag to send output to a single file (rather than separate files per MPI task).
+<default>Default: .true.</default>
+</entry>
+
+<entry id="profile_depth_limit" type="integer"  category="performance"
+       group="prof_inparm" valid_values="" >
+integer indicating maximum number of levels of timer nesting.
+<default>Default: 99999</default>
+</entry>
+
+<entry id="profile_detail_limit" type="integer"  category="performance"
+       group="prof_inparm" valid_values="" >
+integer indicating maximum detail level to profile.
+<default>Default: 0</default>
+</entry>
+
+<entry id="profile_timer" type="integer"  category="performance"
+       group="prof_inparm" valid_values="6,7,8,9,10,11" >
+integer indicating which timer to use. As defined in gptl.inc.
+<unlist>
+<listelm>GPTLgettimeofday   = 6</listelm>
+<listelm>GPTLnanotime       = 7</listelm>
+<listelm>GPTLrtc            = 8</listelm>
+<listelm>GPTLmpiwtime       = 9</listelm>
+<listelm>GPTLclockgettime   = 10</listelm>
+<listelm>GPTLpapitime       = 11</listelm>
+</unlist>
+</entry>
+
+
+<!-- ========================================================================================  -->
+<!-- DATM7 Namelists                                                                           -->
+<!-- ========================================================================================  -->
+
+<entry id="datamode" type="char*256"  category="datm"
+       group="dshr_nml" valid_values="CLMNCEP,CAMHIST,COPYALL,CPLHIST,TN460,TEST,USER" >
+Flags physics options wrt input data.
+</entry>
+
+<entry id="domainfile" type="char*256" input_pathname="abs"  category="datm"
+       group="dshr_nml" valid_values="" >
+File containing domain info.
+</entry>
+
+<entry id="infodbug" type="integer"  category="datm"
+       group="dshr_nml" valid_values="0,1,2,3" >
+Debug level: 0=lowest, 3=highest
+</entry>
+
+<entry id="restpfile" type="char*256"  category="restart"
+       group="dshr_nml" valid_values="">
+Name of restart pointer file
+<default>Default: rpointer.atm</default>
+</entry>
+
+<entry id="restbfile" type="char*256"  category="restart"
+       group="dshr_nml" valid_values="">
+IC bundle data file (for branch runs)
+<default>Default: rpointer.atm</default>
+</entry>
+
+<entry id="restsfile" type="char*256"  category="restart"
+       group="dshr_nml" valid_values="">
+IC stream data file (for branch runs)
+<default>Default: rpointer.atm</default>
+</entry>
+
+<entry id="streams" type="char*256" category="datm"
+       group="dshr_nml" valid_values="">
+Character array of stream description file names
+</entry>
+
+<entry id="tn460_factorfn" type="char*256" category="datm"
+       group="datm_nml" valid_values="unused">
+File containing tn460 correction factors (not valid for any CLM DATM7 modes"
+</entry>
+
+<entry id="res" type="char*30" category="default_settings"
+       group="default_settings"  
+       valid_values=
+"360x720,128x256,64x128,48x96,32x64,8x16,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil">
+Horizontal resolutions
+</entry> 
+
+<entry id="mask" type="char*10" category="default_settings"
+       group="default_settings"  
+       valid_values="USGS,gx3v5,gx1v3,gx1v4,gx1v5,navy,test,tx0.1v2">
+Land mask description
+</entry> 
+
+<entry id="cycle_beg_year" type="integer" category="datm_internal"
+       group="default_settings" valid_values="">
+Beginning of year to cycle datm data through
+</entry>
+
+<entry id="cycle_end_year" type="integer" category="datm_internal"
+       group="default_settings" valid_values="">
+End of year to cycle datm data through
+</entry>
+
+<entry id="sim_year" type="integer" category="default_settings"
+       group="default_settings" valid_values="1890,2000,2100">
+Year to simulate datasets for (such as Nitrogen deposition rates etc.)
+</entry> 
+
+<entry id="source" type="char*80" category="datm_internal"
+       group="datm_internal" 
+       valid_values="CLMNCEP,CAMHIST.eul64x128_datm6.01,CLM1PT,CAMHIST.GENERIC">
+Description of data source for datm7 input data.
+</entry>
+
+</namelist_definition>

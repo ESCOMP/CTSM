@@ -77,7 +77,7 @@ while [ $still_compiling = "TRUE" ]; do
 
     echo "TCBtools.sh: call to make:" 
     echo "        ${MAKE_CMD} ${config_string}" 
-    if [ "$debug" != "YES" ]; then
+    if [ "$debug" != "YES" ] || [ "$compile_only" = "YES" ]; then
        ${MAKE_CMD} ${config_string} >> test.log 2>&1
        rc=$?
     else

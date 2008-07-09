@@ -50,7 +50,7 @@ require queryDefaultXML;
 
 # Defaults
 my $namelist = "clm_inparm";
-my $file = "$cfgdir/DefaultCLM_INPARM_Namelist.xml";
+my $file = "$cfgdir/namelist_files/namelist_defaults_clm.xml";
 my $config = "config_cache.xml";
 
 
@@ -108,14 +108,13 @@ EOF
   my %opts = ( file       => $file,
                namelist   => $namelist,
                var        => undef,
-               res        => undef,
+               hgrid      => undef,
                config     => undef,
                ccsm       => undef, 
                csmdata    => undef,
                demand     => undef,
                test       => undef,
                onlyfiles  => undef,
-               justvalues => undef,
                scpto      => undef,
                silent     => undef,
                help       => undef,
@@ -127,7 +126,7 @@ EOF
         "f|file=s"     => \$opts{'file'},
         "n|namelist=s" => \$opts{'namelist'},
         "v|var=s"      => \$opts{'var'},
-        "r|res=s"      => \$opts{'res'},
+        "r|res=s"      => \$opts{'hgrid'},
         "config=s"     => \$opts{'config'},
         "ccsm"         => \$opts{'ccsm'},
         "csmdata=s"    => \$opts{'csmdata'},
@@ -173,11 +172,14 @@ EOF
      $opts{'test'}       = 1;
   }
   my %inputopts;
-  $inputopts{file}     = $opts{file};
-  $inputopts{namelist} = $opts{namelist};
-  $inputopts{printing} = $printing;
-  $inputopts{ProgName} = $ProgName;
-  $inputopts{cmdline}  = $cmdline;
+  $inputopts{file}           = $opts{file};
+  $inputopts{empty_cfg_file} = "$cfgdir/config_files/config_definition.xml";
+  $inputopts{nldef_file}     = "$cfgdir/namelist_files/namelist_definition.xml";
+  $inputopts{namelist}       = $opts{namelist};
+  $inputopts{printing}       = $printing;
+  $inputopts{cfgdir}         = $cfgdir;
+  $inputopts{ProgName}       = $ProgName;
+  $inputopts{cmdline}        = $cmdline;
   if ( ! defined($opts{csmdata}) ) {
      $inputopts{csmdata} = "default";
   } else {
@@ -191,10 +193,10 @@ EOF
   } else {
      $inputopts{config} = $opts{config};
   }
-  if ( ! defined($opts{res}) ) {
-     $inputopts{res} = "any";
+  if ( ! defined($opts{hgrid}) ) {
+     $inputopts{hgrid} = "any";
   } else {
-     $inputopts{res} = $opts{res};
+     $inputopts{hgrid} = $opts{hgrid};
   }
 
   my $defaults_ref = &queryDefaultXML::ReadDefaultXMLFile( \%inputopts, \%settings );
@@ -218,6 +220,7 @@ EOF
      my $value   = $defaults{$var}{value};
      my $isadir  = $defaults{$var}{isdir};
      my $isafile = $defaults{$var}{isfile};
+     my $isastr  = $defaults{$var}{isstr};
      # If onlyfiles option set do NOT print if is NOT a file
      if ( defined($opts{'onlyfiles'}) && (! $isafile) ) {
         $print = undef;
@@ -254,8 +257,8 @@ EOF
            system( "scp $csmdata/$data $opts{'scpto'}/$data" )
         }
      }
-     # If a file or directory -- add quotes around the value
-     if ( (! defined($opts{'justvalues'}) ) && ($isafile || $isadir) ) {
+     # If a string
+     if ( (! defined($opts{'justvalues'}) ) && ($isastr) ) {
        $value = "\'$value\'";
      }
      if ( defined($print) ) {

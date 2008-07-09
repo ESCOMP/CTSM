@@ -57,8 +57,8 @@ case $hostname in
 
     script_template="$cfgdir/run-ibm.csh"
     ;;
-   ##blueice
-    bl* )
+   ##bluefire
+    be* )
 
     script_template="$cfgdir/run-ibm.csh"
     ;;

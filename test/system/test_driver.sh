@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on bangkok, calgary, bluevista, lightning, blueice, jaguar: 
+# usage on bangkok, calgary, breeze, bluevista, lightning, bluefire, jaguar: 
 # ./test_driver.sh
 #
 # valid arguments: 
@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_alpha30"
+seqccsm_vers="ccsm4_0_alpha33"
 conccsm_vers="ccsm3_9_beta03"
 
 hostname=`hostname`
@@ -95,9 +95,9 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##blueice
-    bl* )
-    submit_script="test_driver_blueice${cur_time}.sh"
+    ##bluefire
+    be* )
+    submit_script="test_driver_bluefire${cur_time}.sh"
 
     account_name=`grep -i "^${LOGNAME}:" /etc/project.ncar | cut -f 1 -d "," | cut -f 2 -d ":" `
     if [ ! -n "${account_name}" ]; then
@@ -112,8 +112,8 @@ cat > ./${submit_script} << EOF
 
 #BSUB -a poe                      # use LSF poe elim
 #BSUB -x                          # exclusive use of node (not_shared)
-#BSUB -n 8                        # total tasks needed
-#BSUB -R "span[ptile=32]"         # max number of tasks (MPI) per node
+#BSUB -n 16                       # total tasks needed
+#BSUB -R "span[ptile=64]"         # max number of tasks (MPI) per node
 #BSUB -o test_dr.o%J              # output filename
 #BSUB -e test_dr.o%J              # error filename
 #BSUB -q premium                  # queue
@@ -131,12 +131,12 @@ else
 fi
 
 ##omp threads
-export CLM_THREADS=4
-export CLM_RESTART_THREADS=8
+export CLM_THREADS=2
+export CLM_RESTART_THREADS=4
 
 ##mpi tasks
-export CLM_TASKS=8
-export CLM_RESTART_TASKS=4
+export CLM_TASKS=16
+export CLM_RESTART_TASKS=8
 
 export CLM_COMPSET="I"
 
@@ -146,16 +146,19 @@ export AIXTHREAD_SCOPE=S
 export MALLOCMULTIHEAP=true
 export OMP_DYNAMIC=false
 export XLSMPOPTS="stack=40000000"
-export MAKE_CMD="gmake -j 8"
+export MAKE_CMD="gmake -j 65"
 export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
-export CCSM_MACH="blueice"
+export CCSM_MACH="bluefire"
 export MACH_WORKSPACE="/ptmp"
-export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
-export DATM_DATA_DIR=/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410
+CPRNC_EXE="/contrib/newcprnc3.0/bin/newcprnc"
+newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
+/bin/cp -fp \$CPRNC_EXE \$newcprnc
+export CPRNC_EXE="\$newcprnc"
+export DATM_DATA_DIR="/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410"
 dataroot="/fs/cgd/csm"
 echo_arg=""
-input_file="tests_posttag_blueice"
+input_file="tests_pretag_bluefire"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -179,7 +182,7 @@ cat > ./${submit_script} << EOF
 
 #BSUB -a mpich_gm            #lightning requirement
 #BSUB -x                     # exclusive use of node (not_shared)
-#BSUB -n 16                  # total tasks needed
+#BSUB -n 32                  # total tasks needed
 #BSUB -o test_dr.o%J         # output filename
 #BSUB -e test_dr.o%J         # error filename
 #BSUB -q premium             # queue
@@ -201,8 +204,8 @@ export CLM_THREADS=1
 export CLM_RESTART_THREADS=2
 
 ##mpi tasks
-export CLM_TASKS=16
-export CLM_RESTART_TASKS=8
+export CLM_TASKS=32
+export CLM_RESTART_TASKS=16
 
 export CLM_COMPSET="I"
 
@@ -238,6 +241,46 @@ export DATM_DATA_DIR=/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
 input_file="tests_posttag_lightning"
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+
+    ##breeze
+    breeze | gale | gust | hail )
+    submit_script="test_driver_breeze_${cur_time}.sh"
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+interactive="YES"
+
+##omp threads
+export CLM_THREADS=2
+export CLM_RESTART_THREADS=2
+
+##mpi tasks
+export CLM_TASKS=2
+export CLM_RESTART_TASKS=1
+
+export CLM_COMPSET="I"
+
+netcdf=/contrib/netcdf-3.6.2/intel
+export INC_NETCDF=\$netcdf/include
+export LIB_NETCDF=\$netcdf/lib
+export intel=/fs/local
+export PATH=\${intel}/bin:\${PATH}
+export MAKE_CMD="gmake -j5 "
+export CFG_STRING="-fc ifort -cc icc "
+export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
+export CCSM_MACH="breeze"
+export MACH_WORKSPACE="/ptmp"
+export DATM_DATA_DIR="/fs/supers/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410"
+dataroot="/fis/cgd/cseg/csm"
+echo_arg="-e"
+input_file="tests_posttag_breeze"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -423,8 +466,8 @@ export CLM_RESTART_TASKS=1
 export CLM_COMPSET="I"
 
 export CCSM_MACH="none"
-#export INC_NETCDF=/usr/local/netcdf-3.6.1..0-p1_g95-4.0.3/include
-#export LIB_NETCDF=/usr/local/netcdf-3.6.1..0-p1_g95-4.0.3/lib
+export INC_NETCDF=/usr/local/netcdf-3.6.1..0-p1/include
+export LIB_NETCDF=/usr/local/netcdf-3.6.1..0-p1/lib
 export MAKE_CMD="make -j 4"
 #export CFG_STRING="-fc g95 -cc gcc "
 export CFG_STRING=""
@@ -665,8 +708,21 @@ case $arg1 in
     [iI]* )
     debug="NO"
     interactive="YES"
+    compile_only="NO"
     export debug
     export interactive
+    export compile_only
+    ./${submit_script}
+    exit 0
+    ;;
+
+    [cC]* )
+    debug="YES"
+    interactive="YES"
+    compile_only="YES"
+    export debug
+    export interactive
+    export compile_only
     ./${submit_script}
     exit 0
     ;;
@@ -674,16 +730,21 @@ case $arg1 in
     [dD]* )
     debug="YES"
     interactive="YES"
+    compile_only="NO"
     export debug
     export interactive
+    export compile_only
     ./${submit_script}
     exit 0
     ;;
 
     [fF]* )
     debug="NO"
+    interactive="NO"
+    compile_only="NO"
     export debug
     export interactive
+    export compile_only
     ;;
 
     "" )
@@ -699,18 +760,23 @@ case $arg1 in
 	;;
     esac
     debug="NO"
+    interactive="NO"
+    compile_only="NO"
     export debug
     export interactive
+    export compile_only
     ;;
 
     * )
     echo ""
     echo "**********************"
-    echo "usage on bangkok, bluevista, blueice, lightning, jaguar: "
+    echo "usage on bangkok, bluevista, bluefire, lightning, jaguar: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
     echo "-i    interactive usage"
+    echo "-c    compile-only usage (run configure and compile do not run clm)"
+    echo "-d    debug-only  usage (run configure and build-namelist do NOT compile or run clm)"
     echo "-f    force batch submission (avoids user prompt)"
     echo "-h    displays this help message"
     echo ""
@@ -729,8 +795,8 @@ case $hostname in
     ##bluevista
     bv* )  bsub < ${submit_script};;
 
-    ##blueice
-    bl* )  bsub < ${submit_script};;
+    ##bluefire
+    be* )  bsub < ${submit_script};;
 
     ##lightning
     ln* )  bsub < ${submit_script};;
@@ -740,6 +806,12 @@ case $hostname in
 
     ##jaguar
     jaguar* )  qsub ${submit_script};;
+
+    #default
+    * )
+    echo "no submission capability on this machine"
+    exit 0
+    ;;
 
 esac
 exit 0

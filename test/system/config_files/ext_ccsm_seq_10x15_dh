@@ -1,4 +1,4 @@
--spmd -nosmp
+-spmd -smp
 -dyn fv
 -res 10x15
 -debug

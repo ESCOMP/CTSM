@@ -1,0 +1,373 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<!--
+Values to use by default for creation of CLM model namelists.
+The element names are the same as the corresponding namelist
+variables.  Values that depend on the model configuration use
+attributes to express the dependency.  The recognized attributes
+are: RESOLUTION, defaults, mask, ic_ymd, ic_tod, sim_year and all configuration
+attributes from the config_cache.xml file (with keys converted to upper-case).
+-->
+
+<!-- Default location of {csmdata} -->
+<csmdata>/fs/cgd/csm/inputdata</csmdata>
+
+<!-- Default time step -->
+<dtime>1800</dtime>
+
+<!-- CO2 volume mixing ratio -->
+<co2_ppmv bgc="none" >355.0</co2_ppmv>
+<co2_ppmv bgc="casa" >283.1878</co2_ppmv>
+<co2_ppmv bgc="cn"   >283.1878</co2_ppmv>
+<co2_ppmv bgc="dgvm" >355.0</co2_ppmv>
+
+<!-- ================================================================== -->
+<!-- Default resolution -->
+<res>1.9x2.5</res>
+
+<!-- Default land/ocean mask type -->
+<mask>gx1v5</mask>
+
+<!-- Default simulation year -->
+<sim_year>2000</sim_year>
+
+<!-- ================================================================== -->
+<!-- The default filenames are given relative to the root directory
+     for the CLM2 data in the CCSM distribution -->
+
+<!-- Plant function types (relative to {csmdata}) -->
+<fpftcon bgc="none">lnd/clm2/pftdata/pft-physiology.c070207</fpftcon>
+<fpftcon bgc="casa">lnd/clm2/pftdata/pft-physiology.c070207</fpftcon>
+<fpftcon bgc="dgvm">lnd/clm2/pftdata/pft-physiology.c070207</fpftcon>
+<fpftcon bgc="cn"  >lnd/clm2/pftdata/pft-physiology-cn.c070601</fpftcon>
+
+<!-- Initial condition datasets (relative to {csmdata}) -->
+
+<finidat hgrid="0.47x0.63" mask="gx1v5" bgc="cn"   ic_ymd="19800101" ic_tod="0">lnd/clm2/initdata/clmi.BCN.1980-01-01.fv0.47x0.63_gx1v5.c080301.nc</finidat>
+<finidat hgrid="1.9x2.5"   mask="gx1v4" bgc="none" ic_ymd=     "101" ic_tod="0">lnd/clm2/inidata_3.1/ccsm/clmi_0000-01-01_1.9x2.5_gx1v4_c070403.nc</finidat>
+<finidat hgrid="1.9x2.5"   mask="gx1v5" bgc="none" ic_ymd=     "101" ic_tod="0">lnd/clm2/initdata/clmi.F_0000-01-01_1.9x2.5_gx1v5_c071203.nc</finidat>
+<finidat hgrid="1.9x2.5"   mask="gx1v5" bgc="none" ic_ymd=     "901" ic_tod="0">lnd/clm2/initdata/clmi.F_0000-09-01_1.9x2.5_gx1v5_c071203.nc</finidat>
+<finidat hgrid="1.9x2.5"   mask="gx1v5" bgc="cn"   ic_ymd=  "250101" ic_tod="0">lnd/clm2/inidata_3.1/ccsm/clmi_0025-01-01_1.9x2.5_gx1v5_cn_c070809.nc</finidat>
+<finidat hgrid="1.9x2.5"   mask="gx1v4" bgc="none" ic_ymd=     "901" ic_tod="0">lnd/clm2/inidata_3.1/cam/clmi_0000-09-01_1.9x2.5_gx1v4_c070309.nc</finidat>
+<finidat hgrid="1x1.25"    mask="gx1v5" bgc="none" ic_ymd="19980101" ic_tod="0">lnd/clm2/inidata_3.1/ccsm/clmi_1998-01-01_1x1.25_gx1v5_c070615.nc</finidat>
+
+<!-- Surface datasets (relative to {csmdata}) -->
+<fsurdat hgrid="360x720"   >lnd/clm2/surfdata/surfdata_360x720_070122.nc</fsurdat>
+<fsurdat hgrid="128x256"   >lnd/clm2/surfdata/surfdata_128x256_c070501.nc</fsurdat>
+<fsurdat hgrid="64x128"    >lnd/clm2/surfdata/surfdata_64x128_c070501.nc</fsurdat>
+<fsurdat hgrid="48x96"     >lnd/clm2/surfdata/surfdata_48x96_c070501.nc</fsurdat>
+<fsurdat hgrid="32x64"     >lnd/clm2/surfdata/surfdata_32x64_c070501.nc</fsurdat>
+<fsurdat hgrid="8x16"      >lnd/clm2/surfdata/surfdata_8x16_c070501.nc</fsurdat>
+
+<fsurdat hgrid="0.23x0.31" >lnd/clm2/surfdata/surfdata_0.23x0.31_c070927.nc</fsurdat>
+<fsurdat hgrid="0.47x0.63" >lnd/clm2/surfdata/surfdata_0.47x0.63_c070927.nc</fsurdat>
+<fsurdat hgrid="0.9x1.25"  >lnd/clm2/surfdata/surfdata_0.9x1.25_c070501.nc</fsurdat>
+<fsurdat hgrid="1x1.25"    >lnd/clm2/surfdata/surfdata_1x1.25_c070501.nc</fsurdat>
+<fsurdat hgrid="1.9x2.5"   >lnd/clm2/surfdata/surfdata_1.9x2.5_c070501.nc </fsurdat>
+<fsurdat hgrid="2x2.5"     >lnd/clm2/surfdata/surfdata_2x2.5_c070501.nc</fsurdat>
+<fsurdat hgrid="2.65x3.33" >lnd/clm2/surfdata/surfdata_2.65x3.33_c080208.nc</fsurdat>
+<fsurdat hgrid="4x5"       >lnd/clm2/surfdata/surfdata_4x5_c070501.nc</fsurdat>
+<fsurdat hgrid="10x15"     >lnd/clm2/surfdata/surfdata_10x15_c070501.nc</fsurdat>
+ 
+<fsurdat hgrid="5x5_amazon"         >lnd/clm2/surfdata/surfdata_5x5pt_amazon_navy_070404.nc</fsurdat>
+<fsurdat hgrid="1x1_brazil"         >lnd/clm2/surfdata/surfdata_1x1pt_brazil_navy_070404.nc</fsurdat>
+<fsurdat hgrid="1x1_tropicAtl"      >lnd/clm2/surfdata/surfdata_1x1pt_tropicAtl_test_070216.nc</fsurdat>
+<fsurdat hgrid="1x1_camdenNJ"       >lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
+<fsurdat hgrid="1x1_vancouverCAN"   >lnd/clm2/surfdata/surfdata_1x1pt_vancouver_c070831.nc</fsurdat>
+<fsurdat hgrid="1x1_mexicocityMEX"  >lnd/clm2/surfdata/surfdata_1x1pt_mexicocity_c070831.nc</fsurdat>
+<fsurdat hgrid="1x1_asphaltjungleNJ">lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
+
+<!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
+<fpftdyn hgrid="10x15"         >lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc</fpftdyn>
+<fpftdyn hgrid="1x1_tropicAtl" >lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_tropicAtl_070218.nc</fpftdyn>
+
+<!-- Grid datasets (relative to {csmdata}) -->
+<fatmgrid hgrid="360x720"   >lnd/clm2/griddata/griddata_360x720_070122.nc</fatmgrid>
+<fatmgrid hgrid="128x256"   >lnd/clm2/griddata/griddata_128x256_060829.nc</fatmgrid>
+<fatmgrid hgrid="64x128"    >lnd/clm2/griddata/griddata_64x128_060829.nc</fatmgrid>
+<fatmgrid hgrid="48x96"     >lnd/clm2/griddata/griddata_48x96_060829.nc</fatmgrid>
+<fatmgrid hgrid="32x64"     >lnd/clm2/griddata/griddata_32x64_070212.nc</fatmgrid>
+<fatmgrid hgrid="8x16"      >lnd/clm2/griddata/griddata_8x16_070212.nc</fatmgrid>
+
+<fatmgrid hgrid="0.23x0.31" >lnd/clm2/griddata/griddata_0.23x0.31_c070927.nc</fatmgrid>
+<fatmgrid hgrid="0.47x0.63" >lnd/clm2/griddata/griddata_0.47x0.63_c070918.nc</fatmgrid>
+<fatmgrid hgrid="0.9x1.25"  >lnd/clm2/griddata/griddata_0.9x1.25_070212.nc</fatmgrid>
+<fatmgrid hgrid="1x1.25"    >lnd/clm2/griddata/griddata_1x1.25_060404.nc</fatmgrid>
+<fatmgrid hgrid="1.9x2.5"   >lnd/clm2/griddata/griddata_1.9x2.5_060404.nc</fatmgrid>
+<fatmgrid hgrid="2x2.5"     >lnd/clm2/griddata/griddata_2x2.5_060502.nc</fatmgrid>
+<fatmgrid hgrid="2.65x3.33" >lnd/clm2/griddata/griddata_2.65x3.33_c080208.nc</fatmgrid>
+<fatmgrid hgrid="4x5"       >lnd/clm2/griddata/griddata_4x5_060404.nc</fatmgrid>
+<fatmgrid hgrid="10x15"     >lnd/clm2/griddata/griddata_10x15_070212.nc</fatmgrid>
+
+<fatmgrid hgrid="5x5_amazon"         >lnd/clm2/griddata/griddata_5x5pt_amazon_navy_070404.nc</fatmgrid>
+<fatmgrid hgrid="1x1_brazil"         >lnd/clm2/griddata/griddata_1x1pt_brazil_navy_070404.nc</fatmgrid>
+<fatmgrid hgrid="1x1_tropicAtl"      >lnd/clm2/griddata/griddata_1x1pt_tropicAtl_test_070218.nc</fatmgrid>
+<fatmgrid hgrid="1x1_camdenNJ"       >lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
+<fatmgrid hgrid="1x1_vancouverCAN"   >lnd/clm2/griddata/griddata_1x1pt_vancouverCAN_c071221.nc</fatmgrid>
+<fatmgrid hgrid="1x1_mexicocityMEX"  >lnd/clm2/griddata/griddata_1x1pt_mexicocityMEX_c071221.nc</fatmgrid>
+<fatmgrid hgrid="1x1_asphaltjungleNJ">lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
+
+<!-- Land topo datasets (when running land at different resolution than atm coupling) (relative to {csmdata}) -->
+<flndtopo hgrid="360x720"   mask="USGS"  >lnd/clm2/griddata/topodata_360x720_c060528.nc</flndtopo>
+<flndtopo hgrid="128x256"   mask="USGS"  >lnd/clm2/griddata/topodata_128x256_060829.nc</flndtopo>
+<flndtopo hgrid="64x128"    mask="USGS"  >lnd/clm2/griddata/topodata_64x128_060829.nc</flndtopo>
+<flndtopo hgrid="64x128"    mask="gx1v5" >lnd/clm2/griddata/topodata_64x128_gx1v5_c070927.nc</flndtopo>
+<flndtopo hgrid="48x96"     mask="USGS"  >lnd/clm2/griddata/topodata_48x96_USGS_070110.nc</flndtopo>
+<flndtopo hgrid="32x64"     mask="USGS"  >lnd/clm2/griddata/topodata_32x64_USGS_070110.nc</flndtopo>
+<flndtopo hgrid="8x16"      mask="USGS"  >lnd/clm2/griddata/topodata_8x16_USGS_070110.nc</flndtopo>
+
+<flndtopo hgrid="0.23x0.31" mask="USGS"   >lnd/clm2/griddata/topodata_0.23x0.31_USGS_c070927.nc</flndtopo>
+<flndtopo hgrid="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.23x0.31_tx0.1v2_c070928.nc</flndtopo>
+<flndtopo hgrid="0.23x0.31" mask="gx1v5"  >lnd/clm2/griddata/topodata_0.23x0.31_gx1v5_c071227.nc</flndtopo>
+<flndtopo hgrid="0.47x0.63" mask="USGS"   >lnd/clm2/griddata/topodata_0.47x0.63_USGS_c070918.nc</flndtopo>
+<flndtopo hgrid="0.47x0.63" mask="gx1v5"  >lnd/clm2/griddata/topodata_0.47x0.63_gx1v5_c071004.nc</flndtopo>
+<flndtopo hgrid="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.47x0.63_tx0.1v2_c070928.nc</flndtopo>
+<flndtopo hgrid="0.9x1.25"  mask="USGS"   >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</flndtopo>
+<flndtopo hgrid="0.9x1.25"  mask="gx1v5"  >lnd/clm2/griddata/topodata_0.9x1.25_gx1v5_c070927.nc</flndtopo>
+<flndtopo hgrid="0.9x1.25"  mask="tx0.1v2">lnd/clm2/griddata/topodata_0.9x1.25_tx0.1v2_c070928.nc</flndtopo>
+<flndtopo hgrid="1x1.25"    mask="USGS"   >lnd/clm2/griddata/topodata_1x1.25_USGS_070110.nc</flndtopo>
+<flndtopo hgrid="1.9x2.5"   mask="USGS"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</flndtopo>
+<flndtopo hgrid="2.65x3.33" mask="USGS"   >lnd/clm2/griddata/topodata_2.65x3.33_USGS_c080208.nc</flndtopo>
+<flndtopo hgrid="4x5"       mask="USGS"   >lnd/clm2/griddata/topodata_4x5_USGS_070110.nc</flndtopo>
+<flndtopo hgrid="10x15"     mask="USGS"   >lnd/clm2/griddata/topodata_10x15_USGS_070110.nc</flndtopo>
+
+<!-- Atmosphere topo datasets (when running land at different resolution than atm coupling) (relative to {csmdata}) -->
+<fatmtopo hgrid="360x720"   mask="USGS"  >lnd/clm2/griddata/topodata_360x720_c060528.nc</fatmtopo>
+<fatmtopo hgrid="128x256"   mask="USGS"  >lnd/clm2/griddata/topodata_128x256_060829.nc</fatmtopo>
+<fatmtopo hgrid="64x128"    mask="USGS"  >lnd/clm2/griddata/topodata_64x128_060829.nc</fatmtopo>
+<fatmtopo hgrid="64x128"    mask="gx1v5" >lnd/clm2/griddata/topodata_64x128_gx1v5_c070927.nc</fatmtopo>
+<fatmtopo hgrid="48x96"     mask="USGS"  >lnd/clm2/griddata/topodata_48x96_USGS_070110.nc</fatmtopo>
+<fatmtopo hgrid="32x64"     mask="USGS"  >lnd/clm2/griddata/topodata_32x64_USGS_070110.nc</fatmtopo>
+<fatmtopo hgrid="8x16"      mask="USGS"  >lnd/clm2/griddata/topodata_8x16_USGS_070110.nc</fatmtopo>
+
+<fatmtopo hgrid="0.23x0.31" mask="USGS"   >lnd/clm2/griddata/topodata_0.23x0.31_USGS_c070927.nc</fatmtopo>
+<fatmtopo hgrid="0.23x0.31" mask="gx1v5"  >lnd/clm2/griddata/topodata_0.23x0.31_gx1v5_c071227.nc</fatmtopo>
+<fatmtopo hgrid="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.23x0.31_tx0.1v2_c070928.nc</fatmtopo>
+<fatmtopo hgrid="0.47x0.63" mask="USGS"   >lnd/clm2/griddata/topodata_0.47x0.63_USGS_c070918.nc</fatmtopo>
+<fatmtopo hgrid="0.47x0.63" mask="gx1v5"  >lnd/clm2/griddata/topodata_0.47x0.63_gx1v5_c071004.nc</fatmtopo>
+<fatmtopo hgrid="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/topodata_0.47x0.63_tx0.1v2_c070928.nc</fatmtopo>
+<fatmtopo hgrid="0.9x1.25"  mask="USGS"   >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</fatmtopo>
+<fatmtopo hgrid="0.9x1.25"  mask="gx1v5"  >lnd/clm2/griddata/topodata_0.9x1.25_gx1v5_c070927.nc</fatmtopo>
+<fatmtopo hgrid="0.9x1.25"  mask="tx0.1v2">lnd/clm2/griddata/topodata_0.9x1.25_tx0.1v2_c070928.nc</fatmtopo>
+<fatmtopo hgrid="1x1.25"    mask="USGS"   >lnd/clm2/griddata/topodata_1x1.25_USGS_070110.nc</fatmtopo>
+<fatmtopo hgrid="1.9x2.5"   mask="USGS"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</fatmtopo>
+<fatmtopo hgrid="2.65x3.33" mask="USGS"   >lnd/clm2/griddata/topodata_2.65x3.33_USGS_c080208.nc</fatmtopo>
+<fatmtopo hgrid="4x5"       mask="USGS"   >lnd/clm2/griddata/topodata_4x5_USGS_070110.nc</fatmtopo>
+<flndtopo hgrid="10x15"     mask="USGS"   >lnd/clm2/griddata/topodata_10x15_USGS_070110.nc</flndtopo>
+
+<!-- Fraction datasets (relative to {csmdata}) -->
+
+<fatmlndfrc hgrid="360x720" mask="USGS"  >lnd/clm2/griddata/fracdata_360x720_070122.nc</fatmlndfrc>
+<fatmlndfrc hgrid="128x256" mask="USGS"  >lnd/clm2/griddata/fracdata_128x256_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="128x256" mask="gx1v3" >lnd/clm2/griddata/fracdata_128x256_gx1v3_060829.nc</fatmlndfrc>
+<fatmlndfrc hgrid="128x256" mask="gx1v4" >lnd/clm2/griddata/fracdata_128x256_gx1v4_060829.nc</fatmlndfrc>
+<fatmlndfrc hgrid="64x128"  mask="USGS"  >lnd/clm2/griddata/fracdata_64x128_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="64x128"  mask="gx1v3" >lnd/clm2/griddata/fracdata_64x128_gx1v3_060829.nc</fatmlndfrc>
+<fatmlndfrc hgrid="64x128"  mask="gx1v4" >lnd/clm2/griddata/fracdata_64x128_gx1v4_060829.nc</fatmlndfrc>
+<fatmlndfrc hgrid="64x128"  mask="gx1v5" >lnd/clm2/griddata/fracdata_64x128_gx1v5_c070927.nc</fatmlndfrc>
+<fatmlndfrc hgrid="64x128"  mask="gx3v5" >lnd/clm2/griddata/fracdata_64x128_gx3v5_060829.nc</fatmlndfrc>
+<fatmlndfrc hgrid="48x96"   mask="USGS"  >lnd/clm2/griddata/fracdata_48x96_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="48x96"   mask="gx3v5" >lnd/clm2/griddata/fracdata_48x96_gx3v5_060829.nc</fatmlndfrc>
+<fatmlndfrc hgrid="32x64"   mask="USGS"  >lnd/clm2/griddata/fracdata_32x64_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="8x16"    mask="USGS"  >lnd/clm2/griddata/fracdata_8x16_USGS_070110.nc</fatmlndfrc>
+
+<fatmlndfrc hgrid="0.23x0.31" mask="USGS"   >lnd/clm2/griddata/fracdata_0.23x0.31_USGS_c070927.nc</fatmlndfrc>
+<fatmlndfrc hgrid="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.23x0.31_tx0.1v2_c070928.nc</fatmlndfrc>
+<fatmlndfrc hgrid="0.23x0.31" mask="gx1v5"  >lnd/clm2/griddata/fracdata_0.23x0.31_gx1v5_c071227.nc</fatmlndfrc>
+<fatmlndfrc hgrid="0.47x0.63" mask="USGS"   >lnd/clm2/griddata/fracdata_0.47x0.63_USGS_c070918.nc</fatmlndfrc>
+<fatmlndfrc hgrid="0.47x0.63" mask="gx1v5"  >lnd/clm2/griddata/fracdata_0.47x0.63_gx1v5_c071113.nc</fatmlndfrc>
+<fatmlndfrc hgrid="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.47x0.63_tx0.1v2_c070928.nc</fatmlndfrc>
+<fatmlndfrc hgrid="0.9x1.25"  mask="USGS"   >lnd/clm2/griddata/fracdata_0.9x1.25_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="0.9x1.25"  mask="gx1v5"  >lnd/clm2/griddata/fracdata_0.9x1.25_gx1v5_c070927.nc</fatmlndfrc>
+<fatmlndfrc hgrid="0.9x1.25"  mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.9x1.25_tx0.1v2_c070928.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1.25"    mask="USGS"   >lnd/clm2/griddata/fracdata_1x1.25_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1.25"    mask="gx1v3"  >lnd/clm2/griddata/fracdata_1x1.25_gx1v3_060404.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1.25"    mask="gx1v4"  >lnd/clm2/griddata/fracdata_1x1.25_gx1v4_060711.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1.25"    mask="gx1v5"  >lnd/clm2/griddata/fracdata_1x1.25_gx1v5_070612.nc</fatmlndfrc>
+
+<fatmlndfrc hgrid="1.9x2.5"   mask="USGS"   >lnd/clm2/griddata/fracdata_1.9x2.5_USGS_061130.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1.9x2.5"   mask="gx1v3"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v3_060404.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1.9x2.5"   mask="gx1v4"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v4_060808.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1.9x2.5"   mask="gx1v5"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v5_070316.nc</fatmlndfrc>
+<fatmlndfrc hgrid="2x2.5"     mask="USGS"   >lnd/clm2/griddata/fracdata_2x2.5_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="2.65x3.33" mask="USGS"   >lnd/clm2/griddata/fracdata_2.65x3.33_USGS_c080208.nc</fatmlndfrc>
+<fatmlndfrc hgrid="4x5"       mask="USGS"   >lnd/clm2/griddata/fracdata_4x5_USGS_070110.nc</fatmlndfrc>
+<fatmlndfrc hgrid="4x5"       mask="gx3v5"  >lnd/clm2/griddata/fracdata_4x5_gx3v5_060404.nc</fatmlndfrc>
+<fatmlndfrc hgrid="10x15"     mask="USGS"   >lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc</fatmlndfrc>
+
+<fatmlndfrc hgrid="5x5_amazon"          mask="navy">lnd/clm2/griddata/fracdata_5x5pt_amazon_navy_070404.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1_brazil"          mask="navy">lnd/clm2/griddata/fracdata_1x1pt_brazil_navy_070404.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1_tropicAtl"       mask="test">lnd/clm2/griddata/fracdata_1x1pt_tropicAtl_test_070218.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1_camdenNJ"        mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1_mexicocityMEX"   mask="navy">lnd/clm2/griddata/fracdata_1x1pt_mexicocityMEX_navy_c071221.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1_vancouverCAN"    mask="navy">lnd/clm2/griddata/fracdata_1x1pt_vancouverCAN_navy_c071221.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1_asphaltjungleNJ" mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc</fatmlndfrc>
+
+<!-- Urban input datasets (relative to {rootdir/bld/urban_input/}) -->
+<furbinp  hgrid="1x1_mexicocityMEX"  >mexicocityMEX_fluxes.txt</furbinp>
+<furbinp  hgrid="1x1_vancouverCAN"   >vancouverCAN_fluxes.txt</furbinp>
+<furbinp  hgrid="1x1_camdenNJ"       >metropolis_fluxes.txt</furbinp>
+<furbinp  hgrid="1x1_asphaltjungleNJ">asphaltjungle_fluxes.txt</furbinp>
+
+<!--CN Nitrogen deposition dataset for a fixed year (relative to {csmdata}) -->
+
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_1.9x2.5_c070118.nc</fndepdat>
+<fndepdat hgrid="0.47x0.63" bgc="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_0.47x0.63_c071213.nc</fndepdat>
+<fndepdat hgrid="64x128"    bgc="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_64x128_c071221.nc</fndepdat>
+<fndepdat hgrid="48x96"     bgc="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_48x96_c060414.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_1.9x2.5_c070118.nc</fndepdat>
+<fndepdat hgrid="0.47x0.63" bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_0.47x0.63_c071213.nc</fndepdat>
+<fndepdat hgrid="64x128"    bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_64x128_c071221.nc</fndepdat>
+<fndepdat hgrid="48x96"     bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_48x96_c060414.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_1.9x2.5_c070118.nc</fndepdat>
+<fndepdat hgrid="0.47x0.63" bgc="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_0.47x0.63_c071213.nc</fndepdat>
+<fndepdat hgrid="64x128"    bgc="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_64x128_c071221.nc</fndepdat>
+<fndepdat hgrid="48x96"     bgc="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_48x96_c060414.nc</fndepdat>
+
+<!--CN Nitrogen deposition dataset for a series of years (relative to {csmdata}) -->
+
+<fndepdyn hgrid="64x128"    bgc="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_64x128_c070214.nc</fndepdyn>
+<fndepdyn hgrid="48x96"     bgc="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_48x96_c050608.nc</fndepdyn>
+<fndepdyn hgrid="1.9x2.5"   bgc="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_1.9x2.5_c070925.nc</fndepdyn>
+<fndepdyn hgrid="0.47x0.63" bgc="cn" >lnd/clm2/ndepdata/fndep_clm_1890-2100_0.47x0.63_c071213.nc</fndepdyn>
+
+<!-- River Transport Model 1/2 degree grid river routing file (relative to {csmdata}) -->
+<frivinp_rtm rtm="on">lnd/clm2/rtmdata/rdirc.05.061026</frivinp_rtm>
+
+<!-- ================================================================== -->
+<!-- Defaults for driver namelist seq_infodata_inparm                   -->
+<!-- ================================================================== -->
+
+<!-- Case name -->
+<case_name>clmrun</case_name>
+
+<!-- Orbit -->
+<orb_iyear_ad >2000</orb_iyear_ad>
+
+<!-- start-type -->
+<start_type>startup</start_type>
+
+<!-- Model Version -->
+<model_version>
+$HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01/bld/DefaultCLM_INPARM_Namelist.xml$
+</model_version>
+
+<!-- ================================================================== -->
+<!-- Defaults for driver namelist seq_timemgr_inparm                    -->
+<!-- ================================================================== -->
+
+<!-- Coupling time step -->
+<atm_cpl_dt>3600</atm_cpl_dt>
+
+<!-- Length of run -->
+<stop_option hgrid="1x1_mexicocityMEX" mask="navy" >nsteps</stop_option>
+<stop_option hgrid="1x1_vancouverCAN"  mask="navy" >nsteps</stop_option>
+<stop_option                                       >ndays</stop_option>
+
+<stop_n hgrid="1x1_mexicocityMEX" mask="navy" >159</stop_n>
+<stop_n hgrid="1x1_vancouverCAN"  mask="navy" >330</stop_n>
+<stop_n                                       >  1</stop_n>
+
+<!-- Starting date -->
+<start_ymd hgrid="1.9x2.5"           mask="gx1v4" bgc="none">     901</start_ymd>
+<start_ymd hgrid="1.9x2.5"           mask="gx1v5" bgc="cn"  >   25101</start_ymd>
+<start_ymd hgrid="1x1.25"            mask="gx1v5" bgc="none"> 1998011</start_ymd>
+<start_ymd hgrid="1x1_mexicocityMEX" mask="navy"            >19931201</start_ymd>
+<start_ymd hgrid="1x1_vancouverCAN"  mask="navy"            >19920812</start_ymd>
+<start_ymd                                                   >    101</start_ymd>
+
+<start_tod hgrid="1x1_mexicocityMEX" mask="navy"            >10800</start_tod>
+<start_tod hgrid="1x1_vancouverCAN"  mask="navy"            >72000</start_tod>
+<start_tod                                                   >   0</start_tod>
+
+<!-- Length of time for restarts -->
+<restart_option>monthly</restart_option>
+
+<!-- if should write a restart at the end of the run -->
+<end_restart >.true.</end_restart>
+
+<!-- ================================================================== -->
+<!-- Defaults for driver namelist prof_inparm                           -->
+<!-- ================================================================== -->
+
+<profile_barrier    >.false.</profile_barrier>
+<profile_disable    >.false.</profile_disable>
+<profile_single_file>.true.</profile_single_file>
+
+<!-- ================================================================== -->
+<!-- Defaults for datm namelist  --->
+<!-- ================================================================== -->
+
+<!-- Default begining year for cycling over input atmospheric data -->
+<cycle_beg_year hgrid="1x1_mexicocityMEX" >1993</cycle_beg_year>
+<cycle_beg_year hgrid="1x1_vancouverCAN"  >1992</cycle_beg_year>
+<cycle_beg_year                           >2003</cycle_beg_year>
+
+<!-- Default ending year for cycling over input atmospheric data -->
+<cycle_end_year hgrid="1x1_mexicocityMEX" >1993</cycle_end_year>
+<cycle_end_year hgrid="1x1_vancouverCAN"  >1992</cycle_end_year>
+<cycle_end_year                           >2004</cycle_end_year>
+
+<!-- Verbosity level-->
+<infodbug>2</infodbug>
+
+<!-- Data source -->
+<source >CLMNCEP</source>
+
+<!-- Output Streams text filename -->
+<outstreams>datm7.streams.txt</outstreams>
+
+<!-- Streams template files -->
+<streamstemplate >datm.streams.template.xml</streamstemplate>
+
+<!-- Domain files, grids and land mask -->
+<domainfile hgrid="1x1_brazil"          mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-brazil_navy.080214.nc</domainfile>
+<domainfile hgrid="1x1_camdenNJ"        mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.071220.nc</domainfile>
+<domainfile hgrid="1x1_asphaltjungleNJ" mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.071220.nc</domainfile>
+<domainfile hgrid="1x1_mexicocityMEX"   mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-mexicocityMEX_navy.080115.nc</domainfile>
+<domainfile hgrid="1x1_vancouverCAN"    mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-vancouverCAN_navy.080115.nc</domainfile>
+<domainfile hgrid="1x1_tropicAtl"       mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-tropicAtl_test.071010.nc</domainfile>
+<domainfile hgrid="5x5_amazon"          mask="navy" >atm/datm7/domain.clm/domain.lnd.5x5pt-amazon_navy.071010.nc</domainfile>
+<domainfile hgrid="360x720"             mask="USGS" >atm/datm7/domain.clm/domain.lnd.360x720pt-global_USGS.071010.nc</domainfile>
+
+<domainfile hgrid="8x16"        mask="USGS" >atm/datm7/domain.clm/domain.lnd.T5_USGS.071010.nc</domainfile>
+<domainfile hgrid="32x64"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T21_USGS.071010.nc</domainfile>
+<domainfile hgrid="48x96"       mask="gx3v5">atm/datm7/domain.lnd.T31_gx3v5.051111.nc</domainfile>
+<domainfile hgrid="48x96"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T31_USGS.071010.nc</domainfile>
+<domainfile hgrid="64x128"      mask="USGS" >atm/datm7/domain.clm/domain.lnd.T42_USGS.071010.nc</domainfile>
+<domainfile hgrid="64x128"      mask="gx3v5">atm/datm7/domain.clm/domain.lnd.T42_gx3v5.071010.nc</domainfile>
+<domainfile hgrid="64x128"      mask="gx1v3">atm/datm7/domain.lnd.T42_gx1v3.051111.nc</domainfile>
+<domainfile hgrid="64x128"      mask="gx1v4">atm/datm7/domain.lnd.T42_gx1v4.060403.nc</domainfile>
+<domainfile hgrid="64x128"      mask="gx1v5">atm/datm7/domain.lnd.T42_gx1v5.070831.nc</domainfile>
+<domainfile hgrid="128x256"     mask="USGS" >atm/datm7/domain.clm/domain.lnd.T85_USGS.071010.nc</domainfile>
+<domainfile hgrid="128x256"     mask="gx1v3">atm/datm7/domain.lnd.T85_gx1v3.051111.nc</domainfile>
+<domainfile hgrid="128x256"     mask="gx1v4">atm/datm7/domain.lnd.T85_gx1v4.060403.nc</domainfile>
+
+<domainfile hgrid="0.23x0.31"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.23x0.31_tx0.1v2_070929.nc</domainfile>
+<domainfile hgrid="0.23x0.31"   mask="gx1v5"  >atm/datm7/domain.lnd.0.23x0.31_gx1v5.071227.nc</domainfile>
+<domainfile hgrid="0.47x0.63"   mask="gx1v5"  >atm/datm7/domain.lnd.fv0.47x0.63_gx1v5.071005.nc</domainfile>
+<domainfile hgrid="0.47x0.63"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.47x0.63_tx0.1v2_070929.nc</domainfile>
+<domainfile hgrid="0.9x1.25"    mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv0.9x1.25_USGS.071010.nc</domainfile>
+<domainfile hgrid="0.9x1.25"    mask="gx1v5"  >atm/datm7/domain.lnd.0.9x1.25_gx1v5.070831.nc</domainfile>
+<domainfile hgrid="0.9x1.25"    mask="tx0.1v2">atm/datm7/domain.lnd.fv0.9x1.25_tx0.1v2_070928.nc</domainfile>
+<domainfile hgrid="1x1.25"      mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv1x1.25_USGS.071010.nc</domainfile>
+<domainfile hgrid="1x1.25"      mask="gx1v3"  >atm/datm7/domain.clm/domain.lnd.fv1x1.25_gx1v3.071010.nc</domainfile>
+<domainfile hgrid="1x1.25"      mask="gx1v4"  >atm/datm7/domain.clm/domain.lnd.fv1x1.25_gx1v4.071010.nc</domainfile>
+<domainfile hgrid="1x1.25"      mask="gx1v5"  >atm/datm7/domain.clm/domain.lnd.fv1x1.25_gx1v5.071010.nc</domainfile>
+<domainfile hgrid="1.9x2.5"     mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv1.9x2.5_USGS.071010.nc</domainfile>
+<domainfile hgrid="1.9x2.5"     mask="gx1v3"  >atm/datm7/domain.clm/domain.lnd.fv1.9x2.5_gx1v3.071010.nc</domainfile>
+<domainfile hgrid="1.9x2.5"     mask="gx1v4"  >atm/datm7/domain.lnd.1.9x2.5_gx1v4.060810.nc</domainfile>
+<domainfile hgrid="1.9x2.5"     mask="gx1v5"  >atm/datm7/domain.lnd.1.9x2.5_gx1v5.070102.nc</domainfile>
+<domainfile hgrid="2x2.5"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2x2.5_USGS.071010.nc</domainfile>
+<domainfile hgrid="2.65x3.33"   mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2.65x3.33_USGS.080529.nc</domainfile>
+<domainfile hgrid="4x5"         mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv4x5_USGS.071010.nc</domainfile>
+<domainfile hgrid="4x5"         mask="gx3v5"  >atm/datm7/domain.lnd.4x5_gx3v5.060404.nc</domainfile>
+<domainfile hgrid="10x15"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv10x15_USGS.071010.nc</domainfile>
+
+<tn460_factorfn>unused </tn460_factorfn>
+
+<restpfile>rpointer.atm</restpfile>
+
+</namelist_defaults>

@@ -153,31 +153,31 @@ blG74 TBL.sh 17p_sc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test -100  ar
 smH74 TSM.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test -1100 arb_ic
 blH74 TBL.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test -100  arb_ic
 
-smH11 TSM.sh 17p_cnnsc_dh clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
-erH11 TER.sh 17p_cnnsc_dh clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 10+38 arb_ic
-brH11 TBR.sh 17p_cnnsc_dh clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 24+24 arb_ic
-blH11 TBL.sh 17p_cnnsc_dh clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
+smH11 TSM.sh 17p_cnnsc_dh clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
+erH11 TER.sh 17p_cnnsc_dh clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 10+38 arb_ic
+brH11 TBR.sh 17p_cnnsc_dh clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 24+24 arb_ic
+blH11 TBL.sh 17p_cnnsc_dh clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
 
 cbH12 TCB.sh 17p_cnnsc_dm
 
-smH12 TSM.sh 17p_cnnsc_dm clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
-erH12 TER.sh 17p_cnnsc_dm clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 10+38 arb_ic
-brH12 TBR.sh 17p_cnnsc_dm clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 24+24 arb_ic
-blH12 TBL.sh 17p_cnnsc_dm clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
+smH12 TSM.sh 17p_cnnsc_dm clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
+erH12 TER.sh 17p_cnnsc_dm clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 10+38 arb_ic
+brH12 TBR.sh 17p_cnnsc_dm clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 24+24 arb_ic
+blH12 TBL.sh 17p_cnnsc_dm clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
 
-smH13 TSM.sh 17p_cnnsc_do clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
-erH13 TER.sh 17p_cnnsc_do clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 10+38 arb_ic
-brH13 TBR.sh 17p_cnnsc_do clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 24+24 arb_ic
-blH13 TBL.sh 17p_cnnsc_do clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
+smH13 TSM.sh 17p_cnnsc_do clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
+erH13 TER.sh 17p_cnnsc_do clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 10+38 arb_ic
+brH13 TBR.sh 17p_cnnsc_do clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 24+24 arb_ic
+blH13 TBL.sh 17p_cnnsc_do clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 48    arb_ic
 
-smH15 TSM.sh 17p_cnnsc_h clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48 arb_ic
-smH16 TSM.sh 17p_cnnsc_m clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48 arb_ic
-smH17 TSM.sh 17p_cnnsc_o clm_std 19980101:MONTHLY:1800 48x96 gx3v5@1890 48 arb_ic
+smH15 TSM.sh 17p_cnnsc_h clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 48 arb_ic
+smH16 TSM.sh 17p_cnnsc_m clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 48 arb_ic
+smH17 TSM.sh 17p_cnnsc_o clm_ndepdyn 19980101:MONTHLY:1800 48x96 gx3v5@1890 48 arb_ic
 
-smH51 TSM.sh 17p_cnnsc_dh clm_std 19980115:MONTHLY:1800 10x15 USGS@1890 48    arb_ic
-erH51 TER.sh 17p_cnnsc_dh clm_std 19980115:MONTHLY:1800 10x15 USGS@1890 10+38 arb_ic
-brH51 TBR.sh 17p_cnnsc_dh clm_std 19980115:MONTHLY:1800 10x15 USGS@1890 24+24 arb_ic
-blH51 TBL.sh 17p_cnnsc_dh clm_std 19980115:MONTHLY:1800 10x15 USGS@1890 48    arb_ic
+smH51 TSM.sh 17p_cnnsc_dh clm_std std 19980115:MONTHLY:1800 10x15 USGS@1890 48    arb_ic
+erH51 TER.sh 17p_cnnsc_dh clm_std std 19980115:MONTHLY:1800 10x15 USGS@1890 10+38 arb_ic
+brH51 TBR.sh 17p_cnnsc_dh clm_std std 19980115:MONTHLY:1800 10x15 USGS@1890 24+24 arb_ic
+blH51 TBL.sh 17p_cnnsc_dh clm_std std 19980115:MONTHLY:1800 10x15 USGS@1890 48    arb_ic
 
 smH52 TSM.sh 17p_cnnsc_dm clm_std 19980115:MONTHLY:1800 10x15 USGS@1890 48    arb_ic
 erH52 TER.sh 17p_cnnsc_dm clm_std 19980115:MONTHLY:1800 10x15 USGS@1890 10+38 arb_ic
@@ -331,8 +331,11 @@ smM14 TSMncl_tools.sh ndepregrid
 sm921 TSMext_ccsmseq_cam.sh ext_ccsm_seq_4x5_dh   ext_ccsm_seq_cam 48
 bl921 TSMext_ccsmseq_cam.sh ext_ccsm_seq_4x5_dh   ext_ccsm_seq_cam 48
 
-sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dm ext_ccsm_seq_cam 48
-bl952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dm ext_ccsm_seq_cam 48
+sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48
+bl952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48
+
+sm961 TSMext_ccsmseq_cam.sh ext_ccsm_seq_1.9x2.5_dh   ext_ccsm_seq_cam 48
+bl961 TSMext_ccsmseq_cam.sh ext_ccsm_seq_1.9x2.5_dh   ext_ccsm_seq_cam 48
 
 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3
 bl984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3

@@ -67,14 +67,14 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to temp file ^^^^^^^^^^^^^^^^^^^
 
     ;;
-   ##blueice
-    bl* )
+   ##bluefire
+    be* )
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to temp file vvvvvvvvvvvvvvvvvvv
-## 8 32-way tasks -- this MUST be in sync with the tasks/threads in the test_driver.sh script
+## 16 tasks -- this MUST be in sync with the tasks/threads in the test_driver.sh script
 ## this is also setup to be consistent with the compset specified in test_driver.sh
 cat > ${CLM_TESTDIR}/${test_name}/pes.tmp << EOF
 set ntasks_atm =  1; set nthrds_atm = 1
-set ntasks_lnd =  4; set nthrds_lnd = 8
+set ntasks_lnd = 12; set nthrds_lnd = 1
 set ntasks_ice =  1; set nthrds_ice = 1
 set ntasks_ocn =  1; set nthrds_ocn = 1
 set ntasks_cpl =  1; set nthrds_cpl = 1

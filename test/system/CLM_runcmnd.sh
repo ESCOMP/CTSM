@@ -136,8 +136,8 @@ case $hostname in
     fi ;;
 
 
-    ##blueice
-    bl* )
+    ##bluefire
+    be* )
     ##search config options file for parallelization info; default on aix is hybrid
     if grep -ic NOSPMD ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
 	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
@@ -173,10 +173,10 @@ case $hostname in
 
 	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
             ##mpi only
-	    cmnd="env LSB_PJL_TASK_GEOMETRY=${geo_string} mpirun.lsf "
+	    cmnd="env LSB_PJL_TASK_GEOMETRY=${geo_string} TARGET_CPU_LIST="-1" mpirun.lsf /usr/local/bin/launch"
 	else
             ##hybrid
-	    cmnd="env LSB_PJL_TASK_GEOMETRY=${geo_string} OMP_NUM_THREADS=${CLM_THREADS} mpirun.lsf "
+	    cmnd="env LSB_PJL_TASK_GEOMETRY=${geo_string} TARGET_CPU_RANGE="-1" OMP_NUM_THREADS=${CLM_THREADS} mpirun.lsf /usr/local/bin/hybrid_launch"
 	fi
     fi ;;
 
@@ -198,13 +198,13 @@ case $hostname in
     else
         if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
             ##mpi only
-            cmnd="mpirun -np ${CLM_TASKS} "
+            cmnd="mpiexec -np ${CLM_TASKS} "
         elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
             ##hybrid
-            cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -np ${CLM_TASKS} "
+            cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpiexec -np ${CLM_TASKS} "
         else
             ##mpi only
-            cmnd="mpirun -np ${CLM_TASKS} "
+            cmnd="mpiexec -np ${CLM_TASKS} "
         fi
     fi ;;
 
@@ -238,6 +238,11 @@ case $hostname in
     ##aluminum
     aluminum* )
     cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -np ${CLM_TASKS} "
+    ;;
+
+    ##breeze
+    breeze | gale | gust | hail )
+    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
     ;;
 
     * ) 

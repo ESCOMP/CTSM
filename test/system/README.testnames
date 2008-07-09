@@ -13,9 +13,9 @@ n is the configuration type:
 6 -- mkgriddata
 7 -- mksurfdata
 8 -- interpinic
-9 -- External Sequential CCSM CAM
-0 -- External CCSM concurrent
-A -- Standard Sequential CCSM mode
+9 -- External Sequential CCSM CAM - remove ?
+0 -- External CCSM concurrent - remove ?
+A -- Standard Sequential CCSM mode 
 B -- Test run script
 C -- ccsm_seq URBAN_SOLAR
 D -- ccsm_seq Pergro

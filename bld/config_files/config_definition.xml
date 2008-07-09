@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet type="text/xsl" href="config_definition.xsl" ?>
+
+<config_definition>
+
+<entry id="ad_spinup" valid_values="on,off" value="off">
+Toggle to turn on ad_spinup
+</entry>
+<entry id="bgc" valid_values="none,cn,casa,dgvm" value="none">
+CLM BGC mode
+</entry>
+<entry id="clm_bld" value=".">
+CLM build directory; contains .o and .mod files.
+</entry>
+<entry id="clm_exedir" value=".">
+Directory where CLM executable will be created.
+</entry>
+<entry id="clm_root" value="">
+Root directory of CLM source distribution.
+</entry>
+<entry id="usr_src" value="" list="1">
+User source directories to prepend to the filepath.  Multiple directories
+are specified as a comma separated list with no embedded white space.
+</entry>
+<entry id="pergro" valid_values="0,1" value="0">
+Modifications that allow perturbation growth testing: 0=off, 1=on.
+</entry>
+<entry id="clm_exe" value="clm">
+Name of CLM executable.
+</entry>
+<entry id="cppdefs" value="">
+User specified CPP defines to append to Makefile defaults.
+</entry>
+<entry id="cc" value="">
+User specified C compiler overrides Makefile default (linux only).
+</entry>
+<entry id="cflags" value="">
+User specified C compiler options to append to Makefile defaults.
+</entry>
+<entry id="fc" value="">
+User specified Fortran compiler overrides Makefile default.
+</entry>
+<entry id="debug" valid_values="0,1" value="0">
+Switch to enable debugging options for Fortran compiler: 0=off, 1=on.
+</entry>
+<entry id="dust" valid_values="on,off" value="off">
+Toggle to turn on dust module
+</entry>
+<entry id="exit_spinup" valid_values="on,off" value="off">
+Toggle to turn exit spinup
+</entry>
+<entry id="fflags" value="">
+User specified Fortran compiler flags to append to Makefile defaults.
+</entry>
+<entry id="fopt" value="">
+User specified Fortran optimization flags to override Makefile defaults.
+</entry>
+<entry id="linker" value="">
+User specified linker.  Overrides the Makefile default $(FC).
+</entry>
+<entry id="ldflags" value="">
+User specified load options to append to Makefile defaults.
+</entry>
+<entry id="spmd" valid_values="0,1" value="">
+Switch to enable or disable building SPMD version of CLM: 0=off, 1=on.
+</entry>
+<entry id="smp" valid_values="0,1" value="">
+Switch to enable or disable building SMP version (OPENMP) of CLM: 0=off, 1=on.
+</entry>
+<entry id="nc_inc" value="">
+Directory containing NetCDF include files.
+</entry>
+<entry id="nc_lib" value="">
+Directory containing NetCDF library.
+</entry>
+<entry id="nc_mod" value="">
+Directory containing NetCDF module files.
+</entry>
+<entry id="lapack_libdir" value="">
+Directory containing LAPACK library.
+</entry>
+<entry id="esmf_libdir" value="">
+Directory containing ESMF library (for linking to external ESMF).
+</entry>
+<entry id="maxpft"  value="4">
+Maximum numbr of pfts per gridcell
+</entry>
+<entry id="mpi_inc" value="">
+Directory containing MPI include files.
+</entry>
+<entry id="mpi_lib" value="">
+Directory containing MPI library.
+</entry>
+<entry id="mpi_lib_name" value="">
+Name of MPI library.
+</entry>
+<entry id="mode" valid_values="ccsm_seq,ext_ccsm_seq,ext_ccsm_con" value="ccsm_seq">
+CLM coupling mode
+</entry>
+<entry id="pergro" valid_values="on,off" value="off">
+Toggle to turn on perturbation error growth test
+</entry>
+<entry id="progsslt" valid_values="on,off" value="off">
+Toggle to turn on prognostic sea salt 
+</entry>
+<entry id="rtm" valid_values="on,off" value="off">
+Toggle to turn on river runoff module
+</entry>
+<entry id="supln" valid_values="on,off" value="off">
+Toggle to turn on CN suplemental nitrnogen
+</entry>
+<entry id="target_os" value="">
+OS for which CLM is being built.  The value is the name returned by the "uname -s"
+command on the target platform.  This parameter is to allow cross-compilation.
+</entry>
+<entry id="voc" valid_values="on,off" value="off">
+Toggle to turn on voc module
+</entry>
+
+</config_definition>

@@ -85,7 +85,7 @@ while [ $still_compiling = "TRUE" ]; do
 
     echo "TCBext_ccsmseq_cam.sh: call to make:" 
     echo "        ${MAKE_CMD}" 
-    if [ "$debug" != "YES" ]; then
+    if [ "$debug" != "YES" ] || [ "$compile_only" = "YES" ]; then
        ${MAKE_CMD} >> test.log 2>&1
        rc=$?
     else

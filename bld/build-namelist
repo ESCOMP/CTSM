@@ -3,17 +3,30 @@
 #
 # build-namelist
 #
-# This script builds the namelists for a CLM sequential CCSM simulation.
+# This script builds the namelists for CLM
 #
-#-----------------------------------------------------------------------------------------------
+# The simplest use of build-namelist is to execute it from the build directory where configure
+# was run.  By default it will use the config_cache.xml file that was written by configure to
+# determine the build time properties of the executable, and will write the files that contain 
+# the output namelists in that same directory.  But if multiple runs are to made using the
+# same executable, successive invocations of build-namelist will overwrite previously generated
+# namelist files.  So generally the best strategy is to invoke build-namelist from the run
+# directory and use the -config option to provide the filepath of the config_cache.xml file.
+#
+#
+# Date        Contributor      Modification
+# -------------------------------------------------------------------------------------------
+# 2009-01-20  Vertenstein      Original version
+#--------------------------------------------------------------------------------------------
 
 use strict;
 #use warnings;
 #use diagnostics;
 
 use Cwd;
-use Getopt::Long;
 use English;
+use Getopt::Long;
+use IO::File;
 #-----------------------------------------------------------------------------------------------
 
 sub usage {
@@ -21,64 +34,64 @@ sub usage {
 SYNOPSIS
      build-namelist [options]
 OPTIONS
-     -cam_config "file"      Read the CAM config cache file (rather than the CLM version) to get
-                             build-time configuration information. 
-                             (Default -- not used.)
-     -cam_hist_case "caseid" Use the input CAM simulation caseid to build a streams file with that case id.
-                             (Default -- not used).
-     -case "name"            Case identifier up to 32 characters
-     -clm_cfg "dir"          Directory containing CLM configuration scripts.
-     -clm_demand "list"      List of variables to require on clm namelist besides the usuals.
-     -config "file"          Read the given config cache file to get the configuration
-                             of the CLM executable.  Default: config_cache.xml.
-     -csmdata "dir"          Head directory location of CCSM input data.
-                             Can also be set by using the CSMDATA environment variable.
-     -cycle_beg_year "year"  The begining year to cycle input datasets over.
-     -cycle_end_year "year"  The ending year to cycle input datasets over.
-     -cycle_init_year "year" The simulation year that will correspond to the data 
-                             for cycle_beg_year.
-     -d "directory"          Output directory name of resulant namelists.  
-                             Default: ./
-     -datm_data_dir "path"   Directory path to the datm data
-                             (only used when mode=ccsm_seq)
-     -datm_domain "file"     File name of domain file for datm data matching resolution data resolution.
-                             (only used when mode=ccsm_seq)
-     -datm_dom_dir "path"    Directory path to the datm_domain file.
-                             (only used when mode=ccsm_seq)
-     -help [or -h]           Print usage to STDOUT.
-     -ignore_ic_date         Ignore the date on the initial condition files (ic_ymd and ic_tod) 
-                             when determining what input initial condition file to use.
-     -ignore_ic_year         Ignore just the year part of the date on the initial condition files (ic_ymd and ic_tod) 
-                             when determining what input initial condition file to use.
-     -infile "file"          Specify a namelist file to read values from.
-     -lnd_res "Resolution"   Horizontal resolution of fine mesh for land 
-                             (if different than resolution coupling to atmosphere)
-     -mask "land-mask"       Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
-     -namelist "namelist"    Specify namelist settings using FORTRAN namelist syntax, e.g.,
-                              -namelist "&clm_inparm hist_dov2xy=.true. /"
-     -res "Resolution"       Horizontal resolution (default, 64x128, 1.9x2.5, 1x1_brazil etc.)
-     -runlength "length"     Length of simulation (e.g. default, 10d, 5s, 2y)
-                             (Corresponding to: default, 10 days, 5 steps, or 2 years)
-                             classifiers (d=days, s=steps, y=years)
-     -s                      Turns on silent mode - only fatal messages issued.
-     -sim_year year          Year to simulate for input datasets (i.e. 1890, 2000, etc.)
-     -source "source"        Source data to use for datm (for ccsm_seq mode)
-     -start_type "type"      Type of simulation (arb_ic, startup, continue, or branch)
-     -test                   Enable checking that initial and boundary datasets exist on local filesystem.
-     -use_case "case"        Specify a use case which will provide default values.
-     -v n                    Set verbosity to level n.  1 (default), 2 or 3.
+     -case "name"             Case identifier up to 32 characters
+     -clm_demand "list"       List of variables to require on clm namelist besides the usuals.
+     -config "filepath"       Read the given CICE configuration cache file. Default: "config_cache_cice.xml".
+     -csmdata "dir"           Root directory of CCSM input data.
+                              Can also be set by using the CSMDATA environment variable.
+     -cycle_beg_year  "year"  The begining year to cycle input datasets over.
+                              (ONLY used when mode=ccsm_seq)
+     -cycle_end_year  "year"  The ending year to cycle input datasets over.
+                              (ONLY used when mode=ccsm_seq)
+     -cycle_init_year "year"  The simulation year that will correspond to the data for cycle_beg_year.
+                              (ONLY used when mode=ccsm_seq)
+     -d "directory"           Directory where output namelist file will be written
+                              Default: current working directory.
+     -datm_data_dir "path"    Directory path to the datm data
+                              (ONLY used when mode=ccsm_seq)
+     -datm_domain "file"      File name of domain file for datm data matching resolution data resolution.
+                              (only used when mode=ccsm_seq)
+     -datm_dom_dir "path"     Directory path to the datm_domain file.
+                              (ONLY used when mode=ccsm_seq)
+     -help [or -h]            Print usage to STDOUT.
+     -ignore_ic_date          Ignore the date on the initial condition files (ic_ymd and ic_tod) 
+                              when determining what input initial condition file to use.
+     -ignore_ic_year          Ignore just the year part of the date on the initial condition files (ic_ymd and ic_tod) 
+                              when determining what input initial condition file to use.
+     -infile "filepath"       Specify a file containing namelists to read values from.
+     -lnd_res "resolution"    Horizontal resolution of fine mesh for land 
+                              (if different than resolution coupling to atmosphere)
+                              Use nlatxnlon for spectral grids;  dlatxdlon for fv grids 
+			      (dlat and dlon are the grid cell size in degrees for latitude and longitude).
+     -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
+     -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
+                              a string containing FORTRAN namelist syntax, e.g.,
+                                 -namelist "&clm_inparm dt=1800 /"
+     -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
+                              dlatxdlon for fv grids (dlat and dlon are the grid cell size
+    			      in degrees for latitude and longitude respectively)
+     -runlength "length"      Length of simulation (e.g. default, 10d, 5s, 2y)
+                              (Corresponding to: default, 10 days, 5 steps, or 2 years)
+                              classifiers (d=days, s=steps, y=years)
+                              (ONLY used when mode=ccsm_seq)
+     -s                       Turns on silent mode - only fatal messages issued.
+     -sim_year "year"         Year to simulate for input datasets (i.e. 1890, 2000, etc.)
+                              (ONLY used when mode=ccsm_seq)
+     -source "source"         Source data to use for datm (for ccsm_seq mode)
+     -start_type "type"       Type of simulation (arb_ic, startup, continue, or branch)
+                              (ONLY used when mode=ccsm_seq)
+     -test                    Enable checking that input datasets exist on local filesystem.
+     -verbose                 Turn on verbose echoing of informational messages.
+     -use_case "case"         Specify a use case which will provide default values.
+     -version [or -v]         Echo the SVN tag name used to check out this CLM distribution.
+
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
-      1. interactive prompting,
-      2. namelist values set by specific command-line options, e.g., -case -start_type and -ignore_ic_date,
-      3. values set on the command-line using the -namelist option,
-      4. values read from the file specified by -infile,
-      5. values specified by the -use_case option,
-      6. values from defaults files in the CLM configuration
-         script directory.
-
-      Use the "drv_in" 'virtual namelist' to have build-namelist decide which namelist
-      to put driver control information in.
+      0. values set from a use-case scenario, e.g., -use_case
+      1. namelist values set by specific command-line options, i.e., -d 
+      2. values set on the command-line using the -namelist option,
+      3. values read from the file specified by -infile,
+      4. values from the namelist defaults file.
 EOF
 }
 
@@ -94,6 +107,7 @@ my $ProgDir = $1;                      # name of directory containing this scrip
 my $cmdline = "@ARGV";                 # Command line arguments to script
 my $cwd = getcwd();                    # current working directory
 my $cfgdir;                            # absolute pathname of directory that contains this script
+my $nm = "ProgName::";                 # name to use if script dies
 if ($ProgDir) { 
     $cfgdir = absolute_path($ProgDir);
 } else {
@@ -105,72 +119,60 @@ my $outdirname = "$cwd";                  # Default name of output directory nam
 
 #-----------------------------------------------------------------------------------------------
 
-# Parse command-line options.
+# Process command-line options.
+
 my %opts = ( config          => $cfg_cache,
-             cam_config      => undef,
-             cam_hist_case   => undef,
-             datm_data_dir   => undef,
-             datm_domain     => undef,
-             datm_dom_dir    => undef,
-             cfgdir          => $cfgdir,
-	     help            => 0,
-	     interactive     => 0,
-	     dir             => $outdirname,
-             lnd_RESOLUTION  => "default",
-             mask            => "default",
-             RESOLUTION      => "default",
-             sim_year        => "default",
+	     csmdata         => undef,
              cycle_beg_year  => "default",
              cycle_end_year  => "default",
              cycle_init_year => "default",
-             csmdata         => "default",
-             version         => "default",
-             runlength       => "default",
-             clm_demand      => undef,
-	     ignore_ic_date  => undef,
-	     ignore_ic_year  => undef,
-             source          => "default",
+	     help            => 0,
+	     dir             => $outdirname,
+             sim_year        => "default",
+	     res             => "default",
+	     lnd_res         => "default",
 	     silent          => 0,
+             source          => "default",
+             mask            => "default",
 	     test            => 0,
-	     use_case        => undef,
 	    );
 
 GetOptions(
-    "clm_cfg=s"                 => \$opts{'clm_cfg'},
     "case=s"                    => \$opts{'case'},
-    "config=s"                  => \$opts{'config'},
-    "cam_config=s"              => \$opts{'cam_config'},
-    "cam_hist_case=s"           => \$opts{'cam_hist_case'},
-    "datm_data_dir=s"           => \$opts{'datm_data_dir'},
-    "datm_domain=s"             => \$opts{'datm_domain'},
-    "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
     "clm_demand=s"              => \$opts{'clm_demand'},
+    "config=s"                  => \$opts{'config'},
     "csmdata=s"                 => \$opts{'csmdata'},
     "cycle_beg_year=s"          => \$opts{'cycle_beg_year'},
     "cycle_end_year=s"          => \$opts{'cycle_end_year'},
     "cycle_init_year=s"         => \$opts{'cycle_init_year'},
+    "datm_data_dir=s"           => \$opts{'datm_data_dir'},
+    "datm_domain=s"             => \$opts{'datm_domain'},
+    "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
+    "d|d=s"                     => \$opts{'dir'},
     "h|help"                    => \$opts{'help'},
-    "i|interactive"             => \$opts{'interactive'},
-    "infile=s"                  => \$opts{'infile'},
-    "namelist=s"                => \$opts{'namelist'},
-    "mask=s"                    => \$opts{'mask'},
-    "lnd_res=s"                 => \$opts{'lnd_RESOLUTION'},
-    "d|dir=s"                   => \$opts{'dir'},
-    "start_type=s"              => \$opts{'start_type'},
+    "lnd_res=s"                 => \$opts{'lnd_res'},
     "ignore_ic_date"            => \$opts{'ignore_ic_date'},
     "ignore_ic_year"            => \$opts{'ignore_ic_year'},
-    "res=s"                     => \$opts{'RESOLUTION'},
+    "infile=s"                  => \$opts{'infile'},
+    "mask=s"                    => \$opts{'mask'},
+    "namelist=s"                => \$opts{'namelist'},
+    "res=s"                     => \$opts{'res'},
+    "runlength=s"               => \$opts{'runlength'},
     "s|silent"                  => \$opts{'silent'},
     "sim_year=s"                => \$opts{'sim_year'},
+    "start_type=s"              => \$opts{'start_type'},
     "source=s"                  => \$opts{'source'},
-    "runlength=s"               => \$opts{'runlength'},
     "test"                      => \$opts{'test'},
     "use_case=s"                => \$opts{'use_case'},
-    "v|verbose=s"               => \$opts{'verbose'},
+    "v|verbose"                 => \$opts{'verbose'},
+    "version"                   => \$opts{'version'},
 )  or usage();
 
 # Give usage message.
 usage() if $opts{'help'};
+
+# Echo version info.
+version($cfgdir) if $opts{'version'};    
 
 # Check for unparsed arguments
 if (@ARGV) {
@@ -181,63 +183,838 @@ if (@ARGV) {
 # Define print levels:
 # 0 - only issue fatal error messages
 # 1 - only informs what files are created (default)
-# 2 - echo verbosely
-$opts{'printlev'} = 1;
-if ($opts{'silent'}) { $opts{'printlev'} = 0; }
-if ($opts{'verbose'}>=2) { $opts{'printlev'} = $opts{'verbose'}; }
-
-# End of line
+# 2 - verbose
+my $print = 1;
+if ($opts{'silent'})  { $print = 0; }
+if ($opts{'verbose'}) { $print = 2; }
 my $eol = "\n";
-if ($opts{'interactive'}) { $eol = "\n\n"; }
-$opts{'eol'} = $eol;
+
+if ($print>=2) { print "Setting CLM configuration script directory to $cfgdir$eol"; }
+
+# Check that configuration cache file exists.
+(-f $opts{'config'})  or  die <<"EOF";
+** $ProgName - Cannot find configuration cache file: \"$opts{'config'}\" **
+EOF
+
+if ($print>=2) { print "Using CLM configuration cache file $opts{'config'}$eol"; }
+
+
+# Add the location of the use case defaults files to the options hash
+$opts{'use_case_dir'} = "$cfgdir/namelist_files/use_cases";
+
+# Validate some of the commandline option values.
+validate_options("commandline", \%opts);
 
 #-----------------------------------------------------------------------------------------------
+# Make sure we can find required perl modules, definition, and defaults files.
+# Look for them under the directory that contains the configure script.
 
-if ($opts{'printlev'}>2) {
-  print "Setting CLM configuration script directory to $cfgdir$eol";
-}
+# The root directory for the input data files must be specified.
+
+# The XML::Lite module is required to parse the XML files.
+(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/XML/Lite.pm")  or  die <<"EOF";
+** $ProgName - Cannot find perl module \"XML/Lite.pm\" in directory 
+    \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
+EOF
+
+# The Build::Config module provides utilities to access the configuration information
+# in the config_cache.xml file
+(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/Build/Config.pm")  or  die <<"EOF";
+** $ProgName - Cannot find perl module \"Build/Config.pm\" in directory 
+    \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
+EOF
+
+# The namelist definition file contains entries for all namelist variables that
+# can be output by build-namelist.
+my $nl_definition_file = "$cfgdir/namelist_files/namelist_definition.xml";
+(-f "$nl_definition_file")  or  die <<"EOF";
+** $ProgName - Cannot find namelist definition file \"$nl_definition_file\" **
+EOF
+if ($print>=2) { print "Using namelist definition file $nl_definition_file$eol"; }
+
+# The Build::NamelistDefinition module provides utilities to validate that the output
+# namelists are consistent with the namelist definition file
+(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
+** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory 
+    \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
+EOF
+
+# The namelist defaults file contains default values for all required namelist variables.
+my $nl_defaults_file = "$cfgdir/namelist_files/namelist_defaults_clm.xml";
+(-f "$nl_defaults_file")  or  die <<"EOF";
+** $ProgName - Cannot find namelist defaults file \"$nl_defaults_file\" **
+EOF
+if ($print>=2) { print "Using namelist defaults file $nl_defaults_file$eol"; }
+
+# The Build::NamelistDefaults module provides a utility to obtain default values of namelist
+# variables based on finding a best fit with the attributes specified in the defaults file.
+(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/Build/NamelistDefaults.pm")  or  die <<"EOF";
+** $ProgName - Cannot find perl module \"Build/NamelistDefaults.pm\" in directory 
+    \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
+EOF
+
+# The Build::Namelist module provides utilities to parse input namelists, to query and modify
+# namelists, and to write output namelists.
+(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/Build/Namelist.pm")  or  die <<"EOF";
+** $ProgName - Cannot find perl module \"Build/Namelist.pm\" in directory 
+    \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
+EOF
 
 #-----------------------------------------------------------------------------------------------
-# Make sure we can find required perl modules and configuration files.
-# Add $cfgdir to the list of paths that Perl searches for modules
-my @dirs = ( $cfgdir, "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib",
-             "$cfgdir/../../../../models/utils/perl5lib",
-           );
-
+# Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
+my @dirs = ( $cfgdir, "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib");
 unshift @INC, @dirs;
-
 require XML::Lite;
 require Build::Config;
+require Build::NamelistDefinition;
+require Build::NamelistDefaults;
+require Build::Namelist;
 require Streams::Template;
+#-----------------------------------------------------------------------------------------------
 
-my $result = eval "require SeqCCSM_namelist";
-if ( ! defined($result) ) {
-   die <<"EOF";
-** Cannot process perl module \"SeqCCSM_namelist.pm\" with directories: @dirs **
+# Create a configuration object from the CLM config_cache.xml file. 
+my $cfg = Build::Config->new($opts{'config'});
+
+# Create a namelist definition object.  This object provides a method for verifying that the
+# output namelist variables are in the definition file, and are output in the correct
+# namelist groups.
+my $definition = Build::NamelistDefinition->new($nl_definition_file);
+
+# Create a namelist defaults object.  This object provides default values for variables
+# contained in the input defaults file.  The configuration object provides attribute
+# values that are relevent for the CLM executable for which the namelist is being produced.
+my $defaults = Build::NamelistDefaults->new($nl_defaults_file, $cfg);
+
+# Create an empty namelist object.  Add values to it in order of precedence.
+my $nl = Build::Namelist->new();
+
+# Check that the CCSM inputdata root directory has been specified.  This must be
+# a local or nfs mounted directory.
+my $inputdata_rootdir = undef;
+if (defined($opts{'csmdata'})) {
+    $inputdata_rootdir = $opts{'csmdata'};
+}
+elsif (defined $ENV{'CSMDATA'}) {
+    $inputdata_rootdir = $ENV{'CSMDATA'};
+}
+else {
+    die "$ProgName - ERROR: CCSM inputdata root directory must be specified by either -csmdata argument\n" .
+	" or by the CSMDATA environment variable. :";
+}
+
+if ($opts{'test'}) {
+    (-d $inputdata_rootdir)  or  die <<"EOF";
+** $ProgName - CCSM inputdata root is not a directory: \"$inputdata_rootdir\" **
 EOF
 }
 
-require SeqCCSM_namelist;
+if ($print>=2) { print "CCSM inputdata root directory: $inputdata_rootdir$eol"; }
+#-----------------------------------------------------------------------------------------------
+
+# Some regular expressions...
+###my $TRUE  = qr/\.true\./i;
+###my $FALSE = qr/\.false\./i;
+# **N.B.** the use of qr// for precompiling regexps isn't supported until perl 5.005.
+my $TRUE  = '\.true\.';
+my $FALSE = '\.false\.';
+
+#-----------------------------------------------------------------------------------------------
+
+# Process the user input in order of precedence.  At each point we'll only add new
+# values to the namelist and not overwrite previously specified specified values which
+# have higher precedence.
+
+# Process the -use_case arg.
+
+if (defined $opts{'use_case'}) {
+
+    # The use case definition is contained in an xml file with the same format as the defaults file.
+    # Create a new NamelistDefaults object.
+    my $uc_defaults = Build::NamelistDefaults->new("$opts{'use_case_dir'}/$opts{'use_case'}.xml", $cfg);
+
+    # Loop over the variables specified in the use case.
+    # Add each one to the namelist.
+    my @vars = $uc_defaults->get_variable_names();
+    foreach my $var (@vars) {
+	my $val = $uc_defaults->get_value($var);
+
+        print "adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
+
+	if ($val) {
+	    add_default($nl, $var, 'val'=>$val);
+	}
+	else {
+	    die "$ProgName - ERROR: No default value found for variable $var in '-use_case' $opts{'use_case'}.\n $@";
+	}
+    }
+}
+
+# Process the commandline args that provide specific namelist values.
+
+# Process the -namelist arg.
+
+if (defined $opts{'namelist'}) {
+    # Parse commandline namelist
+    my $nl_arg = Build::Namelist->new($opts{'namelist'});
+
+    # Validate input namelist -- trap exceptions
+    my $nl_arg_valid;
+    eval { $nl_arg_valid = $definition->validate($nl_arg); };
+    if ($@) {
+	die "$ProgName - ERROR: Invalid namelist variable in commandline arg '-namelist'.\n $@";
+    }
+
+    # Merge input values into namelist.  Previously specified values have higher precedence
+    # and are not overwritten.
+    $nl->merge_nl($nl_arg_valid);
+}
+
+# Process the -infile arg.
+
+if (defined $opts{'infile'}) {
+    # Parse namelist input from a file
+    my $nl_infile = Build::Namelist->new($opts{'infile'});
+
+    # Validate input namelist -- trap exceptions
+    my $nl_infile_valid;
+    eval { $nl_infile_valid = $definition->validate($nl_infile); };
+    if ($@) {
+	die "$ProgName - ERROR: Invalid namelist variable in '-infile' $opts{'infile'}.\n $@";
+    }
+
+    # Merge input values into namelist.  Previously specified values have higher precedence
+    # and are not overwritten.
+    $nl->merge_nl($nl_infile_valid);
+}
+
+
+#-----------------------------------------------------------------------------------------------
+
+my $val;
+
+# Determine mode from config file
+
+my $mode = $cfg->get('mode');
+if ($print>=2) { print "CLM mode is $mode $eol"; }
+
+# Obtain default values for the following build-namelist input arguments
+
+my $val;
+my $res;
+my $group;
+my $var;
+
+$var = "res";
+if ( $opts{$var} ne "default" ) {
+    $val = $opts{$var};
+} else {
+    $val= $defaults->get_value($var);
+}
+$res = $val;
+if ($print>=2) { print "CLM atm resolution is $res $eol"; }
+$opts{$var} = $val;
+$val = &quote_string( $res );
+$group = $definition->get_group_name($var);
+$nl->set_variable_value($group, $var, $val);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+
+$var = "mask";
+if ( $opts{$var} ne "default" ) {
+    $val = $opts{$var};
+} else {
+    $val = $defaults->get_value($var);
+}
+my $mask = $val;
+$opts{'mask'} = $mask;
+$val = &quote_string( $val );
+$group = $definition->get_group_name($var);
+$nl->set_variable_value($group, $var, $val);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+if ($print>=2) { print "CLM land mask is $mask $eol"; }
+
+my $var = "sim_year";
+if ( $opts{$var} ne "default" ) {
+    $val = $opts{$var};
+} else {
+    $val = $defaults->get_value($var);
+} 
+my $sim_year = $val;
+$opts{$var}  = $val;
+$group = $definition->get_group_name($var);
+$nl->set_variable_value($group, $var, $val );
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var is NOT valid. Valid values are: @valid_values\n";
+}
+if ($print>=2) { print "CLM sim_year is $sim_year $eol"; }
+
+my $lnd_res;
+if ($opts{'lnd_res'} eq "default") { 
+    $lnd_res = $res;
+} else {
+    $lnd_res = $opts{'lnd_res'};
+}
+if ($print>=2) { print "CLM land resolution is $lnd_res $eol"; }
+$opts{'lnd_res'} = $lnd_res;
+my $var = "res";
+my $val = &quote_string( $res );
+my $group = $definition->get_group_name($var);
+$nl->set_variable_value($group, $var, $val);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm lnd_res has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+
+# Add default values for required namelist variables that have not been previously set.
+# This is done either by using the namelist default object, or directly with inline logic.
+
+#######################################
+# namelist group: seq_infodata_inparm #
+#######################################
+
+# Case name
+if (defined $opts{'case'}) {
+    add_default($nl, 'case_name', 'val'=>$opts{'case'});
+} else {
+    add_default($nl, 'case_name');
+}
+
+# Run type - note that arb_ic implies that the run is startup
+# Note that arb_ic for the start_type will force finidat to be empty regardless
+# of the default settings in the namelist_defaults_clm.xml file
+my $var = "start_type";
+if (defined $opts{$var}) { 
+    if ($opts{$var} eq "arb_ic") {
+	add_default($nl, $var, 'val'=>'startup'); 
+    } else {
+	add_default($nl, $var, 'val'=>$opts{$var}); 
+    }
+} else {
+    add_default($nl, $var );
+}
+my $start_type = $nl->get_value($var);
+
+add_default($nl, 'outpathroot', 'val'=>$opts{'dir'}."/"); 
+
+# Orbit
+# If orbital parameters have not been specified then set default orbital year.
+# If NOT all of obliq, eccen and mvelp are specified -- return an error.
+
+if (not defined $nl->get_value('orb_obliq') and
+    not defined $nl->get_value('orb_eccen') and
+    not defined $nl->get_value('orb_mvelp')     ) {
+      add_default($nl, 'orb_iyear_ad');
+} else {
+   if (not defined $nl->get_value('orb_obliq') or
+       not defined $nl->get_value('orb_eccen') or
+       not defined $nl->get_value('orb_mvelp')     ) {
+      die "$nm when setting orbit, ALL of orb_obliq, orb_eccen, AND orb_mvelp MUST be set\n";
+   }
+}
+
+add_default($nl, 'model_version' );
+add_default($nl, 'hostname', 'val'=>`hostname` );
+add_default($nl, 'username', 'val'=>$ENV{'LOGNAME'} );
+
+if ( $start_type =~ /branch/ ) {
+   if ( not defined $nl->get_value('restart_file') ) {
+      die "$nm restart_file MUST be set when start_type equals branch\n";
+   }
+}
+
+# Only one of these can be set to .true.
+if (defined $nl->get_value('atm_adiabatic')     or
+    defined $nl->get_value('aqua_planet')       or
+    defined $nl->get_value('atm_ideal_physics') ) {
+       my $atm_adiabatic     = $nl->get_value('atm_adiabatic');
+       my $atm_ideal_physics = $nl->get_value('atm_ideal_physics');
+       my $aqua_planet       = $nl->get_value('aqua_planet');
+       my $t = 0;
+       if ( defined( $atm_adiabatic ) ) { 
+           if ( $atm_adiabatic     =~ /$TRUE/i ) { $t++; }
+       }
+       if ( defined( $aqua_planet) ) { 
+           if ( $aqua_planet       =~ /$TRUE/i ) { $t++; }
+       }
+       if ( defined( $atm_ideal_physics) ) { 
+           if ( $atm_ideal_physics =~ /$TRUE/i ) { $t++; }
+       }
+       if ( $t > 1 ) {
+          die "$nm only one of atm_adiabatic, atm_ideal_phys and aqua_planet" . 
+              " can be set to true.\n";
+       }
+}
+
+######################################
+# namelist group: seq_timemgr_inparm #
+######################################
+
+# Length of simulation
+if ( defined $opts{'runlength'} ) {
+    if ( $opts{'runlength'} =~ /^([1-9][0-9]*)([sdy])$/ ) {
+	my %options = ( s=>"nsteps", d=>"ndays", y=>"nyears" );
+	add_default($nl, "stop_n"     , 'val'=>$1 );
+	add_default($nl, "stop_option", 'val'=>$options{$2} );
+    } else {
+	die "$ProgName ERROR:: bad input to runlength option\n";
+    }
+} else {
+    add_default($nl, 'stop_option');
+    unless (defined $nl->get_value('stop_ymd')) { 
+	add_default($nl, 'stop_n', 'hgrid'=>$lnd_res, 'mask'=>$mask); 
+    }
+}
+
+# Restart interval
+add_default($nl, 'restart_option');
+
+# Write restart file at end
+add_default($nl, 'end_restart');
+
+# Start date
+add_default($nl, 'start_ymd', 'hgrid'=>$lnd_res, 'mask'=>$mask);
+
+# Start tod
+add_default($nl, 'start_tod', 'hgrid'=>$lnd_res, 'mask'=>$mask);
+
+# Coupling interval
+add_default($nl, 'atm_cpl_dt');
+
+##############################
+# namelist group: clm_inparm #
+##############################
+
+add_default($nl, 'dtime');
+
+# Initial conditions
+# The initial date is an attribute in the defaults file which should be matched unless
+# the user explicitly requests to ignore the initial date via the -ignore_ic_date option, 
+# or just ignore the year of the initial date via the -ignore_ic_year option.
+if ($opts{'start_type'} eq "arb_ic") {
+   if (not defined $nl->get_value('finidat')) {
+      add_default($nl, 'finidat', 'val'=>"' '", 'no_abspath'=>1);
+   } elsif ( $val !~/^[' "]+$/ ) {
+      die "$ProgName ERROR:: start_type is set to arb_ic and YET finidat is also defined.\n";
+   }
+} else {
+    if (not defined $nl->get_value('finidat')) {
+       my $ic_date = $nl->get_value('start_ymd');
+       my $nofail = 1;
+       if ( $start_type =~ /startup/ ) { $nofail = 0; }
+       if ($opts{'ignore_ic_date'}) {
+	   add_default($nl, 'finidat', 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+                       'nofail'=>$nofail);
+       } elsif ($opts{'ignore_ic_year'}) {
+	   add_default($nl, 'finidat', 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+                       'ic_md'=>$ic_date, 'nofail'=>$nofail);
+       } else {
+	   add_default($nl, 'finidat', 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+                       'ic_ymd'=>$ic_date, 'nofail'=>$nofail);
+       }
+       if (not defined $nl->get_value('finidat')) {
+          add_default($nl, 'finidat', 'val'=>"' '", 'no_abspath'=>1);
+       }
+    }
+    if ($start_type =~ /startup/ && (not defined $nl->get_value('finidat')) ) {
+       die "$ProgName ERROR:: finidat NOT defined and start_type is startup.\n";
+    }
+}
+
+if ( $start_type =~ /branch/ ) {
+   if (not defined $nl->get_value('nrevsn')) {
+      die "$ProgName ERROR:: nrevsn is required for a branch type.\n";
+   }
+}
+
+add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res);
+add_default($nl, 'fatmlndfrc', 'hgrid'=>$res, 'mask'=>$mask);
+
+if ($res ne $lnd_res) {
+    add_default($nl, 'flndtopo'  , 'hgrid'=>$lnd_res, 'mask'=>$mask );
+    add_default($nl, 'fatmtopo'  , 'hgrid'=>$res,     'mask'=>$mask );
+}
+
+add_default($nl, 'fatmgrid'  , 'hgrid'=>$res );
+
+
+add_default($nl, 'fpftcon');
+
+
+add_default($nl, 'co2_ppmv');
+#add_default($nl, 'co2_type',     'val'=> 'constant');
+#add_default($nl, 'wrtdia',       'val'=> '.false.');
+add_default($nl, 'hist_crtinic', 'val'=> 'NONE');
+
+#
+# Optional variables or variables only turned on for specific settings
+#
+
+
+# If River Transport Model turned on
+my $rtm = $cfg->get('rtm');
+if ( $rtm eq "on" ) {
+   add_default($nl, 'frivinp_rtm');
+}
+add_default($nl, "furbinp",  'hgrid'=>$lnd_res, 'set_abspath'=>"$cfgdir/urban_input", 
+            'nofail'=>1 );
+#
+# Deal with options that the user has said are required...
+#
+if ( defined($opts{'clm_demand'}) ) {
+    my @demandlist = split( ",", $opts{'clm_demand'} );
+    my %settings = {};
+    $settings{'hgrid'}       = $res;
+    $settings{'sim_year'}    = $sim_year;
+    $settings{'mask'}        = $mask;
+    foreach my $item ( @demandlist ) {
+	add_default($nl, $item, %settings );
+    }
+}
+
+#
+# If CN mode -- get Nitrogen deposition file if available AND fndepdyn NOT set
+#
+my $bgc = $cfg->get('bgc');
+if ( ($bgc eq "cn") && not defined $nl->get_value('fndepdyn') ) {
+   add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'nofail'=>1 );
+}
+ 
+###############################
+# namelist group: prof_inparm #
+###############################
+
+if ($mode eq "ccsm_seq") {
+  add_default($nl, 'profile_barrier');
+  add_default($nl, 'profile_disable');
+  add_default($nl, 'profile_single_file');
+}
+ 
+##############################
+# namelist group: datm_dshr  #
+##############################
+
+if ($mode eq "ccsm_seq") {
+
+    add_default($nl, 'datamode', 'val'=>'CLMNCEP' );
+    add_default($nl, 'infodbug');
+    if (defined $nl->get_value('restpfile')) {
+       die "$ProgName ERROR:: can NOT set restpfile as archiving script depends on filename.\n";
+    } else {
+       add_default($nl, 'restpfile');
+    }
+    if ( $start_type =~ /branch/ ) {
+       if (not defined $nl->get_value('restsfile')) {
+          die "$ProgName ERROR:: restsfile is required for a branch type.\n";
+       }
+       if (not defined $nl->get_value('restbfile')) {
+          die "$ProgName ERROR:: restbfile is required for a branch type.\n";
+       }
+    }
+    add_default($nl, 'domainfile', 'hgrid'=>$res, 'mask'=>$mask); 
+    #
+    # Set streams text file
+    #
+    
+    my %cycleopts = ('mask'=>$mask,'hgrid'=>$lnd_res);
+    my $init_year;
+    my $beg_year;
+    my $end_year;
+    
+    # Note that init_year is the model start year from the driver namelist
+    if ( $opts{'cycle_init_year'} eq "default" ) {
+	my $start_ymd = $nl->get_value('start_ymd');
+	$init_year = int( $start_ymd / 10000 );
+    } else {
+	$init_year = $opts{'cycle_init_year'}; 
+    }
+    if ( $opts{'cycle_beg_year'} eq "default" ) {
+	$beg_year= $defaults->get_value('cycle_beg_year', \%cycleopts);
+    } else {
+	$beg_year = $opts{'cycle_beg_year'}; 
+    }
+    if ( $opts{'cycle_end_year'} eq "default" ) {
+	$end_year= $defaults->get_value('cycle_end_year', \%cycleopts);
+    } else {
+	$end_year = $opts{'cycle_end_year'}; 
+    }
+    if ( $beg_year > $end_year ) {
+	print "\n\ncycle_beg_year=$beg_year cycle_end_year=$end_year\n";
+	die "$ProgName ERROR:: cycle_beg_year greater than cycle_end_year\n";
+    }
+    
+    my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' );
+    add_default($nl, 'streams', 'val' => "$outstreams $init_year $beg_year $end_year");
+    
+    # Determine options for reading the stream template file (datm.streams.template.xml)
+    my %inputopts;
+    if ( $opts{'silent'} ) {
+	$inputopts{'printing'} = 0;
+    } else {
+	$inputopts{'printing'} = 1;
+    }
+    if ( $opts{'source'} eq "default" ) {
+	$inputopts{'datasource'}  = $defaults->get_value( 'source' );
+    } else {
+	$inputopts{'datasource'}  = $opts{'source'};
+    }
+    my $var = "source";
+    my $source = $inputopts{'datasource'};
+    my $val = &quote_string( $source );
+    my $group = $definition->get_group_name( $var );
+    $nl->set_variable_value($group, $var, $val );
+    if (  ! $definition->is_valid_value( $var, $val ) ) {
+       my @valid_values   = $definition->get_valid_values( $var );
+       die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+    }
+
+    $inputopts{'ProgName'} = $ProgName;
+    $inputopts{'ProgDir'}  = "$cfgdir";
+    if ( $source !~ /CLM1PT/ ) {
+	$inputopts{'res'}     = "";
+    } else {
+	$inputopts{'res'} = $opts{'res'};
+    }
+    $inputopts{'yearfirst'}  = $beg_year;
+    $inputopts{'yearlast'}   = $end_year;
+    if ( defined($opts{'datm_data_dir'}) ) {
+	$inputopts{'filepath'} = $opts{'datm_data_dir'};
+    } else {
+	if ( $source !~ /CAMHIST.eul64x128_datm6.01/ && $source !~ /CLM1PT/ ) {
+	    die "$ProgName ERROR:: Need to specify datm_data_dir directory of where " .
+		" datm data is for datasource=$source.\n";
+	}
+	$inputopts{'filepath'}   = "";
+    }
+    if ( ! defined($opts{'datm_dom_dir'} ) ) {
+	$inputopts{'domainpath'} = "";
+	if ( $source =~ /CAMHIST.GENERIC/ ) {
+	    die "$ProgName ERROR:: Need to specify datm_dom_dir directory of where " .
+		" datm domain data is for datasource=$source.\n";
+	}
+    } else {
+	$inputopts{'domainpath'} = $opts{'datm_dom_dir'};
+    }
+    if ( ! defined($opts{'datm_domain'}) ) {
+	$inputopts{'domain'} = "";
+	if ( $source =~ /CAMHIST.GENERIC/ ) {
+	    die "$ProgName ERROR:: Need to specify datm_domain name of domain file " .
+		" for datasource=$source.\n";
+	}
+    } else {
+	$inputopts{'domain'} = $opts{'datm_domain'};
+    }
+    $inputopts{'cmdline'}   = $cmdline;
+    $inputopts{'csmdata'}   = $inputdata_rootdir;
+    $inputopts{'filenames'} = "";
+    $inputopts{'case'}      = "";
+    
+    # Read the streams template file
+    my $streams = Streams::Template->new( \%inputopts );
+    my $template = $defaults->get_value( 'streamstemplate' );
+    $streams->Read( "$cfgdir/namelist_files/$template" );
+    
+    if ( $opts{'test'} ) {
+	$streams->TestFilesExist( "data" );
+	$streams->TestFilesExist( "domain" );
+    }
+    $streams->Write( $outstreams );
+}
+
+##############################
+# namelist group: datm_in    #
+##############################
+
+if ($mode eq "ccsm_seq") {
+    add_default($nl, 'tn460_factorfn');
+}
+
+
+#-----------------------------------------------------------------------------------------------
+# Validate that the entire resultant namelist is valid
+#
+$definition->validate($nl);
+
+
+#-----------------------------------------------------------------------------------------------
+# Write output files
+
+my $note = "Comment:\n" . 
+           "This namelist was created using the following command-line:\n" .
+           "    $cfgdir/$ProgName $cmdline\n" .
+           "For help on options use: $cfgdir/$ProgName -help";
+
+# CLM component
+my @groups = qw(clm_inparm);
+my $outfile = "$opts{'dir'}/lnd_in";
+$nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+if ($print>=2) { print "Writing clm namelist to $outfile $eol"; }
+
+if ($mode eq "ccsm_seq") {
+    # Driver
+    @groups = qw(seq_infodata_inparm seq_timemgr_inparm prof_inparm);
+    $outfile = "$opts{'dir'}/drv_in";
+    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+    if ($print>=2) { print "Writing driver namelist to $outfile $eol"; }
+    
+    # DATM7 component
+    @groups = qw(dshr_nml);
+    $outfile = "$opts{'dir'}/datm_dshr_in";
+    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+    if ($print>=2) { print "Writing datm7_dshr namelist to $outfile $eol"; }
+
+    @groups = qw(datm_nml);
+    $outfile = "$opts{'dir'}/datm_in";
+    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+    if ($print>=2) { print "Writing datm7_nml namelist to $outfile $eol"; }
+}
+    
+# END OF MAIN SCRIPT
+#===============================================================================================
+
+sub add_default {
+
+# Add a value for the specified variable to the specified namelist object.  The variables
+# already in the object have the higher precedence, so if the specified variable is already
+# defined in the object then don't overwrite it, just return.
+#
+# This method checks the definition file and adds the variable to the correct
+# namelist group.
+#
+# The value can be provided by using the optional argument key 'val' in the
+# calling list.  Otherwise a default value is obtained from the namelist
+# defaults object.  If no default value is found this method throws an exception
+# unless the 'nofail' option is set true.
+#
+# Example 1: Specify the default value $val for the namelist variable $var in namelist
+#            object $nl:
+#
+#  add_default($nl, $var, 'val'=>$val)
+#
+# Example 2: Add a default for variable $var if an appropriate value is found.  Otherwise
+#            don't add the variable
+#
+#  add_default($nl, $var, 'nofail'=>1)
+#
+#
+# ***** N.B. ***** This routine assumes the following variables are in package main::
+#  $definition        -- the namelist definition object
+#  $defaults          -- the namelist defaults object
+#  $inputdata_rootdir -- CCSM inputdata root directory
+
+    my $nl = shift;     # namelist object
+    my $var = shift;    # name of namelist variable
+    my %opts = @_;      # options
+
+    # Query the definition to find which group the variable belongs to.  Exit if not found.
+    my $group = $definition->get_group_name($var);
+    unless ($group) {
+	my $fname = $definition->get_file_name();
+	die "$ProgName - ERROR: variable \"$var\" not found in namelist definition file $fname.\n";
+    }
+
+    # check whether the variable has a value in the namelist object -- if so then skip to end
+    my $val = $nl->get_variable_value($group, $var);
+    if (! defined $val) {
+
+       # Look for a specified value in the options hash
+
+       if (defined $opts{'val'}) {
+	   $val = $opts{'val'};
+       }
+       # or else get a value from namelist defaults object.
+       # Note that if the 'val' key isn't in the hash, then just pass anything else
+       # in %opts to the get_value method to be used as attributes that are matched
+       # when looking for default values.
+       else {
+	   $val = $defaults->get_value($var, \%opts);
+
+           # Truncate model_version appropriately
+   
+           if ( $var eq "model_version" ) {
+               $val =~ /(URL: https:\/\/[a-zA-Z0-9._-]+\/)([a-zA-Z0-9\/._-]+)(\/bld\/.+)/;
+               $val = $2;
+           }
+       }
+
+       # if no value is found then exit w/ error (unless 'nofail' option set)
+       unless ($val) {
+	   unless ($opts{'nofail'}) {
+	       die "$ProgName - No default value found for $var.\n" . 
+                   "            Are defaults provided for this resolution and land mask?\n";
+	   }
+	   else {
+	       return;
+	   }
+       }
+
+       # query the definition to find out if the variable is an input pathname
+       my $is_input_pathname = $definition->is_input_pathname($var);
+
+       # The default values for input pathnames are relative.  If the namelist
+       # variable is defined to be an absolute pathname, then prepend
+       # the CCSM inputdata root directory.
+       if (not defined $opts{'no_abspath'}) {
+	   if (defined $opts{'set_abspath'}) {
+	       $val = set_abs_filepath($val, $opts{'set_abspath'});
+	   } else {
+	       if ($is_input_pathname eq 'abs') {
+		   $val = set_abs_filepath($val, $inputdata_rootdir);
+	       }
+	   }
+       }
+
+       # query the definition to find out if the variable takes a string value.
+       # The returned string length will be >0 if $var is a string, and 0 if not.
+       my $str_len = $definition->get_str_len($var);
+
+       # If the variable is a string, then add quotes if they're missing
+       if ($str_len > 0) {
+	   $val = quote_string($val);
+       }
+
+       # set the value in the namelist
+       $nl->set_variable_value($group, $var, $val);
+    }
+
+}
 
 #-----------------------------------------------------------------------------------------------
 
 
-# Command-line option processing:
-
-$opts{'cfgdir'}       = $cfgdir;
-$opts{'cmdline'}      = $cmdline;
-$opts{'ProgName'}     = $ProgName;
-$opts{'use_case_dir'} = "$cfgdir/use_cases";
-
-# Validate specified option values.
-
-validate_options("command line", \%opts);
-
-my $nl = SeqCCSM_namelist->new( \%opts );
-
-$nl->build;            # Build the model namelist
-
 #-----------------------------------------------------------------------------------------------
+
+sub set_abs_filepath {
+
+# check whether the input filepath is an absolute path, and if it isn't then
+# prepend a root directory
+
+    my ($filepath, $rootdir) = @_;
+
+    # strip any leading/trailing whitespace
+    $filepath =~ s/^\s+//;
+    $filepath =~ s/\s+$//;
+    $rootdir  =~ s/^\s+//;
+    $rootdir  =~ s/\s+$//;
+
+    # strip any leading/trailing quotes
+    $filepath =~ s/^['"]+//;
+    $filepath =~ s/["']+$//;
+    $rootdir =~ s/^['"]+//;
+    $rootdir =~ s/["']+$//;
+
+    my $out = $filepath;
+    unless ( $filepath =~ /^\// ) {  # unless $filepath starts with a /
+	$out = "$rootdir/$filepath"; # prepend the root directory
+    }
+    return $out;
+}
+
 #-----------------------------------------------------------------------------------------------
 
 
@@ -321,39 +1098,64 @@ sub valid_option {
 
 sub validate_options {
 
-    my ($source, $opts) = @_;
+    my $source = shift;   # text string declaring the source of the options being validated
+    my $opts   = shift;   # reference to hash that contains the options
+
     my ($opt, $old, @expect);
     
-    # start_type
-    $opt = 'start_type';
-    @expect = ('arb_ic', 'startup', 'continue', 'branch');
-    if (defined $opts->{$opt}) {
-	$old = $opts->{$opt};
-	$opts->{$opt} = valid_option($old, @expect)
-	    or die "invalid value of $opt ($old) specified in $source\n".
-                   "expected one of: @expect\n";
-    }
-
     # use_case
     $opt = 'use_case';
     if (defined $opts->{$opt}) {
 
 	# create the @expect array by listing the files in $use_case_dir
-	# and strip off the ".nl" part of the filename
+	# and strip off the ".xml" part of the filename
 	@expect = ();
-	my @files = glob("$opts->{'use_case_dir'}/*.nl");
+	my @files = glob("$opts->{'use_case_dir'}/*.xml");
 	foreach my $file (@files) {
-	    $file =~ m{.*/(.*)\.nl};
+	    $file =~ m{.*/(.*)\.xml};
 	    push @expect, $1;
 	}
 
 	$old = $opts->{$opt};
 	$opts->{$opt} = valid_option($old, @expect)
-	    or die "invalid value of $opt ($old) specified in $source\n".
+	    or die "$ProgName - invalid value of $opt ($old) specified in $source\n".
                    "expected one of: @expect\n";
     }
 
 }
 
+#-------------------------------------------------------------------------------
 
-__END__
+sub quote_string {
+    my $str = shift;
+    $str =~ s/^\s+//;
+    $str =~ s/\s+$//;
+    unless ($str =~ /^['"]/) {        #"'
+        $str = "\'$str\'";
+    }
+    return $str;
+}
+
+#-------------------------------------------------------------------------------
+
+sub version {
+# The version is found in CLM ChangeLog file.
+# $cfgdir is set by the configure script to the name of its directory.
+
+    my ($cfgdir) = @_;
+
+    my $logfile = "$cfgdir/../doc/ChangeLog";
+
+    my $fh = IO::File->new($logfile, '<') or die "** $ProgName - can't open ChangeLog file: $logfile\n";
+
+    while (my $line = <$fh>) {
+
+	if ($line =~ /^Tag name:\s*(\w+)/ ) {
+	    print "$1\n";
+	    exit;
+	}
+    }
+
+}
+
+#-------------------------------------------------------------------------------

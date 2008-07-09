@@ -35,13 +35,6 @@ that answers are exact when namelist items remain unchanged.
 021 br411 TBR.sh 10p_dgvm_dh t31_dgvm 24+24 .......................FAIL! rc= 11
 
 ====================================================================================
-Bug number: 447
-Problem running on Cray-X1
-
-Offline CLM will NOT run on Cray-X1 because of calls to shr_sys_flush(6) without
-unit 6 being explicitly opened. 
-
-====================================================================================
 Bug number: 251
 Potential floating point errors in src/biogeophys/SurfaceAlbedoMod.F90:
 
@@ -109,12 +102,6 @@ well.
  areaini_pft error: w_ovr == nan!
 FORTRAN STOP
 
-====================================================================================
-Bug number: 694
-Problem with exact restarts for offline code -- er112 (4p_vodsr_dm clm_std 19981231:YEARLY:1800 48x96 gx3v5 10+38 arb_ic) 
-on bangkok lf95 and lightning pathscale.
-
-Restarts are NOT exact for offline code.
 ====================================================================================
 Bug number: 680
 Small spike in initial input precipitation for a startup run in I case with datm7

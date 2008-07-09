@@ -1,0 +1,6 @@
+-test 
+-ignore_ic_date 
+-silent 
+-case clmrun 
+-clm_demand fndepdyn
+-source CLMNCEP

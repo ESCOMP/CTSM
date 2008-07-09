@@ -41,6 +41,7 @@ begin
   csmdata  = getenv("CSMDATA");
   clmroot  = getenv("CLM_ROOT");
   querynml = "bld/queryDefaultNamelist.pl -silent -justvalue -options sim_year="+sim_year;
+  querynml = querynml+",bgc=cn"
   if ( .not. ismissing(csmdata) )then
      querynml = querynml+" -csmdata "+csmdata;
   end if
@@ -62,7 +63,7 @@ begin
   ;
   print( "Interpolate from file: "+filename );
   if ( systemfunc("test -f "+filename+"; echo $?" ) .ne. 0 )then
-     print( "Input clmi file does not exist or not found: "+filename );
+     print( "Input ndep file does not exist or not found: "+filename );
      exit
   end if
   nc       = addfile( filename,    "r" );

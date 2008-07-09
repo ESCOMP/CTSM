@@ -49,7 +49,7 @@ EOF
 require queryDefaultXML;
 
 # Defaults
-my $file = "$cfgdir/DefaultCLM_INPARM_Namelist.xml";
+my $file = "$cfgdir/namelist_files/namelist_defaults_clm.xml";
 my $namelist = "clm_inparm";
 
 sub usage {
@@ -106,18 +106,13 @@ sub GetListofNeededFiles {
   my $settings_ref  = shift;
   my $files_ref     = shift;
   
-  my %inputopts = %$inputopts_ref;
-  my %settings  = %$settings_ref;
-
   my $defaults_ref = &queryDefaultXML::ReadDefaultXMLFile( $inputopts_ref, $settings_ref );
-  my %defaults = %$defaults_ref;
-  my @keys     = keys(%defaults);
-  my $csmdata  = $defaults{'csmdata'}{'value'};
-  $$inputopts_ref{'csmdata'} = $csmdata;
-  my $printing = $inputopts{'printing'};
+  my @keys     = keys(%$defaults_ref);
+  my $csmdata  = $$inputopts_ref{'csmdata'};
+  my $printing = $$inputopts_ref{'printing'};
   foreach my $var ( @keys ) {
-     my $value   = $defaults{$var}{'value'};
-     my $isafile = $defaults{$var}{'isfile'};
+     my $value   = $$defaults_ref{$var}{'value'};
+     my $isafile = $$defaults_ref{$var}{'isfile'};
      # If is a file
      if ( $isafile ) {
         # Test that this file exists
@@ -128,7 +123,7 @@ sub GetListofNeededFiles {
            $value    =~ m#$csmdata/(.+?)/([^/]+)$#;
            my $dir   = $1;
            my $file  = $2;
-           my $cfile = $inputopts{'scpfrom'} . "$dir/$file";
+           my $cfile = $$inputopts_ref{'scpfrom'} . "$dir/$file";
            my @dfiles;
            if ( defined($$files_ref{$dir}) ) {
               my $dir_ref = $$files_ref{$dir};
@@ -200,12 +195,15 @@ sub GetListofNeededFiles {
      }
   }
   my %inputopts;
-  $inputopts{'file'}     = $opts{'file'};
-  $inputopts{'namelist'} = $opts{'namelist'};
-  $inputopts{'printing'} = $printing;
-  $inputopts{'ProgName'} = $ProgName;
-  $inputopts{'cmdline'}  = $cmdline;
-  $inputopts{'scpfrom'}  = $opts{'scpfrom'};
+  $inputopts{'file'}           = $opts{'file'};
+  $inputopts{'empty_cfg_file'} = "$cfgdir/config_files/config_definition.xml";
+  $inputopts{'nldef_file'}     = "$cfgdir/namelist_files/namelist_definition.xml";
+  $inputopts{'namelist'}       = $opts{'namelist'};
+  $inputopts{'printing'}       = $printing;
+  $inputopts{'ProgName'}       = $ProgName;
+  $inputopts{'cmdline'}        = $cmdline;
+  $inputopts{'cfgdir'}         = $cfgdir;
+  $inputopts{'scpfrom'}        = $opts{'scpfrom'};
   if ( ! defined($opts{'csmdata'}) ) {
      $inputopts{'csmdata'} = "default";
   } else {
@@ -213,34 +211,39 @@ sub GetListofNeededFiles {
   }
   $inputopts{'config'} = "noconfig";
   my @resolutions = split( /,/, $opts{'res'} );
+  my $definition = Build::NamelistDefinition->new( $inputopts{'nldef_file'} );
+  my $cfg = Build::Config->new( $inputopts{'empty_cfg_file'} );
 
   my %files;
   #
   # Loop over all resolutions asked for
   #
   foreach my $res ( @resolutions ) {
-     $inputopts{'res'} = $res;
+     if ( ! $definition->is_valid_value( "res", "'$res'" )  ) {
+        die "ERROR: Input resolution: $res is NOT a valid resolution\n";
+     }
+     $inputopts{'hgrid'} = $res;
      print "Resolution = $res\n" if $printing;
      my %settings;
      #
      # Loop for all possible land masks
      #
-     foreach my $mask ( "USGS", "gx3v5", "gx1v3", "gx1v4", "gx1v5", "navy", "test", "tx0.1v2" ) {
+     foreach my $mask ( $definition->get_valid_values( "mask", 'noquotes'=>1 ) ) {
         print "Mask = $mask \n" if $printing;
         $settings{'mask'} = $mask;
         #
         # Loop over all possible simulation years 
         #
-        foreach my $sim_year ( "1890", "2000", "2100" ) {
+        foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquotes'=>1 ) ) {
            print "Mask = $mask \n" if $printing;
            $settings{'sim_year'} = $sim_year;   # 1890, 2000, 2100
 
            #
            # Loop over all possible BGC seetings
            #
-           foreach my $bgc ( "none", "cn", "casa", "dgvm" ) {
-              print "BGC = $bgc\n" if $printing;
-              $settings{'BGC'} = $bgc;
+           foreach my $bgc ( $cfg->get_valid_values( "bgc" ) ) {
+              print "bgc = $bgc\n" if $printing;
+              $settings{'bgc'} = $bgc;
               &GetListofNeededFiles( \%inputopts, \%settings, \%files );
            }
         }
