@@ -1,4 +1,83 @@
 ===============================================================
+Tag name:  clm3_6_08
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date:  Wed Aug  6 15:49:39 MDT 2008
+One-line Summary: Fix bugs, and build changes for inputdata repo
+
+Purpose of changes: Add in the changes needed for inputdata repo for ccsm, and add a couple small bug-fixes.
+
+Bugs fixed (include bugzilla ID): 708 (xlf bug on bluevista), 781 (bluefire tests, iyear_ad and hourly change),
+                                  780 (-defaults option in build-namelist)
+
+Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
+                                  698 (cprnc bug gives false difference), 701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+    http://bugs.cgd.ucar.edu/
+
+Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
+                                      652 (threads different answers with older PGI versions)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: Change iyear_ad to 1990, and correct inithist=6-HOURLY
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm7, csm_share, esmf_wrf_timemgr
+
+    +scripts          to scripts4_080731
+    +drv              to drvseq2_0_25
+    +datm7            to datm7_080731
+    +csm_share        to share3_080801
+    +esmf_wrf_timemgr to esmf_timemgr_080717
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+   A  models/lnd/clm/test/system/tests_pretag_bluefire ---- test list for bluefire
+   A  models/lnd/clm/test/system/config_files/_persc_do --- pure OpenMP pergro test
+
+List all existing files that have been modified, and describe the changes:
+
+   M  models/lnd/clm/test/system/TBL.sh --------------------------- Add note about RMS changes to test log file
+   M  models/lnd/clm/test/system/input_tests_master --------------- Fix 6-HOURLY in tests
+   M  models/lnd/clm/bld/configure -------------------------------- Fix -defaults option
+   M  models/lnd/clm/bld/config_files/Makefile.in ----------------- Start switching Darwin over to g95
+   M  models/lnd/clm/bld/clm.cpl7.template ------------------------ Add inputdata_repo stuff
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Correct inithist=6-HOURLY
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Change iyear_ad to 1990
+   M  models/lnd/clm/bld/build-namelist --------------------------- Add inputdata_repo stuff
+
+Summary of testing:
+
+  bluefire: all PASS except TBL and...
+015 blD91 TBL.sh _persc_dh clm_per 19981231:YEARLY:1200 4x5 gx3v5 144 arb_ic ....................FAIL! rc= 7
+  bluevista: not ran
+  jaguar: all PASS except TBL and
+038 erP65 TSM_ccsmseq.sh ERS f19_g13 I ..........................................................FAIL! rc= 5
+039 erP15 TSM_ccsmseq.sh ERS T31_g35 ICN ........................................................FAIL! rc= 5
+  lightning/pathscale: all PASS except TBL
+  bangkok/lf95: all PASS except TBL
+  breeze/gale/hail/gust/ifort: all PASS except TBL
+
+all PASS except for TBL changes because of the change in iyear_ad to 1990 (as in ccsm)
+
+The test blD91 on bluefire failure is not clear to me -- it shows answers as changing when really shouldn't (this 
+comparision didn't include the iyear_ad change).
+erP65 and erP15 fail on jaguar because of a scripting issue. It may be because I ran "-c" first to compile everything first
+before running. But, it couldn't find the *.build script which is strange. But, I was able to run it by hand fine.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_07
+
+Changes answers relative to baseline: Bit-for-Bit (except for iyear_ad change to 1990)
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_07
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Tue Jul  8 23:12:17 MDT 2008

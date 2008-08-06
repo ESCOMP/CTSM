@@ -107,6 +107,8 @@ if [ "${all_comparisons_good}" = "TRUE" ]; then
         rm *.r*
     fi
 else
+    echo "RMS error of last file that do not match"
+    grep RMS ${rundir}/cprnc.${compare_file}.out | grep -v 0.0000E+00 | tail -200
     echo "TBL.sh: at least one file comparison did not pass" 
     echo "FAIL.job${JOBID}" > TestStatus
     exit 7

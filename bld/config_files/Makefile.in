@@ -696,7 +696,10 @@ mod_path   := -I$(MOD_NETCDF)
 
 # Set the default Fortran compiler
 ifeq ($(strip $(USER_FC)),)
-  FC := xlf90_r
+  FC := g95
+endif
+ifeq ($(strip $(USER_CC)),)
+  CC := gcc
 endif
 
 ifeq ($(FC),g95)
@@ -740,8 +743,7 @@ endif
 ifeq ($(CC),gcc)
    CFLAGS     := $(cpp_path) -O2 $(CPPDEF) -I/Developer/SDKs/MacOSX10.4.0.sdk/usr/include/malloc
 endif
-ifeq ($(CC),null)
-   CC         := xlc
+ifeq ($(CC),xlc)
    CFLAGS     := -I/usr/include -I/usr/include/malloc $(cpp_path) $(CPPDEF) -O2
 endif
 

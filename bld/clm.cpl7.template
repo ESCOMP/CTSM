@@ -98,7 +98,7 @@ endif
 
 set options = "-config $config -res $LND_GRID $mask $sim_year $clm_demand "
 set options = "$options -infile ccsm_namelist -start_type $RUNTYPE -case $CASE "
-$CODEROOT/lnd/clm*/bld/build-namelist $options -csmdata \$DIN_LOC_ROOT || exit -1
+$CODEROOT/lnd/clm*/bld/build-namelist $options -csmdata \$DIN_LOC_ROOT -inputdata $CASEROOT/Buildnml_Prestage/clm.input_data_list || exit -1
 
 # ---------------------------------------------------------------------------
 #  Create namelist and prestage data script

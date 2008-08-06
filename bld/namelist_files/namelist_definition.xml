@@ -127,10 +127,9 @@ Per file averaging flag.
 </entry>
 
 <entry id="hist_crtinic" type="char*8" category="history"
-       group="clm_inparm" valid_values="6_HOURLY,DAILY,MONTHLY,YEARLY,NONE" >
+       group="clm_inparm" valid_values="6-HOURLY,DAILY,MONTHLY,YEARLY,NONE" >
 Frequency to generate initial dataset.
 <default>Default: 'YEARLY' for DGVM; 'NONE' otherwise.</default>
-<default>NOTE: 6_HOURLY should actually be 6-HOURLY</default>
 </entry>
 
 <entry id="hist_dov2xy" type="logical(6)" category="history"

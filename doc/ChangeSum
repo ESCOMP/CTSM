@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ===============================================================================================================================
+   clm3_6_08         erik 08/06/2008 Fix bugs, and build changes for inputdata repo
    clm3_6_07         erik 07/08/2008 Implement new build namelist system from Vertenstein/Eaton, bluefire, and BGP updates
    clm3_6_06         erik 05/30/2008 Small fix needed for ccsm4_alpha30 (use gx1v5 for some resolutions when OCN_GRID==ATM_GRID)
    clm3_6_05         erik 05/27/2008 Fix to compile with PGI-6, update scripts, fix cpl7.template for new scripts LND_GRID, fix 2.65x3.33 frac dataset.

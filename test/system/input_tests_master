@@ -290,10 +290,10 @@ erL62 TER.sh _sc_m clm_std 19980101:MONTHLY:1800 1.9x2.5 gx1v5 -5+-5   startup
 blL62 TBL.sh _sc_m clm_std 19980101:MONTHLY:1800 1.9x2.5 gx1v5 -10     startup
 brL62 TBR.sh _sc_m clm_std 19980101:MONTHLY:1800 1.9x2.5 gx1v5 -10+-10 startup
 
-smL74 TSM.sh _sc_s clm_std 19980101:6_HOURLY:1800 1x1_brazil navy -10     arb_ic
-erL74 TER.sh _sc_s clm_std 19980101:6_HOURLY:1800 1x1_brazil navy -5+-5   arb_ic
-blL74 TBL.sh _sc_s clm_std 19980101:6_HOURLY:1800 1x1_brazil navy -10     arb_ic
-brL74 TBR.sh _sc_s clm_std 19980101:6_HOURLY:1800 1x1_brazil navy -10+-10 arb_ic
+smL74 TSM.sh _sc_s clm_std 19980101:6-HOURLY:1800 1x1_brazil navy -10     arb_ic
+erL74 TER.sh _sc_s clm_std 19980101:6-HOURLY:1800 1x1_brazil navy -5+-5   arb_ic
+blL74 TBL.sh _sc_s clm_std 19980101:6-HOURLY:1800 1x1_brazil navy -10     arb_ic
+brL74 TBR.sh _sc_s clm_std 19980101:6-HOURLY:1800 1x1_brazil navy -10+-10 arb_ic
 
 smL78 TSM.sh _sc_s clm_std 19971231:NONE:1800 1x1_brazil navy -366 arb_ic
 blL78 TBL.sh _sc_s clm_std 19971231:NONE:1800 1x1_brazil navy -10  arb_ic

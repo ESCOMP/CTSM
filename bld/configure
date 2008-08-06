@@ -62,8 +62,8 @@ OPTIONS
      -cppdefs <string>   A string of user specified CPP defines.  Appended to
                          Makefile defaults.  E.g. -cppdefs '-DVAR1 -DVAR2'
      -debug              Switch to turn on building CLM with debugging compiler options.
-     -defaults <file>    Specify a configuration file which will be used to supply defaults instead of
-                         one of the config_setup_*.xml files.  This file is used to specify model
+     -defaults <file>    Specify full path to a configuration file which will be used to supply defaults instead of
+                         the defaults in bld/config_files.  This file is used to specify model
                          configuration parameters only.  Parameters relating to the build which
                          are system dependent will be ignored.
      -dust <name>        Turn on DUST [on | off ] (default is off).
@@ -220,10 +220,9 @@ EOF
 # definition file.  Note that the -defaults option has precedence over all other options.
 my $config_defaults_file;
 if    ($opts{'defaults'})  {$config_defaults_file = $opts{'defaults'}}
-else                       {$config_defaults_file = 'config_defaults.xml'}
-(-f "$cfgdir/config_files/$config_defaults_file")  or  die <<"EOF";
-** Cannot find configuration defaults file \"$config_defaults_file\" in directory 
-    \"$cfgdir/config_files\" **
+else                       {$config_defaults_file = "$cfgdir/config_files/config_defaults.xml"}
+(-f "$config_defaults_file")  or  die <<"EOF";
+** Cannot find configuration defaults file \"$config_defaults_file\" **
 EOF
 
 # System defaults (currently for spmd and smp settings)
@@ -232,6 +231,8 @@ my $sys_defaults_file = 'config_sys_defaults.xml';
 ** Cannot find system defaults file \"$sys_defaults_file\" in directory 
     \"$cfgdir/config_fiels\" **
 EOF
+
+
 
 # The XML::Lite module is required to parse the XML configuration files.
 (-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/XML/Lite.pm")  or  die <<"EOF";
@@ -259,7 +260,7 @@ require Build::Config;
 # configuration, and the $config_defaults_file provides default values for a specific CLM
 # configuration.   $cfg_ref is a reference to the new configuration object.
 my $cfg_ref = Build::Config->new("$cfgdir/config_files/$config_def_file", 
-				 "$cfgdir/config_files/$config_defaults_file");
+                                "$config_defaults_file");
 
 #-----------------------------------------------------------------------------------------------
 # Figure out the CLM mode you to run in

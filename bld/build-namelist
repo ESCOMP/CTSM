@@ -59,6 +59,8 @@ OPTIONS
      -ignore_ic_year          Ignore just the year part of the date on the initial condition files (ic_ymd and ic_tod) 
                               when determining what input initial condition file to use.
      -infile "filepath"       Specify a file containing namelists to read values from.
+     -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
+                              file specified.
      -lnd_res "resolution"    Horizontal resolution of fine mesh for land 
                               (if different than resolution coupling to atmosphere)
                               Use nlatxnlon for spectral grids;  dlatxdlon for fv grids 
@@ -154,6 +156,7 @@ GetOptions(
     "ignore_ic_date"            => \$opts{'ignore_ic_date'},
     "ignore_ic_year"            => \$opts{'ignore_ic_year'},
     "infile=s"                  => \$opts{'infile'},
+    "inputdata=s"               => \$opts{'inputdata'},
     "mask=s"                    => \$opts{'mask'},
     "namelist=s"                => \$opts{'namelist'},
     "res=s"                     => \$opts{'res'},
@@ -873,7 +876,14 @@ if ($mode eq "ccsm_seq") {
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing datm7_nml namelist to $outfile $eol"; }
 }
-    
+
+#-----------------------------------------------------------------------------------------------
+
+# Output input dataset list.
+if ($opts{'inputdata'}) {
+    check_input_files($nl,$inputdata_rootdir,$opts{'inputdata'});
+}
+
 # END OF MAIN SCRIPT
 #===============================================================================================
 
@@ -985,6 +995,81 @@ sub add_default {
 }
 
 #-----------------------------------------------------------------------------------------------
+
+sub check_input_files {
+
+# For each variable in the namelist which is an input dataset, check to see if it
+# exists locally.
+#
+# ***** N.B. ***** This routine assumes the following variables are in package main::
+#  $definition        -- the namelist definition object
+
+    my $nl                = shift;     # namelist object
+    my $inputdata_rootdir = shift;    # if false prints test, else creates inputdata file
+    my $outfile           = shift;
+
+    open(OUTFILE, ">>$outfile") if defined $inputdata_rootdir;
+
+    # Look through all namelist groups
+    my @groups = $nl->get_group_names();
+    foreach my $group (@groups) {
+
+	# Look through all variables in each group
+	my @vars = $nl->get_variable_names($group);
+	foreach my $var (@vars) {
+
+	    # Is the variable an input dataset?
+	    my $input_pathname_type = $definition->is_input_pathname($var);
+
+	    # If it is, check whether it exists locally and print status
+	    if ($input_pathname_type) {
+
+		# Get pathname of input dataset
+		my $pathname = $nl->get_variable_value($group, $var);
+		# Need to strip the quotes
+		$pathname =~ s/['"]//g;
+
+		if ($input_pathname_type eq 'abs') {
+                    if ($inputdata_rootdir) {
+                        $pathname =~ s:$inputdata_rootdir::;
+                        print OUTFILE "$var = $pathname\n";
+                    }
+                    else {
+		        if (-e $pathname) {  # use -e rather than -f since the absolute pathname
+			                     # might be a directory
+			    print "OK -- found $var = $pathname\n";
+		        }
+		        else {
+			    print "NOT FOUND:  $var = $pathname\n";
+		        }
+                    }
+		}
+		elsif ($input_pathname_type =~ m/rel:(.+)/o) {
+		    # The match provides the namelist variable that contains the
+		    # root directory for a relative filename
+		    my $rootdir_var = $1;
+		    my $rootdir = $nl->get_variable_value($group, $rootdir_var);
+		    $rootdir =~ s/['"]//g;
+                    if ($inputdata_rootdir) {
+                        $pathname = "$rootdir/$pathname";
+                        $pathname =~ s:$inputdata_rootdir::;
+                        print OUTFILE "$var = $pathname\n";
+                    }
+                    else {
+		        if (-f "$rootdir/$pathname") {
+			    print "OK -- found $var = $rootdir/$pathname\n";
+		        }
+		        else {
+			    print "NOT FOUND:  $var = $rootdir/$pathname\n";
+		        }
+                    }
+		}
+	    }
+	}
+    }
+    close OUTFILE if defined $inputdata_rootdir;
+    return 0 if defined $inputdata_rootdir;
+}
 
 
 #-----------------------------------------------------------------------------------------------
