@@ -481,113 +481,118 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
 # namelist group: seq_infodata_inparm #
 #######################################
 
-# Case name
-if (defined $opts{'case'}) {
-    add_default($nl, 'case_name', 'val'=>$opts{'case'});
-} else {
-    add_default($nl, 'case_name');
-}
-
 # Run type - note that arb_ic implies that the run is startup
 # Note that arb_ic for the start_type will force finidat to be empty regardless
 # of the default settings in the namelist_defaults_clm.xml file
 my $var = "start_type";
 if (defined $opts{$var}) { 
     if ($opts{$var} eq "arb_ic") {
-	add_default($nl, $var, 'val'=>'startup'); 
+       add_default($nl, $var, 'val'=>'startup'); 
     } else {
-	add_default($nl, $var, 'val'=>$opts{$var}); 
+       add_default($nl, $var, 'val'=>$opts{$var}); 
     }
 } else {
     add_default($nl, $var );
 }
 my $start_type = $nl->get_value($var);
 
-add_default($nl, 'outpathroot', 'val'=>$opts{'dir'}."/"); 
+if ($mode eq "ccsm_seq") {
 
-# Orbit
-# If orbital parameters have not been specified then set default orbital year.
-# If NOT all of obliq, eccen and mvelp are specified -- return an error.
+   # Case name
+   if (defined $opts{'case'}) {
+       add_default($nl, 'case_name', 'val'=>$opts{'case'});
+   } else {
+       add_default($nl, 'case_name');
+   }
 
-if (not defined $nl->get_value('orb_obliq') and
-    not defined $nl->get_value('orb_eccen') and
-    not defined $nl->get_value('orb_mvelp')     ) {
-      add_default($nl, 'orb_iyear_ad');
-} else {
-   if (not defined $nl->get_value('orb_obliq') or
-       not defined $nl->get_value('orb_eccen') or
+   add_default($nl, 'outpathroot', 'val'=>$opts{'dir'}."/"); 
+   
+   # Orbit
+   # If orbital parameters have not been specified then set default orbital year.
+   # If NOT all of obliq, eccen and mvelp are specified -- return an error.
+   
+   if (not defined $nl->get_value('orb_obliq') and
+       not defined $nl->get_value('orb_eccen') and
        not defined $nl->get_value('orb_mvelp')     ) {
-      die "$nm when setting orbit, ALL of orb_obliq, orb_eccen, AND orb_mvelp MUST be set\n";
+         add_default($nl, 'orb_iyear_ad');
+   } else {
+      if (not defined $nl->get_value('orb_obliq') or
+          not defined $nl->get_value('orb_eccen') or
+          not defined $nl->get_value('orb_mvelp')     ) {
+         die "$nm when setting orbit, ALL of orb_obliq, orb_eccen, AND orb_mvelp MUST be set\n";
+      }
    }
-}
 
-add_default($nl, 'model_version' );
-add_default($nl, 'hostname', 'val'=>`hostname` );
-add_default($nl, 'username', 'val'=>$ENV{'LOGNAME'} );
-
-if ( $start_type =~ /branch/ ) {
-   if ( not defined $nl->get_value('restart_file') ) {
-      die "$nm restart_file MUST be set when start_type equals branch\n";
+   add_default($nl, 'model_version' );
+   add_default($nl, 'hostname', 'val'=>`hostname` );
+   add_default($nl, 'username', 'val'=>$ENV{'LOGNAME'} );
+   
+   if ( $start_type =~ /branch/ ) {
+      if ( not defined $nl->get_value('restart_file') ) {
+         die "$nm restart_file MUST be set when start_type equals branch\n";
+      }
    }
-}
 
-# Only one of these can be set to .true.
-if (defined $nl->get_value('atm_adiabatic')     or
-    defined $nl->get_value('aqua_planet')       or
-    defined $nl->get_value('atm_ideal_physics') ) {
-       my $atm_adiabatic     = $nl->get_value('atm_adiabatic');
-       my $atm_ideal_physics = $nl->get_value('atm_ideal_physics');
-       my $aqua_planet       = $nl->get_value('aqua_planet');
-       my $t = 0;
-       if ( defined( $atm_adiabatic ) ) { 
-           if ( $atm_adiabatic     =~ /$TRUE/i ) { $t++; }
-       }
-       if ( defined( $aqua_planet) ) { 
-           if ( $aqua_planet       =~ /$TRUE/i ) { $t++; }
-       }
-       if ( defined( $atm_ideal_physics) ) { 
-           if ( $atm_ideal_physics =~ /$TRUE/i ) { $t++; }
-       }
-       if ( $t > 1 ) {
-          die "$nm only one of atm_adiabatic, atm_ideal_phys and aqua_planet" . 
-              " can be set to true.\n";
-       }
+   # Only one of these can be set to .true.
+   if (defined $nl->get_value('atm_adiabatic')     or
+       defined $nl->get_value('aqua_planet')       or
+       defined $nl->get_value('atm_ideal_physics') ) {
+          my $atm_adiabatic     = $nl->get_value('atm_adiabatic');
+          my $atm_ideal_physics = $nl->get_value('atm_ideal_physics');
+          my $aqua_planet       = $nl->get_value('aqua_planet');
+          my $t = 0;
+          if ( defined( $atm_adiabatic ) ) { 
+              if ( $atm_adiabatic     =~ /$TRUE/i ) { $t++; }
+          }
+          if ( defined( $aqua_planet) ) { 
+              if ( $aqua_planet       =~ /$TRUE/i ) { $t++; }
+          }
+          if ( defined( $atm_ideal_physics) ) { 
+              if ( $atm_ideal_physics =~ /$TRUE/i ) { $t++; }
+          }
+          if ( $t > 1 ) {
+             die "$nm only one of atm_adiabatic, atm_ideal_phys and aqua_planet" . 
+                 " can be set to true.\n";
+          }
+   }
 }
 
 ######################################
 # namelist group: seq_timemgr_inparm #
 ######################################
 
-# Length of simulation
-if ( defined $opts{'runlength'} ) {
-    if ( $opts{'runlength'} =~ /^([1-9][0-9]*)([sdy])$/ ) {
-	my %options = ( s=>"nsteps", d=>"ndays", y=>"nyears" );
-	add_default($nl, "stop_n"     , 'val'=>$1 );
-	add_default($nl, "stop_option", 'val'=>$options{$2} );
-    } else {
-	die "$ProgName ERROR:: bad input to runlength option\n";
-    }
-} else {
-    add_default($nl, 'stop_option');
-    unless (defined $nl->get_value('stop_ymd')) { 
-	add_default($nl, 'stop_n', 'hgrid'=>$lnd_res, 'mask'=>$mask); 
-    }
+if ($mode eq "ccsm_seq") {
+   # Length of simulation
+   if ( defined $opts{'runlength'} ) {
+       if ( $opts{'runlength'} =~ /^([1-9][0-9]*)([sdy])$/ ) {
+	   my %options = ( s=>"nsteps", d=>"ndays", y=>"nyears" );
+	   add_default($nl, "stop_n"     , 'val'=>$1 );
+	   add_default($nl, "stop_option", 'val'=>$options{$2} );
+       } else {
+	   die "$ProgName ERROR:: bad input to runlength option\n";
+       }
+   } else {
+       add_default($nl, 'stop_option');
+       unless (defined $nl->get_value('stop_ymd')) { 
+	   add_default($nl, 'stop_n', 'hgrid'=>$lnd_res, 'mask'=>$mask); 
+       }
+   }
+
+   # Restart interval
+   add_default($nl, 'restart_option');
+
+   # Write restart file at end
+   add_default($nl, 'end_restart');
+
+   # Start date
+   add_default($nl, 'start_ymd', 'hgrid'=>$lnd_res, 'mask'=>$mask);
+
+   # Start tod
+   add_default($nl, 'start_tod', 'hgrid'=>$lnd_res, 'mask'=>$mask);
+
+   # Coupling interval
+   add_default($nl, 'atm_cpl_dt');
 }
-
-# Restart interval
-add_default($nl, 'restart_option');
-
-# Write restart file at end
-add_default($nl, 'end_restart');
-
-# Start date
-add_default($nl, 'start_ymd', 'hgrid'=>$lnd_res, 'mask'=>$mask);
-
-# Start tod
-add_default($nl, 'start_tod', 'hgrid'=>$lnd_res, 'mask'=>$mask);
-
-# Coupling interval
-add_default($nl, 'atm_cpl_dt');
 
 ##############################
 # namelist group: clm_inparm #

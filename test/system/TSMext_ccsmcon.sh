@@ -56,7 +56,7 @@ sandboxbuild=`/bin/ls -1 *.build`
 echo "TSMext_ccsmcon.sh: building concurrent-CCSM; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 
 if [ "$debug" != "YES" ]; then
-   ${sandboxbuild} > ${CLM_TESTDIR}/${test_name}/test.log 2>&1
+   ./${sandboxbuild} > ${CLM_TESTDIR}/${test_name}/test.log 2>&1
    rc=$?
 else
    rc=0

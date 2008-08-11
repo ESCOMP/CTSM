@@ -345,5 +345,17 @@ sm061 TSMext_ccsmcon.sh ERS f19_g13
 erP61 TSM_ccsmseq.sh ERS f19_g13 I4804
 erP11 TSM_ccsmseq.sh ERS T31_g35 ICN4804
 
+erP62 TSM_ccsmseq.sh ERB f19_g13 I4804
+erP12 TSM_ccsmseq.sh ERB T31_g35 ICN4804
+
+erP63 TSM_ccsmseq.sh ERH f19_g13 I4804
+erP13 TSM_ccsmseq.sh ERH T31_g35 ICN4804
+
 erP65 TSM_ccsmseq.sh ERS f19_g13 I
 erP15 TSM_ccsmseq.sh ERS T31_g35 ICN
+
+erP66 TSM_ccsmseq.sh ERH f19_g13 I
+erP16 TSM_ccsmseq.sh ERH T31_g35 ICN
+
+erP67 TSM_ccsmseq.sh ERB f19_g13 I
+erP17 TSM_ccsmseq.sh ERB T31_g35 ICN

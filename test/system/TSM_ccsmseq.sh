@@ -56,7 +56,7 @@ sandboxbuild=`/bin/ls -1 *.build`
 echo "TSM_ccsmseq.sh: building sequential-CCSM; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 
 if [ "$debug" != "YES" ]; then
-   ${sandboxbuild} > ${CLM_TESTDIR}/${test_name}/test.log 2>&1
+   ./${sandboxbuild} > ${CLM_TESTDIR}/${test_name}/test.log 2>&1
    rc=$?
 else
    rc=0

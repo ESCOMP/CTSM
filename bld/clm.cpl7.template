@@ -75,10 +75,13 @@ set cfgdir = $CASEROOT/Buildnml_Prestage/clmconf
 set config = $cfgdir/config_cache.xml
 cd $cfgdir
 
+set finidat = " "
+if ($RUN_TYPE == hybrid) set finidat = " finidat = '$datainit'"
 cat >> $cfgdir/ccsm_namelist << EOF1
  &clm_inparm
  dtime            =  $CLM_DTIME
  rtm_nsteps       =  $RTM_NSTEPS
+$finidat
  nrevsn           = '$nrevsn'
  hist_mfilt       =  1
  hist_nhtfrq      =  0
@@ -87,17 +90,18 @@ cat >> $cfgdir/ccsm_namelist << EOF1
  co2_type         = '$CLM_CO2_TYPE'
 EOF1
 
-$CODEROOT/lnd/clm*/bld/configure -verbose -spmd -mode ext_ccsm_seq -rtm on $bgc $maxpft -clm_bld $cfgdir \
+$CODEROOT/lnd/clm*/bld/configure -spmd -mode ext_ccsm_seq -rtm on $bgc $maxpft -clm_bld $cfgdir \
          $targetos -usr_src $CASEROOT/SourceMods/src.clm || exit -1 
 
 if ($RUN_TYPE == startup && $CLM_ARB_IC != off) then
-   set RUNTYPE = "arb_ic"
+   set START_TYPE = "arb_ic"
 else
-   set RUNTYPE = $RUN_TYPE
+   set START_TYPE = $RUN_TYPE
+   if ($RUN_TYPE == hybrid ) set START_TYPE = "startup"
 endif
 
 set options = "-config $config -res $LND_GRID $mask $sim_year $clm_demand "
-set options = "$options -infile ccsm_namelist -start_type $RUNTYPE -case $CASE "
+set options = "$options -infile ccsm_namelist -start_type $START_TYPE -case $CASE "
 $CODEROOT/lnd/clm*/bld/build-namelist $options -csmdata \$DIN_LOC_ROOT -inputdata $CASEROOT/Buildnml_Prestage/clm.input_data_list || exit -1
 
 # ---------------------------------------------------------------------------
@@ -124,7 +128,7 @@ EOF1
 
 if ($RUN_TYPE == 'hybrid') then
 cat >> $CASEROOT/Buildnml_Prestage/clm.buildnml_prestage.csh << EOF1
-if ( "\$runtype" != continue) then
+if ( "\$RUN_TYPE" != continue) then
 set datainit = $datainit
 #\$UTILROOT/Tools/ccsm_getfile $RUN_REFCASE/lnd/init/\$datainit || exit 1 
 endif
@@ -133,7 +137,7 @@ endif
 
 if ($RUN_TYPE == 'branch') then
 cat >> $CASEROOT/Buildnml_Prestage/clm.buildnml_prestage.csh << EOF1
-if ( "\$runtype" != 'continue') then
+if ( "\$RUN_TYPE" != 'continue') then
 #\$UTILROOT/Tools/ccsm_getfile $RUN_REFCASE/lnd/rest/\$nrevsn || exit 1
 endif
 EOF1

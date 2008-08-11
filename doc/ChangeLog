@@ -1,4 +1,65 @@
 ===============================================================
+Tag name:  clm3_6_09
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date:  Mon Aug 11 10:55:23 MDT 2008
+One-line Summary: Fix clm.cpl7.template to run hybrid and branch cases
+
+Purpose of changes: Fix so cpl7 tests will work for hybrid and branch cases 
+                    (needed for ccsm4 tag)
+
+Bugs fixed (include bugzilla ID): 808 (bug for hybrid/branch)
+                                  partially 805 (too much output in build-streams)
+
+Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
+                                  698 (cprnc bug gives false difference), 701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  805 (too much output in build-streams)
+    http://bugs.cgd.ucar.edu/
+
+Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
+                                      652 (threads different answers with older PGI versions)
+
+Describe any changes made to build system: cpl7.template fixed to work with branch/hybrid
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+  M models/lnd/clm/test/system/tests_pretag_bluefire --- Add branch/hybrid cpl7 tests
+  M models/lnd/clm/test/system/TSM_ccsmseq.sh ---------- Include path in scripts call
+  M models/lnd/clm/test/system/tests_pretag_jaguar ----- Add branch/hybrid cpl7 tests
+  M models/lnd/clm/test/system/TSMext_ccsmcon.sh ------- Include path in scripts call
+  M models/lnd/clm/test/system/test_driver.sh ---------- Add more tasks for jaguar
+  M models/lnd/clm/test/system/input_tests_master ------ Add branch/hybrid cpl7 tests
+  M models/lnd/clm/bld/clm.cpl7.template --------------- Fix so branch/hybrid works
+  M models/lnd/clm/bld/build-namelist ------------------ Fix so branch/hybrid for cpl7 works
+
+Summary of testing:
+
+  bluefire: All PASS
+  jaguar: All PASS
+  lightning/pathscale: All PASS
+  bangkok/lf95: All PASS
+  breeze/gale/hail/gust/ifort: All PASS
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_08
+
+Changes answers relative to baseline: No bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_08
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date:  Wed Aug  6 15:49:39 MDT 2008
@@ -12,6 +73,7 @@ Bugs fixed (include bugzilla ID): 708 (xlf bug on bluevista), 781 (bluefire test
 Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
                                   698 (cprnc bug gives false difference), 701 (svn keyword)
                                   717 (archiving bug -- only archive 1000 files at a time)
+                                  805 (too much output in build-streams), 808 (bug for hybrid/branch)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -97,6 +159,7 @@ Bugs fixed (include bugzilla ID): 769 (6_HOURLY to 6-HOURLY), 721 (add -c option
 Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
                                   698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
                                   717 (archiving bug -- only archive 1000 files at a time)
+                                  805 (too much output in build-streams), 808 (bug for hybrid/branch)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 

@@ -376,7 +376,7 @@ cat > ./${submit_script} << EOF
 # Name of the queue (CHANGE THIS if needed)
 # #PBS -q batch
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l walltime=02:30:00,size=280
+#PBS -l walltime=02:30:00,size=360
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
@@ -407,8 +407,8 @@ export CLM_THREADS=1
 export CLM_RESTART_THREADS=4
 
 ##mpi tasks
-export CLM_TASKS=280
-export CLM_RESTART_TASKS=70
+export CLM_TASKS=360
+export CLM_RESTART_TASKS=90
 
 export CLM_COMPSET="I"
 
