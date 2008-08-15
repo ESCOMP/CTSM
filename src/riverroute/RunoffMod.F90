@@ -22,15 +22,19 @@ module RunoffMod
   implicit none
   private
 
+  integer,parameter,public :: nt_rtm = 2    ! number of tracers
+  character(len=3),parameter,public :: rtm_tracers(nt_rtm) = &
+     (/'LIQ','ICE'/)
+
   public :: runoff_flow
   type runoff_flow
 !    - local
-     real(r8), pointer :: runoff(:)      ! RTM flow (m**3 H2O/s)
-     real(r8), pointer :: runofflnd(:)   ! runoff masked for land (m**3 H2O/s)
-     real(r8), pointer :: runoffocn(:)   ! runoff masked for ocn  (m**3 H2O/s)
-     real(r8), pointer :: dvolrdt(:)     ! RTM change in storage (m**3/s)
-     real(r8), pointer :: dvolrdtlnd(:)  ! dvolrdt masked for land (m**3/s)
-     real(r8), pointer :: dvolrdtocn(:)  ! dvolrdt masked for ocn  (m**3/s)
+     real(r8), pointer :: runoff(:,:)      ! RTM flow (m**3 H2O/s)
+     real(r8), pointer :: runofflnd(:,:)   ! runoff masked for land (m**3 H2O/s)
+     real(r8), pointer :: runoffocn(:,:)   ! runoff masked for ocn  (m**3 H2O/s)
+     real(r8), pointer :: dvolrdt(:,:)     ! RTM change in storage (m**3/s)
+     real(r8), pointer :: dvolrdtlnd(:,:)  ! dvolrdt masked for land (m**3/s)
+     real(r8), pointer :: dvolrdtocn(:,:)  ! dvolrdt masked for ocn  (m**3/s)
      real(r8), pointer :: lonc(:)        ! lon of cell
      real(r8), pointer :: latc(:)        ! lat of cell
      real(r8), pointer :: area(:)        ! area of cell
@@ -51,6 +55,15 @@ module RunoffMod
      integer           :: numr           ! rtm gdc global number of cells
      integer           :: numrl          ! rtm gdc global number of lnd cells
      integer           :: numro          ! rtm gdc global number of ocn cells
+!    - need 1d field pointers for history files
+     real(r8), pointer :: runofflnd_nt1(:)
+     real(r8), pointer :: runofflnd_nt2(:)
+     real(r8), pointer :: runoffocn_nt1(:)
+     real(r8), pointer :: runoffocn_nt2(:)
+     real(r8), pointer :: dvolrdtlnd_nt1(:)
+     real(r8), pointer :: dvolrdtlnd_nt2(:)
+     real(r8), pointer :: dvolrdtocn_nt1(:)
+     real(r8), pointer :: dvolrdtocn_nt2(:)
   end type runoff_flow
 !
   type (runoff_flow)         ,public :: runoff

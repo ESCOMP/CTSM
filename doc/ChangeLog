@@ -1,4 +1,154 @@
 ===============================================================
+Tag name:  clm3_6_10
+Originator(s):  tcraig
+Date: Fri Aug 15 09:05:50 MDT 2008
+One-line Summary: extend rtm tracer, ascale for tri-grids, AIX O3 to O2
+
+Purpose of changes: extend rtm to handle multiple tracers.  added
+  second tracer to rtm associated with frozen water.  first tracer
+  is now liquid water.  both are passed to cpl7 now via the roff and
+  ioff fields.
+
+  add ascale field to land model in support of model running on it's
+  own grid.  ascale is a field provided by the coupler to the land model 
+  via the driver "domain" datatype.  it is needed to correct fluxes
+  in the land model for conservation.  it is being applied to the
+  land to rtm fluxes and will need to be fully validated in a ccsm4
+  tri-grid configuration which is still under development.
+
+  change AIX optimization from -O3 to -O2 at request of LMWG.  not
+  needed for these changes in particular.  see bug #812.
+
+Bugs fixed (include bugzilla ID): 812
+
+Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 
+                                  680 (t0 precip diff for seq-ccsm), 
+                                  698 (cprnc bug gives false difference), 701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  805 (too much output in build-streams)
+    http://bugs.cgd.ucar.edu/
+
+Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
+                                      652 (threads different answers with older PGI versions)
+
+Describe any changes made to build system:
+  change AIX -O3 to -O2 at request of LMWG, incorporated
+  into tag for convenience.
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: none
+
+Describe any substantial timing or memory changes:  
+  added extra rtm tracer, should have no noticable impact on timing
+  or memory.
+
+Code reviewed by: tcraig
+
+List any svn externals directories updated (csm_share, mct, etc.):
+
+List all files eliminated: none
+
+List all files added and what they do: none
+
+List all existing files that have been modified, and describe the changes:
+
+M      bld/config_files/Makefile.in
+M      src/main/clmtypeInitMod.F90
+M      src/main/pft2colMod.F90
+M      src/main/clm_atmlnd.F90
+M      src/main/clm_csmMod.F90
+M      src/main/lnd_comp_mct.F90
+M      src/main/domainMod.F90
+M      src/main/clmtype.F90
+M      src/main/histFldsMod.F90
+M      src/riverroute/RtmMod.F90
+M      src/riverroute/RunoffMod.F90
+M      src/biogeophys/Biogeophysics2Mod.F90
+M      src/biogeophys/Hydrology1Mod.F90
+M      src/biogeophys/SoilHydrologyMod.F90
+
+- change AIX -O3 to -O2
+- add ascale implementation.  add asca field to domain datatype, set
+  for atm and lnd domains.  default is 1.0.  received from coupler
+  in first run call.  reset in lnd only if atm and lnd domain are same.
+- split qflx_snowcap term into qflx_snowcap_rain and qflx_snowcap_snow.
+  snowcap_rain term is same implementation as old snowcap term.
+  snowcap_snow is set to zero now.  potential future mods are noted
+  and commented out, search for tcx_snowcap_new in src code.
+- implement multiple tracers extensibility in rtm.  add frozen
+  runoff tracer in addition to liquid runoff tracer.
+- set roff and ioff runoff terms in lnd_comp_mct to send back to coupler
+- update rtm restart file, support backward compatability by setting
+  runoff tracers to zero if the new fields are not on the restart file.
+- update history file for new rtm tracers.  requires individual fields
+  to be copied from tracer arrays to single field arrays for history
+  interface.  
+	
+Summary of testing:
+
+  bluefire: all PASS except
+     073 blL61 TBL.sh _sc_h clm_std 19980101:MONTHLY:1800 1.9x2.5 gx1v5 -10 startup
+     077 blL62 TBL.sh _sc_m clm_std 19980101:MONTHLY:1800 1.9x2.5 gx1v5 -10 startup
+     085 blL74 TBL.sh _sc_s clm_std 19980101:6-HOURLY:1800 1x1_brazil navy -10 arb_ic
+     087 blL78 TBL.sh _sc_s clm_std 19971231:NONE:1800 1x1_brazil navy -10 arb_ic
+       the above 4 bl cases FAIL due to -O3 to -O2 optimzation change
+     113 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3
+       sm984 fails due to inconsistent driver in test
+  jaguar: all PASS except
+     038 erP65 TSM_ccsmseq.sh ERS f19_g13 I
+     039 erP15 TSM_ccsmseq.sh ERS T31_g35 ICN
+     040 erP66 TSM_ccsmseq.sh ERH f19_g13 I
+     041 erP16 TSM_ccsmseq.sh ERH T31_g35 ICN
+     042 erP67 TSM_ccsmseq.sh ERB f19_g13 I
+     043 erP17 TSM_ccsmseq.sh ERB T31_g35 ICN
+       erP* tests fail due to script error
+  bangkok/lf95: all PASS except
+     046 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48
+     047 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3
+       sm952 and sm984 fail due to inconsistent driver in test
+  breeze/gale/hail/gust/ifort: all PASS
+
+  bluefire cam pretag: all PASS except previously documented failures
+  bluefire ccsm4 pretag: all PASS except previously documented failures
+    compare with alpha33 FAILS since rtm not bit-for-bit in some tests.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_09
+
+Changes answers relative to baseline: 
+  change of AIX -O3 to -O2 changes some results by what appears to be roundoff.
+  change of rtm tracers introduces a roundoff change in some grid cells on bluefire,
+     this might be caused by changes in compiler optimization associated with the
+     extra rtm tracer dimension and extra rtm loop.  this can be seen only in 
+     fully coupled ccsm4 tests with an active ocean model.
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: active rtm and ocean
+    - what platforms/compilers: AIX + ? 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+	 roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+         examination of differences in a CCSM4 f45_g35 B case.
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name:  clm3_6_09
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date:  Mon Aug 11 10:55:23 MDT 2008

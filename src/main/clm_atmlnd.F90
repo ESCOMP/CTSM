@@ -753,6 +753,11 @@ end subroutine init_lnd2atm_type
     endif
   enddo
 
+  else    ! mx_ovr > 1
+
+     ! adomain and ldomain same, copy asca from adomain
+     ldomain%asca = adomain%asca
+
   endif   ! mx_ovr > 1
 
   first_call = .false.

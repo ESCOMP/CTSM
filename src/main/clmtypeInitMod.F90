@@ -1755,7 +1755,8 @@ contains
     allocate(pwf%qflx_prec_grnd(beg:end))
     allocate(pwf%qflx_rain_grnd(beg:end))
     allocate(pwf%qflx_snow_grnd(beg:end))
-    allocate(pwf%qflx_snowcap(beg:end))
+    allocate(pwf%qflx_snowcap_rain(beg:end))
+    allocate(pwf%qflx_snowcap_snow(beg:end))
     allocate(pwf%qflx_evap_veg(beg:end))
     allocate(pwf%qflx_tran_veg(beg:end))
     allocate(pwf%qflx_evap_can(beg:end))
@@ -1770,7 +1771,8 @@ contains
     pwf%qflx_prec_grnd(beg:end) = nan
     pwf%qflx_rain_grnd(beg:end) = nan
     pwf%qflx_snow_grnd(beg:end) = nan
-    pwf%qflx_snowcap(beg:end) = nan
+    pwf%qflx_snowcap_rain(beg:end) = nan
+    pwf%qflx_snowcap_snow(beg:end) = nan
     pwf%qflx_evap_veg(beg:end) = nan
     pwf%qflx_tran_veg(beg:end) = nan
     pwf%qflx_evap_can(beg:end) = nan

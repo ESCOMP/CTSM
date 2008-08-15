@@ -744,7 +744,7 @@ contains
 !
     integer , pointer :: ctype(:)          !column type index
     integer , pointer :: snl(:)            !number of snow layers
-    real(r8), pointer :: qflx_snowcap(:)   !excess precipitation due to snow capping (mm H2O /s) [+]
+    real(r8), pointer :: qflx_snowcap_rain(:) !excess rainfall due to snow capping (mm H2O /s) [+]
     real(r8), pointer :: qflx_dew_grnd(:)  !ground surface dew formation (mm H2O /s) [+]
     real(r8), pointer :: qflx_dew_snow(:)  !surface dew added to snow pack (mm H2O /s) [+]
     real(r8), pointer :: qflx_sub_snow(:)  !sublimation rate from snow pack (mm H2O /s) [+]
@@ -824,7 +824,7 @@ contains
     wt            => clm3%g%l%c%cws%wt
     qcharge       => clm3%g%l%c%cws%qcharge
     eff_porosity  => clm3%g%l%c%cps%eff_porosity
-    qflx_snowcap  => clm3%g%l%c%cwf%pwf_a%qflx_snowcap
+    qflx_snowcap_rain => clm3%g%l%c%cwf%pwf_a%qflx_snowcap_rain
     qflx_dew_grnd => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
     qflx_dew_snow => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
     qflx_sub_snow => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
@@ -1037,7 +1037,7 @@ contains
 
        ! Set imbalance for snow capping
 
-       qflx_qrgwl(c) = qflx_snowcap(c)
+       qflx_qrgwl(c) = qflx_snowcap_rain(c)
 
        ! Implicit evaporation term is now zero
 

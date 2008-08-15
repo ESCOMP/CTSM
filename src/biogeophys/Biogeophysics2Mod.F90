@@ -138,7 +138,8 @@ contains
 !
     real(r8), pointer :: eflx_sh_grnd(:)    ! sensible heat flux from ground (W/m**2) [+ to atm]
     real(r8), pointer :: qflx_evap_soi(:)   ! soil evaporation (mm H2O/s) (+ = to atm)
-    real(r8), pointer :: qflx_snowcap(:)    ! excess precipitation due to snow capping (mm H2O /s)
+    real(r8), pointer :: qflx_snowcap_rain(:)    ! excess rainfall due to snow capping (mm H2O /s)
+    real(r8), pointer :: qflx_snowcap_snow(:)    ! excess snowfall due to snow capping (mm H2O /s)
 ! 
 ! local pointers to implicit out arguments
 ! 
@@ -220,7 +221,8 @@ contains
     qflx_evap_veg  => clm3%g%l%c%p%pwf%qflx_evap_veg
     qflx_tran_veg  => clm3%g%l%c%p%pwf%qflx_tran_veg
     qflx_evap_can  => clm3%g%l%c%p%pwf%qflx_evap_can
-    qflx_snowcap   => clm3%g%l%c%p%pwf%qflx_snowcap
+    qflx_snowcap_rain => clm3%g%l%c%p%pwf%qflx_snowcap_rain
+    qflx_snowcap_snow => clm3%g%l%c%p%pwf%qflx_snowcap_snow
     qflx_evap_tot  => clm3%g%l%c%p%pwf%qflx_evap_tot
     qflx_evap_grnd => clm3%g%l%c%p%pwf%qflx_evap_grnd
     qflx_sub_snow  => clm3%g%l%c%p%pwf%qflx_sub_snow
@@ -399,7 +401,10 @@ contains
        ! calculations out of Hydrology2
 
        if (snl(c) < 0 .and. do_capsnow(c)) then
-          qflx_snowcap(p) = qflx_snowcap(p) + qflx_dew_snow(p) + qflx_dew_grnd(p)
+          qflx_snowcap_rain(p) = qflx_snowcap_rain(p) + qflx_dew_snow(p) + qflx_dew_grnd(p)
+          qflx_snowcap_snow(p) = 0.0_r8
+!tcx_snowcap_new          qflx_snowcap_rain(p) = qflx_snowcap_rain(p) + qflx_dew_grnd(p)
+!tcx_snowcap_new          qflx_snowcap_snow(p) = qflx_snowcap_snow(p) + qflx_dew_snow(p)
        end if
 
        ! Variables needed by history tape

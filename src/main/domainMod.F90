@@ -39,6 +39,7 @@ module domainMod
      real(r8),pointer :: latc(:)    ! latitude of grid cell (deg)
      real(r8),pointer :: lonc(:)    ! longitude of grid cell (deg)
      real(r8),pointer :: area(:)    ! grid cell area (km**2)
+     real(r8),pointer :: asca(:)    ! area scaling from driver
      character*16     :: set        ! flag to check if domain is set
      !--- following are valid only for land domain ---
      integer ,pointer :: pftm(:)    ! pft  mask: 1=real, 0=fake, -1=notset
@@ -144,7 +145,7 @@ contains
     allocate(domain%mask(nb:ne),domain%frac(nb:ne),domain%latc(nb:ne), &
              domain%pftm(nb:ne),domain%area(nb:ne),domain%lonc(nb:ne), &
              domain%nara(nb:ne),domain%topo(nb:ne),domain%ntop(nb:ne), &
-             stat=ier)
+             domain%asca(nb:ne),stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'domain_init ERROR: allocate mask, frac, lat, lon, area '
        call endrun()
@@ -178,6 +179,7 @@ contains
     domain%pftm     = -9999
     domain%nara     = 0._r8
     domain%ntop     = -1.0e36
+    domain%asca     = 1._r8
 
 end subroutine domain_init
 !------------------------------------------------------------------------------
@@ -213,7 +215,7 @@ end subroutine domain_init
        deallocate(domain%mask,domain%frac,domain%latc, &
                   domain%lonc,domain%area,domain%pftm, &
                   domain%nara,domain%topo,domain%ntop, &
-                  stat=ier)
+                  domain%asca,stat=ier)
        if (ier /= 0) then
           write(iulog,*) 'domain_clean ERROR: deallocate mask, frac, lat, lon, area '
           call endrun()
@@ -279,6 +281,7 @@ end subroutine domain_clean
 !   domain2%pftm     = domain1%pftm
 !   domain2%nara     = domain1%nara
 !   domain2%ntop     = domain1%ntop
+!   domain2%asca     = domain1%asca
 !   domain2%gatm     = domain1%gatm
 
     domain2%latc     = domain1%latc
@@ -299,7 +302,7 @@ end subroutine domain_setsame
 ! !INTERFACE:
   subroutine domain_setptrs(domain,ns,ni,nj,nbeg,nend,decomped,regional, &
      mask,pftm,clmlevel, &
-     frac,topo,latc,lonc,area,nara,ntop)
+     frac,topo,latc,lonc,area,nara,ntop,asca)
 !
 ! !DESCRIPTION:
 ! This subroutine sets external pointer arrays to arrays in domain
@@ -322,6 +325,7 @@ end subroutine domain_setsame
     real(r8),optional,pointer  :: area(:)  
     real(r8),optional,pointer  :: nara(:)  
     real(r8),optional,pointer  :: ntop(:)  
+    real(r8),optional,pointer  :: asca(:)  
 !
 ! !REVISION HISTORY:
 !   Created by T Craig
@@ -382,6 +386,9 @@ end subroutine domain_setsame
     if (present(ntop)) then
       ntop => domain%ntop
     endif
+    if (present(asca)) then
+      asca => domain%asca
+    endif
 
 end subroutine domain_setptrs
 !------------------------------------------------------------------------------
@@ -428,6 +435,7 @@ end subroutine domain_setptrs
     write(iulog,*) '  domain_check pftm = ',minval(domain%pftm),maxval(domain%pftm)
     write(iulog,*) '  domain_check nara = ',minval(domain%nara),maxval(domain%nara)
     write(iulog,*) '  domain_check ntop = ',minval(domain%ntop),maxval(domain%ntop)
+    write(iulog,*) '  domain_check asca = ',minval(domain%asca),maxval(domain%asca)
     write(iulog,*) ' '
   endif
 

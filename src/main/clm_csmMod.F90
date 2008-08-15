@@ -548,7 +548,7 @@ contains
     do n = runoff%begr,runoff%endr
        if (runoff%mask(n) == 2) then
           ni = ni + 1
-          bufSr(ni,index_r2c_Forr_roff) = runoff%runoff(n)/(runoff%area(n)*1.0e-6_r8*1000._r8)
+          bufSr(ni,index_r2c_Forr_roff) = runoff%runoff(1,n)/(runoff%area(n)*1.0e-6_r8*1000._r8)
           if (ni > runoff%lnumro) then
              write(iulog,*)'clm_csmMod: ERROR runoff count',n,ni,gi
              call endrun()

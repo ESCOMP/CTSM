@@ -116,7 +116,8 @@ contains
 !
     real(r8), pointer :: qflx_prec_intr(:)     ! interception of precipitation [mm/s]
     real(r8), pointer :: qflx_prec_grnd(:)     ! water onto ground including canopy runoff [kg/(m2 s)]
-    real(r8), pointer :: qflx_snowcap(:)       ! excess precipitation due to snow capping (mm H2O /s) [+]
+    real(r8), pointer :: qflx_snowcap_rain(:)  ! excess rainfall due to snow capping (mm H2O /s) [+]
+    real(r8), pointer :: qflx_snowcap_snow(:)  ! excess snowfall due to snow capping (mm H2O /s) [+]
     real(r8), pointer :: qflx_snow_grnd_pft(:) ! snow on ground after interception (mm H2O/s) [+]
     real(r8), pointer :: qflx_snow_grnd_col(:) ! snow on ground after interception (mm H2O/s) [+]
     real(r8), pointer :: qflx_rain_grnd(:)     ! rain on ground after interception (mm H2O/s) [+]
@@ -201,7 +202,8 @@ contains
     h2ocan             => clm3%g%l%c%p%pws%h2ocan
     qflx_prec_intr     => clm3%g%l%c%p%pwf%qflx_prec_intr
     qflx_prec_grnd     => clm3%g%l%c%p%pwf%qflx_prec_grnd
-    qflx_snowcap       => clm3%g%l%c%p%pwf%qflx_snowcap
+    qflx_snowcap_rain  => clm3%g%l%c%p%pwf%qflx_snowcap_rain
+    qflx_snowcap_snow  => clm3%g%l%c%p%pwf%qflx_snowcap_snow
     qflx_snow_grnd_pft => clm3%g%l%c%p%pwf%qflx_snow_grnd
     qflx_rain_grnd     => clm3%g%l%c%p%pwf%qflx_rain_grnd
     fwet               => clm3%g%l%c%p%pps%fwet
@@ -313,11 +315,15 @@ contains
        qflx_prec_grnd(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
 
        if (do_capsnow(c)) then
-          qflx_snowcap(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
+          qflx_snowcap_rain(p) = qflx_prec_grnd_snow(p) + qflx_prec_grnd_rain(p)
+          qflx_snowcap_snow(p) = 0._r8
+!tcx_snowcap_new          qflx_snowcap_rain(p) = qflx_prec_grnd_rain(p)
+!tcx_snowcap_new          qflx_snowcap_snow(p) = qflx_prec_grnd_snow(p)
           qflx_snow_grnd_pft(p) = 0._r8
           qflx_rain_grnd(p) = 0._r8
        else
-          qflx_snowcap(p) = 0._r8
+          qflx_snowcap_rain(p) = 0._r8
+          qflx_snowcap_snow(p) = 0._r8
           qflx_snow_grnd_pft(p) = qflx_prec_grnd_snow(p)           ! ice onto ground (mm/s)
           qflx_rain_grnd(p)     = qflx_prec_grnd_rain(p)           ! liquid water onto ground (mm/s)
        end if

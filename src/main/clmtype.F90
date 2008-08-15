@@ -626,7 +626,8 @@ type, public :: pft_wflux_type
    real(r8), pointer :: qflx_prec_grnd(:) !water onto ground including canopy runoff [kg/(m2 s)]
    real(r8), pointer :: qflx_rain_grnd(:) !rain on ground after interception (mm H2O/s) [+]
    real(r8), pointer :: qflx_snow_grnd(:) !snow on ground after interception (mm H2O/s) [+]
-   real(r8), pointer :: qflx_snowcap(:)   !excess precipitation due to snow capping (mm H2O /s) [+]
+   real(r8), pointer :: qflx_snowcap_snow(:) !excess snowfall due to snow capping (mm H2O /s) [+]
+   real(r8), pointer :: qflx_snowcap_rain(:) !excess rainfall due to snow capping (mm H2O /s) [+]
    real(r8), pointer :: qflx_evap_veg(:)  !vegetation evaporation (mm H2O/s) (+ = to atm)
    real(r8), pointer :: qflx_tran_veg(:)  !vegetation transpiration (mm H2O/s) (+ = to atm)
    real(r8), pointer :: qflx_evap_can(:)  !evaporation from leaves and stems 

@@ -365,6 +365,8 @@ contains
     use clm_comp        ,only : clm_run1, clm_run2
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
                                 advance_timestep 
+    use domainMod       ,only : adomain
+    use decompMod       ,only : get_proc_bounds_atm
     use abortutils      ,only : endrun
     use clm_varctl      ,only : irad
     use esmf_mod        ,only : ESMF_Clock
@@ -379,6 +381,7 @@ contains
     use perf_mod        ,only : t_startf, t_stopf, t_barrierf
     use mct_mod         ,only : mct_aVect, mct_aVect_accum, mct_aVect_copy, mct_aVect_avg, &
                                 mct_aVect_zero
+    use mct_mod        , only : mct_gGrid, mct_gGrid_exportRAttr, mct_gGrid_lsize
 !
 ! !ARGUMENTS:
     type(ESMF_Clock)            , intent(in)    :: EClock
@@ -410,8 +413,13 @@ contains
     real(r8):: nextsw_cday     ! calday from clock of next radiation computation
     real(r8):: caldayp1        ! clm calday plus dtime offset
     integer :: shrlogunit,shrloglev       ! old values
+    integer :: begg, endg    
     integer :: lbnum
     type(seq_infodata_type),pointer :: infodata
+    type(mct_gGrid),        pointer :: dom_l
+    real(r8),               pointer :: data(:)  ! temporary
+    integer :: g,i,lsize       ! counters
+    logical,save :: first_call = .true.   ! first call work
     character(len=32)            :: rdate ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
 !
@@ -436,7 +444,7 @@ contains
 
     ! Determine time of next atmospheric shortwave calculation
 
-    call seq_cdata_setptrs(cdata_l, infodata=infodata)
+    call seq_cdata_setptrs(cdata_l, infodata=infodata, dom=dom_l)
     call seq_timemgr_EClockGetData(EClock, &
          curr_ymd=ymd, curr_tod=tod_sync,  &
          curr_yr=yr_sync, curr_mon=mon_sync, curr_day=day_sync)
@@ -445,6 +453,18 @@ contains
     write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync,mon_sync,day_sync,tod_sync
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
     rstwr_sync = seq_timemgr_RestartAlarmIsOn( EClock )
+
+    lsize = mct_gGrid_lsize(dom_l)
+    call get_proc_bounds_atm(begg, endg)
+    if (first_call) then
+       allocate(data(lsize))
+       call mct_gGrid_exportRattr(dom_l,"ascale",data,lsize) 
+       do g = begg,endg
+          i = 1 + (g - begg)
+           adomain%asca(g) = data(i)
+       end do
+       deallocate(data)
+    endif
     
     ! Map MCT to land data type
 
@@ -575,6 +595,8 @@ contains
        call memmon_reset_addr()
     endif
 #endif
+
+    first_call = .false.
 
   end subroutine lnd_run_mct
 
@@ -1164,7 +1186,7 @@ contains
   subroutine rof_export_mct( r2x_r)
 
     use shr_kind_mod, only : r8 => shr_kind_r8
-    use RunoffMod   , only : runoff
+    use RunoffMod   , only : runoff, nt_rtm, rtm_tracers
     use abortutils  , only : endrun
     use clm_varctl  , only : iulog
     use mct_mod     , only : mct_aVect
@@ -1177,15 +1199,31 @@ contains
     !
     ! Local variables
     !
-    integer :: ni, n
+    integer :: ni, n, nt, nliq, nfrz
     character(len=32), parameter :: sub = 'rof_export_mct'
     !-----------------------------------------------------
     
+    nliq = 0
+    nfrz = 0
+    do nt = 1,nt_rtm
+       if (trim(rtm_tracers(nt)) == 'LIQ') then
+          nliq = nt
+       endif
+       if (trim(rtm_tracers(nt)) == 'ICE') then
+          nfrz = nt
+       endif
+    enddo
+    if (nliq == 0 .or. nfrz == 0) then
+       write(iulog,*)'RtmUpdateInput: ERROR in rtm_tracers LIQ ICE ',nliq,nfrz,rtm_tracers
+       call endrun()
+    endif
+
     ni = 0
     do n = runoff%begr,runoff%endr
        if (runoff%mask(n) == 2) then
           ni = ni + 1
-          r2x_r%rAttr(index_r2x_Forr_roff,ni) = runoff%runoff(n)/(runoff%area(n)*1.0e-6_r8*1000._r8)
+          r2x_r%rAttr(index_r2x_Forr_roff,ni) = runoff%runoff(n,nliq)/(runoff%area(n)*1.0e-6_r8*1000._r8)
+          r2x_r%rAttr(index_r2x_Forr_ioff,ni) = runoff%runoff(n,nfrz)/(runoff%area(n)*1.0e-6_r8*1000._r8)
           if (ni > runoff%lnumro) then
              write(iulog,*) sub, ' : ERROR runoff count',n,ni
              call endrun( sub//' : ERROR runoff > expected' )

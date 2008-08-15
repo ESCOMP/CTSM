@@ -184,7 +184,7 @@ else
   # Check for override of default Fortran compiler optimizations
   ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
     # Inline when not debugging
-    FORTRAN_OPTIMIZATION := -O3 -qstrict -Q
+    FORTRAN_OPTIMIZATION := -O2 -qstrict -Q
   endif
   FFLAGS += $(FORTRAN_OPTIMIZATION)
   LDFLAGS := -q64 -lmass -lmassv

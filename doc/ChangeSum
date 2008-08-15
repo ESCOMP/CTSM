@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ===============================================================================================================================
+   clm3_6_10       tcraig 08/15/2008 extend rtm tracer, ascale for tri-grids, AIX O3 to O2
    clm3_6_09         erik 08/11/2008 Fix clm.cpl7.template to run hybrid and branch cases
    clm3_6_08         erik 08/06/2008 Fix bugs, and build changes for inputdata repo
    clm3_6_07         erik 07/08/2008 Implement new build namelist system from Vertenstein/Eaton, bluefire, and BGP updates
