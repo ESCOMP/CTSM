@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_alpha33"
+seqccsm_vers="ccsm4_0_alpha34"
 conccsm_vers="ccsm3_9_beta03"
 
 hostname=`hostname`

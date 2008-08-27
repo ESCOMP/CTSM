@@ -92,6 +92,7 @@ contains
     real(r8), pointer :: qflx_surf(:)     !surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_drain(:)    !sub-surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)    !qflx_surf at glaciers, wetlands, lakes
+    real(r8), pointer :: qflx_snwcp_ice(:)!excess snowfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: qflx_evap_tot_col(:) !pft quantity averaged to the column (assuming one pft)
     real(r8) ,pointer :: soilalpha(:)     !factor that reduces ground saturated specific humidity (-)
     real(r8), pointer :: zwt(:)           !water table depth
@@ -124,30 +125,31 @@ contains
 
     ! Assign local pointers to derived type column members
 
-    begwb        => clm3%g%l%c%cwbal%begwb
-    endwb        => clm3%g%l%c%cwbal%endwb
-    do_capsnow   => clm3%g%l%c%cps%do_capsnow
-    snowdp       => clm3%g%l%c%cps%snowdp
-    t_grnd       => clm3%g%l%c%ces%t_grnd
-    h2osno       => clm3%g%l%c%cws%h2osno
-    snowice      => clm3%g%l%c%cws%snowice
-    snowliq      => clm3%g%l%c%cws%snowliq
-    eflx_snomelt => clm3%g%l%c%cef%eflx_snomelt
-    qmelt        => clm3%g%l%c%cwf%qmelt
-    qflx_snomelt => clm3%g%l%c%cwf%qflx_snomelt
-    qflx_surf    => clm3%g%l%c%cwf%qflx_surf
-    qflx_qrgwl   => clm3%g%l%c%cwf%qflx_qrgwl
-    qflx_drain   => clm3%g%l%c%cwf%qflx_drain
-    qflx_infl    => clm3%g%l%c%cwf%qflx_infl
-    rootr_column => clm3%g%l%c%cps%rootr_column
-    h2osoi_vol   => clm3%g%l%c%cws%h2osoi_vol
-    h2osoi_ice   => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq   => clm3%g%l%c%cws%h2osoi_liq
+    begwb          => clm3%g%l%c%cwbal%begwb
+    endwb          => clm3%g%l%c%cwbal%endwb
+    do_capsnow     => clm3%g%l%c%cps%do_capsnow
+    snowdp         => clm3%g%l%c%cps%snowdp
+    t_grnd         => clm3%g%l%c%ces%t_grnd
+    h2osno         => clm3%g%l%c%cws%h2osno
+    snowice        => clm3%g%l%c%cws%snowice
+    snowliq        => clm3%g%l%c%cws%snowliq
+    eflx_snomelt   => clm3%g%l%c%cef%eflx_snomelt
+    qmelt          => clm3%g%l%c%cwf%qmelt
+    qflx_snomelt   => clm3%g%l%c%cwf%qflx_snomelt
+    qflx_surf      => clm3%g%l%c%cwf%qflx_surf
+    qflx_qrgwl     => clm3%g%l%c%cwf%qflx_qrgwl
+    qflx_snwcp_ice => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
+    qflx_drain     => clm3%g%l%c%cwf%qflx_drain
+    qflx_infl      => clm3%g%l%c%cwf%qflx_infl
+    rootr_column   => clm3%g%l%c%cps%rootr_column
+    h2osoi_vol     => clm3%g%l%c%cws%h2osoi_vol
+    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
+    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
     qflx_evap_tot_col => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
-    soilalpha    => clm3%g%l%c%cws%soilalpha
-    zwt          => clm3%g%l%c%cws%zwt
-    fcov         => clm3%g%l%c%cws%fcov
-    qcharge      => clm3%g%l%c%cws%qcharge
+    soilalpha      => clm3%g%l%c%cws%soilalpha
+    zwt            => clm3%g%l%c%cws%zwt
+    fcov           => clm3%g%l%c%cws%fcov
+    qcharge        => clm3%g%l%c%cws%qcharge
 
     ! Assign local pointers to derived type pft members
 
@@ -201,8 +203,10 @@ contains
 
        if (do_capsnow(c)) then
           h2osno(c) = h2osno(c) - (qmelt(c) + qflx_sub_snow)*dtime
+          qflx_snwcp_ice(c) = forc_snow(g) + qflx_dew_snow
        else
           h2osno(c) = h2osno(c) + (forc_snow(g)-qmelt(c)-qflx_sub_snow+qflx_dew_snow)*dtime
+          qflx_snwcp_ice(c) = 0._r8
        end if
        h2osno(c) = max(h2osno(c), 0._r8)
 
@@ -243,7 +247,8 @@ contains
        h2osoi_vol(c,:)   = spval
        h2osoi_ice(c,:)   = spval
        h2osoi_liq(c,:)   = spval
-       qflx_qrgwl(c)     = forc_rain(g) + forc_snow(g) - qflx_evap_tot(p) - (endwb(c)-begwb(c))/dtime
+       qflx_qrgwl(c)     = forc_rain(g) + forc_snow(g) - qflx_evap_tot(p) - qflx_snwcp_ice(c) - &
+                           (endwb(c)-begwb(c))/dtime
 
        ! The pft average must be done here for output to history tape
 

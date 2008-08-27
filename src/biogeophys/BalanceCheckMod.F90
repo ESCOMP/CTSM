@@ -204,6 +204,7 @@ contains
     real(r8), pointer :: qflx_surf(:)       ! surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)      ! qflx_surf at glaciers, wetlands, lakes
     real(r8), pointer :: qflx_drain(:)      ! sub-surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_snwcp_ice(:)  ! excess snowfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: forc_solad(:,:)    ! direct beam radiation (vis=forc_sols , nir=forc_soll )
     real(r8), pointer :: forc_solai(:,:)    ! diffuse radiation     (vis=forc_solsd, nir=forc_solld)
 !
@@ -251,6 +252,7 @@ contains
     qflx_surf         => clm3%g%l%c%cwf%qflx_surf
     qflx_qrgwl        => clm3%g%l%c%cwf%qflx_qrgwl
     qflx_drain        => clm3%g%l%c%cwf%qflx_drain
+    qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
     qflx_evap_tot     => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
     errh2o            => clm3%g%l%c%cwbal%errh2o
     errsoi_col        => clm3%g%l%c%cebal%errsoi
@@ -303,10 +305,10 @@ contains
 !cdir nodep
     do c = lbc, ubc
        g = cgridcell(c)
-       
+      
        errh2o(c) = endwb(c) - begwb(c) &
             - (forc_rain_col(c) + forc_snow_col(c) - qflx_evap_tot(c) - qflx_surf(c) &
-            - qflx_qrgwl(c) - qflx_drain(c)) * dtime
+            - qflx_qrgwl(c) - qflx_drain(c) - qflx_snwcp_ice(c)) * dtime
 
     end do
 

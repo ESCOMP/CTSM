@@ -143,6 +143,8 @@ contains
     real(r8), pointer :: qflx_prec_grnd(:)  ! water onto ground including canopy runoff [kg/(m2 s)]
     real(r8), pointer :: qflx_evap_soi(:)   ! soil evaporation (mm H2O/s) (+ = to atm)
     real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
+    real(r8), pointer :: qflx_snwcp_liq(:)  ! excess rainfall due to snow capping (mm H2O /s) [+]`
+    real(r8), pointer :: qflx_snwcp_ice(:)  ! excess snowfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: eflx_sh_grnd(:)    ! sensible heat flux from ground (W/m**2) [+ to atm]
     real(r8), pointer :: eflx_lwrad_out(:)  ! emitted infrared (longwave) radiation (W/m**2)
     real(r8), pointer :: eflx_lwrad_net(:)  ! net infrared (longwave) rad (W/m**2) [+ = to atm]
@@ -326,6 +328,8 @@ contains
     qflx_prec_grnd => clm3%g%l%c%p%pwf%qflx_prec_grnd
     qflx_evap_soi  => clm3%g%l%c%p%pwf%qflx_evap_soi
     qflx_evap_tot  => clm3%g%l%c%p%pwf%qflx_evap_tot
+    qflx_snwcp_ice => clm3%g%l%c%p%pwf%qflx_snwcp_ice    
+    qflx_snwcp_liq => clm3%g%l%c%p%pwf%qflx_snwcp_liq    
 
     ! Determine step size
 
@@ -521,6 +525,10 @@ contains
        p = filter_lakep(fp)
        c = pcolumn(p)
        g = pgridcell(p)
+
+       ! initialize snow cap terms to zero for lake columns
+       qflx_snwcp_ice(p) = 0._r8
+       qflx_snwcp_liq(p) = 0._r8
 
        ! If there is snow on the ground and t_grnd > tfrz: reset t_grnd = tfrz.
        ! Re-evaluate ground fluxes. Energy imbalance used to melt snow.

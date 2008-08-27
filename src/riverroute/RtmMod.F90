@@ -1146,7 +1146,7 @@ contains
     real(r8), pointer :: qflx_qrgwl(:)        ! qflx_surf at glaciers, wetlands, lakes
     real(r8), pointer :: qflx_drain(:)        ! sub-surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_surf(:)         ! surface runoff (mm H2O /s)
-    real(r8), pointer :: qflx_snowcap_snow(:) ! excess snowfall due to snow capping (mm H2O /s)
+    real(r8), pointer :: qflx_snwcp_ice(:)    ! excess snowfall due to snow capping (mm H2O /s)
 !
 !EOP
 !
@@ -1176,7 +1176,7 @@ contains
     qflx_qrgwl        => clm3%g%l%c%cwf%qflx_qrgwl
     qflx_drain        => clm3%g%l%c%cwf%qflx_drain
     qflx_surf         => clm3%g%l%c%cwf%qflx_surf
-    qflx_snowcap_snow => clm3%g%l%c%cwf%pwf_a%qflx_snowcap_snow
+    qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice   
 
     ! Determine subgrid bounds for this processor
 
@@ -1203,8 +1203,7 @@ contains
     do c = begc, endc
        g = cgridcell(c)
        rtmin_acc(g,nliq) = rtmin_acc(g,nliq) + (qflx_surf(c) + qflx_qrgwl(c) + qflx_drain(c)) * wtgcell(c)
-       rtmin_acc(g,nfrz) = 0._r8
-!tcx_snowcap_new       rtmin_acc(g,nfrz) = rtmin_acc(g,nfrz) + (qflx_snowcap_snow(c)) * wtgcell(c)
+       rtmin_acc(g,nfrz) = rtmin_acc(g,nfrz) + qflx_snwcp_ice(c) * wtgcell(c)
     end do
 
     ncount_rtm = ncount_rtm + 1

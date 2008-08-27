@@ -1,4 +1,82 @@
 ===============================================================
+Tag name:  clm3_6_11
+Originator(s):  dlawren (Lawrence David 1384 CGD)
+Date: Tue Aug 26 21:53:22 MDT 2008
+One-line Summary: Ice stream for snow capped regions
+
+Purpose of changes: Split liquid and ice runoff streams in snow capped situations
+
+Bugs fixed (include bugzilla ID):  None
+
+Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 
+                                  680 (t0 precip diff for seq-ccsm), 
+                                  698 (cprnc bug gives false difference), 701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  805 (too much output in build-streams)
+    http://bugs.cgd.ucar.edu/
+
+Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
+                                      652 (threads different answers with older PGI versions)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: Update version of pft-physiology file used
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: erik
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts and csm_share
+
+   scripts    to scripts4_080731
+   csm_share  to share3_080801
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml --- Use the same pft-phisiology file for every option
+M      models/lnd/clm/src/main/clmtypeInitMod.F90
+M      models/lnd/clm/src/main/pft2colMod.F90
+M      models/lnd/clm/src/main/clmtype.F90
+M      models/lnd/clm/src/main/histFldsMod.F90
+M      models/lnd/clm/src/main/models/lnd/clm/src/main/clm_time_manager.F90 -- Hack for fake Gregorian calendar
+M      models/lnd/clm/src/riverroute/RtmMod.F90 --------------- two runoff sreams, liq and ice (qflx_snwcp_ice)
+M      models/lnd/clm/src/biogeophys/Biogeophysics2Mod.F90 ---- dew snwcp
+M      models/lnd/clm/src/biogeophys/Hydrology1Mod.F90 -------- snow and rain split for snwcp
+M      models/lnd/clm/src/biogeophys/SoilHydrologyMod.F90 ----- liq snwcp 
+M      models/lnd/clm/src/biogeophys/Hydrology2Mod.F90 -------- qrgwl minus snwcp_ice
+M      models/lnd/clm/src/biogeophys/HydrologyLakeMod.F90 ----- lake snwcp
+M      models/lnd/clm/src/biogeophys/BiogeophysicsLakeMod.F90 - initialize snwcp fields to zero for lakes
+M      models/lnd/clm/src/biogeophys/BalanceCheckMod.F90 ------ revised balance check
+      >>>>>>>>>> Get scam test working
+M      models/lnd/clm/test/system/TSMext_ccsmseq_cam.sh
+M      models/lnd/clm/test/system/nl_files/scam
+M      models/lnd/clm/test/system/TSCext_ccsmseq_scam.sh
+M      models/lnd/clm/test/system/config_files/scam_ds
+M      models/lnd/clm/test/system/config_files/ext_ccsm_seq_64x128_s
+M      models/lnd/clm/test/system/nl_files/scam
+M      models/lnd/clm/test/system/nl_files/scam_prep
+
+Summary of testing:
+
+  bluefire: All PASS except TBL tests
+  lightning/pathscale: All PASS except TBL tests
+  bangkok/lf95: All PASS except TBL tests
+  breeze/gale/hail/gust/ifort: All PASS
+
+  Didn't test on jaguar -- since it was down.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_10
+
+Changes answers relative to baseline: Yes -- pft-physiology file, RTM changes
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_10
 Originator(s):  tcraig
 Date: Fri Aug 15 09:05:50 MDT 2008

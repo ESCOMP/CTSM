@@ -38,10 +38,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      for the CLM2 data in the CCSM distribution -->
 
 <!-- Plant function types (relative to {csmdata}) -->
-<fpftcon bgc="none">lnd/clm2/pftdata/pft-physiology.c070207</fpftcon>
-<fpftcon bgc="casa">lnd/clm2/pftdata/pft-physiology.c070207</fpftcon>
-<fpftcon bgc="dgvm">lnd/clm2/pftdata/pft-physiology.c070207</fpftcon>
-<fpftcon bgc="cn"  >lnd/clm2/pftdata/pft-physiology-cn.c070601</fpftcon>
+<fpftcon           >lnd/clm2/pftdata/pft-physiology.c070321</fpftcon>
 
 <!-- Initial condition datasets (relative to {csmdata}) -->
 

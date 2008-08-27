@@ -92,14 +92,14 @@ contains
     ptrp => clm3%g%l%c%p%pwf%qflx_snow_grnd
     ptrc => clm3%g%l%c%cwf%pwf_a%qflx_snow_grnd
     call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
+    
+    ptrp => clm3%g%l%c%p%pwf%qflx_snwcp_liq
+    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_liq
+    call p2c (num_allc, filter_allc, ptrp, ptrc)
 
-    ptrp => clm3%g%l%c%p%pwf%qflx_snowcap_rain
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_snowcap_rain
-    call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
-
-    ptrp => clm3%g%l%c%p%pwf%qflx_snowcap_snow
-    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_snowcap_snow
-    call p2c (num_nolakec, filter_nolakec, ptrp, ptrc)
+    ptrp => clm3%g%l%c%p%pwf%qflx_snwcp_ice
+    ptrc => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
+    call p2c (num_allc, filter_allc, ptrp, ptrc)
 
     ptrp => clm3%g%l%c%p%pwf%qflx_tran_veg
     ptrc => clm3%g%l%c%cwf%pwf_a%qflx_tran_veg

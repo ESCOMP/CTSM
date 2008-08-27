@@ -744,7 +744,7 @@ contains
 !
     integer , pointer :: ctype(:)          !column type index
     integer , pointer :: snl(:)            !number of snow layers
-    real(r8), pointer :: qflx_snowcap_rain(:) !excess rainfall due to snow capping (mm H2O /s) [+]
+    real(r8), pointer :: qflx_snwcp_liq(:) !excess rainfall due to snow capping (mm H2O /s) [+]
     real(r8), pointer :: qflx_dew_grnd(:)  !ground surface dew formation (mm H2O /s) [+]
     real(r8), pointer :: qflx_dew_snow(:)  !surface dew added to snow pack (mm H2O /s) [+]
     real(r8), pointer :: qflx_sub_snow(:)  !sublimation rate from snow pack (mm H2O /s) [+]
@@ -806,33 +806,33 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    ctype         => clm3%g%l%c%itype
-!   cgridcell     => clm3%g%l%c%gridcell
+    ctype          => clm3%g%l%c%itype
+!   cgridcell      => clm3%g%l%c%gridcell
 
-    snl           => clm3%g%l%c%cps%snl
-    dz            => clm3%g%l%c%cps%dz
-    bsw           => clm3%g%l%c%cps%bsw
-    t_soisno      => clm3%g%l%c%ces%t_soisno
-    hksat         => clm3%g%l%c%cps%hksat
-    sucsat        => clm3%g%l%c%cps%sucsat
-    z             => clm3%g%l%c%cps%z
-    zi            => clm3%g%l%c%cps%zi
-    watsat        => clm3%g%l%c%cps%watsat
-    hkdepth       => clm3%g%l%c%cps%hkdepth
-    zwt           => clm3%g%l%c%cws%zwt
-    wa            => clm3%g%l%c%cws%wa
-    wt            => clm3%g%l%c%cws%wt
-    qcharge       => clm3%g%l%c%cws%qcharge
-    eff_porosity  => clm3%g%l%c%cps%eff_porosity
-    qflx_snowcap_rain => clm3%g%l%c%cwf%pwf_a%qflx_snowcap_rain
-    qflx_dew_grnd => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
-    qflx_dew_snow => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
-    qflx_sub_snow => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
-    qflx_drain    => clm3%g%l%c%cwf%qflx_drain
-    qflx_qrgwl    => clm3%g%l%c%cwf%qflx_qrgwl
-    eflx_impsoil  => clm3%g%l%c%cef%eflx_impsoil
-    h2osoi_liq    => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_ice    => clm3%g%l%c%cws%h2osoi_ice
+    snl            => clm3%g%l%c%cps%snl
+    dz             => clm3%g%l%c%cps%dz
+    bsw            => clm3%g%l%c%cps%bsw
+    t_soisno       => clm3%g%l%c%ces%t_soisno
+    hksat          => clm3%g%l%c%cps%hksat
+    sucsat         => clm3%g%l%c%cps%sucsat
+    z              => clm3%g%l%c%cps%z
+    zi             => clm3%g%l%c%cps%zi
+    watsat         => clm3%g%l%c%cps%watsat
+    hkdepth        => clm3%g%l%c%cps%hkdepth
+    zwt            => clm3%g%l%c%cws%zwt
+    wa             => clm3%g%l%c%cws%wa
+    wt             => clm3%g%l%c%cws%wt
+    qcharge        => clm3%g%l%c%cws%qcharge
+    eff_porosity   => clm3%g%l%c%cps%eff_porosity
+    qflx_snwcp_liq => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_liq
+    qflx_dew_grnd  => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
+    qflx_dew_snow  => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
+    qflx_sub_snow  => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
+    qflx_drain     => clm3%g%l%c%cwf%qflx_drain
+    qflx_qrgwl     => clm3%g%l%c%cwf%qflx_qrgwl
+    eflx_impsoil   => clm3%g%l%c%cef%eflx_impsoil
+    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
+    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
 
     ! Get time step
 
@@ -1037,7 +1037,7 @@ contains
 
        ! Set imbalance for snow capping
 
-       qflx_qrgwl(c) = qflx_snowcap_rain(c)
+       qflx_qrgwl(c) = qflx_snwcp_liq(c)
 
        ! Implicit evaporation term is now zero
 

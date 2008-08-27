@@ -51,8 +51,24 @@ if [ $rc -ne 0 ]; then
 fi
 
 #temporarily stage these files one level up in work directory tree
-cp ${CLM_TESTDIR}/TSMext_ccsmseq_cam.$1.$2.$5/camrun.*.i.*.nc ../.
-cp ${CLM_TESTDIR}/TSMext_ccsmseq_cam.$1.$2.$5/camrun.*.h1.*.nc ../.
+echo "TSCext_ccsmseq_scam.sh: stage output files in $CLM_TESTDIR"
+file=${CLM_TESTDIR}/TSMext_ccsmseq_cam.$1.$2.$5/camrun.cam2.i.0000-09-01-00000.nc
+echo "cp -f $file ${CLM_TESTDIR}/."
+if [ ! -f $file ]; then
+    echo "TSCext_ccsmseq_scam.sh: error -- $file does not exist as expected"
+    echo "FAIL.job${JOBID}" > TestStatus
+    exit 5
+fi
+cp -f $file ${CLM_TESTDIR}/.
+
+file=${CLM_TESTDIR}/TSMext_ccsmseq_cam.$1.$2.$5/camrun.cam2.h1.0000-09-01-00000.nc
+echo "cp -f $file ${CLM_TESTDIR}/."
+if [ ! -f $file ]; then
+    echo "TSCext_ccsmseq_scam.sh: error -- $file does not exist as expected"
+    echo "FAIL.job${JOBID}" > TestStatus
+    exit 5
+fi
+cp -f $file ${CLM_TESTDIR}/.
 
 echo "TSCext_ccsmseq_scam.sh: now run scam with the generated datafiles as input" 
 if [ "$debug" != "YES" ]; then
@@ -62,15 +78,15 @@ else
   rc=0
 fi
 
-#remove temporarily staged files
-if [ "$CAM_RETAIN_FILES" != "TRUE" ]; then
-    rm ../camrun.*
-fi
-
 if [ $rc -ne 0 ]; then
     echo "TSCext_ccsmseq_scam.sh: error from TSMext_ccsmseq_cam.sh= $rc" 
     echo "FAIL.job${JOBID}" > TestStatus
-    exit 4
+    exit 7
+fi
+
+#remove temporarily staged files
+if [ "$CAM_RETAIN_FILES" != "TRUE" ]; then
+    rm ../camrun.*.nc
 fi
 
 # Now test the output
@@ -86,7 +102,7 @@ if [ "$myvar" == "0" ]; then
 else
     echo "TSCext_ccsmseq_scam.sh: scam b4b test did not pass"
     echo "FAIL.job${JOBID}" > TestStatus
-    exit 6
+    exit 8
 fi
 
 exit 0

@@ -139,6 +139,7 @@ contains
     real(r8), pointer :: qflx_surf(:)     ! surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_infl(:)     ! infiltration (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)    ! qflx_surf at glaciers, wetlands, lakes
+    real(r8), pointer :: qflx_snwcp_ice(:)! excess snowfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: soilpsi(:,:)	  ! soil water potential in each soil layer (MPa)
 !
 !EOP
@@ -175,42 +176,43 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    cgridcell     => clm3%g%l%c%gridcell
-    clandunit     => clm3%g%l%c%landunit
-    snl           => clm3%g%l%c%cps%snl
-    snowage       => clm3%g%l%c%cps%snowage
-    t_snow        => clm3%g%l%c%ces%t_snow
-    t_grnd        => clm3%g%l%c%ces%t_grnd
-    h2ocan        => clm3%g%l%c%cws%pws_a%h2ocan
-    h2osno        => clm3%g%l%c%cws%h2osno
-    wf            => clm3%g%l%c%cps%wf
-    snowice       => clm3%g%l%c%cws%snowice
-    snowliq       => clm3%g%l%c%cws%snowliq
-    zwt           => clm3%g%l%c%cws%zwt
-    fcov          => clm3%g%l%c%cws%fcov
-    wa            => clm3%g%l%c%cws%wa
-    qcharge       => clm3%g%l%c%cws%qcharge
-    watsat        => clm3%g%l%c%cps%watsat
-    sucsat        => clm3%g%l%c%cps%sucsat
-    bsw           => clm3%g%l%c%cps%bsw
-    z             => clm3%g%l%c%cps%z
-    dz            => clm3%g%l%c%cps%dz
-    zi            => clm3%g%l%c%cps%zi
-    t_soisno      => clm3%g%l%c%ces%t_soisno
-    h2osoi_ice    => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq    => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_vol    => clm3%g%l%c%cws%h2osoi_vol
-    qflx_evap_tot => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
-    qflx_drain    => clm3%g%l%c%cwf%qflx_drain
-    qflx_surf     => clm3%g%l%c%cwf%qflx_surf
-    qflx_infl     => clm3%g%l%c%cwf%qflx_infl
-    qflx_qrgwl    => clm3%g%l%c%cwf%qflx_qrgwl
-    endwb         => clm3%g%l%c%cwbal%endwb
-    begwb         => clm3%g%l%c%cwbal%begwb
-    bsw2          => clm3%g%l%c%cps%bsw2
-    psisat        => clm3%g%l%c%cps%psisat
-    vwcsat        => clm3%g%l%c%cps%vwcsat
-    soilpsi       => clm3%g%l%c%cps%soilpsi
+    cgridcell      => clm3%g%l%c%gridcell
+    clandunit      => clm3%g%l%c%landunit
+    snl            => clm3%g%l%c%cps%snl
+    snowage        => clm3%g%l%c%cps%snowage
+    t_snow         => clm3%g%l%c%ces%t_snow
+    t_grnd         => clm3%g%l%c%ces%t_grnd
+    h2ocan         => clm3%g%l%c%cws%pws_a%h2ocan
+    h2osno         => clm3%g%l%c%cws%h2osno
+    wf             => clm3%g%l%c%cps%wf
+    snowice        => clm3%g%l%c%cws%snowice
+    snowliq        => clm3%g%l%c%cws%snowliq
+    zwt            => clm3%g%l%c%cws%zwt
+    fcov           => clm3%g%l%c%cws%fcov
+    wa             => clm3%g%l%c%cws%wa
+    qcharge        => clm3%g%l%c%cws%qcharge
+    watsat         => clm3%g%l%c%cps%watsat
+    sucsat         => clm3%g%l%c%cps%sucsat
+    bsw            => clm3%g%l%c%cps%bsw
+    z              => clm3%g%l%c%cps%z
+    dz             => clm3%g%l%c%cps%dz
+    zi             => clm3%g%l%c%cps%zi
+    t_soisno       => clm3%g%l%c%ces%t_soisno
+    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
+    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
+    h2osoi_vol     => clm3%g%l%c%cws%h2osoi_vol
+    qflx_evap_tot  => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
+    qflx_drain     => clm3%g%l%c%cwf%qflx_drain
+    qflx_surf      => clm3%g%l%c%cwf%qflx_surf
+    qflx_infl      => clm3%g%l%c%cwf%qflx_infl
+    qflx_qrgwl     => clm3%g%l%c%cwf%qflx_qrgwl
+    qflx_snwcp_ice => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
+    endwb          => clm3%g%l%c%cwbal%endwb
+    begwb          => clm3%g%l%c%cwbal%begwb
+    bsw2           => clm3%g%l%c%cps%bsw2
+    psisat         => clm3%g%l%c%cps%psisat
+    vwcsat         => clm3%g%l%c%cps%vwcsat
+    soilpsi        => clm3%g%l%c%cps%soilpsi
 
     ! Determine time step and step size
 
@@ -377,7 +379,8 @@ contains
           qflx_drain(c) = 0._r8
           qflx_surf(c) = 0._r8
           qflx_infl(c) = 0._r8
-          qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) - qflx_evap_tot(c) - (endwb(c)-begwb(c))/dtime
+          qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
+                          (endwb(c)-begwb(c))/dtime
           fcov(c) = spval
           qcharge(c) = spval
        end if

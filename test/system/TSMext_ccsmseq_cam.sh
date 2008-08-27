@@ -117,8 +117,8 @@ if [ $rc -eq 0 ] && grep -c "END OF MODEL RUN" test.log > /dev/null; then
     echo "PASS" > TestStatus
     if [ $CLM_RETAIN_FILES != "TRUE" ]; then
         echo "TSMext_ccsmseq_cam.sh: removing some unneeded files to save disc space" 
-        if [ -f "*.clm*.i.* *.cam*.i.*" ]; then
-            rm *.clm*.i.* *.cam*.i.*
+        if [ -f "*.clm*.i.*" ]; then
+            rm *.clm*.i.*
 	fi
     fi
 else

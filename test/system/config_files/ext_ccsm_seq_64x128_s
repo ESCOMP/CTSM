@@ -1,4 +1,6 @@
 -nospmd -nosmp
+-chem none
+-microphys rk
 -dyn eul
 -res 64x128
 -camiop

@@ -472,6 +472,14 @@ contains
          avgflag='A', long_name='surface runoff at glaciers, wetlands, lakes', &
          ptr_col=clm3%g%l%c%cwf%qflx_qrgwl)
 
+    call hist_addfld1d (fname='QSNWCPLIQ', units='mm H2O/s', &
+         avgflag='A', long_name='excess rainfall due to snow capping', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_snwcp_liq, default='inactive')
+
+    call hist_addfld1d (fname='QSNWCPICE', units='mm H2O/s', &
+         avgflag='A', long_name='excess snowfall due to snow capping', &
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_snwcp_ice)
+
     call hist_addfld1d (fname='QDRAI',  units='mm/s',  &
          avgflag='A', long_name='sub-surface drainage', &
          ptr_col=clm3%g%l%c%cwf%qflx_drain)
@@ -503,7 +511,7 @@ contains
 #if (defined RTM)
     ! RTM River Routing
 
-    call hist_addfld1d (fname='QCHANR'//'_'//trim(rtm_tracers(1)), units='m3/s',  &
+    call hist_addfld1d (fname='QCHANR', units='m3/s',  &
       avgflag='A', long_name='RTM river flow: '//trim(rtm_tracers(1)), &
       ptr_rof=runoff%runofflnd_nt1)
 
@@ -511,7 +519,7 @@ contains
       avgflag='A', long_name='RTM river flow: '//trim(rtm_tracers(2)), &
       ptr_rof=runoff%runofflnd_nt2)
 
-    call hist_addfld1d (fname='QCHOCNR'//'_'//trim(rtm_tracers(1)), units='m3/s', &
+    call hist_addfld1d (fname='QCHOCNR', units='m3/s', &
       avgflag='A', long_name='RTM river discharge into ocean: '//trim(rtm_tracers(1)), &
       ptr_rof=runoff%runoffocn_nt1)
 
@@ -519,7 +527,7 @@ contains
       avgflag='A', long_name='RTM river discharge into ocean: '//trim(rtm_tracers(2)), &
       ptr_rof=runoff%runoffocn_nt2)
 
-    call hist_addfld1d (fname='DVOLRDT_LND'//'_'//trim(rtm_tracers(1)), units='mm/s',  &
+    call hist_addfld1d (fname='DVOLRDT_LND', units='mm/s',  &
       avgflag='A', long_name='RTM land change in storage: '//trim(rtm_tracers(1)), &
       ptr_rof=runoff%dvolrdtlnd_nt1)
 
@@ -527,7 +535,7 @@ contains
       avgflag='A', long_name='RTM land change in storage: '//trim(rtm_tracers(2)), &
       ptr_rof=runoff%dvolrdtlnd_nt2)
 
-    call hist_addfld1d (fname='DVOLRDT_OCN'//'_'//trim(rtm_tracers(1)), units='mm/s',  &
+    call hist_addfld1d (fname='DVOLRDT_OCN', units='mm/s',  &
       avgflag='A', long_name='RTM ocean change of storage: '//trim(rtm_tracers(1)), &
       ptr_rof=runoff%dvolrdtocn_nt1)
 
@@ -4021,14 +4029,6 @@ contains
     call hist_addfld1d (fname='QFLX_SNOW_GRND', units='mm H2O/s', &
          avgflag='A', long_name='snow on ground after interception', &
          ptr_pft=clm3%g%l%c%p%pwf%qflx_snow_grnd, default='inactive')
-
-    call hist_addfld1d (fname='QFLX_SNOWCAP_RAIN', units='mm H2O/s', &
-         avgflag='A', long_name='excess rainfall due to snow capping', &
-         ptr_pft=clm3%g%l%c%p%pwf%qflx_snowcap_rain, default='inactive')
-
-    call hist_addfld1d (fname='QFLX_SNOWCAP_SNOW', units='mm H2O/s', &
-         avgflag='A', long_name='excess snowfall due to snow capping', &
-         ptr_pft=clm3%g%l%c%p%pwf%qflx_snowcap_snow, default='inactive')
 
     call hist_addfld1d (fname='QFLX_EVAP_VEG', units='mm H2O/s', &
          avgflag='A', long_name='vegetation evaporation', &

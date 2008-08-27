@@ -782,7 +782,7 @@ subroutine timemgr_print()
   call chkrc(rc, sub//': error return from ESMF_ClockGet')
   nstep = step_no
 
-  write(iulog,*)' ********** Time Manager Configuration **********'
+  write(iulog,*)' ******** CLM Time Manager Configuration ********'
 
   call ESMF_TimeIntervalGet( step, s=step_sec, rc=rc )
   call chkrc(rc, sub//': error return from ESMF_TimeIntervalGet')
@@ -1192,6 +1192,18 @@ function get_curr_calday(offset)
 
    call ESMF_TimeGet( date, dayOfYear_r8=get_curr_calday, rc=rc )
    call chkrc(rc, sub//': error return from ESMF_TimeGet')
+   !----------------------------------------------------------------------------------------!
+   !!!!!!!!!!!!!! WARNING HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!
+   !!!! The following hack fakes day 366 by reusing day 365. This is just because the  !!!!!!
+   !!!! current shr_orb_decl calculation can't handle days > 366.                      !!!!!!
+   !!!!       Dani Bundy-Coleman and Erik Kluzek Aug/2008                              !!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   if ( (get_curr_calday > 366.0) .and. (get_curr_calday <= 367.0) .and. &
+        (trim(calendar) == 'GREGORIAN') )then
+       get_curr_calday = get_curr_calday - 1.0_r8
+   end if
+   !!!!!!!!!!!!!! END HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!!!!!
+   !----------------------------------------------------------------------------------------!
    if ( (get_curr_calday < 1.0) .or. (get_curr_calday > 366.0) )then
       write(iulog,*) 'calday = ', get_curr_calday
       if ( present(offset) ) write(iulog,*) 'offset = ', offset
@@ -1224,6 +1236,18 @@ function get_calday(ymd, tod)
    date = TimeSetymd( ymd, tod, "get_calday" )
    call ESMF_TimeGet( date, dayOfYear_r8=get_calday, rc=rc )
    call chkrc(rc, sub//': error return from ESMF_TimeGet')
+   !----------------------------------------------------------------------------------------!
+   !!!!!!!!!!!!!! WARNING HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!
+   !!!! The following hack fakes day 366 by reusing day 365. This is just because the  !!!!!!
+   !!!! current shr_orb_decl calculation can't handle days > 366.                      !!!!!!
+   !!!!       Dani Bundy-Coleman and Erik Kluzek Aug/2008                              !!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   if ( (get_calday > 366.0) .and. (get_calday <= 367.0) .and. &
+        (trim(calendar) == 'GREGORIAN') )then
+       get_calday = get_calday - 1.0_r8
+   end if
+   !!!!!!!!!!!!!! END HACK TO ENABLE Gregorian CALENDAR WITH SHR_ORB !!!!!!!!!!!!!!!!!!!!!!!!
+   !----------------------------------------------------------------------------------------!
    if ( (get_calday < 1.0) .or. (get_calday > 366.0) )then
       write(iulog,*) 'calday = ', get_calday
       call endrun( sub//': error calday out of range' )
