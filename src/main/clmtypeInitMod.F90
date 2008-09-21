@@ -414,6 +414,7 @@ contains
    allocate(l%itype(beg:end))
    allocate(l%ifspecial(beg:end))
    allocate(l%lakpoi(beg:end))
+   allocate(l%urbpoi(beg:end))
 
    ! MV - these should be moved to landunit physical state -MV
    allocate(l%canyon_hwr(beg:end))
@@ -423,8 +424,6 @@ contains
    allocate(l%wind_hgt_canyon(beg:end))
    allocate(l%z_0_town(beg:end))
    allocate(l%z_d_town(beg:end))
-   allocate(l%taf(beg:end))
-   allocate(l%qaf(beg:end))
 
    l%canyon_hwr(beg:end)  = nan
    l%wtroad_perv(beg:end) = nan
@@ -433,8 +432,6 @@ contains
    l%wind_hgt_canyon(beg:end) = nan
    l%z_0_town(beg:end) = nan
    l%z_d_town(beg:end) = nan
-   l%taf(beg:end) = nan
-   l%qaf(beg:end) = nan
 
   end subroutine init_landunit_type
 
@@ -900,6 +897,9 @@ contains
     allocate(pps%sun_faii(beg:end,1:numrad))
     allocate(pps%sha_faid(beg:end,1:numrad))
     allocate(pps%sha_faii(beg:end,1:numrad))
+    allocate(pps%forc_hgt_u_pft(beg:end))
+    allocate(pps%forc_hgt_t_pft(beg:end))
+    allocate(pps%forc_hgt_q_pft(beg:end))
     ! 4/14/05: PET
     ! Adding isotope code
     allocate(pps%cisun(beg:end))
@@ -1033,6 +1033,9 @@ contains
     pps%sun_faii(beg:end,1:numrad) = nan
     pps%sha_faid(beg:end,1:numrad) = nan
     pps%sha_faii(beg:end,1:numrad) = nan
+    pps%forc_hgt_u_pft(beg:end) = nan
+    pps%forc_hgt_t_pft(beg:end) = nan
+    pps%forc_hgt_q_pft(beg:end) = nan
     ! 4/14/05: PET
     ! Adding isotope code
     pps%cisun(beg:end) = nan
@@ -1363,10 +1366,23 @@ contains
     allocate(pes%t_ref2m_min_inst(beg:end))
     allocate(pes%t_ref2m_max_inst(beg:end))
     allocate(pes%q_ref2m(beg:end))
+    allocate(pes%t_ref2m_u(beg:end))
+    allocate(pes%t_ref2m_r(beg:end))
+    allocate(pes%t_ref2m_min_u(beg:end))
+    allocate(pes%t_ref2m_min_r(beg:end))
+    allocate(pes%t_ref2m_max_u(beg:end))
+    allocate(pes%t_ref2m_max_r(beg:end))
+    allocate(pes%t_ref2m_min_inst_u(beg:end))
+    allocate(pes%t_ref2m_min_inst_r(beg:end))
+    allocate(pes%t_ref2m_max_inst_u(beg:end))
+    allocate(pes%t_ref2m_max_inst_r(beg:end))
+    allocate(pes%q_ref2m_u(beg:end))
+    allocate(pes%q_ref2m_r(beg:end))
 #if (defined CLAMP)
     allocate(pes%rh_ref2m(beg:end))
 #endif
     allocate(pes%t_veg(beg:end))
+    allocate(pes%thm(beg:end))
 
     pes%t_ref2m(beg:end) = nan
     pes%t_ref2m_min(beg:end) = nan
@@ -1374,10 +1390,23 @@ contains
     pes%t_ref2m_min_inst(beg:end) = nan
     pes%t_ref2m_max_inst(beg:end) = nan
     pes%q_ref2m(beg:end) = nan
+    pes%t_ref2m_u(beg:end) = nan
+    pes%t_ref2m_r(beg:end) = nan
+    pes%t_ref2m_min_u(beg:end) = nan
+    pes%t_ref2m_min_r(beg:end) = nan
+    pes%t_ref2m_max_u(beg:end) = nan
+    pes%t_ref2m_max_r(beg:end) = nan
+    pes%t_ref2m_min_inst_u(beg:end) = nan
+    pes%t_ref2m_min_inst_r(beg:end) = nan
+    pes%t_ref2m_max_inst_u(beg:end) = nan
+    pes%t_ref2m_max_inst_r(beg:end) = nan
+    pes%q_ref2m_u(beg:end) = nan
+    pes%q_ref2m_r(beg:end) = nan
 #if (defined CLAMP)
     pes%rh_ref2m(beg:end) = nan
 #endif
     pes%t_veg(beg:end) = nan
+    pes%thm(beg:end) = nan
 
   end subroutine init_pft_estate_type
 
@@ -1618,9 +1647,7 @@ contains
     allocate(pef%dgnetdT(beg:end))
     allocate(pef%eflx_lwrad_out(beg:end))
     allocate(pef%eflx_lwrad_net(beg:end))
-!KO
     allocate(pef%netrad(beg:end))
-!KO
     allocate(pef%fsds_vis_d(beg:end))
     allocate(pef%fsds_nir_d(beg:end))
     allocate(pef%fsds_vis_i(beg:end))
@@ -1669,9 +1696,7 @@ contains
     pef%dgnetdT(beg:end) = nan
     pef%eflx_lwrad_out(beg:end) = nan
     pef%eflx_lwrad_net(beg:end) = nan
-!KO
     pef%netrad(beg:end) = nan
-!KO
     pef%fsds_vis_d(beg:end) = nan
     pef%fsds_nir_d(beg:end) = nan
     pef%fsds_vis_i(beg:end) = nan
@@ -2520,24 +2545,26 @@ contains
 !EOP
 !------------------------------------------------------------------------
     allocate(ces%t_grnd(beg:end))
+    allocate(ces%t_grnd_u(beg:end))
+    allocate(ces%t_grnd_r(beg:end))
     allocate(ces%dt_grnd(beg:end))
     allocate(ces%t_soisno(beg:end,-nlevsno+1:nlevsoi))
     allocate(ces%t_lake(beg:end,1:nlevlak))
     allocate(ces%tssbef(beg:end,-nlevsno+1:nlevsoi))
     allocate(ces%t_snow(beg:end))
     allocate(ces%thv(beg:end))
-    allocate(ces%thm(beg:end))
     allocate(ces%hc_soi(beg:end))
     allocate(ces%hc_soisno(beg:end))
 
     ces%t_grnd(beg:end)    = nan
+    ces%t_grnd_u(beg:end)  = nan
+    ces%t_grnd_r(beg:end)  = nan
     ces%dt_grnd(beg:end)   = nan
     ces%t_soisno(beg:end,-nlevsno+1:nlevsoi) = nan
     ces%t_lake(beg:end,1:nlevlak)            = nan
     ces%tssbef(beg:end,-nlevsno+1:nlevsoi)   = nan
     ces%t_snow(beg:end)    = nan
     ces%thv(beg:end)       = nan
-    ces%thm(beg:end)       = nan
     ces%hc_soi(beg:end)    = nan
     ces%hc_soisno(beg:end) = nan
 
@@ -2575,6 +2602,7 @@ contains
     allocate(cws%snowice(beg:end))
     allocate(cws%snowliq(beg:end))
     allocate(cws%soilalpha(beg:end))
+    allocate(cws%soilalpha_u(beg:end))
     allocate(cws%zwt(beg:end))
     allocate(cws%fcov(beg:end))
     allocate(cws%wa(beg:end))
@@ -2591,6 +2619,7 @@ contains
     cws%snowice(beg:end) = nan
     cws%snowliq(beg:end) = nan
     cws%soilalpha(beg:end) = nan
+    cws%soilalpha_u(beg:end) = nan
     cws%zwt(beg:end) = nan
     cws%fcov(beg:end) = nan
     cws%wa(beg:end) = nan
@@ -2748,10 +2777,14 @@ contains
     allocate(cef%eflx_snomelt(beg:end))
     allocate(cef%eflx_impsoil(beg:end))
     allocate(cef%eflx_building_heat(beg:end))
+    allocate(cef%eflx_urban_ac(beg:end))
+    allocate(cef%eflx_urban_heat(beg:end))
 
     cef%eflx_snomelt(beg:end) = nan
     cef%eflx_impsoil(beg:end) = nan
     cef%eflx_building_heat(beg:end) = nan
+    cef%eflx_urban_ac(beg:end) = nan
+    cef%eflx_urban_heat(beg:end) = nan
 
   end subroutine init_column_eflux_type
 
@@ -2783,6 +2816,9 @@ contains
     allocate(cwf%qflx_top_soil(beg:end))
     allocate(cwf%qflx_snomelt(beg:end))
     allocate(cwf%qflx_qrgwl(beg:end))
+    allocate(cwf%qflx_runoff(beg:end))
+    allocate(cwf%qflx_runoff_u(beg:end))
+    allocate(cwf%qflx_runoff_r(beg:end))
     allocate(cwf%qmelt(beg:end))
     allocate(cwf%h2ocan_loss(beg:end))
 
@@ -2792,6 +2828,9 @@ contains
     cwf%qflx_top_soil(beg:end) = nan
     cwf%qflx_snomelt(beg:end) = nan
     cwf%qflx_qrgwl(beg:end) = nan
+    cwf%qflx_runoff(beg:end) = nan
+    cwf%qflx_runoff_u(beg:end) = nan
+    cwf%qflx_runoff_r(beg:end) = nan
     cwf%qmelt(beg:end) = nan
     cwf%h2ocan_loss(beg:end) = nan
 
@@ -3212,32 +3251,60 @@ contains
     allocate(lps%t_building_min(beg:end))
     allocate(lps%tk_wall(beg:end,nlevsoi))
     allocate(lps%tk_roof(beg:end,nlevsoi))
-    allocate(lps%tk_improad(beg:end,5))
+    allocate(lps%tk_improad(beg:end,nlevsoi))
     allocate(lps%cv_wall(beg:end,nlevsoi))
     allocate(lps%cv_roof(beg:end,nlevsoi))
-    allocate(lps%cv_improad(beg:end,5))
-    allocate(lps%sandfrac_road(beg:end,nlevsoi))
-    allocate(lps%clayfrac_road(beg:end,nlevsoi))
-    allocate(lps%scalez_wall(beg:end))
-    allocate(lps%scalez_roof(beg:end))
+    allocate(lps%cv_improad(beg:end,nlevsoi))
     allocate(lps%thick_wall(beg:end))
     allocate(lps%thick_roof(beg:end))
+    allocate(lps%nlev_improad(beg:end))
+    allocate(lps%vf_sr(beg:end))
+    allocate(lps%vf_wr(beg:end))
+    allocate(lps%vf_sw(beg:end))
+    allocate(lps%vf_rw(beg:end))
+    allocate(lps%vf_ww(beg:end))
+    allocate(lps%taf(beg:end))
+    allocate(lps%qaf(beg:end))
+    allocate(lps%sabs_roof_dir(beg:end,1:numrad))
+    allocate(lps%sabs_roof_dif(beg:end,1:numrad))
+    allocate(lps%sabs_sunwall_dir(beg:end,1:numrad))
+    allocate(lps%sabs_sunwall_dif(beg:end,1:numrad))
+    allocate(lps%sabs_shadewall_dir(beg:end,1:numrad))
+    allocate(lps%sabs_shadewall_dif(beg:end,1:numrad))
+    allocate(lps%sabs_improad_dir(beg:end,1:numrad))
+    allocate(lps%sabs_improad_dif(beg:end,1:numrad))
+    allocate(lps%sabs_perroad_dir(beg:end,1:numrad))
+    allocate(lps%sabs_perroad_dif(beg:end,1:numrad))
 
     lps%t_building(beg:end) = nan
     lps%t_building_max(beg:end) = nan
     lps%t_building_min(beg:end) = nan
     lps%tk_wall(beg:end,1:nlevsoi) = nan
     lps%tk_roof(beg:end,1:nlevsoi) = nan
-    lps%tk_improad(beg:end,1:5) = nan
+    lps%tk_improad(beg:end,1:nlevsoi) = nan
     lps%cv_wall(beg:end,1:nlevsoi) = nan
     lps%cv_roof(beg:end,1:nlevsoi) = nan
-    lps%cv_improad(beg:end,1:5) = nan
-    lps%sandfrac_road(beg:end,1:nlevsoi) = nan
-    lps%clayfrac_road(beg:end,1:nlevsoi) = nan
-    lps%scalez_wall(beg:end) = nan
-    lps%scalez_roof(beg:end) = nan
+    lps%cv_improad(beg:end,1:nlevsoi) = nan
     lps%thick_wall(beg:end) = nan
     lps%thick_roof(beg:end) = nan
+    lps%nlev_improad(beg:end) = bigint
+    lps%vf_sr(beg:end) = nan
+    lps%vf_wr(beg:end) = nan
+    lps%vf_sw(beg:end) = nan
+    lps%vf_rw(beg:end) = nan
+    lps%vf_ww(beg:end) = nan
+    lps%taf(beg:end) = nan
+    lps%qaf(beg:end) = nan
+    lps%sabs_roof_dir(beg:end,1:numrad) = nan
+    lps%sabs_roof_dif(beg:end,1:numrad) = nan
+    lps%sabs_sunwall_dir(beg:end,1:numrad) = nan
+    lps%sabs_sunwall_dif(beg:end,1:numrad) = nan
+    lps%sabs_shadewall_dir(beg:end,1:numrad) = nan
+    lps%sabs_shadewall_dif(beg:end,1:numrad) = nan
+    lps%sabs_improad_dir(beg:end,1:numrad) = nan
+    lps%sabs_improad_dif(beg:end,1:numrad) = nan
+    lps%sabs_perroad_dir(beg:end,1:numrad) = nan
+    lps%sabs_perroad_dif(beg:end,1:numrad) = nan
 
   end subroutine init_landunit_pstate_type
 
@@ -3266,10 +3333,12 @@ contains
     allocate(lef%eflx_traffic(beg:end))
     allocate(lef%eflx_traffic_factor(beg:end))
     allocate(lef%eflx_wasteheat(beg:end))
+    allocate(lef%eflx_anthro(beg:end))
 
     lef%eflx_traffic(beg:end) = nan
     lef%eflx_traffic_factor(beg:end) = nan
     lef%eflx_wasteheat(beg:end) = nan
+    lef%eflx_anthro(beg:end) = nan
 
   end subroutine init_landunit_eflux_type
 

@@ -95,7 +95,7 @@ Directory containing MPI library.
 <entry id="mpi_lib_name" value="">
 Name of MPI library.
 </entry>
-<entry id="mode" valid_values="ccsm_seq,ext_ccsm_seq,ext_ccsm_con" value="ccsm_seq">
+<entry id="mode" valid_values="ccsm_seq,ext_ccsm_seq" value="ccsm_seq">
 CLM coupling mode
 </entry>
 <entry id="pergro" valid_values="on,off" value="off">
@@ -109,6 +109,9 @@ Toggle to turn on river runoff module
 </entry>
 <entry id="supln" valid_values="on,off" value="off">
 Toggle to turn on CN suplemental nitrnogen
+</entry>
+<entry id="nofire" valid_values="on,off" value="off">
+Toggle to make wildfires inactive for biogeochemistry=CN mode
 </entry>
 <entry id="target_os" value="">
 OS for which CLM is being built.  The value is the name returned by the "uname -s"

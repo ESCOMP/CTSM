@@ -12,36 +12,9 @@ module controlMod
 ! Module which initializes run control variables. The following possible
 ! namelist variables are set default values and possibly read in on startup
 !
-! === define run ======================= >>>> Only for mode = ext_ccsm_con
-!
-!    o caseid                = 256 character case name
-!    o ctitle                = 256 character case title
-!    o nsrest                = integer flag. 0: initial run. 1: restart: 3: branch
-!    o model_version         = 256 character model version description
-!    o username              = 256 character user username
-!    o hostname              = 256 character hostname of machine running on
-!    o brnch_retain_casename = logical if a branch simulation can use the same casename 
-!                              as the case it branches from
-!
 ! === model time =======================
 !
 !    o dtime      = integer model time step (s)
-!
-! === define run ======================= >>>> Only for mode = ext_ccsm_con
-!
-!    o calendar       = Calendar to use in date calculations.
-!                      'no_leap' (default) or 'gregorian'
-!    o start_ymd      = Starting date for run encoded in yearmmdd format.
-!                       Default value is read from initial conditions file.
-!    o start_tod      = Starting time of day for run in seconds since 0Z.
-!                       Default value is read from initial conditions file.
-!    o nelapse        = nnn, Specify the ending time for the run as an interval
-!                       starting at the current time in either timesteps
-!                       (if positive) or days (if negative).
-!    o ref_ymd        = Reference date for time coordinate encoded in yearmmdd format.
-!                       Default value is start_ymd.
-!    o ref_tod        = Reference time of day for time coordinate in seconds since 0Z.
-!                       Default value is start_tod.
 !
 ! === input data ===
 !
@@ -113,21 +86,14 @@ module controlMod
 !
 !    o irad         = integer solar radiation frequency (+ = iteration. - = hour)
 !    o wrtdia       = true if want output written
-!    o csm_doflxave = true => flux averaging is to be performed (only used for csm mode)
 !    o co2_ppmv     = CO2 volume mixing ratio
 !    o pertlim      = perturbation limit
 !    o create_crop_landunit = logical on if to create crop as separate landunits
-!
-!    >>>>>>>>>>>>> Only for mode=ext_ccsm_con or seq_ccsm
 !    o co2_type     = type of CO2 feedback, choices are constant, prognostic or diagnostic
 !
 ! === rtm control variables ===
 !
 !    o rtm_nsteps  = if > 1, average rtm over rtm_nsteps time steps
-!
-! When coupled to CAM: base calendar info, nstep, nsrest, and time
-! step are input to the land model from CAM. The values in the clm_inparm namelist
-! are not used. 
 !
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8, SHR_KIND_CL
@@ -136,7 +102,7 @@ module controlMod
                             iulog, hist_crtinic, outnc_large_files, finidat, fsurdat, fatmgrid, fatmlndfrc,     &
                             fatmtopo, flndtopo, fndepdat, fndepdyn, fpftdyn, fpftcon, nrevsn, frivinp_rtm,      &
                             create_crop_landunit, allocate_all_vegpfts, &
-                            co2_type, irad, wrtdia, csm_doflxave, co2_ppmv, rtm_nsteps, nsegspc, pertlim,       &
+                            co2_type, irad, wrtdia, co2_ppmv, rtm_nsteps, nsegspc, pertlim,       &
                             hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, username,           &
                             ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
                             ncd_pio_num_iotasks
@@ -264,21 +230,6 @@ contains
     ! Namelist Variables
     ! ----------------------------------------------------------------------
 
-    ! clm time manager info
-
-#if (defined COUP_CSM)
-    integer          :: nelapse            ! Number of step (or days) to advance
-    integer          :: start_ymd          ! Start date       (YYYYMMDD)
-    integer          :: start_tod          ! Start time of day (sec)
-    integer          :: ref_ymd            ! Reference date   (YYYYMMDD)
-    integer          :: ref_tod            ! Reference time of day (sec)
-    character(len=SHR_KIND_CL) :: calendar ! Calendar type
-    namelist /clm_inparm/  &
-         ctitle, caseid, nsrest, model_version, hostname, username, &
-         calendar, nelapse, start_ymd, start_tod, ref_ymd, ref_tod, &
-         brnch_retain_casename
-#endif
-
     ! clm input datasets
 
     integer :: dtime    ! Integer time-step
@@ -312,7 +263,7 @@ contains
          lnpp, lalloc, q10, spunup, fcpool
 #endif
 
-#if (defined SEQ_MCT) || (defined SEQ_ESMF) || (defined COUP_CSM)
+#if (defined SEQ_MCT) || (defined SEQ_ESMF)
     namelist /clm_inparm / &
          co2_type
 #endif
@@ -320,7 +271,7 @@ contains
     ! clm other options
 
     namelist /clm_inparm/  &
-         clump_pproc, irad, wrtdia, csm_doflxave, rtm_nsteps, pertlim, &
+         clump_pproc, irad, wrtdia, rtm_nsteps, pertlim, &
          create_crop_landunit, nsegspc, co2_ppmv
 
          
@@ -364,12 +315,6 @@ contains
        ! ----------------------------------------------------------------------
        ! Read namelist from standard input. 
        ! ----------------------------------------------------------------------
-#if (defined COUP_CSM)
-       call get_timemgr_defaults( nelapse_out=nelapse,           &
-                                  start_ymd_out=start_ymd, start_tod_out=start_tod, &
-                                  ref_ymd_out=ref_ymd, ref_tod_out=ref_tod,         &
-                                  calendar_out=calendar, dtime_out=dtime )
-#endif
 
        if ( len_trim(NLFilename) == 0  )then
           call endrun( subname//' error: nlfilename not set' )
@@ -390,14 +335,7 @@ contains
        ! Consistency checks on input namelist.
        ! ----------------------------------------------------------------------
 
-#if (defined COUP_CSM)
-       call set_timemgr_init( nelapse_in=nelapse,           &
-                              start_ymd_in=start_ymd, start_tod_in=start_tod, &
-                              ref_ymd_in=ref_ymd, ref_tod_in=ref_tod,         &
-                              calendar_in=calendar, dtime_in=dtime )
-#else
        call set_timemgr_init( dtime_in=dtime )
-#endif
 
 #if (defined RTM) || (defined DGVM)
        if (is_perpetual()) then
@@ -521,7 +459,6 @@ contains
     ! physics variables
 
     call mpi_bcast (irad        , 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (csm_doflxave, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (rtm_nsteps  , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (nsegspc     , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (wrtdia      , 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -663,8 +600,6 @@ contains
     if (nsrest /= 0) write(iulog,*) '   restart data   = ',trim(nrevsn)
 #if (defined SEQ_MCT) || (defined SEQ_ESMF)
     write(iulog,*) '   atmospheric forcing data is from sequential ccsm model'
-#elif (defined COUP_CSM)
-    write(iulog,*) '   atmospheric forcint data is from ccsm flux coupler'
 #endif
 #if (defined RTM)
     if (frivinp_rtm /= ' ') write(iulog,*) '   RTM river data       = ',trim(frivinp_rtm)
@@ -694,18 +629,6 @@ contains
 #endif
     write(iulog,*) '   solar radiation frequency (iterations) = ',irad
     write(iulog,*) '   CO2 volume mixing ratio   (umol/mol)   = ', co2_ppmv
-#if (defined COUP_CSM)
-    write(iulog,*) 'communication with the flux coupler'
-    if (csm_doflxave) then
-       write(iulog,*)'    data will be sent to the flux coupler ', &
-            'only when an albedo calculation is performed '
-       write(iulog,*)'     fluxes will be averaged on steps where ', &
-            'communication with the flux coupler does not occur'
-    else
-       write(iulog,*)'    data will be sent and received to/from ', &
-            'the flux coupler at every time step except for nstep=1'
-    endif
-#endif
 #if (defined RTM)
     if (rtm_nsteps > 1) then
        write(iulog,*)'river runoff calculation performed only every ',rtm_nsteps,' nsteps'
@@ -723,9 +646,6 @@ contains
        write(iulog,*) '   Namelist not checked for agreement with initial run.'
        write(iulog,*) '   Surface data set and reference date should not differ from initial run'
     end if
-#if (defined COUP_CSM)
-    write(iulog,*) '   last time step determined by flux coupler'
-#endif
     if ( pertlim /= 0.0_r8 ) &
     write(iulog,*) '   perturbation limit = ',pertlim
     write(iulog,*) '   maxpatch_pft         = ',maxpatch_pft

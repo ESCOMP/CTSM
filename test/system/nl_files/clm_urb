@@ -2,5 +2,5 @@
 -ignore_ic_date 
 -silent 
 -case clmrun 
--source CLM1PT
 -clm_demand furbinp
+-source CLMNCEP

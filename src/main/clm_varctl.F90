@@ -83,7 +83,6 @@ module clm_varctl
 !
   integer,  public :: irad         = -1                 ! solar radiation frequency (iterations)
   logical,  public :: wrtdia       = .false.            ! true => write global average diagnostics to std out
-  logical,  public :: csm_doflxave = .true.             ! true => only communicate with flux coupler on albedo calc time steps
   real(r8), public :: co2_ppmv     = 355._r8            ! atmospheric CO2 molar ratio (by volume) (umol/mol)
 
 !
@@ -254,13 +253,6 @@ contains
        if (nsrest == iundef) call shr_sys_abort( subname//' ERROR:: must set nsrest' )
        if (nsrest == 3 .and. nrevsn == ' ') &
           call shr_sys_abort( subname//' ERROR: need to set restart data file name' )
-
-       ! Check on ccsm mode
-
-#if (defined COUP_CSM)
-       if (csm_doflxave .and. irad ==1 ) &
-          call shr_sys_abort( subname//' ERROR: irad must be greater that one if flux averaging option is enabled' )
-#endif
 
        ! Check on nitrogen deposition dataset
 

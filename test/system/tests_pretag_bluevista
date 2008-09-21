@@ -3,8 +3,8 @@ smD91 erD91       blD91 smD94
 smG74             blG74
 smH74             blH74
 smB11
-smCA8             blCA8
-smNB4             blNB4
+smCA8 erCA8 brCA8 blCA8
+smNB4 erNB4 brNB4 blNB4
 smG41 erG41 brG41 blG41 smG45
 smH11 erH11 brH11 blH11
 smJ11 erJ11 brJ11 blJ11
@@ -20,6 +20,5 @@ smM14
 smZ14
 sm921
 sm984
-sm061
 erP61
 erP11

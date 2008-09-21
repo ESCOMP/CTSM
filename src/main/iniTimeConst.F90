@@ -71,13 +71,8 @@ subroutine iniTimeConst
   integer , pointer :: cgridcell(:)       ! gridcell index of column
   integer , pointer :: ctype(:)           ! column type index
   integer , pointer :: ltype(:)           ! landunit type index
-  real(r8), pointer :: sandfrac_road(:,:) ! sand fraction of urban road
-  real(r8), pointer :: clayfrac_road(:,:) ! clay fraction of urban road
-  real(r8), pointer :: scalez_wall(:)     ! urban wall layer thickness discretization
-  real(r8), pointer :: scalez_roof(:)     ! urban roof layer thickness discretization
   real(r8), pointer :: thick_wall(:)      ! total thickness of urban wall
   real(r8), pointer :: thick_roof(:)      ! total thickness of urban roof
-
 !
 ! local pointers to implicit out arguments
 !
@@ -124,17 +119,6 @@ subroutine iniTimeConst
   real(r8) :: tkm              ! mineral conductivity
   real(r8) :: xksat            ! maximum hydraulic conductivity of soil [mm/s]
   real(r8) :: scalez = 0.025_r8   ! Soil layer thickness discretization (m)
-#if (defined GRANDVIEW)
-! real(r8) :: scalez_wall = 0.781e-3_r8 ! urban wall layer thickness discretization
-                                        !  this gives a total "soil" depth of about 0.1072m
-! real(r8) :: scalez_roof = 1.455e-3_r8 ! urban roof layer thickness discretization
-                                        !  this gives a total "soil" depth of about 0.2m
-#else
-! real(r8) :: scalez_wall = 1.455e-3_r8 ! urban wall layer thickness discretization
-                                        !  this gives a total "soil" depth of about 0.2m
-! real(r8) :: scalez_roof = 1.455e-3_r8 ! urban roof layer thickness discretization
-                                        !  this gives a total "soil" depth of about 0.2m
-#endif
   real(r8) :: clay,sand        ! temporaries
   real(r8) :: slope,intercept        ! temporary, for rooting distribution
   integer  :: begp, endp       ! per-proc beginning and ending pft indices
@@ -184,10 +168,6 @@ subroutine iniTimeConst
   ! Assign local pointers to derived subtypes components (landunit-level)
 
   ltype               => clm3%g%l%itype
-  sandfrac_road       => clm3%g%l%lps%sandfrac_road
-  clayfrac_road       => clm3%g%l%lps%clayfrac_road
-  scalez_wall         => clm3%g%l%lps%scalez_wall
-  scalez_roof         => clm3%g%l%lps%scalez_roof
   thick_wall          => clm3%g%l%lps%thick_wall
   thick_roof          => clm3%g%l%lps%thick_roof
 
@@ -238,7 +218,7 @@ subroutine iniTimeConst
            dzurb_wall(begl:endl,nlevsoi), dzurb_roof(begl:endl,nlevsoi), &
            ziurb_wall(begl:endl,0:nlevsoi), ziurb_roof(begl:endl,0:nlevsoi),  stat=ier)
   if (ier /= 0) then
-     write (6,*)'iniTimeConst: allocation error for zurb_wall,zurb_roof,dzurb_wall,dzurb_roof,ziurb_wall,ziurb_roof'
+     write (iulog,*)'iniTimeConst: allocation error for zurb_wall,zurb_roof,dzurb_wall,dzurb_roof,ziurb_wall,ziurb_roof'
      call endrun()
   end if
 
@@ -522,12 +502,6 @@ subroutine iniTimeConst
         zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/10.)  !node depths
       end do
 #elif (defined GRANDVIEW)
-!     do j = 1, nlevsoi
-!       zurb_wall(l,j) = (j-0.5)*(0.01072/10.)  !node depths
-!     end do
-!     do j = 1, nlevsoi
-!       zurb_roof(l,j) = scalez_roof(l)*(exp(0.5*(j-0.5))-1.)  !node depths
-!     end do
       do j = 1, nlevsoi
         zurb_wall(l,j) = scalez_wall(l)*(exp(0.5*(j-0.5))-1.)  !node depths
       end do
@@ -536,10 +510,10 @@ subroutine iniTimeConst
       end do
 #else
       do j = 1, nlevsoi
-        zurb_wall(l,j) = scalez_wall(l)*(exp(0.5*(j-0.5))-1.)  !node depths
+        zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/10.)  !node depths
       end do
       do j = 1, nlevsoi
-        zurb_roof(l,j) = scalez_roof(l)*(exp(0.5*(j-0.5))-1.)  !node depths
+        zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/10.)  !node depths
       end do
 #endif
 
@@ -550,6 +524,7 @@ subroutine iniTimeConst
       dzurb_wall(l,nlevsoi) = zurb_wall(l,nlevsoi)-zurb_wall(l,nlevsoi-1)
       write(iulog,*)'Total thickness of wall: ',sum(dzurb_wall(l,:))
       write(iulog,*)'Wall layer thicknesses: ',dzurb_wall(l,:)
+
       dzurb_roof(l,1) = 0.5*(zurb_roof(l,1)+zurb_roof(l,2))    !thickness b/n two interfaces
       do j = 2,nlevsoi-1
         dzurb_roof(l,j)= 0.5*(zurb_roof(l,j+1)-zurb_roof(l,j-1)) 
@@ -564,6 +539,7 @@ subroutine iniTimeConst
       enddo
       ziurb_wall(l,nlevsoi) = zurb_wall(l,nlevsoi) + 0.5*dzurb_wall(l,nlevsoi)
       write(iulog,*)'Wall layer interface depths: ',ziurb_wall(l,:)
+
       ziurb_roof(l,0) = 0.
       do j = 1, nlevsoi-1
         ziurb_roof(l,j) = 0.5*(zurb_roof(l,j)+zurb_roof(l,j+1))          !interface depths
@@ -620,7 +596,7 @@ subroutine iniTimeConst
         ! Note that urban roof, sunwall and shadewall thermal properties used to 
         ! derive thermal conductivity and heat capacity are set to special 
         ! value because thermal conductivity and heat capacity for urban 
-        ! sunwall and shadewall are prescribed in SoilThermProp.F90 in 
+        ! roof, sunwall and shadewall are prescribed in SoilThermProp.F90 in 
         ! SoilTemperatureMod.F90
       if (ltype(l)==istdlak .or. ltype(l)==istwet .or. ltype(l)==istice) then
          do lev = 1,nlevsoi
@@ -657,9 +633,11 @@ subroutine iniTimeConst
                watopt(c,lev) = spval 
             end do
          else if (ctype(c) == icol_road_imperv) then
+            ! Note that these are overwritten for impervious road layers that are
+            ! not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
             do lev = 1,nlevsoi
-               clay          = clayfrac_road(l,lev)
-               sand          = sandfrac_road(l,lev)
+               clay = clay3d(g,lev)
+               sand = sand3d(g,lev)
                watsat(c,lev) = 0.489 - 0.00126*sand
                bd            = (1.-watsat(c,lev))*2.7e3
                xksat         = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
@@ -681,8 +659,8 @@ subroutine iniTimeConst
          ! Currently, pervious road has same properties as soil
          else if (ctype(c) == icol_road_perv) then 
             do lev = 1,nlevsoi
-               clay          = clayfrac_road(l,lev)
-               sand          = sandfrac_road(l,lev)
+               clay = clay3d(g,lev)
+               sand = sand3d(g,lev)
                watsat(c,lev) = 0.489 - 0.00126*sand
                bd            = (1.-watsat(c,lev))*2.7e3
                xksat         = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s

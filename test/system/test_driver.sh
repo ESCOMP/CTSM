@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on bangkok, calgary, breeze, bluevista, lightning, bluefire, jaguar: 
+# usage on bangkok, calgary, breeze, bluevista, lightning, bluefire, jaguar, kraken: 
 # ./test_driver.sh
 #
 # valid arguments: 
@@ -21,7 +21,6 @@
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
 seqccsm_vers="ccsm4_0_alpha34"
-conccsm_vers="ccsm3_9_beta03"
 
 hostname=`hostname`
 case $hostname in
@@ -47,7 +46,7 @@ cat > ./${submit_script} << EOF
 #BSUB -o test_dr.o%J            # output filename
 #BSUB -e test_dr.o%J            # error filename
 #BSUB -J clmtest
-#BSUB -q premium                # queue
+#BSUB -q regular                # queue
 #BSUB -W 6:00                     
 #BSUB -P $account_name      
 #BSUB -x                        # exclusive use of node (not_shared)
@@ -116,8 +115,8 @@ cat > ./${submit_script} << EOF
 #BSUB -R "span[ptile=64]"         # max number of tasks (MPI) per node
 #BSUB -o test_dr.o%J              # output filename
 #BSUB -e test_dr.o%J              # error filename
-#BSUB -q premium                  # queue
-#BSUB -W 4:28                     
+#BSUB -q regular                  # queue
+#BSUB -W 6:00                     
 #BSUB -P $account_name      
 #BSUB -J clmtest
 
@@ -185,7 +184,7 @@ cat > ./${submit_script} << EOF
 #BSUB -n 32                  # total tasks needed
 #BSUB -o test_dr.o%J         # output filename
 #BSUB -e test_dr.o%J         # error filename
-#BSUB -q premium             # queue
+#BSUB -q regular             # queue
 #BSUB -W 6:00                     
 #BSUB -P $account_name      
 #BSUB -J clmtest
@@ -277,7 +276,7 @@ export CFG_STRING="-fc ifort -cc icc "
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export CCSM_MACH="breeze"
 export MACH_WORKSPACE="/ptmp"
-export DATM_DATA_DIR="/fs/supers/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410"
+export DATM_DATA_DIR="/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410"
 dataroot="/fis/cgd/cseg/csm"
 echo_arg="-e"
 input_file="tests_posttag_breeze"
@@ -376,7 +375,7 @@ cat > ./${submit_script} << EOF
 # Name of the queue (CHANGE THIS if needed)
 # #PBS -q batch
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l walltime=02:30:00,size=360
+#PBS -l walltime=02:30:00,size=440
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
@@ -407,8 +406,8 @@ export CLM_THREADS=1
 export CLM_RESTART_THREADS=4
 
 ##mpi tasks
-export CLM_TASKS=360
-export CLM_RESTART_TASKS=90
+export CLM_TASKS=440
+export CLM_RESTART_TASKS=110
 
 export CLM_COMPSET="I"
 
@@ -440,6 +439,92 @@ export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/spin/proj/ccsm/bin/jaguar/newcprnc
 export DATM_DATA_DIR=/tmp/proj/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
 dataroot="/tmp/proj/ccsm"
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+
+    ##kraken
+    kraken* ) 
+    submit_script="test_driver_kraken_${cur_time}.sh"
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+# Name of the queue (CHANGE THIS if needed)
+### #PBS -q debug
+# #PBS -q small
+# Number of nodes (CHANGE THIS if needed)
+#PBS -l walltime=02:00:00,size=200
+# output file base name
+#PBS -N test_dr
+# Put standard error and standard out in same file
+#PBS -j oe
+# Use sh
+#PBS -S /bin/sh
+# Export all Environment variables
+#PBS -V
+#PBS -A UT-NTNL0001
+# End of options
+
+if [ -n "\$PBS_JOBID" ]; then    #batch job
+    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
+    initdir=\${PBS_O_WORKDIR}
+fi
+
+echo_arg="-e"
+if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
+    interactive="NO"
+else
+    interactive="YES"
+fi
+
+input_file="tests_posttag_kraken"
+
+##omp threads
+export CLM_THREADS=1
+export CLM_RESTART_THREADS=4
+
+##mpi tasks
+export CLM_TASKS=200
+export CLM_RESTART_TASKS=50
+
+export CLM_COMPSET="I"
+
+export PATH="/usr/bin/X11"
+export PATH="\${PATH}:/usr/bin:/bin:/sbin:/usr/sbin"
+
+if [ -e /opt/modules/default/init/sh ]; then
+  source /opt/modules/default/init/sh
+  module purge
+  module load PrgEnv-pgi Base-opts
+  module load xtpe-quadcore
+# module swap xt-mpt xt-mpt/3.0.0.0 # (3.0.0.0 is default on 2008-Aug-11)
+  module load torque moab
+  module switch pgi pgi/7.1.6       # (7.1.6   is default on 2008-Aug-11)
+  module load netcdf/3.6.2
+# module list
+fi
+export PATH="\${PATH}:\${MPICH_DIR}/bin"
+export PATH="\${PATH}:\${PE_DIR}/bin/snos64"
+export PATH="\${PATH}:\${PGI}/linux86-64/default/bin"
+export PATH="\${PATH}:\${SE_DIR}/bin/snos64"
+export PATH="\${PATH}:\${C_DIR}/amd64/bin"
+export PATH="\${PATH}:\${PRGENV_DIR}/bin"
+export PATH="\${PATH}:\${MPT_DIR}/bin"
+
+export LIB_NETCDF=\${NETCDF_DIR}/lib
+export INC_NETCDF=\${NETCDF_DIR}/include
+export MOD_NETCDF=\${NETCDF_DIR}/include
+export CCSM_MACH="kraken"
+export CFG_STRING="-fc ftn "
+export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
+export MAKE_CMD="gmake -j 9 "
+export MACH_WORKSPACE="/lustre/scratch"
+export CPRNC_EXE="/lustre/scratch/proj/ccsm/bin/newcprnc"
+export DATM_DATA_DIR="/lustre/scratch/proj/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410"
+dataroot="/lustre/scratch/proj/ccsm"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
@@ -556,9 +641,6 @@ export MPI_TYPE_MAX=100000
 if [ -z "\$CLM_RETAIN_FILES" ]; then
     export CLM_RETAIN_FILES=FALSE
 fi
-if [ -z "\$CLM_CCSMROOT" ]; then
-    export CLM_CCSMROOT="\${dataroot}/collections/${conccsm_vers}"
-fi
 if [ -z "\$CLM_SEQCCSMROOT" ]; then
     export CLM_SEQCCSMROOT="\${dataroot}/collections/${seqccsm_vers}"
 fi
@@ -582,10 +664,13 @@ num_tests=\`wc -w < \${input_file}\`
 echo "STATUS OF CLM TESTING UNDER JOB \${JOBID};  scheduled to run \$num_tests tests from:" >> \${clm_status}
 echo "\$input_file" >> \${clm_status}
 echo "" >> \${clm_status}
-echo "tests of CCSM will use source code from:" >> \${clm_status}
-echo "\$CLM_CCSMROOT" >> \${clm_status}
+echo " on machine: $hostname" >> \${clm_status}
 echo "tests of Sequential-CCSM will use source code from:" >> \${clm_status}
 echo "\$CLM_SEQCCSMROOT" >> \${clm_status}
+if [ -n "${BL_ROOT}" ]; then
+   echo "tests of baseline will use source code from:" >> \${clm_status}
+   echo "\$BL_ROOT" >> \${clm_status}
+fi
 if [ \$interactive = "NO" ]; then
     echo "see \${clm_log} for more detailed output" >> \${clm_status}
 fi
@@ -770,7 +855,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bangkok, bluevista, bluefire, lightning, jaguar: "
+    echo "usage on bangkok, bluevista, bluefire, lightning, jaguar, kraken: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
@@ -806,6 +891,9 @@ case $hostname in
 
     ##jaguar
     jaguar* )  qsub ${submit_script};;
+
+    ##kraken
+    kraken* )  qsub ${submit_script};;
 
     #default
     * )

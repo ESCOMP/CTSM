@@ -1453,16 +1453,6 @@ subroutine timemgr_spmdbcast( )
 
   call mpi_bcast (dtime    , 1, MPI_INTEGER  , 0, mpicom, ier)
 
-#if (defined COUP_CSM)
-  call mpi_bcast (nelapse  ,            1, MPI_INTEGER  , 0, mpicom, ier)
-  call mpi_bcast (start_ymd,            1, MPI_INTEGER  , 0, mpicom, ier)
-  call mpi_bcast (start_tod,            1, MPI_INTEGER  , 0, mpicom, ier)
-  call mpi_bcast (stop_ymd ,            1, MPI_INTEGER  , 0, mpicom, ier)
-  call mpi_bcast (stop_tod ,            1, MPI_INTEGER  , 0, mpicom, ier)
-  call mpi_bcast (ref_ymd  ,            1, MPI_INTEGER  , 0, mpicom, ier)
-  call mpi_bcast (ref_tod  ,            1, MPI_INTEGER  , 0, mpicom, ier)
-  call mpi_bcast (calendar ,len(calendar), MPI_CHARACTER, 0, mpicom, ier)
-#endif
 end subroutine timemgr_spmdbcast
 
 end module clm_time_manager

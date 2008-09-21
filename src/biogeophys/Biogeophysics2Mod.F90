@@ -36,8 +36,9 @@ contains
 ! !IROUTINE: Biogeophysics2
 !
 ! !INTERFACE:
-  subroutine Biogeophysics2 (lbc, ubc, lbp, ubp, num_nolakec, &
-             filter_nolakec, num_nolakep, filter_nolakep)
+  subroutine Biogeophysics2 (lbl, ubl, lbc, ubc, lbp, ubp, &
+             num_urbanl, filter_urbanl, num_nolakec, filter_nolakec, &
+             num_nolakep, filter_nolakep)
 !
 ! !DESCRIPTION:
 ! This is the main subroutine to execute the calculation of soil/snow and
@@ -85,8 +86,11 @@ contains
     implicit none
     integer, intent(in) :: lbp, ubp                    ! pft bounds
     integer, intent(in) :: lbc, ubc                    ! column bounds
+    integer, intent(in) :: lbl, ubl                    ! landunit bounds
     integer, intent(in) :: num_nolakec                 ! number of column non-lake points in column filter
     integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
+    integer, intent(in) :: num_urbanl                  ! number of urban landunits in clump
+    integer, intent(in) :: filter_urbanl(ubl-lbl+1)    ! urban landunit filter
     integer, intent(in) :: num_nolakep                 ! number of column non-lake points in pft filter
     integer, intent(in) :: filter_nolakep(ubp-lbp+1)   ! pft filter for non-lake points
 !
@@ -249,7 +253,8 @@ contains
 
     ! Determine soil temperatures including surface soil temperature
 
-    call SoilTemperature(lbc, ubc, num_nolakec, filter_nolakec, xmf , fact)
+    call SoilTemperature(lbl, ubl, lbc, ubc, num_urbanl, filter_urbanl, &
+                         num_nolakec, filter_nolakec, xmf , fact)
 
 !dir$ concurrent
 !cdir nodep

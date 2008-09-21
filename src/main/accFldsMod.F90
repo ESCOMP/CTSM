@@ -87,6 +87,20 @@ contains
          accum_type='timeavg', accum_period=nint(3600._r8/dtime), &
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
+    ! Hourly average of Urban 2m temperature.
+
+    call init_accum_field(name='TREFAV_U', units='K', &
+         desc='average over an hour of urban 2-m temperature', &
+         accum_type='timeavg', accum_period=nint(3600._r8/dtime), &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
+    ! Hourly average of Rural 2m temperature.
+
+    call init_accum_field(name='TREFAV_R', units='K', &
+         desc='average over an hour of rural 2-m temperature', &
+         accum_type='timeavg', accum_period=nint(3600._r8/dtime), &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
 #if (defined DGVM)
     ! 30-day average of 2m temperature.
 
@@ -184,6 +198,11 @@ contains
     real(r8), pointer :: frmf(:)             ! leaf maintenance respiration  (umol CO2 /m**2 /s)
     real(r8), pointer :: fpsn(:)             ! photosynthesis (umol CO2 /m**2 /s)
     real(r8), pointer :: t_ref2m(:)          ! 2 m height surface air temperature (Kelvin)
+    real(r8), pointer :: t_ref2m_u(:)        ! Urban 2 m height surface air temperature (Kelvin)
+    real(r8), pointer :: t_ref2m_r(:)        ! Rural 2 m height surface air temperature (Kelvin)
+    logical , pointer :: urbpoi(:)           ! true => landunit is an urban point
+    logical , pointer :: ifspecial(:)        ! true => landunit is not vegetated
+    integer , pointer :: plandunit(:)        ! landunit index associated with each pft
 !
 ! local pointers to implicit out arguments
 !
@@ -191,6 +210,14 @@ contains
     real(r8), pointer :: t_ref2m_max(:)      ! daily maximum of average 2 m height surface air temperature (K)
     real(r8), pointer :: t_ref2m_min_inst(:) ! instantaneous daily min of average 2 m height surface air temp (K)
     real(r8), pointer :: t_ref2m_max_inst(:) ! instantaneous daily max of average 2 m height surface air temp (K)
+    real(r8), pointer :: t_ref2m_min_u(:)    ! Urban daily minimum of average 2 m height surface air temperature (K)
+    real(r8), pointer :: t_ref2m_min_r(:)    ! Rural daily minimum of average 2 m height surface air temperature (K)
+    real(r8), pointer :: t_ref2m_max_u(:)    ! Urban daily maximum of average 2 m height surface air temperature (K)
+    real(r8), pointer :: t_ref2m_max_r(:)    ! Rural daily maximum of average 2 m height surface air temperature (K)
+    real(r8), pointer :: t_ref2m_min_inst_u(:) ! Urban instantaneous daily min of average 2 m height surface air temp (K)
+    real(r8), pointer :: t_ref2m_min_inst_r(:) ! Rural instantaneous daily min of average 2 m height surface air temp (K)
+    real(r8), pointer :: t_ref2m_max_inst_u(:) ! Urban instantaneous daily max of average 2 m height surface air temp (K)
+    real(r8), pointer :: t_ref2m_max_inst_r(:) ! Rural instantaneous daily max of average 2 m height surface air temp (K)
     real(r8), pointer :: t10(:)              ! 10-day running mean of the 2 m temperature (K)
     real(r8), pointer :: t_mo(:)             ! 30-day average temperature (Kelvin)
     real(r8), pointer :: t_mo_min(:)         ! annual min of t_mo (Kelvin)
@@ -231,6 +258,10 @@ contains
     forc_rain => clm_a2l%forc_rain
     forc_snow => clm_a2l%forc_snow
 
+    ! Assign local pointers to derived subtypes components (landunit-level)
+    ifspecial  => clm3%g%l%ifspecial
+    urbpoi     => clm3%g%l%urbpoi
+
     ! Assign local pointers to derived subtypes components (pft-level)
 
     itype            => clm3%g%l%c%p%itype
@@ -242,6 +273,17 @@ contains
     t_ref2m_min_inst => clm3%g%l%c%p%pes%t_ref2m_min_inst
     t_ref2m_max      => clm3%g%l%c%p%pes%t_ref2m_max
     t_ref2m_min      => clm3%g%l%c%p%pes%t_ref2m_min
+    t_ref2m_u        => clm3%g%l%c%p%pes%t_ref2m_u
+    t_ref2m_r        => clm3%g%l%c%p%pes%t_ref2m_r
+    t_ref2m_max_u    => clm3%g%l%c%p%pes%t_ref2m_max_u
+    t_ref2m_max_r    => clm3%g%l%c%p%pes%t_ref2m_max_r
+    t_ref2m_min_u    => clm3%g%l%c%p%pes%t_ref2m_min_u
+    t_ref2m_min_r    => clm3%g%l%c%p%pes%t_ref2m_min_r
+    t_ref2m_max_inst_u => clm3%g%l%c%p%pes%t_ref2m_max_inst_u
+    t_ref2m_max_inst_r => clm3%g%l%c%p%pes%t_ref2m_max_inst_r
+    t_ref2m_min_inst_u => clm3%g%l%c%p%pes%t_ref2m_min_inst_u
+    t_ref2m_min_inst_r => clm3%g%l%c%p%pes%t_ref2m_min_inst_r
+    plandunit        => clm3%g%l%c%p%landunit
     t_mo             => clm3%g%l%c%p%pdgvs%t_mo
     t_mo_min         => clm3%g%l%c%p%pdgvs%t_mo_min
     t10              => clm3%g%l%c%p%pdgvs%t10
@@ -300,6 +342,66 @@ contains
        else if (secs == int(dtime)) then
           t_ref2m_max(p) = spval
           t_ref2m_min(p) = spval
+       endif
+    end do
+
+    ! Accumulate and extract TREFAV_U - hourly average urban 2m air temperature
+    ! Used to compute maximum and minimum of hourly averaged 2m reference
+    ! temperature over a day. Note that "spval" is returned by the call to
+    ! accext if the time step does not correspond to the end of an
+    ! accumulation interval. First, initialize the necessary values for
+    ! an initial run at the first time step the accumulator is called
+
+    call update_accum_field  ('TREFAV_U', t_ref2m_u, nstep)
+    call extract_accum_field ('TREFAV_U', rbufslp, nstep)
+!dir$ concurrent
+!cdir nodep
+    do p = begp,endp
+       l = plandunit(p)
+       if (rbufslp(p) /= spval) then
+          t_ref2m_max_inst_u(p) = max(rbufslp(p), t_ref2m_max_inst_u(p))
+          t_ref2m_min_inst_u(p) = min(rbufslp(p), t_ref2m_min_inst_u(p))
+       endif
+       if (end_cd) then
+         if (urbpoi(l)) then
+          t_ref2m_max_u(p) = t_ref2m_max_inst_u(p)
+          t_ref2m_min_u(p) = t_ref2m_min_inst_u(p)
+          t_ref2m_max_inst_u(p) = -spval
+          t_ref2m_min_inst_u(p) =  spval
+         end if
+       else if (secs == int(dtime)) then
+          t_ref2m_max_u(p) = spval
+          t_ref2m_min_u(p) = spval
+       endif
+    end do
+
+    ! Accumulate and extract TREFAV_R - hourly average rural 2m air temperature
+    ! Used to compute maximum and minimum of hourly averaged 2m reference
+    ! temperature over a day. Note that "spval" is returned by the call to
+    ! accext if the time step does not correspond to the end of an
+    ! accumulation interval. First, initialize the necessary values for
+    ! an initial run at the first time step the accumulator is called
+
+    call update_accum_field  ('TREFAV_R', t_ref2m_r, nstep)
+    call extract_accum_field ('TREFAV_R', rbufslp, nstep)
+!dir$ concurrent
+!cdir nodep
+    do p = begp,endp
+       l = plandunit(p)
+       if (rbufslp(p) /= spval) then
+          t_ref2m_max_inst_r(p) = max(rbufslp(p), t_ref2m_max_inst_r(p))
+          t_ref2m_min_inst_r(p) = min(rbufslp(p), t_ref2m_min_inst_r(p))
+       endif
+       if (end_cd) then
+         if (.not.(ifspecial(l))) then
+          t_ref2m_max_r(p) = t_ref2m_max_inst_r(p)
+          t_ref2m_min_r(p) = t_ref2m_min_inst_r(p)
+          t_ref2m_max_inst_r(p) = -spval
+          t_ref2m_min_inst_r(p) =  spval
+         end if
+       else if (secs == int(dtime)) then
+          t_ref2m_max_r(p) = spval
+          t_ref2m_min_r(p) = spval
        endif
     end do
 
@@ -450,6 +552,14 @@ contains
     real(r8), pointer :: t_ref2m_max(:)      ! daily maximum of average 2 m height surface air temperature (K)
     real(r8), pointer :: t_ref2m_min_inst(:) ! instantaneous daily min of average 2 m height surface air temp (K)
     real(r8), pointer :: t_ref2m_max_inst(:) ! instantaneous daily max of average 2 m height surface air temp (K)
+    real(r8), pointer :: t_ref2m_min_u(:)    ! Urban daily minimum of average 2 m height surface air temperature (K)
+    real(r8), pointer :: t_ref2m_min_r(:)    ! Rural daily minimum of average 2 m height surface air temperature (K)
+    real(r8), pointer :: t_ref2m_max_u(:)    ! Urban daily maximum of average 2 m height surface air temperature (K)
+    real(r8), pointer :: t_ref2m_max_r(:)    ! Rural daily maximum of average 2 m height surface air temperature (K)
+    real(r8), pointer :: t_ref2m_min_inst_u(:) ! Urban instantaneous daily min of average 2 m height surface air temp (K)
+    real(r8), pointer :: t_ref2m_min_inst_r(:) ! Rural instantaneous daily min of average 2 m height surface air temp (K)
+    real(r8), pointer :: t_ref2m_max_inst_u(:) ! Urban instantaneous daily max of average 2 m height surface air temp (K)
+    real(r8), pointer :: t_ref2m_max_inst_r(:) ! Rural instantaneous daily max of average 2 m height surface air temp (K)
     real(r8), pointer :: t10(:)              ! 10-day running mean of the 2 m temperature (K)
     real(r8), pointer :: t_mo(:)             ! 30-day average temperature (Kelvin)
     real(r8), pointer :: fnpsn10(:)          ! 10-day running mean net photosynthesis
@@ -480,6 +590,14 @@ contains
     t_ref2m_min_inst => clm3%g%l%c%p%pes%t_ref2m_min_inst
     t_ref2m_max      => clm3%g%l%c%p%pes%t_ref2m_max
     t_ref2m_min      => clm3%g%l%c%p%pes%t_ref2m_min
+    t_ref2m_max_inst_u => clm3%g%l%c%p%pes%t_ref2m_max_inst_u
+    t_ref2m_max_inst_r => clm3%g%l%c%p%pes%t_ref2m_max_inst_r
+    t_ref2m_min_inst_u => clm3%g%l%c%p%pes%t_ref2m_min_inst_u
+    t_ref2m_min_inst_r => clm3%g%l%c%p%pes%t_ref2m_min_inst_r
+    t_ref2m_max_u      => clm3%g%l%c%p%pes%t_ref2m_max_u
+    t_ref2m_max_r      => clm3%g%l%c%p%pes%t_ref2m_max_r
+    t_ref2m_min_u      => clm3%g%l%c%p%pes%t_ref2m_min_u
+    t_ref2m_min_r      => clm3%g%l%c%p%pes%t_ref2m_min_r
     t10              => clm3%g%l%c%p%pdgvs%t10
     t_mo             => clm3%g%l%c%p%pdgvs%t_mo
     fnpsn10          => clm3%g%l%c%p%pdgvs%fnpsn10
@@ -507,6 +625,14 @@ contains
           t_ref2m_min(p) = spval
           t_ref2m_max_inst(p) = -spval
           t_ref2m_min_inst(p) =  spval
+          t_ref2m_max_u(p) = spval
+          t_ref2m_max_r(p) = spval
+          t_ref2m_min_u(p) = spval
+          t_ref2m_min_r(p) = spval
+          t_ref2m_max_inst_u(p) = -spval
+          t_ref2m_max_inst_r(p) = -spval
+          t_ref2m_min_inst_u(p) =  spval
+          t_ref2m_min_inst_r(p) =  spval
        end do
     end if
 

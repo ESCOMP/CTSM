@@ -38,12 +38,6 @@ on to output NetCDF files in large-file format
 <default>Default: FALSE</default>
 </entry>
 
-<entry id="csm_doflxave" type="logical" category="clm_physics"
-       group="clm_inparm" valid_values="" >
-true => flux averaging is to be performed (only used for concurrent CCSM mode)
-<default>Default: TRUE</default>
-</entry>
-
 <entry id="dtime" type="real"  category="clm_physics" 
        group="clm_inparm" valid_values="">
 Time step, seconds
@@ -783,7 +777,7 @@ File containing tn460 correction factors (not valid for any CLM DATM7 modes"
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"360x720,128x256,64x128,48x96,32x64,8x16,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil">
+"360x720,128x256,64x128,48x96,32x64,8x16,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
 Horizontal resolutions
 </entry> 
 

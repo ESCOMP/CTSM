@@ -649,7 +649,7 @@ contains
     if (nsrest == 0 .or. nsrest == 3) call hist_htapes_build()
 
     ! Initialize clmtype variables that are obtained from accumulated fields.
-    ! This routine is called in an initial run at nstep=0 for cam and csm mode.
+    ! This routine is called in an initial run at nstep=0
     ! This routine is also always called for a restart run and must 
     ! therefore be called after the restart file is read in
 

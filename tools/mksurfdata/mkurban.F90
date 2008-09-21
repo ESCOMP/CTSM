@@ -112,7 +112,7 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
-        if (urbn_o(io,jo) < 5.) urbn_o(io,jo) = 0.
+        if (urbn_o(io,jo) < 1.) urbn_o(io,jo) = 0.
   enddo
   enddo
 

@@ -162,6 +162,9 @@ type, public :: pft_pstate_type
    real(r8), pointer :: u10(:)                  !10-m wind (m/s) (for dust model)
    real(r8), pointer :: ram1(:)                 !aerodynamical resistance (s/m)
    real(r8), pointer :: fv(:)                   !friction velocity (m/s) (for dust model)
+   real(r8), pointer :: forc_hgt_u_pft(:)       !wind forcing height (10m+z0m+d) (m)
+   real(r8), pointer :: forc_hgt_t_pft(:)       !temperature forcing height (10m+z0m+d) (m)
+   real(r8), pointer :: forc_hgt_q_pft(:)       !specific humidity forcing height (10m+z0m+d) (m)
    ! new variables for CN code
    real(r8), pointer :: slasun(:)     !specific leaf area for sunlit canopy, projected area basis (m^2/gC)
    real(r8), pointer :: slasha(:)     !specific leaf area for shaded canopy, projected area basis (m^2/gC)
@@ -413,16 +416,29 @@ end type pft_epv_type
 ! pft energy state variables structure
 !----------------------------------------------------
 type, public :: pft_estate_type
-   real(r8), pointer :: t_ref2m(:)          !2 m height surface air temperature (Kelvin)
-   real(r8), pointer :: t_ref2m_min(:)      !daily minimum of average 2 m height surface air temperature (K)
-   real(r8), pointer :: t_ref2m_max(:)      !daily maximum of average 2 m height surface air temperature (K)
-   real(r8), pointer :: t_ref2m_min_inst(:) !instantaneous daily min of average 2 m height surface air temp (K)
-   real(r8), pointer :: t_ref2m_max_inst(:) !instantaneous daily max of average 2 m height surface air temp (K)
-   real(r8), pointer :: q_ref2m(:)          !2 m height surface specific humidity (kg/kg)
+   real(r8), pointer :: t_ref2m(:)            !2 m height surface air temperature (Kelvin)
+   real(r8), pointer :: t_ref2m_min(:)        !daily minimum of average 2 m height surface air temperature (K)
+   real(r8), pointer :: t_ref2m_max(:)        !daily maximum of average 2 m height surface air temperature (K)
+   real(r8), pointer :: t_ref2m_min_inst(:)   !instantaneous daily min of average 2 m height surface air temp (K)
+   real(r8), pointer :: t_ref2m_max_inst(:)   !instantaneous daily max of average 2 m height surface air temp (K)
+   real(r8), pointer :: q_ref2m(:)            !2 m height surface specific humidity (kg/kg)
+   real(r8), pointer :: t_ref2m_u(:)          !Urban 2 m height surface air temperature (Kelvin)
+   real(r8), pointer :: t_ref2m_r(:)          !Rural 2 m height surface air temperature (Kelvin)
+   real(r8), pointer :: t_ref2m_min_u(:)      !Urban daily minimum of average 2 m height surface air temperature (K)
+   real(r8), pointer :: t_ref2m_min_r(:)      !Rural daily minimum of average 2 m height surface air temperature (K)
+   real(r8), pointer :: t_ref2m_max_u(:)      !Urban daily maximum of average 2 m height surface air temperature (K)
+   real(r8), pointer :: t_ref2m_max_r(:)      !Rural daily maximum of average 2 m height surface air temperature (K)
+   real(r8), pointer :: t_ref2m_min_inst_u(:) !Urban instantaneous daily min of average 2 m height surface air temp (K)
+   real(r8), pointer :: t_ref2m_min_inst_r(:) !Rural instantaneous daily min of average 2 m height surface air temp (K)
+   real(r8), pointer :: t_ref2m_max_inst_u(:) !Urban instantaneous daily max of average 2 m height surface air temp (K)
+   real(r8), pointer :: t_ref2m_max_inst_r(:) !Rural instantaneous daily max of average 2 m height surface air temp (K)
+   real(r8), pointer :: q_ref2m_u(:)          !Urban 2 m height surface specific humidity (kg/kg)
+   real(r8), pointer :: q_ref2m_r(:)          !Rural 2 m height surface specific humidity (kg/kg)
 #if (defined CLAMP)
-   real(r8), pointer :: rh_ref2m(:)         !2 m height surface relative humidity (%)
+   real(r8), pointer :: rh_ref2m(:)           !2 m height surface relative humidity (%)
 #endif
-   real(r8), pointer :: t_veg(:)            !vegetation temperature (Kelvin)
+   real(r8), pointer :: t_veg(:)              !vegetation temperature (Kelvin)
+   real(r8), pointer :: thm(:)              !intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
 end type pft_estate_type
 
 !----------------------------------------------------
@@ -581,9 +597,7 @@ type, public :: pft_eflux_type
    real(r8), pointer :: dgnetdT(:)           !derivative of net ground heat flux wrt soil temp (W/m**2 K)
    real(r8), pointer :: eflx_lwrad_out(:)    !emitted infrared (longwave) radiation (W/m**2)
    real(r8), pointer :: eflx_lwrad_net(:)    !net infrared (longwave) rad (W/m**2) [+ = to atm]
-!KO
    real(r8), pointer :: netrad(:)            !net radiation (W/m**2) [+ = to sfc]
-!KO
    real(r8), pointer :: fsds_vis_d(:)        !incident direct beam vis solar radiation (W/m**2)
    real(r8), pointer :: fsds_nir_d(:)        !incident direct beam nir solar radiation (W/m**2)
    real(r8), pointer :: fsds_vis_i(:)        !incident diffuse vis solar radiation (W/m**2)
@@ -1004,13 +1018,14 @@ end type column_pstate_type
 type, public :: column_estate_type
    type(pft_estate_type):: pes_a              !pft-level energy state variables averaged to the column
    real(r8), pointer :: t_grnd(:)             !ground temperature (Kelvin)
+   real(r8), pointer :: t_grnd_u(:)           !Urban ground temperature (Kelvin)
+   real(r8), pointer :: t_grnd_r(:)           !Rural ground temperature (Kelvin)
    real(r8), pointer :: dt_grnd(:)            !change in t_grnd, last iteration (Kelvin)
    real(r8), pointer :: t_soisno(:,:)         !soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
    real(r8), pointer :: t_lake(:,:)           !lake temperature (Kelvin)  (1:nlevlak)          
    real(r8), pointer :: tssbef(:,:)           !soil/snow temperature before update (-nlevsno+1:nlevsoi) 
    real(r8), pointer :: t_snow(:)             !vertically averaged snow temperature
    real(r8), pointer :: thv(:)                !virtual potential temperature (kelvin)
-   real(r8), pointer :: thm(:)                !intermediate variable (forc_t+0.0098*forc_hgt_t)
    real(r8), pointer :: hc_soi(:)             !soil heat content (MJ/m2)
    real(r8), pointer :: hc_soisno(:)          !soil plus snow heat content (MJ/m2)
 end type column_estate_type
@@ -1030,6 +1045,7 @@ type, public :: column_wstate_type
    real(r8), pointer :: snowice(:)            !average snow ice lens
    real(r8), pointer :: snowliq(:)            !average snow liquid water
    real(r8) ,pointer :: soilalpha(:)          !factor that reduces ground saturated specific humidity (-)
+   real(r8) ,pointer :: soilalpha_u(:)        !urban factor that reduces ground saturated specific humidity (-)
    real(r8), pointer :: zwt(:)                !water table depth
    real(r8), pointer :: fcov(:)               !fractional area with water table at surface
    real(r8), pointer :: wa(:)                 !water in the unconfined aquifer (mm)
@@ -1126,6 +1142,8 @@ type, public :: column_eflux_type
    real(r8), pointer :: eflx_impsoil(:)	      ! implicit evaporation for soil temperature equation
    ! Urban variable
    real(r8), pointer :: eflx_building_heat(:) ! heat flux from urban building interior to urban walls, roof (W/m**2)
+   real(r8), pointer :: eflx_urban_ac(:)      ! urban air conditioning flux (W/m**2)
+   real(r8), pointer :: eflx_urban_heat(:)    ! urban heating flux (W/m**2)
 end type column_eflux_type
 
 !----------------------------------------------------
@@ -1146,6 +1164,9 @@ type, public :: column_wflux_type
    real(r8), pointer :: qflx_top_soil(:)! net water input into soil from top (mm/s)
    real(r8), pointer :: qflx_snomelt(:) ! snow melt (mm H2O /s)
    real(r8), pointer :: qflx_qrgwl(:) 	! qflx_surf at glaciers, wetlands, lakes
+   real(r8), pointer :: qflx_runoff(:) 	! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
+   real(r8), pointer :: qflx_runoff_u(:)! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
+   real(r8), pointer :: qflx_runoff_r(:)! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
    real(r8), pointer :: qmelt(:) 	! snow melt [mm/s]
    real(r8), pointer :: h2ocan_loss(:)  ! mass balance correction term for dynamic weights
 end type column_wflux_type
@@ -1391,12 +1412,26 @@ type, public :: landunit_pstate_type
    real(r8), pointer :: cv_wall(:,:)          ! heat capacity of urban wall (J/m^3/K)
    real(r8), pointer :: cv_roof(:,:)          ! heat capacity of urban roof (J/m^3/K)
    real(r8), pointer :: cv_improad(:,:)       ! heat capacity of urban impervious road (J/m^3/K)
-   real(r8), pointer :: sandfrac_road(:,:)    ! sand fraction of urban road
-   real(r8), pointer :: clayfrac_road(:,:)    ! clay fraction of urban road
-   real(r8), pointer :: scalez_wall(:)        ! layer thickness discretization of urban wall
-   real(r8), pointer :: scalez_roof(:)        ! layer thickness discretization of urban roof
    real(r8), pointer :: thick_wall(:)         ! total thickness of urban wall (m)
    real(r8), pointer :: thick_roof(:)         ! total thickness of urban roof (m)
+   integer, pointer :: nlev_improad(:)        ! number of impervious road layers (-)
+   real(r8), pointer :: vf_sr(:)              ! view factor of sky for road
+   real(r8), pointer :: vf_wr(:)              ! view factor of one wall for road
+   real(r8), pointer :: vf_sw(:)              ! view factor of sky for one wall
+   real(r8), pointer :: vf_rw(:)              ! view factor of road for one wall
+   real(r8), pointer :: vf_ww(:)              ! view factor of opposing wall for one wall
+   real(r8), pointer :: taf(:)                ! urban canopy air temperature (K)
+   real(r8), pointer :: qaf(:)                ! urban canopy air specific humidity (kg/kg)
+   real(r8), pointer :: sabs_roof_dir(:,:)       ! direct solar absorbed by roof per unit ground area per unit incident flux
+   real(r8), pointer :: sabs_roof_dif(:,:)       ! diffuse solar absorbed by roof per unit ground area per unit incident flux
+   real(r8), pointer :: sabs_sunwall_dir(:,:)    ! direct  solar absorbed by sunwall per unit wall area per unit incident flux
+   real(r8), pointer :: sabs_sunwall_dif(:,:)    ! diffuse solar absorbed by sunwall per unit wall area per unit incident flux
+   real(r8), pointer :: sabs_shadewall_dir(:,:)  ! direct  solar absorbed by shadewall per unit wall area per unit incident flux
+   real(r8), pointer :: sabs_shadewall_dif(:,:)  ! diffuse solar absorbed by shadewall per unit wall area per unit incident flux
+   real(r8), pointer :: sabs_improad_dir(:,:)    ! direct  solar absorbed by impervious road per unit ground area per unit incident flux
+   real(r8), pointer :: sabs_improad_dif(:,:)    ! diffuse solar absorbed by impervious road per unit ground area per unit incident flux
+   real(r8), pointer :: sabs_perroad_dir(:,:)    ! direct  solar absorbed by pervious road per unit ground area per unit incident flux
+   real(r8), pointer :: sabs_perroad_dif(:,:)    ! diffuse solar absorbed by pervious road per unit ground area per unit incident flux
 end type landunit_pstate_type
 
 !----------------------------------------------------
@@ -1457,6 +1492,7 @@ type, public :: landunit_eflux_type
    real(r8), pointer :: eflx_traffic_factor(:)  ! multiplicative traffic factor for sensible heat flux from urban traffic (-)
    real(r8), pointer :: eflx_traffic(:)         ! traffic sensible heat flux (W/m**2)
    real(r8), pointer :: eflx_wasteheat(:)       ! sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
+   real(r8), pointer :: eflx_anthro(:)          ! total anthropogenic heat flux (W/m**2)
 end type landunit_eflux_type
 
 !----------------------------------------------------
@@ -1875,13 +1911,12 @@ type, public :: landunit_type
    real(r8), pointer :: wind_hgt_canyon(:)! height above road at which wind in canyon is to be computed (m)
    real(r8), pointer :: z_0_town(:)       ! urban landunit momentum roughness length (m)
    real(r8), pointer :: z_d_town(:)       ! urban landunit displacement height (m)
-   real(r8), pointer :: taf(:)            ! urban canopy air temperature (K)
-   real(r8), pointer :: qaf(:)            ! urban canopy air specific humidity (kg/kg)
    
    ! topological mapping functionality
    integer , pointer :: itype(:)        !landunit type
    logical , pointer :: ifspecial(:)    !BOOL: true=>landunit is not vegetated
    logical , pointer :: lakpoi(:)       !BOOL: true=>lake point
+   logical , pointer :: urbpoi(:)       !BOOL: true=>urban point
 
    ! conservation check structures for the landunit level
    type(energy_balance_type)   :: lebal !energy balance structure

@@ -99,6 +99,10 @@ contains
    real(r8), pointer :: forc_hgt_u(:)  ! observational height of wind [m]
    real(r8), pointer :: forc_hgt_t(:)  ! observational height of temperature [m]
    real(r8), pointer :: forc_hgt_q(:)  ! observational height of humidity [m]
+   real(r8), pointer :: forc_hgt_u_pft(:) !observational height of wind at pft level [m]
+   real(r8), pointer :: forc_hgt_t_pft(:) !observational height of temperature at pft level [m]
+   real(r8), pointer :: forc_hgt_q_pft(:) !observational height of specific humidity at pft level [m]
+   integer , pointer :: pfti(:)           !beginning pfti index for landunit
 !
 ! local pointers to implicit out arguments
 !
@@ -138,12 +142,17 @@ contains
    forc_hgt_t => clm_a2l%forc_hgt_t
    forc_hgt_q => clm_a2l%forc_hgt_q
 
-   ! Adjustment factors for unstable (moz < 0) or stable (moz > 0) conditions.
+   ! Assign local pointers to derived type members (pft or landunit-level)
 
-   if (present(landunit_index)) then
-!    write(iulog,*)'Inside FrictionVelocity'
-!    write(iulog,*)'fn: ',fn
-   end if
+   pfti             => clm3%g%l%pfti
+
+   ! Assign local pointers to derived type members (pft-level)
+
+   forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
+   forc_hgt_t_pft => clm3%g%l%c%p%pps%forc_hgt_t_pft
+   forc_hgt_q_pft => clm3%g%l%c%p%pps%forc_hgt_q_pft
+
+   ! Adjustment factors for unstable (moz < 0) or stable (moz > 0) conditions.
 
 #if (!defined PERGRO)
 
@@ -152,16 +161,14 @@ contains
    do f = 1, fn
       n = filtern(f)
       g = ngridcell(n)
-      if (present(landunit_index)) then
-!       write(iulog,*)'f: ',f
-!       write(iulog,*)'n: ',n
-!       write(iulog,*)'g: ',g
-!       write(iulog,*)'displa in FrictionVelocity: ',displa(n)
-      end if
 
       ! Wind profile
 
-      zldis(n) = forc_hgt_u(g)-displa(n)
+      if (present(landunit_index)) then
+        zldis(n) = forc_hgt_u_pft(pfti(n))-displa(n)
+      else
+        zldis(n) = forc_hgt_u_pft(n)-displa(n)
+      end if
       zeta(n) = zldis(n)/obu(n)
       if (zeta(n) < -zetam) then
          ustar(n) = vkc*um(n)/(log(-zetam*obu(n)/z0m(n))&
@@ -181,7 +188,11 @@ contains
 
       ! Temperature profile
 
-      zldis(n) = forc_hgt_t(g)-displa(n)
+      if (present(landunit_index)) then
+        zldis(n) = forc_hgt_t_pft(pfti(n))-displa(n)
+      else
+        zldis(n) = forc_hgt_t_pft(n)-displa(n)
+      end if
       zeta(n) = zldis(n)/obu(n)
       if (zeta(n) < -zetat) then
          temp1(n) = vkc/(log(-zetat*obu(n)/z0h(n))&
@@ -201,10 +212,11 @@ contains
 
       ! Humidity profile
 
-      if (forc_hgt_q(g) == forc_hgt_t(g) .and. z0q(n) == z0h(n)) then
+      if (present(landunit_index)) then
+       if (forc_hgt_q_pft(pfti(n)) == forc_hgt_t_pft(pfti(n)) .and. z0q(n) == z0h(n)) then
          temp2(n) = temp1(n)
-      else
-         zldis(n) = forc_hgt_q(g)-displa(n)
+       else
+         zldis(n) = forc_hgt_q_pft(pfti(n))-displa(n)
          zeta(n) = zldis(n)/obu(n)
          if (zeta(n) < -zetat) then
             temp2(n) = vkc/(log(-zetat*obu(n)/z0q(n)) &
@@ -221,6 +233,29 @@ contains
             temp2(n) = vkc/(log(obu(n)/z0q(n)) + 5._r8 - 5._r8*z0q(n)/obu(n) &
                  + (5._r8*log(zeta(n))+zeta(n)-1._r8))
          end if
+       end if
+      else
+       if (forc_hgt_q_pft(n) == forc_hgt_t_pft(n) .and. z0q(n) == z0h(n)) then
+         temp2(n) = temp1(n)
+       else
+         zldis(n) = forc_hgt_q_pft(n)-displa(n)
+         zeta(n) = zldis(n)/obu(n)
+         if (zeta(n) < -zetat) then
+            temp2(n) = vkc/(log(-zetat*obu(n)/z0q(n)) &
+                 - StabilityFunc2(-zetat) &
+                 + StabilityFunc2(z0q(n)/obu(n)) &
+                 + 0.8_r8*((zetat)**(-0.333_r8)-(-zeta(n))**(-0.333_r8)))
+         else if (zeta(n) < 0._r8) then
+            temp2(n) = vkc/(log(zldis(n)/z0q(n)) &
+                 - StabilityFunc2(zeta(n)) &
+                 + StabilityFunc2(z0q(n)/obu(n)))
+         else if (zeta(n) <=  1._r8) then
+            temp2(n) = vkc/(log(zldis(n)/z0q(n)) + 5._r8*zeta(n)-5._r8*z0q(n)/obu(n))
+         else
+            temp2(n) = vkc/(log(obu(n)/z0q(n)) + 5._r8 - 5._r8*z0q(n)/obu(n) &
+                 + (5._r8*log(zeta(n))+zeta(n)-1._r8))
+         end if
+       endif
       endif
 
       ! Temperature profile applied at 2-m
@@ -298,7 +333,7 @@ contains
       else                ! not stable
          fm10 = -5.0_r8 * zeta10
       end if
-      tmp4 = log(forc_hgt(g) / 10._r8)
+      tmp4 = log( min( 1.0_8, forc_hgt(g) / 10._r8) )
       if (.not. present(landunit_index)) then
         u10(n) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
         fv(n)  = ustar(n)
@@ -413,7 +448,7 @@ contains
       else                ! not stable
          fm10 = -5.0_r8 * zeta10
       end if
-      tmp4 = log(forc_hgt(g) / 10._r8)
+      tmp4 = log( min( 1.0_r8, forc_hgt(g) / 10._r8 ) )
       if (.not. present(landunit_index)) then
         u10(n) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
         fv(n)  = ustar(n)

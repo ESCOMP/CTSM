@@ -318,7 +318,8 @@ contains
        ! Determine albedos for urban landunits
 
        if (filter(nc)%num_urbanl > 0) then
-          call UrbanAlbedo(nc, filter(nc)%num_urbanl, filter(nc)%urbanl, &
+          call UrbanAlbedo(nc, begl, endl, begc, endc, begp, endp, &
+                           filter(nc)%num_urbanl, filter(nc)%urbanl, &
                            filter(nc)%num_urbanc, filter(nc)%urbanc, &
                            filter(nc)%num_urbanp, filter(nc)%urbanp, &
                            calday, declin)

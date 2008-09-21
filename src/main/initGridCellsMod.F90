@@ -582,6 +582,7 @@ end subroutine clm_ptrs_check
           ! Set landunit properties
           lptr%ifspecial(li) = .false.
           lptr%lakpoi(li)    = .false.
+          lptr%urbpoi(li)    = .false.
           lptr%itype(li)     = ltype
        
           lptr%gridcell (li) = gi
@@ -747,6 +748,7 @@ end subroutine clm_ptrs_check
 
           lptr%itype(li)     = ltype
           lptr%ifspecial(li) = .true.
+          lptr%urbpoi(li)    = .false.
           if (ltype == istdlak) then
              lptr%lakpoi(li) = .true.
           else
@@ -853,6 +855,7 @@ end subroutine clm_ptrs_check
           lptr%itype(li)     = ltype
           lptr%ifspecial(li) = .false.
           lptr%lakpoi(li)    = .false.
+          lptr%urbpoi(li)    = .false.
        
           lptr%gridcell (li) = gi
           lptr%wtgcell(li) = wtlunit2gcell
@@ -970,6 +973,7 @@ end subroutine clm_ptrs_check
           lptr%itype    (li) = ltype
           lptr%ifspecial(li) = .true.
           lptr%lakpoi   (li) = .false.
+          lptr%urbpoi   (li) = .true.
 
           lptr%gridcell (li) = gi
           lptr%wtgcell  (li) = wtlunit2gcell
@@ -981,8 +985,8 @@ end subroutine clm_ptrs_check
        do m = npatch_urban, npatch_urban + maxpatch_urb - 1
           if (wtxy(nw,m) > 0._r8) then
                 
-             wtlunit_roof = urbinp%wtlunit_roof(nw)
-             wtroad_perv  = urbinp%wtroad_perv(nw)
+             wtlunit_roof = urbinp%wtlunit_roof(ldecomp%gdc2glo(nw))
+             wtroad_perv  = urbinp%wtroad_perv(ldecomp%gdc2glo(nw))
              
              if (m == npatch_urban  ) then
                 ctype = icol_roof

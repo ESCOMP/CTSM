@@ -3,5 +3,5 @@
 /
 &clm_inparm
  outnc_large_files=.true.
- hist_ndens=1
+ hist_ndens=1,1
 /

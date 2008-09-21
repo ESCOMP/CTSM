@@ -72,8 +72,20 @@ fi
 
 echo "TBR.sh: branching clm; output in ${CLM_TESTDIR}/${test_name}/test.log"
 
+start_ymd=`echo $3 | awk -F: '{print $1}'`
+freq=`echo      $3 | awk -F: '{print $2}'`
+dtime=`echo     $3 | awk -F: '{print $3}'`
+if [ $branch_length -lt 0 ]; then
+  branch_len_days=$((-$branch_length))
+else
+  branch_len_days=$(($branch_length * $dtime / 86400))
+fi
+start_ymd=$(( $start_ymd + $branch_len_days))
+
+branch_nlops="$start_ymd:$freq:$dtime"
+
 echo "TBR.sh: calling TSM.sh for smoke test of branch length ${branch_length}"
-${CLM_SCRIPTDIR}/TSM.sh $1 $2 $3 $4 $5 ${branch_length} \
+${CLM_SCRIPTDIR}/TSM.sh $1 $2 $branch_nlops $4 $5 ${branch_length} \
             branch+$1.$2.$3.$4.$5.$initial_length.$7
 rc=$?
 if [ $rc -ne 0 ]; then
@@ -83,7 +95,7 @@ if [ $rc -ne 0 ]; then
 fi
 
 
-mv ${CLM_TESTDIR}/TSM.$1.$2.$3.$4.$5.${branch_length}.branch/*.clm*h*.nc .
+mv ${CLM_TESTDIR}/TSM.$1.$2.$branch_nlops.$4.$5.${branch_length}.branch/*.clm*h*.nc .
 echo "TBR.sh: starting b4b comparisons " 
 file_string="*.clm*h*.nc"
 files_to_compare=`ls $file_string`

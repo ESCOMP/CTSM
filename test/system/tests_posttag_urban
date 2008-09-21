@@ -1,4 +1,7 @@
-smCA4             blCA4
-smCA8             blCA8
-smNB4             blNB4
-smOC4             blOC4
+smCA4 erCA4 brCA4 blCA4
+smCA8 erCA8 brCA8 blCA8
+smCE4 erCE4 brCE4 blCE4
+smNB4 erNB4 brNB4 blNB4
+smOC4 erOC4 brOC4 blOC4
+smC52 erC52 brC52 blC52
+smC62 erC62 brC62 blC62

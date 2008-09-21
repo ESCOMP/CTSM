@@ -46,7 +46,7 @@ contains
     use clmtype
     use clm_atmlnd         , only : clm_a2l
     use clm_varpar         , only : nlevsoi
-    use clm_varcon         , only : cpair, vkc, grav, denice, denh2o
+    use clm_varcon         , only : cpair, vkc, grav, denice, denh2o, istsoil
     use shr_const_mod      , only : SHR_CONST_RGAS
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
 #if (defined CLAMP)
@@ -81,6 +81,8 @@ contains
 !
     integer , pointer :: pcolumn(:)        ! pft's column index
     integer , pointer :: pgridcell(:)      ! pft's gridcell index
+    integer , pointer :: plandunit(:)      ! pft's landunit index
+    integer , pointer :: ltype(:)          ! landunit type
     integer , pointer :: frac_veg_nosno(:) ! fraction of vegetation not covered by snow (0 OR 1) [-]
     real(r8), pointer :: t_grnd(:)         ! ground surface temperature [K]
     real(r8), pointer :: thm(:)            ! intermediate variable (forc_t+0.0098*forc_hgt_t)
@@ -98,6 +100,7 @@ contains
     real(r8), pointer :: forc_rho(:)       ! density (kg/m**3)
     real(r8), pointer :: forc_pbot(:)      ! atmospheric pressure (Pa)
     real(r8), pointer :: forc_hgt_u(:)     ! observational height of wind [m]
+    real(r8), pointer :: forc_hgt_u_pft(:) ! observational height of wind at pft level [m]
     real(r8), pointer :: psnsun(:)         ! sunlit leaf photosynthesis (umol CO2 /m**2/ s)
     real(r8), pointer :: psnsha(:)         ! shaded leaf photosynthesis (umol CO2 /m**2/ s)
     real(r8), pointer :: z0mg_col(:)       ! roughness length, momentum [m]
@@ -127,6 +130,8 @@ contains
     real(r8), pointer :: qflx_evap_tot(:) ! qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
     real(r8), pointer :: t_ref2m(:)       ! 2 m height surface air temperature (Kelvin)
     real(r8), pointer :: q_ref2m(:)       ! 2 m height surface specific humidity (kg/kg)
+    real(r8), pointer :: t_ref2m_r(:)     ! Rural 2 m height surface air temperature (Kelvin)
+    real(r8), pointer :: q_ref2m_r(:)     ! Rural 2 m height surface specific humidity (kg/kg)
 #if (defined CLAMP)
     real(r8), pointer :: rh_ref2m(:)      ! 2 m height surface relative humidity (%)
 #endif
@@ -144,7 +149,7 @@ contains
 ! !OTHER LOCAL VARIABLES:
 !
     integer, parameter  :: niters = 3  ! maximum number of iterations for surface temperature
-    integer  :: p,c,g,f,j              ! indices
+    integer  :: p,c,g,f,j,l            ! indices
     integer  :: filterp(ubp-lbp+1)     ! pft filter for vegetated pfts
     integer  :: fn                     ! number of values in local pft filter
     integer  :: fp                     ! lake filter pft index
@@ -198,6 +203,10 @@ contains
     forc_rho   => clm_a2l%forc_rho
     forc_q     => clm_a2l%forc_q
 
+    ! Assign local pointers to derived type members (landunit-level)
+
+    ltype      => clm3%g%l%itype
+
     ! Assign local pointers to derived type members (column-level)
 
     pcolumn => clm3%g%l%c%p%column
@@ -205,7 +214,6 @@ contains
     frac_veg_nosno => clm3%g%l%c%p%pps%frac_veg_nosno
     dlrad => clm3%g%l%c%p%pef%dlrad
     ulrad => clm3%g%l%c%p%pef%ulrad
-    thm => clm3%g%l%c%ces%thm
     t_grnd => clm3%g%l%c%ces%t_grnd
     qg => clm3%g%l%c%cws%qg
     z0mg_col => clm3%g%l%c%cps%z0mg
@@ -236,10 +244,14 @@ contains
     qflx_evap_tot => clm3%g%l%c%p%pwf%qflx_evap_tot
     t_ref2m => clm3%g%l%c%p%pes%t_ref2m
     q_ref2m => clm3%g%l%c%p%pes%q_ref2m
+    t_ref2m_r => clm3%g%l%c%p%pes%t_ref2m_r
+    q_ref2m_r => clm3%g%l%c%p%pes%q_ref2m_r
+    plandunit => clm3%g%l%c%p%landunit
 #if (defined CLAMP)
     rh_ref2m => clm3%g%l%c%p%pes%rh_ref2m
 #endif
     t_veg => clm3%g%l%c%p%pes%t_veg
+    thm => clm3%g%l%c%p%pes%thm
     btran => clm3%g%l%c%p%pps%btran
     rssun => clm3%g%l%c%p%pps%rssun
     rssha => clm3%g%l%c%p%pps%rssha
@@ -248,6 +260,7 @@ contains
     psnsun => clm3%g%l%c%p%pcf%psnsun
     psnsha => clm3%g%l%c%p%pcf%psnsha
     fpsn => clm3%g%l%c%p%pcf%fpsn
+    forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
 
     ! Filter pfts where frac_veg_nosno is zero
 
@@ -277,10 +290,10 @@ contains
        ulrad(p)  = 0._r8
 
        ur(p) = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
-       dth(p) = thm(c)-t_grnd(c)
+       dth(p) = thm(p)-t_grnd(c)
        dqh(p) = forc_q(g)-qg(c)
        dthv = dth(p)*(1._r8+0.61_r8*forc_q(g))+0.61_r8*forc_th(g)*dqh(p)
-       zldis(p) = forc_hgt_u(g)
+       zldis(p) = forc_hgt_u_pft(p)
 
        ! Copy column roughness to local pft-level arrays
 
@@ -350,6 +363,7 @@ contains
        p = filterp(f)
        c = pcolumn(p)
        g = pgridcell(p)
+       l = plandunit(p)
 
        ! Determine aerodynamic resistances
 
@@ -389,11 +403,16 @@ contains
 
        ! 2 m height air temperature
 
-       t_ref2m(p) = thm(c) + temp1(p)*dth(p)*(1._r8/temp12m(p) - 1._r8/temp1(p))
+       t_ref2m(p) = thm(p) + temp1(p)*dth(p)*(1._r8/temp12m(p) - 1._r8/temp1(p))
 
        ! 2 m height specific humidity
 
        q_ref2m(p) = forc_q(g) + temp2(p)*dqh(p)*(1._r8/temp22m(p) - 1._r8/temp2(p))
+
+       if (ltype(l) == istsoil) then
+         q_ref2m_r(p) = q_ref2m(p)
+         t_ref2m_r(p) = t_ref2m(p)
+       end if
 
 #if (defined CLAMP)
        ! 2 m height relative humidity
@@ -406,7 +425,7 @@ contains
 
        t_veg(p) = forc_t(g)
        btran(p) = 0._r8
-       cf = forc_pbot(g)/(SHR_CONST_RGAS*0.001_r8*thm(c))*1.e06_r8
+       cf = forc_pbot(g)/(SHR_CONST_RGAS*0.001_r8*thm(p))*1.e06_r8
        rssun(p) = 1._r8/1.e15_r8 * cf
        rssha(p) = 1._r8/1.e15_r8 * cf
 

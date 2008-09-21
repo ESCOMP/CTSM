@@ -81,9 +81,6 @@ contains
 #if (defined CASA)
     use CASAMod          , only : CASARest
 #endif
-#if (defined COUP_CSM)
-    use clm_csmMod       , only : csm_restart 
-#endif
     use accumulMod       , only : accumulRest
 !
 ! !ARGUMENTS:
@@ -130,9 +127,6 @@ contains
 #if (defined RTM)
     call RtmRest( ncid, flag='define' )
 #endif
-#if (defined COUP_CSM)
-    call csm_restart( ncid, flag='define' )
-#endif
     call accumulRest( ncid, flag='define' )
     call restFile_enddef( ncid )
 
@@ -152,9 +146,6 @@ contains
 #endif
 #if (defined RTM)
     call RtmRest( ncid, flag='write' )
-#endif
-#if (defined COUP_CSM)
-    call csm_restart( ncid, flag='write' )
 #endif
     call accumulRest( ncid, flag='write' )
     
@@ -205,9 +196,6 @@ contains
 #if (defined CASA)
     use CASAMod          , only : CASARest
 #endif
-#if (defined COUP_CSM)
-    use clm_csmMod       , only : csm_restart 
-#endif
     use accumulMod       , only : accumulRest
 !
 ! !ARGUMENTS:
@@ -247,9 +235,6 @@ contains
 #endif
 #if (defined RTM)
     call RtmRest( ncid, flag='read' )
-#endif
-#if (defined COUP_CSM)
-    call csm_restart( ncid, flag='read' )
 #endif
     call accumulRest( ncid, flag='read' )
     
@@ -508,9 +493,6 @@ contains
 ! in write mode, otherwise just close restart file if in read mode
 !
 ! !USES:
-#if (defined COUP_CSM)
-    use clm_csmMod  , only : csmstop_next
-#endif
     use clm_time_manager, only : is_last_step
     use fileutils   , only : putfil, set_filename
 !

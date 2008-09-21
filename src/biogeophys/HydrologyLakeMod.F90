@@ -92,6 +92,7 @@ contains
     real(r8), pointer :: qflx_surf(:)     !surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_drain(:)    !sub-surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)    !qflx_surf at glaciers, wetlands, lakes
+    real(r8), pointer :: qflx_runoff(:)   !total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
     real(r8), pointer :: qflx_snwcp_ice(:)!excess snowfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: qflx_evap_tot_col(:) !pft quantity averaged to the column (assuming one pft)
     real(r8) ,pointer :: soilalpha(:)     !factor that reduces ground saturated specific humidity (-)
@@ -138,6 +139,7 @@ contains
     qflx_snomelt   => clm3%g%l%c%cwf%qflx_snomelt
     qflx_surf      => clm3%g%l%c%cwf%qflx_surf
     qflx_qrgwl     => clm3%g%l%c%cwf%qflx_qrgwl
+    qflx_runoff    => clm3%g%l%c%cwf%qflx_runoff
     qflx_snwcp_ice => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
     qflx_drain     => clm3%g%l%c%cwf%qflx_drain
     qflx_infl      => clm3%g%l%c%cwf%qflx_infl
@@ -249,6 +251,7 @@ contains
        h2osoi_liq(c,:)   = spval
        qflx_qrgwl(c)     = forc_rain(g) + forc_snow(g) - qflx_evap_tot(p) - qflx_snwcp_ice(c) - &
                            (endwb(c)-begwb(c))/dtime
+       qflx_runoff(c)    = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c)
 
        ! The pft average must be done here for output to history tape
 

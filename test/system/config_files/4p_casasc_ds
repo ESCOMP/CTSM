@@ -1,0 +1,6 @@
+-mode ccsm_seq
+-nospmd -nosmp
+-debug
+-maxpft 4
+-bgc casa
+-s

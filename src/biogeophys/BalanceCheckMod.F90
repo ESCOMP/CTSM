@@ -49,7 +49,8 @@ contains
     use clmtype
     use clm_varpar   , only : nlevsoi
     use subgridAveMod, only : p2c
-
+    use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, &
+                              icol_road_imperv
 !
 ! !ARGUMENTS:
     implicit none
@@ -77,7 +78,7 @@ contains
     real(r8), pointer :: h2osoi_liq(:,:)       ! liquid water (kg/m2)
     real(r8), pointer :: h2ocan_pft(:)         ! canopy water (mm H2O) (pft-level) 
     real(r8), pointer :: wa(:)                 ! water in the unconfined aquifer (mm)
-
+    integer , pointer :: ctype(:)              ! column type 
 !
 ! local pointers to original implicit out variables
 !
@@ -97,6 +98,7 @@ contains
     begwb              => clm3%g%l%c%cwbal%begwb
     h2ocan_col         => clm3%g%l%c%cws%pws_a%h2ocan
     wa                 => clm3%g%l%c%cws%wa
+    ctype              => clm3%g%l%c%itype
 
     ! Assign local pointers to derived type members (pft-level)
 
@@ -110,7 +112,12 @@ contains
 !cdir nodep
     do f = 1, num_nolakec
        c = filter_nolakec(f)
-       begwb(c) = h2ocan_col(c) + h2osno(c) + wa(c)
+       if (ctype(c) == icol_roof .or. ctype(c) == icol_sunwall &
+          .or. ctype(c) == icol_shadewall .or. ctype(c) == icol_road_imperv) then
+         begwb(c) = h2ocan_col(c) + h2osno(c)
+       else
+         begwb(c) = h2ocan_col(c) + h2osno(c) + wa(c)
+       end if
     end do
     do j = 1, nlevsoi
 !dir$ concurrent
@@ -214,9 +221,7 @@ contains
     real(r8), pointer :: errsol(:)          ! solar radiation conservation error (W/m**2)
     real(r8), pointer :: errlon(:)          ! longwave radiation conservation error (W/m**2)
     real(r8), pointer :: errseb(:)          ! surface energy conservation error (W/m**2)
-!KO
     real(r8), pointer :: netrad(:)          ! net radiation (positive downward) (W/m**2)
-!KO
     real(r8), pointer :: errsoi_col(:)      ! column-level soil/lake energy conservation error (W/m**2)
 !
 !EOP
@@ -274,9 +279,7 @@ contains
     errsol            => clm3%g%l%c%p%pebal%errsol
     errseb            => clm3%g%l%c%p%pebal%errseb
     errlon            => clm3%g%l%c%p%pebal%errlon
-!KO
     netrad            => clm3%g%l%c%p%pef%netrad
-!KO
 
     ! Get step size and time step
 
@@ -398,10 +401,7 @@ contains
                          - eflx_lwrad_net(p) &
                          - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p)
           end if
-!KO
           netrad(p) = fsa(p) - eflx_lwrad_net(p)
-!KO
-
        end if
     end do
 

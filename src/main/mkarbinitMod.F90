@@ -51,6 +51,9 @@ contains
     integer , pointer :: clandunit(:)      ! landunit index associated with each column
     integer , pointer :: ltype(:)          ! landunit type
     logical , pointer :: lakpoi(:)         ! true => landunit is a lake point
+    integer , pointer :: plandunit(:)      ! landunit index associated with each pft
+    logical , pointer :: urbpoi(:)         ! true => landunit is an urban point
+    logical , pointer :: ifspecial(:)      ! true => landunit is not vegetated
     real(r8), pointer :: dz(:,:)           ! layer thickness depth (m)
     real(r8), pointer :: watsat(:,:)       ! volumetric soil water at saturation (porosity) (nlevsoi)
     real(r8), pointer :: h2osoi_ice(:,:)   ! ice lens (kg/m2)
@@ -71,6 +74,8 @@ contains
     real(r8), pointer :: t_grnd(:)         ! ground temperature (Kelvin)
     real(r8), pointer :: t_veg(:)          ! vegetation temperature (Kelvin)
     real(r8), pointer :: t_ref2m(:)        ! 2 m height surface air temperature (Kelvin)
+    real(r8), pointer :: t_ref2m_u(:)      ! Urban 2 m height surface air temperature (Kelvin)
+    real(r8), pointer :: t_ref2m_r(:)      ! Rural 2 m height surface air temperature (Kelvin)
     real(r8), pointer :: h2osoi_vol(:,:)   ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
     real(r8), pointer :: h2ocan_col(:)     ! canopy water (mm H2O) (column-level)
     real(r8), pointer :: h2ocan_pft(:)     ! canopy water (mm H2O) (pft-level)
@@ -102,6 +107,8 @@ contains
 
     ltype      => clm3%g%l%itype
     lakpoi     => clm3%g%l%lakpoi
+    ifspecial  => clm3%g%l%ifspecial
+    urbpoi     => clm3%g%l%urbpoi
 
     ! Assign local pointers to derived subtypes components (column-level)
 
@@ -135,6 +142,9 @@ contains
     h2ocan_pft     => clm3%g%l%c%p%pws%h2ocan
     t_veg          => clm3%g%l%c%p%pes%t_veg
     t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
+    t_ref2m_u      => clm3%g%l%c%p%pes%t_ref2m_u
+    t_ref2m_r      => clm3%g%l%c%p%pes%t_ref2m_r
+    plandunit      => clm3%g%l%c%p%landunit
     eflx_lwrad_out => clm3%g%l%c%p%pef%eflx_lwrad_out  
 
     ! Determine subgrid bounds on this processor
@@ -254,20 +264,19 @@ contains
              end if
 #elif (defined GRANDVIEW)
              if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then 
-             ! Set road top layer to 18.5C and interpolate other
-             ! layers down to 16.5C in bottom layer
+             ! Set road layers to 18.5C
                do j = 1, nlevsoi
-                  t_soisno(c,j) = 291.66 - (j-1) * ((291.66-289.66)/(nlevsoi-1)) 
+                  t_soisno(c,j) = 291.66_r8
                end do
-             ! Set wall top layer to 18.35C and interpolate other
-             ! layers down to 17.0C in bottom layer
              else if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall) then
+             ! Set wall layers to 18.35C
                do j = 1, nlevsoi
-                  t_soisno(c,j) = 291.51 - (j-1) * ((291.51-290.16)/(nlevsoi-1)) 
+                  t_soisno(c,j) = 291.51_r8
                end do
              else if (ctype(c) == icol_roof) then
+             ! Set roof layers to 18.5C
                do j = 1, nlevsoi
-                  t_soisno(c,j) = 291.56_r8
+                  t_soisno(c,j) = 291.66_r8
                end do
              end if
 #else
@@ -305,18 +314,61 @@ contains
 !cdir nodep
     do p = begp, endp
        c = pcolumn(p)
+       l = plandunit(p)
+
 #if (defined VANCOUVER)
        t_veg(p) = 297.56
        t_ref2m(p) = 297.56
+       if (urbpoi(l)) then
+         t_ref2m_u(p) = 297.56
+       else
+         t_ref2m_u(p) = spval
+       end if
+       if (ifspecial(l)) then
+         t_ref2m_r(p) = spval
+       else
+         t_ref2m_r(p) = 297.56
+       end if 
 #elif (defined MEXICOCITY)
        t_veg(p) = 289.46
        t_ref2m(p) = 289.46
+       if (urbpoi(l)) then
+         t_ref2m_u(p) = 289.46
+       else
+         t_ref2m_u(p) = spval
+       end if
+       if (ifspecial(l)) then
+         t_ref2m_r(p) = spval
+       else
+         t_ref2m_r(p) = 289.46
+       end if 
 #elif (defined GRANDVIEW)
-       t_veg(p) = 291.56
-       t_ref2m(p) = 291.56
+       ! Set to 19.0C
+       t_veg(p) = 292.16
+       t_ref2m(p) = 292.16
+       if (urbpoi(l)) then
+         t_ref2m_u(p) = 292.16
+       else
+         t_ref2m_u(p) = spval
+       end if
+       if (ifspecial(l)) then
+         t_ref2m_r(p) = spval
+       else
+         t_ref2m_r(p) = 292.16
+       end if 
 #else
        t_veg(p) = 283._r8
        t_ref2m(p) = 283._r8
+       if (urbpoi(l)) then
+         t_ref2m_u(p) = 283._r8
+       else
+         t_ref2m_u(p) = spval
+       end if
+       if (ifspecial(l)) then
+         t_ref2m_r(p) = spval
+       else
+         t_ref2m_r(p) = 283._r8
+       end if 
 #endif
        eflx_lwrad_out(p) = sb * (t_grnd(c))**4
     end do
@@ -340,9 +392,21 @@ contains
     do c = begc,endc
        l = clandunit(c)
        if (.not. lakpoi(l)) then  !not lake
-          wa(c)  = 4800._r8
-          wt(c)  = wa(c)
-          zwt(c) = (25._r8 + zi(c,nlevsoi)) - wa(c)/0.2_r8 /1000._r8  ! One meter below soil column
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_road_perv) then
+                wa(c)  = 4800._r8
+                wt(c)  = wa(c)
+                zwt(c) = (25._r8 + zi(c,nlevsoi)) - wa(c)/0.2_r8 /1000._r8  ! One meter below soil column
+             else
+                wa(c)  = spval
+                wt(c)  = spval
+                zwt(c) = spval
+             end if
+          else
+             wa(c)  = 4800._r8
+             wt(c)  = wa(c)
+             zwt(c) = (25._r8 + zi(c,nlevsoi)) - wa(c)/0.2_r8 /1000._r8  ! One meter below soil column
+          end if
        end if
     end do
 
@@ -356,10 +420,13 @@ contains
              ! volumetric water
              if (ltype(l) == istsoil) then
                 h2osoi_vol(c,j) = 0.4_r8
-!KO                h2osoi_vol(c,j) = 0.05_r8
              else if (ltype(l) == isturb) then 
                 if (ctype(c) == icol_road_perv) then
+#if (defined GRANDVIEW)
+                   h2osoi_vol(c,j) = 0.0_r8
+#else
                    h2osoi_vol(c,j) = 0.3_r8
+#endif
                 else
                    h2osoi_vol(c,j) = 0.0_r8
                 end if

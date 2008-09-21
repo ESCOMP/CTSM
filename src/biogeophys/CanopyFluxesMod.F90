@@ -141,6 +141,7 @@ contains
    real(r8), pointer :: forc_u(:)      ! atmospheric wind speed in east direction (m/s)
    real(r8), pointer :: forc_v(:)      ! atmospheric wind speed in north direction (m/s)
    real(r8), pointer :: forc_hgt_u(:)  ! observational height of wind [m]
+   real(r8), pointer :: forc_hgt_u_pft(:) !observational height of wind at pft level [m]
    real(r8), pointer :: forc_rho(:)    ! density (kg/m**3)
    real(r8), pointer :: forc_lwrad(:)  ! downward infrared (longwave) radiation (W/m**2)
    real(r8), pointer :: displa(:)      ! displacement height (m)
@@ -173,6 +174,8 @@ contains
    real(r8), pointer :: t_veg(:)       ! vegetation temperature (Kelvin)
    real(r8), pointer :: t_ref2m(:)     ! 2 m height surface air temperature (Kelvin)
    real(r8), pointer :: q_ref2m(:)     ! 2 m height surface specific humidity (kg/kg)
+   real(r8), pointer :: t_ref2m_r(:)   ! Rural 2 m height surface air temperature (Kelvin)
+   real(r8), pointer :: q_ref2m_r(:)   ! Rural 2 m height surface specific humidity (kg/kg)
 #if (defined CLAMP)
    real(r8), pointer :: rh_ref2m(:)    ! 2 m height surface relative humidity (%)
 #endif
@@ -368,7 +371,6 @@ contains
    bsw            => clm3%g%l%c%cps%bsw
    emg            => clm3%g%l%c%cps%emg
    t_grnd         => clm3%g%l%c%ces%t_grnd
-   thm            => clm3%g%l%c%ces%thm
    qg             => clm3%g%l%c%cws%qg
    thv            => clm3%g%l%c%ces%thv
    dqgdT          => clm3%g%l%c%cws%dqgdT
@@ -430,6 +432,8 @@ contains
    qflx_evap_soi  => clm3%g%l%c%p%pwf%qflx_evap_soi
    t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
    q_ref2m        => clm3%g%l%c%p%pes%q_ref2m
+   t_ref2m_r      => clm3%g%l%c%p%pes%t_ref2m_r
+   q_ref2m_r      => clm3%g%l%c%p%pes%q_ref2m_r
 #if (defined CLAMP)
    rh_ref2m       => clm3%g%l%c%p%pes%rh_ref2m
 #endif
@@ -439,6 +443,8 @@ contains
    cgrndl         => clm3%g%l%c%p%pef%cgrndl
    cgrnd          => clm3%g%l%c%p%pef%cgrnd
    fpsn           => clm3%g%l%c%p%pcf%fpsn
+   forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
+   thm            => clm3%g%l%c%p%pes%thm
       
    ! Assign local pointers to derived type members (ecophysiological)
 
@@ -553,15 +559,15 @@ contains
 
       nmozsgn(p) = 0
 
-      taf(p) = (t_grnd(c) + thm(c))/2._r8
+      taf(p) = (t_grnd(c) + thm(p))/2._r8
       qaf(p) = (forc_q(g)+qg(c))/2._r8
 
       ur(p) = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
-      dth(p) = thm(c)-taf(p)
+      dth(p) = thm(p)-taf(p)
       dqh(p) = forc_q(g)-qaf(p)
       delq(p) = qg(c) - qaf(p)
       dthv(p) = dth(p)*(1._r8+0.61_r8*forc_q(g))+0.61_r8*forc_th(g)*dqh(p)
-      zldis(p) = forc_hgt_u(g) - displa(p)
+      zldis(p) = forc_hgt_u_pft(p) - displa(p)
 
       ! Check to see if the forcing height is below the canopy height
       if (zldis(p) < 0._r8) then
@@ -738,7 +744,7 @@ contains
          dc1 = forc_rho(g)*cpair*wtl
          dc2 = hvap*forc_rho(g)*wtlq
 
-         efsh   = dc1*(wtga*t_veg(p)-wtg0*t_grnd(c)-wta0(p)*thm(c))
+         efsh   = dc1*(wtga*t_veg(p)-wtg0*t_grnd(c)-wta0(p)*thm(p))
          efe(p) = dc2*(wtgaq*qsatl(p)-wtgq0*qg(c)-wtaq0(p)*forc_q(g))
 
          ! Evaporation flux from foliage
@@ -803,13 +809,13 @@ contains
          ! temperature, canopy vapor pressure, aerodynamic temperature, and
          ! Monin-Obukhov stability parameter for next iteration.
 
-         taf(p) = wtg0*t_grnd(c) + wta0(p)*thm(c) + wtl0(p)*t_veg(p)
+         taf(p) = wtg0*t_grnd(c) + wta0(p)*thm(p) + wtl0(p)*t_veg(p)
          qaf(p) = wtlq0(p)*qsatl(p) + wtgq0*qg(c) + forc_q(g)*wtaq0(p)
 
          ! Update Monin-Obukhov length and wind speed including the
          ! stability effect
 
-         dth(p) = thm(c)-taf(p)
+         dth(p) = thm(p)-taf(p)
          dqh(p) = forc_q(g)-qaf(p)
          delq(p) = wtalq(p)*qg(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(g)
 
@@ -877,7 +883,7 @@ contains
 
       ! Fluxes from ground to canopy space
 
-      delt    = wtal(p)*t_grnd(c)-wtl0(p)*t_veg(p)-wta0(p)*thm(c)
+      delt    = wtal(p)*t_grnd(c)-wtl0(p)*t_veg(p)-wta0(p)*thm(p)
       taux(p) = -forc_rho(g)*forc_u(g)/ram1(p)
       tauy(p) = -forc_rho(g)*forc_v(g)/ram1(p)
       eflx_sh_grnd(p) = cpair*forc_rho(g)*wtg(p)*delt
@@ -885,11 +891,13 @@ contains
 
       ! 2 m height air temperature
 
-      t_ref2m(p) = thm(c) + temp1(p)*dth(p)*(1._r8/temp12m(p) - 1._r8/temp1(p))
+      t_ref2m(p) = thm(p) + temp1(p)*dth(p)*(1._r8/temp12m(p) - 1._r8/temp1(p))
+      t_ref2m_r(p) = t_ref2m(p)
 
       ! 2 m height specific humidity
 
       q_ref2m(p) = forc_q(g) + temp2(p)*dqh(p)*(1._r8/temp22m(p) - 1._r8/temp2(p))
+      q_ref2m_r(p) = q_ref2m(p)
 
 #if (defined CLAMP)
       ! 2 m height relative humidity
@@ -1125,7 +1133,7 @@ contains
 
      ! Assign local pointers to derived type members (column-level)
 
-     tgcm      => clm3%g%l%c%ces%thm
+     tgcm        => clm3%g%l%c%p%pes%thm
 
      ! Assign local pointers to pft constants
      ! new ecophys constants added 1/26/04
@@ -1169,7 +1177,7 @@ contains
         ! Set constants
 
         rsmax0 = 2.e4_r8
-        cf = forc_pbot(g)/(SHR_CONST_RGAS*0.001_r8*tgcm(c))*1.e06_r8 
+        cf = forc_pbot(g)/(SHR_CONST_RGAS*0.001_r8*tgcm(p))*1.e06_r8
         if (apar(p) <= 0._r8) then          ! night time
            rs(p) = min(rsmax0, 1._r8/bp * cf)
            psn(p) = 0._r8

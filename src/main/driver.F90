@@ -18,8 +18,6 @@ module driver
 ! The main CLM driver calling sequence is as follows:
 ! \begin{verbatim}
 !
-! * Recv data from flux coupler [COUP_CSM] 
-!
 ! + interpMonthlyVeg      interpolate monthly vegetation data [!DGVM]
 !   + readMonthlyVegetation read vegetation data for two months [!DGVM]
 !
@@ -65,7 +63,6 @@ module driver
 !  -> UrbanAlbedo         Urban landunit albedos for next time step
 !  ====  End Loop over clumps  ====
 !
-! * Average fluxes over time interval and send to flux coupler [COUP_CSM]
 !  -> write_diagnostic    output diagnostic if appropriate
 !   + Rtmriverflux        calls RTM river routing model [RTM]
 !  -> updateAccFlds       update accumulated fields
@@ -364,11 +361,11 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 
      ! Surface Radiation for urban columns
 
-     if (filter(nc)%num_urbanl > 0) then
-        call UrbanRadiation(nc, filter(nc)%num_urbanl, filter(nc)%urbanl, &
-                            filter(nc)%num_urbanc, filter(nc)%urbanc, &
-                            filter(nc)%num_urbanp, filter(nc)%urbanp)
-     end if
+     call UrbanRadiation(nc, begl, endl, begc, endc, begp, endp, &
+                         filter(nc)%num_nourbanl, filter(nc)%nourbanl, &
+                         filter(nc)%num_urbanl, filter(nc)%urbanl, &
+                         filter(nc)%num_urbanc, filter(nc)%urbanc, &
+                         filter(nc)%num_urbanp, filter(nc)%urbanp)
 
      call t_stopf('surfrad')
 
@@ -398,14 +395,13 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 
      ! Fluxes for all Urban landunits
 
-     if (filter(nc)%num_urbanl > 0) then
-        call t_startf('uflux')
-        call UrbanFluxes(nc, begp, endp, begl, endl, begc, endc, &
-                         filter(nc)%num_urbanl, filter(nc)%urbanl, &
-                         filter(nc)%num_urbanc, filter(nc)%urbanc, &
-                         filter(nc)%num_urbanp, filter(nc)%urbanp)
-        call t_stopf('uflux')
-     end if
+     call t_startf('uflux')
+     call UrbanFluxes(nc, begp, endp, begl, endl, begc, endc, &
+                      filter(nc)%num_nourbanl, filter(nc)%nourbanl, &
+                      filter(nc)%num_urbanl, filter(nc)%urbanl, &
+                      filter(nc)%num_urbanc, filter(nc)%urbanc, &
+                      filter(nc)%num_urbanp, filter(nc)%urbanp)
+     call t_stopf('uflux')
 
      ! ============================================================================
      ! Determine non snow-covered vegetation surface temperature and fluxes
@@ -457,7 +453,8 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      ! ============================================================================
 
      call t_startf('bgp2')
-     call Biogeophysics2(begc, endc, begp, endp, &
+     call Biogeophysics2(begl, endl, begc, endc, begp, endp, &
+                         filter(nc)%num_urbanl,  filter(nc)%urbanl, &
                          filter(nc)%num_nolakec, filter(nc)%nolakec, &
                          filter(nc)%num_nolakep, filter(nc)%nolakep)
      call t_stopf('bgp2')
@@ -604,7 +601,8 @@ subroutine driver1 (doalb, caldayp1, declinp1)
         call t_startf('urbsurfalb')
 
         if (filter(nc)%num_urbanl > 0) then
-           call UrbanAlbedo(nc, filter(nc)%num_urbanl, filter(nc)%urbanl, &
+           call UrbanAlbedo(nc, begl, endl, begc, endc, begp, endp, &
+                            filter(nc)%num_urbanl, filter(nc)%urbanl, &
                             filter(nc)%num_urbanc, filter(nc)%urbanc, &
                             filter(nc)%num_urbanp, filter(nc)%urbanp, &
                             caldayp1, declinp1)
@@ -968,12 +966,8 @@ logical function do_restwrite()
 !
 ! !USES:
   use restFileMod , only : rest_flag
-#if (defined COUP_CSM)
-  use clm_csmMod  , only : csmstop_next, csmrstrt
-#else
   use clm_time_manager, only : is_last_step
   use histFileMod , only : if_writrest
-#endif
 !
 ! !ARGUMENTS:
   implicit none
@@ -985,14 +979,6 @@ logical function do_restwrite()
 !------------------------------------------------------------------------
 
   do_restwrite = .false.
-
-#if (defined COUP_CSM)
-
-  ! Write restart only if coupler says to
-
-  if (csmrstrt) do_restwrite = .true.
-
-#endif
 
 end function do_restwrite
 

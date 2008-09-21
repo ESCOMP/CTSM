@@ -64,6 +64,7 @@ OPTIONS
      -csmdata "dir"                       Directory for head of csm inputdata.
      -demand                              Demand that something is returned.
      -file "file"                         Input xml file to read in by default ($file).
+     -filenameonly                        Only return the filename -- not the full path to it.
      -help  [or -h]                       Display this help.
      -justvalue                           Just display the values (NOT key = value).
      -var "varname"                       Variable name to match.
@@ -115,6 +116,7 @@ EOF
                demand     => undef,
                test       => undef,
                onlyfiles  => undef,
+               fileonly   => undef,
                scpto      => undef,
                silent     => undef,
                help       => undef,
@@ -134,6 +136,7 @@ EOF
         "options=s"    => \$opts{'options'},
         "t|test"       => \$opts{'test'},
         "onlyfiles"    => \$opts{'onlyfiles'},
+        "filenameonly" => \$opts{'fileonly'},
         "justvalues"   => \$opts{'justvalues'},
         "scpto=s"      => \$opts{'scpto'},
         "s|silent"     => \$opts{'silent'},
@@ -164,12 +167,18 @@ EOF
   }
   my $csmdata = "";
   if ( defined($opts{'scpto'}) ) {
-     if ( ! defined($opts{'justvalues'}) ) { print "When -scpto option used, -justvalues is set as well\n"; }
-     if ( ! defined($opts{'onlyfiles'}) )  { print "When -scpto option used, -onlyfiles is set as well\n"; }
-     if ( ! defined($opts{'test'}) )       { print "When -scpto option used, -test is set as well\n"; }
+     if ( ! defined($opts{'justvalues'}) ) { print "When -scpto option used, -justvalues is set as well\n" if $printing; }
+     if ( ! defined($opts{'onlyfiles'}) )  { print "When -scpto option used, -onlyfiles is set as well\n"  if $printing; }
+     if ( ! defined($opts{'test'}) )       { print "When -scpto option used, -test is set as well\n"       if $printing; }
      $opts{'justvalues'} = 1;
      $opts{'onlyfiles'}  = 1;
      $opts{'test'}       = 1;
+  }
+  if ( defined($opts{'fileonly'}) ) {
+     if ( ! defined($opts{'justvalues'}) ) { print "When -filenameonly option used, -justvalues is set as well\n" if $printing; }
+     if ( ! defined($opts{'onlyfiles'}) )  { print "When -filenameonly option used, -onlyfiles is set as well\n"  if $printing; }
+     $opts{'justvalues'} = 1;
+     $opts{'onlyfiles'}  = 1;
   }
   my %inputopts;
   $inputopts{file}           = $opts{file};
@@ -260,6 +269,10 @@ EOF
      # If a string
      if ( (! defined($opts{'justvalues'}) ) && ($isastr) ) {
        $value = "\'$value\'";
+     }
+     # if you just want the filename -- not the full path with the directory
+     if ( defined($opts{'fileonly'}) ) {
+       $value =~ s!(.*)/!!;
      }
      if ( defined($print) ) {
         if ( ! defined($opts{'justvalues'})  ) {

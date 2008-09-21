@@ -22,11 +22,7 @@ subroutine do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, rstwr
 ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_sys_mod     , only : shr_sys_abort
-#if (defined COUP_CSM)
-  use clm_csmMod      , only : csmstop_next, csmrstrt
-#else
   use clm_time_manager, only : is_last_step
-#endif
 !
 ! !ARGUMENTS:
   implicit none
@@ -59,9 +55,6 @@ subroutine do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, rstwr
   else
      call shr_sys_abort('do_close_dispose error: must specify nlend and rstwr')
   end if
-#elif (defined COUP_CSM)
-  if (csmstop_next) stop_now = .true.
-  if (csmrstrt    ) rest_now = .true.
 #endif
 
   if_stop = stop_now

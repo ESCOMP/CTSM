@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ===============================================================================================================================
+   clm3_6_12         erik 09/21/2008 Fix restarts for urban, add capability to do global urban experiments, add in new forcing height changes
    clm3_6_11      dlawren 08/26/2008 Ice stream for snow capped regions
    clm3_6_10       tcraig 08/15/2008 extend rtm tracer, ascale for tri-grids, AIX O3 to O2
    clm3_6_09         erik 08/11/2008 Fix clm.cpl7.template to run hybrid and branch cases

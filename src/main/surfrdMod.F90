@@ -34,7 +34,7 @@ module surfrdMod
   use clmtype
   use spmdMod                         
   use clm_varctl,   only : scmlat, scmlon, single_column
-  use decompMod   , only : get_proc_bounds,gsMap_lnd_gdc2glo
+  use decompMod   , only : get_proc_bounds,gsMap_lnd_gdc2glo,ldecomp
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -212,7 +212,7 @@ contains
 !  (1) Dateline            :        -180 to 180       (negative W of Greenwich)
 !  (2) Greenwich (centered):    0 - dx/2 to 360 - dx/2
 !
-!    Grid 2 is the grid for cam and csm mode since the NCAR CAM
+!    Grid 2 is the grid for cam and ccsm mode since the NCAR CAM
 !    starts at Greenwich, centered on Greenwich
 !
 ! !USES:
@@ -325,7 +325,6 @@ contains
 ! !USES:
     use clm_varcon, only : spval
     use domainMod , only : latlon_type, latlon_init
-    use areaMod   , only : celledge
     use fileutils , only : getfil
 !
 ! !ARGUMENTS:
@@ -462,10 +461,6 @@ contains
           call ncd_ioglobal('LONW',rdata,'read',ncid)
           latlon%lonw(:) = rdata(:,1)
        endif
-
-#if (defined COUP_CAM) || (defined COUP_CSM)
-       if (.not.NSEWset) call celledge (latlon)
-#endif
 
        if (present(mask)) then
           if (present(mfilename)) then
@@ -855,10 +850,7 @@ contains
           wtxy(nl,nurb)  = pcturb(nl) / 100._r8
        end do
        if ( pcturb(nl) > 0.0_r8 )then
-          g = 1
-          if ( nl > 1 )then
-             call endrun( 'ERROR, more than one urban point' )
-          end if
+          g = ldecomp%gdc2glo(nl)
           wtxy(nl,npatch_urban)   = wtxy(nl,npatch_urban)*urbinp%wtlunit_roof(g)
           wtxy(nl,npatch_urban+1) = wtxy(nl,npatch_urban+1)*(1 - urbinp%wtlunit_roof(g))/3
           wtxy(nl,npatch_urban+2) = wtxy(nl,npatch_urban+2)*(1 - urbinp%wtlunit_roof(g))/3
@@ -867,6 +859,26 @@ contains
        end if
 
     end do
+
+    ! Check to make sure we have valid urban data for each urban patch
+    ! Currently, checking just canyon_hwr is sufficient for checking all parameters
+
+    found = .false.
+    do nl = begg,endg
+       g = ldecomp%gdc2glo(nl)
+       if ( pcturb(nl) > 0.0_r8 )then
+         if (nint(urbinp%canyon_hwr(g)) == -999) then
+            found = .true.
+            nindx = nl
+            exit
+         end if
+         if (found) exit
+       end if
+    end do
+    if ( found ) then
+       write(iulog,*)'surfrd error: no valid urban data for nl=',nindx
+       call endrun()
+    end if
 
    deallocate(pctgla,pctlak,pctwet,pcturb)
 

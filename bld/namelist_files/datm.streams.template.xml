@@ -81,6 +81,7 @@
    <fileNames                               > %do </fileNames>
    <fileNames RESOLUTION="1x1_mexicocityMEX"> domain.lnd.1x1pt-mexicocityMEX_navy.080115.nc </fileNames>
    <fileNames RESOLUTION="1x1_vancouverCAN" > domain.lnd.1x1pt-vancouverCAN_navy.080115.nc </fileNames>
+   <fileNames RESOLUTION="1x1_urbanc_alpha" > domain.lnd.1x1pt-urbanc_alpha_navy.080401.nc </fileNames>
 </domainInfo>
 
 <fieldInfo>
@@ -97,14 +98,44 @@
       PSRF     pbot
       FLDS     lwdn
    </variableNames>
+   <variableNames RESOLUTION="1x1_urbanc_alpha">
+      ZBOT     z
+      TBOT     tbot
+      QBOT     shum
+      WIND     wind
+      PRECTmms precn
+      FSDS     swdn
+      FSDSdir  swdndr
+      FSDSdif  swdndf
+      PSRF     pbot
+      FLDS     lwdn
+   </variableNames>
    <!-- File path to data -->
    <filePath                               >%p</filePath>
    <filePath RESOLUTION="1x1_mexicocityMEX">%d/atm/datm7/CLM1PT_data/mexicocityMEX.c080124</filePath>
    <filePath RESOLUTION="1x1_vancouverCAN" >%d/atm/datm7/CLM1PT_data/vancouverCAN.c080124</filePath>
+   <filePath RESOLUTION="1x1_urbanc_alpha" >%d/atm/datm7/CLM1PT_data/urbanc_alpha.c080416</filePath>
    <!-- data filenames template -->
    <fileNames                               > clm1pt-%ym.nc </fileNames>
    <fileNames RESOLUTION="1x1_mexicocityMEX"> clm1pt-1993-12.nc </fileNames>
    <fileNames RESOLUTION="1x1_vancouverCAN" > clm1pt-1992-08.nc </fileNames>
+   <fileNames RESOLUTION="1x1_urbanc_alpha" > clm1pt-0001-08.nc
+                                              clm1pt-0001-09.nc
+                                              clm1pt-0001-10.nc
+                                              clm1pt-0001-11.nc
+                                              clm1pt-0001-12.nc
+                                              clm1pt-0002-01.nc
+                                              clm1pt-0002-02.nc
+                                              clm1pt-0002-03.nc
+                                              clm1pt-0002-04.nc
+                                              clm1pt-0002-05.nc
+                                              clm1pt-0002-06.nc
+                                              clm1pt-0002-07.nc
+                                              clm1pt-0002-08.nc
+                                              clm1pt-0002-09.nc
+                                              clm1pt-0002-10.nc
+                                              clm1pt-0002-11.nc
+   </fileNames>
 </fieldInfo>
 
 </stream>

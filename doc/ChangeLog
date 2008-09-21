@@ -1,4 +1,192 @@
 ===============================================================
+Tag name:  clm3_6_12
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Sun Sep 21 10:04:22 MDT 2008
+One-line Summary: Fix restarts for urban, add capability to do global urban experiments, add new forcing height changes, remove cpl6
+
+Purpose of changes: Fix restarts for urban model as well as adding capability to do global urban experiments.
+                    It also adds the new forcing height changes into the trunk.
+                    And we remove all the cpl6 #ifdef's, source codes, and associated scripts and script options.
+                    Also fix some memory leaks found in MCT.
+                    Add testing for kraken.
+                    Fix branch tests so they change the start_ymd.
+                    Add some more tests for CASA.
+                    Set minimum urban percentage to use from 5% to 1%.
+                    Completely remove COUP_CAM #ifdef as NOT needed anymore.
+
+Bugs fixed (include bugzilla ID):  Fix urban model restarts, remove cpl6 (755), MCT memory leak (825)
+
+Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 
+                                  680 (t0 precip diff for seq-ccsm), 
+                                  698 (cprnc bug gives false difference), 701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  805 (too much output in build-streams), 826 (pftdyn)
+    http://bugs.cgd.ucar.edu/
+
+Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
+                                      652 (threads different answers with older PGI versions)
+
+Describe any changes made to build system: Add nofire option to configure, remove cpl6 option
+
+Describe any changes made to the namelist: Add new urban oriented output history variables:
+
+   _U, and _R (Urban and Rural) for:
+        QRUNOFF, TREFMXAV, TREFMNAV, TSA, SoilAlpha, TG, Q2M, TREFAV
+   URBAN_AC, and URBAN_HEAT, Qanth, SWup, LWup, QTau, HWR, Wind, Qair
+   and  ZBOT_PFT for forcing height
+
+   Change build-namelist so that to use a dataset with urban points on it you 
+   need to use "-clm_demand furbinp". This way it will not only select the appropriate
+   furbinp dataset -- but it will select the correct surface dataset that includes
+   urban data on it.  Such as for 10x15 and 1.9x2.5 surface datasets where there is
+   now an urban version as well as the standard version.
+  
+
+List any changes to the defaults for the boundary datasets: Add urbanc point dataset, 
+     and 1.9x2.5 and 10x15 urban datasets
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self (some changes by Keith Oleson)
+
+List any svn externals directories updated (csm_share, mct, etc.): drv, datm7, mct
+
+  drv   to drvseq3_0_26
+  datm7 to datm7_080907
+  mct   to MCT2_5_1_080522
+
+List all files eliminated: Remove cpl6 files
+
+R      models/lnd/clm/test/system/TCText_ccsmcon.sh
+R      models/lnd/clm/test/system/TSMext_ccsmcon.sh
+R      models/lnd/clm/bld/clm.cpl6.template
+R      models/lnd/clm/src/main/program_csm.F90
+R      models/lnd/clm/src/main/clm_csmMod.F90
+
+List all files added and what they do:
+
+A      models/lnd/clm/test/system/config_files/4p_casasc_ds ----- Add serial test for CASA
+A      models/lnd/clm/test/system/nl_files/clm_urb -------------- For standard urban tests.
+A      models/lnd/clm/test/system/nl_files/nl_urb_br ------------ Urban namelist for branch tests.
+A      models/lnd/clm/test/system/tests_posttag_kraken ---------- Add tests for kraken
+A      models/lnd/clm/tools/ncl_scripts/generate_ascii_avg_fv1_9x2_5_urbanparam_file_p7.ncl -- script to create furbinp dataset
+A      models/lnd/clm/tools/mksurfdata/mksurfdata.globalurban --- Example namelist to make a global urban surface dataset
+A      models/lnd/clm/bld/urban_input/urbanc_alpha_fluxes.txt --- Add urban intercomparison test case
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>> Remove cpl6 option, add nofire, make urban point datasets consistent with global Feddema datasets
+M      models/lnd/clm/bld/configure -------------------------------- Remove cpl6 option, add nofire option
+M      models/lnd/clm/bld/queryDefaultNamelist.pl ------------------ Add -filenameonly option
+M      models/lnd/clm/bld/urban_input/metropolis_fluxes.txt
+M      models/lnd/clm/bld/urban_input/urbanc_alpha_fluxes.txt
+M      models/lnd/clm/bld/urban_input/asphaltjungle_fluxes.txt
+M      models/lnd/clm/bld/urban_input/mexicocityMEX_fluxes.txt
+M      models/lnd/clm/bld/urban_input/vancouverCAN_fluxes.txt
+M      models/lnd/clm/bld/config_files/config_definition.xml
+M      models/lnd/clm/bld/namelist_files/namelist_definition.xml
+M      models/lnd/clm/bld/namelist_files/datm.streams.template.xml
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+M      models/lnd/clm/bld/build-namelist --------------------------- Have urban surface datasets dependent on furbinp
+
+M      models/lnd/clm/test/system/README.testnames
+M      models/lnd/clm/test/system/tests_posttag_urban
+M      models/lnd/clm/test/system/tests_pretag_jaguar
+M      models/lnd/clm/test/system/tests_pretag_bluefire
+M      models/lnd/clm/test/system/tests_posttag_purempi_regression
+M      models/lnd/clm/test/system/tests_posttag_hybrid_regression
+M      models/lnd/clm/test/system/tests_pretag_bluevista
+M      models/lnd/clm/test/system/tests_posttag_lightning
+M      models/lnd/clm/test/system/nl_files/clm_urb1pt
+M      models/lnd/clm/test/system/input_tests_master
+M      models/lnd/clm/test/system/README
+M      models/lnd/clm/test/system/CLM_runcmnd.sh
+M      models/lnd/clm/test/system/TBR.sh ---------------------- Change so start_ymd of branch runs is initial-length after original start-date
+M      models/lnd/clm/test/system/test_driver.sh -------------- Reduce from premium to regular, add kraken
+M      models/lnd/clm/test/system/mknamelist ------------------ Set hist_* values for second file
+M      models/lnd/clm/test/system/nl_files/nl_crcrop ---------- Set hist_dens for second file
+M      models/lnd/clm/test/system/nl_files/nl_urb ------------- Set hist_dens for second file, add more fields to list
+M      models/lnd/clm/test/system/nl_files/nl_std ------------- Set hist_dens for second file
+M      models/lnd/clm/test/system/nl_files/nl_lfiles ---------- Set hist_dens for second file
+M      models/lnd/clm/test/system/input_tests_master ---------- Change TBR tests, add more CASA tests
+
+M      models/lnd/clm/tools/mksurfdata/mkurban.F90 ------------ Change threshold to ignore urban from 5% to 1%
+
+M      models/lnd/clm/src/biogeophys/FrictionVelocityMod.F90 -- For DUST fix forcing height appropriately
+M      models/lnd/clm/src/biogeophys/UrbanMod.F90 ------------- Don't set pointers if no urban points
+
+>>>>>>>>>>>>>>>> Remove COUP_CSM #ifdefs
+
+M      models/lnd/clm/src/main/driver.F90 --------- Also make sure urban calls have urban points
+M      models/lnd/clm/src/main/accFldsMod.F90
+M      models/lnd/clm/src/main/clmtypeInitMod.F90
+M      models/lnd/clm/src/main/initializeMod.F90
+M      models/lnd/clm/src/main/iniTimeConst.F90
+M      models/lnd/clm/src/main/histFileMod.F90
+M      models/lnd/clm/src/main/restFileMod.F90
+M      models/lnd/clm/src/main/controlMod.F90
+M      models/lnd/clm/src/main/initSurfAlbMod.F90
+M      models/lnd/clm/src/main/clm_time_manager.F90
+M      models/lnd/clm/src/main/clm_varctl.F90
+M      models/lnd/clm/src/main/subgridAveMod.F90
+M      models/lnd/clm/src/main/initGridCellsMod.F90
+M      models/lnd/clm/src/main/spmdMod.F90
+M      models/lnd/clm/src/main/surfrdMod.F90 ------------- Also remove COUP_CAM #ifdef
+M      models/lnd/clm/src/main/do_close_dispose.F90
+M      models/lnd/clm/src/main/clmtype.F90 --------------- Also forcing height changes
+M      models/lnd/clm/src/main/histFldsMod.F90
+M      models/lnd/clm/src/main/mkarbinitMod.F90
+M      models/lnd/clm/src/biogeophys/BalanceCheckMod.F90
+M      models/lnd/clm/src/biogeophys/SoilTemperatureMod.F90
+M      models/lnd/clm/src/biogeophys/UrbanInputMod.F90
+M      models/lnd/clm/src/biogeophys/Biogeophysics1Mod.F90 ------ Also forcing height changes
+M      models/lnd/clm/src/biogeophys/Biogeophysics2Mod.F90
+M      models/lnd/clm/src/biogeophys/UrbanInitMod.F90
+M      models/lnd/clm/src/biogeophys/Hydrology2Mod.F90
+M      models/lnd/clm/src/biogeophys/BiogeophysicsLakeMod.F90 ------ Also forcing height changes
+M      models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 --------- Fix restarts for urban
+M      models/lnd/clm/src/biogeophys/HydrologyLakeMod.F90
+M      models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90
+M      models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90
+
+Summary of testing:
+
+  bluefire: All PASS except TBL and
+042 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+043 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+044 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+046 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ...................FAIL! rc= 10
+  jaguar: All PASS except TBL and
+019 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+  kraken: All PASS except TBL and TER and TBR (this may be a setup problem) and
+017 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+  lightning/pathscale: All PASS except TBL and
+  bangkok/lf95: All PASS except TBL and
+025 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+026 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+027 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+029 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ...................FAIL! rc= 10
+  kraken: All PASS except TBL and
+017 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ...........
+.......FAIL! rc= 10
+018 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 10+38 arb_ic .........
+.......FAIL! rc= 13
+019 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic .........
+.......FAIL! rc= 5
+  breeze/gale/hail/gust/ifort: All PASS
+
+   pftdyn tests fail on all platforms -- due to a previous problem that was not 
+detected because of a bug in the test.
+   TER and TBR tests fail on kraken -- this may be a setup problem. Possibily a problem
+with newcprnc? I'm not sure but since it passes elsewhere, I don't think it's a problem
+in the code.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_11
+
+Changes answers relative to baseline: Forcing height changes cause answers to change
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_11
 Originator(s):  dlawren (Lawrence David 1384 CGD)
 Date: Tue Aug 26 21:53:22 MDT 2008

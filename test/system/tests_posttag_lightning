@@ -1,15 +1,13 @@
 smA91 erA91 brA91 blA91
 smA74 erA74 brA74 blA74
 smB11
-smCA4             blCA4
-smCA8             blCA8
-smNB4             blNB4
-smOC4             blOC4
+smCA4 erCA4 brCA4 blCA4
+smCA8 erCA8 brCA8 blCA8
+smOC4 erOC4 brOC4 blOC4
 smG42 erG42 brG42 blG42 smG46
 smH52 erH52 brH52 blH52
 smK51 erK51 brK51 blK51
 smL51 erL51 brL51 blL51
-smL58 erL58 brL58 blL58
 smL74 erL74 brL74 blL74
 sm674
 sm774             bl774

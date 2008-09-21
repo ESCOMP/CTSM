@@ -17,7 +17,7 @@ n is the configuration type:
 0 -- External CCSM concurrent - remove ?
 A -- Standard Sequential CCSM mode 
 B -- Test run script
-C -- ccsm_seq URBAN_SOLAR
+C -- ccsm_seq URBAN
 D -- ccsm_seq Pergro
 E -- ccsm_seq numpft=4, VOC, DUST, RTM
 F -- ccsm_seq numpft=17, VOC, DUST, RTM
@@ -30,6 +30,7 @@ M -- ndepregrid
 N -- ccsm_seq MEXICOCITY
 O -- ccsm_seq VANCOUVER
 P -- ccsm_seq standard scripts
+Q -- generate_urban_input
 
 m is the resolution
 
@@ -47,6 +48,7 @@ A -- 1x1 Camden NJ         (Urban test)
 B -- 1x1 Mexicocity Mexico (Urban test)
 C -- 1x1 Vancouver Canada  (Urban test)
 D -- 2.65x3.33
+E -- 1x1 urbanc_alpha      (Urban CLM1PT_URBANC test)
 
 i is the specific test (usually this implies...)
 

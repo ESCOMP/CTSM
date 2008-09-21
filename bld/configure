@@ -83,10 +83,11 @@ OPTIONS
      -maxpft <n>         Value of maxpatch_pft (default is 4)
      -mpi_inc <dir>      Directory containing MPI include files.
      -mpi_lib <dir>      Directory containing MPI library.
-     -mode <name>        CLM mode [ccsm_seq | ext_ccsm_con || ext_ccsm_seq]
+     -mode <name>        CLM mode [ccsm_seq | ext_ccsm_seq]
      -nc_inc <dir>       Directory containing netCDF include files.
      -nc_lib <dir>       Directory containing netCDF library.
      -nc_mod <dir>       Directory containing netCDF module files.
+     -nofire             Turn off wildfires for bgc setting of CN (default includes fire for CN)
      -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off ] (default is off)
      -prog_seasalt<name> Turn on prognostic sea-salt (PROGSSLT cppdef token) [on | off ] (default is off)
      -rtm <name>         Turn on RTM  [on | off ] (default is off)
@@ -135,6 +136,7 @@ my $commandline = "$cfgdir/configure @ARGV";
 # Parse command-line options.
 my %opts = (
 	    cache       => "config_cache.xml",
+            nofire      => undef,
 	    );
 GetOptions(
     "ad_spinup=s"               => \$opts{'ad_spinup'}, 
@@ -167,6 +169,7 @@ GetOptions(
     "nc_inc=s"                  => \$opts{'nc_inc'},
     "nc_lib=s"                  => \$opts{'nc_lib'},
     "nc_mod=s"                  => \$opts{'nc_mod'},
+    "nofire"                    => \$opts{'nofire'},
     "pergro=s"                  => \$opts{'pergro'}, 
     "prog_seasalt=s"            => \$opts{'progsslt'}, 
     "rtm=s"                     => \$opts{'rtm'}, 
@@ -268,7 +271,7 @@ if (defined $opts{'mode'}) {
     $cfg_ref->set('mode', $opts{'mode'});
 }
 my $clm_mode = $cfg_ref->get('mode');
-if ($clm_mode ne "ccsm_seq" && $clm_mode ne "ext_ccsm_con" && $clm_mode ne "ext_ccsm_seq" ) {
+if ($clm_mode ne "ccsm_seq" && $clm_mode ne "ext_ccsm_seq" ) {
     die <<"EOF";
 x** $clm_mode is not a supported mode **
 EOF
@@ -280,7 +283,7 @@ if ($print>=2) { print "Using $clm_mode mode for running clm.$eol"; }
 # CLM Makefile is produced are disabled when the ccsm option is set.  Use the $clm_build
 # variable to turn on CLM specific tests.
 my $clm_build = 1;
-if ($clm_mode eq "ext_ccsm_con" || $clm_mode eq "ext_ccsm_seq") {
+if ( $clm_mode eq "ext_ccsm_seq") {
     $clm_build = 0;
 }
 
@@ -404,6 +407,21 @@ if (defined $opts{'bgc'}) {
 }
 my $bgc_mode = $cfg_ref->get('bgc');
 if ($print>=2) { print "Using $bgc_mode for bgc.$eol"; }
+
+# NOFIRE option -- currently only in bgc=CN
+if (defined $opts{'nofire'}) {
+    $cfg_ref->set('nofire', "on" );
+}
+my $nofire = $cfg_ref->get('nofire');
+if ( ($nofire eq "on") && ($bgc_mode ne "cn") ) {
+   die <<"EOF";
+** Cannot turn nofire mode on -- without cn for bgc mode** 
+EOF
+}
+if ($print>=2) { 
+   if ( $nofire eq "on") { print "Wildfires are active as normal.$eol"; }
+   else                  { print "Wildfires are turned off.$eol";       }
+}
 
 # SUPLN option for BGC/CN mode only
 if (defined $opts{'supln'}) {
@@ -660,9 +678,6 @@ $cfg_cppdefs .= " -DMAXPATCH_PFT=$maxpft";
 if ( $clm_mode eq "ccsm_seq" ) {
     $cfg_cppdefs .= " -DSEQ_MCT";
 }
-if ( $clm_mode eq "ext_ccsm_con" ) {
-    $cfg_cppdefs .= " -DCOUP_CSM";
-}
 if ( $clm_mode eq "ext_ccsm_seq" ) {
     $cfg_cppdefs .= " -DSEQ_MCT";
 }
@@ -690,6 +705,9 @@ if ($bgc_mode eq 'dgvm') {
 if ($supln eq 'on') { 
     $cfg_cppdefs .= " -DSUPLN";
 }
+if ($nofire eq 'on') {
+    $cfg_cppdefs .= " -DNOFIRE";
+}
 if ($ad_spinup eq 'on') { 
     $cfg_cppdefs .= " -DAD_SPINUP";
 }
@@ -701,7 +719,7 @@ if ( $pergro eq 'on' ) {
 }
 
 # -DSPMD only added for CCSM build.  The CLM Makefile has a separate SPMD macro.
-if ( ($clm_mode eq "ext_ccsm_con" || $clm_mode eq "ext_ccsm_seq") && $spmd ) { $cfg_cppdefs .= " -DSPMD";}
+if ( ($clm_mode eq "ext_ccsm_seq") && $spmd ) { $cfg_cppdefs .= " -DSPMD";}
 
 # CPP defines to put on Makefile
 my $make_cppdefs = "$usr_cppdefs $cfg_cppdefs";
@@ -930,7 +948,7 @@ my $cpp_filename     = 'CCSM_cppdefs';         # name of output file for clm's c
 my $misc_filename    = 'misc.h';               # name of output auxiliary cpp tokens file
 my $preproc_filename = 'preproc.h';            # name of output land model cpp tokens file
 
-if ($clm_mode eq "ext_ccsm_seq" || $clm_mode eq "ext_ccsm_con") {
+if ($clm_mode eq "ext_ccsm_seq" ) {
 
     # Write the filepath file for ccsm.
     write_filepath_ccsm("$clm_bld/$fp_filename", $cfg_ref);
@@ -1190,15 +1208,9 @@ sub write_misc_h
     print $fh  <<"EOF";
 #ifndef MISC_SET
 #define MISC_SET
+#endif
 EOF
 
-    my $mode = $cfg_ref->get('mode');
-    if ($mode eq "ext_ccsm_con") {
-	print $fh "#define COUP_CSM\n";
-    } else {
-	print $fh "#undef COUP_CSM\n";
-    }
-    print $fh "#endif\n";
     $fh->close;
 }
 

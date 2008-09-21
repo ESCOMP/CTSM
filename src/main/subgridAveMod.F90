@@ -541,6 +541,23 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
+    else if (c2l_scale_type == 'urbanh') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = spval
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
     else
        write(iulog,*)'p2l_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -581,8 +598,8 @@ contains
           if (pi <= npfts(l)) then
              p = pfti(l) + pi - 1
              if (wtlunit(p) /= 0._r8) then
-                if (parr(p) /= spval) then
-                   c = pcolumn(p)
+                c = pcolumn(p)
+                if (parr(p) /= spval .and. scale_c2l(c) /= spval) then
                    larr(l) = larr(l) + parr(p) * scale_p2c(p) * scale_c2l(c) * wtlunit(p)
                    sumwt(l) = sumwt(l) + wtlunit(p)
                 end if
@@ -593,8 +610,8 @@ contains
 #else
     do p = lbp,ubp
        if (wtlunit(p) /= 0._r8) then
-          if (parr(p) /= spval) then
-             c = pcolumn(p)
+          c = pcolumn(p)
+          if (parr(p) /= spval .and. scale_c2l(c) /= spval) then
              l = plandunit(p)
              if (sumwt(l) == 0._r8) larr(l) = 0._r8
              larr(l) = larr(l) + parr(p) * scale_p2c(p) * scale_c2l(c) * wtlunit(p)
@@ -716,6 +733,23 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
+    else if (c2l_scale_type == 'urbanh') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = spval
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
     else
        write(iulog,*)'p2l_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -757,8 +791,8 @@ contains
              if (pi <= npfts(l)) then
                 p = pfti(l) + pi - 1
                 if (wtlunit(p) /= 0._r8) then
-                   if (parr(p,j) /= spval) then
-                      c = pcolumn(p)
+                   c = pcolumn(p)
+                   if (parr(p,j) /= spval .and. scale_c2l(c) /= spval) then
                       larr(l,j) = larr(l,j) + parr(p,j) * scale_p2c(p) * scale_c2l(c) * wtlunit(p)
                       sumwt(l) = sumwt(l) + wtlunit(p)
                    end if
@@ -769,8 +803,8 @@ contains
 #else
        do p = lbp,ubp
           if (wtlunit(p) /= 0._r8) then
-             if (parr(p,j) /= spval) then
-                c = pcolumn(p)
+             c = pcolumn(p)
+             if (parr(p,j) /= spval .and. scale_c2l(c) /= spval) then
                 l = plandunit(p)
                 if (sumwt(l) == 0._r8) larr(l,j) = 0._r8
                 larr(l,j) = larr(l,j) + parr(p,j) * scale_p2c(p) * scale_c2l(c) * wtlunit(p)
@@ -905,6 +939,23 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
+    else if (c2l_scale_type == 'urbanh') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = spval
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
     else
        write(iulog,*)'p2g_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -945,8 +996,8 @@ contains
           if (pi <= npfts(g)) then
              p = pfti(g) + pi - 1
              if (wtgcell(p) /= 0._r8) then
-                if (parr(p) /= spval) then
-                   c = pcolumn(p)
+                c = pcolumn(p)
+                if (parr(p) /= spval .and. scale_c2l(c) /= spval) then
                    l = plandunit(p)
                    garr(g) = garr(g) + parr(p) * scale_p2c(p) * scale_c2l(c) * scale_l2g(l) * wtgcell(p)
                    sumwt(g) = sumwt(g) + wtgcell(p)
@@ -958,8 +1009,8 @@ contains
 #else
     do p = lbp,ubp
        if (wtgcell(p) /= 0._r8) then
-          if (parr(p) /= spval) then
-             c = pcolumn(p)
+          c = pcolumn(p)
+          if (parr(p) /= spval .and. scale_c2l(c) /= spval) then
              l = plandunit(p)
              g = pgridcell(p)
              if (sumwt(g) == 0._r8) garr(g) = 0._r8
@@ -1036,11 +1087,9 @@ contains
     integer , pointer :: ctype(:)      ! column type
     integer , pointer :: ltype(:)      ! landunit type
     real(r8), pointer :: canyon_hwr(:) ! urban canyon height to width ratio
-    real(r8), pointer :: wtlunit_roof(:) ! weight of roof with respect to landunit
 !------------------------------------------------------------------------
 
     canyon_hwr   => clm3%g%l%canyon_hwr
-    wtlunit_roof => clm3%g%l%wtlunit_roof
     ltype        => clm3%g%l%itype
     clandunit    => clm3%g%l%c%landunit
     ctype        => clm3%g%l%c%itype
@@ -1098,6 +1147,23 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
+    else if (c2l_scale_type == 'urbanh') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = spval 
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = spval 
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
     else
        write(iulog,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -1139,8 +1205,8 @@ contains
              if (pi <= npfts(g)) then
                 p = pfti(g) + pi - 1
                 if (wtgcell(p) /= 0._r8) then
-                   if (parr(p,j) /= spval) then
-                      c = pcolumn(p)
+                   c = pcolumn(p)
+                   if (parr(p,j) /= spval .and. scale_c2l(c) /= spval) then
                       l = plandunit(p)
                       garr(g,j) = garr(g,j) + parr(p,j) * scale_p2c(p) * scale_c2l(c) * scale_l2g(l) * wtgcell(p)
                       sumwt(g) = sumwt(g) + wtgcell(p)
@@ -1152,8 +1218,8 @@ contains
 #else
        do p = lbp,ubp
           if (wtgcell(p) /= 0._r8) then
-             if (parr(p,j) /= spval) then
-                c = pcolumn(p)
+             c = pcolumn(p)
+             if (parr(p,j) /= spval .and. scale_c2l(c) /= spval) then
                 l = plandunit(p)
                 g = pgridcell(p)
                 if (sumwt(g) == 0._r8) garr(g,j) = 0._r8
@@ -1266,6 +1332,23 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
+    else if (c2l_scale_type == 'urbanh') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = spval
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
     else
        write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -1301,7 +1384,7 @@ contains
           if (ci <= ncolumns(l)) then
              c = coli(l) + ci - 1
              if (wtlunit(c) /= 0._r8) then
-                if (carr(c) /= spval) then
+                if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
                    larr(l) = larr(l) + carr(c) * scale_c2l(c) * wtlunit(c)
                    sumwt(l) = sumwt(l) + wtlunit(c)
                 end if
@@ -1312,7 +1395,7 @@ contains
 #else
     do c = lbc,ubc
        if (wtlunit(c) /= 0._r8) then
-          if (carr(c) /= spval) then
+          if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
              l = clandunit(c)
              if (sumwt(l) == 0._r8) larr(l) = 0._r8
              larr(l) = larr(l) + carr(c) * scale_c2l(c) * wtlunit(c)
@@ -1424,6 +1507,23 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
+    else if (c2l_scale_type == 'urbanh') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = spval
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
     else
        write(iulog,*)'c2l_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -1463,7 +1563,7 @@ contains
              if (ci <= ncolumns(l)) then
                 c = coli(l) + ci - 1
                 if (wtlunit(c) /= 0._r8) then
-                   if (carr(c,j) /= spval) then
+                   if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
                       larr(l,j) = larr(l,j) + carr(c,j) * scale_c2l(c) * wtlunit(c)
                       sumwt(l) = sumwt(l) + wtlunit(c)
                    end if
@@ -1474,7 +1574,7 @@ contains
 #else
        do c = lbc,ubc
           if (wtlunit(c) /= 0._r8) then
-             if (carr(c,j) /= spval) then
+             if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
                 l = clandunit(c)
                 if (sumwt(l) == 0._r8) larr(l,j) = 0._r8
                 larr(l,j) = larr(l,j) + carr(c,j) * scale_c2l(c) * wtlunit(c)
@@ -1601,6 +1701,23 @@ contains
              scale_c2l(c) = 1.0_r8
           end if
        end do
+    else if (c2l_scale_type == 'urbanh') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = spval
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
     else
        write(iulog,*)'c2l_1d error: scale type ',c2l_scale_type,' not supported'
        call endrun()
@@ -1636,7 +1753,7 @@ contains
           if (ci <= ncolumns(g)) then
              c = coli(g) + ci - 1
              if (wtgcell(c) /= 0._r8) then
-                if (carr(c) /= spval) then
+                if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
                    l = clandunit(c)
                    garr(g) = garr(g) + carr(c) * scale_c2l(c) * scale_l2g(l) * wtgcell(c)
                    sumwt(g) = sumwt(g) + wtgcell(c)
@@ -1648,7 +1765,7 @@ contains
 #else
     do c = lbc,ubc
        if ( wtgcell(c) /= 0._r8) then
-          if (carr(c) /= spval) then
+          if (carr(c) /= spval .and. scale_c2l(c) /= spval) then
              l = clandunit(c)
              g = cgridcell(c)
              if (sumwt(g) == 0._r8) garr(g) = 0._r8
@@ -1750,7 +1867,7 @@ contains
              else if (ctype(c) == icol_shadewall) then
                 scale_c2l(c) = 3.0 * canyon_hwr(l) 
              else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
-                scale_c2l(c) = 1.0_r8
+                scale_c2l(c) = 3.0_r8
              else if (ctype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
              end if
@@ -1770,6 +1887,23 @@ contains
                 scale_c2l(c) = 3.0 / (2.*canyon_hwr(l) + 1.)
              else if (ctype(c) == icol_roof) then
                 scale_c2l(c) = 1.0_r8
+             end if
+          else
+             scale_c2l(c) = 1.0_r8
+          end if
+       end do
+    else if (c2l_scale_type == 'urbanh') then
+       do c = lbc,ubc
+          l = clandunit(c) 
+          if (ltype(l) == isturb) then
+             if (ctype(c) == icol_sunwall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_shadewall) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                scale_c2l(c) = spval
+             else if (ctype(c) == icol_roof) then
+                scale_c2l(c) = spval
              end if
           else
              scale_c2l(c) = 1.0_r8
@@ -1814,7 +1948,7 @@ contains
              if (ci <= ncolumns(g)) then
                 c = coli(g) + ci - 1
                 if (wtgcell(c) /= 0._r8) then
-                   if (carr(c,j) /= spval) then
+                   if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
                       l = clandunit(c)
                       garr(g,j) = garr(g,j) + carr(c,j) * scale_c2l(c) * scale_l2g(l) * wtgcell(c)
                       sumwt(g) = sumwt(g) + wtgcell(c)
@@ -1826,7 +1960,7 @@ contains
 #else
        do c = lbc,ubc
           if (wtgcell(c) /= 0._r8) then
-             if (carr(c,j) /= spval) then
+             if (carr(c,j) /= spval .and. scale_c2l(c) /= spval) then
                 l = clandunit(c)
                 g = cgridcell(c)
                 if (sumwt(g) == 0._r8) garr(g,j) = 0._r8

@@ -2,5 +2,5 @@
  brnch_retain_casename=.true.
 /
 &clm_inparm
- hist_ndens=1
+ hist_ndens=1,1
 /

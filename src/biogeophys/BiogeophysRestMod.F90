@@ -353,6 +353,261 @@ contains
        end if
     end if
 
+    ! landunit type physical state variable - sabs_roof_dir
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sabs_roof_dir', xtype=nf_double,  &
+            dim1name='landunit', dim2name='numrad', &
+            long_name='direct solar absorbed by roof per unit ground area per unit incident flux',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sabs_roof_dir', data=lptr%lps%sabs_roof_dir, &
+            dim1name=namel, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - sabs_roof_dif
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sabs_roof_dif', xtype=nf_double,  &
+            dim1name='landunit', dim2name='numrad', &
+            long_name='diffuse solar absorbed by roof per unit ground area per unit incident flux',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sabs_roof_dif', data=lptr%lps%sabs_roof_dif, &
+            dim1name=namel, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - sabs_sunwall_dir
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sabs_sunwall_dir', xtype=nf_double,  &
+            dim1name='landunit', dim2name='numrad', &
+            long_name='direct solar absorbed by sunwall per unit wall area per unit incident flux',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sabs_sunwall_dir', data=lptr%lps%sabs_sunwall_dir, &
+            dim1name=namel, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - sabs_sunwall_dif
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sabs_sunwall_dif', xtype=nf_double,  &
+            dim1name='landunit', dim2name='numrad', &
+            long_name='diffuse solar absorbed by sunwall per unit wall area per unit incident flux',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sabs_sunwall_dif', data=lptr%lps%sabs_sunwall_dif, &
+            dim1name=namel, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - sabs_shadewall_dir
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sabs_shadewall_dir', xtype=nf_double,  &
+            dim1name='landunit', dim2name='numrad', &
+            long_name='direct solar absorbed by shadewall per unit wall area per unit incident flux',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sabs_shadewall_dir', data=lptr%lps%sabs_shadewall_dir, &
+            dim1name=namel, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - sabs_shadewall_dif
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sabs_shadewall_dif', xtype=nf_double,  &
+            dim1name='landunit', dim2name='numrad', &
+            long_name='diffuse solar absorbed by shadewall per unit wall area per unit incident flux',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sabs_shadewall_dif', data=lptr%lps%sabs_shadewall_dif, &
+            dim1name=namel, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - sabs_improad_dir
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sabs_improad_dir', xtype=nf_double,  &
+            dim1name='landunit', dim2name='numrad', &
+            long_name='direct solar absorbed by impervious road per unit ground area per unit incident flux',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sabs_improad_dir', data=lptr%lps%sabs_improad_dir, &
+            dim1name=namel, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - sabs_improad_dif
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sabs_improad_dif', xtype=nf_double,  &
+            dim1name='landunit', dim2name='numrad', &
+            long_name='diffuse solar absorbed by impervious road per unit ground area per unit incident flux',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sabs_improad_dif', data=lptr%lps%sabs_improad_dif, &
+            dim1name=namel, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - sabs_perroad_dir
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sabs_perroad_dir', xtype=nf_double,  &
+            dim1name='landunit', dim2name='numrad', &
+            long_name='direct solar absorbed by pervious road per unit ground area per unit incident flux',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sabs_perroad_dir', data=lptr%lps%sabs_perroad_dir, &
+            dim1name=namel, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - sabs_perroad_dif
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='sabs_perroad_dif', xtype=nf_double,  &
+            dim1name='landunit', dim2name='numrad', &
+            long_name='diffuse solar absorbed by pervious road per unit ground area per unit incident flux',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='sabs_perroad_dif', data=lptr%lps%sabs_perroad_dif, &
+            dim1name=namel, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - vf_sr
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='vf_sr', xtype=nf_double,  &
+            dim1name='landunit', &
+            long_name='view factor of sky for road',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='vf_sr', data=lptr%lps%vf_sr, &
+            dim1name=namel, &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - vf_wr
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='vf_wr', xtype=nf_double,  &
+            dim1name='landunit', &
+            long_name='view factor of one wall for road',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='vf_wr', data=lptr%lps%vf_wr, &
+            dim1name=namel, &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - vf_sw
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='vf_sw', xtype=nf_double,  &
+            dim1name='landunit', &
+            long_name='view factor of sky for one wall',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='vf_sw', data=lptr%lps%vf_sw, &
+            dim1name=namel, &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - vf_rw
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='vf_rw', xtype=nf_double,  &
+            dim1name='landunit', &
+            long_name='view factor of road for one wall',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='vf_rw', data=lptr%lps%vf_rw, &
+            dim1name=namel, &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - vf_ww
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='vf_ww', xtype=nf_double,  &
+            dim1name='landunit', &
+            long_name='view factor of opposing wall for one wall',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='vf_ww', data=lptr%lps%vf_ww, &
+            dim1name=namel, &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - taf
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='taf', xtype=nf_double,  &
+            dim1name='landunit', &
+            long_name='urban canopy air temperature',units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='taf', data=lptr%lps%taf, &
+            dim1name=namel, &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    ! landunit type physical state variable - qaf
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='qaf', xtype=nf_double,  &
+            dim1name='landunit', &
+            long_name='urban canopy specific humidity',units='kg/kg')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='qaf', data=lptr%lps%qaf, &
+            dim1name=namel, &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
     ! pft type physical state variable - albd
 
     if (flag == 'define') then
@@ -480,6 +735,36 @@ contains
        end if
     end if
 
+   ! column urban energy state variable - eflx_urban_ac
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='URBAN_AC', xtype=nf_double,  &
+            dim1name='column', &
+            long_name='urban air conditioning flux', units='watt/m^2')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='URBAN_AC', data=cptr%cef%eflx_urban_ac, &
+            dim1name=namec, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+   ! column urban energy state variable - eflx_urban_heat
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='URBAN_HEAT', xtype=nf_double,  &
+            dim1name='column', &
+            long_name='urban heating flux', units='watt/m^2')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='URBAN_HEAT', data=cptr%cef%eflx_urban_heat, &
+            dim1name=namec, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
    ! pft energy state variable - t_ref2m_min
 
     if (flag == 'define') then
@@ -533,6 +818,186 @@ contains
             long_name='instantaneous daily max of average 2 m height surface air temp (K)', units='K')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='T_REF2M_MAX_INST', data=pptr%pes%t_ref2m_max_inst, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    endif
+
+    ! pft energy state variable - t_ref2m_u
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname="T_REF2M_U", xtype=nf_double,  &
+            dim1name='pft', &
+            long_name='Urban 2m height surface air temperature', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname="T_REF2M_U", data=pptr%pes%t_ref2m_u, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+   ! column energy state variable - t_grnd_u
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='T_GRND_U', xtype=nf_double,  &
+            dim1name='column', &
+            long_name='urban ground temperature', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='T_GRND_U', data=cptr%ces%t_grnd_u, &
+            dim1name=namec, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+   ! pft energy state variable - t_ref2m_min_u
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_U', xtype=nf_double,  &
+            dim1name='pft', &
+            long_name='urban daily minimum of average 2 m height surface air temperature (K)', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='T_REF2M_MIN_U', data=pptr%pes%t_ref2m_min_u, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    endif
+
+   ! pft energy state variable - t_ref2m_max_u
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_U', xtype=nf_double,  &
+            dim1name='pft', &
+            long_name='urban daily maximum of average 2 m height surface air temperature (K)', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='T_REF2M_MAX_U', data=pptr%pes%t_ref2m_max_u, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    endif
+
+   ! pft energy state variable - t_ref2m_min_inst_u
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_INST_U', xtype=nf_double,  &
+            dim1name='pft', &
+            long_name='urban instantaneous daily min of average 2 m height surface air temp (K)', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='T_REF2M_MIN_INST_U', data=pptr%pes%t_ref2m_min_inst_u, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    endif
+
+   ! pft energy state variable - t_ref2m_max_inst_u
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_INST_U', xtype=nf_double,  &
+            dim1name='pft', &
+            long_name='urban instantaneous daily max of average 2 m height surface air temp (K)', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='T_REF2M_MAX_INST_U', data=pptr%pes%t_ref2m_max_inst_u, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    endif
+
+    ! pft energy state variable - t_ref2m_r
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname="T_REF2M_R", xtype=nf_double,  &
+            dim1name='pft', &
+            long_name='Rural 2m height surface air temperature', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname="T_REF2M_R", data=pptr%pes%t_ref2m_r, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+   ! column energy state variable - t_grnd_r
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='T_GRND_R', xtype=nf_double,  &
+            dim1name='column', &
+            long_name='rural ground temperature', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='T_GRND_R', data=cptr%ces%t_grnd_r, &
+            dim1name=namec, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+   ! pft energy state variable - t_ref2m_min_r
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_R', xtype=nf_double,  &
+            dim1name='pft', &
+            long_name='rural daily minimum of average 2 m height surface air temperature (K)', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='T_REF2M_MIN_R', data=pptr%pes%t_ref2m_min_r, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    endif
+
+   ! pft energy state variable - t_ref2m_max_r
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_R', xtype=nf_double,  &
+            dim1name='pft', &
+            long_name='rural daily maximum of average 2 m height surface air temperature (K)', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='T_REF2M_MAX_R', data=pptr%pes%t_ref2m_max_r, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    endif
+
+   ! pft energy state variable - t_ref2m_min_inst_r
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MIN_INST_R', xtype=nf_double,  &
+            dim1name='pft', &
+            long_name='rural instantaneous daily min of average 2 m height surface air temp (K)', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='T_REF2M_MIN_INST_R', data=pptr%pes%t_ref2m_min_inst_r, &
+            dim1name=namep, &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    endif
+
+   ! pft energy state variable - t_ref2m_max_inst_r
+
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='T_REF2M_MAX_INST_R', xtype=nf_double,  &
+            dim1name='pft', &
+            long_name='rural instantaneous daily max of average 2 m height surface air temp (K)', units='K')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='T_REF2M_MAX_INST_R', data=pptr%pes%t_ref2m_max_inst_r, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then

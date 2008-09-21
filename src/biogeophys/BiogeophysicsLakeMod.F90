@@ -121,6 +121,9 @@ contains
     real(r8), pointer :: forc_hgt_q(:)      ! observational height of humidity [m]
     real(r8), pointer :: forc_hgt_t(:)      ! observational height of temperature [m]
     real(r8), pointer :: forc_hgt_u(:)      ! observational height of wind [m]
+    real(r8), pointer :: forc_hgt_u_pft(:)  ! observational height of wind at pft level [m]
+    real(r8), pointer :: forc_hgt_t_pft(:)  ! observational height of temperature at pft level [m]
+    real(r8), pointer :: forc_hgt_q_pft(:)  ! observational height of specific humidity at pft level [m]
     real(r8), pointer :: forc_th(:)         ! atmospheric potential temperature (Kelvin)
     real(r8), pointer :: forc_q(:)          ! atmospheric specific humidity (kg/kg)
     real(r8), pointer :: forc_u(:)          ! atmospheric wind speed in east direction (m/s)
@@ -209,7 +212,7 @@ contains
     real(r8) :: temp2(lbp:ubp)          ! relation for specific humidity profile
     real(r8) :: temp22m(lbp:ubp)        ! relation for specific humidity profile applied at 2-m
     real(r8) :: tgbef(lbc:ubc)          ! initial ground temperature
-    real(r8) :: thm(lbc:ubc)            ! intermediate variable (forc_t+0.0098*forc_hgt_t)
+    real(r8) :: thm(lbp:ubp)            ! intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
     real(r8) :: thv(lbc:ubc)            ! virtual potential temperature (kelvin)
     real(r8) :: thvstar                 ! virtual potential temperature scaling parameter
     real(r8) :: tksur                   ! thermal conductivity of snow/soil (w/m/kelvin)
@@ -328,6 +331,9 @@ contains
     qflx_prec_grnd => clm3%g%l%c%p%pwf%qflx_prec_grnd
     qflx_evap_soi  => clm3%g%l%c%p%pwf%qflx_evap_soi
     qflx_evap_tot  => clm3%g%l%c%p%pwf%qflx_evap_tot
+    forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
+    forc_hgt_t_pft => clm3%g%l%c%p%pps%forc_hgt_t_pft
+    forc_hgt_q_pft => clm3%g%l%c%p%pps%forc_hgt_q_pft
     qflx_snwcp_ice => clm3%g%l%c%p%pwf%qflx_snwcp_ice    
     qflx_snwcp_liq => clm3%g%l%c%p%pwf%qflx_snwcp_liq    
 
@@ -362,7 +368,6 @@ contains
        ! reference height
 
        !zii = 1000.    ! m  (pbl height)
-       thm(c) = forc_t(g) + 0.0098_r8*forc_hgt_t(g)   ! intermediate variable
        thv(c) = forc_th(g)*(1._r8+0.61_r8*forc_q(g))     ! virtual potential T
     end do
 
@@ -376,6 +381,7 @@ contains
        nmozsgn(p) = 0
        obuold(p) = 0._r8
        displa(p) = 0._r8
+       thm(p) = forc_t(g) + 0.0098_r8*forc_hgt_t_pft(p)   ! intermediate variable
 
        ! Roughness lengths
 
@@ -402,10 +408,10 @@ contains
        ! Initialize stability variables
 
        ur(p)    = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
-       dth(p)   = thm(c)-t_grnd(c)
+       dth(p)   = thm(p)-t_grnd(c)
        dqh(p)   = forc_q(g)-qsatg(c)
        dthv     = dth(p)*(1._r8+0.61_r8*forc_q(g))+0.61_r8*forc_th(g)*dqh(p)
-       zldis(p) = forc_hgt_u(g) - 0._r8
+       zldis(p) = forc_hgt_u_pft(p) - 0._r8
 
        ! Initialize Monin-Obukhov length and wind speed
 
@@ -455,7 +461,7 @@ contains
           stftg3(p) = emg*sb*tgbef(c)*tgbef(c)*tgbef(c)
 
           ax  = sabg(p) + emg*forc_lwrad(g) + 3._r8*stftg3(p)*tgbef(c) &
-               + forc_rho(g)*cpair/rah(p)*thm(c) &
+               + forc_rho(g)*cpair/rah(p)*thm(p) &
                - htvp(c)*forc_rho(g)/raw(p)*(qsatg(c)-qsatgdT(c)*tgbef(c) - forc_q(g)) &
                + tksur*t_lake(c,1)/dzsur(c)
 
@@ -467,7 +473,7 @@ contains
           ! Surface fluxes of momentum, sensible and latent heat
           ! using ground temperatures from previous time step
 
-          eflx_sh_grnd(p) = forc_rho(g)*cpair*(t_grnd(c)-thm(c))/rah(p)
+          eflx_sh_grnd(p) = forc_rho(g)*cpair*(t_grnd(c)-thm(p))/rah(p)
           qflx_evap_soi(p) = forc_rho(g)*(qsatg(c)+qsatgdT(c)*(t_grnd(c)-tgbef(c))-forc_q(g))/raw(p)
 
           ! Re-calculate saturated vapor pressure, specific humidity and their
@@ -475,7 +481,7 @@ contains
 
           call QSat(t_grnd(c), forc_pbot(g), eg, degdT, qsatg(c), qsatgdT(c))
 
-          dth(p)=thm(c)-t_grnd(c)
+          dth(p)=thm(p)-t_grnd(c)
           dqh(p)=forc_q(g)-qsatg(c)
 
           tstar = temp1(p)*dth(p)
@@ -538,7 +544,7 @@ contains
 
        if (h2osno(c) > 0.5_r8 .AND. t_grnd(c) > tfrz) then
           t_grnd(c) = tfrz
-          eflx_sh_grnd(p) = forc_rho(g)*cpair*(t_grnd(c)-thm(c))/rah(p)
+          eflx_sh_grnd(p) = forc_rho(g)*cpair*(t_grnd(c)-thm(p))/rah(p)
           qflx_evap_soi(p) = forc_rho(g)*(qsatg(c)+qsatgdT(c)*(t_grnd(c)-tgbef(c)) - forc_q(g))/raw(p)
        end if
 
@@ -560,7 +566,7 @@ contains
        eflx_lh_grnd(p)  = htvp(c)*qflx_evap_soi(p)
 
        ! 2 m height air temperature
-       t_ref2m(p) = thm(c) + temp1(p)*dth(p)*(1._r8/temp12m(p) - 1._r8/temp1(p))
+       t_ref2m(p) = thm(p) + temp1(p)*dth(p)*(1._r8/temp12m(p) - 1._r8/temp1(p))
 
        ! 2 m height specific humidity
        q_ref2m(p) = forc_q(g) + temp2(p)*dqh(p)*(1._r8/temp22m(p) - 1._r8/temp2(p))

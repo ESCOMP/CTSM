@@ -640,7 +640,6 @@ if ( $start_type =~ /branch/ ) {
    }
 }
 
-add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res);
 add_default($nl, 'fatmlndfrc', 'hgrid'=>$res, 'mask'=>$mask);
 
 if ($res ne $lnd_res) {
@@ -669,8 +668,6 @@ my $rtm = $cfg->get('rtm');
 if ( $rtm eq "on" ) {
    add_default($nl, 'frivinp_rtm');
 }
-add_default($nl, "furbinp",  'hgrid'=>$lnd_res, 'set_abspath'=>"$cfgdir/urban_input", 
-            'nofail'=>1 );
 #
 # Deal with options that the user has said are required...
 #
@@ -681,9 +678,27 @@ if ( defined($opts{'clm_demand'}) ) {
     $settings{'sim_year'}    = $sim_year;
     $settings{'mask'}        = $mask;
     foreach my $item ( @demandlist ) {
-	add_default($nl, $item, %settings );
+        if ( $item eq "furbinp" ) {
+           if ( $lnd_res =~ /1x1_/ ) {
+              add_default($nl, "furbinp",  'hgrid'=>$lnd_res, 'set_abspath'=>"$cfgdir/urban_input" );
+           } else {
+              add_default($nl, "furbinp",  'hgrid'=>$lnd_res );
+           }
+        } else {
+	   add_default($nl, $item, %settings );
+        }
     }
 }
+
+#
+# Get surface dataset after furbinp so that we can get surface data consistent with it
+#
+my $furbinp = $nl->get_value('furbinp');
+$furbinp =~ s!(.*)/!!;
+$furbinp =~ s/'//;
+$furbinp =~ s/"//;
+if ( $furbinp eq "" ) { $furbinp = "null"; }
+add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'furbinp'=>$furbinp );
 
 #
 # If CN mode -- get Nitrogen deposition file if available AND fndepdyn NOT set
@@ -783,7 +798,7 @@ if ($mode eq "ccsm_seq") {
 
     $inputopts{'ProgName'} = $ProgName;
     $inputopts{'ProgDir'}  = "$cfgdir";
-    if ( $source !~ /CLM1PT/ ) {
+    if ( $source ne "CLM1PT" ) {
 	$inputopts{'res'}     = "";
     } else {
 	$inputopts{'res'} = $opts{'res'};
@@ -793,7 +808,7 @@ if ($mode eq "ccsm_seq") {
     if ( defined($opts{'datm_data_dir'}) ) {
 	$inputopts{'filepath'} = $opts{'datm_data_dir'};
     } else {
-	if ( $source !~ /CAMHIST.eul64x128_datm6.01/ && $source !~ /CLM1PT/ ) {
+        if ( $source ne "CAMHIST.eul64x128_datm6.01" && $source ne "CLM1PT" ) {
 	    die "$ProgName ERROR:: Need to specify datm_data_dir directory of where " .
 		" datm data is for datasource=$source.\n";
 	}

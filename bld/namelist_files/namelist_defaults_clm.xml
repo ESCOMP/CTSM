@@ -71,10 +71,17 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fsurdat hgrid="5x5_amazon"         >lnd/clm2/surfdata/surfdata_5x5pt_amazon_navy_070404.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"         >lnd/clm2/surfdata/surfdata_1x1pt_brazil_navy_070404.nc</fsurdat>
 <fsurdat hgrid="1x1_tropicAtl"      >lnd/clm2/surfdata/surfdata_1x1pt_tropicAtl_test_070216.nc</fsurdat>
-<fsurdat hgrid="1x1_camdenNJ"       >lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
-<fsurdat hgrid="1x1_vancouverCAN"   >lnd/clm2/surfdata/surfdata_1x1pt_vancouver_c070831.nc</fsurdat>
-<fsurdat hgrid="1x1_mexicocityMEX"  >lnd/clm2/surfdata/surfdata_1x1pt_mexicocity_c070831.nc</fsurdat>
-<fsurdat hgrid="1x1_asphaltjungleNJ">lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
+
+<!-- Urban datasets also need to check if urban dataset is input -->
+<fsurdat hgrid="1x1_camdenNJ"        furbinp="metropolis_fluxes.txt"   >lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc </fsurdat>
+<fsurdat hgrid="1x1_vancouverCAN"    furbinp="vancouverCAN_fluxes.txt" >lnd/clm2/surfdata/surfdata_1x1pt_vancouver_c070831.nc</fsurdat>
+<fsurdat hgrid="1x1_mexicocityMEX"   furbinp="mexicocityMEX_fluxes.txt">lnd/clm2/surfdata/surfdata_1x1pt_mexicocity_c070831.nc</fsurdat>
+<fsurdat hgrid="1x1_urbanc_alpha"    furbinp="urbanc_alpha_fluxes.txt" >lnd/clm2/surfdata/surfdata_1x1pt_urbanc_alpha_lon0_c080401.nc</fsurdat>
+<fsurdat hgrid="1x1_asphaltjungleNJ" furbinp="asphaltjungle_fluxes.txt">lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
+
+<!-- Global urban datasets also need to check if urban dataset is input -->
+<fsurdat hgrid="1.9x2.5"             furbinp="avg_densityclass_1.9x2.5_fluxes_p7_c080918.txt">lnd/clm2/surfdata/surfdata_1.9x2.5_urban3den_c080919.nc</fsurdat>
+<fsurdat hgrid="10x15"               furbinp="avg_densityclass_10x15_fluxes_p7_c080919.txt">lnd/clm2/surfdata/surfdata_10x15_urban3den_c080919.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 <fpftdyn hgrid="10x15"         >lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc</fpftdyn>
@@ -104,6 +111,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fatmgrid hgrid="1x1_camdenNJ"       >lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
 <fatmgrid hgrid="1x1_vancouverCAN"   >lnd/clm2/griddata/griddata_1x1pt_vancouverCAN_c071221.nc</fatmgrid>
 <fatmgrid hgrid="1x1_mexicocityMEX"  >lnd/clm2/griddata/griddata_1x1pt_mexicocityMEX_c071221.nc</fatmgrid>
+<fatmgrid hgrid="1x1_urbanc_alpha"   >lnd/clm2/griddata/griddata_1x1pt_urbanc_alpha_navy_080401.nc</fatmgrid>
 <fatmgrid hgrid="1x1_asphaltjungleNJ">lnd/clm2/griddata/griddata_1x1pt_camdenNJ_navy_070824.nc</fatmgrid>
 
 <!-- Land topo datasets (when running land at different resolution than atm coupling) (relative to {csmdata}) -->
@@ -200,13 +208,19 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fatmlndfrc hgrid="1x1_camdenNJ"        mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1x1_mexicocityMEX"   mask="navy">lnd/clm2/griddata/fracdata_1x1pt_mexicocityMEX_navy_c071221.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1x1_vancouverCAN"    mask="navy">lnd/clm2/griddata/fracdata_1x1pt_vancouverCAN_navy_c071221.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1x1_urbanc_alpha"    mask="navy">lnd/clm2/griddata/fracdata_1x1pt_urbanc_alpha_navy_080401.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1x1_asphaltjungleNJ" mask="navy">lnd/clm2/griddata/fracdata_1x1pt_camdenNJ_navy_070824.nc</fatmlndfrc>
 
-<!-- Urban input datasets (relative to {rootdir/bld/urban_input/}) -->
+<!-- Urban point input datasets (relative to {rootdir/bld/urban_input/}) -->
 <furbinp  hgrid="1x1_mexicocityMEX"  >mexicocityMEX_fluxes.txt</furbinp>
 <furbinp  hgrid="1x1_vancouverCAN"   >vancouverCAN_fluxes.txt</furbinp>
+<furbinp  hgrid="1x1_urbanc_alpha"   >urbanc_alpha_fluxes.txt</furbinp>
 <furbinp  hgrid="1x1_camdenNJ"       >metropolis_fluxes.txt</furbinp>
 <furbinp  hgrid="1x1_asphaltjungleNJ">asphaltjungle_fluxes.txt</furbinp>
+
+<!-- Urban global input datasets (relative to {csmdata}) -->
+<furbinp  hgrid="1.9x2.5">lnd/clm2/urbdata/avg_densityclass_1.9x2.5_fluxes_p7_c080918.txt</furbinp>
+<furbinp  hgrid="10x15"  >lnd/clm2/urbdata/avg_densityclass_10x15_fluxes_p7_c080919.txt</furbinp>
 
 <!--CN Nitrogen deposition dataset for a fixed year (relative to {csmdata}) -->
 
@@ -261,10 +275,12 @@ $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01
 <!-- Length of run -->
 <stop_option hgrid="1x1_mexicocityMEX" mask="navy" >nsteps</stop_option>
 <stop_option hgrid="1x1_vancouverCAN"  mask="navy" >nsteps</stop_option>
+<stop_option hgrid="1x1_urbanc_alpha"  mask="navy" >'nsteps'</stop_option>
 <stop_option                                       >ndays</stop_option>
 
 <stop_n hgrid="1x1_mexicocityMEX" mask="navy" >159</stop_n>
 <stop_n hgrid="1x1_vancouverCAN"  mask="navy" >330</stop_n>
+<stop_n hgrid="1x1_urbanc_alpha"  mask="navy" >22772</stop_n>
 <stop_n                                       >  1</stop_n>
 
 <!-- Starting date -->
@@ -273,11 +289,13 @@ $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01
 <start_ymd hgrid="1x1.25"            mask="gx1v5" bgc="none"> 1998011</start_ymd>
 <start_ymd hgrid="1x1_mexicocityMEX" mask="navy"            >19931201</start_ymd>
 <start_ymd hgrid="1x1_vancouverCAN"  mask="navy"            >19920812</start_ymd>
-<start_ymd                                                   >    101</start_ymd>
+<start_ymd hgrid="1x1_urbanc_alpha"  mask="navy"            >00010812</start_ymd>
+<start_ymd                                                  >    101</start_ymd>
 
 <start_tod hgrid="1x1_mexicocityMEX" mask="navy"            >10800</start_tod>
 <start_tod hgrid="1x1_vancouverCAN"  mask="navy"            >72000</start_tod>
-<start_tod                                                   >   0</start_tod>
+<start_tod hgrid="1x1_urbanc_alpha"  mask="navy"            >46800</start_tod>
+<start_tod                                                  >    0</start_tod>
 
 <!-- Length of time for restarts -->
 <restart_option>monthly</restart_option>
@@ -300,11 +318,13 @@ $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01
 <!-- Default begining year for cycling over input atmospheric data -->
 <cycle_beg_year hgrid="1x1_mexicocityMEX" >1993</cycle_beg_year>
 <cycle_beg_year hgrid="1x1_vancouverCAN"  >1992</cycle_beg_year>
+<cycle_beg_year hgrid="1x1_urbanc_alpha"  >0001</cycle_beg_year>
 <cycle_beg_year                           >2003</cycle_beg_year>
 
 <!-- Default ending year for cycling over input atmospheric data -->
 <cycle_end_year hgrid="1x1_mexicocityMEX" >1993</cycle_end_year>
 <cycle_end_year hgrid="1x1_vancouverCAN"  >1992</cycle_end_year>
+<cycle_end_year hgrid="1x1_urbanc_alpha"  >0002</cycle_end_year>
 <cycle_end_year                           >2004</cycle_end_year>
 
 <!-- Verbosity level-->
@@ -325,6 +345,7 @@ $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01
 <domainfile hgrid="1x1_asphaltjungleNJ" mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.071220.nc</domainfile>
 <domainfile hgrid="1x1_mexicocityMEX"   mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-mexicocityMEX_navy.080115.nc</domainfile>
 <domainfile hgrid="1x1_vancouverCAN"    mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-vancouverCAN_navy.080115.nc</domainfile>
+<domainfile hgrid="1x1_urbanc_alpha"    mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-urbanc_alpha_navy.080401.nc</domainfile>
 <domainfile hgrid="1x1_tropicAtl"       mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-tropicAtl_test.071010.nc</domainfile>
 <domainfile hgrid="5x5_amazon"          mask="navy" >atm/datm7/domain.clm/domain.lnd.5x5pt-amazon_navy.071010.nc</domainfile>
 <domainfile hgrid="360x720"             mask="USGS" >atm/datm7/domain.clm/domain.lnd.360x720pt-global_USGS.071010.nc</domainfile>

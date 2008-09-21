@@ -63,7 +63,8 @@ contains
     use clmtype
     use clm_atmlnd      , only : clm_a2l
     use clm_varcon      , only : denh2o, denice, istice, istwet, istsoil, isturb, spval, &
-                                 icol_roof, icol_road_imperv, icol_road_perv
+                                 icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
+                                 icol_shadewall
     use clm_varpar      , only : nlevsoi, nlevsno
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
                                  SnowWater, BuildSnowFilter
@@ -98,6 +99,7 @@ contains
     integer , pointer :: cgridcell(:)     ! column's gridcell
     integer , pointer :: clandunit(:)     ! column's landunit
     integer , pointer :: ityplun(:)       ! landunit type
+    integer , pointer :: ctype(:)         ! column type
     integer , pointer :: snl(:)           ! number of snow layers
     real(r8), pointer :: h2ocan(:)        ! canopy water (mm H2O)
     real(r8), pointer :: h2osno(:)        ! snow water (mm H2O)
@@ -139,6 +141,11 @@ contains
     real(r8), pointer :: qflx_surf(:)     ! surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_infl(:)     ! infiltration (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)    ! qflx_surf at glaciers, wetlands, lakes
+    real(r8), pointer :: qflx_runoff(:)   ! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
+    real(r8), pointer :: qflx_runoff_u(:) ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
+    real(r8), pointer :: qflx_runoff_r(:) ! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
+    real(r8), pointer :: t_grnd_u(:)      ! Urban ground temperature (Kelvin)
+    real(r8), pointer :: t_grnd_r(:)      ! Rural ground temperature (Kelvin)
     real(r8), pointer :: qflx_snwcp_ice(:)! excess snowfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: soilpsi(:,:)	  ! soil water potential in each soil layer (MPa)
 !
@@ -177,6 +184,7 @@ contains
     ! Assign local pointers to derived subtypes components (column-level)
 
     cgridcell      => clm3%g%l%c%gridcell
+    ctype          => clm3%g%l%c%itype
     clandunit      => clm3%g%l%c%landunit
     snl            => clm3%g%l%c%cps%snl
     snowage        => clm3%g%l%c%cps%snowage
@@ -206,6 +214,11 @@ contains
     qflx_surf      => clm3%g%l%c%cwf%qflx_surf
     qflx_infl      => clm3%g%l%c%cwf%qflx_infl
     qflx_qrgwl     => clm3%g%l%c%cwf%qflx_qrgwl
+    qflx_runoff    => clm3%g%l%c%cwf%qflx_runoff
+    qflx_runoff_u  => clm3%g%l%c%cwf%qflx_runoff_u
+    qflx_runoff_r  => clm3%g%l%c%cwf%qflx_runoff_r
+    t_grnd_u       => clm3%g%l%c%ces%t_grnd_u
+    t_grnd_r       => clm3%g%l%c%ces%t_grnd_r
     qflx_snwcp_ice => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
     endwb          => clm3%g%l%c%cwbal%endwb
     begwb          => clm3%g%l%c%cwbal%begwb
@@ -351,9 +364,23 @@ contains
     do fc = 1, num_nolakec
        
        c = filter_nolakec(fc)
+       l = clandunit(c)
+
        if (snl(c) < 0) t_snow(c) = t_snow(c)/abs(snl(c))
        t_grnd(c) = t_soisno(c,snl(c)+1)
-       endwb(c) = h2ocan(c) + h2osno(c) + wa(c)
+
+       if (ityplun(l)==isturb) then
+         t_grnd_u(c) = t_soisno(c,snl(c)+1)
+       end if
+       if (ityplun(l)==istsoil) then
+         t_grnd_r(c) = t_soisno(c,snl(c)+1)
+       end if
+       if (ctype(c) == icol_roof .or. ctype(c) == icol_sunwall &
+          .or. ctype(c) == icol_shadewall .or. ctype(c) == icol_road_imperv) then
+         endwb(c) = h2ocan(c) + h2osno(c)
+       else
+         endwb(c) = h2ocan(c) + h2osno(c) + wa(c)
+       end if
     end do
 
     do j = 1, nlevsoi
@@ -383,6 +410,17 @@ contains
                           (endwb(c)-begwb(c))/dtime
           fcov(c) = spval
           qcharge(c) = spval
+       else if (ityplun(l)==isturb .and. ctype(c) /= icol_road_perv) then 
+          fcov(c) = spval
+          qcharge(c) = spval
+       end if
+
+       qflx_runoff(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c)
+       if (ityplun(l)==isturb) then
+         qflx_runoff_u(c) = qflx_drain(c) + qflx_surf(c)
+       end if
+       if (ityplun(l)==istsoil) then
+         qflx_runoff_r(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c)
        end if
     end do
 

@@ -10,6 +10,8 @@ smH06
 smH12 erH12 brH12 blH12 smH16
 smH52 erH52 brH52 blH52
 smJ12 erJ12 brJ12 blJ12 smJ16
+smJ06 erJ06 brJ06 blJ06
+smJ74 erJ74 brJ74 blJ74
 smK12 erK12 brK12 blK12 smK16
 smK18 erK18
 smK52 erK52 brK52 blK52
@@ -25,6 +27,7 @@ sm674
 sm694
 sm714             bl714
 sm774             bl774
+sm764             bl764
 smZ14
 sm814
 sm813
@@ -32,8 +35,11 @@ sm952             bl952
 sm984             bl984
 sm061
 smM14
-smCA4             blCA4
-smCA8             blCA8
-smNB4             blNB4
-smOC4             blOC4
-sm061
+smQ54
+smCE4 erCE4 brCE4 blCE4
+smCA4 erCA4 brCA4 blCA4
+smCA8 erCA8 brCA8 blCA8
+smC62 erC62 brC62 blC62
+smC52 erC52 brC52 blC52
+smNB4 erNB1 brNB1 blNB1
+smOC4 erOC4 brOC4 blOC4

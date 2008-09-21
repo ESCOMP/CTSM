@@ -2,8 +2,9 @@ smA92 erA92 brA92 blA92
 smA74 erA74 brA74 blA74
 smD91 erD91       blD91
 smB11
-smCA8             blCA8
-smOC4             blOC4
+smCA4 erCA4 brCA4 blCA4
+smOC4 erOC4 brOC4 blOC4
+smNB4 erNB4 brNB4 blNB4
 smG42 erG42 brG42 blG42 smG46
 smH52 erH52 brH52 blH52
 smJ12 erJ12 brJ12 blJ12

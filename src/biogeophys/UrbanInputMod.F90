@@ -49,12 +49,11 @@ module UrbanInputMod
      real(r8), pointer :: cv_wall(:,:)
      real(r8), pointer :: cv_roof(:,:)
      real(r8), pointer :: cv_improad(:,:)
-     real(r8), pointer :: sandfrac_road(:,:)
-     real(r8), pointer :: clayfrac_road(:,:)
-     real(r8), pointer :: scalez_wall(:)
-     real(r8), pointer :: scalez_roof(:)
      real(r8), pointer :: thick_wall(:)
      real(r8), pointer :: thick_roof(:)
+     integer,  pointer :: nlev_improad(:)
+     real(r8), pointer :: t_building_min(:)
+     real(r8), pointer :: t_building_max(:)
   end type urbinp_t
   public urbinp_t
 
@@ -130,16 +129,15 @@ contains
                 urbinp%wind_hgt_canyon(lsmlon*lsmlat), &
                 urbinp%tk_wall(lsmlon*lsmlat,nlevsoi), &
                 urbinp%tk_roof(lsmlon*lsmlat,nlevsoi), &
-                urbinp%tk_improad(lsmlon*lsmlat,5), &
+                urbinp%tk_improad(lsmlon*lsmlat,nlevsoi), &
                 urbinp%cv_wall(lsmlon*lsmlat,nlevsoi), &
                 urbinp%cv_roof(lsmlon*lsmlat,nlevsoi), &
-                urbinp%cv_improad(lsmlon*lsmlat,5), &
-                urbinp%sandfrac_road(lsmlon*lsmlat,nlevsoi), &
-                urbinp%clayfrac_road(lsmlon*lsmlat,nlevsoi), &
-                urbinp%scalez_wall(lsmlon*lsmlat), &
-                urbinp%scalez_roof(lsmlon*lsmlat), &
+                urbinp%cv_improad(lsmlon*lsmlat,nlevsoi), &
                 urbinp%thick_wall(lsmlon*lsmlat), &
                 urbinp%thick_roof(lsmlon*lsmlat), &
+                urbinp%nlev_improad(lsmlon*lsmlat), &
+                urbinp%t_building_min(lsmlon*lsmlat), &
+                urbinp%t_building_max(lsmlon*lsmlat), &
                 stat=ier)
        if (ier /= 0) then
           write(iulog,*)'initUrbanInput: allocation error '; call endrun()
@@ -159,17 +157,8 @@ contains
              if ( index( desc, "canyon_hwr" ) /= 1 )then
                 call endrun( 'ERROR:: reading of ASCII urban input file got off track' )
              end if
-             if ( (urbinp%canyon_hwr(nw) <= 0.0_r8) .or. (urbinp%canyon_hwr(nw) >= 1000.0_r8) )then
-                call endrun( 'ERROR:: canyon_hwr out of range' )
-             end if
              read (n,*,iostat=ier) desc, urbinp%wtlunit_roof(nw)
-             if ( (urbinp%wtlunit_roof(nw) <= 0.0_r8) .or. (urbinp%wtlunit_roof(nw) >= 1.0_r8) )then
-                call endrun( 'ERROR:: wtlunit_roof out of range' )
-             end if
              read (n,*,iostat=ier) desc, urbinp%wtroad_perv(nw)
-             if ( (urbinp%wtroad_perv(nw) < 0.0_r8) .or. (urbinp%wtroad_perv(nw) > 1.0_r8) )then
-                call endrun( 'ERROR:: wtlunit_roof out of range' )
-             end if
              read (n,*,iostat=ier) desc, urbinp%em_roof(nw)
              read (n,*,iostat=ier) desc, urbinp%em_improad(nw)
              read (n,*,iostat=ier) desc, urbinp%em_perroad(nw)
@@ -186,37 +175,27 @@ contains
              read (n,*,iostat=ier) desc, urbinp%alb_wall_dir(nw,1), urbinp%alb_wall_dir(nw,2)
              read (n,*,iostat=ier) desc, urbinp%alb_wall_dif(nw,1), urbinp%alb_wall_dif(nw,2)
              read (n,*,iostat=ier) desc, urbinp%ht_roof(nw)
-             if ( (urbinp%ht_roof(nw) <= 0.0_r8) .or. (urbinp%ht_roof(nw) > 20.0_r8) )then
-                call endrun( 'ERROR:: roof height out of range' )
-             end if
              if ( index( desc, "ht_roof" ) /= 1 )then
                 call endrun( 'ERROR:: reading of ASCII urban input file got off track' )
              end if
              read (n,*,iostat=ier) desc, urbinp%wind_hgt_canyon(nw)
              read (n,*,iostat=ier) desc, (urbinp%tk_wall(nw,k),k=1,nlevsoi)
              read (n,*,iostat=ier) desc, (urbinp%tk_roof(nw,k),k=1,nlevsoi)
-             read (n,*,iostat=ier) desc, (urbinp%tk_improad(nw,k),k=1,5)
+             read (n,*,iostat=ier) desc, (urbinp%tk_improad(nw,k),k=1,nlevsoi)
              read (n,*,iostat=ier) desc, (urbinp%cv_wall(nw,k),k=1,nlevsoi)
              read (n,*,iostat=ier) desc, (urbinp%cv_roof(nw,k),k=1,nlevsoi)
-             read (n,*,iostat=ier) desc, (urbinp%cv_improad(nw,k),k=1,5)
+             read (n,*,iostat=ier) desc, (urbinp%cv_improad(nw,k),k=1,nlevsoi)
              if ( index( desc, "cv_improad" ) /= 1 )then
                 call endrun( 'ERROR:: reading of ASCII urban input file got off track' )
              end if
-             read (n,*,iostat=ier) desc, (urbinp%sandfrac_road(nw,k),k=1,nlevsoi)
-             read (n,*,iostat=ier) desc, (urbinp%clayfrac_road(nw,k),k=1,nlevsoi)
-             do k = 1, nlevsoi
-                soilfrac = urbinp%sandfrac_road(nw,k) + urbinp%clayfrac_road(nw,k)
-                if ( (soilfrac < 0.0_r8) .or. (soilfrac >= 100.0_r8) )then
-                   call endrun( 'ERROR:: sandfrac_road and/or clayfrac_road out of range' )
-                end if
-             end do
-             read (n,*,iostat=ier) desc, urbinp%scalez_wall(nw)
-             read (n,*,iostat=ier) desc, urbinp%scalez_roof(nw)
              read (n,*,iostat=ier) desc, urbinp%thick_wall(nw)
              read (n,*,iostat=ier) desc, urbinp%thick_roof(nw)
              if ( index( desc, "thick_roof" ) /= 1 )then
                 call endrun( 'ERROR:: reading of ASCII urban input file got off track' )
              end if
+             read (n,*,iostat=ier) desc, urbinp%nlev_improad(nw)
+             read (n,*,iostat=ier) desc, urbinp%t_building_min(nw)
+             read (n,*,iostat=ier) desc, urbinp%t_building_max(nw)
           end do
        end do
        
@@ -254,12 +233,11 @@ contains
                 write(iulog,*)'   cv_wall        = ', urbinp%cv_wall(nw,:)
                 write(iulog,*)'   cv_roof        = ', urbinp%cv_roof(nw,:)
                 write(iulog,*)'   cv_improad     = ', urbinp%cv_improad(nw,:)
-                write(iulog,*)'   sandfrac_road  = ', urbinp%sandfrac_road(nw,:)
-                write(iulog,*)'   clayfrac_road  = ', urbinp%clayfrac_road(nw,:)
-                write(iulog,*)'   scalez_wall    = ', urbinp%scalez_wall(nw)
-                write(iulog,*)'   scalez_roof    = ', urbinp%scalez_roof(nw)
                 write(iulog,*)'   thick_wall    = ', urbinp%thick_wall(nw)
                 write(iulog,*)'   thick_roof    = ', urbinp%thick_roof(nw)
+                write(iulog,*)'   nlev_improad    = ', urbinp%nlev_improad(nw)
+                write(iulog,*)'   t_building_min  = ', urbinp%t_building_min(nw)
+                write(iulog,*)'   t_building_max  = ', urbinp%t_building_max(nw)
              end do
           end do
        end if
@@ -289,12 +267,11 @@ contains
                   urbinp%cv_wall, &
                   urbinp%cv_roof, &
                   urbinp%cv_improad, &
-                  urbinp%sandfrac_road, &
-                  urbinp%clayfrac_road, &
-                  urbinp%scalez_wall, &
-                  urbinp%scalez_roof, &
                   urbinp%thick_wall, &
                   urbinp%thick_roof, &
+                  urbinp%nlev_improad, &
+                  urbinp%t_building_min, &
+                  urbinp%t_building_max, &
                   stat=ier)
        if (ier /= 0) then
           write(iulog,*)'initUrbanInput: deallocation error '; call endrun()
