@@ -46,7 +46,7 @@ contains
     use ncdio
     use decompMod       , only : get_proc_bounds
     use clm_varpar      , only : nlevsoi, nlevsno
-    use clm_varcon      , only : denice, denh2o
+    use clm_varcon      , only : denice, denh2o, istsoil, pondmx, watmin
     use clm_varctl      , only : allocate_all_vegpfts, nsrest
     use initSurfAlbMod  , only : do_initsurfalb
     use clm_time_manager, only : is_first_step
@@ -69,6 +69,15 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
+!
+! local pointers to implicit in arguments
+!
+    integer , pointer :: ityplun(:)       !landunit type
+    integer , pointer :: clandunit(:)     !column's landunit index
+
+    real(r8) :: maxwatsat                 !maximum porosity    
+    real(r8) :: excess                    !excess volumetric soil water
+    real(r8) :: totwat                    !total soil water (mm)
     integer :: p,c,l,g,j    ! indices
     integer :: begp, endp   ! per-proc beginning and ending pft indices
     integer :: begc, endc   ! per-proc beginning and ending column indices
@@ -88,6 +97,8 @@ contains
     lptr => clm3%g%l
     cptr => clm3%g%l%c
     pptr => clm3%g%l%c%p
+    ityplun   => lptr%itype
+    clandunit => cptr%landunit
 
     ! Note - for the snow interfaces, are only examing the snow interfaces
     ! above zi=0 which is why zisno and zsno have the same level dimension below
@@ -1328,15 +1339,30 @@ contains
 !dir$ concurrent
 !cdir nodep
              do c = begc,endc
-                ! soil water should be ... less than saturation
-                if (      cptr%cws%h2osoi_vol(c,j) > cptr%cps%watsat(c,j) )then
-                   cptr%cws%h2osoi_liq(c,j) = (cptr%cps%watsat(c,j) &
-                                - cptr%cws%h2osoi_ice(c,j)/(cptr%cps%dz(c,j)*denice)) * &
-                                  (cptr%cps%dz(c,j)*denh2o)
-                   cptr%cws%h2osoi_vol(c,j) = cptr%cps%watsat(c,j)
-                ! ........................ and greater than zero
-                else if ( cptr%cws%h2osoi_vol(c,j) < 0.0_r8 )then
-                      cptr%cws%h2osoi_vol(c,j) = 0.0_r8
+                l = clandunit(c)
+                if (ityplun(l) == istsoil) then
+                   cptr%cws%h2osoi_liq(c,j) = max(0._r8,cptr%cws%h2osoi_liq(c,j))
+                   cptr%cws%h2osoi_ice(c,j) = max(0._r8,cptr%cws%h2osoi_ice(c,j))
+                   cptr%cws%h2osoi_vol(c,j) = cptr%cws%h2osoi_liq(c,j)/(cptr%cps%dz(c,j)*denh2o) &
+                                              + cptr%cws%h2osoi_ice(c,j)/(cptr%cps%dz(c,j)*denice)
+                   if (j == 1) then
+                      maxwatsat = (cptr%cps%watsat(c,j)*cptr%cps%dz(c,j)*1000.0_r8 + pondmx) / &
+                                  (cptr%cps%dz(c,j)*1000.0_r8)
+                   else
+                      maxwatsat = cptr%cps%watsat(c,j)
+                   end if
+                   if (cptr%cws%h2osoi_vol(c,j) > maxwatsat) then 
+                      excess = (cptr%cws%h2osoi_vol(c,j) - maxwatsat)*cptr%cps%dz(c,j)*1000.0_r8
+                      totwat = cptr%cws%h2osoi_liq(c,j) + cptr%cws%h2osoi_ice(c,j)
+                      cptr%cws%h2osoi_liq(c,j) = cptr%cws%h2osoi_liq(c,j) - &
+                        (cptr%cws%h2osoi_liq(c,j)/totwat) * excess
+                      cptr%cws%h2osoi_ice(c,j) = cptr%cws%h2osoi_ice(c,j) - &
+                        (cptr%cws%h2osoi_ice(c,j)/totwat) * excess
+                   end if
+                   cptr%cws%h2osoi_liq(c,j) = max(watmin,cptr%cws%h2osoi_liq(c,j))
+                   cptr%cws%h2osoi_ice(c,j) = max(watmin,cptr%cws%h2osoi_ice(c,j))
+                   cptr%cws%h2osoi_vol(c,j) = cptr%cws%h2osoi_liq(c,j)/(cptr%cps%dz(c,j)*denh2o) &
+                                              + cptr%cws%h2osoi_ice(c,j)/(cptr%cps%dz(c,j)*denice)
                 end if
              end do
           end do

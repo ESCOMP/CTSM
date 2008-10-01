@@ -1,4 +1,182 @@
 ===============================================================
+Tag name:  clm3_6_13
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Wed Oct  1 13:33:36 MDT 2008
+One-line Summary: Update to new version of cpl7 scripts and build, update externals for versions needed for clm36sci branch, add new CASA tests
+
+Purpose of changes:  Update to new version of cpl7 scripts and build. 
+                     Update externals for versions needed on clm36sci branch.
+                     Add new CASA tests.
+                     Add $CLM_ACCOUNT as option to test_driver.sh
+                     Add single point capability to cpl7 scripts.
+                     Add CLM_DEMAND, CLM_BLD_NL_OPTIONS as options to cpl7 scripts.
+                     Some code changes from Keith Oleson to fix a CASA startup problem.
+
+Code changes from Keith Oleson
+
+1. Volumetric soil water check in BiogeophysRestMod changed so that it accounts for ponded ice/water
+that may be present in surface layer. If volumetric soil water is above saturation, h2osoi_liq
+and h2osoi_ice are reduced according to their proportion of total water/ice.  Both h2osoi_liq
+and h2osoi_ice are limited to be no lower than watmin (currently 0.01_r8 mm).  All this done for
+soil points only.
+
+2. In SoilHydrologyMod, variable su changed to:
+
+    su        = max(0._r8,(s1-fcov(c)) / max(0.01_r8,1._r8-fcov(c))
+
+to account for the fact that fcov could be one and hence divide by zero could have occurred.
+Also, the factor "1._r8" multiplying fcov in the numerator was removed.
+
+3. watmin made a global parameter available from clm_varcon
+
+Bugs fixed (include bugzilla ID): 805 (too much output in build-streams), 801 (G95 in csm_Share),
+                                  786 (dshr_map bug), 834 (CASA startup bug), 
+
+Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 
+                                  680 (t0 precip diff for seq-ccsm), 
+                                  698 (cprnc bug gives false difference), 701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  826 (pftdyn), 833 (bug with cam in ccsm4_0_alpha37)
+                                  832 (problem with cice bn in ccsm4_0_alpha37)
+    http://bugs.cgd.ucar.edu/
+
+Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
+                                      652 (threads different answers with older PGI versions)
+
+Describe any changes made to build system: Update to new ccsm4_0_alpha37 scripts
+
+	New options in cpl7 scripts: CLM_DEMAND, CLM_BLD_NL_OPTIONS
+
+              CLM_DEMAND: List of output variables to require be set in namelist
+                          For example, set to "furbinp" to use urban grid.
+              CLM_BLD_NL_OPTIONS: List of options to pass to clm build-namelist.
+
+        New grid in cpl7 scripts: pt1_pt1 (also set CLM_PT1_NAME) for single point sims
+
+        Add ability to set "none" in clm build-namelist -clm_dmand option.
+
+Quickstart to new cpl7 scripts...
+
+     New cpl7 namelists now do two things for you.
+         - Add a ton of error checking at each step -- so it won't let you do something you  aren't allowed to
+         - Only show you the variables that you could actually set in your case.
+
+     To accomplish this we use XML files rather than cshell env files. But, the
+     operation sequence is similar with options only changed slightly.
+
+         cd scripts
+         ./create_newcase -help      # get help on how to run create_newcase
+         ./create_newcase -case testI -mach bluefire -res f19_g15 -compset I    # create new "I" case for bluefire at 1.9x2.5_gx1v5 res
+                                     # "I" case is clm active, datm7, and inactive ice/ocn
+         cd testI
+         ./xmlchange -help           # Get help on editor for XML files 
+         ./xmlchange <options> env_conf.xml env_mach_pes  # Edit configure files if needed
+         configure -case             # create scripts
+         ./xmlchange <options> env_build.xml              # Edit build files if needed
+         testI.build                 # build model and create namelists
+         ./xmlchange <options> env_run.xml                # Edit run files if needed
+         bsub < testI.run            # submit script  
+                                     # (NOTE: edit env_run.xml to set RESUBMIT to number of times to automatically resubmit)
+
+     Note that the -skip_rundb option to create_newcase no longer needs the argument of "NONE".
+     Syntax of create_tests changed to only one form.
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: erik, oleson and dlawren (source code changes)
+
+List any svn externals directories updated (csm_share, mct, etc.): drv, csm_share, datm7, and scripts
+
+  csm_share, datm7 and scripts include changes required for the clm36sci branch.
+
+     scripts   to scripts4_080930
+     drv       to drvseq2_0_32
+     datm7     to datm7_080926
+     csm_share to share3_080929
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>> Add $CLM_ACCOUNT env var, change tests around, update to ccsm4_0_alpha37
+          add some more CASA tests.
+M  models/lnd/clm/test/system/README
+M  models/lnd/clm/test/system/tests_pretag_bluefire
+M  models/lnd/clm/test/system/tests_pretag_jaguar
+M  models/lnd/clm/test/system/tests_posttag_kraken
+M  models/lnd/clm/test/system/tests_posttag_hybrid_regression
+M  models/lnd/clm/test/system/tests_posttag_purempi_regression
+M  models/lnd/clm/test/system/test_driver.sh ------------------ Add $CLM_ACCOUNT env var
+                                                                update to ccsm4_0_alpha37
+M  models/lnd/clm/test/system/input_tests_master -------------- Add CASA 1.9x2.5 tests
+M  models/lnd/clm/test/system/TSMext_ccsmseq_cam.sh ----------- Separate call to cice bn
+M  models/lnd/clm/test/system/TCT_ccsmseq.sh
+M  models/lnd/clm/test/system/TCBext_ccsmseq_cam.sh ----------- Need to set threads/tasks
+M  models/lnd/clm/test/system/TSM.sh -------------------------- Remove old namelist name
+
+>>>>>>>>>>>>>> Update for new scripts
+M  models/lnd/clm/bld/clm.cpl7.template ----------------------- Straighten out clm_demand
+                               Add new env vars. Remove prestaging.
+M  models/lnd/clm/bld/namelist_files/namelist_definition.xml -- Update to alpha37
+M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml- Add file for clm36sci branch
+M  models/lnd/clm/bld/build-namelist -------------------------- Allow clm_demand to include none.
+
+>>>>>>>>>>>>>> These are Keith's changes to fix bug 834. They do make it possible for
+               answers to change, but in most cases they don't. It allows code to
+               startup correctly for situations it might fail in, and sets a mininum
+               value in SoilHydrologyMod to guard against divide by zero. This would
+               change answers when amount of ice -- fcov > 0.99 -- which would be rare.
+M  models/lnd/clm/src/main/clm_varcon.F90
+M  models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90
+M  models/lnd/clm/src/biogeophys/SoilHydrologyMod.F90
+
+Summary of testing:
+
+  bluefire: All PASS except
+042 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+043 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+044 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+045 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 4
+P
+046 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ...................FAIL! rc= 10
+079 blL61 TBL.sh _sc_h clm_std 19980101:NONE:1800 1.9x2.5 gx1v5 -10 startup .....................FAIL! rc= 7
+083 blL62 TBL.sh _sc_m clm_std 19980101:NONE:1800 1.9x2.5 gx1v5 -10 startup .....................FAIL! rc= 7
+107 brJ74 TBR.sh 4p_casasc_ds clm_std 10001230:NONE:3600 1x1_tropicAtl test -3+-3 arb_ic ........FAIL! rc= 11
+127 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  kraken: All PASS except all TER and TBR tests fail, because of a script problem, and the following fail
+  lightning/pathscale:
+022 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+023 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+024 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+025 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 4
+026 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ...................FAIL! rc= 10
+050 erP11 TSM_ccsmseq.sh ERS T31_g35 ICN4804 ....................................................FAIL! rc= 5
+  bangkok/lf95: All PASS except
+025 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+026 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+027 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+028 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 4
+029 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ...................FAIL! rc= 10
+054 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48 .......................FAIL! rc= 6
+055 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  breeze/gale/hail/gust/ifort: All PASS
+
+pftdyn tests fail because of previous problem (bug 826). ext_ccsmseq_ tests fail 
+because of problem with ccsm4_0_alpha37 (bug 833).
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_12
+
+Changes answers relative to baseline: Only for some cases, see tests 79 and 83 on
+bluefire above
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_12
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Sun Sep 21 10:04:22 MDT 2008

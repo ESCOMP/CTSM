@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_alpha34"
+seqccsm_vers="ccsm4_0_alpha37"
 
 hostname=`hostname`
 case $hostname in
@@ -29,10 +29,12 @@ case $hostname in
     bv* )
     submit_script="test_driver_bluevista_${cur_time}.sh"
 
-    account_name=`grep -i "^${LOGNAME}:" /etc/project.ncar | cut -f 2 -d "," | cut -f 3 -d ":" `
-    if [ ! -n "${account_name}" ]; then
-	echo "ERROR: unable to locate an account number to charge for this job under user: $LOGNAME"
-	exit 2
+    if [ -z "$CLM_ACCOUNT" ]; then
+	export CLM_ACCOUNT=`grep -i "^${LOGNAME}:" /etc/project.ncar | cut -f 1 -d "," | cut -f 2 -d ":" `
+	if [ -z "${CLM_ACCOUNT}" ]; then
+	    echo "ERROR: unable to locate an account number to charge for this job under user: $LOGNAME"
+	    exit 2
+	fi
     fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -48,11 +50,8 @@ cat > ./${submit_script} << EOF
 #BSUB -J clmtest
 #BSUB -q regular                # queue
 #BSUB -W 6:00                     
-#BSUB -P $account_name      
+#BSUB -P $CLM_ACCOUNT
 #BSUB -x                        # exclusive use of node (not_shared)
-##BSUB -q share
-##BSUB -W 0:50
-##BSUB -P 00000006
 
 if [ -n "\$LSB_JOBID" ]; then   #batch job
     export JOBID=\${LSB_JOBID}
@@ -98,10 +97,12 @@ EOF
     be* )
     submit_script="test_driver_bluefire${cur_time}.sh"
 
-    account_name=`grep -i "^${LOGNAME}:" /etc/project.ncar | cut -f 1 -d "," | cut -f 2 -d ":" `
-    if [ ! -n "${account_name}" ]; then
-	echo "ERROR: unable to locate an account number to charge for this job under user: $LOGNAME"
-	exit 2
+    if [ -z "$CLM_ACCOUNT" ]; then
+	export CLM_ACCOUNT=`grep -i "^${LOGNAME}:" /etc/project.ncar | cut -f 1 -d "," | cut -f 2 -d ":" `
+	if [ -z "${CLM_ACCOUNT}" ]; then
+	    echo "ERROR: unable to locate an account number to charge for this job under user: $LOGNAME"
+	    exit 2
+	fi
     fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -117,7 +118,7 @@ cat > ./${submit_script} << EOF
 #BSUB -e test_dr.o%J              # error filename
 #BSUB -q regular                  # queue
 #BSUB -W 6:00                     
-#BSUB -P $account_name      
+#BSUB -P $CLM_ACCOUNT
 #BSUB -J clmtest
 
 if [ -n "\$LSB_JOBID" ]; then   #batch job
@@ -168,10 +169,12 @@ EOF
     ln* )
     submit_script="test_driver_lightning_${cur_time}.sh"
 
-    account_name=`grep -i "^${LOGNAME}:" /etc/project | cut -f 1 -d "," | cut -f 2 -d ":" `
-    if [ ! -n "${account_name}" ]; then
-	echo "ERROR: unable to locate an account number to charge for this job under user: $LOGNAME"
-	exit 2
+    if [ -z "$CLM_ACCOUNT" ]; then
+	export CLM_ACCOUNT=`grep -i "^${LOGNAME}:" /etc/project | cut -f 1 -d "," | cut -f 2 -d ":" `
+	if [ -z "${CLM_ACCOUNT}" ]; then
+	    echo "ERROR: unable to locate an account number to charge for this job under user: $LOGNAME"
+	    exit 2
+	fi
     fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -186,7 +189,7 @@ cat > ./${submit_script} << EOF
 #BSUB -e test_dr.o%J         # error filename
 #BSUB -q regular             # queue
 #BSUB -W 6:00                     
-#BSUB -P $account_name      
+#BSUB -P $CLM_ACCOUNT
 #BSUB -J clmtest
 
 if [ -n "\$LSB_JOBID" ]; then   #batch job

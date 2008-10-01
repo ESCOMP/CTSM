@@ -44,36 +44,26 @@ if ($CCSM_IPCC == 2000_control       ) set sim_year = '-sim_year 2000'
 if ($CCSM_IPCC == OFF                ) set sim_year = '-sim_year 2000'
 if ($CCSM_IPCC == "1870-2000_control") set sim_year = ' '
 
-
 set config = $CASEROOT/Buildnml_Prestage/clmconf/config_cache.xml
 
 if ($CCSM_IPCC == "1870-2000_control") then
   setenv CLM_DYNNDEP "transient"
 endif
 
-if (     $CLM_DYNNDEP == "transient" && $CLM_BGC == "CN" ) set clm_demand = "-clm_demand fndepdyn"
-if (     $CLM_DYNPFT  == "transient" && $?clm_demand )then
-    set clm_demand = "$clm_demand,fpftdyn"
-else if ($CLM_DYNPFT  == "transient" )then
-    set clm_demand = '-clm_demand fpftdyn'
-else
-    set clm_demand = " "
-endif
-
-set res = $LND_GRID
-
-if ($ATM_GRID == $OCN_GRID) then
-   set mask = USGS
-   if ($ATM_GRID == 1.9x2.5 || $ATM_GRID == 0.9x1.25 || $ATM_GRID == 0.47x0.63 || $ATM_GRID == 0.23x0.31 ) \
-      set mask = gx1v5
-else
-  set mask = $OCN_GRID
-endif
-set mask = "-mask $mask"
-
 set cfgdir = $CASEROOT/Buildnml_Prestage/clmconf  
 set config = $cfgdir/config_cache.xml
 cd $cfgdir
+
+$CODEROOT/lnd/clm*/bld/configure -spmd -mode ext_ccsm_seq -rtm on $bgc $maxpft -clm_bld $cfgdir \
+         $targetos -usr_src $CASEROOT/SourceMods/src.clm || exit -1 
+
+set clm_demand = $CLM_DEMAND
+if (     $CLM_DYNNDEP == "transient" && $CLM_BGC == "CN" )then
+   set clm_demand = "$clm_demand,fndepdyn"
+endif
+if ($CLM_DYNPFT  == "transient" )then
+    set clm_demand = "$clm_demand,fpftdyn"
+endif
 
 set finidat = " "
 if ($RUN_TYPE == hybrid) set finidat = " finidat = '$datainit'"
@@ -90,9 +80,6 @@ $finidat
  co2_type         = '$CLM_CO2_TYPE'
 EOF1
 
-$CODEROOT/lnd/clm*/bld/configure -spmd -mode ext_ccsm_seq -rtm on $bgc $maxpft -clm_bld $cfgdir \
-         $targetos -usr_src $CASEROOT/SourceMods/src.clm || exit -1 
-
 if ($RUN_TYPE == startup && $CLM_ARB_IC != off) then
    set START_TYPE = "arb_ic"
 else
@@ -100,8 +87,27 @@ else
    if ($RUN_TYPE == hybrid ) set START_TYPE = "startup"
 endif
 
-set options = "-config $config -res $LND_GRID $mask $sim_year $clm_demand "
+if ($ATM_GRID == $OCN_GRID) then
+   set mask = USGS
+   if ($ATM_GRID == 1.9x2.5 || $ATM_GRID == 0.9x1.25 || $ATM_GRID == 0.47x0.63 || $ATM_GRID == 0.23x0.31 ) \
+      set mask = gx1v5
+else
+  set mask = $OCN_GRID
+endif
+
+if ($LND_GRID == pt1 ) then
+   set RESOLUTION = $CLM_PT1_NAME
+   set mask = navy
+   if ($LND_GRID == 1x1_tropicAtl ) set mask = test
+else
+   set RESOLUTION = $LND_GRID
+endif
+
+set mask = "-mask $mask"
+
+set options = "-config $config -res $RESOLUTION $mask $sim_year -clm_demand $clm_demand "
 set options = "$options -infile ccsm_namelist -start_type $START_TYPE -case $CASE "
+set options = "$options $CLM_BLDNL_OPTIONS"
 $CODEROOT/lnd/clm*/bld/build-namelist $options -csmdata \$DIN_LOC_ROOT -inputdata $CASEROOT/Buildnml_Prestage/clm.input_data_list || exit -1
 
 # ---------------------------------------------------------------------------
@@ -130,15 +136,6 @@ if ($RUN_TYPE == 'hybrid') then
 cat >> $CASEROOT/Buildnml_Prestage/clm.buildnml_prestage.csh << EOF1
 if ( "\$RUN_TYPE" != continue) then
 set datainit = $datainit
-#\$UTILROOT/Tools/ccsm_getfile $RUN_REFCASE/lnd/init/\$datainit || exit 1 
-endif
-EOF1
-endif
-
-if ($RUN_TYPE == 'branch') then
-cat >> $CASEROOT/Buildnml_Prestage/clm.buildnml_prestage.csh << EOF1
-if ( "\$RUN_TYPE" != 'continue') then
-#\$UTILROOT/Tools/ccsm_getfile $RUN_REFCASE/lnd/rest/\$nrevsn || exit 1
 endif
 EOF1
 endif
@@ -188,22 +185,22 @@ cat $CASEROOT/Buildnml_Prestage/clmconf/Filepath >> $CASEROOT/Buildexe/clm.build
 cat >> $CASEROOT/Buildexe/clm.buildexe.csh << EOF2
 EOF
 
+
 # Create the executable
 #----------------------
 
 if (\$BLDTYPE == 'TRUE') then
-   cp \$BLDROOT/mkDepends . || exit 2
-   cp \$BLDROOT/mkSrcfiles . || exit 2
-   set THREAD = FALSE ;  if (\$NTHRDS_LND > 1) set THREAD = TRUE
-   set clmdefs = "`cat \$CASEROOT/Buildnml_Prestage/clmconf/CCSM_cppdefs`"
-   gmake complib -j \$GMAKE_J CLM_CPPDEFS="\$clmdefs" MODEL=clm DEPINC=\$INCROOT COMPLIB=\$objdir/../libclm.a \
-       VPFILE=Filepath THREAD=\$THREAD -f  \$BLDROOT/Makefile MACFILE=\$CASEROOT/Macros.\$MACH  || exit 2
-   cp -p *comp_*.mod \$LIBROOT/include/
+  cp \$BLDROOT/mkDepends . || exit 2
+  cp \$BLDROOT/mkSrcfiles . || exit 2
+  set SMP = FALSE ;  if (\$NTHRDS_LND > 1) set SMP = TRUE
+  set clmdefs = "`cat \$CASEROOT/Buildnml_Prestage/clmconf/CCSM_cppdefs`"
+  gmake complib -j \$GMAKE_J MODEL=clm COMPLIB=\$LIBROOT/liblnd.a SMP=\$SMP MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="\$clmdefs" -f \$BLDROOT/Makefile || exit 2
+  cp -p *comp_*.mod \$LIBROOT/include/
 endif
 
-if !(-f \$objdir/../libclm.a) then
-  echo "ERROR: clm library not available, check SETBLD"
-  exit -1
+if !(-f \$LIBROOT/liblnd.a) then
+ echo "ERROR: clm library not available, check SETBLD"
+ exit -1
 endif
 
 EOF2

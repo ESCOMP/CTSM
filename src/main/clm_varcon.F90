@@ -67,6 +67,7 @@ module clm_varcon
   real(r8) :: bdsno = 250._r8       !bulk density snow (kg/m**3)
   real(r8) :: forc_hgt_min = 40._r8 !minimum forcing height (10m + roughly the 
                                     !largest z0m+d for any vegetated canopy) (m)
+  real(r8) :: watmin = 0.01_r8      !minimum soil moisture (mm)
 
   real(r8) :: re = SHR_CONST_REARTH*0.001_r8 !radius of earth (km)
 

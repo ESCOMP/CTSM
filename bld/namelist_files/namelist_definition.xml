@@ -482,9 +482,15 @@ Restart pointer filename.
 <default>Default: 'rpointer.drv'</default>
 </entry>
 
-<entry id="samegrid" type="logical" category="driver"
+<entry id="samegrid_ao" type="logical" category="driver"
        group="seq_infodata_inparm" valid_values="">
-are ocean and ice grids same lat/lon/size
+are atmosphere and ocean grids same lat/lon/size
+<default>Default: TRUE</default>
+</entry>
+
+<entry id="samegrid_al" type="logical" category="driver"
+       group="seq_infodata_inparm" valid_values="">
+are atmosphere and land grids same lat/lon/size
 <default>Default: TRUE</default>
 </entry>
 

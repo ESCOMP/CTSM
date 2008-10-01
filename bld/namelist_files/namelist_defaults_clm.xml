@@ -47,6 +47,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="1.9x2.5"   mask="gx1v5" bgc="none" ic_ymd=     "101" ic_tod="0">lnd/clm2/initdata/clmi.F_0000-01-01_1.9x2.5_gx1v5_c071203.nc</finidat>
 <finidat hgrid="1.9x2.5"   mask="gx1v5" bgc="none" ic_ymd=     "901" ic_tod="0">lnd/clm2/initdata/clmi.F_0000-09-01_1.9x2.5_gx1v5_c071203.nc</finidat>
 <finidat hgrid="1.9x2.5"   mask="gx1v5" bgc="cn"   ic_ymd=  "250101" ic_tod="0">lnd/clm2/inidata_3.1/ccsm/clmi_0025-01-01_1.9x2.5_gx1v5_cn_c070809.nc</finidat>
+
+<!-- Add this on the clm36 science branch
+<finidat hgrid="1.9x2.5"   mask="gx1v5" bgc="casa" ic_ymd= "1510101" ic_tod="0">lnd/clm2/initdata/clmi.ICASA_0151-01-01_1.9x2.5_gx1v5_c080820.nc</finidat>
+-->
+
 <finidat hgrid="1.9x2.5"   mask="gx1v4" bgc="none" ic_ymd=     "901" ic_tod="0">lnd/clm2/inidata_3.1/cam/clmi_0000-09-01_1.9x2.5_gx1v4_c070309.nc</finidat>
 <finidat hgrid="1x1.25"    mask="gx1v5" bgc="none" ic_ymd="19980101" ic_tod="0">lnd/clm2/inidata_3.1/ccsm/clmi_1998-01-01_1x1.25_gx1v5_c070615.nc</finidat>
 

@@ -154,7 +154,7 @@ ${CLM_SCRIPTDIR}/mknamelist $2 $3 $4 $5 $config_file ${7%+*}
 rc=$?
 if [ $rc -eq 0 ]; then
     echo "TSM.sh: namelist creation was successful" 
-    cat lnd.stdin *_in
+    cat *_in
 else
     echo "TSM.sh: error building namelist, error= $rc" 
     echo "TSM.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"

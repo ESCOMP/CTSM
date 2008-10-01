@@ -62,6 +62,7 @@ config_string="${config_string}${CLM_ROOT}/models/csm_share/dshr,"
 config_string="${config_string}${clmsrc}/biogeochem,"
 config_string="${config_string}${clmsrc}/biogeophys,"
 config_string="${config_string}${clmsrc}/riverroute"
+config_string="${config_string} -nthreads $CLM_THREADS -ntasks $CLM_TASKS"
 
 echo "TCBext_ccsmseq_cam.sh: building external seq-ccsm executable with CAM; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 

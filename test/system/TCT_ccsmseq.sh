@@ -61,10 +61,20 @@ set ntasks_lnd=\$ntasks_atm
 set ntasks_ice=\$ntasks_atm
 set ntasks_ocn=\$ntasks_atm
 set ntasks_cpl=\$ntasks_atm
+set nthrds_atm=1
+set rootpe_atm=0
+set nthrds_lnd=1
+set rootpe_lnd=0
+set nthrds_ice=1
+set rootpe_ice=0
+set nthrds_ocn=1
+set rootpe_ocn=0
+set nthrds_cpl=1
+set rootpe_cpl=0
 EOF
 
-echo "./create_test -test $1 -res $2 -compset $3 -testroot ${CLM_TESTDIR} -mach ${CCSM_MACH} -testid \"sc.${JOBID}\" -clean off -pes_file ${CLM_TESTDIR}/env_pes"
-./create_test -test $1 -res $2 -compset $3 -testroot ${CLM_TESTDIR} -mach ${CCSM_MACH} \
+echo "./create_test -testname $1.$2.$3.${CCSM_MACH} -testroot ${CLM_TESTDIR} -testid \"sc.${JOBID}\" -clean off -pes_file ${CLM_TESTDIR}/env_pes"
+./create_test -testname $1.$2.$3.${CCSM_MACH} -testroot ${CLM_TESTDIR} \
     -testid "sc.${JOBID}" -clean off -pes_file ${CLM_TESTDIR}/env_pes
 rc=$?
 echo "rc = $rc"

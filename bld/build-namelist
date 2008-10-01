@@ -36,6 +36,7 @@ SYNOPSIS
 OPTIONS
      -case "name"             Case identifier up to 32 characters
      -clm_demand "list"       List of variables to require on clm namelist besides the usuals.
+                              (can include a list member "none" which does nothing)
      -config "filepath"       Read the given CICE configuration cache file. Default: "config_cache_cice.xml".
      -csmdata "dir"           Root directory of CCSM input data.
                               Can also be set by using the CSMDATA environment variable.
@@ -678,6 +679,7 @@ if ( defined($opts{'clm_demand'}) ) {
     $settings{'sim_year'}    = $sim_year;
     $settings{'mask'}        = $mask;
     foreach my $item ( @demandlist ) {
+        if ( $item eq "none" ) { next; }
         if ( $item eq "furbinp" ) {
            if ( $lnd_res =~ /1x1_/ ) {
               add_default($nl, "furbinp",  'hgrid'=>$lnd_res, 'set_abspath'=>"$cfgdir/urban_input" );

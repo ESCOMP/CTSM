@@ -32,8 +32,8 @@ List all existing files that have been modified, and describe the changes:
 Summary of testing:
 
   bluefire:
-  bluevista:
   jaguar:
+  kraken:
   lightning/pathscale:
   bangkok/lf95:
   breeze/gale/hail/gust/ifort:

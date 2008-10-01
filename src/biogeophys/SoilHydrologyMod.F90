@@ -180,7 +180,7 @@ contains
 
        ! Maximum infiltration capacity
        s1        = max(0.01_r8,vol_liq(c,1)/max(wimp,eff_porosity(c,1)))
-       su        = max(0._r8,(s1-fcov(c)*1._r8) / (1._r8-fcov(c)))
+       su        = max(0._r8,(s1-fcov(c)) / (max(0.01_r8,1._r8-fcov(c))))
        v         = -bsw(c,1)*sucsat(c,1)/(0.5_r8*dz(c,1)*1000._r8)
        qinmax    = (1._r8+v*(su-1._r8))*hksat(c,1)
 
@@ -714,7 +714,7 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clmtype
     use clm_time_manager, only : get_step_size
-    use clm_varcon  , only : pondmx, tfrz, icol_roof, icol_road_imperv, icol_road_perv
+    use clm_varcon  , only : pondmx, tfrz, icol_roof, icol_road_imperv, icol_road_perv, watmin
     use clm_varpar  , only : nlevsoi
 !
 ! !ARGUMENTS:
@@ -782,7 +782,6 @@ contains
     real(r8) :: dtime                    !land model time step (sec)
     real(r8) :: xs(lbc:ubc)              !water needed to bring soil moisture to watmin (mm)
     real(r8) :: dzmm(lbc:ubc,1:nlevsoi)  !layer thickness (mm)
-    real(r8) :: watmin                   !minimum soil moisture (mm)
     integer  :: jwt(lbc:ubc)             !index of the soil layer right above the water table (-)
     real(r8) :: rsub_bot(lbc:ubc)        !subsurface runoff - bottom drainage (mm/s)
     real(r8) :: rsub_sat(lbc:ubc)        !subsurface runoff - saturation excess (mm/s)
@@ -993,8 +992,6 @@ contains
     ! Limit h2osoi_liq to be greater than or equal to watmin.
     ! Get water needed to bring h2osoi_liq equal watmin from lower layer.
     ! If insufficient water in soil layers, get from aquifer water
-
-    watmin = 0.01_r8
 
     do j = 1, nlevsoi-1
 !dir$ concurrent
