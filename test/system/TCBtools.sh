@@ -79,14 +79,16 @@ while [ $still_compiling = "TRUE" ]; do
     echo "        ${MAKE_CMD} ${config_string}" 
     if [ "$debug" != "YES" ] || [ "$compile_only" = "YES" ]; then
        ${MAKE_CMD} ${config_string} >> test.log 2>&1
+       status="PASS"
        rc=$?
     else
+       status="GEN"
        rc=0
     fi
     if [ $rc -eq 0 ]; then
 	echo "TCBtools.sh: make was successful" 
 	echo "TCBtools.sh: configure and build test passed"
-	echo "PASS" > TestStatus
+	echo "$status" > TestStatus
 	if [ $CLM_RETAIN_FILES != "TRUE" ]; then
 	    echo "TCBtools.sh: removing some unneeded files to save disc space" 
 	    rm *.o

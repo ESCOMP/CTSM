@@ -138,9 +138,15 @@ for compare_file in ${files_to_compare}; do
     fi
 done
 
+if [ [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
+   status="PASS"
+else
+   status="GEN"
+fi
+
 if [ ${all_comparisons_good} = "TRUE" ]; then
     echo "TBR.sh: branch test passed" 
-    echo "PASS" > TestStatus
+    echo "$status" > TestStatus
     if [ $CLM_RETAIN_FILES != "TRUE" ]; then
         echo "TBR.sh: removing some unneeded files to save disc space" 
         rm *.nc

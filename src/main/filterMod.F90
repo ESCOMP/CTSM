@@ -361,15 +361,13 @@ contains
 !dir$ concurrent
 !cdir nodep
        do p = begp,endp
-          if (clm3%g%l%c%p%wtgcell(p) > 0._r8) then
-             l = clm3%g%l%c%p%landunit(p)
-             if (clm3%g%l%itype(l) == isturb) then
-                f = f + 1
-                filter(nc)%urbanp(f) = p
-             else
-                fn = fn + 1
-                filter(nc)%nourbanp(fn) = p 
-             end if
+          l = clm3%g%l%c%p%landunit(p)
+          if (clm3%g%l%itype(l) == isturb .and. clm3%g%l%c%p%wtgcell(p) > 0._r8) then
+             f = f + 1
+             filter(nc)%urbanp(f) = p
+          else
+             fn = fn + 1
+             filter(nc)%nourbanp(fn) = p 
           end if
        end do
        filter(nc)%num_urbanp = f

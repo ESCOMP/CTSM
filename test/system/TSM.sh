@@ -13,6 +13,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TSM.sh: smoke test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TSM.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -182,14 +184,16 @@ fi
 
 if [ "$debug" != "YES" ]; then
    ${cmnd} ${CLM_TESTDIR}/TCB.$1/clm >> test.log 2>&1
+   status="PASS"
 else
    echo "${cmnd} ${CLM_TESTDIR}/TCB.$1/clm"
    echo "=============== SUCCESSFUL TERMINATION" >> test.log
+   status="GEN"
 fi
 rc=$?
 if [ $rc -eq 0 ] && grep -c "=============== SUCCESSFUL TERMINATION" *test.log > /dev/null; then
     echo "TSM.sh: smoke test passed" 
-    echo "PASS" > TestStatus
+    echo "$status" > TestStatus
     if [ $CLM_RETAIN_FILES != "TRUE" ]; then
         echo "TSM.sh: removing some unneeded files to save disc space" 
         if [ -f "*.clm*.i.*" ]; then

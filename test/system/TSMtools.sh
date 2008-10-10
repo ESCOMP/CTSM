@@ -13,6 +13,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TSMtools.sh: smoke test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TSMtools.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -69,25 +71,29 @@ if [ $3 == "runoptions" ]; then
   cp $cfgdir/*.nc .
   if [ "$debug" != "YES" ]; then
      $toolrun  `cat ${cfgdir}/$1.$3` >> test.log 2>&1
+     status="PASS"
      rc=$?
   else
      echo "success" > test.log
+     status="GEN"
      rc=0
   fi
 else
   echo "$toolrun < ${cfgdir}/$1.$3"
   if [ "$debug" != "YES" ]; then
      $toolrun < ${cfgdir}/$1.$3 >> test.log 2>&1
+     status="PASS"
      rc=$?
   else
      echo "success" > test.log
+     status="GEN"
      rc=0
   fi
 fi
 
 if [ $rc -eq 0 ] && grep -ci "success" test.log > /dev/null; then
     echo "TSMtools.sh: smoke test passed" 
-    echo "PASS" > TestStatus
+    echo "$status" > TestStatus
 else
     echo "TSMtools.sh: error running $1, error= $rc" 
     echo "TSMtools.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"

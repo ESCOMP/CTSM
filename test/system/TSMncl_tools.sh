@@ -13,6 +13,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TSMncl_tools.sh: smoke test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TSMncl_tools.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -51,15 +53,17 @@ fi
 
 if [ "$debug" != "YES" ]; then
    ncl ${cfgdir}/$1.ncl >> test.log 2>&1
+   status="PASS"
    rc=$?
 else
    echo "success" > test.log
+   status="GEN"
    rc=0
 fi
 
 if [ $rc -eq 0 ] && grep -ci "success" test.log > /dev/null; then
     echo "TSMncl_tools.sh: smoke test passed" 
-    echo "PASS" > TestStatus
+    echo "$status" > TestStatus
 else
     echo "TSMncl_tools.sh: error running $1, error= $rc" 
     echo "TSMncl_tools.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"

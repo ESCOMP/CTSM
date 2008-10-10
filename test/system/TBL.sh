@@ -98,9 +98,15 @@ for compare_file in ${files_to_compare}; do
     fi
 done
 
+if [ [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
+   status="PASS"
+else
+   status="GEN"
+fi
+
 if [ "${all_comparisons_good}" = "TRUE" ]; then
     echo "TBL.sh: baseline test passed" 
-    echo "PASS" > TestStatus
+    echo "$status" > TestStatus
     if [ "$CLM_RETAIN_FILES" != "TRUE" ]; then
         echo "TBL.sh: removing some unneeded files to save disc space" 
         rm *.nc
@@ -110,6 +116,8 @@ else
     echo "RMS error of last file that do not match"
     grep RMS ${rundir}/cprnc.${compare_file}.out | grep -v 0.0000E+00 | tail -200
     echo "TBL.sh: at least one file comparison did not pass" 
+    echo "Last bit of non-zero RMS errors of last file that did not match"
+    grep RMS ${rundir}/cprnc.${compare_file}.out | grep -v 0.0000E+00 | tail -200
     echo "FAIL.job${JOBID}" > TestStatus
     exit 7
 fi

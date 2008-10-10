@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ===============================================================================================================================
+   clm3_6_14         erik 10/10/2008 Fix some global urban issues, fix pftdyn, really get compile-only option working in testing
    clm3_6_13         erik 10/01/2008 Update to new version of cpl7 scripts and build, update externals for versions needed for clm36sci branch, add new CASA tests
    clm3_6_12         erik 09/21/2008 Fix restarts for urban, add capability to do global urban experiments, add in new forcing height changes
    clm3_6_11      dlawren 08/26/2008 Ice stream for snow capped regions

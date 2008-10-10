@@ -302,7 +302,7 @@ contains
 
     call hist_addfld1d (fname='Qanth', units='watt/m^2',  &
          avgflag='A', long_name='anthropogenic heat flux', &
-         ptr_lunit=clm3%g%l%lef%eflx_wasteheat, set_lake=spval, l2g_scale_type='unity', &
+         ptr_lunit=clm3%g%l%lef%eflx_anthro, set_nourb=spval, l2g_scale_type='unity', &
          default='inactive')
 
     call hist_addfld1d (fname='Qnet', units='watt/m^2',  &
@@ -3876,11 +3876,11 @@ contains
                                                                        
     call hist_addfld2d (fname='ALBD', units='proportion', type2d='numrad', &
          avgflag='A', long_name='surface albedo (direct)', &
-         ptr_pft=clm3%g%l%c%p%pps%albd, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pps%albd, default='inactive', c2l_scale_type='urbanf')
                                                                         
     call hist_addfld2d (fname='ALBI', units='proportion', type2d='numrad', &
          avgflag='A', long_name='surface albedo (indirect)', &
-         ptr_pft=clm3%g%l%c%p%pps%albi, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pps%albi, default='inactive', c2l_scale_type='urbanf')
                                                                        
     call hist_addfld2d (fname='FABD', units='proportion', type2d='numrad', &
          avgflag='A', long_name='flux absorbed by veg per unit direct flux', &
@@ -4145,7 +4145,7 @@ contains
 
     call hist_addfld1d (fname='QFLX_EVAP_TOT', units='mm H2O/s', &
          avgflag='A', long_name='qflx_evap_soi + qflx_evap_veg + qflx_tran_veg', &
-         ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_tot, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pwf%qflx_evap_tot, default='inactive', c2l_scale_type='urbanf')
 
     call hist_addfld1d (fname='QFLX_DEW_GRND', units='mm H2O/s', &
          avgflag='A', long_name='ground surface dew formation', &

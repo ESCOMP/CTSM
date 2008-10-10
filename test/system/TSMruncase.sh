@@ -14,6 +14,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TSMruncase.sh: smoke test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TSMruncase.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -57,9 +59,11 @@ chmod +x $sandboxscript
 echo "TSMruncase.sh: running CLM run script; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 
 if [ "$debug" != "YES" ]; then
-  ${sandboxscript} > ${CLM_TESTDIR}/${test_name}/test.log 2>&1
+  ./${sandboxscript} > ${CLM_TESTDIR}/${test_name}/test.log 2>&1
+  status="PASS"
   rc=$?
 else
+  status="GEN"
   rc=0
 fi
 if [ $rc -ne 0 ]; then
@@ -68,7 +72,7 @@ if [ $rc -ne 0 ]; then
     exit 6
 else
     echo "TSMruncase.sh: smoke test passed" 
-    echo "PASS" > ${CLM_TESTDIR}/${test_name}/TestStatus
+    echo "$status" > ${CLM_TESTDIR}/${test_name}/TestStatus
 fi
 
 exit 0

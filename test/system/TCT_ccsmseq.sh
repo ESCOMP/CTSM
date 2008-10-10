@@ -12,11 +12,6 @@ cd ${CLM_SCRIPTDIR}/../../../../../scripts
 
 test_name="TCT_ccsmseq.${1}.${2}.${3}.${CCSM_MACH}"
 
-if [ -d ${CLM_TESTDIR}/${test_name} ]; then
-    echo "TCT.ccsm.sh: removing old ccsm test directories"
-    rm -rf ${CLM_TESTDIR}/${test_name}
-fi
-
 if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     if grep -c PASS ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
         echo "TCT_ccsmseq.sh: sequential CCSM create test has already passed; results are in "
@@ -38,11 +33,17 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
     fi
 fi
 
+if [ -d ${CLM_TESTDIR}/${test_name} ] && [ $CLM_RETAIN_FILES != "TRUE" ]; then
+    echo "TCT.ccsm.sh: removing old ccsm test directories"
+    rm -rf ${CLM_TESTDIR}/${test_name}
+fi
+
+
 blddir=${CLM_TESTDIR}/${test_name}
 
 echo "blddir: $blddir"
 
-if [ -d ${blddir} ]; then
+if [ -d ${blddir} ] && [ $CLM_RETAIN_FILES != "TRUE" ]; then
     rm -r ${blddir}
 fi
 mkdir -p ${blddir} 
@@ -80,8 +81,10 @@ rc=$?
 echo "rc = $rc"
 if [ $rc -ne 0 ]; then
     echo "TCT_ccsmseq.sh: create_test failed, error= $rc"
+    echo "FAIL.job${JOBID}" > ${CLM_TESTDIR}/${test_name}/TestStatus
     exit 5
 else
     echo "TCT_ccsmseq.sh: sequential ccsm create test completed successfully"
+    echo "PASS" > ${CLM_TESTDIR}/${test_name}/TestStatus
 fi
 exit 0

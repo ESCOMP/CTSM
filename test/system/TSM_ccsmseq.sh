@@ -13,6 +13,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TSM_ccsmseq.sh: smoke test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TSM_ccsmseq.sh: test was already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -69,11 +71,11 @@ fi
  
 echo "TSM_ccsmseq.sh: running sequential-CCSM; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 
-if [ "$debug" != "YES" ]; then
-   ${sandboxscript} > ${CLM_TESTDIR}/${test_name}/test.log 2>&1
+if [ "$debug" != "YES" ] || [ "$compile_only" != "YES" ]; then
+   ./${sandboxscript} > ${CLM_TESTDIR}/${test_name}/test.log 2>&1
    rc=$?
 else
-   echo "PASS" > TestStatus
+   echo "GEN" > TestStatus
    rc=0
 fi
 if [ $rc -ne 0 ]; then
@@ -85,6 +87,9 @@ if [ -f TestStatus ]; then
     if grep -c PASS TestStatus > /dev/null; then
        echo "TSM_ccsmseq.sh: smoke test passed" 
        echo "PASS" > ${CLM_TESTDIR}/${test_name}/TestStatus
+    elif grep -c GEN TestStatus > /dev/null; then
+       echo "TSM_ccsmseq.sh: smoke test passed" 
+       echo "GEN" > ${CLM_TESTDIR}/${test_name}/TestStatus
     else
        echo "TSM_ccsmseq.sh: TestStatus reports an error"
        echo "FAIL.job${JOBID}" > ${CLM_TESTDIR}/${test_name}/TestStatus

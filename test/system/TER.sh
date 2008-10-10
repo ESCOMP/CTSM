@@ -88,6 +88,12 @@ if [ -z " ${files_to_compare}" ]  && [ "$debug" != "YES" ]; then
     exit 10
 fi
 
+if [ [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
+   status="PASS"
+else
+   status="GEN"
+fi
+
 all_comparisons_good="TRUE"
 for compare_file in ${files_to_compare}; do
 
@@ -114,7 +120,7 @@ done
 
 if [ ${all_comparisons_good} = "TRUE" ]; then
     echo "TER.sh: exact restart test passed" 
-    echo "PASS" > TestStatus
+    echo "$status" > TestStatus
     if [ $CLM_RETAIN_FILES != "TRUE" ]; then
         echo "TER.sh: removing some unneeded files to save disc space" 
         rm *.nc

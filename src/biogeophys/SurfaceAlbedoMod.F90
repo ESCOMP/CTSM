@@ -282,16 +282,15 @@ contains
     num_novegsol = 0
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
-       if (pwtgcell(p)>0._r8) then
-          if (coszen_pft(p) > 0._r8) then
-             if (itypelun(plandunit(p)) == istsoil .and. (elai(p) + esai(p)) > 0._r8) then                       
-                num_vegsol = num_vegsol + 1
-                filter_vegsol(num_vegsol) = p
-             else if (itypelun(plandunit(p)) /= istsoil .or. &
-                     (itypelun(plandunit(p)) == istsoil .and. (elai(p) + esai(p)) == 0._r8)) then
-                num_novegsol = num_novegsol + 1
-                filter_novegsol(num_novegsol) = p
-             end if
+       if (coszen_pft(p) > 0._r8) then
+          if (itypelun(plandunit(p)) == istsoil .and. (elai(p) + esai(p)) > 0._r8 &
+          .and. pwtgcell(p)>0._r8 ) then
+             num_vegsol = num_vegsol + 1
+             filter_vegsol(num_vegsol) = p
+          else if (itypelun(plandunit(p)) /= istsoil .or. &
+                  (itypelun(plandunit(p)) == istsoil .and. (elai(p) + esai(p)) == 0._r8)) then
+             num_novegsol = num_novegsol + 1
+             filter_novegsol(num_novegsol) = p
           end if
        end if
     end do

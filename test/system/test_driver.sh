@@ -623,10 +623,10 @@ fi
 
 ##setup test work directory
 if [ -z "\$CLM_TESTDIR" ]; then
-    export CLM_TESTDIR=\${MACH_WORKSPACE}/\$LOGNAME/test-driver.\${JOBID}
-    if [ -d \$CLM_TESTDIR ]; then
-        rm -r \$CLM_TESTDIR
-    fi
+   export CLM_TESTDIR=\${MACH_WORKSPACE}/\$LOGNAME/test-driver.\${JOBID}
+fi
+if [ -d \$CLM_TESTDIR ] && [ \$CLM_RETAIN_FILES != "TRUE" ]; then
+   rm -r \$CLM_TESTDIR
 fi
 if [ ! -d \$CLM_TESTDIR ]; then
     mkdir -p \$CLM_TESTDIR
@@ -811,6 +811,7 @@ case $arg1 in
     export debug
     export interactive
     export compile_only
+    export CLM_RETAIN_FILES="TRUE"
     ./${submit_script}
     exit 0
     ;;

@@ -1,4 +1,93 @@
 ===============================================================
+Tag name:  clm3_6_14
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Fri Oct 10 11:32:57 MDT 2008
+One-line Summary: Fix some global urban issues, fix pftdyn, really get compile-only option working in testing
+
+Purpose of changes: Fix column and pft averaging for urban (crtical for coupling to cam) (from Keith)
+                    Fix Qanth (was wasteheat previously) (from Keith)
+                    Fix so that pftdyn works (fix from Sam)
+                    Really get the compile-only option working in test-suite 
+                       (so that doesn't re-compile, but does re-run, when sent again)
+
+Bugs fixed (include bugzilla ID): 826 (pftdyn)
+
+Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 830 (missing C-LAMP mods)
+                                  680 (t0 precip diff for seq-ccsm), 789 (pt sims slower than offline)
+                                  698 (cprnc bug gives false difference), 701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  833 (bug with cam in ccsm4_0_alpha37), 722 (threading slow)
+                                  832 (problem with cice bn in ccsm4_0_alpha37)
+    http://bugs.cgd.ucar.edu/
+
+Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
+                                      652 (threads different answers with older PGI versions)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, oleson, slevis (Sam provided pftdyn fix, and Keith provided urban fixes)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts and drv
+
+  scripts to scripts4_081009
+  drv     to drvseq2_0_33
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>> Change so that pftdyn will work, do urban averaging, and fix Qanth
+   M   models/lnd/clm/src/main/clm_atmlnd.F90 -------------- Make averaging take into account urban (critical for global urban modeling)
+   M   models/lnd/clm/src/main/histFldsMod.F90 ------------- Add urban scaling, fix Qanth
+   M   models/lnd/clm/src/main/filterMod.F90 --------------- Change urban filter to include pftwgt>0
+   M   models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90 -- Change filter_vegsol to include pftwgt>0
+>>>>>>>>>>> Fix so that compile-only option leaves compiled program there, doesn't recompile, but does rerun
+   M   models/lnd/clm/test/system/TCB.sh
+   M   models/lnd/clm/test/system/TSMncl_tools.sh
+   M   models/lnd/clm/test/system/TBL.sh
+   M   models/lnd/clm/test/system/TSM_ccsmseq.sh
+   M   models/lnd/clm/test/system/TSMext_ccsmseq_cam.sh
+   M   models/lnd/clm/test/system/TBR.sh
+   M   models/lnd/clm/test/system/TCBtools.sh
+   M   models/lnd/clm/test/system/test_driver.sh
+   M   models/lnd/clm/test/system/TER.sh
+   M   models/lnd/clm/test/system/TCT_ccsmseq.sh
+   M   models/lnd/clm/test/system/TSMpergro.sh
+   M   models/lnd/clm/test/system/TSMcnspinup.sh
+   M   models/lnd/clm/test/system/TSMtools.sh
+   M   models/lnd/clm/test/system/TSMruncase.sh
+   M   models/lnd/clm/test/system/TCBext_ccsmseq_cam.sh
+   M   models/lnd/clm/test/system/CLM_runcmnd.sh
+   M   models/lnd/clm/test/system/TSM.sh
+
+Summary of testing:
+
+  bluefire: All PASS except
+071 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  jaguar: All PASS
+  bangkok/lf95: All PASS except
+028 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 5
+054 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48 .......................FAIL! rc= 6
+055 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  breeze/gale/hail/gust/ifort: All PASS
+
+pftdyn TBL test fails, because pftdyn did not work in previous tag. 
+cam and scam tests fail because of bugs 832 and 833 in ccsm4_0_alpha37
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_13
+
+Changes answers relative to baseline: No -- bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_13
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Wed Oct  1 13:33:36 MDT 2008
@@ -149,8 +238,8 @@ P
 083 blL62 TBL.sh _sc_m clm_std 19980101:NONE:1800 1.9x2.5 gx1v5 -10 startup .....................FAIL! rc= 7
 107 brJ74 TBR.sh 4p_casasc_ds clm_std 10001230:NONE:3600 1x1_tropicAtl test -3+-3 arb_ic ........FAIL! rc= 11
 127 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
-  kraken: All PASS except all TER and TBR tests fail, because of a script problem, and the following fail
-  lightning/pathscale:
+  kraken: All PASS except all TER and TBR tests fail, because of a script problem and ends early
+  lightning/pathscale: All PASS except
 022 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
 023 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
 024 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
@@ -172,7 +261,7 @@ because of problem with ccsm4_0_alpha37 (bug 833).
 
 CLM tag used for the baseline comparison tests if applicable: clm3_6_12
 
-Changes answers relative to baseline: Only for some cases, see tests 79 and 83 on
+Changes answers relative to baseline: Only for some cases, see tests 079 and 083 on
 bluefire above
 
 ===============================================================

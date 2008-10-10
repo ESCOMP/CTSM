@@ -88,14 +88,16 @@ while [ $still_compiling = "TRUE" ]; do
     echo "        ${MAKE_CMD}" 
     if [ "$debug" != "YES" ] || [ "$compile_only" = "YES" ]; then
        ${MAKE_CMD} >> test.log 2>&1
+       status="PASS"
        rc=$?
     else
+       status="GEN"
        rc=0
     fi
     if [ $rc -eq 0 ]; then
 	echo "TCBext_ccsmseq_cam.sh: make was successful" 
 	echo "TCBext_ccsmseq_cam.sh: configure and build test passed"
-	echo "PASS" > TestStatus
+	echo "$status" > TestStatus
 	if [ $CLM_RETAIN_FILES != "TRUE" ]; then
 	    echo "TCBext_ccsmseq_cam.sh: removing some unneeded files to save disc space" 
 	    rm *.o

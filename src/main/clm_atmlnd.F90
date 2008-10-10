@@ -41,9 +41,7 @@ type atm2lnd_type
   real(r8), pointer :: forc_th(:)      !atm potential temperature (Kelvin)
   real(r8), pointer :: forc_vp(:)      !atmospheric vapor pressure (Pa)
   real(r8), pointer :: forc_rho(:)     !density (kg/m**3)
-!KO
   real(r8), pointer :: forc_rh(:)      !atmospheric relative humidity (%)
-!KO
   real(r8), pointer :: forc_psrf(:)    !surface pressure (Pa)
   real(r8), pointer :: forc_pco2(:)    !CO2 partial pressure (Pa)
   real(r8), pointer :: forc_lwrad(:)   !downwrd IR longwave radiation (W/m**2)
@@ -55,9 +53,7 @@ type atm2lnd_type
   real(r8), pointer :: forc_rain(:)    !rain rate [mm/s]
   real(r8), pointer :: forc_snow(:)    !snow rate [mm/s]
   real(r8), pointer :: forc_ndep(:)    !nitrogen deposition rate (gN/m2/s)
-!KO
   real(r8), pointer :: rainf(:)        !ALMA rain+snow [mm/s]
-!KO
   ! 4/14/05: PET
   ! Adding isotope code
   real(r8), pointer :: forc_pc13o2(:)  !C13O2 partial pressure (Pa)
@@ -191,9 +187,7 @@ end subroutine init_adiag_type
   allocate(a2l%forc_v(beg:end))
   allocate(a2l%forc_wind(beg:end))
   allocate(a2l%forc_q(beg:end))
-!KO
   allocate(a2l%forc_rh(beg:end))
-!KO
   allocate(a2l%forc_hgt(beg:end))
   allocate(a2l%forc_hgt_u(beg:end))
   allocate(a2l%forc_hgt_t(beg:end))
@@ -211,9 +205,7 @@ end subroutine init_adiag_type
   allocate(a2l%forc_rain(beg:end))
   allocate(a2l%forc_snow(beg:end))
   allocate(a2l%forc_ndep(beg:end))
-!KO
   allocate(a2l%rainf(beg:end))
-!KO
   ! 4/14/05: PET
   ! Adding isotope code
   allocate(a2l%forc_pc13o2(beg:end))
@@ -227,9 +219,7 @@ end subroutine init_adiag_type
   a2l%forc_v(beg:end) = ival
   a2l%forc_wind(beg:end) = ival
   a2l%forc_q(beg:end) = ival
-!KO
   a2l%forc_rh(beg:end) = ival
-!KO
   a2l%forc_hgt(beg:end) = ival
   a2l%forc_hgt_u(beg:end) = ival
   a2l%forc_hgt_t(beg:end) = ival
@@ -247,9 +237,7 @@ end subroutine init_adiag_type
   a2l%forc_rain(beg:end) = ival
   a2l%forc_snow(beg:end) = ival
   a2l%forc_ndep(beg:end) = ival
-!KO
   a2l%rainf(beg:end) = nan
-!KO
   ! 4/14/05: PET
   ! Adding isotope code
   a2l%forc_pc13o2(beg:end) = ival
@@ -418,9 +406,7 @@ end subroutine init_lnd2atm_type
   ix=ix+1; asrc(:,ix) = a2l_src%forc_v(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_wind(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_q(:)  
-!KO
   ix=ix+1; asrc(:,ix) = a2l_src%forc_rh(:)
-!KO
   ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt_u(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_hgt_t(:)  
@@ -435,9 +421,7 @@ end subroutine init_lnd2atm_type
   ix=ix+1; asrc(:,ix) = a2l_src%forc_solar(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_rain(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_snow(:)  
-!KO
   ix=ix+1; asrc(:,ix) = a2l_src%rainf(:)  
-!KO
   ix=ix+1; asrc(:,ix) = a2l_src%forc_pc13o2(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_po2(:)  
   do n = 1,numrad
@@ -456,9 +440,7 @@ end subroutine init_lnd2atm_type
   ix=ix+1; a2l_dst%forc_v(:)     =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_wind(:)  =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_q(:)     =   adst(:,ix)
-!KO
   ix=ix+1; a2l_dst%forc_rh(:)    =   adst(:,ix)
-!KO
   ix=ix+1; a2l_dst%forc_hgt(:)   =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_hgt_u(:) =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_hgt_t(:) =   adst(:,ix)
@@ -473,9 +455,7 @@ end subroutine init_lnd2atm_type
   ix=ix+1; a2l_dst%forc_solar(:) =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_rain(:)  =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_snow(:)  =   adst(:,ix)
-!KO
   ix=ix+1; a2l_dst%rainf(:)      =   adst(:,ix)
-!KO
   ix=ix+1; a2l_dst%forc_pc13o2(:)=   adst(:,ix)
   ix=ix+1; a2l_dst%forc_po2(:)   =   adst(:,ix)
   do n = 1,numrad
@@ -963,7 +943,7 @@ end subroutine clm_mapl2a
 
      call c2g(begc, endc, begl, endl, begg, endg, &
           cptr%cws%h2osno, clm_l2a%h2osno, &
-          c2l_scale_type= 'unity', l2g_scale_type='unity')
+          c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 !dir$ concurrent
 !cdir nodep
      do g = begg,endg
@@ -972,15 +952,15 @@ end subroutine clm_mapl2a
       
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
           pptr%pps%albd, clm_l2a%albd,&
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
       
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
           pptr%pps%albi, clm_l2a%albi,&
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
       
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out,&
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 !dir$ concurrent
 !cdir nodep
      do g = begg,endg
@@ -990,7 +970,7 @@ end subroutine clm_mapl2a
   else
 
      call c2g(begc, endc, begl, endl, begg, endg, cptr%cws%h2osno, clm_l2a%h2osno,&
-          c2l_scale_type= 'unity', l2g_scale_type='unity')
+          c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 !dir$ concurrent
 !cdir nodep
      do g = begg,endg
@@ -999,11 +979,11 @@ end subroutine clm_mapl2a
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
           pptr%pps%albd, clm_l2a%albd, &
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, numrad, &
           pptr%pps%albi, clm_l2a%albi, &
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pes%t_ref2m, clm_l2a%t_ref2m, & 
@@ -1023,23 +1003,23 @@ end subroutine clm_mapl2a
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pef%eflx_lh_tot, clm_l2a%eflx_lh_tot, &
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pef%eflx_sh_tot, clm_l2a%eflx_sh_tot, & 
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pwf%qflx_evap_tot, clm_l2a%qflx_evap_tot, & 
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pef%fsa, clm_l2a%fsa, &
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
                   
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out, &
-          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
                   
 #if (defined CN)
      call c2g(begc, endc, begl, endl, begg, endg, &

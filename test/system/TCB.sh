@@ -31,7 +31,7 @@ fi
 
 cfgdir=${CLM_SCRIPTDIR}/../../bld
 blddir=${CLM_TESTDIR}/${test_name}
-if [ -d ${blddir} ]; then
+if [ -d ${blddir} ] && [ $CLM_RETAIN_FILES != "TRUE" ]; then
     rm -r ${blddir}
 fi
 mkdir -p ${blddir} 
@@ -62,7 +62,11 @@ while [ $still_compiling = "TRUE" ]; do
     echo "TCB.sh: call to configure:" 
     echo "        ${cfgdir}/configure ${config_string}" 
 
-    ${cfgdir}/configure ${config_string} > test.log 2>&1
+    if [ -f $blddir/config_cache.xml ]; then
+       echo "TCB.sh: configure already ran"
+    else
+       ${cfgdir}/configure ${config_string} > test.log 2>&1
+    fi
     rc=$?
     if [ $rc -eq 0 ]; then
 	echo "TCB.sh: configure was successful" 
@@ -77,14 +81,16 @@ while [ $still_compiling = "TRUE" ]; do
     echo "        ${MAKE_CMD}" 
     if [ "$debug" != "YES" ] || [ "$compile_only" = "YES" ]; then
       ${MAKE_CMD} >> test.log 2>&1
+      status="PASS"
       rc=$?
     else
+      status="GEN"
       rc=0
     fi
     if [ $rc -eq 0 ]; then
 	echo "TCB.sh: make was successful" 
 	echo "TCB.sh: configure and build test passed"
-	echo "PASS" > TestStatus
+	echo "$status" > TestStatus
 	if [ $CLM_RETAIN_FILES != "TRUE" ]; then
 	    echo "TCB.sh: removing some unneeded files to save disc space" 
 	    rm *.o

@@ -1,6 +1,6 @@
 doc                           https://svn-ccsm-models.cgd.ucar.edu/doc/trunk_tags/doc_060127
-scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_080930
-models/drv/seq_mct            https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq2_0_32
+scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_081009
+models/drv/seq_mct            https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq2_0_33
 models/atm/datm7              https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm7_080926
 models/ocn/socn               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_0_7/socn
 models/ice/sice               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_0_7/sice

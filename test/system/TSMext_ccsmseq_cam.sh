@@ -14,6 +14,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TSMext_ccsmseq_cam.sh: smoke test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TSMext_ccsmseq_cam.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -125,14 +127,16 @@ fi
 
 if [ "$debug" != "YES" ]; then
   ${cmnd} ${CLM_TESTDIR}/TCBext_ccsmseq_cam.$1/cam >> test.log 2>&1
+  status="PASS"
   rc=$?
 else
   echo "END OF MODEL RUN" > test.log
+  status="GEN"
   rc=0
 fi
 if [ $rc -eq 0 ] && grep -c "END OF MODEL RUN" test.log > /dev/null; then
     echo "TSMext_ccsmseq_cam.sh: smoke test passed" 
-    echo "PASS" > TestStatus
+    echo "$status" > TestStatus
     if [ $CLM_RETAIN_FILES != "TRUE" ]; then
         echo "TSMext_ccsmseq_cam.sh: removing some unneeded files to save disc space" 
         if [ -f "*.clm*.i.*" ]; then
