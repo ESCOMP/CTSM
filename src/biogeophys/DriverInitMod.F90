@@ -41,7 +41,7 @@ contains
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
-    use clm_varpar   , only : nlevsoi, nlevsno
+    use clm_varpar   , only : nlevsno
     use subgridAveMod, only : p2c
 
 !

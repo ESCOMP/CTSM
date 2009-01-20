@@ -19,7 +19,7 @@ module CASAMod
   use clmtype
   use clm_atmlnd  , only : clm_a2l
   use clm_varcon  , only : denh2o, hvap, istsoil, tfrz, spval
-  use clm_varpar  , only : numpft, nlevsoi
+  use clm_varpar  , only : numpft, nlevsoi, nlevgrnd
   use clm_varctl  , only : iulog
 !
 ! !PUBLIC TYPES:
@@ -80,17 +80,17 @@ module CASAMod
   integer pool_type_index(npools)          ! Index of pool type
   ! type definitions for pools in the order specified above
   data pool_type_index/            &
-       LIVE_TYPE, &
-       LIVE_TYPE, &
-       LIVE_TYPE, &
+       LIVE_TYPE,   &
+       LIVE_TYPE,   &
+       LIVE_TYPE,   &
        LITTER_TYPE, &
        LITTER_TYPE, &
        LITTER_TYPE, &
        LITTER_TYPE, &
-       CWD_TYPE, &
-       LITTER_TYPE, &
-       LITTER_TYPE, &
-       SOIL_TYPE, &
+       CWD_TYPE,    &
+       SOIL_TYPE,   &
+       SOIL_TYPE,   &
+       SOIL_TYPE,   &
        SOIL_TYPE/
   ! order that respiration is called
   data resp_pool_index/            &
@@ -1149,39 +1149,66 @@ contains
 ! !IROUTINE: Casa
 !
 ! !INTERFACE:
-  subroutine Casa(lbp, ubp, num_soilp, filter_soilp)
+  subroutine Casa(lbp, ubp, num_soilp, filter_soilp, init)
 !
 ! !DESCRIPTION:
 ! Primary calling interface to the CASA submodel.
 !
 ! !ARGUMENTS:
     implicit none
-    integer, intent(in) :: lbp, ubp      ! pft bounds
-    integer, intent(in) :: num_soilp     ! number of soil points in pft filter
+    integer, intent(in) :: lbp, ubp       ! pft bounds
+    integer, intent(in) :: num_soilp      ! number of soil points in pft filter
     integer, intent(in) :: filter_soilp(ubp-lbp+1) ! pft filter for soil points
+    logical, intent(in), optional :: init ! if calling on initialization
 !
 ! !CALLED FROM:
-! driver in driver.F90
+! driver in driver.F90 and initSurfAlb
 !
 ! !REVISION HISTORY:
 ! 2004.06.08 Vectorized and reformatted by Forrest Hoffman
 ! 
+!
+! !LOCAL VARIABLES:
+    integer :: f, p  ! indices
+    logical :: linit ! local init
+
+    ! implicit intent inout
+    !============================================================
+    real(r8), pointer :: plai(:)     ! prognostic LAI (m2 leaf/m2 ground)
 !EOP
 !-----------------------------------------------------------------------
 
-    ! potential evapotranspiration
-    call CASAPot_Evptr(lbp, ubp, num_soilp, filter_soilp)
+    if ( present(init) )then
+      linit = init
+    else
+      linit = .false.
+    end if
 
-    ! plant net primary production
-    call casa_npp(lbp, ubp, num_soilp, filter_soilp)
+    if ( linit )then
+       ! explicitly set prognostic LAI to zero when called from initSurfAlb
+       plai       => clm3%g%l%c%p%pps%plai
+       do f = 1,num_soilp
+          p = filter_soilp(f)
 
-    ! allocation          
-    call casa_allocate(lbp, ubp, num_soilp, filter_soilp)
+          plai(p) = 0.0_r8
+       end do
+    else
 
-    ! bgfluxes (litterfall, respiration)
-    !  Compute Carbon flux to send to atm
-    !  fnpp (gC/m2/sec), Cflux (gC/m2/sec), co2flux (gC/m2/sec)
-    call casa_bgfluxes(lbp, ubp, num_soilp, filter_soilp)
+       ! potential evapotranspiration
+       call CASAPot_Evptr(lbp, ubp, num_soilp, filter_soilp)
+   
+       ! plant net primary production
+       call casa_npp(lbp, ubp, num_soilp, filter_soilp)
+
+       ! allocation          
+       call casa_allocate(lbp, ubp, num_soilp, filter_soilp)
+
+       ! bgfluxes (litterfall, respiration)
+       !  Compute Carbon flux to send to atm
+       !  fnpp (gC/m2/sec), Cflux (gC/m2/sec), co2flux (gC/m2/sec)
+       call casa_bgfluxes(lbp, ubp, num_soilp, filter_soilp)
+
+    end if
 
   end subroutine Casa
 
@@ -1590,12 +1617,8 @@ contains
     end do
 
 !! convert soil temperature to deg C 
-!! convert liquid water to m3/m3 (need mm3/mm3 to match watsat, watdry, watopt)
-!! h2osoi_liq /(denh2o*dz) gives m3/m3
 
-    do j = 1, nlevsoi
-!dir$ concurrent
-!cdir nodep
+    do j = 1, nlevgrnd
        do f = 1,num_soilp
           p = filter_soilp(f)
           c = pcolumn(p)
@@ -1603,11 +1626,27 @@ contains
 !! top 30 cm
           if (z(c,j)+0.5_r8*dz(c,j) <= z30) then
              soilt(p)  = soilt(p) + (t_soisno(c,j)-tfrz)*dz(c,j)    
-             smoist(p) = smoist(p) + h2osoi_liq(c,j)/denh2o    ! dz cancels
           end if
 
 !! entire column
           soiltc(p)  = soiltc(p) + (t_soisno(c,j)-tfrz)*dz(c,j)    
+
+       end do
+    end do
+
+!! convert liquid water to m3/m3 (need mm3/mm3 to match watsat, watdry, watopt)
+!! h2osoi_liq /(denh2o*dz) gives m3/m3
+
+    do j = 1, nlevsoi
+       do f = 1,num_soilp
+          p = filter_soilp(f)
+          c = pcolumn(p)
+
+!! top 30 cm
+          if (z(c,j)+0.5_r8*dz(c,j) <= z30) then
+             smoistc(p) = smoistc(p) + h2osoi_liq(c,j)/denh2o    ! dz cancels
+          end if
+!! entire column
           smoistc(p) = smoistc(p) + h2osoi_liq(c,j)/denh2o    ! dz cancels
 
        end do
@@ -1753,6 +1792,7 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer  f,g,i,j,l,n,p
+    integer iptype
     real(r8) leafmass
     real(r8) dtime                  !land model time step (sec)
 
@@ -1777,6 +1817,7 @@ contains
     !============================================================
     real(r8), pointer :: plai(:)     ! prognostic LAI (m2 leaf/m2 ground)
     real(r8), pointer :: Closs(:,:)
+    real(r8), pointer :: Ctrans(:,:) ! C transfers out of pool types
     real(r8), pointer :: Resp_C(:,:) ! could dimension by ndead, but caution!!!
     real(r8), pointer :: Tpool_C(:,:)
     real(r8), pointer :: Cflux(:)
@@ -1799,6 +1840,7 @@ contains
     excessC    => clm3%g%l%c%p%pps%excessC   
     plai       => clm3%g%l%c%p%pps%plai
     Closs      => clm3%g%l%c%p%pps%Closs
+    Ctrans     => clm3%g%l%c%p%pps%Ctrans
     Resp_C     => clm3%g%l%c%p%pps%Resp_C
     Tpool_C    => clm3%g%l%c%p%pps%Tpool_C
     XSCpool    => clm3%g%l%c%p%pps%XSCpool
@@ -2037,6 +2079,16 @@ contains
           Closs(p,n)=Closs(p,n)/dtime
           !            Nloss(p,n)=Nloss(p,n)/dtime  ! not used
 
+       end do
+    end do
+
+    ! Loop over all pool types to adjust units on Ctrans to gC/m2/s
+    do iptype = 1, npool_types
+!dir$ concurrent
+!cdir nodep
+       do f = 1,num_soilp
+          p = filter_soilp(f)
+          Ctrans(p,iptype) = Ctrans(p,iptype) / dtime
        end do
     end do
 

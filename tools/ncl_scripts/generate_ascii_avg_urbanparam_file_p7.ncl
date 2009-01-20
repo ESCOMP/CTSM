@@ -61,7 +61,7 @@ begin
  furbinp = systemfunc( querynml+" -res "+res+" -filenameonly -var furbinp" );
  srf_file= systemfunc( querynml+" -res "+res+" -options furbinp="+furbinp+" -var fsurdat" );
 
- cdf_file = csmdata+"/lnd/clm2/rawdata/urban_data_Feddema:080410_0.5x0.5_avg_c080725.nc" ; netCDF file to read.
+ cdf_file = csmdata+"/lnd/clm2/rawdata/urban_data_Feddema:080410_0.5x0.5_avg_c080908.nc" ; netCDF file to read.
  ;
  ; Set output data filenames
  ;
@@ -78,7 +78,10 @@ begin
  ;
  ; Parameter sizes
  ;
- nlevurb  = 10    ; Number of thickness layers for urban
+ ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ ; WARNING: IF YOU CHANGE nlevurb -- YOU ALSO NEED TO CHANGE THE HARDCODED PRINT TABLE BELOW!!!!
+ ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ nlevurb  = 15    ; Number of thickness layers for urban
  numrad   = 2     ; Number or radiation bands
  numsolar = 2     ; Number of solar bands
 
@@ -610,6 +613,9 @@ begin
        system("/bin/rm " + outfile)
     end if
 
+    ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    ; WARNING: THE FOLLOWING PRINT TABLE IS HARDCODED TO ASSUME THAT NLEVURB==15 -- IF YOU CHANGE NLEVURB CHANGE THIS AS WELL
+    ;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     flt_fmt = "%11.3f";
     exp_fmt = "%11.3e";
     print((/"Begin generating ascii file: "+outfile/))
@@ -638,32 +644,50 @@ begin
           sprintf(flt_fmt,tk_wall_lr(2,j,i))+sprintf(flt_fmt,tk_wall_lr(3,j,i))+ \
           sprintf(flt_fmt,tk_wall_lr(4,j,i))+sprintf(flt_fmt,tk_wall_lr(5,j,i))+ \
           sprintf(flt_fmt,tk_wall_lr(6,j,i))+sprintf(flt_fmt,tk_wall_lr(7,j,i))+ \
-          sprintf(flt_fmt,tk_wall_lr(8,j,i))+sprintf(flt_fmt,tk_wall_lr(9,j,i))/), \
+          sprintf(flt_fmt,tk_wall_lr(8,j,i))+sprintf(flt_fmt,tk_wall_lr(9,j,i))+ \
+          sprintf(flt_fmt,tk_wall_lr(10,j,i))+sprintf(flt_fmt,tk_wall_lr(11,j,i))+ \
+          sprintf(flt_fmt,tk_wall_lr(12,j,i))+sprintf(flt_fmt,tk_wall_lr(13,j,i))+ \
+          sprintf(flt_fmt,tk_wall_lr(14,j,i))/), \
           (/sprintf("tk_roof "+flt_fmt,tk_roof_lr(0,j,i))+sprintf(flt_fmt,tk_roof_lr(1,j,i))+ \
           sprintf(flt_fmt,tk_roof_lr(2,j,i))+sprintf(flt_fmt,tk_roof_lr(3,j,i))+ \
           sprintf(flt_fmt,tk_roof_lr(4,j,i))+sprintf(flt_fmt,tk_roof_lr(5,j,i))+ \
           sprintf(flt_fmt,tk_roof_lr(6,j,i))+sprintf(flt_fmt,tk_roof_lr(7,j,i))+ \
-          sprintf(flt_fmt,tk_roof_lr(8,j,i))+sprintf(flt_fmt,tk_roof_lr(9,j,i))/), \
+          sprintf(flt_fmt,tk_roof_lr(8,j,i))+sprintf(flt_fmt,tk_roof_lr(9,j,i))+ \
+          sprintf(flt_fmt,tk_roof_lr(10,j,i))+sprintf(flt_fmt,tk_roof_lr(11,j,i))+ \
+          sprintf(flt_fmt,tk_roof_lr(12,j,i))+sprintf(flt_fmt,tk_roof_lr(13,j,i))+ \
+          sprintf(flt_fmt,tk_roof_lr(14,j,i))/), \
           (/sprintf("tk_improad "+flt_fmt,tk_improad_lr(0,j,i))+sprintf(flt_fmt,tk_improad_lr(1,j,i))+ \
           sprintf(flt_fmt,tk_improad_lr(2,j,i))+sprintf(flt_fmt,tk_improad_lr(3,j,i))+ \
           sprintf(flt_fmt,tk_improad_lr(4,j,i))+sprintf(flt_fmt,tk_improad_lr(5,j,i))+ \
           sprintf(flt_fmt,tk_improad_lr(6,j,i))+sprintf(flt_fmt,tk_improad_lr(7,j,i))+ \
-          sprintf(flt_fmt,tk_improad_lr(8,j,i))+sprintf(flt_fmt,tk_improad_lr(9,j,i))/), \
+          sprintf(flt_fmt,tk_improad_lr(8,j,i))+sprintf(flt_fmt,tk_improad_lr(9,j,i))+ \
+          sprintf(flt_fmt,tk_improad_lr(10,j,i))+sprintf(flt_fmt,tk_improad_lr(11,j,i))+ \
+          sprintf(flt_fmt,tk_improad_lr(12,j,i))+sprintf(flt_fmt,tk_improad_lr(13,j,i))+ \
+          sprintf(flt_fmt,tk_improad_lr(14,j,i))/), \
           (/sprintf("cv_wall "+exp_fmt,cv_wall_lr(0,j,i))+sprintf(exp_fmt,cv_wall_lr(1,j,i))+ \
           sprintf(exp_fmt,cv_wall_lr(2,j,i))+sprintf(exp_fmt,cv_wall_lr(3,j,i))+ \
           sprintf(exp_fmt,cv_wall_lr(4,j,i))+sprintf(exp_fmt,cv_wall_lr(5,j,i))+ \
           sprintf(exp_fmt,cv_wall_lr(6,j,i))+sprintf(exp_fmt,cv_wall_lr(7,j,i))+ \
-          sprintf(exp_fmt,cv_wall_lr(8,j,i))+sprintf(exp_fmt,cv_wall_lr(9,j,i))/), \
+          sprintf(exp_fmt,cv_wall_lr(8,j,i))+sprintf(exp_fmt,cv_wall_lr(9,j,i))+ \
+          sprintf(exp_fmt,cv_wall_lr(10,j,i))+sprintf(exp_fmt,cv_wall_lr(11,j,i))+ \
+          sprintf(exp_fmt,cv_wall_lr(12,j,i))+sprintf(exp_fmt,cv_wall_lr(13,j,i))+ \
+          sprintf(exp_fmt,cv_wall_lr(14,j,i))/), \
           (/sprintf("cv_roof "+exp_fmt,cv_roof_lr(0,j,i))+sprintf(exp_fmt,cv_roof_lr(1,j,i))+ \
           sprintf(exp_fmt,cv_roof_lr(2,j,i))+sprintf(exp_fmt,cv_roof_lr(3,j,i))+ \
           sprintf(exp_fmt,cv_roof_lr(4,j,i))+sprintf(exp_fmt,cv_roof_lr(5,j,i))+ \
           sprintf(exp_fmt,cv_roof_lr(6,j,i))+sprintf(exp_fmt,cv_roof_lr(7,j,i))+ \
-          sprintf(exp_fmt,cv_roof_lr(8,j,i))+sprintf(exp_fmt,cv_roof_lr(9,j,i))/), \
+          sprintf(exp_fmt,cv_roof_lr(8,j,i))+sprintf(exp_fmt,cv_roof_lr(9,j,i))+ \
+          sprintf(exp_fmt,cv_roof_lr(10,j,i))+sprintf(exp_fmt,cv_roof_lr(11,j,i))+ \
+          sprintf(exp_fmt,cv_roof_lr(12,j,i))+sprintf(exp_fmt,cv_roof_lr(13,j,i))+ \
+          sprintf(exp_fmt,cv_roof_lr(14,j,i))/), \
           (/sprintf("cv_improad "+exp_fmt,cv_improad_lr(0,j,i))+sprintf(exp_fmt,cv_improad_lr(1,j,i))+ \
           sprintf(exp_fmt,cv_improad_lr(2,j,i))+sprintf(exp_fmt,cv_improad_lr(3,j,i))+ \
           sprintf(exp_fmt,cv_improad_lr(4,j,i))+sprintf(exp_fmt,cv_improad_lr(5,j,i))+ \
           sprintf(exp_fmt,cv_improad_lr(6,j,i))+sprintf(exp_fmt,cv_improad_lr(7,j,i))+ \
-          sprintf(exp_fmt,cv_improad_lr(8,j,i))+sprintf(exp_fmt,cv_improad_lr(9,j,i))/), \
+          sprintf(exp_fmt,cv_improad_lr(8,j,i))+sprintf(exp_fmt,cv_improad_lr(9,j,i))+ \
+          sprintf(exp_fmt,cv_improad_lr(10,j,i))+sprintf(exp_fmt,cv_improad_lr(11,j,i))+ \
+          sprintf(exp_fmt,cv_improad_lr(12,j,i))+sprintf(exp_fmt,cv_improad_lr(13,j,i))+ \
+          sprintf(exp_fmt,cv_improad_lr(14,j,i))/), \
           (/sprintf("thick_wall "+flt_fmt,thick_wall_lr(j,i))/), \
           (/sprintf("thick_roof "+flt_fmt,thick_roof_lr(j,i))/), \
           (/sprinti("nlev_improad %2i",floattointeger(nlevimproad_lr(j,i)))/), \

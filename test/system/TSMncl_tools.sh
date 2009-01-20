@@ -51,7 +51,7 @@ if [ ! -f "${cfgdir}/$1.ncl" ]; then
     exit 5
 fi
 
-if [ "$debug" != "YES" ]; then
+if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
    ncl ${cfgdir}/$1.ncl >> test.log 2>&1
    status="PASS"
    rc=$?

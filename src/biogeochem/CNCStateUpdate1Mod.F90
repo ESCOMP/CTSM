@@ -15,7 +15,6 @@ module CNCStateUpdate1Mod
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varcon  , only: istsoil
     use spmdMod     , only: masterproc
-    use clm_varpar  , only: nlevsoi
     implicit none
     save
     private
@@ -46,8 +45,7 @@ subroutine CStateUpdate0(num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl, only: irad
+   use clm_time_manager, only: get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -70,7 +68,6 @@ subroutine CStateUpdate0(num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: p     ! indices
    integer :: fp   ! lake filter indices
-   integer :: dtime   ! time step (s)
    real(r8):: dt      ! radiation time step (seconds)
 !
 !EOP
@@ -81,8 +78,7 @@ subroutine CStateUpdate0(num_soilp, filter_soilp)
     psnsun_to_cpool                => clm3%g%l%c%p%pcf%psnsun_to_cpool
 
     ! set time steps
-    dtime = get_step_size()
-    dt = float(irad)*dtime
+    dt = real( get_rad_step_size(), r8 )
 
     ! pft loop
 !dir$ concurrent
@@ -111,8 +107,7 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl, only: irad
+   use clm_time_manager, only: get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -270,7 +265,6 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: c,p     ! indices
    integer :: fp,fc   ! lake filter indices
-   integer :: dtime   ! time step (s)
    real(r8):: dt      ! radiation time step (seconds)
 !
 !EOP
@@ -413,8 +407,7 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
     pft_ctrunc                     => clm3%g%l%c%p%pcs%pft_ctrunc
 
     ! set time steps
-    dtime = get_step_size()
-    dt = float(irad)*dtime
+    dt = real( get_rad_step_size(), r8 )
 
     ! column loop
 !dir$ concurrent

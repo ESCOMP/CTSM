@@ -45,8 +45,8 @@ contains
 ! !USES:
     use clmtype
     use clm_atmlnd         , only : clm_a2l
-    use clm_varpar         , only : nlevsoi
-    use clm_varcon         , only : cpair, vkc, grav, denice, denh2o, istsoil
+    use clm_varpar         , only : nlevgrnd
+    use clm_varcon         , only : cpair, vkc, grav, denice, denh2o, hvap, istsoil
     use shr_const_mod      , only : SHR_CONST_RGAS
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
 #if (defined CLAMP)
@@ -85,7 +85,7 @@ contains
     integer , pointer :: ltype(:)          ! landunit type
     integer , pointer :: frac_veg_nosno(:) ! fraction of vegetation not covered by snow (0 OR 1) [-]
     real(r8), pointer :: t_grnd(:)         ! ground surface temperature [K]
-    real(r8), pointer :: thm(:)            ! intermediate variable (forc_t+0.0098*forc_hgt_t)
+    real(r8), pointer :: thm(:)            ! intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
     real(r8), pointer :: qg(:)             ! specific humidity at ground surface [kg/kg]
     real(r8), pointer :: thv(:)            ! virtual potential temperature (kelvin)
     real(r8), pointer :: dqgdT(:)          ! temperature derivative of "qg"
@@ -99,7 +99,6 @@ contains
     real(r8), pointer :: forc_q(:)         ! atmospheric specific humidity (kg/kg)
     real(r8), pointer :: forc_rho(:)       ! density (kg/m**3)
     real(r8), pointer :: forc_pbot(:)      ! atmospheric pressure (Pa)
-    real(r8), pointer :: forc_hgt_u(:)     ! observational height of wind [m]
     real(r8), pointer :: forc_hgt_u_pft(:) ! observational height of wind at pft level [m]
     real(r8), pointer :: psnsun(:)         ! sunlit leaf photosynthesis (umol CO2 /m**2/ s)
     real(r8), pointer :: psnsha(:)         ! shaded leaf photosynthesis (umol CO2 /m**2/ s)
@@ -109,6 +108,7 @@ contains
     real(r8), pointer :: dz(:,:)           ! layer depth (m)
     real(r8), pointer :: watsat(:,:)       ! volumetric soil water at saturation (porosity)
     real(r8), pointer :: frac_sno(:)       ! fraction of ground covered by snow (0 to 1)
+    real(r8), pointer :: soilbeta(:)       ! soil wetness relative to field capacity
 !
 ! local pointers to implicit inout arguments
 !
@@ -142,7 +142,7 @@ contains
     real(r8), pointer :: ram1(:)          ! aerodynamical resistance (s/m)
     real(r8), pointer :: fpsn(:)          ! photosynthesis (umol CO2 /m**2 /s)
     real(r8), pointer :: rootr(:,:)       ! effective fraction of roots in each soil layer
-    real(r8), pointer :: rresis(:,:)      ! root resistance by layer (0-1)  (nlevsoi)	
+    real(r8), pointer :: rresis(:,:)      ! root resistance by layer (0-1)  (nlevgrnd)	
 !
 !EOP
 !
@@ -189,13 +189,11 @@ contains
     real(r8) :: dqsat2mdT              ! derivative of 2 m height surface saturated specific humidity on t_ref2m 
 #endif
     real(r8) :: www                    ! surface soil wetness [-]
-    real(r8) :: rsoil                  ! Sellers (1996) soil evaporation resistance [s/m]
 !------------------------------------------------------------------------------
 
     ! Assign local pointers to derived type members (gridcell-level)
 
     forc_th    => clm_a2l%forc_th
-    forc_hgt_u => clm_a2l%forc_hgt_u
     forc_pbot  => clm_a2l%forc_pbot
     forc_t     => clm_a2l%forc_t
     forc_u     => clm_a2l%forc_u
@@ -233,6 +231,7 @@ contains
     dz             => clm3%g%l%c%cps%dz
     h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
     frac_sno       => clm3%g%l%c%cps%frac_sno
+    soilbeta       => clm3%g%l%c%cws%soilbeta
 
     ! Assign local pointers to derived type members (pft-level)
 
@@ -346,7 +345,7 @@ contains
 
     end do ! end stability iteration
 
-     do j = 1, nlevsoi
+     do j = 1, nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do f = 1, fn
@@ -375,13 +374,15 @@ contains
        ! Soil evaporation resistance
        www     = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)/watsat(c,1)
        www     = min(max(www,0.0_r8),1._r8)
-       if (dqh(p) .gt. 0._r8) then   !dew
-         rsoil = 0._r8
+
+       !changed by K.Sakaguchi. Soilbeta is used for evaporation
+       if (dqh(p) .gt. 0._r8) then   !dew  (beta is not applied, just like rsoil used to be)
+          raiw    = forc_rho(g)/(raw)
        else
-         rsoil   = (1._r8 - frac_sno(c)) * exp(8.206 - 4.255*www)
+       ! Lee and Pielke 1992 beta is applied
+          raiw    = soilbeta(c)*forc_rho(g)/(raw)
        end if
 
-       raiw    = forc_rho(g)/(raw+rsoil)
        ram1(p) = ram  !pass value to global variable
 
        ! Output to pft-level data structures

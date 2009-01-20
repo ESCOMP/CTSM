@@ -65,8 +65,9 @@ contains
     use clm_time_manager  , only : get_step_size
     use clm_varctl    , only : iulog
     use clm_varcon    , only : sb, capr, cnfac, hvap, isturb, &
-                               icol_roof, icol_sunwall, icol_shadewall 
-    use clm_varpar    , only : nlevsno, nlevsoi, max_pft_per_col
+                               icol_roof, icol_sunwall, icol_shadewall, &
+                               icol_road_perv, icol_road_imperv
+    use clm_varpar    , only : nlevsno, nlevgrnd, max_pft_per_col, nlevurb
     use TridiagonalMod, only : Tridiagonal
 !
 ! !ARGUMENTS:
@@ -78,7 +79,7 @@ contains
     integer , intent(in)  :: num_urbanl                  ! number of urban landunits in clump
     integer , intent(in)  :: filter_urbanl(ubl-lbl+1)    ! urban landunit filter
     real(r8), intent(out) :: xmf(lbc:ubc)                ! total latent heat of phase change of ground water
-    real(r8), intent(out) :: fact(lbc:ubc, -nlevsno+1:nlevsoi) ! used in computing tridiagonal matrix
+    real(r8), intent(out) :: fact(lbc:ubc, -nlevsno+1:nlevgrnd) ! used in computing tridiagonal matrix
 !
 ! !CALLED FROM:
 ! subroutine Biogeophysics2 in module Biogeophysics2Mod
@@ -91,7 +92,8 @@ contains
 ! rest of the code (tg eliminated as redundant)
 ! 2/14/02, Peter Thornton: Migrated to new data structures. Added pft loop
 ! in calculation of net ground heat flux.
-!
+! 3/18/08, David Lawrence: Change nlevsoi to nlevgrnd for deep soil
+! 03/28/08, Mark Flanner: Changes to allow solar radiative absorption in all snow layers and top soil layer
 ! !LOCAL VARIABLES:
 !
 ! local pointers to original implicit in arguments
@@ -127,6 +129,7 @@ contains
     real(r8), pointer :: t_building_min(:)  ! minimum internal building temperature (K)
     real(r8), pointer :: hc_soi(:)          ! soil heat content (MJ/m2)
     real(r8), pointer :: hc_soisno(:)       ! soil plus snow plus lake heat content (MJ/m2)
+    real(r8), pointer :: eflx_fgr12(:)      ! heat flux between soil layer 1 and 2 (W/m2)
 ! 
 ! local pointers to  original implicit inout arguments
 !
@@ -137,6 +140,14 @@ contains
     real(r8), pointer :: eflx_gnet(:)          ! net ground heat flux into the surface (W/m**2)
     real(r8), pointer :: dgnetdT(:)            ! temperature derivative of ground net heat flux
     real(r8), pointer :: eflx_building_heat(:) ! heat flux from urban building interior to walls, roof (W/m**2)
+
+! variables needed for SNICAR
+    real(r8), pointer :: sabg_lyr(:,:)      ! absorbed solar radiation (pft,lyr) [W/m2]
+    real(r8), pointer :: h2osno(:)          ! total snow water (col) [kg/m2]
+    real(r8), pointer :: h2osoi_liq(:,:)    ! liquid water (col,lyr) [kg/m2]
+    real(r8), pointer :: h2osoi_ice(:,:)    ! ice content (col,lyr) [kg/m2]
+
+! Urban building HAC fluxes
     real(r8), pointer :: eflx_urban_ac(:)      ! urban air conditioning flux (W/m**2)
     real(r8), pointer :: eflx_urban_heat(:)    ! urban heating flux (W/m**2)
 !
@@ -144,28 +155,32 @@ contains
 !
 ! !OTHER LOCAL VARIABLES:
 !
-    integer  :: j,c,p,l,g,pi                     !  indices
-    integer  :: fc                               ! lake filtered column indices
-    integer  :: fl                               ! urban filtered landunit indices
-    integer  :: jtop(lbc:ubc)                    ! top level at each column
-    real(r8) :: dtime                            ! land model time step (sec)
-    real(r8) :: at (lbc:ubc,-nlevsno+1:nlevsoi)  ! "a" vector for tridiagonal matrix
-    real(r8) :: bt (lbc:ubc,-nlevsno+1:nlevsoi)  ! "b" vector for tridiagonal matrix
-    real(r8) :: ct (lbc:ubc,-nlevsno+1:nlevsoi)  ! "c" vector for tridiagonal matrix
-    real(r8) :: rt (lbc:ubc,-nlevsno+1:nlevsoi)  ! "r" vector for tridiagonal solution
-    real(r8) :: cv (lbc:ubc,-nlevsno+1:nlevsoi)  ! heat capacity [J/(m2 K)]
-    real(r8) :: tk (lbc:ubc,-nlevsno+1:nlevsoi)  ! thermal conductivity [W/(m K)]
-    real(r8) :: fn (lbc:ubc,-nlevsno+1:nlevsoi)  ! heat diffusion through the layer interface [W/m2]
-    real(r8) :: fn1(lbc:ubc,-nlevsno+1:nlevsoi)  ! heat diffusion through the layer interface [W/m2]
-    real(r8) :: brr(lbc:ubc,-nlevsno+1:nlevsoi)  ! temporary
-    real(r8) :: dzm                              ! used in computing tridiagonal matrix
-    real(r8) :: dzp                              ! used in computing tridiagonal matrix
-    real(r8) :: hs(lbc:ubc)                      ! net energy flux into the surface (w/m2)
-    real(r8) :: dhsdT(lbc:ubc)                   ! d(hs)/dT
-    real(r8) :: lwrad_emit(lbc:ubc)              ! emitted longwave radiation
-    real(r8) :: dlwrad_emit(lbc:ubc)             ! time derivative of emitted longwave radiation
-    logical  :: cool_on(lbl:ubl)                 ! is urban air conditioning on?
-    logical  :: heat_on(lbl:ubl)                 ! is urban heating on?
+    integer  :: j,c,p,l,g,pi                       !  indices
+    integer  :: fc                                 ! lake filtered column indices
+    integer  :: fl                                 ! urban filtered landunit indices
+    integer  :: jtop(lbc:ubc)                      ! top level at each column
+    real(r8) :: dtime                              ! land model time step (sec)
+    real(r8) :: at (lbc:ubc,-nlevsno+1:nlevgrnd)   ! "a" vector for tridiagonal matrix
+    real(r8) :: bt (lbc:ubc,-nlevsno+1:nlevgrnd)   ! "b" vector for tridiagonal matrix
+    real(r8) :: ct (lbc:ubc,-nlevsno+1:nlevgrnd)   ! "c" vector for tridiagonal matrix
+    real(r8) :: rt (lbc:ubc,-nlevsno+1:nlevgrnd)   ! "r" vector for tridiagonal solution
+    real(r8) :: cv (lbc:ubc,-nlevsno+1:nlevgrnd)   ! heat capacity [J/(m2 K)]
+    real(r8) :: tk (lbc:ubc,-nlevsno+1:nlevgrnd)   ! thermal conductivity [W/(m K)]
+    real(r8) :: fn (lbc:ubc,-nlevsno+1:nlevgrnd)   ! heat diffusion through the layer interface [W/m2]
+    real(r8) :: fn1(lbc:ubc,-nlevsno+1:nlevgrnd)   ! heat diffusion through the layer interface [W/m2]
+    real(r8) :: brr(lbc:ubc,-nlevsno+1:nlevgrnd)   ! temporary
+    real(r8) :: dzm                                ! used in computing tridiagonal matrix
+    real(r8) :: dzp                                ! used in computing tridiagonal matrix
+    real(r8) :: hs(lbc:ubc)                        ! net energy flux into the surface (w/m2)
+    real(r8) :: dhsdT(lbc:ubc)                     ! d(hs)/dT
+    real(r8) :: lwrad_emit(lbc:ubc)                ! emitted longwave radiation
+    real(r8) :: dlwrad_emit(lbc:ubc)               ! time derivative of emitted longwave radiation
+    integer  :: lyr_top                            ! index of top layer of snowpack (-4 to 0) [idx]
+    real(r8) :: sabg_lyr_col(lbc:ubc,-nlevsno+1:1) ! absorbed solar radiation (col,lyr) [W/m2]
+    real(r8) :: eflx_gnet_top                      ! net energy flux into surface layer, pft-level [W/m2]
+    real(r8) :: hs_top(lbc:ubc)                    ! net energy flux into surface layer (col) [W/m2]
+    logical  :: cool_on(lbl:ubl)                   ! is urban air conditioning on?
+    logical  :: heat_on(lbl:ubl)                   ! is urban heating on?
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
@@ -191,6 +206,7 @@ contains
     t_grnd         => clm3%g%l%c%ces%t_grnd
     hc_soi         => clm3%g%l%c%ces%hc_soi
     hc_soisno      => clm3%g%l%c%ces%hc_soisno
+    eflx_fgr12     => clm3%g%l%c%cef%eflx_fgr12
     zi             => clm3%g%l%c%cps%zi
     dz             => clm3%g%l%c%cps%dz
     z              => clm3%g%l%c%cps%z
@@ -216,6 +232,11 @@ contains
     eflx_gnet      => clm3%g%l%c%p%pef%eflx_gnet
     dgnetdT        => clm3%g%l%c%p%pef%dgnetdT
     eflx_lwrad_net => clm3%g%l%c%p%pef%eflx_lwrad_net
+
+    sabg_lyr       => clm3%g%l%c%p%pef%sabg_lyr
+    h2osno         => clm3%g%l%c%cws%h2osno
+    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
+    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
 
     ! Get step size
 
@@ -272,6 +293,52 @@ contains
        end do
     end do
 
+    !       Additional calculations with SNICAR: 
+    !       Set up tridiagonal matrix in a new manner. There is now 
+    !       absorbed solar radiation in each snow layer, instead of 
+    !       only the surface. Following the current implementation, 
+    !       absorbed solar flux should be: S + ((delS/delT)*dT), 
+    !       where S is absorbed radiation, and T is temperature. Now, 
+    !       assume delS/delT is zero, then it is OK to just add S 
+    !       to each layer
+
+    ! Initialize:
+    sabg_lyr_col(lbc:ubc,-nlevsno+1:1) = 0._r8
+    hs_top(lbc:ubc) = 0._r8
+
+    do pi = 1,max_pft_per_col
+!dir$ concurrent
+!cdir nodep
+       do fc = 1,num_nolakec
+          c = filter_nolakec(fc)
+          lyr_top = snl(c) + 1
+          if ( pi <= npfts(c) ) then
+             p = pfti(c) + pi - 1
+             if (pwtgcell(p)>0._r8) then
+                g = pgridcell(p)
+                if (ltype(l) /= isturb )then
+
+                   eflx_gnet_top = sabg_lyr(p,lyr_top) + dlrad(p) + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) &
+                        - lwrad_emit(c) - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
+
+                   hs_top(c) = hs_top(c) + eflx_gnet_top*pwtcol(p)
+             
+                   do j = lyr_top,1,1
+                      sabg_lyr_col(c,j) = sabg_lyr_col(c,j) + sabg_lyr(p,j) * pwtcol(p)
+                   enddo
+                else
+
+                   hs_top(c) = hs_top(c) + eflx_gnet(p)*pwtcol(p)
+
+                   sabg_lyr_col(c,lyr_top) = sabg_lyr_col(c,lyr_top) + sabg(p) * pwtcol(p)
+             
+                endif
+             endif
+
+          endif
+       enddo
+    enddo
+
     ! Restrict internal building temperature to between min and max
     ! and determine if heating or air conditioning is on
     do fl = 1,num_urbanl
@@ -295,7 +362,7 @@ contains
     ! tridiagonal matrix and set up vector r and vectors a, b, c that define tridiagonal
     ! matrix and solve system
 
-    do j = -nlevsno+1,nlevsoi
+    do j = -nlevsno+1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec
@@ -309,11 +376,11 @@ contains
                   fact(c,j) = dtime/cv(c,j) * dz(c,j) / (0.5_r8*(z(c,j)-zi(c,j-1)+capr*(z(c,j+1)-zi(c,j-1))))
                 end if
                 fn(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
-             else if (j <= nlevsoi-1) then
+             else if (j <= nlevgrnd-1) then
                 fact(c,j) = dtime/cv(c,j)
                 fn(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
                 dzm     = (z(c,j)-z(c,j-1))
-             else if (j == nlevsoi) then
+             else if (j == nlevgrnd) then
                 fact(c,j) = dtime/cv(c,j)
 
                 ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
@@ -329,7 +396,7 @@ contains
        enddo
     end do
 
-    do j = -nlevsno+1,nlevsoi
+    do j = -nlevsno+1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec
@@ -340,15 +407,24 @@ contains
                 at(c,j) = 0._r8
                 bt(c,j) = 1+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
                 ct(c,j) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
-                rt(c,j) = t_soisno(c,j) +  fact(c,j)*( hs(c) - dhsdT(c)*t_soisno(c,j) + cnfac*fn(c,j) )
-             else if (j <= nlevsoi-1) then
+                ! changed hs to hs_top
+                rt(c,j) = t_soisno(c,j) +  fact(c,j)*( hs_top(c) - dhsdT(c)*t_soisno(c,j) + cnfac*fn(c,j) )
+             else if (j <= nlevgrnd-1) then
                 dzm     = (z(c,j)-z(c,j-1))
                 dzp     = (z(c,j+1)-z(c,j))
                 at(c,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j-1)/dzm
                 bt(c,j) = 1._r8+ (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
                 ct(c,j) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
-                rt(c,j) = t_soisno(c,j) + cnfac*fact(c,j)*( fn(c,j) - fn(c,j-1) )
-             else if (j == nlevsoi) then
+
+                ! if this is a snow layer or the top soil layer,
+                ! add absorbed solar flux to factor 'rt'
+                if (j <= 1) then
+                   rt(c,j) = t_soisno(c,j) + cnfac*fact(c,j)*( fn(c,j) - fn(c,j-1) ) + (fact(c,j)*sabg_lyr_col(c,j))
+                else
+                   rt(c,j) = t_soisno(c,j) + cnfac*fact(c,j)*( fn(c,j) - fn(c,j-1) )
+                endif
+
+             else if (j == nlevgrnd) then
 
                 ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
                 ! the bottom "soil" layer and the equations are derived assuming a prescribed internal
@@ -378,21 +454,21 @@ contains
        c = filter_nolakec(fc)
        jtop(c) = snl(c) + 1
     end do
-    call Tridiagonal(lbc, ubc, -nlevsno+1, nlevsoi, jtop, num_nolakec, filter_nolakec, &
-                     at, bt, ct, rt, t_soisno(lbc:ubc,-nlevsno+1:nlevsoi))
+    call Tridiagonal(lbc, ubc, -nlevsno+1, nlevgrnd, jtop, num_nolakec, filter_nolakec, &
+                     at, bt, ct, rt, t_soisno(lbc:ubc,-nlevsno+1:nlevgrnd))
 
     ! Melting or Freezing
 
-    do j = -nlevsno+1,nlevsoi
+    do j = -nlevsno+1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
           if (j >= snl(c)+1) then
-             if (j <= nlevsoi-1) then
+             if (j <= nlevgrnd-1) then
                 fn1(c,j) = tk(c,j)*(t_soisno(c,j+1)-t_soisno(c,j))/(z(c,j+1)-z(c,j))
-             else if (j == nlevsoi) then
+             else if (j == nlevgrnd) then
 
                 ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
                 ! the bottom "soil" layer and the equations are derived assuming a prescribed internal
@@ -413,7 +489,7 @@ contains
        c = filter_nolakec(fc)
        l = clandunit(c)
        if (ltype(l) == isturb) then
-         eflx_building_heat(c) = cnfac*fn(c,nlevsoi) + (1-cnfac)*fn1(c,nlevsoi)
+         eflx_building_heat(c) = cnfac*fn(c,nlevurb) + (1-cnfac)*fn1(c,nlevurb)
          if (cool_on(l)) then
            eflx_urban_ac(c) = abs(eflx_building_heat(c))
            eflx_urban_heat(c) = 0._r8
@@ -427,7 +503,7 @@ contains
        end if
     end do
 
-    do j = -nlevsno+1,nlevsoi
+    do j = -nlevsno+1,nlevgrnd
 !dir$ prefervector
 !dir$ concurrent
 !cdir nodep
@@ -443,7 +519,7 @@ contains
        end do
     end do
 
-    call PhaseChange (lbc, ubc, num_nolakec, filter_nolakec, fact, brr, hs, dhsdT, xmf)
+    call PhaseChange (lbc, ubc, num_nolakec, filter_nolakec, fact, brr, hs, dhsdT, xmf, hs_top, sabg_lyr_col)
 
 !dir$ concurrent
 !cdir nodep
@@ -463,16 +539,18 @@ contains
          hc_soisno(c) = 0._r8
          hc_soi(c)    = 0._r8
        end if
+       eflx_fgr12(c)= 0._r8
     end do
 
 ! Calculate soil heat content and soil plus snow heat content
-    do j = -nlevsno+1,nlevsoi
+    do j = -nlevsno+1,nlevgrnd
 !dir$ prefervector
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
+          eflx_fgr12(c) = -(cnfac*fn(c,1) + (1._r8-cnfac)*fn1(c,1))/2.
           if (ltype(l) /= isturb) then
             if (j >= snl(c)+1) then
                hc_soisno(c) = hc_soisno(c) + cv(c,j)*t_soisno(c,j) / 1.e6_r8
@@ -515,7 +593,7 @@ contains
                              cpice,  cpliq,  istice, istwet, &
                              icol_roof, icol_sunwall, icol_shadewall, &
                              icol_road_perv, icol_road_imperv
-    use clm_varpar  , only : nlevsno, nlevsoi
+    use clm_varpar  , only : nlevsno, nlevgrnd, nlevurb, nlevsoi
     use clm_varctl  , only : iulog
 !
 ! !ARGUMENTS:
@@ -523,8 +601,8 @@ contains
     integer , intent(in)  :: lbc, ubc                       ! column bounds
     integer , intent(in)  :: num_nolakec                    ! number of column non-lake points in column filter
     integer , intent(in)  :: filter_nolakec(ubc-lbc+1)      ! column filter for non-lake points
-    real(r8), intent(out) :: cv(lbc:ubc,-nlevsno+1:nlevsoi) ! heat capacity [J/(m2 K)]
-    real(r8), intent(out) :: tk(lbc:ubc,-nlevsno+1:nlevsoi) ! thermal conductivity [W/(m K)]
+    real(r8), intent(out) :: cv(lbc:ubc,-nlevsno+1:nlevgrnd)! heat capacity [J/(m2 K)]
+    real(r8), intent(out) :: tk(lbc:ubc,-nlevsno+1:nlevgrnd)! thermal conductivity [W/(m K)]
 !
 ! !CALLED FROM:
 ! subroutine SoilTemperature in this module
@@ -578,7 +656,9 @@ contains
     real(r8) :: dke                       ! kersten number
     real(r8) :: fl                        ! fraction of liquid or unfrozen water to total water
     real(r8) :: satw                      ! relative total water content of soil.
-    real(r8) :: thk(lbc:ubc,-nlevsno+1:nlevsoi) ! thermal conductivity of layer
+    real(r8) :: thk(lbc:ubc,-nlevsno+1:nlevgrnd) ! thermal conductivity of layer
+    real(r8) :: thk_bedrock = 3.0_r8      ! thermal conductivity of 'typical' saturated granitic rock 
+                                          ! (Clauser and Huenges, 1995)(W/m/K)
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (landunit-level)
@@ -615,13 +695,13 @@ contains
     ! scheme with direct measurements from dry districts in two cities, J. Appl. Meteorol.,
     ! 41, 1011-1026.
 
-    do j = -nlevsno+1,nlevsoi
+    do j = -nlevsno+1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do fc = 1, num_nolakec
           c = filter_nolakec(fc)
 
-          ! Only examine levels from 1->nlevsoi
+          ! Only examine levels from 1->nlevgrnd
           if (j >= 1) then    
              l = clandunit(c)
              if (ctype(c) == icol_sunwall .OR. ctype(c) == icol_shadewall) then
@@ -646,6 +726,7 @@ contains
                 else
                    thk(c,j) = tkdry(c,j)
                 endif
+                if (j > nlevsoi) thk(c,j) = thk_bedrock
              else
                 thk(c,j) = tkwat
                 if (t_soisno(c,j) < tfrz) thk(c,j) = tkice
@@ -664,15 +745,15 @@ contains
 
     ! Thermal conductivity at the layer interface
 
-    do j = -nlevsno+1,nlevsoi
+    do j = -nlevsno+1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
-          if (j >= snl(c)+1 .AND. j <= nlevsoi-1) then
+          if (j >= snl(c)+1 .AND. j <= nlevgrnd-1) then
              tk(c,j) = thk(c,j)*thk(c,j+1)*(z(c,j+1)-z(c,j)) &
                        /(thk(c,j)*(z(c,j+1)-zi(c,j))+thk(c,j+1)*(zi(c,j)-z(c,j)))
-          else if (j == nlevsoi) then
+          else if (j == nlevgrnd) then
 
              ! For urban sunwall, shadewall, and roof columns, there is a non-zero heat flux across
              ! the bottom "soil" layer and the equations are derived assuming a prescribed internal
@@ -691,7 +772,7 @@ contains
     ! scheme with direct measurements from dry districts in two cities, J. Appl. Meteorol.,
     ! 41, 1011-1026.
 
-    do j = 1, nlevsoi
+    do j = 1, nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec
@@ -738,7 +819,7 @@ contains
 !
 ! !INTERFACE:
   subroutine PhaseChange (lbc, ubc, num_nolakec, filter_nolakec, fact, &
-                          brr, hs, dhsdT, xmf)
+                          brr, hs, dhsdT, xmf, hs_top, sabg_lyr_col)
 !
 ! !DESCRIPTION:
 ! Calculation of the phase change within snow and soil layers:
@@ -756,19 +837,22 @@ contains
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use clm_time_manager, only : get_step_size
-    use clm_varcon  , only : tfrz, hfus, grav
-    use clm_varpar  , only : nlevsno, nlevsoi
+    use clm_varcon  , only : tfrz, hfus, grav, istsoil, icol_road_perv
+    use clm_varpar  , only : nlevsno, nlevgrnd
 !
 ! !ARGUMENTS:
     implicit none
     integer , intent(in) :: lbc, ubc                             ! column bounds
     integer , intent(in) :: num_nolakec                          ! number of column non-lake points in column filter
     integer , intent(in) :: filter_nolakec(ubc-lbc+1)            ! column filter for non-lake points
-    real(r8), intent(in) :: brr   (lbc:ubc, -nlevsno+1:nlevsoi)  ! temporary
-    real(r8), intent(in) :: fact  (lbc:ubc, -nlevsno+1:nlevsoi)  ! temporary
+    real(r8), intent(in) :: brr   (lbc:ubc, -nlevsno+1:nlevgrnd) ! temporary
+    real(r8), intent(in) :: fact  (lbc:ubc, -nlevsno+1:nlevgrnd) ! temporary
     real(r8), intent(in) :: hs    (lbc:ubc)                      ! net ground heat flux into the surface
     real(r8), intent(in) :: dhsdT (lbc:ubc)                      ! temperature derivative of "hs"
     real(r8), intent(out):: xmf   (lbc:ubc)                      ! total latent heat of phase change
+    real(r8), intent(in) :: hs_top(lbc:ubc)                      ! net heat flux into the top snow layer [W/m2]
+    real(r8), intent(in) :: sabg_lyr_col(lbc:ubc,-nlevsno+1:1)   ! absorbed solar radiation (col,lyr) [W/m2]
+
 !
 ! !CALLED FROM:
 ! subroutine SoilTemperature in this module
@@ -779,6 +863,7 @@ contains
 ! 2/14/02, Peter Thornton: Migrated to new data structures.
 ! 7/01/03, Mariana Vertenstein: Migrated to vector code
 ! 04/25/07 Keith Oleson: CLM3.5 Hydrology
+! 03/28/08 Mark Flanner: accept new arguments and calculate freezing rate of h2o in snow
 !
 ! !LOCAL VARIABLES:
 !
@@ -786,6 +871,9 @@ contains
 !
     integer , pointer :: snl(:)           !number of snow layers
     real(r8), pointer :: h2osno(:)        !snow water (mm H2O)
+    integer , pointer :: ltype(:)         !landunit type
+    integer , pointer :: clandunit(:)     !column's landunit
+    integer , pointer :: ctype(:)         !column type
 !
 ! local pointers to original implicit inout scalars
 !
@@ -795,6 +883,7 @@ contains
 !
     real(r8), pointer :: qflx_snomelt(:)  !snow melt (mm H2O /s)
     real(r8), pointer :: eflx_snomelt(:)  !snow melt heat flux (W/m**2)
+    real(r8), pointer :: qflx_snofrz_lyr(:,:)  !snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
 !
 ! local pointers to original implicit in arrays
 !
@@ -818,17 +907,17 @@ contains
 !
 ! !OTHER LOCAL VARIABLES:
 !
-    integer  :: j,c,g                              !do loop index
+    integer  :: j,c,g,l                            !do loop index
     integer  :: fc                                 !lake filtered column indices
     real(r8) :: dtime                              !land model time step (sec)
     real(r8) :: heatr                              !energy residual or loss after melting or freezing
     real(r8) :: temp1                              !temporary variables [kg/m2]
-    real(r8) :: hm(lbc:ubc,-nlevsno+1:nlevsoi)     !energy residual [W/m2]
-    real(r8) :: xm(lbc:ubc,-nlevsno+1:nlevsoi)     !melting or freezing within a time step [kg/m2]
-    real(r8) :: wmass0(lbc:ubc,-nlevsno+1:nlevsoi) !initial mass of ice and liquid (kg/m2)
-    real(r8) :: wice0 (lbc:ubc,-nlevsno+1:nlevsoi) !initial mass of ice (kg/m2)
-    real(r8) :: wliq0 (lbc:ubc,-nlevsno+1:nlevsoi) !initial mass of liquid (kg/m2)
-    real(r8) :: supercool(lbc:ubc,nlevsoi)         !supercooled water in soil (kg/m2) 
+    real(r8) :: hm(lbc:ubc,-nlevsno+1:nlevgrnd)    !energy residual [W/m2]
+    real(r8) :: xm(lbc:ubc,-nlevsno+1:nlevgrnd)    !melting or freezing within a time step [kg/m2]
+    real(r8) :: wmass0(lbc:ubc,-nlevsno+1:nlevgrnd)!initial mass of ice and liquid (kg/m2)
+    real(r8) :: wice0 (lbc:ubc,-nlevsno+1:nlevgrnd)!initial mass of ice (kg/m2)
+    real(r8) :: wliq0 (lbc:ubc,-nlevsno+1:nlevgrnd)!initial mass of liquid (kg/m2)
+    real(r8) :: supercool(lbc:ubc,nlevgrnd)        !supercooled water in soil (kg/m2) 
     real(r8) :: propor                             !proportionality constant (-)
     real(r8) :: tinc                               !t(n+1)-t(n) (K)
     real(r8) :: smp                                !frozen water potential (mm)
@@ -850,6 +939,10 @@ contains
     sucsat       => clm3%g%l%c%cps%sucsat
     watsat       => clm3%g%l%c%cps%watsat
     dz           => clm3%g%l%c%cps%dz
+    ctype        => clm3%g%l%c%itype
+    clandunit    => clm3%g%l%c%landunit
+    ltype        => clm3%g%l%itype
+    qflx_snofrz_lyr => clm3%g%l%c%cwf%qflx_snofrz_lyr
 
     ! Get step size
 
@@ -863,9 +956,10 @@ contains
        c = filter_nolakec(fc)
        qflx_snomelt(c) = 0._r8
        xmf(c) = 0._r8
+       qflx_snofrz_lyr(c,-nlevsno+1:0) = 0._r8
     end do
 
-    do j = -nlevsno+1,nlevsoi       ! all layers
+    do j = -nlevsno+1,nlevgrnd       ! all layers
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec
@@ -907,11 +1001,12 @@ contains
        end do   ! end of column-loop
     enddo   ! end of level-loop
 
-    do j = 1,nlevsoi             ! soil layers 
+    do j = 1,nlevgrnd             ! soil layers 
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
+          l = clandunit(c)
           if (h2osoi_ice(c,j) > 0. .AND. t_soisno(c,j) > tfrz) then
              imelt(c,j) = 1
              t_soisno(c,j) = tfrz
@@ -919,10 +1014,12 @@ contains
 
           ! from Zhao (1997) and Koren (1999)
           supercool(c,j) = 0.0_r8
-          if(t_soisno(c,j) < tfrz) then
-             smp = hfus*(tfrz-t_soisno(c,j))/(grav*t_soisno(c,j)) * 1000._r8  !(mm)
-             supercool(c,j) = watsat(c,j)*(smp/sucsat(c,j))**(-1._r8/bsw(c,j))
-             supercool(c,j) = supercool(c,j)*dz(c,j)*1000._r8       ! (mm)
+          if (ltype(l) == istsoil .or. ctype(c) == icol_road_perv) then
+             if(t_soisno(c,j) < tfrz) then
+                smp = hfus*(tfrz-t_soisno(c,j))/(grav*t_soisno(c,j)) * 1000._r8  !(mm)
+                supercool(c,j) = watsat(c,j)*(smp/sucsat(c,j))**(-1._r8/bsw(c,j))
+                supercool(c,j) = supercool(c,j)*dz(c,j)*1000._r8       ! (mm)
+             endif
           endif
 
           if (h2osoi_liq(c,j) > supercool(c,j) .AND. t_soisno(c,j) < tfrz) then
@@ -940,7 +1037,7 @@ contains
        end do
     enddo
 
-    do j = -nlevsno+1,nlevsoi       ! all layers
+    do j = -nlevsno+1,nlevgrnd       ! all layers
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec
@@ -951,11 +1048,20 @@ contains
              ! Calculate the energy surplus and loss for melting and freezing
              if (imelt(c,j) > 0) then
                 tinc = t_soisno(c,j)-tssbef(c,j)
-                if (j > snl(c)+1) then
-                   hm(c,j) = brr(c,j) - tinc/fact(c,j)
+                
+                ! added unique cases for this calculation,
+                ! to account for absorbed solar radiation in each layer
+                if (j == snl(c)+1) then
+                   ! top layer
+                   hm(c,j) = hs_top(c) + dhsdT(c)*tinc + brr(c,j) - tinc/fact(c,j)
+                elseif (j <= 1) then
+                   ! snow layer or top soil layer (where sabg_lyr_col is defined)
+                   hm(c,j) = brr(c,j) - tinc/fact(c,j) + sabg_lyr_col(c,j)
                 else
-                   hm(c,j) = hs(c) + dhsdT(c)*tinc + brr(c,j) - tinc/fact(c,j)
+                   ! soil layer
+                   hm(c,j) = brr(c,j) - tinc/fact(c,j)
                 endif
+
              endif
 
              ! These two errors were checked carefully (Y. Dai).  They result from the
@@ -1031,6 +1137,12 @@ contains
                 if (imelt(c,j) == 1 .AND. j < 1) then
                    qflx_snomelt(c) = qflx_snomelt(c) + max(0._r8,(wice0(c,j)-h2osoi_ice(c,j)))/dtime
                 endif
+
+                ! layer freezing mass flux (positive):
+                if (imelt(c,j) == 2 .AND. j < 1) then
+                   qflx_snofrz_lyr(c,j) = max(0._r8,(h2osoi_ice(c,j)-wice0(c,j)))/dtime
+                endif
+
              endif
 
           endif   ! end of snow layer if-block
@@ -1047,5 +1159,6 @@ contains
     end do
 
   end subroutine PhaseChange
+
 
 end module SoilTemperatureMod

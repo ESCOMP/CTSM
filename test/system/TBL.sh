@@ -18,6 +18,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TBL.sh: baseline test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}"
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TBL.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -98,7 +100,7 @@ for compare_file in ${files_to_compare}; do
     fi
 done
 
-if [ [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
+if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
    status="PASS"
 else
    status="GEN"

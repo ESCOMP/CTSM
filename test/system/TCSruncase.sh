@@ -24,6 +24,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TCSruncase.sh: CLM runcase create_newcase has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TCSruncase.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -52,11 +54,6 @@ fi
 
 hostname=`hostname`
 case $hostname in
-   ##bluevista
-    bv* )
-
-    script_template="$cfgdir/run-ibm.csh"
-    ;;
    ##bluefire
     be* )
 

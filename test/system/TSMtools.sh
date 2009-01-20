@@ -69,7 +69,7 @@ fi
 if [ $3 == "runoptions" ]; then
   echo "$toolrun "`cat ${cfgdir}/$1.$3`
   cp $cfgdir/*.nc .
-  if [ "$debug" != "YES" ]; then
+  if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
      $toolrun  `cat ${cfgdir}/$1.$3` >> test.log 2>&1
      status="PASS"
      rc=$?
@@ -80,7 +80,7 @@ if [ $3 == "runoptions" ]; then
   fi
 else
   echo "$toolrun < ${cfgdir}/$1.$3"
-  if [ "$debug" != "YES" ]; then
+  if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
      $toolrun < ${cfgdir}/$1.$3 >> test.log 2>&1
      status="PASS"
      rc=$?

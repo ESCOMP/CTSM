@@ -512,7 +512,7 @@ end subroutine map_maparrayg
           do n = -noffset,noffset
              offset = n*doffset
              if ((ia == 1 .and. lon_l(il)+offset <= lone_a(ia) .and.   &
-                                lon_l(il)+offset >= lonw_a(ia)) .or.   &
+                                lon_l(il)+offset >  lonw_a(ia)) .or.   &
                  (ia >  1 .and. lon_l(il)+offset <= lone_a(ia) .and.   &
                                 lon_l(il)+offset >  lonw_a(ia))) then
                 if (found) then

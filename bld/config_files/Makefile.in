@@ -100,9 +100,10 @@ $(CURDIR)/Srcfiles: $(CURDIR)/Filepath
 
 OBJS      := $(addsuffix .o, $(basename $(SOURCES)))
 
-CPPDEF    := $(USER_CPPDEFS)
+CPPDEF    := $(USER_CPPDEFS) -DHAVE_GETTIMEOFDAY
+LDFLAGS   := 
 ifeq ($(SPMD),TRUE)
-   CPPDEF += -DSPMD
+   CPPDEF += -DSPMD -DHAVE_MPI
 endif
 
 $(MODEL_EXEDIR)/$(EXENAME): $(OBJS)
@@ -151,12 +152,9 @@ ifeq ($(UNAMES),AIX)
 
 CPPDEF     += -DAIX
 ifeq ($(SMP),TRUE)
-  # THREADED_PTHREADS is used by the timing library
-  CPPDEF   += -DTHREADED_PTHREADS
+  # THREADED_OMP is used by the timing library
+  CPPDEF   += -DTHREADED_OMP
 endif
-
-cpre = $(null)-WF,-D$(null)
-FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
 
 # Use the thread-safe compilers even when disabling openMP.
 ifeq ($(SPMD),TRUE)
@@ -165,39 +163,47 @@ else
   FC       := xlf90_r
 endif
 
+cpre = $(null)-WF,-D$(null)
+FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
+
 CC         := mpcc_r
-CFLAGS     := -q64 $(cpp_path) $(CPPDEF) -O2
+CFLAGS     := -q64 -I/usr/include $(cpp_path) $(CPPDEF) -O2
 mod_path   := -I$(MOD_NETCDF)
-FFLAGS     := -q64 $(cpp_path) $(mod_path) $(FPPFLAGS) -qarch=auto -qspillsize=2500 -g -qfullpath 
+FFLAGS     := -q64 -I/usr/include $(cpp_path) $(mod_path) $(FPPFLAGS) -qarch=auto -g -qfullpath 
 FREEFLAGS  := -qsuffix=f=f90:cpp=F90
 FIXEDFLAGS := -qfixed=132
 
 ifeq ($(DEBUG),TRUE)
+  CPPDEFS += -DNO_SHR_VMATH
   # Bounds checking is unreliable on the IBM.
   # Sometimes you can get it to go if you turn threading off (by deleting -qsmp=omp)
   # Only turn float-trapping on for debug mode as it's a 20% performance hit.
-  FFLAGS += -qinitauto=FF911299 -qflttrap=ov:zero:inv:en
+  FFLAGS += -qinitauto=7FF7FFFF -qflttrap=ov:zero:inv:en -qspillsize=4000 -C -O0
   # As of Apr/15/2003 cam2_0_2_dev18 xlfrte8.1.0.3 using -lmass causes the code to core-dump
   # when using DEBUG compiler options.
-  LDFLAGS := -q64 -lmassv
+  LDFLAGS += -q64 -lmassv
 else
   # Check for override of default Fortran compiler optimizations
   ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
     # Inline when not debugging
     FORTRAN_OPTIMIZATION := -O2 -qstrict -Q
   endif
-  FFLAGS += $(FORTRAN_OPTIMIZATION)
-  LDFLAGS := -q64 -lmass -lmassv
+  FFLAGS += $(FORTRAN_OPTIMIZATION) -qsigtrap=xl__trcedump
+  LDFLAGS += -q64 -lmass -lmassv
 endif
 
 ifeq ($(SMP),TRUE)
-  FFLAGS  += -qsmp=omp
-  LDFLAGS += -qsmp=omp
+  FFLAGS  += -qsmp=omp:noopt
+  LDFLAGS += -qsmp=omp:noopt
 endif
 
 ifeq ($(SPMD),TRUE)
   LDFLAGS += -lmpi_r
+else
+  FFLAGS  += -WF,-DHIDE_MPI,-D_MPISERIAL
 endif
+
+LDFLAGS += -bdatapsize:64K -bstackpsize:64K -btextpsize:64K
 
 endif
 
@@ -215,7 +221,7 @@ mod_path    := -I$(MOD_NETCDF)
 FFLAGS      := -64 $(cpp_path) $(mod_path) $(CPPDEF) -i4 -macro_expand -extend_source
 FREEFLAGS   :=
 FIXEDFLAGS  :=
-LDFLAGS     := -64
+LDFLAGS     += -64
 
 ifeq ($(DEBUG),TRUE)
   # WARNING: -mp and -g together has been known to cause wrong answers
@@ -291,17 +297,15 @@ ifeq ($(findstring pgc,$(CC)),pgc)
 endif
 
 ifeq ($(SMP),TRUE)
-  # THREADED_OMP and THREADED_PTHREADS are used by the timing library
-  ifeq ($(PGI_CC),TRUE)
-    CPPDEF += -DTHREADED_OMP
-  else
-    CPPDEF += -DTHREADED_PTHREADS
-  endif
+  # THREADED_OMP is used by the timing library
+  CPPDEF += -DTHREADED_OMP
 endif
 
 CFLAGS = $(cpp_path) $(CPPDEF)
+FFLAGS = $(cpp_path) $(mod_path) $(CPPDEF)
 ifeq ($(findstring ftn,$(FC)),ftn)
-  CFLAGS += -DFORTRANUNDERSCORE
+  CFLAGS += -DFORTRANUNDERSCORE -target=linux -gopt -DCATAMOUNT -Mlist -time -Kieee
+  FFLAGS += -time -target=linux -gopt
 else
   ifeq ($(PGI_CC),TRUE)
     CFLAGS += -fast
@@ -315,17 +319,16 @@ mod_path  := -I$(MOD_NETCDF)
 
 ifeq ($(PGI_FC),TRUE)
 
-  FFLAGS     := $(cpp_path) $(mod_path) $(CPPDEF) -i4 -Mdalign -Mextend -byteswapio
+  FFLAGS     += -i4 -Mdalign -Mextend -Kieee -byteswapio -Mflushz -Mlist
   FREEFLAGS  := -Mfree
   FIXEDFLAGS :=
-  LDFLAGS    :=
 
   ifeq ($(DEBUG),TRUE)
     FFLAGS   += -g -Ktrap=fp -Mrecursive -Mbounds
   else
     # Check for override of default Fortran compiler optimizations
     ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
-      FORTRAN_OPTIMIZATION := -O1
+      FORTRAN_OPTIMIZATION := -fast -Mvect=nosse 
     endif
     FFLAGS   += $(FORTRAN_OPTIMIZATION)
   endif
@@ -341,11 +344,10 @@ endif
 
 ifeq ($(FC),lf95)
 
-  FFLAGS      := $(cpp_path) $(mod_path) $(CPPDEF) --wide
+  FFLAGS      += --wide
   SPEC_FFLAGS := $(FFLAGS)
   FREEFLAGS   :=
   FIXEDFLAGS  :=
-  LDFLAGS     :=
 
   ifeq ($(DEBUG),TRUE)
     # --trace produces a call traceback on abort
@@ -361,23 +363,23 @@ ifeq ($(FC),lf95)
       FORTRAN_OPTIMIZATION := -O
     endif
     FFLAGS    += $(FORTRAN_OPTIMIZATION)
-    # Threading only works by putting thread memory on the heap rather than the stack (--threadheap).
-    # As of lf95 version 6.2 the thread stacksize limits are (still) too small to run even small
-    # resolution problems (FV at 10x15 res fails).
-    ifeq ($(SMP),TRUE)
-      FFLAGS  += --openmp --threadheap 4096
-      LDFLAGS += --openmp --threadheap 4096
-    endif
+  endif
+  # Threading only works by putting thread memory on the heap rather than the stack (--threadheap).
+  # As of lf95 version 6.2 the thread stacksize limits are (still) too small to run even small
+  # resolution problems (FV at 10x15 res fails).
+  ifeq ($(SMP),TRUE)
+    FFLAGS  += --openmp --threadheap 4096
+    CFLAGS  += -openmp
+    LDFLAGS += --openmp --threadheap 4096
   endif
 
 endif
 
 ifeq ($(findstring ifort,$(FC)),ifort)
 
-  FFLAGS      := $(cpp_path) $(mod_path) $(CPPDEF) -132 -ftz -g -m64
+  FFLAGS      += -132 -ftz -g -fp-model precise -convert big_endian -assume byterecl -traceback
   FREEFLAGS   := -FR
   FIXEDFLAGS  :=
-  LDFLAGS     :=
   CFLAGS      += -m64 -ftz -g
 
   ifeq ($(DEBUG),TRUE)
@@ -403,13 +405,12 @@ endif
 ifeq ($(FC),pathf90)
 
   CC         := pathcc
-  FFLAGS     := $(cpp_path) $(mod_path) $(CPPDEF) -extend_source -ftpp -fno-second-underscore
+  FFLAGS     += -extend_source -ftpp -fno-second-underscore
   FREEFLAGS  :=
   FIXEDFLAGS :=
-  LDFLAGS    :=
 
   ifeq ($(DEBUG),TRUE)
-    FFLAGS   += -g
+    FFLAGS   += -g  -trapuv -Wuninitialized
   else
     # Check for override of default Fortran compiler optimizations
     ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
@@ -430,10 +431,9 @@ endif
 ifeq ($(FC),g95)
 
   CPPDEF     += -DG95 -DDISABLE_TIMERS -DNO_CRAY_POINTERS
-  FFLAGS     := $(cpp_path) $(mod_path) $(CPPDEF) -i4 -fno-second-underscore -fstatic  
+  FFLAGS     += -i4 -fno-second-underscore -fstatic  
   FREEFLAGS  := 
   FIXEDFLAGS :=
-  LDFLAGS    :=
 
   ifeq ($(DEBUG),TRUE)
     FFLAGS   += -g -fbounds-check
@@ -482,7 +482,7 @@ FFLAGS     := $(PROF) $(CPPFLAGS) -Wf,"-A idbl4 -pvctl fullmsg loopcnt=1000000 n
               -Wf,"-L fmtlist map transform -ptr byte"
 FREEFLAGS  :=
 FIXEDFLAGS :=
-LDFLAGS    := $(PROF) -Wl"-Z 5000M -ZL 5000M"
+LDFLAGS    += $(PROF) -Wl"-Z 5000M -ZL 5000M"
 
 ifneq ($strip $(LINKER)),)
   LINKER := $(CC) -f90lib
@@ -558,7 +558,7 @@ FFLAGS     := $(PROF) $(CPPFLAGS) -Wf,"-A idbl4 -pvctl fullmsg loopcnt=1000000 n
               -Wf,"-L fmtlist map transform -ptr byte"
 FREEFLAGS  :=
 FIXEDFLAGS :=
-LDFLAGS    := $(PROF) -Wl"-Z 5000M -ZL 5000M"
+LDFLAGS    += $(PROF) -Wl"-Z 5000M -ZL 5000M"
 
 ifneq ($strip $(LINKER)),)
   LINKER   := $(CC) -f90lib
@@ -663,7 +663,7 @@ FFLAGS     := $(cpp_path) $(mod_path) $(FPPFLAGS) $(FOPT) -r a -dy -rm -em
 FREEFLAGS  := -f free
 FIXEDFLAGS := -f fixed -N 132
 
-LDFLAGS := -p$(MOD_NETCDF)
+LDFLAGS += -p$(MOD_NETCDF)
 ifeq ($(SSP),TRUE)
   LDFLAGS += -Ossp
 endif
@@ -747,7 +747,7 @@ ifeq ($(CC),xlc)
    CFLAGS     := -I/usr/include -I/usr/include/malloc $(cpp_path) $(CPPDEF) -O2
 endif
 
-LDFLAGS    := -lSystemStubs -lSystemStubs_profile
+LDFLAGS    += -lSystemStubs -lSystemStubs_profile
 
 ifeq ($(SMP),TRUE)
   # SMP not implemented
@@ -786,7 +786,7 @@ FFLAGS     := -I$(BGLPATH)/include \
 		-qspillsize=2500 -g -qfullpath -qdebug=function_trace 
 FREEFLAGS  := -qsuffix=f=f90:cpp=F90
 FIXEDFLAGS := -qfixed=132
-LDFLAGS    := -L/contrib/bgl/lib -lmass -lmassv \
+LDFLAGS    += -L/contrib/bgl/lib -lmass -lmassv \
               -Wl,--allow-multiple-definition \
               -L$(BGLPATH)/lib -lmpich.rts -lmsglayer.rts \
               -lrts.rts -ldevices.rts -llapack440 -lblas440 -lstackmonitor 

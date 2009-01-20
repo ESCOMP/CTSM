@@ -509,8 +509,8 @@ contains
     integer  :: begg, endg    ! proc beginning and ending gridcell indices
     integer  :: pi,p,c,l,g    ! indices
     integer  :: ier           ! error code
-    real(r8) :: dwt           ! change in pft weight (relative to column)
     real(r8) :: dtime         ! land model time step (sec)
+    real(r8) :: dwt           ! change in pft weight (relative to column)
     real(r8) :: init_h2ocan   ! initial canopy water mass
     real(r8) :: new_h2ocan    ! canopy water mass after weight shift
     real(r8), allocatable :: loss_h2ocan(:) ! canopy water mass loss due to weight shift
@@ -630,8 +630,7 @@ contains
     use shr_const_mod,only : SHR_CONST_PDB
     use decompMod   , only : get_proc_bounds
     use clm_varcon  , only : istsoil, c13ratio
-    use clm_time_manager, only : get_step_size
-   use clm_varctl, only: irad
+    use clm_time_manager, only : get_rad_step_size
 !
 ! !ARGUMENTS:
     implicit none
@@ -646,7 +645,7 @@ contains
     integer  :: pi,p,c,l,g    ! indices
     integer  :: ier           ! error code
     real(r8) :: dwt           ! change in pft weight (relative to column)
-    real(r8) :: dtime,dt      ! land model time step (sec)
+    real(r8) :: dt            ! land model time step (sec)
     real(r8) :: init_h2ocan   ! initial canopy water mass
     real(r8) :: new_h2ocan    ! canopy water mass after weight shift
     real(r8), allocatable :: dwt_leafc_seed(:)       ! pft-level mass gain due to seeding of new area
@@ -817,8 +816,7 @@ contains
     ! Get time step
     ! N.B. This routine is called on the doalb timestep, so the relevant time step
     ! between calls (dt) is generally longer than dtime.
-    dtime = get_step_size()
-    dt = float(irad)*dtime
+    dt = real( get_rad_step_size(), r8 )
 
     ! set column-level conversion and product pool fluxes
     ! to 0 at the beginning of every weight-shifting timestep

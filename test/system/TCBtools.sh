@@ -13,6 +13,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TCBtools.sh: build test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TCBtools.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -77,7 +79,7 @@ while [ $still_compiling = "TRUE" ]; do
 
     echo "TCBtools.sh: call to make:" 
     echo "        ${MAKE_CMD} ${config_string}" 
-    if [ "$debug" != "YES" ] || [ "$compile_only" = "YES" ]; then
+    if [ "$debug" != "YES" ]; then
        ${MAKE_CMD} ${config_string} >> test.log 2>&1
        status="PASS"
        rc=$?

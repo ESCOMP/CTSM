@@ -11,7 +11,7 @@
 !
 ! !USES:
   use shr_kind_mod  , only : r8 => shr_kind_r8, SHR_KIND_CL
-  use shr_const_mod , only : SHR_CONST_REARTH
+  use shr_const_mod , only : SHR_CONST_REARTH, SHR_CONST_PI
   implicit none
   include 'netcdf.inc'
 !
@@ -23,12 +23,13 @@
 !
 ! !LOCAL VARIABLES:
   integer  :: ni,nj                         ! grid resolution
+  integer  :: nv=4                          ! number of verticies
   integer  :: ni_grid,nj_grid               ! grid resolution
-  integer  :: i,j                           ! indices
+  integer  :: i,j,k                         ! indices
   integer  :: ier                           ! error status
   integer  :: omode                         ! netCDF output mode
   integer  :: ncid                          ! temporary
-  integer  :: dimid(2)                      ! temporary
+  integer  :: dimid(0:2)                    ! temporary
   integer  :: varid                         ! temporary
   character(len=SHR_KIND_CL) :: f_fracdata  ! clm fracdata file
   character(len=SHR_KIND_CL) :: f_griddata  ! clm griddata file
@@ -44,6 +45,12 @@
   integer , allocatable :: lndmask(:,:)     ! Land mask
   real(r8), allocatable :: xc(:,:)          ! Longitudes
   real(r8), allocatable :: yc(:,:)          ! Latitudes
+  real(r8), allocatable :: xv2(:,:)         ! Longitudes vertice in northern east
+  real(r8), allocatable :: xv4(:,:)         ! Longitudes vertice in southern west
+  real(r8), allocatable :: yv1(:,:)         ! Latitudes vertice in northern west
+  real(r8), allocatable :: yv3(:,:)         ! Latitudes vertice in southern west
+  real(r8), allocatable :: xv(:,:,:)        ! Longitude vertices
+  real(r8), allocatable :: yv(:,:,:)        ! Latitude vertices
   real(r8), allocatable :: area(:,:)        ! Grid areas
 
   integer :: filename_position              ! Character position for last character of directory
@@ -86,7 +93,7 @@
   end if
   
   !-------------------------------------------------------------------
-  ! Read clm fractional dataset ( for lon, lat, landfrac )
+  ! Read clm fractional dataset ( for landfrac )
   !-------------------------------------------------------------------
   
   write(6,*) trim(subname),': reading in ',trim(f_fracdata)
@@ -98,16 +105,8 @@
   call check_ret(nf_inq_dimid  (ncid, 'lsmlat', dimid), subname)
   call check_ret(nf_inq_dimlen (ncid, dimid, nj), subname)
   
-  allocate(lndfrac(ni,nj), xc(ni,nj), yc(ni,nj))
+  allocate(lndfrac(ni,nj))
 
-  write(6,*) trim(subname),': reading LONGXY'
-  call check_ret(nf_inq_varid (ncid, 'LONGXY', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, xc), subname)
-  
-  write(6,*) trim(subname),': reading LATIXY'
-  call check_ret(nf_inq_varid (ncid, 'LATIXY', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, yc), subname)
-  
   write(6,*) trim(subname),': reading LANDFRAC'
   call check_ret(nf_inq_varid (ncid, 'LANDFRAC', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, lndfrac), subname)
@@ -116,7 +115,7 @@
   call check_ret(nf_close(ncid), subname)
     
   !-------------------------------------------------------------------
-  ! Read clm grid dataset (for area)
+  ! Read clm grid dataset (for lats, longs, area)
   !-------------------------------------------------------------------
 
   write(6,*)
@@ -139,8 +138,52 @@
      stop
   end if
 
-  allocate(area(ni,nj))
+  allocate(xc(ni,nj), yc(ni,nj), xv(nv,ni,nj), yv(nv,ni,nj), area(ni,nj))
+  allocate(yv1(ni,nj),xv2(ni,nj),yv3(ni,nj),xv4(ni,nj))
 
+  write(6,*) trim(subname),': reading LONGXY'
+  call check_ret(nf_inq_varid (ncid, 'LONGXY', varid), subname)
+  call check_ret(nf_get_var_double (ncid, varid, xc), subname)
+  
+  write(6,*) trim(subname),': reading LATIXY'
+  call check_ret(nf_inq_varid (ncid, 'LATIXY', varid), subname)
+  call check_ret(nf_get_var_double (ncid, varid, yc), subname)
+
+  write(6,*) trim(subname),': reading LATN'
+  call check_ret(nf_inq_varid (ncid, 'LATN', varid), subname)
+  call check_ret(nf_get_var_double (ncid, varid, yv3), subname)
+
+  write(6,*) trim(subname),': reading LATS'
+  call check_ret(nf_inq_varid (ncid, 'LATS', varid), subname)
+  call check_ret(nf_get_var_double (ncid, varid, yv1), subname)
+
+  write(6,*) trim(subname),': reading LONE'
+  call check_ret(nf_inq_varid (ncid, 'LONE', varid), subname)
+  call check_ret(nf_get_var_double (ncid, varid, xv2), subname)
+
+  write(6,*) trim(subname),': reading LONW'
+  call check_ret(nf_inq_varid (ncid, 'LONW', varid), subname)
+  call check_ret(nf_get_var_double (ncid, varid, xv4), subname)
+
+  xv(1,:,:) = xv4(:,:)
+  xv(2,:,:) = xv2(:,:)
+  xv(3,:,:) = xv2(:,:)
+  xv(4,:,:) = xv4(:,:)
+
+  ! Nix any negative longitudes
+  do j = 1, nj
+  do i = 1, ni
+  do k = 1, nv
+     if ( xv(k,i,j) < 0.0_r8 ) xv(k,i,j) = 360.0_r8 + xv(k,i,j)
+  end do
+  end do
+  end do
+
+  yv(1,:,:) = yv1(:,:)
+  yv(2,:,:) = yv1(:,:)
+  yv(3,:,:) = yv3(:,:)
+  yv(4,:,:) = yv3(:,:)
+  
   write(6,*) trim(subname),': reading AREA'
   call check_ret(nf_inq_varid (ncid, 'AREA', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, area), subname)
@@ -157,6 +200,7 @@
   call check_ret(nf_create(trim(f_domain), nf_clobber, ncid), subname)
   call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
 
+  call check_ret(nf_def_dim (ncid, 'nv', nv, dimid(0)), subname)
   call check_ret(nf_def_dim (ncid, 'ni', ni, dimid(1)), subname)
   call check_ret(nf_def_dim (ncid, 'nj', nj, dimid(2)), subname)
 
@@ -185,40 +229,62 @@
                  'Land_Fraction_Dataset', len_trim(str), trim(str)), subname)
   
   name = 'xc'
-  call check_ret(nf_def_var(ncid, trim(name), nf_double, 2, dimid, varid), subname)
+  call check_ret(nf_def_var(ncid, trim(name), nf_double, 2, dimid(1:2), varid), subname)
   name = 'longitude of grid cell center'
   call check_ret(nf_put_att_text(ncid, varid, 'long_name', len_trim(name), trim(name)), subname)
   name = 'degrees_east'
   call check_ret(nf_put_att_text(ncid, varid, 'units', len_trim(name), trim(name)), subname)
+  name = 'xv'
+  call check_ret(nf_put_att_text(ncid, varid, 'bounds', len_trim(name), trim(name)), subname)
 
   name = 'yc'
-  call check_ret(nf_def_var(ncid, trim(name), nf_double, 2, dimid, varid), subname)
+  call check_ret(nf_def_var(ncid, trim(name), nf_double, 2, dimid(1:2), varid), subname)
   name = 'latitude of grid cell center'
+  call check_ret(nf_put_att_text(ncid, varid, 'long_name', len_trim(name), trim(name)), subname)
+  name = 'degrees_north'
+  call check_ret(nf_put_att_text(ncid, varid, 'units', len_trim(name), trim(name)), subname)
+  name = 'yv'
+  call check_ret(nf_put_att_text(ncid, varid, 'bounds', len_trim(name), trim(name)), subname)
+
+  name = 'xv'
+  call check_ret(nf_def_var(ncid, trim(name), nf_double, 3, dimid(0:2), varid), subname)
+  name = 'longitude of grid cell vertices'
+  call check_ret(nf_put_att_text(ncid, varid, 'long_name', len_trim(name), trim(name)), subname)
+  name = 'degrees_east'
+  call check_ret(nf_put_att_text(ncid, varid, 'units', len_trim(name), trim(name)), subname)
+
+  name = 'yv'
+  call check_ret(nf_def_var(ncid, trim(name), nf_double, 3, dimid(0:2), varid), subname)
+  name = 'latitude of grid cell vertices'
   call check_ret(nf_put_att_text(ncid, varid, 'long_name', len_trim(name), trim(name)), subname)
   name = 'degrees_north'
   call check_ret(nf_put_att_text(ncid, varid, 'units', len_trim(name), trim(name)), subname)
 
   name = 'mask'
-  call check_ret(nf_def_var(ncid, trim(name), nf_int, 2, dimid, varid), subname)
+  call check_ret(nf_def_var(ncid, trim(name), nf_int, 2, dimid(1:2), varid), subname)
   call check_ret(nf_put_att_text(ncid, varid, 'long_name', len_trim(mask(indx)), trim(mask(indx))), subname)
   name = 'xc yc'
   call check_ret(nf_put_att_text(ncid, varid, 'coordinate', len_trim(name), trim(name)), subname)
   name = 'unitless'
-  call check_ret(nf_put_att_text(ncid, varid, 'units', len_trim(name), trim(name)), subname)
+  call check_ret(nf_put_att_text(ncid, varid, 'note', len_trim(name), trim(name)), subname)
   call check_ret(nf_put_att_text(ncid, varid, 'comment', len_trim(mask_values(indx)), &
                                  trim(mask_values(indx))), subname)
 
   name = 'frac'
-  call check_ret(nf_def_var(ncid, trim(name), nf_double, 2, dimid, varid), subname)
+  call check_ret(nf_def_var(ncid, trim(name), nf_double, 2, dimid(1:2), varid), subname)
   name = 'fraction of grid cell that is active'
   call check_ret(nf_put_att_text(ncid, varid, 'long_name', len_trim(name), trim(name)), subname)
   name = 'xc yc'
   call check_ret(nf_put_att_text(ncid, varid, 'coordinate', len_trim(name), trim(name)), subname)
   name = 'unitless'
   call check_ret(nf_put_att_text(ncid, varid, 'units', len_trim(name), trim(name)), subname)
+  name = "error if frac> 1.0+eps or frac < 0.0-eps; eps = 0.1000000E-11"
+  call check_ret(nf_put_att_text(ncid, varid, 'filter1', len_trim(name), trim(name)), subname)
+  name = "limit frac to [fminval,fmaxval]; fminval= 0.1000000E-02 fmaxval=  1.000000"
+  call check_ret(nf_put_att_text(ncid, varid, 'filter2', len_trim(name), trim(name)), subname)
 
   name = 'area'
-  call check_ret(nf_def_var(ncid, trim(name), nf_double, 2, dimid, varid), subname)
+  call check_ret(nf_def_var(ncid, trim(name), nf_double, 2, dimid(1:2), varid), subname)
   name = "area of grid cell in radians squared" ;
   call check_ret(nf_put_att_text(ncid, varid, 'long_name', len_trim(name), trim(name)), subname)
   name = "xc yc"
@@ -248,7 +314,7 @@
            lndmask(i,j) = 1
         end if
         ! Input area is assumed to be in km^2 - must convert to radians^2
-        area(i,j) = area(i,j)  / (SHR_CONST_REARTH * SHR_CONST_REARTH * 0.001 * 0.001)
+        area(i,j) = area(i,j) * 4.0_r8 * SHR_CONST_PI / (SHR_CONST_REARTH * SHR_CONST_REARTH * 0.001_r8 * 0.001_r8)
      end do
   end do
   
@@ -259,6 +325,14 @@
   write(6,*)'putting out yc'
   call check_ret(nf_inq_varid(ncid, 'yc', varid), subname)
   call check_ret(nf_put_var_double(ncid, varid, yc), subname) 
+
+  write(6,*)'putting out xv'
+  call check_ret(nf_inq_varid(ncid, 'xv', varid), subname)
+  call check_ret(nf_put_var_double(ncid, varid, xv), subname) 
+  
+  write(6,*)'putting out yv'
+  call check_ret(nf_inq_varid(ncid, 'yv', varid), subname)
+  call check_ret(nf_put_var_double(ncid, varid, yv), subname) 
   
   if (      indx == indx_docn )then
      write(6,*)'putting out ocean frac'

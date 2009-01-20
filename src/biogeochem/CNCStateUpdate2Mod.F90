@@ -15,7 +15,6 @@ module CNCStateUpdate2Mod
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varcon  , only: istsoil
     use spmdMod     , only: masterproc
-    use clm_varpar  , only: nlevsoi
     implicit none
     save
     private
@@ -44,8 +43,7 @@ subroutine CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl, only: irad
+   use clm_time_manager, only: get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -140,7 +138,6 @@ subroutine CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: c,p      ! indices
    integer :: fp,fc    ! lake filter indices
-   integer :: dtime    ! time step (s)
    real(r8):: dt       ! radiation time step (seconds)
 !
 !EOP
@@ -218,8 +215,7 @@ subroutine CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
     livestemc_xfer                 => clm3%g%l%c%p%pcs%livestemc_xfer
 
     ! set time steps
-    dtime = get_step_size()
-    dt = float(irad)*dtime
+    dt = real( get_rad_step_size(), r8 )
 
     ! column loop
 !dir$ concurrent

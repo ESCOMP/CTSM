@@ -15,7 +15,6 @@ module CNDecompMod
 ! !USES:
    use shr_kind_mod , only: r8 => shr_kind_r8
    use shr_const_mod, only: SHR_CONST_TKFRZ
-   use clm_varpar   , only: nlevsoi
    use clm_varcon   , only: istsoil
    use spmdMod      , only: masterproc
    implicit none
@@ -46,9 +45,8 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: irad
    use CNAllocationMod, only: CNAllocation
-   use clm_time_manager, only: get_step_size
+   use clm_time_manager, only: get_rad_step_size
    use pft2colMod, only: p2c
 !
 ! !ARGUMENTS:
@@ -69,7 +67,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
 ! local pointers to implicit in scalars
 !
    ! column level
-   real(r8), pointer :: t_soisno(:,:)    ! soil temperature (Kelvin)  (-nlevsno+1:nlevsoi)
+   real(r8), pointer :: t_soisno(:,:)    ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
    real(r8), pointer :: psisat(:,:)      ! soil water potential at saturation for CN code (MPa)
    real(r8), pointer :: soilpsi(:,:)     ! soil water potential in each soil layer (MPa)
    real(r8), pointer :: dz(:,:)          ! soil layer thickness (m)
@@ -88,7 +86,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    integer, pointer :: clandunit(:)      ! index into landunit level quantities
    integer , pointer :: itypelun(:)      ! landunit type
    ! pft level
-   real(r8), pointer :: rootfr(:,:)      ! fraction of roots in each soil layer  (nlevsoi)
+   real(r8), pointer :: rootfr(:,:)      ! fraction of roots in each soil layer  (nlevgrnd)
 !
 ! local pointers to implicit in/out scalars
 !
@@ -140,7 +138,6 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
 ! !OTHER LOCAL VARIABLES:
    integer :: c,j          !indices
    integer :: fc           !lake filter column index
-   integer :: dtime        !time step (s)
    real(r8):: dt           !decomp timestep (seconds)
    real(r8):: dtd          !decomp timestep (days)
    real(r8), pointer:: fr(:,:)   !column-level rooting fraction by soil depth
@@ -268,8 +265,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    itypelun              => clm3%g%l%itype
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
    dtd = dt/86400.0_r8
 
    ! set soil organic matter compartment C:N ratios (from Biome-BGC v4.2.0)
@@ -330,12 +326,12 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    ! calculate function to weight the temperature and water potential scalars
    ! for decomposition control.  
 
-   allocate(fr(lbc:ubc,nlevsoi))
 
    ! the following normalizes values in fr so that they
    ! sum to 1.0 across top nlevdecomp levels on a column
    frw(lbc:ubc) = 0._r8
    nlevdecomp=5
+   allocate(fr(lbc:ubc,nlevdecomp))
    do j=1,nlevdecomp
 !dir$ concurrent
 !cdir nodep
@@ -373,9 +369,9 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
 !cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
-         ! only modify scalar if the soil temperature is >= -10 C
-         if (t_soisno(c,j) >= SHR_CONST_TKFRZ-10._r8) then
-            t_scalar(c) = t_scalar(c) + exp(308.56_r8*((1.0_r8/71.02_r8)-(1.0_r8/(t_soisno(c,j)-227.13_r8))))*fr(c,j)
+         ! only modify scalar if the soil temperature is >= -40 C
+         if (t_soisno(c,j) >= SHR_CONST_TKFRZ-40._r8) then
+            t_scalar(c) = t_scalar(c) + exp(208.56_r8*((1.0_r8/71.02_r8)-(1.0_r8/(t_soisno(c,j)-227.13_r8))))*fr(c,j)
          end if
       end do
    end do

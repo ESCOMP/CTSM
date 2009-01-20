@@ -5,7 +5,7 @@ offline-build and test scripts. This gives you everything you need
 to run CLM in sequential CCSM mode with datm7 to provide NCEP 
 forcing data in place of a modeled atmosphere.
 
-What is new in CLM3.6 (compared to CLM3.6)?
+What is new in CLM3.6 (compared to CLM3.6.00)?
 
 
 General directory structure:
@@ -18,9 +18,11 @@ models/lnd/clm/tools -- CLM Offline tools to prepare input datasets
 
 scripts --------------- CPL7 scripts
 
+models/drv/seq_mct ---- CCSM top level driver source code
 models/atm/datm7 ------ CCSM Data model version 7 source code
 models/ice/sice ------- CCSM stub sea-ice model source code
 models/ocn/socn ------- CCSM stub ocean model source code
+models/glc/sglc ------- CCSM stub glacier model source code
 models/utils ---------- CCSM utility codes 
                         (Model Coupling Toolkit (MCT)
                         (Earth System Model Framework)
@@ -31,8 +33,6 @@ Important files in main directories:
 =============================================================================================
 
 models/lnd/clm/bld/configure ---- Script to create Makefile and needed files to build offline CLM
-models/lnd/clm/bld/run-ibm.csh -- Complete script to build and run offline CLM on an IBM-SP (bluevista.ucar.edu)
-models/lnd/clm/bld/run-pc.csh --- Complete script to build and run offline CLM on an Linux-PC (bangkok.cgd.ucar.edu)
 
 models/lnd/clm/test/system/test_driver.sh --- Script for general software testing of offline CLM
 
@@ -91,11 +91,12 @@ models/utils/mct/mpeu
 
          cd scripts
          ./create_newcase            # get help on how to run create_newcase
-         ./create_newcase -case testI -mach blueice -res f19_g15 -compset I    # create new "I" case for blueice at 1.9x2.5_gx1v5 res
+         ./create_newcase -case testI -mach bluefire -res f19_g15 -compset IQ -skip_rundb    
+                                     # create new "I" case for bluefire at 1.9x2.5_gx1v5 res, without entering info on the case in the run database
                                      # "I" case is clm active, datm7, and inactive ice/ocn
          cd testI
-         configure -mach blueice     # create scripts
+         configure -case             # create scripts
          testI.build                 # build model and create namelists
          bsub < testI.run            # submit script
-                                     # (NOTE: edit env_run to set RESUBMIT to number of times to automatically resubmit)
+                                     # (NOTE: edit env_run.xml to set RESUBMIT to number of times to automatically resubmit)
 

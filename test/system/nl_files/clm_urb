@@ -3,4 +3,4 @@
 -silent 
 -case clmrun 
 -clm_demand furbinp
--source CLMNCEP
+-source CLM_QIAN

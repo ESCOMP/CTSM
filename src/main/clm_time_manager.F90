@@ -25,6 +25,7 @@ module clm_time_manager
       get_clock,                &! get the clock from the time-manager
       get_curr_ESMF_Time,       &! get current time in terms of the ESMF_Time
       get_step_size,            &! return step size in seconds
+      get_rad_step_size,        &! return radiation step size in seconds
       get_nstep,                &! return timestep number
       get_curr_date,            &! return date components at end of current timestep
       get_prev_date,            &! return date components at beginning of current timestep
@@ -35,6 +36,8 @@ module clm_time_manager
       get_prev_time,            &! return components of elapsed time since reference date at beg of current timestep
       get_curr_calday,          &! return calendar day at end of current timestep
       get_calday,               &! return calendar day from input date
+      get_days_per_year,        &! return the days per year for current year
+      set_nextsw_cday,          &! set the next radiation calendar day
       is_first_step,            &! return true on first step of initial run
       is_first_restart_step,    &! return true on first step of restart or branch run
       is_end_curr_day,          &! return true on last timestep in current day
@@ -50,13 +53,14 @@ module clm_time_manager
    character(len=ESMF_MAXSTR), save ::&
       calendar   = 'NO_LEAP'     ! Calendar to use in date calculations.
                                  ! 'NO_LEAP' or 'GREGORIAN'
-   integer, parameter :: uninit_int = -999999999
+   integer,  parameter :: uninit_int = -999999999
+   real(r8), parameter :: uninit_r8  = -999999999.0
 
-! Input in all modes
+! Input
    integer, save ::&
       dtime         = uninit_int    ! timestep in seconds
 
-! Input in only in concurrent CCSM mode
+! Input from driver
    integer, save ::&
       nelapse       = uninit_int,  &! number of timesteps (or days if negative) to extend a run
       start_ymd     = uninit_int,  &! starting date for run in yearmmdd format
@@ -90,6 +94,11 @@ module clm_time_manager
    integer, save :: cal_type              = uninit_int ! calendar type
    logical, save :: timemgr_set           = .false.    ! true when timemgr initialized
    integer, save :: nestep                = uninit_int ! ending time-step
+!
+! Last short-wave radiation calendar day
+! 
+   real(r8) :: lastsw_cday = uninit_r8 ! calday from clock of last radiation computation
+   real(r8) :: nextsw_cday = uninit_r8 ! calday from clock of next radiation computation
 
 ! Private module methods
 
@@ -835,7 +844,7 @@ subroutine advance_timestep()
   
   call ESMF_ClockAdvance( tm_clock, rc=rc )
   call chkrc(rc, sub//': error return from ESMF_ClockAdvance')
-  
+
   tm_first_restart_step = .false.
   
 end subroutine advance_timestep
@@ -894,6 +903,43 @@ integer function get_step_size()
   call chkrc(rc, sub//': error return from ESMF_ClockTimeIntervalGet')
   
 end function get_step_size
+
+!=========================================================================================
+
+integer function get_rad_step_size()
+
+  use shr_const_mod, only : SHR_CONST_CDAY
+
+  ! Return the radiation step size in seconds.
+  
+  character(len=*), parameter :: sub = 'get_rad_step_size'
+  integer :: days_per_yr   ! Days per year
+
+  ! At initialization just return time-step as radiation step size
+  if ( lastsw_cday == uninit_r8 )then
+     get_rad_step_size  = dtime
+  else
+     ! If next radiation time NOT set -- die with error
+     if ( nextsw_cday == uninit_r8 )then
+        call endrun( sub//': nextsw_cday NOT set and needs to be' )
+     end if
+     ! If next step > last one (as normally will be) convert step to seconds
+     if ( nextsw_cday > lastsw_cday )then
+        get_rad_step_size = nint( ( nextsw_cday - lastsw_cday               )*SHR_CONST_CDAY)
+     ! If last step was at end of year and next step is into the next year...
+     else
+        days_per_yr = get_days_per_year( offset=-dtime )
+        get_rad_step_size = nint( ( nextsw_cday - lastsw_cday + days_per_yr )*SHR_CONST_CDAY)
+     end if
+  end if
+  ! Check to make sure reasonably bounded...
+  if (      get_rad_step_size  < dtime   )then
+      call endrun( sub//': error get_rad_step_size less than time-step'               )
+  else if ( get_rad_step_size  > dtime*5 )then
+      call endrun( sub//': error get_rad_step_size greater than five times time-step' )
+  end if
+
+end function get_rad_step_size
 
 !=========================================================================================
 
@@ -1254,6 +1300,50 @@ function get_calday(ymd, tod)
    end if
 
 end function get_calday
+
+!=========================================================================================
+
+integer function get_days_per_year( offset )
+
+  ! Get the number of days per year for currrent year
+
+  !
+  ! Arguments
+  integer, optional, intent(in) :: offset  ! Offset from current time in seconds.
+                                           ! Positive for future times, negative 
+                                           ! for previous times.
+  
+  character(len=*), parameter :: sub = 'get_days_per_year'
+  integer         :: yr, mon, day, tod ! current date year, month, day and time-of-day
+  type(ESMF_Time) :: eDate             ! ESMF date
+  integer         :: rc                ! ESMF return code
+
+  if ( present(offset) )then
+     call get_curr_date(yr, mon, day, tod, offset )
+  else
+     call get_curr_date(yr, mon, day, tod )
+  end if
+  eDate = TimeSetymd( ymd=yr*10000+1231, tod=0, desc="end of year" )
+  call ESMF_TimeGet( eDate, dayOfYear=get_days_per_year, rc=rc )
+  call chkrc(rc, sub//': error return from ESMF_TimeGet')
+  
+end function get_days_per_year
+
+!=========================================================================================
+
+subroutine set_nextsw_cday( nextsw_cday_in )
+
+  ! Set the next radiation calendar day, so that radiation step can be calculated
+  !
+  ! Arguments
+  real(r8), intent(IN) :: nextsw_cday_in ! input calday of next radiation computation
+  
+  character(len=*), parameter :: sub = 'set_nextsw_cday'
+
+  lastsw_cday = nextsw_cday  
+  nextsw_cday = nextsw_cday_in
+  
+end subroutine set_nextsw_cday
 
 !=========================================================================================
  

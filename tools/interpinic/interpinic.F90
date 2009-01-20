@@ -7,6 +7,7 @@ module interpinic
 
   use shr_kind_mod   , only: r8 => shr_kind_r8
   use shr_const_mod  , only: SHR_CONST_PI, SHR_CONST_REARTH
+  use shr_sys_mod    , only: shr_sys_flush
   implicit none
 
   private
@@ -14,7 +15,8 @@ module interpinic
   ! Variables read in from input and output initial files
 
   integer :: nlevsno        ! maximum number of snow levels
-  integer :: nlevsoi        ! number of soil levels
+  integer :: nlevsno1       ! maximum number of snow levels plus one
+  integer :: nlevgrnd       ! number of soil levels
   integer :: nlevlak        ! number of lake levels
   integer :: nlevtot        ! number of soil and snow levels
 
@@ -103,6 +105,7 @@ contains
     integer :: dimidlak            !netCDF dimension id lake
     integer :: dimidsoi            !netCDF dimension id soil depth
     integer :: dimidsno            !netCDF dimension id snow depth
+    integer :: dimidsno1           !netCDF dimension id snow depth plus one
     integer :: dimidtot            !netCDF dimension id total
     integer :: dimidrad            !netCDF dimension id numrad
     integer :: dimidrtmlat         !netCDF dimension id rtmlat
@@ -166,16 +169,37 @@ contains
     end if
 
     ret = nf90_inq_dimid(ncidi, "levsoi", dimidsoi )
+
+    ret = nf90_inq_dimid(ncidi, "levsno1", dimidsno1 )
+    if (ret==NF90_NOERR)then
+       ret = nf90_inquire_dimension(ncidi, dimidsno1, len=nlevsno1)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_inq_dimid(ncido, "levsno1", dimid )
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       ret = nf90_inquire_dimension(ncido, dimid, len=dimlen)
+       if (ret/=NF90_NOERR) call handle_error (ret)
+       if (dimlen/=nlevsno1) then
+          write (6,*) 'error: input and output nlevsno1 values disagree'
+          write (6,*) 'input nlevsno1 = ',nlevsno1,' output nlevsno1 = ',dimlen
+          stop
+       end if
+    else
+       write (6,*) 'levsno1 dimension does NOT exist on the input dataset'
+       dimidsno1 = -9999
+       nlevsno1  = -9999
+    end if
+
+    ret = nf90_inq_dimid(ncidi, "levgrnd", dimidsoi )
     if (ret/=NF90_NOERR) call handle_error (ret)
-    ret = nf90_inquire_dimension(ncidi, dimidsoi, len=nlevsoi)
+    ret = nf90_inquire_dimension(ncidi, dimidsoi, len=nlevgrnd)
     if (ret/=NF90_NOERR) call handle_error (ret)
-    ret = nf90_inq_dimid(ncido, "levsoi", dimid )
+    ret = nf90_inq_dimid(ncido, "levgrnd", dimid )
     if (ret/=NF90_NOERR) call handle_error (ret)
     ret = nf90_inquire_dimension(ncido, dimid, len=dimlen)
     if (ret/=NF90_NOERR) call handle_error (ret)
-    if (dimlen/=nlevsoi) then
-       write (6,*) 'error: input and output nlevsoi values disagree'
-       write (6,*) 'input nlevsoi = ',nlevsoi,' output nlevsoi = ',dimlen
+    if (dimlen/=nlevgrnd) then
+       write (6,*) 'error: input and output nlevgrnd values disagree'
+       write (6,*) 'input nlevgrnd = ',nlevgrnd,' output nlevgrnd = ',dimlen
        stop
     end if
 
@@ -209,6 +233,10 @@ contains
 
     ret = nf90_inq_dimid(ncidi, "numrad", dimidrad)
     if (ret/=NF90_NOERR) call handle_error (ret)
+    ret = nf90_inquire_dimension(ncidi, dimidrad, len=dimlen)
+    if (dimlen/=numrad) then
+       write (6,*) 'error: input numrad dimension size does not equal ',numrad; stop
+    end if
 
     ! If CASA data exist on input file
     ret = nf_inq_varid (ncidi, 'livefr', varid)
@@ -234,7 +262,10 @@ contains
 
     ! numrad dimension
 
-    ret = nf90_inquire_dimension(ncido, dimidrad, len=dimlen)
+    ret = nf90_inq_dimid(ncido, "numrad", dimid)
+    if (ret/=NF90_NOERR) call handle_error (ret)
+
+    ret = nf90_inquire_dimension(ncido, dimid, len=dimlen)
     if (ret/=NF90_NOERR) call handle_error (ret)
     if (dimlen/=numrad) then
        write (6,*) 'error: output numrad dimension size does not equal ',numrad; stop
@@ -244,7 +275,7 @@ contains
 #endif
 
     ! If RTM data exists on input file
-    ret = nf_inq_varid (ncidi, 'RTMVOLR', varid)
+    ret = nf_inq_varid (ncidi, 'RTM_VOLR_LIQ', varid)
     if (ret == NF_NOERR) then
        ret = nf90_inq_dimid(ncidi, "rtmlon", dimidrtmlon)
        if (ret/=NF90_NOERR) call handle_error (ret)
@@ -265,7 +296,7 @@ contains
        dimidrtmlon = -1
     end if
     ! If RTM data exists on output file
-    ret = nf_inq_varid (ncido, 'RTMVOLR', varid)
+    ret = nf_inq_varid (ncido, 'RTM_VOLR_LIQ', varid)
     if (ret == NF_NOERR) then
        ret = nf90_inq_dimid(ncido, "rtmlon", dimid)
        if (ret/=NF90_NOERR) call handle_error (ret)
@@ -323,6 +354,8 @@ contains
        if ( index(varname,"esai"               ) /= 0 ) cycle
        if ( index(varname,"T_REF"              ) /= 0 ) cycle
        if ( index(varname,"TREF"               ) /= 0 ) cycle
+       if ( index(varname,"RTM_INPUT_LIQ"      ) /= 0 ) cycle
+       if ( index(varname,"RTM_INPUT_ICE"      ) /= 0 ) cycle
        if ( index(varname,"t_ref2m"            ) /= 0 ) cycle
        ret = nf90_inq_varid(ncido, varname, varido)
        if (ret==NF90_ENOTVAR)then
@@ -354,7 +387,7 @@ contains
           end if
        ! For RTM variables
        else if ( (dimids(2) == dimidrtmlat) .and. (dimids(1) == dimidrtmlon) )then
-          if ( index(varname,"RTMVOLR"  ) /= 1 ) cycle  ! If anything BUT RTMVOLR -- go to next variable
+          if ( index(varname,"RTM_VOLR_LIQ" ) /= 1 .and. index(varname,"RTM_VOLR_ICE" ) /= 1 ) cycle  ! If anything BUT RTM_VOLR_LIQ/ICE -- go to next variable
           ret = nf90_inq_varid(ncidi, varname, varid)
           if (ret/=NF90_NOERR) call handle_error (ret)
           ret = nf90_get_var(ncidi, varid, volr)
@@ -424,9 +457,12 @@ contains
           else if ( dimids(1) == dimidsno )then
              call interp_ml_real(varname, ncidi, ncido, &
                                  nlev=nlevsno, nvec=numcols, nveco=numcolso)
+          else if ( dimids(1) == dimidsno1)then
+             call interp_ml_real(varname, ncidi, ncido, &
+                                 nlev=nlevsno1, nvec=numcols, nveco=numcolso)
           else if ( dimids(1) == dimidsoi )then
              call interp_ml_real(varname, ncidi, ncido, &
-                                 nlev=nlevsoi, nvec=numcols, nveco=numcolso)
+                                 nlev=nlevgrnd, nvec=numcols, nveco=numcolso)
           else if ( dimids(1) == dimidnlive)then
              call interp_ml_real(varname, ncidi, ncido, &
                                  nlev=nlive, nvec=numpfts, nveco=numpftso)
@@ -440,6 +476,7 @@ contains
        else
           write (6,*) 'skipping variable NOT 1 or 2D: ', trim(varname)
        end if
+       call shr_sys_flush(6)
     end do
 
     ! Close input and output files

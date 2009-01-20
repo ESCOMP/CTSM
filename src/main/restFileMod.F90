@@ -704,7 +704,7 @@ contains
     use spmdMod     , only : mpicom, MPI_LOGICAL
     use clm_varctl  , only : caseid, ctitle, version, username, hostname, fsurdat, &
                              conventions, source
-    use clm_varpar  , only : numrad, rtmlon, rtmlat, nlevlak, nlevsno, nlevsoi
+    use clm_varpar  , only : numrad, rtmlon, rtmlat, nlevlak, nlevsno, nlevgrnd
     use decompMod   , only : get_proc_bounds, get_proc_global
 #ifdef RTM
 !    use RunoffMod   , only : get_proc_rof_global
@@ -757,10 +757,11 @@ contains
        call check_ret( nf_def_dim(ncid, 'column'  , numc           , dimid), subname )
        call check_ret( nf_def_dim(ncid, 'pft'     , nump           , dimid), subname )
        
-       call check_ret( nf_def_dim(ncid, 'levsoi'  , nlevsoi        , dimid), subname )
+       call check_ret( nf_def_dim(ncid, 'levgrnd' , nlevgrnd       , dimid), subname )
        call check_ret( nf_def_dim(ncid, 'levlak'  , nlevlak        , dimid), subname )
        call check_ret( nf_def_dim(ncid, 'levsno'  , nlevsno        , dimid), subname )
-       call check_ret( nf_def_dim(ncid, 'levtot'  , nlevsno+nlevsoi, dimid), subname )
+       call check_ret( nf_def_dim(ncid, 'levsno1'  , nlevsno+1     , dimid), subname )
+       call check_ret( nf_def_dim(ncid, 'levtot'  , nlevsno+nlevgrnd, dimid), subname )
        call check_ret( nf_def_dim(ncid, 'numrad'  , numrad         , dimid), subname )
 #if (defined CASA)
        call check_ret(nf_def_dim (ncid, 'nlive'   , nlive          , dimid), subname)
@@ -820,7 +821,7 @@ contains
 !
 ! !USES:
     use decompMod,  only : get_proc_bounds, get_proc_global
-    use clm_varpar, only : nlevsno, nlevsoi, nlevlak
+    use clm_varpar, only : nlevsno, nlevlak, nlevgrnd
     implicit none
 !
 ! !ARGUMENTS:
@@ -848,7 +849,7 @@ contains
        call check_dim(ncid, 'column'  , numc)
        call check_dim(ncid, 'pft'     , nump)
        call check_dim(ncid, 'levsno'  , nlevsno)
-       call check_dim(ncid, 'levsoi'  , nlevsoi)
+       call check_dim(ncid, 'levgrnd'  , nlevgrnd)
        call check_dim(ncid, 'levlak'  , nlevlak) 
 #if (defined CASA)
        ! Dimensions should be checked, but this will only work for initial

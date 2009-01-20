@@ -2027,7 +2027,7 @@ contains
           endif
           if (flag == 'write') data1d(:) = data(:,k)
           call ncd_iolocal_gs_int1d(ncid, varname, flag, data1d, clmlevel, start, count, ier, lmissing, usepio=lusepio)
-          if (flag == 'read') data(:,k) = data1d(:)
+          if (flag == 'read' .and. ier == 0 ) data(:,k) = data1d(:)
        enddo
        deallocate(data1d)
     else
@@ -2172,7 +2172,8 @@ contains
             rcode = -5
          endif
       endif
-      call scatter_data_from_master(data,arrayg,clmlevel)
+      call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
+      if ( varpresent ) call scatter_data_from_master(data,arrayg,clmlevel)
       if (masterproc) then
          deallocate(arrayg)
       endif
@@ -2399,7 +2400,8 @@ contains
             rcode = -5
          endif
       endif
-      call scatter_data_from_master(data,arrayg,clmlevel)
+      call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
+      if ( varpresent ) call scatter_data_from_master(data,arrayg,clmlevel)
       if (masterproc) then
          deallocate(arrayg)
       endif
@@ -2761,7 +2763,7 @@ contains
           endif
           if (flag == 'write') data1d(:) = data(:,k)
           call ncd_iolocal_gs_real1d(ncid, varname, flag, data1d, clmlevel, start, count, ier, lmissing, usepio=lusepio)
-          if (flag == 'read') data(:,k) = data1d(:)
+          if (flag == 'read' .and. ier == 0 ) data(:,k) = data1d(:)
        enddo
        deallocate(data1d)
     else
@@ -2906,7 +2908,8 @@ contains
             rcode = -5
          endif
       endif
-      call scatter_data_from_master(data,arrayg,clmlevel)
+      call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
+      if ( varpresent ) call scatter_data_from_master(data,arrayg,clmlevel)
       if (masterproc) then
          deallocate(arrayg)
       endif
@@ -3133,7 +3136,8 @@ contains
             rcode = -5
          endif
       endif
-      call scatter_data_from_master(data,arrayg,clmlevel)
+      call mpi_bcast(varpresent, 1, MPI_LOGICAL, 0, mpicom, ier)
+      if ( varpresent ) call scatter_data_from_master(data,arrayg,clmlevel)
       if (masterproc) then
          deallocate(arrayg)
       endif

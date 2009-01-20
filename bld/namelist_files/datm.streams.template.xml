@@ -54,7 +54,118 @@
    <!-- File path to data -->
    <filePath>%p</filePath>
    <!-- data filenames template -->
-   <fileNames>clmncep.T62.%ym.nc</fileNames>
+   <fileNames>clmcep.T62.TPQW.%ym.nc</fileNames>
+</fieldInfo>
+
+</stream>
+
+<stream datasource="CLM_QIAN.Solar">
+
+<!-- Comment on description of stream data -->
+
+<comment>Stream description file for Qian et. al. 2006 solar data</comment>
+
+<!-- Data source names -->
+<dataSource>CLMNCEP</dataSource>
+
+
+<!-- Domain information -->
+<domainInfo>
+   <variableNames>
+       time    time
+       xc      lon
+       yc      lat
+       area    area
+       mask    mask
+   </variableNames>
+   <filePath>%d/atm/datm7</filePath>
+   <fileNames> domain.T62.050609.nc </fileNames>
+</domainInfo>
+
+<fieldInfo>
+   <!-- Field names -->
+   <variableNames>
+      FSDS     swdn
+   </variableNames>
+   <tInterpAlgo>coszen</tInterpAlgo>
+   <!-- File path to data -->
+   <filePath>%p/Solar6Hrly</filePath>
+   <!-- data filenames template -->
+   <fileNames>clmforc.Qian.c2006.T62.Solr.%ym.nc</fileNames>
+</fieldInfo>
+
+</stream>
+
+<stream datasource="CLM_QIAN.Precip">
+
+<!-- Comment on description of stream data -->
+
+<comment>Stream description file for Qian et. al. 2006 precipitation data</comment>
+
+<!-- Data source names -->
+<dataSource>CLMNCEP</dataSource>
+
+<!-- Domain information -->
+<domainInfo>
+   <variableNames>
+       time    time
+       xc      lon
+       yc      lat
+       area    area
+       mask    mask
+   </variableNames>
+   <filePath>%d/atm/datm7</filePath>
+   <fileNames> domain.T62.050609.nc </fileNames>
+</domainInfo>
+
+<fieldInfo>
+   <!-- Field names -->
+   <variableNames>
+      PRECTmms precn
+   </variableNames>
+   <!-- File path to data -->
+   <filePath>%p/Precip6Hrly</filePath>
+   <tInterpAlgo>nearest</tInterpAlgo>
+   <!-- data filenames template -->
+   <fileNames>clmforc.Qian.c2006.T62.Prec.%ym.nc</fileNames>
+</fieldInfo>
+
+</stream>
+
+<stream datasource="CLM_QIAN.TPQW">
+
+<!-- Comment on description of stream data -->
+
+<comment>Stream description file for Qian et. al. 2006 temperature, pressure, humidity and wind data</comment>
+
+<!-- Data source names -->
+<dataSource>CLMNCEP</dataSource>
+
+<!-- Domain information -->
+<domainInfo>
+   <variableNames>
+       time    time
+       xc      lon
+       yc      lat
+       area    area
+       mask    mask
+   </variableNames>
+   <filePath>%d/atm/datm7</filePath>
+   <fileNames> domain.T62.050609.nc </fileNames>
+</domainInfo>
+
+<fieldInfo>
+   <!-- Field names -->
+   <variableNames>
+      TBOT     tbot
+      WIND     wind
+      QBOT     shum
+      PSRF     pbot
+   </variableNames>
+   <!-- File path to data -->
+   <filePath>%p/TmpPrsHumWnd3Hrly</filePath>
+   <!-- data filenames template -->
+   <fileNames>clmforc.Qian.c2006.T62.TPQW.%ym.nc</fileNames>
 </fieldInfo>
 
 </stream>

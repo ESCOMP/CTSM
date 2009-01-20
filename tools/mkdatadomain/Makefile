@@ -97,10 +97,9 @@ FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
 LIB_NETCDF := /usr/local/lib64/r4i4
 FC      = xlf90
 FFLAGS  = -c -I$(INC_NETCDF) -q64 -qsuffix=f=f90 -O2 -qsuffix=f=f90:cpp=F90 \
-	   $(FPPFLAGS)  -g -qfullpath
+	   $(FPPFLAGS)  -g -qfullpath -qarch=auto -qspillsize=2500
 ifneq ($(OPT),TRUE)
-   #FFLAGS += -qmaxmem=-1 -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C
-   FFLAGS += -qmaxmem=-1 -C
+   FFLAGS += -qmaxmem=-1 -C -qinitauto=FF911299 -qflttrap=ov:zero:inv:en
 endif
 CFLAGS  := -q64 -g $(CPPDEF) -O2
 LDFLAGS = -L$(LIB_NETCDF) -q64 -lnetcdf
@@ -150,9 +149,9 @@ ifeq ($(UNAMES),Linux)
   ifeq ($(PGF90),TRUE)
     CC     := pgcc
     ifneq ($(OPT),TRUE)
-      FFLAGS += -g -Ktrap=fp -Mbounds
+      FFLAGS += -g -Ktrap=fp -Mbounds -Kieee
     else
-      FFLAGS += -fast
+      FFLAGS += -fast -Kieee
       CFLAGS += -fast
     endif
   endif

@@ -15,7 +15,7 @@ module CNSetValueMod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varpar  , only: nlevsoi
+    use clm_varpar  , only: nlevgrnd
     use clmtype
     implicit none
     save
@@ -706,7 +706,7 @@ subroutine CNSetCps(num, filter, val, cps)
       cps%ann_farea_burned(i) = val
    end do
 
-   do j = 1,nlevsoi
+   do j = 1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
       do fi = 1,num

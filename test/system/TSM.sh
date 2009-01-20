@@ -36,7 +36,7 @@ rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
 fi
-mkdir -p ${rundir} 
+mkdir -p ${rundir}/timing
 if [ $? -ne 0 ]; then
     echo "TSM.sh: error, unable to create work subdirectory" 
     exit 3
@@ -64,7 +64,7 @@ export drv_rpointer
 lnd_rpointer="rpointer.lnd"
 export lnd_rpointer
 
-if     [ "$7" = "arb_ic" ]; then
+if     [ "$7" = "arb_ic" ] || [ "$7" = "cold" ]; then
 
    nrevsn=' '
    export nrevsn
@@ -107,7 +107,7 @@ elif [ "${7%+*}" = "continue" ]; then
 
 elif [ "${7%+*}" = "branch" ]; then
 
-   if [ "$debug" = "YES" ]; then
+   if [ "$debug" = "YES" ] || [ "$compile_only" = "YES" ]; then
        touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.clm3.r.1967-01-01-00000
    fi
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*.clm?.r.* $rundir/.
@@ -121,7 +121,7 @@ elif [ "${7%+*}" = "branch" ]; then
    nrevsn=${master_clm_restart}
    export nrevsn
 
-   if [ "$debug" = "YES" ]; then
+   if [ "$debug" = "YES" ] || [ "$compile_only" = "YES" ]; then
        touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.cpl.r.1967-01-01-00000
    fi
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*cpl.r* $rundir/.
@@ -129,7 +129,7 @@ elif [ "${7%+*}" = "branch" ]; then
        | tail -1 | head -1`
    export drv_restart
 
-   if [ "$debug" = "YES" ]; then
+   if [ "$debug" = "YES" ] || [ "$compile_only" = "YES" ]; then
        touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.datm7.rb.1967-01-01-00000
    fi
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.rb.* $rundir/.
@@ -137,7 +137,7 @@ elif [ "${7%+*}" = "branch" ]; then
        | tail -1 | head -1`
    export restBfile
 
-   if [ "$debug" = "YES" ]; then
+   if [ "$debug" = "YES" ] || [ "$compile_only" = "YES" ]; then
        touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.datm7.rs.1967-01-01-00000
    fi
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.rs.* $rundir/.
@@ -146,7 +146,7 @@ elif [ "${7%+*}" = "branch" ]; then
    export restSfile
    
 else
-    echo "TSM.sh: bad start type = $7, can only handle arb_ic, startup, continue or branch"
+    echo "TSM.sh: bad start type = $7, can only handle cold, arb_ic, startup, continue or branch"
     exit 7
 fi
 
@@ -182,7 +182,7 @@ else
     exit 9
 fi
 
-if [ "$debug" != "YES" ]; then
+if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
    ${cmnd} ${CLM_TESTDIR}/TCB.$1/clm >> test.log 2>&1
    status="PASS"
 else

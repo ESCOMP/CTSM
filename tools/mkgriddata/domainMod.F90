@@ -42,6 +42,7 @@ module domainMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public domain_init          ! allocates/nans domain types
+  public domain_isSet         ! if domain is set
   public domain_clean         ! deallocate domain
   public domain_setptrs       ! sets external pointer arrays into domain
   public domain_check         ! write out domain stats
@@ -261,6 +262,42 @@ end subroutine domain_clean
     endif
 
 end subroutine domain_setptrs
+
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: domain_isSet
+!
+! !INTERFACE:
+  logical function domain_isSet(domain)
+!
+! !DESCRIPTION:
+! This returns .true. is the domain is set
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    type(domain_type), intent(IN) :: domain        ! domain datatype
+!
+! !REVISION HISTORY:
+!   Created by E. Kluzek
+!
+!EOP
+!
+! LOCAL VARIABLES:
+!
+!------------------------------------------------------------------------------
+    if (domain%domain_set == domain_set) then
+        domain_isSet = .true.
+    else
+        domain_isSet = .false.
+    endif
+
+end function domain_isSet
+!------------------------------------------------------------------------------
+
+
 !------------------------------------------------------------------------------
 !BOP
 !

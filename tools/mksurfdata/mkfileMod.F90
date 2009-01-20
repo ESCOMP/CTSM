@@ -31,6 +31,8 @@ contains
     character(len=  5) :: zone      ! temporary
     integer            :: ier       ! error status
     integer            :: omode     ! netCDF output mode
+    integer            :: xtype     ! external type
+
     character(len=32) :: subname = 'mkfile'  ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -109,6 +111,10 @@ contains
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
             'Soil_color_raw_data_file_name', len_trim(str), trim(str)), subname)
     end if
+
+    str = get_filename(mksrf_forganic)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'Organic_matter_raw_data_file_name', len_trim(str), trim(str)), subname)
        
     str = get_filename(mksrf_flanwat)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -135,6 +141,12 @@ contains
     ! ----------------------------------------------------------------------
     ! Define variables
     ! ----------------------------------------------------------------------
+ 
+    if ( .not. outnc_double )then
+       xtype = nf_float
+    else
+       xtype = nf_double
+    end if
 
     call ncd_defvar(ncid=ncid, varname='EDGEN', xtype=nf_double, &
          long_name='northern edge of surface grid', units='degrees north')
@@ -203,59 +215,64 @@ contains
             dim1name='lsmlon', dim2name='lsmlat', &
             long_name='soil color', units='unitless')
 
-       call ncd_defvar(ncid=ncid, varname='PCT_SAND', xtype=nf_float, &
+       call ncd_defvar(ncid=ncid, varname='PCT_SAND', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
             long_name='percent sand', units='unitless')
        
-       call ncd_defvar(ncid=ncid, varname='PCT_CLAY', xtype=nf_float, &
+       call ncd_defvar(ncid=ncid, varname='PCT_CLAY', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
             long_name='percent clay', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='ORGANIC', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
+            long_name='organic matter density at soil levels', &
+            units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
     endif
 
-    call ncd_defvar(ncid=ncid, varname='PCT_WETLAND', xtype=nf_float, &
+    call ncd_defvar(ncid=ncid, varname='PCT_WETLAND', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='percent wetland', units='unitless')
 
-    call ncd_defvar(ncid=ncid, varname='PCT_LAKE', xtype=nf_float, &
+    call ncd_defvar(ncid=ncid, varname='PCT_LAKE', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='percent lake', units='unitless')
 
-    call ncd_defvar(ncid=ncid, varname='PCT_GLACIER', xtype=nf_float, &
+    call ncd_defvar(ncid=ncid, varname='PCT_GLACIER', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='percent glacier', units='unitless')
 
-    call ncd_defvar(ncid=ncid, varname='FMAX', xtype=nf_float, &
+    call ncd_defvar(ncid=ncid, varname='FMAX', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='maximum fractional saturated area', units='unitless')
 
-    call ncd_defvar(ncid=ncid, varname='PCT_URBAN', xtype=nf_float, &
+    call ncd_defvar(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='percent urban', units='unitless')
 
     if (.not. dynlanduse) then
-       call ncd_defvar(ncid=ncid, varname='PCT_PFT', xtype=nf_float, &
+       call ncd_defvar(ncid=ncid, varname='PCT_PFT', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', &
             long_name='percent plant functional type of gridcell', units='unitless')
     else
-       call ncd_defvar(ncid=ncid, varname='PCT_PFT', xtype=nf_float, &
+       call ncd_defvar(ncid=ncid, varname='PCT_PFT', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
             long_name='percent plant functional type of gridcell', units='unitless')
     end if
 
     if (.not. dynlanduse) then
-       call ncd_defvar(ncid=ncid, varname='MONTHLY_LAI', xtype=nf_float,  &
+       call ncd_defvar(ncid=ncid, varname='MONTHLY_LAI', xtype=xtype,  &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
             long_name='monthly leaf area index', units='unitless')
        
-       call ncd_defvar(ncid=ncid, varname='MONTHLY_SAI', xtype=nf_float,  &
+       call ncd_defvar(ncid=ncid, varname='MONTHLY_SAI', xtype=xtype,  &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
             long_name='monthly stem area index', units='unitless')
        
-       call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_TOP', xtype=nf_float,  &
+       call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_TOP', xtype=xtype,  &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
             long_name='monthly height top', units='meters')
        
-       call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_BOT', xtype=nf_float,  &
+       call ncd_defvar(ncid=ncid, varname='MONTHLY_HEIGHT_BOT', xtype=xtype,  &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
             long_name='monthly height bottom', units='meters')
     end if

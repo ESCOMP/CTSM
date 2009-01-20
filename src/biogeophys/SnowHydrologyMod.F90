@@ -62,6 +62,11 @@ contains
     use clmtype
     use clm_varcon  , only : denh2o, denice, wimp, ssi
     use clm_time_manager, only : get_step_size
+    use clm_atmlnd        , only : clm_a2l
+    use SNICARMod         , only : scvng_fct_mlt_bcphi, scvng_fct_mlt_bcpho, &
+                                   scvng_fct_mlt_ocphi, scvng_fct_mlt_ocpho, &
+                                   scvng_fct_mlt_dst1,  scvng_fct_mlt_dst2,  &
+                                   scvng_fct_mlt_dst3,  scvng_fct_mlt_dst4
 !
 ! !ARGUMENTS:
     implicit none
@@ -78,6 +83,7 @@ contains
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 ! 15 November 2000: Mariana Vertenstein
 ! 2/26/02, Peter Thornton: Migrated to new data structures.
+! 03/28/08, Mark Flanner: Added aerosol deposition and flushing with meltwater
 !
 ! !LOCAL VARIABLES:
 !
@@ -101,6 +107,36 @@ contains
 !
     real(r8), pointer :: h2osoi_ice(:,:)     !ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)     !liquid water (kg/m2)
+    integer , pointer :: cgridcell(:)        ! columns's gridcell (col) 
+    real(r8), pointer :: mss_bcphi(:,:)      ! hydrophillic BC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_bcpho(:,:)      ! hydrophobic BC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_ocphi(:,:)      ! hydrophillic OC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_ocpho(:,:)      ! hydrophobic OC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst1(:,:)       ! mass of dust species 1 in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst2(:,:)       ! mass of dust species 2 in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst3(:,:)       ! mass of dust species 3 in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst4(:,:)       ! mass of dust species 4 in snow (col,lyr) [kg]
+    real(r8), pointer :: flx_bc_dep_dry(:)   ! dry BC deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_bc_dep_wet(:)   ! wet BC deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_bc_dep(:)       ! total BC deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_bc_dep_pho(:)   ! hydrophobic BC deposition (col) [kg m-1 s-1]
+    real(r8), pointer :: flx_bc_dep_phi(:)   ! hydrophillic BC deposition (col) [kg m-1 s-1]
+    real(r8), pointer :: flx_oc_dep_dry(:)   ! dry OC deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_oc_dep_wet(:)   ! wet OC deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_oc_dep(:)       ! total OC deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_oc_dep_pho(:)   ! hydrophobic OC deposition (col) [kg m-1 s-1]
+    real(r8), pointer :: flx_oc_dep_phi(:)   ! hydrophillic OC deposition (col) [kg m-1 s-1]
+    real(r8), pointer :: flx_dst_dep_dry1(:) ! dry dust (species 1) deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_dst_dep_wet1(:) ! wet dust (species 1) deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_dst_dep_dry2(:) ! dry dust (species 2) deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_dst_dep_wet2(:) ! wet dust (species 2) deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_dst_dep_dry3(:) ! dry dust (species 3) deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_dst_dep_wet3(:) ! wet dust (species 3) deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_dst_dep_dry4(:) ! dry dust (species 4) deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_dst_dep_wet4(:) ! wet dust (species 4) deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: flx_dst_dep(:)      ! total dust deposition (col) [kg m-2 s-1]
+    real(r8), pointer :: forc_aer(:,:)       ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+
 !
 !EOP
 !
@@ -108,28 +144,76 @@ contains
 !
     integer  :: c, j, fc                           !do loop/array indices
     real(r8) :: dtime                              !land model time step (sec)
-    real(r8) :: qin(lbc:ubc)                       !water flow into the elmement (mm/s)
-    real(r8) :: qout(lbc:ubc)                      !water flow out of the elmement (mm/s)
+    real(r8) :: qin(lbc:ubc)                       !water flow into the elmement (mm/s) (mgf fxm: units apear to be mm)
+    real(r8) :: qout(lbc:ubc)                      !water flow out of the elmement (mm/s) (mgf fxm: units appear to be mm)
     real(r8) :: wgdif                              !ice mass after minus sublimation
     real(r8) :: vol_liq(lbc:ubc,-nlevsno+1:0)      !partial volume of liquid water in layer
     real(r8) :: vol_ice(lbc:ubc,-nlevsno+1:0)      !partial volume of ice lens in layer
     real(r8) :: eff_porosity(lbc:ubc,-nlevsno+1:0) !effective porosity = porosity - vol_ice
+    integer  :: g                                 ! gridcell loop index
+    real(r8) :: qin_bc_phi(lbc:ubc)               ! flux of hydrophilic BC into layer [kg]
+    real(r8) :: qout_bc_phi(lbc:ubc)              ! flux of hydrophilic BC out of layer [kg]
+    real(r8) :: qin_bc_pho(lbc:ubc)               ! flux of hydrophobic BC into layer [kg]
+    real(r8) :: qout_bc_pho(lbc:ubc)              ! flux of hydrophobic BC out of layer [kg]
+    real(r8) :: qin_oc_phi(lbc:ubc)               ! flux of hydrophilic OC into layer [kg]
+    real(r8) :: qout_oc_phi(lbc:ubc)              ! flux of hydrophilic OC out of layer [kg]
+    real(r8) :: qin_oc_pho(lbc:ubc)               ! flux of hydrophobic OC into layer [kg]
+    real(r8) :: qout_oc_pho(lbc:ubc)              ! flux of hydrophobic OC out of layer [kg]
+    real(r8) :: qin_dst1(lbc:ubc)                 ! flux of dust species 1 into layer [kg]
+    real(r8) :: qout_dst1(lbc:ubc)                ! flux of dust species 1 out of layer [kg]
+    real(r8) :: qin_dst2(lbc:ubc)                 ! flux of dust species 2 into layer [kg]
+    real(r8) :: qout_dst2(lbc:ubc)                ! flux of dust species 2 out of layer [kg]
+    real(r8) :: qin_dst3(lbc:ubc)                 ! flux of dust species 3 into layer [kg]
+    real(r8) :: qout_dst3(lbc:ubc)                ! flux of dust species 3 out of layer [kg]
+    real(r8) :: qin_dst4(lbc:ubc)                 ! flux of dust species 4 into layer [kg]
+    real(r8) :: qout_dst4(lbc:ubc)                ! flux of dust species 4 out of layer [kg]
+    real(r8) :: mss_liqice                        ! mass of liquid+ice in a layer
+ 
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtype components (column-level)
 
-    snl            => clm3%g%l%c%cps%snl
-    do_capsnow     => clm3%g%l%c%cps%do_capsnow
-    qflx_snomelt   => clm3%g%l%c%cwf%qflx_snomelt
-    qflx_rain_grnd => clm3%g%l%c%cwf%pwf_a%qflx_rain_grnd
-    qflx_sub_snow  => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
-    qflx_evap_grnd => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
-    qflx_dew_snow  => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
-    qflx_dew_grnd  => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
-    qflx_top_soil  => clm3%g%l%c%cwf%qflx_top_soil
-    dz             => clm3%g%l%c%cps%dz
-    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
+    snl              => clm3%g%l%c%cps%snl
+    do_capsnow       => clm3%g%l%c%cps%do_capsnow
+    qflx_snomelt     => clm3%g%l%c%cwf%qflx_snomelt
+    qflx_rain_grnd   => clm3%g%l%c%cwf%pwf_a%qflx_rain_grnd
+    qflx_sub_snow    => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
+    qflx_evap_grnd   => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
+    qflx_dew_snow    => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
+    qflx_dew_grnd    => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
+    qflx_top_soil    => clm3%g%l%c%cwf%qflx_top_soil
+    dz               => clm3%g%l%c%cps%dz
+    h2osoi_ice       => clm3%g%l%c%cws%h2osoi_ice
+    h2osoi_liq       => clm3%g%l%c%cws%h2osoi_liq
+    cgridcell        => clm3%g%l%c%gridcell
+    mss_bcphi        => clm3%g%l%c%cps%mss_bcphi
+    mss_bcpho        => clm3%g%l%c%cps%mss_bcpho
+    mss_ocphi        => clm3%g%l%c%cps%mss_ocphi
+    mss_ocpho        => clm3%g%l%c%cps%mss_ocpho
+    mss_dst1         => clm3%g%l%c%cps%mss_dst1
+    mss_dst2         => clm3%g%l%c%cps%mss_dst2
+    mss_dst3         => clm3%g%l%c%cps%mss_dst3
+    mss_dst4         => clm3%g%l%c%cps%mss_dst4
+    flx_bc_dep       => clm3%g%l%c%cwf%flx_bc_dep
+    flx_bc_dep_wet   => clm3%g%l%c%cwf%flx_bc_dep_wet
+    flx_bc_dep_dry   => clm3%g%l%c%cwf%flx_bc_dep_dry
+    flx_bc_dep_phi   => clm3%g%l%c%cwf%flx_bc_dep_phi
+    flx_bc_dep_pho   => clm3%g%l%c%cwf%flx_bc_dep_pho
+    flx_oc_dep       => clm3%g%l%c%cwf%flx_oc_dep
+    flx_oc_dep_wet   => clm3%g%l%c%cwf%flx_oc_dep_wet
+    flx_oc_dep_dry   => clm3%g%l%c%cwf%flx_oc_dep_dry
+    flx_oc_dep_phi   => clm3%g%l%c%cwf%flx_oc_dep_phi
+    flx_oc_dep_pho   => clm3%g%l%c%cwf%flx_oc_dep_pho
+    flx_dst_dep      => clm3%g%l%c%cwf%flx_dst_dep
+    flx_dst_dep_wet1 => clm3%g%l%c%cwf%flx_dst_dep_wet1
+    flx_dst_dep_dry1 => clm3%g%l%c%cwf%flx_dst_dep_dry1
+    flx_dst_dep_wet2 => clm3%g%l%c%cwf%flx_dst_dep_wet2
+    flx_dst_dep_dry2 => clm3%g%l%c%cwf%flx_dst_dep_dry2
+    flx_dst_dep_wet3 => clm3%g%l%c%cwf%flx_dst_dep_wet3
+    flx_dst_dep_dry3 => clm3%g%l%c%cwf%flx_dst_dep_dry3
+    flx_dst_dep_wet4 => clm3%g%l%c%cwf%flx_dst_dep_wet4
+    flx_dst_dep_dry4 => clm3%g%l%c%cwf%flx_dst_dep_dry4
+    forc_aer         => clm_a2l%forc_aer
 
     ! Determine model time step
 
@@ -186,7 +270,24 @@ contains
     ! when the liquid water of layer exceeds the layer's holding
     ! capacity, the excess meltwater adds to the underlying neighbor layer.
 
+    ! Also compute aerosol fluxes through snowpack in this loop:
+    ! 1) compute aerosol mass in each layer
+    ! 2) add aerosol mass flux from above layer to mass of this layer
+    ! 3) qout_xxx is mass flux of aerosol species xxx out bottom of
+    !    layer in water flow, proportional to (current) concentration
+    !    of aerosol in layer multiplied by a scavenging ratio.
+    ! 4) update mass of aerosol in top layer, accordingly
+    ! 5) update mass concentration of aerosol accordingly
+
     qin(:) = 0._r8
+    qin_bc_phi(:) = 0._r8
+    qin_bc_pho(:) = 0._r8
+    qin_oc_phi(:) = 0._r8
+    qin_oc_pho(:) = 0._r8
+    qin_dst1(:)   = 0._r8
+    qin_dst2(:)   = 0._r8
+    qin_dst3(:)   = 0._r8
+    qin_dst4(:)   = 0._r8
 
     do j = -nlevsno+1, 0
 !dir$ concurrent
@@ -195,6 +296,16 @@ contains
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
              h2osoi_liq(c,j) = h2osoi_liq(c,j) + qin(c)
+             
+             mss_bcphi(c,j) = mss_bcphi(c,j) + qin_bc_phi(c)
+             mss_bcpho(c,j) = mss_bcpho(c,j) + qin_bc_pho(c)
+             mss_ocphi(c,j) = mss_ocphi(c,j) + qin_oc_phi(c)
+             mss_ocpho(c,j) = mss_ocpho(c,j) + qin_oc_pho(c)
+             mss_dst1(c,j)  = mss_dst1(c,j) + qin_dst1(c)
+             mss_dst2(c,j)  = mss_dst2(c,j) + qin_dst2(c)
+             mss_dst3(c,j)  = mss_dst3(c,j) + qin_dst3(c)
+             mss_dst4(c,j)  = mss_dst4(c,j) + qin_dst4(c)
+
              if (j <= -1) then
                 ! No runoff over snow surface, just ponding on surface
                 if (eff_porosity(c,j) < wimp .OR. eff_porosity(c,j+1) < wimp) then
@@ -209,6 +320,88 @@ contains
              qout(c) = qout(c)*1000._r8
              h2osoi_liq(c,j) = h2osoi_liq(c,j) - qout(c)
              qin(c) = qout(c)
+
+             ! mass of ice+water: in extremely rare circumstances, this can
+             ! be zero, even though there is a snow layer defined. In
+             ! this case, set the mass to a very small value to
+             ! prevent division by zero.
+             mss_liqice = h2osoi_liq(c,j)+h2osoi_ice(c,j)
+             if (mss_liqice < 1E-30_r8) then
+                mss_liqice = 1E-30_r8
+             endif
+         
+             ! BCPHI:
+             ! 1. flux with meltwater:
+             qout_bc_phi(c) = qout(c)*scvng_fct_mlt_bcphi*(mss_bcphi(c,j)/mss_liqice)
+             if (qout_bc_phi(c) > mss_bcphi(c,j)) then
+                qout_bc_phi(c) = mss_bcphi(c,j)
+             endif
+             mss_bcphi(c,j) = mss_bcphi(c,j) - qout_bc_phi(c)
+             qin_bc_phi(c) = qout_bc_phi(c)
+
+             ! BCPHO:
+             ! 1. flux with meltwater:
+             qout_bc_pho(c) = qout(c)*scvng_fct_mlt_bcpho*(mss_bcpho(c,j)/mss_liqice)
+             if (qout_bc_pho(c) > mss_bcpho(c,j)) then
+                qout_bc_pho(c) = mss_bcpho(c,j)
+             endif
+             mss_bcpho(c,j) = mss_bcpho(c,j) - qout_bc_pho(c)
+             qin_bc_pho(c) = qout_bc_pho(c)
+
+             ! OCPHI:
+             ! 1. flux with meltwater:
+             qout_oc_phi(c) = qout(c)*scvng_fct_mlt_ocphi*(mss_ocphi(c,j)/mss_liqice)
+             if (qout_oc_phi(c) > mss_ocphi(c,j)) then
+                qout_oc_phi(c) = mss_ocphi(c,j)
+             endif
+             mss_ocphi(c,j) = mss_ocphi(c,j) - qout_oc_phi(c)
+             qin_oc_phi(c) = qout_oc_phi(c)
+
+             ! OCPHO:
+             ! 1. flux with meltwater:
+             qout_oc_pho(c) = qout(c)*scvng_fct_mlt_ocpho*(mss_ocpho(c,j)/mss_liqice)
+             if (qout_oc_pho(c) > mss_ocpho(c,j)) then
+                qout_oc_pho(c) = mss_ocpho(c,j)
+             endif
+             mss_ocpho(c,j) = mss_ocpho(c,j) - qout_oc_pho(c)
+             qin_oc_pho(c) = qout_oc_pho(c)
+
+             ! DUST 1:
+             ! 1. flux with meltwater:
+             qout_dst1(c) = qout(c)*scvng_fct_mlt_dst1*(mss_dst1(c,j)/mss_liqice)
+             if (qout_dst1(c) > mss_dst1(c,j)) then
+                qout_dst1(c) = mss_dst1(c,j)
+             endif
+             mss_dst1(c,j) = mss_dst1(c,j) - qout_dst1(c)
+             qin_dst1(c) = qout_dst1(c)
+
+             ! DUST 2:
+             ! 1. flux with meltwater:
+             qout_dst2(c) = qout(c)*scvng_fct_mlt_dst2*(mss_dst2(c,j)/mss_liqice)
+             if (qout_dst2(c) > mss_dst2(c,j)) then
+                qout_dst2(c) = mss_dst2(c,j)
+             endif
+             mss_dst2(c,j) = mss_dst2(c,j) - qout_dst2(c)
+             qin_dst2(c) = qout_dst2(c)
+
+             ! DUST 3:
+             ! 1. flux with meltwater:
+             qout_dst3(c) = qout(c)*scvng_fct_mlt_dst3*(mss_dst3(c,j)/mss_liqice)
+             if (qout_dst3(c) > mss_dst3(c,j)) then
+                qout_dst3(c) = mss_dst3(c,j)
+             endif
+             mss_dst3(c,j) = mss_dst3(c,j) - qout_dst3(c)
+             qin_dst3(c) = qout_dst3(c)
+
+             ! DUST 4:
+             ! 1. flux with meltwater:
+             qout_dst4(c) = qout(c)*scvng_fct_mlt_dst4*(mss_dst4(c,j)/mss_liqice)
+             if (qout_dst4(c) > mss_dst4(c,j)) then
+                qout_dst4(c) = mss_dst4(c,j)
+             endif
+             mss_dst4(c,j) = mss_dst4(c,j) - qout_dst4(c)
+             qin_dst4(c) = qout_dst4(c)
+             
           end if
        end do
     end do
@@ -226,6 +419,56 @@ contains
     do fc = 1, num_nosnowc
        c = filter_nosnowc(fc)
        qflx_top_soil(c) = qflx_rain_grnd(c) + qflx_snomelt(c)
+    end do
+
+    
+    !  set aerosol deposition fluxes from forcing array
+    !  The forcing array is either set from an external file 
+    !  or from fluxes received from the atmosphere model
+    do c = lbc,ubc
+       g = cgridcell(c)
+       
+       flx_bc_dep_dry(c)   = forc_aer(g,1) + forc_aer(g,2)
+       flx_bc_dep_wet(c)   = forc_aer(g,3)
+       flx_bc_dep_phi(c)   = forc_aer(g,1) + forc_aer(g,3)
+       flx_bc_dep_pho(c)   = forc_aer(g,2)
+       flx_bc_dep(c)       = forc_aer(g,1) + forc_aer(g,2) + forc_aer(g,3)
+       
+       flx_oc_dep_dry(c)   = forc_aer(g,4) + forc_aer(g,5)
+       flx_oc_dep_wet(c)   = forc_aer(g,6)
+       flx_oc_dep_phi(c)   = forc_aer(g,4) + forc_aer(g,6)
+       flx_oc_dep_pho(c)   = forc_aer(g,5)
+       flx_oc_dep(c)       = forc_aer(g,4) + forc_aer(g,5) + forc_aer(g,6)
+       
+       flx_dst_dep_wet1(c) = forc_aer(g,7)
+       flx_dst_dep_dry1(c) = forc_aer(g,8)
+       flx_dst_dep_wet2(c) = forc_aer(g,9)
+       flx_dst_dep_dry2(c) = forc_aer(g,10)
+       flx_dst_dep_wet3(c) = forc_aer(g,11)
+       flx_dst_dep_dry3(c) = forc_aer(g,12)
+       flx_dst_dep_wet4(c) = forc_aer(g,13)
+       flx_dst_dep_dry4(c) = forc_aer(g,14)
+       flx_dst_dep(c)      = forc_aer(g,7) + forc_aer(g,8) + forc_aer(g,9) + &
+                             forc_aer(g,10) + forc_aer(g,11) + forc_aer(g,12) + &
+                             forc_aer(g,13) + forc_aer(g,14)
+    
+    end do
+
+    ! aerosol deposition fluxes into top layer
+    ! This is done after the inter-layer fluxes so that some aerosol
+    ! is in the top layer after deposition, and is not immediately
+    ! washed out before radiative calculations are done
+    do fc = 1, num_snowc
+       c = filter_snowc(fc)
+       mss_bcphi(c,snl(c)+1) = mss_bcphi(c,snl(c)+1) + (flx_bc_dep_phi(c)*dtime)
+       mss_bcpho(c,snl(c)+1) = mss_bcpho(c,snl(c)+1) + (flx_bc_dep_pho(c)*dtime)
+       mss_ocphi(c,snl(c)+1) = mss_ocphi(c,snl(c)+1) + (flx_oc_dep_phi(c)*dtime)
+       mss_ocpho(c,snl(c)+1) = mss_ocpho(c,snl(c)+1) + (flx_oc_dep_pho(c)*dtime)
+       
+       mss_dst1(c,snl(c)+1) = mss_dst1(c,snl(c)+1) + (flx_dst_dep_dry1(c) + flx_dst_dep_wet1(c))*dtime
+       mss_dst2(c,snl(c)+1) = mss_dst2(c,snl(c)+1) + (flx_dst_dep_dry2(c) + flx_dst_dep_wet2(c))*dtime
+       mss_dst3(c,snl(c)+1) = mss_dst3(c,snl(c)+1) + (flx_dst_dep_dry3(c) + flx_dst_dep_wet3(c))*dtime
+       mss_dst4(c,snl(c)+1) = mss_dst4(c,snl(c)+1) + (flx_dst_dep_dry4(c) + flx_dst_dep_wet4(c))*dtime
     end do
 
   end subroutine SnowWater
@@ -265,6 +508,7 @@ contains
 ! 15 September 1999: Yongjiu Dai; Initial code
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 ! 2/28/02, Peter Thornton: Migrated to new data structures
+! 2/29/08, David Lawrence: Revised snow overburden to be include 0.5 weight of current layer
 !
 ! !LOCAL VARIABLES:
 !
@@ -356,7 +600,7 @@ contains
 
                 ! Compaction due to overburden
 
-                ddz2 = -burden(c)*exp(-0.08_r8*td - c2*bi)/eta0
+                ddz2 = -(burden(c)+wx/2._r8)*exp(-0.08_r8*td - c2*bi)/eta0 
 
                 ! Compaction occurring during melt
 
@@ -416,6 +660,7 @@ contains
 ! 15 September 1999: Yongjiu Dai; Initial code
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 ! 2/28/02, Peter Thornton: Migrated to new data structures.
+! 03/28/08, Mark Flanner: Added aerosol masses and snow grain radius
 !
 ! !LOCAL VARIABLES:
 !
@@ -437,7 +682,16 @@ contains
 !
 ! local pointers to implicit out arguments
 !
-    real(r8), pointer :: z(:,:)            !layer thickness (m)
+    real(r8), pointer :: z(:,:)          ! layer thickness (m)
+    real(r8), pointer :: mss_bcphi(:,:)  ! hydrophilic BC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_bcpho(:,:)  ! hydrophobic BC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_ocphi(:,:)  ! hydrophilic OC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_ocpho(:,:)  ! hydrophobic OC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst1(:,:)   ! dust species 1 mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst2(:,:)   ! dust species 2 mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst3(:,:)   ! dust species 3 mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst4(:,:)   ! dust species 4 mass in snow (col,lyr) [kg]
+    real(r8), pointer :: snw_rds(:,:)    ! effective snow grain radius (col,lyr) [microns, m^-6]
 !
 !EOP
 !
@@ -458,7 +712,7 @@ contains
 
     ! Assign local pointers to derived subtypes (landunit-level)
 
-    ltype    => clm3%g%l%itype
+    ltype      => clm3%g%l%itype
 
     ! Assign local pointers to derived subtypes (column-level)
 
@@ -472,6 +726,16 @@ contains
     t_soisno   => clm3%g%l%c%ces%t_soisno
     h2osoi_ice => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq => clm3%g%l%c%cws%h2osoi_liq
+    mss_bcphi  => clm3%g%l%c%cps%mss_bcphi
+    mss_bcpho  => clm3%g%l%c%cps%mss_bcpho
+    mss_ocphi  => clm3%g%l%c%cps%mss_ocphi
+    mss_ocpho  => clm3%g%l%c%cps%mss_ocpho
+    mss_dst1   => clm3%g%l%c%cps%mss_dst1
+    mss_dst2   => clm3%g%l%c%cps%mss_dst2
+    mss_dst3   => clm3%g%l%c%cps%mss_dst3
+    mss_dst4   => clm3%g%l%c%cps%mss_dst4
+    snw_rds    => clm3%g%l%c%cps%snw_rds
+
 
     ! Check the mass of ice lens of snow, when the total is less than a small value,
     ! combine it with the underlying neighbor.
@@ -493,9 +757,36 @@ contains
              if (ltype(l) == istsoil .or. ltype(l)==isturb) then
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
+                
+                ! NOTE: Temperature, and similarly snw_rds, of the
+                ! underlying snow layer are NOT adjusted in this case. 
+                ! Because the layer being eliminated has a small mass, 
+                ! this should not make a large difference, but it 
+                ! would be more thorough to do so.
+                if (j /= 0) then
+                   mss_bcphi(c,j+1) = mss_bcphi(c,j+1) + mss_bcphi(c,j)
+                   mss_bcpho(c,j+1) = mss_bcpho(c,j+1) + mss_bcpho(c,j)
+                   mss_ocphi(c,j+1) = mss_ocphi(c,j+1) + mss_ocphi(c,j)
+                   mss_ocpho(c,j+1) = mss_ocpho(c,j+1) + mss_ocpho(c,j)
+                   mss_dst1(c,j+1)  = mss_dst1(c,j+1) + mss_dst1(c,j)
+                   mss_dst2(c,j+1)  = mss_dst2(c,j+1) + mss_dst2(c,j)
+                   mss_dst3(c,j+1)  = mss_dst3(c,j+1) + mss_dst3(c,j)
+                   mss_dst4(c,j+1)  = mss_dst4(c,j+1) + mss_dst4(c,j)
+                end if
+
              else if (ltype(l) /= istsoil .and. ltype(l) /= isturb .and. j /= 0) then
                 h2osoi_liq(c,j+1) = h2osoi_liq(c,j+1) + h2osoi_liq(c,j)
                 h2osoi_ice(c,j+1) = h2osoi_ice(c,j+1) + h2osoi_ice(c,j)
+                
+                mss_bcphi(c,j+1) = mss_bcphi(c,j+1) + mss_bcphi(c,j)
+                mss_bcpho(c,j+1) = mss_bcpho(c,j+1) + mss_bcpho(c,j)
+                mss_ocphi(c,j+1) = mss_ocphi(c,j+1) + mss_ocphi(c,j)
+                mss_ocpho(c,j+1) = mss_ocpho(c,j+1) + mss_ocpho(c,j)
+                mss_dst1(c,j+1)  = mss_dst1(c,j+1) + mss_dst1(c,j)
+                mss_dst2(c,j+1)  = mss_dst2(c,j+1) + mss_dst2(c,j)
+                mss_dst3(c,j+1)  = mss_dst3(c,j+1) + mss_dst3(c,j)
+                mss_dst4(c,j+1)  = mss_dst4(c,j+1) + mss_dst4(c,j)
+
              end if
 
              ! shift all elements above this down one.
@@ -504,6 +795,17 @@ contains
                    t_soisno(c,i)   = t_soisno(c,i-1)
                    h2osoi_liq(c,i) = h2osoi_liq(c,i-1)
                    h2osoi_ice(c,i) = h2osoi_ice(c,i-1)
+                   
+                   mss_bcphi(c,i)   = mss_bcphi(c,i-1)
+                   mss_bcpho(c,i)   = mss_bcpho(c,i-1)
+                   mss_ocphi(c,i)   = mss_ocphi(c,i-1)
+                   mss_ocpho(c,i)   = mss_ocpho(c,i-1)
+                   mss_dst1(c,i)    = mss_dst1(c,i-1)
+                   mss_dst2(c,i)    = mss_dst2(c,i-1)
+                   mss_dst3(c,i)    = mss_dst3(c,i-1)
+                   mss_dst4(c,i)    = mss_dst4(c,i-1)
+                   snw_rds(c,i)     = snw_rds(c,i-1)
+
                    dz(c,i)         = dz(c,i-1)
                 end do
              end if
@@ -547,6 +849,16 @@ contains
        if (snowdp(c) < 0.01_r8 .and. snowdp(c) > 0._r8) then
           snl(c) = 0
           h2osno(c) = zwice(c)
+
+          mss_bcphi(c,:) = 0._r8
+          mss_bcpho(c,:) = 0._r8
+          mss_ocphi(c,:) = 0._r8
+          mss_ocpho(c,:) = 0._r8
+          mss_dst1(c,:)  = 0._r8
+          mss_dst2(c,:)  = 0._r8
+          mss_dst3(c,:)  = 0._r8
+          mss_dst4(c,:)  = 0._r8
+
           if (h2osno(c) <= 0._r8) snowdp(c) = 0._r8
           if (ltype(l) == istsoil .or. ltype(l) == isturb) then
              h2osoi_liq(c,1) = h2osoi_liq(c,1) + zwliq(c)
@@ -591,6 +903,21 @@ contains
                    l = neibor
                 end if
 
+                ! this should be included in 'Combo' for consistency,
+                ! but functionally it is the same to do it here
+                mss_bcphi(c,j)=mss_bcphi(c,j)+mss_bcphi(c,l)
+                mss_bcpho(c,j)=mss_bcpho(c,j)+mss_bcpho(c,l)
+                mss_ocphi(c,j)=mss_ocphi(c,j)+mss_ocphi(c,l)
+                mss_ocpho(c,j)=mss_ocpho(c,j)+mss_ocpho(c,l)
+                mss_dst1(c,j)=mss_dst1(c,j)+mss_dst1(c,l)
+                mss_dst2(c,j)=mss_dst2(c,j)+mss_dst2(c,l)
+                mss_dst3(c,j)=mss_dst3(c,j)+mss_dst3(c,l)
+                mss_dst4(c,j)=mss_dst4(c,j)+mss_dst4(c,l)
+                ! mass-weighted combination of effective grain size:
+                snw_rds(c,j) = (snw_rds(c,j)*(h2osoi_liq(c,j)+h2osoi_ice(c,j)) + &
+                               snw_rds(c,l)*(h2osoi_liq(c,l)+h2osoi_ice(c,l))) / &
+                               (h2osoi_liq(c,j)+h2osoi_ice(c,j)+h2osoi_liq(c,l)+h2osoi_ice(c,l))
+
                 call Combo (dz(c,j), h2osoi_liq(c,j), h2osoi_ice(c,j), &
                    t_soisno(c,j), dz(c,l), h2osoi_liq(c,l), h2osoi_ice(c,l), t_soisno(c,l) )
 
@@ -600,6 +927,17 @@ contains
                       t_soisno(c,k) = t_soisno(c,k-1)
                       h2osoi_ice(c,k) = h2osoi_ice(c,k-1)
                       h2osoi_liq(c,k) = h2osoi_liq(c,k-1)
+
+                      mss_bcphi(c,k) = mss_bcphi(c,k-1)
+                      mss_bcpho(c,k) = mss_bcpho(c,k-1)
+                      mss_ocphi(c,k) = mss_ocphi(c,k-1)
+                      mss_ocpho(c,k) = mss_ocpho(c,k-1)
+                      mss_dst1(c,k)  = mss_dst1(c,k-1)
+                      mss_dst2(c,k)  = mss_dst2(c,k-1)
+                      mss_dst3(c,k)  = mss_dst3(c,k-1)
+                      mss_dst4(c,k)  = mss_dst4(c,k-1)
+                      snw_rds(c,k)   = snw_rds(c,k-1)
+
                       dz(c,k) = dz(c,k-1)
                    end do
                 end if
@@ -649,6 +987,7 @@ contains
 !
 ! !USES:
     use clmtype
+    use clm_varcon,  only : tfrz 
 !
 ! !ARGUMENTS:
     implicit none
@@ -663,6 +1002,8 @@ contains
 ! 15 September 1999: Yongjiu Dai; Initial code
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 ! 2/28/02, Peter Thornton: Migrated to new data structures.
+! 2/29/08, David Lawrence: Snowpack T profile maintained during layer splitting
+! 03/28/08, Mark Flanner: Added aerosol masses and snow grain radius
 !
 ! !LOCAL VARIABLES:
 !
@@ -677,7 +1018,16 @@ contains
 !
 ! local pointers to implicit out arguments
 !
-    real(r8), pointer :: z(:,:)            !layer thickness (m)
+    real(r8), pointer :: z(:,:)          ! layer thickness (m)
+    real(r8), pointer :: mss_bcphi(:,:)  ! hydrophilic BC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_bcpho(:,:)  ! hydrophobic BC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_ocphi(:,:)  ! hydrophilic OC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_ocpho(:,:)  ! hydrophobic OC mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst1(:,:)   ! dust species 1 mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst2(:,:)   ! dust species 2 mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst3(:,:)   ! dust species 3 mass in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst4(:,:)   ! dust species 4 mass in snow (col,lyr) [kg]
+    real(r8), pointer :: snw_rds(:,:)    ! effective snow grain radius (col,lyr) [microns, m^-6]
 !
 !EOP
 !
@@ -693,6 +1043,27 @@ contains
     real(r8) :: zwice                  ! temporary
     real(r8) :: zwliq                  ! temporary
     real(r8) :: propor                 ! temporary
+    real(r8) :: dtdz                   ! temporary
+
+    ! temporary variables mimicking the structure of other layer division variables
+    real(r8) :: mbc_phi(lbc:ubc,nlevsno) ! mass of BC in each snow layer
+    real(r8) :: zmbc_phi                 ! temporary
+    real(r8) :: mbc_pho(lbc:ubc,nlevsno) ! mass of BC in each snow layer
+    real(r8) :: zmbc_pho                 ! temporary
+    real(r8) :: moc_phi(lbc:ubc,nlevsno) ! mass of OC in each snow layer
+    real(r8) :: zmoc_phi                 ! temporary
+    real(r8) :: moc_pho(lbc:ubc,nlevsno) ! mass of OC in each snow layer
+    real(r8) :: zmoc_pho                 ! temporary
+    real(r8) :: mdst1(lbc:ubc,nlevsno)   ! mass of dust 1 in each snow layer
+    real(r8) :: zmdst1                   ! temporary
+    real(r8) :: mdst2(lbc:ubc,nlevsno)   ! mass of dust 2 in each snow layer
+    real(r8) :: zmdst2                   ! temporary
+    real(r8) :: mdst3(lbc:ubc,nlevsno)   ! mass of dust 3 in each snow layer
+    real(r8) :: zmdst3                   ! temporary
+    real(r8) :: mdst4(lbc:ubc,nlevsno)   ! mass of dust 4 in each snow layer
+    real(r8) :: zmdst4                   ! temporary
+    real(r8) :: rds(lbc:ubc,nlevsno)
+
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtype components (column-level)
@@ -704,6 +1075,16 @@ contains
     t_soisno   => clm3%g%l%c%ces%t_soisno
     h2osoi_ice => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq => clm3%g%l%c%cws%h2osoi_liq
+    mss_bcphi  => clm3%g%l%c%cps%mss_bcphi
+    mss_bcpho  => clm3%g%l%c%cps%mss_bcpho
+    mss_ocphi  => clm3%g%l%c%cps%mss_ocphi
+    mss_ocpho  => clm3%g%l%c%cps%mss_ocpho
+    mss_dst1   => clm3%g%l%c%cps%mss_dst1
+    mss_dst2   => clm3%g%l%c%cps%mss_dst2
+    mss_dst3   => clm3%g%l%c%cps%mss_dst3
+    mss_dst4   => clm3%g%l%c%cps%mss_dst4
+    snw_rds    => clm3%g%l%c%cps%snw_rds
+    
 
     ! Begin calculation - note that the following column loops are only invoked
     ! for snow-covered columns
@@ -718,6 +1099,19 @@ contains
              swice(c,j) = h2osoi_ice(c,j+snl(c))
              swliq(c,j) = h2osoi_liq(c,j+snl(c))
              tsno(c,j)  = t_soisno(c,j+snl(c))
+
+             !mgf++
+             mbc_phi(c,j) = mss_bcphi(c,j+snl(c))
+             mbc_pho(c,j) = mss_bcpho(c,j+snl(c))
+             moc_phi(c,j) = mss_ocphi(c,j+snl(c))
+             moc_pho(c,j) = mss_ocpho(c,j+snl(c))
+             mdst1(c,j)   = mss_dst1(c,j+snl(c))
+             mdst2(c,j)   = mss_dst2(c,j+snl(c))
+             mdst3(c,j)   = mss_dst3(c,j+snl(c))
+             mdst4(c,j)   = mss_dst4(c,j+snl(c))
+             rds(c,j)     = snw_rds(c,j+snl(c))
+             !mgf--
+
           end if
        end do
     end do
@@ -740,6 +1134,27 @@ contains
              swice(c,2) = swice(c,1)
              swliq(c,2) = swliq(c,1)
              tsno(c,2)  = tsno(c,1)
+             
+             !mgf++
+             mbc_phi(c,1) = mbc_phi(c,1)/2._r8
+             mbc_phi(c,2) = mbc_phi(c,1)
+             mbc_pho(c,1) = mbc_pho(c,1)/2._r8
+             mbc_pho(c,2) = mbc_pho(c,1)
+             moc_phi(c,1) = moc_phi(c,1)/2._r8
+             moc_phi(c,2) = moc_phi(c,1)
+             moc_pho(c,1) = moc_pho(c,1)/2._r8
+             moc_pho(c,2) = moc_pho(c,1)
+             mdst1(c,1) = mdst1(c,1)/2._r8
+             mdst1(c,2) = mdst1(c,1)
+             mdst2(c,1) = mdst2(c,1)/2._r8
+             mdst2(c,2) = mdst2(c,1)
+             mdst3(c,1) = mdst3(c,1)/2._r8
+             mdst3(c,2) = mdst3(c,1)
+             mdst4(c,1) = mdst4(c,1)/2._r8
+             mdst4(c,2) = mdst4(c,1)
+             rds(c,2) = rds(c,1)
+             !mgf--
+
           end if
        end if
 
@@ -749,10 +1164,46 @@ contains
              propor = drr/dzsno(c,1)
              zwice = propor*swice(c,1)
              zwliq = propor*swliq(c,1)
+
+             !mgf++
+             zmbc_phi = propor*mbc_phi(c,1)
+             zmbc_pho = propor*mbc_pho(c,1)
+             zmoc_phi = propor*moc_phi(c,1)
+             zmoc_pho = propor*moc_pho(c,1)
+             zmdst1 = propor*mdst1(c,1)
+             zmdst2 = propor*mdst2(c,1)
+             zmdst3 = propor*mdst3(c,1)
+             zmdst4 = propor*mdst4(c,1)
+             !mgf--
+
              propor = 0.02_r8/dzsno(c,1)
              swice(c,1) = propor*swice(c,1)
              swliq(c,1) = propor*swliq(c,1)
+
+             !mgf++
+             mbc_phi(c,1) = propor*mbc_phi(c,1)
+             mbc_pho(c,1) = propor*mbc_pho(c,1)
+             moc_phi(c,1) = propor*moc_phi(c,1)
+             moc_pho(c,1) = propor*moc_pho(c,1)
+             mdst1(c,1) = propor*mdst1(c,1)
+             mdst2(c,1) = propor*mdst2(c,1)
+             mdst3(c,1) = propor*mdst3(c,1)
+             mdst4(c,1) = propor*mdst4(c,1)
+             !mgf--
+
              dzsno(c,1) = 0.02_r8
+
+             !mgf++
+             mbc_phi(c,2) = mbc_phi(c,2)+zmbc_phi  ! (combo)
+             mbc_pho(c,2) = mbc_pho(c,2)+zmbc_pho  ! (combo)
+             moc_phi(c,2) = moc_phi(c,2)+zmoc_phi  ! (combo)
+             moc_pho(c,2) = moc_pho(c,2)+zmoc_pho  ! (combo)
+             mdst1(c,2) = mdst1(c,2)+zmdst1  ! (combo)
+             mdst2(c,2) = mdst2(c,2)+zmdst2  ! (combo)
+             mdst3(c,2) = mdst3(c,2)+zmdst3  ! (combo)
+             mdst4(c,2) = mdst4(c,2)+zmdst4  ! (combo)
+             rds(c,2) = rds(c,1) ! (combo)
+             !mgf--
 
              call Combo (dzsno(c,2), swliq(c,2), swice(c,2), tsno(c,2), drr, &
                   zwliq, zwice, tsno(c,1))
@@ -760,13 +1211,40 @@ contains
              ! Subdivide a new layer
              if (msno <= 2 .and. dzsno(c,2) > 0.07_r8) then
                 msno = 3
+                dtdz = (tsno(c,1) - tsno(c,2))/((dzsno(c,1)+dzsno(c,2))/2._r8) 
                 dzsno(c,2) = dzsno(c,2)/2._r8
                 swice(c,2) = swice(c,2)/2._r8
                 swliq(c,2) = swliq(c,2)/2._r8
                 dzsno(c,3) = dzsno(c,2)
                 swice(c,3) = swice(c,2)
                 swliq(c,3) = swliq(c,2)
-                tsno(c,3)  = tsno(c,2)
+                tsno(c,3) = tsno(c,2) - dtdz*dzsno(c,2)/2._r8
+                if (tsno(c,3) >= tfrz) then 
+                   tsno(c,3)  = tsno(c,2)
+                else
+                   tsno(c,2) = tsno(c,2) + dtdz*dzsno(c,2)/2._r8 
+                endif
+
+                !mgf++
+                mbc_phi(c,2) = mbc_phi(c,2)/2._r8
+                mbc_phi(c,3) = mbc_phi(c,2)
+                mbc_pho(c,2) = mbc_pho(c,2)/2._r8
+                mbc_pho(c,3) = mbc_pho(c,2)
+                moc_phi(c,2) = moc_phi(c,2)/2._r8
+                moc_phi(c,3) = moc_phi(c,2)
+                moc_pho(c,2) = moc_pho(c,2)/2._r8
+                moc_pho(c,3) = moc_pho(c,2)
+                mdst1(c,2) = mdst1(c,2)/2._r8
+                mdst1(c,3) = mdst1(c,2)
+                mdst2(c,2) = mdst2(c,2)/2._r8
+                mdst2(c,3) = mdst2(c,2)
+                mdst3(c,2) = mdst3(c,2)/2._r8
+                mdst3(c,3) = mdst3(c,2)
+                mdst4(c,2) = mdst4(c,2)/2._r8
+                mdst4(c,3) = mdst4(c,2)
+                rds(c,3) = rds(c,2)
+                !mgf--
+
              end if
           end if
        end if
@@ -777,10 +1255,46 @@ contains
              propor = drr/dzsno(c,2)
              zwice = propor*swice(c,2)
              zwliq = propor*swliq(c,2)
+             
+             !mgf++
+             zmbc_phi = propor*mbc_phi(c,2)
+             zmbc_pho = propor*mbc_pho(c,2)
+             zmoc_phi = propor*moc_phi(c,2)
+             zmoc_pho = propor*moc_pho(c,2)
+             zmdst1 = propor*mdst1(c,2)
+             zmdst2 = propor*mdst2(c,2)
+             zmdst3 = propor*mdst3(c,2)
+             zmdst4 = propor*mdst4(c,2)
+             !mgf--
+
              propor = 0.05_r8/dzsno(c,2)
              swice(c,2) = propor*swice(c,2)
              swliq(c,2) = propor*swliq(c,2)
+
+             !mgf++
+             mbc_phi(c,2) = propor*mbc_phi(c,2)
+             mbc_pho(c,2) = propor*mbc_pho(c,2)
+             moc_phi(c,2) = propor*moc_phi(c,2)
+             moc_pho(c,2) = propor*moc_pho(c,2)
+             mdst1(c,2) = propor*mdst1(c,2)
+             mdst2(c,2) = propor*mdst2(c,2)
+             mdst3(c,2) = propor*mdst3(c,2)
+             mdst4(c,2) = propor*mdst4(c,2)
+             !mgf--
+
              dzsno(c,2) = 0.05_r8
+
+             !mgf++
+             mbc_phi(c,3) = mbc_phi(c,3)+zmbc_phi  ! (combo)
+             mbc_pho(c,3) = mbc_pho(c,3)+zmbc_pho  ! (combo)
+             moc_phi(c,3) = moc_phi(c,3)+zmoc_phi  ! (combo)
+             moc_pho(c,3) = moc_pho(c,3)+zmoc_pho  ! (combo)
+             mdst1(c,3) = mdst1(c,3)+zmdst1  ! (combo)
+             mdst2(c,3) = mdst2(c,3)+zmdst2  ! (combo)
+             mdst3(c,3) = mdst3(c,3)+zmdst3  ! (combo)
+             mdst4(c,3) = mdst4(c,3)+zmdst4  ! (combo)
+             rds(c,3) = rds(c,2) ! (combo)
+             !mgf--
 
              call Combo (dzsno(c,3), swliq(c,3), swice(c,3), tsno(c,3), drr, &
                   zwliq, zwice, tsno(c,2))
@@ -788,13 +1302,40 @@ contains
              ! Subdivided a new layer
              if (msno <= 3 .and. dzsno(c,3) > 0.18_r8) then
                 msno =  4
+                dtdz = (tsno(c,2) - tsno(c,3))/((dzsno(c,2)+dzsno(c,3))/2._r8) 
                 dzsno(c,3) = dzsno(c,3)/2._r8
                 swice(c,3) = swice(c,3)/2._r8
                 swliq(c,3) = swliq(c,3)/2._r8
                 dzsno(c,4) = dzsno(c,3)
                 swice(c,4) = swice(c,3)
                 swliq(c,4) = swliq(c,3)
-                tsno(c,4)  = tsno(c,3)
+                tsno(c,4) = tsno(c,3) - dtdz*dzsno(c,3)/2._r8
+                if (tsno(c,4) >= tfrz) then 
+                   tsno(c,4)  = tsno(c,3)
+                else
+                   tsno(c,3) = tsno(c,3) + dtdz*dzsno(c,3)/2._r8 
+                endif
+                
+                !mgf++
+                mbc_phi(c,3) = mbc_phi(c,3)/2._r8
+                mbc_phi(c,4) = mbc_phi(c,3)
+                mbc_pho(c,3) = mbc_pho(c,3)/2._r8
+                mbc_pho(c,4) = mbc_pho(c,3)
+                moc_phi(c,3) = moc_phi(c,3)/2._r8
+                moc_phi(c,4) = moc_phi(c,3)
+                moc_pho(c,3) = moc_pho(c,3)/2._r8
+                moc_pho(c,4) = moc_pho(c,3)
+                mdst1(c,3) = mdst1(c,3)/2._r8
+                mdst1(c,4) = mdst1(c,3)
+                mdst2(c,3) = mdst2(c,3)/2._r8
+                mdst2(c,4) = mdst2(c,3)
+                mdst3(c,3) = mdst3(c,3)/2._r8
+                mdst3(c,4) = mdst3(c,3)
+                mdst4(c,3) = mdst4(c,3)/2._r8
+                mdst4(c,4) = mdst4(c,3)
+                rds(c,4) = rds(c,3)
+                !mgf--
+
              end if
           end if
        end if
@@ -805,10 +1346,46 @@ contains
              propor = drr/dzsno(c,3)
              zwice = propor*swice(c,3)
              zwliq = propor*swliq(c,3)
+             
+             !mgf++
+             zmbc_phi = propor*mbc_phi(c,3)
+             zmbc_pho = propor*mbc_pho(c,3)
+             zmoc_phi = propor*moc_phi(c,3)
+             zmoc_pho = propor*moc_pho(c,3)
+             zmdst1 = propor*mdst1(c,3)
+             zmdst2 = propor*mdst2(c,3)
+             zmdst3 = propor*mdst3(c,3)
+             zmdst4 = propor*mdst4(c,3)
+             !mgf--
+
              propor = 0.11_r8/dzsno(c,3)
              swice(c,3) = propor*swice(c,3)
              swliq(c,3) = propor*swliq(c,3)
+
+             !mgf++
+             mbc_phi(c,3) = propor*mbc_phi(c,3)
+             mbc_pho(c,3) = propor*mbc_pho(c,3)
+             moc_phi(c,3) = propor*moc_phi(c,3)
+             moc_pho(c,3) = propor*moc_pho(c,3)
+             mdst1(c,3) = propor*mdst1(c,3)
+             mdst2(c,3) = propor*mdst2(c,3)
+             mdst3(c,3) = propor*mdst3(c,3)
+             mdst4(c,3) = propor*mdst4(c,3)
+             !mgf--
+
              dzsno(c,3) = 0.11_r8
+
+             !mgf++
+             mbc_phi(c,4) = mbc_phi(c,4)+zmbc_phi  ! (combo)
+             mbc_pho(c,4) = mbc_pho(c,4)+zmbc_pho  ! (combo)
+             moc_phi(c,4) = moc_phi(c,4)+zmoc_phi  ! (combo)
+             moc_pho(c,4) = moc_pho(c,4)+zmoc_pho  ! (combo)
+             mdst1(c,4) = mdst1(c,4)+zmdst1  ! (combo)
+             mdst2(c,4) = mdst2(c,4)+zmdst2  ! (combo)
+             mdst3(c,4) = mdst3(c,4)+zmdst3  ! (combo)
+             mdst4(c,4) = mdst4(c,4)+zmdst4  ! (combo)
+             rds(c,4) = rds(c,3) ! (combo)
+             !mgf--
 
              call Combo (dzsno(c,4), swliq(c,4), swice(c,4), tsno(c,4), drr, &
                   zwliq, zwice, tsno(c,3))
@@ -816,13 +1393,40 @@ contains
              ! Subdivided a new layer
              if (msno <= 4 .and. dzsno(c,4) > 0.41_r8) then
                 msno = 5
+                dtdz = (tsno(c,3) - tsno(c,4))/((dzsno(c,3)+dzsno(c,4))/2._r8) 
                 dzsno(c,4) = dzsno(c,4)/2._r8
                 swice(c,4) = swice(c,4)/2._r8
                 swliq(c,4) = swliq(c,4)/2._r8
                 dzsno(c,5) = dzsno(c,4)
                 swice(c,5) = swice(c,4)
                 swliq(c,5) = swliq(c,4)
-                tsno(c,5)  = tsno(c,4)
+                tsno(c,5) = tsno(c,4) - dtdz*dzsno(c,4)/2._r8 
+                if (tsno(c,5) >= tfrz) then 
+                   tsno(c,5)  = tsno(c,4)
+                else
+                   tsno(c,4) = tsno(c,4) + dtdz*dzsno(c,4)/2._r8 
+                endif
+
+                !mgf++
+                mbc_phi(c,4) = mbc_phi(c,4)/2._r8
+                mbc_phi(c,5) = mbc_phi(c,4)
+                mbc_pho(c,4) = mbc_pho(c,4)/2._r8
+                mbc_pho(c,5) = mbc_pho(c,4)              
+                moc_phi(c,4) = moc_phi(c,4)/2._r8
+                moc_phi(c,5) = moc_phi(c,4)
+                moc_pho(c,4) = moc_pho(c,4)/2._r8
+                moc_pho(c,5) = moc_pho(c,4)
+                mdst1(c,4) = mdst1(c,4)/2._r8
+                mdst1(c,5) = mdst1(c,4)
+                mdst2(c,4) = mdst2(c,4)/2._r8
+                mdst2(c,5) = mdst2(c,4)
+                mdst3(c,4) = mdst3(c,4)/2._r8
+                mdst3(c,5) = mdst3(c,4)
+                mdst4(c,4) = mdst4(c,4)/2._r8
+                mdst4(c,5) = mdst4(c,4)
+                rds(c,5) = rds(c,4)
+                !mgf--
+
              end if
           end if
        end if
@@ -833,10 +1437,46 @@ contains
              propor = drr/dzsno(c,4)
              zwice = propor*swice(c,4)
              zwliq = propor*swliq(c,4)
+             
+             !mgf++
+             zmbc_phi = propor*mbc_phi(c,4)
+             zmbc_pho = propor*mbc_pho(c,4)
+             zmoc_phi = propor*moc_phi(c,4)
+             zmoc_pho = propor*moc_pho(c,4)
+             zmdst1 = propor*mdst1(c,4)
+             zmdst2 = propor*mdst2(c,4)
+             zmdst3 = propor*mdst3(c,4)
+             zmdst4 = propor*mdst4(c,4)
+             !mgf--
+
              propor = 0.23_r8/dzsno(c,4)
              swice(c,4) = propor*swice(c,4)
              swliq(c,4) = propor*swliq(c,4)
+
+             !mgf++
+             mbc_phi(c,4) = propor*mbc_phi(c,4)
+             mbc_pho(c,4) = propor*mbc_pho(c,4)
+             moc_phi(c,4) = propor*moc_phi(c,4)
+             moc_pho(c,4) = propor*moc_pho(c,4)
+             mdst1(c,4) = propor*mdst1(c,4)
+             mdst2(c,4) = propor*mdst2(c,4)
+             mdst3(c,4) = propor*mdst3(c,4)
+             mdst4(c,4) = propor*mdst4(c,4)
+             !mgf--
+
              dzsno(c,4) = 0.23_r8
+
+             !mgf++
+             mbc_phi(c,5) = mbc_phi(c,5)+zmbc_phi  ! (combo)
+             mbc_pho(c,5) = mbc_pho(c,5)+zmbc_pho  ! (combo)
+             moc_phi(c,5) = moc_phi(c,5)+zmoc_phi  ! (combo)
+             moc_pho(c,5) = moc_pho(c,5)+zmoc_pho  ! (combo)
+             mdst1(c,5) = mdst1(c,5)+zmdst1  ! (combo)
+             mdst2(c,5) = mdst2(c,5)+zmdst2  ! (combo)
+             mdst3(c,5) = mdst3(c,5)+zmdst3  ! (combo)
+             mdst4(c,5) = mdst4(c,5)+zmdst4  ! (combo)
+             rds(c,5) = rds(c,4) ! (combo)
+             !mgf--
 
              call Combo (dzsno(c,5), swliq(c,5), swice(c,5), tsno(c,5), drr, &
                   zwliq, zwice, tsno(c,4))
@@ -857,6 +1497,19 @@ contains
              h2osoi_ice(c,j) = swice(c,j-snl(c))
              h2osoi_liq(c,j) = swliq(c,j-snl(c))
              t_soisno(c,j)   = tsno(c,j-snl(c))
+
+             !mgf++
+             mss_bcphi(c,j)   = mbc_phi(c,j-snl(c))
+             mss_bcpho(c,j)   = mbc_pho(c,j-snl(c))
+             mss_ocphi(c,j)   = moc_phi(c,j-snl(c))
+             mss_ocpho(c,j)   = moc_pho(c,j-snl(c))
+             mss_dst1(c,j)    = mdst1(c,j-snl(c))
+             mss_dst2(c,j)    = mdst2(c,j-snl(c))
+             mss_dst3(c,j)    = mdst3(c,j-snl(c))
+             mss_dst4(c,j)    = mdst4(c,j-snl(c))
+             snw_rds(c,j)     = rds(c,j-snl(c))
+             !mgf--
+
           end if
        end do
     end do

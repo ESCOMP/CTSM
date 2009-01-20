@@ -299,8 +299,8 @@ contains
     do i=1,rtmlon
        n = (j-1)*rtmlon + i
        if (rdirc(n) /= 0) then
-          ir = i + ioff(rdirc(n))
-          jr = j + joff(rdirc(n))
+          ir = i + ioff(abs(rdirc(n)))
+          jr = j + joff(abs(rdirc(n)))
           if (ir < 1     ) ir = ir + rtmlon
           if (ir > rtmlon) ir = ir - rtmlon
           !--- check cross pole flow, etc
@@ -317,8 +317,6 @@ contains
        endif
     enddo
     enddo
-
-    deallocate(rdirc)
 
     !--- Determine RTM celledges and areas 
 
@@ -363,7 +361,7 @@ contains
 
     call t_stopf('rtmi_setl2r')
 
-    !--- Determine rtm ocn/land mask, 0=none, 1=land, 2=ocean
+    !--- Determine rtm ocn/land mask, 0=none, 1=land, 2=ocean outflow, -1=reroute over ocean to ocean outflow points
 
     call t_startf('rtmi_decomp')
 
@@ -379,12 +377,17 @@ contains
     do n=1,rtmlon*rtmlat         ! override downstream setting from local info
        nr = dwnstrm_index(n)
        if (nr /= 0) then         ! n is always land if dwnstrm_index exists
-          gmask(n) = 1
+          if (rdirc(n) > 0) then
+             gmask(n) = 1
+          else if (rdirc(n) < 0) then 
+             gmask(n) = -1
+          end if
        else                      ! n is ocn if no dwnstrm_index and some frac
           if (gfrac(n)>0._r8) gmask(n) = 2
        end if
     enddo
 
+    deallocate(rdirc)
     deallocate(gfrac,lfrac)
 
    !--- Compute river basins, actually compute ocean outlet gridcell
@@ -403,16 +406,16 @@ contains
     nocn = 0
     do nr=1,rtmlon*rtmlat
        n = nr
-       if (gmask(n) == 1) then    ! land
+       if (abs(gmask(n)) == 1) then    ! land
           g = 0
-          do while (gmask(n) == 1 .and. g < rtmlon*rtmlat)  ! follow downstream
+          do while (abs(gmask(n)) == 1 .and. g < rtmlon*rtmlat)  ! follow downstream
              n = dwnstrm_index(n)
              g = g + 1
           end do
           if (gmask(n) == 2) then  ! found ocean outlet
              iocn(nr) = n                 ! set ocean outlet or nr to n
              nocn(n) = nocn(n) + 1        ! one more land cell for n
-          elseif (gmask(n) == 1) then  ! no ocean outlet, warn user, ignore cell
+          elseif (abs(gmask(n)) == 1) then  ! no ocean outlet, warn user, ignore cell
              write(iulog,*) 'rtmini WARNING no downstream ocean cell - IGNORED', &
                g,nr,gmask(nr),dwnstrm_index(nr), &
                n,gmask(n),dwnstrm_index(n)
@@ -1298,7 +1301,7 @@ contains
        sfluxin = 0._r8
        do n = runoff%begr,runoff%endr
           nr = runoff%dsi(n)
-          if (runoff%mask(n) == 1) then
+          if (abs(runoff%mask(n)) == 1) then
              if (nr < runoff%begr .or. nr > runoff%endr) then
                 write(iulog,*) 'Rtm ERROR: non-local communication ',n,nr
                 call endrun()
@@ -1337,7 +1340,7 @@ contains
              sumdvt(nt) = sumdvt(nt) + dvolrdt
           endif
 
-          if (runoff%mask(n) == 1) then         ! land points
+          if (abs(runoff%mask(n)) == 1) then         ! land points
              volr(n,nt)     = volr(n,nt) + dvolrdt*delt
              fluxout(n,nt)  = volr(n,nt) * evel(n,nt)/ddist(n)
 !            --- old cfl constraint.  now use subcycling.  for reference only
@@ -1354,7 +1357,7 @@ contains
              fluxout(n,nt) = 0._r8
           endif
 
-          if (runoff%mask(n) == 1) then
+          if (abs(runoff%mask(n)) == 1) then
              runoff%runoff(n,nt) = runoff%runoff(n,nt) + fluxout(n,nt)
           elseif (runoff%mask(n) == 2) then
              runoff%runoff(n,nt) = runoff%runoff(n,nt) + dvolrdt

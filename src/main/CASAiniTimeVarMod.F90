@@ -44,6 +44,7 @@ subroutine CASAiniTimeVar()
    use clmtype
    use shr_kind_mod, only: r8 => shr_kind_r8
    use decompMod   , only: get_proc_bounds
+   use clm_varpar  , only: nlevgrnd
 !
 ! !ARGUMENTS:
    implicit none
@@ -87,9 +88,10 @@ subroutine CASAiniTimeVar()
    real(r8), pointer :: casa_woodc(:)        ! wood C [gC/m2]
    real(r8), pointer :: casa_woodc_alloc(:)  ! wood C allocation [gC/m2/s]
    real(r8), pointer :: casa_woodc_loss(:)   ! wood C loss [gC/m2/s]
+   real(r8), pointer :: soilpsi(:,:)         ! soil water potential in each
 !
 ! !LOCAL VARIABLES:
-   integer :: g,l,c,p      ! indices
+   integer :: g,l,c,p,j    ! indices
    integer :: begp, endp   ! per-clump/proc beginning and ending pft indices
    integer :: begc, endc   ! per-clump/proc beginning and ending column indices
    integer :: begl, endl   ! per-clump/proc beginning and ending landunit indices
@@ -101,6 +103,7 @@ subroutine CASAiniTimeVar()
     ! assign local pointers at the landunit level
 
     ! assign local pointers at the column level
+    soilpsi                        => clm3%g%l%c%cps%soilpsi
 
     ! assign local pointers at the pft level
     casa_agnpp                     => clm3%g%l%c%p%pps%casa_agnpp
@@ -132,6 +135,8 @@ subroutine CASAiniTimeVar()
 
    ! Determine subgrid bounds on this processor
    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+
+   ! initialize column-level variables
 
    ! initialize pft-level variables
 !dir$ concurrent

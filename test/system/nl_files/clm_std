@@ -2,4 +2,4 @@
 -ignore_ic_date 
 -silent 
 -case clmrun 
--source CLMNCEP
+-source CLM_QIAN

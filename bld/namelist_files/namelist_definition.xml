@@ -114,6 +114,26 @@ Full pathname of surface data file.
 Urban input data file name
 </entry>
 
+<entry id="forganic" type="char*256"  input_pathname="abs" category="datasets" 
+       group="clm_inparm" valid_values="" >
+Soil organic carbon data file name
+</entry>
+
+<entry id="faerdep" type="char*256"  input_pathname="abs" category="datasets" 
+       group="clm_inparm" valid_values="" >
+Aerosol deposition file name (when NOT passing deposition rates from atmosphere model)
+</entry>
+
+<entry id="fsnowoptics" type="char*256"  input_pathname="abs" category="datasets" 
+       group="clm_inparm" valid_values="" >
+SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
+</entry>
+
+<entry id="fsnowaging" type="char*256"  input_pathname="abs" category="datasets" 
+       group="clm_inparm" valid_values="" >
+SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
+</entry>
+
 <entry id="hist_avgflag_pertape" type="char*1(6)" category="history"
        group="clm_inparm" valid_values="" >
 Per file averaging flag.
@@ -232,12 +252,6 @@ Per file history write frequency (0=monthly)
        group="clm_inparm" valid_values="" >
 Per file type1d
 <default>Default: ' ',' ',' ',' ',' ',' '</default>
-</entry>
-
-<entry id="irad" type="integer" category="radiation"
-       group="clm_inparm" valid_values="" >
-Solar radiation frequency (+ = iteration. - = hour).
-<default>Default: -1</default>
 </entry>
 
 <entry id="nrevsn" type="char*256" input_pathname="abs" category="restart"
@@ -359,7 +373,7 @@ T => no diurnal cycle in ocn albedos.
 </entry>
 
 <entry id="flux_epbal" type="char*256" category="driver"
-       group="seq_infodata_inparm" valid_values="" >
+       group="seq_infodata_inparm" valid_values="off,ocn" >
 Selects E,P,R adjustment technique.
 <default>Default: 'off'</default>
 </entry>
@@ -371,7 +385,7 @@ Use netcdf 64 bit offset, large file support.
 </entry>
 
 <entry id="info_debug" type="integer" category="driver"
-       group="seq_infodata_inparm" valid_values="" >
+       group="seq_infodata_inparm" valid_values="0,1,2,3" >
 Debug flag.
 <default>Default: 1</default>
 </entry>
@@ -536,6 +550,54 @@ Name of the machine you are running the model on.
        group="seq_infodata_inparm" valid_values="" >
 Name of user running the model.
 <default>Default: none.</default>
+</entry>
+
+<entry id="bfbflag" type="logical"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Change mapping in driver to give bit-for-bit results regardless of number of processors used.
+<default>Default: .false..</default>
+</entry>
+
+<entry id="do_budgets" type="logical"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Toggle to turn writing of budgets to log file on.
+<default>Default: .false..</default>
+</entry>
+
+<entry id="budget_inst" type="integer"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Output level for instantaneous budgets.
+<default>Default: 0</default>
+</entry>
+
+<entry id="budget_daily" type="integer"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Output level for daily budgets.
+<default>Default: 0</default>
+</entry>
+
+<entry id="budget_month" type="integer"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Output level for monthly budgets.
+<default>Default: 0</default>
+</entry>
+
+<entry id="budget_ann" type="integer"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Output level for annual budgets.
+<default>Default: 0</default>
+</entry>
+
+<entry id="budget_ltann" type="integer"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Output level for long-term annual budgets.
+<default>Default: 0</default>
+</entry>
+
+<entry id="budget_ltend" type="integer"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Output level for long-term budgets written at the end of the run.
+<default>Default: 0</default>
 </entry>
 
 <!-- Time Manager -->
@@ -770,26 +832,31 @@ IC stream data file (for branch runs)
 <default>Default: rpointer.atm</default>
 </entry>
 
-<entry id="streams" type="char*256" category="datm"
+<entry id="streams" type="char*256(3)" category="datm"
        group="dshr_nml" valid_values="">
 Character array of stream description file names
 </entry>
 
 <entry id="tn460_factorfn" type="char*256" category="datm"
        group="datm_nml" valid_values="unused">
-File containing tn460 correction factors (not valid for any CLM DATM7 modes"
+File containing tn460 correction factors (not valid for any CLM DATM7 modes)
+</entry>
+
+<entry id="step2init" type="logical" category="datm"
+       group="datm_nml" valid_values="">
+Use two step initialization and time-stepping in the data atmosphere model.
 </entry>
 
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"360x720,128x256,64x128,48x96,32x64,8x16,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
+"360x720,128x256,64x128,48x96,32x64,8x16,94x128,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
 Horizontal resolutions
 </entry> 
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v5,gx1v3,gx1v4,gx1v5,navy,test,tx0.1v2">
+       valid_values="USGS,gx3v5,gx1v3,gx1v4,gx1v5,navy,test,tx0.1v2,T62">
 Land mask description
 </entry> 
 
@@ -810,7 +877,7 @@ Year to simulate datasets for (such as Nitrogen deposition rates etc.)
 
 <entry id="source" type="char*80" category="datm_internal"
        group="datm_internal" 
-       valid_values="CLMNCEP,CAMHIST.eul64x128_datm6.01,CLM1PT,CAMHIST.GENERIC">
+       valid_values="CLMNCEP,CLM_QIAN,CAMHIST.eul64x128_datm6.01,CLM1PT,CAMHIST.GENERIC">
 Description of data source for datm7 input data.
 </entry>
 

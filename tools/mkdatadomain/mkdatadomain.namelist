@@ -1,6 +1,6 @@
 &domain_nl
  dtype = "datm"
- f_fracdata = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/fracdata_48x96_USGS_070110.nc'
- f_griddata = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/griddata_48x96_060829.nc'
- f_domain   = 'domain.lnd.T31_USGS.080530.nc'
+ f_fracdata = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/fracdata_4x5_USGS_070110.nc'
+ f_griddata = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/griddata_4x5_060404.nc'
+ f_domain   = 'domain.lnd.fv4x5_USGS.090117.nc'
 /

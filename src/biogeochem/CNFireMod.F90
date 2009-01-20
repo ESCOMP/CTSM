@@ -46,8 +46,7 @@ subroutine CNFireArea (num_soilc, filter_soilc)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size, get_nstep
-   use clm_varctl  , only: irad
+   use clm_time_manager, only: get_rad_step_size, get_nstep
    use clm_varpar  , only: max_pft_per_col
 !
 ! !ARGUMENTS:
@@ -74,6 +73,8 @@ subroutine CNFireArea (num_soilc, filter_soilc)
    real(r8), pointer :: t_grnd(:)       ! ground temperature (Kelvin)
    real(r8), pointer :: totlitc(:)      ! (gC/m2) total litter C (not including cwdc)
    real(r8), pointer :: cwdc(:)         ! (gC/m2) coarse woody debris C
+   ! PET 5/20/08, test to increase fire area
+   real(r8), pointer :: totvegc(:)    ! (gC/m2) total veg C (column-level mean)
    ! pointers for column averaging
 !
 ! local pointers to implicit in/out scalars
@@ -87,12 +88,15 @@ subroutine CNFireArea (num_soilc, filter_soilc)
    real(r8), pointer :: ann_farea_burned(:) ! annual total fractional area burned (proportion)
 !
 ! !OTHER LOCAL VARIABLES:
-   real(r8), parameter:: minfuel = 200.0_r8 ! dead fuel threshold to carry a fire (gC/m2)
+!   real(r8), parameter:: minfuel = 200.0_r8 ! dead fuel threshold to carry a fire (gC/m2)
+! PET, 5/30/08: changed from 200 to 100 gC/m2, since the original paper didn't specify
+! the units as carbon, I am assuming that they were in dry biomass, so carbon would be ~50%
+   real(r8), parameter:: minfuel = 100.0_r8 ! dead fuel threshold to carry a fire (gC/m2)
    real(r8), parameter:: me_woody = 0.3_r8  ! moisture of extinction for woody PFTs (proportion)
    real(r8), parameter:: me_herb  = 0.2_r8  ! moisture of extinction for herbaceous PFTs (proportion)
    real(r8), parameter:: ef_time = 1.0_r8   ! e-folding time constant (years)
    integer :: fc,c,pi,p ! index variables
-   real(r8):: dtime,dt  ! time step variables (s)
+   real(r8):: dt        ! time step variable (s)
    real(r8):: fuelc     ! temporary column-level litter + cwd C (gC/m2)
    integer :: nef       ! number of e-folding timesteps
    real(r8):: ef_nsteps ! number of e-folding timesteps (real)
@@ -121,6 +125,8 @@ subroutine CNFireArea (num_soilc, filter_soilc)
    t_grnd           => clm3%g%l%c%ces%t_grnd
    totlitc          => clm3%g%l%c%ccs%totlitc
    cwdc             => clm3%g%l%c%ccs%cwdc
+   ! PET 5/20/08, test to increase fire area
+   totvegc          => clm3%g%l%c%ccs%pcs_a%totvegc
 
    ! pft to column average for moisture of extinction
    do fc = 1,num_soilc
@@ -148,8 +154,7 @@ subroutine CNFireArea (num_soilc, filter_soilc)
    end do
 
    ! Get model step size
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
 
    ! Set the number of timesteps for e-folding.
    ! When the simulation has run fewer than this number of steps,
@@ -173,9 +178,13 @@ subroutine CNFireArea (num_soilc, filter_soilc)
 
       ! dead fuel C (total litter + CWD)
       fuelc = totlitc(c) + cwdc(c)
+      ! PET 5/20/08, test to increase fire area
+      ! PET, 5/30/08. going back to original treatment using dead fuel only
+      ! fuelc = fuelc + totvegc(c)
 
       ! m is the fractional soil mositure in the top layer (taken here
       ! as the top 0.5 m)
+      ! PET 5/30/08 - note that this has been changed in Hydrology to use top 5 cm.
       m = max(0._r8,wf(c))
 
 
@@ -236,8 +245,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl  , only: irad
+   use clm_time_manager, only: get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -364,11 +372,12 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: retransn(:)           ! (gN/m2) plant pool of retranslocated N
 !
 ! !OTHER LOCAL VARIABLES:
-   real(r8), parameter:: wcf = 0.2_r8 ! wood combustion fraction
+   !real(r8), parameter:: wcf = 0.2_r8 ! wood combustion fraction
+   real(r8), parameter:: wcf = 0.4_r8 ! wood combustion fraction
    integer :: c,p                  ! indices
    integer :: fp,fc                ! filter indices
    real(r8):: f                    ! rate for fire effects (1/s)
-   real(r8):: dtime,dt             ! time step variables (s)
+   real(r8):: dt                   ! time step variable (s)
 !EOP
 !-----------------------------------------------------------------------
 
@@ -485,8 +494,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 
    ! Get model step size
 
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
 
    ! pft loop
 !dir$ concurrent

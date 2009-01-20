@@ -43,8 +43,7 @@ subroutine CNAllocation (lbc, ubc, &
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: irad
-   use clm_time_manager, only: get_step_size
+   use clm_time_manager, only: get_rad_step_size
    use pft2colMod, only: p2c
 !
 ! !ARGUMENTS:
@@ -117,6 +116,7 @@ subroutine CNAllocation (lbc, ubc, &
    real(r8), pointer :: n_allometry(:)           ! N allocation index (DIM)
    real(r8), pointer :: plant_ndemand(:)         ! N flux required to support initial GPP (gN/m2/s)
    real(r8), pointer :: tempsum_plant_ndemand(:) ! temporary annual sum of plant_ndemand
+   real(r8), pointer :: tempsum_retransn(:)      ! temporary annual sum of N retranslocation
    real(r8), pointer :: annsum_plant_ndemand(:)  ! annual sum of plant_ndemand
    real(r8), pointer :: avail_retransn(:)        ! N flux available from retranslocation pool (gN/m2/s)
    real(r8), pointer :: annsum_retransn(:)       ! annual sum of N retranslocation
@@ -173,7 +173,6 @@ subroutine CNAllocation (lbc, ubc, &
    integer :: c,p          !indices
    integer :: fp           !lake filter pft index
    integer :: fc           !lake filter column index
-   integer :: dtime        !time step (s)
    real(r8):: dt           !decomp timestep (seconds)
    integer :: nlimit               !flag for N limitation
    real(r8), pointer:: col_plant_ndemand(:)    !column-level plant N demand
@@ -237,6 +236,7 @@ subroutine CNAllocation (lbc, ubc, &
    n_allometry                 => clm3%g%l%c%p%pepv%n_allometry
    plant_ndemand               => clm3%g%l%c%p%pepv%plant_ndemand
    tempsum_plant_ndemand       => clm3%g%l%c%p%pepv%tempsum_plant_ndemand
+   tempsum_retransn            => clm3%g%l%c%p%pepv%tempsum_retransn
    annsum_plant_ndemand        => clm3%g%l%c%p%pepv%annsum_plant_ndemand
    avail_retransn              => clm3%g%l%c%p%pepv%avail_retransn
    annsum_retransn             => clm3%g%l%c%p%pepv%annsum_retransn
@@ -286,8 +286,7 @@ subroutine CNAllocation (lbc, ubc, &
    supplement_to_sminn         => clm3%g%l%c%cnf%supplement_to_sminn
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
 
    ! set some parameters (temporary, these will eventually go into
    ! either pepc, or parameter file
@@ -386,7 +385,9 @@ subroutine CNAllocation (lbc, ubc, &
       ! allocation as specified in the pft-physiology file.  The value is also used
       ! as a trigger here: -1.0 means to use the dynamic allocation (trees).
       if (stem_leaf(ivt(p)) == -1._r8) then
-      	f3 = max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p))
+!             f3 = max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p))
+!       f3 = min(max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p)),2.5_r8)
+        f3 = (2.7/(1.0+exp(-0.004*(annsum_npp(p) - 300.0)))) - 0.4
       else
       	f3 = stem_leaf(ivt(p))
       end if
@@ -414,10 +415,28 @@ subroutine CNAllocation (lbc, ubc, &
       ! retranslocated N deployment depends on seasonal cycle of N demand
       ! (requires one year run to accumulate demand)
 
-      tempsum_plant_ndemand(p) = tempsum_plant_ndemand(p) + plant_ndemand(p)
+      ! PET - 8/29/08
+              ! modifying seasonal cycle controls on retranslocated N deployment:
+              ! tied to retransn pool instead of retransn flux
+
+              ! PET 9/2/08
+              ! temporarily using the tempsum_plant_ndemand to store gpp information,
+              ! so only a few files need to be modified during testing.
+              ! Go back and rename these variables if test is successful.
+              ! Note that the gpp local in this routine does not have any N-availability
+              ! downregulation applied.
+
+              ! Also temporarily using annsum_retransn to store annmax_retransn.
+              ! Go back and rename this if successful.
+
+              ! tempsum_plant_ndemand(p) = tempsum_plant_ndemand(p) + plant_ndemand(p)
+              tempsum_plant_ndemand(p) = tempsum_plant_ndemand(p) + gpp(p)
+              ! Adding the following line to carry max retransn info to CN Annual Update
+              tempsum_retransn(p) = max(tempsum_retransn(p),retransn(p))
 
       if (annsum_plant_ndemand(p) > 0.0_r8) then
-         avail_retransn(p) = annsum_retransn(p)*(plant_ndemand(p)/annsum_plant_ndemand(p))/dt
+         ! avail_retransn(p) = annsum_retransn(p)*(plant_ndemand(p)/annsum_plant_ndemand(p))/dt
+                      avail_retransn(p) = (annsum_retransn(p)/2.0)*(gpp(p)/annsum_plant_ndemand(p))/dt
       else
          avail_retransn(p) = 0.0_r8
       end if
@@ -535,7 +554,9 @@ subroutine CNAllocation (lbc, ubc, &
       ! allocation as specified in the pft-physiology file.  The value is also used
       ! as a trigger here: -1.0 means to use the dynamic allocation (trees).
       if (stem_leaf(ivt(p)) == -1._r8) then
-      	f3 = max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p))
+!             f3 = max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p))
+!       f3 = min(max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p)),2.5_r8)
+        f3 = (2.7/(1.0+exp(-0.004*(annsum_npp(p) - 300.0)))) - 0.4
       else
       	f3 = stem_leaf(ivt(p))
       end if

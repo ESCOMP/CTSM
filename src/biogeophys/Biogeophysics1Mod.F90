@@ -67,11 +67,13 @@ contains
     use clmtype
     use clm_atmlnd         , only : clm_a2l
     use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub,          &
-                                    istice, istwet, istsoil, isturb, zlnd, zsno, &
+                                    istice, istwet, istsoil, isturb, istdlak, &
+                                    zlnd, zsno, tfrz, &
                                     icol_roof, icol_sunwall, icol_shadewall,     &
                                     icol_road_imperv, icol_road_perv, tfrz, spval, istdlak
-    use clm_varpar         , only : nlevsoi, nlevsno, max_pft_per_gcell
+    use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, max_pft_per_gcell
     use QSatMod            , only : QSat
+    use shr_const_mod      , only : SHR_CONST_PI
 !
 ! !ARGUMENTS:
     implicit none
@@ -91,6 +93,7 @@ contains
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 ! Migrated to clm2.0 by Keith Oleson and Mariana Vertenstein
 ! Migrated to clm2.1 new data structures by Peter Thornton and M. Vertenstein
+! 27 February 2008: Keith Oleson; weighted soil/snow emissivity
 !
 ! !LOCAL VARIABLES:
 !
@@ -138,6 +141,7 @@ contains
     real(r8), pointer :: watsat(:,:)      !volumetric soil water at saturation (porosity)
     real(r8), pointer :: sucsat(:,:)      !minimum soil suction (mm)
     real(r8), pointer :: bsw(:,:)         !Clapp and Hornberger "b"
+    real(r8), pointer :: watfc(:,:)       !volumetric soil water at field capacity
     real(r8), pointer :: watopt(:,:)      !volumetric soil moisture corresponding to no restriction on ET from urban pervious surface
     real(r8), pointer :: watdry(:,:)      !volumetric soil moisture corresponding to no restriction on ET from urban pervious surface
     real(r8), pointer :: rootfr_road_perv(:,:) !fraction of roots in each soil layer for urban pervious road
@@ -152,7 +156,7 @@ contains
     real(r8), pointer :: htvp(:)          !latent heat of vapor of water (or sublimation) [j/kg]
     real(r8), pointer :: beta(:)          !coefficient of convective velocity [-]
     real(r8), pointer :: zii(:)           !convective boundary height [m]
-    real(r8), pointer :: thm(:)           !intermediate variable (forc_t+0.0098*forc_hgt_t)
+    real(r8), pointer :: thm(:)           !intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
     real(r8), pointer :: thv(:)           !virtual potential temperature (kelvin)
     real(r8), pointer :: z0mg(:)          !roughness length over ground, momentum [m]
     real(r8), pointer :: z0hg(:)          !roughness length over ground, sensible heat [m]
@@ -174,6 +178,7 @@ contains
     real(r8), pointer :: cgrndl(:)        !deriv. of soil latent heat flux wrt soil temp [w/m**2/k]
     real(r8) ,pointer :: tssbef(:,:)      !soil/snow temperature before update
     real(r8) ,pointer :: soilalpha(:)     !factor that reduces ground saturated specific humidity (-)
+    real(r8) ,pointer :: soilbeta(:)      !factor that reduces ground evaporation
     real(r8) ,pointer :: soilalpha_u(:)   !Urban factor that reduces ground saturated specific humidity (-)
 !
 !EOP
@@ -195,10 +200,11 @@ contains
     real(r8) :: hr      !relative humidity
     real(r8) :: hr_road_perv  !relative humidity for urban pervious road
     real(r8) :: wx      !partial volume of ice and water of surface layer
+    real(r8) :: fac_fc        !soil wetness of surface layer relative to field capacity
     real(r8) :: eff_porosity  ! effective porosity in layer
     real(r8) :: vol_ice       ! partial volume of ice lens in layer
     real(r8) :: vol_liq       ! partial volume of liquid water in layer
-    integer  :: pi                    !index
+    integer  :: pi            !index
 !------------------------------------------------------------------------------
 
    ! Assign local pointers to derived type members (gridcell-level)
@@ -246,11 +252,13 @@ contains
     h2osoi_ice    => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq    => clm3%g%l%c%cws%h2osoi_liq
     soilalpha     => clm3%g%l%c%cws%soilalpha
+    soilbeta      => clm3%g%l%c%cws%soilbeta
     soilalpha_u   => clm3%g%l%c%cws%soilalpha_u
     sucsat        => clm3%g%l%c%cps%sucsat
     t_soisno      => clm3%g%l%c%ces%t_soisno
     tssbef        => clm3%g%l%c%ces%tssbef
     watsat        => clm3%g%l%c%cps%watsat
+    watfc         => clm3%g%l%c%cps%watfc
     watdry        => clm3%g%l%c%cps%watdry
     watopt        => clm3%g%l%c%cps%watopt
     rootfr_road_perv => clm3%g%l%c%cps%rootfr_road_perv
@@ -292,7 +300,7 @@ contains
     z0mr          => pftcon%z0mr
     displar       => pftcon%displar
 
-    do j = -nlevsno+1, nlevsoi
+    do j = -nlevsno+1, nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec
@@ -330,10 +338,22 @@ contains
              psit = max(smpmin(c), psit)
              hr   = exp(psit/roverg/t_grnd(c))
              qred = (1.-frac_sno(c))*hr + frac_sno(c)
+
+             !! Lee and Pielke 1992 beta, added by K.Sakaguchi
+             if (wx < watfc(c,1) ) then  !when water content of ths top layer is less than that at F.C.
+                fac_fc  = min(1._r8, wx/watfc(c,1))  !eqn5.66 but divided by theta at field capacity
+                fac_fc  = max( fac_fc, 0.01_r8 )
+                ! modifiy soil beta by snow cover. soilbeta for snow surface is one
+                soilbeta(c) = (1._r8-frac_sno(c))*0.25_r8*(1._r8 - cos(SHR_CONST_PI*fac_fc))**2._r8 &
+                              + frac_sno(c)
+             else   !when water content of ths top layer is more than that at F.C.
+                soilbeta(c) = 1._r8
+             end if
+
              soilalpha(c) = qred
           ! Pervious road depends on water in total soil column
           else if (ctype(c) == icol_road_perv) then
-             do j = 1, nlevsoi
+             do j = 1, nlevurb
                 if (t_soisno(c,j) >= tfrz) then
                    vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
                    eff_porosity = watsat(c,j)-vol_ice
@@ -350,20 +370,24 @@ contains
 
              ! Normalize root resistances to get layer contribution to total ET
              if (hr_road_perv .gt. 0._r8) then
-                do j = 1, nlevsoi
+                do j = 1, nlevurb
                    rootr_road_perv(c,j) = rootr_road_perv(c,j)/hr_road_perv
                 end do
              end if
              soilalpha_u(c) = qred
+             soilbeta(c) = 0._r8
           else if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall) then
              qred = 0._r8
+             soilbeta(c) = 0._r8
              soilalpha_u(c) = spval
           else if (ctype(c) == icol_roof .or. ctype(c) == icol_road_imperv) then
              qred = 1._r8
+             soilbeta(c) = 0._r8
              soilalpha_u(c) = spval
           end if
        else
           soilalpha(c) = spval
+          soilbeta(c) =   1._r8
        end if
 
        call QSat(t_grnd(c), forc_pbot(g), eg, degdT, qsatg, qsatgdT)
@@ -383,15 +407,11 @@ contains
        ! Urban emissivities are currently read in from data file
 
        if (ityplun(l) /= isturb) then
-#if (defined PERGRO)
-          emg(c) = 0.965_r8
-#else
-          if (h2osno(c)>0._r8 .or. ityplun(l)==istice) then
+          if (ityplun(l)==istice) then
              emg(c) = 0.97_r8
           else
-             emg(c) = 0.96_r8
+             emg(c) = (1._r8-frac_sno(c))*0.96_r8 + frac_sno(c)*0.97_r8
           end if
-#endif
        end if
 
        ! Latent heat. We arbitrarily assume that the sublimation occurs
@@ -462,7 +482,52 @@ contains
        z0mv(p)   = z0m(p)
        z0hv(p)   = z0mv(p)
        z0qv(p)   = z0mv(p)
+    end do
 
+    ! Make forcing height a pft-level quantity that is the atmospheric forcing 
+    ! height plus each pft's z0m+displa
+    do pi = 1,max_pft_per_gcell
+!dir$ concurrent
+!cdir nodep
+       do g = lbg, ubg
+          if (pi <= npfts(g)) then
+            p = pfti(g) + pi - 1
+            if (pwtgcell(p) > 0._r8) then 
+              l = plandunit(p)
+              c = pcolumn(p)
+              if (ityplun(l) == istsoil) then
+                if (frac_veg_nosno(p) == 0) then
+                  forc_hgt_u_pft(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
+                  forc_hgt_t_pft(p) = forc_hgt_t(g) + z0mg(c) + displa(p)
+                  forc_hgt_q_pft(p) = forc_hgt_q(g) + z0mg(c) + displa(p)
+                else
+                  forc_hgt_u_pft(p) = forc_hgt_u(g) + z0m(p) + displa(p)
+                  forc_hgt_t_pft(p) = forc_hgt_t(g) + z0m(p) + displa(p)
+                  forc_hgt_q_pft(p) = forc_hgt_q(g) + z0m(p) + displa(p)
+                end if
+              else if (ityplun(l) == istice .or. ityplun(l) == istwet) then
+                forc_hgt_u_pft(p) = forc_hgt_u(g) + z0mg(c)
+                forc_hgt_t_pft(p) = forc_hgt_t(g) + z0mg(c)
+                forc_hgt_q_pft(p) = forc_hgt_q(g) + z0mg(c)
+              else if (ityplun(l) == istdlak) then
+                ! Should change the roughness lengths to shared constants
+                if (t_grnd(c) >= tfrz) then
+                  forc_hgt_u_pft(p) = forc_hgt_u(g) + 0.01_r8
+                  forc_hgt_t_pft(p) = forc_hgt_t(g) + 0.01_r8
+                  forc_hgt_q_pft(p) = forc_hgt_q(g) + 0.01_r8
+                else
+                  forc_hgt_u_pft(p) = forc_hgt_u(g) + 0.04_r8
+                  forc_hgt_t_pft(p) = forc_hgt_t(g) + 0.04_r8
+                  forc_hgt_q_pft(p) = forc_hgt_q(g) + 0.04_r8
+                end if
+              else if (ityplun(l) == isturb) then
+                forc_hgt_u_pft(p) = forc_hgt_u(g) + z_0_town(l) + z_d_town(l)
+                forc_hgt_t_pft(p) = forc_hgt_t(g) + z_0_town(l) + z_d_town(l)
+                forc_hgt_q_pft(p) = forc_hgt_q(g) + z_0_town(l) + z_d_town(l)
+              end if
+            end if
+          end if
+       end do
     end do
 
     ! Make forcing height a pft-level quantity that is the atmospheric forcing

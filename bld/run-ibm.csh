@@ -21,7 +21,7 @@
 #BSUB -a poe                    # use poe for multiprocessing
 #BSUB -x                        # exclusive use of node (not_shared)
 ## Number of tasks and tasks per node (CHANGE THIS IF YOU TURN smp on)
-#BSUB -n 16                     # total number of MPI-tasks (processors) needed
+#BSUB -n 32                     # total number of MPI-tasks (processors) needed
 #BSUB -R "span[ptile=64]"       # max number of tasks (MPI) per node
 #BSUB -o out.%J                 # output filename
 #BSUB -e out.%J                 # error filename
@@ -47,10 +47,10 @@ set rtm      = off      # settings are [on   | off         ] (default is off)
 #--------------------------------------------------------------------------------------------
 ## Run time settings:
 ## May also make changes to namelist in build-namelist section below:
-set res        = 48x96      # settings are [48x96   | 64x128  | 4x5  | 10x15 | 1.9x2.5 etc.      ]
+set res        = 4x5        # settings are [48x96   | 64x128  | 4x5  | 10x15 | 1.9x2.5 etc.      ]
 set mask       = gx3v5      # settings are [default | USGS    | navy | gx3v5 | gx1v5   etc.      ]
 set sim_year   = default    # settings are [default | 1890    | 2000 | 2100                      ]
-set start_type = arb_ic     # settings are [arb_ic  | startup | continue | branch                ] (default is arb_ic)
+set start_type = arb_ic     # settings are [cold    | arb_ic  | startup | continue | branch      ] (default is arb_ic)
 set runlen     = 2d         # settings are [ integer<sdy> where s=cpling-step, d=days, y=years   ] (default is 2d)
 set start_ymd  = 19980101   # Start date [yyyymmdd]
 set cycle_init = 1998       # Initial year to use atm data from
@@ -82,7 +82,7 @@ setenv CSMDATA /fs/cgd/csm/inputdata                # (MAKE SURE YOU CHANGE THIS
 
 ## Location of datm data - needs to be customized unless running at NCAR.
 ## Contains the location for the datm7 input data
-setenv datm_data_dir /cgd/tss/NCEPDATA.datm7.Qian.T62.c060410   # (MAKE SURE YOU CHANGE THIS!!!)
+setenv datm_data_dir /cgd/tss/atm_forcing.datm7.Qian.T62.c080727  # (MAKE SURE YOU CHANGE THIS!!!)
 
 ## $wrkdir  is a working directory where the model will be built and run.
 ## $blddir  is the directory where model will be compiled.
@@ -104,7 +104,7 @@ set usr_src = $clmroot/bld/usr.src
 #
 # should be set equal to (CPUs-per-node / tasks_per_node)
 # Only activated if smp=on above
-setenv OMP_NUM_THREADS 4
+setenv OMP_NUM_THREADS 2
 
 #=================== END OF THINGS MOST COMONLY CHANGED ====================
 #===========================================================================
@@ -126,8 +126,9 @@ setenv OMP_DYNAMIC false
 limit stacksize unlimited
 
 ## Ensure that run and build directories exist
-mkdir -p $rundir                || echo "cannot create $rundir" && exit 1
-mkdir -p $blddir                || echo "cannot create $blddir" && exit 1
+mkdir -p $rundir                || echo "cannot create $rundir"        && exit 1
+mkdir -p $rundir/timing         || echo "cannot create $rundir/timing" && exit 1
+mkdir -p $blddir                || echo "cannot create $blddir"        && exit 1
 
 ## Build (or re-build) executable
 set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust -usr_src $usr_src"
@@ -149,7 +150,7 @@ if ( ! -f $config ) then
     echo "Building CLM in $blddir ..."
     gmake -j8 >&! MAKE.out      || echo "CLM build failed: see $blddir/MAKE.out" && exit 1
 else
-    cho "Re-building CLM in $blddir ..."
+    echo "Re-building CLM in $blddir ..."
     rm -f Depends
     gmake -j8 >&! REMAKE.out      || echo "CLM build failed: see $blddir/REMAKE.out" && exit 1
 endif
@@ -200,7 +201,6 @@ cat >! lndinput << EOF
  &clm_inparm
  $set_nrevsn
  dtime          =  1800
- irad           = -1
  wrtdia         = .true.
  hist_dov2xy    = .true.
  hist_nhtfrq    =  -24

@@ -46,7 +46,7 @@ subroutine CNiniTimeVar()
 !
 ! local pointers to implicit out arguments
 !
-   real(r8), pointer :: forc_hgt_u(:)     !observational height of wind [m] (new)
+   real(r8), pointer :: forc_hgt_u_pft(:)    !observational height of wind at pft-level [m]
    real(r8), pointer :: annsum_counter(:) ! seconds since last annual accumulator turnover
    real(r8), pointer :: cannsum_npp(:)    ! annual sum of NPP, averaged from pft-level (gC/m2/yr)
    real(r8), pointer :: cannavg_t2m(:)    !annual average of 2m air temperature, averaged from pft-level (K)
@@ -257,7 +257,6 @@ subroutine CNiniTimeVar()
 !-----------------------------------------------------------------------
 
     ! assign local pointers at the gridcell level
-    forc_hgt_u                     => clm_a2l%forc_hgt_u
 
     ! assign local pointers at the landunit level
     lakpoi                         => clm3%g%l%lakpoi
@@ -356,6 +355,7 @@ subroutine CNiniTimeVar()
     gresp_xfer                     => clm3%g%l%c%p%pcs%gresp_xfer
     cpool                          => clm3%g%l%c%p%pcs%cpool
     xsmrpool                       => clm3%g%l%c%p%pcs%xsmrpool
+    forc_hgt_u_pft                 => clm3%g%l%c%p%pps%forc_hgt_u_pft
 
 #if (defined CLAMP)
     ! CLAMP variable
@@ -486,10 +486,13 @@ subroutine CNiniTimeVar()
    ! Added 5/4/04, PET: initialize forc_hgt_u (gridcell-level),
    ! since this is not initialized before first call to CNVegStructUpdate,
    ! and it is required to set the upper bound for canopy top height.
+   ! Changed 3/21/08, KO: still needed but don't have sufficient information 
+   ! to set this properly (e.g., pft-level displacement height and roughness 
+   ! length). So leave at 30m.
 !dir$ concurrent
 !cdir nodep
-   do g = begg, endg
-      forc_hgt_u(g) = 30._r8
+   do p = begp, endp
+      forc_hgt_u_pft(p) = 30._r8
    end do
 
    ! initialize column-level variables

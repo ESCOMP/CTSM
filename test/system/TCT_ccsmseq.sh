@@ -17,6 +17,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TCT_ccsmseq.sh: sequential CCSM create test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TCT_ccsmseq.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -62,6 +64,7 @@ set ntasks_lnd=\$ntasks_atm
 set ntasks_ice=\$ntasks_atm
 set ntasks_ocn=\$ntasks_atm
 set ntasks_cpl=\$ntasks_atm
+set ntasks_glc=\$ntasks_atm
 set nthrds_atm=1
 set rootpe_atm=0
 set nthrds_lnd=1
@@ -72,6 +75,8 @@ set nthrds_ocn=1
 set rootpe_ocn=0
 set nthrds_cpl=1
 set rootpe_cpl=0
+set nthrds_glc=1
+set rootpe_glc=0
 EOF
 
 echo "./create_test -testname $1.$2.$3.${CCSM_MACH} -testroot ${CLM_TESTDIR} -testid \"sc.${JOBID}\" -clean off -pes_file ${CLM_TESTDIR}/env_pes"

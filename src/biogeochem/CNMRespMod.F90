@@ -14,7 +14,7 @@ module CNMRespMod
 !
 ! !USES:
    use shr_kind_mod , only: r8 => shr_kind_r8
-   use clm_varpar   , only: nlevsoi
+   use clm_varpar   , only: nlevgrnd
    use clm_varcon   , only: istsoil
    use shr_const_mod, only: SHR_CONST_TKFRZ
    implicit none
@@ -44,8 +44,6 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: irad
-   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -65,14 +63,14 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! local pointers to implicit in arrays
 !
    ! column level
-   real(r8), pointer :: t_soisno(:,:) ! soil temperature (Kelvin)  (-nlevsno+1:nlevsoi)
+   real(r8), pointer :: t_soisno(:,:) ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
    ! pft level
    real(r8), pointer :: t_ref2m(:)    ! 2 m height surface air temperature (Kelvin)
    real(r8), pointer :: leafn(:)      ! (kgN/m2) leaf N
    real(r8), pointer :: frootn(:)     ! (kgN/m2) fine root N
    real(r8), pointer :: livestemn(:)  ! (kgN/m2) live stem N
    real(r8), pointer :: livecrootn(:) ! (kgN/m2) live coarse root N
-   real(r8), pointer :: rootfr(:,:)   ! fraction of roots in each soil layer  (nlevsoi)
+   real(r8), pointer :: rootfr(:,:)   ! fraction of roots in each soil layer  (nlevgrnd)
    integer , pointer :: ivt(:)        ! pft vegetation type
    integer , pointer :: pcolumn(:)    ! index into column level quantities
    integer , pointer :: plandunit(:)  ! index into landunit level quantities
@@ -97,7 +95,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8):: br             ! base rate (gC/gN/s)
    real(r8):: q10            ! temperature dependence
    real(r8):: tc             ! temperature correction, 2m air temp (unitless)
-   real(r8):: tcsoi(lbc:ubc,nlevsoi) ! temperature correction by soil layer (unitless)
+   real(r8):: tcsoi(lbc:ubc,nlevgrnd) ! temperature correction by soil layer (unitless)
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays
@@ -128,7 +126,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
    q10 = 2.0_r8
 
    ! column loop to calculate temperature factors in each soil layer
-   do j=1,nlevsoi
+   do j=1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
       do fc = 1, num_soilc
@@ -160,7 +158,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
    end do
 
    ! soil and pft loop for fine root
-   do j = 1,nlevsoi
+   do j = 1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
       do fp = 1,num_soilp

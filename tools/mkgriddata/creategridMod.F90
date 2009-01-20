@@ -29,8 +29,8 @@ module creategridMod
   public :: mkfile        ! create netcdf file
 
 ! !PRIVATE MEMBER FUNCTIONS:
-  real(r8) :: flandmin = 0.001             ! minimum land frac for land cell
-  real(r8) :: re = SHR_CONST_REARTH*0.001  ! radius of earth (km)
+  real(r8) :: flandmin = 0.001_r8            ! minimum land frac for land cell
+  real(r8) :: re = SHR_CONST_REARTH*0.001_r8 ! radius of earth (km)
   type (gridmap_type), public :: gridmap_d2l
   type (gridmap_type), public :: gridmap_t2l
 !
@@ -48,7 +48,7 @@ contains
 ! !IROUTINE: creategrid
 !
 ! !INTERFACE:
-  subroutine creategrid(fname,type)
+  subroutine creategrid(fname,ftype,type,grid,writeTopo,writeLandFrac)
 !
 ! !DESCRIPTION:
 ! Generate land model grid.
@@ -71,12 +71,16 @@ contains
 ! cell correspond with the edges (i.e., range from -180 to 180)).
 !
 ! !USES:
-  use mkvarsur
+  use mkvarsur, only: ldomain
 !
 ! !ARGUMENTS:
     implicit none
-    character(len=*), intent(in) :: fname
-    character(len=*), intent(in) :: type
+    character(len=*), intent(in)  :: fname
+    character(len=*), intent(in)  :: ftype
+    character(len=*), intent(in)  :: type
+    logical,          intent(in)  :: grid
+    logical,          intent(out) :: writeTopo
+    logical,          intent(out) :: writeLandFrac
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -94,49 +98,53 @@ contains
 !-----------------------------------------------------------------------
 
     if (trim(type) == 'internal') then
-       if (mksrf_lsmlon==-1 .and. mksrf_lsmlat==-1) then
-          write(6,*) 'must specify mksrf_lsmlon/lat with internal type'
-          stop
-       endif
-       if (mksrf_edgen ==-999. .or. mksrf_edges ==-999. .or. mksrf_edgee ==-999. .or. mksrf_edgew ==-999.) then
-          write(6,*) 'must specify mksrf_edgen/edges/edgen/edgew with internal type'
-          stop
-       endif
+       if ( .not. grid )then
+          if ( mksrf_lsmlon==-1 .and. mksrf_lsmlat==-1) then
+             write(6,*) 'must specify mksrf_lsmlon/lat with internal type'
+             stop
+          endif
+          if (mksrf_edgen ==-999. .or. mksrf_edges ==-999. .or. mksrf_edgee ==-999. .or. mksrf_edgew ==-999.) then
+             write(6,*) 'must specify mksrf_edgen/edges/edgen/edgew with internal type'
+             stop
+          endif
+       end if
 
-       call read_domain(ddomain,fname)
+       call read_domain(ddomain,ftype,fname,writeTopo,writeLandFrac)
 
-       lsmlon     = mksrf_lsmlon
-       lsmlat     = mksrf_lsmlat
+       if ( .not. grid )then
+          lsmlon     = mksrf_lsmlon
+          lsmlat     = mksrf_lsmlat
 
-       call domain_init(ldomain,lsmlon,lsmlat)
+          call domain_init(ldomain,lsmlon,lsmlat)
+   
+          ldomain%numlon(:) = lsmlon
+          ldomain%edgen = mksrf_edgen
+          ldomain%edgee = mksrf_edgee
+          ldomain%edges = mksrf_edges
+          ldomain%edgew = mksrf_edgew
 
-       ldomain%numlon(:) = lsmlon
-       ldomain%edgen = mksrf_edgen
-       ldomain%edgee = mksrf_edgee
-       ldomain%edges = mksrf_edges
-       ldomain%edgew = mksrf_edgew
+          dx = (ldomain%edgee - ldomain%edgew) / lsmlon
+          dy = (ldomain%edgen - ldomain%edges) / lsmlat
 
-       dx = (ldomain%edgee - ldomain%edgew) / lsmlon
-       dy = (ldomain%edgen - ldomain%edges) / lsmlat
+          if (dx <= 0._r8 .or. dy <= 0._r8) then
+             write(6,*) 'creategrid ERROR edges wrong sign NESN:',ldomain%edgen,ldomain%edgee,ldomain%edges,ldomain%edgen
+             stop
+          endif
 
-       if (dx <= 0._r8 .or. dy <= 0._r8) then
-          write(6,*) 'creategrid ERROR edges wrong sign NESN:',ldomain%edgen,ldomain%edgee,ldomain%edges,ldomain%edgen
-          stop
-       endif
+          do j = 1, lsmlat
+          do i = 1, lsmlon
+             ldomain%longxy(i,j) = ldomain%edgew + (2*i-1)*dx / 2.
+             ldomain%latixy(i,j) = ldomain%edges + (2*j-1)*dy / 2
+          end do
+          end do
 
-       do j = 1, lsmlat
-       do i = 1, lsmlon
-          ldomain%longxy(i,j) = ldomain%edgew + (2*i-1)*dx / 2.
-          ldomain%latixy(i,j) = ldomain%edges + (2*j-1)*dy / 2
-       end do
-       end do
+          ! Define edges and area of output land model grid cells
+          call celledge (ldomain, ldomain%edgen , ldomain%edgee , &
+                                  ldomain%edges , ldomain%edgew)
+          call cellarea (ldomain, ldomain%edgen , ldomain%edgee , &
+                                  ldomain%edges , ldomain%edgew)
 
-       ! Define edges and area of output land model grid cells
-       call celledge (ldomain, ldomain%edgen , ldomain%edgee , &
-                               ldomain%edges , ldomain%edgew)
-       call cellarea (ldomain, ldomain%edgen , ldomain%edgee , &
-                               ldomain%edges , ldomain%edgew)
-
+       end if
        call ddomain_to_ldomain(ddomain,ldomain)
 
        write(6,*) ' '
@@ -144,7 +152,7 @@ contains
        call domain_check(ddomain)
 
     elseif (trim(type) == 'external') then
-       call read_domain(ldomain,fname,trim(type))
+       call read_domain(ldomain,ftype,fname,writeTopo,writeLandFrac,trim(type))
     else
        write(6,*) 'creategrid ERROR, type = ',trim(type)
        stop
@@ -191,11 +199,17 @@ contains
     real(r8),allocatable :: fld_i(:,:)      !input grid: dummy field
     integer ,allocatable :: mask(:,:)       !temp for ldomain mask
     type(domain_type) :: tdomain
+    logical :: haveTopo, haveLFrc
 
 !-----------------------------------------------------------------------
 
 ! establish tdomain
-    call read_domain(tdomain,fname)
+    call read_domain(tdomain,'mksrf_frawtopo',fname,haveTopo,haveLFrc)
+
+    if ( .not. haveTopo )then
+       write (6,*) 'SETTOPO error: topo is not available on this dataset: ', trim(fname)
+       stop
+    end if
 
     call domain_check(tdomain)
 
@@ -367,18 +381,23 @@ contains
 ! !IROUTINE: read_domain
 !
 ! !INTERFACE:
-  subroutine read_domain(domain,fname,type)
+  subroutine read_domain(domain,ftype,fname,toposet,fracset,type)
 !
 ! !DESCRIPTION:
 ! Read a grid file
 !
 ! !USES:
+    use nanmod,   only: nan, bigint
+    use domainMod, only: domain_isSet
     implicit none
     include 'netcdf.inc'
 !
 ! !ARGUMENTS:
     type(domain_type),intent(inout) :: domain
     character(len=*) ,intent(in)    :: fname
+    character(len=*) ,intent(in)    :: ftype
+    logical          ,intent(out)   :: toposet
+    logical          ,intent(out)   :: fracset
     character(len=*) ,intent(in),optional :: type
 !
 ! !REVISION HISTORY:
@@ -404,10 +423,10 @@ contains
     logical :: edgeNESWset                     !local EDGE[NESW]
     logical :: llneswset                       !local lat[ns],lon[we]
     logical :: areaset                         !local area
-    logical :: toposet                         !local topo
     logical :: landfracset                     !local landfrac
     logical :: maskset                         !local mask
     logical :: numlonset                       !local numlon
+    logical :: domainSet                       !local domain set
     integer :: ndims                           !number of dims for variable
     integer :: ier
     character(len= 32) :: subname = 'read_domain'
@@ -421,15 +440,30 @@ contains
     endif
     write(6,*) ' ' 
 
-    dimset      = .false.
-    lonlatset   = .false.
-    edgeNESWset = .false.
-    llneswset   = .false.
-    areaset     = .false.
-    toposet     = .false.
-    landfracset = .false.
-    maskset     = .false.
-    numlonset   = .false.
+    domainset = domain_isSet( domain )
+    if ( .not. domainset )then
+       dimset      = .false.
+       lonlatset   = .false.
+       edgeNESWset = .false.
+       llneswset   = .false.
+       areaset     = .false.
+       toposet     = .false.
+       landfracset = .false.
+       fracset     = .false.
+       maskset     = .false.
+       numlonset   = .false.
+    else
+       dimset      = .true.
+       lonlatset   = .true.
+       edgeNESWset = .true.
+       llneswset   = .true.
+       areaset     = all( domain%area    /= nan    )
+       toposet     = all( domain%topo    /= 0.0_r8 )
+       landfracset = all( domain%frac    /= nan    )
+       fracset     = all( domain%frac    /= nan    )
+       maskset     = all( domain%mask    /= nan    )
+       numlonset   = all( domain%numlon  /= bigint )
+    end if
 
     ! Read domain file and compute stuff as needed
 
@@ -469,7 +503,12 @@ contains
        call check_ret(nf_inq_dimlen (ncid, dimid, nlat), subname)
     endif
 
-    if (dimset) then
+    if (domainset) then
+       if ( nlon /= domain%ni .or. nlat /= domain%nj )then
+          write(6,*) trim(subname),' ERROR: size of new file does NOT agree with previous'
+          stop
+       end if
+    else if (dimset) then
        write(6,*) trim(subname),' initialized domain'
        call domain_init(domain,nlon,nlat)
     else
@@ -478,8 +517,7 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'xc', varid)
-    if (ier == NF_NOERR) then
-       if (lonlatset) write(6,*) trim(subname),' WARNING, overwriting lat,lon'
+    if (ier == NF_NOERR .and. .not. lonlatset ) then
        lonlatset = .true.
        write(6,*) trim(subname),' read xc and yc fields'
        call check_ret(nf_inq_varid (ncid, 'xc', varid), subname)
@@ -489,8 +527,7 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'lon', varid)
-    if (ier == NF_NOERR) then
-       if (lonlatset) write(6,*) trim(subname),' WARNING, overwriting lat,lon'
+    if (ier == NF_NOERR .and. .not. lonlatset) then
        lonlatset = .true.
        ier = nf_inq_varndims(ncid,varid,ndims)
        if (ndims == 1) then
@@ -520,8 +557,7 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'LATIXY', varid)
-    if (ier == NF_NOERR) then
-       if (lonlatset) write(6,*) trim(subname),' WARNING, overwriting lat,lon'
+    if (ier == NF_NOERR .and. .not. lonlatset ) then
        lonlatset = .true.
        write(6,*) trim(subname),' read LONGXY and LATIXY fields'
        call check_ret(nf_inq_varid (ncid, 'LONGXY', varid), subname)
@@ -531,20 +567,18 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'NUMLON', varid)
-    if (ier == NF_NOERR) then
-       write(6,*) trim(subname),' check NUMLON for regular grid'
+    if (ier == NF_NOERR .and. .not. numlonset ) then
        numlonset = .true.
        call check_ret(nf_inq_varid (ncid, 'NUMLON', varid), subname)
        call check_ret(nf_get_var_int (ncid, varid, domain%numlon), subname)
        if (minval(domain%numlon) /= nlon .or. maxval(domain%numlon) /= nlon) then
-          write(6,*) trim(subname),' ERROR not regular grid, stop', minval(domain%numlon),maxval(domain%numlon)
+          write(6,*) trim(subname),' ERROR not regular grid, numlon NOT constant, stop', minval(domain%numlon),maxval(domain%numlon)
           stop
        endif
     endif
 
     ier = nf_inq_varid (ncid, 'EDGEN', varid)
-    if (ier == NF_NOERR) then
-       if (edgeNESWset) write(6,*) trim(subname),' WARNING, overwriting edges'
+    if (ier == NF_NOERR .and. .not. edgeNESWset ) then
        edgeNESWset = .true.
        write(6,*) trim(subname),' read EDGE[NESW]'
        call check_ret(nf_inq_varid (ncid, 'EDGEN', varid), subname)
@@ -568,8 +602,7 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'xv', varid)
-    if (ier == NF_NOERR) then
-       if (llneswset) write(6,*) trim(subname),' WARNING, overwriting lat[ns],lon[we]'
+    if (ier == NF_NOERR .and. .not. llneswset ) then
        llneswset = .true.
        write(6,*) trim(subname),' read xv and yv'
        allocate(xv(4,nlon,nlat),yv(4,nlon,nlat))
@@ -582,7 +615,7 @@ contains
        do i = 1, nlon
           if (xv(1,i,j) /= xv(4,i,j) .or. xv(2,i,j) /= xv(3,i,j) .or. &
               yv(1,i,j) /= yv(2,i,j) .or. yv(3,i,j) /= yv(4,i,j)) then
-                 write(6,*) trim(subname),' ERROR not regular grid, stop', xv(:,i,j),yv(:,i,j)
+                 write(6,*) trim(subname),' ERROR not regular grid, vertices do NOT match up, stop: xv[1-4], yv[1-4]', xv(:,i,j),yv(:,i,j)
                  stop
           endif
           domain%latn(i,j) = yv(3,i,j)
@@ -597,8 +630,7 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'LATN', varid)
-    if (ier == NF_NOERR) then
-       if (llneswset) write(6,*) trim(subname),' WARNING, overwriting lat[ns],lon[we]'
+    if (ier == NF_NOERR .and. .not. llneswset ) then
        llneswset = .true.
        write(6,*) trim(subname),' read LAT[NS],LON[WE]'
        call check_ret(nf_inq_varid (ncid, 'LATN', varid), subname)
@@ -612,8 +644,7 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'frac', varid)
-    if (ier == NF_NOERR) then
-       if (landfracset) write(6,*) trim(subname),' WARNING, overwriting frac'
+    if (ier == NF_NOERR .and. .not. landfracset ) then
        landfracset = .true.
        write(6,*) trim(subname),' read frac'
        call check_ret(nf_inq_varid (ncid, 'frac', varid), subname)
@@ -621,7 +652,7 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'LANDFRAC', varid)
-    if (ier == NF_NOERR) then
+    if (ier == NF_NOERR .and. .not. landfracset ) then
        if (landfracset) write(6,*) trim(subname),' WARNING, overwriting frac'
        landfracset = .true.
        write(6,*) trim(subname),' read LANDFRAC'
@@ -630,8 +661,7 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'landfract', varid)
-    if (ier == NF_NOERR) then
-       if (landfracset) write(6,*) trim(subname),' WARNING, overwriting frac'
+    if (ier == NF_NOERR .and. .not. landfracset ) then
        landfracset = .true.
        write(6,*) trim(subname),' read landfract'
        call check_ret(nf_inq_varid (ncid, 'landfract', varid), subname)
@@ -639,8 +669,7 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'mask', varid)
-    if (ier == NF_NOERR) then
-       if (maskset) write(6,*) trim(subname),' WARNING, overwriting mask'
+    if (ier == NF_NOERR .and. .not. maskset ) then
        maskset = .true.
        write(6,*) trim(subname),' read mask'
        call check_ret(nf_inq_varid (ncid, 'mask', varid), subname)
@@ -648,8 +677,7 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'LANDMASK', varid)
-    if (ier == NF_NOERR) then
-       if (maskset) write(6,*) trim(subname),' WARNING, overwriting mask'
+    if (ier == NF_NOERR .and. .not. maskset ) then
        maskset = .true.
        write(6,*) trim(subname),' read LANDMASK'
        call check_ret(nf_inq_varid (ncid, 'LANDMASK', varid), subname)
@@ -657,26 +685,31 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'area', varid)
-    if (ier == NF_NOERR) then
-       if (areaset) write(6,*) trim(subname),' WARNING, overwriting area'
+    if (ier == NF_NOERR .and. .not. areaset) then
        areaset = .true.
        write(6,*) trim(subname),' read area'
        call check_ret(nf_inq_varid (ncid, 'area', varid), subname)
        call check_ret(nf_get_var_double (ncid, varid, domain%area), subname)
+       if (area_units == 1) then
+          domain%area = domain%area * re * re
+          area_units = 0
+       endif
     endif
 
     ier = nf_inq_varid (ncid, 'AREA', varid)
-    if (ier == NF_NOERR) then
-       if (areaset) write(6,*) trim(subname),' WARNING, overwriting area'
+    if (ier == NF_NOERR .and. .not. areaset) then
        areaset = .true.
        write(6,*) trim(subname),' read AREA'
        call check_ret(nf_inq_varid (ncid, 'AREA', varid), subname)
        call check_ret(nf_get_var_double (ncid, varid, domain%area), subname)
+       if (area_units == 1) then
+          domain%area = domain%area * re * re
+          area_units = 0
+       endif
     endif
 
     ier = nf_inq_varid (ncid, 'PHIS', varid)
-    if (ier == NF_NOERR) then
-       if (toposet) write(6,*) trim(subname),' WARNING, overwriting topo'
+    if (ier == NF_NOERR .and. .not. toposet) then
        toposet = .true.
        write(6,*) trim(subname),' read TOPO'
        call check_ret(nf_inq_varid (ncid, 'PHIS', varid), subname)
@@ -685,8 +718,7 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'TOPO', varid)
-    if (ier == NF_NOERR) then
-       if (toposet) write(6,*) trim(subname),' WARNING, overwriting topo'
+    if (ier == NF_NOERR .and. .not. toposet) then
        toposet = .true.
        write(6,*) trim(subname),' read TOPO'
        call check_ret(nf_inq_varid (ncid, 'TOPO', varid), subname)
@@ -694,91 +726,78 @@ contains
     endif
 
     ier = nf_inq_varid (ncid, 'htopo', varid)
-    if (ier == NF_NOERR) then
-       if (toposet) write(6,*) trim(subname),' WARNING, overwriting topo'
+    if (ier == NF_NOERR .and. .not. toposet) then
        toposet = .true.
        write(6,*) trim(subname),' read htopo'
        call check_ret(nf_inq_varid (ncid, 'htopo', varid), subname)
        call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
     endif
 
-    if (area_units == 1) then
-       domain%area = domain%area * re * re
-       area_units = 0
-    endif
-
     call check_ret(nf_close(ncid), subname)
 
-!----------------------
     if (etype) then
-    if (mksrf_fcamfile /= '') then
-    fnamel = mksrf_fcamfile
-    call getfil (fnamel, locfn, 0)
-    call check_ret(nf_open(locfn, 0, ncid), subname)
+!----------------------
+    if (trim(ftype) == 'mksrf_fcamfile' ) then
+       call getfil (fnamel, locfn, 0)
+       call check_ret(nf_open(locfn, 0, ncid), subname)
 
-    ier = nf_inq_varid (ncid, 'lon', varid)
-    if (ier == NF_NOERR) then
-       if (lonlatset) write(6,*) trim(subname),' WARNING, overwriting lat,lon'
-       lonlatset = .true.
-       ier = nf_inq_varndims(ncid,varid,ndims)
-       if (ndims == 1) then
-          write(6,*) trim(subname),' read lon and lat 1d fields'
-          allocate(lon1d(nlon),lat1d(nlat))
-          call check_ret(nf_inq_varid (ncid, 'lon', varid), subname)
-          call check_ret(nf_get_var_double (ncid, varid, lon1d), subname)
-          call check_ret(nf_inq_varid (ncid, 'lat', varid), subname)
-          call check_ret(nf_get_var_double (ncid, varid, lat1d), subname)
-          do j = 1, nlat
-          do i = 1, nlon
-             domain%longxy(i,j) = lon1d(i)
-             domain%latixy(i,j) = lat1d(j)
-          enddo
-          enddo
-          deallocate(lon1d,lat1d)
-       elseif (ndims == 2) then
-          write(6,*) trim(subname),' read lon and lat 2d fields'
-          call check_ret(nf_inq_varid (ncid, 'lat', varid), subname)
-          call check_ret(nf_get_var_double (ncid, varid, domain%latixy), subname)
-          call check_ret(nf_inq_varid (ncid, 'lon', varid), subname)
-          call check_ret(nf_get_var_double (ncid, varid, domain%longxy), subname)
-       else
-          write(6,*) trim(subname),'ERROR: lon and lat illegal dim ',ndims
-          stop
+       ier = nf_inq_varid (ncid, 'lon', varid)
+       if (ier == NF_NOERR .and. lonlatset ) then
+          lonlatset = .true.
+          ier = nf_inq_varndims(ncid,varid,ndims)
+          if (ndims == 1) then
+             write(6,*) trim(subname),' read lon and lat 1d fields'
+             allocate(lon1d(nlon),lat1d(nlat))
+             call check_ret(nf_inq_varid (ncid, 'lon', varid), subname)
+             call check_ret(nf_get_var_double (ncid, varid, lon1d), subname)
+             call check_ret(nf_inq_varid (ncid, 'lat', varid), subname)
+             call check_ret(nf_get_var_double (ncid, varid, lat1d), subname)
+             do j = 1, nlat
+             do i = 1, nlon
+                domain%longxy(i,j) = lon1d(i)
+                domain%latixy(i,j) = lat1d(j)
+             enddo
+             enddo
+             deallocate(lon1d,lat1d)
+          elseif (ndims == 2) then
+             write(6,*) trim(subname),' read lon and lat 2d fields'
+             call check_ret(nf_inq_varid (ncid, 'lat', varid), subname)
+             call check_ret(nf_get_var_double (ncid, varid, domain%latixy), subname)
+             call check_ret(nf_inq_varid (ncid, 'lon', varid), subname)
+             call check_ret(nf_get_var_double (ncid, varid, domain%longxy), subname)
+          else
+             write(6,*) trim(subname),'ERROR: lon and lat illegal dim ',ndims
+             stop
+          endif
        endif
-    endif
 
-    call check_ret(nf_close(ncid), subname)
+       call check_ret(nf_close(ncid), subname)
 
-    endif
     endif
 !----------------------
 !----------------------
-    if (etype) then
-    if (mksrf_fcamtopo /= '') then
-    fnamel = mksrf_fcamtopo
-    call getfil (fnamel, locfn, 0)
-    call check_ret(nf_open(locfn, 0, ncid), subname)
+    if (trim(ftype) == 'mksrf_fcamtopo') then
+       call getfil (fnamel, locfn, 0)
+       call check_ret(nf_open(locfn, 0, ncid), subname)
 
-    ier = nf_inq_varid (ncid, 'PHIS', varid)
-    if (ier == NF_NOERR) then
-       if (toposet) write(6,*) trim(subname),' WARNING, overwriting topo'
-       toposet = .true.
-       write(6,*) trim(subname),' read TOPO'
-       call check_ret(nf_inq_varid (ncid, 'PHIS', varid), subname)
-       call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
-       domain%topo = domain%topo/SHR_CONST_G
-    endif
+       ier = nf_inq_varid (ncid, 'PHIS', varid)
+       if (ier == NF_NOERR .and. .not. toposet) then
+          toposet = .true.
+          write(6,*) trim(subname),' read TOPO'
+          call check_ret(nf_inq_varid (ncid, 'PHIS', varid), subname)
+          call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
+          domain%topo = domain%topo/SHR_CONST_G
+       endif
 
-    ier = nf_inq_varid (ncid, 'TOPO', varid)
-    if (ier == NF_NOERR) then
-       if (toposet) write(6,*) trim(subname),' WARNING, overwriting topo'
-       toposet = .true.
-       write(6,*) trim(subname),' read TOPO'
-       call check_ret(nf_inq_varid (ncid, 'TOPO', varid), subname)
-       call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
-    endif
+       ier = nf_inq_varid (ncid, 'TOPO', varid)
+       if (ier == NF_NOERR .and. .not. toposet) then
+          toposet = .true.
+          write(6,*) trim(subname),' read TOPO'
+          call check_ret(nf_inq_varid (ncid, 'TOPO', varid), subname)
+          call check_ret(nf_get_var_double (ncid, varid, domain%topo), subname)
+       endif
 
-    call check_ret(nf_close(ncid), subname)
+       call check_ret(nf_close(ncid), subname)
 
     endif
     endif
@@ -810,6 +829,8 @@ contains
           domain%frac(:,:) = 1._r8     !land
        endwhere
     endif
+
+    if ( landfracset .or. maskset ) fracset = .true.
 
     ! Reset landfrac to zero where landmask has been set to zero
 

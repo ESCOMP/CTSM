@@ -79,9 +79,9 @@ contains
     use clmtype
     use clm_atmlnd         , only : clm_a2l
     use clm_time_manager   , only : get_step_size
-    use clm_varpar         , only : nlevsoi, nlevsno
+    use clm_varpar         , only : nlevgrnd, nlevsno
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, &
-                                    denh2o, tfrz, csoilc
+                                    denh2o, tfrz, csoilc, tlsai_crit, alpha_aero
     use QSatMod            , only : QSat
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use spmdMod            , only : masterproc
@@ -107,6 +107,8 @@ contains
 ! o2 partial pressures are hardwired, but they should be coming in from
 ! forc_pco2 and forc_po2. Keeping the same hardwired values as in CLM2 to
 ! assure bit-for-bit results in the first comparisons.
+! 27 February 2008: Keith Oleson; Sparse/dense aerodynamic parameters from
+! X. Zeng
 !
 ! !LOCAL VARIABLES:
 !
@@ -119,7 +121,7 @@ contains
    integer , pointer :: pgridcell(:)   ! pft's gridcell index
    real(r8), pointer :: forc_th(:)     ! atmospheric potential temperature (Kelvin)
    real(r8), pointer :: t_grnd(:)      ! ground surface temperature [K]
-   real(r8), pointer :: thm(:)         ! intermediate variable (forc_t+0.0098*forc_hgt_t)
+   real(r8), pointer :: thm(:)         ! intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
    real(r8), pointer :: qg(:)          ! specific humidity at ground surface [kg/kg]
    real(r8), pointer :: thv(:)         ! virtual potential temperature (kelvin)
    real(r8), pointer :: z0mv(:)        ! roughness length over vegetation, momentum [m]
@@ -140,7 +142,6 @@ contains
    real(r8), pointer :: forc_q(:)      ! atmospheric specific humidity (kg/kg)
    real(r8), pointer :: forc_u(:)      ! atmospheric wind speed in east direction (m/s)
    real(r8), pointer :: forc_v(:)      ! atmospheric wind speed in north direction (m/s)
-   real(r8), pointer :: forc_hgt_u(:)  ! observational height of wind [m]
    real(r8), pointer :: forc_hgt_u_pft(:) !observational height of wind at pft level [m]
    real(r8), pointer :: forc_rho(:)    ! density (kg/m**3)
    real(r8), pointer :: forc_lwrad(:)  ! downward infrared (longwave) radiation (W/m**2)
@@ -166,6 +167,9 @@ contains
    real(r8), pointer :: smpso(:)       ! soil water potential at full stomatal opening (mm)
    real(r8), pointer :: smpsc(:)       ! soil water potential at full stomatal closure (mm)
    real(r8), pointer :: frac_sno(:)    ! fraction of ground covered by snow (0 to 1)
+   real(r8), pointer :: htop(:)        ! canopy top(m)
+   real(r8), pointer :: snowdp(:)      ! snow height (m)
+   real(r8), pointer :: soilbeta(:)    ! soil wetness relative to field capacity
 !
 ! local pointers to implicit inout arguments
 !
@@ -216,7 +220,7 @@ contains
    real(r8), pointer :: qflx_evap_soi(:)   ! soil evaporation (mm H2O/s) (+ = to atm)
    real(r8), pointer :: fpsn(:)            ! photosynthesis (umol CO2 /m**2 /s)
    real(r8), pointer :: rootr(:,:)         ! effective fraction of roots in each soil layer
-   real(r8), pointer :: rresis(:,:)        ! root resistance by layer (0-1)  (nlevsoi)	
+   real(r8), pointer :: rresis(:,:)        ! root resistance by layer (0-1)  (nlevgrnd)	
 !
 !EOP
 !
@@ -229,7 +233,12 @@ contains
    real(r8), parameter :: dlemin = 0.1_r8  ! max limit for energy flux convergence [w/m2]
    real(r8), parameter :: dtmin = 0.01_r8  ! max limit for temperature convergence [K]
    integer , parameter :: itmax = 40       ! maximum number of iteration [-]
-   integer , parameter :: itmin = 2         ! minimum number of iteration [-]
+   integer , parameter :: itmin = 2        ! minimum number of iteration [-]
+   !added by K.Sakaguchi for litter resistance
+   real(r8), parameter :: lai_dl = 0.5_r8  ! placeholder for (dry) plant litter area index (m2/m2)
+   real(r8), parameter :: z_dl = 0.05_r8   ! placeholder for (dry) litter layer thickness (m)
+   !added by K.Sakaguchi for stability formulation
+   real(r8), parameter :: ria  = 0.5_r8    ! free parameter for stable formulation (currently = 0.5, "gamma" in Sakaguchi&Zeng,2008)
    real(r8) :: dtime                 ! land model time step (sec)
    real(r8) :: zldis(lbp:ubp)        ! reference height "minus" zero displacement height [m]
    real(r8) :: zeta                  ! dimensionless height used in Monin-Obukhov theory
@@ -240,7 +249,7 @@ contains
    real(r8) :: obu(lbp:ubp)          ! Monin-Obukhov length (m)
    real(r8) :: um(lbp:ubp)           ! wind speed including the stablity effect [m/s]
    real(r8) :: ur(lbp:ubp)           ! wind speed at reference height [m/s]
-   real(r8) :: uaf                   ! velocity of air within foliage [m/s]
+   real(r8) :: uaf(lbp:ubp)          ! velocity of air within foliage [m/s]
    real(r8) :: temp1(lbp:ubp)        ! relation for potential temperature profile
    real(r8) :: temp12m(lbp:ubp)      ! relation for potential temperature profile applied at 2-m
    real(r8) :: temp2(lbp:ubp)        ! relation for specific humidity profile
@@ -340,8 +349,15 @@ contains
    real(r8) :: z0qv_loc(lbp:ubp)     ! temporary copy
    logical  :: found                 ! error flag for canopy above forcing hgt
    integer  :: index                 ! pft index for error
-   real(r8) :: www                   ! surface soil wetness [-]
-   real(r8) :: rsoil                 ! Sellers (1996) soil evaporation resistance [s/m]
+   real(r8) :: egvf                  ! effective green vegetation fraction
+   real(r8) :: lt                    ! elai+esai
+   real(r8) :: ri                    ! stability parameter for under canopy air (unitless)
+   real(r8) :: csoilb                ! turbulent transfer coefficient over bare soil (unitless)
+   real(r8) :: ricsoilc              ! modified transfer coefficient under dense canopy (unitless)
+   real(r8) :: snowdp_c              ! critical snow depth to cover plant litter (m)
+   real(r8) :: rdl                   ! dry litter layer resistance for water vapor  (s/m)
+   real(r8) :: elai_dl               ! exposed (dry) plant litter area index
+   real(r8) :: fsno_dl               ! effective snow cover over plant litter
 !------------------------------------------------------------------------------
 
    ! Assign local pointers to derived type members (gridcell-level)
@@ -355,7 +371,6 @@ contains
    forc_u         => clm_a2l%forc_u
    forc_v         => clm_a2l%forc_v
    forc_th        => clm_a2l%forc_th
-   forc_hgt_u     => clm_a2l%forc_hgt_u
    forc_rho       => clm_a2l%forc_rho
 
    ! Assign local pointers to derived type members (column-level)
@@ -377,6 +392,8 @@ contains
    htvp           => clm3%g%l%c%cps%htvp
    z0mg           => clm3%g%l%c%cps%z0mg
    frac_sno       => clm3%g%l%c%cps%frac_sno
+   snowdp         => clm3%g%l%c%cps%snowdp
+   soilbeta       => clm3%g%l%c%cws%soilbeta
 
    ! Assign local pointers to derived type members (pft-level)
 
@@ -396,6 +413,7 @@ contains
    z0hv           => clm3%g%l%c%p%pps%z0hv
    z0qv           => clm3%g%l%c%p%pps%z0qv
    ram1           => clm3%g%l%c%p%pps%ram1
+   htop           => clm3%g%l%c%p%pps%htop
    rssun          => clm3%g%l%c%p%pps%rssun
    rssha          => clm3%g%l%c%p%pps%rssha
    cisun          => clm3%g%l%c%p%pps%cisun
@@ -484,7 +502,7 @@ contains
    ! Effective porosity of soil, partial volume of ice and liquid (needed for btran)
    ! and root resistance factors
 
-   do j = 1,nlevsoi
+   do j = 1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
       do f = 1, fn
@@ -497,7 +515,7 @@ contains
          vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
          eff_porosity = watsat(c,j)-vol_ice
          vol_liq = min(eff_porosity, h2osoi_liq(c,j)/(dz(c,j)*denh2o))
-         if (vol_liq .le. 0._r8) then
+         if (vol_liq .le. 0._r8 .or. t_soisno(c,j) .le. tfrz-2._r8) then
             rootr(p,j) = 0._r8
          else
             s_node = max(vol_liq/eff_porosity,0.01_r8)
@@ -513,7 +531,7 @@ contains
 
    ! Normalize root resistances to get layer contribution to ET
 
-   do j = 1,nlevsoi
+   do j = 1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
       do f = 1, fn
@@ -525,6 +543,20 @@ contains
          end if
       end do
    end do
+
+ ! Modify aerodynamic parameters for sparse/dense canopy (X. Zeng)
+   do f = 1, fn
+      p = filterp(f)
+      c = pcolumn(p)
+
+      lt = min(elai(p)+esai(p), tlsai_crit)
+      egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
+      displa(p) = egvf * displa(p)
+      z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
+      z0hv(p)   = z0mv(p)
+      z0qv(p)   = z0mv(p)
+
+  end do
 
    found = .false.
 !dir$ concurrent
@@ -642,16 +674,38 @@ contains
 
          ! Bulk boundary layer resistance of leaves
 
-         uaf = um(p)*sqrt( 1._r8/(ram1(p)*um(p)) )
-         cf  = 0.01_r8/(sqrt(uaf)*sqrt(dleaf(ivt(p))))
-         rb(p)  = 1._r8/(cf*uaf)
+         uaf(p) = um(p)*sqrt( 1._r8/(ram1(p)*um(p)) )
+         cf  = 0.01_r8/(sqrt(uaf(p))*sqrt(dleaf(ivt(p))))
+         rb(p)  = 1._r8/(cf*uaf(p))
 
          ! Parameterization for variation of csoilc with canopy density from
          ! X. Zeng, University of Arizona
 
          w = exp(-(elai(p)+esai(p)))
-         csoilcn = (vkc/(0.13_r8*(z0mg(c)*uaf/1.5e-5_r8)**0.45_r8))*w + csoilc*(1._r8-w)
-         rah(p,2) = 1._r8/(csoilcn*uaf)
+
+         ! changed by K.Sakaguchi from here
+         ! transfer coefficient over bare soil is changed to a local variable
+         ! just for readability of the code (from line 680)
+         csoilb = (vkc/(0.13_r8*(z0mg(c)*uaf(p)/1.5e-5_r8)**0.45_r8))
+
+         !compute the stability parameter for ricsoilc  ("S" in Sakaguchi&Zeng,2008)
+
+         ri = ( grav*htop(p) * (taf(p) - t_grnd(c)) ) / (taf(p) * uaf(p) **2.00_r8)
+
+         !! modify csoilc value (0.004) if the under-canopy is in stable condition
+
+         if ( (taf(p) - t_grnd(c) ) > 0._r8) then
+               ! decrease the value of csoilc by dividing it with (1+gamma*min(S, 10.0))
+               ! ria ("gmanna" in Sakaguchi&Zeng, 2008) is a constant (=0.5)
+               ricsoilc = csoilc / (1.00_r8 + ria*min( ri, 10.0_r8) )
+               csoilcn = csoilb*w + ricsoilc*(1._r8-w)
+         else
+              csoilcn = csoilb*w + csoilc*(1._r8-w)
+         end if
+
+         !! Sakaguchi changes for stability formulation ends here
+
+         rah(p,2) = 1._r8/(csoilcn*uaf(p))
          raw(p,2) = rah(p,2)
 
          ! Stomatal resistances for sunlit and shaded fractions of canopy.
@@ -722,16 +776,19 @@ contains
          wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
          wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
 
-         !Soil evaporation resistance
-         www     = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)/watsat(c,1)
-         www     = min(max(www,0.0_r8),1._r8)
-         if (delq(p) .lt. 0._r8) then  !dew
-           rsoil = 0._r8
+         !Litter layer resistance. Added by K.Sakaguchi
+         snowdp_c = z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
+         fsno_dl = snowdp(c)/snowdp_c    ! effective snow cover for (dry)plant litter
+         elai_dl = lai_dl*(1._r8 - min(fsno_dl,1._r8)) ! exposed (dry)litter area index
+         rdl = ( 1._r8 - exp(-elai_dl) ) / ( 0.004_r8*uaf(p)) ! dry litter layer resistance
+
+         ! add litter resistance and Lee and Pielke 1992 beta
+         if (delq(p) .lt. 0._r8) then  !dew. Do not apply beta for negative flux (follow old rsoil)
+            wtgq(p) = frac_veg_nosno(p)/(raw(p,2)+rdl)
          else
-           rsoil   = (1._r8 - frac_sno(c)) * exp(8.206_r8 - 4.255_r8*www)
+            wtgq(p) = soilbeta(c)*frac_veg_nosno(p)/(raw(p,2)+rdl)
          end if
 
-         wtgq(p) = frac_veg_nosno(p)/(raw(p,2)+rsoil)
          wtsqi   = 1._r8/(wtaq+wtlq+wtgq(p))
 
          wtgq0    = wtgq(p)*wtsqi      ! ground

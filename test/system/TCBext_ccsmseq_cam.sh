@@ -13,6 +13,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TCBext_ccsmseq_cam.sh: configure and build test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TCBext_ccsmseq_cam.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -59,6 +61,7 @@ config_string="${config_string} -usr_src ${clmsrc}/main,"
 config_string="${config_string}${CLM_ROOT}/models/csm_share/shr,"
 config_string="${config_string}${CLM_ROOT}/models/csm_share/eshr,"
 config_string="${config_string}${CLM_ROOT}/models/csm_share/dshr,"
+config_string="${config_string}${CLM_ROOT}/models/glc/sglc,"
 config_string="${config_string}${clmsrc}/biogeochem,"
 config_string="${config_string}${clmsrc}/biogeophys,"
 config_string="${config_string}${clmsrc}/riverroute"
@@ -86,7 +89,7 @@ while [ $still_compiling = "TRUE" ]; do
 
     echo "TCBext_ccsmseq_cam.sh: call to make:" 
     echo "        ${MAKE_CMD}" 
-    if [ "$debug" != "YES" ] || [ "$compile_only" = "YES" ]; then
+    if [ "$debug" != "YES" ]; then
        ${MAKE_CMD} >> test.log 2>&1
        status="PASS"
        rc=$?

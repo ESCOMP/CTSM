@@ -67,7 +67,9 @@ contains
 !
 ! !INTERFACE:
   subroutine lnd_init_mct( EClock, cdata_l, x2l_l, l2x_l, &
-                                   cdata_r,        r2x_r, NLFilename )
+                                   cdata_r, r2x_r,        &
+                                   cdata_s, x2s_s, s2x_s, &
+                                   NLFilename )
 !
 ! !DESCRIPTION:
 ! Initialize land surface model and obtain relevant atmospheric model arrays
@@ -75,10 +77,11 @@ contains
 !
 ! !USES:
     use shr_kind_mod     , only : r8 => shr_kind_r8
-    use clm_time_manager , only : get_nstep, advance_timestep, get_step_size, set_timemgr_init
+    use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, &
+                                  set_nextsw_cday
     use clm_atmlnd       , only : clm_mapl2a, clm_l2a, atm_l2a
     use clm_comp         , only : clm_init0, clm_init1, clm_init2
-    use clm_varctl       , only : finidat,single_column, irad, set_clmvarctl
+    use clm_varctl       , only : finidat,single_column, set_clmvarctl
     use controlMod       , only : control_setNL
     use domainMod        , only : amask, adomain
     use clm_varpar       , only : rtmlon, rtmlat
@@ -105,6 +108,8 @@ contains
     type(mct_aVect),              intent(inout) :: x2l_l, l2x_l
     type(seq_cdata),              intent(inout) :: cdata_r
     type(mct_aVect),              intent(inout) ::        r2x_r
+    type(seq_cdata),  optional,   intent(inout) :: cdata_s
+    type(mct_aVect),  optional,   intent(inout) :: x2s_s, s2x_s
     character(len=*), optional,   intent(in)    :: NLFilename 
 !
 ! !LOCAL VARIABLES:
@@ -122,6 +127,7 @@ contains
     logical  :: exists               ! true if file exists
     real(r8) :: scmlat
     real(r8) :: scmlon
+    real(r8) :: nextsw_cday     ! calday from clock of next radiation computation
     character(len=SHR_KIND_CL) :: caseid
     character(len=SHR_KIND_CL) :: ctitle
     character(len=SHR_KIND_CL) :: starttype
@@ -319,6 +325,9 @@ contains
 #else
     call seq_infodata_PutData( infodata, rof_present=.false.)
 #endif
+    call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
+
+    call set_nextsw_cday( nextsw_cday )
 
     ! Determine atmosphere modes
 
@@ -353,7 +362,9 @@ contains
 ! !IROUTINE: lnd_run_mct
 !
 ! !INTERFACE:
-  subroutine lnd_run_mct( EClock, cdata_l, x2l_l, l2x_l, cdata_r, r2x_r)
+  subroutine lnd_run_mct( EClock, cdata_l, x2l_l, l2x_l, &
+                                  cdata_r,        r2x_r, &
+                                  cdata_s, x2s_s, s2x_s )
 !
 ! !DESCRIPTION:
 ! Run clm model
@@ -364,11 +375,10 @@ contains
     use clm_atmlnd      ,only : clm_l2a, atm_l2a, atm_a2l, clm_a2l
     use clm_comp        ,only : clm_run1, clm_run2
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
-                                advance_timestep 
+                                advance_timestep, set_nextsw_cday
     use domainMod       ,only : adomain
     use decompMod       ,only : get_proc_bounds_atm
     use abortutils      ,only : endrun
-    use clm_varctl      ,only : irad
     use esmf_mod        ,only : ESMF_Clock
     use clm_varctl      ,only : iulog
     use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
@@ -390,6 +400,9 @@ contains
     type(mct_aVect)             , intent(inout) :: l2x_l
     type(seq_cdata)             , intent(in)    :: cdata_r
     type(mct_aVect)             , intent(inout) :: r2x_r
+    type(seq_cdata),  optional,   intent(in)    :: cdata_s
+    type(mct_aVect),  optional,   intent(inout) :: x2s_s
+    type(mct_aVect),  optional,   intent(inout) :: s2x_s
 !
 ! !LOCAL VARIABLES:
     integer :: ymd_sync        ! Sync date (YYYYMMDD)
@@ -450,6 +463,8 @@ contains
          curr_yr=yr_sync, curr_mon=mon_sync, curr_day=day_sync)
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
 
+    call set_nextsw_cday( nextsw_cday )
+
     write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync,mon_sync,day_sync,tod_sync
     nlend_sync = seq_timemgr_StopAlarmIsOn( EClock )
     rstwr_sync = seq_timemgr_RestartAlarmIsOn( EClock )
@@ -490,19 +505,11 @@ contains
        tod = tod
        dosend = (seq_timemgr_EClockDateInSync( EClock, ymd, tod))
 
-       ! Determine doalb
-       ! If not prognostic atm, then will always use internal albedo calculation
-       ! logic and not trigger off of nextsw_cday - not that clm namelist irad will now
-       ! ONLY be used with a datm model - not with cam
+       ! Determine doalb based on nextsw_cday sent from atm model
 
-       if (atm_prognostic) then
-          dtime = get_step_size()
-          caldayp1 = get_curr_calday(offset=dtime)
-          doalb = (nextsw_cday == caldayp1) 
-       else
-          nstep = get_nstep()
-          doalb = ((irad==1) .or. (mod(nstep,irad)==0 .and. nstep/=0))
-       end if
+       dtime = get_step_size()
+       caldayp1 = get_curr_calday(offset=dtime)
+       doalb = abs(nextsw_cday- caldayp1) < 1.e-10_r8
 
        ! Determine if time to write cam restart and stop
 
@@ -596,7 +603,7 @@ contains
     endif
 #endif
 
-    first_call = .false.
+    first_call  = .false.
 
   end subroutine lnd_run_mct
 
@@ -744,14 +751,16 @@ contains
 
   subroutine lnd_import_mct( x2l_l, a2l )
 
+! 27 February 2008: Keith Oleson; Forcing height change
     !-----------------------------------------------------
     use shr_kind_mod    , only: r8 => shr_kind_r8
     use clm_atmlnd      , only: atm2lnd_type
     use clm_varctl      , only: co2_type, co2_ppmv
-    use clm_varcon      , only: rair, o2_molar_const, c13ratio, forc_hgt_min
+    use clm_varcon      , only: rair, o2_molar_const, c13ratio
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use decompMod       , only: get_proc_bounds_atm
     use abortutils      , only: endrun
+    use clm_varctl      , only : set_caerdep_from_file, set_dustdep_from_file, iulog
     use clm_varctl      , only: iulog
     use mct_mod         , only: mct_aVect
     use seq_flds_indices
@@ -820,6 +829,7 @@ contains
     ! by 1000 mm/m resulting in an overall factor of unity.
     ! Below the units are therefore given in mm/s.
     
+
 !dir$ concurrent
     do g = begg,endg
         i = 1 + (g - begg)
@@ -843,6 +853,26 @@ contains
         a2l%forc_solai(g,2) = x2l_l%rAttr(index_x2l_Faxa_swndf,i)   ! forc_solldxy Atm flux  W/m^2
         a2l%forc_solai(g,1) = x2l_l%rAttr(index_x2l_Faxa_swvdf,i)   ! forc_solsdxy Atm flux  W/m^2
 
+        ! atmosphere coupling, if using prognostic aerosols
+        if ( .not. set_caerdep_from_file ) then
+           a2l%forc_aer(g,1) =  x2l_l%rAttr(index_x2l_Faxa_bcphidry,i)
+           a2l%forc_aer(g,2) =  x2l_l%rAttr(index_x2l_Faxa_bcphodry,i)
+           a2l%forc_aer(g,3) =  x2l_l%rAttr(index_x2l_Faxa_bcphiwet,i)
+           a2l%forc_aer(g,4) =  x2l_l%rAttr(index_x2l_Faxa_ocphidry,i)
+           a2l%forc_aer(g,5) =  x2l_l%rAttr(index_x2l_Faxa_ocphodry,i)
+           a2l%forc_aer(g,6) =  x2l_l%rAttr(index_x2l_Faxa_ocphiwet,i)
+        endif
+        if ( .not. set_dustdep_from_file ) then
+           a2l%forc_aer(g,7)  =  x2l_l%rAttr(index_x2l_Faxa_dstwet1,i)
+           a2l%forc_aer(g,8)  =  x2l_l%rAttr(index_x2l_Faxa_dstdry1,i)
+           a2l%forc_aer(g,9)  =  x2l_l%rAttr(index_x2l_Faxa_dstwet2,i)
+           a2l%forc_aer(g,10) =  x2l_l%rAttr(index_x2l_Faxa_dstdry2,i)
+           a2l%forc_aer(g,11) =  x2l_l%rAttr(index_x2l_Faxa_dstwet3,i)
+           a2l%forc_aer(g,12) =  x2l_l%rAttr(index_x2l_Faxa_dstdry3,i)
+           a2l%forc_aer(g,13) =  x2l_l%rAttr(index_x2l_Faxa_dstwet4,i)
+           a2l%forc_aer(g,14) =  x2l_l%rAttr(index_x2l_Faxa_dstdry4,i)
+        endif
+
         ! Determine optional receive fields
 
         if (index_x2l_Sa_co2prog /= 0) then
@@ -858,10 +888,6 @@ contains
         end if
 
         ! Determine derived quantities for required fields
-        ! First, set forcing height to maximum of atmospheric model forcing height
-        ! and a prescribed minimum height 
-
-	a2l%forc_hgt(g)   = max(a2l%forc_hgt(g), forc_hgt_min)
         a2l%forc_hgt_u(g) = a2l%forc_hgt(g)    !observational height of wind [m]
         a2l%forc_hgt_t(g) = a2l%forc_hgt(g)    !observational height of temperature [m]
         a2l%forc_hgt_q(g) = a2l%forc_hgt(g)    !observational height of humidity [m]

@@ -123,6 +123,7 @@ contains
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
 ! 2/1/02, Peter Thornton: Migrated to new data structure.
+! 2/29/08, David Lawrence: revised snow burial fraction for short vegetation   
 !
 ! !LOCAL VARIABLES:
 !
@@ -130,9 +131,9 @@ contains
 !
     integer , pointer :: pcolumn(:)  ! column index associated with each pft
     real(r8), pointer :: snowdp(:)   ! snow height (m)
+    integer , pointer :: ivt(:)      ! pft vegetation type
 #if (defined CASA)
     real(r8), pointer :: plai(:)     ! Prognostic lai
-    integer , pointer :: ivt(:)      ! pft vegetation type
 #endif
 !
 ! local pointers to implicit out arguments
@@ -170,9 +171,9 @@ contains
        htop    => clm3%g%l%c%p%pps%htop
        hbot    => clm3%g%l%c%p%pps%hbot
        frac_veg_nosno_alb => clm3%g%l%c%p%pps%frac_veg_nosno_alb
+       ivt     => clm3%g%l%c%p%itype
 #if (defined CASA)
        plai    => clm3%g%l%c%p%pps%plai
-       ivt     => clm3%g%l%c%p%itype
 #endif
 
 !dir$ concurrent
@@ -214,8 +215,17 @@ contains
           ! are less than 0.05, set equal to zero to prevent numerical
           ! problems associated with very small lai and sai.
 
-          ol = min( max(snowdp(c)-hbot(p), 0._r8), htop(p)-hbot(p))
-          fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
+          ! snow burial fraction for short vegetation (e.g. grasses) as in
+          ! Wang and Zeng, 2007. 
+
+          if (ivt(p) > 0 .and. ivt(p) <= 11) then
+             ol = min( max(snowdp(c)-hbot(p), 0._r8), htop(p)-hbot(p))
+             fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
+          else
+             fb = 1._r8 - max(min(snowdp(c),0.2_r8),0._r8)/0.2_r8   ! 0.2m is assumed
+                  !depth of snow required for complete burial of grasses
+          endif
+
           elai(p) = max(tlai(p)*fb, 0.0_r8)
           esai(p) = max(tsai(p)*fb, 0.0_r8)
           if (elai(p) < 0.05_r8) elai(p) = 0._r8

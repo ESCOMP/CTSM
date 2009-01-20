@@ -150,9 +150,9 @@ ifeq ($(UNAMES),Linux)
   ifeq ($(PGF90),TRUE)
     CC     := pgcc
     ifneq ($(OPT),TRUE)
-      FFLAGS += -g -Ktrap=fp -Mbounds
+      FFLAGS += -g -Ktrap=fp -Mbounds -Kieee
     else
-      FFLAGS += -fast
+      FFLAGS += -fast -Kieee
       CFLAGS += -fast
     endif
   endif

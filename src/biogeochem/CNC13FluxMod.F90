@@ -15,7 +15,6 @@ module CNC13FluxMod
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varcon  , only: istsoil,c13ratio
     use spmdMod     , only: masterproc
-    use clm_varpar  , only: nlevsoi
     implicit none
     save
     private
@@ -50,8 +49,6 @@ subroutine C13Flux1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl, only: irad
 !
 ! !ARGUMENTS:
    implicit none
@@ -397,8 +394,6 @@ subroutine C13Flux2(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl, only: irad
 !
 ! !ARGUMENTS:
    implicit none
@@ -527,8 +522,6 @@ subroutine C13Flux3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl, only: irad
    use pft2colMod, only: p2c
 !
 ! !ARGUMENTS:
@@ -1039,8 +1032,6 @@ subroutine C13FluxCalc(c13_flux, ctot_flux, c13_state, ctot_state, &
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl, only: irad
 !
 ! !ARGUMENTS:
    implicit none

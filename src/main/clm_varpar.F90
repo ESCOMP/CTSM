@@ -29,9 +29,11 @@ module clm_varpar
 
 ! Define number of levels
 
-  integer, parameter :: nlevsoi     =  10   ! number of soil layers
-  integer, parameter :: nlevlak     =  10   ! number of lake layers
-  integer, parameter :: nlevsno     =   5   ! maximum number of snow layers
+  integer, parameter :: nlevsoi     =  10     ! number of hydrologically active soil layers
+  integer, parameter :: nlevgrnd    =  15     ! number of ground layers (includes lower layers that are hydrologically inactive)
+  integer, parameter :: nlevurb     = nlevgrnd! number of urban layers (must equal nlevgrnd right now)
+  integer, parameter :: nlevlak     =  10     ! number of lake layers
+  integer, parameter :: nlevsno     =   5     ! maximum number of snow layers
 
 ! Define miscellaneous parameters
 

@@ -3,4 +3,4 @@
 -silent 
 -case clmrun 
 -clm_demand fndepdyn
--source CLMNCEP
+-source CLM_QIAN

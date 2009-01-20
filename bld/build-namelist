@@ -79,14 +79,15 @@ OPTIONS
                               (ONLY used when mode=ccsm_seq)
      -s                       Turns on silent mode - only fatal messages issued.
      -sim_year "year"         Year to simulate for input datasets (i.e. 1890, 2000, etc.)
-                              (ONLY used when mode=ccsm_seq)
      -source "source"         Source data to use for datm (for ccsm_seq mode)
-     -start_type "type"       Type of simulation (arb_ic, startup, continue, or branch)
-                              (ONLY used when mode=ccsm_seq)
+     -start_type "type"       Type of simulation (cold, arb_ic, startup, continue, or branch)
+                              (cold=always start with arbitrary initial conditions)
+                              (arb_ic=start with arbitrary initial conditions if initial conditions don't exist)
+                              (startup=ensure that initial conditions are being used)
      -test                    Enable checking that input datasets exist on local filesystem.
-     -verbose                 Turn on verbose echoing of informational messages.
+     -verbose [or -v]         Turn on verbose echoing of informational messages.
      -use_case "case"         Specify a use case which will provide default values.
-     -version [or -v]         Echo the SVN tag name used to check out this CLM distribution.
+     -version                 Echo the SVN tag name used to check out this CLM distribution.
 
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
@@ -454,7 +455,7 @@ $group = $definition->get_group_name($var);
 $nl->set_variable_value($group, $var, $val );
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
-   die "$nm $var is NOT valid. Valid values are: @valid_values\n";
+   die "$nm $var of $val is NOT valid. Valid values are: @valid_values\n";
 }
 if ($print>=2) { print "CLM sim_year is $sim_year $eol"; }
 
@@ -482,20 +483,20 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
 # namelist group: seq_infodata_inparm #
 #######################################
 
-# Run type - note that arb_ic implies that the run is startup
-# Note that arb_ic for the start_type will force finidat to be empty regardless
-# of the default settings in the namelist_defaults_clm.xml file
+# Run type for driver namelist - note that arb_ic implies that the run is startup
 my $var = "start_type";
+my $start_type = $nl->get_value($var);
 if (defined $opts{$var}) { 
-    if ($opts{$var} eq "arb_ic") {
+    $start_type = $opts{$var};
+    if ($opts{$var} eq "cold" || $opts{$var} eq "arb_ic") {
        add_default($nl, $var, 'val'=>'startup'); 
     } else {
        add_default($nl, $var, 'val'=>$opts{$var}); 
     }
 } else {
     add_default($nl, $var );
+    $start_type = $nl->get_value($var);
 }
-my $start_type = $nl->get_value($var);
 
 if ($mode eq "ccsm_seq") {
 
@@ -601,40 +602,6 @@ if ($mode eq "ccsm_seq") {
 
 add_default($nl, 'dtime');
 
-# Initial conditions
-# The initial date is an attribute in the defaults file which should be matched unless
-# the user explicitly requests to ignore the initial date via the -ignore_ic_date option, 
-# or just ignore the year of the initial date via the -ignore_ic_year option.
-if ($opts{'start_type'} eq "arb_ic") {
-   if (not defined $nl->get_value('finidat')) {
-      add_default($nl, 'finidat', 'val'=>"' '", 'no_abspath'=>1);
-   } elsif ( $val !~/^[' "]+$/ ) {
-      die "$ProgName ERROR:: start_type is set to arb_ic and YET finidat is also defined.\n";
-   }
-} else {
-    if (not defined $nl->get_value('finidat')) {
-       my $ic_date = $nl->get_value('start_ymd');
-       my $nofail = 1;
-       if ( $start_type =~ /startup/ ) { $nofail = 0; }
-       if ($opts{'ignore_ic_date'}) {
-	   add_default($nl, 'finidat', 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                       'nofail'=>$nofail);
-       } elsif ($opts{'ignore_ic_year'}) {
-	   add_default($nl, 'finidat', 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                       'ic_md'=>$ic_date, 'nofail'=>$nofail);
-       } else {
-	   add_default($nl, 'finidat', 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                       'ic_ymd'=>$ic_date, 'nofail'=>$nofail);
-       }
-       if (not defined $nl->get_value('finidat')) {
-          add_default($nl, 'finidat', 'val'=>"' '", 'no_abspath'=>1);
-       }
-    }
-    if ($start_type =~ /startup/ && (not defined $nl->get_value('finidat')) ) {
-       die "$ProgName ERROR:: finidat NOT defined and start_type is startup.\n";
-    }
-}
-
 if ( $start_type =~ /branch/ ) {
    if (not defined $nl->get_value('nrevsn')) {
       die "$ProgName ERROR:: nrevsn is required for a branch type.\n";
@@ -642,6 +609,8 @@ if ( $start_type =~ /branch/ ) {
 }
 
 add_default($nl, 'fatmlndfrc', 'hgrid'=>$res, 'mask'=>$mask);
+add_default($nl, 'fsnowoptics' );
+add_default($nl, 'fsnowaging' );
 
 if ($res ne $lnd_res) {
     add_default($nl, 'flndtopo'  , 'hgrid'=>$lnd_res, 'mask'=>$mask );
@@ -663,12 +632,19 @@ add_default($nl, 'hist_crtinic', 'val'=> 'NONE');
 # Optional variables or variables only turned on for specific settings
 #
 
-
 # If River Transport Model turned on
 my $rtm = $cfg->get('rtm');
 if ( $rtm eq "on" ) {
    add_default($nl, 'frivinp_rtm');
 }
+
+# If cpl6 mode or if DUST or CARBON_AERO NOT turned on -- get aerosol deposition rates from datasets
+my $dust        = $cfg->get('dust');
+my $carbon_aero = $cfg->get('carbon_aero');
+if ( $mode eq "ext_ccsm_con" || $dust eq "off" || $carbon_aero eq "off" ) {
+   add_default($nl, 'faerdep', 'hgrid'=>$lnd_res );
+}
+
 #
 # Deal with options that the user has said are required...
 #
@@ -694,13 +670,54 @@ if ( defined($opts{'clm_demand'}) ) {
 
 #
 # Get surface dataset after furbinp so that we can get surface data consistent with it
+# And so that you can get surface dataset consistent with the fpftdyn dataset
 #
 my $furbinp = $nl->get_value('furbinp');
 $furbinp =~ s!(.*)/!!;
 $furbinp =~ s/'//;
 $furbinp =~ s/"//;
 if ( $furbinp eq "" ) { $furbinp = "null"; }
-add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'furbinp'=>$furbinp );
+my $fpftdyn = $nl->get_value('fpftdyn');
+$fpftdyn =~ s!(.*)/!!;
+$fpftdyn =~ s/'//;
+$fpftdyn =~ s/"//;
+if ( $fpftdyn eq "" ) { $fpftdyn = "null"; }
+add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'furbinp'=>$furbinp, 'fpftdyn'=>$fpftdyn );
+
+# Initial conditions
+# The initial date is an attribute in the defaults file which should be matched unless
+# the user explicitly requests to ignore the initial date via the -ignore_ic_date option, 
+# or just ignore the year of the initial date via the -ignore_ic_year option.
+
+if ( $start_type =~ /cold/ ) {
+   if (defined $nl->get_value('finidat')) {
+      die "$ProgName ERROR:: setting finidat is incomptable with using start_type=cold.\n";
+   }
+   add_default($nl, 'finidat', 'val'=>"' '", 'no_abspath'=>1);
+}
+
+if (not defined $nl->get_value('finidat')) {
+    my $ic_date = $nl->get_value('start_ymd');
+    my $nofail = 1;
+    my $var = "finidat";
+    if ( $start_type =~ /startup/  ) { $nofail = 0; }
+    if ($opts{'ignore_ic_date'}) {
+	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+                    'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp );
+    } elsif ($opts{'ignore_ic_year'}) {
+	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp );
+    } else {
+	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
+                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp );
+    }
+    my $finidat = $nl->get_value($var);
+    if ( (not defined $finidat ) || $finidat =~ /null/ ) {
+       my $group = $definition->get_group_name($var);
+       $nl->set_variable_value($group, $var, "' '" );
+    }
+}
+
 
 #
 # If CN mode -- get Nitrogen deposition file if available AND fndepdyn NOT set
@@ -718,6 +735,8 @@ if ($mode eq "ccsm_seq") {
   add_default($nl, 'profile_barrier');
   add_default($nl, 'profile_disable');
   add_default($nl, 'profile_single_file');
+  add_default($nl, 'profile_depth_limit');
+  add_default($nl, 'profile_detail_limit');
 }
  
 ##############################
@@ -773,9 +792,6 @@ if ($mode eq "ccsm_seq") {
 	die "$ProgName ERROR:: cycle_beg_year greater than cycle_end_year\n";
     }
     
-    my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' );
-    add_default($nl, 'streams', 'val' => "$outstreams $init_year $beg_year $end_year");
-    
     # Determine options for reading the stream template file (datm.streams.template.xml)
     my %inputopts;
     if ( $opts{'silent'} ) {
@@ -783,6 +799,7 @@ if ($mode eq "ccsm_seq") {
     } else {
 	$inputopts{'printing'} = 1;
     }
+    $inputopts{'test'} = $opts{'test'};
     if ( $opts{'source'} eq "default" ) {
 	$inputopts{'datasource'}  = $defaults->get_value( 'source' );
     } else {
@@ -839,16 +856,47 @@ if ($mode eq "ccsm_seq") {
     $inputopts{'filenames'} = "";
     $inputopts{'case'}      = "";
     
-    # Read the streams template file
-    my $streams = Streams::Template->new( \%inputopts );
-    my $template = $defaults->get_value( 'streamstemplate' );
-    $streams->Read( "$cfgdir/namelist_files/$template" );
+    if ( $source ne "CLM_QIAN" ) {
+       my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' );
+       add_default($nl, 'streams', 'val' => "$outstreams $init_year $beg_year $end_year");
     
-    if ( $opts{'test'} ) {
-	$streams->TestFilesExist( "data" );
-	$streams->TestFilesExist( "domain" );
-    }
-    $streams->Write( $outstreams );
+       # Read the streams template file
+       my $streams = Streams::Template->new( \%inputopts );
+       my $template = $defaults->get_value( 'streamstemplate' );
+       $streams->Read( "$cfgdir/namelist_files/$template" );
+       
+       if ( $opts{'test'} ) {
+	   $streams->TestFilesExist( "data" );
+	   $streams->TestFilesExist( "domain" );
+       }
+       $streams->Write( $outstreams );
+   } else {
+       my $ostreams = undef;
+       my $filepath = $inputopts{'filepath'};
+       foreach my $src ( "Precip", "Solar", "TPQW" ) {
+	  $inputopts{'datasource'}  = "$source.$src";
+	  $inputopts{'filepath'} = "$filepath/" . $defaults->get_value( "CLM_QIAN_dir.$src" );
+
+          my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' ) . ".$src";
+    
+          # Read the streams template file
+          my $streams = Streams::Template->new( \%inputopts );
+          my $template = $defaults->get_value( 'streamstemplate' );
+          $streams->Read( "$cfgdir/namelist_files/$template" );
+       
+          if ( $opts{'test'} ) {
+	      $streams->TestFilesExist( "data" );
+	      $streams->TestFilesExist( "domain" );
+          }
+          $streams->Write( $outstreams );
+          if ( ! defined($ostreams) ) {
+             $ostreams = "\"$outstreams $init_year $beg_year $end_year\"";
+          } else {
+             $ostreams = "$ostreams,\"$outstreams $init_year $beg_year $end_year\"";
+          }
+      }
+      add_default($nl, 'streams', 'val' => "$ostreams" );
+   }
 }
 
 ##############################
@@ -857,6 +905,7 @@ if ($mode eq "ccsm_seq") {
 
 if ($mode eq "ccsm_seq") {
     add_default($nl, 'tn460_factorfn');
+    add_default($nl, 'step2init');
 }
 
 
@@ -975,7 +1024,7 @@ sub add_default {
        }
 
        # if no value is found then exit w/ error (unless 'nofail' option set)
-       unless ($val) {
+       unless ( defined($val) ) {
 	   unless ($opts{'nofail'}) {
 	       die "$ProgName - No default value found for $var.\n" . 
                    "            Are defaults provided for this resolution and land mask?\n";

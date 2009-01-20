@@ -95,6 +95,7 @@ contains
     real(r8), pointer :: sucsat(:,:)       ! minimum soil suction (mm)
     integer , pointer :: snl(:)            ! minus number of snow layers
     real(r8), pointer :: qflx_evap_grnd(:) ! ground surface evaporation rate (mm H2O/s) [+]
+    real(r8), pointer :: zi(:,:)           ! interface level below a "z" level (m)
 !
 ! local pointers to original implicit out arguments
 !
@@ -138,6 +139,7 @@ contains
     sucsat        => clm3%g%l%c%cps%sucsat
     snl            => clm3%g%l%c%cps%snl
     qflx_evap_grnd => clm3%g%l%c%cwf%pwf_a%qflx_evap_grnd
+    zi            => clm3%g%l%c%cps%zi
 
     ! Get time step
 
@@ -158,8 +160,7 @@ contains
 
           icefrac(c,j) = min(1._r8,h2osoi_ice(c,j)/(h2osoi_ice(c,j)+h2osoi_liq(c,j)))
 
-          fracice(c,j) = max(0._r8,exp(-3._r8*(1._r8-icefrac(c,j)))- exp(-3._r8))
-
+          fracice(c,j) = max(0._r8,exp(-3._r8*(1._r8-icefrac(c,j)))- exp(-3._r8))/(1.0_r8-exp(-3._r8))
        end do
     end do
 
@@ -169,7 +170,7 @@ contains
 !cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
-       fff(c)  = 1._r8 / hkdepth(c)
+       fff(c) = 0.5_r8
        fcov(c) = (1._r8 - fracice(c,1)) * wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c)) + fracice(c,1)
     end do
 
@@ -439,6 +440,10 @@ contains
     integer , pointer :: pfti(:)              ! beginning pft index for each column
     real(r8), pointer :: fracice(:,:)         ! fractional impermeability (-)
     real(r8), pointer :: h2osoi_vol(:,:)      ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+    real(r8), pointer :: qcharge(:)           ! aquifer recharge rate (mm/s)
+    real(r8), pointer :: hkdepth(:)           ! decay factor (m)
+    real(r8), pointer :: zwt(:)               ! water table depth (m)
+    real(r8), pointer :: zi(:,:)              ! interface level below a "z" level (m)
 !
 ! local pointers to original implicit inout arguments
 !
@@ -447,6 +452,14 @@ contains
 ! local pointer s to original implicit out arguments
 !
     real(r8), pointer :: rootr_col(:,:)       ! effective fraction of roots in each soil layer
+    real(r8), pointer :: smp_l(:,:)             ! soil matrix potential [mm]
+    real(r8), pointer :: dsmpdw_l(:,:)          ! derivative of soil matric potential
+    real(r8), pointer :: hk_l(:,:)              ! hydraulic conductivity (mm/s)
+    real(r8), pointer :: dhkdw_l(:,:)           ! derivative of hydraulic conductivity
+    real(r8), pointer :: dwat_l(:,:)            ! change in volumetric soil water content
+    real(r8), pointer :: qflx_in_soil(:,:)      ! flux of water into soil layer [mm h2o/s]
+    real(r8), pointer :: qflx_out_soil(:,:)     ! flux of water out of soil layer [mm h2o/s]
+    real(r8), pointer :: qflx_tranout_soil(:,:) ! transpiration flux out of soil layer [mm h2o/s]
 !
 !EOP
 !
@@ -455,21 +468,21 @@ contains
     integer  :: p,c,fc,j                  ! do loop indices
     integer  :: jtop(lbc:ubc)             ! top level at each column
     real(r8) :: dtime                     ! land model time step (sec)
-    real(r8) :: amx(lbc:ubc,1:nlevsoi)    ! "a" left off diagonal of tridiagonal matrix
-    real(r8) :: bmx(lbc:ubc,1:nlevsoi)    ! "b" diagonal column for tridiagonal matrix
-    real(r8) :: cmx(lbc:ubc,1:nlevsoi)    ! "c" right off diagonal tridiagonal matrix
-    real(r8) :: rmx(lbc:ubc,1:nlevsoi)    ! "r" forcing term of tridiagonal matrix
-    real(r8) :: zmm(lbc:ubc,1:nlevsoi)    ! layer depth [mm]
-    real(r8) :: dzmm(lbc:ubc,1:nlevsoi)   ! layer thickness [mm]
+    real(r8) :: amx(lbc:ubc,1:nlevsoi+1)  ! "a" left off diagonal of tridiagonal matrix
+    real(r8) :: bmx(lbc:ubc,1:nlevsoi+1)  ! "b" diagonal column for tridiagonal matrix
+    real(r8) :: cmx(lbc:ubc,1:nlevsoi+1)  ! "c" right off diagonal tridiagonal matrix
+    real(r8) :: rmx(lbc:ubc,1:nlevsoi+1)  ! "r" forcing term of tridiagonal matrix
+    real(r8) :: zmm(lbc:ubc,1:nlevsoi+1)  ! layer depth [mm]
+    real(r8) :: dzmm(lbc:ubc,1:nlevsoi+1) ! layer thickness [mm]
     real(r8) :: den                       ! used in calculating qin, qout
-    real(r8) :: dqidw0                    ! d(qin)/d(vol_liq(i-1))
-    real(r8) :: dqidw1                    ! d(qin)/d(vol_liq(i))
-    real(r8) :: dqodw1                    ! d(qout)/d(vol_liq(i))
-    real(r8) :: dqodw2                    ! d(qout)/d(vol_liq(i+1))
-    real(r8) :: dsmpdw(lbc:ubc,1:nlevsoi) ! d(smp)/d(vol_liq)
-    real(r8) :: num                       ! used in calculating qin, qout
-    real(r8) :: qin                       ! flux of water into soil layer [mm h2o/s]
-    real(r8) :: qout                      ! flux of water out of soil layer [mm h2o/s]
+    real(r8) :: dqidw0(lbc:ubc,1:nlevsoi+1) ! d(qin)/d(vol_liq(i-1))
+    real(r8) :: dqidw1(lbc:ubc,1:nlevsoi+1) ! d(qin)/d(vol_liq(i))
+    real(r8) :: dqodw1(lbc:ubc,1:nlevsoi+1) ! d(qout)/d(vol_liq(i))
+    real(r8) :: dqodw2(lbc:ubc,1:nlevsoi+1) ! d(qout)/d(vol_liq(i+1))
+    real(r8) :: dsmpdw(lbc:ubc,1:nlevsoi+1) ! d(smp)/d(vol_liq)
+    real(r8) :: num                         ! used in calculating qin, qout
+    real(r8) :: qin(lbc:ubc,1:nlevsoi+1)    ! flux of water into soil layer [mm h2o/s]
+    real(r8) :: qout(lbc:ubc,1:nlevsoi+1)   ! flux of water out of soil layer [mm h2o/s]
     real(r8) :: s_node                    ! soil wetness
     real(r8) :: s1                        ! "s" at interface of layer
     real(r8) :: s2                        ! k*s**(2b+2)
@@ -477,10 +490,25 @@ contains
     real(r8) :: sdamp                     ! extrapolates soiwat dependence of evaporation
     integer  :: pi                        ! pft index
     real(r8) :: temp(lbc:ubc)             ! accumulator for rootr weighting
+    integer  :: jwt(lbc:ubc)              ! index of the soil layer right above the water table (-)
+    real(r8) :: smp1,dsmpdw1,wh,wh_zwt,ka
+    real(r8) :: dwat2(lbc:ubc,1:nlevsoi+1)
+    real(r8) :: dzq                         ! used in calculating qin, qout (difference in equilbirium matric potential)
+    real(r8) :: zimm(lbc:ubc,0:nlevsoi)     ! layer interface depth [mm]
+    real(r8) :: zq(lbc:ubc,1:nlevsoi+1)     ! equilibrium matric potential for each layer [mm]
+    real(r8) :: vol_eq(lbc:ubc,1:nlevsoi+1) ! equilibrium volumetric water content
+    real(r8) :: tempi                       ! temp variable for calculating vol_eq
+    real(r8) :: temp0                       ! temp variable for calculating vol_eq
+    real(r8) :: voleq1                      ! temp variable for calculating vol_eq
+    real(r8) :: zwtmm(lbc:ubc)              ! water table depth [mm]
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived type members (column-level)
 
+    qcharge           => clm3%g%l%c%cws%qcharge
+    hkdepth           => clm3%g%l%c%cps%hkdepth
+    zi                => clm3%g%l%c%cps%zi
+    zwt               => clm3%g%l%c%cws%zwt
     ctype             => clm3%g%l%c%itype
     npfts             => clm3%g%l%c%npfts
     z                 => clm3%g%l%c%cps%z
@@ -499,6 +527,14 @@ contains
     fracice           => clm3%g%l%c%cps%fracice
     qflx_tran_veg_col => clm3%g%l%c%cwf%pwf_a%qflx_tran_veg
     pfti              => clm3%g%l%c%pfti
+    smp_l             => clm3%g%l%c%cws%smp_l
+    dsmpdw_l          => clm3%g%l%c%cws%dsmpdw_l
+    hk_l              => clm3%g%l%c%cws%hk_l
+    dhkdw_l           => clm3%g%l%c%cws%dhkdw_l
+    dwat_l            => clm3%g%l%c%cws%dwat_l
+    qflx_in_soil      => clm3%g%l%c%cwf%qflx_in_soil
+    qflx_out_soil     => clm3%g%l%c%cwf%qflx_out_soil
+    qflx_tranout_soil => clm3%g%l%c%cwf%qflx_tranout_soil
 
     ! Assign local pointers to derived type members (pft-level)
 
@@ -521,7 +557,14 @@ contains
           c = filter_hydrologyc(fc)
           zmm(c,j) = z(c,j)*1.e3_r8
           dzmm(c,j) = dz(c,j)*1.e3_r8
+          zimm(c,j) = zi(c,j)*1.e3_r8
        end do
+    end do
+
+    do fc = 1, num_hydrologyc 
+       c = filter_hydrologyc(fc)
+       zimm(c,0) = 0.0_r8
+       zwtmm(c)  = zwt(c)*1.e3_r8
     end do
 
     ! First step is to calculate the column-level effective rooting
@@ -552,7 +595,6 @@ contains
                 p = pfti(c) + pi - 1
                 if (pwtgcell(p)>0._r8) then
                    rootr_col(c,j) = rootr_col(c,j) + rootr_pft(p,j) * qflx_tran_veg_pft(p) * pwtcol(p)
-!                  write(iulog,*)'qflx_tran_veg_pft: ',qflx_tran_veg_pft(p)
                 end if
              end if
           end do
@@ -577,9 +619,70 @@ contains
           c = filter_hydrologyc(fc)
           if (temp(c) /= 0._r8) then
              rootr_col(c,j) = rootr_col(c,j)/temp(c)
-!            write(iulog,*)'rootr_col: ',rootr_col(c,j)
           end if
        end do
+    end do
+
+    !compute jwt index
+    ! The layer index of the first unsaturated layer, i.e., the layer right above
+    ! the water table
+
+!dir$ concurrent
+!cdir nodep
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
+       jwt(c) = nlevsoi
+       do j = 2,nlevsoi
+          if(zwt(c) <= zi(c,j)) then
+             jwt(c) = j-1
+             exit
+          end if
+       enddo
+    end do
+
+    ! calculate the equilibrium water content based on the water table depth
+            
+    do j=1,nlevsoi 
+       do fc=1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          if ((zwtmm(c) .lt. zimm(c,j-1))) then   !fully saturated when wtd is less than the layer top
+             vol_eq(c,j) = watsat(c,j)
+            
+          ! use the weighted average from the saturated part (depth > wtd) and the equilibrium solution for the
+          ! rest of the layer
+
+          else if ((zwtmm(c) .lt. zimm(c,j)) .and. (zwtmm(c) .gt. zimm(c,j-1))) then
+             tempi = 1.0_r8
+             temp0 = (((sucsat(c,j)+zwtmm(c)-zimm(c,j-1))/sucsat(c,j)))**(1._r8-1._r8/bsw(c,j))
+             voleq1 = -sucsat(c,j)*watsat(c,j)/(1._r8-1._r8/bsw(c,j))/(zwtmm(c)-zimm(c,j-1))*(tempi-temp0)
+             vol_eq(c,j) = (voleq1*(zwtmm(c)-zimm(c,j-1)) + watsat(c,j)*(zimm(c,j)-zwtmm(c)))/(zimm(c,j)-zimm(c,j-1))
+             vol_eq(c,j) = min(watsat(c,j),vol_eq(c,j))
+             vol_eq(c,j) = max(vol_eq(c,j),0.0_r8)
+          else
+             tempi = (((sucsat(c,j)+zwtmm(c)-zimm(c,j))/sucsat(c,j)))**(1._r8-1._r8/bsw(c,j))
+             temp0 = (((sucsat(c,j)+zwtmm(c)-zimm(c,j-1))/sucsat(c,j)))**(1._r8-1._r8/bsw(c,j))
+             vol_eq(c,j) = -sucsat(c,j)*watsat(c,j)/(1._r8-1._r8/bsw(c,j))/(zimm(c,j)-zimm(c,j-1))*(tempi-temp0)
+             vol_eq(c,j) = max(vol_eq(c,j),0.0_r8)
+             vol_eq(c,j) = min(watsat(c,j),vol_eq(c,j))
+          endif
+          zq(c,j) = -sucsat(c,j)*(max(vol_eq(c,j)/watsat(c,j),0.01_r8))**(-bsw(c,j))
+          zq(c,j) = max(smpmin(c), zq(c,j))
+       end do
+    end do
+
+    ! If water table is below soil column calculate zq for the 11th layer
+    j = nlevsoi
+    do fc=1, num_hydrologyc
+       c = filter_hydrologyc(fc)
+       if(jwt(c) == nlevsoi) then 
+          tempi = 1._r8
+          temp0 = (((sucsat(c,j)+zwtmm(c)-zimm(c,j))/sucsat(c,j)))**(1._r8-1._r8/bsw(c,j))
+          vol_eq(c,j+1) = -sucsat(c,j)*watsat(c,j)/(1._r8-1._r8/bsw(c,j))/(zwtmm(c)-zimm(c,j))*(tempi-temp0)
+          vol_eq(c,j+1) = max(vol_eq(c,j+1),0.0_r8)
+          vol_eq(c,j+1) = min(watsat(c,j),vol_eq(c,j+1))
+          zq(c,j+1) = -sucsat(c,j)*(max(vol_eq(c,j+1)/watsat(c,j),0.01_r8))**(-bsw(c,j))
+          zq(c,j+1) = max(smpmin(c), zq(c,j+1))
+       end if
     end do
 
     ! Hydraulic conductivity and soil matric potential and their derivatives
@@ -600,7 +703,6 @@ contains
 
           dhkdw(c,j) = (1._r8-0.5_r8*(fracice(c,j)+fracice(c,min(nlevsoi, j+1))))* &
                        (2._r8*bsw(c,j)+3._r8)*s2*0.5_r8/watsat(c,j)
-          if(j == nlevsoi) dhkdw(c,j) = dhkdw(c,j) * 2._r8
 
           s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
           s_node = min(1.0_r8, s_node)
@@ -610,7 +712,25 @@ contains
 
           dsmpdw(c,j) = -bsw(c,j)*smp(c,j)/(s_node*watsat(c,j))
 
+          smp_l(c,j) = smp(c,j)
+          dsmpdw_l(c,j) = dsmpdw(c,j)
+          hk_l(c,j) = hk(c,j)
+          dhkdw_l(c,j) = dhkdw(c,j)
+
        end do
+    end do
+
+    ! aquifer (11th) layer
+!dir$ concurrent
+!cdir nodep
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
+       zmm(c,nlevsoi+1) = 0.5*(1.e3_r8*zwt(c) + zmm(c,nlevsoi))
+       if(jwt(c) < nlevsoi) then
+         dzmm(c,nlevsoi+1) = dzmm(c,nlevsoi)
+       else
+         dzmm(c,nlevsoi+1) = (1.e3_r8*zwt(c) - zmm(c,nlevsoi))
+       end if
     end do
 
     ! Set up r, a, b, and c vectors for tridiagonal solution
@@ -622,16 +742,17 @@ contains
 !cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
-       qin    = qflx_infl(c)
+       qin(c,j)    = qflx_infl(c)
        den    = (zmm(c,j+1)-zmm(c,j))
-       num    = (smp(c,j+1)-smp(c,j)) - den
-       qout   = -hk(c,j)*num/den
-       dqodw1 = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
-       dqodw2 = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-       rmx(c,j) =  qin - qout - qflx_tran_veg_col(c) * rootr_col(c,j)
+       dzq    = (zq(c,j+1)-zq(c,j))
+       num    = (smp(c,j+1)-smp(c,j)) - dzq
+       qout(c,j)   = -hk(c,j)*num/den
+       dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
+       dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
+       rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_tran_veg_col(c) * rootr_col(c,j)
        amx(c,j) =  0._r8
-       bmx(c,j) =  dzmm(c,j)*(sdamp+1._r8/dtime) + dqodw1
-       cmx(c,j) =  dqodw2
+       bmx(c,j) =  dzmm(c,j)*(sdamp+1._r8/dtime) + dqodw1(c,j)
+       cmx(c,j) =  dqodw2(c,j)
     end do
 
     ! Nodes j=2 to j=nlevsoi-1
@@ -642,19 +763,21 @@ contains
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           den    = (zmm(c,j) - zmm(c,j-1))
-          num    = (smp(c,j)-smp(c,j-1)) - den
-          qin    = -hk(c,j-1)*num/den
-          dqidw0 = -(-hk(c,j-1)*dsmpdw(c,j-1) + num*dhkdw(c,j-1))/den
-          dqidw1 = -( hk(c,j-1)*dsmpdw(c,j)   + num*dhkdw(c,j-1))/den
+          dzq    = (zq(c,j)-zq(c,j-1))
+          num    = (smp(c,j)-smp(c,j-1)) - dzq
+          qin(c,j)    = -hk(c,j-1)*num/den
+          dqidw0(c,j) = -(-hk(c,j-1)*dsmpdw(c,j-1) + num*dhkdw(c,j-1))/den
+          dqidw1(c,j) = -( hk(c,j-1)*dsmpdw(c,j)   + num*dhkdw(c,j-1))/den
           den    = (zmm(c,j+1)-zmm(c,j))
-          num    = (smp(c,j+1)-smp(c,j)) - den
-          qout   = -hk(c,j)*num/den
-          dqodw1 = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
-          dqodw2 = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
-          rmx(c,j) =  qin - qout - qflx_tran_veg_col(c)*rootr_col(c,j)
-          amx(c,j) = -dqidw0
-          bmx(c,j) =  dzmm(c,j)/dtime - dqidw1 + dqodw1
-          cmx(c,j) =  dqodw2
+          dzq    = (zq(c,j+1)-zq(c,j))
+          num    = (smp(c,j+1)-smp(c,j)) - dzq
+          qout(c,j)   = -hk(c,j)*num/den
+          dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
+          dqodw2(c,j) = -( hk(c,j)*dsmpdw(c,j+1) + num*dhkdw(c,j))/den
+          rmx(c,j)    =  qin(c,j) - qout(c,j) - qflx_tran_veg_col(c)*rootr_col(c,j)
+          amx(c,j)    = -dqidw0(c,j)
+          bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
+          cmx(c,j)    =  dqodw2(c,j)
        end do
     end do
 
@@ -665,24 +788,123 @@ contains
 !cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
-       den    = (zmm(c,j) - zmm(c,j-1))
-       num    = (smp(c,j)-smp(c,j-1)) - den
-       qin    = -hk(c,j-1)*num/den
-       dqidw0 = -(-hk(c,j-1)*dsmpdw(c,j-1) + num*dhkdw(c,j-1))/den
-       dqidw1 = -( hk(c,j-1)*dsmpdw(c,j)   + num*dhkdw(c,j-1))/den
-       qout   =  0._r8  ! zero-flow bottom boundary condition
-       dqodw1 =  0._r8  ! zero-flow bottom boundary condition
-       rmx(c,j) =  qin - qout - qflx_tran_veg_col(c)*rootr_col(c,j)
-       amx(c,j) = -dqidw0
-       bmx(c,j) =  dzmm(c,j)/dtime - dqidw1 + dqodw1
-       cmx(c,j) =  0._r8
+       if(j > jwt(c)) then !water table is in soil column
+         den    = (zmm(c,j) - zmm(c,j-1))
+         dzq    = (zq(c,j)-zq(c,j-1))
+         num    = (smp(c,j)-smp(c,j-1)) - dzq
+         qin(c,j)    = -hk(c,j-1)*num/den
+         dqidw0(c,j) = -(-hk(c,j-1)*dsmpdw(c,j-1) + num*dhkdw(c,j-1))/den
+         dqidw1(c,j) = -( hk(c,j-1)*dsmpdw(c,j)   + num*dhkdw(c,j-1))/den
+         qout(c,j)   =  0._r8
+         dqodw1(c,j) =  0._r8
+         rmx(c,j)    =  qin(c,j) - qout(c,j) - qflx_tran_veg_col(c)*rootr_col(c,j)
+         amx(c,j)    = -dqidw0(c,j)
+         bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
+         cmx(c,j)    =  0._r8
+
+         !scs: next set up aquifer layer; hydrologically inactive
+         rmx(c,j+1) = 0._r8
+         amx(c,j+1) = 0._r8
+         bmx(c,j+1) = dzmm(c,j+1)/dtime
+         cmx(c,j+1) = 0._r8
+       else ! water table is below soil column
+
+         !scs: compute aquifer soil moisture as average of layer 10 and saturation
+         s_node = max(0.5*(1.0_r8+h2osoi_vol(c,j)/watsat(c,j)), 0.01_r8)
+         s_node = min(1.0_r8, s_node)
+
+         !scs: compute smp for aquifer layer
+         smp1 = -sucsat(c,j)*s_node**(-bsw(c,j))
+         smp1 = max(smpmin(c), smp1)
+
+         !scs: compute dsmpdw for aquifer layer
+         dsmpdw1 = -bsw(c,j)*smp1/(s_node*watsat(c,j))
+
+         !scs: first set up bottom layer of soil column
+         den    = (zmm(c,j) - zmm(c,j-1))
+         dzq    = (zq(c,j)-zq(c,j-1))
+         num    = (smp(c,j)-smp(c,j-1)) - dzq
+         qin(c,j)    = -hk(c,j-1)*num/den
+         dqidw0(c,j) = -(-hk(c,j-1)*dsmpdw(c,j-1) + num*dhkdw(c,j-1))/den
+         dqidw1(c,j) = -( hk(c,j-1)*dsmpdw(c,j)   + num*dhkdw(c,j-1))/den
+         den    = (zmm(c,j+1)-zmm(c,j))
+         dzq    = (zq(c,j+1)-zq(c,j))
+         num    = (smp1-smp(c,j)) - dzq
+         qout(c,j)   = -hk(c,j)*num/den
+         dqodw1(c,j) = -(-hk(c,j)*dsmpdw(c,j)   + num*dhkdw(c,j))/den
+         dqodw2(c,j) = -( hk(c,j)*dsmpdw1 + num*dhkdw(c,j))/den
+
+         rmx(c,j) =  qin(c,j) - qout(c,j) - qflx_tran_veg_col(c)*rootr_col(c,j)
+         amx(c,j) = -dqidw0(c,j)
+         bmx(c,j) =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
+         cmx(c,j) =  dqodw2(c,j)
+
+         !scs: next set up aquifer layer; den/num unchanged, qin=qout
+         qin(c,j+1)    = qout(c,j)
+         dqidw0(c,j+1) = -(-hk(c,j)*dsmpdw(c,j) + num*dhkdw(c,j))/den
+         dqidw1(c,j+1) = -( hk(c,j)*dsmpdw1   + num*dhkdw(c,j))/den
+         qout(c,j+1)   =  0._r8  ! zero-flow bottom boundary condition
+         dqodw1(c,j+1) =  0._r8  ! zero-flow bottom boundary condition
+         rmx(c,j+1) =  qin(c,j+1) - qout(c,j+1)
+         amx(c,j+1) = -dqidw0(c,j+1)
+         bmx(c,j+1) =  dzmm(c,j+1)/dtime - dqidw1(c,j+1) + dqodw1(c,j+1)
+         cmx(c,j+1) =  0._r8
+       endif
     end do
 
     ! Solve for dwat
 
     jtop(:) = 1
-    call Tridiagonal(lbc, ubc, 1, nlevsoi, jtop, num_hydrologyc, filter_hydrologyc, &
-                     amx, bmx, cmx, rmx, dwat(lbc:ubc,1:nlevsoi))
+    call Tridiagonal(lbc, ubc, 1, nlevsoi+1, jtop, num_hydrologyc, filter_hydrologyc, &
+                     amx, bmx, cmx, rmx, dwat2 )
+    !scs: set dwat
+    do fc = 1,num_hydrologyc
+       c = filter_hydrologyc(fc)
+       do j = 1, nlevsoi
+          dwat(c,j)=dwat2(c,j)
+       end do
+    end do
+
+    ! Renew the mass of liquid water
+    !scs: also compute qcharge from dwat in aquifer layer
+    !scs: update in drainage for case jwt < nlevsoi
+
+!dir$ concurrent
+!cdir nodep
+    do fc = 1,num_hydrologyc
+       c = filter_hydrologyc(fc)
+       do j = 1, nlevsoi
+          h2osoi_liq(c,j) = h2osoi_liq(c,j) + dwat2(c,j)*dzmm(c,j)
+       end do
+
+       !scs: calculate qcharge for case jwt < nlevsoi
+       if(jwt(c) < nlevsoi) then
+          wh_zwt = 0._r8   !since wh_zwt = -sucsat - zq_zwt, where zq_zwt = -sucsat
+
+          s_node = max(h2osoi_vol(c,jwt(c))/watsat(c,jwt(c)), 0.01_r8)
+          s_node = min(1.0_r8, s_node)
+
+          !scs: use average moisture between water table and layer jwt
+          s1 = 0.5_r8*(1.0+s_node)
+          s1 = min(1._r8, s1)
+
+          !scs: this is the expression for unsaturated hk
+          ka = hksat(c,jwt(c))*s1**(2._r8*bsw(c,jwt(c))+3._r8)
+
+          ! Recharge rate qcharge to groundwater (positive to aquifer)
+          smp1 = -sucsat(c,jwt(c))*s_node**(-bsw(c,jwt(c)))
+          smp1 = max(smpmin(c), smp(c,jwt(c)))
+          wh      = smp1 - zq(c,jwt(c))
+          qcharge(c) = -ka * (wh_zwt-wh)  /((zwt(c)-z(c,jwt(c)))*1000._r8)
+
+          ! To limit qcharge  (for the first several timesteps)
+          qcharge(c) = max(-10.0_r8/dtime,qcharge(c))
+          qcharge(c) = min( 10.0_r8/dtime,qcharge(c))
+       else
+          !scs: if water table is below soil column, compute qcharge from dwat2(11)
+          qcharge(c) = dwat2(c,nlevsoi+1)*dzmm(c,nlevsoi+1)/dtime
+       endif
+    end do
 
     ! Renew the mass of liquid water
 
@@ -691,7 +913,38 @@ contains
 !cdir nodep
        do fc = 1,num_hydrologyc
           c = filter_hydrologyc(fc)
-          h2osoi_liq(c,j) = h2osoi_liq(c,j) + dwat(c,j)*dzmm(c,j)
+          dwat_l(c,j) = dwat(c,j)
+       end do
+    end do
+
+    ! Calculate soil water fluxes
+
+    do j= 1,nlevsoi
+!dir$ concurrent
+       do fc = 1,num_hydrologyc
+          c = filter_hydrologyc(fc)
+          if (j == 1) then
+             qflx_in_soil(c,j) = -qin(c,j)
+             qflx_out_soil(c,j) = - qout(c,j) - dqodw1(c,j)*dwat(c,j) - &
+                                  dqodw2(c,j)*dwat(c,j+1)
+          else if (j >= 2 .and. j <= nlevsoi-1) then
+             qflx_in_soil(c,j) = -qin(c,j) - dqidw0(c,j)*dwat(c,j-1) - &
+                                 dqidw1(c,j)*dwat(c,j)
+             qflx_out_soil(c,j) = -qout(c,j) - dqodw1(c,j)*dwat(c,j) - &
+                                  dqodw2(c,j)*dwat(c,j+1)
+          else
+             if(j > jwt(c)) then !water table is in soil column
+                qflx_in_soil(c,j) = -qin(c,j) - dqidw0(c,j)*dwat(c,j-1) - &
+                                    dqidw1(c,j)*dwat(c,j)
+                qflx_out_soil(c,j) = -qout(c,j) - dqodw1(c,j)*dwat(c,j)
+             else
+                qflx_in_soil(c,j) = -qin(c,j) - dqidw0(c,j)*dwat(c,j-1) - &
+                                    dqidw1(c,j)*dwat(c,j)
+                qflx_out_soil(c,j) = -qout(c,j) - dqodw1(c,j)*dwat(c,j) - &
+                                     dqodw2(c,j)*dwat2(c,j+1)
+             end if
+          end if
+          qflx_tranout_soil(c,j) = qflx_tran_veg_col(c)*rootr_col(c,j)
        end do
     end do
 
@@ -737,6 +990,7 @@ contains
 ! 4/26/05, Peter Thornton and David Lawrence: Turned off drainage from
 ! middle soil layers for both wet and dry fractions.
 ! 04/25/07  Keith Oleson: Completely new routine for CLM3.5 hydrology
+! 27 February 2008: Keith Oleson; Saturation excess modification
 !
 ! !LOCAL VARIABLES:
 !
@@ -773,6 +1027,7 @@ contains
     real(r8), pointer :: qflx_drain(:)     !sub-surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)     !qflx_surf at glaciers, wetlands, lakes (mm H2O /s)
     real(r8), pointer :: eflx_impsoil(:)   !implicit evaporation for soil temperature equation
+    real(r8), pointer :: qflx_rsub_sat(:)  !soil saturation excess [mm h2o/s]
 !
 !EOP
 !
@@ -784,10 +1039,10 @@ contains
     real(r8) :: dzmm(lbc:ubc,1:nlevsoi)  !layer thickness (mm)
     integer  :: jwt(lbc:ubc)             !index of the soil layer right above the water table (-)
     real(r8) :: rsub_bot(lbc:ubc)        !subsurface runoff - bottom drainage (mm/s)
-    real(r8) :: rsub_sat(lbc:ubc)        !subsurface runoff - saturation excess (mm/s)
     real(r8) :: rsub_top(lbc:ubc)        !subsurface runoff - topographic control (mm/s)
     real(r8) :: fff(lbc:ubc)             !decay factor (m-1)
     real(r8) :: xsi(lbc:ubc)             !excess soil water above saturation at layer i (mm)
+    real(r8) :: xsia(lbc:ubc)            !available pore space at layer i (mm)
     real(r8) :: xs1(lbc:ubc)             !excess soil water above saturation at layer 1 (mm)
     real(r8) :: smpfz(1:nlevsoi)         !matric potential of layer right above water table (mm)
     real(r8) :: wtsub                    !summation of hk*dzmm for layers below water table (mm**2/s)
@@ -808,30 +1063,31 @@ contains
     ctype          => clm3%g%l%c%itype
 !   cgridcell      => clm3%g%l%c%gridcell
 
-    snl            => clm3%g%l%c%cps%snl
-    dz             => clm3%g%l%c%cps%dz
-    bsw            => clm3%g%l%c%cps%bsw
-    t_soisno       => clm3%g%l%c%ces%t_soisno
-    hksat          => clm3%g%l%c%cps%hksat
-    sucsat         => clm3%g%l%c%cps%sucsat
-    z              => clm3%g%l%c%cps%z
-    zi             => clm3%g%l%c%cps%zi
-    watsat         => clm3%g%l%c%cps%watsat
-    hkdepth        => clm3%g%l%c%cps%hkdepth
-    zwt            => clm3%g%l%c%cws%zwt
-    wa             => clm3%g%l%c%cws%wa
-    wt             => clm3%g%l%c%cws%wt
-    qcharge        => clm3%g%l%c%cws%qcharge
-    eff_porosity   => clm3%g%l%c%cps%eff_porosity
+    snl           => clm3%g%l%c%cps%snl
+    dz            => clm3%g%l%c%cps%dz
+    bsw           => clm3%g%l%c%cps%bsw
+    t_soisno      => clm3%g%l%c%ces%t_soisno
+    hksat         => clm3%g%l%c%cps%hksat
+    sucsat        => clm3%g%l%c%cps%sucsat
+    z             => clm3%g%l%c%cps%z
+    zi            => clm3%g%l%c%cps%zi
+    watsat        => clm3%g%l%c%cps%watsat
+    hkdepth       => clm3%g%l%c%cps%hkdepth
+    zwt           => clm3%g%l%c%cws%zwt
+    wa            => clm3%g%l%c%cws%wa
+    wt            => clm3%g%l%c%cws%wt
+    qcharge       => clm3%g%l%c%cws%qcharge
+    eff_porosity  => clm3%g%l%c%cps%eff_porosity
     qflx_snwcp_liq => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_liq
-    qflx_dew_grnd  => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
-    qflx_dew_snow  => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
-    qflx_sub_snow  => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
-    qflx_drain     => clm3%g%l%c%cwf%qflx_drain
-    qflx_qrgwl     => clm3%g%l%c%cwf%qflx_qrgwl
-    eflx_impsoil   => clm3%g%l%c%cef%eflx_impsoil
-    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
+    qflx_dew_grnd => clm3%g%l%c%cwf%pwf_a%qflx_dew_grnd
+    qflx_dew_snow => clm3%g%l%c%cwf%pwf_a%qflx_dew_snow
+    qflx_sub_snow => clm3%g%l%c%cwf%pwf_a%qflx_sub_snow
+    qflx_drain    => clm3%g%l%c%cwf%qflx_drain
+    qflx_qrgwl    => clm3%g%l%c%cwf%qflx_qrgwl
+    qflx_rsub_sat => clm3%g%l%c%cwf%qflx_rsub_sat
+    eflx_impsoil  => clm3%g%l%c%cef%eflx_impsoil
+    h2osoi_liq    => clm3%g%l%c%cws%h2osoi_liq
+    h2osoi_ice    => clm3%g%l%c%cws%h2osoi_ice
 
     ! Get time step
 
@@ -854,11 +1110,11 @@ contains
 !cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
-       qflx_drain(c) = 0._r8 
-       rsub_bot(c)   = 0._r8
-       rsub_sat(c)   = 0._r8
-       rsub_top(c)   = 0._r8
-       fracice_rsub(c) = 0._r8
+       qflx_drain(c)    = 0._r8 
+       rsub_bot(c)      = 0._r8
+       qflx_rsub_sat(c) = 0._r8
+       rsub_top(c)      = 0._r8
+       fracice_rsub(c)  = 0._r8
     end do
 
     ! The layer index of the first unsaturated layer, i.e., the layer right above
@@ -889,8 +1145,8 @@ contains
           dzsum  = dzsum + dzmm(c,j)
           icefracsum = icefracsum + icefrac(c,j) * dzmm(c,j)
        end do
-       fracice_rsub(c) = max(0._r8,exp(-3._r8*(1._r8-(icefracsum/dzsum)))- exp(-3._r8))
-       rsub_top(c)    = (1._r8 - fracice_rsub(c)) * 4.5e-4_r8 * exp(-fff(c)*zwt(c))
+       fracice_rsub(c) = max(0._r8,exp(-3._r8*(1._r8-(icefracsum/dzsum)))- exp(-3._r8))/(1.0_r8-exp(-3._r8))
+       rsub_top(c)    = (1._r8 - fracice_rsub(c)) * 5.5e-3_r8 * exp(-fff(c)*zwt(c))
     end do
 
     rous = 0.2_r8
@@ -902,31 +1158,6 @@ contains
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
 
-       ! Matric potential at the layer above the water table
-       s_node = vol_liq(c,jwt(c))/eff_porosity(c,jwt(c))
-       s_node = max(s_node, 0.01_r8)
-       s_node = min(1.0_r8, s_node)
-       smpfz(jwt(c)) = -sucsat(c,jwt(c))*s_node**(-bsw(c,jwt(c)))
-       smpfz(jwt(c)) = max(-80000.0_r8, smpfz(jwt(c)))
-
-       ! Water head at the water table and hydraulic conductivity of the aquifer
-       if(jwt(c) == nlevsoi) then
-          dza = fff(c)*(zwt(c)-z(c,jwt(c)))
-          ka = hk(c,jwt(c)) * (1.0_r8-exp(-dza))/dza
-          wh_zwt  = -zwt(c) * 1000._r8
-       else
-          ka = hk(c,jwt(c))
-          wh_zwt  = -sucsat(c,jwt(c)+1) - zwt(c) * 1000._r8
-       endif
-
-       ! Recharge rate qcharge to groundwater (positive to aquifer)
-       wh      = smpfz(jwt(c))  - z(c,jwt(c))*1.e3_r8
-       qcharge(c) = -ka * (wh_zwt-wh)  /((zwt(c)-z(c,jwt(c)))*1000._r8)
-
-       ! To limit qcharge  (for the first several timesteps)
-       qcharge(c) = max(-10.0_r8/dtime,qcharge(c))
-       qcharge(c) = min( 10.0_r8/dtime,qcharge(c))
-
        ! Water storage in aquifer + soil
        wt(c)  = wt(c) + (qcharge(c) - rsub_top(c)) * dtime
 
@@ -934,7 +1165,6 @@ contains
           wa(c)  = wa(c) + (qcharge(c) -rsub_top(c)) * dtime
           wt(c)  = wa(c)
           zwt(c)     = (zi(c,nlevsoi) + 25._r8) - wa(c)/1000._r8/rous
-          h2osoi_liq(c,nlevsoi) = h2osoi_liq(c,nlevsoi) - qcharge(c) * dtime
           h2osoi_liq(c,nlevsoi) = h2osoi_liq(c,nlevsoi) + max(0._r8,(wa(c)-5000._r8))
           wa(c)  = min(wa(c), 5000._r8)
        else                                ! water table within soil layers
@@ -986,7 +1216,7 @@ contains
        c = filter_hydrologyc(fc)
        xs1(c)          = max(h2osoi_liq(c,1)-(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1)),0._r8)
        h2osoi_liq(c,1) = min(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1), h2osoi_liq(c,1))
-       rsub_sat(c)     = xs1(c) / dtime
+       qflx_rsub_sat(c)     = xs1(c) / dtime
     end do
 
     ! Limit h2osoi_liq to be greater than or equal to watmin.
@@ -1030,7 +1260,7 @@ contains
 
        ! Sub-surface runoff and drainage
 
-       qflx_drain(c) = rsub_sat(c) + rsub_top(c)
+       qflx_drain(c) = qflx_rsub_sat(c) + rsub_top(c)
 
        ! Set imbalance for snow capping
 

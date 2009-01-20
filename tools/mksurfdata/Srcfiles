@@ -12,6 +12,7 @@ spmdMod.F90
 clm_varctl.F90
 clm_varpar.F90
 mksoicol.F90
+mkorganic.F90
 mksoitex.F90
 mksrfdat.F90
 mkurban.F90

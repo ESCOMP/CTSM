@@ -11,6 +11,9 @@ be done.
 	
 Scripts available:
 
+aerdepregrid.ncl ------------ Regrid the Aerosol deposition dataset to a different
+resolution.
+                              Uses bi-linear interpolation.
 ndepregrid.ncl -------------- Regrid the Nitrogen deposition datasets to a different resolution.
                               Uses bi-linear interpolation.
 

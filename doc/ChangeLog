@@ -1,4 +1,518 @@
 ===============================================================
+Tag name:  clm3_6_15
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Mon Jan 19 22:51:29 MST 2009
+One-line Summary: Bring clm36sci branch to the trunk
+
+Purpose of changes: Move the clm36 science branch to the trunk
+                    Brings in changes to data atm. so data has correct times, and
+                    solar matches solar zenith angle 
+                    Deep soil with bedrock at bottom, David Lawrence
+                    Organic matter in soils David Lawrence
+                    SNICAR brought in for snow radiation Mark Flanner
+                    Adjustments to hydrology, Keith Oleson, Sean Swenson
+                    Sparse dense aero.
+                    Snow cover fraction and snow veg cover
+                    CN Changes from Peter Thornton and Sam Levis
+                    CLAMP and CASA changes from Forrect Hoffman
+                    New surface datasets (old lake/wetlands), new pft etc. from Peter Lawrence
+                    New pft-physiology file with changes for grass/crop
+                    Forcing height now h_atm+z0+d for each pft
+                    Add stub glacier
+
+Bugs fixed (include bugzilla ID): 753 (data off by 1.5 hours)
+
+Known bugs (include bugzilla ID):  885 (domain checking), 883 (aerosol deposition is zero)
+                                   877 (CN restart problem), 887 (doesn't compile for serial mode)
+                                   672 (3.5.4-3.5.14 diffs), 862 (360x720 res problem)
+                                   851 (abort when files non-exist on jaguar), 888 (add check for pftdyn mode)
+                                   821 (mksurfdata for qtr deg), 789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange), 722 (threading slow) 
+                                  701 (svn keyword)
+                                  698 (cprnc bug gives false difference)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+    http://bugs.cgd.ucar.edu/
+
+    Known bugs that will NOT be resolved: 546(interpinic for DGVM),
+                                          652 (threads different answers with older PGI versions)
+
+Hydrology changes (Guo-Yue Niu water table below soil column, fff=7, 
+Qing micropore eqs (hksat and sucsat) and Qing microporosity 
+-Simulation clm3_5niu5).
+
+Snow cover fraction (Niu and Yang); snow burial fraction for short vegetation 
+(Wang and Zeng); thermal and hydraulic organic soil (Lawrence); 
+snow compaction fix (Lawrence); snow T profile during layer splitting 
+fix (Lawrence); new FGR12 diagnostic.
+
+Ground emissivity now weighted combination (using fsno) of snow and soil 
+emissivity, sparse dense aerodynamic parameters from X. Zeng parameterization, 
+Liu (2004) saturated hydraulic conductivity and matric potential,
+change saturation excess mechanism to only go to next to lowest layer, change 
+forcing height to min. of 40m.
+
+Lower volumetric soil water content to remove drainage spikes from some points
+with high sand content. Change volumetric soil water content from 0.4 to 0.3.
+
+Incorporate hydrologically inactive deep soil (15 layers, 11-15
+hyrdologically inactive) and add mksoilcarb capability.
+Change deep soil (layers 11-15) to dry rock type rather than wet sand
+to reduce spinup time and for greater realism.
+
+Improved representation of snow-radiation interaction, including snow aging, 
+darkening from black carbon and dust, and vertically-resolved solar heating.
+
+Remove code pertaining to 40m minimum forcing height. Forcing height is now
+whatever the atmospheric model provides plus z0+d of each pft.  For offline
+simulations this will be 30m+z0+d.
+
+saturation excess back to CLM3.5 parameterization.  Sakaguchi litter resistance
+Remove Qing Liu soil micropore functions and return to CLM3.5 formulations, 
+change decay factor for drainage to 2.5. remove Niu water table below soil 
+column formulation, frozen fraction of soil expression normalized per Zeng,
+rsubmax=9.9 for drainage calculation, decay factor=0.5 for surface runoff 
+calculation, Zeng/Decker Richards equation mods, modified one-step solution 
+for soil moisture and qcharge for compatibility with Zeng/Decker Richards 
+mods per Swenson.
+
+Change input datm7 forcing so that Precip is constant over 6 hour interval, 
+times are corrected for Temp, Pres, Humid, and Wind data and linear 
+interpolation is used, and solar data is scaled by the cos(sol-zen angle).
+
+Set litter LAI = 0.5 and incorporate Swenson organic/mineral soil hk 
+percolation theory
+
+CASA changes from Forrest Hoffman:
+
+   These changes add SOILPSI to the CASA'
+   configuration, correct units on C-LAMP carbon pool type fluxes, and reclassify
+   microbial pools as soil type pools.  I believe this includes all modifications
+   between bgcmip04_clm3_expa_60 and bgcmip08_clm3_expa_72.
+
+Summary of CN and Btran changes from Sam Levis:
+
+- CanopyFluxes modification in the calculation of btran so that it equals 0 in soil layers with temperature <=-2 C.
+- CN mods recommended by Peter Thornton and the BGCWG during the bgc development phase of the last few months.
+
+Grassland AND CROP optical properties changes from Keith Oleson:
+
+New pft physiology file was created:
+
+pft-physiology.c081002
+
+Description of changes to physiology file:
+
+New leaf and stem optical properties (VIS and NIR reflectance and transmittance)
+were derived for grasslands and crops (pfts 12-16) from full optical range 
+spectra of measured optical properties (Asner et al. (RSE 1998). 
+
+New properties are:
+
+                          Leaf              Stem
+                   VIS         NIR       VIS     NIR
+Reflectance        0.11        0.35      0.31    0.53
+Transmittance      0.05        0.34      0.12    0.25
+
+
+Describe any changes made to build system: 
+
+   Add SNICAR_FRC and CARBON_AERO ifdef tokens
+
+   DEFINE option SNICAR_FRC: enables second radiative transfer calculation of pure snow for radiative forcing estimation
+
+   in configure use options -carbon_aero and -snicar_frc
+
+Describe any changes made to the namelist:  Add fsnowoptics, fsnowaging, faerdep
+
+Added namelist variables fsnowoptics, fsnowaging, and faerdep, which point to files containing, respectively, snow/aerosol optical properties, snow aging parameters, and global aerosol deposition file. THESE FILES ARE REQUIRED.
+
+List any changes to the defaults for the boundary datasets:
+
+   finidat files developed, all new fsurdat files, new pft-physiology,
+   files for T62, new organic files, new files for SNICAR (fsnowoptics, 
+   fsnowaging, faerdep), fix some inconsistencies with fraction files, 
+   get topo files setup correctly, get all files for 4x5 and 2x2.5 resolution
+
+Describe any substantial timing or memory changes: Yes
+     20% slower because of SNICAR and slower because of deep soil
+
+Code reviewed by: Keith Oleson, Mark Flanner, Dave Lawrence, 
+                  Peter Thornton, Sam Levis, Sean Swenson
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, 
+                    drv, datm7, socn, sice, sglc, csm_share, timing, pio, cprnc
+
++scripts                       scripts4_090112
++models/drv/seq_mct            drvseq3_0_04
++models/atm/datm7              datm7_090107
++models/ocn/socn               stubs1_1_01/socn
++models/ice/sice               stubs1_1_01/sice
++models/glc/sglc               stubs1_1_01/sglc
++models/csm_share              share3_090112
++models/utils/timing           timing_081028
++models/utils/pio              pio28_prod/pio
++models/lnd/clm/tools/cprnc    cprnc_081022
+
+List all files eliminated:
+
+D      models/lnd/clm/test/system/tests_pretag_bluevista - remove
+D      models/lnd/clm/bld/scpDefaultNamelist.pl ---------- replace with listDefaultNamelist.pl
+D      models/lnd/clm/bld/run-frost.csh ------------------ remove as can use cpl7
+D      models/lnd/clm/tools/interpinic/clmi_1999-01-02_10x15_c070330.nc -- new file
+
+List all files added and what they do:
+
+A  +   models/lnd/clm/test/system/nl_files/clm_organic ------------ test organic
+A  +   models/lnd/clm/tools/mksurfdata/mkorganic.F90 -------------- add organic to surfdat
+A  +   models/lnd/clm/tools/mksurfdata/mksurfdata.pl -------------- create all fsurdat files
+A  +   models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl ---------- interpolate aerosol deposition
+A  +   models/lnd/clm/tools/ncl_scripts/clmi_increasesoillayer.ncl  interpolate old clmi files to 15 soil levels
+A  +   models/lnd/clm/tools/interpinic/clmi.IQ.1953-01-01_10x15_USGS_simyr2000_c081202.nc
+                                                   ---------------- new 15 layer file to test interpolation
+A  +   models/lnd/clm/tools/interpinic/runinit_ibm.csh ------------ create all finidat files
+A  +   models/lnd/clm/bld/listDefaultNamelist.pl ------------------ list inputdata files needed
+A  +   models/lnd/clm/src/main/organicFileMod.F90 ----------------- organic soil
+A  +   models/lnd/clm/src/main/aerdepMod.F90 ---------------------- read in aerosol deposition
+A  +   models/lnd/clm/src/biogeophys/SNICARMod.F90 ---------------- SNICAR model
+A  +   Quickstart.GUIDE ------------------------------------------- Quickstart to cpl7 scripts
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>>>>>>>>>>>> Add compile_only option, fix smp/spmd, change most
+>>>>>>>>>>>>>>>>>>>>>>>>> tests to 4x5 resolution, update ccsm version, 
+>>>>>>>>>>>>>>>>>>>>>>>>> remove bluevista, change to clm_qian inputdata
+>>>>>>>>>>>>>>>>>>>>>>>>> add cold start type
+
+M      models/lnd/clm/test/system/TCB.sh
+M      models/lnd/clm/test/system/config_files/4p_vodsrsc_dm
+M      models/lnd/clm/test/system/config_files/4p_vodsrsc_do
+M      models/lnd/clm/test/system/config_files/scam_ds ----- fix defaults for scam
+M      models/lnd/clm/test/system/config_files/17p_cnnsc_o
+M      models/lnd/clm/test/system/config_files/4p_casasc_dm
+M      models/lnd/clm/test/system/config_files/10p_dgvmsc_o
+M      models/lnd/clm/test/system/config_files/4p_casasc_do
+M      models/lnd/clm/test/system/config_files/4p_casasc_o
+M      models/lnd/clm/test/system/config_files/17p_vodsrsc_o
+M      models/lnd/clm/test/system/config_files/17p_cnnsc_dm
+M      models/lnd/clm/test/system/config_files/17p_cnnsc_do
+M      models/lnd/clm/test/system/config_files/10p_dgvmsc_dm
+M      models/lnd/clm/test/system/config_files/10p_dgvmsc_do
+M      models/lnd/clm/test/system/config_files/17p_vodsrsc_dm
+M      models/lnd/clm/test/system/config_files/ext_ccsm_seq_64x128_s
+M      models/lnd/clm/test/system/config_files/17p_vodsrsc_do
+M      models/lnd/clm/test/system/config_files/4p_vodsrsc_o
+M      models/lnd/clm/test/system/TSMncl_tools.sh
+M      models/lnd/clm/test/system/CLM_compare.sh
+M      models/lnd/clm/test/system/TBL.sh
+M      models/lnd/clm/test/system/TSM_ccsmseq.sh
+M      models/lnd/clm/test/system/TSMext_ccsmseq_cam.sh
+M      models/lnd/clm/test/system/tests_pretag_jaguar
+M      models/lnd/clm/test/system/tests_posttag_kraken
+M      models/lnd/clm/test/system/tests_pretag_bluefire
+M      models/lnd/clm/test/system/README.testnames
+M      models/lnd/clm/test/system/tests_posttag_breeze
+M      models/lnd/clm/test/system/tests_pretag_bangkok
+M      models/lnd/clm/test/system/TBR.sh
+M      models/lnd/clm/test/system/TCBtools.sh
+M      models/lnd/clm/test/system/TER.sh
+M      models/lnd/clm/test/system/test_driver.sh
+M      models/lnd/clm/test/system/tests_posttag_purempi_regression
+M      models/lnd/clm/test/system/mknamelist
+M      models/lnd/clm/test/system/tests_posttag_hybrid_regression
+M      models/lnd/clm/test/system/TCT_ccsmseq.sh
+M      models/lnd/clm/test/system/TCSruncase.sh
+M      models/lnd/clm/test/system/TSMpergro.sh
+M      models/lnd/clm/test/system/nl_files/clm_per
+M      models/lnd/clm/test/system/nl_files/clm_urb
+M      models/lnd/clm/test/system/nl_files/clm_std
+M      models/lnd/clm/test/system/nl_files/clm_ndepdyn
+M      models/lnd/clm/test/system/nl_files/clm_pftdyn
+M      models/lnd/clm/test/system/nl_files/clm_per0
+M      models/lnd/clm/test/system/TSMcnspinup.sh
+M      models/lnd/clm/test/system/input_tests_master
+M      models/lnd/clm/test/system/TSMtools.sh
+M      models/lnd/clm/test/system/TSMruncase.sh
+M      models/lnd/clm/test/system/TCBext_ccsmseq_cam.sh
+M      models/lnd/clm/test/system/TSCext_ccsmseq_scam.sh
+M      models/lnd/clm/test/system/tests_posttag_lightning
+M      models/lnd/clm/test/system/CLM_runcmnd.sh
+M      models/lnd/clm/test/system/TBLtools.sh
+M      models/lnd/clm/test/system/TSM.sh
+
+>>>>>>>>>>>>>>>>>>>>>>>>> Add organic add option to output as double precision
+>>>>>>>>>>>>>>>>>>>>>>>>> be more careful with averging add error checking
+M      models/lnd/clm/tools/mksurfdata/mkvarctl.F90
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.globalurban
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.regional
+M      models/lnd/clm/tools/mksurfdata/mkfileMod.F90
+M      models/lnd/clm/tools/mksurfdata/Makefile ----------- -Kieee for pgi
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.singlept
+M      models/lnd/clm/tools/mksurfdata/mksrfdat.F90
+M      models/lnd/clm/tools/mksurfdata/Srcfiles
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.namelist
+
+>>>>>>>>>>>>>>>>>>>>>>>>> 15 levels for urban
+MM     models/lnd/clm/tools/ncl_scripts/generate_ascii_avg_urbanparam_file_p7.ncl
+M      models/lnd/clm/tools/ncl_scripts/README
+
+>>>>>>>>>>>>>>>>>>>>>>>>> Change for 15 levels and new variables/dims on dataset
+M      models/lnd/clm/tools/interpinic/interpinic.F90
+M      models/lnd/clm/tools/interpinic/interpinic.runoptions
+M      models/lnd/clm/tools/interpinic/Srcfiles
+M      models/lnd/clm/tools/interpinic/Filepath
+M      models/lnd/clm/tools/interpinic/Makefile
+
+>>>>>>>>>>>>>>>>>>>>>>>>> 10x15 resolution, start to resolve domain checking bug
+M      models/lnd/clm/tools/mkgriddata/mkgriddata.namelist
+M      models/lnd/clm/tools/mkgriddata/mkgriddata.F90
+M      models/lnd/clm/tools/mkgriddata/domainMod.F90
+M      models/lnd/clm/tools/mkgriddata/creategridMod.F90
+M      models/lnd/clm/tools/mkgriddata/Makefile
+
+>>>>>>>>>>>>>>>>>>>>>>>>> Get grid data from grid files rather than frac files
+M      models/lnd/clm/tools/mkdatadomain/mkdatadomain.namelist
+M      models/lnd/clm/tools/mkdatadomain/addglobal.F90
+M      models/lnd/clm/tools/mkdatadomain/create_domain.F90
+M      models/lnd/clm/tools/mkdatadomain/Makefile
+
+>>>>>>>>>>>>>>>>>>>>>>>>> minor changes to build, new datasets for build-namelist
+M      models/lnd/clm/bld/configure --- add -snicar_frc and -carbon_aero, add sglc, remove timing for cpl7
+M      models/lnd/clm/bld/queryDefaultNamelist.pl --- minor change
+M      models/lnd/clm/bld/config_files/Makefile.in -- add HAVE_GETTIMEOFDAY for new timing, more consistent with cpl7 build
+M      models/lnd/clm/bld/config_files/config_definition.xml -- add snicar_frc and carbon_aero
+M      models/lnd/clm/bld/clm.cpl7.template -- simplify update for new scripts
+M      models/lnd/clm/bld/README ------------- update info.
+M      models/lnd/clm/bld/namelist_files/namelist_definition.xml ----- add new namelist items remove irad
+M      models/lnd/clm/bld/namelist_files/datm.streams.template.xml --- new Qian datasets
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml --- new defaults
+M      models/lnd/clm/bld/build-namelist
+
+>>>>>>>>>>>>>>>>>>>>>>>>> change default resolution to 4x5 remove irad
+M      models/lnd/clm/bld/run-pc.csh
+M      models/lnd/clm/bld/run-ibm.csh
+M      models/lnd/clm/bld/run-lightning.csh
+
+>>>>>>>>>>>>>>>>>>>>>>>>> New 15 layer urban single point datasets
+M      models/lnd/clm/bld/urban_input/metropolis_fluxes.txt
+M      models/lnd/clm/bld/urban_input/asphaltjungle_fluxes.txt
+M      models/lnd/clm/bld/urban_input/mexicocityMEX_fluxes.txt
+M      models/lnd/clm/bld/urban_input/vancouverCAN_fluxes.txt
+
+>>>>>>>>>>>>>>>>>>>>>>>>> Code changes documented above
+M      models/lnd/clm/src/biogeochem/CASASummaryMod.F90
+M      models/lnd/clm/src/biogeochem/CNCStateUpdate2Mod.F90
+M      models/lnd/clm/src/biogeochem/CNC13StateUpdate2Mod.F90
+M      models/lnd/clm/src/biogeochem/CNNStateUpdate1Mod.F90
+M      models/lnd/clm/src/biogeochem/DGVMEcosystemDynMod.F90
+M      models/lnd/clm/src/biogeochem/CNBalanceCheckMod.F90
+M      models/lnd/clm/src/biogeochem/CNNStateUpdate3Mod.F90
+M      models/lnd/clm/src/biogeochem/CNFireMod.F90
+M      models/lnd/clm/src/biogeochem/CNMRespMod.F90
+M      models/lnd/clm/src/biogeochem/CASAMod.F90
+M      models/lnd/clm/src/biogeochem/CNPrecisionControlMod.F90
+M      models/lnd/clm/src/biogeochem/CNSummaryMod.F90
+M      models/lnd/clm/src/biogeochem/DUSTMod.F90
+M      models/lnd/clm/src/biogeochem/CNPhenologyMod.F90
+M      models/lnd/clm/src/biogeochem/CNCStateUpdate1Mod.F90
+M      models/lnd/clm/src/biogeochem/CNDecompMod.F90
+M      models/lnd/clm/src/biogeochem/STATICEcosysDynMod.F90
+M      models/lnd/clm/src/biogeochem/CNCStateUpdate3Mod.F90
+M      models/lnd/clm/src/biogeochem/CNC13StateUpdate1Mod.F90
+M      models/lnd/clm/src/biogeochem/DGVMMod.F90
+M      models/lnd/clm/src/biogeochem/CNrestMod.F90
+M      models/lnd/clm/src/biogeochem/CNC13StateUpdate3Mod.F90
+M      models/lnd/clm/src/biogeochem/CNAnnualUpdateMod.F90
+M      models/lnd/clm/src/biogeochem/CNNStateUpdate2Mod.F90
+M      models/lnd/clm/src/biogeochem/C13SummaryMod.F90
+M      models/lnd/clm/src/biogeochem/CNNDynamicsMod.F90
+M      models/lnd/clm/src/biogeochem/CNAllocationMod.F90
+M      models/lnd/clm/src/biogeochem/CNC13FluxMod.F90
+M      models/lnd/clm/src/biogeochem/CNSetValueMod.F90
+M      models/lnd/clm/src/biogeochem/CNVegStructUpdateMod.F90
+M      models/lnd/clm/src/main/inicFileMod.F90
+M      models/lnd/clm/src/main/clm_varcon.F90
+M      models/lnd/clm/src/main/clm_varpar.F90
+M      models/lnd/clm/src/main/CNiniTimeVar.F90
+M      models/lnd/clm/src/main/clm_comp.F90
+M      models/lnd/clm/src/main/driver.F90
+M      models/lnd/clm/src/main/ncdio.F90
+M      models/lnd/clm/src/main/fileutils.F90
+M      models/lnd/clm/src/main/clmtypeInitMod.F90
+M      models/lnd/clm/src/main/pftdynMod.F90
+M      models/lnd/clm/src/main/iniTimeConst.F90
+M      models/lnd/clm/src/main/histFileMod.F90
+M      models/lnd/clm/src/main/clm_atmlnd.F90
+M      models/lnd/clm/src/main/restFileMod.F90
+M      models/lnd/clm/src/main/controlMod.F90
+M      models/lnd/clm/src/main/initSurfAlbMod.F90
+M      models/lnd/clm/src/main/clm_time_manager.F90
+M      models/lnd/clm/src/main/filterMod.F90
+M      models/lnd/clm/src/main/clm_varctl.F90
+M      models/lnd/clm/src/main/lnd_comp_mct.F90
+M      models/lnd/clm/src/main/CASAiniTimeVarMod.F90
+M      models/lnd/clm/src/main/areaMod.F90
+M      models/lnd/clm/src/main/clmtype.F90
+M      models/lnd/clm/src/main/histFldsMod.F90
+M      models/lnd/clm/src/main/mkarbinitMod.F90
+M      models/lnd/clm/src/riverroute/RtmMod.F90
+M      models/lnd/clm/src/biogeophys/SurfaceRadiationMod.F90
+M      models/lnd/clm/src/biogeophys/BalanceCheckMod.F90
+M      models/lnd/clm/src/biogeophys/SoilTemperatureMod.F90
+M      models/lnd/clm/src/biogeophys/UrbanInputMod.F90
+M      models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90
+M      models/lnd/clm/src/biogeophys/Biogeophysics1Mod.F90
+M      models/lnd/clm/src/biogeophys/Biogeophysics2Mod.F90
+M      models/lnd/clm/src/biogeophys/FrictionVelocityMod.F90
+M      models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90
+M      models/lnd/clm/src/biogeophys/Hydrology1Mod.F90
+M      models/lnd/clm/src/biogeophys/Hydrology2Mod.F90
+M      models/lnd/clm/src/biogeophys/BiogeophysicsLakeMod.F90
+M      models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90
+M      models/lnd/clm/src/biogeophys/SoilHydrologyMod.F90
+M      models/lnd/clm/src/biogeophys/UrbanMod.F90
+M      models/lnd/clm/src/biogeophys/DriverInitMod.F90
+M      models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90
+M      models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90
+
+>>>>>>>>>>>>>>>>>>>>>>>>> update documentation
+M      README -------------- update information
+M      KnownBugs ----------- add info on new known bugs
+
+Summary of testing:
+
+  bluefire: All PASS except TBL and ...
+
+031 smF96 TSM.sh 17p_vodsrsc_m clm_std 19981231:NONE:1800 4x5 gx3v5 48 arb_ic ...................FAIL! rc= 10
+036 smF96 TSM.sh 17p_vodsrsc_m clm_std 19981231:NONE:1800 4x5 gx3v5 48 arb_ic ...................FAIL! rc= 2
+013 blCA4 TBL.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 5
+015 blCA8 TBL.sh _sc_ds clm_urb^nl_urb 19971230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 5
+019 blNB4 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 5
+020 smC61 TSM.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v5 -6 arb_ic ...............FAIL! rc= 10
+021 erC61 TER.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v5 10+38 arb_ic ............FAIL! rc= 5
+022 brC61 TBR.sh _sc_dh clm_urb^nl_urb_br 19981001:NONE:1800 1.9x2.5 gx1v5 -3+-3 arb_ic .........FAIL! rc= 5
+023 blC61 TBL.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v5 48 arb_ic ...............FAIL! rc= 4
+024 smH91 TSM.sh 17p_cnnsc_dh clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@1890 96 startup ..........FAIL! rc= 10
+025 erH91 TER.sh 17p_cnnsc_dh clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@1890 10+38 startup .......FAIL! rc= 5
+026 brH91 TBR.sh 17p_cnnsc_dh clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@1890 72+72 startup .......FAIL! rc= 5
+027 blH91 TBL.sh 17p_cnnsc_dh clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@1890 48 startup ..........FAIL! rc= 4
+029 erH52 TER.sh 17p_cnnsc_dm clm_std 19980115:NONE:1800 10x15 USGS@1890 10+38 arb_ic ...........FAIL! rc= 13
+030 brH52 TBR.sh 17p_cnnsc_dm clm_std 19980115:NONE:1800 10x15 USGS@1890 72+72 arb_ic ...........FAIL! rc= 11
+031 blH52 TBL.sh 17p_cnnsc_dm clm_std 19980115:NONE:1800 10x15 USGS@1890 48 arb_ic ..............FAIL! rc= 7
+
+  lightning/pathscale: all PASS except TBL and ...
+
+009 blCA4 TBL.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 5
+013 blCA8 TBL.sh _sc_ds clm_urb^nl_urb 19971230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 5
+017 blOC4 TBL.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 5
+019 erA91 TER.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .......................FAIL! rc= 7
+020 brA91 TBR.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .......................FAIL! rc= 6
+021 blA91 TBL.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -6 arb_ic ..........................FAIL! rc= 5
+027 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 7
+028 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 6
+029 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 5
+031 smH52 TSM.sh 17p_cnnsc_dm clm_std 19980115:NONE:1800 10x15 USGS@1890 96 arb_ic ..............FAIL! rc= 10
+032 erH52 TER.sh 17p_cnnsc_dm clm_std 19980115:NONE:1800 10x15 USGS@1890 10+38 arb_ic ...........FAIL! rc= 5
+033 brH52 TBR.sh 17p_cnnsc_dm clm_std 19980115:NONE:1800 10x15 USGS@1890 72+72 arb_ic ...........FAIL! rc= 5
+034 blH52 TBL.sh 17p_cnnsc_dm clm_std 19980115:NONE:1800 10x15 USGS@1890 48 arb_ic ..............FAIL! rc= 4
+036 erK51 TER.sh 10p_dgvmsc_dh clm_std 19981230:NONE:1800 10x15 USGS 10+38 arb_ic ...............FAIL! rc= 7
+037 brK51 TBR.sh 10p_dgvmsc_dh clm_std 19981230:NONE:1800 10x15 USGS 72+72 arb_ic ...............FAIL! rc= 6
+001 smL51 TSM.sh _sc_dh clm_std 19980115:NONE:1800 10x15 USGS 96 arb_ic .........................FAIL! rc= 10
+002 erL51 TER.sh _sc_dh clm_std 19980115:NONE:1800 10x15 USGS 10+38 arb_ic ......................FAIL! rc= 5
+003 brL51 TBR.sh _sc_dh clm_std 19980115:NONE:1800 10x15 USGS 72+72 arb_ic ......................FAIL! rc= 5
+004 blL51 TBL.sh _sc_dh clm_std 19980115:NONE:1800 10x15 USGS 48 arb_ic .........................FAIL! rc= 4
+005 sm674 TSMtools.sh mkgriddata tools__ds singlept .............................................FAIL! rc= 6
+006 sm774 TSMtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 6
+007 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 4
+010 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+011 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 6
+012 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804Q ...................................................FAIL! rc= 4
+
+  jaguar: ALL PASS except TBL and ....
+
+001 smA74 TSM.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ...................FAIL! rc= 10
+002 erA74 TER.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -5+-5 arb_ic .................FAIL! rc= 5
+003 brA74 TBR.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -5+-5 arb_ic .................FAIL! rc= 5
+013 smE32 TSM.sh 4p_vodsrsc_dm clm_std 19981231:NONE:3600 64x128^360x720 USGS 48 arb_ic .........FAIL! rc= 10
+014 erE32 TER.sh 4p_vodsrsc_dm clm_std 19981231:NONE:3600 64x128^360x720 USGS 10+38 arb_ic ......FAIL! rc= 5
+015 brE32 TBR.sh 4p_vodsrsc_dm clm_std 19981231:NONE:3600 64x128^360x720 USGS 24+24 arb_ic ......FAIL! rc= 5
+017 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+018 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 10+38 arb_ic ................FAIL! rc= 5
+019 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+021 smH92 TSM.sh 17p_cnnsc_dm clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@1890 96 startup ..........FAIL! rc= 10
+022 erH92 TER.sh 17p_cnnsc_dm clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@1890 10+38 startup .......FAIL! rc= 5
+023 brH92 TBR.sh 17p_cnnsc_dm clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@1890 72+72 startup .......FAIL! rc= 5
+029 smJ05 TSM.sh 4p_casasc_h clm_std^nl_lfiles 19800101:NONE:1800 0.47x0.63 gx1v5 48 startup ....FAIL! rc= 10
+030 smJ74 TSM.sh 4p_casasc_ds clm_std 10001230:NONE:3600 1x1_tropicAtl test -1100 arb_ic ........FAIL! rc= 10
+031 erJ74 TER.sh 4p_casasc_ds clm_std 10001230:NONE:3600 1x1_tropicAtl test -10+-10 arb_ic ......FAIL! rc= 5
+032 brJ74 TBR.sh 4p_casasc_ds clm_std 10001230:NONE:3600 1x1_tropicAtl test -3+-3 arb_ic ........FAIL! rc= 5
+038 smL62 TSM.sh _sc_m clm_std 19980101:NONE:1800 1.9x2.5 gx1v5 -10 startup .....................FAIL! rc= 10
+039 erL62 TER.sh _sc_m clm_std 19980101:NONE:1800 1.9x2.5 gx1v5 -5+-5 startup ...................FAIL! rc= 5
+040 brL62 TBR.sh _sc_m clm_std 19980101:NONE:1800 1.9x2.5 gx1v5 -10+-10 startup .................FAIL! rc= 5
+
+  breeze/gale/hail/gust/ifort: All PASS except TBL and...
+
+  bangkok: All PASS except TBL and..
+
+005 smA74 TSM.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ...................FAIL! rc= 10
+006 erA74 TER.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -5+-5 arb_ic .................FAIL! rc= 5
+007 brA74 TBR.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -5+-5 arb_ic .................FAIL! rc= 5
+009 smD91 TSM.sh _persc_dh clm_per 19981231:NONE:1200 4x5 gx3v5 144 startup .....................FAIL! rc= 10
+010 erD91 TER.sh _persc_dh clm_per 19981231:NONE:1200 4x5 gx3v5 72+72 startup ...................FAIL! rc= 5
+013 smCA4 TSM.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 10
+014 erCA4 TER.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ......FAIL! rc= 5
+015 brCA4 TBR.sh _sc_ds clm_urb^nl_urb_br 19981001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic ...FAIL! rc= 5
+017 smOC4 TSM.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 10
+018 erOC4 TER.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 115+115 arb_icFAIL! rc= 5
+019 brOC4 TBR.sh _vansc_ds clm_urb1pt^nl_urb_br 19920812:NONE:3600 1x1_vancouverCAN navy 72+72 arb_iFAIL! rc= 5
+021 smNB4 TSM.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 10
+022 erNB4 TER.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 59+100 arb_icFAIL! rc= 5
+023 brNB4 TBR.sh _mexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arb_FAIL! rc= 5
+025 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+026 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+027 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+029 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ...................FAIL! rc= 10
+030 smH52 TSM.sh 17p_cnnsc_dm clm_std 19980115:NONE:1800 10x15 USGS@1890 96 arb_ic ..............FAIL! rc= 10
+031 erH52 TER.sh 17p_cnnsc_dm clm_std 19980115:NONE:1800 10x15 USGS@1890 10+38 arb_ic ...........FAIL! rc= 5
+032 brH52 TBR.sh 17p_cnnsc_dm clm_std 19980115:NONE:1800 10x15 USGS@1890 72+72 arb_ic ...........FAIL! rc= 5
+038 smK51 TSM.sh 10p_dgvmsc_dh clm_std 19981230:NONE:1800 10x15 USGS 96 arb_ic ..................FAIL! rc= 10
+039 erK51 TER.sh 10p_dgvmsc_dh clm_std 19981230:NONE:1800 10x15 USGS 10+38 arb_ic ...............FAIL! rc= 5
+040 brK51 TBR.sh 10p_dgvmsc_dh clm_std 19981230:NONE:1800 10x15 USGS 72+72 arb_ic ...............FAIL! rc= 5
+042 smL51 TSM.sh _sc_dh clm_std 19980115:NONE:1800 10x15 USGS 96 arb_ic .........................FAIL! rc= 10
+043 erL51 TER.sh _sc_dh clm_std 19980115:NONE:1800 10x15 USGS 10+38 arb_ic ......................FAIL! rc= 5
+044 brL51 TBR.sh _sc_dh clm_std 19980115:NONE:1800 10x15 USGS 72+72 arb_ic ......................FAIL! rc= 5
+046 smL58 TSM.sh _sc_dh clm_std^nl_crcrop 19980115:NONE:1800 10x15 USGS 96 arb_ic ...............FAIL! rc= 10
+047 smL74 TSM.sh _sc_s clm_std 19980101:NONE:1800 1x1_brazil navy -10 arb_ic ....................FAIL! rc= 10
+048 erL74 TER.sh _sc_s clm_std 19980101:NONE:1800 1x1_brazil navy -5+-5 arb_ic ..................FAIL! rc= 5
+049 brL74 TBR.sh _sc_s clm_std 19980101:NONE:1800 1x1_brazil navy -10+-10 arb_ic ................FAIL! rc= 5
+051 sm654 TSMtools.sh mkgriddata tools__ds namelist .............................................FAIL! rc= 6
+052 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 6
+053 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+057 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+Changes answers relative to baseline: Yes! Changes climate
+
+  Summarize any changes to answers:
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change (new climate)
+   - configuration (CPP ifdefs): All
+   - build-namelist command (or complete namelist):
+
+   MSS location of control simulations used to validate new climate: 
+
+      Grass optical properties: /OLESON/csm/clm36sci16_clm3_6_11shklit0_5sfc_goa
+
+      ccsm4_0_beta05:   /CCSM/csm/b40.018
+   
+   URL for LMWG diagnostics output used to validate new climate: 
+
+ccsm4_0_beta05 (with clm36sci27_clm3_6_14)
+
+http://www.cgd.ucar.edu/cdp/mai/ccsmweb/b40.018-b40.017/setsIndex.html
+
+http://www.cgd.ucar.edu/tss/clm/diagnostics/clm4.0_dev/clm36sci16_clm3_6_11shklit0_5sfc_goa-clm36sci16_clm3_6_11shklit0_5sfca/setsIndex.html
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_14
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Fri Oct 10 11:32:57 MDT 2008
@@ -825,7 +1339,7 @@ Changes answers relative to baseline: Bit-for-Bit (except for iyear_ad change to
 ===============================================================
 Tag name:  clm3_6_07
 Originator(s):  erik (Kluzek Erik 1326 CGD)
-Date: Tue Jul  8 23:12:17 MDT 2008
+Date: Tue Jul  8 21:50:34 MDT 2008
 One-line Summary: Implement new build namelist system from Vertenstein/Eaton, add bluefire, and BGP support
 
 Purpose of changes: Rework build-namelist system to use perl5lib/Build/namelist*.pm objects. This is from
@@ -864,8 +1378,7 @@ List any changes to the defaults for the boundary datasets: None
 
 Describe any substantial timing or memory changes: None
 
-Code reviewed by: mvertens (Mariana developed the original version using Perl objects
-                            that Brian Eaton developed)
+Code reviewed by: self (mvertens looked at original version)
 
 List any svn externals directories updated (csm_share, mct, etc.): scripts and drv
 
@@ -903,8 +1416,6 @@ List all files eliminated: Remove old build system files. Many of these are rena
    R models/lnd/clm/bld/DefaultDATM_DSHR_NML_Namelist.xml -- move to relevent part of namelist_files/namelist_defaults_clm.xml
    R models/lnd/clm/test/system/config_files/ext_ccsm_seq_10x15_dm - move from pure-mpi
                                                                      to hybrid (MPI/OpenMP)
-   R models/lnd/clm/test/system/tests_posttag_blueice
-   R models/lnd/clm/test/system/config_files/ext_ccsm_seq_10x15_dm
 
 List all files added and what they do:
 
@@ -920,13 +1431,8 @@ List all files added and what they do:
    A models/lnd/clm/bld/namelist_files/use_cases/pergro0.xml ----- pergro0 use case
    A models/lnd/clm/bld/namelist_files/datm.streams.template.xml
    A models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - definition of name, group, data-type, and valid values for namelists
-
    A models/lnd/clm/test/system/config_files/ext_ccsm_seq_10x15_dh -- change to hybrid
-   A models/lnd/clm/test/system/config_files/ext_ccsm_seq_10x15_dh
-   A models/lnd/clm/test/system/config_files/ext_ccsm_seq_1.9x2.5_dh
-   A models/lnd/clm/test/system/tests_posttag_breeze
-   A models/lnd/clm/test/system/nl_files/clm_ndepdyn
-   
+
 List all existing files that have been modified, and describe the changes:
 
            >>>>>>>>>>>>>>>>> Rework using perl5lib/Build/namelist*.pm objects
@@ -937,21 +1443,13 @@ List all existing files that have been modified, and describe the changes:
    M models/lnd/clm/bld/build-namelist
    M models/lnd/clm/bld/configure
    M models/lnd/clm/bld/run-ibm.csh -------------------- Add bluefire support to bind processors
-   M models/lnd/clm/bld/run-pc.csh --------------------- Change mpiexec to mpirun
             >>>>>>>>>>>>>>> Changes to get working on bluefire and use new configure/build-namelist
-   M models/lnd/clm/test/system/TCB.sh
    M models/lnd/clm/test/system/TCText_ccsmcon.sh
    M models/lnd/clm/test/system/README.testnames
-   M models/lnd/clm/test/system/TCBtools.sh
    M models/lnd/clm/test/system/test_driver.sh
    M models/lnd/clm/test/system/mknamelist
-   M models/lnd/clm/test/system/input_tests_master
    M models/lnd/clm/test/system/TCSruncase.sh
    M models/lnd/clm/test/system/README
-   M models/lnd/clm/test/system/TCBext_ccsmseq_cam.sh
-   M models/lnd/clm/test/system/tests_pretag_bangkok
-   M models/lnd/clm/test/system/tests_pretag_bluevista
-   M models/lnd/clm/test/system/tests_posttag_lightning
    M models/lnd/clm/test/system/CLM_runcmnd.sh
 
    M models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl --- Adjust to use with updated queryDefaultNamelist.pl
@@ -965,8 +1463,8 @@ Summary of testing:
 054 brJ11 TBR.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 24+24 arb_ic ...............FAIL! rc= 5
 055 blJ11 TBL.sh 4p_casasc_dh clm_std 19981231:NONE:1800 48x96 gx3v5 48 arb_ic ..................FAIL! rc= 4
   bluefire: All PASS except TBL tests as bluefire not available in previous tag
-  jaguar: All PASS
-  lightning/pathscale: All PASS
+  jaguar: All PASS except
+  lightning/pathscale: All PASS except
   bangkok/lf95: All PASS except TBL tests because they had mpirun
 
 CLM tag used for the baseline comparison tests if applicable: clm3_6_06

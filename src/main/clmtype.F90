@@ -131,9 +131,9 @@ type, public :: pft_pstate_type
    real(r8), pointer :: z0mv(:)                 !roughness length over vegetation, momentum [m]
    real(r8), pointer :: z0hv(:)                 !roughness length over vegetation, sensible heat [m]
    real(r8), pointer :: z0qv(:)                 !roughness length over vegetation, latent heat [m]
-   real(r8), pointer :: rootfr(:,:)             !fraction of roots in each soil layer  (nlevsoi)
-   real(r8), pointer :: rootr(:,:)              !effective fraction of roots in each soil layer  (nlevsoi)
-   real(r8), pointer :: rresis(:,:)             !root resistance by layer (0-1)  (nlevsoi)
+   real(r8), pointer :: rootfr(:,:)             !fraction of roots in each soil layer  (nlevgrnd)
+   real(r8), pointer :: rootr(:,:)              !effective fraction of roots in each soil layer  (nlevgrnd)
+   real(r8), pointer :: rresis(:,:)             !root resistance by layer (0-1)  (nlevgrnd)
    real(r8), pointer :: dewmx(:)                !Maximum allowed dew [mm]
    real(r8), pointer :: rssun(:)                !sunlit stomatal resistance (s/m)
    real(r8), pointer :: rssha(:)                !shaded stomatal resistance (s/m)
@@ -438,7 +438,7 @@ type, public :: pft_estate_type
    real(r8), pointer :: rh_ref2m(:)           !2 m height surface relative humidity (%)
 #endif
    real(r8), pointer :: t_veg(:)              !vegetation temperature (Kelvin)
-   real(r8), pointer :: thm(:)              !intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
+   real(r8), pointer :: thm(:)                !intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
 end type pft_estate_type
 
 !----------------------------------------------------
@@ -610,18 +610,35 @@ type, public :: pft_eflux_type
    real(r8), pointer :: fsds_nir_d_ln(:)     !incident direct beam nir solar radiation at local noon (W/m**2)
    real(r8), pointer :: fsr_vis_d_ln(:)      !reflected direct beam vis solar radiation at local noon (W/m**2)
    real(r8), pointer :: fsr_nir_d_ln(:)      !reflected direct beam nir solar radiation at local noon (W/m**2)
-   real(r8), pointer :: sun_add(:,:)   !sun canopy absorbed direct from direct (W/m**2)
-   real(r8), pointer :: tot_aid(:,:)   !total canopy absorbed indirect from direct (W/m**2)
-   real(r8), pointer :: sun_aid(:,:)   !sun canopy absorbed indirect from direct (W/m**2)
-   real(r8), pointer :: sun_aii(:,:)   !sun canopy absorbed indirect from indirect (W/m**2)
-   real(r8), pointer :: sha_aid(:,:)   !shade canopy absorbed indirect from direct (W/m**2)
-   real(r8), pointer :: sha_aii(:,:)   !shade canopy absorbed indirect from indirect (W/m**2)
-   real(r8), pointer :: sun_atot(:,:)  !sun canopy total absorbed (W/m**2)
-   real(r8), pointer :: sha_atot(:,:)  !shade canopy total absorbed (W/m**2)
-   real(r8), pointer :: sun_alf(:,:)   !sun canopy total absorbed by leaves (W/m**2)
-   real(r8), pointer :: sha_alf(:,:)   !shade canopy total absored by leaves (W/m**2)
-   real(r8), pointer :: sun_aperlai(:,:) !sun canopy total absorbed per unit LAI (W/m**2)
-   real(r8), pointer :: sha_aperlai(:,:) !shade canopy total absorbed per unit LAI (W/m**2)
+   real(r8), pointer :: sun_add(:,:)      !sun canopy absorbed direct from direct (W/m**2)
+   real(r8), pointer :: tot_aid(:,:)      !total canopy absorbed indirect from direct (W/m**2)
+   real(r8), pointer :: sun_aid(:,:)      !sun canopy absorbed indirect from direct (W/m**2)
+   real(r8), pointer :: sun_aii(:,:)      !sun canopy absorbed indirect from indirect (W/m**2)
+   real(r8), pointer :: sha_aid(:,:)      !shade canopy absorbed indirect from direct (W/m**2)
+   real(r8), pointer :: sha_aii(:,:)      !shade canopy absorbed indirect from indirect (W/m**2)
+   real(r8), pointer :: sun_atot(:,:)     !sun canopy total absorbed (W/m**2)
+   real(r8), pointer :: sha_atot(:,:)     !shade canopy total absorbed (W/m**2)
+   real(r8), pointer :: sun_alf(:,:)      !sun canopy total absorbed by leaves (W/m**2)
+   real(r8), pointer :: sha_alf(:,:)      !shade canopy total absored by leaves (W/m**2)
+   real(r8), pointer :: sun_aperlai(:,:)  !sun canopy total absorbed per unit LAI (W/m**2)
+   real(r8), pointer :: sha_aperlai(:,:)  !shade canopy total absorbed per unit LAI (W/m**2)
+   real(r8), pointer :: sabg_lyr(:,:)     ! absorbed radiation in each snow layer and top soil layer (pft,lyr) [W/m2]
+   real(r8), pointer :: sfc_frc_aer(:)    ! surface forcing of snow with all aerosols (pft) [W/m2]
+   real(r8), pointer :: sfc_frc_bc(:)     ! surface forcing of snow with BC (pft) [W/m2]
+   real(r8), pointer :: sfc_frc_oc(:)     ! surface forcing of snow with OC (pft) [W/m2]
+   real(r8), pointer :: sfc_frc_dst(:)    ! surface forcing of snow with dust (pft) [W/m2]
+   real(r8), pointer :: sfc_frc_aer_sno(:)! surface forcing of snow with all aerosols, averaged only when snow is present (pft) [W/m2]
+   real(r8), pointer :: sfc_frc_bc_sno(:) ! surface forcing of snow with BC, averaged only when snow is present (pft) [W/m2]
+   real(r8), pointer :: sfc_frc_oc_sno(:) ! surface forcing of snow with OC, averaged only when snow is present (pft) [W/m2]
+   real(r8), pointer :: sfc_frc_dst_sno(:)! surface forcing of snow with dust, averaged only when snow is present (pft) [W/m2]
+   real(r8), pointer :: fsr_sno_vd(:)     ! reflected direct beam vis solar radiation from snow (W/m**2)
+   real(r8), pointer :: fsr_sno_nd(:)     ! reflected direct beam NIR solar radiation from snow (W/m**2)
+   real(r8), pointer :: fsr_sno_vi(:)     ! reflected diffuse vis solar radiation from snow (W/m**2)
+   real(r8), pointer :: fsr_sno_ni(:)     ! reflected diffuse NIR solar radiation from snow (W/m**2)
+   real(r8), pointer :: fsds_sno_vd(:)    ! incident visible, direct radiation on snow (for history files)  [W/m2]
+   real(r8), pointer :: fsds_sno_nd(:)    ! incident near-IR, direct radiation on snow (for history files)  [W/m2]
+   real(r8), pointer :: fsds_sno_vi(:)    ! incident visible, diffuse radiation on snow (for history files) [W/m2]
+   real(r8), pointer :: fsds_sno_ni(:)    ! incident near-IR, diffuse radiation on snow (for history files) [W/m2]
 end type pft_eflux_type
 
 !----------------------------------------------------
@@ -951,19 +968,19 @@ type, public :: column_pstate_type
    type(pft_pstate_type) :: pps_a            !pft-level pstate variables averaged to the column
    integer , pointer :: snl(:)                !number of snow layers
    integer , pointer :: isoicol(:)            !soil color class
-   real(r8), pointer :: bsw(:,:)              !Clapp and Hornberger "b" (nlevsoi)  
-   real(r8), pointer :: watsat(:,:)           !volumetric soil water at saturation (porosity) (nlevsoi) 
+   real(r8), pointer :: bsw(:,:)              !Clapp and Hornberger "b" (nlevgrnd)  
+   real(r8), pointer :: watsat(:,:)           !volumetric soil water at saturation (porosity) (nlevgrnd) 
    real(r8), pointer :: watdry(:,:)           !btran parameter for btran=0
    real(r8), pointer :: watopt(:,:)           !btran parameter for btran = 1
-   real(r8), pointer :: hksat(:,:)            !hydraulic conductivity at saturation (mm H2O /s) (nlevsoi) 
-   real(r8), pointer :: sucsat(:,:)           !minimum soil suction (mm) (nlevsoi) 
+   real(r8), pointer :: hksat(:,:)            !hydraulic conductivity at saturation (mm H2O /s) (nlevgrnd) 
+   real(r8), pointer :: sucsat(:,:)           !minimum soil suction (mm) (nlevgrnd) 
    real(r8), pointer :: hkdepth(:)            !decay factor (m)
    real(r8), pointer :: wtfact(:)             !maximum saturated fraction for a gridcell
    real(r8), pointer :: fracice(:,:)          !fractional impermeability (-)
-   real(r8), pointer :: csol(:,:)             !heat capacity, soil solids (J/m**3/Kelvin) (nlevsoi) 
-   real(r8), pointer :: tkmg(:,:)             !thermal conductivity, soil minerals  [W/m-K] (new) (nlevsoi) 
-   real(r8), pointer :: tkdry(:,:)            !thermal conductivity, dry soil (W/m/Kelvin) (nlevsoi) 
-   real(r8), pointer :: tksatu(:,:)           !thermal conductivity, saturated soil [W/m-K] (new) (nlevsoi) 
+   real(r8), pointer :: csol(:,:)             !heat capacity, soil solids (J/m**3/Kelvin) (nlevgrnd) 
+   real(r8), pointer :: tkmg(:,:)             !thermal conductivity, soil minerals  [W/m-K] (new) (nlevgrnd) 
+   real(r8), pointer :: tkdry(:,:)            !thermal conductivity, dry soil (W/m/Kelvin) (nlevgrnd) 
+   real(r8), pointer :: tksatu(:,:)           !thermal conductivity, saturated soil [W/m-K] (new) (nlevgrnd) 
    real(r8), pointer :: smpmin(:)             !restriction for min of soil potential (mm) (new)
    real(r8), pointer :: gwc_thr(:)            !threshold soil moisture based on clay content
    real(r8), pointer :: mss_frc_cly_vld(:)    ![frc] Mass fraction clay limited to 0.20
@@ -972,12 +989,12 @@ type, public :: column_pstate_type
    real(r8), pointer :: snowdp(:)             !snow height (m)
    real(r8), pointer :: snowage(:)            !non dimensional snow age [-] (new)
    real(r8), pointer :: frac_sno(:)           !fraction of ground covered by snow (0 to 1)
-   real(r8), pointer :: zi(:,:)               !interface level below a "z" level (m) (-nlevsno+0:nlevsoi) 
-   real(r8), pointer :: dz(:,:)               !layer thickness (m)  (-nlevsno+1:nlevsoi) 
-   real(r8), pointer :: z(:,:)                !layer depth (m) (-nlevsno+1:nlevsoi) 
-   real(r8), pointer :: frac_iceold(:,:)      !fraction of ice relative to the tot water (new) (-nlevsno+1:nlevsoi) 
-   integer , pointer :: imelt(:,:)            !flag for melting (=1), freezing (=2), Not=0 (new) (-nlevsno+1:nlevsoi) 
-   real(r8), pointer :: eff_porosity(:,:)     !effective porosity = porosity - vol_ice (nlevsoi) 
+   real(r8), pointer :: zi(:,:)               !interface level below a "z" level (m) (-nlevsno+0:nlevgrnd) 
+   real(r8), pointer :: dz(:,:)               !layer thickness (m)  (-nlevsno+1:nlevgrnd) 
+   real(r8), pointer :: z(:,:)                !layer depth (m) (-nlevsno+1:nlevgrnd) 
+   real(r8), pointer :: frac_iceold(:,:)      !fraction of ice relative to the tot water (new) (-nlevsno+1:nlevgrnd) 
+   integer , pointer :: imelt(:,:)            !flag for melting (=1), freezing (=2), Not=0 (new) (-nlevsno+1:nlevgrnd) 
+   real(r8), pointer :: eff_porosity(:,:)     !effective porosity = porosity - vol_ice (nlevgrnd) 
    real(r8), pointer :: emg(:)                !ground emissivity
    real(r8), pointer :: z0mg(:)               !roughness length over ground, momentum [m]
    real(r8), pointer :: z0hg(:)               !roughness length over ground, sensible heat [m]
@@ -987,7 +1004,7 @@ type, public :: column_pstate_type
    real(r8), pointer :: zii(:)                !convective boundary height [m]
    real(r8), pointer :: albgrd(:,:)           !ground albedo (direct) (numrad)
    real(r8), pointer :: albgri(:,:)           !ground albedo (diffuse) (numrad)
-   real(r8), pointer :: rootr_column(:,:)     !effective fraction of roots in each soil layer (nlevsoi)  
+   real(r8), pointer :: rootr_column(:,:)     !effective fraction of roots in each soil layer (nlevgrnd)  
    real(r8), pointer :: rootfr_road_perv(:,:) !fraction of roots in each soil layer for urban pervious road
    real(r8), pointer :: rootr_road_perv(:,:)  !effective fraction of roots in each soil layer of urban pervious road
    real(r8), pointer :: wf(:)                 !soil water as frac. of whc for top 0.5 m
@@ -1003,13 +1020,61 @@ type, public :: column_pstate_type
    real(r8), pointer :: annsum_counter(:) !seconds since last annual accumulator turnover
    real(r8), pointer :: cannsum_npp(:)    !annual sum of NPP, averaged from pft-level (gC/m2/yr)
    real(r8), pointer :: cannavg_t2m(:)    !annual average of 2m air temperature, averaged from pft-level (K)
+   real(r8), pointer :: watfc(:,:)        !volumetric soil water at field capacity (nlevsoi)
    ! new variables for fire code
-   real(r8), pointer :: me(:)               !moisture of extinction (proportion) 
-   real(r8), pointer :: fire_prob(:)        !daily fire probability (0-1) 
-   real(r8), pointer :: mean_fire_prob(:)   !e-folding mean of daily fire probability (0-1) 
-   real(r8), pointer :: fireseasonl(:)      !annual fire season length (days, <= 365) 
-   real(r8), pointer :: farea_burned(:)     !timestep fractional area burned (proportion) 
-   real(r8), pointer :: ann_farea_burned(:) !annual total fractional area burned (proportion)
+   real(r8), pointer :: me(:)                 !moisture of extinction (proportion) 
+   real(r8), pointer :: fire_prob(:)          !daily fire probability (0-1) 
+   real(r8), pointer :: mean_fire_prob(:)     !e-folding mean of daily fire probability (0-1) 
+   real(r8), pointer :: fireseasonl(:)        !annual fire season length (days, <= 365) 
+   real(r8), pointer :: farea_burned(:)       !timestep fractional area burned (proportion) 
+   real(r8), pointer :: ann_farea_burned(:)   !annual total fractional area burned (proportion)
+   real(r8), pointer :: albsnd_hst(:,:)       ! snow albedo, direct, for history files (col,bnd) [frc]
+   real(r8), pointer :: albsni_hst(:,:)       ! snow albedo, diffuse, for history files (col,bnd) [frc]
+   real(r8), pointer :: albsod(:,:)           ! soil albedo: direct (col,bnd) [frc]
+   real(r8), pointer :: albsoi(:,:)           ! soil albedo: diffuse (col,bnd) [frc]
+   real(r8), pointer :: flx_absdv(:,:)        ! absorbed flux per unit incident direct flux: VIS (col,lyr) [frc]
+   real(r8), pointer :: flx_absdn(:,:)        ! absorbed flux per unit incident direct flux: NIR (col,lyr) [frc]
+   real(r8), pointer :: flx_absiv(:,:)        ! absorbed flux per unit incident diffuse flux: VIS (col,lyr) [frc]
+   real(r8), pointer :: flx_absin(:,:)        ! absorbed flux per unit incident diffuse flux: NIR (col,lyr) [frc]
+   real(r8), pointer :: snw_rds(:,:)          ! snow grain radius (col,lyr) [m^-6, microns]
+   real(r8), pointer :: snw_rds_top(:)        ! snow grain radius, top layer (col) [m^-6, microns]
+   real(r8), pointer :: sno_liq_top(:)        ! snow liquid water fraction (mass), top layer (col) [fraction]
+   real(r8), pointer :: mss_bcpho(:,:)        ! mass of hydrophobic BC in snow (col,lyr) [kg]
+   real(r8), pointer :: mss_bcphi(:,:)        ! mass of hydrophillic BC in snow (col,lyr) [kg]
+   real(r8), pointer :: mss_bctot(:,:)        ! total mass of BC in snow (pho+phi) (col,lyr) [kg]
+   real(r8), pointer :: mss_bc_col(:)         ! column-integrated mass of total BC (col) [kg]
+   real(r8), pointer :: mss_bc_top(:)         ! top-layer mass of total BC (col) [kg]
+   real(r8), pointer :: mss_ocpho(:,:)        ! mass of hydrophobic OC in snow (col,lyr) [kg]
+   real(r8), pointer :: mss_ocphi(:,:)        ! mass of hydrophillic OC in snow (col,lyr) [kg]
+   real(r8), pointer :: mss_octot(:,:)        ! total mass of OC in snow (pho+phi) (col,lyr) [kg]
+   real(r8), pointer :: mss_oc_col(:)         ! column-integrated mass of total OC (col) [kg]
+   real(r8), pointer :: mss_oc_top(:)         ! top-layer mass of total OC (col) [kg]
+   real(r8), pointer :: mss_dst1(:,:)         ! mass of dust species 1 in snow (col,lyr) [kg]
+   real(r8), pointer :: mss_dst2(:,:)         ! mass of dust species 2 in snow (col,lyr) [kg]
+   real(r8), pointer :: mss_dst3(:,:)         ! mass of dust species 3 in snow (col,lyr) [kg]
+   real(r8), pointer :: mss_dst4(:,:)         ! mass of dust species 4 in snow (col,lyr) [kg]
+   real(r8), pointer :: mss_dsttot(:,:)       ! total mass of dust in snow (col,lyr) [kg]
+   real(r8), pointer :: mss_dst_col(:)        ! column-integrated mass of dust in snow (col) [kg]
+   real(r8), pointer :: mss_dst_top(:)        ! top-layer mass of dust in snow (col) [kg]
+   real(r8), pointer :: h2osno_top(:)         ! top-layer mass of snow (col) [kg]
+   real(r8), pointer :: mss_cnc_bcphi(:,:)    ! mass concentration of hydrophilic BC in snow (col,lyr) [kg/kg]
+   real(r8), pointer :: mss_cnc_bcpho(:,:)    ! mass concentration of hydrophilic BC in snow (col,lyr) [kg/kg]
+   real(r8), pointer :: mss_cnc_ocphi(:,:)    ! mass concentration of hydrophilic OC in snow (col,lyr) [kg/kg]
+   real(r8), pointer :: mss_cnc_ocpho(:,:)    ! mass concentration of hydrophilic OC in snow (col,lyr) [kg/kg]
+   real(r8), pointer :: mss_cnc_dst1(:,:)     ! mass concentration of dust species 1 in snow (col,lyr) [kg/kg]
+   real(r8), pointer :: mss_cnc_dst2(:,:)     ! mass concentration of dust species 2 in snow (col,lyr) [kg/kg]
+   real(r8), pointer :: mss_cnc_dst3(:,:)     ! mass concentration of dust species 3 in snow (col,lyr) [kg/kg]
+   real(r8), pointer :: mss_cnc_dst4(:,:)     ! mass concentration of dust species 4 in snow (col,lyr) [kg/kg]
+   real(r8), pointer :: albgrd_pur(:,:)       ! pure snow ground direct albedo (numrad)
+   real(r8), pointer :: albgri_pur(:,:)       ! pure snow ground diffuse albedo (numrad)
+   real(r8), pointer :: albgrd_bc(:,:)        ! ground direct albedo without BC  (numrad)
+   real(r8), pointer :: albgri_bc(:,:)        ! ground diffuse albedo without BC (numrad)
+   real(r8), pointer :: albgrd_oc(:,:)        ! ground direct albedo without OC  (numrad)
+   real(r8), pointer :: albgri_oc(:,:)        ! ground diffuse albedo without OC (numrad)
+   real(r8), pointer :: albgrd_dst(:,:)       ! ground direct albedo without dust  (numrad)
+   real(r8), pointer :: albgri_dst(:,:)       ! ground diffuse albedo without dust (numrad)
+   real(r8), pointer :: dTdz_top(:)           ! temperature gradient in top layer  [K m-1]
+   real(r8), pointer :: snot_top(:)           ! temperature of top snow layer [K]
 end type column_pstate_type
 
 !----------------------------------------------------
@@ -1021,9 +1086,9 @@ type, public :: column_estate_type
    real(r8), pointer :: t_grnd_u(:)           !Urban ground temperature (Kelvin)
    real(r8), pointer :: t_grnd_r(:)           !Rural ground temperature (Kelvin)
    real(r8), pointer :: dt_grnd(:)            !change in t_grnd, last iteration (Kelvin)
-   real(r8), pointer :: t_soisno(:,:)         !soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
+   real(r8), pointer :: t_soisno(:,:)         !soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd) 
    real(r8), pointer :: t_lake(:,:)           !lake temperature (Kelvin)  (1:nlevlak)          
-   real(r8), pointer :: tssbef(:,:)           !soil/snow temperature before update (-nlevsno+1:nlevsoi) 
+   real(r8), pointer :: tssbef(:,:)           !soil/snow temperature before update (-nlevsno+1:nlevgrnd) 
    real(r8), pointer :: t_snow(:)             !vertically averaged snow temperature
    real(r8), pointer :: thv(:)                !virtual potential temperature (kelvin)
    real(r8), pointer :: hc_soi(:)             !soil heat content (MJ/m2)
@@ -1036,21 +1101,27 @@ end type column_estate_type
 type, public :: column_wstate_type
    type(pft_wstate_type):: pws_a             !pft-level water state variables averaged to the column
    real(r8), pointer :: h2osno(:)             !snow water (mm H2O)
-   real(r8), pointer :: h2osoi_liq(:,:)       !liquid water (kg/m2) (new) (-nlevsno+1:nlevsoi)    
-   real(r8), pointer :: h2osoi_ice(:,:)       !ice lens (kg/m2) (new) (-nlevsno+1:nlevsoi)    
-   real(r8), pointer :: h2osoi_vol(:,:)       !volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevsoi)  
+   real(r8), pointer :: h2osoi_liq(:,:)       !liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
+   real(r8), pointer :: h2osoi_ice(:,:)       !ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
+   real(r8), pointer :: h2osoi_vol(:,:)       !volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)  
    real(r8), pointer :: h2osno_old(:)         !snow mass for previous time step (kg/m2) (new)
    real(r8), pointer :: qg(:)                 !ground specific humidity [kg/kg]
    real(r8), pointer :: dqgdT(:)              !d(qg)/dT
    real(r8), pointer :: snowice(:)            !average snow ice lens
    real(r8), pointer :: snowliq(:)            !average snow liquid water
    real(r8) ,pointer :: soilalpha(:)          !factor that reduces ground saturated specific humidity (-)
+   real(r8), pointer :: soilbeta(:)           !factor that reduces ground evaporation L&P1992(-)
    real(r8) ,pointer :: soilalpha_u(:)        !urban factor that reduces ground saturated specific humidity (-)
    real(r8), pointer :: zwt(:)                !water table depth
    real(r8), pointer :: fcov(:)               !fractional area with water table at surface
    real(r8), pointer :: wa(:)                 !water in the unconfined aquifer (mm)
    real(r8), pointer :: wt(:)                 !total water storage (unsaturated soil water + groundwater) (mm)
    real(r8), pointer :: qcharge(:)            !aquifer recharge rate (mm/s)
+   real(r8), pointer :: smp_l(:,:)            !soil matric potential (mm)
+   real(r8), pointer :: dsmpdw_l(:,:)         !derivative of soil matric potential
+   real(r8), pointer :: hk_l(:,:)             !hydraulic conductivity (mm/s)
+   real(r8), pointer :: dhkdw_l(:,:)          !derivative of hydraulic conductivity
+   real(r8), pointer :: dwat_l(:,:)           !change in volumetric soil water content
 end type column_wstate_type
 
 !----------------------------------------------------
@@ -1140,6 +1211,7 @@ type, public :: column_eflux_type
    type(pft_eflux_type):: pef_a	              ! pft-level energy flux variables averaged to the column
    real(r8), pointer :: eflx_snomelt(:)       ! snow melt heat flux (W/m**2)
    real(r8), pointer :: eflx_impsoil(:)	      ! implicit evaporation for soil temperature equation
+   real(r8), pointer :: eflx_fgr12(:)         ! ground heat flux between soil layers 1 and 2 (W/m2)
    ! Urban variable
    real(r8), pointer :: eflx_building_heat(:) ! heat flux from urban building interior to urban walls, roof (W/m**2)
    real(r8), pointer :: eflx_urban_ac(:)      ! urban air conditioning flux (W/m**2)
@@ -1169,6 +1241,30 @@ type, public :: column_wflux_type
    real(r8), pointer :: qflx_runoff_r(:)! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
    real(r8), pointer :: qmelt(:) 	! snow melt [mm/s]
    real(r8), pointer :: h2ocan_loss(:)  ! mass balance correction term for dynamic weights
+   real(r8), pointer :: qflx_in_soil(:,:)  !liquid water flux into soil layer [mm/s]
+   real(r8), pointer :: qflx_out_soil(:,:) !liquid water flux out of soil layer [mm/s]
+   real(r8), pointer :: qflx_tranout_soil(:,:) !transpiration flux out of soil layer [mm/s]
+   real(r8), pointer :: qflx_rsub_sat(:)    ! soil saturation excess [mm/s]
+   real(r8), pointer :: flx_bc_dep_dry(:)   ! dry (BCPHO+BCPHI) BC deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_bc_dep_wet(:)   ! wet (BCPHI) BC deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_bc_dep_pho(:)   ! hydrophobic BC deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_bc_dep_phi(:)   ! hydrophillic BC deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_bc_dep(:)       ! total (dry+wet) BC deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_oc_dep_dry(:)   ! dry (OCPHO+OCPHI) OC deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_oc_dep_wet(:)   ! wet (OCPHI) OC deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_oc_dep_pho(:)   ! hydrophobic OC deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_oc_dep_phi(:)   ! hydrophillic OC deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_oc_dep(:)       ! total (dry+wet) OC deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_dst_dep_dry1(:) ! dust species 1 dry deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_dst_dep_wet1(:) ! dust species 1 wet deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_dst_dep_dry2(:) ! dust species 2 dry deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_dst_dep_wet2(:) ! dust species 2 wet deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_dst_dep_dry3(:) ! dust species 3 dry deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_dst_dep_wet3(:) ! dust species 3 wet deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_dst_dep_dry4(:) ! dust species 4 dry deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_dst_dep_wet4(:) ! dust species 4 wet deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: flx_dst_dep(:)      ! total (dry+wet) dust deposition on ground (positive definite) (col) [kg/s]
+   real(r8), pointer :: qflx_snofrz_lyr(:,:)! snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
 end type column_wflux_type
 
 !----------------------------------------------------
@@ -1550,6 +1646,20 @@ end type landunit_dflux_type
 !----------------------------------------------------
 type, public :: gridcell_pstate_type
    type(column_pstate_type):: cps_a   !column-level physical state variables averaged to gridcell
+   !real(r8), pointer :: bcphiwet2t(:,:)
+   !real(r8), pointer :: bcphidry2t(:,:)
+   !real(r8), pointer :: bcphodry2t(:,:)
+   !real(r8), pointer :: ocphiwet2t(:,:)
+   !real(r8), pointer :: ocphidry2t(:,:)
+   !real(r8), pointer :: ocphodry2t(:,:)
+   !real(r8), pointer :: dstx01wd2t(:,:)
+   !real(r8), pointer :: dstx01dd2t(:,:)
+   !real(r8), pointer :: dstx02wd2t(:,:)
+   !real(r8), pointer :: dstx02dd2t(:,:)
+   !real(r8), pointer :: dstx03wd2t(:,:)
+   !real(r8), pointer :: dstx03dd2t(:,:)
+   !real(r8), pointer :: dstx04wd2t(:,:)
+   !real(r8), pointer :: dstx04dd2t(:,:)
 end type gridcell_pstate_type
 
 !----------------------------------------------------

@@ -117,10 +117,6 @@ contains
     integer , pointer :: cgridcell(:)       ! column's gridcell index
     real(r8), pointer :: forc_t(:)          ! atmospheric temperature (Kelvin)
     real(r8), pointer :: forc_pbot(:)       ! atmospheric pressure (Pa)
-    real(r8), pointer :: forc_hgt(:)        ! atmospheric reference height (m)
-    real(r8), pointer :: forc_hgt_q(:)      ! observational height of humidity [m]
-    real(r8), pointer :: forc_hgt_t(:)      ! observational height of temperature [m]
-    real(r8), pointer :: forc_hgt_u(:)      ! observational height of wind [m]
     real(r8), pointer :: forc_hgt_u_pft(:)  ! observational height of wind at pft level [m]
     real(r8), pointer :: forc_hgt_t_pft(:)  ! observational height of temperature at pft level [m]
     real(r8), pointer :: forc_hgt_q_pft(:)  ! observational height of specific humidity at pft level [m]
@@ -280,10 +276,6 @@ contains
 
     forc_t         => clm_a2l%forc_t
     forc_pbot      => clm_a2l%forc_pbot
-    forc_hgt       => clm_a2l%forc_hgt
-    forc_hgt_u     => clm_a2l%forc_hgt_u
-    forc_hgt_t     => clm_a2l%forc_hgt_t
-    forc_hgt_q     => clm_a2l%forc_hgt_q
     forc_th        => clm_a2l%forc_th
     forc_q         => clm_a2l%forc_q
     forc_u         => clm_a2l%forc_u

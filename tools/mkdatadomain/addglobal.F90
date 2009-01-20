@@ -55,6 +55,18 @@
   call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
        'Conventions', len_trim(str), trim(str)), subname)
 
+  str = 'CCSM domain data:'
+  call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+       'title', len_trim(str), trim(str)), subname)
+
+  str = 'Standard CCSM3.1/4.0 domain specification file created from CLM inputdata files:'
+  call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+       'user_comment', len_trim(str), trim(str)), subname)
+
+  str = 'from CLM fraction and griddata files'
+  call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+       'source', len_trim(str), trim(str)), subname)
+
   hlen = 0
   hist = ' '
   if (nf_inq_attid (ncid, nf_global, 'history', hnum) == nf_noerr) then
@@ -79,8 +91,12 @@
   write(6,*) "Add SVN_version and Id to global file attributes"
   numchars = len_trim (version)
   call check_ret(  nf_put_att_text (ncid, nf_global, 'mkdatadomain_version', numchars, version), subname )
+  call check_ret(  nf_put_att_text (ncid, nf_global, 'SVN_url',              numchars, version), subname )
   numchars = len_trim (revision_id)
   call check_ret(  nf_put_att_text (ncid, nf_global, 'mkdatadomain_version_Id', numchars, revision_id), subname )
+  call check_ret(  nf_put_att_text (ncid, nf_global, 'source_code',             numchars, revision_id), subname )
+
+  write(6,*) "Done adding global attributes"
 
   return
 end subroutine addglobal

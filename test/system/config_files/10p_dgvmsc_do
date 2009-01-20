@@ -1,5 +1,5 @@
 -mode ccsm_seq
--smp 
+-smp -nospmd
 -debug
 -maxpft 10
 -bgc dgvm

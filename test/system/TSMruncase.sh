@@ -35,7 +35,7 @@ testdir=${CLM_TESTDIR}/${test_name}
 if [ -d ${testdir} ]; then
     rm -r ${testdir}
 fi
-mkdir -p ${testdir}
+mkdir -p ${testdir}/timing
 if [ $? -ne 0 ]; then
     echo "TSMruncase.sh: error, unable to create work subdirectory"
     exit 3
@@ -58,7 +58,7 @@ chmod +x $sandboxscript
 
 echo "TSMruncase.sh: running CLM run script; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 
-if [ "$debug" != "YES" ]; then
+if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
   ./${sandboxscript} > ${CLM_TESTDIR}/${test_name}/test.log 2>&1
   status="PASS"
   rc=$?

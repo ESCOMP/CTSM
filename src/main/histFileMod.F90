@@ -34,7 +34,7 @@ module histFileMod
 ! Constants
 !
   integer , public, parameter :: max_tapes = 6          ! max number of history tapes
-  integer , public, parameter :: max_flds = 1000        ! max number of history fields
+  integer , public, parameter :: max_flds = 1500        ! max number of history fields
   integer , public, parameter :: max_namlen = 32        ! maximum number of characters for field name
 !
 ! Counters
@@ -153,7 +153,7 @@ module histFileMod
      character(len=8) :: type1d_out            ! hbuf first dimension type
                                                ! from clmtype (nameg, etc)
      character(len=8) :: type2d                ! hbuf second dimension type 
-                                               ! ["levsoi","levlak","numrad","subname(n)"]
+                                               ! ["levgrnd","levlak","numrad","subname(n)"]
      integer :: beg1d                          ! on-node 1d clm pointer start index
      integer :: end1d                          ! on-node 1d clm pointer end index
      integer :: num1d                          ! size of clm pointer first dimension (all nodes)
@@ -207,7 +207,7 @@ module histFileMod
 !
 ! Pointers into clmtype arrays
 !
-  integer, parameter :: max_mapflds = 1000
+  integer, parameter :: max_mapflds = 1500
   type (clmpoint_rs) :: clmptr_rs(max_mapflds)
   type (clmpoint_ra) :: clmptr_ra(max_mapflds)
 !
@@ -1697,7 +1697,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_varpar  , only : lsmlon, lsmlat, nlevsoi, nlevlak, numrad, rtmlon, rtmlat
+    use clm_varpar  , only : lsmlon, lsmlat, nlevgrnd, nlevlak, numrad, rtmlon, rtmlat
     use clm_varctl  , only : caseid, ctitle, frivinp_rtm, fsurdat, finidat, fpftcon, &
                              version, hostname, username, conventions, source
     use domainMod   , only : llatlon,alatlon
@@ -1820,7 +1820,7 @@ contains
     call ncd_defdim( nfid(t), 'lndrof', num_lndrof, dimid, subname, usepio=pioflag)
     call ncd_defdim( nfid(t), 'allrof', num_rtm   , dimid, subname, usepio=pioflag)
 #endif
-    call ncd_defdim( nfid(t), 'levsoi', nlevsoi, dimid, subname, usepio=pioflag)
+    call ncd_defdim( nfid(t), 'levgrnd', nlevgrnd, dimid, subname, usepio=pioflag)
     call ncd_defdim( nfid(t), 'levlak', nlevlak, dimid, subname, usepio=pioflag)
     call ncd_defdim( nfid(t), 'numrad', numrad , dimid, subname, usepio=pioflag)
 #if (defined CASA)
@@ -1868,7 +1868,7 @@ contains
 #if (defined RTM)
     use RunoffMod    , only : runoff
 #endif	
-    use clm_varpar   , only : lsmlon, lsmlat, nlevsoi
+    use clm_varpar   , only : lsmlon, lsmlat, nlevgrnd
     use spmdGathScatMod, only : gather_data_to_master
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
     use clm_time_manager, only : get_ref_date
@@ -1923,7 +1923,7 @@ contains
 !-------------------------------------------------------------------------------
     if (tape(t)%ntimes == 1) then
     if (mode == 'define') then
-       call ncd_defvar(varname='levsoi', xtype=tape(t)%ncprec, dim1name='levsoi', &
+       call ncd_defvar(varname='levgrnd', xtype=tape(t)%ncprec, dim1name='levgrnd', &
             long_name='coordinate soil levels', units='m', ncid=nfid(t), usepio=pioflag)
        call ncd_defvar(varname='levlak', xtype=tape(t)%ncprec, dim1name='levlak', &
             long_name='coordinate lake levels', units='m', ncid=nfid(t), usepio=pioflag)
@@ -1936,7 +1936,7 @@ contains
        call ncd_defvar(varname='edgew', xtype=tape(t)%ncprec, &
             long_name='western edge of surface grid' , units='degrees_east' , ncid=nfid(t), usepio=pioflag)
     elseif (mode == 'write') then
-       call ncd_ioglobal(varname='levsoi', data=zsoi, ncid=nfid(t), flag='write', usepio=pioflag)
+       call ncd_ioglobal(varname='levgrnd', data=zsoi, ncid=nfid(t), flag='write', usepio=pioflag)
        call ncd_ioglobal(varname='levlak', data=zlak, ncid=nfid(t), flag='write', usepio=pioflag)
        call ncd_ioglobal(varname='edgen', data=llatlon%edges(1), ncid=nfid(t), flag='write', usepio=pioflag)
        call ncd_ioglobal(varname='edgee', data=llatlon%edges(2), ncid=nfid(t), flag='write', usepio=pioflag)
@@ -2020,7 +2020,7 @@ contains
 !-------------------------------------------------------------------------------
     if (t == 1 .and. tape(t)%ntimes == 1) then
     if (mode == 'define') then
-          do ifld = 1,5
+          do ifld = 1,6
              if (ifld == 1) then
                 varname='ZSOI'
                 long_name='soil depth'; units = 'm'
@@ -2036,14 +2036,17 @@ contains
              else if (ifld == 5) then
                 varname = 'BSW'
                 long_name='slope of soil water retention curve'; units = 'unitless'
+             else if (ifld == 6) then
+                varname = 'HKSAT'
+                long_name='saturated hydraulic conductivity'; units = 'unitless'
              end if
              if (tape(t)%dov2xy) then
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec,&
-                     dim1name='lon', dim2name='lat', dim3name='levsoi', &
+                     dim1name='lon', dim2name='lat', dim3name='levgrnd', &
                      long_name=long_name, units=units, missing_value=spval, fill_value=spval, usepio=pioflag)
              else
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
-                     dim1name='column', dim2name='levsoi', &
+                     dim1name='column', dim2name='levgrnd', &
                      long_name=long_name, units=units, missing_value=spval, fill_value=spval, usepio=pioflag)
              end if
           end do
@@ -2130,7 +2133,7 @@ contains
 
        call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
-       allocate(histi(begc:endc,nlevsoi), stat=ier)
+       allocate(histi(begc:endc,nlevgrnd), stat=ier)
        if (ier /= 0) then
           write(iulog,*) trim(subname),' ERROR: allocation error for histi'; call endrun()
        end if
@@ -2138,13 +2141,13 @@ contains
        ! Write time constant fields
 
        if (tape(t)%dov2xy) then
-          allocate(histo(begg:endg,nlevsoi), stat=ier)
+          allocate(histo(begg:endg,nlevgrnd), stat=ier)
           if (ier /= 0) then
              write(iulog,*)  trim(subname),' ERROR: allocation error for histo'; call endrun()
           end if
        end if
 
-       do ifld = 1,5
+       do ifld = 1,6
           if (ifld == 1) then
              varname='ZSOI'
           else if (ifld == 2) then
@@ -2155,9 +2158,11 @@ contains
              varname='SUCSAT'
           else if (ifld == 5) then
              varname = 'BSW'
+          else if (ifld == 6) then
+             varname = 'HKSAT'
           end if
           histi(:,:) = spval
-          do lev = 1,nlevsoi
+          do lev = 1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
              do c = begc, endc
@@ -2168,18 +2173,19 @@ contains
                    if (ifld ==3) histi(c,lev) = cptr%cps%watsat(c,lev)
                    if (ifld ==4) histi(c,lev) = cptr%cps%sucsat(c,lev)
                    if (ifld ==5) histi(c,lev) = cptr%cps%bsw(c,lev)
+                   if (ifld ==6) histi(c,lev) = cptr%cps%hksat(c,lev)
                 end if
              end do
           end do
           if (tape(t)%dov2xy) then
              histo(:,:) = spval
-             call c2g(begc, endc, begl, endl, begg, endg, nlevsoi, histi, histo, &
+             call c2g(begc, endc, begl, endl, begg, endg, nlevgrnd, histi, histo, &
                   c2l_scale_type='urbanh', l2g_scale_type='unity')
 
-             call ncd_iolocal(varname=varname, dim1name=grlnd, dim2name='levsoi', &
+             call ncd_iolocal(varname=varname, dim1name=grlnd, dim2name='levgrnd', &
                   data=histo, ncid=nfid(t), flag='write', usepio=pioflag)
           else
-             call ncd_iolocal(varname=varname, dim1name=namec, dim2name='levsoi', &
+             call ncd_iolocal(varname=varname, dim1name=namec, dim2name='levgrnd', &
                   data=histi, ncid=nfid(t), flag='write', usepio=pioflag)
           end if
        end do
@@ -3755,7 +3761,7 @@ contains
 !
 ! !USES:
     use clmtype
-    use clm_varpar, only : lsmlon, lsmlat, nlevsoi, nlevlak, numrad 
+    use clm_varpar, only : lsmlon, lsmlat, nlevgrnd, nlevlak, numrad
 #if (defined CASA)
     use CASAMod,    only : nlive, npools, npool_types
 #endif
@@ -3804,8 +3810,8 @@ contains
     ! Determine second dimension size
 
     select case (type2d)
-    case ('levsoi')
-       num2d = nlevsoi
+    case ('levgrnd')
+       num2d = nlevgrnd
     case ('levlak')
        num2d = nlevlak
     case ('numrad')
@@ -3820,7 +3826,7 @@ contains
 #endif
     case default
        write(iulog,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
-          ' currently supported types for multi level fields are [levsoi,levlak,numrad', &
+          ' currently supported types for multi level fields are [levgrnd,levlak,numrad', &
 #if (defined CASA)
           ',nlive,npools,npool_t', &
 #endif

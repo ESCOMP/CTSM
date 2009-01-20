@@ -1,19 +1,23 @@
-models/lnd/clm/bld/README                              3/13/2008
+models/lnd/clm/bld/README                              3/13/2008 
 
 CLM build and configure directory and scripts. Scripts to help
 you prepare to build CLM, actually build CLM and then help you
 to run the model.
 
+NOTE: THE MAIN BUILD/RUN SCRIPTS IN HERE ARE DEPRECATED 
+      (USE THE CPL7 SCRIPTS IN "../../../../scripts" TO BUILD
+       AN "I" COMPSET CASE INSTEAD)
+
 Important files/directories:
 
 --------- Configure and build scripts
+--------- (These scripts are also used by the cpl7 scripts)
 
 configure ---------------- Configure script -- creates Makefile and files needed to build CLM
   ----- configure --help - Configure help mode -- sends information on all configure options
-Makefile.in -------------- Base Makefile for building CLM
-config_clm_defaults.xml -- XML file of defaults for CLM
-system_defaults.xml ------ XML file of system defaults
-perl5lib ----------------- Directory with perl5 scripts to read XML, configure, build-streams etc.
+config_files/Makefile.in ------------- Base Makefile for building CLM
+config_files/config_defaults.xml ----- XML file of defaults for CLM
+config_files/config_sys_defaults.xml - XML file of system defaults
 
 ---------- Scripts to figure out dependencies between source files (used by Makefile)
 mkDepends
@@ -21,13 +25,39 @@ mkSrcfiles
 ---------- Directory to put modified source files in
 usr.src
 
+--------- Scripts to build the namelists
+--------- (These scripts are also used by the cpl7 scripts)
+build-namelist --- Build the namelists needed
+build-streams ---- Build the streams text files needed for datm7
+
+--------- CPL7 Script to create namelist and clm library
+clm.cpl7.template ------- Script used by CPL7 scripts to create namelist
+
+--------- Scripts to query namelist defaults
+listDefaultNamelist.pl -- List the files needed for a list of resolutions 
+                          that are NOT available
+queryDefaultNamelist.pl - Query default namelist for variables
+queryDefaultXML.pm ------ Subroutines needed by queryDefaultNamelist.pl script
+urban_input ------------- Input files used by the urban model for 
+                          single-point cases
+
+---------- XML Files describing namelists in namelist_files
+datm.streams.template.xml -- Template describing streams for datm7
+namelist_defaults_clm.xml -- List of default values for all namelists needed
+namelist_definition.xml ---- Definition of all namelist items
+namelist_definition.xsl ---- Describes how to view the xml file as html
+streams.txt.readme --------- Header info on streams file added to streams created
+use_cases ------------------ Specific configurations that build-namelist uses
+
+
 ---------- Script to create a new case directory and run-script
+---------- THIS SCRIPT IS DEPRECATED BY THE CPL7 SCRIPTS
 create_newcase
 ---------- Scripts to configure, build and run on various platforms
-run-frost.csh
-run-ibm.csh
-run-lightning.csh
-run-pc.csh
+---------- THESE SCRIPTS ARE DEPRECATED BY THE CPL7 SCRIPTS
+run-ibm.csh -------- for IBM SP machines such as bluefire
+run-lightning.csh -- for the NCAR machine lightning a PC linux cluster
+run-pc.csh --------- for linux PC machines such as bangkok
 
 NOTE:  To use the run-scripts you HAVE to set the following:
 

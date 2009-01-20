@@ -78,7 +78,7 @@ contains
     use clm_time_manager  , only : get_step_size
     use clm_varcon        , only : hvap, cpair, grav, vkc, tfrz, sb, &
                                    isturb, icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar        , only : nlevsno, nlevsoi, max_pft_per_col
+    use clm_varpar        , only : nlevsno, nlevgrnd, max_pft_per_col
     use SoilTemperatureMod, only : SoilTemperature
     use subgridAveMod     , only : p2c
 !
@@ -179,7 +179,7 @@ contains
     real(r8) :: evaprat(lbp:ubp)     ! ratio of qflx_evap_soi/topsoil_evap_tot
     real(r8) :: save_qflx_evap_soi   ! temporary storage for qflx_evap_soi
     real(r8) :: topsoil_evap_tot(lbc:ubc)          ! column-level total evaporation from top soil layer
-    real(r8) :: fact(lbc:ubc, -nlevsno+1:nlevsoi)  ! used in computing tridiagonal matrix
+    real(r8) :: fact(lbc:ubc, -nlevsno+1:nlevgrnd)  ! used in computing tridiagonal matrix
     real(r8) :: eflx_lwrad_del(lbp:ubp)            ! update due to eflx_lwrad
 !-----------------------------------------------------------------------
 
@@ -434,7 +434,7 @@ contains
           errsoi_pft(p) = errsoi_pft(p) + eflx_building_heat(c) 
        end if
     end do
-    do j = -nlevsno+1,nlevsoi
+    do j = -nlevsno+1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do fp = 1,num_nolakep

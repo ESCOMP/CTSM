@@ -13,6 +13,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TER.sh: exact restart test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TER.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -82,13 +84,13 @@ fi
 mv ${CLM_TESTDIR}/TSM.$1.$2.$3.$4.$5.${restart_length}.continue/*.clm?.h*.nc .
 echo "TER.sh: starting b4b comparisons " 
 files_to_compare=`ls *.clm?.h*.nc`
-if [ -z " ${files_to_compare}" ]  && [ "$debug" != "YES" ]; then
+if [ -z " ${files_to_compare}" ]  && [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
     echo "TER.sh: error locating files to compare"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 10
 fi
 
-if [ [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
+if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
    status="PASS"
 else
    status="GEN"

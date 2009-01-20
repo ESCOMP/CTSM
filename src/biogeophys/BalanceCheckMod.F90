@@ -47,7 +47,7 @@ contains
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
-    use clm_varpar   , only : nlevsoi
+    use clm_varpar   , only : nlevgrnd
     use subgridAveMod, only : p2c
     use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, &
                               icol_road_imperv
@@ -119,7 +119,7 @@ contains
          begwb(c) = h2ocan_col(c) + h2osno(c) + wa(c)
        end if
     end do
-    do j = 1, nlevsoi
+    do j = 1, nlevgrnd
 !dir$ concurrent
 !cdir nodep
       do f = 1, num_nolakec

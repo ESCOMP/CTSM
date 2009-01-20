@@ -248,6 +248,7 @@ EOF
      if ( $isafile ) {
         # Test that this file exists
         if ( defined($opts{'test'})  && defined($print) ) {
+           chomp( $value );
            print "Test that file $value exists\n" if $printing;
            if ( ! -f "$value" ) {
               die "($ProgName) ERROR:: file $value does NOT exist!\n";

@@ -171,7 +171,6 @@ contains
 !
 ! !USES:
     use shr_orb_mod     , only : shr_orb_decl
-    use clm_varctl      , only : irad 
     use clm_time_manager, only : get_nstep, get_step_size, get_curr_calday
     use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
     use driver          , only : driver1

@@ -36,7 +36,7 @@ rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
 fi
-mkdir -p ${rundir}
+mkdir -p ${rundir}/timing
 if [ $? -ne 0 ]; then
     echo "TSMcnspinup.sh: error, unable to create work subdirectory" 
     exit 3

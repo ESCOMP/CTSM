@@ -118,8 +118,7 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: irad
-   use clm_time_manager, only: get_step_size
+   use clm_time_manager, only: get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -148,7 +147,6 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: p                      ! indices
    integer :: fp             !lake filter pft index
-   integer :: dtime          !time step (s)
    real(r8):: dt             !radiation time step delta t (seconds)
    real(r8):: fracday        !dtime as a fraction of day
 !EOP
@@ -160,8 +158,7 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp)
    tempavg_t2m                   => clm3%g%l%c%p%pepv%tempavg_t2m
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
    fracday = dt/86400.0_r8
 
 
@@ -259,8 +256,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: irad
-   use clm_time_manager, only: get_step_size
+   use clm_time_manager, only: get_rad_step_size
    use shr_const_mod, only: SHR_CONST_TKFRZ, SHR_CONST_PI
 !
 ! !ARGUMENTS:
@@ -282,7 +278,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    integer , pointer :: pgridcell(:)          ! pft's gridcell index
    real(r8), pointer :: latdeg(:)             ! latitude (radians)
    real(r8), pointer :: decl(:)               ! solar declination (radians)
-   real(r8), pointer :: t_soisno(:,:)         ! soil temperature (Kelvin)  (-nlevsno+1:nlevsoi)
+   real(r8), pointer :: t_soisno(:,:)         ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
    real(r8), pointer :: soilpsi(:,:)          ! soil water potential in each soil layer (MPa)
    real(r8), pointer :: leafc_storage(:)      ! (kgC/m2) leaf C storage
    real(r8), pointer :: frootc_storage(:)     ! (kgC/m2) fine root C storage
@@ -362,7 +358,6 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: c,p            !indices
    integer :: fp             !lake filter pft index
-   integer :: dtime          !time step (s)
    real(r8):: dt             !radiation time step delta t (seconds)
    real(r8):: fracday        !dtime as a fraction of day
    real(r8):: crit_dayl      !critical daylength for offset (seconds)
@@ -457,8 +452,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    deadcrootn_storage_to_xfer    => clm3%g%l%c%p%pnf%deadcrootn_storage_to_xfer
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
    fracday = dt/86400.0_r8
 
    ! critical daylength from Biome-BGC, v4.1.2
@@ -677,8 +671,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: irad
-   use clm_time_manager, only: get_step_size
+   use clm_time_manager, only: get_rad_step_size
    use shr_const_mod, only: SHR_CONST_TKFRZ, SHR_CONST_PI
 !
 ! !ARGUMENTS:
@@ -715,7 +708,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
    real(r8), pointer :: deadstemn_storage(:)  ! (kgN/m2) dead stem N storage
    real(r8), pointer :: livecrootn_storage(:) ! (kgN/m2) live coarse root N storage
    real(r8), pointer :: deadcrootn_storage(:) ! (kgN/m2) dead coarse root N storage
-   real(r8), pointer :: t_soisno(:,:)         ! soil temperature (Kelvin)  (-nlevsno+1:nlevsoi)
+   real(r8), pointer :: t_soisno(:,:)         ! soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
    real(r8), pointer :: soilpsi(:,:)          ! soil water potential in each soil layer (MPa)
    real(r8), pointer :: leaf_long(:)          ! leaf longevity (yrs)
    real(r8), pointer :: stress_decid(:)       ! binary flag for stress-deciduous leaf habit (0 or 1)
@@ -787,7 +780,6 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: c,p             ! indices
    integer :: fp              ! lake filter pft index
-   integer :: dtime           ! time step (s)
    real(r8):: fracday         ! dtime as a fraction of day
    real(r8):: dt              ! radiation time step delta t (seconds)
    real(r8):: crit_onset_fdd  ! critical number of freezing days
@@ -892,8 +884,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
     deadcrootn_storage_to_xfer     => clm3%g%l%c%p%pnf%deadcrootn_storage_to_xfer
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
    fracday = dt/86400.0_r8
 
    ! set some local parameters - these will be moved into
@@ -1226,8 +1217,7 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: irad
-   use clm_time_manager, only: get_step_size
+   use clm_time_manager, only: get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -1281,7 +1271,6 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
-   integer :: dtime        ! time step (s)
    real(r8):: dt           ! radiation time step delta t (seconds)
    real(r8):: t1           ! temporary variable
 
@@ -1321,8 +1310,7 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
     deadcrootn_xfer_to_deadcrootn  => clm3%g%l%c%p%pnf%deadcrootn_xfer_to_deadcrootn
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
 
    ! pft loop
 !dir$ concurrent
@@ -1398,8 +1386,7 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: irad
-   use clm_time_manager, only: get_step_size
+   use clm_time_manager, only: get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -1443,7 +1430,6 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
-   integer :: dtime        ! time step (s)
    real(r8):: dt           ! radiation time step delta t (seconds)
    real(r8):: t1           ! temporary variable
 
@@ -1472,8 +1458,7 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
     frootn_to_litter               => clm3%g%l%c%p%pnf%frootn_to_litter
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
 
    ! The litterfall transfer rate starts at 0.0 and increases linearly
    ! over time, with displayed growth going to 0.0 on the last day of litterfall
@@ -1500,7 +1485,8 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
          leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
          leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
          ! accumulate total N retranslocation
-         tempsum_retransn(p) = tempsum_retransn(p) + leafn_to_retransn(p)*dt
+         !PET 9/1/08 - testing new retrans algorithm
+                      ! tempsum_retransn(p) = tempsum_retransn(p) + leafn_to_retransn(p)*dt
 
          ! calculate fine root N litterfall (no retranslocation of fine root N)
          frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
@@ -1530,8 +1516,7 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: irad
-   use clm_time_manager, only: get_step_size
+   use clm_time_manager, only: get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -1573,7 +1558,6 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
-   integer :: dtime        ! time step (s)
    real(r8):: dt           ! decomp timestep (seconds)
 
 !EOP
@@ -1596,8 +1580,7 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
     tempsum_retransn               => clm3%g%l%c%p%pepv%tempsum_retransn
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
 
    ! pft loop
 !dir$ concurrent
@@ -1615,7 +1598,8 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
          leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
          leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
          ! accumulate total N retranslocation
-         tempsum_retransn(p) = tempsum_retransn(p) + leafn_to_retransn(p)*dt
+         !PET 9/1/08 - testing new retrans algorithm
+         !tempsum_retransn(p) = tempsum_retransn(p) + leafn_to_retransn(p)*dt
 
          ! calculate fine root N litterfall (no retranslocation of fine root N)
          frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
@@ -1641,8 +1625,7 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: irad
-   use clm_time_manager, only: get_step_size
+   use clm_time_manager, only: get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -1685,7 +1668,6 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: p            ! indices
    integer :: fp           ! lake filter pft index
-   integer :: dtime        ! time step (s)
    real(r8):: dt           ! decomp timestep (seconds)
    real(r8):: lwtop        ! live wood turnover proportion (annual fraction)
    real(r8):: ctovr        ! temporary variable for carbon turnover
@@ -1713,8 +1695,7 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
     tempsum_retransn               => clm3%g%l%c%p%pepv%tempsum_retransn
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
 
    ! set the global parameter for livewood turnover rate
    ! define as an annual fraction (0.7), and convert to fraction per second
@@ -1746,8 +1727,9 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
          livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
 
          ! accumulate total N retranslocation
-         tempsum_retransn(p) = tempsum_retransn(p) + livestemn_to_retransn(p)*dt
-         tempsum_retransn(p) = tempsum_retransn(p) + livecrootn_to_retransn(p)*dt
+         !PET 9/1/08 - testing new retrans algorithm
+         !tempsum_retransn(p) = tempsum_retransn(p) + livestemn_to_retransn(p)*dt
+         !tempsum_retransn(p) = tempsum_retransn(p) + livecrootn_to_retransn(p)*dt
       end if
 
    end do

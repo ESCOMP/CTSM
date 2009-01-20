@@ -71,7 +71,7 @@ fi
  
 echo "TSM_ccsmseq.sh: running sequential-CCSM; output in ${CLM_TESTDIR}/${test_name}/test.log" 
 
-if [ "$debug" != "YES" ] || [ "$compile_only" != "YES" ]; then
+if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
    ./${sandboxscript} > ${CLM_TESTDIR}/${test_name}/test.log 2>&1
    rc=$?
 else

@@ -184,17 +184,17 @@ subroutine CASASummary(lbp, ubp, num_soilp, filter_soilp)
 
       ! leaf C
       casa_leafc(p)       = Tpool_C(p,LEAF)
-      casa_leafc_alloc(p) = livefr(p,LEAF) * fnpp(p) * dtime
+      casa_leafc_alloc(p) = livefr(p,LEAF) * fnpp(p)
       casa_leafc_loss(p)  = Closs(p,LEAF)
 
       ! wood C
       casa_woodc(p)       = Tpool_C(p,WOOD)
-      casa_woodc_alloc(p) = livefr(p,WOOD) * fnpp(p) * dtime
+      casa_woodc_alloc(p) = livefr(p,WOOD) * fnpp(p)
       casa_woodc_loss(p)  = Closs(p,WOOD)
 
       ! fine root C
       casa_frootc(p)       = Tpool_C(p,FROOT)
-      casa_frootc_alloc(p) = livefr(p,FROOT) * fnpp(p) * dtime
+      casa_frootc_alloc(p) = livefr(p,FROOT) * fnpp(p)
       casa_frootc_loss(p)  = Closs(p,FROOT)
 
       ! coarse woody debris C
@@ -204,16 +204,16 @@ subroutine CASASummary(lbp, ubp, num_soilp, filter_soilp)
 
       ! litter C
       casa_litterc(p)      = Tpool_C(p,SURFMET) + Tpool_C(p,SURFSTR) + &
-                             Tpool_C(p,SURFMIC) + Tpool_C(p,SOILMET) + &
-                             Tpool_C(p,SOILSTR) + Tpool_C(p,SOILMIC)
+                             Tpool_C(p,SOILMET) + Tpool_C(p,SOILSTR)
       casa_litterc_hr(p)   = Resp_C(p,SURFMET) + Resp_C(p,SURFSTR) + &
-                             Resp_C(p,SURFMIC) + Resp_C(p,SOILMET) + &
-                             Resp_C(p,SOILSTR) + Resp_C(p,SOILMIC)
+                             Resp_C(p,SOILMET) + Resp_C(p,SOILSTR)
       casa_litterc_loss(p) = Ctrans(p,LITTER_TYPE)
 
       ! soil C
-      casa_soilc(p)      = Tpool_C(p,SLOW) + Tpool_C(p,PASSIVE)
-      casa_soilc_hr(p)   = Resp_C(p,SLOW) + Resp_C(p,PASSIVE)
+      casa_soilc(p)      = Tpool_C(p,SURFMIC) + Tpool_C(p,SOILMIC) + &
+                           Tpool_C(p,SLOW)    + Tpool_C(p,PASSIVE)
+      casa_soilc_hr(p)   = Resp_C(p,SURFMIC) + Resp_C(p,SOILMIC) + &
+                           Resp_C(p,SLOW)    + Resp_C(p,PASSIVE)
       casa_soilc_loss(p) = Ctrans(p,SOIL_TYPE)
 
    end do  ! end of pfts loop

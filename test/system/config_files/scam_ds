@@ -1,6 +1,6 @@
 -nospmd -nosmp
 -chem none
--microphys rk
+-microphys mg
 -dyn eul
 -res 64x128
 -scam

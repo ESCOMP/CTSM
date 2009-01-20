@@ -59,6 +59,7 @@ contains
     use FracWetMod   , only : FracWet
     use clm_time_manager , only : get_step_size
     use subgridAveMod, only : p2c
+    use SNICARMod    , only : snw_rds_min
 !
 ! !ARGUMENTS:
     implicit none
@@ -130,6 +131,24 @@ contains
     real(r8), pointer :: h2osoi_ice(:,:)       ! ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)       ! liquid water (kg/m2)
     real(r8), pointer :: frac_iceold(:,:)      ! fraction of ice relative to the tot water
+    real(r8), pointer :: snw_rds(:,:)          ! effective snow grain radius (col,lyr) [microns, m^-6]
+    real(r8), pointer :: mss_bcpho(:,:)        ! mass of hydrophobic BC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_bcphi(:,:)        ! mass of hydrophilic BC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_bctot(:,:)        ! total mass of BC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_bc_col(:)         ! total column mass of BC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_bc_top(:)         ! total top-layer mass of BC (col,lyr) [kg]
+    real(r8), pointer :: mss_ocpho(:,:)        ! mass of hydrophobic OC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_ocphi(:,:)        ! mass of hydrophilic OC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_octot(:,:)        ! total mass of OC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_oc_col(:)         ! total column mass of OC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_oc_top(:)         ! total top-layer mass of OC (col,lyr) [kg]
+    real(r8), pointer :: mss_dst1(:,:)         ! mass of dust species 1 in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst2(:,:)         ! mass of dust species 2 in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst3(:,:)         ! mass of dust species 3 in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst4(:,:)         ! mass of dust species 4 in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dsttot(:,:)       ! total mass of dust in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst_col(:)        ! total column mass of dust in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst_top(:)        ! total top-layer mass of dust in snow (col,lyr) [kg]
 !
 !EOP
 !
@@ -190,6 +209,24 @@ contains
     h2osoi_liq         => clm3%g%l%c%cws%h2osoi_liq
     qflx_snow_grnd_col => clm3%g%l%c%cwf%pwf_a%qflx_snow_grnd
     h2ocan_loss        => clm3%g%l%c%cwf%h2ocan_loss
+    snw_rds            => clm3%g%l%c%cps%snw_rds
+    mss_bcpho          => clm3%g%l%c%cps%mss_bcpho
+    mss_bcphi          => clm3%g%l%c%cps%mss_bcphi
+    mss_bctot          => clm3%g%l%c%cps%mss_bctot
+    mss_bc_col         => clm3%g%l%c%cps%mss_bc_col
+    mss_bc_top         => clm3%g%l%c%cps%mss_bc_top
+    mss_ocpho          => clm3%g%l%c%cps%mss_ocpho
+    mss_ocphi          => clm3%g%l%c%cps%mss_ocphi
+    mss_octot          => clm3%g%l%c%cps%mss_octot
+    mss_oc_col         => clm3%g%l%c%cps%mss_oc_col
+    mss_oc_top         => clm3%g%l%c%cps%mss_oc_top
+    mss_dst1           => clm3%g%l%c%cps%mss_dst1
+    mss_dst2           => clm3%g%l%c%cps%mss_dst2
+    mss_dst3           => clm3%g%l%c%cps%mss_dst3
+    mss_dst4           => clm3%g%l%c%cps%mss_dst4
+    mss_dsttot         => clm3%g%l%c%cps%mss_dsttot
+    mss_dst_col        => clm3%g%l%c%cps%mss_dst_col
+    mss_dst_top        => clm3%g%l%c%cps%mss_dst_top
 
     ! Assign local pointers to derived type members (pft-level)
 
@@ -387,6 +424,30 @@ contains
           h2osoi_ice(c,0) = h2osno(c)               ! kg/m2
           h2osoi_liq(c,0) = 0._r8                   ! kg/m2
           frac_iceold(c,0) = 1._r8
+       
+
+          ! intitialize SNICAR variables for fresh snow:
+          snw_rds(c,0)    = snw_rds_min
+
+          mss_bcpho(c,:)  = 0._r8
+          mss_bcphi(c,:)  = 0._r8
+          mss_bctot(c,:)  = 0._r8
+          mss_bc_col(c)   = 0._r8
+          mss_bc_top(c)   = 0._r8
+
+          mss_ocpho(c,:)  = 0._r8
+          mss_ocphi(c,:)  = 0._r8
+          mss_octot(c,:)  = 0._r8
+          mss_oc_col(c)   = 0._r8
+          mss_oc_top(c)   = 0._r8
+
+          mss_dst1(c,:)   = 0._r8
+          mss_dst2(c,:)   = 0._r8
+          mss_dst3(c,:)   = 0._r8
+          mss_dst4(c,:)   = 0._r8
+          mss_dsttot(c,:) = 0._r8
+          mss_dst_col(c)  = 0._r8
+          mss_dst_top(c)  = 0._r8
        end if
 
        ! The change of ice partial density of surface node due to precipitation.

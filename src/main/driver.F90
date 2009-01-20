@@ -58,6 +58,7 @@ module driver
 !  -> Hydrology2          surface and soil hydrology
 !  -> Hydrology_Lake      lake hydrology
 !  -> SnowAge             update snow age for surface albedo calcualtion
+!  -> SnowAge_grain       update snow effective grain size for snow radiative transfer
 !  -> BalanceCheck        check for errors in energy and water balances
 !  -> SurfaceAlbedo       albedos for next time step
 !  -> UrbanAlbedo         Urban landunit albedos for next time step
@@ -148,6 +149,9 @@ module driver
   use abortutils          , only : endrun
   use UrbanMod            , only : UrbanAlbedo, UrbanRadiation, UrbanFluxes 
   use perf_mod
+  use SNICARMod           , only : SnowAge_grain
+  use aerdepMod           , only : interpMonthlyAerdep
+  use clm_varctl          , only : set_caerdep_from_file, set_dustdep_from_file  
 
 !
 ! !PUBLIC TYPES:
@@ -184,6 +188,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 !  cpp directive SUNSHA is set, for sunlit/shaded canopy radiation.
 ! 4/25/05, Peter Thornton: Made the sun/shade routine the default, no longer
 !  need to have SUNSHA defined.  
+! 2/29/08, Dave Lawrence: Revised snow cover fraction according to Niu and Yang, 2007
 !
 !EOP
 !
@@ -237,6 +242,17 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      call t_stopf('interpMonthlyVeg')
   endif
 #endif
+
+
+  ! ============================================================================
+  ! interpolate aerosol deposition data, and read in new monthly data if need be.
+  ! ============================================================================
+  if ( (set_caerdep_from_file) .or. (set_dustdep_from_file) ) then
+     !if (doalb) then
+     call interpMonthlyAerdep()
+     !endif
+  endif
+
 
   ! ============================================================================
   ! Loop over clumps
@@ -312,6 +328,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
   end if
 #endif       
   call t_stopf('pftdynwts')
+
 
 !$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
 #if !defined (USE_OMP)
@@ -506,13 +523,27 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      do c = begc,endc
         l = clandunit(c)
         if (itypelun(l) == isturb) then
-          ! Urban landunit use Bonan 1996 (LSM Technical Note)
-          cptr%cps%frac_sno(c) = min( cptr%cps%snowdp(c)/0.05_r8, 1._r8)
+           ! Urban landunit use Bonan 1996 (LSM Technical Note)
+           cptr%cps%frac_sno(c) = min( cptr%cps%snowdp(c)/0.05_r8, 1._r8)
         else
-          cptr%cps%frac_sno(c) = cptr%cps%snowdp(c) / (10._r8*zlnd + cptr%cps%snowdp(c))
+           ! snow cover fraction in Niu et al. 2007
+           cptr%cps%frac_sno(c) = 0.0_r8
+           if(cptr%cps%snowdp(c) .gt. 0.0_r8)  then
+             cptr%cps%frac_sno(c) = tanh(cptr%cps%snowdp(c)/(2.5_r8*zlnd* &
+               (min(800._r8,cptr%cws%h2osno(c)/cptr%cps%snowdp(c))/100._r8)**1._r8) )
+           endif
         end if
      end do
      call t_stopf('snowage')
+
+     ! ============================================================================
+     ! Snow aging routine based on Flanner and Zender (2006), Linking snowpack 
+     ! microphysics and albedo evolution, JGR, and Brun (1989), Investigation of 
+     ! wet-snow metamorphism in respect of liquid-water content, Ann. Glaciol.
+     ! ============================================================================
+     call SnowAge_grain(begc, endc, &
+          filter(nc)%num_snowc, filter(nc)%snowc, &
+          filter(nc)%num_nosnowc, filter(nc)%nosnowc)
 
      ! ============================================================================
      ! Ecosystem dynamics: Uses CN, DGVM, or static parameterizations

@@ -16,7 +16,6 @@ module CNBalanceCheckMod
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varcon  , only: istsoil
     use spmdMod     , only: masterproc
-    use clm_varpar  , only: nlevsoi
     use clm_varctl  , only: iulog
     implicit none
     save
@@ -167,8 +166,7 @@ subroutine CBalanceCheck(num_soilc, filter_soilc)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl, only: irad
+   use clm_time_manager, only: get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -200,7 +198,6 @@ subroutine CBalanceCheck(num_soilc, filter_soilc)
 ! !OTHER LOCAL VARIABLES:
    integer :: c,err_index  ! indices
    integer :: fc          ! lake filter indices
-   integer :: dtime          ! time step (s)
    logical :: err_found      ! error flag
    real(r8):: dt             ! radiation time step (seconds)
 !EOP
@@ -220,8 +217,7 @@ subroutine CBalanceCheck(num_soilc, filter_soilc)
     col_errcb                      => clm3%g%l%c%ccbal%errcb
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
 
    err_found = .false.
    ! column loop
@@ -291,8 +287,7 @@ subroutine NBalanceCheck(num_soilc, filter_soilc)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_step_size
-   use clm_varctl, only: irad
+   use clm_time_manager, only: get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -329,7 +324,6 @@ subroutine NBalanceCheck(num_soilc, filter_soilc)
 ! !OTHER LOCAL VARIABLES:
    integer :: c,err_index    ! indices
    integer :: fc             ! lake filter indices
-   integer :: dtime          ! time step (s)
    logical :: err_found      ! error flag
    real(r8):: dt             ! radiation time step (seconds)
 !EOP
@@ -352,8 +346,7 @@ subroutine NBalanceCheck(num_soilc, filter_soilc)
     col_errnb                      => clm3%g%l%c%cnbal%errnb
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
 
    err_found = .false.
    ! column loop

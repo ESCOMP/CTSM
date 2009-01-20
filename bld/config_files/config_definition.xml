@@ -7,6 +7,12 @@
 <entry id="ad_spinup" valid_values="on,off" value="off">
 Toggle to turn on ad_spinup
 </entry>
+<entry id="carbon_aero" valid_values="on,off" value="off">
+Toggle to turn on passing of carbon aerosols to land in ccsm_seq mode
+</entry>
+<entry id="snicar_frc" valid_values="on,off" value="off">
+Toggle to turn on calculation of SNICAR radiative forcing
+</entry>
 <entry id="bgc" valid_values="none,cn,casa,dgvm" value="none">
 CLM BGC mode
 </entry>

@@ -77,7 +77,7 @@ contains
 ! Allocate memory and read in urban input data
 !
 ! !USES:
-    use clm_varpar, only : lsmlon, lsmlat, numrad, nlevsoi
+    use clm_varpar, only : lsmlon, lsmlat, numrad, nlevurb
     use clm_varctl, only : iulog
     use fileutils , only : getavu, relavu, getfil, opnfil
     use spmdMod   , only : masterproc
@@ -127,12 +127,12 @@ contains
                 urbinp%alb_wall_dif(lsmlon*lsmlat,numrad), &
                 urbinp%ht_roof(lsmlon*lsmlat), &
                 urbinp%wind_hgt_canyon(lsmlon*lsmlat), &
-                urbinp%tk_wall(lsmlon*lsmlat,nlevsoi), &
-                urbinp%tk_roof(lsmlon*lsmlat,nlevsoi), &
-                urbinp%tk_improad(lsmlon*lsmlat,nlevsoi), &
-                urbinp%cv_wall(lsmlon*lsmlat,nlevsoi), &
-                urbinp%cv_roof(lsmlon*lsmlat,nlevsoi), &
-                urbinp%cv_improad(lsmlon*lsmlat,nlevsoi), &
+                urbinp%tk_wall(lsmlon*lsmlat,nlevurb), &
+                urbinp%tk_roof(lsmlon*lsmlat,nlevurb), &
+                urbinp%tk_improad(lsmlon*lsmlat,nlevurb), &
+                urbinp%cv_wall(lsmlon*lsmlat,nlevurb), &
+                urbinp%cv_roof(lsmlon*lsmlat,nlevurb), &
+                urbinp%cv_improad(lsmlon*lsmlat,nlevurb), &
                 urbinp%thick_wall(lsmlon*lsmlat), &
                 urbinp%thick_roof(lsmlon*lsmlat), &
                 urbinp%nlev_improad(lsmlon*lsmlat), &
@@ -179,12 +179,12 @@ contains
                 call endrun( 'ERROR:: reading of ASCII urban input file got off track' )
              end if
              read (n,*,iostat=ier) desc, urbinp%wind_hgt_canyon(nw)
-             read (n,*,iostat=ier) desc, (urbinp%tk_wall(nw,k),k=1,nlevsoi)
-             read (n,*,iostat=ier) desc, (urbinp%tk_roof(nw,k),k=1,nlevsoi)
-             read (n,*,iostat=ier) desc, (urbinp%tk_improad(nw,k),k=1,nlevsoi)
-             read (n,*,iostat=ier) desc, (urbinp%cv_wall(nw,k),k=1,nlevsoi)
-             read (n,*,iostat=ier) desc, (urbinp%cv_roof(nw,k),k=1,nlevsoi)
-             read (n,*,iostat=ier) desc, (urbinp%cv_improad(nw,k),k=1,nlevsoi)
+             read (n,*,iostat=ier) desc, (urbinp%tk_wall(nw,k),k=1,nlevurb)
+             read (n,*,iostat=ier) desc, (urbinp%tk_roof(nw,k),k=1,nlevurb)
+             read (n,*,iostat=ier) desc, (urbinp%tk_improad(nw,k),k=1,nlevurb)
+             read (n,*,iostat=ier) desc, (urbinp%cv_wall(nw,k),k=1,nlevurb)
+             read (n,*,iostat=ier) desc, (urbinp%cv_roof(nw,k),k=1,nlevurb)
+             read (n,*,iostat=ier) desc, (urbinp%cv_improad(nw,k),k=1,nlevurb)
              if ( index( desc, "cv_improad" ) /= 1 )then
                 call endrun( 'ERROR:: reading of ASCII urban input file got off track' )
              end if

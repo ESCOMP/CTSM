@@ -15,7 +15,6 @@ module CNAnnualUpdateMod
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varcon  , only: istsoil
     use spmdMod     , only: masterproc
-    use clm_varpar  , only: nlevsoi
     implicit none
     save
     private
@@ -43,9 +42,9 @@ subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_varctl, only: irad
-   use clm_time_manager, only: get_step_size
-   use pft2colMod, only: p2c
+   use clm_time_manager, only: get_rad_step_size, get_days_per_year
+   use clm_varcon      , only: secspday
+   use pft2colMod      , only: p2c
 !
 ! !ARGUMENTS:
    implicit none
@@ -86,7 +85,6 @@ subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !OTHER LOCAL VARIABLES:
    integer :: c,p          ! indices
    integer :: fp,fc        ! lake filter indices
-   integer :: dtime        ! time step (s)
    real(r8):: dt           ! radiation time step (seconds)
 
 !EOP
@@ -106,8 +104,7 @@ subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
    pcolumn               => clm3%g%l%c%p%column
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
 
    ! column loop
 !dir$ concurrent
@@ -123,7 +120,7 @@ subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       c = pcolumn(p)
-      if (annsum_counter(c) >= 365._r8 * 86400._r8) then
+      if (annsum_counter(c) >= get_days_per_year() * secspday) then
          ! update annual plant ndemand accumulator
          annsum_plant_ndemand(p)  = tempsum_plant_ndemand(p)
          tempsum_plant_ndemand(p) = 0._r8
@@ -151,7 +148,7 @@ subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
-      if (annsum_counter(c) >= 365._r8 * 86400._r8) annsum_counter(c) = 0._r8
+      if (annsum_counter(c) >= get_days_per_year() * secspday) annsum_counter(c) = 0._r8
    end do
 
 end subroutine CNAnnualUpdate

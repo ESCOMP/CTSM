@@ -20,7 +20,7 @@ module clm_varcon
                            SHR_CONST_RHOICE,SHR_CONST_TKFRZ,SHR_CONST_REARTH, &
                            SHR_CONST_PDB, SHR_CONST_PI, SHR_CONST_CDAY,       &
                            SHR_CONST_RGAS
-  use clm_varpar   , only: numrad, nlevsoi, nlevlak
+  use clm_varpar   , only: numrad, nlevgrnd, nlevlak
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -28,6 +28,7 @@ module clm_varcon
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
+! 27 February 2008: Keith Oleson; Add forcing height and aerodynamic parameters
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -57,16 +58,16 @@ module clm_varcon
   real(r8) :: denh2o = SHR_CONST_RHOFW  !density of liquid water [kg/m3]
   real(r8) :: denice = SHR_CONST_RHOICE !density of ice [kg/m3]
   real(r8) :: rgas   = SHR_CONST_RGAS   !universal gas constant [J/K/kmole]
-  real(r8) :: tkair  = 0.023_r8     !thermal conductivity of air   [W/m/k]
-  real(r8) :: tkice  = 2.290_r8     !thermal conductivity of ice   [W/m/k]
-  real(r8) :: tkwat  = 0.6_r8       !thermal conductivity of water [W/m/k]
+  real(r8) :: tkair  = 0.023_r8     !thermal conductivity of air   [W/m/K]
+  real(r8) :: tkice  = 2.290_r8     !thermal conductivity of ice   [W/m/K]
+  real(r8) :: tkwat  = 0.6_r8       !thermal conductivity of water [W/m/K]
   real(r8) :: tfrz   = SHR_CONST_TKFRZ  !freezing temperature [K]
   real(r8) :: tcrit  = 2.5_r8       !critical temperature to determine rain or snow
   real(r8) :: o2_molar_const = 0.209_r8   !constant atmospheric O2 molar ratio (mol/mol)
 
   real(r8) :: bdsno = 250._r8       !bulk density snow (kg/m**3)
-  real(r8) :: forc_hgt_min = 40._r8 !minimum forcing height (10m + roughly the 
-                                    !largest z0m+d for any vegetated canopy) (m)
+  real(r8) :: alpha_aero = 1.0_r8   !constant for aerodynamic parameter weighting
+  real(r8) :: tlsai_crit = 2.0_r8   !critical value of elai+esai for which aerodynamic parameters are maximum
   real(r8) :: watmin = 0.01_r8      !minimum soil moisture (mm)
 
   real(r8) :: re = SHR_CONST_REARTH*0.001_r8 !radius of earth (km)
@@ -146,8 +147,8 @@ module clm_varcon
 
   real(r8) :: zlak(1:nlevlak)     !lake z  (layers)
   real(r8) :: dzlak(1:nlevlak)    !lake dz (thickness)
-  real(r8) :: zsoi(1:nlevsoi)     !soil z  (layers)
-  real(r8) :: dzsoi(1:nlevsoi)    !soil dz (thickness)
-  real(r8) :: zisoi(0:nlevsoi)    !soil zi (interfaces)
+  real(r8) :: zsoi(1:nlevgrnd)    !soil z  (layers)
+  real(r8) :: dzsoi(1:nlevgrnd)   !soil dz (thickness)
+  real(r8) :: zisoi(0:nlevgrnd)   !soil zi (interfaces)
 
 end module clm_varcon

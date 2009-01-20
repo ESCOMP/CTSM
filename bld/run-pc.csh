@@ -45,10 +45,10 @@ set rtm      = off      # settings are [on   | off         ] (default is off)
 #--------------------------------------------------------------------------------------------
 
 ## Run time settings:
-set res        = 48x96      # settings are [48x96   | 64x128  | 4x5  | 10x15 | 1.9x2.5 etc.      ]
+set res        = 4x5        # settings are [48x96   | 64x128  | 4x5  | 10x15 | 1.9x2.5 etc.      ]
 set mask       = gx3v5      # settings are [default | USGS    | navy | gx3v5 | gx1v5   etc.      ]
 set sim_year   = default    # settings are [default | 1890    | 2000 | 2100                      ]
-set start_type = arb_ic     # settings are [arb_ic  | startup | continue | branch                ] (default is arb_ic)
+set start_type = arb_ic     # settings are [cold    | arb_ic  | startup | continue | branch      ] (default is arb_ic)
 set runlen     = 2d         # settings are [ integer<sdy> where s=cpling-step, d=days, y=years   ] (default is 2d)
 set start_ymd  = 19980101   # Start date [yyyymmdd]
 set cycle_init = 2003       # Initial year to use atm data from
@@ -86,7 +86,7 @@ setenv CSMDATA /fs/cgd/csm/inputdata                # (MAKE SURE YOU CHANGE THIS
 
 ## Location of datm data - needs to be customized unless running at NCAR.
 ## Contains the location for the datm7 input data
-setenv datm_data_dir /project/tss/NCEPDATA.datm7.Qian.T62.c060410  # (MAKE SURE YOU CHANGE THIS!!!)
+setenv datm_data_dir /project/tss/atm_forcing.datm7.Qian.T62.c080727   # (MAKE SURE YOU CHANGE THIS!!!)
 
 ## $wrkdir is a working directory where the model will be built and run.
 ## $blddir is the directory where model will be compiled.
@@ -153,8 +153,9 @@ set procs = 4
 limit stacksize unlimited
 
 ## Ensure that run and build directories exist
-mkdir -p $rundir                || echo "cannot create $rundir" && exit 3
-mkdir -p $blddir                || echo "cannot create $blddir" && exit 3
+mkdir -p $rundir                || echo "cannot create $rundir"        && exit 1
+mkdir -p $rundir/timing         || echo "cannot create $rundir/timing" && exit 1
+mkdir -p $blddir                || echo "cannot create $blddir"        && exit 1
 
 ## Build (or re-build) executable
 set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust -usr_src $usr_src"
@@ -225,7 +226,6 @@ cat >! lndinput << EOF
  &clm_inparm
  $set_nrevsn
  dtime          =  1800
- irad           = -1
  wrtdia         = .true.
  hist_dov2xy    = .true.
  hist_nhtfrq    =  -24

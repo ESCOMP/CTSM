@@ -27,6 +27,7 @@ module initSurfalbMod
 !
 ! !REVISION HISTORY:
 ! 2005-06-12: Created by Mariana Vertenstein
+! 2008-02-29: Revised snow cover fraction from Niu and Yang, 2007
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -55,13 +56,18 @@ contains
     use spmdMod             , only : masterproc,iam
     use decompMod           , only : get_proc_clumps, get_clump_bounds
     use filterMod           , only : filter
-    use clm_varpar          , only : nlevsoi, nlevsno, nlevlak
+    use clm_varpar          , only : nlevsoi, nlevsno, nlevlak, nlevgrnd
     use clm_varcon          , only : zlnd, istsoil, isturb, denice, denh2o, &
-                                     icol_roof, icol_road_imperv, icol_road_perv
+                                     icol_roof, icol_road_imperv,           &
+                                     icol_road_perv, spval
     use clm_varcon          , only : zlnd, istsoil 
     use clm_time_manager        , only : get_step_size
     use FracWetMod          , only : FracWet
     use SurfaceAlbedoMod    , only : SurfaceAlbedo
+#if (defined CASA)
+  use CASAPhenologyMod    , only : CASAPhenology
+  use CASAMod             , only : Casa
+#endif
 #if (defined DGVM)
     use DGVMEcosystemDynMod , only : DGVMEcosystemDyn
 #elif (defined CN)
@@ -99,10 +105,12 @@ contains
     real(r8), pointer :: dz(:,:)           ! layer thickness depth (m)
     real(r8), pointer :: h2osoi_ice(:,:)   ! ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)   ! liquid water (kg/m2)
+    real(r8), pointer :: h2osno(:)         ! snow water (mm H2O)
     integer , pointer :: frac_veg_nosno_alb(:) ! fraction of vegetation not covered by snow (0 OR 1) [-] 
     real(r8), pointer :: dayl(:)           ! daylength (seconds)
     real(r8), pointer :: latdeg(:)         ! latitude (degrees)
     integer , pointer :: pcolumn(:)        ! index into column level quantities
+    real(r8), pointer :: soilpsi(:,:)      ! soil water potential in each soil layer (MPa)
 !
 ! local pointers to implicit out arguments
 !
@@ -126,15 +134,17 @@ contains
 !EOP
 !
 ! !OTHER LOCAL VARIABLES:
-    integer :: nc,j,l,c,p   ! indices
-    integer :: nclumps      ! number of clumps on this processor
-    integer :: begp, endp   ! per-clump beginning and ending pft indices
-    integer :: begc, endc   ! per-clump beginning and ending column indices
-    integer :: begl, endl   ! per-clump beginning and ending landunit indices
-    integer :: begg, endg   ! per-clump gridcell ending gridcell indices
-    integer :: ier          ! MPI return code
-    real(r8):: lat          ! latitude (radians) for daylength calculation
-    real(r8):: temp         ! temporary variable for daylength
+    integer :: nc,j,l,c,p,fc ! indices
+    integer :: nclumps       ! number of clumps on this processor
+    integer :: begp, endp    ! per-clump beginning and ending pft indices
+    integer :: begc, endc    ! per-clump beginning and ending column indices
+    integer :: begl, endl    ! per-clump beginning and ending landunit indices
+    integer :: begg, endg    ! per-clump gridcell ending gridcell indices
+    integer :: ier           ! MPI return code
+    real(r8):: lat           ! latitude (radians) for daylength calculation
+    real(r8):: temp          ! temporary variable for daylength
+    real(r8):: snowbd        ! temporary calculation of snow bulk density (kg/m3)
+    real(r8):: fmelt         ! snowbd/100
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (landunit-level)
@@ -149,9 +159,11 @@ contains
     h2osoi_liq          => clm3%g%l%c%cws%h2osoi_liq
     h2osoi_vol          => clm3%g%l%c%cws%h2osoi_vol
     snowdp              => clm3%g%l%c%cps%snowdp
+    h2osno              => clm3%g%l%c%cws%h2osno
     frac_sno            => clm3%g%l%c%cps%frac_sno 
     ctype               => clm3%g%l%c%itype
     clandunit           => clm3%g%l%c%landunit
+    soilpsi             => clm3%g%l%c%cps%soilpsi
 
     ! Assign local pointers to derived subtypes components (pft-level)
 
@@ -221,6 +233,25 @@ contains
              frac_veg_nosno(p) = 0._r8
           end if
        end do
+
+       ! ============================================================================
+       ! Ecosystem dynamics: Uses CN, DGVM, or static parameterizations
+       ! ============================================================================
+
+#if (defined CASA)
+       call CASAPhenology(begp, endp, filter(nc)%num_soilp, filter(nc)%soilp)
+       call Casa(begp, endp, filter(nc)%num_soilp, filter(nc)%soilp, init=.true.)
+#endif
+
+#if (defined CASA) || (defined CN)
+       do j = 1, nlevgrnd
+          do fc = 1, filter(nc)%num_soilc
+             c = filter(nc)%soilc(fc)
+
+             soilpsi(c,j) = -15.0_r8
+          end do
+       end do
+#endif
 
        ! Determine variables needed for SurfaceAlbedo for non-lake points
 
@@ -306,7 +337,15 @@ contains
              ! From Bonan 1996 (LSM technical note)
              frac_sno(c) = min( snowdp(c)/0.05_r8, 1._r8)
           else
-             frac_sno(c) = snowdp(c)/(10._r8*zlnd + snowdp(c))
+             frac_sno(c) = 0._r8
+             ! snow cover fraction as in Niu and Yang 2007
+             if(snowdp(c) .gt. 0.0)  then
+                snowbd   = min(800._r8,h2osno(c)/snowdp(c)) !bulk density of snow (kg/m3)
+                fmelt    = (snowbd/100.)**1.
+                ! 100 is the assumed fresh snow density; 1 is a melting factor that could be
+                ! reconsidered, optimal value of 1.5 in Niu et al., 2007
+                frac_sno(c) = tanh( snowdp(c) /(2.5 * zlnd * fmelt) )
+             endif
           end if
        end do
        call SurfaceAlbedo(begg, endg, begc, endc, begp, endp, &

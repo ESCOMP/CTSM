@@ -474,8 +474,9 @@ contains
 ! subroutine driver
 !
 ! !REVISION HISTORY:
-! Author: Gordon Bonan
-! 2/1/02, Peter Thornton: Migrated to new data structure.
+! Author:  Gordon Bonan
+! 2/1/02,  Peter Thornton: Migrated to new data structure.
+! 2/29/08, David Lawrence: revised snow burial fraction for short vegetation
 !
 ! !LOCAL VARIABLES:
 !
@@ -586,8 +587,17 @@ contains
           ! are less than 0.05 but non zero, set to 0.05 to prevent numerical
           ! problems associated with very small lai and sai.
 
-          ol = min( max(snowdp(c)-hbot(p),0._r8), htop(p)-hbot(p))
-          fb = 1._r8 - ol / max(1.e-06_r8,htop(p)-hbot(p))
+          ! snow burial fraction for short vegetation (e.g. grasses) as in
+          ! Wang and Zeng, 2007.
+
+          if (ivt(p) > 0 .and. ivt(p) <= 11) then
+             ol = min( max(snowdp(c)-hbot(p), 0._r8), htop(p)-hbot(p))
+             fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
+          else
+             fb = 1._r8 - max(min(snowdp(c),0.2_r8),0._r8)/0.2_r8   ! 0.2m is assumed
+                  !depth of snow required for complete burial of grasses
+          endif
+
           elai(p) = max(tlai(p)*fb, 0.0_r8)
           esai(p) = max(tsai(p)*fb, 0.0_r8)
           if (elai(p) > 0.0_r8 .and. elai(p) < 0.05_r8) elai(p) = 0.05_r8
@@ -622,7 +632,7 @@ contains
 ! !USES:
     use clmtype
     use shr_const_mod , only: SHR_CONST_CDAY, SHR_CONST_TKFRZ
-    use clm_varpar    , only : nlevsoi
+    use clm_varpar    , only : nlevgrnd
     use clm_time_manager  , only : get_step_size
 !
 ! !ARGUMENTS:
@@ -744,7 +754,7 @@ contains
        tsoi(c) = 0._r8
        dep(c) = 0._r8
     end do
-    do j = 1, nlevsoi
+    do j = 1, nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do fc = 1,num_nolakec

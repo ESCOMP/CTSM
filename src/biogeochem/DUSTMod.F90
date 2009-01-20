@@ -142,7 +142,7 @@ contains
 !
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
     real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
-    real(r8), parameter :: vai_mbl_thr = 0.1_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
+    real(r8), parameter :: vai_mbl_thr = 0.3_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
     real(r8), pointer :: wtlunit(:)         ! weight of pft relative to landunit
     real(r8) :: sumwt(lbl:ubl)              ! sum of weights
     logical  :: found                       ! temporary for error check

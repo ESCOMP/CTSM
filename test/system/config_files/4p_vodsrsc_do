@@ -1,5 +1,5 @@
 -mode ccsm_seq
--smp
+-smp -nospmd
 -debug
 -maxpft 4
 -rtm on

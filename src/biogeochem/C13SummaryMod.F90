@@ -14,7 +14,6 @@ module C13SummaryMod
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varcon  , only: istsoil
     use spmdMod     , only: masterproc
-    use clm_varpar  , only: nlevsoi
     implicit none
     save
     private
@@ -230,7 +229,6 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: storvegc(:)           ! (gC/m2) stored vegetation carbon, excluding cpool
    real(r8), pointer :: totpftc(:)            ! (gC/m2) total pft-level carbon, including cpool
    real(r8), pointer :: totvegc(:)            ! (gC/m2) total vegetation carbon, excluding cpool
-   real(r8), pointer :: tempsum_npp(:)          !temporary annual sum of NPP (gC/m2/yr)
    ! for landcover change
    real(r8), pointer :: dwt_closs(:)          ! (gC/m2/s) total carbon loss from product pools and conversion
    real(r8), pointer :: dwt_conv_cflux(:)     ! (gC/m2/s) conversion C flux (immediate loss to atm)
@@ -434,7 +432,6 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     storvegc                       => clm3%g%l%c%p%pc13s%storvegc
     totpftc                        => clm3%g%l%c%p%pc13s%totpftc
     totvegc                        => clm3%g%l%c%p%pc13s%totvegc
-    tempsum_npp                    => clm3%g%l%c%p%pepv%tempsum_npp
 
    ! pft loop
 !dir$ concurrent
@@ -514,9 +511,6 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
       ! net primary production (NPP)
       npp(p) = gpp(p) - ar(p)
-
-      ! update the annual NPP accumulator, for use in allocation code
-      tempsum_npp(p) = tempsum_npp(p) + npp(p)
 
       ! aboveground NPP: leaf, live stem, dead stem (AGNPP)
       ! This is supposed to correspond as closely as possible to

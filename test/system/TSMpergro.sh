@@ -36,7 +36,7 @@ rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
 fi
-mkdir -p ${rundir}
+mkdir -p ${rundir}/timing
 if [ $? -ne 0 ]; then
     echo "TSMpergro.sh: error, unable to create work subdirectory" 
     exit 2
@@ -64,7 +64,7 @@ fi
 mv ${CLM_TESTDIR}/TSM.$1.$2.$4.$5.$6.$7.$8/*.clm?.h*.nc .
 echo "TSMpergro.sh: starting comparisons "
 files_to_compare=`ls *.clm?.h*.nc`
-if [ -z " ${files_to_compare}" ]  && [ "$debug" != "YES" ]; then
+if [ -z " ${files_to_compare}" ]  && [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
     echo "TSMpergro.sh: error locating files to compare"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 5

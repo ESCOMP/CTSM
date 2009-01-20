@@ -94,11 +94,7 @@ contains
 !
 ! local pointers to implicit in arguments
 !
-   integer , pointer :: ngridcell(:)   ! pft/landunit gridcell index
-   real(r8), pointer :: forc_hgt(:)    ! atmospheric reference height (m)
-   real(r8), pointer :: forc_hgt_u(:)  ! observational height of wind [m]
-   real(r8), pointer :: forc_hgt_t(:)  ! observational height of temperature [m]
-   real(r8), pointer :: forc_hgt_q(:)  ! observational height of humidity [m]
+   integer , pointer :: ngridcell(:)      !pft/landunit gridcell index
    real(r8), pointer :: forc_hgt_u_pft(:) !observational height of wind at pft level [m]
    real(r8), pointer :: forc_hgt_t_pft(:) !observational height of temperature at pft level [m]
    real(r8), pointer :: forc_hgt_q_pft(:) !observational height of specific humidity at pft level [m]
@@ -137,10 +133,6 @@ contains
      u10        => clm3%g%l%c%p%pps%u10
      fv         => clm3%g%l%c%p%pps%fv
    end if
-   forc_hgt   => clm_a2l%forc_hgt
-   forc_hgt_u => clm_a2l%forc_hgt_u
-   forc_hgt_t => clm_a2l%forc_hgt_t
-   forc_hgt_q => clm_a2l%forc_hgt_q
 
    ! Assign local pointers to derived type members (pft or landunit-level)
 
@@ -308,7 +300,11 @@ contains
       ! Therefore d <= 0.034*z1 and may safely be neglected.
       ! Code from LSM routine SurfaceTemperature was used to obtain u10
 
-      zldis(n) = forc_hgt_u(g)-displa(n)
+      if (present(landunit_index)) then
+        zldis(n) = forc_hgt_u_pft(pfti(n))-displa(n)
+      else
+        zldis(n) = forc_hgt_u_pft(n)-displa(n)
+      end if
       zeta(n) = zldis(n)/obu(n)
       if (min(zeta(n), 1._r8) < 0._r8) then
          tmp1 = (1._r8 - 16._r8*min(zeta(n),1._r8))**0.25_r8
@@ -333,7 +329,11 @@ contains
       else                ! not stable
          fm10 = -5.0_r8 * zeta10
       end if
-      tmp4 = log( min( 1.0_8, forc_hgt(g) / 10._r8) )
+      if (present(landunit_index)) then
+        tmp4 = log( max( 1.0_8, forc_hgt_u_pft(pfti(n)) / 10._r8) )
+      else 
+        tmp4 = log( max( 1.0_8, forc_hgt_u_pft(n) / 10._r8) )
+      end if
       if (.not. present(landunit_index)) then
         u10(n) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
         fv(n)  = ustar(n)
@@ -356,7 +356,11 @@ contains
       n = filtern(f)
       g = ngridcell(n)
 
-      zldis(n) = forc_hgt_u(g)-displa(n)
+      if (present(landunit_index)) then
+        zldis(n) = forc_hgt_u_pft(pfti(n))-displa(n)
+      else
+        zldis(n) = forc_hgt_u_pft(n)-displa(n)
+      end if
       zeta(n) = zldis(n)/obu(n)
       if (zeta(n) < -zetam) then           ! zeta < -1
          ustar(n) = vkc * um(n) / log(-zetam*obu(n)/z0m(n))
@@ -368,7 +372,11 @@ contains
          ustar(n)=vkc * um(n)/log(obu(n)/z0m(n))
       endif
 
-      zldis(n) = forc_hgt_t(g)-displa(n)
+      if (present(landunit_index)) then
+        zldis(n) = forc_hgt_t_pft(pfti(n))-displa(n)
+      else
+        zldis(n) = forc_hgt_t_pft(n)-displa(n)
+      end if
       zeta(n) = zldis(n)/obu(n)
       if (zeta(n) < -zetat) then
          temp1(n)=vkc/log(-zetat*obu(n)/z0h(n))
@@ -380,7 +388,11 @@ contains
          temp1(n)=vkc/log(obu(n)/z0h(n))
       end if
 
-      zldis(n) = forc_hgt_q(g)-displa(n)
+      if (present(landunit_index)) then
+        zldis(n) = forc_hgt_q_pft(pfti(n))-displa(n)
+      else
+        zldis(n) = forc_hgt_q_pft(n)-displa(n)
+      end if
       zeta(n) = zldis(n)/obu(n)
       if (zeta(n) < -zetat) then
          temp2(n)=vkc/log(-zetat*obu(n)/z0q(n))
@@ -423,7 +435,11 @@ contains
       ! Therefore d <= 0.034*z1 and may safely be neglected.
       ! Code from LSM routine SurfaceTemperature was used to obtain u10
 
-      zldis(n) = forc_hgt_u(g)-displa(n)
+      if (present(landunit_index)) then
+        zldis(n) = forc_hgt_u_pft(pfti(n))-displa(n)
+      else
+        zldis(n) = forc_hgt_u_pft(n)-displa(n)
+      end if 
       zeta(n) = zldis(n)/obu(n)
       if (min(zeta(n), 1._r8) < 0._r8) then
          tmp1 = (1._r8 - 16._r8*min(zeta(n),1._r8))**0.25_r8
@@ -448,7 +464,11 @@ contains
       else                ! not stable
          fm10 = -5.0_r8 * zeta10
       end if
-      tmp4 = log( min( 1.0_r8, forc_hgt(g) / 10._r8 ) )
+      if (present(landunit_index)) then
+        tmp4 = log( max( 1.0_r8, forc_hgt_u_pft(pfti(n)) / 10._r8 ) )
+      else
+        tmp4 = log( max( 1.0_r8, forc_hgt_u_pft(n) / 10._r8 ) )
+      end if
       if (.not. present(landunit_index)) then
         u10(n) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
         fv(n)  = ustar(n)

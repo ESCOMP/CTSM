@@ -42,50 +42,6 @@ case $hostname in
 	fi
     fi ;;
 
-    ##bluevista
-    bv* )
-    ##search config options file for parallelization info; default on aix is hybrid
-    if grep -ic NOSPMD ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##serial
-	    cmnd=""                                   
-	else
-            ##open-mp only
-#	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
-	    cmnd="env LSB_PJL_TASK_GEOMETRY="\{\(0\)\}" OMP_NUM_THREADS=${CLM_THREADS} "
-	fi
-    else
-	num_nodes=`echo $LSB_MCPU_HOSTS | wc -w`
-	num_nodes=`expr $num_nodes / 2`
-	tpn=`expr $CLM_TASKS / $num_nodes `
-	proc=0
-	geo_string="\{"
-	count1=$num_nodes
-	while [ "$count1" != "0" ]; do
-	    geo_string="${geo_string}\("
-	    count2=$tpn
-	    while [ "$count2" != "0" ]; do
-		if [ "$count2" != "$tpn" ]; then
-		    geo_string="${geo_string}\,"
-		fi
-		geo_string="${geo_string}$proc"
-		proc=`expr $proc + 1`
-		count2=`expr $count2 - 1`
-	    done
-	    geo_string="${geo_string}\)"
-	    count1=`expr $count1 - 1`
-	done
-	geo_string="${geo_string}\}"
-
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##mpi only
-	    cmnd="env LSB_PJL_TASK_GEOMETRY=${geo_string} mpirun.lsf "
-	else
-            ##hybrid
-	    cmnd="env LSB_PJL_TASK_GEOMETRY=${geo_string} OMP_NUM_THREADS=${CLM_THREADS} mpirun.lsf "
-	fi
-    fi ;;
-
     ##lightning
     ln* )
     ##search config options file for parallelization info; default on linux is mpi
@@ -269,7 +225,13 @@ case $hostname in
 
     ##breeze
     breeze | gale | gust | hail )
-    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
+    if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
+       ##serial
+       cmnd=""
+    elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
+       ##open-mp only
+       cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
+    fi
     ;;
 
     * ) 

@@ -15,7 +15,6 @@ module CNVegStructUpdateMod
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varcon  , only: istsoil
     use spmdMod     , only: masterproc
-    use clm_varpar  , only: nlevsoi
     implicit none
     save
     private
@@ -58,6 +57,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 !
 ! !REVISION HISTORY:
 ! 10/28/03: Created by Peter Thornton
+! 2/29/08, David Lawrence: revised snow burial fraction for short vegetation
 !
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in scalars
@@ -73,7 +73,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
    real(r8), pointer :: dsladlai(:)  !dSLA/dLAI, projected area basis [m^2/gC]
    real(r8), pointer :: z0mr(:)      !ratio of momentum roughness length to canopy top height (-)
    real(r8), pointer :: displar(:)   !ratio of displacement height to canopy top height (-)
-   real(r8), pointer :: forc_hgt_u(:)  ! observational height of wind [m]
+   real(r8), pointer :: forc_hgt_u_pft(:) ! observational height of wind at pft-level [m]
 !
 ! local pointers to implicit in/out scalars
 !
@@ -106,7 +106,6 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
     leafc                          => clm3%g%l%c%p%pcs%leafc
     deadstemc                      => clm3%g%l%c%p%pcs%deadstemc
     snowdp                         => clm3%g%l%c%cps%snowdp
-    forc_hgt_u                     => clm_a2l%forc_hgt_u
     woody                          => pftcon%woody
     slatop                         => pftcon%slatop
     dsladlai                       => pftcon%dsladlai
@@ -121,6 +120,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
     elai                           => clm3%g%l%c%p%pps%elai
     esai                           => clm3%g%l%c%p%pps%esai
     frac_veg_nosno_alb             => clm3%g%l%c%p%pps%frac_veg_nosno_alb
+    forc_hgt_u_pft                 => clm3%g%l%c%p%pps%forc_hgt_u_pft
 
    ! constant allometric parameters
    taper = 200._r8
@@ -171,7 +171,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
              ! Peter Thornton, 5/3/2004
              ! Adding test to keep htop from getting too close to forcing height for windspeed
              ! Also added for grass, below, although it is not likely to ever be an issue.
-             htop(p) = min(htop(p),(forc_hgt_u(g)/(displar(ivt(p))+z0mr(ivt(p))))-3._r8)
+             htop(p) = min(htop(p),(forc_hgt_u_pft(p)/(displar(ivt(p))+z0mr(ivt(p))))-3._r8)
 
              ! Peter Thornton, 8/11/2004
              ! Adding constraint to keep htop from going to 0.0.
@@ -188,7 +188,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
              ! height for grasses depends only on LAI
              htop(p) = max(0.25_r8, tlai(p) * 0.25_r8)
 
-             htop(p) = min(htop(p),(forc_hgt_u(g)/(displar(ivt(p))+z0mr(ivt(p))))-3._r8)
+             htop(p) = min(htop(p),(forc_hgt_u_pft(p)/(displar(ivt(p))+z0mr(ivt(p))))-3._r8)
 
              ! Peter Thornton, 8/11/2004
              ! Adding constraint to keep htop from going to 0.0.
@@ -206,8 +206,16 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
       
       ! adjust lai and sai for burying by snow. 
 
-      ol = min(max(snowdp(c)-hbot(p), 0._r8), htop(p)-hbot(p))
-      fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
+      ! snow burial fraction for short vegetation (e.g. grasses) as in
+      ! Wang and Zeng, 2007.
+      if (ivt(p) > 0 .and. ivt(p) <= 11) then
+         ol = min( max(snowdp(c)-hbot(p), 0._r8), htop(p)-hbot(p))
+         fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
+      else
+         fb = 1._r8 - max(min(snowdp(c),0.2_r8),0._r8)/0.2_r8   ! 0.2m is assumed
+              !depth of snow required for complete burial of grasses
+      endif
+
       elai(p) = max(tlai(p)*fb, 0.0_r8)
       esai(p) = max(tsai(p)*fb, 0.0_r8)
 

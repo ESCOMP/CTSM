@@ -36,7 +36,7 @@ rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
 fi
-mkdir -p ${rundir} 
+mkdir -p ${rundir}/timing
 if [ $? -ne 0 ]; then
     echo "TSMext_ccsmseq_cam.sh: error, unable to create work subdirectory" 
     exit 3
@@ -84,24 +84,6 @@ else
     exit 6
 fi
 
-echo "TSMext_ccsmseq_cam.sh.sh: call to cice build-namelist:"
-echo "        ${CLM_SEQCCSMROOT}/models/ice/cice/bld/build-namelist -s a\
-    -config ${CLM_TESTDIR}/TCBext_ccsmseq_cam.$1/config_cache.xml -infile ${CLM_SCRIPTDIR}/nl_files/$2
-
-${CLM_SEQCCSMROOT}/models/atm/cam/bld/build-namelist -s a\
-    -config ${CLM_TESTDIR}/TCBext_ccsmseq_cam.$1/config_cache.xml \
-    -infile ${CLM_SCRIPTDIR}/nl_files/$2
-rc=$?
-if [ $rc -eq 0 ]; then
-    echo "TSMext_ccsmseq_cam.sh: cice build-namelist was successful"
-    cat *_in
-else
-    echo "TSMext_ccsmseq_cam.sh: error building cice namelist, error from build-namelist= $rc"
-    echo "TSMext_ccsmseq_cam.sh: see ${CLM_TESTDIR}/${test_name}/test.log for details"
-    echo "FAIL.job${JOBID}" > TestStatus
-    exit 6
-fi
-
 echo "TSMext_ccsmseq_cam.sh calling CAM_runcmnd.sh to build run command" 
 export CAM_SCRIPTDIR=${CLM_SCRIPTDIR}
 export CAM_THREADS=${CLM_THREADS}
@@ -125,7 +107,7 @@ else
     exit 7
 fi
 
-if [ "$debug" != "YES" ]; then
+if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
   ${cmnd} ${CLM_TESTDIR}/TCBext_ccsmseq_cam.$1/cam >> test.log 2>&1
   status="PASS"
   rc=$?

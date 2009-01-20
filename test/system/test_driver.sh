@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on bangkok, calgary, breeze, bluevista, lightning, bluefire, jaguar, kraken: 
+# usage on bangkok, calgary, breeze, lightning, bluefire, jaguar, kraken: 
 # ./test_driver.sh
 #
 # valid arguments: 
@@ -20,78 +20,10 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_alpha37"
+seqccsm_vers="ccsm4_0_beta08"
 
 hostname=`hostname`
 case $hostname in
-
-    ##bluevista
-    bv* )
-    submit_script="test_driver_bluevista_${cur_time}.sh"
-
-    if [ -z "$CLM_ACCOUNT" ]; then
-	export CLM_ACCOUNT=`grep -i "^${LOGNAME}:" /etc/project.ncar | cut -f 1 -d "," | cut -f 2 -d ":" `
-	if [ -z "${CLM_ACCOUNT}" ]; then
-	    echo "ERROR: unable to locate an account number to charge for this job under user: $LOGNAME"
-	    exit 2
-	fi
-    fi
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-#BSUB -a poe                    # use LSF poe elim
-#BSUB -n 32                     # total tasks needed
-#BSUB -R "span[ptile=16]"       # max number of tasks (MPI) per node
-#BSUB -o test_dr.o%J            # output filename
-#BSUB -e test_dr.o%J            # error filename
-#BSUB -J clmtest
-#BSUB -q regular                # queue
-#BSUB -W 6:00                     
-#BSUB -P $CLM_ACCOUNT
-#BSUB -x                        # exclusive use of node (not_shared)
-
-if [ -n "\$LSB_JOBID" ]; then   #batch job
-    export JOBID=\${LSB_JOBID}
-    initdir=\${LS_SUBCWD}
-    interactive="NO"
-else
-    interactive="YES"
-    export LSB_MCPU_HOSTS="\$hostname 16"
-fi
-
-##omp threads
-export CLM_THREADS=4
-export CLM_RESTART_THREADS=8
-
-##mpi tasks
-export CLM_TASKS=8
-export CLM_RESTART_TASKS=4
-
-export CLM_COMPSET="I"
-
-export INC_NETCDF=/usr/local/include
-export LIB_NETCDF=/usr/local/lib64/r4i4
-export AIXTHREAD_SCOPE=S
-export MALLOCMULTIHEAP=true
-export OMP_DYNAMIC=false
-export XLSMPOPTS="stack=40000000"
-export MAKE_CMD="gmake -j 8"
-export CFG_STRING=""
-export TOOLS_MAKE_STRING=""
-export CCSM_MACH="bluevista"
-export MACH_WORKSPACE="/ptmp"
-export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
-export DATM_DATA_DIR=/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410
-dataroot="/fs/cgd/csm"
-echo_arg=""
-input_file="tests_pretag_bluevista"
-
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
 
     ##bluefire
     be* )
@@ -112,7 +44,7 @@ cat > ./${submit_script} << EOF
 
 #BSUB -a poe                      # use LSF poe elim
 #BSUB -x                          # exclusive use of node (not_shared)
-#BSUB -n 16                       # total tasks needed
+#BSUB -n 32                       # total tasks needed
 #BSUB -R "span[ptile=64]"         # max number of tasks (MPI) per node
 #BSUB -o test_dr.o%J              # output filename
 #BSUB -e test_dr.o%J              # error filename
@@ -135,17 +67,19 @@ export CLM_THREADS=2
 export CLM_RESTART_THREADS=4
 
 ##mpi tasks
-export CLM_TASKS=16
-export CLM_RESTART_TASKS=8
+export CLM_TASKS=32
+export CLM_RESTART_TASKS=15
 
-export CLM_COMPSET="I"
+export CLM_COMPSET="IQ"
 
 export INC_NETCDF=/usr/local/apps/netcdf-3.6.1/include
 export LIB_NETCDF=/usr/local/apps/netcdf-3.6.1/lib
 export AIXTHREAD_SCOPE=S
-export MALLOCMULTIHEAP=true
-export OMP_DYNAMIC=false
-export XLSMPOPTS="stack=40000000"
+export MALLOCMULTIHEAP=TRUE
+export OMP_DYNAMIC=FALSE
+export MP_USE_BULK_XFER=no
+export MP_LABELIO=yes
+export XLSMPOPTS="stack=256000000"
 export MAKE_CMD="gmake -j 65"
 export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
@@ -156,6 +90,7 @@ newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
 /bin/cp -fp \$CPRNC_EXE \$newcprnc
 export CPRNC_EXE="\$newcprnc"
 export DATM_DATA_DIR="/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410"
+export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 echo_arg=""
 input_file="tests_pretag_bluefire"
@@ -184,7 +119,9 @@ cat > ./${submit_script} << EOF
 
 #BSUB -a mpich_gm            #lightning requirement
 #BSUB -x                     # exclusive use of node (not_shared)
-#BSUB -n 32                  # total tasks needed
+#BSUB -N
+#BSUB -n 64                  # total tasks needed
+#BSUB -R "span[ptile=2]"     # tasks on node
 #BSUB -o test_dr.o%J         # output filename
 #BSUB -e test_dr.o%J         # error filename
 #BSUB -q regular             # queue
@@ -206,12 +143,16 @@ export CLM_THREADS=1
 export CLM_RESTART_THREADS=2
 
 ##mpi tasks
-export CLM_TASKS=32
-export CLM_RESTART_TASKS=16
+export CLM_TASKS=64
+export CLM_RESTART_TASKS=31
 
 export CLM_COMPSET="I"
 
 if [ "\$CLM_FC" = "ifort" ]; then
+   module purge
+   module load intel.10.1.008
+   module list
+
    netcdf=/contrib/2.6/netcdf/3.6.2-intel-10.1.008-64
    export INC_NETCDF=\$netcdf/include
    export LIB_NETCDF=\$netcdf/lib
@@ -223,6 +164,7 @@ if [ "\$CLM_FC" = "ifort" ]; then
    export MAKE_CMD="gmake"
    export CFG_STRING="-fc ifort -cc icc -linker \$mpich/bin/mpif90 "
    export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
+   export CCSM_MACH="lightning_intel"
 else
    export INC_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/include
    export LIB_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/lib
@@ -235,11 +177,12 @@ else
    export MAKE_CMD="gmake -j 4"
    export CFG_STRING="-fc pathf90 -linker \${mpich}/bin/mpif90 "
    export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=\${mpich}/bin/mpif90 "
+   export CCSM_MACH="lightning_path"
 fi
-export CCSM_MACH="lightning"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
 export DATM_DATA_DIR=/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410
+export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
 input_file="tests_posttag_lightning"
@@ -279,7 +222,9 @@ export CFG_STRING="-fc ifort -cc icc "
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export CCSM_MACH="breeze"
 export MACH_WORKSPACE="/ptmp"
+export CPRNC_EXE=/fs/home/erik/bin/cprnc
 export DATM_DATA_DIR="/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410"
+export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fis/cgd/cseg/csm"
 echo_arg="-e"
 input_file="tests_posttag_breeze"
@@ -326,7 +271,7 @@ export CLM_RESTART_THREADS=2
 
 ##mpi tasks
 export CLM_TASKS=4
-export CLM_RESTART_TASKS=2
+export CLM_RESTART_TASKS=1
 
 export CLM_COMPSET="I"
 
@@ -349,7 +294,7 @@ else
     export INC_MPI=\${mpich}/include
     export LIB_MPI=\${mpich}/lib
     export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
-    export CFG_STRING="-fc lf95 "
+    export CFG_STRING="-fc lf95 -cc gcc -cflags -I/usr/lib/gcc/i386-redhat-linux/4.1.0/include "
     export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
 fi
 export CCSM_MACH="bangkok"
@@ -357,6 +302,7 @@ export MAKE_CMD="gmake -j 2"   ##using hyper-threading on calgary
 export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
 export DATM_DATA_DIR=/project/tss/NCEPDATA.datm7.Qian.T62.c060410
+export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
 input_file="tests_pretag_bangkok"
@@ -378,7 +324,7 @@ cat > ./${submit_script} << EOF
 # Name of the queue (CHANGE THIS if needed)
 # #PBS -q batch
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l walltime=02:30:00,size=440
+#PBS -l walltime=04:00:00,size=520
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
@@ -409,17 +355,21 @@ export CLM_THREADS=1
 export CLM_RESTART_THREADS=4
 
 ##mpi tasks
-export CLM_TASKS=440
-export CLM_RESTART_TASKS=110
+export CLM_TASKS=520
+export CLM_RESTART_TASKS=129
 
 export CLM_COMPSET="I"
 
 source /opt/modules/default/init/sh
 module purge
+module load xtpe-quadcore
+module switch pgi pgi/7.1.6       # 7.1.6      is default on 2008-sep-03
+module load netcdf/3.6.2          # 3.6.2      is default on 2008-sep-03
+module swap xt-asyncpe xt-asyncpe/1.0c
+module swap xt-binutils-quadcore xt-binutils-quadcore/2.0.1
 module load   PrgEnv-pgi Base-opts
 module switch xt-mpt xt-mpt/2.0.49a
 module load   torque moab
-module load   netcdf/3.6.2
 module load   ncl
 export PATH="/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
 export PATH="\${PATH}:\${MPICH_DIR}/bin"
@@ -431,6 +381,15 @@ export PATH="\${PATH}:\${PRGENV_DIR}/bin"
 export PATH="\${PATH}:\${MPT_DIR}/bin"
 export PATH="\${PATH}:/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
 
+export MPICH_MAX_SHORT_MSG_SIZE=32000 # default is 128000 bytes
+export MPICH_PTL_UNEX_EVENTS=960000   # default is  90000 (unexpected recv queue size)
+export MPICH_UNEX_BUFFER_SIZE=1000M   # default is    60M (unexpected short msgs buff size)
+export MPICH_MSGS_PER_PROC=160000     # default is  32768
+export MPICH_PTL_SEND_CREDITS=-1
+
+export MPICH_ENV_DISPLAY=1
+export MPICH_VERSION_DISPLAY=1
+
 export LIB_NETCDF=\${NETCDF_DIR}/lib
 export INC_NETCDF=\${NETCDF_DIR}/include
 export MOD_NETCDF=\${NETCDF_DIR}/include
@@ -441,6 +400,7 @@ export MAKE_CMD="gmake -j 9 "
 export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/spin/proj/ccsm/bin/jaguar/newcprnc
 export DATM_DATA_DIR=/tmp/proj/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
+export DATM_QIAN_DATA_DIR="/tmp/proj/ccsm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/tmp/proj/ccsm"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -491,7 +451,7 @@ export CLM_RESTART_THREADS=4
 
 ##mpi tasks
 export CLM_TASKS=200
-export CLM_RESTART_TASKS=50
+export CLM_RESTART_TASKS=49
 
 export CLM_COMPSET="I"
 
@@ -532,8 +492,8 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##aluminum
-    aluminum* )
+    ##yong
+    yong* )
     submit_script="test_driver_spot1_${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -563,6 +523,7 @@ export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="$HOME/runs"
 export CPRNC_EXE=$HOME/bin/newcprnc
 export DATM_DATA_DIR=$HOME/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
+export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="$HOME"
 echo_arg=""
 input_file="tests_posttag_spot1"
@@ -623,10 +584,10 @@ fi
 
 ##setup test work directory
 if [ -z "\$CLM_TESTDIR" ]; then
-   export CLM_TESTDIR=\${MACH_WORKSPACE}/\$LOGNAME/test-driver.\${JOBID}
-fi
-if [ -d \$CLM_TESTDIR ] && [ \$CLM_RETAIN_FILES != "TRUE" ]; then
-   rm -r \$CLM_TESTDIR
+    export CLM_TESTDIR=\${MACH_WORKSPACE}/\$LOGNAME/test-driver.\${JOBID}
+    if [ -d \$CLM_TESTDIR ] && [ \$CLM_RETAIN_FILES != "TRUE" ]; then
+        rm -r \$CLM_TESTDIR
+    fi
 fi
 if [ ! -d \$CLM_TESTDIR ]; then
     mkdir -p \$CLM_TESTDIR
@@ -805,10 +766,11 @@ case $arg1 in
     ;;
 
     [cC]* )
-    debug="YES"
+    debug="NO"
     interactive="YES"
     compile_only="YES"
     export debug
+    export CLM_RETAIN_FILES="TRUE"
     export interactive
     export compile_only
     export CLM_RETAIN_FILES="TRUE"
@@ -859,7 +821,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bangkok, bluevista, bluefire, lightning, jaguar, kraken: "
+    echo "usage on bangkok, bluefire, lightning, jaguar, kraken: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
@@ -881,9 +843,6 @@ esac
 
 echo "submitting..."
 case $hostname in
-    ##bluevista
-    bv* )  bsub < ${submit_script};;
-
     ##bluefire
     be* )  bsub < ${submit_script};;
 

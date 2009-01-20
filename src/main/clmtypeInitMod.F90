@@ -15,7 +15,8 @@ module clmtypeInitMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use nanMod      , only : nan, bigint
   use clmtype
-  use clm_varpar  , only: maxpatch_pft, nlevsno, nlevsoi, numrad, nlevlak, numpft, ndst, nvoc
+  use clm_varpar  , only : maxpatch_pft, nlevsno, nlevgrnd, numrad, nlevlak, &
+                           numpft, ndst, nvoc, nlevurb, nlevsoi
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -26,6 +27,7 @@ module clmtypeInitMod
 !
 ! !REVISION HISTORY:
 ! Created by Peter Thornton and Mariana Vertenstein
+! 3/17/08 David Lawrence, changed nlevsoi to nlevgrnd where appropriate
 !
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: init_pft_type
@@ -831,9 +833,9 @@ contains
 ! Initialize pft physical state
 !
 ! !USES:
+    use clm_varcon, only : spval
 #if (defined CASA)
     use CASAMod   , only : npools, nresp_pools, nlive, npool_types
-    use clm_varcon, only : spval
 #endif
 ! !ARGUMENTS:
     implicit none
@@ -852,9 +854,9 @@ contains
     allocate(pps%z0mv(beg:end))
     allocate(pps%z0hv(beg:end))
     allocate(pps%z0qv(beg:end))
-    allocate(pps%rootfr(beg:end,1:nlevsoi))
-    allocate(pps%rootr(beg:end,1:nlevsoi))
-    allocate(pps%rresis(beg:end,1:nlevsoi))
+    allocate(pps%rootfr(beg:end,1:nlevgrnd))
+    allocate(pps%rootr(beg:end,1:nlevgrnd))
+    allocate(pps%rresis(beg:end,1:nlevgrnd))
     allocate(pps%dewmx(beg:end))
     allocate(pps%rssun(beg:end))
     allocate(pps%rssha(beg:end))
@@ -988,9 +990,9 @@ contains
     pps%z0mv(beg:end) = nan
     pps%z0hv(beg:end) = nan
     pps%z0qv(beg:end) = nan
-    pps%rootfr(beg:end,:nlevsoi) = nan
-    pps%rootr (beg:end,:nlevsoi) = nan
-    pps%rresis(beg:end,:nlevsoi) = nan
+    pps%rootfr(beg:end,:nlevgrnd) = spval
+    pps%rootr (beg:end,:nlevgrnd) = spval
+    pps%rresis(beg:end,:nlevgrnd) = spval
     pps%dewmx(beg:end) = nan
     pps%rssun(beg:end) = nan
     pps%rssha(beg:end) = nan
@@ -1672,6 +1674,23 @@ contains
     allocate(pef%sha_alf(beg:end,1:numrad))
     allocate(pef%sun_aperlai(beg:end,1:numrad))
     allocate(pef%sha_aperlai(beg:end,1:numrad))
+    allocate(pef%sabg_lyr(beg:end,-nlevsno+1:1))
+    allocate(pef%sfc_frc_aer(beg:end))
+    allocate(pef%sfc_frc_bc(beg:end))
+    allocate(pef%sfc_frc_oc(beg:end))
+    allocate(pef%sfc_frc_dst(beg:end))
+    allocate(pef%sfc_frc_aer_sno(beg:end))
+    allocate(pef%sfc_frc_bc_sno(beg:end))
+    allocate(pef%sfc_frc_oc_sno(beg:end))
+    allocate(pef%sfc_frc_dst_sno(beg:end))
+    allocate(pef%fsr_sno_vd(beg:end))
+    allocate(pef%fsr_sno_nd(beg:end))
+    allocate(pef%fsr_sno_vi(beg:end))
+    allocate(pef%fsr_sno_ni(beg:end))
+    allocate(pef%fsds_sno_vd(beg:end))
+    allocate(pef%fsds_sno_nd(beg:end))
+    allocate(pef%fsds_sno_vi(beg:end))
+    allocate(pef%fsds_sno_ni(beg:end))
 
     pef%sabg(beg:end) = nan
     pef%sabv(beg:end) = nan
@@ -1721,7 +1740,23 @@ contains
     pef%sha_alf(beg:end,1:numrad) = nan
     pef%sun_aperlai(beg:end,1:numrad) = nan
     pef%sha_aperlai(beg:end,1:numrad) = nan
-
+    pef%sabg_lyr(beg:end,-nlevsno+1:1) = nan
+    pef%sfc_frc_aer(beg:end) = nan
+    pef%sfc_frc_bc(beg:end) = nan
+    pef%sfc_frc_oc(beg:end) = nan
+    pef%sfc_frc_dst(beg:end) = nan
+    pef%sfc_frc_aer_sno(beg:end) = nan
+    pef%sfc_frc_bc_sno(beg:end) = nan
+    pef%sfc_frc_oc_sno(beg:end) = nan
+    pef%sfc_frc_dst_sno(beg:end) = nan
+    pef%fsr_sno_vd(beg:end) = nan
+    pef%fsr_sno_nd(beg:end) = nan
+    pef%fsr_sno_vi(beg:end) = nan
+    pef%fsr_sno_ni(beg:end) = nan
+    pef%fsds_sno_vd(beg:end) = nan
+    pef%fsds_sno_nd(beg:end) = nan
+    pef%fsds_sno_vi(beg:end) = nan
+    pef%fsds_sno_ni(beg:end) = nan
   end subroutine init_pft_eflux_type
 
 !------------------------------------------------------------------------
@@ -2391,6 +2426,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize column physical state variables
 !
+    use clm_varcon, only : spval
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -2404,20 +2440,21 @@ contains
 
     allocate(cps%snl(beg:end))      !* cannot be averaged up
     allocate(cps%isoicol(beg:end))  !* cannot be averaged up
-    allocate(cps%bsw(beg:end,nlevsoi))
-    allocate(cps%watsat(beg:end,nlevsoi))
-    allocate(cps%watdry(beg:end,nlevsoi)) 
-    allocate(cps%watopt(beg:end,nlevsoi)) 
-    allocate(cps%hksat(beg:end,nlevsoi))
-    allocate(cps%sucsat(beg:end,nlevsoi))
-    allocate(cps%csol(beg:end,nlevsoi))
-    allocate(cps%tkmg(beg:end,nlevsoi))
-    allocate(cps%tkdry(beg:end,nlevsoi))
-    allocate(cps%tksatu(beg:end,nlevsoi))
+    allocate(cps%bsw(beg:end,nlevgrnd))
+    allocate(cps%watsat(beg:end,nlevgrnd))
+    allocate(cps%watfc(beg:end,nlevgrnd))
+    allocate(cps%watdry(beg:end,nlevgrnd)) 
+    allocate(cps%watopt(beg:end,nlevgrnd)) 
+    allocate(cps%hksat(beg:end,nlevgrnd))
+    allocate(cps%sucsat(beg:end,nlevgrnd))
+    allocate(cps%csol(beg:end,nlevgrnd))
+    allocate(cps%tkmg(beg:end,nlevgrnd))
+    allocate(cps%tkdry(beg:end,nlevgrnd))
+    allocate(cps%tksatu(beg:end,nlevgrnd))
     allocate(cps%smpmin(beg:end))
     allocate(cps%hkdepth(beg:end))
     allocate(cps%wtfact(beg:end))
-    allocate(cps%fracice(beg:end,nlevsoi))
+    allocate(cps%fracice(beg:end,nlevgrnd))
     allocate(cps%gwc_thr(beg:end))
     allocate(cps%mss_frc_cly_vld(beg:end))
     allocate(cps%mbl_bsn_fct(beg:end))
@@ -2425,12 +2462,12 @@ contains
     allocate(cps%snowdp(beg:end))
     allocate(cps%snowage(beg:end))
     allocate(cps%frac_sno (beg:end))
-    allocate(cps%zi(beg:end,-nlevsno+0:nlevsoi))
-    allocate(cps%dz(beg:end,-nlevsno+1:nlevsoi))
-    allocate(cps%z (beg:end,-nlevsno+1:nlevsoi))
-    allocate(cps%frac_iceold(beg:end,-nlevsno+1:nlevsoi))
-    allocate(cps%imelt(beg:end,-nlevsno+1:nlevsoi))
-    allocate(cps%eff_porosity(beg:end,nlevsoi))
+    allocate(cps%zi(beg:end,-nlevsno+0:nlevgrnd))
+    allocate(cps%dz(beg:end,-nlevsno+1:nlevgrnd))
+    allocate(cps%z (beg:end,-nlevsno+1:nlevgrnd))
+    allocate(cps%frac_iceold(beg:end,-nlevsno+1:nlevgrnd))
+    allocate(cps%imelt(beg:end,-nlevsno+1:nlevgrnd))
+    allocate(cps%eff_porosity(beg:end,nlevgrnd))
     allocate(cps%emg(beg:end))
     allocate(cps%z0mg(beg:end))
     allocate(cps%z0hg(beg:end))
@@ -2440,14 +2477,14 @@ contains
     allocate(cps%zii(beg:end))
     allocate(cps%albgrd(beg:end,numrad))
     allocate(cps%albgri(beg:end,numrad))
-    allocate(cps%rootr_column(beg:end,nlevsoi))
-    allocate(cps%rootfr_road_perv(beg:end,nlevsoi))
-    allocate(cps%rootr_road_perv(beg:end,nlevsoi))
+    allocate(cps%rootr_column(beg:end,nlevgrnd))
+    allocate(cps%rootfr_road_perv(beg:end,nlevgrnd))
+    allocate(cps%rootr_road_perv(beg:end,nlevgrnd))
     allocate(cps%wf(beg:end))
-    allocate(cps%bsw2(beg:end,nlevsoi))
-    allocate(cps%psisat(beg:end,nlevsoi))
-    allocate(cps%vwcsat(beg:end,nlevsoi))
-    allocate(cps%soilpsi(beg:end,nlevsoi))
+    allocate(cps%bsw2(beg:end,nlevgrnd))
+    allocate(cps%psisat(beg:end,nlevgrnd))
+    allocate(cps%vwcsat(beg:end,nlevgrnd))
+    allocate(cps%soilpsi(beg:end,nlevgrnd))
     allocate(cps%decl(beg:end))
     allocate(cps%coszen(beg:end))
     allocate(cps%fpi(beg:end))
@@ -2461,22 +2498,70 @@ contains
     allocate(cps%fireseasonl(beg:end))
     allocate(cps%farea_burned(beg:end))
     allocate(cps%ann_farea_burned(beg:end))
+    allocate(cps%albsnd_hst(beg:end,numrad))
+    allocate(cps%albsni_hst(beg:end,numrad))
+    allocate(cps%albsod(beg:end,numrad))
+    allocate(cps%albsoi(beg:end,numrad))
+    allocate(cps%flx_absdv(beg:end,-nlevsno+1:1))
+    allocate(cps%flx_absdn(beg:end,-nlevsno+1:1))
+    allocate(cps%flx_absiv(beg:end,-nlevsno+1:1))
+    allocate(cps%flx_absin(beg:end,-nlevsno+1:1))
+    allocate(cps%snw_rds(beg:end,-nlevsno+1:0))
+    allocate(cps%snw_rds_top(beg:end))
+    allocate(cps%sno_liq_top(beg:end))
+    allocate(cps%mss_bcpho(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_bcphi(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_bctot(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_bc_col(beg:end))
+    allocate(cps%mss_bc_top(beg:end))
+    allocate(cps%mss_ocpho(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_ocphi(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_octot(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_oc_col(beg:end))
+    allocate(cps%mss_oc_top(beg:end))
+    allocate(cps%mss_dst1(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_dst2(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_dst3(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_dst4(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_dsttot(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_dst_col(beg:end))
+    allocate(cps%mss_dst_top(beg:end))
+    allocate(cps%h2osno_top(beg:end))
+    allocate(cps%mss_cnc_bcphi(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_cnc_bcpho(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_cnc_ocphi(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_cnc_ocpho(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_cnc_dst1(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_cnc_dst2(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_cnc_dst3(beg:end,-nlevsno+1:0))
+    allocate(cps%mss_cnc_dst4(beg:end,-nlevsno+1:0))
+    allocate(cps%albgrd_pur(beg:end,numrad))
+    allocate(cps%albgri_pur(beg:end,numrad))
+    allocate(cps%albgrd_bc(beg:end,numrad))
+    allocate(cps%albgri_bc(beg:end,numrad))
+    allocate(cps%albgrd_oc(beg:end,numrad))
+    allocate(cps%albgri_oc(beg:end,numrad))
+    allocate(cps%albgrd_dst(beg:end,numrad))
+    allocate(cps%albgri_dst(beg:end,numrad))
+    allocate(cps%dTdz_top(beg:end))
+    allocate(cps%snot_top(beg:end))
 
     cps%isoicol(beg:end) = bigint
-    cps%bsw(beg:end,1:nlevsoi) = nan
-    cps%watsat(beg:end,1:nlevsoi) = nan
-    cps%watdry(beg:end,1:nlevsoi) = nan  
-    cps%watopt(beg:end,1:nlevsoi) = nan  
-    cps%hksat(beg:end,1:nlevsoi) = nan
-    cps%sucsat(beg:end,1:nlevsoi) = nan
-    cps%csol(beg:end,1:nlevsoi) = nan
-    cps%tkmg(beg:end,1:nlevsoi) = nan
-    cps%tkdry(beg:end,1:nlevsoi) = nan
-    cps%tksatu(beg:end,1:nlevsoi) = nan
+    cps%bsw(beg:end,1:nlevgrnd) = nan
+    cps%watsat(beg:end,1:nlevgrnd) = nan
+    cps%watfc(beg:end,1:nlevgrnd) = nan
+    cps%watdry(beg:end,1:nlevgrnd) = nan
+    cps%watopt(beg:end,1:nlevgrnd) = nan
+    cps%hksat(beg:end,1:nlevgrnd) = nan
+    cps%sucsat(beg:end,1:nlevgrnd) = nan
+    cps%csol(beg:end,1:nlevgrnd) = nan
+    cps%tkmg(beg:end,1:nlevgrnd) = nan
+    cps%tkdry(beg:end,1:nlevgrnd) = nan
+    cps%tksatu(beg:end,1:nlevgrnd) = nan
     cps%smpmin(beg:end) = nan
     cps%hkdepth(beg:end) = nan
     cps%wtfact(beg:end) = nan
-    cps%fracice(beg:end,1:nlevsoi) = nan
+    cps%fracice(beg:end,1:nlevgrnd) = nan
     cps%gwc_thr(beg:end) = nan
     cps%mss_frc_cly_vld(beg:end) = nan
     cps%mbl_bsn_fct(beg:end) = nan
@@ -2484,12 +2569,12 @@ contains
     cps%snowdp(beg:end) = nan
     cps%snowage(beg:end) = nan
     cps%frac_sno(beg:end) = nan
-    cps%zi(beg:end,-nlevsno+0:nlevsoi) = nan
-    cps%dz(beg:end,-nlevsno+1:nlevsoi) = nan
-    cps%z (beg:end,-nlevsno+1:nlevsoi) = nan
-    cps%frac_iceold(beg:end,-nlevsno+1:nlevsoi) = nan
-    cps%imelt(beg:end,-nlevsno+1:nlevsoi) = bigint
-    cps%eff_porosity(beg:end,1:nlevsoi) = nan
+    cps%zi(beg:end,-nlevsno+0:nlevgrnd) = nan
+    cps%dz(beg:end,-nlevsno+1:nlevgrnd) = nan
+    cps%z (beg:end,-nlevsno+1:nlevgrnd) = nan
+    cps%frac_iceold(beg:end,-nlevsno+1:nlevgrnd) = spval
+    cps%imelt(beg:end,-nlevsno+1:nlevgrnd) = bigint
+    cps%eff_porosity(beg:end,1:nlevgrnd) = spval
     cps%emg(beg:end) = nan
     cps%z0mg(beg:end) = nan
     cps%z0hg(beg:end) = nan
@@ -2499,14 +2584,14 @@ contains
     cps%zii(beg:end) = nan
     cps%albgrd(beg:end,:numrad) = nan
     cps%albgri(beg:end,:numrad) = nan
-    cps%rootr_column(beg:end,1:nlevsoi) = nan
-    cps%rootfr_road_perv(beg:end,1:nlevsoi) = nan
-    cps%rootr_road_perv(beg:end,1:nlevsoi) = nan
+    cps%rootr_column(beg:end,1:nlevgrnd) = spval
+    cps%rootfr_road_perv(beg:end,1:nlevurb) = nan
+    cps%rootr_road_perv(beg:end,1:nlevurb) = nan
     cps%wf(beg:end) = nan
-    cps%bsw2(beg:end,1:nlevsoi) = nan
-    cps%psisat(beg:end,1:nlevsoi) = nan
-    cps%vwcsat(beg:end,1:nlevsoi) = nan
-    cps%soilpsi(beg:end,1:nlevsoi) = nan
+    cps%bsw2(beg:end,1:nlevgrnd) = nan
+    cps%psisat(beg:end,1:nlevgrnd) = nan
+    cps%vwcsat(beg:end,1:nlevgrnd) = nan
+    cps%soilpsi(beg:end,1:nlevgrnd) = spval
     cps%decl(beg:end) = nan
     cps%coszen(beg:end) = nan
     cps%fpi(beg:end) = nan
@@ -2520,7 +2605,53 @@ contains
     cps%fireseasonl(beg:end) = nan
     cps%farea_burned(beg:end) = nan
     cps%ann_farea_burned(beg:end) = nan
-     
+    cps%albsnd_hst(beg:end,:numrad) = nan
+    cps%albsni_hst(beg:end,:numrad) = nan
+    cps%albsod(beg:end,:numrad) = nan
+    cps%albsoi(beg:end,:numrad) = nan
+    cps%flx_absdv(beg:end,-nlevsno+1:1) = nan
+    cps%flx_absdn(beg:end,-nlevsno+1:1) = nan
+    cps%flx_absiv(beg:end,-nlevsno+1:1) = nan
+    cps%flx_absin(beg:end,-nlevsno+1:1) = nan
+    cps%snw_rds(beg:end,-nlevsno+1:0) = nan
+    cps%snw_rds_top(beg:end) = nan
+    cps%sno_liq_top(beg:end) = nan
+    cps%mss_bcpho(beg:end,-nlevsno+1:0) = nan
+    cps%mss_bcphi(beg:end,-nlevsno+1:0) = nan
+    cps%mss_bctot(beg:end,-nlevsno+1:0) = nan
+    cps%mss_bc_col(beg:end) = nan
+    cps%mss_bc_top(beg:end) = nan
+    cps%mss_ocpho(beg:end,-nlevsno+1:0) = nan
+    cps%mss_ocphi(beg:end,-nlevsno+1:0) = nan
+    cps%mss_octot(beg:end,-nlevsno+1:0) = nan
+    cps%mss_oc_col(beg:end) = nan
+    cps%mss_oc_top(beg:end) = nan
+    cps%mss_dst1(beg:end,-nlevsno+1:0) = nan
+    cps%mss_dst2(beg:end,-nlevsno+1:0) = nan
+    cps%mss_dst3(beg:end,-nlevsno+1:0) = nan
+    cps%mss_dst4(beg:end,-nlevsno+1:0) = nan
+    cps%mss_dsttot(beg:end,-nlevsno+1:0) = nan
+    cps%mss_dst_col(beg:end) = nan
+    cps%mss_dst_top(beg:end) = nan
+    cps%h2osno_top(beg:end) = nan
+    cps%mss_cnc_bcphi(beg:end,-nlevsno+1:0) = nan
+    cps%mss_cnc_bcpho(beg:end,-nlevsno+1:0) = nan
+    cps%mss_cnc_ocphi(beg:end,-nlevsno+1:0) = nan
+    cps%mss_cnc_ocpho(beg:end,-nlevsno+1:0) = nan
+    cps%mss_cnc_dst1(beg:end,-nlevsno+1:0) = nan
+    cps%mss_cnc_dst2(beg:end,-nlevsno+1:0) = nan
+    cps%mss_cnc_dst3(beg:end,-nlevsno+1:0) = nan
+    cps%mss_cnc_dst4(beg:end,-nlevsno+1:0) = nan
+    cps%albgrd_pur(beg:end,:numrad) = nan
+    cps%albgri_pur(beg:end,:numrad) = nan
+    cps%albgrd_bc(beg:end,:numrad) = nan
+    cps%albgri_bc(beg:end,:numrad) = nan
+    cps%albgrd_oc(beg:end,:numrad) = nan
+    cps%albgri_oc(beg:end,:numrad) = nan 
+    cps%albgrd_dst(beg:end,:numrad) = nan
+    cps%albgri_dst(beg:end,:numrad) = nan
+    cps%dTdz_top(beg:end) = nan
+    cps%snot_top(beg:end) = nan
   end subroutine init_column_pstate_type
 
 !------------------------------------------------------------------------
@@ -2534,6 +2665,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize column energy state variables
 !
+    use clm_varcon, only : spval
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -2548,9 +2680,9 @@ contains
     allocate(ces%t_grnd_u(beg:end))
     allocate(ces%t_grnd_r(beg:end))
     allocate(ces%dt_grnd(beg:end))
-    allocate(ces%t_soisno(beg:end,-nlevsno+1:nlevsoi))
+    allocate(ces%t_soisno(beg:end,-nlevsno+1:nlevgrnd))
     allocate(ces%t_lake(beg:end,1:nlevlak))
-    allocate(ces%tssbef(beg:end,-nlevsno+1:nlevsoi))
+    allocate(ces%tssbef(beg:end,-nlevsno+1:nlevgrnd))
     allocate(ces%t_snow(beg:end))
     allocate(ces%thv(beg:end))
     allocate(ces%hc_soi(beg:end))
@@ -2560,9 +2692,9 @@ contains
     ces%t_grnd_u(beg:end)  = nan
     ces%t_grnd_r(beg:end)  = nan
     ces%dt_grnd(beg:end)   = nan
-    ces%t_soisno(beg:end,-nlevsno+1:nlevsoi) = nan
+    ces%t_soisno(beg:end,-nlevsno+1:nlevgrnd) = spval
     ces%t_lake(beg:end,1:nlevlak)            = nan
-    ces%tssbef(beg:end,-nlevsno+1:nlevsoi)   = nan
+    ces%tssbef(beg:end,-nlevsno+1:nlevgrnd)   = nan
     ces%t_snow(beg:end)    = nan
     ces%thv(beg:end)       = nan
     ces%hc_soi(beg:end)    = nan
@@ -2581,6 +2713,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize column water state variables
 !
+    use clm_varcon, only : spval
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -2593,38 +2726,50 @@ contains
 !------------------------------------------------------------------------
 
     allocate(cws%h2osno(beg:end))
-    allocate(cws%h2osoi_liq(beg:end,-nlevsno+1:nlevsoi))
-    allocate(cws%h2osoi_ice(beg:end,-nlevsno+1:nlevsoi))
-    allocate(cws%h2osoi_vol(beg:end,1:nlevsoi))
+    allocate(cws%h2osoi_liq(beg:end,-nlevsno+1:nlevgrnd))
+    allocate(cws%h2osoi_ice(beg:end,-nlevsno+1:nlevgrnd))
+    allocate(cws%h2osoi_vol(beg:end,1:nlevgrnd))
     allocate(cws%h2osno_old(beg:end))
     allocate(cws%qg(beg:end))
     allocate(cws%dqgdT(beg:end))
     allocate(cws%snowice(beg:end))
     allocate(cws%snowliq(beg:end))
     allocate(cws%soilalpha(beg:end))
+    allocate(cws%soilbeta(beg:end))
     allocate(cws%soilalpha_u(beg:end))
     allocate(cws%zwt(beg:end))
     allocate(cws%fcov(beg:end))
     allocate(cws%wa(beg:end))
     allocate(cws%wt(beg:end))
     allocate(cws%qcharge(beg:end))
+    allocate(cws%smp_l(beg:end,1:nlevgrnd))
+    allocate(cws%dsmpdw_l(beg:end,1:nlevgrnd))
+    allocate(cws%hk_l(beg:end,1:nlevgrnd))
+    allocate(cws%dhkdw_l(beg:end,1:nlevgrnd))
+    allocate(cws%dwat_l(beg:end,1:nlevgrnd))
 
     cws%h2osno(beg:end) = nan
-    cws%h2osoi_liq(beg:end,-nlevsno+1:nlevsoi)= nan
-    cws%h2osoi_ice(beg:end,-nlevsno+1:nlevsoi) = nan
-    cws%h2osoi_vol(beg:end,1:nlevsoi) = nan
+    cws%h2osoi_liq(beg:end,-nlevsno+1:nlevgrnd)= spval
+    cws%h2osoi_ice(beg:end,-nlevsno+1:nlevgrnd) = spval
+    cws%h2osoi_vol(beg:end,1:nlevgrnd) = spval
     cws%h2osno_old(beg:end) = nan
     cws%qg(beg:end) = nan
     cws%dqgdT(beg:end) = nan
     cws%snowice(beg:end) = nan
     cws%snowliq(beg:end) = nan
     cws%soilalpha(beg:end) = nan
+    cws%soilbeta(beg:end) = nan
     cws%soilalpha_u(beg:end) = nan
     cws%zwt(beg:end) = nan
     cws%fcov(beg:end) = nan
     cws%wa(beg:end) = nan
     cws%wt(beg:end) = nan
     cws%qcharge(beg:end) = nan
+    cws%smp_l(beg:end,1:nlevgrnd) = spval
+    cws%dsmpdw_l(beg:end,1:nlevgrnd) = spval
+    cws%hk_l(beg:end,1:nlevgrnd) = spval
+    cws%dhkdw_l(beg:end,1:nlevgrnd) = spval
+    cws%dwat_l(beg:end,1:nlevgrnd) = spval
 
   end subroutine init_column_wstate_type
 
@@ -2776,12 +2921,14 @@ contains
 
     allocate(cef%eflx_snomelt(beg:end))
     allocate(cef%eflx_impsoil(beg:end))
+    allocate(cef%eflx_fgr12(beg:end))
     allocate(cef%eflx_building_heat(beg:end))
     allocate(cef%eflx_urban_ac(beg:end))
     allocate(cef%eflx_urban_heat(beg:end))
 
-    cef%eflx_snomelt(beg:end) = nan
-    cef%eflx_impsoil(beg:end) = nan
+    cef%eflx_snomelt(beg:end)       = nan
+    cef%eflx_impsoil(beg:end)       = nan
+    cef%eflx_fgr12(beg:end)         = nan
     cef%eflx_building_heat(beg:end) = nan
     cef%eflx_urban_ac(beg:end) = nan
     cef%eflx_urban_heat(beg:end) = nan
@@ -2799,6 +2946,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize column water flux variables
 !
+    use clm_varcon, only : spval
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -2821,6 +2969,30 @@ contains
     allocate(cwf%qflx_runoff_r(beg:end))
     allocate(cwf%qmelt(beg:end))
     allocate(cwf%h2ocan_loss(beg:end))
+    allocate(cwf%qflx_in_soil(beg:end,1:nlevgrnd))
+    allocate(cwf%qflx_out_soil(beg:end,1:nlevgrnd))
+    allocate(cwf%qflx_tranout_soil(beg:end,1:nlevgrnd))
+    allocate(cwf%qflx_rsub_sat(beg:end))
+    allocate(cwf%flx_bc_dep_dry(beg:end))
+    allocate(cwf%flx_bc_dep_wet(beg:end))
+    allocate(cwf%flx_bc_dep_pho(beg:end))
+    allocate(cwf%flx_bc_dep_phi(beg:end))
+    allocate(cwf%flx_bc_dep(beg:end))
+    allocate(cwf%flx_oc_dep_dry(beg:end))
+    allocate(cwf%flx_oc_dep_wet(beg:end))
+    allocate(cwf%flx_oc_dep_pho(beg:end))
+    allocate(cwf%flx_oc_dep_phi(beg:end))
+    allocate(cwf%flx_oc_dep(beg:end))
+    allocate(cwf%flx_dst_dep_dry1(beg:end))
+    allocate(cwf%flx_dst_dep_wet1(beg:end))
+    allocate(cwf%flx_dst_dep_dry2(beg:end))
+    allocate(cwf%flx_dst_dep_wet2(beg:end))
+    allocate(cwf%flx_dst_dep_dry3(beg:end))
+    allocate(cwf%flx_dst_dep_wet3(beg:end))
+    allocate(cwf%flx_dst_dep_dry4(beg:end))
+    allocate(cwf%flx_dst_dep_wet4(beg:end))
+    allocate(cwf%flx_dst_dep(beg:end))
+    allocate(cwf%qflx_snofrz_lyr(beg:end,-nlevsno+1:0))
 
     cwf%qflx_infl(beg:end) = nan
     cwf%qflx_surf(beg:end) = nan
@@ -2833,6 +3005,30 @@ contains
     cwf%qflx_runoff_r(beg:end) = nan
     cwf%qmelt(beg:end) = nan
     cwf%h2ocan_loss(beg:end) = nan
+    cwf%qflx_in_soil(beg:end,1:nlevgrnd) = spval
+    cwf%qflx_out_soil(beg:end,1:nlevgrnd) = spval
+    cwf%qflx_tranout_soil(beg:end,1:nlevgrnd) = spval
+    cwf%qflx_rsub_sat(beg:end) = nan
+    cwf%flx_bc_dep_dry(beg:end) = nan
+    cwf%flx_bc_dep_wet(beg:end) = nan
+    cwf%flx_bc_dep_pho(beg:end) = nan
+    cwf%flx_bc_dep_phi(beg:end) = nan
+    cwf%flx_bc_dep(beg:end) = nan
+    cwf%flx_oc_dep_dry(beg:end) = nan
+    cwf%flx_oc_dep_wet(beg:end) = nan
+    cwf%flx_oc_dep_pho(beg:end) = nan
+    cwf%flx_oc_dep_phi(beg:end) = nan
+    cwf%flx_oc_dep(beg:end) = nan
+    cwf%flx_dst_dep_dry1(beg:end) = nan
+    cwf%flx_dst_dep_wet1(beg:end) = nan
+    cwf%flx_dst_dep_dry2(beg:end) = nan
+    cwf%flx_dst_dep_wet2(beg:end) = nan
+    cwf%flx_dst_dep_dry3(beg:end) = nan
+    cwf%flx_dst_dep_wet3(beg:end) = nan
+    cwf%flx_dst_dep_dry4(beg:end) = nan
+    cwf%flx_dst_dep_wet4(beg:end) = nan
+    cwf%flx_dst_dep(beg:end) = nan
+    cwf%qflx_snofrz_lyr(beg:end,-nlevsno+1:0) = nan
 
   end subroutine init_column_wflux_type
 
@@ -3249,12 +3445,12 @@ contains
     allocate(lps%t_building(beg:end))
     allocate(lps%t_building_max(beg:end))
     allocate(lps%t_building_min(beg:end))
-    allocate(lps%tk_wall(beg:end,nlevsoi))
-    allocate(lps%tk_roof(beg:end,nlevsoi))
-    allocate(lps%tk_improad(beg:end,nlevsoi))
-    allocate(lps%cv_wall(beg:end,nlevsoi))
-    allocate(lps%cv_roof(beg:end,nlevsoi))
-    allocate(lps%cv_improad(beg:end,nlevsoi))
+    allocate(lps%tk_wall(beg:end,nlevurb))
+    allocate(lps%tk_roof(beg:end,nlevurb))
+    allocate(lps%tk_improad(beg:end,nlevgrnd))
+    allocate(lps%cv_wall(beg:end,nlevurb))
+    allocate(lps%cv_roof(beg:end,nlevurb))
+    allocate(lps%cv_improad(beg:end,nlevgrnd))
     allocate(lps%thick_wall(beg:end))
     allocate(lps%thick_roof(beg:end))
     allocate(lps%nlev_improad(beg:end))
@@ -3279,12 +3475,13 @@ contains
     lps%t_building(beg:end) = nan
     lps%t_building_max(beg:end) = nan
     lps%t_building_min(beg:end) = nan
-    lps%tk_wall(beg:end,1:nlevsoi) = nan
-    lps%tk_roof(beg:end,1:nlevsoi) = nan
-    lps%tk_improad(beg:end,1:nlevsoi) = nan
-    lps%cv_wall(beg:end,1:nlevsoi) = nan
-    lps%cv_roof(beg:end,1:nlevsoi) = nan
-    lps%cv_improad(beg:end,1:nlevsoi) = nan
+    lps%tk_wall(beg:end,1:nlevurb) = nan
+    lps%tk_roof(beg:end,1:nlevurb) = nan
+    lps%tk_improad(beg:end,1:nlevgrnd) = nan
+    lps%cv_wall(beg:end,1:nlevurb) = nan
+    lps%cv_roof(beg:end,1:nlevurb) = nan
+    lps%cv_improad(beg:end,1:nlevgrnd) = nan
+    lps%cv_improad(beg:end,1:5) = nan
     lps%thick_wall(beg:end) = nan
     lps%thick_roof(beg:end) = nan
     lps%nlev_improad(beg:end) = bigint
@@ -3404,6 +3601,37 @@ contains
 !
 !EOP
 !------------------------------------------------------------------------
+    
+    
+    !allocate(gps%bcphiwet2t(beg:end,1:2))
+    !allocate(gps%bcphidry2t(beg:end,1:2))
+    !allocate(gps%bcphodry2t(beg:end,1:2))
+    !allocate(gps%ocphiwet2t(beg:end,1:2))
+    !allocate(gps%ocphidry2t(beg:end,1:2))
+    !allocate(gps%ocphodry2t(beg:end,1:2))
+    !allocate(gps%dstx01wd2t(beg:end,1:2))
+    !allocate(gps%dstx01dd2t(beg:end,1:2))
+    !allocate(gps%dstx02wd2t(beg:end,1:2))
+    !allocate(gps%dstx02dd2t(beg:end,1:2))
+    !allocate(gps%dstx03wd2t(beg:end,1:2))
+    !allocate(gps%dstx03dd2t(beg:end,1:2))
+    !allocate(gps%dstx04wd2t(beg:end,1:2))
+    !allocate(gps%dstx04dd2t(beg:end,1:2))
+    
+    !gps%bcphiwet2t(beg:end,1:2) = nan
+    !gps%bcphidry2t(beg:end,1:2) = nan
+    !gps%bcphodry2t(beg:end,1:2) = nan
+    !gps%ocphiwet2t(beg:end,1:2) = nan
+    !gps%ocphidry2t(beg:end,1:2) = nan
+    !gps%ocphodry2t(beg:end,1:2) = nan
+    !gps%dstx01wd2t(beg:end,1:2) = nan
+    !gps%dstx01dd2t(beg:end,1:2) = nan
+    !gps%dstx02wd2t(beg:end,1:2) = nan
+    !gps%dstx02dd2t(beg:end,1:2) = nan
+    !gps%dstx03wd2t(beg:end,1:2) = nan
+    !gps%dstx03dd2t(beg:end,1:2) = nan
+    !gps%dstx04wd2t(beg:end,1:2) = nan
+    !gps%dstx04dd2t(beg:end,1:2) = nan
 
   end subroutine init_gridcell_pstate_type
 

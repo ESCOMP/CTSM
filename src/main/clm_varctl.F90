@@ -40,6 +40,8 @@ module clm_varctl
   character(len=256), public :: source   = "Community Land Model CLM3.6" ! description of this source
   character(len=256), public :: version  = " "                           ! version of program
   character(len=256), public :: conventions = "CF-1.0"                   ! dataset conventions
+  logical,            public :: set_caerdep_from_file                    ! if reading in carbon aerosol deposition from file
+  logical,            public :: set_dustdep_from_file                    ! if reading in dust aerosol deposition from file
 
 !
 ! Unit Numbers
@@ -64,10 +66,16 @@ module clm_varctl
   character(len=256), public :: flndtopo   = ' '        ! topography on lnd grid
   character(len=256), public :: fndepdat   = ' '        ! static nitrogen deposition data file name
   character(len=256), public :: fndepdyn   = ' '        ! dynamic nitrogen deposition data file name
+  character(len=256), public :: forganic   = ' '        ! organic matter data file name 
   character(len=256), public :: fpftdyn    = ' '        ! dynamic landuse dataset
   character(len=256), public :: fpftcon    = ' '        ! ASCII data file with PFT physiological constants
   character(len=256), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=256), public :: frivinp_rtm  = ' '      ! RTM input data file name
+  character(len=256), public :: fsnowoptics  = ' '      ! snow optical properties file name
+  character(len=256), public :: fsnowaging   = ' '      ! snow aging parameters file name
+  character(len=256), public :: faerdep      = ' '      ! aerosol deposition file name
+  character(len=8),   public :: fget_archdev = 'null:'  ! archive device to read input files from if not on local disk
+  
 !
 ! Landunit logic
 !
@@ -81,7 +89,6 @@ module clm_varctl
 !
 ! Physics
 !
-  integer,  public :: irad         = -1                 ! solar radiation frequency (iterations)
   logical,  public :: wrtdia       = .false.            ! true => write global average diagnostics to std out
   real(r8), public :: co2_ppmv     = 355._r8            ! atmospheric CO2 molar ratio (by volume) (umol/mol)
 
@@ -260,8 +267,6 @@ contains
           call shr_sys_abort( subname//' ERROR: only one of fndepdat or fndepdyn can be defined' )
 
        ! Model physics
-
-       if (irad < 0) irad = nint(-irad*3600._r8/dtime)
 
        if ( (co2_ppmv <= 0.0_r8) .or. (co2_ppmv > 3000.0_r8) ) &
           call shr_sys_abort( subname//' ERROR: co2_ppmv is out of a reasonable range' )

@@ -52,6 +52,7 @@ OPTIONS
      -bgc <name>         Build CLM with bgc package [ none | cn | casa | dgvm ] (default is none).
      -cache <file>       Name of output cache file (default: config_cache.xml).
      -cachedir <file>    Name of directory where output cache file is written (default: CLM build directory).
+     -carbon_aero <name> Turn on passing carbon aerosols from atm to land. [on | off] (default is off)
      -clm_bld <dir>      Directory where CLM will be built.  This is where configure will write the
                          output files it generates (Makefile, Filepath, etc...)
      -clm_exe <name>     Name of the CLM executable (default: clm).
@@ -66,7 +67,7 @@ OPTIONS
                          the defaults in bld/config_files.  This file is used to specify model
                          configuration parameters only.  Parameters relating to the build which
                          are system dependent will be ignored.
-     -dust <name>        Turn on DUST [on | off ] (default is off).
+     -dust <name>        Turn on DUST [on | off] (default is off).
      -esmf_libdir <dir>  Directory containing ESMF library and esmf.mk file.
      -exit_spinup <name> Turn on EXIT_SPINUP mode for bgc setting of CN [on | off] (default is off).
      -fc <name>          User specified Fortran compiler.  Overrides Makefile default.
@@ -88,10 +89,11 @@ OPTIONS
      -nc_lib <dir>       Directory containing netCDF library.
      -nc_mod <dir>       Directory containing netCDF module files.
      -nofire             Turn off wildfires for bgc setting of CN (default includes fire for CN)
-     -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off ] (default is off)
-     -prog_seasalt<name> Turn on prognostic sea-salt (PROGSSLT cppdef token) [on | off ] (default is off)
-     -rtm <name>         Turn on RTM  [on | off ] (default is off)
+     -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off] (default is off)
+     -prog_seasalt<name> Turn on prognostic sea-salt (PROGSSLT cppdef token) [on | off] (default is off)
+     -rtm <name>         Turn on RTM  [on | off] (default is off)
      -silent [or -s]     Turns on silent mode - only fatal messages issued.
+     -snicar_frc <name>  Turn on SNICAR radiative forcing calculation. [on | off] (default is off)
      -[no]smp            Switch on [off] SMP parallelism.
      -[no]spmd           Switch on [off] SPMD parallelism.
      -target_os          Override the os setting for cross platform compilation [aix | darwin | dec_osf | irix | 
@@ -102,6 +104,7 @@ OPTIONS
                          Directories containing user source code.
      -verbose [or -v]    Turn on verbose echoing of settings made by configure.
      -version            Echo the CVS tag name used to check out this CLM distribution.
+     -voc <name>         Turn on Volatile Organic Compounds [on | off] (default is off)
 EOF
 }
 
@@ -143,6 +146,8 @@ GetOptions(
     "bgc=s"                     => \$opts{'bgc'}, 
     "cache=s"                   => \$opts{'cache'},
     "cachedir=s"                => \$opts{'cachedir'},
+    "carbon_aero=s"             => \$opts{'carbon_aero'},
+    "snicar_frc=s"              => \$opts{'snicar_frc'},
     "cc=s"                      => \$opts{'cc'},
     "cflags=s"                  => \$opts{'cflags'},
     "clm_bld=s"                 => \$opts{'clm_bld'},
@@ -171,6 +176,8 @@ GetOptions(
     "nc_mod=s"                  => \$opts{'nc_mod'},
     "nofire"                    => \$opts{'nofire'},
     "pergro=s"                  => \$opts{'pergro'}, 
+    "carbon_aero=s"             => \$opts{'carbon_aero'}, 
+    "snicar_frc=s"              => \$opts{'snicar_frc'}, 
     "prog_seasalt=s"            => \$opts{'progsslt'}, 
     "rtm=s"                     => \$opts{'rtm'}, 
     "s|silent"                  => \$opts{'silent'},
@@ -263,7 +270,7 @@ require Build::Config;
 # configuration, and the $config_defaults_file provides default values for a specific CLM
 # configuration.   $cfg_ref is a reference to the new configuration object.
 my $cfg_ref = Build::Config->new("$cfgdir/config_files/$config_def_file", 
-                                "$config_defaults_file");
+				 "$config_defaults_file");
 
 #-----------------------------------------------------------------------------------------------
 # Figure out the CLM mode you to run in
@@ -500,6 +507,22 @@ my $pergro = $cfg_ref->get('pergro');
 if ($print>=2) { print "Using $pergro for pergro.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
+# SNICAR_FRC option
+if (defined $opts{'snicar_frc'}) {
+    $cfg_ref->set('snicar_frc', $opts{'snicar_frc'});
+}
+my $snicar_frc = $cfg_ref->get('snicar_frc');
+if ($print>=2) { print "Using $snicar_frc for snicar_frc.$eol"; }
+
+#-----------------------------------------------------------------------------------------------
+# CARBON_AERO option
+if (defined $opts{'carbon_aero'}) {
+    $cfg_ref->set('carbon_aero', $opts{'carbon_aero'});
+}
+my $carbon_aero = $cfg_ref->get('carbon_aero');
+if ($print>=2) { print "Using $carbon_aero for carbon_aero.$eol"; }
+
+#-----------------------------------------------------------------------------------------------
 # Makefile configuration #######################################################################
 #-----------------------------------------------------------------------------------------------
 
@@ -716,6 +739,12 @@ if ($exit_spinup eq 'on') {
 }
 if ( $pergro eq 'on' ) {
     $cfg_cppdefs .= " -DPERGRO";
+}
+if ( $snicar_frc eq 'on' ) {
+    $cfg_cppdefs .= " -DSNICAR_FRC";
+}
+if ( $carbon_aero eq 'on' ) {
+    $cfg_cppdefs .= " -DCARBON_AERO";
 }
 
 # -DSPMD only added for CCSM build.  The CLM Makefile has a separate SPMD macro.
@@ -1096,10 +1125,8 @@ sub write_filepath
 
     # Shared utilities.
     my @dirs = ( "csm_share/shr", 
-                 "csm_share/eshr", 
                  "csm_share/dshr", 
                  "utils/timing",   
-                 "utils/mct/mpeu",
                  "utils/mct/mpeu",
                  "utils/mct/mct" );
     if ( !$spmd ) { 
@@ -1119,9 +1146,9 @@ sub write_filepath
 	}
     }
     
-    # Driver, and stub ocean and sea-ice
+    # Driver, stub ocean, stub glacier, and stub sea-ice
     if ($mode eq "ccsm_seq") {
-	my @dirs = ( "drv/seq_mct", "drv/seq_mct/driver", "datm7", "socn", "sice" );
+	my @dirs = ( "drv/seq_mct", "drv/seq_mct/driver", "datm7", "socn", "sice", "sglc" );
 	foreach my $dir ( @dirs ) {
 	    if ( -d "$srcdir/$dir" ) {
 		print $fh "$srcdir/$dir\n";
@@ -1133,6 +1160,8 @@ sub write_filepath
 		print $fh absolute_path( "$srcdir/../../../ice/$dir" ) . "\n";
 	    } elsif ( -d "$srcdir/../../../ocn/$dir" ) {
 		print $fh absolute_path( "$srcdir/../../../ocn/$dir" ) . "\n";
+	    } elsif ( -d "$srcdir/../../../glc/$dir" ) {
+		print $fh absolute_path( "$srcdir/../../../glc/$dir" ) . "\n";
 	    } else {
 		die "** source directory does not exist: $srcdir/$dir or $srcdir/../../../$dir or $srcdir/../../../atm|ice|ocn/$dir\n";
 	    }
@@ -1167,9 +1196,6 @@ sub write_filepath_ccsm
 
     # User specified source directories.
     print $fh "\$CASEROOT/SourceMods/src.clm\n";
-
-    # shared utilities.
-    print $fh "\$CODEROOT/utils/timing\n";
 
     # CLM
     my @dirs = ( "main", "biogeophys", "biogeochem" );

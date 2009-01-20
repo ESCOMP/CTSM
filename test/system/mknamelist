@@ -90,11 +90,14 @@ clmnl=${CLM_SCRIPTDIR}/nl_files/$nlfile
 source=`grep source ${CLM_SCRIPTDIR}/nl_files/$optfile | awk '{print $NF}'`
 if [ "$source" = "CLMNCEP" ]; then
    clmopt="$clmopt -datm_data_dir $DATM_DATA_DIR"
+else if [ "$source" = "CLM_QIAN" ]; then
+   clmopt="$clmopt -datm_data_dir $DATM_QIAN_DATA_DIR"
+fi
 fi
 
 echo "$cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \ "
 echo "                 -infile $clmnl -res $res -lnd_res $land_res -start_type $6 \ "
-echo "                 -csmdata $CSMDATA -runlength $runlen $clmopt \ "
+echo "                 -csmdata $CSMDATA -runlength $runlen $clmopt -test \ "
 echo "                 -namelist \"&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / "
 echo "                             &seq_infodata_inparm $restart_file $logfile / "
 echo "                             &shr_nml $restbfile $restsfile / "
@@ -103,7 +106,7 @@ echo "                             $hist_samp nrevsn='$nrevsn' $hist_freq /\""
 
 $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \
                        -infile $clmnl -res $res -lnd_res $land_res -start_type $6 \
-                       -csmdata $CSMDATA -runlength $runlen $clmopt \
+                       -csmdata $CSMDATA -runlength $runlen $clmopt -test \
                        -namelist "&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / \
                                   &seq_infodata_inparm $restart_file $logfile / \
                                   &shr_nml $restbfile $restsfile / \

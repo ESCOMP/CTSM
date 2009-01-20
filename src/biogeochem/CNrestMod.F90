@@ -91,6 +91,18 @@ contains
     !--------------------------------
     ! pft physical state variables 
     !--------------------------------
+
+    ! forc_hgt_u_pft
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='forc_hgt_u_pft', xtype=nf_double,  &
+            dim1name='pft',long_name='observational height of temperature at pft-level',units='m')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='forc_hgt_u_pft', data=pptr%pps%forc_hgt_u_pft, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
     
     ! laisun
     if (flag == 'define') then
@@ -5802,59 +5814,63 @@ contains
     !--------------------------------
     
     ! bsw2 (2d-numrad)
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='bsw2', xtype=nf_double,   &
-            dim1name='column', dim2name='levsoi', &
-            long_name='Clapp and Hornberger "b" for CN code', units='')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='bsw2', data=cptr%cps%bsw2, &
-            dim1name=namec, dim2name='levsoi', &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
+    ! NOTE: THIS IS ALREADY DONE ELSEWHERE...
+    !if (flag == 'define') then
+    !   call ncd_defvar(ncid=ncid, varname='bsw2', xtype=nf_double,   &
+    !        dim1name='column', dim2name='levsoi', &
+    !        long_name='Clapp and Hornberger "b" for CN code', units='')
+    !else if (flag == 'read' .or. flag == 'write') then
+    !   call ncd_iolocal(varname='bsw2', data=cptr%cps%bsw2, &
+    !        dim1name=namec, dim2name='levsoi', &
+    !        ncid=ncid, flag=flag, readvar=readvar)
+    !   if (flag=='read' .and. .not. readvar) then
+    !      if (is_restart()) call endrun()
+    !   end if
+    !end if
 
     ! psisat (2d-numrad)
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='psisat', xtype=nf_double,   &
-            dim1name='column', dim2name='levsoi', &
-            long_name='soil water potential at saturation for CN code', units='MPa')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='psisat', data=cptr%cps%psisat, &
-            dim1name=namec, dim2name='levsoi', &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
+    ! NOTE: THIS IS ALREADY DONE ELSEWHERE...
+    !if (flag == 'define') then
+    !   call ncd_defvar(ncid=ncid, varname='psisat', xtype=nf_double,   &
+    !        dim1name='column', dim2name='levsoi', &
+    !        long_name='soil water potential at saturation for CN code', units='MPa')
+    !else if (flag == 'read' .or. flag == 'write') then
+    !   call ncd_iolocal(varname='psisat', data=cptr%cps%psisat, &
+    !        dim1name=namec, dim2name='levsoi', &
+    !        ncid=ncid, flag=flag, readvar=readvar)
+    !   if (flag=='read' .and. .not. readvar) then
+    !      if (is_restart()) call endrun()
+    !   end if
+    !end if
 
     ! vwcsat (2d-numrad)
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='vwcsat', xtype=nf_double,   &
-            dim1name='column', dim2name='levsoi', &
-            long_name='volumetric water content at saturation for CN code ', units='m3/m3')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='vwcsat', data=cptr%cps%vwcsat, &
-            dim1name=namec, dim2name='levsoi', &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
+    ! NOTE: THIS IS ALREADY DONE ELSEWHERE...
+    !if (flag == 'define') then
+    !   call ncd_defvar(ncid=ncid, varname='vwcsat', xtype=nf_double,   &
+    !        dim1name='column', dim2name='levsoi', &
+    !        long_name='volumetric water content at saturation for CN code ', units='m3/m3')
+    !else if (flag == 'read' .or. flag == 'write') then
+    !   call ncd_iolocal(varname='vwcsat', data=cptr%cps%vwcsat, &
+    !        dim1name=namec, dim2name='levsoi', &
+    !        ncid=ncid, flag=flag, readvar=readvar)
+    !   if (flag=='read' .and. .not. readvar) then
+    !      if (is_restart()) call endrun()
+    !   end if
+    !end if
 
     ! soilpsi (2d-numrad)
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='soilpsi', xtype=nf_double,  &
-            dim1name='column', dim2name='levsoi', &
-            long_name='soil water potential',units='MPa')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='soilpsi', data=cptr%cps%soilpsi, &
-            dim1name=namec, dim2name='levsoi', ncid=ncid, flag=flag, readvar=readvar) 
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
+    ! NOTE: THIS IS ALREADY DONE ELSEWHERE...
+    !if (flag == 'define') then
+    !   call ncd_defvar(ncid=ncid, varname='soilpsi', xtype=nf_double,  &
+    !        dim1name='column', dim2name='levsoi', &
+    !        long_name='soil water potential',units='MPa')
+    !else if (flag == 'read' .or. flag == 'write') then
+    !   call ncd_iolocal(varname='soilpsi', data=cptr%cps%soilpsi, &
+    !        dim1name=namec, dim2name='levsoi', ncid=ncid, flag=flag, readvar=readvar) 
+    !   if (flag=='read' .and. .not. readvar) then
+    !      if (is_restart()) call endrun()
+    !   end if
+    !end if
 
     ! decl
     if (flag == 'define') then
@@ -9557,18 +9573,6 @@ contains
     !--------------------------------
     ! gridcell a2l variables
     !--------------------------------
-
-    ! gricell forc_hgt_u
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='forc_hgt_u', xtype=nf_double,  &
-            dim1name='gridcell',long_name='observational height of wind',units='m')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='forc_hgt_u', data=clm_a2l%forc_hgt_u, &
-            dim1name=nameg, ncid=ncid, flag=flag, readvar=readvar) 
-       if (flag=='read' .and. .not. readvar) then
-  	  if (is_restart()) call endrun
-       end if	
-    end if
 
 #if (defined EXIT_SPINUP)
     if (flag == 'read') then

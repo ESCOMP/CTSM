@@ -17,7 +17,7 @@ module DGVMMod
 !
 ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use clm_varpar     , only : maxpatch_pft, lsmlon, lsmlat, nlevsoi
+  use clm_varpar     , only : maxpatch_pft, lsmlon, lsmlat, nlevsoi, nlevgrnd
   use clm_varctl     , only : iulog
   use abortutils     , only : endrun
 !
@@ -807,10 +807,10 @@ contains
 !
 ! local pointers to implicit in arguments
 !
-   real(r8), pointer :: zi(:,:)        ! interface level below a "z" level (m) (-nlevsno+0:nlevsoi)
+   real(r8), pointer :: zi(:,:)        ! interface level below a "z" level (m) (-nlevsno+0:nlevgrnd)
    integer , pointer :: ivt(:)         ! pft vegetation
    integer , pointer :: pcolumn(:)     ! column of corresponding pft
-   real(r8), pointer :: rootfr(:,:)    ! fraction of roots in each soil layer  (nlevsoi)
+   real(r8), pointer :: rootfr(:,:)    ! fraction of roots in each soil layer  (nlevgrnd)
 !
 !EOP
 !
@@ -846,8 +846,9 @@ contains
           end do
           rootfr(p,nlevsoi) = .5_r8*( exp(-roota_par(ivt(p)) * zi(c,nlevsoi-1))  &
                                  + exp(-rootb_par(ivt(p)) * zi(c,nlevsoi-1)) )
+          rootfr(p,nlevsoi+1:nlevgrnd) = 0._r8
        else
-          rootfr(p,1:nlevsoi) = spval
+          rootfr(p,1:nlevgrnd) = spval
        end if
     end do
 

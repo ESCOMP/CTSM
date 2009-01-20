@@ -1,5 +1,5 @@
 -mode ccsm_seq
--smp
+-smp -nospmd
 -maxpft 4
 -bgc casa
 -s

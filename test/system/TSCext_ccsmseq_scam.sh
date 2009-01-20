@@ -14,6 +14,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TSCext_ccsmseq_scam.sh: smoke test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}" 
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TSCext_ccsmseq_scam.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -53,6 +55,9 @@ fi
 #temporarily stage these files one level up in work directory tree
 echo "TSCext_ccsmseq_scam.sh: stage output files in $CLM_TESTDIR"
 file=${CLM_TESTDIR}/TSMext_ccsmseq_cam.$1.$2.$5/camrun.cam2.i.0000-09-01-00000.nc
+if [ "$debug" == "YES" ] || [ "$compile_only" == "YES" ]; then
+  touch $file
+fi
 echo "cp -f $file ${CLM_TESTDIR}/."
 if [ ! -f $file ]; then
     echo "TSCext_ccsmseq_scam.sh: error -- $file does not exist as expected"
@@ -62,6 +67,9 @@ fi
 cp -f $file ${CLM_TESTDIR}/.
 
 file=${CLM_TESTDIR}/TSMext_ccsmseq_cam.$1.$2.$5/camrun.cam2.h1.0000-09-01-00000.nc
+if [ "$debug" == "YES" ] || [ "$compile_only" == "YES" ]; then
+  touch $file
+fi
 echo "cp -f $file ${CLM_TESTDIR}/."
 if [ ! -f $file ]; then
     echo "TSCext_ccsmseq_scam.sh: error -- $file does not exist as expected"
@@ -93,12 +101,14 @@ fi
 echo "TSCext_ccsmseq_scam.sh: Comparing answers to ensure SCAM gives bit-for-bit answers as CAM ... "
 if [ "$debug" != "YES" ]; then
    myvar=`ncdump -ff -p 9,17 -v QDIFF,TDIFF ${CLM_TESTDIR}/TSMext_ccsmseq_cam.$3.$4.$5/camrun.*.h1.*.nc | egrep //\.\*DIFF | sed s/^\ \*// | sed s/\[,\;\].\*\$// | uniq`
+   status="PASS"
 else
    myvar=0
+   status="GEN"
 fi
 if [ "$myvar" == "0" ]; then
     echo "TSCext_ccsmseq_scam.sh:  scam b4b test passed"
-    echo "PASS" > TestStatus
+    echo "$status" > TestStatus
 else
     echo "TSCext_ccsmseq_scam.sh: scam b4b test did not pass"
     echo "FAIL.job${JOBID}" > TestStatus

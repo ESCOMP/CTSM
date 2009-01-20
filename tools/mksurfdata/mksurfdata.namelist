@@ -1,12 +1,13 @@
 &clmexp
- mksrf_fgrid        = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/griddata_48x96_060829.nc'
+ mksrf_fgrid        = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/griddata_4x5_060404.nc'
  mksrf_fsoitex      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc'
- mksrf_fvegtyp      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_pft.060929.nc'
- mksrf_fsoicol      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_soilcol.060929.nc'
- mksrf_flanwat      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_lanwat.060929.nc'
+ mksrf_forganic     = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_organic.10level.0.5deg.081112.nc'
+ mksrf_fvegtyp      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_pft.081008.nc'
+ mksrf_flanwat      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_lanwat.050425.nc'
  mksrf_fmax         = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_fmax.070406.nc'
  mksrf_fglacier     = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_glacier.060929.nc'
  mksrf_furban       = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_urban.060929.nc'
- mksrf_flai         = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_lai.060929.nc'
+ mksrf_fsoicol      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_soilcol.081008.nc'
+ mksrf_flai         = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_lai.081008.nc'
  mksrf_fdynuse      = ' '
 /

@@ -18,12 +18,12 @@ subroutine iniTimeConst
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use nanMod
+  use nanMod      , only : nan
   use clmtype
   use decompMod   , only : get_proc_bounds, get_proc_global
   use decompMod   , only : gsMap_lnd_gdc2glo
   use clm_atmlnd  , only : clm_a2l
-  use clm_varpar  , only : nlevsoi, nlevlak, lsmlon, lsmlat, numpft, numrad
+  use clm_varpar  , only : nlevsoi, nlevgrnd, nlevlak, lsmlon, lsmlat, numpft, numrad, nlevurb
   use clm_varcon  , only : istice, istdlak, istwet, isturb, &
                            icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv, &
                            zlak, dzlak, zsoi, dzsoi, zisoi, spval, &
@@ -42,11 +42,16 @@ subroutine iniTimeConst
                            lm_sapl, sm_sapl, hm_sapl    , rm_sapl    , latosa  , &
                            allom1 , allom2 , allom3     , reinickerp , wooddens
   use clm_time_manager, only : get_step_size
-  use abortutils  , only : endrun
-  use fileutils   , only : getfil
-  use ndepFileMod , only : ndeprd
-  use ncdio
-  use spmdMod
+  use abortutils      , only : endrun
+  use fileutils       , only : getfil
+  use ndepFileMod     , only : ndeprd
+  use organicFileMod  , only : organicrd 
+  use ncdio           , only : ncd_iolocal, nf_close, nf_get_var_int, NF_NOERR, nf_inq_varid, nf_open, check_ret
+  use spmdMod         , only : mpicom, MPI_INTEGER, masterproc
+  use clm_varctl      , only : fsnowoptics, fsnowaging
+  use SNICARMod       , only : SnowAge_init, SnowOptics_init
+  use aerdepMod       , only : aerdepini
+
 !
 ! !ARGUMENTS:
   implicit none
@@ -59,6 +64,12 @@ subroutine iniTimeConst
 ! Updated to clm2.1 data structrues by Mariana Vertenstein
 ! 4/26/05, Peter Thornton: Eliminated exponential decrease in saturated hydraulic
 !   conductivity (hksat) with depth. 
+! 27 February 2008: Keith Oleson; Qing Liu (2004) saturated hydraulic conductivity 
+! and matric potential
+! 29 February 2008: David Lawrence; modified soil thermal and hydraulic properties to
+! account for organic matter
+! 18 March 2008: David Lawrence; nlevgrnd changes
+! 03/28/08 Mark Flanner, read in netcdf files for SNICAR parameters
 !
 ! !LOCAL VARIABLES:
 !
@@ -81,21 +92,22 @@ subroutine iniTimeConst
   real(r8), pointer :: dz(:,:)            ! layer thickness depth (m)
   real(r8), pointer :: rootfr(:,:)        ! fraction of roots in each soil layer
   real(r8), pointer :: rootfr_road_perv(:,:) ! fraction of roots in each soil layer for urban pervious road
-  real(r8), pointer :: rresis(:,:)        !root resistance by layer (0-1)  (nlevsoi)	
+  real(r8), pointer :: rresis(:,:)        !root resistance by layer (0-1)  (nlevgrnd)	
   real(r8), pointer :: dewmx(:)           ! maximum allowed dew [mm]
-  real(r8), pointer :: bsw(:,:)           ! Clapp and Hornberger "b" (nlevsoi)  
+  real(r8), pointer :: bsw(:,:)           ! Clapp and Hornberger "b" (nlevgrnd)  
   real(r8), pointer :: bsw2(:,:)          ! Clapp and Hornberger "b" for CN code
   real(r8), pointer :: psisat(:,:)        ! soil water potential at saturation for CN code (MPa)
   real(r8), pointer :: vwcsat(:,:)        ! volumetric water content at saturation for CN code (m3/m3)
-  real(r8), pointer :: watsat(:,:)        ! volumetric soil water at saturation (porosity) (nlevsoi) 
+  real(r8), pointer :: watsat(:,:)        ! volumetric soil water at saturation (porosity) (nlevgrnd) 
+  real(r8), pointer :: watfc(:,:)         ! volumetric soil water at field capacity (nlevsoi)
   real(r8), pointer :: watdry(:,:)        ! btran parameter for btran=0
   real(r8), pointer :: watopt(:,:)        ! btran parameter for btran = 1
-  real(r8), pointer :: hksat(:,:)         ! hydraulic conductivity at saturation (mm H2O /s) (nlevsoi) 
-  real(r8), pointer :: sucsat(:,:)        ! minimum soil suction (mm) (nlevsoi) 
-  real(r8), pointer :: csol(:,:)          ! heat capacity, soil solids (J/m**3/Kelvin) (nlevsoi) 
-  real(r8), pointer :: tkmg(:,:)          ! thermal conductivity, soil minerals  [W/m-K] (new) (nlevsoi) 
-  real(r8), pointer :: tkdry(:,:)         ! thermal conductivity, dry soil (W/m/Kelvin) (nlevsoi) 
-  real(r8), pointer :: tksatu(:,:)        ! thermal conductivity, saturated soil [W/m-K] (new) (nlevsoi) 
+  real(r8), pointer :: hksat(:,:)         ! hydraulic conductivity at saturation (mm H2O /s) (nlevgrnd) 
+  real(r8), pointer :: sucsat(:,:)        ! minimum soil suction (mm) (nlevgrnd) 
+  real(r8), pointer :: csol(:,:)          ! heat capacity, soil solids (J/m**3/Kelvin) (nlevgrnd) 
+  real(r8), pointer :: tkmg(:,:)          ! thermal conductivity, soil minerals  [W/m-K] (new) (nlevgrnd) 
+  real(r8), pointer :: tkdry(:,:)         ! thermal conductivity, dry soil (W/m/Kelvin) (nlevgrnd) 
+  real(r8), pointer :: tksatu(:,:)        ! thermal conductivity, saturated soil [W/m-K] (new) (nlevgrnd) 
   real(r8), pointer :: wtfact(:)          ! maximum saturated fraction for a gridcell
   real(r8), pointer :: smpmin(:)          ! restriction for min of soil potential (mm) (new)
   real(r8), pointer :: hkdepth(:)         ! decay factor (m)
@@ -129,17 +141,32 @@ subroutine iniTimeConst
   integer  :: numl             ! total number of landunits across all processors
   integer  :: numc             ! total number of columns across all processors
   integer  :: nump             ! total number of pfts across all processors
-  real(r8),pointer :: arrayl(:)   ! generic global array
-  integer ,pointer :: irrayg(:)   ! generic global array
-  integer ,pointer :: soic2d(:)   ! read in - soil color
-  real(r8),pointer :: sand3d(:,:) ! read in - soil texture: percent sand
-  real(r8),pointer :: clay3d(:,:) ! read in - soil texture: percent clay
-  real(r8),pointer :: ndep(:)     ! read in - annual nitrogen deposition rate (gN/m2/yr)
-  real(r8),pointer :: gti(:)      ! read in - fmax
-  integer  :: start(3),count(3)   ! netcdf start/count arrays
-  integer  :: dimid,varid      ! netCDF id's
-  integer  :: ret, time_index
-  real(r8) :: nlevsoidata(nlevsoi)
+  real(r8),pointer :: arrayl(:)      ! generic global array
+  integer ,pointer :: irrayg(:)      ! generic global array
+  integer ,pointer :: soic2d(:)      ! read in - soil color
+  real(r8),pointer :: sand3d(:,:)    ! read in - soil texture: percent sand
+  real(r8),pointer :: clay3d(:,:)    ! read in - soil texture: percent clay
+  real(r8),pointer :: organic3d(:,:) ! read in - organic matter: kg/m3
+  real(r8),pointer :: ndep(:)        ! read in - annual nitrogen deposition rate (gN/m2/yr)
+  real(r8),pointer :: gti(:)         ! read in - fmax
+  real(r8) :: om_frac                ! organic matter fraction
+  real(r8) :: om_watsat    = 0.9_r8  ! porosity of organic soil
+  real(r8) :: om_hksat     = 0.1_r8  ! saturated hydraulic conductivity of organic soil [mm/s]
+  real(r8) :: om_tkm       = 0.25_r8 ! thermal conductivity of organic soil (Farouki, 1986) [W/m/K]
+  real(r8) :: om_sucsat    = 10.3_r8 ! saturated suction for organic matter (Letts, 2000)
+  real(r8) :: om_csol      = 2.5_r8  ! heat capacity of peat soil *10^6 (J/K m3) (Farouki, 1986)
+  real(r8) :: om_tkd       = 0.05_r8 ! thermal conductivity of dry organic soil (Farouki, 1981)
+  real(r8) :: om_b         = 2.7_r8  ! Clapp Hornberger paramater for oragnic soil (Letts, 2000)
+  real(r8) :: organic_max  = 130._r8 ! organic matter (kg/m3) where soil is assumed to act like peat 
+  real(r8) :: pc           = 0.5_r8   ! percolation threshold
+  real(r8) :: pcbeta       = 0.139_r8 ! percolation exponent
+  real(r8) :: perc_frac               ! "percolating" fraction of organic soil
+  real(r8) :: perc_norm               ! normalize to 1 when 100% organic soil
+  real(r8) :: uncon_hksat             ! series conductivity of mineral/organic soil
+  real(r8) :: uncon_frac              ! fraction of "unconnected" soil
+  integer  :: start(3),count(3)      ! netcdf start/count arrays
+  integer  :: varid                  ! netCDF id's
+  integer  :: ret
   integer  :: ier                                ! error status
   character(len=256) :: locfn                    ! local filename
   character(len= 32) :: subname = 'iniTimeConst' ! subroutine name
@@ -164,6 +191,7 @@ subroutine iniTimeConst
 
   allocate(soic2d(begg:endg),ndep(begg:endg), gti(begg:endg))
   allocate(sand3d(begg:endg,nlevsoi),clay3d(begg:endg,nlevsoi))
+  allocate(organic3d(begg:endg,nlevsoi))
 
   ! Assign local pointers to derived subtypes components (landunit-level)
 
@@ -184,6 +212,7 @@ subroutine iniTimeConst
   psisat          => clm3%g%l%c%cps%psisat
   vwcsat          => clm3%g%l%c%cps%vwcsat
   watsat          => clm3%g%l%c%cps%watsat
+  watfc           => clm3%g%l%c%cps%watfc
   watdry          => clm3%g%l%c%cps%watdry  
   watopt          => clm3%g%l%c%cps%watopt  
   rootfr_road_perv => clm3%g%l%c%cps%rootfr_road_perv
@@ -201,6 +230,7 @@ subroutine iniTimeConst
   mss_frc_cly_vld => clm3%g%l%c%cps%mss_frc_cly_vld
   forc_ndep       => clm_a2l%forc_ndep
 
+
   ! Assign local pointers to derived subtypes components (pft-level)
 
   ivt             => clm3%g%l%c%p%itype
@@ -214,12 +244,11 @@ subroutine iniTimeConst
   clayfrac        => clm3%g%l%c%p%pps%clayfrac
 #endif
 
-  allocate(zurb_wall(begl:endl,nlevsoi), zurb_roof(begl:endl,nlevsoi), &
-           dzurb_wall(begl:endl,nlevsoi), dzurb_roof(begl:endl,nlevsoi), &
-           ziurb_wall(begl:endl,0:nlevsoi), ziurb_roof(begl:endl,0:nlevsoi),  stat=ier)
+  allocate(zurb_wall(begl:endl,nlevurb), zurb_roof(begl:endl,nlevurb), &
+           dzurb_wall(begl:endl,nlevurb), dzurb_roof(begl:endl,nlevurb), &
+           ziurb_wall(begl:endl,0:nlevurb), ziurb_roof(begl:endl,0:nlevurb),  stat=ier)
   if (ier /= 0) then
-     write (iulog,*)'iniTimeConst: allocation error for zurb_wall,zurb_roof,dzurb_wall,dzurb_roof,ziurb_wall,ziurb_roof'
-     call endrun()
+     call endrun( 'iniTimeConst: allocation error for zurb_wall,zurb_roof,dzurb_wall,dzurb_roof,ziurb_wall,ziurb_roof' )
   end if
 
   ! --------------------------------------------------------------------
@@ -326,6 +355,13 @@ subroutine iniTimeConst
   
   call ndeprd(ndep)
 
+
+  ! --------------------------------------------------------------------
+  ! If a organic matter dataset has been specified, read it
+  ! --------------------------------------------------------------------
+
+  call organicrd(organic3d)
+
   ! --------------------------------------------------------------------
   ! Initialize time constant arrays of ecophysiological constants and
   ! arrays of dgvm ecophysiological constants
@@ -428,14 +464,6 @@ subroutine iniTimeConst
    ! Vertical profile of snow is not initialized here 
    ! --------------------------------------------------------------------
 
-   ! check that lake and soil levels are the same for now
-
-   if (nlevlak /= nlevsoi) then
-      write(iulog,*)'number of soil levels and number of lake levels must be the same'
-      write(iulog,*)'nlevsoi= ',nlevsoi,' nlevlak= ',nlevlak
-      call endrun
-   endif
-
    ! Lake layers (assumed same for all lake patches)
 
    dzlak(1) = 0.1_r8
@@ -463,21 +491,21 @@ subroutine iniTimeConst
    ! Soil layers and interfaces (assumed same for all non-lake patches)
    ! "0" refers to soil surface and "nlevsoi" refers to the bottom of model soil
 
-   do j = 1, nlevsoi
+   do j = 1, nlevgrnd
       zsoi(j) = scalez*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
    enddo
 
    dzsoi(1) = 0.5_r8*(zsoi(1)+zsoi(2))             !thickness b/n two interfaces
-   do j = 2,nlevsoi-1
+   do j = 2,nlevgrnd-1
       dzsoi(j)= 0.5_r8*(zsoi(j+1)-zsoi(j-1))
    enddo
-   dzsoi(nlevsoi) = zsoi(nlevsoi)-zsoi(nlevsoi-1)
+   dzsoi(nlevgrnd) = zsoi(nlevgrnd)-zsoi(nlevgrnd-1)
 
    zisoi(0) = 0._r8
-   do j = 1, nlevsoi-1
+   do j = 1, nlevgrnd-1
       zisoi(j) = 0.5_r8*(zsoi(j)+zsoi(j+1))         !interface depths
    enddo
-   zisoi(nlevsoi) = zsoi(nlevsoi) + 0.5_r8*dzsoi(nlevsoi)
+   zisoi(nlevgrnd) = zsoi(nlevgrnd) + 0.5_r8*dzsoi(nlevgrnd)
 
    ! Column level initialization for urban wall and roof layers and interfaces
 !dir$ concurrent
@@ -487,64 +515,41 @@ subroutine iniTimeConst
    ! "0" refers to urban wall/roof surface and "nlevsoi" refers to urban wall/roof bottom
     if (ltype(l)==isturb) then
    
-#if (defined VANCOUVER)
-      do j = 1, nlevsoi
+      do j = 1, nlevurb
         zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/10.)  !node depths
       end do
-      do j = 1, nlevsoi
+      do j = 1, nlevurb
         zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/10.)  !node depths
       end do
-#elif (defined MEXICOCITY)
-      do j = 1, nlevsoi
-        zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/10.)  !node depths
-      end do
-      do j = 1, nlevsoi
-        zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/10.)  !node depths
-      end do
-#elif (defined GRANDVIEW)
-      do j = 1, nlevsoi
-        zurb_wall(l,j) = scalez_wall(l)*(exp(0.5*(j-0.5))-1.)  !node depths
-      end do
-      do j = 1, nlevsoi
-        zurb_roof(l,j) = scalez_roof(l)*(exp(0.5*(j-0.5))-1.)  !node depths
-      end do
-#else
-      do j = 1, nlevsoi
-        zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/10.)  !node depths
-      end do
-      do j = 1, nlevsoi
-        zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/10.)  !node depths
-      end do
-#endif
 
       dzurb_wall(l,1) = 0.5*(zurb_wall(l,1)+zurb_wall(l,2))    !thickness b/n two interfaces
-      do j = 2,nlevsoi-1
+      do j = 2,nlevurb-1
         dzurb_wall(l,j)= 0.5*(zurb_wall(l,j+1)-zurb_wall(l,j-1)) 
       enddo
-      dzurb_wall(l,nlevsoi) = zurb_wall(l,nlevsoi)-zurb_wall(l,nlevsoi-1)
+      dzurb_wall(l,nlevurb) = zurb_wall(l,nlevurb)-zurb_wall(l,nlevurb-1)
       write(iulog,*)'Total thickness of wall: ',sum(dzurb_wall(l,:))
       write(iulog,*)'Wall layer thicknesses: ',dzurb_wall(l,:)
 
       dzurb_roof(l,1) = 0.5*(zurb_roof(l,1)+zurb_roof(l,2))    !thickness b/n two interfaces
-      do j = 2,nlevsoi-1
+      do j = 2,nlevurb-1
         dzurb_roof(l,j)= 0.5*(zurb_roof(l,j+1)-zurb_roof(l,j-1)) 
       enddo
-      dzurb_roof(l,nlevsoi) = zurb_roof(l,nlevsoi)-zurb_roof(l,nlevsoi-1)
+      dzurb_roof(l,nlevurb) = zurb_roof(l,nlevurb)-zurb_roof(l,nlevurb-1)
       write(iulog,*)'Total thickness of roof: ',sum(dzurb_roof(l,:))
       write(iulog,*)'Roof layer thicknesses: ',dzurb_roof(l,:)
 
       ziurb_wall(l,0) = 0.
-      do j = 1, nlevsoi-1
+      do j = 1, nlevurb-1
         ziurb_wall(l,j) = 0.5*(zurb_wall(l,j)+zurb_wall(l,j+1))          !interface depths
       enddo
-      ziurb_wall(l,nlevsoi) = zurb_wall(l,nlevsoi) + 0.5*dzurb_wall(l,nlevsoi)
+      ziurb_wall(l,nlevurb) = zurb_wall(l,nlevurb) + 0.5*dzurb_wall(l,nlevurb)
       write(iulog,*)'Wall layer interface depths: ',ziurb_wall(l,:)
 
       ziurb_roof(l,0) = 0.
-      do j = 1, nlevsoi-1
+      do j = 1, nlevurb-1
         ziurb_roof(l,j) = 0.5*(zurb_roof(l,j)+zurb_roof(l,j+1))          !interface depths
       enddo
-      ziurb_roof(l,nlevsoi) = zurb_roof(l,nlevsoi) + 0.5*dzurb_roof(l,nlevsoi)
+      ziurb_roof(l,nlevurb) = zurb_roof(l,nlevurb) + 0.5*dzurb_roof(l,nlevurb)
       write(iulog,*)'Roof layer interface depths: ',ziurb_roof(l,:)
     end if
    end do
@@ -565,6 +570,7 @@ subroutine iniTimeConst
       forc_ndep(g) = ndep(g)/(86400._r8 * 365._r8)
       
    end do
+
 
    ! --------------------------------------------------------------------
    ! Initialize soil and lake levels
@@ -599,12 +605,13 @@ subroutine iniTimeConst
         ! roof, sunwall and shadewall are prescribed in SoilThermProp.F90 in 
         ! SoilTemperatureMod.F90
       if (ltype(l)==istdlak .or. ltype(l)==istwet .or. ltype(l)==istice) then
-         do lev = 1,nlevsoi
+         do lev = 1,nlevgrnd
             bsw(c,lev)    = spval
             bsw2(c,lev)   = spval
             psisat(c,lev) = spval
             vwcsat(c,lev) = spval
             watsat(c,lev) = spval
+            watfc(c,lev)  = spval
             hksat(c,lev)  = spval
             sucsat(c,lev) = spval
             tkmg(c,lev)   = spval
@@ -614,95 +621,101 @@ subroutine iniTimeConst
             watdry(c,lev) = spval 
             watopt(c,lev) = spval 
          end do
-      else if (ltype(l)==isturb) then
-         if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
-             .or. ctype(c) == icol_roof) then
-            do lev = 1,nlevsoi
-               watsat(c,lev) = spval
-               bsw(c,lev)    = spval
-               bsw2(c,lev)   = spval
-               psisat(c,lev) = spval
-               vwcsat(c,lev) = spval
-               hksat(c,lev)  = spval
-               sucsat(c,lev) = spval
-               tkmg(c,lev)   = spval
-               tksatu(c,lev) = spval
-               tkdry(c,lev)  = spval
-               csol(c,lev)   = spval
-               watdry(c,lev) = spval 
-               watopt(c,lev) = spval 
-            end do
-         else if (ctype(c) == icol_road_imperv) then
-            ! Note that these are overwritten for impervious road layers that are
-            ! not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
-            do lev = 1,nlevsoi
-               clay = clay3d(g,lev)
-               sand = sand3d(g,lev)
-               watsat(c,lev) = 0.489 - 0.00126*sand
-               bd            = (1.-watsat(c,lev))*2.7e3
-               xksat         = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
-               tkm           = (8.80*sand+2.92*clay)/(sand+clay)        ! W/(m K)
-               
-               bsw(c,lev)    = 2.91 + 0.159*clay
-               bsw2(c,lev)   = -(3.10 + 0.157*clay - 0.003*sand)
-               psisat(c,lev) = -(exp((1.54 - 0.0095*sand + 0.0063*(100.0-sand-clay))*log(10.0))*9.8e-5)
-               vwcsat(c,lev) = (50.5 - 0.142*sand - 0.037*clay)/100.0
-               hksat(c,lev)  = xksat * exp(-zisoi(lev)/hkdepth(c))
-               sucsat(c,lev) = 10. * ( 10.**(1.88-0.0131*sand) )
-               tkmg(c,lev)   = tkm ** (1.- watsat(c,lev))           
-               tksatu(c,lev) = tkmg(c,lev)*0.57**watsat(c,lev)
-               tkdry(c,lev)  = (0.135*bd + 64.7) / (2.7e3 - 0.947*bd)  
-               csol(c,lev)   = (2.128*sand+2.385*clay) / (sand+clay)*1.e6  ! J/(m3 K)
-               watdry(c,lev) = spval 
-               watopt(c,lev) = spval 
-            end do
-         ! Currently, pervious road has same properties as soil
-         else if (ctype(c) == icol_road_perv) then 
-            do lev = 1,nlevsoi
-               clay = clay3d(g,lev)
-               sand = sand3d(g,lev)
-               watsat(c,lev) = 0.489 - 0.00126*sand
-               bd            = (1.-watsat(c,lev))*2.7e3
-               xksat         = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
-               tkm           = (8.80*sand+2.92*clay)/(sand+clay)        ! W/(m K)
-               
-               bsw(c,lev)    = 2.91 + 0.159*clay
-               bsw2(c,lev)   = -(3.10 + 0.157*clay - 0.003*sand)
-               psisat(c,lev) = -(exp((1.54 - 0.0095*sand + 0.0063*(100.0-sand-clay))*log(10.0))*9.8e-5)
-               vwcsat(c,lev) = (50.5 - 0.142*sand - 0.037*clay)/100.0
-               hksat(c,lev)  = xksat
-               sucsat(c,lev) = 10. * ( 10.**(1.88-0.0131*sand) )
-               tkmg(c,lev)   = tkm ** (1.- watsat(c,lev))           
-               tksatu(c,lev) = tkmg(c,lev)*0.57**watsat(c,lev)
-               tkdry(c,lev)  = (0.135*bd + 64.7) / (2.7e3 - 0.947*bd)  
-               csol(c,lev)   = (2.128*sand+2.385*clay) / (sand+clay)*1.e6  ! J/(m3 K)
-               watdry(c,lev) = watsat(c,lev) * (316230./sucsat(c,lev)) ** (-1./bsw(c,lev)) 
-               watopt(c,lev) = watsat(c,lev) * (158490./sucsat(c,lev)) ** (-1./bsw(c,lev)) 
-               rootfr_road_perv(c,lev) = 0.1  ! uniform profile
-            end do
-         end if
-      else  ! non-urban soil columns
-         do lev = 1,nlevsoi
-            clay = clay3d(g,lev)
-            sand = sand3d(g,lev)
+      else if (ltype(l)==isturb .and. (ctype(c) /= icol_road_perv) .and. (ctype(c) /= icol_road_imperv) )then
+         do lev = 1,nlevurb
+            watsat(c,lev) = spval
+            watfc(c,lev)  = spval
+            bsw(c,lev)    = spval
+            bsw2(c,lev)   = spval
+            psisat(c,lev) = spval
+            vwcsat(c,lev) = spval
+            hksat(c,lev)  = spval
+            sucsat(c,lev) = spval
+            tkmg(c,lev)   = spval
+            tksatu(c,lev) = spval
+            tkdry(c,lev)  = spval
+            csol(c,lev)   = spval
+            watdry(c,lev) = spval 
+            watopt(c,lev) = spval 
+         end do
+      else  ! soil columns of both urban and non-urban types
+         do lev = 1,nlevgrnd
+            ! duplicate clay and sand values from 10th soil layer
+            if (lev .le. nlevsoi) then
+               clay    = clay3d(g,lev)
+               sand    = sand3d(g,lev)
+               om_frac = (organic3d(g,lev)/organic_max)**2._r8
+            else
+               clay    = clay3d(g,nlevsoi)
+               sand    = sand3d(g,nlevsoi)
+               om_frac = 0._r8
+            endif
             watsat(c,lev) = 0.489_r8 - 0.00126_r8*sand
-            bd            = (1.-watsat(c,lev))*2.7e3_r8
-            xksat         = 0.0070556_r8 *( 10._r8**(-0.884_r8+0.0153_r8*sand) ) ! mm/s
-            tkm           = (8.80_r8*sand+2.92_r8*clay)/(sand+clay)        ! W/(m K)
-            
-            bsw(c,lev)    = 2.91_r8 + 0.159_r8*clay
+            bsw(c,lev)    = 2.91 + 0.159*clay
+            sucsat(c,lev) = 10._r8 * ( 10._r8**(1.88_r8-0.0131_r8*sand) )
+            bd            = (1._r8-watsat(c,lev))*2.7e3_r8 
+            watsat(c,lev) = (1._r8 - om_frac)*watsat(c,lev) + om_watsat*om_frac
+            tkm           = (1._r8-om_frac)*(8.80_r8*sand+2.92_r8*clay)/(sand+clay)+om_tkm*om_frac ! W/(m K)
+            bsw(c,lev)    = (1._r8-om_frac)*(2.91_r8 + 0.159_r8*clay) + om_frac*om_b   
             bsw2(c,lev)   = -(3.10_r8 + 0.157_r8*clay - 0.003_r8*sand)
             psisat(c,lev) = -(exp((1.54_r8 - 0.0095_r8*sand + 0.0063_r8*(100.0_r8-sand-clay))*log(10.0_r8))*9.8e-5_r8)
             vwcsat(c,lev) = (50.5_r8 - 0.142_r8*sand - 0.037_r8*clay)/100.0_r8
-            hksat(c,lev)  = xksat
-            sucsat(c,lev) = 10._r8 * ( 10._r8**(1.88_r8-0.0131_r8*sand) )
+            sucsat(c,lev) = (1._r8-om_frac)*sucsat(c,lev) + om_sucsat*om_frac  
+            xksat         = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
+
+            ! perc_frac is zero unless perf_frac greater than percolation threshold
+            if (om_frac > pc) then
+               perc_norm=(1._r8 - pc)**(-pcbeta)
+               perc_frac=perc_norm*(om_frac - pc)**pcbeta
+            else
+               perc_frac=0._r8
+            endif
+            ! uncon_frac is fraction of mineral soil plus fraction of "nonpercolating" organic soil
+            uncon_frac=(1._r8-om_frac)+(1._r8-perc_frac)*om_frac
+            ! uncon_hksat is series addition of mineral/organic conductivites
+            if (om_frac .lt. 1._r8) then
+              uncon_hksat=uncon_frac/((1._r8-om_frac)/xksat &
+                   +((1._r8-perc_frac)*om_frac)/om_hksat)
+            else
+              uncon_hksat = 0._r8
+            end if
+            hksat(c,lev)  = uncon_frac*uncon_hksat + (perc_frac*om_frac)*om_hksat
+
             tkmg(c,lev)   = tkm ** (1._r8- watsat(c,lev))           
             tksatu(c,lev) = tkmg(c,lev)*0.57_r8**watsat(c,lev)
-            tkdry(c,lev)  = (0.135_r8*bd + 64.7_r8) / (2.7e3_r8 - 0.947_r8*bd)  
-            csol(c,lev)   = (2.128_r8*sand+2.385_r8*clay) / (sand+clay)*1.e6_r8  ! J/(m3 K)
+            tkdry(c,lev)  = ((0.135_r8*bd + 64.7_r8) / (2.7e3_r8 - 0.947_r8*bd))*(1._r8-om_frac) + &
+                            om_tkd*om_frac  
+            csol(c,lev)   = ((1._r8-om_frac)*(2.128_r8*sand+2.385_r8*clay) / (sand+clay) +   &
+                           om_csol*om_frac)*1.e6_r8  ! J/(m3 K)  
+            if (lev .gt. nlevsoi) then
+               ! vol. heat capacity of granite/sandstone  J/(m3 K)(Wikipedia; Shabbir, 2000)
+               csol(c,lev) = 2.0_r8*1.e6_r8
+            endif
             watdry(c,lev) = watsat(c,lev) * (316230._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
             watopt(c,lev) = watsat(c,lev) * (158490._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
+            !! added by K.Sakaguchi for beta from Lee and Pielke, 1992
+            ! water content at field capacity, defined as hk = 0.1 mm/day
+            ! used eqn (7.70) in CLM3 technote with k = 0.1 (mm/day) / 86400 (day/sec)
+            watfc(c,lev) = watsat(c,lev) * (0.1_r8 / (hksat(c,lev)*86400._r8))**(1._r8/(2._r8*bsw(c,lev)+3._r8))
          end do
+         !
+         ! Urban pervious and impervious road
+         !
+         ! Impervious road layers -- same as above except set watdry and watopt as missing
+         if (ctype(c) == icol_road_imperv) then
+            ! Note that these are overwritten for impervious road layers that are
+            ! not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
+            do lev = 1,nlevgrnd
+               watdry(c,lev) = spval 
+               watopt(c,lev) = spval 
+            end do
+         ! pervious road layers -- same as above except also set rootfr_road_perv
+         ! Currently, pervious road has same properties as soil
+         else if (ctype(c) == icol_road_perv) then 
+            do lev = 1,nlevgrnd
+               rootfr_road_perv(c,lev) = 0.1  ! uniform profile
+            end do
+         end if
       endif
 
       ! Define lake or non-lake levels, layers and interfaces
@@ -711,22 +724,22 @@ subroutine iniTimeConst
          dz(c,1:nlevlak) = dzlak(1:nlevlak)
       else if (ltype(l) == isturb) then
          if (ctype(c)==icol_sunwall .or. ctype(c)==icol_shadewall) then
-            z(c,1:nlevsoi)  = zurb_wall(l,1:nlevsoi)
-            zi(c,0:nlevsoi) = ziurb_wall(l,0:nlevsoi)
-            dz(c,1:nlevsoi) = dzurb_wall(l,1:nlevsoi)
+            z(c,1:nlevurb)  = zurb_wall(l,1:nlevurb)
+            zi(c,0:nlevurb) = ziurb_wall(l,0:nlevurb)
+            dz(c,1:nlevurb) = dzurb_wall(l,1:nlevurb)
          else if (ctype(c)==icol_roof) then
-            z(c,1:nlevsoi)  = zurb_roof(l,1:nlevsoi)
-            zi(c,0:nlevsoi) = ziurb_roof(l,0:nlevsoi)
-            dz(c,1:nlevsoi) = dzurb_roof(l,1:nlevsoi)
+            z(c,1:nlevurb)  = zurb_roof(l,1:nlevurb)
+            zi(c,0:nlevurb) = ziurb_roof(l,0:nlevurb)
+            dz(c,1:nlevurb) = dzurb_roof(l,1:nlevurb)
          else
-            z(c,1:nlevsoi)  = zsoi(1:nlevsoi)
-            zi(c,0:nlevsoi) = zisoi(0:nlevsoi)
-            dz(c,1:nlevsoi) = dzsoi(1:nlevsoi)
+            z(c,1:nlevurb)  = zsoi(1:nlevurb)
+            zi(c,0:nlevurb) = zisoi(0:nlevurb)
+            dz(c,1:nlevurb) = dzsoi(1:nlevurb)
          end if
       else
-         z(c,1:nlevsoi)  = zsoi(1:nlevsoi)
-         zi(c,0:nlevsoi) = zisoi(0:nlevsoi)
-         dz(c,1:nlevsoi) = dzsoi(1:nlevsoi)
+         z(c,1:nlevgrnd)  = zsoi(1:nlevgrnd)
+         zi(c,0:nlevgrnd) = zisoi(0:nlevgrnd)
+         dz(c,1:nlevgrnd) = dzsoi(1:nlevgrnd)
       end if
 
       ! Initialize terms needed for dust model
@@ -752,6 +765,9 @@ subroutine iniTimeConst
 
       c = pcolumn(p)
       if (ivt(p) /= noveg) then
+         do lev = 1, nlevgrnd
+            rootfr(p,lev) = 0._r8
+         enddo
          do lev = 1, nlevsoi-1
             rootfr(p,lev) = .5_r8*( exp(-roota_par(ivt(p)) * zi(c,lev-1))  &
                                + exp(-rootb_par(ivt(p)) * zi(c,lev-1))  &
@@ -759,47 +775,47 @@ subroutine iniTimeConst
                                - exp(-rootb_par(ivt(p)) * zi(c,lev  )) )
          end do
          rootfr(p,nlevsoi) = .5_r8*( exp(-roota_par(ivt(p)) * zi(c,nlevsoi-1))  &
-          
                                 + exp(-rootb_par(ivt(p)) * zi(c,nlevsoi-1)) )
+         rootfr(p,nlevsoi+1:nlevgrnd) =  0.0_r8
 
-#if (defined CN)
-         ! replacing the exponential rooting distribution
-         ! with a linear decrease, going to zero at the bottom of the lowest
-         ! soil layer for woody pfts, but going to zero at the bottom of
-         ! layer 8 for non-woody pfts.  This corresponds to 3.43 m for woody
-         ! bottom, vs 1.38 m for non-woody bottom.
-         if (woody(ivt(p)) == 1) then
-            bottom = nlevsoi
-            slope = -2._r8/(zi(c,bottom)*zi(c,bottom))
-            intercept   = 2._r8/zi(c,bottom)
-            do lev = 1, bottom
-               rootfr(p,lev) = dz(c,lev) * 0.5_r8 * ((intercept+slope*zi(c,lev-1)) + (intercept+slope*zi(c,lev)))
-            end do
-            if (bottom < nlevsoi) then
-               do lev=bottom+1,nlevsoi
-                  rootfr(p,lev) = 0._r8
-               end do
-            end if
-         else
-            bottom = 8
-            slope = -2._r8/(zi(c,bottom)*zi(c,bottom))
-            intercept   = 2._r8/zi(c,bottom)
-            do lev=1,bottom
-               rootfr(p,lev) = dz(c,lev) * 0.5_r8 * ((intercept+slope*zi(c,lev-1)) + (intercept+slope*zi(c,lev)))
-            end do
-            if (bottom < nlevsoi) then
-               do lev=bottom+1,nlevsoi
-                  rootfr(p,lev) = 0._r8
-               end do
-            end if
-         end if
-#endif
+!#if (defined CN)
+!        ! replacing the exponential rooting distribution
+!        ! with a linear decrease, going to zero at the bottom of the lowest
+!        ! soil layer for woody pfts, but going to zero at the bottom of
+!        ! layer 8 for non-woody pfts.  This corresponds to 3.43 m for woody
+!        ! bottom, vs 1.38 m for non-woody bottom.
+!        if (woody(ivt(p)) == 1) then
+!           bottom = nlevsoi
+!           slope = -2._r8/(zi(c,bottom)*zi(c,bottom))
+!           intercept   = 2._r8/zi(c,bottom)
+!           do lev = 1, bottom
+!              rootfr(p,lev) = dz(c,lev) * 0.5_r8 * ((intercept+slope*zi(c,lev-1)) + (intercept+slope*zi(c,lev)))
+!           end do
+!           if (bottom < nlevsoi) then
+!              do lev=bottom+1,nlevgrnd
+!                 rootfr(p,lev) = 0._r8
+!              end do
+!           end if
+!        else
+!           bottom = 8
+!           slope = -2._r8/(zi(c,bottom)*zi(c,bottom))
+!           intercept   = 2._r8/zi(c,bottom)
+!           do lev=1,bottom
+!              rootfr(p,lev) = dz(c,lev) * 0.5_r8 * ((intercept+slope*zi(c,lev-1)) + (intercept+slope*zi(c,lev)))
+!           end do
+!           if (bottom < nlevsoi) then
+!              do lev=bottom+1,nlevgrnd
+!                 rootfr(p,lev) = 0._r8
+!              end do
+!           end if
+!        end if
+!#endif
       else
          rootfr(p,1:nlevsoi) = 0._r8
       endif
       
       ! initialize rresis, for use in ecosystemdyn
-      do lev = 1,nlevsoi
+      do lev = 1,nlevgrnd
          rresis(p,lev) = 0._r8
       end do
 
@@ -810,7 +826,16 @@ subroutine iniTimeConst
    call CNiniSpecial()
 #endif
 
-   deallocate(soic2d,ndep,sand3d,clay3d,gti)
+   deallocate(soic2d,ndep,sand3d,clay3d,gti,organic3d)
+
+
+   ! initialize aerosol deposition routines
+   call aerdepini()
+
+   ! Initialize SNICAR optical and aging parameters:
+   call SnowOptics_init( )
+
+   call SnowAge_init( )
 
    if (masterproc) write(iulog,*) 'Successfully initialized time invariant variables'
 

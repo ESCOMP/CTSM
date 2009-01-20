@@ -1102,14 +1102,14 @@ contains
 
        sum = vf_sr(l) + 2._r8*vf_wr(l)
        if (abs(sum-1._r8) > 1.e-06_r8 ) then
-          write (6,*) 'urban road view factor error',sum
-          write (6,*) 'clm model is stopping'
+          write (iulog,*) 'urban road view factor error',sum
+          write (iulog,*) 'clm model is stopping'
           call endrun()
        endif
        sum = vf_sw(l) + vf_rw(l) + vf_ww(l)
        if (abs(sum-1._r8) > 1.e-06_r8 ) then
-          write (6,*) 'urban wall view factor error',sum
-          write (6,*) 'clm model is stopping'
+          write (iulog,*) 'urban wall view factor error',sum
+          write (iulog,*) 'clm model is stopping'
           call endrun()
        endif
 
@@ -1230,8 +1230,8 @@ contains
        do l = 1,num_urbanl
           if (coszen(l) > 0._r8) then
              if (abs(err1(l)) > 0.001_r8) then
-                write (6,*) 'urban direct beam solar radiation balance error',err1(l)
-                write (6,*) 'clm model is stopping'
+                write (iulog,*) 'urban direct beam solar radiation balance error',err1(l)
+                write (iulog,*) 'clm model is stopping'
                 call endrun()
              endif
           endif
@@ -1265,13 +1265,13 @@ contains
           do l = 1,num_urbanl
              if (coszen(l) > 0._r8) then
              if (abs(err2(l)) > 0.0006_r8 ) then
-                write (6,*) 'urban road incident direct beam solar radiation error',err2(l)
-                write (6,*) 'clm model is stopping'
+                write (iulog,*) 'urban road incident direct beam solar radiation error',err2(l)
+                write (iulog,*) 'clm model is stopping'
                 call endrun
              endif
              if (abs(err3(l)) > 0.0006_r8 ) then
-                write (6,*) 'urban wall incident direct beam solar radiation error',err3(l)
-                write (6,*) 'clm model is stopping'
+                write (iulog,*) 'urban wall incident direct beam solar radiation error',err3(l)
+                write (iulog,*) 'clm model is stopping'
                 call endrun
              end if
              end if
@@ -1354,8 +1354,8 @@ contains
 
        do l = 1, num_urbanl
           if (abs(err(l)) > 0.001_r8) then
-             write (6,*) 'urban diffuse solar radiation balance error',err(l) 
-             write (6,*) 'clm model is stopping'
+             write (iulog,*) 'urban diffuse solar radiation balance error',err(l) 
+             write (iulog,*) 'clm model is stopping'
              call endrun
           endif
        end do
@@ -1768,8 +1768,8 @@ contains
              if (crit < errcrit) exit
           end do
           if (iter_dir >= n) then
-             write (6,*) 'urban net solar radiation error: no convergence, direct beam'
-             write (6,*) 'clm model is stopping'
+             write (iulog,*) 'urban net solar radiation error: no convergence, direct beam'
+             write (iulog,*) 'clm model is stopping'
              call endrun
           endif
  
@@ -1848,8 +1848,8 @@ contains
              if (crit < errcrit) exit
           end do
           if (iter_dif >= n) then
-             write (6,*) 'urban net solar radiation error: no convergence, diffuse'
-             write (6,*) 'clm model is stopping'
+             write (iulog,*) 'urban net solar radiation error: no convergence, diffuse'
+             write (iulog,*) 'clm model is stopping'
              call endrun()
           endif
 
@@ -2090,8 +2090,8 @@ contains
 
        err = lwdown(fl) - (lwdown_road(fl) + (lwdown_shadewall(fl) + lwdown_sunwall(fl))*canyon_hwr(fl))
        if (abs(err) > 0.10_r8 ) then
-          write (6,*) 'urban incident atmospheric longwave radiation balance error',err
-          write (6,*) 'clm model is stopping'
+          write (iulog,*) 'urban incident atmospheric longwave radiation balance error',err
+          write (iulog,*) 'clm model is stopping'
           call endrun
        endif
     end do
@@ -2282,8 +2282,8 @@ contains
           if (crit < .001_r8) exit
        end do
        if (iter >= n) then
-          write (6,*) 'urban net longwave radiation error: no convergence'
-          write (6,*) 'clm model is stopping'
+          write (iulog,*) 'urban net longwave radiation error: no convergence'
+          write (iulog,*) 'clm model is stopping'
           call endrun
        endif
 
@@ -2307,8 +2307,8 @@ contains
 
        err = lwnet_canyon(fl) - (lwup_canyon(fl) - lwdown(fl))
        if (abs(err) > .10_r8 ) then
-          write (6,*) 'urban net longwave radiation balance error',err
-          write (6,*) 'clm model is stopping'
+          write (iulog,*) 'urban net longwave radiation balance error',err
+          write (iulog,*) 'clm model is stopping'
           call endrun()
        end if
 
@@ -2385,7 +2385,7 @@ contains
     nclumps = get_proc_clumps()
     allocate(urban_clump(nclumps), stat=ier)
     if (ier /= 0) then
-       write (6,*) 'UrbanInit: allocation error for urban clumps'; call endrun()
+       write (iulog,*) 'UrbanInit: allocation error for urban clumps'; call endrun()
     end if
 
     ! Loop over all clumps on this processor
@@ -2506,10 +2506,10 @@ contains
     use clmtype
     use clm_varcon         , only : cpair, vkc, spval, icol_roof, icol_sunwall, &
                                     icol_shadewall, icol_road_perv, icol_road_imperv, &
-                                    grav, pondmx_urban, nlevsoi, rpi, rgas
+                                    grav, pondmx_urban, rpi, rgas
     use filterMod          , only : filter
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
-    use clm_varpar         , only : maxpatch_urb
+    use clm_varpar         , only : maxpatch_urb, nlevurb
     use clm_time_manager   , only : get_curr_date, get_step_size, get_nstep
     use clm_atmlnd         , only : clm_a2l
 
@@ -2812,6 +2812,8 @@ contains
     psnsha         => clm3%g%l%c%p%pcf%psnsha
     forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
     forc_hgt_t_pft => clm3%g%l%c%p%pps%forc_hgt_t_pft
+    forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
+    forc_hgt_t_pft => clm3%g%l%c%p%pps%forc_hgt_t_pft
 
     ! Define fields that appear on the restart file for non-urban landunits 
 
@@ -2849,19 +2851,19 @@ contains
        ! Error checks
 
        if (ht_roof(fl) - z_d_town(l) <= z_0_town(l)) then
-          write (6,*) 'aerodynamic parameter error in UrbanFluxes'
-          write (6,*) 'h_r - z_d <= z_0'
-          write (6,*) 'ht_roof, z_d_town, z_0_town: ', ht_roof(fl), z_d_town(l), &
+          write (iulog,*) 'aerodynamic parameter error in UrbanFluxes'
+          write (iulog,*) 'h_r - z_d <= z_0'
+          write (iulog,*) 'ht_roof, z_d_town, z_0_town: ', ht_roof(fl), z_d_town(l), &
                        z_0_town(l)
-          write (6,*) 'clm model is stopping'
+          write (iulog,*) 'clm model is stopping'
           call endrun()
        end if
        if (forc_hgt_u_pft(pfti(l)) - z_d_town(l) <= z_0_town(l)) then
-          write (6,*) 'aerodynamic parameter error in UrbanFluxes'
-          write (6,*) 'h_u - z_d <= z_0'
+          write (iulog,*) 'aerodynamic parameter error in UrbanFluxes'
+          write (iulog,*) 'h_u - z_d <= z_0'
           write (iulog,*) 'forc_hgt_u_pft, z_d_town, z_0_town: ', forc_hgt_u_pft(pfti(l)), z_d_town(l), &
                        z_0_town(l)
-          write (6,*) 'clm model is stopping'
+          write (iulog,*) 'clm model is stopping'
           call endrun()
        end if
 
@@ -3358,11 +3360,11 @@ contains
              c = coli(l) + pi - 1
 
              if (ctype(c) == icol_roof) then
-                t_roof_innerl(l) = t_soisno(c,nlevsoi)
+                t_roof_innerl(l) = t_soisno(c,nlevurb)
              else if (ctype(c) == icol_sunwall) then
-                t_sunwall_innerl(l) = t_soisno(c,nlevsoi)
+                t_sunwall_innerl(l) = t_soisno(c,nlevurb)
              else if (ctype(c) == icol_shadewall) then
-                t_shadewall_innerl(l) = t_soisno(c,nlevsoi)
+                t_shadewall_innerl(l) = t_soisno(c,nlevurb)
              end if
 
           end if
@@ -3384,7 +3386,7 @@ contains
 
     ! No roots for urban except for pervious road
 
-    do j = 1, nlevsoi
+    do j = 1, nlevurb
       do f = 1, num_urbanp
          p = filter_urbanp(f)
          c = pcolumn(p)

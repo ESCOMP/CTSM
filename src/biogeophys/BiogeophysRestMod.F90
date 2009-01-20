@@ -14,6 +14,7 @@ module BiogeophysRestMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils,   only : endrun
+  use spmdMod             , only : masterproc
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -45,11 +46,12 @@ contains
     use clmtype
     use ncdio
     use decompMod       , only : get_proc_bounds
-    use clm_varpar      , only : nlevsoi, nlevsno
-    use clm_varcon      , only : denice, denh2o, istsoil, pondmx, watmin
+    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb
+    use clm_varcon      , only : denice, denh2o, istdlak, istslak, isturb, istsoil, pondmx, watmin
     use clm_varctl      , only : allocate_all_vegpfts, nsrest
     use initSurfAlbMod  , only : do_initsurfalb
     use clm_time_manager, only : is_first_step
+    use SNICARMod       , only : snw_rds_min
 !
 ! !ARGUMENTS:
     implicit none
@@ -72,19 +74,19 @@ contains
 !
 ! local pointers to implicit in arguments
 !
-    integer , pointer :: ityplun(:)       !landunit type
-    integer , pointer :: clandunit(:)     !column's landunit index
-
     real(r8) :: maxwatsat                 !maximum porosity    
     real(r8) :: excess                    !excess volumetric soil water
     real(r8) :: totwat                    !total soil water (mm)
     integer :: p,c,l,g,j    ! indices
+    integer :: nlevs        ! number of layers
     integer :: begp, endp   ! per-proc beginning and ending pft indices
     integer :: begc, endc   ! per-proc beginning and ending column indices
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     logical :: readvar      ! determine if variable is on initial file
     character(len=128) :: varname         ! temporary
+    integer , pointer :: clandunit(:)     ! landunit of corresponding column
+    integer , pointer :: ltype(:)         ! landunit type
     type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
     type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
@@ -93,11 +95,12 @@ contains
 
     ! Set pointers into derived type
 
-    gptr => clm3%g
-    lptr => clm3%g%l
-    cptr => clm3%g%l%c
-    pptr => clm3%g%l%c%p
-    ityplun   => lptr%itype
+    gptr       => clm3%g
+    lptr       => clm3%g%l
+    cptr       => clm3%g%l%c
+    pptr       => clm3%g%l%c%p
+    ltype      => lptr%itype
+    clandunit  => cptr%landunit
     clandunit => cptr%landunit
 
     ! Note - for the snow interfaces, are only examing the snow interfaces
@@ -1321,10 +1324,17 @@ contains
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
     if (flag == 'read' ) then
-       do j = 1,nlevsoi
-!dir$ concurrent
-!cdir nodep
-          do c = begc,endc
+       do c = begc,endc
+          l = clandunit(c)
+          if ( ltype(l) == istdlak .or. ltype(l) == istslak )then
+             nlevs = nlevlak
+          else if ( ltype(l) == isturb )then
+             nlevs = nlevurb
+          else
+             nlevs = nlevgrnd
+          end if
+          ! NOTE: THIS IS A MEMORY INEFFICIENT COPY
+          do j = 1,nlevs
              cptr%cws%h2osoi_vol(c,j) = cptr%cws%h2osoi_liq(c,j)/(cptr%cps%dz(c,j)*denh2o) &
                                       + cptr%cws%h2osoi_ice(c,j)/(cptr%cps%dz(c,j)*denice)
           end do
@@ -1335,12 +1345,18 @@ contains
        ! ------------------------------------------------------------
 
        if ( is_first_step() )then
-          do j = 1,nlevsoi
-!dir$ concurrent
-!cdir nodep
-             do c = begc,endc
+          do c = begc,endc
+             l = clandunit(c)
+             if (      ltype(l) == istdlak .or. ltype(l) == istslak )then
+                nlevs = nlevlak
+             else if ( ltype(l) == isturb )then
+                nlevs = nlevurb
+             else
+                nlevs = nlevgrnd
+             end if
+             do j = 1,nlevs
                 l = clandunit(c)
-                if (ityplun(l) == istsoil) then
+                if (ltype(l) == istsoil) then
                    cptr%cws%h2osoi_liq(c,j) = max(0._r8,cptr%cws%h2osoi_liq(c,j))
                    cptr%cws%h2osoi_ice(c,j) = max(0._r8,cptr%cws%h2osoi_ice(c,j))
                    cptr%cws%h2osoi_vol(c,j) = cptr%cws%h2osoi_liq(c,j)/(cptr%cps%dz(c,j)*denh2o) &
@@ -1368,6 +1384,367 @@ contains
           end do
        end if
     endif
+
+    !mgf variables needed for SNICAR
+    !
+    !mgf: column type physical state variable - snw_rds
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='snw_rds', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno', &
+            long_name='snow layer effective radius', units='um')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='snw_rds', data=cptr%cps%snw_rds, &
+            dim1name='column', dim2name='levsno', &
+            lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "SNICAR: can't find snw_rds in restart (or initial) file..."
+          if (is_restart()) then
+             call endrun()
+          else
+             ! initial run, not restart: initialize snw_rds
+             if (masterproc) then
+                write(iulog,*) "SNICAR: This is an initial run (not a restart), and grain size/aerosol " // &
+                               "mass data are not defined in initial condition file. Initialize snow " // &
+                               "effective radius to fresh snow value, and snow/aerosol masses to zero."
+             endif
+             do c=begc,endc
+                if (cptr%cps%snl(c) < 0) then
+                   cptr%cps%snw_rds(c,cptr%cps%snl(c)+1:0) = snw_rds_min
+                   cptr%cps%snw_rds(c,-nlevsno+1:cptr%cps%snl(c)) = 0._r8
+                   cptr%cps%snw_rds_top(c) = snw_rds_min
+                   cptr%cps%sno_liq_top(c) = cptr%cws%h2osoi_liq(c,cptr%cps%snl(c)+1) / &
+                        (cptr%cws%h2osoi_liq(c,cptr%cps%snl(c)+1)+cptr%cws%h2osoi_ice(c,cptr%cps%snl(c)+1))
+                elseif (cptr%cws%h2osno(c) > 0._r8) then
+                   cptr%cps%snw_rds(c,0) = snw_rds_min
+                   cptr%cps%snw_rds(c,-nlevsno+1:-1) = 0._r8
+                   cptr%cps%snw_rds_top(c) = spval
+                   cptr%cps%sno_liq_top(c) = spval
+                else
+                   cptr%cps%snw_rds(c,:) = 0._r8
+                   cptr%cps%snw_rds_top(c) = spval
+                   cptr%cps%sno_liq_top(c) = spval
+                endif
+             enddo
+          endif
+       end if
+    end if
+
+    !mgf: column type physical state variable - mss_bcpho
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='mss_bcpho', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno', &
+            long_name='snow layer hydrophobic black carbon mass', units='kg m-2')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='mss_bcpho', data=cptr%cps%mss_bcpho, &
+            dim1name='column', dim2name='levsno', &
+            lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) then
+             call endrun()
+          else
+             ! initial run, not restart: initialize mss_bcpho to zero
+             do c=begc,endc
+                cptr%cps%mss_bcpho(c,-nlevsno+1:0) = 0._r8
+             enddo
+          endif
+       end if
+    end if
+
+    !mgf: column type physical state variable - mss_bcphi
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='mss_bcphi', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno', &
+            long_name='snow layer hydrophilic black carbon mass', units='kg m-2')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='mss_bcphi', data=cptr%cps%mss_bcphi, &
+            dim1name='column', dim2name='levsno', &
+            lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) then
+             call endrun()
+          else
+             ! initial run, not restart: initialize mss_bcphi to zero
+             do c=begc,endc
+                cptr%cps%mss_bcphi(c,-nlevsno+1:0) = 0._r8
+             enddo
+          endif
+       end if
+    end if
+
+    !mgf: column type physical state variable - mss_ocpho
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='mss_ocpho', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno', &
+            long_name='snow layer hydrophobic organic carbon mass', units='kg m-2')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='mss_ocpho', data=cptr%cps%mss_ocpho, &
+            dim1name='column', dim2name='levsno', &
+            lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) then
+             call endrun()
+          else
+             ! initial run, not restart: initialize mss_ocpho to zero
+             do c=begc,endc
+                cptr%cps%mss_ocpho(c,-nlevsno+1:0) = 0._r8
+             enddo
+          endif
+       end if
+    end if
+
+    !mgf: column type physical state variable - mss_ocphi
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='mss_ocphi', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno', &
+            long_name='snow layer hydrophilic organic carbon mass', units='kg m-2')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='mss_ocphi', data=cptr%cps%mss_ocphi, &
+            dim1name='column', dim2name='levsno', &
+            lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) then
+             call endrun()
+          else
+             ! initial run, not restart: initialize mss_ocphi to zero
+             do c=begc,endc
+                cptr%cps%mss_ocphi(c,-nlevsno+1:0) = 0._r8
+             enddo
+          endif
+       end if
+    end if
+
+    !mgf: column type physical state variable - mss_dst1
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='mss_dst1', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno', &
+            long_name='snow layer dust species 1 mass', units='kg m-2')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='mss_dst1', data=cptr%cps%mss_dst1, &
+            dim1name='column', dim2name='levsno', &
+            lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) then
+             call endrun()
+          else
+             ! initial run, not restart: initialize mss_dst1 to zero
+             do c=begc,endc
+                cptr%cps%mss_dst1(c,-nlevsno+1:0) = 0._r8
+             enddo
+          endif
+       end if
+    end if
+
+    !mgf: column type physical state variable - mss_dst2
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='mss_dst2', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno', &
+            long_name='snow layer dust species 2 mass', units='kg m-2')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='mss_dst2', data=cptr%cps%mss_dst2, &
+            dim1name='column', dim2name='levsno', &
+            lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) then
+             call endrun()
+          else
+             ! initial run, not restart: initialize mss_dst2 to zero
+             do c=begc,endc
+                cptr%cps%mss_dst2(c,-nlevsno+1:0) = 0._r8
+             enddo
+          endif
+       end if
+    end if
+
+    !mgf: column type physical state variable - mss_dst3
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='mss_dst3', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno', &
+            long_name='snow layer dust species 3 mass', units='kg m-2')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='mss_dst3', data=cptr%cps%mss_dst3, &
+            dim1name='column', dim2name='levsno', &
+            lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) then
+             call endrun()
+          else
+             ! initial run, not restart: initialize mss_dst3 to zero
+             do c=begc,endc
+                cptr%cps%mss_dst3(c,-nlevsno+1:0) = 0._r8
+             enddo
+          endif
+       end if
+    end if
+
+    !mgf: column type physical state variable - mss_dst4
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='mss_dst4', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno', &
+            long_name='snow layer dust species 4 mass', units='kg m-2')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='mss_dst4', data=cptr%cps%mss_dst4, &
+            dim1name='column', dim2name='levsno', &
+            lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) then
+             call endrun()
+          else
+             ! initial run, not restart: initialize mss_dst4 to zero
+             do c=begc,endc
+                cptr%cps%mss_dst4(c,-nlevsno+1:0) = 0._r8
+             enddo
+          endif
+       end if
+    end if
+
+    !mgf: column type physical state variable - flx_absdv
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='flx_absdv', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno1', &
+            long_name='snow layer flux absorption factors (direct, VIS)', units='fraction')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='flx_absdv', data=cptr%cps%flx_absdv, &
+            dim1name='column', dim2name='levsno1', &
+            lowerb2=-nlevsno+1, upperb2=1, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+          ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
+          if (nsrest == 0) do_initsurfalb = .true.
+       end if
+    end if
+
+    !mgf: column type physical state variable - flx_absdn
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='flx_absdn', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno1', &
+            long_name='snow layer flux absorption factors (direct, NIR)', units='fraction')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='flx_absdn', data=cptr%cps%flx_absdn, &
+            dim1name='column', dim2name='levsno1', &
+            lowerb2=-nlevsno+1, upperb2=1, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+          ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
+          if (nsrest == 0) do_initsurfalb = .true.
+       end if
+    end if
+
+    !mgf: column type physical state variable - flx_absiv
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='flx_absiv', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno1', &
+            long_name='snow layer flux absorption factors (diffuse, VIS)', units='fraction')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='flx_absiv', data=cptr%cps%flx_absiv, &
+            dim1name='column', dim2name='levsno1', &
+            lowerb2=-nlevsno+1, upperb2=1, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+          ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
+          if (nsrest == 0) do_initsurfalb = .true.
+       end if
+    end if
+
+    !mgf: column type physical state variable - flx_absin
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='flx_absin', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno1', &
+            long_name='snow layer flux absorption factors (diffuse, NIR)', units='fraction')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='flx_absin', data=cptr%cps%flx_absin, &
+            dim1name='column', dim2name='levsno1', &
+            lowerb2=-nlevsno+1, upperb2=1, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+          ! SNICAR, via SurfaceAlbedo, will define the needed flux absorption factors
+          if (nsrest == 0) do_initsurfalb = .true.
+       end if
+    end if
+
+    !mgf column type physical state variable - albsnd_hst
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='albsnd_hst', xtype=nf_double,  &
+            dim1name='column', dim2name='numrad', &
+            long_name='snow albedo (direct) (0 to 1)',units='proportion')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='albsnd_hst', data=cptr%cps%albsnd_hst, &
+            dim1name='column', dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    !mgf column type physical state variable - albsni_hst
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='albsni_hst', xtype=nf_double,  &
+            dim1name='column', dim2name='numrad', &
+            long_name='snow albedo (diffuse) (0 to 1)',units='proportion')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='albsni_hst', data=cptr%cps%albsni_hst, &
+            dim1name='column', dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
+    !mgf: column type water flux variable - qflx_snofrz_lyr
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='qflx_snofrz_lyr', xtype=nf_double,  &
+            dim1name='column', dim2name='levsno', &
+            long_name='snow layer ice freezing rate', units='kg m-2 s-1')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='qflx_snofrz_lyr', data=cptr%cwf%qflx_snofrz_lyr, &
+            dim1name='column', dim2name='levsno', &
+            lowerb2=-nlevsno+1, upperb2=0, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag == 'read' .and. .not. readvar) then
+          if (is_restart()) then
+             call endrun()
+          else
+             ! initial run, not restart: initialize qflx_snofrz_lyr to zero
+             do c=begc,endc
+                cptr%cwf%qflx_snofrz_lyr(c,-nlevsno+1:0) = 0._r8
+             enddo
+          endif
+       end if
+    end if
+
+    !mgf: initialize other variables that are derived from those
+    ! stored in the restart buffer. (there may be a more appropriate
+    ! place to do this, but functionally this works)
+   if (flag == 'read' ) then
+       do j = -nlevsno+1,0
+!dir$ concurrent
+!cdir nodep
+          do c = begc,endc
+             ! mass concentrations of aerosols in snow
+             if (cptr%cws%h2osoi_ice(c,j)+cptr%cws%h2osoi_liq(c,j) > 0._r8) then
+                cptr%cps%mss_cnc_bcpho(c,j) = cptr%cps%mss_bcpho(c,j) / (cptr%cws%h2osoi_ice(c,j)+cptr%cws%h2osoi_liq(c,j))
+                cptr%cps%mss_cnc_bcphi(c,j) = cptr%cps%mss_bcphi(c,j) / (cptr%cws%h2osoi_ice(c,j)+cptr%cws%h2osoi_liq(c,j))
+                cptr%cps%mss_cnc_ocpho(c,j) = cptr%cps%mss_ocpho(c,j) / (cptr%cws%h2osoi_ice(c,j)+cptr%cws%h2osoi_liq(c,j))
+                cptr%cps%mss_cnc_ocphi(c,j) = cptr%cps%mss_ocphi(c,j) / (cptr%cws%h2osoi_ice(c,j)+cptr%cws%h2osoi_liq(c,j))
+             
+                cptr%cps%mss_cnc_dst1(c,j) = cptr%cps%mss_dst1(c,j) / (cptr%cws%h2osoi_ice(c,j)+cptr%cws%h2osoi_liq(c,j))
+                cptr%cps%mss_cnc_dst2(c,j) = cptr%cps%mss_dst2(c,j) / (cptr%cws%h2osoi_ice(c,j)+cptr%cws%h2osoi_liq(c,j))
+                cptr%cps%mss_cnc_dst3(c,j) = cptr%cps%mss_dst3(c,j) / (cptr%cws%h2osoi_ice(c,j)+cptr%cws%h2osoi_liq(c,j))
+                cptr%cps%mss_cnc_dst4(c,j) = cptr%cps%mss_dst4(c,j) / (cptr%cws%h2osoi_ice(c,j)+cptr%cws%h2osoi_liq(c,j))
+             else
+                cptr%cps%mss_cnc_bcpho(c,j) = 0._r8
+                cptr%cps%mss_cnc_bcphi(c,j) = 0._r8
+                cptr%cps%mss_cnc_ocpho(c,j) = 0._r8
+                cptr%cps%mss_cnc_ocphi(c,j) = 0._r8
+             
+                cptr%cps%mss_cnc_dst1(c,j) = 0._r8
+                cptr%cps%mss_cnc_dst2(c,j) = 0._r8
+                cptr%cps%mss_cnc_dst3(c,j) = 0._r8
+                cptr%cps%mss_cnc_dst4(c,j) = 0._r8
+             endif
+          enddo
+       enddo
+    endif
+    !mgf-- SNICAR variables
+
 
   end subroutine BiogeophysRest
 

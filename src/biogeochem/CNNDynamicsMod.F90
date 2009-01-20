@@ -182,8 +182,7 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
 ! !USES:
    use clmtype
    use clm_varpar      , only : nlevsoi
-   use clm_varctl      , only : irad
-   use clm_time_manager    , only : get_step_size
+   use clm_time_manager    , only : get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -200,7 +199,7 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in scalars
 !
-   real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2) (new) (-nlevsno+1:nlevsoi)
+   real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
    real(r8), pointer :: qflx_drain(:)    ! sub-surface runoff (mm H2O /s)
    real(r8), pointer :: sminn(:)         ! (gN/m2) soil mineral N
 !
@@ -210,7 +209,6 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
 !
 ! !OTHER LOCAL VARIABLES:
    integer  :: j,c,fc             ! indices
-   integer  :: dtime              ! time step (s)
    real(r8) :: dt                 ! radiation time step (seconds)
    real(r8) :: tot_water(lbc:ubc) ! total column liquid water (kg water/m2)
    real(r8) :: sf                 ! soluble fraction of mineral N (unitless)
@@ -228,8 +226,7 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
    sminn_leached => clm3%g%l%c%cnf%sminn_leached
 
    ! set time steps
-   dtime = get_step_size()
-   dt = float(irad)*dtime
+   dt = real( get_rad_step_size(), r8 )
 
    ! Assume that 10% of the soil mineral N is in a soluble form
    sf = 0.1_r8

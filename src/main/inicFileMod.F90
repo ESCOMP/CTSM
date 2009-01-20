@@ -47,7 +47,7 @@ contains
 ! !USES:
     use clmtype
     use clm_varctl  , only : finidat
-    use clm_varpar  , only : nlevsno, nlevsoi, nlevlak
+    use clm_varpar  , only : nlevsno, nlevgrnd, nlevsoi, nlevlak
     use clm_varcon  , only : denice, denh2o, zlnd
     use fileutils   , only : getfil
     use decompMod   , only : get_proc_bounds, get_proc_global
@@ -109,7 +109,7 @@ contains
           call check_dim(ncid, 'column'  , numc)
           call check_dim(ncid, 'pft'     , nump)
           call check_dim(ncid, 'levsno'  , nlevsno)
-          call check_dim(ncid, 'levsoi'  , nlevsoi)
+          call check_dim(ncid, 'levgrnd' , nlevgrnd)
           call check_dim(ncid, 'levlak'  , nlevlak) 
           opened_finidat = .true.
        else

@@ -123,6 +123,7 @@ contains
 ! 
 ! !USES:
      use shr_file_mod, only: shr_file_get
+     use clm_varctl  , only: fget_archdev
 ! !ARGUMENTS:
      implicit none
      character(len=*), intent(in)  :: fulpath !Archival or permanent disk full pathname
@@ -176,7 +177,7 @@ contains
            write(iulog,*)'(GETFIL): using ',trim(fulpath)
            return
         endif
-        fulpath2 = "mss:"//trim(fulpath)
+        fulpath2 = trim(fget_archdev)//trim(fulpath)
      else
         fulpath2 = trim(fulpath)
      end if

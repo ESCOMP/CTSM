@@ -22,6 +22,8 @@ module filterMod
   implicit none
   save
 
+  private
+
   type clumpfilter
 #ifdef DGVM
      integer, pointer :: natvegp(:)      ! DGVM nat-vegetated (present) filter (pfts)
@@ -69,6 +71,8 @@ module filterMod
      integer :: num_nolakeurbanp         ! number of pfts in non-lake, non-urban filter
 
   end type clumpfilter
+  public clumpfilter
+
   type(clumpfilter), allocatable, public :: filter(:)
 !
   public allocFilters   ! allocate memory for filters

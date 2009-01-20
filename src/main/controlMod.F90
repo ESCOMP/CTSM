@@ -27,11 +27,17 @@ module controlMod
 !    o flndtopo        = 256 character land topography file name
 !    o fndepdat        = 254 character nitrogen deposition data file name (netCDF)
 !    o fndepdyn        = 254 character nitrogen deposition data file name (netCDF) changing dynamically in time
+!    o forganic        = 256 character organic matter data file name (netCDF)  
 !    o fpftcon         = 256 character data file with PFT physiological constants
 !    o fpftdyn         = 256 character data file with PFT physiological constants changing dynamically in time
 !    o frivinp_rtm     = 256 character input data file for rtm
 !    o furbinp         = 256 character input data file for urban input
 !    o nrevsn          = 256 character restart file name for use with branch run
+!    o fsnowoptics     = 256 character snow optical properties file name
+!    o fsnowaging      = 256 character snow aging parameters file name
+!    o faerdep         = 256 character aerosol deposition file name
+!    o fget_archdev    = 8 character input archive device prefix to retreive input files from (used by shr/shr_file_mod.F90)
+!                        (such as mss: for NCAR mass store)
 !
 ! === history and restart files ===
 !
@@ -84,7 +90,6 @@ module controlMod
 !
 ! === model physics ===
 !
-!    o irad         = integer solar radiation frequency (+ = iteration. - = hour)
 !    o wrtdia       = true if want output written
 !    o co2_ppmv     = CO2 volume mixing ratio
 !    o pertlim      = perturbation limit
@@ -101,11 +106,11 @@ module controlMod
   use clm_varctl   , only : caseid, ctitle, nsrest, brnch_retain_casename, hostname, model_version=>version,    &
                             iulog, hist_crtinic, outnc_large_files, finidat, fsurdat, fatmgrid, fatmlndfrc,     &
                             fatmtopo, flndtopo, fndepdat, fndepdyn, fpftdyn, fpftcon, nrevsn, frivinp_rtm,      &
-                            create_crop_landunit, allocate_all_vegpfts, &
-                            co2_type, irad, wrtdia, co2_ppmv, rtm_nsteps, nsegspc, pertlim,       &
+                            create_crop_landunit, allocate_all_vegpfts, fget_archdev, &
+                            co2_type, wrtdia, co2_ppmv, rtm_nsteps, nsegspc, pertlim,       &
                             hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, username,           &
                             ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
-                            ncd_pio_num_iotasks
+                            ncd_pio_num_iotasks, faerdep, forganic, fsnowaging, fsnowoptics
   use spmdMod      , only : masterproc
   use decompMod    , only : clump_pproc
   use histFileMod  , only : max_tapes, max_namlen, &
@@ -239,7 +244,8 @@ contains
     namelist /clm_inparm/  &
          finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
          fpftcon, frivinp_rtm,  furbinp, &
-         fpftdyn, fndepdat, fndepdyn, nrevsn
+         fpftdyn, fndepdat, forganic, fndepdyn, nrevsn, &
+         fsnowoptics, fsnowaging, faerdep
 
     ! clm history, restart options
 
@@ -271,7 +277,7 @@ contains
     ! clm other options
 
     namelist /clm_inparm/  &
-         clump_pproc, irad, wrtdia, rtm_nsteps, pertlim, &
+         clump_pproc, wrtdia, rtm_nsteps, pertlim, &
          create_crop_landunit, nsegspc, co2_ppmv
 
          
@@ -440,12 +446,18 @@ contains
     call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdat, len(fndepdat), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdyn, len(fndepdyn), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (forganic, len(forganic),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftcon , len(fpftcon) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (furbinp , len(furbinp) , MPI_CHARACTER, 0, mpicom, ier)
 #if (defined RTM)
     call mpi_bcast (frivinp_rtm, len(frivinp_rtm), MPI_CHARACTER, 0, mpicom, ier)
 #endif
+    call mpi_bcast (fsnowoptics,  len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (faerdep,      len(faerdep),      MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fget_archdev, len(fget_archdev), MPI_CHARACTER, 0, mpicom, ier)
+    
 
     ! Landunit generation
 
@@ -458,7 +470,6 @@ contains
 
     ! physics variables
 
-    call mpi_bcast (irad        , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (rtm_nsteps  , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (nsegspc     , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (wrtdia      , 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -595,6 +606,27 @@ contains
     else
         write(iulog,*) '   dynamic nitrogen deposition data = ',trim(fndepdyn)
     endif
+    if (forganic == ' ') then
+        write(iulog,*) '   NOT using input data organic matter'
+    else
+        write(iulog,*) '   organic matter data = ',trim(forganic)
+    endif
+    if (fsnowoptics == ' ') then
+       write(iulog,*) '   snow optical properties file NOT set'
+    else
+       write(iulog,*) '   snow optical properties file = ',trim(fsnowoptics)
+    endif
+    if (fsnowaging == ' ') then
+       write(iulog,*) '   snow aging parameters file NOT set'
+    else
+       write(iulog,*) '   snow aging parameters file = ',trim(fsnowaging)
+    endif
+    if (faerdep == ' ') then
+       write(iulog,*) '   aerosol deposition file NOT set'
+    else
+       write(iulog,*) '   aerosol deposition file = ',trim(faerdep)
+    endif
+
     if (nsrest == 0 .and. finidat == ' ') write(iulog,*) '   initial data created by model'
     if (nsrest == 0 .and. finidat /= ' ') write(iulog,*) '   initial data   = ',trim(finidat)
     if (nsrest /= 0) write(iulog,*) '   restart data   = ',trim(nrevsn)
@@ -609,6 +641,9 @@ contains
     write(iulog,*)'   restart pointer file name          = ',trim(rpntfil)
     if ( outnc_large_files ) then
        write(iulog,*)'Large file support for output files is ON'
+    end if
+    if ( trim(fget_archdev) /= "null:" ) then
+       write(iulog,*)'try to retreive input files that do NOT exist from archival device: ', trim(fget_archdev)
     end if
     if (hist_crtinic == 'MONTHLY') then
        write(iulog,*)'initial datasets will be written monthly'
@@ -627,7 +662,6 @@ contains
 #else
     write(iulog,*) '   flag for random perturbation test is not set'
 #endif
-    write(iulog,*) '   solar radiation frequency (iterations) = ',irad
     write(iulog,*) '   CO2 volume mixing ratio   (umol/mol)   = ', co2_ppmv
 #if (defined RTM)
     if (rtm_nsteps > 1) then

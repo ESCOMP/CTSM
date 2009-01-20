@@ -13,6 +13,8 @@ if [ -f ${CLM_TESTDIR}/${test_name}/TestStatus ]; then
         echo "TBR.sh: branch test has already passed; results are in "
 	echo "        ${CLM_TESTDIR}/${test_name}"
         exit 0
+    elif grep -c GEN ${CLM_TESTDIR}/${test_name}/TestStatus > /dev/null; then
+        echo "TBR.sh: test already generated"
     else
 	read fail_msg < ${CLM_TESTDIR}/${test_name}/TestStatus
         prev_jobid=${fail_msg#*job}
@@ -100,13 +102,13 @@ echo "TBR.sh: starting b4b comparisons "
 file_string="*.clm*h*.nc"
 files_to_compare=`ls $file_string`
 first_file=`ls $file_string | head -1`
-if [ -z "${files_to_compare}" ] && [ "${debug}" != "YES" ]; then
+if [ -z "${files_to_compare}" ] && [ "${debug}" != "YES" ] && [ "$compile_only" != "YES" ]; then
     echo "TBR.sh: error locating files to compare"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 10
 fi
 
-if [ "$first_file" = "$files_to_compare" ] && [ "$debug" != "YES" ]; then
+if [ "$first_file" = "$files_to_compare" ] && [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
     echo "TBR.sh: only one file to compare -- not enough"
     echo "FAIL.job${JOBID}" > TestStatus
     exit 11
@@ -138,7 +140,7 @@ for compare_file in ${files_to_compare}; do
     fi
 done
 
-if [ [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
+if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
    status="PASS"
 else
    status="GEN"

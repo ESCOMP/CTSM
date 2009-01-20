@@ -1,0 +1,79 @@
+          QuickStart to Using cpl7 Scripts for clm3.6
+          ===========================================
+
+Assumptions: You want to use bluefire with a trunk version of clm3_6
+             to do a clm simulation with data atmosphere and the
+             latest atm forcing files and settings. You also want to cycle
+             the atm data between 1948 to 2004 and you want to run at
+             1.9x2.5 degree resolution.
+
+Process:
+
+   # Checkout a specific version of the CLM model
+
+   svn co https://svn-ccsm-models.cgd.ucar.edu/clm2/trunk_tags/clm3_7_00
+
+   # Create the case
+
+   cd clm3_7_00/scripts
+
+   ./create_newcase -case <testcase> -mach bluevista -res f19_g15 -compset IQ4804 -skip_rundb
+   (./create_newcase -help -- to get help on the script)
+TRUE
+
+   # Configure the case
+
+   cd <testcase>
+   edit env_run.xml env_conf.xml   # If you need to make changes
+   ./configure -case
+   (./configure -help -- to get help on the script)
+
+   # Make any changes to the namelist
+
+   edit Buildnml_prestage/clm.buildnml_prestage.csh
+
+   # Compile the code
+
+   ./<testcase>.build
+
+   # Submit the run
+
+   bsub < <testcase>.run
+
+Information on Compsets:
+
+     "I" compsets are the ones with clm and datm7 without ice and ocean.
+     "I" compsets with a "Q" use the new CLM_QIAN data with solar following
+     the cosine of solar zenith angle, precipitation constant, and other
+     variables linear interpolated in time (and with appropriate time-stamps on
+     the date).
+
+     Name		  (short-name): Description
+     --------------------------------------------------------------------------
+     I_CN            (ICNQ):       CLM with CN on
+     I_CN_1948_2004  (ICN4804Q):   CLM with CN on running over 1948-2004
+     I_CASA          (ICASAQ):     CLM with CASA on
+     I_CASA_19482004 (ICASA4804Q): CLM with CASA on running over 1948-2004
+     I_PRESENT_DAY   (IQ):         CLM with new CLM_QIAN data
+     I_1948_2004     (I4804Q):     CLM with new CLM_QIAN data over 1948-2004
+
+Information on run-database:
+
+    -skip_rundb says to skip entering information on this case into the run-database.
+    The run data-base is on the web at...
+
+    http://ccsm-rundb.cgd.ucar.edu/case_list.php
+
+    It contains information on important cases that we want to retain information on
+    (so they can be reproduced and so scientific details are publically available).
+    The standard CSM username password is used for the database.
+
+Automatically resubmitting jobs:
+
+   After doing a short simulation that you beleive is correct
+
+   edit env_run.xml
+
+   # Change RESUBMIT to number greater than 0, and CONTINUE_RUN to TRUE...
+
+   bsub < <testcase>.run

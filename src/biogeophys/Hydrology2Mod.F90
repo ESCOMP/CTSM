@@ -23,7 +23,7 @@ module Hydrology2Mod
 ! 7/12/03 Forrest Hoffman ,Mariana Vertenstein : Migrated to vector code
 ! 11/05/03 Peter Thornton: Added calculation of soil water potential
 !   for use in CN phenology code.
-! 04/25/07 Keith Oleson: CLM3.5 Hydrology 
+! 04/25/07 Keith Oleson: CLM3.5 Hydrology
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -65,7 +65,7 @@ contains
     use clm_varcon      , only : denh2o, denice, istice, istwet, istsoil, isturb, spval, &
                                  icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
                                  icol_shadewall
-    use clm_varpar      , only : nlevsoi, nlevsno
+    use clm_varpar      , only : nlevgrnd, nlevsno
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
                                  SnowWater, BuildSnowFilter
     use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff
@@ -123,6 +123,15 @@ contains
     real(r8), pointer :: fcov(:)          ! fractional area with water table at surface
     real(r8), pointer :: wa(:)            ! water in the unconfined aquifer (mm)
     real(r8), pointer :: qcharge(:)       ! aquifer recharge rate (mm/s)
+    real(r8), pointer :: smp_l(:,:)             ! soil matrix potential [mm]
+    real(r8), pointer :: dsmpdw_l(:,:)          ! derivative of soil matric potential
+    real(r8), pointer :: hk_l(:,:)              ! hydraulic conductivity (mm/s)
+    real(r8), pointer :: dhkdw_l(:,:)           ! derivative of hydraulic conductivity
+    real(r8), pointer :: dwat_l(:,:)            ! change in volumetric soil water content
+    real(r8), pointer :: qflx_in_soil(:,:)      ! flux of water into soil layer [mm h2o/s]
+    real(r8), pointer :: qflx_out_soil(:,:)     ! flux of water out of soil layer [mm h2o/s]
+    real(r8), pointer :: qflx_tranout_soil(:,:) ! transpiration flux out of soil layer [mm h2o/s]
+    real(r8), pointer :: qflx_rsub_sat(:)       ! soil saturation excess [mm h2o/s]
 !
 ! local pointers to implicit out arguments
 !
@@ -148,6 +157,42 @@ contains
     real(r8), pointer :: t_grnd_r(:)      ! Rural ground temperature (Kelvin)
     real(r8), pointer :: qflx_snwcp_ice(:)! excess snowfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: soilpsi(:,:)	  ! soil water potential in each soil layer (MPa)
+
+    real(r8), pointer :: snot_top(:)        ! snow temperature in top layer (col) [K]
+    real(r8), pointer :: dTdz_top(:)        ! temperature gradient in top layer (col) [K m-1]
+    real(r8), pointer :: snw_rds(:,:)       ! effective snow grain radius (col,lyr) [microns, m^-6]
+    real(r8), pointer :: snw_rds_top(:)     ! effective snow grain size, top layer(col) [microns]
+    real(r8), pointer :: sno_liq_top(:)     ! liquid water fraction in top snow layer (col) [frc]
+    real(r8), pointer :: frac_sno(:)        ! snow cover fraction (col) [frc]
+    real(r8), pointer :: h2osno_top(:)      ! mass of snow in top layer (col) [kg]
+
+    real(r8), pointer :: mss_bcpho(:,:)     ! mass of hydrophobic BC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_bcphi(:,:)     ! mass of hydrophillic BC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_bctot(:,:)     ! total mass of BC (pho+phi) (col,lyr) [kg]
+    real(r8), pointer :: mss_bc_col(:)      ! total mass of BC in snow column (col) [kg]
+    real(r8), pointer :: mss_bc_top(:)      ! total mass of BC in top snow layer (col) [kg]
+    real(r8), pointer :: mss_cnc_bcphi(:,:) ! mass concentration of BC species 1 (col,lyr) [kg/kg]
+    real(r8), pointer :: mss_cnc_bcpho(:,:) ! mass concentration of BC species 2 (col,lyr) [kg/kg]
+    real(r8), pointer :: mss_ocpho(:,:)     ! mass of hydrophobic OC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_ocphi(:,:)     ! mass of hydrophillic OC in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_octot(:,:)     ! total mass of OC (pho+phi) (col,lyr) [kg]
+    real(r8), pointer :: mss_oc_col(:)      ! total mass of OC in snow column (col) [kg]
+    real(r8), pointer :: mss_oc_top(:)      ! total mass of OC in top snow layer (col) [kg]
+    real(r8), pointer :: mss_cnc_ocphi(:,:) ! mass concentration of OC species 1 (col,lyr) [kg/kg]
+    real(r8), pointer :: mss_cnc_ocpho(:,:) ! mass concentration of OC species 2 (col,lyr) [kg/kg]
+
+    real(r8), pointer :: mss_dst1(:,:)      ! mass of dust species 1 in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst2(:,:)      ! mass of dust species 2 in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst3(:,:)      ! mass of dust species 3 in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst4(:,:)      ! mass of dust species 4 in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dsttot(:,:)    ! total mass of dust in snow (col,lyr) [kg]
+    real(r8), pointer :: mss_dst_col(:)     ! total mass of dust in snow column (col) [kg]
+    real(r8), pointer :: mss_dst_top(:)     ! total mass of dust in top snow layer (col) [kg]
+    real(r8), pointer :: mss_cnc_dst1(:,:)  ! mass concentration of dust species 1 (col,lyr) [kg/kg]
+    real(r8), pointer :: mss_cnc_dst2(:,:)  ! mass concentration of dust species 2 (col,lyr) [kg/kg]
+    real(r8), pointer :: mss_cnc_dst3(:,:)  ! mass concentration of dust species 3 (col,lyr) [kg/kg]
+    real(r8), pointer :: mss_cnc_dst4(:,:)  ! mass concentration of dust species 4 (col,lyr) [kg/kg]
+    logical , pointer :: do_capsnow(:)      ! true => do snow capping
 !
 !EOP
 !
@@ -156,11 +201,11 @@ contains
     integer  :: g,l,c,j,fc                 ! indices
     integer  :: nstep                      ! time step number
     real(r8) :: dtime                      ! land model time step (sec)
-    real(r8) :: vol_liq(lbc:ubc,1:nlevsoi) ! partial volume of liquid water in layer
-    real(r8) :: icefrac(lbc:ubc,1:nlevsoi) ! ice fraction in layer
-    real(r8) :: dwat(lbc:ubc,1:nlevsoi)    ! change in soil water
-    real(r8) :: hk(lbc:ubc,1:nlevsoi)      ! hydraulic conductivity (mm h2o/s)
-    real(r8) :: dhkdw(lbc:ubc,1:nlevsoi)   ! d(hk)/d(vol_liq)
+    real(r8) :: vol_liq(lbc:ubc,1:nlevgrnd)! partial volume of liquid water in layer
+    real(r8) :: icefrac(lbc:ubc,1:nlevgrnd)! ice fraction in layer
+    real(r8) :: dwat(lbc:ubc,1:nlevgrnd)   ! change in soil water
+    real(r8) :: hk(lbc:ubc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
+    real(r8) :: dhkdw(lbc:ubc,1:nlevgrnd)  ! d(hk)/d(vol_liq)
     real(r8) :: psi,vwc,fsat               ! temporary variables for soilpsi calculation
 #if (defined DGVM) || (defined CN) || (defined CASA)
     real(r8) :: watdry                     ! temporary
@@ -170,6 +215,9 @@ contains
     real(r8) :: tsw                        ! volumetric soil water to 0.5 m
     real(r8) :: stsw                       ! volumetric soil water to 0.5 m at saturation
 #endif
+    real(r8) :: snowmass                   ! liquid+ice snow mass in a layer [kg/m2]
+    real(r8) :: snowcap_scl_fct            ! temporary factor used to correct for snow capping
+
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
@@ -183,49 +231,91 @@ contains
 
     ! Assign local pointers to derived subtypes components (column-level)
 
-    cgridcell      => clm3%g%l%c%gridcell
-    ctype          => clm3%g%l%c%itype
-    clandunit      => clm3%g%l%c%landunit
-    snl            => clm3%g%l%c%cps%snl
-    snowage        => clm3%g%l%c%cps%snowage
-    t_snow         => clm3%g%l%c%ces%t_snow
-    t_grnd         => clm3%g%l%c%ces%t_grnd
-    h2ocan         => clm3%g%l%c%cws%pws_a%h2ocan
-    h2osno         => clm3%g%l%c%cws%h2osno
-    wf             => clm3%g%l%c%cps%wf
-    snowice        => clm3%g%l%c%cws%snowice
-    snowliq        => clm3%g%l%c%cws%snowliq
-    zwt            => clm3%g%l%c%cws%zwt
-    fcov           => clm3%g%l%c%cws%fcov
-    wa             => clm3%g%l%c%cws%wa
-    qcharge        => clm3%g%l%c%cws%qcharge
-    watsat         => clm3%g%l%c%cps%watsat
-    sucsat         => clm3%g%l%c%cps%sucsat
-    bsw            => clm3%g%l%c%cps%bsw
-    z              => clm3%g%l%c%cps%z
-    dz             => clm3%g%l%c%cps%dz
-    zi             => clm3%g%l%c%cps%zi
-    t_soisno       => clm3%g%l%c%ces%t_soisno
-    h2osoi_ice     => clm3%g%l%c%cws%h2osoi_ice
-    h2osoi_liq     => clm3%g%l%c%cws%h2osoi_liq
-    h2osoi_vol     => clm3%g%l%c%cws%h2osoi_vol
-    qflx_evap_tot  => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
-    qflx_drain     => clm3%g%l%c%cwf%qflx_drain
-    qflx_surf      => clm3%g%l%c%cwf%qflx_surf
-    qflx_infl      => clm3%g%l%c%cwf%qflx_infl
-    qflx_qrgwl     => clm3%g%l%c%cwf%qflx_qrgwl
-    qflx_runoff    => clm3%g%l%c%cwf%qflx_runoff
-    qflx_runoff_u  => clm3%g%l%c%cwf%qflx_runoff_u
-    qflx_runoff_r  => clm3%g%l%c%cwf%qflx_runoff_r
-    t_grnd_u       => clm3%g%l%c%ces%t_grnd_u
-    t_grnd_r       => clm3%g%l%c%ces%t_grnd_r
-    qflx_snwcp_ice => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
-    endwb          => clm3%g%l%c%cwbal%endwb
-    begwb          => clm3%g%l%c%cwbal%begwb
-    bsw2           => clm3%g%l%c%cps%bsw2
-    psisat         => clm3%g%l%c%cps%psisat
-    vwcsat         => clm3%g%l%c%cps%vwcsat
-    soilpsi        => clm3%g%l%c%cps%soilpsi
+    cgridcell         => clm3%g%l%c%gridcell
+    clandunit         => clm3%g%l%c%landunit
+    ctype             => clm3%g%l%c%itype
+    snl               => clm3%g%l%c%cps%snl
+    snowage           => clm3%g%l%c%cps%snowage
+    t_snow            => clm3%g%l%c%ces%t_snow
+    t_grnd            => clm3%g%l%c%ces%t_grnd
+    h2ocan            => clm3%g%l%c%cws%pws_a%h2ocan
+    h2osno            => clm3%g%l%c%cws%h2osno
+    wf                => clm3%g%l%c%cps%wf
+    snowice           => clm3%g%l%c%cws%snowice
+    snowliq           => clm3%g%l%c%cws%snowliq
+    zwt               => clm3%g%l%c%cws%zwt
+    fcov              => clm3%g%l%c%cws%fcov
+    wa                => clm3%g%l%c%cws%wa
+    qcharge           => clm3%g%l%c%cws%qcharge
+    watsat            => clm3%g%l%c%cps%watsat
+    sucsat            => clm3%g%l%c%cps%sucsat
+    bsw               => clm3%g%l%c%cps%bsw
+    z                 => clm3%g%l%c%cps%z
+    dz                => clm3%g%l%c%cps%dz
+    zi                => clm3%g%l%c%cps%zi
+    t_soisno          => clm3%g%l%c%ces%t_soisno
+    h2osoi_ice        => clm3%g%l%c%cws%h2osoi_ice
+    h2osoi_liq        => clm3%g%l%c%cws%h2osoi_liq
+    h2osoi_vol        => clm3%g%l%c%cws%h2osoi_vol
+    qflx_evap_tot     => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
+    qflx_drain        => clm3%g%l%c%cwf%qflx_drain
+    qflx_surf         => clm3%g%l%c%cwf%qflx_surf
+    qflx_infl         => clm3%g%l%c%cwf%qflx_infl
+    qflx_qrgwl        => clm3%g%l%c%cwf%qflx_qrgwl
+    endwb             => clm3%g%l%c%cwbal%endwb
+    begwb             => clm3%g%l%c%cwbal%begwb
+    bsw2              => clm3%g%l%c%cps%bsw2
+    psisat            => clm3%g%l%c%cps%psisat
+    vwcsat            => clm3%g%l%c%cps%vwcsat
+    soilpsi           => clm3%g%l%c%cps%soilpsi
+    smp_l             => clm3%g%l%c%cws%smp_l
+    dsmpdw_l          => clm3%g%l%c%cws%dsmpdw_l
+    hk_l              => clm3%g%l%c%cws%hk_l
+    dhkdw_l           => clm3%g%l%c%cws%dhkdw_l
+    dwat_l            => clm3%g%l%c%cws%dwat_l
+    qflx_in_soil      => clm3%g%l%c%cwf%qflx_in_soil
+    qflx_out_soil     => clm3%g%l%c%cwf%qflx_out_soil
+    qflx_tranout_soil => clm3%g%l%c%cwf%qflx_tranout_soil
+    qflx_rsub_sat     => clm3%g%l%c%cwf%qflx_rsub_sat
+    qflx_runoff       => clm3%g%l%c%cwf%qflx_runoff
+    qflx_runoff_u     => clm3%g%l%c%cwf%qflx_runoff_u
+    qflx_runoff_r     => clm3%g%l%c%cwf%qflx_runoff_r
+    t_grnd_u          => clm3%g%l%c%ces%t_grnd_u
+    t_grnd_r          => clm3%g%l%c%ces%t_grnd_r
+    snot_top          => clm3%g%l%c%cps%snot_top
+    dTdz_top          => clm3%g%l%c%cps%dTdz_top
+    snw_rds           => clm3%g%l%c%cps%snw_rds    
+    snw_rds_top       => clm3%g%l%c%cps%snw_rds_top
+    sno_liq_top       => clm3%g%l%c%cps%sno_liq_top
+    frac_sno          => clm3%g%l%c%cps%frac_sno
+    h2osno_top        => clm3%g%l%c%cps%h2osno_top
+    mss_bcpho         => clm3%g%l%c%cps%mss_bcpho
+    mss_bcphi         => clm3%g%l%c%cps%mss_bcphi
+    mss_bctot         => clm3%g%l%c%cps%mss_bctot
+    mss_bc_col        => clm3%g%l%c%cps%mss_bc_col
+    mss_bc_top        => clm3%g%l%c%cps%mss_bc_top
+    mss_cnc_bcphi     => clm3%g%l%c%cps%mss_cnc_bcphi
+    mss_cnc_bcpho     => clm3%g%l%c%cps%mss_cnc_bcpho
+    mss_ocpho         => clm3%g%l%c%cps%mss_ocpho
+    mss_ocphi         => clm3%g%l%c%cps%mss_ocphi
+    mss_octot         => clm3%g%l%c%cps%mss_octot
+    mss_oc_col        => clm3%g%l%c%cps%mss_oc_col
+    mss_oc_top        => clm3%g%l%c%cps%mss_oc_top
+    mss_cnc_ocphi     => clm3%g%l%c%cps%mss_cnc_ocphi
+    mss_cnc_ocpho     => clm3%g%l%c%cps%mss_cnc_ocpho
+    mss_dst1          => clm3%g%l%c%cps%mss_dst1
+    mss_dst2          => clm3%g%l%c%cps%mss_dst2
+    mss_dst3          => clm3%g%l%c%cps%mss_dst3
+    mss_dst4          => clm3%g%l%c%cps%mss_dst4
+    mss_dsttot        => clm3%g%l%c%cps%mss_dsttot
+    mss_dst_col       => clm3%g%l%c%cps%mss_dst_col
+    mss_dst_top       => clm3%g%l%c%cps%mss_dst_top
+    mss_cnc_dst1      => clm3%g%l%c%cps%mss_cnc_dst1
+    mss_cnc_dst2      => clm3%g%l%c%cps%mss_cnc_dst2
+    mss_cnc_dst3      => clm3%g%l%c%cps%mss_cnc_dst3
+    mss_cnc_dst4      => clm3%g%l%c%cps%mss_cnc_dst4
+    qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
+    do_capsnow        => clm3%g%l%c%cps%do_capsnow
 
     ! Determine time step and step size
 
@@ -383,7 +473,7 @@ contains
        end if
     end do
 
-    do j = 1, nlevsoi
+    do j = 1, nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do fc = 1, num_nolakec
@@ -404,12 +494,35 @@ contains
        g = cgridcell(c)
        if (ityplun(l)==istwet .or. ityplun(l)==istice) then
           qflx_drain(c) = 0._r8
-          qflx_surf(c) = 0._r8
-          qflx_infl(c) = 0._r8
+          qflx_surf(c)  = 0._r8
+          qflx_infl(c)  = 0._r8
           qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
                           (endwb(c)-begwb(c))/dtime
-          fcov(c) = spval
-          qcharge(c) = spval
+          fcov(c)       = spval
+          qcharge(c)    = spval
+          smp_l(c,:)    = spval
+          dsmpdw_l(c,:) = spval
+          hk_l(c,:)     = spval
+          dhkdw_l(c,:)  = spval
+          dwat_l(c,:)   = spval
+          qflx_in_soil(c,:)      = spval
+          qflx_out_soil(c,:)     = spval
+          qflx_tranout_soil(c,:) = spval
+          qflx_rsub_sat(c)       = spval
+       else if (ityplun(l) == isturb) then
+          if (ctype(c) /= icol_road_perv) then
+             fcov(c)       = spval
+             qcharge(c)    = spval
+             smp_l(c,:)    = spval
+             dsmpdw_l(c,:) = spval
+             hk_l(c,:)     = spval
+             dhkdw_l(c,:)  = spval
+             dwat_l(c,:)   = spval
+             qflx_in_soil(c,:)      = spval
+             qflx_out_soil(c,:)     = spval
+             qflx_tranout_soil(c,:) = spval
+             qflx_rsub_sat(c)       = spval
+          end if
        else if (ityplun(l)==isturb .and. ctype(c) /= icol_road_perv) then 
           fcov(c) = spval
           qcharge(c) = spval
@@ -425,7 +538,7 @@ contains
     end do
 
 #if (defined CN) || (defined CASA)
-    do j = 1, nlevsoi
+    do j = 1, nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do fc = 1, num_hydrologyc
@@ -463,13 +576,14 @@ contains
        end if
     end do
 
-    do j = 1, nlevsoi
+    do j = 1, nlevgrnd
 !dir$ concurrent
 !cdir nodep
        do c = lbc,ubc
           l = clandunit(c)
           if (ityplun(l) == istsoil .or. ityplun(l) == isturb) then
-             if (z(c,j)+0.5_r8*dz(c,j) <= 0.5_r8) then
+             !if (z(c,j)+0.5_r8*dz(c,j) <= 0.5_r8) then
+             if (z(c,j)+0.5_r8*dz(c,j) <= 0.05_r8) then
                 watdry = watsat(c,j) * (316230._r8/sucsat(c,j)) ** (-1._r8/bsw(c,j))
                 rwat(c) = rwat(c) + (h2osoi_vol(c,j)-watdry) * dz(c,j)
                 swat(c) = swat(c) + (watsat(c,j)    -watdry) * dz(c,j)
@@ -498,6 +612,141 @@ contains
        end if
     end do
 #endif
+
+
+    !  Calculate column-integrated aerosol masses, and
+    !  mass concentrations for radiative calculations and output
+    !  (based on new snow level state, after SnowFilter is rebuilt.
+    !  NEEDS TO BE AFTER SnowFiler is rebuilt, otherwise there 
+    !  can be zero snow layers but an active column in filter)
+
+    do fc = 1, num_snowc
+       c = filter_snowc(fc)
+
+       ! Zero column-integrated aerosol mass before summation
+       mss_bc_col(c)  = 0._r8
+       mss_oc_col(c)  = 0._r8
+       mss_dst_col(c) = 0._r8
+
+       do j = -nlevsno+1, 0
+
+          ! layer mass of snow:
+          snowmass = h2osoi_ice(c,j)+h2osoi_liq(c,j)
+
+          ! Correct the top layer aerosol mass to account for snow capping. 
+          ! This approach conserves the aerosol mass concentration
+          ! (but not the aerosol amss) when snow-capping is invoked
+
+          if (j == snl(c)+1) then
+             if (do_capsnow(c)) then
+                snowcap_scl_fct = snowmass / (snowmass+(qflx_snwcp_ice(c)*dtime))
+
+                mss_bcpho(c,j) = mss_bcpho(c,j)*snowcap_scl_fct
+                mss_bcphi(c,j) = mss_bcphi(c,j)*snowcap_scl_fct
+                mss_ocpho(c,j) = mss_ocpho(c,j)*snowcap_scl_fct
+                mss_ocphi(c,j) = mss_ocphi(c,j)*snowcap_scl_fct
+                
+                mss_dst1(c,j)  = mss_dst1(c,j)*snowcap_scl_fct
+                mss_dst2(c,j)  = mss_dst2(c,j)*snowcap_scl_fct
+                mss_dst3(c,j)  = mss_dst3(c,j)*snowcap_scl_fct
+                mss_dst4(c,j)  = mss_dst4(c,j)*snowcap_scl_fct 
+             endif
+          endif
+
+          if (j >= snl(c)+1) then
+             mss_bctot(c,j)     = mss_bcpho(c,j) + mss_bcphi(c,j)
+             mss_bc_col(c)      = mss_bc_col(c)  + mss_bctot(c,j)
+             mss_cnc_bcphi(c,j) = mss_bcphi(c,j) / snowmass
+             mss_cnc_bcpho(c,j) = mss_bcpho(c,j) / snowmass
+
+             mss_octot(c,j)     = mss_ocpho(c,j) + mss_ocphi(c,j)
+             mss_oc_col(c)      = mss_oc_col(c)  + mss_octot(c,j)
+             mss_cnc_ocphi(c,j) = mss_ocphi(c,j) / snowmass
+             mss_cnc_ocpho(c,j) = mss_ocpho(c,j) / snowmass
+             
+             mss_dsttot(c,j)    = mss_dst1(c,j)  + mss_dst2(c,j) + mss_dst3(c,j) + mss_dst4(c,j)
+             mss_dst_col(c)     = mss_dst_col(c) + mss_dsttot(c,j)
+             mss_cnc_dst1(c,j)  = mss_dst1(c,j)  / snowmass
+             mss_cnc_dst2(c,j)  = mss_dst2(c,j)  / snowmass
+             mss_cnc_dst3(c,j)  = mss_dst3(c,j)  / snowmass
+             mss_cnc_dst4(c,j)  = mss_dst4(c,j)  / snowmass
+         
+          else
+             !set variables of empty snow layers to zero
+             snw_rds(c,j)       = 0._r8
+
+             mss_bcpho(c,j)     = 0._r8
+             mss_bcphi(c,j)     = 0._r8
+             mss_bctot(c,j)     = 0._r8
+             mss_cnc_bcphi(c,j) = 0._r8
+             mss_cnc_bcpho(c,j) = 0._r8
+
+             mss_ocpho(c,j)     = 0._r8
+             mss_ocphi(c,j)     = 0._r8
+             mss_octot(c,j)     = 0._r8
+             mss_cnc_ocphi(c,j) = 0._r8
+             mss_cnc_ocpho(c,j) = 0._r8
+
+             mss_dst1(c,j)      = 0._r8
+             mss_dst2(c,j)      = 0._r8
+             mss_dst3(c,j)      = 0._r8
+             mss_dst4(c,j)      = 0._r8
+             mss_dsttot(c,j)    = 0._r8
+             mss_cnc_dst1(c,j)  = 0._r8
+             mss_cnc_dst2(c,j)  = 0._r8
+             mss_cnc_dst3(c,j)  = 0._r8
+             mss_cnc_dst4(c,j)  = 0._r8
+          endif
+       enddo
+       
+       ! top-layer diagnostics
+       h2osno_top(c)  = h2osoi_ice(c,snl(c)+1) + h2osoi_liq(c,snl(c)+1)
+       mss_bc_top(c)  = mss_bctot(c,snl(c)+1)
+       mss_oc_top(c)  = mss_octot(c,snl(c)+1)
+       mss_dst_top(c) = mss_dsttot(c,snl(c)+1)
+    enddo
+    
+    ! Zero mass variables in columns without snow
+    do fc = 1, num_nosnowc
+       c = filter_nosnowc(fc)
+            
+       h2osno_top(c)      = 0._r8
+       snw_rds(c,:)       = 0._r8
+
+       mss_bc_top(c)      = 0._r8
+       mss_bc_col(c)      = 0._r8    
+       mss_bcpho(c,:)     = 0._r8
+       mss_bcphi(c,:)     = 0._r8
+       mss_bctot(c,:)     = 0._r8
+       mss_cnc_bcphi(c,:) = 0._r8
+       mss_cnc_bcpho(c,:) = 0._r8
+
+       mss_oc_top(c)      = 0._r8
+       mss_oc_col(c)      = 0._r8    
+       mss_ocpho(c,:)     = 0._r8
+       mss_ocphi(c,:)     = 0._r8
+       mss_octot(c,:)     = 0._r8
+       mss_cnc_ocphi(c,:) = 0._r8
+       mss_cnc_ocpho(c,:) = 0._r8
+
+       mss_dst_top(c)     = 0._r8
+       mss_dst_col(c)     = 0._r8
+       mss_dst1(c,:)      = 0._r8
+       mss_dst2(c,:)      = 0._r8
+       mss_dst3(c,:)      = 0._r8
+       mss_dst4(c,:)      = 0._r8
+       mss_dsttot(c,:)    = 0._r8
+       mss_cnc_dst1(c,:)  = 0._r8
+       mss_cnc_dst2(c,:)  = 0._r8
+       mss_cnc_dst3(c,:)  = 0._r8
+       mss_cnc_dst4(c,:)  = 0._r8
+
+       ! top-layer diagnostics (spval is not averaged when computing history fields)
+       snot_top(c)        = spval
+       dTdz_top(c)        = spval
+       snw_rds_top(c)     = spval
+       sno_liq_top(c)     = spval
+    enddo
 
   end subroutine Hydrology2
 

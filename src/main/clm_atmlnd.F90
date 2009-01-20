@@ -58,6 +58,7 @@ type atm2lnd_type
   ! Adding isotope code
   real(r8), pointer :: forc_pc13o2(:)  !C13O2 partial pressure (Pa)
   real(r8), pointer :: forc_po2(:)     !O2 partial pressure (Pa)
+  real(r8), pointer :: forc_aer(:,:)   ! aerosol deposition array
 end type atm2lnd_type
 
 !----------------------------------------------------
@@ -210,6 +211,7 @@ end subroutine init_adiag_type
   ! Adding isotope code
   allocate(a2l%forc_pc13o2(beg:end))
   allocate(a2l%forc_po2(beg:end))
+  allocate(a2l%forc_aer(beg:end,14))
 
 ! ival = nan      ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
@@ -242,6 +244,7 @@ end subroutine init_adiag_type
   ! Adding isotope code
   a2l%forc_pc13o2(beg:end) = ival
   a2l%forc_po2(beg:end) = ival
+  a2l%forc_aer(beg:end,:) = ival
 
 end subroutine init_atm2lnd_type
 
@@ -335,6 +338,8 @@ end subroutine init_lnd2atm_type
   use decompMod, only : ldecomp,adecomp
   use domainMod, only : ldomain,adomain
   use QSatMod,   only : QSat
+  use clm_varctl,only : set_caerdep_from_file, set_dustdep_from_file
+
 !
 ! !ARGUMENTS:
   implicit none
@@ -397,6 +402,11 @@ end subroutine init_lnd2atm_type
 
   nflds = 23+2*numrad
 
+  ! change nflds based on prognostic aerosol configuration
+  if ( (.not. set_caerdep_from_file) .or. (.not. set_dustdep_from_file) ) then
+     nflds = nflds+14
+  endif
+
   allocate(asrc(begg_s:endg_s,nflds))
   allocate(adst(begg_d:endg_d,nflds))
 
@@ -428,6 +438,14 @@ end subroutine init_lnd2atm_type
      ix=ix+1; asrc(:,ix) = a2l_src%forc_solad(:,n)  
      ix=ix+1; asrc(:,ix) = a2l_src%forc_solai(:,n)  
   enddo
+
+  ! atmopshere aerosol deposition coupling
+  if ( (.not. set_caerdep_from_file) .or. (.not. set_dustdep_from_file) ) then
+     do n = 1,14
+        ix=ix+1; asrc(:,ix) = a2l_src%forc_aer(:,n)
+     enddo
+  endif
+
 !-forc_ndep is not recd from atm,don't know why it's in a2l (TCFIX) ---
 !-forc_ndep cannot be updated here, array will be trashed and CN will fail ---
 !  asrc(:,xx) = a2l_src%forc_ndep(:)  
@@ -462,7 +480,22 @@ end subroutine init_lnd2atm_type
      ix=ix+1; a2l_dst%forc_solad(:,n)  = adst(:,ix)
      ix=ix+1; a2l_dst%forc_solai(:,n)  = adst(:,ix)
   enddo
-
+  
+  !  atmospheric aerosol deposition coupling
+  !  only overwrite the appropriate indices of forc_aer based on the prognostic aerosol scheme, 
+  !  so that forc_aer, as set from the external forcing file, remains intact. 
+  !  This is somewhat kludgy...
+  if ( (.not. set_caerdep_from_file) .or. (.not. set_dustdep_from_file) ) then
+     do n = 1,14
+        ix=ix+1
+        if ( (.not. set_caerdep_from_file) .and. (n <= 6) ) then
+           a2l_dst%forc_aer(:,n)  = adst(:,ix)
+        elseif ( (.not. set_dustdep_from_file) .and. (n > 6) )then
+           a2l_dst%forc_aer(:,n)  = adst(:,ix)
+        endif
+     enddo
+  endif
+  
   deallocate(asrc)
   deallocate(adst)
 
