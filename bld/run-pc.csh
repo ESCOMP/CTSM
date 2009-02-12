@@ -153,9 +153,9 @@ set procs = 4
 limit stacksize unlimited
 
 ## Ensure that run and build directories exist
-mkdir -p $rundir                || echo "cannot create $rundir"        && exit 1
-mkdir -p $rundir/timing         || echo "cannot create $rundir/timing" && exit 1
-mkdir -p $blddir                || echo "cannot create $blddir"        && exit 1
+mkdir -p $rundir                    || echo "cannot create $rundir"        && exit 1
+mkdir -p $rundir/timing/checkpoints || echo "cannot create $rundir/timing" && exit 1
+mkdir -p $blddir                    || echo "cannot create $blddir"        && exit 1
 
 ## Build (or re-build) executable
 set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust -usr_src $usr_src"

@@ -530,52 +530,6 @@ contains
        end do
     end do
 
-    ! Make forcing height a pft-level quantity that is the atmospheric forcing
-    ! height plus each pft's z0m+displa
-    do pi = 1,max_pft_per_gcell
-!dir$ concurrent
-!cdir nodep
-       do g = lbg, ubg
-          if (pi <= npfts(g)) then
-            p = pfti(g) + pi - 1
-            if (pwtgcell(p) > 0._r8) then
-              l = plandunit(p)
-              c = pcolumn(p)
-              if (ityplun(l) == istsoil) then
-                if (frac_veg_nosno(p) == 0) then
-                  forc_hgt_u_pft(p) = forc_hgt_u(g) + z0mg(c) + displa(p)
-                  forc_hgt_t_pft(p) = forc_hgt_t(g) + z0mg(c) + displa(p)
-                  forc_hgt_q_pft(p) = forc_hgt_q(g) + z0mg(c) + displa(p)
-                else
-                  forc_hgt_u_pft(p) = forc_hgt_u(g) + z0m(p) + displa(p)
-                  forc_hgt_t_pft(p) = forc_hgt_t(g) + z0m(p) + displa(p)
-                  forc_hgt_q_pft(p) = forc_hgt_q(g) + z0m(p) + displa(p)
-                end if
-              else if (ityplun(l) == istice .or. ityplun(l) == istwet) then
-                forc_hgt_u_pft(p) = forc_hgt_u(g) + z0mg(c)
-                forc_hgt_t_pft(p) = forc_hgt_t(g) + z0mg(c)
-                forc_hgt_q_pft(p) = forc_hgt_q(g) + z0mg(c)
-              else if (ityplun(l) == istdlak) then
-                ! Should change the roughness lengths to shared constants
-                if (t_grnd(c) >= tfrz) then
-                  forc_hgt_u_pft(p) = forc_hgt_u(g) + 0.01_r8
-                  forc_hgt_t_pft(p) = forc_hgt_t(g) + 0.01_r8
-                  forc_hgt_q_pft(p) = forc_hgt_q(g) + 0.01_r8
-                else
-                  forc_hgt_u_pft(p) = forc_hgt_u(g) + 0.04_r8
-                  forc_hgt_t_pft(p) = forc_hgt_t(g) + 0.04_r8
-                  forc_hgt_q_pft(p) = forc_hgt_q(g) + 0.04_r8
-                end if
-              else if (ityplun(l) == isturb) then
-                forc_hgt_u_pft(p) = forc_hgt_u(g) + z_0_town(l) + z_d_town(l)
-                forc_hgt_t_pft(p) = forc_hgt_t(g) + z_0_town(l) + z_d_town(l)
-                forc_hgt_q_pft(p) = forc_hgt_q(g) + z_0_town(l) + z_d_town(l)
-              end if
-            end if
-          end if
-       end do
-    end do
-
 !dir$ concurrent
 !cdir nodep
     do fp = 1,num_nolakep

@@ -2634,7 +2634,7 @@ contains
        enddo
        call ncd_iolocal(varname='cols1d_lon', data=rcarr, dim1name=namec, ncid=ncid, flag='write', usepio=pioflag)
        do c=begc,endc
-         rcarr(c) = gptr%londeg(cptr%gridcell(c))
+         rcarr(c) = gptr%latdeg(cptr%gridcell(c))
        enddo
        call ncd_iolocal(varname='cols1d_lat', data=rcarr, dim1name=namec, ncid=ncid, flag='write', usepio=pioflag)
        do c=begc,endc

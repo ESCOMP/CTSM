@@ -289,6 +289,18 @@ Full pathname of restart pointer file.
 If greater than one, average rtm over rtm_nsteps time steps
 </entry>
 
+<entry id="urban_hac" type="char*16" category="clm_physics"
+       group="clm_inparm" valid_values="OFF,ON,ON_WASTEHEAT" >
+Urban air conditioning/heating and wasteheat
+<default>Default: 'off'</default>
+</entry>
+
+<entry id="urban_traffic" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+TRUE if want urban traffic flux
+<default>Default: FALSE</default>
+</entry>
+
 <entry id="wrtdia" type="logical" category="history"
        group="clm_inparm" valid_values="" >
 TRUE if want output written
@@ -600,6 +612,42 @@ Output level for long-term budgets written at the end of the run.
 <default>Default: 0</default>
 </entry>
 
+<entry id="timing_dir" type="char*256"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Directory name to store timing files
+<default>Default: current directory "./"</default>
+</entry>
+
+<entry id="tchkpt_dir" type="char*256"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Directory name to store timing checkpoint files
+<default>Default: current directory "./"</default>
+</entry>
+
+<entry id="eps_frac" type="real"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Tolerance to match fractional areas for each component: land, ice, and ocn.
+<default>Default: 1.0e-2</default>
+</entry>
+
+<entry id="eps_agrid" type="real"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Tolerance to match land and atmospheric grid cell latitudes and longitudes.
+<default>Default: 1.0e-12</default>
+</entry>
+
+<entry id="eps_amask" type="real"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Tolerance to match land and atmospheric grid masks
+<default>Default: 1.0e-13</default>
+</entry>
+
+<entry id="eps_aarea" type="real"  category="driver"
+       group="seq_infodata_inparm" valid_values="" >
+Tolerance to match land and atmospheric grid areas
+<default>Default: 9.0e-7</default>
+</entry>
+
 <!-- Time Manager -->
 
 <entry id="atm_cpl_dt" type="integer"  category="time_mgr"
@@ -850,7 +898,7 @@ Use two step initialization and time-stepping in the data atmosphere model.
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"360x720,128x256,64x128,48x96,32x64,8x16,94x128,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
+"360x720,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
 Horizontal resolutions
 </entry> 
 

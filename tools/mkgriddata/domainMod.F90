@@ -10,7 +10,7 @@ module domainMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use nanMod
+  use nanMod      , only : nan, bigint
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -18,25 +18,32 @@ module domainMod
 !
   public :: domain_type
 
+  character*16,parameter, private :: domain_set   = 'domain_set      '
+  character*16,parameter, private :: domain_unset = 'NOdomain_unsetNO'
+  real(r8), parameter, private :: area_init = -9999._r8
+  real(r8), parameter, private :: frac_init = -9999._r8
+  real(r8), parameter, private :: topo_init = 0.0_r8
+  integer,  parameter, private :: mask_init = bigint
+
   type domain_type
-     integer          :: ni,nj         ! size of global arrays (lsmlon,lsmlat)
-     logical          :: fullgrid      ! fullgrid
-     real(r8)         :: edgen         ! lsmedge north
-     real(r8)         :: edgee         ! lsmedge east
-     real(r8)         :: edges         ! lsmedge south
-     real(r8)         :: edgew         ! lsmedge west
-     integer ,pointer :: numlon(:)     ! numlon
-     integer ,pointer :: mask(:,:)     ! land mask: 1 = land. 0 = ocean
-     real(r8),pointer :: frac(:,:)     ! fractional land
-     real(r8),pointer :: topo(:,:)     ! topography,elevation (m)
-     real(r8),pointer :: latixy(:,:)   ! latitude of grid cell (deg)
-     real(r8),pointer :: longxy(:,:)   ! longitude of grid cell (deg)
-     real(r8),pointer :: area(:,:)     ! grid cell area (km**2)
-     real(r8),pointer :: lats(:,:)     ! grid cell latitude, S edge (deg)
-     real(r8),pointer :: latn(:,:)     ! grid cell latitude, N edge (deg)
-     real(r8),pointer :: lonw(:,:)     ! grid cell longitude, W edge (deg)
-     real(r8),pointer :: lone(:,:)     ! grid cell longitude, E edge (deg)
-     character*16     :: domain_set    ! flag to check if domain is set
+     integer          :: ni,nj                        ! size of global arrays (lsmlon,lsmlat)
+     logical          :: fullgrid                     ! fullgrid
+     real(r8)         :: edgen                        ! lsmedge north
+     real(r8)         :: edgee                        ! lsmedge east
+     real(r8)         :: edges                        ! lsmedge south
+     real(r8)         :: edgew                        ! lsmedge west
+     integer ,pointer :: numlon(:)                    ! numlon
+     integer ,pointer :: mask(:,:)                    ! land mask: 1 = land. 0 = ocean
+     real(r8),pointer :: frac(:,:)                    ! fractional land
+     real(r8),pointer :: topo(:,:)                    ! topography,elevation (m)
+     real(r8),pointer :: latixy(:,:)                  ! latitude of grid cell (deg)
+     real(r8),pointer :: longxy(:,:)                  ! longitude of grid cell (deg)
+     real(r8),pointer :: area(:,:)                    ! grid cell area (km**2)
+     real(r8),pointer :: lats(:,:)                    ! grid cell latitude, S edge (deg)
+     real(r8),pointer :: latn(:,:)                    ! grid cell latitude, N edge (deg)
+     real(r8),pointer :: lonw(:,:)                    ! grid cell longitude, W edge (deg)
+     real(r8),pointer :: lone(:,:)                    ! grid cell longitude, E edge (deg)
+     character*16     :: domain_set = domain_unset    ! flag to check if domain is set
   end type domain_type
 
 !
@@ -52,8 +59,6 @@ module domainMod
 ! Originally clm_varsur by Mariana Vertenstein
 ! Migrated from clm_varsur to domainMod by T Craig
 !
-  character*16,parameter :: domain_set   = 'domain_set      '
-  character*16,parameter :: domain_unset = 'NOdomain_unsetNO'
 !
 !EOP
 !------------------------------------------------------------------------------
@@ -87,7 +92,7 @@ contains
     integer ier
 !
 !------------------------------------------------------------------------------
-    if (domain%domain_set == domain_set) then
+    if ( domain_IsSet(domain) )then
         return
 !       call domain_clean(domain)
     endif
@@ -120,11 +125,11 @@ contains
     domain%edges    = nan
     domain%edgew    = nan
     domain%mask     = bigint
-    domain%frac     = nan
-    domain%topo     = 0._r8
+    domain%frac     = frac_init
+    domain%topo     = topo_init
+    domain%area     = area_init
     domain%latixy   = nan
     domain%longxy   = nan
-    domain%area     = nan
     domain%lats     = nan
     domain%latn     = nan
     domain%lonw     = nan
@@ -159,7 +164,7 @@ end subroutine domain_init
     integer ier
 !
 !------------------------------------------------------------------------------
-    if (domain%domain_set == domain_set) then
+    if ( domain_IsSet(domain) )then
        write(6,*) 'domain_clean: cleaning ',domain%ni,domain%nj
        deallocate(domain%mask,domain%frac,domain%latixy, &
               domain%longxy,domain%area,domain%topo,stat=ier)
@@ -269,16 +274,21 @@ end subroutine domain_setptrs
 ! !IROUTINE: domain_isSet
 !
 ! !INTERFACE:
-  logical function domain_isSet(domain)
+  logical function domain_isSet(domain, areaset, fracset, maskset, toposet)
 !
 ! !DESCRIPTION:
-! This returns .true. is the domain is set
+! This returns .true. if the domain is set. Also optionally returns
+! logical variables on the status of if specific variables are set in the domain.
 !
 ! !USES:
 !
 ! !ARGUMENTS:
     implicit none
-    type(domain_type), intent(IN) :: domain        ! domain datatype
+    type(domain_type), intent(IN)  :: domain        ! domain datatype
+    logical, optional, intent(OUT) :: areaset       ! area is set
+    logical, optional, intent(OUT) :: fracset       ! land fraction is set
+    logical, optional, intent(OUT) :: maskset       ! land mask is set
+    logical, optional, intent(OUT) :: toposet       ! topography is set
 !
 ! !REVISION HISTORY:
 !   Created by E. Kluzek
@@ -286,12 +296,21 @@ end subroutine domain_setptrs
 !EOP
 !
 ! LOCAL VARIABLES:
+    integer :: i, j   ! indices
 !
 !------------------------------------------------------------------------------
-    if (domain%domain_set == domain_set) then
+    if ( index(domain%domain_set,domain_set) == 1 ) then
         domain_isSet = .true.
+        if ( present(areaset) ) areaset = .not. all( domain%area == area_init )
+        if ( present(fracset) ) fracset = .not. all( domain%frac == frac_init )
+        if ( present(maskset) ) maskset = .not. all( domain%mask == mask_init )
+        if ( present(toposet) ) toposet = .not. all( domain%topo == topo_init )
     else
         domain_isSet = .false.
+        if ( present(areaset) ) areaset = domain_isSet
+        if ( present(fracset) ) fracset = domain_isSet
+        if ( present(maskset) ) maskset = domain_isSet
+        if ( present(toposet) ) toposet = domain_isSet
     endif
 
 end function domain_isSet

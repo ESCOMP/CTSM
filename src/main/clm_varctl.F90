@@ -40,8 +40,16 @@ module clm_varctl
   character(len=256), public :: source   = "Community Land Model CLM3.6" ! description of this source
   character(len=256), public :: version  = " "                           ! version of program
   character(len=256), public :: conventions = "CF-1.0"                   ! dataset conventions
-  logical,            public :: set_caerdep_from_file                    ! if reading in carbon aerosol deposition from file
-  logical,            public :: set_dustdep_from_file                    ! if reading in dust aerosol deposition from file
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Following will be removed..........................
+!
+! Aerosol deposition file read (will be removed)
+!
+  logical,            public :: set_caerdep_from_file = .false.  ! if reading in carbon aerosol deposition from file
+  logical,            public :: set_dustdep_from_file = .false.  ! if reading in dust aerosol deposition from file
+  character(len=256), public :: faerdep      = ' '               ! aerosol deposition file name
+! to here............................................
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !
 ! Unit Numbers
@@ -73,7 +81,6 @@ module clm_varctl
   character(len=256), public :: frivinp_rtm  = ' '      ! RTM input data file name
   character(len=256), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=256), public :: fsnowaging   = ' '      ! snow aging parameters file name
-  character(len=256), public :: faerdep      = ' '      ! aerosol deposition file name
   character(len=8),   public :: fget_archdev = 'null:'  ! archive device to read input files from if not on local disk
   
 !

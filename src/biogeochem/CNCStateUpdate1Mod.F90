@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNCStateUpdate1Mod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -615,5 +616,6 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
 end subroutine CStateUpdate1
 !-----------------------------------------------------------------------
+#endif
 
 end module CNCStateUpdate1Mod

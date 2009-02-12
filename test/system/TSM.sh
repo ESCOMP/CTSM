@@ -36,7 +36,7 @@ rundir=${CLM_TESTDIR}/${test_name}
 if [ -d ${rundir} ]; then
     rm -r ${rundir}
 fi
-mkdir -p ${rundir}/timing
+mkdir -p ${rundir}/timing/checkpoints
 if [ $? -ne 0 ]; then
     echo "TSM.sh: error, unable to create work subdirectory" 
     exit 3

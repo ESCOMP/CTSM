@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta08"
+seqccsm_vers="ccsm4_0_beta09"
 
 hostname=`hostname`
 case $hostname in
@@ -44,8 +44,8 @@ cat > ./${submit_script} << EOF
 
 #BSUB -a poe                      # use LSF poe elim
 #BSUB -x                          # exclusive use of node (not_shared)
-#BSUB -n 32                       # total tasks needed
-#BSUB -R "span[ptile=64]"         # max number of tasks (MPI) per node
+#BSUB -n 192                      # total tasks needed
+#BSUB -R "span[ptile=32]"         # max number of tasks (MPI) per node
 #BSUB -o test_dr.o%J              # output filename
 #BSUB -e test_dr.o%J              # error filename
 #BSUB -q regular                  # queue
@@ -67,10 +67,10 @@ export CLM_THREADS=2
 export CLM_RESTART_THREADS=4
 
 ##mpi tasks
-export CLM_TASKS=32
-export CLM_RESTART_TASKS=15
+export CLM_TASKS=96
+export CLM_RESTART_TASKS=47
 
-export CLM_COMPSET="IQ"
+export CLM_COMPSET="I"
 
 export INC_NETCDF=/usr/local/apps/netcdf-3.6.1/include
 export LIB_NETCDF=/usr/local/apps/netcdf-3.6.1/lib
@@ -89,7 +89,6 @@ CPRNC_EXE="/contrib/newcprnc3.0/bin/newcprnc"
 newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
 /bin/cp -fp \$CPRNC_EXE \$newcprnc
 export CPRNC_EXE="\$newcprnc"
-export DATM_DATA_DIR="/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410"
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 echo_arg=""
@@ -181,7 +180,6 @@ else
 fi
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
-export DATM_DATA_DIR=/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
@@ -223,7 +221,6 @@ export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export CCSM_MACH="breeze"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/fs/home/erik/bin/cprnc
-export DATM_DATA_DIR="/cgd/tss/NCEPDATA.datm7.Qian.T62.c060410"
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fis/cgd/cseg/csm"
 echo_arg="-e"
@@ -301,7 +298,6 @@ export CCSM_MACH="bangkok"
 export MAKE_CMD="gmake -j 2"   ##using hyper-threading on calgary
 export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
-export DATM_DATA_DIR=/project/tss/NCEPDATA.datm7.Qian.T62.c060410
 export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
@@ -399,7 +395,6 @@ export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
 export MAKE_CMD="gmake -j 9 "
 export MACH_WORKSPACE="/tmp/work"
 export CPRNC_EXE=/spin/proj/ccsm/bin/jaguar/newcprnc
-export DATM_DATA_DIR=/tmp/proj/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
 export DATM_QIAN_DATA_DIR="/tmp/proj/ccsm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/tmp/proj/ccsm"
 EOF
@@ -486,7 +481,7 @@ export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
 export MAKE_CMD="gmake -j 9 "
 export MACH_WORKSPACE="/lustre/scratch"
 export CPRNC_EXE="/lustre/scratch/proj/ccsm/bin/newcprnc"
-export DATM_DATA_DIR="/lustre/scratch/proj/ccsm/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410"
+export DATM_QIAN_DATA_DIR="/lustre/scratch/proj/ccsm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/lustre/scratch/proj/ccsm"
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -522,7 +517,6 @@ export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="$HOME/runs"
 export CPRNC_EXE=$HOME/bin/newcprnc
-export DATM_DATA_DIR=$HOME/inputdata/atm/datm7/NCEPDATA.datm7.Qian.T62.c060410
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="$HOME"
 echo_arg=""

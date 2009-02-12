@@ -67,7 +67,7 @@ contains
 ! !USES:
     use clm_time_manager, only : get_curr_date
     use clm_varctl  , only : fpftdyn
-    use clm_varpar  , only : lsmlon, lsmlat, numpft
+    use clm_varpar  , only : lsmlon, lsmlat, numpft, maxpatch_pft
     use fileutils   , only : getfil
     use spmdGathScatMod, only : gather_data_to_master
 !
@@ -103,6 +103,12 @@ contains
 
     call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
+    ! Error check
+
+    if ( maxpatch_pft /= numpft+1 )then
+       call endrun( subname//' maxpatch_pft does NOT equal numpft+1 -- this is invalid for dynamic PFT case' )
+    end if
+
     allocate(pctgla(begg:endg),pctlak(begg:endg))
     allocate(pctwet(begg:endg),pcturb(begg:endg))
 
@@ -119,14 +125,12 @@ contains
 
     allocate(wtpft1(begg:endg,0:numpft), wtpft2(begg:endg,0:numpft), stat=ier)
     if (ier /= 0) then
-       write(iulog,*)'pctpft_dyn_init allocation error for wtpft1, wtpft2'
-       call endrun()
+       call endrun( subname//' allocation error for wtpft1, wtpft2' )
     end if
 
     allocate(wtcol_old(begp:endp),stat=ier)
     if (ier /= 0) then
-       write(iulog,*)'pctpft_dyn_init allocation error for wtcol_old'
-       call endrun()
+       call endrun( subname//' allocation error for wtcol_old' )
     end if
 
     if (masterproc) then
@@ -152,7 +156,7 @@ contains
 
     allocate (yearspft(ntimes), stat=ier)
     if (ier /= 0) then
-       write(iulog,*)'pctpft_dyn_init allocation error for yearspft'; call endrun()
+       write(iulog,*) subname//' allocation error for yearspft'; call endrun()
     end if
 
     if (masterproc) then
@@ -174,7 +178,7 @@ contains
     ! Consistency check
     do g = begg,endg
        if (pctlak(g)+pctwet(g)+pcturb(g)+pctgla(g) /= pctspec(g)) then 
-          write(iulog,*)'mismatch between input pctspec = ',&
+          write(iulog,*) subname//'mismatch between input pctspec = ',&
                      pctlak(g)+pctwet(g)+pcturb(g)+pctgla(g),&
                     ' and that obtained from surface dataset ', pctspec(g),' at g= ',g
            call endrun()
@@ -210,7 +214,7 @@ contains
           end if   
        end do
        if (.not. found) then
-          write(iulog,*)'pftdyn_init error: model year not found in pftdyn timeseries'
+          write(iulog,*) subname//' error: model year not found in pftdyn timeseries'
           write(iulog,*)'model year = ',year
           call endrun()
        end if

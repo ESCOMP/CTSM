@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNDecompMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -687,4 +688,6 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
 
 end subroutine CNDecompAlloc
 !-----------------------------------------------------------------------
+#endif
+
 end module CNDecompMod

@@ -1,5 +1,5 @@
 &clmexp
- mksrf_fgrid        = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/griddata_1.9x2.5_060404.nc'
+ mksrf_fgrid        = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/griddata_10x15_070212.nc'
  mksrf_fsoitex      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc'
  mksrf_forganic     = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_organic.10level.0.5deg.081112.nc'
  mksrf_flanwat      = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_lanwat.050425.nc'

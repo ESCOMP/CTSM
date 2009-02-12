@@ -16,6 +16,7 @@ module UrbanInitMod
   use abortutils  , only : endrun  
   use shr_sys_mod , only : shr_sys_flush 
   use clm_varctl  , only : iulog
+  use UrbanMod,     only : urban_traffic, urban_hac, urban_hac_off
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -265,22 +266,22 @@ contains
           end do
 
           ! Inferred from Sailor and Lu 2004
-          eflx_traffic_factor(l) = 0.0_r8
-!KO          eflx_traffic_factor(l) = 3.6_r8 * (canyon_hwr(l)-0.5_r8) + 1.0_r8
+          if (urban_traffic) then
+             eflx_traffic_factor(l) = 3.6_r8 * (canyon_hwr(l)-0.5_r8) + 1.0_r8
+          else
+             eflx_traffic_factor(l) = 0.0_r8
+          end if
 
 #if (defined VANCOUVER || defined MEXICOCITY || defined GRANDVIEW)
           ! Freely evolving
           t_building_max(l) = 380.00_r8
           t_building_min(l) = 200.00_r8
 #else
-          ! Arbitrary comfort values
-!KO          t_building_max(l) = 297.60_r8  !~75F
-!KO          t_building_min(l) = 291.16_r8  !~65F
-!KO
-          ! Overwrite values read in from urbinp by freely evolving values for now
-          t_building_max(l) = 380.00_r8
-          t_building_min(l) = 200.00_r8
-!KO
+          if (urban_hac == urban_hac_off) then
+            ! Overwrite values read in from urbinp by freely evolving values
+            t_building_max(l) = 380.00_r8
+            t_building_min(l) = 200.00_r8
+          end if
 #endif
        else
           eflx_traffic_factor(l) = spval

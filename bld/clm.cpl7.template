@@ -109,7 +109,7 @@ endif
 
 set mask = "-mask $mask"
 
-set options = "-config $config -res $RESOLUTION $mask $sim_year -clm_demand $clm_demand "
+set options = "$CLM_BLDNML_OPTS -config $config -res $RESOLUTION $mask $sim_year -clm_demand $clm_demand "
 set options = "$options -infile ccsm_namelist -start_type $START_TYPE -case $CASE "
 $CODEROOT/lnd/clm*/bld/build-namelist $options -csmdata \$DIN_LOC_ROOT -inputdata $CASEBUILD/clm.input_data_list || exit -1
 

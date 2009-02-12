@@ -314,6 +314,7 @@ contains
           lyr_top = snl(c) + 1
           if ( pi <= npfts(c) ) then
              p = pfti(c) + pi - 1
+             l = plandunit(p)
              if (pwtgcell(p)>0._r8) then
                 g = pgridcell(p)
                 if (ltype(l) /= isturb )then

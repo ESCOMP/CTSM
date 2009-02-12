@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNAnnualUpdateMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -153,5 +154,6 @@ subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
 end subroutine CNAnnualUpdate
 !-----------------------------------------------------------------------
+#endif
 
 end module CNAnnualUpdateMod

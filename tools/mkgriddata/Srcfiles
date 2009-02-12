@@ -4,7 +4,6 @@ domainMod.F90
 fileutils.F90
 mkgriddata.F90
 mkvarctl.F90
-mkvarsur.F90
 nanMod.F90
 ncdio.F90
 spmdMod.F90
@@ -19,6 +18,7 @@ shr_log_mod.F90
 shr_file_mod.F90
 shr_sys_mod.F90
 collective.c
+mkvarpar.F90
 comm.c
 fort.F90
 group.c

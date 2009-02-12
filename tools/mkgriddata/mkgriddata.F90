@@ -14,8 +14,8 @@ program mkgriddata
     use shr_sys_mod  , only : shr_sys_getenv
     use fileutils    , only : getfil, putfil, opnfil, getavu, get_filename
     use creategridMod, only : creategrid, write_domain, mkfile, settopo
+    use domainMod    , only : domain_type
     use mkvarctl
-    use mkvarsur     , only : ldomain
     use areaMod
     use ncdio
 !
@@ -46,6 +46,7 @@ program mkgriddata
     logical           :: writeLFrc    ! flag to write land-frac file out or not
     logical           :: writeTopo1   ! tmp flag to write topo file out or not
     logical           :: writeLFrc1   ! tmp flag to write land-frac file out or not
+    type(domain_type) :: ldomain      ! local domain
     character(len=32) :: subname = 'mkgriddata'  ! program name
 
     namelist /clmexp/    &
@@ -91,25 +92,25 @@ program mkgriddata
 
     if (mksrf_fcamfile /= ' ') then
        write(6,*) 'Setting grid from cam grid file ',trim(mksrf_fcamfile)
-       call creategrid(mksrf_fcamfile,'mksrf_fcamfile','external',grid,writeTopo1, writeLFrc1)
+       call creategrid(mksrf_fcamfile,'mksrf_fcamfile','external',grid,ldomain,writeTopo1, writeLFrc1)
        call updateFileInfo( mksrf_fcamfile )
     end if
 
     if (mksrf_fcamtopo /= ' ') then
        write(6,*) 'Setting grid from cam topo file ',trim(mksrf_fcamtopo)
-       call creategrid(mksrf_fcamtopo,'mksrf_fcamtopo','external',grid,writeTopo1, writeLFrc1)
+       call creategrid(mksrf_fcamtopo,'mksrf_fcamtopo','external',grid,ldomain,writeTopo1, writeLFrc1)
        call updateFileInfo( mksrf_fcamtopo )
     end if
 
     if (mksrf_fclmgrid /= ' ') then
        write(6,*) 'Setting grid from clm grid file ',trim(mksrf_fclmgrid)
-       call creategrid(mksrf_fclmgrid,'mksrf_fclmgrid','external',grid,writeTopo1, writeLFrc1)
+       call creategrid(mksrf_fclmgrid,'mksrf_fclmgrid','external',grid,ldomain,writeTopo1, writeLFrc1)
        call updateFileInfo( mksrf_fclmgrid )
     end if
 
     if (mksrf_fnavyoro /= ' ') then
        write(6,*) 'Setting grid from navy oro file ',trim(mksrf_fnavyoro)
-       call creategrid(mksrf_fnavyoro,'mksrf_fnavyoro','internal',grid,writeTopo1, writeLFrc1)
+       call creategrid(mksrf_fnavyoro,'mksrf_fnavyoro','internal',grid,ldomain,writeTopo1, writeLFrc1)
        call updateFileInfo( mksrf_fnavyoro )
     end if
 
@@ -117,7 +118,7 @@ program mkgriddata
        write(6,*) 'Setting grid from ccsm domain file ',trim(mksrf_fccsmdom)
        area_units = 1
        area_valid = .false.
-       call creategrid(mksrf_fccsmdom,'mksrf_fccsmdom','external',grid,writeTopo1, writeLFrc1)
+       call creategrid(mksrf_fccsmdom,'mksrf_fccsmdom','external',grid,ldomain,writeTopo1, writeLFrc1)
        call updateFileInfo( mksrf_fccsmdom )
        area_units = 0
        area_valid = .true.
@@ -127,7 +128,7 @@ program mkgriddata
        write(6,*) 'Setting topo from raw topo file ',trim(mksrf_frawtopo)
        writeTopo1 = .true.
        writeLFrc1 = .false.
-       call settopo(mksrf_frawtopo)
+       call settopo(mksrf_frawtopo,ldomain)
        call updateFileInfo( mksrf_frawtopo )
     else if ( mksrf_frawtopo /= ' ') then
        write(6,*) 'MKGRID namelist error, mksrf_frawtopo used without a grid file'
@@ -204,9 +205,9 @@ subroutine updateFileInfo( filename )
   end if
 
   nused = 1
-  if ( trim(    fileinfo) /= trim(Topofileinfo) ) nused = nused + 1
-  if ( trim(    fileinfo) /= trim(Fracfileinfo) .and. &
-       trim(Topofileinfo) /= trim(Fracfileinfo) ) nused = nused + 1
+  if ( writeTopo .and. trim(fileinfo) /= trim(topofileinfo) ) nused = nused + 1
+  if ( writeLFrc .and. trim(fileinfo) /= trim(fracfileinfo) ) nused = nused + 1
+  if ( nused == 3 .and. trim(topofileinfo) == trim(fracfileinfo) ) nused = 2
 
 end subroutine updateFileInfo
 

@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNC13FluxMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1071,6 +1072,7 @@ subroutine C13FluxCalc(c13_flux, ctot_flux, c13_state, ctot_state, &
 end subroutine C13FluxCalc
 !-----------------------------------------------------------------------
 
+#endif
 
 end module CNC13FluxMod
  

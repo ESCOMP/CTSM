@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNNDynamicsMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -270,5 +271,7 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
    end do
 
 end subroutine CNNLeaching
+
+#endif
 
 end module CNNDynamicsMod

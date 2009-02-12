@@ -3,6 +3,7 @@
 module aerdepMOD
 
 !-----------------------------------------------------------------------
+! This entire module will be removed....................
 !BOP
 !
 ! !MODULE: aerdepMod
@@ -76,9 +77,6 @@ contains
 ! !USES:
     use nanMod         , only : nan
     use decompMod      , only : get_proc_bounds
-#if (defined SEQ_MCT) || (defined SEQ_ESMF)
-    use seq_flds_indices
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -97,14 +95,32 @@ contains
 
     call get_proc_bounds(begg=begg,endg=endg)
 
-    ier = 0
-    if(.not.allocated(bcphiwet2t)) then
-       allocate(bcphiwet2t(begg:endg,2))
-       allocate(bcphidry2t(begg:endg,2))
-       allocate(bcphodry2t(begg:endg,2))
-       allocate(ocphiwet2t(begg:endg,2))
-       allocate(ocphidry2t(begg:endg,2))
-       allocate(ocphodry2t(begg:endg,2))
+    if ( set_caerdep_from_file )then
+       ier = 0
+       if(.not.allocated(bcphiwet2t)) then
+          allocate(bcphiwet2t(begg:endg,2))
+          allocate(bcphidry2t(begg:endg,2))
+          allocate(bcphodry2t(begg:endg,2))
+          allocate(ocphiwet2t(begg:endg,2))
+          allocate(ocphidry2t(begg:endg,2))
+          allocate(ocphodry2t(begg:endg,2))
+       endif
+          
+       if (ier /= 0) then
+          write(iulog,*) 'aerdepini allocation error'
+          call endrun
+       end if
+
+        bcphiwet2t(begg:endg,1:2) = nan
+        bcphidry2t(begg:endg,1:2) = nan
+        bcphodry2t(begg:endg,1:2) = nan
+        ocphiwet2t(begg:endg,1:2) = nan
+        ocphidry2t(begg:endg,1:2) = nan
+        ocphodry2t(begg:endg,1:2) = nan
+    end if
+
+    if ( set_dustdep_from_file )then
+
        allocate(dstx01wd2t(begg:endg,2))
        allocate(dstx01dd2t(begg:endg,2))
        allocate(dstx02wd2t(begg:endg,2))
@@ -113,62 +129,22 @@ contains
        allocate(dstx03dd2t(begg:endg,2))
        allocate(dstx04wd2t(begg:endg,2))
        allocate(dstx04dd2t(begg:endg,2))
-    endif
-       
-    if (ier /= 0) then
-       write(iulog,*) 'aerdepini allocation error'
-       call endrun
+
+       if (ier /= 0) then
+          write(iulog,*) 'aerdepini allocation error'
+          call endrun
+       end if
+
+       dstx01wd2t(begg:endg,1:2) = nan
+       dstx01dd2t(begg:endg,1:2) = nan
+       dstx02wd2t(begg:endg,1:2) = nan
+       dstx02dd2t(begg:endg,1:2) = nan
+       dstx03wd2t(begg:endg,1:2) = nan
+       dstx03dd2t(begg:endg,1:2) = nan
+       dstx04wd2t(begg:endg,1:2) = nan
+       dstx04dd2t(begg:endg,1:2) = nan
+
     end if
-
-    bcphiwet2t(begg:endg,1:2) = nan
-    bcphidry2t(begg:endg,1:2) = nan
-    bcphodry2t(begg:endg,1:2) = nan
-    ocphiwet2t(begg:endg,1:2) = nan
-    ocphidry2t(begg:endg,1:2) = nan
-    ocphodry2t(begg:endg,1:2) = nan
-    dstx01wd2t(begg:endg,1:2) = nan
-    dstx01dd2t(begg:endg,1:2) = nan
-    dstx02wd2t(begg:endg,1:2) = nan
-    dstx02dd2t(begg:endg,1:2) = nan
-    dstx03wd2t(begg:endg,1:2) = nan
-    dstx03dd2t(begg:endg,1:2) = nan
-    dstx04wd2t(begg:endg,1:2) = nan
-    dstx04dd2t(begg:endg,1:2) = nan
-
-
-    ! set flags thet determine whether to set aerosol deposition
-    ! fields from external forcing file or to receive them from atmosphere.
-    ! 1. CLM OFFLINE or CPL6: all aerosols come from external forcing file
-    ! 2. SEQ-CCSM:            if prognostic aerosols are configured, use them.
-    !     Otherwise, use aerosols from external forcing file.
-
-    set_caerdep_from_file = .true.
-    set_dustdep_from_file = .true.
-
-#if (defined SEQ_MCT) || (defined SEQ_ESMF)
-
-!!! Hardwire to ALWAYS read deposition from file for now. Later
-!!! add some checking so that if indices are set, you also check their values.
-!!! EBK Jan/8/2009
-!!!
-!!! if ( index_x2l_Faxa_bcphidry /= 0 .and. &
-!!!      index_x2l_Faxa_bcphodry /= 0 .and. &
-!!!      index_x2l_Faxa_bcphiwet /= 0 .and. &
-!!!      index_x2l_Faxa_ocphidry /= 0 .and. &
-!!!      index_x2l_Faxa_ocphodry /= 0 .and. &
-!!!      index_x2l_Faxa_ocphiwet /= 0 )  set_caerdep_from_file = .false.
-!!!
-!!! if ( index_x2l_Faxa_dstwet1 /= 0 .and. &
-!!!      index_x2l_Faxa_dstwet2 /= 0 .and. &
-!!!      index_x2l_Faxa_dstwet3 /= 0 .and. &
-!!!      index_x2l_Faxa_dstwet4 /= 0 .and. &
-!!!      index_x2l_Faxa_dstdry1 /= 0 .and. &
-!!!      index_x2l_Faxa_dstdry2 /= 0 .and. &
-!!!      index_x2l_Faxa_dstdry3 /= 0 .and. &
-!!!      index_x2l_Faxa_dstdry4 /= 0 ) set_dustdep_from_file = .false.
-
-#endif
-
 
   end subroutine aerdepini
 
@@ -261,20 +237,24 @@ contains
 
     ! interpolate aerosol deposition data into 'forcing' array:
     do g = begg, endg
-       forc_aer(g,1) = timwt_aer(1)*bcphidry2t(g,1)  + timwt_aer(2)*bcphidry2t(g,2)
-       forc_aer(g,2) = timwt_aer(1)*bcphodry2t(g,1)  + timwt_aer(2)*bcphodry2t(g,2)
-       forc_aer(g,3) = timwt_aer(1)*bcphiwet2t(g,1)  + timwt_aer(2)*bcphiwet2t(g,2)
-       forc_aer(g,4) = timwt_aer(1)*ocphidry2t(g,1)  + timwt_aer(2)*ocphidry2t(g,2)
-       forc_aer(g,5) = timwt_aer(1)*ocphodry2t(g,1)  + timwt_aer(2)*ocphodry2t(g,2)
-       forc_aer(g,6) = timwt_aer(1)*ocphiwet2t(g,1)  + timwt_aer(2)*ocphiwet2t(g,2)
-       forc_aer(g,7) = timwt_aer(1)*dstx01wd2t(g,1)  + timwt_aer(2)*dstx01wd2t(g,2)
-       forc_aer(g,8) = timwt_aer(1)*dstx01dd2t(g,1)  + timwt_aer(2)*dstx01dd2t(g,2)
-       forc_aer(g,9) = timwt_aer(1)*dstx02wd2t(g,1)  + timwt_aer(2)*dstx02wd2t(g,2)
-       forc_aer(g,10) = timwt_aer(1)*dstx02dd2t(g,1)  + timwt_aer(2)*dstx02dd2t(g,2)
-       forc_aer(g,11) = timwt_aer(1)*dstx03wd2t(g,1)  + timwt_aer(2)*dstx03wd2t(g,2)
-       forc_aer(g,12) = timwt_aer(1)*dstx03dd2t(g,1)  + timwt_aer(2)*dstx03dd2t(g,2)
-       forc_aer(g,13) = timwt_aer(1)*dstx04wd2t(g,1)  + timwt_aer(2)*dstx04wd2t(g,2)
-       forc_aer(g,14) = timwt_aer(1)*dstx04dd2t(g,1)  + timwt_aer(2)*dstx04dd2t(g,2)
+       if ( set_caerdep_from_file )then
+          forc_aer(g,1) = timwt_aer(1)*bcphidry2t(g,1)  + timwt_aer(2)*bcphidry2t(g,2)
+          forc_aer(g,2) = timwt_aer(1)*bcphodry2t(g,1)  + timwt_aer(2)*bcphodry2t(g,2)
+          forc_aer(g,3) = timwt_aer(1)*bcphiwet2t(g,1)  + timwt_aer(2)*bcphiwet2t(g,2)
+          forc_aer(g,4) = timwt_aer(1)*ocphidry2t(g,1)  + timwt_aer(2)*ocphidry2t(g,2)
+          forc_aer(g,5) = timwt_aer(1)*ocphodry2t(g,1)  + timwt_aer(2)*ocphodry2t(g,2)
+          forc_aer(g,6) = timwt_aer(1)*ocphiwet2t(g,1)  + timwt_aer(2)*ocphiwet2t(g,2)
+       end if
+       if ( set_dustdep_from_file )then
+          forc_aer(g,7) = timwt_aer(1)*dstx01wd2t(g,1)  + timwt_aer(2)*dstx01wd2t(g,2)
+          forc_aer(g,8) = timwt_aer(1)*dstx01dd2t(g,1)  + timwt_aer(2)*dstx01dd2t(g,2)
+          forc_aer(g,9) = timwt_aer(1)*dstx02wd2t(g,1)  + timwt_aer(2)*dstx02wd2t(g,2)
+          forc_aer(g,10) = timwt_aer(1)*dstx02dd2t(g,1)  + timwt_aer(2)*dstx02dd2t(g,2)
+          forc_aer(g,11) = timwt_aer(1)*dstx03wd2t(g,1)  + timwt_aer(2)*dstx03wd2t(g,2)
+          forc_aer(g,12) = timwt_aer(1)*dstx03dd2t(g,1)  + timwt_aer(2)*dstx03dd2t(g,2)
+          forc_aer(g,13) = timwt_aer(1)*dstx04wd2t(g,1)  + timwt_aer(2)*dstx04wd2t(g,2)
+          forc_aer(g,14) = timwt_aer(1)*dstx04dd2t(g,1)  + timwt_aer(2)*dstx04dd2t(g,2)
+       end if
     enddo
 
   end subroutine interpMonthlyAerdep

@@ -50,7 +50,6 @@ subroutine iniTimeConst
   use spmdMod         , only : mpicom, MPI_INTEGER, masterproc
   use clm_varctl      , only : fsnowoptics, fsnowaging
   use SNICARMod       , only : SnowAge_init, SnowOptics_init
-  use aerdepMod       , only : aerdepini
 
 !
 ! !ARGUMENTS:
@@ -622,6 +621,7 @@ subroutine iniTimeConst
             watopt(c,lev) = spval 
          end do
       else if (ltype(l)==isturb .and. (ctype(c) /= icol_road_perv) .and. (ctype(c) /= icol_road_imperv) )then
+         ! Urban Roof, sunwall, shadewall properties set to special value
          do lev = 1,nlevurb
             watsat(c,lev) = spval
             watfc(c,lev)  = spval
@@ -650,6 +650,12 @@ subroutine iniTimeConst
                sand    = sand3d(g,nlevsoi)
                om_frac = 0._r8
             endif
+            ! No organic matter for urban
+            if (ltype(l)==isturb) then
+              om_frac = 0._r8
+            end if
+            ! Note that the following properties are overwritten for urban impervious road 
+            ! layers that are not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
             watsat(c,lev) = 0.489_r8 - 0.00126_r8*sand
             bsw(c,lev)    = 2.91 + 0.159*clay
             sucsat(c,lev) = 10._r8 * ( 10._r8**(1.88_r8-0.0131_r8*sand) )
@@ -703,8 +709,6 @@ subroutine iniTimeConst
          !
          ! Impervious road layers -- same as above except set watdry and watopt as missing
          if (ctype(c) == icol_road_imperv) then
-            ! Note that these are overwritten for impervious road layers that are
-            ! not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
             do lev = 1,nlevgrnd
                watdry(c,lev) = spval 
                watopt(c,lev) = spval 
@@ -712,8 +716,11 @@ subroutine iniTimeConst
          ! pervious road layers -- same as above except also set rootfr_road_perv
          ! Currently, pervious road has same properties as soil
          else if (ctype(c) == icol_road_perv) then 
-            do lev = 1,nlevgrnd
-               rootfr_road_perv(c,lev) = 0.1  ! uniform profile
+            do lev = 1, nlevgrnd
+               rootfr_road_perv(c,lev) = 0._r8
+            enddo
+            do lev = 1,nlevsoi
+               rootfr_road_perv(c,lev) = 0.1_r8  ! uniform profile
             end do
          end if
       endif
@@ -828,9 +835,6 @@ subroutine iniTimeConst
 
    deallocate(soic2d,ndep,sand3d,clay3d,gti,organic3d)
 
-
-   ! initialize aerosol deposition routines
-   call aerdepini()
 
    ! Initialize SNICAR optical and aging parameters:
    call SnowOptics_init( )

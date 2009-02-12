@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNNStateUpdate2Mod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -292,5 +293,7 @@ subroutine NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
 end subroutine NStateUpdate2
 !-----------------------------------------------------------------------
+
+#endif
 
 end module CNNStateUpdate2Mod

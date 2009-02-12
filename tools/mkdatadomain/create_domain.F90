@@ -52,6 +52,7 @@
   real(r8), allocatable :: xv(:,:,:)        ! Longitude vertices
   real(r8), allocatable :: yv(:,:,:)        ! Latitude vertices
   real(r8), allocatable :: area(:,:)        ! Grid areas
+  real(r8), parameter :: re = SHR_CONST_REARTH * 0.001_r8
 
   integer :: filename_position              ! Character position for last character of directory
   integer :: filename_length                ! Length of full pathname
@@ -304,17 +305,19 @@
 
   do j = 1,nj
      do i = 1,ni
-        if (lndfrac(i,j) < 1._r8) then
-           ocnfrac(i,j) = 1._r8 - lndfrac(i,j)
-           ocnmask(i,j) = 1
-           lndmask(i,j) = 0
-        else
-           ocnfrac(i,j) = 0._r8
-           ocnmask(i,j) = 0
+        ocnfrac(i,j) = 1._r8 - lndfrac(i,j)
+        if ( lndfrac(i,j) > 0.0_r8 ) then
            lndmask(i,j) = 1
+        else
+           lndmask(i,j) = 0
+        end if
+        if ( ocnfrac(i,j) > 0.0_r8 ) then
+           ocnmask(i,j) = 1
+        else
+           ocnmask(i,j) = 0
         end if
         ! Input area is assumed to be in km^2 - must convert to radians^2
-        area(i,j) = area(i,j) * 4.0_r8 * SHR_CONST_PI / (SHR_CONST_REARTH * SHR_CONST_REARTH * 0.001_r8 * 0.001_r8)
+        area(i,j) = area(i,j) / (re*re)
      end do
   end do
   

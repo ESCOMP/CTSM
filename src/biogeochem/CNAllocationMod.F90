@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNAllocationMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -657,5 +658,7 @@ subroutine CNAllocation (lbc, ubc, &
    deallocate(col_plant_ndemand)
 
 end subroutine CNAllocation
+
+#endif
 
 end module CNAllocationMod

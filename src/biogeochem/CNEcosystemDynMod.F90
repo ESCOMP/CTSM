@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNEcosystemDynMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -179,5 +180,6 @@ contains
     end if  !end of if-doalb block
 
   end subroutine CNEcosystemDyn
+#endif
 !-----------------------------------------------------------------------
 end  module CNEcosystemDynMod

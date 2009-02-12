@@ -395,6 +395,7 @@ contains
 
 ! !ARGUMENTS:
     implicit none
+    include 'netcdf.inc'
     type(domain_type),intent(inout) :: domain
     character(len=*) ,intent(in)    :: fname
 !

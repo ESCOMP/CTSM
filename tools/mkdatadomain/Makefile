@@ -96,10 +96,13 @@ cpre = $(null)-WF,-D$(null)
 FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
 LIB_NETCDF := /usr/local/lib64/r4i4
 FC      = xlf90
-FFLAGS  = -c -I$(INC_NETCDF) -q64 -qsuffix=f=f90 -O2 -qsuffix=f=f90:cpp=F90 \
-	   $(FPPFLAGS)  -g -qfullpath -qarch=auto -qspillsize=2500
+FFLAGS  = -c -I$(INC_NETCDF) -q64 -qsuffix=f=f90 -qsuffix=f=f90:cpp=F90 \
+	   $(FPPFLAGS)  -g -qfullpath
 ifneq ($(OPT),TRUE)
-   FFLAGS += -qmaxmem=-1 -C -qinitauto=FF911299 -qflttrap=ov:zero:inv:en
+   #FFLAGS += -qmaxmem=-1 -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C
+   FFLAGS += -qmaxmem=-1 -C -O0
+else
+   FFLAGS += -qmaxmem=-1 -C -O2
 endif
 CFLAGS  := -q64 -g $(CPPDEF) -O2
 LDFLAGS = -L$(LIB_NETCDF) -q64 -lnetcdf
@@ -113,22 +116,54 @@ endif
 #------------------------------------------------------------------------
 
 ifeq ($(UNAMES),Darwin)
-CPPDEF += -DAIX -DDarwin -DFORTRAN_SAME
-cpre = $(null)-WF,-D$(null)
-FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
-LIB_NETCDF := /usr/local/lib
-CFLAGS  := -I/usr/include -I/usr/include/malloc -g -O2 $(CPPDEF)
-FC      = xlf90
-FFLAGS  = -c -I$(INC_NETCDF) -qsuffix=f=f90 -O2 -qsuffix=f=f90:cpp=F90 \
-	  -WF,-DAIX -g -qfullpath -qhalt=e $(FPPFLAGS) -I.
-ifneq ($(OPT),TRUE)
-   FFLAGS  += -qmaxmem=-1 -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C
-else
-   FFLAGS  += -qmaxmem=5000
+
+# Set the default Fortran compiler
+ifeq ($(strip $(USER_FC)),)
+  FC := g95
 endif
+ifeq ($(strip $(USER_CC)),)
+  CC := gcc
+endif
+
+CFLAGS  := -g -O2 $(CPPDEF)
+CPPDEF  += -DFORTRAN_SAME -DSYSDARWIN -DDarwin
+
+ifeq ($(FC),g95)
+
+   CPPDEF   += -DG95
+   FFLAGS   := -c -fno-second-underscore $(CPPDEF) $(cpp_path) -I$(MOD_NETCDF)
+   ifeq ($(OPT),TRUE)
+     FFLAGS += -O2
+   else
+     FFLAGS += -g -fbounds-check
+   endif
+
+endif
+
+ifeq ($(FC),xlf90)
+
+   CPPDEF += -DAIX
+   cpre = $(null)-WF,-D$(null)
+   FPPFLAGS   := $(patsubst -D%,$(cpre)%,$(CPPDEF))
+   FFLAGS  = -c -I$(INC_NETCDF) -qsuffix=f=f90 -O2 -qsuffix=f=f90:cpp=F90 \
+	  -WF,-DAIX -g -qfullpath -qhalt=e $(FPPFLAGS) -I.
+   ifneq ($(OPT),TRUE)
+      FFLAGS  += -qmaxmem=-1 -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C
+   else
+      FFLAGS  += -qmaxmem=5000
+   endif
+
+endif
+
+ifeq ($(CC),gcc)
+   CFLAGS     := $(cpp_path) -O2 $(CPPDEF)
+endif
+ifeq ($(CC),xlc)
+   CFLAGS     := -I/usr/include -I/usr/include/malloc $(cpp_path) $(CPPDEF) -O2
+endif
+
 LDFLAGS = -L$(LIB_NETCDF) -lnetcdf -lSystemStubs -lSystemStubs_profile
-FFLAGS += $(cpp_path)
-CFLAGS += $(cpp_path)
+
 endif
 
 #------------------------------------------------------------------------
@@ -145,6 +180,8 @@ ifeq ($(UNAMES),Linux)
   endif
   CPPDEF += -DLINUX -DFORTRANUNDERSCORE
   CFLAGS := $(CPPDEF)
+  LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+  FFLAGS = 
 
   ifeq ($(PGF90),TRUE)
     CC     := pgcc
@@ -158,20 +195,32 @@ ifeq ($(UNAMES),Linux)
 
   ifeq ($(FC),lf95)
     ifneq ($(OPT),TRUE)
-      FFLAGS += -g --chk a,e,s,u
+      FFLAGS += -g --chk a,e,s,u -O0
     else
       FFLAGS += -O
     endif
   endif
   ifeq ($(FC),pathf90)
-    FFLAGS =  -extend_source -ftpp -fno-second-underscore
+    FFLAGS +=  -extend_source -ftpp -fno-second-underscore
     ifneq ($(OPT),TRUE)
-      FFLAGS += -g
+      FFLAGS += -g -O0
     else
       FFLAGS += -O
     endif
   endif
-  LDFLAGS = -L$(LIB_NETCDF) -lnetcdf
+  ifeq ($(FC),ifort)
+
+    FFLAGS      += -132 -ftz -g -fp-model precise -convert big_endian -assume byterecl -traceback -FR
+    CFLAGS      += -m64 -ftz -g
+
+    ifneq ($(OPT),TRUE)
+       FFLAGS    += -CB -O0
+    else
+       FFLAGS    += -O2
+    endif
+    LDFLAGS   += -m64
+
+  endif
   FFLAGS += -c -I$(INC_NETCDF) $(CPPDEF) $(cpp_path)
   CFLAGS += $(cpp_path)
 endif

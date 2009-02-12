@@ -2,6 +2,9 @@
 #include <preproc.h>
 
 module CNSummaryMod
+
+#ifdef CN
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -1223,5 +1226,7 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
 end subroutine NSummary
 !-----------------------------------------------------------------------
+
+#endif
 
 end module CNSummaryMod

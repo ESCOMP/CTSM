@@ -111,9 +111,9 @@ set usr_src  = $clmroot/bld/usr.src
 #===========================================================================
 
 ## Ensure that run and build directories exist
-mkdir -p $rundir                || echo "cannot create $rundir"        && exit 1
-mkdir -p $rundir/timing         || echo "cannot create $rundir/timing" && exit 1
-mkdir -p $blddir                || echo "cannot create $blddir"        && exit 1
+mkdir -p $rundir                    || echo "cannot create $rundir"        && exit 1
+mkdir -p $rundir/timing/checkpoints || echo "cannot create $rundir/timing" && exit 1
+mkdir -p $blddir                    || echo "cannot create $blddir"        && exit 1
 
 ## Build (or re-build) executable
 set flags = "-fc pathf90 -linker mpif90 "

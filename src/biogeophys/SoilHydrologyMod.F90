@@ -1292,7 +1292,8 @@ contains
        c = filter_urbanc(fc)
        if (ctype(c) /= icol_road_perv) then
          qflx_drain(c) = 0._r8
-         qflx_qrgwl(c) = 0._r8
+         ! This must be done for roofs and impervious road (walls will be zero)
+         qflx_qrgwl(c) = qflx_snwcp_liq(c)
          eflx_impsoil(c) = 0._r8
        end if
 

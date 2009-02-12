@@ -2,6 +2,9 @@
 #include <preproc.h>
 
 module C13SummaryMod
+
+#ifdef CN
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -733,5 +736,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
 end subroutine C13Summary
 !-----------------------------------------------------------------------
+
+#endif
 
 end module C13SummaryMod

@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNGRespMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -191,5 +192,7 @@ subroutine CNGResp(num_soilp, filter_soilp)
    end do
 
 end subroutine CNGResp
+
+#endif
 
 end module CNGRespMod

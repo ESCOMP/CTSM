@@ -338,6 +338,7 @@ contains
           write(iulog,*)'qflx_surf    = ',qflx_surf(indexc)
           write(iulog,*)'qflx_qrgwl   = ',qflx_qrgwl(indexc)
           write(iulog,*)'qflx_drain   = ',qflx_drain(indexc)
+          write(iulog,*)'qflx_snwcp_ice   = ',qflx_snwcp_ice(indexc)
           write(iulog,*)'clm model is stopping'
           call endrun()
        else if (abs(errh2o(indexc)) > .10_r8 .and. (nstep > 2) ) then
@@ -352,6 +353,7 @@ contains
           write(iulog,*)'qflx_surf    = ',qflx_surf(indexc)
           write(iulog,*)'qflx_qrgwl   = ',qflx_qrgwl(indexc)
           write(iulog,*)'qflx_drain   = ',qflx_drain(indexc)
+          write(iulog,*)'qflx_snwcp_ice   = ',qflx_snwcp_ice(indexc)
           write(iulog,*)'clm model is stopping'
           call endrun()
        end if

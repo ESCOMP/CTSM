@@ -35,7 +35,6 @@ module controlMod
 !    o nrevsn          = 256 character restart file name for use with branch run
 !    o fsnowoptics     = 256 character snow optical properties file name
 !    o fsnowaging      = 256 character snow aging parameters file name
-!    o faerdep         = 256 character aerosol deposition file name
 !    o fget_archdev    = 8 character input archive device prefix to retreive input files from (used by shr/shr_file_mod.F90)
 !                        (such as mss: for NCAR mass store)
 !
@@ -95,6 +94,8 @@ module controlMod
 !    o pertlim      = perturbation limit
 !    o create_crop_landunit = logical on if to create crop as separate landunits
 !    o co2_type     = type of CO2 feedback, choices are constant, prognostic or diagnostic
+!    o urban_hac     = urban air conditioning/heating and wasteheat on/off
+!    o urban_traffic = logical true if want urban traffic turned on
 !
 ! === rtm control variables ===
 !
@@ -110,7 +111,8 @@ module controlMod
                             co2_type, wrtdia, co2_ppmv, rtm_nsteps, nsegspc, pertlim,       &
                             hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, username,           &
                             ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
-                            ncd_pio_num_iotasks, faerdep, forganic, fsnowaging, fsnowoptics
+                            ncd_pio_num_iotasks, forganic, fsnowaging, fsnowoptics, &
+                            faerdep !will be removed
   use spmdMod      , only : masterproc
   use decompMod    , only : clump_pproc
   use histFileMod  , only : max_tapes, max_namlen, &
@@ -125,6 +127,7 @@ module controlMod
   use shr_const_mod, only : SHR_CONST_CDAY
   use abortutils   , only : endrun
   use UrbanInputMod, only : furbinp
+  use UrbanMod     , only : urban_hac, urban_traffic
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -245,7 +248,9 @@ contains
          finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
          fpftcon, frivinp_rtm,  furbinp, &
          fpftdyn, fndepdat, forganic, fndepdyn, nrevsn, &
-         fsnowoptics, fsnowaging, faerdep
+         fsnowoptics, fsnowaging
+
+    namelist /clm_inparm/ faerdep   ! will be removed
 
     ! clm history, restart options
 
@@ -280,6 +285,10 @@ contains
          clump_pproc, wrtdia, rtm_nsteps, pertlim, &
          create_crop_landunit, nsegspc, co2_ppmv
 
+    ! clm urban options
+
+    namelist /clm_inparm/  &
+         urban_hac, urban_traffic
          
     ! ----------------------------------------------------------------------
     ! Default values
@@ -360,6 +369,11 @@ contains
 
        if (hist_type1d_pertape(1) /= ' ') then
           write(iulog,*)'CONTROL_INIT error: hist_type1d_pertape can only be set for tapes 2-6'
+          call endrun()
+       end if
+
+       if (urban_traffic) then
+          write(iulog,*)'Urban traffic fluxes are not implemented currently'
           call endrun()
        end if
 
@@ -455,9 +469,10 @@ contains
 #endif
     call mpi_bcast (fsnowoptics,  len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (faerdep,      len(faerdep),      MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fget_archdev, len(fget_archdev), MPI_CHARACTER, 0, mpicom, ier)
     
+    ! will be removed......
+    call mpi_bcast (faerdep,      len(faerdep),      MPI_CHARACTER, 0, mpicom, ier)
 
     ! Landunit generation
 
@@ -470,6 +485,8 @@ contains
 
     ! physics variables
 
+    call mpi_bcast (urban_hac     , len(urban_hac), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (urban_traffic , 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (rtm_nsteps  , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (nsegspc     , 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (wrtdia      , 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -621,11 +638,13 @@ contains
     else
        write(iulog,*) '   snow aging parameters file = ',trim(fsnowaging)
     endif
+    ! Will be removed....
     if (faerdep == ' ') then
        write(iulog,*) '   aerosol deposition file NOT set'
     else
        write(iulog,*) '   aerosol deposition file = ',trim(faerdep)
     endif
+    ! to here............
 
     if (nsrest == 0 .and. finidat == ' ') write(iulog,*) '   initial data created by model'
     if (nsrest == 0 .and. finidat /= ' ') write(iulog,*) '   initial data   = ',trim(finidat)
@@ -663,6 +682,8 @@ contains
     write(iulog,*) '   flag for random perturbation test is not set'
 #endif
     write(iulog,*) '   CO2 volume mixing ratio   (umol/mol)   = ', co2_ppmv
+    write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
+    write(iulog,*) '   urban traffic flux   = ', urban_traffic
 #if (defined RTM)
     if (rtm_nsteps > 1) then
        write(iulog,*)'river runoff calculation performed only every ',rtm_nsteps,' nsteps'

@@ -151,7 +151,7 @@ module driver
   use perf_mod
   use SNICARMod           , only : SnowAge_grain
   use aerdepMod           , only : interpMonthlyAerdep
-  use clm_varctl          , only : set_caerdep_from_file, set_dustdep_from_file  
+  use clm_varctl          , only : set_caerdep_from_file, set_dustdep_from_file   ! this will be removed
 
 !
 ! !PUBLIC TYPES:
@@ -246,12 +246,14 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 
   ! ============================================================================
   ! interpolate aerosol deposition data, and read in new monthly data if need be.
+  ! This will be removed.........................
   ! ============================================================================
   if ( (set_caerdep_from_file) .or. (set_dustdep_from_file) ) then
      !if (doalb) then
      call interpMonthlyAerdep()
      !endif
   endif
+  ! to here......................................
 
 
   ! ============================================================================

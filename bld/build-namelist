@@ -528,6 +528,11 @@ if ($mode eq "ccsm_seq") {
    add_default($nl, 'model_version' );
    add_default($nl, 'hostname', 'val'=>`hostname` );
    add_default($nl, 'username', 'val'=>$ENV{'LOGNAME'} );
+   add_default($nl, 'timing_dir' );
+   add_default($nl, 'tchkpt_dir' );
+   add_default($nl, 'eps_frac'   );
+   add_default($nl, 'eps_amask'  );
+   add_default($nl, 'eps_aarea'  );
    
    if ( $start_type =~ /branch/ ) {
       if ( not defined $nl->get_value('restart_file') ) {
@@ -628,6 +633,9 @@ add_default($nl, 'co2_ppmv');
 #add_default($nl, 'wrtdia',       'val'=> '.false.');
 add_default($nl, 'hist_crtinic', 'val'=> 'NONE');
 
+add_default($nl, 'urban_hac');
+add_default($nl, 'urban_traffic');
+
 #
 # Optional variables or variables only turned on for specific settings
 #
@@ -662,6 +670,8 @@ if ( defined($opts{'clm_demand'}) ) {
            } else {
               add_default($nl, "furbinp",  'hgrid'=>$lnd_res );
            }
+        } elsif ( $item eq "forganic" ) {
+           add_default($nl, "$item", 'hgrid'=>$lnd_res );
         } else {
 	   add_default($nl, $item, %settings );
         }
@@ -682,6 +692,11 @@ $fpftdyn =~ s!(.*)/!!;
 $fpftdyn =~ s/'//;
 $fpftdyn =~ s/"//;
 if ( $fpftdyn eq "" ) { $fpftdyn = "null"; }
+my $fndepdyn = $nl->get_value('fndepdyn');
+$fndepdyn =~ s!(.*)/!!;
+$fndepdyn =~ s/'//;
+$fndepdyn =~ s/"//;
+if ( $fndepdyn eq "" ) { $fndepdyn = "null"; }
 add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'furbinp'=>$furbinp, 'fpftdyn'=>$fpftdyn );
 
 # Initial conditions
@@ -703,13 +718,13 @@ if (not defined $nl->get_value('finidat')) {
     if ( $start_type =~ /startup/  ) { $nofail = 0; }
     if ($opts{'ignore_ic_date'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                    'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp );
+                    'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 'fndepdyn'=>$fndepdyn );
     } elsif ($opts{'ignore_ic_year'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp );
+                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 'fndepdyn'=>$fndepdyn );
     } else {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp );
+                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 'fndepdyn'=>$fndepdyn );
     }
     my $finidat = $nl->get_value($var);
     if ( (not defined $finidat ) || $finidat =~ /null/ ) {

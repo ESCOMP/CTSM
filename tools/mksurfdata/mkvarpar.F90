@@ -17,6 +17,7 @@ module mkvarpar
 !
   integer, parameter :: nlevsoi = 10  ! number of soil layers
   integer, parameter :: numpft  = 16  ! number of plant types
+  integer, parameter :: nglcec  = 10  ! number of elevation classes for glaciers
   integer, parameter :: noveg   = 0   ! value for non-vegetated pft
 !
 !EOP

@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNMRespMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -177,5 +178,7 @@ subroutine CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
    end do
 
 end subroutine CNMResp
+
+#endif
 
 end module CNMRespMod

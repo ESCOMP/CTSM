@@ -32,6 +32,7 @@ module lnd_comp_mct
 !EOP
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: lnd_SetgsMap_mct
+  private :: lnd_chkAerDep_mct
   private :: lnd_domain_mct
   private :: lnd_export_mct
   private :: lnd_import_mct
@@ -392,6 +393,7 @@ contains
     use mct_mod         ,only : mct_aVect, mct_aVect_accum, mct_aVect_copy, mct_aVect_avg, &
                                 mct_aVect_zero
     use mct_mod        , only : mct_gGrid, mct_gGrid_exportRAttr, mct_gGrid_lsize
+    use aerdepMod      , only : aerdepini
 !
 ! !ARGUMENTS:
     type(ESMF_Clock)            , intent(in)    :: EClock
@@ -433,6 +435,7 @@ contains
     real(r8),               pointer :: data(:)  ! temporary
     integer :: g,i,lsize       ! counters
     logical,save :: first_call = .true.   ! first call work
+    logical :: never_doAlb                ! if doalb never set
     character(len=32)            :: rdate ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
 !
@@ -479,7 +482,13 @@ contains
            adomain%asca(g) = data(i)
        end do
        deallocate(data)
+
+       call lnd_chkAerDep_mct( x2l_l )
+
+       call aerdepini( )   ! Will be removed...
+
     endif
+
     
     ! Map MCT to land data type
 
@@ -493,7 +502,8 @@ contains
     
     ! Loop over time steps in coupling interval
 
-    dosend = .false.
+    dosend      = .false.
+    never_doAlb = .true.
     do while(.not. dosend)
 
        ! Determine if dosend
@@ -510,6 +520,7 @@ contains
        dtime = get_step_size()
        caldayp1 = get_curr_calday(offset=dtime)
        doalb = abs(nextsw_cday- caldayp1) < 1.e-10_r8
+       if ( doalb ) never_doAlb = .false.
 
        ! Determine if time to write cam restart and stop
 
@@ -578,7 +589,6 @@ contains
 #endif
        
     ! Check that internal clock is in sync with master clock
-
     dtime = get_step_size()
     call get_curr_date( yr, mon, day, tod, offset=-dtime )
     ymd = yr*10000 + mon*100 + day
@@ -589,6 +599,11 @@ contains
        write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
        call endrun( sub//":: CLM clock not in sync with Master Sync clock" )
     end if
+    if ( never_doAlb .and. (nextsw_cday > 0) .and. (nstep > 2) )then
+       write(iulog,*)'nstep=',nstep, 'nextsw_cday=', nextsw_cday, 'caldayp1=', caldayp1
+       call endrun( sub//":: doalb never set to true over coupling interval -- something is wrong" )
+    end if
+
     
     ! Reset shr logging to my original values
 
@@ -682,6 +697,133 @@ contains
 
   end subroutine lnd_SetgsMap_mct
 
+!=================================================================================
+
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: lnd_chkAerDep_mct
+!
+! !INTERFACE:
+  subroutine lnd_chkAerDep_mct( x2l_l )
+!
+! !DESCRIPTION:
+! Check aerosol deposition values sent from atmosphere to make sure data is filled.
+! If any data is set to special-value or if all data is equal to zero than mark
+! data as NOT filled. Model will abort if the data sent from the atmosphere is NOT
+! filled.
+!
+!------------------------------------------------------------------------------
+!BOP
+! !USES:
+    use shr_const_mod    , only : spval => SHR_CONST_SPVAL
+    use shr_sys_mod      , only : shr_sys_flush
+    use clm_varctl       , only : iulog
+    use clm_varctl       , only : set_caerdep_from_file, set_dustdep_from_file  ! This will be removed
+    use abortutils       , only : endrun
+    use seq_flds_indices , only : index_x2l_Faxa_bcphidry, index_x2l_Faxa_bcphodry, &
+                                  index_x2l_Faxa_bcphiwet,                          &
+                                  index_x2l_Faxa_ocphidry, index_x2l_Faxa_ocphodry, &
+                                  index_x2l_Faxa_ocphiwet,                          &
+                                  index_x2l_Faxa_dstdry1, index_x2l_Faxa_dstdry2,   &
+                                  index_x2l_Faxa_dstdry3, index_x2l_Faxa_dstdry4,   &
+                                  index_x2l_Faxa_dstwet1, index_x2l_Faxa_dstwet2,   &
+                                  index_x2l_Faxa_dstwet3, index_x2l_Faxa_dstwet4
+    use spmdMod          , only : masterproc
+!
+! !ARGUMENTS:
+    implicit none
+
+    type(mct_aVect)             , intent(inout) :: x2l_l
+!
+! !REVISION HISTORY:
+! Author: Erik Kluzek
+!
+!EOP
+!---------------------------------------------------------------------------
+    !
+    ! Local Variables
+    !
+    logical :: caerdep_filled = .true.     ! Flag if carbon aerosol deposition is filled
+    logical :: dustdep_filled = .true.     ! Flag if dust deposition is filled
+
+    ! If ANY values set to special value -- then mark data as NOT filled
+    if ( any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphidry,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphodry,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphiwet,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphidry,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphodry,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphiwet,:) - spval)/spval < 0.0001_r8 ) &
+    )then
+        caerdep_filled = .false.
+    end if
+
+    ! If ANY values set to special value -- then mark dust data as NOT filled
+    if ( any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry1,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry2,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry3,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry4,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet1,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet2,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet3,:) - spval)/spval < 0.0001_r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet4,:) - spval)/spval < 0.0001_r8 ) &
+    )then
+        dustdep_filled = .false.
+    end if
+
+    ! If ALL values are set to zero -- then mark carbon aerosol dep. as NOT filled
+    if (  all(x2l_l%rAttr(index_x2l_Faxa_bcphidry,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_bcphodry,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_bcphiwet,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_ocphidry,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_ocphodry,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_ocphiwet,:) == 0.0_r8) &
+    )then
+        caerdep_filled = .false.
+    end if
+
+    ! If ALL values are set to zero -- then mark dust dep. as NOT filled
+    if (  all(x2l_l%rAttr(index_x2l_Faxa_dstdry1,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstdry2,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstdry3,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstdry4,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstwet1,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstwet2,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstwet3,:) == 0.0_r8) &
+    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstwet4,:) == 0.0_r8) &
+    )then
+        dustdep_filled = .false.
+    end if
+
+    if ( caerdep_filled )then
+       if ( masterproc ) &
+       write(iulog,*) "Using aerosol deposition sent from atmosphere model"
+    else
+       if ( masterproc )then
+          write(iulog,*) "WARNING: Reading carbon aerosol deposition from CLM input file"
+          write(iulog,*) "WARNING: aerosol deposition from atm is either spval or all zero"
+       end if
+       !call endrun( "Aerosol deposition data is sent but NOT filled from the atmosphere model" )
+    end if
+    if ( dustdep_filled )then
+       if ( masterproc ) &
+       write(iulog,*) "Using dust deposition sent from atmosphere model"
+    else
+       if ( masterproc )then
+          write(iulog,*) "WARNING: Reading dust deposition from CLM input file"
+          write(iulog,*) "WARNING: Dust deposition from atm is either spval or all zero"
+       end if
+       !call endrun( "Dust deposition data is sent but NOT filled from the atmosphere model" )
+    end if
+    call shr_sys_flush( iulog )
+
+    ! This will be removed...........
+    set_caerdep_from_file = .not. caerdep_filled
+    set_dustdep_from_file = .not. dustdep_filled
+    ! To here........................
+
+  end subroutine lnd_chkAerDep_mct
+
 !====================================================================================
 
   subroutine lnd_export_mct( l2a, l2x_l )   
@@ -760,7 +902,7 @@ contains
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use decompMod       , only: get_proc_bounds_atm
     use abortutils      , only: endrun
-    use clm_varctl      , only : set_caerdep_from_file, set_dustdep_from_file, iulog
+    use clm_varctl      , only : set_caerdep_from_file, set_dustdep_from_file ! will be removed
     use clm_varctl      , only: iulog
     use mct_mod         , only: mct_aVect
     use seq_flds_indices
@@ -854,6 +996,7 @@ contains
         a2l%forc_solai(g,1) = x2l_l%rAttr(index_x2l_Faxa_swvdf,i)   ! forc_solsdxy Atm flux  W/m^2
 
         ! atmosphere coupling, if using prognostic aerosols
+        ! This if will be removed so always on....
         if ( .not. set_caerdep_from_file ) then
            a2l%forc_aer(g,1) =  x2l_l%rAttr(index_x2l_Faxa_bcphidry,i)
            a2l%forc_aer(g,2) =  x2l_l%rAttr(index_x2l_Faxa_bcphodry,i)
@@ -862,6 +1005,7 @@ contains
            a2l%forc_aer(g,5) =  x2l_l%rAttr(index_x2l_Faxa_ocphodry,i)
            a2l%forc_aer(g,6) =  x2l_l%rAttr(index_x2l_Faxa_ocphiwet,i)
         endif
+        ! This if will be removed so always on....
         if ( .not. set_dustdep_from_file ) then
            a2l%forc_aer(g,7)  =  x2l_l%rAttr(index_x2l_Faxa_dstwet1,i)
            a2l%forc_aer(g,8)  =  x2l_l%rAttr(index_x2l_Faxa_dstdry1,i)

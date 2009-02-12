@@ -51,6 +51,9 @@ D -- 2.65x3.33
 E -- 1x1 urbanc_alpha      (Urban CLM1PT_URBANC test)
 F -- 1.9x2.5 with 0.47x0.63 fine mesh
 G -- 1.9x2.5 with 0.23x0.31 fine mesh
+H -- 1.9x2.5 with 0.9x1.25  fine mesh
+I -- T62
+J -- 0.9x1.25
 
 i is the specific test (usually this implies...)
 

@@ -403,6 +403,7 @@ end subroutine init_lnd2atm_type
   nflds = 23+2*numrad
 
   ! change nflds based on prognostic aerosol configuration
+  ! This if will be removed (so always add 14 fields).....
   if ( (.not. set_caerdep_from_file) .or. (.not. set_dustdep_from_file) ) then
      nflds = nflds+14
   endif
@@ -440,6 +441,7 @@ end subroutine init_lnd2atm_type
   enddo
 
   ! atmopshere aerosol deposition coupling
+  ! This if will be removed so always on...
   if ( (.not. set_caerdep_from_file) .or. (.not. set_dustdep_from_file) ) then
      do n = 1,14
         ix=ix+1; asrc(:,ix) = a2l_src%forc_aer(:,n)
@@ -485,6 +487,7 @@ end subroutine init_lnd2atm_type
   !  only overwrite the appropriate indices of forc_aer based on the prognostic aerosol scheme, 
   !  so that forc_aer, as set from the external forcing file, remains intact. 
   !  This is somewhat kludgy...
+  ! This if will be removed so always on....
   if ( (.not. set_caerdep_from_file) .or. (.not. set_dustdep_from_file) ) then
      do n = 1,14
         ix=ix+1

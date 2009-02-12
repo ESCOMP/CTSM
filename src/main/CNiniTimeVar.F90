@@ -8,6 +8,8 @@
 !
 ! !INTERFACE:
 subroutine CNiniTimeVar()
+
+#ifdef CN
 !
 ! !DESCRIPTION:
 ! Initializes time varying variables used only in
@@ -830,5 +832,6 @@ subroutine CNiniTimeVar()
 
       end if   ! end of if-istsoil block
    end do   ! end of loop over pfts  
+#endif
 
 end subroutine CNiniTimeVar

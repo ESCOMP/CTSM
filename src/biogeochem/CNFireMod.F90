@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNFireMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -610,5 +611,6 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 end subroutine CNFireFluxes
 
 !-----------------------------------------------------------------------
+#endif
 
 end module CNFireMod

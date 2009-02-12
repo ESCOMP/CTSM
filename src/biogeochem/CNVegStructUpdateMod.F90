@@ -3,6 +3,7 @@
 
 module CNVegStructUpdateMod
 
+#ifdef CN
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -230,5 +231,6 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
 end subroutine CNVegStructUpdate
 !-----------------------------------------------------------------------
+#endif
 
 end module CNVegStructUpdateMod

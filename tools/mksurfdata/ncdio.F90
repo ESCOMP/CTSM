@@ -11,15 +11,19 @@ module ncdio
 ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_sys_mod    , only : shr_sys_flush
-  use mkvarsur       , only : spval
 !
 ! !PUBLIC TYPES:
   implicit none
   include 'netcdf.inc'
   save
-  public :: check_ret   ! checks return status of netcdf calls
-  public :: check_var   ! determine if variable is on netcdf file
-  public :: check_dim   ! validity check on dimension
+
+  private
+
+  public :: check_ret    ! checks return status of netcdf calls
+  public :: check_var    ! determine if variable is on netcdf file
+  public :: check_dim    ! validity check on dimension
+  public :: ncd_defvar   ! define netCDF input variable
+  public :: ncd_ioglobal ! Read/write netCDF input/output
 !
 ! !REVISION HISTORY:
 !
@@ -38,6 +42,23 @@ module ncdio
      module procedure ncd_ioglobal_real_3d
   end interface
   logical  :: masterproc = .true. ! always use 1 proc
+  real(r8) :: spval = 1.e36       ! special value
+
+  public :: nf_open
+  public :: nf_close
+  public :: nf_write
+  public :: nf_sync
+  public :: nf_inq_dimlen
+  public :: nf_inq_varid
+  public :: nf_get_var_double
+  public :: nf_get_vara_double
+  public :: nf_get_var_int
+  public :: nf_get_vara_int
+  public :: nf_put_var_double
+  public :: nf_put_vara_double
+  public :: nf_put_var_int
+  public :: nf_put_vara_int
+  public :: nf_inq_dimid
 !-----------------------------------------------------------------------
 
 contains
@@ -137,7 +158,6 @@ contains
 
     if (ret /= NF_NOERR) then
        write(6,*)'netcdf error from ',trim(calling)
-       write(6,*)'error ',ret,' = ',nf_strerror(ret)
        call abort()
     end if
 

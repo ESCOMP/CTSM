@@ -3,6 +3,8 @@
 
 module CNSetValueMod
 
+#if (defined CN)
+
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -1043,5 +1045,7 @@ subroutine CNSetCnf(num, filter, val, cnf)
 
 end subroutine CNSetCnf
 !-----------------------------------------------------------------------
+
+#endif
 
 end module CNSetValueMod

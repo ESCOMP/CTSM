@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNPhenologyMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1875,5 +1876,6 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
 
 end subroutine CNLitterToColumn
 !-----------------------------------------------------------------------
+#endif
 
 end module CNPhenologyMod

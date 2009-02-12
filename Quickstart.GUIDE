@@ -43,30 +43,34 @@ TRUE
 Information on Compsets:
 
      "I" compsets are the ones with clm and datm7 without ice and ocean.
-     "I" compsets with a "Q" use the new CLM_QIAN data with solar following
+     The latest "I" compsets use the new CLM_QIAN data with solar following
      the cosine of solar zenith angle, precipitation constant, and other
      variables linear interpolated in time (and with appropriate time-stamps on
      the date).
 
      Name		  (short-name): Description
      --------------------------------------------------------------------------
-     I_CN            (ICNQ):       CLM with CN on
-     I_CN_1948_2004  (ICN4804Q):   CLM with CN on running over 1948-2004
-     I_CASA          (ICASAQ):     CLM with CASA on
-     I_CASA_19482004 (ICASA4804Q): CLM with CASA on running over 1948-2004
-     I_PRESENT_DAY   (IQ):         CLM with new CLM_QIAN data
-     I_1948_2004     (I4804Q):     CLM with new CLM_QIAN data over 1948-2004
+     I_CN            (ICN):       CLM with CN on and new CLM_QIAN data
+     I_CN_1948_2004  (ICN4804):   CLM with CN on running over 1948-2004 and new CLM_QIAN data
+     I_CASA          (ICASA):     CLM with CASA on and new CLM_QIAN data
+     I_CASA_19482004 (ICASA4804): CLM with CASA on running over 1948-2004
+     I_PRESENT_DAY   (I):         CLM with new CLM_QIAN data
+     I_1948_2004     (I4804):     CLM with new CLM_QIAN data over 1948-2004
 
 Information on run-database:
 
     -skip_rundb says to skip entering information on this case into the run-database.
-    The run data-base is on the web at...
+    The run-database stores meta-data on simulations being performed so they can
+    be shared effectively with collaborators. The information on how to redo a simulation
+    as well as where the simulation is stored and any diagnostics on it are stored in
+    the run data-base. The run data-base is on the web at...
 
     http://ccsm-rundb.cgd.ucar.edu/case_list.php
 
     It contains information on important cases that we want to retain information on
     (so they can be reproduced and so scientific details are publically available).
-    The standard CSM username password is used for the database.
+    The standard CSM internal username/password is used for the database (as for the CSEG
+    internal web-page).
 
 Automatically resubmitting jobs:
 

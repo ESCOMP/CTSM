@@ -8,11 +8,12 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use shr_sys_mod , only : shr_sys_getenv
     use fileutils   , only : get_filename
-    use mkvarpar    , only : nlevsoi, numpft
+    use mkvarpar    , only : nlevsoi, numpft, nglcec 
     use mkvarctl
-    use ncdio
+    use ncdio       , only : check_ret, ncd_defvar
 
     implicit none
+    include 'netcdf.inc'
     integer, intent(in) :: lsmlon, lsmlat
     character(len=*),intent(in) :: fname
     logical, intent(in) :: dynlanduse	
@@ -51,6 +52,7 @@ contains
     call check_ret(nf_def_dim (ncid, 'lsmlat' , lsmlat      , dimid), subname)
     if (.not. dynlanduse) then
        call check_ret(nf_def_dim (ncid, 'nlevsoi', nlevsoi     , dimid), subname)
+       call check_ret(nf_def_dim (ncid, 'nglcec', nglcec     , dimid), subname)
     end if
     call check_ret(nf_def_dim (ncid, 'lsmpft' , pftsize     , dimid), subname)
     call check_ret(nf_def_dim (ncid, 'time'   , nf_unlimited, dimid), subname)
@@ -123,6 +125,14 @@ contains
     str = get_filename(mksrf_fglacier)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Glacier_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    str = get_filename(mksrf_ftopo)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'Topography_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    str = get_filename(mksrf_ffrac)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'Fracdata_raw_data_file_name', len_trim(str), trim(str)), subname)
 
     str = get_filename(mksrf_fmax)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -240,6 +250,18 @@ contains
     call ncd_defvar(ncid=ncid, varname='PCT_GLACIER', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='percent glacier', units='unitless')
+
+    call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=nf_float, &
+         dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
+         long_name='percent for each glacier elevation class', units='unitless')
+
+    call ncd_defvar(ncid=ncid, varname='TOPO_GLC_MEC', xtype=nf_float, &
+         dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
+         long_name='mean elevation on glacier elevation classes', units='m')
+
+    call ncd_defvar(ncid=ncid, varname='THCK_GLC_MEC', xtype=nf_float, &
+         dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
+         long_name='mean ice sheet thickness on glacier elevation classes', units='m')
 
     call ncd_defvar(ncid=ncid, varname='FMAX', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', &

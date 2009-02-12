@@ -3,6 +3,8 @@
 
 module CNPrecisionControlMod
 
+#ifdef CN
+
 !----------------------------------------------------------------------- 
 !BOP
 !
@@ -610,5 +612,6 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
 end subroutine CNPrecisionControl
 !-----------------------------------------------------------------------
+#endif
 
 end module CNPrecisionControlMod

@@ -86,12 +86,16 @@ module clm_varcon
   real(r8) :: ssi    = 0.033_r8   !Irreducible water saturation of snow
   real(r8) :: wimp   = 0.05_r8    !Water impremeable if porosity less than wimp
   real(r8) :: pondmx = 10.0_r8    !Ponding depth (mm)
-  real(r8) :: pondmx_urban = 1.0  !Ponding depth for urban roof and impervious road (mm)
+  real(r8) :: pondmx_urban = 1.0_r8  !Ponding depth for urban roof and impervious road (mm)
   ! 4/14/05: PET
   ! Adding isotope code
   real(r8), parameter :: preind_atm_del13c = -6.0   ! preindustrial value for atmospheric del13C
   real(r8), parameter :: preind_atm_ratio = SHR_CONST_PDB + (preind_atm_del13c * SHR_CONST_PDB)/1000.0  ! 13C/12C
   real(r8) :: c13ratio = preind_atm_ratio/(1.0+preind_atm_ratio) ! 13C/(12+13)C preind atmosphere
+  real(r8), parameter :: ht_efficiency_factor = 0.75_r8 !efficiency factor for urban heating (-)
+  real(r8), parameter :: ac_efficiency_factor = 0.25_r8 !efficiency factor for urban air conditioning (-)
+  real(r8) :: ht_wasteheat_factor = 1.0_r8/ht_efficiency_factor  !wasteheat factor for urban heating (-)
+  real(r8) :: ac_wasteheat_factor = 1.0_r8/ac_efficiency_factor  !wasteheat factor for urban air conditioning (-)
   
   !------------------------------------------------------------------
   ! Initialize water type constants

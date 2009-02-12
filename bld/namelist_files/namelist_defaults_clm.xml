@@ -33,6 +33,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Default simulation year -->
 <sim_year>2000</sim_year>
 
+<!-- Default urban air conditioning/heating and wasteheat -->
+<urban_hac>OFF</urban_hac>
+
+<!-- Default urban traffic flux -->
+<urban_traffic>.false.</urban_traffic>
+
 <!-- ================================================================== -->
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CCSM distribution -->
@@ -43,11 +49,23 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Initial condition datasets (relative to {csmdata}) -->
 
 <!-- empty finidat file when have a pftdyn dataset -->
-<finidat hgrid="10x15"         mask="USGS"  fpftdyn="surfdata.pftdyn_10x15_USGS_070307.nc"     > null </finidat>
-<finidat hgrid="1x1_tropicAtl" mask="USGS"  fpftdyn="surfdata.pftdyn_1x1pt_tropicAtl_070218.nc"> null </finidat>
+<finidat hgrid="10x15"         maxpft="4"  mask="USGS" fpftdyn="surfdata.pftdyn_10x15_USGS_070307.nc"              > null </finidat>
+<finidat hgrid="10x15"         maxpft="17" mask="USGS" fpftdyn="surfdata.pftdyn_10x15_USGS_070307.nc"              > null </finidat>
+<finidat hgrid="1x1_tropicAtl" maxpft="4"  mask="USGS" fpftdyn="surfdata.pftdyn_1x1pt_tropicAtl_070218.nc"         > null </finidat>
+<finidat hgrid="1x1_tropicAtl" maxpft="17" mask="USGS" fpftdyn="surfdata.pftdyn_1x1pt_tropicAtl_070218.nc"         > null </finidat>
 <!-- empty finidat file for furbinp datasets -->
-<finidat hgrid="1.9x2.5"       mask="gx1v5" furbinp="avg_densityclass_1.9x2.5_fluxes_p7_c090116.txt"> null </finidat>
-<finidat hgrid="10x15"         mask="USGS"  furbinp="avg_densityclass_10x15_fluxes_p7_c090116.txt"  > null </finidat>
+<finidat hgrid="1.9x2.5"       maxpft="4"  mask="gx1v5"furbinp="avg_densityclass_1.9x2.5_fluxes_p7_c090116.txt"    > null </finidat>
+<finidat hgrid="1.9x2.5"       maxpft="17" mask="gx1v5"furbinp="avg_densityclass_1.9x2.5_fluxes_p7_c090116.txt"    > null </finidat>
+<finidat hgrid="1.9x2.5"       maxpft="4"  mask="USGS" furbinp="avg_densityclass_1.9x2.5_fluxes_p7_c090116.txt"    > null </finidat>
+<finidat hgrid="1.9x2.5"       maxpft="17" mask="USGS" furbinp="avg_densityclass_1.9x2.5_fluxes_p7_c090116.txt"    > null </finidat>
+<finidat hgrid="10x15"         maxpft="4"  mask="USGS" furbinp="avg_densityclass_10x15_fluxes_p7_c090116.txt"      > null </finidat>
+<finidat hgrid="10x15"         maxpft="17" mask="USGS" furbinp="avg_densityclass_10x15_fluxes_p7_c090116.txt"      > null </finidat>
+<!-- empty finidat file for fndepdyn datasets -->
+<finidat hgrid="64x128"        maxpft="17" bgc="cn" fndepdyn="fndep_clm_1890-2100_64x128_c070214.nc"   > null </finidat>
+<finidat hgrid="48x96"         maxpft="17" bgc="cn" fndepdyn="fndep_clm_1890-2100_48x96_c050608.nc"    > null </finidat>
+<finidat hgrid="4x5"           maxpft="17" bgc="cn" fndepdyn="fndep_clm_1890-2100_4x5_c090114.nc"      > null </finidat>
+<finidat hgrid="1.9x2.5"       maxpft="17" bgc="cn" fndepdyn="fndep_clm_1890-2100_1.9x2.5_c070925.nc"  > null </finidat>
+<finidat hgrid="0.47x0.63"     maxpft="17" bgc="cn" fndepdyn="fndep_clm_1890-2100_0.47x0.63_c071213.nc"> null </finidat>
 
 <!-- Initial files at 1.9x2.5 native resolution -->
 <finidat hgrid="1.9x2.5"   maxpft="4"  mask="gx1v5" bgc="none" ic_ymd="20080101" ic_tod="0">lnd/clm2/initdata/clmi.IQ_2008-01-01_1.9x2.5_gx1v5_c081014.nc
@@ -135,7 +153,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fsurdat hgrid="48x96"     >lnd/clm2/surfdata/surfdata_48x96_c081023.nc</fsurdat>
 <fsurdat hgrid="32x64"     >lnd/clm2/surfdata/surfdata_32x64_c081023.nc</fsurdat>
 <fsurdat hgrid="8x16"      >lnd/clm2/surfdata/surfdata_8x16_c081023.nc</fsurdat>
-<fsurdat hgrid="94x128"    >lnd/clm2/surfdata/surfdata_94x128_c081219.nc</fsurdat>
+<fsurdat hgrid="94x192"    >lnd/clm2/surfdata/surfdata_94x192_c081219.nc</fsurdat>
 
 <fsurdat hgrid="0.23x0.31" >lnd/clm2/surfdata/surfdata_0.23x0.31_c070927.nc</fsurdat>
 <fsurdat hgrid="0.47x0.63" >lnd/clm2/surfdata/surfdata_0.47x0.63__c081126.nc</fsurdat>
@@ -151,7 +169,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fsurdat hgrid="1x1_tropicAtl"      >lnd/clm2/surfdata/surfdata_1x1_tropicAtl__c081126.nc</fsurdat>
 
 <!-- Surface datasets that belong with dynamic land-use change datasets (relative to {csmdata}) -->
-<fsurdat hgrid="10x15"         fpftdyn="surfdata.pftdyn_10x15_USGS_070307.nc"     >lnd/clm2/surfdata/surfdata_10x15_c070501.nc
+<fsurdat hgrid="10x15"         fpftdyn="surfdata.pftdyn_10x15_USGS_070307.nc"     >lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc
 </fsurdat>
 <fsurdat hgrid="1x1_tropicAtl" fpftdyn="surfdata.pftdyn_1x1pt_tropicAtl_070218.nc">lnd/clm2/surfdata/surfdata_1x1pt_tropicAtl_test_070216.nc
 </fsurdat>
@@ -175,7 +193,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <forganic hgrid="48x96"     >lnd/clm2/surfdata/surfdata_48x96_c081023.nc</forganic>
 <forganic hgrid="32x64"     >lnd/clm2/surfdata/surfdata_32x64_c081023.nc</forganic>
 <forganic hgrid="8x16"      >lnd/clm2/surfdata/surfdata_8x16_c081023.nc</forganic>
-<forganic hgrid="94x128"    >lnd/clm2/surfdata/surfdata_94x128_c081219.nc</forganic>
+<forganic hgrid="94x192"    >lnd/clm2/surfdata/surfdata_94x192_c081219.nc</forganic>
 
 <forganic hgrid="0.47x0.63" >lnd/clm2/surfdata/surfdata_0.47x0.63__c081126.nc</forganic>
 <forganic hgrid="0.9x1.25"  >lnd/clm2/surfdata/surfdata_0.9x1.25__c081126.nc</forganic>
@@ -185,7 +203,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <forganic hgrid="4x5"       >lnd/clm2/surfdata/surfdata_4x5_c081023.nc</forganic>
 <forganic hgrid="10x15"     >lnd/clm2/surfdata/surfdata_10x15_c081023.nc</forganic>
 
-<forganic hgrid="5x5_amazon"         >lnd/clm2/surfdata/surfdata_5x5pt_amazon_navy__c081126.nc</forganic>
+<forganic hgrid="5x5_amazon"         >lnd/clm2/surfdata/surfdata_5x5pt_amazon__c081126.nc</forganic>
 <forganic hgrid="1x1_brazil"         >lnd/clm2/surfdata/surfdata_1x1pt_brazil_navy_c081023.nc</forganic>
 <forganic hgrid="1x1_tropicAtl"      >lnd/clm2/surfdata/surfdata_1x1pt_tropicAtl_test__c081126.nc</forganic>
 
@@ -200,7 +218,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fatmgrid hgrid="48x96"     >lnd/clm2/griddata/griddata_48x96_060829.nc</fatmgrid>
 <fatmgrid hgrid="32x64"     >lnd/clm2/griddata/griddata_32x64_070212.nc</fatmgrid>
 <fatmgrid hgrid="8x16"      >lnd/clm2/griddata/griddata_8x16_070212.nc</fatmgrid>
-<fatmgrid hgrid="94x128"    >lnd/clm2/griddata/griddata_94x128_c081219.nc</fatmgrid>
+<fatmgrid hgrid="94x192"    >lnd/clm2/griddata/griddata_94x192_c081219.nc</fatmgrid>
 
 <fatmgrid hgrid="0.23x0.31" >lnd/clm2/griddata/griddata_0.23x0.31_c070927.nc</fatmgrid>
 <fatmgrid hgrid="0.47x0.63" >lnd/clm2/griddata/griddata_0.47x0.63_c070918.nc</fatmgrid>
@@ -266,13 +284,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fatmlndfrc hgrid="64x128"  mask="USGS"  >lnd/clm2/griddata/fracdata_64x128_USGS_070110.nc</fatmlndfrc>
 <fatmlndfrc hgrid="64x128"  mask="gx1v3" >lnd/clm2/griddata/fracdata_64x128_gx1v3_060829.nc</fatmlndfrc>
 <fatmlndfrc hgrid="64x128"  mask="gx1v4" >lnd/clm2/griddata/fracdata_64x128_gx1v4_060829.nc</fatmlndfrc>
-<fatmlndfrc hgrid="64x128"  mask="gx1v5" >lnd/clm2/griddata/fracdata_64x128_gx1v5_c070927.nc</fatmlndfrc>
-<fatmlndfrc hgrid="64x128"  mask="gx3v5" >lnd/clm2/griddata/fracdata_64x128_gx3v5_c090106.nc</fatmlndfrc>
+<fatmlndfrc hgrid="64x128"  mask="gx1v5" >lnd/clm2/griddata/fracdata_64x128_gx1v5_c090206.nc</fatmlndfrc>
+<fatmlndfrc hgrid="64x128"  mask="gx3v5" >lnd/clm2/griddata/fracdata_64x128_gx3v5_c090206.nc</fatmlndfrc>
 <fatmlndfrc hgrid="48x96"   mask="USGS"  >lnd/clm2/griddata/fracdata_48x96_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc hgrid="48x96"   mask="gx3v5" >lnd/clm2/griddata/fracdata_48x96_gx3v5_c090106.nc</fatmlndfrc>
+<fatmlndfrc hgrid="48x96"   mask="gx3v5" >lnd/clm2/griddata/fracdata_48x96_gx3v5_c090206.nc</fatmlndfrc>
 <fatmlndfrc hgrid="32x64"   mask="USGS"  >lnd/clm2/griddata/fracdata_32x64_USGS_070110.nc</fatmlndfrc>
 <fatmlndfrc hgrid="8x16"    mask="USGS"  >lnd/clm2/griddata/fracdata_8x16_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc hgrid="94x128"  mask="T62"   >lnd/clm2/griddata/fracdata_94x128_T62_c081219.nc</fatmlndfrc>
+<fatmlndfrc hgrid="94x192"  mask="T62"   >lnd/clm2/griddata/fracdata_94x192_T62_c081219.nc</fatmlndfrc>
 
 <fatmlndfrc hgrid="0.23x0.31" mask="USGS"   >lnd/clm2/griddata/fracdata_0.23x0.31_USGS_c070927.nc</fatmlndfrc>
 <fatmlndfrc hgrid="0.23x0.31" mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.23x0.31_tx0.1v2_c070928.nc</fatmlndfrc>
@@ -329,7 +347,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <faerdep hgrid="48x96"   >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_48x96_c080410.nc</faerdep>
 <faerdep hgrid="32x64"   >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_32x64_c081201.nc</faerdep>
 <faerdep hgrid="8x16"    >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_8x16_c081201.nc</faerdep>
-<faerdep hgrid="94x128"  >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_94x128_c081219.nc</faerdep>
+<faerdep hgrid="94x192"  >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_94x192_c081219.nc</faerdep>
 
 <faerdep hgrid="5x5_amazon"          >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_5x5_amazon_c080410.nc</faerdep>
 <faerdep hgrid="1x1_vancouverCAN"    >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_1x1_vancouverCAN_c080410.nc</faerdep>
@@ -398,6 +416,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <model_version>
 $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01/bld/DefaultCLM_INPARM_Namelist.xml$
 </model_version>
+
+<!-- Timing file output directories -->
+<timing_dir>
+./timing
+</timing_dir>
+<tchkpt_dir>
+./timing/checkpoints
+</tchkpt_dir>
+
+<!-- Epsilon for how close grids need to be between atmosphere and land components -->
+
+<eps_frac>1.0e-12</eps_frac>
+<eps_amask>1.0e-12</eps_amask>
+<eps_aarea>9.0e-07</eps_aarea>
+
 
 <!-- ================================================================== -->
 <!-- Defaults for driver namelist seq_timemgr_inparm                    -->
@@ -493,17 +526,17 @@ $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01
 
 <domainfile hgrid="8x16"        mask="USGS" >atm/datm7/domain.clm/domain.lnd.T5_USGS.090106.nc</domainfile>
 <domainfile hgrid="32x64"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T21_USGS.090106.nc</domainfile>
-<domainfile hgrid="48x96"       mask="gx3v5">atm/datm7/domain.lnd.T31_gx3v5.051111.nc</domainfile>
+<domainfile hgrid="48x96"       mask="gx3v5">atm/datm7/domain.lnd.T31_gx3v5.090206.nc</domainfile>
 <domainfile hgrid="48x96"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T31_USGS.090106.nc</domainfile>
 <domainfile hgrid="64x128"      mask="USGS" >atm/datm7/domain.clm/domain.lnd.T42_USGS.090106.nc</domainfile>
-<domainfile hgrid="64x128"      mask="gx3v5">atm/datm7/domain.lnd.T42_gx3v5.051114.nc</domainfile>
+<domainfile hgrid="64x128"      mask="gx3v5">atm/datm7/domain.lnd.T42_gx3v5.090206.nc</domainfile>
 <domainfile hgrid="64x128"      mask="gx1v3">atm/datm7/domain.lnd.T42_gx1v3.051111.nc</domainfile>
 <domainfile hgrid="64x128"      mask="gx1v4">atm/datm7/domain.lnd.T42_gx1v4.060403.nc</domainfile>
-<domainfile hgrid="64x128"      mask="gx1v5">atm/datm7/domain.lnd.T42_gx1v5.070831.nc</domainfile>
+<domainfile hgrid="64x128"      mask="gx1v5">atm/datm7/domain.lnd.T42_gx1v5.090206.nc</domainfile>
 <domainfile hgrid="128x256"     mask="USGS" >atm/datm7/domain.clm/domain.lnd.T85_USGS.090106.nc</domainfile>
 <domainfile hgrid="128x256"     mask="gx1v3">atm/datm7/domain.lnd.T85_gx1v3.051111.nc</domainfile>
 <domainfile hgrid="128x256"     mask="gx1v4">atm/datm7/domain.lnd.T85_gx1v4.060403.nc</domainfile>
-<domainfile hgrid="94x128"      mask="T62"  >atm/datm7/domain.T62.050609.nc</domainfile>
+<domainfile hgrid="94x192"      mask="T62"  >atm/datm7/domain.lnd.T62_T62.090129.nc</domainfile>
 
 <domainfile hgrid="0.23x0.31"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.23x0.31_tx0.1v2_070929.nc</domainfile>
 <domainfile hgrid="0.23x0.31"   mask="gx1v5"  >atm/datm7/domain.lnd.0.23x0.31_gx1v5.071227.nc</domainfile>

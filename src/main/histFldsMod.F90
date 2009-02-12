@@ -277,33 +277,33 @@ contains
 
     call hist_addfld1d (fname='BUILDHEAT', units='watt/m^2',  &
          avgflag='A', long_name='heat flux from urban building interior to walls and roof', &
-         ptr_col=clm3%g%l%c%cef%eflx_building_heat, set_nourb=spval, c2l_scale_type='urbanf', &
+         ptr_col=clm3%g%l%c%cef%eflx_building_heat, set_nourb=0._r8, c2l_scale_type='urbanf', &
          default='inactive')
 
     call hist_addfld1d (fname='URBAN_AC', units='watt/m^2',  &
          avgflag='A', long_name='urban air conditioning flux', &
-         ptr_col=clm3%g%l%c%cef%eflx_urban_ac, set_nourb=spval, c2l_scale_type='urbanf', &
+         ptr_col=clm3%g%l%c%cef%eflx_urban_ac, set_nourb=0._r8, c2l_scale_type='urbanf', &
          default='inactive')
 
     call hist_addfld1d (fname='URBAN_HEAT', units='watt/m^2',  &
          avgflag='A', long_name='urban heating flux', &
-         ptr_col=clm3%g%l%c%cef%eflx_urban_heat, set_nourb=spval, c2l_scale_type='urbanf', &
+         ptr_col=clm3%g%l%c%cef%eflx_urban_heat, set_nourb=0._r8, c2l_scale_type='urbanf', &
          default='inactive')
 
     call hist_addfld1d (fname='TRAFFICFLUX', units='watt/m^2',  &
          avgflag='A', long_name='sensible heat flux from urban traffic', &
-         ptr_lunit=clm3%g%l%lef%eflx_traffic, set_nourb=spval, l2g_scale_type='unity', &
+         ptr_lunit=clm3%g%l%lef%eflx_traffic, set_nourb=0._r8, l2g_scale_type='unity', &
          default='inactive')
 
     call hist_addfld1d (fname='WASTEHEAT', units='watt/m^2',  &
          avgflag='A', long_name='sensible heat flux from heating/cooling sources of urban waste heat', &
-         ptr_lunit=clm3%g%l%lef%eflx_wasteheat, set_nourb=spval, l2g_scale_type='unity', &
+         ptr_lunit=clm3%g%l%lef%eflx_wasteheat, set_nourb=0._r8, l2g_scale_type='unity', &
          default='inactive')
 
 
     call hist_addfld1d (fname='Qanth', units='watt/m^2',  &
          avgflag='A', long_name='anthropogenic heat flux', &
-         ptr_lunit=clm3%g%l%lef%eflx_anthro, set_nourb=spval, l2g_scale_type='unity', &
+         ptr_lunit=clm3%g%l%lef%eflx_anthro, set_nourb=0._r8, l2g_scale_type='unity', &
          default='inactive')
 
     call hist_addfld1d (fname='Rnet', units='watt/m^2',  &

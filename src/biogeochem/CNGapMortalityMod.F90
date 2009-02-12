@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNGapMortalityMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -688,5 +689,7 @@ subroutine CNGapPftToColumn (num_soilc, filter_soilc)
 
 end subroutine CNGapPftToColumn
 !-----------------------------------------------------------------------
+
+#endif
 
 end module CNGapMortalityMod

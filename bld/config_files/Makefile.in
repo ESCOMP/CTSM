@@ -100,10 +100,10 @@ $(CURDIR)/Srcfiles: $(CURDIR)/Filepath
 
 OBJS      := $(addsuffix .o, $(basename $(SOURCES)))
 
-CPPDEF    := $(USER_CPPDEFS) -DHAVE_GETTIMEOFDAY
+CPPDEF    := $(USER_CPPDEFS)
 LDFLAGS   := 
 ifeq ($(SPMD),TRUE)
-   CPPDEF += -DSPMD -DHAVE_MPI
+   CPPDEF += -DSPMD
 endif
 
 $(MODEL_EXEDIR)/$(EXENAME): $(OBJS)
@@ -297,8 +297,12 @@ ifeq ($(findstring pgc,$(CC)),pgc)
 endif
 
 ifeq ($(SMP),TRUE)
-  # THREADED_OMP is used by the timing library
-  CPPDEF += -DTHREADED_OMP
+  # THREADED_OMP and THREADED_PTHREADS are used by the timing library
+  ifeq ($(PGI_CC),TRUE)
+    CPPDEF += -DTHREADED_OMP
+  else
+    CPPDEF += -DTHREADED_PTHREADS
+  endif
 endif
 
 CFLAGS = $(cpp_path) $(CPPDEF)
@@ -369,7 +373,7 @@ ifeq ($(FC),lf95)
   # resolution problems (FV at 10x15 res fails).
   ifeq ($(SMP),TRUE)
     FFLAGS  += --openmp --threadheap 4096
-    CFLAGS  += -openmp
+    CFLAGS  += -fstack-check
     LDFLAGS += --openmp --threadheap 4096
   endif
 

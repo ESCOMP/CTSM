@@ -66,6 +66,8 @@ module areaMod
   end interface
   public :: celledge
   public :: cellarea
+
+  public :: gridmap_checkmap
 !
 ! !REVISION HISTORY:
 ! Created by Sam Levis
@@ -77,7 +79,6 @@ module areaMod
 ! PRIVATE MEMBER FUNCTIONS:
   private :: gridmap_init
   private :: gridmap_init_pft   ! Initialize plant function type weigts
-  private :: gridmap_checkmap
   private :: areaave_internal   ! area averaging of field from input to output grids
   private :: areamap            ! weights and indices for area of overlap between grids
   private :: areaovr            ! area of overlap between grid cells

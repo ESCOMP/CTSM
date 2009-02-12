@@ -8,6 +8,8 @@
 !
 ! !INTERFACE:
 subroutine CNiniSpecial ()
+
+#ifdef CN
 !
 ! !DESCRIPTION:
 ! One-time initialization of CN variables for special landunits
@@ -212,5 +214,7 @@ subroutine CNiniSpecial ()
    ! deallocate special landunit filters
    deallocate(specialc)
    deallocate(specialp)
+
+#endif
 
 end subroutine CNiniSpecial

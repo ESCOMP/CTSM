@@ -2,6 +2,7 @@
 #include <preproc.h>
 
 module CNBalanceCheckMod
+#ifdef CN
 
 !-----------------------------------------------------------------------
 !BOP
@@ -393,5 +394,6 @@ subroutine NBalanceCheck(num_soilc, filter_soilc)
 
 end subroutine NBalanceCheck
 !-----------------------------------------------------------------------
+#endif
 
 end module CNBalanceCheckMod

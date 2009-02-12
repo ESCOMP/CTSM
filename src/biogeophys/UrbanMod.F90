@@ -29,6 +29,13 @@ module UrbanMod
   public :: UrbanAlbedo       ! Urban albedos  
   public :: UrbanSnowAlbedo   ! Urban snow albedos
   public :: UrbanFluxes       ! Urban turbulent fluxes
+
+! !Urban control variables
+  character(len= *), parameter, public :: urban_hac_off = 'OFF'               ! 
+  character(len= *), parameter, public :: urban_hac_on =  'ON'                ! 
+  character(len= *), parameter, public :: urban_wasteheat_on = 'ON_WASTEHEAT' ! 
+  character(len= 16), public :: urban_hac = urban_hac_off
+  logical, public :: urban_traffic = .false.        ! urban traffic fluxes
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan and Mariana Vertenstein and Keith Oleson 04/2003
@@ -2506,7 +2513,8 @@ contains
     use clmtype
     use clm_varcon         , only : cpair, vkc, spval, icol_roof, icol_sunwall, &
                                     icol_shadewall, icol_road_perv, icol_road_imperv, &
-                                    grav, pondmx_urban, rpi, rgas
+                                    grav, pondmx_urban, rpi, rgas, &
+                                    ht_wasteheat_factor, ac_wasteheat_factor
     use filterMod          , only : filter
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use clm_varpar         , only : maxpatch_urb, nlevurb
@@ -2714,6 +2722,9 @@ contains
     real(r8) :: z_0_town_loc(lbl:ubl)  ! temporary copy
     real(r8), parameter :: lapse_rate = 0.0098_r8     ! Dry adiabatic lapse rate (K/m)
 
+    ! Only works for single point simulations currently that are setup properly
+    ! No capability to do global traffic fluxes currently
+    ! Traffic namelist variable is currently off by default and will stop model if turned on
     ! Note that the national traffic profile used from Sailor and Lu here assumes 1/2 hour time steps
     integer, parameter  :: numtraffic = 48 ! number of traffic flux data points 
     real(r8) :: traffic_flux(numtraffic)   ! sensible heat flux from traffic (W/m**2)
@@ -3024,8 +3035,12 @@ contains
                  wtuq_roof(l) = fwet_roof*(1._r8/canyon_resistance(fl))
 
                  ! domestic heating/cooling
-!KO                 eflx_wasteheat_roof(l) = eflx_urban_ac(c) + eflx_urban_heat(c)
-                 eflx_wasteheat_roof(l) = 0._r8
+                 if (trim(urban_hac) == urban_wasteheat_on) then
+                    eflx_wasteheat_roof(l) = ac_wasteheat_factor * eflx_urban_ac(c) + &
+                                             ht_wasteheat_factor * eflx_urban_heat(c)
+                 else
+                    eflx_wasteheat_roof(l) = 0._r8
+                 end if
 
                else if (ctype(c) == icol_road_perv) then
 
@@ -3089,8 +3104,12 @@ contains
                  wtuq_sunwall(l) = 0._r8
 
                  ! domestic heating/cooling
-!KO                 eflx_wasteheat_sunwall(l) = eflx_urban_ac(c) + eflx_urban_heat(c)
-                 eflx_wasteheat_sunwall(l) = 0._r8
+                 if (trim(urban_hac) == urban_wasteheat_on) then
+                    eflx_wasteheat_sunwall(l) = ac_wasteheat_factor * eflx_urban_ac(c) + &
+                                                ht_wasteheat_factor * eflx_urban_heat(c)
+                 else
+                    eflx_wasteheat_sunwall(l) = 0._r8
+                 end if
 
                else if (ctype(c) == icol_shadewall) then
 
@@ -3105,9 +3124,12 @@ contains
                  wtuq_shadewall(l) = 0._r8
 
                  ! domestic heating/cooling
-!KO                 eflx_wasteheat_shadewall(l) = eflx_urban_ac(c) + eflx_urban_heat(c)
-                 eflx_wasteheat_shadewall(l) = 0._r8
-
+                 if (trim(urban_hac) == urban_wasteheat_on) then
+                    eflx_wasteheat_shadewall(l) = ac_wasteheat_factor * eflx_urban_ac(c) + &
+                                                  ht_wasteheat_factor * eflx_urban_heat(c)
+                 else
+                    eflx_wasteheat_shadewall(l) = 0._r8
+                 end if
                else
                  write(iulog,*) 'c, ctype, pi = ', c, ctype(c), pi
                  write(iulog,*) 'Column indices for: shadewall, sunwall, road_imperv, road_perv, roof: '
@@ -3130,12 +3152,11 @@ contains
          l = filter_urbanl(fl)
          g = lgridcell(l)
 
-         ! Total domestic waste heat is sum of building heat/cool
-         ! accounting for surface area of walls and roof and assuming an
-         ! efficiency of 50%
-         eflx_wasteheat(l) = 2._r8*(wtlunit_roof(fl)*eflx_wasteheat_roof(l) + &
+         ! Total domestic waste heat is sum of wasteheat for walls and roofs
+         ! accounting for different surface areas
+         eflx_wasteheat(l) = wtlunit_roof(fl)*eflx_wasteheat_roof(l) + &
             (1._r8-wtlunit_roof(fl))*(canyon_hwr(fl)*(eflx_wasteheat_sunwall(l) + &
-            eflx_wasteheat_shadewall(l))))
+            eflx_wasteheat_shadewall(l)))
 
          ! Calculate traffic heat flux
          eflx_traffic(l) = eflx_traffic_factor(l)*traffic_flux(local_secp1_indx(l))

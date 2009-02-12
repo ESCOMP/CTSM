@@ -20,15 +20,17 @@ program mksrfdat
     use creategridMod, only : read_domain,write_domain
     use domainMod   , only : domain_setptrs, domain_type, domain_init
     use mkfileMod   , only : mkfile
-    use mkvarpar    , only : numpft, nlevsoi
-    use mkvarsur
+    use mkvarpar    , only : numpft, nlevsoi, nglcec
+    use mkvarsur    , only : spval, ldomain
     use mkvarctl
     use areaMod
-    use ncdio
+    use ncdio       , only : check_ret, ncd_ioglobal
     use nanMod
 !
 ! !ARGUMENTS:
     implicit none
+
+    include 'netcdf.inc'
 !
 ! !REVISION HISTORY:
 ! Authors: Gordon Bonan, Sam Levis and Mariana Vertenstein
@@ -54,6 +56,9 @@ program mksrfdat
     real(r8) :: suma                 ! sum for error check
     real(r8) :: sum8, sum8a          ! sum for error check
     real(r4) :: sum4a                ! sum for error check
+    real(r8) :: bare_urb_diff        ! difference between bare soil and urban %
+    real(r8) :: pcturb_excess        ! excess urban % not accounted for by bare soil
+    real(r8) :: sumpft               ! sum of non-baresoil pfts
     real(r8) :: rmax                 ! maximum patch cover
     character(len=256) :: fgrddat    ! grid data file
     character(len=256) :: fsurdat    ! surface data file name
@@ -72,6 +77,9 @@ program mksrfdat
     real(r8), allocatable  :: pctpft(:,:,:)        ! PFT data: land fraction per gridcell
     real(r8), pointer      :: pctpft_i(:,:,:)      ! PFT data: % fraction on input grid
     real(r8), allocatable  :: pctgla(:,:)          ! percent of grid cell that is glacier  
+    real(r8), allocatable  :: pctglcmec(:,:,:)     ! glacier_mec pct coverage in each gridcell and class
+    real(r8), allocatable  :: topoglcmec(:,:,:)    ! glacier_mec sfc elevation in each gridcell and class
+    real(r8), allocatable  :: thckglcmec(:,:,:)    ! glacier_mec ice sheet thcknss in each gridcell and class
     real(r8), allocatable  :: pctlak(:,:)          ! percent of grid cell that is lake     
     real(r8), allocatable  :: pctwet(:,:)          ! percent of grid cell that is wetland  
     real(r8), allocatable  :: pcturb(:,:)          ! percent of grid cell that is urbanized
@@ -94,6 +102,9 @@ program mksrfdat
     integer , allocatable  :: dpftdata_mask(:,:)    ! mask indicating real or fake land type
     real(r8), allocatable  :: dpctpft(:,:,:)        ! PFT data: land fraction per gridcell
     real(r8), allocatable  :: dpctgla(:,:)          ! percent of grid cell that is glacier  
+    real(r8), allocatable  :: dpctglcmec(:,:,:)     ! glacier_mec pct coverage in each gridcell and class
+    real(r8), allocatable  :: dtopoglcmec(:,:,:)    ! glacier_mec sfc elevation in each gridcell and class
+    real(r8), allocatable  :: dthckglcmec(:,:,:)    ! glacier_mec sfc ice sheet thcknss gridcell and class
     real(r8), allocatable  :: dpctlak(:,:)          ! percent of grid cell that is lake     
     real(r8), allocatable  :: dpctwet(:,:)          ! percent of grid cell that is wetland  
     real(r8), allocatable  :: dpcturb(:,:)          ! percent of grid cell that is urbanized
@@ -122,6 +133,8 @@ program mksrfdat
          mksrf_fsoicol,            &
          mksrf_flanwat,            &
          mksrf_fglacier,           &
+         mksrf_ftopo,              &
+         mksrf_ffrac,              &
          mksrf_fmax,               &
          mksrf_furban,             &
          mksrf_flai,               &
@@ -147,6 +160,8 @@ program mksrfdat
     !    mksrf_flanwat
     !    mksrf_fmax
     !    mksrf_fglacier
+    !     mksrf_ftopo
+    !     mksrf_ffrac
     !    mksrf_furban
     !    mksrf_flai
     ! ======================================
@@ -225,6 +240,9 @@ program mksrfdat
                pftdata_mask(lsmlon,lsmlat)      , & 
                pctpft(lsmlon,lsmlat,0:numpft)   , & 
                pctgla(lsmlon,lsmlat)            , & 
+               pctglcmec(lsmlon,lsmlat,nglcec), &
+               topoglcmec(lsmlon,lsmlat,nglcec), &
+               thckglcmec(lsmlon,lsmlat,nglcec), &
                pctlak(lsmlon,lsmlat)            , & 
                pctwet(lsmlon,lsmlat)            , & 
                pcturb(lsmlon,lsmlat)            , & 
@@ -239,6 +257,9 @@ program mksrfdat
     pftdata_mask(:,:) = -999
     pctpft(:,:,:)     = spval
     pctgla(:,:)       = spval
+    pctglcmec(:,:,:)  = spval
+    topoglcmec(:,:,:) = spval
+    thckglcmec(:,:,:) = spval
     pctlak(:,:)       = spval
     pctwet(:,:)       = spval
     pcturb(:,:)       = spval
@@ -273,6 +294,8 @@ program mksrfdat
     write (ndiag,*) 'PFTs from:         ',trim(mksrf_fvegtyp)
     write (ndiag,*) 'fmax from:         ',trim(mksrf_fmax)
     write (ndiag,*) 'glaciers from:     ',trim(mksrf_fglacier)
+    write (ndiag,*) 'topography from:   ',trim(mksrf_ftopo)
+    write (ndiag,*) 'fracdata from:     ',trim(mksrf_ffrac)
     write (ndiag,*) 'urban from:        ',trim(mksrf_furban)
     write (ndiag,*) 'inland water from: ',trim(mksrf_flanwat)
     write (ndiag,*) 'soil texture from: ',trim(mksrf_fsoitex)
@@ -352,6 +375,7 @@ program mksrfdat
              pctpft(i,j,:)  = 0.
              sand3d(i,j,1:nlevsoi) = 0.
              clay3d(i,j,1:nlevsoi) = 0.
+             organic3d(i,j,1:nlevsoi) = 0.
           end if
        end do
     end do
@@ -371,6 +395,7 @@ program mksrfdat
              pctpft(i,j,:) = 0.
              sand3d(i,j,1:nlevsoi) = 43.
              clay3d(i,j,1:nlevsoi) = 18.
+             organic3d(i,j,1:nlevsoi) = 0.
           else
              pftdata_mask(i,j) = 1
           end if
@@ -389,6 +414,7 @@ program mksrfdat
           pcturb(i,1)   = 0.
           sand3d(i,1,:) = 0.
           clay3d(i,1,:) = 0.
+          organic3d(i,1,:) = 0.
           pctgla(i,1)   = 100.
           pctpft(i,1,:) = 0.
        end do
@@ -406,7 +432,6 @@ program mksrfdat
           end do
           pctlak(i,j) = float(nint(pctlak(i,j)))
           pctwet(i,j) = float(nint(pctwet(i,j)))
-          pcturb(i,j) = float(nint(pcturb(i,j)))
           pctgla(i,j) = float(nint(pctgla(i,j)))
        end do
     end do
@@ -431,12 +456,32 @@ program mksrfdat
              pctgla(i,j) = pctgla(i,j) * 100._r8/suma
           end if
 
-          ! Normalize pctpft to be the remainder of [100 - (special landunits)]
+          ! Replace bare soil preferentially with urban
 
-          suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
-          do m = 0, numpft
-             pctpft(i,j,m) = 0.01_r8 * pctpft(i,j,m) * (100._r8 - suma)
-          end do
+          if (i == 71 .and. j == 27) then
+            write(6,*)'pctpft before adj: ',pctpft(i,j,0)
+            write(6,*)'pcturb: ',pcturb(i,j)
+          end if
+          suma = pctlak(i,j)+pctwet(i,j)+pctgla(i,j)
+          bare_urb_diff = 0.01_r8 * pctpft(i,j,0) * (100._r8 - suma) - pcturb(i,j)
+          pctpft(i,j,0) = max(0._r8,bare_urb_diff)
+          pcturb_excess = abs(min(0._r8,bare_urb_diff))
+          if (i == 71 .and. j == 27) then
+            write(6,*)'pctpft after adj: ',pctpft(i,j,0)
+            write(6,*)'pcturb_excess: ',pcturb_excess
+          end if
+
+          ! Normalize pctpft to be the remainder of [100 - (special landunits)]
+          ! including any urban not accounted for by bare soil above
+
+          sumpft = sum(pctpft(i,j,1:numpft))
+          if (sumpft > 0._r8) then
+            do m = 1, numpft
+               suma = pctlak(i,j)+pctwet(i,j)+pctgla(i,j)
+               pctpft(i,j,m) = 0.01_r8 * pctpft(i,j,m) * (100._r8 - suma) - &
+                               pcturb_excess*pctpft(i,j,m)/sumpft
+            end do
+          end if
 
           suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
           do m = 0,numpft
@@ -480,6 +525,22 @@ program mksrfdat
 
        end do
     end do
+
+
+    ! Make glacier multiple elevation classes [pctglcmec,topoglcmec] from [fglacier,ftopo] dataset
+    ! This call needs to occur after pctgla has been adjusted for the final time
+    
+    if (mksrf_ftopo /= ' ') then 
+       call mkglcmec (lsmlon, lsmlat, mksrf_ftopo, mksrf_ffrac, mksrf_fglacier, ndiag, pctgla, &
+                      pctglcmec, topoglcmec, thckglcmec)
+    else
+       pctglcmec(:,:,:)  = 0.
+       topoglcmec(:,:,:) = 0.
+       thckglcmec(:,:,:) = 0.
+    endif
+
+    write(6,*) ' timer_d mkglcmec-----'
+    call shr_timer_print(t1)
 
     do k = 0,numpft
        suma = 0._r8
@@ -551,6 +612,9 @@ program mksrfdat
     call ncd_ioglobal(varname='PCT_WETLAND' , data=pctwet      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_LAKE'    , data=pctlak      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_GLACIER' , data=pctgla      , ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='PCT_GLC_MEC' , data=pctglcmec   , ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='TOPO_GLC_MEC', data=topoglcmec  , ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='THCK_GLC_MEC', data=thckglcmec  , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_URBAN'   , data=pcturb      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='PCT_PFT'     , data=pctpft      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='FMAX'        , data=fmax        , ncid=ncid, flag='write')
@@ -612,6 +676,9 @@ program mksrfdat
        call ncd_ioglobal(varname='PCT_WETLAND' , data=pctwet      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_LAKE'    , data=pctlak      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_GLACIER' , data=pctgla      , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='PCT_GLC_MEC' , data=pctglcmec   , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='TOPO_GLC_MEC', data=topoglcmec  , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='THCK_GLC_MEC', data=thckglcmec  , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_URBAN'   , data=pcturb      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='FMAX'        , data=fmax        , ncid=ncid, flag='write')
 
@@ -765,6 +832,9 @@ program mksrfdat
                   dpftdata_mask(dbllon,dbllat)    , & 
                   dpctpft(dbllon,dbllat,0:numpft) , & 
                   dpctgla(dbllon,dbllat)          , & 
+                  dpctglcmec(dbllon,dbllat,nglcec), &
+                  dtopoglcmec(dbllon,dbllat,nglcec), &
+                  dthckglcmec(dbllon,dbllat,nglcec), &
                   dpctlak(dbllon,dbllat)          , & 
                   dpctwet(dbllon,dbllat)          , & 
                   dpcturb(dbllon,dbllat)          , & 
@@ -819,6 +889,11 @@ program mksrfdat
             dpctpft      (di:di+1,dj:dj+1,n) = pctpft(i,j,n)
          enddo
          dpctgla         (di:di+1,dj:dj+1) = pctgla(i,j)
+         do n = 1,nglcec
+            dpctglcmec   (di:di+1,dj:dj+1,n) = pctglcmec(i,j,n)
+            dtopoglcmec  (di:di+1,dj:dj+1,n) = topoglcmec(i,j,n)
+            dthckglcmec  (di:di+1,dj:dj+1,n) = thckglcmec(i,j,n)
+         enddo
          dpctlak         (di:di+1,dj:dj+1) = pctlak(i,j)
          dpctwet         (di:di+1,dj:dj+1) = pctwet(i,j)
          dpcturb         (di:di+1,dj:dj+1) = pcturb(i,j)
@@ -852,6 +927,9 @@ program mksrfdat
        call ncd_ioglobal(varname='PCT_WETLAND' , data=dpctwet      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_LAKE'    , data=dpctlak      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_GLACIER' , data=dpctgla      , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='PCT_GLC_MEC' , data=dpctglcmec   , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='TOPO_GLC_MEC', data=dtopoglcmec  , ncid=ncid, flag='write')
+       call ncd_ioglobal(varname='THCK_GLC_MEC', data=dthckglcmec  , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_URBAN'   , data=dpcturb      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_PFT'     , data=dpctpft      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='FMAX'        , data=dfmax        , ncid=ncid, flag='write')
