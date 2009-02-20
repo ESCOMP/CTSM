@@ -1,4 +1,119 @@
 ===============================================================
+Tag name:  clm3_6_17
+Originator(s):  oleson (Oleson Keith 1332 CGD)
+Date:  Thu Feb 19 15:35:44 MST 2009
+One-line Summary: Urban model changes and mksurfdata changes to incorporate urban data
+
+Purpose of changes:  Put in several changes to the urban model.
+                     Modify mksurfdata so that urban data are included in surface dataset.
+
+Bugs fixed (include bugzilla ID):  None
+
+Known bugs (include bugzilla ID): 883 (aerosol deposition not from atm), 877 (CN restart problem)
+                                   903 (problems in driver with open-MP on PGI)
+                                   672 (3.5.4-3.5.14 diffs), 862 (360x720 res problem)
+                                   851 (abort when files non-exist on jaguar)
+                                   821 (mksurfdata for qtr deg), 789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange), 722 (threading slow) 
+                                  701 (svn keyword), 698 (cprnc bug gives false difference)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:  If a raw "mksrf" urban file is used with 
+   PCT_URBAN greater than zero, then urban parameters will be calculated and added to surface dataset.
+   This doesn't affect any variables in the surface dataset.  If urban is desired the latest raw urban 
+   file is /fis/cgd/tss/oleson/urban_sfcdata/Feddema_urban_data_080410/mksrf_urban_3den_0.5x0.5_CY2000.c090213.nc
+   This has not been fully tested in all model configurations.
+
+Describe any substantial timing or memory changes:  None
+
+Code reviewed by: K. Oleson, E. Kluzek
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: 
+
+A      models/lnd/clm/tools/mksurfdata/mkurbanparMod.F90 ---- generate urban parameters from raw urban parameter dataset  
+List all existing files that have been modified, and describe the changes:
+
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.globalurban ---- new default raw urban dataset
+M      models/lnd/clm/tools/mksurfdata/mkfileMod.F90 ---- changes to generate urban parameters
+M      models/lnd/clm/tools/mksurfdata/creategridMod.F90 ---- changes to generate urban parameters 
+M      models/lnd/clm/tools/mksurfdata/mkvarpar.F90 ---- changes to generate urban parameters
+M      models/lnd/clm/tools/mksurfdata/mkurban.F90 ---- changes to generate urban parameters
+M      models/lnd/clm/tools/mksurfdata/mksrfdat.F90 ---- changes to generate urban parameters
+M      models/lnd/clm/tools/mksurfdata/Srcfiles ---- add mkurbanparMod.F90
+M      models/lnd/clm/src/main/clm_varpar.F90 ---- add numsolar variable
+M      models/lnd/clm/src/main/initGridCellsMod.F90 ---- change decomp reference for wtlunit_roof and wtroad_perv
+M      models/lnd/clm/src/main/surfrdMod.F90 ---- changes to read in urban parameters from surface dataset
+M      models/lnd/clm/src/main/histFldsMod.F90 ---- set_urb=spval for dust fluxes within DUST cpp.
+M      models/lnd/clm/src/biogeophys/UrbanInputMod.F90 ---- urban parameters now read in from netcdf surface dataset 
+                                                            instead of ascii file
+M      models/lnd/clm/src/biogeophys/UrbanInitMod.F90 ---- change decomp reference for g index
+M      models/lnd/clm/src/biogeophys/FrictionVelocityMod.F90 ---- fv is now calculated for urban when DUST is on
+M      models/lnd/clm/src/biogeophys/UrbanMod.F90 ---- change decomp reference for g index
+
+Summary of testing:
+
+  bluefire: All PASS except
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+036 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 4
+038 smCA4 TSM.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 10
+039 erCA4 TER.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ......FAIL! rc= 5
+040 brCA4 TBR.sh _sc_ds clm_urb^nl_urb_br 19981001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic ...FAIL! rc= 5
+041 blCA4 TBL.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 4
+042 smCA8 TSM.sh _sc_ds clm_urb^nl_urb 19971230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 10
+043 blCA8 TBL.sh _sc_ds clm_urb^nl_urb 19971230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 4
+044 smNB4 TSM.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 10
+045 erNB4 TER.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 59+100 arb_icFAIL! rc= 5
+046 brNB4 TBR.sh _mexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arb_FAIL! rc= 5
+047 blNB4 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 4
+048 smC61 TSM.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v5 -6 cold .................FAIL! rc= 10
+049 erC61 TER.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v5 10+38 cold ..............FAIL! rc= 5
+050 brC61 TBR.sh _sc_dh clm_urb^nl_urb_br 19981001:NONE:1800 1.9x2.5 gx1v5 -3+-3 cold ...........FAIL! rc= 5
+051 blC61 TBL.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v5 48 cold .................FAIL! rc= 4
+052 smH51 TSM.sh 17p_cnnsc_dh clm_std std 19980115:NONE:1800 10x15 USGS@1890 96 arb_ic ..........FAIL! rc= 1
+053 erH51 TER.sh 17p_cnnsc_dh clm_std std 19980115:NONE:1800 10x15 USGS@1890 10+38 arb_ic .......FAIL! rc= 1
+054 brH51 TBR.sh 17p_cnnsc_dh clm_std std 19980115:NONE:1800 10x15 USGS@1890 72+72 arb_ic .......FAIL! rc= 1
+055 blH51 TBL.sh 17p_cnnsc_dh clm_std std 19980115:NONE:1800 10x15 USGS@1890 48 arb_ic ..........FAIL! rc= 1
+057 smLI1 TSM.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+058 erLI1 TER.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+059 brLI1 TBR.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+060 blLI1 TBL.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 4
+082 sm654 TSMtools.sh mkgriddata tools__ds namelist .............................................FAIL! rc= 6
+083 sm674 TSMtools.sh mkgriddata tools__ds singlept .............................................FAIL! rc= 6
+084 sm694 TSMtools.sh mkgriddata tools__ds ccsm_dom .............................................FAIL! rc= 6
+086 bl744 TBLtools.sh mksurfdata tools__ds namelist .............................................FAIL! rc= 4
+088 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 4
+096 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+097 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+098 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
+099 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 6
+100 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 6
+
+These are known failures
+
+  jaguar:
+  kraken:
+  lightning/pathscale:
+  bangkok/lf95:
+  breeze/gale/hail/gust/ifort:
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_16
+
+Changes answers relative to baseline: bit-for-bit for standard modes
+                                      Urban answers are different
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_16
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Thu Feb 12 11:53:44 MST 2009

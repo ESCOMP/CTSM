@@ -40,7 +40,7 @@ contains
 ! !IROUTINE: read_domain
 !
 ! !INTERFACE:
-  subroutine read_domain(domain,fname)
+  subroutine read_domain(domain,fname,readmask)
 !
 ! !DESCRIPTION:
 ! Read a grid file
@@ -51,6 +51,7 @@ contains
     implicit none
     type(domain_type),intent(inout) :: domain
     character(len=*) ,intent(in)    :: fname
+    logical,optional, intent(in)    :: readmask ! true => read mask instead of landmask for urban parameters
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -79,6 +80,7 @@ contains
     logical :: numlonset                       !local numlon
     integer :: ndims                           !number of dims for variable
     integer :: ier
+    logical :: lreadmask                       !local readmask
     character(len= 32) :: subname = 'read_domain'
 !-----------------------------------------------------------------
 
@@ -92,6 +94,11 @@ contains
     landfracset = .false. 
     maskset     = .false. 
     numlonset   = .false. 
+    lreadmask   = .false.
+
+    if (present(readmask)) then
+       lreadmask = readmask
+    end if
 
     ! Read domain file and compute stuff as needed
 
@@ -282,23 +289,33 @@ contains
        call check_ret(nf_get_var_double (ncid, varid, domain%frac), subname)
     endif
 
-    ier = nf_inq_varid (ncid, 'mask', varid)
-    if (ier == NF_NOERR) then
-       if (maskset) write(6,*) trim(subname),' WARNING, overwriting mask'
-       maskset = .true.
-       write(6,*) trim(subname),' read mask'
-       call check_ret(nf_inq_varid (ncid, 'mask', varid), subname)
-       call check_ret(nf_get_var_int (ncid, varid, domain%mask), subname)
-    endif
-
-    ier = nf_inq_varid (ncid, 'LANDMASK', varid)
-    if (ier == NF_NOERR) then
-       if (maskset) write(6,*) trim(subname),' WARNING, overwriting mask'
-       maskset = .true.
-       write(6,*) trim(subname),' read LANDMASK'
-       call check_ret(nf_inq_varid (ncid, 'LANDMASK', varid), subname)
-       call check_ret(nf_get_var_int (ncid, varid, domain%mask), subname)
-    endif
+    if (lreadmask) then
+       ier = nf_inq_varid (ncid, 'mask', varid)
+       if (ier == NF_NOERR) then
+          if (maskset) write(6,*) trim(subname),' WARNING, overwriting mask'
+          maskset = .true.
+          write(6,*) trim(subname),' read mask'
+          call check_ret(nf_inq_varid (ncid, 'mask', varid), subname)
+          call check_ret(nf_get_var_int (ncid, varid, domain%mask), subname)
+       endif
+    else
+       ier = nf_inq_varid (ncid, 'mask', varid)
+       if (ier == NF_NOERR) then
+          if (maskset) write(6,*) trim(subname),' WARNING, overwriting mask'
+          maskset = .true.
+          write(6,*) trim(subname),' read mask'
+          call check_ret(nf_inq_varid (ncid, 'mask', varid), subname)
+          call check_ret(nf_get_var_int (ncid, varid, domain%mask), subname)
+       endif
+       ier = nf_inq_varid (ncid, 'LANDMASK', varid)
+       if (ier == NF_NOERR) then
+          if (maskset) write(6,*) trim(subname),' WARNING, overwriting mask'
+          maskset = .true.
+          write(6,*) trim(subname),' read LANDMASK'
+          call check_ret(nf_inq_varid (ncid, 'LANDMASK', varid), subname)
+          call check_ret(nf_get_var_int (ncid, varid, domain%mask), subname)
+       endif
+    end if
 
     ier = nf_inq_varid (ncid, 'area', varid)
     if (ier == NF_NOERR) then

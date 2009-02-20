@@ -99,6 +99,7 @@ contains
    real(r8), pointer :: forc_hgt_t_pft(:) !observational height of temperature at pft level [m]
    real(r8), pointer :: forc_hgt_q_pft(:) !observational height of specific humidity at pft level [m]
    integer , pointer :: pfti(:)           !beginning pfti index for landunit
+   integer , pointer :: pftf(:)           !final pft index for landunit
 !
 ! local pointers to implicit out arguments
 !
@@ -114,6 +115,7 @@ contains
    integer :: f                            ! pft/landunit filter index
    integer :: n                            ! pft/landunit index
    integer :: g                            ! gridcell index
+   integer :: pp                           ! pfti,pftf index
    real(r8):: zldis(lbn:ubn)               ! reference height "minus" zero displacement heght [m]
    real(r8):: zeta(lbn:ubn)                ! dimensionless height used in Monin-Obukhov theory
 #if (defined DGVM) || (defined DUST)
@@ -130,13 +132,14 @@ contains
      ngridcell  => clm3%g%l%gridcell
    else
      ngridcell  => clm3%g%l%c%p%gridcell
-     u10        => clm3%g%l%c%p%pps%u10
-     fv         => clm3%g%l%c%p%pps%fv
    end if
+   u10        => clm3%g%l%c%p%pps%u10
+   fv         => clm3%g%l%c%p%pps%fv
 
    ! Assign local pointers to derived type members (pft or landunit-level)
 
    pfti             => clm3%g%l%pfti
+   pftf             => clm3%g%l%pftf
 
    ! Assign local pointers to derived type members (pft-level)
 
@@ -334,7 +337,12 @@ contains
       else 
         tmp4 = log( max( 1.0_8, forc_hgt_u_pft(n) / 10._r8) )
       end if
-      if (.not. present(landunit_index)) then
+      if (present(landunit_index)) then
+        do pp = pfti(n),pftf(n)
+          u10(pp) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
+          fv(pp)  = ustar(n)
+        end do 
+      else
         u10(n) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
         fv(n)  = ustar(n)
       end if
@@ -469,7 +477,12 @@ contains
       else
         tmp4 = log( max( 1.0_r8, forc_hgt_u_pft(n) / 10._r8 ) )
       end if
-      if (.not. present(landunit_index)) then
+      if (present(landunit_index)) then
+        do pp = pfti(n),pftf(n)
+          u10(pp) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
+          fv(pp)  = ustar(n)
+        end do 
+      else
         u10(n) = ur(n) - ustar(n)/vkc * (tmp4 - fm(n) + fm10)
         fv(n)  = ustar(n)
       end if

@@ -985,8 +985,8 @@ end subroutine clm_ptrs_check
        do m = npatch_urban, npatch_urban + maxpatch_urb - 1
           if (wtxy(nw,m) > 0._r8) then
                 
-             wtlunit_roof = urbinp%wtlunit_roof(ldecomp%gdc2glo(nw))
-             wtroad_perv  = urbinp%wtroad_perv(ldecomp%gdc2glo(nw))
+             wtlunit_roof = urbinp%wtlunit_roof(nw)
+             wtroad_perv  = urbinp%wtroad_perv(nw)
              
              if (m == npatch_urban  ) then
                 ctype = icol_roof

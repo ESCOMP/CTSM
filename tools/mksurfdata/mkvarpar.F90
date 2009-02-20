@@ -19,6 +19,9 @@ module mkvarpar
   integer, parameter :: numpft  = 16  ! number of plant types
   integer, parameter :: nglcec  = 10  ! number of elevation classes for glaciers
   integer, parameter :: noveg   = 0   ! value for non-vegetated pft
+  integer, parameter :: nlevurb = 15  ! number of urban layers
+  integer, parameter :: numsolar = 2  ! number of solar types (Direct,Diffuse)
+  integer, parameter :: numrad = 2    ! number of solar bands (VIS,NIR)
 !
 !EOP
 !-----------------------------------------------------------------------

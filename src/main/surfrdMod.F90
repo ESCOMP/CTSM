@@ -784,6 +784,7 @@ contains
     logical  :: found                      ! temporary for error check
     integer  :: nindx                      ! temporary for error check
     integer  :: ier                        ! error status
+    integer  :: nlev                       ! level
     real(r8),pointer :: pctgla(:)      ! percent of grid cell is glacier
     real(r8),pointer :: pctlak(:)      ! percent of grid cell is lake
     real(r8),pointer :: pctwet(:)      ! percent of grid cell is wetland
@@ -850,33 +851,94 @@ contains
           wtxy(nl,nurb)  = pcturb(nl) / 100._r8
        end do
        if ( pcturb(nl) > 0.0_r8 )then
-          g = ldecomp%gdc2glo(nl)
-          wtxy(nl,npatch_urban)   = wtxy(nl,npatch_urban)*urbinp%wtlunit_roof(g)
-          wtxy(nl,npatch_urban+1) = wtxy(nl,npatch_urban+1)*(1 - urbinp%wtlunit_roof(g))/3
-          wtxy(nl,npatch_urban+2) = wtxy(nl,npatch_urban+2)*(1 - urbinp%wtlunit_roof(g))/3
-          wtxy(nl,npatch_urban+3) = wtxy(nl,npatch_urban+3)*(1 - urbinp%wtlunit_roof(g))/3 * (1.-urbinp%wtroad_perv(g))
-          wtxy(nl,npatch_urban+4) = wtxy(nl,npatch_urban+4)*(1 - urbinp%wtlunit_roof(g))/3 * urbinp%wtroad_perv(g)
+          wtxy(nl,npatch_urban)   = wtxy(nl,npatch_urban)*urbinp%wtlunit_roof(nl)
+          wtxy(nl,npatch_urban+1) = wtxy(nl,npatch_urban+1)*(1 - urbinp%wtlunit_roof(nl))/3
+          wtxy(nl,npatch_urban+2) = wtxy(nl,npatch_urban+2)*(1 - urbinp%wtlunit_roof(nl))/3
+          wtxy(nl,npatch_urban+3) = wtxy(nl,npatch_urban+3)*(1 - urbinp%wtlunit_roof(nl))/3 * (1.-urbinp%wtroad_perv(nl))
+          wtxy(nl,npatch_urban+4) = wtxy(nl,npatch_urban+4)*(1 - urbinp%wtlunit_roof(nl))/3 * urbinp%wtroad_perv(nl)
        end if
 
     end do
 
     ! Check to make sure we have valid urban data for each urban patch
-    ! Currently, checking just canyon_hwr is sufficient for checking all parameters
 
     found = .false.
     do nl = begg,endg
-       g = ldecomp%gdc2glo(nl)
        if ( pcturb(nl) > 0.0_r8 )then
-         if (nint(urbinp%canyon_hwr(g)) == -999) then
+         if (urbinp%canyon_hwr(nl)            .le. 0._r8 .or. &
+             urbinp%em_improad(nl)            .le. 0._r8 .or. &
+             urbinp%em_perroad(nl)            .le. 0._r8 .or. &
+             urbinp%em_roof(nl)               .le. 0._r8 .or. &
+             urbinp%em_wall(nl)               .le. 0._r8 .or. &
+             urbinp%ht_roof(nl)               .le. 0._r8 .or. &
+             urbinp%thick_roof(nl)            .le. 0._r8 .or. &
+             urbinp%thick_wall(nl)            .le. 0._r8 .or. &
+             urbinp%t_building_max(nl)        .le. 0._r8 .or. &
+             urbinp%t_building_min(nl)        .le. 0._r8 .or. &
+             urbinp%wind_hgt_canyon(nl)       .le. 0._r8 .or. &
+             urbinp%wtlunit_roof(nl)          .le. 0._r8 .or. &
+             urbinp%wtroad_perv(nl)           .le. 0._r8 .or. &
+             any(urbinp%alb_improad_dir(nl,:) .le. 0._r8) .or. &
+             any(urbinp%alb_improad_dif(nl,:) .le. 0._r8) .or. &
+             any(urbinp%alb_perroad_dir(nl,:) .le. 0._r8) .or. &
+             any(urbinp%alb_perroad_dif(nl,:) .le. 0._r8) .or. &
+             any(urbinp%alb_roof_dir(nl,:)    .le. 0._r8) .or. &
+             any(urbinp%alb_roof_dif(nl,:)    .le. 0._r8) .or. &
+             any(urbinp%alb_wall_dir(nl,:)    .le. 0._r8) .or. &
+             any(urbinp%alb_wall_dif(nl,:)    .le. 0._r8) .or. &
+             any(urbinp%tk_roof(nl,:)         .le. 0._r8) .or. &
+             any(urbinp%tk_wall(nl,:)         .le. 0._r8) .or. &
+             any(urbinp%cv_roof(nl,:)         .le. 0._r8) .or. &
+             any(urbinp%cv_wall(nl,:)         .le. 0._r8)) then
             found = .true.
             nindx = nl
             exit
+         else
+            if (urbinp%nlev_improad(nl) .gt. 0) then
+               nlev = urbinp%nlev_improad(nl)
+               if (any(urbinp%tk_improad(nl,1:nlev) .le. 0._r8) .or. &
+                   any(urbinp%cv_improad(nl,1:nlev) .le. 0._r8)) then
+                  found = .true.
+                  nindx = nl
+                  exit
+               end if
+            end if
          end if
          if (found) exit
        end if
     end do
     if ( found ) then
        write(iulog,*)'surfrd error: no valid urban data for nl=',nindx
+       write(iulog,*)'canyon_hwr: ',urbinp%canyon_hwr(nindx)
+       write(iulog,*)'em_improad: ',urbinp%em_improad(nindx)
+       write(iulog,*)'em_perroad: ',urbinp%em_perroad(nindx)
+       write(iulog,*)'em_roof: ',urbinp%em_roof(nindx)
+       write(iulog,*)'em_wall: ',urbinp%em_wall(nindx)
+       write(iulog,*)'ht_roof: ',urbinp%ht_roof(nindx)
+       write(iulog,*)'thick_roof: ',urbinp%thick_roof(nindx)
+       write(iulog,*)'thick_wall: ',urbinp%thick_wall(nindx)
+       write(iulog,*)'t_building_max: ',urbinp%t_building_max(nindx)
+       write(iulog,*)'t_building_min: ',urbinp%t_building_min(nindx)
+       write(iulog,*)'wind_hgt_canyon: ',urbinp%wind_hgt_canyon(nindx)
+       write(iulog,*)'wtlunit_roof: ',urbinp%wtlunit_roof(nindx)
+       write(iulog,*)'wtroad_perv: ',urbinp%wtroad_perv(nindx)
+       write(iulog,*)'alb_improad_dir: ',urbinp%alb_improad_dir(nindx,:)
+       write(iulog,*)'alb_improad_dif: ',urbinp%alb_improad_dif(nindx,:)
+       write(iulog,*)'alb_perroad_dir: ',urbinp%alb_perroad_dir(nindx,:)
+       write(iulog,*)'alb_perroad_dif: ',urbinp%alb_perroad_dif(nindx,:)
+       write(iulog,*)'alb_roof_dir: ',urbinp%alb_roof_dir(nindx,:)
+       write(iulog,*)'alb_roof_dif: ',urbinp%alb_roof_dif(nindx,:)
+       write(iulog,*)'alb_wall_dir: ',urbinp%alb_wall_dir(nindx,:)
+       write(iulog,*)'alb_wall_dif: ',urbinp%alb_wall_dif(nindx,:)
+       write(iulog,*)'tk_roof: ',urbinp%tk_roof(nindx,:)
+       write(iulog,*)'tk_wall: ',urbinp%tk_wall(nindx,:)
+       write(iulog,*)'cv_roof: ',urbinp%cv_roof(nindx,:)
+       write(iulog,*)'cv_wall: ',urbinp%cv_wall(nindx,:)
+       if (urbinp%nlev_improad(nindx) .gt. 0) then
+          nlev = urbinp%nlev_improad(nindx)
+          write(iulog,*)'tk_improad: ',urbinp%tk_improad(nindx,1:nlev)
+          write(iulog,*)'cv_improad: ',urbinp%cv_improad(nindx,1:nlev)
+       end if
        call endrun()
     end if
 

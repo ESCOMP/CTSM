@@ -8,7 +8,8 @@ program mksrfdat
 ! !DESCRIPTION:
 ! Creates land model surface dataset from original "raw" data files.
 ! Surface dataset contains model grid, pfts, inland water, glacier,
-! soil texture, soil color, LAI and SAI and urban fraction.
+! soil texture, soil color, LAI and SAI, urban fraction, and urban
+! parameters.
 !
 ! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8, r4 => shr_kind_r4
@@ -17,6 +18,7 @@ program mksrfdat
     use fileutils   , only : getfil, putfil, opnfil, getavu, get_filename
     use mklaiMod    , only : mklai
     use mkpftMod    , only : mkpft
+    use mkurbanparMod, only : mkurbanpar
     use creategridMod, only : read_domain,write_domain
     use domainMod   , only : domain_setptrs, domain_type, domain_init
     use mkfileMod   , only : mkfile
@@ -36,6 +38,7 @@ program mksrfdat
 ! Authors: Gordon Bonan, Sam Levis and Mariana Vertenstein
 ! Revised: Nan Rosenbloom to add fmax processing.
 ! 3/18/08: David Lawrence added organic matter processing
+! 1/22/09: Keith Oleson added urban parameter processing
 !
 !EOP
 !
@@ -54,6 +57,9 @@ program mksrfdat
     integer  :: ntim                 ! time sample for dynamic land use
     integer  :: year                 ! year for dynamic land use
     real(r8) :: suma                 ! sum for error check
+    real(r8) :: bare_urb_diff        ! difference between bare soil and urban %
+    real(r8) :: pcturb_excess        ! excess urban % not accounted for by bare soil
+    real(r8) :: sumpft               ! sum of non-baresoil pfts
     real(r8) :: sum8, sum8a          ! sum for error check
     real(r4) :: sum4a                ! sum for error check
     real(r8) :: bare_urb_diff        ! difference between bare soil and urban %
@@ -443,9 +449,9 @@ program mksrfdat
        do i = 1,ldomain%numlon(j)
 
           suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
-          if (suma > 120._r4) then
+          if (suma > 130._r4) then
              write (6,*) 'MKSRFDAT error: sum of pctlak, pctwet,', &
-                  'pcturb and pctgla is greater than 120%'
+                  'pcturb and pctgla is greater than 130%'
              write (6,*)'i,j,pctlak,pctwet,pcturb,pctgla= ', &
                   i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j)
              call abort()
@@ -455,32 +461,33 @@ program mksrfdat
              pcturb(i,j) = pcturb(i,j) * 100._r8/suma
              pctgla(i,j) = pctgla(i,j) * 100._r8/suma
           end if
-
+          if (pcturb(i,j) .gt. 0._r8) then
           ! Replace bare soil preferentially with urban
 
-          if (i == 71 .and. j == 27) then
-            write(6,*)'pctpft before adj: ',pctpft(i,j,0)
-            write(6,*)'pcturb: ',pcturb(i,j)
-          end if
-          suma = pctlak(i,j)+pctwet(i,j)+pctgla(i,j)
-          bare_urb_diff = 0.01_r8 * pctpft(i,j,0) * (100._r8 - suma) - pcturb(i,j)
-          pctpft(i,j,0) = max(0._r8,bare_urb_diff)
-          pcturb_excess = abs(min(0._r8,bare_urb_diff))
-          if (i == 71 .and. j == 27) then
-            write(6,*)'pctpft after adj: ',pctpft(i,j,0)
-            write(6,*)'pcturb_excess: ',pcturb_excess
-          end if
+             suma = pctlak(i,j)+pctwet(i,j)+pctgla(i,j)
+             bare_urb_diff = 0.01_r8 * pctpft(i,j,0) * (100._r8 - suma) - pcturb(i,j)
+             pctpft(i,j,0) = max(0._r8,bare_urb_diff)
+             pcturb_excess = abs(min(0._r8,bare_urb_diff))
 
           ! Normalize pctpft to be the remainder of [100 - (special landunits)]
           ! including any urban not accounted for by bare soil above
 
-          sumpft = sum(pctpft(i,j,1:numpft))
-          if (sumpft > 0._r8) then
-            do m = 1, numpft
-               suma = pctlak(i,j)+pctwet(i,j)+pctgla(i,j)
-               pctpft(i,j,m) = 0.01_r8 * pctpft(i,j,m) * (100._r8 - suma) - &
-                               pcturb_excess*pctpft(i,j,m)/sumpft
-            end do
+             sumpft = sum(pctpft(i,j,1:numpft))
+             if (sumpft > 0._r8) then
+                suma = pctlak(i,j)+pctwet(i,j)+pctgla(i,j)
+                do m = 1, numpft
+                   pctpft(i,j,m) = 0.01_r8 * pctpft(i,j,m) * (100._r8 - suma) - &
+                                   pcturb_excess*pctpft(i,j,m)/sumpft
+                end do
+             end if
+          else
+
+             ! Normalize pctpft to be the remainder of [100 - (special landunits)]
+
+             suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
+             do m = 0, numpft
+                pctpft(i,j,m) = 0.01_r8 * pctpft(i,j,m) * (100._r8 - suma)
+             end do
           end if
 
           suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
@@ -601,7 +608,7 @@ program mksrfdat
     call check_ret(nf_open(trim(fsurdat), nf_write, ncid), subname)
     call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
 
-    ! Write fields other than lai, sai, and heights to netcdf surface dataset
+    ! Write fields other than lai, sai, heights, and urban parameters to netcdf surface dataset
 
     call ncd_ioglobal(varname='PFTDATA_MASK', data=pftdata_mask, ncid=ncid, flag='write')
     call ncd_ioglobal(varname='LANDFRAC_PFT', data=landfrac_pft, ncid=ncid, flag='write')
@@ -628,6 +635,24 @@ program mksrfdat
     call shr_timer_print(t1)
 
     ! ----------------------------------------------------------------------
+    ! Make Urban Parameters from 1/2 degree data and write to surface dataset 
+    ! Write to netcdf file is done inside mkurbanpar routine
+    ! Only call this routine if pcturb is greater than zero somewhere.  Raw urban
+    ! datasets will have no associated parameter fields if there is no urban 
+    ! (e.g., mksrf_urban.060929.nc).
+    ! ----------------------------------------------------------------------
+
+    if (any(pcturb > 0._r8)) then
+      call mkurbanpar(lsmlon, lsmlat, mksrf_furban, ndiag, ncid)
+    else
+      write(6,*) 'PCT_URBAN is zero everywhere, no urban parameter fields will be created'
+    end if
+
+    write(6,*) ' timer_j mkurbanpar-----'
+    call shr_timer_print(t1)
+
+
+    ! ----------------------------------------------------------------------
     ! Make LAI and SAI from 1/2 degree data and write to surface dataset 
     ! Write to netcdf file is done inside mklai routine
     ! ----------------------------------------------------------------------
@@ -641,7 +666,7 @@ program mksrfdat
     call mklai(lsmlon, lsmlat, mksrf_flai, ndiag, ncid, ni, nj, pctpft_i)
     deallocate( pctpft_i )
 
-    write(6,*) ' timer_j mklai-----'
+    write(6,*) ' timer_k mklai-----'
     call shr_timer_print(t1)
 
     ! Close surface dataset
@@ -803,7 +828,7 @@ program mksrfdat
 
     end if   ! end of if-create dynamic landust dataset   
 
-    write(6,*) ' timer_k writedyn-----'
+    write(6,*) ' timer_l writedyn-----'
     call shr_timer_print(t1)
 
     ! ----------------------------------------------------------------------

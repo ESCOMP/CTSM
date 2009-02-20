@@ -8,7 +8,7 @@ contains
     use shr_kind_mod, only : r8 => shr_kind_r8
     use shr_sys_mod , only : shr_sys_getenv
     use fileutils   , only : get_filename
-    use mkvarpar    , only : nlevsoi, numpft, nglcec 
+    use mkvarpar    , only : nlevsoi, numpft, nglcec, nlevurb, numsolar, numrad
     use mkvarctl
     use ncdio       , only : check_ret, ncd_defvar
 
@@ -54,6 +54,9 @@ contains
        call check_ret(nf_def_dim (ncid, 'nlevsoi', nlevsoi     , dimid), subname)
        call check_ret(nf_def_dim (ncid, 'nglcec', nglcec     , dimid), subname)
     end if
+    call check_ret(nf_def_dim (ncid, 'nlevurb', nlevurb     , dimid), subname)
+    call check_ret(nf_def_dim (ncid, 'numsolar', numsolar     , dimid), subname)
+    call check_ret(nf_def_dim (ncid, 'numrad', numrad     , dimid), subname)
     call check_ret(nf_def_dim (ncid, 'lsmpft' , pftsize     , dimid), subname)
     call check_ret(nf_def_dim (ncid, 'time'   , nf_unlimited, dimid), subname)
     call check_ret(nf_def_dim (ncid, 'nchar'  , 128         , dimid), subname)
@@ -237,6 +240,117 @@ contains
             dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
             long_name='organic matter density at soil levels', &
             units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
+
+       call ncd_defvar(ncid=ncid, varname='CANYON_HWR', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='canyon height to width ratio', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='EM_IMPROAD', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='emissivity of impervious road', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='EM_PERROAD', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='emissivity of pervious road', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='EM_ROOF', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='emissivity of roof', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='EM_WALL', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='emissivity of wall', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='HT_ROOF', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='height of roof', units='meters')
+
+       call ncd_defvar(ncid=ncid, varname='THICK_ROOF', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='thickness of roof', units='meters')
+
+       call ncd_defvar(ncid=ncid, varname='THICK_WALL', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='thickness of wall', units='meters')
+
+       call ncd_defvar(ncid=ncid, varname='T_BUILDING_MAX', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='maximum interior building temperature', units='K')
+
+       call ncd_defvar(ncid=ncid, varname='T_BUILDING_MIN', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='minimum interior building temperature', units='K')
+
+       call ncd_defvar(ncid=ncid, varname='WIND_HGT_CANYON', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='height of wind in canyon', units='meters')
+
+       call ncd_defvar(ncid=ncid, varname='WTLUNIT_ROOF', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='fraction of roof', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='WTROAD_PERV', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='fraction of pervious road', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='ALB_IMPROAD', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='numrad', &
+            dim4name='numsolar', &
+            long_name='albedo of impervious road', &
+            units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='ALB_PERROAD', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='numrad', &
+            dim4name='numsolar', &
+            long_name='albedo of pervious road', &
+            units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='ALB_ROOF', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='numrad', &
+            dim4name='numsolar', &
+            long_name='albedo of roof', &
+            units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='ALB_WALL', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='numrad', &
+            dim4name='numsolar', &
+            long_name='albedo of wall', &
+            units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='TK_ROOF', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevurb', &
+            long_name='thermal conductivity of roof', &
+            units='W/m*K')
+
+       call ncd_defvar(ncid=ncid, varname='TK_WALL', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevurb', &
+            long_name='thermal conductivity of wall', &
+            units='W/m*K')
+
+       call ncd_defvar(ncid=ncid, varname='TK_IMPROAD', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevurb', &
+            long_name='thermal conductivity of impervious road', &
+            units='W/m*K')
+
+       call ncd_defvar(ncid=ncid, varname='CV_ROOF', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevurb', &
+            long_name='volumetric heat capacity of roof', &
+            units='J/m^3*K')
+
+       call ncd_defvar(ncid=ncid, varname='CV_WALL', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevurb', &
+            long_name='volumetric heat capacity of wall', &
+            units='J/m^3*K')
+
+       call ncd_defvar(ncid=ncid, varname='CV_IMPROAD', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevurb', &
+            long_name='volumetric heat capacity of impervious road', &
+            units='J/m^3*K')
+
+       call ncd_defvar(ncid=ncid, varname='NLEV_IMPROAD', xtype=nf_int, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='number of impervious road layers', units='unitless')
+
     endif
 
     call ncd_defvar(ncid=ncid, varname='PCT_WETLAND', xtype=xtype, &
@@ -270,6 +384,7 @@ contains
     call ncd_defvar(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='percent urban', units='unitless')
+
 
     if (.not. dynlanduse) then
        call ncd_defvar(ncid=ncid, varname='PCT_PFT', xtype=xtype, &

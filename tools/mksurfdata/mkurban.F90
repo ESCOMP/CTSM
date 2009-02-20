@@ -60,7 +60,7 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   integer  :: k,n,m                           ! indices
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
-  real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
+  real(r8) :: relerr = 0.00001_r8             ! max error: sum overlap wts ne 1
   character(len=256) locfn                    ! local dataset file name
   character(len=32) :: subname = 'mkurban'
 !-----------------------------------------------------------------------
@@ -112,7 +112,7 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
-        if (urbn_o(io,jo) < 1.) urbn_o(io,jo) = 0.
+        if (urbn_o(io,jo) < 0.1_r8) urbn_o(io,jo) = 0._r8
   enddo
   enddo
 
@@ -142,7 +142,7 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 
   call areaave(fld_i,fld_o,tgridmap)
 
-  sum_fldo = 0.
+  sum_fldo = 0._r8
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
      fld_o(io,jo) = fld_o(io,jo)*mask_o(io,jo)
@@ -156,7 +156,7 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   ! -----------------------------------------------------------------
 
   if ( trim(mksrf_gridtype) == 'global') then
-     if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
+     if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
         write (6,*) 'MKURBAN error: input field not conserved'
         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
         write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
@@ -171,26 +171,26 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 
   ! Input grid
 
-  gurbn_i = 0.
-  garea_i = 0.
+  gurbn_i = 0._r8
+  garea_i = 0._r8
 
   do ji = 1, nlat_i
   do ii = 1, nlon_i
      garea_i = garea_i + tdomain%area(ii,ji)
-     gurbn_i = gurbn_i + urbn_i(ii,ji)*(tdomain%area(ii,ji)/100.) * &
+     gurbn_i = gurbn_i + urbn_i(ii,ji)*(tdomain%area(ii,ji)/100._r8) * &
                          tdomain%frac(ii,ji)
   end do
   end do
 
   ! Output grid
 
-  gurbn_o = 0.
-  garea_o = 0.
+  gurbn_o = 0._r8
+  garea_o = 0._r8
 
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
      garea_o = garea_o + ldomain%area(io,jo)
-     gurbn_o = gurbn_o + urbn_o(io,jo)*(ldomain%area(io,jo)/100.) * &
+     gurbn_o = gurbn_o + urbn_o(io,jo)*(ldomain%area(io,jo)/100._r8) * &
                          tdomain%frac(io,jo)
   end do
   end do
@@ -209,9 +209,11 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
              1x,'                 10**6 km**2      10**6 km**2   ')
   write (ndiag,'(1x,70a1)') ('.',k=1,70)
   write (ndiag,*)
-  write (ndiag,2002) gurbn_i*1.e-06,gurbn_o*1.e-06
+! write (ndiag,2002) gurbn_i*1.e-06,gurbn_o*1.e-06
+  write (ndiag,2003) gurbn_i*1.e-06,gurbn_o*1.e-06
   write (ndiag,2004) garea_i*1.e-06,garea_o*1.e-06
 2002 format (1x,'urban       ',f14.3,f17.3)
+2003 format (1x,'urban       ',f14.3,f22.8)
 2004 format (1x,'all surface ',f14.3,f17.3)
 
   if (lsmlat > 1) then

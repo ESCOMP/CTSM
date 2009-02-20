@@ -455,19 +455,19 @@ contains
 
     call hist_addfld1d (fname='DPVLTRB1', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 1', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_1)
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_1,set_urb=spval)
 
     call hist_addfld1d (fname='DPVLTRB2', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 2', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_2)
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_2,set_urb=spval)
 
     call hist_addfld1d (fname='DPVLTRB3', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 3', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_3)
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_3,set_urb=spval)
 
     call hist_addfld1d (fname='DPVLTRB4', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 4', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_4)
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_4,set_urb=spval)
 #endif
 
 #if (defined VOC)

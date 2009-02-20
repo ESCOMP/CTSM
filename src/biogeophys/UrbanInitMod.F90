@@ -238,7 +238,7 @@ contains
 
     do l = begl, endl
        if (ltype(l) == isturb) then
-          g = ldecomp%gdc2glo((clm3%g%l%gridcell(l)))
+          g = clm3%g%l%gridcell(l)
 
           canyon_hwr(l)         = urbinp%canyon_hwr(g)
           wtroad_perv(l)        = urbinp%wtroad_perv(g)

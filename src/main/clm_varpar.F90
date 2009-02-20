@@ -41,6 +41,7 @@ module clm_varpar
   integer, parameter :: numwat      =   5   ! number of water types (soil, ice, 2 lakes, wetland)
   integer, parameter :: npftpar     =  32   ! number of pft parameters (in LPJ - DGVM only)
   integer, parameter :: numrad      =   2   ! number of solar radiation bands: vis, nir
+  integer, parameter :: numsolar    =   2   ! number of solar type bands: direct, diffuse
   integer, parameter :: ndst        =   4   ! number of dust size classes (BGC only)
   integer, parameter :: dst_src_nbr =   3   ! number of size distns in src soil (BGC only)
   integer, parameter :: sz_nbr      = 200   ! number of sub-grid bins in large bin of dust size distribution (BGC only)

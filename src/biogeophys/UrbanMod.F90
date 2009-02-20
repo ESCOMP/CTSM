@@ -2447,7 +2447,7 @@ contains
 
        do fl = 1,num_urbanl
           l = filter(nc)%urbanl(fl)
-          g = ldecomp%gdc2glo((clm3%g%l%gridcell(l)))
+          g = clm3%g%l%gridcell(l)
 
           urban_clump(nc)%canyon_hwr     (fl) = urbinp%canyon_hwr     (g)
           urban_clump(nc)%wtroad_perv    (fl) = urbinp%wtroad_perv    (g)
