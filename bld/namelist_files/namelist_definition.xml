@@ -904,7 +904,7 @@ Horizontal resolutions
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v5,gx1v3,gx1v4,gx1v5,navy,test,tx0.1v2,T62">
+       valid_values="USGS,gx3v5,gx1v3,gx1v4,gx1v5,gx1v6,navy,test,tx0.1v2,T62">
 Land mask description
 </entry> 
 
@@ -919,8 +919,8 @@ End of year to cycle datm data through
 </entry>
 
 <entry id="sim_year" type="integer" category="default_settings"
-       group="default_settings" valid_values="1890,2000,2100">
-Year to simulate datasets for (such as Nitrogen deposition rates etc.)
+       group="default_settings" valid_values="1870,2000,2100">
+Year to simulate datasets for (such as surface datasets, initial conditions, Nitrogen deposition rates etc.)
 </entry> 
 
 <entry id="source" type="char*80" category="datm_internal"

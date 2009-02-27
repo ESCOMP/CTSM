@@ -697,7 +697,8 @@ $fndepdyn =~ s!(.*)/!!;
 $fndepdyn =~ s/'//;
 $fndepdyn =~ s/"//;
 if ( $fndepdyn eq "" ) { $fndepdyn = "null"; }
-add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'furbinp'=>$furbinp, 'fpftdyn'=>$fpftdyn );
+add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 
+            'furbinp'=>$furbinp, 'fpftdyn'=>$fpftdyn );
 
 # Initial conditions
 # The initial date is an attribute in the defaults file which should be matched unless

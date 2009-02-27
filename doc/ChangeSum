@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-   clm3_6_17       oleson 02/19/2009 Urban model changes and mksurfdata changes to incorporate urban data
+   clm3_6_17       oleson 02/26/2009 Urban model changes and mksurfdata changes to incorporate urban data
    clm3_6_16         erik 02/12/2009 Multiple elevation classes on surface dataset, urban fixes, mpi-serial and testing fixes
    clm3_6_15         erik 01/19/2009 Bring clm36sci branch to the trunk
    clm3_6_14         erik 10/10/2008 Fix some global urban issues, fix pftdyn, really get compile-only option 

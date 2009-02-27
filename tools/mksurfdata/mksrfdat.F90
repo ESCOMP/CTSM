@@ -43,38 +43,42 @@ program mksrfdat
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer  :: lsmlon, lsmlat       ! clm grid resolution
-    integer  :: nsoicol              ! number of model color classes
-    integer  :: i,j,k,m,n            ! indices
-    integer  :: ni, nj               ! size of pft index
-    integer  :: ier                  ! error status
-    integer  :: ndiag,nfdyn          ! unit numbers
-    integer  :: ncid                 ! netCDF id
-    integer  :: omode                ! netCDF output mode
-    integer  :: varid                ! netCDF variable id
-    integer  :: beg4d(4),len4d(4)    ! netCDF variable edges
-    integer  :: ret                  ! netCDF return status
-    integer  :: ntim                 ! time sample for dynamic land use
-    integer  :: year                 ! year for dynamic land use
-    real(r8) :: suma                 ! sum for error check
-    real(r8) :: bare_urb_diff        ! difference between bare soil and urban %
-    real(r8) :: pcturb_excess        ! excess urban % not accounted for by bare soil
-    real(r8) :: sumpft               ! sum of non-baresoil pfts
-    real(r8) :: sum8, sum8a          ! sum for error check
-    real(r4) :: sum4a                ! sum for error check
-    real(r8) :: bare_urb_diff        ! difference between bare soil and urban %
-    real(r8) :: pcturb_excess        ! excess urban % not accounted for by bare soil
-    real(r8) :: sumpft               ! sum of non-baresoil pfts
-    real(r8) :: rmax                 ! maximum patch cover
-    character(len=256) :: fgrddat    ! grid data file
-    character(len=256) :: fsurdat    ! surface data file name
-    character(len=256) :: fdyndat    ! dynamic landuse data file name
-    character(len=256) :: fname      ! generic filename
-    character(len=256) :: loc_fn     ! local file name
-    character(len=  9) :: resol      ! resolution for file name
-    integer  :: t1                   ! timer
-    real(r8),parameter :: p5  = 0.5_r8   ! constant
-    real(r8),parameter :: p25 = 0.25_r8  ! constant
+    integer  :: lsmlon, lsmlat              ! clm grid resolution
+    integer  :: nsoicol                     ! number of model color classes
+    integer  :: i,j,k,m,n                   ! indices
+    integer  :: ni, nj                      ! size of pft index
+    integer  :: ier                         ! error status
+    integer  :: ndiag,nfdyn                 ! unit numbers
+    integer  :: ncid                        ! netCDF id
+    integer  :: omode                       ! netCDF output mode
+    integer  :: varid                       ! netCDF variable id
+    integer  :: beg4d(4),len4d(4)           ! netCDF variable edges
+    integer  :: ret                         ! netCDF return status
+    integer  :: ntim                        ! time sample for dynamic land use
+    integer  :: year                        ! year for dynamic land use
+    real(r8) :: suma                        ! sum for error check
+    real(r8) :: bare_urb_diff               ! difference between bare soil and urban %
+    real(r8) :: pcturb_excess               ! excess urban % not accounted for by bare soil
+    real(r8) :: sumpft                      ! sum of non-baresoil pfts
+    real(r8) :: sum8, sum8a                 ! sum for error check
+    real(r4) :: sum4a                       ! sum for error check
+    real(r8) :: bare_urb_diff               ! difference between bare soil and urban %
+    real(r8) :: pcturb_excess               ! excess urban % not accounted for by bare soil
+    real(r8) :: sumpft                      ! sum of non-baresoil pfts
+    real(r8) :: rmax                        ! maximum patch cover
+    character(len=256) :: fgrddat           ! grid data file
+    character(len=256) :: fsurdat           ! surface data file name
+    character(len=256) :: fdyndat           ! dynamic landuse data file name
+    character(len=256) :: fname             ! generic filename
+    character(len=256) :: loc_fn            ! local file name
+    character(len=  9) :: resol             ! resolution for file name
+    integer  :: t1                          ! timer
+    integer ,parameter :: bdtroptree = 6    ! Index for broadleaf decidious tropical tree
+    integer ,parameter :: bdtemptree = 7    ! Index for broadleaf decidious temperate tree
+    integer ,parameter :: bdtempshrub = 10  ! Index for broadleaf decidious temperate shrub
+    real(r8),parameter :: troplat = 23.5_r8 ! Latitude to define as tropical
+    real(r8),parameter :: p5  = 0.5_r8      ! constant
+    real(r8),parameter :: p25 = 0.25_r8     ! constant
 
     real(r8), allocatable  :: landfrac_pft(:,:)    ! PFT data: % land per gridcell
     real(r8), allocatable  :: pctlnd_pft(:,:)      ! PFT data: % of gridcell for PFTs
@@ -95,39 +99,6 @@ program mksrfdat
     real(r8), allocatable  :: clay3d(:,:,:)        ! soil texture: percent clay            
     real(r8), allocatable  :: organic3d(:,:,:)     ! organic matter density (kg/m3)            
 
-    logical  :: do_double_res_too     ! write matching double resolution dataset
-    character(len=256) :: fdfile      ! double surface data file name
-    integer  :: dbllon, dbllat        ! double clm grid resolution
-    type(domain_type) :: dbldomain    ! double domain
-    integer  :: di,dj                 ! double i,j
-    integer  :: ncidi                 ! netCDF id
-    integer  :: dnsoicol              ! number of model color classes
-    real(r8), allocatable  :: dlandfrac_pft(:,:)    ! PFT data: % land per gridcell
-    real(r8), allocatable  :: dpctlnd_pft(:,:)      ! PFT data: % of gridcell for PFTs
-    real(r8), allocatable  :: dpctlnd_pft_dyn(:,:)  ! PFT data: % of gridcell for dyn landuse PFTs
-    integer , allocatable  :: dpftdata_mask(:,:)    ! mask indicating real or fake land type
-    real(r8), allocatable  :: dpctpft(:,:,:)        ! PFT data: land fraction per gridcell
-    real(r8), allocatable  :: dpctgla(:,:)          ! percent of grid cell that is glacier  
-    real(r8), allocatable  :: dpctglcmec(:,:,:)     ! glacier_mec pct coverage in each gridcell and class
-    real(r8), allocatable  :: dtopoglcmec(:,:,:)    ! glacier_mec sfc elevation in each gridcell and class
-    real(r8), allocatable  :: dthckglcmec(:,:,:)    ! glacier_mec sfc ice sheet thcknss gridcell and class
-    real(r8), allocatable  :: dpctlak(:,:)          ! percent of grid cell that is lake     
-    real(r8), allocatable  :: dpctwet(:,:)          ! percent of grid cell that is wetland  
-    real(r8), allocatable  :: dpcturb(:,:)          ! percent of grid cell that is urbanized
-    real(r8), allocatable  :: dfmax(:,:)            ! fractional saturated area
-    integer , allocatable  :: dsoic2d(:,:)          ! soil color                            
-    real(r8), allocatable  :: dsand3d(:,:,:)        ! soil texture: percent sand            
-    real(r8), allocatable  :: dclay3d(:,:,:)        ! soil texture: percent clay            
-    real(r8), allocatable  :: dorganic3d(:,:,:)     ! organic matter density            
-    real(r8), allocatable  :: mlai_i(:,:,:)         ! baseline monthly lai
-    real(r8), allocatable  :: msai_i(:,:,:)         ! baseline monthly sai
-    real(r8), allocatable  :: mhgtt_i(:,:,:)        ! baseline monthly height (top)
-    real(r8), allocatable  :: mhgtb_i(:,:,:)        ! baseline monthly height (bottom)
-    real(r8), allocatable  :: mlai_o(:,:,:)         ! double monthly lai
-    real(r8), allocatable  :: msai_o(:,:,:)         ! double monthly sai
-    real(r8), allocatable  :: mhgtt_o(:,:,:)        ! double monthly height (top)
-    real(r8), allocatable  :: mhgtb_o(:,:,:)        ! double monthly height (bottom)
-
     character(len=32) :: subname = 'mksrfdat'  ! program name
 
     namelist /clmexp/              &
@@ -146,8 +117,7 @@ program mksrfdat
          mksrf_flai,               &
          mksrf_fdynuse,            &
          outnc_large_files,        &
-         outnc_double,             &
-         do_double_res_too      
+         outnc_double
 !-----------------------------------------------------------------------
 
     ! ======================================================================
@@ -175,7 +145,8 @@ program mksrfdat
     ! ======================================
     !    mksrf_gridtype
     !    mksrf_fdynuse
-    !    do_double_res_too
+    !    outnc_large_files
+    !    outnc_double
     ! ======================================================================
 
     call shr_timer_init()
@@ -184,7 +155,6 @@ program mksrfdat
 
     write(6,*) 'Attempting to initialize control settings .....'
 
-    do_double_res_too = .false.
     mksrf_gridtype    = 'global'
     outnc_large_files = .false.
     outnc_double      = .false.
@@ -367,6 +337,24 @@ program mksrfdat
 
     write(6,*) ' timer_g mkurban-----'
     call shr_timer_print(t1)
+
+    ! Set pfts 7 and 10 to 6 in the tropics to avoid lais > 1000
+    ! Using P. Thornton's method found in surfrdMod.F90 in clm3.5
+
+    do j = 1,ldomain%nj ! begin: slevis added
+       do i = 1,ldomain%numlon(j)
+          if (abs(ldomain%latixy(i,j))<troplat .and. pctpft(i,j,bdtemptree)>0._r8) then
+             pctpft(i,j,bdtroptree) = pctpft(i,j,bdtroptree) + pctpft(i,j,bdtemptree)
+             pctpft(i,j,bdtemptree) = 0._r8
+             write (6,*) 'MKPFT warning: all wgt of pft ', bdtemptree, ' now added to pft ', bdtroptree
+          end if
+          if (abs(ldomain%latixy(i,j))<troplat .and. pctpft(i,j,bdtempshrub)>0._r8) then
+             pctpft(i,j,bdtroptree) = pctpft(i,j,bdtroptree) + pctpft(i,j,bdtempshrub)
+             pctpft(i,j,bdtempshrub) = 0._r8
+             write (6,*) 'MKPFT warning: all wgt of pft ', bdtempshrub, ' now added to pft ', bdtroptree
+          end if
+       end do
+    end do ! end: slevis added
 
     ! Set land values on Ross ice shelf to glacier
 
@@ -753,6 +741,20 @@ program mksrfdat
                    call abort()
                 end if
 
+                ! Set pfts 7 and 10 to 6 in the tropics to avoid lais > 1000
+                ! Using P. Thornton's method found in surfrdMod.F90 in clm3.5
+
+                if (abs(ldomain%latixy(i,j))<troplat .and. pctpft(i,j,bdtemptree)>0._r8) then ! begin: slevis added
+                   pctpft(i,j,bdtroptree) = pctpft(i,j,bdtroptree) + pctpft(i,j,bdtemptree)
+                   pctpft(i,j,bdtemptree) = 0._r8
+                   write (6,*) 'MKPFT warning: all wgt of pft ', bdtemptree, ' now added to pft ', bdtroptree
+                end if
+                if (abs(ldomain%latixy(i,j))<troplat .and. pctpft(i,j,bdtempshrub)>0._r8) then
+                   pctpft(i,j,bdtroptree) = pctpft(i,j,bdtroptree) + pctpft(i,j,bdtempshrub)
+                   pctpft(i,j,bdtempshrub) = 0._r8
+                   write (6,*) 'MKPFT warning: all wgt of pft ', bdtempshrub, ' now added to pft ', bdtroptree
+                end if ! end: slevis added
+
                 ! Set land values on Ross ice shelf to glacier
 
                 if (ldomain%latixy(i,j) < -79.) then
@@ -842,180 +844,6 @@ program mksrfdat
     write (6,*) 'Diagnostic log file      = ',trim(loc_fn)
     write (6,*) '   See this file for a summary of the dataset'
     write (6,*)
-
-    write(6,*) ' timer_v double_res-----'
-    call shr_timer_print(t1)
-
-    if (do_double_res_too) then
-       dbllon = 2*lsmlon
-       dbllat = 2*lsmlat
-       call domain_init(dbldomain,dbllon,dbllat)
-
-       allocate ( dlandfrac_pft(dbllon,dbllat)    , &
-                  dpctlnd_pft(dbllon,dbllat)      , & 
-                  dpctlnd_pft_dyn(dbllon,dbllat)  , & 
-                  dpftdata_mask(dbllon,dbllat)    , & 
-                  dpctpft(dbllon,dbllat,0:numpft) , & 
-                  dpctgla(dbllon,dbllat)          , & 
-                  dpctglcmec(dbllon,dbllat,nglcec), &
-                  dtopoglcmec(dbllon,dbllat,nglcec), &
-                  dthckglcmec(dbllon,dbllat,nglcec), &
-                  dpctlak(dbllon,dbllat)          , & 
-                  dpctwet(dbllon,dbllat)          , & 
-                  dpcturb(dbllon,dbllat)          , & 
-                  dfmax(dbllon,dbllat)            , & 
-                  dsand3d(dbllon,dbllat,nlevsoi)  , & 
-                  dclay3d(dbllon,dbllat,nlevsoi)  , & 
-                  dorganic3d(dbllon,dbllat,nlevsoi) , & 
-                  dsoic2d(dbllon,dbllat))
-       allocate ( mlai_i(lsmlon,lsmlat,0:numpft)  , &
-                  msai_i(lsmlon,lsmlat,0:numpft)  , &
-                  mhgtt_i(lsmlon,lsmlat,0:numpft) , &
-                  mhgtb_i(lsmlon,lsmlat,0:numpft))
-       allocate ( mlai_o(dbllon,dbllat,0:numpft)  , &
-                  msai_o(dbllon,dbllat,0:numpft)  , &
-                  mhgtt_o(dbllon,dbllat,0:numpft) , &
-                  mhgtb_o(dbllon,dbllat,0:numpft))
-
-       dbldomain%ni = dbllon
-       dbldomain%nj = dbllat
-       dbldomain%edgen = ldomain%edgen
-       dbldomain%edgee = ldomain%edgee
-       dbldomain%edges = ldomain%edges
-       dbldomain%edgew = ldomain%edgew
-       dbldomain%numlon = dbllon
-
-       dnsoicol = nsoicol
-
-       do j = 1,lsmlat
-       do i = 1,lsmlon
-         di = 2*(i-1)+1
-         dj = 2*(j-1)+1
-         dbldomain%mask  (di:di+1,dj:dj+1) = ldomain%mask(i,j)
-         dbldomain%frac  (di:di+1,dj:dj+1) = ldomain%frac(i,j)
-         dbldomain%latixy(di:di+1,dj     ) = ldomain%latixy(i,j)*p5 + ldomain%lats(i,j)*p5
-         dbldomain%latixy(di:di+1,   dj+1) = ldomain%latixy(i,j)*p5 + ldomain%latn(i,j)*p5
-         dbldomain%longxy(di     ,dj:dj+1) = ldomain%longxy(i,j)*p5 + ldomain%lonw(i,j)*p5
-         dbldomain%longxy(   di+1,dj:dj+1) = ldomain%longxy(i,j)*p5 + ldomain%lone(i,j)*p5
-         dbldomain%area  (di:di+1,dj:dj+1) = ldomain%area(i,j)*p25
-         dbldomain%lats  (di:di+1,dj     ) = ldomain%lats(i,j)
-         dbldomain%lats  (di:di+1,   dj+1) = ldomain%latixy(i,j)
-         dbldomain%latn  (di:di+1,dj     ) = ldomain%latixy(i,j)
-         dbldomain%latn  (di:di+1,   dj+1) = ldomain%latn(i,j)
-         dbldomain%lonw  (di     ,dj:dj+1) = ldomain%lonw(i,j)
-         dbldomain%lonw  (   di+1,dj:dj+1) = ldomain%longxy(i,j)
-         dbldomain%lone  (di     ,dj:dj+1) = ldomain%longxy(i,j)
-         dbldomain%lone  (   di+1,dj:dj+1) = ldomain%lone(i,j)
-         dlandfrac_pft   (di:di+1,dj:dj+1) = landfrac_pft(i,j)
-         dpctlnd_pft     (di:di+1,dj:dj+1) = pctlnd_pft(i,j)
-         dpctlnd_pft_dyn (di:di+1,dj:dj+1) = pctlnd_pft_dyn(i,j)
-         dpftdata_mask   (di:di+1,dj:dj+1) = pftdata_mask(i,j)
-         do n = 0,numpft
-            dpctpft      (di:di+1,dj:dj+1,n) = pctpft(i,j,n)
-         enddo
-         dpctgla         (di:di+1,dj:dj+1) = pctgla(i,j)
-         do n = 1,nglcec
-            dpctglcmec   (di:di+1,dj:dj+1,n) = pctglcmec(i,j,n)
-            dtopoglcmec  (di:di+1,dj:dj+1,n) = topoglcmec(i,j,n)
-            dthckglcmec  (di:di+1,dj:dj+1,n) = thckglcmec(i,j,n)
-         enddo
-         dpctlak         (di:di+1,dj:dj+1) = pctlak(i,j)
-         dpctwet         (di:di+1,dj:dj+1) = pctwet(i,j)
-         dpcturb         (di:di+1,dj:dj+1) = pcturb(i,j)
-         dfmax           (di:di+1,dj:dj+1) = fmax(i,j)
-         do n = 1,nlevsoi
-            dsand3d      (di:di+1,dj:dj+1,n) = sand3d(i,j,n)
-            dclay3d      (di:di+1,dj:dj+1,n) = clay3d(i,j,n)
-            dorganic3d   (di:di+1,dj:dj+1,n) = organic3d(i,j,n)
-         enddo
-         dsoic2d         (di:di+1,dj:dj+1) = soic2d(i,j)
-       enddo
-       enddo
-
-       write (resol,'(i4.4,"x",i4.4)') dbllat,dbllon
-       fdfile = './surfdata_'//trim(resol)//'.double.nc'
-
-       call mkfile(dbldomain%ni, dbldomain%nj, fdfile, dynlanduse = .false.)
-       call write_domain(dbldomain,fdfile)
-
-       call check_ret(nf_open(trim(fdfile), nf_write, ncid), subname)
-       call check_ret(nf_set_fill (ncid, nf_nofill, omode), subname)
-
-       ! Write fields other than lai, sai, and heights to netcdf surface dataset
-
-       call ncd_ioglobal(varname='PFTDATA_MASK', data=dpftdata_mask, ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='LANDFRAC_PFT', data=dlandfrac_pft, ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='mxsoil_color', data=dnsoicol     , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='SOIL_COLOR'  , data=dsoic2d      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_SAND'    , data=dsand3d      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_CLAY'    , data=dclay3d      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_WETLAND' , data=dpctwet      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_LAKE'    , data=dpctlak      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_GLACIER' , data=dpctgla      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_GLC_MEC' , data=dpctglcmec   , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='TOPO_GLC_MEC', data=dtopoglcmec  , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='THCK_GLC_MEC', data=dthckglcmec  , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_URBAN'   , data=dpcturb      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_PFT'     , data=dpctpft      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='FMAX'        , data=dfmax        , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='ORGANIC'     , data=dorganic3d   , ncid=ncid, flag='write')
-
-       call check_ret(nf_open(fsurdat, 0, ncidi), subname)
-       do m = 1,12
-          beg4d(1) = 1  ;  len4d(1) = lsmlon
-          beg4d(2) = 1  ;  len4d(2) = lsmlat
-          beg4d(3) = 1  ;  len4d(3) = numpft+1
-          beg4d(4) = m  ;  len4d(4) = 1
-
-          call check_ret(nf_inq_varid(ncidi, 'MONTHLY_LAI', varid), subname)
-          call check_ret(nf_get_vara_double(ncidi, varid, beg4d, len4d, mlai_i), subname)
-          call check_ret(nf_inq_varid(ncidi, 'MONTHLY_SAI', varid), subname)
-          call check_ret(nf_get_vara_double(ncidi, varid, beg4d, len4d, msai_i), subname)
-          call check_ret(nf_inq_varid(ncidi, 'MONTHLY_HEIGHT_TOP', varid), subname)
-          call check_ret(nf_get_vara_double(ncidi, varid, beg4d, len4d, mhgtt_i), subname)
-          call check_ret(nf_inq_varid(ncidi, 'MONTHLY_HEIGHT_BOT', varid), subname)
-          call check_ret(nf_get_vara_double(ncidi, varid, beg4d, len4d, mhgtb_i), subname)
-
-          do j = 1,lsmlat
-          do i = 1,lsmlon
-             di = 2*(i-1)+1
-             dj = 2*(j-1)+1
-             do n = 0,numpft
-                mlai_o (di:di+1,dj:dj+1,n) = mlai_i (i,j,n)
-                msai_o (di:di+1,dj:dj+1,n) = msai_i (i,j,n)
-                mhgtt_o(di:di+1,dj:dj+1,n) = mhgtt_i(i,j,n)
-                mhgtb_o(di:di+1,dj:dj+1,n) = mhgtb_i(i,j,n)
-             enddo
-          enddo
-          enddo
-
-          beg4d(1) = 1  ;  len4d(1) = dbllon
-          beg4d(2) = 1  ;  len4d(2) = dbllat
-          beg4d(3) = 1  ;  len4d(3) = numpft+1
-          beg4d(4) = m  ;  len4d(4) = 1
-
-          call check_ret(nf_inq_varid(ncid, 'MONTHLY_LAI', varid), subname)
-          call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, mlai_o), subname)
-          call check_ret(nf_inq_varid(ncid, 'MONTHLY_SAI', varid), subname)
-          call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, msai_o), subname)
-          call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_TOP', varid), subname)
-          call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, mhgtt_o), subname)
-          call check_ret(nf_inq_varid(ncid, 'MONTHLY_HEIGHT_BOT', varid), subname)
-          call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, mhgtb_o), subname)
-       enddo
-
-       call check_ret(nf_sync(ncid), subname)
-       ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
-
-       call check_ret(nf_sync(ncid), subname)
-
-       call check_ret(nf_close(ncid), subname)
- 
-       write (6,'(72a1)') ("-",i=1,60)
-       write (6, *) 'Generated file ',trim(fdfile)
-       write (6,'(a52,f5.1,a4,f5.1,a5)') 'land model surface data set successfully created for ', &
-          360./dbllon,' by ',180./dbllat,' double grid'
-    endif
 
     write(6,*) ' timer_z end-----'
     call shr_timer_print(t1)

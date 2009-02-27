@@ -68,7 +68,20 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="0.47x0.63"     maxpft="17" bgc="cn" fndepdyn="fndep_clm_1890-2100_0.47x0.63_c071213.nc"> null </finidat>
 
 <!-- Initial files at 1.9x2.5 native resolution -->
-<finidat hgrid="1.9x2.5"   maxpft="4"  mask="gx1v5" bgc="none" ic_ymd="20080101" ic_tod="0">lnd/clm2/initdata/clmi.IQ_2008-01-01_1.9x2.5_gx1v5_c081014.nc
+<finidat hgrid="1.9x2.5"   maxpft="4"  mask="gx1v5" bgc="none" ic_ymd="00330101" ic_tod="0" sim_year="2000">
+lnd/clm2/initdata/clmi.B.0033-01-01_1.9x2.5_gx1v5_simyr2000_c090223.nc
+</finidat>
+<finidat hgrid="1.9x2.5"   maxpft="4"  mask="gx1v5" bgc="none" ic_ymd="19530101" ic_tod="0" sim_year="1870">
+lnd/clm2/initdata/clmi.IQ.1953-01-01_1.9x2.5_gx1v5_simyr1870_c090224.nc
+</finidat>
+<finidat hgrid="1.9x2.5"   maxpft="4"  mask="gx1v6" bgc="none" ic_ymd="19530101" ic_tod="0" sim_year="1870">
+lnd/clm2/initdata/clmi.B.0033-01-01_1.9x2.5_gx1v6_simyr2000_c090226.nc
+</finidat>
+<finidat hgrid="1.9x2.5"   maxpft="4"  mask="gx1v6" bgc="none" ic_ymd="19530101" ic_tod="0" sim_year="2000">
+lnd/clm2/initdata/clmi.B.0033-01-01_1.9x2.5_gx1v6_simyr2000_c090226.nc
+</finidat>
+<finidat hgrid="1.9x2.5"   maxpft="4"  mask="gx1v5" bgc="none" ic_ymd="20080101" ic_tod="0">
+lnd/clm2/initdata/clmi.IQ_2008-01-01_1.9x2.5_gx1v5_c081014.nc
 </finidat>
 <finidat hgrid="1.9x2.5"   maxpft="4"  mask="gx1v5" bgc="none" ic_ymd="19480901" ic_tod="0">lnd/clm2/initdata/clmi.IQ_1948-09-01_1.9x2.5_gx1v5_c081029.nc
 </finidat>
@@ -147,22 +160,23 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- finidat hgrid="0.47x0.63" maxpft="17" mask="gx1v5" bgc="cn"   ic_ymd="19530101" ic_tod="0">lnd/clm2/initdata/clmi.IQCN.1953-01-01_0.47x0.63_gx1v5_simyr2000_c081203.nc -->
 
 <!-- Surface datasets (relative to {csmdata}) -->
-<fsurdat hgrid="360x720"   >lnd/clm2/surfdata/surfdata_360x720__c081210.nc</fsurdat>
-<fsurdat hgrid="128x256"   >lnd/clm2/surfdata/surfdata_128x256__c081126.nc</fsurdat>
-<fsurdat hgrid="64x128"    >lnd/clm2/surfdata/surfdata_64x128_c081023.nc</fsurdat>
-<fsurdat hgrid="48x96"     >lnd/clm2/surfdata/surfdata_48x96_c081023.nc</fsurdat>
-<fsurdat hgrid="32x64"     >lnd/clm2/surfdata/surfdata_32x64_c081023.nc</fsurdat>
-<fsurdat hgrid="8x16"      >lnd/clm2/surfdata/surfdata_8x16_c081023.nc</fsurdat>
-<fsurdat hgrid="94x192"    >lnd/clm2/surfdata/surfdata_94x192_c081219.nc</fsurdat>
+<fsurdat hgrid="360x720"   sim_year="2000">lnd/clm2/surfdata/surfdata_360x720__c081210.nc</fsurdat>
+<fsurdat hgrid="128x256"   sim_year="2000">lnd/clm2/surfdata/surfdata_128x256__c081126.nc</fsurdat>
+<fsurdat hgrid="64x128"    sim_year="2000">lnd/clm2/surfdata/surfdata_64x128_c081023.nc</fsurdat>
+<fsurdat hgrid="48x96"     sim_year="2000">lnd/clm2/surfdata/surfdata_48x96_c081023.nc</fsurdat>
+<fsurdat hgrid="32x64"     sim_year="2000">lnd/clm2/surfdata/surfdata_32x64_c081023.nc</fsurdat>
+<fsurdat hgrid="8x16"      sim_year="2000">lnd/clm2/surfdata/surfdata_8x16_c081023.nc</fsurdat>
+<fsurdat hgrid="94x192"    sim_year="2000">lnd/clm2/surfdata/surfdata_94x192_c081219.nc</fsurdat>
 
-<fsurdat hgrid="0.23x0.31" >lnd/clm2/surfdata/surfdata_0.23x0.31_c070927.nc</fsurdat>
-<fsurdat hgrid="0.47x0.63" >lnd/clm2/surfdata/surfdata_0.47x0.63__c081126.nc</fsurdat>
-<fsurdat hgrid="0.9x1.25"  >lnd/clm2/surfdata/surfdata_0.9x1.25__c081126.nc</fsurdat>
-<fsurdat hgrid="1.9x2.5"   >lnd/clm2/surfdata/surfdata_1.9x2.5_c081023.nc </fsurdat>
-<fsurdat hgrid="2x2.5"     >lnd/clm2/surfdata/surfdata_2x2.5_c081023.nc</fsurdat>
-<fsurdat hgrid="2.65x3.33" >lnd/clm2/surfdata/surfdata_2.65x3.33_c081023.nc</fsurdat>
-<fsurdat hgrid="4x5"       >lnd/clm2/surfdata/surfdata_4x5_c081023.nc</fsurdat>
-<fsurdat hgrid="10x15"     >lnd/clm2/surfdata/surfdata_10x15_c081023.nc</fsurdat>
+<fsurdat hgrid="0.23x0.31" sim_year="2000">lnd/clm2/surfdata/surfdata_0.23x0.31_c070927.nc</fsurdat>
+<fsurdat hgrid="0.47x0.63" sim_year="2000">lnd/clm2/surfdata/surfdata_0.47x0.63__c081126.nc</fsurdat>
+<fsurdat hgrid="0.9x1.25"  sim_year="2000">lnd/clm2/surfdata/surfdata_0.9x1.25__c081126.nc</fsurdat>
+<fsurdat hgrid="1.9x2.5"   sim_year="2000">lnd/clm2/surfdata/surfdata_1.9x2.5_c081023.nc </fsurdat>
+<fsurdat hgrid="1.9x2.5"   sim_year="1870">lnd/clm2/surfdata/surfdata_1.9x2.5_simyr1870_c090224.nc</fsurdat>
+<fsurdat hgrid="2x2.5"     sim_year="2000">lnd/clm2/surfdata/surfdata_2x2.5_c081023.nc</fsurdat>
+<fsurdat hgrid="2.65x3.33" sim_year="2000">lnd/clm2/surfdata/surfdata_2.65x3.33_c081023.nc</fsurdat>
+<fsurdat hgrid="4x5"       sim_year="2000">lnd/clm2/surfdata/surfdata_4x5_c081023.nc</fsurdat>
+<fsurdat hgrid="10x15"     sim_year="2000">lnd/clm2/surfdata/surfdata_10x15_c081023.nc</fsurdat>
  
 <fsurdat hgrid="5x5_amazon"         >lnd/clm2/surfdata/surfdata_5x5pt_amazon__c081126.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"         >lnd/clm2/surfdata/surfdata_1x1pt_brazil_navy_c081023.nc</fsurdat>
@@ -310,6 +324,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fatmlndfrc hgrid="1.9x2.5"   mask="gx1v3"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v3_060404.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1.9x2.5"   mask="gx1v4"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v4_060808.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1.9x2.5"   mask="gx1v5"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v5_070316.nc</fatmlndfrc>
+<fatmlndfrc hgrid="1.9x2.5"   mask="gx1v6"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v6_c090206.nc</fatmlndfrc>
 <fatmlndfrc hgrid="2x2.5"     mask="USGS"   >lnd/clm2/griddata/fracdata_2x2.5_USGS_070110.nc</fatmlndfrc>
 <fatmlndfrc hgrid="2.65x3.33" mask="USGS"   >lnd/clm2/griddata/fracdata_2.65x3.33_USGS_c080208.nc</fatmlndfrc>
 <fatmlndfrc hgrid="4x5"       mask="USGS"   >lnd/clm2/griddata/fracdata_4x5_USGS_070110.nc</fatmlndfrc>
@@ -381,11 +396,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fndepdat hgrid="4x5"       bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_4x5_c090114.nc</fndepdat>
 <fndepdat hgrid="64x128"    bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_64x128_c071221.nc</fndepdat>
 <fndepdat hgrid="48x96"     bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_48x96_c060414.nc</fndepdat>
-<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_1.9x2.5_c070118.nc</fndepdat>
-<fndepdat hgrid="0.47x0.63" bgc="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_0.47x0.63_c071213.nc</fndepdat>
-<fndepdat hgrid="4x5"       bgc="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_4x5_c090114.nc</fndepdat>
-<fndepdat hgrid="64x128"    bgc="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_64x128_c071221.nc</fndepdat>
-<fndepdat hgrid="48x96"     bgc="cn" sim_year="1890" >lnd/clm2/ndepdata/ndep_clm_1890_48x96_c060414.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1870" >lnd/clm2/ndepdata/ndep_clm_1890_1.9x2.5_c070118.nc</fndepdat>
+<fndepdat hgrid="0.47x0.63" bgc="cn" sim_year="1870" >lnd/clm2/ndepdata/ndep_clm_1890_0.47x0.63_c071213.nc</fndepdat>
+<fndepdat hgrid="4x5"       bgc="cn" sim_year="1870" >lnd/clm2/ndepdata/ndep_clm_1890_4x5_c090114.nc</fndepdat>
+<fndepdat hgrid="64x128"    bgc="cn" sim_year="1870" >lnd/clm2/ndepdata/ndep_clm_1890_64x128_c071221.nc</fndepdat>
+<fndepdat hgrid="48x96"     bgc="cn" sim_year="1870" >lnd/clm2/ndepdata/ndep_clm_1890_48x96_c060414.nc</fndepdat>
 
 <!--CN Nitrogen deposition dataset for a series of years (relative to {csmdata}) -->
 
@@ -555,6 +570,7 @@ $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01
 <domainfile hgrid="1.9x2.5"     mask="gx1v3"  >atm/datm7/domain.clm/domain.lnd.fv1.9x2.5_gx1v3.071010.nc</domainfile>
 <domainfile hgrid="1.9x2.5"     mask="gx1v4"  >atm/datm7/domain.lnd.1.9x2.5_gx1v4.060810.nc</domainfile>
 <domainfile hgrid="1.9x2.5"     mask="gx1v5"  >atm/datm7/domain.lnd.1.9x2.5_gx1v5.070102.nc</domainfile>
+<domainfile hgrid="1.9x2.5"     mask="gx1v6"  >atm/datm7/domain.lnd.fv1.9x2.5_gx1v6.090206.nc</domainfile>
 <domainfile hgrid="2x2.5"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2x2.5_USGS.071010.nc</domainfile>
 <domainfile hgrid="2.65x3.33"   mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2.65x3.33_USGS.090106.nc</domainfile>
 <domainfile hgrid="4x5"         mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv4x5_USGS.090106.nc</domainfile>

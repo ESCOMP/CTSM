@@ -1,4 +1,77 @@
-===============================================================
+================================================================================
+Tag name:  clm3_6_18
+Originator(s):  kauff
+Date: Thu Feb 26 18:15:33 MST 2009
+One-line Summary: Add support for gx1v6 ocn domain & "1870 run"
+
+Purpose of changes:  Add support for gx1v6 ocn domain & "1870 run"
+                     
+
+Bugs fixed (include bugzilla ID):  None
+
+Known bugs (include bugzilla ID): 
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+  xml changes...
+  - new attribute value: mask="gx1v6"
+  - sim_year="1870" replaces sim_year="1890"
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+
+   lnd/clm2/initdata/clmi.B.0033-01-01_1.9x2.5_gx1v6_simyr2000_c090226.n
+
+Describe any substantial timing or memory changes:  None
+
+Code reviewed by: 
+   This tag is largely E. Kluzek's mods checked in by B. Kauffman
+   when Erik was unavailable to finish the tag, thus documentation here
+   may be missing some important information only known to Erik.
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: 
+
+M      models/lnd/clm/tools/mksurfdata/mksrfdat.F90
+M      models/lnd/clm/bld/namelist_files/namelist_definition.xml
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+M      models/lnd/clm/bld/build-namelist
+M      scripts/create_newcase
+M      scripts/ccsm_utils/Tools/perl5lib/t/04.t
+M      models/lnd/clm/tools/cprnc/Makefile
+
+Summary of testing:
+
+   be1005en% cat TestStatus.out
+   doing a 10 day initial test
+   doing a 5 day restart test
+   Initial Test log is /ptmp/kauff/ERS.f19_g16.B.bluefire.173302/run/cpl.log.090226-174726
+   Restart Test log is /ptmp/kauff/ERS.f19_g16.B.bluefire.173302/run/cpl.log.090226-180411
+   Comparing initial log file with second log file
+   log files match!
+   PASS
+
+These are known failures
+
+  jaguar:
+  kraken:
+  lightning/pathscale:
+  bangkok/lf95:
+  breeze/gale/hail/gust/ifort:
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_17
+
+Changes answers relative to baseline: 
+   should bit-for-bit for previously supported resolutions
+
+================================================================================
+================================================================================
+
 Tag name:  clm3_6_17
 Originator(s):  oleson (Oleson Keith 1332 CGD)
 Date:  Thu Feb 19 15:35:44 MST 2009
