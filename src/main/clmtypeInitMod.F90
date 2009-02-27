@@ -1642,6 +1642,10 @@ contains
     allocate(pef%eflx_sh_veg(beg:end))
     allocate(pef%eflx_lh_vege(beg:end))
     allocate(pef%eflx_lh_vegt(beg:end))
+    allocate(pef%eflx_wasteheat_pft(beg:end))
+    allocate(pef%eflx_heat_from_ac_pft(beg:end))
+    allocate(pef%eflx_traffic_pft(beg:end))
+    allocate(pef%eflx_anthro(beg:end))
     allocate(pef%cgrnd(beg:end))
     allocate(pef%cgrndl(beg:end))
     allocate(pef%cgrnds(beg:end))
@@ -1708,6 +1712,10 @@ contains
     pef%eflx_sh_veg(beg:end) = nan
     pef%eflx_lh_vege(beg:end) = nan
     pef%eflx_lh_vegt(beg:end) = nan
+    pef%eflx_wasteheat_pft(beg:end) = nan
+    pef%eflx_heat_from_ac_pft(beg:end) = nan
+    pef%eflx_traffic_pft(beg:end) = nan
+    pef%eflx_anthro(beg:end) = nan
     pef%cgrnd(beg:end) = nan
     pef%cgrndl(beg:end) = nan
     pef%cgrnds(beg:end) = nan
@@ -3530,12 +3538,12 @@ contains
     allocate(lef%eflx_traffic(beg:end))
     allocate(lef%eflx_traffic_factor(beg:end))
     allocate(lef%eflx_wasteheat(beg:end))
-    allocate(lef%eflx_anthro(beg:end))
+    allocate(lef%eflx_heat_from_ac(beg:end))
 
     lef%eflx_traffic(beg:end) = nan
     lef%eflx_traffic_factor(beg:end) = nan
     lef%eflx_wasteheat(beg:end) = nan
-    lef%eflx_anthro(beg:end) = nan
+    lef%eflx_heat_from_ac(beg:end) = nan
 
   end subroutine init_landunit_eflux_type
 

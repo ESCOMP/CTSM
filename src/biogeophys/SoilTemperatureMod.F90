@@ -130,6 +130,15 @@ contains
     real(r8), pointer :: hc_soi(:)          ! soil heat content (MJ/m2)
     real(r8), pointer :: hc_soisno(:)       ! soil plus snow plus lake heat content (MJ/m2)
     real(r8), pointer :: eflx_fgr12(:)      ! heat flux between soil layer 1 and 2 (W/m2)
+    real(r8), pointer :: eflx_traffic(:)    ! traffic sensible heat flux (W/m**2)
+    real(r8), pointer :: eflx_wasteheat(:)  ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+    real(r8), pointer :: eflx_wasteheat_pft(:)  ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+    real(r8), pointer :: eflx_heat_from_ac(:) !sensible heat flux put back into canyon due to removal by AC (W/m**2)
+    real(r8), pointer :: eflx_heat_from_ac_pft(:) !sensible heat flux put back into canyon due to removal by AC (W/m**2)
+    real(r8), pointer :: eflx_traffic_pft(:)    ! traffic sensible heat flux (W/m**2)
+    real(r8), pointer :: eflx_anthro(:)         ! total anthropogenic heat flux (W/m**2)
+    real(r8), pointer :: canyon_hwr(:)      ! urban canyon height to width ratio
+    real(r8), pointer :: wtlunit_roof(:)    ! weight of roof with respect to landunit
 ! 
 ! local pointers to  original implicit inout arguments
 !
@@ -193,6 +202,11 @@ contains
     t_building     => clm3%g%l%lps%t_building
     t_building_max => clm3%g%l%lps%t_building_max
     t_building_min => clm3%g%l%lps%t_building_min
+    eflx_traffic   => clm3%g%l%lef%eflx_traffic
+    canyon_hwr     => clm3%g%l%canyon_hwr
+    eflx_wasteheat => clm3%g%l%lef%eflx_wasteheat
+    eflx_heat_from_ac => clm3%g%l%lef%eflx_heat_from_ac
+    wtlunit_roof   => clm3%g%l%wtlunit_roof
 
     ! Assign local pointers to derived subtypes components (column-level)
 
@@ -232,6 +246,10 @@ contains
     eflx_gnet      => clm3%g%l%c%p%pef%eflx_gnet
     dgnetdT        => clm3%g%l%c%p%pef%dgnetdT
     eflx_lwrad_net => clm3%g%l%c%p%pef%eflx_lwrad_net
+    eflx_wasteheat_pft => clm3%g%l%c%p%pef%eflx_wasteheat_pft
+    eflx_heat_from_ac_pft => clm3%g%l%c%p%pef%eflx_heat_from_ac_pft
+    eflx_traffic_pft => clm3%g%l%c%p%pef%eflx_traffic_pft
+    eflx_anthro => clm3%g%l%c%p%pef%eflx_anthro
 
     sabg_lyr       => clm3%g%l%c%p%pef%sabg_lyr
     h2osno         => clm3%g%l%c%cws%h2osno
@@ -280,10 +298,23 @@ contains
                    ! For urban columns we use the net longwave radiation (eflx_lwrad_net) because of 
                    ! interactions between urban columns.
                    
+                   ! All wasteheat and traffic flux goes into canyon floor
+                   if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then
+                      eflx_wasteheat_pft(p) = eflx_wasteheat(l)/(1._r8-wtlunit_roof(l))
+                      eflx_heat_from_ac_pft(p) = eflx_heat_from_ac(l)/(1._r8-wtlunit_roof(l))
+                      eflx_traffic_pft(p) = eflx_traffic(l)/(1._r8-wtlunit_roof(l))
+                   else
+                      eflx_wasteheat_pft(p) = 0._r8
+                      eflx_heat_from_ac_pft(p) = 0._r8
+                      eflx_traffic_pft(p) = 0._r8
+                   end if
                    ! Include transpiration term because needed for pervious road
+                   ! and include wasteheat and traffic flux
                    eflx_gnet(p) = sabg(p) + dlrad(p)  &
                                   - eflx_lwrad_net(p) &
-                                  - (eflx_sh_grnd(p) + qflx_evap_soi(p)*htvp(c) + qflx_tran_veg(p)*hvap)
+                                  - (eflx_sh_grnd(p) + qflx_evap_soi(p)*htvp(c) + qflx_tran_veg(p)*hvap) &
+                                  + eflx_wasteheat_pft(p) + eflx_heat_from_ac_pft(p) + eflx_traffic_pft(p)
+                   eflx_anthro(p) = eflx_wasteheat_pft(p) + eflx_traffic_pft(p)
                 end if
                 dgnetdT(p) = - cgrnd(p) - dlwrad_emit(c)
                 hs(c) = hs(c) + eflx_gnet(p) * pwtcol(p)

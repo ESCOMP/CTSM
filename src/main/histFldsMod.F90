@@ -292,18 +292,22 @@ contains
 
     call hist_addfld1d (fname='TRAFFICFLUX', units='watt/m^2',  &
          avgflag='A', long_name='sensible heat flux from urban traffic', &
-         ptr_lunit=clm3%g%l%lef%eflx_traffic, set_nourb=0._r8, l2g_scale_type='unity', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_traffic_pft, set_nourb=0._r8, c2l_scale_type='urbanf', &
          default='inactive')
 
     call hist_addfld1d (fname='WASTEHEAT', units='watt/m^2',  &
          avgflag='A', long_name='sensible heat flux from heating/cooling sources of urban waste heat', &
-         ptr_lunit=clm3%g%l%lef%eflx_wasteheat, set_nourb=0._r8, l2g_scale_type='unity', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_wasteheat_pft, set_nourb=0._r8, c2l_scale_type='urbanf', &
          default='inactive')
 
+    call hist_addfld1d (fname='HEAT_FROM_AC', units='watt/m^2',  &
+         avgflag='A', long_name='sensible heat flux put into canyon due to heat removed from air conditioning', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_heat_from_ac_pft, set_nourb=0._r8, c2l_scale_type='urbanf', &
+         default='inactive')
 
     call hist_addfld1d (fname='Qanth', units='watt/m^2',  &
          avgflag='A', long_name='anthropogenic heat flux', &
-         ptr_lunit=clm3%g%l%lef%eflx_anthro, set_nourb=0._r8, l2g_scale_type='unity', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_anthro, set_nourb=0._r8, c2l_scale_type='urbanf', &
          default='inactive')
 
     call hist_addfld1d (fname='Rnet', units='watt/m^2',  &
@@ -451,49 +455,49 @@ contains
 #if (defined DUST)
     call hist_addfld1d (fname='DSTFLXT', units='kg/m2/s',  &
          avgflag='A', long_name='total surface dust emission', &
-         ptr_pft=clm3%g%l%c%p%pdf%flx_mss_vrt_dst_tot, set_lake=0._r8)
+         ptr_pft=clm3%g%l%c%p%pdf%flx_mss_vrt_dst_tot, set_lake=0._r8, set_urb=0._r8)
 
     call hist_addfld1d (fname='DPVLTRB1', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 1', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_1,set_urb=spval)
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_1, set_urb=spval)
 
     call hist_addfld1d (fname='DPVLTRB2', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 2', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_2,set_urb=spval)
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_2, set_urb=spval)
 
     call hist_addfld1d (fname='DPVLTRB3', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 3', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_3,set_urb=spval)
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_3, set_urb=spval)
 
     call hist_addfld1d (fname='DPVLTRB4', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 4', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_4,set_urb=spval)
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_4, set_urb=spval)
 #endif
 
 #if (defined VOC)
     call hist_addfld1d (fname='VOCFLXT', units='uG/M2/H',  &
          avgflag='A', long_name='total VOC flux into atmosphere', &
-         ptr_pft=clm3%g%l%c%p%pvf%vocflx_tot, set_lake=0._r8)
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_tot, set_lake=0._r8, set_urb=0._r8)
 
     call hist_addfld1d (fname='ISOPRENE', units='uG/M2/H',  &
          avgflag='A', long_name='isoprene flux', &
-         ptr_pft=clm3%g%l%c%p%pvf%vocflx_1, set_lake=0._r8)
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_1, set_lake=0._r8, set_urb=0._r8)
 
     call hist_addfld1d (fname='MONOTERP', units='uG/M2/H',  &
          avgflag='A', long_name='monoterpene flux', &
-         ptr_pft=clm3%g%l%c%p%pvf%vocflx_2, set_lake=0._r8)
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_2, set_lake=0._r8, set_urb=0._r8)
 
     call hist_addfld1d (fname='OVOC', units='uG/M2/H',  &
          avgflag='A', long_name='other VOC flux', &
-         ptr_pft=clm3%g%l%c%p%pvf%vocflx_3, set_lake=0._r8)
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_3, set_lake=0._r8, set_urb=0._r8)
 
     call hist_addfld1d (fname='ORVOC', units='uG/M2/H',  &
          avgflag='A', long_name='other reactive VOC flux', &
-         ptr_pft=clm3%g%l%c%p%pvf%vocflx_4, set_lake=0._r8)
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_4, set_lake=0._r8, set_urb=0._r8)
 
     call hist_addfld1d (fname='BIOGENCO', units='uG/M2/H',  &
          avgflag='A', long_name='biogenic CO flux', &
-         ptr_pft=clm3%g%l%c%p%pvf%vocflx_5, set_lake=0._r8)
+         ptr_pft=clm3%g%l%c%p%pvf%vocflx_5, set_lake=0._r8, set_urb=0._r8)
 #endif
 
     ! Hydrology

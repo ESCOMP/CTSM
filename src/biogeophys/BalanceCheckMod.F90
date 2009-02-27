@@ -193,6 +193,8 @@ contains
     integer , pointer :: ltype(:)           ! landunit type 
     integer , pointer :: ctype(:)           ! column type 
     real(r8), pointer :: pwtgcell(:)        ! pft's weight relative to corresponding gridcell
+    real(r8), pointer :: lwtgcell(:)        ! landunit's weight relative to corresponding gridcell
+    integer , pointer :: pcolumn(:)         ! column of corresponding pft
     real(r8), pointer :: forc_rain(:)       ! rain rate [mm/s]
     real(r8), pointer :: forc_snow(:)       ! snow rate [mm/s]
     real(r8), pointer :: forc_lwrad(:)      ! downward infrared (longwave) radiation (W/m**2)
@@ -214,6 +216,10 @@ contains
     real(r8), pointer :: qflx_snwcp_ice(:)  ! excess snowfall due to snow capping (mm H2O /s) [+]`
     real(r8), pointer :: forc_solad(:,:)    ! direct beam radiation (vis=forc_sols , nir=forc_soll )
     real(r8), pointer :: forc_solai(:,:)    ! diffuse radiation     (vis=forc_solsd, nir=forc_solld)
+    real(r8), pointer :: eflx_traffic_pft(:)    ! traffic sensible heat flux (W/m**2)
+    real(r8), pointer :: eflx_wasteheat_pft(:)  ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+    real(r8), pointer :: canyon_hwr(:)      ! ratio of building height to street width
+    real(r8), pointer :: eflx_heat_from_ac_pft(:) !sensible heat flux put back into canyon due to removal by AC (W/m**2)
 !
 ! local pointers to original implicit out arguments
 !
@@ -247,6 +253,8 @@ contains
     ! Assign local pointers to derived type scalar members (landunit-level)
 
     ltype             => clm3%g%l%itype
+    lwtgcell          => clm3%g%l%wtgcell
+    canyon_hwr        => clm3%g%l%canyon_hwr
 
     ! Assign local pointers to derived type scalar members (column-level)
 
@@ -280,6 +288,10 @@ contains
     errseb            => clm3%g%l%c%p%pebal%errseb
     errlon            => clm3%g%l%c%p%pebal%errlon
     netrad            => clm3%g%l%c%p%pef%netrad
+    pcolumn           => clm3%g%l%c%p%column
+    eflx_wasteheat_pft => clm3%g%l%c%p%pef%eflx_wasteheat_pft
+    eflx_heat_from_ac_pft => clm3%g%l%c%p%pef%eflx_heat_from_ac_pft
+    eflx_traffic_pft  => clm3%g%l%c%p%pef%eflx_traffic_pft
 
     ! Get step size and time step
 
@@ -326,8 +338,8 @@ contains
        write(iulog,*)'WARNING:  water balance error ',&
             ' nstep = ',nstep,' indexc= ',indexc,' errh2o= ',errh2o(indexc)
        if ((ctype(indexc) .eq. icol_roof .or. ctype(indexc) .eq. icol_road_imperv .or. &
-            ctype(indexc) .eq. icol_road_perv) .and. abs(errh2o(indexc)) > 1.e-7) then
-          write(iulog,*)'clm urban model is stopping - error is greater than 1.e-7'
+            ctype(indexc) .eq. icol_road_perv) .and. abs(errh2o(indexc)) > 1.e-1 .and. (nstep > 2) ) then
+          write(iulog,*)'clm urban model is stopping - error is greater than 1.e-1'
           write(iulog,*)'nstep = ',nstep,' indexc= ',indexc,' errh2o= ',errh2o(indexc)
           write(iulog,*)'ctype(indexc): ',ctype(indexc)
           write(iulog,*)'forc_rain    = ',forc_rain_col(indexc)
@@ -367,6 +379,7 @@ contains
        if (pwtgcell(p)>0._r8) then
           g = pgridcell(p)
           l = plandunit(p)
+          c = pcolumn(p)
 
           ! Solar radiation energy balance
           ! Do not do this check for an urban pft since it will not balance on a per-column
@@ -401,7 +414,8 @@ contains
           else
              errseb(p) = sabv(p) + sabg(p) &
                          - eflx_lwrad_net(p) &
-                         - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p)
+                         - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p) &
+                         + eflx_wasteheat_pft(p) + eflx_heat_from_ac_pft(p) + eflx_traffic_pft(p)
           end if
           netrad(p) = fsa(p) - eflx_lwrad_net(p)
        end if

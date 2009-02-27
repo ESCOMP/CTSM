@@ -54,10 +54,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="1x1_tropicAtl" maxpft="4"  mask="USGS" fpftdyn="surfdata.pftdyn_1x1pt_tropicAtl_070218.nc"         > null </finidat>
 <finidat hgrid="1x1_tropicAtl" maxpft="17" mask="USGS" fpftdyn="surfdata.pftdyn_1x1pt_tropicAtl_070218.nc"         > null </finidat>
 <!-- empty finidat file for furbinp datasets -->
-<finidat hgrid="1.9x2.5"       maxpft="4"  mask="gx1v5"furbinp="avg_densityclass_1.9x2.5_fluxes_p7_c090116.txt"    > null </finidat>
-<finidat hgrid="1.9x2.5"       maxpft="17" mask="gx1v5"furbinp="avg_densityclass_1.9x2.5_fluxes_p7_c090116.txt"    > null </finidat>
-<finidat hgrid="1.9x2.5"       maxpft="4"  mask="USGS" furbinp="avg_densityclass_1.9x2.5_fluxes_p7_c090116.txt"    > null </finidat>
-<finidat hgrid="1.9x2.5"       maxpft="17" mask="USGS" furbinp="avg_densityclass_1.9x2.5_fluxes_p7_c090116.txt"    > null </finidat>
+<finidat hgrid="1.9x2.5"       maxpft="4"  mask="gx1v5"furbinp="surfdata_0096x0144_090223_v2.nc"    > null </finidat>
+<finidat hgrid="1.9x2.5"       maxpft="17" mask="gx1v5"furbinp="surfdata_0096x0144_090223_v2.nc"    > null </finidat>
+<finidat hgrid="1.9x2.5"       maxpft="4"  mask="USGS" furbinp="surfdata_0096x0144_090223_v2.nc"    > null </finidat>
+<finidat hgrid="1.9x2.5"       maxpft="17" mask="USGS" furbinp="surfdata_0096x0144_090223_v2.nc"    > null </finidat>
 <finidat hgrid="10x15"         maxpft="4"  mask="USGS" furbinp="avg_densityclass_10x15_fluxes_p7_c090116.txt"      > null </finidat>
 <finidat hgrid="10x15"         maxpft="17" mask="USGS" furbinp="avg_densityclass_10x15_fluxes_p7_c090116.txt"      > null </finidat>
 <!-- empty finidat file for fndepdyn datasets -->
@@ -68,6 +68,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="0.47x0.63"     maxpft="17" bgc="cn" fndepdyn="fndep_clm_1890-2100_0.47x0.63_c071213.nc"> null </finidat>
 
 <!-- Initial files at 1.9x2.5 native resolution -->
+
+<finidat hgrid="1.9x2.5"   maxpft="4"  mask="gx1v6" bgc="none" furbinp="surfdata_0096x0144_090223_v2.nc">null</finidat>
+<finidat hgrid="1.9x2.5"   maxpft="4"  mask="gx1v5" bgc="none" furbinp="surfdata_0096x0144_090223_v2.nc">null</finidat>
+
 <finidat hgrid="1.9x2.5"   maxpft="4"  mask="gx1v5" bgc="none" ic_ymd="00330101" ic_tod="0" sim_year="2000">
 lnd/clm2/initdata/clmi.B.0033-01-01_1.9x2.5_gx1v5_simyr2000_c090223.nc
 </finidat>
@@ -182,6 +186,10 @@ lnd/clm2/initdata/clmi.IQ_2008-01-01_1.9x2.5_gx1v5_c081014.nc
 <fsurdat hgrid="1x1_brazil"         >lnd/clm2/surfdata/surfdata_1x1pt_brazil_navy_c081023.nc</fsurdat>
 <fsurdat hgrid="1x1_tropicAtl"      >lnd/clm2/surfdata/surfdata_1x1_tropicAtl__c081126.nc</fsurdat>
 
+<!-- Global urban datasets also need to check if urban dataset is input -->
+<fsurdat hgrid="1.9x2.5" sim_year="2000" furbinp="surfdata_0096x0144_090223_v2.nc">lnd/clm2/surfdata/surfdata_0096x0144_090223_v2.nc</fsurdat>
+<fsurdat hgrid="10x15"                   furbinp="avg_densityclass_10x15_fluxes_p7_c090116.txt">lnd/clm2/surfdata/surfdata_10x15_urban3den_c090114.nc</fsurdat>
+
 <!-- Surface datasets that belong with dynamic land-use change datasets (relative to {csmdata}) -->
 <fsurdat hgrid="10x15"         fpftdyn="surfdata.pftdyn_10x15_USGS_070307.nc"     >lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc
 </fsurdat>
@@ -194,11 +202,6 @@ lnd/clm2/initdata/clmi.IQ_2008-01-01_1.9x2.5_gx1v5_c081014.nc
 <fsurdat hgrid="1x1_mexicocityMEX"   furbinp="mexicocityMEX_fluxes.txt">lnd/clm2/surfdata/surfdata_1x1pt_mexicocity_c070831.nc</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    furbinp="urbanc_alpha_fluxes.txt" >lnd/clm2/surfdata/surfdata_1x1pt_urbanc_alpha_lon0_c080401.nc</fsurdat>
 <fsurdat hgrid="1x1_asphaltjungleNJ" furbinp="asphaltjungle_fluxes.txt">lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
-
-<!-- Global urban datasets also need to check if urban dataset is input -->
-<fsurdat hgrid="1.9x2.5"             furbinp="avg_densityclass_1.9x2.5_fluxes_p7_c090116.txt">lnd/clm2/surfdata/surfdata_1.9x2.5_urban3den_c090114.nc</fsurdat>
-<fsurdat hgrid="10x15"               furbinp="avg_densityclass_10x15_fluxes_p7_c090116.txt">lnd/clm2/surfdata/surfdata_10x15_urban3den_c090114.nc</fsurdat>
-
 
 <!-- Soil carbon datasets (relative to {csmdata}) -->
 <forganic hgrid="360x720"   >lnd/clm2/surfdata/surfdata_360x720__c081210.nc</forganic>
@@ -381,7 +384,7 @@ lnd/clm2/initdata/clmi.IQ_2008-01-01_1.9x2.5_gx1v5_c081014.nc
 <furbinp  hgrid="1x1_asphaltjungleNJ">asphaltjungle_fluxes.txt</furbinp>
 
 <!-- Urban global input datasets (relative to {csmdata}) -->
-<furbinp  hgrid="1.9x2.5">lnd/clm2/urbdata/avg_densityclass_1.9x2.5_fluxes_p7_c090116.txt</furbinp>
+<furbinp  hgrid="1.9x2.5">lnd/clm2/surfdata/surfdata_0096x0144_090223_v2.nc</furbinp>
 <furbinp  hgrid="10x15"  >lnd/clm2/urbdata/avg_densityclass_10x15_fluxes_p7_c090116.txt</furbinp>
 
 <!--CN Nitrogen deposition dataset for a fixed year (relative to {csmdata}) -->

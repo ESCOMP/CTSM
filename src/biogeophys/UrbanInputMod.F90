@@ -313,7 +313,7 @@ contains
        end do
 
        deallocate(arrayl)
-
+       
        if (masterproc) then  
           call relavu (n)
           write(iulog,*)' Sucessfully read urban input data' 

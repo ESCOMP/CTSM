@@ -137,6 +137,10 @@ contains
     real(r8), pointer :: h2osoi_ice(:,:)    ! ice lens (kg/m2) (new)
     real(r8), pointer :: h2osoi_liq(:,:)    ! liquid water (kg/m2) (new)
     real(r8), pointer :: eflx_building_heat(:)   ! heat flux from urban building interior to walls, roof
+    real(r8), pointer :: eflx_traffic_pft(:)    ! traffic sensible heat flux (W/m**2)
+    real(r8), pointer :: eflx_wasteheat_pft(:)  ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+    real(r8), pointer :: eflx_heat_from_ac_pft(:) ! sensible heat flux put back into canyon due to removal by AC (W/m**2)
+    real(r8), pointer :: canyon_hwr(:)      ! ratio of building height to street width (-)
  
 ! local pointers to implicit inout arguments
 !
@@ -190,6 +194,7 @@ contains
     ! Assign local pointers to derived subtypes components (landunit-level)
 
     ltype      => clm3%g%l%itype
+    canyon_hwr     => clm3%g%l%canyon_hwr
 
     ! Assign local pointers to derived subtypes components (column-level)
 
@@ -246,6 +251,9 @@ contains
     qflx_evap_soi  => clm3%g%l%c%p%pwf%qflx_evap_soi
     errsoi_pft     => clm3%g%l%c%p%pebal%errsoi
     wtcol          => clm3%g%l%c%p%wtcol
+    eflx_wasteheat_pft => clm3%g%l%c%p%pef%eflx_wasteheat_pft
+    eflx_heat_from_ac_pft => clm3%g%l%c%p%pef%eflx_heat_from_ac_pft
+    eflx_traffic_pft => clm3%g%l%c%p%pef%eflx_traffic_pft
 
     ! Get step size
 
@@ -365,9 +373,11 @@ contains
 
           eflx_lwrad_del(p) = 4._r8*emg(c)*sb*tssbef(c,j)**3*tinc(c)
           ! Include transpiration term because needed for pervious road
+          ! and wasteheat and traffic flux
           eflx_soil_grnd(p) = sabg(p) + dlrad(p) &
                               - eflx_lwrad_net(p) - eflx_lwrad_del(p) &
-                              - (eflx_sh_grnd(p) + qflx_evap_soi(p)*htvp(c) + qflx_tran_veg(p)*hvap)
+                              - (eflx_sh_grnd(p) + qflx_evap_soi(p)*htvp(c) + qflx_tran_veg(p)*hvap) &
+                              + eflx_wasteheat_pft(p) + eflx_heat_from_ac_pft(p) + eflx_traffic_pft(p)
        end if
 
        ! Total fluxes (vegetation + ground)

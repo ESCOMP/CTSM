@@ -2448,7 +2448,6 @@ contains
        do fl = 1,num_urbanl
           l = filter(nc)%urbanl(fl)
           g = clm3%g%l%gridcell(l)
-
           urban_clump(nc)%canyon_hwr     (fl) = urbinp%canyon_hwr     (g)
           urban_clump(nc)%wtroad_perv    (fl) = urbinp%wtroad_perv    (g)
           urban_clump(nc)%ht_roof        (fl) = urbinp%ht_roof        (g)
@@ -2514,7 +2513,8 @@ contains
     use clm_varcon         , only : cpair, vkc, spval, icol_roof, icol_sunwall, &
                                     icol_shadewall, icol_road_perv, icol_road_imperv, &
                                     grav, pondmx_urban, rpi, rgas, &
-                                    ht_wasteheat_factor, ac_wasteheat_factor
+                                    ht_wasteheat_factor, ac_wasteheat_factor, &
+                                    wasteheat_limit
     use filterMod          , only : filter
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use clm_varpar         , only : maxpatch_urb, nlevurb
@@ -2588,7 +2588,7 @@ contains
     real(r8), pointer :: eflx_traffic(:)        ! traffic sensible heat flux (W/m**2)
     real(r8), pointer :: eflx_traffic_factor(:) ! multiplicative urban traffic factor for sensible heat flux
     real(r8), pointer :: eflx_wasteheat(:)      ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
-    real(r8), pointer :: eflx_anthro(:)         ! total anthropogenic heat flux (W/m**2)
+    real(r8), pointer :: eflx_heat_from_ac(:)   ! sensible heat flux put back into canyon due to removal by AC (W/m**2)
     real(r8), pointer :: t_soisno(:,:)          ! soil temperature (K)
     real(r8), pointer :: eflx_urban_ac(:)     ! urban air conditioning flux (W/m**2)
     real(r8), pointer :: eflx_urban_heat(:)   ! urban heating flux (W/m**2)
@@ -2697,6 +2697,9 @@ contains
     real(r8) :: eflx_wasteheat_roof(lbl:ubl) ! sensible heat flux from urban heating/cooling sources of waste heat for roof (W/m**2)
     real(r8) :: eflx_wasteheat_sunwall(lbl:ubl) ! sensible heat flux from urban heating/cooling sources of waste heat for sunwall (W/m**2)
     real(r8) :: eflx_wasteheat_shadewall(lbl:ubl) ! sensible heat flux from urban heating/cooling sources of waste heat for shadewall (W/m**2)
+    real(r8) :: eflx_heat_from_ac_roof(lbl:ubl) ! sensible heat flux put back into canyon due to heat removal by AC for roof (W/m**2)
+    real(r8) :: eflx_heat_from_ac_sunwall(lbl:ubl) ! sensible heat flux put back into canyon due to heat removal by AC for sunwall (W/m**2)
+    real(r8) :: eflx_heat_from_ac_shadewall(lbl:ubl) ! sensible heat flux put back into canyon due to heat removal by AC for shadewall (W/m**2)
     real(r8) :: eflx(lbl:ubl)                     ! total sensible heat flux for error check (W/m**2)
     real(r8) :: qflx(lbl:ubl)                     ! total water vapor flux for error check (kg/m**2/s)
     real(r8) :: eflx_scale(lbl:ubl)               ! sum of scaled sensible heat fluxes for urban columns for error check (W/m**2)
@@ -2773,7 +2776,7 @@ contains
     eflx_traffic        => clm3%g%l%lef%eflx_traffic
     eflx_traffic_factor => clm3%g%l%lef%eflx_traffic_factor
     eflx_wasteheat      => clm3%g%l%lef%eflx_wasteheat
-    eflx_anthro         => clm3%g%l%lef%eflx_anthro
+    eflx_heat_from_ac   => clm3%g%l%lef%eflx_heat_from_ac
     t_building          => clm3%g%l%lps%t_building
 
     ! Assign local pointers to derived type members (column level)
@@ -3034,12 +3037,19 @@ contains
                  ! unscaled latent heat conductance
                  wtuq_roof(l) = fwet_roof*(1._r8/canyon_resistance(fl))
 
-                 ! domestic heating/cooling
+                 ! wasteheat from heating/cooling
                  if (trim(urban_hac) == urban_wasteheat_on) then
                     eflx_wasteheat_roof(l) = ac_wasteheat_factor * eflx_urban_ac(c) + &
                                              ht_wasteheat_factor * eflx_urban_heat(c)
                  else
                     eflx_wasteheat_roof(l) = 0._r8
+                 end if
+
+                 ! If air conditioning on, always replace heat removed with heat into canyon
+                 if (trim(urban_hac) == urban_hac_on .or. trim(urban_hac) == urban_wasteheat_on) then
+                    eflx_heat_from_ac_roof(l) = abs(eflx_urban_ac(c))
+                 else
+                    eflx_heat_from_ac_roof(l) = 0._r8
                  end if
 
                else if (ctype(c) == icol_road_perv) then
@@ -3103,12 +3113,19 @@ contains
                  ! unscaled latent heat conductance
                  wtuq_sunwall(l) = 0._r8
 
-                 ! domestic heating/cooling
+                 ! wasteheat from heating/cooling
                  if (trim(urban_hac) == urban_wasteheat_on) then
                     eflx_wasteheat_sunwall(l) = ac_wasteheat_factor * eflx_urban_ac(c) + &
                                                 ht_wasteheat_factor * eflx_urban_heat(c)
                  else
                     eflx_wasteheat_sunwall(l) = 0._r8
+                 end if
+
+                 ! If air conditioning on, always replace heat removed with heat into canyon
+                 if (trim(urban_hac) == urban_hac_on .or. trim(urban_hac) == urban_wasteheat_on) then
+                    eflx_heat_from_ac_sunwall(l) = abs(eflx_urban_ac(c))
+                 else
+                    eflx_heat_from_ac_sunwall(l) = 0._r8
                  end if
 
                else if (ctype(c) == icol_shadewall) then
@@ -3123,12 +3140,19 @@ contains
                  ! unscaled latent heat conductance
                  wtuq_shadewall(l) = 0._r8
 
-                 ! domestic heating/cooling
+                 ! wasteheat from heating/cooling
                  if (trim(urban_hac) == urban_wasteheat_on) then
                     eflx_wasteheat_shadewall(l) = ac_wasteheat_factor * eflx_urban_ac(c) + &
                                                   ht_wasteheat_factor * eflx_urban_heat(c)
                  else
                     eflx_wasteheat_shadewall(l) = 0._r8
+                 end if
+
+                 ! If air conditioning on, always replace heat removed with heat into canyon
+                 if (trim(urban_hac) == urban_hac_on .or. trim(urban_hac) == urban_wasteheat_on) then
+                    eflx_heat_from_ac_shadewall(l) = abs(eflx_urban_ac(c))
+                 else
+                    eflx_heat_from_ac_shadewall(l) = 0._r8
                  end if
                else
                  write(iulog,*) 'c, ctype, pi = ', c, ctype(c), pi
@@ -3152,21 +3176,24 @@ contains
          l = filter_urbanl(fl)
          g = lgridcell(l)
 
-         ! Total domestic waste heat is sum of wasteheat for walls and roofs
+         ! Total waste heat and heat from AC is sum of heat for walls and roofs
          ! accounting for different surface areas
          eflx_wasteheat(l) = wtlunit_roof(fl)*eflx_wasteheat_roof(l) + &
             (1._r8-wtlunit_roof(fl))*(canyon_hwr(fl)*(eflx_wasteheat_sunwall(l) + &
             eflx_wasteheat_shadewall(l)))
 
+         ! Limit wasteheat to ensure that we don't get any unrealistically strong 
+         ! positive feedbacks due to AC in a warmer climate
+         eflx_wasteheat(l) = min(eflx_wasteheat(l),wasteheat_limit)
+
+         eflx_heat_from_ac(l) = wtlunit_roof(fl)*eflx_heat_from_ac_roof(l) + &
+            (1._r8-wtlunit_roof(fl))*(canyon_hwr(fl)*(eflx_heat_from_ac_sunwall(l) + &
+            eflx_heat_from_ac_shadewall(l)))
+
          ! Calculate traffic heat flux
-         eflx_traffic(l) = eflx_traffic_factor(l)*traffic_flux(local_secp1_indx(l))
-
-         ! Calculate total anthropogenic heat flux
-         eflx_anthro(l) = eflx_wasteheat(l) + eflx_traffic(l)
-
-         ! Add in domestic and traffic sensible heat flux
-         taf_numer(l) = taf_numer(l) + eflx_traffic(l)/(forc_rho(g)*cpair) + &
-                        eflx_wasteheat(l)/(forc_rho(g)*cpair)
+         ! Only comes from impervious road
+         eflx_traffic(l) = (1._r8-wtlunit_roof(fl))*(1._r8-wtroad_perv(fl))* &
+                           eflx_traffic_factor(l)*traffic_flux(local_secp1_indx(l))
 
          taf(l) = taf_numer(l)/taf_denom(l)
          qaf(l) = qaf_numer(l)/qaf_denom(l)
@@ -3322,7 +3349,7 @@ contains
        g = lgridcell(l)
        eflx(l)       = -(forc_rho(g)*cpair/rahu(l))*(thm_g(l) - taf(l))
        qflx(l)       = -(forc_rho(g)/rawu(l))*(forc_q(g) - qaf(l))
-       eflx_scale(l) = sum(eflx_sh_grnd_scale(pfti(l):pftf(l)))+eflx_traffic(l)+eflx_wasteheat(l)
+       eflx_scale(l) = sum(eflx_sh_grnd_scale(pfti(l):pftf(l)))
        qflx_scale(l) = sum(qflx_evap_soi_scale(pfti(l):pftf(l)))
        eflx_err(l)   = eflx_scale(l) - eflx(l)
        qflx_err(l)   = qflx_scale(l) - qflx(l)

@@ -239,7 +239,6 @@ contains
     do l = begl, endl
        if (ltype(l) == isturb) then
           g = clm3%g%l%gridcell(l)
-
           canyon_hwr(l)         = urbinp%canyon_hwr(g)
           wtroad_perv(l)        = urbinp%wtroad_perv(g)
           ht_roof(l)            = urbinp%ht_roof(g)
@@ -331,6 +330,9 @@ contains
     real(r8), pointer :: t_building(:)         ! internal building temperature (K)
     real(r8), pointer :: eflx_traffic(:)       ! traffic sensible heat flux (W/m**2)
     real(r8), pointer :: eflx_wasteheat(:)     ! sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+    real(r8), pointer :: eflx_wasteheat_pft(:) ! sensible heat flux from urban heating/cooling sources of waste heat at pft level (W/m**2)
+    real(r8), pointer :: eflx_heat_from_ac_pft(:) ! sensible heat flux put back into canyon due to removal by AC (W/m**2)
+    real(r8), pointer :: eflx_traffic_pft(:)   ! sensible heat flux from traffic (W/m**2)
     real(r8), pointer :: eflx_anthro(:)        ! total anthropogenic heat flux (W/m**2)
     real(r8), pointer :: t_ref2m_u(:)          ! Urban 2 m height surface air temperature (Kelvin)
     real(r8), pointer :: t_ref2m_min_u(:)      ! Urban daily minimum of average 2 m height surface air temperature (K)
@@ -364,7 +366,6 @@ contains
     t_building         => clm3%g%l%lps%t_building
     eflx_traffic       => clm3%g%l%lef%eflx_traffic
     eflx_wasteheat     => clm3%g%l%lef%eflx_wasteheat
-    eflx_anthro        => clm3%g%l%lef%eflx_anthro
 
     ! Assign local pointers to derived type members (column level)
 
@@ -385,6 +386,10 @@ contains
     t_ref2m_max_u      => clm3%g%l%c%p%pes%t_ref2m_max_u
     q_ref2m_u          => clm3%g%l%c%p%pes%q_ref2m_u
     plandunit          => clm3%g%l%c%p%landunit
+    eflx_wasteheat_pft => clm3%g%l%c%p%pef%eflx_wasteheat_pft
+    eflx_heat_from_ac_pft => clm3%g%l%c%p%pef%eflx_heat_from_ac_pft
+    eflx_traffic_pft => clm3%g%l%c%p%pef%eflx_traffic_pft
+    eflx_anthro => clm3%g%l%c%p%pef%eflx_anthro
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
@@ -411,7 +416,6 @@ contains
           t_building(l)     = spval
           eflx_traffic(l)   = spval
           eflx_wasteheat(l) = spval
-          eflx_anthro(l)    = spval
        end if
     end do
 
@@ -444,6 +448,10 @@ contains
           t_ref2m_min_u(p) = spval
           t_ref2m_max_u(p) = spval
           q_ref2m_u(p)     = spval
+          eflx_wasteheat_pft(p) = spval
+          eflx_heat_from_ac_pft(p) = spval
+          eflx_traffic_pft(p) = spval
+          eflx_anthro(p)    = spval
        end if
     end do
     

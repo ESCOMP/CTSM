@@ -22,7 +22,7 @@ program mksrfdat
     use creategridMod, only : read_domain,write_domain
     use domainMod   , only : domain_setptrs, domain_type, domain_init
     use mkfileMod   , only : mkfile
-    use mkvarpar    , only : numpft, nlevsoi, nglcec
+    use mkvarpar    , only : numpft, nlevsoi, nglcec, elev_thresh
     use mkvarsur    , only : spval, ldomain
     use mkvarctl
     use areaMod
@@ -93,6 +93,7 @@ program mksrfdat
     real(r8), allocatable  :: pctlak(:,:)          ! percent of grid cell that is lake     
     real(r8), allocatable  :: pctwet(:,:)          ! percent of grid cell that is wetland  
     real(r8), allocatable  :: pcturb(:,:)          ! percent of grid cell that is urbanized
+    real(r8), allocatable  :: elev(:,:)            ! elevation (m)
     real(r8), allocatable  :: fmax(:,:)            ! fractional saturated area
     integer , allocatable  :: soic2d(:,:)          ! soil color                            
     real(r8), allocatable  :: sand3d(:,:,:)        ! soil texture: percent sand            
@@ -222,6 +223,7 @@ program mksrfdat
                pctlak(lsmlon,lsmlat)            , & 
                pctwet(lsmlon,lsmlat)            , & 
                pcturb(lsmlon,lsmlat)            , & 
+               elev(lsmlon,lsmlat)              , & 
                fmax(lsmlon,lsmlat)              , & 
                sand3d(lsmlon,lsmlat,nlevsoi)    , & 
                clay3d(lsmlon,lsmlat,nlevsoi)    , & 
@@ -239,6 +241,7 @@ program mksrfdat
     pctlak(:,:)       = spval
     pctwet(:,:)       = spval
     pcturb(:,:)       = spval
+    elev(:,:)         = spval
     fmax(:,:)         = spval
     sand3d(:,:,:)     = spval
     clay3d(:,:,:)     = spval
@@ -281,6 +284,10 @@ program mksrfdat
     write(6,*) ' timer_a1 init-----'
     call shr_timer_print(t1)
 
+    ! Make elevation [elev] from [ftopo, ffrac] dataset
+    ! Used only to screen pcturb
+
+    call mkelev (lsmlon, lsmlat, mksrf_ftopo, mksrf_ffrac, ndiag, elev, ncid)
 
     ! Make PFTs [pctpft] from dataset [fvegtyp] (1/2 degree PFT data)
 
@@ -334,6 +341,11 @@ program mksrfdat
     ! Make urban fraction [pcturb] from [furban] dataset
 
     call mkurban (lsmlon, lsmlat, mksrf_furban, ndiag, pcturb)
+
+    ! Screen pcturb by elevation threshold
+    where (elev .gt. elev_thresh)
+      pcturb = 0._r8
+    end where
 
     write(6,*) ' timer_g mkurban-----'
     call shr_timer_print(t1)
@@ -614,6 +626,7 @@ program mksrfdat
     call ncd_ioglobal(varname='PCT_PFT'     , data=pctpft      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='FMAX'        , data=fmax        , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='ORGANIC'     , data=organic3d   , ncid=ncid, flag='write')
+    call ncd_ioglobal(varname='ELEVATION'   , data=elev        , ncid=ncid, flag='write')
 
     ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 

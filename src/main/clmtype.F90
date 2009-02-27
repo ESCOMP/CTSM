@@ -590,6 +590,10 @@ type, public :: pft_eflux_type
    real(r8), pointer :: eflx_sh_veg(:)       !sensible heat flux from leaves (W/m**2) [+ to atm]
    real(r8), pointer :: eflx_lh_vege(:)      !veg evaporation heat flux (W/m**2) [+ to atm]
    real(r8), pointer :: eflx_lh_vegt(:)      !veg transpiration heat flux (W/m**2) [+ to atm]
+   real(r8), pointer :: eflx_wasteheat_pft(:) !sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
+   real(r8), pointer :: eflx_heat_from_ac_pft(:) !sensible heat flux put back into canyon due to removal by AC (W/m**2)
+   real(r8), pointer :: eflx_traffic_pft(:)      !traffic sensible heat flux (W/m**2)
+   real(r8), pointer :: eflx_anthro(:)           !total anthropogenic heat flux (W/m**2)
    real(r8), pointer :: cgrnd(:)             !deriv. of soil energy flux wrt to soil temp [w/m2/k]
    real(r8), pointer :: cgrndl(:)            !deriv. of soil latent heat flux wrt soil temp [w/m**2/k]
    real(r8), pointer :: cgrnds(:)            !deriv. of soil sensible heat flux wrt soil temp [w/m2/k]
@@ -1588,7 +1592,7 @@ type, public :: landunit_eflux_type
    real(r8), pointer :: eflx_traffic_factor(:)  ! multiplicative traffic factor for sensible heat flux from urban traffic (-)
    real(r8), pointer :: eflx_traffic(:)         ! traffic sensible heat flux (W/m**2)
    real(r8), pointer :: eflx_wasteheat(:)       ! sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
-   real(r8), pointer :: eflx_anthro(:)          ! total anthropogenic heat flux (W/m**2)
+   real(r8), pointer :: eflx_heat_from_ac(:)    ! sensible heat flux to be put back into canyon due to removal by AC (W/m**2)
 end type landunit_eflux_type
 
 !----------------------------------------------------

@@ -96,6 +96,7 @@ module clm_varcon
   real(r8), parameter :: ac_efficiency_factor = 0.25_r8 !efficiency factor for urban air conditioning (-)
   real(r8) :: ht_wasteheat_factor = 1.0_r8/ht_efficiency_factor  !wasteheat factor for urban heating (-)
   real(r8) :: ac_wasteheat_factor = 1.0_r8/ac_efficiency_factor  !wasteheat factor for urban air conditioning (-)
+  real(r8) :: wasteheat_limit = 40._r8  !limit on wasteheat (W/m2)
   
   !------------------------------------------------------------------
   ! Initialize water type constants

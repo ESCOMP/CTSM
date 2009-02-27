@@ -338,9 +338,18 @@ contains
                end do
              end if
 #else
-             do j = 1, nlevurb
-                t_soisno(c,j) = 274._r8
-             end do
+             if (ctype(c) == icol_road_perv .or. ctype(c) == icol_road_imperv) then 
+               do j = 1, nlevurb
+                 t_soisno(c,j) = 274._r8
+               end do
+             ! Set sunwall, shadewall, roof to fairly high temperature to avoid initialization
+             ! shock from large heating/air conditioning flux
+             else if (ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
+                      .or. ctype(c) == icol_roof) then
+               do j = 1, nlevurb
+                 t_soisno(c,j) = 292._r8
+               end do
+             end if
 #endif
           else
              do j = 1, nlevgrnd
