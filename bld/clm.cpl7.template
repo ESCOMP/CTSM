@@ -51,7 +51,7 @@ set nrevsn = " "
 if ($RUN_TYPE == branch) set nrevsn   = ${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-00000.nc 
 
 set sim_year = '-sim_year 2000'
-if ($CCSM_IPCC == 1870_control       ) set sim_year = '-sim_year 1890'
+if ($CCSM_IPCC == 1870_control       ) set sim_year = '-sim_year 1870'
 if ($CCSM_IPCC == "1870-2000_control") set sim_year = ' '
 
 set config = $CASEBUILD/clmconf/config_cache.xml
