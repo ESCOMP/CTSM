@@ -456,22 +456,18 @@ contains
     call hist_addfld1d (fname='DSTFLXT', units='kg/m2/s',  &
          avgflag='A', long_name='total surface dust emission', &
          ptr_pft=clm3%g%l%c%p%pdf%flx_mss_vrt_dst_tot, set_lake=0._r8, set_urb=0._r8)
-
     call hist_addfld1d (fname='DPVLTRB1', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 1', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_1, set_urb=spval)
-
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_1)
     call hist_addfld1d (fname='DPVLTRB2', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 2', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_2, set_urb=spval)
-
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_2)
     call hist_addfld1d (fname='DPVLTRB3', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 3', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_3, set_urb=spval)
-
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_3)
     call hist_addfld1d (fname='DPVLTRB4', units='m/s',  &
          avgflag='A', long_name='turbulent deposition velocity 4', &
-         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_4, set_urb=spval)
+         ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_4)
 #endif
 
 #if (defined VOC)
