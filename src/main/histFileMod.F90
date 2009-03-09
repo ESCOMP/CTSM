@@ -3747,7 +3747,7 @@ contains
   subroutine hist_addfld2d (fname, type2d, units, avgflag, long_name, type1d_out, &
                         ptr_gcell, ptr_lunit, ptr_col, ptr_pft, ptr_lnd, ptr_atm, &
                         p2c_scale_type, c2l_scale_type, l2g_scale_type, &
-                        set_lake, default)
+                        set_lake, set_urb, set_nourb, set_spec, default)
 !
 ! !DESCRIPTION:
 ! Initialize a single level history field. The pointer, ptrhist,
@@ -3781,6 +3781,9 @@ contains
     real(r8)        , optional, pointer    :: ptr_col(:,:)   ! pointer to column array
     real(r8)        , optional, pointer    :: ptr_pft(:,:)   ! pointer to pft array
     real(r8)        , optional, intent(in) :: set_lake       ! value to set lakes to
+    real(r8)        , optional, intent(in) :: set_urb        ! value to set urban to
+    real(r8)        , optional, intent(in) :: set_nourb      ! value to set non-urban to
+    real(r8)        , optional, intent(in) :: set_spec       ! value to set special to
     character(len=*), optional, intent(in) :: p2c_scale_type ! scale type for subgrid averaging of pfts to column
     character(len=*), optional, intent(in) :: c2l_scale_type ! scale type for subgrid averaging of columns to landunits
     character(len=*), optional, intent(in) :: l2g_scale_type ! scale type for subgrid averaging of landunits to gridcells
@@ -3866,6 +3869,21 @@ contains
              if (clm3%g%l%lakpoi(l)) ptr_lunit(l,:) = set_lake
           end do
        end if
+       if (present(set_urb)) then
+          do l = begl,endl
+             if (clm3%g%l%urbpoi(l)) ptr_lunit(l,:) = set_urb
+          end do
+       end if
+       if (present(set_nourb)) then
+          do l = begl,endl
+             if (.not.(clm3%g%l%urbpoi(l))) ptr_lunit(l,:) = set_nourb
+          end do
+       end if
+       if (present(set_spec)) then
+          do l = begl,endl
+             if (clm3%g%l%ifspecial(l)) ptr_lunit(l,:) = set_spec
+          end do
+       end if
 
     else if (present(ptr_col)) then
        l_type1d = namec
@@ -3877,6 +3895,24 @@ contains
              if (clm3%g%l%lakpoi(l)) ptr_col(c,:) = set_lake
           end do
        end if
+       if (present(set_urb)) then
+          do c = begc,endc
+             l = clm3%g%l%c%landunit(c)
+             if (clm3%g%l%urbpoi(l)) ptr_col(c,:) = set_urb
+          end do
+       end if
+       if (present(set_nourb)) then
+          do c = begc,endc
+             l = clm3%g%l%c%landunit(c)
+             if (.not.(clm3%g%l%urbpoi(l))) ptr_col(c,:) = set_nourb
+          end do
+       end if
+       if (present(set_spec)) then
+          do c = begc,endc
+             l = clm3%g%l%c%landunit(c)
+             if (clm3%g%l%ifspecial(l)) ptr_col(c,:) = set_spec
+          end do
+       end if
 
     else if (present(ptr_pft)) then
        l_type1d = namep
@@ -3886,6 +3922,24 @@ contains
           do p = begp,endp
              l = clm3%g%l%c%p%landunit(p)
              if (clm3%g%l%lakpoi(l)) ptr_pft(p,:) = set_lake
+          end do
+       end if
+       if (present(set_urb)) then
+          do p = begp,endp
+             l = clm3%g%l%c%p%landunit(p)
+             if (clm3%g%l%urbpoi(l)) ptr_pft(p,:) = set_urb
+          end do
+       end if
+       if (present(set_nourb)) then
+          do p = begp,endp
+             l = clm3%g%l%c%p%landunit(p)
+             if (.not.(clm3%g%l%urbpoi(l))) ptr_pft(p,:) = set_nourb
+          end do
+       end if
+       if (present(set_spec)) then
+          do p = begp,endp
+             l = clm3%g%l%c%p%landunit(p)
+             if (clm3%g%l%ifspecial(l)) ptr_pft(p,:) = set_spec
           end do
        end if
 

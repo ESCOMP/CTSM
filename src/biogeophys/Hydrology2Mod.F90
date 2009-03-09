@@ -123,24 +123,16 @@ contains
     real(r8), pointer :: fcov(:)          ! fractional area with water table at surface
     real(r8), pointer :: wa(:)            ! water in the unconfined aquifer (mm)
     real(r8), pointer :: qcharge(:)       ! aquifer recharge rate (mm/s)
-    real(r8), pointer :: smp_l(:,:)             ! soil matrix potential [mm]
-    real(r8), pointer :: dsmpdw_l(:,:)          ! derivative of soil matric potential
-    real(r8), pointer :: hk_l(:,:)              ! hydraulic conductivity (mm/s)
-    real(r8), pointer :: dhkdw_l(:,:)           ! derivative of hydraulic conductivity
-    real(r8), pointer :: dwat_l(:,:)            ! change in volumetric soil water content
-    real(r8), pointer :: qflx_in_soil(:,:)      ! flux of water into soil layer [mm h2o/s]
-    real(r8), pointer :: qflx_out_soil(:,:)     ! flux of water out of soil layer [mm h2o/s]
-    real(r8), pointer :: qflx_tranout_soil(:,:) ! transpiration flux out of soil layer [mm h2o/s]
-    real(r8), pointer :: qflx_rsub_sat(:)       ! soil saturation excess [mm h2o/s]
+    real(r8), pointer :: smp_l(:,:)       ! soil matrix potential [mm]
+    real(r8), pointer :: hk_l(:,:)        ! hydraulic conductivity (mm/s)
+    real(r8), pointer :: qflx_rsub_sat(:) ! soil saturation excess [mm h2o/s]
 !
 ! local pointers to implicit out arguments
 !
     real(r8), pointer :: endwb(:)         ! water mass end of the time step
-    real(r8), pointer :: snowage(:)       ! non dimensional snow age [-]
     real(r8), pointer :: wf(:)            ! soil water as frac. of whc for top 0.5 m
     real(r8), pointer :: snowice(:)       ! average snow ice lens
     real(r8), pointer :: snowliq(:)       ! average snow liquid water
-    real(r8), pointer :: t_snow(:)        ! vertically averaged snow temperature
     real(r8), pointer :: t_grnd(:)        ! ground temperature (Kelvin)
     real(r8), pointer :: t_soisno(:,:)    ! soil temperature (Kelvin)
     real(r8), pointer :: h2osoi_ice(:,:)  ! ice lens (kg/m2)
@@ -235,8 +227,6 @@ contains
     clandunit         => clm3%g%l%c%landunit
     ctype             => clm3%g%l%c%itype
     snl               => clm3%g%l%c%cps%snl
-    snowage           => clm3%g%l%c%cps%snowage
-    t_snow            => clm3%g%l%c%ces%t_snow
     t_grnd            => clm3%g%l%c%ces%t_grnd
     h2ocan            => clm3%g%l%c%cws%pws_a%h2ocan
     h2osno            => clm3%g%l%c%cws%h2osno
@@ -269,13 +259,7 @@ contains
     vwcsat            => clm3%g%l%c%cps%vwcsat
     soilpsi           => clm3%g%l%c%cps%soilpsi
     smp_l             => clm3%g%l%c%cws%smp_l
-    dsmpdw_l          => clm3%g%l%c%cws%dsmpdw_l
     hk_l              => clm3%g%l%c%cws%hk_l
-    dhkdw_l           => clm3%g%l%c%cws%dhkdw_l
-    dwat_l            => clm3%g%l%c%cws%dwat_l
-    qflx_in_soil      => clm3%g%l%c%cwf%qflx_in_soil
-    qflx_out_soil     => clm3%g%l%c%cwf%qflx_out_soil
-    qflx_tranout_soil => clm3%g%l%c%cwf%qflx_tranout_soil
     qflx_rsub_sat     => clm3%g%l%c%cwf%qflx_rsub_sat
     qflx_runoff       => clm3%g%l%c%cwf%qflx_runoff
     qflx_runoff_u     => clm3%g%l%c%cwf%qflx_runoff_u
@@ -380,17 +364,6 @@ contains
 
     end if
 
-    ! Set snow age to zero if no snow
-
-!dir$ concurrent
-!cdir nodep
-    do fc = 1, num_snowc
-       c = filter_snowc(fc)
-       if (snl(c) == 0) then
-          snowage(c) = 0._r8
-       end if
-    end do
-
     ! Set empty snow layers to zero
 
     do j = -nlevsno+1,0
@@ -421,7 +394,6 @@ contains
 !cdir nodep
     do fc = 1, num_snowc
        c = filter_snowc(fc)
-       t_snow(c)  = 0._r8
        snowice(c) = 0._r8
        snowliq(c) = 0._r8
     end do
@@ -429,7 +401,6 @@ contains
 !cdir nodep
     do fc = 1, num_nosnowc
        c = filter_nosnowc(fc)
-       t_snow(c)  = spval
        snowice(c) = spval
        snowliq(c) = spval
     end do
@@ -440,7 +411,6 @@ contains
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
-             t_snow(c)  = t_snow(c) + t_soisno(c,j)
              snowice(c) = snowice(c) + h2osoi_ice(c,j)
              snowliq(c) = snowliq(c) + h2osoi_liq(c,j)
           end if
@@ -456,7 +426,6 @@ contains
        c = filter_nolakec(fc)
        l = clandunit(c)
 
-       if (snl(c) < 0) t_snow(c) = t_snow(c)/abs(snl(c))
        t_grnd(c) = t_soisno(c,snl(c)+1)
 
        if (ityplun(l)==isturb) then
@@ -500,28 +469,12 @@ contains
                           (endwb(c)-begwb(c))/dtime
           fcov(c)       = spval
           qcharge(c)    = spval
-          smp_l(c,:)    = spval
-          dsmpdw_l(c,:) = spval
-          hk_l(c,:)     = spval
-          dhkdw_l(c,:)  = spval
-          dwat_l(c,:)   = spval
-          qflx_in_soil(c,:)      = spval
-          qflx_out_soil(c,:)     = spval
-          qflx_tranout_soil(c,:) = spval
-          qflx_rsub_sat(c)       = spval
+          qflx_rsub_sat(c) = spval
        else if (ityplun(l) == isturb) then
           if (ctype(c) /= icol_road_perv) then
              fcov(c)       = spval
              qcharge(c)    = spval
-             smp_l(c,:)    = spval
-             dsmpdw_l(c,:) = spval
-             hk_l(c,:)     = spval
-             dhkdw_l(c,:)  = spval
-             dwat_l(c,:)   = spval
-             qflx_in_soil(c,:)      = spval
-             qflx_out_soil(c,:)     = spval
-             qflx_tranout_soil(c,:) = spval
-             qflx_rsub_sat(c)       = spval
+             qflx_rsub_sat(c) = spval
           end if
        else if (ityplun(l)==isturb .and. ctype(c) /= icol_road_perv) then 
           fcov(c) = spval

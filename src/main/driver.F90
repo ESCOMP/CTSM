@@ -57,7 +57,6 @@ module driver
 !  -> pft2col             Average from PFT level to column level
 !  -> Hydrology2          surface and soil hydrology
 !  -> Hydrology_Lake      lake hydrology
-!  -> SnowAge             update snow age for surface albedo calcualtion
 !  -> SnowAge_grain       update snow effective grain size for snow radiative transfer
 !  -> BalanceCheck        check for errors in energy and water balances
 !  -> SurfaceAlbedo       albedos for next time step
@@ -115,7 +114,7 @@ module driver
   use CanopyFluxesMod     , only : CanopyFluxes
   use Biogeophysics2Mod   , only : Biogeophysics2
   use BiogeophysicsLakeMod, only : BiogeophysicsLake
-  use SurfaceAlbedoMod    , only : SurfaceAlbedo, Snowage
+  use SurfaceAlbedoMod    , only : SurfaceAlbedo
   use pft2colMod          , only : pft2col
 #if (defined DGVM)
   use DGVMEcosystemDynMod , only : DGVMEcosystemDyn, DGVMRespiration
@@ -509,14 +508,6 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      call t_stopf('hylake')
 
      ! ============================================================================
-     ! Update Snow Age (needed for surface albedo calculation)
-     ! ============================================================================
-
-     call t_startf('snowage')
-     call SnowAge(begc, endc, &
-                  filter(nc)%num_nourbanc, filter(nc)%nourbanc)
-
-     ! ============================================================================
      ! ! Fraction of soil covered by snow (Z.-L. Yang U. Texas)
      ! ============================================================================
 
@@ -536,7 +527,6 @@ subroutine driver1 (doalb, caldayp1, declinp1)
            endif
         end if
      end do
-     call t_stopf('snowage')
 
      ! ============================================================================
      ! Snow aging routine based on Flanner and Zender (2006), Linking snowpack 

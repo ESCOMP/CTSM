@@ -144,8 +144,8 @@ contains
 !
     integer  :: c, j, fc                           !do loop/array indices
     real(r8) :: dtime                              !land model time step (sec)
-    real(r8) :: qin(lbc:ubc)                       !water flow into the elmement (mm/s) (mgf fxm: units apear to be mm)
-    real(r8) :: qout(lbc:ubc)                      !water flow out of the elmement (mm/s) (mgf fxm: units appear to be mm)
+    real(r8) :: qin(lbc:ubc)                       !water flow into the elmement (mm/s) 
+    real(r8) :: qout(lbc:ubc)                      !water flow out of the elmement (mm/s)
     real(r8) :: wgdif                              !ice mass after minus sublimation
     real(r8) :: vol_liq(lbc:ubc,-nlevsno+1:0)      !partial volume of liquid water in layer
     real(r8) :: vol_ice(lbc:ubc,-nlevsno+1:0)      !partial volume of ice lens in layer
@@ -1100,7 +1100,6 @@ contains
              swliq(c,j) = h2osoi_liq(c,j+snl(c))
              tsno(c,j)  = t_soisno(c,j+snl(c))
 
-             !mgf++
              mbc_phi(c,j) = mss_bcphi(c,j+snl(c))
              mbc_pho(c,j) = mss_bcpho(c,j+snl(c))
              moc_phi(c,j) = mss_ocphi(c,j+snl(c))
@@ -1110,7 +1109,6 @@ contains
              mdst3(c,j)   = mss_dst3(c,j+snl(c))
              mdst4(c,j)   = mss_dst4(c,j+snl(c))
              rds(c,j)     = snw_rds(c,j+snl(c))
-             !mgf--
 
           end if
        end do
@@ -1135,7 +1133,6 @@ contains
              swliq(c,2) = swliq(c,1)
              tsno(c,2)  = tsno(c,1)
              
-             !mgf++
              mbc_phi(c,1) = mbc_phi(c,1)/2._r8
              mbc_phi(c,2) = mbc_phi(c,1)
              mbc_pho(c,1) = mbc_pho(c,1)/2._r8
@@ -1153,7 +1150,6 @@ contains
              mdst4(c,1) = mdst4(c,1)/2._r8
              mdst4(c,2) = mdst4(c,1)
              rds(c,2) = rds(c,1)
-             !mgf--
 
           end if
        end if
@@ -1165,7 +1161,6 @@ contains
              zwice = propor*swice(c,1)
              zwliq = propor*swliq(c,1)
 
-             !mgf++
              zmbc_phi = propor*mbc_phi(c,1)
              zmbc_pho = propor*mbc_pho(c,1)
              zmoc_phi = propor*moc_phi(c,1)
@@ -1174,13 +1169,11 @@ contains
              zmdst2 = propor*mdst2(c,1)
              zmdst3 = propor*mdst3(c,1)
              zmdst4 = propor*mdst4(c,1)
-             !mgf--
 
              propor = 0.02_r8/dzsno(c,1)
              swice(c,1) = propor*swice(c,1)
              swliq(c,1) = propor*swliq(c,1)
 
-             !mgf++
              mbc_phi(c,1) = propor*mbc_phi(c,1)
              mbc_pho(c,1) = propor*mbc_pho(c,1)
              moc_phi(c,1) = propor*moc_phi(c,1)
@@ -1189,11 +1182,9 @@ contains
              mdst2(c,1) = propor*mdst2(c,1)
              mdst3(c,1) = propor*mdst3(c,1)
              mdst4(c,1) = propor*mdst4(c,1)
-             !mgf--
 
              dzsno(c,1) = 0.02_r8
 
-             !mgf++
              mbc_phi(c,2) = mbc_phi(c,2)+zmbc_phi  ! (combo)
              mbc_pho(c,2) = mbc_pho(c,2)+zmbc_pho  ! (combo)
              moc_phi(c,2) = moc_phi(c,2)+zmoc_phi  ! (combo)
@@ -1203,7 +1194,6 @@ contains
              mdst3(c,2) = mdst3(c,2)+zmdst3  ! (combo)
              mdst4(c,2) = mdst4(c,2)+zmdst4  ! (combo)
              rds(c,2) = rds(c,1) ! (combo)
-             !mgf--
 
              call Combo (dzsno(c,2), swliq(c,2), swice(c,2), tsno(c,2), drr, &
                   zwliq, zwice, tsno(c,1))
@@ -1225,7 +1215,6 @@ contains
                    tsno(c,2) = tsno(c,2) + dtdz*dzsno(c,2)/2._r8 
                 endif
 
-                !mgf++
                 mbc_phi(c,2) = mbc_phi(c,2)/2._r8
                 mbc_phi(c,3) = mbc_phi(c,2)
                 mbc_pho(c,2) = mbc_pho(c,2)/2._r8
@@ -1243,7 +1232,6 @@ contains
                 mdst4(c,2) = mdst4(c,2)/2._r8
                 mdst4(c,3) = mdst4(c,2)
                 rds(c,3) = rds(c,2)
-                !mgf--
 
              end if
           end if
@@ -1256,7 +1244,6 @@ contains
              zwice = propor*swice(c,2)
              zwliq = propor*swliq(c,2)
              
-             !mgf++
              zmbc_phi = propor*mbc_phi(c,2)
              zmbc_pho = propor*mbc_pho(c,2)
              zmoc_phi = propor*moc_phi(c,2)
@@ -1265,13 +1252,11 @@ contains
              zmdst2 = propor*mdst2(c,2)
              zmdst3 = propor*mdst3(c,2)
              zmdst4 = propor*mdst4(c,2)
-             !mgf--
 
              propor = 0.05_r8/dzsno(c,2)
              swice(c,2) = propor*swice(c,2)
              swliq(c,2) = propor*swliq(c,2)
 
-             !mgf++
              mbc_phi(c,2) = propor*mbc_phi(c,2)
              mbc_pho(c,2) = propor*mbc_pho(c,2)
              moc_phi(c,2) = propor*moc_phi(c,2)
@@ -1280,11 +1265,9 @@ contains
              mdst2(c,2) = propor*mdst2(c,2)
              mdst3(c,2) = propor*mdst3(c,2)
              mdst4(c,2) = propor*mdst4(c,2)
-             !mgf--
 
              dzsno(c,2) = 0.05_r8
 
-             !mgf++
              mbc_phi(c,3) = mbc_phi(c,3)+zmbc_phi  ! (combo)
              mbc_pho(c,3) = mbc_pho(c,3)+zmbc_pho  ! (combo)
              moc_phi(c,3) = moc_phi(c,3)+zmoc_phi  ! (combo)
@@ -1294,7 +1277,6 @@ contains
              mdst3(c,3) = mdst3(c,3)+zmdst3  ! (combo)
              mdst4(c,3) = mdst4(c,3)+zmdst4  ! (combo)
              rds(c,3) = rds(c,2) ! (combo)
-             !mgf--
 
              call Combo (dzsno(c,3), swliq(c,3), swice(c,3), tsno(c,3), drr, &
                   zwliq, zwice, tsno(c,2))
@@ -1316,7 +1298,6 @@ contains
                    tsno(c,3) = tsno(c,3) + dtdz*dzsno(c,3)/2._r8 
                 endif
                 
-                !mgf++
                 mbc_phi(c,3) = mbc_phi(c,3)/2._r8
                 mbc_phi(c,4) = mbc_phi(c,3)
                 mbc_pho(c,3) = mbc_pho(c,3)/2._r8
@@ -1334,7 +1315,6 @@ contains
                 mdst4(c,3) = mdst4(c,3)/2._r8
                 mdst4(c,4) = mdst4(c,3)
                 rds(c,4) = rds(c,3)
-                !mgf--
 
              end if
           end if
@@ -1347,7 +1327,6 @@ contains
              zwice = propor*swice(c,3)
              zwliq = propor*swliq(c,3)
              
-             !mgf++
              zmbc_phi = propor*mbc_phi(c,3)
              zmbc_pho = propor*mbc_pho(c,3)
              zmoc_phi = propor*moc_phi(c,3)
@@ -1356,13 +1335,11 @@ contains
              zmdst2 = propor*mdst2(c,3)
              zmdst3 = propor*mdst3(c,3)
              zmdst4 = propor*mdst4(c,3)
-             !mgf--
 
              propor = 0.11_r8/dzsno(c,3)
              swice(c,3) = propor*swice(c,3)
              swliq(c,3) = propor*swliq(c,3)
 
-             !mgf++
              mbc_phi(c,3) = propor*mbc_phi(c,3)
              mbc_pho(c,3) = propor*mbc_pho(c,3)
              moc_phi(c,3) = propor*moc_phi(c,3)
@@ -1371,11 +1348,9 @@ contains
              mdst2(c,3) = propor*mdst2(c,3)
              mdst3(c,3) = propor*mdst3(c,3)
              mdst4(c,3) = propor*mdst4(c,3)
-             !mgf--
 
              dzsno(c,3) = 0.11_r8
 
-             !mgf++
              mbc_phi(c,4) = mbc_phi(c,4)+zmbc_phi  ! (combo)
              mbc_pho(c,4) = mbc_pho(c,4)+zmbc_pho  ! (combo)
              moc_phi(c,4) = moc_phi(c,4)+zmoc_phi  ! (combo)
@@ -1385,7 +1360,6 @@ contains
              mdst3(c,4) = mdst3(c,4)+zmdst3  ! (combo)
              mdst4(c,4) = mdst4(c,4)+zmdst4  ! (combo)
              rds(c,4) = rds(c,3) ! (combo)
-             !mgf--
 
              call Combo (dzsno(c,4), swliq(c,4), swice(c,4), tsno(c,4), drr, &
                   zwliq, zwice, tsno(c,3))
@@ -1407,7 +1381,6 @@ contains
                    tsno(c,4) = tsno(c,4) + dtdz*dzsno(c,4)/2._r8 
                 endif
 
-                !mgf++
                 mbc_phi(c,4) = mbc_phi(c,4)/2._r8
                 mbc_phi(c,5) = mbc_phi(c,4)
                 mbc_pho(c,4) = mbc_pho(c,4)/2._r8
@@ -1425,7 +1398,6 @@ contains
                 mdst4(c,4) = mdst4(c,4)/2._r8
                 mdst4(c,5) = mdst4(c,4)
                 rds(c,5) = rds(c,4)
-                !mgf--
 
              end if
           end if
@@ -1438,7 +1410,6 @@ contains
              zwice = propor*swice(c,4)
              zwliq = propor*swliq(c,4)
              
-             !mgf++
              zmbc_phi = propor*mbc_phi(c,4)
              zmbc_pho = propor*mbc_pho(c,4)
              zmoc_phi = propor*moc_phi(c,4)
@@ -1447,13 +1418,11 @@ contains
              zmdst2 = propor*mdst2(c,4)
              zmdst3 = propor*mdst3(c,4)
              zmdst4 = propor*mdst4(c,4)
-             !mgf--
 
              propor = 0.23_r8/dzsno(c,4)
              swice(c,4) = propor*swice(c,4)
              swliq(c,4) = propor*swliq(c,4)
 
-             !mgf++
              mbc_phi(c,4) = propor*mbc_phi(c,4)
              mbc_pho(c,4) = propor*mbc_pho(c,4)
              moc_phi(c,4) = propor*moc_phi(c,4)
@@ -1462,11 +1431,9 @@ contains
              mdst2(c,4) = propor*mdst2(c,4)
              mdst3(c,4) = propor*mdst3(c,4)
              mdst4(c,4) = propor*mdst4(c,4)
-             !mgf--
 
              dzsno(c,4) = 0.23_r8
 
-             !mgf++
              mbc_phi(c,5) = mbc_phi(c,5)+zmbc_phi  ! (combo)
              mbc_pho(c,5) = mbc_pho(c,5)+zmbc_pho  ! (combo)
              moc_phi(c,5) = moc_phi(c,5)+zmoc_phi  ! (combo)
@@ -1476,7 +1443,6 @@ contains
              mdst3(c,5) = mdst3(c,5)+zmdst3  ! (combo)
              mdst4(c,5) = mdst4(c,5)+zmdst4  ! (combo)
              rds(c,5) = rds(c,4) ! (combo)
-             !mgf--
 
              call Combo (dzsno(c,5), swliq(c,5), swice(c,5), tsno(c,5), drr, &
                   zwliq, zwice, tsno(c,4))
@@ -1498,7 +1464,6 @@ contains
              h2osoi_liq(c,j) = swliq(c,j-snl(c))
              t_soisno(c,j)   = tsno(c,j-snl(c))
 
-             !mgf++
              mss_bcphi(c,j)   = mbc_phi(c,j-snl(c))
              mss_bcpho(c,j)   = mbc_pho(c,j-snl(c))
              mss_ocphi(c,j)   = moc_phi(c,j-snl(c))
@@ -1508,7 +1473,6 @@ contains
              mss_dst3(c,j)    = mdst3(c,j-snl(c))
              mss_dst4(c,j)    = mdst4(c,j-snl(c))
              snw_rds(c,j)     = rds(c,j-snl(c))
-             !mgf--
 
           end if
        end do

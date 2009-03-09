@@ -203,21 +203,6 @@ contains
        end if
     end if
 
-    ! column water state variable - snowage
-
-    if (flag == 'define') then
-       call ncd_defvar(ncid=ncid, varname='SNOWAGE', xtype=nf_double,  &
-            dim1name='column', &
-            long_name='snow age', units='unitless')
-    else if (flag == 'read' .or. flag == 'write') then
-       call ncd_iolocal(varname='SNOWAGE', data=cptr%cps%snowage, &
-            dim1name=namec, &
-            ncid=ncid, flag=flag, readvar=readvar)
-       if (flag == 'read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
-       end if
-    end if
-
     ! column water state variable - wa
 
     if (flag == 'define') then
@@ -1385,9 +1370,9 @@ contains
        end if
     endif
 
-    !mgf variables needed for SNICAR
+    ! variables needed for SNICAR
     !
-    !mgf: column type physical state variable - snw_rds
+    ! column type physical state variable - snw_rds
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='snw_rds', xtype=nf_double,  &
             dim1name='column', dim2name='levsno', &
@@ -1429,7 +1414,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - mss_bcpho
+    ! column type physical state variable - mss_bcpho
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_bcpho', xtype=nf_double,  &
             dim1name='column', dim2name='levsno', &
@@ -1450,7 +1435,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - mss_bcphi
+    ! column type physical state variable - mss_bcphi
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_bcphi', xtype=nf_double,  &
             dim1name='column', dim2name='levsno', &
@@ -1471,7 +1456,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - mss_ocpho
+    ! column type physical state variable - mss_ocpho
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_ocpho', xtype=nf_double,  &
             dim1name='column', dim2name='levsno', &
@@ -1492,7 +1477,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - mss_ocphi
+    ! column type physical state variable - mss_ocphi
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_ocphi', xtype=nf_double,  &
             dim1name='column', dim2name='levsno', &
@@ -1513,7 +1498,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - mss_dst1
+    ! column type physical state variable - mss_dst1
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_dst1', xtype=nf_double,  &
             dim1name='column', dim2name='levsno', &
@@ -1534,7 +1519,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - mss_dst2
+    ! column type physical state variable - mss_dst2
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_dst2', xtype=nf_double,  &
             dim1name='column', dim2name='levsno', &
@@ -1555,7 +1540,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - mss_dst3
+    ! column type physical state variable - mss_dst3
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_dst3', xtype=nf_double,  &
             dim1name='column', dim2name='levsno', &
@@ -1576,7 +1561,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - mss_dst4
+    ! column type physical state variable - mss_dst4
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='mss_dst4', xtype=nf_double,  &
             dim1name='column', dim2name='levsno', &
@@ -1597,7 +1582,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - flx_absdv
+    ! column type physical state variable - flx_absdv
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='flx_absdv', xtype=nf_double,  &
             dim1name='column', dim2name='levsno1', &
@@ -1613,7 +1598,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - flx_absdn
+    ! column type physical state variable - flx_absdn
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='flx_absdn', xtype=nf_double,  &
             dim1name='column', dim2name='levsno1', &
@@ -1629,7 +1614,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - flx_absiv
+    ! column type physical state variable - flx_absiv
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='flx_absiv', xtype=nf_double,  &
             dim1name='column', dim2name='levsno1', &
@@ -1645,7 +1630,7 @@ contains
        end if
     end if
 
-    !mgf: column type physical state variable - flx_absin
+    ! column type physical state variable - flx_absin
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='flx_absin', xtype=nf_double,  &
             dim1name='column', dim2name='levsno1', &
@@ -1661,7 +1646,7 @@ contains
        end if
     end if
 
-    !mgf column type physical state variable - albsnd_hst
+    ! column type physical state variable - albsnd_hst
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albsnd_hst', xtype=nf_double,  &
             dim1name='column', dim2name='numrad', &
@@ -1675,7 +1660,7 @@ contains
        end if
     end if
 
-    !mgf column type physical state variable - albsni_hst
+    ! column type physical state variable - albsni_hst
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='albsni_hst', xtype=nf_double,  &
             dim1name='column', dim2name='numrad', &
@@ -1689,7 +1674,7 @@ contains
        end if
     end if
 
-    !mgf: column type water flux variable - qflx_snofrz_lyr
+    ! column type water flux variable - qflx_snofrz_lyr
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='qflx_snofrz_lyr', xtype=nf_double,  &
             dim1name='column', dim2name='levsno', &
@@ -1710,7 +1695,7 @@ contains
        end if
     end if
 
-    !mgf: initialize other variables that are derived from those
+    ! initialize other variables that are derived from those
     ! stored in the restart buffer. (there may be a more appropriate
     ! place to do this, but functionally this works)
    if (flag == 'read' ) then
@@ -1743,7 +1728,7 @@ contains
           enddo
        enddo
     endif
-    !mgf-- SNICAR variables
+    !-- SNICAR variables
 
 
   end subroutine BiogeophysRest

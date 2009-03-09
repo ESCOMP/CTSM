@@ -137,10 +137,6 @@ contains
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()
 
-    call ncd_iolocal(varname='SNOWAGE', data=cptr%cps%snowage, dim1name=nameg, &
-         ncid=ncid, flag='read', readvar=readvar)
-    if (.not. readvar) call endrun()
-
     call ncd_iolocal(varname='SNLSNO', data=cptr%cps%snl, dim1name=nameg, &
          ncid=ncid, flag='read', readvar=readvar)
     if (.not. readvar) call endrun()

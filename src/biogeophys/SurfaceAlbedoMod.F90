@@ -23,10 +23,8 @@ module SurfaceAlbedoMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: SurfaceAlbedo  ! Surface albedo and two-stream fluxes
-  public :: SnowAge        ! Update snow age
 !
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: SnowAlbedo    ! Determine snow albedos
   private :: SoilAlbedo    ! Determine ground surface albedo
   private :: TwoStream     ! Two-stream fluxes for canopy radiative transfer
 !
@@ -57,8 +55,8 @@ contains
 ! The calling sequence is:
 ! -> SurfaceAlbedo:   albedos for next time step
 !    -> SoilAlbedo:   soil/lake/glacier/wetland albedos
-!    -> SnowAlbedo:   snow albedos: direct beam (SNICAR)
-!    -> SnowAlbedo:   snow albedos: diffuse (SNICAR)
+!    -> SNICAR_RT:   snow albedos: direct beam (SNICAR)
+!    -> SNICAR_RT:   snow albedos: diffuse (SNICAR)
 !    -> TwoStream:    absorbed, reflected, transmitted solar fluxes (vis dir,vis dif, nir dir, nir dif)
 !
 
@@ -91,7 +89,7 @@ contains
 ! 8/20/03, Mariana Vertenstein: Vectorized routine
 ! 11/3/03, Peter Thornton: added decl(c) output for use in CN code.
 ! 03/28/08, Mark Flanner: added SNICAR, which required reversing the
-!  order of calls to SnowAlbedo and SoilAlbedo and the location where
+!  order of calls to SNICAR_RT and SoilAlbedo and the location where
 !  ground albedo is calculated
 !
 ! !LOCAL VARIABLES:
@@ -109,7 +107,6 @@ contains
     real(r8), pointer :: elai(:)      ! one-sided leaf area index with burying by snow
     real(r8), pointer :: esai(:)      ! one-sided stem area index with burying by snow
     real(r8), pointer :: h2osno(:)    ! snow water (mm H2O)
-    real(r8), pointer :: snowage(:)   ! non dimensional snow age [-]
     real(r8), pointer :: rhol(:,:)    ! leaf reflectance: 1=vis, 2=nir
     real(r8), pointer :: rhos(:,:)    ! stem reflectance: 1=vis, 2=nir
     real(r8), pointer :: taul(:,:)    ! leaf transmittance: 1=vis, 2=nir
@@ -225,7 +222,6 @@ contains
 
     cgridcell      => clm3%g%l%c%gridcell
     h2osno         => clm3%g%l%c%cws%h2osno
-    snowage        => clm3%g%l%c%cps%snowage
     albgrd         => clm3%g%l%c%cps%albgrd
     albgri         => clm3%g%l%c%cps%albgri
     decl           => clm3%g%l%c%cps%decl 
@@ -365,7 +361,7 @@ contains
     end do
     if (num_solar <= 0._r8) return
 
-    ! Switched order of SoilAlbedo and SnowAlbedo calls, 
+    ! SoilAlbedo called before SNICAR_RT
     ! so that reflectance of soil beneath snow column is known 
     ! ahead of time for snow RT calculation.
 
@@ -523,7 +519,7 @@ contains
           c = filter_nourbanc(fc)
           if (coszen(c) > 0._r8) then
              ! ground albedo was originally computed in SoilAlbedo, but is now computed here
-             ! because the order of SoilAlbedo and SnowAlbedo was switched for SNICAR.
+             ! because the order of SoilAlbedo and SNICAR_RT was switched for SNICAR.
              albgrd(c,ib) = albsod(c,ib)*(1._r8-frac_sno(c)) + albsnd(c,ib)*frac_sno(c)
              albgri(c,ib) = albsoi(c,ib)*(1._r8-frac_sno(c)) + albsni(c,ib)*frac_sno(c)
 
@@ -653,106 +649,6 @@ contains
 
   end subroutine SurfaceAlbedo
 
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: SnowAlbedo
-!
-! !INTERFACE:
-  subroutine SnowAlbedo (lbc, ubc, num_nourbanc, filter_nourbanc, coszen, ind, alb)
-!
-! !DESCRIPTION:
-! Determine snow albedos
-!
-! !USES:
-    use clmtype
-!
-! !ARGUMENTS:
-    implicit none
-    integer , intent(in) :: lbc, ubc                   ! column bounds
-    integer , intent(in) :: num_nourbanc               ! number of columns in non-urban points in column filter
-    integer , intent(in) :: filter_nourbanc(ubc-lbc+1) ! column filter for non-urban points
-    real(r8), intent(in) :: coszen(lbc:ubc)            ! cosine solar zenith angle for next time step
-    integer , intent(in) :: ind                        ! 0=direct beam, 1=diffuse radiation
-    real(r8), intent(out):: alb(lbc:ubc,2)             ! snow albedo by waveband (assume 2 wavebands)
-!
-! !CALLED FROM:
-! subroutine SurfaceAlbedo in this module
-!
-! !REVISION HISTORY:
-! Author: Gordon Bonan
-! 2/5/02, Peter Thornton: Migrated to new data structures. Eliminated
-! reference to derived types in this subroutine, and made consistent use
-! of the assumption that numrad = 2, with index values: 1=visible,2=NIR
-! 8/20/03, Mariana Vertenstein: Vectorized routine
-!
-!
-! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    real(r8), pointer :: h2osno(:)    ! snow water (mm H2O)
-    real(r8), pointer :: snowage(:)   ! non dimensional snow age [-]
-!
-!EOP
-!
-! !OTHER LOCAL VARIABLES:
-!
-! variables and constants for snow albedo calculation
-!
-    real(r8), parameter :: snal0 = 0.95_r8 ! vis albedo of new snow for sza<60
-    real(r8), parameter :: snal1 = 0.65_r8 ! nir albedo of new snow for sza<60
-    real(r8), parameter :: cons  = 0.2_r8  ! constant for visible snow albedo calculation [-]
-    real(r8), parameter :: conn  = 0.5_r8  ! constant for nir snow albedo calculation [-]
-    real(r8), parameter :: sl    = 2.0_r8  ! factor that helps control alb zenith dependence [-]
-    integer  :: fc                         ! non-urban filter column index
-    integer  :: c                          ! index
-    real(r8) :: age                        ! factor to reduce visible snow alb due to snow age [-]
-    real(r8) :: albs                       ! temporary vis snow albedo
-    real(r8) :: albl                       ! temporary nir snow albedo
-    real(r8) :: cff                        ! snow alb correction factor for zenith angle > 60 [-]
-    real(r8) :: czf                        ! solar zenith correction for new snow albedo [-]
-!-----------------------------------------------------------------------
-
-    ! Assign local pointers to derived subtypes components (column-level)
-
-    h2osno  => clm3%g%l%c%cws%h2osno
-    snowage => clm3%g%l%c%cps%snowage
-
-    ! this code assumes that numrad = 2 , with the following
-    ! index values: 1 = visible, 2 = NIR
-
-    ! Albedo for snow cover.
-    ! Snow albedo depends on snow-age, zenith angle, and thickness of snow,
-    ! age gives reduction of visible radiation
-    ! age below is correction for snow age
-    ! czf below corrects albedo of new snow for solar zenith
-
-!dir$ concurrent
-!cdir nodep
-    do fc = 1,num_nourbanc
-       c = filter_nourbanc(fc)
-       if (coszen(c) > 0._r8 .and. h2osno(c) > 0._r8) then
-          age = 1._r8-1._r8/(1._r8+snowage(c))
-          albs = snal0*(1._r8-cons*age)
-          albl = snal1*(1._r8-conn*age)
-          if (ind == 0) then
-             cff  = ((1._r8+1._r8/sl)/(1._r8+max(0.001_r8, coszen(c))*2._r8*sl )- 1._r8/sl)
-             cff  = max(cff, 0._r8)
-             czf  = 0.4_r8 * cff * (1._r8-albs)
-             albs = albs + czf
-             czf  = 0.4_r8 *cff * (1._r8-albl)
-             albl = albl + czf
-          end if
-          alb(c,1) = albs
-          alb(c,2) = albl
-       else
-          alb(c,1) = 0._r8
-          alb(c,2) = 0._r8
-       end if
-    end do
-
-  end subroutine SnowAlbedo
 
 !-----------------------------------------------------------------------
 !BOP
@@ -877,8 +773,8 @@ contains
                 albsoi(c,ib) = albsod(c,ib)
              end if
 
-             ! Weighting is now done in SurfaceAlbedo, after the call to SnowAlbedo
-             ! This had to be done, because SoilAlbedo is now called before SnowAlbedo, so at
+             ! Weighting is done in SurfaceAlbedo, after the call to SNICAR_RT
+             ! This had to be done, because SoilAlbedo is called before SNICAR_RT, so at
              ! this point, snow albedo is not yet known.
           end if
        end do
@@ -1168,100 +1064,5 @@ contains
     end do   ! end of radiation band loop
 
   end subroutine TwoStream
-
-!-----------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: SnowAge
-!
-! !INTERFACE:
-!
-  subroutine SnowAge (lbc, ubc, num_nourbanc, filter_nourbanc)
-!
-! !DESCRIPTION:
-! Updates snow age Based on BATS code.
-!
-! !USES:
-    use clmtype
-    use clm_varcon, only : tfrz
-    use clm_time_manager, only : get_step_size
-!
-! !ARGUMENTS:
-    implicit none
-    integer , intent(in) :: lbc, ubc                   ! column bounds
-    integer , intent(in) :: num_nourbanc               ! number of columns in non-urban points in column filter
-    integer , intent(in) :: filter_nourbanc(ubc-lbc+1) ! column filter for non-urban points
-!
-! !CALLED FROM:
-!
-! !REVISION HISTORY:
-! Original Code:  Robert Dickinson
-! 15 September 1999: Yongjiu Dai; Integration of code into CLM
-! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
-! 3/4/02, Peter Thornton: Migrated to new data structures.
-! 8/20/03, Mariana Vertenstein: Vectorized routine
-!
-! !LOCAL VARIABLES:
-!
-! local pointers to implicit in arguments
-!
-    real(r8), pointer :: t_grnd(:)     ! ground temperature (Kelvin)
-    real(r8), pointer :: h2osno(:)     ! snow water (mm H2O)
-    real(r8), pointer :: h2osno_old(:) ! snow mass for previous time step (kg/m2)
-!
-! local pointers to implicit inout arguments
-!
-    real(r8), pointer :: snow_age(:)   ! non dimensional snow age [-]
-!
-!EOP
-!
-! !OTHER LOCAL VARIABLES:
-!
-    integer  :: fc    ! non-urban filter column index
-    integer  :: c     ! index
-    real(r8) :: age1  ! snow aging factor due to crystal growth [-]
-    real(r8) :: age2  ! snow aging factor due to surface growth [-]
-    real(r8) :: age3  ! snow aging factor due to accum of other particles [-]
-    real(r8) :: arg   ! temporary variable used in snow age calculation [-]
-    real(r8) :: arg2  ! temporary variable used in snow age calculation [-]
-    real(r8) :: dela  ! temporary variable used in snow age calculation [-]
-    real(r8) :: dels  ! temporary variable used in snow age calculation [-]
-    real(r8) :: sge   ! temporary variable used in snow age calculation [-]
-    real(r8) :: dtime ! land model time step (sec)
-!-----------------------------------------------------------------------
-
-   ! Assign local pointers to derived type members (column-level)
-
-    snow_age   => clm3%g%l%c%cps%snowage
-    t_grnd     => clm3%g%l%c%ces%t_grnd
-    h2osno     => clm3%g%l%c%cws%h2osno
-    h2osno_old => clm3%g%l%c%cws%h2osno_old
-
-    ! Determine snow age
-
-    dtime = get_step_size()
-
-!dir$ concurrent
-!cdir nodep
-    do fc = 1,num_nourbanc
-       c = filter_nourbanc(fc)
-       if (h2osno(c) <= 0._r8) then
-          snow_age(c) = 0._r8
-       else if (h2osno(c) > 800._r8) then       ! Over Antarctica
-          snow_age(c) = 0._r8
-       else                                  ! Away from Antarctica
-          age3 = 0.3_r8
-          arg  = 5.e3_r8*(1._r8/tfrz-1._r8/t_grnd(c))
-          arg2 = min(0._r8, 10._r8*arg)
-          age2 = exp(arg2)
-          age1 = exp(arg)
-          dela = 1.e-6_r8 * dtime * (age1+age2+age3)
-          dels = 0.1_r8*max(0.0_r8,  h2osno(c)-h2osno_old(c))
-          sge  = (snow_age(c)+dela) * (1.0_r8-dels)
-          snow_age(c) = max(0.0_r8, sge)
-       end if
-    end do
-
-  end subroutine SnowAge
 
 end module SurfaceAlbedoMod

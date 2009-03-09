@@ -1380,9 +1380,7 @@ contains
     allocate(pes%t_ref2m_max_inst_r(beg:end))
     allocate(pes%q_ref2m_u(beg:end))
     allocate(pes%q_ref2m_r(beg:end))
-#if (defined CLAMP)
     allocate(pes%rh_ref2m(beg:end))
-#endif
     allocate(pes%t_veg(beg:end))
     allocate(pes%thm(beg:end))
 
@@ -1404,9 +1402,7 @@ contains
     pes%t_ref2m_max_inst_r(beg:end) = nan
     pes%q_ref2m_u(beg:end) = nan
     pes%q_ref2m_r(beg:end) = nan
-#if (defined CLAMP)
     pes%rh_ref2m(beg:end) = nan
-#endif
     pes%t_veg(beg:end) = nan
     pes%thm(beg:end) = nan
 
@@ -2468,7 +2464,6 @@ contains
     allocate(cps%mbl_bsn_fct(beg:end))
     allocate(cps%do_capsnow(beg:end))
     allocate(cps%snowdp(beg:end))
-    allocate(cps%snowage(beg:end))
     allocate(cps%frac_sno (beg:end))
     allocate(cps%zi(beg:end,-nlevsno+0:nlevgrnd))
     allocate(cps%dz(beg:end,-nlevsno+1:nlevgrnd))
@@ -2575,7 +2570,6 @@ contains
     cps%mbl_bsn_fct(beg:end) = nan
     cps%do_capsnow (beg:end)= .false.
     cps%snowdp(beg:end) = nan
-    cps%snowage(beg:end) = nan
     cps%frac_sno(beg:end) = nan
     cps%zi(beg:end,-nlevsno+0:nlevgrnd) = nan
     cps%dz(beg:end,-nlevsno+1:nlevgrnd) = nan
@@ -2691,7 +2685,6 @@ contains
     allocate(ces%t_soisno(beg:end,-nlevsno+1:nlevgrnd))
     allocate(ces%t_lake(beg:end,1:nlevlak))
     allocate(ces%tssbef(beg:end,-nlevsno+1:nlevgrnd))
-    allocate(ces%t_snow(beg:end))
     allocate(ces%thv(beg:end))
     allocate(ces%hc_soi(beg:end))
     allocate(ces%hc_soisno(beg:end))
@@ -2703,7 +2696,6 @@ contains
     ces%t_soisno(beg:end,-nlevsno+1:nlevgrnd) = spval
     ces%t_lake(beg:end,1:nlevlak)            = nan
     ces%tssbef(beg:end,-nlevsno+1:nlevgrnd)   = nan
-    ces%t_snow(beg:end)    = nan
     ces%thv(beg:end)       = nan
     ces%hc_soi(beg:end)    = nan
     ces%hc_soisno(beg:end) = nan
@@ -2751,10 +2743,7 @@ contains
     allocate(cws%wt(beg:end))
     allocate(cws%qcharge(beg:end))
     allocate(cws%smp_l(beg:end,1:nlevgrnd))
-    allocate(cws%dsmpdw_l(beg:end,1:nlevgrnd))
     allocate(cws%hk_l(beg:end,1:nlevgrnd))
-    allocate(cws%dhkdw_l(beg:end,1:nlevgrnd))
-    allocate(cws%dwat_l(beg:end,1:nlevgrnd))
 
     cws%h2osno(beg:end) = nan
     cws%h2osoi_liq(beg:end,-nlevsno+1:nlevgrnd)= spval
@@ -2774,10 +2763,7 @@ contains
     cws%wt(beg:end) = nan
     cws%qcharge(beg:end) = nan
     cws%smp_l(beg:end,1:nlevgrnd) = spval
-    cws%dsmpdw_l(beg:end,1:nlevgrnd) = spval
     cws%hk_l(beg:end,1:nlevgrnd) = spval
-    cws%dhkdw_l(beg:end,1:nlevgrnd) = spval
-    cws%dwat_l(beg:end,1:nlevgrnd) = spval
 
   end subroutine init_column_wstate_type
 
@@ -2977,9 +2963,6 @@ contains
     allocate(cwf%qflx_runoff_r(beg:end))
     allocate(cwf%qmelt(beg:end))
     allocate(cwf%h2ocan_loss(beg:end))
-    allocate(cwf%qflx_in_soil(beg:end,1:nlevgrnd))
-    allocate(cwf%qflx_out_soil(beg:end,1:nlevgrnd))
-    allocate(cwf%qflx_tranout_soil(beg:end,1:nlevgrnd))
     allocate(cwf%qflx_rsub_sat(beg:end))
     allocate(cwf%flx_bc_dep_dry(beg:end))
     allocate(cwf%flx_bc_dep_wet(beg:end))
@@ -3013,9 +2996,6 @@ contains
     cwf%qflx_runoff_r(beg:end) = nan
     cwf%qmelt(beg:end) = nan
     cwf%h2ocan_loss(beg:end) = nan
-    cwf%qflx_in_soil(beg:end,1:nlevgrnd) = spval
-    cwf%qflx_out_soil(beg:end,1:nlevgrnd) = spval
-    cwf%qflx_tranout_soil(beg:end,1:nlevgrnd) = spval
     cwf%qflx_rsub_sat(beg:end) = nan
     cwf%flx_bc_dep_dry(beg:end) = nan
     cwf%flx_bc_dep_wet(beg:end) = nan

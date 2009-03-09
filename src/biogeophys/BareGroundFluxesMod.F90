@@ -49,9 +49,7 @@ contains
     use clm_varcon         , only : cpair, vkc, grav, denice, denh2o, hvap, istsoil
     use shr_const_mod      , only : SHR_CONST_RGAS
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
-#if (defined CLAMP)
     use QSatMod            , only : QSat
-#endif
 !
 ! !ARGUMENTS:
     implicit none
@@ -132,9 +130,7 @@ contains
     real(r8), pointer :: q_ref2m(:)       ! 2 m height surface specific humidity (kg/kg)
     real(r8), pointer :: t_ref2m_r(:)     ! Rural 2 m height surface air temperature (Kelvin)
     real(r8), pointer :: q_ref2m_r(:)     ! Rural 2 m height surface specific humidity (kg/kg)
-#if (defined CLAMP)
     real(r8), pointer :: rh_ref2m(:)      ! 2 m height surface relative humidity (%)
-#endif
     real(r8), pointer :: t_veg(:)         ! vegetation temperature (Kelvin)
     real(r8), pointer :: btran(:)         ! transpiration wetness factor (0 to 1)
     real(r8), pointer :: rssun(:)         ! sunlit stomatal resistance (s/m)
@@ -182,12 +178,10 @@ contains
     real(r8) :: z0mg_pft(lbp:ubp)
     real(r8) :: z0hg_pft(lbp:ubp)
     real(r8) :: z0qg_pft(lbp:ubp)
-#if (defined CLAMP)
     real(r8) :: e_ref2m                ! 2 m height surface saturated vapor pressure [Pa]
     real(r8) :: de2mdT                 ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
     real(r8) :: qsat_ref2m             ! 2 m height surface saturated specific humidity [kg/kg]
     real(r8) :: dqsat2mdT              ! derivative of 2 m height surface saturated specific humidity on t_ref2m 
-#endif
     real(r8) :: www                    ! surface soil wetness [-]
 !------------------------------------------------------------------------------
 
@@ -246,9 +240,7 @@ contains
     t_ref2m_r => clm3%g%l%c%p%pes%t_ref2m_r
     q_ref2m_r => clm3%g%l%c%p%pes%q_ref2m_r
     plandunit => clm3%g%l%c%p%landunit
-#if (defined CLAMP)
     rh_ref2m => clm3%g%l%c%p%pes%rh_ref2m
-#endif
     t_veg => clm3%g%l%c%p%pes%t_veg
     thm => clm3%g%l%c%p%pes%thm
     btran => clm3%g%l%c%p%pps%btran
@@ -415,12 +407,10 @@ contains
          t_ref2m_r(p) = t_ref2m(p)
        end if
 
-#if (defined CLAMP)
        ! 2 m height relative humidity
                                                                                 
        call QSat(t_ref2m(p), forc_pbot(g), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
        rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
-#endif
 
        ! Variables needed by history tape
 

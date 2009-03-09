@@ -1,4 +1,151 @@
 ===============================================================
+Tag name:  clm3_6_23
+Originator(s):  oleson (Oleson Keith 1332 CGD)
+Date:  Sun Mar  8 17:24:36 MDT 2009
+One-line Summary: Prune history fields and change to snowdp threshold for solar radiation penetration into snow
+
+Purpose of changes:  Eliminate history fields no longer needed and eliminate any associated code with these fields.  
+                     Change snowdp threshold for solar radiation penetration into snow from 0.05 to 0.10.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID): 990 (illegal instruction)
+                                  883 (aerosol deposition not from atm), 877 (CN restart problem)
+                                  903 (problems in driver with open-MP on PGI)
+                                  672 (3.5.4-3.5.14 diffs), 862 (360x720 res problem)
+                                  851 (abort when files non-exist on jaguar)
+                                  821 (mksurfdata for qtr deg), 789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange), 722 (threading slow)
+                                  701 (svn keyword), 698 (cprnc bug gives false difference)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: Not tested
+
+Code reviewed by: dlawren, slevis, oleson
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+M      models/lnd/clm/src/main/inicFileMod.F90 ---- Remove snowage
+M      models/lnd/clm/src/main/driver.F90 ---- Remove snowage
+M      models/lnd/clm/src/main/clmtypeInitMod.F90 ---- Remove snowage, t_snow, dsmpdw_l, dhkdw_l, dwat_l, qflx_in_soil,
+              qflx_out_soil, qflx_tranout_soil, remove CLAMP cpps around rh_ref2m
+M      models/lnd/clm/src/main/histFileMod.F90 ---- add set_urb, set_nourb, set_spec to hist_addfld2d
+M      models/lnd/clm/src/main/clmtype.F90 ---- Remove snowage, t_snow, dsmpdw_l, dhkdw_l, dwat_l, qflx_in_soil,
+              qflx_out_soil, qflx_tranout_soil, remove CLAMP cpps around rh_ref2m
+M      models/lnd/clm/src/main/histFldsMod.F90 ---- Remove SNOWAGE, change TBUILD to active, change HCSOISNO to HC,
+              remove TSNOW, remove CLAMP cpps around rh_ref2m, change BUILDHEAT, URBAN_AC, URBAN_HEAT, WASTEHEAT,
+              HEAT_FROM_AC to active, remove ZBOT_PFT, change FGR long_name, remove HWR, change RSSUN and RSSHA to
+              minimum quantity and make inactive, change DPVLTRB[1-4] to inactive, remove DSMPDW, DHKDW, DWAT,
+              QFLX_OUT_SOIL, QFLX_IN_SOIL, QFLX_TRAN_SOIL, QFLX_RSUB_SAT, set SMP and HK to set_spec=spval and 
+              inactive, change QRGWL and QRUNOFF long_name, change DVOLRDT_LND, DVOLRDT_LND_*, DVOLRDT_OCN,
+              DVOLRDT_OCN_* to inactive, remove FMICR, FCO2, DMI, add set_urb=spval to numerous SNICAR fields
+M      models/lnd/clm/src/main/mkarbinitMod.F90 ---- Remove snowage
+M      models/lnd/clm/src/biogeophys/SurfaceRadiationMod.F90 ---- Change maximum snow depth for vertical solar 
+              absorption from 0.0 5 to 0.1 to prevent unrealistic soil warming at shallow snow depths
+M      models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90 ----  Remove some comments
+M      models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90 ---- Removed SnowAlbedo routine, which is no longer used 
+              and removed snowage variable which is also no longer used
+M      models/lnd/clm/src/biogeophys/Hydrology1Mod.F90 ---- Remove snowage
+M      models/lnd/clm/src/biogeophys/Hydrology2Mod.F90 ---- Remove snowage, t_snow, dsmpdw_l, dhkdw_l, dwat_l,
+              qflx_in_soil, qflx_out_soil, qflx_tranout_soil
+M      models/lnd/clm/src/biogeophys/BiogeophysicsLakeMod.F90 ---- Remove CLAMP cpps around rh_ref2m and 
+              related variables
+M      models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 ---- Remove snowage and some comments
+M      models/lnd/clm/src/biogeophys/SoilHydrologyMod.F90 ---- Remove variables and calculations for 
+              dsmpdw_l, dhkdw_l, dwat_l, qflx_in_soil, qflx_out_soil, qflx_tranout_soil
+M      models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90 ---- Remove CLAMP cpps around rh_ref2m and
+              related variables
+M      models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90 ----  Remove CLAMP cpps around rh_ref2m and 
+              related variables
+
+Summary of testing:
+
+  bluefire: All PASS except:
+009 blA91 TBL.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -6 arb_ic ..........................FAIL! rc= 7
+012 blD91 TBL.sh _persc_dh clm_per 19981231:NONE:1200 4x5 gx3v5 144 startup .....................FAIL! rc= 7
+019 blE91 TBL.sh 4p_vodsrsc_dh clm_std 19981230:NONE:1800 4x5 gx3v5 48 arb_ic ...................FAIL! rc= 7
+024 blF92 TBL.sh 17p_vodsrsc_dm clm_std 19981230:NONE:1800 4x5 gx3v5 48 cold ....................FAIL! rc= 7
+028 blF93 TBL.sh 17p_vodsrsc_do clm_std 19981230:NONE:1800 4x5 gx3v5 48 cold ....................FAIL! rc= 7
+032 blEH1 TBL.sh 4p_vodsrsc_dh clm_std 19981231:NONE:3600 1.9x2.5^0.9x1.25 USGS 48 arb_ic .......FAIL! rc= 7
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+036 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 4
+037 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ...................FAIL! rc= 10
+038 smCA4 TSM.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 10
+039 erCA4 TER.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ......FAIL! rc= 5
+040 brCA4 TBR.sh _sc_ds clm_urb^nl_urb_br 19981001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic ...FAIL! rc= 5
+041 blCA4 TBL.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 4
+042 smCA8 TSM.sh _sc_ds clm_urb^nl_urb 19971230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 10
+043 blCA8 TBL.sh _sc_ds clm_urb^nl_urb 19971230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 4
+044 smNB4 TSM.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 10
+045 erNB4 TER.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 59+100 arb_icFAIL! rc= 5
+046 brNB4 TBR.sh _mexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arb_FAIL! rc= 5
+047 blNB4 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 4
+048 smC61 TSM.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v5 -6 cold .................FAIL! rc= 10
+049 erC61 TER.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v5 10+38 cold ..............FAIL! rc= 5
+050 brC61 TBR.sh _sc_dh clm_urb^nl_urb_br 19981001:NONE:1800 1.9x2.5 gx1v5 -3+-3 cold ...........FAIL! rc= 5
+051 blC61 TBL.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v5 48 cold .................FAIL! rc= 4
+052 smH51 TSM.sh 17p_cnnsc_dh clm_std std 19980115:NONE:1800 10x15 USGS@1890 96 arb_ic ..........FAIL! rc= 1
+053 erH51 TER.sh 17p_cnnsc_dh clm_std std 19980115:NONE:1800 10x15 USGS@1890 10+38 arb_ic .......FAIL! rc= 1
+054 brH51 TBR.sh 17p_cnnsc_dh clm_std std 19980115:NONE:1800 10x15 USGS@1890 72+72 arb_ic .......FAIL! rc= 1
+055 blH51 TBL.sh 17p_cnnsc_dh clm_std std 19980115:NONE:1800 10x15 USGS@1890 48 arb_ic ..........FAIL! rc= 1
+057 smLI1 TSM.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+058 erLI1 TER.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+059 brLI1 TBR.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+060 blLI1 TBL.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 4
+072 blJ61 TBL.sh 4p_casasc_dh clm_std 19981230:NONE:1800 1.9x2.5 gx1v5 48 startup ...............FAIL! rc= 7
+081 blK91 TBL.sh 10p_dgvmsc_dh clm_std 19981230:NONE:1800 4x5 gx3v5 48 arb_ic ...................FAIL! rc= 7
+096 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+097 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+099 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
+099 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 6
+100 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 6
+
+Baseline tests fail because of snowdp change in SurfaceRadiationMod.F90.
+The other tests failed in clm3_6_19 as well.
+Urban tests will continue to fail until testing suite is updated to reflect the fact that urban data is now
+read in from netcdf files instead of ascii files.
+mksurfdata tests not run because of bug that makes these tests run very slow.
+
+  jaguar:
+  kraken:
+  lightning/pathscale:
+  bangkok/lf95:
+  breeze/gale/hail/gust/ifort:
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_20
+
+Changes answers relative to baseline: yes (because of snowdp change but should have small effects)
+
+===============================================================
+===============================================================
+Tag name:  clm3_6_22
+Originator(s): kauff
+Date:
+One-line Summary: replace 1870 finidat file <plus other changes TBD?>
+
+Purpose of changes:
+
+Describe any changes made to the namelist: None
+- replace finidat file for 1870 runs (can't be same as 2000 run)
+  caused 1870 runs only to fail
+
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+
+===============================================================
 Tag name:  clm3_6_21
 Originator(s):  oleson (Oleson Keith 1332 CGD)
 Date:  Wed Mar  4 20:14:23 MST 2009

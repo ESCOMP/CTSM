@@ -108,7 +108,6 @@ contains
 ! local pointers to original implicit inout arrays
 !
     integer , pointer :: snl(:)            ! number of snow layers
-    real(r8), pointer :: snowage(:)        ! non dimensional snow age [-]
     real(r8), pointer :: snowdp(:)         ! snow height (m)
     real(r8), pointer :: h2osno(:)         ! snow water (mm H2O)
     real(r8), pointer :: h2ocan(:)         ! total canopy water (mm H2O)
@@ -198,7 +197,6 @@ contains
     t_grnd             => clm3%g%l%c%ces%t_grnd
     snl                => clm3%g%l%c%cps%snl
     snowdp             => clm3%g%l%c%cps%snowdp
-    snowage            => clm3%g%l%c%cps%snowage
     h2osno             => clm3%g%l%c%cws%h2osno
     zi                 => clm3%g%l%c%cps%zi
     dz                 => clm3%g%l%c%cps%dz
@@ -405,7 +403,6 @@ contains
        if (ltype(l)==istwet .and. t_grnd(c)>tfrz) then
           h2osno(c)=0._r8
           snowdp(c)=0._r8
-          snowage(c)=0._r8
        end if
 
        ! When the snow accumulation exceeds 10 mm, initialize snow layer
@@ -419,7 +416,6 @@ contains
           dz(c,0) = snowdp(c)                       ! meter
           z(c,0) = -0.5_r8*dz(c,0)
           zi(c,-1) = -dz(c,0)
-          snowage(c) = 0._r8                        ! snow age
           t_soisno(c,0) = min(tfrz, forc_t(g))      ! K
           h2osoi_ice(c,0) = h2osno(c)               ! kg/m2
           h2osoi_liq(c,0) = 0._r8                   ! kg/m2

@@ -434,9 +434,7 @@ type, public :: pft_estate_type
    real(r8), pointer :: t_ref2m_max_inst_r(:) !Rural instantaneous daily max of average 2 m height surface air temp (K)
    real(r8), pointer :: q_ref2m_u(:)          !Urban 2 m height surface specific humidity (kg/kg)
    real(r8), pointer :: q_ref2m_r(:)          !Rural 2 m height surface specific humidity (kg/kg)
-#if (defined CLAMP)
    real(r8), pointer :: rh_ref2m(:)           !2 m height surface relative humidity (%)
-#endif
    real(r8), pointer :: t_veg(:)              !vegetation temperature (Kelvin)
    real(r8), pointer :: thm(:)                !intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
 end type pft_estate_type
@@ -991,7 +989,6 @@ type, public :: column_pstate_type
    real(r8), pointer :: mbl_bsn_fct(:)        !??
    logical , pointer :: do_capsnow(:)         !true => do snow capping
    real(r8), pointer :: snowdp(:)             !snow height (m)
-   real(r8), pointer :: snowage(:)            !non dimensional snow age [-] (new)
    real(r8), pointer :: frac_sno(:)           !fraction of ground covered by snow (0 to 1)
    real(r8), pointer :: zi(:,:)               !interface level below a "z" level (m) (-nlevsno+0:nlevgrnd) 
    real(r8), pointer :: dz(:,:)               !layer thickness (m)  (-nlevsno+1:nlevgrnd) 
@@ -1093,7 +1090,6 @@ type, public :: column_estate_type
    real(r8), pointer :: t_soisno(:,:)         !soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd) 
    real(r8), pointer :: t_lake(:,:)           !lake temperature (Kelvin)  (1:nlevlak)          
    real(r8), pointer :: tssbef(:,:)           !soil/snow temperature before update (-nlevsno+1:nlevgrnd) 
-   real(r8), pointer :: t_snow(:)             !vertically averaged snow temperature
    real(r8), pointer :: thv(:)                !virtual potential temperature (kelvin)
    real(r8), pointer :: hc_soi(:)             !soil heat content (MJ/m2)
    real(r8), pointer :: hc_soisno(:)          !soil plus snow heat content (MJ/m2)
@@ -1122,10 +1118,7 @@ type, public :: column_wstate_type
    real(r8), pointer :: wt(:)                 !total water storage (unsaturated soil water + groundwater) (mm)
    real(r8), pointer :: qcharge(:)            !aquifer recharge rate (mm/s)
    real(r8), pointer :: smp_l(:,:)            !soil matric potential (mm)
-   real(r8), pointer :: dsmpdw_l(:,:)         !derivative of soil matric potential
    real(r8), pointer :: hk_l(:,:)             !hydraulic conductivity (mm/s)
-   real(r8), pointer :: dhkdw_l(:,:)          !derivative of hydraulic conductivity
-   real(r8), pointer :: dwat_l(:,:)           !change in volumetric soil water content
 end type column_wstate_type
 
 !----------------------------------------------------
@@ -1245,9 +1238,6 @@ type, public :: column_wflux_type
    real(r8), pointer :: qflx_runoff_r(:)! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
    real(r8), pointer :: qmelt(:) 	! snow melt [mm/s]
    real(r8), pointer :: h2ocan_loss(:)  ! mass balance correction term for dynamic weights
-   real(r8), pointer :: qflx_in_soil(:,:)  !liquid water flux into soil layer [mm/s]
-   real(r8), pointer :: qflx_out_soil(:,:) !liquid water flux out of soil layer [mm/s]
-   real(r8), pointer :: qflx_tranout_soil(:,:) !transpiration flux out of soil layer [mm/s]
    real(r8), pointer :: qflx_rsub_sat(:)    ! soil saturation excess [mm/s]
    real(r8), pointer :: flx_bc_dep_dry(:)   ! dry (BCPHO+BCPHI) BC deposition on ground (positive definite) (col) [kg/s]
    real(r8), pointer :: flx_bc_dep_wet(:)   ! wet (BCPHI) BC deposition on ground (positive definite) (col) [kg/s]

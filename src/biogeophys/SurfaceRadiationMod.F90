@@ -289,9 +289,7 @@ contains
      fsun          => clm3%g%l%c%p%pps%fsun
      sabg          => clm3%g%l%c%p%pef%sabg
      sabv          => clm3%g%l%c%p%pef%sabv
-!DML
      snowdp        => clm3%g%l%c%cps%snowdp
-!DML
      fsa           => clm3%g%l%c%p%pef%fsa
      fsr           => clm3%g%l%c%p%pef%fsr
      parsun        => clm3%g%l%c%p%pef%parsun
@@ -634,8 +632,10 @@ contains
                     sabg_lyr(p,snl(c)+2) = sabg(p)*0.25_r8
                  endif
               endif
-!DML
-              if (snowdp(c) < 0.05_r8) then
+
+              ! If shallow snow depth, all solar radiation absorbed in top or top two snow layers
+              ! to prevent unrealistic timestep soil warming 
+              if (snowdp(c) < 0.10_r8) then
                  if (snl(c) == 0) then
                     sabg_lyr(p,-4:0) = 0._r8
                     sabg_lyr(p,1) = sabg(p)
@@ -649,7 +649,7 @@ contains
                     sabg_lyr(p,snl(c)+2) = sabg(p)*0.25_r8
                  endif
               endif
-!DML
+
            endif
 
            ! This situation should not happen:

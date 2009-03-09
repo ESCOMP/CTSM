@@ -16,7 +16,7 @@ contains
 ! !DESCRIPTION:
 ! Initializes the following time varying variables:
 ! water      : h2osno, h2ocan, h2osoi_liq, h2osoi_ice, h2osoi_vol
-! snow       : snowdp, snowage, snl, dz, z, zi
+! snow       : snowdp, snl, dz, z, zi
 ! temperature: t_soisno, t_veg, t_grnd
 !
 ! !USES:
@@ -85,7 +85,6 @@ contains
     real(r8), pointer :: h2ocan_pft(:)      ! canopy water (mm H2O) (pft-level)
     real(r8), pointer :: h2osno(:)          ! snow water (mm H2O)
     real(r8), pointer :: snowdp(:)          ! snow height (m)
-    real(r8), pointer :: snowage(:)         ! non dimensional snow age [-] (new)
     real(r8), pointer :: eflx_lwrad_out(:)  ! emitted infrared (longwave) radiation (W/m**2)
     real(r8), pointer :: soilpsi(:,:)       ! soil water potential in each soil layer (MPa)
     real(r8), pointer :: snw_rds(:,:)       ! effective snow grain radius (col,lyr) [microns, m^-6]
@@ -158,7 +157,6 @@ contains
     h2osoi_liq       => clm3%g%l%c%cws%h2osoi_liq
     h2osoi_vol       => clm3%g%l%c%cws%h2osoi_vol
     h2ocan_col       => clm3%g%l%c%cws%pws_a%h2ocan
-    snowage          => clm3%g%l%c%cps%snowage
     snowdp           => clm3%g%l%c%cps%snowdp
     h2osno           => clm3%g%l%c%cws%h2osno
     t_soisno         => clm3%g%l%c%ces%t_soisno
@@ -212,7 +210,7 @@ contains
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
-    ! NOTE: h2ocan, h2osno, snowdp and snowage has valid values everywhere
+    ! NOTE: h2ocan, h2osno, and snowdp has valid values everywhere
     ! canopy water (pft level)
 
     do p = begp, endp
@@ -246,10 +244,6 @@ contains
        ! snow depth
 
        snowdp(c)  = h2osno(c) / bdsno
-
-       ! snow age
-
-       snowage(c) = 0._r8
 
     end do
 

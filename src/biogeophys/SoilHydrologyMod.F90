@@ -453,13 +453,7 @@ contains
 !
     real(r8), pointer :: rootr_col(:,:)       ! effective fraction of roots in each soil layer
     real(r8), pointer :: smp_l(:,:)             ! soil matrix potential [mm]
-    real(r8), pointer :: dsmpdw_l(:,:)          ! derivative of soil matric potential
     real(r8), pointer :: hk_l(:,:)              ! hydraulic conductivity (mm/s)
-    real(r8), pointer :: dhkdw_l(:,:)           ! derivative of hydraulic conductivity
-    real(r8), pointer :: dwat_l(:,:)            ! change in volumetric soil water content
-    real(r8), pointer :: qflx_in_soil(:,:)      ! flux of water into soil layer [mm h2o/s]
-    real(r8), pointer :: qflx_out_soil(:,:)     ! flux of water out of soil layer [mm h2o/s]
-    real(r8), pointer :: qflx_tranout_soil(:,:) ! transpiration flux out of soil layer [mm h2o/s]
 !
 !EOP
 !
@@ -528,13 +522,7 @@ contains
     qflx_tran_veg_col => clm3%g%l%c%cwf%pwf_a%qflx_tran_veg
     pfti              => clm3%g%l%c%pfti
     smp_l             => clm3%g%l%c%cws%smp_l
-    dsmpdw_l          => clm3%g%l%c%cws%dsmpdw_l
     hk_l              => clm3%g%l%c%cws%hk_l
-    dhkdw_l           => clm3%g%l%c%cws%dhkdw_l
-    dwat_l            => clm3%g%l%c%cws%dwat_l
-    qflx_in_soil      => clm3%g%l%c%cwf%qflx_in_soil
-    qflx_out_soil     => clm3%g%l%c%cwf%qflx_out_soil
-    qflx_tranout_soil => clm3%g%l%c%cwf%qflx_tranout_soil
 
     ! Assign local pointers to derived type members (pft-level)
 
@@ -713,9 +701,7 @@ contains
           dsmpdw(c,j) = -bsw(c,j)*smp(c,j)/(s_node*watsat(c,j))
 
           smp_l(c,j) = smp(c,j)
-          dsmpdw_l(c,j) = dsmpdw(c,j)
           hk_l(c,j) = hk(c,j)
-          dhkdw_l(c,j) = dhkdw(c,j)
 
        end do
     end do
@@ -904,48 +890,6 @@ contains
           !scs: if water table is below soil column, compute qcharge from dwat2(11)
           qcharge(c) = dwat2(c,nlevsoi+1)*dzmm(c,nlevsoi+1)/dtime
        endif
-    end do
-
-    ! Renew the mass of liquid water
-
-    do j= 1,nlevsoi
-!dir$ concurrent
-!cdir nodep
-       do fc = 1,num_hydrologyc
-          c = filter_hydrologyc(fc)
-          dwat_l(c,j) = dwat(c,j)
-       end do
-    end do
-
-    ! Calculate soil water fluxes
-
-    do j= 1,nlevsoi
-!dir$ concurrent
-       do fc = 1,num_hydrologyc
-          c = filter_hydrologyc(fc)
-          if (j == 1) then
-             qflx_in_soil(c,j) = -qin(c,j)
-             qflx_out_soil(c,j) = - qout(c,j) - dqodw1(c,j)*dwat(c,j) - &
-                                  dqodw2(c,j)*dwat(c,j+1)
-          else if (j >= 2 .and. j <= nlevsoi-1) then
-             qflx_in_soil(c,j) = -qin(c,j) - dqidw0(c,j)*dwat(c,j-1) - &
-                                 dqidw1(c,j)*dwat(c,j)
-             qflx_out_soil(c,j) = -qout(c,j) - dqodw1(c,j)*dwat(c,j) - &
-                                  dqodw2(c,j)*dwat(c,j+1)
-          else
-             if(j > jwt(c)) then !water table is in soil column
-                qflx_in_soil(c,j) = -qin(c,j) - dqidw0(c,j)*dwat(c,j-1) - &
-                                    dqidw1(c,j)*dwat(c,j)
-                qflx_out_soil(c,j) = -qout(c,j) - dqodw1(c,j)*dwat(c,j)
-             else
-                qflx_in_soil(c,j) = -qin(c,j) - dqidw0(c,j)*dwat(c,j-1) - &
-                                    dqidw1(c,j)*dwat(c,j)
-                qflx_out_soil(c,j) = -qout(c,j) - dqodw1(c,j)*dwat(c,j) - &
-                                     dqodw2(c,j)*dwat2(c,j+1)
-             end if
-          end if
-          qflx_tranout_soil(c,j) = qflx_tran_veg_col(c)*rootr_col(c,j)
-       end do
     end do
 
   end subroutine SoilWater

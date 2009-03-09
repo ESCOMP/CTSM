@@ -180,9 +180,7 @@ contains
    real(r8), pointer :: q_ref2m(:)     ! 2 m height surface specific humidity (kg/kg)
    real(r8), pointer :: t_ref2m_r(:)   ! Rural 2 m height surface air temperature (Kelvin)
    real(r8), pointer :: q_ref2m_r(:)   ! Rural 2 m height surface specific humidity (kg/kg)
-#if (defined CLAMP)
    real(r8), pointer :: rh_ref2m(:)    ! 2 m height surface relative humidity (%)
-#endif
    real(r8), pointer :: h2ocan(:)      ! canopy water (mm H2O)
    real(r8), pointer :: cisun(:)       !sunlit intracellular CO2 (Pa)
    real(r8), pointer :: cisha(:)       !shaded intracellular CO2 (Pa)
@@ -286,12 +284,10 @@ contains
    real(r8) :: deldT                 ! derivative of "el" on "t_veg" [pa/K]
    real(r8) :: qsatl(lbp:ubp)        ! leaf specific humidity [kg/kg]
    real(r8) :: qsatldT(lbp:ubp)      ! derivative of "qsatl" on "t_veg"
-#if (defined CLAMP)
    real(r8) :: e_ref2m               ! 2 m height surface saturated vapor pressure [Pa]
    real(r8) :: de2mdT                ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
    real(r8) :: qsat_ref2m            ! 2 m height surface saturated specific humidity [kg/kg]
    real(r8) :: dqsat2mdT             ! derivative of 2 m height surface saturated specific humidity on t_ref2m
-#endif
    real(r8) :: air(lbp:ubp),bir(lbp:ubp),cir(lbp:ubp)  ! atmos. radiation temporay set
    real(r8) :: dc1,dc2               ! derivative of energy flux [W/m2/K]
    real(r8) :: delt                  ! temporary
@@ -452,9 +448,7 @@ contains
    q_ref2m        => clm3%g%l%c%p%pes%q_ref2m
    t_ref2m_r      => clm3%g%l%c%p%pes%t_ref2m_r
    q_ref2m_r      => clm3%g%l%c%p%pes%q_ref2m_r
-#if (defined CLAMP)
    rh_ref2m       => clm3%g%l%c%p%pes%rh_ref2m
-#endif
    dlrad          => clm3%g%l%c%p%pef%dlrad
    ulrad          => clm3%g%l%c%p%pef%ulrad
    cgrnds         => clm3%g%l%c%p%pef%cgrnds
@@ -956,12 +950,10 @@ contains
       q_ref2m(p) = forc_q(g) + temp2(p)*dqh(p)*(1._r8/temp22m(p) - 1._r8/temp2(p))
       q_ref2m_r(p) = q_ref2m(p)
 
-#if (defined CLAMP)
       ! 2 m height relative humidity
 
       call QSat(t_ref2m(p), forc_pbot(g), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
       rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
-#endif
 
       ! Downward longwave radiation below the canopy
 

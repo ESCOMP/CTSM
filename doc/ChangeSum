@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_23       oleson 03/08/2009 Prune history fields and change to snowdp threshold for solar radiation penetration into snow
    clm3_6_21       oleson 03/04/2009 History file changes and finish testing on tags clm3_6_19 and clm3_6_20
    clm3_6_19       oleson 02/27/2009 Changes to urban model and urban surface data
    clm3_6_17       oleson 02/26/2009 Urban model changes and mksurfdata changes to incorporate urban data
