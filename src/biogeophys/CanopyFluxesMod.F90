@@ -179,8 +179,8 @@ contains
    real(r8), pointer :: t_ref2m(:)     ! 2 m height surface air temperature (Kelvin)
    real(r8), pointer :: q_ref2m(:)     ! 2 m height surface specific humidity (kg/kg)
    real(r8), pointer :: t_ref2m_r(:)   ! Rural 2 m height surface air temperature (Kelvin)
-   real(r8), pointer :: q_ref2m_r(:)   ! Rural 2 m height surface specific humidity (kg/kg)
    real(r8), pointer :: rh_ref2m(:)    ! 2 m height surface relative humidity (%)
+   real(r8), pointer :: rh_ref2m_r(:)  ! Rural 2 m height surface relative humidity (%)
    real(r8), pointer :: h2ocan(:)      ! canopy water (mm H2O)
    real(r8), pointer :: cisun(:)       !sunlit intracellular CO2 (Pa)
    real(r8), pointer :: cisha(:)       !shaded intracellular CO2 (Pa)
@@ -447,7 +447,7 @@ contains
    t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
    q_ref2m        => clm3%g%l%c%p%pes%q_ref2m
    t_ref2m_r      => clm3%g%l%c%p%pes%t_ref2m_r
-   q_ref2m_r      => clm3%g%l%c%p%pes%q_ref2m_r
+   rh_ref2m_r     => clm3%g%l%c%p%pes%rh_ref2m_r
    rh_ref2m       => clm3%g%l%c%p%pes%rh_ref2m
    dlrad          => clm3%g%l%c%p%pef%dlrad
    ulrad          => clm3%g%l%c%p%pef%ulrad
@@ -948,12 +948,12 @@ contains
       ! 2 m height specific humidity
 
       q_ref2m(p) = forc_q(g) + temp2(p)*dqh(p)*(1._r8/temp22m(p) - 1._r8/temp2(p))
-      q_ref2m_r(p) = q_ref2m(p)
 
       ! 2 m height relative humidity
 
       call QSat(t_ref2m(p), forc_pbot(g), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
       rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
+      rh_ref2m_r(p) = rh_ref2m(p)
 
       ! Downward longwave radiation below the canopy
 

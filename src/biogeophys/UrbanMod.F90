@@ -2517,6 +2517,7 @@ contains
                                     wasteheat_limit
     use filterMod          , only : filter
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
+    use QSatMod            , only : QSat
     use clm_varpar         , only : maxpatch_urb, nlevurb
     use clm_time_manager   , only : get_curr_date, get_step_size, get_nstep
     use clm_atmlnd         , only : clm_a2l
@@ -2619,13 +2620,14 @@ contains
     real(r8), pointer :: t_ref2m(:)       ! 2 m height surface air temperature (K)
     real(r8), pointer :: q_ref2m(:)       ! 2 m height surface specific humidity (kg/kg)
     real(r8), pointer :: t_ref2m_u(:)     ! Urban 2 m height surface air temperature (K)
-    real(r8), pointer :: q_ref2m_u(:)     ! Urban 2 m height surface specific humidity (kg/kg)
     real(r8), pointer :: t_veg(:)         ! vegetation temperature (K)
     real(r8), pointer :: ram1(:)          ! aerodynamical resistance (s/m)
     real(r8), pointer :: rootr(:,:)       ! effective fraction of roots in each soil layer
     real(r8), pointer :: psnsun(:)        ! sunlit leaf photosynthesis (umol CO2 /m**2/ s)
     real(r8), pointer :: psnsha(:)        ! shaded leaf photosynthesis (umol CO2 /m**2/ s)
     real(r8), pointer :: t_building(:)    ! internal building temperature (K)
+    real(r8), pointer :: rh_ref2m(:)      ! 2 m height surface relative humidity (%)
+    real(r8), pointer :: rh_ref2m_u(:)    ! Urban 2 m height surface relative humidity (%)
 !
 !EOP
 !
@@ -2724,6 +2726,10 @@ contains
     real(r8) :: z_d_town_loc(lbl:ubl)  ! temporary copy
     real(r8) :: z_0_town_loc(lbl:ubl)  ! temporary copy
     real(r8), parameter :: lapse_rate = 0.0098_r8     ! Dry adiabatic lapse rate (K/m)
+    real(r8) :: e_ref2m                ! 2 m height surface saturated vapor pressure [Pa]
+    real(r8) :: de2mdT                 ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
+    real(r8) :: qsat_ref2m             ! 2 m height surface saturated specific humidity [kg/kg]
+    real(r8) :: dqsat2mdT              ! derivative of 2 m height surface saturated specific humidity on t_ref2m
 
     ! Only works for single point simulations currently that are setup properly
     ! No capability to do global traffic fluxes currently
@@ -2819,7 +2825,6 @@ contains
     t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
     q_ref2m        => clm3%g%l%c%p%pes%q_ref2m
     t_ref2m_u      => clm3%g%l%c%p%pes%t_ref2m_u
-    q_ref2m_u      => clm3%g%l%c%p%pes%q_ref2m_u
     t_veg          => clm3%g%l%c%p%pes%t_veg
     rootr          => clm3%g%l%c%p%pps%rootr
     psnsun         => clm3%g%l%c%p%pcf%psnsun
@@ -2828,6 +2833,8 @@ contains
     forc_hgt_t_pft => clm3%g%l%c%p%pps%forc_hgt_t_pft
     forc_hgt_u_pft => clm3%g%l%c%p%pps%forc_hgt_u_pft
     forc_hgt_t_pft => clm3%g%l%c%p%pps%forc_hgt_t_pft
+    rh_ref2m => clm3%g%l%c%p%pes%rh_ref2m
+    rh_ref2m_u     => clm3%g%l%c%p%pes%rh_ref2m_u
 
     ! Define fields that appear on the restart file for non-urban landunits 
 
@@ -3459,7 +3466,12 @@ contains
        t_ref2m(p) = taf(l)
        q_ref2m(p) = qaf(l)
        t_ref2m_u(p) = taf(l)
-       q_ref2m_u(p) = qaf(l)
+
+       ! 2 m height relative humidity
+
+       call QSat(t_ref2m(p), forc_pbot(g), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
+       rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
+       rh_ref2m_u(p) = rh_ref2m(p)
 
        ! Variables needed by history tape
 

@@ -187,7 +187,7 @@ lnd/clm2/initdata/clmi.IQ_2008-01-01_1.9x2.5_gx1v5_c081014.nc
 <fsurdat hgrid="1x1_tropicAtl"      >lnd/clm2/surfdata/surfdata_1x1_tropicAtl__c081126.nc</fsurdat>
 
 <!-- Global urban datasets also need to check if urban dataset is input -->
-<fsurdat hgrid="1.9x2.5" sim_year="2000" furbinp="surfdata_0096x0144_090223_v2.nc">lnd/clm2/surfdata/surfdata_0096x0144_090223_v2.nc</fsurdat>
+<fsurdat hgrid="1.9x2.5" sim_year="2000" furbinp="surfdata_0096x0144_090223_v2.nc">lnd/clm2/urbdata/surfdata_0096x0144_090223_v2.nc</fsurdat>
 <fsurdat hgrid="10x15"                   furbinp="avg_densityclass_10x15_fluxes_p7_c090116.txt">lnd/clm2/surfdata/surfdata_10x15_urban3den_c090114.nc</fsurdat>
 
 <!-- Surface datasets that belong with dynamic land-use change datasets (relative to {csmdata}) -->
@@ -197,11 +197,11 @@ lnd/clm2/initdata/clmi.IQ_2008-01-01_1.9x2.5_gx1v5_c081014.nc
 </fsurdat>
 
 <!-- Urban datasets also need to check if urban dataset is input -->
-<fsurdat hgrid="1x1_camdenNJ"        furbinp="metropolis_fluxes.txt"   >lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc </fsurdat>
-<fsurdat hgrid="1x1_vancouverCAN"    furbinp="vancouverCAN_fluxes.txt" >lnd/clm2/surfdata/surfdata_1x1pt_vancouver_c070831.nc</fsurdat>
-<fsurdat hgrid="1x1_mexicocityMEX"   furbinp="mexicocityMEX_fluxes.txt">lnd/clm2/surfdata/surfdata_1x1pt_mexicocity_c070831.nc</fsurdat>
-<fsurdat hgrid="1x1_urbanc_alpha"    furbinp="urbanc_alpha_fluxes.txt" >lnd/clm2/surfdata/surfdata_1x1pt_urbanc_alpha_lon0_c080401.nc</fsurdat>
-<fsurdat hgrid="1x1_asphaltjungleNJ" furbinp="asphaltjungle_fluxes.txt">lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
+<fsurdat hgrid="1x1_camdenNJ"        furbinp="metropolis_fluxes.nc"   >lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc </fsurdat>
+<fsurdat hgrid="1x1_vancouverCAN"    furbinp="vancouverCAN_fluxes.nc" >lnd/clm2/surfdata/surfdata_1x1pt_vancouver_c070831.nc</fsurdat>
+<fsurdat hgrid="1x1_mexicocityMEX"   furbinp="mexicocityMEX_fluxes.nc">lnd/clm2/surfdata/surfdata_1x1pt_mexicocity_c070831.nc</fsurdat>
+<fsurdat hgrid="1x1_urbanc_alpha"    furbinp="urbanc_alpha_fluxes.nc" >lnd/clm2/surfdata/surfdata_1x1pt_urbanc_alpha_lon0_c080401.nc</fsurdat>
+<fsurdat hgrid="1x1_asphaltjungleNJ" furbinp="asphaltjungle_fluxes.nc">lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
 
 <!-- Soil carbon datasets (relative to {csmdata}) -->
 <forganic hgrid="360x720"   >lnd/clm2/surfdata/surfdata_360x720__c081210.nc</forganic>
@@ -374,17 +374,17 @@ lnd/clm2/initdata/clmi.IQ_2008-01-01_1.9x2.5_gx1v5_c081014.nc
 <faerdep hgrid="1x1_brazil"          >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_1x1_brazil_c080410.nc</faerdep>
 <faerdep hgrid="1x1_asphaltjungleNJ" >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_1x1_asphaltjungleNJ_c080410.nc</faerdep>
 <faerdep hgrid="1x1_tropicAtl"       >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_1x1_tropicAtl_c080410.nc</faerdep>
-<faerdep hgrid="1x1_urbanc_alpha"    >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_1x1_urbanc_alpha_c090119.nc</faerdep>
+<faerdep hgrid="1x1_urbanc_alpha"    >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_1x1_urbanc_alpha_c090114.nc</faerdep>
 
 <!-- Urban point input datasets (relative to {rootdir/bld/urban_input/}) -->
-<furbinp  hgrid="1x1_mexicocityMEX"  >mexicocityMEX_fluxes.txt</furbinp>
-<furbinp  hgrid="1x1_vancouverCAN"   >vancouverCAN_fluxes.txt</furbinp>
-<furbinp  hgrid="1x1_urbanc_alpha"   >urbanc_alpha_fluxes.txt</furbinp>
-<furbinp  hgrid="1x1_camdenNJ"       >metropolis_fluxes.txt</furbinp>
-<furbinp  hgrid="1x1_asphaltjungleNJ">asphaltjungle_fluxes.txt</furbinp>
+<furbinp  hgrid="1x1_mexicocityMEX"  >mexicocityMEX_fluxes.nc</furbinp>
+<furbinp  hgrid="1x1_vancouverCAN"   >vancouverCAN_fluxes.nc</furbinp>
+<furbinp  hgrid="1x1_urbanc_alpha"   >urbanc_alpha_fluxes.nc</furbinp>
+<furbinp  hgrid="1x1_camdenNJ"       >metropolis_fluxes.nc</furbinp>
+<furbinp  hgrid="1x1_asphaltjungleNJ">asphaltjungle_fluxes.nc</furbinp>
 
 <!-- Urban global input datasets (relative to {csmdata}) -->
-<furbinp  hgrid="1.9x2.5">lnd/clm2/surfdata/surfdata_0096x0144_090223_v2.nc</furbinp>
+<furbinp  hgrid="1.9x2.5">lnd/clm2/urbdata/surfdata_0096x0144_090223_v2.nc</furbinp>
 <furbinp  hgrid="10x15"  >lnd/clm2/urbdata/avg_densityclass_10x15_fluxes_p7_c090116.txt</furbinp>
 
 <!--CN Nitrogen deposition dataset for a fixed year (relative to {csmdata}) -->

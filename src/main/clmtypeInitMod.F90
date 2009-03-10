@@ -1378,9 +1378,9 @@ contains
     allocate(pes%t_ref2m_min_inst_r(beg:end))
     allocate(pes%t_ref2m_max_inst_u(beg:end))
     allocate(pes%t_ref2m_max_inst_r(beg:end))
-    allocate(pes%q_ref2m_u(beg:end))
-    allocate(pes%q_ref2m_r(beg:end))
     allocate(pes%rh_ref2m(beg:end))
+    allocate(pes%rh_ref2m_u(beg:end))
+    allocate(pes%rh_ref2m_r(beg:end))
     allocate(pes%t_veg(beg:end))
     allocate(pes%thm(beg:end))
 
@@ -1400,9 +1400,9 @@ contains
     pes%t_ref2m_min_inst_r(beg:end) = nan
     pes%t_ref2m_max_inst_u(beg:end) = nan
     pes%t_ref2m_max_inst_r(beg:end) = nan
-    pes%q_ref2m_u(beg:end) = nan
-    pes%q_ref2m_r(beg:end) = nan
     pes%rh_ref2m(beg:end) = nan
+    pes%rh_ref2m_u(beg:end) = nan
+    pes%rh_ref2m_r(beg:end) = nan
     pes%t_veg(beg:end) = nan
     pes%thm(beg:end) = nan
 

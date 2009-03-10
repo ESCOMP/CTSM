@@ -168,19 +168,19 @@ contains
          avgflag='A', long_name='2m specific humidity', &
          ptr_pft=clm3%g%l%c%p%pes%q_ref2m)
 
-    call hist_addfld1d (fname='Q2M_U', units='kg/kg',  &
-         avgflag='A', long_name='Urban 2m specific humidity', &
-         ptr_pft=clm3%g%l%c%p%pes%q_ref2m_u, set_nourb=spval)
-
-    call hist_addfld1d (fname='Q2M_R', units='kg/kg',  &
-         avgflag='A', long_name='Rural 2m specific humidity', &
-         ptr_pft=clm3%g%l%c%p%pes%q_ref2m_r, set_spec=spval)
-
     ! Relative humidity
 
     call hist_addfld1d (fname='RH2M', units='%',  &
          avgflag='A', long_name='2m relative humidity', &
          ptr_pft=clm3%g%l%c%p%pes%rh_ref2m)
+
+    call hist_addfld1d (fname='RH2M_U', units='%',  &
+         avgflag='A', long_name='Urban 2m relative humidity', &
+         ptr_pft=clm3%g%l%c%p%pes%rh_ref2m_u, set_nourb=spval)
+
+    call hist_addfld1d (fname='RH2M_R', units='%',  &
+         avgflag='A', long_name='Rural 2m specific humidity', &
+         ptr_pft=clm3%g%l%c%p%pes%rh_ref2m_r, set_spec=spval)
 
     ! Surface radiation
 

@@ -337,7 +337,7 @@ contains
     real(r8), pointer :: t_ref2m_u(:)          ! Urban 2 m height surface air temperature (Kelvin)
     real(r8), pointer :: t_ref2m_min_u(:)      ! Urban daily minimum of average 2 m height surface air temperature (K)
     real(r8), pointer :: t_ref2m_max_u(:)      ! Urban daily maximum of average 2 m height surface air temperature (K)
-    real(r8), pointer :: q_ref2m_u(:)          ! Urban 2 m height surface specific humidity (kg/kg)
+    real(r8), pointer :: rh_ref2m_u(:)         ! Urban 2 m height surface relative humidity (%)
     real(r8), pointer :: t_grnd_u(:)           ! Urban ground temperature (Kelvin)
     real(r8), pointer :: qflx_runoff_u(:)      ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
 !
@@ -384,7 +384,7 @@ contains
     t_ref2m_u          => clm3%g%l%c%p%pes%t_ref2m_u
     t_ref2m_min_u      => clm3%g%l%c%p%pes%t_ref2m_min_u
     t_ref2m_max_u      => clm3%g%l%c%p%pes%t_ref2m_max_u
-    q_ref2m_u          => clm3%g%l%c%p%pes%q_ref2m_u
+    rh_ref2m_u         => clm3%g%l%c%p%pes%rh_ref2m_u
     plandunit          => clm3%g%l%c%p%landunit
     eflx_wasteheat_pft => clm3%g%l%c%p%pef%eflx_wasteheat_pft
     eflx_heat_from_ac_pft => clm3%g%l%c%p%pef%eflx_heat_from_ac_pft
@@ -447,7 +447,7 @@ contains
           t_ref2m_u(p)     = spval
           t_ref2m_min_u(p) = spval
           t_ref2m_max_u(p) = spval
-          q_ref2m_u(p)     = spval
+          rh_ref2m_u(p)     = spval
           eflx_wasteheat_pft(p) = spval
           eflx_heat_from_ac_pft(p) = spval
           eflx_traffic_pft(p) = spval

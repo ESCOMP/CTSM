@@ -432,9 +432,9 @@ type, public :: pft_estate_type
    real(r8), pointer :: t_ref2m_min_inst_r(:) !Rural instantaneous daily min of average 2 m height surface air temp (K)
    real(r8), pointer :: t_ref2m_max_inst_u(:) !Urban instantaneous daily max of average 2 m height surface air temp (K)
    real(r8), pointer :: t_ref2m_max_inst_r(:) !Rural instantaneous daily max of average 2 m height surface air temp (K)
-   real(r8), pointer :: q_ref2m_u(:)          !Urban 2 m height surface specific humidity (kg/kg)
-   real(r8), pointer :: q_ref2m_r(:)          !Rural 2 m height surface specific humidity (kg/kg)
    real(r8), pointer :: rh_ref2m(:)           !2 m height surface relative humidity (%)
+   real(r8), pointer :: rh_ref2m_u(:)         !Urban 2 m height surface relative humidity (%)
+   real(r8), pointer :: rh_ref2m_r(:)         !Rural 2 m height surface relative humidity (%)
    real(r8), pointer :: t_veg(:)              !vegetation temperature (Kelvin)
    real(r8), pointer :: thm(:)                !intermediate variable (forc_t+0.0098*forc_hgt_t_pft)
 end type pft_estate_type

@@ -129,7 +129,7 @@ contains
     real(r8), pointer :: t_ref2m(:)       ! 2 m height surface air temperature (Kelvin)
     real(r8), pointer :: q_ref2m(:)       ! 2 m height surface specific humidity (kg/kg)
     real(r8), pointer :: t_ref2m_r(:)     ! Rural 2 m height surface air temperature (Kelvin)
-    real(r8), pointer :: q_ref2m_r(:)     ! Rural 2 m height surface specific humidity (kg/kg)
+    real(r8), pointer :: rh_ref2m_r(:)    ! Rural 2 m height surface relative humidity (%)
     real(r8), pointer :: rh_ref2m(:)      ! 2 m height surface relative humidity (%)
     real(r8), pointer :: t_veg(:)         ! vegetation temperature (Kelvin)
     real(r8), pointer :: btran(:)         ! transpiration wetness factor (0 to 1)
@@ -238,7 +238,7 @@ contains
     t_ref2m => clm3%g%l%c%p%pes%t_ref2m
     q_ref2m => clm3%g%l%c%p%pes%q_ref2m
     t_ref2m_r => clm3%g%l%c%p%pes%t_ref2m_r
-    q_ref2m_r => clm3%g%l%c%p%pes%q_ref2m_r
+    rh_ref2m_r => clm3%g%l%c%p%pes%rh_ref2m_r
     plandunit => clm3%g%l%c%p%landunit
     rh_ref2m => clm3%g%l%c%p%pes%rh_ref2m
     t_veg => clm3%g%l%c%p%pes%t_veg
@@ -402,15 +402,15 @@ contains
 
        q_ref2m(p) = forc_q(g) + temp2(p)*dqh(p)*(1._r8/temp22m(p) - 1._r8/temp2(p))
 
-       if (ltype(l) == istsoil) then
-         q_ref2m_r(p) = q_ref2m(p)
-         t_ref2m_r(p) = t_ref2m(p)
-       end if
-
        ! 2 m height relative humidity
                                                                                 
        call QSat(t_ref2m(p), forc_pbot(g), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
        rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
+
+       if (ltype(l) == istsoil) then
+         rh_ref2m_r(p) = rh_ref2m(p)
+         t_ref2m_r(p) = t_ref2m(p)
+       end if
 
        ! Variables needed by history tape
 
