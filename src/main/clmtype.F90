@@ -1009,6 +1009,7 @@ type, public :: column_pstate_type
    real(r8), pointer :: rootfr_road_perv(:,:) !fraction of roots in each soil layer for urban pervious road
    real(r8), pointer :: rootr_road_perv(:,:)  !effective fraction of roots in each soil layer of urban pervious road
    real(r8), pointer :: wf(:)                 !soil water as frac. of whc for top 0.5 m
+   real(r8), pointer :: max_dayl(:)           !maximum daylength for this column (s)
    ! new variables for CN code
    real(r8), pointer :: bsw2(:,:)        !Clapp and Hornberger "b" for CN code
    real(r8), pointer :: psisat(:,:)        !soil water potential at saturation for CN code (MPa)

@@ -109,6 +109,7 @@ contains
 ! assure bit-for-bit results in the first comparisons.
 ! 27 February 2008: Keith Oleson; Sparse/dense aerodynamic parameters from
 ! X. Zeng
+! 6 March 2009: Peter Thornton; Daylength control on Vcmax, from Bill Bauerle
 !
 ! !LOCAL VARIABLES:
 !
@@ -170,6 +171,10 @@ contains
    real(r8), pointer :: htop(:)        ! canopy top(m)
    real(r8), pointer :: snowdp(:)      ! snow height (m)
    real(r8), pointer :: soilbeta(:)    ! soil wetness relative to field capacity
+   real(r8), pointer :: lat(:)         ! latitude (radians)
+   real(r8), pointer :: decl(:)        ! declination angle (radians)
+   real(r8), pointer :: max_dayl(:)    !maximum daylength for this column (s)
+   
 !
 ! local pointers to implicit inout arguments
 !
@@ -354,6 +359,9 @@ contains
    real(r8) :: rdl                   ! dry litter layer resistance for water vapor  (s/m)
    real(r8) :: elai_dl               ! exposed (dry) plant litter area index
    real(r8) :: fsno_dl               ! effective snow cover over plant litter
+   real(r8) :: dayl                  ! daylength (s)
+   real(r8) :: temp                  ! temporary, for daylength calculation
+   real(r8) :: dayl_factor(lbp:ubp)  ! scalar (0-1) for daylength effect on Vcmax
 !------------------------------------------------------------------------------
 
    ! Assign local pointers to derived type members (gridcell-level)
@@ -368,6 +376,7 @@ contains
    forc_v         => clm_a2l%forc_v
    forc_th        => clm_a2l%forc_th
    forc_rho       => clm_a2l%forc_rho
+   lat            => clm3%g%lat
 
    ! Assign local pointers to derived type members (column-level)
 
@@ -390,6 +399,8 @@ contains
    frac_sno       => clm3%g%l%c%cps%frac_sno
    snowdp         => clm3%g%l%c%cps%snowdp
    soilbeta       => clm3%g%l%c%cws%soilbeta
+   decl           => clm3%g%l%c%cps%decl
+   max_dayl       => clm3%g%l%c%cps%max_dayl
 
    ! Assign local pointers to derived type members (pft-level)
 
@@ -491,6 +502,23 @@ contains
       wtaq0(p)  = 0._r8
       obuold(p) = 0._r8
       btran(p)  = btran0
+   end do
+   
+   ! calculate daylength control for Vcmax
+   do f = 1, fn
+      p=filterp(f)
+      c=pcolumn(p)
+      g=pgridcell(p)
+      ! calculate daylength
+      temp = -(sin(lat(g))*sin(decl(c)))/(cos(lat(g)) * cos(decl(c)))
+      temp = min(1._r8,max(-1._r8,temp))
+      dayl = 2.0_r8 * 13750.9871_r8 * acos(temp)
+      ! calculate dayl_factor as the ratio of (current:max dayl)^2
+      ! set a minimum of 0.01 (1%) for the dayl_factor
+      dayl_factor(p)=min(1._r8,max(0.01_r8,(dayl*dayl)/(max_dayl(c)*max_dayl(c))))
+#if (defined NO_DAYLEN_VCMAX)
+      dayl_factor(p) = 1.0_r8
+#endif
    end do
 
    ! Effective porosity of soil, partial volume of ice and liquid (needed for btran)
@@ -710,8 +738,8 @@ contains
       end do
 
       ! 4/25/05, PET: Now calling the sun/shade version of Stomata by default
-      call Stomata (fn, filterp, lbp, ubp, svpts, eah, o2, co2, rb, phase='sun')
-      call Stomata (fn, filterp, lbp, ubp, svpts, eah, o2, co2, rb, phase='sha')
+      call Stomata (fn, filterp, lbp, ubp, svpts, eah, o2, co2, rb, dayl_factor, phase='sun')
+      call Stomata (fn, filterp, lbp, ubp, svpts, eah, o2, co2, rb, dayl_factor, phase='sha')
 
 !dir$ concurrent
 !cdir nodep
@@ -1018,7 +1046,7 @@ contains
 ! !IROUTINE: Stomata
 !
 ! !INTERFACE:
-   subroutine Stomata (fn, filterp, lbp, ubp, ei, ea, o2, co2, rb, phase)
+   subroutine Stomata (fn, filterp, lbp, ubp, ei, ea, o2, co2, rb, dayl_factor, phase)
 !
 ! !DESCRIPTION: 
 ! Leaf stomatal resistance and leaf photosynthesis. Modifications for CN code.
@@ -1031,6 +1059,7 @@ contains
 ! 4/25/05, Peter Thornton: Adopted as the default code for CLM, together with
 !   modifications for sun/shade canopy.  Renamed from StomataCN to Stomata,
 !   and eliminating the older Stomata subroutine
+! 3/6/09: Peter Thornton; added dayl_factor control on Vcmax, from Bill Bauerle
 
 ! !USES:
      use shr_kind_mod , only : r8 => shr_kind_r8
@@ -1049,6 +1078,7 @@ contains
      real(r8), intent(in)    :: o2(lbp:ubp)        ! atmospheric o2 concentration (pa)
      real(r8), intent(in)    :: co2(lbp:ubp)       ! atmospheric co2 concentration (pa)
      real(r8), intent(inout) :: rb(lbp:ubp)        ! boundary layer resistance (s/m)
+     real(r8), intent(in)    :: dayl_factor(lbp:ubp) ! scalar (0-1) for daylength
      character(len=*), intent(in) :: phase         ! 'sun' or 'sha'
 !
 ! !CALLED FROM:
@@ -1246,9 +1276,9 @@ contains
            lnc(p) = 1._r8 / (sla(p) * leafcn(ivt(p)))
 		   act = act25 * f1(q10act,tc)
 #if (defined CN)
-           vcmx(p) = lnc(p) * flnr(ivt(p)) * fnr * act / f2(tc) * btran(p)
+           vcmx(p) = lnc(p) * flnr(ivt(p)) * fnr * act / f2(tc) * btran(p) * dayl_factor(p)
 #else
-           vcmx(p) = lnc(p) * flnr(ivt(p)) * fnr * act / f2(tc) * btran(p) * fnitr(ivt(p))
+           vcmx(p) = lnc(p) * flnr(ivt(p)) * fnr * act / f2(tc) * btran(p) * dayl_factor(p) * fnitr(ivt(p))
 #endif
            
 #if (defined DGVM)

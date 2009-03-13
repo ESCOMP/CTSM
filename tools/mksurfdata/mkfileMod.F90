@@ -241,10 +241,6 @@ contains
             long_name='organic matter density at soil levels', &
             units='kg/m3 (assumed carbon content 0.58 gC per gOM)')
 
-       call ncd_defvar(ncid=ncid, varname='ELEVATION', xtype=xtype, &
-            dim1name='lsmlon', dim2name='lsmlat', &
-            long_name='elevation', units='m')
-
        call ncd_defvar(ncid=ncid, varname='CANYON_HWR', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', &
             long_name='canyon height to width ratio', units='unitless')

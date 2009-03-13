@@ -181,7 +181,9 @@ contains
 !
 ! !LOCAL VARIABLES:
     integer  :: dtime                 ! time step increment (sec)
+    real(r8) :: calday                ! calendar day for nstep
     real(r8) :: caldayp1              ! calendar day for nstep+1
+    real(r8) :: declin                ! solar declination angle in radians for nstep
     real(r8) :: declinp1              ! solar declination angle in radians for nstep+1
     real(r8) :: eccf                  ! earth orbit eccentricity factor
 !
@@ -194,16 +196,18 @@ contains
     ! Set default values first 
 
     dtime = get_step_size()
+    calday   = get_curr_calday()
     caldayp1 = get_curr_calday( offset=int(dtime) )
 
-    ! Determine declination angle for next time step
+    ! Determine declination angle for current and next time step
     
+    call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
     call shr_orb_decl( caldayp1, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
 
     ! Call land model driver1
     
     call t_startf('driver1')
-    call driver1(doalb, caldayp1, declinp1)
+    call driver1(doalb, caldayp1, declinp1, declin)
     call t_stopf('driver1')
 
     ! Determine gridcell averaged properties to send to atm (l2as and l2af derived types)

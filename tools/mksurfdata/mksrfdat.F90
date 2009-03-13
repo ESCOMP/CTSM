@@ -626,7 +626,6 @@ program mksrfdat
     call ncd_ioglobal(varname='PCT_PFT'     , data=pctpft      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='FMAX'        , data=fmax        , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='ORGANIC'     , data=organic3d   , ncid=ncid, flag='write')
-    call ncd_ioglobal(varname='ELEVATION'   , data=elev        , ncid=ncid, flag='write')
 
     ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 

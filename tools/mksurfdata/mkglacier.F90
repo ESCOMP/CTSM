@@ -112,7 +112,7 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, glac_o)
 
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
-        if (glac_o(io,jo) < 5.) glac_o(io,jo) = 0.
+        if (glac_o(io,jo) < 1.) glac_o(io,jo) = 0.
   enddo
   enddo
 

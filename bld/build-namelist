@@ -402,6 +402,9 @@ my $val;
 my $mode = $cfg->get('mode');
 if ($print>=2) { print "CLM mode is $mode $eol"; }
 
+# Get max number of Plant function types
+my $maxpft = $cfg->get('maxpft');
+
 # Obtain default values for the following build-namelist input arguments
 
 my $val;
@@ -719,13 +722,16 @@ if (not defined $nl->get_value('finidat')) {
     if ( $start_type =~ /startup/  ) { $nofail = 0; }
     if ($opts{'ignore_ic_date'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                    'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 'fndepdyn'=>$fndepdyn );
+                    'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 'fndepdyn'=>$fndepdyn, 
+                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
     } elsif ($opts{'ignore_ic_year'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 'fndepdyn'=>$fndepdyn );
+                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 
+                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
     } else {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 'fndepdyn'=>$fndepdyn );
+                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 
+                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
     }
     my $finidat = $nl->get_value($var);
     if ( (not defined $finidat ) || $finidat =~ /null/ ) {

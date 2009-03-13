@@ -83,6 +83,7 @@ subroutine iniTimeConst
   integer , pointer :: ltype(:)           ! landunit type index
   real(r8), pointer :: thick_wall(:)      ! total thickness of urban wall
   real(r8), pointer :: thick_roof(:)      ! total thickness of urban roof
+  real(r8), pointer :: lat(:)             ! gridcell latitude (radians)
 !
 ! local pointers to implicit out arguments
 !
@@ -114,6 +115,7 @@ subroutine iniTimeConst
   real(r8), pointer :: gwc_thr(:)         ! threshold soil moisture based on clay content
   real(r8), pointer :: mss_frc_cly_vld(:) ! [frc] Mass fraction clay limited to 0.20
   real(r8), pointer :: forc_ndep(:)       ! nitrogen deposition rate (gN/m2/s)
+  real(r8), pointer :: max_dayl(:)        ! maximum daylength (s)
 #if (defined CASA)
   real(r8), pointer :: sandfrac(:)
   real(r8), pointer :: clayfrac(:)
@@ -132,6 +134,7 @@ subroutine iniTimeConst
   real(r8) :: scalez = 0.025_r8   ! Soil layer thickness discretization (m)
   real(r8) :: clay,sand        ! temporaries
   real(r8) :: slope,intercept        ! temporary, for rooting distribution
+  real(r8) :: temp, max_decl   ! temporary, for calculation of max_dayl
   integer  :: begp, endp       ! per-proc beginning and ending pft indices
   integer  :: begc, endc       ! per-proc beginning and ending column indices
   integer  :: begl, endl       ! per-proc beginning and ending landunit indices
@@ -192,6 +195,9 @@ subroutine iniTimeConst
   allocate(sand3d(begg:endg,nlevsoi),clay3d(begg:endg,nlevsoi))
   allocate(organic3d(begg:endg,nlevsoi))
 
+  ! Assign local pointers to derived subtypes components (gridcell-level)
+  lat             => clm3%g%lat
+     
   ! Assign local pointers to derived subtypes components (landunit-level)
 
   ltype               => clm3%g%l%itype
@@ -227,6 +233,7 @@ subroutine iniTimeConst
   isoicol         => clm3%g%l%c%cps%isoicol
   gwc_thr         => clm3%g%l%c%cps%gwc_thr
   mss_frc_cly_vld => clm3%g%l%c%cps%mss_frc_cly_vld
+  max_dayl        => clm3%g%l%c%cps%max_dayl
   forc_ndep       => clm_a2l%forc_ndep
 
 
@@ -584,6 +591,15 @@ subroutine iniTimeConst
       ! Set gridcell and landunit indices
       g = cgridcell(c)
       l = clandunit(c)
+      
+      ! initialize maximum daylength, based on latitude and maximum declination
+      ! maximum declination hardwired for present-day orbital parameters, 
+      ! +/- 23.4667 degrees = +/- 0.409571 radians, use negative value for S. Hem
+      max_decl = 0.409571
+      if (lat(g) .lt. 0._r8) max_decl = -max_decl
+      temp = -(sin(lat(g))*sin(max_decl))/(cos(lat(g)) * cos(max_decl))
+      temp = min(1._r8,max(-1._r8,temp))
+      max_dayl(c) = 2.0_r8 * 13750.9871_r8 * acos(temp)
 
       ! Initialize restriction for min of soil potential (mm)
       smpmin(c) = -1.e8_r8

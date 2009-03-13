@@ -120,8 +120,8 @@ subroutine mklanwat(lsmlon, lsmlat, fname, ndiag, lake_o, swmp_o)
 
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
-        if (lake_o(io,jo) < 5.) lake_o(io,jo) = 0.
-        if (swmp_o(io,jo) < 5.) swmp_o(io,jo) = 0.
+        if (lake_o(io,jo) < 1.) lake_o(io,jo) = 0.
+        if (swmp_o(io,jo) < 1.) swmp_o(io,jo) = 0.
   enddo
   enddo
 

@@ -173,13 +173,14 @@ contains
 ! !ROUTINE: driver1
 !
 ! !INTERFACE:
-subroutine driver1 (doalb, caldayp1, declinp1)
+subroutine driver1 (doalb, caldayp1, declinp1, declin)
 !
 ! !ARGUMENTS:
   implicit none
   logical , intent(in) :: doalb    ! true if time for surface albedo calc
   real(r8), intent(in) :: caldayp1 ! calendar day for nstep+1
   real(r8), intent(in) :: declinp1 ! declination angle for next time step
+  real(r8), intent(in) :: declin   ! declination angle for current time step
 !
 ! !REVISION HISTORY:
 ! 2002.10.01  Mariana Vertenstein latest update to new data structures
@@ -188,6 +189,7 @@ subroutine driver1 (doalb, caldayp1, declinp1)
 ! 4/25/05, Peter Thornton: Made the sun/shade routine the default, no longer
 !  need to have SUNSHA defined.  
 ! 2/29/08, Dave Lawrence: Revised snow cover fraction according to Niu and Yang, 2007
+! 3/6/09, Peter Thornton: Added declin as new argument, for daylength control on Vcmax
 !
 !EOP
 !
@@ -350,7 +352,12 @@ subroutine driver1 (doalb, caldayp1, declinp1)
      ! of foliage that is dry and transpiring. Initialize snow layer if the
      ! snow accumulation exceeds 10 mm.
      ! ============================================================================
-
+     
+     ! initialize declination for current timestep
+     do c = begc,endc
+        clm3%g%l%c%cps%decl(c) = declin
+     end do
+     
      call t_startf('drvinit')
      call DriverInit(begc, endc, begp, endp, &
           filter(nc)%num_nolakec, filter(nc)%nolakec, filter(nc)%num_lakec, filter(nc)%lakec)

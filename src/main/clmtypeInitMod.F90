@@ -2484,6 +2484,7 @@ contains
     allocate(cps%rootfr_road_perv(beg:end,nlevgrnd))
     allocate(cps%rootr_road_perv(beg:end,nlevgrnd))
     allocate(cps%wf(beg:end))
+    allocate(cps%max_dayl(beg:end))
     allocate(cps%bsw2(beg:end,nlevgrnd))
     allocate(cps%psisat(beg:end,nlevgrnd))
     allocate(cps%vwcsat(beg:end,nlevgrnd))

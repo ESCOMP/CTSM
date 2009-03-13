@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta09"
+seqccsm_vers="ccsm4_0_beta10"
 
 hostname=`hostname`
 case $hostname in
@@ -356,26 +356,18 @@ export CLM_RESTART_TASKS=129
 
 export CLM_COMPSET="I"
 
+export PATH="/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
+export PATH="\${PATH}:/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
 source /opt/modules/default/init/sh
 module purge
-module load xtpe-quadcore
-module switch pgi pgi/7.1.6       # 7.1.6      is default on 2008-sep-03
-module load netcdf/3.6.2          # 3.6.2      is default on 2008-sep-03
-module swap xt-asyncpe xt-asyncpe/1.0c
-module swap xt-binutils-quadcore xt-binutils-quadcore/2.0.1
 module load   PrgEnv-pgi Base-opts
-module switch xt-mpt xt-mpt/2.0.49a
+module load   xtpe-quadcore
 module load   torque moab
+module switch pgi pgi/7.1.6       # 7.1.6      is default on 2008-sep-03
+module load   netcdf/3.6.2          # 3.6.2      is default on 2008-sep-03
+module swap   xt-asyncpe xt-asyncpe/1.0c
+module swap   xt-binutils-quadcore xt-binutils-quadcore/2.0.1
 module load   ncl
-export PATH="/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
-export PATH="\${PATH}:\${MPICH_DIR}/bin"
-export PATH="\${PATH}:\${PE_DIR}/bin/snos64"
-export PATH="\${PATH}:\${PGI}/linux86-64/default/bin"
-export PATH="\${PATH}:\${SE_DIR}/bin/snos64"
-export PATH="\${PATH}:\${C_DIR}/amd64/bin"
-export PATH="\${PATH}:\${PRGENV_DIR}/bin"
-export PATH="\${PATH}:\${MPT_DIR}/bin"
-export PATH="\${PATH}:/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
 
 export MPICH_MAX_SHORT_MSG_SIZE=32000 # default is 128000 bytes
 export MPICH_PTL_UNEX_EVENTS=960000   # default is  90000 (unexpected recv queue size)

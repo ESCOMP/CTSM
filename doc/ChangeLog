@@ -1,4 +1,136 @@
 ===============================================================
+Tag name:  clm3_6_25
+Originator(s):  dlawren (Lawrence David 1384 CGD), erik (Kluzek Erik), tcraig (Craig Tony)
+Date: Fri Mar 13 15:11:01 MDT 2009
+One-line Summary: Daylength control on Vcmax, 1%Lake,wetland,glacier in mksrfdat, remove ELEVATION in surface data file
+
+Purpose of changes: Include changes from Peter Thornton to include daylength control 
+on vcmax in photosynthesis scheme; Set minimum lake, wetland, and glacier area to 1% 
+to be more consistent with urban and to represent more lakes and wetlands; remove 
+temporary unused ELEVATION field from surface dataset
+
+Bugs fixed (include bugzilla ID): 877 (CN restart problem)
+                                  911 (high PE count problem)
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference) 
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  821 (mksurfdata for qtr deg)
+                                  851 (abort when files non-exist on jaguar)
+                                  862 (360x720 res problem)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  990 (illegal instruction)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: New global urban datasets 10x15 and 1.9x2.5 resolutions
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: David Lawrence (code), Erik Kluzek (testing and build), Tony Craig (DecompInitMod.F90)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, mct, datm
+
+  scripts to scripts4_090310
+  datm7   to datm7_090229
+  mct     to MCT2_6_0_090308
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+A  models/lnd/clm/test/system/config_files/tools__s ..... Optimized serial mode for tools
+
+List all existing files that have been modified, and describe the changes:
+
+M  models/lnd/clm/tools/mksurfdata/mkglcmec.F90 ..... correct bug in error check
+M  models/lnd/clm/tools/mksurfdata/mkglacier.F90 .... reduce min glacier frac from 5 to 1%
+M  models/lnd/clm/tools/mksurfdata/mkfileMod.F90 .... remove ELEVATION field
+M  models/lnd/clm/tools/mksurfdata/mklanwat.F90 ..... reduce min lake,wetland frac from 5 to 1%
+M  models/lnd/clm/tools/mksurfdata/mksrfdat.F90 ..... remove ELEVATION field
+M  models/lnd/clm/tools/mksurfdata/README ........... add documentation about being slow unless use OPT=TRUE in gmake
+M  models/lnd/clm/src/main/decompInitMod.F90 ........ Changes from Tony Craig to fix for high PE counts
+M  models/lnd/clm/src/main/clm_comp.F90 ............. daylength control on vcmax changes
+M  models/lnd/clm/src/main/driver.F90 ............... daylength control on vcmax changes
+M  models/lnd/clm/src/main/clmtypeInitMod.F90 ....... daylength control on vcmax changes
+M  models/lnd/clm/src/main/iniTimeConst.F90 ......... daylength control on vcmax changes
+M  models/lnd/clm/src/main/clmtype.F90 .............. daylength control on vcmax changes
+M  models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90  daylength control on vcmax changes
+
+M  models/lnd/clm/test/system/test_driver.sh ........ update to beta10, fix some issues on jaguar
+M  models/lnd/clm/test/system/input_tests_master .... do most mksurfdata testing optimized
+                                                      change CN tests to cold-starts, change 1890 to 1870
+
+M  models/lnd/clm/bld/build-namelist ................ pass sim_year and maxpft in when determining default for finidat
+M  models/lnd/clm/bld/clm.cpl7.template ............. add in ignore logic like cam
+M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml . update input files
+
+Summary of testing:
+
+  bluefire: All PASS except TBL and...
+020 smE95 TSM.sh 4p_vodsrsc_h clm_std 19981231:NONE:1800 4x5 gx3v5 48 arb_ic ....................FAIL! rc= 10
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+052 smH51 TSM.sh 17p_cnnsc_dh clm_std 19980115:NONE:1800 10x15 USGS@1890 96 cold ................FAIL! rc= 8
+053 erH51 TER.sh 17p_cnnsc_dh clm_std 19980115:NONE:1800 10x15 USGS@1890 10+38 cold .............FAIL! rc= 5
+054 brH51 TBR.sh 17p_cnnsc_dh clm_std 19980115:NONE:1800 10x15 USGS@1890 72+72 cold .............FAIL! rc= 5
+057 smLI1 TSM.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+058 erLI1 TER.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+059 brLI1 TBR.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+096 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+097 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+098 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
+099 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 6
+100 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 6
+  jaguar: Limited testing...
+  lightning/pathscale: All PASS except TBL and...
+002 smCA4 TSM.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 10
+003 erCA4 TER.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ......FAIL! rc= 5
+004 brCA4 TBR.sh _sc_ds clm_urb^nl_urb_br 19981001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic ...FAIL! rc= 5
+006 smOC4 TSM.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 10
+007 erOC4 TER.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 115+115 arb_icFAIL! rc= 5
+008 brOC4 TBR.sh _vansc_ds clm_urb1pt^nl_urb_br 19920812:NONE:3600 1x1_vancouverCAN navy 72+72 arb_iFAIL! rc= 5
+011 erA91 TER.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .......................FAIL! rc= 7
+012 brA91 TBR.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .......................FAIL! rc= 6
+019 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 7
+020 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 6
+024 erJ42 TER.sh 4p_casasc_dm clm_std 19981230:NONE:1800 10x15 USGS 10+38 startup ...............FAIL! rc= 7
+025 brJ42 TBR.sh 4p_casasc_dm clm_std 19981230:NONE:1800 10x15 USGS 72+72 startup ...............FAIL! rc= 6
+027 smK51 TSM.sh 10p_dgvmsc_dh clm_std 19981230:NONE:1800 10x15 USGS 96 arb_ic ..................FAIL! rc= 10
+028 erK51 TER.sh 10p_dgvmsc_dh clm_std 19981230:NONE:1800 10x15 USGS 10+38 arb_ic ...............FAIL! rc= 5
+029 brK51 TBR.sh 10p_dgvmsc_dh clm_std 19981230:NONE:1800 10x15 USGS 72+72 arb_ic ...............FAIL! rc= 5
+032 erL51 TER.sh _sc_dh clm_std 19980115:NONE:1800 10x15 USGS 10+38 arb_ic ......................FAIL! rc= 7
+033 brL51 TBR.sh _sc_dh clm_std 19980115:NONE:1800 10x15 USGS 72+72 arb_ic ......................FAIL! rc= 6
+040 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+041 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 6
+042 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 5
+  breeze/gale/hail/gust/ifort: All PASS except TBL
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_24
+
+Changes answers relative to baseline: Yes
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers:
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: similar climate
+
+  Dave Lawrence ran a short simulation to show that answers do NOT change significantly
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_24
 Originator(s):  oleson (Oleson Keith 1332 CGD)
 Date:  Mon Mar  9 21:01:47 MDT 2009

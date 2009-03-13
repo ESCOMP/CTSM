@@ -74,7 +74,9 @@ contains
     integer :: ans,ag,an,ai,aj        ! indices
     integer :: anumg                  ! atm num gridcells
     integer :: anumg_tot              ! precompute of anumg
-    real(r8):: rnsegspc               ! real value associated with nsegspc
+    logical :: seglen1                ! is segment length one
+    real(r8):: seglen                 ! average segment length
+    real(r8):: rcid                   ! real value of cid
     integer :: cid,pid                ! indices
     integer :: n,m,np                 ! indices
     integer :: ier                    ! error code
@@ -187,8 +189,27 @@ contains
     enddo
     numa = anumg_tot
 
-    rnsegspc = min(float(nsegspc),float(anumg_tot)/float(nclumps))
-    if (masterproc) write(iulog,*) 'precompute total anumg ',anumg_tot,numa,rnsegspc
+    if (npes > numa) then
+       write(iulog,*) 'decompInit_atm(): Number of processes exceeds number ', &
+            'of atm grid cells',npes,numa
+       call endrun()
+    end if
+
+    if (nclumps > numa) then
+       write(iulog,*) 'decompInit_atm(): Number of clumps exceeds number ', &
+            'of atm grid cells',nclumps,numa
+       call endrun()
+    end if
+
+    if (float(anumg_tot)/float(nclumps) < float(nsegspc)) then
+       seglen1 = .true.
+       seglen = 1.0_r8
+    else
+       seglen1 = .false.
+       seglen = dble(anumg_tot)/(dble(nsegspc)*dble(nclumps))
+    endif
+
+    if (masterproc) write(iulog,*) ' atm decomp precompute anumg,nclumps,seglen1,avg_seglen,nsegspc=',numa,nclumps,seglen1,sngl(seglen),sngl(dble(anumg_tot)/(seglen*dble(nclumps)))
 
     !--- assign gridcells to clumps (and thus pes) ---
     allocate(acid(ans))
@@ -199,8 +220,12 @@ contains
           anumg  = anumg  + 1
 
           !--- give to clumps in order based on nsegspc
-          cid = int(rnsegspc*float(nclumps*(anumg-1))/float(anumg_tot))
-          cid = mod(cid,nclumps) + 1
+          if (seglen1) then
+              cid = mod(anumg-1,nclumps) + 1
+          else
+              rcid = (dble(anumg-1)/dble(anumg_tot))*dble(nsegspc)*dble(nclumps)
+              cid = mod(int(rcid),nclumps) + 1
+          endif
           acid(an) = cid
 
           !--- give atm cell to pe that owns cid ---
@@ -218,12 +243,6 @@ contains
 
     if (anumg /= numa) then
        write(iulog,*) 'decompInit_atm(): Number of atm gridcells inconsistent',anumg,numa
-       call endrun()
-    end if
-
-    if (npes > anumg) then
-       write(iulog,*) 'decompInit_atm(): Number of processes exceeds number ', &
-            'of atm grid cells',npes,anumg
        call endrun()
     end if
 

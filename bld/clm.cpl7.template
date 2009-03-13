@@ -36,7 +36,7 @@ set config = $cfgdir/config_cache.xml
 cd $cfgdir
 
 $CODEROOT/lnd/clm*/bld/configure -spmd -mode ext_ccsm_seq -rtm on $bgc -dust on -prog_seasalt on $maxpft -clm_bld $cfgdir \
-         -usr_src $CASEROOT/SourceMods/src.clm || exit -1 
+         -usr_src $CASEROOT/SourceMods/src.clm $CLM_CONFIG_OPTS || exit -1 
 
 #--------------------------------------------------------------------
 # Invoke build-namelist
@@ -109,7 +109,15 @@ endif
 
 set mask = "-mask $mask"
 
-set options = "$CLM_BLDNML_OPTS -config $config -res $RESOLUTION $mask $sim_year -clm_demand $clm_demand "
+# following logic may need tweaking to account for configurations where start year is important
+if ($RUN_STARTDATE =~ *-01-01* || $RUN_STARTDATE =~ *-09-01*) then
+    set ignore = "-ignore_ic_year"
+else
+    set ignore = "-ignore_ic_date"
+endif
+
+set options = "$CLM_BLDNML_OPTS -config $config -res $RESOLUTION $mask $sim_year "
+set options = "$options -clm_demand $clm_demand "
 set options = "$options -infile ccsm_namelist -start_type $START_TYPE -case $CASE "
 $CODEROOT/lnd/clm*/bld/build-namelist $options -csmdata \$DIN_LOC_ROOT -inputdata $CASEBUILD/clm.input_data_list || exit -1
 

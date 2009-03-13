@@ -256,7 +256,7 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
         ! Error check: are all elevations within elevation class range
 
         do m = 1,nglcec
-           if ( (topoglcmec_i(io,jo,m) .lt. elevclass(m) .or. topoglcmec_i(io,jo,m) .lt. elevclass(m+1)) &
+           if ( (topoglcmec_i(io,jo,m) .lt. elevclass(m) .or. topoglcmec_i(io,jo,m) .gt. elevclass(m+1)) &
               .and. topoglcmec_i(io,jo,m) .ne. 0) then
               write(6,*) 'Warning: mean elevation does not fall within elevation class '
               write(6,*) elevclass(m),elevclass(m+1),topoglcmec_i(io,jo,m),m,io,jo  
