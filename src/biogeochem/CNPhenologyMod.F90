@@ -119,7 +119,7 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -159,7 +159,7 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp)
    tempavg_t2m                   => clm3%g%l%c%p%pepv%tempavg_t2m
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
    fracday = dt/86400.0_r8
 
 
@@ -257,7 +257,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
    use shr_const_mod, only: SHR_CONST_TKFRZ, SHR_CONST_PI
 !
 ! !ARGUMENTS:
@@ -453,7 +453,7 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    deadcrootn_storage_to_xfer    => clm3%g%l%c%p%pnf%deadcrootn_storage_to_xfer
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
    fracday = dt/86400.0_r8
 
    ! critical daylength from Biome-BGC, v4.1.2
@@ -672,7 +672,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
    use shr_const_mod, only: SHR_CONST_TKFRZ, SHR_CONST_PI
 !
 ! !ARGUMENTS:
@@ -885,7 +885,7 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
     deadcrootn_storage_to_xfer     => clm3%g%l%c%p%pnf%deadcrootn_storage_to_xfer
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
    fracday = dt/86400.0_r8
 
    ! set some local parameters - these will be moved into
@@ -1218,7 +1218,7 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -1311,7 +1311,7 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
     deadcrootn_xfer_to_deadcrootn  => clm3%g%l%c%p%pnf%deadcrootn_xfer_to_deadcrootn
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
 
    ! pft loop
 !dir$ concurrent
@@ -1387,7 +1387,7 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -1418,7 +1418,6 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 !
    real(r8), pointer :: prev_leafc_to_litter(:)  ! previous timestep leaf C litterfall flux (gC/m2/s)
    real(r8), pointer :: prev_frootc_to_litter(:) ! previous timestep froot C litterfall flux (gC/m2/s)
-   real(r8), pointer :: tempsum_retransn(:)      ! temporary annual sum of N retranslocation
    real(r8), pointer :: leafc_to_litter(:)
    real(r8), pointer :: frootc_to_litter(:)
    real(r8), pointer :: leafn_to_litter(:)
@@ -1451,7 +1450,6 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
    ! assign local pointers to derived type arrays (out)
     prev_leafc_to_litter           => clm3%g%l%c%p%pepv%prev_leafc_to_litter
     prev_frootc_to_litter          => clm3%g%l%c%p%pepv%prev_frootc_to_litter
-    tempsum_retransn               => clm3%g%l%c%p%pepv%tempsum_retransn
     leafc_to_litter                => clm3%g%l%c%p%pcf%leafc_to_litter
     frootc_to_litter               => clm3%g%l%c%p%pcf%frootc_to_litter
     leafn_to_litter                => clm3%g%l%c%p%pnf%leafn_to_litter
@@ -1459,7 +1457,7 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
     frootn_to_litter               => clm3%g%l%c%p%pnf%frootn_to_litter
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
 
    ! The litterfall transfer rate starts at 0.0 and increases linearly
    ! over time, with displayed growth going to 0.0 on the last day of litterfall
@@ -1485,9 +1483,6 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
          ! calculate the leaf N litterfall and retranslocation
          leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
          leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
-         ! accumulate total N retranslocation
-         !PET 9/1/08 - testing new retrans algorithm
-                      ! tempsum_retransn(p) = tempsum_retransn(p) + leafn_to_retransn(p)*dt
 
          ! calculate fine root N litterfall (no retranslocation of fine root N)
          frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
@@ -1517,7 +1512,7 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -1551,7 +1546,6 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
    real(r8), pointer :: leafn_to_litter(:)
    real(r8), pointer :: leafn_to_retransn(:)
    real(r8), pointer :: frootn_to_litter(:)
-   real(r8), pointer :: tempsum_retransn(:) ! temporary annual sum of N retranslocation
 !
 ! local pointers to implicit out scalars
 !
@@ -1578,10 +1572,9 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
     leafn_to_litter                => clm3%g%l%c%p%pnf%leafn_to_litter
     leafn_to_retransn              => clm3%g%l%c%p%pnf%leafn_to_retransn
     frootn_to_litter               => clm3%g%l%c%p%pnf%frootn_to_litter
-    tempsum_retransn               => clm3%g%l%c%p%pepv%tempsum_retransn
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
 
    ! pft loop
 !dir$ concurrent
@@ -1598,9 +1591,6 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
          ! calculate the leaf N litterfall and retranslocation
          leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
          leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
-         ! accumulate total N retranslocation
-         !PET 9/1/08 - testing new retrans algorithm
-         !tempsum_retransn(p) = tempsum_retransn(p) + leafn_to_retransn(p)*dt
 
          ! calculate fine root N litterfall (no retranslocation of fine root N)
          frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
@@ -1626,7 +1616,7 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -1661,7 +1651,6 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
    real(r8), pointer :: livestemn_to_retransn(:)
    real(r8), pointer :: livecrootn_to_deadcrootn(:)
    real(r8), pointer :: livecrootn_to_retransn(:)
-   real(r8), pointer :: tempsum_retransn(:) ! temporary annual sum of N retranslocation
 !
 ! local pointers to implicit out scalars
 !
@@ -1693,10 +1682,9 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
     livestemn_to_retransn          => clm3%g%l%c%p%pnf%livestemn_to_retransn
     livecrootn_to_deadcrootn       => clm3%g%l%c%p%pnf%livecrootn_to_deadcrootn
     livecrootn_to_retransn         => clm3%g%l%c%p%pnf%livecrootn_to_retransn
-    tempsum_retransn               => clm3%g%l%c%p%pepv%tempsum_retransn
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
 
    ! set the global parameter for livewood turnover rate
    ! define as an annual fraction (0.7), and convert to fraction per second
@@ -1727,10 +1715,6 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
          livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p))
          livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
 
-         ! accumulate total N retranslocation
-         !PET 9/1/08 - testing new retrans algorithm
-         !tempsum_retransn(p) = tempsum_retransn(p) + livestemn_to_retransn(p)*dt
-         !tempsum_retransn(p) = tempsum_retransn(p) + livecrootn_to_retransn(p)*dt
       end if
 
    end do

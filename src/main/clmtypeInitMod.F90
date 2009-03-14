@@ -1169,10 +1169,10 @@ contains
     allocate(pepv%c_allometry(beg:end))
     allocate(pepv%n_allometry(beg:end))
     allocate(pepv%plant_ndemand(beg:end))
-    allocate(pepv%tempsum_plant_ndemand(beg:end))
-    allocate(pepv%annsum_plant_ndemand(beg:end))
-    allocate(pepv%tempsum_retransn(beg:end))
-    allocate(pepv%annsum_retransn(beg:end))
+    allocate(pepv%tempsum_potential_gpp(beg:end))
+    allocate(pepv%annsum_potential_gpp(beg:end))
+    allocate(pepv%tempmax_retransn(beg:end))
+    allocate(pepv%annmax_retransn(beg:end))
     allocate(pepv%avail_retransn(beg:end))
     allocate(pepv%plant_nalloc(beg:end))
     allocate(pepv%plant_calloc(beg:end))
@@ -1215,10 +1215,10 @@ contains
     pepv%c_allometry(beg:end) = nan
     pepv%n_allometry(beg:end) = nan
     pepv%plant_ndemand(beg:end) = nan
-    pepv%tempsum_plant_ndemand(beg:end) = nan
-    pepv%annsum_plant_ndemand(beg:end) = nan
-    pepv%tempsum_retransn(beg:end) = nan
-    pepv%annsum_retransn(beg:end) = nan
+    pepv%tempsum_potential_gpp(beg:end) = nan
+    pepv%annsum_potential_gpp(beg:end) = nan
+    pepv%tempmax_retransn(beg:end) = nan
+    pepv%annmax_retransn(beg:end) = nan
     pepv%avail_retransn(beg:end) = nan
     pepv%plant_nalloc(beg:end) = nan
     pepv%plant_calloc(beg:end) = nan

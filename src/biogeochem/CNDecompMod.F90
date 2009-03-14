@@ -47,7 +47,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
 ! !USES:
    use clmtype
    use CNAllocationMod, only: CNAllocation
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
    use pft2colMod, only: p2c
 !
 ! !ARGUMENTS:
@@ -266,7 +266,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    itypelun              => clm3%g%l%itype
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
    dtd = dt/86400.0_r8
 
    ! set soil organic matter compartment C:N ratios (from Biome-BGC v4.2.0)
@@ -357,23 +357,19 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
 
    ! calculate rate constant scalar for soil temperature
    ! assuming that the base rate constants are assigned for non-moisture
-   ! limiting conditions at 25 C. The function used here is taken from
-   ! Lloyd, J., and J.A. Taylor, 1994. On the temperature dependence of
-   ! soil respiration. Functional Ecology, 8:315-323.
-   ! This equation is a modification of their eqn. 11, changing the base
-   ! temperature from 10 C to 25 C, since most of the microcosm studies
-   ! used to get the base decomp rates were controlled at 25 C.
-
+   ! limiting conditions at 25 C. 
+   ! Peter Thornton: 3/13/09
+   ! Replaced the Lloyd and Taylor function with a Q10 formula, with Q10 = 1.5
+   ! as part of the modifications made to improve the seasonal cycle of 
+   ! atmospheric CO2 concentration in global simulations. This does not impact
+   ! the base rates at 25 C, which are calibrated from microcosm studies.
    t_scalar(:) = 0._r8
    do j = 1,nlevdecomp
 !dir$ concurrent
 !cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
-         ! only modify scalar if the soil temperature is >= -40 C
-         if (t_soisno(c,j) >= SHR_CONST_TKFRZ-40._r8) then
-            t_scalar(c) = t_scalar(c) + exp(208.56_r8*((1.0_r8/71.02_r8)-(1.0_r8/(t_soisno(c,j)-227.13_r8))))*fr(c,j)
-         end if
+         t_scalar(c)=t_scalar(c) + (1.5**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j)
       end do
    end do
 
@@ -396,7 +392,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
          psi = min(soilpsi(c,j),maxpsi)
          ! decomp only if soilpsi is higher than minpsi
          if (psi > minpsi) then
-            w_scalar(c) = w_scalar(c) + (log(minpsi/psi)/log(minpsi/maxpsi))*fr(c,j);
+            w_scalar(c) = w_scalar(c) + (log(minpsi/psi)/log(minpsi/maxpsi))*fr(c,j)
          end if
       end do
    end do

@@ -149,13 +149,12 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
       if (ivt(p) /= noveg) then
           ! update the leaf area index based on leafC and SLA
-          !tlai(p) = (2._r8 * slatop(ivt(p)) * leafc(p))/(2._r8 - dsladlai(ivt(p)) * leafc(p))
+          ! Eq 3 from Thornton and Zimmerman, 2007, J Clim, 20, 3902-3923. 
           if (dsladlai(ivt(p)) > 0._r8) then
-             tlai(p) = (exp(leafc(p)*dsladlai(ivt(p)) + log(slatop(ivt(p)))) - slatop(ivt(p)))/dsladlai(ivt(p))
+             tlai(p) = (slatop(ivt(p))*(exp(leafc(p)*dsladlai(ivt(p))) - 1._r8))/dsladlai(ivt(p))
           else
              tlai(p) = slatop(ivt(p)) * leafc(p)
           end if
-          ! added 5/4/04, PET: duringg exp38 debugging
           tlai(p) = max(0._r8, tlai(p))
 
           ! update the stem area index and height based on LAI, stem mass, and veg type.

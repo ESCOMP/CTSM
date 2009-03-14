@@ -144,10 +144,10 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: c_allometry(:)        ! C allocation index (DIM)
    real(r8), pointer :: n_allometry(:)        ! N allocation index (DIM)
    real(r8), pointer :: plant_ndemand(:)      ! N flux required to support initial GPP (gN/m2/s)
-   real(r8), pointer :: tempsum_plant_ndemand(:) ! temporary annual sum of plant_ndemand
-   real(r8), pointer :: annsum_plant_ndemand(:)  ! annual sum of plant_ndemand
-   real(r8), pointer :: tempsum_retransn(:)   ! temporary annual sum of N retranslocation
-   real(r8), pointer :: annsum_retransn(:)    ! annual sum of N retranslocation
+   real(r8), pointer :: tempsum_potential_gpp(:) ! temporary annual sum of plant_ndemand
+   real(r8), pointer :: annsum_potential_gpp(:)  ! annual sum of plant_ndemand
+   real(r8), pointer :: tempmax_retransn(:)   ! temporary max of retranslocated N pool (gN/m2)
+   real(r8), pointer :: annmax_retransn(:)    ! annual max of retranslocated N pool (gN/m2)
    real(r8), pointer :: avail_retransn(:)     ! N flux available from retranslocation pool (gN/m2/s)
    real(r8), pointer :: plant_nalloc(:)       ! total allocated N flux (gN/m2/s)
    real(r8), pointer :: plant_calloc(:)       ! total allocated C flux (gC/m2/s)
@@ -417,10 +417,10 @@ subroutine CNiniTimeVar()
     c_allometry                    => clm3%g%l%c%p%pepv%c_allometry
     n_allometry                    => clm3%g%l%c%p%pepv%n_allometry
     plant_ndemand                  => clm3%g%l%c%p%pepv%plant_ndemand
-    tempsum_plant_ndemand          => clm3%g%l%c%p%pepv%tempsum_plant_ndemand
-    annsum_plant_ndemand           => clm3%g%l%c%p%pepv%annsum_plant_ndemand
-    tempsum_retransn               => clm3%g%l%c%p%pepv%tempsum_retransn
-    annsum_retransn                => clm3%g%l%c%p%pepv%annsum_retransn
+    tempsum_potential_gpp          => clm3%g%l%c%p%pepv%tempsum_potential_gpp
+    annsum_potential_gpp           => clm3%g%l%c%p%pepv%annsum_potential_gpp
+    tempmax_retransn               => clm3%g%l%c%p%pepv%tempmax_retransn
+    annmax_retransn                => clm3%g%l%c%p%pepv%annmax_retransn
     avail_retransn                 => clm3%g%l%c%p%pepv%avail_retransn
     plant_nalloc                   => clm3%g%l%c%p%pepv%plant_nalloc
     plant_calloc                   => clm3%g%l%c%p%pepv%plant_calloc
@@ -809,10 +809,10 @@ subroutine CNiniTimeVar()
          c_allometry(p) = 0._r8
          n_allometry(p) = 0._r8
          plant_ndemand(p) = 0._r8
-         tempsum_plant_ndemand(p) = 0._r8
-         annsum_plant_ndemand(p) = 0._r8
-         tempsum_retransn(p) = 0._r8
-         annsum_retransn(p) = 0._r8
+         tempsum_potential_gpp(p) = 0._r8
+         annsum_potential_gpp(p) = 0._r8
+         tempmax_retransn(p) = 0._r8
+         annmax_retransn(p) = 0._r8
          avail_retransn(p) = 0._r8
          plant_nalloc(p) = 0._r8
          plant_calloc(p) = 0._r8

@@ -47,7 +47,7 @@ subroutine CNFireArea (num_soilc, filter_soilc)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size, get_nstep
+   use clm_time_manager, only: get_step_size, get_nstep
    use clm_varpar  , only: max_pft_per_col
 !
 ! !ARGUMENTS:
@@ -155,7 +155,7 @@ subroutine CNFireArea (num_soilc, filter_soilc)
    end do
 
    ! Get model step size
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
 
    ! Set the number of timesteps for e-folding.
    ! When the simulation has run fewer than this number of steps,
@@ -246,7 +246,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -495,7 +495,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 
    ! Get model step size
 
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
 
    ! pft loop
 !dir$ concurrent

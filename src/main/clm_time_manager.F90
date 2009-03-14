@@ -914,7 +914,9 @@ integer function get_rad_step_size()
   
   character(len=*), parameter :: sub = 'get_rad_step_size'
   integer :: days_per_yr   ! Days per year
-
+  
+  ! PET: hardwire get_rad_step_size = 3600.0 to allow FCN compset to work
+  if (1 == 0) then
   ! At initialization just return time-step as radiation step size
   if ( lastsw_cday == uninit_r8 )then
      get_rad_step_size  = dtime
@@ -937,6 +939,10 @@ integer function get_rad_step_size()
       call endrun( sub//': error get_rad_step_size less than time-step'               )
   else if ( get_rad_step_size  > dtime*5 )then
       call endrun( sub//': error get_rad_step_size greater than five times time-step' )
+  end if
+  ! PET: this is the hardwire block that should always get executed
+  else
+      get_rad_step_size = 3600._r8
   end if
 
 end function get_rad_step_size

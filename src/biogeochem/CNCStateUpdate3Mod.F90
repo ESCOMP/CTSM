@@ -44,7 +44,7 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -183,7 +183,7 @@ subroutine CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
     livestemc_xfer                 => clm3%g%l%c%p%pcs%livestemc_xfer
 
     ! set time steps
-    dt = real( get_rad_step_size(), r8 )
+    dt = real( get_step_size(), r8 )
 
     ! column loop
 !dir$ concurrent

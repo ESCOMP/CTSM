@@ -634,7 +634,7 @@ contains
     use shr_const_mod,only : SHR_CONST_PDB
     use decompMod   , only : get_proc_bounds
     use clm_varcon  , only : istsoil, c13ratio
-    use clm_time_manager, only : get_rad_step_size
+    use clm_time_manager, only : get_step_size
 !
 ! !ARGUMENTS:
     implicit none
@@ -820,7 +820,7 @@ contains
     ! Get time step
     ! N.B. This routine is called on the doalb timestep, so the relevant time step
     ! between calls (dt) is generally longer than dtime.
-    dt = real( get_rad_step_size(), r8 )
+    dt = real( get_step_size(), r8 )
 
     ! set column-level conversion and product pool fluxes
     ! to 0 at the beginning of every weight-shifting timestep
@@ -1042,10 +1042,10 @@ contains
 					pptr%pepv%c_allometry(p) = 0._r8
 					pptr%pepv%n_allometry(p) = 0._r8
 					pptr%pepv%plant_ndemand(p) = 0._r8
-					pptr%pepv%tempsum_plant_ndemand(p) = 0._r8
-					pptr%pepv%annsum_plant_ndemand(p) = 0._r8
-					pptr%pepv%tempsum_retransn(p) = 0._r8
-					pptr%pepv%annsum_retransn(p) = 0._r8
+					pptr%pepv%tempsum_potential_gpp(p) = 0._r8
+					pptr%pepv%annsum_potential_gpp(p) = 0._r8
+					pptr%pepv%tempmax_retransn(p) = 0._r8
+					pptr%pepv%annmax_retransn(p) = 0._r8
 					pptr%pepv%avail_retransn(p) = 0._r8
 					pptr%pepv%plant_nalloc(p) = 0._r8
 					pptr%pepv%plant_calloc(p) = 0._r8

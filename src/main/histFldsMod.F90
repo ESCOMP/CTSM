@@ -3692,21 +3692,21 @@ contains
          avgflag='A', long_name='N flux required to support initial GPP', &
          ptr_pft=clm3%g%l%c%p%pepv%plant_ndemand, default='inactive')
 
-    call hist_addfld1d (fname='TEMPSUM_PLANT_NDEMAND', units='gN/m^2/yr', &
-         avgflag='A', long_name='temporary annual sum of plant_ndemand', &
-         ptr_pft=clm3%g%l%c%p%pepv%tempsum_plant_ndemand, default='inactive')
+    call hist_addfld1d (fname='TEMPSUM_POTENTIAL_GPP', units='gC/m^2/yr', &
+         avgflag='A', long_name='temporary annual sum of potential GPP', &
+         ptr_pft=clm3%g%l%c%p%pepv%tempsum_potential_gpp, default='inactive')
 
-    call hist_addfld1d (fname='ANNSUM_PLANT_NDEMAND', units='gN/m^2/yr', &
-         avgflag='A', long_name='annual sum of plant_ndemand', &
-         ptr_pft=clm3%g%l%c%p%pepv%annsum_plant_ndemand, default='inactive')
+    call hist_addfld1d (fname='ANNSUM_POTENTIAL_GPP', units='gN/m^2/yr', &
+         avgflag='A', long_name='annual sum of potential GPP', &
+         ptr_pft=clm3%g%l%c%p%pepv%annsum_potential_gpp, default='inactive')
 
-    call hist_addfld1d (fname='TEMPSUM_RETRANSN', units='gN/m^2/yr', &
-         avgflag='A', long_name='temporary annual sum of N retranslocation', &
-         ptr_pft=clm3%g%l%c%p%pepv%tempsum_retransn, default='inactive')
+    call hist_addfld1d (fname='TEMPMAX_RETRANSN', units='gN/m^2', &
+         avgflag='A', long_name='temporary annual max of retranslocated N pool', &
+         ptr_pft=clm3%g%l%c%p%pepv%tempmax_retransn, default='inactive')
 
-    call hist_addfld1d (fname='ANNSUM_RETRANSN', units='gN/m^2/yr', &
-         avgflag='A', long_name='annual sum of N retranslocation', &
-         ptr_pft=clm3%g%l%c%p%pepv%annsum_retransn, default='inactive')
+    call hist_addfld1d (fname='ANNMAX_RETRANSN', units='gN/m^2', &
+         avgflag='A', long_name='annual max of retranslocated N pool', &
+         ptr_pft=clm3%g%l%c%p%pepv%annmax_retransn, default='inactive')
 
     call hist_addfld1d (fname='AVAIL_RETRANSN', units='gN/m^2/s', &
          avgflag='A', long_name='N flux available from retranslocation pool', &

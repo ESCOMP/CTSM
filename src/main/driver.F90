@@ -285,12 +285,12 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
      call t_stopf('begwbal')
 
 #if (defined CN)
-     if (doalb) then
+!     if (doalb) then
         call t_startf('begcnbal')
         call BeginCBalance(filter(nc)%num_soilc,filter(nc)%soilc)
         call BeginNBalance(filter(nc)%num_soilc,filter(nc)%soilc)
         call t_stopf('begcnbal')
-     end if 
+!     end if 
 #endif
 
   end do
@@ -310,7 +310,9 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
   ! Update weights and reset filters if dynamic land use
   ! This needs to be done outside the clumps loop, but after BeginWaterBalance()
   ! ============================================================================
-  if (doalb .and. fpftdyn /= ' ') then
+! PET: switching CN timestep
+!  if (doalb .and. fpftdyn /= ' ') then
+   if (fpftdyn /= ' ') then
      call pftdyn_interp()
      call pftdyn_wbal()
 #if (defined CN)
@@ -326,7 +328,9 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
   ! currently being done outside clumps loop, but no reason why it couldn't be
   ! re-written to go inside.
   ! ============================================================================
-  if (doalb .and. fndepdyn /= ' ') then
+! PET: switching CN timestep
+!  if (doalb .and. fndepdyn /= ' ') then
+  if (fndepdyn /= ' ') then
      call ndepdyn_interp()
   end if
 #endif       
@@ -576,11 +580,11 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
      call CNEcosystemDyn(begc,endc,begp,endp,filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp, doalb)
-     if (doalb) then 
+!     if (doalb) then 
 	    call CNAnnualUpdate(filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp)
-     end if         
+!     end if         
 #else
      ! Prescribed biogeography,
      ! prescribed canopy structure, some prognostic carbon fluxes
@@ -603,7 +607,8 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
      ! on the first EXIT_SPINUP doalb timestep     
 #elif (defined CN)
      nstep = get_nstep()
-     if (doalb .and. (nstep > 2) ) then
+!     if (doalb .and. (nstep > 2) ) then
+     if (nstep > 2) then
         call t_startf('cnbalchk')
         call CBalanceCheck(filter(nc)%num_soilc,filter(nc)%soilc)
         call NBalanceCheck(filter(nc)%num_soilc,filter(nc)%soilc)

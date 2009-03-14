@@ -167,7 +167,7 @@ subroutine CBalanceCheck(num_soilc, filter_soilc)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -218,7 +218,7 @@ subroutine CBalanceCheck(num_soilc, filter_soilc)
     col_errcb                      => clm3%g%l%c%ccbal%errcb
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
 
    err_found = .false.
    ! column loop
@@ -288,7 +288,7 @@ subroutine NBalanceCheck(num_soilc, filter_soilc)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -347,7 +347,7 @@ subroutine NBalanceCheck(num_soilc, filter_soilc)
     col_errnb                      => clm3%g%l%c%cnbal%errnb
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
 
    err_found = .false.
    ! column loop

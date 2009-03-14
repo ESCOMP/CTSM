@@ -108,7 +108,7 @@ contains
 !EOP
 !-----------------------------------------------------------------------
 
-    if (doalb) then
+ !   if (doalb) then
 
        ! Call the main CN routines
        call CNZeroFluxes(num_soilc, filter_soilc, num_soilp, filter_soilp)
@@ -167,7 +167,9 @@ contains
 
        call CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
+    if (doalb) then   
        call CNVegStructUpdate(num_soilp, filter_soilp)
+    end if
 
 !       call CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
        
@@ -177,7 +179,7 @@ contains
        
        call NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
-    end if  !end of if-doalb block
+!    end if  !end of if-doalb block
 
   end subroutine CNEcosystemDyn
 #endif

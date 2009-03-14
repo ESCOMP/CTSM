@@ -45,7 +45,7 @@ subroutine C13StateUpdate0(num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -78,7 +78,7 @@ subroutine C13StateUpdate0(num_soilp, filter_soilp)
     psnsun_to_cpool                => clm3%g%l%c%p%pc13f%psnsun_to_cpool
 
     ! set time steps
-    dt = real( get_rad_step_size(), r8 )
+    dt = real( get_step_size(), r8 )
 
     ! pft loop
 !dir$ concurrent
@@ -107,7 +107,7 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -406,7 +406,7 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
     pft_ctrunc                     => clm3%g%l%c%p%pc13s%pft_ctrunc
 
     ! set time steps
-    dt = real( get_rad_step_size(), r8 )
+    dt = real( get_step_size(), r8 )
 
     ! column loop
 !dir$ concurrent

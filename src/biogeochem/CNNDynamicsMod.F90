@@ -183,7 +183,7 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
 ! !USES:
    use clmtype
    use clm_varpar      , only : nlevsoi
-   use clm_time_manager    , only : get_rad_step_size
+   use clm_time_manager    , only : get_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -227,7 +227,7 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
    sminn_leached => clm3%g%l%c%cnf%sminn_leached
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
 
    ! Assume that 10% of the soil mineral N is in a soluble form
    sf = 0.1_r8

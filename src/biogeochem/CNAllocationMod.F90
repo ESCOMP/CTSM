@@ -44,7 +44,7 @@ subroutine CNAllocation (lbc, ubc, &
 !
 ! !USES:
    use clmtype
-   use clm_time_manager, only: get_rad_step_size
+   use clm_time_manager, only: get_step_size
    use pft2colMod, only: p2c
 !
 ! !ARGUMENTS:
@@ -116,11 +116,11 @@ subroutine CNAllocation (lbc, ubc, &
    real(r8), pointer :: c_allometry(:)           ! C allocation index (DIM)
    real(r8), pointer :: n_allometry(:)           ! N allocation index (DIM)
    real(r8), pointer :: plant_ndemand(:)         ! N flux required to support initial GPP (gN/m2/s)
-   real(r8), pointer :: tempsum_plant_ndemand(:) ! temporary annual sum of plant_ndemand
-   real(r8), pointer :: tempsum_retransn(:)      ! temporary annual sum of N retranslocation
-   real(r8), pointer :: annsum_plant_ndemand(:)  ! annual sum of plant_ndemand
+   real(r8), pointer :: tempsum_potential_gpp(:) ! temporary annual sum of potential GPP 
+   real(r8), pointer :: tempmax_retransn(:)      ! temporary annual max of retranslocated N pool (gN/m2)
+   real(r8), pointer :: annsum_potential_gpp(:)  ! annual sum of potential GPP
    real(r8), pointer :: avail_retransn(:)        ! N flux available from retranslocation pool (gN/m2/s)
-   real(r8), pointer :: annsum_retransn(:)       ! annual sum of N retranslocation
+   real(r8), pointer :: annmax_retransn(:)       ! annual max of retranslocated N pool
    real(r8), pointer :: plant_nalloc(:)          ! total allocated N flux (gN/m2/s)
    real(r8), pointer :: plant_calloc(:)          ! total allocated C flux (gC/m2/s)
    real(r8), pointer :: excess_cflux(:)          ! C flux not allocated due to downregulation (gC/m2/s)
@@ -236,11 +236,11 @@ subroutine CNAllocation (lbc, ubc, &
    c_allometry                 => clm3%g%l%c%p%pepv%c_allometry
    n_allometry                 => clm3%g%l%c%p%pepv%n_allometry
    plant_ndemand               => clm3%g%l%c%p%pepv%plant_ndemand
-   tempsum_plant_ndemand       => clm3%g%l%c%p%pepv%tempsum_plant_ndemand
-   tempsum_retransn            => clm3%g%l%c%p%pepv%tempsum_retransn
-   annsum_plant_ndemand        => clm3%g%l%c%p%pepv%annsum_plant_ndemand
+   tempsum_potential_gpp       => clm3%g%l%c%p%pepv%tempsum_potential_gpp
+   tempmax_retransn            => clm3%g%l%c%p%pepv%tempmax_retransn
+   annsum_potential_gpp        => clm3%g%l%c%p%pepv%annsum_potential_gpp
    avail_retransn              => clm3%g%l%c%p%pepv%avail_retransn
-   annsum_retransn             => clm3%g%l%c%p%pepv%annsum_retransn
+   annmax_retransn             => clm3%g%l%c%p%pepv%annmax_retransn
    plant_nalloc                => clm3%g%l%c%p%pepv%plant_nalloc
    plant_calloc                => clm3%g%l%c%p%pepv%plant_calloc
    excess_cflux                => clm3%g%l%c%p%pepv%excess_cflux
@@ -287,10 +287,9 @@ subroutine CNAllocation (lbc, ubc, &
    supplement_to_sminn         => clm3%g%l%c%cnf%supplement_to_sminn
 
    ! set time steps
-   dt = real( get_rad_step_size(), r8 )
+   dt = real( get_step_size(), r8 )
 
-   ! set some parameters (temporary, these will eventually go into
-   ! either pepc, or parameter file
+   ! set some space-and-time constant parameters 
    dayscrecover = 30.0_r8
    grperc = 0.3_r8
    grpnow = 1.0_r8
@@ -307,12 +306,8 @@ subroutine CNAllocation (lbc, ubc, &
       ! gpp that is used to control stomatal conductance.
       ! For the nitrogen downregulation code, this is assumed
       ! to be the potential gpp, and the actual gpp will be
-      ! reduced due to N limitation.  This eventually feeds
-      ! back to the canopy fluxes calculation by way of reduced
-      ! leaf area, but there is not a direct downregulation of the
-      ! photosynthetic potential that ties C and water fluxes together
-      ! at the leaf level in canopy_fluxes routine. What is the
-      ! right way to do this? - still an open research question.
+      ! reduced due to N limitation. 
+      
       ! Convert psn from umol/m2/s -> gC/m2/s
 
       ! The input psn (psnsun and psnsha) are expressed per unit LAI
@@ -380,15 +375,11 @@ subroutine CNAllocation (lbc, ubc, &
      
       ! modified wood allocation to be 2.2 at npp=800 gC/m2/yr, 0.2 at npp=0,
       ! constrained so that it does not go lower than 0.2 (under negative annsum_npp)
-      ! There was an error in this formula in previous version, where the coefficient
-      ! was 0.004 instead of 0.0025.
       ! This variable allocation is only for trees. Shrubs have a constant
       ! allocation as specified in the pft-physiology file.  The value is also used
       ! as a trigger here: -1.0 means to use the dynamic allocation (trees).
       if (stem_leaf(ivt(p)) == -1._r8) then
-!             f3 = max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p))
-!       f3 = min(max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p)),2.5_r8)
-        f3 = (2.7/(1.0+exp(-0.004*(annsum_npp(p) - 300.0)))) - 0.4
+         f3 = (2.7/(1.0+exp(-0.004*(annsum_npp(p) - 300.0)))) - 0.4
       else
       	f3 = stem_leaf(ivt(p))
       end if
@@ -413,31 +404,16 @@ subroutine CNAllocation (lbc, ubc, &
       end if
       plant_ndemand(p) = availc(p)*(n_allometry(p)/c_allometry(p))
 
-      ! retranslocated N deployment depends on seasonal cycle of N demand
+      ! retranslocated N deployment depends on seasonal cycle of potential GPP
       ! (requires one year run to accumulate demand)
 
-      ! PET - 8/29/08
-              ! modifying seasonal cycle controls on retranslocated N deployment:
-              ! tied to retransn pool instead of retransn flux
+      tempsum_potential_gpp(p) = tempsum_potential_gpp(p) + gpp(p)
 
-              ! PET 9/2/08
-              ! temporarily using the tempsum_plant_ndemand to store gpp information,
-              ! so only a few files need to be modified during testing.
-              ! Go back and rename these variables if test is successful.
-              ! Note that the gpp local in this routine does not have any N-availability
-              ! downregulation applied.
+      ! Adding the following line to carry max retransn info to CN Annual Update
+      tempmax_retransn(p) = max(tempmax_retransn(p),retransn(p))
 
-              ! Also temporarily using annsum_retransn to store annmax_retransn.
-              ! Go back and rename this if successful.
-
-              ! tempsum_plant_ndemand(p) = tempsum_plant_ndemand(p) + plant_ndemand(p)
-              tempsum_plant_ndemand(p) = tempsum_plant_ndemand(p) + gpp(p)
-              ! Adding the following line to carry max retransn info to CN Annual Update
-              tempsum_retransn(p) = max(tempsum_retransn(p),retransn(p))
-
-      if (annsum_plant_ndemand(p) > 0.0_r8) then
-         ! avail_retransn(p) = annsum_retransn(p)*(plant_ndemand(p)/annsum_plant_ndemand(p))/dt
-                      avail_retransn(p) = (annsum_retransn(p)/2.0)*(gpp(p)/annsum_plant_ndemand(p))/dt
+      if (annsum_potential_gpp(p) > 0.0_r8) then
+         avail_retransn(p) = (annmax_retransn(p)/2.0)*(gpp(p)/annsum_potential_gpp(p))/dt
       else
          avail_retransn(p) = 0.0_r8
       end if
