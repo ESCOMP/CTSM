@@ -1158,8 +1158,8 @@ contains
 !cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
-       xs1(c)          = max(h2osoi_liq(c,1)-(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1)),0._r8)
-       h2osoi_liq(c,1) = min(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1), h2osoi_liq(c,1))
+       xs1(c)          = max(max(h2osoi_liq(c,1),0._r8)-max(0._r8,(pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1))),0._r8)
+       h2osoi_liq(c,1) = min(max(0._r8,pondmx+watsat(c,1)*dzmm(c,1)-h2osoi_ice(c,1)), h2osoi_liq(c,1))
        qflx_rsub_sat(c)     = xs1(c) / dtime
     end do
 

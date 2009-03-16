@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_27       oleson 03/16/2009 Urban model changes and FGR12 fix
    clm3_6_25      dlawren 03/13/2009 Daylength control on Vcmax, 1%Lake,wetland,glacier in mksrfdat, remove ELEVATION in surface data file
    clm3_6_24       oleson 03/09/2009 Fix urban testing and some history field changes
    clm3_6_23       oleson 03/08/2009 Prune history fields and change to snowdp threshold for solar radiation penetration into snow

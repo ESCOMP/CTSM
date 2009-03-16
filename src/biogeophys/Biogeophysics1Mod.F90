@@ -71,7 +71,7 @@ contains
                                     zlnd, zsno, tfrz, &
                                     icol_roof, icol_sunwall, icol_shadewall,     &
                                     icol_road_imperv, icol_road_perv, tfrz, spval, istdlak
-    use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, max_pft_per_gcell
+    use clm_varpar         , only : nlevgrnd, nlevurb, nlevsno, max_pft_per_gcell, nlevsoi
     use QSatMod            , only : QSat
     use shr_const_mod      , only : SHR_CONST_PI
 !
@@ -353,7 +353,7 @@ contains
              soilalpha(c) = qred
           ! Pervious road depends on water in total soil column
           else if (ctype(c) == icol_road_perv) then
-             do j = 1, nlevurb
+             do j = 1, nlevsoi
                 if (t_soisno(c,j) >= tfrz) then
                    vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
                    eff_porosity = watsat(c,j)-vol_ice
@@ -370,7 +370,7 @@ contains
 
              ! Normalize root resistances to get layer contribution to total ET
              if (hr_road_perv .gt. 0._r8) then
-                do j = 1, nlevurb
+                do j = 1, nlevsoi
                    rootr_road_perv(c,j) = rootr_road_perv(c,j)/hr_road_perv
                 end do
              end if
@@ -395,12 +395,9 @@ contains
        qg(c) = qred*qsatg
        dqgdT(c) = qred*qsatgdT
 
-       if (ctype(c) /= icol_roof .and. ctype(c) /= icol_road_imperv &
-           .and. ctype(c) /= icol_road_perv) then
-          if (qsatg > forc_q(g) .and. forc_q(g) > qred*qsatg) then
-             qg(c) = forc_q(g)
-             dqgdT(c) = 0._r8
-          end if
+       if (qsatg > forc_q(g) .and. forc_q(g) > qred*qsatg) then
+          qg(c) = forc_q(g)
+          dqgdT(c) = 0._r8
        end if
 
        ! Ground emissivity - only calculate for non-urban landunits 

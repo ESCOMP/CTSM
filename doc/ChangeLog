@@ -1,4 +1,238 @@
 ===============================================================
+Tag name:  clm3_6_27
+Originator(s):  oleson (Oleson Keith 1332 CGD)
+Date: Mon Mar 16 10:52:05 MDT 2009
+One-line Summary: Urban model changes and FGR12 fix
+
+Purpose of changes:  Fix large urban saturation excess runoff.
+                     Limit urban dew formation.
+                     Change FGR12 diagnostic.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  821 (mksurfdata for qtr deg)
+                                  851 (abort when files non-exist on jaguar)
+                                  862 (360x720 res problem)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  990 (illegal instruction)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: Not tested
+
+Code reviewed by: K. Oleson
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+M      models/lnd/clm/src/biogeophys/SoilTemperatureMod.F90 ---- change eflx_fgr12 diagnostic
+M      models/lnd/clm/src/biogeophys/Biogeophysics1Mod.F90 ---- limit urban dew formation and calculate
+              pervious road qred over nlevsoi, not nlevurb
+M      models/lnd/clm/src/biogeophys/SoilHydrologyMod.F90 ---- prevent large saturation excess due to 
+              ponded ice
+
+Summary of testing:
+
+  bluefire: All PASS tests_pretag_bluefire except TBL and :
+013 smH74 TSM.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test -1100 cold .......FAIL! rc= 10
+020 smE95 TSM.sh 4p_vodsrsc_h clm_std 19981231:NONE:1800 4x5 gx3v5 48 arb_ic ....................FAIL! rc= 10
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+048 smC61 TSM.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v5 -6 cold .................FAIL! rc= 10
+049 erC61 TER.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v5 10+38 cold ..............FAIL! rc= 5
+050 brC61 TBR.sh _sc_dh clm_urb^nl_urb_br 19981001:NONE:1800 1.9x2.5 gx1v5 -3+-3 cold ...........FAIL! rc= 5
+053 erH51 TER.sh 17p_cnnsc_dh clm_std 19980115:NONE:1800 10x15 USGS@2000 10+38 cold .............FAIL! rc= 7
+054 brH51 TBR.sh 17p_cnnsc_dh clm_std 19980115:NONE:1800 10x15 USGS@2000 72+72 cold .............FAIL! rc= 6
+056 smI58 TSMcnspinup.sh 17p_cnadspinupsc_dh 17p_cnexitspinupsc_dh 17p_cnsc_dh clm_std 19980115:NONEFAIL! rc=5
+057 smLI1 TSM.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+058 erLI1 TER.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+059 brLI1 TBR.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+096 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+097 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+098 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
+099 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 6
+100 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 6
+
+smH74 and smI58 are CN-related tests that did not fail in clm3_6_25, but fail in clm3_6_26 and in this tag and 
+thus should be investigated further.
+smC61, erC61, brC61 fail because of permission denied when reading surface dataset. This appears to be a test
+suite problem only.
+
+  jaguar:
+  kraken:
+  lightning/pathscale:
+  bangkok/lf95:
+  breeze/gale/hail/gust/ifort:
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_26
+
+Changes answers relative to baseline: Urban answers change because of runoff fix.
+                                      Standard mode answers only change in FGR12 diagnostic.
+
+===============================================================
+===============================================================
+Tag name: clm3_6_26
+Originator(s): Peter Thornton
+Date: 3/14/09
+One-line Summary: CN time step and restart file changes
+
+Purpose of changes: shorten CN restart file. Requires moving CLM to physical model timestep.
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: none
+
+Describe any changes made to the namelist: none
+
+List any changes to the defaults for the boundary datasets: nonee
+
+Describe any substantial timing or memory changes: CLM restart file reduced in size by ~factor of 3.
+
+Code reviewed by: Forrest Hoffman
+
+List any svn externals directories updated (csm_share, mct, etc.): none
+
+List all files eliminated: none
+
+List all files added and what they do:
+
+
+List all existing files that have been modified, and describe the changes:
+M      models/lnd/clm/src/biogeochem/CNCStateUpdate2Mod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNC13StateUpdate2Mod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNNStateUpdate1Mod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNBalanceCheckMod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNNStateUpdate3Mod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNFireMod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNMRespMod.F90 - change q10
+M      models/lnd/clm/src/biogeochem/CNPhenologyMod.F90 - remove reference to retransn
+M      models/lnd/clm/src/biogeochem/CNCStateUpdate1Mod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNDecompMod.F90 - change q10
+M      models/lnd/clm/src/biogeochem/CNCStateUpdate3Mod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNC13StateUpdate1Mod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNrestMod.F90 - eliminate many CN variables
+M      models/lnd/clm/src/biogeochem/CNC13StateUpdate3Mod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNAnnualUpdateMod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNNStateUpdate2Mod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNNDynamicsMod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNAllocationMod.F90 - change time step, and cleanup some variable names
+M      models/lnd/clm/src/biogeochem/CNEcosystemDynMod.F90 - change time step
+M      models/lnd/clm/src/biogeochem/CNSetValueMod.F90 - cleanup variable names
+M      models/lnd/clm/src/biogeochem/CNVegStructUpdateMod.F90 - change time step
+M      models/lnd/clm/src/main/CNiniTimeVar.F90 - cleanup variable names
+M      models/lnd/clm/src/main/driver.F90 - change time step
+M      models/lnd/clm/src/main/clmtypeInitMod.F90 - cleanup variable names
+M      models/lnd/clm/src/main/pftdynMod.F90 - change time step
+M      models/lnd/clm/src/main/clm_time_manager.F90 - change time step
+M      models/lnd/clm/src/main/clmtype.F90 - cleanup variable names
+M      models/lnd/clm/src/main/histFldsMod.F90 - cleanup variable names
+
+Summary of testing:
+
+  bluefire:
+  jaguar:
+ Ran the CLM test suite, with the following results:
+smA74 TSM.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ...................PASS
+erA74 TER.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -5+-5 arb_ic .................PASS
+brA74 TBR.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -5+-5 arb_ic .................PASS
+blA74 TBL.sh _sc_ds clm_std 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ...................SKIPPED*
+smA91 TSM.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -6 arb_ic ..........................PASS
+erA91 TER.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .......................FAIL! rc= 7 (passes with 512 tasks)
+brA91 TBR.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .......................FAIL! rc= 6 (passes with 512 tasks)
+blA91 TBL.sh _sc_dh clm_std 19990101:NONE:3600 4x5 gx3v5 -6 arb_ic ..........................SKIPPED*
+smE92 TSM.sh 4p_vodsrsc_dm clm_std 19981230:NONE:1800 4x5 gx3v5 96 arb_ic ...................PASS
+erE92 TER.sh 4p_vodsrsc_dm clm_std 19981230:NONE:1800 4x5 gx3v5 10+38 arb_ic ................PASS
+brE92 TBR.sh 4p_vodsrsc_dm clm_std 19981230:NONE:1800 4x5 gx3v5 72+72 arb_ic ................PASS
+blE92 TBL.sh 4p_vodsrsc_dm clm_std 19981230:NONE:1800 4x5 gx3v5 48 arb_ic ...................SKIPPED*
+smEH2 TSM.sh 4p_vodsrsc_dm clm_std 19981231:NONE:3600 1.9x2.5^0.9x1.25 USGS 48 arb_ic .......PASS
+erEH2 TER.sh 4p_vodsrsc_dm clm_std 19981231:NONE:3600 1.9x2.5^0.9x1.25 USGS 10+38 arb_ic ....PASS
+brEH2 TBR.sh 4p_vodsrsc_dm clm_std 19981231:NONE:3600 1.9x2.5^0.9x1.25 USGS 24+24 arb_ic ....PASS
+blEH2 TBL.sh 4p_vodsrsc_dm clm_std 19981231:NONE:3600 1.9x2.5^0.9x1.25 USGS 48 arb_ic .......SKIPPED*
+smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 10+38 arb_ic ................FAIL! rc= 5
+brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................SKIPPED*
+smH92 TSM.sh 17p_cnnsc_dm clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@2000 96 cold .............PASS
+erH92 TER.sh 17p_cnnsc_dm clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@2000 10+38 cold ..........PASS
+brH92 TBR.sh 17p_cnnsc_dm clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@2000 72+72 cold ..........PASS
+blH92 TBL.sh 17p_cnnsc_dm clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@2000 48 cold .............SKIPPED*
+smJ62 TSM.sh 4p_casasc_dm clm_std 19981230:NONE:1800 1.9x2.5 gx1v5 96 startup ...............PASS
+erJ62 TER.sh 4p_casasc_dm clm_std 19981230:NONE:1800 1.9x2.5 gx1v5 10+38 startup ............PASS
+brJ62 TBR.sh 4p_casasc_dm clm_std 19981230:NONE:1800 1.9x2.5 gx1v5 72+72 startup ............PASS
+blJ62 TBL.sh 4p_casasc_dm clm_std 19981230:NONE:1800 1.9x2.5 gx1v5 48 startup ...............SKIPPED* 
+smJ05 TSM.sh 4p_casasc_h clm_std^nl_lfiles 19800101:NONE:1800 0.47x0.63 gx1v5 48 startup ....FAIL! rc= 10
+smJ74 TSM.sh 4p_casasc_ds clm_std 10001230:NONE:3600 1x1_tropicAtl test -1100 arb_ic ........PASS
+erJ74 TER.sh 4p_casasc_ds clm_std 10001230:NONE:3600 1x1_tropicAtl test -10+-10 arb_ic ......PASS
+brJ74 TBR.sh 4p_casasc_ds clm_std 10001230:NONE:3600 1x1_tropicAtl test -3+-3 arb_ic ........PASS
+blJ74 TBL.sh 4p_casasc_ds clm_std 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic .........SKIPPED*
+smK92 TSM.sh 10p_dgvmsc_dm clm_std 19981230:NONE:1800 4x5 gx3v5 96 arb_ic ...................PASS
+erK92 TER.sh 10p_dgvmsc_dm clm_std 19981230:NONE:1800 4x5 gx3v5 10+38 arb_ic ................PASS
+brK92 TBR.sh 10p_dgvmsc_dm clm_std 19981230:NONE:1800 4x5 gx3v5 72+72 arb_ic ................PASS
+blK92 TBL.sh 10p_dgvmsc_dm clm_std 19981230:NONE:1800 4x5 gx3v5 48 arb_ic ...................SKIPPED*
+smLI2 TSM.sh _sc_dm clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+erLI2 TER.sh _sc_dm clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+brLI2 TBR.sh _sc_dm clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+blLI2 TBL.sh _sc_dm clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................SKIPPED*
+erP65 TSM_ccsmseq.sh ERS f19_g15 I ..........................................................PASS
+erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................PASS  kraken:
+
+Note: the tests that FAIL here are the same that FAIL on jaguar with clm3_6_25.
+
+  lightning/pathscale:
+  bangkok/lf95:
+  breeze/gale/hail/gust/ifort:
+
+CLM tag used for the baseline comparison tests if applicable:
+
+Changes answers relative to baseline:
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    q10 changes are climate changing. Time step changes are larger than roundoff, similar climate.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository):
+   - platform/compilers:
+   - configuration (CPP ifdefs):
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+   MSS location of control simulations used to validate new climate:
+   
+   URL for LMWG diagnostics output used to validate new climate:
+	
+===============================================================
+===============================================================
 Tag name:  clm3_6_25
 Originator(s):  dlawren (Lawrence David 1384 CGD), erik (Kluzek Erik), tcraig (Craig Tony)
 Date: Fri Mar 13 15:11:01 MDT 2009

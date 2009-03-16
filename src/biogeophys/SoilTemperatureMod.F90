@@ -582,7 +582,7 @@ contains
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           l = clandunit(c)
-          eflx_fgr12(c) = -(cnfac*fn(c,1) + (1._r8-cnfac)*fn1(c,1))/2.
+          eflx_fgr12(c) = -cnfac*fn(c,1) - (1._r8-cnfac)*fn1(c,1)
           if (ltype(l) /= isturb) then
             if (j >= snl(c)+1) then
                hc_soisno(c) = hc_soisno(c) + cv(c,j)*t_soisno(c,j) / 1.e6_r8
