@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_28       oleson 03/17/2009 Fix permission denied error when reading surface dataset
    clm3_6_27       oleson 03/16/2009 Urban model changes and FGR12 fix
    clm3_6_25      dlawren 03/13/2009 Daylength control on Vcmax, 1%Lake,wetland,glacier in mksrfdat, remove ELEVATION in surface data file
    clm3_6_24       oleson 03/09/2009 Fix urban testing and some history field changes

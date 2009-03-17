@@ -164,9 +164,8 @@ contains
        
        if (masterproc) then
           write(iulog,*)' Reading in urban input data ...'
-          n = getavu()
           call getfil (furbinp, locfn, 0)
-          call check_ret(nf_open(locfn, n, ncid), subname)
+          call check_ret(nf_open(locfn, 0, ncid), subname)
           write(iulog,*) subname,trim(furbinp)
           write(iulog,*) " Expected dimensions: lsmlon=",lsmlon," lsmlat=",lsmlat
           call check_dim(ncid, 'lsmlon', lsmlon)
@@ -315,7 +314,7 @@ contains
        deallocate(arrayl)
        
        if (masterproc) then  
-          call relavu (n)
+          call check_ret(nf_close(ncid), subname)
           write(iulog,*)' Sucessfully read urban input data' 
           write(iulog,*)
        end if
