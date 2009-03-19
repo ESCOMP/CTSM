@@ -376,7 +376,7 @@ contains
     use clm_atmlnd      ,only : clm_l2a, atm_l2a, atm_a2l, clm_a2l
     use clm_comp        ,only : clm_run1, clm_run2
     use clm_time_manager,only : get_curr_date, get_nstep, get_curr_calday, get_step_size, &
-                                advance_timestep, set_nextsw_cday
+                                advance_timestep, set_nextsw_cday,update_rad_dtime
     use domainMod       ,only : adomain
     use decompMod       ,only : get_proc_bounds_atm
     use abortutils      ,only : endrun
@@ -519,8 +519,10 @@ contains
 
        dtime = get_step_size()
        caldayp1 = get_curr_calday(offset=dtime)
-       doalb = abs(nextsw_cday- caldayp1) < 1.e-10_r8
+       nstep = get_nstep()
+       doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8 .and. nextsw_cday.ne.-1. .or. nstep==0)
        if ( doalb ) never_doAlb = .false.
+       call update_rad_dtime(doalb)
 
        ! Determine if time to write cam restart and stop
 

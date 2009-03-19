@@ -43,7 +43,8 @@ module clm_time_manager
       is_end_curr_day,          &! return true on last timestep in current day
       is_end_curr_month,        &! return true on last timestep in current month
       is_last_step,             &! return true on last timestep
-      is_perpetual               ! return true if perpetual calendar is in use
+      is_perpetual,             &! return true if perpetual calendar is in use
+      update_rad_dtime           ! track radiation interval via nstep
 
 ! Private module data
 
@@ -58,7 +59,9 @@ module clm_time_manager
 
 ! Input
    integer, save ::&
-      dtime         = uninit_int    ! timestep in seconds
+      dtime          = uninit_int,  &! timestep in seconds
+      dtime_rad      = uninit_int,  &! radiation interval in seconds
+      nstep_rad_prev = uninit_int    ! radiation interval in seconds
 
 ! Input from driver
    integer, save ::&
@@ -84,6 +87,7 @@ module clm_time_manager
       rst_curr_ymd  = uninit_int,  &! current date
       rst_curr_tod  = uninit_int,  &! current time of day
       rst_perp_ymd  = uninit_int    ! perpetual date
+   integer,save :: rst_nstep_rad_prev  ! nstep of previous radiation call
    character(len=ESMF_MAXSTR), save :: rst_calendar    ! Calendar
    logical, save ::&
       rst_perp_cal  = .false.                    ! true when using perpetual calendar
@@ -97,7 +101,11 @@ module clm_time_manager
 !
 ! Last short-wave radiation calendar day
 ! 
-   real(r8) :: lastsw_cday = uninit_r8 ! calday from clock of last radiation computation
+   integer, save :: prev_rad_nstep = uninit_int  ! previous radiation nstep
+
+!
+! Next short-wave radiation calendar day
+! 
    real(r8) :: nextsw_cday = uninit_r8 ! calday from clock of next radiation computation
 
 ! Private module methods
@@ -437,6 +445,24 @@ subroutine timemgr_restart_io( ncid, flag )
   !---------------------------------------------------------------------------------
   
   if (flag == 'write') then
+     rst_nstep_rad_prev  = nstep_rad_prev
+  else if (flag == 'read') then
+     nstep_rad_prev  = rst_nstep_rad_prev
+  end if
+  if (flag == 'define') then
+     call ncd_defvar(ncid=ncid, varname='timemgr_rst_nstep_rad_prev', xtype=nf_int,  &
+          long_name='previous_radiation_nstep', units='')
+  else if (flag == 'read' .or. flag == 'write') then
+     call ncd_ioglobal(varname='timemgr_rst_nstep_rad_prev', data=rst_nstep_rad_prev, &
+          ncid=ncid, flag=flag, readvar=readvar, bcast=.true.)
+     if (flag=='read' .and. .not. readvar) then
+        if (is_restart()) then
+           call endrun()
+        end if
+     end if
+  end if
+
+  if (flag == 'write') then
      rst_calendar  = calendar
   else if (flag == 'read') then
      calendar = rst_calendar
@@ -659,6 +685,10 @@ subroutine timemgr_restart( )
      write(iulog,*) ' Stop date    (yr, mon, day, tod): ', yr, mon, day, tod
      call endrun
   end if
+
+  ! Initialize nstep_rad_prev from restart info
+
+  nstep_rad_prev = rst_nstep_rad_prev
 
   ! Initialize ref date from restart info
 
@@ -906,43 +936,37 @@ end function get_step_size
 
 !=========================================================================================
 
+subroutine update_rad_dtime(doalb)
+  !---------------------------------------------------------------------------------
+  ! called only on doalb timesteps to save off radiation nsteps
+  ! 
+  ! Local Arguments
+  logical,intent(in) ::  doalb
+  integer :: dtime,nstep
+
+  if (doalb) then 
+
+     dtime=get_step_size()
+     nstep = get_nstep()
+
+     if (nstep_rad_prev == uninit_int ) then
+        dtime_rad = dtime
+        nstep_rad_prev = nstep
+     else
+        dtime_rad = (nstep - nstep_rad_prev) * dtime
+        nstep_rad_prev = nstep
+     endif
+  end if
+end subroutine update_rad_dtime
+
+!=========================================================================================
+
 integer function get_rad_step_size()
 
-  use shr_const_mod, only : SHR_CONST_CDAY
-
-  ! Return the radiation step size in seconds.
-  
-  character(len=*), parameter :: sub = 'get_rad_step_size'
-  integer :: days_per_yr   ! Days per year
-  
-  ! PET: hardwire get_rad_step_size = 3600.0 to allow FCN compset to work
-  if (1 == 0) then
-  ! At initialization just return time-step as radiation step size
-  if ( lastsw_cday == uninit_r8 )then
-     get_rad_step_size  = dtime
+  if (nstep_rad_prev == uninit_int ) then
+     get_rad_step_size=get_step_size()
   else
-     ! If next radiation time NOT set -- die with error
-     if ( nextsw_cday == uninit_r8 )then
-        call endrun( sub//': nextsw_cday NOT set and needs to be' )
-     end if
-     ! If next step > last one (as normally will be) convert step to seconds
-     if ( nextsw_cday > lastsw_cday )then
-        get_rad_step_size = nint( ( nextsw_cday - lastsw_cday               )*SHR_CONST_CDAY)
-     ! If last step was at end of year and next step is into the next year...
-     else
-        days_per_yr = get_days_per_year( offset=-dtime )
-        get_rad_step_size = nint( ( nextsw_cday - lastsw_cday + days_per_yr )*SHR_CONST_CDAY)
-     end if
-  end if
-  ! Check to make sure reasonably bounded...
-  if (      get_rad_step_size  < dtime   )then
-      call endrun( sub//': error get_rad_step_size less than time-step'               )
-  else if ( get_rad_step_size  > dtime*5 )then
-      call endrun( sub//': error get_rad_step_size greater than five times time-step' )
-  end if
-  ! PET: this is the hardwire block that should always get executed
-  else
-      get_rad_step_size = 3600._r8
+     get_rad_step_size=dtime_rad
   end if
 
 end function get_rad_step_size
@@ -1346,7 +1370,6 @@ subroutine set_nextsw_cday( nextsw_cday_in )
   
   character(len=*), parameter :: sub = 'set_nextsw_cday'
 
-  lastsw_cday = nextsw_cday  
   nextsw_cday = nextsw_cday_in
   
 end subroutine set_nextsw_cday

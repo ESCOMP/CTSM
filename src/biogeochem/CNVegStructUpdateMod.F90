@@ -47,6 +47,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
    use clm_atmlnd   , only: clm_a2l
    use pftvarcon    , only: noveg
    use shr_const_mod, only: SHR_CONST_PI
+   use clm_time_manager , only : get_rad_step_size
 !
 ! !ARGUMENTS:
    implicit none
@@ -97,9 +98,26 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
    real(r8):: dwood        ! density of wood (kgC/m^3)
    real(r8):: ol           ! thickness of canopy layer covered by snow (m)
    real(r8):: fb           ! fraction of canopy layer covered by snow
+   real(r8) :: tlai_old    ! for use in Zeng tsai formula
+   real(r8) :: tsai_old    ! for use in Zeng tsai formula
+   real(r8) :: tsai_min    ! PFT derived minimum tsai
+   real(r8) :: tsai_alpha  ! monthly decay rate of tsai
+   real(r8) dt             ! radiation time step (sec)
 
+   real(r8), parameter :: dtsmonth = 2592000._r8 ! number of seconds in a 30 day month (60x60x24x30)
 !EOP
 !-----------------------------------------------------------------------
+! tsai formula from Zeng et. al. 2002, Journal of Climate, p1835
+!
+! tsai(p) = max( tsai_alpha(ivt(p))*tsai_old + max(tlai_old-tlai(p),0_r8), tsai_min(ivt(p)) )
+! notes:
+! * RHS tsai & tlai are from previous timestep
+! * should create tsai_alpha(ivt(p)) & tsai_min(ivt(p)) in pftvarcon.F90 - slevis
+! * all non-crop pfts use same values:
+!   crop    tsai_alpha,tsai_min = 0.0,0.1
+!   noncrop tsai_alpha,tsai_min = 0.5,1.0  (includes bare soil and urban)
+!-------------------------------------------------------------------------------
+
    ! assign local pointers to derived type arrays (in)
     ivt                            => clm3%g%l%c%p%itype
     pcolumn                        => clm3%g%l%c%p%column
@@ -122,6 +140,8 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
     esai                           => clm3%g%l%c%p%pps%esai
     frac_veg_nosno_alb             => clm3%g%l%c%p%pps%frac_veg_nosno_alb
     forc_hgt_u_pft                 => clm3%g%l%c%p%pps%forc_hgt_u_pft
+
+   dt = real( get_rad_step_size(), r8 )
 
    ! constant allometric parameters
    taper = 200._r8
@@ -148,6 +168,10 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
       g = pgridcell(p)
 
       if (ivt(p) /= noveg) then
+
+          tlai_old = tlai(p) ! n-1 value
+          tsai_old = tsai(p) ! n-1 value
+
           ! update the leaf area index based on leafC and SLA
           ! Eq 3 from Thornton and Zimmerman, 2007, J Clim, 20, 3902-3923. 
           if (dsladlai(ivt(p)) > 0._r8) then
@@ -160,9 +184,24 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
           ! update the stem area index and height based on LAI, stem mass, and veg type.
           ! With the exception of htop for woody vegetation, this follows the DGVM logic.
 
+          ! tsai formula from Zeng et. al. 2002, Journal of Climate, p1835 (see notes)
+          ! Assumes doalb time step .eq. CLM time step, SAI min and monthly decay factor
+          ! alpha are set by PFT, and alpha is scaled to CLM time step by multiplying by
+          ! dt and dividing by dtsmonth (seconds in average 30 day month)
+          ! tsai_min scaled by 0.65 to match MODIS satellite derived values
+          if (ivt(p) == 15 .or. ivt(p) == 16) then    ! crops (corn, wheat in CLM)
+             tsai_alpha = 1.0_r8-1.0_r8*dt/dtsmonth
+             tsai_min = 0.1_r8
+          else
+             tsai_alpha = 1.0_r8-0.5_r8*dt/dtsmonth
+             tsai_min = 1.0_r8
+          end if
+          tsai_min = tsai_min * 0.65_r8
+          tsai(p) = max(tsai_alpha*tsai_old+max(tlai_old-tlai(p),0._r8),tsai_min)
+
           if (woody(ivt(p)) == 1._r8) then
              ! trees and shrubs
-             tsai(p) = 0.25_r8 * tlai(p)
+!KO             tsai(p) = 0.25_r8 * tlai(p)
 
              ! trees and shrubs for now have a very simple allometry, with hard-wired
              ! stem taper (height:radius) and hard-wired stocking density (#individuals/area)
@@ -183,7 +222,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
           else
              ! grasses
-             tsai(p) = 0.05_r8 * tlai(p)
+!KO             tsai(p) = 0.05_r8 * tlai(p)
 
              ! height for grasses depends only on LAI
              htop(p) = max(0.25_r8, tlai(p) * 0.25_r8)

@@ -472,8 +472,8 @@ contains
        call ncd_iolocal(varname='avail_retransn', data=pptr%pepv%avail_retransn, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
-  	  if (is_restart()) call endrun
-       end if	
+        if (is_restart()) call endrun
+       end if 
     end if
 
     ! plant_nalloc
@@ -611,7 +611,7 @@ contains
     !--------------------------------
     ! pft carbon state variables 
     !--------------------------------
-    
+
     ! leafc
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='leafc', xtype=nf_double,  &
@@ -620,8 +620,8 @@ contains
        call ncd_iolocal(varname='leafc', data=pptr%pcs%leafc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
-       if (is_restart()) call endrun
-       end if 
+  	  if (is_restart()) call endrun
+       end if	
     end if
     
     ! leafc_storage
@@ -882,6 +882,18 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_ctrunc', data=pptr%pcs%pft_ctrunc, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! totvegc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='totvegc', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='totvegc', data=pptr%pcs%totvegc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -1162,6 +1174,18 @@ contains
             dim1name='pft',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='pft_ctrunc_13', data=pptr%pc13s%pft_ctrunc, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
+    ! totvegc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='totvegc_13', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='totvegc_13', data=pptr%pc13s%totvegc, &
             dim1name=namep, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -1708,6 +1732,30 @@ contains
        end if	
     end if
     
+    ! totlitc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='totlitc', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='totlitc', data=cptr%ccs%totlitc, &
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! totcolc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='totcolc', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='totcolc', data=cptr%ccs%totcolc, &
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
     ! prod10c
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='prod10c', xtype=nf_double,  &
@@ -1850,6 +1898,30 @@ contains
             dim1name='column',long_name='',units='')
     else if (flag == 'read' .or. flag == 'write') then
        call ncd_iolocal(varname='col_ctrunc_13', data=cptr%cc13s%col_ctrunc, &
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! totlitc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='totlitc_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='totlitc_13', data=cptr%cc13s%totlitc, &
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+    
+    ! totcolc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='totcolc_13', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='totcolc_13', data=cptr%cc13s%totcolc, &
             dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
        if (flag=='read' .and. .not. readvar) then
   	  if (is_restart()) call endrun
@@ -2004,6 +2076,18 @@ contains
        end if	
     end if
 
+    ! totcoln
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='totcoln', xtype=nf_double,  &
+            dim1name='column',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='totcoln', data=cptr%cns%totcoln, &
+            dim1name=namec, ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+  	  if (is_restart()) call endrun
+       end if	
+    end if
+
     ! seedn
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='seedn', xtype=nf_double,  &
@@ -2040,7 +2124,6 @@ contains
        end if	
     end if
     
-
 #if (defined EXIT_SPINUP)
     if (flag == 'read') then
        m = 20._r8

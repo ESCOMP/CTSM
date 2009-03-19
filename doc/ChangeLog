@@ -1,4 +1,91 @@
 ===============================================================
+Tag name:  clm3_6_29
+Originator(s):  oleson (Oleson Keith 1332 CGD)
+Date:  Thu Mar 19 07:16:05 MDT 2009
+One-line Summary: CN SAI, CN testing fix, rad step size fix
+
+Purpose of changes:  Add SAI decay for CN mode.
+                     Fix CN for tests SmI58, smH51, erH51, brH51
+                     Add new get_rad_step_size function used by SAI decay function.  This is the "simple fix"
+                     and yields correct radiation time step size for all time steps except one for the I and F
+                     cases.  The "complete fix" involves changes to other component models and will be available soon.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  821 (mksurfdata for qtr deg)
+                                  851 (abort when files non-exist on jaguar)
+                                  862 (360x720 res problem)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  990 (illegal instruction)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: K. Oleson, G. Bonan, F. Hoffman, M. Vertenstein, J. Truesdale
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+M      models/lnd/clm/src/biogeochem/CNrestMod.F90 --- add seven CN fields deleted previously for restart
+M      models/lnd/clm/src/biogeochem/CNVegStructUpdateMod.F90 ---- add SAI decay function (calls get_rad_step_size)
+M      models/lnd/clm/src/main/clm_time_manager.F90 ---- changes to fix get_rad_step_size function
+M      models/lnd/clm/src/main/lnd_comp_mct.F90 ---- changes to fix get_rad_step_size function
+
+Summary of testing:
+
+  bluefire: All PASS except:
+013 smH74 TSM.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test -1100 cold .......FAIL! rc= 10
+014 blH74 TBL.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test -100 cold ........FAIL! rc= 4
+020 smE95 TSM.sh 4p_vodsrsc_h clm_std 19981231:NONE:1800 4x5 gx3v5 48 arb_ic ....................FAIL! rc= 10
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+036 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 4
+055 blH51 TBL.sh 17p_cnnsc_dh clm_std 19980115:NONE:1800 10x15 USGS@2000 48 cold ................FAIL! rc= 7
+057 smLI1 TSM.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+058 erLI1 TER.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+059 brLI1 TBR.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+060 blLI1 TBL.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 4
+096 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+097 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+098 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
+099 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 6
+100 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 6
+
+smH74 and blH74 failures are being investigated.
+blH51 fails because it fails in clm3_6_28 (fixed in this commit).
+Other failures are known.
+
+  jaguar:
+  kraken:
+  lightning/pathscale:
+  bangkok/lf95:
+  breeze/gale/hail/gust/ifort:
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_28
+
+Changes answers relative to baseline:  CN mode only due to SAI decay factor
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_28
 Originator(s):  oleson (Oleson Keith 1332 CGD)
 Date:  Tue Mar 17 07:03:12 MDT 2009
