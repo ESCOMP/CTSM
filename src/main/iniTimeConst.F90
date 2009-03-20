@@ -522,10 +522,10 @@ subroutine iniTimeConst
     if (ltype(l)==isturb) then
    
       do j = 1, nlevurb
-        zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/10.)  !node depths
+        zurb_wall(l,j) = (j-0.5)*(thick_wall(l)/float(nlevurb))  !node depths
       end do
       do j = 1, nlevurb
-        zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/10.)  !node depths
+        zurb_roof(l,j) = (j-0.5)*(thick_roof(l)/float(nlevurb))  !node depths
       end do
 
       dzurb_wall(l,1) = 0.5*(zurb_wall(l,1)+zurb_wall(l,2))    !thickness b/n two interfaces

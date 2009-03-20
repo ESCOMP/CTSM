@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_30       oleson 03/19/2009 Fix urban roof/wall layers
    clm3_6_29       oleson 03/19/2009 CN SAI, CN testing fix, rad step size fix
    clm3_6_28       oleson 03/17/2009 Fix permission denied error when reading surface dataset
    clm3_6_27       oleson 03/16/2009 Urban model changes and FGR12 fix
