@@ -10,32 +10,15 @@ if !(-d $CASEBUILD/clmconf) mkdir $CASEBUILD/clmconf
 # Error checks
 #--------------------------------------------------------------------
 
-#--- if CLM is expecting co2 from coupler, then must turn on the co2 interfaces ---   
-if ( "$CLM_CO2_TYPE" != constant && "$CCSM_BGC" == none) then  
-   echo "clm error: CLM_CO2_TYPE is not constant, must set CCSM_BGC to other than none"
-   exit 3
-endif
-
 #--------------------------------------------------------------------
 # Invoke configure
 #--------------------------------------------------------------------
-
-if ( $CLM_BGC == CN )then
-  set bgc = '-bgc cn'
-  set maxpft = '-maxpft numpft+1'
-else if ( $CLM_BGC == CASA )then
-  set bgc = '-bgc casa'
-  set maxpft = '-maxpft 4'
-else
-  set bgc = '-bgc none'
-  set maxpft = '-maxpft 4'
-endif
 
 set cfgdir = $CASEBUILD/clmconf  
 set config = $cfgdir/config_cache.xml
 cd $cfgdir
 
-$CODEROOT/lnd/clm*/bld/configure -spmd -mode ext_ccsm_seq -rtm on $bgc -dust on -prog_seasalt on $maxpft -clm_bld $cfgdir \
+$CODEROOT/lnd/clm*/bld/configure -spmd -mode ext_ccsm_seq -rtm on -dust on -prog_seasalt on -clm_bld $cfgdir \
          -usr_src $CASEROOT/SourceMods/src.clm $CLM_CONFIG_OPTS || exit -1 
 
 #--------------------------------------------------------------------
@@ -50,23 +33,9 @@ if ($RUN_TYPE == hybrid) set finidat = " finidat = '${RUN_REFCASE}.clm2.r.${RUN_
 set nrevsn = " "
 if ($RUN_TYPE == branch) set nrevsn   = ${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-00000.nc 
 
-set sim_year = '-sim_year 2000'
-if ($CCSM_IPCC == 1870_control       ) set sim_year = '-sim_year 1870'
-if ($CCSM_IPCC == "1870-2000_control") set sim_year = ' '
-
 set config = $CASEBUILD/clmconf/config_cache.xml
 
-if ($CCSM_IPCC == "1870-2000_control") then
-  setenv CLM_DYNNDEP "transient"
-endif
-
-set clm_demand = "$CLM_DEMAND,forganic"
-if ($CLM_DYNNDEP == "transient" && $CLM_BGC == "CN" )then
-   set clm_demand = "$clm_demand,fndepdyn"
-endif
-if ($CLM_DYNPFT  == "transient" )then
-    set clm_demand = "$clm_demand,fpftdyn"
-endif
+set clm_demand = "$CLM_DEMAND,forganic,furbinp"
 
 @ clm_dtime  = ( 3600 * 24 ) / $LND_NCPL
 @ rtm_nsteps = ( 3600 * 3  ) / $clm_dtime  # rtm is done every 3 hours
@@ -79,9 +48,7 @@ $finidat
  nrevsn           = '$nrevsn'
  hist_mfilt       =  1
  hist_nhtfrq      =  0
- hist_crtinic     = 'NONE'
  co2_ppmv         =  $CCSM_CO2_PPMV
- co2_type         = '$CLM_CO2_TYPE'
 EOF1
 
 if ($RUN_TYPE == startup && $CLM_ARB_IC != off) then
@@ -89,6 +56,10 @@ if ($RUN_TYPE == startup && $CLM_ARB_IC != off) then
 else
    set START_TYPE = $RUN_TYPE
    if ($RUN_TYPE == hybrid ) set START_TYPE = "startup"
+endif
+
+if ($CLM_FORCE_COLDSTART == on) then
+   set START_TYPE = "cold"
 endif
 
 if ($ATM_GRID == $OCN_GRID) then
@@ -116,10 +87,10 @@ else
     set ignore = "-ignore_ic_date"
 endif
 
-set options = "$CLM_BLDNML_OPTS -config $config -res $RESOLUTION $mask $sim_year "
-set options = "$options -clm_demand $clm_demand "
+set options = "$CLM_BLDNML_OPTS -config $config -res $RESOLUTION $mask "
+set options = "$options -clm_demand $clm_demand $ignore "
 set options = "$options -infile ccsm_namelist -start_type $START_TYPE -case $CASE "
-$CODEROOT/lnd/clm*/bld/build-namelist $options -csmdata \$DIN_LOC_ROOT -inputdata $CASEBUILD/clm.input_data_list || exit -1
+$CODEROOT/lnd/clm*/bld/build-namelist $options -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" -csmdata \$DIN_LOC_ROOT -inputdata $CASEBUILD/clm.input_data_list || exit -1
 
 # ---------------------------------------------------------------------------
 #  Create namelist and prestage data script

@@ -402,6 +402,13 @@ my $val;
 my $mode = $cfg->get('mode');
 if ($print>=2) { print "CLM mode is $mode $eol"; }
 
+# Get PIO mode
+my $pio = $cfg->get('pio');
+
+# Get BGC mode
+
+my $bgc = $cfg->get('bgc');
+
 # Get max number of Plant function types
 my $maxpft = $cfg->get('maxpft');
 
@@ -605,6 +612,19 @@ if ($mode eq "ccsm_seq") {
 }
 
 ##############################
+# namelist group: pio_inparm #
+##############################
+
+if ($mode eq "ccsm_seq" && $pio eq "on") {
+
+   add_default($nl, 'cpl_io_stride'   );
+   add_default($nl, 'cpl_num_iotasks' );
+   add_default($nl, 'cpl_iotype_name' );
+   add_default($nl, 'cpl_io_root'     );
+
+}
+
+##############################
 # namelist group: clm_inparm #
 ##############################
 
@@ -631,10 +651,10 @@ add_default($nl, 'fatmgrid'  , 'hgrid'=>$res );
 add_default($nl, 'fpftcon');
 
 
-add_default($nl, 'co2_ppmv');
-#add_default($nl, 'co2_type',     'val'=> 'constant');
+add_default($nl, 'co2_ppmv', 'sim_year'=>$sim_year );
+add_default($nl, 'co2_type');
 #add_default($nl, 'wrtdia',       'val'=> '.false.');
-add_default($nl, 'hist_crtinic', 'val'=> 'NONE');
+add_default($nl, 'hist_crtinic',  'bgc'=>$bgc );
 
 add_default($nl, 'urban_hac');
 add_default($nl, 'urban_traffic');
@@ -669,9 +689,10 @@ if ( defined($opts{'clm_demand'}) ) {
         if ( $item eq "none" ) { next; }
         if ( $item eq "furbinp" ) {
            if ( $lnd_res =~ /1x1_/ ) {
-              add_default($nl, "furbinp",  'hgrid'=>$lnd_res, 'set_abspath'=>"$cfgdir/urban_input" );
+              add_default($nl, "furbinp",  'hgrid'=>$lnd_res, 
+                          'set_abspath'=>"$cfgdir/urban_input", 'sim_year'=>$sim_year );
            } else {
-              add_default($nl, "furbinp",  'hgrid'=>$lnd_res );
+              add_default($nl, "furbinp",  'hgrid'=>$lnd_res,   'sim_year'=>$sim_year );
            }
         } elsif ( $item eq "forganic" ) {
            add_default($nl, "$item", 'hgrid'=>$lnd_res );
@@ -744,7 +765,6 @@ if (not defined $nl->get_value('finidat')) {
 #
 # If CN mode -- get Nitrogen deposition file if available AND fndepdyn NOT set
 #
-my $bgc = $cfg->get('bgc');
 if ( ($bgc eq "cn") && not defined $nl->get_value('fndepdyn') ) {
    add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'nofail'=>1 );
 }
@@ -926,7 +946,7 @@ if ($mode eq "ccsm_seq") {
 ##############################
 
 if ($mode eq "ccsm_seq") {
-    add_default($nl, 'tn460_factorfn');
+    add_default($nl, 'factorfn');
     add_default($nl, 'step2init');
 }
 
@@ -954,10 +974,11 @@ if ($print>=2) { print "Writing clm namelist to $outfile $eol"; }
 if ($mode eq "ccsm_seq") {
     # Driver
     @groups = qw(seq_infodata_inparm seq_timemgr_inparm prof_inparm);
+    if ( $pio eq "on" ) { push( @groups, "pio_inparm" ); }
     $outfile = "$opts{'dir'}/drv_in";
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing driver namelist to $outfile $eol"; }
-    
+
     # DATM7 component
     @groups = qw(dshr_nml);
     $outfile = "$opts{'dir'}/datm_dshr_in";

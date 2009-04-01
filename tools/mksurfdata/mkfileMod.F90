@@ -10,7 +10,7 @@ contains
     use fileutils   , only : get_filename
     use mkvarpar    , only : nlevsoi, numpft, nglcec, nlevurb, numsolar, numrad
     use mkvarctl
-    use ncdio       , only : check_ret, ncd_defvar
+    use ncdio       , only : check_ret, ncd_defvar, ncd_convl2i
 
     implicit none
     include 'netcdf.inc'
@@ -94,6 +94,9 @@ contains
     str = '$Id$'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Revision_Id', len_trim(str), trim(str)), subname)
+
+    !call check_ret(nf_put_att_int1(ncid, NF_GLOBAL, &
+    !     'all_urban', ncd_convl2i(all_urban)), subname)
 
     str = trim(mksrf_fgrid)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
@@ -365,15 +368,15 @@ contains
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='percent glacier', units='unitless')
 
-    call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=nf_float, &
+    call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
          long_name='percent for each glacier elevation class', units='unitless')
 
-    call ncd_defvar(ncid=ncid, varname='TOPO_GLC_MEC', xtype=nf_float, &
+    call ncd_defvar(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
          long_name='mean elevation on glacier elevation classes', units='m')
 
-    call ncd_defvar(ncid=ncid, varname='THCK_GLC_MEC', xtype=nf_float, &
+    call ncd_defvar(ncid=ncid, varname='THCK_GLC_MEC', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
          long_name='mean ice sheet thickness on glacier elevation classes', units='m')
 

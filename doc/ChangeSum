@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_31         erik 04/01/2009 New surface datasets for 1850,2000, support for 0.9x1.25_gx1v6, urban always on. New pft-physiology file. Update scripts so remove some CLM_ env_conf vars. Fix CN for urban/pftdyn.
    clm3_6_30       oleson 03/19/2009 Fix urban roof/wall layers
    clm3_6_29       oleson 03/19/2009 CN SAI, CN testing fix, rad step size fix
    clm3_6_28       oleson 03/17/2009 Fix permission denied error when reading surface dataset

@@ -90,6 +90,7 @@ OPTIONS
      -nc_mod <dir>       Directory containing netCDF module files.
      -nofire             Turn off wildfires for bgc setting of CN (default includes fire for CN)
      -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off] (default is off)
+     -pio <name>         Switch enables building with Parallel I/O library. [on | off] (default is off)
      -prog_seasalt<name> Turn on prognostic sea-salt (PROGSSLT cppdef token) [on | off] (default is off)
      -rtm <name>         Turn on RTM  [on | off] (default is off)
      -silent [or -s]     Turns on silent mode - only fatal messages issued.
@@ -176,6 +177,7 @@ GetOptions(
     "nc_mod=s"                  => \$opts{'nc_mod'},
     "nofire"                    => \$opts{'nofire'},
     "pergro=s"                  => \$opts{'pergro'}, 
+    "pio=s"                     => \$opts{'pio'}, 
     "carbon_aero=s"             => \$opts{'carbon_aero'}, 
     "snicar_frc=s"              => \$opts{'snicar_frc'}, 
     "prog_seasalt=s"            => \$opts{'progsslt'}, 
@@ -507,6 +509,14 @@ my $pergro = $cfg_ref->get('pergro');
 if ($print>=2) { print "Using $pergro for pergro.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
+# BUILDPIO option
+if (defined $opts{'pio'}) {
+    $cfg_ref->set('pio', $opts{'pio'});
+}
+my $pio = $cfg_ref->get('pio');
+if ($print>=2) { print "Using $pio for BUILDPIO mode.$eol"; }
+
+#-----------------------------------------------------------------------------------------------
 # SNICAR_FRC option
 if (defined $opts{'snicar_frc'}) {
     $cfg_ref->set('snicar_frc', $opts{'snicar_frc'});
@@ -739,6 +749,9 @@ if ($exit_spinup eq 'on') {
 }
 if ( $pergro eq 'on' ) {
     $cfg_cppdefs .= " -DPERGRO";
+}
+if ( $pio eq 'on' ) {
+    $cfg_cppdefs .= " -DBUILDPIO";
 }
 if ( $snicar_frc eq 'on' ) {
     $cfg_cppdefs .= " -DSNICAR_FRC";
@@ -1110,6 +1123,7 @@ sub write_filepath
     my $esmf_libdir = $cfg_ref->get('esmf_libdir');
     my $rtm         = $cfg_ref->get('rtm');
     my $mode        = $cfg_ref->get('mode');
+    my $buildpio    = $cfg_ref->get('pio');
 
     # User specified source directories.
     if ($usr_src  =~ /\S+/) {
@@ -1166,6 +1180,9 @@ sub write_filepath
 		die "** source directory does not exist: $srcdir/$dir or $srcdir/../../../$dir or $srcdir/../../../atm|ice|ocn/$dir\n";
 	    }
 	}
+        if ( $buildpio eq "on" ) {
+	   print $fh absolute_path( "$srcdir/../../../utils/pio" ) . "\n";
+        }
     }
     
     # CLM

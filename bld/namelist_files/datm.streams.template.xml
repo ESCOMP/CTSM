@@ -18,47 +18,6 @@
 
 <datm_comment>DATM streams template for use with stand-alone CLM</datm_comment>
 
-<stream datasource="CLMNCEP">
-
-<!-- Comment on description of stream data -->
-
-<comment>Stream description file for CLM-NCEP data</comment>
-
-<!-- Data source names -->
-<dataSource>CLMNCEP</dataSource>
-
-
-<!-- Domain information -->
-<domainInfo>
-   <variableNames>
-       time    time
-       xc      lon
-       yc      lat
-       area    area
-       mask    mask
-   </variableNames>
-   <filePath>%d/atm/datm7</filePath>
-   <fileNames> domain.T62.050609.nc </fileNames>
-</domainInfo>
-
-<fieldInfo>
-   <!-- Field names -->
-   <variableNames>
-      TBOT     tbot
-      WIND     wind
-      QBOT     shum
-      PRECTmms precn
-      FSDS     swdn
-      PSRF     pbot
-   </variableNames>
-   <!-- File path to data -->
-   <filePath>%p</filePath>
-   <!-- data filenames template -->
-   <fileNames>clmcep.T62.TPQW.%ym.nc</fileNames>
-</fieldInfo>
-
-</stream>
-
 <stream datasource="CLM_QIAN.Solar">
 
 <!-- Comment on description of stream data -->

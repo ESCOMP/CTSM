@@ -62,9 +62,6 @@ program mksrfdat
     real(r8) :: sumpft                      ! sum of non-baresoil pfts
     real(r8) :: sum8, sum8a                 ! sum for error check
     real(r4) :: sum4a                       ! sum for error check
-    real(r8) :: bare_urb_diff               ! difference between bare soil and urban %
-    real(r8) :: pcturb_excess               ! excess urban % not accounted for by bare soil
-    real(r8) :: sumpft                      ! sum of non-baresoil pfts
     real(r8) :: rmax                        ! maximum patch cover
     character(len=256) :: fgrddat           ! grid data file
     character(len=256) :: fsurdat           ! surface data file name
@@ -118,7 +115,8 @@ program mksrfdat
          mksrf_flai,               &
          mksrf_fdynuse,            &
          outnc_large_files,        &
-         outnc_double
+         outnc_double,             &
+         all_urban
 !-----------------------------------------------------------------------
 
     ! ======================================================================
@@ -146,6 +144,7 @@ program mksrfdat
     ! ======================================
     !    mksrf_gridtype
     !    mksrf_fdynuse
+    !    all_urban
     !    outnc_large_files
     !    outnc_double
     ! ======================================================================
@@ -159,6 +158,7 @@ program mksrfdat
     mksrf_gridtype    = 'global'
     outnc_large_files = .false.
     outnc_double      = .false.
+    all_urban         = .false.
     read(5, clmexp, iostat=ier)
     if (ier /= 0) then
        write(6,*)'error: namelist input resulted in error code ',ier
@@ -189,10 +189,13 @@ program mksrfdat
        stop
     endif
     if ( outnc_large_files )then
-       write(6,*)'Output files in NetCDF 64-bit large_files format'
+       write(6,*)'Output file in NetCDF 64-bit large_files format'
     end if
     if ( outnc_double )then
-       write(6,*)'Output ALL data in files as 64-bit'
+       write(6,*)'Output ALL data in file as 64-bit'
+    end if
+    if ( all_urban )then
+       write(6,*) 'Output ALL data in file as 100% urban'
     end if
 
     ! ----------------------------------------------------------------------
@@ -342,10 +345,12 @@ program mksrfdat
 
     call mkurban (lsmlon, lsmlat, mksrf_furban, ndiag, pcturb)
 
-    ! Screen pcturb by elevation threshold
-    where (elev .gt. elev_thresh)
-      pcturb = 0._r8
-    end where
+    ! Screen pcturb by elevation threshold from elev dataset
+    if ( .not. all_urban )then
+       where (elev .gt. elev_thresh)
+         pcturb = 0._r8
+       end where
+    end if
 
     write(6,*) ' timer_g mkurban-----'
     call shr_timer_print(t1)

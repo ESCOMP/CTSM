@@ -181,27 +181,32 @@ subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o, pct_pft_i)
              pctpft_o(io,jo,m) = 0._r8
           endif
        end if
+       if (all_urban) then
+          pctpft_o(io,jo,m) = 0._r8
+       end if
      enddo
      enddo
   enddo
 
   ! Error check: percents should sum to 100 for land grid cells
 
-  do jo = 1, ldomain%nj
-  do io = 1, ldomain%numlon(jo)
-     wst_sum = 0.
-     do m = 0, numpft
-        wst_sum = wst_sum + pctpft_o(io,jo,m)
+  if ( .not. all_urban) then
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+        wst_sum = 0.
+        do m = 0, numpft
+           wst_sum = wst_sum + pctpft_o(io,jo,m)
+        enddo
+        if (abs(wst_sum-100.) > 0.000001_r8) then
+           write (6,*) 'MKPFT error: pft = ', &
+                (pctpft_o(io,jo,m), m = 0, numpft), &
+                ' do not sum to 100. at column, row = ',io,jo, &
+                ' but to ', wst_sum
+           stop
+        end if
      enddo
-     if (abs(wst_sum-100.) > 0.000001_r8) then
-        write (6,*) 'MKPFT error: pft = ', &
-             (pctpft_o(io,jo,m), m = 0, numpft), &
-             ' do not sum to 100. at column, row = ',io,jo, &
-             ' but to ', wst_sum
-        stop
-     end if
-  enddo
-  enddo
+     enddo
+  end if
 
   ! Global sum of output field -- must multiply by fraction of
   ! output grid that is land as determined by input grid
@@ -237,7 +242,7 @@ subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o, pct_pft_i)
   ! Compare global sum fld_o to global sum fld_i.
   ! -----------------------------------------------------------------
 
-  if ( trim(mksrf_gridtype) == 'global') then
+  if ( trim(mksrf_gridtype) == 'global' .and. .not. all_urban ) then
      if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
         write (6,*) 'MKPFT error: input field not conserved'
         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo

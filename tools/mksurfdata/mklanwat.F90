@@ -122,6 +122,8 @@ subroutine mklanwat(lsmlon, lsmlat, fname, ndiag, lake_o, swmp_o)
   do io = 1, ldomain%numlon(jo)
         if (lake_o(io,jo) < 1.) lake_o(io,jo) = 0.
         if (swmp_o(io,jo) < 1.) swmp_o(io,jo) = 0.
+        if (all_urban         ) lake_o(io,jo) = 0.
+        if (all_urban         ) swmp_o(io,jo) = 0.
   enddo
   enddo
 
@@ -164,7 +166,7 @@ subroutine mklanwat(lsmlon, lsmlat, fname, ndiag, lake_o, swmp_o)
   ! Compare global sum fld_o to global sum fld_i.
   ! -----------------------------------------------------------------
 
-  if ( trim(mksrf_gridtype) == 'global') then
+  if ( .not. all_urban .and. trim(mksrf_gridtype) == 'global') then
      if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
         write (6,*) 'MKLANWAT error: input field not conserved'
         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo

@@ -2717,7 +2717,6 @@ contains
     integer, parameter  :: niters = 3  ! maximum number of iterations for surface temperature
 #endif
     integer  :: local_secp1(lbl:ubl)   ! seconds into current date in local time (sec)
-    integer  :: local_secp1_indx(lbl:ubl) ! index for traffic_flux
     real(r8) :: dtime                  ! land model time step (sec)
     integer  :: year,month,day,secs    ! calendar info for current time step
     logical  :: found                  ! flag in search loop
@@ -2731,19 +2730,6 @@ contains
     real(r8) :: qsat_ref2m             ! 2 m height surface saturated specific humidity [kg/kg]
     real(r8) :: dqsat2mdT              ! derivative of 2 m height surface saturated specific humidity on t_ref2m
 
-    ! Only works for single point simulations currently that are setup properly
-    ! No capability to do global traffic fluxes currently
-    ! Traffic namelist variable is currently off by default and will stop model if turned on
-    ! Note that the national traffic profile used from Sailor and Lu here assumes 1/2 hour time steps
-    integer, parameter  :: numtraffic = 48 ! number of traffic flux data points 
-    real(r8) :: traffic_flux(numtraffic)   ! sensible heat flux from traffic (W/m**2)
-    data(traffic_flux(i),i=1,48)/ 4.55_r8,  3.00_r8,  2.40_r8,  1.80_r8,  1.65_r8,  1.50_r8,  1.50_r8, &
-                                  1.50_r8,  1.80_r8,  2.10_r8,  4.10_r8,  6.10_r8,  9.85_r8, 13.60_r8, &
-                                 17.40_r8, 21.20_r8, 19.40_r8, 17.60_r8, 15.40_r8, 14.20_r8, 13.90_r8, &
-                                 13.60_r8, 14.35_r8, 15.10_r8, 15.90_r8, 16.70_r8, 16.70_r8, 16.70_r8, &
-                                 17.45_r8, 18.20_r8, 19.55_r8, 20.90_r8, 21.85_r8, 22.80_r8, 23.55_r8, &
-                                 24.30_r8, 22.00_r8, 19.70_r8, 17.40_r8, 15.10_r8, 13.60_r8, 12.10_r8, &
-                                 11.35_r8, 10.60_r8,  9.55_r8,  8.50_r8,  7.30_r8,  6.10_r8/
 !-----------------------------------------------------------------------
 
     ! Assign pointers into module urban clumps
@@ -2863,11 +2849,6 @@ contains
 
        local_secp1(l)        = secs + nint((londeg(g)/degpsec)/dtime)*dtime
        local_secp1(l)        = mod(local_secp1(l),isecspday)
-       if (local_secp1(l) < 0) then
-         local_secp1_indx(l) = (local_secp1(l)+isecspday)/dtime + 1
-       else
-         local_secp1_indx(l) = local_secp1(l)/dtime + 1
-       end if
 
        ! Error checks
 
@@ -3200,7 +3181,7 @@ contains
          ! Calculate traffic heat flux
          ! Only comes from impervious road
          eflx_traffic(l) = (1._r8-wtlunit_roof(fl))*(1._r8-wtroad_perv(fl))* &
-                           eflx_traffic_factor(l)*traffic_flux(local_secp1_indx(l))
+                           eflx_traffic_factor(l)
 
          taf(l) = taf_numer(l)/taf_denom(l)
          qaf(l) = qaf_numer(l)/qaf_denom(l)

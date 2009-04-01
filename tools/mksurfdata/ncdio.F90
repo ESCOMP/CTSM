@@ -23,6 +23,7 @@ module ncdio
   public :: check_var    ! determine if variable is on netcdf file
   public :: check_dim    ! validity check on dimension
   public :: ncd_defvar   ! define netCDF input variable
+  public :: ncd_convl2i  ! convert logical to integer
   public :: ncd_ioglobal ! Read/write netCDF input/output
 !
 ! !REVISION HISTORY:
@@ -97,6 +98,36 @@ contains
     end if
 
   end subroutine check_dim
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: ncd_convl2i
+!
+! !INTERFACE:
+  integer function ncd_convl2i( lvar )
+!
+! !DESCRIPTION:
+! Convert a logical to integer
+!
+! !ARGUMENTS:
+    implicit none
+    logical, intent(IN) :: lvar   ! logical variable to convert to integer
+!
+! !REVISION HISTORY:
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+!-----------------------------------------------------------------------
+
+     if ( lvar ) then
+        ncd_convl2i = 1
+     else
+        ncd_convl2i = 0
+     end if
+
+  end function ncd_convl2i
 
 !-----------------------------------------------------------------------
 !BOP

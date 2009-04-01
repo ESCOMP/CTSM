@@ -113,6 +113,7 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, glac_o)
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
         if (glac_o(io,jo) < 1.) glac_o(io,jo) = 0.
+        if (all_urban         ) glac_o(io,jo) = 0.
   enddo
   enddo
 
@@ -155,7 +156,7 @@ subroutine mkglacier(lsmlon, lsmlat, fname, ndiag, glac_o)
   ! Compare global sum fld_o to global sum fld_i.
   ! -----------------------------------------------------------------
 
-  if ( trim(mksrf_gridtype) == 'global') then
+  if ( .not. all_urban .and. trim(mksrf_gridtype) == 'global') then
      if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
         write (6,*) 'MKGLACIER error: input field not conserved'
         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo

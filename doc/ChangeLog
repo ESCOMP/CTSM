@@ -1,4 +1,199 @@
 ===============================================================
+Tag name:  clm3_6_31
+Originator(s):  erik (erik)
+Date: Wed Apr  1 00:58:15 MDT 2009
+One-line Summary: New surface datasets for 1850,2000, support for 0.9x1.25_gx1v6, urban always on. New pft-physiology file. Update scripts so remove some CLM_ env_conf vars. Fix CN for urban/pftdyn.
+
+Purpose of changes:
+
+New surface datasets for 1850,2000. sim_year can be 1850 or 2000
+(1870 no longer supported), support for 0.9x1.25_gx1v6. Demand furbinp (urban always on),
+wasteheat='ON_WASTEHEAT' by default. Change cpl7 template so can either do a cold start
+or require a finidat file (cold or startup). New pft-physiology file for CN used by 
+everything. Update scripts so remove some CLM_ env_conf vars: CLM_BGC, CLM_DYNNDEP, 
+CLM_DYNPFT, CLM_CO2_TYPE, remove CLMNCEP from scripts/datm (keeping CLM_QIAN mode). 
+Change final CN loop to go over soil filter -- so CN,CASA,DGVM can work with urban. 
+Remove traffic_flux array as it's subscript was out of bounds on breeze.  lnd_comp_mct
+changed so that check for spval allows for rounding of spval.
+
+Bugs fixed (include bugzilla ID): 904 (I cases start in 2003 rather than 1948)
+                                  897 (string comparision in scripts)
+                                  357 (remove duplicated files in tools)
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  821 (mksurfdata for qtr deg)
+                                  851 (abort when files non-exist on jaguar)
+                                  862 (360x720 res problem)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  919 (problems in mksurfdata for pftdyn mode)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  990 (illegal instruction)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Add -pio option to configure 
+   Will set the BUILDPIO CPP token as well as adding pio source to Filepath.
+
+Describe any changes made to the namelist: Add pio_inparm namelist when -pio 
+   was set in configure
+
+List any changes to the defaults for the boundary datasets:
+   New 1850 and 2000 surface datasets with urban enabled for most resolutions
+   Also new 1850 and 2000 finidat files for 1.9x2.5 resolution (other finidat files removed)
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: Peter Thornton, Keith Oleson, Forrest Hoffman
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, datm, csm_share, mct, pio
+
+   scripts4_090325
+   datm7_090325
+   vocemis-drydep11_share3_090112
+   CT2_6_0_090308
+  pio28_prod
+
+List all files eliminated:
+
+>>>>>>>>>>>>>> Remove DGVM namelist tests.
+D      models/lnd/clm/test/system/config_files/10p_dgvmsc_h
+D      models/lnd/clm/test/system/config_files/10p_dgvmsc_m
+D      models/lnd/clm/test/system/config_files/10p_dgvmsc_o
+D      models/lnd/clm/test/system/config_files/10p_dgvmsc_s
+D      models/lnd/clm/test/system/config_files/10p_dgvmsc_dh
+D      models/lnd/clm/test/system/config_files/10p_dgvmsc_dm
+D      models/lnd/clm/test/system/config_files/10p_dgvmsc_do
+
+>>>>>>>>>>>>>> Remove script that creates ASCII global data for urban.
+D      models/lnd/clm/tools/ncl_scripts/generate_ascii_avg_urbanparam_file_p7.ncl
+
+>>>>>>>>>>>>>> Remove modules replicated in mkgriddata by mksurfdata modules
+>>>>>>>>>>>>>> use the versions in mksurfdata.
+D      models/lnd/clm/tools/mkgriddata/ncdio.F90
+D      models/lnd/clm/tools/mkgriddata/domainMod.F90
+D      models/lnd/clm/tools/mkgriddata/areaMod.F90
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>> Add point datasets that now have urban information in them.
+A      models/lnd/clm/bld/urban_input/surfdata_1x1_tropicAtl_urb3den_simyr2000_c090320.nc
+A      models/lnd/clm/bld/urban_input/surfdata_1x1_brazil_urb3den_simyr2000_c090320.nc
+A      models/lnd/clm/bld/urban_input/surfdata_1x1_brazil_urb3den_simyr1850_c090317.nc
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>> Make most tests with urban, remove dgvm tests
+M      models/lnd/clm/test/system/tests_pretag_bluefire
+M      models/lnd/clm/test/system/config_files/README
+M      models/lnd/clm/test/system/tests_pretag_jaguar
+M      models/lnd/clm/test/system/tests_pretag_bangkok
+M      models/lnd/clm/test/system/test_driver.sh
+M      models/lnd/clm/test/system/tests_posttag_hybrid_regression
+M      models/lnd/clm/test/system/tests_posttag_purempi_regression
+M      models/lnd/clm/test/system/nl_files/clm_per
+M      models/lnd/clm/test/system/nl_files/clm_per0
+M      models/lnd/clm/test/system/input_tests_master
+M      models/lnd/clm/test/system/tests_posttag_lightning
+
+>>>>>>>>>>>>>> Add all_urban mode for single-point mode
+M      models/lnd/clm/tools/mksurfdata/mkvarctl.F90
+M      models/lnd/clm/tools/mksurfdata/ncdio.F90
+M      models/lnd/clm/tools/mksurfdata/mkglacier.F90
+M      models/lnd/clm/tools/mksurfdata/mkfileMod.F90
+M      models/lnd/clm/tools/mksurfdata/mklanwat.F90
+M      models/lnd/clm/tools/mksurfdata/mkurban.F90
+M      models/lnd/clm/tools/mksurfdata/mksrfdat.F90
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.pl
+M      models/lnd/clm/tools/mksurfdata/mkpftMod.F90
+
+>>>>>>>>>>>>>> Add pio option to configure, and if set add pio_inparm namelist
+>>>>>>>>>>>>>> Datasets to 1850/2000 and most with urban.
+M      models/lnd/clm/bld/configure ------------- Add pio option
+M      models/lnd/clm/bld/config_files/config_definition.xml - Add pio to config_cache.xml
+M      models/lnd/clm/bld/clm.cpl7.template ----- require furbinp, remove CLM_ env vars
+M      models/lnd/clm/bld/build-namelist -------- make sure sim_year sent in, change
+                                                  some names etc.
+M      models/lnd/clm/bld/namelist_files/namelist_definition.xml ---- Add pio_inparm
+M      models/lnd/clm/bld/namelist_files/datm.streams.template.xml -- Remove CLM_NCEP
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml -- urban datasets
+              for most resolutions, datasets for 1850 and 2000, remove most finidat
+
+>>>>>>>>>>>>>> Add data from grid files as well as LANDMASK and PCT_URBAN.
+M      models/lnd/clm/bld/urban_input/asphaltjungle_fluxes.nc
+M      models/lnd/clm/bld/urban_input/metropolis_fluxes.nc
+M      models/lnd/clm/bld/urban_input/mexicocityMEX_fluxes.nc
+M      models/lnd/clm/bld/urban_input/urbanc_alpha_fluxes.nc
+M      models/lnd/clm/bld/urban_input/vancouverCAN_fluxes.nc
+
+>>>>>>>>>>>>>> Changes from Forrest H./Peter T. to fix some CN problems (single-point, pftdyn)
+M      models/lnd/clm/src/biogeochem/CNSetValueMod.F90
+M      models/lnd/clm/src/main/driver.F90
+M      models/lnd/clm/src/main/pftdynMod.F90
+M      models/lnd/clm/src/main/lnd_comp_mct.F90 --------- Change from Mark Flanner
+                                                          to fix roundoff issues for aerosols.
+M      models/lnd/clm/src/biogeophys/Hydrology2Mod.F90
+M      models/lnd/clm/src/biogeophys/UrbanMod.F90 ------- Remove traffic_flux as subscript 
+                                                          bounds was being exceeded on breeze.
+
+Summary of testing:
+
+  bluefire: All PASS except TBL and...
+023 brF92 TBR.sh 17p_vodsrsc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 72+72 cold ..........FAIL! rc= 13
+027 brF93 TBR.sh 17p_vodsrsc_do clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 72+72 cold ..........FAIL! rc= 13
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+056 smI58 TSMcnspinup.sh 17p_cnadspinupsc_dh 17p_cnexitspinupsc_dh 17p_cnsc_dh clm_std 19980115:NONEFAIL! rc= 5
+057 smLI1 TSM.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+058 erLI1 TER.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+059 brLI1 TBR.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+065 smL83 TSM.sh _sc_do clm_urb^nl_urb 19980115:NONE:3600 5x5_amazon navy -10 arb_ic ............FAIL! rc= 10
+066 erL83 TER.sh _sc_do clm_urb^nl_urb 19980115:NONE:3600 5x5_amazon navy -5+-5 arb_ic ..........FAIL! rc= 5
+067 brL83 TBR.sh _sc_do clm_urb^nl_urb_br 19980115:NONE:3600 5x5_amazon navy -10+-10 arb_ic .....FAIL! rc= 5
+069 smJ61 TSM.sh 4p_casasc_dh clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 96 cold ...........FAIL! rc= 10
+070 erJ61 TER.sh 4p_casasc_dh clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 10+38 cold ........FAIL! rc= 5
+071 brJ61 TBR.sh 4p_casasc_dh clm_urb^nl_urb_br 19981230:NONE:1800 1.9x2.5 gx1v6 72+72 cold .....FAIL! rc= 5
+076 brJ74 TBR.sh 4p_casasc_ds clm_urb^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -3+-3 arb_ic .FAIL! rc= 13
+  jaguar: All PASS except TBL and...
+005 smA91 TSM.sh _sc_dh clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 10
+006 erA91 TER.sh _sc_dh clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 5
+007 brA91 TBR.sh _sc_dh clm_urb^nl_urb_br 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 5
+009 smE92 TSM.sh 4p_vodsrsc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 96 arb_ic ............FAIL! rc= 10
+010 erE92 TER.sh 4p_vodsrsc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 10+38 arb_ic .........FAIL! rc= 5
+011 brE92 TBR.sh 4p_vodsrsc_dm clm_urb^nl_urb_br 19981230:NONE:1800 4x5 gx3v5 72+72 arb_ic ......FAIL! rc= 5
+017 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+018 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 10+38 arb_ic ................FAIL! rc= 5
+019 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+025 smJ62 TSM.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 96 cold ...........FAIL! rc= 10
+026 erJ62 TER.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 10+38 cold ........FAIL! rc= 5
+027 brJ62 TBR.sh 4p_casasc_dm clm_urb^nl_urb_br 19981230:NONE:1800 1.9x2.5 gx1v6 72+72 cold .....FAIL! rc= 5
+029 smJ05 TSM.sh 4p_casasc_h clm_std^nl_lfiles 19800101:NONE:1800 0.47x0.63 gx1v5 48 startup ....FAIL! rc= 10
+030 smJ74 TSM.sh 4p_casasc_ds clm_urb^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -1100 arb_ic .FAIL! rc= 10
+031 erJ74 TER.sh 4p_casasc_ds clm_urb^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -10+-10 arb_ic FAIL! rc= 5
+032 brJ74 TBR.sh 4p_casasc_ds clm_urb^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -3+-3 arb_ic .FAIL! rc= 5
+034 smLI2 TSM.sh _sc_dm clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+035 erLI2 TER.sh _sc_dm clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+036 brLI2 TBR.sh _sc_dm clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+039 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 7
+  bangkok/lf95: All PASS except TBL
+  breeze/gale/hail/gust/ifort: All PASS
+
+TBL tests are different since most tests are now with urban.
+
+Most of the fails are due to missing files.
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_30
+
+Changes answers relative to baseline: Yes for CN -- new pft-physiology file
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_30
 Originator(s):  oleson (Oleson Keith 1332 CGD)
 Date:  Thu Mar 19 20:44:33 MDT 2009

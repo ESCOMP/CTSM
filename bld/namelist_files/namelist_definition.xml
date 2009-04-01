@@ -140,6 +140,12 @@ Per file averaging flag.
 <default>Default: ' ',' ',' ',' ',' ',' '</default>
 </entry>
 
+<entry id="hist_type1d_pertape" type="char*4(6)" category="history"
+       group="clm_inparm" valid_values="GRID,LAND,COLS,PFTS" >
+Averaging of output for 1D vector output
+<default>Default: ' ',' ',' ',' ',' ',' '</default>
+</entry>
+
 <entry id="hist_crtinic" type="char*8" category="history"
        group="clm_inparm" valid_values="6-HOURLY,DAILY,MONTHLY,YEARLY,NONE" >
 Frequency to generate initial dataset.
@@ -449,7 +455,7 @@ precedence.  Setting is Required
 unless <varname>orb_eccen</varname>, <varname>orb_mvelp</varname>,
 and <varname>orb_obliq</varname> are set.  Not used when running as part of
 CCSM.
-<default>Default: 1990.</default>
+<default>Default: Same as sim_year.</default>
 </entry>
 
 <entry id="orb_mvelp" type="real"  category="radiation"
@@ -842,6 +848,28 @@ integer indicating which timer to use. As defined in gptl.inc.
 </unlist>
 </entry>
 
+<!-- PIO namelist -->
+
+<entry id="cpl_io_stride" type="integer" category="driver"
+       group="pio_inparm" valid_values="" >
+Stride to use for PIO tasks
+</entry>
+
+<entry id="cpl_num_iotasks" type="integer" category="driver"
+       group="pio_inparm" valid_values="" >
+Number of tasks to use for PIO
+</entry>
+
+<entry id="cpl_iotype_name" type="char*80" category="driver"
+       group="pio_inparm" valid_values="netcdf" >
+Type of output files for PIO
+</entry>
+
+<entry id="cpl_io_root" type="integer" category="driver"
+       group="pio_inparm" valid_values="" >
+Root PE for PIO output processing
+</entry>
+
 
 <!-- ========================================================================================  -->
 <!-- DATM7 Namelists                                                                           -->
@@ -885,7 +913,7 @@ IC stream data file (for branch runs)
 Character array of stream description file names
 </entry>
 
-<entry id="tn460_factorfn" type="char*256" category="datm"
+<entry id="factorfn" type="char*256" category="datm"
        group="datm_nml" valid_values="unused">
 File containing tn460 correction factors (not valid for any CLM DATM7 modes)
 </entry>
@@ -919,14 +947,15 @@ End of year to cycle datm data through
 </entry>
 
 <entry id="sim_year" type="integer" category="default_settings"
-       group="default_settings" valid_values="1870,2000,2100">
+       group="default_settings" valid_values="1850,2000">
 Year to simulate datasets for (such as surface datasets, initial conditions, Nitrogen deposition rates etc.)
 </entry> 
 
 <entry id="source" type="char*80" category="datm_internal"
        group="datm_internal" 
-       valid_values="CLMNCEP,CLM_QIAN,CAMHIST.eul64x128_datm6.01,CLM1PT,CAMHIST.GENERIC">
+       valid_values="CLM_QIAN,CAMHIST.eul64x128_datm6.01,CLM1PT,CAMHIST.GENERIC">
 Description of data source for datm7 input data.
 </entry>
+
 
 </namelist_definition>

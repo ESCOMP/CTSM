@@ -1,6 +1,0 @@
--mode ccsm_seq
--spmd -nosmp
--debug
--maxpft 10
--bgc dgvm
--s

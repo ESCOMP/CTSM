@@ -17,6 +17,7 @@ module mkvarctl
 !
   logical            :: outnc_large_files     ! output files in 64-bit format for large files
   logical            :: outnc_double          ! output ALL data in files as 64-bit
+  logical            :: all_urban             ! output ALL data as 100% covered in urban
   character(len=256) :: mksrf_fgrid = ' '     ! land grid file name to use 
   character(len=256) :: mksrf_gridtype = ' '  ! land gridtype, global or reg
   character(len=256) :: mksrf_fvegtyp         ! vegetation data file name

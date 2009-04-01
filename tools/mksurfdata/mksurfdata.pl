@@ -12,13 +12,15 @@ use IO::File;
    # Set disk location to send files to, and list resolutions to operate over, set filenames, and short-date-name
    #
    my $CSMDATA = "/fs/cgd/csm/inputdata";
-   my @hresols = ( "360x720","128x256","64x128","48x96","32x64","8x16","0.47x0.63","0.9x1.25",
-                   "1.9x2.5","2.65x3.33","4x5","10x15","5x1_amazon", "1x1_tropicAtl", "1x1_camdenNJ","1x1_vancouverCAN",
+   my @hresols = ( "360x720","128x256", "0.47x0.63" );
+   my @hresols = ( "64x128","48x96","32x64","8x16","0.9x1.25",
+                   "1.9x2.5","2.65x3.33","4x5","10x15","5x5_amazon", "1x1_tropicAtl", "1x1_camdenNJ","1x1_vancouverCAN",
                    "1x1_mexicocityMEX", "1x1_asphaltjungleNJ", "1x1_brazil", "1x1_urbanc_alpha" );
    my $nl = "namelist";
    my $sdate = "c" . `date +%y%m%d`;
    chomp( $sdate );
 
+   my $urban = 1;
    my @ncfiles;
    my @lfiles;
    my $cfile = "clm.input_data_files";
@@ -54,11 +56,13 @@ EOF
       chomp( $griddata );
       print "res = $res griddata = $griddata\n";
       my $desc;
+      my @all_urb = ( "1x1_camdenNJ","1x1_vancouverCAN", "1x1_mexicocityMEX", 
+                      "1x1_asphaltjungleNJ", "1x1_urbanc_alpha" );
+      my $all_urb = "  all_urban = .false.";
       #
       # Loop over each sim_year
       #
-      #foreach my $sim_year ( 1992, 2000, 1890 ) {
-      foreach my $sim_year ( 1992 ) {
+      foreach my $sim_year ( 1850, 2000 ) {
          #
          # Create namelist file
          #
@@ -72,37 +76,44 @@ EOF
  mksrf_flanwat      = '$CSMDATA/lnd/clm2/rawdata/mksrf_lanwat.050425.nc'
  mksrf_fmax         = '$CSMDATA/lnd/clm2/rawdata/mksrf_fmax.070406.nc'
  mksrf_fglacier     = '$CSMDATA/lnd/clm2/rawdata/mksrf_glacier.060929.nc'
- mksrf_furban       = '$CSMDATA/lnd/clm2/rawdata/mksrf_urban.060929.nc'
+ mksrf_ftopo        = '$CSMDATA/lnd/clm2/rawdata/mksrf_topo.10min.c080912.nc'
+ mksrf_ffrac        = '$CSMDATA/lnd/clm2/griddata/fracdata_10min_USGS_071205.nc'
  mksrf_fdynuse      = ' '
+ $all_urb
 EOF
+         my $urbdesc;
+         if ( $urban ) {
+            $urbdesc = "urb3den";
+            print $fh <<"EOF";
+ mksrf_furban       = '$CSMDATA/lnd/clm2/rawdata/mksrf_urban_3den_0.5x0.5_simyr2000.c090223_v1.nc'
+EOF
+         } else {
+            $urbdesc = "nourb";
+            print $fh <<"EOF";
+ mksrf_furban       = '$CSMDATA/lnd/clm2/rawdata/mksrf_urban.060929.nc'
+EOF
+         }
          if ( $res =~ /[1-9]x[1-9]_[a-zA-Z0-9]/ ) {
             print $fh <<"EOF";
  mksrf_gridtype     = 'regional'
 EOF
          }
-         if ( $sim_year == 1992 ) {
-            $desc = "";
-            print $fh <<"EOF";
- mksrf_fvegtyp      = '$CSMDATA/lnd/clm2/rawdata/mksrf_pft.081008.nc'
- mksrf_fsoicol      = '$CSMDATA/lnd/clm2/rawdata/mksrf_soilcol.081008.nc'
- mksrf_flai         = '$CSMDATA/lnd/clm2/rawdata/mksrf_lai.081008.nc'
-/
-         elsif ( $sim_year == 2000 ) {
-            $desc = "mcrop2000";
-            print $fh <<"EOF";
- mksrf_fvegtyp      = '$CSMDATA/lnd/clm2/rawdata/mksrf_pft_mcrop2000.c081031.nc'
- mksrf_fsoicol      = '$CSMDATA/lnd/clm2/rawdata/mksrf_soilcol_mcrop2000.c081031.nc'
- mksrf_flai         = '$CSMDATA/lnd/clm2/rawdata/mksrf_lai_mcrop2000.c081031.nc'
+         $desc = "simyr$sim_year";
+         my $sdate = "c090313";
+         if (      $sim_year == 2000 ) {
+            $sdate = "c090320";
+         } elsif ( $sim_year == 1850 ) {
+            $sdate = "c090220";
+         }
+         print $fh <<"EOF";
+ mksrf_fvegtyp      = '$CSMDATA/lnd/clm2/rawdata/mksrf_pft_0.5x0.5_$desc.$sdate.nc'
+ mksrf_fsoicol      = '$CSMDATA/lnd/clm2/rawdata/mksrf_soilcol_0.5x0.5_$desc.$sdate.nc'
+ mksrf_flai         = '$CSMDATA/lnd/clm2/rawdata/mksrf_lai_0.5x0.5_$desc.$sdate.nc'
 /
 EOF
-         } else {
-            $desc = "potveg";
-            print $fh <<"EOF";
- mksrf_fvegtyp      = '$CSMDATA/lnd/clm2/rawdata/mksrf_pft_potveg.c081009.nc'
- mksrf_fsoicol      = '$CSMDATA/lnd/clm2/rawdata/mksrf_soilcol_potveg.c081009.nc'
- mksrf_flai         = '$CSMDATA/lnd/clm2/rawdata/mksrf_lai_potveg.c081009.nc'
-/
-EOF
+         if ( $sim_year != 2005 && $sim_year != 2000 && $sim_year != 1990 && 
+              $sim_year != 1870 && $sim_year != 1850 ) {
+            die "Bad sim_year = $sim_year, expecting: 1850, 1870, 1990, 2000, or 2005\n";
          }
          $fh->close;
          print "namelist: $nl\n";
@@ -128,14 +139,19 @@ EOF
          chomp( $ncfiles[0] );
          @lfiles = glob( "surfdata_*.log" );
          chomp( $lfiles[0] );
+         my $lsvnmesg = "$svnmesg $urbdesc $desc";
          if ( -f "$ncfiles[0]" && -f "$lfiles[0]" ) {
-            my $ofile = "surfdata_${res}_${desc}_${sdate}";
+            my $ofile = "surfdata_${res}_${urbdesc}_${desc}_${sdate}";
             my $mvcmd = "/bin/mv -f $ncfiles[0]  $CSMDATA/$surfdir/$ofile.nc";
+            print "$mvcmd\n";
             system( "$mvcmd" );
             my $mvcmd = "/bin/mv -f $lfiles[0] $CSMDATA/$surfdir/$ofile.log";
+            print "$mvcmd\n";
             system( "$mvcmd" );
             print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.nc\n";
-            print $cfh "svn import -m $svnmesg \$CSMDATA/$surfdir/$ofile.nc $svnrepo/$surfdir/.\n";
+            print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.nc $svnrepo/$surfdir/$ofile.nc\n";
+            print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.log\n";
+            print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.log $svnrepo/$surfdir/$ofile.log\n";
 
          } else {
            die "ERROR files were NOT created: nc=$ncfiles[0] log=$lfiles[0]\n";

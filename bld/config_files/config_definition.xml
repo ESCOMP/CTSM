@@ -32,6 +32,9 @@ are specified as a comma separated list with no embedded white space.
 <entry id="pergro" valid_values="0,1" value="0">
 Modifications that allow perturbation growth testing: 0=off, 1=on.
 </entry>
+<entry id="pio" valid_values="on,off" value="off">
+Toggle to enable/disable building with the PIO parallel I/O library.
+</entry>
 <entry id="clm_exe" value="clm">
 Name of CLM executable.
 </entry>

@@ -750,25 +750,25 @@ contains
     logical :: dustdep_filled = .true.     ! Flag if dust deposition is filled
 
     ! If ANY values set to special value -- then mark data as NOT filled
-    if ( any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphidry,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphodry,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphiwet,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphidry,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphodry,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphiwet,:) - spval)/spval < 0.0001_r8 ) &
+    if ( any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphidry,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphodry,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphiwet,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphidry,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphodry,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphiwet,:) - spval)/spval < 1._r8 ) &
     )then
         caerdep_filled = .false.
     end if
 
     ! If ANY values set to special value -- then mark dust data as NOT filled
-    if ( any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry1,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry2,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry3,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry4,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet1,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet2,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet3,:) - spval)/spval < 0.0001_r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet4,:) - spval)/spval < 0.0001_r8 ) &
+    if ( any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry1,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry2,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry3,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry4,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet1,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet2,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet3,:) - spval)/spval < 1._r8 ) &
+    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet4,:) - spval)/spval < 1._r8) &
     )then
         dustdep_filled = .false.
     end if

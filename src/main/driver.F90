@@ -121,6 +121,7 @@ module driver
   use DGVMMod             , only : lpj, lpjreset, histDGVM, &
 	                           resetweightsdgvm, resettimeconstdgvm 
 #elif (defined CN)
+  use CNSetValueMod       , only : CNZeroFluxes_dwt
   use CNEcosystemDynMod   , only : CNEcosystemDyn
   use CNAnnualUpdateMod   , only : CNAnnualUpdate
   use CNBalanceCheckMod   , only : BeginCBalance, BeginNBalance, &
@@ -305,11 +306,18 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
   call t_startf('pftdynwts')
   call pftdyn_wbal_init()
 
+
 #if (!defined DGVM)
   ! ============================================================================
   ! Update weights and reset filters if dynamic land use
   ! This needs to be done outside the clumps loop, but after BeginWaterBalance()
+  ! The call to CNZeroFluxes_dwt() is needed regardless of fpftdyn
   ! ============================================================================
+
+#if (defined CN)
+   call CNZeroFluxes_dwt()
+#endif
+
 ! PET: switching CN timestep
 !  if (doalb .and. fpftdyn /= ' ') then
    if (fpftdyn /= ' ') then

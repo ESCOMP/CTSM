@@ -148,7 +148,7 @@ contains
     real(r8), pointer :: t_grnd_u(:)      ! Urban ground temperature (Kelvin)
     real(r8), pointer :: t_grnd_r(:)      ! Rural ground temperature (Kelvin)
     real(r8), pointer :: qflx_snwcp_ice(:)! excess snowfall due to snow capping (mm H2O /s) [+]`
-    real(r8), pointer :: soilpsi(:,:)	  ! soil water potential in each soil layer (MPa)
+    real(r8), pointer :: soilpsi(:,:)     ! soil water potential in each soil layer (MPa)
 
     real(r8), pointer :: snot_top(:)        ! snow temperature in top layer (col) [K]
     real(r8), pointer :: dTdz_top(:)        ! temperature gradient in top layer (col) [K m-1]
@@ -470,22 +470,16 @@ contains
           fcov(c)       = spval
           qcharge(c)    = spval
           qflx_rsub_sat(c) = spval
-       else if (ityplun(l) == isturb) then
-          if (ctype(c) /= icol_road_perv) then
-             fcov(c)       = spval
-             qcharge(c)    = spval
-             qflx_rsub_sat(c) = spval
-          end if
-       else if (ityplun(l)==isturb .and. ctype(c) /= icol_road_perv) then 
-          fcov(c) = spval
-          qcharge(c) = spval
+       else if (ityplun(l) == isturb .and. ctype(c) /= icol_road_perv) then
+          fcov(c)       = spval
+          qcharge(c)    = spval
+          qflx_rsub_sat(c) = spval
        end if
 
        qflx_runoff(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c)
        if (ityplun(l)==isturb) then
          qflx_runoff_u(c) = qflx_drain(c) + qflx_surf(c)
-       end if
-       if (ityplun(l)==istsoil) then
+       else if (ityplun(l)==istsoil) then
          qflx_runoff_r(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c)
        end if
     end do
@@ -520,49 +514,41 @@ contains
 
 !dir$ concurrent
 !cdir nodep
-    do c = lbc,ubc
-       l = clandunit(c)
-       if (ityplun(l) == istsoil .or. ityplun(l) == isturb) then
-          rwat(c) = 0._r8
-          swat(c) = 0._r8
-          rz(c)   = 0._r8
-       end if
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
+       rwat(c) = 0._r8
+       swat(c) = 0._r8
+       rz(c)   = 0._r8
     end do
 
     do j = 1, nlevgrnd
 !dir$ concurrent
 !cdir nodep
-       do c = lbc,ubc
-          l = clandunit(c)
-          if (ityplun(l) == istsoil .or. ityplun(l) == isturb) then
-             !if (z(c,j)+0.5_r8*dz(c,j) <= 0.5_r8) then
-             if (z(c,j)+0.5_r8*dz(c,j) <= 0.05_r8) then
-                watdry = watsat(c,j) * (316230._r8/sucsat(c,j)) ** (-1._r8/bsw(c,j))
-                rwat(c) = rwat(c) + (h2osoi_vol(c,j)-watdry) * dz(c,j)
-                swat(c) = swat(c) + (watsat(c,j)    -watdry) * dz(c,j)
-                rz(c) = rz(c) + dz(c,j)
-             end if
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          !if (z(c,j)+0.5_r8*dz(c,j) <= 0.5_r8) then
+          if (z(c,j)+0.5_r8*dz(c,j) <= 0.05_r8) then
+             watdry = watsat(c,j) * (316230._r8/sucsat(c,j)) ** (-1._r8/bsw(c,j))
+             rwat(c) = rwat(c) + (h2osoi_vol(c,j)-watdry) * dz(c,j)
+             swat(c) = swat(c) + (watsat(c,j)    -watdry) * dz(c,j)
+             rz(c) = rz(c) + dz(c,j)
           end if
        end do
     end do
 
 !dir$ concurrent
 !cdir nodep
-    do c = lbc,ubc
-       l = clandunit(c)
-       if (ityplun(l) == istsoil .or. ityplun(l) == isturb) then
-          if (rz(c) /= 0._r8) then
-             tsw  = rwat(c)/rz(c)
-             stsw = swat(c)/rz(c)
-          else
-             watdry = watsat(c,1) * (316230._r8/sucsat(c,1)) ** (-1._r8/bsw(c,1))
-             tsw = h2osoi_vol(c,1) - watdry
-             stsw = watsat(c,1) - watdry
-          end if
-          wf(c) = tsw/stsw
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
+       if (rz(c) /= 0._r8) then
+          tsw  = rwat(c)/rz(c)
+          stsw = swat(c)/rz(c)
        else
-          wf(c) = 1.0_r8
+          watdry = watsat(c,1) * (316230._r8/sucsat(c,1)) ** (-1._r8/bsw(c,1))
+          tsw = h2osoi_vol(c,1) - watdry
+          stsw = watsat(c,1) - watdry
        end if
+       wf(c) = tsw/stsw
     end do
 #endif
 

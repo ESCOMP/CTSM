@@ -818,56 +818,7 @@ contains
     end if
 
     ! Get time step
-    ! N.B. This routine is called on the doalb timestep, so the relevant time step
-    ! between calls (dt) is generally longer than dtime.
     dt = real( get_step_size(), r8 )
-
-    ! set column-level conversion and product pool fluxes
-    ! to 0 at the beginning of every weight-shifting timestep
-
-!dir$ concurrent
-!cdir nodep
-    do c = begc,endc
-       ! C fluxes
-       cptr%ccf%dwt_seedc_to_leaf(c) = 0._r8
-       cptr%ccf%dwt_seedc_to_deadstem(c) = 0._r8
-       cptr%ccf%dwt_conv_cflux(c) = 0._r8
-       cptr%ccf%dwt_prod10c_gain(c) = 0._r8
-       cptr%ccf%dwt_prod10c_loss(c) = 0._r8
-       cptr%ccf%dwt_prod100c_gain(c) = 0._r8
-       cptr%ccf%dwt_prod100c_loss(c) = 0._r8
-       cptr%ccf%dwt_frootc_to_litr1c(c) = 0._r8
-       cptr%ccf%dwt_frootc_to_litr2c(c) = 0._r8
-       cptr%ccf%dwt_frootc_to_litr3c(c) = 0._r8
-       cptr%ccf%dwt_livecrootc_to_cwdc(c) = 0._r8
-       cptr%ccf%dwt_deadcrootc_to_cwdc(c) = 0._r8
-       ! C13 fluxes
-       cptr%cc13f%dwt_seedc_to_leaf(c) = 0._r8
-       cptr%cc13f%dwt_seedc_to_deadstem(c) = 0._r8
-       cptr%cc13f%dwt_conv_cflux(c) = 0._r8
-       cptr%cc13f%dwt_prod10c_gain(c) = 0._r8
-       cptr%cc13f%dwt_prod10c_loss(c) = 0._r8
-       cptr%cc13f%dwt_prod100c_gain(c) = 0._r8
-       cptr%cc13f%dwt_prod100c_loss(c) = 0._r8
-       cptr%cc13f%dwt_frootc_to_litr1c(c) = 0._r8
-       cptr%cc13f%dwt_frootc_to_litr2c(c) = 0._r8
-       cptr%cc13f%dwt_frootc_to_litr3c(c) = 0._r8
-       cptr%cc13f%dwt_livecrootc_to_cwdc(c) = 0._r8
-       cptr%cc13f%dwt_deadcrootc_to_cwdc(c) = 0._r8
-       ! N fluxes
-       cptr%cnf%dwt_seedn_to_leaf(c) = 0._r8
-       cptr%cnf%dwt_seedn_to_deadstem(c) = 0._r8
-       cptr%cnf%dwt_conv_nflux(c) = 0._r8
-       cptr%cnf%dwt_prod10n_gain(c) = 0._r8
-       cptr%cnf%dwt_prod10n_loss(c) = 0._r8
-       cptr%cnf%dwt_prod100n_gain(c) = 0._r8
-       cptr%cnf%dwt_prod100n_loss(c) = 0._r8
-       cptr%cnf%dwt_frootn_to_litr1n(c) = 0._r8
-       cptr%cnf%dwt_frootn_to_litr2n(c) = 0._r8
-       cptr%cnf%dwt_frootn_to_litr3n(c) = 0._r8
-       cptr%cnf%dwt_livecrootn_to_cwdn(c) = 0._r8
-       cptr%cnf%dwt_deadcrootn_to_cwdn(c) = 0._r8
-    end do
 
 !dir$ concurrent
 !cdir nodep

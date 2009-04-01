@@ -113,6 +113,7 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
         if (urbn_o(io,jo) < 0.1_r8) urbn_o(io,jo) = 0._r8
+        if (all_urban )             urbn_o(io,jo) = 100.00_r8
   enddo
   enddo
 
@@ -155,7 +156,7 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   ! Compare global sum fld_o to global sum fld_i.
   ! -----------------------------------------------------------------
 
-  if ( trim(mksrf_gridtype) == 'global') then
+  if ( .not. all_urban .and. trim(mksrf_gridtype) == 'global') then
      if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
         write (6,*) 'MKURBAN error: input field not conserved'
         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo

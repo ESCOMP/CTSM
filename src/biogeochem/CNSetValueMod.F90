@@ -14,6 +14,10 @@ module CNSetValueMod
 ! contains code to set all CN variables to specified value
 ! Used for both initialization of special landunit values, and
 ! setting fluxes to 0.0 at the beginning of each time step
+! 3/23/09, Peter Thornton: Added new subroutine, CNZeroFluxes_dwt(), 
+!     which initialize flux variables used in the pftdyn
+!     routines. This is called from driver(), as
+!     these variables need to be initialized outside of the clumps loop.
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
@@ -24,6 +28,7 @@ module CNSetValueMod
     private
 ! !PUBLIC MEMBER FUNCTIONS:
     public :: CNZeroFluxes
+    public :: CNZeroFluxes_dwt
     public :: CNSetPps
     public :: CNSetPepv
     public :: CNSetPcs
@@ -99,6 +104,100 @@ subroutine CNZeroFluxes(num_filterc, filterc, num_filterp, filterp)
     call CNSetPnf(num_filterp, filterp, 0._r8, clm3%g%l%c%p%pnf)
 
 end subroutine CNZeroFluxes
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: CNZeroFluxes_dwt
+!
+! !INTERFACE:
+subroutine CNZeroFluxes_dwt()
+!
+! !DESCRIPTION:
+!
+! !USES:
+    use decompMod   , only : get_proc_bounds
+!
+! !ARGUMENTS:
+    implicit none
+!
+! !CALLED FROM:
+! subroutine driver in module driver.F90
+!
+! !REVISION HISTORY:
+! 3/23/09: Created by Peter Thornton
+!
+! !LOCAL VARIABLES:
+! local pointers to implicit in scalars
+!
+!
+! local pointers to implicit in/out scalars
+!
+!
+! local pointers to implicit out scalars
+!
+!
+! !OTHER LOCAL VARIABLES:
+    integer  :: begp, endp    ! proc beginning and ending pft indices
+    integer  :: begc, endc    ! proc beginning and ending column indices
+    integer  :: begl, endl    ! proc beginning and ending landunit indices
+    integer  :: begg, endg    ! proc beginning and ending gridcell indices
+    integer  :: c             ! indices
+    type(column_type),   pointer :: cptr         ! pointer to column derived subtype
+!EOP
+!-----------------------------------------------------------------------
+
+    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+    cptr => clm3%g%l%c
+    ! set column-level conversion and product pool fluxes
+    ! to 0 at the beginning of every timestep
+
+!dir$ concurrent
+!cdir nodep
+    do c = begc,endc
+       ! C fluxes
+       cptr%ccf%dwt_seedc_to_leaf(c) = 0._r8
+       cptr%ccf%dwt_seedc_to_deadstem(c) = 0._r8
+       cptr%ccf%dwt_conv_cflux(c) = 0._r8
+       cptr%ccf%dwt_prod10c_gain(c) = 0._r8
+       cptr%ccf%dwt_prod10c_loss(c) = 0._r8
+       cptr%ccf%dwt_prod100c_gain(c) = 0._r8
+       cptr%ccf%dwt_prod100c_loss(c) = 0._r8
+       cptr%ccf%dwt_frootc_to_litr1c(c) = 0._r8
+       cptr%ccf%dwt_frootc_to_litr2c(c) = 0._r8
+       cptr%ccf%dwt_frootc_to_litr3c(c) = 0._r8
+       cptr%ccf%dwt_livecrootc_to_cwdc(c) = 0._r8
+       cptr%ccf%dwt_deadcrootc_to_cwdc(c) = 0._r8
+       ! C13 fluxes
+       cptr%cc13f%dwt_seedc_to_leaf(c) = 0._r8
+       cptr%cc13f%dwt_seedc_to_deadstem(c) = 0._r8
+       cptr%cc13f%dwt_conv_cflux(c) = 0._r8
+       cptr%cc13f%dwt_prod10c_gain(c) = 0._r8
+       cptr%cc13f%dwt_prod10c_loss(c) = 0._r8
+       cptr%cc13f%dwt_prod100c_gain(c) = 0._r8
+       cptr%cc13f%dwt_prod100c_loss(c) = 0._r8
+       cptr%cc13f%dwt_frootc_to_litr1c(c) = 0._r8
+       cptr%cc13f%dwt_frootc_to_litr2c(c) = 0._r8
+       cptr%cc13f%dwt_frootc_to_litr3c(c) = 0._r8
+       cptr%cc13f%dwt_livecrootc_to_cwdc(c) = 0._r8
+       cptr%cc13f%dwt_deadcrootc_to_cwdc(c) = 0._r8
+       ! N fluxes
+       cptr%cnf%dwt_seedn_to_leaf(c) = 0._r8
+       cptr%cnf%dwt_seedn_to_deadstem(c) = 0._r8
+       cptr%cnf%dwt_conv_nflux(c) = 0._r8
+       cptr%cnf%dwt_prod10n_gain(c) = 0._r8
+       cptr%cnf%dwt_prod10n_loss(c) = 0._r8
+       cptr%cnf%dwt_prod100n_gain(c) = 0._r8
+       cptr%cnf%dwt_prod100n_loss(c) = 0._r8
+       cptr%cnf%dwt_frootn_to_litr1n(c) = 0._r8
+       cptr%cnf%dwt_frootn_to_litr2n(c) = 0._r8
+       cptr%cnf%dwt_frootn_to_litr3n(c) = 0._r8
+       cptr%cnf%dwt_livecrootn_to_cwdn(c) = 0._r8
+       cptr%cnf%dwt_deadcrootn_to_cwdn(c) = 0._r8
+    end do
+    
+end subroutine CNZeroFluxes_dwt
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -911,19 +1010,6 @@ subroutine CNSetCcf(num, filter, val, ccf)
       ccf%soil3_hr(i) = val
       ccf%soil3c_to_soil4c(i) = val
       ccf%soil4_hr(i) = val
-      ccf%dwt_seedc_to_leaf(i) = val     
-      ccf%dwt_seedc_to_deadstem(i) = val 
-      ccf%dwt_conv_cflux(i) = val        
-      ccf%dwt_prod10c_gain(i) = val     
-      ccf%dwt_prod10c_loss(i) = val      
-      ccf%dwt_prod100c_gain(i) = val     
-      ccf%dwt_prod100c_loss(i) = val     
-      ccf%dwt_frootc_to_litr1c(i) = val  
-      ccf%dwt_frootc_to_litr2c(i) = val  
-      ccf%dwt_frootc_to_litr3c(i) = val  
-      ccf%dwt_livecrootc_to_cwdc(i) = val
-      ccf%dwt_deadcrootc_to_cwdc(i) = val
-      ccf%dwt_closs(i) = val             
       ccf%lithr(i) = val
       ccf%somhr(i) = val
       ccf%hr(i) = val
@@ -1044,19 +1130,6 @@ subroutine CNSetCnf(num, filter, val, cnf)
       cnf%sminn_to_denit_s4(i) = val
       cnf%sminn_to_denit_excess(i) = val
       cnf%sminn_leached(i) = val
-      cnf%dwt_seedn_to_leaf(i) = val     
-      cnf%dwt_seedn_to_deadstem(i) = val 
-      cnf%dwt_conv_nflux(i) = val        
-      cnf%dwt_prod10n_gain(i) = val      
-      cnf%dwt_prod10n_loss(i) = val      
-      cnf%dwt_prod100n_gain(i) = val     
-      cnf%dwt_prod100n_loss(i) = val     
-      cnf%dwt_frootn_to_litr1n(i) = val  
-      cnf%dwt_frootn_to_litr2n(i) = val  
-      cnf%dwt_frootn_to_litr3n(i) = val  
-      cnf%dwt_livecrootn_to_cwdn(i) = val
-      cnf%dwt_deadcrootn_to_cwdn(i) = val
-      cnf%dwt_nloss(i) = val                   
       cnf%potential_immob(i) = val
       cnf%actual_immob(i) = val
       cnf%sminn_to_plant(i) = val
