@@ -187,11 +187,11 @@ if [ "$debug" != "YES" ] && [ "$compile_only" != "YES" ]; then
    status="PASS"
 else
    echo "${cmnd} ${CLM_TESTDIR}/TCB.$1/clm"
-   echo "=============== SUCCESSFUL TERMINATION" >> test.log
+   echo "SUCCESSFUL TERMINATION" >> test.log
    status="GEN"
 fi
 rc=$?
-if [ $rc -eq 0 ] && grep -c "=============== SUCCESSFUL TERMINATION" *test.log > /dev/null; then
+if [ $rc -eq 0 ] && grep -c "SUCCESSFUL TERMINATION" *test.log > /dev/null; then
     echo "TSM.sh: smoke test passed" 
     echo "$status" > TestStatus
     if [ $CLM_RETAIN_FILES != "TRUE" ]; then

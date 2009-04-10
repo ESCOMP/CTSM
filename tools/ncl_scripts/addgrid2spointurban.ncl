@@ -106,14 +106,13 @@ begin
   ;
   ; Add PCT_URBAN and LANDMASK
   ;
-  PUvar = "PCT_URBAN";
-  filevardef (    nco, PUvar, "float", (/ "lsmlat", "lsmlon" /) )
-  nco->$PUvar$@long_name = "percent urban";
-  nco->$PUvar$@units     = "unitless";
-  LMvar = "LANDMASK";
-  filevardef (    nco, LMvar, "float", (/ "lsmlat", "lsmlon" /) )
-  nco->$LMvar$@long_name = "land mask";
-  nco->$LMvar$@units     = "unitless";
+  addvars   = (/ "PCT_URBAN",     "LANDMASK",  "mask" /);
+  addvarsln = (/ "percent urban", "land mask", "mask" /);
+  do i = 0, dimsizes( addvars ) - 1
+     filevardef ( nco, addvars(i), "float", (/ "lsmlat", "lsmlon" /) )
+     nco->$addvars(i)$@long_name = addvarsln(i)
+     nco->$addvars(i)$@units     = "unitless";
+  end do
 
   sdate = systemfunc( "date" );
   nco@History_Log = "Added grid data from "+gridfile+" on "+sdate + "grid file "+ncg@History_Log;
@@ -134,8 +133,9 @@ begin
      end if
   end do
 
-  nco->$PUvar$ = 100.0;
-  nco->$LMvar$ =   1.0;
+  nco->PCT_URBAN = 100.0;
+  nco->LANDMASK  =   1.0;
+  nco->mask      =   1.0;
   
   delete( vars  );
   delete( gvars );

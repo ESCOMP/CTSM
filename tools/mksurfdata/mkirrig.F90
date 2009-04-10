@@ -1,13 +1,13 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: mkurban
+! !IROUTINE: mkirrig
 !
 ! !INTERFACE:
-subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
+subroutine mkirrig(lsmlon, lsmlat, fname, ndiag, irrig_o)
 !
 ! !DESCRIPTION:
-! make percent urban
+! make percent irrigated area
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
@@ -26,13 +26,13 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   integer , intent(in) :: lsmlon, lsmlat          ! clm grid resolution
   character(len=*), intent(in) :: fname           ! input dataset file name
   integer , intent(in) :: ndiag                   ! unit number for diag out
-  real(r8), intent(out):: urbn_o(lsmlon,lsmlat)    ! output grid: %urban
+  real(r8), intent(out):: irrig_o(lsmlon,lsmlat)    ! output grid: %irrigated area
 !
 ! !CALLED FROM:
 ! subroutine mksrfdat in module mksrfdatMod
 !
 ! !REVISION HISTORY:
-! Author: Mariana Vertenstein
+! Author: David Lawrence
 !
 !EOP
 !
@@ -43,16 +43,16 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   type(domain_type)     :: tdomain            ! local domain
   type(gridmap_type)    :: tgridmap           ! local gridmap
 
-  real(r8), allocatable :: urbn_i(:,:)        ! input grid: percent urbn
+  real(r8), allocatable :: irrig_i(:,:)       ! input grid: percent irrig
   real(r8), allocatable :: mask_i(:,:)        ! input grid: mask (0, 1)
   real(r8), allocatable :: mask_o(:,:)        ! output grid: mask (0, 1)
   real(r8), allocatable :: fld_i(:,:)         ! input grid: dummy field
   real(r8), allocatable :: fld_o(:,:)         ! output grid: dummy field
   real(r8) :: sum_fldi                        ! global sum of dummy input fld
   real(r8) :: sum_fldo                        ! global sum of dummy output fld
-  real(r8) :: gurbn_i                          ! input  grid: global urbn
+  real(r8) :: girrig_i                        ! input  grid: global irrig
   real(r8) :: garea_i                         ! input  grid: global area
-  real(r8) :: gurbn_o                          ! output grid: global urbn
+  real(r8) :: girrig_o                        ! output grid: global irrig
   real(r8) :: garea_o                         ! output grid: global area
 
   integer  :: ii,ji                           ! indices
@@ -60,12 +60,12 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   integer  :: k,n,m                           ! indices
   integer  :: ncid,dimid,varid                ! input netCDF id's
   integer  :: ier                             ! error status
-  real(r8) :: relerr = 0.00001_r8             ! max error: sum overlap wts ne 1
+  real(r8) :: relerr = 0.00001                ! max error: sum overlap wts ne 1
   character(len=256) locfn                    ! local dataset file name
-  character(len=32) :: subname = 'mkurban'
+  character(len=32) :: subname = 'mkirrig'
 !-----------------------------------------------------------------------
 
-  write (6,*) 'Attempting to make %urban .....'
+  write (6,*) 'Attempting to make %irrigated area .....'
   call shr_sys_flush(6)
 
   ! -----------------------------------------------------------------
@@ -81,11 +81,11 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 
   call check_ret(nf_open(locfn, 0, ncid), subname)
 
-  allocate(urbn_i(nlon_i,nlat_i), stat=ier)
+  allocate(irrig_i(nlon_i,nlat_i), stat=ier)
   if (ier/=0) call abort()
 
-  call check_ret(nf_inq_varid (ncid, 'PCT_URBAN', varid), subname)
-  call check_ret(nf_get_var_double (ncid, varid, urbn_i), subname)
+  call check_ret(nf_inq_varid (ncid, 'PCT_IRRIG', varid), subname)
+  call check_ret(nf_get_var_double (ncid, varid, irrig_i), subname)
 
   call check_ret(nf_close(ncid), subname)
 
@@ -108,12 +108,11 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   ! and correct according to land landmask
   ! Note that percent cover is in terms of total grid area.
 
-  call areaave(urbn_i,urbn_o,tgridmap)
+  call areaave(irrig_i,irrig_o,tgridmap)
 
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
-        if (urbn_o(io,jo) < 0.1_r8) urbn_o(io,jo) = 0._r8
-        if (all_urban )             urbn_o(io,jo) = 100.00_r8
+        if (irrig_o(io,jo) < 1.) irrig_o(io,jo) = 0.
   enddo
   enddo
 
@@ -121,8 +120,8 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
-     if ((urbn_o(io,jo)) > 100.000001_r8) then
-        write (6,*) 'MKURBAN error: urban = ',urbn_o(io,jo), &
+     if ((irrig_o(io,jo)) > 100.000001_r8) then
+        write (6,*) 'MKIRRIG error: irrigated area = ',irrig_o(io,jo), &
                 ' greater than 100.000001 for column, row = ',io,jo
         call shr_sys_flush(6)
         stop
@@ -143,7 +142,7 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 
   call areaave(fld_i,fld_o,tgridmap)
 
-  sum_fldo = 0._r8
+  sum_fldo = 0.
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
      fld_o(io,jo) = fld_o(io,jo)*mask_o(io,jo)
@@ -156,9 +155,9 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   ! Compare global sum fld_o to global sum fld_i.
   ! -----------------------------------------------------------------
 
-  if ( .not. all_urban .and. trim(mksrf_gridtype) == 'global') then
-     if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
-        write (6,*) 'MKURBAN error: input field not conserved'
+  if ( trim(mksrf_gridtype) == 'global') then
+     if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
+        write (6,*) 'MKIRRIG error: input field not conserved'
         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
         write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
         stop
@@ -172,26 +171,26 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 
   ! Input grid
 
-  gurbn_i = 0._r8
-  garea_i = 0._r8
+  girrig_i = 0.
+  garea_i = 0.
 
   do ji = 1, nlat_i
   do ii = 1, nlon_i
      garea_i = garea_i + tdomain%area(ii,ji)
-     gurbn_i = gurbn_i + urbn_i(ii,ji)*(tdomain%area(ii,ji)/100._r8) * &
+     girrig_i = girrig_i + irrig_i(ii,ji)*(tdomain%area(ii,ji)/100.) * &
                          tdomain%frac(ii,ji)
   end do
   end do
 
   ! Output grid
 
-  gurbn_o = 0._r8
-  garea_o = 0._r8
+  girrig_o = 0.
+  garea_o = 0.
 
   do jo = 1, ldomain%nj
   do io = 1, ldomain%numlon(jo)
      garea_o = garea_o + ldomain%area(io,jo)
-     gurbn_o = gurbn_o + urbn_o(io,jo)*(ldomain%area(io,jo)/100._r8) * &
+     girrig_o = girrig_o + irrig_o(io,jo)*(ldomain%area(io,jo)/100.) * &
                          ldomain%frac(io,jo)
   end do
   end do
@@ -200,7 +199,7 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 
   write (ndiag,*)
   write (ndiag,'(1x,70a1)') ('=',k=1,70)
-  write (ndiag,*) 'Urban Output'
+  write (ndiag,*) 'Irrigated area Output'
   write (ndiag,'(1x,70a1)') ('=',k=1,70)
 
   write (ndiag,*)
@@ -210,11 +209,9 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
              1x,'                 10**6 km**2      10**6 km**2   ')
   write (ndiag,'(1x,70a1)') ('.',k=1,70)
   write (ndiag,*)
-! write (ndiag,2002) gurbn_i*1.e-06,gurbn_o*1.e-06
-  write (ndiag,2003) gurbn_i*1.e-06,gurbn_o*1.e-06
+  write (ndiag,2002) girrig_i*1.e-06,girrig_o*1.e-06
   write (ndiag,2004) garea_i*1.e-06,garea_o*1.e-06
-2002 format (1x,'urban       ',f14.3,f17.3)
-2003 format (1x,'urban       ',f14.3,f22.8)
+2002 format (1x,'irrigated area    ',f14.3,f17.3)
 2004 format (1x,'all surface ',f14.3,f17.3)
 
   if (lsmlat > 1) then
@@ -226,7 +223,7 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
   endif
   call shr_sys_flush(ndiag)
 
-  write (6,*) 'Successfully made %urban'
+  write (6,*) 'Successfully made %irrigated area'
   write (6,*)
   call shr_sys_flush(6)
 
@@ -234,9 +231,9 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 
   call domain_clean(tdomain)
   call gridmap_clean(tgridmap)
-  deallocate (urbn_i)
+  deallocate (irrig_i)
   deallocate (mask_i,mask_o)
   deallocate ( fld_i, fld_o)
 
-end subroutine mkurban
+end subroutine mkirrig
 

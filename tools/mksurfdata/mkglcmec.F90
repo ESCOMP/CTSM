@@ -265,6 +265,7 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
 
         ! normalize so that sum of pctglcmec_i adds up to one
         do m = 1,nglcec
+           if ( pctectot /= 0.0_r8 ) &
            pctglcmec_i(io,jo,m) = (100./pctectot)*pctglcmec_i(io,jo,m)
         enddo
      endif

@@ -41,6 +41,7 @@ NOTE: In order to successfully build, some source files are required from
     !    mksrf_flanwat
     !    mksrf_fglacier
     !    mksrf_furban
+    !    mksrf_firrig
     !    mksrf_flai
     ! ======================================
     ! Optionally specify setting for:

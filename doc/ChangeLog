@@ -1,4 +1,200 @@
 ===============================================================
+Tag name:  clm3_6_32
+Originator(s):  dlawren, erik, jet
+Date: Fri Apr 10 14:38:52 MDT 2009
+One-line Summary: Add irrigation area to mksrfdata, fix high-res and pftdyn problems
+
+Purpose of changes:  Add irrigation area to mksrfdat tool, for irrigated area copy PFT=15 LAI and heights
+	into PFT=16, PFT=15 is unirrigated crop, PFT=16 is irrigated crop
+   fix pftdyn mode for mksurfdata (erik), bug fixes to mksurfdata from John Truesdale
+   script changes to make gx1v6 default.
+
+Bugs fixed (include bugzilla ID): 919 (pftdyn mode in mksurfdata)
+                                  821 (problems running mksurfdata at high-res)
+                                  357 (codes replicated in tools)
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  821 (mksurfdata for qtr deg)
+                                  851 (abort when files non-exist on jaguar)
+                                  862 (360x720 res problem)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  919 (problems in mksurfdata for pftdyn mode)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  927 (problem with urban on bangkok/lahey)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Building with PIO is on by default
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: gx1v6 for and 0.47 res
+   fix 5x5_amazon surface dataset.
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, jet, dlawren
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm7,
+csm_share, esmf_wrf_timemgr
+
+  scripts   to scripts4_090406
+  drv       to vocemis-drydep08_drvseq3_0_13
+  datm7     to datm7_090403
+  csm_share to share3_090407
+  timemgr   to esmf_wrf_timemgr_090402
+
+List all files eliminated: Remove text urban input files, globalurban mksurf namelist --
+as urban is default.
+
+D      models/lnd/clm/bld/urban_input/metropolis_fluxes.txt
+D      models/lnd/clm/bld/urban_input/urbanc_alpha_fluxes.txt
+D      models/lnd/clm/bld/urban_input/asphaltjungle_fluxes.txt
+D      models/lnd/clm/bld/urban_input/mexicocityMEX_fluxes.txt
+D      models/lnd/clm/bld/urban_input/vancouverCAN_fluxes.txt
+D      models/lnd/clm/tools/mksurfdata/mksurfdata.globalurban 
+
+List all files added and what they do:
+
+A      models/lnd/clm/tools/mksurfdata/pftdyn_simyr1850-2005.txt . List of dynamic PFT files from 1850 to 2005
+A      models/lnd/clm/tools/mksurfdata/pftdyn_simyr1850.txt ...... Dynamic PFT file for 1850
+A      models/lnd/clm/tools/mksurfdata/pftdyn_simyr2000.txt ...... Dynamic PFT file for 2000
+A      models/lnd/clm/tools/mksurfdata/mkirrig.F90 ............... calculates irrigated area from irrigated area on input dataset
+A      models/lnd/clm/tools/mksurfdata/mksurfdata.globalirrig .... namelist file pointing to irrigated area source file
+A      models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml datm namelist info
+A      models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml  drv namelist info
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>> Add firrig option, fix bugs, fix pftdyn mode
+M      models/lnd/clm/tools/mksurfdata/mkvarctl.F90 .............. Add mksrf_firrig
+M      models/lnd/clm/tools/mksurfdata/mklaiMod.F90 .............. Copy LAI in PFT=15 into PFT=16 if mksrf_irrig /= ''
+                                                        use standard averaging for pftdyn
+M      models/lnd/clm/tools/mksurfdata/mkfileMod.F90 ............. Add mksrf_firrig
+M      models/lnd/clm/tools/mksurfdata/README
+M      models/lnd/clm/tools/mksurfdata/mksrfdat.F90 .............. Add pct_irr to surface dataset if mksrf_irrig /= ''
+M      models/lnd/clm/tools/mksurfdata/Srcfiles
+M      models/lnd/clm/tools/mksurfdata/mkpftMod.F90 .............. Adjust PCT_PFT for non-irrigated (PFT=15) and irrigted (PFT=16) crops
+M      models/lnd/clm/tools/mksurfdata/mkglcmec.F90 .............. Check for divide by zero (JT)
+M      models/lnd/clm/tools/mksurfdata/mkvarctl.F90 .............. Initialize files to blank
+M      models/lnd/clm/tools/mksurfdata/mkfileMod.F90 ............. Only output data needed for pftdyn files
+M      models/lnd/clm/tools/mksurfdata/mkorganic.F90 ............. Allocate bug-fix (JT)
+M      models/lnd/clm/tools/mksurfdata/mkurban.F90 ............... bug-fix (JT)
+M      models/lnd/clm/tools/mksurfdata/areaMod.F90 ............... bug-fix (JT) 
+M      models/lnd/clm/tools/mksurfdata/mksrfdat.F90 .............. add mkirrig, changes for pftdyn
+M      models/lnd/clm/tools/mksurfdata/Srcfiles .................. add mkirrig.F90
+M      models/lnd/clm/tools/mksurfdata/mkpftMod.F90 .............. if firrig => irrig/non-irrig crops
+>>>>>>>>>>>>>>> Always create files using the transient input raw datasets
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.pl
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.namelist
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.regional 
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.singlept
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.namelist
+>>>>>>>>>>>>>>> Add needed fields (mask, LANDMASK) to urban datasets
+M      models/lnd/clm/tools/ncl_scripts/addgrid2spointurban.ncl
+>>>>>>>>>>>>>>> Turn pio on, work with defaults
+M      models/lnd/clm/bld/configure
+M      models/lnd/clm/bld/config_files/config_definition.xml
+M      models/lnd/clm/bld/run-ibm.csh
+M      models/lnd/clm/bld/clm.cpl7.template
+M      models/lnd/clm/bld/build-namelist
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+>>>>>>>>>>>>>>> Add mask,PCT_URBAN and LANDMASK to urban point input files
+M      models/lnd/clm/bld/urban_input/vancouverCAN_fluxes.nc ..... Add mask
+M      models/lnd/clm/bld/urban_input/metropolis_fluxes.nc ....... Add mask
+M      models/lnd/clm/bld/urban_input/urbanc_alpha_fluxes.nc ..... Add mask
+M      models/lnd/clm/bld/urban_input/asphaltjungle_fluxes.nc .... Add mask
+M      models/lnd/clm/bld/urban_input/mexicocityMEX_fluxes.nc .... Changes from Keith, add mask
+>>>>>>>>>>>>>>> 
+M      models/lnd/clm/test/system/tests_pretag_bluefire - add pftdyn test
+M      models/lnd/clm/test/system/test_driver.sh -------- use beta14
+M      models/lnd/clm/test/system/input_tests_master ---- fix TBR tests, 
+M      models/lnd/clm/test/system/TCBext_ccsmseq_cam.sh - remove eshr
+M      models/lnd/clm/test/system/TSM.sh ---------------- fix 
+M      models/lnd/clm/test/system/tests_pretag_bangkok -- put some serial tests first
+M      models/lnd/clm/test/system/CLM_runcmnd.sh -------- remove bluesky
+>>>>>>>>>>>>>>> Always use T_REF2M NOT t_ref2m
+M      models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90
+
+Summary of testing:
+
+  bluefire: All PASS except
+004 blA74 TBL.sh _sc_ds clm_urb^nl_urb 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ............FAIL! rc= 5
+009 blA91 TBL.sh _sc_dh clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 5
+012 blD91 TBL.sh _persc_dh clm_per^nl_urb 19981231:NONE:1200 4x5 gx3v5 144 cold .................FAIL! rc= 7
+014 blH74 TBL.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test -100 cold ........FAIL! rc= 5
+019 blE91 TBL.sh 4p_vodsrsc_dh clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 48 arb_ic ............FAIL! rc= 5
+024 blF92 TBL.sh 17p_vodsrsc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 48 cold .............FAIL! rc= 5
+028 blF93 TBL.sh 17p_vodsrsc_do clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 48 cold .............FAIL! rc= 5
+032 blEH1 TBL.sh 4p_vodsrsc_dh clm_urb^nl_urb 19981231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 48 arb_ic FAIL! rc= 5
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+036 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 4
+041 blCA4 TBL.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 7
+043 blCA8 TBL.sh _sc_ds clm_urb^nl_urb 19971230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 7
+047 blNB4 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 7
+051 blC61 TBL.sh _sc_dh clm_urb^nl_urb 19981001:NONE:1800 1.9x2.5 gx1v6 48 cold .................FAIL! rc= 7
+055 blH51 TBL.sh 17p_cnnsc_dh clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS@2000 48 cold .........FAIL! rc= 5
+056 smI58 TSMcnspinup.sh 17p_cnadspinupsc_dh 17p_cnexitspinupsc_dh 17p_cnsc_dh clm_std 19980115:NONEFAIL! rc= 5
+057 smLI1 TSM.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+058 erLI1 TER.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+059 brLI1 TBR.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+060 blLI1 TBL.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 4
+062 blL78 TBL.sh _sc_s clm_urb^nl_urb 19971231:NONE:1800 1x1_brazil navy -10 arb_ic .............FAIL! rc= 5
+065 smL83 TSM.sh _sc_do clm_urb^nl_urb 19980115:NONE:3600 5x5_amazon navy -10 arb_ic ............FAIL! rc= 10
+066 erL83 TER.sh _sc_do clm_urb^nl_urb 19980115:NONE:3600 5x5_amazon navy -5+-5 arb_ic ..........FAIL! rc= 5
+067 brL83 TBR.sh _sc_do clm_urb^nl_urb_br 19980115:NONE:3600 5x5_amazon navy -10+-10 arb_ic .....FAIL! rc= 5
+068 blL83 TBL.sh _sc_do clm_urb^nl_urb 19980115:NONE:3600 5x5_amazon navy -10 arb_ic ............FAIL! rc= 4
+069 smJ61 TSM.sh 4p_casasc_dh clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 96 cold ...........FAIL! rc= 10
+070 erJ61 TER.sh 4p_casasc_dh clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 10+38 cold ........FAIL! rc= 5
+071 brJ61 TBR.sh 4p_casasc_dh clm_urb^nl_urb_br 19981230:NONE:1800 1.9x2.5 gx1v6 72+72 cold .....FAIL! rc= 5
+072 blJ61 TBL.sh 4p_casasc_dh clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 48 cold ...........FAIL! rc= 4
+073 smJ05 TSM.sh 4p_casasc_h clm_std^nl_lfiles 19800101:NONE:1800 0.47x0.63 gx1v6 48 arb_ic .....FAIL! rc= 10
+077 blJ74 TBL.sh 4p_casasc_ds clm_urb^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic ..FAIL! rc= 5
+084 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 6
+086 bl754 TBLtools.sh mksurfdata tools__s globalirrig ...........................................FAIL! rc= 6
+088 bl756 TBLtools.sh mksurfdata tools__s pftdyn ................................................FAIL! rc= 7
+093 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+094 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+095 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 4
+096 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 4
+097 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 4
+    jaguar: ALL FAIL except
+029 smJ05 TSM.sh 4p_casasc_h clm_std^nl_lfiles 19800101:NONE:1800 0.47x0.63 gx1v6 48 arb_ic .....PASS
+    breeze/pathscale: All PASS
+    bangkok/lahey: All PASS except
+005 smA92 TSM.sh _sc_dm clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 10
+006 erA92 TER.sh _sc_dm clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 5
+007 brA92 TBR.sh _sc_dm clm_urb^nl_urb_br 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 5
+009 smD91 TSM.sh _persc_dh clm_per^nl_urb 19981231:NONE:1200 4x5 gx3v5 144 cold .................FAIL! rc= 10
+010 erD91 TER.sh _persc_dh clm_per^nl_urb 19981231:NONE:1200 4x5 gx3v5 72+72 cold ...............FAIL! rc= 5
+014 erCA4 TER.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ......FAIL! rc= 7
+030 smH52 TSM.sh 17p_cnnsc_dm clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS@2000 96 cold .........FAIL! rc= 10
+031 erH52 TER.sh 17p_cnnsc_dm clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS@2000 10+38 cold ......FAIL! rc= 5
+032 brH52 TBR.sh 17p_cnnsc_dm clm_urb^nl_urb_br 19980115:NONE:1800 10x15 USGS@2000 72+72 cold ...FAIL! rc= 5
+034 smJ92 TSM.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 96 cold ...............FAIL! rc= 10
+035 erJ92 TER.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 10+38 cold ............FAIL! rc= 5
+036 brJ92 TBR.sh 4p_casasc_dm clm_urb^nl_urb_br 19981230:NONE:1800 4x5 gx3v5 72+72 cold .........FAIL! rc= 5
+038 smL51 TSM.sh _sc_dh clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS 96 arb_ic ..................FAIL! rc= 10
+039 erL51 TER.sh _sc_dh clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS 10+38 arb_ic ...............FAIL! rc= 5
+040 brL51 TBR.sh _sc_dh clm_urb^nl_urb_br 19980115:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 5
+052 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48 .......................FAIL! rc= 8
+053 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_30
+
+Changes answers relative to baseline: No bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_31
 Originator(s):  erik (erik)
 Date: Wed Apr  1 00:58:15 MDT 2009

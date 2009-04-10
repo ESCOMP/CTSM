@@ -642,11 +642,13 @@ end subroutine gridmap_checkmap
 
     ! check for conservation
 
-    if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
-       write (6,*) 'AREAINI error: input field not conserved'
-       write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-       write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-       stop
+    if (sum_fldi .ne. 0) then   ! NOT a null field
+       if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
+          write (6,*) 'AREAINI error: input field not conserved'
+          write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
+          write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
+          stop
+       end if
     end if
 
     deallocate (fld_o, fld_i)

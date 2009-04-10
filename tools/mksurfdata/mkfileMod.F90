@@ -16,7 +16,7 @@ contains
     include 'netcdf.inc'
     integer, intent(in) :: lsmlon, lsmlat
     character(len=*),intent(in) :: fname
-    logical, intent(in) :: dynlanduse	
+    logical, intent(in) :: dynlanduse
 
     integer :: ncid
     integer :: j                    ! index
@@ -147,6 +147,10 @@ contains
     str = get_filename(mksrf_furban)
     call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
          'Urban_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+    str = get_filename(mksrf_firrig)
+    call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+         'Irrig_raw_data_file_name', len_trim(str), trim(str)), subname)
 
     if (.not. dynlanduse) then
        str = get_filename(mksrf_flai)
@@ -368,25 +372,34 @@ contains
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='percent glacier', units='unitless')
 
-    call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
-         dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-         long_name='percent for each glacier elevation class', units='unitless')
+    if (.not. dynlanduse) then
+       call ncd_defvar(ncid=ncid, varname='PCT_GLC_MEC', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
+            long_name='percent for each glacier elevation class', units='unitless')
+   
+       call ncd_defvar(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
+            long_name='mean elevation on glacier elevation classes', units='m')
 
-    call ncd_defvar(ncid=ncid, varname='TOPO_GLC_MEC', xtype=xtype, &
-         dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-         long_name='mean elevation on glacier elevation classes', units='m')
+       call ncd_defvar(ncid=ncid, varname='THCK_GLC_MEC', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
+            long_name='mean ice sheet thickness on glacier elevation classes', units='m')
 
-    call ncd_defvar(ncid=ncid, varname='THCK_GLC_MEC', xtype=xtype, &
-         dim1name='lsmlon', dim2name='lsmlat', dim3name='nglcec', &
-         long_name='mean ice sheet thickness on glacier elevation classes', units='m')
+       call ncd_defvar(ncid=ncid, varname='FMAX', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='maximum fractional saturated area', units='unitless')
 
-    call ncd_defvar(ncid=ncid, varname='FMAX', xtype=xtype, &
-         dim1name='lsmlon', dim2name='lsmlat', &
-         long_name='maximum fractional saturated area', units='unitless')
+    end if
 
     call ncd_defvar(ncid=ncid, varname='PCT_URBAN', xtype=xtype, &
          dim1name='lsmlon', dim2name='lsmlat', &
          long_name='percent urban', units='unitless')
+
+    if (mksrf_firrig /= ' ') then
+       call ncd_defvar(ncid=ncid, varname='PCT_IRRIG', xtype=xtype, &
+         dim1name='lsmlon', dim2name='lsmlat', &
+         long_name='percent irrigated area', units='unitless')
+    endif
 
 
     if (.not. dynlanduse) then
@@ -417,13 +430,17 @@ contains
             long_name='monthly height bottom', units='meters')
     end if
        
-    call ncd_defvar(ncid=ncid, varname='time', xtype=nf_int,  &
-            dim1name='time', &
-            long_name='month', units='month')
     if (dynlanduse) then
        call ncd_defvar(ncid=ncid, varname='YEAR', xtype=nf_int,  &
             dim1name='time', &
-            long_name='year of PFT data', units='unitless')
+            long_name='Year of PFT data', units='unitless')
+       call ncd_defvar(ncid=ncid, varname='time', xtype=nf_int,  &
+            dim1name='time', &
+            long_name='year', units='unitless')
+    else
+       call ncd_defvar(ncid=ncid, varname='time', xtype=nf_int,  &
+            dim1name='time', &
+            long_name='Calendar month', units='month')
     end if
 
     ! End of define mode

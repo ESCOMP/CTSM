@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<!--
+Values to use by default for creation of CLM model driver namelists.
+The element names are the same as the corresponding namelist
+variables.  Values that depend on the model configuration use
+attributes to express the dependency.  The recognized attributes
+are: RESOLUTION, defaults, mask, ic_ymd, ic_tod, sim_year and all configuration
+attributes from the config_cache.xml file (with keys converted to upper-case).
+-->
+
+<!-- ================================================================== -->
+
+<!-- ================================================================== -->
+<!-- Defaults for driver namelist seq_infodata_inparm                   -->
+<!-- ================================================================== -->
+
+<!-- Case name -->
+<case_name>clmrun</case_name>
+
+<!-- Orbit -->
+<orb_iyear_ad sim_year="2000" >2000</orb_iyear_ad>
+<orb_iyear_ad sim_year="1850" >1850</orb_iyear_ad>
+
+<!-- start-type -->
+<start_type>startup</start_type>
+
+<!-- Model Version -->
+<model_version>
+$HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01/bld/DefaultCLM_INPARM_Namelist.xml$
+</model_version>
+
+<!-- Timing file output directories -->
+<timing_dir>
+./timing
+</timing_dir>
+<tchkpt_dir>
+./timing/checkpoints
+</tchkpt_dir>
+
+<!-- Epsilon for how close grids need to be between atmosphere and land components -->
+
+<eps_frac>1.0e-12</eps_frac>
+<eps_amask>1.0e-12</eps_amask>
+<eps_aarea>9.0e-07</eps_aarea>
+
+<!-- ================================================================== -->
+<!-- Defaults for driver namelist pio_inparm                            -->
+<!-- ================================================================== -->
+
+<cpl_io_stride   >4</cpl_io_stride>
+<cpl_num_iotasks >-1</cpl_num_iotasks>
+<cpl_iotype_name >netcdf</cpl_iotype_name>
+<cpl_io_root     >1</cpl_io_root>
+
+
+<!-- ================================================================== -->
+<!-- Defaults for driver namelist seq_timemgr_inparm                    -->
+<!-- ================================================================== -->
+
+<!-- Coupling time step -->
+<atm_cpl_dt>3600</atm_cpl_dt>
+
+<!-- Length of run -->
+<stop_option hgrid="1x1_mexicocityMEX" mask="navy" >nsteps</stop_option>
+<stop_option hgrid="1x1_vancouverCAN"  mask="navy" >nsteps</stop_option>
+<stop_option hgrid="1x1_urbanc_alpha"  mask="navy" >'nsteps'</stop_option>
+<stop_option                                       >ndays</stop_option>
+
+<stop_n hgrid="1x1_mexicocityMEX" mask="navy" >159</stop_n>
+<stop_n hgrid="1x1_vancouverCAN"  mask="navy" >330</stop_n>
+<stop_n hgrid="1x1_urbanc_alpha"  mask="navy" >22772</stop_n>
+<stop_n                                       >  1</stop_n>
+
+<!-- Starting date -->
+<start_ymd hgrid="1.9x2.5"           mask="gx1v4" bgc="none">     901</start_ymd>
+<start_ymd hgrid="1.9x2.5"           mask="gx1v5" bgc="cn"  >   25101</start_ymd>
+<start_ymd hgrid="1x1.25"            mask="gx1v5" bgc="none"> 1998011</start_ymd>
+<start_ymd hgrid="1x1_mexicocityMEX" mask="navy"            >19931201</start_ymd>
+<start_ymd hgrid="1x1_vancouverCAN"  mask="navy"            >19920812</start_ymd>
+<start_ymd hgrid="1x1_urbanc_alpha"  mask="navy"            >00010812</start_ymd>
+<start_ymd                                                  >    101</start_ymd>
+
+<start_tod hgrid="1x1_mexicocityMEX" mask="navy"            >10800</start_tod>
+<start_tod hgrid="1x1_vancouverCAN"  mask="navy"            >72000</start_tod>
+<start_tod hgrid="1x1_urbanc_alpha"  mask="navy"            >46800</start_tod>
+<start_tod                                                  >    0</start_tod>
+
+<!-- Length of time for restarts -->
+<restart_option>monthly</restart_option>
+
+<!-- if should write a restart at the end of the run -->
+<end_restart >.true.</end_restart>
+
+<!-- ================================================================== -->
+<!-- Defaults for driver namelist prof_inparm                           -->
+<!-- ================================================================== -->
+
+<profile_barrier     >.false.</profile_barrier>
+<profile_disable     >.false.</profile_disable>
+<profile_single_file >.true.</profile_single_file>
+<profile_depth_limit >4</profile_depth_limit>
+<profile_detail_limit>0</profile_detail_limit>
+
+
+</namelist_defaults>

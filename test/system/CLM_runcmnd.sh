@@ -14,34 +14,6 @@ fi
 hostname=`hostname`
 case $hostname in
 
-    ##bluesky
-    bs* )
-    ##search config options file for parallelization info; default on aix is hybrid
-    ##note: load-leveller will ignore any MP_ environment vars
-    if grep -ic NOSPMD ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##serial
-	    cmnd=""                                   
-	else
-            ##open-mp only
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
-	fi
-    else
-	echo "CLM_runcmnd.sh: NOTE...if running in batch mode, MP_* env vars will be ignored by "
-        echo "                load-leveller and processor assignment will be governed by "
-        echo "                directives in job command file"
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##mpi only
-	    cmnd="env MP_NODES=2 MP_PROCS=${CLM_TASKS} \
-		MP_SHARED_MEMORY=yes MP_EUILIB=us MP_RMPOOL=1 poe "
-	else
-            ##hybrid
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} MP_NODES=1 \
-		MP_PROCS=${CLM_TASKS} MP_SHARED_MEMORY=yes MP_EUILIB=us \
-		MP_RMPOOL=1 poe "
-	fi
-    fi ;;
-
     ##lightning
     ln* )
     ##search config options file for parallelization info; default on linux is mpi

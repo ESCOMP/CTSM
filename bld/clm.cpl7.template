@@ -63,22 +63,17 @@ if ($CLM_FORCE_COLDSTART == on) then
 endif
 
 if ($ATM_GRID == $OCN_GRID) then
-   set mask = USGS
-   if ($ATM_GRID == 1.9x2.5 || $ATM_GRID == 0.9x1.25 || $ATM_GRID == 0.47x0.63 || $ATM_GRID == 0.23x0.31 ) \
-      set mask = gx1v5
+  set mask = " "
 else
-  set mask = $OCN_GRID
+  set mask = "-mask $OCN_GRID"
 endif
 
 if ($LND_GRID == pt1 ) then
    set RESOLUTION = $CLM_PT1_NAME
-   set mask = navy
-   if ($LND_GRID == 1x1_tropicAtl ) set mask = test
+   set mask = " "
 else
    set RESOLUTION = $LND_GRID
 endif
-
-set mask = "-mask $mask"
 
 # following logic may need tweaking to account for configurations where start year is important
 if ($RUN_STARTDATE =~ *-01-01* || $RUN_STARTDATE =~ *-09-01*) then

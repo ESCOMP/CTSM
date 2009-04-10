@@ -29,7 +29,34 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <res>1.9x2.5</res>
 
 <!-- Default land/ocean mask type -->
-<mask>gx1v5</mask>
+<mask hgrid="0.23x0.31"           >gx1v5</mask>
+<mask hgrid="0.47x0.63"           >gx1v6</mask>
+<mask hgrid="0.9x1.25"            >gx1v6</mask>
+<mask hgrid="1x1.25"              >gx1v5</mask>
+<mask hgrid="1.9x2.5"             >gx1v6</mask>
+<mask hgrid="2x2.5"               >USGS</mask>
+<mask hgrid="2.65x3.33"           >USGS</mask>
+<mask hgrid="4x5"                 >gx3v5</mask>
+<mask hgrid="10x15"               >USGS</mask>
+
+<mask hgrid="360x720"             >USGS</mask>
+<mask hgrid="128x256"             >gx1v4</mask>
+<mask hgrid="64x128"              >gx1v5</mask>
+<mask hgrid="48x96"               >gx3v5</mask>
+<mask hgrid="32x64"               >USGS</mask>
+<mask hgrid="8x16"                >USGS</mask>
+
+<mask hgrid="94x192"              >T62</mask>
+
+<mask hgrid="5x5_amazon"          >navy</mask>
+<mask hgrid="1x1_tropicAtl"       >test</mask>
+<mask hgrid="1x1_camdenNJ"        >navy</mask>
+<mask hgrid="1x1_vancouverCAN"    >navy</mask>
+<mask hgrid="1x1_mexicocityMEX"   >navy</mask>
+<mask hgrid="1x1_asphaltjungleNJ" >navy</mask>
+<mask hgrid="1x1_brazil"          >navy</mask>
+<mask hgrid="1x1_urbanc_alpha"    >navy</mask>
+<mask                             >gx1v5</mask>
 
 <!-- Default simulation year -->
 <sim_year>2000</sim_year>
@@ -154,7 +181,7 @@ lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090320.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" furbinp="surfdata_10x15_urb3den_simyr2000_c090320.nc">lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr2000_c090320.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000">lnd/clm2/surfdata/surfdata_10x15_c081023.nc</fsurdat>
  
-<fsurdat hgrid="5x5_amazon"    sim_year="2000" furbinp="surfdata_5x5pt_amazon_urb3den_simyr2000_c090320.nc"    >lnd/clm2/surfdata/surfdata_5x5pt_amazon_urb3den_simyr2000_c090320.nc</fsurdat>
+<fsurdat hgrid="5x5_amazon"    sim_year="2000" furbinp="surfdata_5x5_amazon_urb3den_simyr2000_c090320.nc"    >lnd/clm2/surfdata/surfdata_5x5_amazon_urb3den_simyr2000_c090320.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="2000" furbinp="surfdata_1x1_brazil_urb3den_simyr2000_c090320.nc"    >lnd/clm2/surfdata/surfdata_1x1_brazil_urb3den_simyr2000_c090320.nc</fsurdat>
 <fsurdat hgrid="1x1_tropicAtl" sim_year="2000" furbinp="surfdata_1x1_tropicAtl_urb3den_simyr2000_c090320.nc"    >lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr2000_c090320.nc</fsurdat>
 
@@ -295,6 +322,7 @@ lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090320.nc</fsurdat>
 <fatmlndfrc hgrid="0.23x0.31" mask="gx1v5"  >lnd/clm2/griddata/fracdata_0.23x0.31_gx1v5_c071227.nc</fatmlndfrc>
 <fatmlndfrc hgrid="0.47x0.63" mask="USGS"   >lnd/clm2/griddata/fracdata_0.47x0.63_USGS_c070918.nc</fatmlndfrc>
 <fatmlndfrc hgrid="0.47x0.63" mask="gx1v5"  >lnd/clm2/griddata/fracdata_0.47x0.63_gx1v5_c071113.nc</fatmlndfrc>
+<fatmlndfrc hgrid="0.47x0.63" mask="gx1v6"  >lnd/clm2/griddata/fracdata_0.47x0.63_gx1v6_c090408.nc</fatmlndfrc>
 <fatmlndfrc hgrid="0.47x0.63" mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.47x0.63_tx0.1v2_c070928.nc</fatmlndfrc>
 <fatmlndfrc hgrid="0.9x1.25"  mask="USGS"   >lnd/clm2/griddata/fracdata_0.9x1.25_USGS_070110.nc</fatmlndfrc>
 <fatmlndfrc hgrid="0.9x1.25"  mask="gx1v5"  >lnd/clm2/griddata/fracdata_0.9x1.25_gx1v5_c070927.nc</fatmlndfrc>
@@ -381,7 +409,7 @@ lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090320.nc</fsurdat>
 <furbinp hgrid="4x5"       sim_year="2000" >lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090320.nc</furbinp>
 <furbinp hgrid="10x15"     sim_year="2000" >lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr2000_c090320.nc</furbinp>
  
-<furbinp hgrid="5x5_amazon"    sim_year="2000" >lnd/clm2/surfdata/surfdata_5x5pt_amazon_urb3den_simyr2000_c090320.nc</furbinp>
+<furbinp hgrid="5x5_amazon"    sim_year="2000" >lnd/clm2/surfdata/surfdata_5x5_amazon_urb3den_simyr2000_c090320.nc</furbinp>
 
 <!-- for pre-industrial simulations - year 1850 -->
 <furbinp hgrid="64x128"    sim_year="1850" >lnd/clm2/surfdata/surfdata_64x128_urb3den_simyr1850_c090316.nc</furbinp>
@@ -429,186 +457,5 @@ lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090320.nc</fsurdat>
 <hist_crtinic bgc="cn"   >YEARLY</hist_crtinic>
 <hist_crtinic bgc="casa" >NONE</hist_crtinic>
 <hist_crtinic bgc="dgvm" >NONE</hist_crtinic>
-
-<!-- ================================================================== -->
-<!-- Defaults for driver namelist seq_infodata_inparm                   -->
-<!-- ================================================================== -->
-
-<!-- Case name -->
-<case_name>clmrun</case_name>
-
-<!-- Orbit -->
-<orb_iyear_ad sim_year="2000" >2000</orb_iyear_ad>
-<orb_iyear_ad sim_year="1850" >1850</orb_iyear_ad>
-
-<!-- start-type -->
-<start_type>startup</start_type>
-
-<!-- Model Version -->
-<model_version>
-$HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01/bld/DefaultCLM_INPARM_Namelist.xml$
-</model_version>
-
-<!-- Timing file output directories -->
-<timing_dir>
-./timing
-</timing_dir>
-<tchkpt_dir>
-./timing/checkpoints
-</tchkpt_dir>
-
-<!-- Epsilon for how close grids need to be between atmosphere and land components -->
-
-<eps_frac>1.0e-12</eps_frac>
-<eps_amask>1.0e-12</eps_amask>
-<eps_aarea>9.0e-07</eps_aarea>
-
-<!-- ================================================================== -->
-<!-- Defaults for driver namelist pio_inparm                            -->
-<!-- ================================================================== -->
-
-<cpl_io_stride   >4</cpl_io_stride>
-<cpl_num_iotasks >-1</cpl_num_iotasks>
-<cpl_iotype_name >netcdf</cpl_iotype_name>
-<cpl_io_root     >1</cpl_io_root>
-
-
-<!-- ================================================================== -->
-<!-- Defaults for driver namelist seq_timemgr_inparm                    -->
-<!-- ================================================================== -->
-
-<!-- Coupling time step -->
-<atm_cpl_dt>3600</atm_cpl_dt>
-
-<!-- Length of run -->
-<stop_option hgrid="1x1_mexicocityMEX" mask="navy" >nsteps</stop_option>
-<stop_option hgrid="1x1_vancouverCAN"  mask="navy" >nsteps</stop_option>
-<stop_option hgrid="1x1_urbanc_alpha"  mask="navy" >'nsteps'</stop_option>
-<stop_option                                       >ndays</stop_option>
-
-<stop_n hgrid="1x1_mexicocityMEX" mask="navy" >159</stop_n>
-<stop_n hgrid="1x1_vancouverCAN"  mask="navy" >330</stop_n>
-<stop_n hgrid="1x1_urbanc_alpha"  mask="navy" >22772</stop_n>
-<stop_n                                       >  1</stop_n>
-
-<!-- Starting date -->
-<start_ymd hgrid="1.9x2.5"           mask="gx1v4" bgc="none">     901</start_ymd>
-<start_ymd hgrid="1.9x2.5"           mask="gx1v5" bgc="cn"  >   25101</start_ymd>
-<start_ymd hgrid="1x1.25"            mask="gx1v5" bgc="none"> 1998011</start_ymd>
-<start_ymd hgrid="1x1_mexicocityMEX" mask="navy"            >19931201</start_ymd>
-<start_ymd hgrid="1x1_vancouverCAN"  mask="navy"            >19920812</start_ymd>
-<start_ymd hgrid="1x1_urbanc_alpha"  mask="navy"            >00010812</start_ymd>
-<start_ymd                                                  >    101</start_ymd>
-
-<start_tod hgrid="1x1_mexicocityMEX" mask="navy"            >10800</start_tod>
-<start_tod hgrid="1x1_vancouverCAN"  mask="navy"            >72000</start_tod>
-<start_tod hgrid="1x1_urbanc_alpha"  mask="navy"            >46800</start_tod>
-<start_tod                                                  >    0</start_tod>
-
-<!-- Length of time for restarts -->
-<restart_option>monthly</restart_option>
-
-<!-- if should write a restart at the end of the run -->
-<end_restart >.true.</end_restart>
-
-<!-- ================================================================== -->
-<!-- Defaults for driver namelist prof_inparm                           -->
-<!-- ================================================================== -->
-
-<profile_barrier     >.false.</profile_barrier>
-<profile_disable     >.false.</profile_disable>
-<profile_single_file >.true.</profile_single_file>
-<profile_depth_limit >4</profile_depth_limit>
-<profile_detail_limit>0</profile_detail_limit>
-
-
-<!-- ================================================================== -->
-<!-- Defaults for datm namelist  --->
-<!-- ================================================================== -->
-
-<!-- Default begining year for cycling over input atmospheric data -->
-<cycle_beg_year hgrid="1x1_mexicocityMEX" >1993</cycle_beg_year>
-<cycle_beg_year hgrid="1x1_vancouverCAN"  >1992</cycle_beg_year>
-<cycle_beg_year hgrid="1x1_urbanc_alpha"  >0001</cycle_beg_year>
-<cycle_beg_year                           >2003</cycle_beg_year>
-
-<!-- Default ending year for cycling over input atmospheric data -->
-<cycle_end_year hgrid="1x1_mexicocityMEX" >1993</cycle_end_year>
-<cycle_end_year hgrid="1x1_vancouverCAN"  >1992</cycle_end_year>
-<cycle_end_year hgrid="1x1_urbanc_alpha"  >0002</cycle_end_year>
-<cycle_end_year                           >2004</cycle_end_year>
-
-<!-- Verbosity level-->
-<infodbug>2</infodbug>
-
-<!-- Data source -->
-<source >CLM_QIAN</source>
-
-<CLM_QIAN_dir.Solar>Solar6Hrly</CLM_QIAN_dir.Solar>
-<CLM_QIAN_dir.Precip>Precip6Hrly</CLM_QIAN_dir.Precip>
-<CLM_QIAN_dir.TPQW>TmpPrsHumWnd3Hrly</CLM_QIAN_dir.TPQW>
-
-<!-- Output Streams text filename -->
-<outstreams>datm7.streams.txt</outstreams>
-
-<!-- Streams template files -->
-<streamstemplate >datm.streams.template.xml</streamstemplate>
-
-<!-- Domain files, grids and land mask -->
-<domainfile hgrid="1x1_brazil"          mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-brazil_navy.080214.nc</domainfile>
-<domainfile hgrid="1x1_camdenNJ"        mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.071220.nc</domainfile>
-<domainfile hgrid="1x1_asphaltjungleNJ" mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-camdenNJ_navy.071220.nc</domainfile>
-<domainfile hgrid="1x1_mexicocityMEX"   mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-mexicocityMEX_navy.080115.nc</domainfile>
-<domainfile hgrid="1x1_vancouverCAN"    mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-vancouverCAN_navy.080115.nc</domainfile>
-<domainfile hgrid="1x1_urbanc_alpha"    mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-urbanc_alpha_navy.080401.nc</domainfile>
-<domainfile hgrid="1x1_tropicAtl"       mask="test" >atm/datm7/domain.clm/domain.lnd.1x1pt-tropicAtl_test.071010.nc</domainfile>
-<domainfile hgrid="5x5_amazon"          mask="navy" >atm/datm7/domain.clm/domain.lnd.5x5pt-amazon_navy.071010.nc</domainfile>
-<domainfile hgrid="360x720"             mask="USGS" >atm/datm7/domain.clm/domain.lnd.360x720pt-global_USGS.090106.nc</domainfile>
-
-<domainfile hgrid="8x16"        mask="USGS" >atm/datm7/domain.clm/domain.lnd.T5_USGS.090106.nc</domainfile>
-<domainfile hgrid="32x64"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T21_USGS.090106.nc</domainfile>
-<domainfile hgrid="48x96"       mask="gx3v5">atm/datm7/domain.lnd.T31_gx3v5.090206.nc</domainfile>
-<domainfile hgrid="48x96"       mask="USGS" >atm/datm7/domain.clm/domain.lnd.T31_USGS.090106.nc</domainfile>
-<domainfile hgrid="64x128"      mask="USGS" >atm/datm7/domain.clm/domain.lnd.T42_USGS.090106.nc</domainfile>
-<domainfile hgrid="64x128"      mask="gx3v5">atm/datm7/domain.lnd.T42_gx3v5.090206.nc</domainfile>
-<domainfile hgrid="64x128"      mask="gx1v3">atm/datm7/domain.lnd.T42_gx1v3.051111.nc</domainfile>
-<domainfile hgrid="64x128"      mask="gx1v4">atm/datm7/domain.lnd.T42_gx1v4.060403.nc</domainfile>
-<domainfile hgrid="64x128"      mask="gx1v5">atm/datm7/domain.lnd.T42_gx1v5.090206.nc</domainfile>
-<domainfile hgrid="128x256"     mask="USGS" >atm/datm7/domain.clm/domain.lnd.T85_USGS.090106.nc</domainfile>
-<domainfile hgrid="128x256"     mask="gx1v3">atm/datm7/domain.lnd.T85_gx1v3.051111.nc</domainfile>
-<domainfile hgrid="128x256"     mask="gx1v4">atm/datm7/domain.lnd.T85_gx1v4.060403.nc</domainfile>
-<domainfile hgrid="94x192"      mask="T62"  >atm/datm7/domain.lnd.T62_T62.090129.nc</domainfile>
-
-<domainfile hgrid="0.23x0.31"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.23x0.31_tx0.1v2_070929.nc</domainfile>
-<domainfile hgrid="0.23x0.31"   mask="gx1v5"  >atm/datm7/domain.lnd.0.23x0.31_gx1v5.071227.nc</domainfile>
-<domainfile hgrid="0.23x0.31"   mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv0.23x0.31_USGS.090106.nc</domainfile>
-<domainfile hgrid="0.47x0.63"   mask="gx1v5"  >atm/datm7/domain.lnd.fv0.47x0.63_gx1v5.071005.nc</domainfile>
-<domainfile hgrid="0.47x0.63"   mask="USGS"  >atm/datm7/domain.clm/domain.lnd.fv0.47x0.63_USGS.090106.nc</domainfile>
-<domainfile hgrid="0.47x0.63"   mask="tx0.1v2">atm/datm7/domain.lnd.fv0.47x0.63_tx0.1v2_070929.nc</domainfile>
-<domainfile hgrid="0.9x1.25"    mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv0.9x1.25_USGS.090106.nc</domainfile>
-<domainfile hgrid="0.9x1.25"    mask="gx1v5"  >atm/datm7/domain.lnd.0.9x1.25_gx1v5.070831.nc</domainfile>
-<domainfile hgrid="0.9x1.25"    mask="gx1v6"  >atm/datm7/domain.lnd.fv0.9x1.25_gx1v6.090309.nc</domainfile>
-<domainfile hgrid="0.9x1.25"    mask="tx0.1v2">atm/datm7/domain.lnd.fv0.9x1.25_tx0.1v2_070928.nc</domainfile>
-<domainfile hgrid="1x1.25"      mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv1x1.25_USGS.071010.nc</domainfile>
-<domainfile hgrid="1x1.25"      mask="gx1v3"  >atm/datm7/domain.clm/domain.lnd.fv1x1.25_gx1v3.071010.nc</domainfile>
-<domainfile hgrid="1x1.25"      mask="gx1v4"  >atm/datm7/domain.clm/domain.lnd.fv1x1.25_gx1v4.071010.nc</domainfile>
-<domainfile hgrid="1x1.25"      mask="gx1v5"  >atm/datm7/domain.clm/domain.lnd.fv1x1.25_gx1v5.071010.nc</domainfile>
-<domainfile hgrid="1.9x2.5"     mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv1.9x2.5_USGS.090106.nc</domainfile>
-<domainfile hgrid="1.9x2.5"     mask="gx1v3"  >atm/datm7/domain.clm/domain.lnd.fv1.9x2.5_gx1v3.071010.nc</domainfile>
-<domainfile hgrid="1.9x2.5"     mask="gx1v4"  >atm/datm7/domain.lnd.1.9x2.5_gx1v4.060810.nc</domainfile>
-<domainfile hgrid="1.9x2.5"     mask="gx1v5"  >atm/datm7/domain.lnd.1.9x2.5_gx1v5.070102.nc</domainfile>
-<domainfile hgrid="1.9x2.5"     mask="gx1v6"  >atm/datm7/domain.lnd.fv1.9x2.5_gx1v6.090206.nc</domainfile>
-<domainfile hgrid="2x2.5"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2x2.5_USGS.071010.nc</domainfile>
-<domainfile hgrid="2.65x3.33"   mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv2.65x3.33_USGS.090106.nc</domainfile>
-<domainfile hgrid="4x5"         mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv4x5_USGS.090106.nc</domainfile>
-<domainfile hgrid="4x5"         mask="gx3v5"  >atm/datm7/domain.lnd.4x5_gx3v5.060404.nc</domainfile>
-<domainfile hgrid="10x15"       mask="USGS"   >atm/datm7/domain.clm/domain.lnd.fv10x15_USGS.090106.nc</domainfile>
-
-<factorfn>unused </factorfn>
-
-<!-- Two step initialization and time-stepping-->
-<step2init>.true.</step2init>
-
-<restpfile>rpointer.atm</restpfile>
 
 </namelist_defaults>

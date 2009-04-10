@@ -12,15 +12,13 @@ use IO::File;
    # Set disk location to send files to, and list resolutions to operate over, set filenames, and short-date-name
    #
    my $CSMDATA = "/fs/cgd/csm/inputdata";
-   my @hresols = ( "360x720","128x256", "0.47x0.63" );
-   my @hresols = ( "64x128","48x96","32x64","8x16","0.9x1.25",
+   my @hresols = ( "360x720","128x256","64x128","48x96","32x64","8x16","0.47x0.63","0.9x1.25",
                    "1.9x2.5","2.65x3.33","4x5","10x15","5x5_amazon", "1x1_tropicAtl", "1x1_camdenNJ","1x1_vancouverCAN",
                    "1x1_mexicocityMEX", "1x1_asphaltjungleNJ", "1x1_brazil", "1x1_urbanc_alpha" );
    my $nl = "namelist";
    my $sdate = "c" . `date +%y%m%d`;
    chomp( $sdate );
 
-   my $urban = 1;
    my @ncfiles;
    my @lfiles;
    my $cfile = "clm.input_data_files";
@@ -56,9 +54,23 @@ EOF
       chomp( $griddata );
       print "res = $res griddata = $griddata\n";
       my $desc;
+      #
+      # Check if all urban single point dataset
+      #
       my @all_urb = ( "1x1_camdenNJ","1x1_vancouverCAN", "1x1_mexicocityMEX", 
                       "1x1_asphaltjungleNJ", "1x1_urbanc_alpha" );
-      my $all_urb = "  all_urban = .false.";
+      my $all_urb = ".false.";
+      my $urb_pt  = 0;
+      foreach my $urb_res ( @all_urb ) {
+         if ( $res eq $urb_res ) {
+            $all_urb = ".true.";
+            $urb_pt  = 1;
+         }
+      }
+      #
+      # Always run at double precision for output
+      #
+      my $double = ".true.";
       #
       # Loop over each sim_year
       #
@@ -79,18 +91,25 @@ EOF
  mksrf_ftopo        = '$CSMDATA/lnd/clm2/rawdata/mksrf_topo.10min.c080912.nc'
  mksrf_ffrac        = '$CSMDATA/lnd/clm2/griddata/fracdata_10min_USGS_071205.nc'
  mksrf_fdynuse      = ' '
- $all_urb
+ outnc_double       = $double
+ all_urban          = $all_urb
 EOF
-         my $urbdesc;
-         if ( $urban ) {
-            $urbdesc = "urb3den";
+         my $urbdesc = "urb3den";
+         if ( ! $urb_pt ) {
             print $fh <<"EOF";
  mksrf_furban       = '$CSMDATA/lnd/clm2/rawdata/mksrf_urban_3den_0.5x0.5_simyr2000.c090223_v1.nc'
 EOF
          } else {
-            $urbdesc = "nourb";
+            #
+            # Query the XML default file database to get the appropriate furbinp file
+            #
+            my $urbdata = `../../bld/queryDefaultNamelist.pl -res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue -filenameonly -demand -var furbinp`;
+            if ( $? != 0 ) {
+               die "ERROR:: furbinp file NOT found\n";
+            }
+            chomp( $urbdata );
             print $fh <<"EOF";
- mksrf_furban       = '$CSMDATA/lnd/clm2/rawdata/mksrf_urban.060929.nc'
+ mksrf_furban       = '../../bld/urban_input/$urbdata'
 EOF
          }
          if ( $res =~ /[1-9]x[1-9]_[a-zA-Z0-9]/ ) {
@@ -99,16 +118,11 @@ EOF
 EOF
          }
          $desc = "simyr$sim_year";
-         my $sdate = "c090313";
-         if (      $sim_year == 2000 ) {
-            $sdate = "c090320";
-         } elsif ( $sim_year == 1850 ) {
-            $sdate = "c090220";
-         }
          print $fh <<"EOF";
- mksrf_fvegtyp      = '$CSMDATA/lnd/clm2/rawdata/mksrf_pft_0.5x0.5_$desc.$sdate.nc'
- mksrf_fsoicol      = '$CSMDATA/lnd/clm2/rawdata/mksrf_soilcol_0.5x0.5_$desc.$sdate.nc'
- mksrf_flai         = '$CSMDATA/lnd/clm2/rawdata/mksrf_lai_0.5x0.5_$desc.$sdate.nc'
+ mksrf_fvegtyp      = '/cgd/tss/pftdyn.0.5x0.5.simyr1850-2005.c090324/mksrf_pft_rc${sim_year}.nc'
+ mksrf_fsoicol      = '/cgd/tss/pftdyn.0.5x0.5.simyr1850-2005.c090324/mksrf_soilcol_global.nc'
+ mksrf_flai         = '/cgd/tss/pftdyn.0.5x0.5.simyr1850-2005.c090324/mksrf_lai_global.nc'
+ mksrf_fdynuse      = 'pftdyn_$desc.txt'
 /
 EOF
          if ( $sim_year != 2005 && $sim_year != 2000 && $sim_year != 1990 && 
@@ -145,9 +159,11 @@ EOF
             my $mvcmd = "/bin/mv -f $ncfiles[0]  $CSMDATA/$surfdir/$ofile.nc";
             print "$mvcmd\n";
             system( "$mvcmd" );
+            chmod( 0444, "$CSMDATA/$surfdir/$ofile.nc" );
             my $mvcmd = "/bin/mv -f $lfiles[0] $CSMDATA/$surfdir/$ofile.log";
             print "$mvcmd\n";
             system( "$mvcmd" );
+            chmod( 0444, "$CSMDATA/$surfdir/$ofile.log" );
             print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.nc\n";
             print $cfh "svn import -m $lsvnmesg \$CSMDATA/$surfdir/$ofile.nc $svnrepo/$surfdir/$ofile.nc\n";
             print $cfh "# FILE = \$DIN_LOC_ROOT/$surfdir/$ofile.log\n";

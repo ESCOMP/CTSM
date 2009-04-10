@@ -89,7 +89,8 @@ subroutine mkorganic(lsmlon, lsmlat, fname, ndiag, organic_o)
   call check_ret(nf_inq_dimid  (ncid, 'number_of_layers', dimid), subname)
   call check_ret(nf_inq_dimlen (ncid, dimid, nlay), subname)
 
-  allocate(organic_i(nlon_i,nlat_i,nlay), omlev_i(nlon_i,nlat_i), omlev_o(nlon_i,nlat_i),stat=ier)
+  allocate(organic_i(nlon_i,nlat_i,nlay), omlev_i(nlon_i,nlat_i), &
+           omlev_o(lsmlon,lsmlat),stat=ier)
   if (ier/=0) call abort()
 
   call check_ret(nf_inq_varid (ncid, 'ORGANIC', varid), subname)

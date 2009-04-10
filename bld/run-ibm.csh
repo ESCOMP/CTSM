@@ -35,7 +35,7 @@
 ## Configuration settings:
 set spmd     = on       # settings are [on   | off         ] (default is on) (off for interactive)
 set smp      = off      # settings are [on   | off         ] (default is off)
-set maxpft   = 4        # settings are 4->17                 (default is 4)
+set maxpft   = 17       # settings are 4->17                 (default is 17)
 set bgc      = none     # settings are [none | cn | casa   ] (default is none)
 set supln    = off      # settings are [on   | off         ] (default is off)
 set dust     = off      # settings are [on   | off         ] (default is off)   
@@ -188,6 +188,7 @@ set stop_final = 99991231
 if ( $resub_date > 0    ) set stop_final = $resub_date
 set set_restart_option = " "
 set_restart_option = " restart_option = 'yearly'"
+set dtime = 1800
 cat >! lndinput << EOF
  &drv_in
  $set_restart_option
@@ -197,10 +198,11 @@ cat >! lndinput << EOF
  start_ymd      =  $start_ymd
  start_tod      =  0
  stop_ymd       = $stop_final
+ atm_cpl_dt     =  $dtime
  /
  &clm_inparm
  $set_nrevsn
- dtime          =  1800
+ dtime          =  $dtime
  wrtdia         = .true.
  hist_dov2xy    = .true.
  hist_nhtfrq    =  -24
@@ -211,6 +213,7 @@ EOF
 set bnflags="-case $case -start_type $start_type -config $config -mask $mask -sim_year $sim_year -infile lndinput -runlength $runlen"
 set bnflags="$bnflags -datm_data_dir $datm_data_dir -res $res -csmdata $CSMDATA"
 set bnflags="$bnflags -cycle_init $cycle_init -cycle_beg_year $cycle_beg -cycle_end_year $cycle_end"
+set bnflags="$bnflags -clm_demand furbinp,forganic"
 $cfgdir/build-namelist $bnflags    || echo "build-namelist failed" && exit 1
 
 ## Run CLM 

@@ -21,7 +21,7 @@ contains
 ! !IROUTINE: mkpft
 !
 ! !INTERFACE:
-subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o, pct_pft_i)
+subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft_o, pct_pft_i)
 !
 ! !DESCRIPTION:
 ! Make PFT data
@@ -48,7 +48,9 @@ subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o, pct_pft_i)
   implicit none
   integer , intent(in) :: lsmlon, lsmlat          ! clm grid resolution
   character(len=*), intent(in) :: fpft            ! input pft dataset file name
+  character(len=*), intent(in) :: firrig          ! input irrigation dataset file name
   integer , intent(in) :: ndiag                   ! unit number for diag out
+  real(r8), intent(in) :: pctirr_o(lsmlon,lsmlat) ! % irrigated area (output grid)
   real(r8), intent(out):: pctlnd_o(lsmlon,lsmlat) ! output grid:%land/gridcell
   real(r8), intent(out):: pctpft_o(lsmlon,lsmlat,0:numpft)  ! PFT cover 
                                                   ! (% of vegetated area)
@@ -187,6 +189,19 @@ subroutine mkpft(lsmlon, lsmlat, fpft, ndiag, pctlnd_o, pctpft_o, pct_pft_i)
      enddo
      enddo
   enddo
+
+  ! if irrigation dataset present, split into irrigated (pft=16) and 
+  ! non-irrigated (pft=15) crop area
+  if (firrig /= ' ') then
+     write(6,*) 'Irrigation dataset present; splitting crop PFT into irrigated (PFT=16) ',&
+                'and non-irrigated (PFT=15) fractions'
+     do jo = 1, ldomain%nj
+     do io = 1, ldomain%numlon(jo)
+        pctpft_o(io,jo,16) = min(pctpft_o(io,jo,15),pctirr_o(io,jo))
+        pctpft_o(io,jo,15) = pctpft_o(io,jo,15)-pctpft_o(io,jo,16)
+     enddo
+     enddo
+  endif
 
   ! Error check: percents should sum to 100 for land grid cells
 

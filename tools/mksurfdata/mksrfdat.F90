@@ -89,6 +89,7 @@ program mksrfdat
     real(r8), allocatable  :: thckglcmec(:,:,:)    ! glacier_mec ice sheet thcknss in each gridcell and class
     real(r8), allocatable  :: pctlak(:,:)          ! percent of grid cell that is lake     
     real(r8), allocatable  :: pctwet(:,:)          ! percent of grid cell that is wetland  
+    real(r8), allocatable  :: pctirr(:,:)          ! percent of grid cell that is irrigated  
     real(r8), allocatable  :: pcturb(:,:)          ! percent of grid cell that is urbanized
     real(r8), allocatable  :: elev(:,:)            ! elevation (m)
     real(r8), allocatable  :: fmax(:,:)            ! fractional saturated area
@@ -113,6 +114,7 @@ program mksrfdat
          mksrf_fmax,               &
          mksrf_furban,             &
          mksrf_flai,               &
+         mksrf_firrig,             &
          mksrf_fdynuse,            &
          outnc_large_files,        &
          outnc_double,             &
@@ -135,9 +137,10 @@ program mksrfdat
     !    mksrf_flanwat
     !    mksrf_fmax
     !    mksrf_fglacier
-    !     mksrf_ftopo
-    !     mksrf_ffrac
+    !    mksrf_ftopo
+    !    mksrf_ffrac
     !    mksrf_furban
+    !    mksrf_firrig
     !    mksrf_flai
     ! ======================================
     ! Optionally specify setting for:
@@ -226,6 +229,7 @@ program mksrfdat
                pctlak(lsmlon,lsmlat)            , & 
                pctwet(lsmlon,lsmlat)            , & 
                pcturb(lsmlon,lsmlat)            , & 
+               pctirr(lsmlon,lsmlat)            , & 
                elev(lsmlon,lsmlat)              , & 
                fmax(lsmlon,lsmlat)              , & 
                sand3d(lsmlon,lsmlat,nlevsoi)    , & 
@@ -244,6 +248,7 @@ program mksrfdat
     pctlak(:,:)       = spval
     pctwet(:,:)       = spval
     pcturb(:,:)       = spval
+    pctirr(:,:)       = spval
     elev(:,:)         = spval
     fmax(:,:)         = spval
     sand3d(:,:,:)     = spval
@@ -283,18 +288,37 @@ program mksrfdat
     write (ndiag,*) 'soil texture from: ',trim(mksrf_fsoitex)
     write (ndiag,*) 'soil organic from:  ',trim(mksrf_forganic)
     write (ndiag,*) 'soil color from:   ',trim(mksrf_fsoicol)
+    if (mksrf_firrig /= ' ') then
+       write (ndiag,*) 'irrigated area from:',trim(mksrf_firrig)
+    endif
 
     write(6,*) ' timer_a1 init-----'
     call shr_timer_print(t1)
+
+    ! Make organic matter density [organic3d] from Global Soil Data Task [forganic]
+
+    call mkorganic (lsmlon, lsmlat, mksrf_forganic, ndiag, organic3d)
 
     ! Make elevation [elev] from [ftopo, ffrac] dataset
     ! Used only to screen pcturb
 
     call mkelev (lsmlon, lsmlat, mksrf_ftopo, mksrf_ffrac, ndiag, elev, ncid)
 
+    ! Make irrigated area fraction [pctirr] from [firrig] dataset if requested in namelist
+
+    if (mksrf_firrig /= ' ') then
+
+       call mkirrig (lsmlon, lsmlat, mksrf_firrig, ndiag, pctirr)
+
+       write(6,*) ' timer_d mkirrig-----'
+       call shr_timer_print(t1)
+
+    endif
+
     ! Make PFTs [pctpft] from dataset [fvegtyp] (1/2 degree PFT data)
 
-    call mkpft(lsmlon, lsmlat, mksrf_fvegtyp, ndiag, pctlnd_pft, pctpft, pctpft_i)
+    call mkpft(lsmlon, lsmlat, mksrf_fvegtyp, mksrf_firrig, ndiag, pctlnd_pft, &
+               pctirr, pctpft, pctpft_i)
 
     write(6,*) ' timer_b mkpft-----'
     call shr_timer_print(t1)
@@ -333,10 +357,6 @@ program mksrfdat
 
     write(6,*) ' timer_f mksoicol-----'
     call shr_timer_print(t1)
-
-    ! Make organic matter density [organic3d] from Global Soil Data Task [forganic]
-
-    call mkorganic (lsmlon, lsmlat, mksrf_forganic, ndiag, organic3d)
 
     write(6,*) ' timer_f mkorganic-----'
     call shr_timer_print(t1)
@@ -378,11 +398,12 @@ program mksrfdat
     do j = 1,ldomain%nj
        do i = 1,ldomain%numlon(j)
           if (ldomain%latixy(i,j) < -79.) then
-             soic2d(i,j) = 0
-             pctlak(i,j) = 0.
-             pctwet(i,j) = 0.
-             pcturb(i,j) = 0.
-             pctgla(i,j) = 100.
+             soic2d(i,j)  = 0
+             pctlak(i,j)  = 0.
+             pctwet(i,j)  = 0.
+             pcturb(i,j)  = 0.
+             pctgla(i,j)  = 100.
+             pctirr(i,j)  = 0.
              pctpft(i,j,:)  = 0.
              sand3d(i,j,1:nlevsoi) = 0.
              clay3d(i,j,1:nlevsoi) = 0.
@@ -402,6 +423,7 @@ program mksrfdat
              soic2d(i,j) = 15
              pctwet(i,j) = 100. - pctlak(i,j)
              pcturb(i,j) = 0.
+             pctirr(i,j) = 0.
              pctgla(i,j) = 0.
              pctpft(i,j,:) = 0.
              sand3d(i,j,1:nlevsoi) = 43.
@@ -423,6 +445,7 @@ program mksrfdat
           pctlak(i,1)   = 0.
           pctwet(i,1)   = 0.
           pcturb(i,1)   = 0.
+          pctirr(i,1)   = 0.
           sand3d(i,1,:) = 0.
           clay3d(i,1,:) = 0.
           organic3d(i,1,:) = 0.
@@ -444,6 +467,8 @@ program mksrfdat
           pctlak(i,j) = float(nint(pctlak(i,j)))
           pctwet(i,j) = float(nint(pctwet(i,j)))
           pctgla(i,j) = float(nint(pctgla(i,j)))
+          if (mksrf_firrig /= ' ') &
+          pctirr(i,j) = float(nint(pctirr(i,j)))
        end do
     end do
 
@@ -631,6 +656,9 @@ program mksrfdat
     call ncd_ioglobal(varname='PCT_PFT'     , data=pctpft      , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='FMAX'        , data=fmax        , ncid=ncid, flag='write')
     call ncd_ioglobal(varname='ORGANIC'     , data=organic3d   , ncid=ncid, flag='write')
+    if (mksrf_firrig /= ' ') then
+       call ncd_ioglobal(varname='PCT_IRRIG', data=pctirr      , ncid=ncid, flag='write')
+    endif
 
     ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 
@@ -668,7 +696,8 @@ program mksrfdat
     end if
     ni = size(pctpft_i,1)
     nj = size(pctpft_i,2)
-    call mklai(lsmlon, lsmlat, mksrf_flai, ndiag, ncid, ni, nj, pctpft_i)
+    call mklai(lsmlon, lsmlat, mksrf_flai, mksrf_firrig, mksrf_fdynuse, &
+               ndiag, ncid, ni, nj, pctpft_i)
     deallocate( pctpft_i )
 
     write(6,*) ' timer_k mklai-----'
@@ -688,8 +717,7 @@ program mksrfdat
 
     if (mksrf_fdynuse /= ' ') then
 
-       write (resol,'(i4.4,"x",i4.4)') lsmlon,lsmlat
-       fdyndat = './surface-data.dynpft.'//trim(resol)//'.nc'
+       fdyndat = './surfdata.pftdyn_'//trim(resol)//'.nc'
 
        ! Define dimensions and global attributes
 
@@ -706,11 +734,7 @@ program mksrfdat
        call ncd_ioglobal(varname='PCT_WETLAND' , data=pctwet      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_LAKE'    , data=pctlak      , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_GLACIER' , data=pctgla      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='PCT_GLC_MEC' , data=pctglcmec   , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='TOPO_GLC_MEC', data=topoglcmec  , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='THCK_GLC_MEC', data=thckglcmec  , ncid=ncid, flag='write')
        call ncd_ioglobal(varname='PCT_URBAN'   , data=pcturb      , ncid=ncid, flag='write')
-       call ncd_ioglobal(varname='FMAX'        , data=fmax        , ncid=ncid, flag='write')
 
        ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 
@@ -725,22 +749,21 @@ program mksrfdat
        do 
           ! Read input pft data filename
 
-          read(nfdyn, *, iostat=ier) fname, year
-	  write(6,*)'input pft dynamic dataset is ',fname,' year is ',year
+          read(nfdyn, '(A100,1x,I4)', iostat=ier) fname, year
+	  write(6,*)'input pft dynamic dataset is ',trim(fname),' year is ',year
           if (ier /= 0) exit
           ntim = ntim + 1
 
           ! Create pctpft data at model resolution
 
-          call mkpft(lsmlon, lsmlat, fname, ndiag, pctlnd_pft_dyn, pctpft)
+          call mkpft(lsmlon, lsmlat, fname, mksrf_firrig, ndiag, pctlnd_pft_dyn, pctirr, pctpft)
 
           ! If have pole points, set south pole to glacier (north pole is as assumed as non-land)
 
           if (abs((ldomain%latixy(1,lsmlat) - 90.)) < 1.e-6) then
              write(6,*)'MKSRFDAT: grid has pole_points'
              do i = 1,ldomain%numlon(1)
-                pctpft(i,1,0)        = 100.
-                pctpft(i,1,1:numpft) = 0.
+                pctpft(i,1,:) = 0.
              end do
           end if
 
@@ -775,27 +798,86 @@ program mksrfdat
                 ! Set land values on Ross ice shelf to glacier
 
                 if (ldomain%latixy(i,j) < -79.) then
-                   pctpft(i,j,0) = 100.
-                   pctpft(i,j,1:numpft)  = 0.
+                   pctpft(i,j,:)  = 0.
                 end if
 
                 ! Assume nonvegetated wetland when input landmask says land and 
                 ! pft landmask says ocean 
 
-                if (pctlnd_pft(i,j)==0.) then
-                   pctpft(i,j,0) = 100.
-                   pctpft(i,j,1:numpft) = 0.
-                   pftdata_mask(i,j) = 0
-                else
-                   pftdata_mask(i,j) = 1
+                if (pctlnd_pft_dyn(i,j) /= pctlnd_pft(i,j) ) then
+                   write(6,*) 'MKPFT error: pctlnd_pft_dyn and pct_lnd_pft disagree'
+                   call abort()
                 end if
 
-                ! Normalize pctpft to be the remainder of [100 - (special landunits)]
+                if (pcturb(i,j) .gt. 0._r8) then
+                ! Replace bare soil preferentially with urban
+
+                   suma = pctlak(i,j)+pctwet(i,j)+pctgla(i,j)
+                   bare_urb_diff = 0.01_r8 * pctpft(i,j,0) * (100._r8 - suma) &
+                                 - pcturb(i,j)
+                   pctpft(i,j,0) = max(0._r8,bare_urb_diff)
+                   pcturb_excess = abs(min(0._r8,bare_urb_diff))
+
+                   ! Normalize pctpft to be the remainder of [100 - (special landunits)]
+                   ! including any urban not accounted for by bare soil above
+
+                   sumpft = sum(pctpft(i,j,1:numpft))
+                   if (sumpft > 0._r8) then
+                      suma = pctlak(i,j)+pctwet(i,j)+pctgla(i,j)
+                      do m = 1, numpft
+                         pctpft(i,j,m) = 0.01_r8 * pctpft(i,j,m) * (100._r8 - suma) - &
+                                         pcturb_excess*pctpft(i,j,m)/sumpft
+                      end do
+                   end if
+                else
+
+                   ! Normalize pctpft to be the remainder of [100 - (special landunits)]
+      
+                   suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
+                   do m = 0, numpft
+                      pctpft(i,j,m) = 0.01_r8 * pctpft(i,j,m) * (100._r8 - suma)
+                   end do
+                end if
 
                 suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
-                do m = 0, numpft
-                   pctpft(i,j,m) = 0.01_r8 * pctpft(i,j,m) * (100._r8 - suma)
+                do m = 0,numpft
+                   suma = suma + pctpft(i,j,m)
                 end do
+
+                if (suma < 90._r8) then
+                   write (6,*) 'MKSRFDAT error: sum of pctlak, pctwet,', &
+                        'pcturb, pctgla and pctpft is less than 90'
+                   write (6,*)'i,j,pctlak,pctwet,pcturb,pctgla,pctpft= ', &
+                        i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j),&
+                        pctpft(i,j,:)
+                   call abort()
+                else if (suma > 100._r8 + 1.e-4_r8) then
+                   write (6,*) 'MKSRFDAT error: sum of pctlak, pctwet,', &
+                        'pcturb, pctgla and pctpft is greater than 100'
+                   write (6,*)'i,j,pctlak,pctwet,pcturb,pctgla,pctpft,sum= ', &
+                        i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j),&
+                        pctpft(i,j,:), suma
+                   call abort()
+                else
+                   pctlak(i,j)   = pctlak(i,j)   * 100._r8/suma
+                   pctwet(i,j)   = pctwet(i,j)   * 100._r8/suma
+                   pcturb(i,j)   = pcturb(i,j)   * 100._r8/suma
+                   pctgla(i,j)   = pctgla(i,j)   * 100._r8/suma
+                   pctpft(i,j,:) = pctpft(i,j,:) * 100._r8/suma
+                end if
+
+                suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
+                do m = 0,numpft
+                   suma = suma + pctpft(i,j,m)
+                end do
+                if ( abs(suma-100._r8) > 1.e-10_r8) then
+                   write (6,*) 'MKSRFDAT error: sum of pctlak, pctwet,', &
+                  'pcturb, pctgla and pctpft is NOT equal to 100'
+                   write (6,*)'i,j,pctlak,pctwet,pcturb,pctgla,pctpft,sum= ', &
+                        i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j),&
+                        pctpft(i,j,:), sum8
+                   call abort()
+                end if
              end do
           end do
 
@@ -835,6 +917,9 @@ program mksrfdat
           call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, pctpft), subname)
 
           call check_ret(nf_inq_varid(ncid, 'YEAR', varid), subname)
+          call check_ret(nf_put_vara_int(ncid, varid, beg4d(4), len4d(4), year), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'time', varid), subname)
           call check_ret(nf_put_vara_int(ncid, varid, beg4d(4), len4d(4), year), subname)
 
 	  ! Synchronize the disk copy of a netCDF dataset with in-memory buffers

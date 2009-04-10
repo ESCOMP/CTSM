@@ -245,11 +245,14 @@ if ($print>=2) { print "Using namelist definition file $nl_definition_file$eol";
 EOF
 
 # The namelist defaults file contains default values for all required namelist variables.
-my $nl_defaults_file = "$cfgdir/namelist_files/namelist_defaults_clm.xml";
-(-f "$nl_defaults_file")  or  die <<"EOF";
+my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_clm.xml", "$cfgdir/namelist_files/namelist_defaults_drv.xml",
+                         "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
+foreach my $nl_defaults_file ( @nl_defaults_files ) {
+  (-f "$nl_defaults_file")  or  die <<"EOF";
 ** $ProgName - Cannot find namelist defaults file \"$nl_defaults_file\" **
 EOF
-if ($print>=2) { print "Using namelist defaults file $nl_defaults_file$eol"; }
+  if ($print>=2) { print "Using namelist defaults file $nl_defaults_file$eol"; }
+}
 
 # The Build::NamelistDefaults module provides a utility to obtain default values of namelist
 # variables based on finding a best fit with the attributes specified in the defaults file.
@@ -288,7 +291,10 @@ my $definition = Build::NamelistDefinition->new($nl_definition_file);
 # Create a namelist defaults object.  This object provides default values for variables
 # contained in the input defaults file.  The configuration object provides attribute
 # values that are relevent for the CLM executable for which the namelist is being produced.
-my $defaults = Build::NamelistDefaults->new($nl_defaults_file, $cfg);
+my $defaults = Build::NamelistDefaults->new( shift( @nl_defaults_files ), $cfg);
+foreach my $nl_defaults_file ( @nl_defaults_files ) {
+   $defaults->add( "$nl_defaults_file" );
+}
 
 # Create an empty namelist object.  Add values to it in order of precedence.
 my $nl = Build::Namelist->new();
@@ -312,6 +318,7 @@ if ($opts{'test'}) {
 ** $ProgName - CCSM inputdata root is not a directory: \"$inputdata_rootdir\" **
 EOF
 }
+my $test_files = $opts{'test'};
 
 if ($print>=2) { print "CCSM inputdata root directory: $inputdata_rootdir$eol"; }
 #-----------------------------------------------------------------------------------------------
@@ -440,7 +447,8 @@ $var = "mask";
 if ( $opts{$var} ne "default" ) {
     $val = $opts{$var};
 } else {
-    $val = $defaults->get_value($var);
+    my %opts = ( 'hgrid'=>$res );
+    $val = $defaults->get_value($var, \%opts );
 }
 my $mask = $val;
 $opts{'mask'} = $mask;
@@ -1089,6 +1097,9 @@ sub add_default {
 	   } else {
 	       if ($is_input_pathname eq 'abs') {
 		   $val = set_abs_filepath($val, $inputdata_rootdir);
+                   if ( $test_files and ($val !~ /null/) and (! -f "$val") ) {
+                      die "$ProgName - file not found: $var = $val\n";
+                   }
 	       }
 	   }
        }

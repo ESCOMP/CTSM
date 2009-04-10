@@ -32,7 +32,8 @@ contains
 ! !IROUTINE: mklai
 !
 ! !INTERFACE:
-subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido, ni, nj, pctpft_i )
+subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
+                 ni, nj, pctpft_i )
 !
 ! !DESCRIPTION:
 ! Make LAI/SAI/height data
@@ -54,6 +55,8 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido, ni, nj, pctpft_i )
   implicit none
   integer , intent(in) :: lsmlon, lsmlat          ! clm grid resolution
   character(len=256), intent(in) :: fname         ! input dataset file name
+  character(len=256), intent(in) :: firrig        ! %irrigated area filename
+  character(len=256), intent(in) :: fdynuse       ! dynamic land use filename
   integer , intent(in) :: ndiag                   ! unit number for diag out
   integer , intent(in) :: ncido                   ! output netcdf file id
   integer , intent(in) :: ni                      ! number of long dimension of pft index
@@ -224,23 +227,41 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido, ni, nj, pctpft_i )
      mhgtb_o(:,:,:) = 0.
 
      do l = 0, numpft
-        ! Calculate weights for this PFT type
-        call areaini_pft(tgridmap,ni,nj,pctpft_i=pctpft_i,pft_indx=l)
+        if ( fdynuse /= ' ' )then
+           ! Calculate weights for this PFT type
+           call areaini_pft(tgridmap,ni,nj,pctpft_i=pctpft_i,pft_indx=l)
+        end if
 
         fld_i(:,:) = mlai_i(:,:,l)
-        call areaave_pft(fld_i,fld_o,tgridmap)
+        if ( fdynuse /= ' ' )then
+           call areaave_pft(fld_i,fld_o,tgridmap)
+        else
+           call areaave(    fld_i,fld_o,tgridmap)
+        end if
         mlai_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = msai_i(:,:,l)
-        call areaave_pft(fld_i,fld_o,tgridmap)
+        if ( fdynuse /= ' ' )then
+           call areaave_pft(fld_i,fld_o,tgridmap)
+        else
+           call areaave    (fld_i,fld_o,tgridmap)
+        end if
         msai_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = mhgtt_i(:,:,l)
-        call areaave_pft(fld_i,fld_o,tgridmap)
+        if ( fdynuse /= ' ' )then
+           call areaave_pft(fld_i,fld_o,tgridmap)
+        else
+           call areaave    (fld_i,fld_o,tgridmap)
+        end if
         mhgtt_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = mhgtb_i(:,:,l)
-        call areaave_pft(fld_i,fld_o,tgridmap)
+        if ( fdynuse /= ' ' )then
+           call areaave_pft(fld_i,fld_o,tgridmap)
+        else
+           call areaave    (fld_i,fld_o,tgridmap)
+        end if
         mhgtb_o(:,:,l) = fld_o(:,:)
 
         do ji = 1, nlat_i
@@ -255,6 +276,17 @@ subroutine mklai(lsmlon, lsmlat, fname, ndiag, ncido, ni, nj, pctpft_i )
 !           mhgtb_o(:,:,l) = 0.
 !        endwhere
      enddo
+
+     ! if irrigation dataset present, copy LAI,SAI,Heights from PFT=15 (non-irrigated) 
+     ! into PFT=16 (irrigated)
+     if (firrig /= ' ') then      
+        write(6,*) 'Irrigation dataset present; Copying crop (PFT=15) LAI, SAI, and heights',&
+                   ' into irrigated crop (PFT=16) '
+        mlai_o(:,:,16)  = mlai_o(:,:,15)
+        msai_o(:,:,16)  = msai_o(:,:,15)
+        mhgtt_o(:,:,16) = mhgtt_o(:,:,15)
+        mhgtb_o(:,:,16) = mhgtb_o(:,:,15)
+     endif
 
      ! -----------------------------------------------------------------
      ! Output model resolution LAI/SAI/HEIGHT data

@@ -1261,11 +1261,7 @@ contains
 
     ! pft energy state variable - t_ref2m
 
-#if (defined CN)
-    varname = 't_ref2m'
-#else
     varname = 'T_REF2M'
-#endif
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname=varname, xtype=nf_double,  &
             dim1name='pft', &
@@ -1275,15 +1271,11 @@ contains
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
        if (flag=='read' .and. .not. readvar) then
-#if (defined CN)
-          call endrun()
-#else
           if (allocate_all_vegpfts) then
              call endrun()
           else
              if (is_restart()) call endrun()
           end if
-#endif
        end if
     end if
 
