@@ -95,7 +95,8 @@ module driver
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds
   use filterMod           , only : filter, setFilters
-  use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal, pftdyn_cnbal 
+  use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal, pftdyn_cnbal
+  use dynlandMod          , only : dynland_hwcontent
   use clm_varcon          , only : zlnd, isturb
   use clm_time_manager    , only : get_step_size, get_curr_calday, &
                                    get_curr_date, get_ref_date, get_nstep, is_perpetual
@@ -137,11 +138,7 @@ module driver
   use VOCEmissionMod      , only : VOCEmission
 #endif
 #if (defined CASA)
-  use CASAPhenologyMod    , only : CASAPhenology
-  use CASAMod             , only : Casa
-#if (defined CLAMP)
-  use CASASummaryMod      , only : CASASummary
-#endif
+  use CASAMod             , only : casa_ecosystemDyn
 #endif
 #if (defined RTM)
   use RtmMod              , only : Rtmriverflux
@@ -191,6 +188,8 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
 !  need to have SUNSHA defined.  
 ! 2/29/08, Dave Lawrence: Revised snow cover fraction according to Niu and Yang, 2007
 ! 3/6/09, Peter Thornton: Added declin as new argument, for daylength control on Vcmax
+! 2008.11.12  B. Kauffman: morph routine casa() in casa_ecosytemDyn(), so casa
+!    is more similar to CN & DGVM
 !
 !EOP
 !
@@ -202,8 +201,9 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
   integer , pointer :: itypelun(:)  ! landunit type
 !
 ! !OTHER LOCAL VARIABLES:
+  real(r8) :: dtime                       ! land model time step (sec)
   real(r8) :: t1, t2, t3                  ! temporary for mass balance checks
-  integer  :: nc, fc, c, fp, p, l         ! indices
+  integer  :: nc, fc, c, fp, p, l, g      ! indices
   integer  :: nclumps                     ! number of clumps on this processor
   integer  :: nstep                       ! time step number
   integer  :: begp, endp                  ! clump beginning and ending pft indices
@@ -277,6 +277,49 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
      call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
 
      ! ============================================================================
+     ! change pft weights and compute associated heat & water fluxes
+     ! ============================================================================
+
+     ! initialize heat and water content and dynamic balance fields to zero
+!dir$ concurrent
+!cdir nodep
+     do g = begg,endg
+        clm3%g%gwf%qflx_liq_dynbal(g) = 0._r8
+        clm3%g%gws%gc_liq2(g)         = 0._r8
+        clm3%g%gws%gc_liq1(g)         = 0._r8
+        clm3%g%gwf%qflx_ice_dynbal(g) = 0._r8
+        clm3%g%gws%gc_ice2(g)         = 0._r8 
+        clm3%g%gws%gc_ice1(g)         = 0._r8
+        clm3%g%gef%eflx_dynbal(g)     = 0._r8
+        clm3%g%ges%gc_heat2(g)        = 0._r8
+        clm3%g%ges%gc_heat1(g)        = 0._r8
+     enddo
+
+     !--- get initial heat,water content ---
+      call dynland_hwcontent(begg,endg,clm3%g%gws%gc_liq1,clm3%g%gws%gc_ice1,clm3%g%ges%gc_heat1)
+
+#if (!defined DGVM)
+#if (!defined PFTDYNWBAL)
+     if (doalb .and. fpftdyn /= ' ') then
+
+        write(iulog,*) 'Doing dynamic pfts'
+        call pftdyn_interp()  ! change the pft weights
+
+        !--- get new heat,water content: (new-old)/dt = flux into lnd model ---
+        call dynland_hwcontent(begg,endg,clm3%g%gws%gc_liq2,clm3%g%gws%gc_ice2,clm3%g%ges%gc_heat2)
+        dtime = get_step_size()
+!dir$ concurrent
+!cdir nodep
+        do g = begg,endg
+           clm3%g%gwf%qflx_liq_dynbal(g) = (clm3%g%gws%gc_liq2 (g) - clm3%g%gws%gc_liq1 (g))/dtime
+           clm3%g%gwf%qflx_ice_dynbal(g) = (clm3%g%gws%gc_ice2 (g) - clm3%g%gws%gc_ice1 (g))/dtime
+           clm3%g%gef%eflx_dynbal    (g) = (clm3%g%ges%gc_heat2(g) - clm3%g%ges%gc_heat1(g))/dtime
+        enddo
+     end if
+#endif
+#endif
+
+     ! ============================================================================
      ! Initialize the mass balance checks: water, carbon, and nitrogen
      ! ============================================================================
 
@@ -321,14 +364,19 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
 ! PET: switching CN timestep
 !  if (doalb .and. fpftdyn /= ' ') then
    if (fpftdyn /= ' ') then
+#if (defined PFTDYNWBAL)
      call pftdyn_interp()
+
+     !--- conserve heat,water,carbon content wrt dynamic land use ---
      call pftdyn_wbal()
+#endif
 #if (defined CN)
      call pftdyn_cnbal()
 #endif
      call setFilters()
   end if
 #endif
+
 
 #if (defined CN)
   ! ============================================================================
@@ -559,17 +607,6 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
      ! ============================================================================
      ! Ecosystem dynamics: Uses CN, DGVM, or static parameterizations
      ! ============================================================================
-
-#if (defined CASA)
-     call t_startf('casa')
-     call CASAPhenology(begp, endp, filter(nc)%num_soilp, filter(nc)%soilp)
-     call Casa(begp, endp, filter(nc)%num_soilp, filter(nc)%soilp)
-#if (defined CLAMP)
-     call CASASummary(begp, endp, filter(nc)%num_soilp, filter(nc)%soilp)
-#endif
-     call t_stopf('casa')
-#endif
-
      call t_startf('ecosysdyn')
 
 #if (defined DGVM)
@@ -593,6 +630,15 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp)
 !     end if         
+#elif (defined CASA)
+     ! Prescribed biogeography,
+     ! prescribed canopy structure, some prognostic carbon fluxes
+     call casa_ecosystemDyn(begc, endc, begp, endp, &
+               filter(nc)%num_soilc, filter(nc)%soilc, &
+               filter(nc)%num_soilp, filter(nc)%soilp, doalb)
+     call EcosystemDyn(begp, endp, &
+                       filter(nc)%num_nolakep, filter(nc)%nolakep, &
+                       doalb)
 #else
      ! Prescribed biogeography,
      ! prescribed canopy structure, some prognostic carbon fluxes
@@ -607,8 +653,9 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
      ! ============================================================================
 
      call t_startf('balchk')
-     call BalanceCheck(begp, endp, begc, endc)
+     call BalanceCheck(begp, endp, begc, endc, begl, endl, begg, endg)
      call t_stopf('balchk')
+
 #if (defined EXIT_SPINUP)
      ! skip calls to C and N balance checking during EXIT_SPINUP
      ! because the system is (intentionally) not conserving mass

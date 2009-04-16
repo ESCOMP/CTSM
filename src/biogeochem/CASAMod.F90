@@ -21,6 +21,8 @@ module CASAMod
   use clm_varcon  , only : denh2o, hvap, istsoil, tfrz, spval
   use clm_varpar  , only : numpft, nlevsoi, nlevgrnd
   use clm_varctl  , only : iulog
+  use spmdMod     , only : masterproc
+  use CASAPhenologyMod, only : CASAPhenology
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -232,7 +234,7 @@ module CASAMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: initCASA                 ! initialize the CASA submodel
-  public :: Casa                     ! the main submodel interface
+  public :: CASA_ecosystemDyn        ! the main submodel interface
   public :: CASAPot_Evptr            ! potential evapotranspiration computation
   public :: CASARest             ! CASA restart
 !
@@ -1141,50 +1143,65 @@ contains
     if (masterproc) call check_ret(nf_close(ncid), subname)
 
   end subroutine casa_write_cpool
-!-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
+!===============================================================================
 !BOP
 !
-! !IROUTINE: Casa
+! !IROUTINE: casa_ecosystemDyn
 !
 ! !INTERFACE:
-  subroutine Casa(lbp, ubp, num_soilp, filter_soilp, init)
+  subroutine casa_ecosystemDyn(begc,endc, begp,endp, num_soilc,filter_soilc, &
+                               num_soilp,filter_soilp, doalb, init)
 !
 ! !DESCRIPTION:
-! Primary calling interface to the CASA submodel.
-!
-! !ARGUMENTS:
-    implicit none
-    integer, intent(in) :: lbp, ubp       ! pft bounds
-    integer, intent(in) :: num_soilp      ! number of soil points in pft filter
-    integer, intent(in) :: filter_soilp(ubp-lbp+1) ! pft filter for soil points
-    logical, intent(in), optional :: init ! if calling on initialization
+!    Primary calling interface to the CASA submodel.
 !
 ! !CALLED FROM:
-! driver in driver.F90 and initSurfAlb
+!    driver in driver.F90 and initSurfAlb
 !
 ! !REVISION HISTORY:
-! 2004.06.08 Vectorized and reformatted by Forrest Hoffman
+!    2004.06.08  F. Hoffman: Vectorized and reformatted
+!    2008.11.12  B. Kauffman: include phenology, vegStruct, rename "ecosystemDyn"
 ! 
+! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: begc, endc      ! column bounds
+    integer, intent(in) :: begp, endp      ! pft bounds
+    integer, intent(in) :: num_soilc       ! number of soil points in column filter
+    integer, intent(in) :: filter_soilc(:) ! column filter for soil points
+    integer, intent(in) :: num_soilp       ! number of soil points in pft filter
+    integer, intent(in) :: filter_soilp(:) ! pft filter for soil points
+    logical, intent(in), optional :: doalb ! T => run phase call and albedo timestep
+    logical, intent(in), optional :: init  ! T => init phase call: for albedo init
 !
-! !LOCAL VARIABLES:
-    integer :: f, p  ! indices
-    logical :: linit ! local init
+!EOP
+
+    !--- local variables ---
+    integer :: f, p   ! indicies
+    logical :: linit  ! local init
+    logical :: ldoalb ! local doalb
 
     ! implicit intent inout
     !============================================================
     real(r8), pointer :: plai(:)     ! prognostic LAI (m2 leaf/m2 ground)
-!EOP
-!-----------------------------------------------------------------------
 
-    if ( present(init) )then
-      linit = init
-    else
-      linit = .false.
-    end if
+    character(*),parameter :: subname='(casa_ecosystemDyn) '
 
-    if ( linit )then
+!-------------------------------------------------------------------------------
+!
+!-------------------------------------------------------------------------------
+
+    linit = .false.
+    if (present(init)) lInit = init
+    ldoalb = .false.
+    if (present(doalb)) ldoalb = doalb
+
+    ! phenology
+    call CASAPhenology(begp, endp, num_soilp, filter_soilp)
+
+    if ( linit) then
+       if (masterproc) write(iulog,*) subName,"initialize option is ON"
+
        ! explicitly set prognostic LAI to zero when called from initSurfAlb
        plai       => clm3%g%l%c%p%pps%plai
        do f = 1,num_soilp
@@ -1192,29 +1209,30 @@ contains
 
           plai(p) = 0.0_r8
        end do
+
     else
+       !--- potential evapo-transpiration ---
+       call CASAPot_Evptr(begp, endp, num_soilp, filter_soilp)
 
-       ! potential evapotranspiration
-       call CASAPot_Evptr(lbp, ubp, num_soilp, filter_soilp)
-   
-       ! plant net primary production
-       call casa_npp(lbp, ubp, num_soilp, filter_soilp)
+       !--- carbon allocation ---
+       call casa_allocate(begp, endp, num_soilp, filter_soilp)
 
-       ! allocation          
-       call casa_allocate(lbp, ubp, num_soilp, filter_soilp)
+       !--- plant net primary production ---
+       call casa_npp(begp,endp, num_soilp,filter_soilp)
 
-       ! bgfluxes (litterfall, respiration)
+       ! bgfluxes (litterfall, soil respiration)
        !  Compute Carbon flux to send to atm
        !  fnpp (gC/m2/sec), Cflux (gC/m2/sec), co2flux (gC/m2/sec)
-       call casa_bgfluxes(lbp, ubp, num_soilp, filter_soilp)
+       call casa_bgfluxes(begp, endp, num_soilp, filter_soilp)
 
+#if (defined CLAMP)
+       call CASASummary(begp, endp, num_soilp, filter_soilp )
+#endif
     end if
 
-  end subroutine Casa
+  end subroutine casa_ecosystemDyn
 
-!-----------------------------------------------------------------------
-
-!-----------------------------------------------------------------------
+!===============================================================================
 !BOP
 !
 ! !IROUTINE: CASAPot_Evptr
@@ -2793,6 +2811,193 @@ contains
 
   end function is_restart
 
-#endif
+#if (defined CLAMP)
+!===============================================================================
+!BOP
+!
+! !IROUTINE: CASASummary
+!
+! !INTERFACE:
+subroutine CASASummary(lbp, ubp, num_soilp, filter_soilp)
+!
+! !DESCRIPTION:
+! Perform pft carbon summary calculations
+!
+! !USES:
+   use clm_time_manager, only: get_step_size
+!
+! !ARGUMENTS:
+   implicit none
+   integer, intent(in) :: lbp, ubp       ! pft bounds
+   integer, intent(in) :: num_soilp      ! number of soil points in pft filter
+   integer, intent(in) :: filter_soilp(ubp-lbp+1) ! pft filter for soil points
+!
+! !CALLED FROM:
+! subroutine casa_ecocystemDyn
+!
+! !REVISION HISTORY:
+! 22 Sept 2006: Created by Forrest Hoffman
+!
+! !LOCAL VARIABLES:
+! local pointers to implicit in scalars
+   real(r8), pointer :: fpsn(:)              !photosynthesis (umol CO2 /m**2 /s)
+   real(r8), pointer :: Tpool_C(:,:)         ! Total C by pool
+   real(r8), pointer :: Resp_C(:,:)          ! Respired C by pool
+   real(r8), pointer :: Closs(:,:)           ! Lost C by pool
+   real(r8), pointer :: Ctrans(:,:)          ! Transferred C by pool type
+   real(r8), pointer :: Cflux(:)             ! C flux
+   real(r8), pointer :: livefr(:,:)          ! Live fraction
+   real(r8), pointer :: fnpp(:)              ! NPP (gC/m2/sec)
+   real(r8), pointer :: co2flux(:)           ! net CO2 flux (gC/m2/s) [+= atm]
+!
+!
+! local pointers to implicit in/out scalars
+!
+!
+! local pointers to implicit out scalars
+   real(r8), pointer :: casa_agnpp(:)        ! above-ground net primary production [gC/m2/s]
+   real(r8), pointer :: casa_ar(:)           ! autotrophic respiration [gC/m2/s]
+   real(r8), pointer :: casa_bgnpp(:)        ! below-ground net primary production [gC/m2/s]
+   real(r8), pointer :: casa_cwdc(:)         ! coarse woody debris C [gC/m2]
+   real(r8), pointer :: casa_cwdc_hr(:)      ! cwd heterotrophic respiration [gC/m2/s]
+   real(r8), pointer :: casa_cwdc_loss(:)    ! cwd C loss [gC/m2/s]
+   real(r8), pointer :: casa_frootc(:)       ! fine root C [gC/m2]
+   real(r8), pointer :: casa_frootc_alloc(:) ! fine root C allocation [gC/m2/s]
+   real(r8), pointer :: casa_frootc_loss(:)  ! fine root C loss [gC/m2/s]
+   real(r8), pointer :: casa_gpp(:)          ! gross primary production [gC/m2/s]
+   real(r8), pointer :: casa_hr(:)           ! total heterotrophic respiration [gC/m2/s]
+   real(r8), pointer :: casa_leafc(:)        ! leaf C [gC/m2]
+   real(r8), pointer :: casa_leafc_alloc(:)  ! leaf C allocation [gC/m2/s]
+   real(r8), pointer :: casa_leafc_loss(:)   ! leaf C loss [gC/m2/s]
+   real(r8), pointer :: casa_litterc(:)      ! total litter C (excluding cwd C) [gC/m2]
+   real(r8), pointer :: casa_litterc_hr(:)   ! litter heterotrophic respiration [gC/m2/s]
+   real(r8), pointer :: casa_litterc_loss(:) ! litter C loss [gC/m2/s]
+   real(r8), pointer :: casa_nee(:)          ! net ecosystem exchange [gC/m2/s]
+   real(r8), pointer :: casa_nep(:)          ! net ecosystem production [gC/m2/s]
+   real(r8), pointer :: casa_npp(:)          ! net primary production [gC/m2/s]
+   real(r8), pointer :: casa_soilc(:)        ! total soil organic matter C (excluding cwd and litter C) [gC/m2]
+   real(r8), pointer :: casa_soilc_hr(:)     ! soil heterotrophic respiration [gC/m2/s]
+   real(r8), pointer :: casa_soilc_loss(:)   ! total soil organic matter C loss [gC/m2/s]
+   real(r8), pointer :: casa_woodc(:)        ! wood C [gC/m2]
+   real(r8), pointer :: casa_woodc_alloc(:)  ! wood C allocation [gC/m2/s]
+   real(r8), pointer :: casa_woodc_loss(:)   ! wood C loss [gC/m2/s]
+!
+!
+! !OTHER LOCAL VARIABLES:
+   integer :: f,p          ! indices
+   real(r8):: dtime        ! land model time step (sec)
 
+!EOP
+!-----------------------------------------------------------------------
+
+   ! assign local pointers at the pft level
+   fpsn                           => clm3%g%l%c%p%pcf%fpsn
+   Tpool_C                        => clm3%g%l%c%p%pps%Tpool_C
+   Resp_C                         => clm3%g%l%c%p%pps%Resp_C
+   Closs                          => clm3%g%l%c%p%pps%Closs
+   Ctrans                         => clm3%g%l%c%p%pps%Ctrans
+   Cflux                          => clm3%g%l%c%p%pps%Cflux  
+   livefr                         => clm3%g%l%c%p%pps%livefr
+   fnpp                           => clm3%g%l%c%p%pps%fnpp
+   co2flux                        => clm3%g%l%c%p%pps%co2flux
+
+   casa_agnpp                     => clm3%g%l%c%p%pps%casa_agnpp
+   casa_ar                        => clm3%g%l%c%p%pps%casa_ar
+   casa_bgnpp                     => clm3%g%l%c%p%pps%casa_bgnpp
+   casa_cwdc                      => clm3%g%l%c%p%pps%casa_cwdc
+   casa_cwdc_hr                   => clm3%g%l%c%p%pps%casa_cwdc_hr
+   casa_cwdc_loss                 => clm3%g%l%c%p%pps%casa_cwdc_loss
+   casa_frootc                    => clm3%g%l%c%p%pps%casa_frootc
+   casa_frootc_alloc              => clm3%g%l%c%p%pps%casa_frootc_alloc
+   casa_frootc_loss               => clm3%g%l%c%p%pps%casa_frootc_loss
+   casa_gpp                       => clm3%g%l%c%p%pps%casa_gpp
+   casa_hr                        => clm3%g%l%c%p%pps%casa_hr
+   casa_leafc                     => clm3%g%l%c%p%pps%casa_leafc
+   casa_leafc_alloc               => clm3%g%l%c%p%pps%casa_leafc_alloc
+   casa_leafc_loss                => clm3%g%l%c%p%pps%casa_leafc_loss
+   casa_litterc                   => clm3%g%l%c%p%pps%casa_litterc
+   casa_litterc_hr                => clm3%g%l%c%p%pps%casa_litterc_hr
+   casa_litterc_loss              => clm3%g%l%c%p%pps%casa_litterc_loss
+   casa_nee                       => clm3%g%l%c%p%pps%casa_nee
+   casa_nep                       => clm3%g%l%c%p%pps%casa_nep
+   casa_npp                       => clm3%g%l%c%p%pps%casa_npp
+   casa_soilc                     => clm3%g%l%c%p%pps%casa_soilc
+   casa_soilc_hr                  => clm3%g%l%c%p%pps%casa_soilc_hr
+   casa_soilc_loss                => clm3%g%l%c%p%pps%casa_soilc_loss
+   casa_woodc                     => clm3%g%l%c%p%pps%casa_woodc
+   casa_woodc_alloc               => clm3%g%l%c%p%pps%casa_woodc_alloc
+   casa_woodc_loss                => clm3%g%l%c%p%pps%casa_woodc_loss
+
+   ! Get step size
+   dtime = get_step_size()
+
+   ! pft loop
+!dir$ concurrent
+!cdir nodep
+   do f = 1, num_soilp
+      p = filter_soilp(f)
+
+      ! calculate pft-level summary carbon fluxes and states
+
+      ! autotrophic respiration
+      casa_ar(p) = gppfact * fpsn(p) * 12.0_r8 * 1.e-6_r8 ! umolC/m2/s to gC/m2/s
+      ! gross primary production
+      casa_gpp(p) = fpsn(p) * 12.0_r8 * 1.e-6_r8 ! umolC/m2/s to gC/m2/s
+
+      ! total heterotrophic respiration
+      casa_hr(p) = Cflux(p)
+
+      ! net ecosystem exchange
+      casa_nee(p) = co2flux(p)
+
+      ! net ecosystem production
+      casa_nep(p) =  -1._r8 * co2flux(p)
+
+      ! net primary production
+      casa_npp(p) = fnpp(p)
+
+      ! above-ground and below-ground NPP
+      casa_agnpp(p) = (livefr(p,LEAF)  + 0.8_r8 * livefr(p,WOOD)) * fnpp(p)
+      casa_bgnpp(p) = (livefr(p,FROOT) + 0.2_r8 * livefr(p,WOOD)) * fnpp(p)
+
+      ! leaf C
+      casa_leafc(p)       = Tpool_C(p,LEAF)
+      casa_leafc_alloc(p) = livefr(p,LEAF) * fnpp(p)
+      casa_leafc_loss(p)  = Closs(p,LEAF)
+
+      ! wood C
+      casa_woodc(p)       = Tpool_C(p,WOOD)
+      casa_woodc_alloc(p) = livefr(p,WOOD) * fnpp(p)
+      casa_woodc_loss(p)  = Closs(p,WOOD)
+
+      ! fine root C
+      casa_frootc(p)       = Tpool_C(p,FROOT)
+      casa_frootc_alloc(p) = livefr(p,FROOT) * fnpp(p)
+      casa_frootc_loss(p)  = Closs(p,FROOT)
+
+      ! coarse woody debris C
+      casa_cwdc(p)      = Tpool_C(p,CWD)
+      casa_cwdc_hr(p)   = Resp_C(p,CWD)
+      casa_cwdc_loss(p) = Ctrans(p,CWD_TYPE)
+
+      ! litter C
+      casa_litterc(p)      = Tpool_C(p,SURFMET) + Tpool_C(p,SURFSTR) + &
+                             Tpool_C(p,SOILMET) + Tpool_C(p,SOILSTR)
+      casa_litterc_hr(p)   = Resp_C(p,SURFMET) + Resp_C(p,SURFSTR) + &
+                             Resp_C(p,SOILMET) + Resp_C(p,SOILSTR)
+      casa_litterc_loss(p) = Ctrans(p,LITTER_TYPE)
+
+      ! soil C
+      casa_soilc(p)      = Tpool_C(p,SURFMIC) + Tpool_C(p,SOILMIC) + &
+                           Tpool_C(p,SLOW)    + Tpool_C(p,PASSIVE)
+      casa_soilc_hr(p)   = Resp_C(p,SURFMIC) + Resp_C(p,SOILMIC) + &
+                           Resp_C(p,SLOW)    + Resp_C(p,PASSIVE)
+      casa_soilc_loss(p) = Ctrans(p,SOIL_TYPE)
+
+   end do  ! end of pfts loop
+
+end subroutine CASASummary
+!===============================================================================
+#endif
+#endif
 end module CASAMod

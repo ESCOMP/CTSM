@@ -144,7 +144,7 @@ contains
 ! !IROUTINE: BalanceCheck
 !
 ! !INTERFACE:
-  subroutine BalanceCheck(lbp, ubp, lbc, ubc)
+  subroutine BalanceCheck(lbp, ubp, lbc, ubc, lbl, ubl, lbg, ubg)
 !
 ! !DESCRIPTION:
 ! This subroutine accumulates the numerical truncation errors of the water
@@ -172,6 +172,8 @@ contains
     implicit none
     integer :: lbp, ubp ! pft-index bounds
     integer :: lbc, ubc ! column-index bounds
+    integer :: lbl, ubl ! landunit-index bounds
+    integer :: lbg, ubg ! grid-index bounds
 !
 ! !CALLED FROM:
 ! subroutine driver
@@ -207,13 +209,20 @@ contains
     real(r8), pointer :: sabv(:)            ! solar radiation absorbed by vegetation (W/m**2)
     real(r8), pointer :: sabg(:)            ! solar radiation absorbed by ground (W/m**2)
     real(r8), pointer :: eflx_sh_tot(:)     ! total sensible heat flux (W/m**2) [+ to atm]
+    real(r8), pointer :: eflx_sh_totg(:)    ! total sensible heat flux at grid level (W/m**2) [+ to atm]
+    real(r8), pointer :: eflx_dynbal(:)     ! energy conversion flux due to dynamic land cover change(W/m**2) [+ to atm]
     real(r8), pointer :: eflx_lh_tot(:)     ! total latent heat flux (W/m8*2)  [+ to atm]
     real(r8), pointer :: eflx_soil_grnd(:)  ! soil heat flux (W/m**2) [+ = into soil]
     real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
     real(r8), pointer :: qflx_surf(:)       ! surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_qrgwl(:)      ! qflx_surf at glaciers, wetlands, lakes
     real(r8), pointer :: qflx_drain(:)      ! sub-surface runoff (mm H2O /s)
+    real(r8), pointer :: qflx_runoff(:)     ! total runoff (mm H2O /s)
+    real(r8), pointer :: qflx_runoffg(:)    ! total runoff at gridcell level inc land cover change flux (mm H2O /s)
+    real(r8), pointer :: qflx_liq_dynbal(:) ! liq runoff due to dynamic land cover change (mm H2O /s)
     real(r8), pointer :: qflx_snwcp_ice(:)  ! excess snowfall due to snow capping (mm H2O /s) [+]`
+    real(r8), pointer :: qflx_snwcp_iceg(:) ! excess snowfall due to snow cap inc land cover change flux (mm H20/s)
+    real(r8), pointer :: qflx_ice_dynbal(:) ! ice runoff due to dynamic land cover change (mm H2O /s)
     real(r8), pointer :: forc_solad(:,:)    ! direct beam radiation (vis=forc_sols , nir=forc_soll )
     real(r8), pointer :: forc_solai(:,:)    ! diffuse radiation     (vis=forc_solsd, nir=forc_solld)
     real(r8), pointer :: eflx_traffic_pft(:)    ! traffic sensible heat flux (W/m**2)
@@ -265,6 +274,7 @@ contains
     qflx_surf         => clm3%g%l%c%cwf%qflx_surf
     qflx_qrgwl        => clm3%g%l%c%cwf%qflx_qrgwl
     qflx_drain        => clm3%g%l%c%cwf%qflx_drain
+    qflx_runoff       => clm3%g%l%c%cwf%qflx_runoff
     qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice
     qflx_evap_tot     => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
     errh2o            => clm3%g%l%c%cwbal%errh2o
@@ -292,6 +302,15 @@ contains
     eflx_wasteheat_pft => clm3%g%l%c%p%pef%eflx_wasteheat_pft
     eflx_heat_from_ac_pft => clm3%g%l%c%p%pef%eflx_heat_from_ac_pft
     eflx_traffic_pft  => clm3%g%l%c%p%pef%eflx_traffic_pft
+
+    ! Assign local pointers to derived type scalar members (gridcell-level)
+
+    qflx_runoffg       => clm3%g%gwf%qflx_runoffg
+    qflx_liq_dynbal    => clm3%g%gwf%qflx_liq_dynbal
+    qflx_snwcp_iceg    => clm3%g%gwf%qflx_snwcp_iceg
+    qflx_ice_dynbal    => clm3%g%gwf%qflx_ice_dynbal
+    eflx_sh_totg       => clm3%g%gef%eflx_sh_totg
+    eflx_dynbal        => clm3%g%gef%eflx_dynbal
 
     ! Get step size and time step
 
@@ -459,7 +478,7 @@ contains
        end if
     end do
     if ( found  .and. (nstep > 2) ) then
-       write(iulog,100)'longwave enery balance error',nstep,indexp,errlon(indexp)
+       write(iulog,100)'BalanceCheck: longwave enery balance error',nstep,indexp,errlon(indexp)
        write(iulog,*)'clm model is stopping'
        call endrun()
     end if
@@ -497,15 +516,37 @@ contains
        end if
     end do
     if ( found ) then
-       write(iulog,100)'soil balance error',nstep,indexc,errsoi_col(indexc)
+       write(iulog,100)'BalanceCheck: soil balance error',nstep,indexc,errsoi_col(indexc)
        if (abs(errsoi_col(indexc)) > .10_r8 .and. (nstep > 2) ) then
           write(iulog,*)'clm model is stopping'
           call endrun()
        end if
     end if
 
-100 format (1x,a14,' nstep =',i10,' point =',i6,' imbalance =',f8.2,' W/m2')
-200 format (1x,a14,' nstep =',i10,' point =',i6,' imbalance =',f8.2,' mm')
+    ! Update SH and RUNOFF for dynamic land cover change energy and water fluxes
+    call c2g(lbc, ubc, lbl, ubl, lbg, ubg, &
+          qflx_runoff, qflx_runoffg, &
+          c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+    do g = lbg, ubg
+       qflx_runoffg(g) = qflx_runoffg(g) - qflx_liq_dynbal(g)
+    enddo
+
+    call c2g(lbc, ubc, lbl, ubl, lbg, ubg, &
+          qflx_snwcp_ice, qflx_snwcp_iceg, &
+          c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+    do g = lbg, ubg
+       qflx_snwcp_iceg(g) = qflx_snwcp_iceg(g) - qflx_ice_dynbal(g)
+    enddo
+
+    call p2g(lbp, ubp, lbc, ubc, lbl, ubl, lbg, ubg, &
+             eflx_sh_tot, eflx_sh_totg, &
+             p2c_scale_type='unity',c2l_scale_type='urbanf',l2g_scale_type='unity')
+    do g = lbg, ubg
+       eflx_sh_totg(g) =  eflx_sh_totg(g) - eflx_dynbal(g)
+    enddo
+
+100 format (1x,a,' nstep =',i10,' point =',i6,' imbalance =',f12.6,' W/m2')
+200 format (1x,a,' nstep =',i10,' point =',i6,' imbalance =',f12.6,' mm')
 
   end subroutine BalanceCheck
 

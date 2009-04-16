@@ -323,9 +323,25 @@ contains
          avgflag='A', long_name='ground evaporation', &
          ptr_pft=clm3%g%l%c%p%pef%eflx_lh_grnd, c2l_scale_type='urbanf') 
 
-    call hist_addfld1d (fname='FSH', units='watt/m^2',  &
+    call hist_addfld1d (fname='FSH_NODYNLNDUSE', units='watt/m^2',  &
          avgflag='A', long_name='sensible heat', &
          ptr_pft=clm3%g%l%c%p%pef%eflx_sh_tot, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='FSH', units='watt/m^2',  &
+         avgflag='A', long_name='sensible heat', &
+         ptr_lnd=clm3%g%gef%eflx_sh_totg)
+
+    call hist_addfld1d (fname='GC_HEAT1',  units='J/m^2',  &
+         avgflag='A', long_name='initial gridcell total heat content', &
+         ptr_lnd=clm3%g%ges%gc_heat1)
+
+    call hist_addfld1d (fname='GC_HEAT2',  units='J/m^2',  &
+         avgflag='A', long_name='post land cover change total heat content', &
+         ptr_lnd=clm3%g%ges%gc_heat2)
+
+    call hist_addfld1d (fname='EFLX_DYNBAL',  units='W/m^2',  &
+         avgflag='A', long_name='dynamic land cover change conversion energy flux', &
+         ptr_lnd=clm3%g%gef%eflx_dynbal)
 
     call hist_addfld1d (fname='Qh', units='watt/m^2',  &
          avgflag='A', long_name='sensible heat', &
@@ -557,17 +573,49 @@ contains
          avgflag='A', long_name='excess rainfall due to snow capping', &
          ptr_pft=clm3%g%l%c%p%pwf%qflx_snwcp_liq, default='inactive')
 
-    call hist_addfld1d (fname='QSNWCPICE', units='mm H2O/s', &
+    call hist_addfld1d (fname='QSNWCPICE_NODYNLNDUSE', units='mm H2O/s', &
          avgflag='A', long_name='excess snowfall due to snow capping', &
          ptr_pft=clm3%g%l%c%p%pwf%qflx_snwcp_ice)
+
+    call hist_addfld1d (fname='QSNWCPICE',  units='mm/s',  &
+         avgflag='A', long_name='excess snowfall due to snow capping', &
+         ptr_lnd=clm3%g%gwf%qflx_snwcp_iceg)
 
     call hist_addfld1d (fname='QDRAI',  units='mm/s',  &
          avgflag='A', long_name='sub-surface drainage', &
          ptr_col=clm3%g%l%c%cwf%qflx_drain, c2l_scale_type='urbanf')
 
-    call hist_addfld1d (fname='QRUNOFF',  units='mm/s',  &
+    call hist_addfld1d (fname='QRUNOFF_NODYNLNDUSE',  units='mm/s',  &
          avgflag='A', long_name='total liquid runoff (does not include QSNWCPICE)', &
          ptr_col=clm3%g%l%c%cwf%qflx_runoff, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='QRUNOFF',  units='mm/s',  &
+         avgflag='A', long_name='total liquid runoff (does not include QSNWCPICE)', &
+         ptr_lnd=clm3%g%gwf%qflx_runoffg)
+
+    call hist_addfld1d (fname='GC_LIQ1',  units='mm',  &
+         avgflag='A', long_name='initial gridcell total liq content', &
+         ptr_lnd=clm3%g%gws%gc_liq1)
+
+    call hist_addfld1d (fname='GC_LIQ2',  units='mm',  &  
+         avgflag='A', long_name='initial gridcell total liq content', &              
+         ptr_lnd=clm3%g%gws%gc_liq2)     
+
+    call hist_addfld1d (fname='QFLX_LIQ_DYNBAL',  units='mm/s',  &  
+         avgflag='A', long_name='liq dynamic land cover change conversion runoff flux', &              
+         ptr_lnd=clm3%g%gwf%qflx_liq_dynbal)     
+
+    call hist_addfld1d (fname='GC_ICE1',  units='mm',  &  
+         avgflag='A', long_name='initial gridcell total ice content', &              
+         ptr_lnd=clm3%g%gws%gc_ice1)     
+
+    call hist_addfld1d (fname='GC_ICE2',  units='mm',  &  
+         avgflag='A', long_name='post land cover change total ice content', &              
+         ptr_lnd=clm3%g%gws%gc_ice2)     
+
+    call hist_addfld1d (fname='QFLX_ICE_DYNBAL',  units='mm/s',  &
+         avgflag='A', long_name='ice dynamic land cover change conversion runoff flux', &                                   
+         ptr_lnd=clm3%g%gwf%qflx_ice_dynbal)
 
     call hist_addfld1d (fname='QRUNOFF_U', units='mm/s',  &
          avgflag='A', long_name='Urban total runoff', &

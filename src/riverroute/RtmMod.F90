@@ -1146,10 +1146,8 @@ contains
 !
     integer , pointer :: cgridcell(:)         ! corresponding gridcell index for each column
     real(r8), pointer :: wtgcell(:)           ! weight (relative to gridcell) for each column (0-1)
-    real(r8), pointer :: qflx_qrgwl(:)        ! qflx_surf at glaciers, wetlands, lakes
-    real(r8), pointer :: qflx_drain(:)        ! sub-surface runoff (mm H2O /s)
-    real(r8), pointer :: qflx_surf(:)         ! surface runoff (mm H2O /s)
-    real(r8), pointer :: qflx_snwcp_ice(:)    ! excess snowfall due to snow capping (mm H2O /s)
+    real(r8), pointer :: qflx_runoffg(:)      ! total runoff (mm H2O /s)
+    real(r8), pointer :: qflx_snwcp_iceg(:)   ! excess snowfall due to snow capping (mm H2O /s)
 !
 !EOP
 !
@@ -1176,10 +1174,8 @@ contains
 
     cgridcell         => clm3%g%l%c%gridcell
     wtgcell           => clm3%g%l%c%wtgcell
-    qflx_qrgwl        => clm3%g%l%c%cwf%qflx_qrgwl
-    qflx_drain        => clm3%g%l%c%cwf%qflx_drain
-    qflx_surf         => clm3%g%l%c%cwf%qflx_surf
-    qflx_snwcp_ice    => clm3%g%l%c%cwf%pwf_a%qflx_snwcp_ice   
+    qflx_runoffg      => clm3%g%gwf%qflx_runoffg
+    qflx_snwcp_iceg   => clm3%g%gwf%qflx_snwcp_iceg
 
     ! Determine subgrid bounds for this processor
 
@@ -1203,11 +1199,10 @@ contains
        call endrun()
     endif
 
-    do c = begc, endc
-       g = cgridcell(c)
-       rtmin_acc(g,nliq) = rtmin_acc(g,nliq) + (qflx_surf(c) + qflx_qrgwl(c) + qflx_drain(c)) * wtgcell(c)
-       rtmin_acc(g,nfrz) = rtmin_acc(g,nfrz) + qflx_snwcp_ice(c) * wtgcell(c)
-    end do
+    do g = begg, endg
+       rtmin_acc(g,nliq) = qflx_runoffg(g)
+       rtmin_acc(g,nfrz) = qflx_snwcp_iceg(g)
+    enddo
 
     ncount_rtm = ncount_rtm + 1
 
@@ -1215,7 +1210,6 @@ contains
     if (mod(nstep,rtm_nsteps)==0 .and. nstep>1) then
        if (ncount_rtm*get_step_size() /= delt_rtm) then
           if (masterproc) write(iulog,*) 'RtmUpdateInput timestep out of sync ',delt_rtm,ncount_rtm*get_step_size()
-!          call endrun
           delt_rtm = ncount_rtm*get_step_size()
        endif
        do nt = 1,nt_rtm

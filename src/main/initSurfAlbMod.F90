@@ -65,8 +65,7 @@ contains
     use FracWetMod          , only : FracWet
     use SurfaceAlbedoMod    , only : SurfaceAlbedo
 #if (defined CASA)
-  use CASAPhenologyMod    , only : CASAPhenology
-  use CASAMod             , only : Casa
+  use CASAMod             , only : CASA_ecosystemDyn
 #endif
 #if (defined DGVM)
     use DGVMEcosystemDynMod , only : DGVMEcosystemDyn
@@ -235,12 +234,13 @@ contains
        end do
 
        ! ============================================================================
-       ! Ecosystem dynamics: Uses CN, DGVM, or static parameterizations
+       ! Ecosystem dynamics: Uses CASA, CN, DGVM, or static parameterizations
        ! ============================================================================
 
 #if (defined CASA)
-       call CASAPhenology(begp, endp, filter(nc)%num_soilp, filter(nc)%soilp)
-       call Casa(begp, endp, filter(nc)%num_soilp, filter(nc)%soilp, init=.true.)
+     call casa_ecosystemDyn(begc, endc, begp, endp,    &
+               filter(nc)%num_soilc, filter(nc)%soilc, &
+               filter(nc)%num_soilp, filter(nc)%soilp, init=.true.)
 #endif
 
 #if (defined CASA) || (defined CN)

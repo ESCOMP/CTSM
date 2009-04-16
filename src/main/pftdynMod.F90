@@ -224,6 +224,7 @@ contains
 
     call pftdyn_getdata(nt1, wtpft1, begg,endg,0,numpft)
     call pftdyn_getdata(nt2, wtpft2, begg,endg,0,numpft)
+
     do m = 0,numpft
 !dir$ concurrent
 !cdir nodep
@@ -259,14 +260,17 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer  :: i,j,m,p,l,g      ! indices
+    integer  :: i,j,m,p,l,g,c    ! indices
     integer  :: year             ! year (0, ...) for nstep+1
     integer  :: mon              ! month (1, ..., 12) for nstep+1
     integer  :: day              ! day of month (1, ..., 31) for nstep+1
     integer  :: sec              ! seconds into current date for nstep+1
     real(r8) :: cday             ! current calendar day (1.0 = 0Z on Jan 1)
     integer  :: ier              ! error status
+    integer  :: lbc,ubc
     real(r8) :: wt1              ! time interpolation weights
+    real(r8), pointer :: wtpfttot1(:)           ! summation of pft weights for renormalization
+    real(r8), pointer :: wtpfttot2(:)           ! summation of pft weights for renormalization
     integer  :: begg,endg                       ! beg/end indices for land gridcells
     integer  :: begl,endl                       ! beg/end indices for land landunits
     integer  :: begc,endc                       ! beg/end indices for land columns
@@ -284,6 +288,10 @@ contains
     pptr => clm3%g%l%c%p
 
     call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
+
+    allocate(wtpfttot1(begc:endc),wtpfttot2(begc:endc))
+    wtpfttot1(:) = 0._r8
+    wtpfttot2(:) = 0._r8
 
     ! Interpolat pctpft to current time step - output in pctpft_intp
     ! Map interpolated pctpft to subgrid weights
@@ -345,6 +353,7 @@ contains
 !dir$ concurrent
 !cdir nodep
     do p = begp,endp
+       c = pptr%column(p)
        g = pptr%gridcell(p)
        l = pptr%landunit(p)
        if (lptr%itype(l) == istsoil) then
@@ -352,12 +361,35 @@ contains
           wtcol_old(p)      = pptr%wtcol(p)
 !         --- recoded for roundoff performance, tcraig 3/07 from k.lindsay
 !         pptr%wtgcell(p)   = wtpft1(g,m)*wt1 + wtpft2(g,m)*wt2
+          wtpfttot1(c) = wtpfttot1(c)+pptr%wtgcell(p)    
           pptr%wtgcell(p)   = wtpft2(g,m) + wt1*(wtpft1(g,m)-wtpft2(g,m))
           pptr%wtlunit(p)   = pptr%wtgcell(p) / lptr%wtgcell(l)
           pptr%wtcol(p)     = pptr%wtgcell(p) / lptr%wtgcell(l)
+          wtpfttot2(c) = wtpfttot2(c)+pptr%wtgcell(p)
        end if
+
     end do
-    
+
+!   Renormalize pft weights so that sum of pft weights relative to grid cell 
+!   remain constant even as land cover changes.  Doing this eliminates 
+!   soil balance error warnings.  (DML, 4/8/2009)
+!dir$ concurrent
+!cdir nodep
+    do p = begp,endp
+       c = pptr%column(p)
+       g = pptr%gridcell(p)
+       l = pptr%landunit(p)
+       if (lptr%itype(l) == istsoil) then
+          if (wtpfttot2(c) .ne. 0) then
+             pptr%wtgcell(p)   = (wtpfttot1(c)/wtpfttot2(c))*pptr%wtgcell(p)
+             pptr%wtlunit(p)   = pptr%wtgcell(p) / lptr%wtgcell(l)
+             pptr%wtcol(p)     = pptr%wtgcell(p) / lptr%wtgcell(l)
+          end if
+       end if
+
+    end do
+   
+    deallocate(wtpfttot1,wtpfttot2) 
     
   end subroutine pftdyn_interp
 

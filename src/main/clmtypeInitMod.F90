@@ -322,6 +322,18 @@ contains
 
     call init_gridcell_wflux_type(begg, endg, clm3%g%gwf)
 
+    ! gridcell: energy flux variables
+
+    call init_gridcell_eflux_type(begg, endg, clm3%g%gef)
+
+    ! gridcell: water state variables
+
+    call init_gridcell_wstate_type(begg, endg, clm3%g%gws)
+
+    ! gridcell: energy state variables
+
+    call init_gridcell_estate_type(begg, endg, clm3%g%ges)
+
   end subroutine initClmtype
 
 !------------------------------------------------------------------------
@@ -3645,12 +3657,108 @@ contains
 !
 !EOP
 !------------------------------------------------------------------------
-    allocate(gwf%qchan2(beg:end))
-    allocate(gwf%qchocn2(beg:end))
 
-    gwf%qchan2(beg:end) = 0._r8
-    gwf%qchocn2(beg:end) = 0._r8
+    allocate(gwf%qflx_runoffg(beg:end))
+    allocate(gwf%qflx_snwcp_iceg(beg:end))
+    allocate(gwf%qflx_liq_dynbal(beg:end))
+    allocate(gwf%qflx_ice_dynbal(beg:end))
+
+    gwf%qflx_runoffg(beg:end) = nan
+    gwf%qflx_snwcp_iceg(beg:end) = nan
+    gwf%qflx_liq_dynbal(beg:end) = nan
+    gwf%qflx_ice_dynbal(beg:end) = nan
 
   end subroutine init_gridcell_wflux_type
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_gridcell_eflux_type
+!
+! !INTERFACE:
+  subroutine init_gridcell_eflux_type(beg, end, gef)
+!
+! !DESCRIPTION:
+! Initialize gridcell energy flux variables
+!
+! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: beg, end
+    type (gridcell_eflux_type), intent(inout):: gef
+!
+! !REVISION HISTORY:
+! Created by David Lawrence
+!
+!EOP
+!------------------------------------------------------------------------
+    allocate(gef%eflx_sh_totg(beg:end))
+    allocate(gef%eflx_dynbal(beg:end))
+
+    gef%eflx_sh_totg(beg:end) = nan
+    gef%eflx_dynbal(beg:end) = nan
+
+  end subroutine init_gridcell_eflux_type
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_gridcell_wstate_type
+!
+! !INTERFACE:
+  subroutine init_gridcell_wstate_type(beg, end, gws)
+!
+! !DESCRIPTION:
+! Initialize gridcell water state variables
+!
+! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: beg, end
+    type (gridcell_wstate_type), intent(inout):: gws
+!
+! !REVISION HISTORY:
+! Created by David Lawrence
+!
+!EOP
+!------------------------------------------------------------------------
+    allocate(gws%gc_liq1(beg:end))
+    allocate(gws%gc_liq2(beg:end))
+    allocate(gws%gc_ice1(beg:end))     
+    allocate(gws%gc_ice2(beg:end))    
+
+    gws%gc_liq1(beg:end) = nan
+    gws%gc_liq2(beg:end) = nan
+    gws%gc_ice1(beg:end) = nan     
+    gws%gc_ice2(beg:end) = nan    
+
+  end subroutine init_gridcell_wstate_type
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_gridcell_estate_type
+!
+! !INTERFACE:
+  subroutine init_gridcell_estate_type(beg, end, ges)
+!
+! !DESCRIPTION:
+! Initialize gridcell energy state variables     
+!
+! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: beg, end
+    type (gridcell_estate_type), intent(inout):: ges
+!
+! !REVISION HISTORY:
+! Created by David Lawrence
+!
+!EOP
+!------------------------------------------------------------------------
+    allocate(ges%gc_heat1(beg:end))     
+    allocate(ges%gc_heat2(beg:end))    
+
+    ges%gc_heat1(beg:end) = nan     
+    ges%gc_heat2(beg:end) = nan    
+
+  end subroutine init_gridcell_estate_type
 
 end module clmtypeInitMod

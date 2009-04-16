@@ -1662,6 +1662,8 @@ end type gridcell_pstate_type
 !----------------------------------------------------
 type, public :: gridcell_estate_type
    type(column_estate_type):: ces_a            !column-level energy state variables averaged to gridcell
+   real(r8), pointer :: gc_heat1(:)            ! initial gridcell total heat content
+   real(r8), pointer :: gc_heat2(:)            ! post land cover change total heat content
 end type gridcell_estate_type
 
 !----------------------------------------------------
@@ -1669,6 +1671,10 @@ end type gridcell_estate_type
 !----------------------------------------------------
 type, public :: gridcell_wstate_type
    type(column_wstate_type):: cws_a            !column-level water state variables averaged to gridcell
+   real(r8), pointer :: gc_liq1(:)             ! initial gridcell total h2o liq content
+   real(r8), pointer :: gc_liq2(:)             ! post land cover change total liq content
+   real(r8), pointer :: gc_ice1(:)             ! initial gridcell total h2o liq content
+   real(r8), pointer :: gc_ice2(:)             ! post land cover change total ice content
 end type gridcell_wstate_type
 
 !----------------------------------------------------
@@ -1718,11 +1724,13 @@ end type gridcell_dgvstate_type
 !----------------------------------------------------
 type, public :: gridcell_eflux_type
    type(column_eflux_type):: cef_a             !column-level energy flux variables averaged to gridcell
+   real(r8), pointer :: eflx_sh_totg(:)   ! total grid-level sensible heat flux
+   real(r8), pointer :: eflx_dynbal(:)    ! dynamic land cover change conversion energy flux
 end type gridcell_eflux_type
 
 !----------------------------------------------------
 ! gridcell momentum flux variables structure
-!----------------------------------------------------
+!-- -------------------------------------------------
 type, public :: gridcell_mflux_type
    type(pft_mflux_type):: pmf_a                !pft-level momentum flux variables averaged to gridcell
 end type gridcell_mflux_type
@@ -1731,11 +1739,11 @@ end type gridcell_mflux_type
 ! gridcell water flux variables structure
 !----------------------------------------------------
 type, public :: gridcell_wflux_type
-!FTO
-   real(r8), pointer :: qchan2(:)               !history file RTM river (channel) flow (m**3 H2O /s) 
-   real(r8), pointer :: qchocn2(:)              !history file RTM river (channel) flow into ocean (m**3/s)
-!FTO
    type(column_wflux_type):: cwf_a             !column-level water flux variables averaged to gridcell
+   real(r8), pointer :: qflx_runoffg(:)      ! total grid-level liq runoff
+   real(r8), pointer :: qflx_snwcp_iceg(:)   ! total grid-level ice runoff
+   real(r8), pointer :: qflx_liq_dynbal(:)   ! liq dynamic land cover change conversion runoff flux
+   real(r8), pointer :: qflx_ice_dynbal(:)   ! ice dynamic land cover change conversion runoff flux
 end type gridcell_wflux_type
 
 !----------------------------------------------------

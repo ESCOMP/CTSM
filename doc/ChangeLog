@@ -1,4 +1,160 @@
 ===============================================================
+Tag name:  clm3_6_33
+Originator(s):  erik (erik)
+Date: Thu Apr 16 14:45:23 MDT 2009
+One-line Summary: Bring in dynpft changes from cbgc branch
+
+Purpose of changes: New method for dealing with dynamic land-use changes
+
+   morph routine casa() in casa_ecosystemDyn(), so casa is more similar to CN & DGVM,
+   and prepares casa code for adding additional carbon flux functionality.
+   Larger plan is to duplicate these and other mods from casafire branch on this branch.
+   Add new method for conserving heat & water wrt dynamic land use.
+   Conserves heat & water for any change in the land-unit, column, or pft arrangment. 
+   when pftdyn is activated, "normalize" sum of new pft weights in a column
+   to be the same as the sum of the old pft weights
+   otherwise BalanceCheck will generate water/heat balance errors.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  927 (problem with urban on bangkok/lahey)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: Added pftdyn file for testing
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by:
+  B. Kauffman, D. Lawrence, G. Bonan, K. Oleson
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated:
+
+  D    biogeochem/CASASummary.F90 ................ code relocated inside CASAMod.F90
+
+List all files added and what they do:
+
+  A    main/dynlandMod.F90 ............... new routine is here
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>>> models/lnd/clm/src
+  M    biogeochem/CASAMod.F90 .......... Add in CASASummary.F90, add casa_recosystemDyn subroutine
+  M    main/pftdynMod.F90 .............. when pftdyn is active, "normalize" pft weights in a column
+  M    biogeophys/BalanceCheckMod.F90 .. improved imbalance write statement
+  M    main/driver.F90 ................. CASAsummary, CASAPhenology now called in 
+                                         casa_ecocsystemDyn()
+  M    main/initSurfAlbMod.F90 ......... casa() renamed casa_ecocsystemDyn()
+  M    main/driver.F90         ......... call new routine here
+  M    main/clmtype.F90        ......... define new fields
+  M    main/clmtypeInitMod.F90 ......... init   new fields
+  M    main/histFldsMod.F90    ......... put new fields on hist file
+  M    main/clm_atmlnd.F90     ......... heat  imbalance is applied here 
+                                         (to latent heat flux)
+  M    riverroute/RtmMod.F90   ......... water imbalance is applied here (to runoff)
+
+	    with fpftdyn = "/blhome/kauff/surfdata.dynpft_1.9x2.5_c090313.nc"
+	    a special fpftdyn file created to test the mods
+
+Summary of testing:
+
+  bluefire: All PASS except
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+056 smI58 TSMcnspinup.sh 17p_cnadspinupsc_dh 17p_cnexitspinupsc_dh 17p_cnsc_dh clm_std 19980115:NONEFAIL! rc= 5
+057 smLI1 TSM.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+058 erLI1 TER.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+059 brLI1 TBR.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+069 smJ61 TSM.sh 4p_casasc_dh clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 96 cold ...........FAIL! rc= 10
+070 erJ61 TER.sh 4p_casasc_dh clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 10+38 cold ........FAIL! rc= 5
+071 brJ61 TBR.sh 4p_casasc_dh clm_urb^nl_urb_br 19981230:NONE:1800 1.9x2.5 gx1v6 72+72 cold .....FAIL! rc= 5
+093 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+094 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+095 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 4
+096 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 4
+097 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 4
+  jaguar: All PASS except
+005 smA91 TSM.sh _sc_dh clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 10
+006 erA91 TER.sh _sc_dh clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 5
+007 brA91 TBR.sh _sc_dh clm_urb^nl_urb_br 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 5
+009 smE92 TSM.sh 4p_vodsrsc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 96 arb_ic ............FAIL! rc= 10
+010 erE92 TER.sh 4p_vodsrsc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 10+38 arb_ic .........FAIL! rc= 5
+011 brE92 TBR.sh 4p_vodsrsc_dm clm_urb^nl_urb_br 19981230:NONE:1800 4x5 gx3v5 72+72 arb_ic ......FAIL! rc= 5
+013 smEH2 TSM.sh 4p_vodsrsc_dm clm_urb^nl_urb 19981231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 48 arb_ic FAIL! rc= 10
+014 erEH2 TER.sh 4p_vodsrsc_dm clm_urb^nl_urb 19981231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 10+38 arb_icFAIL! rc= 5
+015 brEH2 TBR.sh 4p_vodsrsc_dm clm_urb^nl_urb_br 19981231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 24+24 arbFAIL! rc= 5
+021 smH92 TSM.sh 17p_cnnsc_dm clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@2000 96 cold .............FAIL! rc= 10
+022 erH92 TER.sh 17p_cnnsc_dm clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@2000 10+38 cold ..........FAIL! rc= 5
+023 brH92 TBR.sh 17p_cnnsc_dm clm_ndepdyn 19980101:NONE:1800 4x5 gx3v5@2000 72+72 cold ..........FAIL! rc= 5
+025 smJ62 TSM.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 96 cold ...........FAIL! rc= 10
+026 erJ62 TER.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 10+38 cold ........FAIL! rc= 5
+027 brJ62 TBR.sh 4p_casasc_dm clm_urb^nl_urb_br 19981230:NONE:1800 1.9x2.5 gx1v6 72+72 cold .....FAIL! rc= 5
+034 smLI2 TSM.sh _sc_dm clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+035 erLI2 TER.sh _sc_dm clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+036 brLI2 TBR.sh _sc_dm clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+038 erP65 TSM_ccsmseq.sh ERS f19_g15 I ..........................................................FAIL! rc= 4
+039 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 4
+  lightning/pathscale: All PASS except
+011 erA91 TER.sh _sc_dh clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 7
+012 brA91 TBR.sh _sc_dh clm_urb^nl_urb_br 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 5
+018 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+019 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+020 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+022 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ...................FAIL! rc= 10
+023 smJ42 TSM.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 10x15 USGS 96 cold ..............FAIL! rc= 10
+024 erJ42 TER.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 10x15 USGS 10+38 cold ...........FAIL! rc= 5
+025 brJ42 TBR.sh 4p_casasc_dm clm_urb^nl_urb_br 19981230:NONE:1800 10x15 USGS 72+72 cold ........FAIL! rc= 5
+027 smL51 TSM.sh _sc_dh clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS 96 arb_ic ..................FAIL! rc= 10
+028 erL51 TER.sh _sc_dh clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS 10+38 arb_ic ...............FAIL! rc= 5
+029 brL51 TBR.sh _sc_dh clm_urb^nl_urb_br 19980115:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 5
+036 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+037 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 6
+038 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 4
+  bangkok/lf95: All PASS except
+005 smA92 TSM.sh _sc_dm clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 10
+006 erA92 TER.sh _sc_dm clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 5
+007 brA92 TBR.sh _sc_dm clm_urb^nl_urb_br 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 5
+009 smD91 TSM.sh _persc_dh clm_per^nl_urb 19981231:NONE:1200 4x5 gx3v5 144 cold .................FAIL! rc= 10
+010 erD91 TER.sh _persc_dh clm_per^nl_urb 19981231:NONE:1200 4x5 gx3v5 72+72 cold ...............FAIL! rc= 5
+030 smH52 TSM.sh 17p_cnnsc_dm clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS@2000 96 cold .........FAIL! rc= 10
+031 erH52 TER.sh 17p_cnnsc_dm clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS@2000 10+38 cold ......FAIL! rc= 5
+032 brH52 TBR.sh 17p_cnnsc_dm clm_urb^nl_urb_br 19980115:NONE:1800 10x15 USGS@2000 72+72 cold ...FAIL! rc= 5
+034 smJ92 TSM.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 96 cold ...............FAIL! rc= 10
+035 erJ92 TER.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 10+38 cold ............FAIL! rc= 5
+036 brJ92 TBR.sh 4p_casasc_dm clm_urb^nl_urb_br 19981230:NONE:1800 4x5 gx3v5 72+72 cold .........FAIL! rc= 5
+038 smL51 TSM.sh _sc_dh clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS 96 arb_ic ..................FAIL! rc= 10
+039 erL51 TER.sh _sc_dh clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS 10+38 arb_ic ...............FAIL! rc= 5
+040 brL51 TBR.sh _sc_dh clm_urb^nl_urb_br 19980115:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 5
+048 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 6
+049 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+052 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48 .......................FAIL! rc= 8
+053 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  breeze/gale/hail/gust/ifort: All PASS
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_33
+
+Changes answers relative to baseline: Only for pftdyn mode
+
+===============================================================
+================================================================================
 Tag name:  clm3_6_32
 Originator(s):  dlawren, erik, jet
 Date: Fri Apr 10 14:38:52 MDT 2009
@@ -20,12 +176,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   722 (threading slow)
                                   789 (1pt sims 2.5X slow)
                                   794 (hist avg strange)
-                                  821 (mksurfdata for qtr deg)
                                   851 (abort when files non-exist on jaguar)
-                                  862 (360x720 res problem)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
-                                  919 (problems in mksurfdata for pftdyn mode)
                                   920 (glacier_mec problems in mksurfdata)
                                   926 (pftdyn code needs to be shared in mksurfdata)
                                   927 (problem with urban on bangkok/lahey)
@@ -225,7 +378,6 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   794 (hist avg strange)
                                   821 (mksurfdata for qtr deg)
                                   851 (abort when files non-exist on jaguar)
-                                  862 (360x720 res problem)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   919 (problems in mksurfdata for pftdyn mode)
@@ -408,7 +560,6 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   794 (hist avg strange)
                                   821 (mksurfdata for qtr deg)
                                   851 (abort when files non-exist on jaguar)
-                                  862 (360x720 res problem)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   990 (illegal instruction)
@@ -470,7 +621,6 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   794 (hist avg strange)
                                   821 (mksurfdata for qtr deg)
                                   851 (abort when files non-exist on jaguar)
-                                  862 (360x720 res problem)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   990 (illegal instruction)
@@ -553,7 +703,6 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   794 (hist avg strange)
                                   821 (mksurfdata for qtr deg)
                                   851 (abort when files non-exist on jaguar)
-                                  862 (360x720 res problem)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   990 (illegal instruction)
@@ -638,7 +787,6 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   794 (hist avg strange)
                                   821 (mksurfdata for qtr deg)
                                   851 (abort when files non-exist on jaguar)
-                                  862 (360x720 res problem)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   990 (illegal instruction)
@@ -874,7 +1022,6 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   794 (hist avg strange)
                                   821 (mksurfdata for qtr deg)
                                   851 (abort when files non-exist on jaguar)
-                                  862 (360x720 res problem)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   990 (illegal instruction)
@@ -1004,7 +1151,6 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   794 (hist avg strange)
                                   821 (mksurfdata for qtr deg)
                                   851 (abort when files non-exist on jaguar)
-                                  862 (360x720 res problem)
                                   877 (CN restart problem)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
@@ -1108,7 +1254,7 @@ Bugs fixed (include bugzilla ID): None
 Known bugs (include bugzilla ID): 990 (illegal instruction)
                                   883 (aerosol deposition not from atm), 877 (CN restart problem)
                                   903 (problems in driver with open-MP on PGI)
-                                  672 (3.5.4-3.5.14 diffs), 862 (360x720 res problem)
+                                  672 (3.5.4-3.5.14 diffs)
                                   851 (abort when files non-exist on jaguar)
                                   821 (mksurfdata for qtr deg), 789 (1pt sims 2.5X slow)
                                   794 (hist avg strange), 722 (threading slow)
@@ -1255,7 +1401,7 @@ Bugs fixed (include bugzilla ID): None
 Known bugs (include bugzilla ID):
 Known bugs (include bugzilla ID): 883 (aerosol deposition not from atm), 877 (CN restart problem)
                                    903 (problems in driver with open-MP on PGI)
-                                   672 (3.5.4-3.5.14 diffs), 862 (360x720 res problem)
+                                   672 (3.5.4-3.5.14 diffs)
                                    851 (abort when files non-exist on jaguar)
                                    821 (mksurfdata for qtr deg), 789 (1pt sims 2.5X slow)
                                   794 (hist avg strange), 722 (threading slow)
@@ -1396,7 +1542,7 @@ Bugs fixed (include bugzilla ID): None
 
 Known bugs (include bugzilla ID): 883 (aerosol deposition not from atm), 877 (CN restart problem)
                                    903 (problems in driver with open-MP on PGI)
-                                   672 (3.5.4-3.5.14 diffs), 862 (360x720 res problem)
+                                   672 (3.5.4-3.5.14 diffs)
                                    851 (abort when files non-exist on jaguar)
                                    821 (mksurfdata for qtr deg), 789 (1pt sims 2.5X slow)
                                   794 (hist avg strange), 722 (threading slow) 
@@ -1596,7 +1742,7 @@ Bugs fixed (include bugzilla ID):  None
 
 Known bugs (include bugzilla ID): 883 (aerosol deposition not from atm), 877 (CN restart problem)
                                    903 (problems in driver with open-MP on PGI)
-                                   672 (3.5.4-3.5.14 diffs), 862 (360x720 res problem)
+                                   672 (3.5.4-3.5.14 diffs)
                                    851 (abort when files non-exist on jaguar)
                                    821 (mksurfdata for qtr deg), 789 (1pt sims 2.5X slow)
                                   794 (hist avg strange), 722 (threading slow) 
@@ -1730,7 +1876,7 @@ Bugs fixed (include bugzilla ID): 887 (doesn't compile for serial mode), 885 (do
 
 Known bugs (include bugzilla ID):  883 (aerosol deposition not from atm), 877 (CN restart problem)
                                    903 (problems in driver with open-MP on PGI)
-                                   672 (3.5.4-3.5.14 diffs), 862 (360x720 res problem)
+                                   672 (3.5.4-3.5.14 diffs)
                                    851 (abort when files non-exist on jaguar)
                                    821 (mksurfdata for qtr deg), 789 (1pt sims 2.5X slow)
                                   794 (hist avg strange), 722 (threading slow) 
@@ -2040,7 +2186,7 @@ Bugs fixed (include bugzilla ID): 753 (data off by 1.5 hours)
 
 Known bugs (include bugzilla ID):  885 (domain checking), 883 (aerosol deposition is zero)
                                    877 (CN restart problem), 887 (doesn't compile for serial mode)
-                                   672 (3.5.4-3.5.14 diffs), 862 (360x720 res problem)
+                                   672 (3.5.4-3.5.14 diffs)
                                    851 (abort when files non-exist on jaguar), 888 (add check for pftdyn mode)
                                    821 (mksurfdata for qtr deg), 789 (1pt sims 2.5X slow)
                                   794 (hist avg strange), 722 (threading slow) 

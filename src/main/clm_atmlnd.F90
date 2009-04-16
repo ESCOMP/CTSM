@@ -1041,9 +1041,16 @@ end subroutine clm_mapl2a
           pptr%pef%eflx_lh_tot, clm_l2a%eflx_lh_tot, &
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
-          pptr%pef%eflx_sh_tot, clm_l2a%eflx_sh_tot, & 
-          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+!DML note: use new array: clm3%g%gef%eflx_sh_totg
+!     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
+!          pptr%pef%eflx_sh_tot, clm_l2a%eflx_sh_tot, &
+!          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+
+!dir$ concurrent
+!cdir nodep
+     do g = begg,endg
+        clm_l2a%eflx_sh_tot(g) = clm3%g%gef%eflx_sh_totg(g)
+     end do
 
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pwf%qflx_evap_tot, clm_l2a%qflx_evap_tot, & 
