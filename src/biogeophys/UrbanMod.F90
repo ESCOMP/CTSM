@@ -1418,16 +1418,16 @@ contains
     real(r8), intent(in)  :: sdif_road(num_urbanl, numrad)          ! diffuse solar radiation incident on road per unit incident flux
     real(r8), intent(in)  :: sdif_sunwall(num_urbanl, numrad)       ! diffuse solar radiation (per unit wall area) incident on sunlit wall per unit incident flux
     real(r8), intent(in)  :: sdif_shadewall(num_urbanl, numrad)     ! diffuse solar radiation (per unit wall area) incident on shaded wall per unit incident flux
-    real(r8), intent(out) :: sref_improad_dir(num_urbanl, numrad)   ! direct  solar rad reflected by impervious road (per unit ground area) per unit incident flux
-    real(r8), intent(out) :: sref_perroad_dir(num_urbanl, numrad)   ! direct  solar rad reflected by pervious road (per unit ground area) per unit incident flux
-    real(r8), intent(out) :: sref_improad_dif(num_urbanl, numrad)   ! diffuse solar rad reflected by impervious road (per unit ground area) per unit incident flux
-    real(r8), intent(out) :: sref_perroad_dif(num_urbanl, numrad)   ! diffuse solar rad reflected by pervious road (per unit ground area) per unit incident flux
-    real(r8), intent(out) :: sref_sunwall_dir(num_urbanl, numrad)   ! direct solar  rad reflected by sunwall (per unit wall area) per unit incident flux
-    real(r8), intent(out) :: sref_sunwall_dif(num_urbanl, numrad)   ! diffuse solar rad reflected by sunwall (per unit wall area) per unit incident flux
-    real(r8), intent(out) :: sref_shadewall_dir(num_urbanl, numrad) ! direct solar  rad reflected by shadewall (per unit wall area) per unit incident flux
-    real(r8), intent(out) :: sref_shadewall_dif(num_urbanl, numrad) ! diffuse solar rad reflected by shadewall (per unit wall area) per unit incident flux
-    real(r8), intent(out) :: sref_roof_dir(num_urbanl, numrad)      ! direct  solar rad reflected by roof (per unit ground area) per unit incident flux
-    real(r8), intent(out) :: sref_roof_dif(num_urbanl, numrad)      ! diffuse solar rad reflected by roof (per unit ground area)  per unit incident flux
+    real(r8), intent(inout) :: sref_improad_dir(num_urbanl, numrad)   ! direct  solar rad reflected by impervious road (per unit ground area) per unit incident flux
+    real(r8), intent(inout) :: sref_perroad_dir(num_urbanl, numrad)   ! direct  solar rad reflected by pervious road (per unit ground area) per unit incident flux
+    real(r8), intent(inout) :: sref_improad_dif(num_urbanl, numrad)   ! diffuse solar rad reflected by impervious road (per unit ground area) per unit incident flux
+    real(r8), intent(inout) :: sref_perroad_dif(num_urbanl, numrad)   ! diffuse solar rad reflected by pervious road (per unit ground area) per unit incident flux
+    real(r8), intent(inout) :: sref_sunwall_dir(num_urbanl, numrad)   ! direct solar  rad reflected by sunwall (per unit wall area) per unit incident flux
+    real(r8), intent(inout) :: sref_sunwall_dif(num_urbanl, numrad)   ! diffuse solar rad reflected by sunwall (per unit wall area) per unit incident flux
+    real(r8), intent(inout) :: sref_shadewall_dir(num_urbanl, numrad) ! direct solar  rad reflected by shadewall (per unit wall area) per unit incident flux
+    real(r8), intent(inout) :: sref_shadewall_dif(num_urbanl, numrad) ! diffuse solar rad reflected by shadewall (per unit wall area) per unit incident flux
+    real(r8), intent(inout) :: sref_roof_dir(num_urbanl, numrad)      ! direct  solar rad reflected by roof (per unit ground area) per unit incident flux
+    real(r8), intent(inout) :: sref_roof_dif(num_urbanl, numrad)      ! diffuse solar rad reflected by roof (per unit ground area)  per unit incident flux
 !
 ! local pointers to original implicit in arguments (clmtype)
 !
@@ -2601,6 +2601,7 @@ contains
     real(r8), pointer :: h2osno(:)            ! snow water (mm H2O)
     integer , pointer :: snl(:)               ! number of snow layers
     real(r8), pointer :: rootr_road_perv(:,:) ! effective fraction of roots in each soil layer for urban pervious road
+    real(r8), pointer :: soilalpha_u(:)       ! Urban factor that reduces ground saturated specific humidity (-)
 !
 ! local pointers to original implicit out arguments
 !
@@ -2788,6 +2789,7 @@ contains
     h2osno             => clm3%g%l%c%cws%h2osno
     snl                => clm3%g%l%c%cps%snl
     rootr_road_perv    => clm3%g%l%c%cps%rootr_road_perv
+    soilalpha_u        => clm3%g%l%c%cws%soilalpha_u
 
     ! Assign local pointers to derived type members (pft level)
 
@@ -3307,7 +3309,8 @@ contains
          qflx_evap_soi(p) = -forc_rho(g)*wtuq_roof(l)*dqh(l)
        else if (ctype(c) == icol_road_perv) then
          ! Evaporation assigned to soil term if dew or snow
-         if (dqh(l) > 0._r8 .or. frac_sno(c) > 0._r8) then
+         ! or if no liquid water available in soil column
+         if (dqh(l) > 0._r8 .or. frac_sno(c) > 0._r8 .or. soilalpha_u(c) .le. 0._r8) then
             qflx_evap_soi(p) = -forc_rho(g)*wtuq_road_perv(l)*dqh(l)
             qflx_tran_veg(p) = 0._r8
          ! Otherwise, evaporation assigned to transpiration term

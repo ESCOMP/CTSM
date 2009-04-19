@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_34       oleson 04/19/2009 Fix bangkok urban bug
    clm3_6_33         erik 04/16/2009 Bring in dynpft changes from cbgc branch
    clm3_6_32         erik 04/15/2009 Add irrigation area to mksrfdata, fix high-res and pftdyn problems
    clm3_6_31         erik 04/01/2009 New surface datasets for 1850,2000, support for 0.9x1.25_gx1v6, urban always on. New pft-physiology file. Update scripts so remove some CLM_ env_conf vars. Fix CN for urban/pftdyn.

@@ -570,7 +570,8 @@ contains
     do ib = 1, nband
 !dir$ concurrent
 !cdir nodep
-       do c = lbc, ubc
+       do fc = 1,num_nourbanc
+          c = filter_nourbanc(fc)
           if ((coszen(c) > 0._r8) .and. (h2osno(c) > 0._r8)) then
              albsnd_hst(c,ib) = albsnd(c,ib)
              albsni_hst(c,ib) = albsni(c,ib)

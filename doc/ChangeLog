@@ -1,4 +1,99 @@
 ===============================================================
+Tag name:  clm3_6_34
+Originator(s):  oleson (Oleson Keith 1332 CGD)
+Date:  Sun Apr 19 09:34:43 MDT 2009
+One-line Summary: Fix bangkok urban bug
+
+Purpose of changes: Fix urban bug found from bangkok testing (#927) and eliminate potential water balance error
+
+Bugs fixed (include bugzilla ID): 927
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: myself, Erik Kluzek, Sean Swenson
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+M      models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90 .... Change loop over all columns to filter_nourbanc
+M      models/lnd/clm/src/biogeophys/UrbanMod.F90 .... Change some net_solar fields from intent(out) to intent(inout).
+              add soilalpha_u restriction on soil evaporation/transpiration selection for pervious road (this second
+              change is bit for bit for all bluefire/bangkok testing, but will prevent small water balance errors in
+              special situations (e.g., perpetual January simulations)
+
+Summary of testing:
+
+  bluefire: All PASS except:
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+036 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 4
+056 smI58 TSMcnspinup.sh 17p_cnadspinupsc_dh 17p_cnexitspinupsc_dh 17p_cnsc_dh clm_std 19980115:NONEFAIL! rc= 5
+057 smLI1 TSM.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+058 erLI1 TER.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+059 brLI1 TBR.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+060 blLI1 TBL.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 4
+069 smJ61 TSM.sh 4p_casasc_dh clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 96 cold ...........FAIL! rc= 10
+070 erJ61 TER.sh 4p_casasc_dh clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 10+38 cold ........FAIL! rc= 5
+071 brJ61 TBR.sh 4p_casasc_dh clm_urb^nl_urb_br 19981230:NONE:1800 1.9x2.5 gx1v6 72+72 cold .....FAIL! rc= 5
+072 blJ61 TBL.sh 4p_casasc_dh clm_urb^nl_urb 19981230:NONE:1800 1.9x2.5 gx1v6 48 cold ...........FAIL! rc= 4
+082 bl744 TBLtools.sh mksurfdata tools__s namelist ..............................................FAIL! rc= 7
+084 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 6
+086 bl754 TBLtools.sh mksurfdata tools__s globalirrig ...........................................FAIL! rc= 6
+088 bl756 TBLtools.sh mksurfdata tools__s pftdyn ................................................FAIL! rc= 7
+093 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+094 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+095 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 4
+096 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 4
+097 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 4
+  jaguar:
+  kraken:
+  lightning/pathscale:
+  bangkok/lf95: All PASS except:
+008 blA92 TBL.sh _sc_dm clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 5
+011 blD91 TBL.sh _persc_dh clm_per^nl_urb 19981231:NONE:1200 4x5 gx3v5 144 cold .................FAIL! rc= 5
+033 blH52 TBL.sh 17p_cnnsc_dm clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS@2000 48 cold .........FAIL! rc= 5
+034 smJ92 TSM.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 96 cold ...............FAIL! rc= 10
+035 erJ92 TER.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 10+38 cold ............FAIL! rc= 5
+036 brJ92 TBR.sh 4p_casasc_dm clm_urb^nl_urb_br 19981230:NONE:1800 4x5 gx3v5 72+72 cold .........FAIL! rc= 5
+037 blJ92 TBL.sh 4p_casasc_dm clm_urb^nl_urb 19981230:NONE:1800 4x5 gx3v5 48 cold ...............FAIL! rc= 4
+041 blL51 TBL.sh _sc_dh clm_urb^nl_urb 19980115:NONE:1800 10x15 USGS 48 arb_ic ..................FAIL! rc= 5
+048 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 6
+049 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+052 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48 .......................FAIL! rc= 8
+053 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  breeze/gale/hail/gust/ifort:
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_33
+
+Changes answers relative to baseline: No, bit for bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_33
 Originator(s):  erik (erik)
 Date: Thu Apr 16 14:45:23 MDT 2009
@@ -36,7 +131,7 @@ Describe any changes made to build system: None
 
 Describe any changes made to the namelist: None
 
-List any changes to the defaults for the boundary datasets: Added pftdyn file for testing
+List any changes to the defaults for the boundary datasets: None
 
 Describe any substantial timing or memory changes: None
 
@@ -70,12 +165,9 @@ List all existing files that have been modified, and describe the changes:
                                          (to latent heat flux)
   M    riverroute/RtmMod.F90   ......... water imbalance is applied here (to runoff)
 
-	    with fpftdyn = "/blhome/kauff/surfdata.dynpft_1.9x2.5_c090313.nc"
-	    a special fpftdyn file created to test the mods
-
 Summary of testing:
 
-  bluefire: All PASS except
+  bluefire: All PASS except pftdyn TBL tests and ...
 033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
 034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
 035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
@@ -112,7 +204,7 @@ Summary of testing:
 036 brLI2 TBR.sh _sc_dm clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
 038 erP65 TSM_ccsmseq.sh ERS f19_g15 I ..........................................................FAIL! rc= 4
 039 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 4
-  lightning/pathscale: All PASS except
+  lightning/pathscale: All PASS except pftdyn TBL tests and ...
 011 erA91 TER.sh _sc_dh clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 7
 012 brA91 TBR.sh _sc_dh clm_urb^nl_urb_br 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 5
 018 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
@@ -128,7 +220,7 @@ Summary of testing:
 036 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
 037 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 6
 038 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 4
-  bangkok/lf95: All PASS except
+  bangkok/lf95: All PASS except pftdyn TBL tests and ...
 005 smA92 TSM.sh _sc_dm clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 10
 006 erA92 TER.sh _sc_dm clm_urb^nl_urb 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 5
 007 brA92 TBR.sh _sc_dm clm_urb^nl_urb_br 19990101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 5
