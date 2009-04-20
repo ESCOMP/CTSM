@@ -1,4 +1,85 @@
 ===============================================================
+Tag name:  clm3_6_35
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Mon Apr 20 15:19:17 MDT 2009
+One-line Summary: Fix major logic bug in mksurfdata
+
+Purpose of changes: Fix major logic bug in mksurfdata (bug 934) which requires us to recreate any surface datasets
+                    created with clm3_6_32. The bug zero'd out LAI for some PFT's and biased the LAI values
+                    (LAI, SAI, veg-bot, veg-top).
+
+ This is a note from dlawren
+   "I have taken a look at the new surface files and they look correct to me.  LAI
+   is defined everywhere.  I did a quick test using this surface dataset with a
+   spunup file from Keith's prior 1850 simulation and it worked fine (no errors).
+    I also confirmed that indeed the gridbox mean LAI is different by up to about
+   +-0.5.  In most places the difference is below +-0.1."
+
+
+Bugs fixed (include bugzilla ID): 934 (pftdyn logic bug)
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: Self (but new 1.9x2.5 surface dataset checked by dlawren and lawrence)
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: 
+
+A      models/lnd/clm/tools/ncl_scripts/pftdyntest2raw.ncl --- Create raw pftdyn test datasets, so can create new ones.
+
+List all existing files that have been modified, and describe the changes:
+
+M      models/lnd/clm/tools/mksurfdata/mklaiMod.F90 ---------------- Fix pftdyn logic error.
+M      models/lnd/clm/tools/mksurfdata/mksrfdat.F90 ---------------- Move soil-text calc higher up, allow more space for filenames
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.globalirrig ------ Make output in double precision
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.regional --------- Make output in double precision
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.pftdyn ----------- Make output in double precision
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.singlept --------- Make output in double precision
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.namelist --------- Make output in double precision
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.pl --------------- Get T62, 2x2.5 and qtr deg res's, only do 2000 for urban single-point
+M      models/lnd/clm/tools/mksurfdata/pftdyn_simyr1850-2005.txt --- Allow larger size for filenames
+M      models/lnd/clm/tools/mksurfdata/pftdyn_simyr2000.txt -------- Allow larger size for filenames
+M      models/lnd/clm/tools/mksurfdata/pftdyn_simyr1850.txt -------- Allow larger size for filenames
+
+MM     models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl ----------- Add svn keywords
+MM     models/lnd/clm/tools/ncl_scripts/clmi_increasesoillayer.ncl - Add svn keywords
+M      models/lnd/clm/tools/ncl_scripts/README --------------------- Update doc on files
+
+Summary of testing: No testing except for mksurfdata on bluefire
+
+001 sm774 TSMtools.sh mksurfdata tools__ds singlept .............................................PASS
+002 sm754 TSMtools.sh mksurfdata tools__s globalirrig ...........................................PASS
+003 sm756 TSMtools.sh mksurfdata tools__s pftdyn ................................................PASS
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_34
+
+Changes answers relative to baseline: no bit-for-bit (other than mksurfdata)
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_34
 Originator(s):  oleson (Oleson Keith 1332 CGD)
 Date:  Sun Apr 19 09:34:43 MDT 2009
@@ -20,6 +101,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   903 (problems in driver with open-MP on PGI)
                                   920 (glacier_mec problems in mksurfdata)
                                   926 (pftdyn code needs to be shared in mksurfdata)
+                                  934 (pftdyn logic bug)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -125,6 +207,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   920 (glacier_mec problems in mksurfdata)
                                   926 (pftdyn code needs to be shared in mksurfdata)
                                   927 (problem with urban on bangkok/lahey)
+                                  934 (pftdyn logic bug)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -274,6 +357,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   920 (glacier_mec problems in mksurfdata)
                                   926 (pftdyn code needs to be shared in mksurfdata)
                                   927 (problem with urban on bangkok/lahey)
+                                  934 (pftdyn logic bug)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Building with PIO is on by default

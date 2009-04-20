@@ -227,13 +227,13 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
      mhgtb_o(:,:,:) = 0.
 
      do l = 0, numpft
-        if ( fdynuse /= ' ' )then
+        if ( fdynuse == ' ' )then
            ! Calculate weights for this PFT type
            call areaini_pft(tgridmap,ni,nj,pctpft_i=pctpft_i,pft_indx=l)
         end if
 
         fld_i(:,:) = mlai_i(:,:,l)
-        if ( fdynuse /= ' ' )then
+        if ( fdynuse == ' ' )then
            call areaave_pft(fld_i,fld_o,tgridmap)
         else
            call areaave(    fld_i,fld_o,tgridmap)
@@ -241,7 +241,7 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
         mlai_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = msai_i(:,:,l)
-        if ( fdynuse /= ' ' )then
+        if ( fdynuse == ' ' )then
            call areaave_pft(fld_i,fld_o,tgridmap)
         else
            call areaave    (fld_i,fld_o,tgridmap)
@@ -249,7 +249,7 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
         msai_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = mhgtt_i(:,:,l)
-        if ( fdynuse /= ' ' )then
+        if ( fdynuse == ' ' )then
            call areaave_pft(fld_i,fld_o,tgridmap)
         else
            call areaave    (fld_i,fld_o,tgridmap)
@@ -257,18 +257,20 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
         mhgtt_o(:,:,l) = fld_o(:,:)
 
         fld_i(:,:) = mhgtb_i(:,:,l)
-        if ( fdynuse /= ' ' )then
+        if ( fdynuse == ' ' )then
            call areaave_pft(fld_i,fld_o,tgridmap)
         else
            call areaave    (fld_i,fld_o,tgridmap)
         end if
         mhgtb_o(:,:,l) = fld_o(:,:)
 
-        do ji = 1, nlat_i
-        do ii = 1, nlon_i
-           if ( (mlai_i(ii,ji,l)+msai_i(ii,ji,l)) > 0.0_r8 ) laimask(ii,ji,l) = 1
-        end do
-        end do
+        if ( fdynuse == ' ' )then
+           do ji = 1, nlat_i
+           do ii = 1, nlon_i
+              if ( (mlai_i(ii,ji,l)+msai_i(ii,ji,l)) > 0.0_r8 ) laimask(ii,ji,l) = 1
+           end do
+           end do
+        end if
 !tcx?        where (ldomain%mask(:,:) == 0)
 !           mlai_o (:,:,l) = 0.
 !           msai_o (:,:,l) = 0.

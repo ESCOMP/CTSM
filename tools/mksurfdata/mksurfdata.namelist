@@ -13,4 +13,5 @@
  mksrf_ffrac        = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/fracdata_10min_USGS_071205.nc'
  mksrf_firrig       = ' '
  mksrf_fdynuse      = 'pftdyn_simyr2000.txt'
+ outnc_double       = .true.
 /

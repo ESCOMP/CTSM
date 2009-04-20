@@ -12,8 +12,8 @@ use IO::File;
    # Set disk location to send files to, and list resolutions to operate over, set filenames, and short-date-name
    #
    my $CSMDATA = "/fs/cgd/csm/inputdata";
-   my @hresols = ( "360x720","128x256","64x128","48x96","32x64","8x16","0.47x0.63","0.9x1.25",
-                   "1.9x2.5","2.65x3.33","4x5","10x15","5x5_amazon", "1x1_tropicAtl", "1x1_camdenNJ","1x1_vancouverCAN",
+   my @hresols = ( "360x720","128x256","64x128","48x96","32x64","8x16","94x192", "0.23x0.31", "0.47x0.63","0.9x1.25",
+                   "1.9x2.5","2x2.5", "2.65x3.33","4x5","10x15","5x5_amazon", "1x1_tropicAtl", "1x1_camdenNJ","1x1_vancouverCAN",
                    "1x1_mexicocityMEX", "1x1_asphaltjungleNJ", "1x1_brazil", "1x1_urbanc_alpha" );
    my $nl = "namelist";
    my $sdate = "c" . `date +%y%m%d`;
@@ -61,10 +61,12 @@ EOF
                       "1x1_asphaltjungleNJ", "1x1_urbanc_alpha" );
       my $all_urb = ".false.";
       my $urb_pt  = 0;
+      my @years   = ( "1850", "2000" );
       foreach my $urb_res ( @all_urb ) {
          if ( $res eq $urb_res ) {
             $all_urb = ".true.";
             $urb_pt  = 1;
+            @years   = ( "1850" );
          }
       }
       #
@@ -74,7 +76,7 @@ EOF
       #
       # Loop over each sim_year
       #
-      foreach my $sim_year ( 1850, 2000 ) {
+      foreach my $sim_year ( @years ) {
          #
          # Create namelist file
          #

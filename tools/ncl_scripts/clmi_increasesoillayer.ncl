@@ -5,7 +5,7 @@
 ;
 ;  Erik Kluzek
 ;  Mar/17/2008
-;  $Id: ndepregrid.ncl 9138 2008-03-07 19:52:06Z erik $
+;  $Id$
 ;  $HeadURL;
 ;
 begin

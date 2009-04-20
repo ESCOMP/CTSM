@@ -11,6 +11,10 @@ be done.
 	
 Scripts available:
 
+addgrid2spointurban.ncl ----- Add grid data to urban point datafiles.
+clmi_increasesoillayer.ncl -- Increate soil layer for clm Initial Condition files from 10 to 15.
+convertUrbanOffline2Seq.ncl - Convert urban offline data to ccsm sequential mode that can be used by datm7.
+pftdyntest2raw.ncl ---------- Convert pftdyn test datasets to rawdata format so can be used to create future datasets.
 aerdepregrid.ncl ------------ Regrid the Aerosol deposition dataset to a different
 resolution.
                               Uses bi-linear interpolation.

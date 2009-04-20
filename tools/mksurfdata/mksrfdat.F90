@@ -295,6 +295,14 @@ program mksrfdat
     write(6,*) ' timer_a1 init-----'
     call shr_timer_print(t1)
 
+    ! Make soil texture [sand3d, clay3d] from IGBP 5 minute data [fsoitex]
+
+    call mksoitex (lsmlon, lsmlat, mksrf_fsoitex, ndiag, pctgla, sand3d, clay3d)
+
+    write(6,*) ' timer_e mksoitex-----'
+    call shr_timer_print(t1)
+
+
     ! Make organic matter density [organic3d] from Global Soil Data Task [forganic]
 
     call mkorganic (lsmlon, lsmlat, mksrf_forganic, ndiag, organic3d)
@@ -342,13 +350,6 @@ program mksrfdat
     call mkglacier (lsmlon, lsmlat, mksrf_fglacier, ndiag, pctgla)
 
     write(6,*) ' timer_d mkglacier-----'
-    call shr_timer_print(t1)
-
-    ! Make soil texture [sand3d, clay3d] from IGBP 5 minute data [fsoitex]
-
-    call mksoitex (lsmlon, lsmlat, mksrf_fsoitex, ndiag, pctgla, sand3d, clay3d)
-
-    write(6,*) ' timer_e mksoitex-----'
     call shr_timer_print(t1)
 
     ! Make soil color classes [soic2d] from BATS T42 data [fsoicol]
@@ -749,7 +750,7 @@ program mksrfdat
        do 
           ! Read input pft data filename
 
-          read(nfdyn, '(A100,1x,I4)', iostat=ier) fname, year
+          read(nfdyn, '(A125,1x,I4)', iostat=ier) fname, year
 	  write(6,*)'input pft dynamic dataset is ',trim(fname),' year is ',year
           if (ier /= 0) exit
           ntim = ntim + 1

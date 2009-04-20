@@ -7,7 +7,7 @@
 ;
 ;  Erik Kluzek
 ;  Apr/10/2008
-;  $Id: aerdepregrid.ncl 9114 2008-03-06 17:07:01Z erik $
+;  $Id$
 ;  $HeadURL;
 ;
 begin

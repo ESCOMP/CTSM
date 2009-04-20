@@ -14,4 +14,5 @@
  mksrf_flai         = '/cgd/tss/pftdyn.0.5x0.5.simyr1850-2005.c090324/mksrf_lai_global.nc'
  mksrf_firrig       = ' '
  mksrf_fdynuse      = 'pftdyn_simyr2000.txt'
+ outnc_double       = .true.
 /
