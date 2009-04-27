@@ -16,14 +16,24 @@ module aerdepMOD
   use abortutils,      only : endrun
   use clm_varctl,      only : scmlat,scmlon,single_column
   use clm_varctl,      only : iulog
+  use clm_varcon     , only : secspday
   use perf_mod,        only : t_startf, t_stopf
   use clm_varctl,      only : set_caerdep_from_file, set_dustdep_from_file
+  use spmdMod,         only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
+  use fileutils      , only : getfil
+  use ncdio          , only : check_ret,ncd_iolocal
+  use shr_sys_mod    , only : shr_sys_flush
+
+
 !
 ! !PUBLIC TYPES:
   implicit none
   save
- 
+
   private
+
+! !INCLUDES:
+  include 'netcdf.inc'
   
 !
 ! !PUBLIC MEMBER FUNCTIONS:
@@ -34,6 +44,7 @@ module aerdepMOD
 ! !REVISION HISTORY:
 ! Created by Mark Flanner, 
 !   based on vegetation interpolation schemes in STATICEcosystemDynMod
+!    2009-Apr-17 B. Kauffman -- added multi-year time series functionality
 !
 !EOP
 !
@@ -42,7 +53,6 @@ module aerdepMOD
 
 !
 ! PRIVATE TYPES:
-  integer , private :: InterpMonths1_aer        ! saved month index (for aerosol deposition)
 
   real(r8), private, allocatable :: bcphiwet2t(:,:)
   real(r8), private, allocatable :: bcphidry2t(:,:)
@@ -59,11 +69,17 @@ module aerdepMOD
   real(r8), private, allocatable :: dstx04wd2t(:,:)
   real(r8), private, allocatable :: dstx04dd2t(:,:)
 
-!-----------------------------------------------------------------------
+  integer             ,save :: nt      ! size of time(:) array
+  real(r8),allocatable,save :: time(:) ! data time, elapsed days since 0000-01-01 0s
+  real(r8),parameter  :: daysPerYear = 365.0_r8 ! days per year
+
+  integer,parameter :: debug = 1 ! internal debug level
+
+!================================================================================
 
 contains
 
-!-----------------------------------------------------------------------
+!================================================================================
 !BOP
 !
 ! !IROUTINE: aerdepini
@@ -77,21 +93,42 @@ contains
 ! !USES:
     use nanMod         , only : nan
     use decompMod      , only : get_proc_bounds
+    use clm_varctl     , only : faerdep
+    use shr_ncread_mod , only : shr_ncread_tCoord
+    use shr_cal_mod    , only : shr_cal_date2eday
 !
 ! !ARGUMENTS:
     implicit none
 
 !
 ! !REVISION HISTORY:
+!    2009-Apr-17 B. Kauffman -- added multi-year time series functionality
 !
 !EOP
 !
 ! LOCAL VARIABLES:
     integer :: ier         ! error code
     integer :: begg,endg   ! local beg and end p index
-!-----------------------------------------------------------------------
 
-    InterpMonths1_aer = -999  ! saved month index
+    character(256) :: locfn          ! local file name
+    integer :: ncid,dimid,varid      ! input netCDF id's
+
+    integer,allocatable :: cdate(:)  ! calendar date yyyymmdd
+    integer,allocatable :: eday(:)   ! elapsed days since 0000-01-01
+    integer,allocatable :: secs(:)   ! elapsed secs within current date
+    integer             :: n         ! loop index
+    integer             :: m1,m2     ! month 1, month 2
+
+    integer, parameter :: ndaypm(12) = &
+         (/31,28,31,30,31,30,31,31,30,31,30,31/) !days per month
+
+    character(*),parameter :: subName =   '(aerdepini) '
+    character(*),parameter :: F00     = "('(aerdepini) ',4a)"
+    character(*),parameter :: F01     = "('(aerdepini) ',a,4f13.3)"
+
+!-------------------------------------------------------------------------------
+!
+!-------------------------------------------------------------------------------
 
     call get_proc_bounds(begg=begg,endg=endg)
 
@@ -108,7 +145,6 @@ contains
           
        if (ier /= 0) then
           write(iulog,*) 'aerdepini allocation error'
-          call endrun
        end if
 
         bcphiwet2t(begg:endg,1:2) = nan
@@ -146,10 +182,105 @@ contains
 
     end if
 
+   !----------------------------------------------------------------------------
+   ! read time axis from data file
+   !----------------------------------------------------------------------------
+
+   write(iulog,F00) "Read time axis from ",trim(faerdep)
+
+   if (masterproc) then
+      call getfil(faerdep, locfn, 0)
+      call check_ret(nf_open      (locfn, 0, ncid     ), subname)
+      call check_ret(nf_inq_dimid (ncid, 'time', dimid), subname)
+      call check_ret(nf_inq_dimlen(ncid, dimid, nt    ), subname)
+   endif 
+   call mpi_bcast (nt, 1, MPI_INTEGER, 0, mpicom, ier)
+   write(iulog,*)  subName,"number of time samples in file = ",nt
+   allocate(time(nt))
+
+   if ( nt < 12) then 
+      write(iulog,F00)     "ERROR: input data must have at least 12 months of data"
+      call endrun(subName//"ERROR: input data must have at least 12 months of data")
+   else if ( nt == 12) then 
+      !--- old format => create time axis here ---
+      write(iulog,F00)  'nt = 12: assume old format without a CF-1.0 time axis'
+      n = 365
+      time( 1) = n + float(ndaypm( 1))/2.0_r8 ; n = n + ndaypm( 1)
+      time( 2) = n + float(ndaypm( 2))/2.0_r8 ; n = n + ndaypm( 2)
+      time( 3) = n + float(ndaypm( 3))/2.0_r8 ; n = n + ndaypm( 3)
+      time( 4) = n + float(ndaypm( 4))/2.0_r8 ; n = n + ndaypm( 4)
+      time( 5) = n + float(ndaypm( 5))/2.0_r8 ; n = n + ndaypm( 5)
+      time( 6) = n + float(ndaypm( 6))/2.0_r8 ; n = n + ndaypm( 6)
+      time( 7) = n + float(ndaypm( 7))/2.0_r8 ; n = n + ndaypm( 7)
+      time( 8) = n + float(ndaypm( 8))/2.0_r8 ; n = n + ndaypm( 8)
+      time( 9) = n + float(ndaypm( 9))/2.0_r8 ; n = n + ndaypm( 9)
+      time(10) = n + float(ndaypm(10))/2.0_r8 ; n = n + ndaypm(10)
+      time(11) = n + float(ndaypm(11))/2.0_r8 ; n = n + ndaypm(11)
+      time(12) = n + float(ndaypm(12))/2.0_r8
+
+      write(iulog,F01) 'first time series cal date = ',10100.0+ndaypm( 1)/2.0
+      write(iulog,F01) 'last  time series cal date = ',11200.0+ndaypm(12)/2.0
+   else 
+      !--- new format => get time axis from data file ---
+      write(iulog,F00)  "nt > 12: assume new format with a CF-1.0 time axis"
+      if (masterproc) then
+         allocate(eday(nt),cdate(nt),secs(nt))
+
+         call shr_ncread_tCoord(locfn,"time",cdate,secs,ier)
+
+         !--- convert date & secs to elapsed days since 0000-01-01 0sec ---
+         do n = 1,nt
+            call shr_cal_date2eday(cdate(n),eday(n))
+            time(n) = float(eday(n)) + float(secs(n))/secspday
+            if (debug>2) write(iulog,*) subName,"n,cdate,secs,time",n,cdate(n),secs(n),time(n)
+         end do
+         write(iulog,F01) 'first time series cal date = ',cdate( 1) + secs( 1)/secspday
+         write(iulog,F01) 'last  time series cal date = ',cdate(nt) + secs(nt)/secspday
+
+         !--- requirement: 1 time sample per month & don't skip months ---
+         do n = 2,nt
+            m1 = mod( cdate(n-1)/100, 100) + 1 ! get month, add one
+            m2 = mod( cdate(n  )/100, 100) 
+            if (m1==13) m1 = 1
+            if (m1 .ne. m2) then
+                write(iulog,*  )     subname,"cdate(n-1),cdate(n)=",cdate(n-1),cdate(n)
+                write(iulog,*  )     subname,"m1        ,m2      =",m1,m2
+                write(iulog,F00)     "ERROR: data must have exactly one sample per month"
+                call endrun(subName//"ERROR: data must have exactly one sample per month")
+            end if
+            if (m1 == 1) then
+                m1 = cdate(n-1)/10000 + 1 ! get year, add one
+                m2 = cdate(n  )/10000 
+                if (m1 .ne. m2) then
+                   write(iulog,*  )     subname,"cdate(n-1),cdate(n)=",cdate(n-1),cdate(n)
+                   write(iulog,*  )     subname,"m1        ,m2      =",m1,m2
+                   write(iulog,F00)     "ERROR: input data skipped a year"
+                   call endrun(subName//"ERROR: input data skipped a year")
+               end if
+            end if
+         end do
+
+         !--- requirement: 1st month is Jan, last is Dec ---
+         m1 = mod( cdate(1 )/100, 100) ! get month, add one
+         m2 = mod( cdate(nt)/100, 100) 
+         if (m1.ne.1  .or.  m2.ne.12) then
+             write(iulog,F00)     "ERROR: first month must be Jan, last Dec"
+             write(iulog,*  )     subName,"ERROR: first & last month = ",m1,m2
+             call endrun(subName//"ERROR: first month must be Jan, last Dec")
+         end if
+
+         deallocate(eday,cdate,secs)
+      endif 
+      call mpi_bcast(time,size(time),MPI_REAL8,0,mpicom,ier)
+      call shr_sys_flush(iulog)
+   end if
+
+   write(iulog,F01) 'first time axis elapsed days since 0000-01-01 = ',time( 1)
+   write(iulog,F01) 'last  time axis elapsed days since 0000-01-01 = ',time(nt)
+
   end subroutine aerdepini
 
-
-!-----------------------------------------------------------------------
+!================================================================================
 !BOP
 !
 ! !IROUTINE: interpMonthlyAerdep
@@ -166,11 +297,13 @@ contains
     use clm_varctl        , only : faerdep
     use clm_time_manager  , only : get_curr_date, get_step_size, get_perp_date, is_perpetual
     use decompMod         , only : get_proc_bounds
+    use shr_cal_mod       , only : shr_cal_ymd2eday
 !
 ! !ARGUMENTS:
     implicit none
 !
 ! !REVISION HISTORY:
+!    2009-Apr-17 B. Kauffman -- added multi-year time series functionality
 !  Adapted by Mark Flanner
 !
 !EOP
@@ -181,7 +314,6 @@ contains
 !
     real(r8), pointer :: forc_aer(:,:)   ! aerosol deposition rate (kg/m2/s)
 
-
 ! LOCAL VARIABLES:
     real(r8):: timwt_aer(2)  ! time weights for month 1 and month 2 (aerosol deposition)
     integer :: kyr         ! year (0, ...) for nstep+1
@@ -189,16 +321,33 @@ contains
     integer :: kda         ! day of month (1, ..., 31)
     integer :: ksec        ! seconds into current date for nstep+1
     real(r8):: dtime       ! land model time step (sec)
-    real(r8):: t           ! a fraction: kda/ndaypm
-    integer :: it(2)       ! month 1 and month 2 (step 1)
-    integer :: months(2)   ! months to be interpolated (1 to 12)
     integer :: g
     integer :: begg,endg                  ! beg and end local g index
-    
-    integer, dimension(12) :: ndaypm= &
-         (/31,28,31,30,31,30,31,31,30,31,30,31/) !days per month
-!-----------------------------------------------------------------------
 
+    integer       :: n         ! counter to prevent infinite LB/UB search
+    integer       :: edays     ! elapsed days since 0000-01-01 0s (excluding partial days)
+    real(r8)      :: t         ! model time, elapsed days since 0000-01-01
+    integer ,save :: nLB = 0   ! tLB = time(nLB)
+    integer ,save :: nUB = 1   ! tUB = time(nUB)
+    real(r8),save :: tLB =-1.0 ! upper bound time sample, model time is in [tLB,tUB]
+    real(r8),save :: tUB =-2.0 ! lower bound time sample, model time is in [tLB,tUB]
+    real(r8)      :: fUB,fLB   ! t-interp fracs for UB,LB
+    logical ,save :: firstCallA = .true.   ! id 1st occurance of case A
+    logical ,save :: firstCallB = .true.   ! id 1st occurance of case B
+    logical ,save :: firstCallC = .true.   ! id 1st occurance of case C
+    character(1)  :: case                  ! flags case A, B, or C
+    logical       ::  readNewData          ! T <=> read new LB,UB data
+    
+    character(*),parameter :: subName =  '(interpMonthlyAerdep) '
+    character(*),parameter :: F00    = "('(interpMonthlyAerdep) ',4a)"
+    character(*),parameter :: F01    = "('(interpMonthlyAerdep) ', &
+    &                                   a,i4.4,2('-',i2.2),3f11.2,2i6,2x,2f6.3)"
+    character(*),parameter :: F02    = "('(interpMonthlyAerdep) ', &
+    &                                   a,i4.4,2('-',i2.2),i7,'s ',f12.3)"
+
+!-------------------------------------------------------------------------------
+! WARNING: this is (and has always been) hard-coded to assume 365 days per year
+!-------------------------------------------------------------------------------
 
     ! Determine necessary indices
     call get_proc_bounds(begg=begg,endg=endg)
@@ -207,8 +356,9 @@ contains
     ! Assign local pointers to derived subtypes components (gridcell level)
     forc_aer     => clm_a2l%forc_aer
     
-   
-    ! get timestep
+   !----------------------------------------------------------------------------
+   ! get model time, convert units to days elapsed since 0000-01-01
+   !----------------------------------------------------------------------------
     dtime = get_step_size()
 
     if ( is_perpetual() ) then
@@ -217,56 +367,157 @@ contains
        call get_curr_date(kyr, kmo, kda, ksec, offset=int(dtime))
     end if
 
-    t = (kda-0.5_r8) / ndaypm(kmo)
-    it(1) = t + 0.5_r8
-    it(2) = it(1) + 1
-    months(1) = kmo + it(1) - 1
-    months(2) = kmo + it(2) - 1
-    if (months(1) <  1) months(1) = 12
-    if (months(2) > 12) months(2) = 1
-    timwt_aer(1) = (it(1)+0.5_r8) - t
-    timwt_aer(2) = 1._r8-timwt_aer(1)
+   call shr_cal_ymd2eday(kyr,kmo,kda,edays) ! convert to elapsed days
+   t = float(edays) + ksec/secspday
+   if (debug > 2) then
+      write(iulog,F02) "model date, elapsed days = ", kyr,kmo,kda,ksec,t
+   endif
 
-    if (InterpMonths1_aer /= months(1)) then
-       call t_startf('readMonthlyAerdep')
-       call readMonthlyAerdep (faerdep, kmo, kda, months)
-       InterpMonths1_aer = months(1)
-       call t_stopf('readMonthlyAerdep')
-    end if
+   !----------------------------------------------------------------------------
+   ! find input data LB & UB, time units are elapsed days since 0000-01-01
+   !----------------------------------------------------------------------------
 
+   CASE = "B"                    ! => interpolate within input time series
+   if (t < time( 1) ) CASE = "A" ! => loop over 1st  year of input data
+   if (t > time(nt) ) CASE = "C" ! => loop over last year of input data
 
-    ! interpolate aerosol deposition data into 'forcing' array:
+   if ( case == "A" ) then 
+      !--- CASE A: loop over first year of data ----------------------
+      if ( firstCallA ) then
+         write(iulog,F00) "CASE A: loop over first year of data"
+         write(iulog,F01) "CASE A: model date, t, time(1) = ",kyr,kmo,kda,t,time(1)
+         nLB = 0 ; tLB = -2.0
+         nUB = 1 ; tUB = -1.0 ! forces search for new LB,UB
+         firstCallA = .false.
+      end if
+      t = mod(t,daysPerYear) + daysPerYear ! CASE A: put t in year 1
+      n = 0
+      readNewData = .false.
+      do while (t < tLB  .or.  tUB < t)
+         readNewData = .true.
+         !--- move tUB,tLB forward in time ---
+         nLB = nLB + 1 ; if (nLB > 12) nLB = 1
+         nUB = nLB + 1 ; if (nUB > 12) nUB = 1
+         tLB = mod(time(nLB),daysPerYear) + daysPerYear ! set year to 1
+         tUB = mod(time(nUB),daysPerYear) + daysPerYear 
+         !--- deal with wrap around situation ---
+         if (nLB == 12) then 
+            if (tLB <= t ) then
+               tUB = tUB + daysPerYear ! put UB in year 2
+            else if (t < tUB ) then
+               tLB = tLB - daysPerYear ! put LB in year 1
+            else 
+               call endrun(subName//"ERROR: in case A")
+            end if
+         end if
+         !--- prevent infinite search ---
+         n = n + 1
+         if (n > 12) then
+             write(iulog,F01) "ERROR: date,tLB,t,tUB = ",kyr,kmo,kda,tLB,t,tUB
+             call endrun(subName//"ERROR: loop over first year, fail to find LB,UB")
+         end if
+      end do
+   else if ( case == "C" ) then 
+      !--- CASE C: loop over last year of data -----------------------
+      if ( firstCallC ) then
+         write(iulog,F00) "CASE C: loop over last year of data"
+         write(iulog,F01) "CASE C: model date, t, time(nt) = ",kyr,kmo,kda,t,time(nt)
+         nLB = nt-12 ; tLB = -2.0
+         nUB = nt-11 ; tUB = -1.0 ! forces search for new LB,UB
+         firstCallC = .false.
+      end if
+      t = mod(t,daysPerYear) + daysPerYear ! set year to 1
+      n = 0
+      readNewData = .false.
+      do while (t < tLB  .or.  tUB < t)
+         readNewData = .true.
+         !--- move tUB,tLB forward in time ---
+         nLB = nLB + 1 ; if (nLB > nt) nLB = nt - 11
+         nUB = nLB + 1 ; if (nUB > nt) nUB = nt - 11
+         tLB = mod(time(nLB),daysPerYear) + daysPerYear ! set year to 1
+         tUB = mod(time(nUB),daysPerYear) + daysPerYear 
+         !--- deal with wrap around situation ---
+         if (nLB == nt) then 
+            if (tLB <= t ) then
+               tUB = tUB + daysPerYear ! put UB in year 2
+               else if (t < tUB ) then
+               tLB = tLB - daysPerYear ! put LB in year 1
+            else 
+               call endrun(subName//"ERROR: in case A")
+            end if
+         end if
+         !--- prevent infinite search ---
+         n = n + 1
+         if (n > 12) then
+             write(iulog,F01) "ERROR: date,tLB,t,tUB = ",kyr,kmo,kda,tLB,t,tUB
+             call endrun(subName//"ERROR: loop over first year, fail to find LB,UB")
+         end if
+      end do
+   else
+      !--- CASE B: interpolate within time series --------------------
+      if ( firstCallB ) then
+         write(iulog,F01) "CASE B: interpolate within time series"
+         write(iulog,F01) "CASE B: date, time(1), model t, time(nt) = ",kyr,kmo,kda,time(1),t,time(nt)
+         nLB = 0 ; tLB = -2.0
+         nUB = 1 ; tUB = -1.0 ! forces search for new LB,UB
+         firstCallB = .false.
+      end if
+      readNewData = .false.
+      do while (tUB < t) 
+         readNewData = .true.
+         nLB = nLB + 1
+         nUB = nLB + 1
+         tLB = time(nLB)
+         tUB = time(nUB)
+         if (nUB > nt) call endrun(subName//"ERROR: nt < nUB")
+      end do
+   end if
+
+   if (readNewData) then
+      write(iulog,F02) "read new data: model date, t = ", kyr,kmo,kda,ksec,t
+      call readMonthlyAerdep (faerdep, nLB, nUB) ! input the new LB,UB data
+   end if
+
+   !----------------------------------------------------------------------------
+   ! interpolate aerosol deposition data into 'forcing' array:
+   !----------------------------------------------------------------------------
+   fLB = (tUB - t)/(tUB - tLB)
+   fUB = 1.0_r8 - fLB
+   if (debug>2 .or. (debug==1 .and. (kda==1 .or. kda==15) .and. ksec==0)) then
+      write(iulog,F01) "date,tLB,t,tUB,nLB,nUB,fLB,fUB = ", kyr,kmo,kda,tLB,t,tUB,nLB,nUB,fLB,fUB
+   endif
+
     do g = begg, endg
        if ( set_caerdep_from_file )then
-          forc_aer(g,1) = timwt_aer(1)*bcphidry2t(g,1)  + timwt_aer(2)*bcphidry2t(g,2)
-          forc_aer(g,2) = timwt_aer(1)*bcphodry2t(g,1)  + timwt_aer(2)*bcphodry2t(g,2)
-          forc_aer(g,3) = timwt_aer(1)*bcphiwet2t(g,1)  + timwt_aer(2)*bcphiwet2t(g,2)
-          forc_aer(g,4) = timwt_aer(1)*ocphidry2t(g,1)  + timwt_aer(2)*ocphidry2t(g,2)
-          forc_aer(g,5) = timwt_aer(1)*ocphodry2t(g,1)  + timwt_aer(2)*ocphodry2t(g,2)
-          forc_aer(g,6) = timwt_aer(1)*ocphiwet2t(g,1)  + timwt_aer(2)*ocphiwet2t(g,2)
+          forc_aer(g, 1) = fLB*bcphidry2t(g,1)  + fUB*bcphidry2t(g,2)
+          forc_aer(g, 2) = fLB*bcphodry2t(g,1)  + fUB*bcphodry2t(g,2)
+          forc_aer(g, 3) = fLB*bcphiwet2t(g,1)  + fUB*bcphiwet2t(g,2)
+          forc_aer(g, 4) = fLB*ocphidry2t(g,1)  + fUB*ocphidry2t(g,2)
+          forc_aer(g, 5) = fLB*ocphodry2t(g,1)  + fUB*ocphodry2t(g,2)
+          forc_aer(g, 6) = fLB*ocphiwet2t(g,1)  + fUB*ocphiwet2t(g,2)
        end if
        if ( set_dustdep_from_file )then
-          forc_aer(g,7) = timwt_aer(1)*dstx01wd2t(g,1)  + timwt_aer(2)*dstx01wd2t(g,2)
-          forc_aer(g,8) = timwt_aer(1)*dstx01dd2t(g,1)  + timwt_aer(2)*dstx01dd2t(g,2)
-          forc_aer(g,9) = timwt_aer(1)*dstx02wd2t(g,1)  + timwt_aer(2)*dstx02wd2t(g,2)
-          forc_aer(g,10) = timwt_aer(1)*dstx02dd2t(g,1)  + timwt_aer(2)*dstx02dd2t(g,2)
-          forc_aer(g,11) = timwt_aer(1)*dstx03wd2t(g,1)  + timwt_aer(2)*dstx03wd2t(g,2)
-          forc_aer(g,12) = timwt_aer(1)*dstx03dd2t(g,1)  + timwt_aer(2)*dstx03dd2t(g,2)
-          forc_aer(g,13) = timwt_aer(1)*dstx04wd2t(g,1)  + timwt_aer(2)*dstx04wd2t(g,2)
-          forc_aer(g,14) = timwt_aer(1)*dstx04dd2t(g,1)  + timwt_aer(2)*dstx04dd2t(g,2)
+          forc_aer(g, 7) = fLB*dstx01wd2t(g,1)  + fUB*dstx01wd2t(g,2)
+          forc_aer(g, 8) = fLB*dstx01dd2t(g,1)  + fUB*dstx01dd2t(g,2)
+          forc_aer(g, 9) = fLB*dstx02wd2t(g,1)  + fUB*dstx02wd2t(g,2)
+          forc_aer(g,10) = fLB*dstx02dd2t(g,1)  + fUB*dstx02dd2t(g,2)
+          forc_aer(g,11) = fLB*dstx03wd2t(g,1)  + fUB*dstx03wd2t(g,2)
+          forc_aer(g,12) = fLB*dstx03dd2t(g,1)  + fUB*dstx03dd2t(g,2)
+          forc_aer(g,13) = fLB*dstx04wd2t(g,1)  + fUB*dstx04wd2t(g,2)
+          forc_aer(g,14) = fLB*dstx04dd2t(g,1)  + fUB*dstx04dd2t(g,2)
        end if
     enddo
 
+
   end subroutine interpMonthlyAerdep
 
-
-!-----------------------------------------------------------------------
+!================================================================================
 !BOP
 !
 ! !IROUTINE: readMonthlyAerdep
 !
 ! !INTERFACE:
-  subroutine readMonthlyAerdep (faer, kmo, kda, months)
+  subroutine readMonthlyAerdep (faer, n1, n2 )
 !
 ! !DESCRIPTION:
 ! Read monthly aerosol deposition data for two consec. months.
@@ -275,18 +526,13 @@ contains
     use clmtype
     use decompMod   , only : get_proc_bounds
     use clm_varpar  , only : lsmlon, lsmlat
-    use fileutils   , only : getfil
-    use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
     use clm_time_manager, only : get_nstep
-    use ncdio       , only : check_ret,ncd_iolocal
 !
 ! !ARGUMENTS:
     implicit none
     include 'netcdf.inc'
     character(len=*), intent(in) :: faer       ! file with monthly aerosol deposition
-    integer, intent(in)          :: kmo        ! month (1, ..., 12)
-    integer, intent(in)          :: kda        ! day of month (1, ..., 31)
-    integer, intent(in)          :: months(2)  ! months to be interpolated (1 to 12)
+    integer, intent(in)          :: n1,n2      ! time index for samples 1 & 2
 !
 ! !REVISION HISTORY:
 ! Adapted by Mark Flanner
@@ -300,7 +546,7 @@ contains
 
 ! LOCAL VARIABLES:
     character(len=256) :: locfn           ! local file name
-    integer :: k                          ! indices
+    integer :: k,n                        ! indices
     integer :: ncid,dimid,varid           ! input netCDF id's
     integer :: beg3d(3),len3d(3)          ! netCDF variable edges
     integer :: ntim                       ! number of input data time samples
@@ -313,10 +559,9 @@ contains
 
     real(r8), pointer :: arrayl(:)  ! temp local array
 
-    character(len=32) :: subname = 'readMonthlyAerdep'
-
+    character(*),parameter :: subname = '(readMonthlyAerdep) '
     
-!-----------------------------------------------------------------------
+!--------------------------------------------------------------------------------
 
     ! Determine necessary indices
 
@@ -327,12 +572,13 @@ contains
     ! Read data and store in clmtype
     ! ----------------------------------------------------------------------
 
+    write(iulog,*) subName,'read samples ',n1,n2,' from ',trim(faer)
+
     do k=1,2   !loop over months and read aerosol data
 
+       if (k==1) n = n1
+       if (k==2) n = n2
        if (masterproc) then
-
-          write(iulog,*) 'Attempting to read monthly aerosol deposition data .....'
-          write(iulog,*) 'nstep = ',get_nstep(),' month = ',kmo,' day = ',kda
 
           call getfil(faer, locfn, 0)
           call check_ret(nf_open(locfn, 0, ncid), subname)
@@ -386,7 +632,7 @@ contains
           beg3d(2) = 1         ; len3d(2) = nlat_i
        end if
 
-       beg3d(3) = months(k) ; len3d(3) = 1
+       beg3d(3) = n ; len3d(3) = 1
 
        
        call ncd_iolocal(ncid,'BCDEPWET','read',arrayl,grlnd,beg3d,len3d,status=ret)
@@ -449,8 +695,7 @@ contains
 
        if (masterproc) then
           call check_ret(nf_close(ncid), subname)
-          write(iulog,*) 'Successfully read aerosol deposition data for'
-          write(iulog,*) 'month ', months(k)
+          if (debug>1) write(iulog,*) subName,'Successfully read aerosol data for index n = ',n
           write(iulog,*)
        end if
 

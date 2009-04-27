@@ -50,7 +50,6 @@ require queryDefaultXML;
 
 # Defaults
 my $namelist = "clm_inparm";
-my $file = "$cfgdir/namelist_files/namelist_defaults_clm.xml";
 my $config = "config_cache.xml";
 
 
@@ -63,7 +62,6 @@ OPTIONS
      -ccsm                                CCSM mode set csmdata to \$DIN_LOC_ROOT.
      -csmdata "dir"                       Directory for head of csm inputdata.
      -demand                              Demand that something is returned.
-     -file "file"                         Input xml file to read in by default ($file).
      -filenameonly                        Only return the filename -- not the full path to it.
      -help  [or -h]                       Display this help.
      -justvalue                           Just display the values (NOT key = value).
@@ -73,8 +71,6 @@ OPTIONS
      -options "item=value,item2=value2"   Set options to query for when matching.
                                           (comma delimited, with equality to set value).
      -res  "resolution"                   Resolution to use for files.
-     -scpto "dir"                         Copy files to given directory.
-                                          (also enables -onlyfiles, -test and -justvalue options)
      -silent [or -s]                      Don't do any extra printing.
      -test   [or -t]                      Test that files exists.
 EXAMPLES
@@ -91,22 +87,19 @@ EXAMPLES
 
   $ProgName  -onlyfiles -test -csmdata /spin/proj/ccsm/inputdata
 
-  To query the CAM file for files that match particular configurations
+  To query for namelist items that match particular configurations
 
-  $ProgName  -onlyfiles \
-  -file \$CAM_CFGDIR/DefaultCAM_INPARM_Namelist.xml -namelist cam_inparm \
-  -options DYNAMICS=fv,PLEV=26,PHYSICS=cam1,OCEANMODEL=DOM,CHEMISTRY=
+  $ProgName  -namelist seqinfodata_inparm -options sim_year=2000,bgc=cn
 
-  To copy files that match to a different location
-
-  $ProgName -onlyfiles -test -scpto bangkok:/fs/cgd/csm/inputdata
+  Only lists namelist items in the seqinfodata_inparm namelist with options for
+  sim_year=200 and BGC=cn.
 
 EOF
 }
 
 #-----------------------------------------------------------------------------------------------
 
-  my %opts = ( file       => $file,
+  my %opts = ( 
                namelist   => $namelist,
                var        => undef,
                hgrid      => undef,
@@ -117,7 +110,6 @@ EOF
                test       => undef,
                onlyfiles  => undef,
                fileonly   => undef,
-               scpto      => undef,
                silent     => undef,
                help       => undef,
                options    => undef,
@@ -138,7 +130,6 @@ EOF
         "onlyfiles"    => \$opts{'onlyfiles'},
         "filenameonly" => \$opts{'fileonly'},
         "justvalues"   => \$opts{'justvalues'},
-        "scpto=s"      => \$opts{'scpto'},
         "s|silent"     => \$opts{'silent'},
         "h|elp"        => \$opts{'help'},
   ) or usage();
@@ -166,22 +157,20 @@ EOF
      }
   }
   my $csmdata = "";
-  if ( defined($opts{'scpto'}) ) {
-     if ( ! defined($opts{'justvalues'}) ) { print "When -scpto option used, -justvalues is set as well\n" if $printing; }
-     if ( ! defined($opts{'onlyfiles'}) )  { print "When -scpto option used, -onlyfiles is set as well\n"  if $printing; }
-     if ( ! defined($opts{'test'}) )       { print "When -scpto option used, -test is set as well\n"       if $printing; }
-     $opts{'justvalues'} = 1;
-     $opts{'onlyfiles'}  = 1;
-     $opts{'test'}       = 1;
-  }
   if ( defined($opts{'fileonly'}) ) {
      if ( ! defined($opts{'justvalues'}) ) { print "When -filenameonly option used, -justvalues is set as well\n" if $printing; }
      if ( ! defined($opts{'onlyfiles'}) )  { print "When -filenameonly option used, -onlyfiles is set as well\n"  if $printing; }
      $opts{'justvalues'} = 1;
      $opts{'onlyfiles'}  = 1;
   }
+  # The namelist defaults file contains default values for all required namelist variables.
+  my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
+                            "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
+                            "$cfgdir/namelist_files/namelist_defaults_drv.xml",
+                            "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
+  # List of input options
   my %inputopts;
-  $inputopts{file}           = $opts{file};
+  $inputopts{files}          = \@nl_defaults_files;
   $inputopts{empty_cfg_file} = "$cfgdir/config_files/config_definition.xml";
   $inputopts{nldef_file}     = "$cfgdir/namelist_files/namelist_definition.xml";
   $inputopts{namelist}       = $opts{namelist};
@@ -253,18 +242,6 @@ EOF
            if ( ! -f "$value" ) {
               die "($ProgName) ERROR:: file $value does NOT exist!\n";
            }
-        }
-        # Copy to remote location
-        if ( defined($opts{'scpto'}) && defined($print) ) {
-           my $csmdata = $inputopts{csmdata};
-           my $data = $value;
-           if ( $value =~ /^$csmdata\/(.+)$/ ) {
-              $data = $1;
-           } else {
-              die "($ProgName) ERROR:: parsing $csmdata directory out of value: $value\n";
-           }
-           print "scp $csmdata/$data $opts{'scpto'}/$data\n";
-           system( "scp $csmdata/$data $opts{'scpto'}/$data" )
         }
      }
      # If a string

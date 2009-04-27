@@ -171,12 +171,12 @@ contains
 ! !ROUTINE: driver1
 !
 ! !INTERFACE:
-subroutine driver1 (doalb, caldayp1, declinp1, declin)
+subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 !
 ! !ARGUMENTS:
   implicit none
   logical , intent(in) :: doalb    ! true if time for surface albedo calc
-  real(r8), intent(in) :: caldayp1 ! calendar day for nstep+1
+  real(r8), intent(in) :: nextsw_cday ! calendar day for nstep+1
   real(r8), intent(in) :: declinp1 ! declination angle for next time step
   real(r8), intent(in) :: declin   ! declination angle for current time step
 !
@@ -682,7 +682,7 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
         call SurfaceAlbedo(begg, endg, begc, endc, begp, endp, &
                            filter(nc)%num_nourbanc, filter(nc)%nourbanc, &
                            filter(nc)%num_nourbanp, filter(nc)%nourbanp, &
-                           caldayp1, declinp1)
+                           nextsw_cday, declinp1)
 
         call t_stopf('surfalb')
 
@@ -691,11 +691,10 @@ subroutine driver1 (doalb, caldayp1, declinp1, declin)
         call t_startf('urbsurfalb')
 
         if (filter(nc)%num_urbanl > 0) then
-           call UrbanAlbedo(nc, begl, endl, begc, endc, begp, endp, &
+           call UrbanAlbedo(nc, begl, endl, begc, endc, begp, endp,   &
                             filter(nc)%num_urbanl, filter(nc)%urbanl, &
                             filter(nc)%num_urbanc, filter(nc)%urbanc, &
-                            filter(nc)%num_urbanp, filter(nc)%urbanp, &
-                            caldayp1, declinp1)
+                            filter(nc)%num_urbanp, filter(nc)%urbanp)
         end if
 
         call t_stopf('urbsurfalb')
@@ -715,11 +714,11 @@ end subroutine driver1
 ! !ROUTINE: driver2
 !
 ! !INTERFACE:
-subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
+subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 !
 ! !ARGUMENTS:
   implicit none
-  real(r8),          intent(in) :: caldayp1 ! calendar day for nstep+1
+  real(r8),          intent(in) :: nextsw_cday ! calendar day for nstep+1
   real(r8),          intent(in) :: declinp1 ! declination angle for next time step
   logical, optional, intent(in) :: rstwr    ! true => write restart file this step
   logical, optional, intent(in) :: nlend    ! true => end of run on this step
@@ -843,7 +842,7 @@ subroutine driver2(caldayp1, declinp1, rstwr, nlend, rdate)
         call lpjreset(begg, endg, begc, endc, begp, endp, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                       filter(nc)%num_nourbanc, filter(nc)%nourbanc, &
                       filter(nc)%num_nourbanp, filter(nc)%nourbanp, &
-                      caldayp1, declinp1)
+                      nextsw_cday, declinp1)
         call resetWeightsDGVM(begg, endg, begc, endc, begp, endp)
         call resetTimeConstDGVM(begp, endp)
      end do

@@ -45,7 +45,7 @@ contains
   subroutine SurfaceAlbedo(lbg, ubg, lbc, ubc, lbp, ubp, &
                            num_nourbanc, filter_nourbanc, &
                            num_nourbanp, filter_nourbanp, &
-                           caldayp1, declinp1)
+                           nextsw_cday, declinp1)
 !
 ! !DESCRIPTION:
 ! Surface albedo and two-stream fluxes
@@ -75,7 +75,7 @@ contains
     integer , intent(in) :: filter_nourbanc(ubc-lbc+1) ! column filter for non-urban points
     integer , intent(in) :: num_nourbanp               ! number of pfts in non-urban filter
     integer , intent(in) :: filter_nourbanp(ubp-lbp+1) ! pft filter for non-urban points
-    real(r8), intent(in) :: caldayp1                   ! calendar day at Greenwich (1.00, ..., 365.99)
+    real(r8), intent(in) :: nextsw_cday                   ! calendar day at Greenwich (1.00, ..., 365.99)
     real(r8), intent(in) :: declinp1                   ! declination angle (radians) for next time step
 !
 ! !CALLED FROM:
@@ -285,7 +285,7 @@ contains
 !dir$ concurrent
 !cdir nodep
     do g = lbg, ubg
-       coszen_gcell(g) = shr_orb_cosz (caldayp1, lat(g), lon(g), declinp1)
+       coszen_gcell(g) = shr_orb_cosz (nextsw_cday, lat(g), lon(g), declinp1)
     end do
 
     ! Save coszen and declination values to  clm3 data structures for

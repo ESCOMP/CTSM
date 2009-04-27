@@ -61,13 +61,18 @@ begin
    ; Get variable info.
    ;
    vars = (/ "EDGEE", "EDGEN", "EDGES", "EDGEW", "LANDMASK", "LAT", "LATIXY", "LON", "LONGXY", "PCT_PFT" /);
-   LANDFRAC = (/nc->LANDFRAC_PFT/);
+   LAT      = nc->LATIXY( :, 0 );
+   LON      = nc->LONGXY( 0, : );
+   LANDFRAC = new( (/ dimsizes(LAT), dimsizes(LON) /), "float" );
+   do lat = 0, dimsizes(LAT)-1
+   do lon = 0, dimsizes(LON)-1
+      LANDFRAC(lat,lon) = LANDFRAC(lat,lon) + sum( nc->PCT_PFT(0,:,lat,lon) );
+   end do
+   end do
    LANDMASK = new( dsizes(1:), "integer"  );
    LANDMASK = where( LANDFRAC > 0.0, 1, 0 );
    LANDMASK@long_name = "land mask";
    LANDMASK@units     = "unitless";
-   LAT      = nc->LATIXY( :, 0 );
-   LON      = nc->LONGXY( 0, : );
    print( "vars on file:"+vars );
    ;
    ; Now loop over each year and output files for each year

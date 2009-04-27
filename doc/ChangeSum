@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_36         erik 04/27/2009 Handle transient aersol, make maxpatchpft=numpft+1 default, new datasets for 1.9x2.5 and 0.9x1.25, change doalb
    clm3_6_35         erik 04/20/2009 Fix major logic bug in mksurfdata
    clm3_6_34       oleson 04/19/2009 Fix bangkok urban bug
    clm3_6_33         erik 04/16/2009 Bring in dynpft changes from cbgc branch

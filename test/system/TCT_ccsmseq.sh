@@ -54,34 +54,33 @@ if [ $? -ne 0 ]; then
     exit 3
 fi
 
-echo "cat env_pes"
+echo "cat env_pes.xml"
 
-cat > ${CLM_TESTDIR}/env_pes << EOF
-#!/bin/csh -f
+cat > ${CLM_TESTDIR}/env_pes.xml << EOF
+<?xml version="1.0"?>
 
-set ntasks_atm=$CLM_TASKS
-set ntasks_lnd=\$ntasks_atm
-set ntasks_ice=\$ntasks_atm
-set ntasks_ocn=\$ntasks_atm
-set ntasks_cpl=\$ntasks_atm
-set ntasks_glc=\$ntasks_atm
-set nthrds_atm=1
-set rootpe_atm=0
-set nthrds_lnd=1
-set rootpe_lnd=0
-set nthrds_ice=1
-set rootpe_ice=0
-set nthrds_ocn=1
-set rootpe_ocn=0
-set nthrds_cpl=1
-set rootpe_cpl=0
-set nthrds_glc=1
-set rootpe_glc=0
+<pesinfo>
+
+<!-------------------------------------------------------------------------------
+ tasks/thread setup -- default
+ ------------------------------------------------------------------------------->
+
+<pes>
+    <NTASKS_ATM>$CLM_TASKS</NTASKS_ATM> <NTHRDS_ATM>1</NTHRDS_ATM> <ROOTPE_ATM>0</ROOTPE_ATM>
+    <NTASKS_LND>\$NTASKS_ATM</NTASKS_LND> <NTHRDS_LND>1</NTHRDS_LND> <ROOTPE_LND>0</ROOTPE_LND>
+    <NTASKS_ICE>\$NTASKS_ATM</NTASKS_ICE> <NTHRDS_ICE>1</NTHRDS_ICE> <ROOTPE_ICE>0</ROOTPE_ICE>
+    <NTASKS_OCN>\$NTASKS_ATM</NTASKS_OCN> <NTHRDS_OCN>1</NTHRDS_OCN> <ROOTPE_OCN>0</ROOTPE_OCN>
+    <NTASKS_CPL>\$NTASKS_ATM</NTASKS_CPL> <NTHRDS_CPL>1</NTHRDS_CPL> <ROOTPE_CPL>0</ROOTPE_CPL>
+    <NTASKS_GLC>\$NTASKS_ATM</NTASKS_GLC> <NTHRDS_GLC>1</NTHRDS_GLC> <ROOTPE_GLC>0</ROOTPE_GLC>
+    <PES_LEVEL>0</PES_LEVEL>
+</pes>
+
+</pesinfo>
 EOF
 
-echo "./create_test -testname $1.$2.$3.${CCSM_MACH} -testroot ${CLM_TESTDIR} -testid \"sc.${JOBID}\" -clean off -pes_file ${CLM_TESTDIR}/env_pes"
+echo "./create_test -testname $1.$2.$3.${CCSM_MACH} -testroot ${CLM_TESTDIR} -testid \"sc.${JOBID}\" -clean off -pes_file ${CLM_TESTDIR}/env_pes.xml"
 ./create_test -testname $1.$2.$3.${CCSM_MACH} -testroot ${CLM_TESTDIR} \
-    -testid "sc.${JOBID}" -clean off -pes_file ${CLM_TESTDIR}/env_pes
+    -testid "sc.${JOBID}" -clean off -pes_file ${CLM_TESTDIR}/env_pes.xml
 rc=$?
 echo "rc = $rc"
 if [ $rc -ne 0 ]; then

@@ -360,8 +360,7 @@ contains
           call UrbanAlbedo(nc, begl, endl, begc, endc, begp, endp, &
                            filter(nc)%num_urbanl, filter(nc)%urbanl, &
                            filter(nc)%num_urbanc, filter(nc)%urbanc, &
-                           filter(nc)%num_urbanp, filter(nc)%urbanp, &
-                           calday, declin)
+                           filter(nc)%num_urbanp, filter(nc)%urbanp )
 
        end if
 

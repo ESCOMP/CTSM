@@ -1,4 +1,126 @@
 ===============================================================
+Tag name:  clm3_6_36
+Originator(s):  erik (erik)
+Date: Mon Apr 27 14:10:13 MDT 2009
+One-line Summary: Handle transient aersol, make maxpatchpft=numpft+1 default, new datasets for 1.9x2.5 and 0.9x1.25, change doalb
+
+Purpose of changes:
+
+Changes so can do aerosol transient time-series (1850-2000) (kauff). New surfdata
+datasets for 1.9x2.5 and 0.9x1.25 (1850 and 2000). New 1850-2000 pftdyn dataset for
+1.9x2.5. New aerosol and ndep for 1.9x2.5 (1850 and 2000). Change to doalb from Mariana.
+Make maxpatchpft=numpft+1 the default and remove all finidat files
+
+Bugs fixed (include bugzilla ID): 936 (create_test bug)
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: maxpatchpft default is now numpft+1
+
+Describe any changes made to the namelist: build-namelist now allows 1850-2000 for sim_year for transient datasets
+    aerdep now chooses a transient dataset for this case as well
+
+List any changes to the defaults for the boundary datasets:
+    New aerosol deposition and nitrogen deposition datasets for 1.9x2.5 and transient
+    New pftdyn dataset for 1.9x2.5 for 1850-2000
+    New surfdata for 1.9x2.5 and 0.9x1.25
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, kauff (aer transient), mvertens (doalb changes)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm7, and pio
+    scripts to scripts4_090424
+    drv     to vocemis-drydep08_drvseq3_0_14
+    datm7   to datm7_090406
+    pio     to pio38_prod
+
+List all files eliminated: None
+
+List all files added and what they do: Add file for generic settings NOT used by a specific model component
+
+A      models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>>>>>>>>>>> Add cice decomp info, use xml input file for PE change
+M      models/lnd/clm/test/system/config_files/ext_ccsm_seq_10x15_dh
+M      models/lnd/clm/test/system/config_files/ext_ccsm_seq_4x5_dh
+M      models/lnd/clm/test/system/config_files/ext_ccsm_seq_1.9x2.5_dh
+M      models/lnd/clm/test/system/config_files/ext_ccsm_seq_64x128_s
+M      models/lnd/clm/test/system/config_files/ext_ccsm_seq_0.9x1.25_dh
+M      models/lnd/clm/test/system/TCT_ccsmseq.sh --- use xml file format for PE change
+>>>>>>>>>>>>>>>>>>>>>>>> Base LANDMASK on SUM(PCT_PFT) rather than LANDFRAC_PFT
+M      models/lnd/clm/tools/ncl_scripts/pftdyntest2raw.ncl
+>>>>>>>>>>>>>>>>>>>>>>>> Add 1850-2000 simyr option
+M      models/lnd/clm/bld/config_files/config_definition.xml ------ maxpatchpft default
+is numpft+1
+M      models/lnd/clm/bld/namelist_files/namelist_definition.xml -- Add 1850-2000 to valid sim_year values
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Remove finidat files, 
+                                              remove data in namelist_defaults_overall,
+                                              new fsurdat,forganic,furbinp for 1.9x2.5 and 0.9x1.25
+                                              1850-2000 PFT dataset for 1.9x2.5
+                                              new aerdep and ndep datasets for 1.9x2.5 and 0.9x1.25, 
+                                              and transient 1850-2000 aerdep datasets
+M      models/lnd/clm/bld/build-namelist ----------- Be careful if datasets are picked
+based on full sim_year (which could be 1850-2000) or the first year (1850 finidat,
+fsurdat files)
+M      models/lnd/clm/bld/listDefaultNamelist.pl --- Use list of defaults files
+M      models/lnd/clm/bld/queryDefaultNamelist.pl -- Use list of defaults files, remove scpto option
+M      models/lnd/clm/bld/queryDefaultXML.pm ------- Use list of defaults files
+>>>>>>>>>>>>>>>>>>>>>>>> doalb changes from Mariana Vertenstein (branches/new_doalb)
+>>>>>>>>>>>>>>>>>>>>>>>> remove caldayp1 use next_swcday sent from atm
+M      models/lnd/clm/src/biogeochem/DGVMMod.F90 ---------- remove caldayp1, send nextsw_cday
+M      models/lnd/clm/src/main/clm_comp.F90 --------------- don't calcualte caldayp1, calc declinp1 based on nextsw_cday
+M      models/lnd/clm/src/main/driver.F90 ----------------- Pass nextsw_cday instead of caldayp1
+M      models/lnd/clm/src/main/initSurfAlbMod.F90 --------- Don't pass calday and declin
+M      models/lnd/clm/src/main/lnd_comp_mct.F90 ----------- Remove never_doAlb logic, pass nextsw_cday down
+M      models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90 - cosz based on nextsw_cday NOT caldayp1
+M      models/lnd/clm/src/biogeophys/UrbanMod.F90 --------- Do NOT pass calday, declin
+>>>>>>>>>>>>>>>>>>>>>>>> aerdep changes from Brian Kauffman (cbgcdev05_clm3_6_35)
+M      models/lnd/clm/src/main/aerdepMod.F90 -- Time-interpolation done each time-step (rather than just each day) method slightly different.
+                                                Also allows transient file where uses first year 
+                                               until reaches middle years, then after last year continues to use last year.
+
+Summary of testing:
+
+  bluefire: All PASS except TBL and... up to test 62
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 144 arb_ic ..................FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS 72+72 arb_ic ................FAIL! rc= 5
+038 smCA4 TSM.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 10
+039 erCA4 TER.sh _sc_ds clm_urb^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ......FAIL! rc= 5
+040 brCA4 TBR.sh _sc_ds clm_urb^nl_urb_br 19981001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic ...FAIL! rc= 5
+042 smCA8 TSM.sh _sc_ds clm_urb^nl_urb 19971230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 10
+056 smI58 TSMcnspinup.sh 17p_cnadspinupsc_dh 17p_cnexitspinupsc_dh 17p_cnsc_dh clm_std 19980115:NONEFAIL! rc= 5
+057 smLI1 TSM.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+058 erLI1 TER.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+059 brLI1 TBR.sh _sc_dh clm_std 19980101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_35
+
+Changes answers relative to baseline: Yes -- default for maxpatchpft is numpft+1 
+                                             rather than 4
+                                      And aersol time-interpolation is different
+                                      method is different and also does interpolation
+                                      for every time-step NOT held constant each day.
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_35
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Mon Apr 20 15:19:17 MDT 2009
@@ -2413,7 +2535,7 @@ calculation, Zeng/Decker Richards equation mods, modified one-step solution
 for soil moisture and qcharge for compatibility with Zeng/Decker Richards 
 mods per Swenson.
 
-Change input datm7 forcing so that Precip is constant over 6 hour interval, 
+Change input datm7 forcing so that Precip is  over 6 hour interval, 
 times are corrected for Temp, Pres, Humid, and Wind data and linear 
 interpolation is used, and solar data is scaled by the cos(sol-zen angle).
 

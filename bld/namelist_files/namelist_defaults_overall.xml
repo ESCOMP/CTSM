@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<!--
+Values to use by default for creation of CLM model namelists.
+These are overall settings used as defaults for the model
+configuration of all namelists. None of these are items
+in a namelist, but they are default values that will help
+determine default values for namelists.
+-->
+
+<!-- Default location of {csmdata} -->
+<csmdata>/fs/cgd/csm/inputdata</csmdata>
+
+<!-- Default resolution -->
+<res>1.9x2.5</res>
+
+<!-- Default simulation year -->
+<sim_year>2000</sim_year>
+
+</namelist_defaults>

@@ -435,7 +435,6 @@ contains
     real(r8),               pointer :: data(:)  ! temporary
     integer :: g,i,lsize       ! counters
     logical,save :: first_call = .true.   ! first call work
-    logical :: never_doAlb                ! if doalb never set
     character(len=32)            :: rdate ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
 !
@@ -488,7 +487,6 @@ contains
        call aerdepini( )   ! Will be removed...
 
     endif
-
     
     ! Map MCT to land data type
 
@@ -503,7 +501,6 @@ contains
     ! Loop over time steps in coupling interval
 
     dosend      = .false.
-    never_doAlb = .true.
     do while(.not. dosend)
 
        ! Determine if dosend
@@ -517,11 +514,15 @@ contains
 
        ! Determine doalb based on nextsw_cday sent from atm model
 
-       dtime = get_step_size()
-       caldayp1 = get_curr_calday(offset=dtime)
        nstep = get_nstep()
-       doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8 .and. nextsw_cday.ne.-1. .or. nstep==0)
-       if ( doalb ) never_doAlb = .false.
+       caldayp1 = get_curr_calday(offset=dtime)
+       if (nstep == 0) then
+	  doalb = .false. 	
+       else if (nstep == 1) then 
+          doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8) 
+       else
+          doalb = (nextsw_cday >= -0.5_r8) 
+       end if
        call update_rad_dtime(doalb)
 
        ! Determine if time to write cam restart and stop
@@ -535,12 +536,12 @@ contains
 
        call t_barrierf('sync_clm_run1', mpicom)
        call t_startf ('clm_run1')
-       call clm_run1( doalb )
+       call clm_run1( doalb, nextsw_cday )
        call t_stopf ('clm_run1')
 
        call t_barrierf('sync_clm_run2', mpicom)
        call t_startf ('clm_run2')
-       call clm_run2( rstwr, nlend, rdate )
+       call clm_run2( nextsw_cday, rstwr, nlend, rdate )
        call t_stopf ('clm_run2')
 
        ! Map land data type to MCT
@@ -555,8 +556,8 @@ contains
        
        ! Compute snapshot attribute vector for accumulation
        
-! don't accumulate on first coupling freq ts0 and ts1
-! for consistency with ccsm3 when flxave is off
+       ! don't accumulate on first coupling freq ts0 and ts1
+       ! for consistency with ccsm3 when flxave is off
        nstep = get_nstep()
        if (nstep <= 1) then
           call mct_aVect_copy( l2x_l, l2x_l_SUM )
@@ -601,11 +602,6 @@ contains
        write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
        call endrun( sub//":: CLM clock not in sync with Master Sync clock" )
     end if
-    if ( never_doAlb .and. (nextsw_cday > 0) .and. (nstep > 2) )then
-       write(iulog,*)'nstep=',nstep, 'nextsw_cday=', nextsw_cday, 'caldayp1=', caldayp1
-       call endrun( sub//":: doalb never set to true over coupling interval -- something is wrong" )
-    end if
-
     
     ! Reset shr logging to my original values
 

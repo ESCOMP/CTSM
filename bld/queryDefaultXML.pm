@@ -1,6 +1,6 @@
 #=======================================================================
 #
-#  This is a perl module to read in a DefaultNamelist XML file.
+#  This is a perl module to read in a list of namelist_default files.
 #
 #=======================================================================
 use strict;
@@ -98,7 +98,7 @@ sub ReadDefaultXMLFile {
   # Error check that input and opts hash has the expected variables
   my $ProgName     = $$opts_ref{'ProgName'};
   my $nm = "${ProgName}::ReadDefaultXMLFile";
-  my @required_list = ( "file", "nldef_file", "empty_cfg_file", "config", "namelist", 
+  my @required_list = ( "files", "nldef_file", "empty_cfg_file", "config", "namelist", 
                         "csmdata", "hgrid", "printing", "ProgName", "cmdline",      
                         "cfgdir"  );
   foreach my $var ( @required_list ) {
@@ -109,7 +109,8 @@ sub ReadDefaultXMLFile {
   my $printing = $$opts_ref{'printing'};
   my $cmdline  = $$opts_ref{'cmdline'};
   # Initialize some local variables
-  my $file               = $$opts_ref{'file'};
+  my $files_ref          = $$opts_ref{'files'};
+  my @files              = @$files_ref;
   my $nl_definition_file = $$opts_ref{'nldef_file'};
   my $empty_config_file  = $$opts_ref{'empty_cfg_file'};
   my $namelist           = $$opts_ref{'namelist'};
@@ -128,11 +129,15 @@ sub ReadDefaultXMLFile {
      $nlopts{'hgrid'} = $$opts_ref{'hgrid'};
   }
   #
-  # Loop through all variables in file
+  # Loop through all variables in files
   #
-  print "($nm) Read: $file\n" if $printing;
+  print "($nm) Read: $files[0]\n" if $printing;
   my %defaults;
-  my $nldefaults = Build::NamelistDefaults->new($file, $cfg);
+  my $nldefaults = Build::NamelistDefaults->new($files[0], $cfg);
+  for ( my $i = 1; $i <= $#files; $i++ ) {
+      print "($nm) Read: $files[$i]\n" if $printing;
+      $nldefaults->add( $files[$i] );
+  }
   my $definition = Build::NamelistDefinition->new($nl_definition_file);
   if ( $$opts_ref{'csmdata'} eq "default" ) {
     $$opts_ref{'csmdata'} = $nldefaults->get_value( "csmdata", \%nlopts );

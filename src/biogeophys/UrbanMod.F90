@@ -89,8 +89,7 @@ contains
   subroutine UrbanAlbedo (nc, lbl, ubl, lbc, ubc, lbp, ubp, &
                           num_urbanl, filter_urbanl, &
                           num_urbanc, filter_urbanc, &
-                          num_urbanp, filter_urbanp, &
-                          caldayp1, declinp1)
+                          num_urbanp, filter_urbanp)
 !
 ! !DESCRIPTION: 
 ! Determine urban landunit component albedos
@@ -113,8 +112,6 @@ contains
     integer , intent(in) :: filter_urbanc(ubc-lbc+1) ! urban column filter
     integer , intent(in) :: num_urbanp                ! number of urban pfts in clump
     integer , intent(in) :: filter_urbanp(ubp-lbp+1) ! urban pft filter
-    real(r8), intent(in) :: caldayp1                  ! calendar day at Greenwich (1.00, ..., 365.99)
-    real(r8), intent(in) :: declinp1                  ! declination angle (radians) for next time step
 !
 ! !CALLED FROM:
 ! subroutine driver

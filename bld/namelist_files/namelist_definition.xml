@@ -946,9 +946,9 @@ Beginning of year to cycle datm data through
 End of year to cycle datm data through
 </entry>
 
-<entry id="sim_year" type="integer" category="default_settings"
-       group="default_settings" valid_values="1850,2000">
-Year to simulate datasets for (such as surface datasets, initial conditions, Nitrogen deposition rates etc.)
+<entry id="sim_year" type="char*9" category="default_settings"
+       group="default_settings" valid_values="1850,2000,1850-2000">
+Year to simulate datasets for (such as surface datasets, initial conditions, dynamic PFT, aerosol-deposition, Nitrogen deposition rates etc.)
 </entry> 
 
 <entry id="source" type="char*80" category="datm_internal"

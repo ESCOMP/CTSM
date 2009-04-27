@@ -49,7 +49,11 @@ EOF
 require queryDefaultXML;
 
 # Defaults
-my $file = "$cfgdir/namelist_files/namelist_defaults_clm.xml";
+# The namelist defaults file contains default values for all required namelist variables.
+my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml",
+                          "$cfgdir/namelist_files/namelist_defaults_clm.xml",
+                          "$cfgdir/namelist_files/namelist_defaults_drv.xml",
+                          "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
 my $namelist = "clm_inparm";
 my $list = "clm.input_data_list";
 
@@ -58,7 +62,6 @@ sub usage {
 SYNOPSIS
      $ProgName [options]
 OPTIONS
-     -file "file"                         Input xml file to read in by default ($file).
      -help  [or -h]                       Display this help.
      -namelist "namelistname"             Namelist name to read in by default ($namelist).
      -res  "resolution1,resolution2,..."  List of resolution to use for files.
@@ -129,7 +132,7 @@ sub GetListofNeededFiles {
 
 #-----------------------------------------------------------------------------------------------
 
-  my %opts = ( file       => $file,
+  my %opts = ( 
                namelist   => $namelist,
                res        => undef,
                silent     => undef,
@@ -139,7 +142,6 @@ sub GetListofNeededFiles {
 
   my $cmdline = "@ARGV";
   GetOptions(
-        "f|file=s"     => \$opts{'file'},
         "n|namelist=s" => \$opts{'namelist'},
         "r|res=s"      => \$opts{'res'},
         "s|silent"     => \$opts{'silent'},
@@ -168,7 +170,7 @@ sub GetListofNeededFiles {
      }
   }
   my %inputopts;
-  $inputopts{'file'}           = $opts{'file'};
+  $inputopts{'files'}          = \@nl_defaults_files;
   $inputopts{'empty_cfg_file'} = "$cfgdir/config_files/config_definition.xml";
   $inputopts{'nldef_file'}     = "$cfgdir/namelist_files/namelist_definition.xml";
   $inputopts{'namelist'}  = $opts{'namelist'};

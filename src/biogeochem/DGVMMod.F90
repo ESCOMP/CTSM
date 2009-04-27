@@ -233,7 +233,7 @@ contains
                       num_nolakep,  filter_nolakep, &
                       num_nourbanc, filter_nourbanc, &
                       num_nourbanp, filter_nourbanp, &
-                      caldayp1, declinp1)
+                      nextsw_cday, declinp1)
 !
 ! !DESCRIPTION:
 ! Resets variables related to lpj!
@@ -254,7 +254,7 @@ contains
     integer , intent(in) :: filter_nourbanc(ubp-lbp+1) ! column filter for non-urban points
     integer , intent(in) :: num_nourbanp   ! number of non-urban pfts in filter
     integer , intent(in) :: filter_nourbanp(ubp-lbp+1) ! pft filter for non-urban points
-    real(r8), intent(in) :: caldayp1       ! calendar day at Greenwich (1.00, ..., 365.99) for nstep+1
+    real(r8), intent(in) :: nextsw_cday    ! calendar day at Greenwich (1.00, ..., 365.99) for nstep+1
     real(r8), intent(in) :: declinp1       ! declination angle for next time step
 !
 ! !CALLED FROM:
@@ -295,7 +295,7 @@ contains
     call SurfaceAlbedo(lbg, ubg, lbc, ubc, lbp, ubp, &
                        num_nourbanc, filter_nourbanc, &
                        num_nourbanp, filter_nourbanp, &
-                       caldayp1, declinp1)
+                       nextsw_cday, declinp1)
 
   end subroutine lpjreset
 

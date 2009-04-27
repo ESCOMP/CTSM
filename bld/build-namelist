@@ -78,7 +78,7 @@ OPTIONS
                               classifiers (d=days, s=steps, y=years)
                               (ONLY used when mode=ccsm_seq)
      -s                       Turns on silent mode - only fatal messages issued.
-     -sim_year "year"         Year to simulate for input datasets (i.e. 1890, 2000, etc.)
+     -sim_year "year"         Year to simulate for input datasets (i.e. 1850, 2000, 1850-2000)
      -source "source"         Source data to use for datm (for ccsm_seq mode)
      -start_type "type"       Type of simulation (cold, arb_ic, startup, continue, or branch)
                               (cold=always start with arbitrary initial conditions)
@@ -245,8 +245,10 @@ if ($print>=2) { print "Using namelist definition file $nl_definition_file$eol";
 EOF
 
 # The namelist defaults file contains default values for all required namelist variables.
-my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_clm.xml", "$cfgdir/namelist_files/namelist_defaults_drv.xml",
-                         "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
+my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
+                          "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
+                          "$cfgdir/namelist_files/namelist_defaults_drv.xml",
+                          "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
 foreach my $nl_defaults_file ( @nl_defaults_files ) {
   (-f "$nl_defaults_file")  or  die <<"EOF";
 ** $ProgName - Cannot find namelist defaults file \"$nl_defaults_file\" **
@@ -467,15 +469,28 @@ if ( $opts{$var} ne "default" ) {
 } else {
     $val = $defaults->get_value($var);
 } 
-my $sim_year = $val;
-$opts{$var}  = $val;
+my $sim_years = $val;
+my $sim_yr    = $val;
+if ( $sim_years =~ /([0-9]+)-([0-9]+)/ ) { 
+   $sim_yr = $1; 
+   if ( ! defined($opts{'clm_demand'}) ) {
+      $opts{'clm_demand'} = "null";
+   }
+   $opts{'clm_demand'} = $opts{'clm_demand'} . ",fpftdyn";
+   if ( $bgc eq "cn" ) { 
+     $opts{'clm_demand'} = $opts{'clm_demand'} . ",fndepdyn"; 
+   }
+}
+$opts{$var}   = $val;
 $group = $definition->get_group_name($var);
 $nl->set_variable_value($group, $var, $val );
-if (  ! $definition->is_valid_value( $var, $val ) ) {
+if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var of $val is NOT valid. Valid values are: @valid_values\n";
 }
-if ($print>=2) { print "CLM sim_year is $sim_year $eol"; }
+$val = "'".$defaults->get_value($var)."'";
+$nl->set_variable_value($group, $var, $val );
+if ($print>=2) { print "CLM sim_year is $sim_years $eol"; }
 
 my $lnd_res;
 if ($opts{'lnd_res'} eq "default") { 
@@ -659,7 +674,7 @@ add_default($nl, 'fatmgrid'  , 'hgrid'=>$res );
 add_default($nl, 'fpftcon');
 
 
-add_default($nl, 'co2_ppmv', 'sim_year'=>$sim_year );
+add_default($nl, 'co2_ppmv', 'sim_year'=>$sim_years );
 add_default($nl, 'co2_type');
 #add_default($nl, 'wrtdia',       'val'=> '.false.');
 add_default($nl, 'hist_crtinic',  'bgc'=>$bgc );
@@ -681,7 +696,7 @@ if ( $rtm eq "on" ) {
 my $dust        = $cfg->get('dust');
 my $carbon_aero = $cfg->get('carbon_aero');
 if ( $mode eq "ext_ccsm_con" || $dust eq "off" || $carbon_aero eq "off" ) {
-   add_default($nl, 'faerdep', 'hgrid'=>$lnd_res );
+   add_default($nl, 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_years );
 }
 
 #
@@ -691,19 +706,19 @@ if ( defined($opts{'clm_demand'}) ) {
     my @demandlist = split( ",", $opts{'clm_demand'} );
     my %settings = {};
     $settings{'hgrid'}       = $res;
-    $settings{'sim_year'}    = $sim_year;
+    $settings{'sim_year'}    = $sim_years;
     $settings{'mask'}        = $mask;
     foreach my $item ( @demandlist ) {
         if ( $item eq "none" ) { next; }
         if ( $item eq "furbinp" ) {
            if ( $lnd_res =~ /1x1_/ ) {
               add_default($nl, "furbinp",  'hgrid'=>$lnd_res, 
-                          'set_abspath'=>"$cfgdir/urban_input", 'sim_year'=>$sim_year );
+                          'set_abspath'=>"$cfgdir/urban_input", 'sim_year'=>$sim_yr );
            } else {
-              add_default($nl, "furbinp",  'hgrid'=>$lnd_res,   'sim_year'=>$sim_year );
+              add_default($nl, "furbinp",  'hgrid'=>$lnd_res,   'sim_year'=>$sim_yr );
            }
         } elsif ( $item eq "forganic" ) {
-           add_default($nl, "$item", 'hgrid'=>$lnd_res );
+           add_default($nl, "$item", 'hgrid'=>$lnd_res, 'sim_year'=>$sim_yr );
         } else {
 	   add_default($nl, $item, %settings );
         }
@@ -729,7 +744,7 @@ $fndepdyn =~ s!(.*)/!!;
 $fndepdyn =~ s/'//;
 $fndepdyn =~ s/"//;
 if ( $fndepdyn eq "" ) { $fndepdyn = "null"; }
-add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 
+add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_yr, 
             'furbinp'=>$furbinp, 'fpftdyn'=>$fpftdyn );
 
 # Initial conditions
@@ -752,15 +767,15 @@ if (not defined $nl->get_value('finidat')) {
     if ($opts{'ignore_ic_date'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 'fndepdyn'=>$fndepdyn, 
-                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
+                    'sim_year'=>$sim_yr, 'maxpft'=>$maxpft );
     } elsif ($opts{'ignore_ic_year'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 
-                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
+                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_yr, 'maxpft'=>$maxpft );
     } else {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 
-                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
+                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_yr, 'maxpft'=>$maxpft );
     }
     my $finidat = $nl->get_value($var);
     if ( (not defined $finidat ) || $finidat =~ /null/ ) {
@@ -774,7 +789,7 @@ if (not defined $nl->get_value('finidat')) {
 # If CN mode -- get Nitrogen deposition file if available AND fndepdyn NOT set
 #
 if ( ($bgc eq "cn") && not defined $nl->get_value('fndepdyn') ) {
-   add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'nofail'=>1 );
+   add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_yr, 'nofail'=>1 );
 }
  
 ###############################

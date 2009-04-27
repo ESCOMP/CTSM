@@ -2,4 +2,8 @@
 -dyn fv
 -res 4x5
 -debug
+-cice_decomptype cartesian
+-cice_maxblocks 1
+-cice_bsizex 12
+-cice_bsizey 23
 -s
