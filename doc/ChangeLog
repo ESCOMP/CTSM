@@ -1,4 +1,61 @@
 ===============================================================
+Tag name:  clm3_6_37
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date:  Mon Apr 27 23:27:26 MDT 2009
+One-line Summary: Update faerdep dataset for 1.9x2.5 to point to version cice is using for 1850 and 2000
+
+Purpose of changes: Point to same version of faerdep datasets used by cice for 1.9x2.5 1850/2000
+    This was needed for the ccsm4_0_beta15 tag.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+    http://bugs.cgd.ucar.edu/
+
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+    New faerdep datasets for 1.9x2.5 used by cice (only difference is time coord)
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts
+   scripts to scripts4_090427b
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml
+
+Summary of testing: None, other than build-namelist for 1.9x2.5 sim_year=1850/2000
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_36
+
+Changes answers relative to baseline: Should be identical
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_36
 Originator(s):  erik (erik)
 Date: Mon Apr 27 14:10:13 MDT 2009

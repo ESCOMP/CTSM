@@ -295,9 +295,9 @@ lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090320.nc</fsurdat>
 <faerdep hgrid="0.23x0.31"                      >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_0.23x0.31_c081201.nc</faerdep>
 <faerdep hgrid="0.47x0.63"                      >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_0.47x0.63_c080410.nc</faerdep>
 <faerdep hgrid="0.9x1.25"                       >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_0.9x1.25_c081201.nc</faerdep>
-<faerdep hgrid="1.9x2.5"   sim_year="1850"      >lnd/clm2/snicardata/aerosoldep_monthly_1850_mean_1.9x2.5_c090409.nc</faerdep>
+<faerdep hgrid="1.9x2.5"   sim_year="1850"      >lnd/clm2/snicardata/aerosoldep_monthly_1850_mean_1.9x2.5_c090421.nc</faerdep>
 <faerdep hgrid="1.9x2.5"   sim_year="1850-2000" >lnd/clm2/snicardata/aerosoldep_monthly_1849-2001_1.9x2.5_c090420.nc</faerdep>
-<faerdep hgrid="1.9x2.5"   sim_year="2000"      >lnd/clm2/snicardata/aerosoldep_monthly_2000_mean_1.9x2.5_c090415.nc</faerdep>
+<faerdep hgrid="1.9x2.5"   sim_year="2000"      >lnd/clm2/snicardata/aerosoldep_monthly_2000_mean_1.9x2.5_c090421.nc</faerdep>
 <faerdep hgrid="2x2.5"                          >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_2x2.5_c090114.nc</faerdep>
 <faerdep hgrid="2.65x3.33"                      >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_2.65x3.33_c080709.nc</faerdep>
 <faerdep hgrid="4x5"                            >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_4x5_c080410.nc</faerdep>
