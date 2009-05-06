@@ -1200,8 +1200,8 @@ contains
     endif
 
     do g = begg, endg
-       rtmin_acc(g,nliq) = qflx_runoffg(g)
-       rtmin_acc(g,nfrz) = qflx_snwcp_iceg(g)
+       rtmin_acc(g,nliq) = rtmin_acc(g,nliq)+qflx_runoffg(g)
+       rtmin_acc(g,nfrz) = rtmin_acc(g,nfrz)+qflx_snwcp_iceg(g)
     enddo
 
     ncount_rtm = ncount_rtm + 1

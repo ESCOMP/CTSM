@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta14"
+seqccsm_vers="ccsm4_0_beta15"
 
 hostname=`hostname`
 case $hostname in
@@ -173,7 +173,7 @@ else
    export PS=/contrib/2.6/pathscale/2.4
    export PATH=\${mpich}/bin:\${PS}/bin:\${PATH}
    export LD_LIBRARY_PATH=\${PS}/lib/2.4:/opt/pathscale/lib/2.4/32:\${LD_LIBRARY_PATH}
-   export MAKE_CMD="gmake -j 4"
+   export MAKE_CMD="gmake"
    export CFG_STRING="-fc pathf90 -linker \${mpich}/bin/mpif90 "
    export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=\${mpich}/bin/mpif90 "
    export CCSM_MACH="lightning_path"

@@ -143,9 +143,7 @@ contains
           allocate(ocphodry2t(begg:endg,2))
        endif
           
-       if (ier /= 0) then
-          write(iulog,*) 'aerdepini allocation error'
-       end if
+       if (ier /= 0) call endrun( 'aerdepini allocation error' )
 
         bcphiwet2t(begg:endg,1:2) = nan
         bcphidry2t(begg:endg,1:2) = nan
@@ -166,10 +164,7 @@ contains
        allocate(dstx04wd2t(begg:endg,2))
        allocate(dstx04dd2t(begg:endg,2))
 
-       if (ier /= 0) then
-          write(iulog,*) 'aerdepini allocation error'
-          call endrun
-       end if
+       if (ier /= 0) call endrun( 'aerdepini allocation error' )
 
        dstx01wd2t(begg:endg,1:2) = nan
        dstx01dd2t(begg:endg,1:2) = nan
@@ -186,7 +181,7 @@ contains
    ! read time axis from data file
    !----------------------------------------------------------------------------
 
-   write(iulog,F00) "Read time axis from ",trim(faerdep)
+   if ( masterproc ) write(iulog,F00) "Read time axis from ",trim(faerdep)
 
    if (masterproc) then
       call getfil(faerdep, locfn, 0)
@@ -195,7 +190,7 @@ contains
       call check_ret(nf_inq_dimlen(ncid, dimid, nt    ), subname)
    endif 
    call mpi_bcast (nt, 1, MPI_INTEGER, 0, mpicom, ier)
-   write(iulog,*)  subName,"number of time samples in file = ",nt
+   if ( masterproc ) write(iulog,*)  subName,"number of time samples in file = ",nt
    allocate(time(nt))
 
    if ( nt < 12) then 
@@ -203,7 +198,7 @@ contains
       call endrun(subName//"ERROR: input data must have at least 12 months of data")
    else if ( nt == 12) then 
       !--- old format => create time axis here ---
-      write(iulog,F00)  'nt = 12: assume old format without a CF-1.0 time axis'
+      if ( masterproc ) write(iulog,F00)  'nt = 12: assume old format without a CF-1.0 time axis'
       n = 365
       time( 1) = n + float(ndaypm( 1))/2.0_r8 ; n = n + ndaypm( 1)
       time( 2) = n + float(ndaypm( 2))/2.0_r8 ; n = n + ndaypm( 2)
@@ -218,12 +213,12 @@ contains
       time(11) = n + float(ndaypm(11))/2.0_r8 ; n = n + ndaypm(11)
       time(12) = n + float(ndaypm(12))/2.0_r8
 
-      write(iulog,F01) 'first time series cal date = ',10100.0+ndaypm( 1)/2.0
-      write(iulog,F01) 'last  time series cal date = ',11200.0+ndaypm(12)/2.0
+      if ( masterproc ) write(iulog,F01) 'first time series cal date = ',10100.0+ndaypm( 1)/2.0
+      if ( masterproc ) write(iulog,F01) 'last  time series cal date = ',11200.0+ndaypm(12)/2.0
    else 
       !--- new format => get time axis from data file ---
-      write(iulog,F00)  "nt > 12: assume new format with a CF-1.0 time axis"
       if (masterproc) then
+         write(iulog,F00)  "nt > 12: assume new format with a CF-1.0 time axis"
          allocate(eday(nt),cdate(nt),secs(nt))
 
          call shr_ncread_tCoord(locfn,"time",cdate,secs,ier)
@@ -272,11 +267,13 @@ contains
          deallocate(eday,cdate,secs)
       endif 
       call mpi_bcast(time,size(time),MPI_REAL8,0,mpicom,ier)
+   end if
+   if ( masterproc )then
+      write(iulog,F01) 'first time axis elapsed days since 0000-01-01 = ',time( 1)
+      write(iulog,F01) 'last  time axis elapsed days since 0000-01-01 = ',time(nt)
       call shr_sys_flush(iulog)
    end if
 
-   write(iulog,F01) 'first time axis elapsed days since 0000-01-01 = ',time( 1)
-   write(iulog,F01) 'last  time axis elapsed days since 0000-01-01 = ',time(nt)
 
   end subroutine aerdepini
 
@@ -369,7 +366,7 @@ contains
 
    call shr_cal_ymd2eday(kyr,kmo,kda,edays) ! convert to elapsed days
    t = float(edays) + ksec/secspday
-   if (debug > 2) then
+   if (masterproc .and. debug > 2) then
       write(iulog,F02) "model date, elapsed days = ", kyr,kmo,kda,ksec,t
    endif
 
@@ -384,8 +381,8 @@ contains
    if ( case == "A" ) then 
       !--- CASE A: loop over first year of data ----------------------
       if ( firstCallA ) then
-         write(iulog,F00) "CASE A: loop over first year of data"
-         write(iulog,F01) "CASE A: model date, t, time(1) = ",kyr,kmo,kda,t,time(1)
+         if ( masterproc ) write(iulog,F00) "CASE A: loop over first year of data"
+         if ( masterproc ) write(iulog,F01) "CASE A: model date, t, time(1) = ",kyr,kmo,kda,t,time(1)
          nLB = 0 ; tLB = -2.0
          nUB = 1 ; tUB = -1.0 ! forces search for new LB,UB
          firstCallA = .false.
@@ -420,8 +417,8 @@ contains
    else if ( case == "C" ) then 
       !--- CASE C: loop over last year of data -----------------------
       if ( firstCallC ) then
-         write(iulog,F00) "CASE C: loop over last year of data"
-         write(iulog,F01) "CASE C: model date, t, time(nt) = ",kyr,kmo,kda,t,time(nt)
+         if ( masterproc ) write(iulog,F00) "CASE C: loop over last year of data"
+         if ( masterproc ) write(iulog,F01) "CASE C: model date, t, time(nt) = ",kyr,kmo,kda,t,time(nt)
          nLB = nt-12 ; tLB = -2.0
          nUB = nt-11 ; tUB = -1.0 ! forces search for new LB,UB
          firstCallC = .false.
@@ -449,15 +446,15 @@ contains
          !--- prevent infinite search ---
          n = n + 1
          if (n > 12) then
-             write(iulog,F01) "ERROR: date,tLB,t,tUB = ",kyr,kmo,kda,tLB,t,tUB
+             if ( masterproc ) write(iulog,F01) "ERROR: date,tLB,t,tUB = ",kyr,kmo,kda,tLB,t,tUB
              call endrun(subName//"ERROR: loop over first year, fail to find LB,UB")
          end if
       end do
    else
       !--- CASE B: interpolate within time series --------------------
       if ( firstCallB ) then
-         write(iulog,F01) "CASE B: interpolate within time series"
-         write(iulog,F01) "CASE B: date, time(1), model t, time(nt) = ",kyr,kmo,kda,time(1),t,time(nt)
+         if ( masterproc ) write(iulog,F01) "CASE B: interpolate within time series"
+         if ( masterproc ) write(iulog,F01) "CASE B: date, time(1), model t, time(nt) = ",kyr,kmo,kda,time(1),t,time(nt)
          nLB = 0 ; tLB = -2.0
          nUB = 1 ; tUB = -1.0 ! forces search for new LB,UB
          firstCallB = .false.
@@ -474,7 +471,7 @@ contains
    end if
 
    if (readNewData) then
-      write(iulog,F02) "read new data: model date, t = ", kyr,kmo,kda,ksec,t
+      if ( masterproc ) write(iulog,F02) "read new data: model date, t = ", kyr,kmo,kda,ksec,t
       call readMonthlyAerdep (faerdep, nLB, nUB) ! input the new LB,UB data
    end if
 
@@ -484,7 +481,7 @@ contains
    fLB = (tUB - t)/(tUB - tLB)
    fUB = 1.0_r8 - fLB
    if (debug>2 .or. (debug==1 .and. (kda==1 .or. kda==15) .and. ksec==0)) then
-      write(iulog,F01) "date,tLB,t,tUB,nLB,nUB,fLB,fUB = ", kyr,kmo,kda,tLB,t,tUB,nLB,nUB,fLB,fUB
+      if ( masterproc ) write(iulog,F01) "date,tLB,t,tUB,nLB,nUB,fLB,fUB = ", kyr,kmo,kda,tLB,t,tUB,nLB,nUB,fLB,fUB
    endif
 
     do g = begg, endg
@@ -572,7 +569,7 @@ contains
     ! Read data and store in clmtype
     ! ----------------------------------------------------------------------
 
-    write(iulog,*) subName,'read samples ',n1,n2,' from ',trim(faer)
+    if ( masterproc ) write(iulog,*) subName,'read samples ',n1,n2,' from ',trim(faer)
 
     do k=1,2   !loop over months and read aerosol data
 
@@ -587,8 +584,8 @@ contains
           call check_ret(nf_inq_dimlen(ncid, dimid, nlon_i), subname)
           if (.not.single_column) then
              if (nlon_i /= lsmlon) then
-                write(iulog,*)subname,' parameter lsmlon= ',lsmlon,'does not equal input nlon_i= ',nlon_i
-                call endrun()
+                if ( masterproc ) write(iulog,*)subname,' parameter lsmlon= ',lsmlon,'does not equal input nlon_i= ',nlon_i
+                call endrun( subname//' ERROR:: lsmlon does NOT equal input nlon' )
              end if
           endif
           call check_ret(nf_inq_dimid(ncid, 'lat', dimid), subname)
@@ -596,8 +593,8 @@ contains
 
           if (.not.single_column ) then
              if (nlat_i /= lsmlat) then
-                write(iulog,*)subname,' parameter lsmlat= ',lsmlat,'does not equal input nlat_i= ',nlat_i
-                call endrun()
+                if ( masterproc ) write(iulog,*)subname,' parameter lsmlat= ',lsmlat,'does not equal input nlat_i= ',nlat_i
+                call endrun( subname//' ERROR:: lsmlat does NOT equal input nlat' )
              end if
           endif
 
@@ -620,9 +617,7 @@ contains
        endif
 
        allocate(arrayl(begg:endg),stat=ier)
-       if (ier /= 0) then
-          write(iulog,*)subname, 'allocation array error '; call endrun()
-       end if
+       if (ier /= 0) call endrun( subname//' ERROR:: allocation array error' )
 
        if (single_column) then
           beg3d(1) = closelonidx; len3d(1) = 1
@@ -695,8 +690,11 @@ contains
 
        if (masterproc) then
           call check_ret(nf_close(ncid), subname)
-          if (debug>1) write(iulog,*) subName,'Successfully read aerosol data for index n = ',n
-          write(iulog,*)
+          if (debug>1) then
+             write(iulog,*) subName,'Successfully read aerosol data for index n = ',n
+             write(iulog,*)
+             call shr_sys_flush(iulog)
+          end if
        end if
 
     end do   ! end of loop over months

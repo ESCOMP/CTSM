@@ -174,6 +174,8 @@ contains
             dim1name='column', long_name='column weight relative to corresponding landunit')
        call ncd_defvar(ncid=ncid, varname='cols1d_ityplun', xtype=nf_int,   &
             dim1name='column', long_name='column landunit type (vegetated,urban,lake,wetland or glacier)')
+       call ncd_defvar(ncid=ncid, varname='cols1d_ityp', xtype=nf_int,   &
+            dim1name='column', long_name='column type (61-roof,62-sunwall,63-shadewall,64-impervious road,65-pervious road,1-all other columns)')
     else if (flag == 'write') then
        do c=begc,endc
           rcarr(c) = gptr%londeg(cptr%gridcell(c))
@@ -199,6 +201,10 @@ contains
           icarr(c) = lptr%itype(cptr%landunit(c))
        enddo
        call ncd_iolocal(varname='cols1d_ityplun', data=icarr      , dim1name=namec, ncid=ncid, flag=flag)
+       do c=begc,endc
+          icarr(c) = cptr%itype((c))
+       enddo
+       call ncd_iolocal(varname='cols1d_ityp', data=icarr      , dim1name=namec, ncid=ncid, flag=flag)
     end if
 
     ! Write pft info

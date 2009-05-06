@@ -120,7 +120,8 @@ contains
     real(r8), pointer :: dz(:,:)          ! layer thickness depth (m)
     real(r8), pointer :: zi(:,:)          ! interface depth (m)
     real(r8), pointer :: zwt(:)           ! water table depth (m)
-    real(r8), pointer :: fcov(:)          ! fractional area with water table at surface
+    real(r8), pointer :: fcov(:)          ! fractional impermeable area
+    real(r8), pointer :: fsat(:)          ! fractional area with water table at surface
     real(r8), pointer :: wa(:)            ! water in the unconfined aquifer (mm)
     real(r8), pointer :: qcharge(:)       ! aquifer recharge rate (mm/s)
     real(r8), pointer :: smp_l(:,:)       ! soil matrix potential [mm]
@@ -198,7 +199,7 @@ contains
     real(r8) :: dwat(lbc:ubc,1:nlevgrnd)   ! change in soil water
     real(r8) :: hk(lbc:ubc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
     real(r8) :: dhkdw(lbc:ubc,1:nlevgrnd)  ! d(hk)/d(vol_liq)
-    real(r8) :: psi,vwc,fsat               ! temporary variables for soilpsi calculation
+    real(r8) :: psi,vwc,fsattmp            ! temporary variables for soilpsi calculation
 #if (defined DGVM) || (defined CN) || (defined CASA)
     real(r8) :: watdry                     ! temporary
     real(r8) :: rwat(lbc:ubc)              ! soil water wgted by depth to maximum depth of 0.5 m
@@ -235,6 +236,7 @@ contains
     snowliq           => clm3%g%l%c%cws%snowliq
     zwt               => clm3%g%l%c%cws%zwt
     fcov              => clm3%g%l%c%cws%fcov
+    fsat              => clm3%g%l%c%cws%fsat
     wa                => clm3%g%l%c%cws%wa
     qcharge           => clm3%g%l%c%cws%qcharge
     watsat            => clm3%g%l%c%cps%watsat
@@ -468,10 +470,12 @@ contains
           qflx_qrgwl(c) = forc_rain(g) + forc_snow(g) - qflx_evap_tot(c) - qflx_snwcp_ice(c) - &
                           (endwb(c)-begwb(c))/dtime
           fcov(c)       = spval
+          fsat(c)       = spval
           qcharge(c)    = spval
           qflx_rsub_sat(c) = spval
        else if (ityplun(l) == isturb .and. ctype(c) /= icol_road_perv) then
           fcov(c)       = spval
+          fsat(c)       = spval
           qcharge(c)    = spval
           qflx_rsub_sat(c) = spval
        end if
@@ -497,8 +501,8 @@ contains
              ! the following limit set to catch very small values of 
              ! fractional saturation that can crash the calculation of psi
            
-             fsat = max(vwc/vwcsat(c,j), 0.001_r8)
-             psi = psisat(c,j) * (fsat)**bsw2(c,j)
+             fsattmp = max(vwc/vwcsat(c,j), 0.001_r8)
+             psi = psisat(c,j) * (fsattmp)**bsw2(c,j)
              soilpsi(c,j) = min(max(psi,-15.0_r8),0._r8)
           else 
              soilpsi(c,j) = -15.0_r8

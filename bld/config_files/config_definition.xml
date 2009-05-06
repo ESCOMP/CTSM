@@ -53,7 +53,7 @@ User specified Fortran compiler overrides Makefile default.
 <entry id="debug" valid_values="0,1" value="0">
 Switch to enable debugging options for Fortran compiler: 0=off, 1=on.
 </entry>
-<entry id="dust" valid_values="on,off" value="off">
+<entry id="dust" valid_values="on,off" value="on">
 Toggle to turn on dust module
 </entry>
 <entry id="exit_spinup" valid_values="on,off" value="off">
@@ -92,8 +92,8 @@ Directory containing LAPACK library.
 <entry id="esmf_libdir" value="">
 Directory containing ESMF library (for linking to external ESMF).
 </entry>
-<entry id="maxpft"  value="numpft+1">
-Maximum number of pfts per gridcell (numpft+1 means use all available)
+<entry id="maxpft"  value="4">
+Maximum numbr of pfts per gridcell
 </entry>
 <entry id="mpi_inc" value="">
 Directory containing MPI include files.
@@ -110,10 +110,10 @@ CLM coupling mode
 <entry id="pergro" valid_values="on,off" value="off">
 Toggle to turn on perturbation error growth test
 </entry>
-<entry id="progsslt" valid_values="on,off" value="off">
+<entry id="progsslt" valid_values="on,off" value="on">
 Toggle to turn on prognostic sea salt 
 </entry>
-<entry id="rtm" valid_values="on,off" value="off">
+<entry id="rtm" valid_values="on,off" value="on">
 Toggle to turn on river runoff module
 </entry>
 <entry id="supln" valid_values="on,off" value="off">

@@ -85,7 +85,8 @@ contains
     real(r8), pointer :: watsat(:,:)       !volumetric soil water at saturation (porosity)
     real(r8), pointer :: hkdepth(:)        !decay factor (m)
     real(r8), pointer :: zwt(:)            !water table depth (m)
-    real(r8), pointer :: fcov(:)           !fractional area with water table at surface
+    real(r8), pointer :: fcov(:)           !fractional impermeable area
+    real(r8), pointer :: fsat(:)           !fractional area with water table at surface
     real(r8), pointer :: dz(:,:)           !layer depth (m)
     real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
@@ -130,6 +131,7 @@ contains
     h2osoi_ice    => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq    => clm3%g%l%c%cws%h2osoi_liq
     fcov          => clm3%g%l%c%cws%fcov
+    fsat          => clm3%g%l%c%cws%fsat
     eff_porosity  => clm3%g%l%c%cps%eff_porosity
     wtfact        => clm3%g%l%c%cps%wtfact
     zwt           => clm3%g%l%c%cws%zwt
@@ -171,7 +173,8 @@ contains
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        fff(c) = 0.5_r8
-       fcov(c) = (1._r8 - fracice(c,1)) * wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c)) + fracice(c,1)
+       fsat(c) = wtfact(c) * exp(-0.5_r8*fff(c)*zwt(c))
+       fcov(c) = (1._r8 - fracice(c,1)) * fsat(c) + fracice(c,1)
     end do
 
 !dir$ concurrent

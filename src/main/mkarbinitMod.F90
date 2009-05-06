@@ -504,8 +504,17 @@ contains
                    h2osoi_vol(c,j) = 0.0_r8
                 end if
              end do
-          else
+          else if (ltype(l) == istwet) then
              nlevs = nlevgrnd
+             do j = 1, nlevs
+                if (j > nlevsoi) then
+                   h2osoi_vol(c,j) = 0.0_r8
+                else
+                   h2osoi_vol(c,j) = 1.0_r8
+                endif
+             end do
+          else if (ltype(l) == istice) then
+             nlevs = nlevgrnd 
              do j = 1, nlevs
                 h2osoi_vol(c,j) = 1.0_r8
              end do

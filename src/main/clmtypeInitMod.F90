@@ -2752,6 +2752,7 @@ contains
     allocate(cws%soilalpha_u(beg:end))
     allocate(cws%zwt(beg:end))
     allocate(cws%fcov(beg:end))
+    allocate(cws%fsat(beg:end))
     allocate(cws%wa(beg:end))
     allocate(cws%wt(beg:end))
     allocate(cws%qcharge(beg:end))
@@ -2772,6 +2773,7 @@ contains
     cws%soilalpha_u(beg:end) = nan
     cws%zwt(beg:end) = nan
     cws%fcov(beg:end) = nan
+    cws%fsat(beg:end) = nan
     cws%wa(beg:end) = nan
     cws%wt(beg:end) = nan
     cws%qcharge(beg:end) = nan

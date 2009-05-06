@@ -1114,12 +1114,13 @@ type, public :: column_wstate_type
    real(r8), pointer :: soilbeta(:)           !factor that reduces ground evaporation L&P1992(-)
    real(r8) ,pointer :: soilalpha_u(:)        !urban factor that reduces ground saturated specific humidity (-)
    real(r8), pointer :: zwt(:)                !water table depth
-   real(r8), pointer :: fcov(:)               !fractional area with water table at surface
+   real(r8), pointer :: fcov(:)               !fractional impermeable area
    real(r8), pointer :: wa(:)                 !water in the unconfined aquifer (mm)
    real(r8), pointer :: wt(:)                 !total water storage (unsaturated soil water + groundwater) (mm)
    real(r8), pointer :: qcharge(:)            !aquifer recharge rate (mm/s)
    real(r8), pointer :: smp_l(:,:)            !soil matric potential (mm)
    real(r8), pointer :: hk_l(:,:)             !hydraulic conductivity (mm/s)
+   real(r8), pointer :: fsat(:)               !fractional area with water table at surface
 end type column_wstate_type
 
 !----------------------------------------------------

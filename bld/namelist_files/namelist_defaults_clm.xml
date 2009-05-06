@@ -15,6 +15,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <dtime>1800</dtime>
 
 <!-- CO2 volume mixing ratio -->
+<co2_ppmv sim_year="1000-1002" >379.0</co2_ppmv>
+<co2_ppmv sim_year="1000-1004" >379.0</co2_ppmv>
 <co2_ppmv sim_year="2000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="1850-2000" >332.95</co2_ppmv>
 <co2_ppmv sim_year="1850"      >284.7</co2_ppmv>
@@ -67,13 +69,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Initial condition datasets (relative to {csmdata}) -->
 
-<!-- empty finidat file when have a pftdyn dataset -->
-
-<!-- empty finidat file for fndepdyn datasets -->
-
 <!-- Initial files at 1.9x2.5 native resolution -->
 
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="none" furbinp="surfdata_1.9x2.5_urb3den_simyr1850_c090422.nc"     ic_ymd="19500101" ic_tod="0" sim_year="1850">lnd/clm2/initdata/clmi.IQmp17_1950-01-01_1.9x2.5_gx1v6_simyr1850_c090424.nc
+<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="19500101" ic_tod="0" sim_year="1850">lnd/clm2/initdata/clmi.IQmp17_1950-01-01_1.9x2.5_gx1v6_simyr1850_c090424.nc
+</finidat>
+<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="20000101" ic_tod="0" sim_year="2000">lnd/clm2/initdata/clmi.IQmp17_2000-01-01_1.9x2.5_gx1v6_simyr2000_c090429.nc
 </finidat>
 
 <!-- Initial files interpolated to given resolution without BGC and for both Jan and Sep -->
@@ -83,90 +83,101 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Initial files interpolated to given resolution with CN BGC and for January -->
 
 <!-- Surface datasets (relative to {csmdata}) -->
-<!-- Global urban datasets also need to check if urban dataset is input -->
+<!-- Also use fsurdat to set forganic, and furbinp -->
+
+<!-- Surface datasets that belong with dynamic land-use change datasets (relative to {csmdata}) -->
+<fsurdat hgrid="10x15"         sim_year="1000" >
+lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc
+</fsurdat>
+<fsurdat hgrid="1x1_tropicAtl" sim_year="1000" >
+lnd/clm2/surfdata/surfdata_1x1_tropicAtl_testyr1000_c090421.nc
+</fsurdat>
 
 <!-- for present day simulations - year 2000 -->
 <fsurdat hgrid="360x720"   sim_year="2000">
-lnd/clm2/surfdata/surfdata_360x720__c081210.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_360x720_urb3den_simyr2000_c090420.nc</fsurdat>
 <fsurdat hgrid="128x256"   sim_year="2000">
-lnd/clm2/surfdata/surfdata_128x256__c081126.nc</fsurdat>
-<fsurdat hgrid="64x128"    sim_year="2000" furbinp="surfdata_64x128_urb3den_simyr2000_c090320.nc">lnd/clm2/surfdata/surfdata_64x128_urb3den_simyr2000_c090320.nc</fsurdat>
-<fsurdat hgrid="48x96"     sim_year="2000" furbinp="surfdata_48x96_urb3den_simyr2000_c090320.nc" >lnd/clm2/surfdata/surfdata_48x96_urb3den_simyr2000_c090320.nc</fsurdat>
-<fsurdat hgrid="32x64"     sim_year="2000" furbinp="surfdata_32x64_urb3den_simyr2000_c090320.nc">lnd/clm2/surfdata/surfdata_32x64_urb3den_simyr2000_c090320.nc</fsurdat>
-<fsurdat hgrid="8x16"      sim_year="2000" furbinp="surfdata_8x16_urb3den_simyr2000_c090320.nc" >lnd/clm2/surfdata/surfdata_8x16_urb3den_simyr2000_c090320.nc</fsurdat>
-<fsurdat hgrid="94x192"    sim_year="2000" >lnd/clm2/surfdata/surfdata_94x192_c081219.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_128x256_urb3den_simyr2000_c090420.nc</fsurdat>
+<fsurdat hgrid="64x128"    sim_year="2000">
+lnd/clm2/surfdata/surfdata_64x128_urb3den_simyr2000_c090420.nc</fsurdat>
+<fsurdat hgrid="48x96"     sim_year="2000" >
+lnd/clm2/surfdata/surfdata_48x96_urb3den_simyr2000_c090420.nc</fsurdat>
+<fsurdat hgrid="32x64"     sim_year="2000" >
+lnd/clm2/surfdata/surfdata_32x64_urb3den_simyr2000_c090420.nc</fsurdat>
+<fsurdat hgrid="8x16"      sim_year="2000" >
+lnd/clm2/surfdata/surfdata_8x16_urb3den_simyr2000_c090420.nc</fsurdat>
+<fsurdat hgrid="94x192"    sim_year="2000" >
+lnd/clm2/surfdata/surfdata_94x192_urb3den_simyr2000_c090420.nc</fsurdat>
 
-<fsurdat hgrid="0.23x0.31" sim_year="2000">lnd/clm2/surfdata/surfdata_0.23x0.31_c070927.nc</fsurdat>
-<fsurdat hgrid="0.47x0.63" sim_year="2000">lnd/clm2/surfdata/surfdata_0.47x0.63__c081126.nc</fsurdat>
-<fsurdat hgrid="0.9x1.25"  sim_year="2000" furbinp="surfdata_0.9x1.25_urb3den_simyr2000_c090421.nc">lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr2000_c090421.nc</fsurdat>
-<fsurdat hgrid="1.9x2.5"   sim_year="2000"
-furbinp="surfdata_1.9x2.5_urb3den_simyr2000_c090421.nc">lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr2000_c090421.nc</fsurdat>
-<fsurdat hgrid="2x2.5"     sim_year="2000">lnd/clm2/surfdata/surfdata_2x2.5_c081023.nc</fsurdat>
-<fsurdat hgrid="2.65x3.33" sim_year="2000" furbinp="surfdata_2.65x3.33_urb3den_simyr2000_c090320.nc" >lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr2000_c090320.nc</fsurdat>
-<fsurdat hgrid="4x5"       sim_year="2000" furbinp="surfdata_4x5_urb3den_simyr2000_c090320.nc">
-lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090320.nc</fsurdat>
-<fsurdat hgrid="4x5"       sim_year="2000">lnd/clm2/surfdata/surfdata_4x5_c081023.nc</fsurdat>
-<fsurdat hgrid="10x15"     sim_year="2000" furbinp="surfdata_10x15_urb3den_simyr2000_c090320.nc">lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr2000_c090320.nc</fsurdat>
-<fsurdat hgrid="10x15"     sim_year="2000">lnd/clm2/surfdata/surfdata_10x15_c081023.nc</fsurdat>
+<fsurdat hgrid="0.23x0.31" sim_year="2000" >
+lnd/clm2/surfdata/surfdata_0.23x0.31_urb3den_simyr2000_c090422.nc</fsurdat>
+<fsurdat hgrid="0.47x0.63" sim_year="2000" >
+lnd/clm2/surfdata/surfdata_0.47x0.63_urb3den_simyr2000_c090421.nc</fsurdat>
+<fsurdat hgrid="0.9x1.25"  sim_year="2000" >
+lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr2000_c090421.nc</fsurdat>
+<fsurdat hgrid="1.9x2.5"   sim_year="2000" >
+lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr2000_c090421.nc</fsurdat>
+<fsurdat hgrid="2x2.5"     sim_year="2000" >
+lnd/clm2/surfdata/surfdata_2x2.5_urb3den_simyr2000_c090421.nc</fsurdat>
+<fsurdat hgrid="2.65x3.33" sim_year="2000" >
+lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr2000_c090421.nc</fsurdat>
+<fsurdat hgrid="4x5"       sim_year="2000" >
+lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090421.nc</fsurdat>
+<fsurdat hgrid="10x15"     sim_year="2000" >
+lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr2000_c090421.nc</fsurdat>
  
-<fsurdat hgrid="5x5_amazon"    sim_year="2000" furbinp="surfdata_5x5_amazon_urb3den_simyr2000_c090320.nc"    >lnd/clm2/surfdata/surfdata_5x5_amazon_urb3den_simyr2000_c090320.nc</fsurdat>
-<fsurdat hgrid="1x1_brazil"    sim_year="2000" furbinp="surfdata_1x1_brazil_urb3den_simyr2000_c090320.nc"    >lnd/clm2/surfdata/surfdata_1x1_brazil_urb3den_simyr2000_c090320.nc</fsurdat>
-<fsurdat hgrid="1x1_tropicAtl" sim_year="2000" furbinp="surfdata_1x1_tropicAtl_urb3den_simyr2000_c090320.nc"    >lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr2000_c090320.nc</fsurdat>
+<fsurdat hgrid="5x5_amazon"    sim_year="2000" >
+lnd/clm2/surfdata/surfdata_5x5_amazon_urb3den_simyr2000_c090421.nc</fsurdat>
+<fsurdat hgrid="1x1_brazil"    sim_year="2000" >
+lnd/clm2/surfdata/surfdata_1x1_brazil_urb3den_simyr2000_c090421.nc</fsurdat>
+<fsurdat hgrid="1x1_tropicAtl" sim_year="2000" >
+lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr2000_c090421.nc</fsurdat>
 
-<!-- Global urban datasets also need to check if urban dataset is input -->
+<!-- 100% Urban single-point datasets (only for sim-year=2000) -->
+<fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" >
+lnd/clm2/surfdata/surfdata_1x1_camdenNJ_urb3den_simyr2000_c090505.nc</fsurdat>
+<fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" >
+lnd/clm2/surfdata/surfdata_1x1_vancouverCAN_urb3den_simyr2000_c090505.nc</fsurdat>
+<fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" >
+lnd/clm2/surfdata/surfdata_1x1_mexicocityMEX_urb3den_simyr2000_c090505.nc</fsurdat>
+<fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" >
+lnd/clm2/surfdata/surfdata_1x1_urbanc_alpha_urb3den_simyr2000_c090505.nc</fsurdat>
+<fsurdat hgrid="1x1_asphaltjungleNJ" sim_year="2000" >
+lnd/clm2/surfdata/surfdata_1x1_asphaltjungleNJ_urb3den_simyr2000_c090505.nc</fsurdat>
+
 <!-- for pre-industrial simulations - year 1850 -->
-<fsurdat hgrid="64x128"    sim_year="1850" furbinp="surfdata_64x128_urb3den_simyr1850_c090316.nc">lnd/clm2/surfdata/surfdata_64x128_urb3den_simyr1850_c090316.nc</fsurdat>
-<fsurdat hgrid="48x96"     sim_year="1850" furbinp="surfdata_48x96_urb3den_simyr1850_c090316.nc">lnd/clm2/surfdata/surfdata_48x96_urb3den_simyr1850_c090316.nc</fsurdat>
-<fsurdat hgrid="32x64"     sim_year="1850" furbinp="surfdata_32x64_urb3den_simyr1850_c090316.nc">lnd/clm2/surfdata/surfdata_32x64_urb3den_simyr1850_c090316.nc</fsurdat>
-<fsurdat hgrid="8x16"      sim_year="1850" furbinp="surfdata_8x16_urb3den_simyr1850_c090316.nc">lnd/clm2/surfdata/surfdata_8x16_urb3den_simyr1850_c090316.nc</fsurdat>
+<fsurdat hgrid="360x720"   sim_year="1850">
+lnd/clm2/surfdata/surfdata_360x720_urb3den_simyr1850_c090420.nc</fsurdat>
+<fsurdat hgrid="128x256"   sim_year="1850">
+lnd/clm2/surfdata/surfdata_128x256_urb3den_simyr1850_c090420.nc</fsurdat>
+<fsurdat hgrid="64x128"    sim_year="1850" >
+lnd/clm2/surfdata/surfdata_64x128_urb3den_simyr1850_c090420.nc</fsurdat>
+<fsurdat hgrid="48x96"     sim_year="1850" >
+lnd/clm2/surfdata/surfdata_48x96_urb3den_simyr1850_c090420.nc</fsurdat>
+<fsurdat hgrid="32x64"     sim_year="1850" >
+lnd/clm2/surfdata/surfdata_32x64_urb3den_simyr1850_c090420.nc</fsurdat>
+<fsurdat hgrid="8x16"      sim_year="1850" >
+lnd/clm2/surfdata/surfdata_8x16_urb3den_simyr1850_c090420.nc</fsurdat>
 
-<fsurdat hgrid="0.9x1.25"  sim_year="1850" furbinp="surfdata_0.9x1.25_urb3den_simyr1850_c090421.nc">lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr1850_c090421.nc</fsurdat>
-<fsurdat hgrid="1.9x2.5"   sim_year="1850" furbinp="surfdata_1.9x2.5_urb3den_simyr1850_c090422.nc">lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr1850_c090422.nc</fsurdat>
-<fsurdat hgrid="2.65x3.33" sim_year="1850" furbinp="surfdata_2.65x3.33_urb3den_simyr1850_c090316.nc">lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr1850_c090316.nc</fsurdat>
-<fsurdat hgrid="4x5"       sim_year="1850" furbinp="surfdata_4x5_urb3den_simyr1850_c090316.nc">lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr1850_c090316.nc</fsurdat>
-<fsurdat hgrid="10x15"     sim_year="1850" furbinp="surfdata_10x15_urb3den_simyr1850_c090316.nc">lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr1850_c090316.nc</fsurdat>
-
-<!-- Surface datasets that belong with dynamic land-use change datasets (relative to {csmdata}) -->
-<fsurdat hgrid="10x15"   sim_year="2000" fpftdyn="surfdata.pftdyn_10x15_USGS_070307.nc"     >lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc
-</fsurdat>
-<fsurdat hgrid="1x1_tropicAtl" sim_year="2000" fpftdyn="surfdata.pftdyn_1x1pt_tropicAtl_070218.nc">lnd/clm2/surfdata/surfdata_1x1pt_tropicAtl_test_070216.nc
-</fsurdat>
-
-<!-- Urban datasets also need to check if urban dataset is input -->
-<fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" furbinp="metropolis_fluxes.nc"   >lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc </fsurdat>
-<fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" furbinp="vancouverCAN_fluxes.nc" >lnd/clm2/surfdata/surfdata_1x1pt_vancouver_c070831.nc</fsurdat>
-<fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" furbinp="mexicocityMEX_fluxes.nc">lnd/clm2/surfdata/surfdata_1x1pt_mexicocity_c070831.nc</fsurdat>
-<fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" furbinp="urbanc_alpha_fluxes.nc" >lnd/clm2/surfdata/surfdata_1x1pt_urbanc_alpha_lon0_c080401.nc</fsurdat>
-<fsurdat hgrid="1x1_asphaltjungleNJ" sim_year="2000" furbinp="asphaltjungle_fluxes.nc">lnd/clm2/surfdata/surfdata_1x1pt_camdenNJ_navy_070824.nc</fsurdat>
-
-<!-- Soil carbon datasets (relative to {csmdata}) -->
-<forganic hgrid="360x720"   >lnd/clm2/surfdata/surfdata_360x720__c081210.nc</forganic>
-<forganic hgrid="128x256"   >lnd/clm2/surfdata/surfdata_128x256__c081126.nc</forganic>
-<forganic hgrid="64x128"    >lnd/clm2/surfdata/surfdata_64x128_c081023.nc</forganic>
-<forganic hgrid="48x96"     >lnd/clm2/surfdata/surfdata_48x96_c081023.nc</forganic>
-<forganic hgrid="32x64"     >lnd/clm2/surfdata/surfdata_32x64_c081023.nc</forganic>
-<forganic hgrid="8x16"      >lnd/clm2/surfdata/surfdata_8x16_c081023.nc</forganic>
-<forganic hgrid="94x192"    >lnd/clm2/surfdata/surfdata_94x192_c081219.nc</forganic>
-
-<forganic hgrid="0.47x0.63"                      >lnd/clm2/surfdata/surfdata_0.47x0.63__c081126.nc</forganic>
-<forganic hgrid="0.9x1.25"  sim_year="1850"      >lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr1850_c090421.nc</forganic>
-<forganic hgrid="0.9x1.25"  sim_year="2000"      >lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr2000_c090421.nc</forganic>
-<forganic hgrid="1.9x2.5"   sim_year="1850"      >lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr1850_c090422.nc</forganic>
-<forganic hgrid="1.9x2.5"   sim_year="1850-2000" >lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr1850_c090422.nc</forganic>
-<forganic hgrid="1.9x2.5"   sim_year="2000"      >lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr2000_c090421.nc</forganic>
-<forganic hgrid="2x2.5"                          >lnd/clm2/surfdata/surfdata_2x2.5_c081023.nc</forganic>
-<forganic hgrid="2.65x3.33"                      >lnd/clm2/surfdata/surfdata_2.65x3.33_c081023.nc</forganic>
-<forganic hgrid="4x5"                            >lnd/clm2/surfdata/surfdata_4x5_c081023.nc</forganic>
-<forganic hgrid="10x15"                          >lnd/clm2/surfdata/surfdata_10x15_c081023.nc</forganic>
-
-<forganic hgrid="5x5_amazon"         >lnd/clm2/surfdata/surfdata_5x5pt_amazon__c081126.nc</forganic>
-<forganic hgrid="1x1_brazil"         >lnd/clm2/surfdata/surfdata_1x1_brazil_navy_c081023.nc</forganic>
-<forganic hgrid="1x1_tropicAtl"      >lnd/clm2/surfdata/surfdata_1x1pt_tropicAtl_test__c081126.nc</forganic>
+<fsurdat hgrid="0.23x0.31" sim_year="1850" >
+lnd/clm2/surfdata/surfdata_0.23x0.31_urb3den_simyr1850_c090422.nc</fsurdat>
+<fsurdat hgrid="0.47x0.63" sim_year="1850" >
+lnd/clm2/surfdata/surfdata_0.47x0.63_urb3den_simyr1850_c090421.nc</fsurdat>
+<fsurdat hgrid="0.9x1.25"  sim_year="1850" >
+lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr1850_c090421.nc</fsurdat>
+<fsurdat hgrid="1.9x2.5"   sim_year="1850" >
+lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr1850_c090422.nc</fsurdat>
+<fsurdat hgrid="2.65x3.33" sim_year="1850" >
+lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr1850_c090421.nc</fsurdat>
+<fsurdat hgrid="4x5"       sim_year="1850" >
+lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr1850_c090421.nc</fsurdat>
+<fsurdat hgrid="10x15"     sim_year="1850" >
+lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr1850_c090421.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
-<fpftdyn hgrid="10x15"                              >lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc</fpftdyn>
-<fpftdyn hgrid="1x1_tropicAtl"                      >lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_tropicAtl_070218.nc</fpftdyn>
+<fpftdyn hgrid="10x15"         sim_year="1000-1002" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc</fpftdyn>
 <fpftdyn hgrid="1.9x2.5"       sim_year="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_simyr1850-2005_c090422.nc</fpftdyn>
+<fpftdyn hgrid="1x1_tropicAtl" sim_year="1000-1004" >lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_tropicAtl_testyr1000-1004_c090421.nc</fpftdyn>
 
 <!-- Grid datasets (relative to {csmdata}) -->
 <fatmgrid hgrid="360x720"   >lnd/clm2/griddata/griddata_360x720_070122.nc</fatmgrid>
@@ -319,43 +330,6 @@ lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090320.nc</fsurdat>
 <faerdep hgrid="1x1_asphaltjungleNJ"         >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_1x1_asphaltjungleNJ_c080410.nc</faerdep>
 <faerdep hgrid="1x1_tropicAtl"               >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_1x1_tropicAtl_c080410.nc</faerdep>
 <faerdep hgrid="1x1_urbanc_alpha"            >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_1x1_urbanc_alpha_c090114.nc</faerdep>
-
-<!-- Urban point input datasets (relative to {rootdir/bld/urban_input/}) -->
-<furbinp  hgrid="1x1_mexicocityMEX"  >mexicocityMEX_fluxes.nc</furbinp>
-<furbinp  hgrid="1x1_vancouverCAN"   >vancouverCAN_fluxes.nc</furbinp>
-<furbinp  hgrid="1x1_urbanc_alpha"   >urbanc_alpha_fluxes.nc</furbinp>
-<furbinp  hgrid="1x1_camdenNJ"       >metropolis_fluxes.nc</furbinp>
-<furbinp  hgrid="1x1_asphaltjungleNJ">asphaltjungle_fluxes.nc</furbinp>
-
-<furbinp hgrid="1x1_brazil"    sim_year="2000" >surfdata_1x1_brazil_urb3den_simyr2000_c090320.nc</furbinp>
-<furbinp hgrid="1x1_brazil"    sim_year="1850" >surfdata_1x1_brazil_urb3den_simyr1850_c090320.nc</furbinp>
-<furbinp hgrid="1x1_tropicAtl" sim_year="2000" >surfdata_1x1_tropicAtl_urb3den_simyr2000_c090320.nc</furbinp>
-
-<!-- Urban global input datasets (relative to {csmdata}) -->
-<furbinp hgrid="64x128"    sim_year="2000" >lnd/clm2/surfdata/surfdata_64x128_urb3den_simyr2000_c090320.nc</furbinp>
-<furbinp hgrid="48x96"     sim_year="2000" >lnd/clm2/surfdata/surfdata_48x96_urb3den_simyr2000_c090320.nc</furbinp>
-<furbinp hgrid="32x64"     sim_year="2000" >lnd/clm2/surfdata/surfdata_32x64_urb3den_simyr2000_c090320.nc</furbinp>
-<furbinp hgrid="8x16"      sim_year="2000" >lnd/clm2/surfdata/surfdata_8x16_urb3den_simyr2000_c090320.nc</furbinp>
-
-<furbinp hgrid="0.9x1.25"  sim_year="2000" >lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr2000_c090421.nc</furbinp>
-<furbinp hgrid="1.9x2.5"   sim_year="2000" >lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr2000_c090421.nc</furbinp>
-<furbinp hgrid="2.65x3.33" sim_year="2000" >lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr2000_c090320.nc</furbinp>
-<furbinp hgrid="4x5"       sim_year="2000" >lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090320.nc</furbinp>
-<furbinp hgrid="10x15"     sim_year="2000" >lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr2000_c090320.nc</furbinp>
- 
-<furbinp hgrid="5x5_amazon"    sim_year="2000" >lnd/clm2/surfdata/surfdata_5x5_amazon_urb3den_simyr2000_c090320.nc</furbinp>
-
-<!-- for pre-industrial simulations - year 1850 -->
-<furbinp hgrid="64x128"    sim_year="1850" >lnd/clm2/surfdata/surfdata_64x128_urb3den_simyr1850_c090316.nc</furbinp>
-<furbinp hgrid="48x96"     sim_year="1850" >lnd/clm2/surfdata/surfdata_48x96_urb3den_simyr1850_c090316.nc</furbinp>
-<furbinp hgrid="32x64"     sim_year="1850" >lnd/clm2/surfdata/surfdata_32x64_urb3den_simyr1850_c090316.nc</furbinp>
-<furbinp hgrid="8x16"      sim_year="1850" >lnd/clm2/surfdata/surfdata_8x16_urb3den_simyr1850_c090316.nc</furbinp>
-
-<furbinp hgrid="0.9x1.25"  sim_year="1850" >lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr1850_c090421.nc</furbinp>
-<furbinp hgrid="1.9x2.5"   sim_year="1850" >lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr1850_c090422.nc</furbinp>
-<furbinp hgrid="2.65x3.33" sim_year="1850" >lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr1850_c090316.nc</furbinp>
-<furbinp hgrid="4x5"       sim_year="1850" >lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr1850_c090316.nc</furbinp>
-<furbinp hgrid="10x15"     sim_year="1850" >lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr1850_c090316.nc</furbinp>
 
 <!--CN Nitrogen deposition dataset for a fixed year (relative to {csmdata}) -->
 

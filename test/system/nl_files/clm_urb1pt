@@ -3,4 +3,3 @@
 -silent 
 -case clmrun 
 -source CLM1PT
--clm_demand furbinp

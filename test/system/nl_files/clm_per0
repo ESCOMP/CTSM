@@ -3,5 +3,4 @@
 -silent 
 -case clmrun 
 -use_case pergro0 
--clm_demand furbinp
 -source CLM_QIAN

@@ -67,7 +67,7 @@ OPTIONS
                          the defaults in bld/config_files.  This file is used to specify model
                          configuration parameters only.  Parameters relating to the build which
                          are system dependent will be ignored.
-     -dust <name>        Turn on DUST [on | off] (default is off).
+     -dust <name>        Turn on DUST [on | off] (default is on).
      -esmf_libdir <dir>  Directory containing ESMF library and esmf.mk file.
      -exit_spinup <name> Turn on EXIT_SPINUP mode for bgc setting of CN [on | off] (default is off).
      -fc <name>          User specified Fortran compiler.  Overrides Makefile default.
@@ -81,7 +81,7 @@ OPTIONS
      -ldflags <string>   A string of user specified load options.  Appended to
                          Makefile defaults.
      -linker <name>      User specified linker.  Overrides Makefile default of \$(FC).
-     -maxpft <n>         Value of maxpatch_pft (default is 4)
+     -maxpft <n>         Value of maxpatch_pft (default is numpft+1)
      -mpi_inc <dir>      Directory containing MPI include files.
      -mpi_lib <dir>      Directory containing MPI library.
      -mode <name>        CLM mode [ccsm_seq | ext_ccsm_seq]
@@ -90,9 +90,9 @@ OPTIONS
      -nc_mod <dir>       Directory containing netCDF module files.
      -nofire             Turn off wildfires for bgc setting of CN (default includes fire for CN)
      -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off] (default is off)
-     -pio <name>         Switch enables building with Parallel I/O library. [on | off] (default is off)
-     -prog_seasalt<name> Turn on prognostic sea-salt (PROGSSLT cppdef token) [on | off] (default is off)
-     -rtm <name>         Turn on RTM  [on | off] (default is off)
+     -pio <name>         Switch enables building with Parallel I/O library. [on | off] (default is on)
+     -prog_seasalt<name> Turn on prognostic sea-salt (PROGSSLT cppdef token) [on | off] (default is on)
+     -rtm <name>         Turn on RTM  [on | off] (default is on)
      -silent [or -s]     Turns on silent mode - only fatal messages issued.
      -snicar_frc <name>  Turn on SNICAR radiative forcing calculation. [on | off] (default is off)
      -[no]smp            Switch on [off] SMP parallelism.

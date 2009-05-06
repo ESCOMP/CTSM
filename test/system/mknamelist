@@ -88,11 +88,8 @@ clmopt=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile`
 clmnl=${CLM_SCRIPTDIR}/nl_files/$nlfile
 
 source=`grep source ${CLM_SCRIPTDIR}/nl_files/$optfile | awk '{print $NF}'`
-if [ "$source" = "CLMNCEP" ]; then
-   clmopt="$clmopt -datm_data_dir $DATM_DATA_DIR"
-else if [ "$source" = "CLM_QIAN" ]; then
+if [ "$source" = "CLM_QIAN" ]; then
    clmopt="$clmopt -datm_data_dir $DATM_QIAN_DATA_DIR"
-fi
 fi
 
 echo "$cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \ "

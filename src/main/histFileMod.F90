@@ -1953,6 +1953,7 @@ contains
        if (tape(t)%ntimes == 1) then     ! just protect define mode
 
        call get_ref_date(yr, mon, day, nbsec)
+       nstep = get_nstep()
        hours   = nbsec / 3600
        minutes = (nbsec - hours*3600) / 60
        secs    = (nbsec - hours*3600 - minutes*60)
@@ -2020,6 +2021,7 @@ contains
 !-------------------------------------------------------------------------------
     if (t == 1 .and. tape(t)%ntimes == 1) then
     if (mode == 'define') then
+        if (nstep == 0) then
           do ifld = 1,6
              if (ifld == 1) then
                 varname='ZSOI'
@@ -2050,76 +2052,77 @@ contains
                      long_name=long_name, units=units, missing_value=spval, fill_value=spval, usepio=pioflag)
              end if
           end do
+        endif
 
-         ! Define time-invariant grid variables
+        ! Define time-invariant grid variables
 
-         call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, dim1name='lon', &
+        call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, dim1name='lon', &
               long_name='coordinate longitude', units='degrees_east', &
               ncid=nfid(t), usepio=pioflag)
-         call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, dim1name='lat', &
+        call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, dim1name='lat', &
               long_name='coordinate latitude', units='degrees_north', &
               ncid=nfid(t), usepio=pioflag)
-         call ncd_defvar(varname='lonatm', xtype=tape(t)%ncprec, dim1name='lonatm', &
+        call ncd_defvar(varname='lonatm', xtype=tape(t)%ncprec, dim1name='lonatm', &
               long_name='atm coordinate longitude', units='degrees_east', &
               ncid=nfid(t), usepio=pioflag)
-         call ncd_defvar(varname='latatm', xtype=tape(t)%ncprec, dim1name='latatm', &
+        call ncd_defvar(varname='latatm', xtype=tape(t)%ncprec, dim1name='latatm', &
               long_name='atm coordinate latitude', units='degrees_north', &
               ncid=nfid(t), usepio=pioflag)
 #if (defined RTM)
-         call ncd_defvar(varname='lonrof', xtype=tape(t)%ncprec, dim1name='lonrof', &
+        call ncd_defvar(varname='lonrof', xtype=tape(t)%ncprec, dim1name='lonrof', &
               long_name='runoff coordinate longitude', units='degrees_east', ncid=nfid(t), usepio=pioflag)
-         call ncd_defvar(varname='latrof', xtype=tape(t)%ncprec, dim1name='latrof', &
+        call ncd_defvar(varname='latrof', xtype=tape(t)%ncprec, dim1name='latrof', &
               long_name='runoff coordinate latitude', units='degrees_north', ncid=nfid(t), usepio=pioflag)
 #endif
-         call ncd_defvar(varname='longxy',   xtype=tape(t)%ncprec, &
+        call ncd_defvar(varname='longxy',   xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat', &
               long_name='longitude', units='degrees_east',  ncid=nfid(t), &
               missing_value=spval, fill_value=spval, usepio=pioflag)
-         call ncd_defvar(varname='latixy',   xtype=tape(t)%ncprec, &
+        call ncd_defvar(varname='latixy',   xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='latitude', units='degrees_north', ncid=nfid(t), &
               missing_value=spval, fill_value=spval, usepio=pioflag)
-         call ncd_defvar(varname='area',     xtype=tape(t)%ncprec, &
+        call ncd_defvar(varname='area',     xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='grid cell areas', units='km^2', ncid=nfid(t), &
               missing_value=spval, fill_value=spval, usepio=pioflag)
-         call ncd_defvar(varname='areaupsc', xtype=tape(t)%ncprec, &
+        call ncd_defvar(varname='areaupsc', xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='normalized grid cell areas related to upscaling', units='km^2', ncid=nfid(t), &
               missing_value=spval, fill_value=spval, usepio=pioflag)
-         call ncd_defvar(varname='topo',     xtype=tape(t)%ncprec, &
+        call ncd_defvar(varname='topo',     xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='grid cell topography', units='m', ncid=nfid(t), &
               missing_value=spval, fill_value=spval, usepio=pioflag)
-         call ncd_defvar(varname='topodnsc', xtype=tape(t)%ncprec, &
+        call ncd_defvar(varname='topodnsc', xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat',&
               long_name='normalized grid cell topography related to downscaling', units='m', ncid=nfid(t), &
               missing_value=spval, fill_value=spval, usepio=pioflag)
-         call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
+        call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
               dim1name='lon', dim2name='lat', &
               long_name='land fraction', ncid=nfid(t), &
               missing_value=spval, fill_value=spval, usepio=pioflag)
 
-         call ncd_defvar(varname='landmask', xtype=ncd_int, &
+        call ncd_defvar(varname='landmask', xtype=ncd_int, &
               dim1name='lon', dim2name='lat', &
               long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), usepio=pioflag)
-         call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
+        call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
               dim1name='lon', dim2name='lat', &
               long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
               imissing_value=ispval, ifill_value=ispval, usepio=pioflag)
-         call ncd_defvar(varname='indxupsc', xtype=ncd_int, &
+        call ncd_defvar(varname='indxupsc', xtype=ncd_int, &
               dim1name='lon', dim2name='lat', &
               long_name='upscaling atm global grid index', ncid=nfid(t), &
               imissing_value=ispval, ifill_value=ispval, usepio=pioflag)
-         call ncd_defvar(varname='longxyatm',   xtype=tape(t)%ncprec, &
+        call ncd_defvar(varname='longxyatm',   xtype=tape(t)%ncprec, &
               dim1name='lonatm', dim2name='latatm', &
               long_name='atm longitude', units='degrees_east',  ncid=nfid(t), &
               missing_value=spval, fill_value=spval, usepio=pioflag)
-         call ncd_defvar(varname='latixyatm',   xtype=tape(t)%ncprec, &
+        call ncd_defvar(varname='latixyatm',   xtype=tape(t)%ncprec, &
               dim1name='lonatm', dim2name='latatm',&
               long_name='atm latitude', units='degrees_north', ncid=nfid(t), &
               missing_value=spval, fill_value=spval, usepio=pioflag)
-         call ncd_defvar(varname='areaatm',     xtype=tape(t)%ncprec, &
+        call ncd_defvar(varname='areaatm',     xtype=tape(t)%ncprec, &
               dim1name='lonatm', dim2name='latatm',&
               long_name='atm grid cell areas', units='km^2', ncid=nfid(t), &
               missing_value=spval, fill_value=spval, usepio=pioflag)
@@ -2147,48 +2150,51 @@ contains
           end if
        end if
 
-       do ifld = 1,6
-          if (ifld == 1) then
-             varname='ZSOI'
-          else if (ifld == 2) then
-             varname='DZSOI'
-          else if (ifld == 3) then
-             varname='WATSAT'
-          else if (ifld == 4) then
-             varname='SUCSAT'
-          else if (ifld == 5) then
-             varname = 'BSW'
-          else if (ifld == 6) then
-             varname = 'HKSAT'
-          end if
-          histi(:,:) = spval
-          do lev = 1,nlevgrnd
+       if (nstep == 0) then
+          do ifld = 1,6
+             if (ifld == 1) then
+                varname='ZSOI'
+             else if (ifld == 2) then
+                varname='DZSOI'
+             else if (ifld == 3) then
+                varname='WATSAT'
+             else if (ifld == 4) then
+                varname='SUCSAT'
+             else if (ifld == 5) then
+                varname = 'BSW'
+             else if (ifld == 6) then
+                varname = 'HKSAT'
+             end if
+             histi(:,:) = spval
+             do lev = 1,nlevgrnd
 !dir$ concurrent
 !cdir nodep
-             do c = begc, endc
-                l = cptr%landunit(c)
-                if (.not. lptr%lakpoi(l)) then
-                   if (ifld ==1) histi(c,lev) = cptr%cps%z(c,lev)
-                   if (ifld ==2) histi(c,lev) = cptr%cps%dz(c,lev)
-                   if (ifld ==3) histi(c,lev) = cptr%cps%watsat(c,lev)
-                   if (ifld ==4) histi(c,lev) = cptr%cps%sucsat(c,lev)
-                   if (ifld ==5) histi(c,lev) = cptr%cps%bsw(c,lev)
-                   if (ifld ==6) histi(c,lev) = cptr%cps%hksat(c,lev)
-                end if
+                do c = begc, endc
+                   l = cptr%landunit(c)
+                   if (.not. lptr%lakpoi(l)) then
+                      if (ifld ==1) histi(c,lev) = cptr%cps%z(c,lev)
+                      if (ifld ==2) histi(c,lev) = cptr%cps%dz(c,lev)
+                      if (ifld ==3) histi(c,lev) = cptr%cps%watsat(c,lev)
+                      if (ifld ==4) histi(c,lev) = cptr%cps%sucsat(c,lev)
+                      if (ifld ==5) histi(c,lev) = cptr%cps%bsw(c,lev)
+                      if (ifld ==6) histi(c,lev) = cptr%cps%hksat(c,lev)
+                   end if
+                end do
              end do
-          end do
-          if (tape(t)%dov2xy) then
-             histo(:,:) = spval
-             call c2g(begc, endc, begl, endl, begg, endg, nlevgrnd, histi, histo, &
-                  c2l_scale_type='urbanh', l2g_scale_type='unity')
+             if (tape(t)%dov2xy) then
+                histo(:,:) = spval
+                call c2g(begc, endc, begl, endl, begg, endg, nlevgrnd, histi, histo, &
+                     c2l_scale_type='urbanh', l2g_scale_type='unity')
 
-             call ncd_iolocal(varname=varname, dim1name=grlnd, dim2name='levgrnd', &
-                  data=histo, ncid=nfid(t), flag='write', usepio=pioflag)
-          else
-             call ncd_iolocal(varname=varname, dim1name=namec, dim2name='levgrnd', &
-                  data=histi, ncid=nfid(t), flag='write', usepio=pioflag)
-          end if
-       end do
+                call ncd_iolocal(varname=varname, dim1name=grlnd, dim2name='levgrnd', &
+                     data=histo, ncid=nfid(t), flag='write', usepio=pioflag)
+             else
+                call ncd_iolocal(varname=varname, dim1name=namec, dim2name='levgrnd', &
+                     data=histi, ncid=nfid(t), flag='write', usepio=pioflag)
+             end if
+          end do
+
+       endif
 
        if (tape(t)%dov2xy) deallocate(histo)
        deallocate(histi)

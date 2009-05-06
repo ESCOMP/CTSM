@@ -914,13 +914,8 @@ Character array of stream description file names
 </entry>
 
 <entry id="factorfn" type="char*256" category="datm"
-       group="datm_nml" valid_values="unused">
+       group="datm_nml" valid_values="null">
 File containing tn460 correction factors (not valid for any CLM DATM7 modes)
-</entry>
-
-<entry id="step2init" type="logical" category="datm"
-       group="datm_nml" valid_values="">
-Use two step initialization and time-stepping in the data atmosphere model.
 </entry>
 
 <entry id="res" type="char*30" category="default_settings"
@@ -947,8 +942,9 @@ End of year to cycle datm data through
 </entry>
 
 <entry id="sim_year" type="char*9" category="default_settings"
-       group="default_settings" valid_values="1850,2000,1850-2000">
+       group="default_settings" valid_values="1000-1002,1000-1004,1850,2000,1850-2000">
 Year to simulate datasets for (such as surface datasets, initial conditions, dynamic PFT, aerosol-deposition, Nitrogen deposition rates etc.)
+A sim_year near 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
 </entry> 
 
 <entry id="source" type="char*80" category="datm_internal"

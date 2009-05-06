@@ -59,17 +59,6 @@ case $hostname in
 
     script_template="$cfgdir/run-ibm.csh"
     ;;
-   ##bangkok,calgary
-    ba* | b0* | ca* | c0* ) 
-
-    script_template="$cfgdir/run-pc.csh"
-    ;;
-
-   ##lightning
-    ln* )
-
-    script_template="$cfgdir/run-lightning.csh"
-    ;;
 
    ## default
     * )

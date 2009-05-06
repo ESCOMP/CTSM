@@ -18,7 +18,7 @@ set cfgdir = $CASEBUILD/clmconf
 set config = $cfgdir/config_cache.xml
 cd $cfgdir
 
-$CODEROOT/lnd/clm*/bld/configure -spmd -mode ext_ccsm_seq -rtm on -dust on -prog_seasalt on -clm_bld $cfgdir \
+$CODEROOT/lnd/clm*/bld/configure -spmd -mode ext_ccsm_seq -clm_bld $cfgdir \
          -usr_src $CASEROOT/SourceMods/src.clm $CLM_CONFIG_OPTS || exit -1 
 
 #--------------------------------------------------------------------
@@ -35,7 +35,7 @@ if ($RUN_TYPE == branch) set nrevsn   = ${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-000
 
 set config = $CASEBUILD/clmconf/config_cache.xml
 
-set clm_demand = "$CLM_DEMAND,forganic,furbinp"
+set clm_demand = "$CLM_DEMAND"
 
 @ clm_dtime  = ( 3600 * 24 ) / $LND_NCPL
 @ rtm_nsteps = ( 3600 * 3  ) / $clm_dtime  # rtm is done every 3 hours

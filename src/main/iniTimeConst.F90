@@ -160,6 +160,7 @@ subroutine iniTimeConst
   real(r8) :: om_tkd       = 0.05_r8 ! thermal conductivity of dry organic soil (Farouki, 1981)
   real(r8) :: om_b         = 2.7_r8  ! Clapp Hornberger paramater for oragnic soil (Letts, 2000)
   real(r8) :: organic_max  = 130._r8 ! organic matter (kg/m3) where soil is assumed to act like peat 
+  real(r8) :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
   real(r8) :: pc           = 0.5_r8   ! percolation threshold
   real(r8) :: pcbeta       = 0.139_r8 ! percolation exponent
   real(r8) :: perc_frac               ! "percolating" fraction of organic soil
@@ -533,30 +534,24 @@ subroutine iniTimeConst
         dzurb_wall(l,j)= 0.5*(zurb_wall(l,j+1)-zurb_wall(l,j-1)) 
       enddo
       dzurb_wall(l,nlevurb) = zurb_wall(l,nlevurb)-zurb_wall(l,nlevurb-1)
-      write(iulog,*)'Total thickness of wall: ',sum(dzurb_wall(l,:))
-      write(iulog,*)'Wall layer thicknesses: ',dzurb_wall(l,:)
 
       dzurb_roof(l,1) = 0.5*(zurb_roof(l,1)+zurb_roof(l,2))    !thickness b/n two interfaces
       do j = 2,nlevurb-1
         dzurb_roof(l,j)= 0.5*(zurb_roof(l,j+1)-zurb_roof(l,j-1)) 
       enddo
       dzurb_roof(l,nlevurb) = zurb_roof(l,nlevurb)-zurb_roof(l,nlevurb-1)
-      write(iulog,*)'Total thickness of roof: ',sum(dzurb_roof(l,:))
-      write(iulog,*)'Roof layer thicknesses: ',dzurb_roof(l,:)
 
       ziurb_wall(l,0) = 0.
       do j = 1, nlevurb-1
         ziurb_wall(l,j) = 0.5*(zurb_wall(l,j)+zurb_wall(l,j+1))          !interface depths
       enddo
       ziurb_wall(l,nlevurb) = zurb_wall(l,nlevurb) + 0.5*dzurb_wall(l,nlevurb)
-      write(iulog,*)'Wall layer interface depths: ',ziurb_wall(l,:)
 
       ziurb_roof(l,0) = 0.
       do j = 1, nlevurb-1
         ziurb_roof(l,j) = 0.5*(zurb_roof(l,j)+zurb_roof(l,j+1))          !interface depths
       enddo
       ziurb_roof(l,nlevurb) = zurb_roof(l,nlevurb) + 0.5*dzurb_roof(l,nlevurb)
-      write(iulog,*)'Roof layer interface depths: ',ziurb_roof(l,:)
     end if
    end do
 
@@ -632,7 +627,11 @@ subroutine iniTimeConst
             tkmg(c,lev)   = spval
             tksatu(c,lev) = spval
             tkdry(c,lev)  = spval
-            csol(c,lev)   = spval
+            if (ltype(l)==istwet .and. lev > nlevsoi) then
+               csol(c,lev) = csol_bedrock
+            else
+               csol(c,lev)= spval
+            endif
             watdry(c,lev) = spval 
             watopt(c,lev) = spval 
          end do
@@ -710,8 +709,7 @@ subroutine iniTimeConst
             csol(c,lev)   = ((1._r8-om_frac)*(2.128_r8*sand+2.385_r8*clay) / (sand+clay) +   &
                            om_csol*om_frac)*1.e6_r8  ! J/(m3 K)  
             if (lev .gt. nlevsoi) then
-               ! vol. heat capacity of granite/sandstone  J/(m3 K)(Wikipedia; Shabbir, 2000)
-               csol(c,lev) = 2.0_r8*1.e6_r8
+               csol(c,lev) = csol_bedrock
             endif
             watdry(c,lev) = watsat(c,lev) * (316230._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
             watopt(c,lev) = watsat(c,lev) * (158490._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 

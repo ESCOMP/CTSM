@@ -65,7 +65,8 @@ OPTIONS
      -help  [or -h]                       Display this help.
      -namelist "namelistname"             Namelist name to read in by default ($namelist).
      -res  "resolution1,resolution2,..."  List of resolution to use for files.
-                                          (At least one resolution is required).
+                                          (At least one resolution is required)
+                                          (If res is "all" will run over all resolutions)
      -silent [or -s]                      Don't do any extra printing.
 EXAMPLES
 
@@ -180,11 +181,17 @@ sub GetListofNeededFiles {
   $inputopts{'cfgdir'}    = $cfgdir;
   $inputopts{'csmdata'}   = "default";
   $inputopts{'config'}    = "noconfig";
-  my @resolutions = split( /,/, $opts{'res'} );
   my $definition = Build::NamelistDefinition->new( $inputopts{'nldef_file'} );
   my $cfg = Build::Config->new( $inputopts{'empty_cfg_file'} );
 
   my %files;
+  # Resolutions...
+  my @resolutions;
+  if ( $opts{'res'} eq "all" ) {
+     @resolutions = $definition->get_valid_values( "res", 'noquotes'=>1 );
+  } else {
+     @resolutions = split( /,/, $opts{'res'} );
+  }
   #
   # Loop over all resolutions asked for
   #

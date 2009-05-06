@@ -709,31 +709,14 @@ if ( defined($opts{'clm_demand'}) ) {
     $settings{'sim_year'}    = $sim_years;
     $settings{'mask'}        = $mask;
     foreach my $item ( @demandlist ) {
-        if ( $item eq "none" ) { next; }
-        if ( $item eq "furbinp" ) {
-           if ( $lnd_res =~ /1x1_/ ) {
-              add_default($nl, "furbinp",  'hgrid'=>$lnd_res, 
-                          'set_abspath'=>"$cfgdir/urban_input", 'sim_year'=>$sim_yr );
-           } else {
-              add_default($nl, "furbinp",  'hgrid'=>$lnd_res,   'sim_year'=>$sim_yr );
-           }
-        } elsif ( $item eq "forganic" ) {
-           add_default($nl, "$item", 'hgrid'=>$lnd_res, 'sim_year'=>$sim_yr );
-        } else {
-	   add_default($nl, $item, %settings );
-        }
+        if ( $item eq "null" ) { next; }
+	add_default($nl, $item, %settings );
     }
 }
 
 #
-# Get surface dataset after furbinp so that we can get surface data consistent with it
-# And so that you can get surface dataset consistent with the fpftdyn dataset
+# Get surface dataset after fpftdyn so that we can get surface data consistent with it
 #
-my $furbinp = $nl->get_value('furbinp');
-$furbinp =~ s!(.*)/!!;
-$furbinp =~ s/'//;
-$furbinp =~ s/"//;
-if ( $furbinp eq "" ) { $furbinp = "null"; }
 my $fpftdyn = $nl->get_value('fpftdyn');
 $fpftdyn =~ s!(.*)/!!;
 $fpftdyn =~ s/'//;
@@ -744,8 +727,14 @@ $fndepdyn =~ s!(.*)/!!;
 $fndepdyn =~ s/'//;
 $fndepdyn =~ s/"//;
 if ( $fndepdyn eq "" ) { $fndepdyn = "null"; }
-add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_yr, 
-            'furbinp'=>$furbinp, 'fpftdyn'=>$fpftdyn );
+add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_yr );
+my $fsurdat = $nl->get_value( 'fsurdat' );
+
+#
+# Use surface dataset for organic soil and urban input datasets
+#
+add_default($nl, 'forganic', 'val'=>$fsurdat, 'no_abspath'=>1 );
+add_default($nl, 'furbinp',  'val'=>$fsurdat, 'no_abspath'=>1 );
 
 # Initial conditions
 # The initial date is an attribute in the defaults file which should be matched unless
@@ -766,15 +755,15 @@ if (not defined $nl->get_value('finidat')) {
     if ( $start_type =~ /startup/  ) { $nofail = 0; }
     if ($opts{'ignore_ic_date'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                    'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 'fndepdyn'=>$fndepdyn, 
+                    'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'fndepdyn'=>$fndepdyn, 
                     'sim_year'=>$sim_yr, 'maxpft'=>$maxpft );
     } elsif ($opts{'ignore_ic_year'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 
+                    'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
                     'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_yr, 'maxpft'=>$maxpft );
     } else {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
-                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'furbinp'=>$furbinp, 
+                    'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
                     'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_yr, 'maxpft'=>$maxpft );
     }
     my $finidat = $nl->get_value($var);
@@ -970,7 +959,6 @@ if ($mode eq "ccsm_seq") {
 
 if ($mode eq "ccsm_seq") {
     add_default($nl, 'factorfn');
-    add_default($nl, 'step2init');
 }
 
 

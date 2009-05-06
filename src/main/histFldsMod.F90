@@ -502,9 +502,11 @@ contains
          ptr_col=clm3%g%l%c%cws%soilalpha_u, set_nourb=spval)
 
     call hist_addfld1d (fname='FCOV',  units='unitless',  &
-         avgflag='A', long_name='fractional area with water table at surface', &
+         avgflag='A', long_name='fractional impermeable area', &
          ptr_col=clm3%g%l%c%cws%fcov, c2l_scale_type='urbanh')
-
+    call hist_addfld1d (fname='FSAT',  units='unitless',  &
+         avgflag='A', long_name='fractional area with water table at surface', &
+         ptr_col=clm3%g%l%c%cws%fsat, c2l_scale_type='urbanh')
     call hist_addfld1d (fname='ZWT',  units='m',  &
          avgflag='A', long_name='water table depth', &
          ptr_col=clm3%g%l%c%cws%zwt, c2l_scale_type='urbanh')

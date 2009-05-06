@@ -66,7 +66,7 @@ contains
     use clm_varctl    , only : iulog
     use clm_varcon    , only : sb, capr, cnfac, hvap, isturb, &
                                icol_roof, icol_sunwall, icol_shadewall, &
-                               icol_road_perv, icol_road_imperv
+                               icol_road_perv, icol_road_imperv, istwet
     use clm_varpar    , only : nlevsno, nlevgrnd, max_pft_per_col, nlevurb
     use TridiagonalMod, only : Tridiagonal
 !
@@ -433,6 +433,7 @@ contains
 !cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
+          l = clandunit(c)
           if (j >= snl(c)+1) then
              if (j == snl(c)+1) then
                 dzp     = z(c,j+1)-z(c,j)
@@ -476,6 +477,7 @@ contains
                    rt(c,j) = t_soisno(c,j) - cnfac*fact(c,j)*fn(c,j-1)
                 end if
              end if
+
           end if
        enddo
     end do
@@ -541,6 +543,7 @@ contains
 !cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
+          l = clandunit(c)
           if (j >= snl(c)+1) then
              if (j == snl(c)+1) then
                 brr(c,j) = cnfac*fn(c,j) + (1._r8-cnfac)*fn1(c,j)
@@ -759,9 +762,16 @@ contains
                    thk(c,j) = tkdry(c,j)
                 endif
                 if (j > nlevsoi) thk(c,j) = thk_bedrock
-             else
+             else if (ltype(l) == istice) then
                 thk(c,j) = tkwat
                 if (t_soisno(c,j) < tfrz) thk(c,j) = tkice
+             else if (ltype(l) == istwet) then                         
+                if (j > nlevsoi) then 
+                   thk(c,j) = thk_bedrock
+                else
+                   thk(c,j) = tkwat
+                   if (t_soisno(c,j) < tfrz) thk(c,j) = tkice
+                endif
              endif
           endif
 
@@ -818,7 +828,10 @@ contains
              cv(c,j) = cv_improad(l,j) * dz(c,j)
           else if (ltype(l) /= istwet .AND. ltype(l) /= istice) then
              cv(c,j) = csol(c,j)*(1-watsat(c,j))*dz(c,j) + (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
-          else
+          else if (ltype(l) == istwet) then 
+             cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
+             if (j > nlevsoi) cv(c,j) = csol(c,j)*dz(c,j)
+          else if (ltype(l) == istice) then 
              cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
           endif
           if (j == 1) then

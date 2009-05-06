@@ -325,7 +325,8 @@ contains
     real(r8), pointer :: eflx_building_heat(:) ! heat flux from urban building interior to walls, roof (W/m**2)
     real(r8), pointer :: eflx_urban_ac(:)      ! urban air conditioning flux (W/m**2)
     real(r8), pointer :: eflx_urban_heat(:)    ! urban heating flux (W/m**2)
-    real(r8), pointer :: fcov(:)               ! fractional area with water table at surface
+    real(r8), pointer :: fcov(:)               ! fractional impermeable area
+    real(r8), pointer :: fsat(:)               ! fractional area with water table at surface
     real(r8), pointer :: qcharge(:)            ! aquifer recharge rate (mm/s)
     real(r8), pointer :: t_building(:)         ! internal building temperature (K)
     real(r8), pointer :: eflx_traffic(:)       ! traffic sensible heat flux (W/m**2)
@@ -374,6 +375,7 @@ contains
     eflx_urban_ac      => clm3%g%l%c%cef%eflx_urban_ac
     eflx_urban_heat    => clm3%g%l%c%cef%eflx_urban_heat
     fcov               => clm3%g%l%c%cws%fcov
+    fsat               => clm3%g%l%c%cws%fsat
     qcharge            => clm3%g%l%c%cws%qcharge
     ctype              => clm3%g%l%c%itype
     t_grnd_u           => clm3%g%l%c%ces%t_grnd_u
@@ -430,6 +432,7 @@ contains
           !
           if (ctype(c) /= icol_road_perv  )then
              fcov(c)    = spval
+             fsat(c)    = spval
              qcharge(c) = spval
           end if
        else

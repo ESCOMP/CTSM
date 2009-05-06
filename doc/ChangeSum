@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_38         erik 05/06/2009 New fsurdat for other resolutions, bug-fixes, deep wetlands to bedrock, new spinups for 1.9x2.5 1850, 2000
    clm3_6_37         erik 04/27/2009 Update faerdep dataset for 1.9x2.5 to point to version cice is using for 1850 and 2000
    clm3_6_36         erik 04/27/2009 Handle transient aersol, make maxpatchpft=numpft+1 default, new datasets for 1.9x2.5 and 0.9x1.25, change doalb
    clm3_6_35         erik 04/20/2009 Fix major logic bug in mksurfdata
