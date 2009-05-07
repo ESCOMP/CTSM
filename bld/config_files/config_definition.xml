@@ -92,8 +92,8 @@ Directory containing LAPACK library.
 <entry id="esmf_libdir" value="">
 Directory containing ESMF library (for linking to external ESMF).
 </entry>
-<entry id="maxpft"  value="4">
-Maximum numbr of pfts per gridcell
+<entry id="maxpft"  value="numpft+1">
+Maximum numbr of pfts per gridcell (numpft+1 means use all available)
 </entry>
 <entry id="mpi_inc" value="">
 Directory containing MPI include files.

@@ -302,7 +302,6 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 #if (!defined PFTDYNWBAL)
      if (doalb .and. fpftdyn /= ' ') then
 
-        write(iulog,*) 'Doing dynamic pfts'
         call pftdyn_interp()  ! change the pft weights
 
         !--- get new heat,water content: (new-old)/dt = flux into lnd model ---

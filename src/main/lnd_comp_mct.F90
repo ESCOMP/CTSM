@@ -178,6 +178,7 @@ contains
 
     ! Initialize io log unit
 
+    call shr_file_getLogUnit (shrlogunit)
     if (masterproc) then
        inquire(file='lnd_modelio.nml',exist=exists)
        if (exists) then
@@ -185,9 +186,10 @@ contains
           call shr_file_setIO('lnd_modelio.nml',iulog)
        end if
        write(iulog,format) "CLM land model initialization"
+    else
+       iulog = shrlogunit
     end if
 
-    call shr_file_getLogUnit (shrlogunit)
     call shr_file_getLogLevel(shrloglev)
     call shr_file_setLogUnit (iulog)
     
