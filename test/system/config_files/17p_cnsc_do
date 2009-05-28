@@ -1,5 +1,5 @@
 -mode ccsm_seq
--spmd -nosmp
+-nospmd -smp
 -debug
 -maxpft 17
 -bgc cn

@@ -83,6 +83,22 @@ foreach $f (@src) {
     $module_files{$mod} = $name;
 }
 
+# Now make a list of .mod files in the file_paths.  If a .o source dependency
+# can't be found based on the module_files list above, then maybe a .mod
+# module dependency can if the mod file is visible.  
+my %trumod_files = ();
+my ($dir);
+my ($f, $name, $path, $suffix, $mod);
+my @suffixes = ('\.mod' );
+foreach $dir (@file_paths) {
+    @filenames = (glob("$dir/*.mod"));
+    foreach $f (@filenames) {
+       ($name, $path, $suffix) = fileparse($f, @suffixes);
+       ($mod = $name) =~ tr/a-z/A-Z/;
+       $trumod_files{$mod} = $name;
+    }
+}
+
 #print STDERR "\%module_files\n";
 #while ( ($k,$v) = each %module_files ) {
 #    print STDERR "$k => $v\n";
@@ -225,14 +241,14 @@ sub find_dependencies {
 	     push @incs, $1;
 	 } 
 	# Search for Fortran include dependencies.
-	elsif ( /^\s*include\s+['"](.*)['"]/ ) {
+	elsif ( /^\s*include\s+['"](.*)['"]/ ) {                   #" for emacs fontlock
 	     push @incs, $1;
 	}
 	# Search for module dependencies.
 	elsif ( /^\s*USE\s+(\w+)/i ) {
-	    # Return dependency in the form of a .o version of the file that contains
-	    # the module.
 	    ($module = $1) =~ tr/a-z/A-Z/;
+	    # Return dependency in the form of a .o version of the file that contains
+	    # the module.  this is from the source list.
 	    if ( defined $module_files{$module} ) { 
 	        if ( defined $obj_dir ) {
 		    push @mods, "$obj_dir/$module_files{$module}.o";
@@ -240,6 +256,15 @@ sub find_dependencies {
 	            push @mods, "$module_files{$module}.o";
 	        }
 	    }
+	    # Return dependency in the form of a .mod version of the file that contains
+	    # the module.  this is from the .mod list.  only if .o version not found
+	    elsif ( defined $trumod_files{$module} ) { 
+	        if ( defined $obj_dir ) {
+		    push @mods, "$obj_dir/$trumod_files{$module}.mod";
+	        } else {
+	            push @mods, "$trumod_files{$module}.mod";
+	        }
+            }
 	}
     }
     close( FH );
@@ -259,17 +284,7 @@ sub find_file {
 
     foreach $dir (@file_paths) {
 	$fname = "$dir/$file";
-	if ( -f  $fname ) { 
-           # The following fixes a bug in Mac OS 10.4.10: Jul/13/2007 EBK
-           # The bug allows assert.H to match the file assert.h with "-f"
-           # If file found return it (make sure NOT darwin or filename NOT assert.h
-           if ( ($^O ne "darwin") || ($file ne "assert.h") ) {
-              return $fname; 
-           # Fix a kludge for Darwin where assert.h is wrongly matched
-           } else {
-              return '';  # file not found
-           }
-        }
+	if ( -f  $fname ) { return $fname; }
     }
     return '';  # file not found
 }

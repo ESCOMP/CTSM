@@ -208,49 +208,6 @@ LDFLAGS += -bdatapsize:64K -bstackpsize:64K -btextpsize:64K
 endif
 
 #------------------------------------------------------------------------
-# SGI
-#------------------------------------------------------------------------
-
-ifeq ($(UNAMES),IRIX64)
-
-CPPDEF      += -DIRIX64
-FC          := f90
-CC          := cc
-CFLAGS      := -64 $(cpp_path) $(CPPDEF) -O2
-mod_path    := -I$(MOD_NETCDF)
-FFLAGS      := -64 $(cpp_path) $(mod_path) $(CPPDEF) -i4 -macro_expand -extend_source
-FREEFLAGS   :=
-FIXEDFLAGS  :=
-LDFLAGS     += -64
-
-ifeq ($(DEBUG),TRUE)
-  # WARNING: -mp and -g together has been known to cause wrong answers
-  FFLAGS  += -g -DEBUG:trap_uninitialized=ON -C
-else
-  # Check for override of default Fortran compiler optimizations
-  ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
-    FORTRAN_OPTIMIZATION := -O2
-  endif
-  FFLAGS += $(FORTRAN_OPTIMIZATION)
-endif
-
-ifeq ($(SMP),TRUE)
-  # THREADED_OMP is used by the timing library
-  CFLAGS += -DTHREADED_OMP
-  # Only enable OpenMP, not SGI specific parallelism
-  # Note that -lmp should precede -lmpi when running hybrid MPI/OpenMP
-  FFLAGS  += -mp -MP:dsm=OFF -MP:old_mp=OFF
-  LDFLAGS += -mp -lmp
-endif
-
-ifeq ($(SPMD),TRUE)
-  FFLAGS  += -I$(INC_MPI)
-  LDFLAGS += -L$(LIB_MPI) -lmpi
-endif
-
-endif
-
-#------------------------------------------------------------------------
 # Linux
 #------------------------------------------------------------------------
 
@@ -413,8 +370,13 @@ ifeq ($(FC),pathf90)
   FREEFLAGS  :=
   FIXEDFLAGS :=
 
+  ifeq ($(SMP),TRUE)
+    FFLAGS   += -mp
+    LDFLAGS  += -mp
+  endif
+
   ifeq ($(DEBUG),TRUE)
-    FFLAGS   += -g  -trapuv -Wuninitialized
+    FFLAGS   += -trapuv -Wuninitialized -g
   else
     # Check for override of default Fortran compiler optimizations
     ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
@@ -423,10 +385,6 @@ ifeq ($(FC),pathf90)
     FFLAGS   += $(FORTRAN_OPTIMIZATION)
   endif
 
-  ifeq ($(SMP),TRUE)
-    FFLAGS   += -mp
-    LDFLAGS  += -mp
-  endif
 
 endif
 
@@ -460,233 +418,6 @@ ifeq ($(SPMD),TRUE)
 endif
 
 endif
-
-#------------------------------------------------------------------------
-# NEC SX-6
-#------------------------------------------------------------------------
-
-ifeq ($(UNAMES),SUPER-UX)
-
-VER = inst
-VER = rev285
-
-CPPDEF     += -USX -DFORTRANUNDERSCORE -DNEC_SX -D_SX -DDISABLE_TIMERS
-ifeq ($(SMP),TRUE)
-  CPPDEF   += -DTHREADED_OMP
-endif
-CPPFLAGS   := $(CPPDEF) $(cpp_path)
-
-FC         := sxf90 -Yf,/SX/opt/sxf90/$(VER)/lib -V
-CC         := sxc++
-AS         := sxas
-CPP        := cpp -traditional
-PROF       := -ftrace
-CFLAGS     := $(PROF) $(CPPFLAGS)
-FFLAGS     := $(PROF) $(CPPFLAGS) -Wf,"-A idbl4 -pvctl fullmsg loopcnt=1000000 noassume noloopchg" \
-              -Wf,"-L fmtlist map transform -ptr byte"
-FREEFLAGS  :=
-FIXEDFLAGS :=
-LDFLAGS    += $(PROF) -Wl"-Z 5000M -ZL 5000M"
-
-ifneq ($strip $(LINKER)),)
-  LINKER := $(CC) -f90lib
-endif
-
-ifeq ($(DEBUG),TRUE)
-  FFLAGS  += -g -Cvsafe
-else
-# Check for override of default Fortran compiler optimizations
-  ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
-    FORTRAN_OPTIMIZATION := -Cvopt
-  endif
-  FFLAGS += $(FORTRAN_OPTIMIZATION)
-endif
-
-ifeq ($(SMP),TRUE)
-  CFLAGS  += -P openmp
-  FFLAGS  += -P openmp
-  LDFLAGS += -lcpp -P openmp
-endif
-
-ifeq ($(SPMD),TRUE)
-  LDFLAGS += -L$(LIB_MPI) -lmpi
-endif
-
-FrictionVelocityMod.o:	FrictionVelocityMod.F90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi $<
-
-shr_orb_mod.f90:        shr_orb_mod.F90
-	$(CPP)  $(CPPFLAGS) $< > shr_orb_mod.f90
-
-# inlining for CLM
-
-QSatMod.f90:	QSatMod.F90
-	$(CPP) $(CPPFLAGS) $< > QSatMod.f90
-
-CanopyFluxesMod.o:	CanopyFluxesMod.F90 QSatMod.f90  FrictionVelocityMod.f90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=qsat,moninobukini expin=QSatMod.f90,FrictionVelocityMod.f90
-
-Biogeophysics1Mod.o:	Biogeophysics1Mod.F90 QSatMod.f90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=qsat expin=QSatMod.f90
-
-FrictionVelocityMod.f90	: FrictionVelocityMod.F90
-	$(CPP) $(CPPFLAGS) $< > FrictionVelocityMod.f90
-
-BareGroundFluxesMod.o	: BareGroundFluxesMod.F90 FrictionVelocityMod.f90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=moninobukini expin=FrictionVelocityMod.f90
-
-BiogeophysicsLakeMod.o	: BiogeophysicsLakeMod.F90 FrictionVelocityMod.f90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=moninobukini expin=FrictionVelocityMod.f90
-
-endif
-
-#------------------------------------------------------------------------
-# Earth Simulator
-#------------------------------------------------------------------------
-
-ifeq ($(UNAMES),ES)
-
-CPPDEF     += -USX -DFORTRANUNDERSCORE -DNEC_SX -D_SX -DDISABLE_TIMERS
-ifeq ($(SMP),TRUE)
-  CPPDEF   += -DTHREADED_OMP
-endif
-CPPFLAGS   := $(CPPDEF) $(cpp_path)
-
-FC         := esf90 -V
-CC         := esc++
-AS         := esas
-CPP        := cpp -traditional
-PROF       :=
-CFLAGS     := $(PROF) $(CPPFLAGS)
-FFLAGS     := $(PROF) $(CPPFLAGS) -Wf,"-A idbl4 -pvctl fullmsg loopcnt=1000000 noassume noloopchg" \
-              -Wf,"-L fmtlist map transform -ptr byte"
-FREEFLAGS  :=
-FIXEDFLAGS :=
-LDFLAGS    += $(PROF) -Wl"-Z 5000M -ZL 5000M"
-
-ifneq ($strip $(LINKER)),)
-  LINKER   := $(CC) -f90lib
-endif
-
-ifeq ($(DEBUG),TRUE)
-  FFLAGS   += -g -Cvsafe
-else
-# Check for override of default Fortran compiler optimizations
-  ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
-    FORTRAN_OPTIMIZATION := -Cvopt
-  endif
-  FFLAGS   += $(FORTRAN_OPTIMIZATION)
-endif
-
-ifeq ($(SMP),TRUE)
-  CFLAGS   += -P openmp
-  FFLAGS   += -P openmp
-  LDFLAGS  += -lcpp -P openmp
-endif
-
-ifeq ($(SPMD),TRUE)
-  LDFLAGS  += -L$(LIB_MPI) -lmpi
-endif
-
-FrictionVelocityMod.o:	FrictionVelocityMod.F90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -pi $<
-
-shr_orb_mod.f90:        shr_orb_mod.F90
-	$(CPP)  $(CPPFLAGS) $< > shr_orb_mod.f90
-
-# inlining for CLM
-
-QSatMod.f90:	QSatMod.F90
-	$(CPP) $(CPPFLAGS) $< > QSatMod.f90
-
-CanopyFluxesMod.o:	CanopyFluxesMod.F90 QSatMod.f90  FrictionVelocityMod.f90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=qsat,moninobukini expin=QSatMod.f90,FrictionVelocityMod.f90
-
-Biogeophysics1Mod.o:	Biogeophysics1Mod.F90 QSatMod.f90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=qsat expin=QSatMod.f90
-
-FrictionVelocityMod.f90	: FrictionVelocityMod.F90
-	$(CPP) $(CPPFLAGS) $< > FrictionVelocityMod.f90
-
-BareGroundFluxesMod.o	: BareGroundFluxesMod.F90 FrictionVelocityMod.f90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=moninobukini expin=FrictionVelocityMod.f90
-
-BiogeophysicsLakeMod.o	: BiogeophysicsLakeMod.F90 FrictionVelocityMod.f90
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) $< -pi exp=moninobukini expin=FrictionVelocityMod.f90
-
-endif
-
-#------------------------------------------------------------------------
-# Cray X1
-#------------------------------------------------------------------------
-
-ifeq ($(UNAMES),UNICOS/mp)
-
-ifeq ($(SSP),$(null))
-  SSP := FALSE
-endif
-
-CC := cc
-CPPFLAGS := -UCRAY -DUNICOSMP -DCPP_VECTOR $(CPPDEF)
-ifeq ($(SMP),FALSE)
-  COPT := -h task0
-else
-  COPT := -h task1
-  # THREADED_OMP is used by the timing library
-  CPPFLAGS += -DTHREADED_OMP
-endif
-ifeq ($(SSP),FALSE)
-  COPT += -h
-else
-  COPT += -h ssp
-  CPPFLAGS += -DSSP
-endif
-CFLAGS := $(cpp_path) $(CPPFLAGS) $(COPT) -h list=m 
-
-FC := ftn
-FPPFLAGS := -F -UCRAY -DUNICOSMP -DSYSUNICOS -DCPP_VECTOR $(CPPDEF)
-FOPT := -Ofp1,nomodinline
-
-# Check for override of default Fortran compiler optimizations
-ifneq ($(F_OPTIMIZATION_OVERRIDE),$(null))
-  FOPT += $F_OPTIMIZATION_OVERRIDE
-endif
-ifeq ($(SMP),FALSE)
-  FOPT += -Otask0 -xomp
-else
-  FOPT += -Otask1
-  FPPFLAGS += -DUSE_OMP
-endif
-ifeq ($(SSP),FALSE)
-  FOPT += -Ossp
-  FPPFLAGS += -DSSP
-endif
-
-mod_path   := -I$(INC_NETCDF) -p$(MOD_NETCDF)
-FFLAGS     := $(cpp_path) $(mod_path) $(FPPFLAGS) $(FOPT) -r a -dy -rm -em
-FREEFLAGS  := -f free
-FIXEDFLAGS := -f fixed -N 132
-
-LDFLAGS += -p$(MOD_NETCDF)
-ifeq ($(SSP),TRUE)
-  LDFLAGS += -Ossp
-endif
-
-ifeq ($(DEBUG),TRUE)
-  CFLAGS += -Gp
-  FFLAGS += -G1
-endif
-
-FrictionVelocityMod.o :
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -Omodinline $<
-QSatMod.o :
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -Omodinline $<
-shr_orb_mod.o :
-	$(FC) -c $(FREEFLAGS) $(FFLAGS) -Omodinline $<
-
-
-endif
-
 
 #------------------------------------------------------------------------
 # Darwin XLF compiler (serial only, no MPI multi-tasking or OpenMP threading)

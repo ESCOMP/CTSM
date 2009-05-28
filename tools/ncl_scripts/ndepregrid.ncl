@@ -19,13 +19,28 @@ begin
   ;
   ; Input and output resolution and sim_year for input data
   ;
-  resin    = "64x128";        ; Input resolution:  T42 (normally NOT changed)
-  res      = "48x96";         ; Output Resolution: 1.9x2.5, 48x96 etc.
-  filetype = "fndepdat";      ; File type:         fndepdat or fndepdyn
-  if ( filetype .eq. "fndepdat" )then
-     sim_year = "2000";       ; Year:              1890, 2000 or 2100
+  resin    = "1.9x2.5";          ; Input resolution:  1.9x2.5 (normally NOT changed)
+  res      = getenv("RES");      ; Get output resolution from env variable
+  sim_year = getenv("SIM_YR");   ; Get input simulation year from env variable
+
+  ; END OF SECTION TO EDIT
+  ; ===========================================================================================================
+
+  ; Defaults if env variable is NOT set
+
+  if ( ismissing(res) )then
+     res      = "48x96";      ; Output Resolution: 1.9x2.5, 48x96 etc.
+  end if
+  if ( ismissing(sim_year) )then
+     sim_year = "2000";       ; Input/Output simulation year: 1850, 2000
+  end if
+
+  ; Figure out file type from sim-year
+
+  if ( sim_year .eq. "1850-2000" )then
+     filetype = "fndepdyn"
   else
-     sim_year = "1890-2100";  ; Time-range for dynamic files
+     filetype = "fndepdat"
   end if
 
   ; END OF SECTION TO EDIT
@@ -118,8 +133,11 @@ begin
   ;
   ; Add global attributes to output file
   ;
-  nco@history = ldate+": Regrid from "+resin+" resolution to "+res+" by ndepregrid.ncl";
-  nco@source  = "Regrid from:"+filename;
+  nco@history            = ldate+": Regrid from "+resin+" resolution to "+res+" by ndepregrid.ncl";
+  nco@source             = "Regrid from:"+filename;
+  nco@gridfile           = gridfile;
+  nco@ndepregridVersion  = "$HeadURL$";
+  nco@ndepregridRevision = "$Id$";
   ;
   ; Copy coordinate variables over
   ;
@@ -128,22 +146,17 @@ begin
      if ( isfilevar( nc, "month" ) ) then
         nco->month = (/nc->month/);
      end if
-     nco->lon   = doubletofloat( (/ncg->LONGXY(lsmlat|0,lsmlon|:) /) );
-     nco->lat   = doubletofloat( (/ncg->LATIXY(lsmlat|:,lsmlon|0) /) );
-     lon  = (/ nc->lon /);
-     lat  = (/ nc->lat /);
-     lono = (/ nco->lon /);
-     lato = (/ nco->lat /);
   ; for yearly dynamic files...
   else
      nco->YEAR = (/nc->YEAR/);
-     nco->LON  = doubletofloat( (/ncg->LONGXY(lsmlat|0,lsmlon|:) /) );
-     nco->LAT  = doubletofloat( (/ncg->LATIXY(lsmlat|:,lsmlon|0) /) );
-     lon  = (/ nc->LON /);
-     lat  = (/ nc->LAT /);
-     lono = (/ nco->LON /);
-     lato = (/ nco->LAT /);
+     nco->time = (/nc->time/);
   end if
+  nco->lon= doubletofloat( (/ncg->LONGXY(lsmlat|0,lsmlon|:) /) );
+  nco->lat= doubletofloat( (/ncg->LATIXY(lsmlat|:,lsmlon|0) /) );
+  lon     = (/ nc->lon /);
+  lat     = (/ nc->lat /);
+  lono    = (/ nco->lon /);
+  lato    = (/ nco->lat /);
   areai   = doubletofloat( (/ ncgi->AREA /) );
   sumarea = sum(areai);
   areai   = areai / sumarea;

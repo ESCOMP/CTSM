@@ -109,11 +109,6 @@ Full pathname of surface data file.
 <default>Default: set by build-namelist.</default>
 </entry>
 
-<entry id="furbinp" type="char*256"  input_pathname="abs" category="datasets" 
-       group="clm_inparm" valid_values="" >
-Urban input data file name
-</entry>
-
 <entry id="forganic" type="char*256"  input_pathname="abs" category="datasets" 
        group="clm_inparm" valid_values="" >
 Soil organic carbon data file name
@@ -652,6 +647,128 @@ Tolerance to match land and atmospheric grid masks
        group="seq_infodata_inparm" valid_values="" >
 Tolerance to match land and atmospheric grid areas
 <default>Default: 9.0e-7</default>
+</entry>
+
+<!-- Task/Thread layouts -->
+
+<entry id="atm_pestride" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Stride used in selecting the processes in the atm communicator group.
+Default: 1
+</entry>
+
+<entry id="atm_rootpe" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Root process of the atm communicator group.
+Default: 0
+</entry>
+
+<entry id="atm_ntasks" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of atm tasks.
+Default: total number of tasks assigned to job.
+</entry>
+
+<entry id="atm_nthreads" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of threads in each atm task.
+Default: 1
+</entry>
+
+<entry id="lnd_pestride" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Stride used in selecting the processes in the lnd communicator group.
+Default: 1
+</entry>
+
+<entry id="lnd_rootpe" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Root process of the lnd communicator group.
+Default: 0
+</entry>
+
+<entry id="lnd_ntasks" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of lnd tasks.
+Default: total number of tasks assigned to job.
+</entry>
+
+<entry id="lnd_nthreads" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of threads in each lnd task.
+Default: 1
+</entry>
+
+<entry id="ice_pestride" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Stride used in selecting the processes in the ice communicator group.
+Default: 1
+</entry>
+
+<entry id="ice_rootpe" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Root process of the ice communicator group.
+Default: 0
+</entry>
+
+<entry id="ice_ntasks" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of ice tasks.
+Default: total number of tasks assigned to job.
+</entry>
+
+<entry id="ice_nthreads" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of threads in each ice task.
+Default: 1
+</entry>
+
+<entry id="ocn_pestride" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Stride used in selecting the processes in the ocn communicator group.
+Default: 1
+</entry>
+
+<entry id="ocn_rootpe" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Root process of the ocn communicator group.
+Default: 0
+</entry>
+
+<entry id="ocn_ntasks" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of ocn tasks.
+Default: total number of tasks assigned to job.
+</entry>
+
+<entry id="ocn_nthreads" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of threads in each ocn task.
+Default: 1
+</entry>
+
+<entry id="cpl_pestride" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Stride used in selecting the processes in the cpl communicator group.
+Default: 1
+</entry>
+
+<entry id="cpl_rootpe" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Root process of the cpl communicator group.
+Default: 0
+</entry>
+
+<entry id="cpl_ntasks" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of cpl tasks.
+Default: total number of tasks assigned to job.
+</entry>
+
+<entry id="cpl_nthreads" type="integer"  catagory="driver"
+       group="ccsm_pes" valid_values="" >
+Number of threads in each cpl task.
+Default: 1
 </entry>
 
 <!-- Time Manager -->

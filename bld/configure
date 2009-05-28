@@ -50,9 +50,12 @@ OPTIONS
 
      -ad_spinup <name>   Turn on AD_SPINUP mode for bgc setting of CN [on | off] (default is off).
      -bgc <name>         Build CLM with bgc package [ none | cn | casa | dgvm ] (default is none).
+                         NOTE: When set to cn or casa -- also turns on the CLAMP CPP macro.
      -cache <file>       Name of output cache file (default: config_cache.xml).
      -cachedir <file>    Name of directory where output cache file is written (default: CLM build directory).
      -carbon_aero <name> Turn on passing carbon aerosols from atm to land. [on | off] (default is off)
+     -ccsm_bld <name>    Turn use of CCSM build and makefiles. [on | off] (default is off)
+                         Can ONLY be turned on for mode=ccsm_seq.
      -clm_bld <dir>      Directory where CLM will be built.  This is where configure will write the
                          output files it generates (Makefile, Filepath, etc...)
      -clm_exe <name>     Name of the CLM executable (default: clm).
@@ -81,6 +84,8 @@ OPTIONS
      -ldflags <string>   A string of user specified load options.  Appended to
                          Makefile defaults.
      -linker <name>      User specified linker.  Overrides Makefile default of \$(FC).
+     -mach <name>        Machine name to use for CCSM build.
+     -maxpft <n>         Value of maxpatch_pft (default is 4)
      -maxpft <n>         Value of maxpatch_pft (default is numpft+1)
      -mpi_inc <dir>      Directory containing MPI include files.
      -mpi_lib <dir>      Directory containing MPI library.
@@ -148,6 +153,7 @@ GetOptions(
     "cache=s"                   => \$opts{'cache'},
     "cachedir=s"                => \$opts{'cachedir'},
     "carbon_aero=s"             => \$opts{'carbon_aero'},
+    "ccsm_bld=s"                => \$opts{'ccsm_bld'},
     "snicar_frc=s"              => \$opts{'snicar_frc'},
     "cc=s"                      => \$opts{'cc'},
     "cflags=s"                  => \$opts{'cflags'},
@@ -164,6 +170,7 @@ GetOptions(
     "fflags=s"                  => \$opts{'fflags'},
     "fopt=s"                    => \$opts{'fopt'},
     "gmake=s"                   => \$opts{'gmake'},
+    "mach=s"                    => \$opts{'mach'},
     "h|help"                    => \$opts{'help'},
     "ldflags=s"                 => \$opts{'ldflags'},
     "linker=s"                  => \$opts{'linker'},
@@ -533,6 +540,19 @@ my $carbon_aero = $cfg_ref->get('carbon_aero');
 if ($print>=2) { print "Using $carbon_aero for carbon_aero.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
+# ccsm_bld option
+if ( defined $opts{'ccsm_bld'}) {
+     $cfg_ref->set('ccsm_bld', $opts{'ccsm_bld'});
+}
+my $ccsm_bld = $cfg_ref->get('ccsm_bld');
+if ($clm_mode ne "ccsm_seq" && $ccsm_bld eq "on" ) {
+    die <<"EOF";
+*** ccsm_bld can NOT be turned on if mode does NOT equal ccsm_seq **
+EOF
+}
+if ($print>=2) { print "Using $ccsm_bld for CCSM build.$eol"; }
+
+#-----------------------------------------------------------------------------------------------
 # Makefile configuration #######################################################################
 #-----------------------------------------------------------------------------------------------
 
@@ -679,6 +699,15 @@ my $smp = $smp_val ? 'on': 'off';
 if ($print>=2) { print "SMP parallelism: $smp$eol";}
 
 #-----------------------------------------------------------------------------------------------
+# machine
+my $mach_val = (defined $opts{'mach'}) ? $opts{'mach'} : $sys_defaults{'mach'};
+
+$cfg_ref->set('mach', $mach_val);
+my $mach = $mach_val;
+
+if ($print>=2) { print "CCSM machine/compiler: $mach$eol";}
+
+#-----------------------------------------------------------------------------------------------
 # For the CPP tokens, start with the defaults (from defaults file) and append the specifications
 # from the commandline.  That way the user can override defaults since the commandline versions
 # occur last.
@@ -727,10 +756,10 @@ if ($voc eq 'on') {
     $cfg_cppdefs .= " -DVOC";
 }
 if ($bgc_mode eq 'cn') { 
-    $cfg_cppdefs .= " -DCN";
+    $cfg_cppdefs .= " -DCN -DCLAMP";
 }
 if ($bgc_mode eq 'casa') { 
-    $cfg_cppdefs .= " -DCASA";
+    $cfg_cppdefs .= " -DCASA -DCLAMP";
 }
 if ($bgc_mode eq 'dgvm') { 
     $cfg_cppdefs .= " -DDGVM";
@@ -1009,7 +1038,7 @@ if ($clm_mode eq "ext_ccsm_seq" ) {
     write_cppdefs("$clm_bld/$cpp_filename", $make_cppdefs);
     if ($print>=2) { print "creating $clm_bld/$cpp_filename\n"; }
 
-} else {
+} elsif ( $ccsm_bld eq "off" ) {
 
     # Write the filepath file.
     write_filepath("$clm_bld/$fp_filename", $cfg_ref);
@@ -1026,6 +1055,88 @@ if ($clm_mode eq "ext_ccsm_seq" ) {
     # Write the Makefile.
     write_makefile("$cfgdir/config_files/Makefile.in", "$clm_bld/Makefile", $cfg_ref, $make_cppdefs);
     if ($print>=2) { print "creating $clm_bld/Makefile\n"; }
+
+} elsif ( $ccsm_bld eq "on" ) {
+
+    # Create all the directories and subdirecties needed
+    my @dirs = ( "$clm_bld",                    "$clm_bld/lib", "$clm_bld/include", 
+                 "$clm_bld/SourceMods/src.clm", "$clm_bld/SourceMods/src.ccsm",
+                 "$clm_bld/ccsm_lib",           "$clm_bld/lnd" );
+    foreach my $dir ( @dirs ) {
+       mkdirp( "$dir" );
+    }
+
+    # Write the file for clm's cppdefs needed in ccsm.
+    write_cppdefs("$clm_bld/$cpp_filename", $make_cppdefs);
+    if ($print>=2) { print "creating $clm_bld/$cpp_filename\n"; }
+
+    # Write the Macro's file for machine dependent build information
+    my $macro      = "Macros.$mach";
+    my $cppmacro   = "Macros.cppdefs";
+    my $config_dir = "$cfgdir/config_files";
+    my $scriptsdir = "$cfgdir/../../../../scripts/ccsm_utils/Machines";
+    my $builddir   = "$cfgdir/../../../../scripts/ccsm_utils/Build";
+    my $macdir;
+    if (      -f "$config_dir/$macro" ) {
+       $macdir = "$config_dir";
+    } elsif ( -f "$scriptsdir/$macro" ) {
+       $macdir = "$scriptsdir";
+    } else {
+	die <<"EOF";
+** Could not find a $macro file in $config_dir or $scriptsdir
+** 
+EOF
+    }
+    if ( ! -f "$scriptsdir/$cppmacro" ) {
+	die <<"EOF";
+** Could not find a $cppmacro file in $scriptsdir
+** 
+EOF
+    }
+    write_macros("$macdir/$macro", "$scriptsdir/$cppmacro", "$clm_bld/$macro", $cfg_ref );
+    if ($print>=2) { print "creating $clm_bld/$macro\n"; }
+
+    # Write the ccsm top level Makefile.
+    write_ccsm_makefile("$config_dir/TopCCSMBldMakefile.in", "$clm_bld/Makefile",
+                        "ccsm", "$macro", $cfg_ref );
+    if ($print>=2) { print "creating $clm_bld/ccsm_lib/Makefile\n"; }
+
+    # Write the top level filepath file for ccsm build
+    write_filepath_ccsmbld("$clm_bld/$fp_filename", "ccsm", $cfg_ref);
+    if ($print>=2) { print "creating $clm_bld/$fp_filename\n"; }
+
+    # Write the ccsm_lib level Makefile.
+    write_ccsm_makefile("$builddir/Makefile", "$clm_bld/ccsm_lib/Makefile", 
+                        "ccsm_lib", "../$macro", $cfg_ref );
+    if ($print>=2) { print "creating $clm_bld/ccsm_lib/Makefile\n"; }
+
+    # Write the ccsm_lib level filepath file for ccsm build
+    write_filepath_ccsmbld("$clm_bld/ccsm_lib/$fp_filename", "ccsm_lib", $cfg_ref);
+    if ($print>=2) { print "creating $clm_bld/ccsm_lib/$fp_filename\n"; }
+
+    # Write the lnd level Makefile.
+    write_ccsm_makefile("$builddir/Makefile", "$clm_bld/lnd/Makefile", 
+                        "clm", "../$macro", $cfg_ref );
+    if ($print>=2) { print "creating $clm_bld/lnd/Makefile\n"; }
+
+    # Write the filepath file for ccsm build of clm library
+    write_filepath_ccsmbld("$clm_bld/lnd/$fp_filename", "clm", $cfg_ref);
+    if ($print>=2) { print "creating $clm_bld/lnd/$fp_filename\n"; }
+
+    # Write the misc.h file 
+    write_misc_h("$clm_bld/lnd/$misc_filename", $cfg_ref);
+    if ($print>=2) { print "creating $clm_bld/lnd/$misc_filename\n"; }
+
+    # Write the preproc.h file.
+    write_preproc_h("$clm_bld/lnd/$preproc_filename", $cfg_ref);
+    if ($print>=2) { print "creating $clm_bld/lnd/$preproc_filename\n"; }
+
+} else {
+	die <<"EOF";
+** Mode and ccsm_bld option are not valid.
+** 
+EOF
+
 }
 
 
@@ -1229,6 +1340,111 @@ sub write_filepath_ccsm
 
 #-------------------------------------------------------------------------------
 
+sub write_filepath_ccsmbld
+{
+    my ($file, $model, $cfg_ref) = @_;
+    my  $fh = new IO::File;
+
+    $fh->open(">$file") or die "** can't open filepath file: $file\n";
+
+    # configuration parameters used to determine paths
+    my $usr_src     = $cfg_ref->get('usr_src');
+    my $clm_root    = $cfg_ref->get('clm_root');
+    my $spmd        = $cfg_ref->get('spmd');
+    my $esmf_libdir = $cfg_ref->get('esmf_libdir');
+    my $rtm         = $cfg_ref->get('rtm');
+    my $mode        = $cfg_ref->get('mode');
+    my $buildpio    = $cfg_ref->get('pio');
+
+    # Source root
+    my $srcdir = "$clm_root/src";
+    if ( ! -d "$srcdir" ) { die "** source directory does not exist: $srcdir\n"; }
+
+    # Shared utilities.
+    if ( $model eq "ccsm_lib" ) {
+       my @dirs = ( "csm_share/shr", 
+                    "csm_share/dshr", 
+                    "utils/timing",   
+                    "utils/mct/mpeu",
+                    "utils/mct/mct" );
+       if ( ! $spmd ) {
+	   push( @dirs, "utils/mct/mpi-serial" );
+       }
+       unless ($esmf_libdir) { 
+	   push( @dirs, "utils/esmf_wrf_timemgr" );
+       }
+
+       print $fh "../SourceMods/src.ccsm\n";
+
+       foreach my $dir ( @dirs ) {
+	   if ( -d "$srcdir/$dir" ) {
+	       print $fh "$srcdir/$dir\n";
+	   } elsif ( -d "$srcdir/../../../$dir" ) {
+	       print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
+	   } else {
+	       die "** source directory does not exist: $srcdir/$dir or $srcdir/../../../$dir\n";
+	   }
+       }
+    
+       # Driver, stub ocean, stub glacier, and stub sea-ice
+       if ($mode eq "ccsm_seq") {
+	   my @dirs = ( "drv/seq_mct", "datm7", "socn", "sice", "sglc" );
+	   foreach my $dir ( @dirs ) {
+	       if ( -d "$srcdir/$dir" ) {
+		   print $fh "$srcdir/$dir\n";
+	       } elsif ( -d "$srcdir/../../../$dir" ) {
+		   print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
+	       } elsif ( -d "$srcdir/../../../atm/$dir" ) {
+		   print $fh absolute_path( "$srcdir/../../../atm/$dir" ) . "\n";
+	       } elsif ( -d "$srcdir/../../../ice/$dir" ) {
+		   print $fh absolute_path( "$srcdir/../../../ice/$dir" ) . "\n";
+	       } elsif ( -d "$srcdir/../../../ocn/$dir" ) {
+		   print $fh absolute_path( "$srcdir/../../../ocn/$dir" ) . "\n";
+	       } elsif ( -d "$srcdir/../../../glc/$dir" ) {
+		   print $fh absolute_path( "$srcdir/../../../glc/$dir" ) . "\n";
+	       } else {
+		   die "** source directory does not exist: $srcdir/$dir or $srcdir/../../../$dir or $srcdir/../../../atm|ice|ocn/$dir\n";
+	       }
+	   }
+           if ( $buildpio eq "on" ) {
+	      print $fh absolute_path( "$srcdir/../../../utils/pio" ) . "\n";
+           }
+       }
+    }
+    
+    # CLM
+    if ( $model eq "clm" ) {
+
+       print $fh "../SourceMods/src.clm\n";
+
+       my @dirs = ( "main", "biogeophys", "biogeochem" );
+       if ( $rtm eq "on" ) { 
+	   push( @dirs, "riverroute" );
+       }
+       foreach my $dir ( @dirs ) {
+	   if ( -d "$srcdir/$dir" ) {
+	       print $fh "$srcdir/$dir\n";
+	   } else {
+	       die "** source directory does not exist: $srcdir/$dir\n";
+	   }
+       }
+       if ( ! $spmd ) {
+	   print $fh absolute_path( "$srcdir/../../../utils/mct/mpi-serial" ) . "\n";
+       }
+    }
+
+    # CCSM driver
+    if ( $model eq "ccsm" ) {
+       print $fh absolute_path( "$srcdir/../../../drv/seq_mct/driver" ) . "\n";
+       if ( ! $spmd ) {
+          print $fh absolute_path( "$srcdir/../../../utils/mct/mpi-serial" ) . "\n";
+       }
+    }
+    
+    $fh->close;
+}
+#-------------------------------------------------------------------------------
+
 sub write_cppdefs
 {
     my ($file, $make_cppdefs) = @_;
@@ -1238,6 +1454,82 @@ sub write_cppdefs
 
     print $fh "$make_cppdefs\n";
     $fh->close;
+}
+
+#-------------------------------------------------------------------------------
+
+sub write_macros
+{
+    my ($file_in, $cppfile_in, $file_out, $cfg_ref) = @_;
+    my  $fh_in  = new IO::File;
+    my  $fh_out = new IO::File;
+
+    $fh_in->open("<$file_in") or die "** can't open macros file: $file_in\n";
+    $fh_out->open(">$file_out") or die "** can't open macros file: $file_out\n";
+
+    # configuration parameters
+    my $nc_inc       = $cfg_ref->get('nc_inc');
+    my $nc_lib       = $cfg_ref->get('nc_lib');
+    my $nc_mod       = $cfg_ref->get('nc_mod');
+    my $mpi_inc      = $cfg_ref->get('mpi_inc');
+    my $mpi_lib      = $cfg_ref->get('mpi_lib');
+    my $mpi_lib_name = $cfg_ref->get('mpi_lib_name');
+    my $debug        = $cfg_ref->get('debug') ? 'TRUE' : 'FALSE';
+    my $spmd         = $cfg_ref->get('spmd') ? 'TRUE' : 'FALSE';
+    my $smp          = $cfg_ref->get('smp') ? 'TRUE' : 'FALSE';
+    my $fc           = $cfg_ref->get('fc');
+    my $cc           = $cfg_ref->get('cc');
+    my $linker       = $cfg_ref->get('linker');
+    my $cflags       = $cfg_ref->get('cflags');
+    my $fflags       = $cfg_ref->get('fflags');
+    my $fopt         = $cfg_ref->get('fopt');
+    my $ldflags      = $cfg_ref->get('ldflags');
+    my $esmf_libdir  = $cfg_ref->get('esmf_libdir');
+
+    print $fh_out  <<"EOF";
+# Make macro settings for building CLM using the CCSM build files.
+BLDROOT                 := $clm_bld
+CASETOOLS               := \$(BLDROOT)/../../../../../scripts/ccsm_utils/Build
+LIBROOT                 := \$(BLDROOT)/lib
+INCROOT                 := \$(BLDROOT)/include
+SMP                     := $smp
+SPMD                    := $spmd
+DEBUG                   := $debug
+BUILD_THREADED          := $smp
+USEPIO                  := false
+HIRES                   := false
+FRAMEWORK               := MCT
+CCSM_BGC                := none
+GLC_NEC                 := 0
+USER_CPPDEFS            := \$(shell cat \$(BLDROOT)/CCSM_cppdefs)
+USER_LINKER             := $linker
+USER_LIB_NETCDF         := $nc_lib
+USER_LIB_MPI            := $mpi_lib
+USER_MPI_LIB_NAME       := $mpi_lib_name
+USER_ESMF_LIBDIR        := $esmf_libdir
+USER_FC                 := $fc
+USER_CC                 := $cc
+USER_CFLAGS             := $cflags
+USER_FFLAGS             := $fflags
+USER_LDFLAGS            := $ldflags
+F_OPTIMIZATION_OVERRIDE := $fopt
+
+EOF
+
+    # Copy the "template" cpp Macros file to the new file.
+    $fh_in->open("<$cppfile_in") or die "** can't open file: $cppfile_in\n";
+    while (<$fh_in>) {
+	print $fh_out $_;
+    }
+    $fh_in->close;
+    # Copy the "template" Macros file to the new file.
+    $fh_in->open("<$file_in") or die "** can't open file: $file_in\n";
+    while (<$fh_in>) {
+	print $fh_out $_;
+    }
+    $fh_in->close;
+
+    $fh_out->close;
 }
 
 #-------------------------------------------------------------------------------
@@ -1364,43 +1656,70 @@ EOF
 
 #-------------------------------------------------------------------------------
 
-sub set_horiz_grid
+sub write_ccsm_makefile
 {
-    # Set the parameters for the specified dycore and horizontal grid.  The
-    # parameters are read from an input file, and if no dycore/grid matches are
-    # found then issue error message.
-    # This routine uses the configuration defined at the package level ($cfg_ref).
+    # Add macro definitions to the beginning of the ccsm Makefile that will be written
 
-    my ($hgrid_file, $cfg_ref) = @_;
-    my $xml = XML::Lite->new( $hgrid_file );
-    my $root = $xml->root_element();
+    my ($file_in, $file_out, $model, $macfile, $cfg_ref) = @_;
+    my  $fh_in = new IO::File;
+    my  $fh_out = new IO::File;
 
-    # Check for valid root node
-    my $name = $root->get_name();
-    $name eq "config_horiz_grid" or die
-	"file $hgrid_file is not a horizontal grid parameters file\n";
+    $fh_out->open(">$file_out") or die "** can't open file: $file_out\n";
 
-    # Get dycore/grid from the package's configuration
-    my $hgrid   = $cfg_ref->get('hgrid');
+    # configuration parameters
+    my $clm_exe      = $cfg_ref->get('clm_exe');
+    my $clm_exedir   = $cfg_ref->get('clm_exedir');
 
-    # Read the grid parameters from $hgrid_file.
-    my @e = $xml->elements_by_name( "horiz_grid" );
-    my %a = ();
+    my $target_name;
+    my $target;
+    my $lib_name;
+    if ( $model eq "ccsm" ) {
+       $target_name = "EXEC_SE := $clm_exedir/$clm_exe";
+       $target      = "exec_se";
+    } else {
+       if ( $model eq "clm" ) {
+          $lib_name = "lnd";
+       } else { 
+          $lib_name = "$model";
+       }
+       $target_name = "COMPLIB := \$(LIBROOT)/lib$lib_name.a";
+       $target      = "complib";
+    }
+    print $fh_out  <<"EOF";
+# Make macros for CLM.
+MODEL   := $model
+MACFILE := $macfile
+-include \$(MACFILE)
+$target_name
 
-    # Search for matching grid.
-    my $found = 0;
-  HGRID:
-    while ( my $e = shift @e ) {
-	%a = $e->get_attributes();
-	if ( $hgrid eq $a{'hgrid'} ) {
-	    $found = 1;
-	    last HGRID;
-	}
+target: $target
+
+EOF
+    if ( $model eq "ccsm" ) {
+    print $fh_out  <<"EOF";
+ULIBS   := -L\$(LIBROOT) -lccsm_lib
+CLIBS   := -L\$(LIBROOT) -llnd
+ULIBDEP := \$(LIBROOT)/libccsm_lib.a \$(LIBROOT)/liblnd.a
+
+target: exec_se
+
+\$(LIBROOT)/liblnd.a:
+	cd lnd; \$(MAKE); \$(CP) *.mod \$(INCROOT)
+
+\$(LIBROOT)/libccsm_lib.a:
+	cd ccsm_lib; \$(MAKE); \$(CP) *.mod \$(INCROOT)
+EOF
+
     }
 
-    # Die unless search was successful.
-    unless ($found) { die "set_horiz_grid: no match for hgrid $hgrid\n"; }
+    # Copy the "template" makefile to the new makefile.
+    $fh_in->open("<$file_in") or die "** can't open file: $file_in\n";
+    while (<$fh_in>) {
+	print $fh_out $_;
+    }
 
+    $fh_out->close;
+    $fh_in->close;
 }
 
 #-------------------------------------------------------------------------------
@@ -1419,15 +1738,12 @@ sub get_sys_defaults
     $name eq "system_defaults" or die
 	"file $file is not a system defaults file\n";
 
-    # SPMD
-    $e = $xml->elements_by_name( "spmd" );
-    %a = $e->get_attributes();
-    $sys{'spmd'} = $a{$os};
-
-    # SMP
-    $e = $xml->elements_by_name( "smp" );
-    %a = $e->get_attributes();
-    $sys{'smp'} = $a{$os};
+    my @vars = ( "spmd", "smp", "mach" );
+    foreach my $var ( @vars ) {
+       $e = $xml->elements_by_name( $var );
+       %a = $e->get_attributes();
+       $sys{$var} = $a{$os};
+    }
 
     return %sys;
 }

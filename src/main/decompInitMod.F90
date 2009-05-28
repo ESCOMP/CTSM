@@ -209,7 +209,8 @@ contains
        seglen = dble(anumg_tot)/(dble(nsegspc)*dble(nclumps))
     endif
 
-    if (masterproc) write(iulog,*) ' atm decomp precompute anumg,nclumps,seglen1,avg_seglen,nsegspc=',numa,nclumps,seglen1,sngl(seglen),sngl(dble(anumg_tot)/(seglen*dble(nclumps)))
+    if (masterproc) write(iulog,*) ' atm decomp precompute anumg,nclumps,seglen1,avg_seglen,nsegspc=', &
+      numa,nclumps,seglen1,sngl(seglen),sngl(dble(anumg_tot)/(seglen*dble(nclumps)))
 
     !--- assign gridcells to clumps (and thus pes) ---
     allocate(acid(ans))

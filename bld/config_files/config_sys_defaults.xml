@@ -28,4 +28,11 @@ unicosmp="0"
 bgl="0"
 />
 
+<mach
+aix="bluefire"
+darwin="yong_g95"
+linux="calgary_pgi"
+bgl="intrepid"
+/>
+
 </system_defaults>

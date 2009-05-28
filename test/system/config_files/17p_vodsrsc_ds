@@ -1,0 +1,8 @@
+-mode ccsm_seq
+-nosmp -nospmd
+-debug
+-maxpft 17
+-rtm on
+-dust on
+-voc on
+-s

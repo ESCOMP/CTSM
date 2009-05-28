@@ -10,6 +10,7 @@ contains
     use fileutils   , only : get_filename
     use mkvarpar    , only : nlevsoi, numpft, nglcec, nlevurb, numsolar, numrad
     use mkvarctl
+    use mkharvestMod, only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname
     use ncdio       , only : check_ret, ncd_defvar, ncd_convl2i
 
     implicit none
@@ -410,6 +411,11 @@ contains
        call ncd_defvar(ncid=ncid, varname='PCT_PFT', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='lsmpft', dim4name='time', &
             long_name='percent plant functional type of gridcell', units='unitless')
+       do j = 1, mkharvest_numtypes()
+          call ncd_defvar(ncid=ncid, varname=mkharvest_fieldname(j), xtype=xtype, &
+               dim1name='lsmlon', dim2name='lsmlat', dim3name='time', &
+               long_name=mkharvest_longname(j), units='unitless')
+       end do
     end if
 
     if (.not. dynlanduse) then

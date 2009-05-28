@@ -92,7 +92,7 @@ if [ "$source" = "CLM_QIAN" ]; then
    clmopt="$clmopt -datm_data_dir $DATM_QIAN_DATA_DIR"
 fi
 
-echo "$cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \ "
+echo "env OMP_NUM_THREADS=$CLM_THREADS $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \ "
 echo "                 -infile $clmnl -res $res -lnd_res $land_res -start_type $6 \ "
 echo "                 -csmdata $CSMDATA -runlength $runlen $clmopt -test \ "
 echo "                 -namelist \"&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / "
@@ -101,7 +101,7 @@ echo "                             &shr_nml $restbfile $restsfile / "
 echo "                             &clm_inparm dtime=$dtime hist_crtinic='$inithist' "
 echo "                             $hist_samp nrevsn='$nrevsn' $hist_freq /\""
 
-$cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \
+env OMP_NUM_THREADS=$CLM_THREADS $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \
                        -infile $clmnl -res $res -lnd_res $land_res -start_type $6 \
                        -csmdata $CSMDATA -runlength $runlen $clmopt -test \
                        -namelist "&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / \

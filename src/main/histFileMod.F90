@@ -1077,9 +1077,6 @@ contains
 
     do t = 1,ntapes
 !$OMP PARALLEL DO PRIVATE (f, num2d)
-#if !defined (USE_OMP)
-!CSD$ PARALLEL DO PRIVATE (f, num2d)
-#endif
        do f = 1,tape(t)%nflds
           num2d = tape(t)%hlist(f)%field%num2d
           if ( num2d == 1) then
@@ -1088,9 +1085,6 @@ contains
              call hist_update_hbuf_field_2d (t, f, begp, endp, begc, endc, begl, endl, begg, endg, num2d)
           end if
        end do
-#if !defined (USE_OMP)
-!CSD$ END PARALLEL DO
-#endif
 !$OMP END PARALLEL DO
     end do
 

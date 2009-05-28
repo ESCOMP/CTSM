@@ -164,6 +164,7 @@ sub GetListofNeededFiles {
   }
   #
   # Check for required arguments
+  #
   foreach my $req ( "res", "list" ) {
      if ( ! defined($opts{$req}) ) {
          print "ERROR: $req NOT set and it is a required argument\n";
@@ -171,20 +172,12 @@ sub GetListofNeededFiles {
      }
   }
   my %inputopts;
-  $inputopts{'files'}          = \@nl_defaults_files;
-  $inputopts{'empty_cfg_file'} = "$cfgdir/config_files/config_definition.xml";
   $inputopts{'nldef_file'}     = "$cfgdir/namelist_files/namelist_definition.xml";
-  $inputopts{'namelist'}  = $opts{'namelist'};
-  $inputopts{'printing'}  = $printing;
-  $inputopts{'ProgName'}  = $ProgName;
-  $inputopts{'cmdline'}   = $cmdline;
-  $inputopts{'cfgdir'}    = $cfgdir;
-  $inputopts{'csmdata'}   = "default";
-  $inputopts{'config'}    = "noconfig";
+  $inputopts{'empty_cfg_file'} = "$cfgdir/config_files/config_definition.xml";
+
   my $definition = Build::NamelistDefinition->new( $inputopts{'nldef_file'} );
   my $cfg = Build::Config->new( $inputopts{'empty_cfg_file'} );
 
-  my %files;
   # Resolutions...
   my @resolutions;
   if ( $opts{'res'} eq "all" ) {
@@ -192,8 +185,20 @@ sub GetListofNeededFiles {
   } else {
      @resolutions = split( /,/, $opts{'res'} );
   }
+
+  # Input options
+  $inputopts{'files'}     = \@nl_defaults_files;
+  $inputopts{'printing'}  = $printing;
+  $inputopts{'ProgName'}  = $ProgName;
+  $inputopts{'cmdline'}   = $cmdline;
+  $inputopts{'cfgdir'}    = $cfgdir;
+  $inputopts{'csmdata'}   = "default";
+  $inputopts{'config'}    = "noconfig";
+  my %files;
+  # Namelist
+  $inputopts{'namelist'}  = $opts{'namelist'};
   #
-  # Loop over all resolutions asked for
+  # Loop over all resolutions asked for: 1.9x2.5, 10x15, 64x128 etc.
   #
   foreach my $res ( @resolutions ) {
      if ( ! $definition->is_valid_value( "res", "'$res'" )  ) {
@@ -203,20 +208,20 @@ sub GetListofNeededFiles {
      print "Resolution = $res\n" if $printing;
      my %settings;
      #
-     # Loop for all possible land masks
+     # Loop for all possible land masks: USGS, gx1v6, gx3v5 etc.
      #
      foreach my $mask ( $definition->get_valid_values( "mask", 'noquotes'=>1 ) ) {
         print "Mask = $mask \n" if $printing;
         $settings{'mask'} = $mask;
         #
-        # Loop over all possible simulation years 
+        # Loop over all possible simulation year: 1890, 2000, 2100 etc.
         #
         foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquotes'=>1 ) ) {
-           print "Mask = $mask \n" if $printing;
-           $settings{'sim_year'} = $sim_year;   # 1890, 2000, 2100
+           print "sim_year = $sim_year\n" if $printing;
+           $settings{'sim_year'} = $sim_year;   
 
            #
-           # Loop over all possible BGC seetings
+           # Loop over all possible BGC seetings: none, cn, casa etc.
            #
            foreach my $bgc ( $cfg->get_valid_values( "bgc" ) ) {
               print "bgc = $bgc\n" if $printing;

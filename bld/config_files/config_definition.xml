@@ -56,6 +56,9 @@ Switch to enable debugging options for Fortran compiler: 0=off, 1=on.
 <entry id="dust" valid_values="on,off" value="on">
 Toggle to turn on dust module
 </entry>
+<entry id="mach" value="bluefire">
+CCSM build machine name and compiler
+</entry>
 <entry id="exit_spinup" valid_values="on,off" value="off">
 Toggle to turn exit spinup
 </entry>
@@ -106,6 +109,9 @@ Name of MPI library.
 </entry>
 <entry id="mode" valid_values="ccsm_seq,ext_ccsm_seq" value="ccsm_seq">
 CLM coupling mode
+</entry>
+<entry id="ccsm_bld" valid_values="on,off" value="off">
+Toggle to build using CCSM makefiles or not.
 </entry>
 <entry id="pergro" valid_values="on,off" value="off">
 Toggle to turn on perturbation error growth test

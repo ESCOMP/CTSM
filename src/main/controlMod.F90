@@ -31,7 +31,6 @@ module controlMod
 !    o fpftcon         = 256 character data file with PFT physiological constants
 !    o fpftdyn         = 256 character data file with PFT physiological constants changing dynamically in time
 !    o frivinp_rtm     = 256 character input data file for rtm
-!    o furbinp         = 256 character input data file for urban input
 !    o nrevsn          = 256 character restart file name for use with branch run
 !    o fsnowoptics     = 256 character snow optical properties file name
 !    o fsnowaging      = 256 character snow aging parameters file name
@@ -126,7 +125,6 @@ module controlMod
   use restFileMod  , only : rest_flag
   use shr_const_mod, only : SHR_CONST_CDAY
   use abortutils   , only : endrun
-  use UrbanInputMod, only : furbinp
   use UrbanMod     , only : urban_hac, urban_traffic
 !
 ! !PUBLIC TYPES:
@@ -246,7 +244,7 @@ contains
 
     namelist /clm_inparm/  &
          finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
-         fpftcon, frivinp_rtm,  furbinp, &
+         fpftcon, frivinp_rtm,  &
          fpftdyn, fndepdat, forganic, fndepdyn, nrevsn, &
          fsnowoptics, fsnowaging
 
@@ -312,17 +310,10 @@ contains
 
     ! Set clumps per procoessor
 
-    clump_pproc = 1
 #if (defined _OPENMP)
     clump_pproc = omp_get_max_threads()
 #else
-#if (defined UNICOSMP)
-#if (defined SSP)
     clump_pproc = 1
-#else
-    clump_pproc = 1 ! 4 when using CSDs in driver.F90; 1 otherwise
-#endif
-#endif
 #endif
 
     if (masterproc) then
@@ -463,7 +454,6 @@ contains
     call mpi_bcast (forganic, len(forganic),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftcon , len(fpftcon) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (furbinp , len(furbinp) , MPI_CHARACTER, 0, mpicom, ier)
 #if (defined RTM)
     call mpi_bcast (frivinp_rtm, len(frivinp_rtm), MPI_CHARACTER, 0, mpicom, ier)
 #endif

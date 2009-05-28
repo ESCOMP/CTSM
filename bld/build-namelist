@@ -512,6 +512,7 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
 # Add default values for required namelist variables that have not been previously set.
 # This is done either by using the namelist default object, or directly with inline logic.
 
+
 #######################################
 # namelist group: seq_infodata_inparm #
 #######################################
@@ -594,6 +595,42 @@ if ($mode eq "ccsm_seq") {
              die "$nm only one of atm_adiabatic, atm_ideal_phys and aqua_planet" . 
                  " can be set to true.\n";
           }
+   }
+}
+
+############################
+# namelist group: ccsm_pes #
+############################
+if ($mode eq "ccsm_seq") {
+
+   # By default the driver sets all components to use all tasks.  This is the
+   # appropriate default for the standalone CLM configuration.
+
+   # By default the driver sets all components to use 1 thread.  This should be
+   # reset either to user specified values, or by default use the OMP_NUM_THREADS
+   # environment variable to set the thread count for each component.
+
+   # Is this an smp build?
+   my $smp = $cfg->get('smp');
+   if ($smp) {
+
+       # If user has set the specific variables for component threads on the commandline
+       # those values will be used.  If not, the value of the environment variable 
+       # OMP_NUM_THREADS will be used.
+   
+       # Check for OMP_NUM_THREADS
+       my $nthreads;
+       if (defined $ENV{'OMP_NUM_THREADS'}) {
+	   $nthreads = $ENV{'OMP_NUM_THREADS'};
+       }
+
+       if ($nthreads) {
+	   add_default($nl, 'atm_nthreads', 'val'=>$nthreads);
+	   add_default($nl, 'cpl_nthreads', 'val'=>$nthreads);
+	   add_default($nl, 'lnd_nthreads', 'val'=>$nthreads);
+	   add_default($nl, 'ice_nthreads', 'val'=>1        );
+	   add_default($nl, 'ocn_nthreads', 'val'=>1        );
+       }
    }
 }
 
@@ -734,7 +771,6 @@ my $fsurdat = $nl->get_value( 'fsurdat' );
 # Use surface dataset for organic soil and urban input datasets
 #
 add_default($nl, 'forganic', 'val'=>$fsurdat, 'no_abspath'=>1 );
-add_default($nl, 'furbinp',  'val'=>$fsurdat, 'no_abspath'=>1 );
 
 # Initial conditions
 # The initial date is an attribute in the defaults file which should be matched unless
@@ -984,7 +1020,7 @@ if ($print>=2) { print "Writing clm namelist to $outfile $eol"; }
 
 if ($mode eq "ccsm_seq") {
     # Driver
-    @groups = qw(seq_infodata_inparm seq_timemgr_inparm prof_inparm);
+    @groups = qw(seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm);
     if ( $pio eq "on" ) { push( @groups, "pio_inparm" ); }
     $outfile = "$opts{'dir'}/drv_in";
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );

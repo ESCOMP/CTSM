@@ -5,6 +5,7 @@ mkfileMod.F90
 mkfmax.F90
 mkglacier.F90
 mkglcmec.F90
+mkharvestMod.F90
 mkirrig.F90
 mklaiMod.F90
 mklanwat.F90

@@ -152,7 +152,11 @@ fi
 
 
 config_file="${CLM_TESTDIR}/TCB.$1/config_cache.xml"
-${CLM_SCRIPTDIR}/mknamelist $2 $3 $4 $5 $config_file ${7%+*}
+if [ "$7" = "arb_ic" ] || [ "$7" = "startup" ] || [ "$7" = "cold" ]; then
+   ${CLM_SCRIPTDIR}/mknamelist $2 $3 $4 $5 $config_file ${7%+*}
+else
+   env CLM_THREADS=$CLM_RESTART_THREADS ${CLM_SCRIPTDIR}/mknamelist $2 $3 $4 $5 $config_file ${7%+*}
+fi
 rc=$?
 if [ $rc -eq 0 ]; then
     echo "TSM.sh: namelist creation was successful" 
@@ -165,7 +169,7 @@ else
 fi
 
 echo "TSM.sh calling CLM_runcmnd.sh to build run command" 
-if [ "$7" = "arb_ic" ] || [ "$7" = "startup" ]; then
+if [ "$7" = "arb_ic" ] || [ "$7" = "startup" ] || [ "$7" = "cold" ]; then
    ${CLM_SCRIPTDIR}/CLM_runcmnd.sh $1
 else
    env CLM_THREADS=$CLM_RESTART_THREADS CLM_TASKS=$CLM_RESTART_TASKS ${CLM_SCRIPTDIR}/CLM_runcmnd.sh $1

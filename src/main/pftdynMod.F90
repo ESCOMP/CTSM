@@ -32,7 +32,9 @@ module pftdynMod
   public :: pftdyn_interp
   public :: pftdyn_wbal_init
   public :: pftdyn_wbal
+#ifdef CN
   public :: pftdyn_cnbal
+#endif
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
@@ -649,6 +651,7 @@ contains
     
   end subroutine pftdyn_wbal
   
+#ifdef CN
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -2289,5 +2292,6 @@ contains
 	deallocate(prod100_nflux)
     
 end subroutine pftdyn_cnbal
+#endif
 
 end module pftdynMod

@@ -41,7 +41,7 @@ contains
 ! !IROUTINE: BeginCBalance
 !
 ! !INTERFACE:
-subroutine BeginCBalance(num_soilc, filter_soilc)
+subroutine BeginCBalance(lbc, ubc, num_soilc, filter_soilc)
 !
 ! !DESCRIPTION:
 ! On the radiation time step, calculate the beginning carbon balance for mass
@@ -52,8 +52,9 @@ subroutine BeginCBalance(num_soilc, filter_soilc)
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbc, ubc        ! column bounds
    integer, intent(in) :: num_soilc       ! number of soil columns filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+   integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
 !
 ! !CALLED FROM:
 ! subroutine driver
@@ -101,7 +102,7 @@ end subroutine BeginCBalance
 ! !IROUTINE: BeginNBalance
 !
 ! !INTERFACE:
-subroutine BeginNBalance(num_soilc, filter_soilc)
+subroutine BeginNBalance(lbc, ubc, num_soilc, filter_soilc)
 !
 ! !DESCRIPTION:
 ! On the radiation time step, calculate the beginning nitrogen balance for mass
@@ -112,8 +113,9 @@ subroutine BeginNBalance(num_soilc, filter_soilc)
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbc, ubc        ! column bounds
    integer, intent(in) :: num_soilc       ! number of soil columns filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+   integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
 !
 ! !CALLED FROM:
 ! subroutine driver
@@ -160,7 +162,7 @@ end subroutine BeginNBalance
 ! !IROUTINE: CBalanceCheck
 !
 ! !INTERFACE:
-subroutine CBalanceCheck(num_soilc, filter_soilc)
+subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 !
 ! !DESCRIPTION:
 ! On the radiation time step, perform carbon mass conservation check for column and pft
@@ -171,8 +173,9 @@ subroutine CBalanceCheck(num_soilc, filter_soilc)
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbc, ubc        ! column bounds
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+   integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
 !
 ! !CALLED FROM:
 ! subroutine driver
@@ -280,7 +283,7 @@ end subroutine CBalanceCheck
 ! !IROUTINE: NBalanceCheck
 !
 ! !INTERFACE:
-subroutine NBalanceCheck(num_soilc, filter_soilc)
+subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 !
 ! !DESCRIPTION:
 ! On the radiation time step, perform nitrogen mass conservation check
@@ -292,8 +295,9 @@ subroutine NBalanceCheck(num_soilc, filter_soilc)
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbc, ubc        ! column bounds
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+   integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
 !
 ! !CALLED FROM:
 ! subroutine driver

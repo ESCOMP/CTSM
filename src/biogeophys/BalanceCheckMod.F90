@@ -524,23 +524,23 @@ contains
     end if
 
     ! Update SH and RUNOFF for dynamic land cover change energy and water fluxes
-    call c2g(lbc, ubc, lbl, ubl, lbg, ubg, &
-          qflx_runoff, qflx_runoffg, &
-          c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+    call c2g( lbc, ubc, lbl, ubl, lbg, ubg,                &
+              qflx_runoff(lbc:ubc), qflx_runoffg(lbg:ubg), &
+              c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
     do g = lbg, ubg
        qflx_runoffg(g) = qflx_runoffg(g) - qflx_liq_dynbal(g)
     enddo
 
-    call c2g(lbc, ubc, lbl, ubl, lbg, ubg, &
-          qflx_snwcp_ice, qflx_snwcp_iceg, &
-          c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+    call c2g( lbc, ubc, lbl, ubl, lbg, ubg,                      &
+              qflx_snwcp_ice(lbc:ubc), qflx_snwcp_iceg(lbg:ubg), &
+              c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
     do g = lbg, ubg
        qflx_snwcp_iceg(g) = qflx_snwcp_iceg(g) - qflx_ice_dynbal(g)
     enddo
 
-    call p2g(lbp, ubp, lbc, ubc, lbl, ubl, lbg, ubg, &
-             eflx_sh_tot, eflx_sh_totg, &
-             p2c_scale_type='unity',c2l_scale_type='urbanf',l2g_scale_type='unity')
+    call p2g( lbp, ubp, lbc, ubc, lbl, ubl, lbg, ubg,      &
+              eflx_sh_tot(lbp:ubp), eflx_sh_totg(lbg:ubg), &
+              p2c_scale_type='unity',c2l_scale_type='urbanf',l2g_scale_type='unity')
     do g = lbg, ubg
        eflx_sh_totg(g) =  eflx_sh_totg(g) - eflx_dynbal(g)
     enddo

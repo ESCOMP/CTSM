@@ -690,17 +690,11 @@ contains
 
     nclumps = get_proc_clumps()
 !$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
-#if !defined (USE_OMP)
-!CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
-#endif
     do nc = 1,nclumps
        call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
        call resetWeightsDGVM(begg, endg, begc, endc, begp, endp)
        call resetTimeConstDGVM(begp, endp)
     end do
-#if !defined (USE_OMP)
-!CSD$ END PARALLEL DO
-#endif
 !$OMP END PARALLEL DO
     call t_stopf('init_dgvmw')
 #endif

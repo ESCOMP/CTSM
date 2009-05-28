@@ -18,13 +18,17 @@ begin
   ;
   ; Input and output resolution
   ;
-  resin    = "1.9x2.5";       ; Input resolution:  1.9x2.5 (normally NOT changed)
-  res      = getenv("RES");   ; Get output resolution from env variable
+  resin    = "1.9x2.5";          ; Input resolution:  1.9x2.5 (normally NOT changed)
+  res      = getenv("RES");      ; Get output resolution from env variable
+  sim_year = getenv("SIM_YR");   ; Get input simulation year from env variable
 
   ; Defaults if env variable is NOT set
 
   if ( ismissing(res) )then
      res      = "48x96";      ; Output Resolution: 1.9x2.5, 48x96 etc.
+  end if
+  if ( ismissing(sim_year) )then
+     sim_year = "2000";       ; Input/Output simulation year: 1850, 2000
   end if
 
   ; END OF SECTION TO EDIT
@@ -48,10 +52,10 @@ begin
   sdate     = systemfunc( "date +%y%m%d" );
   ldate     = systemfunc( "date" );
   print( "query string="+querynml )
-  filename    = systemfunc( querynml+" -res "+resin+" -var "+filetype );
+  filename    = systemfunc( querynml+" -res "+resin+" -var "+filetype+" -options sim_year="+sim_year );
   gridinfile  = systemfunc( querynml+" -res "+resin+" -var fatmgrid" );
   gridfile    = systemfunc( querynml+" -res "+res  +" -var fatmgrid" );
-  filenameout = "aerosoldep_"+res+"_c"+sdate+".nc";
+  filenameout = "aerosoldep_"+sim_year+"_mean_"+res+"_c"+sdate+".nc";
   ;
   ; Open files
   ;
@@ -83,7 +87,7 @@ begin
   ;
   dimnames  = (/ "lon", "lat", "time" /);
   dims      = getfiledimsizes( nc );
-  ntime     = dims(0);
+  ntime     = getfilevardimsizes(nc,"time");
   ncgdimsiz = getfiledimsizes( ncg )
   dsizes    = (/ ncgdimsiz(1), ncgdimsiz(2), ntime /);
   is_unlim  = (/ False, False, True /);
@@ -105,13 +109,19 @@ begin
   ;
   ; Add global attributes to output file
   ;
-  nco@history = ldate+": Regrid from "+resin+" resolution to "+res+" by aerdepregrid.ncl";
-  nco@source  = "Regrid from:"+filename;
+  nco@history              = ldate+": Regrid from "+resin+" resolution to "+res+" by aerdepregrid.ncl";
+  nco@source               = "Regrid from:"+filename;
+  nco@gridfile             = gridfile;
+  nco@aerdepregridVersion  = "$HeadURL$";
+  nco@aerdepregridRevision = "$Id$";
   ;
   ; Copy coordinate variables over
   ;
-  if ( isfilevar( nc, "month" ) ) then
-     nco->month = (/nc->month/);
+  if ( isfilevar( nc, "date" ) ) then
+     nco->date= (/nc->date/);
+  end if
+  if ( isfilevar( nc, "time" ) ) then
+     nco->time= (/nc->time/);
   end if
   nco->lon   = doubletofloat( (/ncg->LONGXY(lsmlat|0,lsmlon|:) /) );
   nco->lat   = doubletofloat( (/ncg->LATIXY(lsmlat|:,lsmlon|0) /) );
@@ -143,7 +153,7 @@ begin
      ;
      ; If variable is not one of the dimensions -- regrid it and write to output file
      ;
-     if ( (vars(i) .ne. "time") .and. (vars(i) .ne. "lat") .and. (vars(i) .ne. "lon") )then
+     if ( (vars(i) .ne. "date") .and. (vars(i) .ne. "time") .and. (vars(i) .ne. "lat") .and. (vars(i) .ne. "lon") )then
        print( "Write variable: "+vars(i)+" to output file" );
        ;
        ; If time dimension

@@ -1,5 +1,6 @@
 -mode ccsm_seq
--spmd -nosmp
+-nospmd -smp
+-exit_spinup on
 -debug
 -maxpft 17
 -bgc cn

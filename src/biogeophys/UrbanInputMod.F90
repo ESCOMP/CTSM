@@ -58,7 +58,6 @@ module UrbanInputMod
   public urbinp_t
 
   type (urbinp_t)   , public :: urbinp        ! urban input derived type
-  character(len=256), public :: furbinp = ' ' ! urban input data
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -78,7 +77,7 @@ contains
 !
 ! !USES:
     use clm_varpar, only : lsmlon, lsmlat, numrad, nlevurb, numsolar
-    use clm_varctl, only : iulog
+    use clm_varctl, only : iulog, fsurdat
     use fileutils , only : getavu, relavu, getfil, opnfil
     use spmdMod   , only : masterproc
     use ncdio     , only : ncd_iolocal, check_dim, check_ret
@@ -116,10 +115,6 @@ contains
     real(r8),pointer :: arrayl(:)    ! generic global array
     character(len=32) :: subname = 'UrbanInput'          ! subroutine name
 !-----------------------------------------------------------------------
-
-    if (furbinp == ' ') then
-       return
-    end if
 
     call get_proc_bounds(begg,endg)
 
@@ -163,10 +158,10 @@ contains
        ! Read urban data
        
        if (masterproc) then
-          write(iulog,*)' Reading in urban input data ...'
-          call getfil (furbinp, locfn, 0)
+          write(iulog,*)' Reading in urban input data from fsurdat file ...'
+          call getfil (fsurdat, locfn, 0)
           call check_ret(nf_open(locfn, 0, ncid), subname)
-          write(iulog,*) subname,trim(furbinp)
+          write(iulog,*) subname,trim(fsurdat)
           write(iulog,*) " Expected dimensions: lsmlon=",lsmlon," lsmlat=",lsmlat
           call check_dim(ncid, 'lsmlon', lsmlon)
           call check_dim(ncid, 'lsmlon', lsmlon)
@@ -198,46 +193,46 @@ contains
        allocate(arrayl(begg:endg))
 
        call ncd_iolocal(ncid,'CANYON_HWR','read',urbinp%canyon_hwr,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: CANYON_HWR NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: CANYON_HWR NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'WTLUNIT_ROOF','read',urbinp%wtlunit_roof,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: WTLUNIT_ROOF NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: WTLUNIT_ROOF NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'WTROAD_PERV','read',urbinp%wtroad_perv,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: WTROAD_PERV NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: WTROAD_PERV NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'EM_ROOF','read',urbinp%em_roof,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_ROOF NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_ROOF NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'EM_IMPROAD','read',urbinp%em_improad,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_IMPROAD NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_IMPROAD NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'EM_PERROAD','read',urbinp%em_perroad,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_PERROAD NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_PERROAD NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'EM_WALL','read',urbinp%em_wall,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_WALL NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: EM_WALL NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'HT_ROOF','read',urbinp%ht_roof,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: HT_ROOF NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: HT_ROOF NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'WIND_HGT_CANYON','read',urbinp%wind_hgt_canyon,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: WIND_HGT_CANYON NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: WIND_HGT_CANYON NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'THICK_WALL','read',urbinp%thick_wall,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: THICK_WALL NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: THICK_WALL NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'THICK_ROOF','read',urbinp%thick_roof,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: THICK_ROOF NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: THICK_ROOF NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'NLEV_IMPROAD','read',urbinp%nlev_improad,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: NLEV_IMPROAD NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: NLEV_IMPROAD NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'T_BUILDING_MIN','read',urbinp%t_building_min,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: T_BUILDING_MIN NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: T_BUILDING_MIN NOT on fsurdat file' )
 
        call ncd_iolocal(ncid,'T_BUILDING_MAX','read',urbinp%t_building_max,grlnd,status=ret)
-       if (ret /= 0) call endrun( trim(subname)//' ERROR: T_BUILDING_MAX NOT on furbinp file' )
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: T_BUILDING_MAX NOT on fsurdat file' )
 
        start4d(1) = 1
        count4d(1) = lsmlon
@@ -253,28 +248,28 @@ contains
             start4d(3) = nn
             start4d(4) = mm
             call ncd_iolocal(ncid,'ALB_IMPROAD','read',arrayl,grlnd,start4d,count4d,status=ret)
-            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_IMPROAD NOT on furbinp file' )
+            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_IMPROAD NOT on fsurdat file' )
             if (mm .eq. 1) then
               urbinp%alb_improad_dir(begg:endg,nn) = arrayl(begg:endg)
             else
               urbinp%alb_improad_dif(begg:endg,nn) = arrayl(begg:endg)
             end if
             call ncd_iolocal(ncid,'ALB_PERROAD','read',arrayl,grlnd,start4d,count4d,status=ret)
-            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_PERROAD NOT on furbinp file' )
+            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_PERROAD NOT on fsurdat file' )
             if (mm .eq. 1) then
               urbinp%alb_perroad_dir(begg:endg,nn) = arrayl(begg:endg)
             else
               urbinp%alb_perroad_dif(begg:endg,nn) = arrayl(begg:endg)
             end if
             call ncd_iolocal(ncid,'ALB_ROOF','read',arrayl,grlnd,start4d,count4d,status=ret)
-            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_ROOF NOT on furbinp file' )
+            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_ROOF NOT on fsurdat file' )
             if (mm .eq. 1) then
               urbinp%alb_roof_dir(begg:endg,nn) = arrayl(begg:endg)
             else
               urbinp%alb_roof_dif(begg:endg,nn) = arrayl(begg:endg)
             end if
             call ncd_iolocal(ncid,'ALB_WALL','read',arrayl,grlnd,start4d,count4d,status=ret)
-            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_WALL NOT on furbinp file' )
+            if (ret /= 0) call endrun( trim(subname)//' ERROR: ALB_WALL NOT on fsurdat file' )
             if (mm .eq. 1) then
               urbinp%alb_wall_dir(begg:endg,nn) = arrayl(begg:endg)
             else
@@ -292,22 +287,22 @@ contains
        do nn = 1,nlevurb
           start3d(3) = nn
           call ncd_iolocal(ncid,'TK_IMPROAD','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: TK_IMPROAD NOT on furbinp file' )
+          if (ret /= 0) call endrun( trim(subname)//' ERROR: TK_IMPROAD NOT on fsurdat file' )
           urbinp%tk_improad(begg:endg,nn) = arrayl(begg:endg)
           call ncd_iolocal(ncid,'TK_ROOF','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: TK_ROOF NOT on furbinp file' )
+          if (ret /= 0) call endrun( trim(subname)//' ERROR: TK_ROOF NOT on fsurdat file' )
           urbinp%tk_roof(begg:endg,nn) = arrayl(begg:endg)
           call ncd_iolocal(ncid,'TK_WALL','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: TK_WALL NOT on furbinp file' )
+          if (ret /= 0) call endrun( trim(subname)//' ERROR: TK_WALL NOT on fsurdat file' )
           urbinp%tk_wall(begg:endg,nn) = arrayl(begg:endg)
           call ncd_iolocal(ncid,'CV_IMPROAD','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: CV_IMPROAD NOT on furbinp file' )
+          if (ret /= 0) call endrun( trim(subname)//' ERROR: CV_IMPROAD NOT on fsurdat file' )
           urbinp%cv_improad(begg:endg,nn) = arrayl(begg:endg)
           call ncd_iolocal(ncid,'CV_ROOF','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: CV_ROOF NOT on furbinp file' )
+          if (ret /= 0) call endrun( trim(subname)//' ERROR: CV_ROOF NOT on fsurdat file' )
           urbinp%cv_roof(begg:endg,nn) = arrayl(begg:endg)
           call ncd_iolocal(ncid,'CV_WALL','read',arrayl,grlnd,start3d,count3d,status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: CV_WALL NOT on furbinp file' )
+          if (ret /= 0) call endrun( trim(subname)//' ERROR: CV_WALL NOT on fsurdat file' )
           urbinp%cv_wall(begg:endg,nn) = arrayl(begg:endg)
        end do
 

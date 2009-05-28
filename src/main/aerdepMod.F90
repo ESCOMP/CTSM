@@ -28,7 +28,6 @@ module aerdepMOD
 !
 ! !PUBLIC TYPES:
   implicit none
-  save
 
   private
 
@@ -54,20 +53,20 @@ module aerdepMOD
 !
 ! PRIVATE TYPES:
 
-  real(r8), private, allocatable :: bcphiwet2t(:,:)
-  real(r8), private, allocatable :: bcphidry2t(:,:)
-  real(r8), private, allocatable :: bcphodry2t(:,:)
-  real(r8), private, allocatable :: ocphiwet2t(:,:)
-  real(r8), private, allocatable :: ocphidry2t(:,:)
-  real(r8), private, allocatable :: ocphodry2t(:,:)
-  real(r8), private, allocatable :: dstx01wd2t(:,:)
-  real(r8), private, allocatable :: dstx01dd2t(:,:)
-  real(r8), private, allocatable :: dstx02wd2t(:,:)
-  real(r8), private, allocatable :: dstx02dd2t(:,:)
-  real(r8), private, allocatable :: dstx03wd2t(:,:)
-  real(r8), private, allocatable :: dstx03dd2t(:,:)
-  real(r8), private, allocatable :: dstx04wd2t(:,:)
-  real(r8), private, allocatable :: dstx04dd2t(:,:)
+  real(r8), save, private, allocatable :: bcphiwet2t(:,:)
+  real(r8), save, private, allocatable :: bcphidry2t(:,:)
+  real(r8), save, private, allocatable :: bcphodry2t(:,:)
+  real(r8), save, private, allocatable :: ocphiwet2t(:,:)
+  real(r8), save, private, allocatable :: ocphidry2t(:,:)
+  real(r8), save, private, allocatable :: ocphodry2t(:,:)
+  real(r8), save, private, allocatable :: dstx01wd2t(:,:)
+  real(r8), save, private, allocatable :: dstx01dd2t(:,:)
+  real(r8), save, private, allocatable :: dstx02wd2t(:,:)
+  real(r8), save, private, allocatable :: dstx02dd2t(:,:)
+  real(r8), save, private, allocatable :: dstx03wd2t(:,:)
+  real(r8), save, private, allocatable :: dstx03dd2t(:,:)
+  real(r8), save, private, allocatable :: dstx04wd2t(:,:)
+  real(r8), save, private, allocatable :: dstx04dd2t(:,:)
 
   integer             ,save :: nt      ! size of time(:) array
   real(r8),allocatable,save :: time(:) ! data time, elapsed days since 0000-01-01 0s

@@ -18,6 +18,8 @@ program mksrfdat
     use fileutils   , only : getfil, putfil, opnfil, getavu, get_filename
     use mklaiMod    , only : mklai
     use mkpftMod    , only : mkpft
+    use mkharvestMod, only : mkharvest, mkharvest_init, mkharvest_fieldname, &
+                             mkharvest_numtypes
     use mkurbanparMod, only : mkurbanpar
     use creategridMod, only : read_domain,write_domain
     use domainMod   , only : domain_setptrs, domain_type, domain_init
@@ -52,7 +54,8 @@ program mksrfdat
     integer  :: ncid                        ! netCDF id
     integer  :: omode                       ! netCDF output mode
     integer  :: varid                       ! netCDF variable id
-    integer  :: beg4d(4),len4d(4)           ! netCDF variable edges
+    integer  :: beg4d(4),len4d(4)           ! netCDF variable edges 4Dimensional
+    integer  :: beg3d(3),len3d(3)           ! netCDF variable edges 3Dimensional
     integer  :: ret                         ! netCDF return status
     integer  :: ntim                        ! time sample for dynamic land use
     integer  :: year                        ! year for dynamic land use
@@ -82,6 +85,7 @@ program mksrfdat
     real(r8), allocatable  :: pctlnd_pft_dyn(:,:)  ! PFT data: % of gridcell for dyn landuse PFTs
     integer , allocatable  :: pftdata_mask(:,:)    ! mask indicating real or fake land type
     real(r8), allocatable  :: pctpft(:,:,:)        ! PFT data: land fraction per gridcell
+    real(r8), pointer      :: harvest(:,:,:)       ! harvest data: normalized harvesting
     real(r8), pointer      :: pctpft_i(:,:,:)      ! PFT data: % fraction on input grid
     real(r8), allocatable  :: pctgla(:,:)          ! percent of grid cell that is glacier  
     real(r8), allocatable  :: pctglcmec(:,:,:)     ! glacier_mec pct coverage in each gridcell and class
@@ -256,6 +260,8 @@ program mksrfdat
     organic3d(:,:,:)  = spval
     soic2d(:,:)       = -999
 
+    call mkharvest_init( lsmlon, lsmlat, spval, harvest )
+
     write(6,*) ' timer_a2 init-----'
     call shr_timer_print(t1)
 
@@ -330,6 +336,10 @@ program mksrfdat
 
     write(6,*) ' timer_b mkpft-----'
     call shr_timer_print(t1)
+
+    ! Create harvesting data at model resolution
+
+    call mkharvest( lsmlon, lsmlat, mksrf_fvegtyp, ndiag, harvest )
 
     ! Make inland water [pctlak, pctwet] from Cogley's one degree data [flanwat]
 
@@ -759,6 +769,10 @@ program mksrfdat
 
           call mkpft(lsmlon, lsmlat, fname, mksrf_firrig, ndiag, pctlnd_pft_dyn, pctirr, pctpft)
 
+          ! Create harvesting data at model resolution
+
+          call mkharvest( lsmlon, lsmlat, fname, ndiag, harvest )
+
           ! If have pole points, set south pole to glacier (north pole is as assumed as non-land)
 
           if (abs((ldomain%latixy(1,lsmlat) - 90.)) < 1.e-6) then
@@ -917,11 +931,20 @@ program mksrfdat
           call check_ret(nf_inq_varid(ncid, 'PCT_PFT', varid), subname)
           call check_ret(nf_put_vara_double(ncid, varid, beg4d, len4d, pctpft), subname)
 
+    
+          beg3d(1) = 1     ;  len3d(1) = lsmlon
+          beg3d(2) = 1     ;  len3d(2) = lsmlat
+          beg3d(3) = ntim  ;  len3d(3) = 1
+          do k = 1, mkharvest_numtypes()
+             call check_ret(nf_inq_varid(ncid, trim(mkharvest_fieldname(k)), varid), subname)
+             call check_ret(nf_put_vara_double(ncid, varid, beg3d, len3d, harvest(:,:,k) ), subname)
+          end do
+
           call check_ret(nf_inq_varid(ncid, 'YEAR', varid), subname)
-          call check_ret(nf_put_vara_int(ncid, varid, beg4d(4), len4d(4), year), subname)
+          call check_ret(nf_put_vara_int(ncid, varid, ntim, 1, year), subname)
 
           call check_ret(nf_inq_varid(ncid, 'time', varid), subname)
-          call check_ret(nf_put_vara_int(ncid, varid, beg4d(4), len4d(4), year), subname)
+          call check_ret(nf_put_vara_int(ncid, varid, ntim, 1, year), subname)
 
 	  ! Synchronize the disk copy of a netCDF dataset with in-memory buffers
 

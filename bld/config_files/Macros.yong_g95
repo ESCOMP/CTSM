@@ -1,0 +1,155 @@
+#===============================================================================
+# The following always need to be set
+# SPMD             Whether to build in SPMD mode or not.  [values TRUE FALSE]
+# SMP              Set to TRUE to enable building in SMP mode (uses OpenMP).  
+# USER_CPPDEFS     CPP definitions (non platform dependent)
+#
+# The following can be optionally set
+# USER_LIB_MPI       Allow user to override the default 
+# USER_LIB_NETCDF    Allow user to override the default 
+# USER_LAPACK_LIBDIR Allow user to override the default 
+# USER_ESMF_LIBDIR   Allos user to override the default
+# USER_LINKER        Allow user to override the default
+#
+# USER_INC_MPI       Allow user to override the default 
+# USER MPI_LIB_NAME  Allow user to override the default
+# USER_INC_NETCDF    Allow user to override the default 
+# USER_MOD_NETCDF    Allow user to override the default 
+# USER_FC            Allow user to override the default Fortran compiler specified in Makefile.
+# USER_CC            Allow user to override the default C compiler specified in Makefile (linux only).
+# USER_CFLAGS        Additional C compiler flags that the user wishes to set.
+# USER_FFLAGS        Additional Fortran compiler flags that the user wishes to set.
+# USER_LDLAGS        Additional load flags that the user wishes to set.
+# F_OPTIMIZATION_OVERRIDE
+#                    Use this to replace default Fortran compiler optimization.  
+#===============================================================================
+
+#===============================================================================
+# Set general compile options
+#===============================================================================
+# Makefile macros for Darwin with g95
+#
+# Notes:
+#
+#===============================================================================
+
+# Note that CPPDEFS is set in Macros.cppdefs
+CPPDEFS += -DDarwin -DG95 -DSEQ_$(FRAMEWORK)
+
+ifeq ($(strip $(DEBUG)),TRUE)
+   CPPDEFS += -DNO_SHR_VMATH
+endif
+ifeq ($(compile_threaded), true)
+   CPPDEFS += -DTHREADED_OMP
+endif
+
+ifneq ($(SPMD),TRUE)
+	FC := g95
+else
+	FC := mpg95
+endif
+CC            := gcc
+LD            := $(FC)
+
+NETCDF_PATH   := /usr/local/netcdf-3-6-3
+INC_NETCDF    := $(NETCDF_PATH)/include
+LIB_NETCDF    := $(NETCDF_PATH)/lib
+MOD_NETCDF    := $(NETCDF_PATH)/include
+
+INC_MPI       := 
+LIB_MPI       := 
+PNETCDF_PATH  := 
+LIB_PNETCDF   := 
+LAPACK_LIBDIR := 
+
+CFLAGS        := $(CPPDEFS) -O2 -I/usr/include/malloc
+FFLAGS        := $(CPPDEFS) -fno-underscoring
+FFLAGS_NOOPT  := -O0
+FLAGS_OPT     := -O2
+LDFLAGS       := -lSystemStubs -lSystemStubs_profile
+AR            := ar
+MOD_SUFFIX    := mod
+
+#ifeq ($(strip $(MODEL)),ccsm_lib)
+#
+#gptl.o: gptl.c
+#
+#	$(CC) -c -I/usr/include -I/usr/include/malloc $(CPPDEF) -O2 $<
+#
+#endif
+
+
+#===============================================================================
+# Override with user settings
+#===============================================================================
+
+ifneq ($(strip $(USER_FC)),)
+   FC := $(USER_FC)
+endif
+ifneq ($(strip $(USER_CC)),)
+   CC := $(USER_CC)
+endif
+ifneq ($(strip $(USER_INC_NETCDF)),)
+   INC_NETCDF := $(USER_INC_NETCDF)
+endif
+ifneq ($(strip $(USER_MOD_NETCDF)),)
+   MOD_NETCDF := $(USER_MOD_NETCDF)  
+endif
+ifneq ($(strip $(USER_INC_PNETCDF)),)
+   INC_PNETCDF := $(USER_INC_PNETCDF)
+endif
+ifneq ($(strip $(USER_INC_MPI)),)
+   INC_MPI := $(USER_INC_MPI)
+endif
+
+#===============================================================================
+# Set include paths (needed after override for any model specific builds below)
+#===============================================================================
+
+INCLDIR := -I. -I/usr/include
+ifneq ($(strip $(INC_NETCDF)),)
+  INCLDIR += -I$(INC_NETCDF)
+endif
+ifneq ($(strip $(MOD_NETCDF)),)
+  INCLDIR += -I$(MOD_NETCDF)
+endif
+ifneq ($(strip $(INC_MPI)),)
+  INCLDIR += -I$(INC_MPI)
+endif 
+ifneq ($(strip $(INC_PNETCDF)),)
+  INCLDIR += -I$(INC_PNETCDF)
+endif
+
+#===============================================================================
+# Set model and other specific options
+# NOTE - all CPPDEFS options must be defined before this point
+#===============================================================================
+
+# Set flags specific to debug mode
+ifeq ($(strip $(DEBUG)),TRUE)
+   FFLAGS  += -g
+   bounds := true
+   ifeq ($(bounds),true)	
+      FFLAGS += -fbounds-check
+   endif
+else
+   FFLAGS += $(FLAGS_OPT)
+endif
+
+# For compiling and linking with external ESMF.
+# If linking to external ESMF library then include esmf.mk to provide the macros:
+# ESMF_F90COMPILEPATHS
+# ESMF_F90LINKPATHS
+# ESMF_F90LINKRPATHS
+# ESMF_F90ESMFLINKLIBS
+ifneq ($(strip $(ESMF_LIBDIR)),)
+  include $(ESMF_LIBDIR)/esmf.mk
+  FFLAGS  += $(ESMF_F90COMPILEPATHS)
+  LDFLAGS += $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) $(ESMF_F90ESMFLINKLIBS)
+endif
+
+# Append user defined compiler and load flags to Makefile defaults
+CFLAGS   += $(USER_CFLAGS)
+FFLAGS   += $(USER_FFLAGS)
+LDFLAGS  += $(USER_LDFLAGS)
+

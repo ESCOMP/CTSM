@@ -1,4 +1,285 @@
 ===============================================================
+Tag name:  clm3_6_40
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Thu May 28 15:17:11 MDT 2009
+One-line Summary: Fix openMP bug, add fndepdyn ncl script, fix interpinic for urban, add mkharvest to mksurfdata, new spinups, turn CLAMP on for CASA or CN
+
+Purpose of changes:
+
+Fix hybrid/open-MP mode bug, and testing for hybrid/open-MP. Add ncl script to
+time-interpolate between 1850 and 2000 for fndepdat dataset, for fndepdyn version. Fix
+interpinic for urban and cndv (jet/oleson/slevis). Update aerdepregrid.ncl and
+ndepregrid.ncl scripts. Add mkharvest fields to mksurfdata. Remove furbinp and just use
+fsurdat (leave forganic, so can remove to turn off).  Begin to add an option to build
+with ccsm makefiles, for test-suite. Remove archiving, branching and resub from last run
+script in models/lnd/clm/bld. New spin-up files for 1850 and 2000 for 1.9x2.5 and 1850
+for CN. Make sure CLAMP is turned on for either CASA or CN. Change testing years to
+2002-2003 so same as for ccsm tests.
+
+Bugs fixed (include bugzilla ID): 954 (hybrid problem)
+                                  959 (test suite NOT testing hybrid)
+                                  965 (hybrid problem for high-proc count)
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+                                  966 (Hybrid restart problem on bluefire)
+                                  967 (PIO bounds problem on jaguar)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Start adding option to build with ccsm Makefiles
+
+    By default turn on CLAMP when either CN or CASA is enabled
+
+Describe any changes made to the namelist: Remove furbinp (use fsurdat)
+
+List any changes to the defaults for the boundary datasets: New spinup files
+
+   clmi.IQmp17_1950-01-01_1.9x2.5_gx1v6_simyr1850_c090509.nc
+   clmi.IQmp17_2000-01-01_1.9x2.5_gx1v6_simyr2000_c090509.nc
+   clmi.BCN_0093-01-01_1.9x2.5_gx1v6_simyr1850_c090527.nc
+
+Describe any substantial timing or memory changes: Faster because of a fix to a I/O
+                                                   write bug in datm7
+
+Code reviewed by: self, forrest, mvertens, oleson, jet (relevant portions from them)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, datm7, csm_share
+
+   scripts   to scripts4_090527
+   datm7     to datm7_090518
+   csm_share to share3_090512
+
+List all files eliminated:
+
+D  models/lnd/clm/bld/build-streams -- Remove phasing out old run scripts, another 
+                               version exists in scripts/ccsm_utils/Tools/build_streams
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>>>>>>>> Add harvest fields to surface datasets
+A  models/lnd/clm/tools/mksurfdata/mkharvestMod.F90 ------------- New module to handle harvest fields
+
+>>>>>>>>>>>>>>>>>>>> New files for ccsm_bld option
+A  models/lnd/clm/bld/config_files/Macros.yong_g95 -------------- Macro's file for my Darwin Mac-OSX laptop
+A  models/lnd/clm/bld/config_files/Macros.breeze_intel ---------- Macro's file for intel on breeze.
+A  models/lnd/clm/bld/config_files/TopCCSMBldMakefile.in -------- Top level makefile for a ccsm_bld
+
+>>>>>>>>>>>>>>>>>>>> New scripts to regrid all aerosol/nitrogen deposition resolutions and create 
+                     transient Nitrogen-Deposition
+A  models/lnd/clm/tools/ncl_scripts/runDepositionRegrid.pl ------ Run regrid for many resolutions for 
+                                                                  aerosol and nitrogen deposition
+A  models/lnd/clm/tools/ncl_scripts/ndeplintInterp.ncl ---------- Linearly interpolate nitrogen-deposition 
+                                                                  between 1850 and 2000 to get
+                                                                  transient nitrogen deposition.
+
+>>>>>>>>>>>>>>>>>>>> New serial and open-MP tests
+A  models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_do
+A  models/lnd/clm/test/system/config_files/17p_cnadspinupsc_do
+A  models/lnd/clm/test/system/config_files/17p_vodsrsc_ds
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>>>>>>> Fix hybrid bug (959), some tweaks, change dates to 2002/2003 to correspond with 
+                     data checked in
+M  models/lnd/clm/test/system/tests-driver.sh -------------------- Add -mach option to configure, 
+                                                                  able to set CLM_THREADS as input
+M  models/lnd/clm/test/system/tests_pretag_bluefire -------------- Move f19_g16 test closer to 
+                                                                   beginning of list
+M  models/lnd/clm/test/system/config_files/17p_cnsc_dh ----------- Turn supln off
+M  models/lnd/clm/test/system/config_files/17p_cnsc_dm ----------- Turn supln off
+M  models/lnd/clm/test/system/config_files/17p_cnsc_do ----------- Turn supln off
+M  models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dh --- Turn supln on
+M  models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dm --- Turn supln on
+M  models/lnd/clm/test/system/mknamelist ------------------------- Set number of threads by input CLM_THREADS
+M  models/lnd/clm/test/system/input_tests_master ----------------- Change all start dates to 2002/2003 to 
+                                                                   correspond with data checked in
+M  models/lnd/clm/test/system/README ----------------------------- Document that can set CLM_THREADS
+M  models/lnd/clm/test/system/TSM.sh ----------------------------- Set number of threads by input 
+                                                                   CLM_THREADS / handle cold start
+
+>>>>>>>>>>>>>>>>>>>> Add harvest fields
+M  models/lnd/clm/tools/mksurfdata/ncdio.F90 --------------------- Add nf_get_att_text
+M  models/lnd/clm/tools/mksurfdata/mkfileMod.F90 ----------------- Write out harvest fields
+M  models/lnd/clm/tools/mksurfdata/mkvarpar.F90 ------------------ Formatting change
+M  models/lnd/clm/tools/mksurfdata/mksrfdat.F90 ------------------ Call mkharvest_init, mkharvest, 
+                                                                   and add harvest fields to file
+M  models/lnd/clm/tools/mksurfdata/pftdyn_simyr1850.txt ---------- Point to new landuse files
+M  models/lnd/clm/tools/mksurfdata/pftdyn_simyr1850-2005.txt ----- Point to new landuse files
+M  models/lnd/clm/tools/mksurfdata/pftdyn_simyr2000.txt ---------- Point to new landuse files
+M  models/lnd/clm/tools/mksurfdata/Srcfiles ---------------------- Add mkharvestMod.F90 file to list
+
+>>>>>>>>>>>>>>>>>>>> Fix interpinic for urban
+M  models/lnd/clm/tools/interpinic/interpinic.F90 ---- Changes from Keith Oleson/John Truesdale to 
+                                                       handle urban
+M  models/lnd/clm/tools/interpinic/runinit_ibm.csh --- Tweak sim_years, maxpft, and start times
+
+>>>>>>>>>>>>>>>>>>>> Fix regrid scripts for new sim_yr
+M  models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl --- Add sim_yr, document better, add time coord. 
+                                                         variable
+M  models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl ----- Add sim_yr, figure out file-type from it, 
+                                                         document better, transient files use 
+                                                         lowercase lat, lon instead of LAT, LON.
+
+>>>>>>>>>>>>>>>>>>>> Fix hybrid bug (959), deprecate old scripts
+M  models/lnd/clm/bld/configure ----------------- By default turn on CLAMP when either CN or CASA is enabled, 
+                                                  start adding ccsm_bld option, and -mach option.
+M  models/lnd/clm/bld/mkSrcfiles ---------------- Get it to match scripts version of same thing
+M  models/lnd/clm/bld/mkDepends ----------------- Get it to match scripts version of same thing, 
+                                                  remove Darwin kludge for assert.h (as has been renamed)
+M  models/lnd/clm/bld/queryDefaultXML.pm -------- Handle return characters in values
+M  models/lnd/clm/bld/config_files/Makefile.in -- Get rid of SGI, Nec-SX6, ES, Cray-X1 build options, 
+                                                  tweak Linux build
+M  models/lnd/clm/bld/listDefaultNamelist.pl ---- Add option to do all resolutions, correct prints 
+M  models/lnd/clm/bld/build-namelist ------------ Add drv_in namelist "ccsm_pes" setting threads to 
+                                                  OMP_NUM_THREADS value, remove furbinp file
+M  models/lnd/clm/bld/create_newcase ------------ Document that this script is deprecated
+M  models/lnd/clm/bld/run-ibm.csh --------------- Remove archiving, change defaults, 
+                                                  add notes that script is deprecated
+M  models/lnd/clm/bld/README -------------------- Remove files taken out
+M  models/lnd/clm/bld/config_files/config_sys_defaults.xml ----- Add default mach settings
+M  models/lnd/clm/bld/config_files/config_definition.xml ------- Add mach and ccsm_bld settings
+M  models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Remove furbinp, add task thread layouts 
+                                                                 for ccsm_pe namelist
+M  models/lnd/clm/bld/namelist_files/datm.streams.template.xml - Make same as datm7 version 
+                                                                 (except using %p instead of DIN_LOC_ROOT)
+M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - New finidat spinup files for 1.9x2.5, 
+                                                                 1850, 2000 and 1850-CN
+
+>>>>>>>>>>>>>>>>>>>> Changes from Forrest Hoffman to fix hybrid issues on jaguar (bug 954 and more)
+M  models/lnd/clm/src/biogeochem/CNBalanceCheckMod.F90 -- Add lbc,ubc
+M  models/lnd/clm/src/biogeochem/CNAnnualUpdateMod.F90 -- Add lbc, ubc, lbp, ubp
+M  models/lnd/clm/src/biogeochem/CNEcosystemDynMod.F90 -- Explicitly dimension filters to "ubp-lbp+1" 
+                                                          rather than ":"
+
+>>>>>>>>>>>>>>>>>>>> Fix hybrid issues (bug 954), add #ifdefs to clmtype so can use CLAMP with CASA, 
+                     remove CSD and USE_OMP junk
+M  models/lnd/clm/src/main/driver.F90 ------------------- Remove CSD directives and USE_OMP.
+                                                          Add more variables to private for OMP loops 
+                                                          (forrest) (bug 954)
+                                                          Pass array bounds to dynland_hwcontent 
+                                                          (mvertens) (bug 954).
+                                                          Pass array bounds needed by Forrest's 
+                                                          biogeochem changes above.
+M  models/lnd/clm/src/main/decompInitMod.F90 ------------ Make a line shorter (with continue lines)
+M  models/lnd/clm/src/main/subgridRestMod.F90 ----------- Make a line shorter (with continue lines)
+M  models/lnd/clm/src/main/aerdepMod.F90 ---------------- Remove generic save statement, add save for 
+                                                          each data instantiation
+M  models/lnd/clm/src/main/clmtypeInitMod.F90 ----------- Add #ifdefs from casafire branch to limit 
+                                                          clmtype size
+M  models/lnd/clm/src/main/initializeMod.F90 ------------ Remove USE_OMP and CSD directives
+M  models/lnd/clm/src/main/pftdynMod.F90 ---------------- #ifdef pftdyn_cnbal
+M  models/lnd/clm/src/main/histFileMod.F90 -------------- Remove CSD directives
+M  models/lnd/clm/src/main/controlMod.F90 --------------- Remove furbinp, remove UNICOSMP and SSP complexity
+M  models/lnd/clm/src/main/filterMod.F90 ---------------- Remove CSD directives
+M  models/lnd/clm/src/main/clmtype.F90 ------------------ Add #ifdefs from casafire branch to limit 
+                                                          clmtype size
+M  models/lnd/clm/src/main/histFldsMod.F90 -------------- Remove KO comments
+
+>>>>>>>>>>>>>>>>>>>> Fix hybrid issues (bug 954 and 965), use fsurdat instead of furbinp file for urban input
+M  models/lnd/clm/src/biogeophys/BalanceCheckMod.F90 ---- Pass in array bounds (mvertens) (bug 954)
+M  models/lnd/clm/src/biogeophys/UrbanInputMod.F90 ------ Use fsurdat instead of separate furbinp file
+M  models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90 --- Remove num_solar logic that caused an early exit 
+                                                          (bug 965)
+
+Summary of testing:
+
+  bluefire: All PASS except
+007 erA91 TER.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 7
+008 brA91 TBR.sh _sc_dh clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 6
+011 erD91 TER.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v5 72+72 cold ...............FAIL! rc= 7
+013 smH74 TSM.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -1100 cold FAIL! rc= 8
+014 blH74 TBL.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -100 cold FAIL! rc= 4
+017 erE91 TER.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 10+38 arb_ic .........FAIL! rc= 7
+018 brE91 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v5 72+72 arb_ic ......FAIL! rc= 6
+022 erF92 TER.sh 17p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 10+38 cold ..........FAIL! rc= 7
+023 brF92 TBR.sh 17p_vodsrsc_dm clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v5 72+72 cold .......FAIL! rc= 6
+009 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+012 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+013 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+021 erC61 TER.sh _sc_dh clm_std^nl_urb 20021001:NONE:1800 1.9x2.5 gx1v6 10+38 cold ..............FAIL! rc= 7
+022 brC61 TBR.sh _sc_dh clm_std^nl_urb_br 20021001:NONE:1800 1.9x2.5 gx1v6 -3+-3 cold ...........FAIL! rc= 6
+025 erH51 TER.sh 17p_cnnsc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 10+38 cold ......FAIL! rc= 7
+027 blH51 TBL.sh 17p_cnnsc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 48 cold .........FAIL! rc= 5
+029 smLI1 TSM.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+030 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+031 brLI1 TBR.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+032 blLI1 TBL.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 4
+036 erLD1 TER.sh _sc_dh clm_std^nl_urb 20030101:NONE:1800 2.65x3.33 USGS -5+-5 arb_ic ...........FAIL! rc= 7
+007 brJ61 TBR.sh 4p_casasc_dh clm_std^nl_urb_br 20021230:NONE:1800 1.9x2.5 gx1v6 72+72 cold .....FAIL! rc= 6
+  jaguar: All PASS except
+005 smA91 TSM.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 10 <<< bug 967
+006 erA91 TER.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 5
+007 brA91 TBR.sh _sc_dh clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 5
+009 smE92 TSM.sh 4p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 96 arb_ic ............FAIL! rc= 10 <<< bug 967
+010 erE92 TER.sh 4p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 10+38 arb_ic .........FAIL! rc= 5
+011 brE92 TBR.sh 4p_vodsrsc_dm clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v5 72+72 arb_ic ......FAIL! rc= 5
+013 smEH2 TSM.sh 4p_vodsrsc_dm clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 48 arb_ic FAIL! rc= 10 <<< bug 967
+014 erEH2 TER.sh 4p_vodsrsc_dm clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 10+38 arb_icFAIL! rc= 5
+015 brEH2 TBR.sh 4p_vodsrsc_dm clm_std^nl_urb_br 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 24+24 arbFAIL! rc= 5
+017 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+018 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+019 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+021 smH92 TSM.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@2000 96 cold .............FAIL! rc= 8
+022 erH92 TER.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@2000 10+38 cold ..........FAIL! rc= 5
+023 brH92 TBR.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@2000 72+72 cold ..........FAIL! rc= 5
+025 smJ62 TSM.sh 4p_casasc_dm clm_std^nl_urb 20021230:NONE:1800 1.9x2.5 gx1v6 96 cold ...........FAIL! rc= 10 <<< bug 967
+026 erJ62 TER.sh 4p_casasc_dm clm_std^nl_urb 20021230:NONE:1800 1.9x2.5 gx1v6 10+38 cold ........FAIL! rc= 5
+027 brJ62 TBR.sh 4p_casasc_dm clm_std^nl_urb_br 20021230:NONE:1800 1.9x2.5 gx1v6 72+72 cold .....FAIL! rc= 5
+034 smLI2 TSM.sh _sc_dm clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+035 erLI2 TER.sh _sc_dm clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+036 brLI2 TBR.sh _sc_dm clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+  lightning/pathscale: All PASS except
+009 smA91 TSM.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 10
+010 erA91 TER.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 5
+011 brA91 TBR.sh _sc_dh clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 5
+012 blA91 TBL.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 4
+017 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+018 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+019 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+020 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+021 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+023 erJ42 TER.sh 4p_casasc_dm clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 10+38 cold ...........FAIL! rc= 7
+024 brJ42 TBR.sh 4p_casasc_dm clm_std^nl_urb_br 20021230:NONE:1800 10x15 USGS 72+72 cold ........FAIL! rc= 6
+026 smL51 TSM.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 96 arb_ic ..................FAIL! rc= 10
+027 erL51 TER.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 10+38 arb_ic ...............FAIL! rc= 5
+028 brL51 TBR.sh _sc_dh clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 5
+029 blL51 TBL.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 48 arb_ic ..................FAIL! rc= 4
+032 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 6
+035 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+036 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 6
+037 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 5
+  bangkok/lf95:
+024 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+025 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+026 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+028 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+051 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 6
+052 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+055 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48 .......................FAIL! rc= 4
+056 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  breeze/gale/hail/gust/ifort: All PASS up to the pftdyn test
+016 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_39
+
+Changes answers relative to baseline: No bit-for-bit (unless compare cases using the new vs old spin-up files)
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_39
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Thu May  7 14:18:08 MDT 2009
@@ -25,7 +306,6 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   935 (RTM warning NOT an error)
                                   937 (undef value on bangkok for maxpatchpft=numpft+1 case)
     http://bugs.cgd.ucar.edu/
-
 
 Describe any changes made to build system: Change default for maxpatch_pft back to numpft+1
 

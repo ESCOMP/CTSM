@@ -95,7 +95,10 @@ module driver
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds
   use filterMod           , only : filter, setFilters
-  use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal, pftdyn_cnbal
+  use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal
+#ifdef CN
+  use pftdynMod           , only : pftdyn_cnbal
+#endif
   use dynlandMod          , only : dynland_hwcontent
   use clm_varcon          , only : zlnd, isturb
   use clm_time_manager    , only : get_step_size, get_curr_calday, &
@@ -264,10 +267,7 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 
   nclumps = get_proc_clumps()
 
-!$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
-#if !defined (USE_OMP)
-!!CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
-#endif
+!$OMP PARALLEL DO PRIVATE (nc,g,begg,endg,begl,endl,begc,endc,begp,endp)
   do nc = 1,nclumps
 
      ! ============================================================================
@@ -296,7 +296,8 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
      enddo
 
      !--- get initial heat,water content ---
-      call dynland_hwcontent(begg,endg,clm3%g%gws%gc_liq1,clm3%g%gws%gc_ice1,clm3%g%ges%gc_heat1)
+      call dynland_hwcontent( begg, endg, clm3%g%gws%gc_liq1(begg:endg), &
+                              clm3%g%gws%gc_ice1(begg:endg), clm3%g%ges%gc_heat1(begg:endg) )
 
 #if (!defined DGVM)
 #if (!defined PFTDYNWBAL)
@@ -305,7 +306,8 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
         call pftdyn_interp()  ! change the pft weights
 
         !--- get new heat,water content: (new-old)/dt = flux into lnd model ---
-        call dynland_hwcontent(begg,endg,clm3%g%gws%gc_liq2,clm3%g%gws%gc_ice2,clm3%g%ges%gc_heat2)
+        call dynland_hwcontent( begg, endg, clm3%g%gws%gc_liq2(begg:endg), &
+                                clm3%g%gws%gc_ice2(begg:endg), clm3%g%ges%gc_heat2(begg:endg) )
         dtime = get_step_size()
 !dir$ concurrent
 !cdir nodep
@@ -330,17 +332,14 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 #if (defined CN)
 !     if (doalb) then
         call t_startf('begcnbal')
-        call BeginCBalance(filter(nc)%num_soilc,filter(nc)%soilc)
-        call BeginNBalance(filter(nc)%num_soilc,filter(nc)%soilc)
+        call BeginCBalance(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
+        call BeginNBalance(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
         call t_stopf('begcnbal')
 !     end if 
 #endif
 
   end do
 !$OMP END PARALLEL DO
-#if !defined (USE_OMP)
-!!CSD$ END PARALLEL DO
-#endif
 
   ! ============================================================================
   ! Initialize h2ocan_loss to zero
@@ -392,10 +391,7 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
   call t_stopf('pftdynwts')
 
 
-!$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
-#if !defined (USE_OMP)
-!!CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
-#endif
+!$OMP PARALLEL DO PRIVATE (nc,l,c,begg,endg,begl,endl,begc,endc,begp,endp)
   do nc = 1,nclumps
 
      ! ============================================================================
@@ -625,7 +621,7 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp, doalb)
 !     if (doalb) then 
-	    call CNAnnualUpdate(filter(nc)%num_soilc,&
+            call CNAnnualUpdate(begc,endc,begp,endp,filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp)
 !     end if         
@@ -664,8 +660,8 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 !     if (doalb .and. (nstep > 2) ) then
      if (nstep > 2) then
         call t_startf('cnbalchk')
-        call CBalanceCheck(filter(nc)%num_soilc,filter(nc)%soilc)
-        call NBalanceCheck(filter(nc)%num_soilc,filter(nc)%soilc)
+        call CBalanceCheck(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
+        call NBalanceCheck(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
         call t_stopf('cnbalchk')
      end if
 #endif
@@ -702,9 +698,6 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 
   end do
 !$OMP END PARALLEL DO
-#if !defined (USE_OMP)
-!!CSD$ END PARALLEL DO
-#endif
 
 end subroutine driver1
 
@@ -832,9 +825,6 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
      nclumps = get_proc_clumps()
 
 !$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
-#if !defined (USE_OMP)
-!!CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
-#endif
      do nc = 1,nclumps
         call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
         call lpj(begg, endg, begp, endp, filter(nc)%num_natvegp, filter(nc)%natvegp, kyr)
@@ -845,9 +835,6 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
         call resetWeightsDGVM(begg, endg, begc, endc, begp, endp)
         call resetTimeConstDGVM(begp, endp)
      end do
-#if !defined (USE_OMP)
-!!CSD$ END PARALLEL DO
-#endif
 !$OMP END PARALLEL DO
   end if
   call t_stopf('d2dgvm')

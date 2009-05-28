@@ -22,13 +22,10 @@ config_files/config_sys_defaults.xml - XML file of system defaults
 ---------- Scripts to figure out dependencies between source files (used by Makefile)
 mkDepends
 mkSrcfiles
----------- Directory to put modified source files in
-usr.src
 
 --------- Scripts to build the namelists
 --------- (These scripts are also used by the cpl7 scripts)
 build-namelist --- Build the namelists needed
-build-streams ---- Build the streams text files needed for datm7
 
 --------- CPL7 Script to create namelist and clm library
 clm.cpl7.template ------- Script used by CPL7 scripts to create namelist
@@ -56,8 +53,6 @@ create_newcase
 ---------- Scripts to configure, build and run on various platforms
 ---------- THESE SCRIPTS ARE DEPRECATED BY THE CPL7 SCRIPTS
 run-ibm.csh -------- for IBM SP machines such as bluefire
-run-lightning.csh -- for the NCAR machine lightning a PC linux cluster
-run-pc.csh --------- for linux PC machines such as bangkok
 
 NOTE:  To use the run-scripts you HAVE to set the following:
 

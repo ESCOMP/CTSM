@@ -36,7 +36,8 @@ contains
 ! !IROUTINE: CNAnnualUpdate
 !
 ! !INTERFACE:
-subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
+subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
+                          num_soilp, filter_soilp)
 !
 ! !DESCRIPTION:
 ! On the radiation time step, update annual summation variables
@@ -49,10 +50,12 @@ subroutine CNAnnualUpdate(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbc, ubc        ! column bounds
+   integer, intent(in) :: lbp, ubp        ! pft bounds
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+   integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
-   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+   integer, intent(in) :: filter_soilp(ubp-lbp+1) ! filter for soil pfts
 !
 ! !CALLED FROM:
 ! subroutine driver

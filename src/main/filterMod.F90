@@ -136,7 +136,6 @@ contains
     ! Loop over clumps on this processor
 
 !$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
-!WARNING: Do not put CSDs around loops which call allocate()
     do nc = 1, nclumps
        call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
 
@@ -220,9 +219,6 @@ contains
 
     nclumps = get_proc_clumps()
 !$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp,f,fn,fl,fnl,fnlu,fs,p,c,l)
-#if !defined (USE_OMP)
-!CSD$ PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp,f,fn,fl,fnl,fnlu,fs,p,c,l)
-#endif
     do nc = 1,nclumps
 
        ! Determine clump boundaries
@@ -382,9 +378,6 @@ contains
 
     end do
 !$OMP END PARALLEL DO
-#if !defined (USE_OMP)
-!CSD$ END PARALLEL DO
-#endif
 
   end subroutine setFilters
 

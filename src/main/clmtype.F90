@@ -478,7 +478,7 @@ type, public :: pft_cstate_type
    real(r8), pointer :: storvegc(:)           ! (gC/m2) stored vegetation carbon, excluding cpool
    real(r8), pointer :: totvegc(:)            ! (gC/m2) total vegetation carbon, excluding cpool
    real(r8), pointer :: totpftc(:)            ! (gC/m2) total pft-level carbon, including cpool
-#if (defined CLAMP)
+#if (defined CLAMP) && (defined CN)
    ! CLAMP summary (diagnostic) variable
    real(r8), pointer :: woodc(:)              ! (gC/m2) wood C
 #endif
@@ -822,7 +822,7 @@ type, public :: pft_cflux_type
    real(r8), pointer :: vegfire(:)        ! (gC/m2/s) pft-level fire loss (obsolete, mark for removal)
    real(r8), pointer :: pft_cinputs(:)    ! (gC/m2/s) pft-level carbon inputs (for balance checking)
    real(r8), pointer :: pft_coutputs(:)   ! (gC/m2/s) pft-level carbon outputs (for balance checking)
-#if (defined CLAMP)
+#if (defined CLAMP) && (defined CN)
    ! CLAMP summary (diagnostic) variables, not involved in mass balance
    real(r8), pointer :: frootc_alloc(:)   ! (gC/m2/s) pft-level fine root C alloc
    real(r8), pointer :: frootc_loss(:)    ! (gC/m2/s) pft-level fine root C loss
@@ -1325,6 +1325,7 @@ type, public :: column_cflux_type
    real(r8), pointer :: soil3c_to_soil4c(:)   ! decomp. of SOM 3 C to SOM 4 C (gC/m2/s)
    real(r8), pointer :: soil4_hr(:)           ! het. resp. from SOM 4 C (gC/m2/s)
    ! dynamic landcover fluxes
+#ifdef CN
    real(r8), pointer :: dwt_seedc_to_leaf(:)      ! (gC/m2/s) seed source to PFT-level
    real(r8), pointer :: dwt_seedc_to_deadstem(:)  ! (gC/m2/s) seed source to PFT-level
    real(r8), pointer :: dwt_conv_cflux(:)         ! (gC/m2/s) conversion C flux (immediate loss to atm)
@@ -1338,6 +1339,7 @@ type, public :: column_cflux_type
    real(r8), pointer :: dwt_livecrootc_to_cwdc(:) ! (gC/m2/s) live coarse root to CWD due to landcover change
    real(r8), pointer :: dwt_deadcrootc_to_cwdc(:) ! (gC/m2/s) dead coarse root to CWD due to landcover change
    real(r8), pointer :: dwt_closs(:)              ! (gC/m2/s) total carbon loss from product pools and conversion
+#endif
    ! summary (diagnostic) flux variables, not involved in mass balance
    real(r8), pointer :: lithr(:)         ! (gC/m2/s) litter heterotrophic respiration 
    real(r8), pointer :: somhr(:)         ! (gC/m2/s) soil organic matter heterotrophic respiration
@@ -1352,7 +1354,7 @@ type, public :: column_cflux_type
    real(r8), pointer :: col_cinputs(:)   ! (gC/m2/s) total column-level carbon inputs (for balance check)
    real(r8), pointer :: col_coutputs(:)  ! (gC/m2/s) total column-level carbon outputs (for balance check) 
 
-#if (defined CLAMP)
+#if (defined CLAMP) && (defined CN)
    ! CLAMP summary (diagnostic) flux variables, not involved in mass balance
    real(r8), pointer :: cwdc_hr(:)       ! (gC/m2/s) col-level coarse woody debris C heterotrophic respiration
    real(r8), pointer :: cwdc_loss(:)     ! (gC/m2/s) col-level coarse woody debris C loss

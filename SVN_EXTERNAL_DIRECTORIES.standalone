@@ -1,11 +1,11 @@
 doc                           https://svn-ccsm-models.cgd.ucar.edu/doc/trunk_tags/doc_060127
-scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_090506
+scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_090527
 models/drv/seq_mct            https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/branch_tags/vocemis-drydep_drvseq2_0_33_tags/vocemis-drydep08_drvseq3_0_16
-models/atm/datm7              https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm7_090505b/
+models/atm/datm7              https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm7_090518/
 models/ocn/socn               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_1_01/socn
 models/ice/sice               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_1_01/sice
 models/glc/sglc               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_1_01/sglc
-models/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_090429
+models/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_090512
 models/utils/esmf_wrf_timemgr https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_090402
 models/utils/timing           https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_081221
 models/utils/mct              https://svn-ccsm-models.cgd.ucar.edu/mct/trunk_tags/MCT2_6_0_090317/

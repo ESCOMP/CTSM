@@ -144,6 +144,7 @@ sub ReadDefaultXMLFile {
   } 
   foreach my $name ( $nldefaults->get_variable_names() ) {
     my $value   = $nldefaults->get_value( $name, \%nlopts );
+    $value =~ s/\n//g;
     my $isafile = 0;
     if ( $definition->is_input_pathname($name) ) {
        if ( $value && $name eq "furbinp" ) {

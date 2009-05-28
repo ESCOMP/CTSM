@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 # Make list of files containing source code.  The source list contains all
-# .F90, .F, and .c files in a specified list of directories.  The
+# .F90, .f90, .F, and .c files in a specified list of directories.  The
 # directories are specified one per line in a file called Filepath which
 # this script tries to open in the current directory.  The current
 # directory is prepended to the specified list of directories.  If Filepath
@@ -31,7 +31,7 @@ foreach $dir (@paths) {  # (could check that directories exist here)
 # automatically eliminates redunancies.
 %src = ();
 foreach $dir (@paths) {
-    @filenames = (glob("$dir/*.[Fc]"), glob("$dir/*.F90"));
+    @filenames = (glob("$dir/*.[Fc]"), glob("$dir/*.[Ff]90"));
     foreach $filename (@filenames) {
 	$filename =~ s!.*/!!;                   # remove part before last slash
 	$src{$filename} = "";

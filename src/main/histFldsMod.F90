@@ -445,9 +445,6 @@ contains
          ptr_pft=clm3%g%l%c%p%pcf%fpsn, set_lake=0._r8, set_urb=0._r8)
 
 #if (defined DUST)
-    !KO Spaces between the turbulent deposition velocity calls have 
-    !   been removed because of inexplicable runtime errors in hybrid
-    !   mode in the clm test suite (Illegal instruction)
     call hist_addfld1d (fname='DSTFLXT', units='kg/m2/s',  &
          avgflag='A', long_name='total surface dust emission', &
          ptr_pft=clm3%g%l%c%p%pdf%flx_mss_vrt_dst_tot, set_lake=0._r8, set_urb=0._r8)

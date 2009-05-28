@@ -4,5 +4,5 @@
 -debug
 -maxpft 17
 -bgc cn
--supln off
+-supln on
 -s

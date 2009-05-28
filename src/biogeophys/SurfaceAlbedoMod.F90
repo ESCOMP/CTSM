@@ -182,7 +182,6 @@ contains
     integer  :: filter_vegsol(ubp-lbp+1)   ! pft filter where vegetated and coszen>0
     integer  :: num_novegsol               ! number of vegetated pfts where coszen>0
     integer  :: filter_novegsol(ubp-lbp+1) ! pft filter where vegetated and coszen>0
-    integer  :: num_solar                  ! number of gridcells where coszen>0
     integer, parameter :: nband =numrad    ! number of solar radiation waveband classes
     integer  :: flg_slr                    ! flag for SNICAR (=1 if direct, =2 if diffuse)
     integer  :: flg_snw_ice                ! flag for SNICAR (=1 when called from CLM, =2 when called from sea-ice)
@@ -350,17 +349,6 @@ contains
        end do
     end do
 
-    ! Index points with positive coszen for subsequent calculations
-    ! Return if all coszen are not positive
-
-    num_solar = 0
-!dir$ concurrent
-!cdir nodep
-    do g = lbg,ubg
-       if (coszen_gcell(g) > 0._r8) num_solar = num_solar + 1
-    end do
-    if (num_solar <= 0._r8) return
-
     ! SoilAlbedo called before SNICAR_RT
     ! so that reflectance of soil beneath snow column is known 
     ! ahead of time for snow RT calculation.
@@ -373,7 +361,8 @@ contains
     ! Note that ground albedo routine will only compute nonzero snow albedos
     ! where coszen > 0
 
-    call SoilAlbedo(lbc, ubc, num_nourbanc, filter_nourbanc, coszen_col, albsnd, albsni) 
+    call SoilAlbedo(lbc, ubc, num_nourbanc, filter_nourbanc, &
+                    coszen_col, albsnd, albsni) 
 
     ! set variables to pass to SNICAR.
     
@@ -582,7 +571,7 @@ contains
        enddo
     enddo
 
-    ! Creat solar-vegetated filter for the following calculations
+    ! Create solar-vegetated filter for the following calculations
 
     num_vegsol = 0
     num_novegsol = 0

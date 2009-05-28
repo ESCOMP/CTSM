@@ -63,7 +63,9 @@ else
 fi
 
 ##omp threads
-export CLM_THREADS=2
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=2
+fi
 export CLM_RESTART_THREADS=4
 
 ##mpi tasks
@@ -81,9 +83,9 @@ export MP_USE_BULK_XFER=no
 export MP_LABELIO=yes
 export XLSMPOPTS="stack=256000000"
 export MAKE_CMD="gmake -j 65"
-export CFG_STRING=""
-export TOOLS_MAKE_STRING=""
 export CCSM_MACH="bluefire"
+export CFG_STRING="-mach \$CCSM_MACH "
+export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="/ptmp"
 CPRNC_EXE="/contrib/newcprnc3.0/bin/newcprnc"
 newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
@@ -138,7 +140,9 @@ else
 fi
 
 ##omp threads
-export CLM_THREADS=1
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=1
+fi
 export CLM_RESTART_THREADS=2
 
 ##mpi tasks
@@ -161,9 +165,9 @@ if [ "\$CLM_FC" = "ifort" ]; then
    export intel=/contrib/2.6/intel/10.1.008
    export PATH=\${mpich}/bin:\${intel}/bin:\${PATH}
    export MAKE_CMD="gmake"
-   export CFG_STRING="-fc ifort -cc icc -linker \$mpich/bin/mpif90 "
-   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
    export CCSM_MACH="lightning_intel"
+   export CFG_STRING="-fc ifort -cc icc -linker \$mpich/bin/mpif90 -mach \$CCSM_MACH "
+   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 else
    export INC_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/include
    export LIB_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/lib
@@ -174,9 +178,9 @@ else
    export PATH=\${mpich}/bin:\${PS}/bin:\${PATH}
    export LD_LIBRARY_PATH=\${PS}/lib/2.4:/opt/pathscale/lib/2.4/32:\${LD_LIBRARY_PATH}
    export MAKE_CMD="gmake"
-   export CFG_STRING="-fc pathf90 -linker \${mpich}/bin/mpif90 "
-   export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=\${mpich}/bin/mpif90 "
    export CCSM_MACH="lightning_path"
+   export CFG_STRING="-fc pathf90 -linker \${mpich}/bin/mpif90 -mach \$CCSM_MACH "
+   export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=\${mpich}/bin/mpif90 "
 fi
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
@@ -201,7 +205,9 @@ cat > ./${submit_script} << EOF
 interactive="YES"
 
 ##omp threads
-export CLM_THREADS=2
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=2
+fi
 export CLM_RESTART_THREADS=2
 
 ##mpi tasks
@@ -216,9 +222,9 @@ export LIB_NETCDF=\$netcdf/lib
 export intel=/fs/local
 export PATH=\${intel}/bin:\${PATH}
 export MAKE_CMD="gmake -j5 "
-export CFG_STRING="-fc ifort -cc icc "
+export CCSM_MACH="breeze_intel"
+export CFG_STRING="-fc ifort -cc icc -mach \$CCSM_MACH "
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
-export CCSM_MACH="breeze"
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/fs/home/erik/bin/cprnc
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
@@ -263,7 +269,9 @@ else
 fi
 
 ##omp threads
-export CLM_THREADS=1
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=1
+fi
 export CLM_RESTART_THREADS=2
 
 ##mpi tasks
@@ -281,7 +289,8 @@ if [ "\$CLM_FC" = "PGI" ]; then
     export LIB_MPI=\${mpich}/lib
     export PATH=\${PGI}/linux86/6.1/bin:\${mpich}/bin:\${PATH}
     export LD_LIBRARY_PATH=\${PGI}/linux86/6.1/lib:\${LD_LIBRARY_PATH}
-    export CFG_STRING=""
+    export CCSM_MACH="calgary_pgi"
+    export CFG_STRING="-mach \$CCSM_MACH "
     export TOOLS_MAKE_STRING=""
 else
     export LAHEY=/usr/local/lf9562
@@ -291,10 +300,10 @@ else
     export INC_MPI=\${mpich}/include
     export LIB_MPI=\${mpich}/lib
     export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
-    export CFG_STRING="-fc lf95 -cc gcc -cflags -I/usr/lib/gcc/i386-redhat-linux/4.1.0/include "
+    export CCSM_MACH="calgary_lahey"
+    export CFG_STRING="-fc lf95 -cc gcc -cflags -I/usr/lib/gcc/i386-redhat-linux/4.1.0/include -mach \$CCSM_MACH "
     export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
 fi
-export CCSM_MACH="bangkok"
 export MAKE_CMD="gmake -j 2"   ##using hyper-threading on calgary
 export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
@@ -347,7 +356,9 @@ fi
 input_file="tests_pretag_jaguar"
 
 ##omp threads
-export CLM_THREADS=1
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=1
+fi
 export CLM_RESTART_THREADS=4
 
 ##mpi tasks
@@ -382,7 +393,7 @@ export LIB_NETCDF=\${NETCDF_DIR}/lib
 export INC_NETCDF=\${NETCDF_DIR}/include
 export MOD_NETCDF=\${NETCDF_DIR}/include
 export CCSM_MACH="jaguar"
-export CFG_STRING="-fc ftn "
+export CFG_STRING="-fc ftn -mach \$CCSM_MACH "
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
 export MAKE_CMD="gmake -j 9 "
 export MACH_WORKSPACE="/tmp/work"
@@ -433,7 +444,9 @@ fi
 input_file="tests_posttag_kraken"
 
 ##omp threads
-export CLM_THREADS=1
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=1
+fi
 export CLM_RESTART_THREADS=4
 
 ##mpi tasks
@@ -468,7 +481,7 @@ export LIB_NETCDF=\${NETCDF_DIR}/lib
 export INC_NETCDF=\${NETCDF_DIR}/include
 export MOD_NETCDF=\${NETCDF_DIR}/include
 export CCSM_MACH="kraken"
-export CFG_STRING="-fc ftn "
+export CFG_STRING="-fc ftn -mach \$CCSM_MACH "
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
 export MAKE_CMD="gmake -j 9 "
 export MACH_WORKSPACE="/lustre/scratch"
@@ -481,7 +494,7 @@ EOF
 
     ##yong
     yong* )
-    submit_script="test_driver_spot1_${cur_time}.sh"
+    submit_script="test_driver_yong_${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -491,7 +504,9 @@ cat > ./${submit_script} << EOF
 interactive="YES"
 
 ##omp threads
-export CLM_THREADS=2
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=2
+fi
 export CLM_RESTART_THREADS=1
 
 ##mpi tasks
@@ -500,12 +515,12 @@ export CLM_RESTART_TASKS=1
 
 export CLM_COMPSET="I"
 
-export CCSM_MACH="none"
-export INC_NETCDF=/usr/local/netcdf-3.6.1..0-p1/include
-export LIB_NETCDF=/usr/local/netcdf-3.6.1..0-p1/lib
+export CCSM_MACH="yong_g95"
+export NETCDF=/usr/local/netcdf-3-6-3
+export INC_NETCDF=\$NETCDF/include
+export LIB_NETCDF=\$NETCDF/lib
 export MAKE_CMD="make -j 4"
-#export CFG_STRING="-fc g95 -cc gcc "
-export CFG_STRING=""
+export CFG_STRING="-fc g95 -cc gcc -mach \$CCSM_MACH "
 export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="$HOME/runs"
 export CPRNC_EXE=$HOME/bin/newcprnc

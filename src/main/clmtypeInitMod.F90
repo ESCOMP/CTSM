@@ -1497,7 +1497,7 @@ contains
     allocate(pcs%totvegc(beg:end))
     allocate(pcs%totpftc(beg:end))
 
-#if (defined CLAMP)
+#if (defined CLAMP) && (defined CN)
     !CLAMP
     allocate(pcs%woodc(beg:end))
 #endif
@@ -1530,7 +1530,7 @@ contains
     pcs%totvegc(beg:end) = nan
     pcs%totpftc(beg:end) = nan
 
-#if (defined CLAMP)
+#if (defined CLAMP) && (defined CN)
     !CLAMP
     pcs%woodc(beg:end) = nan
 #endif
@@ -2016,7 +2016,7 @@ contains
     allocate(pcf%pft_coutputs(beg:end))
     allocate(pcf%pft_fire_closs(beg:end))
 
-#if (defined CLAMP)
+#if (defined CLAMP) && (defined CN)
     !CLAMP
     allocate(pcf%frootc_alloc(beg:end))
     allocate(pcf%frootc_loss(beg:end))
@@ -2159,7 +2159,7 @@ contains
     pcf%pft_coutputs(beg:end) = nan
     pcf%pft_fire_closs(beg:end) = nan
 
-#if (defined CLAMP)
+#if (defined CLAMP) && (defined CN)
     !CLAMP
     pcf%frootc_alloc(beg:end) = nan
     pcf%frootc_loss(beg:end) = nan
@@ -3108,6 +3108,7 @@ contains
     allocate(ccf%soil3_hr(beg:end))
     allocate(ccf%soil3c_to_soil4c(beg:end))
     allocate(ccf%soil4_hr(beg:end))
+#ifdef CN
     allocate(ccf%dwt_seedc_to_leaf(beg:end))
     allocate(ccf%dwt_seedc_to_deadstem(beg:end))
     allocate(ccf%dwt_conv_cflux(beg:end))
@@ -3121,6 +3122,7 @@ contains
     allocate(ccf%dwt_livecrootc_to_cwdc(beg:end))
     allocate(ccf%dwt_deadcrootc_to_cwdc(beg:end))
     allocate(ccf%dwt_closs(beg:end))
+#endif
     allocate(ccf%lithr(beg:end))
     allocate(ccf%somhr(beg:end))
     allocate(ccf%hr(beg:end))
@@ -3135,7 +3137,7 @@ contains
     allocate(ccf%col_coutputs(beg:end))
     allocate(ccf%col_fire_closs(beg:end))
 
-#if (defined CLAMP)
+#if (defined CLAMP) && (defined CN)
     !CLAMP
     allocate(ccf%cwdc_hr(beg:end))
     allocate(ccf%cwdc_loss(beg:end))
@@ -3193,6 +3195,7 @@ contains
     ccf%soil3_hr(beg:end) = nan
     ccf%soil3c_to_soil4c(beg:end) = nan
     ccf%soil4_hr(beg:end) = nan
+#if (defined CN)
     ccf%dwt_seedc_to_leaf(beg:end) = nan
     ccf%dwt_seedc_to_deadstem(beg:end) = nan
     ccf%dwt_conv_cflux(beg:end) = nan
@@ -3206,6 +3209,7 @@ contains
     ccf%dwt_livecrootc_to_cwdc(beg:end) = nan
     ccf%dwt_deadcrootc_to_cwdc(beg:end) = nan
     ccf%dwt_closs(beg:end) = nan
+#endif
     ccf%lithr(beg:end) = nan
     ccf%somhr(beg:end) = nan
     ccf%hr(beg:end) = nan
@@ -3220,7 +3224,7 @@ contains
     ccf%col_coutputs(beg:end) = nan
     ccf%col_fire_closs(beg:end) = nan
 
-#if (defined CLAMP)
+#if (defined CLAMP) && (defined CN)
     !CLAMP
     ccf%cwdc_hr(beg:end) = nan
     ccf%cwdc_loss(beg:end) = nan

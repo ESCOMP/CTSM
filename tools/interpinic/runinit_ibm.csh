@@ -117,12 +117,8 @@ date
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #------------------ Loop over different and configuration types -------------------------
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-foreach bgc ( "casa" )
-   if ( "$bgc" == "none" || "$bgc" == "casa" )then
-      set maxpft   = 4        # settings are 4->17                 (default is 4)
-   else
-      set maxpft   = "numpft+1"
-   endif
+foreach bgc ( "none" "cn" )
+   set maxpft   = "numpft+1"
    if (      "$bgc" == "none" )then
       set compset = "IQ"
       set start_times = ( 19521231 19480831 )
@@ -131,7 +127,7 @@ foreach bgc ( "casa" )
       set start_times = ( 19521231 )
    else if ( "$bgc" == "cn"   )then
       set compset = "IQCN"
-      set start_times = ( 19521231 )
+      set start_times = ( 19501231 )
    endif
    set bldcase = "clmbld_$bgc"
    set blddir  = $wrkdir/$bldcase/bld
@@ -174,19 +170,15 @@ foreach bgc ( "casa" )
       if ( "$res" == "48x96" || "$res" == "4x5" )then
          set masks = ( "gx3v5" )
       else if ( "$res" == "1.9x2.5" ) then
-         set masks = ( "gx1v5", "USGS" )
+         set masks = ( "gx1v6" "USGS" )
       else if ( "$res" == "1.9x2.5" || "$res" == "0.47x0.63" || "$res" == "0.23x0.31" \
              || "$res" == "0.9x1.25" || "$res" == "64x128" || "$res" == "48x96" )then
-         set masks = ( "gx1v5" )
+         set masks = ( "gx1v6" )
       else
          set masks = ( "USGS" )
       endif
 
-      if ( "$res" == "1.9x2.5" ) then
-         set sim_years = ("1890" "2000" )
-      else
-         set sim_years = ("2000" )
-      endif
+      set sim_years = ("1850" "2000" )
 
       if ( "$res" == "0.47x0.63" && "$bgc" == "cn" ) then
          set outnc = "outnc_large_files = .true."
@@ -266,7 +258,7 @@ EOF
 
                # Run interpinic on resulting file
                cd $curdir
-               set finidat = `../../bld/queryDefaultNamelist.pl -res 1.9x2.5 -options mask=gx1v5 -onlyfiles -justvalue -var finidat -s -config $config`
+               set finidat = `../../bld/queryDefaultNamelist.pl -res 1.9x2.5 -options mask=gx1v6 -onlyfiles -justvalue -var finidat -s -config $config`
 
                echo "Run interpinic to interpolate from $finidat to $outfile"
 

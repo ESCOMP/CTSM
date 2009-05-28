@@ -51,6 +51,7 @@ module ncdio
   public :: nf_sync
   public :: nf_inq_dimlen
   public :: nf_inq_varid
+  public :: nf_get_att_text
   public :: nf_get_var_double
   public :: nf_get_vara_double
   public :: nf_get_var_int

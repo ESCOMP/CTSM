@@ -1,7 +1,8 @@
 -mode ccsm_seq
--spmd -nosmp
+-nospmd -smp
+-ad_spinup on
 -debug
 -maxpft 17
 -bgc cn
--supln off
+-supln on
 -s
