@@ -188,7 +188,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
           ! Assumes doalb time step .eq. CLM time step, SAI min and monthly decay factor
           ! alpha are set by PFT, and alpha is scaled to CLM time step by multiplying by
           ! dt and dividing by dtsmonth (seconds in average 30 day month)
-          ! tsai_min scaled by 0.65 to match MODIS satellite derived values
+          ! tsai_min scaled by 0.5 to match MODIS satellite derived values
           if (ivt(p) == 15 .or. ivt(p) == 16) then    ! crops (corn, wheat in CLM)
              tsai_alpha = 1.0_r8-1.0_r8*dt/dtsmonth
              tsai_min = 0.1_r8
@@ -196,12 +196,20 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
              tsai_alpha = 1.0_r8-0.5_r8*dt/dtsmonth
              tsai_min = 1.0_r8
           end if
-          tsai_min = tsai_min * 0.65_r8
+          tsai_min = tsai_min * 0.5_r8
           tsai(p) = max(tsai_alpha*tsai_old+max(tlai_old-tlai(p),0._r8),tsai_min)
 
           if (woody(ivt(p)) == 1._r8) then
+
              ! trees and shrubs
-!KO             tsai(p) = 0.25_r8 * tlai(p)
+
+             ! if shrubs have a squat taper 
+             if (ivt(p) .ge. 9 .and. ivt(p) .le. 11) then
+                taper = 10._r8
+             ! otherwise have a tall taper
+             else
+                taper = 200._r8
+             end if
 
              ! trees and shrubs for now have a very simple allometry, with hard-wired
              ! stem taper (height:radius) and hard-wired stocking density (#individuals/area)
@@ -222,7 +230,6 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
           else
              ! grasses
-!KO             tsai(p) = 0.05_r8 * tlai(p)
 
              ! height for grasses depends only on LAI
              htop(p) = max(0.25_r8, tlai(p) * 0.25_r8)

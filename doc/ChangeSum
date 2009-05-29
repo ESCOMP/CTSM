@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-   clm3_6_40         erik 05/28/2009 Fix openMP bug, add fndepdyn ncl script, fix interpinic for urban, add mkharvest to mksurfdata, new spinups, turn CLAMP on for CASA or CN
+   clm3_6_40         erik 05/29/2009 Fix openMP bug, add fndepdyn ncl script, fix interpinic for urban, add mkharvest to mksurfdata, new spinups, turn CLAMP on for CASA or CN
    clm3_6_39         erik 05/07/2009 Bug fix for script version and maxpatchpft back to numpft+1
    clm3_6_38         erik 05/06/2009 New fsurdat for other resolutions, bug-fixes, deep wetlands to bedrock, new spinups for 1.9x2.5 1850, 2000
    clm3_6_37         erik 04/27/2009 Update faerdep dataset for 1.9x2.5 to point to version cice is using for 1850 and 2000

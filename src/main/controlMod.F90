@@ -315,6 +315,9 @@ contains
 #else
     clump_pproc = 1
 #endif
+    if (clump_pproc /= 1) then
+       call endrun( subname//' ERROR: ability to run threaded temporarily disabled due to restart bug.')
+    endif
 
     if (masterproc) then
 
