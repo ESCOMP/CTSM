@@ -2,7 +2,7 @@
 #include <preproc.h>
 
 module CNC13StateUpdate3Mod
-#ifdef CN
+#if (defined CN) && (defined C13)
 
 !-----------------------------------------------------------------------
 !BOP

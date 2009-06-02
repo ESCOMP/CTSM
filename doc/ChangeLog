@@ -1,5 +1,228 @@
-================================================================================
-Tag name: clm3_6_40
+===============================================================
+Tag name:  clm3_6_42
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Tue Jun  2 11:58:25 MDT 2009
+One-line Summary: Bring CN Harvest branch (cnhrv02_clm3_6_41) to trunk
+
+Purpose of changes:
+
+     Add in Peter Thornton's code to read in harvesting variables on surface datasets 
+     and apply harvesting to carbon and nitrogen pools.
+     Add in surface datasets from clm3_6_40 that have harvesting fields on them for
+       0.9x1.25, 1.9x2.5, and 10x15 (as well as aerdep, ndepdat, and ndepdyn datasets).
+     Remove urban test list as urban on by default, and remove top level doc directory.
+     Add C13 CPP token for C13 extension of CN add -c13 option to configure.
+     Add C13/10x15@1850-2000 testing.
+     Let sum of percent types match to 100 within small value rather than an exact match.
+     Increase wasteheat limit from 40 to 100 W/m2.
+     Change default masks to USGS for 4x5,T31,T42, and T85 resolutions so same as cice
+     Update drv to latest version (drvseq3_0_17 -- on voc branch).
+     Update ccsm comparision version used in test suite.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+                                  966 (Hybrid restart problem on bluefire)
+                                  971 (abort on lahey with MPI)
+                                  972 (abort on intel with MPI)
+
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system:
+     Add C13 #ifdef for CN
+     Add -c13 option to configure
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+    Make USGS mask default for 4x5,T31,T42, and T85
+         surface  datasets with harvesting for: 0.9x1.25, 1.9x2.5, 10x15 (1850,2000)
+         pftdyn   datasets with harvesting for: 0.9x1.25, 10x15 (1850-2005)
+         faerdep  datasets for: 0.9x1.25, 10x15 (1850, 2000, 1850-2000)
+         fndepdat datasets for: 0.9x1.25, 10x15 (1850,2000)
+         fndepdyn datasets for: 0.9x1.25, 1.9x2.5, 10x15 (1850-2000)
+
+Describe any substantial timing or memory changes: Minor for CN
+
+Code reviewed by: thornton, erik
+
+List any svn externals directories updated (csm_share, mct, etc.):
+	Remove top level doc directory as out of date and won't be updated. Howto is in
+        the scripts directory
+
+List all files eliminated:
+
+D      models/lnd/clm/test/system/tests_posttag_urban - Urban on by default so doesn't 
+                                                        need it's own tests
+>>>>>>>>>>>>>>>>>> Remove as can NOT easily recreate source from them and code
+                   has changed since the creation of the scripts. Would take work
+                   to get the two in sync and be able to use these scripts as source.
+D      models/lnd/clm/src/main/gen_ncdio_global_subs.csh
+D      models/lnd/clm/src/main/gen_ncdio_local_subs.csh
+D      models/lnd/clm/src/main/gen_spmdgs_subs.csh
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>>>>>> Add new configurations to test C13 config
+A  +   models/lnd/clm/test/system/config_files/17p_cnc13sc_dh
+A  +   models/lnd/clm/test/system/config_files/17p_cnc13sc_dm
+A  +   models/lnd/clm/test/system/config_files/17p_cnc13sc_do
+>>>>>>>>>>>>>>>>>> New module to handle wood harvesting
+A  +   models/lnd/clm/src/biogeochem/CNWoodProductsMod.F90 Calculate loss fluxes from wood
+                                                           products pools, and update 
+                                                           product pool state variables
+
+List all existing files that have been modified, and describe the changes:
+
+M      Quickstart.GUIDE --- Update documentation
+M      README ------------- Update documentation
+>>>>>>>>>>>>>>>>>> Add C13 and 10x15@1850-2000 tests
+M   models/lnd/clm/test/system/tests_pretag_bluefire --- Add 10x15@1850-2000 tests
+M   models/lnd/clm/test/system/config_files/README ----- Add note on new C13 config
+M   models/lnd/clm/test/system/tests_posttag_breeze ---- Add openmp C13 test
+M   models/lnd/clm/test/system/README.testnames -------- Add R configuration for C13 config
+M   models/lnd/clm/test/system/tests_posttag_hybrid_regression -- Add C45 and R51 tests
+M   models/lnd/clm/test/system/tests_posttag_purempi_regression - Add C45 and R52 tests
+M   models/lnd/clm/test/system/input_tests_master ------ Add C45 (10x15@1850-2000, pure-mpi) and 
+                                                         R51-R53 (C13) tests
+M   models/lnd/clm/test/system/test_driver.sh ---------- Update ccsm4 comparision version
+                                                         to beta17
+>>>>>>>>>>>>>>>>>> Add C13 configuration option, and new datasets
+M   models/lnd/clm/bld/configure -------------------------------- Add -c13 option
+M   models/lnd/clm/bld/config_files/config_definition.xml ------- Add c13 entry
+M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - 
+       Change default masks for 4x5,T31,T42,T85 to USGS so agree with cice defaults
+               surface  datasets with harvesting for: 0.9x1.25, 1.9x2.5, 10x15 (1850,2000)
+               pftdyn   datasets with harvesting for: 0.9x1.25, 10x15 (1850-2005)
+               faerdep  datasets for: 0.9x1.25, 10x15 (1850, 2000, 1850-2000)
+               fndepdat datasets for: 0.9x1.25, 10x15 (1850,2000)
+               fndepdyn datasets for: 0.9x1.25, 1.9x2.5, 10x15 (1850-2000)
+>>>>>>>>>>>>>>>>>> C13/DGVM #ifdefs, add harvest vars and calculations
+M models/lnd/clm/src/biogeochem/CNCStateUpdate2Mod.F90 ---- Add CStateUpdate2h method for 
+                                                            harvest mortality fluxes
+M models/lnd/clm/src/biogeochem/CNC13StateUpdate2Mod.F90 -- Add C13 cpp and add C13StateUpdate2h
+                                                            method for harvesting
+M models/lnd/clm/src/biogeochem/CNNStateUpdate1Mod.F90 ---- Remove 10n and 100n variables
+M models/lnd/clm/src/biogeochem/CNBalanceCheckMod.F90 ----- Add in harvesting terms
+M models/lnd/clm/src/biogeochem/CNPrecisionControlMod.F90 - Add C13 #ifdef's
+M models/lnd/clm/src/biogeochem/CNSummaryMod.F90 ---------- Add harvesting fields
+M models/lnd/clm/src/biogeochem/CNCStateUpdate1Mod.F90 ---- Remove 10c, 100c variables, 
+                                                            formatting changes
+M models/lnd/clm/src/biogeochem/CNC13StateUpdate1Mod.F90 -- Add C13 #ifdef, remove 10c, 100c vars
+M models/lnd/clm/src/biogeochem/CNrestMod.F90 ------------- Add C13 #ifdef
+M models/lnd/clm/src/biogeochem/CNC13StateUpdate3Mod.F90 -- Add C13 #ifdef
+M models/lnd/clm/src/biogeochem/CNNStateUpdate2Mod.F90 ---- Add NStateUpdate2h Nitrogen 
+                                                            harvesting method
+M models/lnd/clm/src/biogeochem/C13SummaryMod.F90 --------- Add C13 #ifdef
+M models/lnd/clm/src/biogeochem/CNAllocationMod.F90 ------- Add C13 #ifdef and harvesting variables
+M models/lnd/clm/src/biogeochem/CNC13FluxMod.F90 ---------- Add C13 #ifdef and C13Flux2h harvest 
+                                                            method, and CNC13HarvestPftToColumn 
+                                                            private method
+M models/lnd/clm/src/biogeochem/CNEcosystemDynMod.F90 ----- Add harvesting method calls
+                                                            filters by lbc,ubc
+                                                            Add C13 #ifdef, add CNHarvest call if 
+                                                            fpftdyn file is set.
+M models/lnd/clm/src/biogeochem/CNSetValueMod.F90 --------- Add C13 #ifdef, remove 10c, 100c loss 
+                                                            vars, add harvest vars
+M models/lnd/clm/src/main/clm_varcon.F90 ------------------ Add C13 #ifdef 
+                                                      Increase wasteheat limit to 100 W/m2
+M models/lnd/clm/src/main/CNiniTimeVar.F90 ---------------- Add C13 #ifdef
+                                                            begc, endc to methods
+M models/lnd/clm/src/main/accFldsMod.F90 ------------------ Put frmf and other vars (t10, t_mo, 
+                                                            ... agdd) in DGVM #ifdef
+M models/lnd/clm/src/main/clmtypeInitMod.F90 -------------- Add C13 and DGVM #ifdef and new 
+                                                            harvesting vars
+M models/lnd/clm/src/main/pftdynMod.F90 ------------------- Add CNHarvest and CNHarvestPftToColumn 
+                                                            as public methods, 
+                                                            add pftdyn_getharvest private methods, 
+                                                            check that land fractions sum to 100 
+                                                            within 1e-15 rather than exactly 100, 
+                                                            change pftdyn_get_data to pftdyn_getdata
+                                                            Add C13 #ifdef, remove 10c, 100c loss 
+                                                            calculation
+M models/lnd/clm/src/main/iniTimeConst.F90 ---------------- Add DGVM #ifdef
+M models/lnd/clm/src/main/clm_atmlnd.F90 ------------------ Add C13 #ifdef
+M models/lnd/clm/src/main/lnd_comp_mct.F90 ---------------- Add C13 #ifdef
+M models/lnd/clm/src/main/CNiniSpecial.F90 ---------------- Add C13 #ifdef
+M models/lnd/clm/src/main/clmtype.F90 --------------------- Add DGVM, C13 #ifdef,
+                                                            harvest vars
+M models/lnd/clm/src/main/histFldsMod.F90 ----------------- Add C13 #ifdef, correct SEEDN,
+          Add: WOOD_HARVESTC, PRODUCT_CLOSS, C13_PRODUCT_CLOSS, WOOD_HARVESTN, PRODUCT_NLOSS
+          Change long_name: DWT_PROD10C_GAIN, DWT_PROD100C_GAIN, DWT_CLOSS, DWT_NLOSS
+M models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90 --- Add C13 #ifdef
+M models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90 ------- Add C13 #ifdef
+
+Summary of testing:
+
+  bluefire: hybrid and open-mp tests FAIL, pftdyn 1000 tests fail, most TBL tests FAIL as answers change
+001 smA74 TSM.sh _sc_ds clm_std^nl_urb 20030101:NONE:3600 1x1_brazil navy -10 arb_ic ............PASS
+002 erA74 TER.sh _sc_ds clm_std^nl_urb 20030101:NONE:3600 1x1_brazil navy -5+-5 arb_ic ..........PASS
+003 brA74 TBR.sh _sc_ds clm_std^nl_urb_br 20030101:NONE:3600 1x1_brazil navy -5+-5 arb_ic .......PASS
+004 blA74 TBL.sh _sc_ds clm_std^nl_urb 20030101:NONE:3600 1x1_brazil navy -10 arb_ic ............PASS
+005 smL74 TSM.sh _sc_s clm_std^nl_urb 20020101:NONE:1800 1x1_brazil navy -10 arb_ic .............PASS
+015 smB91 TSMruncase.sh .........................................................................PASS
+021 smF92 TSM.sh 17p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 96 cold .............PASS
+022 erF92 TER.sh 17p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 10+38 cold ..........PASS
+023 brF92 TBR.sh 17p_vodsrsc_dm clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v5 72+72 cold .......PASS
+029 smCA4 TSM.sh _sc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........PASS
+030 erCA4 TER.sh _sc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ......PASS
+031 brCA4 TBR.sh _sc_ds clm_std^nl_urb_br 20021001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic ...PASS
+032 blCA4 TBL.sh _sc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........PASS
+046 smCA8 TSM.sh _sc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...PASS
+047 blCA8 TBL.sh _sc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...PASS
+048 smNB4 TSM.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic PASS
+049 erNB4 TER.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 59+100 arb_icPASS
+050 brNB4 TBR.sh _mexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arb_PASS
+051 blNB4 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic PASS
+065 smL78 TSM.sh _sc_s clm_std^nl_urb 20021231:NONE:1800 1x1_brazil navy -366 arb_ic ............PASS
+066 blL78 TBL.sh _sc_s clm_std^nl_urb 20021231:NONE:1800 1x1_brazil navy -10 arb_ic .............PASS
+PASS  ERS.f45_g35.I_2000.bluefire
+PASS  ERS.f19_g16.I_1850.bluefire
+PASS  ERS.f19_g16.I_1850-2000.bluefire
+PASS  ERB.f09_g16.I_1948_2004.bluefire
+SFAIL ERH.f10_f10.I_1850_CN.bluefire.014926 <<< f10_f10 doesn't work for datm7 right now
+PASS  ERP.f19_g16.I_CN_1850-2000.bluefire
+  bangkok/lf95: Up to test 6 as follows
+001 smA74 TSM.sh _sc_ds clm_std^nl_urb 20030101:NONE:3600 1x1_brazil navy -10 arb_ic ............PASS
+002 erA74 TER.sh _sc_ds clm_std^nl_urb 20030101:NONE:3600 1x1_brazil navy -5+-5 arb_ic ..........PASS
+003 brA74 TBR.sh _sc_ds clm_std^nl_urb_br 20030101:NONE:3600 1x1_brazil navy -5+-5 arb_ic .......PASS
+004 blA74 TBL.sh _sc_ds clm_std^nl_urb 20030101:NONE:3600 1x1_brazil navy -10 arb_ic ............PASS
+005 smA92 TSM.sh _sc_dm clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 10
+006 erA92 TER.sh _sc_dm clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 5
+  breeze/gale/hail/gust/ifort:
+001 smA74 TSM.sh _sc_ds clm_std^nl_urb 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ............PASS
+002 erA74 TER.sh _sc_ds clm_std^nl_urb 19990101:NONE:3600 1x1_brazil navy -5+-5 arb_ic ..........PASS
+003 brA74 TBR.sh _sc_ds clm_std^nl_urb_br 19990101:NONE:3600 1x1_brazil navy -5+-5 arb_ic .......PASS
+004 blA74 TBL.sh _sc_ds clm_std^nl_urb 19990101:NONE:3600 1x1_brazil navy -10 arb_ic ............SKIPPED*
+005 smD94 TSM.sh _persc_ds clm_per^nl_urb 19981231:NONE:1200 4x5 gx3v5 144 cold .................PASS
+006 erD94 TER.sh _persc_ds clm_per^nl_urb 19981231:NONE:1200 4x5 gx3v5 72+72 cold ...............PASS
+007 blD94 TBL.sh _persc_ds clm_per^nl_urb 19981231:NONE:1200 4x5 gx3v5 144 cold .................SKIPPED*
+008 smCA4 TSM.sh _sc_ds clm_std^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........PASS
+009 blCA4 TBL.sh _sc_ds clm_std^nl_urb 19981001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........SKIPPED*
+010 smCA8 TSM.sh _sc_ds clm_std^nl_urb 19971230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...PASS
+011 blCA8 TBL.sh _sc_ds clm_std^nl_urb 19971230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...SKIPPED*
+012 smL54 TSM.sh _sc_ds clm_std^nl_urb 19980115:NONE:1800 10x15 USGS 96 arb_ic ..................FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_41
+
+Changes answers relative to baseline: Yes, urban wasteheat limit increased to 100 W/m2
+                                      and CN changes due to harvesting
+
+===============================================================
+Tag name:  clm3_6_41
 Originator(s): kauff,erik
 Date: Fri May 29 14:15:38 MDT 2009
 One-line Summary: shrub mods, abort if nthreads > 1 (temporary, wrt bugz #965)
@@ -100,7 +323,7 @@ following should be filled in:
    
    URL for LMWG diagnostics output used to validate new climate:
 	
-================================================================================
+===============================================================
 Tag name:  clm3_6_40
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Thu May 28 15:17:11 MDT 2009

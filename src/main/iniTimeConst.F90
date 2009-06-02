@@ -428,6 +428,7 @@ subroutine iniTimeConst
       pftcon%resist(m) = resist(m)
    end do
 
+#ifdef DGVM
 !dir$ concurrent
 !cdir nodep
    do m = 0,numpft
@@ -465,6 +466,7 @@ subroutine iniTimeConst
       dgv_pftcon%allom2(m) = allom2
       dgv_pftcon%allom3(m) = allom3
    end do
+#endif
 
    ! --------------------------------------------------------------------
    ! Define layer structure for soil, lakes, urban walls and roof 

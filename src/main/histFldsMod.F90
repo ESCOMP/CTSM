@@ -976,6 +976,7 @@ contains
          avgflag='A', long_name='total pft-level carbon, including cpool', &
          ptr_pft=clm3%g%l%c%p%pcs%totpftc)
 
+#if (defined C13)
     !-------------------------------
     ! C13 state variables - native to PFT 
     !-------------------------------
@@ -1087,6 +1088,7 @@ contains
     call hist_addfld1d (fname='C13_TOTPFTC', units='gC13/m^2', &
          avgflag='A', long_name='C13 total pft-level carbon, including cpool', &
          ptr_pft=clm3%g%l%c%p%pc13s%totpftc)
+#endif
 
     !-------------------------------
     ! C state variables - native to column
@@ -1171,6 +1173,7 @@ contains
          ptr_col=clm3%g%l%c%ccs%totprodc)
 
     
+#if (defined C13)
     !-------------------------------
     ! C13 state variables - native to column
     !-------------------------------
@@ -1242,6 +1245,7 @@ contains
     call hist_addfld1d (fname='C13_TOTPRODC', units='gC13/m^2', &
          avgflag='A', long_name='C13 total wood product C', &
          ptr_col=clm3%g%l%c%cc13s%totprodc)
+#endif
 
     !-------------------------------
     ! N state variables - native to PFT
@@ -1409,7 +1413,7 @@ contains
 
     call hist_addfld1d (fname='SEEDN', units='gN/m^2', &
          avgflag='A', long_name='pool for seeding new PFTs ', &
-         ptr_col=clm3%g%l%c%cns%prod10n)
+         ptr_col=clm3%g%l%c%cns%seedn)
 
     call hist_addfld1d (fname='PROD10N', units='gN/m^2', &
          avgflag='A', long_name='10-yr wood product N', &
@@ -1899,10 +1903,15 @@ contains
          avgflag='A', long_name='pft-level fire loss', &
          ptr_pft=clm3%g%l%c%p%pcf%vegfire, default='inactive')
 
+    call hist_addfld1d (fname='WOOD_HARVESTC', units='gC/m^2/s', &
+         avgflag='A', long_name='wood harvest (to product pools)', &
+         ptr_pft=clm3%g%l%c%p%pcf%wood_harvestc)
+
     call hist_addfld1d (fname='PFT_FIRE_CLOSS', units='gC/m^2/s', &
          avgflag='A', long_name='total pft-level fire C loss', &
          ptr_pft=clm3%g%l%c%p%pcf%pft_fire_closs)
 
+#if (defined C13)
     !-------------------------------
     ! C13 flux variables - native to PFT
     !-------------------------------
@@ -2354,6 +2363,7 @@ contains
     call hist_addfld1d (fname='C13_PFT_FIRE_CLOSS', units='gC13/m^2/s', &
          avgflag='A', long_name='C13 total pft-level fire C loss', &
          ptr_pft=clm3%g%l%c%p%pc13f%pft_fire_closs)
+#endif
 
     !-------------------------------
     ! C flux variables - native to column 
@@ -2648,20 +2658,20 @@ contains
          ptr_col=clm3%g%l%c%ccf%dwt_conv_cflux)
 
     call hist_addfld1d (fname='DWT_PROD10C_GAIN', units='gC/m^2/s', &
-         avgflag='A', long_name='addition to 10-yr wood product pool', &
+         avgflag='A', long_name='landcover change-driven addition to 10-yr wood product pool', &
          ptr_col=clm3%g%l%c%ccf%dwt_prod10c_gain)
 
-    call hist_addfld1d (fname='DWT_PROD10C_LOSS', units='gC/m^2/s', &
+    call hist_addfld1d (fname='PROD10C_LOSS', units='gC/m^2/s', &
          avgflag='A', long_name='loss from 10-yr wood product pool', &
-         ptr_col=clm3%g%l%c%ccf%dwt_prod10c_loss)
+         ptr_col=clm3%g%l%c%ccf%prod10c_loss)
 
     call hist_addfld1d (fname='DWT_PROD100C_GAIN', units='gC/m^2/s', &
-         avgflag='A', long_name='addition to 100-yr wood product pool', &
+         avgflag='A', long_name='landcover change-driven addition to 100-yr wood product pool', &
          ptr_col=clm3%g%l%c%ccf%dwt_prod100c_gain)
 
-    call hist_addfld1d (fname='DWT_PROD100C_LOSS', units='gC/m^2/s', &
+    call hist_addfld1d (fname='PROD100C_LOSS', units='gC/m^2/s', &
          avgflag='A', long_name='loss from 100-yr wood product pool', &
-         ptr_col=clm3%g%l%c%ccf%dwt_prod100c_loss)
+         ptr_col=clm3%g%l%c%ccf%prod100c_loss)
 
     call hist_addfld1d (fname='DWT_FROOTC_TO_LITR1C', units='gC/m^2/s', &
          avgflag='A', long_name='fine root to litter due to landcover change', &
@@ -2684,9 +2694,14 @@ contains
          ptr_col=clm3%g%l%c%ccf%dwt_deadcrootc_to_cwdc, default='inactive')
 
     call hist_addfld1d (fname='DWT_CLOSS', units='gC/m^2/s', &
-         avgflag='A', long_name='total carbon loss from product pools and conversion', &
+         avgflag='A', long_name='total carbon loss from land cover conversion', &
          ptr_col=clm3%g%l%c%ccf%dwt_closs)
 
+    call hist_addfld1d (fname='PRODUCT_CLOSS', units='gC/m^2/s', &
+         avgflag='A', long_name='total carbon loss from wood product pools', &
+         ptr_col=clm3%g%l%c%ccf%product_closs)
+
+#if (defined C13)
     !-------------------------------
     ! C13 flux variables - native to column 
     !-------------------------------
@@ -2955,17 +2970,17 @@ contains
          avgflag='A', long_name='C13 addition to 10-yr wood product pool', &
          ptr_col=clm3%g%l%c%cc13f%dwt_prod10c_gain)
 
-    call hist_addfld1d (fname='C13_DWT_PROD10C_LOSS', units='gC13/m^2/s', &
+    call hist_addfld1d (fname='C13_PROD10C_LOSS', units='gC13/m^2/s', &
          avgflag='A', long_name='C13 loss from 10-yr wood product pool', &
-         ptr_col=clm3%g%l%c%cc13f%dwt_prod10c_loss)
+         ptr_col=clm3%g%l%c%cc13f%prod10c_loss)
 
     call hist_addfld1d (fname='C13_DWT_PROD100C_GAIN', units='gC13/m^2/s', &
          avgflag='A', long_name='C13 addition to 100-yr wood product pool', &
          ptr_col=clm3%g%l%c%cc13f%dwt_prod100c_gain)
 
-    call hist_addfld1d (fname='C13_DWT_PROD100C_LOSS', units='gC13/m^2/s', &
+    call hist_addfld1d (fname='C13_PROD100C_LOSS', units='gC13/m^2/s', &
          avgflag='A', long_name='C13 loss from 100-yr wood product pool', &
-         ptr_col=clm3%g%l%c%cc13f%dwt_prod100c_loss)
+         ptr_col=clm3%g%l%c%cc13f%prod100c_loss)
 
     call hist_addfld1d (fname='C13_DWT_FROOTC_TO_LITR1C', units='gC13/m^2/s', &
          avgflag='A', long_name='C13 fine root to litter due to landcover change', &
@@ -2988,8 +3003,13 @@ contains
          ptr_col=clm3%g%l%c%cc13f%dwt_deadcrootc_to_cwdc, default='inactive')
 
     call hist_addfld1d (fname='C13_DWT_CLOSS', units='gC13/m^2/s', &
-         avgflag='A', long_name='C13 total carbon loss from product pools and conversion', &
+         avgflag='A', long_name='C13 total carbon loss from land cover conversion', &
          ptr_col=clm3%g%l%c%cc13f%dwt_closs)
+
+    call hist_addfld1d (fname='C13_PRODUCT_CLOSS', units='gC13/m^2/s', &
+         avgflag='A', long_name='C13 total carbon loss from wood product pools', &
+         ptr_col=clm3%g%l%c%cc13f%product_closs)
+#endif
 
     !-------------------------------
     ! N flux variables - native to PFT
@@ -3291,6 +3311,10 @@ contains
          avgflag='A', long_name='total N deployed in new growth', &
          ptr_pft=clm3%g%l%c%p%pnf%ndeploy)
 
+    call hist_addfld1d (fname='WOOD_HARVESTN', units='gN/m^2/s', &
+         avgflag='A', long_name='wood harvest (to product pools)', &
+         ptr_pft=clm3%g%l%c%p%pnf%wood_harvestn)
+
     call hist_addfld1d (fname='PFT_FIRE_NLOSS', units='gN/m^2/s', &
          avgflag='A', long_name='total pft-level fire N loss', &
          ptr_pft=clm3%g%l%c%p%pnf%pft_fire_nloss)
@@ -3591,17 +3615,21 @@ contains
          avgflag='A', long_name='addition to 10-yr wood product pool', &
          ptr_col=clm3%g%l%c%cnf%dwt_prod10n_gain)
 
-    call hist_addfld1d (fname='DWT_PROD10N_LOSS', units='gN/m^2/s', &
+    call hist_addfld1d (fname='PROD10N_LOSS', units='gN/m^2/s', &
          avgflag='A', long_name='loss from 10-yr wood product pool', &
-         ptr_col=clm3%g%l%c%cnf%dwt_prod10n_loss)
+         ptr_col=clm3%g%l%c%cnf%prod10n_loss)
 
     call hist_addfld1d (fname='DWT_PROD100N_GAIN', units='gN/m^2/s', &
          avgflag='A', long_name='addition to 100-yr wood product pool', &
          ptr_col=clm3%g%l%c%cnf%dwt_prod100n_gain)
 
-    call hist_addfld1d (fname='DWT_PROD100N_LOSS', units='gN/m^2/s', &
+    call hist_addfld1d (fname='PROD100N_LOSS', units='gN/m^2/s', &
          avgflag='A', long_name='loss from 100-yr wood product pool', &
-         ptr_col=clm3%g%l%c%cnf%dwt_prod100n_loss)
+         ptr_col=clm3%g%l%c%cnf%prod100n_loss)
+
+    call hist_addfld1d (fname='PRODUCT_NLOSS', units='gN/m^2/s', &
+         avgflag='A', long_name='total N loss from wood product pools', &
+         ptr_col=clm3%g%l%c%cnf%product_nloss)
 
     call hist_addfld1d (fname='DWT_FROOTN_TO_LITR1N', units='gN/m^2/s', &
          avgflag='A', long_name='fine root to litter due to landcover change', &
@@ -3624,7 +3652,7 @@ contains
          ptr_col=clm3%g%l%c%cnf%dwt_deadcrootn_to_cwdn, default='inactive')
 
     call hist_addfld1d (fname='DWT_NLOSS', units='gN/m^2/s', &
-         avgflag='A', long_name='total nitrogen loss from product pools and conversion', &
+         avgflag='A', long_name='total nitrogen loss from landcover conversion', &
          ptr_col=clm3%g%l%c%cnf%dwt_nloss)
 
     !-------------------------------
@@ -3719,9 +3747,11 @@ contains
          avgflag='A', long_name='C flux assigned to recovery of negative xsmrpool', &
          ptr_pft=clm3%g%l%c%p%pepv%xsmrpool_recover, default='inactive')
 
+#if (defined C13)
     call hist_addfld1d (fname='XSMRPOOL_C13RATIO', units='proportion', &
          avgflag='A', long_name='C13/C(12+13) ratio for xsmrpool', &
          ptr_pft=clm3%g%l%c%p%pepv%xsmrpool_recover, default='inactive')
+#endif
 
     call hist_addfld1d (fname='ALLOC_PNOW', units='proportion', &
          avgflag='A', long_name='fraction of current allocation to display as new growth', &
@@ -3787,6 +3817,7 @@ contains
          avgflag='A', long_name='annual sum of NPP', &
          ptr_pft=clm3%g%l%c%p%pepv%annsum_npp, default='inactive')
 
+#if (defined C13)
     call hist_addfld1d (fname='RC13_CANAIR', units='proportion', &
          avgflag='A', long_name='C13/C(12+13) for canopy air', &
          ptr_pft=clm3%g%l%c%p%pepv%rc13_canair, default='inactive')
@@ -3798,6 +3829,7 @@ contains
     call hist_addfld1d (fname='RC13_PSNSHA', units='proportion', &
          avgflag='A', long_name='C13/C(12+13) for shaded photosynthesis', &
          ptr_pft=clm3%g%l%c%p%pepv%rc13_psnsha, default='inactive')
+#endif
 
     !-------------------------------
     ! PFT physical state variables not already defined by default
@@ -3855,6 +3887,7 @@ contains
          avgflag='A', long_name='shaded intracellular CO2', &
          ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
 
+#if (defined C13)
     call hist_addfld1d (fname='ALPHAPSNSUN', units='proportion', &
          avgflag='A', long_name='sunlit c13 fractionation', &
          ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
@@ -3862,6 +3895,7 @@ contains
     call hist_addfld1d (fname='ALPHAPSNSHA', units='proportion', &
          avgflag='A', long_name='shaded c13 fractionation', &
          ptr_pft=clm3%g%l%c%p%pps%gdir, default='inactive')
+#endif
 
     call hist_addfld1d (fname='FWET', units='proportion', &
          avgflag='A', long_name='fraction of canopy that is wet', &

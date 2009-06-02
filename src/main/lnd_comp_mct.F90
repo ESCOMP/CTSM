@@ -898,7 +898,10 @@ contains
     use shr_kind_mod    , only: r8 => shr_kind_r8
     use clm_atmlnd      , only: atm2lnd_type
     use clm_varctl      , only: co2_type, co2_ppmv
-    use clm_varcon      , only: rair, o2_molar_const, c13ratio
+    use clm_varcon      , only: rair, o2_molar_const
+#if (defined C13)
+    use clm_varcon      , only: c13ratio
+#endif
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use decompMod       , only: get_proc_bounds_atm
     use abortutils      , only: endrun
@@ -1070,7 +1073,9 @@ contains
            co2_ppmv_val = co2_ppmv
         end if
         a2l%forc_pco2(g)   = co2_ppmv_val * 1.e-6_r8 * a2l%forc_pbot(g) 
+#if (defined C13)
         a2l%forc_pc13o2(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * a2l%forc_pbot(g)
+#endif
 	 
      end do
 

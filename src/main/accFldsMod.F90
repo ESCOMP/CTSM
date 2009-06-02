@@ -195,7 +195,6 @@ contains
     real(r8), pointer :: forc_t(:)           ! atmospheric temperature (Kelvin)
     real(r8), pointer :: forc_rain(:)        ! rain rate [mm/s]
     real(r8), pointer :: forc_snow(:)        ! snow rate [mm/s]
-    real(r8), pointer :: frmf(:)             ! leaf maintenance respiration  (umol CO2 /m**2 /s)
     real(r8), pointer :: fpsn(:)             ! photosynthesis (umol CO2 /m**2 /s)
     real(r8), pointer :: t_ref2m(:)          ! 2 m height surface air temperature (Kelvin)
     real(r8), pointer :: t_ref2m_u(:)        ! Urban 2 m height surface air temperature (Kelvin)
@@ -203,6 +202,10 @@ contains
     logical , pointer :: urbpoi(:)           ! true => landunit is an urban point
     logical , pointer :: ifspecial(:)        ! true => landunit is not vegetated
     integer , pointer :: plandunit(:)        ! landunit index associated with each pft
+
+#ifdef DGVM
+    real(r8), pointer :: frmf(:)             ! leaf maintenance respiration  (umol CO2 /m**2 /s)
+#endif
 !
 ! local pointers to implicit out arguments
 !
@@ -218,6 +221,7 @@ contains
     real(r8), pointer :: t_ref2m_min_inst_r(:) ! Rural instantaneous daily min of average 2 m height surface air temp (K)
     real(r8), pointer :: t_ref2m_max_inst_u(:) ! Urban instantaneous daily max of average 2 m height surface air temp (K)
     real(r8), pointer :: t_ref2m_max_inst_r(:) ! Rural instantaneous daily max of average 2 m height surface air temp (K)
+#ifdef DGVM
     real(r8), pointer :: t10(:)              ! 10-day running mean of the 2 m temperature (K)
     real(r8), pointer :: t_mo(:)             ! 30-day average temperature (Kelvin)
     real(r8), pointer :: t_mo_min(:)         ! annual min of t_mo (Kelvin)
@@ -227,6 +231,7 @@ contains
     real(r8), pointer :: agdd5(:)            ! accumulated growing degree days above -5
     real(r8), pointer :: agddtw(:)           ! accumulated growing degree days above twmax
     real(r8), pointer :: agdd(:)             ! accumulated growing degree days above 5
+#endif
 !
 !EOP
 !
@@ -268,7 +273,6 @@ contains
     pgridcell        => clm3%g%l%c%p%gridcell
     t_ref2m          => clm3%g%l%c%p%pes%t_ref2m
     fpsn             => clm3%g%l%c%p%pcf%fpsn
-    frmf             => clm3%g%l%c%p%pcf%frmf
     t_ref2m_max_inst => clm3%g%l%c%p%pes%t_ref2m_max_inst
     t_ref2m_min_inst => clm3%g%l%c%p%pes%t_ref2m_min_inst
     t_ref2m_max      => clm3%g%l%c%p%pes%t_ref2m_max
@@ -284,6 +288,8 @@ contains
     t_ref2m_min_inst_u => clm3%g%l%c%p%pes%t_ref2m_min_inst_u
     t_ref2m_min_inst_r => clm3%g%l%c%p%pes%t_ref2m_min_inst_r
     plandunit        => clm3%g%l%c%p%landunit
+#ifdef DGVM
+    frmf             => clm3%g%l%c%p%pcf%frmf
     t_mo             => clm3%g%l%c%p%pdgvs%t_mo
     t_mo_min         => clm3%g%l%c%p%pdgvs%t_mo_min
     t10              => clm3%g%l%c%p%pdgvs%t10
@@ -293,6 +299,7 @@ contains
     agdd5            => clm3%g%l%c%p%pdgvs%agdd5
     agddtw           => clm3%g%l%c%p%pdgvs%agddtw
     agdd             => clm3%g%l%c%p%pdgvs%agdd
+#endif
 
     ! Determine calendar information
 
@@ -560,6 +567,7 @@ contains
     real(r8), pointer :: t_ref2m_min_inst_r(:) ! Rural instantaneous daily min of average 2 m height surface air temp (K)
     real(r8), pointer :: t_ref2m_max_inst_u(:) ! Urban instantaneous daily max of average 2 m height surface air temp (K)
     real(r8), pointer :: t_ref2m_max_inst_r(:) ! Rural instantaneous daily max of average 2 m height surface air temp (K)
+#ifdef DGVM
     real(r8), pointer :: t10(:)              ! 10-day running mean of the 2 m temperature (K)
     real(r8), pointer :: t_mo(:)             ! 30-day average temperature (Kelvin)
     real(r8), pointer :: fnpsn10(:)          ! 10-day running mean net photosynthesis
@@ -568,6 +576,7 @@ contains
     real(r8), pointer :: agdd5(:)            ! accumulated growing degree days above -5
     real(r8), pointer :: agddtw(:)           ! accumulated growing degree days above twmax
     real(r8), pointer :: agdd(:)             ! accumulated growing degree days above 5
+#endif
 !
 ! !LOCAL VARIABLES:
 !
@@ -598,6 +607,7 @@ contains
     t_ref2m_max_r      => clm3%g%l%c%p%pes%t_ref2m_max_r
     t_ref2m_min_u      => clm3%g%l%c%p%pes%t_ref2m_min_u
     t_ref2m_min_r      => clm3%g%l%c%p%pes%t_ref2m_min_r
+#ifdef DGVM
     t10              => clm3%g%l%c%p%pdgvs%t10
     t_mo             => clm3%g%l%c%p%pdgvs%t_mo
     fnpsn10          => clm3%g%l%c%p%pdgvs%fnpsn10
@@ -606,6 +616,7 @@ contains
     agdd5            => clm3%g%l%c%p%pdgvs%agdd5
     agddtw           => clm3%g%l%c%p%pdgvs%agddtw
     agdd             => clm3%g%l%c%p%pdgvs%agdd
+#endif
 
     ! Determine necessary indices
 

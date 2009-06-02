@@ -31,6 +31,7 @@ N -- ccsm_seq MEXICOCITY
 O -- ccsm_seq VANCOUVER
 P -- ccsm_seq standard scripts
 Q -- generate_urban_input
+R -- ccsm_seq numpft=17, CN, C13
 
 m is the resolution
 

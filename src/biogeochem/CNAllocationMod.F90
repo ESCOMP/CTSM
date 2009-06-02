@@ -74,8 +74,10 @@ subroutine CNAllocation (lbc, ubc, &
    real(r8), pointer :: retransn(:)   ! (kgN/m2) plant pool of retranslocated N
    real(r8), pointer :: psnsun(:)     ! sunlit leaf-level photosynthesis (umol CO2 /m**2/ s)
    real(r8), pointer :: psnsha(:)     ! shaded leaf-level photosynthesis (umol CO2 /m**2/ s)
+#if (defined C13)
    real(r8), pointer :: c13_psnsun(:) ! C13 sunlit leaf-level photosynthesis (umol CO2 /m**2/ s)
    real(r8), pointer :: c13_psnsha(:) ! C13 shaded leaf-level photosynthesis (umol CO2 /m**2/ s)
+#endif
    real(r8), pointer :: laisun(:)     ! sunlit projected leaf area index
    real(r8), pointer :: laisha(:)     ! shaded projected leaf area index
    real(r8), pointer :: leaf_mr(:)
@@ -129,8 +131,10 @@ subroutine CNAllocation (lbc, ubc, &
    real(r8), pointer :: cpool_to_xsmrpool(:)
    real(r8), pointer :: psnsun_to_cpool(:)
    real(r8), pointer :: psnshade_to_cpool(:)
+#if (defined C13)
    real(r8), pointer :: c13_psnsun_to_cpool(:)
    real(r8), pointer :: c13_psnshade_to_cpool(:)
+#endif
    real(r8), pointer :: cpool_to_leafc(:)
    real(r8), pointer :: cpool_to_leafc_storage(:)
    real(r8), pointer :: cpool_to_frootc(:)
@@ -202,8 +206,10 @@ subroutine CNAllocation (lbc, ubc, &
    retransn                    => clm3%g%l%c%p%pns%retransn
    psnsun                      => clm3%g%l%c%p%pcf%psnsun
    psnsha                      => clm3%g%l%c%p%pcf%psnsha
+#if (defined C13)
    c13_psnsun                  => clm3%g%l%c%p%pc13f%psnsun
    c13_psnsha                  => clm3%g%l%c%p%pc13f%psnsha
+#endif
    laisun                      => clm3%g%l%c%p%pps%laisun
    laisha                      => clm3%g%l%c%p%pps%laisha
    leaf_mr                     => clm3%g%l%c%p%pcf%leaf_mr
@@ -249,8 +255,10 @@ subroutine CNAllocation (lbc, ubc, &
    cpool_to_xsmrpool           => clm3%g%l%c%p%pcf%cpool_to_xsmrpool
    psnsun_to_cpool             => clm3%g%l%c%p%pcf%psnsun_to_cpool
    psnshade_to_cpool           => clm3%g%l%c%p%pcf%psnshade_to_cpool
+#if (defined C13)
    c13_psnsun_to_cpool         => clm3%g%l%c%p%pc13f%psnsun_to_cpool
    c13_psnshade_to_cpool       => clm3%g%l%c%p%pc13f%psnshade_to_cpool
+#endif
    cpool_to_leafc              => clm3%g%l%c%p%pcf%cpool_to_leafc
    cpool_to_leafc_storage      => clm3%g%l%c%p%pcf%cpool_to_leafc_storage
    cpool_to_frootc             => clm3%g%l%c%p%pcf%cpool_to_frootc
@@ -316,8 +324,10 @@ subroutine CNAllocation (lbc, ubc, &
 
       psnsun_to_cpool(p) = psnsun(p) * laisun(p) * 12.011e-6_r8
       psnshade_to_cpool(p) = psnsha(p) * laisha(p) * 12.011e-6_r8
+#if (defined C13)
       c13_psnsun_to_cpool(p) = c13_psnsun(p) * laisun(p) * 12.011e-6_r8
       c13_psnshade_to_cpool(p) = c13_psnsha(p) * laisha(p) * 12.011e-6_r8
+#endif
       
       gpp(p) = psnsun_to_cpool(p) + psnshade_to_cpool(p)
 
@@ -567,8 +577,10 @@ subroutine CNAllocation (lbc, ubc, &
          downreg(p) = excess_cflux(p)/gpp(p)
          psnsun_to_cpool(p) = psnsun_to_cpool(p)*(1._r8 - downreg(p))
          psnshade_to_cpool(p) = psnshade_to_cpool(p)*(1._r8 - downreg(p))
+#if (defined C13)
          c13_psnsun_to_cpool(p) = c13_psnsun_to_cpool(p)*(1._r8 - downreg(p))
          c13_psnshade_to_cpool(p) = c13_psnshade_to_cpool(p)*(1._r8 - downreg(p))
+#endif
       end if
 
       ! calculate the amount of new leaf C dictated by these allocation

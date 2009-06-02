@@ -2,7 +2,7 @@
 #include <preproc.h>
 
 module CNC13FluxMod
-#ifdef CN
+#if (defined CN) && (defined C13)
 
 !-----------------------------------------------------------------------
 !BOP
@@ -23,9 +23,11 @@ module CNC13FluxMod
 ! !PUBLIC MEMBER FUNCTIONS:
     public:: C13Flux1
     public:: C13Flux2
+    public:: C13Flux2h
     public:: C13Flux3
     private:: CNC13LitterToColumn
     private:: CNC13GapPftToColumn
+    private:: CNC13HarvestPftToColumn
     private:: C13FluxCalc
 !
 ! !REVISION HISTORY:
@@ -508,6 +510,142 @@ subroutine C13Flux2(num_soilc, filter_soilc, num_soilp, filter_soilp)
 	call CNC13GapPftToColumn(num_soilc, filter_soilc)
    
 end subroutine C13Flux2
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: C13Flux2h
+!
+! !INTERFACE:
+subroutine C13Flux2h(num_soilc, filter_soilc, num_soilp, filter_soilp)
+!
+! !DESCRIPTION:
+! set the 13-carbon fluxes for harvest mortality
+!
+! !USES:
+   use clmtype
+!
+! !ARGUMENTS:
+   implicit none
+   integer, intent(in) :: num_soilc       ! number of soil columns filter
+   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+   integer, intent(in) :: num_soilp       ! number of soil pfts in filter
+   integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
+!
+! !CALLED FROM:
+! subroutine driver
+!
+! !REVISION HISTORY:
+!
+! !LOCAL VARIABLES:
+! !OTHER LOCAL VARIABLES:
+   type(pft_type), pointer :: p
+   type(column_type), pointer :: c
+   integer :: fp,pi
+!
+!EOP
+!-----------------------------------------------------------------------
+	! set local pointers
+   p => clm3%g%l%c%p
+   c => clm3%g%l%c
+	
+   ! pft-level gap mortality fluxes
+   
+   call C13FluxCalc(p%pc13f%hrv_leafc_to_litter, p%pcf%hrv_leafc_to_litter, &
+                     p%pc13s%leafc, p%pcs%leafc, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_leafc_storage_to_litter, p%pcf%hrv_leafc_storage_to_litter, &
+                     p%pc13s%leafc_storage, p%pcs%leafc_storage, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_leafc_xfer_to_litter, p%pcf%hrv_leafc_xfer_to_litter, &
+                     p%pc13s%leafc_xfer, p%pcs%leafc_xfer, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_frootc_to_litter, p%pcf%hrv_frootc_to_litter, &
+                     p%pc13s%frootc, p%pcs%frootc, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_frootc_storage_to_litter, p%pcf%hrv_frootc_storage_to_litter, &
+                     p%pc13s%frootc_storage, p%pcs%frootc_storage, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_frootc_xfer_to_litter, p%pcf%hrv_frootc_xfer_to_litter, &
+                     p%pc13s%frootc_xfer, p%pcs%frootc_xfer, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_livestemc_to_litter, p%pcf%hrv_livestemc_to_litter, &
+                     p%pc13s%livestemc, p%pcs%livestemc, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_livestemc_storage_to_litter, p%pcf%hrv_livestemc_storage_to_litter, &
+                     p%pc13s%livestemc_storage, p%pcs%livestemc_storage, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_livestemc_xfer_to_litter, p%pcf%hrv_livestemc_xfer_to_litter, &
+                     p%pc13s%livestemc_xfer, p%pcs%livestemc_xfer, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_deadstemc_to_prod10c, p%pcf%hrv_deadstemc_to_prod10c, &
+                     p%pc13s%deadstemc, p%pcs%deadstemc, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_deadstemc_to_prod100c, p%pcf%hrv_deadstemc_to_prod100c, &
+                     p%pc13s%deadstemc, p%pcs%deadstemc, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_deadstemc_storage_to_litter, p%pcf%hrv_deadstemc_storage_to_litter, &
+                     p%pc13s%deadstemc_storage, p%pcs%deadstemc_storage, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_deadstemc_xfer_to_litter, p%pcf%hrv_deadstemc_xfer_to_litter, &
+                     p%pc13s%deadstemc_xfer, p%pcs%deadstemc_xfer, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_livecrootc_to_litter, p%pcf%hrv_livecrootc_to_litter, &
+                     p%pc13s%livecrootc, p%pcs%livecrootc, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_livecrootc_storage_to_litter, p%pcf%hrv_livecrootc_storage_to_litter, &
+                     p%pc13s%livecrootc_storage, p%pcs%livecrootc_storage, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_livecrootc_xfer_to_litter, p%pcf%hrv_livecrootc_xfer_to_litter, &
+                     p%pc13s%livecrootc_xfer, p%pcs%livecrootc_xfer, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_deadcrootc_to_litter, p%pcf%hrv_deadcrootc_to_litter, &
+                     p%pc13s%deadcrootc, p%pcs%deadcrootc, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_deadcrootc_storage_to_litter, p%pcf%hrv_deadcrootc_storage_to_litter, &
+                     p%pc13s%deadcrootc_storage, p%pcs%deadcrootc_storage, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_deadcrootc_xfer_to_litter, p%pcf%hrv_deadcrootc_xfer_to_litter, &
+                     p%pc13s%deadcrootc_xfer, p%pcs%deadcrootc_xfer, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_gresp_storage_to_litter, p%pcf%hrv_gresp_storage_to_litter, &
+                     p%pc13s%gresp_storage, p%pcs%gresp_storage, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+   call C13FluxCalc(p%pc13f%hrv_gresp_xfer_to_litter, p%pcf%hrv_gresp_xfer_to_litter, &
+                     p%pc13s%gresp_xfer, p%pcs%gresp_xfer, &
+                     num_soilp, filter_soilp, 1._r8, 0)
+   
+	call C13FluxCalc(p%pc13f%hrv_xsmrpool_to_atm, p%pcf%hrv_xsmrpool_to_atm, &
+                    p%pc13s%totvegc, p%pcs%totvegc, &
+                    num_soilp, filter_soilp, 1._r8, 0)
+                    
+	! call routine to shift pft-level gap mortality fluxes to column, for isotopes
+   ! the non-isotope version of this routine is in CNGapMortalityMod.F90.
+
+	call CNC13HarvestPftToColumn(num_soilc, filter_soilc)
+   
+end subroutine C13Flux2h
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -1016,6 +1154,248 @@ subroutine CNC13GapPftToColumn (num_soilc, filter_soilc)
    end do
 
 end subroutine CNC13GapPftToColumn
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: CNC13HarvestPftToColumn
+!
+! !INTERFACE:
+subroutine CNC13HarvestPftToColumn (num_soilc, filter_soilc)
+!
+! !DESCRIPTION:
+! gather all pft-level harvest mortality fluxes
+! to the column level and assign them to the litter, cwd, and wood product pools
+!
+! !USES:
+  use clmtype
+  use clm_varpar, only : max_pft_per_col, maxpatch_pft
+!
+! !ARGUMENTS:
+  implicit none
+  integer, intent(in) :: num_soilc       ! number of soil columns in filter
+  integer, intent(in) :: filter_soilc(:) ! soil column filter
+!
+! !CALLED FROM:
+! subroutine CNphenology
+!
+! !REVISION HISTORY:
+! 9/8/03: Created by Peter Thornton
+!
+! !LOCAL VARIABLES:
+!
+! local pointers to implicit in scalars
+   integer , pointer :: ivt(:)      ! pft vegetation type
+   real(r8), pointer :: wtcol(:)    ! pft weight relative to column (0-1)
+   real(r8), pointer :: pwtgcell(:) ! weight of pft relative to corresponding gridcell
+   real(r8), pointer :: lf_flab(:)  ! leaf litter labile fraction
+   real(r8), pointer :: lf_fcel(:)  ! leaf litter cellulose fraction
+   real(r8), pointer :: lf_flig(:)  ! leaf litter lignin fraction
+   real(r8), pointer :: fr_flab(:)  ! fine root litter labile fraction
+   real(r8), pointer :: fr_fcel(:)  ! fine root litter cellulose fraction
+   real(r8), pointer :: fr_flig(:)  ! fine root litter lignin fraction
+   integer , pointer :: npfts(:)    ! number of pfts for each column
+   integer , pointer :: pfti(:)     ! beginning pft index for each column
+   real(r8), pointer :: hrv_leafc_to_litter(:)
+   real(r8), pointer :: hrv_frootc_to_litter(:)
+   real(r8), pointer :: hrv_livestemc_to_litter(:)
+   real(r8), pointer :: phrv_deadstemc_to_prod10c(:)
+   real(r8), pointer :: phrv_deadstemc_to_prod100c(:)
+   real(r8), pointer :: hrv_livecrootc_to_litter(:)
+   real(r8), pointer :: hrv_deadcrootc_to_litter(:)
+   real(r8), pointer :: hrv_leafc_storage_to_litter(:)
+   real(r8), pointer :: hrv_frootc_storage_to_litter(:)
+   real(r8), pointer :: hrv_livestemc_storage_to_litter(:)
+   real(r8), pointer :: hrv_deadstemc_storage_to_litter(:)
+   real(r8), pointer :: hrv_livecrootc_storage_to_litter(:)
+   real(r8), pointer :: hrv_deadcrootc_storage_to_litter(:)
+   real(r8), pointer :: hrv_gresp_storage_to_litter(:)
+   real(r8), pointer :: hrv_leafc_xfer_to_litter(:)
+   real(r8), pointer :: hrv_frootc_xfer_to_litter(:)
+   real(r8), pointer :: hrv_livestemc_xfer_to_litter(:)
+   real(r8), pointer :: hrv_deadstemc_xfer_to_litter(:)
+   real(r8), pointer :: hrv_livecrootc_xfer_to_litter(:)
+   real(r8), pointer :: hrv_deadcrootc_xfer_to_litter(:)
+   real(r8), pointer :: hrv_gresp_xfer_to_litter(:)
+!
+! local pointers to implicit in/out arrays
+   real(r8), pointer :: hrv_leafc_to_litr1c(:)
+   real(r8), pointer :: hrv_leafc_to_litr2c(:)
+   real(r8), pointer :: hrv_leafc_to_litr3c(:)
+   real(r8), pointer :: hrv_frootc_to_litr1c(:)
+   real(r8), pointer :: hrv_frootc_to_litr2c(:)
+   real(r8), pointer :: hrv_frootc_to_litr3c(:)
+   real(r8), pointer :: hrv_livestemc_to_cwdc(:)
+   real(r8), pointer :: chrv_deadstemc_to_prod10c(:)
+   real(r8), pointer :: chrv_deadstemc_to_prod100c(:)
+   real(r8), pointer :: hrv_livecrootc_to_cwdc(:)
+   real(r8), pointer :: hrv_deadcrootc_to_cwdc(:)
+   real(r8), pointer :: hrv_leafc_storage_to_litr1c(:)
+   real(r8), pointer :: hrv_frootc_storage_to_litr1c(:)
+   real(r8), pointer :: hrv_livestemc_storage_to_litr1c(:)
+   real(r8), pointer :: hrv_deadstemc_storage_to_litr1c(:)
+   real(r8), pointer :: hrv_livecrootc_storage_to_litr1c(:)
+   real(r8), pointer :: hrv_deadcrootc_storage_to_litr1c(:)
+   real(r8), pointer :: hrv_gresp_storage_to_litr1c(:)
+   real(r8), pointer :: hrv_leafc_xfer_to_litr1c(:)
+   real(r8), pointer :: hrv_frootc_xfer_to_litr1c(:)
+   real(r8), pointer :: hrv_livestemc_xfer_to_litr1c(:)
+   real(r8), pointer :: hrv_deadstemc_xfer_to_litr1c(:)
+   real(r8), pointer :: hrv_livecrootc_xfer_to_litr1c(:)
+   real(r8), pointer :: hrv_deadcrootc_xfer_to_litr1c(:)
+   real(r8), pointer :: hrv_gresp_xfer_to_litr1c(:)
+!
+! local pointers to implicit out arrays
+!
+!
+! !OTHER LOCAL VARIABLES:
+   integer :: fc,c,pi,p               ! indices
+!EOP
+!-----------------------------------------------------------------------
+
+   ! assign local pointers
+   lf_flab                        => pftcon%lf_flab
+   lf_fcel                        => pftcon%lf_fcel
+   lf_flig                        => pftcon%lf_flig
+   fr_flab                        => pftcon%fr_flab
+   fr_fcel                        => pftcon%fr_fcel
+   fr_flig                        => pftcon%fr_flig
+
+   ! assign local pointers to column-level arrays
+   npfts                          => clm3%g%l%c%npfts
+   pfti                           => clm3%g%l%c%pfti
+   hrv_leafc_to_litr1c              => clm3%g%l%c%cc13f%hrv_leafc_to_litr1c
+   hrv_leafc_to_litr2c              => clm3%g%l%c%cc13f%hrv_leafc_to_litr2c
+   hrv_leafc_to_litr3c              => clm3%g%l%c%cc13f%hrv_leafc_to_litr3c
+   hrv_frootc_to_litr1c             => clm3%g%l%c%cc13f%hrv_frootc_to_litr1c
+   hrv_frootc_to_litr2c             => clm3%g%l%c%cc13f%hrv_frootc_to_litr2c
+   hrv_frootc_to_litr3c             => clm3%g%l%c%cc13f%hrv_frootc_to_litr3c
+   hrv_livestemc_to_cwdc            => clm3%g%l%c%cc13f%hrv_livestemc_to_cwdc
+   chrv_deadstemc_to_prod10c        => clm3%g%l%c%cc13f%hrv_deadstemc_to_prod10c
+   chrv_deadstemc_to_prod100c       => clm3%g%l%c%cc13f%hrv_deadstemc_to_prod100c
+   hrv_livecrootc_to_cwdc           => clm3%g%l%c%cc13f%hrv_livecrootc_to_cwdc
+   hrv_deadcrootc_to_cwdc           => clm3%g%l%c%cc13f%hrv_deadcrootc_to_cwdc
+   hrv_leafc_storage_to_litr1c      => clm3%g%l%c%cc13f%hrv_leafc_storage_to_litr1c
+   hrv_frootc_storage_to_litr1c     => clm3%g%l%c%cc13f%hrv_frootc_storage_to_litr1c
+   hrv_livestemc_storage_to_litr1c  => clm3%g%l%c%cc13f%hrv_livestemc_storage_to_litr1c
+   hrv_deadstemc_storage_to_litr1c  => clm3%g%l%c%cc13f%hrv_deadstemc_storage_to_litr1c
+   hrv_livecrootc_storage_to_litr1c => clm3%g%l%c%cc13f%hrv_livecrootc_storage_to_litr1c
+   hrv_deadcrootc_storage_to_litr1c => clm3%g%l%c%cc13f%hrv_deadcrootc_storage_to_litr1c
+   hrv_gresp_storage_to_litr1c      => clm3%g%l%c%cc13f%hrv_gresp_storage_to_litr1c
+   hrv_leafc_xfer_to_litr1c         => clm3%g%l%c%cc13f%hrv_leafc_xfer_to_litr1c
+   hrv_frootc_xfer_to_litr1c        => clm3%g%l%c%cc13f%hrv_frootc_xfer_to_litr1c
+   hrv_livestemc_xfer_to_litr1c     => clm3%g%l%c%cc13f%hrv_livestemc_xfer_to_litr1c
+   hrv_deadstemc_xfer_to_litr1c     => clm3%g%l%c%cc13f%hrv_deadstemc_xfer_to_litr1c
+   hrv_livecrootc_xfer_to_litr1c    => clm3%g%l%c%cc13f%hrv_livecrootc_xfer_to_litr1c
+   hrv_deadcrootc_xfer_to_litr1c    => clm3%g%l%c%cc13f%hrv_deadcrootc_xfer_to_litr1c
+   hrv_gresp_xfer_to_litr1c         => clm3%g%l%c%cc13f%hrv_gresp_xfer_to_litr1c
+
+   ! assign local pointers to pft-level arrays
+   ivt                            => clm3%g%l%c%p%itype
+   wtcol                          => clm3%g%l%c%p%wtcol
+   pwtgcell                       => clm3%g%l%c%p%wtgcell  
+   hrv_leafc_to_litter              => clm3%g%l%c%p%pc13f%hrv_leafc_to_litter
+   hrv_frootc_to_litter             => clm3%g%l%c%p%pc13f%hrv_frootc_to_litter
+   hrv_livestemc_to_litter          => clm3%g%l%c%p%pc13f%hrv_livestemc_to_litter
+   phrv_deadstemc_to_prod10c        => clm3%g%l%c%p%pc13f%hrv_deadstemc_to_prod10c
+   phrv_deadstemc_to_prod100c       => clm3%g%l%c%p%pc13f%hrv_deadstemc_to_prod100c
+   hrv_livecrootc_to_litter         => clm3%g%l%c%p%pc13f%hrv_livecrootc_to_litter
+   hrv_deadcrootc_to_litter         => clm3%g%l%c%p%pc13f%hrv_deadcrootc_to_litter
+   hrv_leafc_storage_to_litter      => clm3%g%l%c%p%pc13f%hrv_leafc_storage_to_litter
+   hrv_frootc_storage_to_litter     => clm3%g%l%c%p%pc13f%hrv_frootc_storage_to_litter
+   hrv_livestemc_storage_to_litter  => clm3%g%l%c%p%pc13f%hrv_livestemc_storage_to_litter
+   hrv_deadstemc_storage_to_litter  => clm3%g%l%c%p%pc13f%hrv_deadstemc_storage_to_litter
+   hrv_livecrootc_storage_to_litter => clm3%g%l%c%p%pc13f%hrv_livecrootc_storage_to_litter
+   hrv_deadcrootc_storage_to_litter => clm3%g%l%c%p%pc13f%hrv_deadcrootc_storage_to_litter
+   hrv_gresp_storage_to_litter      => clm3%g%l%c%p%pc13f%hrv_gresp_storage_to_litter
+   hrv_leafc_xfer_to_litter         => clm3%g%l%c%p%pc13f%hrv_leafc_xfer_to_litter
+   hrv_frootc_xfer_to_litter        => clm3%g%l%c%p%pc13f%hrv_frootc_xfer_to_litter
+   hrv_livestemc_xfer_to_litter     => clm3%g%l%c%p%pc13f%hrv_livestemc_xfer_to_litter
+   hrv_deadstemc_xfer_to_litter     => clm3%g%l%c%p%pc13f%hrv_deadstemc_xfer_to_litter
+   hrv_livecrootc_xfer_to_litter    => clm3%g%l%c%p%pc13f%hrv_livecrootc_xfer_to_litter
+   hrv_deadcrootc_xfer_to_litter    => clm3%g%l%c%p%pc13f%hrv_deadcrootc_xfer_to_litter
+   hrv_gresp_xfer_to_litter         => clm3%g%l%c%p%pc13f%hrv_gresp_xfer_to_litter
+
+   do pi = 1,maxpatch_pft
+!dir$ concurrent
+!cdir nodep
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
+
+         if (pi <=  npfts(c)) then
+            p = pfti(c) + pi - 1
+
+            if (pwtgcell(p)>0._r8) then
+
+               ! leaf harvest mortality carbon fluxes
+               hrv_leafc_to_litr1c(c) = hrv_leafc_to_litr1c(c) + &
+                  hrv_leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p)
+               hrv_leafc_to_litr2c(c) = hrv_leafc_to_litr2c(c) + &
+                  hrv_leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p)
+               hrv_leafc_to_litr3c(c) = hrv_leafc_to_litr3c(c) + &
+                  hrv_leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p)
+
+               ! fine root harvest mortality carbon fluxes
+               hrv_frootc_to_litr1c(c) = hrv_frootc_to_litr1c(c) + &
+                  hrv_frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p)
+               hrv_frootc_to_litr2c(c) = hrv_frootc_to_litr2c(c) + &
+                  hrv_frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p)
+               hrv_frootc_to_litr3c(c) = hrv_frootc_to_litr3c(c) + &
+                  hrv_frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p)
+
+               ! wood harvest mortality carbon fluxes
+               hrv_livestemc_to_cwdc(c)  = hrv_livestemc_to_cwdc(c)  + &
+                  hrv_livestemc_to_litter(p)  * wtcol(p)
+               chrv_deadstemc_to_prod10c(c)  = chrv_deadstemc_to_prod10c(c)  + &
+                  phrv_deadstemc_to_prod10c(p)  * wtcol(p)
+               chrv_deadstemc_to_prod100c(c)  = chrv_deadstemc_to_prod100c(c)  + &
+                  phrv_deadstemc_to_prod100c(p)  * wtcol(p)
+               hrv_livecrootc_to_cwdc(c) = hrv_livecrootc_to_cwdc(c) + &
+                  hrv_livecrootc_to_litter(p) * wtcol(p)
+               hrv_deadcrootc_to_cwdc(c) = hrv_deadcrootc_to_cwdc(c) + &
+                  hrv_deadcrootc_to_litter(p) * wtcol(p)
+
+               ! storage harvest mortality carbon fluxes
+               hrv_leafc_storage_to_litr1c(c)      = hrv_leafc_storage_to_litr1c(c)      + &
+                  hrv_leafc_storage_to_litter(p)      * wtcol(p)
+               hrv_frootc_storage_to_litr1c(c)     = hrv_frootc_storage_to_litr1c(c)     + &
+                  hrv_frootc_storage_to_litter(p)     * wtcol(p)
+               hrv_livestemc_storage_to_litr1c(c)  = hrv_livestemc_storage_to_litr1c(c)  + &
+                  hrv_livestemc_storage_to_litter(p)  * wtcol(p)
+               hrv_deadstemc_storage_to_litr1c(c)  = hrv_deadstemc_storage_to_litr1c(c)  + &
+                  hrv_deadstemc_storage_to_litter(p)  * wtcol(p)
+               hrv_livecrootc_storage_to_litr1c(c) = hrv_livecrootc_storage_to_litr1c(c) + &
+                  hrv_livecrootc_storage_to_litter(p) * wtcol(p)
+               hrv_deadcrootc_storage_to_litr1c(c) = hrv_deadcrootc_storage_to_litr1c(c) + &
+                  hrv_deadcrootc_storage_to_litter(p) * wtcol(p)
+               hrv_gresp_storage_to_litr1c(c)      = hrv_gresp_storage_to_litr1c(c)      + &
+                  hrv_gresp_storage_to_litter(p)      * wtcol(p)
+
+               ! transfer harvest mortality carbon fluxes
+               hrv_leafc_xfer_to_litr1c(c)      = hrv_leafc_xfer_to_litr1c(c)      + &
+                  hrv_leafc_xfer_to_litter(p)      * wtcol(p)
+               hrv_frootc_xfer_to_litr1c(c)     = hrv_frootc_xfer_to_litr1c(c)     + &
+                  hrv_frootc_xfer_to_litter(p)     * wtcol(p)
+               hrv_livestemc_xfer_to_litr1c(c)  = hrv_livestemc_xfer_to_litr1c(c)  + &
+                  hrv_livestemc_xfer_to_litter(p)  * wtcol(p)
+               hrv_deadstemc_xfer_to_litr1c(c)  = hrv_deadstemc_xfer_to_litr1c(c)  + &
+                  hrv_deadstemc_xfer_to_litter(p)  * wtcol(p)
+               hrv_livecrootc_xfer_to_litr1c(c) = hrv_livecrootc_xfer_to_litr1c(c) + &
+                  hrv_livecrootc_xfer_to_litter(p) * wtcol(p)
+               hrv_deadcrootc_xfer_to_litr1c(c) = hrv_deadcrootc_xfer_to_litr1c(c) + &
+                  hrv_deadcrootc_xfer_to_litter(p) * wtcol(p)
+               hrv_gresp_xfer_to_litr1c(c)      = hrv_gresp_xfer_to_litr1c(c)      + &
+                  hrv_gresp_xfer_to_litter(p)      * wtcol(p)
+
+            end if
+         end if
+
+      end do
+
+   end do
+
+end subroutine CNC13HarvestPftToColumn
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------

@@ -432,6 +432,7 @@ contains
        ! adding code for isotopes, 8/17/05, PET
        clm3%g%l%c%p%pps%cisun(p) = 0._r8
        clm3%g%l%c%p%pps%cisha(p) = 0._r8
+#if (defined C13)
        clm3%g%l%c%p%pps%alphapsnsun(p) = 0._r8
        clm3%g%l%c%p%pps%alphapsnsha(p) = 0._r8
        clm3%g%l%c%p%pepv%rc13_canair(p) = 0._r8
@@ -440,7 +441,7 @@ contains
        clm3%g%l%c%p%pc13f%psnsun(p) = 0._r8
        clm3%g%l%c%p%pc13f%psnsha(p) = 0._r8
        clm3%g%l%c%p%pc13f%fpsn(p) = 0._r8
-       
+#endif
 
     end do
 

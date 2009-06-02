@@ -135,9 +135,11 @@ contains
    real(r8), pointer :: emg(:)         ! vegetation emissivity
    real(r8), pointer :: forc_pbot(:)   ! atmospheric pressure (Pa)
    real(r8), pointer :: forc_pco2(:)   ! partial pressure co2 (Pa)
+#if (defined C13)
    ! 4/14/05: PET
    ! Adding isotope code
    real(r8), pointer :: forc_pc13o2(:) ! partial pressure c13o2 (Pa)
+#endif
    
    real(r8), pointer :: forc_po2(:)    ! partial pressure o2 (Pa)
    real(r8), pointer :: forc_q(:)      ! atmospheric specific humidity (kg/kg)
@@ -201,6 +203,7 @@ contains
    real(r8), pointer :: rssha(:)           ! shaded stomatal resistance (s/m)
    real(r8), pointer :: psnsun(:)          ! sunlit leaf photosynthesis (umol CO2 /m**2/ s)
    real(r8), pointer :: psnsha(:)          ! shaded leaf photosynthesis (umol CO2 /m**2/ s)
+#if (defined C13)
    ! 4/14/05: PET
    ! Adding isotope code
    real(r8), pointer :: c13_psnsun(:)      ! sunlit leaf photosynthesis (umol 13CO2 /m**2/ s)
@@ -212,6 +215,7 @@ contains
    real(r8), pointer :: rc13_psnsha(:)     !C13O2/C12O2 in shaded canopy psn flux
    real(r8), pointer :: alphapsnsun(:)     !fractionation factor in sunlit canopy psn flux
    real(r8), pointer :: alphapsnsha(:)     !fractionation factor in shaded canopy psn flux
+#endif
    
    real(r8), pointer :: qflx_tran_veg(:)   ! vegetation transpiration (mm H2O/s) (+ = to atm)
    real(r8), pointer :: dt_veg(:)          ! change in t_veg, last iteration (Kelvin)
@@ -313,9 +317,11 @@ contains
    real(r8) :: err(lbp:ubp)          ! balance error
    real(r8) :: erre                  ! balance error
    real(r8) :: co2(lbp:ubp)          ! atmospheric co2 partial pressure (pa)
+#if (defined C13)
    ! 4/14/05: PET
    ! Adding isotope code
    real(r8) :: c13o2(lbp:ubp)        ! atmospheric c13o2 partial pressure (pa)
+#endif
    
    real(r8) :: o2(lbp:ubp)           ! atmospheric o2 partial pressure (pa)
    real(r8) :: svpts(lbp:ubp)        ! saturation vapor pressure at t_veg (pa)
@@ -368,7 +374,9 @@ contains
 
    forc_lwrad     => clm_a2l%forc_lwrad
    forc_pco2      => clm_a2l%forc_pco2
+#if (defined C13)
    forc_pc13o2    => clm_a2l%forc_pc13o2
+#endif
    forc_po2       => clm_a2l%forc_po2
    forc_q         => clm_a2l%forc_q
    forc_pbot      => clm_a2l%forc_pbot
@@ -427,6 +435,7 @@ contains
    cisha          => clm3%g%l%c%p%pps%cisha
    psnsun         => clm3%g%l%c%p%pcf%psnsun
    psnsha         => clm3%g%l%c%p%pcf%psnsha
+#if (defined C13)
    ! 4/14/05: PET
    ! Adding isotope code
    c13_psnsun     => clm3%g%l%c%p%pc13f%psnsun
@@ -438,6 +447,7 @@ contains
    rc13_psnsha    => clm3%g%l%c%p%pepv%rc13_psnsha
    alphapsnsun    => clm3%g%l%c%p%pps%alphapsnsun
    alphapsnsha    => clm3%g%l%c%p%pps%alphapsnsha
+#endif
    
    elai           => clm3%g%l%c%p%pps%elai
    esai           => clm3%g%l%c%p%pps%esai
@@ -605,9 +615,11 @@ contains
       co2(p) = forc_pco2(g)
       o2(p)  = forc_po2(g)
       
+#if (defined C13)
       ! 4/14/05: PET
       ! Adding isotope code
       c13o2(p) = forc_pc13o2(g)
+#endif
       
       ! Initialize flux profile
 
@@ -1008,7 +1020,7 @@ contains
 
       fpsn(p) = psnsun(p)*laisun(p) + psnsha(p)*laisha(p)
       
-#if (defined CN)
+#if (defined CN) && (defined C13)
       ! 4/14/05: PET
       ! Adding isotope code
       rc13_canair(p) = c13o2(p)/(co2(p)-c13o2(p))
@@ -1111,7 +1123,9 @@ contains
      real(r8), pointer :: rs(:)          ! leaf stomatal resistance (s/m)
      real(r8), pointer :: psn(:)         ! foliage photosynthesis (umol co2 /m**2/ s) [always +]
      real(r8), pointer :: ci(:)          ! intracellular leaf CO2 (Pa)
+#if (defined C13)
      real(r8), pointer :: alphapsn(:)    ! 13C fractionation factor for PSN ()
+#endif
 
 #if (defined DGVM)
      real(r8), pointer :: annpsnpot(:)   ! annual potential photosynthesis (umol CO2 /m**2)
@@ -1187,7 +1201,9 @@ contains
         rs     => clm3%g%l%c%p%pps%rssun
         psn    => clm3%g%l%c%p%pcf%psnsun
         ci     => clm3%g%l%c%p%pps%cisun
+#if (defined C13)
         alphapsn  => clm3%g%l%c%p%pps%alphapsnsun
+#endif
         sla    => clm3%g%l%c%p%pps%slasun
         lnc    => clm3%g%l%c%p%pps%lncsun   
         vcmx   => clm3%g%l%c%p%pps%vcmxsun   
@@ -1197,7 +1213,9 @@ contains
         psn    => clm3%g%l%c%p%pcf%psnsha
         ci     => clm3%g%l%c%p%pps%cisha
         sla    => clm3%g%l%c%p%pps%slasha   
+#if (defined C13)
         alphapsn  => clm3%g%l%c%p%pps%alphapsnsha
+#endif
         lnc    => clm3%g%l%c%p%pps%lncsha   
         vcmx   => clm3%g%l%c%p%pps%vcmxsha
      end if
@@ -1262,7 +1280,9 @@ contains
            psn(p) = 0._r8
            lnc(p) = 0._r8
            vcmx(p) = 0._r8
+#if (defined C13)
            alphapsn(p) = 1._r8
+#endif
         else                             ! day time
            tc = tl(p) - SHR_CONST_TKFRZ
            ppf = 4.6_r8 * apar(p)                  
@@ -1423,12 +1443,14 @@ contains
            rs(p) = min(rsmax0, rs(p)*cf)
            rb(p) = rb(p) * cf 
            
+#if (defined C13)
            ! 4/14/05: PET
            ! Adding isotope code
            alphapsn(p) = 1._r8 + (((c3psn(ivt(p)) * (4.4_r8 + (22.6_r8*(ci(p)/co2(p))))) + &
                          ((1._r8 - c3psn(ivt(p))) * 4.4_r8))/1000._r8)
            !alphapsn(p) = 1._r8
            !write(iulog,*) 'in StomataCN ',p,ivt(p),c3psn(ivt(p)),ci(p),co2(p),alphapsn(p)
+#endif
            
         end if
 

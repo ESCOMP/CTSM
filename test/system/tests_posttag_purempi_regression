@@ -7,6 +7,7 @@ smF92 erF92 brF92 blF92 smF96
 smE32 erE32 brE32 blE32 smE36
 smG42 erG42 brG42 blG42 smG46
 smH12 erH12 brH12 blH12 smH16
+smC45 erC45 brC45 blC45
 smH52 erH52 brH52 blH52
 smH61 erH61 brH61 blH61
 smJ92 erJ92 brJ92 blJ92 smJ96
@@ -19,6 +20,7 @@ smL62 erL62 brL62 blL62
 smL78             blL78
 smL74             blL74
 smL82 erL82 brL82 blL82
+smR52 erR52 brR52 blR52
 sm654
 sm674
 sm694

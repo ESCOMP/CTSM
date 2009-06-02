@@ -51,6 +51,7 @@ OPTIONS
      -ad_spinup <name>   Turn on AD_SPINUP mode for bgc setting of CN [on | off] (default is off).
      -bgc <name>         Build CLM with bgc package [ none | cn | casa | dgvm ] (default is none).
                          NOTE: When set to cn or casa -- also turns on the CLAMP CPP macro.
+     -c13 <name>         Turn on C13 mode for bgc setting of CN [on | off] (default is off).
      -cache <file>       Name of output cache file (default: config_cache.xml).
      -cachedir <file>    Name of directory where output cache file is written (default: CLM build directory).
      -carbon_aero <name> Turn on passing carbon aerosols from atm to land. [on | off] (default is off)
@@ -149,6 +150,7 @@ my %opts = (
 	    );
 GetOptions(
     "ad_spinup=s"               => \$opts{'ad_spinup'}, 
+    "c13=s"                     => \$opts{'c13'}, 
     "bgc=s"                     => \$opts{'bgc'}, 
     "cache=s"                   => \$opts{'cache'},
     "cachedir=s"                => \$opts{'cachedir'},
@@ -475,6 +477,19 @@ EOF
 }
 if ($print>=2) { print "Using $exit_spinup for exit_spinup for cn mode.$eol"; }
 
+# C13 option for BGC/CN mode only
+if (defined $opts{'c13'}) {
+    $cfg_ref->set('c13', $opts{'c13'});
+}
+my $c13 = $cfg_ref->get('c13');
+if ( ($c13 eq "on" ) && ($bgc_mode ne "cn") ) {
+   die <<"EOF";
+** Cannot turn c13 mode on -- without cn for bgc mode** 
+EOF
+}
+if ($print>=2) { print "Using $c13 for c13 for cn mode.$eol"; }
+
+
 #-----------------------------------------------------------------------------------------------
 # RTM option
 if (defined $opts{'rtm'}) {
@@ -772,6 +787,9 @@ if ($nofire eq 'on') {
 }
 if ($ad_spinup eq 'on') { 
     $cfg_cppdefs .= " -DAD_SPINUP";
+}
+if ($c13 eq 'on') { 
+    $cfg_cppdefs .= " -DC13";
 }
 if ($exit_spinup eq 'on') { 
     $cfg_cppdefs .= " -DEXIT_SPINUP";

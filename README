@@ -91,8 +91,8 @@ models/utils/mct/mpeu
 
          cd scripts
          ./create_newcase            # get help on how to run create_newcase
-         ./create_newcase -case testI -mach bluefire -res f19_g15 -compset IQ -skip_rundb    
-                                     # create new "I" case for bluefire at 1.9x2.5_gx1v5 res, without entering info on the case in the run database
+         ./create_newcase -case testI -mach bluefire -res f19_g16 -compset I -skip_rundb    
+                                     # create new "I" case for bluefire at 1.9x2.5_gx1v6 res, without entering info on the case in the run database
                                      # "I" case is clm active, datm7, and inactive ice/ocn
          cd testI
          configure -case             # create scripts

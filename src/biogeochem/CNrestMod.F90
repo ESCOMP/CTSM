@@ -356,6 +356,7 @@ contains
        end if	
     end if
 
+#if (defined C13)
     ! xsmrpool_c13ratio
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='xsmrpool_c13ratio', xtype=nf_double,  &
@@ -367,6 +368,7 @@ contains
   	  if (is_restart()) call endrun
        end if	
     end if
+#endif
 
     ! alloc_pnow
     if (flag == 'define') then
@@ -572,6 +574,7 @@ contains
        end if	
     end if
 
+#if (defined C13)
     ! rc13_canair
     if (flag == 'define') then
        call ncd_defvar(ncid=ncid, varname='rc13_canair', xtype=nf_double,  &
@@ -607,6 +610,7 @@ contains
   	  if (is_restart()) call endrun
        end if	
     end if
+#endif
 
     !--------------------------------
     ! pft carbon state variables 
@@ -900,6 +904,7 @@ contains
        end if	
     end if
 
+#if (defined C13)
     !--------------------------------
     ! C13 pft carbon state variables 
     !--------------------------------
@@ -1191,6 +1196,7 @@ contains
   	  if (is_restart()) call endrun
        end if	
     end if
+#endif
 
     !--------------------------------
     ! pft nitrogen state variables
@@ -1780,6 +1786,7 @@ contains
        end if	
     end if
     
+#if (defined C13)
     !--------------------------------
     ! C13 column carbon state variables
     !--------------------------------
@@ -1951,6 +1958,7 @@ contains
   	  if (is_restart()) call endrun
        end if	
     end if
+#endif
     
     !--------------------------------
     ! column nitrogen state variables
@@ -2133,11 +2141,13 @@ contains
           clm3%g%l%c%ccs%soil3c(c) = clm3%g%l%c%ccs%soil3c(c) * m
           clm3%g%l%c%ccs%soil4c(c) = clm3%g%l%c%ccs%soil4c(c) * m
           
+#if (defined C13)
           ! adding code for 13C, 12/25/05, PET 
           clm3%g%l%c%cc13s%soil1c(c) = clm3%g%l%c%cc13s%soil1c(c) * m
           clm3%g%l%c%cc13s%soil2c(c) = clm3%g%l%c%cc13s%soil2c(c) * m
           clm3%g%l%c%cc13s%soil3c(c) = clm3%g%l%c%cc13s%soil3c(c) * m
           clm3%g%l%c%cc13s%soil4c(c) = clm3%g%l%c%cc13s%soil4c(c) * m
+#endif
           
           clm3%g%l%c%cns%soil1n(c) = clm3%g%l%c%cns%soil1n(c) * m
           clm3%g%l%c%cns%soil2n(c) = clm3%g%l%c%cns%soil2n(c) * m

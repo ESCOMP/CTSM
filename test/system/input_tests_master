@@ -274,6 +274,11 @@ blG74 TBL.sh 17p_sc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-100
 smH74 TSM.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -1100 cold
 blH74 TBL.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -100  cold
 
+smC45 TSM.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10   arb_ic
+erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -3+-7 arb_ic
+brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -5+-5 arb_ic
+blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10   arb_ic
+
 smH11 TSM.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v5@2000 96    cold
 erH11 TER.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v5@2000 10+38 cold
 brH11 TBR.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v5@2000 72+72 cold
@@ -337,10 +342,23 @@ blH61 TBL.sh 17p_cnnsc_dm clm_organic 20020101:NONE:3600 1.9x2.5 gx1v6@1870 -10 
 brH61 TBR.sh 17p_cnnsc_dm clm_organic 20020101:NONE:3600 1.9x2.5 gx1v6@1870 -10+-10 cold
 
 smI58 TSMcnspinup.sh 17p_cnadspinupsc_dh 17p_cnexitspinupsc_dh 17p_cnsc_dh clm_std 20020115:NONE:1800 10x15 USGS@2000 -90+-30
-
 smI59 TSMcnspinup.sh 17p_cnadspinupsc_dm 17p_cnexitspinupsc_dm 17p_cnsc_dm clm_std 20020115:NONE:1800 10x15 USGS@2000 -90+-30
-
 smI50 TSMcnspinup.sh 17p_cnadspinupsc_do 17p_cnexitspinupsc_do 17p_cnsc_do clm_std 20020115:NONE:1800 10x15 USGS@2000 -90+-30
+
+smR51 TSM.sh 17p_cnc13sc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@1850 96    cold
+erR51 TER.sh 17p_cnc13sc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@1850 10+38 cold
+brR51 TBR.sh 17p_cnc13sc_dh clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@1850 72+72 cold
+blR51 TBL.sh 17p_cnc13sc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@1850 48    cold
+
+smR52 TSM.sh 17p_cnc13sc_dm clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@1850 96    cold
+erR52 TER.sh 17p_cnc13sc_dm clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@1850 10+38 cold
+brR52 TBR.sh 17p_cnc13sc_dm clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@1850 72+72 cold
+blR52 TBL.sh 17p_cnc13sc_dm clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@1850 48    cold
+
+smR53 TSM.sh 17p_cnc13sc_do clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@1850 96    cold
+erR53 TER.sh 17p_cnc13sc_do clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@1850 10+38 cold
+brR53 TBR.sh 17p_cnc13sc_do clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@1850 72+72 cold
+blR53 TBL.sh 17p_cnc13sc_do clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@1850 48    cold
 
 smJ74 TSM.sh 4p_casasc_ds clm_std^nl_urb     10001230:NONE:3600 1x1_tropicAtl test -1100   arb_ic
 erJ74 TER.sh 4p_casasc_ds clm_std^nl_urb     10001230:NONE:3600 1x1_tropicAtl test -10+-10 arb_ic

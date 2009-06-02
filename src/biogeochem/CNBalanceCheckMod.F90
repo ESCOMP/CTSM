@@ -190,7 +190,9 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
    real(r8), pointer :: gpp(:)            ! (gC/m2/s) gross primary production 
    real(r8), pointer :: er(:)            ! (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
    real(r8), pointer :: col_fire_closs(:) ! (gC/m2/s) total column-level fire C loss
+   real(r8), pointer :: col_hrv_xsmrpool_to_atm(:)  ! excess MR pool harvest mortality (gC/m2/s)
    real(r8), pointer :: dwt_closs(:)              ! (gC/m2/s) total carbon loss from product pools and conversion
+   real(r8), pointer :: product_closs(:)      ! (gC/m2/s) total wood product carbon loss
 !
 ! local pointers to implicit out arrays
    real(r8), pointer :: col_cinputs(:)  ! (gC/m2/s) total column-level carbon inputs (for balance check)
@@ -212,7 +214,9 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 	gpp                            => clm3%g%l%c%ccf%pcf_a%gpp
 	er                             => clm3%g%l%c%ccf%er
 	col_fire_closs                 => clm3%g%l%c%ccf%col_fire_closs
+	col_hrv_xsmrpool_to_atm        => clm3%g%l%c%ccf%pcf_a%hrv_xsmrpool_to_atm
 	dwt_closs                      => clm3%g%l%c%ccf%dwt_closs
+	product_closs                  => clm3%g%l%c%ccf%product_closs
 	
     col_cinputs                    => clm3%g%l%c%ccf%col_cinputs
     col_coutputs                   => clm3%g%l%c%ccf%col_coutputs
@@ -241,7 +245,7 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
       ! calculate total column-level outputs
 	  ! er = ar + hr, col_fire_closs includes pft-level fire losses
 
-      col_coutputs(c) = er(c) + col_fire_closs(c) + dwt_closs(c)
+      col_coutputs(c) = er(c) + col_fire_closs(c) + dwt_closs(c) + product_closs(c) + col_hrv_xsmrpool_to_atm(c)
 
       ! calculate the total column-level carbon balance error for this time step
 
@@ -269,7 +273,9 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 	  write(iulog,*)'gpp         = ',gpp(c) * dt
 	  write(iulog,*)'er          = ',er(c) * dt
 	  write(iulog,*)'col_fire_closs         = ',col_fire_closs(c) * dt
+     write(iulog,*)'col_hrv_xsmrpool_to_atm = ',col_hrv_xsmrpool_to_atm(c) * dt
 	  write(iulog,*)'dwt_closs         = ',dwt_closs(c) * dt
+	  write(iulog,*)'product_closs         = ',product_closs(c) * dt
       call endrun
    end if
 
@@ -316,6 +322,7 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
    real(r8), pointer :: sminn_leached(:)         ! soil mineral N pool loss to leaching (gN/m2/s)
    real(r8), pointer :: col_fire_nloss(:)        ! total column-level fire N loss (gN/m2/s)
    real(r8), pointer :: dwt_nloss(:)              ! (gN/m2/s) total nitrogen loss from product pools and conversion
+   real(r8), pointer :: product_nloss(:)          ! (gN/m2/s) total wood product nitrogen loss
 !
 ! local pointers to implicit in/out arrays
 !
@@ -343,6 +350,7 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
     sminn_leached                  => clm3%g%l%c%cnf%sminn_leached
     col_fire_nloss                 => clm3%g%l%c%cnf%col_fire_nloss
     dwt_nloss                      => clm3%g%l%c%cnf%dwt_nloss
+    product_nloss                  => clm3%g%l%c%cnf%product_nloss
 
     col_ninputs                    => clm3%g%l%c%cnf%col_ninputs
     col_noutputs                   => clm3%g%l%c%cnf%col_noutputs
@@ -370,7 +378,7 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 
       ! calculate total column-level outputs
 
-      col_noutputs(c) = denit(c) + sminn_leached(c) + col_fire_nloss(c) + dwt_nloss(c)
+      col_noutputs(c) = denit(c) + sminn_leached(c) + col_fire_nloss(c) + dwt_nloss(c) + product_nloss(c)
 
       ! calculate the total column-level nitrogen balance error for this time step
 

@@ -254,13 +254,7 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: dwt_frootc_to_litr3c(:)
    real(r8), pointer :: dwt_livecrootc_to_cwdc(:)
    real(r8), pointer :: dwt_deadcrootc_to_cwdc(:)
-   real(r8), pointer :: dwt_prod10c_gain(:)
-   real(r8), pointer :: dwt_prod10c_loss(:)
-   real(r8), pointer :: dwt_prod100c_gain(:)
-   real(r8), pointer :: dwt_prod100c_loss(:)
    real(r8), pointer :: seedc(:)
-   real(r8), pointer :: prod10c(:)
-   real(r8), pointer :: prod100c(:)
 
 !
 ! !OTHER LOCAL VARIABLES:
@@ -306,19 +300,13 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil4c                         => clm3%g%l%c%ccs%soil4c
     ! new pointers for dynamic landcover
     dwt_seedc_to_leaf              => clm3%g%l%c%ccf%dwt_seedc_to_leaf
-	dwt_seedc_to_deadstem          => clm3%g%l%c%ccf%dwt_seedc_to_deadstem
-	dwt_frootc_to_litr1c           => clm3%g%l%c%ccf%dwt_frootc_to_litr1c
+    dwt_seedc_to_deadstem          => clm3%g%l%c%ccf%dwt_seedc_to_deadstem
+	 dwt_frootc_to_litr1c           => clm3%g%l%c%ccf%dwt_frootc_to_litr1c
     dwt_frootc_to_litr2c           => clm3%g%l%c%ccf%dwt_frootc_to_litr2c
     dwt_frootc_to_litr3c           => clm3%g%l%c%ccf%dwt_frootc_to_litr3c
     dwt_livecrootc_to_cwdc         => clm3%g%l%c%ccf%dwt_livecrootc_to_cwdc
     dwt_deadcrootc_to_cwdc         => clm3%g%l%c%ccf%dwt_deadcrootc_to_cwdc
-    dwt_prod10c_gain               => clm3%g%l%c%ccf%dwt_prod10c_gain
-    dwt_prod10c_loss               => clm3%g%l%c%ccf%dwt_prod10c_loss
-    dwt_prod100c_gain              => clm3%g%l%c%ccf%dwt_prod100c_gain
-    dwt_prod100c_loss              => clm3%g%l%c%ccf%dwt_prod100c_loss
     seedc                          => clm3%g%l%c%ccs%seedc
-	prod10c                        => clm3%g%l%c%ccs%prod10c
-    prod100c                       => clm3%g%l%c%ccs%prod100c
 
     ! assign local pointers at the pft level
     ivt                            => clm3%g%l%c%p%itype
@@ -429,24 +417,16 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
        litr3c(c) = litr3c(c) + frootc_to_litr3c(c)*dt
        
        ! seeding fluxes, from dynamic landcover
-	   seedc(c) = seedc(c) - dwt_seedc_to_leaf(c) * dt
-	   seedc(c) = seedc(c) - dwt_seedc_to_deadstem(c) * dt
+	    seedc(c) = seedc(c) - dwt_seedc_to_leaf(c) * dt
+	    seedc(c) = seedc(c) - dwt_seedc_to_deadstem(c) * dt
 	   
-	   ! fluxes into litter and CWD, from dynamic landcover
+	    ! fluxes into litter and CWD, from dynamic landcover
        litr1c(c) = litr1c(c) + dwt_frootc_to_litr1c(c)*dt
        litr2c(c) = litr2c(c) + dwt_frootc_to_litr2c(c)*dt
        litr3c(c) = litr3c(c) + dwt_frootc_to_litr3c(c)*dt
        cwdc(c)   = cwdc(c)   + dwt_livecrootc_to_cwdc(c)*dt
        cwdc(c)   = cwdc(c)   + dwt_deadcrootc_to_cwdc(c)*dt
        
-       ! fluxes into wood product pools, from dynamic landcover
-       prod10c(c)  = prod10c(c)  + dwt_prod10c_gain(c)*dt
-       prod100c(c) = prod100c(c) + dwt_prod100c_gain(c)*dt
-       
-       ! fluxes out of wood product pools, from decomposition
-       prod10c(c)  = prod10c(c)  - dwt_prod10c_loss(c)*dt
-       prod100c(c) = prod100c(c) - dwt_prod100c_loss(c)*dt
- 
        ! litter and SOM HR fluxes
        litr1c(c) = litr1c(c) - litr1_hr(c)*dt
        litr2c(c) = litr2c(c) - litr2_hr(c)*dt

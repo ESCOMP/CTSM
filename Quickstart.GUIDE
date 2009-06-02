@@ -17,7 +17,7 @@ Process:
 
    cd clm3_7_00/scripts
 
-   ./create_newcase -case <testcase> -mach bluevista -res f19_g15 -compset IQ4804 -skip_rundb
+   ./create_newcase -case <testcase> -mach bluevista -res f19_g15 -compset I4804 -skip_rundb
    (./create_newcase -help -- to get help on the script)
 TRUE
 
@@ -50,14 +50,19 @@ Information on Compsets:
 
      Name		  (short-name): Description
      --------------------------------------------------------------------------
-     I_CN            (ICN):       CLM with CN on and new CLM_QIAN data
-     I_CN_1948_2004  (ICN4804):   CLM with CN on running over 1948-2004 and new CLM_QIAN data
-     I_CASA          (ICASA):     CLM with CASA on and new CLM_QIAN data
-     I_CASA_19482004 (ICASA4804): CLM with CASA on running over 1948-2004
-     I_PRESENT_DAY   (I):         CLM with new CLM_QIAN data
-     I_1948_2004     (I4804):     CLM with new CLM_QIAN data over 1948-2004
+     I_2000           (I):         CLM with to simulate year=2000
+     I_1850           (I1850):     CLM with to simulate year=1850
+     I_1948_2004      (I4804):     CLM with running with atm data over 1948-2004
+     I_1850-2000      (I8520):     CLM with 1850-2000
+     I_CN             (ICN):       CLM with CN on
+     I_CN_1948_2004   (ICN4804):   CLM with CN on running over 1948-2004
+     I_CN_1850-2000   (ICN8520):   CLM with CN on running over 1850-2000
+     I_1850_CN        (I1850CN):   CLM with CN on running over 1948-2004
+     I_CASA           (ICASA):     CLM with CASA on
+     I_CASA_1948_2004 (ICASA4804): CLM with CASA on running over 1948-2004
+     I_GLC            (IG):        CLM with glacier model
 
-Information on run-database:
+nformation on run-database:
 
     -skip_rundb says to skip entering information on this case into the run-database.
     The run-database stores meta-data on simulations being performed so they can

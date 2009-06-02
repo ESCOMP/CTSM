@@ -56,6 +56,9 @@ Switch to enable debugging options for Fortran compiler: 0=off, 1=on.
 <entry id="dust" valid_values="on,off" value="on">
 Toggle to turn on dust module
 </entry>
+<entry id="c13" valid_values="on,off" value="off">
+Toggle to turn on C13 isotopes as part of the CN biogeochemistry model
+</entry>
 <entry id="mach" value="bluefire">
 CCSM build machine name and compiler
 </entry>

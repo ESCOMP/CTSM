@@ -14,6 +14,7 @@ module CNEcosystemDynMod
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
+  use clm_varctl  , only: fpftdyn
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -24,6 +25,7 @@ module CNEcosystemDynMod
 !
 ! !REVISION HISTORY:
 ! Created by Peter Thornton
+! 19 May 2009: PET - modified to include call to harvest routine
 !
 !EOP
 !
@@ -61,8 +63,8 @@ contains
     use CNCStateUpdate1Mod   , only: CStateUpdate1,CStateUpdate0
     use CNNStateUpdate1Mod   , only: NStateUpdate1
     use CNGapMortalityMod    , only: CNGapMortality
-    use CNCStateUpdate2Mod   , only: CStateUpdate2
-    use CNNStateUpdate2Mod   , only: NStateUpdate2
+    use CNCStateUpdate2Mod   , only: CStateUpdate2, CStateUpdate2h
+    use CNNStateUpdate2Mod   , only: NStateUpdate2, NStateUpdate2h
     use CNFireMod            , only: CNFireArea, CNFireFluxes
     use CNCStateUpdate3Mod   , only: CStateUpdate3
     use CNNStateUpdate3Mod   , only: NStateUpdate3
@@ -71,11 +73,15 @@ contains
     use CNVegStructUpdateMod , only: CNVegStructUpdate
     use CNAnnualUpdateMod    , only: CNAnnualUpdate
     use CNSummaryMod         , only: CSummary, NSummary
+#if (defined C13)
     use CNC13StateUpdate1Mod , only: C13StateUpdate1,C13StateUpdate0
-    use CNC13StateUpdate2Mod , only: C13StateUpdate2
+    use CNC13StateUpdate2Mod , only: C13StateUpdate2, C13StateUpdate2h
     use CNC13StateUpdate3Mod , only: C13StateUpdate3
-    use CNC13FluxMod         , only: C13Flux1, C13Flux2, C13Flux3
+    use CNC13FluxMod         , only: C13Flux1, C13Flux2, C13Flux2h, C13Flux3
     use C13SummaryMod        , only: C13Summary
+#endif
+    use pftdynMod               , only: CNHarvest
+    use CNWoodProductsMod    , only: CNWoodProducts
 !
 ! !ARGUMENTS:
     implicit none
@@ -131,37 +137,67 @@ contains
        
        call CStateUpdate0(num_soilp, filter_soilp)
 
+#if (defined C13)
        call C13StateUpdate0(num_soilp, filter_soilp)
 
        call C13Flux1(num_soilc, filter_soilc, num_soilp, filter_soilp)
+#endif
 
        call CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
+#if (defined C13)
        call C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
+#endif
        
        call NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
        call CNGapMortality(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
+#if (defined C13)
        call C13Flux2(num_soilc, filter_soilc, num_soilp, filter_soilp)
+#endif
 
        call CStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
+#if (defined C13)
        call C13StateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
+#endif
 
        call NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
+       
+       if (fpftdyn /= ' ') then
+          call CNHarvest(num_soilc, filter_soilc, num_soilp, filter_soilp)
+       end if 
 
+#if (defined C13)
+       call C13Flux2h(num_soilc, filter_soilc, num_soilp, filter_soilp)
+#endif
+
+       call CStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp)
+
+#if (defined C13)
+       call C13StateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp)
+#endif
+
+       call NStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp)
+       
+       call CNWoodProducts(num_soilc, filter_soilc)
+       
        call CNFireArea(num_soilc, filter_soilc)
 
        call CNFireFluxes(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
        call CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
 
+#if (defined C13)
        call C13Flux3(num_soilc, filter_soilc, num_soilp, filter_soilp)
+#endif
 
        call CStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
+#if (defined C13)
        call C13StateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
+#endif
 
        call NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
@@ -175,7 +211,9 @@ contains
        
        call CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
        
+#if (defined C13)
        call C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
+#endif
        
        call NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 

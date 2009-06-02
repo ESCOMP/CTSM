@@ -170,13 +170,7 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: dwt_frootn_to_litr3n(:)
    real(r8), pointer :: dwt_livecrootn_to_cwdn(:)
    real(r8), pointer :: dwt_deadcrootn_to_cwdn(:)
-   real(r8), pointer :: dwt_prod10n_gain(:)
-   real(r8), pointer :: dwt_prod10n_loss(:)
-   real(r8), pointer :: dwt_prod100n_gain(:)
-   real(r8), pointer :: dwt_prod100n_loss(:)
    real(r8), pointer :: seedn(:)
-   real(r8), pointer :: prod10n(:)
-   real(r8), pointer :: prod100n(:)
 !
 ! local pointers to implicit out scalars
    real(r8), pointer :: col_begnb(:)   ! nitrogen mass, beginning of time step (gN/m**2)
@@ -243,13 +237,7 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    dwt_frootn_to_litr3n 	  => clm3%g%l%c%cnf%dwt_frootn_to_litr3n
    dwt_livecrootn_to_cwdn	  => clm3%g%l%c%cnf%dwt_livecrootn_to_cwdn
    dwt_deadcrootn_to_cwdn	  => clm3%g%l%c%cnf%dwt_deadcrootn_to_cwdn
-   dwt_prod10n_gain		  => clm3%g%l%c%cnf%dwt_prod10n_gain
-   dwt_prod10n_loss		  => clm3%g%l%c%cnf%dwt_prod10n_loss
-   dwt_prod100n_gain		  => clm3%g%l%c%cnf%dwt_prod100n_gain
-   dwt_prod100n_loss		  => clm3%g%l%c%cnf%dwt_prod100n_loss
    seedn			  => clm3%g%l%c%cns%seedn
-   prod10n			  => clm3%g%l%c%cns%prod10n
-   prod100n			  => clm3%g%l%c%cns%prod100n
 
    ! assign local pointers at the pft level
    ivt                            => clm3%g%l%c%p%itype
@@ -343,14 +331,6 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
       cwdn(c)	= cwdn(c)   + dwt_livecrootn_to_cwdn(c)*dt
       cwdn(c)	= cwdn(c)   + dwt_deadcrootn_to_cwdn(c)*dt
       
-      ! fluxes into wood product pools, from dynamic landcover
-      prod10n(c)  = prod10n(c)  + dwt_prod10n_gain(c)*dt
-      prod100n(c) = prod100n(c) + dwt_prod100n_gain(c)*dt
-      
-      ! fluxes out of wood product pools, from decomposition
-      prod10n(c)  = prod10n(c)  - dwt_prod10n_loss(c)*dt
-      prod100n(c) = prod100n(c) - dwt_prod100n_loss(c)*dt
- 
       ! CWD to litter fluxes
       cwdn(c)   = cwdn(c)   - cwdn_to_litr2n(c)*dt
       litr2n(c) = litr2n(c) + cwdn_to_litr2n(c)*dt

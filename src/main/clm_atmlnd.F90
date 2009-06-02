@@ -54,9 +54,11 @@ type atm2lnd_type
   real(r8), pointer :: forc_snow(:)    !snow rate [mm/s]
   real(r8), pointer :: forc_ndep(:)    !nitrogen deposition rate (gN/m2/s)
   real(r8), pointer :: rainf(:)        !ALMA rain+snow [mm/s]
+#if (defined C13)
   ! 4/14/05: PET
   ! Adding isotope code
   real(r8), pointer :: forc_pc13o2(:)  !C13O2 partial pressure (Pa)
+#endif
   real(r8), pointer :: forc_po2(:)     !O2 partial pressure (Pa)
   real(r8), pointer :: forc_aer(:,:)   ! aerosol deposition array
 end type atm2lnd_type
@@ -207,9 +209,11 @@ end subroutine init_adiag_type
   allocate(a2l%forc_snow(beg:end))
   allocate(a2l%forc_ndep(beg:end))
   allocate(a2l%rainf(beg:end))
+#if (defined C13)
   ! 4/14/05: PET
   ! Adding isotope code
   allocate(a2l%forc_pc13o2(beg:end))
+#endif
   allocate(a2l%forc_po2(beg:end))
   allocate(a2l%forc_aer(beg:end,14))
 
@@ -240,9 +244,11 @@ end subroutine init_adiag_type
   a2l%forc_snow(beg:end) = ival
   a2l%forc_ndep(beg:end) = ival
   a2l%rainf(beg:end) = nan
+#if (defined C13)
   ! 4/14/05: PET
   ! Adding isotope code
   a2l%forc_pc13o2(beg:end) = ival
+#endif
   a2l%forc_po2(beg:end) = ival
   a2l%forc_aer(beg:end,:) = ival
 
@@ -433,7 +439,9 @@ end subroutine init_lnd2atm_type
   ix=ix+1; asrc(:,ix) = a2l_src%forc_rain(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_snow(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%rainf(:)  
+#if (defined C13)
   ix=ix+1; asrc(:,ix) = a2l_src%forc_pc13o2(:)  
+#endif
   ix=ix+1; asrc(:,ix) = a2l_src%forc_po2(:)  
   do n = 1,numrad
      ix=ix+1; asrc(:,ix) = a2l_src%forc_solad(:,n)  
@@ -476,7 +484,9 @@ end subroutine init_lnd2atm_type
   ix=ix+1; a2l_dst%forc_rain(:)  =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_snow(:)  =   adst(:,ix)
   ix=ix+1; a2l_dst%rainf(:)      =   adst(:,ix)
+#if (defined C13)
   ix=ix+1; a2l_dst%forc_pc13o2(:)=   adst(:,ix)
+#endif
   ix=ix+1; a2l_dst%forc_po2(:)   =   adst(:,ix)
   do n = 1,numrad
      ix=ix+1; a2l_dst%forc_solad(:,n)  = adst(:,ix)

@@ -3,7 +3,7 @@
 
 module C13SummaryMod
 
-#ifdef CN
+#if (defined CN) && (defined C13)
 
 !-----------------------------------------------------------------------
 !BOP
@@ -82,6 +82,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: col_pft_fire_closs(:) ! (gC/m2/s) total pft-level fire C loss 
    real(r8), pointer :: col_rr(:)             ! (gC/m2/s) root respiration (fine root MR + total root GR)
    real(r8), pointer :: col_vegfire(:)        ! (gC/m2/s) pft-level fire loss (obsolete, mark for removal)
+   real(r8), pointer :: col_wood_harvestc(:)
    real(r8), pointer :: soil1_hr(:)        
    real(r8), pointer :: soil2_hr(:)        
    real(r8), pointer :: soil3_hr(:) 
@@ -191,6 +192,28 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: m_livestemc_to_litter(:)            
    real(r8), pointer :: m_livestemc_xfer_to_fire(:) 
    real(r8), pointer :: m_livestemc_xfer_to_litter(:) 
+   real(r8), pointer :: hrv_leafc_to_litter(:)              
+   real(r8), pointer :: hrv_leafc_storage_to_litter(:)      
+   real(r8), pointer :: hrv_leafc_xfer_to_litter(:)         
+   real(r8), pointer :: hrv_frootc_to_litter(:)             
+   real(r8), pointer :: hrv_frootc_storage_to_litter(:)     
+   real(r8), pointer :: hrv_frootc_xfer_to_litter(:)        
+   real(r8), pointer :: hrv_livestemc_to_litter(:)          
+   real(r8), pointer :: hrv_livestemc_storage_to_litter(:)  
+   real(r8), pointer :: hrv_livestemc_xfer_to_litter(:)     
+   real(r8), pointer :: hrv_deadstemc_to_prod10c(:)         
+   real(r8), pointer :: hrv_deadstemc_to_prod100c(:)        
+   real(r8), pointer :: hrv_deadstemc_storage_to_litter(:)  
+   real(r8), pointer :: hrv_deadstemc_xfer_to_litter(:)     
+   real(r8), pointer :: hrv_livecrootc_to_litter(:)         
+   real(r8), pointer :: hrv_livecrootc_storage_to_litter(:) 
+   real(r8), pointer :: hrv_livecrootc_xfer_to_litter(:)    
+   real(r8), pointer :: hrv_deadcrootc_to_litter(:)         
+   real(r8), pointer :: hrv_deadcrootc_storage_to_litter(:) 
+   real(r8), pointer :: hrv_deadcrootc_xfer_to_litter(:)    
+   real(r8), pointer :: hrv_gresp_storage_to_litter(:)      
+   real(r8), pointer :: hrv_gresp_xfer_to_litter(:)         
+   real(r8), pointer :: hrv_xsmrpool_to_atm(:)              
    real(r8), pointer :: mr(:)             ! (gC/m2/s) maintenance respiration
    real(r8), pointer :: npp(:)            ! (gC/m2/s) net primary production
    real(r8), pointer :: pft_fire_closs(:) ! (gC/m2/s) total pft-level fire C loss 
@@ -205,6 +228,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: transfer_leaf_gr(:)          
    real(r8), pointer :: transfer_livecroot_gr(:)     
    real(r8), pointer :: transfer_livestem_gr(:)      
+   real(r8), pointer :: wood_harvestc(:)      ! (gC/m2/s) pft-level wood harvest (to product pools)
    real(r8), pointer :: vegfire(:)        ! (gC/m2/s) pft-level fire loss (obsolete, mark for removal)
    real(r8), pointer :: cpool(:)              ! (gC/m2) temporary photosynthate C pool
    real(r8), pointer :: xsmrpool(:)              ! (gC/m2) temporary photosynthate C pool
@@ -235,8 +259,9 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    ! for landcover change
    real(r8), pointer :: dwt_closs(:)          ! (gC/m2/s) total carbon loss from product pools and conversion
    real(r8), pointer :: dwt_conv_cflux(:)     ! (gC/m2/s) conversion C flux (immediate loss to atm)
-   real(r8), pointer :: dwt_prod10c_loss(:)   ! (gC/m2/s) loss from 10-yr wood product pool
-   real(r8), pointer :: dwt_prod100c_loss(:)  ! (gC/m2/s) loss from 100-yr wood product pool
+   real(r8), pointer :: prod10c_loss(:)       ! (gC/m2/s) loss from 10-yr wood product pool
+   real(r8), pointer :: prod100c_loss(:)      ! (gC/m2/s) loss from 100-yr wood product pool
+   real(r8), pointer :: product_closs(:)      ! (gC/m2/s) total wood product carbon loss
    real(r8), pointer :: prod10c(:)            ! (gC/m2) wood product C pool, 10-year lifespan
    real(r8), pointer :: prod100c(:)           ! (gC/m2) wood product C pool, 100-year lifespan
    real(r8), pointer :: totprodc(:)           ! (gC/m2) total wood product C
@@ -275,6 +300,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     col_pft_fire_closs             => clm3%g%l%c%cc13f%pcf_a%pft_fire_closs
     col_rr                         => clm3%g%l%c%cc13f%pcf_a%rr
     col_vegfire                    => clm3%g%l%c%cc13f%pcf_a%vegfire
+    col_wood_harvestc              => clm3%g%l%c%cc13f%pcf_a%wood_harvestc
     soil1_hr                       => clm3%g%l%c%cc13f%soil1_hr
     soil2_hr                       => clm3%g%l%c%cc13f%soil2_hr
     soil3_hr                       => clm3%g%l%c%cc13f%soil3_hr
@@ -287,8 +313,11 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     ! dynamic landcover pointers
     dwt_closs                      => clm3%g%l%c%cc13f%dwt_closs
     dwt_conv_cflux                 => clm3%g%l%c%cc13f%dwt_conv_cflux
-    dwt_prod10c_loss               => clm3%g%l%c%cc13f%dwt_prod10c_loss
-    dwt_prod100c_loss              => clm3%g%l%c%cc13f%dwt_prod100c_loss
+
+    ! wood product pointers
+    prod10c_loss                   => clm3%g%l%c%cc13f%prod10c_loss
+    prod100c_loss                  => clm3%g%l%c%cc13f%prod100c_loss
+    product_closs                  => clm3%g%l%c%cc13f%product_closs
     prod10c                        => clm3%g%l%c%cc13s%prod10c
     prod100c                       => clm3%g%l%c%cc13s%prod100c
     totprodc                       => clm3%g%l%c%cc13s%totprodc
@@ -394,6 +423,28 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     m_livestemc_to_litter          => clm3%g%l%c%p%pc13f%m_livestemc_to_litter
     m_livestemc_xfer_to_fire       => clm3%g%l%c%p%pc13f%m_livestemc_xfer_to_fire
     m_livestemc_xfer_to_litter     => clm3%g%l%c%p%pc13f%m_livestemc_xfer_to_litter
+    hrv_leafc_to_litter               => clm3%g%l%c%p%pc13f%hrv_leafc_to_litter               
+    hrv_leafc_storage_to_litter       => clm3%g%l%c%p%pc13f%hrv_leafc_storage_to_litter     
+    hrv_leafc_xfer_to_litter          => clm3%g%l%c%p%pc13f%hrv_leafc_xfer_to_litter        
+    hrv_frootc_to_litter              => clm3%g%l%c%p%pc13f%hrv_frootc_to_litter            
+    hrv_frootc_storage_to_litter      => clm3%g%l%c%p%pc13f%hrv_frootc_storage_to_litter    
+    hrv_frootc_xfer_to_litter         => clm3%g%l%c%p%pc13f%hrv_frootc_xfer_to_litter       
+    hrv_livestemc_to_litter           => clm3%g%l%c%p%pc13f%hrv_livestemc_to_litter         
+    hrv_livestemc_storage_to_litter   => clm3%g%l%c%p%pc13f%hrv_livestemc_storage_to_litter 
+    hrv_livestemc_xfer_to_litter      => clm3%g%l%c%p%pc13f%hrv_livestemc_xfer_to_litter    
+    hrv_deadstemc_to_prod10c          => clm3%g%l%c%p%pc13f%hrv_deadstemc_to_prod10c        
+    hrv_deadstemc_to_prod100c         => clm3%g%l%c%p%pc13f%hrv_deadstemc_to_prod100c       
+    hrv_deadstemc_storage_to_litter   => clm3%g%l%c%p%pc13f%hrv_deadstemc_storage_to_litter 
+    hrv_deadstemc_xfer_to_litter      => clm3%g%l%c%p%pc13f%hrv_deadstemc_xfer_to_litter    
+    hrv_livecrootc_to_litter          => clm3%g%l%c%p%pc13f%hrv_livecrootc_to_litter        
+    hrv_livecrootc_storage_to_litter  => clm3%g%l%c%p%pc13f%hrv_livecrootc_storage_to_litter
+    hrv_livecrootc_xfer_to_litter     => clm3%g%l%c%p%pc13f%hrv_livecrootc_xfer_to_litter   
+    hrv_deadcrootc_to_litter          => clm3%g%l%c%p%pc13f%hrv_deadcrootc_to_litter        
+    hrv_deadcrootc_storage_to_litter  => clm3%g%l%c%p%pc13f%hrv_deadcrootc_storage_to_litter
+    hrv_deadcrootc_xfer_to_litter     => clm3%g%l%c%p%pc13f%hrv_deadcrootc_xfer_to_litter   
+    hrv_gresp_storage_to_litter       => clm3%g%l%c%p%pc13f%hrv_gresp_storage_to_litter     
+    hrv_gresp_xfer_to_litter          => clm3%g%l%c%p%pc13f%hrv_gresp_xfer_to_litter        
+    hrv_xsmrpool_to_atm               => clm3%g%l%c%p%pc13f%hrv_xsmrpool_to_atm             
     mr                             => clm3%g%l%c%p%pc13f%mr
     npp                            => clm3%g%l%c%p%pc13f%npp
     pft_fire_closs                 => clm3%g%l%c%p%pc13f%pft_fire_closs
@@ -409,6 +460,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     transfer_livecroot_gr          => clm3%g%l%c%p%pc13f%transfer_livecroot_gr
     transfer_livestem_gr           => clm3%g%l%c%p%pc13f%transfer_livestem_gr
     vegfire                        => clm3%g%l%c%p%pc13f%vegfire
+    wood_harvestc                  => clm3%g%l%c%p%pc13f%wood_harvestc
     cpool                          => clm3%g%l%c%p%pc13s%cpool
     xsmrpool                       => clm3%g%l%c%p%pc13s%xsmrpool
     deadcrootc                     => clm3%g%l%c%p%pc13s%deadcrootc
@@ -564,10 +616,34 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          m_gresp_storage_to_litter(p)       + &
          m_gresp_xfer_to_litter(p)          + &
          m_deadstemc_to_litter_fire(p)      + &
-         m_deadcrootc_to_litter_fire(p)
+         m_deadcrootc_to_litter_fire(p)     + &
+         hrv_leafc_to_litter(p)             + &
+         hrv_leafc_storage_to_litter(p)     + &
+         hrv_leafc_xfer_to_litter(p)        + &
+         hrv_frootc_to_litter(p)            + &
+         hrv_frootc_storage_to_litter(p)    + &
+         hrv_frootc_xfer_to_litter(p)       + &
+         hrv_livestemc_to_litter(p)         + &
+         hrv_livestemc_storage_to_litter(p) + &
+         hrv_livestemc_xfer_to_litter(p)    + &
+         hrv_deadstemc_storage_to_litter(p) + &
+         hrv_deadstemc_xfer_to_litter(p)    + &
+         hrv_livecrootc_to_litter(p)        + &
+         hrv_livecrootc_storage_to_litter(p)+ &
+         hrv_livecrootc_xfer_to_litter(p)   + &
+         hrv_deadcrootc_to_litter(p)        + &
+         hrv_deadcrootc_storage_to_litter(p)+ &
+         hrv_deadcrootc_xfer_to_litter(p)   + &
+         hrv_gresp_storage_to_litter(p)     + &
+         hrv_gresp_xfer_to_litter(p)
 
       ! pft-level fire losses (VEGFIRE)
       vegfire(p) = 0._r8
+
+      ! pft-level wood harvest
+      wood_harvestc(p) = &
+         hrv_deadstemc_to_prod10c(p) + &
+         hrv_deadstemc_to_prod100c(p)
 
       ! pft-level carbon losses to fire
       pft_fire_closs(p) = &
@@ -633,6 +709,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    call p2c(num_soilc, filter_soilc, rr, col_rr)
    call p2c(num_soilc, filter_soilc, npp, col_npp)
    call p2c(num_soilc, filter_soilc, vegfire, col_vegfire)
+   call p2c(num_soilc, filter_soilc, wood_harvestc, col_wood_harvestc)
    call p2c(num_soilc, filter_soilc, totvegc, col_totvegc)
    call p2c(num_soilc, filter_soilc, totpftc, col_totpftc)
    call p2c(num_soilc, filter_soilc, pft_fire_closs, col_pft_fire_closs)
@@ -668,6 +745,11 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
       ! litter fire losses (LITFIRE)
       litfire(c) = 0._r8
 
+      ! total wood product loss
+      product_closs(c) = &
+         prod10c_loss(c) + &
+         prod100c_loss(c) 
+
       ! soil organic matter fire losses (SOMFIRE)
       somfire(c) = 0._r8
 
@@ -687,15 +769,13 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
       ! column-level carbon losses due to landcover change
       dwt_closs(c) = &
-         dwt_conv_cflux(c) + &
-	 dwt_prod10c_loss(c) + &
-	 dwt_prod100c_loss(c)
+         dwt_conv_cflux(c) 
 
       ! net ecosystem production, excludes fire flux, positive for sink (NEP)
       nep(c) = col_gpp(c) - er(c)
 
       ! net ecosystem exchange of carbon, includes fire flux, positive for source (NEE)
-      nee(c) = -nep(c) + col_fire_closs(c) + dwt_closs(c)
+      nee(c) = -nep(c) + col_fire_closs(c) + dwt_closs(c) + product_closs(c)
 
       ! total litter carbon (TOTLITC)
       totlitc(c) = &
@@ -713,14 +793,14 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
       ! total wood product carbon
       totprodc(c) = &
          prod10c(c) + &
-	 prod100c(c)	 
+	      prod100c(c)	 
 
       ! total ecosystem carbon, including veg but excluding cpool (TOTECOSYSC)
       totecosysc(c) = &
          cwdc(c) + &
          totlitc(c) + &
          totsomc(c) + &
-	 totprodc(c) + &
+	      totprodc(c) + &
          col_totvegc(c)
 
       ! total column carbon, including veg and cpool (TOTCOLC)
@@ -728,7 +808,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          cwdc(c) + &
          totlitc(c) + &
          totsomc(c) + &
-	 totprodc(c) + &
+	      totprodc(c) + &
          col_totpftc(c)
 
    end do ! end of columns loop
