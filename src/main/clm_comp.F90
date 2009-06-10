@@ -236,9 +236,9 @@ contains
 !
 ! !ARGUMENTS:
     real(r8)                 ,intent(in) :: nextsw_cday ! calendar day for nextsw_cday
-    logical         ,optional,intent(in) :: rstwr    ! true => write restart file this step
-    logical         ,optional,intent(in) :: nlend    ! true => end run this step
-    character(len=*),optional,intent(in) :: rdate    ! time stamp for restart file names
+    logical                  ,intent(in) :: rstwr    ! true => write restart file this step
+    logical                  ,intent(in) :: nlend    ! true => end run this step
+    character(len=*)         ,intent(in) :: rdate    ! time stamp for restart file names
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -253,11 +253,7 @@ contains
     ! Call land model driver2
     
     call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
-    if (present(rstwr) .and. present(nlend) .and. present(rdate)) then
-       call driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
-    else
-       call driver2(nextsw_cday, declinp1)
-    endif
+    call driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 
   end subroutine clm_run2
 

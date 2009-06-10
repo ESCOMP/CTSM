@@ -251,11 +251,9 @@ contains
        close(1)
     endif
     deallocate(tempg)
-#if (defined SPMD)
     call mpi_bcast(glatc,size(glatc),MPI_REAL8,0,mpicom,ier)
     call mpi_bcast(glonc,size(glonc),MPI_REAL8,0,mpicom,ier)
     call mpi_bcast(rdirc,size(rdirc),MPI_INTEGER,0,mpicom,ier)
-#endif
 
     if (masterproc) then
        write(iulog,*)'Columns in RTM = ',rtmlon

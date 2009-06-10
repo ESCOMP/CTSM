@@ -1,4 +1,132 @@
 ===============================================================
+Tag name:  clm3_6_43
+Originator(s):  erik (erik)
+Date: Wed Jun 10 11:41:57 MDT 2009
+One-line Summary: Fix pftdyn bug, enable 1D primary hist files, fix time-const3D output, fix template bug, enable cpl_esmf/cpl_mct
+
+Purpose of changes:
+
+Add src/main/cpl_esmf,src/main/cpl_mct directories, change configure to build either way,
+add -comp_intf option. Remove SEQ_ #ifdef's, simplify some of the logic associated with
+the old options (cpl6 and program_off). Brian K -- fix nans, enable  openMP again. Allow
+first history tape to be 1D (Sean Swenson). Fix template co2_ppmv error.  Remove SPMD 
+#ifdef from RTM. Fix driver pftdyn bug. Fix bug on writing out 3D time-constant fields.
+
+Bugs fixed (include bugzilla ID):
+                                  929 (bug in co2ppmv value in template)
+                                  969 (allow primary tapes to be 1D)
+                                  974 (bug in pftdyn mode)
+                                  977 (bug writing out 3D time-const data)
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+                                  966 (Hybrid restart problem on bluefire)
+                                  971 (abort on lahey with MPI)
+                                  972 (abort on intel with MPI)
+
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Add choice between ESMF/MCT compilation
+     NOTE: ESMF option does NOT work as files do NOT exist yet!
+     Add -comp_intf option to configure
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, swensosc (1D and history changes), 
+                  kauff (reenable OpenMP, some vars spval instead of nan)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, pio
+
+    scripts to scripts4_090605b
+    drv     to vocemis-drydep08_drvseq3_0_18
+    pio     back to pio45_prod (to eliminate compilation problem with pathscale)
+
+List all files eliminated:
+
+D   models/lnd/clm/src/main/lnd_comp_mct.F90 --- Move to cpl_mct
+
+List all files added and what they do:
+
+A   models/lnd/clm/src/main/cpl_mct ---- Directory for MCT interface
+A   models/lnd/clm/src/main/cpl_esmf --- Directory for ESMF interface
+A   models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 - Moved from main directory
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>> Add -comp_intf option, fix template bug, closing input namelist
+M   models/lnd/clm/bld/configure ----------- Add -comp_intf option
+M   models/lnd/clm/bld/config_files/config_definition.xml -- Add comp_interface
+M   models/lnd/clm/bld/clm.cpl7.template --- Close input namelist with ending "/"
+
+>>>>>>>>>>>>>> Remove SEQ_ CPP #if's, require some arguments 
+               (needed to be optional for cpl6/offline), allow primary hist files 1D
+               Fix so that 3D time-constant data does get written out.
+M   models/lnd/clm/src/main/clm_comp.F90 --------- Make rstwr, nlend, rdate required
+M   models/lnd/clm/src/main/driver.F90 ----------- Remove doalb if's, PFTDYNWBAL CPP
+                                                   (for pftdyn bug). Require rstwr,
+                                                   nlend, and rdate
+M   models/lnd/clm/src/main/clmtypeInitMod.F90 --- Some vars init to spval (kauff)
+                      certain cell & pft level variables are initialized to spval
+                      instead of nan so eliminate the appearance of nans on restart files.
+                      (not all cell & pfts were used and given non-nan values)
+M   models/lnd/clm/src/main/histFileMod.F90 ------ Write out 3D time-constant vars,
+                                                   fix so can write primary 1D files
+                                                   (Sean Swenson)
+M   models/lnd/clm/src/main/restFileMod.F90 ------ nlend required
+M   models/lnd/clm/src/main/controlMod.F90 ------- Remove SEQ_ CPP #if's, allow 1D primary
+                                                   ability to run threaded is re-enabled (kauff)
+M   models/lnd/clm/src/main/do_close_dispose.F90 - Require rstwr, nlend
+M   models/lnd/clm/src/riverroute/RtmMod.F90 ----- Remove SPMD #ifdef
+
+>>>>>>>>>>>>>> Move testing to calgary from bangkok
+M   models/lnd/clm/test/system/test_driver.sh ---- Add LD_LIBRARY_PATH for calgary/lf95
+
+Summary of testing:
+
+  bluefire: All PASS except (up to test 35)
+007 erA91 TER.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 7
+008 brA91 TBR.sh _sc_dh clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 6
+009 blA91 TBL.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 5
+012 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v5 144 cold .................FAIL! rc= 5
+013 smH74 TSM.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -1100 cold FAIL! rc= 8
+014 blH74 TBL.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -100 cold FAIL! rc= 4
+019 blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 arb_ic ............FAIL! rc= 5
+028 blF93 TBL.sh 17p_vodsrsc_do clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 cold .............FAIL! rc= 5
+034 erEH1 TER.sh 4p_vodsrsc_dh clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 10+38 arb_icFAIL! rc= 7
+
+  bluefire/CCSM testing:
+PASS  ERS.f45_g35.I_2000.bluefire
+PASS  ERS.f19_g16.I_1850.bluefire
+PASS  ERS.f19_g16.I_1850-2000.bluefire
+PASS  ERB.f09_g16.I_1948_2004.bluefire
+SFAIL ERH.f10_f10.I_1850_CN.bluefire.235943 <<< f10_f10 doesn't work for datm7 right now
+
+TBL hybrid/openMP tests fail since previous version had OpenMP disabled.
+
+  breeze/gale/hail/gust/ifort: All PASS up to test 12 (10x15, smL51 test)
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_43
+
+Changes answers relative to baseline: Only pftdyn mode
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_42
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Tue Jun  2 11:58:25 MDT 2009
@@ -19,7 +147,8 @@ Purpose of changes:
      Update drv to latest version (drvseq3_0_17 -- on voc branch).
      Update ccsm comparision version used in test suite.
 
-Bugs fixed (include bugzilla ID): None
+Bugs fixed (include bugzilla ID): 
+                                  977 (bug writing out 3D time-const data)
 
 Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   698 (cprnc bug gives false difference)
@@ -38,6 +167,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   966 (Hybrid restart problem on bluefire)
                                   971 (abort on lahey with MPI)
                                   972 (abort on intel with MPI)
+                                  974 (bug in pftdyn mode)
+                                  977 (bug writing out 3D time-const data)
 
     http://bugs.cgd.ucar.edu/
 
@@ -361,6 +492,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   937 (undef value on bangkok for maxpatchpft=numpft+1 case)
                                   966 (Hybrid restart problem on bluefire)
                                   967 (PIO bounds problem on jaguar)
+                                  974 (bug in pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Start adding option to build with ccsm Makefiles
@@ -630,6 +762,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   926 (pftdyn code needs to be shared in mksurfdata)
                                   935 (RTM warning NOT an error)
                                   937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+                                  974 (bug in pftdyn mode)
+                                  977 (bug writing out 3D time-const data)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Change default for maxpatch_pft back to numpft+1
@@ -699,6 +833,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   937 (undef value on bangkok for maxpatchpft=numpft+1 case)
                                   943 (CLM_DEMAND="null")
                                   946 (default maxpatchpft)
+                                  974 (bug in pftdyn mode)
+                                  977 (bug writing out 3D time-const data)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system:
@@ -834,6 +970,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   935 (RTM warning NOT an error)
                                   937 (undef value on bangkok for maxpatchpft=numpft+1 case)
                                   941 (RTM output 6X too low)
+                                  974 (bug in pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 
@@ -896,6 +1033,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   935 (RTM warning NOT an error)
                                   937 (undef value on bangkok for maxpatchpft=numpft+1 case)
                                   941 (RTM output 6X too low)
+                                  974 (bug in pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: maxpatchpft default is now numpft+1
@@ -1022,6 +1160,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   920 (glacier_mec problems in mksurfdata)
                                   926 (pftdyn code needs to be shared in mksurfdata)
                                   941 (RTM output 6X too low)
+                                  974 (bug in pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1095,6 +1234,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   926 (pftdyn code needs to be shared in mksurfdata)
                                   934 (pftdyn logic bug)
                                   941 (RTM output 6X too low)
+                                  974 (bug in pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1202,6 +1342,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   927 (problem with urban on bangkok/lahey)
                                   934 (pftdyn logic bug)
                                   941 (RTM output 6X too low)
+                                  974 (bug in pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None

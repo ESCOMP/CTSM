@@ -272,10 +272,8 @@ contains
          lnpp, lalloc, q10, spunup, fcpool
 #endif
 
-#if (defined SEQ_MCT) || (defined SEQ_ESMF)
     namelist /clm_inparm / &
          co2_type
-#endif
 
     ! clm other options
 
@@ -315,9 +313,6 @@ contains
 #else
     clump_pproc = 1
 #endif
-    if (clump_pproc /= 1) then
-       call endrun( subname//' ERROR: ability to run threaded temporarily disabled due to restart bug.')
-    endif
 
     if (masterproc) then
 
@@ -357,13 +352,6 @@ contains
              write(iulog,*)'must specify initial dataset for perpetual mode'
              call endrun()
           end if
-       end if
-
-       ! Check that hist_type_1d is not set for primary tape
-
-       if (hist_type1d_pertape(1) /= ' ') then
-          write(iulog,*)'CONTROL_INIT error: hist_type1d_pertape can only be set for tapes 2-6'
-          call endrun()
        end if
 
        if (urban_traffic) then
@@ -642,9 +630,7 @@ contains
     if (nsrest == 0 .and. finidat == ' ') write(iulog,*) '   initial data created by model'
     if (nsrest == 0 .and. finidat /= ' ') write(iulog,*) '   initial data   = ',trim(finidat)
     if (nsrest /= 0) write(iulog,*) '   restart data   = ',trim(nrevsn)
-#if (defined SEQ_MCT) || (defined SEQ_ESMF)
     write(iulog,*) '   atmospheric forcing data is from sequential ccsm model'
-#endif
 #if (defined RTM)
     if (frivinp_rtm /= ' ') write(iulog,*) '   RTM river data       = ',trim(frivinp_rtm)
 #endif

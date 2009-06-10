@@ -32,10 +32,10 @@ List all existing files that have been modified, and describe the changes:
 Summary of testing:
 
   bluefire:
+  bluefire/CCSM testing:
   jaguar:
-  kraken:
   lightning/pathscale:
-  bangkok/lf95:
+  calgary/lf95:
   breeze/gale/hail/gust/ifort:
 
 CLM tag used for the baseline comparison tests if applicable:

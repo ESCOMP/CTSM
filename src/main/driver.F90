@@ -254,9 +254,7 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
   ! This will be removed.........................
   ! ============================================================================
   if ( (set_caerdep_from_file) .or. (set_dustdep_from_file) ) then
-     !if (doalb) then
      call interpMonthlyAerdep()
-     !endif
   endif
   ! to here......................................
 
@@ -300,8 +298,7 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
                               clm3%g%gws%gc_ice1(begg:endg), clm3%g%ges%gc_heat1(begg:endg) )
 
 #if (!defined DGVM)
-#if (!defined PFTDYNWBAL)
-     if (doalb .and. fpftdyn /= ' ') then
+     if (fpftdyn /= ' ') then
 
         call pftdyn_interp()  ! change the pft weights
 
@@ -318,7 +315,6 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
         enddo
      end if
 #endif
-#endif
 
      ! ============================================================================
      ! Initialize the mass balance checks: water, carbon, and nitrogen
@@ -330,12 +326,10 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
      call t_stopf('begwbal')
 
 #if (defined CN)
-!     if (doalb) then
-        call t_startf('begcnbal')
-        call BeginCBalance(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
-        call BeginNBalance(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
-        call t_stopf('begcnbal')
-!     end if 
+     call t_startf('begcnbal')
+     call BeginCBalance(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
+     call BeginNBalance(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
+     call t_stopf('begcnbal')
 #endif
 
   end do
@@ -359,20 +353,12 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
    call CNZeroFluxes_dwt()
 #endif
 
-! PET: switching CN timestep
-!  if (doalb .and. fpftdyn /= ' ') then
    if (fpftdyn /= ' ') then
-#if (defined PFTDYNWBAL)
-     call pftdyn_interp()
-
-     !--- conserve heat,water,carbon content wrt dynamic land use ---
-     call pftdyn_wbal()
-#endif
 #if (defined CN)
      call pftdyn_cnbal()
 #endif
      call setFilters()
-  end if
+   end if
 #endif
 
 
@@ -383,7 +369,6 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
   ! re-written to go inside.
   ! ============================================================================
 ! PET: switching CN timestep
-!  if (doalb .and. fndepdyn /= ' ') then
   if (fndepdyn /= ' ') then
      call ndepdyn_interp()
   end if
@@ -620,11 +605,9 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
      call CNEcosystemDyn(begc,endc,begp,endp,filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp, doalb)
-!     if (doalb) then 
-            call CNAnnualUpdate(begc,endc,begp,endp,filter(nc)%num_soilc,&
+     call CNAnnualUpdate(begc,endc,begp,endp,filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp)
-!     end if         
 #elif (defined CASA)
      ! Prescribed biogeography,
      ! prescribed canopy structure, some prognostic carbon fluxes
@@ -657,7 +640,6 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
      ! on the first EXIT_SPINUP doalb timestep     
 #elif (defined CN)
      nstep = get_nstep()
-!     if (doalb .and. (nstep > 2) ) then
      if (nstep > 2) then
         call t_startf('cnbalchk')
         call CBalanceCheck(begc, endc, filter(nc)%num_soilc, filter(nc)%soilc)
@@ -712,9 +694,9 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
   implicit none
   real(r8),          intent(in) :: nextsw_cday ! calendar day for nstep+1
   real(r8),          intent(in) :: declinp1 ! declination angle for next time step
-  logical, optional, intent(in) :: rstwr    ! true => write restart file this step
-  logical, optional, intent(in) :: nlend    ! true => end of run on this step
-  character(len=*), optional, intent(in) :: rdate  ! restart file time stamp for name
+  logical,           intent(in) :: rstwr    ! true => write restart file this step
+  logical,           intent(in) :: nlend    ! true => end of run on this step
+  character(len=*),  intent(in) :: rdate    ! restart file time stamp for name
 !
 ! !REVISION HISTORY:
 ! 2005.05.22  Mariana Vertenstein creation
@@ -769,7 +751,6 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
   call t_stopf('clmrtm')
 #endif
 
-#if (defined SEQ_MCT) || (defined SEQ_ESMF)
   ! ============================================================================
   ! Read initial snow and soil moisture data at each time step
   ! ============================================================================
@@ -779,7 +760,6 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
      call inicfile_perp()
   end if
   call t_stopf('inicperp')
-#endif
 
   ! ============================================================================
   ! Update accumulators
@@ -848,11 +828,7 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 #ifndef _NOIO
   call t_startf('clm_driver_io_htapes')
 
-  if (present(nlend) .and. present(rstwr)) then 	
-     call hist_htapes_wrapup( rstwr, nlend )
-  else
-     call hist_htapes_wrapup()
-  end if
+  call hist_htapes_wrapup( rstwr, nlend )
 
   call t_stopf('clm_driver_io_htapes')
 
@@ -873,36 +849,18 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
   ! Write restart/initial files if appropriate
   ! ============================================================================
 
-  if (present(rstwr)) then
-     write_restart = rstwr
-  else
-     write_restart = do_restwrite()
-  end if
+  write_restart = rstwr
      
   if (write_restart) then
 
      call t_startf('clm_driver_io_wrest')
-     if (present(rdate)) then
-        filer = restFile_filename(type='netcdf', rdate=rdate)
-     else
-        filer = restFile_filename(type='netcdf') 
-     end if
-     if (present(nlend)) then
-        call restFile_write( filer, nlend )
-     else
-        call restFile_write( filer)
-     end if
+     filer = restFile_filename(type='netcdf', rdate=rdate)
+     call restFile_write( filer, nlend )
 
-     if (present(rdate)) then
-        filer = restFile_filename(type='binary', rdate=rdate )
-     else
-        filer = restFile_filename(type='binary')
-     end if
-     if (present(nlend)) then
-        call restFile_write_binary( filer, nlend )
-     else
-        call restFile_write_binary( filer )
-     end if
+     filer = restFile_filename(type='binary', rdate=rdate )
+
+     call restFile_write_binary( filer, nlend )
+
      call t_stopf('clm_driver_io_wrest')
 
   else if (do_inicwrite()) then
@@ -911,11 +869,7 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
      dtime = get_step_size()
      filer = restFile_filename(type='netcdf', offset=int(dtime))
 
-     if (present(nlend)) then
-        call restFile_write( filer, nlend )
-     else
-        call restFile_write( filer)
-     end if
+     call restFile_write( filer, nlend )
      call t_stopf('clm_driver_io_wrest')
 
   end if

@@ -25,6 +25,9 @@ Directory where CLM executable will be created.
 <entry id="clm_root" value="">
 Root directory of CLM source distribution.
 </entry>
+<entry id="comp_interface" valid_values="ESMF,MCT" value="MCT">
+Component framework interface to use (MCT or ESMF)
+</entry>
 <entry id="usr_src" value="" list="1">
 User source directories to prepend to the filepath.  Multiple directories
 are specified as a comma separated list with no embedded white space.

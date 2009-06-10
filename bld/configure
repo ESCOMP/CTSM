@@ -66,6 +66,7 @@ OPTIONS
                          Makefile defaults.
      -cppdefs <string>   A string of user specified CPP defines.  Appended to
                          Makefile defaults.  E.g. -cppdefs '-DVAR1 -DVAR2'
+     -comp_intf <name>   Component interface to use (ESMF or MCT) (default MCT)
      -debug              Switch to turn on building CLM with debugging compiler options.
      -defaults <file>    Specify full path to a configuration file which will be used to supply defaults instead of
                          the defaults in bld/config_files.  This file is used to specify model
@@ -163,6 +164,7 @@ GetOptions(
     "clm_exe=s"                 => \$opts{'clm_exe'},
     "clm_exedir=s"              => \$opts{'clm_exedir'},
     "cppdefs=s"                 => \$opts{'cppdefs'},
+    "comp_intf=s"               => \$opts{'comp_interface'},
     "debug"                     => \$opts{'debug'},
     "defaults=s"                => \$opts{'defaults'},
     "dust=s"                    => \$opts{'dust'}, 
@@ -1252,6 +1254,7 @@ sub write_filepath
     my $spmd        = $cfg_ref->get('spmd');
     my $esmf_libdir = $cfg_ref->get('esmf_libdir');
     my $rtm         = $cfg_ref->get('rtm');
+    my $comp_intf   = $cfg_ref->get('comp_interface');
     my $mode        = $cfg_ref->get('mode');
     my $buildpio    = $cfg_ref->get('pio');
 
@@ -1320,6 +1323,13 @@ sub write_filepath
     if ( $rtm eq "on" ) { 
 	push( @dirs, "riverroute" );
     }
+    if ( $comp_intf eq "MCT" ) { 
+	push( @dirs, "main/cpl_mct" );
+    } elsif ( $comp_intf eq "ESMF" ) { 
+	push( @dirs, "main/cpl_esmf" );
+    } else {
+	die "** Bad component interface name -- should be MCT or ESMF\n";
+    }
     foreach my $dir ( @dirs ) {
 	if ( -d "$srcdir/$dir" ) {
 	    print $fh "$srcdir/$dir\n";
@@ -1336,8 +1346,10 @@ sub write_filepath
 sub write_filepath_ccsm
 {
     my ($file, $cfg_ref) = @_;
-    my  $fh = new IO::File;
-    my  $rtm = $cfg_ref->get('rtm');
+
+    my  $fh        = new IO::File;
+    my  $comp_intf = $cfg_ref->get('comp_interface');
+    my  $rtm       = $cfg_ref->get('rtm');
 
     $fh->open(">$file") or die "** can't open filepath file: $file\n";
 
@@ -1348,6 +1360,13 @@ sub write_filepath_ccsm
     my @dirs = ( "main", "biogeophys", "biogeochem" );
     if ( $rtm eq "on" ) { 
 	push( @dirs, "riverroute" );
+    }
+    if ( $comp_intf eq "MCT" ) { 
+	push( @dirs, "main/cpl_mct" );
+    } elsif ( $comp_intf eq "ESMF" ) { 
+	push( @dirs, "main/cpl_esmf" );
+    } else {
+	die "** Bad component interface name -- should be MCT or ESMF\n";
     }
     foreach my $dir ( @dirs ) {
 	print $fh "\$CODEROOT/lnd/clm/src/$dir\n";
@@ -1435,7 +1454,7 @@ sub write_filepath_ccsmbld
 
        print $fh "../SourceMods/src.clm\n";
 
-       my @dirs = ( "main", "biogeophys", "biogeochem" );
+       my @dirs = ( "main", "main/cpl_mct", "biogeophys", "biogeochem" );
        if ( $rtm eq "on" ) { 
 	   push( @dirs, "riverroute" );
        }

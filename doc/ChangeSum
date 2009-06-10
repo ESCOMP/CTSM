@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_43         erik 06/10/2009 Fix pftdyn bug, enable 1D primary hist files, fix time-const3D output, fix template bug, enable cpl_esmf/cpl_mct
    clm3_6_42         erik 06/02/2009 Bring CN Harvest branch to trunk
    clm3_6_41        kauff 05/29/2009 shrub mods, abort if nthreads > 1 (temporary, wrt bugz #965)
    clm3_6_40         erik 05/28/2009 Fix openMP bug, add fndepdyn ncl script, fix interpinic for urban, add mkharvest to mksurfdata, new spinups, turn CLAMP on for CASA or CN

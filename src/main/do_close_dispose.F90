@@ -31,8 +31,8 @@ subroutine do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, rstwr
   integer, intent(in)  :: hist_mfilt(ntapes)  !maximum number of time samples per tape
   logical, intent(out) :: if_stop             !true => last time step of run
   logical, intent(out) :: if_disphist(ntapes) !true => save and dispose history file
-  logical, intent(in), optional :: rstwr
-  logical, intent(in), optional :: nlend	
+  logical, intent(in)  :: rstwr
+  logical, intent(in)  :: nlend	
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -48,14 +48,8 @@ subroutine do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, rstwr
   rest_now = .false.
   stop_now = .false.
 
-#if (defined SEQ_MCT) || (defined SEQ_ESMF)
-  if (present(nlend) .and. present(rstwr)) then  
-     if (nlend) stop_now = .true.
-     if (rstwr) rest_now = .true.
-  else
-     call shr_sys_abort('do_close_dispose error: must specify nlend and rstwr')
-  end if
-#endif
+  if (nlend) stop_now = .true.
+  if (rstwr) rest_now = .true.
 
   if_stop = stop_now
 

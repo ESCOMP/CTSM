@@ -87,7 +87,7 @@ contains
     implicit none
     include 'netcdf.inc'
     character(len=*) , intent(in) :: file  ! output netcdf restart file
-    logical, optional, intent(in) :: nlend	
+    logical,           intent(in) :: nlend	
 !
 ! !CALLED FROM:
 ! subroutine driver
@@ -152,11 +152,7 @@ contains
     ! Close restart file and write restart pointer file
     
     call restFile_close( ncid )
-    if (present(nlend)) then	
-       call restFile_closeRestart( file, nlend )
-    else
-       call restFile_closeRestart( file )
-    end if
+    call restFile_closeRestart( file, nlend )
     
     ! Write restart pointer file
     
@@ -312,7 +308,7 @@ contains
 ! !ARGUMENTS:
     implicit none
     character(len=*) , intent(in) :: file   ! binary restart file
-    logical, optional, intent(in) :: nlend
+    logical,           intent(in) :: nlend
 !
 ! !CALLED FROM:
 ! subroutine driver
@@ -333,11 +329,7 @@ contains
     call hist_restart(nio, flag='write')
     if (masterproc) then
        call relavu (nio)
-       if (present(nlend)) then
-          call restFile_closeRestart( file, nlend )
-       else
-          call restFile_closeRestart( file )
-       end if
+       call restFile_closeRestart( file, nlend )
     end if
 
   end subroutine restFile_write_binary
@@ -499,7 +491,7 @@ contains
 ! !ARGUMENTS:
     implicit none
     character(len=*) , intent(in) :: file  ! local output filename
-    logical, optional, intent(in) :: nlend
+    logical,           intent(in) :: nlend
 !
 ! !CALLED FROM:
 ! subroutine restart in this module
@@ -515,11 +507,6 @@ contains
 
    if (masterproc) then
 
-#if (defined SEQ_MCT) || (defined SEQ_ESMF)
-      if ( .not. present(nlend)) then
-         call endrun('restFile_closeRestart error: must pass nlend as argument for SEQ_MCT or SEQ_ESMF')
-      end if
-#endif
       write(iulog,*) 'Successfully wrote local restart file ',trim(file)
       write(iulog,'(72a1)') ("-",i=1,60)
       write(iulog,*)

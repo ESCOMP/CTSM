@@ -1032,7 +1032,7 @@ contains
     pps%laisun(beg:end) = nan
     pps%laisha(beg:end) = nan
     pps%btran(beg:end) = nan
-    pps%fsun(beg:end) = nan
+    pps%fsun(beg:end) = spval
     pps%tlai(beg:end) = 0._r8
     pps%tsai(beg:end) = 0._r8
     pps%elai(beg:end) = 0._r8
@@ -2747,14 +2747,14 @@ contains
     cps%fireseasonl(beg:end) = nan
     cps%farea_burned(beg:end) = nan
     cps%ann_farea_burned(beg:end) = nan
-    cps%albsnd_hst(beg:end,:numrad) = nan
-    cps%albsni_hst(beg:end,:numrad) = nan
+    cps%albsnd_hst(beg:end,:numrad) = spval
+    cps%albsni_hst(beg:end,:numrad) = spval
     cps%albsod(beg:end,:numrad) = nan
     cps%albsoi(beg:end,:numrad) = nan
-    cps%flx_absdv(beg:end,-nlevsno+1:1) = nan
-    cps%flx_absdn(beg:end,-nlevsno+1:1) = nan
-    cps%flx_absiv(beg:end,-nlevsno+1:1) = nan
-    cps%flx_absin(beg:end,-nlevsno+1:1) = nan
+    cps%flx_absdv(beg:end,-nlevsno+1:1) = spval
+    cps%flx_absdn(beg:end,-nlevsno+1:1) = spval
+    cps%flx_absiv(beg:end,-nlevsno+1:1) = spval
+    cps%flx_absin(beg:end,-nlevsno+1:1) = spval
     cps%snw_rds(beg:end,-nlevsno+1:0) = nan
     cps%snw_rds_top(beg:end) = nan
     cps%sno_liq_top(beg:end) = nan
@@ -3158,7 +3158,7 @@ contains
     cwf%flx_dst_dep_dry4(beg:end) = nan
     cwf%flx_dst_dep_wet4(beg:end) = nan
     cwf%flx_dst_dep(beg:end) = nan
-    cwf%qflx_snofrz_lyr(beg:end,-nlevsno+1:0) = nan
+    cwf%qflx_snofrz_lyr(beg:end,-nlevsno+1:0) = spval
 
   end subroutine init_column_wflux_type
 

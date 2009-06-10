@@ -49,6 +49,7 @@ $finidat
  hist_mfilt       =  1
  hist_nhtfrq      =  0
  co2_ppmv         =  $CCSM_CO2_PPMV
+/
 EOF1
 
 if ($RUN_TYPE == startup && $CLM_ARB_IC != off) then

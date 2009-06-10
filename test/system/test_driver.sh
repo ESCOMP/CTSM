@@ -296,6 +296,7 @@ else
     export LAHEY=/usr/local/lf9562
     export INC_NETCDF=/usr/local/netcdf-gcc-lf95/include
     export LIB_NETCDF=/usr/local/netcdf-gcc-lf95/lib
+    export LD_LIBRARY_PATH=/usr/local/torque/lib:\${LD_LIBRARY_PATH}
     mpich=/usr/local/mpich-gcc-g++-lf95
     export INC_MPI=\${mpich}/include
     export LIB_MPI=\${mpich}/lib
