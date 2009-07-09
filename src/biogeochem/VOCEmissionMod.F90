@@ -64,6 +64,10 @@ contains
     use clm_varpar   , only : nvoc
     use clm_atmlnd   , only : clm_a2l
     use shr_const_mod, only : SHR_CONST_RGAS
+    use pftvarcon    , only : ndllf_evr_tmp_tree, ndllf_evr_brl_tree,  &
+                              ndllf_dcd_brl_tree, nbrdlf_evr_trp_tree,  &
+                              nbrdlf_evr_tmp_tree, nbrdlf_dcd_brl_shrub, &
+                              nc3_arctic_grass, nwheat, noveg
 !
 ! !ARGUMENTS:
     implicit none
@@ -209,13 +213,14 @@ contains
              epsilon(p) = 0._r8
 
              ! isoprenes:
-             if (ivt(p) == 1) then       !needleleaf evergreen temperate
+             if (ivt(p) == ndllf_evr_tmp_tree) then       !needleleaf evergreen temperate
                 epsilon(p) = 2._r8
-             else if (ivt(p) == 2) then  !needleleaf evergreen boreal
+             else if (ivt(p) == ndllf_evr_brl_tree) then  !needleleaf evergreen boreal
                 epsilon(p) = 4._r8
-             else if (ivt(p) == 4) then  !broadleaf evergreen tropical
+             else if (ivt(p) == nbrdlf_evr_trp_tree) then  !broadleaf evergreen tropical
                 epsilon(p) = 24._r8
-             else if (ivt(p) >= 5 .and. ivt(p) <= 11) then !other woody veg
+             else if (ivt(p) >= nbrdlf_evr_tmp_tree .and. &
+                      ivt(p) <= nbrdlf_dcd_brl_shrub) then !other woody veg
                 epsilon(p) = 24._r8
              end if
           end do
@@ -229,15 +234,18 @@ contains
 
              epsilon(p) = 0._r8
              ! monoterpenes:
-             if (ivt(p) >= 1 .and. ivt(p) <= 2) then        !needleleaf evergreen
+             if (ivt(p) >= ndllf_evr_tmp_tree .and. &
+                 ivt(p) <= ndllf_evr_brl_tree) then        !needleleaf evergreen
                 epsilon(p) = 2.0_r8
-             else if (ivt(p) == 3) then                     !needleleaf deciduous
+             else if (ivt(p) == ndllf_dcd_brl_tree) then   !needleleaf deciduous
                 epsilon(p) = 1.6_r8
-             else if (ivt(p) == 4) then                     !broadleaf everg trop
+             else if (ivt(p) == nbrdlf_evr_trp_tree) then   !broadleaf everg trop
                 epsilon(p) = 0.4_r8
-             else if (ivt(p) >= 5 .and. ivt(p) <= 11) then  !other woody veg
+             else if (ivt(p) >= nbrdlf_evr_tmp_tree .and. &
+                      ivt(p) <= nbrdlf_dcd_brl_shrub) then  !other woody veg
                 epsilon(p) = 0.8_r8
-             else if (ivt(p) >= 12 .and. ivt(p) <= 17) then !grass & crop
+             else if (ivt(p) >= nc3_arctic_grass .and. &
+                      ivt(p) <= nwheat) then !grass & crop
                 epsilon(p) = 0.1_r8
              end if
           end do
@@ -334,7 +342,7 @@ contains
 
           ! density: Source density factor [g dry weight foliar mass m-2 ground]
 
-          if (ivt(p) > 0) then
+          if (ivt(p) > noveg) then
              density = elai(p) / (slarea(p) * 0.5_r8)
           else
              density = 0._r8

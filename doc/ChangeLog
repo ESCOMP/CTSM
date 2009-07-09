@@ -1,4 +1,171 @@
 ===============================================================
+Tag name:  clm3_6_44
+Originator(s):  erik (erik)
+Date: Thu Jul  9 11:47:40 MDT 2009
+One-line Summary: Fix C13 bug, update scripts, drv, datm. Add domain files for idmap
+atm-ocn grids for datm. Remove SEQ_MCT, add new ESMF env vars to template. Work with
+ndeplintInterp, fix SCAM
+
+Purpose of changes:
+
+Fix C13 nflds bug, update scripts, drv, datm. Add domain files for idmap atm-ocn grids
+for datm. Remove SEQ_MCT, add new ESMF env vars to template. Work with ndeplintInterp to
+enable using J-F's new Nitrogen deposition files for transient 20th Century simulations.
+SCAM fixes from John Truesdale. Add indices for PFT types.
+
+Bugs fixed (include bugzilla ID): 981 (ccsm domain files for atm=ocn grid)
+                                  987 (remove SEQ_MCT)
+                                  991 (C13 nfields cause model to blowup on jaguar)
+                                  997 (interpolated finidat files cause fully coupled cases to fail)
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+                                  966 (Hybrid restart problem on bluefire)
+                                  971 (abort on lahey with MPI)
+                                  972 (abort on intel with MPI)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Remove SEQ_MCT
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: 
+   New surface datasets for 0.9x1.25 and 1.9x2.5, and new finidat for 1850 for 0.9x1.25
+   10x15 2000 10x15 dataset set to the 1850 version so that testing will work.
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, oleson (pftvarcon changes)
+     SCAM changes from John Truesdale
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm7,
+     csm_share and pio
+
+ scripts   to scripts4_090707b
+ drv       to vocemis-drydep11_drvseq3_0_23
+ datm7     to datm7_090708
+ csm_share to share3_090706b
+ pio       to pio50_prod
+
+List all files eliminated:
+
+ D  models/lnd/clm/test/system/tests_pretag_bangkok -- Rename to calgary
+
+List all files added and what they do:
+
+ A  models/lnd/clm/test/system/tests_pretag_calgary ----------- Rename from bangkok
+ A  models/lnd/clm/test/system/tests_pretag_bluefire_nompi ---- serial/open-MP tests
+ A  models/lnd/clm/test/system/tests_pretag_jaguar_nompi ------ serial/open-MP tests
+ A  models/lnd/clm/test/system/tests_posttag_lightning_nompi -- serial/open-MP tests
+
+List all existing files that have been modified, and describe the changes:
+
+ M  Quickstart.GUIDE --- fix minor error in name of directory as scripts changed.
+
+  >>>>>>>>>>>> Separate out non-mpi tests for bluefire, jaguar, and lightning
+               Test list is different if run interactive or submitted to batch que.
+               Serial, open-mp only tests are run interactive, MPI and hybrid tests
+               are run when submitted to the batch que. This prevents waste of resources
+               for serial and open-mp only tests.
+               Remove bangkok, replace with calgary only. Default threads depends
+               on if interative or not.
+ M  models/lnd/clm/test/system/test_driver.sh -----------
+ M  models/lnd/clm/test/system/tests_pretag_bluefire ----
+ M  models/lnd/clm/test/system/tests_pretag_jaguar ------
+ M  models/lnd/clm/test/system/tests_posttag_lightning --
+ M  models/lnd/clm/test/system/README ------------------- Add note about CLM_SOFF
+
+  >>>>>>>>>>>> 
+ M  models/lnd/clm/tools/mksurfdata/Makefile ------------------- For ifort remove -ftz option to CFLAGS
+ M  models/lnd/clm/tools/mksurfdata/mksurfdata.globalirrig ----- New input PFT datasets from Peter L.
+ M  models/lnd/clm/tools/mksurfdata/mksurfdata.regional -------- New input PFT datasets from Peter L.
+ M  models/lnd/clm/tools/mksurfdata/mksurfdata.pftdyn ---------- New input PFT datasets from Peter L.
+ M  models/lnd/clm/tools/mksurfdata/mksurfdata.singlept -------- New input PFT datasets from Peter L.
+ M  models/lnd/clm/tools/mksurfdata/mksurfdata.namelist -------- New input PFT datasets from Peter L.
+ M  models/lnd/clm/tools/mksurfdata/pftdyn_simyr1850-2005.txt -- New input PFT datasets from Peter L.
+ M  models/lnd/clm/tools/mksurfdata/pftdyn_simyr2000.txt ------- New input PFT datasets from Peter L.
+ M  models/lnd/clm/tools/mksurfdata/pftdyn_simyr1850.txt ------- New input PFT datasets from Peter L.
+ M  models/lnd/clm/tools/mksurfdata/mksurfdata.pl -------------- New input PFT datasets from Peter L.
+
+  >>>>>>>>>>>> Work on linear interpolation of Nitrogen deposition so that add in mid-decades
+ M  models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl ------- Check if interpolation should be cyclic
+ M  models/lnd/clm/tools/ncl_scripts/ndeplintInterp.ncl ----- Also loop over mid decades as well
+ M  models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl --------- Check if interpolation should be cyclic
+
+  >>>>>>>>>>>> Fix from Sam so that don't have negative ice flow
+ M  models/lnd/clm/tools/interpinic/interpinic.F90 --- Change from Sam so that fully coupled cases don't trap negative ice flow
+ M  models/lnd/clm/tools/interpinic/Srcfiles --------- Don't repeat filenames so can build with lahey
+
+  >>>>>>>>>>>> Change so that document that files should have longs between 0 and 360 rather than -180 to 180
+ M  models/lnd/clm/tools/mkgriddata/mkgriddata.regional --- Use longs 0-360
+ M  models/lnd/clm/tools/mkgriddata/mkgriddata.singlept --- Use longs 0-360
+ M  models/lnd/clm/tools/mkgriddata/Makefile -------------- For ifort remove -ftz option to CFLAGS
+ M  models/lnd/clm/tools/mkgriddata/README ---------------- Make note that regional/single-pt grid files should have longs: 0 <= longs <= 360
+
+  >>>>>>>>>>>> Remove SEQ_MCT and handle COMP_INTERFACE from ccsm cpl7 scripts, new surface datasets
+ M  models/lnd/clm/bld/configure ----------- Remove SEQ_MCT, handle cpl_esmf
+ M  models/lnd/clm/bld/clm.cpl7.template --- Handle $COMP_INTERFACE 
+ M  models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Allow mid-decadal
+                                                 sim_years so can process ndepdyn files
+ M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml --- New 0.9 finidat,
+        0.9x1.25, and 1.9x2.5 surfdata, fndepdat files for mid-decadal sim_years.
+
+  >>>>>>>>>>>> Add indices for PFTs. Fixes for SCAM. Break up long lines > 132chars
+ M  models/lnd/clm/src/biogeochem/CASAMod.F90 -------------- noveg, nc3_nonarctic_grass
+ M  models/lnd/clm/src/biogeochem/STATICEcosysDynMod.F90 --- noveg, ncorn, nbrdlf_dcd_brl_shrub
+ M  models/lnd/clm/src/biogeochem/VOCEmissionMod.F90 ------- Add PFT indices
+ M  models/lnd/clm/src/biogeochem/CNVegStructUpdateMod.F90 - Add PFT indices
+ M  models/lnd/clm/src/main/organicFileMod.F90 ------------- SCAM fix (from jet)
+ M  models/lnd/clm/src/main/ncdio.F90 ---------------------- Break up long lines
+ M  models/lnd/clm/src/main/pftdynMod.F90 ------------------ Break up long lines, add 
+                                                             noveg, nbrdlf_evr_shrub
+ M  models/lnd/clm/src/main/clm_atmlnd.F90 ----------------- C13 bug fix for number of fields
+                                                             (found by Jon Wolfe)
+ M  models/lnd/clm/src/main/pftvarcon.F90 ------------------ Add PFT indices, make sure
+                                                             pftnames from pftcon file is
+                                                             as expected.
+ M  models/lnd/clm/src/biogeophys/UrbanInputMod.F90 -------- SCAM fix (from jet)
+
+Summary of testing:
+
+  bluefire: All FAIL except...
+008 smB91 TSMruncase.sh .........................................................................PASS
+053 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................PASS
+  bluefire/CCSM testing: All PASS
+PASS  ERS_D.f45_g35.I_2000.bluefire
+PASS  PET.f45_g35.I_1850.bluefire.cpl
+PASS  PET.f45_g35.I_1850.bluefire.atm
+PASS  PET.f45_g35.I_1850.bluefire.lnd
+PASS  PET.f45_g35.I_1850.bluefire.ice
+PASS  PET.f45_g35.I_1850.bluefire.ocn
+PASS  PET.f45_g35.I_1850.bluefire.glc
+PASS  ERS.f19_g16.I_1850.bluefire
+PASS  ERS.f19_g16.I_1850-2000.bluefire
+PASS  ERB.f09_g16.I_1948_2004.bluefire
+PASS  ERB.f09_g16.I1850SPINUPCN.bluefire.001802
+PASS  ERH_D.f10_f10.I_1850_CN.bluefire
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_43
+
+Changes answers relative to baseline: No -- bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_43
 Originator(s):  erik (erik)
 Date: Wed Jun 10 11:41:57 MDT 2009
@@ -35,6 +202,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   966 (Hybrid restart problem on bluefire)
                                   971 (abort on lahey with MPI)
                                   972 (abort on intel with MPI)
+                                  991 (C13 nfields cause model to blowup on jaguar)
 
     http://bugs.cgd.ucar.edu/
 

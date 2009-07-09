@@ -22,6 +22,7 @@ CLM_SEQCCSMROOT -------- Root directory of external CAM Sequential CCSM source c
 CLM_FC ----------------- Use given compiler (only setup to use on bangkok to use PGI compiler instead of Lahey)
 CLM_JOBID -------------- Job identification number to use (rather than process ID)
 CLM_THREADS ------------ Number of open-MP threads to use (by default this is set differently by machine)
+CLM_SOFF --------------- If set to TRUE -- stop on first failed test
 
 Important files:
 

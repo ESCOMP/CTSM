@@ -2346,9 +2346,12 @@ contains
 				p = cptr%pfti(c) + pi - 1
 
 				! fine root litter carbon fluxes
-				cptr%ccf%dwt_frootc_to_litr1c(c) = cptr%ccf%dwt_frootc_to_litr1c(c) + (dwt_frootc_to_litter(p)*pftcon%fr_flab(pptr%itype(p)))/dt
-				cptr%ccf%dwt_frootc_to_litr2c(c) = cptr%ccf%dwt_frootc_to_litr2c(c) + (dwt_frootc_to_litter(p)*pftcon%fr_fcel(pptr%itype(p)))/dt
-				cptr%ccf%dwt_frootc_to_litr3c(c) = cptr%ccf%dwt_frootc_to_litr3c(c) + (dwt_frootc_to_litter(p)*pftcon%fr_flig(pptr%itype(p)))/dt
+				cptr%ccf%dwt_frootc_to_litr1c(c) = cptr%ccf%dwt_frootc_to_litr1c(c) + &
+                                                            (dwt_frootc_to_litter(p)*pftcon%fr_flab(pptr%itype(p)))/dt
+				cptr%ccf%dwt_frootc_to_litr2c(c) = cptr%ccf%dwt_frootc_to_litr2c(c) + &
+                                                            (dwt_frootc_to_litter(p)*pftcon%fr_fcel(pptr%itype(p)))/dt
+				cptr%ccf%dwt_frootc_to_litr3c(c) = cptr%ccf%dwt_frootc_to_litr3c(c) + &
+                                                            (dwt_frootc_to_litter(p)*pftcon%fr_flig(pptr%itype(p)))/dt
 
 #if (defined C13)
 				! fine root litter C13 fluxes
@@ -2361,23 +2364,32 @@ contains
 #endif
 
 				! fine root litter nitrogen fluxes
-				cptr%cnf%dwt_frootn_to_litr1n(c) = cptr%cnf%dwt_frootn_to_litr1n(c) + (dwt_frootn_to_litter(p)*pftcon%fr_flab(pptr%itype(p)))/dt
-				cptr%cnf%dwt_frootn_to_litr2n(c) = cptr%cnf%dwt_frootn_to_litr2n(c) + (dwt_frootn_to_litter(p)*pftcon%fr_fcel(pptr%itype(p)))/dt
-				cptr%cnf%dwt_frootn_to_litr3n(c) = cptr%cnf%dwt_frootn_to_litr3n(c) + (dwt_frootn_to_litter(p)*pftcon%fr_flig(pptr%itype(p)))/dt
+				cptr%cnf%dwt_frootn_to_litr1n(c) = cptr%cnf%dwt_frootn_to_litr1n(c) + &
+                                                            (dwt_frootn_to_litter(p)*pftcon%fr_flab(pptr%itype(p)))/dt
+				cptr%cnf%dwt_frootn_to_litr2n(c) = cptr%cnf%dwt_frootn_to_litr2n(c) + &
+                                                            (dwt_frootn_to_litter(p)*pftcon%fr_fcel(pptr%itype(p)))/dt
+				cptr%cnf%dwt_frootn_to_litr3n(c) = cptr%cnf%dwt_frootn_to_litr3n(c) + &
+                                                            (dwt_frootn_to_litter(p)*pftcon%fr_flig(pptr%itype(p)))/dt
 
 				! livecroot fluxes to cwd
-				cptr%ccf%dwt_livecrootc_to_cwdc(c) = cptr%ccf%dwt_livecrootc_to_cwdc(c) + (dwt_livecrootc_to_litter(p))/dt
+				cptr%ccf%dwt_livecrootc_to_cwdc(c) = cptr%ccf%dwt_livecrootc_to_cwdc(c) + &
+                                                            (dwt_livecrootc_to_litter(p))/dt
 #if (defined C13)
-				cptr%cc13f%dwt_livecrootc_to_cwdc(c) = cptr%cc13f%dwt_livecrootc_to_cwdc(c) + (dwt_livecrootc13_to_litter(p))/dt
+				cptr%cc13f%dwt_livecrootc_to_cwdc(c) = cptr%cc13f%dwt_livecrootc_to_cwdc(c) + &
+                                                            (dwt_livecrootc13_to_litter(p))/dt
 #endif
-				cptr%cnf%dwt_livecrootn_to_cwdn(c) = cptr%cnf%dwt_livecrootn_to_cwdn(c) + (dwt_livecrootn_to_litter(p))/dt
+				cptr%cnf%dwt_livecrootn_to_cwdn(c) = cptr%cnf%dwt_livecrootn_to_cwdn(c) + &
+                                                            (dwt_livecrootn_to_litter(p))/dt
 
 				! deadcroot fluxes to cwd
-				cptr%ccf%dwt_deadcrootc_to_cwdc(c) = cptr%ccf%dwt_deadcrootc_to_cwdc(c) + (dwt_deadcrootc_to_litter(p))/dt
+				cptr%ccf%dwt_deadcrootc_to_cwdc(c) = cptr%ccf%dwt_deadcrootc_to_cwdc(c) + &
+                                                            (dwt_deadcrootc_to_litter(p))/dt
 #if (defined C13)
-				cptr%cc13f%dwt_deadcrootc_to_cwdc(c) = cptr%cc13f%dwt_deadcrootc_to_cwdc(c) + (dwt_deadcrootc13_to_litter(p))/dt
+				cptr%cc13f%dwt_deadcrootc_to_cwdc(c) = cptr%cc13f%dwt_deadcrootc_to_cwdc(c) + &
+                                                            (dwt_deadcrootc13_to_litter(p))/dt
 #endif
-				cptr%cnf%dwt_deadcrootn_to_cwdn(c) = cptr%cnf%dwt_deadcrootn_to_cwdn(c) + (dwt_deadcrootn_to_litter(p))/dt
+				cptr%cnf%dwt_deadcrootn_to_cwdn(c) = cptr%cnf%dwt_deadcrootn_to_cwdn(c) + &
+                                                            (dwt_deadcrootn_to_litter(p))/dt
 			end if
 		end do
 	end do
@@ -2463,6 +2475,7 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
+   use pftvarcon, only : noveg, nbrdlf_evr_shrub
 !
 ! !ARGUMENTS:
    implicit none
@@ -2682,7 +2695,7 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
       ! If this is a tree pft, then
       ! get the annual harvest "mortality" rate (am) from harvest array
       ! and convert to rate per second
-      if (ivt(p) > 0 .and. ivt(p) < 9) then
+      if (ivt(p) > noveg .and. ivt(p) < nbrdlf_evr_shrub) then
 
          if (do_harvest) then
             am = harvest(g)

@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on bangkok, calgary, breeze, lightning, bluefire, jaguar, kraken: 
+# usage on calgary, breeze, lightning, bluefire, jaguar, kraken: 
 # ./test_driver.sh
 #
 # valid arguments: 
@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta17"
+seqccsm_vers="ccsm4_0_beta18"
 
 hostname=`hostname`
 case $hostname in
@@ -57,16 +57,21 @@ if [ -n "\$LSB_JOBID" ]; then   #batch job
     export JOBID=\${LSB_JOBID}
     initdir=\${LS_SUBCWD}
     interactive="NO"
+    input_file="tests_pretag_bluefire"
+    c_threads=2
+    r_threads=4
 else
     interactive="YES"
     export LSB_MCPU_HOSTS="\$hostname 8"
+    input_file="tests_pretag_bluefire_nompi"
+    r_threads=16
 fi
 
 ##omp threads
 if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=2
+   export CLM_THREADS=$c_threads
 fi
-export CLM_RESTART_THREADS=4
+export CLM_RESTART_THREADS=$r_threads
 
 ##mpi tasks
 export CLM_TASKS=96
@@ -94,7 +99,6 @@ export CPRNC_EXE="\$newcprnc"
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 echo_arg=""
-input_file="tests_pretag_bluefire"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -134,9 +138,11 @@ if [ -n "\$LSB_JOBID" ]; then   #batch job
     export JOBID=\${LSB_JOBID}
     initdir=\${LS_SUBCWD}
     interactive="NO"
+    input_file="tests_posttag_lightning"
 else
     interactive="YES"
     export LSB_MCPU_HOSTS="\$hostname 8"
+    input_file="tests_posttag_lightning_nompi"
 fi
 
 ##omp threads
@@ -152,10 +158,6 @@ export CLM_RESTART_TASKS=31
 export CLM_COMPSET="I"
 
 if [ "\$CLM_FC" = "ifort" ]; then
-   module purge
-   module load intel.10.1.008
-   module list
-
    netcdf=/contrib/2.6/netcdf/3.6.2-intel-10.1.008-64
    export INC_NETCDF=\$netcdf/include
    export LIB_NETCDF=\$netcdf/lib
@@ -187,7 +189,6 @@ export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
-input_file="tests_posttag_lightning"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -236,9 +237,9 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##bangkok,calgary
-    ba* | b0* | ca* | c0* ) 
-    submit_script="test_driver_bangkok_${cur_time}.sh"
+    ##calgary
+    ca* | c0* ) 
+    submit_script="test_driver_calgary_${cur_time}.sh"
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -311,7 +312,7 @@ export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
 export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
-input_file="tests_pretag_bangkok"
+input_file="tests_pretag_calgary"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -350,11 +351,12 @@ fi
 echo_arg="-e"
 if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
     interactive="NO"
+    input_file="tests_pretag_jaguar"
 else
     interactive="YES"
+    input_file="tests_pretag_jaguar_nompi"
 fi
 
-input_file="tests_pretag_jaguar"
 
 ##omp threads
 if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
@@ -823,7 +825,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on bangkok, bluefire, lightning, jaguar, kraken: "
+    echo "usage on calgary, bluefire, lightning, jaguar, kraken: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
@@ -851,8 +853,8 @@ case $hostname in
     ##lightning
     ln* )  bsub < ${submit_script};;
 
-    ##bangkok,calgary
-    ba* | b0* | ca* | c0* )  qsub ${submit_script};;
+    ##calgary
+    ca* | c0* )  qsub ${submit_script};;
 
     ##jaguar
     jaguar* )  qsub ${submit_script};;

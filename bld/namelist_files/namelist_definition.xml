@@ -1059,7 +1059,8 @@ End of year to cycle datm data through
 </entry>
 
 <entry id="sim_year" type="char*9" category="default_settings"
-       group="default_settings" valid_values="1000,1000-1002,1000-1004,1850,2000,1850-2000">
+       group="default_settings" valid_values=
+"1000,1000-1002,1000-1004,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1985,1995,2000,2005,1850-2000">
 Year to simulate datasets for (such as surface datasets, initial conditions, dynamic PFT, aerosol-deposition, Nitrogen deposition rates etc.)
 A sim_year near 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
 </entry> 

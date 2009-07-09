@@ -95,12 +95,8 @@ contains
 
        count(1) = lsmlon
        count(2) = lsmlat
-       if (single_column) then
-          call endrun('forganicrd: not implemented for SCAM' )
-       else
-          start(1) = 1
-          start(2) = 1
-       end if
+       start(1) = 1
+       start(2) = 1
        start(3) = 1
        count(3) = 1
 
@@ -114,8 +110,10 @@ contains
           call check_ret(nf_open(locfn, 0, ncid), subname)
 	  write(iulog,*) subname,trim(forganic)
           write(iulog,*) "  Expected dimensions: lsmlon=",lsmlon," lsmlat=",lsmlat
-          call check_dim(ncid, 'lsmlon' , lsmlon)
-          call check_dim(ncid, 'lsmlat' , lsmlat)
+          if (.not.single_column) then
+             call check_dim(ncid, 'lsmlon' , lsmlon)
+             call check_dim(ncid, 'lsmlat' , lsmlat)
+	  endif 
        endif 
 
        allocate(arrayl(begg:endg))

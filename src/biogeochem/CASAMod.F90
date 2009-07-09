@@ -283,6 +283,7 @@ contains
     use clm_varpar   , only : lsmlon, lsmlat, max_pft_per_gcell
     use spmdMod      , only : masterproc
     use clm_time_manager , only : get_step_size
+    use pftvarcon    , only : noveg, nc3_nonarctic_grass
 !
 ! !ARGUMENTS:
     implicit none
@@ -642,8 +643,8 @@ contains
              if (pi <= npfts(g)) then
                 p = pfti(g) + pi - 1
                 sumwts(g) = sumwts(g) + wtgcell(p)
-                if (ivt(p) > 0) vege_wts(g) = vege_wts(g) + wtgcell(p)
-                if (ivt(p) > 0 .and. ivt(p) < 13) wood_wts(g) = wood_wts(g) + wtgcell(p)
+                if (ivt(p) > noveg) vege_wts(g) = vege_wts(g) + wtgcell(p)
+                if (ivt(p) > noveg .and. ivt(p) < nc3_nonarctic_grass ) wood_wts(g) = wood_wts(g) + wtgcell(p)
              end if
           end do
        end do
@@ -652,13 +653,13 @@ contains
 !cdir nodep
        do p = begp,endp
           g = pgridcell(p)
-          if (ivt(p) > 0 .and. vege_wts(g) > 0._r8) then
+          if (ivt(p) > noveg .and. vege_wts(g) > 0._r8) then
              !vege_scale(p) = sumwts(g) / vege_wts(g)
              vege_scale(p) = 1._r8
           else
              vege_scale(p) = 0._r8
           end if
-          if (ivt(p) > 0 .and. ivt(p) < 13 .and. vege_wts(g) > 0._r8) then
+          if (ivt(p) > noveg .and. ivt(p) < nc3_nonarctic_grass .and. vege_wts(g) > 0._r8) then
              !wood_scale(p) = sumwts(g) / wood_wts(g)
              wood_scale(p) = 1._r8
           else

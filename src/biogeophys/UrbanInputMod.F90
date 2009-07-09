@@ -77,7 +77,7 @@ contains
 !
 ! !USES:
     use clm_varpar, only : lsmlon, lsmlat, numrad, nlevurb, numsolar
-    use clm_varctl, only : iulog, fsurdat
+    use clm_varctl, only : iulog, fsurdat, single_column
     use fileutils , only : getavu, relavu, getfil, opnfil
     use spmdMod   , only : masterproc
     use ncdio     , only : ncd_iolocal, check_dim, check_ret
@@ -163,8 +163,10 @@ contains
           call check_ret(nf_open(locfn, 0, ncid), subname)
           write(iulog,*) subname,trim(fsurdat)
           write(iulog,*) " Expected dimensions: lsmlon=",lsmlon," lsmlat=",lsmlat
-          call check_dim(ncid, 'lsmlon', lsmlon)
-          call check_dim(ncid, 'lsmlon', lsmlon)
+          if (.not. single_column) then
+             call check_dim(ncid, 'lsmlon', lsmlon)
+             call check_dim(ncid, 'lsmlon', lsmlon)
+          end if 
 
           call check_ret(nf_inq_dimid(ncid, 'nlevurb', dimid), subname)
           call check_ret(nf_inq_dimlen(ncid, dimid, nlevurb_i), subname)

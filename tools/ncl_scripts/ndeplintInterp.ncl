@@ -1,5 +1,6 @@
 ;
-; Linearly interpolate between 1850 and 2000 to create a ndepdyn file.
+; Linearly interpolate nitrogen deposition between 1850 and 2000 from
+; decadal averages to create a ndepdyn file.
 ;
 ; Erik Kluzek
 ; April/30/2009
@@ -35,7 +36,7 @@ begin
    ; Use resolution to get input filenames and open them
    ;
    filetype  = "fndepdat";
-   sim_years = (/ 1850, 2000 /);
+   sim_years = (/ 1850, 1855, 1865, 1875, 1885, 1895, 1905, 1915, 1925, 1935, 1945, 1955, 1965, 1975, 1985, 1995, 2000, 2005 /);
    nfiles    = dimsizes(sim_years)
    nc        = new( (/ nfiles /), "file"   );
    filenames = new( (/ nfiles /), "string" );
@@ -146,7 +147,7 @@ begin
    ;
    ; Year after last and last year is just from last file
    ;
-   print( "Copy last year to last year and also year after first year" );
+   print( "Copy last year to last year and also year after last year as well as first year to first and year before first" );
    ncyn = nc(nfiles-1);
    nco->NDEP_year(nyears-2,:,:)     = (/ ncyn->NDEP_year(:,:) /);
    nco->NDEP_AER_year(nyears-2,:,:) = (/ ncyn->NDEP_AER_year(:,:) /);
@@ -161,14 +162,15 @@ begin
    n    = 2;
    ncy0 = nc(0);
    ncy1 = nc(1);
-   print( sim_years(0)+" avg(NDEP)="+avg(ncy0->NDEP_year(:,:)) );
-   print( sim_years(1)+" avg(NDEP)="+avg(ncy1->NDEP_year(:,:)) );
+   print( "low bound year="+sim_years(0)+"      avg(NDEP)="+avg(ncy0->NDEP_year(:,:)) );
+   print( "hi  bound year="+sim_years(1)+"      avg(NDEP)="+avg(ncy1->NDEP_year(:,:)) );
    do year = sim_years(0)+1, sim_years(nfiles-1)-1
       if ( year .gt. sim_years(yr+1) ) then
          yr = yr + 1;
          ncy0 = nc(yr);
          ncy1 = nc(yr+1);
-         print( sim_years(yr)+" avg(NDEP)="+avg(ncy1->NDEP_year(:,:)) );
+         print( "low bound year="+sim_years(yr)+"      avg(NDEP)="+avg(ncy0->NDEP_year(:,:)) );
+         print( "hi  bound year="+sim_years(yr+1)+"      avg(NDEP)="+avg(ncy1->NDEP_year(:,:)) );
       end if
 
       t1                        = int2flt(year-sim_years(yr))/int2flt(sim_years(yr+1)-sim_years(yr));

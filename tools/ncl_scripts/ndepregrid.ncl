@@ -171,10 +171,12 @@ begin
      print( "Area-out: "+sum(areao) );
      exit
   end if
+  sumearth = sum( doubletofloat( (/ ncgi->AREA /) ) );
   ;
   ; loop over variables
   ;
-  Cyclic = True;
+  Cyclic = abs(sumarea - sumearth) .lt. 1.e-5;
+
   do i = 0, dimsizes( vars )-1
 
      vardimnames = getfilevardims( nc, vars(i) );

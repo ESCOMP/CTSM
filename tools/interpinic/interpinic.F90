@@ -431,7 +431,11 @@ contains
           end if
        ! For RTM variables
        else if ( (dimids(2) == dimidrtmlat) .and. (dimids(1) == dimidrtmlon) )then
-          if ( index(varname,"RTM_VOLR_LIQ" ) /= 1 .and. index(varname,"RTM_VOLR_ICE" ) /= 1 ) cycle  ! If anything BUT RTM_VOLR_LIQ/ICE -- go to next variable
+          ! Only copy the liquid water in, leave ice alone. This seems to solve problems
+          ! where the ocean blows up for negative ice flow.
+          ! An alternative solution that has not been tested, yet, eliminates both "if ( index..." lines
+          ! so that all RTM variables get mapped from the input to the output file. (slevis)
+          if ( index(varname,"RTM_VOLR_LIQ" ) /= 1 ) cycle  ! If anything BUT RTM_VOLR_LIQ -- go to next variable
           ret = nf90_inq_varid(ncidi, varname, varid)
           if (ret/=NF90_NOERR) call handle_error (ret)
           ret = nf90_get_var(ncidi, varid, volr)

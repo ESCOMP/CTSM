@@ -18,8 +18,8 @@ set cfgdir = $CASEBUILD/clmconf
 set config = $cfgdir/config_cache.xml
 cd $cfgdir
 
-$CODEROOT/lnd/clm*/bld/configure -spmd -mode ext_ccsm_seq -clm_bld $cfgdir \
-         -usr_src $CASEROOT/SourceMods/src.clm $CLM_CONFIG_OPTS || exit -1 
+set config_opts = "-spmd -mode ext_ccsm_seq $CLM_CONFIG_OPTS -comp_intf $COMP_INTERFACE "
+$CODEROOT/lnd/clm*/bld/configure -clm_bld $cfgdir -usr_src $CASEROOT/SourceMods/src.clm $config_opts || exit -1 
 
 #--------------------------------------------------------------------
 # Invoke build-namelist

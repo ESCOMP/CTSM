@@ -78,6 +78,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 <finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="00930101" ic_tod="0" sim_year="1850">lnd/clm2/initdata/clmi.BCN_0093-01-01_1.9x2.5_gx1v6_simyr1850_c090527.nc
 </finidat>
+<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="19510101" ic_tod="0" sim_year="1850">lnd/clm2/initdata/clmi.IQCN.1951-01-01_0.9x1.25_gx1v6_simyr1850_c090610.nc
+</finidat>
 
 <!-- Initial files interpolated to given resolution without BGC and for both Jan and Sep -->
 
@@ -117,17 +119,20 @@ lnd/clm2/surfdata/surfdata_0.23x0.31_urb3den_simyr2000_c090422.nc</fsurdat>
 <fsurdat hgrid="0.47x0.63" sim_year="2000" >
 lnd/clm2/surfdata/surfdata_0.47x0.63_urb3den_simyr2000_c090421.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="2000" >
-lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr2000_c090530.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr2000_c090705.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" >
-lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr2000_c090529.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr2000_c090705.nc</fsurdat>
 <fsurdat hgrid="2x2.5"     sim_year="2000" >
 lnd/clm2/surfdata/surfdata_2x2.5_urb3den_simyr2000_c090421.nc</fsurdat>
 <fsurdat hgrid="2.65x3.33" sim_year="2000" >
 lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr2000_c090421.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="2000" >
 lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090421.nc</fsurdat>
+
+<!-- BEGIN: Use 1850 for 2000 conditions just to get the test to work as the 2000 file was incorrect -->
 <fsurdat hgrid="10x15"     sim_year="2000" >
-lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr2000_c090529.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr1850_c090529.nc</fsurdat>
+<!-- END: Use 1850 for 2000 conditions just to get the test to work as the 2000 file was incorrect -->
  
 <fsurdat hgrid="5x5_amazon"    sim_year="2000" >
 lnd/clm2/surfdata/surfdata_5x5_amazon_urb3den_simyr2000_c090421.nc</fsurdat>
@@ -167,9 +172,9 @@ lnd/clm2/surfdata/surfdata_0.23x0.31_urb3den_simyr1850_c090422.nc</fsurdat>
 <fsurdat hgrid="0.47x0.63" sim_year="1850" >
 lnd/clm2/surfdata/surfdata_0.47x0.63_urb3den_simyr1850_c090421.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="1850" >
-lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr1850_c090530.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr1850_c090702.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="1850" >
-lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr1850_c090529.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_1.9x2.5_urb3den_simyr1850_c090705.nc</fsurdat>
 <fsurdat hgrid="2.65x3.33" sim_year="1850" >
 lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr1850_c090421.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="1850" >
@@ -179,8 +184,8 @@ lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr1850_c090529.nc</fsurdat>
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 <fpftdyn hgrid="10x15"         sim_year="1000-1002" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_USGS_070307.nc</fpftdyn>
-<fpftdyn hgrid="0.9x1.25"      sim_year="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_simyr1850-2005_c090530.nc</fpftdyn>
-<fpftdyn hgrid="1.9x2.5"       sim_year="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_simyr1850-2005_c090529.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      sim_year="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_simyr1850-2005_c090702.nc</fpftdyn>
+<fpftdyn hgrid="1.9x2.5"       sim_year="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_simyr1850-2005_c090705.nc</fpftdyn>
 <fpftdyn hgrid="10x15"         sim_year="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_simyr1850-2005_c090529.nc</fpftdyn>
 <fpftdyn hgrid="1x1_tropicAtl" sim_year="1000-1004" >lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_tropicAtl_testyr1000-1004_c090421.nc</fpftdyn>
 
@@ -362,6 +367,24 @@ lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr1850_c090529.nc</fsurdat>
 <fndepdat hgrid="10x15"     bgc="cn" sim_year="1850" >lnd/clm2/ndepdata/ndep_clm_simyr1850_10x15_c090529.nc</fndepdat>
 <fndepdat hgrid="64x128"    bgc="cn" sim_year="1850" >lnd/clm2/ndepdata/ndep_clm_1890_64x128_c071221.nc</fndepdat>
 <fndepdat hgrid="48x96"     bgc="cn" sim_year="1850" >lnd/clm2/ndepdata/ndep_clm_1890_48x96_c060414.nc</fndepdat>
+
+<!--CN Nitrogen deposition dataset for a fixed decade for 1.9x2.5 resolution (relative to {csmdata}) -->
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1855" >lnd/clm2/ndepdata/ndep_clm_1850-1859_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1865" >lnd/clm2/ndepdata/ndep_clm_1860-1869_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1875" >lnd/clm2/ndepdata/ndep_clm_1870-1879_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1885" >lnd/clm2/ndepdata/ndep_clm_1880-1889_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1895" >lnd/clm2/ndepdata/ndep_clm_1890-1899_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1905" >lnd/clm2/ndepdata/ndep_clm_1900-1909_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1915" >lnd/clm2/ndepdata/ndep_clm_1910-1919_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1925" >lnd/clm2/ndepdata/ndep_clm_1920-1929_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1935" >lnd/clm2/ndepdata/ndep_clm_1930-1939_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1945" >lnd/clm2/ndepdata/ndep_clm_1940-1949_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1955" >lnd/clm2/ndepdata/ndep_clm_1950-1959_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1965" >lnd/clm2/ndepdata/ndep_clm_1960-1969_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1975" >lnd/clm2/ndepdata/ndep_clm_1970-1979_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1985" >lnd/clm2/ndepdata/ndep_clm_1980-1989_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1995" >lnd/clm2/ndepdata/ndep_clm_1990-1999_1.9x2.5_c090603.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2005" >lnd/clm2/ndepdata/ndep_clm_2000-2009_1.9x2.5_c090603.nc</fndepdat>
 
 <!--CN Nitrogen deposition dataset for a series of years (relative to {csmdata}) -->
 

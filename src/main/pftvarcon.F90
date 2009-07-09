@@ -15,7 +15,7 @@ module pftvarcon
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
-  use clm_varpar
+  use clm_varpar  , only : numpft, numrad, npftpar
   use clm_varctl  , only : iulog
 !
 ! !PUBLIC TYPES:
@@ -26,10 +26,26 @@ module pftvarcon
 !
   character(len=40) pftname(0:numpft) !PFT description
 
-  integer ncorn                  !value for corn
-  integer nwheat                 !value for wheat
-  integer noveg                  !value for not vegetated 
-  integer ntree                  !value for last type of tree
+  integer :: noveg                  !value for not vegetated 
+  integer :: ndllf_evr_tmp_tree     !value for Needleleaf evergreen temperate tree
+  integer :: ndllf_evr_brl_tree     !value for Needleleaf evergreen boreal tree
+  integer :: ndllf_dcd_brl_tree     !value for Needleleaf deciduous boreal tree
+  integer :: nbrdlf_evr_trp_tree    !value for Broadleaf evergreen tropical tree
+  integer :: nbrdlf_evr_tmp_tree    !value for Broadleaf evergreen temperate tree
+  integer :: nbrdlf_dcd_trp_tree    !value for Broadleaf deciduous tropical tree
+  integer :: nbrdlf_dcd_tmp_tree    !value for Broadleaf deciduous temperate tree
+  integer :: nbrdlf_dcd_brl_tree    !value for Broadleaf deciduous boreal tree
+  integer :: nbrdlf_evr_shrub       !value for Broadleaf evergreen shrub
+  integer :: nbrdlf_dcd_tmp_shrub   !value for Broadleaf deciduous temperate shrub
+  integer :: nbrdlf_dcd_brl_shrub   !value for Broadleaf deciduous boreal shrub
+  integer :: nc3_arctic_grass       !value for C3 arctic grass
+  integer :: nc3_nonarctic_grass    !value for C3 non-arctic grass
+  integer :: nc4_grass              !value for C4 grass
+  integer :: ncorn                  !value for corn
+  integer :: nwheat                 !value for wheat
+
+  integer :: ntree                  !value for last type of tree
+
 
   real(r8):: dleaf(0:numpft)       !characteristic leaf dimension (m)
   real(r8):: c3psn(0:numpft)       !photosynthetic pathway: 0. = c4, 1. = c3
@@ -105,6 +121,7 @@ module pftvarcon
 ! !REVISION HISTORY:
 ! Created by Sam Levis (put into module form by Mariana Vertenstein)
 ! 10/21/03, Peter Thornton: Added new variables for CN code
+! 06/24/09, Erik Kluzek: Add indices for all pft types, and add expected_pftnames array and comparision
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -125,7 +142,7 @@ contains
 ! !USES:
     use fileutils , only : opnfil, getfil, relavu, getavu
     use clm_varctl, only : fpftcon
-    use spmdMod   , only : masterproc, mpicom, MPI_REAL8
+    use spmdMod   , only : masterproc, mpicom, MPI_REAL8, MPI_CHARACTER
 !
 ! !ARGUMENTS:
     implicit none
@@ -142,14 +159,36 @@ contains
     character(len=256) :: locfn ! local file name
     integer :: i,n              ! loop indices
     integer :: ier              ! error code
+    !
+    ! Expected PFT names: The names expected on the fpftcon file and the order they are expected to be in.
+    ! NOTE: similar types are assumed to be together, first trees (ending with broadleaf_deciduous_boreal_tree
+    !       then shrubs, ending with broadleaf_deciduous_boreal_shrub, then grasses starting with c3_arctic_grass
+    !       and finally crops, ending with wheat
+    ! DO NOT CHANGE THE ORDER -- WITHOUT MODIFYING OTHER PARTS OF THE CODE WHERE THE ORDER MATTERS!
+    !
+    character(len=*), parameter :: expected_pftnames(1:numpft) = (/ &
+                 'needleleaf_evergreen_temperate_tree', &
+                 'needleleaf_evergreen_boreal_tree   ', &
+                 'needleleaf_deciduous_boreal_tree   ', &
+                 'broadleaf_evergreen_tropical_tree  ', &
+                 'broadleaf_evergreen_temperate_tree ', &
+                 'broadleaf_deciduous_tropical_tree  ', &
+                 'broadleaf_deciduous_temperate_tree ', &
+                 'broadleaf_deciduous_boreal_tree    ', &
+                 'broadleaf_evergreen_shrub          ', &
+                 'broadleaf_deciduous_temperate_shrub', &
+                 'broadleaf_deciduous_boreal_shrub   ', &
+                 'c3_arctic_grass                    ', &
+                 'c3_non-arctic_grass                ', &
+                 'c4_grass                           ', &
+                 'corn                               ', &
+                 'wheat                              '  &
+    /)
 !-----------------------------------------------------------------------
 
     ! Set specific vegetation type values
 
-    ncorn  = 15
-    nwheat = 16
-    ntree  =  8  ! value for last type of tree
-    noveg  =  0  ! value for non-vegetated
+    noveg                =  0  ! value for non-vegetated
 
     ! Assign unit number to file. Get local file.
     ! Open file and read PFT's.
@@ -194,67 +233,94 @@ contains
        call relavu (n)
     end if
 
+    call mpi_bcast (pftname, (numpft+1)*len(pftname(noveg)), MPI_CHARACTER, 0, mpicom, ier)
+    do i = 1, numpft
+       if ( trim(pftname(i)) /= trim(expected_pftnames(i)) )then
+          write(iulog,*)'pftconrd: pftname is NOT what is expected, name = ', &
+                        trim(pftname(i)), ', expected name = ', trim(expected_pftnames(i))
+          call endrun( 'pftconrd: bad name for pft on fpftcon dataset' )
+       end if
+       if ( trim(pftname(i)) == 'needleleaf_evergreen_temperate_tree' ) ndllf_evr_tmp_tree  = i
+       if ( trim(pftname(i)) == 'needleleaf_evergreen_boreal_tree'    ) ndllf_evr_brl_tree  = i
+       if ( trim(pftname(i)) == 'needleleaf_deciduous_boreal_tree'    ) ndllf_dcd_brl_tree  = i
+       if ( trim(pftname(i)) == 'broadleaf_evergreen_tropical_tree'   ) nbrdlf_evr_trp_tree  = i
+       if ( trim(pftname(i)) == 'broadleaf_evergreen_temperate_tree'  ) nbrdlf_evr_tmp_tree  = i
+       if ( trim(pftname(i)) == 'broadleaf_deciduous_tropical_tree'   ) nbrdlf_dcd_trp_tree  = i
+       if ( trim(pftname(i)) == 'broadleaf_deciduous_temperate_tree'  ) nbrdlf_dcd_tmp_tree  = i
+       if ( trim(pftname(i)) == 'broadleaf_deciduous_boreal_tree'     ) nbrdlf_dcd_brl_tree  = i
+       if ( trim(pftname(i)) == 'broadleaf_evergreen_shrub'           ) nbrdlf_evr_shrub     = i
+       if ( trim(pftname(i)) == 'broadleaf_deciduous_temperate_shrub' ) nbrdlf_dcd_tmp_shrub = i
+       if ( trim(pftname(i)) == 'broadleaf_deciduous_boreal_shrub'    ) nbrdlf_dcd_brl_shrub = i
+       if ( trim(pftname(i)) == 'c3_arctic_grass'                     ) nc3_arctic_grass     = i
+       if ( trim(pftname(i)) == 'c3_non-arctic_grass'                 ) nc3_nonarctic_grass  = i
+       if ( trim(pftname(i)) == 'c4_grass'                            ) nc4_grass            = i
+       if ( trim(pftname(i)) == 'corn'                                ) ncorn                = i
+       if ( trim(pftname(i)) == 'wheat'                               ) nwheat               = i
+    end do
+
+    ntree                = nbrdlf_dcd_brl_tree  ! value for last type of tree
+
     ! Set crop explicitly here (in future will be on pft dataset)
 
     if (masterproc) then
-       crop(:)  = 0
-       crop(15) = 1
-       crop(16) = 1
+       crop(:)      = 0
+       crop(ncorn)  = 1
+       crop(nwheat) = 1
     end if
 
     ! Define PFT zero to be bare ground
 
-    pftname(noveg) = 'not_vegetated'
-    z0mr(noveg) = 0._r8
-    displar(noveg) = 0._r8
-    dleaf(noveg) = 0._r8
-    c3psn(noveg) = 1._r8
-    vcmx25(noveg) = 0._r8
-    mp(noveg) = 9._r8
-    qe25(noveg) = 0._r8
-    rhol(noveg,1) = 0._r8
-    rhol(noveg,2) = 0._r8
-    rhos(noveg,1) = 0._r8
-    rhos(noveg,2) = 0._r8
-    taul(noveg,1) = 0._r8
-    taul(noveg,2) = 0._r8
-    taus(noveg,1) = 0._r8
-    taus(noveg,2) = 0._r8
-    xl(noveg) = 0._r8
-    roota_par(noveg) = 0._r8
-    rootb_par(noveg) = 0._r8
-    crop(noveg) = 0._r8
-    smpso(noveg) = 0._r8
-    smpsc(noveg) = 0._r8
-    fnitr(noveg) = 0._r8
-    slatop(noveg) = 0._r8
-    dsladlai(noveg) = 0._r8
-    leafcn(noveg) = 1._r8
-    flnr(noveg) = 0._r8
+    pftname(noveg)      = 'not_vegetated'
+    z0mr(noveg)         = 0._r8
+    displar(noveg)      = 0._r8
+    dleaf(noveg)        = 0._r8
+    c3psn(noveg)        = 1._r8
+    vcmx25(noveg)       = 0._r8
+    mp(noveg)           = 9._r8
+    qe25(noveg)         = 0._r8
+    rhol(noveg,1)       = 0._r8
+    rhol(noveg,2)       = 0._r8
+    rhos(noveg,1)       = 0._r8
+    rhos(noveg,2)       = 0._r8
+    taul(noveg,1)       = 0._r8
+    taul(noveg,2)       = 0._r8
+    taus(noveg,1)       = 0._r8
+    taus(noveg,2)       = 0._r8
+    xl(noveg)           = 0._r8
+    roota_par(noveg)    = 0._r8
+    rootb_par(noveg)    = 0._r8
+    crop(noveg)         = 0._r8
+    smpso(noveg)        = 0._r8
+    smpsc(noveg)        = 0._r8
+    fnitr(noveg)        = 0._r8
+    slatop(noveg)       = 0._r8
+    dsladlai(noveg)     = 0._r8
+    leafcn(noveg)       = 1._r8
+    flnr(noveg)         = 0._r8
     ! begin variables used only for CN code
-    woody(noveg) = 0._r8
-    lflitcn(noveg) = 1._r8
-    frootcn(noveg) = 1._r8
-    livewdcn(noveg) = 1._r8
-    deadwdcn(noveg) = 1._r8
-    froot_leaf(noveg) = 0._r8
-    stem_leaf(noveg) = 0._r8
-    croot_stem(noveg) = 0._r8
-    flivewd(noveg) = 0._r8
-    fcur(noveg) = 0._r8
-    lf_flab(noveg) = 0._r8
-    lf_fcel(noveg) = 0._r8
-    lf_flig(noveg) = 0._r8
-    fr_flab(noveg) = 0._r8
-    fr_fcel(noveg) = 0._r8
-    fr_flig(noveg) = 0._r8
-    dw_fcel(noveg) = 0._r8
-    dw_flig(noveg) = 0._r8
-    leaf_long(noveg) = 0._r8
-    evergreen(noveg) = 0._r8
+    woody(noveg)        = 0._r8
+    lflitcn(noveg)      = 1._r8
+    frootcn(noveg)      = 1._r8
+    livewdcn(noveg)     = 1._r8
+    deadwdcn(noveg)     = 1._r8
+    froot_leaf(noveg)   = 0._r8
+    stem_leaf(noveg)    = 0._r8
+    croot_stem(noveg)   = 0._r8
+    flivewd(noveg)      = 0._r8
+    fcur(noveg)         = 0._r8
+    lf_flab(noveg)      = 0._r8
+    lf_fcel(noveg)      = 0._r8
+    lf_flig(noveg)      = 0._r8
+    fr_flab(noveg)      = 0._r8
+    fr_fcel(noveg)      = 0._r8
+    fr_flig(noveg)      = 0._r8
+    dw_fcel(noveg)      = 0._r8
+    dw_flig(noveg)      = 0._r8
+    leaf_long(noveg)    = 0._r8
+    evergreen(noveg)    = 0._r8
     stress_decid(noveg) = 0._r8
     season_decid(noveg) = 0._r8
-    resist(noveg) = 1._r8
+    resist(noveg)       = 1._r8
     ! end variables used only for CN code
 
     call mpi_bcast (z0mr, size(z0mr), MPI_REAL8, 0, mpicom, ier)

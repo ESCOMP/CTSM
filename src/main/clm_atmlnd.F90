@@ -406,7 +406,10 @@ end subroutine init_lnd2atm_type
   call get_proc_bounds_atm(begg_s, endg_s)
   call get_proc_bounds    (begg_d, endg_d)
 
-  nflds = 23+2*numrad
+  nflds = 22+2*numrad
+#if (defined C13)
+  nflds = nflds + 1
+#endif
 
   ! change nflds based on prognostic aerosol configuration
   ! This if will be removed (so always add 14 fields).....
@@ -417,6 +420,11 @@ end subroutine init_lnd2atm_type
   allocate(asrc(begg_s:endg_s,nflds))
   allocate(adst(begg_d:endg_d,nflds))
 
+  !
+  ! Begin -- fragile code
+  ! Do NOT change anything here unless you are an expert!
+  !
+  ! NOTE: Following code is fragile -- order MUST match order for adst below!
   ix = 0
   ix=ix+1; asrc(:,ix) = a2l_src%forc_t(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_u(:)  
@@ -439,9 +447,6 @@ end subroutine init_lnd2atm_type
   ix=ix+1; asrc(:,ix) = a2l_src%forc_rain(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%forc_snow(:)  
   ix=ix+1; asrc(:,ix) = a2l_src%rainf(:)  
-#if (defined C13)
-  ix=ix+1; asrc(:,ix) = a2l_src%forc_pc13o2(:)  
-#endif
   ix=ix+1; asrc(:,ix) = a2l_src%forc_po2(:)  
   do n = 1,numrad
      ix=ix+1; asrc(:,ix) = a2l_src%forc_solad(:,n)  
@@ -456,12 +461,28 @@ end subroutine init_lnd2atm_type
      enddo
   endif
 
+#if (defined C13)
+  ix=ix+1; asrc(:,ix) = a2l_src%forc_pc13o2(:)  
+#endif
+
+  if ( ix /= nflds )then
+     call endrun( ' clm_mapa2l ERROR: number of atm-grid forcing fields NOT equal to nflds' )
+  end if
+  !
+  ! End-- fragile code
+  !
+
 !-forc_ndep is not recd from atm,don't know why it's in a2l (TCFIX) ---
 !-forc_ndep cannot be updated here, array will be trashed and CN will fail ---
 !  asrc(:,xx) = a2l_src%forc_ndep(:)  
 
   call map_maparrayl(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_a2l)
 
+  !
+  ! Begin -- fragile code
+  ! Do NOT change anything here unless you are an expert!
+  !
+  ! NOTE: Following code is fragile -- order MUST match order for asrc above!
   ix = 0
   ix=ix+1; a2l_dst%forc_t(:)     =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_u(:)     =   adst(:,ix)
@@ -484,9 +505,6 @@ end subroutine init_lnd2atm_type
   ix=ix+1; a2l_dst%forc_rain(:)  =   adst(:,ix)
   ix=ix+1; a2l_dst%forc_snow(:)  =   adst(:,ix)
   ix=ix+1; a2l_dst%rainf(:)      =   adst(:,ix)
-#if (defined C13)
-  ix=ix+1; a2l_dst%forc_pc13o2(:)=   adst(:,ix)
-#endif
   ix=ix+1; a2l_dst%forc_po2(:)   =   adst(:,ix)
   do n = 1,numrad
      ix=ix+1; a2l_dst%forc_solad(:,n)  = adst(:,ix)
@@ -508,6 +526,17 @@ end subroutine init_lnd2atm_type
         endif
      enddo
   endif
+
+#if (defined C13)
+  ix=ix+1; a2l_dst%forc_pc13o2(:)=   adst(:,ix)
+#endif
+
+  if ( ix /= nflds )then
+     call endrun( ' clm_mapa2l ERROR: number of forcing fields NOT equal to nflds' )
+  end if
+  !
+  ! End-- fragile code
+  !
   
   deallocate(asrc)
   deallocate(adst)
@@ -855,6 +884,11 @@ end subroutine clm_mapa2l
   allocate(asrc(begg_s:endg_s,nflds))
   allocate(adst(begg_d:endg_d,nflds))
 
+  !
+  ! Begin -- fragile code
+  ! Do NOT change anything here unless you are an expert!
+  !
+  ! NOTE: Following code is fragile -- order MUST match order for adst below!
   ix = 0
   ix=ix+1; asrc(:,ix) = l2a_src%t_rad(:)  
   ix=ix+1; asrc(:,ix) = l2a_src%t_ref2m(:)  
@@ -881,9 +915,20 @@ end subroutine clm_mapa2l
      ix=ix+1; asrc(:,ix) = l2a_src%flxdst(:,m)  
   end do !m
 #endif
+  if ( ix /= nflds )then
+     call endrun( ' clm_mapa2l ERROR: number of atm-grid l2a forcing fields NOT equal to nflds' )
+  end if
+  !
+  ! End -- fragile code
+  !
 
   call map_maparrayl(begg_s, endg_s, begg_d, endg_d, nflds, asrc, adst, map1dl_l2a)
 
+  !
+  ! Begin -- fragile code
+  ! Do NOT change anything here unless you are an expert!
+  !
+  ! NOTE: Following code is fragile -- order MUST match order for asrc above!
   ix = 0
   ix=ix+1; l2a_dst%t_rad(:)          = adst(:,ix)
   ix=ix+1; l2a_dst%t_ref2m(:)        = adst(:,ix)
@@ -911,6 +956,12 @@ end subroutine clm_mapa2l
      ix=ix+1; l2a_dst%flxdst(:,m)    = adst(:,ix)
   end do !m
 #endif
+  if ( ix /= nflds )then
+     call endrun( ' clm_mapa2l ERROR: number of l2a forcing fields NOT equal to nflds' )
+  end if
+  !
+  ! End -- fragile code
+  !
 
   deallocate(asrc)
   deallocate(adst)

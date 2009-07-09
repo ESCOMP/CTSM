@@ -54,6 +54,9 @@ e.g., cp surfdata_096x144.nc /fs/cgd/csm/inputdata/lnd/clm2/surfdata/surfdata_1.
 FV grid files, although 90+/-0.25 is used for mapping and domain files.  FV Grid files with something other
 than 90 at the poles are incorrect and should not be used.
 
+3.  Grid files should have Longitudes between 0.0 and 360.0 -- so that other files that
+use them will have a grids that are consistent and can be easily regridded etcetera.
+
 Important files:
 
   Makefile ---------------- GNU makefile

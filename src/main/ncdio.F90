@@ -1859,7 +1859,8 @@ contains
        elseif (dim1name == allrof .or. dim1name == gratm) then
           ! continue, acceptable and default behavior for now
        else
-          if (masterproc) write(iulog,*) trim(subname),' warning incorrect use of dim1name and nlonxy/nlatxy ',trim(dim1name),nlonxy,nlatxy
+          if (masterproc) write(iulog,*) trim(subname),' warning incorrect use of dim1name and nlonxy/nlatxy ', &
+                                         trim(dim1name),nlonxy,nlatxy
        endif
     endif
 
@@ -2595,7 +2596,8 @@ contains
        elseif (dim1name == allrof .or. dim1name == gratm) then
           ! continue, acceptable and default behavior for now
        else
-          if (masterproc) write(iulog,*) trim(subname),' warning incorrect use of dim1name and nlonxy/nlatxy ',trim(dim1name),nlonxy,nlatxy
+          if (masterproc) write(iulog,*) trim(subname),' warning incorrect use of dim1name and nlonxy/nlatxy ', &
+                                         trim(dim1name),nlonxy,nlatxy
        endif
     endif
 

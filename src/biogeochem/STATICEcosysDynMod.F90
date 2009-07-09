@@ -110,6 +110,7 @@ contains
 !
 ! !USES:
     use clmtype
+    use pftvarcon, only : noveg, ncorn, nbrdlf_dcd_brl_shrub
 !
 ! !ARGUMENTS:
     implicit none
@@ -208,7 +209,7 @@ contains
 !! can also choose to use default tlai instead of plai - need option
 ! 03/03/11: don't reset lai of crops - use default lsm tlai/elai
 
-          if (ivt(p) > 0 .and. ivt(p) < 15) tlai(p) = plai(p)
+          if (ivt(p) > noveg .and. ivt(p) < ncorn ) tlai(p) = plai(p)
 #endif
 
           ! adjust lai and sai for burying by snow. if exposed lai and sai
@@ -218,7 +219,7 @@ contains
           ! snow burial fraction for short vegetation (e.g. grasses) as in
           ! Wang and Zeng, 2007. 
 
-          if (ivt(p) > 0 .and. ivt(p) <= 11) then
+          if (ivt(p) > noveg .and. ivt(p) <= nbrdlf_dcd_brl_shrub ) then
              ol = min( max(snowdp(c)-hbot(p), 0._r8), htop(p)-hbot(p))
              fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
           else

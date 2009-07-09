@@ -45,7 +45,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_atmlnd   , only: clm_a2l
-   use pftvarcon    , only: noveg
+   use pftvarcon    , only: noveg, ncorn, nwheat, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
    use shr_const_mod, only: SHR_CONST_PI
    use clm_time_manager , only : get_rad_step_size
 !
@@ -189,7 +189,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
           ! alpha are set by PFT, and alpha is scaled to CLM time step by multiplying by
           ! dt and dividing by dtsmonth (seconds in average 30 day month)
           ! tsai_min scaled by 0.5 to match MODIS satellite derived values
-          if (ivt(p) == 15 .or. ivt(p) == 16) then    ! crops (corn, wheat in CLM)
+          if (ivt(p) == ncorn .or. ivt(p) == nwheat ) then    ! crops (corn, wheat in CLM)
              tsai_alpha = 1.0_r8-1.0_r8*dt/dtsmonth
              tsai_min = 0.1_r8
           else
@@ -204,7 +204,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
              ! trees and shrubs
 
              ! if shrubs have a squat taper 
-             if (ivt(p) .ge. 9 .and. ivt(p) .le. 11) then
+             if (ivt(p) >= nbrdlf_evr_shrub .and. ivt(p) <= nbrdlf_dcd_brl_shrub) then
                 taper = 10._r8
              ! otherwise have a tall taper
              else
@@ -254,7 +254,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
       ! snow burial fraction for short vegetation (e.g. grasses) as in
       ! Wang and Zeng, 2007.
-      if (ivt(p) > 0 .and. ivt(p) <= 11) then
+      if (ivt(p) > noveg .and. ivt(p) <= nbrdlf_dcd_brl_shrub ) then
          ol = min( max(snowdp(c)-hbot(p), 0._r8), htop(p)-hbot(p))
          fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
       else

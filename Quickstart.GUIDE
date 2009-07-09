@@ -30,7 +30,7 @@ TRUE
 
    # Make any changes to the namelist
 
-   edit Buildnml_prestage/clm.buildnml_prestage.csh
+   edit Buildconf/clm.buildnml_prestage.csh
 
    # Compile the code
 

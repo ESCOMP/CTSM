@@ -754,12 +754,6 @@ elsif ( $target_os eq 'irix'      or  $target_os eq 'linux'   or
 
 $cfg_cppdefs .= " -DMAXPATCH_PFT=$maxpft";
 
-if ( $clm_mode eq "ccsm_seq" ) {
-    $cfg_cppdefs .= " -DSEQ_MCT";
-}
-if ( $clm_mode eq "ext_ccsm_seq" ) {
-    $cfg_cppdefs .= " -DSEQ_MCT";
-}
 if ( $progsslt eq 'on') { 
     $cfg_cppdefs .= " -DPROGSSLT";
 }
@@ -1295,22 +1289,20 @@ sub write_filepath
     
     # Driver, stub ocean, stub glacier, and stub sea-ice
     if ($mode eq "ccsm_seq") {
-	my @dirs = ( "drv/seq_mct", "drv/seq_mct/driver", "datm7", "socn", "sice", "sglc" );
+	my @dirs = ( "drv/seq_mct", "drv/seq_mct/driver", "atm/datm7", "ocn/socn", 
+                     "ice/sice", "glc/sglc" );
+        if ( $comp_intf eq "MCT" ) { 
+	    push( @dirs, "atm/datm7/cpl_mct" );
+        } elsif ( $comp_intf eq "ESMF" ) { 
+	    push( @dirs, "atm/datm7/cpl_esmf" );
+        } else {
+	    die "** Bad component interface name -- should be MCT or ESMF\n";
+        }
 	foreach my $dir ( @dirs ) {
-	    if ( -d "$srcdir/$dir" ) {
-		print $fh "$srcdir/$dir\n";
-	    } elsif ( -d "$srcdir/../../../$dir" ) {
+	    if ( -d "$srcdir/../../../$dir" ) {
 		print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
-	    } elsif ( -d "$srcdir/../../../atm/$dir" ) {
-		print $fh absolute_path( "$srcdir/../../../atm/$dir" ) . "\n";
-	    } elsif ( -d "$srcdir/../../../ice/$dir" ) {
-		print $fh absolute_path( "$srcdir/../../../ice/$dir" ) . "\n";
-	    } elsif ( -d "$srcdir/../../../ocn/$dir" ) {
-		print $fh absolute_path( "$srcdir/../../../ocn/$dir" ) . "\n";
-	    } elsif ( -d "$srcdir/../../../glc/$dir" ) {
-		print $fh absolute_path( "$srcdir/../../../glc/$dir" ) . "\n";
 	    } else {
-		die "** source directory does not exist: $srcdir/$dir or $srcdir/../../../$dir or $srcdir/../../../atm|ice|ocn/$dir\n";
+		die "** source directory does not exist: $srcdir/../../../$dir\n";
 	    }
 	}
         if ( $buildpio eq "on" ) {
@@ -1327,8 +1319,6 @@ sub write_filepath
 	push( @dirs, "main/cpl_mct" );
     } elsif ( $comp_intf eq "ESMF" ) { 
 	push( @dirs, "main/cpl_esmf" );
-    } else {
-	die "** Bad component interface name -- should be MCT or ESMF\n";
     }
     foreach my $dir ( @dirs ) {
 	if ( -d "$srcdir/$dir" ) {
