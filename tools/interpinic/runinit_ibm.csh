@@ -58,6 +58,7 @@ setenv LIB_NETCDF /usr/local/lib64/r4i4
 set curdir    = `pwd`
 set clmroot   = $curdir/../..
 setenv UTILROOT $clmroot/../../../scripts/ccsm_utils
+set ccsm_mach = "bluefire"
 
 ## ROOT OF CLM DATA DISTRIBUTION
 ## Contains the initial and boundary data for the CLM distribution.
@@ -78,18 +79,10 @@ set cfgdir  = $clmroot/bld
 # Only activated if smp=on above
 setenv OMP_NUM_THREADS 64
 
-## POE Environment.
-## Use batch settings for number of nodes and tasks per node
-setenv MP_EUILIB us
-setenv MP_RMPOOL 1
+## env variables
+set CCSMUSER=$USER
+source $UTILROOT/Machines/env_machopts.$ccsm_mach
 
-setenv MP_STDINMODE 0
-
-## suggestion from Jim Edwards to reintroduce XLSMPOPTS on 11/13/03
-setenv XLSMPOPTS "stack=256000000"
-setenv AIXTHREAD_SCOPE S
-setenv MALLOCMULTIHEAP true
-setenv OMP_DYNAMIC false
 ## Do our best to get sufficient stack memory
 limit stacksize unlimited
 
@@ -135,7 +128,7 @@ foreach bgc ( "none" "cn" )
 
    ## Build (or re-build) executable
    set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust "
-   set flags = "$flags -prog_seasalt $seaslt "
+   set flags = "$flags -prog_seasalt $seaslt -mach $ccsm_mach"
    if ($spmd == on ) set flags = "$flags -spmd"
    if ($spmd == off) set flags = "$flags -nospmd"
    if ($smp  == on ) set flags = "$flags -smp"

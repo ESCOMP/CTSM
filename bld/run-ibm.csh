@@ -52,8 +52,8 @@ set rtm      = on       # settings are [on   | off         ] (default is on)
 ## Run time settings:
 ## May also make changes to namelist in build-namelist section below:
 set res        = 4x5        # settings are [48x96   | 64x128  | 4x5  | 10x15 | 1.9x2.5 etc.      ]
-set mask       = gx3v5      # settings are [default | USGS    | navy | gx3v5 | gx1v6   etc.      ]
-set sim_year   = default    # settings are [default | 1890    | 2000 | 2100                      ]
+set mask       = default    # settings are [default | USGS    | navy | gx3v5 | gx1v6   etc.      ]
+set sim_year   = default    # settings are [default | 1850    | 2000                             ]
 set start_type = arb_ic     # settings are [cold    | arb_ic  | startup | continue | branch      ] (default is arb_ic)
                             # for branch type you need to enter needed files by hand, and make sure they are available
 set runlen     = 2d         # settings are [ integer<sdy> where s=cpling-step, d=days, y=years   ] (default is 2d)
@@ -68,6 +68,9 @@ set cycle_end  = 2004       # Ending   year to cycle through for input atm data
 ## netCDF stuff (MAKE SURE YOU CHANGE THIS -- IF NOT RUNNING AT NCAR)
 setenv INC_NETCDF /usr/local/include
 setenv LIB_NETCDF /usr/local/lib64/r4i4
+
+## CCSM machine name
+set ccsm_mach = bluefire
 
 ## ROOT OF CLM DISTRIBUTION - probably needs to be customized (changed by create_newcase)
 ## Contains the source code for the CLM distribution.
@@ -87,12 +90,14 @@ setenv datm_data_dir /cgd/tss/atm_forcing.datm7.Qian.T62.c080727  # (MAKE SURE Y
 ## $rundir  is the directory where the model will be run.
 ## $cfgdir  is the directory containing the CLM configuration scripts.
 ## $casdir  is the directory this script is found in.
+## $macdir  is the directory the ccsm machines files are found in
 set case    = clmrun                  # changed by create_newcase
 set wrkdir  = /ptmp/$LOGNAME          # changed by create_newcase
 set blddir  = $wrkdir/$case/bld
 set rundir  = $wrkdir/$case
 set cfgdir  = $clmroot/bld
 set casdir  = $clmroot/bld            # changed by create_newcase
+set macdir  = $clmroot/../../../scripts/ccsm_utils/Machines
 
 # Number of threads to use:
 #
@@ -103,24 +108,14 @@ setenv OMP_NUM_THREADS 32
 #=================== END OF THINGS MOST COMONLY CHANGED ====================
 #===========================================================================
 
+## Invoke ccsm machine vars
+source $macdir/env_machopts.$ccsm_mach
 
-## POE Environment.
-## Use batch settings for number of nodes and tasks per node
-setenv MP_EUILIB us
-setenv MP_RMPOOL 1
-
-setenv MP_STDINMODE 0
-
-## suggestion from Jim Edwards to reintroduce XLSMPOPTS on 11/13/03
-setenv XLSMPOPTS "stack=256000000"
-setenv AIXTHREAD_SCOPE S
-setenv MALLOCMULTIHEAP true
-setenv OMP_DYNAMIC false
 ## Do our best to get sufficient stack memory
 limit stacksize unlimited
 
 echo "This script is deprecated."
-echo "NOTE: FOR PRODUCTION RUNS -- USE THE create_newcase SCRIPT in ../../../../scripts!!!"
+echo "NOTE: FOR PRODUCTION RUNS -- USE THE create_newcase SCRIPT in ../../../../scripts\!\!\!"
 
 
 ## Ensure that run and build directories exist
@@ -130,6 +125,7 @@ mkdir -p $blddir                    || echo "cannot create $blddir"        && ex
 
 ## Build (or re-build) executable
 set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust "
+set flags = "$flags -mach $ccsm_mach"
 if ($spmd == on ) set flags = "$flags -spmd"
 if ($spmd == off) set flags = "$flags -nospmd"
 if ($smp  == on ) set flags = "$flags -smp"
@@ -198,7 +194,7 @@ else if ($spmd == on) then
 else
   set launch = ""
 endif
-if ( ! -f $launch ) set launch = ""
+if ( ! -f "$launch" ) set launch = ""
 
 if ($spmd == on) then
 

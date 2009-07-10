@@ -78,8 +78,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 <finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="00930101" ic_tod="0" sim_year="1850">lnd/clm2/initdata/clmi.BCN_0093-01-01_1.9x2.5_gx1v6_simyr1850_c090527.nc
 </finidat>
-<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="19510101" ic_tod="0" sim_year="1850">lnd/clm2/initdata/clmi.IQCN.1951-01-01_0.9x1.25_gx1v6_simyr1850_c090610.nc
-</finidat>
 
 <!-- Initial files interpolated to given resolution without BGC and for both Jan and Sep -->
 

@@ -1,6 +1,6 @@
 scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_090707b
 models/drv/seq_mct            https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/branch_tags/vocemis-drydep_drvseq2_0_33_tags/vocemis-drydep11_drvseq3_0_23
-models/atm/datm7              https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm7_090708
+models/atm/datm7              https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm7_090709
 models/ocn/socn               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_1_01/socn
 models/ice/sice               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_1_01/sice
 models/glc/sglc               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_1_01/sglc

@@ -287,7 +287,7 @@ blH11 TBL.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v5@2000 48    
 cbH12 TCB.sh 17p_cnnsc_dm
 
 smH12 TSM.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 48x96 gx3v5@2000 96    cold
-erH12 TER.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 48x96 gx3v5@2000 10+38 col-1004d
+erH12 TER.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 48x96 gx3v5@2000 10+38 cold
 brH12 TBR.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 48x96 gx3v5@2000 72+72 cold
 blH12 TBL.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 48x96 gx3v5@2000 48    cold
 

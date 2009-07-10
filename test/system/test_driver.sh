@@ -64,14 +64,15 @@ else
     interactive="YES"
     export LSB_MCPU_HOSTS="\$hostname 8"
     input_file="tests_pretag_bluefire_nompi"
-    r_threads=16
+    c_threads=32
+    r_threads=64
 fi
 
 ##omp threads
 if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=$c_threads
+   export CLM_THREADS=\$c_threads
 fi
-export CLM_RESTART_THREADS=$r_threads
+export CLM_RESTART_THREADS=\$r_threads
 
 ##mpi tasks
 export CLM_TASKS=96
