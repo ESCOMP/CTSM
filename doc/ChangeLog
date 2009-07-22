@@ -1,4 +1,246 @@
 ===============================================================
+Tag name:  clm3_6_46
+Originator(s):  erik (erik)
+Date: Wed Jul 22 15:50:43 MDT 2009
+One-line Summary: Get more tests to work/document them, add use cases for 1850_control, 
+       2000_control, and 20thC_transient, straighten out single-point grids, Listen to 
+       LND_CDF64 env variable from template, remove CLM_ARB_IC.
+
+Purpose of changes:
+
+Work with build-namelist to make 20th-Century a use-case so that ndepdyn files will be
+included if found, but can still work without them (20thC_transient, 2000_control, and
+1850_control use cases). Fix more bugs and tests, report on testing status for each
+machine. Add files needed for 1.9x2.5_tx1v1 grid and new 10x15 surface dataset. Reconcile
+grids for single-point datasets so consistent (lon within 0-360 rather than -180-180).
+Get new single-point datasets for aerosol and nitrogen-deposition. Work with
+pftdyntest2raw.ncl so will work. Work with mksurfdata.pl script so will append needed
+grid data on urban point datasets. Add in CLM1PT mode for datm7 and use datm7 streams
+template for testing. Listen to LND_CDF64 env variable from template, remove CLM_ARB_IC.
+
+Bugs fixed (include bugzilla ID): 1002 (remove CLM_ARB_IC)
+
+Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
+                                  698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+                                  966 (Hybrid restart problem on bluefire)
+                                  971 (abort on lahey with MPI)
+                                  972 (abort on intel with MPI)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1007 (interpinic error with Linux/lahey)
+
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: 
+
+     Add CLM1PT option to DATM_MODE in env_conf.xml
+
+Describe any changes made to the namelist: 
+
+     New use-cases for:
+                2000_control
+                1850_control
+                20thC_transient
+
+List any changes to the defaults for the boundary datasets: 
+    1.9x2.5_tx1v1 datasets, new single-point/regional datasets, new 10x15 surface dataset
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, datm7, pio
+
+scripts to scripts4_090720
+datm7   to datm7_090721
+pio     to pio51_prod
+
+List all files eliminated:
+
+D   models/lnd/clm/bld/namelist_files/streams.txt.readme ------- Use datm7 version
+D   models/lnd/clm/bld/namelist_files/datm.streams.template.xml- Use datm7 version
+D   models/lnd/clm/test/system/nl_files/clm_organic ------------ organic files included anyway
+
+List all files added and what they do:
+
+>>>>>>>>>>>> Add new use cases
+A   models/lnd/clm/bld/namelist_files/use_cases/2000_control.xml ---- 2000 control
+A   models/lnd/clm/bld/namelist_files/use_cases/20thC_transient.xml - 20th Century transient
+A   models/lnd/clm/bld/namelist_files/use_cases/1850_control.xml ---- 1850 control
+A   models/lnd/clm/bld/namelist_files/use_cases/2000_control.xml ---- 2000 control
+
+>>>>>>>>>>>> Add regression tests list for without MPI
+A   models/lnd/clm/test/system/tests_posttag_nompi_regression ------- no mpi tests
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>>>>> Get more tests working, or at least closer to working
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>> models/lnd/clm/test/system	      directory changes
+M   TCB.sh -------------------------------- Put -mach arg here
+M   tests_pretag_bluefire ----------------- Change some hybrid tests to MPI
+M   config_files/ext_ccsm_seq_10x15_dh ---- Set cice decomp / remove silent mode
+M   config_files/ext_ccsm_seq_4x5_dh ------ Set cice decomp / remove silent mode
+M   config_files/ext_ccsm_seq_1.9x2.5_dh -- Set cice decomp / remove silent mode
+M   config_files/ext_ccsm_seq_64x128_s ---- Set cice decomp / remove silent mode
+M   config_files/ext_ccsm_seq_0.9x1.25_dh - Set cice decomp / remove silent mode
+M   test_driver.sh ------------------------ Set threads/tasks, move -mach to TCB, 
+                        set DIN_LOC_ROOT, change needed for latest jaguar build
+M   tests_posttag_hybrid_regression ------- Remove bad tests, move pure-mpi, serial/open-mp out
+M   tests_posttag_purempi_regression ------ Remove bad tests, move pure-mpi, serial/open-mp out
+M   nl_files/nl_urb ----------------------- Remove urban fields already included
+M   nl_files/nl_urb_br -------------------- Remove urban fields already included
+M   input_tests_master -------------------- Changes so tests will work
+M   TCBext_ccsmseq_cam.sh ----------------- Add main/cpl_mct to clm list of dirs
+
+>>>>>>>>>>>>>>>>>> Update filenames, append grid/frac files to urban single-pt in script
+M   models/lnd/clm/tools/mksurfdata/mksurfdata.regional ---- New griddata, fix filepath
+M   models/lnd/clm/tools/mksurfdata/mksurfdata.singlept ---- New griddata, fix filepath
+M   models/lnd/clm/tools/mksurfdata/mksurfdata.pl ---------- Fix, append grid/frac data
+                                                         to urban single-point datasets
+
+>>>>>>>>>>>>>>>>>> Get the pftdyntest2raw script working (will update datasets later)
+M   models/lnd/clm/tools/ncl_scripts/pftdyntest2raw.ncl - Fix so will work, add grazing on
+M   models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl ----- Add sim_yr to out filenames
+
+>>>>>>>>>>>>>>>>>> Validate grid
+M   models/lnd/clm/tools/mkgriddata/creategridMod.F90 - Check for valid grid values
+
+M   models/lnd/clm/srm/main/pftdynMod.F90 - Shorten some long lines
+
+>>>>>>>>>>>>>>>>>> Change to build: add use-cases, remove CLM_ARB_IC, listen to LND_CDF64
+>>>>>>>>>>>>>>>>>> Add new 1.9x2.5_tx1v1 frac dataset, new datasets for single-point,
+>>>>>>>>>>>>>>>>>> new 10x15 datasets, separate out sim_yr and sim_year_range
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>> models/lnd/clm/bld		  directory changes
+M   listDefaultNamelist.pl ----------------------- Add csmdata arg
+M   build-namelist ------------------------------- Add -list_use_cases option
+                   load uses cases before other defaults, add $ccsm_tools var,
+                   separate sim_yr and sim_year_range, put case_desc for use-cases
+M   clm.cpl7.template ---------------------------- Remove CLM_ARB_IC, use LND_CDF64
+M   namelist_files/checkdatmfiles.ncl ------------ Add tx1v1 mask
+M   namelist_files/namelist_definition.xml ------- Add tx1v1 mask, make sim_year integer
+                    add sim_year_range, use_case_desc, and clm_demand
+M   namelist_files/namelist_defaults_overall.xml - default sim_year_range is constant
+                    and default clm_demand is null
+M   namelist_files/namelist_defaults_datm.xml ---- Use datm7 streams template, 
+                    and update domain files
+M   namelist_files/use_cases/pergro.xml ---------- Add use_case_desc
+M   namelist_files/use_cases/pergro0.xml --------- Add use_case_desc
+M   namelist_files/namelist_defaults_clm.xml ----- Move co2_ppmv defaults to use_cases
+        new surf/frac/aer/ndep/grid data: 5x5_amazon, 1x1_brazil, 1x1_urbanc_alpha, 
+                                          1x1_mexicocityMEX, 1x1_vancouverCAN
+       new frac data:        1.9x2.5_tx1v1
+       new aerdep/ndep data: 1x1_camdenNJ, 1x1_tropicAtl, 1x1_asphaltjungleNJ
+       new surfdata/pftdyn:  10x15
+       (new finidat file for f09 CN, 1850 -- commented out -- so answers same as last tag)
+
+Summary of testing:
+
+  bluefire: All PASS except
+019 erEH1 TER.sh 4p_vodsrsc_dh clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 10+38 arb_icFAIL! rc= 7
+020 brEH1 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 24+24 arbFAIL! rc= 6
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+027 smC45 TSM.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic .........FAIL! rc= 8
+028 erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -3+-7 arb_ic .......FAIL! rc= 5
+029 brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -5+-5 arb_ic .......FAIL! rc= 5
+030 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic .........FAIL! rc= 4
+033 brC61 TBR.sh _sc_dh clm_std^nl_urb_br 20021001:NONE:1800 1.9x2.5 gx1v6 -3+-3 cold ...........FAIL! rc= 6
+041 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 7
+042 brLI1 TBR.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 6
+051 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 4
+052 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
+054 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 6
+  bluefire interactive testing: All PASS except
+004 blA74 TBL.sh _sc_ds clm_std^nl_urb 20030101:NONE:3600 1x1_brazil navy -10 arb_ic ............FAIL! rc= 7
+009 blCA4 TBL.sh _sc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 7
+013 blNB4 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 7
+017 blJ74 TBL.sh 4p_casasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic ..FAIL! rc= 7
+019 blCA8 TBL.sh _sc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 7
+021 blL78 TBL.sh _sc_s clm_std^nl_urb 20021231:NONE:1800 1x1_brazil navy -10 arb_ic .............FAIL! rc= 7
+027 erL83 TER.sh _sc_do clm_std^nl_urb 20020115:NONE:3600 5x5_amazon navy -5+-5 arb_ic ..........FAIL! rc= 7
+028 brL83 TBR.sh _sc_do clm_std^nl_urb_br 20020115:NONE:3600 5x5_amazon navy -10+-10 arb_ic .....FAIL! rc= 6
+029 blL83 TBL.sh _sc_do clm_std^nl_urb 20020115:NONE:3600 5x5_amazon navy -10 arb_ic ............FAIL! rc= 5
+034 bl744 TBLtools.sh mksurfdata tools__s namelist ..............................................FAIL! rc= 4
+036 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 4
+043 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  bluefire/CCSM testing: All PASS
+PASS  ERS_D.f45_g35.I_2000.bluefire
+PASS  PET.f45_g35.I_1850.bluefire.cpl
+PASS  PET.f45_g35.I_1850.bluefire.atm
+PASS  PET.f45_g35.I_1850.bluefire.lnd
+PASS  PET.f45_g35.I_1850.bluefire.ice
+PASS  PET.f45_g35.I_1850.bluefire.ocn
+PASS  PET.f45_g35.I_1850.bluefire.glc
+PASS  ERS.f19_g16.I_1850.bluefire
+PASS  ERS.f19_g16.I_1850-2000.bluefire
+PASS  ERB.f09_g16.I_1948_2004.bluefire
+PASS  ERB.f09_g16.I1850SPINUPCN.bluefire
+PASS  ERH_D.f10_f10.I_1850_CN.bluefire
+  lightning/ifort: All PASS except -- up to test 18
+002 erA91 TER.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 7
+003 brA91 TBR.sh _sc_dh clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 6
+005 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+006 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+007 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+008 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+009 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+011 erJ42 TER.sh 4p_casasc_dm clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 10+38 cold ...........FAIL! rc= 7
+012 brJ42 TBR.sh 4p_casasc_dm clm_std^nl_urb_br 20021230:NONE:1800 10x15 USGS 72+72 cold ........FAIL! rc= 6
+015 erL51 TER.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 10+38 arb_ic ...............FAIL! rc= 7
+016 brL51 TBR.sh _sc_dh clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 6
+  lightning/ifort interactive testing: up to test 004
+004 blCA4 TBL.sh _sc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 7
+  calgary/lf95: All PASS except...
+004 blA74 TBL.sh _sc_ds clm_std^nl_urb 20030101:NONE:3600 1x1_brazil navy -10 arb_ic ............FAIL! rc= 7
+015 blCA4 TBL.sh _sc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 7
+019 blOC4 TBL.sh _vansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 7
+023 blNB4 TBL.sh _mexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 7
+024 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+025 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+026 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+027 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+028 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+049 blL74 TBL.sh _sc_s clm_std^nl_urb 20020101:NONE:1800 1x1_brazil navy -10 arb_ic .............FAIL! rc= 7
+052 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+053 smM94 TSMncl_tools.sh ndepregrid ............................................................FAIL! rc= 6
+055 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48 .......................FAIL! rc= 8
+056 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  breeze,gale,hail,gust/ifort: All PASS except...
+004 blA74 TBL.sh _sc_ds clm_std^nl_urb 20030101:NONE:3600 1x1_brazil navy -10 arb_ic ............FAIL! rc= 7
+009 blCA4 TBL.sh _sc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ..........FAIL! rc= 7
+011 blCA8 TBL.sh _sc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic ...FAIL! rc= 7
+019 blR53 TBL.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@1850 48 cold .......FAIL! rc= 7
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+021 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+022 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+023 blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_45
+
+Changes answers relative to baseline: Bit-for-bit EXCEPT for (as datasets change)
+       5x5_amazon, 1x1_brazil, 1x1_urbanc_alpha, 1x1_mexicocityMEX, 1x1_vancouverCAN
+       1x1_camdenNJ, 1x1_tropicAtl, 1x1_asphaltjungleNJ, 10x15
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_45
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date:  Fri Jul 10 14:00:27 MDT 2009

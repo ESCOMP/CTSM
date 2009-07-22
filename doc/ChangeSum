@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_46         erik 07/22/2009 Get more tests to work/document them, add use cases for 1850_control, 2000_control, and 
+                                     20thC_transient, straighten out single-point grids, Listen to LND_CDF64 env variable from 
+                                     template, remove CLM_ARB_IC.
    clm3_6_45         erik 07/10/2009 Remove inconsistent finidat file in clm3_6_44
    clm3_6_44         erik 07/09/2009 Fix C13 bug, update scripts, drv, datm. Add domain files for idmap atm-ocn grids for datm. Remove SEQ_MCT, add new ESMF env vars to template. Work with ndeplintInterp
    clm3_6_43         erik 06/10/2009 Fix pftdyn bug, enable 1D primary hist files, fix time-const3D output, fix template bug, enable cpl_esmf/cpl_mct

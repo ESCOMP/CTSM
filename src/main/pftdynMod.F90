@@ -1307,30 +1307,30 @@ contains
 				pptr%pc13s%leafc(p)         = pptr%pc13s%leafc(p)*t1         + leafc13_seed*pleaf*t2
 				pptr%pc13s%leafc_storage(p) = pptr%pc13s%leafc_storage(p)*t1 + leafc13_seed*pstor*t2
 				pptr%pc13s%leafc_xfer(p)    = pptr%pc13s%leafc_xfer(p)*t1    + leafc13_seed*pxfer*t2
-				pptr%pc13s%frootc(p)			 = pptr%pc13s%frootc(p) 			* t1
-				pptr%pc13s%frootc_storage(p)	 = pptr%pc13s%frootc_storage(p) 	* t1
+				pptr%pc13s%frootc(p)			 = pptr%pc13s%frootc(p) 		* t1
+				pptr%pc13s%frootc_storage(p)	         = pptr%pc13s%frootc_storage(p) 	* t1
 				pptr%pc13s%frootc_xfer(p)		 = pptr%pc13s%frootc_xfer(p)		* t1
 				pptr%pc13s%livestemc(p) 		 = pptr%pc13s%livestemc(p)  		* t1
-				pptr%pc13s%livestemc_storage(p)  = pptr%pc13s%livestemc_storage(p)  * t1
-				pptr%pc13s%livestemc_xfer(p)	 = pptr%pc13s%livestemc_xfer(p) 	* t1
-				pptr%pc13s%deadstemc(p)     = pptr%pc13s%deadstemc(p)*t1     + deadstemc13_seed*t2
-				pptr%pc13s%deadstemc_storage(p)  = pptr%pc13s%deadstemc_storage(p)  * t1
-				pptr%pc13s%deadstemc_xfer(p)	 = pptr%pc13s%deadstemc_xfer(p) 	* t1
+				pptr%pc13s%livestemc_storage(p)          = pptr%pc13s%livestemc_storage(p)      * t1
+				pptr%pc13s%livestemc_xfer(p)	         = pptr%pc13s%livestemc_xfer(p) 	* t1
+				pptr%pc13s%deadstemc(p)                  = pptr%pc13s%deadstemc(p)*t1     + deadstemc13_seed*t2
+				pptr%pc13s%deadstemc_storage(p)          = pptr%pc13s%deadstemc_storage(p)      * t1
+				pptr%pc13s%deadstemc_xfer(p)	         = pptr%pc13s%deadstemc_xfer(p) 	* t1
 				pptr%pc13s%livecrootc(p)		 = pptr%pc13s%livecrootc(p) 		* t1
-				pptr%pc13s%livecrootc_storage(p) = pptr%pc13s%livecrootc_storage(p) * t1
-				pptr%pc13s%livecrootc_xfer(p)	 = pptr%pc13s%livecrootc_xfer(p)	* t1
+				pptr%pc13s%livecrootc_storage(p)         = pptr%pc13s%livecrootc_storage(p)     * t1
+				pptr%pc13s%livecrootc_xfer(p)	         = pptr%pc13s%livecrootc_xfer(p)	* t1
 				pptr%pc13s%deadcrootc(p)		 = pptr%pc13s%deadcrootc(p) 		* t1
-				pptr%pc13s%deadcrootc_storage(p) = pptr%pc13s%deadcrootc_storage(p) * t1
-				pptr%pc13s%deadcrootc_xfer(p)	 = pptr%pc13s%deadcrootc_xfer(p)	* t1
-				pptr%pc13s%gresp_storage(p) 	 = pptr%pc13s%gresp_storage(p)  	* t1
+				pptr%pc13s%deadcrootc_storage(p)         = pptr%pc13s%deadcrootc_storage(p)     * t1
+				pptr%pc13s%deadcrootc_xfer(p)	         = pptr%pc13s%deadcrootc_xfer(p)	* t1
+				pptr%pc13s%gresp_storage(p) 	         = pptr%pc13s%gresp_storage(p)  	* t1
 				pptr%pc13s%gresp_xfer(p)		 = pptr%pc13s%gresp_xfer(p) 		* t1
-				pptr%pc13s%cpool(p) 			 = pptr%pc13s%cpool(p)  			* t1
-				pptr%pc13s%xsmrpool(p)  		 = pptr%pc13s%xsmrpool(p)			* t1
+				pptr%pc13s%cpool(p) 			 = pptr%pc13s%cpool(p)  		* t1
+				pptr%pc13s%xsmrpool(p)  		 = pptr%pc13s%xsmrpool(p)		* t1
 				pptr%pc13s%pft_ctrunc(p)		 = pptr%pc13s%pft_ctrunc(p) 		* t1
-				pptr%pc13s%dispvegc(p)  		 = pptr%pc13s%dispvegc(p)			* t1
-				pptr%pc13s%storvegc(p)  		 = pptr%pc13s%storvegc(p)			* t1
-				pptr%pc13s%totvegc(p)			 = pptr%pc13s%totvegc(p)			* t1
-				pptr%pc13s%totpftc(p)			 = pptr%pc13s%totpftc(p)			* t1
+				pptr%pc13s%dispvegc(p)  		 = pptr%pc13s%dispvegc(p)		* t1
+				pptr%pc13s%storvegc(p)  		 = pptr%pc13s%storvegc(p)		* t1
+				pptr%pc13s%totvegc(p)			 = pptr%pc13s%totvegc(p)		* t1
+				pptr%pc13s%totpftc(p)			 = pptr%pc13s%totpftc(p)		* t1
 #endif
 
 				tot_leaf = pptr%pns%leafn(p) + pptr%pns%leafn_storage(p) + pptr%pns%leafn_xfer(p)
@@ -1353,28 +1353,28 @@ contains
 				pptr%pns%leafn(p)         = pptr%pns%leafn(p)*t1         + leafn_seed*pleaf*t2
 				pptr%pns%leafn_storage(p) = pptr%pns%leafn_storage(p)*t1 + leafn_seed*pstor*t2
 				pptr%pns%leafn_xfer(p)    = pptr%pns%leafn_xfer(p)*t1    + leafn_seed*pxfer*t2
-				pptr%pns%frootn(p)  		   = pptr%pns%frootn(p) 			* t1
-				pptr%pns%frootn_storage(p)     = pptr%pns%frootn_storage(p) 	* t1
+				pptr%pns%frootn(p)  		   = pptr%pns%frootn(p) 		* t1
+				pptr%pns%frootn_storage(p)         = pptr%pns%frootn_storage(p) 	* t1
 				pptr%pns%frootn_xfer(p) 	   = pptr%pns%frootn_xfer(p)		* t1
 				pptr%pns%livestemn(p)		   = pptr%pns%livestemn(p)  		* t1
-				pptr%pns%livestemn_storage(p)  = pptr%pns%livestemn_storage(p)  * t1
-				pptr%pns%livestemn_xfer(p)     = pptr%pns%livestemn_xfer(p) 	* t1
-				pptr%pns%deadstemn(p)     = pptr%pns%deadstemn(p)*t1     + deadstemn_seed*t2
-				pptr%pns%deadstemn_storage(p)  = pptr%pns%deadstemn_storage(p)  * t1
-				pptr%pns%deadstemn_xfer(p)     = pptr%pns%deadstemn_xfer(p) 	* t1
+				pptr%pns%livestemn_storage(p)      = pptr%pns%livestemn_storage(p)      * t1
+				pptr%pns%livestemn_xfer(p)         = pptr%pns%livestemn_xfer(p) 	* t1
+				pptr%pns%deadstemn(p)              = pptr%pns%deadstemn(p)*t1     + deadstemn_seed*t2
+				pptr%pns%deadstemn_storage(p)      = pptr%pns%deadstemn_storage(p)      * t1
+				pptr%pns%deadstemn_xfer(p)         = pptr%pns%deadstemn_xfer(p) 	* t1
 				pptr%pns%livecrootn(p)  	   = pptr%pns%livecrootn(p) 		* t1
-				pptr%pns%livecrootn_storage(p) = pptr%pns%livecrootn_storage(p) * t1
-				pptr%pns%livecrootn_xfer(p)    = pptr%pns%livecrootn_xfer(p)	* t1
+				pptr%pns%livecrootn_storage(p)     = pptr%pns%livecrootn_storage(p)     * t1
+				pptr%pns%livecrootn_xfer(p)        = pptr%pns%livecrootn_xfer(p)	* t1
 				pptr%pns%deadcrootn(p)  	   = pptr%pns%deadcrootn(p) 		* t1
-				pptr%pns%deadcrootn_storage(p) = pptr%pns%deadcrootn_storage(p) * t1
-				pptr%pns%deadcrootn_xfer(p)    = pptr%pns%deadcrootn_xfer(p)	* t1
-				pptr%pns%retransn(p)		   = pptr%pns%retransn(p)			* t1
-				pptr%pns%npool(p)			   = pptr%pns%npool(p)  			* t1
-				pptr%pns%pft_ntrunc(p)  	   = pptr%pns%pft_ntrunc(p) 		* t1
-				pptr%pns%dispvegn(p)		   = pptr%pns%dispvegn(p)			* t1
-				pptr%pns%storvegn(p)		   = pptr%pns%storvegn(p)			* t1
-				pptr%pns%totvegn(p) 		   = pptr%pns%totvegn(p)			* t1
-				pptr%pns%totpftn(p) 		   = pptr%pns%totpftn(p)			* t1
+				pptr%pns%deadcrootn_storage(p)     = pptr%pns%deadcrootn_storage(p)     * t1
+				pptr%pns%deadcrootn_xfer(p)        = pptr%pns%deadcrootn_xfer(p)        * t1
+				pptr%pns%retransn(p)		   = pptr%pns%retransn(p)		* t1
+				pptr%pns%npool(p)		   = pptr%pns%npool(p)  		* t1
+				pptr%pns%pft_ntrunc(p)  	   = pptr%pns%pft_ntrunc(p)        	* t1
+				pptr%pns%dispvegn(p)		   = pptr%pns%dispvegn(p)		* t1
+				pptr%pns%storvegn(p)		   = pptr%pns%storvegn(p)		* t1
+				pptr%pns%totvegn(p) 		   = pptr%pns%totvegn(p)		* t1
+				pptr%pns%totpftn(p) 		   = pptr%pns%totpftn(p)		* t1
 
 				! update temporary seed source arrays
 				! These are calculated in terms of the required contributions from
@@ -2320,17 +2320,20 @@ contains
 				
 				! C fluxes
 				cptr%ccf%dwt_seedc_to_leaf(c) = cptr%ccf%dwt_seedc_to_leaf(c) + dwt_leafc_seed(p)/dt
-				cptr%ccf%dwt_seedc_to_deadstem(c) = cptr%ccf%dwt_seedc_to_deadstem(c) + dwt_deadstemc_seed(p)/dt
+				cptr%ccf%dwt_seedc_to_deadstem(c) = cptr%ccf%dwt_seedc_to_deadstem(c) &
+                                                                    + dwt_deadstemc_seed(p)/dt
 				
 #if (defined C13)
 				! C13 fluxes
-				cptr%cc13f%dwt_seedc_to_leaf(c) = cptr%cc13f%dwt_seedc_to_leaf(c) + dwt_leafc13_seed(p)/dt
-				cptr%cc13f%dwt_seedc_to_deadstem(c) = cptr%cc13f%dwt_seedc_to_deadstem(c) + dwt_deadstemc13_seed(p)/dt
+                                cptr%cc13f%dwt_seedc_to_leaf(c) = cptr%cc13f%dwt_seedc_to_leaf(c) + dwt_leafc13_seed(p)/dt
+                                cptr%cc13f%dwt_seedc_to_deadstem(c) = cptr%cc13f%dwt_seedc_to_deadstem(c) &
+                                                                      + dwt_deadstemc13_seed(p)/dt
 #endif
 				
 				! N fluxes
 				cptr%cnf%dwt_seedn_to_leaf(c) = cptr%cnf%dwt_seedn_to_leaf(c) + dwt_leafn_seed(p)/dt
-				cptr%cnf%dwt_seedn_to_deadstem(c) = cptr%cnf%dwt_seedn_to_deadstem(c) + dwt_deadstemn_seed(p)/dt
+				cptr%cnf%dwt_seedn_to_deadstem(c) = cptr%cnf%dwt_seedn_to_deadstem(c) &
+                                                                    + dwt_deadstemn_seed(p)/dt
 			end if
 		end do
 	end do

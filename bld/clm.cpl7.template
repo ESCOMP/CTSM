@@ -40,6 +40,9 @@ set clm_demand = "$CLM_DEMAND"
 @ clm_dtime  = ( 3600 * 24 ) / $LND_NCPL
 @ rtm_nsteps = ( 3600 * 3  ) / $clm_dtime  # rtm is done every 3 hours
 
+set outnc_large_files = ".false."
+if ($LND_CDF64 == TRUE ) set outnc_large_files = ".true."
+
 cat >> $cfgdir/ccsm_namelist << EOF1
  &clm_inparm
  dtime            =  $clm_dtime
@@ -49,10 +52,11 @@ $finidat
  hist_mfilt       =  1
  hist_nhtfrq      =  0
  co2_ppmv         =  $CCSM_CO2_PPMV
+ outnc_large_files = $outnc_large_files
 /
 EOF1
 
-if ($RUN_TYPE == startup && $CLM_ARB_IC != off) then
+if ($RUN_TYPE == startup ) then
    set START_TYPE = "arb_ic"
 else
    set START_TYPE = $RUN_TYPE

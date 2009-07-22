@@ -2,6 +2,8 @@
 
 <namelist_defaults>
 
+<use_case_desc>Perturbation error growth test with unperturbed initial conditions</use_case_desc>
+
 <pertlim>0.0</pertlim>
 
 <hist_empty_htapes>.true.</hist_empty_htapes>

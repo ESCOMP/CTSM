@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<sim_year>1850</sim_year>
+
+<sim_year_range>constant</sim_year_range>
+
+<orb_iyear_ad>1850</orb_iyear_ad>
+
+<use_case_desc>Conditions to simulate 1850 land-use</use_case_desc>
+
+</namelist_defaults>

@@ -50,7 +50,7 @@ begin
   do i = 0, dimsizes(resolutions)-1
      res = resolutions(i);
      print( "Resolution: "+res );
-     masks = (/ "gx3v5", "gx1v5", "USGS" /);
+     masks = (/ "gx3v5", "gx1v5", "gx1v6", "tx1v1", "USGS" /);
      do j = 0, dimsizes(masks)-1
         omask = masks(j);
         print( "Mask: "+omask);

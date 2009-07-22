@@ -133,6 +133,11 @@ contains
              write(6,*) 'creategrid ERROR edges wrong sign NESN:',ldomain%edgen,ldomain%edgee,ldomain%edges,ldomain%edgen
              stop
           endif
+          if ( mksrf_edgen > 90. .or. mksrf_edges < -90. .or. mksrf_edgee > 360. .or. mksrf_edgew < -dx )then
+             write(6,*) 'creategrid ERROR edges bad values NESWN:',ldomain%edgen,ldomain%edgee,ldomain%edges,ldomain%edgen
+             write(6,*) '           Are latitudes within -90 to 90 and longitudes within -dx to 360?'
+             stop
+          end if
 
           do j = 1, lsmlat
           do i = 1, lsmlon

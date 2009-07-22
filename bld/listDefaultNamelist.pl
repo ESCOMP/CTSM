@@ -63,6 +63,7 @@ SYNOPSIS
      $ProgName [options]
 OPTIONS
      -help  [or -h]                       Display this help.
+     -csmdata [or -d]                     Path to CSMDATA.
      -namelist "namelistname"             Namelist name to read in by default ($namelist).
      -res  "resolution1,resolution2,..."  List of resolution to use for files.
                                           (At least one resolution is required)
@@ -137,6 +138,7 @@ sub GetListofNeededFiles {
                namelist   => $namelist,
                res        => undef,
                silent     => undef,
+               csmdata    => "default",
                list       => $list,
                help       => undef,
              );
@@ -144,6 +146,7 @@ sub GetListofNeededFiles {
   my $cmdline = "@ARGV";
   GetOptions(
         "n|namelist=s" => \$opts{'namelist'},
+        "d|csmdata=s"  => \$opts{'csmdata'},
         "r|res=s"      => \$opts{'res'},
         "s|silent"     => \$opts{'silent'},
         "h|elp"        => \$opts{'help'},
@@ -192,7 +195,7 @@ sub GetListofNeededFiles {
   $inputopts{'ProgName'}  = $ProgName;
   $inputopts{'cmdline'}   = $cmdline;
   $inputopts{'cfgdir'}    = $cfgdir;
-  $inputopts{'csmdata'}   = "default";
+  $inputopts{'csmdata'}   = $opts{'csmdata'};
   $inputopts{'config'}    = "noconfig";
   my %files;
   # Namelist

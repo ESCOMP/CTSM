@@ -7,6 +7,8 @@
 ; $HeadURL$
 ;
 begin
+
+
    ; ===========================================================================================================
 
    res      = getenv("RES");   ; Get output resolution from env variable
@@ -33,13 +35,65 @@ begin
    ; Use resolution to get input filename and open it
    ;
    filetype = "fpftdyn";
-   filename = systemfunc( querynml+" -res "+res+" -var "+filetype );
+   if ( res .eq. "1x1_tropicAtl" )then
+     sim_yrs  = "1000-1004";
+   else
+     sim_yrs  = "1000-1002";
+   end if
+   filename = systemfunc( querynml+" -res "+res+" -options sim_year_range="+sim_yrs+" -var "+filetype );
    print( "Use file: "+filename );
    if ( systemfunc("test -f "+filename+"; echo $?" ) .ne. 0 )then
       print( "Input "+filetype+" file does not exist or not found: "+filename );
       exit
    end if
    nc = addfile( filename, "r" );
+   ;
+   ; Use resolution to get input grid filename and open it
+   ;
+   filetype = "fatmlndfrc";
+   gridfile = systemfunc( querynml+" -res "+res+" -var "+filetype );
+   print( "Use file: "+gridfile );
+   if ( systemfunc("test -f "+gridfile+"; echo $?" ) .ne. 0 )then
+      print( "Input "+filetype+" file does not exist or not found: "+gridfile );
+      exit
+   end if
+   ncg = addfile( gridfile, "r" );
+   ;
+   ; Use resolution to get input dynamic PFT filename and open it for harvesting values
+   ;
+   filetype = "fpftdyn";
+   dsim_yrs  = "1850-2000";
+   dynfile = systemfunc( querynml+" -res "+res+" -options sim_year_range="+dsim_yrs+" -var "+filetype );
+   print( "Use file: "+dynfile );
+   if ( systemfunc("test -f "+dynfile+"; echo $?" ) .ne. 0 )then
+      print( "Input "+filetype+" file does not exist or not found: "+dynfile );
+      exit
+   end if
+   ncd = addfile( dynfile, "r" );
+
+   function getmyfile( filedesc:string )
+   ;
+   ; Return file handle for file described
+   ;
+   local myfile;
+   begin
+      if ( filedesc .eq. "nc" )then
+         myfile = nc;      
+      else
+      if ( filedesc .eq. "ncg" )then
+         myfile = ncg;      
+      else
+      if ( filedesc .eq. "ncd" )then
+         myfile = ncd;      
+      else
+         print( "ERROR: bad file descriptor = "+filedesc );
+         exit
+      end if
+      end if
+      end if
+      return( myfile );
+   end
+
    ;
    ; Get date time-stamp to put on output filenames
    ;
@@ -60,19 +114,11 @@ begin
    ;
    ; Get variable info.
    ;
-   vars = (/ "EDGEE", "EDGEN", "EDGES", "EDGEW", "LANDMASK", "LAT", "LATIXY", "LON", "LONGXY", "PCT_PFT" /);
+   vars = (/ "EDGEE", "EDGEN", "EDGES", "EDGEW", "LANDMASK", "LAT", "LATIXY", "LON", "LONGXY", "PCT_PFT", "GRAZING", "HARVEST_VH1", "HARVEST_VH2", "HARVEST_SH1", "HARVEST_SH2", "HARVEST_SH3" /);
+   files= (/    "nc",    "nc",    "nc",    "nc",      "ncg", "ncg",     "nc", "ncg",     "nc",      "nc",     "ncd",         "ncd",         "ncd",        "ncd",         "ncd",         "ncd" /);
+   ftype= (/  "file",  "file",  "file",  "file",     "file", "var",   "file", "var",  "file",   "notime",  "notime",      "notime",      "notime",       "notime",     "notime",      "notime" /);
    LAT      = nc->LATIXY( :, 0 );
    LON      = nc->LONGXY( 0, : );
-   LANDFRAC = new( (/ dimsizes(LAT), dimsizes(LON) /), "float" );
-   do lat = 0, dimsizes(LAT)-1
-   do lon = 0, dimsizes(LON)-1
-      LANDFRAC(lat,lon) = LANDFRAC(lat,lon) + sum( nc->PCT_PFT(0,:,lat,lon) );
-   end do
-   end do
-   LANDMASK = new( dsizes(1:), "integer"  );
-   LANDMASK = where( LANDFRAC > 0.0, 1, 0 );
-   LANDMASK@long_name = "land mask";
-   LANDMASK@units     = "unitless";
    print( "vars on file:"+vars );
    ;
    ; Now loop over each year and output files for each year
@@ -80,6 +126,9 @@ begin
    ntimes = timdsizes( 0 );
    do t = 0, ntimes - 1
       year = nc->YEAR(t);
+      if ( year .lt. 10 ) then
+         year        = 1000 + year;
+      end if
       ; Open file for this year
       outfilename = "mksrf_pft_"+res+"_testyr"+year+"_c"+sdate+".nc";
       system( "/bin/rm -f "+outfilename );
@@ -91,37 +140,33 @@ begin
       ; Define variables
       ;
       do i = 0, dimsizes(vars)-1
-         if ( vars(i) .eq. "PCT_PFT" ) then
-            dimlist = dimnames;
-            vtype   = typeof(nc->$vars(i)$);
-            var     = nc->$vars(i)$;
-         else
-            if ( vars(i) .eq. "LANDMASK" ) then
-               dimlist = dimnames( 1: );
-               vtype   = typeof(LANDMASK);
-               var     = LANDMASK;
+         ncf = getmyfile( files(i) );
+         if ( ftype(i) .eq. "notime" ) then
+            if ( vars(i) .eq. "PCT_PFT" ) then
+               dimlist = dimnames;
             else
-               if ( vars(i) .eq. "LAT" ) then
-                  dimlist = (/ "lsmlat" /);
-                  vtype   = typeof(LAT);
-                  var     = LAT;
-               else
-                  if ( vars(i) .eq. "LON" ) then
-                     dimlist = (/ "lsmlon" /);
-                     vtype   = typeof(LON);
-                     var     = LON;
-                  else
-                     dimlist = getfilevardims( nc, vars(i) )
-                     vtype   = typeof(nc->$vars(i)$);
-                     var     = nc->$vars(i)$;
-                  end if
-               end if
+               dimlist = dimnames(1:);
+            end if
+            var     = ncf->$vars(i)$;
+         else
+            if ( ftype(i) .eq. "var" )then
+                if ( vars(i) .eq. "LAT" ) then
+                   dimlist = (/ "lsmlat" /);
+                   var     = LAT;
+                else
+                if ( vars(i) .eq. "LON" ) then
+                   dimlist = (/ "lsmlon" /);
+                   var     = LON;
+                end if
+                end if
+            else
+               dimlist = getfilevardims( ncf, vars(i) )
+               var     = ncf->$vars(i)$;
             end if
          end if
-         filevardef (    nco, vars(i), vtype, dimlist );
+         filevardef (    nco, vars(i), typeof(var), dimlist );
          filevarattdef ( nco, vars(i), var );
          delete( dimlist );
-         delete( vtype   );
          delete( var     );
       end do
       ;
@@ -137,31 +182,38 @@ begin
       ; Now add the variables on the file
       ;
       do i = 0, dimsizes(vars)-1
-         if ( vars(i) .eq. "PCT_PFT" ) then
-            nco->$vars(i)$ = (/ nc->$vars(i)$(t,:,:,:) /);
-         else
-            if ( vars(i) .eq. "LANDMASK" ) then
-               nco->$vars(i)$ = (/ LANDMASK /);
+         ncf = getmyfile( files(i) );
+         if ( ftype(i) .eq. "notime" ) then
+            if ( vars(i) .eq. "PCT_PFT" ) then
+               nco->$vars(i)$ = (/ ncf->$vars(i)$(t,:,:,:) /);
             else
+               nco->$vars(i)$ = (/ ncf->$vars(i)$(t,:,:) /);
+            end if
+         else
+            if ( ftype(i) .eq. "var" )then
                if ( vars(i) .eq. "LAT" ) then
                   nco->$vars(i)$ = (/ LAT /);
                else
-                  if ( vars(i) .eq. "LON" ) then
-                     nco->$vars(i)$ = (/ LON /);
-                  else
-                     nco->$vars(i)$ = (/ nc->$vars(i)$ /);
-                  end if
+               if ( vars(i) .eq. "LON" ) then
+                  nco->$vars(i)$ = (/ LON /);
                end if
+               end if
+            else
+               nco->$vars(i)$ = (/ ncf->$vars(i)$ /);
             end if
          end if
       end do
 
    end do
 
-   delete( vars );
+   delete( vars  );
+   delete( ftype );
+   delete( files );
 
    print( "================================================================================================" );
    print( "Successfully created output "+filetype+" file: "+outfilename );
 
    ; ===========================================================================================================
+
+
 end

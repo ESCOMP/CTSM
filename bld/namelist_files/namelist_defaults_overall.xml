@@ -19,4 +19,10 @@ determine default values for namelists.
 <!-- Default simulation year -->
 <sim_year>2000</sim_year>
 
+<!-- Default simulation year range -->
+<sim_year_range>constant</sim_year_range>
+
+<!-- List of optional fields to demand on namelist -->
+<clm_demand>null</clm_demand>
+
 </namelist_defaults>

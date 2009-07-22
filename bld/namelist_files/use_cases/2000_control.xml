@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<sim_year>2000</sim_year>
+
+<sim_year_range>constant</sim_year_range>
+
+<orb_iyear_ad>1990</orb_iyear_ad>
+
+<use_case_desc>Conditions to simulate 2000 land-use</use_case_desc>
+
+</namelist_defaults>

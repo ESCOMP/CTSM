@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<use_case_desc bgc="none" >Simulate transient land-use, and aerosol deposition changes from 1850 to 2005</use_case_desc>
+<use_case_desc bgc="cn"   >Simulate transient land-use, aerosol deposition, and Nitrogen deposition changes from 1850 to 2005</use_case_desc>
+
+<start_ymd>18500101</start_ymd>
+
+<sim_year>1850</sim_year>
+
+<sim_year_range>1850-2000</sim_year_range>
+
+<orb_iyear_ad >1990</orb_iyear_ad>
+
+<clm_demand bgc="none" >fpftdyn</clm_demand>
+<clm_demand bgc="cn"   >fpftdyn,fndepdyn</clm_demand>
+
+<start_type>startup</start_type>
+
+</namelist_defaults>

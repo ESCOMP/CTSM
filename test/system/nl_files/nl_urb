@@ -7,7 +7,7 @@
  hist_dov2xy    = .true.,.false.
  hist_ndens     = 1,1
  hist_crtinic   = 'NONE'
- hist_fincl1    = 'TBUILD', 'BUILDHEAT', 'TRAFFICFLUX', 'WASTEHEAT','SNOWLIQ:A','SNOWICE:A'
+ hist_fincl1    = 'TRAFFICFLUX', 'SNOWLIQ:A','SNOWICE:A'
  hist_fincl2    = 'TG','TBOT','FIRE','FIRA','FLDS','FSDS',
                   'FSR','FSA','FGEV','FSH','FGR','TSOI',
                   'ERRSOI','BUILDHEAT','SABV','SABG',

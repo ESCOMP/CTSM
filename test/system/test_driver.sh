@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta18"
+seqccsm_vers="ccsm4_0_beta19"
 
 hostname=`hostname`
 case $hostname in
@@ -64,8 +64,8 @@ else
     interactive="YES"
     export LSB_MCPU_HOSTS="\$hostname 8"
     input_file="tests_pretag_bluefire_nompi"
-    c_threads=32
-    r_threads=64
+    c_threads=13
+    r_threads=25
 fi
 
 ##omp threads
@@ -76,7 +76,7 @@ export CLM_RESTART_THREADS=\$r_threads
 
 ##mpi tasks
 export CLM_TASKS=96
-export CLM_RESTART_TASKS=47
+export CLM_RESTART_TASKS=46
 
 export CLM_COMPSET="I"
 
@@ -90,7 +90,7 @@ export MP_LABELIO=yes
 export XLSMPOPTS="stack=256000000"
 export MAKE_CMD="gmake -j 65"
 export CCSM_MACH="bluefire"
-export CFG_STRING="-mach \$CCSM_MACH "
+export CFG_STRING=""
 export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="/ptmp"
 CPRNC_EXE="/contrib/newcprnc3.0/bin/newcprnc"
@@ -98,6 +98,7 @@ newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
 /bin/cp -fp \$CPRNC_EXE \$newcprnc
 export CPRNC_EXE="\$newcprnc"
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
+export DIN_LOC_ROOT="/fs/cgd/csm/inputdata"
 dataroot="/fs/cgd/csm"
 echo_arg=""
 
@@ -154,7 +155,7 @@ export CLM_RESTART_THREADS=2
 
 ##mpi tasks
 export CLM_TASKS=64
-export CLM_RESTART_TASKS=31
+export CLM_RESTART_TASKS=30
 
 export CLM_COMPSET="I"
 
@@ -169,7 +170,7 @@ if [ "\$CLM_FC" = "ifort" ]; then
    export PATH=\${mpich}/bin:\${intel}/bin:\${PATH}
    export MAKE_CMD="gmake"
    export CCSM_MACH="lightning_intel"
-   export CFG_STRING="-fc ifort -cc icc -linker \$mpich/bin/mpif90 -mach \$CCSM_MACH "
+   export CFG_STRING="-fc ifort -cc icc -linker \$mpich/bin/mpif90 "
    export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 else
    export INC_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/include
@@ -182,7 +183,7 @@ else
    export LD_LIBRARY_PATH=\${PS}/lib/2.4:/opt/pathscale/lib/2.4/32:\${LD_LIBRARY_PATH}
    export MAKE_CMD="gmake"
    export CCSM_MACH="lightning_path"
-   export CFG_STRING="-fc pathf90 -linker \${mpich}/bin/mpif90 -mach \$CCSM_MACH "
+   export CFG_STRING="-fc pathf90 -linker \${mpich}/bin/mpif90 "
    export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=\${mpich}/bin/mpif90 "
 fi
 export MACH_WORKSPACE="/ptmp"
@@ -225,7 +226,7 @@ export intel=/fs/local
 export PATH=\${intel}/bin:\${PATH}
 export MAKE_CMD="gmake -j5 "
 export CCSM_MACH="breeze_intel"
-export CFG_STRING="-fc ifort -cc icc -mach \$CCSM_MACH "
+export CFG_STRING="-fc ifort -cc icc "
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/fs/home/erik/bin/cprnc
@@ -292,7 +293,7 @@ if [ "\$CLM_FC" = "PGI" ]; then
     export PATH=\${PGI}/linux86/6.1/bin:\${mpich}/bin:\${PATH}
     export LD_LIBRARY_PATH=\${PGI}/linux86/6.1/lib:\${LD_LIBRARY_PATH}
     export CCSM_MACH="calgary_pgi"
-    export CFG_STRING="-mach \$CCSM_MACH "
+    export CFG_STRING=""
     export TOOLS_MAKE_STRING=""
 else
     export LAHEY=/usr/local/lf9562
@@ -304,7 +305,7 @@ else
     export LIB_MPI=\${mpich}/lib
     export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
     export CCSM_MACH="calgary_lahey"
-    export CFG_STRING="-fc lf95 -cc gcc -cflags -I/usr/lib/gcc/i386-redhat-linux/4.1.0/include -mach \$CCSM_MACH "
+    export CFG_STRING="-fc lf95 -cc gcc -cflags -I/usr/lib/gcc/i386-redhat-linux/4.1.0/include "
     export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
 fi
 export MAKE_CMD="gmake -j 2"   ##using hyper-threading on calgary
@@ -380,7 +381,7 @@ module load   xtpe-quadcore
 module load   torque moab
 module switch pgi pgi/7.1.6       # 7.1.6      is default on 2008-sep-03
 module load   netcdf/3.6.2          # 3.6.2      is default on 2008-sep-03
-module swap   xt-asyncpe xt-asyncpe/1.0c
+#module swap   xt-asyncpe xt-asyncpe/1.0c
 module swap   xt-binutils-quadcore xt-binutils-quadcore/2.0.1
 module load   ncl
 
@@ -397,7 +398,7 @@ export LIB_NETCDF=\${NETCDF_DIR}/lib
 export INC_NETCDF=\${NETCDF_DIR}/include
 export MOD_NETCDF=\${NETCDF_DIR}/include
 export CCSM_MACH="jaguar"
-export CFG_STRING="-fc ftn -mach \$CCSM_MACH "
+export CFG_STRING="-fc ftn "
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
 export MAKE_CMD="gmake -j 9 "
 export MACH_WORKSPACE="/tmp/work"
@@ -455,7 +456,7 @@ export CLM_RESTART_THREADS=4
 
 ##mpi tasks
 export CLM_TASKS=200
-export CLM_RESTART_TASKS=49
+export CLM_RESTART_TASKS=48
 
 export CLM_COMPSET="I"
 
@@ -485,7 +486,7 @@ export LIB_NETCDF=\${NETCDF_DIR}/lib
 export INC_NETCDF=\${NETCDF_DIR}/include
 export MOD_NETCDF=\${NETCDF_DIR}/include
 export CCSM_MACH="kraken"
-export CFG_STRING="-fc ftn -mach \$CCSM_MACH "
+export CFG_STRING="-fc ftn "
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
 export MAKE_CMD="gmake -j 9 "
 export MACH_WORKSPACE="/lustre/scratch"
@@ -524,7 +525,7 @@ export NETCDF=/usr/local/netcdf-3-6-3
 export INC_NETCDF=\$NETCDF/include
 export LIB_NETCDF=\$NETCDF/lib
 export MAKE_CMD="make -j 4"
-export CFG_STRING="-fc g95 -cc gcc -mach \$CCSM_MACH "
+export CFG_STRING="-fc g95 -cc gcc "
 export TOOLS_MAKE_STRING=""
 export MACH_WORKSPACE="$HOME/runs"
 export CPRNC_EXE=$HOME/bin/newcprnc
@@ -604,6 +605,7 @@ fi
 
 ##set our own environment vars
 export CSMDATA=\${dataroot}/inputdata
+export DIN_LOC_ROOT=\${CSMDATA}
 export MPI_TYPE_MAX=100000
 
 ##process other env vars possibly coming in

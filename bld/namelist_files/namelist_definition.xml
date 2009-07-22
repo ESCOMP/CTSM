@@ -1044,7 +1044,7 @@ Horizontal resolutions
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v5,gx1v3,gx1v4,gx1v5,gx1v6,navy,test,tx0.1v2,T62">
+       valid_values="USGS,gx3v5,gx1v3,gx1v4,gx1v5,gx1v6,navy,test,tx0.1v2,tx1v1,T62">
 Land mask description
 </entry> 
 
@@ -1058,12 +1058,30 @@ Beginning of year to cycle datm data through
 End of year to cycle datm data through
 </entry>
 
-<entry id="sim_year" type="char*9" category="default_settings"
+<entry id="sim_year" type="integer" category="default_settings"
        group="default_settings" valid_values=
-"1000,1000-1002,1000-1004,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1985,1995,2000,2005,1850-2000">
-Year to simulate datasets for (such as surface datasets, initial conditions, dynamic PFT, aerosol-deposition, Nitrogen deposition rates etc.)
-A sim_year near 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
+"1000,1850,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1985,1995,2000,2005">
+Year to simulate datasets for (such as surface datasets, initial conditions, aerosol-deposition, Nitrogen deposition rates etc.)
+A sim_year of 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
 </entry> 
+
+<entry id="sim_year_range" type="char*9" category="default_settings"
+       group="default_settings" valid_values=
+"constant,1000-1002,1000-1004,1850-2000">
+Range of years to simulate transitory datasets for (such as dynamic: land-use datasets, aerosol-deposition, Nitrogen deposition rates etc.)
+Constant means simulation will be held at a constant year given in sim_year.
+A sim_year_range near 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.
+</entry> 
+
+<entry id="clm_demand" type="char*256" category="default_settings"
+       group="default_settings" valid_values="">
+Namelist entries to demand be provided on the namelist.
+</entry>
+
+<entry id="use_case_desc" type="char*256"  category="default_settings"
+       group="use_case_desc" valid_values="" >
+Description of the use case selected.
+</entry>
 
 <entry id="source" type="char*80" category="datm_internal"
        group="datm_internal" 

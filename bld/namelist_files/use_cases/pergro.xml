@@ -2,6 +2,8 @@
 
 <namelist_defaults>
 
+<use_case_desc>Perturbation error growth test with initial conditions perturbed by roundoff level</use_case_desc>
+
 <pertlim>1.e-14</pertlim>
 
 <hist_empty_htapes>.true.</hist_empty_htapes>

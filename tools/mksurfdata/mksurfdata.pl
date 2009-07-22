@@ -47,7 +47,7 @@ EOF
       #
       # Query the XML default file database to get the appropriate griddata file
       #
-      my $griddata = `../../bld/queryDefaultNamelist.pl -res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue -demand -var fatmgrid`;
+      my $griddata = `../../bld/queryDefaultNamelist.pl -res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue -var fatmgrid`;
       if ( $? != 0 ) {
          die "ERROR:: fatmgrid file NOT found\n";
       }
@@ -104,13 +104,13 @@ EOF
             #
             # Query the XML default file database to get the appropriate furbinp file
             #
-            my $urbdata = `../../bld/queryDefaultNamelist.pl -res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue -filenameonly -demand -var furbinp`;
+            my $urbdata = `../../bld/queryDefaultNamelist.pl -res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue -filenameonly -var fsurdat`;
             if ( $? != 0 ) {
                die "ERROR:: furbinp file NOT found\n";
             }
             chomp( $urbdata );
             print $fh <<"EOF";
- mksrf_furban       = '../../bld/urban_input/$urbdata'
+ mksrf_furban       = '$CSMDATA/lnd/clm2/surfdata/$urbdata'
 EOF
          }
          if ( $res =~ /[1-9]x[1-9]_[a-zA-Z0-9]/ ) {
@@ -145,7 +145,7 @@ EOF
          if ( $? ) { die "ERROR in mksurfdata: $?\n"; }
 
          #
-         # Check that files were created and rename them to CSMDATA
+         # Check that files were created
          #
          @ncfiles  = glob( "surfdata_*.nc" );
          if ( $#ncfiles != 0 ) {
@@ -154,6 +154,20 @@ EOF
          chomp( $ncfiles[0] );
          @lfiles = glob( "surfdata_*.log" );
          chomp( $lfiles[0] );
+         #
+         # If urban point, append grid and frac file on top of surface dataset
+         #
+         if ( $urb_pt ) {
+            system( "ncks -A $griddata $ncfiles[0]" );
+            my $fracdata = `../../bld/queryDefaultNamelist.pl -res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue -var fatmlndfrc`;
+            if ( $? != 0 ) {
+               die "ERROR:: fatmlndfrc file NOT found\n";
+            }
+            system( "ncks -A $fracdata $ncfiles[0]" );
+         }
+         #
+         # Rename files to CSMDATA
+         #
          my $lsvnmesg = "$svnmesg $urbdesc $desc";
          if ( -f "$ncfiles[0]" && -f "$lfiles[0]" ) {
             my $ofile = "surfdata_${res}_${urbdesc}_${desc}_${sdate}";

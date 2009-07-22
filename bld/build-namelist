@@ -62,6 +62,7 @@ OPTIONS
      -infile "filepath"       Specify a file containing namelists to read values from.
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
                               file specified.
+     -list_use_cases          List use cases and descriptions and then quit.
      -lnd_res "resolution"    Horizontal resolution of fine mesh for land 
                               (if different than resolution coupling to atmosphere)
                               Use nlatxnlon for spectral grids;  dlatxdlon for fv grids 
@@ -91,8 +92,8 @@ OPTIONS
 
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
-      0. values set from a use-case scenario, e.g., -use_case
-      1. namelist values set by specific command-line options, i.e., -d 
+      0. namelist values set by specific command-line options, i.e., -d, -sim_year
+      1. values set from a use-case scenario, e.g., -use_case
       2. values set on the command-line using the -namelist option,
       3. values read from the file specified by -infile,
       4. values from the namelist defaults file.
@@ -130,7 +131,9 @@ my %opts = ( config          => $cfg_cache,
              cycle_beg_year  => "default",
              cycle_end_year  => "default",
              cycle_init_year => "default",
+             clm_demand      => "null",
 	     help            => 0,
+             list_use_cases  => 0,
 	     dir             => $outdirname,
              sim_year        => "default",
 	     res             => "default",
@@ -159,6 +162,7 @@ GetOptions(
     "ignore_ic_year"            => \$opts{'ignore_ic_year'},
     "infile=s"                  => \$opts{'infile'},
     "inputdata=s"               => \$opts{'inputdata'},
+    "list_use_cases"            => \$opts{'list_use_cases'},
     "mask=s"                    => \$opts{'mask'},
     "namelist=s"                => \$opts{'namelist'},
     "res=s"                     => \$opts{'res'},
@@ -216,17 +220,20 @@ validate_options("commandline", \%opts);
 
 # The root directory for the input data files must be specified.
 
+#The root directory to ccsm utils Tools
+my $ccsm_tools = &absolute_path( "$cfgdir/../../../../scripts/ccsm_utils/Tools" );
+
 # The XML::Lite module is required to parse the XML files.
-(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/XML/Lite.pm")  or  die <<"EOF";
+(-f "$ccsm_tools/perl5lib/XML/Lite.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"XML/Lite.pm\" in directory 
-    \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
+    \"$ccsm_tools/perl5lib\" **
 EOF
 
 # The Build::Config module provides utilities to access the configuration information
 # in the config_cache.xml file
-(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/Build/Config.pm")  or  die <<"EOF";
+(-f "$ccsm_tools/perl5lib/Build/Config.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/Config.pm\" in directory 
-    \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
+    \"$ccsm_tools/perl5lib\" **
 EOF
 
 # The namelist definition file contains entries for all namelist variables that
@@ -239,9 +246,9 @@ if ($print>=2) { print "Using namelist definition file $nl_definition_file$eol";
 
 # The Build::NamelistDefinition module provides utilities to validate that the output
 # namelists are consistent with the namelist definition file
-(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
+(-f "$ccsm_tools/perl5lib/Build/NamelistDefinition.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/NamelistDefinition.pm\" in directory 
-    \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
+    \"$ccsm_tools/perl5lib\" **
 EOF
 
 # The namelist defaults file contains default values for all required namelist variables.
@@ -249,6 +256,11 @@ my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml"
                           "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
                           "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                           "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
+
+if (defined $opts{'use_case'}) {
+   unshift( @nl_defaults_files, "$opts{'use_case_dir'}/$opts{'use_case'}.xml" );
+}
+
 foreach my $nl_defaults_file ( @nl_defaults_files ) {
   (-f "$nl_defaults_file")  or  die <<"EOF";
 ** $ProgName - Cannot find namelist defaults file \"$nl_defaults_file\" **
@@ -258,21 +270,21 @@ EOF
 
 # The Build::NamelistDefaults module provides a utility to obtain default values of namelist
 # variables based on finding a best fit with the attributes specified in the defaults file.
-(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/Build/NamelistDefaults.pm")  or  die <<"EOF";
+(-f "$ccsm_tools/perl5lib/Build/NamelistDefaults.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/NamelistDefaults.pm\" in directory 
-    \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
+    \"$ccsm_tools//perl5lib\" **
 EOF
 
 # The Build::Namelist module provides utilities to parse input namelists, to query and modify
 # namelists, and to write output namelists.
-(-f "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib/Build/Namelist.pm")  or  die <<"EOF";
+(-f "$ccsm_tools/perl5lib/Build/Namelist.pm")  or  die <<"EOF";
 ** $ProgName - Cannot find perl module \"Build/Namelist.pm\" in directory 
-    \"$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib\" **
+    \"$ccsm_tools/perl5lib\" **
 EOF
 
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir/perl5lib to the list of paths that Perl searches for modules
-my @dirs = ( $cfgdir, "$cfgdir/../../../../scripts/ccsm_utils/Tools/perl5lib");
+my @dirs = ( $cfgdir, "$ccsm_tools/perl5lib");
 unshift @INC, @dirs;
 require XML::Lite;
 require Build::Config;
@@ -284,6 +296,29 @@ require Streams::Template;
 
 # Create a configuration object from the CLM config_cache.xml file. 
 my $cfg = Build::Config->new($opts{'config'});
+
+# If list_use_case options set -- list the use cases and descriptions and quit
+if ( $opts{'list_use_cases'} ) {
+    print "Use cases are:...\n\n";
+    my @ucases;
+    foreach my $file( sort( glob($opts{'use_case_dir'}."/*.xml") ) ) {
+       my $use_case;
+       if ( $file =~ /\/([^\/]+)\.xml$/ ) {
+          $use_case = $1;
+       } else {
+          die << "EOF";
+** $ProgName - Bad name for use case file = $file
+EOF
+       }
+       my $uc_defaults = Build::NamelistDefaults->new("$file", $cfg);
+       printf "%15s = %s\n", $use_case, $uc_defaults->get_value("use_case_desc");
+       push @ucases, $use_case;
+    }
+    die <<EOF;
+
+$ProgName - use cases: @ucases
+EOF
+}
 
 # Create a namelist definition object.  This object provides a method for verifying that the
 # output namelist variables are in the definition file, and are output in the correct
@@ -314,6 +349,7 @@ else {
     die "$ProgName - ERROR: CCSM inputdata root directory must be specified by either -csmdata argument\n" .
 	" or by the CSMDATA environment variable. :";
 }
+$ENV{'DIN_LOC_ROOT'} = $inputdata_rootdir;
 
 if ($opts{'test'}) {
     (-d $inputdata_rootdir)  or  die <<"EOF";
@@ -356,8 +392,7 @@ if (defined $opts{'use_case'}) {
 
 	if ($val) {
 	    add_default($nl, $var, 'val'=>$val);
-	}
-	else {
+	} else {
 	    die "$ProgName - ERROR: No default value found for variable $var in '-use_case' $opts{'use_case'}.\n $@";
 	}
     }
@@ -469,28 +504,36 @@ if ( $opts{$var} ne "default" ) {
 } else {
     $val = $defaults->get_value($var);
 } 
-my $sim_years = $val;
-my $sim_yr    = $val;
-if ( $sim_years =~ /([0-9]+)-([0-9]+)/ ) { 
-   $sim_yr = $1; 
-   if ( ! defined($opts{'clm_demand'}) ) {
-      $opts{'clm_demand'} = "null";
-   }
-   $opts{'clm_demand'} = $opts{'clm_demand'} . ",fpftdyn";
-   if ( $bgc eq "cn" ) { 
-     $opts{'clm_demand'} = $opts{'clm_demand'} . ",fndepdyn"; 
-   }
+my $sim_year_range = $defaults->get_value("sim_year_range");
+my $sim_year       = $val;
+if ( $val =~ /([0-9]+)-([0-9]+)/ ) { 
+   $sim_year       = $1; 
+   $sim_year_range = $val;
 }
-$opts{$var}   = $val;
+$val = $sim_year;
 $group = $definition->get_group_name($var);
 $nl->set_variable_value($group, $var, $val );
 if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm $var of $val is NOT valid. Valid values are: @valid_values\n";
 }
-$val = "'".$defaults->get_value($var)."'";
 $nl->set_variable_value($group, $var, $val );
-if ($print>=2) { print "CLM sim_year is $sim_years $eol"; }
+if ($print>=2) { print "CLM sim_year is $sim_year $eol"; }
+
+my $var = "sim_year_range";
+$val = $sim_year_range;
+if ( $val ne "constant" ) {
+   $opts{$var}   = $val;
+   $group = $definition->get_group_name($var);
+   $nl->set_variable_value($group, $var, $val );
+   if (  ! $definition->is_valid_value( $var, $val, 'noquotes'=>1 ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      die "$nm $var of $val is NOT valid. Valid values are: @valid_values\n";
+   }
+   $val = "'".$defaults->get_value($var)."'";
+   $nl->set_variable_value($group, $var, $val );
+   if ($print>=2) { print "CLM sim_year_range is $sim_year_range $eol"; }
+}
 
 my $lnd_res;
 if ($opts{'lnd_res'} eq "default") { 
@@ -540,7 +583,17 @@ if ($mode eq "ccsm_seq") {
    } else {
        add_default($nl, 'case_name');
    }
+   # Case description
+   my $case_desc  = $nl->get_value('case_desc');
+   if ( $case_desc eq "" ) {
+      if (defined $opts{'use_case'}) {
+         add_default($nl, 'case_desc', 'val'=>$nl->get_value("use_case_desc") );
+      } else {
+         add_default($nl, 'case_desc', 'nofail'=>1 );
+      }
+   }
 
+   # Output path root directory
    add_default($nl, 'outpathroot', 'val'=>$opts{'dir'}."/"); 
    
    # Orbit
@@ -711,7 +764,7 @@ add_default($nl, 'fatmgrid'  , 'hgrid'=>$res );
 add_default($nl, 'fpftcon');
 
 
-add_default($nl, 'co2_ppmv', 'sim_year'=>$sim_years );
+add_default($nl, 'co2_ppmv', 'sim_year'=>$sim_year );
 add_default($nl, 'co2_type');
 #add_default($nl, 'wrtdia',       'val'=> '.false.');
 add_default($nl, 'hist_crtinic',  'bgc'=>$bgc );
@@ -733,24 +786,26 @@ if ( $rtm eq "on" ) {
 my $dust        = $cfg->get('dust');
 my $carbon_aero = $cfg->get('carbon_aero');
 if ( $mode eq "ext_ccsm_con" || $dust eq "off" || $carbon_aero eq "off" ) {
-   add_default($nl, 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_years );
+   add_default($nl, 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year,
+                    'sim_year_range'=>$sim_year_range);
 }
 
 #
 # Deal with options that the user has said are required...
 #
-if ( defined($opts{'clm_demand'}) ) {
-    my @demandlist = split( ",", $opts{'clm_demand'} );
-    my %settings = {};
-    $settings{'hgrid'}       = $res;
-    $settings{'sim_year'}    = $sim_years;
-    $settings{'mask'}        = $mask;
-    foreach my $item ( @demandlist ) {
-        if ( $item eq "null" ) { next; }
-	add_default($nl, $item, %settings );
-    }
+my $demand  = $nl->get_value('clm_demand');
+$demand =~ s/\'//g;   # Remove quotes
+$opts{'clm_demand'} .= ",$demand";
+my @demandlist = split( ",", $opts{'clm_demand'} );
+my %settings = {};
+$settings{'hgrid'}          = $res;
+$settings{'sim_year'}       = $sim_year;
+$settings{'sim_year_range'} = $sim_year_range;
+$settings{'mask'}           = $mask;
+foreach my $item ( @demandlist ) {
+   if ( $item eq "null" ) { next; }
+   add_default($nl, $item, %settings );
 }
-
 #
 # Get surface dataset after fpftdyn so that we can get surface data consistent with it
 #
@@ -764,7 +819,7 @@ $fndepdyn =~ s!(.*)/!!;
 $fndepdyn =~ s/'//;
 $fndepdyn =~ s/"//;
 if ( $fndepdyn eq "" ) { $fndepdyn = "null"; }
-add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_yr );
+add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year );
 my $fsurdat = $nl->get_value( 'fsurdat' );
 
 #
@@ -792,15 +847,15 @@ if (not defined $nl->get_value('finidat')) {
     if ($opts{'ignore_ic_date'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'fndepdyn'=>$fndepdyn, 
-                    'sim_year'=>$sim_yr, 'maxpft'=>$maxpft );
+                    'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
     } elsif ($opts{'ignore_ic_year'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'ic_md'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
-                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_yr, 'maxpft'=>$maxpft );
+                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
     } else {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'ic_ymd'=>$ic_date, 'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 
-                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_yr, 'maxpft'=>$maxpft );
+                    'fndepdyn'=>$fndepdyn, 'sim_year'=>$sim_year, 'maxpft'=>$maxpft );
     }
     my $finidat = $nl->get_value($var);
     if ( (not defined $finidat ) || $finidat =~ /null/ ) {
@@ -814,7 +869,7 @@ if (not defined $nl->get_value('finidat')) {
 # If CN mode -- get Nitrogen deposition file if available AND fndepdyn NOT set
 #
 if ( ($bgc eq "cn") && not defined $nl->get_value('fndepdyn') ) {
-   add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_yr, 'nofail'=>1 );
+   add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'nofail'=>1 );
 }
  
 ###############################
@@ -945,6 +1000,7 @@ if ($mode eq "ccsm_seq") {
     $inputopts{'csmdata'}   = $inputdata_rootdir;
     $inputopts{'filenames'} = "";
     $inputopts{'case'}      = "";
+    $inputopts{'chng_din_lc'} = 1;
     
     if ( $source ne "CLM_QIAN" ) {
        my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' );
@@ -953,7 +1009,7 @@ if ($mode eq "ccsm_seq") {
        # Read the streams template file
        my $streams = Streams::Template->new( \%inputopts );
        my $template = $defaults->get_value( 'streamstemplate' );
-       $streams->Read( "$cfgdir/namelist_files/$template" );
+       $streams->Read( "$cfgdir/../../../$template" );
        
        if ( $opts{'test'} ) {
 	   $streams->TestFilesExist( "data" );
@@ -972,7 +1028,7 @@ if ($mode eq "ccsm_seq") {
           # Read the streams template file
           my $streams = Streams::Template->new( \%inputopts );
           my $template = $defaults->get_value( 'streamstemplate' );
-          $streams->Read( "$cfgdir/namelist_files/$template" );
+          $streams->Read( "$cfgdir/../../../$template" );
        
           if ( $opts{'test'} ) {
 	      $streams->TestFilesExist( "data" );
@@ -1082,6 +1138,10 @@ sub add_default {
     my $var = shift;    # name of namelist variable
     my %opts = @_;      # options
 
+    # If variable has quotes around it
+    if ( $var =~ /'(.+)'/ ) {
+       $var = $1;
+    }
     # Query the definition to find which group the variable belongs to.  Exit if not found.
     my $group = $definition->get_group_name($var);
     unless ($group) {

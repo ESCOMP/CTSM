@@ -49,9 +49,9 @@ begin
   ; Use above to get filenames, and various other information needed such as dates
   ;
   if ( filetype .eq. "fndepdyn" )then
-     ftype    = "fndep_clm_";
+     ftype    = "fndep_clm_simyr";
   else
-     ftype    = "ndep_clm_";
+     ftype    = "ndep_clm_simyr";
   end if
   csmdata  = getenv("CSMDATA");
   clmroot  = getenv("CLM_ROOT");
