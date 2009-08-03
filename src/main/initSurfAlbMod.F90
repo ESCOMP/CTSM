@@ -182,6 +182,12 @@ contains
     esai               => clm3%g%l%c%p%pps%esai
     fdry               => clm3%g%l%c%p%pps%fdry
 
+    decl      => clm3%g%l%c%cps%decl
+    dayl      => clm3%g%l%c%p%pepv%dayl
+    pcolumn   => clm3%g%l%c%p%column
+    pgridcell => clm3%g%l%c%p%gridcell
+    latdeg    => clm3%g%latdeg 
+
     ! ========================================================================
     ! Determine surface albedo - initialized by calls to ecosystem dynamics and
     ! albedo subroutines. Note: elai, esai, frac_veg_nosno_alb are computed in
@@ -207,6 +213,7 @@ contains
     nclumps = get_proc_clumps()
 
     ! Loop over clumps on this processor
+!$OMP PARALLEL DO PRIVATE (nc,p,j,l,c,fc,begg,endg,begl,endl,begc,endc,begp,endp,lat,temp,snowbd,fmelt)
     do nc = 1,nclumps
 
        ! Determine clump bounds
@@ -215,8 +222,6 @@ contains
 
        ! Determine variables needed by SurfaceAlbedo for lake points
 
-       !dir$ concurrent
-       !cdir nodep
        do p = begp,endp
           l = plandunit(p)
           if (lakpoi(l)) then
@@ -271,12 +276,6 @@ contains
        ! timestep (caldaym1) so that the CNphenology routines know if this is 
        ! before or after the summer solstice.
 
-       decl      => clm3%g%l%c%cps%decl
-       dayl      => clm3%g%l%c%p%pepv%dayl
-       pcolumn   => clm3%g%l%c%p%column
-       pgridcell => clm3%g%l%c%p%gridcell
-       latdeg    => clm3%g%latdeg 
-
        ! declination for previous timestep
        do c = begc, endc
           l = clandunit(c)
@@ -314,8 +313,6 @@ contains
             doalb=.true.)
 #endif        
 
-!dir$ concurrent
-!cdir nodep
        do p = begp, endp
           l = plandunit(p)
           if (.not. lakpoi(l)) then
@@ -329,8 +326,6 @@ contains
        ! Compute Surface Albedo - all land points (including lake) other than urban
        ! Needs as input fracion of soil covered by snow (Z.-L. Yang U. Texas)
 
-!dir$ concurrent
-!cdir nodep
        do c = begc, endc
           l = clandunit(c)
           if (itypelun(l) == isturb) then
@@ -365,6 +360,7 @@ contains
        end if
 
     end do   ! end of loop over clumps
+!$OMP END PARALLEL DO
 
   end subroutine initSurfalb
 

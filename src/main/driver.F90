@@ -300,7 +300,7 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 #if (!defined DGVM)
      if (fpftdyn /= ' ') then
 
-        call pftdyn_interp()  ! change the pft weights
+        call pftdyn_interp( begg, endg, begc, endc, begp, endp )  ! change the pft weights
 
         !--- get new heat,water content: (new-old)/dt = flux into lnd model ---
         call dynland_hwcontent( begg, endg, clm3%g%gws%gc_liq2(begg:endg), &

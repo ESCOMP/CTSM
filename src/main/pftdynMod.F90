@@ -247,7 +247,7 @@ contains
     call pftdyn_getdata(nt2, wtpft2, begg,endg,0,numpft)
     
     ! Get harvest rate at the nt1 time
-    call pftdyn_getharvest(nt1)
+    call pftdyn_getharvest(nt1,begg,endg)
 
     ! convert weights from percent to proportion
     do m = 0,numpft
@@ -269,7 +269,7 @@ contains
 ! !ROUTINE: pftdyn_interp
 !
 ! !INTERFACE:
-  subroutine pftdyn_interp()
+  subroutine pftdyn_interp( begg, endg, begc, endc, begp, endp )
 !
 ! !DESCRIPTION:
 ! Time interpolate dynamic landuse data to get pft weights for model time
@@ -285,9 +285,15 @@ contains
     use clm_time_manager, only : get_curr_date, get_curr_calday
     use clm_varcon  , only : istsoil
     use clm_varpar  , only : numpft, lsmlon, lsmlat
+    implicit none
 !
 ! !ARGUMENTS:
-    implicit none
+    integer, intent(IN)  :: begg     ! beg indices for land gridcells
+    integer, intent(IN)  :: endg     ! end indices for land gridcells
+    integer, intent(IN)  :: begc     ! beg indices for land columns
+    integer, intent(IN)  :: endc     ! end indices for land columns
+    integer, intent(IN)  :: begp     ! beg indices for land plant function types
+    integer, intent(IN)  :: endp     ! end indices for land plant function types
 !
 !EOP
 !
@@ -303,10 +309,6 @@ contains
     real(r8) :: wt1              ! time interpolation weights
     real(r8), pointer :: wtpfttot1(:)           ! summation of pft weights for renormalization
     real(r8), pointer :: wtpfttot2(:)           ! summation of pft weights for renormalization
-    integer  :: begg,endg                       ! beg/end indices for land gridcells
-    integer  :: begl,endl                       ! beg/end indices for land landunits
-    integer  :: begc,endc                       ! beg/end indices for land columns
-    integer  :: begp,endp                       ! beg/end indices for land pfts
     type(gridcell_type), pointer :: gptr         ! pointer to gridcell derived subtype
     type(landunit_type), pointer :: lptr         ! pointer to landunit derived subtype
     type(pft_type)     , pointer :: pptr         ! pointer to pft derived subtype
@@ -318,8 +320,6 @@ contains
     gptr => clm3%g
     lptr => clm3%g%l
     pptr => clm3%g%l%c%p
-
-    call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
     allocate(wtpfttot1(begc:endc),wtpfttot2(begc:endc))
     wtpfttot1(:) = 0._r8
@@ -370,7 +370,7 @@ contains
        end do
 
        call pftdyn_getdata(nt2, wtpft2, begg,endg,0,numpft)
-       call pftdyn_getharvest(nt1)
+       call pftdyn_getharvest(nt1,begg,endg)
 
        do m = 0,numpft
 !dir$ concurrent
@@ -437,7 +437,7 @@ contains
 ! !ROUTINE: pftdyn_getdata
 !
 ! !INTERFACE:
-  subroutine pftdyn_getdata(ntime, pctpft, lb1,ub1,lb2,ub2)
+  subroutine pftdyn_getdata(ntime, pctpft, begg, endg, pft0, maxpft)
 !
 ! !DESCRIPTION:
 ! Obtain dynamic landuse data (pctpft) and make sure that
@@ -450,14 +450,13 @@ contains
     implicit none
     include 'netcdf.inc'
     integer , intent(in)  :: ntime
-    integer , intent(in)  :: lb1,ub1,lb2,ub2
-    real(r8), intent(out) :: pctpft(lb1:ub1,lb2:ub2)
+    integer , intent(in)  :: begg,endg,pft0,maxpft
+    real(r8), intent(out) :: pctpft(begg:endg,pft0:maxpft)
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
     integer  :: i,j,m,n
-    integer  :: begg,endg         
     integer  :: err, ierr, ret
     real(r8) :: sumpct,sumerr                     ! temporary
     integer  :: start(4), count(4)                ! input sizes
@@ -465,8 +464,6 @@ contains
     character(len=32) :: subname='pftdyn_getdata' ! subroutine name
 !-----------------------------------------------------------------------
     
-    call get_proc_bounds(begg,endg)
-
     allocate(arrayl(begg:endg))
     do n = 0,numpft
        start(1) = 1
@@ -514,7 +511,7 @@ contains
 ! !ROUTINE: pftdyn_getharvest
 !
 ! !INTERFACE:
-  subroutine pftdyn_getharvest(ntime)
+  subroutine pftdyn_getharvest(ntime, begg, endg)
 !
 ! !DESCRIPTION:
 ! Obtain harvest data 
@@ -526,19 +523,18 @@ contains
     implicit none
     include 'netcdf.inc'
     integer , intent(in)  :: ntime
+    integer , intent(IN)  :: begg     ! beg indices for land gridcells
+    integer , intent(IN)  :: endg     ! end indices for land gridcells
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer  :: begg,endg         
     integer  :: ret
     integer  :: start(3), count(3)                ! input sizes
     real(r8),pointer :: arrayl(:)                 ! temporary array
     character(len=32) :: subname='pftdyn_getharvest' ! subroutine name
 !-----------------------------------------------------------------------
     
-    call get_proc_bounds(begg,endg)
-
     allocate(arrayl(begg:endg))
     start(1) = 1
     count(1) = lsmlon
@@ -624,7 +620,7 @@ contains
 ! !ROUTINE: pftdyn_wbal
 !
 ! !INTERFACE:
-  subroutine pftdyn_wbal()
+  subroutine pftdyn_wbal( begg, endg, begc, endc, begp, endp )
 !
 ! !DESCRIPTION:
 ! modify pft-level state and flux variables to maintain water balance with
@@ -638,14 +634,16 @@ contains
 !
 ! !ARGUMENTS:
     implicit none
+    integer, intent(IN)  :: begg     ! beg indices for land gridcells
+    integer, intent(IN)  :: endg     ! end indices for land gridcells
+    integer, intent(IN)  :: begc     ! beg indices for land columns
+    integer, intent(IN)  :: endc     ! end indices for land columns
+    integer, intent(IN)  :: begp     ! beg indices for land plant function types
+    integer, intent(IN)  :: endp     ! end indices for land plant function types
 !
 !EOP
 !
 ! !LOCAL VARIABLES:
-    integer  :: begp, endp    ! proc beginning and ending pft indices
-    integer  :: begc, endc    ! proc beginning and ending column indices
-    integer  :: begl, endl    ! proc beginning and ending landunit indices
-    integer  :: begg, endg    ! proc beginning and ending gridcell indices
     integer  :: pi,p,c,l,g    ! indices
     integer  :: ier           ! error code
     real(r8) :: dtime         ! land model time step (sec)
@@ -664,10 +662,6 @@ contains
     lptr => clm3%g%l
     cptr => clm3%g%l%c
     pptr => clm3%g%l%c%p
-
-    ! Get relevant sizes
-
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
     ! Allocate loss_h2ocan
     allocate(loss_h2ocan(begp:endp), stat=ier)

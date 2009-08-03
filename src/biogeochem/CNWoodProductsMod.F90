@@ -64,10 +64,6 @@ subroutine CNWoodProducts(num_soilc, filter_soilc)
    integer :: fc        ! lake filter indices
    integer :: c         ! indices
    real(r8):: dt        ! time step (seconds)
-   integer  :: begg,endg                       ! beg/end indices for land gridcells
-   integer  :: begl,endl                       ! beg/end indices for land landunits
-   integer  :: begc,endc                       ! beg/end indices for land columns
-   integer  :: begp,endp                       ! beg/end indices for land pfts
    type(column_type),   pointer :: cptr         ! pointer to column derived subtype
    real(r8) :: kprod10       ! decay constant for 10-year product pool
    real(r8) :: kprod100      ! decay constant for 100-year product pool
@@ -75,7 +71,6 @@ subroutine CNWoodProducts(num_soilc, filter_soilc)
 !EOP
 !-----------------------------------------------------------------------
 
-   call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
    cptr => clm3%g%l%c
 	
    ! calculate column-level losses from product pools

@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on calgary, breeze, lightning, bluefire, jaguar, kraken: 
+# usage on calgary, breeze, dublin, lightning, bluefire, jaguar, kraken: 
 # ./test_driver.sh
 #
 # valid arguments: 
@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta19"
+seqccsm_vers="ccsm4_0_beta20"
 
 hostname=`hostname`
 case $hostname in
@@ -159,20 +159,7 @@ export CLM_RESTART_TASKS=30
 
 export CLM_COMPSET="I"
 
-if [ "\$CLM_FC" = "ifort" ]; then
-   netcdf=/contrib/2.6/netcdf/3.6.2-intel-10.1.008-64
-   export INC_NETCDF=\$netcdf/include
-   export LIB_NETCDF=\$netcdf/lib
-   mpich=/contrib/2.6/mpich-gm/1.2.6..14a-intel-10.1.008-64
-   export INC_MPI=\${mpich}/include
-   export LIB_MPI=\${mpich}/lib
-   export intel=/contrib/2.6/intel/10.1.008
-   export PATH=\${mpich}/bin:\${intel}/bin:\${PATH}
-   export MAKE_CMD="gmake"
-   export CCSM_MACH="lightning_intel"
-   export CFG_STRING="-fc ifort -cc icc -linker \$mpich/bin/mpif90 "
-   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
-else
+if [ "\$CLM_FC" = "pathf90" ]; then
    export INC_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/include
    export LIB_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/lib
    mpich=/contrib/2.6/mpich-gm/1.2.6..14a-pathscale-2.4-64
@@ -185,6 +172,33 @@ else
    export CCSM_MACH="lightning_path"
    export CFG_STRING="-fc pathf90 -linker \${mpich}/bin/mpif90 "
    export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=\${mpich}/bin/mpif90 "
+elif [ "\$CLM_FC" = "PGI" ]; then
+   netcdf=/contrib/2.6/netcdf/3.6.2-pgi-6.2-64
+   export INC_NETCDF=\${netcdf}/include
+   export LIB_NETCDF=\${netcdf}/lib
+   mpich=/contrib/2.6/mpich-gm/1.2.6..14a-pgi-6.2-64
+   export INC_MPI=\${mpich}/include
+   export LIB_MPI=\${mpich}/lib
+   export PGI=/usr/local/pgi/linux86-64/6.2
+   export PATH=\${mpich}/bin:\${PGI}/bin:\${PATH}
+   export LD_LIBRARY_PATH=\${PGI}/lib:\${LD_LIBRARY_PATH}
+   export MAKE_CMD="gmake"
+   export CCSM_MACH="lightning_pgi"
+   export CFG_STRING="-fc pgf90 -linker \${mpich}/bin/mpif90 "
+   export TOOLS_MAKE_STRING="USER_FC=pgf90 USER_LINKER=\${mpich}/bin/mpif90 "
+else
+   netcdf=/contrib/2.6/netcdf/3.6.2-intel-10.1.008-64
+   export INC_NETCDF=\$netcdf/include
+   export LIB_NETCDF=\$netcdf/lib
+   mpich=/contrib/2.6/mpich-gm/1.2.6..14a-intel-10.1.008-64
+   export INC_MPI=\${mpich}/include
+   export LIB_MPI=\${mpich}/lib
+   export intel=/contrib/2.6/intel/10.1.008
+   export PATH=\${mpich}/bin:\${intel}/bin:\${PATH}
+   export MAKE_CMD="gmake"
+   export CCSM_MACH="lightning_intel"
+   export CFG_STRING="-fc ifort -cc icc -linker \$mpich/bin/mpif90 "
+   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 fi
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
@@ -320,6 +334,89 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
+    ## dublin
+    dublin* ) 
+    submit_script="test_driver_dublin_${cur_time}.sh"
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+# Name of the queue (CHANGE THIS if needed)
+#PBS -q long
+# Number of nodes (CHANGE THIS if needed)
+#PBS -l nodes=2:ppn=2
+# output file base name
+#PBS -N test_dr
+# Put standard error and standard out in same file
+#PBS -j oe
+# Export all Environment variables
+#PBS -V
+# End of options
+
+if [ -n "\$PBS_JOBID" ]; then    #batch job
+    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
+    initdir=\${PBS_O_WORKDIR}
+fi
+
+if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
+    interactive="NO"
+    input_file="tests_pretag_dublin"
+else
+    interactive="YES"
+    input_file="tests_pretag_dublin_nompi"
+fi
+
+##omp threads
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=1
+fi
+export CLM_RESTART_THREADS=2
+
+##mpi tasks
+export CLM_TASKS=4
+export CLM_RESTART_TASKS=1
+
+export CLM_COMPSET="I"
+
+if [ "\$CLM_FC" = "PGI" ]; then
+    export PGI=/usr/local/pgi-pgcc-pghf
+    netcdf=/usr/local/netcdf-pgi
+    export INC_NETCDF=\${netcdf}/include
+    export LIB_NETCDF=\${netcdf}/lib
+    mpich=/usr/local/mpich-pgi
+    export INC_MPI=\${mpich}/include
+    export LIB_MPI=\${mpich}/lib
+    export PATH=\${PGI}/linux86/7.2-5/bin:\${mpich}/bin:\${PATH}
+    export LD_LIBRARY_PATH=\${PGI}/linux86/7.2-5/lib:\${LD_LIBRARY_PATH}
+    export CCSM_MACH="dublin_pgi"
+    export CFG_STRING=""
+    export TOOLS_MAKE_STRING=""
+else
+    export LAHEY=/usr/local/lf95
+    netcdf=/usr/local/netcdf-3.6.3-gcc-4.1.2-lf95-8.0_x86_64
+    export INC_NETCDF=\${netcdf}/include
+    export LIB_NETCDF=\${netcdf}/lib
+    export LD_LIBRARY_PATH=/usr/local/pgi-pgcc-pghf-7.2-5/linux86-64/7.2-5/libso:\${LAHEY}/lib64:\${LD_LIBRARY_PATH}
+    mpich=/usr/local/mpich-lf95
+    export INC_MPI=\${mpich}/include
+    export LIB_MPI=\${mpich}/lib
+    export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
+    export CCSM_MACH="dublin_lahey"
+    export CFG_STRING="-fc lf95 -cc gcc -cflags -I/usr/lib/gcc/x86_64-redhat-linux/4.1.2/include/ "
+    export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
+fi
+export MAKE_CMD="gmake -j 2"   ##using hyper-threading on calgary
+export MACH_WORKSPACE="/scratch/cluster"
+export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
+export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
+dataroot="/fs/cgd/csm"
+echo_arg="-e"
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
 
     ##jaguar
     jaguar* ) 
@@ -828,7 +925,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on calgary, bluefire, lightning, jaguar, kraken: "
+    echo "usage on calgary, bluefire, dublin, lightning, jaguar, kraken: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
@@ -858,6 +955,9 @@ case $hostname in
 
     ##calgary
     ca* | c0* )  qsub ${submit_script};;
+
+    ##dublin
+    dublin* )  qsub ${submit_script};;
 
     ##jaguar
     jaguar* )  qsub ${submit_script};;

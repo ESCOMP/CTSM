@@ -148,8 +148,21 @@ contains
 !EOP
 !
 ! !LOCAL VARIABLES:
-     integer :: cid                        ! clump id
+     character(len=32), parameter :: subname = 'get_clump_bounds'  ! Subroutine name
+     integer :: cid                                                ! clump id
+#ifdef _OPENMP
+     integer, external :: OMP_GET_MAX_THREADS
+     integer, external :: OMP_GET_NUM_THREADS
+#endif
 !------------------------------------------------------------------------------
+!
+!    Make sure this IS being called from a threaded region
+!
+#ifdef _OPENMP
+     if ( OMP_GET_NUM_THREADS() == 1 .and. OMP_GET_MAX_THREADS() > 1 )then
+        call endrun( trim(subname)//' ERROR: Calling from inside a non-threaded region -- this results in bad performance' )
+     end if
+#endif
 
      cid  = procinfo%cid(n)
      begp = clumps(cid)%begp
@@ -191,7 +204,20 @@ contains
 ! 2003.09.12  Mariana Vertenstein  Creation.
 !
 !EOP
+! !LOCAL VARIABLES:
+     character(len=32), parameter :: subname = 'get_proc_bounds'  ! Subroutine name
+#ifdef _OPENMP
+     integer, external :: OMP_GET_NUM_THREADS
+#endif
 !------------------------------------------------------------------------------
+!
+!    Make sure this is NOT being called from a threaded region
+!
+#ifdef _OPENMP
+     if ( OMP_GET_NUM_THREADS() > 1 )then
+        call endrun( trim(subname)//' ERROR: Calling from inside a threaded region -- this is illegal' )
+     end if
+#endif
 
      if (present(begp)) then
         begp = procinfo%begp
@@ -242,6 +268,20 @@ contains
 !
 !EOP
 !------------------------------------------------------------------------------
+! !LOCAL VARIABLES:
+     character(len=32), parameter :: subname = 'get_proc_bounds_atm'  ! Subroutine name
+#ifdef _OPENMP
+     integer, external :: OMP_GET_NUM_THREADS
+#endif
+!------------------------------------------------------------------------------
+!
+!    Make sure this is NOT being called from a threaded region
+!
+#ifdef _OPENMP
+     if ( OMP_GET_NUM_THREADS() > 1 )then
+        call endrun( trim(subname)//' ERROR: Calling from inside a threaded region -- this is illegal' )
+     end if
+#endif
 
    begg = procinfo%abegg
    endg = procinfo%aendg

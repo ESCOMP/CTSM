@@ -442,7 +442,8 @@ contains
     call t_startf('init_clmtype')
     call initClmtype()
 
-    call get_proc_bounds    (begg    , endg)
+    call get_proc_bounds    (begg    , endg    , begl, endl, &
+                             begc    , endc    , begp, endp )
     call init_atm2lnd_type  (begg    , endg    , clm_a2l)
     call init_lnd2atm_type  (begg    , endg    , clm_l2a)
 
@@ -603,7 +604,7 @@ contains
     if (fpftdyn /= ' ') then
        call t_startf('init_pftdyn')
        call pftdyn_init()
-       if (nsrest == 0) call pftdyn_interp()
+       if (nsrest == 0) call pftdyn_interp( begg, endg, begc, endc, begp, endp )
        call t_stopf('init_pftdyn')
     end if
 

@@ -98,7 +98,7 @@ Put this new finidat file in the next clm tag
 lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc
 </fsurdat>
 <fsurdat hgrid="1x1_tropicAtl" sim_year="1000" >
-lnd/clm2/surfdata/surfdata_1x1_tropicAtl_testyr1000_c090421.nc
+lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_testyr1000_c090731.nc
 </fsurdat>
 
 <!-- for present day simulations - year 2000 -->
@@ -195,7 +195,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr1850_c090715.nc</fsurdat>
 <fpftdyn hgrid="1.9x2.5"       sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_simyr1850-2005_c090705.nc</fpftdyn>
 <fpftdyn hgrid="10x15"         sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_simyr1850-2005_c090715.nc</fpftdyn>
 <fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_tropicAtl_simyr1850-2005_c090715.nc</fpftdyn>
-<fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1000-1004" >lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_tropicAtl_testyr1000-1004_c090421.nc</fpftdyn>
+<fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1000-1004" >lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_tropicAtl_testyr1000-1004_c090731.nc</fpftdyn>
 
 <!-- Grid datasets (relative to {csmdata}) -->
 <fatmgrid hgrid="360x720"   >lnd/clm2/griddata/griddata_360x720_070122.nc</fatmgrid>

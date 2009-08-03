@@ -72,11 +72,6 @@ contains
  
 ! !LOCAL VARIABLES:
 
-!  integer  :: begp, endp    ! proc beginning and ending pft indices
-!  integer  :: begc, endc    ! proc beginning and ending column indices
-!  integer  :: begl, endl    ! proc beginning and ending landunit indices
-!  integer  :: begg, endg    ! proc beginning and ending gridcell indices
-
    integer  :: li,lf         ! loop initial/final indicies
    integer  :: ci,cf         ! loop initial/final indicies
    integer  :: pi,pf         ! loop initial/final indicies
@@ -145,8 +140,6 @@ contains
    h2osno       => clm3%g%l%c%cws%h2osno
 
    ! Get relevant sizes
-
-!  call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
    do g = begg,endg ! loop over grid cells
 

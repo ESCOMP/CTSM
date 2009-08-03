@@ -18,12 +18,8 @@ module clm_varpar
   implicit none
   save
 !
-! Define land surface 2-d grid. This sets the model resolution according
-! to cpp directives LSMLON and LSMLAT in preproc.h.
+! Define land surface 2-d grid. The model resolution is read in from the surface dataset
 !
-!  integer, parameter :: lsmlon = LSMLON     ! maximum number of longitude points on lsm grid
-!  integer, parameter :: lsmlat = LSMLAT     ! number of latitude points on lsm grid
-! tcx make it dynamic, read from surface dataset
   integer             :: lsmlon              ! maximum number of longitude points on lsm grid
   integer             :: lsmlat              ! number of latitude points on lsm grid
 
@@ -110,8 +106,8 @@ contains
 !
 !------------------------------------------------------------------------------
 
-  lsmlon         = LSMLON
-  lsmlat         = LSMLAT
+  lsmlon         = 1
+  lsmlat         = 1
   maxpatch_pft   = MAXPATCH_PFT
   npatch_urban   = maxpatch_pft + 1
   npatch_lake    = npatch_urban + maxpatch_urb

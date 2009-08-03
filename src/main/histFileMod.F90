@@ -2141,11 +2141,11 @@ contains
        call ncd_defvar(nfid(t), 'time_written', ncd_char, 2, dim2id, varid, subname, usepio=pioflag)
 
        if ( len_trim(TimeConst3DVars_Filename) > 0 )then
-          call ncd_putatt(nfid(t), ncd_global, '3D_Time_constants_vars_filename', &
+          call ncd_putatt(nfid(t), ncd_global, 'Time_constant_3Dvars_filename', &
                           trim(TimeConst3DVars_Filename), subname, usepio=pioflag)
        end if
        if ( len_trim(TimeConst3DVars)          > 0 )then
-          call ncd_putatt(nfid(t), ncd_global, '3D_Time_constants_vars',          &
+          call ncd_putatt(nfid(t), ncd_global, 'Time_constant_3Dvars',          &
                           trim(TimeConst3DVars), subname, usepio=pioflag)
        end if
 

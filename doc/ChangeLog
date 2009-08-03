@@ -1,4 +1,142 @@
 ===============================================================
+Tag name:  clm3_6_47
+Originator(s):  erik (erik)
+Date: Mon Aug  3 11:47:49 MDT 2009
+One-line Summary: Fix hybrid bug for dynpft case, update externals
+
+Purpose of changes:
+   Fix hybrid bug for dynpft case, update externals. Require get_clump_bounds to be called
+   in threaded regions and get_proc_bounds to be called in non-threaded regions. Remove uneeded get_proc_bounds
+   calls, and pass down begg stuff as needed. Make loop in initSurfAlb Open-MP. Begin adding
+   testing for dublin, and add lightning_pgi testing. Add new pftdyn test datasets for 1x1_tropicAtl.
+   Update testing to beta20, default for lightning is ifort, add lighting_pgi testing. Change hist varnames
+   of 3D_Time_constants_vars* to Time_constant_3Dvars*. Remove use of LSMLAT/LSMLON cpp tokens, by default
+   set lsmlat/lsmlon to 1.
+
+Bugs fixed (include bugzilla ID): 1011 (PGI build problem in driver)
+                                  1016 (Problem with PTS_MODE build)
+                                  1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
+
+Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+                                  966 (Hybrid restart problem on bluefire)
+                                  971 (abort on lahey with MPI)
+                                  972 (abort on intel with MPI)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1007 (interpinic error with Linux/lahey)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: pftdyn test datasets for 1x1_tropicAtl
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self,mvertens
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm7, csm_share
+
+scripts   to scripts4_090801 ---------------- Begin adding PTS_MODE settings, update clm testlists
+drv       to vocemis-drydep12_drvseq3_0_27 -- Add PTS_MODE settings to template
+datm7     to datm7_090729 ------------------- Add single_column support
+csm_share to share3_090729 ------------------ Add dshr support for scmlat/scmlon in domain
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+  A   models/lnd/clm/test/system/tests_pretag_dublin ------- Add test list for dublin
+  A   models/lnd/clm/test/system/tests_pretag_dublin_nompi - Add interactive test list for dublin
+
+List all existing files that have been modified, and describe the changes:
+
+  M  models/lnd/clm/test/system/test_driver.sh ------- Seq testing to beta20, begin adding dublin, default
+                                                       for lightning is ifort, add lightning_pgi, 
+  M   models/lnd/clm/test/system/input_tests_master -- Add openMP 4x5 test
+  M   models/lnd/clm/test/system/CLM_runcmnd.sh ------ Add dublin remove bangkok
+
+  M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Update pftdyn surfdata for 1000-1004
+                                                                    tests for 1x1_tropicAtl
+
+  M   models/lnd/clm/src/biogeochem/CNWoodProductsMod.F90 - Remove call to get_proc_bounds -- NOT needed
+  M   models/lnd/clm/src/main/clm_varpar.F90 -------------- By default set lsmlat/lsmlon to 1
+  M   models/lnd/clm/src/main/dynlandMod.F90 -------------- Remove get_proc_bounds pass begg stuff in
+  M   models/lnd/clm/src/main/driver.F90 ------------------ Pass begg stuff down to pft_interp
+  M   models/lnd/clm/src/main/initializeMod.F90 ----------- Pass begg stuff down to pft_interp
+  M   models/lnd/clm/src/main/pftdynMod.F90 --------------- Pass begg stuff down, remove get_proc_bounds calls
+  M   models/lnd/clm/src/main/histFileMod.F90 ------------- Change var names of 3D_Time_constants_vars* to
+                                                            Time_constant_3Dvars* 
+  M   models/lnd/clm/src/main/initSurfAlbMod.F90 ---------- Make loop OpenMP parallel
+  M   models/lnd/clm/src/main/decompMod.F90 --------------- Make sure get_clumpbounds is called from threaded
+                                                            regions and get_proc_bounds is NOT.
+
+Summary of testing:
+
+  bluefire: All PASS except
+002 erA91 TER.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 7
+003 brA91 TBR.sh _sc_dh clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic .............FAIL! rc= 6
+006 erD91 TER.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v5 72+72 cold ...............FAIL! rc= 7
+010 erE91 TER.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 10+38 arb_ic .........FAIL! rc= 7
+011 brE91 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v5 72+72 arb_ic ......FAIL! rc= 6
+019 erEH1 TER.sh 4p_vodsrsc_dh clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 10+38 arb_icFAIL! rc= 7
+020 brEH1 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 24+24 arbFAIL! rc= 6
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+041 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 7
+042 brLI1 TBR.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 6
+048 brJ61 TBR.sh 4p_casasc_dh clm_std^nl_urb_br 20021230:NONE:1800 1.9x2.5 gx1v6 72+72 cold .....FAIL! rc= 6
+051 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+052 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
+054 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 6
+  bluefire interactive testing: All PASS!
+  bluefire/CCSM testing: All PASS!
+PASS  ERS_D.f45_g35.I_2000.bluefire 
+PASS  PET.f45_g35.I_1850.bluefire.cpl 
+PASS  PET.f45_g35.I_1850.bluefire.atm 
+PASS  PET.f45_g35.I_1850.bluefire.lnd 
+PASS  PET.f45_g35.I_1850.bluefire.ice 
+PASS  PET.f45_g35.I_1850.bluefire.ocn 
+PASS  PET.f45_g35.I_1850.bluefire.glc 
+PASS  ERS.f19_g16.I_1850.bluefire 
+PASS  ERS.f19_g16.I_1850-2000.bluefire 
+PASS  ERB.f09_g16.I_1948_2004.bluefire 
+PASS  ERB.f09_g16.I1850SPINUPCN.bluefire 
+PASS  ERH_D.f10_f10.I_1850_CN.bluefire 
+PASS  PET.f10_f10.ICN8520.bluefire.cpl 
+PASS  PET.f10_f10.ICN8520.bluefire.atm 
+PASS  PET.f10_f10.ICN8520.bluefire.lnd 
+PASS  PET.f10_f10.ICN8520.bluefire.ice 
+PASS  PET.f10_f10.ICN8520.bluefire.ocn 
+PASS  PET.f10_f10.ICN8520.bluefire.glc 
+  jaguar: All PASS!
+  lightning/ifort interactive testing: All PASS!
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_46
+
+Changes answers relative to baseline: No bit-for-bit (except dynpft which was irreproducible before)
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_46
 Originator(s):  erik (erik)
 Date: Wed Jul 22 15:50:43 MDT 2009
@@ -41,6 +179,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   990 (CN transient blowup)
                                   994 (finidat files on jaguar for pftdyn fail)
                                  1007 (interpinic error with Linux/lahey)
+                                 1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
 
     http://bugs.cgd.ucar.edu/
 
@@ -275,6 +414,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   972 (abort on intel with MPI)
                                   990 (CN transient blowup)
                                   994 (finidat files on jaguar for pftdyn fail)
+                                 1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
 
     http://bugs.cgd.ucar.edu/
 
@@ -354,6 +494,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   972 (abort on intel with MPI)
                                   990 (CN transient blowup)
                                   994 (finidat files on jaguar for pftdyn fail)
+                                 1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
 
     http://bugs.cgd.ucar.edu/
 
@@ -520,6 +661,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   971 (abort on lahey with MPI)
                                   972 (abort on intel with MPI)
                                   991 (C13 nfields cause model to blowup on jaguar)
+                                 1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
 
     http://bugs.cgd.ucar.edu/
 
