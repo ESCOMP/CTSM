@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<use_case_desc>Do NOT include organic soil dataset</use_case_desc>
+
+<clm_demand>null</clm_demand>
+
+</namelist_defaults>

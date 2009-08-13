@@ -336,10 +336,8 @@ contains
     
     character(*),parameter :: subName =  '(interpMonthlyAerdep) '
     character(*),parameter :: F00    = "('(interpMonthlyAerdep) ',4a)"
-    character(*),parameter :: F01    = "('(interpMonthlyAerdep) ', &
-    &                                   a,i4.4,2('-',i2.2),3f11.2,2i6,2x,2f6.3)"
-    character(*),parameter :: F02    = "('(interpMonthlyAerdep) ', &
-    &                                   a,i4.4,2('-',i2.2),i7,'s ',f12.3)"
+    character(*),parameter :: F01    = "('(interpMonthlyAerdep) ',a,i4.4,2('-',i2.2),3f11.2,2i6,2x,2f6.3)"
+    character(*),parameter :: F02    = "('(interpMonthlyAerdep) ',a,i4.4,2('-',i2.2),i7,'s ',f12.3)"
 
 !-------------------------------------------------------------------------------
 ! WARNING: this is (and has always been) hard-coded to assume 365 days per year

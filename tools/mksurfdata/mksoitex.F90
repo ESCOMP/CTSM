@@ -247,6 +247,13 @@ subroutine mksoitex(lsmlon, lsmlat, fname, ndiag, pctglac_o, sand_o, clay_o)
   ! Compare global area of each soil type on input and output grids
   ! -----------------------------------------------------------------
 
+  mask_i = float(tdomain%mask(:,:))
+  call areaave(mask_i,mask_o,tgridmap)
+  ldomain%frac = mask_o
+
+  call gridmap_clean(tgridmap)
+  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
+
   ! input grid: global areas by texture class
 
   gast_i(:) = 0.

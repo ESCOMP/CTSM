@@ -82,12 +82,12 @@ contains
     use clm_comp         , only : clm_init0, clm_init1, clm_init2
     use clm_varctl       , only : finidat,single_column, set_clmvarctl
     use controlMod       , only : control_setNL
-    use domainMod        , only : amask, adomain
+    use domainMod        , only : adomain
     use clm_varpar       , only : rtmlon, rtmlat
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
     use abortutils       , only : endrun
     use esmf_mod         , only : ESMF_Clock
-    use clm_varctl       , only : iulog
+    use clm_varctl       , only : iulog, noland
     use shr_file_mod     , only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                   shr_file_getLogUnit, shr_file_getLogLevel, &
                                   shr_file_getUnit, shr_file_setIO
@@ -239,9 +239,9 @@ contains
 
     call clm_init0( )
 
-    ! If in SCM mode and no land then exit out of initialization
+    ! If no land then exit out of initialization
 
-    if ( single_column .and. amask(1)==0) then
+    if ( noland) then
        call seq_infodata_PutData(infodata, lnd_present=.false.)
        return
     end if

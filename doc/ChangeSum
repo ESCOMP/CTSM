@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_48         erik 08/12/2009 New aerosol/nitrogen deposition datasets, mksurfdata work, scm work, clm_usr_name option to build-namelist
    clm3_6_47         erik 08/03/2009 Fix hybrid bug for dynpft case, update externals
    clm3_6_46         erik 07/22/2009 Get more tests to work/document them, add use cases for 1850_control, 2000_control, and 
                                      20thC_transient, straighten out single-point grids, Listen to LND_CDF64 env variable from 

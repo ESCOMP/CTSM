@@ -341,10 +341,9 @@ ifeq ($(findstring ifort,$(FC)),ifort)
   FFLAGS      += -132 -ftz -g -fp-model precise -convert big_endian -assume byterecl -traceback
   FREEFLAGS   := -FR
   FIXEDFLAGS  :=
-  CFLAGS      += -m64 -ftz -g
 
   ifeq ($(DEBUG),TRUE)
-    FFLAGS    += -CB
+    FFLAGS    += -check all -fpe0
   else
     # Check for override of default Fortran compiler optimizations
     ifeq ($(F_OPTIMIZATION_OVERRIDE),$(null))
@@ -355,10 +354,19 @@ ifeq ($(findstring ifort,$(FC)),ifort)
 
   ifeq ($(SMP),TRUE)
     FFLAGS    += -openmp
+    CFLAGS    += -openmp
     LDFLAGS   += -openmp
   endif
   LDFLAGS   += -m64
 
+  ifeq ($(USER_CC),$(null))
+    CC := icc
+  endif
+
+endif
+
+ifeq ($(findstring icc,$(CC)),icc)
+  CFLAGS      += -m64 -ftz -g
 endif
 
 # pathf90

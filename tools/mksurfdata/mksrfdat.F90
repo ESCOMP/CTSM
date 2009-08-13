@@ -184,7 +184,7 @@ program mksrfdat
        write(6,*)'mksrf_fgrid = ',mksrf_fgrid
     else
        write (6,*)'must specify mksrf_fgrid'
-       stop
+       call abort()
     endif
 
     if (trim(mksrf_gridtype) == 'global' .or. &
@@ -193,7 +193,7 @@ program mksrfdat
     else
        write(6,*)'mksrf_gridtype = ',trim(mksrf_gridtype)
        write (6,*)'illegal mksrf_gridtype, must be global or regional '
-       stop
+       call abort()
     endif
     if ( outnc_large_files )then
        write(6,*)'Output file in NetCDF 64-bit large_files format'
@@ -376,15 +376,15 @@ program mksrfdat
 
     call mkurban (lsmlon, lsmlat, mksrf_furban, ndiag, pcturb)
 
+    write(6,*) ' timer_g mkurban-----'
+    call shr_timer_print(t1)
+
     ! Screen pcturb by elevation threshold from elev dataset
     if ( .not. all_urban )then
        where (elev .gt. elev_thresh)
          pcturb = 0._r8
        end where
     end if
-
-    write(6,*) ' timer_g mkurban-----'
-    call shr_timer_print(t1)
 
     ! Set pfts 7 and 10 to 6 in the tropics to avoid lais > 1000
     ! Using P. Thornton's method found in surfrdMod.F90 in clm3.5
@@ -558,7 +558,35 @@ program mksrfdat
              pctpft(i,j,:) = pctpft(i,j,:) * 100._r8/suma
           end if
 
+          ! Roundoff error fix
           suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
+          if (suma < 100._r8 .and. suma > (100._r8 - 100._r8*epsilon(suma))) then
+             write (6,*) 'Special land units near 100%, but not quite for i,j,suma =',i,j,suma
+             write (6,*) 'Adjusting special land units to 100%'
+             if (pctlak(i,j) >= 25._r8) then
+                pctlak(i,j) = 100._r8 - (pctwet(i,j) + pcturb(i,j) + pctgla(i,j))
+             else if (pctwet(i,j) >= 25._r8) then
+                pctwet(i,j) = 100._r8 - (pctlak(i,j) + pcturb(i,j) + pctgla(i,j))
+             else if (pcturb(i,j) >= 25._r8) then
+                pcturb(i,j) = 100._r8 - (pctlak(i,j) + pctwet(i,j) + pctgla(i,j))
+             else if (pctgla(i,j) >= 25._r8) then
+                pctgla(i,j) = 100._r8 - (pctlak(i,j) + pctwet(i,j) + pcturb(i,j))
+             else
+                write (6,*) 'Error: sum of special land units nearly 100% but none is >= 25% at ', &
+                   'i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j),pctpft(i,j,:),suma = ', &
+                   i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j),pctpft(i,j,:),suma
+                call abort()
+             end if
+             pctpft(i,j,:) = 0._r8
+          end if
+
+          suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
+          if (suma < 100._r8-epsilon(suma) .and. suma > (100._r8 - 4._r8*epsilon(suma))) then
+             write (6,*)'i,j,pctlak,pctwet,pcturb,pctgla,pctpft= ', &
+                  i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j),&
+                  pctpft(i,j,:)
+             call abort()
+          end if
           do m = 0,numpft
              suma = suma + pctpft(i,j,m)
           end do
@@ -613,11 +641,32 @@ program mksrfdat
             do k = 0,numpft
                sum4a = sum4a + real(pctpft(i,j,k),r4)
             end do
-            if ( sum4a==0.0_r4 .and. sum8 < 100._r4 )then
+            if ( sum4a==0.0_r4 .and. sum8 < 100._r4-2._r4*epsilon(sum4a) )then
                write (6,*) 'MKSRFDAT error: sum of pctlak, pctwet,', &
                     'pcturb, pctgla is < 100% when pctpft==0 sum = ', sum8
                write (6,*)'i,j,pctlak,pctwet,pcturb,pctgla= ', &
                     i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j), pctpft(i,j,:)
+               call abort()
+            end if
+          enddo
+       enddo
+    else
+       do j = 1,ldomain%nj
+          do i = 1,ldomain%numlon(j)
+            sum8  =        pctlak(i,j)
+            sum8  = sum8 + pctwet(i,j)
+            sum8  = sum8 + pcturb(i,j)
+            sum8  = sum8 + pctgla(i,j)
+            sum8a = 0._r8
+            do k = 0,numpft
+               sum8a = sum8a + pctpft(i,j,k)
+            end do
+            if ( sum8a==0._r8 .and. sum8 < (100._r8-4._r8*epsilon(sum8)) )then
+               write (6,*) 'MKSRFDAT error: sum of pctlak, pctwet,', &
+                    'pcturb, pctgla is < 100% when pctpft==0 sum = ', sum8
+               write (6,*) 'Total error, error/epsilon = ',100._r8-sum8, ((100._r8-sum8)/epsilon(sum8))
+               write (6,*)'i,j,pctlak,pctwet,pcturb,pctgla,epsilon= ', &
+                    i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j), pctpft(i,j,:), epsilon(sum8)
                call abort()
             end if
           enddo
@@ -881,7 +930,35 @@ program mksrfdat
                    pctpft(i,j,:) = pctpft(i,j,:) * 100._r8/suma
                 end if
 
+                ! Roundoff error fix
                 suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
+                if (suma < 100._r8 .and. suma > (100._r8 - 100._r8*epsilon(suma))) then
+                   write (6,*) 'Special land units near 100%, but not quite for i,j,suma =',i,j,suma
+                   write (6,*) 'Adjusting special land units to 100%'
+                   if (pctlak(i,j) >= 25._r8) then
+                      pctlak(i,j) = 100._r8 - (pctwet(i,j) + pcturb(i,j) + pctgla(i,j))
+                   else if (pctwet(i,j) >= 25._r8) then
+                      pctwet(i,j) = 100._r8 - (pctlak(i,j) + pcturb(i,j) + pctgla(i,j))
+                   else if (pcturb(i,j) >= 25._r8) then
+                      pcturb(i,j) = 100._r8 - (pctlak(i,j) + pctwet(i,j) + pctgla(i,j))
+                   else if (pctgla(i,j) >= 25._r8) then
+                      pctgla(i,j) = 100._r8 - (pctlak(i,j) + pctwet(i,j) + pcturb(i,j))
+                   else
+                      write (6,*) 'Error: sum of special land units nearly 100% but none is >= 25% at ', &
+                         'i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j),pctpft(i,j,:),suma = ', &
+                         i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j),pctpft(i,j,:),suma
+                      call abort()
+                   end if
+                   pctpft(i,j,:) = 0._r8
+                end if
+
+                suma = pctlak(i,j) + pctwet(i,j) + pcturb(i,j) + pctgla(i,j)
+                if (suma < 100._r8-epsilon(suma) .and. suma > (100._r8 - 4._r8*epsilon(suma))) then
+                   write (6,*)'i,j,pctlak,pctwet,pcturb,pctgla,pctpft= ', &
+                        i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j),&
+                        pctpft(i,j,:)
+                   call abort()
+                end if
                 do m = 0,numpft
                    suma = suma + pctpft(i,j,m)
                 end do
@@ -909,11 +986,31 @@ program mksrfdat
                   do k = 0,numpft
                      sum4a = sum4a + real(pctpft(i,j,k),r4)
                   end do
-                  if ( sum4a==0.0_r4 .and. sum8 < 100._r4 )then
+                  if ( sum4a==0.0_r4 .and. sum8 < 100._r4-2._r4*epsilon(sum4a) )then
                      write (6,*) 'MKSRFDAT error: sum of pctlak, pctwet,', &
                           'pcturb, pctgla is < 100% when pctpft==0 sum = ', sum8
                      write (6,*)'i,j,pctlak,pctwet,pcturb,pctgla= ', &
                           i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j), pctpft(i,j,:)
+                     call abort()
+                  end if
+                enddo
+             enddo
+          else
+             do j = 1,ldomain%nj
+                do i = 1,ldomain%numlon(j)
+                  sum8  =        pctlak(i,j)
+                  sum8  = sum8 + pctwet(i,j)
+                  sum8  = sum8 + pcturb(i,j)
+                  sum8  = sum8 + pctgla(i,j)
+                  sum8a = 0._r8
+                  do k = 0,numpft
+                     sum8a = sum8a + pctpft(i,j,k)
+                  end do
+                  if ( sum8a==0._r8 .and. sum8 < (100._r8-4._r8*epsilon(sum8)) )then
+                     write (6,*) 'MKSRFDAT error: sum of pctlak, pctwet,', &
+                          'pcturb, pctgla is < 100% when pctpft==0 sum = ', sum8
+                     write (6,*)'i,j,pctlak,pctwet,pcturb,pctgla,epsilon= ', &
+                          i,j,pctlak(i,j),pctwet(i,j),pcturb(i,j),pctgla(i,j), pctpft(i,j,:), epsilon(sum8)
                      call abort()
                   end if
                 enddo

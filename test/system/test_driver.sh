@@ -337,6 +337,7 @@ EOF
     ## dublin
     dublin* ) 
     submit_script="test_driver_dublin_${cur_time}.sh"
+    export PATH=/cluster/torque/bin:${PATH}
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -346,7 +347,7 @@ cat > ./${submit_script} << EOF
 # Name of the queue (CHANGE THIS if needed)
 #PBS -q long
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l nodes=2:ppn=2
+#PBS -l nodes=1:ppn=4
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
@@ -380,36 +381,45 @@ export CLM_RESTART_TASKS=1
 
 export CLM_COMPSET="I"
 
+export PGI=/usr/local/pgi-pgcc-pghf-7.2-5
+export LAHEY=/usr/local/lf6481
+export INTEL=/usr/local/intel-cluster-3.2.02
+export P4_GLOBMEMSIZE=500000000
+
+
 if [ "\$CLM_FC" = "PGI" ]; then
-    export PGI=/usr/local/pgi-pgcc-pghf
-    netcdf=/usr/local/netcdf-pgi
-    export INC_NETCDF=\${netcdf}/include
-    export LIB_NETCDF=\${netcdf}/lib
-    mpich=/usr/local/mpich-pgi
-    export INC_MPI=\${mpich}/include
-    export LIB_MPI=\${mpich}/lib
-    export PATH=\${PGI}/linux86/7.2-5/bin:\${mpich}/bin:\${PATH}
-    export LD_LIBRARY_PATH=\${PGI}/linux86/7.2-5/lib:\${LD_LIBRARY_PATH}
+    netcdf=/usr/local/netcdf-3.6.3-pgi-hpf-cc-7.2-5
+    mpich=/usr/local/mpich-1.2.7p1-pgi-hpf-cc-7.2-5
+    export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
+    export PATH=\${PGI}/linux86/bin:\${mpich}/bin:\${PATH}
     export CCSM_MACH="dublin_pgi"
     export CFG_STRING=""
     export TOOLS_MAKE_STRING=""
+elif [ "\$CLM_FC" = "INTEL" ]; then
+    netcdf=/usr/local/netcdf-3.6.3-intel-3.2.02
+    mpich=/usr/local/mpich-1.2.7p1-intel-3.2.02
+    export LD_LIBRARY_PATH=/cluster/torque/lib:\${INTEL}/cc/11.0.074/lib/intel64:\${INTEL}/fc/11.0.074/lib/intel64:\${LD_LIBRARY_PATH}
+    export PATH=\${INTEL}/fc/11.0.074/bin/intel64:\${INTEL}/cc/11.0.074/bin/intel64:\${mpich}/bin:\${PATH}
+    export CCSM_MACH="dublin_ifort"
+    export CFG_STRING="-fc ifort "
+    export TOOLS_MAKE_STRING="USER_FC=ifort "
+    /usr/local/intel-cluster-3.2.02/intel-login-script.sh
 else
-    export LAHEY=/usr/local/lf95
     netcdf=/usr/local/netcdf-3.6.3-gcc-4.1.2-lf95-8.0_x86_64
-    export INC_NETCDF=\${netcdf}/include
-    export LIB_NETCDF=\${netcdf}/lib
-    export LD_LIBRARY_PATH=/usr/local/pgi-pgcc-pghf-7.2-5/linux86-64/7.2-5/libso:\${LAHEY}/lib64:\${LD_LIBRARY_PATH}
-    mpich=/usr/local/mpich-lf95
-    export INC_MPI=\${mpich}/include
-    export LIB_MPI=\${mpich}/lib
+    mpich=/usr/local/mpich-1.2.7p1-gcc-g++-4.1.2-42-lf9581
+    export LD_LIBRARY_PATH=\${LAHEY}/lib64:/cluster/torque/lib:\${LD_LIBRARY_PATH}
     export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
     export CCSM_MACH="dublin_lahey"
-    export CFG_STRING="-fc lf95 -cc gcc -cflags -I/usr/lib/gcc/x86_64-redhat-linux/4.1.2/include/ "
+    export CFG_STRING="-fc lf95 -cc gcc "
     export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
 fi
-export MAKE_CMD="gmake -j 2"   ##using hyper-threading on calgary
+export INC_NETCDF=\${netcdf}/include
+export LIB_NETCDF=\${netcdf}/lib
+export INC_MPI=\${mpich}/include
+export LIB_MPI=\${mpich}/lib
+export MAKE_CMD="gmake -j 5"   ##using hyper-threading on dublin
 export MACH_WORKSPACE="/scratch/cluster"
-export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
+export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_64/cprnc
 export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/fs/cgd/csm"
 echo_arg="-e"
@@ -473,13 +483,14 @@ export PATH="/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
 export PATH="\${PATH}:/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
 source /opt/modules/default/init/sh
 module purge
+module load   DefApps
 module load   PrgEnv-pgi Base-opts
 module load   xtpe-quadcore
 module load   torque moab
 module switch pgi pgi/7.1.6       # 7.1.6      is default on 2008-sep-03
-module load   netcdf/3.6.2          # 3.6.2      is default on 2008-sep-03
-#module swap   xt-asyncpe xt-asyncpe/1.0c
-module swap   xt-binutils-quadcore xt-binutils-quadcore/2.0.1
+module load   netcdf/3.6.2        # 3.6.2      is default on 2008-sep-03
+module load p-netcdf/1.0.2
+module swap xt-asyncpe xt-asyncpe/3.0
 module load   ncl
 
 export MPICH_MAX_SHORT_MSG_SIZE=32000 # default is 128000 bytes
@@ -491,9 +502,15 @@ export MPICH_PTL_SEND_CREDITS=-1
 export MPICH_ENV_DISPLAY=1
 export MPICH_VERSION_DISPLAY=1
 
+# The environment variables below produce corefiles and maybe (?) should be
+# moved to DEBUG mode at some point
+export MPICH_DBMASK=0x200
+
 export LIB_NETCDF=\${NETCDF_DIR}/lib
 export INC_NETCDF=\${NETCDF_DIR}/include
 export MOD_NETCDF=\${NETCDF_DIR}/include
+export INC_PNETCDF=\${PNETCDF_DIR}/include
+export LIB_PNETCDF=\${PNETCDF_DIR}/lib
 export CCSM_MACH="jaguar"
 export CFG_STRING="-fc ftn "
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "

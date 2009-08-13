@@ -32,6 +32,9 @@ models/utils ---------- CCSM utility codes
 Important files in main directories:
 =============================================================================================
 
+Quickstart.GUIDE ---------------- Quick guide to using build/run scripts
+Quickstart.userdatasets --------- Quick guide to using your own datasets
+
 models/lnd/clm/bld/configure ---- Script to create Makefile and needed files to build offline CLM
 
 models/lnd/clm/test/system/test_driver.sh --- Script for general software testing of offline CLM

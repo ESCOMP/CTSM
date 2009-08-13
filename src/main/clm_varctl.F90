@@ -35,6 +35,7 @@ module clm_varctl
   integer, public :: nsrest             = iundef                         ! 0: initial run. 1: restart: 3: branch
   logical, public :: brnch_retain_casename = .false.                     ! true => allow case name to remain the same for branch run
                                                                          ! by default this is not allowed
+  logical, public :: noland = .false.                                    ! true => no valid land points -- do NOT run
   character(len=256), public :: hostname = ' '                           ! Hostname of machine running on
   character(len=256), public :: username = ' '                           ! username of user running program
   character(len=256), public :: source   = "Community Land Model CLM3.6" ! description of this source

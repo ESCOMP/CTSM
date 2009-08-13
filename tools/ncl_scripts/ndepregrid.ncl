@@ -19,9 +19,10 @@ begin
   ;
   ; Input and output resolution and sim_year for input data
   ;
-  resin    = "1.9x2.5";          ; Input resolution:  1.9x2.5 (normally NOT changed)
-  res      = getenv("RES");      ; Get output resolution from env variable
-  sim_year = getenv("SIM_YR");   ; Get input simulation year from env variable
+  resin          = "1.9x2.5";              ; Input resolution:  1.9x2.5 (normally NOT changed)
+  res            = getenv("RES");          ; Get output resolution from env variable
+  sim_year       = getenv("SIM_YR");       ; Get input simulation year from env variable
+  sim_year_range = getenv("SIM_YR_RNG");   ; Get input simulation year range from env variable
 
   ; END OF SECTION TO EDIT
   ; ===========================================================================================================
@@ -34,10 +35,13 @@ begin
   if ( ismissing(sim_year) )then
      sim_year = "2000";       ; Input/Output simulation year: 1850, 2000
   end if
+  if ( ismissing(sim_year_range) )then
+     sim_year_range = "constant";       ; Input/Output simulation year range: constant or 1850-2000
+  end if
 
   ; Figure out file type from sim-year
 
-  if ( sim_year .eq. "1850-2000" )then
+  if ( sim_year_range .eq. "1850-2000" )then
      filetype = "fndepdyn"
   else
      filetype = "fndepdat"
@@ -56,7 +60,7 @@ begin
   csmdata  = getenv("CSMDATA");
   clmroot  = getenv("CLM_ROOT");
   querynml = "bld/queryDefaultNamelist.pl -silent -justvalue -options sim_year="+sim_year;
-  querynml = querynml+",bgc=cn"
+  querynml = querynml+",sim_year_range="+sim_year_range+",bgc=cn"
   if ( .not. ismissing(csmdata) )then
      querynml = querynml+" -csmdata "+csmdata;
   end if
@@ -72,7 +76,11 @@ begin
   filename    = systemfunc( querynml+" -res "+resin+" -var "+filetype );
   gridinfile  = systemfunc( querynml+" -res "+resin+" -var fatmgrid" );
   gridfile    = systemfunc( querynml+" -res "+res  +" -var fatmgrid" );
-  filenameout = ftype+sim_year+"_"+res+"_c"+sdate+".nc";
+  if ( sim_year_range .eq. "constant" ) then
+     filenameout = ftype+sim_year+"_"+res+"_c"+sdate+".nc";
+  else
+     filenameout = ftype+sim_year_range+"_"+res+"_c"+sdate+".nc";
+  end if
   ;
   ; Open files
   ;
@@ -165,7 +173,7 @@ begin
   areao   = areao / sumarea;
   print( "areai sum = "+sum(areai) );
   print( "areao sum = "+sum(areao) );
-  if ( abs(sum(areai)-sum(areao)) .gt. 1.e-4 ) then
+  if ( abs(sum(areai)-sum(areao)) .gt. 1.e-3 ) then
      print( "Input and output areas are significantly different" );
      print( "Area-in:  "+sum(areai) );
      print( "Area-out: "+sum(areao) );
@@ -183,7 +191,7 @@ begin
      ;
      ; If variable is not one of the dimensions -- regrid it and write to output file
      ;
-     if ( (vars(i) .ne. "YEAR") .and. (vars(i) .ne. "month") .and. (vars(i) .ne. "lat") .and. (vars(i) .ne. "lon") .and. (vars(i) .ne. "LAT") .and. (vars(i) .ne. "LON") )then
+     if ( (vars(i) .ne. "YEAR") .and. (vars(i) .ne. "month") .and. (vars(i) .ne. "lat") .and. (vars(i) .ne. "lon") .and. (vars(i) .ne. "LAT") .and. (vars(i) .ne. "LON") .and. (vars(i) .ne. "time") )then
        print( "Write variable: "+vars(i)+" to output file" );
        ;
        ; If time dimension

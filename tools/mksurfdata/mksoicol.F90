@@ -262,6 +262,13 @@ subroutine mksoicol(lsmlon, lsmlat, fname, ndiag, pctglac_o, soil_color_o, nsoic
 
   ! output grid
 
+  mask_i = float(tdomain%mask(:,:))
+  call areaave(mask_i,mask_o,tgridmap)
+  ldomain%frac = mask_o
+
+  call gridmap_clean(tgridmap)
+  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
+
   gast_o(:) = 0.
   do jo = 1, ldomain%nj
      do io = 1, ldomain%numlon(jo)

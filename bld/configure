@@ -355,7 +355,7 @@ if (defined $opts{'clm_exedir'}) {
     $clm_exedir = absolute_path($opts{'clm_exedir'});
 }
 else { # use default value
-    $clm_exedir = absolute_path($cfg_ref->get('clm_exedir'));
+    $clm_exedir = $clm_bld;
 }
 
 if ($clm_build) {
@@ -1382,6 +1382,8 @@ sub write_filepath_ccsmbld
     my $rtm         = $cfg_ref->get('rtm');
     my $mode        = $cfg_ref->get('mode');
     my $buildpio    = $cfg_ref->get('pio');
+    my $comp_intf   = $cfg_ref->get('comp_interface');
+    my $clm_bld     = $cfg_ref->get('clm_bld');
 
     # Source root
     my $srcdir = "$clm_root/src";
@@ -1415,22 +1417,19 @@ sub write_filepath_ccsmbld
     
        # Driver, stub ocean, stub glacier, and stub sea-ice
        if ($mode eq "ccsm_seq") {
-	   my @dirs = ( "drv/seq_mct", "datm7", "socn", "sice", "sglc" );
+	   my @dirs = ( "drv/seq_mct", "atm/datm7", "ocn/socn", "ice/sice", "glc/sglc" );
+           if ( $comp_intf eq "MCT" ) { 
+	       push( @dirs, "atm/datm7/cpl_mct" );
+           } elsif ( $comp_intf eq "ESMF" ) { 
+	       push( @dirs, "atm/datm7/cpl_esmf" );
+           } else {
+	       die "** Bad component interface name -- should be MCT or ESMF\n";
+           }
 	   foreach my $dir ( @dirs ) {
-	       if ( -d "$srcdir/$dir" ) {
-		   print $fh "$srcdir/$dir\n";
-	       } elsif ( -d "$srcdir/../../../$dir" ) {
+	       if ( -d "$srcdir/../../../$dir" ) {
 		   print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
-	       } elsif ( -d "$srcdir/../../../atm/$dir" ) {
-		   print $fh absolute_path( "$srcdir/../../../atm/$dir" ) . "\n";
-	       } elsif ( -d "$srcdir/../../../ice/$dir" ) {
-		   print $fh absolute_path( "$srcdir/../../../ice/$dir" ) . "\n";
-	       } elsif ( -d "$srcdir/../../../ocn/$dir" ) {
-		   print $fh absolute_path( "$srcdir/../../../ocn/$dir" ) . "\n";
-	       } elsif ( -d "$srcdir/../../../glc/$dir" ) {
-		   print $fh absolute_path( "$srcdir/../../../glc/$dir" ) . "\n";
 	       } else {
-		   die "** source directory does not exist: $srcdir/$dir or $srcdir/../../../$dir or $srcdir/../../../atm|ice|ocn/$dir\n";
+		   die "** source directory does not exist: $srcdir/../../../$dir\n";
 	       }
 	   }
            if ( $buildpio eq "on" ) {
@@ -1448,6 +1447,13 @@ sub write_filepath_ccsmbld
        if ( $rtm eq "on" ) { 
 	   push( @dirs, "riverroute" );
        }
+       if ( $comp_intf eq "MCT" ) { 
+	   push( @dirs, "main/cpl_mct" );
+       } elsif ( $comp_intf eq "ESMF" ) { 
+	   push( @dirs, "main/cpl_esmf" );
+       } else {
+	   die "** Bad component interface name -- should be MCT or ESMF\n";
+       }
        foreach my $dir ( @dirs ) {
 	   if ( -d "$srcdir/$dir" ) {
 	       print $fh "$srcdir/$dir\n";
@@ -1458,14 +1464,12 @@ sub write_filepath_ccsmbld
        if ( ! $spmd ) {
 	   print $fh absolute_path( "$srcdir/../../../utils/mct/mpi-serial" ) . "\n";
        }
+       print $fh "$clm_bld/include\n";
     }
 
     # CCSM driver
     if ( $model eq "ccsm" ) {
        print $fh absolute_path( "$srcdir/../../../drv/seq_mct/driver" ) . "\n";
-       if ( ! $spmd ) {
-          print $fh absolute_path( "$srcdir/../../../utils/mct/mpi-serial" ) . "\n";
-       }
     }
     
     $fh->close;
@@ -1512,11 +1516,21 @@ sub write_macros
     my $fopt         = $cfg_ref->get('fopt');
     my $ldflags      = $cfg_ref->get('ldflags');
     my $esmf_libdir  = $cfg_ref->get('esmf_libdir');
+    my $clm_root     = $cfg_ref->get('clm_root');
 
+    my $casetools = absolute_path( "$clm_root/../../../scripts/ccsm_utils/Build" );
+
+    my $mpiserial;
+    if ( $spmd eq "FALSE" ) {
+       $mpi_inc = absolute_path( "$clm_root/../../utils/mct/mpi-serial" );
+       $mpiserial = "TRUE";
+    } else {
+       $mpiserial = "FALSE";
+    }
     print $fh_out  <<"EOF";
 # Make macro settings for building CLM using the CCSM build files.
 BLDROOT                 := $clm_bld
-CASETOOLS               := \$(BLDROOT)/../../../../../scripts/ccsm_utils/Build
+CASETOOLS               := $casetools
 LIBROOT                 := \$(BLDROOT)/lib
 INCROOT                 := \$(BLDROOT)/include
 SMP                     := $smp
@@ -1531,6 +1545,7 @@ GLC_NEC                 := 0
 USER_CPPDEFS            := \$(shell cat \$(BLDROOT)/CCSM_cppdefs)
 USER_LINKER             := $linker
 USER_LIB_NETCDF         := $nc_lib
+USER_INC_MPI            := $mpi_inc
 USER_LIB_MPI            := $mpi_lib
 USER_MPI_LIB_NAME       := $mpi_lib_name
 USER_ESMF_LIBDIR        := $esmf_libdir
@@ -1539,6 +1554,7 @@ USER_CC                 := $cc
 USER_CFLAGS             := $cflags
 USER_FFLAGS             := $fflags
 USER_LDFLAGS            := $ldflags
+USE_MPISERIAL           := $mpiserial
 F_OPTIMIZATION_OVERRIDE := $fopt
 
 EOF
@@ -1710,7 +1726,7 @@ sub write_ccsm_makefile
           $lib_name = "$model";
        }
        $target_name = "COMPLIB := \$(LIBROOT)/lib$lib_name.a";
-       $target      = "complib";
+       $target      = "mkcomplib";
     }
     print $fh_out  <<"EOF";
 # Make macros for CLM.
@@ -1723,20 +1739,24 @@ target: $target
 
 EOF
     if ( $model eq "ccsm" ) {
-    print $fh_out  <<"EOF";
+        print $fh_out  <<"EOF";
 ULIBS   := -L\$(LIBROOT) -lccsm_lib
 CLIBS   := -L\$(LIBROOT) -llnd
 ULIBDEP := \$(LIBROOT)/libccsm_lib.a \$(LIBROOT)/liblnd.a
 
-target: exec_se
-
-\$(LIBROOT)/liblnd.a:
-	cd lnd; \$(MAKE); \$(CP) *.mod \$(INCROOT)
+\$(LIBROOT)/liblnd.a: \$(LIBROOT)/libccsm_lib.a
+	cd lnd && \$(MAKE) \$(MAKEFLAGS)
 
 \$(LIBROOT)/libccsm_lib.a:
-	cd ccsm_lib; \$(MAKE); \$(CP) *.mod \$(INCROOT)
+	cd ccsm_lib && \$(MAKE) \$(MAKEFLAGS)
 EOF
 
+    } else {
+        print $fh_out  <<"EOF";
+mkcomplib: complib copymod
+copymod: complib
+	\$(CP) *.mod \$(INCROOT)
+EOF
     }
 
     # Copy the "template" makefile to the new makefile.

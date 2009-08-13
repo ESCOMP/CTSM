@@ -18,9 +18,10 @@ begin
   ;
   ; Input and output resolution
   ;
-  resin    = "1.9x2.5";          ; Input resolution:  1.9x2.5 (normally NOT changed)
-  res      = getenv("RES");      ; Get output resolution from env variable
-  sim_year = getenv("SIM_YR");   ; Get input simulation year from env variable
+  resin          = "1.9x2.5";              ; Input resolution:  1.9x2.5 (normally NOT changed)
+  res            = getenv("RES");          ; Get output resolution from env variable
+  sim_year       = getenv("SIM_YR");       ; Get input simulation year from env variable
+  sim_year_range = getenv("SIM_YR_RNG");   ; Get input simulation year range from env variable
 
   ; Defaults if env variable is NOT set
 
@@ -29,6 +30,9 @@ begin
   end if
   if ( ismissing(sim_year) )then
      sim_year = "2000";       ; Input/Output simulation year: 1850, 2000
+  end if
+  if ( ismissing(sim_year_range) )then
+     sim_year_range = "constant";       ; Input/Output simulation year range: constant or 1850-2000
   end if
 
   ; END OF SECTION TO EDIT
@@ -52,10 +56,14 @@ begin
   sdate     = systemfunc( "date +%y%m%d" );
   ldate     = systemfunc( "date" );
   print( "query string="+querynml )
-  filename    = systemfunc( querynml+" -res "+resin+" -var "+filetype+" -options sim_year="+sim_year );
+  filename    = systemfunc( querynml+" -res "+resin+" -var "+filetype+" -options sim_year="+sim_year+",sim_year_range="+sim_year_range );
   gridinfile  = systemfunc( querynml+" -res "+resin+" -var fatmgrid" );
   gridfile    = systemfunc( querynml+" -res "+res  +" -var fatmgrid" );
-  filenameout = "aerosoldep_"+sim_year+"_mean_"+res+"_c"+sdate+".nc";
+  if ( sim_year_range .eq. "constant" ) then
+     filenameout = "aerosoldep_"+sim_year+"_mean_"+res+"_c"+sdate+".nc";
+  else
+     filenameout = "aerosoldep_"+sim_year_range+"_mean_"+res+"_c"+sdate+".nc";
+  end if
   ;
   ; Open files
   ;

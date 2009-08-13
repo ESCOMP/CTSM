@@ -151,7 +151,7 @@ INCS    := $(foreach dir,$(cpp_dirs),-I$(dir))
 
 CURDIR := $(shell pwd)
 
-$(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Deppath
+$(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Deppath $(ULIBDEP)
 	$(CASETOOLS)/mkDepends Deppath Srcfiles > $@
 
 $(CURDIR)/Deppath: $(CURDIR)/Filepath
@@ -160,10 +160,6 @@ $(CURDIR)/Deppath: $(CURDIR)/Filepath
 
 $(CURDIR)/Srcfiles: $(CURDIR)/Filepath
 	$(CASETOOLS)/mkSrcfiles > $@
-
-$(CURDIR)/Filepath:
-	@echo "$(VPATH)" > $@
-
 
 #-------------------------------------------------------------------------------
 # echo file names, paths, compile flags, etc. used during build

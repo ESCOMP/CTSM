@@ -1,4 +1,248 @@
 ===============================================================
+Tag name:  clm3_6_48
+Originator(s):  erik (erik)
+Date: Wed Aug 12 19:22:59 MDT 2009
+One-line Summary: New aerosol/nitrogen deposition datasets, mksurfdata work, scm work, clm_usr_name option to build-namelist
+
+Purpose of changes:
+
+Add in 0.47x0.63, 0.9x1.25 finidat file for CN and 1850, and 0.47x0.63 surface dataset.
+Add in datasets at f09, f10, f05, f02 for aerosol (excepting f02 and f05) and nitrogen
+deposition from J-F. Work with mksurfdata so that 0.23x0.31 dataset will work (Forrest).
+Update csm_share, and get scam working. Add scam tests in. Add clm_usr_name option for
+personal datasets to build-namelist. Add a noOrganicSoilDataset use-case so it won't add
+in forganic file. Work on using ccsm build files for stand-alone testing. Get testing
+going on dublin.
+
+Bugs fixed (include bugzilla ID): 
+                                  813 (use CCSM build files in testing -- partial)
+                                 1010 (error in mksurfdata for qtr degree)
+                                 1014 (shr_scam checkSurface can NOT run an I case)
+                                 1023 (SCM mode check for lnd_present)
+
+Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+                                  966 (Hybrid restart problem on bluefire)
+                                  971 (abort on lahey with MPI)
+                                  972 (abort on intel with MPI)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1007 (interpinic error with Linux/lahey)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM  mode can NOT use a global finidat file)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Get ccsm_bld option working
+
+Describe any changes made to the namelist: Add -clm_usr_name option for user-datasets, 
+       add noOrganicSoilDataset use case (leaves forganic file off)
+
+   Add the clm_usr_name option to build-namelist, document how this is done in the 
+   Quickstart.userdataset README file. In short...
+
+   if -clm_usr_name is set to ${MYDATAID} then do the following...
+
+       surfdata:    copy files into: 
+             $MYCSMDATA/lnd/clm2/surfdata/surfdata_${MYDATAID}_simyr${SIM_YEAR}.nc
+       fatmgrid:    copy files into:
+             $MYCSMDATA/lnd/clm2/griddata/griddata_${MYDATAID}.nc
+       fatmlndfrc:  copy files into:
+             $MYCSMDATA/lnd/clm2/griddata/fracdata_${MYDATAID}_${MASK}.nc
+       faerdep:     copy files into:
+             $MYCSMDATA/lnd/clm2/snicardata/aerosoldep_monthly_${SIM_YEAR}_${MYDATAID}.nc
+
+   Then set CLM_BLDNML_OPTS="-clm_usr_name $MYDATAID" in your env_conf.xml. You
+   may have to set DIN_LOC_ROOT_CSMDATA in env_run.xml to $MYCSMDATA is this isn't
+  the standard location as well (use scripts/link_dirtree $CSMDATA $MYCSMDATA to
+  link standard datasets to your location.
+
+List any changes to the defaults for the boundary datasets: New datasets
+    New aerosol and nitrogen deposition datasets from Jean-Francois Lamarque
+             New interpolated finidat:   for 0.9x1.25, and 0.47x0.63
+             New fsurdat:                for 0.47x0.63
+             New faerdep, 1849-2006:     for 0.9x1.25 strung together by David Bailey
+             New faerdep, 1849-2006:     for 1.9x2.5, 10x15 (interpolated)
+             New fndepdat, decadal avgs: for 1.9x2.5 (raw data from J-F)
+             New fndepdyn, 1850-2006:    for 1.9x.25 strung together
+             New fndepdyn, 1849-2006:    for 0.9x1.25, 0.47x0.63, 10x15 (interpolated)
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, csm_share, datm7
+
+   scripts   to scripts4_090806
+   csm_share to share3_090811
+   datm7     to datm7_090812
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+  A  Quickstart.userdatasets ---------------------------- Documentation on using own datasets
+  A  models/lnd/clm/test/system/nl_files/nl_ptsmode_ocn - Test SCM mode
+  A  models/lnd/clm/test/system/nl_files/nl_ptsmode ----- Test SCM mode over ocean
+  A  models/lnd/clm/bld/namelist_files/namelist_defaults_usr_files.xml --- Template for
+                                                          user defined input datasets
+  A  models/lnd/clm/bld/namelist_files/use_cases/noOrganicSoilDataset.xml- Use case to
+                                                          turn off organic soil dataset
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>>> Add scm tests, new variable to turn on use of CCSM build
+>>>>>>>>>>>>>>>> Turn off -test in nl_files, already in mknamelist
+>>>>>>>>>>>>>>>> Update dublin build/run to what used by cam.
+  M  models/lnd/clm/test/system/TCB.sh --------------- Test for CLM_CCSMBLD
+  M  models/lnd/clm/test/system/README.testnames ----- Add K and L single point mode cases
+  M  models/lnd/clm/test/system/test_driver.sh ------- Update dublin, add INTEL for dublin
+                                                       reconcile jaguar module with CCSM build
+                                                       also set PNETCDF dirs.
+  M  models/lnd/clm/test/system/nl_files/clm_per ----- Remove -test
+  M  models/lnd/clm/test/system/nl_files/clm_std ----- Remove -test
+  M  models/lnd/clm/test/system/nl_files/clm_ndepdyn - Remove -test
+  M  models/lnd/clm/test/system/nl_files/clm_pftdyn -- Remove -test
+  M  models/lnd/clm/test/system/nl_files/clm_per0 ---- Remove -test
+  M  models/lnd/clm/test/system/nl_files/clm_urb1pt -- Remove -test
+  M  models/lnd/clm/test/system/input_tests_master --- Add single point tests AK4/AK8,AL4
+  M  models/lnd/clm/test/system/README --------------- Add note about CLM_CCSMBLD env var
+  M  models/lnd/clm/test/system/CLM_runcmnd.sh ------- Update dublin
+>>>>>>>>>>>>>>>> Changes from Forrest Hoffman so that 0.23x0.31 case will work
+>>>>>>>>>>>>>>>> I had started this work, but didn't complete it. Forrest checked
+>>>>>>>>>>>>>>>> the following changes in.
+>>>>   1. Changed the FFLAGS for debug mode on AIX
+>>>>   2. Added calls to areaave(), gridmap_clean(), and areaini() in mksoicol.F90 and mksoitex.F90
+>>>>   3. Changed "stop" to "call abort()" in mksrfdat.F90
+>>>>   4. Added roundoff error fixes for gridcells containing only special landunits not 
+>>>>      totalling 100% twice in mksrfdat.F90
+>>>>   5. Added error checking for after landunit adjustment to detect gridcells whose 
+>>>>      components do not total 100% twice in mksrfdat.F90
+  M  models/lnd/clm/tools/mksurfdata/mksoicol.F90 ---- Add regrid for mask
+  M  models/lnd/clm/tools/mksurfdata/Makefile -------- On IBM optimized remove -C, non-opt remove -O0
+  M  models/lnd/clm/tools/mksurfdata/mksoitex.F90 ---- Regrid mask
+  M  models/lnd/clm/tools/mksurfdata/mksrfdat.F90 ---- Roundoff error fix and test
+>>>>>>>>>>>>>>>> Handle sim_year_range for datasets, loosen the tolerance for area sum
+>>>>>>>>>>>>>>>> Allow time variable to be one ndep files.
+  M  models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl - Handle sim_year_range
+  M  models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl --- Handle sim_year_range, loosen 
+           tolerance, and allow time variable
+>>>>>>>>>>>>>>>> Get ccsm_bld option working, change ifort a bit, add clm_usr_name
+>>>>>>>>>>>>>>>> option and noOrganicSoilDataset use case to build-namelist
+>>>>>>>>>>>>>>>> New datasets
+  M  models/lnd/clm/bld/configure ------------------------------------ Work on ccsm_bld option
+  M  models/lnd/clm/bld/config_files/Makefile.in --------------------- Change ifort slightly, 
+                                                    assume icc for ifort, set CFLAGS for icc
+  M  models/lnd/clm/bld/config_files/TopCCSMBldMakefile.in ----------- Make top level
+                         Depends file dependent on ULIBDEP and remove Filepath creation
+  M  models/lnd/clm/bld/build-namelist ------------------------------- Add clm_usr_name
+      option, test if require forganic file
+  M  models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - By default demand forganic file
+  M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ----- New datasets:
+             New interpolated finidat:   for 0.9x1.25, and 0.47x0.63
+             New fsurdat:                for 0.47x0.63
+             New faerdep, 1849-2006:     for 0.9x1.25, 1.9x2.5, 10x15
+             New fndepdat, decadal avgs: for 1.9x2.5
+             New fndepdyn, 1850-2006:    for 1.9x.25
+             New fndepdyn, 1849-2006:    for 0.9x1.25, 0.47x0.63, 10x15 (interpolated)
+>>>>>>>>>>>>>>>> Get SCM mode working, allow SCM mode to run if no-land
+>>>>>>>>>>>>>>>> Fix an ifort compiler error.
+  M  models/lnd/clm/src/main/aerdepMod.F90 ------------ Fix ifort compiler error (bad continue lines)
+  M  models/lnd/clm/src/main/initializeMod.F90 -------- Exit early if noland
+  M  models/lnd/clm/src/main/restFileMod.F90 ---------- Don't check dims if single_column
+  M  models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 - Exit early, set lnd_present to .false.
+                                                        if no-land
+  M  models/lnd/clm/src/main/clm_varctl.F90 ----------- Add noland variable
+
+Summary of testing:
+
+  bluefire: All PASS except..
+002 erA91 TER.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic ................FAIL! rc= 7
+010 erE91 TER.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 10+38 arb_ic .........FAIL! rc= 7
+019 erEH1 TER.sh 4p_vodsrsc_dh clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 10+38 arb_icFAIL! rc= 7
+020 brEH1 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 24+24 arbFAIL! rc= 6
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+030 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic .........FAIL! rc= 7
+033 brC61 TBR.sh _sc_dh clm_std^nl_urb_br 20021001:NONE:1800 1.9x2.5 gx1v6 -3+-3 cold ...........FAIL! rc= 6
+041 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 7
+042 brLI1 TBR.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 6
+045 erLD1 TER.sh _sc_dh clm_std^nl_urb 20030101:NONE:1800 2.65x3.33 USGS -5+-5 arb_ic ...........FAIL! rc= 7
+048 brJ61 TBR.sh 4p_casasc_dh clm_std^nl_urb_br 20021230:NONE:1800 1.9x2.5 gx1v6 72+72 cold .....FAIL! rc= 6
+051 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+052 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
+054 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 6
+  bluefire interactive testing: All PASS up to...
+043 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  bluefire/CCSM testing: All PASS as follows...
+PASS  ERS_D.f45_g35.I_2000.bluefire 
+PASS  PET.f45_g35.I_1850.bluefire.cpl 
+PASS  PET.f45_g35.I_1850.bluefire.atm 
+PASS  PET.f45_g35.I_1850.bluefire.lnd 
+PASS  PET.f45_g35.I_1850.bluefire.ice 
+PASS  PET.f45_g35.I_1850.bluefire.ocn 
+PASS  PET.f45_g35.I_1850.bluefire.glc 
+PASS  ERS.f19_g16.I_1850.bluefire 
+PASS  ERS.f19_g16.I_1850-2000.bluefire 
+PASS  ERB.f09_g16.I_1948_2004.bluefire 
+PASS  ERB.f09_g16.I1850SPINUPCN.bluefire 
+PASS  ERH_D.f10_f10.I_1850_CN.bluefire 
+PASS  PET.f10_f10.ICN8520.bluefire.cpl 
+PASS  PET.f10_f10.ICN8520.bluefire.atm 
+PASS  PET.f10_f10.ICN8520.bluefire.lnd 
+PASS  PET.f10_f10.ICN8520.bluefire.ice 
+PASS  PET.f10_f10.ICN8520.bluefire.ocn 
+PASS  PET.f10_f10.ICN8520.bluefire.glc 
+  jaguar: All PASS
+  jaguar interactive testing: All PASS up to...
+005 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
+........FAIL! rc= 10
+  lightning/ifort interactive testing: All PASS
+  dublin/lf95 interactive testing: All PASS except
+023 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+026 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  dublin/lf95: All PASS except
+004 blA92 TBL.sh _sc_dm clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 5
+007 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v5 144 cold .................FAIL! rc= 5
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+016 blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 arb_ic ............FAIL! rc= 5
+020 blH52 TBL.sh 17p_cnnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 48 cold .........FAIL! rc= 5
+024 blJ92 TBL.sh 4p_casasc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 cold ...............FAIL! rc= 5
+028 blL51 TBL.sh _sc_dh clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 48 arb_ic ..................FAIL! rc= 5
+030 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48 .......................FAIL! rc= 7
+  dublin/pgi: All PASS except
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+  breeze,gale,hail,gust/ifort interactive testing:
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_47
+
+Changes answers relative to baseline: Cases where datasets change
+       0.47x0.63, 0.9x1.25, 1.9x2.5, 10x15
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_47
 Originator(s):  erik (erik)
 Date: Mon Aug  3 11:47:49 MDT 2009
@@ -37,6 +281,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                   990 (CN transient blowup)
                                   994 (finidat files on jaguar for pftdyn fail)
                                  1007 (interpinic error with Linux/lahey)
+                                 1010 (error in mksurfdata for qtr degree)
+                                 1014 (shr_scam checkSurface can NOT run an I case)
+                                 1023 (SCM mode check for lnd_present)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None

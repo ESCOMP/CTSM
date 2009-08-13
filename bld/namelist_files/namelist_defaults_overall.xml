@@ -23,6 +23,6 @@ determine default values for namelists.
 <sim_year_range>constant</sim_year_range>
 
 <!-- List of optional fields to demand on namelist -->
-<clm_demand>null</clm_demand>
+<clm_demand>forganic</clm_demand>
 
 </namelist_defaults>

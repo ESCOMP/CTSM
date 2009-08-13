@@ -55,6 +55,8 @@ G -- 1.9x2.5 with 0.23x0.31 fine mesh
 H -- 1.9x2.5 with 0.9x1.25  fine mesh
 I -- T62
 J -- 0.9x1.25
+K -- 1.9x2.5 with single point mode
+L -- 10x15   with single point mode
 
 i is the specific test (usually this implies...)
 

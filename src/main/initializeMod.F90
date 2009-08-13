@@ -83,7 +83,7 @@ contains
     use surfrdMod , only : surfrd,surfrd_get_grid,surfrd_get_frac,&
                            surfrd_get_topo, surfrd_get_latlon
     use clm_varctl, only : fsurdat, fatmgrid, fatmlndfrc, &
-                           fatmtopo, flndtopo
+                           fatmtopo, flndtopo, noland
     use controlMod, only : control_init, control_print
     use UrbanInputMod    , only : UrbanInput
 !
@@ -197,6 +197,12 @@ contains
        if (masterproc) write(iulog,*) 'initialize1: alatlon/llatlon different ', &
           'sizes:continue'
     endif
+
+    ! Exit early if no valid land points
+    if ( all(amask == 0) )then
+       noland = .true.
+       return
+    end if
 
     call decompInit_atm(alatlon,amask)
 

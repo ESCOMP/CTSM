@@ -1,0 +1,9 @@
+&drv_in
+ brnch_retain_casename=.true.
+ single_column=.true.
+ scmlat=42.
+ scmlon=260.
+/
+&clm_inparm
+ hist_ndens=1,1
+/

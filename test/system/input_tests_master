@@ -26,6 +26,21 @@ erA74 TER.sh _sc_ds clm_std^nl_urb    20030101:NONE:3600 1x1_brazil navy -5+-5 a
 brA74 TBR.sh _sc_ds clm_std^nl_urb_br 20030101:NONE:3600 1x1_brazil navy -5+-5 arb_ic
 blA74 TBL.sh _sc_ds clm_std^nl_urb    20030101:NONE:3600 1x1_brazil navy -10   arb_ic
 
+smAK4 TSM.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10   arb_ic
+erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 arb_ic
+brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 arb_ic
+blAK4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10   arb_ic
+
+smAK8 TSM.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -10   arb_ic
+erAK8 TER.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 arb_ic
+brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 arb_ic
+blAK8 TBL.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -10   arb_ic
+
+smAL4 TSM.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -10   arb_ic
+erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 arb_ic
+brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 arb_ic
+blAL4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -10   arb_ic
+
 smB91 TSMruncase.sh
 
 smD91 TSM.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 144    cold

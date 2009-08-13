@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<namelist_defaults>
+
+<!--
+User defined filenames to use in conjuction with the "clm_usr_name" option
+to build-namelist to specify user created files that will be searched for
+in place of the standard files, or to give different resolutions, or 
+The element names are the same as the corresponding namelist filename
+variables (only files can be set here).  Values that depend on the model 
+configuration use attributes to express the dependency.  The recognized attributes
+are: clm_usr_name, mask, sim_year, and sim_year_range and all configuration
+attributes from the config_cache.xml file (with keys converted to upper-case).
+
+In addition variable names expressed as ${variable_name} will be expanded
+provided they are in the valid list expressed above.
+-->
+
+<!-- Initial file (relative to ${csmdata}) -->
+
+<finidat >lnd/clm2/initdata/clmi.${clm_usr_name}_${mask}_simyr${sim_year}.nc</finidat>
+
+<!-- Surface dataset (relative to ${csmdata}) -->
+<fsurdat >lnd/clm2/surfdata/surfdata_${clm_usr_name}_simyr${sim_year}.nc</fsurdat>
+
+<!-- Dynamic PFT surface dataset (relative to ${csmdata}) -->
+<fpftdyn                            >lnd/clm2/surfdata/surfdata.pftdyn_${clm_usr_name}_simyr${sim_year_range}.nc</fpftdyn>
+<fpftdyn sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_${clm_usr_name}_simyr1849-2006.nc</fpftdyn>
+
+<!-- Grid dataset (relative to ${csmdata}) -->
+<fatmgrid >lnd/clm2/griddata/griddata_${clm_usr_name}.nc</fatmgrid>
+
+<!-- Land topo dataset (when running land at different resolution than atm coupling) (relative to ${csmdata})  -->
+<flndtopo >lnd/clm2/griddata/topodata_${clm_usr_name}.nc</flndtopo>
+
+<!-- Atmosphere topo dataset (when running land at different resolution than atm coupling) (relative to ${csmdata})  -->
+<fatmtopo >lnd/clm2/griddata/topodata_${clm_usr_name}.nc</fatmtopo>
+
+<!-- Fraction dataset (relative to ${csmdata})  -->
+
+<fatmlndfrc >lnd/clm2/griddata/fracdata_${clm_usr_name}_${mask}.nc</fatmlndfrc>
+
+<!-- Aerosol deposition fluxes - if NOT coupled to CAM or NOT running CAM with dust and aerosols -->
+<faerdep sim_year_range="constant" >lnd/clm2/snicardata/aerosoldep_monthly_${sim_year}_${clm_usr_name}.nc</faerdep>
+<faerdep                           >lnd/clm2/snicardata/aerosoldep_monthly_${sim_year_range}_${clm_usr_name}.nc</faerdep>
+<faerdep sim_year_range="1850-2000">lnd/clm2/snicardata/aerosoldep_monthly_1849-2006_${clm_usr_name}.nc</faerdep>
+
+<!--CN Nitrogen deposition dataset for a fixed year (relative to ${csmdata})  -->
+
+<fndepdat bgc="cn" sim_year_range="constant">lnd/clm2/ndepdata/ndep_clm_simyr${sim_year}_${clm_usr_name}.nc</fndepdat>
+
+<!--CN Nitrogen deposition dataset for a series of years (relative to ${csmdata})  -->
+
+<fndepdyn bgc="cn"                           >lnd/clm2/ndepdata/fndep_clm_simyr${sim_year_range}_${clm_usr_name}.nc</fndepdyn>
+<fndepdyn bgc="cn" sim_year_range="1850-2000">lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_${clm_usr_name}.nc</fndepdyn>
+
+<!-- Domain files for datm (relative to ${csmdata}) -->
+<domainfile >atm/datm7/domain.clm/domain.lnd.${clm_usr_name}_${mask}.nc</domainfile>
+
+</namelist_defaults>

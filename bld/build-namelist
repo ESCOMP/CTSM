@@ -37,6 +37,9 @@ OPTIONS
      -case "name"             Case identifier up to 32 characters
      -clm_demand "list"       List of variables to require on clm namelist besides the usuals.
                               (can include a list member "none" which does nothing)
+     -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets. Default: not used
+                              Example: 1x1pt_boulderCO_c090722 to describe location,
+                                       number of pts, and date files created
      -config "filepath"       Read the given CICE configuration cache file. Default: "config_cache_cice.xml".
      -csmdata "dir"           Root directory of CCSM input data.
                               Can also be set by using the CSMDATA environment variable.
@@ -126,22 +129,23 @@ my $outdirname = "$cwd";                  # Default name of output directory nam
 
 # Process command-line options.
 
-my %opts = ( config          => $cfg_cache,
-	     csmdata         => undef,
-             cycle_beg_year  => "default",
-             cycle_end_year  => "default",
-             cycle_init_year => "default",
-             clm_demand      => "null",
-	     help            => 0,
-             list_use_cases  => 0,
-	     dir             => $outdirname,
-             sim_year        => "default",
-	     res             => "default",
-	     lnd_res         => "default",
-	     silent          => 0,
-             source          => "default",
-             mask            => "default",
-	     test            => 0,
+my %opts = ( config           => $cfg_cache,
+	     csmdata          => undef,
+	     clm_usr_name     => undef,
+             cycle_beg_year   => "default",
+             cycle_end_year   => "default",
+             cycle_init_year  => "default",
+             clm_demand       => "null",
+	     help             => 0,
+             list_use_cases   => 0,
+	     dir              => $outdirname,
+             sim_year         => "default",
+	     res              => "default",
+	     lnd_res          => "default",
+	     silent           => 0,
+             source           => "default",
+             mask             => "default",
+	     test             => 0,
 	    );
 
 GetOptions(
@@ -149,6 +153,7 @@ GetOptions(
     "clm_demand=s"              => \$opts{'clm_demand'},
     "config=s"                  => \$opts{'config'},
     "csmdata=s"                 => \$opts{'csmdata'},
+    "clm_usr_name=s"            => \$opts{'clm_usr_name'},
     "cycle_beg_year=s"          => \$opts{'cycle_beg_year'},
     "cycle_end_year=s"          => \$opts{'cycle_end_year'},
     "cycle_init_year=s"         => \$opts{'cycle_init_year'},
@@ -349,7 +354,9 @@ else {
     die "$ProgName - ERROR: CCSM inputdata root directory must be specified by either -csmdata argument\n" .
 	" or by the CSMDATA environment variable. :";
 }
-$ENV{'DIN_LOC_ROOT'} = $inputdata_rootdir;
+if ( $ENV{'DIN_LOC_ROOT'} eq "" ) {
+   $ENV{'DIN_LOC_ROOT'} = $inputdata_rootdir;
+}
 
 if ($opts{'test'}) {
     (-d $inputdata_rootdir)  or  die <<"EOF";
@@ -550,6 +557,43 @@ $nl->set_variable_value($group, $var, $val);
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
    die "$nm lnd_res has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+
+# Process the -clm_usr_name argument
+if (defined $opts{'clm_usr_name'}) {
+    # The user files definition is contained in an xml file with the same format as the defaults file.
+    
+    # The one difference is that variables are expanded.
+    # Create a new NamelistDefaults object.
+    my $nl_defaults_file = "$cfgdir/namelist_files/namelist_defaults_usr_files.xml";
+    my $uf_defaults = Build::NamelistDefaults->new("$nl_defaults_file", $cfg );
+    # Loop over the variables specified in the user files
+    # Add each one to the namelist.
+    my @vars = $uf_defaults->get_variable_names();
+    my %settings;
+    $settings{'mask'}           = $mask;
+    $settings{'sim_year'}       = $sim_year;
+    $settings{'sim_year_range'} = $sim_year_range;
+    $settings{'clm_usr_name'}   = $opts{'clm_usr_name'};
+    if ( $inputdata_rootdir eq "\$DIN_LOC_ROOT" ) {
+       $settings{'csmdata'}     = $ENV{'DIN_LOC_ROOT'};
+    } else {
+       $settings{'csmdata'}     = $inputdata_rootdir;
+    }
+
+    my $nvars = 0;
+    foreach my $var (@vars) {
+	my $val = $uf_defaults->get_usr_file($var, $definition, \%settings);
+
+	if ($val) {
+            print "adding clm user file defaults for var $var with val $val \n";
+	    add_default($nl, $var, 'val'=>$val);
+            $nvars++;
+	}
+    }
+    if ( $nvars == 0 ) {
+         die "$nm setting clm_usr_name -- but did NOT find any user datasets\n";
+    }
 }
 
 # Add default values for required namelist variables that have not been previously set.
@@ -793,17 +837,25 @@ if ( $mode eq "ext_ccsm_con" || $dust eq "off" || $carbon_aero eq "off" ) {
 #
 # Deal with options that the user has said are required...
 #
-my $demand  = $nl->get_value('clm_demand');
-$demand =~ s/\'//g;   # Remove quotes
-$opts{'clm_demand'} .= ",$demand";
-my @demandlist = split( ",", $opts{'clm_demand'} );
-my %settings = {};
+my $demand           = $nl->get_value('clm_demand');
+$demand              =~ s/\'//g;   # Remove quotes
+if ( $demand =~ /.+/ ) { $opts{'clm_demand'} .= ",$demand"; }
+my $demand           = $defaults->get_value('clm_demand');
+$demand              =~ s/\'//g;   # Remove quotes
+if ( $demand =~ /.+/ ) { $opts{'clm_demand'} .= ",$demand"; }
+my @demandlist       = split( ",", $opts{'clm_demand'} );
+my %settings         = {};
 $settings{'hgrid'}          = $res;
 $settings{'sim_year'}       = $sim_year;
 $settings{'sim_year_range'} = $sim_year_range;
 $settings{'mask'}           = $mask;
+my $require_forganic        = 0;
 foreach my $item ( @demandlist ) {
    if ( $item eq "null" ) { next; }
+   if ( $item eq "forganic" ) { 
+      $require_forganic = 1;
+      next; 
+   }
    add_default($nl, $item, %settings );
 }
 #
@@ -825,7 +877,9 @@ my $fsurdat = $nl->get_value( 'fsurdat' );
 #
 # Use surface dataset for organic soil and urban input datasets
 #
-add_default($nl, 'forganic', 'val'=>$fsurdat, 'no_abspath'=>1 );
+if ( $require_forganic ) {
+   add_default($nl, 'forganic', 'val'=>$fsurdat, 'no_abspath'=>1 );
+}
 
 # Initial conditions
 # The initial date is an attribute in the defaults file which should be matched unless

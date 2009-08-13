@@ -99,10 +99,9 @@ FC      = xlf90
 FFLAGS  = -c -I$(INC_NETCDF) -q64 -qsuffix=f=f90 -qsuffix=f=f90:cpp=F90 \
 	   $(FPPFLAGS)  -g -qfullpath
 ifneq ($(OPT),TRUE)
-   #FFLAGS += -qmaxmem=-1 -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C
-   FFLAGS += -qmaxmem=-1 -C -O0
+   FFLAGS += -qmaxmem=-1 -qinitauto=FF911299 -qflttrap=ov:zero:inv:en -C
 else
-   FFLAGS += -qmaxmem=-1 -C -O2
+   FFLAGS += -qmaxmem=-1 -O2
 endif
 CFLAGS  := -q64 -g $(CPPDEF) -O2
 LDFLAGS = -L$(LIB_NETCDF) -q64 -lnetcdf

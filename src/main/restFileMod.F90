@@ -809,6 +809,7 @@ contains
 ! !USES:
     use decompMod,  only : get_proc_bounds, get_proc_global
     use clm_varpar, only : nlevsno, nlevlak, nlevgrnd
+    use clm_varctl, only : single_column, nsrest
     implicit none
 !
 ! !ARGUMENTS:
@@ -830,11 +831,13 @@ contains
     ! Get relevant sizes
 
     if (masterproc) then
-       call get_proc_global(numg, numl, numc, nump)
-       call check_dim(ncid, 'gridcell', numg)
-       call check_dim(ncid, 'landunit', numl)
-       call check_dim(ncid, 'column'  , numc)
-       call check_dim(ncid, 'pft'     , nump)
+       if ( .not. single_column .or. nsrest /= 0 )then
+          call get_proc_global(numg, numl, numc, nump)
+          call check_dim(ncid, 'gridcell', numg)
+          call check_dim(ncid, 'landunit', numl)
+          call check_dim(ncid, 'column'  , numc)
+          call check_dim(ncid, 'pft'     , nump)
+       end if
        call check_dim(ncid, 'levsno'  , nlevsno)
        call check_dim(ncid, 'levgrnd'  , nlevgrnd)
        call check_dim(ncid, 'levlak'  , nlevlak) 
