@@ -338,9 +338,9 @@ endif
 
 ifeq ($(findstring ifort,$(FC)),ifort)
 
-  FFLAGS      += -132 -ftz -g -fp-model precise -convert big_endian -assume byterecl -traceback
+  FFLAGS      += -ftz -g -fp-model precise -convert big_endian -assume byterecl -traceback
   FREEFLAGS   := -FR
-  FIXEDFLAGS  :=
+  FIXEDFLAGS  := -132
 
   ifeq ($(DEBUG),TRUE)
     FFLAGS    += -check all -fpe0

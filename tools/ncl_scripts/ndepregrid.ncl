@@ -110,21 +110,21 @@ begin
   ;
   ; Define dimensions
   ;
+  latgg = ncg->LATIXY(lsmlat|:,lsmlon|0);
+  longg = ncg->LONGXY(lsmlat|0,lsmlon|:);
+  nlat  = dimsizes( latgg );
+  nlon  = dimsizes( longg );
   if ( isfilevardim( nc, "NDEP_year", "time" ) )then
      dimnames  = (/ "lon", "lat", "time" /);
-     dims      = getfiledimsizes( nc );
-     ntime     = dims(2);
-     ncgdimsiz = getfiledimsizes( ncg )
-     dsizes    = (/ ncgdimsiz(1), ncgdimsiz(2), ntime /);
+     ntime     = dimsizes( nc->YEAR );
+     dsizes    = (/ nlon, nlat, ntime /);
      is_unlim  = (/ False, False, True /);
-     filedimdef( nco, dimnames, dsizes, is_unlim );
   else
      dimnames  = (/ "lon", "lat" /);
-     ncgdimsiz = getfiledimsizes( ncg )
-     dsizes    = (/ ncgdimsiz(1), ncgdimsiz(2) /);
+     dsizes    = (/ nlon, nlat /);
      is_unlim  = (/ False, False /);
-     filedimdef( nco, dimnames, dsizes, is_unlim );
   end if
+  filedimdef( nco, dimnames, dsizes, is_unlim );
   ;
   ; Define vars and add attributes from original file
   ;
@@ -159,10 +159,10 @@ begin
      nco->YEAR = (/nc->YEAR/);
      nco->time = (/nc->time/);
   end if
-  nco->lon= doubletofloat( (/ncg->LONGXY(lsmlat|0,lsmlon|:) /) );
-  nco->lat= doubletofloat( (/ncg->LATIXY(lsmlat|:,lsmlon|0) /) );
-  lon     = (/ nc->lon /);
-  lat     = (/ nc->lat /);
+  nco->lon= doubletofloat( (/longg/) );
+  nco->lat= doubletofloat( (/latgg/) );
+  lat     = (/ nc->lat  /);
+  lon     = (/ nc->lon  /);
   lono    = (/ nco->lon /);
   lato    = (/ nco->lat /);
   areai   = doubletofloat( (/ ncgi->AREA /) );

@@ -94,10 +94,12 @@ begin
   ; Define dimensions
   ;
   dimnames  = (/ "lon", "lat", "time" /);
-  dims      = getfiledimsizes( nc );
+  latgg     = ncg->LATIXY(lsmlat|:,lsmlon|0);
+  longg     = ncg->LONGXY(lsmlat|0,lsmlon|:);
+  nlat      = dimsizes( latgg );
+  nlon      = dimsizes( longg );
   ntime     = getfilevardimsizes(nc,"time");
-  ncgdimsiz = getfiledimsizes( ncg )
-  dsizes    = (/ ncgdimsiz(1), ncgdimsiz(2), ntime /);
+  dsizes    = (/ nlon, nlat, ntime /);
   is_unlim  = (/ False, False, True /);
   filedimdef( nco, dimnames, dsizes, is_unlim );
   print( "Number of times: "+ntime );
@@ -131,8 +133,8 @@ begin
   if ( isfilevar( nc, "time" ) ) then
      nco->time= (/nc->time/);
   end if
-  nco->lon   = doubletofloat( (/ncg->LONGXY(lsmlat|0,lsmlon|:) /) );
-  nco->lat   = doubletofloat( (/ncg->LATIXY(lsmlat|:,lsmlon|0) /) );
+  nco->lon   = doubletofloat( (/longg/) );
+  nco->lat   = doubletofloat( (/latgg/) );
   lon  = (/ nc->lon /);
   lat  = (/ nc->lat /);
   lono = (/ nco->lon /);

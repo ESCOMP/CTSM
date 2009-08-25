@@ -102,12 +102,15 @@ begin
    ;
    ; Get dimension info.
    ;
-   varname   = "PCT_PFT";
-   timdimnames  = getfilevardims(     nc,  varname );
-   timdsizes    = getfilevardimsizes( nc,  varname );
-   dimnames     = timdimnames( 1: );
-   dimnames(0)  = "pft";
-   dsizes       = timdsizes(   1: );
+   varname      = "PCT_PFT";
+   dimnames     = (/ "pft", "lsmlat", "lsmlon" /);
+   latgg        = ncg->LATIXY(lsmlat|:,lsmlon|0);
+   longg        = ncg->LONGXY(lsmlat|0,lsmlon|:);
+   nlat         = dimsizes( latgg );
+   nlon         = dimsizes( longg );
+   pft          = dimsizes( nc->$varname$(lsmpft|:,lsmlat|0,lsmlon|0,time|0) );
+   numpft       = pft(0);
+   dsizes       = (/ numpft, nlat, nlon /);
    is_unlim     = (/ False, False, False /);
    print( "dimensions:"+dimnames );
 
@@ -123,7 +126,7 @@ begin
    ;
    ; Now loop over each year and output files for each year
    ;
-   ntimes = timdsizes( 0 );
+   ntimes = dimsizes( nc->YEAR );
    do t = 0, ntimes - 1
       year = nc->YEAR(t);
       if ( year .lt. 10 ) then

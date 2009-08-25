@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta20"
+seqccsm_vers="ccsm4_0_beta21"
 
 hostname=`hostname`
 case $hostname in
@@ -35,6 +35,9 @@ case $hostname in
 	    echo "ERROR: unable to locate an account number to charge for this job under user: $LOGNAME"
 	    exit 2
 	fi
+    fi
+    if [ -z "$CLM_CCSMBLD" ]; then
+	export CLM_CCSMBLD="TRUE"
     fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
@@ -432,6 +435,10 @@ EOF
     jaguar* ) 
     submit_script="test_driver_jaguar_${cur_time}.sh"
 
+    if [ -z "$CLM_CCSMBLD" ]; then
+	export CLM_CCSMBLD="TRUE"
+    fi
+
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
 #!/bin/sh
@@ -516,7 +523,7 @@ export CFG_STRING="-fc ftn "
 export TOOLS_MAKE_STRING="USER_FC=ftn USER_CC=cc "
 export MAKE_CMD="gmake -j 9 "
 export MACH_WORKSPACE="/tmp/work"
-export CPRNC_EXE=/spin/proj/ccsm/bin/jaguar/newcprnc
+export CPRNC_EXE=/tmp/proj/ccsm/tools/ccsm_cprnc/cprnc
 export DATM_QIAN_DATA_DIR="/tmp/proj/ccsm/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
 dataroot="/tmp/proj/ccsm"
 EOF
@@ -526,6 +533,10 @@ EOF
     ##kraken
     kraken* ) 
     submit_script="test_driver_kraken_${cur_time}.sh"
+
+    if [ -z "$CLM_CCSMBLD" ]; then
+	export CLM_CCSMBLD="TRUE"
+    fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF

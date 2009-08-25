@@ -1,4 +1,137 @@
 ===============================================================
+Tag name:  clm3_6_49
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Tue Aug 25 15:17:18 MDT 2009
+One-line Summary: Fix ncl interpolation scripts, update externals, turn on CLM_CCSM_BLD for bluefire,jaguar, ESMF3 compliance
+
+Purpose of changes:
+
+Fix fndepdyn ncl interpolation scripts. Use old clm3_6_47 fndepdyn datasets (until updated in next tag). 
+Update scripts, drv, and csm_share to latest. Turn on CLM_CCSM_BLD mode for bluefire, and jaguar. 
+Add scm-mode tests to test lists. Update Makefile to fix pio ifort bug. Changes from Dani Coleman 
+to clm_time_manager to make compatible with ESMF3. Fix lahey compiler problem for scm_mode.
+
+Bugs fixed (include bugzilla ID):
+                                  966 (Hybrid restart problem on bluefire) -- works with CCSM build
+                                 1031 (Can't run SMS_D.f09_g16.ICN8520) -- partial -- using old datasets
+                                 1029 (ifort compilation error in pio)
+                                 1032 (Problem running SCM mode on Lahey)
+
+Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+                                  971 (abort on lahey with MPI)
+                                  972 (abort on intel with MPI)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1007 (interpinic error with Linux/lahey)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM  mode can NOT use a global finidat file)
+                                 1031 (Can't run SMS_D.f09_g16.ICN8520)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system:  Local Makefile changed for ifort
+
+	local Makefile changed for ifort changed so that -132 only added to fixed-form code.
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: Self, bundy (clm_time_manager code)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, csm_share
+
+   scripts   to scripts4_090806
+   drv       to vocemis-drydep12_drvseq3_0_27
+   csm_share to share3_090825
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M      models/lnd/clm/test/system/tests_pretag_bluefire_nompi ----- Add single-column tests
+M      models/lnd/clm/test/system/tests_pretag_jaguar_nompi ------- Add single-column tests
+M      models/lnd/clm/test/system/test_driver.sh ------------------ Update seqvers to beta21, set 
+                                                           CLM_CCSMBLD to true for bluefire/jaguar, 
+                                                           change path for cprnc on jaguar
+M      models/lnd/clm/test/system/input_tests_master -------------- single-column tests are cold-starts
+M      models/lnd/clm/test/system/tests_pretag_dublin_nompi ------- Add single-column tests
+M      models/lnd/clm/test/system/tests_posttag_nompi_regression -- Add single-column tests
+M      models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl ---------- Remove assumption about order of dimensions
+M      models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl ------------ Remove assumption about order of dimensions
+M      models/lnd/clm/tools/ncl_scripts/pftdyntest2raw.ncl -------- Remove assumption about order of dimensions
+M      models/lnd/clm/bld/config_files/Makefile.in ---------------- For ifort only add -132 to FIXEDFLAGS
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml  Go back to old fndepdyn files from clm3_6_47
+M      models/lnd/clm/src/main/clm_time_manager.F90 --------------- Label sub as "clm::" and change data to
+                                                                    intent(inout) to comply with ESMF3
+                                                                    (From Dani Bundy-Coleman)
+
+Summary of testing:
+
+  bluefire: All PASS except
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+051 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+052 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
+054 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 6
+  bluefire interactive testing: All PASS except
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 arb_ic ........FAIL! rc= 5
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 arb_ic ........FAIL! rc= 5
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 arb_ic ....FAIL! rc= 6
+027 blAK8 TBL.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -10 arb_ic ......FAIL! rc= 6
+051 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  bluefire/CCSM testing: All PASS
+PASS  ERS_D.f45_g35.I_2000.bluefire
+PASS  PET.f45_g35.I_1850.bluefire.cpl
+PASS  PET.f45_g35.I_1850.bluefire.atm
+PASS  PET.f45_g35.I_1850.bluefire.lnd
+PASS  PET.f45_g35.I_1850.bluefire.ice
+PASS  PET.f45_g35.I_1850.bluefire.ocn
+PASS  PET.f45_g35.I_1850.bluefire.glc
+PASS  ERS.f19_g16.I_1850.bluefire
+PASS  ERS.f19_g16.I_1850-2000.bluefire
+PASS  ERB.f09_g16.I_1948_2004.bluefire
+PASS  ERB.f09_g16.I1850SPINUPCN.bluefire
+PASS  ERH_D.f10_f10.I_1850_CN.bluefire
+PASS  PET.f10_f10.ICN8520.bluefire.cpl
+PASS  PET.f10_f10.ICN8520.bluefire.atm
+PASS  PET.f10_f10.ICN8520.bluefire.lnd
+PASS  PET.f10_f10.ICN8520.bluefire.ice
+PASS  PET.f10_f10.ICN8520.bluefire.ocn
+PASS  PET.f10_f10.ICN8520.bluefire.glc
+  jaguar interactive testing: All PASS up to...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+  lightning/ifort interactive testing: All PASS
+  dublin/lf95 interactive testing: All PASS up to...
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_48
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_48
 Originator(s):  erik (erik)
 Date: Wed Aug 12 19:22:59 MDT 2009
@@ -42,6 +175,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1007 (interpinic error with Linux/lahey)
                                  1017 (SCM mode can NOT restart)
                                  1025 (SCM  mode can NOT use a global finidat file)
+                                 1029 (ifort compilation error in pio)
+                                 1031 (Can't run SMS_D.f09_g16.ICN8520)
+                                 1032 (Problem running SCM mode on Lahey)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Get ccsm_bld option working
