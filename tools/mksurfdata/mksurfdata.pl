@@ -120,7 +120,7 @@ EOF
          }
          $desc = "simyr$sim_year";
          print $fh <<"EOF";
- mksrf_fvegtyp      = '/cgd/tss/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_landuse_rc2000_c090630.nc'
+ mksrf_fvegtyp      = '/cgd/tss/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_landuse_rc${sim_year}_c090630.nc'
  mksrf_fsoicol      = '/cgd/tss/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_soilcol_global_c090324.nc'
  mksrf_flai         = '/cgd/tss/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_lai_global_c090506.nc'
  mksrf_fdynuse      = 'pftdyn_$desc.txt'

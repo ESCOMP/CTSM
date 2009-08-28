@@ -114,9 +114,9 @@ lnd/clm2/surfdata/surfdata_8x16_urb3den_simyr2000_c090420.nc</fsurdat>
 lnd/clm2/surfdata/surfdata_94x192_urb3den_simyr2000_c090420.nc</fsurdat>
 
 <fsurdat hgrid="0.23x0.31" sim_year="2000" >
-lnd/clm2/surfdata/surfdata_0.23x0.31_urb3den_simyr2000_c090422.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_0.23x0.31_urb3den_simyr2000_c090828.nc</fsurdat>
 <fsurdat hgrid="0.47x0.63" sim_year="2000" >
-lnd/clm2/surfdata/surfdata_0.47x0.63_urb3den_simyr2000_c090421.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_0.47x0.63_urb3den_simyr2000_c090828.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="2000" >
 lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr2000_c090705.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" >
@@ -127,11 +127,8 @@ lnd/clm2/surfdata/surfdata_2x2.5_urb3den_simyr2000_c090421.nc</fsurdat>
 lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr2000_c090421.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="2000" >
 lnd/clm2/surfdata/surfdata_4x5_urb3den_simyr2000_c090421.nc</fsurdat>
-
-<!-- BEGIN: Use 1850 for 2000 conditions just to get the test to work as the 2000 file was incorrect -->
 <fsurdat hgrid="10x15"     sim_year="2000" >
-lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr1850_c090529.nc</fsurdat>
-<!-- END: Use 1850 for 2000 conditions just to get the test to work as the 2000 file was incorrect -->
+lnd/clm2/surfdata/surfdata_10x15_urb3den_simyr2000_c090828.nc</fsurdat>
  
 <fsurdat hgrid="5x5_amazon"    sim_year="2000" >
 lnd/clm2/surfdata/surfdata_5x5_amazon_urb3den_simyr2000_c090720.nc</fsurdat>
@@ -167,7 +164,7 @@ lnd/clm2/surfdata/surfdata_32x64_urb3den_simyr1850_c090420.nc</fsurdat>
 lnd/clm2/surfdata/surfdata_8x16_urb3den_simyr1850_c090420.nc</fsurdat>
 
 <fsurdat hgrid="0.23x0.31" sim_year="1850" >
-lnd/clm2/surfdata/surfdata_0.23x0.31_urb3den_simyr1850_c090422.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_0.23x0.31_urb3den_simyr1850_c090827.nc</fsurdat>
 <fsurdat hgrid="0.47x0.63" sim_year="1850" >
 lnd/clm2/surfdata/surfdata_0.47x0.63_urb3den_simyr1850_c090729.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="1850" >
@@ -353,11 +350,14 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr1850_c090715.nc</fsurdat>
 
 <!--CN Nitrogen deposition dataset for a fixed year (relative to {csmdata}) -->
 
+<!-- Future simulations -->
 <fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_1.9x2.5_c070118.nc</fndepdat>
 <fndepdat hgrid="0.47x0.63" bgc="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_0.47x0.63_c071213.nc</fndepdat>
 <fndepdat hgrid="4x5"       bgc="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_4x5_c090114.nc</fndepdat>
 <fndepdat hgrid="64x128"    bgc="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_64x128_c071221.nc</fndepdat>
 <fndepdat hgrid="48x96"     bgc="cn" sim_year="2100" >lnd/clm2/ndepdata/ndep_clm_2100_48x96_c060414.nc</fndepdat>
+
+<!-- current year 2000 simulations -->
 <fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_simyr2000_1.9x2.5_c090415.nc</fndepdat>
 <fndepdat hgrid="0.9x1.25"  bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_simyr2000_0.9x1.25_c090529.nc</fndepdat>
 <fndepdat hgrid="0.47x0.63" bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_0.47x0.63_c071213.nc</fndepdat>
@@ -365,6 +365,8 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr1850_c090715.nc</fsurdat>
 <fndepdat hgrid="10x15"     bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_simyr2000_10x15_c090529.nc</fndepdat>
 <fndepdat hgrid="64x128"    bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_64x128_c071221.nc</fndepdat>
 <fndepdat hgrid="48x96"     bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_2000_48x96_c060414.nc</fndepdat>
+
+<!-- year 1850 pre-industrial simulations -->
 <fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1850" >lnd/clm2/ndepdata/ndep_clm_simyr1850_1.9x2.5_c090409.nc</fndepdat>
 <fndepdat hgrid="0.9x1.25"  bgc="cn" sim_year="1850" >lnd/clm2/ndepdata/ndep_clm_simyr1850_0.9x1.25_c090529.nc</fndepdat>
 <fndepdat hgrid="0.47x0.63" bgc="cn" sim_year="1850" >lnd/clm2/ndepdata/ndep_clm_1890_0.47x0.63_c071213.nc</fndepdat>
@@ -373,6 +375,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr1850_c090715.nc</fsurdat>
 <fndepdat hgrid="64x128"    bgc="cn" sim_year="1850" >lnd/clm2/ndepdata/ndep_clm_1890_64x128_c071221.nc</fndepdat>
 <fndepdat hgrid="48x96"     bgc="cn" sim_year="1850" >lnd/clm2/ndepdata/ndep_clm_1890_48x96_c060414.nc</fndepdat>
 
+<!-- current year 2000 simulations for single points -->
 <fndepdat hgrid="1x1_brazil"          bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_simyr2000_1x1_brazil_c090716.nc</fndepdat>
 <fndepdat hgrid="5x5_amazon"          bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_simyr2000_5x5_amazon_c090716.nc</fndepdat>
 <fndepdat hgrid="1x1_urbanc_alpha"    bgc="cn" sim_year="2000" >lnd/clm2/ndepdata/ndep_clm_simyr2000_1x1_urbanc_alpha_c090716.nc</fndepdat>
@@ -407,7 +410,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr1850_c090715.nc</fsurdat>
 <fndepdyn hgrid="4x5"       bgc="cn" sim_year_range="1850-2000" >lnd/clm2/ndepdata/fndep_clm_1890-2100_4x5_c090114.nc</fndepdyn>
 <fndepdyn hgrid="0.47x0.63" bgc="cn" sim_year_range="1850-2000" >lnd/clm2/ndepdata/fndep_clm_1890-2100_0.47x0.63_c071213.nc</fndepdyn>
 <fndepdyn hgrid="0.9x1.25"  bgc="cn" sim_year_range="1850-2000" >lnd/clm2/ndepdata/fndep_clm_simyr1849-2001_0.9x1.25_c090529.nc</fndepdyn>
-<fndepdyn hgrid="1.9x2.5"   bgc="cn" sim_year_range="1850-2000" >lnd/clm2/ndepdata/fndep_clm_simyr1849-2001_1.9x2.5_c090529.nc</fndepdyn>
+<fndepdyn hgrid="1.9x2.5"   bgc="cn" sim_year_range="1850-2000" >lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_1.9x2.5_c090805.nc</fndepdyn>
 <fndepdyn hgrid="10x15"     bgc="cn" sim_year_range="1850-2000" >lnd/clm2/ndepdata/fndep_clm_simyr1849-2001_10x15_c090529.nc</fndepdyn>
 
 <!-- River Transport Model 1/2 degree grid river routing file (relative to {csmdata}) -->

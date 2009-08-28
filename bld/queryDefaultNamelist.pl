@@ -60,6 +60,9 @@ SYNOPSIS
 OPTIONS
      -config "file"                       CLM build configuration file created by configure.
      -ccsm                                CCSM mode set csmdata to \$DIN_LOC_ROOT.
+     -usrname "name"                      Dataset resolution/descriptor for personal datasets.  Default : not used
+                                          Example: 1x1pt_boulderCO to describe location,
+                                          number of pts
      -csmdata "dir"                       Directory for head of csm inputdata.
      -demand                              Demand that something is returned.
      -filenameonly                        Only return the filename -- not the full path to it.
@@ -111,6 +114,7 @@ EOF
                onlyfiles  => undef,
                fileonly   => undef,
                silent     => undef,
+               usrname    => undef,
                help       => undef,
                options    => undef,
              );
@@ -130,6 +134,7 @@ EOF
         "onlyfiles"    => \$opts{'onlyfiles'},
         "filenameonly" => \$opts{'fileonly'},
         "justvalues"   => \$opts{'justvalues'},
+        "usrname=s"    => \$opts{'usrname'},
         "s|silent"     => \$opts{'silent'},
         "h|elp"        => \$opts{'help'},
   ) or usage();
@@ -163,14 +168,8 @@ EOF
      $opts{'justvalues'} = 1;
      $opts{'onlyfiles'}  = 1;
   }
-  # The namelist defaults file contains default values for all required namelist variables.
-  my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
-                            "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
-                            "$cfgdir/namelist_files/namelist_defaults_drv.xml",
-                            "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
   # List of input options
   my %inputopts;
-  $inputopts{files}          = \@nl_defaults_files;
   $inputopts{empty_cfg_file} = "$cfgdir/config_files/config_definition.xml";
   $inputopts{nldef_file}     = "$cfgdir/namelist_files/namelist_definition.xml";
   $inputopts{namelist}       = $opts{namelist};
@@ -196,6 +195,21 @@ EOF
   } else {
      $inputopts{hgrid} = $opts{hgrid};
   }
+  # The namelist defaults file contains default values for all required namelist variables.
+  my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml" );
+  if ( defined($opts{'usrname'}) ) {
+     my $nl_defaults_file =  "$cfgdir/namelist_files/namelist_defaults_usr_files.xml";
+     push( @nl_defaults_files, $nl_defaults_file );
+     $settings{'clm_usr_name'} = $opts{'usrname'};
+     $settings{'csmdata'}      = $inputopts{csmdata};
+  } else {
+     my @files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
+                   "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
+                   "$cfgdir/namelist_files/namelist_defaults_drv.xml",
+                   "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
+     push( @nl_defaults_files, @files );
+  }
+  $inputopts{files}          = \@nl_defaults_files;
 
   my $defaults_ref = &queryDefaultXML::ReadDefaultXMLFile( \%inputopts, \%settings );
   my %defaults = %$defaults_ref;

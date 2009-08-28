@@ -116,12 +116,8 @@ contains
           end if
        endif 
 
-       if ( .not. single_column )then
-          call ncd_iolocal(ncid,'NDEP_year','read',ndep,grlnd, status=ret)
-          if (ret /= 0) call endrun( trim(subname)//' ERROR: NDEP_year NOT on ndepdat file' )
-       else
-          call endrun('ndeprd not implemented for SCAM' )
-       end if
+       call ncd_iolocal(ncid,'NDEP_year','read',ndep,grlnd, status=ret)
+       if (ret /= 0) call endrun( trim(subname)//' ERROR: NDEP_year NOT on ndepdat file' )
 
     endif
 

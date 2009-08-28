@@ -127,7 +127,7 @@ contains
     integer :: varido              !netCDF variable id
     integer :: xtype               !netCDF variable type
     integer :: ndims               !netCDF number of dimensions
-    integer :: dimids(3)           !netCDF dimension ids
+    integer :: dimids(3) = -1      !netCDF dimension ids
     integer :: dimlen              !input dimension length       
     integer :: ret                 !netcdf return code
     character(len=256) :: varname  !variable name

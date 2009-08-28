@@ -193,6 +193,11 @@ erEG3 TER.sh 4p_vodsrsc_do clm_std 20021231:NONE:3600  1.9x2.5^0.23x0.31 USGS 10
 brEG3 TBR.sh 4p_vodsrsc_do clm_std 20021231:NONE:3600  1.9x2.5^0.23x0.31 USGS 24+24 cold
 blEG3 TBL.sh 4p_vodsrsc_do clm_std 20021231:NONE:3600  1.9x2.5^0.23x0.31 USGS 48    cold
 
+smEG1 TSM.sh 4p_vodsrsc_dh clm_std 20021231:NONE:3600  1.9x2.5^0.23x0.31 USGS@1850 48    cold
+erEG1 TER.sh 4p_vodsrsc_dh clm_std 20021231:NONE:3600  1.9x2.5^0.23x0.31 USGS@1850 10+38 cold
+brEG1 TBR.sh 4p_vodsrsc_dh clm_std 20021231:NONE:3600  1.9x2.5^0.23x0.31 USGS@1850 24+24 cold
+blEG1 TBL.sh 4p_vodsrsc_dh clm_std 20021231:NONE:3600  1.9x2.5^0.23x0.31 USGS@1850 48    cold
+
 smEH1 TSM.sh 4p_vodsrsc_dh clm_std^nl_urb    20021231:NONE:3600  1.9x2.5^0.9x1.25 gx1v6 48    arb_ic
 erEH1 TER.sh 4p_vodsrsc_dh clm_std^nl_urb    20021231:NONE:3600  1.9x2.5^0.9x1.25 gx1v6 10+38 arb_ic
 brEH1 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021231:NONE:3600  1.9x2.5^0.9x1.25 gx1v6 24+24 arb_ic
@@ -360,6 +365,26 @@ smH61 TSM.sh 17p_cnnsc_dm clm_std^nl_urb    20020101:NONE:3600 1.9x2.5 gx1v6@185
 erH61 TER.sh 17p_cnnsc_dm clm_std^nl_urb    20020101:NONE:3600 1.9x2.5 gx1v6@1850 -5+-5   cold
 brH61 TBR.sh 17p_cnnsc_dm clm_std^nl_urb_br 20020101:NONE:3600 1.9x2.5 gx1v6@1850 -10+-10 cold
 blH61 TBL.sh 17p_cnnsc_dm clm_std^nl_urb    20020101:NONE:3600 1.9x2.5 gx1v6@1850 -10     cold
+
+smHJ1 TSM.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
+erHJ1 TER.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
+brHJ1 TBR.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
+blHJ1 TBL.sh 17p_cnsc_dh clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
+
+smHJ2 TSM.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
+erHJ2 TER.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
+brHJ2 TBR.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
+blHJ2 TBL.sh 17p_cnsc_dm clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
+
+smHJ3 TSM.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
+erHJ3 TER.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
+brHJ3 TBR.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
+blHJ3 TBL.sh 17p_cnsc_do clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
+
+smHJ4 TSM.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 24    cold
+erHJ4 TER.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 4+20 cold
+brHJ4 TBR.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12+12 cold
+blHJ4 TBL.sh 17p_cnsc_ds clm_ndepdyn 20020101:NONE:1800 0.9x1.25 gx1v6@1850-2000 12    cold
 
 smI58 TSMcnspinup.sh 17p_cnadspinupsc_dh 17p_cnexitspinupsc_dh 17p_cnsc_dh clm_std 20020115:NONE:1800 10x15 USGS@2000 -90+-30
 smI59 TSMcnspinup.sh 17p_cnadspinupsc_dm 17p_cnexitspinupsc_dm 17p_cnsc_dm clm_std 20020115:NONE:1800 10x15 USGS@2000 -90+-30

@@ -93,14 +93,14 @@ begin
   ;
   ; Define dimensions
   ;
-  dimnames  = (/ "lon", "lat", "time" /);
+  dimnames  = (/ "time", "lat", "lon" /);
   latgg     = ncg->LATIXY(lsmlat|:,lsmlon|0);
   longg     = ncg->LONGXY(lsmlat|0,lsmlon|:);
   nlat      = dimsizes( latgg );
   nlon      = dimsizes( longg );
   ntime     = getfilevardimsizes(nc,"time");
-  dsizes    = (/ nlon, nlat, ntime /);
-  is_unlim  = (/ False, False, True /);
+  dsizes    = (/ ntime, nlat,  nlon  /);
+  is_unlim  = (/ True,  False, False /);
   filedimdef( nco, dimnames, dsizes, is_unlim );
   print( "Number of times: "+ntime );
   ;
@@ -157,7 +157,10 @@ begin
   ;
   ; loop over variables
   ;
-  Cyclic = abs(sumarea - sumearth) .lt. 1.e-5;
+  Cyclic = abs(sumarea - sumearth)/sumearth .lt. 1.e-4;
+
+  print( "Cyclic grid: "+Cyclic );
+
   do i = 0, dimsizes( vars )-1
 
      vardimnames = getfilevardims( nc, vars(i) );
@@ -173,6 +176,14 @@ begin
           do t = 0, ntime-1
              vart  = (/nc->$vars(i)$(time|t,lat|:,lon|:)/);
              varto = linint2 ( lon,  lat,  vart, Cyclic, lono, lato, 0 );
+             if ( all(ismissing(varto(nlat-1,:))) )then
+                print( "Copy last latitude over" );
+                varto(nlat-1,:) = varto(nlat-2,:);
+             end if
+             if ( any(ismissing(varto)) )then
+                print( "There are some missing values on output no="+num(ismissing(varto)) );
+                exit
+             end if
              nco->$vars(i)$(time|t,lat|:,lon|:) = (/varto/);
              vart  = vart*areai;
              varto = varto*areao;
@@ -184,6 +195,14 @@ begin
        else
           var  = (/nc->$vars(i)$/);
           varo = linint2 ( lon, lat,  var, Cyclic, lono, lato, 0 );
+          if ( all(ismissing(varo(nlat-1,:))) )then
+             print( "Copy last latitude over" );
+             varo(nlat-1,:) = varo(nlat-2,:);
+          end if
+          if ( any(ismissing(varo)) )then
+             print( "There are some missing values on output no="+num(ismissing(varo)) );
+             exit
+          end if
           nco->$vars(i)$ = (/varo/);
           var  = var*areai;
           varo = varo*areao;

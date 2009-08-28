@@ -115,13 +115,13 @@ begin
   nlat  = dimsizes( latgg );
   nlon  = dimsizes( longg );
   if ( isfilevardim( nc, "NDEP_year", "time" ) )then
-     dimnames  = (/ "lon", "lat", "time" /);
+     dimnames = (/ "time", "lat", "lon" /);
      ntime     = dimsizes( nc->YEAR );
-     dsizes    = (/ nlon, nlat, ntime /);
-     is_unlim  = (/ False, False, True /);
+     dsizes   = (/ ntime, nlat,  nlon /);
+     is_unlim = (/ True, False, False /);
   else
-     dimnames  = (/ "lon", "lat" /);
-     dsizes    = (/ nlon, nlat /);
+     dimnames = (/ "lat", "lon" /);
+     dsizes    = (/ nlat, nlon /);
      is_unlim  = (/ False, False /);
   end if
   filedimdef( nco, dimnames, dsizes, is_unlim );
@@ -138,6 +138,8 @@ begin
      i = i - 1
   end do
   fileattdef ( nco, nc );
+  nco->NDEP_year@_FillValue     = -1.e36;
+  nco->NDEP_AER_year@_FillValue = -1.e36;
   ;
   ; Add global attributes to output file
   ;
@@ -183,7 +185,9 @@ begin
   ;
   ; loop over variables
   ;
-  Cyclic = abs(sumarea - sumearth) .lt. 1.e-5;
+  Cyclic = abs(sumarea - sumearth)/sumearth .lt. 1.e-4;
+
+  print( "Cyclic grid: "+Cyclic );
 
   do i = 0, dimsizes( vars )-1
 
@@ -199,7 +203,19 @@ begin
        if ( vardimnames(0) .eq. "time" )then
           do t = 0, ntime-1
              vart  = (/nc->$vars(i)$(time|t,lat|:,lon|:)/);
+             if ( any(ismissing(vart)) )then
+                print( "There are some missing values on input" );
+                exit
+             end if
              varto = linint2 ( lon,  lat,  vart, Cyclic, lono, lato, 0 );
+             if ( all(ismissing(varto(nlat-1,:))) )then
+                print( "Copy last latitude over" );
+                varto(nlat-1,:) = varto(nlat-2,:); 
+             end if
+             if ( any(ismissing(varto)) )then
+                print( "There are some missing values on output no="+num(ismissing(varto)) );
+                exit
+             end if
              nco->$vars(i)$(time|t,lat|:,lon|:) = (/varto/);
              vart  = vart*areai;
              varto = varto*areao;
@@ -210,7 +226,19 @@ begin
        ;
        else
           var  = (/nc->$vars(i)$/);
+          if ( any(ismissing(var)) )then
+             print( "There are some missing values on input" );
+             exit
+          end if
           varo = linint2 ( lon, lat,  var, Cyclic, lono, lato, 0 );
+          if ( all(ismissing(varo(nlat-1,:))) )then
+             print( "Copy last latitude over" );
+             varo(nlat-1,:) = varo(nlat-2,:); 
+          end if
+          if ( any(ismissing(varo)) )then
+             print( "There are some missing values on output" );
+             exit
+          end if
           nco->$vars(i)$ = (/varo/);
           var  = var*areai;
           varo = varo*areao;

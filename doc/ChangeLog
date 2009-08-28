@@ -1,4 +1,97 @@
 ===============================================================
+Tag name:  clm3_6_50
+Originator(s):  erik (erik)
+Date: Fri Aug 28 14:38:53 MDT 2009
+One-line Summary: Fix ncl regridding scripts so that NO missing values are allowed for aerosol and nitrogen deposition
+
+Purpose of changes:
+
+ Fix aer and n deposition dataset regridder. Get CN to work for SCM mode. New half
+(2000), 10x15 (2000) and qtr (1850,2000) degree surf dataset. Fix interpinic lahey error.
+
+Bugs fixed (include bugzilla ID):
+                                1033 (SCM mode does NOT work with CN)
+
+Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  851 (abort when files non-exist on jaguar)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  903 (problems in driver with open-MP on PGI)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  937 (undef value on bangkok for maxpatchpft=numpft+1 case)
+                                  971 (abort on lahey with MPI)
+                                  972 (abort on intel with MPI)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1007 (interpinic error with Linux/lahey)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM  mode can NOT use a global finidat file)
+                                 1031 (Can't run SMS_D.f09_g16.ICN8520)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: 
+   1.9x2.5 new transient pftdyn dataset for 1850-2005 with new data from Jean-Francois
+   10x15, half-degree, and qtr-degree 2000 surface datasets
+   qtr-degree 1850 surface dataset
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M    models/lnd/clm/test/system/input_tests_master - Add tests: 
+               fmesh-qtr-deg@1850, 1-degree transient
+             
+
+M    models/lnd/clm/tools/mksurfdata/mksurfdata.pl ----- Set sim-year for pft data
+M    models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl - Reorder dims, don't allow 
+         missing values, correct Cyclic, and copy last latitude up
+M    models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl --- Reorder dims, don't allow 
+         missing values, correct Cyclic, and copy last latitude up
+M    models/lnd/clm/tools/interpinic/interpinic.F90 ---- Initialize dimids so will work with lahey
+
+M    models/lnd/clm/bld/queryDefaultNamelist.pl --- Add -usrname argument
+M    models/lnd/clm/bld/queryDefaultXML.pm -------- If clm_usr_name set use get_usr_file
+          method.
+M    models/lnd/clm/bld/listDefaultNamelist.pl ---- Automatically search both clm_inparm
+        AND the datm_dshr_nml namelists, remove namelist option
+M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml -- New datasets:
+        1.9x2.5 new transient pftdyn dataset for 1850-2005 with new data from Jean-Francois
+        10x15, half-degree, and qtr-degree 2000 surface datasets
+        qtr-degree 1850 surface dataset
+
+M    models/lnd/clm/src/main/ndepFileMod.F90 --- Don't stop if single_column set.
+
+Summary of testing: Limited
+
+  bluefire:
+  dublin/lf95 interactive testing:
+  dublin/lf95:
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_49
+
+Changes answers relative to baseline: No bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_49
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Tue Aug 25 15:17:18 MDT 2009
@@ -39,6 +132,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1017 (SCM mode can NOT restart)
                                  1025 (SCM  mode can NOT use a global finidat file)
                                  1031 (Can't run SMS_D.f09_g16.ICN8520)
+                                 1033 (SCM mode does NOT work with CN)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system:  Local Makefile changed for ifort

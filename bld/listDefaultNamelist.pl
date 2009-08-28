@@ -54,7 +54,6 @@ my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml"
                           "$cfgdir/namelist_files/namelist_defaults_clm.xml",
                           "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                           "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
-my $namelist = "clm_inparm";
 my $list = "clm.input_data_list";
 
 sub usage {
@@ -64,7 +63,6 @@ SYNOPSIS
 OPTIONS
      -help  [or -h]                       Display this help.
      -csmdata [or -d]                     Path to CSMDATA.
-     -namelist "namelistname"             Namelist name to read in by default ($namelist).
      -res  "resolution1,resolution2,..."  List of resolution to use for files.
                                           (At least one resolution is required)
                                           (If res is "all" will run over all resolutions)
@@ -135,7 +133,6 @@ sub GetListofNeededFiles {
 #-----------------------------------------------------------------------------------------------
 
   my %opts = ( 
-               namelist   => $namelist,
                res        => undef,
                silent     => undef,
                csmdata    => "default",
@@ -145,7 +142,6 @@ sub GetListofNeededFiles {
 
   my $cmdline = "@ARGV";
   GetOptions(
-        "n|namelist=s" => \$opts{'namelist'},
         "d|csmdata=s"  => \$opts{'csmdata'},
         "r|res=s"      => \$opts{'res'},
         "s|silent"     => \$opts{'silent'},
@@ -198,8 +194,6 @@ sub GetListofNeededFiles {
   $inputopts{'csmdata'}   = $opts{'csmdata'};
   $inputopts{'config'}    = "noconfig";
   my %files;
-  # Namelist
-  $inputopts{'namelist'}  = $opts{'namelist'};
   #
   # Loop over all resolutions asked for: 1.9x2.5, 10x15, 64x128 etc.
   #
@@ -229,9 +223,17 @@ sub GetListofNeededFiles {
            foreach my $bgc ( $cfg->get_valid_values( "bgc" ) ) {
               print "bgc = $bgc\n" if $printing;
               $settings{'bgc'} = $bgc;
+              $inputopts{'namelist'} = "clm_inparm";
               &GetListofNeededFiles( \%inputopts, \%settings, \%files );
            }
         }
+        #
+        # Now also do the datm namelist (only for mask and resolution)
+        #
+        my $nml = "datm_dshr_in";
+        print "nml = $nml\n" if $printing;
+        $inputopts{'namelist'} = $nml;
+        &GetListofNeededFiles( \%inputopts, \%settings, \%files );
      }
   }
   #

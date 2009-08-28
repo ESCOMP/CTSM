@@ -147,8 +147,9 @@ sub ReadDefaultXMLFile {
     $value =~ s/\n//g;
     my $isafile = 0;
     if ( $definition->is_input_pathname($name) ) {
-       if ( $value && $name eq "furbinp" ) {
-          $value   = $$opts_ref{'cfgdir'} . "/" . $value;
+
+       if ( defined($$settings_ref{'clm_usr_name'}) ) {
+          $value   = $nldefaults->get_usr_file( $name, $definition, \%nlopts );
        } elsif ( $value ) {
           $value   = $$opts_ref{'csmdata'} . "/" . $value;
        }
