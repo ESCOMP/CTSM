@@ -1502,9 +1502,6 @@ sub write_macros
     my $nc_inc       = $cfg_ref->get('nc_inc');
     my $nc_lib       = $cfg_ref->get('nc_lib');
     my $nc_mod       = $cfg_ref->get('nc_mod');
-    my $mpi_inc      = $cfg_ref->get('mpi_inc');
-    my $mpi_lib      = $cfg_ref->get('mpi_lib');
-    my $mpi_lib_name = $cfg_ref->get('mpi_lib_name');
     my $debug        = $cfg_ref->get('debug') ? 'TRUE' : 'FALSE';
     my $spmd         = $cfg_ref->get('spmd') ? 'TRUE' : 'FALSE';
     my $smp          = $cfg_ref->get('smp') ? 'TRUE' : 'FALSE';
@@ -1521,11 +1518,17 @@ sub write_macros
     my $casetools = absolute_path( "$clm_root/../../../scripts/ccsm_utils/Build" );
 
     my $mpiserial;
+    my $mpi_inc      = " ";
+    my $mpi_lib      = " ";
+    my $mpi_lib_name = " ";
     if ( $spmd eq "FALSE" ) {
        $mpi_inc = absolute_path( "$clm_root/../../utils/mct/mpi-serial" );
        $mpiserial = "TRUE";
     } else {
        $mpiserial = "FALSE";
+       $mpi_inc      = $cfg_ref->get('mpi_inc');
+       $mpi_lib      = $cfg_ref->get('mpi_lib');
+       $mpi_lib_name = $cfg_ref->get('mpi_lib_name');
     }
     print $fh_out  <<"EOF";
 # Make macro settings for building CLM using the CCSM build files.
@@ -1545,6 +1548,7 @@ GLC_NEC                 := 0
 USER_CPPDEFS            := \$(shell cat \$(BLDROOT)/CCSM_cppdefs)
 USER_LINKER             := $linker
 USER_LIB_NETCDF         := $nc_lib
+USER_INC_NETCDF         := $nc_inc
 USER_INC_MPI            := $mpi_inc
 USER_LIB_MPI            := $mpi_lib
 USER_MPI_LIB_NAME       := $mpi_lib_name

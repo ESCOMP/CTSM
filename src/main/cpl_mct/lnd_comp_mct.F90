@@ -242,7 +242,9 @@ contains
     ! If no land then exit out of initialization
 
     if ( noland) then
-       call seq_infodata_PutData(infodata, lnd_present=.false.)
+       call seq_infodata_PutData( infodata, lnd_present   =.false.)
+       call seq_infodata_PutData( infodata, lnd_prognostic=.false.)
+       call seq_infodata_PutData( infodata, rof_present   =.false.)
        return
     end if
 

@@ -201,6 +201,7 @@ EOF
      my $nl_defaults_file =  "$cfgdir/namelist_files/namelist_defaults_usr_files.xml";
      push( @nl_defaults_files, $nl_defaults_file );
      $settings{'clm_usr_name'} = $opts{'usrname'};
+     $settings{'notest'}       = ! $opts{'test'};
      $settings{'csmdata'}      = $inputopts{csmdata};
   } else {
      my @files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 

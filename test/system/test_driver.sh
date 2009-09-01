@@ -338,9 +338,13 @@ EOF
     ;;
 
     ## dublin
-    dublin* ) 
+    dublin* | d0*) 
     submit_script="test_driver_dublin_${cur_time}.sh"
     export PATH=/cluster/torque/bin:${PATH}
+
+    if [ -z "$CLM_CCSMBLD" ]; then
+	export CLM_CCSMBLD="TRUE"
+    fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -985,7 +989,7 @@ case $hostname in
     ca* | c0* )  qsub ${submit_script};;
 
     ##dublin
-    dublin* )  qsub ${submit_script};;
+    dublin* | d0* )  qsub ${submit_script};;
 
     ##jaguar
     jaguar* )  qsub ${submit_script};;
