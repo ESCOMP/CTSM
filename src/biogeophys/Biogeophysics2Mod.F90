@@ -77,7 +77,7 @@ contains
     use clm_atmlnd        , only : clm_a2l
     use clm_time_manager  , only : get_step_size
     use clm_varcon        , only : hvap, cpair, grav, vkc, tfrz, sb, &
-                                   isturb, icol_roof, icol_sunwall, icol_shadewall
+                                   isturb, icol_roof, icol_sunwall, icol_shadewall, istsoil
     use clm_varpar        , only : nlevsno, nlevgrnd, max_pft_per_col
     use SoilTemperatureMod, only : SoilTemperature
     use subgridAveMod     , only : p2c
@@ -153,15 +153,23 @@ contains
 ! 
     real(r8), pointer :: dt_grnd(:)         ! change in t_grnd, last iteration (Kelvin)
     real(r8), pointer :: eflx_soil_grnd(:)  ! soil heat flux (W/m**2) [+ = into soil]
+    real(r8), pointer :: eflx_soil_grnd_u(:)! urban soil heat flux (W/m**2) [+ = into soil]
+    real(r8), pointer :: eflx_soil_grnd_r(:)! rural soil heat flux (W/m**2) [+ = into soil]
     real(r8), pointer :: eflx_sh_tot(:)     ! total sensible heat flux (W/m**2) [+ to atm]
+    real(r8), pointer :: eflx_sh_tot_u(:)   ! urban total sensible heat flux (W/m**2) [+ to atm]
+    real(r8), pointer :: eflx_sh_tot_r(:)   ! rural total sensible heat flux (W/m**2) [+ to atm]
     real(r8), pointer :: qflx_evap_tot(:)   ! qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
-    real(r8), pointer :: eflx_lh_tot(:)     ! total latent heat flux (W/m8*2)  [+ to atm]
+    real(r8), pointer :: eflx_lh_tot(:)     ! total latent heat flux (W/m**2)  [+ to atm]
+    real(r8), pointer :: eflx_lh_tot_u(:)   ! urban total latent heat flux (W/m**2)  [+ to atm]
+    real(r8), pointer :: eflx_lh_tot_r(:)   ! rural total latent heat flux (W/m**2)  [+ to atm]
     real(r8), pointer :: qflx_evap_grnd(:)  ! ground surface evaporation rate (mm H2O/s) [+]
     real(r8), pointer :: qflx_sub_snow(:)   ! sublimation rate from snow pack (mm H2O /s) [+]
     real(r8), pointer :: qflx_dew_snow(:)   ! surface dew added to snow pack (mm H2O /s) [+]
     real(r8), pointer :: qflx_dew_grnd(:)   ! ground surface dew formation (mm H2O /s) [+]
     real(r8), pointer :: eflx_lwrad_out(:)  ! emitted infrared (longwave) radiation (W/m**2)
     real(r8), pointer :: eflx_lwrad_net(:)  ! net infrared (longwave) rad (W/m**2) [+ = to atm]
+    real(r8), pointer :: eflx_lwrad_net_u(:)  ! urban net infrared (longwave) rad (W/m**2) [+ = to atm]
+    real(r8), pointer :: eflx_lwrad_net_r(:)  ! rural net infrared (longwave) rad (W/m**2) [+ = to atm]
     real(r8), pointer :: eflx_lh_vege(:)    ! veg evaporation heat flux (W/m**2) [+ to atm]
     real(r8), pointer :: eflx_lh_vegt(:)    ! veg transpiration heat flux (W/m**2) [+ to atm]
     real(r8), pointer :: eflx_lh_grnd(:)    ! ground evaporation heat flux (W/m**2) [+ to atm]
@@ -238,10 +246,18 @@ contains
     qflx_dew_snow  => clm3%g%l%c%p%pwf%qflx_dew_snow
     qflx_dew_grnd  => clm3%g%l%c%p%pwf%qflx_dew_grnd
     eflx_soil_grnd => clm3%g%l%c%p%pef%eflx_soil_grnd
+    eflx_soil_grnd_u => clm3%g%l%c%p%pef%eflx_soil_grnd_u
+    eflx_soil_grnd_r => clm3%g%l%c%p%pef%eflx_soil_grnd_r
     eflx_sh_tot    => clm3%g%l%c%p%pef%eflx_sh_tot
+    eflx_sh_tot_u  => clm3%g%l%c%p%pef%eflx_sh_tot_u
+    eflx_sh_tot_r  => clm3%g%l%c%p%pef%eflx_sh_tot_r
     eflx_lh_tot    => clm3%g%l%c%p%pef%eflx_lh_tot
+    eflx_lh_tot_u    => clm3%g%l%c%p%pef%eflx_lh_tot_u
+    eflx_lh_tot_r    => clm3%g%l%c%p%pef%eflx_lh_tot_r
     eflx_lwrad_out => clm3%g%l%c%p%pef%eflx_lwrad_out
     eflx_lwrad_net => clm3%g%l%c%p%pef%eflx_lwrad_net
+    eflx_lwrad_net_u => clm3%g%l%c%p%pef%eflx_lwrad_net_u
+    eflx_lwrad_net_r => clm3%g%l%c%p%pef%eflx_lwrad_net_r
     eflx_lh_vege   => clm3%g%l%c%p%pef%eflx_lh_vege
     eflx_lh_vegt   => clm3%g%l%c%p%pef%eflx_lh_vegt
     eflx_lh_grnd   => clm3%g%l%c%p%pef%eflx_lh_grnd
@@ -366,6 +382,9 @@ contains
                               + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(g) &
                               - emg(c)*sb*tssbef(c,j)**3*(tssbef(c,j) + 4._r8*tinc(c)) &
                               - (eflx_sh_grnd(p) + qflx_evap_soi(p)*htvp(c))
+          if (ltype(l) == istsoil) then
+            eflx_soil_grnd_r(p) = eflx_soil_grnd(p)
+          end if
        else
           ! For all urban columns we use the net longwave radiation (eflx_lwrad_net) since
           ! the term (emg*sb*tssbef(snl+1)**4) is not the upward longwave flux because of 
@@ -378,6 +397,7 @@ contains
                               - eflx_lwrad_net(p) - eflx_lwrad_del(p) &
                               - (eflx_sh_grnd(p) + qflx_evap_soi(p)*htvp(c) + qflx_tran_veg(p)*hvap) &
                               + eflx_wasteheat_pft(p) + eflx_heat_from_ac_pft(p) + eflx_traffic_pft(p)
+          eflx_soil_grnd_u(p) = eflx_soil_grnd(p)
        end if
 
        ! Total fluxes (vegetation + ground)
@@ -385,6 +405,13 @@ contains
        eflx_sh_tot(p) = eflx_sh_veg(p) + eflx_sh_grnd(p)
        qflx_evap_tot(p) = qflx_evap_veg(p) + qflx_evap_soi(p)
        eflx_lh_tot(p)= hvap*qflx_evap_veg(p) + htvp(c)*qflx_evap_soi(p)
+       if (ltype(l) == istsoil) then
+         eflx_lh_tot_r(p)= eflx_lh_tot(p)
+         eflx_sh_tot_r(p)= eflx_sh_tot(p)
+       else if (ltype(l) == isturb) then
+         eflx_lh_tot_u(p)= eflx_lh_tot(p)
+         eflx_sh_tot_u(p)= eflx_sh_tot(p)
+       end if
 
        ! Assign ground evaporation to sublimation from soil ice or to dew
        ! on snow or ground
@@ -475,9 +502,13 @@ contains
                               + (1-frac_veg_nosno(p))*emg(c)*sb*tssbef(c,j)**4 &
                               + 4.*emg(c)*sb*tssbef(c,j)**3*tinc(c)
           eflx_lwrad_net(p) = eflx_lwrad_out(p) - forc_lwrad(g)
+          if (ltype(l) == istsoil) then
+            eflx_lwrad_net_r(p) = eflx_lwrad_out(p) - forc_lwrad(g)
+          end if
        else
           eflx_lwrad_out(p) = eflx_lwrad_out(p) + eflx_lwrad_del(p)
           eflx_lwrad_net(p) = eflx_lwrad_net(p) + eflx_lwrad_del(p)
+          eflx_lwrad_net_u(p) = eflx_lwrad_net_u(p) + eflx_lwrad_del(p)
        end if
     end do
 

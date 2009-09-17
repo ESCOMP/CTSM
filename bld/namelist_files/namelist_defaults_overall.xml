@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 
+<?xml-stylesheet type="text/xsl" href="namelist_defaults.xsl"?>
+
 <namelist_defaults>
 
 <!--
@@ -21,8 +23,5 @@ determine default values for namelists.
 
 <!-- Default simulation year range -->
 <sim_year_range>constant</sim_year_range>
-
-<!-- List of optional fields to demand on namelist -->
-<clm_demand>forganic</clm_demand>
 
 </namelist_defaults>

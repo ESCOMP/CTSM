@@ -1,4 +1,227 @@
 ===============================================================
+Tag name:  clm3_6_52
+Originator(s):  erik (erik)
+Date: Thu Sep 17 11:07:19 MDT 2009
+One-line Summary: Add T31_gx3v7 support, remove forganic, read from fsurdat, add script to extract regional datasets, work with CN output, add more urban/rural fields
+
+Purpose of changes:
+
+ Add T31_gx3v7 files needed. Read organic fields from fsurdat file, remove forganic file.
+ Add in script to extract regional datasets. Change CN output fields list, add NBP (Net
+ Biome Production field). New Urban/Rural fields from Keith. Update bluefire compiler
+  to XLF12 (causes some restart issues listed below).
+
+ This tag includes new scripts to extract regional datasets from the global datasets
+ in order to run for a specific region of interest. The scripts are available in the
+ models/lnd/clm/tools/ncl_scripts directory, the main script is the
+ getregional_datasets.pl perl script and it has a command line interface and help with
+ the "-help" option. There's also a README file in the directory containing the scripts,
+ and more information in the Quickstart.userdatasets file at the top level.
+
+ Quickstart to use of regional extraction scripts:
+
+       # Run the script to create an area to put your files (assume CSMDATA set to standard inputdata)
+       cd scripts
+       setenv MYCSMDATA $HOME/myinputdata
+       link_dirtree $CSMDATA $MYCSMDATA 
+
+       # Run the extraction for data from 52-73 North latitude, 190-220 longitude
+       # that creates 13x12 gridcell region from the f19 (1.9x2.5) global resolution over
+       # Alaska
+       cd ../models/lnd/clm/tools/ncl_scripts
+       setenv MYID 13x12pt_f19_alaskaUSA
+       getregional_datasets.pl -sw 52,190 -ne 73,220 -id $MYID -mycsmdata $MYCSMDATA
+
+       # Now create a case that uses these datasets
+       cd ../../../../../scripts
+       create_newcase -case testregional -compset I -mach bluefire -res pt1_pt1 -skip_rundb
+       cd testregional
+       $EDITOR env_conf.xml # change CLM_BLDNML_OPTS to include "-clm_usr_name $MYID" (expand $MYID)
+       $EDITOR env_mach_pes.xml # Change tasks/threads as appropriate (defaults to serial)
+       xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
+       $EDITOR Tool/Templates/datm.cpl7.template.csh # Add the following line before the check on DOMAINFILE (expand $MYID)
+
+if ( $DOMAINFILE == "unset" ) set DOMAINFILE = "domain.lnd.$MYID.nc"
+
+       # Do other changes to xml files as appropriate
+       # configure as normal, then edit the datm namelist
+
+       configure -case
+
+       # Then build and run the case as normal
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM  mode can NOT use a global finidat file)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Filepath, bluefire compiler to XLF12
+
+    Filepath for stub-components changes
+    In scripts and in test_driver.sh update compiler for bluefire to XLF12
+    (this causes the restart issue for certain cases below).
+
+Describe any changes made to the namelist: Remove forganic (read organic from fsurdat file)
+
+List any changes to the defaults for the boundary datasets: Add 48x96_gx3v7 fracdata 
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, oleson(urban/rural), slevis (CN fields, new NBP field)
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm7, stub-comps, csm_share
+
+ scripts        to scripts4_090916
+ drv            to vocemis-drydep12_drvseq3_0_29
+ datm7          to datm7_090915
+ socn/sice/sglc to stubs1_2_01
+ csm_share      to share3_090902
+
+List all files eliminated: Remove noOrganicSoilDataset use case
+
+  Remove the use case that removed the requirement for the forganic dataset.
+
+  D    models/lnd/clm/bld/namelist_files/use_cases/noOrganicSoilDataset.xml
+
+List all files added and what they do:
+
+  Add stylesheet for namelist defaults files.
+
+  A models/lnd/clm/bld/namelist_files/namelist_defaults.xsl
+
+ Scripts to extract regions of interest from global grids and put them into the place
+ expected by build-namelist with the clm_usr_name option.
+
+  A  models/lnd/clm/tools/ncl_scripts/getregional_datasets.pl --- Main script to extract regional datasets.
+          This one has a command line interface.
+  A  models/lnd/clm/tools/ncl_scripts/getregional_datasets.ncl -- Support script to do the actual work.
+          This one works based on settings of a bunch of environment variables.
+          
+List all existing files that have been modified, and describe the changes:
+
+  M    Quickstart.userdatasets - Add notes about using getregional_datasets.pl
+  M    Quickstart.GUIDE -------- Fix typo
+
+  M    models/lnd/clm/test/system/test_driver.sh ---- Update seqccsm version to beta26
+                                                      Also update bluefire to XLF12.
+
+  M    models/lnd/clm/tools/ncl_scripts/README ----- Add note about new getregional_datasets scripts
+
+>>>>>>>>>>>>>>> Get configure working with new scripts/stub-components
+  M    models/lnd/clm/bld/configure ------- Change Filepath for stub components, remove
+                                            write_filepath_ccsm use ccsmbld version
+
+>>>>>>>>>>>>>>> Remove forganic, add T31_gx3v7, have query NOT return user filenames
+>>>>>>>>>>>>>>> for transient files when sim_year_range=constant.
+>>>>>>>>>>>>>>> Add style sheets for namelist_defaults files.
+  M    models/lnd/clm/bld/queryDefaultXML.pm -- Skip filenames set to "null"
+  M    models/lnd/clm/bld/build-namelist ------ Remove forganic
+
+  M    models/lnd/clm/bld/namelist_files/namelist_definition.xml ------------ Remove forganic, 
+            add gx3v7
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml ------ Remove forganic, 
+             add stylesheet.
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml --------- Add T31_gx3v7 
+              domainfile, add stylesheet.
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml ---------- Add stylesheet.
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ---------- Make 
+               gx3v7 default for T31, remove reference to forganic, add stylesheet.
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_usr_files.xml ---- Set transient 
+           files to null for sim_year_range=constant, add stylesheet.
+
+>>>>>>>>>>>>>>> Add NBP, change which CN fields active/inactive, add new Urban/Rural
+>>>>>>>>>>>>>>> fields, remove forganic read organic soil from fsurdat
+  M    models/lnd/clm/src/biogeochem/CNSummaryMod.F90 --------- Add nbp, update doc for nee, nep, 
+                work with formatting
+  M    models/lnd/clm/src/biogeochem/C13SummaryMod.F90 -------- Add nbp, update doc for nee, nep, 
+                work with formatting
+  M    models/lnd/clm/src/biogeochem/CNSetValueMod.F90 -------- Set nbp and work with formatting
+  M    models/lnd/clm/src/main/organicFileMod.F90 ------------- Remove forganic use fsurdat
+  M    models/lnd/clm/src/main/clmtypeInitMod.F90 ------------- New urban/rural fields and nbp, 
+                work with formatting
+  M    models/lnd/clm/src/main/controlMod.F90 ----------------- Remove forganic
+  M    models/lnd/clm/src/main/clm_varctl.F90 ----------------- Remove forganic
+  M    models/lnd/clm/src/main/clmtype.F90 -------------------- Add urban/rural (oleson) and nbp, 
+             and update doc on nep, nee
+  M    models/lnd/clm/src/main/histFldsMod.F90 ---------------- Add urban/rural fields (oleson),
+           Change which CN fields on/off, add NBP
+  M    models/lnd/clm/src/biogeophys/SurfaceRadiationMod.F90 -- Add urban/rural (oleson)
+  M    models/lnd/clm/src/biogeophys/SoilTemperatureMod.F90 --- Add urban/rural (oleson)
+  M    models/lnd/clm/src/biogeophys/Biogeophysics1Mod.F90 ---- Add urban/rural (oleson)
+  M    models/lnd/clm/src/biogeophys/Biogeophysics2Mod.F90 ---- Add urban/rural (oleson)
+  M    models/lnd/clm/src/biogeophys/UrbanInitMod.F90 --------- Add urban/rural (oleson)
+  M    models/lnd/clm/src/biogeophys/UrbanMod.F90 ------------- Add urban/rural (oleson)
+
+Summary of testing:
+
+  bluefire: All PASS except...
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+051 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+052 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
+054 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 6
+  bluefire interactive testing: All PASS up to...
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+  bluefire/CCSM testing: All PASS except for branch tests that fail due to XLF12
+PASS  ERS_D.f45_g35.I_2000.bluefire 
+PASS  PET.f45_g35.I_1850.bluefire.cpl 
+PASS  PET.f45_g35.I_1850.bluefire.atm 
+PASS  PET.f45_g35.I_1850.bluefire.lnd 
+PASS  PET.f45_g35.I_1850.bluefire.ice 
+PASS  PET.f45_g35.I_1850.bluefire.ocn 
+PASS  PET.f45_g35.I_1850.bluefire.glc 
+PASS  ERS.f19_g16.I_1850.bluefire 
+PASS  ERS.f19_g16.I_1850-2000.bluefire 
+FAIL  ERB.f09_g16.I_1948_2004.bluefire    <<<< FAIL's due to compiler upgrade to XLF12
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire  <<<< FAIL's due to compiler upgrade to XLF12
+>>>>>>>>>>>>> NOTE This same problem exists in clm3_6_51 if you update the compiler to
+>>>>>>>>>>>>> XLF12.
+PASS  ERH_D.f10_f10.I_1850_CN.bluefire 
+PASS  PET.f10_f10.ICN8520.bluefire.cpl 
+PASS  PET.f10_f10.ICN8520.bluefire.atm 
+PASS  PET.f10_f10.ICN8520.bluefire.lnd 
+PASS  PET.f10_f10.ICN8520.bluefire.ice 
+PASS  PET.f10_f10.ICN8520.bluefire.ocn 
+PASS  PET.f10_f10.ICN8520.bluefire.glc 
+  jaguar: All PASS
+  jaguar interactive testing: All PASS up to...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+  dublin/lf95 interactive testing: All PASS up to...
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+  dublin/lf95: All PASS except (up to...)
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_51
+
+Changes answers relative to baseline: bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_51
 Originator(s):  erik (erik)
 Date: Tue Sep  1 10:46:16 MDT 2009

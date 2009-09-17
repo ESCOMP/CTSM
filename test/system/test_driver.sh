@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta21"
+seqccsm_vers="ccsm4_0_beta26"
 
 hostname=`hostname`
 case $hostname in
@@ -83,8 +83,8 @@ export CLM_RESTART_TASKS=46
 
 export CLM_COMPSET="I"
 
-export INC_NETCDF=/usr/local/apps/netcdf-3.6.1/include
-export LIB_NETCDF=/usr/local/apps/netcdf-3.6.1/lib
+export INC_NETCDF=/contrib/netcdf-3.6.2/include
+export LIB_NETCDF=/contrib/netcdf-3.6.2/lib
 export AIXTHREAD_SCOPE=S
 export MALLOCMULTIHEAP=TRUE
 export OMP_DYNAMIC=FALSE
@@ -103,6 +103,9 @@ export CPRNC_EXE="\$newcprnc"
 export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 export DIN_LOC_ROOT="/fs/cgd/csm/inputdata"
 dataroot="/fs/cgd/csm"
+
+export LD_LIBRARY_PATH="/contrib/tcl8.4.19/unix:\$LD_LIBRARY_PATH"
+export PATH="/contrib/xlf/12.01.0000.0003/bin:\$PATH"
 echo_arg=""
 
 EOF

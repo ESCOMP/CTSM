@@ -168,7 +168,11 @@ contains
     real(r8), pointer :: z0hv(:)          !roughness length over vegetation, sensible heat [m]
     real(r8), pointer :: z0qv(:)          !roughness length over vegetation, latent heat [m]
     real(r8), pointer :: eflx_sh_tot(:)   !total sensible heat flux (W/m**2) [+ to atm]
+    real(r8), pointer :: eflx_sh_tot_u(:) !urban total sensible heat flux (W/m**2) [+ to atm]
+    real(r8), pointer :: eflx_sh_tot_r(:) !rural total sensible heat flux (W/m**2) [+ to atm]
     real(r8), pointer :: eflx_lh_tot(:)   !total latent heat flux (W/m8*2)  [+ to atm]
+    real(r8), pointer :: eflx_lh_tot_u(:) !urban total latent heat flux (W/m**2)  [+ to atm]
+    real(r8), pointer :: eflx_lh_tot_r(:) !rural total latent heat flux (W/m**2)  [+ to atm]
     real(r8), pointer :: eflx_sh_veg(:)   !sensible heat flux from leaves (W/m**2) [+ to atm]
     real(r8), pointer :: qflx_evap_tot(:) !qflx_evap_soi + qflx_evap_veg + qflx_tran_veg
     real(r8), pointer :: qflx_evap_veg(:) !vegetation evaporation (mm H2O/s) (+ = to atm)
@@ -277,7 +281,11 @@ contains
     z0hv          => clm3%g%l%c%p%pps%z0hv
     z0qv          => clm3%g%l%c%p%pps%z0qv
     eflx_sh_tot   => clm3%g%l%c%p%pef%eflx_sh_tot
+    eflx_sh_tot_u => clm3%g%l%c%p%pef%eflx_sh_tot_u
+    eflx_sh_tot_r => clm3%g%l%c%p%pef%eflx_sh_tot_r
     eflx_lh_tot   => clm3%g%l%c%p%pef%eflx_lh_tot
+    eflx_lh_tot_u => clm3%g%l%c%p%pef%eflx_lh_tot_u
+    eflx_lh_tot_r => clm3%g%l%c%p%pef%eflx_lh_tot_r
     eflx_sh_veg   => clm3%g%l%c%p%pef%eflx_sh_veg
     qflx_evap_tot => clm3%g%l%c%p%pwf%qflx_evap_tot
     qflx_evap_veg => clm3%g%l%c%p%pwf%qflx_evap_veg
@@ -454,7 +462,18 @@ contains
        ! Initial set (needed for history tape fields)
 
        eflx_sh_tot(p) = 0._r8
+       l = plandunit(p)
+       if (ityplun(l) == isturb) then
+         eflx_sh_tot_u(p) = 0._r8
+       else if (ityplun(l) == istsoil) then 
+         eflx_sh_tot_r(p) = 0._r8
+       end if
        eflx_lh_tot(p) = 0._r8
+       if (ityplun(l) == isturb) then
+         eflx_lh_tot_u(p) = 0._r8
+       else if (ityplun(l) == istsoil) then 
+         eflx_lh_tot_r(p) = 0._r8
+       end if
        eflx_sh_veg(p) = 0._r8
        qflx_evap_tot(p) = 0._r8
        qflx_evap_veg(p) = 0._r8

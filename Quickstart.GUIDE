@@ -1,4 +1,4 @@
-          QuickStart to Using cpl7 Scripts for clm3.6
+          Quick-Start to Using cpl7 Scripts for clm3.6
           ===========================================
 
 Assumptions: You want to use bluefire with a trunk version of clm3_6
@@ -62,7 +62,7 @@ Information on Compsets:
      I_CASA_1948_2004 (ICASA4804): CLM with CASA on running over 1948-2004
      I_GLC            (IG):        CLM with glacier model
 
-nformation on run-database:
+Information on run-database:
 
     -skip_rundb says to skip entering information on this case into the run-database.
     The run-database stores meta-data on simulations being performed so they can
@@ -73,13 +73,13 @@ nformation on run-database:
     http://ccsm-rundb.cgd.ucar.edu/case_list.php
 
     It contains information on important cases that we want to retain information on
-    (so they can be reproduced and so scientific details are publically available).
-    The standard CSM internal username/password is used for the database (as for the CSEG
+    (so they can be reproduced and so scientific details are publicly available).
+    The standard CSM internal user-name/password is used for the database (as for the CSEG
     internal web-page).
 
 Automatically resubmitting jobs:
 
-   After doing a short simulation that you beleive is correct
+   After doing a short simulation that you believe is correct
 
    edit env_run.xml
 

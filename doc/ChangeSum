@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_52         erik 09/17/2009 Add T31_gx3v7 support, remove forganic, read from fsurdat, add script to extract regional datasets, work with CN output, add more urban/rural fields
    clm3_6_51         erik 09/01/2009 Update fndepdyn and aerdep datasets (f02,f05,f09,f10) (1850,2000) and f09, f10 transient (1850-2000)
    clm3_6_50         erik 08/28/2009 Fix ncl regridding scripts so that NO missing values are allowed for aerosol and nitrogen deposition
    clm3_6_49         erik 08/25/2009 Fix ncl interpolation scripts, update externals, turn on CLM_CCSM_BLD for bluefire,jaguar, ESMF3 compliance

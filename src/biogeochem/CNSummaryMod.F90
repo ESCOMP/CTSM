@@ -63,11 +63,11 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in scalars
-   real(r8), pointer :: col_fire_closs(:) ! (gC/m2/s) total column-level fire C loss
-   real(r8), pointer :: er(:)            ! (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
-   real(r8), pointer :: hr(:)            ! (gC/m2/s) total heterotrophic respiration
-   real(r8), pointer :: litfire(:)       ! (gC/m2/s) litter fire losses
-   real(r8), pointer :: lithr(:)         ! (gC/m2/s) litter heterotrophic respiration 
+   real(r8), pointer :: col_fire_closs(:)     ! (gC/m2/s) total column-level fire C loss
+   real(r8), pointer :: er(:)                 ! (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
+   real(r8), pointer :: hr(:)                 ! (gC/m2/s) total heterotrophic respiration
+   real(r8), pointer :: litfire(:)            ! (gC/m2/s) litter fire losses
+   real(r8), pointer :: lithr(:)              ! (gC/m2/s) litter heterotrophic respiration 
    real(r8), pointer :: litr1_hr(:)       
    real(r8), pointer :: litr2_hr(:)        
    real(r8), pointer :: litr3_hr(:)        
@@ -75,10 +75,11 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: m_litr1c_to_fire(:)             
    real(r8), pointer :: m_litr2c_to_fire(:)             
    real(r8), pointer :: m_litr3c_to_fire(:)             
-   real(r8), pointer :: nee(:)           ! (gC/m2/s) net ecosystem exchange of carbon, includes fire flux, positive for source
-   real(r8), pointer :: nep(:)           ! (gC/m2/s) net ecosystem production, excludes fire flux, positive for sink
+   real(r8), pointer :: nee(:)                ! (gC/m2/s) net ecosystem exchange of carbon, includes fire, land-use, harvest, and hrv_xsmrpool flux, positive for source
+   real(r8), pointer :: nep(:)                ! (gC/m2/s) net ecosystem production, excludes fire, land-use, and harvest flux, positive for sink
+   real(r8), pointer :: nbp(:)                ! (gC/m2/s) net biome production, includes fire, land-use, and harvest flux, positive for sink
    real(r8), pointer :: col_ar(:)             ! (gC/m2/s) autotrophic respiration (MR + GR)
-   real(r8), pointer :: col_gpp(:)                  !GPP flux before downregulation (gC/m2/s)
+   real(r8), pointer :: col_gpp(:)            ! GPP flux before downregulation (gC/m2/s)
    real(r8), pointer :: col_npp(:)            ! (gC/m2/s) net primary production
    real(r8), pointer :: col_pft_fire_closs(:) ! (gC/m2/s) total pft-level fire C loss 
    real(r8), pointer :: col_litfall(:)        ! (gC/m2/s) total pft-level litterfall C loss 
@@ -89,10 +90,10 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: soil2_hr(:)        
    real(r8), pointer :: soil3_hr(:) 
    real(r8), pointer :: soil4_hr(:) 
-   real(r8), pointer :: somfire(:)       ! (gC/m2/s) soil organic matter fire losses
-   real(r8), pointer :: somhr(:)         ! (gC/m2/s) soil organic matter heterotrophic respiration
-   real(r8), pointer :: sr(:)            ! (gC/m2/s) total soil respiration (HR + root resp)
-   real(r8), pointer :: totfire(:)       ! (gC/m2/s) total ecosystem fire losses
+   real(r8), pointer :: somfire(:)            ! (gC/m2/s) soil organic matter fire losses
+   real(r8), pointer :: somhr(:)              ! (gC/m2/s) soil organic matter heterotrophic respiration
+   real(r8), pointer :: sr(:)                 ! (gC/m2/s) total soil respiration (HR + root resp)
+   real(r8), pointer :: totfire(:)            ! (gC/m2/s) total ecosystem fire losses
    real(r8), pointer :: cwdc(:)               ! (gC/m2) coarse woody debris C
    real(r8), pointer :: litr1c(:)             ! (gC/m2) litter labile C
    real(r8), pointer :: litr2c(:)             ! (gC/m2) litter cellulose C
@@ -108,9 +109,9 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: totecosysc(:)         ! (gC/m2) total ecosystem carbon, incl veg but excl cpool
    real(r8), pointer :: totlitc(:)            ! (gC/m2) total litter carbon
    real(r8), pointer :: totsomc(:)            ! (gC/m2) total soil organic matter carbon
-   real(r8), pointer :: agnpp(:)          ! (gC/m2/s) aboveground NPP
-   real(r8), pointer :: ar(:)             ! (gC/m2/s) autotrophic respiration (MR + GR)
-   real(r8), pointer :: bgnpp(:)          ! (gC/m2/s) belowground NPP
+   real(r8), pointer :: agnpp(:)              ! (gC/m2/s) aboveground NPP
+   real(r8), pointer :: ar(:)                 ! (gC/m2/s) autotrophic respiration (MR + GR)
+   real(r8), pointer :: bgnpp(:)              ! (gC/m2/s) belowground NPP
    real(r8), pointer :: cpool_deadcroot_gr(:)        
    real(r8), pointer :: cpool_deadcroot_storage_gr(:)
    real(r8), pointer :: cpool_deadstem_gr(:)         
@@ -129,18 +130,18 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: cpool_to_leafc(:)             
    real(r8), pointer :: cpool_to_livecrootc(:)        
    real(r8), pointer :: cpool_to_livestemc(:)         
-   real(r8), pointer :: current_gr(:)     ! (gC/m2/s) growth resp for new growth displayed in this timestep
+   real(r8), pointer :: current_gr(:)         ! (gC/m2/s) growth resp for new growth displayed in this timestep
    real(r8), pointer :: deadcrootc_xfer_to_deadcrootc(:)
    real(r8), pointer :: deadstemc_xfer_to_deadstemc(:) 
    real(r8), pointer :: frootc_to_litter(:)
    real(r8), pointer :: frootc_xfer_to_frootc(:)       
    real(r8), pointer :: froot_mr(:)     
-   real(r8), pointer :: gpp(:)                  !GPP flux before downregulation (gC/m2/s)
-   real(r8), pointer :: gr(:)             ! (gC/m2/s) total growth respiration
+   real(r8), pointer :: gpp(:)                !GPP flux before downregulation (gC/m2/s)
+   real(r8), pointer :: gr(:)                 ! (gC/m2/s) total growth respiration
    real(r8), pointer :: leafc_to_litter(:)
    real(r8), pointer :: leafc_xfer_to_leafc(:)         
    real(r8), pointer :: leaf_mr(:)
-   real(r8), pointer :: litfall(:)        ! (gC/m2/s) litterfall (leaves and fine roots)
+   real(r8), pointer :: litfall(:)            ! (gC/m2/s) litterfall (leaves and fine roots)
    real(r8), pointer :: livecrootc_xfer_to_livecrootc(:)
    real(r8), pointer :: livecroot_mr(:)
    real(r8), pointer :: livestemc_xfer_to_livestemc(:) 
@@ -231,7 +232,7 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: pft_ctrunc(:)         ! (gC/m2) pft-level sink for C truncation
    real(r8), pointer :: deadcrootc(:)         ! (gC/m2) dead coarse root C
    real(r8), pointer :: deadcrootc_storage(:) ! (gC/m2) dead coarse root C storage
-   real(r8), pointer :: deadcrootc_xfer(:)    !(gC/m2) dead coarse root C transfer
+   real(r8), pointer :: deadcrootc_xfer(:)    ! (gC/m2) dead coarse root C transfer
    real(r8), pointer :: deadstemc(:)          ! (gC/m2) dead stem C
    real(r8), pointer :: deadstemc_storage(:)  ! (gC/m2) dead stem C storage
    real(r8), pointer :: deadstemc_xfer(:)     ! (gC/m2) dead stem C transfer
@@ -323,6 +324,7 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 #endif
     nee                            => clm3%g%l%c%ccf%nee
     nep                            => clm3%g%l%c%ccf%nep
+    nbp                            => clm3%g%l%c%ccf%nbp
     col_ar                         => clm3%g%l%c%ccf%pcf_a%ar
     col_gpp                        => clm3%g%l%c%ccf%pcf_a%gpp
     col_npp                        => clm3%g%l%c%ccf%pcf_a%npp
@@ -367,7 +369,7 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     soil2c                         => clm3%g%l%c%ccs%soil2c
     soil3c                         => clm3%g%l%c%ccs%soil3c
     soil4c                         => clm3%g%l%c%ccs%soil4c
-	col_ctrunc                     => clm3%g%l%c%ccs%col_ctrunc
+    col_ctrunc                     => clm3%g%l%c%ccs%col_ctrunc
     totcolc                        => clm3%g%l%c%ccs%totcolc
     totecosysc                     => clm3%g%l%c%ccs%totecosysc
     totlitc                        => clm3%g%l%c%ccs%totlitc
@@ -883,12 +885,15 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
       dwt_closs(c) = &
          dwt_conv_cflux(c)
 
-      ! net ecosystem production, excludes fire flux, positive for sink (NEP)
+      ! net ecosystem production, excludes fire flux, landcover change, and loss from wood products, positive for sink (NEP)
       nep(c) = col_gpp(c) - er(c)
 
-      ! net ecosystem exchange of carbon, includes fire flux, landcover change flux, and loss
-      ! from wood products pools
-      ! positive for source (NEE)
+      ! net biome production of carbon, includes depletion from: fire flux, landcover change flux, and loss
+      ! from wood products pools, positive for sink (NBP)
+      nbp(c) = nep(c) - col_fire_closs(c) - dwt_closs(c) - product_closs(c)
+
+      ! net ecosystem exchange of carbon, includes fire flux, landcover change flux, loss
+      ! from wood products pools, and hrv_xsmrpool flux, positive for source (NEE)
       nee(c) = -nep(c) + col_fire_closs(c) + dwt_closs(c) + product_closs(c) + col_hrv_xsmrpool_to_atm(c)
 
       ! total litter carbon (TOTLITC)

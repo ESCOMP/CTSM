@@ -109,11 +109,6 @@ Full pathname of surface data file.
 <default>Default: set by build-namelist.</default>
 </entry>
 
-<entry id="forganic" type="char*256"  input_pathname="abs" category="datasets" 
-       group="clm_inparm" valid_values="" >
-Soil organic carbon data file name
-</entry>
-
 <entry id="faerdep" type="char*256"  input_pathname="abs" category="datasets" 
        group="clm_inparm" valid_values="" >
 Aerosol deposition file name (when NOT passing deposition rates from atmosphere model)
@@ -1044,7 +1039,7 @@ Horizontal resolutions
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v5,gx1v3,gx1v4,gx1v5,gx1v6,navy,test,tx0.1v2,tx1v1,T62">
+       valid_values="USGS,gx3v5,gx3v7,gx1v3,gx1v4,gx1v5,gx1v6,navy,test,tx0.1v2,tx1v1,T62">
 Land mask description
 </entry> 
 

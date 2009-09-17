@@ -48,7 +48,7 @@ contains
 ! Read the organic matter dataset.
 !
 ! !USES:
-    use clm_varctl  , only : forganic, single_column, scmlon, scmlat
+    use clm_varctl  , only : fsurdat, single_column, scmlon, scmlat
     use clm_varpar  , only : lsmlon, lsmlat, nlevsoi
     use ncdio       , only : ncd_iolocal, check_dim, check_ret
     use fileutils   , only : getfil
@@ -91,7 +91,7 @@ contains
        
     ! read data if file was specified in namelist
        
-    if (forganic /= ' ') then
+    if (fsurdat /= ' ') then
 
        count(1) = lsmlon
        count(2) = lsmlat
@@ -106,9 +106,9 @@ contains
 
           write(iulog,*) 'Attempting to read organic matter data .....'
 
-          call getfil (forganic, locfn, 0)
+          call getfil (fsurdat, locfn, 0)
           call check_ret(nf_open(locfn, 0, ncid), subname)
-	  write(iulog,*) subname,trim(forganic)
+	  write(iulog,*) subname,trim(fsurdat)
           write(iulog,*) "  Expected dimensions: lsmlon=",lsmlon," lsmlat=",lsmlat
           if (.not.single_column) then
              call check_dim(ncid, 'lsmlon' , lsmlon)

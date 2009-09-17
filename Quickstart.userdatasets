@@ -1,4 +1,4 @@
-          QuickStart to using your own datasets in clm3.6
+          Quick-Start to using your own datasets in clm3.6
           ===============================================
 
 Assumptions: You are already familiar with the use of the cpl7 scripts
@@ -23,7 +23,7 @@ Process:
 
        0.) Why do this?
 
-       An alturnative to the steps below, is to create your case, and hand-edit the
+       An alternative to the steps below, is to create your case, and hand-edit the
        relevant namelists as appropriate with your own datasets. One reason for
        the process below is so that we can do automated testing on dataset inclusion.
        But, it also provides the following functionality to the user:
@@ -31,7 +31,7 @@ Process:
                env_conf.xml and env_run.xml (steps 5,6, and 8)
            b.) You can clone new cases based on a working case, without having to 
                hand-edit all of the namelists for the new case in the same way.
-           c.) The process will check for the existance of files when cases are
+           c.) The process will check for the existence of files when cases are
                configured so you can have the scripts check that datasets exist
                rather than finding out at run-time after submitted to batch.
            d.) The process checks for valid namelists, and makes it less likely 
@@ -40,7 +40,7 @@ Process:
                you can use the check_input_data script to do queries on the files.
            f.) Your dataset names will be closer to standard names, and easier
                for inclusion in standard clm (with the exception of creation dates).
-           g.) TODO: The regional extraction script will automatically create
+           g.) The regional extraction script (see 3.b below) will automatically create
                files with names following this convention.
 
        1.) Create your own dataset area -- link it to standard dataset location
@@ -63,7 +63,7 @@ Process:
 
        2.) Establish a "user dataset identifier name" string
 
-       You need a unique identifiyer for your datasets for a given resolution,
+       You need a unique identifier for your datasets for a given resolution,
        mask, area, simulation-year, and simulation year-range. The identifier
        can be any string you want -- but we have the following suggestions:
 
@@ -87,10 +87,14 @@ Process:
                      setenv MYDATAID 1x1pt_boulderCO -- single-point for Boulder CO
                      setenv MYDATAID 5x5pt_boulderCO -- 5x5 region around Boulder CO
                      setenv MYDATAID 1x1deg_boulderCO - 1x1 degree region around Boulder CO
+                     setenv MYDATAID 13x12pt_f19_alaskaUSA1 - 13x12 gridcells from f19
+                                                 (1.9x2.5) global resolution over Alaska
 
        3.) Add your own datasets in the standard locations in that area
 
-       Use the tools in models/lnd/clm/tools to create new datsets. Tools
+       3.a) Create datasets using the standard tools valid for any specific points
+
+       Use the tools in models/lnd/clm/tools to create new datasets. Tools
        such as: mkgriddata, mksurfdata, mkdatadomain, and the regridding tools
        in ncl_scripts 
 
@@ -107,6 +111,18 @@ Process:
              $MYCSMDATA/lnd/clm2/snicardata/aerosoldep_monthly_${SIM_YEAR}_${MYDATAID}.nc
        domainfile:  copy files into:
              $MYCSMDATA/atm/datm7/domain.clm/domain.lnd.${MYDATAID}_${MASK}.nc
+
+       3.b) Use the regional extraction script to get regional datasets from the global ones
+       Use the getregional_datasets.pl script to extract out regional datasets of interest.
+       Note, the script works on all files other than the "finidat" file as it's a 1D vector file.
+
+       For example, Run the extraction for data from 52-73 North latitude, 190-220 longitude
+       that creates 13x12 gridcell region from the f19 (1.9x2.5) global resolution over Alaska.
+
+                cd models/lnd/clm/tools/ncl_scripts
+                getregional_datasets.pl -sw 52,190 -ne 73,220 -id $MYDATAID -mycsmdata $MYCSMDATA
+
+       Repeat this process if you need files for multiple sim_year, and sim_year_range values.
 
        4.) Setup your case
 
@@ -134,18 +150,15 @@ Process:
 
        		$EDITOR env_conf.xml
 
-       7.) Configure the case as normal
+       7.) Edit the datm template file so that it uses the new DOMAINFILE you created (if you changed it)
+
+       Add the line "if ( $DOMAINFILE == "unset" ) set DOMAINFILE = "domain.lnd.$MYID.nc" to just before the
+       check on DOMAINFILE (expand the value of MYID in the line above).
+       
+       $EDITOR Tool/Templates/datm.cpl7.template.csh
+
+       8.) Configure the case as normal
 
        		configure -case
-
-       8.) Edit your datm.buildnml.csh script to get the correct output domainfile (if needed)
-
-       Change the lines that set DOMAINPATH and DOMAINFILE to to point to the proper directory and filename.
-       This step is only needed if you have a output domain file for the datm. If you are just changing 
-       clm datasets -- you won't have a domain file for the datm.
-
-       		$EDITOR Buildconf/datm.buildnml.csh
-
-       TODO: Remove this step, use the value of $MYDATAID set in step 6.
 
        9.) Run your case as normal

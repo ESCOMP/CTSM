@@ -882,7 +882,7 @@ contains
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
     use clm_time_manager, only : get_step_size
-    use clm_varcon  , only : tfrz, hfus, grav, istsoil, icol_road_perv
+    use clm_varcon  , only : tfrz, hfus, grav, istsoil, isturb, icol_road_perv
     use clm_varpar  , only : nlevsno, nlevgrnd
 !
 ! !ARGUMENTS:
@@ -928,6 +928,8 @@ contains
 !
     real(r8), pointer :: qflx_snomelt(:)  !snow melt (mm H2O /s)
     real(r8), pointer :: eflx_snomelt(:)  !snow melt heat flux (W/m**2)
+    real(r8), pointer :: eflx_snomelt_u(:)!urban snow melt heat flux (W/m**2)
+    real(r8), pointer :: eflx_snomelt_r(:)!rural snow melt heat flux (W/m**2)
     real(r8), pointer :: qflx_snofrz_lyr(:,:)  !snow freezing rate (positive definite) (col,lyr) [kg m-2 s-1]
 !
 ! local pointers to original implicit in arrays
@@ -975,6 +977,8 @@ contains
     snowdp       => clm3%g%l%c%cps%snowdp
     qflx_snomelt => clm3%g%l%c%cwf%qflx_snomelt
     eflx_snomelt => clm3%g%l%c%cef%eflx_snomelt
+    eflx_snomelt_u => clm3%g%l%c%cef%eflx_snomelt_u
+    eflx_snomelt_r => clm3%g%l%c%cef%eflx_snomelt_r
     h2osoi_liq   => clm3%g%l%c%cws%h2osoi_liq
     h2osoi_ice   => clm3%g%l%c%cws%h2osoi_ice
     imelt        => clm3%g%l%c%cps%imelt
@@ -1201,6 +1205,12 @@ contains
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        eflx_snomelt(c) = qflx_snomelt(c) * hfus
+       l = clandunit(c)
+       if (ltype(l) == isturb) then
+         eflx_snomelt_u(c) = eflx_snomelt(c)
+       else if (ltype(l) == istsoil) then
+         eflx_snomelt_r(c) = eflx_snomelt(c)
+       end if
     end do
 
   end subroutine PhaseChange

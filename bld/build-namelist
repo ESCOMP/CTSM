@@ -36,7 +36,7 @@ SYNOPSIS
 OPTIONS
      -case "name"             Case identifier up to 32 characters
      -clm_demand "list"       List of variables to require on clm namelist besides the usuals.
-                              (can include a list member "none" which does nothing)
+                              (can include a list member "null" which does nothing)
      -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets. Default: not used
                               Example: 1x1pt_boulderCO_c090722 to describe location,
                                        number of pts, and date files created
@@ -849,13 +849,8 @@ $settings{'hgrid'}          = $res;
 $settings{'sim_year'}       = $sim_year;
 $settings{'sim_year_range'} = $sim_year_range;
 $settings{'mask'}           = $mask;
-my $require_forganic        = 0;
 foreach my $item ( @demandlist ) {
    if ( $item eq "null" ) { next; }
-   if ( $item eq "forganic" ) { 
-      $require_forganic = 1;
-      next; 
-   }
    add_default($nl, $item, %settings );
 }
 #
@@ -873,13 +868,6 @@ $fndepdyn =~ s/"//;
 if ( $fndepdyn eq "" ) { $fndepdyn = "null"; }
 add_default($nl, 'fsurdat'   , 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year );
 my $fsurdat = $nl->get_value( 'fsurdat' );
-
-#
-# Use surface dataset for organic soil and urban input datasets
-#
-if ( $require_forganic ) {
-   add_default($nl, 'forganic', 'val'=>$fsurdat, 'no_abspath'=>1 );
-}
 
 # Initial conditions
 # The initial date is an attribute in the defaults file which should be matched unless

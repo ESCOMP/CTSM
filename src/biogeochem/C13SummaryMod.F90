@@ -74,8 +74,9 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: m_litr1c_to_fire(:)             
    real(r8), pointer :: m_litr2c_to_fire(:)             
    real(r8), pointer :: m_litr3c_to_fire(:)             
-   real(r8), pointer :: nee(:)           ! (gC/m2/s) net ecosystem exchange of carbon, includes fire flux, positive for source
-   real(r8), pointer :: nep(:)           ! (gC/m2/s) net ecosystem production, excludes fire flux, positive for sink
+   real(r8), pointer :: nee(:)           ! (gC/m2/s) net ecosystem exchange of carbon, includes fire, land-use, and wood products flux, positive for source
+   real(r8), pointer :: nbp(:)           ! (gC/m2/s) net biome production, includes fire, land-use, and wood products flux, positive for sink
+   real(r8), pointer :: nep(:)           ! (gC/m2/s) net ecosystem production, excludes fire, land-use, and wood products flux, positive for sink
    real(r8), pointer :: col_ar(:)             ! (gC/m2/s) autotrophic respiration (MR + GR)
    real(r8), pointer :: col_gpp(:)                  !GPP flux before downregulation (gC/m2/s)
    real(r8), pointer :: col_npp(:)            ! (gC/m2/s) net primary production
@@ -294,6 +295,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     m_litr3c_to_fire               => clm3%g%l%c%cc13f%m_litr3c_to_fire
     nee                            => clm3%g%l%c%cc13f%nee
     nep                            => clm3%g%l%c%cc13f%nep
+    nbp                            => clm3%g%l%c%cc13f%nbp
     col_ar                         => clm3%g%l%c%cc13f%pcf_a%ar
     col_gpp                        => clm3%g%l%c%cc13f%pcf_a%gpp
     col_npp                        => clm3%g%l%c%cc13f%pcf_a%npp
@@ -773,6 +775,9 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
       ! net ecosystem production, excludes fire flux, positive for sink (NEP)
       nep(c) = col_gpp(c) - er(c)
+
+      ! net ecosystem exchange of carbon, includes fire flux, positive for source (NBP)
+      nbp(c) = nep(c) - col_fire_closs(c) - dwt_closs(c) - product_closs(c)
 
       ! net ecosystem exchange of carbon, includes fire flux, positive for source (NEE)
       nee(c) = -nep(c) + col_fire_closs(c) + dwt_closs(c) + product_closs(c)

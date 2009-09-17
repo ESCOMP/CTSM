@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 
+<?xml-stylesheet type="text/xsl" href="namelist_defaults.xsl"?>
+
 <namelist_defaults>
 
 <!--
@@ -24,6 +26,7 @@ provided they are in the valid list expressed above.
 <fsurdat >lnd/clm2/surfdata/surfdata_${clm_usr_name}_simyr${sim_year}.nc</fsurdat>
 
 <!-- Dynamic PFT surface dataset (relative to ${csmdata}) -->
+<fpftdyn sim_year_range="constant"  >null</fpftdyn>
 <fpftdyn                            >lnd/clm2/surfdata/surfdata.pftdyn_${clm_usr_name}_simyr${sim_year_range}.nc</fpftdyn>
 <fpftdyn sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_${clm_usr_name}_simyr1849-2006.nc</fpftdyn>
 
@@ -51,6 +54,7 @@ provided they are in the valid list expressed above.
 
 <!--CN Nitrogen deposition dataset for a series of years (relative to ${csmdata})  -->
 
+<fndepdyn bgc="cn" sim_year_range="constant" >null</fndepdyn>
 <fndepdyn bgc="cn"                           >lnd/clm2/ndepdata/fndep_clm_simyr${sim_year_range}_${clm_usr_name}.nc</fndepdyn>
 <fndepdyn bgc="cn" sim_year_range="1850-2000">lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_${clm_usr_name}.nc</fndepdyn>
 

@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 
+<?xml-stylesheet type="text/xsl" href="namelist_defaults.xsl"?>
+
 <namelist_defaults>
+
 
 <!--
 Values to use by default for creation of CLM model namelists.
@@ -36,7 +39,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mask hgrid="360x720"             >USGS</mask>
 <mask hgrid="128x256"             >USGS</mask>
 <mask hgrid="64x128"              >USGS</mask>
-<mask hgrid="48x96"               >USGS</mask>
+<mask hgrid="48x96"               >gx3v7</mask>
 <mask hgrid="32x64"               >USGS</mask>
 <mask hgrid="8x16"                >USGS</mask>
 
@@ -87,7 +90,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- Surface datasets (relative to {csmdata}) -->
-<!-- Also use fsurdat to set forganic -->
 
 <!-- Surface datasets that belong with dynamic land-use change datasets (relative to {csmdata}) -->
 <fsurdat hgrid="10x15"         sim_year="1000" >
@@ -435,7 +437,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr1850_c090715.nc</fsurdat>
 <fndepdyn hgrid="4x5"       bgc="cn" sim_year_range="1850-2000" >lnd/clm2/ndepdata/fndep_clm_1890-2100_4x5_c090114.nc</fndepdyn>
 
 <!-- River Transport Model 1/2 degree grid river routing file (relative to {csmdata}) -->
-<!-- New direction file with negative directions over ocean -- frivinp_rtm rtm="on">lnd/clm2/rtmdata/rdirc.05.081203.txt</frivinp_rtm> -->
+<!-- New direction file with negative directions over ocean - frivinp_rtm rtm="on">lnd/clm2/rtmdata/rdirc.05.081203.txt</frivinp_rtm> -->
 <frivinp_rtm rtm="on">lnd/clm2/rtmdata/rdirc.05.061026</frivinp_rtm>
 
 <hist_crtinic bgc="none" >NONE</hist_crtinic>

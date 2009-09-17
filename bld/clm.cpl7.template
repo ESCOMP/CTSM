@@ -75,6 +75,7 @@ endif
 
 if ($LND_GRID == pt1 ) then
    set RESOLUTION = $CLM_PT1_NAME
+   if ( $RESOLUTION == "" ) set RESOLUTION = "default"
    set mask = " "
 else
    set RESOLUTION = $LND_GRID

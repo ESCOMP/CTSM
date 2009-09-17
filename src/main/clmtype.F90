@@ -585,15 +585,23 @@ type, public :: pft_eflux_type
    real(r8), pointer :: sabg(:)              !solar radiation absorbed by ground (W/m**2)
    real(r8), pointer :: sabv(:)              !solar radiation absorbed by vegetation (W/m**2)
    real(r8), pointer :: fsa(:)               !solar radiation absorbed (total) (W/m**2)
+   real(r8), pointer :: fsa_u(:)             !urban solar radiation absorbed (total) (W/m**2)
+   real(r8), pointer :: fsa_r(:)             !rural solar radiation absorbed (total) (W/m**2)
    real(r8), pointer :: fsr(:)               !solar radiation reflected (W/m**2)
    real(r8), pointer :: parsun(:)            !average absorbed PAR for sunlit leaves (W/m**2)
    real(r8), pointer :: parsha(:)            !average absorbed PAR for shaded leaves (W/m**2)
    real(r8), pointer :: dlrad(:)             !downward longwave radiation below the canopy [W/m2]
    real(r8), pointer :: ulrad(:)             !upward longwave radiation above the canopy [W/m2]
    real(r8), pointer :: eflx_lh_tot(:)       !total latent heat flux (W/m**2)  [+ to atm]
+   real(r8), pointer :: eflx_lh_tot_u(:)     !urban total latent heat flux (W/m**2)  [+ to atm]
+   real(r8), pointer :: eflx_lh_tot_r(:)     !rural total latent heat flux (W/m**2)  [+ to atm]
    real(r8), pointer :: eflx_lh_grnd(:)      !ground evaporation heat flux (W/m**2) [+ to atm]
    real(r8), pointer :: eflx_soil_grnd(:)    !soil heat flux (W/m**2) [+ = into soil]
+   real(r8), pointer :: eflx_soil_grnd_u(:)  !urban soil heat flux (W/m**2) [+ = into soil]
+   real(r8), pointer :: eflx_soil_grnd_r(:)  !rural soil heat flux (W/m**2) [+ = into soil]
    real(r8), pointer :: eflx_sh_tot(:)       !total sensible heat flux (W/m**2) [+ to atm]
+   real(r8), pointer :: eflx_sh_tot_u(:)     !urban total sensible heat flux (W/m**2) [+ to atm]
+   real(r8), pointer :: eflx_sh_tot_r(:)     !rural total sensible heat flux (W/m**2) [+ to atm]
    real(r8), pointer :: eflx_sh_grnd(:)      !sensible heat flux from ground (W/m**2) [+ to atm]
    real(r8), pointer :: eflx_sh_veg(:)       !sensible heat flux from leaves (W/m**2) [+ to atm]
    real(r8), pointer :: eflx_lh_vege(:)      !veg evaporation heat flux (W/m**2) [+ to atm]
@@ -609,6 +617,8 @@ type, public :: pft_eflux_type
    real(r8), pointer :: dgnetdT(:)           !derivative of net ground heat flux wrt soil temp (W/m**2 K)
    real(r8), pointer :: eflx_lwrad_out(:)    !emitted infrared (longwave) radiation (W/m**2)
    real(r8), pointer :: eflx_lwrad_net(:)    !net infrared (longwave) rad (W/m**2) [+ = to atm]
+   real(r8), pointer :: eflx_lwrad_net_u(:)  !urban net infrared (longwave) rad (W/m**2) [+ = to atm]
+   real(r8), pointer :: eflx_lwrad_net_r(:)  !rural net infrared (longwave) rad (W/m**2) [+ = to atm]
    real(r8), pointer :: netrad(:)            !net radiation (W/m**2) [+ = to sfc]
    real(r8), pointer :: fsds_vis_d(:)        !incident direct beam vis solar radiation (W/m**2)
    real(r8), pointer :: fsds_nir_d(:)        !incident direct beam nir solar radiation (W/m**2)
@@ -1269,6 +1279,8 @@ end type column_dstate_type
 type, public :: column_eflux_type
    type(pft_eflux_type):: pef_a	              ! pft-level energy flux variables averaged to the column
    real(r8), pointer :: eflx_snomelt(:)       ! snow melt heat flux (W/m**2)
+   real(r8), pointer :: eflx_snomelt_u(:)     ! urban snow melt heat flux (W/m**2)
+   real(r8), pointer :: eflx_snomelt_r(:)     ! rural snow melt heat flux (W/m**2)
    real(r8), pointer :: eflx_impsoil(:)	      ! implicit evaporation for soil temperature equation
    real(r8), pointer :: eflx_fgr12(:)         ! ground heat flux between soil layers 1 and 2 (W/m2)
    ! Urban variable
@@ -1437,8 +1449,9 @@ type, public :: column_cflux_type
    real(r8), pointer :: litfire(:)       ! (gC/m2/s) litter fire losses
    real(r8), pointer :: somfire(:)       ! (gC/m2/s) soil organic matter fire losses
    real(r8), pointer :: totfire(:)       ! (gC/m2/s) total ecosystem fire losses
-   real(r8), pointer :: nep(:)           ! (gC/m2/s) net ecosystem production, excludes fire flux, positive for sink
-   real(r8), pointer :: nee(:)           ! (gC/m2/s) net ecosystem exchange of carbon, includes fire flux, positive for source
+   real(r8), pointer :: nep(:)           ! (gC/m2/s) net ecosystem production, excludes fire, landuse, and harvest flux, positive for sink
+   real(r8), pointer :: nbp(:)           ! (gC/m2/s) net biome production, includes fire, landuse, and harvest flux, positive for sink
+   real(r8), pointer :: nee(:)           ! (gC/m2/s) net ecosystem exchange of carbon, includes fire, landuse, harvest, and hrv_xsmrpool flux, positive for source
    real(r8), pointer :: col_cinputs(:)   ! (gC/m2/s) total column-level carbon inputs (for balance check)
    real(r8), pointer :: col_coutputs(:)  ! (gC/m2/s) total column-level carbon outputs (for balance check) 
 

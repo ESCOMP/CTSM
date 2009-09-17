@@ -1037,7 +1037,7 @@ my $preproc_filename = 'preproc.h';            # name of output land model cpp t
 if ($clm_mode eq "ext_ccsm_seq" ) {
 
     # Write the filepath file for ccsm.
-    write_filepath_ccsm("$clm_bld/$fp_filename", $cfg_ref);
+    write_filepath_ccsmbld("$clm_bld/$fp_filename", "clm", $cfg_ref);
     if ($print>=2) { print "creating $clm_bld/$fp_filename\n"; }
 
     # Write the misc.h file 
@@ -1299,6 +1299,14 @@ sub write_filepath
 	    die "** Bad component interface name -- should be MCT or ESMF\n";
         }
 	foreach my $dir ( @dirs ) {
+            # For stub components
+            if ( $dir =~ /^...\/s...$/ ) {
+               if ( $comp_intf eq "MCT" ) { 
+                  $dir .= "/cpl_mct";
+               } else {
+                  $dir .= "/cpl_esmf";
+               }
+            }
 	    if ( -d "$srcdir/../../../$dir" ) {
 		print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
 	    } else {
@@ -1326,40 +1334,6 @@ sub write_filepath
 	} else {
 	    die "** source directory does not exist: $srcdir/$dir\n";
 	}
-    }
-    
-    $fh->close;
-}
-
-#-------------------------------------------------------------------------------
-
-sub write_filepath_ccsm
-{
-    my ($file, $cfg_ref) = @_;
-
-    my  $fh        = new IO::File;
-    my  $comp_intf = $cfg_ref->get('comp_interface');
-    my  $rtm       = $cfg_ref->get('rtm');
-
-    $fh->open(">$file") or die "** can't open filepath file: $file\n";
-
-    # User specified source directories.
-    print $fh "\$CASEROOT/SourceMods/src.clm\n";
-
-    # CLM
-    my @dirs = ( "main", "biogeophys", "biogeochem" );
-    if ( $rtm eq "on" ) { 
-	push( @dirs, "riverroute" );
-    }
-    if ( $comp_intf eq "MCT" ) { 
-	push( @dirs, "main/cpl_mct" );
-    } elsif ( $comp_intf eq "ESMF" ) { 
-	push( @dirs, "main/cpl_esmf" );
-    } else {
-	die "** Bad component interface name -- should be MCT or ESMF\n";
-    }
-    foreach my $dir ( @dirs ) {
-	print $fh "\$CODEROOT/lnd/clm/src/$dir\n";
     }
     
     $fh->close;
@@ -1426,6 +1400,14 @@ sub write_filepath_ccsmbld
 	       die "** Bad component interface name -- should be MCT or ESMF\n";
            }
 	   foreach my $dir ( @dirs ) {
+               # For stub components
+               if ( $dir =~ /^...\/s...$/ ) {
+                  if ( $comp_intf eq "MCT" ) { 
+                     $dir .= "/cpl_mct";
+                  } else {
+                     $dir .= "/cpl_esmf";
+                  }
+               }
 	       if ( -d "$srcdir/../../../$dir" ) {
 		   print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
 	       } else {

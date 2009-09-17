@@ -341,6 +341,12 @@ contains
     real(r8), pointer :: rh_ref2m_u(:)         ! Urban 2 m height surface relative humidity (%)
     real(r8), pointer :: t_grnd_u(:)           ! Urban ground temperature (Kelvin)
     real(r8), pointer :: qflx_runoff_u(:)      ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
+    real(r8), pointer :: fsa_u(:)              ! Urban absorbed solar radiation (W/m**2)
+    real(r8), pointer :: eflx_lwrad_net_u(:)   ! Urban net longwave radiation (W/m**2)
+    real(r8), pointer :: eflx_lh_tot_u(:)      ! Urban latent heat flux (W/m**2)
+    real(r8), pointer :: eflx_sh_tot_u(:)      ! Urban sensible heat flux (W/m**2)
+    real(r8), pointer :: eflx_soil_grnd_u(:)   ! Urban ground heat flux (W/m**2)
+    real(r8), pointer :: eflx_snomelt_u(:)     ! Urban snow melt heat flux (W/m**2)
 !
 ! !CALLED FROM:
 ! subroutine initialize
@@ -380,6 +386,7 @@ contains
     ctype              => clm3%g%l%c%itype
     t_grnd_u           => clm3%g%l%c%ces%t_grnd_u
     qflx_runoff_u      => clm3%g%l%c%cwf%qflx_runoff_u
+    eflx_snomelt_u     => clm3%g%l%c%cef%eflx_snomelt_u
 
     ! Assign local pointers to derived type members (pft level)
 
@@ -392,6 +399,11 @@ contains
     eflx_heat_from_ac_pft => clm3%g%l%c%p%pef%eflx_heat_from_ac_pft
     eflx_traffic_pft => clm3%g%l%c%p%pef%eflx_traffic_pft
     eflx_anthro => clm3%g%l%c%p%pef%eflx_anthro
+    fsa_u              => clm3%g%l%c%p%pef%fsa_u
+    eflx_lwrad_net_u   => clm3%g%l%c%p%pef%eflx_lwrad_net_u
+    eflx_lh_tot_u      => clm3%g%l%c%p%pef%eflx_lh_tot_u
+    eflx_sh_tot_u      => clm3%g%l%c%p%pef%eflx_sh_tot_u
+    eflx_soil_grnd_u   => clm3%g%l%c%p%pef%eflx_soil_grnd_u
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
@@ -441,6 +453,7 @@ contains
           eflx_urban_heat(c) = spval
           t_grnd_u(c) = spval
           qflx_runoff_u(c) = spval
+          eflx_snomelt_u(c) = spval
        end if
     end do
 
@@ -455,6 +468,11 @@ contains
           eflx_heat_from_ac_pft(p) = spval
           eflx_traffic_pft(p) = spval
           eflx_anthro(p)    = spval
+          fsa_u(p)            = spval 
+          eflx_lwrad_net_u(p) = spval
+          eflx_lh_tot_u(p)    = spval
+          eflx_sh_tot_u(p)    = spval
+          eflx_soil_grnd_u(p) = spval
        end if
     end do
     

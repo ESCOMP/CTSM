@@ -701,6 +701,7 @@ contains
     real(r8), pointer :: sabg(:)                 ! solar radiation absorbed by ground (W/m**2)
     real(r8), pointer :: sabv(:)                 ! solar radiation absorbed by vegetation (W/m**2)
     real(r8), pointer :: fsa(:)                  ! solar radiation absorbed (total) (W/m**2)
+    real(r8), pointer :: fsa_u(:)                ! urban solar radiation absorbed (total) (W/m**2)
     real(r8), pointer :: fsr(:)                  ! solar radiation reflected (total) (W/m**2)
     real(r8), pointer :: fsds_vis_d(:)           ! incident direct beam vis solar radiation (W/m**2)
     real(r8), pointer :: fsds_nir_d(:)           ! incident direct beam nir solar radiation (W/m**2)
@@ -716,6 +717,7 @@ contains
     real(r8), pointer :: fsr_nir_d_ln(:)         ! reflected direct beam nir solar rad at local noon (W/m**2)
     real(r8), pointer :: eflx_lwrad_out(:)       ! emitted infrared (longwave) radiation (W/m**2)
     real(r8), pointer :: eflx_lwrad_net(:)       ! net infrared (longwave) rad (W/m**2) [+ = to atm]
+    real(r8), pointer :: eflx_lwrad_net_u(:)     ! urban net infrared (longwave) rad (W/m**2) [+ = to atm]
 !
 !EOP
 !
@@ -810,6 +812,7 @@ contains
     sabg           => clm3%g%l%c%p%pef%sabg
     sabv           => clm3%g%l%c%p%pef%sabv
     fsa            => clm3%g%l%c%p%pef%fsa
+    fsa_u          => clm3%g%l%c%p%pef%fsa_u
     fsr            => clm3%g%l%c%p%pef%fsr
     fsds_vis_d     => clm3%g%l%c%p%pef%fsds_vis_d
     fsds_nir_d     => clm3%g%l%c%p%pef%fsds_nir_d
@@ -825,6 +828,7 @@ contains
     fsr_nir_d_ln   => clm3%g%l%c%p%pef%fsr_nir_d_ln
     eflx_lwrad_out => clm3%g%l%c%p%pef%eflx_lwrad_out 
     eflx_lwrad_net => clm3%g%l%c%p%pef%eflx_lwrad_net
+    eflx_lwrad_net_u => clm3%g%l%c%p%pef%eflx_lwrad_net_u
     parsun         => clm3%g%l%c%p%pef%parsun
     parsha         => clm3%g%l%c%p%pef%parsha
     t_ref2m        => clm3%g%l%c%p%pes%t_ref2m
@@ -962,6 +966,7 @@ contains
           if (ctype(c) == icol_roof) then   
              eflx_lwrad_out(p) = lwup_roof(fl)
              eflx_lwrad_net(p) = lwnet_roof(fl)
+             eflx_lwrad_net_u(p) = lwnet_roof(fl)
              sabg(p) = sabs_roof_dir(l,1)*forc_solad(g,1) + &
                        sabs_roof_dif(l,1)*forc_solai(g,1) + &
                        sabs_roof_dir(l,2)*forc_solad(g,2) + &
@@ -969,6 +974,7 @@ contains
           else if (ctype(c) == icol_sunwall) then   
              eflx_lwrad_out(p) = lwup_sunwall(fl)
              eflx_lwrad_net(p) = lwnet_sunwall(fl)
+             eflx_lwrad_net_u(p) = lwnet_sunwall(fl)
              sabg(p) = sabs_sunwall_dir(l,1)*forc_solad(g,1) + &
                        sabs_sunwall_dif(l,1)*forc_solai(g,1) + &
                        sabs_sunwall_dir(l,2)*forc_solad(g,2) + &
@@ -976,6 +982,7 @@ contains
           else if (ctype(c) == icol_shadewall) then   
              eflx_lwrad_out(p) = lwup_shadewall(fl)
              eflx_lwrad_net(p) = lwnet_shadewall(fl)
+             eflx_lwrad_net_u(p) = lwnet_shadewall(fl)
              sabg(p) = sabs_shadewall_dir(l,1)*forc_solad(g,1) + &
                        sabs_shadewall_dif(l,1)*forc_solai(g,1) + &
                        sabs_shadewall_dir(l,2)*forc_solad(g,2) + &
@@ -983,6 +990,7 @@ contains
           else if (ctype(c) == icol_road_perv) then       
              eflx_lwrad_out(p) = lwup_perroad(fl)
              eflx_lwrad_net(p) = lwnet_perroad(fl)
+             eflx_lwrad_net_u(p) = lwnet_perroad(fl)
              sabg(p) = sabs_perroad_dir(l,1)*forc_solad(g,1) + &
                        sabs_perroad_dif(l,1)*forc_solai(g,1) + &
                        sabs_perroad_dir(l,2)*forc_solad(g,2) + &
@@ -990,6 +998,7 @@ contains
           else if (ctype(c) == icol_road_imperv) then       
              eflx_lwrad_out(p) = lwup_improad(fl)
              eflx_lwrad_net(p) = lwnet_improad(fl)
+             eflx_lwrad_net_u(p) = lwnet_improad(fl)
              sabg(p) = sabs_improad_dir(l,1)*forc_solad(g,1) + &
                        sabs_improad_dif(l,1)*forc_solai(g,1) + &
                        sabs_improad_dir(l,2)*forc_solad(g,2) + &
@@ -997,6 +1006,7 @@ contains
           end if
           sabv(p)   = 0._r8
           fsa(p)    = sabv(p) + sabg(p)
+          fsa_u(p)  = fsa(p)
           parsun(p) = 0._r8  
           parsha(p) = 0._r8  
           
@@ -2611,6 +2621,7 @@ contains
     real(r8), pointer :: tauy(:)          ! wind (shear) stress: n-s (kg/m/s**2)
     real(r8), pointer :: eflx_sh_grnd(:)  ! sensible heat flux from ground (W/m**2) [+ to atm]
     real(r8), pointer :: eflx_sh_tot(:)   ! total sensible heat flux (W/m**2) [+ to atm]
+    real(r8), pointer :: eflx_sh_tot_u(:) ! urban total sensible heat flux (W/m**2) [+ to atm]
     real(r8), pointer :: qflx_evap_soi(:) ! soil evaporation (mm H2O/s) (+ = to atm)
     real(r8), pointer :: qflx_tran_veg(:) ! vegetation transpiration (mm H2O/s) (+ = to atm)
     real(r8), pointer :: qflx_evap_veg(:) ! vegetation evaporation (mm H2O/s) (+ = to atm)
@@ -2803,6 +2814,7 @@ contains
     tauy           => clm3%g%l%c%p%pmf%tauy
     eflx_sh_grnd   => clm3%g%l%c%p%pef%eflx_sh_grnd
     eflx_sh_tot    => clm3%g%l%c%p%pef%eflx_sh_tot
+    eflx_sh_tot_u  => clm3%g%l%c%p%pef%eflx_sh_tot_u
     qflx_evap_soi  => clm3%g%l%c%p%pwf%qflx_evap_soi
     qflx_tran_veg  => clm3%g%l%c%p%pwf%qflx_tran_veg
     qflx_evap_veg  => clm3%g%l%c%p%pwf%qflx_evap_veg
@@ -3299,6 +3311,7 @@ contains
        end if
 
        eflx_sh_tot(p)   = eflx_sh_grnd(p)
+       eflx_sh_tot_u(p) = eflx_sh_tot(p)
 
        dqh(l) = qaf(l) - qg(c)
 

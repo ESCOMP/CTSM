@@ -244,6 +244,14 @@ contains
          avgflag='A', long_name='absorbed solar radiation', &
          ptr_pft=clm3%g%l%c%p%pef%fsa, c2l_scale_type='urbanf')
 
+    call hist_addfld1d (fname='FSA_U', units='watt/m^2',  &
+         avgflag='A', long_name='Urban absorbed solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsa_u, c2l_scale_type='urbanf', set_nourb=spval)
+
+    call hist_addfld1d (fname='FSA_R', units='watt/m^2',  &
+         avgflag='A', long_name='Rural absorbed solar radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%fsa_r, set_spec=spval)
+
     call hist_addfld1d (fname='FSR', units='watt/m^2',  &
          avgflag='A', long_name='reflected solar radiation', &
          ptr_pft=clm3%g%l%c%p%pef%fsr, c2l_scale_type='urbanf')
@@ -255,6 +263,14 @@ contains
     call hist_addfld1d (fname='FIRA', units='watt/m^2',  &
          avgflag='A', long_name='net infrared (longwave) radiation', &
          ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_net, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='FIRA_U', units='watt/m^2',  &
+         avgflag='A', long_name='Urban net infrared (longwave) radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_net_u, c2l_scale_type='urbanf', set_nourb=spval)
+
+    call hist_addfld1d (fname='FIRA_R', units='watt/m^2',  &
+         avgflag='A', long_name='Rural net infrared (longwave) radiation', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lwrad_net_r, set_spec=spval)
 
     call hist_addfld1d (fname='FIRE', units='watt/m^2',  &
          avgflag='A', long_name='emitted infrared (longwave) radiation', &
@@ -331,6 +347,14 @@ contains
          avgflag='A', long_name='sensible heat', &
          ptr_lnd=clm3%g%gef%eflx_sh_totg)
 
+    call hist_addfld1d (fname='FSH_U', units='watt/m^2',  &
+         avgflag='A', long_name='Urban sensible heat', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_tot_u, c2l_scale_type='urbanf', set_nourb=spval)
+
+    call hist_addfld1d (fname='FSH_R', units='watt/m^2',  &
+         avgflag='A', long_name='Rural sensible heat', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_sh_tot_r, set_spec=spval)
+
     call hist_addfld1d (fname='GC_HEAT1',  units='J/m^2',  &
          avgflag='A', long_name='initial gridcell total heat content', &
          ptr_lnd=clm3%g%ges%gc_heat1)
@@ -353,6 +377,14 @@ contains
          ptr_pft=clm3%g%l%c%p%pef%eflx_lh_tot, c2l_scale_type='urbanf', &
          default = 'inactive')
 
+    call hist_addfld1d (fname='EFLX_LH_TOT_U', units='watt/m^2',  &
+         avgflag='A', long_name='Urban total evaporation', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_tot_u, c2l_scale_type='urbanf', set_nourb=spval)
+
+    call hist_addfld1d (fname='EFLX_LH_TOT_R', units='watt/m^2',  &
+         avgflag='A', long_name='Rural total evaporation', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_lh_tot_r, set_spec=spval)
+
     call hist_addfld1d (fname='Qstor', units='watt/m^2',  &
          avgflag='A', long_name='storage heat flux (includes snowmelt)', &
          ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd, c2l_scale_type='urbanf', &
@@ -370,9 +402,25 @@ contains
          avgflag='A', long_name='heat flux into soil/snow including snow melt', &
          ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd, c2l_scale_type='urbanf')
 
+    call hist_addfld1d (fname='FGR_U', units='watt/m^2',  &
+         avgflag='A', long_name='Urban heat flux into soil/snow including snow melt', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd_u, c2l_scale_type='urbanf', set_nourb=spval)
+
+    call hist_addfld1d (fname='FGR_R', units='watt/m^2',  &
+         avgflag='A', long_name='Rural heat flux into soil/snow including snow melt', &
+         ptr_pft=clm3%g%l%c%p%pef%eflx_soil_grnd_r, set_spec=spval)
+
     call hist_addfld1d (fname='FSM',  units='watt/m^2',  &
          avgflag='A', long_name='snow melt heat flux', &
          ptr_col=clm3%g%l%c%cef%eflx_snomelt, c2l_scale_type='urbanf')
+
+    call hist_addfld1d (fname='FSM_U',  units='watt/m^2',  &
+         avgflag='A', long_name='Urban snow melt heat flux', &
+         ptr_col=clm3%g%l%c%cef%eflx_snomelt_u, c2l_scale_type='urbanf', set_nourb=spval)
+
+    call hist_addfld1d (fname='FSM_R',  units='watt/m^2',  &
+         avgflag='A', long_name='Rural snow melt heat flux', &
+         ptr_col=clm3%g%l%c%cef%eflx_snomelt_r, set_spec=spval)
 
     call hist_addfld1d (fname='FGR12',  units='watt/m^2',  &
          avgflag='A', long_name='heat flux between soil layers 1 and 2', &
@@ -1897,7 +1945,7 @@ contains
 
     call hist_addfld1d (fname='LITFALL', units='gC/m^2/s', &
          avgflag='A', long_name='litterfall (leaves and fine roots)', &
-         ptr_pft=clm3%g%l%c%p%pcf%litfall, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pcf%litfall)
 
     call hist_addfld1d (fname='VEGFIRE', units='gC/m^2/s', &
          avgflag='A', long_name='pft-level fire loss', &
@@ -2555,7 +2603,7 @@ contains
 
     call hist_addfld1d (fname='LITR1C_TO_SOIL1C', units='gC/m^2/s', &
          avgflag='A', long_name='decomp. of litter 1 C to SOM 1 C', &
-         ptr_col=clm3%g%l%c%ccf%litr1c_to_soil1c, default='inactive')
+         ptr_col=clm3%g%l%c%ccf%litr1c_to_soil1c)
 
     call hist_addfld1d (fname='LITR2_HR', units='gC/m^2/s', &
          avgflag='A', long_name='het. resp. from litter 2 C', &
@@ -2563,7 +2611,7 @@ contains
 
     call hist_addfld1d (fname='LITR2C_TO_SOIL2C', units='gC/m^2/s', &
          avgflag='A', long_name='decomp. of litter 2 C to SOM 2 C', &
-         ptr_col=clm3%g%l%c%ccf%litr2c_to_soil2c, default='inactive')
+         ptr_col=clm3%g%l%c%ccf%litr2c_to_soil2c)
 
     call hist_addfld1d (fname='LITR3_HR', units='gC/m^2/s', &
          avgflag='A', long_name='het. resp. from litter 3 C', &
@@ -2571,7 +2619,7 @@ contains
 
     call hist_addfld1d (fname='LITR3C_TO_SOIL3C', units='gC/m^2/s', &
          avgflag='A', long_name='decomp. of litter 3 C to SOM 3 C', &
-         ptr_col=clm3%g%l%c%ccf%litr3c_to_soil3c, default='inactive')
+         ptr_col=clm3%g%l%c%ccf%litr3c_to_soil3c)
 
     call hist_addfld1d (fname='SOIL1_HR', units='gC/m^2/s', &
          avgflag='A', long_name='het. resp. from SOM 1 C', &
@@ -2634,11 +2682,15 @@ contains
          ptr_col=clm3%g%l%c%ccf%totfire, default='inactive')
 
     call hist_addfld1d (fname='NEP', units='gC/m^2/s', &
-         avgflag='A', long_name='net ecosystem production, excludes fire flux, positive for sink', &
+         avgflag='A', long_name='net ecosystem production, excludes fire, landuse, and harvest flux, positive for sink', &
          ptr_col=clm3%g%l%c%ccf%nep)
 
+    call hist_addfld1d (fname='NBP', units='gC/m^2/s', &
+         avgflag='A', long_name='net biome production, includes fire, landuse, and harvest flux, positive for sink', &
+         ptr_col=clm3%g%l%c%ccf%nbp)
+
     call hist_addfld1d (fname='NEE', units='gC/m^2/s', &
-         avgflag='A', long_name='net ecosystem exchange of carbon, includes fire flux, positive for source', &
+         avgflag='A', long_name='net ecosystem exchange of carbon, includes fire, landuse, harvest, and hrv_xsmrpool flux, positive for source', &
          ptr_col=clm3%g%l%c%ccf%nee)
 
     call hist_addfld1d (fname='COL_FIRE_CLOSS', units='gC/m^2/s', &
@@ -3745,12 +3797,12 @@ contains
 
     call hist_addfld1d (fname='XSMRPOOL_RECOVER', units='gC/m^2/s', &
          avgflag='A', long_name='C flux assigned to recovery of negative xsmrpool', &
-         ptr_pft=clm3%g%l%c%p%pepv%xsmrpool_recover, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pepv%xsmrpool_recover)
 
 #if (defined C13)
     call hist_addfld1d (fname='XSMRPOOL_C13RATIO', units='proportion', &
          avgflag='A', long_name='C13/C(12+13) ratio for xsmrpool', &
-         ptr_pft=clm3%g%l%c%p%pepv%xsmrpool_recover, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pepv%xsmrpool_c13ratio, default='inactive')
 #endif
 
     call hist_addfld1d (fname='ALLOC_PNOW', units='proportion', &
@@ -3767,7 +3819,7 @@ contains
 
     call hist_addfld1d (fname='PLANT_NDEMAND', units='gN/m^2/s', &
          avgflag='A', long_name='N flux required to support initial GPP', &
-         ptr_pft=clm3%g%l%c%p%pepv%plant_ndemand, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pepv%plant_ndemand)
 
     call hist_addfld1d (fname='TEMPSUM_POTENTIAL_GPP', units='gC/m^2/yr', &
          avgflag='A', long_name='temporary annual sum of potential GPP', &
@@ -3911,7 +3963,7 @@ contains
 
     call hist_addfld1d (fname='HTOP', units='m', &
          avgflag='A', long_name='canopy top', &
-         ptr_pft=clm3%g%l%c%p%pps%htop, default='inactive')
+         ptr_pft=clm3%g%l%c%p%pps%htop)
 
     call hist_addfld1d (fname='HBOT', units='m', &
          avgflag='A', long_name='canopy bottom', &
@@ -4051,11 +4103,11 @@ contains
 
     call hist_addfld1d (fname='CANNSUM_NPP', units='gC/m^2/s', &
          avgflag='A', long_name='annual sum of column-level NPP', &
-         ptr_col=clm3%g%l%c%cps%cannsum_npp)
+         ptr_col=clm3%g%l%c%cps%cannsum_npp, default='inactive')
 
     call hist_addfld1d (fname='CANNAVG_T2M', units='K', &
          avgflag='A', long_name='annual average of 2m air temperature', &
-         ptr_col=clm3%g%l%c%cps%cannavg_t2m)
+         ptr_col=clm3%g%l%c%cps%cannavg_t2m, default='inactive')
 
     call hist_addfld2d (fname='FRAC_ICEOLD', units='proportion', type2d='levgrnd', &
          avgflag='A', long_name='fraction of ice relative to the tot water', &
@@ -4079,11 +4131,11 @@ contains
 
     call hist_addfld1d (fname='ME',  units='proportion', &
          avgflag='A', long_name='moisture of extinction', &
-         ptr_col=clm3%g%l%c%cps%me)
+         ptr_col=clm3%g%l%c%cps%me, default='inactive')
 
     call hist_addfld1d (fname='FIRE_PROB',  units='0-1', &
          avgflag='A', long_name='daily fire probability', &
-         ptr_col=clm3%g%l%c%cps%fire_prob)
+         ptr_col=clm3%g%l%c%cps%fire_prob, default='inactive')
 
     call hist_addfld1d (fname='MEAN_FIRE_PROB',  units='0-1', &
          avgflag='A', long_name='e-folding mean of daily fire probability', &
@@ -4095,7 +4147,7 @@ contains
 
     call hist_addfld1d (fname='FAREA_BURNED',  units='proportion', &
          avgflag='A', long_name='timestep fractional area burned', &
-         ptr_col=clm3%g%l%c%cps%farea_burned)
+         ptr_col=clm3%g%l%c%cps%farea_burned, default='inactive')
 
     call hist_addfld1d (fname='ANN_FAREA_BURNED',  units='proportion', &
          avgflag='A', long_name='annual total fractional area burned', &

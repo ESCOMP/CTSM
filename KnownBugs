@@ -26,27 +26,6 @@ So it seems like the datm routines that read in data are taking up more time
 than the model itself.
 
 ====================================================================================
-Bug Number: 887
-MPI_INTEGER8 causes trouble for serial codes using MCT/mpi-serial
-
-I ran into a bunch of trouble with the latest csm_share share3_090112 includes
-the use of MPI_INTEGER8. This caused me a bunch of trouble when I try to
-compile it in serial mode (on lightning or bangkok for example).
-
-I'm also a little bit nervous about this token as it appears that MPI_INTEGER8
-isn't in the MPI standard. The standard does require something like it if the
-underlying compiler has something like INTEGER*8 -- but it doesn't specify what
-it should be.
-
-So we could get around this by adding it to mpif.h in mct/mpi-serial -- but I'm
-just wondering if it's available as MPI_INTEGER8 for all of the versions of MPI
-that we use?
-
-This also effects the clm offline tools as they use csm_share stuff. I was able
-to get around it by adding an #ifdef NO_MPI_INT8 for the tools, but the driver
-uses this capability so it won't compile without the new stuff.
-
-====================================================================================
 Bug Number: 717
 Problem with lt_archiving for too-many files
 
@@ -59,19 +38,6 @@ The next problem he has is that running over just 10 years -- the job resubmits
 itself before the lt_archive script is done. Then the scripts conflict and he
 ends up having to run the archiving by hand. It would also help if it were
 easier to submit the lt_archive.sh script as well.
-
-====================================================================================
-Bug Number: 885
-Inconsistent datasets for clm and datm domain files for some resolutions
-
-Resolutions 64x128_gx3v5, 64x128_gx1v5 and 48x96_gx3v5 all fail because of inconsistencies
-in the inputdata datasets.
-
-====================================================================================
-Bug Number: 877
-Restart problem for CN in clm36sci27_clm3_6_14
-
-Restart tests are failing for CN.
 
 ====================================================================================
 Bug Number: 452

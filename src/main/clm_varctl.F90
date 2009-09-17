@@ -75,7 +75,6 @@ module clm_varctl
   character(len=256), public :: flndtopo   = ' '        ! topography on lnd grid
   character(len=256), public :: fndepdat   = ' '        ! static nitrogen deposition data file name
   character(len=256), public :: fndepdyn   = ' '        ! dynamic nitrogen deposition data file name
-  character(len=256), public :: forganic   = ' '        ! organic matter data file name 
   character(len=256), public :: fpftdyn    = ' '        ! dynamic landuse dataset
   character(len=256), public :: fpftcon    = ' '        ! ASCII data file with PFT physiological constants
   character(len=256), public :: nrevsn     = ' '        ! restart data file name for branch run

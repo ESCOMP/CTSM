@@ -27,7 +27,6 @@ module controlMod
 !    o flndtopo        = 256 character land topography file name
 !    o fndepdat        = 254 character nitrogen deposition data file name (netCDF)
 !    o fndepdyn        = 254 character nitrogen deposition data file name (netCDF) changing dynamically in time
-!    o forganic        = 256 character organic matter data file name (netCDF)  
 !    o fpftcon         = 256 character data file with PFT physiological constants
 !    o fpftdyn         = 256 character data file with PFT physiological constants changing dynamically in time
 !    o frivinp_rtm     = 256 character input data file for rtm
@@ -110,7 +109,7 @@ module controlMod
                             co2_type, wrtdia, co2_ppmv, rtm_nsteps, nsegspc, pertlim,       &
                             hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, username,           &
                             ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
-                            ncd_pio_num_iotasks, forganic, fsnowaging, fsnowoptics, &
+                            ncd_pio_num_iotasks, fsnowaging, fsnowoptics, &
                             faerdep !will be removed
   use spmdMod      , only : masterproc
   use decompMod    , only : clump_pproc
@@ -245,7 +244,7 @@ contains
     namelist /clm_inparm/  &
          finidat, fsurdat, fatmgrid, fatmlndfrc, fatmtopo, flndtopo, &
          fpftcon, frivinp_rtm,  &
-         fpftdyn, fndepdat, forganic, fndepdyn, nrevsn, &
+         fpftdyn, fndepdat, fndepdyn, nrevsn, &
          fsnowoptics, fsnowaging
 
     namelist /clm_inparm/ faerdep   ! will be removed
@@ -442,7 +441,6 @@ contains
     call mpi_bcast (flndtopo, len(flndtopo) ,MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdat, len(fndepdat), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fndepdyn, len(fndepdyn), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (forganic, len(forganic),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftcon , len(fpftcon) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fpftdyn , len(fpftdyn) , MPI_CHARACTER, 0, mpicom, ier)
 #if (defined RTM)
@@ -603,11 +601,6 @@ contains
         write(iulog,*) '   NOT using dynamic input data for nitrogen deposition'
     else
         write(iulog,*) '   dynamic nitrogen deposition data = ',trim(fndepdyn)
-    endif
-    if (forganic == ' ') then
-        write(iulog,*) '   NOT using input data organic matter'
-    else
-        write(iulog,*) '   organic matter data = ',trim(forganic)
     endif
     if (fsnowoptics == ' ') then
        write(iulog,*) '   snow optical properties file NOT set'

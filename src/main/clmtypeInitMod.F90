@@ -1670,15 +1670,23 @@ contains
     allocate(pef%sabg(beg:end))
     allocate(pef%sabv(beg:end))
     allocate(pef%fsa(beg:end))
+    allocate(pef%fsa_u(beg:end))
+    allocate(pef%fsa_r(beg:end))
     allocate(pef%fsr(beg:end))
     allocate(pef%parsun(beg:end))
     allocate(pef%parsha(beg:end))
     allocate(pef%dlrad(beg:end))
     allocate(pef%ulrad(beg:end))
     allocate(pef%eflx_lh_tot(beg:end))
+    allocate(pef%eflx_lh_tot_u(beg:end))
+    allocate(pef%eflx_lh_tot_r(beg:end))
     allocate(pef%eflx_lh_grnd(beg:end))
     allocate(pef%eflx_soil_grnd(beg:end))
+    allocate(pef%eflx_soil_grnd_u(beg:end))
+    allocate(pef%eflx_soil_grnd_r(beg:end))
     allocate(pef%eflx_sh_tot(beg:end))
+    allocate(pef%eflx_sh_tot_u(beg:end))
+    allocate(pef%eflx_sh_tot_r(beg:end))
     allocate(pef%eflx_sh_grnd(beg:end))
     allocate(pef%eflx_sh_veg(beg:end))
     allocate(pef%eflx_lh_vege(beg:end))
@@ -1694,6 +1702,8 @@ contains
     allocate(pef%dgnetdT(beg:end))
     allocate(pef%eflx_lwrad_out(beg:end))
     allocate(pef%eflx_lwrad_net(beg:end))
+    allocate(pef%eflx_lwrad_net_u(beg:end))
+    allocate(pef%eflx_lwrad_net_r(beg:end))
     allocate(pef%netrad(beg:end))
     allocate(pef%fsds_vis_d(beg:end))
     allocate(pef%fsds_nir_d(beg:end))
@@ -1740,15 +1750,23 @@ contains
     pef%sabg(beg:end) = nan
     pef%sabv(beg:end) = nan
     pef%fsa(beg:end) = nan
+    pef%fsa_u(beg:end) = nan
+    pef%fsa_r(beg:end) = nan
     pef%fsr(beg:end) = nan
     pef%parsun(beg:end) = nan
     pef%parsha(beg:end) = nan
     pef%dlrad(beg:end) = nan
     pef%ulrad(beg:end) = nan
     pef%eflx_lh_tot(beg:end) = nan
+    pef%eflx_lh_tot_u(beg:end) = nan
+    pef%eflx_lh_tot_r(beg:end) = nan
     pef%eflx_lh_grnd(beg:end) = nan
     pef%eflx_soil_grnd(beg:end) = nan
+    pef%eflx_soil_grnd_u(beg:end) = nan
+    pef%eflx_soil_grnd_r(beg:end) = nan
     pef%eflx_sh_tot(beg:end) = nan
+    pef%eflx_sh_tot_u(beg:end) = nan
+    pef%eflx_sh_tot_r(beg:end) = nan
     pef%eflx_sh_grnd(beg:end) = nan
     pef%eflx_sh_veg(beg:end) = nan
     pef%eflx_lh_vege(beg:end) = nan
@@ -1764,6 +1782,8 @@ contains
     pef%dgnetdT(beg:end) = nan
     pef%eflx_lwrad_out(beg:end) = nan
     pef%eflx_lwrad_net(beg:end) = nan
+    pef%eflx_lwrad_net_u(beg:end) = nan
+    pef%eflx_lwrad_net_r(beg:end) = nan
     pef%netrad(beg:end) = nan
     pef%fsds_vis_d(beg:end) = nan
     pef%fsds_nir_d(beg:end) = nan
@@ -2569,6 +2589,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize column physical state variables
 !
+! !USES:
     use clm_varcon, only : spval
 ! !ARGUMENTS:
     implicit none
@@ -2807,6 +2828,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize column energy state variables
 !
+! !USES:
     use clm_varcon, only : spval
 ! !ARGUMENTS:
     implicit none
@@ -2853,6 +2875,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize column water state variables
 !
+! !USES:
     use clm_varcon, only : spval
 ! !ARGUMENTS:
     implicit none
@@ -3056,6 +3079,8 @@ contains
 !------------------------------------------------------------------------
 
     allocate(cef%eflx_snomelt(beg:end))
+    allocate(cef%eflx_snomelt_u(beg:end))
+    allocate(cef%eflx_snomelt_r(beg:end))
     allocate(cef%eflx_impsoil(beg:end))
     allocate(cef%eflx_fgr12(beg:end))
     allocate(cef%eflx_building_heat(beg:end))
@@ -3063,6 +3088,8 @@ contains
     allocate(cef%eflx_urban_heat(beg:end))
 
     cef%eflx_snomelt(beg:end)       = nan
+    cef%eflx_snomelt_u(beg:end)       = nan
+    cef%eflx_snomelt_r(beg:end)       = nan
     cef%eflx_impsoil(beg:end)       = nan
     cef%eflx_fgr12(beg:end)         = nan
     cef%eflx_building_heat(beg:end) = nan
@@ -3082,6 +3109,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize column water flux variables
 !
+! !USES:
     use clm_varcon, only : spval
 ! !ARGUMENTS:
     implicit none
@@ -3285,6 +3313,7 @@ contains
     allocate(ccf%somfire(beg:end))
     allocate(ccf%totfire(beg:end))
     allocate(ccf%nep(beg:end))
+    allocate(ccf%nbp(beg:end))
     allocate(ccf%nee(beg:end))
     allocate(ccf%col_cinputs(beg:end))
     allocate(ccf%col_coutputs(beg:end))
@@ -3297,117 +3326,118 @@ contains
     allocate(ccf%litterc_loss(beg:end))
 #endif
 
-    ccf%m_leafc_to_litr1c(beg:end) = nan
-    ccf%m_leafc_to_litr2c(beg:end) = nan
-    ccf%m_leafc_to_litr3c(beg:end) = nan
-    ccf%m_frootc_to_litr1c(beg:end) = nan
-    ccf%m_frootc_to_litr2c(beg:end) = nan
-    ccf%m_frootc_to_litr3c(beg:end) = nan
-    ccf%m_leafc_storage_to_litr1c(beg:end) = nan
-    ccf%m_frootc_storage_to_litr1c(beg:end) = nan
-    ccf%m_livestemc_storage_to_litr1c(beg:end) = nan
-    ccf%m_deadstemc_storage_to_litr1c(beg:end) = nan
-    ccf%m_livecrootc_storage_to_litr1c(beg:end) = nan
-    ccf%m_deadcrootc_storage_to_litr1c(beg:end) = nan
-    ccf%m_leafc_xfer_to_litr1c(beg:end) = nan
-    ccf%m_frootc_xfer_to_litr1c(beg:end) = nan
-    ccf%m_livestemc_xfer_to_litr1c(beg:end) = nan
-    ccf%m_deadstemc_xfer_to_litr1c(beg:end) = nan
-    ccf%m_livecrootc_xfer_to_litr1c(beg:end) = nan
-    ccf%m_deadcrootc_xfer_to_litr1c(beg:end) = nan
-    ccf%m_livestemc_to_cwdc(beg:end) = nan
-    ccf%m_deadstemc_to_cwdc(beg:end) = nan
-    ccf%m_livecrootc_to_cwdc(beg:end) = nan
-    ccf%m_deadcrootc_to_cwdc(beg:end) = nan
-    ccf%m_gresp_storage_to_litr1c(beg:end) = nan
-    ccf%m_gresp_xfer_to_litr1c(beg:end) = nan
-    ccf%m_deadstemc_to_cwdc_fire(beg:end) = nan
-    ccf%m_deadcrootc_to_cwdc_fire(beg:end) = nan
-    ccf%hrv_leafc_to_litr1c(beg:end) = nan             
-    ccf%hrv_leafc_to_litr2c(beg:end) = nan             
-    ccf%hrv_leafc_to_litr3c(beg:end) = nan             
-    ccf%hrv_frootc_to_litr1c(beg:end) = nan            
-    ccf%hrv_frootc_to_litr2c(beg:end) = nan            
-    ccf%hrv_frootc_to_litr3c(beg:end) = nan            
-    ccf%hrv_livestemc_to_cwdc(beg:end) = nan           
-    ccf%hrv_deadstemc_to_prod10c(beg:end) = nan        
-    ccf%hrv_deadstemc_to_prod100c(beg:end) = nan       
-    ccf%hrv_livecrootc_to_cwdc(beg:end) = nan          
-    ccf%hrv_deadcrootc_to_cwdc(beg:end) = nan          
-    ccf%hrv_leafc_storage_to_litr1c(beg:end) = nan     
-    ccf%hrv_frootc_storage_to_litr1c(beg:end) = nan    
-    ccf%hrv_livestemc_storage_to_litr1c(beg:end) = nan 
-    ccf%hrv_deadstemc_storage_to_litr1c(beg:end) = nan 
+    ccf%m_leafc_to_litr1c(beg:end)                = nan
+    ccf%m_leafc_to_litr2c(beg:end)                = nan
+    ccf%m_leafc_to_litr3c(beg:end)                = nan
+    ccf%m_frootc_to_litr1c(beg:end)               = nan
+    ccf%m_frootc_to_litr2c(beg:end)               = nan
+    ccf%m_frootc_to_litr3c(beg:end)               = nan
+    ccf%m_leafc_storage_to_litr1c(beg:end)        = nan
+    ccf%m_frootc_storage_to_litr1c(beg:end)       = nan
+    ccf%m_livestemc_storage_to_litr1c(beg:end)    = nan
+    ccf%m_deadstemc_storage_to_litr1c(beg:end)    = nan
+    ccf%m_livecrootc_storage_to_litr1c(beg:end)   = nan
+    ccf%m_deadcrootc_storage_to_litr1c(beg:end)   = nan
+    ccf%m_leafc_xfer_to_litr1c(beg:end)           = nan
+    ccf%m_frootc_xfer_to_litr1c(beg:end)          = nan
+    ccf%m_livestemc_xfer_to_litr1c(beg:end)       = nan
+    ccf%m_deadstemc_xfer_to_litr1c(beg:end)       = nan
+    ccf%m_livecrootc_xfer_to_litr1c(beg:end)      = nan
+    ccf%m_deadcrootc_xfer_to_litr1c(beg:end)      = nan
+    ccf%m_livestemc_to_cwdc(beg:end)              = nan
+    ccf%m_deadstemc_to_cwdc(beg:end)              = nan
+    ccf%m_livecrootc_to_cwdc(beg:end)             = nan
+    ccf%m_deadcrootc_to_cwdc(beg:end)             = nan
+    ccf%m_gresp_storage_to_litr1c(beg:end)        = nan
+    ccf%m_gresp_xfer_to_litr1c(beg:end)           = nan
+    ccf%m_deadstemc_to_cwdc_fire(beg:end)         = nan
+    ccf%m_deadcrootc_to_cwdc_fire(beg:end)        = nan
+    ccf%hrv_leafc_to_litr1c(beg:end)              = nan             
+    ccf%hrv_leafc_to_litr2c(beg:end)              = nan             
+    ccf%hrv_leafc_to_litr3c(beg:end)              = nan             
+    ccf%hrv_frootc_to_litr1c(beg:end)             = nan            
+    ccf%hrv_frootc_to_litr2c(beg:end)             = nan            
+    ccf%hrv_frootc_to_litr3c(beg:end)             = nan            
+    ccf%hrv_livestemc_to_cwdc(beg:end)            = nan           
+    ccf%hrv_deadstemc_to_prod10c(beg:end)         = nan        
+    ccf%hrv_deadstemc_to_prod100c(beg:end)        = nan       
+    ccf%hrv_livecrootc_to_cwdc(beg:end)           = nan          
+    ccf%hrv_deadcrootc_to_cwdc(beg:end)           = nan          
+    ccf%hrv_leafc_storage_to_litr1c(beg:end)      = nan     
+    ccf%hrv_frootc_storage_to_litr1c(beg:end)     = nan    
+    ccf%hrv_livestemc_storage_to_litr1c(beg:end)  = nan 
+    ccf%hrv_deadstemc_storage_to_litr1c(beg:end)  = nan 
     ccf%hrv_livecrootc_storage_to_litr1c(beg:end) = nan
     ccf%hrv_deadcrootc_storage_to_litr1c(beg:end) = nan
-    ccf%hrv_gresp_storage_to_litr1c(beg:end) = nan     
-    ccf%hrv_leafc_xfer_to_litr1c(beg:end) = nan        
-    ccf%hrv_frootc_xfer_to_litr1c(beg:end) = nan       
-    ccf%hrv_livestemc_xfer_to_litr1c(beg:end) = nan    
-    ccf%hrv_deadstemc_xfer_to_litr1c(beg:end) = nan    
-    ccf%hrv_livecrootc_xfer_to_litr1c(beg:end) = nan   
-    ccf%hrv_deadcrootc_xfer_to_litr1c(beg:end) = nan   
-    ccf%hrv_gresp_xfer_to_litr1c(beg:end) = nan        
-    ccf%m_litr1c_to_fire(beg:end) = nan
-    ccf%m_litr2c_to_fire(beg:end) = nan
-    ccf%m_litr3c_to_fire(beg:end) = nan
-    ccf%m_cwdc_to_fire(beg:end) = nan
-    ccf%leafc_to_litr1c(beg:end) = nan
-    ccf%leafc_to_litr2c(beg:end) = nan
-    ccf%leafc_to_litr3c(beg:end) = nan
-    ccf%frootc_to_litr1c(beg:end) = nan
-    ccf%frootc_to_litr2c(beg:end) = nan
-    ccf%frootc_to_litr3c(beg:end) = nan
-    ccf%cwdc_to_litr2c(beg:end) = nan
-    ccf%cwdc_to_litr3c(beg:end) = nan
-    ccf%litr1_hr(beg:end) = nan
-    ccf%litr1c_to_soil1c(beg:end) = nan
-    ccf%litr2_hr(beg:end) = nan
-    ccf%litr2c_to_soil2c(beg:end) = nan
-    ccf%litr3_hr(beg:end) = nan
-    ccf%litr3c_to_soil3c(beg:end) = nan
-    ccf%soil1_hr(beg:end) = nan
-    ccf%soil1c_to_soil2c(beg:end) = nan
-    ccf%soil2_hr(beg:end) = nan
-    ccf%soil2c_to_soil3c(beg:end) = nan
-    ccf%soil3_hr(beg:end) = nan
-    ccf%soil3c_to_soil4c(beg:end) = nan
-    ccf%soil4_hr(beg:end) = nan
+    ccf%hrv_gresp_storage_to_litr1c(beg:end)      = nan     
+    ccf%hrv_leafc_xfer_to_litr1c(beg:end)         = nan        
+    ccf%hrv_frootc_xfer_to_litr1c(beg:end)        = nan       
+    ccf%hrv_livestemc_xfer_to_litr1c(beg:end)     = nan    
+    ccf%hrv_deadstemc_xfer_to_litr1c(beg:end)     = nan    
+    ccf%hrv_livecrootc_xfer_to_litr1c(beg:end)    = nan   
+    ccf%hrv_deadcrootc_xfer_to_litr1c(beg:end)    = nan   
+    ccf%hrv_gresp_xfer_to_litr1c(beg:end)         = nan        
+    ccf%m_litr1c_to_fire(beg:end)                 = nan
+    ccf%m_litr2c_to_fire(beg:end)                 = nan
+    ccf%m_litr3c_to_fire(beg:end)                 = nan
+    ccf%m_cwdc_to_fire(beg:end)                   = nan
+    ccf%leafc_to_litr1c(beg:end)                  = nan
+    ccf%leafc_to_litr2c(beg:end)                  = nan
+    ccf%leafc_to_litr3c(beg:end)                  = nan
+    ccf%frootc_to_litr1c(beg:end)                 = nan
+    ccf%frootc_to_litr2c(beg:end)                 = nan
+    ccf%frootc_to_litr3c(beg:end)                 = nan
+    ccf%cwdc_to_litr2c(beg:end)                   = nan
+    ccf%cwdc_to_litr3c(beg:end)                   = nan
+    ccf%litr1_hr(beg:end)                         = nan
+    ccf%litr1c_to_soil1c(beg:end)                 = nan
+    ccf%litr2_hr(beg:end)                         = nan
+    ccf%litr2c_to_soil2c(beg:end)                 = nan
+    ccf%litr3_hr(beg:end)                         = nan
+    ccf%litr3c_to_soil3c(beg:end)                 = nan
+    ccf%soil1_hr(beg:end)                         = nan
+    ccf%soil1c_to_soil2c(beg:end)                 = nan
+    ccf%soil2_hr(beg:end)                         = nan
+    ccf%soil2c_to_soil3c(beg:end)                 = nan
+    ccf%soil3_hr(beg:end)                         = nan
+    ccf%soil3c_to_soil4c(beg:end)                 = nan
+    ccf%soil4_hr(beg:end)                         = nan
 #if (defined CN)
-    ccf%dwt_seedc_to_leaf(beg:end) = nan
-    ccf%dwt_seedc_to_deadstem(beg:end) = nan
-    ccf%dwt_conv_cflux(beg:end) = nan
-    ccf%dwt_prod10c_gain(beg:end) = nan
-    ccf%dwt_prod100c_gain(beg:end) = nan
-    ccf%dwt_frootc_to_litr1c(beg:end) = nan
-    ccf%dwt_frootc_to_litr2c(beg:end) = nan
-    ccf%dwt_frootc_to_litr3c(beg:end) = nan
-    ccf%dwt_livecrootc_to_cwdc(beg:end) = nan
-    ccf%dwt_deadcrootc_to_cwdc(beg:end) = nan
-    ccf%dwt_closs(beg:end) = nan
-    ccf%prod10c_loss(beg:end) = nan
-    ccf%prod100c_loss(beg:end) = nan
-    ccf%product_closs(beg:end) = nan
+    ccf%dwt_seedc_to_leaf(beg:end)                = nan
+    ccf%dwt_seedc_to_deadstem(beg:end)            = nan
+    ccf%dwt_conv_cflux(beg:end)                   = nan
+    ccf%dwt_prod10c_gain(beg:end)                 = nan
+    ccf%dwt_prod100c_gain(beg:end)                = nan
+    ccf%dwt_frootc_to_litr1c(beg:end)             = nan
+    ccf%dwt_frootc_to_litr2c(beg:end)             = nan
+    ccf%dwt_frootc_to_litr3c(beg:end)             = nan
+    ccf%dwt_livecrootc_to_cwdc(beg:end)           = nan
+    ccf%dwt_deadcrootc_to_cwdc(beg:end)           = nan
+    ccf%dwt_closs(beg:end)                        = nan
+    ccf%prod10c_loss(beg:end)                     = nan
+    ccf%prod100c_loss(beg:end)                    = nan
+    ccf%product_closs(beg:end)                    = nan
 #endif
-    ccf%lithr(beg:end) = nan
-    ccf%somhr(beg:end) = nan
-    ccf%hr(beg:end) = nan
-    ccf%sr(beg:end) = nan
-    ccf%er(beg:end) = nan
-    ccf%litfire(beg:end) = nan
-    ccf%somfire(beg:end) = nan
-    ccf%totfire(beg:end) = nan
-    ccf%nep(beg:end) = nan
-    ccf%nee(beg:end) = nan
-    ccf%col_cinputs(beg:end) = nan
-    ccf%col_coutputs(beg:end) = nan
-    ccf%col_fire_closs(beg:end) = nan
+    ccf%lithr(beg:end)                            = nan
+    ccf%somhr(beg:end)                            = nan
+    ccf%hr(beg:end)                               = nan
+    ccf%sr(beg:end)                               = nan
+    ccf%er(beg:end)                               = nan
+    ccf%litfire(beg:end)                          = nan
+    ccf%somfire(beg:end)                          = nan
+    ccf%totfire(beg:end)                          = nan
+    ccf%nep(beg:end)                              = nan
+    ccf%nbp(beg:end)                              = nan
+    ccf%nee(beg:end)                              = nan
+    ccf%col_cinputs(beg:end)                      = nan
+    ccf%col_coutputs(beg:end)                     = nan
+    ccf%col_fire_closs(beg:end)                   = nan
 
 #if (defined CLAMP) && (defined CN)
     !CLAMP
-    ccf%cwdc_hr(beg:end) = nan
-    ccf%cwdc_loss(beg:end) = nan
-    ccf%litterc_loss(beg:end) = nan
+    ccf%cwdc_hr(beg:end)                          = nan
+    ccf%cwdc_loss(beg:end)                        = nan
+    ccf%litterc_loss(beg:end)                     = nan
 #endif
 
   end subroutine init_column_cflux_type

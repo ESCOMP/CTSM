@@ -64,7 +64,7 @@ contains
      use clmtype
      use clm_atmlnd      , only : clm_a2l
      use clm_varpar      , only : numrad
-     use clm_varcon      , only : spval
+     use clm_varcon      , only : spval, istsoil
      use clm_time_manager, only : get_curr_date, get_step_size
      use clm_varpar      , only : nlevsno
      use SNICARMod       , only : DO_SNO_OC
@@ -145,6 +145,9 @@ contains
      real(r8), pointer :: sabg(:)          ! solar radiation absorbed by ground (W/m**2)
      real(r8), pointer :: sabv(:)          ! solar radiation absorbed by vegetation (W/m**2)
      real(r8), pointer :: fsa(:)           ! solar radiation absorbed (total) (W/m**2)
+     real(r8), pointer :: fsa_r(:)         ! rural solar radiation absorbed (total) (W/m**2)
+     integer , pointer :: ityplun(:)       ! landunit type
+     integer , pointer :: plandunit(:)     ! index into landunit level quantities
      real(r8), pointer :: parsun(:)        ! average absorbed PAR for sunlit leaves (W/m**2)
      real(r8), pointer :: parsha(:)        ! average absorbed PAR for shaded leaves (W/m**2)
      real(r8), pointer :: fsr(:)           ! solar radiation reflected (W/m**2)
@@ -223,6 +226,7 @@ contains
      integer  :: fp                  ! non-urban filter pft index
      integer  :: p                   ! pft index
      integer  :: c                   ! column index
+     integer  :: l                   ! landunit index
      integer  :: g                   ! grid cell index
      integer  :: ib                  ! waveband number (1=vis, 2=nir)
      real(r8) :: absrad              ! absorbed solar radiation (W/m**2)
@@ -259,6 +263,10 @@ contains
      forc_solad    => clm_a2l%forc_solad
      forc_solai    => clm_a2l%forc_solai
 
+     ! Assign local pointers to multi-level derived type members (landunit level)
+
+     ityplun => clm3%g%l%itype
+
      ! Assign local pointers to multi-level derived type members (column level)
 
      albgrd        => clm3%g%l%c%cps%albgrd
@@ -267,6 +275,7 @@ contains
 
      ! Assign local pointers to derived type members (pft-level)
 
+     plandunit     => clm3%g%l%c%p%landunit
      ivt           => clm3%g%l%c%p%itype
      pcolumn       => clm3%g%l%c%p%column
      pgridcell     => clm3%g%l%c%p%gridcell
@@ -291,6 +300,7 @@ contains
      sabv          => clm3%g%l%c%p%pef%sabv
      snowdp        => clm3%g%l%c%cps%snowdp
      fsa           => clm3%g%l%c%p%pef%fsa
+     fsa_r         => clm3%g%l%c%p%pef%fsa_r
      fsr           => clm3%g%l%c%p%pef%fsr
      parsun        => clm3%g%l%c%p%pef%parsun
      parsha        => clm3%g%l%c%p%pef%parsha
@@ -378,6 +388,10 @@ contains
            sabg(p)       = 0._r8
            sabv(p)       = 0._r8
            fsa(p)        = 0._r8
+           l = plandunit(p)
+           if (ityplun(l)==istsoil) then
+             fsa_r(p)      = 0._r8
+           end if
            sabg_lyr(p,:) = 0._r8
            sabg_pur(p)   = 0._r8
            sabg_bc(p)    = 0._r8
@@ -456,6 +470,10 @@ contains
               cai(p,ib) = forc_solai(g,ib)*fabi(p,ib)
               sabv(p) = sabv(p) + cad(p,ib) + cai(p,ib)
               fsa(p)  = fsa(p)  + cad(p,ib) + cai(p,ib)
+              l = plandunit(p)
+              if (ityplun(l)==istsoil) then
+                fsa_r(p)  = fsa_r(p)  + cad(p,ib) + cai(p,ib)
+              end if
               
               ! Transmitted = solar fluxes incident on ground
               
@@ -467,6 +485,9 @@ contains
               absrad  = trd(p,ib)*(1._r8-albgrd(c,ib)) + tri(p,ib)*(1._r8-albgri(c,ib))
               sabg(p) = sabg(p) + absrad
               fsa(p)  = fsa(p)  + absrad
+              if (ityplun(l)==istsoil) then
+                fsa_r(p)  = fsa_r(p)  + absrad
+              end if
 
 #if (defined SNICAR_FRC)
               ! Solar radiation absorbed by ground surface without BC
