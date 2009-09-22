@@ -269,6 +269,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr1850_c090715.nc</fsurdat>
 <fatmlndfrc hgrid="64x128"  mask="gx3v5" >lnd/clm2/griddata/fracdata_64x128_gx3v5_c090206.nc</fatmlndfrc>
 <fatmlndfrc hgrid="48x96"   mask="USGS"  >lnd/clm2/griddata/fracdata_48x96_USGS_070110.nc</fatmlndfrc>
 <fatmlndfrc hgrid="48x96"   mask="gx3v5" >lnd/clm2/griddata/fracdata_48x96_gx3v5_c090206.nc</fatmlndfrc>
+<fatmlndfrc hgrid="48x96"   mask="gx3v7" >lnd/clm2/griddata/fracdata_48x96_gx3v7_c090915.nc</fatmlndfrc>
 <fatmlndfrc hgrid="32x64"   mask="USGS"  >lnd/clm2/griddata/fracdata_32x64_USGS_070110.nc</fatmlndfrc>
 <fatmlndfrc hgrid="8x16"    mask="USGS"  >lnd/clm2/griddata/fracdata_8x16_USGS_070110.nc</fatmlndfrc>
 <fatmlndfrc hgrid="94x192"  mask="T62"   >lnd/clm2/griddata/fracdata_94x192_T62_c081219.nc</fatmlndfrc>
@@ -312,7 +313,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr1850_c090715.nc</fsurdat>
 
 <!-- SNICAR (SNow, ICe, and Aerosol Radiative model) datasets -->
 <!--  ***********  Resolution independent:   ***********  -->
-<fsnowoptics >lnd/clm2/snicardata/snicar_optics_5bnd_c080403.nc</fsnowoptics>
+<fsnowoptics >lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc</fsnowoptics>
 <fsnowaging  >lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc</fsnowaging>
 
 <!-- Aerosol deposition fluxes - if NOT coupled to CAM or NOT running CAM with dust and aerosols -->

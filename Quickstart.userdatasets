@@ -152,8 +152,7 @@ Process:
 
        7.) Edit the datm template file so that it uses the new DOMAINFILE you created (if you changed it)
 
-       Add the line "if ( $DOMAINFILE == "unset" ) set DOMAINFILE = "domain.lnd.$MYID.nc" to just before the
-       check on DOMAINFILE (expand the value of MYID in the line above).
+       Add the line "CLM_USRDAT_NAME = $MYDATAID" to near the top of the file (expand the value of MYDATAID).
        
        $EDITOR Tool/Templates/datm.cpl7.template.csh
 

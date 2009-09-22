@@ -18,7 +18,14 @@ set cfgdir = $CASEBUILD/clmconf
 set config = $cfgdir/config_cache.xml
 cd $cfgdir
 
-set config_opts = "-spmd -mode ext_ccsm_seq $CLM_CONFIG_OPTS -comp_intf $COMP_INTERFACE "
+# Global River Transport model off for pt1 mode
+if ($LND_GRID == pt1 ) then
+   set rtm = "off"
+else
+   set rtm = "on"
+endif
+
+set config_opts = "-spmd -mode ext_ccsm_seq $CLM_CONFIG_OPTS -comp_intf $COMP_INTERFACE -rtm $rtm"
 $CODEROOT/lnd/clm*/bld/configure -clm_bld $cfgdir -usr_src $CASEROOT/SourceMods/src.clm $config_opts || exit -1 
 
 #--------------------------------------------------------------------
