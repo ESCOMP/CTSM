@@ -121,9 +121,9 @@ contains
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer ier
     integer nb,ne
 !
@@ -202,9 +202,9 @@ end subroutine domain_init
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer ier
 !
 !------------------------------------------------------------------------------
@@ -260,9 +260,9 @@ end subroutine domain_clean
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer ier
 !
 !------------------------------------------------------------------------------
@@ -330,10 +330,10 @@ end subroutine domain_setsame
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
+!
+! !LOCAL VARIABLES:
+!
 !EOP
-!
-! LOCAL VARIABLES:
-!
 !------------------------------------------------------------------------------
     if (present(ns)) then
       ns = domain%ns
@@ -411,10 +411,10 @@ end subroutine domain_setptrs
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
+!
+! !LOCAL VARIABLES:
+!
 !EOP
-!
-! LOCAL VARIABLES:
-!
 !------------------------------------------------------------------------------
 
   if (masterproc) then
@@ -461,11 +461,11 @@ end subroutine domain_check
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
     integer ier
 !
+!EOP
 !------------------------------------------------------------------------------
 
     if (latlon%set == set) then
@@ -516,11 +516,11 @@ end subroutine latlon_init
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
     integer ier
 !
+!EOP
 !------------------------------------------------------------------------------
 
     if (latlon%set == unset) then
@@ -567,11 +567,11 @@ end subroutine latlon_clean
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
     integer ier
 !
+!EOP
 !------------------------------------------------------------------------------
 
     if (latlon1%ni /= latlon2%ni .or. latlon1%nj /= latlon2%nj) then
@@ -614,10 +614,10 @@ end subroutine latlon_setsame
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
+!
+! !LOCAL VARIABLES:
+!
 !EOP
-!
-! LOCAL VARIABLES:
-!
 !------------------------------------------------------------------------------
 
   if (masterproc .and. latlon%set == set) then

@@ -82,9 +82,9 @@ contains
     real(r8), pointer :: litterag(:)     ! above ground litter
     real(r8), pointer :: litterbg(:)     ! below ground litter
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !
     real(r8), parameter :: k_mort = 0.3_r8 !coefficient of growth efficiency in mortality equation
     real(r8), parameter :: ramp_agddtw = 300.0_r8

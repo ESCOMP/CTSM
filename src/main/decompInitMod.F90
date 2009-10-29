@@ -36,13 +36,13 @@ module decompInitMod
 ! 2005.11.01  T Craig  Rewrite
 ! 2006.06.06  T Craig  Reduce memory, cleanup
 !
-!EOP
 !
 ! !PRIVATE TYPES:
   private
 
   integer, pointer :: acid(:)       ! temporary for setting adecomp/ldecomp
 
+!EOP
 !------------------------------------------------------------------------------
 
 contains

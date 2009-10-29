@@ -104,9 +104,9 @@ contains
     real(r8), pointer :: vocflx_4(:)      ! VOC flux(4) [ug C m-2 h-1]
     real(r8), pointer :: vocflx_5(:)      ! VOC flux(5) [ug C m-2 h-1]
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: fp,p,g,n         ! indices
     real(r8) :: epsilon(lbp:ubp) ! emission factor [ug g-1 h-1]

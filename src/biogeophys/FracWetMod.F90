@@ -74,9 +74,9 @@ contains
     real(r8), pointer :: fwet(:)           ! fraction of canopy that is wet (0 to 1)
     real(r8), pointer :: fdry(:)           ! fraction of foliage that is green and dry [-] (new)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: fp,p             ! indices
     real(r8) :: vegt             ! frac_veg_nosno*lsai

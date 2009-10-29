@@ -146,18 +146,12 @@ Process:
 
        6.) Edit the env_conf.xml in the case to point to your user dataset identifier name
 
-       Add "-clm_usr_name $MYDATAID" to the CLM_BLDNML_OPTS entry in env_conf.xml
+       Edit CLM_USRDAT_NAME  to point to $MYDATAID
 
-       		$EDITOR env_conf.xml
+       		xmlchange -file env_conf.xml -id CLM_USRDAT_NAME -val $MYDATAID
 
-       7.) Edit the datm template file so that it uses the new DOMAINFILE you created (if you changed it)
-
-       Add the line "CLM_USRDAT_NAME = $MYDATAID" to near the top of the file (expand the value of MYDATAID).
-       
-       $EDITOR Tool/Templates/datm.cpl7.template.csh
-
-       8.) Configure the case as normal
+       7.) Configure the case as normal
 
        		configure -case
 
-       9.) Run your case as normal
+       8.) Run your case as normal

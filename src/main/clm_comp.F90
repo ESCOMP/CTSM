@@ -2,7 +2,21 @@
 #include <preproc.h>
 
 module clm_comp
+!---------------------------------------------------------------------------
+!BOP
+!
+! !MODULE: clm_comp
+!
+! !DESCRIPTION: 
+!
+! High level initial and run phase component module for CLM. This module interfaces
+! with the generic lnd_comp_<framework> module to send/receive land model information
+! with the interface desired by CCSM for initialization phase and run time stepping
+! phases.
+!
+!---------------------------------------------------------------------------
 
+! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_abort
   use perf_mod
@@ -14,11 +28,13 @@ module clm_comp
 
 ! !PUBLIC MEMBER FUNCTIONS:
 
-  public clm_init0
-  public clm_init1
-  public clm_init2
-  public clm_run1
-  public clm_run2
+  public clm_init0   ! Phase 1 initialization, namelist, setup grid etc.
+  public clm_init1   ! Phase 2 initialization, initialize parameterizations
+  public clm_init2   ! Phase 3 initialization, initialize albedos
+  public clm_run1    ! Phase 1 run
+  public clm_run2    ! Phase 2 run
+!EOP
+!---------------------------------------------------------------------------
 
 contains
 
@@ -243,9 +259,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     real(r8) :: eccf                  ! earth orbit eccentricity factor
     real(r8) :: declinp1              ! solar declination angle in radians for nstep+1
 !---------------------------------------------------------------------------

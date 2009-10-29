@@ -34,9 +34,9 @@ module iobinary
 ! Created by Mariana Vertenstein
 ! Updated by tcraig, 3/2007
 !
-!EOP
 !
-! !PRIVATE MEMBER FUNCTIONS:
+! !PRIVATE MEMBER FUNCTIONS: None
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -63,9 +63,9 @@ contains
 ! Created by Mariana Vertenstein
 ! Updated by tcraig, 3/2007
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: n                               !index
     integer :: ier                             !return code
     integer :: gsize                           !size of first dimension
@@ -151,9 +151,9 @@ contains
 ! Created by Mariana Vertenstein
 ! Updated by tcraig, 3/2007
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: n                               !index
     integer :: ier                             !return code
     integer :: gsize                           !size of first dimension

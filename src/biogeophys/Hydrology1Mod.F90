@@ -149,9 +149,9 @@ contains
     real(r8), pointer :: mss_dst_col(:)        ! total column mass of dust in snow (col,lyr) [kg]
     real(r8), pointer :: mss_dst_top(:)        ! total top-layer mass of dust in snow (col,lyr) [kg]
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: f                            ! filter index
     integer  :: pi                           ! pft index

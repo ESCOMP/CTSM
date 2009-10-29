@@ -361,7 +361,7 @@ contains
 
     call hist_addfld1d (fname='GC_HEAT2',  units='J/m^2',  &
          avgflag='A', long_name='post land cover change total heat content', &
-         ptr_lnd=clm3%g%ges%gc_heat2)
+         ptr_lnd=clm3%g%ges%gc_heat2, default='inactive')
 
     call hist_addfld1d (fname='EFLX_DYNBAL',  units='W/m^2',  &
          avgflag='A', long_name='dynamic land cover change conversion energy flux', &
@@ -646,7 +646,7 @@ contains
 
     call hist_addfld1d (fname='GC_LIQ2',  units='mm',  &  
          avgflag='A', long_name='initial gridcell total liq content', &              
-         ptr_lnd=clm3%g%gws%gc_liq2)     
+         ptr_lnd=clm3%g%gws%gc_liq2, default='inactive')     
 
     call hist_addfld1d (fname='QFLX_LIQ_DYNBAL',  units='mm/s',  &  
          avgflag='A', long_name='liq dynamic land cover change conversion runoff flux', &              
@@ -658,7 +658,7 @@ contains
 
     call hist_addfld1d (fname='GC_ICE2',  units='mm',  &  
          avgflag='A', long_name='post land cover change total ice content', &              
-         ptr_lnd=clm3%g%gws%gc_ice2)     
+         ptr_lnd=clm3%g%gws%gc_ice2, default='inactive')
 
     call hist_addfld1d (fname='QFLX_ICE_DYNBAL',  units='mm/s',  &
          avgflag='A', long_name='ice dynamic land cover change conversion runoff flux', &                                   

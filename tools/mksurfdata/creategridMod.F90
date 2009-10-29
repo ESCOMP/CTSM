@@ -56,9 +56,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   include 'netcdf.inc'
     integer :: nlon,nlat                       !size
     real(r8), allocatable :: lon1d(:)          !local array for 1d lon
@@ -419,9 +419,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: ncid                           !netCDF file id
     integer  :: omode                          !netCDF output mode
     character(len= 32) :: subname = 'write_domain'

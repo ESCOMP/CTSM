@@ -115,9 +115,9 @@ contains
 ! Migrated to new data structures by Peter Thornton and Mariana Vertenstein
 ! !Created by Peter Thornton and Mariana Vertenstein
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: fp,p,c,l,g,m,n      ! indices
     real(r8) :: liqfrac             ! fraction of total water that is liquid
@@ -450,9 +450,9 @@ contains
 ! !REVISION HISTORY
 ! Created by Sam Levis
 !
-!EOP
 !
 ! !LOCAL VARIABLES
+!EOP
 !
     integer  :: p,g,m,n               ! indices
     real(r8) :: vsc_dyn_atm(lbp:ubp)  ! [kg m-1 s-1] Dynamic viscosity of air
@@ -609,9 +609,9 @@ contains
 !
     real(r8), pointer :: mbl_bsn_fct(:) !basin factor
 !
-!EOP
 !
 ! !LOCAL VARIABLES
+!EOP
 !
     integer  :: fc,c,l,m,n              ! indices
     real(r8) :: ovr_src_snk_frc

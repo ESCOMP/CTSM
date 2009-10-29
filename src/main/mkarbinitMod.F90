@@ -116,9 +116,9 @@ contains
     real(r8), pointer :: mss_cnc_dst3(:,:)  ! mass concentration of dust species 3 (col,lyr) [kg/kg]
     real(r8), pointer :: mss_cnc_dst4(:,:)  ! mass concentration of dust species 4 (col,lyr) [kg/kg]
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     integer :: j,l,c,p      ! indices
     integer :: nlevs        ! number of levels
     integer :: begp, endp   ! per-proc beginning and ending pft indices

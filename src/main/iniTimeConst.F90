@@ -121,9 +121,9 @@ subroutine iniTimeConst
   real(r8), pointer :: clayfrac(:)
 #endif
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
   integer  :: ncid             ! netCDF file id 
   integer  :: n,i,j,ib,lev,bottom      ! indices
   integer  :: g,l,c,p          ! indices

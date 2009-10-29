@@ -60,7 +60,6 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
 !
@@ -81,6 +80,7 @@ contains
     real(r8), pointer :: frac_iceold(:,:)      ! fraction of ice relative to the tot water
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer :: c, p, f, j, fc            ! indices
 !-----------------------------------------------------------------------

@@ -176,9 +176,9 @@ contains
     real(r8), pointer :: errsoi_pft(:)      ! pft-level soil/lake energy conservation error (W/m**2)
     real(r8), pointer :: errsoi_col(:)      ! column-level soil/lake energy conservation error (W/m**2)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: p,c,g,j,pi,l         ! indices
     integer  :: fc,fp                ! lake filtered column and pft indices

@@ -55,11 +55,11 @@ module accumulMod
 ! Updated to clm2.1 data structures by Mariana Vertenstein
 ! Updated to include all subgrid type and multilevel fields, M. Vertenstein 03/2003
 !
-!EOP
 !
   private
 !
-! PRIVATE TYPES:
+! !PRIVATE TYPES:
+!EOP
 !
   type accum_field
      character(len=  8) :: name     !field name
@@ -122,9 +122,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 03/2003
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: nf           ! field index
     integer :: beg1d,end1d  ! beggining and end subgrid indices
     integer :: num1d        ! total number subgrid indices
@@ -293,9 +293,9 @@ contains
 ! Updated to clm2.1 data structures by Mariana Vertenstein
 ! Updated to include all subgrid type and multilevel fields, Mariana Vertenstein 03-2003
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: i,k,nf        !indices
     integer :: beg,end         !subgrid beginning,ending indices
 !------------------------------------------------------------------------
@@ -370,9 +370,9 @@ contains
 ! Updated to clm2.1 data structures by Mariana Vertenstein
 ! Updated to include all subgrid type and multilevel fields, M. Vertenstein 03/2003
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: i,j,k,nf        !indices
     integer :: beg,end         !subgrid beginning,ending indices
     integer :: numlev          !number of vertical levels
@@ -452,9 +452,9 @@ contains
 ! Updated to clm2.1 data structures by Mariana Vertenstein
 ! Updated to include all subgrid type and multilevel fields by M. Vertenstein 03/2003
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: i,k,nf              !indices
     integer :: accper              !temporary accumulation period
     integer :: beg,end             !subgrid beginning,ending indices
@@ -558,9 +558,9 @@ contains
 ! Updated to clm2.1 data structures by Mariana Vertenstein
 ! Updated to include all subgrid type and multilevel fields by M. Vertenstein 03/2003
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: i,j,k,nf            !indices
     integer :: accper              !temporary accumulation period
     integer :: beg,end             !subgrid beginning,ending indices
@@ -676,9 +676,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: nf,k,j              ! indices
     integer :: beg1d, end1d        ! buffer bounds
     integer :: ier                 ! error status

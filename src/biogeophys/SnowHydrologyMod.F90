@@ -138,9 +138,9 @@ contains
     real(r8), pointer :: forc_aer(:,:)       ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: c, j, fc                           !do loop/array indices
     real(r8) :: dtime                              !land model time step (sec)
@@ -528,9 +528,9 @@ contains
 !
     real(r8), pointer :: dz(:,:)           !layer depth (m)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer :: j, c, fc                   ! indices
     real(r8):: dtime                      ! land model time step (sec)
@@ -693,9 +693,9 @@ contains
     real(r8), pointer :: mss_dst4(:,:)   ! dust species 4 mass in snow (col,lyr) [kg]
     real(r8), pointer :: snw_rds(:,:)    ! effective snow grain radius (col,lyr) [microns, m^-6]
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer :: c, fc                 ! column indices
     integer :: i,k                   ! loop indices
@@ -1029,9 +1029,9 @@ contains
     real(r8), pointer :: mss_dst4(:,:)   ! dust species 4 mass in snow (col,lyr) [kg]
     real(r8), pointer :: snw_rds(:,:)    ! effective snow grain radius (col,lyr) [microns, m^-6]
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: j, c, fc               ! indices
     real(r8) :: drr                    ! thickness of the combined [m]
@@ -1529,9 +1529,9 @@ contains
 ! 15 September 1999: Yongjiu Dai; Initial code
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !
     real(r8) :: dzc   ! Total thickness of nodes 1 and 2 (dzc=dz+dz2).
     real(r8) :: wliqc ! Combined liquid water [kg/m2]
@@ -1601,9 +1601,9 @@ contains
 ! local pointers to implicit in arguments
     integer , pointer :: snl(:)                        ! number of snow layers
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     integer  :: fc, c
 !-----------------------------------------------------------------------
 

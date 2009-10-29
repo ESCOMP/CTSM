@@ -83,9 +83,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer            :: n1,n2,lb1,ub1,lb2,ub2 ! indices
     integer            :: lsize      ! size of local array
     type(mct_aVect)    :: AVi, AVo   ! attribute vectors
@@ -189,9 +189,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer            :: n1,n2,lb1,ub1,lb2,ub2 ! indices
     integer            :: lsize      ! size of local array
     type(mct_aVect)    :: AVi, AVo   ! attribute vectors
@@ -326,9 +326,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ier          ! error code
     character(len=*),parameter :: subname = 'allgather_1darray_int'
 
@@ -378,9 +378,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer            :: n1,n2,lb1,ub1,lb2,ub2 ! indices
     integer            :: lsize      ! size of local array
     type(mct_aVect)    :: AVi, AVo   ! attribute vectors
@@ -484,9 +484,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer            :: n1,n2,lb1,ub1,lb2,ub2 ! indices
     integer            :: lsize      ! size of local array
     type(mct_aVect)    :: AVi, AVo   ! attribute vectors
@@ -621,9 +621,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ier          ! error code
     character(len=*),parameter :: subname = 'allgather_1darray_real'
 
@@ -673,9 +673,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer            :: n1,n2,lb1,ub1,lb2,ub2 ! indices
     integer            :: lsize      ! size of local array
     type(mct_aVect)    :: AVi, AVo   ! attribute vectors
@@ -779,9 +779,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer            :: n1,n2,lb1,ub1,lb2,ub2 ! indices
     integer            :: lsize      ! size of local array
     type(mct_aVect)    :: AVi, AVo   ! attribute vectors
@@ -916,9 +916,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ier          ! error code
     character(len=*),parameter :: subname = 'allgather_2darray_int'
 
@@ -968,9 +968,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer            :: n1,n2,lb1,ub1,lb2,ub2 ! indices
     integer            :: lsize      ! size of local array
     type(mct_aVect)    :: AVi, AVo   ! attribute vectors
@@ -1074,9 +1074,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer            :: n1,n2,lb1,ub1,lb2,ub2 ! indices
     integer            :: lsize      ! size of local array
     type(mct_aVect)    :: AVi, AVo   ! attribute vectors
@@ -1211,9 +1211,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ier          ! error code
     character(len=*),parameter :: subname = 'allgather_2darray_real'
 

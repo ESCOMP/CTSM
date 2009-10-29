@@ -36,7 +36,7 @@ begin
    ; Use resolution to get input filenames and open them
    ;
    filetype  = "fndepdat";
-   sim_years = (/ 1850, 1855, 1865, 1875, 1885, 1895, 1905, 1915, 1925, 1935, 1945, 1955, 1965, 1975, 1985, 1995, 2000, 2005 /);
+   sim_years = (/ 1850, 1925, 1935, 1945, 1955, 1965, 1975, 1985, 1995, 2005 /);
    nfiles    = dimsizes(sim_years)
    nc        = new( (/ nfiles /), "file"   );
    filenames = new( (/ nfiles /), "string" );

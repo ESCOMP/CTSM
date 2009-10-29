@@ -62,9 +62,9 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer  :: nlon_i                          ! input grid : lon points
   integer  :: nlat_i                          ! input grid : lat points
   integer  :: numpft_i                        ! num of plant types input data

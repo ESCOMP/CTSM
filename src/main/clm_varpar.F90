@@ -100,10 +100,10 @@ contains
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
+!
+! !LOCAL VARIABLES:
+!
 !EOP
-!
-! LOCAL VARIABLES:
-!
 !------------------------------------------------------------------------------
 
   lsmlon         = 1

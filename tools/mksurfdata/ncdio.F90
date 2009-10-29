@@ -28,9 +28,8 @@ module ncdio
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
-! !PRIVATE METHODS:
+! !PRIVATE MEMBER FUNCTIONS:
 !
   interface ncd_ioglobal
      module procedure ncd_ioglobal_int_var
@@ -61,6 +60,7 @@ module ncdio
   public :: nf_put_var_int
   public :: nf_put_vara_int
   public :: nf_inq_dimid
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -84,10 +84,10 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
     integer :: dimid, dimlen    ! temporaries
+!EOP
 !-----------------------------------------------------------------------
 
     call check_ret(nf_inq_dimid (ncid, trim(dimname), dimid), 'check_dim')
@@ -117,9 +117,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !-----------------------------------------------------------------------
 
      if ( lvar ) then
@@ -150,9 +150,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ret     ! return value
 !-----------------------------------------------------------------------
 
@@ -229,9 +229,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: n              ! indices
     integer :: ndims          ! dimension counter
     integer :: dimid(5)       ! dimension ids
@@ -321,9 +321,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ier                            ! error status
     integer :: dimid(1)                       ! dimension id
     integer :: start(1), count(1)             ! output bounds
@@ -391,9 +391,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ier                            ! error status
     integer :: dimid(1)                       ! dimension id
     integer :: start(1), count(1)             ! output bounds
@@ -460,9 +460,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: varid                          ! netCDF variable id
     integer :: dimid(2), ndims                ! dimension ids
     integer :: start(2), count(2)             ! output bounds
@@ -530,9 +530,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: varid                          ! netCDF variable id
     integer :: ier                            ! error code
     integer :: dimid(2), ndims                ! dimension ids
@@ -600,9 +600,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: varid                          ! netCDF variable id
     integer :: dimid(3), ndims                ! dimension ids
     integer :: start(3), count(3)             ! output bounds
@@ -674,7 +674,6 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
     integer :: varid                          ! netCDF variable id
@@ -683,6 +682,7 @@ contains
     integer :: start(3), count(3)             ! output bounds
     logical :: varpresent                     ! if true, variable is on tape
     character(len=32) :: subname='NCD_IOGLOBAL_REAL_2D' ! subroutine name
+!EOP
 !-----------------------------------------------------------------------
 
     if (flag == 'write') then
@@ -748,7 +748,6 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
     integer :: varid                    ! netCDF variable id
@@ -757,6 +756,7 @@ contains
     integer :: ier                      ! error code
     logical :: varpresent               ! if true, variable is on tape
     character(len=32) :: subname='NCD_IOGLOBAL_3D_INT_IO' ! subroutine name
+!EOP
 !-----------------------------------------------------------------------
 
     if (flag == 'write') then
@@ -823,7 +823,6 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
     integer :: varid                    ! netCDF variable id
@@ -832,6 +831,7 @@ contains
     integer :: start(4), count(4)       ! output bounds
     logical :: varpresent               ! if true, variable is on tape
     character(len=32) :: subname='NCD_IOGLOBAL_REAL_3D' ! subroutine name
+!EOP
 !-----------------------------------------------------------------------
 
     if (flag == 'write') then

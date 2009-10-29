@@ -85,9 +85,9 @@ contains
     real(r8), pointer :: lm_ind(:)    ! individual leaf mass
     real(r8), pointer :: rm_ind(:)    ! individual root mass
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     real(r8), parameter :: fpc_tree_max = 0.95_r8  !maximum total tree FPC
     integer  :: p,fp, g                         ! indices
     real(r8) :: fpc_tree_total(lbg:ubg)

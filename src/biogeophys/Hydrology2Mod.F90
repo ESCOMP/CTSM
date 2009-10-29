@@ -187,9 +187,9 @@ contains
     real(r8), pointer :: mss_cnc_dst4(:,:)  ! mass concentration of dust species 4 (col,lyr) [kg/kg]
     logical , pointer :: do_capsnow(:)      ! true => do snow capping
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: g,l,c,j,fc                 ! indices
     integer  :: nstep                      ! time step number

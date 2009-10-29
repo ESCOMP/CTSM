@@ -68,9 +68,9 @@ contains
 ! Created by David Lawrence, 4 May 2006
 ! Revised by David Lawrence, 21 September 2007
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character(len=256) :: locfn                          ! local file name
     real(r8),pointer :: arrayl(:)                        ! generic global array
     integer  :: ncid,dimid,varid                         ! netCDF id's

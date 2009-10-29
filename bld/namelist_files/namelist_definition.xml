@@ -967,12 +967,12 @@ integer indicating which timer to use. As defined in gptl.inc.
 Stride to use for PIO tasks
 </entry>
 
-<entry id="cpl_num_iotasks" type="integer" category="driver"
+<entry id="cpl_io_numtasks" type="integer" category="driver"
        group="pio_inparm" valid_values="" >
 Number of tasks to use for PIO
 </entry>
 
-<entry id="cpl_iotype_name" type="char*80" category="driver"
+<entry id="cpl_io_typename" type="char*80" category="driver"
        group="pio_inparm" valid_values="netcdf" >
 Type of output files for PIO
 </entry>
@@ -1033,7 +1033,7 @@ File containing tn460 correction factors (not valid for any CLM DATM7 modes)
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"360x720,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
+"360x720,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.5x3.33,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
 Horizontal resolutions
 </entry> 
 

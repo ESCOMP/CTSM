@@ -88,9 +88,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 
     integer  :: i,j                            !indices
     integer  :: lsmlon, lsmlat                 !local size
@@ -195,9 +195,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 
     integer  :: i,j,im,jm                      !indices
     integer  :: lsmlon, lsmlat                 !local size
@@ -276,9 +276,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: i,j                         !indices
     real(r8),allocatable :: fld_o(:,:)      !output grid: dummy field
     real(r8),allocatable :: fld_i(:,:)      !input grid: dummy field
@@ -414,9 +414,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: nlon,nlat                       !size
     logical :: etype                           !external type
     real(r8), allocatable :: lon1d(:)          !local array for 1d lon
@@ -1145,9 +1145,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: ncid                           !netCDF file id
     integer  :: omode                          !netCDF output mode
     character(len= 32) :: subname = 'write_domain'

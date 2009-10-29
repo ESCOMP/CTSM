@@ -140,9 +140,9 @@ contains
     real(r8), pointer :: rootr(:,:)       ! effective fraction of roots in each soil layer
     real(r8), pointer :: rresis(:,:)      ! root resistance by layer (0-1)  (nlevgrnd)	
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer, parameter  :: niters = 3  ! maximum number of iterations for surface temperature
     integer  :: p,c,g,f,j,l            ! indices

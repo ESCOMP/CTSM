@@ -158,9 +158,9 @@ contains
     real(r8), pointer :: albsnd_hst(:,:)    ! snow albedo, direct, for history files (col,bnd) [frc]
     real(r8), pointer :: albsni_hst(:,:)    ! snow ground albedo, diffuse, for history files (col,bnd) [frc]
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     real(r8), parameter :: mpe = 1.e-06_r8 ! prevents overflow for division by zero
     integer  :: fp,fc,g,c,p                ! indices
@@ -693,9 +693,9 @@ contains
     real(r8), pointer :: albsod(:,:)        ! soil albedo (direct)
     real(r8), pointer :: albsoi(:,:)        ! soil albedo (diffuse)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer, parameter :: nband =numrad ! number of solar radiation waveband classes
     integer  :: fc            ! non-urban filter column index
@@ -837,9 +837,9 @@ contains
     real(r8), pointer :: gdir(:)		   ! leaf projection in solar direction (0 to 1)
 	 real(r8), pointer :: omega(:,:)    ! fraction of intercepted radiation that is scattered (0 to 1)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: fp,p,c           ! array indices
     !integer  :: ic               ! 0=unit incoming direct; 1=unit incoming diffuse

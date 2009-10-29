@@ -92,9 +92,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: pi,p,c,index           ! indices
     real(r8) :: scale_p2c(lbp:ubp)     ! scale factor for column->landunit mapping
     logical  :: found                  ! temporary for error check
@@ -208,9 +208,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: j,pi,p,c,index         ! indices
     real(r8) :: scale_p2c(lbp:ubp)     ! scale factor for column->landunit mapping
     logical  :: found                  ! temporary for error check
@@ -322,9 +322,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: fc,c,pi,p           ! indices
     integer , pointer :: npfts(:)
     integer , pointer :: pfti(:)
@@ -395,9 +395,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: fc,c,pi,p,j    ! indices
     integer , pointer :: npfts(:)
     integer , pointer :: pfti(:)
@@ -474,9 +474,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: pi,p,c,l,index         ! indices
     logical  :: found                  ! temporary for error check
     real(r8) :: sumwt(lbl:ubl)         ! sum of weights
@@ -666,9 +666,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: j,pi,p,c,l,index       ! indices
     logical  :: found                  ! temporary for error check
     real(r8) :: sumwt(lbl:ubl)         ! sum of weights
@@ -861,8 +861,8 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
+!  !LOCAL VARIABLES:
 !EOP
-!  ! LOCAL VARIABLES:
     integer  :: pi,p,c,l,g,index       ! indices
     logical  :: found                  ! temporary for error check
     real(r8) :: scale_p2c(lbp:ubp)     ! scale factor
@@ -1068,9 +1068,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: j,pi,p,c,l,g,index     ! indices
     logical  :: found                  ! temporary for error check
     real(r8) :: scale_p2c(lbp:ubp)     ! scale factor
@@ -1269,9 +1269,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: ci,c,l,index           ! indices
     integer  :: max_col_per_lu         ! max columns per landunit; on the fly
     logical  :: found                  ! temporary for error check
@@ -1444,9 +1444,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: j,l,ci,c,index         ! indices
     integer  :: max_col_per_lu         ! max columns per landunit; on the fly
     logical  :: found                  ! temporary for error check
@@ -1626,9 +1626,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: ci,c,l,g,index         ! indices
     integer  :: max_col_per_gcell      ! max columns per gridcell; on the fly
     logical  :: found                  ! temporary for error check
@@ -1818,9 +1818,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: j,ci,c,g,l,index       ! indices
     integer  :: max_col_per_gcell      ! max columns per gridcell; on the fly
     logical  :: found                  ! temporary for error check
@@ -2010,9 +2010,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: li,l,g,index           ! indices
     integer  :: max_lu_per_gcell       ! max landunits per gridcell; on the fly
     logical  :: found                  ! temporary for error check
@@ -2128,9 +2128,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/03
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: j,g,li,l,index         ! indices
     integer  :: max_lu_per_gcell       ! max landunits per gridcell; on the fly
     logical  :: found                  ! temporary for error check

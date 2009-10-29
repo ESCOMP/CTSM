@@ -104,9 +104,9 @@ contains
     real(r8), pointer :: eff_porosity(:,:) ! effective porosity = porosity - vol_ice
     real(r8), pointer :: fracice(:,:)      !fractional impermeability (-)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: c,j,fc,g                   !indices
     real(r8) :: dtime                      ! land model time step (sec)
@@ -273,9 +273,9 @@ contains
 !
     real(r8), pointer :: qflx_infl(:)      !infiltration (mm H2O /s)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer :: c, fc    !indices
 !-----------------------------------------------------------------------
@@ -458,9 +458,9 @@ contains
     real(r8), pointer :: smp_l(:,:)             ! soil matrix potential [mm]
     real(r8), pointer :: hk_l(:,:)              ! hydraulic conductivity (mm/s)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: p,c,fc,j                  ! do loop indices
     integer  :: jtop(lbc:ubc)             ! top level at each column
@@ -976,9 +976,9 @@ contains
     real(r8), pointer :: eflx_impsoil(:)   !implicit evaporation for soil temperature equation
     real(r8), pointer :: qflx_rsub_sat(:)  !soil saturation excess [mm h2o/s]
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: c,j,fc                   !indices
     real(r8) :: dtime                    !land model time step (sec)

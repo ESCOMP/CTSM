@@ -229,9 +229,9 @@ contains
    real(r8), pointer :: rootr(:,:)         ! effective fraction of roots in each soil layer
    real(r8), pointer :: rresis(:,:)        ! root resistance by layer (0-1)  (nlevgrnd)	
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
    real(r8), parameter :: btran0 = 0.0_r8  ! initial value
    real(r8), parameter :: zii = 1000.0_r8  ! convective boundary layer height [m]
@@ -1137,9 +1137,9 @@ contains
      real(r8), pointer :: lnc(:)         ! leaf N concentration per unit projected LAI (gN leaf/m^2)
      real(r8), pointer :: vcmx(:)        ! maximum rate of carboxylation (umol co2/m**2/s)
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !
      real(r8), parameter :: mpe = 1.e-6_r8   ! prevents overflow error if division by zero
      integer , parameter :: niter = 3     ! number of iterations

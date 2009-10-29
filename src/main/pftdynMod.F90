@@ -83,9 +83,9 @@ contains
     implicit none
     include 'netcdf.inc'
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: i,j,m,n,g                       ! indices
     real(r8) :: sumpct                          ! sum for error check
     integer  :: varid                           ! netcdf ids
@@ -295,9 +295,9 @@ contains
     integer, intent(IN)  :: begp     ! beg indices for land plant function types
     integer, intent(IN)  :: endp     ! end indices for land plant function types
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: i,j,m,p,l,g,c    ! indices
     integer  :: year             ! year (0, ...) for nstep+1
     integer  :: mon              ! month (1, ..., 12) for nstep+1
@@ -453,9 +453,9 @@ contains
     integer , intent(in)  :: begg,endg,pft0,maxpft
     real(r8), intent(out) :: pctpft(begg:endg,pft0:maxpft)
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: i,j,m,n
     integer  :: err, ierr, ret
     real(r8) :: sumpct,sumerr                     ! temporary
@@ -526,9 +526,9 @@ contains
     integer , intent(IN)  :: begg     ! beg indices for land gridcells
     integer , intent(IN)  :: endg     ! end indices for land gridcells
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: ret
     integer  :: start(3), count(3)                ! input sizes
     real(r8),pointer :: arrayl(:)                 ! temporary array
@@ -584,9 +584,9 @@ contains
 ! !ARGUMENTS:
     implicit none
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: begp, endp    ! proc beginning and ending pft indices
     integer  :: begc, endc    ! proc beginning and ending column indices
     integer  :: begl, endl    ! proc beginning and ending landunit indices
@@ -641,9 +641,9 @@ contains
     integer, intent(IN)  :: begp     ! beg indices for land plant function types
     integer, intent(IN)  :: endp     ! end indices for land plant function types
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: pi,p,c,l,g    ! indices
     integer  :: ier           ! error code
     real(r8) :: dtime         ! land model time step (sec)
@@ -772,9 +772,9 @@ contains
 ! !ARGUMENTS:
     implicit none
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: begp, endp    ! proc beginning and ending pft indices
     integer  :: begc, endc    ! proc beginning and ending column indices
     integer  :: begl, endl    ! proc beginning and ending landunit indices

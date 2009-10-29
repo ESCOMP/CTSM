@@ -106,9 +106,9 @@ contains
    real(r8), pointer :: u10(:)         ! 10-m wind (m/s) (for dust model)
    real(r8), pointer :: fv(:)          ! friction velocity (m/s) (for dust model)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
    real(r8), parameter :: zetam = 1.574_r8 ! transition point of flux-gradient relation (wind profile)
    real(r8), parameter :: zetat = 0.465_r8 ! transition point of flux-gradient relation (temp. profile)
@@ -518,9 +518,9 @@ contains
 ! 15 September 1999: Yongjiu Dai; Initial code
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
       real(r8) :: chik, chik2
 !------------------------------------------------------------------------------
 
@@ -556,9 +556,9 @@ contains
 ! 15 September 1999: Yongjiu Dai; Initial code
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
      real(r8) :: chik2
 !------------------------------------------------------------------------------
 
@@ -604,9 +604,9 @@ contains
 ! 15 September 1999: Yongjiu Dai; Initial code
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !
     real(r8) :: wc    ! convective velocity [m/s]
     real(r8) :: rib   ! bulk Richardson number

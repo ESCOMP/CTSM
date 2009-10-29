@@ -55,7 +55,6 @@ subroutine CASAiniTimeVar()
 ! !REVISION HISTORY:
 !  22 Sept 2006: Created by Forrest Hoffman
 !
-!EOP
 !
 ! local pointers to implicit in arguments
 !
@@ -91,6 +90,7 @@ subroutine CASAiniTimeVar()
    real(r8), pointer :: soilpsi(:,:)         ! soil water potential in each
 !
 ! !LOCAL VARIABLES:
+!EOP
    integer :: g,l,c,p,j    ! indices
    integer :: begp, endp   ! per-clump/proc beginning and ending pft indices
    integer :: begc, endc   ! per-clump/proc beginning and ending column indices

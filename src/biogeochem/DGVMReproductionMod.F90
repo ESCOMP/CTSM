@@ -63,9 +63,9 @@ contains
     real(r8), pointer :: litter_ag(:)        ! above ground litter
     real(r8), pointer :: bm_inc(:)           ! biomass increment
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     real(r8), parameter :: reprod_cost = 0.1_r8 ! proportion of NPP lost to reproduction (Harper 1977)
     integer  :: p, fp                        ! pft index
     real(r8) :: reprod                       ! temporary

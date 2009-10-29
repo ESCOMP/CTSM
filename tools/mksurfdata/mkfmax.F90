@@ -35,9 +35,9 @@ subroutine mkfmax(lsmlon, lsmlat, fname, ndiag, fmax_o)
 ! Revised: Nan Rosenbloom - used mkglacier.F90 as template.
 ! Original Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer  :: nlon_i                          ! input grid : lon points
   integer  :: nlat_i                          ! input grid : lat points
 

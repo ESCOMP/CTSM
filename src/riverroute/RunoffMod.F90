@@ -169,9 +169,9 @@ contains
 ! !REVISION HISTORY:
 ! Mariana Vertenstein: Created 10/2003
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: pid
 !-----------------------------------------------------------------------
 

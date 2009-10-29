@@ -1,4 +1,331 @@
 ===============================================================
+Tag name:  clm3_6_54
+Originator(s):  erik (erik)
+Date: Wed Oct 28 21:17:13 MDT 2009
+One-line Summary: Allow comp_intf to change on ccsm build, reduce default hist fields, 
+                  start adding 2.5x3.33, start adding VOC fsurdat datasets, 
+                  new finidat files for f09 and f19
+
+Purpose of changes:
+
+Make: GC_ICE2, GC_LIQ2, GC_HEAT2 output history fields off by default. Add in 2.5x3.33
+resolution.Changes for bug 1050, put in env variables for CODE_ROOT and COMP_INTERFACE.
+Update pio, MCT, timing, sglc, sice, socn, datm, scripts, csm_share to beta30 versions.
+Update scripts so CLM_USRDAT_NAME can be set in scripts and used by datm and clm (also
+add in DATM_CO2_SERIES variable so can be added to datm later). Start using VOC
+version of the surfdata datasets: non-opt mksurf versions for f09, f10, and f19.
+New finidat files for f09, f19 with CN for 1850 (year 400 of
+b40.1850.track1.1deg.006) . Remove blAK8 test. Change Template to include: COMP_INTERFACE
+logic in csm_share.buildlib and use CLM_USRDAT_NAME. Formatting changes for some comments 
+in the code to comply with ProTex documentation standard as a step to move toward automatic 
+documentation using doxygen where I have script to convert from ProTex to doxygen comments.
+New fndepdyn files that fix a dip near 1855 and 2000, and fix the script that creates it.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM  mode can NOT use a global finidat file)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Have configure write out unresolved filepaths 
+                                           when called from cpl7.template
+
+Describe any changes made to the namelist: drv namelist updated
+
+List any changes to the defaults for the boundary datasets:
+      Add 2.5x3.33 resolution
+      Remove 2x2.5 res files
+      New f09, f19 finidat files
+      New f09, f19, f10, 1x1_tropicAtl fsurdat/fpftdyn files (only f19 change answers)
+      New f05, 5x5_amazon, 1x1_brazil 2000 fsurdat file (b4b)
+      New f03, f09, f19, f03, f10 ndepdyn files (changes 1851-1924, 1996-2004)
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): to ccsm4_0_beta33 versions
+
+   scripts        to scripts4_091027b
+   drv            to vocemis-drydep12_drvseq3_0_37
+   datm7          to datm7_090928
+   socn/sice/sglc to stubs1_2_02
+   csm_share      to share3_091013
+   timing         to timing_090929
+   mct            to MCT2_6_0_090926
+   pio            to pio57_prod
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M      Quickstart.userdatasets --- Update notes about setting user-defined datasets
+>>>>>>>>>>>>>>> Update jaguar, kraken, and bluefire env vars to latest scripts
+>>>>>>>>>>>>>>> Remove blAK8 test as ocean-only and no clm files to compare
+  M    models/lnd/clm/test/system/README.testnames ---------------- Add 2.5x3.33 test resolution
+  M    models/lnd/clm/test/system/tests_driver.sh ----------------- Update env vars
+                      to whats in scripts4_091015 for jaguar, kraken and bluefire
+  M    models/lnd/clm/test/system/tests_pretag_bluefire_nompi ----- Rm blAK8
+  M    models/lnd/clm/test/system/input_tests_master -------------- Rm blAK8, add 1x1_tropicAtl@1850,1850-2000, and 2.5x3.33 tests
+  M    models/lnd/clm/test/system/tests_posttag_nompi_regression -- Rm blAK8
+
+>>>>>>>>>>>>>>> Allow configure to write out unresolved Filepath, make TopCCSMBld
+>>>>>>>>>>>>>>> Makefile closer to CPL7 version
+  M    models/lnd/clm/bld/configure -------------------------- Add clm_root option
+              add ability to set comp_intf to cpl_$COMP, allow ability to check for
+              directories existance resolving env vars that are set. Create a subroutine
+              is_valid_directory to check for directories instead of "-d".
+  M    models/lnd/clm/bld/config_files/config_definition.xml - Allow cpl_$COMP rm lapacklibdir
+  M    models/lnd/clm/bld/clm.cpl7.template -- Set COMP based on COMP_INTERFACE, 
+                 add clm_root to configure, don't resolve CODEROOT and CASEROOT on output
+  M    models/lnd/clm/bld/config_files/TopCCSMBldMakefile.in - Changes to make closer to scripts4_091015 version.
+>>>>>>>>>>>>>>> Change drv namelist names, 
+  M    models/lnd/clm/bld/build-namelist ----- Change drv namelist names: cpl_io_numtasks/cpl_io_typename
+>>>>>>>>>>>>>>> Change drv namelist names, add 2.5x3.33 resolution
+>>>>>>>>>>>>>>> Remove 2x2.5 res files
+>>>>>>>>>>>>>>> New f09, f19 finidat files
+>>>>>>>>>>>>>>> New f09, f19, f10, 1x1_tropicAtl fsurdat/fpftdyn files (only f19 change answers)
+>>>>>>>>>>>>>>> New f05, 5x5_amazon, 1x1_brazil 2000 fsurdat file (b4b)
+>>>>>>>>>>>>>>> New f03, f09, f19, f03, f10 ndepdyn files (changes 1851-1924, 1996-2004)
+  M    models/lnd/clm/bld/namelist_files/namelist_definition.xml -----Change drv namelist 
+                names: cpl_io_numtasks/cpl_io_typename, add 2.5x3.33 resolution
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml -- Add 2.5x3.33 res domainfile
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml --- New f19, f09 finidat files
+               new f09, f19, f10 fsurdat/fpftdyn files
+               new 2.5x3.33: fatmgrid, flndtopo, fatmtopo, fatmlndfrc, faerdep, fndepdat files
+              new f05, 5x5_amazon, 1x1_brazil 2000 fsurdat files
+              new f03, f09, f19, f03, f10 ndepdyn files
+  M    models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml --- Change drv namelist 
+               names: cpl_io_numtasks/cpl_io_typename
+
+  M    models/lnd/clm/src/main/histFldsMod.F90 -- GC_HEAT2, GC_LIQ2, GC_ICE2 NOT on by default
+>>>>>>>>>>>>>>> Remove dips in 20th Century transient Nitrogen deposition
+>>>>>>>>>>>>>>> for 1855 and 2000.
+  M   models/lnd/clm/tools/ncl_scripts/ndeplintInterp.ncl --- Remove 1855-1915 and 2000
+                from list of input files. The 1850 dataset had too high of CO2 and hence
+                to high Nitrogen deposition, which gives a unrealistic dip near the
+                beginning.
+
+>>>>>>>>>>>>>>> Documentation changes of ProTex comments to fit the ProTex standard
+M      tools/mksurfdata/mkglcmec.F90
+M      tools/mksurfdata/mkfmax.F90
+M      tools/mksurfdata/ncdio.F90
+M      tools/mksurfdata/mklaiMod.F90
+M      tools/mksurfdata/mkglacier.F90
+M      tools/mksurfdata/mkharvestMod.F90
+M      tools/mksurfdata/creategridMod.F90
+M      tools/mksurfdata/mkorganic.F90
+M      tools/mksurfdata/mklanwat.F90
+M      tools/mksurfdata/mksoicol.F90
+M      tools/mksurfdata/mkrank.F90
+M      tools/mksurfdata/mkelev.F90
+M      tools/mksurfdata/mkurban.F90
+M      tools/mksurfdata/mkurbanparMod.F90
+M      tools/mksurfdata/mksoitex.F90
+M      tools/mksurfdata/mkirrig.F90
+M      tools/mksurfdata/domainMod.F90
+M      tools/mksurfdata/areaMod.F90
+M      tools/mksurfdata/mksrfdat.F90
+M      tools/mksurfdata/mkpftMod.F90
+M      tools/mkgriddata/mkgriddata.F90
+M      tools/mkgriddata/creategridMod.F90
+M      tools/mkdatadomain/create_domain.F90
+M      src/biogeochem/DGVMLightMod.F90
+M      src/biogeochem/DGVMReproductionMod.F90
+M      src/biogeochem/DGVMAllocationMod.F90
+M      src/biogeochem/DGVMEcosystemDynMod.F90
+M      src/biogeochem/CASAMod.F90
+M      src/biogeochem/DGVMKillMod.F90
+M      src/biogeochem/DUSTMod.F90
+M      src/biogeochem/DGVMEstablishmentMod.F90
+M      src/biogeochem/STATICEcosysDynMod.F90
+M      src/biogeochem/DGVMRestMod.F90
+M      src/biogeochem/DGVMMod.F90
+M      src/biogeochem/CNrestMod.F90
+M      src/biogeochem/VOCEmissionMod.F90
+M      src/biogeochem/DGVMMortalityMod.F90
+M      src/biogeochem/DGVMTurnoverMod.F90
+M      src/biogeochem/DGVMFireMod.F90
+M      src/biogeochem/CNEcosystemDynMod.F90
+M      src/main/inicFileMod.F90
+M      src/main/organicFileMod.F90
+M      src/main/spmdGathScatMod.F90
+M      src/main/clm_varpar.F90
+M      src/main/CNiniTimeVar.F90
+M      src/main/dynlandMod.F90
+M      src/main/accumulMod.F90
+M      src/main/clm_comp.F90
+M      src/main/driver.F90
+M      src/main/decompInitMod.F90
+M      src/main/ncdio.F90
+M      src/main/getdatetime.F90
+M      src/main/subgridRestMod.F90
+M      src/main/accFldsMod.F90
+M      src/main/subgridMod.F90
+M      src/main/fileutils.F90
+M      src/main/aerdepMod.F90
+M      src/main/initializeMod.F90
+M      src/main/pftdynMod.F90
+M      src/main/iniTimeConst.F90
+M      src/main/histFileMod.F90
+M      src/main/pft2colMod.F90
+M      src/main/clm_atmlnd.F90
+M      src/main/restFileMod.F90
+M      src/main/controlMod.F90
+M      src/main/initSurfAlbMod.F90
+M      src/main/clm_time_manager.F90
+M      src/main/cpl_mct/lnd_comp_mct.F90
+M      src/main/ndepFileMod.F90
+M      src/main/subgridAveMod.F90
+M      src/main/initGridCellsMod.F90
+M      src/main/CASAiniTimeVarMod.F90
+M      src/main/CNiniSpecial.F90
+M      src/main/pftvarcon.F90
+M      src/main/snowdp2lev.F90
+M      src/main/spmdMod.F90
+M      src/main/surfrdMod.F90
+M      src/main/domainMod.F90
+M      src/main/decompMod.F90
+M      src/main/areaMod.F90
+M      src/main/iobinary.F90
+M      src/main/do_close_dispose.F90
+M      src/main/mkarbinitMod.F90
+M      src/riverroute/RtmMod.F90
+M      src/riverroute/RunoffMod.F90
+M      src/biogeophys/BalanceCheckMod.F90
+M      src/biogeophys/SurfaceRadiationMod.F90
+M      src/biogeophys/SoilTemperatureMod.F90
+M      src/biogeophys/SnowHydrologyMod.F90
+M      src/biogeophys/UrbanInputMod.F90
+M      src/biogeophys/Biogeophysics1Mod.F90
+M      src/biogeophys/Biogeophysics2Mod.F90
+M      src/biogeophys/FracWetMod.F90
+M      src/biogeophys/UrbanInitMod.F90
+M      src/biogeophys/FrictionVelocityMod.F90
+M      src/biogeophys/TridiagonalMod.F90
+M      src/biogeophys/SurfaceAlbedoMod.F90
+M      src/biogeophys/Hydrology1Mod.F90
+M      src/biogeophys/Hydrology2Mod.F90
+M      src/biogeophys/BiogeophysicsLakeMod.F90
+M      src/biogeophys/BiogeophysRestMod.F90
+M      src/biogeophys/SoilHydrologyMod.F90
+M      src/biogeophys/UrbanMod.F90
+M      src/biogeophys/QSatMod.F90
+M      src/biogeophys/HydrologyLakeMod.F90
+M      src/biogeophys/SNICARMod.F90
+M      src/biogeophys/DriverInitMod.F90
+M      src/biogeophys/BareGroundFluxesMod.F90
+M      src/biogeophys/CanopyFluxesMod.F90
+
+Summary of testing:
+
+  bluefire:
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
+........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72
+arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72
+arb_ic ......FAIL! rc= 5
+025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
+........FAIL! rc= 4
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
+.........FAIL! rc= 10
+031 smC61 TSM.sh _sc_dh clm_std^nl_urb 20021001:NONE:1800 1.9x2.5 gx1v6 -6 cold
+.................FAIL! rc= 10
+032 erC61 TER.sh _sc_dh clm_std^nl_urb 20021001:NONE:1800 1.9x2.5 gx1v6 10+38 cold
+..............FAIL! rc= 5
+033 brC61 TBR.sh _sc_dh clm_std^nl_urb_br 20021001:NONE:1800 1.9x2.5 gx1v6 -3+-3 cold
+...........FAIL! rc= 5
+034 blC61 TBL.sh _sc_dh clm_std^nl_urb 20021001:NONE:1800 1.9x2.5 gx1v6 48 cold
+.................FAIL! rc= 4
+035 smH52 TSM.sh 17p_cnnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 96 cold
+.........FAIL! rc= 8
+036 erH52 TER.sh 17p_cnnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 10+38
+cold ......FAIL! rc= 5
+037 brH52 TBR.sh 17p_cnnsc_dm clm_std^nl_urb_br 20020115:NONE:1800 10x15 USGS@2000 72+72
+cold ...FAIL! rc= 5
+038 blH52 TBL.sh 17p_cnnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 48 cold
+.........FAIL! rc= 4
+039 smI59 TSMcnspinup.sh 17p_cnadspinupsc_dm 17p_cnexitspinupsc_dm 17p_cnsc_dm clm_std
+20020115:NONEFAIL! rc= 5
+040 smLI1 TSM.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic
+........................FAIL! rc= 10
+041 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic
+......................FAIL! rc= 5
+  bluefire interactive testing: All PASS up to...
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic........FAIL! rc= 10
+  bluefire/CCSM testing:
+PASS  SMS_RLA.f45_f45.I.bluefire 
+PASS  SMS_RLB.f45_f45.I.bluefire 
+PASS  SMS_ROA.f45_f45.I.bluefire 
+PASS  ERS_D.f45_g35.I_2000.bluefire 
+PASS  PET.f45_g35.I_1850.bluefire.cpl 
+PASS  PET.f45_g35.I_1850.bluefire.atm 
+PASS  PET.f45_g35.I_1850.bluefire.lnd 
+PASS  PET.f45_g35.I_1850.bluefire.ice 
+PASS  PET.f45_g35.I_1850.bluefire.ocn 
+PASS  PET.f45_g35.I_1850.bluefire.glc 
+PASS  ERS.f19_g16.I_1850.bluefire 
+FAIL  ERS.f19_g16.I_1850-2000.bluefire  <-- script fails, but cpl log same
+PASS  ERB.f09_g16.I_1948_2004.bluefire 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire <-- recv lnd Sl_t different
+PASS  ERH_D.f10_f10.I_1850_CN.bluefire 
+PASS  PET.f10_f10.ICN8520.bluefire.cpl 
+PASS  PET.f10_f10.ICN8520.bluefire.atm 
+PASS  PET.f10_f10.ICN8520.bluefire.lnd 
+PASS  PET.f10_f10.ICN8520.bluefire.ice 
+PASS  PET.f10_f10.ICN8520.bluefire.ocn 
+PASS  PET.f10_f10.ICN8520.bluefire.glc
+  jaguar: All PASS
+  jaguar interactive testing: All PASS except
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+013 smJ74 TSM.sh 4p_casasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -1100 arb_ic .FAIL! rc= 8
+014 erJ74 TER.sh 4p_casasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -10+-10 arb_ic FAIL! rc= 5
+015 brJ74 TBR.sh 4p_casasc_ds clm_std^nl_urb_br 10001230:NONE:3600 1x1_tropicAtl test -3+-3 arb_ic FAIL! rc= 5
+  dublin/lf95 interactive testing:
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+007 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 6
+026 sm853 TSMtools.sh interpinic tools__o runoptions ............................................FAIL! rc= 6
+027 sm854 TSMtools.sh interpinic tools__ds runoptions ...........................................FAIL! rc= 6
+030 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  dublin/lf95:
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+030 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48 .......................FAIL! rc= 8
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to..
+019 blR53 TBL.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@1850 48 cold ......FAIL! rc= 7
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_53
+
+Changes answers relative to baseline: Only f19 due to new fsurdat file (off by roundoff)
+                                      and startup for f09 and f19 with CN change due
+                                      to new finidat files. 20th Century simulations 
+                                      with CN change because the ndep data set is different
+                                      from 1851-1924, and 2001-2004.
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_53
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date:  Tue Sep 22 16:15:39 MDT 2009

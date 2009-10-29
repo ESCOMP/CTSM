@@ -43,7 +43,6 @@ module RtmMod
 ! !REVISION HISTORY:
 ! Author: Sam Levis
 !
-!EOP
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
@@ -79,6 +78,7 @@ module RtmMod
   type(mct_sMat)     :: sMat0_l2r
   type(mct_sMat)     :: sMat0_l2r_d
 
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -117,9 +117,9 @@ contains
 ! Author: Sam Levis
 ! Update: T Craig, Dec 2006
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     real(r8), dimension(4) :: rtmedge = (/ 90._r8, 180._r8, -90._r8, -180._r8 /)  !N,E,S,W edges of rtm grid
     integer  :: ioff(0:8) = (/0,0,1,1,1,0,-1,-1,-1/) !rdirc input to i
     integer  :: joff(0:8) = (/0,1,1,0,-1,-1,-1,0,1/) !rdirc input to j
@@ -1147,9 +1147,9 @@ contains
     real(r8), pointer :: qflx_runoffg(:)      ! total runoff (mm H2O /s)
     real(r8), pointer :: qflx_snwcp_iceg(:)   ! excess snowfall due to snow capping (mm H2O /s)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer :: i,j,k,n,g,l,c,p,nt             ! indices
     integer :: io,jo,ir,jr,is,js              ! mapping indices
@@ -1249,9 +1249,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Sam Levis
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: i, j, n, ns, nt             !loop indices
     integer  :: ir,jr,nr                    !neighbor indices
     real(r8) :: dvolrdt                     !change in storage (m3/s)
@@ -1423,9 +1423,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     logical :: readvar          ! determine if variable is on initial file
     integer :: nt,nv,n          ! indices
     integer :: begg,endg        ! start end indices
@@ -1568,9 +1568,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: T Craig
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 
     runoff%runofflnd_nt1(:) = runoff%runofflnd(:,1)
     runoff%runofflnd_nt2(:) = runoff%runofflnd(:,2)

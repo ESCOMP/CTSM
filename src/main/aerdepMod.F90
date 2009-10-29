@@ -45,13 +45,13 @@ module aerdepMOD
 !   based on vegetation interpolation schemes in STATICEcosystemDynMod
 !    2009-Apr-17 B. Kauffman -- added multi-year time series functionality
 !
-!EOP
 !
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: readMonthlyAerdep       ! read monthly aerosol deposition data for two months
 
 !
-! PRIVATE TYPES:
+! !PRIVATE TYPES:
+!EOP
 
   real(r8), save, private, allocatable :: bcphiwet2t(:,:)
   real(r8), save, private, allocatable :: bcphidry2t(:,:)
@@ -103,9 +103,9 @@ contains
 ! !REVISION HISTORY:
 !    2009-Apr-17 B. Kauffman -- added multi-year time series functionality
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: ier         ! error code
     integer :: begg,endg   ! local beg and end p index
 
@@ -302,7 +302,6 @@ contains
 !    2009-Apr-17 B. Kauffman -- added multi-year time series functionality
 !  Adapted by Mark Flanner
 !
-!EOP
 !
 
 !
@@ -310,7 +309,8 @@ contains
 !
     real(r8), pointer :: forc_aer(:,:)   ! aerosol deposition rate (kg/m2/s)
 
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     real(r8):: timwt_aer(2)  ! time weights for month 1 and month 2 (aerosol deposition)
     integer :: kyr         ! year (0, ...) for nstep+1
     integer :: kmo         ! month (1, ..., 12)
@@ -531,14 +531,14 @@ contains
 ! !REVISION HISTORY:
 ! Adapted by Mark Flanner
 !
-!EOP
 !
 !
 ! local pointers to implicit out arguments
 !
 
 
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     character(len=256) :: locfn           ! local file name
     integer :: k,n                        ! indices
     integer :: ncid,dimid,varid           ! input netCDF id's

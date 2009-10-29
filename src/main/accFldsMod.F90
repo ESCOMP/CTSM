@@ -71,9 +71,9 @@ contains
 ! !REVISION HISTORY::
 ! Created by M. Vertenstein 03/2003
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
 !
     integer :: dtime                     !time step size
     integer, parameter :: not_used = bigint
@@ -233,9 +233,9 @@ contains
     real(r8), pointer :: agdd(:)             ! accumulated growing degree days above 5
 #endif
 !
-!EOP
 !
-! OTHER LOCAL VARIABLES:
+! !OTHER LOCAL VARIABLES:
+!EOP
     integer :: g,l,c,p                   ! indices
     integer :: itypveg                   ! vegetation type
     integer :: dtime                     ! timestep size [seconds]
@@ -580,9 +580,9 @@ contains
 !
 ! !LOCAL VARIABLES:
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     integer :: p            ! indices
     integer :: nstep        ! time step
     integer :: ier          ! error status

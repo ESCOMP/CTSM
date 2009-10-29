@@ -113,9 +113,9 @@ contains
     real(r8), pointer :: lai_ind(:)       ! LAI per individual
     real(r8), pointer :: crownarea(:)     ! area that each individual tree takes up (m^2)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: g,l,p,m                        ! indices
     integer  :: fn, filterg(ubg-lbg+1)         ! local gridcell filter for error check

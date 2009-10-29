@@ -25,11 +25,11 @@ module subgridMod
 ! !REVISION HISTORY:
 ! 2006.07.04 T Craig, rename initSubgridMod
 !
+!
+! !PRIVATE MEMBER FUNCTIONS: None
+!
+! !PRIVATE DATA MEMBERS: None
 !EOP
-!
-! !PRIVATE MEMBER FUNCTIONS:
-!
-! !LOCAL MODULE VARIABLES:
 !-----------------------------------------------------------------------
 
 contains
@@ -84,9 +84,9 @@ contains
 ! !REVISION HISTORY:
 ! 2002.09.11  Mariana Vertenstein  Creation.
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: m                ! loop index
     integer  :: ipfts            ! number of pfts in gridcell
     integer  :: icols            ! number of columns in gridcell

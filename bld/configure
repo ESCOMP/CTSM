@@ -61,6 +61,7 @@ OPTIONS
                          output files it generates (Makefile, Filepath, etc...)
      -clm_exe <name>     Name of the CLM executable (default: clm).
      -clm_exedir <dir>   Directory where CLM executable will be created (default: CLM build directory).
+     -clm_root <dir>     Root directory of clm source code (default: directory above location of this script)
      -cc <name>          User specified C compiler (linux or darwin only).  Overrides Makefile default.
      -cflags <string>    A string of user specified C compiler options.  Appended to
                          Makefile defaults.
@@ -148,6 +149,7 @@ my $commandline = "$cfgdir/configure @ARGV";
 my %opts = (
 	    cache       => "config_cache.xml",
             nofire      => undef,
+            clm_root    => undef,
 	    );
 GetOptions(
     "ad_spinup=s"               => \$opts{'ad_spinup'}, 
@@ -163,6 +165,7 @@ GetOptions(
     "clm_bld=s"                 => \$opts{'clm_bld'},
     "clm_exe=s"                 => \$opts{'clm_exe'},
     "clm_exedir=s"              => \$opts{'clm_exedir'},
+    "clm_root=s"                => \$opts{'clm_root'},
     "cppdefs=s"                 => \$opts{'cppdefs'},
     "comp_intf=s"               => \$opts{'comp_interface'},
     "debug"                     => \$opts{'debug'},
@@ -309,18 +312,23 @@ if ( $clm_mode eq "ext_ccsm_seq") {
 
 #-----------------------------------------------------------------------------------------------
 # CLM root directory.  
-my $clm_root = absolute_path("$cfgdir/..");
+my $clm_root;
 
-if (-d "$clm_root/src") {
+if ( ! defined($opts{'clm_root'} ) ) {
+  $clm_root = absolute_path("$cfgdir/..");
+} else {
+  $clm_root = $opts{'clm_root'};
+}
+
+if ( &is_valid_directory( "$clm_root/src", allowEnv=>1 ) ) {
     $cfg_ref->set('clm_root', $clm_root);
 } else {
     die <<"EOF";
 ** Invalid CLM root directory: $clm_root
 ** 
 ** The CLM root directory must contain the subdirectory /src/.
-** It is derived from config_dir/.. where config_dir is the
-** directory in the CLM distribution that contains the configuration
-** scripts.
+** clm_root can be entered on the command line or it will be derived
+** from the location of this script.
 EOF
 }
 
@@ -336,7 +344,7 @@ else { # use default value
     $clm_bld = absolute_path($cfg_ref->get('clm_bld'));
 }
 
-if (-d $clm_bld or mkdirp($clm_bld)) {
+if (&is_valid_directory( $clm_bld ) or mkdirp($clm_bld)) {
     # If the build directory exists or can be made then set the value...
     $cfg_ref->set('clm_bld', $clm_bld);
 }
@@ -360,7 +368,7 @@ else { # use default value
 
 if ($clm_build) {
 
-    if (-d $clm_exedir or mkdirp($clm_exedir)) {
+    if (&is_valid_directory( $clm_exedir ) or mkdirp($clm_exedir)) {
 	# If the install directory exists or can be made then set the value...
 	$cfg_ref->set('clm_exedir', $clm_exedir);
     } else {
@@ -379,8 +387,8 @@ if (defined $opts{'usr_src'}) {
     my @dirs = split ',', $opts{'usr_src'};
     my @adirs;
     while ( my $dir = shift @dirs ) {
-	if (-d "$dir") {
-	    push @adirs, absolute_path($dir);
+	if (&is_valid_directory( "$dir", allowEnv=>1 ) ) {
+	    push @adirs, $dir;
 	} else {
 	    die "** User source directory does not exist: $dir\n";
 	}
@@ -402,7 +410,7 @@ else {
     $config_cache_dir = $cfg_ref->get('clm_bld');
 }
 
-if (-d $config_cache_dir or mkdirp($config_cache_dir)) {
+if (&is_valid_directory( $config_cache_dir, allowEnv=>1 ) or mkdirp($config_cache_dir)) {
     $config_cache_file = "$config_cache_dir/$opts{'cache'}";
 } else {
     die <<"EOF";
@@ -499,6 +507,14 @@ if (defined $opts{'rtm'}) {
 }
 my $rtm = $cfg_ref->get('rtm');
 if ($print>=2) { print "Using $rtm for rtm.$eol"; }
+
+#-----------------------------------------------------------------------------------------------
+# comp_interface option
+if (defined $opts{'comp_interface'}) {
+    $cfg_ref->set('comp_interface', $opts{'comp_interface'});
+}
+my $comp_interface = $cfg_ref->get('comp_interface');
+if ($print>=2) { print "Using $comp_interface for comp_interface.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # DUST option
@@ -1037,7 +1053,7 @@ my $preproc_filename = 'preproc.h';            # name of output land model cpp t
 if ($clm_mode eq "ext_ccsm_seq" ) {
 
     # Write the filepath file for ccsm.
-    write_filepath_ccsmbld("$clm_bld/$fp_filename", "clm", $cfg_ref);
+    write_filepath_ccsmbld("$clm_bld/$fp_filename", "clm", $cfg_ref, allowEnv=>1 );
     if ($print>=2) { print "creating $clm_bld/$fp_filename\n"; }
 
     # Write the misc.h file 
@@ -1168,7 +1184,7 @@ unless ($clm_build and $opts{'test'}) {
 
 # create a subdirectory of the current directory for testing
 my $test_dir = "$clm_bld/configure-tests";
-unless (-d $test_dir or mkdirp($test_dir)) {
+unless ( &is_valid_directory( $test_dir, allowEnv=>1 ) or mkdirp($test_dir)) {
     die <<"EOF";
 ** Could not create the testing directory: $test_dir
 EOF
@@ -1343,7 +1359,7 @@ sub write_filepath
 
 sub write_filepath_ccsmbld
 {
-    my ($file, $model, $cfg_ref) = @_;
+    my ($file, $model, $cfg_ref, %opts) = @_;
     my  $fh = new IO::File;
 
     $fh->open(">$file") or die "** can't open filepath file: $file\n";
@@ -1361,7 +1377,7 @@ sub write_filepath_ccsmbld
 
     # Source root
     my $srcdir = "$clm_root/src";
-    if ( ! -d "$srcdir" ) { die "** source directory does not exist: $srcdir\n"; }
+    if ( ! &is_valid_directory( "$srcdir", %opts )  ) { die "** source directory does not exist: $srcdir\n"; }
 
     # Shared utilities.
     if ( $model eq "ccsm_lib" ) {
@@ -1380,9 +1396,9 @@ sub write_filepath_ccsmbld
        print $fh "../SourceMods/src.ccsm\n";
 
        foreach my $dir ( @dirs ) {
-	   if ( -d "$srcdir/$dir" ) {
+	   if ( &is_valid_directory( "$srcdir/$dir", %opts )  ) {
 	       print $fh "$srcdir/$dir\n";
-	   } elsif ( -d "$srcdir/../../../$dir" ) {
+	   } elsif ( &is_valid_directory( "$srcdir/../../../$dir", %opts )  ) {
 	       print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
 	   } else {
 	       die "** source directory does not exist: $srcdir/$dir or $srcdir/../../../$dir\n";
@@ -1397,18 +1413,20 @@ sub write_filepath_ccsmbld
            } elsif ( $comp_intf eq "ESMF" ) { 
 	       push( @dirs, "atm/datm7/cpl_esmf" );
            } else {
-	       die "** Bad component interface name -- should be MCT or ESMF\n";
+	       push( @dirs, "main/$comp_intf" );
            }
 	   foreach my $dir ( @dirs ) {
                # For stub components
                if ( $dir =~ /^...\/s...$/ ) {
                   if ( $comp_intf eq "MCT" ) { 
                      $dir .= "/cpl_mct";
-                  } else {
+                  } elsif ( $comp_intf eq "ESMF" ) { 
                      $dir .= "/cpl_esmf";
+                 } else {
+                     $dir .= "/$comp_intf";
                   }
                }
-	       if ( -d "$srcdir/../../../$dir" ) {
+	       if ( &is_valid_directory( "$srcdir/../../../$dir", %opts )  ) {
 		   print $fh absolute_path( "$srcdir/../../../$dir" ) . "\n";
 	       } else {
 		   die "** source directory does not exist: $srcdir/../../../$dir\n";
@@ -1423,9 +1441,17 @@ sub write_filepath_ccsmbld
     # CLM
     if ( $model eq "clm" ) {
 
-       print $fh "../SourceMods/src.clm\n";
+       # User specified source directories.
+       if ($usr_src  =~ /\S+/) {
+	   my @dirs = split ',', $usr_src;
+	   while ( my $dir = shift @dirs ) {
+	       print $fh "$dir\n";
+           }
+       } else {
+          print $fh "../SourceMods/src.clm\n";
+       }
 
-       my @dirs = ( "main", "main/cpl_mct", "biogeophys", "biogeochem" );
+       my @dirs = ( "main", "biogeophys", "biogeochem" );
        if ( $rtm eq "on" ) { 
 	   push( @dirs, "riverroute" );
        }
@@ -1434,19 +1460,19 @@ sub write_filepath_ccsmbld
        } elsif ( $comp_intf eq "ESMF" ) { 
 	   push( @dirs, "main/cpl_esmf" );
        } else {
-	   die "** Bad component interface name -- should be MCT or ESMF\n";
+	   push( @dirs, "main/$comp_intf" );
        }
        foreach my $dir ( @dirs ) {
-	   if ( -d "$srcdir/$dir" ) {
+	   if ( &is_valid_directory( "$srcdir/$dir", %opts )  ) {
 	       print $fh "$srcdir/$dir\n";
 	   } else {
 	       die "** source directory does not exist: $srcdir/$dir\n";
 	   }
        }
        if ( ! $spmd ) {
-	   print $fh absolute_path( "$srcdir/../../../utils/mct/mpi-serial" ) . "\n";
+	   print $fh "$srcdir/../../../utils/mct/mpi-serial\n";
        }
-       print $fh "$clm_bld/include\n";
+       #print $fh "$clm_bld/include\n";
     }
 
     # CCSM driver
@@ -1853,6 +1879,7 @@ sub subst_env_path {
 #
   my $path = shift;
   my $newpath;         # resulting pathname
+  my $nm = "subst_env_path";
 
 # Strip off any leading or trailing whitespace.  (This pattern won't match if
 # there's embedded whitespace.
@@ -1863,8 +1890,15 @@ sub subst_env_path {
                                      # This enables correct processing of the input "/".
 
   foreach $dir (@dirs) {
-    if ( $dir =~ /^\$(.+)$/ ) {
-        push @dirs2, $ENV{$1};
+    if ( $dir =~ m/(^[^\$]*)\$(.*$)/ ) {
+        my $startvar = $1;
+        my $envvarnm = $2;
+        if ( ! defined($ENV{$envvarnm}) ) {
+           die "${nm}:: ENV variable $envvarnm is in pathname ($path) -- but NOT defined\n";
+        }
+        push @dirs2, "$startvar$ENV{$envvarnm}";
+    } elsif ( $dir =~ m/\$/) {
+        die "${nm}:: malformed ENV variable is in pathname ($path)\n";
     } else {
         push @dirs2, $dir;
     }
@@ -2246,6 +2280,25 @@ sub version {
 
 }
 
+#-------------------------------------------------------------------------------
+
+sub is_valid_directory {
+#
+# Validate that the input is a valid existing directory.
+# If allowEnv=>1 expand environment variables.
+#
+  my ($dir, %opts) = @_;
+  my $nm = "is_valid_directory";
+
+  my $valid = 0;
+  # Expand environment variables
+  if ( $opts{'allowEnv'} ) {
+     $dir = subst_env_path( $dir );
+  }
+  if ( -d $dir ) { $valid = 1; }
+  return( $valid );
+  
+}
 
 #-------------------------------------------------------------------------------
 

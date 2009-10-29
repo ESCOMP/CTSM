@@ -221,9 +221,9 @@ contains
     real(r8), pointer :: lai_ind(:)          ! LAI per individual
     real(r8), pointer :: fpc_inc(:)          ! foliar projective cover increment (fraction)
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !
     integer , parameter :: nseg = 20
     real(r8), parameter :: xacc = 0.1_r8         ! threshold x-axis and threshold

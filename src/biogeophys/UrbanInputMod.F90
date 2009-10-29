@@ -97,9 +97,9 @@ contains
 ! Created by Mariana Vertenstein July 2004
 ! Revised by Keith Oleson for netcdf input Jan 2008
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character(len=256) :: locfn      ! local file name
     character(len=32)  :: desc
     integer :: ncid,dimid,varid      ! netCDF id's

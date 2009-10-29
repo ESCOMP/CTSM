@@ -37,9 +37,9 @@ subroutine do_disp (ntapes, hist_ntimes, hist_mfilt, if_stop, if_disphist, rstwr
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer :: t                   ! history tape index
   logical :: rest_now            ! temporary
   logical :: stop_now            ! temporary

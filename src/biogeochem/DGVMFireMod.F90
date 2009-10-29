@@ -81,9 +81,9 @@ contains
     real(r8), pointer :: litter_ag(:)       ! above ground litter
     real(r8), pointer :: nind(:)            ! number of individuals (#/m**2)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     real(r8), parameter :: minfuel = 200.0_r8  ! fuel threshold to carry a fire (gC/m2)
     integer  :: p                           ! index
     real(r8) :: fire_index

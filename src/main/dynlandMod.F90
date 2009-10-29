@@ -68,9 +68,8 @@ contains
    real(r8), intent(out) :: gcell_ice  (begg:endg)
    real(r8), intent(out) :: gcell_heat (begg:endg)
  
-!EOP
- 
 ! !LOCAL VARIABLES:
+!EOP
 
    integer  :: li,lf         ! loop initial/final indicies
    integer  :: ci,cf         ! loop initial/final indicies

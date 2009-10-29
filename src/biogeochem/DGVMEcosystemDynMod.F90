@@ -69,9 +69,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Sam Levis (adapted from LPJ initialization subroutines)
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: p,n                  ! indices
     integer  :: begp, endp           ! per-proc beginning and ending pft indices
     integer  :: begc, endc           ! per-proc beginning and ending column indices
@@ -502,9 +502,9 @@ contains
     real(r8), pointer :: esai(:)     ! one-sided stem area index with burying by snow
     integer , pointer :: frac_veg_nosno_alb(:) ! frac of vegetation not covered by snow [-]
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: fp,p,c  ! indices
     real(r8) :: ol      ! thickness of canopy layer covered by snow (m)
@@ -690,9 +690,9 @@ contains
     real(r8), pointer :: fco2(:)       ! net CO2 flux (umol CO2 /m**2 /s) [+ = to atm]
     real(r8), pointer :: tsoi25(:)     ! soil temperature to 0.25 m (Kelvin)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     real(r8), parameter :: k = 0.0548_r8 / SHR_CONST_CDAY ! from [/day] to [/second]
     integer  :: fp,p,fc,c,j   ! indices
@@ -901,9 +901,9 @@ contains
 !
     real(r8), pointer :: dphen(:)       ! phenology [0 to 1]
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     real(r8), parameter :: ddfacu = 1.0_r8 / 15.0_r8 ! 'drop day factor'
     real(r8), parameter :: ddfacl = 1.0_r8 /  5.0_r8 ! logy to switch in 15 or 5 days
     integer  :: fp,p                           ! indices
@@ -1058,9 +1058,9 @@ contains
 !
     real(r8), pointer :: firelength(:)   ! fire season in days
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     integer  :: fp, p, c   ! indices
     real(r8) :: dtime      ! land model time step (sec)
     real(r8) :: fire_prob  ! fire probability (tsteps)
@@ -1162,9 +1162,9 @@ contains
 !
     real(r8), pointer :: fmicr(:)            ! microbial respiration (umol CO2 /m**2 /s)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer , parameter :: soil_equil_year = 400     ! number of years until pool sizes for soil decomposition solved analytically
     real(r8), parameter :: k_litter10 = 0.5_r8          ! litter decomp. rate at 10 deg C (/year)

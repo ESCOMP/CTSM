@@ -68,9 +68,9 @@ contains
 !   default code behavior.
 ! 6/12/2005, Moved to netcdf format and renamed file
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !
 ! local pointers to implicit in arguments
 !

@@ -185,9 +185,9 @@ contains
     real(r8) ,pointer :: soilbeta(:)      !factor that reduces ground evaporation
     real(r8) ,pointer :: soilalpha_u(:)   !Urban factor that reduces ground saturated specific humidity (-)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: g,l,c,p !indices
     integer  :: j       !soil/snow level index

@@ -53,8 +53,8 @@ $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01
 <!-- ================================================================== -->
 
 <cpl_io_stride   >4</cpl_io_stride>
-<cpl_num_iotasks >-1</cpl_num_iotasks>
-<cpl_iotype_name >netcdf</cpl_iotype_name>
+<cpl_io_numtasks >-1</cpl_io_numtasks>
+<cpl_io_typename >netcdf</cpl_io_typename>
 <cpl_io_root     >1</cpl_io_root>
 
 

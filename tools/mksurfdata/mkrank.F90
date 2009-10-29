@@ -28,9 +28,9 @@ subroutine mkrank (n, a, miss, iv, num)
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   real(r8) a_max       !maximum value in array
   integer i            !array index
   real(r8) delmax      !tolerance for finding if larger value

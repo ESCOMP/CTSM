@@ -35,7 +35,6 @@ subroutine CNiniTimeVar()
 ! !REVISION HISTORY:
 ! 10/21/03: Created by Peter Thornton
 !
-!EOP
 !
 ! local pointers to implicit in arguments
 !
@@ -269,6 +268,7 @@ subroutine CNiniTimeVar()
    integer :: begc, endc   ! per-clump/proc beginning and ending column indices
    integer :: begl, endl   ! per-clump/proc beginning and ending landunit indices
    integer :: begg, endg   ! per-clump/proc gridcell ending gridcell indices
+!EOP
 !-----------------------------------------------------------------------
 
     ! assign local pointers at the gridcell level

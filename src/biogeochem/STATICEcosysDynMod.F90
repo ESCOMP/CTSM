@@ -32,18 +32,18 @@ module STATICEcosysdynMOD
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: readMonthlyVegetation   ! read monthly vegetation data for two months
 !
-! PRIVATE TYPES:
+! !PRIVATE TYPES:
   integer , private :: InterpMonths1         ! saved month index
   real(r8), private :: timwt(2)              ! time weights for month 1 and month 2
   real(r8), private, allocatable :: mlai2t(:,:) ! lai for interpolation (2 months)
   real(r8), private, allocatable :: msai2t(:,:) ! sai for interpolation (2 months)
   real(r8), private, allocatable :: mhvt2t(:,:) ! top vegetation height for interpolation (2 months)
   real(r8), private, allocatable :: mhvb2t(:,:) ! bottom vegetation height for interpolation(2 months)
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -68,9 +68,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: ier    ! error code
     integer :: begp,endp  ! local beg and end p index
 !-----------------------------------------------------------------------
@@ -147,9 +147,9 @@ contains
     real(r8), pointer :: esai(:)     ! one-sided stem area index with burying by snow
     integer , pointer :: frac_veg_nosno_alb(:) ! frac of vegetation not covered by snow [-]
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: fp,p,c   ! indices
     real(r8) :: ol       ! thickness of canopy layer covered by snow (m)
@@ -267,9 +267,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: kyr         ! year (0, ...) for nstep+1
     integer :: kmo         ! month (1, ..., 12)
     integer :: kda         ! day of month (1, ..., 31)
@@ -341,9 +341,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Sam Levis
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     character(len=256) :: locfn           ! local file name
     integer :: g,n,k,l,m,p,ivt            ! indices
     integer :: ncid,dimid,varid           ! input netCDF id's

@@ -137,9 +137,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by T Craig for downscaling diagnostics, 4/2007
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !
   integer :: beg,end
 !------------------------------------------------------------------------
@@ -178,9 +178,9 @@ end subroutine init_adiag_type
 ! Created by Mariana Vertenstein
 ! Modified by T Craig, 11/01/05 for finemesh project
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   real(r8) :: ival   ! initial value
   integer  :: beg_atm, end_atm
 !------------------------------------------------------------------------
@@ -274,9 +274,9 @@ end subroutine init_atm2lnd_type
 ! Created by Mariana Vertenstein
 ! Modified by T Craig, 11/01/05 for finemesh project
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   real(r8) :: ival   ! initial value
 !------------------------------------------------------------------------
 
@@ -356,9 +356,9 @@ end subroutine init_lnd2atm_type
 ! 2005.11.15  T Craig  Creation.
 ! 2006.3.30   P Worley Restructuring for improved vector performance
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer :: n                     ! loop counter
   integer :: ix                    ! field index
   integer :: nflds                 ! number of fields to be mapped
@@ -842,9 +842,9 @@ end subroutine clm_mapa2l
 ! 2005.11.15  T Craig  Creation.
 ! 2006.3.30   P Worley Restructuring for improved vector performance
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer :: n                     ! loop counter
   integer :: ix                    ! field index
   integer :: nflds                 ! number of fields to be mapped
@@ -994,7 +994,6 @@ end subroutine clm_mapl2a
 ! !REVISION HISTORY:
 ! Mariana Vertenstein: created 03/10-25
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
   integer :: begp, endp      ! per-proc beginning and ending pft indices
@@ -1008,9 +1007,9 @@ end subroutine clm_mapl2a
 ! 03-04-27 : Created by Mariana Vertenstein
 ! 03-08-25 : Updated to vector data structure (Mariana Vertenstein)
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer :: g                          ! indices
   type(gridcell_type), pointer :: gptr  ! pointer to gridcell derived subtype
   type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype

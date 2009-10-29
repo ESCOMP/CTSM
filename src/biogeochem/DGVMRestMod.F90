@@ -60,9 +60,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: c,p          ! indices
     integer :: begp, endp   ! per-proc beginning and ending pft indices
     integer :: begc, endc   ! per-proc beginning and ending column indices

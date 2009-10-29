@@ -85,9 +85,9 @@ contains
 !
     real(r8), pointer :: turnover_ind(:)    !
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: p, fp
     real(r8) :: l_torate
     real(r8) :: s_torate

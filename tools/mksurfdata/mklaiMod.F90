@@ -69,9 +69,9 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer  :: nlon_i                          ! input grid : lon points
   integer  :: nlat_i                          ! input grid : lat points
 
@@ -422,8 +422,16 @@ subroutine mklai(lsmlon, lsmlat, fname, firrig, fdynuse, ndiag, ncido, &
 
 end subroutine mklai
 
+!-----------------------------------------------------------------------
+!BOP
+!
+! !INTERFACE:
 subroutine pft_laicheck( ni, nj, pctpft_i, laimask )
+! !USES:
   use mkvarpar	  , only : numpft
+!
+! !DESCRIPTION:
+!
 ! consistency check that PFT and LAI+SAI make sense
 !
 ! !ARGUMENTS:
@@ -431,9 +439,11 @@ subroutine pft_laicheck( ni, nj, pctpft_i, laimask )
   integer ,           intent(in) :: ni, nj                  ! input PFT grid resolution
   real(r8),           intent(in) :: pctpft_i(ni,nj,0:numpft)! % plant function types
   integer,            intent(in) :: laimask(ni,nj,0:numpft) ! mask where LAI+SAI > 0
+!EOP
 
   character(len=*), parameter :: subName="pft_laicheck"
   integer :: ii, ji, l, n, nc      ! Indices
+!-----------------------------------------------------------------------
 
   do l  = 0, numpft
      n  = 0

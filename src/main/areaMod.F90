@@ -71,9 +71,9 @@ module areaMod
 ! Updated to clm2.1 data structures by Mariana Vertenstein
 ! 2005.11.01 Updated and cleaned by T Craig
 !
-!EOP
 !
-! PRIVATE MEMBER FUNCTIONS:
+! !PRIVATE MEMBER FUNCTIONS:
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -103,9 +103,9 @@ contains
 ! !REVISION HISTORY:
 ! 2006.06.28  T Craig  Creation.
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer ier    ! error flag
 !------------------------------------------------------------------------------
 
@@ -168,10 +168,10 @@ end subroutine map_init
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
+!
+! !LOCAL VARIABLES:
+!
 !EOP
-!
-! LOCAL VARIABLES:
-!
 !------------------------------------------------------------------------------
     if (present(name)) then
       name = map%name
@@ -235,9 +235,9 @@ end subroutine map_setptrs
 ! 2005.11.15  T Craig  Creation.
 ! 2006.3.30   P Worley Restructuring for improved vector performance
 !
-!EOP
 
 ! !LOCAL VARIABLES:
+!EOP
   integer :: g_o ,g_i              ! gridcell indices
   integer :: n,ifld                ! loop counters
   real(r8):: wtx                   ! wt for map
@@ -304,9 +304,9 @@ end subroutine map_maparrayl
 ! 2005.11.15  T Craig  Creation.
 ! 2006.3.30   P Worley Restructuring for improved vector performance
 !
-!EOP
 
 ! !LOCAL VARIABLES:
+!EOP
   integer :: g_o ,g_i              ! gridcell indices
   integer :: n,ifld,nflds          ! loop counters
   real(r8):: wtx                   ! wt for map
@@ -364,9 +364,9 @@ end subroutine map_maparrayg
 ! 2006.06.28  T Craig  Creation.
 ! 2006.08.23  P Worley Performance optimizations
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer          :: nlon_a       !input  grid: max number of longitude pts
     integer          :: nlat_a       !input  grid: number of latitude  points
     integer          :: ns_a         !input  grid: total number of cells
@@ -674,9 +674,9 @@ end subroutine map_setgatm
 ! !REVISION HISTORY:
 ! 2005.12.01  T Craig  Creation.
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer           :: ns_a
     integer           :: ns_l
     integer           :: na,nag
@@ -983,9 +983,9 @@ end subroutine map_setmapsFM
 ! Created by Gordon Bonan
 ! 2005.11.20 Updated by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer          :: nlon_i       !input  grid: max number of longitude pts
     integer          :: nlat_i       !input  grid: number of latitude  points
     real(r8),pointer :: dx_i(:)      !input grid: dx length
@@ -1322,9 +1322,9 @@ end subroutine map_setmapsFM
 ! !REVISION HISTORY:
 ! 2005.12.01  T Craig  Creation.
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer          :: nlon_i       !input  grid: max number of longitude pts
     integer          :: nlat_i       !input  grid: number of latitude  points
     integer          :: nlon_o       !output grid: max number of longitude pts
@@ -1468,9 +1468,9 @@ end subroutine map_checkmap
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: nbeg
     integer  :: nend
     integer  :: ni
@@ -1540,9 +1540,9 @@ end subroutine map_checkmap
 ! Created by Mariana Vertenstein
 ! 2005.11.20 Updated to latlon datatype by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: nlon              
     integer  :: nlat              
     real(r8),pointer :: lonc(:) 
@@ -1629,9 +1629,9 @@ end subroutine map_checkmap
 ! Created by Mariana Vertenstein
 ! 2005.11.20 Updated to latlon datatype by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: nlon              
     integer  :: nlat              
     real(r8),pointer :: lonc(:) 

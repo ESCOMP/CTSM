@@ -86,11 +86,11 @@ contains
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
     integer ier
 !
+!EOP
 !------------------------------------------------------------------------------
     if ( domain_IsSet(domain) )then
         return
@@ -158,11 +158,11 @@ end subroutine domain_init
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
     integer ier
 !
+!EOP
 !------------------------------------------------------------------------------
     if ( domain_IsSet(domain) )then
        write(6,*) 'domain_clean: cleaning ',domain%ni,domain%nj
@@ -224,10 +224,10 @@ end subroutine domain_clean
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
+!
+! !LOCAL VARIABLES:
+!
 !EOP
-!
-! LOCAL VARIABLES:
-!
 !------------------------------------------------------------------------------
     if (present(ni)) then
       ni = domain%ni
@@ -293,11 +293,11 @@ end subroutine domain_setptrs
 ! !REVISION HISTORY:
 !   Created by E. Kluzek
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
     integer :: i, j   ! indices
 !
+!EOP
 !------------------------------------------------------------------------------
     if ( index(domain%domain_set,domain_set) == 1 ) then
         domain_isSet = .true.
@@ -337,10 +337,10 @@ end function domain_isSet
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
+!
+! !LOCAL VARIABLES:
+!
 !EOP
-!
-! LOCAL VARIABLES:
-!
 !------------------------------------------------------------------------------
 
     write(6,*) ' '

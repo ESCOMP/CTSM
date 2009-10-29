@@ -64,9 +64,9 @@ contains
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 !  1 July 2003: Mariana Vertenstein; modified for vectorization
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: j,ci,fc                   !indices
     real(r8) :: gam(lbc:ubc,lbj:ubj)      !temporary

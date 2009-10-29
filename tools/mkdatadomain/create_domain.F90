@@ -18,10 +18,10 @@
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer  :: ni,nj                         ! grid resolution
   integer  :: nv=4                          ! number of verticies
   integer  :: ni_grid,nj_grid               ! grid resolution

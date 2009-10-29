@@ -139,9 +139,8 @@ module controlMod
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! PRIVATE TYPES:
+! !PRIVATE TYPES:
 ! Namelist variables only used locally
   character(len=  7) :: runtyp(4)                        ! run type
   character(len=SHR_KIND_CL) :: NLFilename = 'lnd.stdin' ! Namelist filename
@@ -149,6 +148,7 @@ module controlMod
    integer, external :: omp_get_max_threads  ! max number of threads that can execute
                                              ! concurrently in a single parallel region
 #endif
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -173,9 +173,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Erik Kluzek
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character(len=32) :: subname = 'control_setNL'  ! subroutine name
     logical :: lexist                               ! File exists
 
@@ -221,9 +221,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character(len=32)  :: starttype ! infodata start type
     integer :: i,j,n                ! loop indices
     integer :: ierr                 ! error code
@@ -415,9 +415,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer ier       !error code
 !-----------------------------------------------------------------------
 
@@ -548,9 +548,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer i  !loop index
 !------------------------------------------------------------------------
 

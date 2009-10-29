@@ -36,9 +36,9 @@ module initGridCellsMod
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! !LOCAL MODULE VARIABLES:
+! !PRIVATE DATA MEMBERS: None
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -70,9 +70,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Peter Thornton and Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: li,ci,pi,m,na,gdc,gsn,glo    ! indices
     integer :: nveg           ! number of pfts in naturally vegetated landunit
     real(r8):: wtveg          ! weight (gridcell) of naturally veg landunit
@@ -229,7 +229,6 @@ contains
 ! !REVISION HISTORY:
 ! 2005.11.15  T Craig Creation
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
     integer :: begg,endg,begl,endl,begc,endc,begp,endp ! beg/end glcp
@@ -239,6 +238,7 @@ contains
     type(landunit_type), pointer  :: lptr ! pointer to landunit derived subtype
     type(column_type)  , pointer  :: cptr ! pointer to column derived subtype
     type(pft_type)     , pointer  :: pptr ! pointer to pft derived subtype
+!EOP
 !------------------------------------------------------------------------------
 
     gptr => clm3%g
@@ -361,7 +361,6 @@ contains
 ! !REVISION HISTORY:
 ! 2005.11.15  T Craig Creation
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
     type(gridcell_type), pointer  :: gptr ! pointer to gridcell derived subtype
@@ -371,6 +370,7 @@ contains
     integer :: begg,endg,begl,endl,begc,endc,begp,endp   ! beg/end indices
     integer :: g,l,c,p       ! loop counters
     logical :: error         ! error flag
+!EOP
 !------------------------------------------------------------------------------
 
     gptr => clm3%g
@@ -545,9 +545,9 @@ end subroutine clm_ptrs_check
 ! Created by Sam Levis
 ! 2005.11.25 Updated by T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: m                                ! m index in wtxy(nw,m)
     integer  :: n                                ! loop index
     integer  :: npfts                            ! number of pfts in landunit
@@ -679,9 +679,9 @@ end subroutine clm_ptrs_check
 ! Created by Sam Levis
 ! 2005.11.25 Updated by T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: m                                ! m index in wtxy(nw,m)
     integer  :: c                                ! column loop index
     integer  :: ctype                            ! column type
@@ -820,9 +820,9 @@ end subroutine clm_ptrs_check
 ! Created by Sam Levis
 ! 2005.11.25 Updated by T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: m                                ! m index in wtxy(nw,m)
     integer  :: npfts                            ! number of pfts in landunit
     integer  :: ncols                            ! number of columns in landu
@@ -933,9 +933,9 @@ end subroutine clm_ptrs_check
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: c             ! column loop index
     integer  :: m             ! m index in wtxy(nw,m)
     integer  :: ctype         ! column type

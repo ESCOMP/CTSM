@@ -108,9 +108,8 @@ module histFileMod
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! PRIVATE MEMBER FUNCTIONS:
+! !PRIVATE MEMBER FUNCTIONS:
   private :: masterlist_make_active    ! Add a field to a history file default "on" list
   private :: masterlist_addfld         ! Add a field to the master field list
   private :: masterlist_change_timeavg ! Override default history tape contents for specific tape
@@ -131,7 +130,7 @@ module histFileMod
   private :: getflag                   ! Retrieve flag
   private :: pointer_index             ! Track data pointer indices
 
-! PRIVATE TYPES:
+! !PRIVATE TYPES:
 ! Constants
 !
   integer, parameter :: max_chars = 128        ! max chars for char variables
@@ -205,6 +204,7 @@ module histFileMod
   type clmpoint_ra
      real(r8), pointer :: ptr(:,:)
   end type clmpoint_ra
+!EOP
 !
 ! Pointers into clmtype arrays
 !
@@ -269,9 +269,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 03/2003
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer nf
     character(len=*),parameter :: subname = 'hist_printflds'
 !-----------------------------------------------------------------------
@@ -322,9 +322,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: n            ! loop index
     integer :: f            ! masterlist index
     integer :: begp, endp   ! per-proc beginning and ending pft indices
@@ -468,9 +468,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: i                   ! index
     integer :: ier                 ! error code
     integer :: t, f                ! tape, field indices
@@ -565,9 +565,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: f            ! field index
     logical :: found        ! flag indicates field found in masterlist
     character(len=*),parameter :: subname = 'masterlist_make_active'
@@ -632,9 +632,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: f                     ! field index
     character(len=1) :: avgflag      ! lcl equiv of hist_avgflag_pertape(t)
     character(len=*),parameter :: subname = 'masterlist_change_timeavg'
@@ -683,9 +683,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: t, f                ! tape, field indices
     integer :: ff                  ! index into include, exclude and fprec list
     character(len=max_namlen) :: name       ! field name portion of fincl (i.e. no avgflag separator)
@@ -897,9 +897,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: n                    ! field index on defined tape
     character(len=8) :: type1d      ! clm pointer 1d type
     character(len=8) :: type1d_out  ! history buffer 1d type
@@ -1073,9 +1073,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: t                   ! tape index
     integer :: f                   ! field index
     integer :: begp, endp          ! per-proc beginning and ending pft indices
@@ -1131,9 +1131,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: hpindex                 ! history pointer index
     integer  :: k                       ! gridcell, landunit, column or pft index
     integer  :: beg1d,end1d             ! beginning and ending indices
@@ -1366,9 +1366,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: hpindex                 ! history pointer index
     integer  :: k                       ! gridcell, landunit, column or pft index
     integer  :: j                       ! level index
@@ -1612,9 +1612,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: f                   ! field index
     integer :: k                   ! 1d index
     integer :: j                   ! 2d index
@@ -1676,9 +1676,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: f                 ! field index
     character(len=*),parameter :: subname = 'hfields_zero'
 !-----------------------------------------------------------------------
@@ -1720,9 +1720,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: f                   ! field index
     integer :: p,c,l,n             ! indices
     integer :: ier                 ! error code
@@ -1883,9 +1883,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: c,l,lev,ifld               ! indices
     integer :: ier                        ! error status
     integer :: begp, endp   ! per-proc beginning and ending pft indices
@@ -2038,9 +2038,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: vid,n,i,j                  ! indices
     integer :: nstep                      ! current step
     integer :: mcsec                      ! seconds of current date
@@ -2336,9 +2336,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: f                         ! field index
     integer :: k                         ! 1d index
     integer :: c,l,p                     ! indices
@@ -2505,9 +2505,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: f                         ! field index
     integer :: k                         ! 1d index
     integer :: g,c,l,p                   ! indices
@@ -2803,9 +2803,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: t                          ! tape index
     integer :: f                          ! field index
     integer :: ier                        ! error code
@@ -3008,9 +3008,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     character(len=256) :: fnameh(max_tapes)      ! full name of history file
     character(len=256) :: filename               ! generic filename
     character(len=  8) :: type1d                 ! clm pointer 1d type
@@ -3439,9 +3439,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Jim Rosinski
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
      integer :: length
      integer :: i
      character(len=*),parameter :: subname = 'getname'
@@ -3481,9 +3481,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Jim Rosinski
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
      integer :: length         ! length of inname
      integer :: i              ! loop index
      character(len=*),parameter :: subname = 'getflag'
@@ -3527,9 +3527,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Jim Rosinski
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
      character(len=max_namlen) :: listname           ! input name with ":" stripped off.
      integer f                                       ! field index
      character(len=*),parameter :: subname = 'list_index'
@@ -3572,9 +3572,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
    character(len=256) :: cdate       !date char string
    character(len=  1) :: hist_index  !p,1 or 2 (currently)
    integer :: day                    !day (1 -> 31)
@@ -3649,9 +3649,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: p,c,l,g                 ! indices
     integer :: begp, endp              ! per-proc beginning and ending pft indices
     integer :: begc, endc              ! per-proc beginning and ending column indices
@@ -3867,9 +3867,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer :: p,c,l,g                 ! indices
     integer :: num2d                   ! size of second dimension (e.g. number of vertical levels)
     integer :: begp, endp              ! per-proc beginning and ending pft indices
@@ -4102,9 +4102,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     character(len=*),parameter :: subname = 'hist_add_subscript'
 !-----------------------------------------------------------------------
 

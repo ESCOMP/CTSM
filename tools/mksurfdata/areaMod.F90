@@ -74,9 +74,8 @@ module areaMod
 ! Updated to clm2.1 data structures by Mariana Vertenstein
 ! 2005.11.01 Updated and cleaned by T Craig
 !
-!EOP
 !
-! PRIVATE MEMBER FUNCTIONS:
+! !PRIVATE MEMBER FUNCTIONS:
   private :: gridmap_init
   private :: gridmap_init_pft   ! Initialize plant function type weigts
   private :: areaave_internal   ! area averaging of field from input to output grids
@@ -84,6 +83,7 @@ module areaMod
   private :: areaovr            ! area of overlap between grid cells
   real(r8):: re = SHR_CONST_REARTH*0.001  ! radius of earth (km)
   logical :: masterproc=.true.
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -113,12 +113,12 @@ contains
 ! !REVISION HISTORY:
 ! 2005.11.15  T Craig  Creation.
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
   character(len=*), parameter :: subName = "gridmap_init"
   integer ni,nj  ! size of domain_o
   integer ier    ! error flag
+!EOP
 !------------------------------------------------------------------------------
 
   gridmap%domain_i => domain_i
@@ -174,7 +174,6 @@ end subroutine gridmap_init
 ! !REVISION HISTORY:
 ! 2007.01.29  E Kluzek  Creation.
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
   character(len=*), parameter :: subName = "gridmap_init_pft"
@@ -182,6 +181,8 @@ end subroutine gridmap_init
   integer :: mwts             ! maximum number of overlap areas in output cell
   integer :: ier              ! error status
   logical, save :: first_time = .true.
+!EOP
+!------------------------------------------------------------------------------
 
   if ( first_time )then
      allocate( gridmap%scale_pft_i(ni,nj), stat=ier )
@@ -219,11 +220,11 @@ end subroutine gridmap_init_pft
 ! !REVISION HISTORY:
 ! 2005.11.15  T Craig  Creation.
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
   character(len=*), parameter :: subName = "gridmap_clean"
   integer ier    ! error flag
+!EOP
 !------------------------------------------------------------------------------
 
   nullify(gridmap%domain_i)
@@ -288,11 +289,11 @@ end subroutine gridmap_clean
 ! !REVISION HISTORY:
 !   Created by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
     character(len=*), parameter :: subName = "gridmap_setptrs"
 !
+!EOP
 !------------------------------------------------------------------------------
     if (present(name)) then
       name = gridmap%name
@@ -353,9 +354,9 @@ end subroutine gridmap_setptrs
 ! !REVISION HISTORY:
 ! 2005.12.01  T Craig  Creation.
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer          :: nlon_i       !input  grid: max number of longitude pts
     integer          :: nlat_i       !input  grid: number of latitude  points
     integer          :: nlon_o       !output grid: max number of longitude pts
@@ -512,9 +513,9 @@ end subroutine gridmap_checkmap
 ! Created by Gordon Bonan
 ! 2005.11.20 Updated by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer          :: nlon_i       !input  grid: max number of longitude pts
     integer          :: nlat_i       !input  grid: number of latitude  points
     real(r8),pointer :: area_i(:,:)  !input grid: cell area
@@ -679,9 +680,9 @@ end subroutine gridmap_checkmap
 ! !REVISION HISTORY:
 ! 2007.01.29 Created by Erik Kluek
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     character(len=*), parameter :: subName = "areaini_pft"
     integer  :: nlon_o                   !output  grid: max number of longitude pts
     integer  :: nlat_o                   !output  grid: number of latitude  points
@@ -790,9 +791,9 @@ end subroutine gridmap_checkmap
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: nlat_i    !input grid : number of latitude points
     integer  :: nlon_i    !input grid : max number longitude points
     integer  :: nlat_o    !output grid: number of latitude points
@@ -873,9 +874,9 @@ end subroutine gridmap_checkmap
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
 !------------------------------------------------------------------------
 !dir$ inlinenever areaave
 
@@ -907,10 +908,10 @@ end subroutine gridmap_checkmap
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
     real(r8),pointer :: scale_pft_i(:,:)  !PFT %
+!EOP
 !------------------------------------------------------------------------
 !dir$ inlinenever areaave_pft
 
@@ -963,9 +964,9 @@ end subroutine gridmap_checkmap
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer          :: mx_ovr      ! max num input cells that overlap 
     integer ,pointer :: n_ovr(:,:)  ! number of overlapping input cells
     integer ,pointer :: i_ovr(:,:,:)! lon index, overlapping input cell
@@ -1214,9 +1215,9 @@ end subroutine gridmap_checkmap
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer           :: nlon_i       !input grid : max lon points
     integer           :: nlat_i       !input grid : lat points
     real(r8), pointer :: lone_i(:,:)  !input grid : cell E edge lon (deg)
@@ -1409,9 +1410,9 @@ end subroutine gridmap_checkmap
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: nlat           
     integer  :: nlon           
     real(r8), pointer :: lats(:,:)
@@ -1477,9 +1478,9 @@ end subroutine gridmap_checkmap
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: nlat           
     integer  :: nlon           
     real(r8), pointer :: lats(:,:)
@@ -1561,9 +1562,9 @@ end subroutine gridmap_checkmap
 ! Created by Mariana Vertenstein
 ! 2005.11.20 Updated to domain datatype by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: nlon              
     integer  :: nlat              
     real(r8),pointer :: longxy(:,:) 
@@ -1650,9 +1651,9 @@ end subroutine gridmap_checkmap
 ! Created by Mariana Vertenstein
 ! 2005.11.20 Updated to domain datatype by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: nlon              
     integer  :: nlat              
     real(r8),pointer :: longxy(:,:) 
@@ -1726,9 +1727,9 @@ end subroutine gridmap_checkmap
 ! !REVISION HISTORY:
 ! 2005.11.20 Updated to domain datatype by T Craig
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
     integer  :: nlon              
     integer  :: nlat              
     real(r8),pointer :: longxy(:,:) 

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_54         erik 10/28/2009 Allow comp_intf to change on ccsm build, reduce default hist fields, start adding 2.5x3.33, start adding VOC fsurdat datasets, new finidat files for f09 and f19
    clm3_6_53         erik 09/22/2009 Fix so that T31_gx3v7 file is actually included
    clm3_6_52         erik 09/17/2009 Add T31_gx3v7 support, remove forganic, read from fsurdat, add script to extract regional datasets, work with CN output, add more urban/rural fields
    clm3_6_51         erik 09/01/2009 Update fndepdyn and aerdep datasets (f02,f05,f09,f10) (1850,2000) and f09, f10 transient (1850-2000)

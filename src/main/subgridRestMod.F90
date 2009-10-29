@@ -25,9 +25,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: g,l,c,p,j,i         ! indices
     integer :: yr                  ! current year (0 -> ...)
     integer :: mon                 ! current month (1 -> 12)

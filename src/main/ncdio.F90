@@ -44,6 +44,9 @@ module ncdio
   include 'netcdf.inc'
   save
 
+!
+! !PUBLIC MEMBER FUNCTIONS:
+!
   public :: check_ret   ! checks return status of netcdf calls
 #if (defined BUILDPIO)
   public :: check_ret_pio   ! checks return status of pio calls
@@ -85,9 +88,8 @@ module ncdio
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
-! !PRIVATE METHODS:
+! !PRIVATE MEMBER FUNCTIONS:
 !
   interface ncd_putatt
      module procedure ncd_putatt_int
@@ -158,6 +160,7 @@ module ncdio
 
 #endif
   
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -182,9 +185,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: dimid, dimlen    ! temporaries
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='check_dim' ! subroutine name
@@ -234,9 +237,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ret     ! return value
     logical :: lusepio           ! local usepio variable
 #if (defined BUILDPIO)
@@ -356,9 +359,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio       ! local usepio variable
     integer :: stride        ! pe stride for num_iotasks
     integer :: base          ! base pe for iotasks
@@ -447,9 +450,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_open' ! subroutine name
 
@@ -502,9 +505,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_close' ! subroutine name
 
@@ -551,9 +554,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_redef' ! subroutine name
 
@@ -600,9 +603,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_enddef' ! subroutine name
 
@@ -652,9 +655,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_setfill' ! subroutine name
 
@@ -702,9 +705,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_inqdid' ! subroutine name
 
@@ -753,9 +756,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_inqdlen' ! subroutine name
 
@@ -804,9 +807,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_inqdname' ! subroutine name
 
@@ -854,9 +857,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     logical :: found             ! search flag
     integer :: n
@@ -913,9 +916,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     logical :: found             ! search flag
     integer :: n,m
@@ -984,9 +987,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     integer :: ret               ! return code
     character(len=*),parameter :: subname='ncd_inqvid' ! subroutine name
@@ -1067,9 +1070,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_inqvdims' ! subroutine name
 
@@ -1127,9 +1130,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_inqvname' ! subroutine name
 
@@ -1187,9 +1190,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_inqvdids' ! subroutine name
 
@@ -1244,9 +1247,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     integer :: lxtype
     character(len=*),parameter :: subname='ncd_putatt_int' ! subroutine name
@@ -1305,9 +1308,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_putatt_char' ! subroutine name
 
@@ -1359,9 +1362,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     integer :: lxtype
     real*4  :: value4
@@ -1427,9 +1430,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     logical :: lusepio           ! local usepio variable
     character(len=*),parameter :: subname='ncd_defdim' ! subroutine name
 
@@ -1493,9 +1496,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: n              ! indices
     character(len=256) :: str ! temporary
     character(len=256) :: lsubname ! temporary
@@ -1669,9 +1672,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: n              ! indices
     integer :: ndims          ! dimension counter
     integer :: dimid(5)       ! dimension ids
@@ -1817,9 +1820,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: dims                     ! dimensions
     integer :: gsize                    ! size of global array
     integer :: ier                      ! error status
@@ -1921,9 +1924,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: k                        ! index
     integer :: dims                     ! dimensions
     integer :: gsize                    ! size of global array
@@ -2098,9 +2101,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer           :: n
     integer , pointer :: arrayg(:)
     integer           :: gsize      ! array global size from gsmap
@@ -2326,9 +2329,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer           :: n
     integer , pointer :: arrayg(:,:)
     integer           :: gsize      ! array global size from gsmap
@@ -2554,9 +2557,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: dims                     ! dimensions
     integer :: gsize                    ! size of global array
     integer :: ier                      ! error status
@@ -2658,9 +2661,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: k                        ! index
     integer :: dims                     ! dimensions
     integer :: gsize                    ! size of global array
@@ -2835,9 +2838,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer           :: n
     real(r8), pointer :: arrayg(:)
     integer           :: gsize      ! array global size from gsmap
@@ -3063,9 +3066,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer           :: n
     real(r8), pointer :: arrayg(:,:)
     integer           :: gsize      ! array global size from gsmap
@@ -3296,9 +3299,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer         ,pointer :: piodata(:)  ! copy of data in 1d
     integer :: n,n1,n2,n3           ! local counter
     integer :: varid                ! netCDF variable id
@@ -3466,9 +3469,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     real(r8)        ,pointer :: piodata(:)  ! copy of data in 1d
     integer :: n,n1,n2,n3           ! local counter
     integer :: varid                ! netCDF variable id
@@ -3636,9 +3639,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer         ,pointer :: piodata(:)  ! copy of data in 1d
     integer :: n,n1,n2,n3           ! local counter
     integer :: varid                ! netCDF variable id
@@ -3806,9 +3809,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     real(r8)        ,pointer :: piodata(:)  ! copy of data in 1d
     integer :: n,n1,n2,n3           ! local counter
     integer :: varid                ! netCDF variable id
@@ -3976,9 +3979,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character,pointer :: piodata(:)  ! copy of data in 1d
     integer :: n,n1,n2,n3           ! local counter
     integer :: varid                ! netCDF variable id
@@ -4148,9 +4151,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer         ,pointer :: piodata(:)  ! copy of data in 1d
     integer :: n,n1,n2,n3           ! local counter
     integer :: varid                ! netCDF variable id
@@ -4324,9 +4327,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     real(r8)        ,pointer :: piodata(:)  ! copy of data in 1d
     integer :: n,n1,n2,n3           ! local counter
     integer :: varid                ! netCDF variable id
@@ -4500,9 +4503,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer         ,pointer :: piodata(:)  ! copy of data in 1d
     integer :: n,n1,n2,n3           ! local counter
     integer :: varid                ! netCDF variable id
@@ -4678,9 +4681,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     real(r8)        ,pointer :: piodata(:)  ! copy of data in 1d
     integer :: n,n1,n2,n3           ! local counter
     integer :: varid                ! netCDF variable id
@@ -4862,9 +4865,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by T Craig, Aug 2007
 
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: m,n,cnt,n1,n2,n3,n4,n1s,n2s,n3s,n4s
     integer :: ndims                         ! size of dims
     integer :: gsize                         ! global size of clmlevel
@@ -5012,9 +5015,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by John Truesdale
 
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: data_offset                   ! offset into land array 1st column 
     integer :: ndata                         ! number of column (or pft points to read)
     real(r8) , pointer :: cols1dlon(:)       ! holds cols1d_ixy var

@@ -25,8 +25,8 @@ Directory where CLM executable will be created.
 <entry id="clm_root" value="">
 Root directory of CLM source distribution.
 </entry>
-<entry id="comp_interface" valid_values="ESMF,MCT" value="MCT">
-Component framework interface to use (MCT or ESMF)
+<entry id="comp_interface" valid_values="ESMF,MCT,cpl_\$COMP" value="MCT">
+Component framework interface to use (MCT, ESMF or cpl_${COMP})
 </entry>
 <entry id="usr_src" value="" list="1">
 User source directories to prepend to the filepath.  Multiple directories
@@ -94,9 +94,6 @@ Directory containing NetCDF library.
 </entry>
 <entry id="nc_mod" value="">
 Directory containing NetCDF module files.
-</entry>
-<entry id="lapack_libdir" value="">
-Directory containing LAPACK library.
 </entry>
 <entry id="esmf_libdir" value="">
 Directory containing ESMF library (for linking to external ESMF).

@@ -37,9 +37,9 @@ subroutine mkelev(lsmlon, lsmlat, fname1, fname2, ndiag, elev_o, ncido)
 ! !REVISION HISTORY:
 ! Author: Keith Oleson
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer  :: nlon_i                          ! input grid : lon points
   integer  :: nlat_i                          ! input grid : lat points
 

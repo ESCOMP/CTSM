@@ -35,9 +35,9 @@ subroutine mklanwat(lsmlon, lsmlat, fname, ndiag, lake_o, swmp_o)
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer  :: nlon_i                          ! input grid : lon points
   integer  :: nlat_i                          ! input grid : lat points
 

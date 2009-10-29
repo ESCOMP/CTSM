@@ -1527,19 +1527,29 @@ subroutine chkrc(rc, mes)
 end subroutine chkrc
 
 !=========================================================================================
-
+!BOP
+!
+! !IROUTINE: to_upper -- Convert string to upper case
+!
+! !INTERFACE:
 function to_upper(str)
-  !
-  ! Convert character string to upper case. Use achar and iachar intrinsics
-  ! to ensure use of ascii collating sequence.
-  !
+!=========================================================================================
+!
+! !DESCRIPTION:
+!
+! Convert character string to upper case. Use achar and iachar intrinsics
+! to ensure use of ascii collating sequence.
+!
+! !INPUT PARAMETERS:
   character(len=*), intent(in) :: str ! String to convert to upper case
-  ! !RETURN VALUE:
+! !RETURN VALUE:
   character(len=len(str))      :: to_upper
-  ! !LOCAL VARIABLES:
+! !LOCAL VARIABLES:
   integer :: i                ! Index
   integer :: aseq             ! ascii collating sequence
   character(len=1) :: ctmp    ! Character temporary
+!EOP
+!=========================================================================================
   
   do i = 1, len(str)
      ctmp = str(i:i)

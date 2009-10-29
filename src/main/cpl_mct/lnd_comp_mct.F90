@@ -22,12 +22,11 @@ module lnd_comp_mct
   SAVE
   private                              ! By default make data private
 !
-! ! PUBLIC DATA:
+! !PUBLIC DATA MEMBERS: None
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: lnd_SetgsMap_mct
   private :: lnd_chkAerDep_mct
@@ -40,7 +39,7 @@ module lnd_comp_mct
   private :: rof_export_mct
 #endif
 !
-! !PRIVATE VARIABLES
+! !PRIVATE DATA MEMBERS:
 !
 ! Time averaged flux fields
 !  
@@ -55,6 +54,7 @@ module lnd_comp_mct
 !
   logical :: atm_prognostic
 
+!EOP
 !===============================================================
 contains
 !===============================================================
@@ -634,7 +634,6 @@ contains
 ! Finalize land surface model
 !
 !------------------------------------------------------------------------------
-!BOP
 !
 ! !ARGUMENTS:
 !
@@ -714,7 +713,6 @@ contains
 ! filled.
 !
 !------------------------------------------------------------------------------
-!BOP
 ! !USES:
     use shr_const_mod    , only : spval => SHR_CONST_SPVAL
     use shr_sys_mod      , only : shr_sys_flush

@@ -75,9 +75,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: i,j         ! indices
     integer :: ier         ! return error status
     logical :: mpi_running ! temporary

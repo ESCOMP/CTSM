@@ -160,9 +160,9 @@ contains
     real(r8), pointer :: eflx_urban_ac(:)      ! urban air conditioning flux (W/m**2)
     real(r8), pointer :: eflx_urban_heat(:)    ! urban heating flux (W/m**2)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: j,c,p,l,g,pi                       !  indices
     integer  :: fc                                 ! lake filtered column indices
@@ -680,9 +680,9 @@ contains
     integer,  pointer :: nlev_improad(:)  ! number of impervious road layers
 
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: l,c,j                     ! indices
     integer  :: fc                        ! lake filtered column indices
@@ -950,9 +950,9 @@ contains
 !
     integer, pointer :: imelt(:,:)        !flag for melting (=1), freezing (=2), Not=0 (new)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer  :: j,c,g,l                            !do loop index
     integer  :: fc                                 !lake filtered column indices

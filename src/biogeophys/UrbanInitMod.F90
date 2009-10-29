@@ -71,9 +71,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Keith Oleson January 2005
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     real(r8), parameter :: alpha = 4.43_r8 ! coefficient used to calculate z_d_town
     real(r8), parameter :: beta = 1.0_r8   ! coefficient used to calculate z_d_town
     real(r8), parameter :: C_d = 1.2_r8    ! drag coefficient as used in Grimmond and Oke (1999)
@@ -192,9 +192,9 @@ contains
     real(r8), pointer :: thick_roof(:)          ! thickness of urban roof (m)
     integer,  pointer :: nlev_improad(:)        ! number of impervious road layers (-)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES
+!EOP
     integer  :: nc,fl,ib,l,c,p,g          ! indices
     integer  :: ier                       ! error status
     integer  :: begp, endp                ! clump beginning and ending pft indices
@@ -354,9 +354,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Keith Oleson February 2005
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: l,g,c,p       ! indices
     integer :: begp, endp    ! clump beginning and ending pft indices
     integer :: begc, endc    ! clump beginning and ending column indices

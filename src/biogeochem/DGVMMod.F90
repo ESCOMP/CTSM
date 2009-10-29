@@ -100,9 +100,9 @@ contains
    real(r8), pointer :: bmfm_gcell(:,:)     ! gridcell biomass
    real(r8), pointer :: afmicr_gcell(:,:)   ! gridcell microbial respiration
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: g,p                    ! indices
     real(r8) :: afirefrac(lbp:ubp)     ! for history write
     real(r8) :: acfluxfire(lbp:ubp)    ! for history write
@@ -263,9 +263,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Sam Levis
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: p         ! indices
 !-----------------------------------------------------------------------
 
@@ -355,9 +355,9 @@ contains
    real(r8), pointer :: bmfm_gcell(:,:)     ! gridcell biomass
    real(r8), pointer :: afmicr_gcell(:,:)   ! gridcell microbial respiration
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character(len=256) :: dgvm_fn      ! dgvm history filename
     integer :: ncid                    ! dgvm netcdf file id
     integer :: omode                   ! returned mode from netCDF call
@@ -812,9 +812,9 @@ contains
    integer , pointer :: pcolumn(:)     ! column of corresponding pft
    real(r8), pointer :: rootfr(:,:)    ! fraction of roots in each soil layer  (nlevgrnd)
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: p,c,j        ! indices
 !-----------------------------------------------------------------------
 
@@ -907,9 +907,9 @@ contains
    real(r8), pointer :: pwtlunit(:)       ! weight (relative to landunit) for this pft (0-1)
    real(r8), pointer :: pwtgcell(:)       ! weight (relative to gridcell) for this pft (0-1)
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: g,p,c,l             ! indices
     integer  :: fn,filterg(lbg:ubg) ! local gridcell filter for error check
     real(r8) :: sumwt(lbg:ubg)      ! consistency check
@@ -1001,9 +1001,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character(len=256) :: cdate       !date char string
     integer :: day                    !day (1 -> 31)
     integer :: mon                    !month (1 -> 12)
@@ -1048,9 +1048,9 @@ contains
 ! local pointers to implicit in arguments
     integer , pointer :: ivt(:)         ! pft vegetation (pft level)
     logical , pointer :: present(:)     ! whether this pft present in patch
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: p
 !-----------------------------------------------------------------------
 

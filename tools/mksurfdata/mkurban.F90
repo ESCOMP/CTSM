@@ -34,9 +34,9 @@ subroutine mkurban(lsmlon, lsmlat, fname, ndiag, urbn_o)
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer  :: nlon_i                          ! input grid : lon points
   integer  :: nlat_i                          ! input grid : lat points
 

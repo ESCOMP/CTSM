@@ -41,9 +41,9 @@ subroutine mkglcmec(lsmlon, lsmlat, fname1, fname2, fname3, ndiag, pctglac_o, pc
 ! !REVISION HISTORY:
 ! Author: David Lawrence
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer  :: nlong_i                        ! input grid glacier: lon points
   integer  :: nlatg_i                        ! input grid glacier: lat points
   integer  :: nlont_i                        ! input grid topography: lon points

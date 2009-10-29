@@ -43,7 +43,6 @@ module decompMod
 ! 2005.11.01  T Craig  Rewrite
 ! 2006.06.06  T Craig  Reduce memory, cleanup
 !
-!EOP
 !
 ! !PRIVATE TYPES:
   private  ! (now mostly public for decompinitmod)
@@ -108,6 +107,7 @@ module decompMod
   type(mct_gsMap)  ,public,target :: gsMap_col_gdc2glo
   type(mct_gsMap)  ,public,target :: gsMap_pft_gdc2glo
 
+!EOP
 !------------------------------------------------------------------------------
 ! 
 ! 
@@ -145,9 +145,9 @@ contains
 ! !REVISION HISTORY:
 ! 2003.09.12  Mariana Vertenstein  Creation.
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
      character(len=32), parameter :: subname = 'get_clump_bounds'  ! Subroutine name
      integer :: cid                                                ! clump id
 #ifdef _OPENMP
@@ -203,8 +203,8 @@ contains
 ! !REVISION HISTORY:
 ! 2003.09.12  Mariana Vertenstein  Creation.
 !
-!EOP
 ! !LOCAL VARIABLES:
+!EOP
      character(len=32), parameter :: subname = 'get_proc_bounds'  ! Subroutine name
 #ifdef _OPENMP
      integer, external :: OMP_GET_NUM_THREADS
@@ -266,9 +266,9 @@ contains
 ! !REVISION HISTORY:
 ! 2005.12.15  T Craig Added
 !
-!EOP
 !------------------------------------------------------------------------------
 ! !LOCAL VARIABLES:
+!EOP
      character(len=32), parameter :: subname = 'get_proc_bounds_atm'  ! Subroutine name
 #ifdef _OPENMP
      integer, external :: OMP_GET_NUM_THREADS
@@ -316,9 +316,9 @@ contains
 ! !REVISION HISTORY:
 ! 2003.09.12  Mariana Vertenstein  Creation.
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
    integer :: cid       ! clump index
 !------------------------------------------------------------------------------
 
@@ -456,9 +456,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 
 !-----------------------------------------------------------------------
     ! Determine necessary indices
@@ -516,9 +516,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ls(4)
 
 !-----------------------------------------------------------------------
@@ -595,9 +595,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 
 !----------------------------------------------------------------------
 

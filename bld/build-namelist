@@ -481,10 +481,12 @@ if ($print>=2) { print "CLM atm resolution is $res $eol"; }
 $opts{$var} = $val;
 $val = &quote_string( $res );
 $group = $definition->get_group_name($var);
-$nl->set_variable_value($group, $var, $val);
+#$nl->set_variable_value($group, $var, $val);
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
-   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+   if ( ! defined($opts{'clm_usr_name'}) || $res ne $opts{'clm_usr_name'} ) {
+      die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+   }
 }
 
 $var = "mask";
@@ -553,10 +555,12 @@ $opts{'lnd_res'} = $lnd_res;
 my $var = "res";
 my $val = &quote_string( $res );
 my $group = $definition->get_group_name($var);
-$nl->set_variable_value($group, $var, $val);
+#$nl->set_variable_value($group, $var, $val);
 if (  ! $definition->is_valid_value( $var, $val ) ) {
    my @valid_values   = $definition->get_valid_values( $var );
-   die "$nm lnd_res has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+   if ( ! defined($opts{'clm_usr_name'}) || $res ne $opts{'clm_usr_name'} ) {
+      die "$nm lnd_res has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+   }
 }
 
 # Process the -clm_usr_name argument
@@ -592,7 +596,7 @@ if (defined $opts{'clm_usr_name'}) {
 	}
     }
     if ( $nvars == 0 ) {
-         die "$nm setting clm_usr_name -- but did NOT find any user datasets\n";
+         die "$nm setting clm_usr_name -- but did NOT find any user datasets: $opts{'clm_usr_name'}\n";
     }
 }
 
@@ -775,8 +779,8 @@ if ($mode eq "ccsm_seq") {
 if ($mode eq "ccsm_seq" && $pio eq "on") {
 
    add_default($nl, 'cpl_io_stride'   );
-   add_default($nl, 'cpl_num_iotasks' );
-   add_default($nl, 'cpl_iotype_name' );
+   add_default($nl, 'cpl_io_numtasks' );
+   add_default($nl, 'cpl_io_typename' );
    add_default($nl, 'cpl_io_root'     );
 
 }

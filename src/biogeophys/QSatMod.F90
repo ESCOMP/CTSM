@@ -63,9 +63,9 @@ contains
 ! 15 September 1999: Yongjiu Dai; Initial code
 ! 15 December 1999:  Paul Houser and Jon Radakovich; F90 Revision
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !
     real(r8) :: T_limit
     real(r8) :: td,vp,vp1,vp2

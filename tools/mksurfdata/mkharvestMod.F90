@@ -10,7 +10,6 @@ module mkharvestMod
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
 !
-!EOP
 !-----------------------------------------------------------------------
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8, CL => shr_kind_CL
@@ -20,7 +19,7 @@ module mkharvestMod
 
   private
 
-! !PUBLIC INTERFACES:
+! !PUBLIC MEMBER FUNCTIONS:
   public mkharvest_init       ! Initialization
   public mkharvest            ! Calculate the harvest values on output grid
   public mkharvest_fieldname  ! Field name
@@ -43,6 +42,7 @@ module mkharvestMod
   character(len=CL), save :: harvest_longnames(numharv) = string_undef
 
 
+!EOP
 !-----------------------------------------------------------------------
 contains
 !-----------------------------------------------------------------------
@@ -71,10 +71,10 @@ contains
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'mkharvest_init'
+!EOP
 !-----------------------------------------------------------------------
 
     allocate( harvest(lsmlon,lsmlat,numharv) )
@@ -105,10 +105,10 @@ contains
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'mkharvest_fieldname'
+!EOP
 !-----------------------------------------------------------------------
 
       if (      nfield < 1       )then
@@ -145,10 +145,10 @@ contains
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'mkharvest_longname'
+!EOP
 !-----------------------------------------------------------------------
 
       if (      nfield < 1       )then
@@ -189,9 +189,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !-----------------------------------------------------------------------
       mkharvest_numtypes = numharv
 
@@ -234,9 +234,9 @@ subroutine mkharvest(lsmlon, lsmlat, fharvest, ndiag, harv_o)
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer  :: nlon_i                          ! input grid : lon points
   integer  :: nlat_i                          ! input grid : lat points
 

@@ -25,8 +25,12 @@ else
    set rtm = "on"
 endif
 
-set config_opts = "-spmd -mode ext_ccsm_seq $CLM_CONFIG_OPTS -comp_intf $COMP_INTERFACE -rtm $rtm"
-$CODEROOT/lnd/clm*/bld/configure -clm_bld $cfgdir -usr_src $CASEROOT/SourceMods/src.clm $config_opts || exit -1 
+setenv COMP "unknown"
+if ($COMP_INTERFACE == 'MCT' ) setenv COMP mct
+if ($COMP_INTERFACE == 'ESMF') setenv COMP esmf
+
+set config_opts = "-spmd -mode ext_ccsm_seq $CLM_CONFIG_OPTS -rtm $rtm -clm_bld $cfgdir"
+$CODEROOT/lnd/clm*/bld/configure -comp_intf cpl_\$COMP -clm_root \$CODEROOT/lnd/clm -usr_src \$CASEROOT/SourceMods/src.clm $config_opts || exit -1 
 
 #--------------------------------------------------------------------
 # Invoke build-namelist
@@ -95,7 +99,12 @@ else
     set ignore = "-ignore_ic_date"
 endif
 
-set options = "$CLM_BLDNML_OPTS -config $config -res $RESOLUTION $mask "
+if ( $CLM_USRDAT_NAME != UNSET )then
+   set options    = "-clm_usr_name $CLM_USRDAT_NAME"
+else
+   set options    = ""
+endif
+set options = "$options $CLM_BLDNML_OPTS -config $config -res $RESOLUTION $mask "
 set options = "$options -clm_demand $clm_demand $ignore "
 set options = "$options -infile ccsm_namelist -start_type $START_TYPE -case $CASE "
 $CODEROOT/lnd/clm*/bld/build-namelist $options -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" -csmdata \$DIN_LOC_ROOT -inputdata $CASEBUILD/clm.input_data_list || exit -1
@@ -143,6 +152,10 @@ cp -f \$CASEBUILD/clmconf/preproc.h    .tmp
 cmp -s .tmp preproc.h    || mv -f .tmp preproc.h
 cp -f \$CASEBUILD/clmconf/CCSM_cppdefs .tmp
 cmp -s .tmp CCSM_cppdefs || mv -f .tmp CCSM_cppdefs
+
+setenv COMP "unknown"
+if (\$COMP_INTERFACE == 'MCT' ) setenv COMP mct
+if (\$COMP_INTERFACE == 'ESMF') setenv COMP esmf
 
 \cat >! .tmp << EOF; cmp -s .tmp Filepath || mv -f .tmp Filepath
 EOF2

@@ -130,9 +130,9 @@ contains
     real(r8), pointer :: elai(:)     ! one-sided leaf area index with burying by snow
     real(r8), pointer :: esai(:)     ! one-sided stem area index with burying by snow
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     integer :: nc,j,l,c,p,fc ! indices
     integer :: nclumps       ! number of clumps on this processor
     integer :: begp, endp    ! per-clump beginning and ending pft indices

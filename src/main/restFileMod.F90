@@ -46,10 +46,10 @@ module restFileMod
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
-! !PRIVATE TYPES:
+! !PRIVATE TYPES: None
   private
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -95,9 +95,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ncid    ! netcdf id
     integer :: i       ! index
 !-----------------------------------------------------------------------
@@ -205,9 +205,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ncid                        ! netcdf id
     integer :: i                           ! index
 !-----------------------------------------------------------------------
@@ -273,9 +273,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: nio                         ! Fortran unit number
 !-----------------------------------------------------------------------
 
@@ -316,9 +316,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: nio                         ! Fortran unit number
 !-----------------------------------------------------------------------
 
@@ -361,9 +361,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: status                      ! return status
     integer :: length                      ! temporary          
     character(len=256) :: ftest,ctest      ! temporaries
@@ -444,9 +444,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: i                  ! indices
     integer :: nio                ! restart unit
     integer :: status             ! substring check status
@@ -499,9 +499,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: i                   !index
 !-----------------------------------------------------------------------
 
@@ -542,9 +542,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: m                    ! index
     integer :: nio                  ! restart pointer file
     character(len=256) :: filename  ! local file name
@@ -628,9 +628,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character(len=256) :: cdate       ! date char string
     integer :: day                    ! day (1 -> 31)
     integer :: mon                    ! month (1 -> 12)
@@ -706,9 +706,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: yr                  ! current year (0 -> ...)
     integer :: mon                 ! current month (1 -> 12)
     integer :: day                 ! current day (1 -> 31)
@@ -818,9 +818,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: numg     ! total number of gridcells across all processors
     integer :: numl     ! total number of landunits across all processors
     integer :: numc     ! total number of columns across all processors
@@ -872,9 +872,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: nio    ! Fortran unit number
     character(len=32) :: subname='restFile_enddef' ! subroutine name
 !-----------------------------------------------------------------------
@@ -905,9 +905,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character(len=32) :: subname='restFile_close' ! subroutine name
 !-----------------------------------------------------------------------
 

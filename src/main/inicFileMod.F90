@@ -59,9 +59,9 @@ contains
 !
 ! !REVISION HISTORY:
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ncid                           ! netCDF dataset id
     integer :: j,c,l                          ! indices
     integer :: begp, endp                     ! per-proc beginning and ending pft indices

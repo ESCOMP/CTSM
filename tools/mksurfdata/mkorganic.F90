@@ -35,9 +35,9 @@ subroutine mkorganic(lsmlon, lsmlat, fname, ndiag, organic_o)
 ! 
 ! Author: David Lawrence
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   integer  :: nlon_i                          ! input grid : lon points
   integer  :: nlat_i                          ! input grid : lat points
 

@@ -217,9 +217,9 @@ contains
      real(r8), pointer :: snowdp(:)        ! snow height (m)
 
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
      integer , parameter :: nband = numrad    ! number of solar radiation waveband classes
      real(r8), parameter :: mpe = 1.e-06_r8   ! prevents overflow for division by zero

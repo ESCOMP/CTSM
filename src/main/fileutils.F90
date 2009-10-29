@@ -31,9 +31,9 @@ module fileutils
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !PRIVATE MEMBER FUNCTIONS: None
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -56,9 +56,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer i               !loop index
     integer klen            !length of fulpath character string
 !------------------------------------------------------------------------
@@ -92,9 +92,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: i   !integer
 !------------------------------------------------------------------------
 
@@ -133,9 +133,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
      integer i               !loop index
      integer klen            !length of fulpath character string
      integer ierr            !error status
@@ -236,9 +236,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
      integer ier                ! error number
 !------------------------------------------------------------------------
 
@@ -280,9 +280,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
      integer ioe             !error return from fortran open
      character(len=11) ft    !format type: formatted. unformatted
 !------------------------------------------------------------------------
@@ -329,9 +329,9 @@ contains
 ! Created by Gordon Bonan
 ! Modified for clm2 by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !------------------------------------------------------------------------
 
     getavu = shr_file_getunit()

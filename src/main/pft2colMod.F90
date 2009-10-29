@@ -54,9 +54,9 @@ contains
 ! !REVISION HISTORY:
 ! 03/09/08: Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     integer :: c,fc                      ! indices
     integer :: num_allc                  ! number of total column points
     integer :: filter_allc(ubc-lbc+1)    ! filter for all column points

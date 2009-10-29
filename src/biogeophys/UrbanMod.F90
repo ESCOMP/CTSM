@@ -168,9 +168,9 @@ contains
     real(r8), pointer :: sabs_perroad_dir(:,:)    ! direct  solar absorbed  by pervious road per unit ground area per unit incident flux
     real(r8), pointer :: sabs_perroad_dif(:,:)    ! diffuse solar absorbed  by pervious road per unit ground area per unit incident flux
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES
+!EOP
 !
     real(r8) :: coszen(num_urbanl)                 ! cosine solar zenith angle
     real(r8) :: coszen_pft(num_urbanp)             ! cosine solar zenith angle for next time step (pft level)
@@ -542,9 +542,9 @@ contains
     real(r8), pointer :: h2osno(:)    ! snow water (mm H2O)
     integer , pointer :: ctype(:)     ! column type
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     integer  :: fl,c,l              ! indices
 !
 ! variables and constants for snow albedo calculation
@@ -719,9 +719,9 @@ contains
     real(r8), pointer :: eflx_lwrad_net(:)       ! net infrared (longwave) rad (W/m**2) [+ = to atm]
     real(r8), pointer :: eflx_lwrad_net_u(:)     ! urban net infrared (longwave) rad (W/m**2) [+ = to atm]
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES
+!EOP
 !
     integer  :: fp,fl,p,c,l,g              ! indices
     integer  :: local_secp1                ! seconds into current date in local time
@@ -1075,9 +1075,9 @@ contains
 ! 03/2003, Mariana Vertenstein: Migrated to clm2.2 
 ! 01/2008, Erik Kluzek:         Migrated to clm3.5.15
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: l, fl   ! indices
     real(r8) :: sum    ! sum of view factors for wall or road
 !-----------------------------------------------------------------------
@@ -1191,9 +1191,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: l,i,ib             ! indices
 !KO   logical  :: numchk = .true.     ! true => perform numerical check of analytical solution
     logical  :: numchk = .false.   ! true => perform numerical check of analytical solution
@@ -1337,9 +1337,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: l, fl, ib       ! indices      
     real(r8) :: err(num_urbanl) ! energy conservation error (W/m**2)
     real(r8) :: swall_projected ! diffuse solar radiation (per unit ground area) incident on wall (W/m**2)
@@ -1460,9 +1460,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
 !
-!EOP
 !
 ! !LOCAL VARIABLES
+!EOP
 !
     real(r8) :: wtroad_imperv(num_urbanl)           ! weight of impervious road wrt total road
     real(r8) :: sabs_canyon_dir(num_urbanl)         ! direct solar rad absorbed by canyon per unit incident flux
@@ -2014,9 +2014,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     real(r8) :: lwdown_road(num_urbanl)         ! atmospheric longwave radiation for total road (W/m**2)
     real(r8) :: lwdown_sunwall(num_urbanl)      ! atmospheric longwave radiation (per unit wall area) for sunlit wall (W/m**2)
     real(r8) :: lwdown_shadewall(num_urbanl)    ! atmospheric longwave radiation (per unit wall area) for shaded wall (W/m**2)
@@ -2374,9 +2374,9 @@ contains
     integer , pointer :: lgridcell(:)    ! gridcell of corresponding landunit
     integer , pointer :: ctype(:)        ! column type
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES
+!EOP
 !
     integer :: nc,fl,ib,l,c,p,g          ! indices
     integer :: nclumps                   ! number of clumps on processor 
@@ -2638,9 +2638,9 @@ contains
     real(r8), pointer :: rh_ref2m(:)      ! 2 m height surface relative humidity (%)
     real(r8), pointer :: rh_ref2m_u(:)    ! Urban 2 m height surface relative humidity (%)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES
+!EOP
 !
     character(len=*), parameter :: sub="UrbanFluxes"
     integer  :: fp,fc,fl,f,p,c,l,g,j,pi,i     ! indices

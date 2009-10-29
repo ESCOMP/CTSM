@@ -78,9 +78,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Peter Thornton, 1 June 2004
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character(len=256) :: locfn                          ! local file name
     integer  :: ncid,dimid,varid                         ! netCDF id's
     integer  :: begg,endg                                ! start/stop gridcells
@@ -150,9 +150,9 @@ contains
     implicit none
     include 'netcdf.inc'
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: i,j,m,n,g                       ! indices
     integer  :: ntimes                          ! number of input time samples
     real(r8) :: sumpct                          ! sum for error check
@@ -277,9 +277,9 @@ contains
 ! !ARGUMENTS:
     implicit none
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: i,j,m,p,l,g      ! indices
     integer  :: year             ! year (0, ...) for nstep+1
     integer  :: mon              ! month (1, ..., 12) for nstep+1
@@ -380,9 +380,9 @@ contains
     integer , intent(in)  :: ntime
     real(r8), pointer     :: ndep(:)
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: beg3d(3), len3d(3)      ! input sizes
     integer  :: ret                     ! error status
     character(len=32) :: subname='ndepdyn_getdata' ! subroutine name

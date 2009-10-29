@@ -162,9 +162,9 @@ contains
     real(r8), pointer :: errsoi(:)          ! soil/lake energy conservation error (W/m**2)
     real(r8), pointer :: t_lake(:,:)        ! lake temperature (Kelvin)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer , parameter  :: idlak = 1     ! index of lake, 1 = deep lake, 2 = shallow lake
     integer , parameter  :: niters = 3    ! maximum number of iterations for surface temperature

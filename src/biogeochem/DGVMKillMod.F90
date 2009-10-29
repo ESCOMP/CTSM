@@ -81,9 +81,9 @@ contains
     logical , pointer :: present(:)         ! whether PFT present in patch
     real(r8), pointer :: litter_ag(:)       ! above ground litter
     real(r8), pointer :: litter_bg(:)       ! below ground litter
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
 !
     integer :: p,fp
 !-----------------------------------------------------------------------

@@ -108,9 +108,9 @@ contains
     real(r8), pointer :: h2osoi_ice(:,:)   !ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)   !liquid water (kg/m2)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     real(r8), parameter :: snow_bd = 250._r8  !constant snow bulk density
     integer  :: fp, p, c, g    ! indices
     real(r8) :: dtime          ! land model time step (sec)

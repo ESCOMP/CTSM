@@ -243,10 +243,10 @@ module CASAMod
 ! Mariana Vertenstein.
 ! 2004.06.08 Vectorized and reformatted by Forrest Hoffman
 !
-!EOP
 !-----------------------------------------------------------------------
 
-! !PRIVATE VARIABLES:
+! !PRIVATE DATA MEMBERS:
+!EOP
 
   real(r8) sla(0:numpft)          ! specific leaf area
   real(r8) leafmin(0:numpft)      ! min leafmass (g C/m2 ground)

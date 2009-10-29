@@ -26,9 +26,9 @@ program mkgriddata
 ! Authors: Gordon Bonan, Sam Levis and Mariana Vertenstein
 ! 2005.12.15 T Craig Updated
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: lsmlon, lsmlat        ! clm grid resolution
     integer  :: i,j,k,m               ! indices
     integer  :: nfile                 ! number of files read in

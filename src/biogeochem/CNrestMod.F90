@@ -60,9 +60,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Peter Thornton
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: c,p,j        ! indices 
     integer :: begp, endp   ! per-proc beginning and ending pft indices
     integer :: begc, endc   ! per-proc beginning and ending column indices 

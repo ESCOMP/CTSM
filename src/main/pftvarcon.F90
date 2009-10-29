@@ -153,9 +153,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character(len=256) :: locfn ! local file name
     integer :: i,n              ! loop indices
     integer :: ier              ! error code

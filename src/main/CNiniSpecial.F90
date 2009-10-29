@@ -31,7 +31,6 @@ subroutine CNiniSpecial ()
 ! !REVISION HISTORY:
 ! 11/13/03: Created by Peter Thornton
 !
-!EOP
 !
 ! local pointers to implicit in arguments
 !
@@ -42,6 +41,7 @@ subroutine CNiniSpecial ()
 ! local pointers to implicit out arguments
 !
 ! !LOCAL VARIABLES:
+!EOP
    integer :: fc,fp,l,c,p  ! indices
    integer :: begp, endp   ! per-clump/proc beginning and ending pft indices
    integer :: begc, endc   ! per-clump/proc beginning and ending column indices

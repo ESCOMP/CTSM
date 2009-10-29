@@ -42,9 +42,9 @@ program mksrfdat
 ! 3/18/08: David Lawrence added organic matter processing
 ! 1/22/09: Keith Oleson added urban parameter processing
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: lsmlon, lsmlat              ! clm grid resolution
     integer  :: nsoicol                     ! number of model color classes
     integer  :: i,j,k,m,n                   ! indices

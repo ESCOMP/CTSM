@@ -40,9 +40,9 @@ subroutine snowdp2lev(lbc, ubc)
   real(r8), pointer :: dz(:,:)       ! layer thickness depth (m) over snow only
   real(r8), pointer :: zi(:,:)       ! interface depth (m) over snow only
 !
-!EOP
 !
-! LOCAL VARIABLES:
+! !LOCAL VARIABLES:
+!EOP
   integer :: c,l,j      !indices
 !-----------------------------------------------------------------------
 

@@ -36,8 +36,6 @@ Summary of testing:
   bluefire/CCSM testing:
   jaguar:
   jaguar interactive testing:
-  lightning/ifort interactive testing:
-  lightning/ifort:
   dublin/lf95 interactive testing:
   dublin/lf95:
   breeze,gale,hail,gust/ifort interactive testing:

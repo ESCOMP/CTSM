@@ -20,9 +20,9 @@ subroutine getdatetime (cdate, ctime)
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
   character(len=8)  :: date       !current date
   character(len=10) :: time       !current time
   character(len=5)  :: zone       !zone

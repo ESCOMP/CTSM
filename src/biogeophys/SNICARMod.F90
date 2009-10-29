@@ -12,7 +12,7 @@ module SNICARMod
 ! Calculate albedo of snow containing impurities 
 ! and the evolution of snow effective radius
 !
-! !PUBLIC TYPES:
+! !USES:
   use shr_kind_mod  , only : r8 => shr_kind_r8
   use shr_sys_mod   , only : shr_sys_flush
   use clm_varctl    , only : iulog
@@ -27,7 +27,7 @@ module SNICARMod
   public :: SnowAge_init     ! Initial read in of snow-aging file
   public :: SnowOptics_init  ! Initial read in of snow-optics file
 !
-! !PUBLIC MEMBER DATA:
+! !PUBLIC DATA MEMBERS:
 
   real(r8), public, parameter :: snw_rds_min = 54.526_r8  ! minimum allowed snow effective radius (also "fresh snow" value) [microns]
   integer,  public, parameter :: sno_nbr_aer =   8        ! number of aerosol species in snowpack (indices described above) [nbr]
@@ -46,7 +46,7 @@ module SNICARMod
 ! !PRIVATE MEMBER FUNCTIONS:
 
 !
-! !PRIVATE MEMBER DATA:
+! !PRIVATE DATA MEMBERS:
   ! Aerosol species indices:
   !  1= hydrophillic black carbon 
   !  2= hydrophobic black carbon
@@ -165,11 +165,11 @@ contains
 ! !IROUTINE: SNICAR_RT
 !
 !
-! CALLED FROM:
+! !CALLED FROM:
 ! subroutine SurfaceAlbedo in module SurfaceAlbedoMod (CLM)
 ! subroutine albice (CSIM)
 !
-! REVISION HISTORY:
+! !REVISION HISTORY:
 ! Author: Mark Flanner
 !
 ! !INTERFACE:
@@ -235,10 +235,10 @@ contains
     integer,  pointer :: ltype(:)            ! landunit type (lnd) (debugging only)
     real(r8), pointer :: londeg(:)           ! longitude (degrees) (debugging only)
     real(r8), pointer :: latdeg(:)           ! latitude (degrees) (debugging only)
-    !
-    !EOP
-    !
-    ! !OTHER LOCAL VARIABLES:
+!
+! !OTHER LOCAL VARIABLES:
+!EOP
+!-----------------------------------------------------------------------
     !
     ! variables for snow radiative transfer calculations
 

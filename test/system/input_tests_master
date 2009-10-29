@@ -34,7 +34,6 @@ blAK4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10   co
 smAK8 TSM.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -10   cold
 erAK8 TER.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold
 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold
-blAK8 TBL.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -10   cold
 
 smAL4 TSM.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -10   cold
 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold
@@ -156,6 +155,11 @@ blF94 TBL.sh 17p_vodsrsc_ds clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 48
 smF95 TSM.sh 17p_vodsrsc_h clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v5 48 arb_ic
 smF96 TSM.sh 17p_vodsrsc_m clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v5 48 arb_ic
 smF97 TSM.sh 17p_vodsrsc_o clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v5 48 arb_ic
+
+smE74 TSM.sh 4p_vodsrsc_ds clm_std 20021231:NONE:3600  1x1_tropicAtl test@1850 48    arb_ic
+erE74 TER.sh 4p_vodsrsc_ds clm_std 20021231:NONE:3600  1x1_tropicAtl test@1850 10+38 arb_ic
+brE74 TBR.sh 4p_vodsrsc_ds clm_std 20021231:NONE:3600  1x1_tropicAtl test@1850 24+24 arb_ic
+blE74 TBL.sh 4p_vodsrsc_ds clm_std 20021231:NONE:3600  1x1_tropicAtl test@1850 48    arb_ic
 
 smE31 TSM.sh 4p_vodsrsc_dh clm_std 20021231:NONE:3600  64x128^360x720 USGS 48    arb_ic
 erE31 TER.sh 4p_vodsrsc_dh clm_std 20021231:NONE:3600  64x128^360x720 USGS 10+38 arb_ic
@@ -295,6 +299,9 @@ smG47 TSM.sh 17p_sc_o clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb
 
 smG74 TSM.sh 17p_sc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -1100 arb_ic
 blG74 TBL.sh 17p_sc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -100  arb_ic
+
+smG78 TSM.sh 17p_sc_ds clm_pftdyn 18501230:NONE:3600 1x1_tropicAtl test@1850-2000 -1100 arb_ic
+blG78 TBL.sh 17p_sc_ds clm_pftdyn 18501230:NONE:3600 1x1_tropicAtl test@1850-2000 -100  arb_ic
 
 smH74 TSM.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -1100 cold
 blH74 TBL.sh 17p_cnnsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -100  cold
@@ -577,6 +584,18 @@ blL83 TBL.sh _sc_do clm_std^nl_urb    20020115:NONE:3600 5x5_amazon navy -10    
 
 smLD1 TSM.sh _sc_dh clm_std^nl_urb    20030101:NONE:1800 2.65x3.33 USGS -10   arb_ic
 erLD1 TER.sh _sc_dh clm_std^nl_urb    20030101:NONE:1800 2.65x3.33 USGS -5+-5 arb_ic
+
+smLM1 TSM.sh _sc_dh clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -10   arb_ic
+erLM1 TER.sh _sc_dh clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -5+-5 arb_ic
+
+smLM2 TSM.sh _sc_dm clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -10   arb_ic
+erLM1 TER.sh _sc_dm clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -5+-5 arb_ic
+
+smLM3 TSM.sh _sc_do clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -10   arb_ic
+erLM3 TER.sh _sc_do clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -5+-5 arb_ic
+
+smLM4 TSM.sh _sc_ds clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -10   arb_ic
+erLM4 TER.sh _sc_ds clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -5+-5 arb_ic
 
 sm654 TSMtools.sh mkgriddata   tools__ds namelist
 sm674 TSMtools.sh mkgriddata   tools__ds singlept

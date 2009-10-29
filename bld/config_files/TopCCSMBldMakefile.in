@@ -4,6 +4,10 @@
 # clm library and the ccsm_lib library for datm,sice,socn,mct,pio,mpeu,timing and
 # csm_share.
 # This is mostly duplicated from the CCSM Makefile with a few slight tweaks.
+# The changes are highlited with "### NOTE:" and are as follows...
+#
+# 1.) Include dependency on $(ULIBDEP) for Depends file
+# 2.) On clean go to subdirectories and clean
 #-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
@@ -21,13 +25,9 @@
 #-------------------------------------------------------------------------------
 
 # name of macros file - but default this is generic
-ifeq ($(strip $(MACFILE)),)
+ifneq ($(strip $(MACFILE)),)
    MACFILE  := Macros
 endif
-
-# Machine specific macros file 
-# This must be included before any settings are overwritten 
-  -include $(MACFILE)
 
 # Load dependency search path.
 dirs := . $(shell cat Filepath)
@@ -63,6 +63,9 @@ ifeq ($(strip $(SMP)),TRUE)
    compile_threaded = true
 endif
 
+# Machine specific macros file 
+# This must be included before any settings are overwritten 
+  -include $(MACFILE)
 
 # All user settings for libraries are here 
 # All user settings for the include paths are in the relevant Macros file
@@ -111,10 +114,13 @@ endif
 
 # User libraries (mct, mpeu, pio)
 ifeq ($(strip $(ULIBS)),)
-    ULIBS :=
-    ifneq ($(strip $(LIBROOT)),)
-        ULIBS += -L$(LIBROOT) -lcsm_share -lmct -lmpeu -lpio
+  ifneq ($(strip $(LIBROOT)),)
+    ifeq ($(USE_MPISERIAL),TRUE)
+      ULIBS += -L$(LIBROOT) -lcsm_share -lmct -lmpeu -lpio -lmpi-serial
+    else
+      ULIBS += -L$(LIBROOT) -lcsm_share -lmct -lmpeu -lpio
     endif
+  endif
 endif
 
 # Component libraries - hard-wirer for current ccsm components
@@ -151,6 +157,7 @@ INCS    := $(foreach dir,$(cpp_dirs),-I$(dir))
 
 CURDIR := $(shell pwd)
 
+### NOTE: Here we also include a dependency on ULIBDEP
 $(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Deppath $(ULIBDEP)
 	$(CASETOOLS)/mkDepends Deppath Srcfiles > $@
 
@@ -160,6 +167,10 @@ $(CURDIR)/Deppath: $(CURDIR)/Filepath
 
 $(CURDIR)/Srcfiles: $(CURDIR)/Filepath
 	$(CASETOOLS)/mkSrcfiles > $@
+
+$(CURDIR)/Filepath:
+	@echo "$(VPATH)" > $@
+
 
 #-------------------------------------------------------------------------------
 # echo file names, paths, compile flags, etc. used during build
@@ -208,10 +219,13 @@ ifeq ($(strip $(ULIBDEP)),)
     ULIBDEP += $(LIBROOT)/liblnd.a
     ULIBDEP += $(LIBROOT)/libocn.a
     ULIBDEP += $(LIBROOT)/libglc.a
+    ifeq ($(USE_MPISERIAL),TRUE)
+      ULIBDEP += $(LIBROOT)/libmpi-serial.a
+    endif
   endif
 endif
 
-$(EXEC_SE): $(ULIBDEP) $(OBJS)
+$(EXEC_SE): $(OBJS) $(ULIBDEP)
 	$(LD) -o $(EXEC_SE) $(OBJS) $(CLIBS) $(ULIBS) $(SLIBS) $(LDFLAGS)
 
 $(COMPLIB): $(OBJS)
@@ -231,16 +245,21 @@ $(COMPLIB): $(OBJS)
 
 mostlyclean:
 	$(RM) -f *.f *.f90
+### NOTE: Also remove these and then go to subdirs...
 	cd lnd;      $(MAKE) mostlyclean
 	cd ccsm_lib; $(MAKE) mostlyclean
 
 clean:
-	$(RM) -f *.f *.f90 *.d *.$(MOD_SUFFIX) $(OBJS) $(INCROOT)/* $(LIBROOT)/* $(INCROOT)/*
+	$(RM) -f *.f *.f90 *.d *.$(MOD_SUFFIX) $(OBJS)
+### NOTE: Also remove these and then go to subdirs...
+	$(RM) -f $(INCROOT)/* $(LIBROOT)/* $(INCROOT)/*
 	cd lnd;      $(MAKE) clean
 	cd ccsm_lib; $(MAKE) clean
 
 realclean:
-	$(RM) -f *.f *.f90 *.d *.$(MOD_SUFFIX) $(OBJS) $(EXEC_SE) $(LIBROOT)/* $(INCROOT)/*
+	$(RM) -f *.f *.f90 *.d *.$(MOD_SUFFIX) $(OBJS) $(EXEC_SE)
+### NOTE: Also remove these and then go to subdirs...
+	$(RM) -f $(LIBROOT)/* $(INCROOT)/*
 	cd lnd;      $(MAKE) realclean
 	cd ccsm_lib; $(MAKE) realclean
 

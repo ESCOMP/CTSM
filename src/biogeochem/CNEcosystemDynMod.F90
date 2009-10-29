@@ -27,11 +27,11 @@ module CNEcosystemDynMod
 ! Created by Peter Thornton
 ! 19 May 2009: PET - modified to include call to harvest routine
 !
-!EOP
 !
 ! !PRIVATE MEMBER FUNCTIONS:
 !
-! PRIVATE TYPES
+! !PRIVATE TYPES:
+!EOP
 !-----------------------------------------------------------------------
 
 contains

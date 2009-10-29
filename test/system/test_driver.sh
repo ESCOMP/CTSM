@@ -83,14 +83,40 @@ export CLM_RESTART_TASKS=46
 
 export CLM_COMPSET="I"
 
-export INC_NETCDF=/contrib/netcdf-3.6.2/include
-export LIB_NETCDF=/contrib/netcdf-3.6.2/lib
+export OBJECT_MODE=64
+export XLSMPOPTS="stack=256000000"
+export OMP_DYNAMIC=FALSE
 export AIXTHREAD_SCOPE=S
 export MALLOCMULTIHEAP=TRUE
-export OMP_DYNAMIC=FALSE
-export MP_USE_BULK_XFER=no
 export MP_LABELIO=yes
-export XLSMPOPTS="stack=256000000"
+
+# MPI Environment
+export MP_RC_USE_LMC=yes
+export LAPI_DEBUG_RC_WAIT_ON_QP_SETUP=yes
+export MP_INFOLEVEL=2
+export MP_EUIDEVICE=sn_all
+export MP_SHARED_MEMORY=yes
+export LAPI_USE_SHM=yes
+export MP_EUILIB=us
+export MP_EAGER_LIMIT=32k
+export MP_BULK_MIN_MSG_SIZE=64k
+export MP_POLLING_INTERVAL=20000000
+export MEMORY_AFFINITY=MCM
+export LAPI_DEBUG_ENABLE_AFFINITY=YES
+export LAPI_DEBUG_BINDPROC_AFFINITY=YES
+export MP_SYNC_QP=YES
+export MP_RFIFO_SIZE=16777216
+export MP_SHM_ATTACH_THRESH=500000
+export MP_EUIDEVELOP=min
+export MP_USE_BULK_XFER=yes
+
+export MP_RC_MAX_QP=8192
+export LAPI_DEBUG_RC_DREG_THRESHOLD=1000000
+export LAPI_DEBUG_QP_NOTIFICATION=no
+export LAPI_DEBUG_RC_INIT_SETUP=no
+
+export INC_NETCDF=/contrib/netcdf-3.6.2/include
+export LIB_NETCDF=/contrib/netcdf-3.6.2/lib
 export MAKE_CMD="gmake -j 65"
 export CCSM_MACH="bluefire"
 export CFG_STRING=""
@@ -496,15 +522,14 @@ export CLM_COMPSET="I"
 export PATH="/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
 export PATH="\${PATH}:/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
 source /opt/modules/default/init/sh
-module purge
-module load   DefApps
-module load   PrgEnv-pgi Base-opts
-module load   xtpe-quadcore
-module load   torque moab
-module switch pgi pgi/7.1.6       # 7.1.6      is default on 2008-sep-03
-module load   netcdf/3.6.2        # 3.6.2      is default on 2008-sep-03
-module load p-netcdf/1.0.2
-module swap xt-asyncpe xt-asyncpe/3.0
+module load PrgEnv-pgi Base-opts
+module load xtpe-quadcore
+module load torque moab
+module switch pgi pgi/9.0.2               # 9.0.2 tested for bfb on 2009-sep-25
+module switch xt-mpt    xt-mpt/3.2.0      # 3.2.0  is default on 2009-sep-25
+module switch xt-libsci xt-libsci/10.3.5  # 10.3.5 is default on 2009-sep-25
+module load   netcdf/3.6.2                # 3.6.2  is default on 2008-sep-03
+module load p-netcdf
 module load   ncl
 
 export MPICH_MAX_SHORT_MSG_SIZE=32000 # default is 128000 bytes
@@ -515,6 +540,11 @@ export MPICH_PTL_SEND_CREDITS=-1
 
 export MPICH_ENV_DISPLAY=1
 export MPICH_VERSION_DISPLAY=1
+
+# These environment variables were suggested by Helen He to help get around compiler issues
+# with pgi9
+export MALLOC_MMAP_MAX_=0
+export MALLOC_TRIM_THRESHOLD_=536870912
 
 # The environment variables below produce corefiles and maybe (?) should be
 # moved to DEBUG mode at some point
@@ -597,14 +627,13 @@ export PATH="\${PATH}:/usr/bin:/bin:/sbin:/usr/sbin"
 
 if [ -e /opt/modules/default/init/sh ]; then
   source /opt/modules/default/init/sh
-  module purge
-  module load PrgEnv-pgi Base-opts
   module load xtpe-quadcore
-# module swap xt-mpt xt-mpt/3.0.0.0 # (3.0.0.0 is default on 2008-Aug-11)
-  module load torque moab
-  module switch pgi pgi/7.1.6       # (7.1.6   is default on 2008-Aug-11)
-  module load netcdf/3.6.2
-# module list
+  module switch pgi pgi/9.0.2               # 9.0.2 tested for bfb on 2009-sep-25
+  module switch xt-mpt    xt-mpt/3.2.0      # 3.2.0  is default on 2009-sep-25
+  module switch xt-libsci xt-libsci/10.3.5  # 10.3.5 is default on 2009-sep-25
+  module load   netcdf/3.6.2                # 3.6.2  is default on 2008-sep-03
+  module load p-netcdf
+  module load   ncl
 fi
 export PATH="\${PATH}:\${MPICH_DIR}/bin"
 export PATH="\${PATH}:\${PE_DIR}/bin/snos64"
@@ -613,6 +642,25 @@ export PATH="\${PATH}:\${SE_DIR}/bin/snos64"
 export PATH="\${PATH}:\${C_DIR}/amd64/bin"
 export PATH="\${PATH}:\${PRGENV_DIR}/bin"
 export PATH="\${PATH}:\${MPT_DIR}/bin"
+
+export MPICH_MAX_SHORT_MSG_SIZE=8000  # default is 128000 bytes
+export MPICH_PTL_UNEX_EVENTS=960000   # default is  90000 (unexpected recv queue size)
+export MPICH_UNEX_BUFFER_SIZE=1000M   # default is    60M (unexpected short msgs buff size)
+export MPICH_MSGS_PER_PROC=160000     # default is  32768
+export MPICH_PTL_SEND_CREDITS=-1
+export MPICH_PTL_OTHER_EVENTS=4096    # default is 2048
+
+export MPICH_ENV_DISPLAY=1
+export MPICH_VERSION_DISPLAY=1
+
+# These environment variables were suggested by Helen He to help get around compiler issues
+# with pgi9
+export MALLOC_MMAP_MAX_=0
+export MALLOC_TRIM_THRESHOLD_=536870912
+
+# The environment variables below produce corefiles and maybe (?) should be
+# moved to DEBUG mode at some point
+export MPICH_DBMASK=0x200
 
 export LIB_NETCDF=\${NETCDF_DIR}/lib
 export INC_NETCDF=\${NETCDF_DIR}/include

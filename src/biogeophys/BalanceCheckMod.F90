@@ -67,7 +67,6 @@ contains
 ! !REVISION HISTORY:
 ! Created by Peter Thornton
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
 !
@@ -86,6 +85,7 @@ contains
     real(r8), pointer :: begwb(:)              ! water mass begining of the time step
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
 !
     integer :: c, p, f, j, fc            ! indices
 !-----------------------------------------------------------------------
@@ -239,9 +239,9 @@ contains
     real(r8), pointer :: netrad(:)          ! net radiation (positive downward) (W/m**2)
     real(r8), pointer :: errsoi_col(:)      ! column-level soil/lake energy conservation error (W/m**2)
 !
-!EOP
 !
 ! !OTHER LOCAL VARIABLES:
+!EOP
     integer  :: p,c,l,g                     ! indices
     real(r8) :: dtime                       ! land model time step (sec)
     integer  :: nstep                       ! time step number

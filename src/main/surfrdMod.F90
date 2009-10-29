@@ -52,7 +52,6 @@ module surfrdMod
 ! Created by Mariana Vertenstein
 ! Updated by T Craig
 !
-!EOP
 !
 ! !PRIVATE MEMBER FUNCTIONS:
   private :: surfrd_wtxy_special
@@ -60,6 +59,7 @@ module surfrdMod
   private :: surfrd_wtxy_veg_all
   private :: surfrd_wtxy_veg_dgvm
   private :: surfrd_mkrank
+!EOP
 !-----------------------------------------------------------------------
 
 contains
@@ -115,9 +115,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein, Sam Levis and Gordon Bonan
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     character(len=256) :: locfn                          ! local file name
     integer  :: ncid,dimid,varid                         ! netCDF id's
     integer  :: begg,endg   
@@ -235,9 +235,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ni,nj               ! size of grid on file
     integer :: ncid,dimid,varid    ! netCDF id's
     integer :: ier                 ! error status
@@ -342,9 +342,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: ni,nj               ! size of grid on file
     integer :: n                   ! index
     integer :: ncid,dimid,varid    ! netCDF id's
@@ -560,9 +560,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: n                   ! indices
     integer :: ni,nj,ns            ! size of grid on file
     integer :: ncid,dimid,varid    ! netCDF id's
@@ -665,9 +665,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by T Craig
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: n                   ! indices
     integer :: ni,nj,ns            ! size of grid on file
     integer :: ncid,dimid,varid    ! netCDF id's
@@ -773,9 +773,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein, Sam Levis and Gordon Bonan
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: n,nl,ns,nurb,g             ! indices
     integer  :: begg,endg                  ! gcell beg/end
     integer  :: dimid,varid                ! netCDF id's
@@ -978,9 +978,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein, Sam Levis and Gordon Bonan
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: k,m,k1,k2,n,nl,ns               ! indices
     integer  :: begg,endg                       ! beg/end gcell index
     integer  :: dimid,varid                     ! netCDF id's
@@ -1311,9 +1311,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein, Sam Levis and Gordon Bonan
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: m,mp7,mp8,mp11,n,nl,ns         ! indices
     integer  :: begg,endg                      ! beg/end gcell index
     integer  :: dimid,varid                    ! netCDF id's
@@ -1417,9 +1417,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 12/04
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer :: m,nl         ! indices
     integer  :: begg,endg   ! beg/end gcell index
 !-----------------------------------------------------------------------
@@ -1463,9 +1463,9 @@ contains
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     real(r8) :: a_max       ! maximum value in array
     integer  :: i           ! array index
     real(r8) :: delmax      ! tolerance for finding if larger value

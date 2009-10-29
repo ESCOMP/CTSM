@@ -34,14 +34,15 @@ module initializeMod
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
 !
-!EOP
 !
 ! !PRIVATE MEMBER FUNCTIONS:
   private header    ! echo version numbers
   private do_restread
 !-----------------------------------------------------------------------
-! !PRIVATE DATA:
+! !PRIVATE DATA MEMBERS: None
 
+!EOP
+!-----------------------------------------------------------------------
 contains
 
 !-----------------------------------------------------------------------
@@ -92,9 +93,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: ier                   ! error status
     integer  :: i,j,n1,n2,n,k,nr      ! loop indices
     integer  :: nl,nlg                ! gdc and glo lnd indices
@@ -413,9 +414,9 @@ contains
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
 !
-!EOP
 !
 ! !LOCAL VARIABLES:
+!EOP
     integer  :: i,j,k,n1,n2           ! indices
     integer  :: yr                    ! current year (0, ...)
     integer  :: mon                   ! current month (1 -> 12)
