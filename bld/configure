@@ -1127,7 +1127,7 @@ EOF
     if ($print>=2) { print "creating $clm_bld/$macro\n"; }
 
     # Write the ccsm top level Makefile.
-    write_ccsm_makefile("$config_dir/TopCCSMBldMakefile.in", "$clm_bld/Makefile",
+    write_ccsm_makefile("$builddir/Makefile", "$clm_bld/Makefile",
                         "ccsm", "$macro", $cfg_ref );
     if ($print>=2) { print "creating $clm_bld/ccsm_lib/Makefile\n"; }
 
@@ -1761,6 +1761,15 @@ ULIBDEP := \$(LIBROOT)/libccsm_lib.a \$(LIBROOT)/liblnd.a
 
 \$(LIBROOT)/libccsm_lib.a:
 	cd ccsm_lib && \$(MAKE) \$(MAKEFLAGS)
+
+#-----------------------------------------------------------------------------
+# This is duplicated from the CCSM Makefile with the following mods.
+# The changes are highlighted with "### NOTE:" and are as follows...
+#
+# 1.) Include dependency on $(ULIBDEP) for Depends file
+# 2.) On clean go to subdirectories and clean
+#-----------------------------------------------------------------------------
+
 EOF
 
     } else {
@@ -1774,7 +1783,27 @@ EOF
     # Copy the "template" makefile to the new makefile.
     $fh_in->open("<$file_in") or die "** can't open file: $file_in\n";
     while (<$fh_in>) {
-	print $fh_out $_;
+        if ( $model eq "ccsm" ) {
+           # Add ULIBDEP to end of Depends dependency
+           if ( /\$\(CURDIR\)\/Depends\:/ ) {
+              chomp( $_ );
+              $_ = "$_ \$(ULIBDEP)\n";
+           }
+        }
+        print $fh_out $_;
+        if ( $model eq "ccsm" ) {
+          if ( /(mostly|real||)clean\:\s*$/ ) {
+             my $type = $1;
+             $_ = <$fh_in>;
+             print $fh_out $_;
+             print $fh_out "### NOTE: Also remove these and then go to subdirs...\n";
+             if ( $type eq "real" && $type eq "" ) {
+                print $fh_out "\t\$(RM) -f \$(INCROOT)/* \$(LIBROOT)/*\n";
+             }
+             print $fh_out "\tcd lnd;      \$(MAKE) \$@\n";
+             print $fh_out "\tcd ccsm_lib; \$(MAKE) \$@\n";
+          }
+        }
     }
 
     $fh_out->close;

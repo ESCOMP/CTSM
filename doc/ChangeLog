@@ -1,4 +1,108 @@
 ===============================================================
+Tag name:  clm3_6_55
+Originator(s):  erik (erik)
+Date: Thu Nov  5 21:30:58 MST 2009
+One-line Summary: Fix tool to create Nitrogen deposition datasets, and change configure to use CCSM Makefile as source for TopLevel Makefile
+
+Purpose of changes:
+
+    Fix the tools to create Nitrogen deposition datasets, so units are transformed
+    to units expected by CLM, and summed together.
+    Create a new tool to extract static ndepdata from a given year from a transient file.
+    Remove old clm3.0 tex documentation.
+    Start adding in new documentation for CLM4.
+    Change the configure so that it modifies the standard CCSM makefile on the fly 
+    rather than keeping it's own copy.
+
+Bugs fixed (include bugzilla ID): 1068 and 1069 (partial)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
+                                      (fix the file generation tools -- next tag will use them)
+
+Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM  mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:  None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated:
+
+>>>>>>>>>>>>>>> Remove copy of CCSM top level Makefile
+   D   models/lnd/clm/bld/config_files/TopCCSMBldMakefile.in
+>>>>>>>>>>>>>>> Remove old documentation for clm3.0
+   D   models/lnd/clm/doc/UsersGuide/History.tex
+   D   models/lnd/clm/doc/UsersGuide/Download.tex
+   D   models/lnd/clm/doc/UsersGuide/Namelist.tex
+   D   models/lnd/clm/doc/UsersGuide/Examples.tex
+   D   models/lnd/clm/doc/UsersGuide/Makefile
+   D   models/lnd/clm/doc/UsersGuide/Build.tex
+   D   models/lnd/clm/doc/UsersGuide/Subgrid.tex
+   D   models/lnd/clm/doc/UsersGuide/UsersGuide.tex
+   D   models/lnd/clm/doc/CodeReference/CodeReference.tex
+   D   models/lnd/clm/doc/CodeReference/Makefile
+   D   models/lnd/clm/doc/CodeReference/clm_offline_tree.html
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>>> Add script to extract out static fndepdat files from
+>>>>>>>>>>>>>>> the transient time-series data.
+   A   models/lnd/clm/tools/ncl_scripts/getndepdatFrom20thCentury.ncl -- Get ndepdat from fndepdyn
+>>>>>>>>>>>>>>> Start adding html based documentation, with a small outline
+   A   models/lnd/clm/doc/UsersGuide/clm_head.shtml ------------ Header for all users-guide docs
+   A   models/lnd/clm/doc/UsersGuide/tree.html ----------------- Contents nav side-bar
+   A   models/lnd/clm/doc/UsersGuide/clm_foot.shtml ------------ Footer for all users-guide docs
+   A   models/lnd/clm/doc/UsersGuide/index.shtml --------------- Starting short outline of Users-Guide
+   A   models/lnd/clm/doc/docs.html ---------------------------- List of documents
+   A   models/lnd/clm/doc/index.shtml -------------------------- Pointer to docs
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>> When creating ndepdyn file convert to proper units, and sum fields
+>>>>>>>>>>>>>>> together use only the decadal averages for data NOT 1850 and 2000
+>>>>>>>>>>>>>>> Make setting of cyclic more robust in regrid, and let ndepregrid handle
+>>>>>>>>>>>>>>> new files
+   M   models/lnd/clm/tools/ncl_scripts/ndeplintInterp.ncl - Convert from Kg/s to g/m^2/yr
+                sum fields together also keep separated fields, use only decadal
+                files to calculate and extrapolate to 1849 from the 1855 decade average.
+   M   models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl --- Make setting of Cyclic robust
+   M   models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl ----- Make setting of Cyclic robust
+           add _FillValue on all NDEP_ fieldnames
+>>>>>>>>>>>>>>> Change configure so that the top level Makefile is the standard
+>>>>>>>>>>>>>>> CCSM Makefile with some mods done on the fly
+   M   models/lnd/clm/bld/configure ---
+
+Summary of testing: Limited
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_54
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_54
 Originator(s):  erik (erik)
 Date: Wed Oct 28 21:17:13 MDT 2009
@@ -38,6 +142,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                   994 (finidat files on jaguar for pftdyn fail)
                                  1017 (SCM mode can NOT restart)
                                  1025 (SCM  mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Have configure write out unresolved filepaths 
@@ -356,6 +463,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                   994 (finidat files on jaguar for pftdyn fail)
                                  1017 (SCM mode can NOT restart)
                                  1025 (SCM  mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: In template turn off RTM if grid=pt1
@@ -462,6 +572,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1017 (SCM mode can NOT restart)
                                  1025 (SCM  mode can NOT use a global finidat file)
                                  1042 (Bug with domain directory name in datm for pt1_pt1 resolution)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Filepath, bluefire compiler to XLF12
@@ -647,6 +760,8 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                   994 (finidat files on jaguar for pftdyn fail)
                                  1017 (SCM mode can NOT restart)
                                  1025 (SCM  mode can NOT use a global finidat file)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Small change to configure
@@ -795,6 +910,8 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1017 (SCM mode can NOT restart)
                                  1025 (SCM  mode can NOT use a global finidat file)
                                  1031 (Can't run SMS_D.f09_g16.ICN8520)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -894,6 +1011,8 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1025 (SCM  mode can NOT use a global finidat file)
                                  1031 (Can't run SMS_D.f09_g16.ICN8520)
                                  1033 (SCM mode does NOT work with CN)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system:  Local Makefile changed for ifort
@@ -1033,6 +1152,8 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1029 (ifort compilation error in pio)
                                  1031 (Can't run SMS_D.f09_g16.ICN8520)
                                  1032 (Problem running SCM mode on Lahey)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Get ccsm_bld option working
@@ -1275,6 +1396,8 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1010 (error in mksurfdata for qtr degree)
                                  1014 (shr_scam checkSurface can NOT run an I case)
                                  1023 (SCM mode check for lnd_present)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1418,6 +1541,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   994 (finidat files on jaguar for pftdyn fail)
                                  1007 (interpinic error with Linux/lahey)
                                  1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
 
     http://bugs.cgd.ucar.edu/
 
@@ -1653,6 +1778,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   990 (CN transient blowup)
                                   994 (finidat files on jaguar for pftdyn fail)
                                  1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
 
     http://bugs.cgd.ucar.edu/
 
@@ -1733,6 +1860,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   990 (CN transient blowup)
                                   994 (finidat files on jaguar for pftdyn fail)
                                  1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
 
     http://bugs.cgd.ucar.edu/
 
@@ -1900,6 +2029,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   972 (abort on intel with MPI)
                                   991 (C13 nfields cause model to blowup on jaguar)
                                  1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
 
     http://bugs.cgd.ucar.edu/
 
@@ -2034,6 +2165,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   972 (abort on intel with MPI)
                                   974 (bug in pftdyn mode)
                                   977 (bug writing out 3D time-const data)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
 
     http://bugs.cgd.ucar.edu/
 
@@ -2358,6 +2491,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   966 (Hybrid restart problem on bluefire)
                                   967 (PIO bounds problem on jaguar)
                                   974 (bug in pftdyn mode)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Start adding option to build with ccsm Makefiles
@@ -2629,6 +2764,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   937 (undef value on bangkok for maxpatchpft=numpft+1 case)
                                   974 (bug in pftdyn mode)
                                   977 (bug writing out 3D time-const data)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Change default for maxpatch_pft back to numpft+1
@@ -2700,6 +2837,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   946 (default maxpatchpft)
                                   974 (bug in pftdyn mode)
                                   977 (bug writing out 3D time-const data)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system:
@@ -2836,6 +2975,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   937 (undef value on bangkok for maxpatchpft=numpft+1 case)
                                   941 (RTM output 6X too low)
                                   974 (bug in pftdyn mode)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 
@@ -2899,6 +3040,8 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   937 (undef value on bangkok for maxpatchpft=numpft+1 case)
                                   941 (RTM output 6X too low)
                                   974 (bug in pftdyn mode)
+                                 1068 (Problems interpolated deposition datasets to high res)
+                                 1069 (Nitrogen Deposition datasets have wrong units)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: maxpatchpft default is now numpft+1

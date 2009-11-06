@@ -153,11 +153,23 @@ begin
      print( "Area-out: "+sum(areao) );
      exit
   end if
-  sumearth = sum( doubletofloat( (/ ncgi->AREA /) ) );
   ;
   ; loop over variables
   ;
-  Cyclic = abs(sumarea - sumearth)/sumearth .lt. 1.e-4;
+  if ( nlon .eq. 1 )then
+     Cyclic = False
+  else
+     dx = lono(1) - lono(0);
+     ; The last longitude should equal 360-(dx-first_longitude)
+     ; So for example if first_longitude=0,  last will be 360-dx
+     ;                If first_longitude=dx, last will be 360
+     expLast = 360.0 - (dx - lono(0));
+     if ( abs(lono(nlon-1) - expLast) .lt. 1.e-4 )then
+        Cyclic = True;
+     else
+        Cyclic = False
+     end if
+  end if
 
   print( "Cyclic grid: "+Cyclic );
 

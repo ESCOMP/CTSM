@@ -26,6 +26,7 @@ begin
 
   ; END OF SECTION TO EDIT
   ; ===========================================================================================================
+  load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 
   ; Defaults if env variable is NOT set
 
@@ -134,12 +135,13 @@ begin
      dimlist = getfilevardims( nc, vars(i) )
      filevardef (    nco, vars(i), typeof(nc->$vars(i)$), dimlist );
      filevarattdef ( nco, vars(i), nc->$vars(i)$ );
+     if ( isStrSubset( vars(i), "NDEP_" ) )then
+        nco->$vars(i)$@_FillValue = -1.e36;
+     end if
      delete( dimlist );
      i = i - 1
   end do
   fileattdef ( nco, nc );
-  nco->NDEP_year@_FillValue     = -1.e36;
-  nco->NDEP_AER_year@_FillValue = -1.e36;
   ;
   ; Add global attributes to output file
   ;
@@ -181,11 +183,23 @@ begin
      print( "Area-out: "+sum(areao) );
      exit
   end if
-  sumearth = sum( doubletofloat( (/ ncgi->AREA /) ) );
   ;
   ; loop over variables
   ;
-  Cyclic = abs(sumarea - sumearth)/sumearth .lt. 1.e-4;
+  if ( nlon .eq. 1 )then
+     Cyclic = False
+  else
+     dx = lono(1) - lono(0); 
+     ; The last longitude should equal 360-(dx-first_longitude)
+     ; So for example if first_longitude=0,  last will be 360-dx
+     ;                If first_longitude=dx, last will be 360
+     expLast = 360.0 - (dx - lono(0));
+     if ( abs(lono(nlon-1) - expLast) .lt. 1.e-4 )then
+        Cyclic = True;
+     else
+        Cyclic = False
+     end if
+  end if
 
   print( "Cyclic grid: "+Cyclic );
 
@@ -219,7 +233,7 @@ begin
              nco->$vars(i)$(time|t,lat|:,lon|:) = (/varto/);
              vart  = vart*areai;
              varto = varto*areao;
-             print( "Month: "+t+" Input w-sum: "+sum(vart)+" Output: "+sum(varto) );
+             print( "Year: "+nco->YEAR(t)+" Input w-sum: "+sum(vart)+" Output: "+sum(varto) );
           end do
        ;
        ; without time dimension

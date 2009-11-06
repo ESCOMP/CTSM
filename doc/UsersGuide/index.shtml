@@ -1,0 +1,91 @@
+<!--#include virtual="clm_head.shtml" -->
+
+<h1 class="bigheading">CCSM Research Tools: CLM4.0 Users Guide Documentation</h1>
+
+<h2>Authors</h2>
+Erik Kluzek
+                     
+<!-- begin maincontent_subcolumn -->
+<div id="maincontent_subcolumn">
+                        
+   <h2 class="secondheading">What is new with CLM4?</h2>
+   <p>How to customize the configuration for a case with CLM</p>
+   <h2 class="secondheading">Choosing a compset using CLM</h2>
+     <h3>Compsets coupled to data atmosphere and stub ocean/sea-ice ("I" compsets)</h3>
+    <ol>
+       <li><h4>I_2000</h4> for vegetation types simulating year 2000 AD.
+       <li><h4>I_1850</h4> for vegetation types simulating year 1850 AD.
+       <li><h4>I_GLC</h4> for running with the glacier model (2000 AD conditions).
+       <li><h4>I_1948_2004</h4> for 2000 AD simulation year running over atmospheric
+           data from 1948 to 2004.
+       <li><h4>I_1850-2000</h4> for 20th Century simulations varying the vegetation
+          types from 1850 to 2000 AD.
+       <li><h4>I_CASA</h4> for 2000 AD simulation year running with CASA' BGC model..
+       <li><h4>I_CASA_1948_2004</h4> for 2000 AD simulation year running with CASA'
+           BGC model over atmospheric data from 1948 to 2004.
+       <li><h4>I_CN</h4> for 2000 AD simulation year running with CN BGC model.
+       <li><h4>I_1850_CN</h4> for 1850 AD simulation year running with CN BGC model.
+       <li><h4>I_1850_SPINUP_3HrWxHfHrSol_CN</h4> for 1850 AD simulation year running
+          with CN BGC model and using 3-hourly weather forcing and half-hour solar
+          data from a fully coupled case for the atmosphere. This is meant to spinup the
+          CN BGC model.
+       <li><h4>I_CN_1948_2004</h4> for 2000 AD simulation year running with CN BGC model
+          with atmospheric data from 1948 to 2004.
+       <li><h4>I_CN_1850-2000</h4> for 20th Century simulations varying the vegetation
+          types from 1850 to 2000 AD running with the CN BGC model
+          with atmospheric data from 1948 to 2004.
+    </ol>
+     <h3>Compsets coupled to active atmosphere with data ocean</h3>
+      <p>
+       CAM compsets are compsets that start with "E" or "F" in the name. They are
+       described more fully in the scripts documentation or the CAM documentation.
+     <h3>Fully coupled compsets with fully active ocean, sea-ice, and atmosphere</h3>
+      <p>
+       Fully coupled compsets are compsets that start with "B" in the name. They are
+       described more fully in the scripts documentation.
+   <h2 class="secondheading">Customizing the clm configuration</h2>
+   <p>How to customize the configuration for a case with CLM</p>
+    <h3>CLM Script configuration items</h3>
+    <ul>
+    <li>CLM_CONFIG_OPTS
+    <li>CLM_BLDNML_OPTS
+    <li>CLM_NAMELIST_OPTS
+    <li>CLM_DEMAND
+    <li>CLM_FORCE_COLDSTART
+    <li>CLM_PT1_NAME
+    <li>CLM_USRDAT_NAME
+    </ul>
+    <h3>Other noteworthy configuration items</h3>
+    <ul>
+    <li>CCSM_CO2_PPMV
+    <li>DATM_MODE
+    <li>DATM_CLMNCEP_YR_ALIGN
+    <li>DATM_CLMNCEP_YR_START
+    <li>DATM_CLMNCEP_YR_END
+    <li>DATM_CO2_TSERIES
+    </ul>
+   <a href="../config_files/config_definition.xml">Definition of each clm configuration Item</a>
+                        
+   <h2 class="secondheading">Customizing the clm namelist</h2>
+   <p>How to customize the namelist for a case with CLM</p>
+
+   <a href="../namelist_files/namelist_definition.xml">Definition of each Namelist Item</a>
+   <a href="../namelist_files/namelist_defaults_clm.xml">Default values of each CLM Namelist Item</a>
+   <h3 class="thirdheading">Examples of using different namelist features</h3>
+   <p>Examples of using different features in your namelist</p>
+      <h4 class="fourthheading">Adding/removing fields on your primary history file</h4>
+      <h4 class="fourthheading">Adding auxillary history files and changing output
+frequency</h4>
+      <h4 class="fourthheading">Removing all history fields</h4>
+      <h4 class="fourthheading">Various ways to change history output averaging flags</h4>
+      <h4 class="fourthheading">Outputting history files as a vector in order to analyze
+the plant function types within gridcells</h4>
+   <h2 class="secondheading">Using the CLM tools to create your own input datasets</h2>
+   <h2 class="secondheading">How to run Single-Point cases</h2>
+   <h3 class="thirdheading">Running PTS_MODE configurations</h3>
+   <h3 class="thirdheading">Creating your own single-point datasets</h3>
+
+<!-- end maincontent_subcolumn -->
+</div>
+                        
+<!--#include virtual="clm_foot.shtml" -->

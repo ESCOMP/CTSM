@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_55         erik 11/05/2009 Fix tool to create Nitrogen deposition datasets, and change configure to use CCSM Makefile as source for TopLevel Makefile
    clm3_6_54         erik 10/28/2009 Allow comp_intf to change on ccsm build, reduce default hist fields, start adding 2.5x3.33, start adding VOC fsurdat datasets, new finidat files for f09 and f19
    clm3_6_53         erik 09/22/2009 Fix so that T31_gx3v7 file is actually included
    clm3_6_52         erik 09/17/2009 Add T31_gx3v7 support, remove forganic, read from fsurdat, add script to extract regional datasets, work with CN output, add more urban/rural fields
