@@ -82,6 +82,7 @@ contains
 ! !LOCAL VARIABLES:
 !EOP
     character(len=256) :: locfn                          ! local file name
+    character(len=256) :: units = ' '                    ! units of ndep_year variable
     integer  :: ncid,dimid,varid                         ! netCDF id's
     integer  :: begg,endg                                ! start/stop gridcells
     integer  :: ier, ret                                 ! error status 
@@ -113,6 +114,14 @@ contains
           else
              lsmlon = 1
              lsmlat = 1
+          end if
+          !
+          ! Check that units are correct on NDEP_year variable
+          !
+          call check_ret(nf_inq_varid(ncid, 'NDEP_year', varid), subname)
+          call check_ret(nf_get_att_text(ncid, varid, 'units', units), subname)
+          if ( trim(units) .ne. "g(N)/m2/yr" .and. trim(units) .ne. "gN/m2/yr" )then
+             call endrun( 'ERROR: units are NOT what is expected on ndepdat file = '//trim(units) )
           end if
        endif 
 
@@ -153,20 +162,20 @@ contains
 !
 ! !LOCAL VARIABLES:
 !EOP
-    integer  :: i,j,m,n,g                       ! indices
-    integer  :: ntimes                          ! number of input time samples
-    real(r8) :: sumpct                          ! sum for error check
-    integer  :: varid                           ! netcdf ids
-    integer  :: year                            ! year (0, ...) for nstep+1
-    integer  :: mon                             ! month (1, ..., 12) for nstep+1
-    integer  :: day                             ! day of month (1, ..., 31) for nstep+1
-    integer  :: sec                             ! seconds into current date for nstep+1
-    integer  :: ier                             ! error status
-    logical  :: found                           ! true => input dataset bounding dates found
-    integer  :: begg,endg                       ! local beg/end indices
-!    real(r8), allocatable :: ndep(:,:)          ! input ndep
-    type(gridcell_type), pointer :: gptr        ! pointer to gridcell derived subtype
-    character(len=256) :: locfn                 ! local file name
+    integer  :: i,j,m,n,g                        ! indices
+    integer  :: ntimes                           ! number of input time samples
+    real(r8) :: sumpct                           ! sum for error check
+    integer  :: varid                            ! netcdf ids
+    integer  :: year                             ! year (0, ...) for nstep+1
+    integer  :: mon                              ! month (1, ..., 12) for nstep+1
+    integer  :: day                              ! day of month (1, ..., 31) for nstep+1
+    integer  :: sec                              ! seconds into current date for nstep+1
+    integer  :: ier                              ! error status
+    logical  :: found                            ! true => input dataset bounding dates found
+    integer  :: begg,endg                        ! local beg/end indices
+    type(gridcell_type), pointer :: gptr         ! pointer to gridcell derived subtype
+    character(len=256) :: locfn                  ! local file name
+    character(len=256) :: units = ' '            ! units of ndep_year variable
     character(len= 32) :: subname='ndepdyn_init' ! subroutine name
  !-----------------------------------------------------------------------
 
@@ -238,6 +247,14 @@ contains
              write(iulog,*)'model year = ',year
              call endrun()
           end if
+       end if
+       !
+       ! Check that units are correct on NDEP_year variable
+       !
+       call check_ret(nf_inq_varid(ncid, 'NDEP_year', varid), subname)
+       call check_ret(nf_get_att_text(ncid, varid, 'units', units), subname)
+       if ( trim(units) .ne. "g(N)/m2/yr" )then
+          call endrun( 'ERROR: units are NOT what is expected on fndepdyn file' )
        end if
             
     end if   ! end of if-masterproc block

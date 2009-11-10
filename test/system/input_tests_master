@@ -311,6 +311,22 @@ erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -3+-7 a
 brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -5+-5 arb_ic
 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10   arb_ic
 
+smH65 TSM.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   arb_ic
+erH65 TER.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 arb_ic
+brH65 TBR.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 arb_ic
+blH65 TBL.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   arb_ic
+
+smH67 TSM.sh 17p_cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   arb_ic
+erH67 TER.sh 17p_cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 arb_ic
+brH67 TBR.sh 17p_cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 arb_ic
+blH67 TBL.sh 17p_cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   arb_ic
+
+
+smHM1 TSM.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 USGS@1850-2000 -10   arb_ic
+erHM1 TER.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 USGS@1850-2000 -3+-7 arb_ic
+brHM1 TBR.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 USGS@1850-2000 -5+-5 arb_ic
+blHM1 TBL.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 USGS@1850-2000 -10   arb_ic
+
 smH11 TSM.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 96    cold
 erH11 TER.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 10+38 cold
 brH11 TBR.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 72+72 cold

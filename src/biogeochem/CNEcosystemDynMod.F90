@@ -119,7 +119,7 @@ contains
        ! Call the main CN routines
        call CNZeroFluxes(num_soilc, filter_soilc, num_soilp, filter_soilp)
 
-       call CNNDeposition(num_soilc,filter_soilc)
+       call CNNDeposition(lbc, ubc)
 
        call CNNFixation(num_soilc,filter_soilc)
 

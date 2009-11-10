@@ -38,7 +38,7 @@ contains
 ! !IROUTINE: CNNDeposition
 !
 ! !INTERFACE:
-subroutine CNNDeposition(num_soilc, filter_soilc)
+subroutine CNNDeposition( lbc, ubc )
 !
 ! !DESCRIPTION:
 ! On the radiation time step, update the nitrogen deposition rate
@@ -53,14 +53,14 @@ subroutine CNNDeposition(num_soilc, filter_soilc)
 !
 ! !ARGUMENTS:
    implicit none
-   integer, intent(in) :: num_soilc       ! number of soil columns in filter
-   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
+   integer, intent(in) :: lbc, ubc        ! column bounds
 !
 ! !CALLED FROM:
 ! subroutine CNEcosystemDyn, in module CNEcosystemDynMod.F90
 !
 ! !REVISION HISTORY:
 ! 6/1/04: Created by Peter Thornton
+! 11/06/09: Copy to all columns NOT just over soil. S. Levis
 !
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in scalars
@@ -73,7 +73,7 @@ subroutine CNNDeposition(num_soilc, filter_soilc)
    real(r8), pointer :: ndep_to_sminn(:)
 !
 ! !OTHER LOCAL VARIABLES:
-   integer :: g,c,fc                 ! indices
+   integer :: g,c                    ! indices
 
 !EOP
 !-----------------------------------------------------------------------
@@ -85,10 +85,7 @@ subroutine CNNDeposition(num_soilc, filter_soilc)
    ndep_to_sminn => clm3%g%l%c%cnf%ndep_to_sminn
 
    ! Loop through columns
-!dir$ concurrent
-!cdir nodep
-   do fc = 1,num_soilc
-      c = filter_soilc(fc)
+   do c = lbc, ubc
       g = gridcell(c)
 
       ndep_to_sminn(c) = forc_ndep(g)

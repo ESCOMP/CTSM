@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<!-- Support for running with glacier model -->
+<!-- Currently is just a placeholder until the glcec branch comes to the trunk of clm-->
+<!-- This allows the glcec scripts branch to come to the scripts trunk -->
+
+<namelist_defaults>
+
+<use_case_desc>Placeholder for running IG cases with the ice sheet model glimmer</use_case_desc>
+
+<hist_nhtfrq>0,-8760</hist_nhtfrq>
+
+</namelist_defaults>
