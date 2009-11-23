@@ -194,6 +194,7 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 ! 2008.11.12  B. Kauffman: morph routine casa() in casa_ecosytemDyn(), so casa
 !    is more similar to CN & DGVM
 !
+!EOP
 !
 ! !LOCAL VARIABLES:
 !
@@ -203,7 +204,6 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
   integer , pointer :: itypelun(:)  ! landunit type
 !
 ! !OTHER LOCAL VARIABLES:
-!EOP
   real(r8) :: dtime                       ! land model time step (sec)
   real(r8) :: t1, t2, t3                  ! temporary for mass balance checks
   integer  :: nc, fc, c, fp, p, l, g      ! indices
@@ -322,7 +322,11 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 
      call t_startf('begwbal')
      call BeginWaterBalance(begc, endc, begp, endp, &
-          filter(nc)%num_nolakec, filter(nc)%nolakec, filter(nc)%num_lakec, filter(nc)%lakec)
+!KO          filter(nc)%num_nolakec, filter(nc)%nolakec, filter(nc)%num_lakec, filter(nc)%lakec)
+!KO
+          filter(nc)%num_nolakec, filter(nc)%nolakec, filter(nc)%num_lakec, filter(nc)%lakec, &
+          filter(nc)%num_hydrologyc, filter(nc)%hydrologyc)
+!KO
      call t_stopf('begwbal')
 
 #if (defined CN)
@@ -684,7 +688,6 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 end subroutine driver1
 
 !-----------------------------------------------------------------------
-!BOP
 !
 ! !ROUTINE: driver2
 !
@@ -702,9 +705,9 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 ! !REVISION HISTORY:
 ! 2005.05.22  Mariana Vertenstein creation
 !
+!EOP
 !
 ! !LOCAL VARIABLES:
-!EOP
   integer  :: nstep         ! time step number
   real(r8) :: dtime         ! land model time step (sec)
 #if (defined DGVM)
@@ -908,9 +911,9 @@ subroutine write_diagnostic (wrtdia, nstep)
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 !
+!EOP
 !
 ! !LOCAL VARIABLES:
-!EOP
   integer :: p                       ! loop index
   integer :: begp, endp              ! per-proc beginning and ending pft indices
   integer :: begc, endc              ! per-proc beginning and ending column indices
@@ -1038,9 +1041,9 @@ end function do_restwrite
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 
+!EOP
 !
 ! !LOCAL VARIABLES:
-!EOP
     integer :: yr         !nstep year (0 -> ...)
     integer :: yrm1       !nstep-1 year (0 -> ...)
     integer :: daym1      !nstep-1 day (1 -> 31)

@@ -39,7 +39,11 @@ contains
 !
 ! !INTERFACE:
   subroutine BeginWaterBalance(lbc, ubc, lbp, ubp, &
-             num_nolakec, filter_nolakec, num_lakec, filter_lakec)
+!KO             num_nolakec, filter_nolakec, num_lakec, filter_lakec)
+!KO
+             num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
+             num_hydrologyc, filter_hydrologyc)
+!KO
 !
 ! !DESCRIPTION:
 ! Initialize column-level water balance at beginning of time step
@@ -47,7 +51,10 @@ contains
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
-    use clm_varpar   , only : nlevgrnd
+!KO    use clm_varpar   , only : nlevgrnd
+!KO
+    use clm_varpar   , only : nlevgrnd, nlevsoi
+!KO
     use subgridAveMod, only : p2c
     use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, &
                               icol_road_imperv
@@ -60,6 +67,10 @@ contains
     integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
     integer, intent(in) :: num_lakec                   ! number of column non-lake points in column filter
     integer, intent(in) :: filter_lakec(ubc-lbc+1)     ! column filter for non-lake points
+!KO
+    integer , intent(in)  :: num_hydrologyc               ! number of column soil points in column filter
+    integer , intent(in)  :: filter_hydrologyc(ubc-lbc+1) ! column filter for soil points
+!KO
 !
 ! !CALLED FROM:
 ! subroutine driver
@@ -67,6 +78,7 @@ contains
 ! !REVISION HISTORY:
 ! Created by Peter Thornton
 !
+!EOP
 !
 ! !LOCAL VARIABLES:
 !
@@ -78,6 +90,10 @@ contains
     real(r8), pointer :: h2ocan_pft(:)         ! canopy water (mm H2O) (pft-level) 
     real(r8), pointer :: wa(:)                 ! water in the unconfined aquifer (mm)
     integer , pointer :: ctype(:)              ! column type 
+!KO
+    real(r8), pointer :: zwt(:)                ! water table depth (m)
+    real(r8), pointer :: zi(:,:)               ! interface level below a "z" level (m)
+!KO
 !
 ! local pointers to original implicit out variables
 !
@@ -85,7 +101,6 @@ contains
     real(r8), pointer :: begwb(:)              ! water mass begining of the time step
 !
 ! !OTHER LOCAL VARIABLES:
-!EOP
 !
     integer :: c, p, f, j, fc            ! indices
 !-----------------------------------------------------------------------
@@ -99,6 +114,10 @@ contains
     h2ocan_col         => clm3%g%l%c%cws%pws_a%h2ocan
     wa                 => clm3%g%l%c%cws%wa
     ctype              => clm3%g%l%c%itype
+!KO
+    zwt                => clm3%g%l%c%cws%zwt
+    zi                 => clm3%g%l%c%cps%zi
+!KO
 
     ! Assign local pointers to derived type members (pft-level)
 
@@ -107,6 +126,17 @@ contains
     ! Determine beginning water balance for time step
     ! pft-level canopy water averaged to column
     call p2c(num_nolakec, filter_nolakec, h2ocan_pft, h2ocan_col)
+
+!KO
+!dir$ concurrent
+!cdir nodep
+    do f = 1, num_hydrologyc
+       c = filter_hydrologyc(f)
+       if(zwt(c) <= zi(c,nlevsoi)) then
+          wa(c) = 5000._r8
+       end if
+    end do
+!KO
 
 !dir$ concurrent
 !cdir nodep
@@ -239,9 +269,9 @@ contains
     real(r8), pointer :: netrad(:)          ! net radiation (positive downward) (W/m**2)
     real(r8), pointer :: errsoi_col(:)      ! column-level soil/lake energy conservation error (W/m**2)
 !
+!EOP
 !
 ! !OTHER LOCAL VARIABLES:
-!EOP
     integer  :: p,c,l,g                     ! indices
     real(r8) :: dtime                       ! land model time step (sec)
     integer  :: nstep                       ! time step number

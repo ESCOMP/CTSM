@@ -104,9 +104,9 @@ contains
     real(r8), pointer :: eff_porosity(:,:) ! effective porosity = porosity - vol_ice
     real(r8), pointer :: fracice(:,:)      !fractional impermeability (-)
 !
+!EOP
 !
 ! !OTHER LOCAL VARIABLES:
-!EOP
 !
     integer  :: c,j,fc,g                   !indices
     real(r8) :: dtime                      ! land model time step (sec)
@@ -273,9 +273,9 @@ contains
 !
     real(r8), pointer :: qflx_infl(:)      !infiltration (mm H2O /s)
 !
+!EOP
 !
 ! !OTHER LOCAL VARIABLES:
-!EOP
 !
     integer :: c, fc    !indices
 !-----------------------------------------------------------------------
@@ -458,9 +458,9 @@ contains
     real(r8), pointer :: smp_l(:,:)             ! soil matrix potential [mm]
     real(r8), pointer :: hk_l(:,:)              ! hydraulic conductivity (mm/s)
 !
+!EOP
 !
 ! !OTHER LOCAL VARIABLES:
-!EOP
 !
     integer  :: p,c,fc,j                  ! do loop indices
     integer  :: jtop(lbc:ubc)             ! top level at each column
@@ -976,11 +976,14 @@ contains
     real(r8), pointer :: eflx_impsoil(:)   !implicit evaporation for soil temperature equation
     real(r8), pointer :: qflx_rsub_sat(:)  !soil saturation excess [mm h2o/s]
 !
-!
-! !OTHER LOCAL VARIABLES:
 !EOP
 !
-    integer  :: c,j,fc                   !indices
+! !OTHER LOCAL VARIABLES:
+!
+!KO    integer  :: c,j,fc                   !indices
+!KO
+    integer  :: c,j,fc,i                 !indices
+!KO
     real(r8) :: dtime                    !land model time step (sec)
     real(r8) :: xs(lbc:ubc)              !water needed to bring soil moisture to watmin (mm)
     real(r8) :: dzmm(lbc:ubc,1:nlevsoi)  !layer thickness (mm)
@@ -1003,6 +1006,9 @@ contains
     real(r8) :: fracice_rsub(lbc:ubc)    !fractional impermeability of soil layers (-)
     real(r8) :: ka                       !hydraulic conductivity of the aquifer (mm/s)
     real(r8) :: dza                      !fff*(zwt-z(jwt)) (-)
+!KO
+    real(r8) :: available_h2osoi_liq     !available soil liquid water in a layer
+!KO
 !-----------------------------------------------------------------------
 
     ! Assign local pointers to derived subtypes components (column-level)
@@ -1175,7 +1181,10 @@ contains
 !cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
-          if (h2osoi_liq(c,j) < 0._r8) then
+!KO          if (h2osoi_liq(c,j) < 0._r8) then
+!KO
+          if (h2osoi_liq(c,j) < watmin) then
+!KO
              xs(c) = watmin - h2osoi_liq(c,j)
           else
              xs(c) = 0._r8
@@ -1185,6 +1194,23 @@ contains
        end do
     end do
 
+!KO    j = nlevsoi
+!KO!dir$ concurrent
+!KO!cdir nodep
+!KO    do fc = 1, num_hydrologyc
+!KO       c = filter_hydrologyc(fc)
+!KO       if (h2osoi_liq(c,j) < watmin) then
+!KO          xs(c) = watmin-h2osoi_liq(c,j)
+!KO       else
+!KO          xs(c) = 0._r8
+!KO       end if
+!KO       h2osoi_liq(c,j) = h2osoi_liq(c,j) + xs(c)
+!KO       wa(c) = wa(c) - xs(c)
+!KO       wt(c) = wt(c) - xs(c)
+!KO    end do
+
+!KO
+! Get water for bottom layer from layers above if possible
     j = nlevsoi
 !dir$ concurrent
 !cdir nodep
@@ -1192,13 +1218,31 @@ contains
        c = filter_hydrologyc(fc)
        if (h2osoi_liq(c,j) < watmin) then
           xs(c) = watmin-h2osoi_liq(c,j)
+          searchforwater: do i = nlevsoi-1, 1, -1
+             available_h2osoi_liq = max(h2osoi_liq(c,i)-watmin-xs(c),0._r8)
+             if (available_h2osoi_liq .ge. xs(c)) then
+               h2osoi_liq(c,j) = h2osoi_liq(c,j) + xs(c)
+               h2osoi_liq(c,i) = h2osoi_liq(c,i) - xs(c)
+               xs(c) = 0._r8
+               exit searchforwater
+             else
+               h2osoi_liq(c,j) = h2osoi_liq(c,j) + available_h2osoi_liq
+               h2osoi_liq(c,i) = h2osoi_liq(c,i) - available_h2osoi_liq
+               xs(c) = xs(c) - available_h2osoi_liq
+             end if
+          end do searchforwater
        else
           xs(c) = 0._r8
        end if
+! Needed in case there is no water to be found
        h2osoi_liq(c,j) = h2osoi_liq(c,j) + xs(c)
-       wa(c) = wa(c) - xs(c)
        wt(c) = wt(c) - xs(c)
+! Instead of removing water from aquifer where it eventually
+! shows up as excess drainage to the ocean, take it back out of 
+! drainage
+       rsub_top(c) = rsub_top(c) - xs(c)/dtime
     end do
+!KO
 
 !dir$ concurrent
 !cdir nodep
