@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_58         erik 12/08/2009 Fix rpointer, correct units for export of nee, start adding testing for intrepid
+   clm3_6_57         erik 11/20/2009 Redirect aquifer overflow to drainage, so doesn't end up in ocean
    clm3_6_56         erik 11/10/2009 New ndepdat and ndepdyn datasets
    clm3_6_55         erik 11/05/2009 Fix tool to create Nitrogen deposition datasets, and change configure to use CCSM Makefile as source for TopLevel Makefile
    clm3_6_54         erik 10/28/2009 Allow comp_intf to change on ccsm build, reduce default hist fields, start adding 2.5x3.33, start adding VOC fsurdat datasets, new finidat files for f09 and f19

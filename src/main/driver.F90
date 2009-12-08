@@ -873,7 +873,7 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
      dtime = get_step_size()
      filer = restFile_filename(type='netcdf', offset=int(dtime))
 
-     call restFile_write( filer, nlend )
+     call restFile_write( filer, nlend, noptr=.true. )
      call t_stopf('clm_driver_io_wrest')
 
   end if

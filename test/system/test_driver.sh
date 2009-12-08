@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on calgary, breeze, dublin, lightning, bluefire, jaguar, kraken: 
+# usage on calgary, breeze, dublin, lightning, bluefire, jaguar, kraken, intrepid: 
 # ./test_driver.sh
 #
 # valid arguments: 
@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta32"
+seqccsm_vers="ccsm4_0_beta35"
 
 hostname=`hostname`
 case $hostname in
@@ -718,6 +718,64 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
+    ##intrepid
+    login* )
+    submit_script="test_driver_intrepid_${cur_time}.sh"
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+if [ -n "\$COBALT_JOBID" ]; then    #batch job
+    export JOBID=\`echo \${COBALT_JOBID} | cut -f1 -d'.'\`
+    initdir=\`pwd\`
+    interactive="NO"
+    input_file="tests_posttag_intrepid"
+else
+    interactive="YES"
+    input_file="tests_posttag_intrepid_nompi"
+fi
+
+##omp threads
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=4
+fi
+export CLM_RESTART_THREADS=2
+
+##mpi tasks
+export CLM_TASKS=256
+export CLM_RESTART_TASKS=120
+
+export CLM_COMPSET="I"
+
+export CCSM_MACH="intrepid"
+
+export OBJECT_MODE=32
+export OMP_DYNAMIC=FALSE
+export AIXTHREAD_SCOPE=S
+export MALLOCMULTIHEAP=TRUE
+export MPI_TYPE_MAX=100000
+
+export NETCDF=/soft/apps/netcdf-3.6.2
+export INC_NETCDF=\$NETCDF/include
+export LIB_NETCDF=\$NETCDF/lib
+export MAKE_CMD="make -j 5"
+export CFG_STRING=""
+export TOOLS_MAKE_STRING=""
+export MACH_WORKSPACE="$HOME/exe"
+dataroot="/gpfs/home/projects/ccsm"
+CPRNC_EXE="\$dataroot/tools/cprnc/cprnc"
+newcprnc="\$MACH_WORKSPACE/\$LOGIN/newcprnc"
+/bin/cp -fp \$CPRNC_EXE \$newcprnc
+export CPRNC_EXE="\$newcprnc"
+export DATM_QIAN_DATA_DIR="\$dataroot/inputdata/atm/datm7/atm_forcing.datm7.Qian.T62.c080727"
+echo_arg=""
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+
     * ) echo "ERROR: machine $hostname not currently supported"; exit 1 ;;
 esac
 
@@ -1008,7 +1066,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on calgary, bluefire, dublin, lightning, jaguar, kraken: "
+    echo "usage on calgary, bluefire, dublin, lightning, jaguar, kraken, intrepid: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
@@ -1047,6 +1105,9 @@ case $hostname in
 
     ##kraken
     kraken* )  qsub ${submit_script};;
+
+    #intrepid
+    login* )  qsub -n 256 -q prod-devel --mode script ${submit_script};;
 
     #default
     * )

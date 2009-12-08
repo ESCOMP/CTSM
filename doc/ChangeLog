@@ -1,4 +1,185 @@
 ===============================================================
+Tag name:  clm3_6_58
+Originator(s):  erik (erik)
+Date: Tue Dec  8 12:56:47 MST 2009
+One-line Summary: Fix rpointer, correct units for export of nee, start adding testing for intrepid
+
+Purpose of changes:
+    Only update the rpointer file when restart files are written NOT when clm.i initial
+    files are written. This was causing problems to restart the model when it was
+    aborting before it completed it's period to run for.
+    Correct the units for the export of NEE from kg C to kg CO2 (kgCO2/m2/s)
+    Remove some concurent directives in the code and the unicosmp target_os in 
+    configure as we no longer have Phoenix.
+    Add bgp target_os to configure, only set Fortran mangling if NOT using the 
+    CCSM build in configure.
+    Add CN atm spinup data source as option to configure and to test_driver.sh.
+    Update version of external to test with to ccsm4_0_beta35
+    Add ability to test on intrepid to test_driver.sh.
+
+Bugs fixed (include bugzilla ID):
+                                 1079 (rpointer file updated with clm.i files)
+                                 1082 (Add bgp, don't do Fortran mangling for CCSM build)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
+
+Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: 
+
+  Add bgp target_os for configure.
+  Don't set Fortran mangling when using CCSM build (as this already happens).
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): drv
+
+  drv to vocemis-drydep12_drvseq3_0_41 (just before directory restructure)
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+A      models/lnd/clm/test/system/nl_files/clm_spin ------------ Use spin-up atm dataset
+A      models/lnd/clm/test/system/tests_posttag_intrepid ------- List of tests for intrepid
+A      models/lnd/clm/test/system/tests_posttag_intrepid_nompi - List of non-MPI tests for intrepid
+
+List all existing files that have been modified, and describe the changes:
+
+M      models/lnd/clm/test/system/test_driver.sh ------- Add intrepid
+M      models/lnd/clm/test/system/input_tests_master --- Add CN spinup test
+M      models/lnd/clm/test/system/CLM_runcmnd.sh ------- Add intrepid
+M      models/lnd/clm/bld/configure -------------------- Add target_os bgp, remove unicosmp
+                                                         only do Fortran name mangling
+                                                         if NOT a CCSM build
+M      models/lnd/clm/bld/namelist_files/namelist_definition.xml - Add CPLHIST3HrWxHfHrSol source type
+M      models/lnd/clm/src/main/driver.F90 -------------- When clm.i file written tell it NOT to update rpointer
+M      models/lnd/clm/src/main/clm_atmlnd.F90 ---------- Convert output NEE from kg C to kg CO2
+                                                         remove concurrent directives
+M      models/lnd/clm/src/main/restFileMod.F90 --------- Add optional argument to NOT
+                                                         update the rpointer file
+
+Summary of testing: Limited
+
+  bluefire: All PASS except...
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+051 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+052 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 6
+054 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 6
+  bluefire interactive testing: All PASS up to...
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_57
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+===============================================================
+===============================================================
+Tag name:  clm3_6_57
+Originator(s):  jwolfe (Jon Wolfe)
+Date: Tue Nov 10 02:29:35 MST 2009
+One-line Summary: Fix trend in aquifer water
+
+Purpose of changes:
+
+These mods are to fix the trend in aquifer water that results in a trend in
+ocean salinity.
+
+Bugs fixed (include bugzilla ID):
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+
+Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM  mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: Code changes contributed by Keith Oleson.
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M      models/lnd/clm/src/main/driver.F90
+M      models/lnd/clm/src/biogeophys/BalanceCheckMod.F90
+M      models/lnd/clm/src/biogeophys/SoilHydrologyMod.F90
+
+Summary of testing:
+
+  No testing done prior to tag -- Erik may run tests after the fact.
+
+CLM tag used for the baseline comparison tests if applicable:  clm3_6_56
+
+Changes answers relative to baseline: Yes
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change (similar climate): TBD
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+   - source tag (all code used must be in the repository): 
+   - platform/compilers: bluefire IBM-SP/xlf12
+   - configuration (CPP ifdefs): 
+   - build-namelist command (or complete namelist):
+   - MSS location of output:
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_56
 Originator(s):  erik (erik)
 Date: Tue Nov 10 02:29:35 MST 2009
@@ -33,6 +214,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1017 (SCM mode can NOT restart)
                                  1025 (SCM  mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -214,6 +398,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1070 (pftdyn datasets bad for f19, 2.5x3.33)
                                  1071 (Problem with PET.f10 comparision)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -325,6 +512,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
                                  1070 (pftdyn datasets bad for f19, 2.5x3.33)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Have configure write out unresolved filepaths 
@@ -646,6 +836,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: In template turn off RTM if grid=pt1
@@ -755,6 +948,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Filepath, bluefire compiler to XLF12
@@ -942,6 +1138,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1025 (SCM  mode can NOT use a global finidat file)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Small change to configure
@@ -1092,6 +1291,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1031 (Can't run SMS_D.f09_g16.ICN8520)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1193,6 +1395,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1033 (SCM mode does NOT work with CN)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system:  Local Makefile changed for ifort
@@ -1334,6 +1539,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1032 (Problem running SCM mode on Lahey)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Get ccsm_bld option working
@@ -1578,6 +1786,9 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1023 (SCM mode check for lnd_present)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1723,6 +1934,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
 
     http://bugs.cgd.ucar.edu/
 
@@ -1960,6 +2174,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
 
     http://bugs.cgd.ucar.edu/
 
@@ -2042,6 +2259,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
 
     http://bugs.cgd.ucar.edu/
 
@@ -2211,6 +2431,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1019 (hybrid/OpenMP reproducibility bug for pftdyn mode)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
 
     http://bugs.cgd.ucar.edu/
 
@@ -2347,6 +2570,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   977 (bug writing out 3D time-const data)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
 
     http://bugs.cgd.ucar.edu/
 
@@ -2673,6 +2899,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   974 (bug in pftdyn mode)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Start adding option to build with ccsm Makefiles
@@ -2946,6 +3175,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   977 (bug writing out 3D time-const data)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Change default for maxpatch_pft back to numpft+1
@@ -3019,6 +3251,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   977 (bug writing out 3D time-const data)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system:
@@ -3157,6 +3392,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   974 (bug in pftdyn mode)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 
@@ -3222,6 +3460,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   974 (bug in pftdyn mode)
                                  1068 (Problems interpolated deposition datasets to high res)
                                  1069 (Nitrogen Deposition datasets have wrong units)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: maxpatchpft default is now numpft+1
@@ -3349,6 +3590,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   926 (pftdyn code needs to be shared in mksurfdata)
                                   941 (RTM output 6X too low)
                                   974 (bug in pftdyn mode)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -3423,6 +3667,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   934 (pftdyn logic bug)
                                   941 (RTM output 6X too low)
                                   974 (bug in pftdyn mode)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -3531,6 +3778,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   934 (pftdyn logic bug)
                                   941 (RTM output 6X too low)
                                   974 (bug in pftdyn mode)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -3681,6 +3931,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   926 (pftdyn code needs to be shared in mksurfdata)
                                   927 (problem with urban on bangkok/lahey)
                                   934 (pftdyn logic bug)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Building with PIO is on by default
@@ -3882,6 +4135,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   919 (problems in mksurfdata for pftdyn mode)
                                   920 (glacier_mec problems in mksurfdata)
                                   990 (illegal instruction)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Add -pio option to configure 
@@ -4062,6 +4318,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   990 (illegal instruction)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4123,6 +4382,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   990 (illegal instruction)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4205,6 +4467,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   990 (illegal instruction)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4289,6 +4554,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   990 (illegal instruction)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4524,6 +4792,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   990 (illegal instruction)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4654,6 +4925,9 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                   883 (aerosol deposition not from atm)
                                   903 (problems in driver with open-MP on PGI)
                                   990 (illegal instruction)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4759,6 +5033,9 @@ Known bugs (include bugzilla ID): 990 (illegal instruction)
                                   794 (hist avg strange), 722 (threading slow)
                                   701 (svn keyword), 698 (cprnc bug gives false difference)
                                   717 (archiving bug -- only archive 1000 files at a time)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4906,6 +5183,9 @@ Known bugs (include bugzilla ID): 883 (aerosol deposition not from atm), 877 (CN
                                   794 (hist avg strange), 722 (threading slow)
                                   701 (svn keyword), 698 (cprnc bug gives false difference)
                                   717 (archiving bug -- only archive 1000 files at a time)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -5047,6 +5327,9 @@ Known bugs (include bugzilla ID): 883 (aerosol deposition not from atm), 877 (CN
                                   794 (hist avg strange), 722 (threading slow) 
                                   701 (svn keyword), 698 (cprnc bug gives false difference)
                                   717 (archiving bug -- only archive 1000 files at a time)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
 
 Describe any changes made to build system: datm.cpl7.template modified to add gx1v6 domain file
 
@@ -5247,6 +5530,9 @@ Known bugs (include bugzilla ID): 883 (aerosol deposition not from atm), 877 (CN
                                   794 (hist avg strange), 722 (threading slow) 
                                   701 (svn keyword), 698 (cprnc bug gives false difference)
                                   717 (archiving bug -- only archive 1000 files at a time)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -5381,6 +5667,9 @@ Known bugs (include bugzilla ID):  883 (aerosol deposition not from atm), 877 (C
                                   794 (hist avg strange), 722 (threading slow) 
                                   701 (svn keyword), 698 (cprnc bug gives false difference)
                                   717 (archiving bug -- only archive 1000 files at a time)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
     Known bugs that will NOT be resolved: 546(interpinic for DGVM),
@@ -5692,6 +5981,9 @@ Known bugs (include bugzilla ID):  885 (domain checking), 883 (aerosol depositio
                                   701 (svn keyword)
                                   698 (cprnc bug gives false difference)
                                   717 (archiving bug -- only archive 1000 files at a time)
+                                 1077 (Slow leak of land aquifer to Ocean runoff)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
     Known bugs that will NOT be resolved: 546(interpinic for DGVM),
@@ -6193,6 +6485,8 @@ Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 830
                                   717 (archiving bug -- only archive 1000 files at a time)
                                   833 (bug with cam in ccsm4_0_alpha37), 722 (threading slow)
                                   832 (problem with cice bn in ccsm4_0_alpha37)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -6302,6 +6596,8 @@ Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs),
                                   717 (archiving bug -- only archive 1000 files at a time)
                                   826 (pftdyn), 833 (bug with cam in ccsm4_0_alpha37)
                                   832 (problem with cice bn in ccsm4_0_alpha37)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -6463,6 +6759,8 @@ Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs),
                                   698 (cprnc bug gives false difference), 701 (svn keyword)
                                   717 (archiving bug -- only archive 1000 files at a time)
                                   805 (too much output in build-streams), 826 (pftdyn)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -6643,6 +6941,8 @@ Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs),
                                   698 (cprnc bug gives false difference), 701 (svn keyword)
                                   717 (archiving bug -- only archive 1000 files at a time)
                                   805 (too much output in build-streams)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -6734,6 +7034,8 @@ Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs),
                                   698 (cprnc bug gives false difference), 701 (svn keyword)
                                   717 (archiving bug -- only archive 1000 files at a time)
                                   805 (too much output in build-streams)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -6872,6 +7174,8 @@ Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680
                                   698 (cprnc bug gives false difference), 701 (svn keyword)
                                   717 (archiving bug -- only archive 1000 files at a time)
                                   805 (too much output in build-streams)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -6932,6 +7236,8 @@ Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680
                                   698 (cprnc bug gives false difference), 701 (svn keyword)
                                   717 (archiving bug -- only archive 1000 files at a time)
                                   805 (too much output in build-streams), 808 (bug for hybrid/branch)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -7018,6 +7324,8 @@ Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680
                                   698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
                                   717 (archiving bug -- only archive 1000 files at a time)
                                   805 (too much output in build-streams), 808 (bug for hybrid/branch)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -7146,6 +7454,8 @@ Bugs fixed (include bugzilla ID): 766 (bug when OCN_GRID==ATM_GRID), 767 (2.65x3
 Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
                                   698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
                                   717 (archiving bug -- only archive 1000 files at a time), 768 (cpl6 tests on blueice)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -7208,6 +7518,8 @@ Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680
                                   698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
                                   717 (archiving bug -- only archive 1000 files at a time), 766 (bug when OCN_GRID==ATM_GRID), 
                                   767 (2.65x3.33 bug for seq-ccsm), 768 (cpl6 tests on blueice)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -7293,6 +7605,8 @@ Bugs fixed (include bugzilla ID): 759 (mkgriddata incompatibility between MASK a
 Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
                                   698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
                                   717 (archiving bug -- only archive 1000 files at a time)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
 Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -7473,6 +7787,8 @@ Bugs fixed (include bugzilla ID): 724 (cprnc), 750 (doalb bug)
 Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
                                   698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
                                   717 (archiving bug -- only archive 1000 files at a time)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
     Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -7554,6 +7870,8 @@ Bugs fixed (include bugzilla ID): 727 (fix configure for ext_ccsm_seq)
 Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
                                   698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
                                   717 (archiving bug -- only archive 1000 files at a time), 724 (cprnc core dumps)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
     Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -7606,6 +7924,8 @@ Purpose of changes: Use minimum of a 40 m forcing height in clm so that CAM can 
 Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
                                   698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
                                   717 (archiving bug -- only archive 1000 files at a time), 724 (cprnc core dumps)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
     Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 
@@ -7709,6 +8029,8 @@ Science changes:
 Known bugs (include bugzilla ID): 251 (TwoStream), 672 (3.5.4-3.5.14 diffs), 680 (t0 precip diff for seq-ccsm), 
                                   698 (cprnc bug gives false difference), 701 (svn keyword), 708, (xlf bug on bluevista)
                                   717 (archiving bug -- only archive 1000 files at a time), 724 (cprnc core dumps)
+                                 1079 (rpointer file updated with clm.i files)
+                                 1083 (Units of NEE exported should be kg CO2 NOT kg C)
     http://bugs.cgd.ucar.edu/
 
     Known bugs that will NOT be resolved: 512 (mksurf on PGI), 546(interpinic for DGVM), 

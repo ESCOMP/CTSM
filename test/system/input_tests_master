@@ -19,6 +19,11 @@ erA93 TER.sh _sc_do clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic
 brA93 TBR.sh _sc_do clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic
 blA93 TBL.sh _sc_do clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v5 -6    arb_ic
 
+smA97 TSM.sh _sc_do clm_spin^nl_urb    20030101:NONE:1800 4x5 gx3v5@1850 -6    arb_ic
+erA97 TER.sh _sc_do clm_spin^nl_urb    20030101:NONE:1800 4x5 gx3v5@1850 -3+-3 arb_ic
+brA97 TBR.sh _sc_do clm_spin^nl_urb_br 20030101:NONE:1800 4x5 gx3v5@1850 -3+-3 arb_ic
+blA97 TBL.sh _sc_do clm_spin^nl_urb    20030101:NONE:1800 4x5 gx3v5@1850 -6    arb_ic
+
 cbA74 TCB.sh _sc_ds
 
 smA74 TSM.sh _sc_ds clm_std^nl_urb    20030101:NONE:3600 1x1_brazil navy -10   arb_ic

@@ -1019,6 +1019,11 @@ end subroutine clm_mapl2a
   type(pft_dflux_type),pointer :: pdf   ! local pointer to derived subtype
   integer n
 #endif
+  real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
+  real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
+  real(r8), parameter :: amCO2 = amC + 2.0_r8*amO ! Atomic mass number for CO2
+  ! The following converts g of C to kg of CO2
+  real(r8), parameter :: convertgC2kgCO2 = 1.0e-3_r8 * (amCO2/amC)
 
 !------------------------------------------------------------------------
 
@@ -1040,8 +1045,6 @@ end subroutine clm_mapl2a
      call c2g(begc, endc, begl, endl, begg, endg, &
           cptr%cws%h2osno, clm_l2a%h2osno, &
           c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-!dir$ concurrent
-!cdir nodep
      do g = begg,endg
         clm_l2a%h2osno(g) = clm_l2a%h2osno(g)/1000._r8
      end do
@@ -1057,8 +1060,6 @@ end subroutine clm_mapl2a
      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, &
           pptr%pef%eflx_lwrad_out, clm_l2a%eflx_lwrad_out,&
           p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-!dir$ concurrent
-!cdir nodep
      do g = begg,endg
         clm_l2a%t_rad(g) = sqrt(sqrt(clm_l2a%eflx_lwrad_out(g)/sb))
      end do
@@ -1067,8 +1068,6 @@ end subroutine clm_mapl2a
 
      call c2g(begc, endc, begl, endl, begg, endg, cptr%cws%h2osno, clm_l2a%h2osno,&
           c2l_scale_type= 'urbanf', l2g_scale_type='unity')
-!dir$ concurrent
-!cdir nodep
      do g = begg,endg
         clm_l2a%h2osno(g) = clm_l2a%h2osno(g)/1000._r8
      end do
@@ -1106,8 +1105,6 @@ end subroutine clm_mapl2a
 !          pptr%pef%eflx_sh_tot, clm_l2a%eflx_sh_tot, &
 !          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
-!dir$ concurrent
-!cdir nodep
      do g = begg,endg
         clm_l2a%eflx_sh_tot(g) = clm3%g%gef%eflx_sh_totg(g)
      end do
@@ -1158,21 +1155,15 @@ end subroutine clm_mapl2a
            p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 #endif
 
-     ! Convert from gC/m2/s to kgC/m2/s
-!dir$ concurrent
-!cdir nodep
+     ! Convert from gC/m2/s to kgCO2/m2/s
      do g = begg,endg
-        clm_l2a%nee(g) = clm_l2a%nee(g)*1.0e-3_r8
+        clm_l2a%nee(g) = clm_l2a%nee(g)*convertgC2kgCO2
      end do
 
-!dir$ concurrent
-!cdir nodep
      do g = begg,endg
         clm_l2a%t_rad(g) = sqrt(sqrt(clm_l2a%eflx_lwrad_out(g)/sb))
      end do
 
-!dir$ concurrent
-!cdir nodep
      ! DOWNSCALING add rain snow conversion heat flux to latent heat flux
      do g = begg,endg
         clm_l2a%eflx_lh_tot(g) = clm_l2a%eflx_lh_tot(g) + adiag_lflux(g)

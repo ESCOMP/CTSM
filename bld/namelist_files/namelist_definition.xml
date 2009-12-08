@@ -1080,7 +1080,7 @@ Description of the use case selected.
 
 <entry id="source" type="char*80" category="datm_internal"
        group="datm_internal" 
-       valid_values="CLM_QIAN,CAMHIST.eul64x128_datm6.01,CLM1PT,CAMHIST.GENERIC">
+       valid_values="CLM_QIAN,CPLHIST3HrWxHfHrSol,CAMHIST.eul64x128_datm6.01,CLM1PT,CAMHIST.GENERIC">
 Description of data source for datm7 input data.
 </entry>
 

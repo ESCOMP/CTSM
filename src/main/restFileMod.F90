@@ -60,7 +60,7 @@ contains
 ! !IROUTINE: restFile_write
 !
 ! !INTERFACE:
-  subroutine restFile_write( file, nlend )
+  subroutine restFile_write( file, nlend, noptr )
 !
 ! !DESCRIPTION:
 ! Read/write CLM restart file.
@@ -86,8 +86,9 @@ contains
 ! !ARGUMENTS:
     implicit none
     include 'netcdf.inc'
-    character(len=*) , intent(in) :: file  ! output netcdf restart file
-    logical,           intent(in) :: nlend	
+    character(len=*) , intent(in) :: file            ! output netcdf restart file
+    logical,           intent(in) :: nlend	     ! if at the end of the simulation
+    logical,           intent(in), optional :: noptr ! if should NOT write to the restart pointer file
 !
 ! !CALLED FROM:
 ! subroutine driver
@@ -100,7 +101,13 @@ contains
 !EOP
     integer :: ncid    ! netcdf id
     integer :: i       ! index
+    logical :: ptrfile ! write out the restart pointer file
 !-----------------------------------------------------------------------
+    if ( present(noptr) )then
+       ptrfile = .not. noptr
+    else
+       ptrfile = .true.
+    end if
 
     ! Open restart file
 
@@ -156,7 +163,7 @@ contains
     
     ! Write restart pointer file
     
-    call restFile_write_pfile( file )
+    if ( ptrfile ) call restFile_write_pfile( file )
     
     ! Write out diagnostic info
 

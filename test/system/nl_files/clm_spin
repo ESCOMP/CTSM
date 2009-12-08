@@ -1,0 +1,5 @@
+-ignore_ic_date 
+-silent 
+-case clmrun 
+-source CPLHIST3HrWxHfHrSol
+-datm_data_dir /cgd/tss/BCN1850TR1f09g16_3Hrly

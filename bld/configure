@@ -106,7 +106,7 @@ OPTIONS
      -[no]smp            Switch on [off] SMP parallelism.
      -[no]spmd           Switch on [off] SPMD parallelism.
      -target_os          Override the os setting for cross platform compilation [aix | darwin | dec_osf | irix | 
-                         linux | solaris | super-ux | unicosmp | bgl ].  Default: OS on which configure is
+                         linux | solaris | super-ux | bgl | bgp ].  Default: OS on which configure is
 			 executing as defined by the perl \$OSNAME variable.
      -[no]test           Switch on [off] testing of Fortran compiler and external libraries.
      -usr_src <dir1>[,<dir2>[,<dir3>[...]]]
@@ -757,15 +757,17 @@ if ($usr_cppdefs and $print>=2) { print "Default and user CPP definitions: \'$us
 # the CPP definitions that were explicitly set in the defaults file or by the user on the commandline.
 my $cfg_cppdefs = '';
 
-# Fortran name mangling
-if ( $target_os eq 'aix'  or  $target_os eq 'darwin'  or  $target_os eq 'bgl' ) {
-    $cfg_cppdefs .= " -DFORTRAN_SAME";
-}
-elsif ( $target_os eq 'irix'      or  $target_os eq 'linux'   or
-        $target_os eq 'super-us'  or  $target_os eq 'es'      or
-        $target_os eq 'unicosmp'  or  $target_os eq 'solaris' or
-        $target_os eq 'dec_osf'   ) {
-    $cfg_cppdefs .= " -DFORTRANUNDERSCORE";
+# Fortran name mangling (only when NOT using the CCSM build as it already does this)
+if ( $clm_mode eq "ext_ccsm_seq" || $ccsm_bld eq "on" ) {
+   if ( $target_os eq 'aix'  or  $target_os eq 'darwin'  
+   or   $target_os eq 'bgl'  or  $target_os eq 'bgp' ) {
+       $cfg_cppdefs .= " -DFORTRAN_SAME";
+   }
+   elsif ( $target_os eq 'irix'      or  $target_os eq 'linux'   or
+           $target_os eq 'super-us'  or  $target_os eq 'es'      or
+           $target_os eq 'solaris'   or  $target_os eq 'dec_osf'   ) {
+       $cfg_cppdefs .= " -DFORTRANUNDERSCORE";
+   }
 }
 
 $cfg_cppdefs .= " -DMAXPATCH_PFT=$maxpft";
@@ -1667,8 +1669,8 @@ sub write_makefile
 		      'linux'    => 'Linux',
 		      'solaris'  => 'SunOS',
 		      'super-ux' => 'SUPER-UX',
-		      'unicosmp' => 'UNICOS/mp',
                       'bgl'      => 'BGL',
+                      'bgp'      => 'BGP',
 		      );
 
     print $fh_out  <<"EOF";
