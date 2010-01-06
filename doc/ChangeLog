@@ -1,4 +1,254 @@
 ===============================================================
+Tag name:  clm3_6_59
+Originator(s):  erik (erik)
+Date: Tue Jan  5 17:44:48 MST 2010
+One-line Summary: Update to datm8, fix so wts used are from fsurdat file NOT finidat file
+
+Purpose of changes:
+
+Changes needed for beta34 ESMF upgrade. Use new datm8 model which is more flexible and
+has new options as well as parallel IO. Add in 4x5_gx3v7 frac file. Remove use for
+ESMF_mod. Abort if finidat weights are significantly different from surfdata file
+weights. Change name of driver and initializeMod to have a clm_ prefix. Convert UG
+outline from html to DocBook. Make changes to code documentation for high level
+subroutines. Remove documentation of namelist items in controlMod and have it point
+to the documentation in the xml namelist file. Fix "called from" in code documentation 
+and remove a lot of the concurrent directives. New files from Tony for esmf interface. 
+Alpha release testing will start with this version.
+
+Bugs fixed (include bugzilla ID):
+                                 1084 (don't use only for ESMF_Mod)
+                                 1087 (let weights come from fsurdat file NOT finidat)
+                                 1088 (change name of driver module)
+                                 1093 (namelist tweaks) -- partial
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1087 (let weights come from fsurdat file NOT finidat)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: 
+    Let CCSM build determine FORTRAN mangle definitions
+    Directory structure changes slightly with new ESMF interfaces and new datm8
+
+Describe any changes made to the namelist:
+   Make default for hist_crtinic NONE so clm.i files are NOT made by default.
+   Change names of options to build-namelist that only are for clm stand-alone testing.
+   Add a drv_ or datm_ prefix, and separate how these options are displayed in the help
+   Also add an option to several commands for "list" so that you can list the variables
+   for clm_demand, for resolution, and for use-cases.
+   Also update build-namelist to work with the new datm8
+
+List any changes to the defaults for the boundary datasets: Add in 4x5_gx3v7 dataset
+
+Describe any substantial timing or memory changes: datm8 is approx. 30% faster
+   datm8 also allows you to enable parallel I/O
+
+Code reviewed by: self, oleson, slevis, dlawren review of weights change
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, datm, csm_share, drv, pio
+
++scripts   to scripts4_100103b
++drv       to vocemis-drydep12_drvseq3_1_11
++datm      to datm8_091218
++csm_share to vocemis-drydep13_share3_091217
++pio       to pio60_prod
+
+List all files eliminated: 
+
+  D   models/lnd/clm/test/system/config_files/_mexsc_ds --- Rename with nr in name
+  D   models/lnd/clm/test/system/config_files/_vansc_ds --- Rename with nr in name
+  D   models/lnd/clm/src/main/driver.F90 ------------------ Rename with clm_ prefix
+  D   models/lnd/clm/src/main/initializeMod.F90 ----------- Rename with clm_ prefix
+  D   models/lnd/clm/src/biogeophys/DriverInitMod.F90 ----- Rename to clm_driverInitMod
+
+List all files added and what they do:
+
+  A   models/lnd/clm/doc/UsersGuide/index.xml ---------------- Users Guide Outline in docbook format
+>>>>>>>>>>> Version with "nr" so that RTM is turned off for non-global tests
+  A   models/lnd/clm/test/system/config_files/_nrsc_s
+  A   models/lnd/clm/test/system/config_files/17p_nrsc_ds
+  A   models/lnd/clm/test/system/config_files/4p_nrcasasc_ds
+  A   models/lnd/clm/test/system/config_files/_nrsc_ds
+  A   models/lnd/clm/test/system/config_files/_nrmexsc_ds
+  A   models/lnd/clm/test/system/config_files/_nrvansc_ds
+  A   models/lnd/clm/test/system/config_files/17p_nrcnnsc_ds
+>>>>>>>>>>> New files from Tony for ESMF interfaces
+  A   models/lnd/clm/src/main/cpl_esmf/lnd_comp_esmf.F90
+  A   models/lnd/clm/src/main/cpl_esmf/lnd_comp_mct.F90
+
+  A   models/lnd/clm/src/main/clm_initializeMod.F90 ---------- Rename with clm_ prefix
+              Also change so that dyn pft is always called before reading in the restart
+              file.
+  A   models/lnd/clm/src/main/clm_driver.F90 ----------------- Rename with clm_ prefix
+  A   models/lnd/clm/src/biogeophys/clm_driverInitMod.F90 ---- Rename from driverInitMod
+
+List all existing files that have been modified, and describe the changes:
+
+  M   models/lnd/clm/test/system/config_files/README -- Note about nr means no-RTM
+  M   models/lnd/clm/test/system/test_driver.sh ------- Some tweaks for dublin/intrepid
+  M   models/lnd/clm/test/system/mknamelist ----------- Changes for datm namelists, and 
+                                                        change for new options names for
+                                                        build-namelist
+  M   models/lnd/clm/test/system/nl_files/clm_per ----- Change case and source to
+                                                        drv_case and datm_source
+  M   models/lnd/clm/test/system/nl_files/clm_std ----- Change case and source to
+                                                        drv_case and datm_source
+  M   models/lnd/clm/test/system/nl_files/clm_ndepdyn - Change case and source to
+                                                        drv_case and datm_source
+  M   models/lnd/clm/test/system/nl_files/clm_pftdyn -- Change case and source to
+                                                        drv_case and datm_source
+  M   models/lnd/clm/test/system/nl_files/clm_per0 ---- Change case and source to
+                                                        drv_case and datm_source
+  M   models/lnd/clm/test/system/nl_files/clm_spin ---- Change case and source to
+                                                        drv_case and datm_source
+  M   models/lnd/clm/test/system/nl_files/clm_urb1pt -- Change case and source to
+                                                        drv_case and datm_source
+  M   models/lnd/clm/test/system/input_tests_master --- Use nr in test names
+  M   models/lnd/clm/test/system/CLM_runcmnd.sh ------- Change name for laptop
+  M   models/lnd/clm/test/system/TSM.sh --------------- Change datm restart files
+
+  M   models/lnd/clm/bld/clm.cpl7.template ------------ Change template to not put RTM
+                                                        time-step in when rtm is off
+  M   models/lnd/clm/bld/configure -------------------- Change to new datm dir structure
+  M   models/lnd/clm/bld/listDefaultNamelist.pl ------- Change name of datm namelist
+  M   models/lnd/clm/bld/build-namelist --------------- New list options, update for
+           new datm8 namelist.
+
+  M   models/lnd/clm/bld/namelist_files/namelist_definition.xml ---- Document pio options
+           new datm8 namelist items, CASA nameist items, and fget_archdev
+  M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml -- New 4x5_gx3v7 frac file
+                                                              set default of hist_crtinic to NONE
+  M   models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml - New datm8 defaults
+  M   models/lnd/clm/bld/namelist_files/namelist_definition.xsl ---- Add section for
+           CASA nl items, and a commented out section for the pio items
+
+  M   models/lnd/clm/src/biogeochem/CNCStateUpdate2Mod.F90 ---- Fix called from, rm concurrnt directives
+  M   models/lnd/clm/src/biogeochem/CASAPhenologyMod.F90 ------ Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNGapMortalityMod.F90 ----- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNC13StateUpdate2Mod.F90 -- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNNStateUpdate1Mod.F90 ---- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/DGVMEcosystemDynMod.F90 --- Fix called from
+  M   models/lnd/clm/src/biogeochem/CNBalanceCheckMod.F90 ----- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNNStateUpdate3Mod.F90 ---- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CASAMod.F90 --------------- Doc routine as private, fix called from, rm con dirct.
+  M   models/lnd/clm/src/biogeochem/CNPrecisionControlMod.F90 - Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNSummaryMod.F90 ---------- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNCStateUpdate1Mod.F90 ---- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNCStateUpdate3Mod.F90 ---- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNC13StateUpdate1Mod.F90 -- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/DGVMMod.F90 --------------- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNC13StateUpdate3Mod.F90 -- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNAnnualUpdateMod.F90 ----- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNNStateUpdate2Mod.F90 ---- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/C13SummaryMod.F90 --------- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNNDynamicsMod.F90 -------- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNC13FluxMod.F90 ---------- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNSetValueMod.F90 --------- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeochem/CNVegStructUpdateMod.F90 -- Fix called from, rm con dirt.
+
+  M   models/lnd/clm/src/main/clm_comp.F90 ------------- Add clm_ prefix to calls
+  M   models/lnd/clm/src/main/pftdynMod.F90 ------------ Fix called from, rm con dirt.
+  M   models/lnd/clm/src/main/histFileMod.F90 ---------- Add more documentation, rm con direct.
+  M   models/lnd/clm/src/main/clm_atmlnd.F90 ----------- Change documentation of units for nee
+  M   models/lnd/clm/src/main/restFileMod.F90 ---------- Change called from documentation
+  M   models/lnd/clm/src/main/controlMod.F90 ----------- Remove namelist items documentation 
+                                                         point to xml files for documenation
+                                                         Work with code documentation
+                                                         Get rid of notes about aerdep
+                                                         files going away
+  M   models/lnd/clm/src/main/clm_time_manager.F90 ----- Fix called from doc
+  M   models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 - Add documentation
+  M   models/lnd/clm/src/main/domainMod.F90 ------------ Clarify which driver in doc
+  M   models/lnd/clm/src/main/clmtype.F90 -------------- Work on code documentation
+  M   models/lnd/clm/src/main/histFldsMod.F90 ---------- Work on code documentation and formatting
+
+  M   models/lnd/clm/src/riverroute/RtmMod.F90 - Fix called from
+
+  M   models/lnd/clm/src/biogeophys/BalanceCheckMod.F90 ------ Remove KO and fix called from in code doc, rm con dirct.
+  M   models/lnd/clm/src/biogeophys/Biogeophysics1Mod.F90 ---- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeophys/Biogeophysics2Mod.F90 ---- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90 ----- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeophys/Hydrology1Mod.F90 -------- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeophys/Hydrology2Mod.F90 -------- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeophys/BiogeophysicsLakeMod.F90 - Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeophys/UrbanMod.F90 ------------- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeophys/HydrologyLakeMod.F90 ----- Fix called from, rm con dirt.
+  M   models/lnd/clm/src/biogeophys/SNICARMod.F90 ------------ Fix called from.
+
+  M   models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 - Check that weights when read
+         in agree reasonably closely with fsurdat weights
+
+Summary of testing:
+
+  bluefire:
+004 blA91 TBL.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 7
+007 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v5 144 cold .................FAIL! rc= 7
+012 blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 arb_ic ............FAIL! rc= 7
+017 blF92 TBL.sh 17p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 cold .............FAIL! rc= 7
+021 blEH1 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 48 arb_ic FAIL! rc= 7
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+028 erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -3+-7 arb_ic .......FAIL! rc= 13
+029 brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -5+-5 arb_ic .......FAIL! rc= 11
+030 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic .........FAIL! rc= 7
+034 blC61 TBL.sh _sc_dh clm_std^nl_urb 20021001:NONE:1800 1.9x2.5 gx1v6 48 cold .................FAIL! rc= 7
+038 blH52 TBL.sh 17p_cnnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 48 cold .........FAIL! rc= 7
+043 blLI1 TBL.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 7
+049 blJ61 TBL.sh 4p_casasc_dh clm_std^nl_urb 20021230:NONE:1800 1.9x2.5 gx1v6 48 cold ...........FAIL! rc= 7
+050 smJ05 TSM.sh 4p_casasc_h clm_std^nl_lfiles 19800101:NONE:1800 0.47x0.63 gx1v6 48 arb_ic .....FAIL! rc= 10
+051 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 4
+052 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 3
+053 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 3 
+054 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 3
+  bluefire interactive testing:
+004 blA74 TBL.sh _nrsc_ds clm_std^nl_urb 20030101:NONE:1800 1x1_brazil navy -10 arb_ic ..........FAIL! rc= 5
+009 blCA4 TBL.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 5
+013 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 159 arb_ic FAIL! rc= 5
+017 blJ74 TBL.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic FAIL! rc= 5
+019 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 5
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+023 blAK4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10 cold ............FAIL! rc= 7
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+028 blL78 TBL.sh _nrsc_s clm_std^nl_urb 20021231:NONE:1800 1x1_brazil navy -10 arb_ic ...........FAIL! rc= 5
+032 blF93 TBL.sh 17p_vodsrsc_do clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 cold .............FAIL! rc= 7
+033 smL83 TSM.sh _nrsc_do clm_std^nl_urb 20020115:NONE:3600 5x5_amazon navy -10 arb_ic ..........FAIL! rc= 4
+034 erL83 TER.sh _nrsc_do clm_std^nl_urb 20020115:NONE:3600 5x5_amazon navy -5+-5 arb_ic ........FAIL! rc= 5
+035 brL83 TBR.sh _nrsc_do clm_std^nl_urb_br 20020115:NONE:3600 5x5_amazon navy -10+-10 arb_ic ...FAIL! rc= 5
+036 blL83 TBL.sh _nrsc_do clm_std^nl_urb 20020115:NONE:3600 5x5_amazon navy -10 arb_ic ..........FAIL! rc= 4
+041 bl744 TBLtools.sh mksurfdata tools__s namelist ..............................................FAIL! rc= 7
+043 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 7
+045 bl754 TBLtools.sh mksurfdata tools__s globalirrig ...........................................FAIL! rc= 6
+050 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  dublin/lf95:   No testing as all tests fail due to bug 1092
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_58
+
+Changes answers relative to baseline: datm8 causes answers to be roundoff different
+    Change to use of fsurdat instead of finidat weights means answers may change
+    for non-coldstart cases.
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_58
 Originator(s):  erik (erik)
 Date: Tue Dec  8 12:56:47 MST 2009
@@ -38,6 +288,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1017 (SCM mode can NOT restart)
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: 
@@ -130,6 +381,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -217,6 +469,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -401,6 +654,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -515,6 +769,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Have configure write out unresolved filepaths 
@@ -839,6 +1094,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: In template turn off RTM if grid=pt1
@@ -951,6 +1207,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Filepath, bluefire compiler to XLF12
@@ -1141,6 +1398,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Small change to configure
@@ -1294,6 +1552,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1398,6 +1657,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system:  Local Makefile changed for ifort
@@ -1542,6 +1802,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Get ccsm_bld option working
@@ -1789,6 +2050,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1937,7 +2199,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
-
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: 
@@ -2177,6 +2439,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
 
     http://bugs.cgd.ucar.edu/
 
@@ -2262,6 +2525,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
 
     http://bugs.cgd.ucar.edu/
 
@@ -2434,6 +2698,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
 
     http://bugs.cgd.ucar.edu/
 
@@ -2573,6 +2838,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
 
     http://bugs.cgd.ucar.edu/
 
@@ -2902,6 +3168,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Start adding option to build with ccsm Makefiles
@@ -3178,6 +3445,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Change default for maxpatch_pft back to numpft+1
@@ -3254,6 +3522,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system:
@@ -3463,6 +3732,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: maxpatchpft default is now numpft+1
@@ -3593,6 +3863,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -3670,6 +3941,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -3781,6 +4053,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -3934,6 +4207,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Building with PIO is on by default
@@ -4138,6 +4412,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Add -pio option to configure 
@@ -4321,6 +4596,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4385,6 +4661,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4470,6 +4747,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4557,6 +4835,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4795,6 +5074,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -4928,6 +5208,7 @@ Known bugs (include bugzilla ID): 672 (3.5.4-3.5.14 diffs)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -5036,6 +5317,7 @@ Known bugs (include bugzilla ID): 990 (illegal instruction)
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -5186,6 +5468,7 @@ Known bugs (include bugzilla ID): 883 (aerosol deposition not from atm), 877 (CN
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -5330,6 +5613,7 @@ Known bugs (include bugzilla ID): 883 (aerosol deposition not from atm), 877 (CN
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
 
 Describe any changes made to build system: datm.cpl7.template modified to add gx1v6 domain file
 
@@ -5533,6 +5817,7 @@ Known bugs (include bugzilla ID): 883 (aerosol deposition not from atm), 877 (CN
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -5670,6 +5955,7 @@ Known bugs (include bugzilla ID):  883 (aerosol deposition not from atm), 877 (C
                                  1077 (Slow leak of land aquifer to Ocean runoff)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
+                                 1087 (let weights come from fsurdat file NOT finidat)
     http://bugs.cgd.ucar.edu/
 
     Known bugs that will NOT be resolved: 546(interpinic for DGVM),

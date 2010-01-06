@@ -55,7 +55,7 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 ! 12/9/03: Created by Peter Thornton
@@ -491,8 +491,6 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     totvegc                        => clm3%g%l%c%p%pc13s%totvegc
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 
@@ -717,8 +715,6 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    call p2c(num_soilc, filter_soilc, pft_fire_closs, col_pft_fire_closs)
 
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 

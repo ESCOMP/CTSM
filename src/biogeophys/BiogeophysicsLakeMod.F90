@@ -100,7 +100,7 @@ contains
     integer, intent(in) :: filter_lakep(ubp-lbp+1) ! pft filter for non-lake points
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
@@ -329,8 +329,6 @@ contains
 
     ! Begin calculations
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_lakec
        c = filter_lakec(fc)
        g = cgridcell(c)
@@ -357,8 +355,6 @@ contains
        thv(c) = forc_th(g)*(1._r8+0.61_r8*forc_q(g))     ! virtual potential T
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1, num_lakep
        p = filter_lakep(fp)
        c = pcolumn(p)
@@ -421,8 +417,6 @@ contains
                              obu, iter, ur, um, ustar, &
                              temp1, temp2, temp12m, temp22m, fm)
 
-!dir$ concurrent
-!cdir nodep
        do fp = 1, fncopy
           p = fpcopy(fp)
           c = pcolumn(p)
@@ -511,8 +505,6 @@ contains
 
     end do ITERATION   ! end of stability iteration
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1, num_lakep
        p = filter_lakep(fp)
        c = pcolumn(p)
@@ -590,8 +582,6 @@ contains
     ! Lake density
 
     do j = 1, nlevlak
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_lakec
           c = filter_lakec(fc)
           rhow(c,j) = 1000._r8*( 1.0_r8 - 1.9549e-05_r8*(abs(t_lake(c,j)-277._r8))**1.68_r8 )
@@ -599,9 +589,6 @@ contains
     end do
 
     do j = 1, nlevlak-1
-!dir$ prefervector
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_lakec
           c = filter_lakec(fc)
           drhodz = (rhow(c,j+1)-rhow(c,j)) / (z(c,j+1)-z(c,j))
@@ -619,8 +606,6 @@ contains
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_lakec
        c = filter_lakec(fc)
        kme(c,nlevlak) = kme(c,nlevlak-1)
@@ -631,8 +616,6 @@ contains
     ! Heat source term: unfrozen lakes only
 
     do j = 1, nlevlak
-!dir$ concurrent
-!cdir nodep
        do fp = 1, num_lakep
           p = filter_lakep(fp)
           c = pcolumn(p)
@@ -658,8 +641,6 @@ contains
     ! Sum cwat*t_lake*dz for energy check
 
     do j = 1, nlevlak
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_lakec
           c = filter_lakec(fc)
 
@@ -669,8 +650,6 @@ contains
 
     ! Set up vector r and vectors a, b, c that define tridiagonal matrix
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_lakec
        c = filter_lakec(fc)
 
@@ -692,9 +671,6 @@ contains
     end do
 
     do j = 2, nlevlak-1
-!dir$ prefervector
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_lakec
           c = filter_lakec(fc)
 
@@ -729,8 +705,6 @@ contains
     end do
 
     do j = 1, nlevlak-1
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_unfrzc
           c = filter_unfrzc(fc)
           tav(c) = 0._r8
@@ -738,8 +712,6 @@ contains
        end do
 
        do i = 1, j+1
-!dir$ concurrent
-!cdir nodep
           do fc = 1, num_unfrzc
              c = filter_unfrzc(fc)
              if (rhow(c,j) > rhow(c,j+1)) then
@@ -749,8 +721,6 @@ contains
           end do
        end do
 
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_unfrzc
           c = filter_unfrzc(fc)
           if (rhow(c,j) > rhow(c,j+1)) then
@@ -759,8 +729,6 @@ contains
        end do
 
        do i = 1, j+1
-!dir$ concurrent
-!cdir nodep
           do fc = 1, num_unfrzc
              c = filter_unfrzc(fc)
              if (nav(c) > 0._r8) then
@@ -774,8 +742,6 @@ contains
     ! Sum cwat*t_lake*dz and total energy into lake for energy check
 
     do j = 1, nlevlak
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_lakec
           c = filter_lakec(fc)
           ncvts(c) = ncvts(c) + cwat*t_lake(c,j)*dz(c,j)
@@ -790,8 +756,6 @@ contains
 
     ! The following are needed for global average on history tape.
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1, num_lakep
        p = filter_lakep(fp)
        c = pcolumn(p)

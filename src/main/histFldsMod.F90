@@ -20,7 +20,7 @@ module histFldsMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public hist_initFlds ! Build master field list of all possible history
-                      ! file fields
+                       ! file fields
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 03/2003
@@ -909,9 +909,9 @@ contains
     ! C state variables - native to PFT 
     !-------------------------------
 #if (defined CLAMP)
-        ! add history fields for all CLAMP CN variables
+    ! add history fields for all CLAMP CN variables
 
-        call hist_addfld1d (fname='WOODC', units='gC/m^2', &
+    call hist_addfld1d (fname='WOODC', units='gC/m^2', &
              avgflag='A', long_name='wood C', &
              ptr_pft=clm3%g%l%c%p%pcs%woodc)
 #endif
@@ -2417,31 +2417,31 @@ contains
     ! C flux variables - native to column 
     !-------------------------------
 #if (defined CLAMP)
-        ! add history fields for all CLAMP CN variables
+    ! add history fields for all CLAMP CN variables
 
-        call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
-             avgflag='A', long_name='coarse woody debris C heterotrophic respiration', &
-             ptr_col=clm3%g%l%c%ccf%cwdc_hr)
+    call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
+         avgflag='A', long_name='coarse woody debris C heterotrophic respiration', &
+         ptr_col=clm3%g%l%c%ccf%cwdc_hr)
 
-        call hist_addfld1d (fname='CWDC_LOSS', units='gC/m^2/s', &
-             avgflag='A', long_name='coarse woody debris C loss', &
-             ptr_col=clm3%g%l%c%ccf%cwdc_loss)
+    call hist_addfld1d (fname='CWDC_LOSS', units='gC/m^2/s', &
+         avgflag='A', long_name='coarse woody debris C loss', &
+         ptr_col=clm3%g%l%c%ccf%cwdc_loss)
 
-        call hist_addfld1d (fname='LITTERC_HR', units='gC/m^2/s', &
-             avgflag='A', long_name='litter C heterotrophic respiration', &
-             ptr_col=clm3%g%l%c%ccf%lithr)
+    call hist_addfld1d (fname='LITTERC_HR', units='gC/m^2/s', &
+         avgflag='A', long_name='litter C heterotrophic respiration', &
+         ptr_col=clm3%g%l%c%ccf%lithr)
 
-        call hist_addfld1d (fname='LITTERC_LOSS', units='gC/m^2/s', &
-             avgflag='A', long_name='litter C loss', &
-             ptr_col=clm3%g%l%c%ccf%litterc_loss)
+    call hist_addfld1d (fname='LITTERC_LOSS', units='gC/m^2/s', &
+         avgflag='A', long_name='litter C loss', &
+         ptr_col=clm3%g%l%c%ccf%litterc_loss)
 
-        call hist_addfld1d (fname='SOILC_HR', units='gC/m^2/s', &
-             avgflag='A', long_name='soil C heterotrophic respiration', &
-             ptr_col=clm3%g%l%c%ccf%somhr)
+    call hist_addfld1d (fname='SOILC_HR', units='gC/m^2/s', &
+         avgflag='A', long_name='soil C heterotrophic respiration', &
+         ptr_col=clm3%g%l%c%ccf%somhr)
 
-        call hist_addfld1d (fname='SOILC_LOSS', units='gC/m^2/s', &
-             avgflag='A', long_name='soil C loss', &
-             ptr_col=clm3%g%l%c%ccf%somhr)
+    call hist_addfld1d (fname='SOILC_LOSS', units='gC/m^2/s', &
+         avgflag='A', long_name='soil C loss', &
+         ptr_col=clm3%g%l%c%ccf%somhr)
 
 #endif
 
@@ -4309,8 +4309,8 @@ contains
          avgflag='A', long_name='Daily Averaged Temperature', &
          ptr_pft=clm3%g%l%c%p%pps%tdayavg, set_lake=0._r8)
 
-! the next three will not give bfb upon restart, due to the frequency of
-! calculation; however, they do not affect other variables (slevis)
+    ! the next three will not give bfb upon restart, due to the frequency of
+    ! calculation; however, they do not affect other variables (slevis)
 
     call hist_addfld1d (fname='STRESST', units=' ',  &
          avgflag='A', long_name='temperature stress function for leaf loss', &
@@ -4356,8 +4356,6 @@ contains
          avgflag='A', long_name='total excess Carbon', &
          ptr_pft=clm3%g%l%c%p%pps%XSCpool, set_lake=0._r8)
 
-!!! addition
-
     call hist_addfld1d (fname='WLIM', units=' ',  &
          avgflag='A', long_name='Water limitation used in bgmoist (atmp factor)', &
          ptr_pft=clm3%g%l%c%p%pps%Wlim, set_lake=0._r8)
@@ -4377,8 +4375,6 @@ contains
     call hist_addfld1d (fname='WATDRY', units='mm3/mm3',  &
          avgflag='A', long_name='watdry for entire column', &
          ptr_pft=clm3%g%l%c%p%pps%watdryc, set_lake=0._r8)
-
-!!! end addition
 
    call hist_addfld2d (fname='LIVEFR', units='g/m2', type2d='nlive', &
         avgflag='A', long_name='live fraction for leaf, wood, froot', &
@@ -4657,7 +4653,6 @@ contains
          avgflag='A', long_name='surface forcing of dust in snow, averaged only when snow is present (land)', &
          ptr_pft=clm3%g%l%c%p%pef%sfc_frc_dst_sno, set_lake=spval, set_urb=spval)
 #endif
-
 
     ! Print masterlist of history fields
 

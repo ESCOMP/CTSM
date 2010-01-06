@@ -304,6 +304,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmlndfrc hgrid="2.5x3.33"  mask="USGS"   >lnd/clm2/griddata/fracdata_2.5x3.33_USGS_c091012.nc</fatmlndfrc>
 <fatmlndfrc hgrid="4x5"       mask="USGS"   >lnd/clm2/griddata/fracdata_4x5_USGS_070110.nc</fatmlndfrc>
 <fatmlndfrc hgrid="4x5"       mask="gx3v5"  >lnd/clm2/griddata/fracdata_4x5_gx3v5_060404.nc</fatmlndfrc>
+<fatmlndfrc hgrid="4x5"       mask="gx3v7"  >lnd/clm2/griddata/fracdata_4x5_gx3v7_c091231.nc</fatmlndfrc>
 <fatmlndfrc hgrid="10x15"     mask="USGS"   >lnd/clm2/griddata/fracdata_10x15_USGS_070110.nc</fatmlndfrc>
 
 <fatmlndfrc hgrid="5x5_amazon"          mask="navy">lnd/clm2/griddata/fracdata_5x5pt_amazon_navy_c090715.nc</fatmlndfrc>
@@ -456,9 +457,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <!-- New direction file with negative directions over ocean - frivinp_rtm rtm="on">lnd/clm2/rtmdata/rdirc.05.081203.txt</frivinp_rtm> -->
 <frivinp_rtm rtm="on">lnd/clm2/rtmdata/rdirc.05.061026</frivinp_rtm>
 
-<hist_crtinic bgc="none" >NONE</hist_crtinic>
-<hist_crtinic bgc="cn"   >YEARLY</hist_crtinic>
-<hist_crtinic bgc="casa" >NONE</hist_crtinic>
-<hist_crtinic bgc="dgvm" >NONE</hist_crtinic>
+<hist_crtinic >NONE</hist_crtinic>
 
 </namelist_defaults>

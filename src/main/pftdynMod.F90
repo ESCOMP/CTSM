@@ -251,8 +251,6 @@ contains
 
     ! convert weights from percent to proportion
     do m = 0,numpft
-!dir$ concurrent
-!cdir nodep
        do g = begg,endg
           wtpft1(g,m) = wtpft1(g,m)/100._r8
           wtpft2(g,m) = wtpft2(g,m)/100._r8
@@ -362,8 +360,6 @@ contains
        end if
        
        do m = 0,numpft
-!dir$ concurrent
-!cdir nodep
           do g = begg,endg
              wtpft1(g,m) = wtpft2(g,m)
           end do
@@ -373,8 +369,6 @@ contains
        call pftdyn_getharvest(nt1,begg,endg)
 
        do m = 0,numpft
-!dir$ concurrent
-!cdir nodep
           do g = begg,endg
              wtpft2(g,m) = wtpft2(g,m)/100._r8
           end do
@@ -388,8 +382,6 @@ contains
 
     wt1 = ((days_per_year + 1._r8) - cday)/days_per_year
 
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        c = pptr%column(p)
        g = pptr%gridcell(p)
@@ -411,8 +403,6 @@ contains
 !   Renormalize pft weights so that sum of pft weights relative to grid cell 
 !   remain constant even as land cover changes.  Doing this eliminates 
 !   soil balance error warnings.  (DML, 4/8/2009)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        c = pptr%column(p)
        g = pptr%gridcell(p)
@@ -606,8 +596,6 @@ contains
     ! set column-level canopy water mass balance correction flux
     ! term to 0 at the beginning of every timestep
     
-!dir$ concurrent
-!cdir nodep
     do c = begc,endc
        cptr%cwf%h2ocan_loss(c) = 0._r8
     end do
@@ -676,14 +664,10 @@ contains
     ! set column-level canopy water mass balance correction flux
     ! term to 0 at the beginning of every weight-shifting timestep
 
-!dir$ concurrent
-!cdir nodep
     do c = begc,endc
        cptr%cwf%h2ocan_loss(c) = 0._r8
     end do
 
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        l = pptr%landunit(p)
        loss_h2ocan(p) = 0._r8
@@ -729,10 +713,7 @@ contains
        
     end do
 
-!dir$ nointerchange
     do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
        do c = begc,endc
           if (pi <= cptr%npfts(c)) then
              p = cptr%pfti(c) + pi - 1
@@ -972,8 +953,6 @@ contains
     ! Get time step
     dt = real( get_step_size(), r8 )
 
-!dir$ concurrent
-!cdir nodep
 	do p = begp,endp
 		! initialize all the pft-level local flux arrays
 		dwt_leafc_seed(p) = 0._r8
@@ -2304,10 +2283,7 @@ contains
 	end do               ! pft loop
     
 	! calculate column-level seeding fluxes
-!dir$ nointerchange
 	do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
 		do c = begc, endc
 			if ( pi <=  cptr%npfts(c) ) then
 				p = cptr%pfti(c) + pi - 1
@@ -2334,10 +2310,7 @@ contains
 
 
 	! calculate pft-to-column for fluxes into litter and CWD pools
-!dir$ nointerchange
 	do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
 		do c = begc, endc
 			if ( pi <=  cptr%npfts(c) ) then
 				p = cptr%pfti(c) + pi - 1
@@ -2392,10 +2365,7 @@ contains
 	end do
 
 	! calculate pft-to-column for fluxes into product pools and conversion flux
-!dir$ nointerchange
 	do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
 		do c = begc,endc
 			if (pi <= cptr%npfts(c)) then
 				p = cptr%pfti(c) + pi - 1
@@ -2482,7 +2452,7 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! pft filter for soil points
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 ! 3/29/04: Created by Peter Thornton
@@ -2683,8 +2653,6 @@ subroutine CNHarvest (num_soilc, filter_soilc, num_soilp, filter_soilp)
    pprod10 =    (/0.75_r8, 0.75_r8, 0.75_r8, 1.0_r8, 0.75_r8, 1.0_r8, 0.75_r8, 0.75_r8/)
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       g = pgridcell(p)
@@ -3019,8 +2987,6 @@ subroutine CNHarvestPftToColumn (num_soilc, filter_soilc)
    hrv_deadcrootn_xfer_to_litter    => clm3%g%l%c%p%pnf%hrv_deadcrootn_xfer_to_litter
 
    do pi = 1,maxpatch_pft
-!dir$ concurrent
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
 

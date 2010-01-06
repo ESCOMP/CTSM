@@ -470,9 +470,6 @@ contains
     logical, intent(in) :: doalb                       ! true = surface albedo calculation time step
     logical, intent(in) :: endofyr
 !
-! !CALLED FROM:
-! subroutine driver
-!
 ! !REVISION HISTORY:
 ! Author:  Gordon Bonan
 ! 2/1/02,  Peter Thornton: Migrated to new data structure.
@@ -643,9 +640,6 @@ contains
     integer, intent(in) :: filter_nolakec(num_nolakec) ! column filter for non-lake points
     integer, intent(in) :: num_nolakep                 ! number of column non-lake points in pft filter
     integer, intent(in) :: filter_nolakep(num_nolakep) ! pft filter for non-lake points
-!
-! !CALLED FROM:
-! subroutine driver
 !
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan and Sam Levis

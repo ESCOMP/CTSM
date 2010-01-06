@@ -1,5 +1,8 @@
 -mode ccsm_seq
 -nospmd -nosmp
 -debug
--cppdefs -DMEXICOCITY
+-maxpft 17
+-rtm off
+-bgc cn
+-supln on 
 -s

@@ -1,4 +1,4 @@
 -ignore_ic_date 
 -silent 
--case clmrun 
--source CLM_QIAN
+-drv_case clmrun 
+-datm_source CLM_QIAN

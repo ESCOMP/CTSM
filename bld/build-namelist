@@ -34,8 +34,8 @@ sub usage {
 SYNOPSIS
      build-namelist [options]
 OPTIONS
-     -case "name"             Case identifier up to 32 characters
      -clm_demand "list"       List of variables to require on clm namelist besides the usuals.
+                              "-clm_demand list" to list valid options.
                               (can include a list member "null" which does nothing)
      -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets. Default: not used
                               Example: 1x1pt_boulderCO_c090722 to describe location,
@@ -43,20 +43,8 @@ OPTIONS
      -config "filepath"       Read the given CICE configuration cache file. Default: "config_cache_cice.xml".
      -csmdata "dir"           Root directory of CCSM input data.
                               Can also be set by using the CSMDATA environment variable.
-     -cycle_beg_year  "year"  The begining year to cycle input datasets over.
-                              (ONLY used when mode=ccsm_seq)
-     -cycle_end_year  "year"  The ending year to cycle input datasets over.
-                              (ONLY used when mode=ccsm_seq)
-     -cycle_init_year "year"  The simulation year that will correspond to the data for cycle_beg_year.
-                              (ONLY used when mode=ccsm_seq)
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
-     -datm_data_dir "path"    Directory path to the datm data
-                              (ONLY used when mode=ccsm_seq)
-     -datm_domain "file"      File name of domain file for datm data matching resolution data resolution.
-                              (only used when mode=ccsm_seq)
-     -datm_dom_dir "path"     Directory path to the datm_domain file.
-                              (ONLY used when mode=ccsm_seq)
      -help [or -h]            Print usage to STDOUT.
      -ignore_ic_date          Ignore the date on the initial condition files (ic_ymd and ic_tod) 
                               when determining what input initial condition file to use.
@@ -65,25 +53,22 @@ OPTIONS
      -infile "filepath"       Specify a file containing namelists to read values from.
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
                               file specified.
-     -list_use_cases          List use cases and descriptions and then quit.
      -lnd_res "resolution"    Horizontal resolution of fine mesh for land 
                               (if different than resolution coupling to atmosphere)
                               Use nlatxnlon for spectral grids;  dlatxdlon for fv grids 
 			      (dlat and dlon are the grid cell size in degrees for latitude and longitude).
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
+                              "-mask list" to list valid land masks.
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
      -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
     			      in degrees for latitude and longitude respectively)
-     -runlength "length"      Length of simulation (e.g. default, 10d, 5s, 2y)
-                              (Corresponding to: default, 10 days, 5 steps, or 2 years)
-                              classifiers (d=days, s=steps, y=years)
-                              (ONLY used when mode=ccsm_seq)
+                              "-res list" to list valid resolutions.
      -s                       Turns on silent mode - only fatal messages issued.
      -sim_year "year"         Year to simulate for input datasets (i.e. 1850, 2000, 1850-2000)
-     -source "source"         Source data to use for datm (for ccsm_seq mode)
+                              "-sim_year list" to list valid simulation years
      -start_type "type"       Type of simulation (cold, arb_ic, startup, continue, or branch)
                               (cold=always start with arbitrary initial conditions)
                               (arb_ic=start with arbitrary initial conditions if initial conditions don't exist)
@@ -91,7 +76,24 @@ OPTIONS
      -test                    Enable checking that input datasets exist on local filesystem.
      -verbose [or -v]         Turn on verbose echoing of informational messages.
      -use_case "case"         Specify a use case which will provide default values.
+                              "-use_case list" to list valid use-cases.
      -version                 Echo the SVN tag name used to check out this CLM distribution.
+
+OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=ccsm_seq)
+
+     -drv_case "name"         Case identifier up to 32 characters
+     -datm_cycle_beg_year  "year"  The begining year to cycle input datasets over.
+     -datm_cycle_end_year  "year"  The ending year to cycle input datasets over.
+     -datm_cycle_init_year "year"  The simulation year that will correspond to the data for cycle_beg_year.
+     -datm_data_dir "path"    Directory path to the datm data
+     -datm_domain "file"      File name of domain file for datm data matching 
+                              resolution data resolution.
+     -datm_dom_dir "path"     Directory path to the datm_domain file.
+     -datm_source "source"    Source data to use for datm (for ccsm_seq mode)
+                              "-datm_source list" to list valid datm_source types.
+     -drv_runlength "length"  Length of simulation (e.g. default, 10d, 5s, 2y)
+                              (Corresponding to: default, 10 days, 5 steps, or 2 years)
+                              classifiers (d=days, s=steps, y=years)
 
 
 Note: The precedence for setting the values of namelist variables is (highest to lowest):
@@ -129,34 +131,33 @@ my $outdirname = "$cwd";                  # Default name of output directory nam
 
 # Process command-line options.
 
-my %opts = ( config           => $cfg_cache,
-	     csmdata          => undef,
-	     clm_usr_name     => undef,
-             cycle_beg_year   => "default",
-             cycle_end_year   => "default",
-             cycle_init_year  => "default",
-             clm_demand       => "null",
-	     help             => 0,
-             list_use_cases   => 0,
-	     dir              => $outdirname,
-             sim_year         => "default",
-	     res              => "default",
-	     lnd_res          => "default",
-	     silent           => 0,
-             source           => "default",
-             mask             => "default",
-	     test             => 0,
+my %opts = ( config                => $cfg_cache,
+	     csmdata               => undef,
+	     clm_usr_name          => undef,
+             datm_cycle_beg_year   => "default",
+             datm_cycle_end_year   => "default",
+             datm_cycle_init_year  => "default",
+             clm_demand            => "null",
+	     help                  => 0,
+	     dir                   => $outdirname,
+             sim_year              => "default",
+	     res                   => "default",
+	     lnd_res               => "default",
+	     silent                => 0,
+             datm_source           => "default",
+             mask                  => "default",
+	     test                  => 0,
 	    );
 
 GetOptions(
-    "case=s"                    => \$opts{'case'},
+    "drv_case=s"                => \$opts{'drv_case'},
     "clm_demand=s"              => \$opts{'clm_demand'},
     "config=s"                  => \$opts{'config'},
     "csmdata=s"                 => \$opts{'csmdata'},
     "clm_usr_name=s"            => \$opts{'clm_usr_name'},
-    "cycle_beg_year=s"          => \$opts{'cycle_beg_year'},
-    "cycle_end_year=s"          => \$opts{'cycle_end_year'},
-    "cycle_init_year=s"         => \$opts{'cycle_init_year'},
+    "datm_cycle_beg_year=s"     => \$opts{'datm_cycle_beg_year'},
+    "datm_cycle_end_year=s"     => \$opts{'datm_cycle_end_year'},
+    "datm_cycle_init_year=s"    => \$opts{'datm_cycle_init_year'},
     "datm_data_dir=s"           => \$opts{'datm_data_dir'},
     "datm_domain=s"             => \$opts{'datm_domain'},
     "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
@@ -167,15 +168,14 @@ GetOptions(
     "ignore_ic_year"            => \$opts{'ignore_ic_year'},
     "infile=s"                  => \$opts{'infile'},
     "inputdata=s"               => \$opts{'inputdata'},
-    "list_use_cases"            => \$opts{'list_use_cases'},
     "mask=s"                    => \$opts{'mask'},
     "namelist=s"                => \$opts{'namelist'},
     "res=s"                     => \$opts{'res'},
-    "runlength=s"               => \$opts{'runlength'},
+    "drv_runlength=s"           => \$opts{'drv_runlength'},
     "s|silent"                  => \$opts{'silent'},
     "sim_year=s"                => \$opts{'sim_year'},
     "start_type=s"              => \$opts{'start_type'},
-    "source=s"                  => \$opts{'source'},
+    "datm_source=s"             => \$opts{'datm_source'},
     "test"                      => \$opts{'test'},
     "use_case=s"                => \$opts{'use_case'},
     "v|verbose"                 => \$opts{'verbose'},
@@ -215,9 +215,6 @@ if ($print>=2) { print "Using CLM configuration cache file $opts{'config'}$eol";
 
 # Add the location of the use case defaults files to the options hash
 $opts{'use_case_dir'} = "$cfgdir/namelist_files/use_cases";
-
-# Validate some of the commandline option values.
-validate_options("commandline", \%opts);
 
 #-----------------------------------------------------------------------------------------------
 # Make sure we can find required perl modules, definition, and defaults files.
@@ -263,7 +260,9 @@ my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml"
                           "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
 
 if (defined $opts{'use_case'}) {
-   unshift( @nl_defaults_files, "$opts{'use_case_dir'}/$opts{'use_case'}.xml" );
+   if ( $opts{'use_case'} ne "list" ) {
+      unshift( @nl_defaults_files, "$opts{'use_case_dir'}/$opts{'use_case'}.xml" );
+   }
 }
 
 foreach my $nl_defaults_file ( @nl_defaults_files ) {
@@ -298,32 +297,11 @@ require Build::NamelistDefaults;
 require Build::Namelist;
 require Streams::Template;
 #-----------------------------------------------------------------------------------------------
-
 # Create a configuration object from the CLM config_cache.xml file. 
 my $cfg = Build::Config->new($opts{'config'});
 
-# If list_use_case options set -- list the use cases and descriptions and quit
-if ( $opts{'list_use_cases'} ) {
-    print "Use cases are:...\n\n";
-    my @ucases;
-    foreach my $file( sort( glob($opts{'use_case_dir'}."/*.xml") ) ) {
-       my $use_case;
-       if ( $file =~ /\/([^\/]+)\.xml$/ ) {
-          $use_case = $1;
-       } else {
-          die << "EOF";
-** $ProgName - Bad name for use case file = $file
-EOF
-       }
-       my $uc_defaults = Build::NamelistDefaults->new("$file", $cfg);
-       printf "%15s = %s\n", $use_case, $uc_defaults->get_value("use_case_desc");
-       push @ucases, $use_case;
-    }
-    die <<EOF;
-
-$ProgName - use cases: @ucases
-EOF
-}
+# Validate some of the commandline option values.
+validate_options("commandline", $cfg, \%opts);
 
 # Create a namelist definition object.  This object provides a method for verifying that the
 # output namelist variables are in the definition file, and are output in the correct
@@ -337,6 +315,11 @@ my $defaults = Build::NamelistDefaults->new( shift( @nl_defaults_files ), $cfg);
 foreach my $nl_defaults_file ( @nl_defaults_files ) {
    $defaults->add( "$nl_defaults_file" );
 }
+
+#
+# List valid values if asked for
+#
+list_options( $cfg, \%opts );
 
 # Create an empty namelist object.  Add values to it in order of precedence.
 my $nl = Build::Namelist->new();
@@ -626,8 +609,8 @@ if (defined $opts{$var}) {
 if ($mode eq "ccsm_seq") {
 
    # Case name
-   if (defined $opts{'case'}) {
-       add_default($nl, 'case_name', 'val'=>$opts{'case'});
+   if (defined $opts{'drv_case'}) {
+       add_default($nl, 'case_name', 'val'=>$opts{'drv_case'});
    } else {
        add_default($nl, 'case_name');
    }
@@ -741,13 +724,13 @@ if ($mode eq "ccsm_seq") {
 
 if ($mode eq "ccsm_seq") {
    # Length of simulation
-   if ( defined $opts{'runlength'} ) {
-       if ( $opts{'runlength'} =~ /^([1-9][0-9]*)([sdy])$/ ) {
+   if ( defined $opts{'drv_runlength'} ) {
+       if ( $opts{'drv_runlength'} =~ /^([1-9][0-9]*)([sdy])$/ ) {
 	   my %options = ( s=>"nsteps", d=>"ndays", y=>"nyears" );
 	   add_default($nl, "stop_n"     , 'val'=>$1 );
 	   add_default($nl, "stop_option", 'val'=>$options{$2} );
        } else {
-	   die "$ProgName ERROR:: bad input to runlength option\n";
+	   die "$ProgName ERROR:: bad input to drv_runlength option\n";
        }
    } else {
        add_default($nl, 'stop_option');
@@ -930,28 +913,19 @@ if ($mode eq "ccsm_seq") {
   add_default($nl, 'profile_detail_limit');
 }
  
-##############################
-# namelist group: datm_dshr  #
-##############################
+####################################
+# namelist group: shr_strdata_nml  #
+####################################
 
+my $atm_in;
 if ($mode eq "ccsm_seq") {
 
-    add_default($nl, 'datamode', 'val'=>'CLMNCEP' );
-    add_default($nl, 'infodbug');
-    if (defined $nl->get_value('restpfile')) {
-       die "$ProgName ERROR:: can NOT set restpfile as archiving script depends on filename.\n";
-    } else {
-       add_default($nl, 'restpfile');
-    }
-    if ( $start_type =~ /branch/ ) {
-       if (not defined $nl->get_value('restsfile')) {
-          die "$ProgName ERROR:: restsfile is required for a branch type.\n";
-       }
-       if (not defined $nl->get_value('restbfile')) {
-          die "$ProgName ERROR:: restbfile is required for a branch type.\n";
-       }
-    }
-    add_default($nl, 'domainfile', 'hgrid'=>$res, 'mask'=>$mask); 
+    add_default($nl, 'io_type');
+    add_default($nl, 'num_iotasks');
+    add_default($nl, 'io_root');
+    add_default($nl, 'io_stride');
+    add_default($nl, 'num_agg');
+
     #
     # Set streams text file
     #
@@ -962,27 +936,29 @@ if ($mode eq "ccsm_seq") {
     my $end_year;
     
     # Note that init_year is the model start year from the driver namelist
-    if ( $opts{'cycle_init_year'} eq "default" ) {
+    if ( $opts{'datm_cycle_init_year'} eq "default" ) {
 	my $start_ymd = $nl->get_value('start_ymd');
 	$init_year = int( $start_ymd / 10000 );
     } else {
-	$init_year = $opts{'cycle_init_year'}; 
+	$init_year = $opts{'datm_cycle_init_year'}; 
     }
-    if ( $opts{'cycle_beg_year'} eq "default" ) {
-	$beg_year= $defaults->get_value('cycle_beg_year', \%cycleopts);
+    if ( $opts{'datm_cycle_beg_year'} eq "default" ) {
+	$beg_year= $defaults->get_value('datm_cycle_beg_year', \%cycleopts);
     } else {
-	$beg_year = $opts{'cycle_beg_year'}; 
+	$beg_year = $opts{'datm_cycle_beg_year'}; 
     }
-    if ( $opts{'cycle_end_year'} eq "default" ) {
-	$end_year= $defaults->get_value('cycle_end_year', \%cycleopts);
+    if ( $opts{'datm_cycle_end_year'} eq "default" ) {
+	$end_year= $defaults->get_value('datm_cycle_end_year', \%cycleopts);
     } else {
-	$end_year = $opts{'cycle_end_year'}; 
+	$end_year = $opts{'datm_cycle_end_year'}; 
     }
     if ( $beg_year > $end_year ) {
-	print "\n\ncycle_beg_year=$beg_year cycle_end_year=$end_year\n";
-	die "$ProgName ERROR:: cycle_beg_year greater than cycle_end_year\n";
+	print "\n\ndatm_cycle_beg_year=$beg_year datm_cycle_end_year=$end_year\n";
+	die "$ProgName ERROR:: datm_cycle_beg_year greater than datm_cycle_end_year\n";
     }
     
+    # Get defaults for data manipulation options associated with each stream (mapping, filling, time-interp etc.)
+
     # Determine options for reading the stream template file (datm.streams.template.xml)
     my %inputopts;
     if ( $opts{'silent'} ) {
@@ -991,14 +967,28 @@ if ($mode eq "ccsm_seq") {
 	$inputopts{'printing'} = 1;
     }
     $inputopts{'test'} = $opts{'test'};
-    if ( $opts{'source'} eq "default" ) {
-	$inputopts{'datasource'}  = $defaults->get_value( 'source' );
+    if ( $opts{'datm_source'} eq "default" ) {
+	$inputopts{'datasource'}  = $defaults->get_value( 'datm_source' );
     } else {
-	$inputopts{'datasource'}  = $opts{'source'};
+	$inputopts{'datasource'}  = $opts{'datm_source'};
     }
-    my $var = "source";
-    my $source = $inputopts{'datasource'};
-    my $val = &quote_string( $source );
+
+    # Determine options for reading the stream template file (datm.streams.template.xml)
+    my %inputopts;
+    if ( $opts{'silent'} ) {
+	$inputopts{'printing'} = 0;
+    } else {
+	$inputopts{'printing'} = 1;
+    }
+    $inputopts{'test'} = $opts{'test'};
+    if ( $opts{'datm_source'} eq "default" ) {
+	$inputopts{'datasource'}  = $defaults->get_value( 'datm_source' );
+    } else {
+	$inputopts{'datasource'}  = $opts{'datm_source'};
+    }
+    my $var = "datm_source";
+    my $datm_source = $inputopts{'datasource'};
+    my $val = &quote_string( $datm_source );
     my $group = $definition->get_group_name( $var );
     $nl->set_variable_value($group, $var, $val );
     if (  ! $definition->is_valid_value( $var, $val ) ) {
@@ -1008,7 +998,7 @@ if ($mode eq "ccsm_seq") {
 
     $inputopts{'ProgName'} = $ProgName;
     $inputopts{'ProgDir'}  = "$cfgdir";
-    if ( $source ne "CLM1PT" ) {
+    if ( $datm_source ne "CLM1PT" ) {
 	$inputopts{'res'}     = "";
     } else {
 	$inputopts{'res'} = $opts{'res'};
@@ -1018,26 +1008,26 @@ if ($mode eq "ccsm_seq") {
     if ( defined($opts{'datm_data_dir'}) ) {
 	$inputopts{'filepath'} = $opts{'datm_data_dir'};
     } else {
-        if ( $source ne "CAMHIST.eul64x128_datm6.01" && $source ne "CLM1PT" ) {
+        if ( $datm_source ne "CAMHIST.eul64x128_datm6.01" && $datm_source ne "CLM1PT" ) {
 	    die "$ProgName ERROR:: Need to specify datm_data_dir directory of where " .
-		" datm data is for datasource=$source.\n";
+		" datm data is for datasource=$datm_source.\n";
 	}
 	$inputopts{'filepath'}   = "";
     }
     if ( ! defined($opts{'datm_dom_dir'} ) ) {
 	$inputopts{'domainpath'} = "";
-	if ( $source =~ /CAMHIST.GENERIC/ ) {
+	if ( $datm_source =~ /CAMHIST.GENERIC/ ) {
 	    die "$ProgName ERROR:: Need to specify datm_dom_dir directory of where " .
-		" datm domain data is for datasource=$source.\n";
+		" datm domain data is for datasource=$datm_source.\n";
 	}
     } else {
 	$inputopts{'domainpath'} = $opts{'datm_dom_dir'};
     }
     if ( ! defined($opts{'datm_domain'}) ) {
 	$inputopts{'domain'} = "";
-	if ( $source =~ /CAMHIST.GENERIC/ ) {
+	if ( $datm_source =~ /CAMHIST.GENERIC/ ) {
 	    die "$ProgName ERROR:: Need to specify datm_domain name of domain file " .
-		" for datasource=$source.\n";
+		" for datasource=$datm_source.\n";
 	}
     } else {
 	$inputopts{'domain'} = $opts{'datm_domain'};
@@ -1048,9 +1038,14 @@ if ($mode eq "ccsm_seq") {
     $inputopts{'case'}      = "";
     $inputopts{'chng_din_lc'} = 1;
     
-    if ( $source ne "CLM_QIAN" ) {
+    if ( $datm_source ne "CLM_QIAN" ) {
        my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' );
        add_default($nl, 'streams', 'val' => "$outstreams $init_year $beg_year $end_year");
+       add_default($nl, 'mapalgo');
+       add_default($nl, 'mapmask');
+       add_default($nl, 'tintalgo');
+       add_default($nl, 'fillalgo');
+       add_default($nl, 'fillmask');
     
        # Read the streams template file
        my $streams = Streams::Template->new( \%inputopts );
@@ -1062,14 +1057,24 @@ if ($mode eq "ccsm_seq") {
 	   $streams->TestFilesExist( "domain" );
        }
        $streams->Write( $outstreams );
-   } else {
-       my $ostreams = undef;
-       my $filepath = $inputopts{'filepath'};
+    } else {
+       my $ostreams  = undef;
+       my $omapalgo  = undef;
+       my $omapmask  = undef;
+       my $otintalgo = undef;
+       my $ofillalgo = undef;
+       my $ofillmask = undef;
+       my $filepath  = $inputopts{'filepath'};
        foreach my $src ( "Precip", "Solar", "TPQW" ) {
-	  $inputopts{'datasource'}  = "$source.$src";
+	  $inputopts{'datasource'}  = "$datm_source.$src";
 	  $inputopts{'filepath'} = "$filepath/" . $defaults->get_value( "CLM_QIAN_dir.$src" );
 
           my $outstreams = "$outdirname/" . $defaults->get_value( 'outstreams' ) . ".$src";
+          my $mapalgo    = $defaults->get_value( 'mapalgo' );
+          my $mapmask    = $defaults->get_value( 'mapmask' );
+          my $tintalgo   = $defaults->get_value( "tintalgo.$src" );
+          my $fillalgo   = $defaults->get_value( 'fillalgo' );
+          my $fillmask   = $defaults->get_value( 'fillmask' );
     
           # Read the streams template file
           my $streams = Streams::Template->new( \%inputopts );
@@ -1082,12 +1087,27 @@ if ($mode eq "ccsm_seq") {
           }
           $streams->Write( $outstreams );
           if ( ! defined($ostreams) ) {
-             $ostreams = "\"$outstreams $init_year $beg_year $end_year\"";
+             $ostreams  = "\"$outstreams $init_year $beg_year $end_year\"";
+             $omapalgo  = "\'$mapalgo\'";
+             $omapmask  = "\'$mapmask\'";
+             $otintalgo = "\'$tintalgo\'";
+             $ofillalgo = "\'$fillalgo\'";
+             $ofillmask = "\'$fillmask\'";
           } else {
-             $ostreams = "$ostreams,\"$outstreams $init_year $beg_year $end_year\"";
+             $ostreams  = "$ostreams,\"$outstreams $init_year $beg_year $end_year\"";
+             $omapalgo  .= ",\'$mapalgo\'";
+             $omapmask  .= ",\'$mapmask\'";
+             $otintalgo .= ",\'$tintalgo\'";
+             $ofillalgo .= ",\'$fillalgo\'";
+             $ofillmask .= ",\'$fillmask\'";
           }
       }
-      add_default($nl, 'streams', 'val' => "$ostreams" );
+      add_default($nl, 'streams',  'val' => "$ostreams"  );
+      add_default($nl, 'mapalgo',  'val' => "$omapalgo"  );
+      add_default($nl, 'mapmask',  'val' => "$omapmask"  );
+      add_default($nl, 'tintalgo', 'val' => "$otintalgo" );
+      add_default($nl, 'fillalgo', 'val' => "$ofillalgo" );
+      add_default($nl, 'fillmask', 'val' => "$ofillmask" );
    }
 }
 
@@ -1096,9 +1116,35 @@ if ($mode eq "ccsm_seq") {
 ##############################
 
 if ($mode eq "ccsm_seq") {
+    add_default($nl, 'datamode', 'val'=>'CLMNCEP' );
+    add_default($nl, 'domainfile', 'hgrid'=>$res, 'mask'=>$mask); 
     add_default($nl, 'factorfn');
+    add_default($nl, 'iradsw');
+    add_default($nl, 'vectors');
+    add_default($nl, 'decomp');
+    add_default($nl, 'atm_in');
+    $atm_in = $nl->get_value('atm_in');
+    $atm_in =~ s/"|'//g;
+    if ( $start_type =~ /branch/ ) {
+       # The datm master restart file is currently unused
+       #if (not defined $nl->get_value('restfilm')) {
+       #   die "$ProgName ERROR:: restfilm is required for a branch type.\n";
+       #}
+       if (not defined $nl->get_value('restfils')) {
+          die "$ProgName ERROR:: restfils is required for a branch type.\n";
+       }
+    }
 }
 
+##############################
+# namelist group: modelio    #
+##############################
+
+if ($mode eq "ccsm_seq") {
+    add_default($nl, 'diri'    );
+    add_default($nl, 'diro'    );
+    add_default($nl, 'logfile' );
+}
 
 #-----------------------------------------------------------------------------------------------
 # Validate that the entire resultant namelist is valid
@@ -1129,15 +1175,27 @@ if ($mode eq "ccsm_seq") {
     if ($print>=2) { print "Writing driver namelist to $outfile $eol"; }
 
     # DATM7 component
-    @groups = qw(dshr_nml);
-    $outfile = "$opts{'dir'}/datm_dshr_in";
+    @groups = qw(shr_strdata_nml);
+    $outfile = "$opts{'dir'}/$atm_in";
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
-    if ($print>=2) { print "Writing datm7_dshr namelist to $outfile $eol"; }
+    if ($print>=2) { print "Writing datm_dshr namelist to $outfile $eol"; }
 
     @groups = qw(datm_nml);
     $outfile = "$opts{'dir'}/datm_in";
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
-    if ($print>=2) { print "Writing datm7_nml namelist to $outfile $eol"; }
+    if ($print>=2) { print "Writing datm_in namelist to $outfile $eol"; }
+
+    # atm_modelio
+    @groups = qw(modelio);
+    $outfile = "$opts{'dir'}/atm_modelio.nml";
+    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+    if ($print>=2) { print "Writing atm_modelio.nml namelist to $outfile $eol"; }
+
+    # lnd_modelio
+    @groups = qw(modelio);
+    $outfile = "$opts{'dir'}/lnd_modelio.nml";
+    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+    if ($print>=2) { print "Writing lnd_modelio.nml namelist to $outfile $eol"; }
 }
 
 #-----------------------------------------------------------------------------------------------
@@ -1454,6 +1512,7 @@ sub valid_option {
 sub validate_options {
 
     my $source = shift;   # text string declaring the source of the options being validated
+    my $cfg    = shift;   # configure object
     my $opts   = shift;   # reference to hash that contains the options
 
     my ($opt, $old, @expect);
@@ -1462,21 +1521,123 @@ sub validate_options {
     $opt = 'use_case';
     if (defined $opts->{$opt}) {
 
-	# create the @expect array by listing the files in $use_case_dir
-	# and strip off the ".xml" part of the filename
-	@expect = ();
-	my @files = glob("$opts->{'use_case_dir'}/*.xml");
-	foreach my $file (@files) {
-	    $file =~ m{.*/(.*)\.xml};
-	    push @expect, $1;
-	}
-
-	$old = $opts->{$opt};
-	$opts->{$opt} = valid_option($old, @expect)
-	    or die "$ProgName - invalid value of $opt ($old) specified in $source\n".
-                   "expected one of: @expect\n";
+        if ( $opts->{$opt} ne "list" ) {
+	   # create the @expect array by listing the files in $use_case_dir
+	   # and strip off the ".xml" part of the filename
+	   @expect = ();
+	   my @files = glob("$opts->{'use_case_dir'}/*.xml");
+	   foreach my $file (@files) {
+	       $file =~ m{.*/(.*)\.xml};
+	       push @expect, $1;
+	   }
+   
+	   $old = $opts->{$opt};
+	   $opts->{$opt} = valid_option($old, @expect)
+	       or die "$ProgName - invalid value of $opt ($old) specified in $source\n".
+                      "expected one of: @expect\n";
+        } else {
+           print "Use cases are:...\n\n";
+           my @ucases;
+           foreach my $file( sort( glob($opts{'use_case_dir'}."/*.xml") ) ) {
+              my $use_case;
+              if ( $file =~ /\/([^\/]+)\.xml$/ ) {
+                 $use_case = $1;
+              } else {
+                 die << "EOF";
+** $ProgName - Bad name for use case file = $file
+EOF
+              }
+              my $uc_defaults = Build::NamelistDefaults->new("$file", $cfg);
+              printf "%15s = %s\n", $use_case, $uc_defaults->get_value("use_case_desc");
+              push @ucases, $use_case;
+           }
+           die <<EOF;
+$ProgName - use cases: @ucases
+EOF
+        }
     }
+}
 
+#-------------------------------------------------------------------------------
+
+sub list_options {
+#
+# List the options for different command line values if asked for
+#
+    my $cfg     = shift;   # configure object
+    my $optsref = shift;   # reference to hash that contains the options
+
+    # options to list value values for that are in the defaults files
+    my @opts_list = ( "res", "lnd_res", "mask", "datm_source", "sim_year", 
+                      "datm_cycle_beg_year", "datm_cycle_end_year", 
+                      "datm_cycle_init_year" );
+    my %opts;
+    foreach my $var ( "res", "mask", "sim_year" ) {
+       my $val;
+       if (      $optsref->{$var} eq "list" ) {
+         $val = "default";
+       } elsif ( $optsref->{$var} eq "default" ) {
+         $val = $defaults->get_value($var, \%opts );
+       } else {
+         $val = $optsref->{$var};
+       }
+       my $vname = $var;
+       if ( $vname eq "res" ) { $vname = "hgrid"; }
+       $opts{$vname} = $val;
+    }
+    foreach my $opt ( @opts_list ) {
+       if (defined $optsref->{$opt}) {
+
+           if ( $optsref->{$opt} eq "list" ) {
+               $var = $opt;
+               if ( $var eq "lnd_res" ) { $var = "res"; }
+               my @valid_values   = $definition->get_valid_values( $var );
+               if ( $opt eq "sim_year" ) { 
+                   unshift( @valid_values, 
+                            $definition->get_valid_values( "sim_year_range" ) );
+               }
+               unshift( @valid_values, "default" );
+               # Strip out quotes and the constant value
+               for( my $i = 0; $i <= $#valid_values; $i++ ) {
+                  $valid_values[$i] =~ s/('|')//g;
+                  if ( $valid_values[$i] eq "constant" ) { $valid_values[$i] = undef; }
+               }
+               $val= $defaults->get_value($var, \%opts);
+               if ( $opt eq "lnd_res" ) { $val = "same as atm resolution given in res option"; }
+               if ( $opt eq "datm_cycle_init_year" ) { 
+                  unshift( @valid_values, "0 to 9999" );
+                  $val = int( $defaults->get_value("start_ymd")/10000 ); 
+               }
+               die <<EOF;
+$ProgName - valid values for $opt: @valid_values
+                  default = $val
+                  (NOTE: resolution and mask and other settings may influence what the default is)
+EOF
+           }
+       }
+    }
+    # clm_demand
+    my $opt = 'clm_demand';
+    if (defined $optsref->{$opt}) {
+
+        if ( $optsref->{$opt} eq "list" ) {
+           my @vars = $definition->get_var_names( );
+           my @demands = ( "null" );
+           foreach my $var ( @vars ) {
+              if ( $definition->get_group_name( $var ) ne "clm_inparm" ) { next; }
+              if ( defined($defaults->get_value($var, \%opts ) ) ) { 
+                 push( @demands, $var );
+              }
+           }
+           die <<EOF;
+$ProgName - valid values for $opt: @demands
+            any valid namelist item for clm_inparm can be set. However, not all are 
+            available in the clm defaults file. The defaults are also dependent on
+            resolution and landmask, as well as other settings. Hence, the list above
+            will vary depending on what you set for resolution and landmask.
+EOF
+        }
+    }
 }
 
 #-------------------------------------------------------------------------------

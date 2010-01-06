@@ -55,7 +55,7 @@ subroutine NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 ! 8/1/03: Created by Peter Thornton
@@ -214,8 +214,6 @@ subroutine NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
    dt = real( get_step_size(), r8 )
 
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 
@@ -259,8 +257,6 @@ subroutine NStateUpdate2(num_soilc, filter_soilc, num_soilp, filter_soilp)
    end do ! end of column loop
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 
@@ -319,7 +315,7 @@ subroutine NStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 ! 8/1/03: Created by Peter Thornton
@@ -478,8 +474,6 @@ subroutine NStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp)
    dt = real( get_step_size(), r8 )
 
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 
@@ -524,8 +518,6 @@ subroutine NStateUpdate2h(num_soilc, filter_soilc, num_soilp, filter_soilp)
    end do ! end of column loop
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 

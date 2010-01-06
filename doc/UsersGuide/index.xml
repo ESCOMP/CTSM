@@ -1,0 +1,334 @@
+<?xml version='1.0'?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+]>
+
+<book label="CLM4_UsersGuide" status="draft">
+
+<bookinfo>
+<title>CCSM Research Tools: CLM4.0 Users Guide Documentation</title>
+
+<authorgroup>
+
+<author>
+    <firstname>Erik</firstname>
+    <surname>Kluzek</surname>
+   <affiliation>
+   <orgname> NCAR </orgname>
+   </affiliation>
+</author>
+
+</authorgroup>
+
+<date>2010-04-01</date>
+                     
+</bookinfo>
+
+<dedication>
+<para>
+Dedicated to the Land Model Working Group.
+</para>
+</dedication>
+
+<preface id="acknowledge">
+<title>Acknowledgements</title>
+<para>
+We acknowledge all of the people that helped review or edit the model documentation:
+</para>
+</preface>
+
+<preface id="intro">
+<title>Introduction</title>
+
+<para>
+The Community Land Model (CLM) is the latest in a series of
+global land models developed at the National Center for
+Atmospheric Research (NCAR). This guide is intended to instruct both
+the novice and experienced user on running CLM;.
+</para>
+</preface>
+
+<!-- ======================================================================= -->
+<preface id="how_to">
+<title>How to Use This Document</title>
+
+<para>
+This section provides the details in using CLM with the CCSM modelling
+system. Links to descriptions and definitions have been provided in the code below.
+We use the same conventions used in the CCSM documentation as outlined below.
+</para>
+
+<para>
+Note that computer input is written in a fixed point font and ">" is a
+UNIX prompt.
+</para>
+
+<screen>
+Lastly, throughout the document this style is used to indicate shell
+commands and options, fragments of code, namelist variables, etc.
+Where examples from an interactive shell session are presented, lines
+starting with % indicate the shell prompt.
+</screen>
+
+</preface>
+
+
+<!-- ======================================================================= -->
+<preface id="what_is_new">
+<title>What is new with CLM4 since CLM3.5?</title>
+
+<para>
+Since CLM3.5 there have been advances in both the science and the software infrastructure.
+</para>
+
+<sect1 id="science">
+<title>What is new with CLM4 Science?</title>
+<para>
+The following aspects are changes to the science in CLM since CLM3.5.
+</para>
+</sect1>
+
+<sect1 id="software">
+<title>What is new with CLM4 Software Infrastructure?</title>
+<para>
+The following aspects are changes to the software infrastructure in CLM since CLM3.5.
+</para>
+</sect1>
+
+</preface>
+
+<!-- ======================================================================= -->
+<preface id="quickstart">
+<title>Quickstart to using CLM4</title>
+<para>
+Here we give a quick outline of how to run CLM4.
+</para>
+</preface>
+
+<!-- ======================================================================= -->
+<preface id="help">
+<title>Other resources to get help from</title>
+
+<sect1 id="CCSM_UG">
+<title>The CCSM Users-Guide</title>
+<para>
+....
+</para>
+</sect1>
+
+<sect1 id="CCSM_BB">
+<title>The CCSM Bulletin Board</title>
+<para>
+....
+</para>
+</sect1>
+
+<sect1 id="CLM_web">
+<title>The CLM web pages</title>
+<para>
+....
+</para>
+</sect1>
+
+<sect1 id="reporting_bugs">
+<title>Reporting bugs in CLM4</title>
+<para>
+....
+</para>
+</sect1>
+
+</preface>
+
+<!-- End introduction preface -->
+
+<!-- ======================================================================= -->
+<!-- Beg of customizing section -->
+
+<chapter id="customize">
+<title>How to customize the configuration for a case with CLM</title>
+
+<para>
+....
+</para>
+<!-- Beg of choosing a compset section -->
+<sect1 id="compset_choice">
+<title>Choosing a compset using CLM</title>
+
+<para>
+....
+</para>
+<sect2 id="I_compsets">
+<title>Compsets coupled to data atmosphere and stub ocean/sea-ice ("I" compsets)</title>
+<orderedlist>
+       <listitem><para><varname>I_2000</varname> for vegetation types simulating year 2000 AD.</para></listitem>
+       <listitem><para><varname>I_1850</varname> for vegetation types simulating year 1850 AD.</para></listitem>
+       <listitem><para><varname>I_GLC</varname> for running with the glacier model (2000 AD conditions).</para></listitem>
+       <listitem><para><varname>I_1948_2004</varname> for 2000 AD simulation year running over atmospheric
+           data from 1948 to 2004.</para></listitem>
+       <listitem><para><varname>I_1850-2000</varname> for 20th Century simulations varying the vegetation
+          types from 1850 to 2000 AD.</para></listitem>
+       <listitem><para><varname>I_CASA</varname> for 2000 AD simulation year running with CASA' BGC model..</para></listitem>
+       <listitem><para><varname>I_CASA_1948_2004</varname> for 2000 AD simulation year running with CASA'
+           BGC model over atmospheric data from 1948 to 2004.</para></listitem>
+       <listitem><para><varname>I_CN</varname> for 2000 AD simulation year running with CN BGC model.</para></listitem>
+       <listitem><para><varname>I_1850_CN</varname> for 1850 AD simulation year running with CN BGC model.</para></listitem>
+       <listitem><para><varname>I_1850_SPINUP_3HrWxHfHrSol_CN</varname> for 1850 AD simulation year running
+          with CN BGC model and using 3-hourly weather forcing and half-hour solar
+          data from a fully coupled case for the atmosphere. This is meant to spinup the
+          CN BGC model.</para></listitem>
+       <listitem><para><varname>I_CN_1948_2004</varname> for 2000 AD simulation year running with CN BGC model
+          with atmospheric data from 1948 to 2004.</para></listitem>
+       <listitem><para><varname>I_CN_1850-2000</varname> for 20th Century simulations varying the vegetation
+          types from 1850 to 2000 AD running with the CN BGC model
+          with atmospheric data from 1948 to 2004.</para></listitem>
+</orderedlist>
+</sect2>
+
+<sect2 id="EF_compsets">
+     <title>Compsets coupled to active atmosphere with data ocean</title>
+<para>
+       CAM compsets are compsets that start with "E" or "F" in the name. They are
+       described more fully in the scripts documentation or the CAM documentation.
+</para>
+</sect2>
+
+<sect2 id="B_compsets">
+<title>Fully coupled compsets with fully active ocean, sea-ice, and atmosphere</title>
+<para>
+       Fully coupled compsets are compsets that start with "B" in the name. They are
+       described more fully in the scripts documentation.
+</para>
+</sect2>
+
+</sect1>
+</chapter>
+<!-- End of choosing a compset section -->
+
+<!-- Beg of customonizing clm config section -->
+<chapter id="customizing_clm_config">
+<title>Customizing the clm configuration</title>
+   <para>How to customize the configuration for a case with CLM</para>
+
+<sect1 id="clm_script">
+<title>CLM Script configuration items</title>
+<simplelist>
+    <member>CLM_CONFIG_OPTS</member>
+    <member>CLM_BLDNML_OPTS</member>
+    <member>CLM_NAMELIST_OPTS</member>
+    <member>CLM_DEMAND</member>
+    <member>CLM_FORCE_COLDSTART</member>
+    <member>CLM_PT1_NAME</member>
+    <member>CLM_USRDAT_NAME</member>
+</simplelist>
+</sect1>
+
+<sect1 id="other_config">
+<title>Other noteworthy configuration items</title>
+    <simplelist>
+    <member>CCSM_CO2_PPMV</member>
+    <member>DATM_MODE</member>
+    <member>DATM_CLMNCEP_YR_ALIGN</member>
+    <member>DATM_CLMNCEP_YR_START</member>
+    <member>DATM_CLMNCEP_YR_END</member>
+    <member>DATM_CO2_TSERIES</member>
+    </simplelist>
+<para>
+<ulink url="../../bld/config_files/config_definition.xml">Definition of each clm configuration Item</ulink>
+</para>
+</sect1>
+
+</chapter>
+<!-- End of customonizing clm config section -->
+
+<!-- Beg of customonizing clm nl section -->
+<chapter id="customizing_clm_nl">
+   <title>Customizing the clm namelist</title>
+   <para>How to customize the namelist for a case with CLM</para>
+
+<para>
+<ulink url="../../bld/namelist_files/namelist_definition.xml">Definition of each Namelist Item</ulink>
+<ulink url="../../bld/namelist_files/namelist_defaults_clm.xml">Default values of each CLM Namelist Item</ulink>
+</para>
+<!-- Beg of nl examples section -->
+<sect1 id="nl_examples">
+<title>Examples of using different namelist features</title>
+<para>Examples of using different features in your namelist</para>
+
+<sect2 id="add_rm_primary_hist">
+<title>Adding/removing fields on your primary history file</title>
+<para>
+....
+</para>
+</sect2>
+
+<sect2 id="add_aux_hist_chng_output_frq">
+<title>Adding auxillary history files and changing output
+frequency</title>
+<para>
+....
+</para>
+</sect2>
+
+<sect2 id="rm_hist">
+<title>Removing all history fields</title>
+<para>
+....
+</para>
+</sect2>
+
+<sect2 id="hist_averaging">
+<title>Various ways to change history output averaging flags</title>
+<para>
+....
+</para>
+</sect2>
+
+<sect2 id="hist_vector">
+<title>Outputting history files as a vector in order to analyze
+the plant function types within gridcells</title>
+<para>
+....
+</para>
+</sect2>
+
+</sect1>
+<!-- End of customonizing clm nl section -->
+
+</chapter>
+<!-- End of customizing section -->
+
+<!-- Beg of tools section -->
+<chapter id="tools">
+<title>Using the CLM tools to create your own input datasets</title>
+<para>
+....
+</para>
+</chapter>
+<!-- End of tools section -->
+
+<!-- Beg of single_point section -->
+<chapter id="single_point">
+<title>How to run Single-Point cases</title>
+<para>
+....
+</para>
+
+<sect1 id="PTS_MODE">
+<title>Running PTS_MODE configurations</title>
+<para>
+....
+</para>
+</sect1>
+
+<sect1 id="own_single_point_datasets">
+<title>Creating your own single-point datasets</title>
+<para>
+....
+</para>
+</sect1>
+
+</chapter>
+<!-- End of single_point section -->
+
+
+</book>

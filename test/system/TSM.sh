@@ -70,10 +70,10 @@ if     [ "$7" = "arb_ic" ] || [ "$7" = "cold" ]; then
    export nrevsn
    drv_restart=' '
    export drv_restart
-   restBfile='null'
-   export restBfile
-   restSfile='null'
-   export restSfile
+   datm_restfilm='null'
+   export datm_restfilm
+   datm_restfils='null'
+   export datm_restfils
 
 elif   [ "$7" = "startup" ]; then
 
@@ -81,10 +81,10 @@ elif   [ "$7" = "startup" ]; then
    export nrevsn
    drv_restart=' '
    export drv_restart
-   restBfile='null'
-   export restBfile
-   restSfile='null'
-   export restSfile
+   datm_restfilm='null'
+   export datm_restfilm
+   datm_restfils='null'
+   export datm_restfils
 
 elif [ "${7%+*}" = "continue" ]; then
 
@@ -92,15 +92,15 @@ elif [ "${7%+*}" = "continue" ]; then
    export nrevsn
    drv_restart=' '
    export drv_restart
-   restBfile='null'
-   export restBfile
-   restSfile='null'
-   export restSfile
+   datm_restfilm='null'
+   export datm_restfilm
+   datm_restfils='null'
+   export datm_restfils
 
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*clm?.*.*     $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*drv.r*       $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/*cpl.r*       $rundir/.
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.r*     $rundir/.
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm.r*      $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/$atm_rpointer $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/$lnd_rpointer $rundir/.
    cp ${CLM_TESTDIR}/TSM.${7#*+}/$drv_rpointer $rundir/.
@@ -130,21 +130,25 @@ elif [ "${7%+*}" = "branch" ]; then
    export drv_restart
 
    if [ "$debug" = "YES" ] || [ "$compile_only" = "YES" ]; then
-       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.datm7.rb.1967-01-01-00000
+       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.datm.rs1.1967-01-01-00000.bin
    fi
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.rb.* $rundir/.
-   restBfile=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.rb.* \
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm.rs.* $rundir/.
+   datm_restfils=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*datm.rs1.* \
        | tail -1 | head -1`
-   export restBfile
+   if [ $rc -ne 0 ]; then
+      echo "Can not find datm streams restart file in ${CLM_TESTDIR}/TSM.${7#*+}"
+      exit 6
+   fi
+   export datm_restfils
 
    if [ "$debug" = "YES" ] || [ "$compile_only" = "YES" ]; then
-       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.datm7.rs.1967-01-01-00000
+       touch ${CLM_TESTDIR}/TSM.${7#*+}/clmrun.datm.r.1967-01-01-00000.nc
    fi
-   cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.rs.* $rundir/.
-   restSfile=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*datm7.rs.* \
+   cp ${CLM_TESTDIR}/TSM.${7#*+}/*datm.r.* $rundir/.
+   datm_restfilm=`ls -1rt ${CLM_TESTDIR}/TSM.${7#*+}/*datm.r.* \
        | tail -1 | head -1`
-   export restSfile
-   
+   export datm_restfilm
+
 else
     echo "TSM.sh: bad start type = $7, can only handle cold, arb_ic, startup, continue or branch"
     exit 7

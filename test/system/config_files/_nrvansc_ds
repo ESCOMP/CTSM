@@ -1,0 +1,6 @@
+-mode ccsm_seq
+-nospmd -nosmp
+-rtm off
+-debug
+-cppdefs -DVANCOUVER
+-s

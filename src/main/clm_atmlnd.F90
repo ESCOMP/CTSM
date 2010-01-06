@@ -80,7 +80,7 @@ type lnd2atm_type
   real(r8), pointer :: eflx_lwrad_out(:) !IR (longwave) radiation (W/m**2)
   real(r8), pointer :: qflx_evap_tot(:)!qflx_evap(_soi + _veg) + qflx_tran_veg
   real(r8), pointer :: fsa(:)          !solar rad absorbed (total) (W/m**2)
-  real(r8), pointer :: nee(:)          !net CO2 flux (kg C/m**2/s) [+ to atm]
+  real(r8), pointer :: nee(:)          !net CO2 flux (kg CO2/m**2/s) [+ to atm]
 #if (defined DUST || defined  PROGSSLT )
   real(r8), pointer :: ram1(:)         !aerodynamical resistance (s/m)
   real(r8), pointer :: fv(:)           !friction velocity (m/s) (for dust model)

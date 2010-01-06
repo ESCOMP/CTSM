@@ -16,7 +16,7 @@ module CNSetValueMod
 ! setting fluxes to 0.0 at the beginning of each time step
 ! 3/23/09, Peter Thornton: Added new subroutine, CNZeroFluxes_dwt(), 
 !     which initialize flux variables used in the pftdyn
-!     routines. This is called from driver(), as
+!     routines. This is called from clm_driver1, as
 !     these variables need to be initialized outside of the clumps loop.
 !
 ! !USES:
@@ -127,7 +127,7 @@ subroutine CNZeroFluxes_dwt()
     implicit none
 !
 ! !CALLED FROM:
-! subroutine driver in module driver.F90
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! 3/23/09: Created by Peter Thornton
@@ -157,8 +157,6 @@ subroutine CNZeroFluxes_dwt()
     ! set column-level conversion and product pool fluxes
     ! to 0 at the beginning of every timestep
 
-!dir$ concurrent
-!cdir nodep
     do c = begc,endc
        ! C fluxes
        cptr%ccf%dwt_seedc_to_leaf(c) = 0._r8
@@ -231,8 +229,6 @@ subroutine CNSetPps(num, filter, val, pps)
 !EOP
 !------------------------------------------------------------------------
 
-!dir$ concurrent
-!cdir nodep
    do fi = 1,num
       i = filter(fi)
       pps%slasun(i) = val
@@ -245,8 +241,6 @@ subroutine CNSetPps(num, filter, val, pps)
    end do
 
    do j = 1,numrad
-!dir$ concurrent
-!cdir nodep
       do fi = 1,num
          i = filter(fi)
          pps%omega(i,j) = val
@@ -291,8 +285,6 @@ subroutine CNSetPepv (num, filter, val, pepv)
 !EOP
 !------------------------------------------------------------------------
 
-!dir$ concurrent
-!cdir nodep
    do fi = 1,num
       i = filter(fi)
       pepv%dormant_flag(i) = val
@@ -371,8 +363,6 @@ subroutine CNSetPcs (num, filter, val, pcs)
 !EOP
 !------------------------------------------------------------------------
 
-!dir$ concurrent
-!cdir nodep
    do fi = 1,num
       i = filter(fi)
       pcs%leafc(i) = val
@@ -442,8 +432,6 @@ subroutine CNSetPns(num, filter, val, pns)
 !EOP
 !------------------------------------------------------------------------
 
-!dir$ concurrent
-!cdir nodep
    do fi = 1,num
       i = filter(fi)
       pns%leafn(i) = val
@@ -505,8 +493,6 @@ subroutine CNSetPcf(num, filter, val, pcf)
 !EOP
 !------------------------------------------------------------------------
 
-!dir$ concurrent
-!cdir nodep
    do fi = 1,num
       i = filter(fi)
       pcf%m_leafc_to_litter(i) = val
@@ -697,8 +683,6 @@ subroutine CNSetPnf(num, filter, val, pnf)
 !EOP
 !------------------------------------------------------------------------
 
-!dir$ concurrent
-!cdir nodep
    do fi = 1,num
       i=filter(fi)
       pnf%m_leafn_to_litter(i) = val
@@ -833,8 +817,6 @@ subroutine CNSetCps(num, filter, val, cps)
 !EOP
 !------------------------------------------------------------------------
 
-!dir$ concurrent
-!cdir nodep
    do fi = 1,num
       i = filter(fi)
       cps%decl(i) = val
@@ -854,8 +836,6 @@ subroutine CNSetCps(num, filter, val, cps)
    end do
 
    do j = 1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
       do fi = 1,num
          i = filter(fi)
          cps%bsw2(i,j) = val
@@ -897,8 +877,6 @@ subroutine CNSetCcs(num, filter, val, ccs)
 !EOP
 !------------------------------------------------------------------------
 
-!dir$ concurrent
-!cdir nodep
    do fi = 1,num
       i = filter(fi)
       ccs%cwdc(i) = val
@@ -949,8 +927,6 @@ subroutine CNSetCns(num, filter, val, cns)
 !EOP
 !------------------------------------------------------------------------
 
-!dir$ concurrent
-!cdir nodep
    do fi = 1,num
       i = filter(fi)
       cns%cwdn(i) = val
@@ -1138,8 +1114,6 @@ subroutine CNSetCnf(num, filter, val, cnf)
 !EOP
 !------------------------------------------------------------------------
 
-!dir$ concurrent
-!cdir nodep
    do fi = 1,num
       i = filter(fi)
       cnf%ndep_to_sminn(i) = val

@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_59         erik 01/05/2010 Update to datm8, fix so wts used are from fsurdat file NOT finidat file
    clm3_6_58         erik 12/08/2009 Fix rpointer, correct units for export of nee, start adding testing for intrepid
    clm3_6_57         erik 11/20/2009 Redirect aquifer overflow to drainage, so doesn't end up in ocean
    clm3_6_56         erik 11/10/2009 New ndepdat and ndepdyn datasets

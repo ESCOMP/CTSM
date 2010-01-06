@@ -54,7 +54,7 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 ! 8/1/03: Created by Peter Thornton
@@ -282,8 +282,6 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
    ncrit = 1.e-8_r8
    
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       
@@ -565,8 +563,6 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
    end do ! end of pft loop
 
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
       

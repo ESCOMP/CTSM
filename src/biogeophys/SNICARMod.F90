@@ -1117,7 +1117,7 @@ contains
     integer, intent(in) :: filter_nosnowc(ubc-lbc+1) ! column filter for non-snow points
     !
     !
-    ! !CALLED FROM: driver.F90
+    ! !CALLED FROM: clm_driver1
     !
 
     ! !LOCAL VARIABLES:

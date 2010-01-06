@@ -6,6 +6,7 @@ sc    => seq-ccsm               is on
 urb   => urban_solar 	        is on
 van   => VANCOUVER              is on
 mex   => MEXICOCITY             is on
+nr    => rtm                    is off
 
 _cnn  => bgc is in cn   mode with suplemental nitrogen on
 _cn   => bgc is in cn   mode with suplemental nitrogen off

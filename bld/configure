@@ -758,7 +758,7 @@ if ($usr_cppdefs and $print>=2) { print "Default and user CPP definitions: \'$us
 my $cfg_cppdefs = '';
 
 # Fortran name mangling (only when NOT using the CCSM build as it already does this)
-if ( $clm_mode eq "ext_ccsm_seq" || $ccsm_bld eq "on" ) {
+if ( $clm_mode ne "ext_ccsm_seq" && $ccsm_bld ne "on" ) {
    if ( $target_os eq 'aix'  or  $target_os eq 'darwin'  
    or   $target_os eq 'bgl'  or  $target_os eq 'bgp' ) {
        $cfg_cppdefs .= " -DFORTRAN_SAME";
@@ -811,15 +811,15 @@ if ($exit_spinup eq 'on') {
 if ( $pergro eq 'on' ) {
     $cfg_cppdefs .= " -DPERGRO";
 }
-if ( $pio eq 'on' ) {
-    $cfg_cppdefs .= " -D_USEBOX -D_NETCDF";
-    if ( ($clm_mode eq "ccsm_seq") && ($spmd eq "off") ) { $cfg_cppdefs .= " -D_MPISERIAL";}
-}
 if ( $snicar_frc eq 'on' ) {
     $cfg_cppdefs .= " -DSNICAR_FRC";
 }
 if ( $carbon_aero eq 'on' ) {
     $cfg_cppdefs .= " -DCARBON_AERO";
+}
+if ( $pio eq 'on' ) {
+    $cfg_cppdefs .= " -D_USEBOX -D_NETCDF";
+    if ( ($clm_mode eq "ccsm_seq") && ($spmd eq "off") ) { $cfg_cppdefs .= " -D_MPISERIAL";}
 }
 
 # -DSPMD only added for CCSM build.  The CLM Makefile has a separate SPMD macro.
@@ -1284,7 +1284,6 @@ sub write_filepath
 
     # Shared utilities.
     my @dirs = ( "csm_share/shr", 
-                 "csm_share/dshr", 
                  "utils/timing",   
                  "utils/mct/mpeu",
                  "utils/mct/mct" );
@@ -1307,12 +1306,14 @@ sub write_filepath
     
     # Driver, stub ocean, stub glacier, and stub sea-ice
     if ($mode eq "ccsm_seq") {
-	my @dirs = ( "drv/seq_mct", "drv/seq_mct/driver", "atm/datm7", "ocn/socn", 
+	my @dirs = ( "drv/driver", "drv/shr", "atm/datm", "ocn/socn", 
                      "ice/sice", "glc/sglc" );
         if ( $comp_intf eq "MCT" ) { 
-	    push( @dirs, "atm/datm7/cpl_mct" );
+	    push( @dirs, "atm/datm/cpl_mct" );
+	    #push( @dirs, "drv/shr_mct" );
         } elsif ( $comp_intf eq "ESMF" ) { 
-	    push( @dirs, "atm/datm7/cpl_esmf" );
+	    push( @dirs, "atm/datm/cpl_esmf" );
+	    push( @dirs, "drv/shr_esmf" );
         } else {
 	    die "** Bad component interface name -- should be MCT or ESMF\n";
         }
@@ -1384,7 +1385,6 @@ sub write_filepath_ccsmbld
     # Shared utilities.
     if ( $model eq "ccsm_lib" ) {
        my @dirs = ( "csm_share/shr", 
-                    "csm_share/dshr", 
                     "utils/timing",   
                     "utils/mct/mpeu",
                     "utils/mct/mct" );
@@ -1409,11 +1409,13 @@ sub write_filepath_ccsmbld
     
        # Driver, stub ocean, stub glacier, and stub sea-ice
        if ($mode eq "ccsm_seq") {
-	   my @dirs = ( "drv/seq_mct", "atm/datm7", "ocn/socn", "ice/sice", "glc/sglc" );
+	   my @dirs = ( "drv/shr", "atm/datm", "ocn/socn", "ice/sice", "glc/sglc" );
            if ( $comp_intf eq "MCT" ) { 
-	       push( @dirs, "atm/datm7/cpl_mct" );
+	       push( @dirs, "atm/datm/cpl_mct" );
+	       #push( @dirs, "drv/shr_mct" );
            } elsif ( $comp_intf eq "ESMF" ) { 
-	       push( @dirs, "atm/datm7/cpl_esmf" );
+	       push( @dirs, "atm/datm/cpl_esmf" );
+	       push( @dirs, "drv/shr_esmf" );
            } else {
 	       push( @dirs, "main/$comp_intf" );
            }
@@ -1479,7 +1481,7 @@ sub write_filepath_ccsmbld
 
     # CCSM driver
     if ( $model eq "ccsm" ) {
-       print $fh absolute_path( "$srcdir/../../../drv/seq_mct/driver" ) . "\n";
+       print $fh absolute_path( "$srcdir/../../../drv/driver" ) . "\n";
     }
     
     $fh->close;

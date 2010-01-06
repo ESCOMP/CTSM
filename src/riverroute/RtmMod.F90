@@ -1024,7 +1024,7 @@ contains
     implicit none
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver2
 !
 ! !REVISION HISTORY:
 ! Author: Sam Levis

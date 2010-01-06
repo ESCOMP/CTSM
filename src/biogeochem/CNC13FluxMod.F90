@@ -61,7 +61,7 @@ subroutine C13Flux1(num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 !
@@ -406,7 +406,7 @@ subroutine C13Flux2(num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 !
@@ -534,7 +534,7 @@ subroutine C13Flux2h(num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 !
@@ -671,7 +671,7 @@ subroutine C13Flux3(num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 !
@@ -891,8 +891,6 @@ subroutine CNC13LitterToColumn (num_soilc, filter_soilc)
     frootc_to_litr3c               => clm3%g%l%c%cc13f%frootc_to_litr3c
 
    do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
 
@@ -1078,8 +1076,6 @@ subroutine CNC13GapPftToColumn (num_soilc, filter_soilc)
    m_gresp_xfer_to_litter         => clm3%g%l%c%p%pc13f%m_gresp_xfer_to_litter
 
    do pi = 1,maxpatch_pft
-!dir$ concurrent
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
 
@@ -1318,8 +1314,6 @@ subroutine CNC13HarvestPftToColumn (num_soilc, filter_soilc)
    hrv_gresp_xfer_to_litter         => clm3%g%l%c%p%pc13f%hrv_gresp_xfer_to_litter
 
    do pi = 1,maxpatch_pft
-!dir$ concurrent
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
 
@@ -1435,8 +1429,6 @@ subroutine C13FluxCalc(c13_flux, ctot_flux, c13_state, ctot_state, &
    real(r8) :: temp
 !
    ! loop over the supplied filter
-!dir$ concurrent
-!cdir nodep
    do f = 1,num
       i = filter(f)
       if (ctot_state(i) /= 0._r8) then

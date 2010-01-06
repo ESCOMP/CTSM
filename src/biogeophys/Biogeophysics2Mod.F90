@@ -95,7 +95,7 @@ contains
     integer, intent(in) :: filter_nolakep(ubp-lbp+1)   ! pft filter for non-lake points
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! 15 September 1999: Yongjiu Dai; Initial code
@@ -280,8 +280,6 @@ contains
     call SoilTemperature(lbl, ubl, lbc, ubc, num_urbanl, filter_urbanl, &
                          num_nolakec, filter_nolakec, xmf , fact)
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        j = snl(c)+1
@@ -310,8 +308,6 @@ contains
     ! greater than availability, or 1.0 otherwise.
     ! Correct fluxes to present soil temperature
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        c = pcolumn(p)
@@ -322,8 +318,6 @@ contains
     ! Set the column-average qflx_evap_soi as the weighted average over all pfts
     ! but only count the pfts that are evaporating
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        topsoil_evap_tot(c) = 0._r8
@@ -331,8 +325,6 @@ contains
     end do
 
     do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           if ( pi <= npfts(c) ) then
@@ -346,8 +338,6 @@ contains
 
     ! Calculate ratio for rescaling pft-level fluxes to meet availability
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        if (topsoil_evap_tot(c) > egsmax(c)) then
@@ -357,8 +347,6 @@ contains
        end if
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        c = pcolumn(p)
@@ -458,8 +446,6 @@ contains
 
     ! Soil Energy balance check
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        c = pcolumn(p)
@@ -472,8 +458,6 @@ contains
        end if
     end do
     do j = -nlevsno+1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do fp = 1,num_nolakep
           p = filter_nolakep(fp)
           c = pcolumn(p)

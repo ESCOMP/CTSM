@@ -91,7 +91,7 @@ contains
     logical,           intent(in), optional :: noptr ! if should NOT write to the restart pointer file
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver2
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -207,7 +207,7 @@ contains
     character(len=*), intent(in) :: file  ! output netcdf restart file
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine initialize2
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -275,7 +275,7 @@ contains
     character(len=*), intent(in) :: file   ! binary restart file
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine initialize2
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -318,7 +318,7 @@ contains
     logical,           intent(in) :: nlend
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver2
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
@@ -363,7 +363,7 @@ contains
     character(len=*), intent(out) :: path  ! full pathname of netcdf restart file
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine initialize2
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein

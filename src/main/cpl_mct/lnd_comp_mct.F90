@@ -8,51 +8,57 @@ module lnd_comp_mct
 !
 ! !MODULE: lnd_comp_mct
 !
+!  Interface of the active land model component of CCSM the CLM (Community Land Model)
+!  with the main CCSM driver. This is a thin interface taking CCSM driver information
+!  in MCT (Model Coupling Toolkit) format and converting it to use by CLM.
+!
 ! !DESCRIPTION:
 !
 ! !USES:
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use mct_mod          , only : mct_aVect
-!
-! !PUBLIC MEMBER FUNCTIONS:
   implicit none
-  public :: lnd_init_mct
-  public :: lnd_run_mct
-  public :: lnd_final_mct
   SAVE
   private                              ! By default make data private
+!
+! !PUBLIC MEMBER FUNCTIONS:
+!
+  public :: lnd_init_mct               ! clm initialization
+  public :: lnd_run_mct                ! clm run phase
+  public :: lnd_final_mct              ! clm finalization/cleanup
 !
 ! !PUBLIC DATA MEMBERS: None
 !
 ! !REVISION HISTORY:
 ! Author: Mariana Vertenstein
+! Dec/18/2009 Make sure subroutines have documentation. Erik Kluzek
 !
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: lnd_SetgsMap_mct
-  private :: lnd_chkAerDep_mct
-  private :: lnd_domain_mct
-  private :: lnd_export_mct
-  private :: lnd_import_mct
+  private :: lnd_SetgsMap_mct         ! Set the land model MCT GS map
+  private :: lnd_chkAerDep_mct        ! Check if aerosol deposition data is input or not
+  private :: lnd_domain_mct           ! Set the land model domain information
+  private :: lnd_export_mct           ! export land data to CCSM coupler
+  private :: lnd_import_mct           ! import data from the CCSM coupler to the land model
 #ifdef RTM
-  private :: rof_SetgsMap_mct
-  private :: rof_domain_mct
-  private :: rof_export_mct
+  private :: rof_SetgsMap_mct         ! Set the river runoff model MCT GS map
+  private :: rof_domain_mct           ! Set the river runoff model domain information
+  private :: rof_export_mct           ! Export the river runoff model data to the CCSM coupler
 #endif
 !
 ! !PRIVATE DATA MEMBERS:
 !
 ! Time averaged flux fields
 !  
-  type(mct_aVect)   :: l2x_l_SNAP
-  type(mct_aVect)   :: l2x_l_SUM
+  type(mct_aVect)   :: l2x_l_SNAP     ! Snapshot of land to coupler data on the land grid
+  type(mct_aVect)   :: l2x_l_SUM      ! Summation of land to coupler data on the land grid
 !
 ! Time averaged counter for flux fields
 !
-  integer :: avg_count
+  integer :: avg_count                ! Number of times snapshots of above flux data summed together
 !
 ! Atmospheric mode  
 !
-  logical :: atm_prognostic
+  logical :: atm_prognostic           ! Flag if active atmosphere component or not
 
 !EOP
 !===============================================================
@@ -86,7 +92,6 @@ contains
     use clm_varpar       , only : rtmlon, rtmlat
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
     use abortutils       , only : endrun
-    use esmf_mod         , only : ESMF_Clock
     use clm_varctl       , only : iulog, noland
     use shr_file_mod     , only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                   shr_file_getLogUnit, shr_file_getLogLevel, &
@@ -100,53 +105,54 @@ contains
     use mct_mod          , only : mct_aVect, mct_gsMap, mct_gGrid, mct_aVect_init, mct_aVect_zero
     use seq_flds_mod
     use seq_flds_indices
+    use ESMF_mod
+    implicit none
 !
 ! !ARGUMENTS:
-    type(ESMF_Clock),             intent(in)    :: EClock
-    type(seq_cdata),              intent(inout) :: cdata_l
-    type(mct_aVect),              intent(inout) :: x2l_l, l2x_l
-    type(seq_cdata),              intent(inout) :: cdata_r
-    type(mct_aVect),              intent(inout) ::        r2x_r
-    type(seq_cdata),  optional,   intent(inout) :: cdata_s
-    type(mct_aVect),  optional,   intent(inout) :: x2s_s, s2x_s
-    character(len=*), optional,   intent(in)    :: NLFilename 
+    type(ESMF_Clock),             intent(in)    :: EClock           ! Input synchronization clock
+    type(seq_cdata),              intent(inout) :: cdata_l          ! Input land-model driver data
+    type(mct_aVect),              intent(inout) :: x2l_l, l2x_l     ! land model import and export states
+    type(seq_cdata),              intent(inout) :: cdata_r          ! Input runoff-model driver data
+    type(mct_aVect),              intent(inout) :: r2x_r            ! River export state
+    type(seq_cdata),  optional,   intent(inout) :: cdata_s          ! Input snow-model (land-ice) driver data
+    type(mct_aVect),  optional,   intent(inout) :: x2s_s, s2x_s     ! Snow-model import and export states
+    character(len=*), optional,   intent(in)    :: NLFilename       ! Namelist filename to read
 !
 ! !LOCAL VARIABLES:
-    integer                                     :: LNDID	
-    integer                                     :: mpicom_lnd       	
-    type(mct_gsMap),              pointer       :: GSMap_lnd
-    type(mct_gGrid),              pointer       :: dom_l
-    type(mct_gsMap),              pointer       :: GSMap_rof
-    type(mct_gGrid),              pointer       :: dom_r
-    type(seq_infodata_type),      pointer       :: infodata
-    integer  :: lsize           ! size of attribute vector
-    integer  :: i,j             ! indices
-    integer  :: dtime_sync
-    integer  :: dtime_clm
-    logical  :: exists               ! true if file exists
-    real(r8) :: scmlat
-    real(r8) :: scmlon
-    real(r8) :: nextsw_cday     ! calday from clock of next radiation computation
-    character(len=SHR_KIND_CL) :: caseid
-    character(len=SHR_KIND_CL) :: ctitle
-    character(len=SHR_KIND_CL) :: starttype
-    character(len=SHR_KIND_CL) :: calendar
-    character(len=SHR_KIND_CL) :: hostname     ! hostname of machine running on
-    character(len=SHR_KIND_CL) :: version      ! Model version
-    character(len=SHR_KIND_CL) :: username     ! user running the model
-    integer  :: nsrest
-    integer :: startype
-    integer :: perpetual_ymd
-    integer :: ref_ymd
-    integer :: ref_tod
-    integer :: start_ymd
-    integer :: start_tod
-    integer :: stop_ymd
-    integer :: stop_tod
-    logical :: brnch_retain_casename
-    logical :: perpetual_run
-    integer :: lbnum
-    integer  :: shrlogunit,shrloglev ! old values
+    integer                          :: LNDID	     ! Land identifyer
+    integer                          :: mpicom_lnd   ! MPI communicator
+    type(mct_gsMap),         pointer :: GSMap_lnd    ! Land model MCT GS map
+    type(mct_gGrid),         pointer :: dom_l        ! Land model domain
+    type(mct_gsMap),         pointer :: GSMap_rof    ! Runoff model MCT GS map
+    type(mct_gGrid),         pointer :: dom_r        ! Runoff model domain
+    type(seq_infodata_type), pointer :: infodata     ! CCSM driver level info data
+    integer  :: lsize                                ! size of attribute vector
+    integer  :: i,j                                  ! indices
+    integer  :: dtime_sync                           ! coupling time-step from the input synchronization clode
+    integer  :: dtime_clm                            ! clm time-step
+    logical  :: exists                               ! true if file exists
+    real(r8) :: scmlat                               ! single-column latitude
+    real(r8) :: scmlon                               ! single-column longitude
+    real(r8) :: nextsw_cday                          ! calday from clock of next radiation computation
+    character(len=SHR_KIND_CL) :: caseid             ! case identifier name
+    character(len=SHR_KIND_CL) :: ctitle             ! case description title
+    character(len=SHR_KIND_CL) :: starttype          ! start-type (startup, continue, branch, hybrid)
+    character(len=SHR_KIND_CL) :: calendar           ! calendar type name
+    character(len=SHR_KIND_CL) :: hostname           ! hostname of machine running on
+    character(len=SHR_KIND_CL) :: version            ! Model version
+    character(len=SHR_KIND_CL) :: username           ! user running the model
+    integer :: nsrest                                ! clm restart type
+    integer :: perpetual_ymd                         ! perpetual date
+    integer :: ref_ymd                               ! reference date (YYYYMMDD)
+    integer :: ref_tod                               ! reference time of day (sec)
+    integer :: start_ymd                             ! start date (YYYYMMDD)
+    integer :: start_tod                             ! start time of day (sec)
+    integer :: stop_ymd                              ! stop date (YYYYMMDD)
+    integer :: stop_tod                              ! stop time of day (sec)
+    logical :: brnch_retain_casename                 ! flag if should retain the case name on a branch start type
+    logical :: perpetual_run                         ! flag if should cycle over a perpetual date or not
+    integer :: lbnum                                 ! input to memory diagnostic
+    integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
     character(len=32), parameter :: sub = 'lnd_init_mct'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
 !
@@ -382,7 +388,6 @@ contains
     use domainMod       ,only : adomain
     use decompMod       ,only : get_proc_bounds_atm
     use abortutils      ,only : endrun
-    use esmf_mod        ,only : ESMF_Clock
     use clm_varctl      ,only : iulog
     use shr_file_mod    ,only : shr_file_setLogUnit, shr_file_setLogLevel, &
                                 shr_file_getLogUnit, shr_file_getLogLevel
@@ -396,48 +401,50 @@ contains
                                 mct_aVect_zero
     use mct_mod        , only : mct_gGrid, mct_gGrid_exportRAttr, mct_gGrid_lsize
     use aerdepMod      , only : aerdepini
+    use ESMF_mod
+    implicit none
 !
 ! !ARGUMENTS:
-    type(ESMF_Clock)            , intent(in)    :: EClock
-    type(seq_cdata)             , intent(in)    :: cdata_l
-    type(mct_aVect)             , intent(inout) :: x2l_l
-    type(mct_aVect)             , intent(inout) :: l2x_l
-    type(seq_cdata)             , intent(in)    :: cdata_r
-    type(mct_aVect)             , intent(inout) :: r2x_r
-    type(seq_cdata),  optional,   intent(in)    :: cdata_s
-    type(mct_aVect),  optional,   intent(inout) :: x2s_s
-    type(mct_aVect),  optional,   intent(inout) :: s2x_s
+    type(ESMF_Clock)            , intent(in)    :: EClock    ! Input synchronization clock from driver
+    type(seq_cdata)             , intent(in)    :: cdata_l   ! Input driver data for land model
+    type(mct_aVect)             , intent(inout) :: x2l_l     ! Import state to land model
+    type(mct_aVect)             , intent(inout) :: l2x_l     ! Export state from land model
+    type(seq_cdata)             , intent(in)    :: cdata_r   ! Input driver data for runoff model
+    type(mct_aVect)             , intent(inout) :: r2x_r     ! Export state from runoff model
+    type(seq_cdata),  optional,   intent(in)    :: cdata_s   ! Input driver data for snow model (land-ice)
+    type(mct_aVect),  optional,   intent(inout) :: x2s_s     ! Import state for snow model
+    type(mct_aVect),  optional,   intent(inout) :: s2x_s     ! Export state for snow model
 !
 ! !LOCAL VARIABLES:
-    integer :: ymd_sync        ! Sync date (YYYYMMDD)
-    integer :: yr_sync         ! Sync current year
-    integer :: mon_sync        ! Sync current month
-    integer :: day_sync        ! Sync current day
-    integer :: tod_sync        ! Sync current time of day (sec)
-    integer :: ymd             ! CLM current date (YYYYMMDD)
-    integer :: yr              ! CLM current year
-    integer :: mon             ! CLM current month
-    integer :: day             ! CLM current day
-    integer :: tod             ! CLM current time of day (sec)
-    integer :: dtime           ! time step increment (sec)
-    integer :: nstep           ! time step index
-    logical :: rstwr_sync      ! .true. ==> write restart file before returning
-    logical :: rstwr           ! .true. ==> write restart file before returning
-    logical :: nlend_sync      ! Flag signaling last time-step
-    logical :: nlend           ! .true. ==> last time-step
-    logical :: dosend          ! true => send data back to driver
-    logical :: doalb           ! .true. ==> do albedo calculation on this time step
-    real(r8):: nextsw_cday     ! calday from clock of next radiation computation
-    real(r8):: caldayp1        ! clm calday plus dtime offset
-    integer :: shrlogunit,shrloglev       ! old values
-    integer :: begg, endg    
-    integer :: lbnum
-    type(seq_infodata_type),pointer :: infodata
-    type(mct_gGrid),        pointer :: dom_l
+    integer :: ymd_sync                   ! Sync date (YYYYMMDD)
+    integer :: yr_sync                    ! Sync current year
+    integer :: mon_sync                   ! Sync current month
+    integer :: day_sync                   ! Sync current day
+    integer :: tod_sync                   ! Sync current time of day (sec)
+    integer :: ymd                        ! CLM current date (YYYYMMDD)
+    integer :: yr                         ! CLM current year
+    integer :: mon                        ! CLM current month
+    integer :: day                        ! CLM current day
+    integer :: tod                        ! CLM current time of day (sec)
+    integer :: dtime                      ! time step increment (sec)
+    integer :: nstep                      ! time step index
+    logical :: rstwr_sync                 ! .true. ==> write restart file before returning
+    logical :: rstwr                      ! .true. ==> write restart file before returning
+    logical :: nlend_sync                 ! Flag signaling last time-step
+    logical :: nlend                      ! .true. ==> last time-step
+    logical :: dosend                     ! true => send data back to driver
+    logical :: doalb                      ! .true. ==> do albedo calculation on this time step
+    real(r8):: nextsw_cday                ! calday from clock of next radiation computation
+    real(r8):: caldayp1                   ! clm calday plus dtime offset
+    integer :: shrlogunit,shrloglev       ! old values for share log unit and log level
+    integer :: begg, endg                 ! Beginning and ending gridcell index numbers
+    integer :: lbnum                      ! input to memory diagnostic
+    type(seq_infodata_type),pointer :: infodata ! CCSM information from the driver
+    type(mct_gGrid),        pointer :: dom_l    ! Land model domain data
     real(r8),               pointer :: data(:)  ! temporary
-    integer :: g,i,lsize       ! counters
-    logical,save :: first_call = .true.   ! first call work
-    character(len=32)            :: rdate ! date char string for restart file names
+    integer :: g,i,lsize                        ! counters
+    logical,save :: first_call = .true.         ! first call work
+    character(len=32)            :: rdate       ! date char string for restart file names
     character(len=32), parameter :: sub = "lnd_run_mct"
 !
 ! !REVISION HISTORY:
@@ -486,7 +493,7 @@ contains
 
        call lnd_chkAerDep_mct( x2l_l )
 
-       call aerdepini( )   ! Will be removed...
+       call aerdepini( )
 
     endif
     
@@ -635,6 +642,7 @@ contains
 !
 !------------------------------------------------------------------------------
 !
+   implicit none
 ! !ARGUMENTS:
 !
 ! !REVISION HISTORY:
@@ -648,30 +656,44 @@ contains
 
 !=================================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: lnd_SetgsMap_mct
+!
+! !INTERFACE:
   subroutine lnd_SetgsMap_mct( mpicom_lnd, LNDID, gsMap_lnd )
-
-    !-------------------------------------------------------------------
-    !
-    ! Uses
-    !
+!-------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+! Set the MCT GS map for the land model
+!
+!-------------------------------------------------------------------
+! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use decompMod    , only : get_proc_bounds_atm, adecomp
     use domainMod    , only : adomain
     use mct_mod      , only : mct_gsMap, mct_gsMap_init
-    !
-    ! Arguments
-    !
-    integer        , intent(in)  :: mpicom_lnd
-    integer        , intent(in)  :: LNDID
-    type(mct_gsMap), intent(out) :: gsMap_lnd
-    !
-    ! Local Variables
-    !
-    integer,allocatable :: gindex(:)
-    integer :: i, j, n, gi
-    integer :: lsize,gsize
-    integer :: ier
-    integer :: begg, endg    
+    implicit none
+! !ARGUMENTS:
+    integer        , intent(in)  :: mpicom_lnd    ! MPI communicator for the clm land model
+    integer        , intent(in)  :: LNDID         ! Land model identifyer number
+    type(mct_gsMap), intent(out) :: gsMap_lnd     ! Resulting MCT GS map for the land model
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
+!
+! Local Variables
+!
+    integer,allocatable :: gindex(:)  ! Number the local grid points
+    integer :: i, j, n, gi            ! Indices
+    integer :: lsize,gsize            ! GS Map size
+    integer :: ier                    ! Error code
+    integer :: begg, endg             ! Beginning/Ending grid cell index
     !-------------------------------------------------------------------
 
     ! Build the land grid numbering for MCT
@@ -717,7 +739,7 @@ contains
     use shr_const_mod    , only : spval => SHR_CONST_SPVAL
     use shr_sys_mod      , only : shr_sys_flush
     use clm_varctl       , only : iulog
-    use clm_varctl       , only : set_caerdep_from_file, set_dustdep_from_file  ! This will be removed
+    use clm_varctl       , only : set_caerdep_from_file, set_dustdep_from_file
     use abortutils       , only : endrun
     use seq_flds_indices , only : index_x2l_Faxa_bcphidry, index_x2l_Faxa_bcphodry, &
                                   index_x2l_Faxa_bcphiwet,                          &
@@ -728,11 +750,11 @@ contains
                                   index_x2l_Faxa_dstwet1, index_x2l_Faxa_dstwet2,   &
                                   index_x2l_Faxa_dstwet3, index_x2l_Faxa_dstwet4
     use spmdMod          , only : masterproc
+    implicit none
 !
 ! !ARGUMENTS:
-    implicit none
 
-    type(mct_aVect)             , intent(inout) :: x2l_l
+    type(mct_aVect)             , intent(inout) :: x2l_l   ! coupler to land import state on land grid
 !
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
@@ -801,7 +823,6 @@ contains
           write(iulog,*) "WARNING: Reading carbon aerosol deposition from CLM input file"
           write(iulog,*) "WARNING: aerosol deposition from atm is either spval or all zero"
        end if
-       !call endrun( "Aerosol deposition data is sent but NOT filled from the atmosphere model" )
     end if
     if ( dustdep_filled )then
        if ( masterproc ) &
@@ -811,35 +832,50 @@ contains
           write(iulog,*) "WARNING: Reading dust deposition from CLM input file"
           write(iulog,*) "WARNING: Dust deposition from atm is either spval or all zero"
        end if
-       !call endrun( "Dust deposition data is sent but NOT filled from the atmosphere model" )
     end if
     call shr_sys_flush( iulog )
 
-    ! This will be removed...........
     set_caerdep_from_file = .not. caerdep_filled
     set_dustdep_from_file = .not. dustdep_filled
-    ! To here........................
 
   end subroutine lnd_chkAerDep_mct
 
 !====================================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: lnd_export_mct
+!
+! !INTERFACE:
   subroutine lnd_export_mct( l2a, l2x_l )   
-
-    !-----------------------------------------------------
+!
+! !DESCRIPTION:
+!
+! Convert the data to be sent from the clm model to the coupler from clm data types
+! to MCT data types.
+! 
+!---------------------------------------------------------------------------
+! !USES:
     use shr_kind_mod    , only : r8 => shr_kind_r8
     use clm_time_manager, only : get_nstep  
     use clm_atmlnd      , only : lnd2atm_type
     use domainMod       , only : adomain
     use decompMod       , only : get_proc_bounds_atm, adecomp
     use seq_flds_indices
-
-    type(lnd2atm_type), intent(inout) :: l2a
-    type(mct_aVect)   , intent(inout) :: l2x_l
-
-    integer :: g,i
+    implicit none
+! !ARGUMENTS:
+    type(lnd2atm_type), intent(inout) :: l2a     ! clm land to atmosphere exchange data type
+    type(mct_aVect)   , intent(inout) :: l2x_l   ! Land to coupler export state on land grid
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
+! Local variables:
+    integer :: g,i           ! Indices
     integer :: begg, endg    ! beginning and ending gridcell indices
-    !-----------------------------------------------------
     
     call get_proc_bounds_atm(begg, endg)
 
@@ -847,7 +883,6 @@ contains
 
     ! ccsm sign convention is that fluxes are positive downward
 
-!dir$ concurrent
     do g = begg,endg
        i = 1 + (g-begg)
        l2x_l%rAttr(index_l2x_Sl_landfrac,i) =  adomain%frac(g)
@@ -889,10 +924,21 @@ contains
 
 !====================================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: lnd_import_mct
+!
+! !INTERFACE:
   subroutine lnd_import_mct( x2l_l, a2l )
-
-! 27 February 2008: Keith Oleson; Forcing height change
-    !-----------------------------------------------------
+!
+! !DESCRIPTION:
+!
+! Convert the input data from the coupler to the land model from MCT import state
+! into internal clm data types.
+!
+!---------------------------------------------------------------------------
+! !USES:
     use shr_kind_mod    , only: r8 => shr_kind_r8
     use clm_atmlnd      , only: atm2lnd_type
     use clm_varctl      , only: co2_type, co2_ppmv
@@ -903,22 +949,28 @@ contains
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use decompMod       , only: get_proc_bounds_atm
     use abortutils      , only: endrun
-    use clm_varctl      , only : set_caerdep_from_file, set_dustdep_from_file ! will be removed
+    use clm_varctl      , only : set_caerdep_from_file, set_dustdep_from_file
     use clm_varctl      , only: iulog
     use mct_mod         , only: mct_aVect
     use seq_flds_indices
-    !
-    ! Arguments
-    !
-    type(mct_aVect)   , intent(inout) :: x2l_l
-    type(atm2lnd_type), intent(inout) :: a2l
-    !
-    ! Local Variables
-    !
-    integer  :: g,i,nstep,ier
+    implicit none
+! !ARGUMENTS:
+    type(mct_aVect)   , intent(inout) :: x2l_l   ! Driver MCT import state to land model
+    type(atm2lnd_type), intent(inout) :: a2l     ! clm internal input data type
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+! 27 February 2008: Keith Oleson; Forcing height change
+!
+!EOP
+!---------------------------------------------------------------------------
+!
+! Local Variables
+!
+    integer  :: g,i,nstep,ier        ! indices, number of steps, and error code
     real(r8) :: forc_rainc           ! rainxy Atm flux mm/s
-    real(r8) :: e                    !vapor pressure (Pa)
-    real(r8) :: qsat                 !saturation specific humidity (kg/kg)
+    real(r8) :: e                    ! vapor pressure (Pa)
+    real(r8) :: qsat                 ! saturation specific humidity (kg/kg)
     real(r8) :: forc_rainl           ! rainxy Atm flux mm/s
     real(r8) :: forc_snowc           ! snowfxy Atm flux  mm/s
     real(r8) :: forc_snowl           ! snowfxl Atm flux  mm/s
@@ -927,13 +979,14 @@ contains
     real(r8) :: co2_ppmv_val         ! temporary
     integer  :: begg, endg           ! beginning and ending gridcell indices
     integer  :: co2_type_idx         ! integer flag for co2_type options
-    real(r8) :: esatw                !saturation vapor pressure over water (Pa)
-    real(r8) :: esati                !saturation vapor pressure over ice (Pa)
-    real(r8) :: a0,a1,a2,a3,a4,a5,a6 !coefficients for esat over water
-    real(r8) :: b0,b1,b2,b3,b4,b5,b6 !coefficients for esat over ice
-    real(r8) :: tdc, t               !Kelvins to Celcius function and its input
+    real(r8) :: esatw                ! saturation vapor pressure over water (Pa)
+    real(r8) :: esati                ! saturation vapor pressure over ice (Pa)
+    real(r8) :: a0,a1,a2,a3,a4,a5,a6 ! coefficients for esat over water
+    real(r8) :: b0,b1,b2,b3,b4,b5,b6 ! coefficients for esat over ice
+    real(r8) :: tdc, t               ! Kelvins to Celcius function and its input
     character(len=32), parameter :: sub = 'lnd_import_mct'
 
+    ! Constants to compute vapor pressure
     parameter (a0=6.107799961_r8    , a1=4.436518521e-01_r8, &
                a2=1.428945805e-02_r8, a3=2.650648471e-04_r8, &
                a4=3.031240396e-06_r8, a5=2.034080948e-08_r8, &
@@ -943,9 +996,9 @@ contains
                b2=1.886013408e-02_r8, b3=4.176223716e-04_r8, &
                b4=5.824720280e-06_r8, b5=4.838803174e-08_r8, &
                b6=1.838826904e-10_r8)
-!
-! function declarations
-!
+    !
+    ! function declarations
+    !
     tdc(t) = min( 50._r8, max(-50._r8,(t-SHR_CONST_TKFRZ)) )
     esatw(t) = 100._r8*(a0+t*(a1+t*(a2+t*(a3+t*(a4+t*(a5+t*a6))))))
     esati(t) = 100._r8*(b0+t*(b1+t*(b2+t*(b3+t*(b4+t*(b5+t*b6))))))
@@ -973,7 +1026,6 @@ contains
     ! Below the units are therefore given in mm/s.
     
 
-!dir$ concurrent
     do g = begg,endg
         i = 1 + (g - begg)
        
@@ -997,7 +1049,6 @@ contains
         a2l%forc_solai(g,1) = x2l_l%rAttr(index_x2l_Faxa_swvdf,i)   ! forc_solsdxy Atm flux  W/m^2
 
         ! atmosphere coupling, if using prognostic aerosols
-        ! This if will be removed so always on....
         if ( .not. set_caerdep_from_file ) then
            a2l%forc_aer(g,1) =  x2l_l%rAttr(index_x2l_Faxa_bcphidry,i)
            a2l%forc_aer(g,2) =  x2l_l%rAttr(index_x2l_Faxa_bcphodry,i)
@@ -1006,7 +1057,6 @@ contains
            a2l%forc_aer(g,5) =  x2l_l%rAttr(index_x2l_Faxa_ocphodry,i)
            a2l%forc_aer(g,6) =  x2l_l%rAttr(index_x2l_Faxa_ocphiwet,i)
         endif
-        ! This if will be removed so always on....
         if ( .not. set_dustdep_from_file ) then
            a2l%forc_aer(g,7)  =  x2l_l%rAttr(index_x2l_Faxa_dstwet1,i)
            a2l%forc_aer(g,8)  =  x2l_l%rAttr(index_x2l_Faxa_dstdry1,i)
@@ -1081,9 +1131,20 @@ contains
 
 !===============================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: lnd_domain_mct
+!
+! !INTERFACE:
   subroutine lnd_domain_mct( lsize, gsMap_l, dom_l )
-
-    !-------------------------------------------------------------------
+!
+! !DESCRIPTION:
+!
+! Send the land model domain information to the coupler
+!
+!---------------------------------------------------------------------------
+! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_varcon  , only : re
     use domainMod   , only : adomain
@@ -1093,12 +1154,17 @@ contains
                              mct_gGrid_importRAttr, mct_gGrid_init,       &
                              mct_gsMap_orderedPoints
     use seq_flds_mod
-    !
-    ! Arguments
-    !
-    integer        , intent(in)    :: lsize
-    type(mct_gsMap), intent(inout) :: gsMap_l
-    type(mct_ggrid), intent(out)   :: dom_l      
+    implicit none
+! !ARGUMENTS:
+    integer        , intent(in)    :: lsize     ! land model domain data size
+    type(mct_gsMap), intent(inout) :: gsMap_l   ! Output land model MCT GS map
+    type(mct_ggrid), intent(out)   :: dom_l     ! Output domain information for land model
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
     !
     ! Local Variables
     !
@@ -1180,28 +1246,45 @@ contains
 !===============================================================================
     
 #ifdef RTM
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: rof_SetgsMap_mct
+!
+! !INTERFACE:
   subroutine rof_SetgsMap_mct( mpicom_l, LNDID, gsMap_r )
+!
+! !DESCRIPTION:
+!
+! Set the MCT GS map for the runoff model
+!
+!---------------------------------------------------------------------------
 
-    !-------------------------------------------------------------------
+! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_varpar  , only : rtmlon, rtmlat
     use RunoffMod   , only : runoff
     use abortutils  , only : endrun
     use clm_varctl  , only : iulog
     use mct_mod     , only : mct_gsMap, mct_gsMap_init
-    !
-    ! Arguments
-    !
-    integer        , intent(in)  :: mpicom_l
-    integer        , intent(in)  :: LNDID
-    type(mct_gsMap), intent(out) :: gsMap_r
+    implicit none
+! !ARGUMENTS:
+    integer        , intent(in)  :: mpicom_l    ! MPI communicator for land model
+    integer        , intent(in)  :: LNDID       ! Land model identifier
+    type(mct_gsMap), intent(out) :: gsMap_r     ! MCT GS map for runoff model data
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
     !
     ! Local Variables
     !
-    integer,allocatable :: gindex(:)
-    integer :: n, ni
-    integer :: lsize,gsize
-    integer :: ier
+    integer,allocatable :: gindex(:)         ! indexing for runoff grid cells
+    integer :: n, ni                         ! indices
+    integer :: lsize,gsize                   ! size of runoff data and number of grid cells
+    integer :: ier                           ! error code
     character(len=32), parameter :: sub = 'rof_SetgsMap_mct'
     !-------------------------------------------------------------------
 
@@ -1237,9 +1320,21 @@ contains
 
 !===============================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: rof_domain_mct
+!
+! !INTERFACE:
   subroutine rof_domain_mct( lsize, gsMap_r, dom_r )
+!
+! !DESCRIPTION:
+!
+! Send the runoff model domain information to the coupler
+!
+!---------------------------------------------------------------------------
 
-    !-------------------------------------------------------------------
+! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use clm_varcon  , only : re
     use RunoffMod   , only : runoff
@@ -1250,12 +1345,17 @@ contains
                              mct_gGrid_importRAttr, mct_gGrid_init, mct_gsMap_orderedPoints
     use seq_flds_mod
     use seq_flds_indices
-    !
-    ! Arguments
-    !
-    integer        , intent(in)    :: lsize
-    type(mct_gsMap), intent(inout) :: gsMap_r
-    type(mct_ggrid), intent(out)   :: dom_r      
+    implicit none
+! !ARGUMENTS:
+    integer        , intent(in)    :: lsize       ! Size of runoff domain information
+    type(mct_gsMap), intent(inout) :: gsMap_r     ! Output MCT GS map for runoff model
+    type(mct_ggrid), intent(out)   :: dom_r       ! Domain information from the runoff model
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
     !
     ! Local Variables
     !
@@ -1356,19 +1456,35 @@ contains
 
 !====================================================================================
 
+!---------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: rof_export_mct
+!
+! !INTERFACE:
   subroutine rof_export_mct( r2x_r)
-
+!
+! !DESCRIPTION:
+!
+! Send the runoff model export state to the CCSM coupler
+!
+!---------------------------------------------------------------------------
+! !USES:
     use shr_kind_mod, only : r8 => shr_kind_r8
     use RunoffMod   , only : runoff, nt_rtm, rtm_tracers
     use abortutils  , only : endrun
     use clm_varctl  , only : iulog
     use mct_mod     , only : mct_aVect
     use seq_flds_indices
-    !-----------------------------------------------------
-    !
-    ! Arguments
-    ! 
-    type(mct_aVect), intent(inout) :: r2x_r
+    implicit none
+! !ARGUMENTS:
+    type(mct_aVect), intent(inout) :: r2x_r  ! Runoff to coupler export state
+!
+! !REVISION HISTORY:
+! Author: Mariana Vertenstein
+!
+!EOP
+!---------------------------------------------------------------------------
     !
     ! Local variables
     !

@@ -58,7 +58,7 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
    integer, intent(in) :: filter_soilp(ubp-lbp+1) ! filter for soil pfts
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! 10/1/03: Created by Peter Thornton
@@ -111,16 +111,12 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
    dt = real( get_step_size(), r8 )
 
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
       annsum_counter(c) = annsum_counter(c) + dt
    end do
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       c = pcolumn(p)
@@ -148,8 +144,6 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
    call p2c(num_soilc, filter_soilc, annavg_t2m, cannavg_t2m)
 
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
       if (annsum_counter(c) >= get_days_per_year() * secspday) annsum_counter(c) = 0._r8

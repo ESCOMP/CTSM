@@ -71,7 +71,7 @@ contains
     integer, intent(in) :: filter_nolakep(ubp-lbp+1)    ! pft filter for non-lake points
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! 15 September 1999: Yongjiu Dai; Initial code
@@ -250,8 +250,6 @@ contains
 
     ! Start pft loop
 
-!dir$ concurrent
-!cdir nodep
     do f = 1, num_nolakep
        p = filter_nolakep(f)
        g = pgridcell(p)
@@ -374,8 +372,6 @@ contains
 
     ! Determine snow height and snow water
 
-!dir$ concurrent
-!cdir nodep
     do f = 1, num_nolakec
        c = filter_nolakec(f)
        l = clandunit(c)

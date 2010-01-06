@@ -13,11 +13,13 @@ module BiogeophysRestMod
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use abortutils,   only : endrun
-  use spmdMod             , only : masterproc
+  use abortutils  , only : endrun
+  use spmdMod     , only : masterproc
 !
 ! !PUBLIC TYPES:
   implicit none
+
+  private
 ! save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
@@ -28,6 +30,10 @@ module BiogeophysRestMod
 !
 !EOP
 !-----------------------------------------------------------------------
+
+  private :: weights_exactly_the_same
+  private :: weights_within_roundoff_different
+  private :: weights_tooDifferent
 
 contains
 
@@ -43,8 +49,8 @@ contains
 ! Read/Write biogeophysics information to/from restart file.
 !
 ! !USES:
-    use clmtype
     use ncdio
+    use clmtype
     use decompMod       , only : get_proc_bounds
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb
     use clm_varcon      , only : denice, denh2o, istdlak, istslak, isturb, istsoil, pondmx, watmin
@@ -77,6 +83,9 @@ contains
     real(r8) :: maxwatsat                 !maximum porosity    
     real(r8) :: excess                    !excess volumetric soil water
     real(r8) :: totwat                    !total soil water (mm)
+    real(r8), pointer :: wtgcell(:)       ! Grid cell weights for PFT
+    real(r8), pointer :: wtlunit(:)       ! Land-unit weights for PFT
+    real(r8), pointer :: wtcol(:)         ! Column weights for PFT
     integer :: p,c,l,g,j    ! indices
     integer :: nlevs        ! number of layers
     integer :: begp, endp   ! per-proc beginning and ending pft indices
@@ -91,6 +100,7 @@ contains
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
     type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
     type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
+    character(len=*), parameter :: sub="BiogeophysRest"
 !-----------------------------------------------------------------------
 
     ! Set pointers into derived type
@@ -101,63 +111,106 @@ contains
     pptr       => clm3%g%l%c%p
     ltype      => lptr%itype
     clandunit  => cptr%landunit
-    clandunit => cptr%landunit
+    clandunit  => cptr%landunit
 
-    ! Note - for the snow interfaces, are only examing the snow interfaces
-    ! above zi=0 which is why zisno and zsno have the same level dimension below
-    ! (Note - for zisno, zi(0) is set to 0 in routine iniTimeConst)
-    
-    ! pft weight wrt gridcell 
+    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+
+    !
+    ! Read in weights if allocating all vegetation types
+    !
 
     if (allocate_all_vegpfts) then
+
+       ! pft weight wrt gridcell 
+
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname='PFT_WTGCELL', xtype=nf_double,  &
                dim1name='pft', &
                long_name='pft weight relative to corresponding gridcell', units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_iolocal(varname='PFT_WTGCELL', data=pptr%wtgcell, &
+          if (flag == 'write' )then
+             wtgcell => pptr%wtgcell
+          else
+             allocate( wtgcell(begp:endp) )
+          end if
+          call ncd_iolocal(varname='PFT_WTGCELL', data=wtgcell, &
                dim1name=namep, &
                ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) call endrun()
           end if
        end if
-    end if
 
-    ! pft weight wrt landunit
+       ! pft weight wrt landunit
 
-    if (allocate_all_vegpfts) then
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname='PFT_WTLUNIT', xtype=nf_double,  &
                dim1name='pft', &
                long_name='pft weight relative to corresponding landunit', units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_iolocal(varname='PFT_WTLUNIT', data=pptr%wtlunit, &
+          if (flag == 'write' )then
+             wtlunit => pptr%wtlunit
+          else
+             allocate( wtlunit(begp:endp) )
+          end if
+          call ncd_iolocal(varname='PFT_WTLUNIT', data=wtlunit, &
                dim1name=namep, &
                ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) call endrun()
           end if
        end if
-    end if
 
-    ! pft weight wrt column
+       ! pft weight wrt column
 
-    if (allocate_all_vegpfts) then
        if (flag == 'define') then
           call ncd_defvar(ncid=ncid, varname='PFT_WTCOL', xtype=nf_double,  &
                dim1name='pft', &
                long_name='pft weight relative to corresponding column', units='')
        else if (flag == 'read' .or. flag == 'write') then
-          call ncd_iolocal(varname='PFT_WTCOL', data=pptr%wtcol, &
+          if (flag == 'write' )then
+             wtcol => pptr%wtcol
+          else
+             allocate( wtcol(begp:endp)   )
+          end if
+          call ncd_iolocal(varname='PFT_WTCOL', data=wtcol, &
                dim1name=namep, &
                ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
              if (is_restart()) call endrun()
           end if
        end if
+
+       if (flag == 'read' )then
+
+          if ( .not.   weights_exactly_the_same( pptr, wtgcell, wtlunit, wtcol ) )then
+
+             if (      weights_within_roundoff_different( pptr, wtgcell, wtlunit, wtcol ) )then
+                write(iulog,*) sub// &
+                '::NOTE, weights from finidat file and fsurdat file different to roundoff -- using fsurdat values.'
+             else if ( weights_tooDifferent( begp, endp, pptr, wtgcell ) )then
+                write(iulog,*) "Weights are different from the input files, ", &
+                               "if you really do want to continue, uncomment out this endrun call in __FILE__"
+                call endrun( sub//'::ERROR, weights on fsurdat and finidat files are too different!' )
+             else
+                write(iulog,*) sub// &
+                '::WARNING, weights different between finidat file and fsurdat file, but close enough -- using fsurdat values'
+             end if
+
+          end if
+
+          deallocate( wtgcell )
+          deallocate( wtlunit )
+          deallocate( wtcol   )
+
+       end if
+
     end if
 
+    ! Note - for the snow interfaces, are only examing the snow interfaces
+    ! above zi=0 which is why zisno and zsno have the same level dimension below
+    ! (Note - for zisno, zi(0) is set to 0 in routine iniTimeConst)
+    
     ! pft energy flux - eflx_lwrad_out
 
     if (flag == 'define') then
@@ -1298,8 +1351,6 @@ contains
     ! Determine volumetric soil water (for read only)
     ! ------------------------------------------------------------
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-
     if (flag == 'read' ) then
        do c = begc,endc
           l = clandunit(c)
@@ -1758,5 +1809,125 @@ contains
     end if
 
   end function is_restart
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: weights_exactly_the_same
+!
+! !INTERFACE:
+  logical function weights_exactly_the_same( pptr, wtgcell, wtlunit, wtcol )
+!
+! !DESCRIPTION:
+! Determine if the weights read in are exactly the same as those from surface dataset
+!
+! !USES:
+    use clmtype     , only : pft_type
+!
+! !ARGUMENTS:
+    implicit none
+    type(pft_type), pointer :: pptr       ! pointer to pft derived subtype
+    real(r8), intent(IN)    :: wtgcell(:) ! grid cell weights for each PFT
+    real(r8), intent(IN)    :: wtlunit(:) ! land-unit weights for each PFT
+    real(r8), intent(IN)    :: wtcol(:)   ! column weights for each PFT
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!EOP
+!-----------------------------------------------------------------------
+
+     ! Check that weights are identical for all PFT's and all weight types
+     if (  all( pptr%wtgcell(:) == wtgcell ) .and. all( pptr%wtlunit(:) == wtlunit ) &
+     .and. all( pptr%wtcol(:) == wtcol ) )then
+        weights_exactly_the_same = .true.
+     else
+        weights_exactly_the_same = .false.
+     end if
+
+  end function weights_exactly_the_same
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: weights_within_roundoff_different
+!
+! !INTERFACE:
+  logical function weights_within_roundoff_different( pptr, wtgcell, wtlunit, wtcol )
+!
+! !DESCRIPTION:
+! Determine if the weights are within roundoff different from each other
+!
+! !USES:
+    use clmtype     , only : pft_type
+!
+! !ARGUMENTS:
+    implicit none
+    type(pft_type), pointer :: pptr       ! pointer to pft derived subtype
+    real(r8), intent(IN)    :: wtgcell(:) ! grid cell weights for each PFT
+    real(r8), intent(IN)    :: wtlunit(:) ! land-unit weights for each PFT
+    real(r8), intent(IN)    :: wtcol(:)   ! column weights for each PFT
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!EOP
+!-----------------------------------------------------------------------
+     real(r8), parameter :: rndVal  = 1.e-13_r8
+
+     ! If differences between all weights for each PFT and each weight type is
+     ! less than or equal to double precision roundoff level -- weights are close
+     if (  all( abs(pptr%wtgcell(:) - wtgcell) <= rndVal ) &
+     .and. all( abs(pptr%wtlunit(:) - wtlunit) <= rndVal ) &
+     .and. all( abs(pptr%wtcol(:)   - wtcol  ) <= rndVal ) )then
+        weights_within_roundoff_different = .true.
+     else
+        weights_within_roundoff_different = .false.
+     end if
+
+  end function weights_within_roundoff_different
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: weights_tooDifferent
+!
+! !INTERFACE:
+  logical function weights_tooDifferent( begp, endp, pptr, wtgcell )
+!
+! !DESCRIPTION:
+! Determine if the weights read in are too different and should flag an error
+!
+! !USES:
+    use clmtype     , only : pft_type
+    use clm_varpar  , only : numpft
+!
+! !ARGUMENTS:
+    integer, intent(IN)     :: begp, endp         ! per-proc beginning and ending pft indices
+    type(pft_type), pointer :: pptr               ! pointer to pft derived subtype
+    real(r8), intent(IN)    :: wtgcell(begp:endp) ! grid cell weights for each PFT
+    implicit none
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!EOP
+!-----------------------------------------------------------------------
+     integer  :: p        ! PFT index
+     real(r8) :: adiff    ! tolerance of acceptible difference
+
+     ! Assume weights are NOT different and only change if find weights too different
+     weights_tooDifferent = .false.
+     adiff                = 1.e-02_r8 / real(numpft+1)
+     do p = begp, endp
+
+        if ( abs(pptr%wtgcell(p) - wtgcell(p)) > adiff )then
+           weights_tooDifferent = .true.
+           cycle
+        end if
+     end do
+
+  end function weights_tooDifferent
+
 
 end module BiogeophysRestMod

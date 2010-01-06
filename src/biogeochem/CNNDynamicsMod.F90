@@ -146,8 +146,6 @@ subroutine CNNFixation(num_soilc, filter_soilc)
    nfix_to_sminn => clm3%g%l%c%cnf%nfix_to_sminn
 
    ! Loop through columns
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 
@@ -189,7 +187,7 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
 !
 ! !CALLED FROM:
-! subroutine driver, in driver.F90
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 ! 6/9/04: Created by Peter Thornton
@@ -232,8 +230,6 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
    ! calculate the total soil water
    tot_water(lbc:ubc) = 0._r8
    do j = 1,nlevsoi
-!dir$ concurrent
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
          tot_water(c) = tot_water(c) + h2osoi_liq(c,j)
@@ -241,8 +237,6 @@ subroutine CNNLeaching(lbc, ubc, num_soilc, filter_soilc)
    end do
 
    ! Loop through columns
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 

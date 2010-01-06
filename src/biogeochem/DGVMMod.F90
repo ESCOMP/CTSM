@@ -257,9 +257,6 @@ contains
     real(r8), intent(in) :: nextsw_cday    ! calendar day at Greenwich (1.00, ..., 365.99) for nstep+1
     real(r8), intent(in) :: declinp1       ! declination angle for next time step
 !
-! !CALLED FROM:
-! subroutine driver() in driver.F90
-!
 ! !REVISION HISTORY:
 ! Author: Sam Levis
 !

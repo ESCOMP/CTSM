@@ -55,7 +55,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:)   ! pft filter for soil points
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 ! 10/28/03: Created by Peter Thornton
@@ -160,8 +160,6 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
    dwood = dwood * 0.5_r8
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       c = pcolumn(p)

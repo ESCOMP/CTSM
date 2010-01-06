@@ -1,28 +1,32 @@
 #include <misc.h>
 #include <preproc.h>
 
-module driver
+module clm_driver
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: driver
+! !MODULE: clm_driver
 !
 ! !DESCRIPTION:
-! This module provides the main CLM driver calling sequence.  Most
+! This module provides the main CLM driver physics calling sequence.  Most
 ! computations occurs over ``clumps'' of gridcells (and associated subgrid
 ! scale entities) assigned to each MPI process. Computation is further
-! parallelized by looping over clumps on each process using shared memory
-! OpenMP or Cray Streaming Directives.
+! parallelized by looping over clumps on each process using shared memory OpenMP.
 !
-! The main CLM driver calling sequence is as follows:
+! The main CLM driver physics calling sequence for clm_driver1 is as follows:
 ! \begin{verbatim}
 !
-! + interpMonthlyVeg      interpolate monthly vegetation data [!DGVM]
-!   + readMonthlyVegetation read vegetation data for two months [!DGVM]
+!     + interpMonthlyVeg      interpolate monthly vegetation data        [! CN or ! CNDV]
+!       + readMonthlyVegetation read vegetation data for two months      [! CN or ! CNDV]
 !
 ! ==== Begin Loop over clumps ====
-!  -> DriverInit          save of variables from previous time step
+!  -> dynland_hwcontent   Get initial heat, water content
+!     + pftdyn_interp                                                    [pftdyn]
+!     + dynland_hwcontent   Get new heat, water content                  [pftdyn]
+!
+! ==== Begin Loop over clumps ====
+!  -> clm_driverInit      save of variables from previous time step
 !  -> Hydrology1          canopy interception and precip on ground
 !     -> FracWet          fraction of wet vegetated surface and dry elai
 !  -> SurfaceRadiation    surface solar radiation
@@ -47,45 +51,29 @@ module driver
 !                         shaded leaves
 !     -> QSat             recalculation of saturated vapor pressure,
 !                         specific humidity, & derivatives at leaf surface
+!   + DustEmission        Dust mobilization                             [DUST]
+!   + DustDryDep          Dust dry deposition                           [DUST]
 !  -> Biogeophysics_Lake  lake temperature and surface fluxes
-!   + VOCEmission         compute VOC emission [VOC]
-!   + DGVMRespiration     CO2 respriation and plant production [DGVM]
-!   + DGVMEcosystemDyn    DGVM ecosystem dynamics: vegetation phenology [!DGVM]
-!  -> EcosystemDyn        "static" ecosystem dynamics: vegetation phenology
-!                         and soil carbon [!DGVM]
+!   + VOCEmission         compute VOC emission                          [VOC]
 !  -> Biogeophysics2      soil/snow & ground temp and update surface fluxes
 !  -> pft2col             Average from PFT level to column level
 !  -> Hydrology2          surface and soil hydrology
 !  -> Hydrology_Lake      lake hydrology
 !  -> SnowAge_grain       update snow effective grain size for snow radiative transfer
+!   + CNEcosystemDyn      Carbon Nitrogen model ecosystem dynamics:     [CN]
+!                         vegetation phenology and soil carbon  
+!   + casa_ecosystemDyn   CASA Prime Carbon model ecosystem dynamics:   [CASA]
+!                         vegetation phenology and soil carbon  
+!   + EcosystemDyn        "static" ecosystem dynamics:                  [! CN or ! CASA]
+!                         vegetation phenology and soil carbon  
 !  -> BalanceCheck        check for errors in energy and water balances
 !  -> SurfaceAlbedo       albedos for next time step
 !  -> UrbanAlbedo         Urban landunit albedos for next time step
 !  ====  End Loop over clumps  ====
-!
-!  -> write_diagnostic    output diagnostic if appropriate
-!   + Rtmriverflux        calls RTM river routing model [RTM]
-!  -> updateAccFlds       update accumulated fields
-!  -> hist_update_hbuf    accumulate history fields for time interval
-!
-!  Begin DGVM calculations at end of model year [DGVM]
-!    ==== Begin Loop over clumps ====
-!     + lpj                 run LPJ ecosystem dynamics: reproduction, turnover,
-!                           kill, allocation, light, mortality, fire
-!     + lpjreset            reset variables & initialize for next year
-!     + resetWeightsDGVM    reset variables and patch weights
-!     + resetTimeConstDGVM  reset time constant variables for new pfts
-!    ====  End Loop over clumps  ====
-!  End DGVM calculations at end of model year [DGVM]
-!
-!  -> htapes_wrapup       write history tapes if appropriate
-!  -> DGVMhist            write DGVM history file
-!  -> restFile            write restart file if appropriate
-!  -> inicfile            write initial file if appropriate
 ! \end{verbatim}
+!
 ! Optional subroutines are denoted by an plus (+) with the associated
-! CPP variable in brackets at the end of the line.  Coupler communication
-! when coupled with CCSM components is denoted by an asterisk (*).
+! CPP token or variable in brackets at the end of the line.
 !
 ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
@@ -107,7 +95,7 @@ module driver
   use restFileMod         , only : restFile_write, restFile_write_binary, restFile_filename
   use inicFileMod         , only : inicfile_perp  
   use accFldsMod          , only : updateAccFlds
-  use DriverInitMod       , only : DriverInit
+  use clm_driverInitMod   , only : clm_driverInit
   use BalanceCheckMod     , only : BeginWaterBalance, BalanceCheck
   use SurfaceRadiationMod , only : SurfaceRadiation
   use Hydrology1Mod       , only : Hydrology1
@@ -151,37 +139,43 @@ module driver
   use perf_mod
   use SNICARMod           , only : SnowAge_grain
   use aerdepMod           , only : interpMonthlyAerdep
-  use clm_varctl          , only : set_caerdep_from_file, set_dustdep_from_file   ! this will be removed
+  use clm_varctl          , only : set_caerdep_from_file, set_dustdep_from_file
 
 !
 ! !PUBLIC TYPES:
   implicit none
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: driver1
-  public :: driver2
+  public :: clm_driver1              ! Phase one of the clm driver (clm physics)
+  public :: clm_driver2              ! Phase two of the clm driver (history, restart writes updates etc.)
 !
 ! !PRIVATE MEMBER FUNCTIONS:
-  private :: write_diagnostic
-  private :: do_restwrite
-  private :: do_inicwrite
+  private :: write_diagnostic        ! Write diagnostic information to log file
+  private :: do_inicwrite            ! If time to write an initial condition file
+!EOP
 !-----------------------------------------------------------------------
 
 contains
 
 !-----------------------------------------------------------------------
+!BOP
 !
-! !ROUTINE: driver1
+! !ROUTINE: clm_driver1
 !
 ! !INTERFACE:
-subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
+subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
+!
+! !DESCRIPTION:
+!
+! First phase of the clm driver calling the clm physics. An outline of
+! the calling tree is given in the description of this module.
 !
 ! !ARGUMENTS:
   implicit none
-  logical , intent(in) :: doalb    ! true if time for surface albedo calc
+  logical , intent(in) :: doalb       ! true if time for surface albedo calc
   real(r8), intent(in) :: nextsw_cday ! calendar day for nstep+1
-  real(r8), intent(in) :: declinp1 ! declination angle for next time step
-  real(r8), intent(in) :: declin   ! declination angle for current time step
+  real(r8), intent(in) :: declinp1    ! declination angle for next time step
+  real(r8), intent(in) :: declin      ! declination angle for current time step
 !
 ! !REVISION HISTORY:
 ! 2002.10.01  Mariana Vertenstein latest update to new data structures
@@ -251,12 +245,10 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 
   ! ============================================================================
   ! interpolate aerosol deposition data, and read in new monthly data if need be.
-  ! This will be removed.........................
   ! ============================================================================
   if ( (set_caerdep_from_file) .or. (set_dustdep_from_file) ) then
      call interpMonthlyAerdep()
   endif
-  ! to here......................................
 
 
   ! ============================================================================
@@ -279,8 +271,6 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
      ! ============================================================================
 
      ! initialize heat and water content and dynamic balance fields to zero
-!dir$ concurrent
-!cdir nodep
      do g = begg,endg
         clm3%g%gwf%qflx_liq_dynbal(g) = 0._r8
         clm3%g%gws%gc_liq2(g)         = 0._r8
@@ -306,8 +296,6 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
         call dynland_hwcontent( begg, endg, clm3%g%gws%gc_liq2(begg:endg), &
                                 clm3%g%gws%gc_ice2(begg:endg), clm3%g%ges%gc_heat2(begg:endg) )
         dtime = get_step_size()
-!dir$ concurrent
-!cdir nodep
         do g = begg,endg
            clm3%g%gwf%qflx_liq_dynbal(g) = (clm3%g%gws%gc_liq2 (g) - clm3%g%gws%gc_liq1 (g))/dtime
            clm3%g%gwf%qflx_ice_dynbal(g) = (clm3%g%gws%gc_ice2 (g) - clm3%g%gws%gc_ice1 (g))/dtime
@@ -322,11 +310,8 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
 
      call t_startf('begwbal')
      call BeginWaterBalance(begc, endc, begp, endp, &
-!KO          filter(nc)%num_nolakec, filter(nc)%nolakec, filter(nc)%num_lakec, filter(nc)%lakec)
-!KO
           filter(nc)%num_nolakec, filter(nc)%nolakec, filter(nc)%num_lakec, filter(nc)%lakec, &
           filter(nc)%num_hydrologyc, filter(nc)%hydrologyc)
-!KO
      call t_stopf('begwbal')
 
 #if (defined CN)
@@ -403,7 +388,7 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
      end do
      
      call t_startf('drvinit')
-     call DriverInit(begc, endc, begp, endp, &
+     call clm_driverInit(begc, endc, begp, endp, &
           filter(nc)%num_nolakec, filter(nc)%nolakec, filter(nc)%num_lakec, filter(nc)%lakec)
      call t_stopf('drvinit')
 
@@ -562,8 +547,6 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
      ! ! Fraction of soil covered by snow (Z.-L. Yang U. Texas)
      ! ============================================================================
 
-!dir$ concurrent
-!cdir nodep
      do c = begc,endc
         l = clandunit(c)
         if (itypelun(l) == isturb) then
@@ -685,22 +668,39 @@ subroutine driver1 (doalb, nextsw_cday, declinp1, declin)
   end do
 !$OMP END PARALLEL DO
 
-end subroutine driver1
+end subroutine clm_driver1
 
 !-----------------------------------------------------------------------
 !
-! !ROUTINE: driver2
+! !ROUTINE: clm_driver2
 !
 ! !INTERFACE:
-subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
+subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
+!
+! !DESCRIPTION:
+!
+! Second phase of the clm main driver, for handling history and restart file output.
+!
+! The main CLM driver calling sequence is as follows:
+! \begin{verbatim}
+!
+!  -> write_diagnostic    output diagnostic if appropriate
+!   + Rtmriverflux        calls RTM river routing model                [RTM]
+!   + inicfile_perp       initial snow and soil moisture               [is_perpetual]
+!  -> updateAccFlds       update accumulated fields
+!  -> hist_update_hbuf    accumulate history fields for time interval
+!  -> htapes_wrapup       write history tapes if appropriate
+!  -> restFile_write      write restart file if appropriate
+!  -> restFile_write      write initial file if appropriate
+! \end{verbatim}
 !
 ! !ARGUMENTS:
   implicit none
   real(r8),          intent(in) :: nextsw_cday ! calendar day for nstep+1
-  real(r8),          intent(in) :: declinp1 ! declination angle for next time step
-  logical,           intent(in) :: rstwr    ! true => write restart file this step
-  logical,           intent(in) :: nlend    ! true => end of run on this step
-  character(len=*),  intent(in) :: rdate    ! restart file time stamp for name
+  real(r8),          intent(in) :: declinp1    ! declination angle for next time step
+  logical,           intent(in) :: rstwr       ! true => write restart file this step
+  logical,           intent(in) :: nlend       ! true => end of run on this step
+  character(len=*),  intent(in) :: rdate       ! restart file time stamp for name
 !
 ! !REVISION HISTORY:
 ! 2005.05.22  Mariana Vertenstein creation
@@ -729,9 +729,9 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
   integer  :: begl, endl    ! clump beginning and ending landunit indices
   integer  :: begg, endg    ! clump beginning and ending gridcell indices
 #endif
-  character(len=256) :: filer       ! restart file name
-  integer :: ier
-  logical :: write_restart
+  character(len=256) :: filer  ! restart file name
+  integer :: ier               ! error code
+  logical :: write_restart     ! flag if should write restart files
 !-----------------------------------------------------------------------
 
   ! ============================================================================
@@ -880,7 +880,7 @@ subroutine driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 #endif
   call t_stopf('clm_driver_io')
 
-end subroutine driver2
+end subroutine clm_driver2
 
 !------------------------------------------------------------------------
 !BOP
@@ -928,7 +928,7 @@ subroutine write_diagnostic (wrtdia, nstep)
   real(r8):: tsum                    ! sum of ts
   real(r8):: tsxyav                  ! average ts for diagnostic output
   integer :: status(MPI_STATUS_SIZE) ! mpi status
-  logical,parameter :: old_sendrecv = .false.
+  logical,parameter :: old_sendrecv = .false.  ! Flag if should use old send/receive method rather than MPI reduce
 !------------------------------------------------------------------------
 
   call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
@@ -966,18 +966,14 @@ subroutine write_diagnostic (wrtdia, nstep)
      if (masterproc) then
         tsxyav = tsum / numg
         write(iulog,1000) nstep, tsxyav
-#ifndef UNICOSMP
         call shr_sys_flush(iulog)
-#endif
      end if
 
   else
 
      if (masterproc) then
         write(iulog,*)'clm2: completed timestep ',nstep
-#ifndef UNICOSMP
         call shr_sys_flush(iulog)
-#endif
      end if
 
   endif
@@ -985,35 +981,6 @@ subroutine write_diagnostic (wrtdia, nstep)
 1000 format (1x,'nstep = ',i10,'   TS = ',f21.15)
 
 end subroutine write_diagnostic
-
-!------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: do_restwrite
-!
-! !INTERFACE:
-logical function do_restwrite()
-!
-! !DESCRIPTION:
-! Determine if restart dataset is to be written at this time step
-!
-! !USES:
-  use restFileMod , only : rest_flag
-  use clm_time_manager, only : is_last_step
-  use histFileMod , only : if_writrest
-!
-! !ARGUMENTS:
-  implicit none
-!
-! !REVISION HISTORY:
-! Created by Mariana Vertenstein
-!
-!EOP
-!------------------------------------------------------------------------
-
-  do_restwrite = .false.
-
-end function do_restwrite
 
 !-----------------------------------------------------------------------
 !BOP
@@ -1034,9 +1001,6 @@ end function do_restwrite
 !
 ! !ARGUMENTS:
     implicit none
-!
-! !CALLED FROM:
-! subroutine driver
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -1082,5 +1046,6 @@ end function do_restwrite
     endif
 
   end function do_inicwrite
+!-----------------------------------------------------------------------
 
-end module driver
+end module clm_driver

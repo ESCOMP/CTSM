@@ -53,7 +53,7 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! pft filter for soil points
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 ! 3/29/04: Created by Peter Thornton
@@ -244,8 +244,6 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
    m  = am/(365._r8 * 86400._r8)
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 
@@ -554,8 +552,6 @@ subroutine CNGapPftToColumn (num_soilc, filter_soilc)
    m_deadcrootn_xfer_to_litter    => clm3%g%l%c%p%pnf%m_deadcrootn_xfer_to_litter
 
    do pi = 1,maxpatch_pft
-!dir$ concurrent
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
 

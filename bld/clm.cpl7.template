@@ -49,7 +49,13 @@ set config = $CASEBUILD/clmconf/config_cache.xml
 set clm_demand = "$CLM_DEMAND"
 
 @ clm_dtime  = ( 3600 * 24 ) / $LND_NCPL
-@ rtm_nsteps = ( 3600 * 3  ) / $clm_dtime  # rtm is done every 3 hours
+
+if ( $rtm = "on" )then
+  @ rtm_nsteps = ( 3600 * 3  ) / $clm_dtime  # rtm is done every 3 hours
+ set $rtm = " rtm_nsteps       =  $rtm_nsteps"
+endif
+
+ co2_ppmv         =  $CCSM_CO2_PPMV
 
 set outnc_large_files = ".false."
 if ($LND_CDF64 == TRUE ) set outnc_large_files = ".true."
@@ -57,7 +63,7 @@ if ($LND_CDF64 == TRUE ) set outnc_large_files = ".true."
 cat >> $cfgdir/ccsm_namelist << EOF1
  &clm_inparm
  dtime            =  $clm_dtime
- rtm_nsteps       =  $rtm_nsteps
+$rtm
 $finidat
  nrevsn           = '$nrevsn'
  hist_mfilt       =  1

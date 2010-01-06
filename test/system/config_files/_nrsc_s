@@ -1,5 +1,4 @@
 -mode ccsm_seq
 -nospmd -nosmp
--debug
--cppdefs -DVANCOUVER
+-rtm off
 -s

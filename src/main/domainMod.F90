@@ -39,7 +39,7 @@ module domainMod
      real(r8),pointer :: latc(:)    ! latitude of grid cell (deg)
      real(r8),pointer :: lonc(:)    ! longitude of grid cell (deg)
      real(r8),pointer :: area(:)    ! grid cell area (km**2)
-     real(r8),pointer :: asca(:)    ! area scaling from driver
+     real(r8),pointer :: asca(:)    ! area scaling from CCSM driver
      character*16     :: set        ! flag to check if domain is set
      !--- following are valid only for land domain ---
      integer ,pointer :: pftm(:)    ! pft  mask: 1=real, 0=fake, -1=notset

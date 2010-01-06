@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta35"
+seqccsm_vers="ccsm4_0_beta37"
 
 hostname=`hostname`
 case $hostname in
@@ -362,6 +362,10 @@ dataroot="/fs/cgd/csm"
 echo_arg="-e"
 input_file="tests_pretag_calgary"
 
+if [ -z "$CLM_CCSMBLD" ]; then
+   export CLM_CCSMBLD="TRUE"
+fi
+
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
@@ -383,7 +387,7 @@ cat > ./${submit_script} << EOF
 # Name of the queue (CHANGE THIS if needed)
 #PBS -q long
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l nodes=1:ppn=4
+#PBS -l nodes=1:ppn=8
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
@@ -412,7 +416,7 @@ fi
 export CLM_RESTART_THREADS=2
 
 ##mpi tasks
-export CLM_TASKS=4
+export CLM_TASKS=8
 export CLM_RESTART_TASKS=1
 
 export CLM_COMPSET="I"
@@ -721,6 +725,10 @@ EOF
     ##intrepid
     login* )
     submit_script="test_driver_intrepid_${cur_time}.sh"
+
+    if [ -z "$CLM_CCSMBLD" ]; then
+	export CLM_CCSMBLD="TRUE"
+    fi
 
 ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
 cat > ./${submit_script} << EOF
@@ -1107,7 +1115,7 @@ case $hostname in
     kraken* )  qsub ${submit_script};;
 
     #intrepid
-    login* )  qsub -n 256 -q prod-devel --mode script ${submit_script};;
+    login* )  qsub -n 256 -t 60 -q prod-devel --mode script ${submit_script};;
 
     #default
     * )

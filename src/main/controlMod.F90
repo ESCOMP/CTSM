@@ -12,92 +12,9 @@ module controlMod
 ! Module which initializes run control variables. The following possible
 ! namelist variables are set default values and possibly read in on startup
 !
-! === model time =======================
-!
-!    o dtime      = integer model time step (s)
-!
-! === input data ===
-!
-!    o finidat         = 256 character initial conditions file name
-!    o fsurdat         = 256 character surface data file name
-!    o flndtopo        = 256 character land topography file name
-!    o fatmgrid        = 256 character atmosphere grid data file name
-!    o fatmlndfrc      = 256 character landfrac (on atm grid) file name
-!    o fatmtopo        = 256 character atmosphere topography file name (on atm grid)
-!    o flndtopo        = 256 character land topography file name
-!    o fndepdat        = 254 character nitrogen deposition data file name (netCDF)
-!    o fndepdyn        = 254 character nitrogen deposition data file name (netCDF) changing dynamically in time
-!    o fpftcon         = 256 character data file with PFT physiological constants
-!    o fpftdyn         = 256 character data file with PFT physiological constants changing dynamically in time
-!    o frivinp_rtm     = 256 character input data file for rtm
-!    o nrevsn          = 256 character restart file name for use with branch run
-!    o fsnowoptics     = 256 character snow optical properties file name
-!    o fsnowaging      = 256 character snow aging parameters file name
-!    o fget_archdev    = 8 character input archive device prefix to retreive input files from (used by shr/shr_file_mod.F90)
-!                        (such as mss: for NCAR mass store)
-!
-! === history and restart files ===
-!
-!    o outnc_large_files = true if want to create output netCDF files in 64-bit large file format
-!    o hist_empty_htapes = true if do not want ANY output fields on files by default
-!    o hist_avgflag_pertape = averaging flag to use by default for all fields on a file series
-!    o hist_ndens    = integer, can have value of 1 (nc_double) or 2 (nf_float)
-!    o hist_dov2xy   = true if want grid-average history field (false = vector)
-!    o hist_nhtfrq   = integer history interval (+ = iterations,  - = hours, 0=monthly ave)
-!    o hist_mfilt    = integer number of time samples per history file
-!    o hist_fincl1   = 10 character name of fields for first  auxillary history file
-!    o hist_fincl2   = 10 character name of fields for second auxillary history file
-!    o hist_fincl3   = 10 character name of fields for first  auxillary history file
-!    o hist_fincl4   = 10 character name of fields for second auxillary history file
-!    o hist_fincl5   = 10 character name of fields for first  auxillary history file
-!    o hist_fincl6   = 10 character name of fields for second auxillary history file
-!    o hist_fexcl1   = 8  character name of fields for first  auxillary history file
-!    o hist_fexcl2   = 8  character name of fields for second auxillary history file
-!    o hist_fexcl3   = 8  character name of fields for first  auxillary history file
-!    o hist_fexcl4   = 8  character name of fields for second auxillary history file
-!    o hist_fexcl5   = 8  character name of fields for first  auxillary history file
-!    o hist_fexcl6   = 8  character name of fields for second auxillary history file
-!    o hist_crtinic  = 8  character frequency to generate initial dataset
-!                         ['6-HOURLY','DAILY','MONTHLY','YEARLY','NONE']
-!    o rest_flag     = logical, turns off restart file writing [.TRUE., .FALSE.]
-!
-! === Parallel history writing options (experiemental, and mostly to due with PIO)
-!
-!    o hist_pioflag           = logical true if want to turn on hist with pio                    [.FALSE., .TRUE.]
-!    o ncd_lowmem2d           = logical true if want to turn on low memory 2d writes in clm hist [.TRUE., .FALSE.]
-!    o ncd_pio_def            = logical true if want default pio use setting                     [.FALSE., .TRUE.]
-!    o ncd_pio_UseRearranger  = logical true if want to use MCT as Rearranger                    [.TRUE., .FALSE.]
-!    o ncd_pio_UseBoxRearr    = logical true if want to use box as Rearranger                    [.FALSE., .TRUE.]
-!    o ncd_pio_SerialCDF      = logical true if want to write with pio serial netcdf mode        [.FALSE., .TRUE.]
-!    o ncd_pio_IODOF_rootonly = logical true if want to write history in pio from root only      [.FALSE., .TRUE.]
-!    o ncd_pio_DebugLevel     = integer pio debug level
-!    o ncd_pio_num_iotasks    = integer number of iotasks to use for PIO
-!
-! === Biogeochem=CASA =======
-!    o lnpp        = 1=gpp*gppfact,2=fn(lgrow)*gppfact
-!    o lalloc      = 0=fixed allocation, 1=dynamic allocation
-!    o q10         = temperature dependence
-!    o spunup      = 0=no, 1=yes (used with nsrest/=1 only)
-!    o fcpool      = Carbon Pool initial state filename
-!
-! === Decomposition   =======
-!
-!    o clump_pproc = clumps per processor
-!    o nsegspc     = number of segments per clump for decomposition
-!
-! === model physics ===
-!
-!    o wrtdia       = true if want output written
-!    o co2_ppmv     = CO2 volume mixing ratio
-!    o pertlim      = perturbation limit
-!    o create_crop_landunit = logical on if to create crop as separate landunits
-!    o co2_type     = type of CO2 feedback, choices are constant, prognostic or diagnostic
-!    o urban_hac     = urban air conditioning/heating and wasteheat on/off
-!    o urban_traffic = logical true if want urban traffic turned on
-!
-! === rtm control variables ===
-!
-!    o rtm_nsteps  = if > 1, average rtm over rtm_nsteps time steps
+! Note: For definitions of namelist variablses see
+!       ../../bld/namelist_files/namelist_definition.xml
+!       Display the file in a browser to see it neatly formatted in html.
 !
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8, SHR_KIND_CL
@@ -110,7 +27,7 @@ module controlMod
                             hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, username,           &
                             ncd_pio_UseBoxRearr, ncd_pio_SerialCDF, ncd_pio_IODOF_rootonly, ncd_pio_DebugLevel, &
                             ncd_pio_num_iotasks, fsnowaging, fsnowoptics, &
-                            faerdep !will be removed
+                            faerdep
   use spmdMod      , only : masterproc
   use decompMod    , only : clump_pproc
   use histFileMod  , only : max_tapes, max_namlen, &
@@ -247,7 +164,7 @@ contains
          fpftdyn, fndepdat, fndepdyn, nrevsn, &
          fsnowoptics, fsnowaging
 
-    namelist /clm_inparm/ faerdep   ! will be removed
+    namelist /clm_inparm/ faerdep
 
     ! clm history, restart options
 
@@ -395,10 +312,10 @@ contains
   subroutine control_spmd()
 !
 ! !DESCRIPTION:
-! Distribute namelist data all processors. The cpp SPMD definition
-! provides for the funnelling of all program i/o through the master
-! processor. Processor 0 either reads restart/history data from the
-! disk and distributes it to all processors, or collects data from
+! Distribute namelist data all processors. All program i/o is 
+! funnelled through the master processor. Processor 0 either 
+! reads restart/history data from the disk and distributes 
+! it to all processors, or collects data from
 ! all processors and writes it to disk.
 !
 ! !USES:
@@ -450,7 +367,6 @@ contains
     call mpi_bcast (fsnowaging,   len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fget_archdev, len(fget_archdev), MPI_CHARACTER, 0, mpicom, ier)
     
-    ! will be removed......
     call mpi_bcast (faerdep,      len(faerdep),      MPI_CHARACTER, 0, mpicom, ier)
 
     ! Landunit generation
@@ -537,7 +453,7 @@ contains
   subroutine control_print ()
 !
 ! !DESCRIPTION:
-! Write out run control variables
+! Write out the clm namelist run control variables
 !
 ! !USES:
 !
@@ -612,13 +528,11 @@ contains
     else
        write(iulog,*) '   snow aging parameters file = ',trim(fsnowaging)
     endif
-    ! Will be removed....
     if (faerdep == ' ') then
        write(iulog,*) '   aerosol deposition file NOT set'
     else
        write(iulog,*) '   aerosol deposition file = ',trim(faerdep)
     endif
-    ! to here............
 
     if (nsrest == 0 .and. finidat == ' ') write(iulog,*) '   initial data created by model'
     if (nsrest == 0 .and. finidat /= ' ') write(iulog,*) '   initial data   = ',trim(finidat)

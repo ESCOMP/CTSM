@@ -1,4 +1,4 @@
 -ignore_ic_date 
 -silent 
--case clmrun 
--source CLM1PT
+-drv_case clmrun 
+-datm_source CLM1PT

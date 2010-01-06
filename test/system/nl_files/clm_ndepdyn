@@ -1,5 +1,5 @@
 -ignore_ic_date 
 -silent 
--case clmrun 
+-drv_case clmrun 
 -clm_demand fndepdyn
--source CLM_QIAN
+-datm_source CLM_QIAN

@@ -51,7 +51,7 @@ contains
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use initializeMod,     only : initialize1
+    use clm_initializeMod,     only : initialize1
 !
 ! !ARGUMENTS:
 !
@@ -83,7 +83,7 @@ contains
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use initializeMod,   only : initialize2
+    use clm_initializeMod,   only : initialize2
 !
 ! !ARGUMENTS:
 !
@@ -189,7 +189,7 @@ contains
     use shr_orb_mod     , only : shr_orb_decl
     use clm_time_manager, only : get_nstep, get_step_size, get_curr_calday
     use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
-    use driver          , only : driver1
+    use clm_driver      , only : clm_driver1
     use clm_atmlnd      , only : clm_map2gcell
 !
 ! !ARGUMENTS:
@@ -221,9 +221,9 @@ contains
 
     ! Call land model driver1
     
-    call t_startf('driver1')
-    call driver1(doalb, nextsw_cday, declinp1, declin)
-    call t_stopf('driver1')
+    call t_startf('clm_driver1')
+    call clm_driver1(doalb, nextsw_cday, declinp1, declin)
+    call t_stopf('clm_driver1')
 
     ! Determine gridcell averaged properties to send to atm (l2as and l2af derived types)
 
@@ -248,7 +248,7 @@ contains
     use shr_orb_mod     , only : shr_orb_decl
     use clm_time_manager, only : get_nstep, get_step_size, get_curr_calday
     use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
-    use driver          , only : driver2
+    use clm_driver      , only : clm_driver2
 !
 ! !ARGUMENTS:
     real(r8)                 ,intent(in) :: nextsw_cday ! calendar day for nextsw_cday
@@ -269,7 +269,7 @@ contains
     ! Call land model driver2
     
     call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
-    call driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
+    call clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 
   end subroutine clm_run2
 

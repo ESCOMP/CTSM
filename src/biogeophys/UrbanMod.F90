@@ -114,7 +114,7 @@ contains
     integer , intent(in) :: filter_urbanp(ubp-lbp+1) ! urban pft filter
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
@@ -639,7 +639,7 @@ contains
     integer , intent(in) :: filter_urbanp(ubp-lbp+1)   ! urban pft filter
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
@@ -2546,7 +2546,7 @@ contains
     integer , intent(in) :: filter_urbanp(ubp-lbp+1)   ! urban pft filter
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! Author: Keith Oleson 10/2005

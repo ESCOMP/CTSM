@@ -1,22 +1,22 @@
 #include <misc.h>
 #include <preproc.h>
 
-module DriverInitMod
+module clm_driverInitMod
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: DriverInitMod
+! !MODULE: clm_driverInitMod
 !
 ! !DESCRIPTION:
-! Initialization of driver variables needed from previous timestep
+! Initialization of clm driver variables needed from previous timestep
 !
 ! !PUBLIC TYPES:
   implicit none
   save
 !
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: DriverInit
+  public :: clm_driverInit
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -29,14 +29,14 @@ contains
 !-----------------------------------------------------------------------
 !BOP
 !
-! !IROUTINE: DriverInit
+! !IROUTINE: clm_driverInit
 !
 ! !INTERFACE:
-  subroutine DriverInit(lbc, ubc, lbp, ubp, &
+  subroutine clm_driverInit(lbc, ubc, lbp, ubp, &
              num_nolakec, filter_nolakec, num_lakec, filter_lakec)
 !
 ! !DESCRIPTION:
-! Initialization of driver variables needed from previous timestep
+! Initialization of clm driver variables needed from previous timestep
 !
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
@@ -55,7 +55,7 @@ contains
     integer, intent(in) :: filter_lakec(ubc-lbc+1)     ! column filter for non-lake points
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine driver1
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -101,8 +101,6 @@ contains
 
     pwtgcell           => clm3%g%l%c%p%wtgcell
 
-!dir$ concurrent
-!cdir nodep
     do c = lbc, ubc
 
       ! Save snow mass at previous time step
@@ -119,8 +117,6 @@ contains
 
     ! Initialize fraction of vegetation not covered by snow (pft-level)
 
-!dir$ concurrent
-!cdir nodep
     do p = lbp,ubp
        if (pwtgcell(p)>0._r8) then
           frac_veg_nosno(p) = frac_veg_nosno_alb(p)
@@ -133,8 +129,6 @@ contains
     ! Ice fraction of snow at previous time step
 
     do j = -nlevsno+1,0
-!dir$ concurrent
-!cdir nodep
       do f = 1, num_nolakec
          c = filter_nolakec(f)
          if (j >= snl(c) + 1) then
@@ -143,6 +137,6 @@ contains
       end do
     end do
 
-  end subroutine DriverInit
+  end subroutine clm_driverInit
 
-end module DriverInitMod
+end module clm_driverInitMod

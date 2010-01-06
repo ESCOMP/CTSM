@@ -28,13 +28,13 @@ Type of CO2 feedback.
 
 <entry id="create_crop_landunit" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
-on if to create crop as separate landunits
+Flag to create crop as separate landunits
 <default>Default: FALSE</default>
 </entry>
 
 <entry id="outnc_large_files" type="logical" category="history"
        group="clm_inparm" valid_values="" >
-on to output NetCDF files in large-file format
+Flag to output NetCDF files in 64-bit large-file format
 <default>Default: FALSE</default>
 </entry>
 
@@ -47,6 +47,13 @@ Time step, seconds
        group="clm_inparm" valid_values="" >
 Full pathname of atmosphere grid data file.
 <default>Default: set by build-namelist.</default>
+</entry>
+
+<entry id="fget_archdev" type="char*8" category="datasets"
+       group="clm_inparm" valid_values="null:,mss:,cp:,hpss:" >
+Input archive device prefix to retreive input files from (used by shr/shr_file_mod.F90)
+(such as mss: for NCAR mass store)
+<default>Default: null:</default>
 </entry>
 
 <entry id="fatmlndfrc" type="char*256" input_pathname="abs" category="datasets"
@@ -302,8 +309,89 @@ TRUE if want urban traffic flux
 TRUE if want output written
 <default>Default: FALSE</default>
 </entry>
+<!--                                                   -->
+<!-- PIO experimental namelist  NOT currently working  -->
+<!--                                                   -->
+<entry id="hist_pioflag" type="logical" category="pio"
+       group="clm_inparm" valid_values="" >
+TRUE if want to use PIO to write history data out (EXPERIMENTAL AND NOT FUNCTIONAL!)
+<default>Default: FALSE</default>
+</entry>
 
+<entry id="ncd_lowmem2d" type="logical" category="pio"
+       group="clm_inparm" valid_values="" >
+TRUE if want to turn on low memory 2d writes in clm hist (EXPERIMENTAL AND NOT FUNCTIONAL!)
+<default>Default: TRUE</default>
+</entry>
 
+<entry id="ncd_pio_def" type="logical" category="pio"
+       group="clm_inparm" valid_values="" >
+TRUE if want default pio use setting (EXPERIMENTAL AND NOT FUNCTIONAL!)
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="ncd_pio_UseRearranger" type="logical" category="pio"
+       group="clm_inparm" valid_values="" >
+TRUE if want to use MCT as Rearranger (EXPERIMENTAL AND NOT FUNCTIONAL!)
+<default>Default: TRUE</default>
+</entry>
+
+<entry id="ncd_pio_UseBoxRearr" type="logical" category="pio"
+       group="clm_inparm" valid_values="" >
+TRUE if want to use box as Rearranger (EXPERIMENTAL AND NOT FUNCTIONAL!)
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="ncd_pio_SerialCDF" type="logical" category="pio"
+       group="clm_inparm" valid_values="" >
+TRUE if want to write with pio serial netcdf mode (EXPERIMENTAL AND NOT FUNCTIONAL!)
+<default>Default: FALSE</default>
+</entry>
+
+<entry id="ncd_pio_DebugLevel" type="integer" category="pio"
+       group="clm_inparm" valid_values="0,1,2,3" >
+Integer pio debug level (EXPERIMENTAL AND NOT FUNCTIONAL!)
+<default>Default: 2</default>
+</entry>
+
+<entry id="ncd_pio_num_iotasks" type="integer" category="pio"
+       group="clm_inparm" valid_values="" >
+Integer number of iotasks to use for PIO (EXPERIMENTAL AND NOT FUNCTIONAL!)
+<default>Default: 999999999</default>
+</entry>
+
+<!--                                                              -->
+<!-- CASA namelist items  CASA is experimental and NOT supported  -->
+<!--                                                              -->
+<entry id="lnpp" type="integer" category="casa"
+       group="clm_inparm" valid_values="1,2" >
+CASA Net Primary Production format: 1=gpp*gppfact,2=fn(lgrow)*gppfact (CASA is EXPERIMENTAL NOT SUPPORTED!)
+<default>Default: 2</default>
+</entry>
+
+<entry id="lalloc" type="integer" category="casa"
+       group="clm_inparm" valid_values="0,1" >
+CASA allocation type: 0=fixed allocation, 1=dynamic allocation (CASA is EXPERIMENTAL NOT SUPPORTED!)
+<default>Default: 1</default>
+</entry>
+
+<entry id="q10" type="real" category="casa"
+       group="clm_inparm" valid_values="" >
+CASA Temperature dependence (CASA is EXPERIMENTAL NOT SUPPORTED!)
+<default>Default: 2.0</default>
+</entry>
+
+<entry id="spunup" type="integer" category="casa"
+       group="clm_inparm" valid_values="0,1" >
+CASA flag if input file spunup or not: 0=no, 1=yes (CASA is EXPERIMENTAL NOT SUPPORTED!)
+<default>Default: 0</default>
+</entry>
+
+<entry id="fcpool" type="integer" category="casa"
+       group="clm_inparm" valid_values="" >
+CASA Carbon Pool initial state filename (CASA is EXPERIMENTAL NOT SUPPORTED!)
+<default>Default: blank</default>
+</entry>
 <!-- ========================================================================================  -->
 <!-- CPL7 Driver Namelist -->
 <!-- ========================================================================================  -->
@@ -984,51 +1072,138 @@ Root PE for PIO output processing
 
 
 <!-- ========================================================================================  -->
-<!-- DATM7 Namelists                                                                           -->
+<!-- DATM Namelists                                                                            -->
 <!-- ========================================================================================  -->
 
 <entry id="datamode" type="char*256"  category="datm"
-       group="dshr_nml" valid_values="CLMNCEP,CAMHIST,COPYALL,CPLHIST,TN460,TEST,USER" >
+       group="shr_strdata_nml" valid_values="CLMNCEP,CAMHIST,COPYALL,CPLHIST,CORE2,TN460,NULL" >
 Flags physics options wrt input data.
 </entry>
 
 <entry id="domainfile" type="char*256" input_pathname="abs"  category="datm"
-       group="dshr_nml" valid_values="" >
+       group="shr_strdata_nml" valid_values="" >
 File containing domain info.
 </entry>
 
-<entry id="infodbug" type="integer"  category="datm"
-       group="dshr_nml" valid_values="0,1,2,3" >
-Debug level: 0=lowest, 3=highest
+<entry id="fillalgo" type="char*256(30)"  category="datm"
+       group="shr_strdata_nml" valid_values="copy,bilinear,nn,nnoni,nnonj,spval">
+Fill algorithm
 </entry>
 
-<entry id="restpfile" type="char*256"  category="restart"
-       group="dshr_nml" valid_values="">
-Name of restart pointer file
-<default>Default: rpointer.atm</default>
+<entry id="fillmask" type="char*256(30)"  category="datm"
+       group="shr_strdata_nml" valid_values="nomask,srcmask,dstmask,bothmask">
+Fill mask
 </entry>
 
-<entry id="restbfile" type="char*256"  category="restart"
-       group="dshr_nml" valid_values="">
-IC bundle data file (for branch runs)
-<default>Default: rpointer.atm</default>
+<entry id="mapmask" type="char*256(30)"  category="datm"
+       group="shr_strdata_nml" valid_values="nomask,srcmask,dstmask,bothmask">
+Scalar mapping mask
 </entry>
 
-<entry id="restsfile" type="char*256"  category="restart"
-       group="dshr_nml" valid_values="">
-IC stream data file (for branch runs)
-<default>Default: rpointer.atm</default>
+<entry id="mapalgo" type="char*256(30)"  category="datm"
+       group="shr_strdata_nml" valid_values="copy,bilinear,nn,nnoni,nnonj,spval">
+Scalar mapping algorithm
 </entry>
 
-<entry id="streams" type="char*256(3)" category="datm"
-       group="dshr_nml" valid_values="">
+<entry id="tintalgo" type="char*256(30)"  category="datm"
+       group="shr_strdata_nml" valid_values="coszen,nearest,linear,lower,upper">
+Time interpolation algrorithm method
+</entry>
+
+<entry id="io_type" type="char*256"  category="datm"
+       group="shr_strdata_nml" valid_values="pio_netcdf,netcdf,pio_pnetcdf">
+Input/Output (IO) type
+</entry>
+
+<entry id="num_iotasks" type="integer"  category="datm"
+       group="shr_strdata_nml" valid_values="">
+Total number of tasks for IO
+</entry>
+
+<entry id="io_root" type="integer"  category="datm"
+       group="shr_strdata_nml" valid_values="">
+MPI rank of starting IO task
+</entry>
+
+<entry id="io_stride" type="integer"  category="datm"
+       group="shr_strdata_nml" valid_values="">
+Ranks to skip for MPI IO tasks
+</entry>
+
+<entry id="num_agg" type="integer"  category="datm"
+       group="shr_strdata_nml" valid_values="">
+MPI aggregator count
+</entry>
+
+<entry id="streams" type="char*256(30)" category="datm"
+       group="shr_strdata_nml" valid_values="">
 Character array of stream description file names
+</entry>
+
+<entry id="vectors" type="char*256(30)" category="datm"
+       group="shr_strdata_nml" valid_values="">
+Character array of vector description file names
 </entry>
 
 <entry id="factorfn" type="char*256" category="datm"
        group="datm_nml" valid_values="null">
 File containing tn460 correction factors (not valid for any CLM DATM7 modes)
 </entry>
+
+<entry id="atm_in" type="char*256" category="datm"
+       group="datm_nml" valid_values="">
+Namelist filename for data model share stream data namelist
+</entry>
+
+<entry id="decomp" type="char*256" category="datm"
+       group="datm_nml" valid_values="1d,root">
+Decomposition type
+</entry>
+
+<entry id="iradsw" type="integer" category="datm"
+       group="datm_nml" valid_values="">
+Frequency to update radiation in number of steps (or hours if negative)
+</entry>
+
+<entry id="restfilm" type="char*256" category="datm"
+       group="datm_nml" valid_values="">
+Master restart file name for datm model, needed for branch simulations, but currently unused
+</entry>
+
+<entry id="restfils" type="char*256" category="datm"
+       group="datm_nml" valid_values="">
+Stream restart file name for datm model, needed for branch simulations
+</entry>
+
+<entry id="datm_source" type="char*80" category="datm_internal"
+       group="datm_internal" 
+       valid_values="CLM_QIAN,CPLHIST3HrWxHfHrSol,CAMHIST.eul64x128_datm6.01,CLM1PT,CAMHIST.GENERIC">
+Description of data source for datm input data.
+</entry>
+
+<entry id="datm_cycle_beg_year" type="integer" category="datm_internal"
+       group="default_settings" valid_values="">
+Beginning of year to cycle datm data through
+</entry>
+
+<entry id="datm_cycle_end_year" type="integer" category="datm_internal"
+       group="default_settings" valid_values="">
+End of year to cycle datm data through
+</entry>
+
+<entry id="diri" type="char*256" category="datm"
+       group="modelio" valid_values="">
+</entry>
+<entry id="diro" type="char*256" category="datm"
+       group="modelio" valid_values="">
+</entry>
+<entry id="logfile" type="char*256" category="datm"
+       group="modelio" valid_values="">
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- Generic issues (resolution, mask etc.)                                                    -->
+<!-- ========================================================================================  -->
 
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
@@ -1042,16 +1217,6 @@ Horizontal resolutions
        valid_values="USGS,gx3v5,gx3v7,gx1v3,gx1v4,gx1v5,gx1v6,navy,test,tx0.1v2,tx1v1,T62">
 Land mask description
 </entry> 
-
-<entry id="cycle_beg_year" type="integer" category="datm_internal"
-       group="default_settings" valid_values="">
-Beginning of year to cycle datm data through
-</entry>
-
-<entry id="cycle_end_year" type="integer" category="datm_internal"
-       group="default_settings" valid_values="">
-End of year to cycle datm data through
-</entry>
 
 <entry id="sim_year" type="integer" category="default_settings"
        group="default_settings" valid_values=
@@ -1077,12 +1242,5 @@ Namelist entries to demand be provided on the namelist.
        group="use_case_desc" valid_values="" >
 Description of the use case selected.
 </entry>
-
-<entry id="source" type="char*80" category="datm_internal"
-       group="datm_internal" 
-       valid_values="CLM_QIAN,CPLHIST3HrWxHfHrSol,CAMHIST.eul64x128_datm6.01,CLM1PT,CAMHIST.GENERIC">
-Description of data source for datm7 input data.
-</entry>
-
 
 </namelist_definition>

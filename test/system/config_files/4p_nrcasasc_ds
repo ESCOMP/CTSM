@@ -1,0 +1,7 @@
+-mode ccsm_seq
+-nospmd -nosmp
+-debug
+-rtm off
+-maxpft 4
+-bgc casa
+-s

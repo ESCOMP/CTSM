@@ -86,7 +86,7 @@ contains
     integer, intent(in) :: filter_nolakep(ubp-lbp+1)   ! pft filter for non-lake points
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! 15 September 1999: Yongjiu Dai; Initial code
@@ -309,16 +309,12 @@ contains
     displar       => pftcon%displar
 
     do j = -nlevsno+1, nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
           tssbef(c,j) = t_soisno(c,j)
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        l = clandunit(c)
@@ -454,8 +450,6 @@ contains
     
     ! Initialization
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
 
@@ -503,8 +497,6 @@ contains
     ! Make forcing height a pft-level quantity that is the atmospheric forcing 
     ! height plus each pft's z0m+displa
     do pi = 1,max_pft_per_gcell
-!dir$ concurrent
-!cdir nodep
        do g = lbg, ubg
           if (pi <= npfts(g)) then
             p = pfti(g) + pi - 1
@@ -546,8 +538,6 @@ contains
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_nolakep
        p = filter_nolakep(fp)
        g = pgridcell(p)

@@ -138,9 +138,9 @@ module histFileMod
 ! Subscript dimensions
 !
   integer, parameter :: max_subs = 100         ! max number of subscripts
-  integer            :: num_subs = 0
-  character(len=32)  :: subs_name(max_subs)
-  integer            :: subs_dim(max_subs)
+  integer            :: num_subs = 0           ! actual number of subscripts
+  character(len=32)  :: subs_name(max_subs)    ! name of subscript
+  integer            :: subs_dim(max_subs)     ! dimension of subscript
 !
 ! Derived types
 !
@@ -192,25 +192,19 @@ module histFileMod
      type (history_entry) :: hlist(max_flds)   ! array of active history tape entries
   end type history_tape
 
-  type clmpoint_is
-     integer, pointer :: ptr(:)
-  end type clmpoint_is
-  type clmpoint_ia
-     integer, pointer :: ptr(:,:)
-  end type clmpoint_ia
-  type clmpoint_rs
+  type clmpoint_rs                             ! Pointer to real scalar data (1D)
      real(r8), pointer :: ptr(:)
   end type clmpoint_rs
-  type clmpoint_ra
+  type clmpoint_ra                             ! Pointer to real array data (2D)
      real(r8), pointer :: ptr(:,:)
   end type clmpoint_ra
 !EOP
 !
 ! Pointers into clmtype arrays
 !
-  integer, parameter :: max_mapflds = 1500
-  type (clmpoint_rs) :: clmptr_rs(max_mapflds)
-  type (clmpoint_ra) :: clmptr_ra(max_mapflds)
+  integer, parameter :: max_mapflds = 1500     ! Maximum number of fields to track
+  type (clmpoint_rs) :: clmptr_rs(max_mapflds) ! Real scalar data (1D)
+  type (clmpoint_ra) :: clmptr_ra(max_mapflds) ! Real array data (2D)
 !
 ! Master list: an array of master_entry entities
 !
@@ -1192,8 +1186,6 @@ contains
        ! note that in this case beg1d = begg and end1d=endg
        select case (avgflag)
        case ('I') ! Instantaneous
-!dir$ concurrent
-!cdir nodep
           do k = begg,endg
              if (field_gcell(k) /= spval) then
                 hbuf(k,1) = field_gcell(k)
@@ -1203,8 +1195,6 @@ contains
              nacs(k,1) = 1
           end do
        case ('A') ! Time average
-!dir$ concurrent
-!cdir nodep
           do k = begg,endg
              if (field_gcell(k) /= spval) then
                 if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
@@ -1215,8 +1205,6 @@ contains
              end if
           end do
        case ('X') ! Maximum over time
-!dir$ concurrent
-!cdir nodep
           do k = begg,endg
              if (field_gcell(k) /= spval) then
                 if (nacs(k,1) == 0) hbuf(k,1) = -1.e50_r8
@@ -1227,8 +1215,6 @@ contains
              nacs(k,1) = 1
           end do
        case ('M') ! Minimum over time
-!dir$ concurrent
-!cdir nodep
           do k = begg,endg
              if (field_gcell(k) /= spval) then
                 if (nacs(k,1) == 0) hbuf(k,1) = +1.e50_r8
@@ -1251,8 +1237,6 @@ contains
 
        select case (avgflag)
        case ('I') ! Instantaneous
-!dir$ concurrent
-!cdir nodep
           do k = beg1d,end1d
              valid = .true.
              if (checkwt) then
@@ -1270,8 +1254,6 @@ contains
              nacs(k,1) = 1
           end do
        case ('A') ! Time average
-!dir$ concurrent
-!cdir nodep
           do k = beg1d,end1d
              valid = .true.
              if (checkwt) then
@@ -1290,8 +1272,6 @@ contains
              end if
           end do
        case ('X') ! Maximum over time
-!dir$ concurrent
-!cdir nodep
           do k = beg1d,end1d
              valid = .true.
              if (checkwt) then
@@ -1310,8 +1290,6 @@ contains
              nacs(k,1) = 1
           end do
        case ('M') ! Minimum over time
-!dir$ concurrent
-!cdir nodep
           do k = beg1d,end1d
              valid = .true.
              if (checkwt) then
@@ -1428,8 +1406,6 @@ contains
        select case (avgflag)
        case ('I') ! Instantaneous
           do j = 1,num2d
-!dir$ concurrent
-!cdir nodep
              do k = begg,endg
                 if (field_gcell(k,j) /= spval) then
                    hbuf(k,j) = field_gcell(k,j)
@@ -1441,8 +1417,6 @@ contains
           end do
        case ('A') ! Time average
           do j = 1,num2d
-!dir$ concurrent
-!cdir nodep
              do k = begg,endg
                 if (field_gcell(k,j) /= spval) then
                    if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
@@ -1455,8 +1429,6 @@ contains
           end do
        case ('X') ! Maximum over time
           do j = 1,num2d
-!dir$ concurrent
-!cdir nodep
              do k = begg,endg
                 if (field_gcell(k,j) /= spval) then
                    if (nacs(k,j) == 0) hbuf(k,j) = -1.e50_r8
@@ -1469,8 +1441,6 @@ contains
           end do
        case ('M') ! Minimum over time
           do j = 1,num2d
-!dir$ concurrent
-!cdir nodep
              do k = begg,endg
                 if (field_gcell(k,j) /= spval) then
                    if (nacs(k,j) == 0) hbuf(k,j) = +1.e50_r8
@@ -1499,8 +1469,6 @@ contains
        select case (avgflag)
        case ('I') ! Instantaneous
           do j = 1,num2d
-!dir$ concurrent
-!cdir nodep
              do k = beg1d,end1d
                 valid = .true.
                 if (checkwt) then
@@ -1520,8 +1488,6 @@ contains
           end do
        case ('A') ! Time average
           do j = 1,num2d
-!dir$ concurrent
-!cdir nodep
              do k = beg1d,end1d
                 valid = .true.
                 if (checkwt) then
@@ -1542,8 +1508,6 @@ contains
           end do
        case ('X') ! Maximum over time
           do j = 1,num2d
-!dir$ concurrent
-!cdir nodep
              do k = beg1d,end1d
                 valid = .true.
                 if (checkwt) then
@@ -1564,8 +1528,6 @@ contains
           end do
        case ('M') ! Minimum over time
           do j = 1,num2d
-!dir$ concurrent
-!cdir nodep
              do k = beg1d,end1d
                 valid = .true.
                 if (checkwt) then
@@ -1972,8 +1934,6 @@ contains
        do ifld = 1,nflds
           histi(:,:) = spval
           do lev = 1,nlevgrnd
-!dir$ concurrent
-!cdir nodep
              do c = begc, endc
                 l = cptr%landunit(c)
                 if (.not. lptr%lakpoi(l)) then
@@ -2322,8 +2282,7 @@ contains
   subroutine hfields_write(t, mode)
 !
 ! !DESCRIPTION:
-! Write history tape. If SPMD, first gather the data to the master
-! processor. Issue the netcdf call to write the variable.
+! Write history tape.  Issue the call to write the variable.
 !
 ! !USES:
     use clmtype
@@ -3370,8 +3329,6 @@ contains
                  call bin_iolocal (nio, ibuf2d, clmlevel=type1d_out, flag='read')
                  call bin_iolocal (nio, rbuf2d, clmlevel=type1d_out, flag='read')
                  do lev = 1,num2d
-!dir$ concurrent
-!cdir nodep
                     do k = beg1d_out,end1d_out
                        nacs(k,lev) = ibuf2d(k,lev)
                        hbuf(k,lev) = rbuf2d(k,lev)
@@ -3379,8 +3336,6 @@ contains
                  end do
               else if (flag == 'write') then
                  do lev = 1,num2d
-!dir$ concurrent
-!cdir nodep
                     do k = beg1d_out,end1d_out
                        ibuf2d(k,lev) = nacs(k,lev)
                        rbuf2d(k,lev) = hbuf(k,lev)

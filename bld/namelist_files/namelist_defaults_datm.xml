@@ -16,32 +16,34 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Defaults for datm namelist  -->
 
 <!-- Default begining year for cycling over input atmospheric data -->
-<cycle_beg_year hgrid="1x1_mexicocityMEX" >1993</cycle_beg_year>
-<cycle_beg_year hgrid="1x1_vancouverCAN"  >1992</cycle_beg_year>
-<cycle_beg_year hgrid="1x1_urbanc_alpha"  >0001</cycle_beg_year>
-<cycle_beg_year                           >2003</cycle_beg_year>
+<datm_cycle_beg_year hgrid="1x1_mexicocityMEX" >1993</datm_cycle_beg_year>
+<datm_cycle_beg_year hgrid="1x1_vancouverCAN"  >1992</datm_cycle_beg_year>
+<datm_cycle_beg_year hgrid="1x1_urbanc_alpha"  >0001</datm_cycle_beg_year>
+<datm_cycle_beg_year                           >2003</datm_cycle_beg_year>
 
 <!-- Default ending year for cycling over input atmospheric data -->
-<cycle_end_year hgrid="1x1_mexicocityMEX" >1993</cycle_end_year>
-<cycle_end_year hgrid="1x1_vancouverCAN"  >1992</cycle_end_year>
-<cycle_end_year hgrid="1x1_urbanc_alpha"  >0002</cycle_end_year>
-<cycle_end_year                           >2004</cycle_end_year>
+<datm_cycle_end_year hgrid="1x1_mexicocityMEX" >1993</datm_cycle_end_year>
+<datm_cycle_end_year hgrid="1x1_vancouverCAN"  >1992</datm_cycle_end_year>
+<datm_cycle_end_year hgrid="1x1_urbanc_alpha"  >0002</datm_cycle_end_year>
+<datm_cycle_end_year                           >2003</datm_cycle_end_year>
 
 <!-- Verbosity level-->
-<infodbug>2</infodbug>
-
 <!-- Data source -->
-<source >CLM_QIAN</source>
+<datm_source >CLM_QIAN</datm_source>
 
 <CLM_QIAN_dir.Solar>Solar6Hrly</CLM_QIAN_dir.Solar>
 <CLM_QIAN_dir.Precip>Precip6Hrly</CLM_QIAN_dir.Precip>
 <CLM_QIAN_dir.TPQW>TmpPrsHumWnd3Hrly</CLM_QIAN_dir.TPQW>
 
+<tintalgo.Solar >coszen</tintalgo.Solar>
+<tintalgo.Precip>nearest</tintalgo.Precip>
+<tintalgo.TPQW  >linear</tintalgo.TPQW>
+
 <!-- Output Streams text filename -->
-<outstreams>datm7.streams.txt</outstreams>
+<outstreams>datm.streams.txt</outstreams>
 
 <!-- Streams template files -->
-<streamstemplate >atm/datm7/bld/datm.template.streams.xml</streamstemplate>
+<streamstemplate >atm/datm/bld/datm.template.streams.xml</streamstemplate>
 
 <!-- Domain files, grids and land mask -->
 <domainfile hgrid="1x1_brazil"          mask="navy" >atm/datm7/domain.clm/domain.lnd.1x1pt-brazil_navy.090715.nc</domainfile>
@@ -99,6 +101,28 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <factorfn>null</factorfn>
 
-<restpfile>rpointer.atm</restpfile>
+<vectors  >null</vectors>
+
+<atm_in   >datm_atm_in</atm_in>
+
+<iradsw   >1</iradsw>
+
+<tintalgo>linear</tintalgo>
+<fillalgo>nn</fillalgo>
+<fillmask>nomask</fillmask>
+<mapalgo>bilinear</mapalgo>
+<mapmask>nomask</mapmask>
+
+<decomp>1d</decomp>
+
+<io_type    >netcdf</io_type>
+<num_iotasks>1</num_iotasks>
+<io_stride  >4</io_stride>
+<io_root    >0</io_root>
+<num_agg    >0</num_agg>
+
+<diri>.</diri>
+<diro>.</diro>
+<logfile>clm.log</logfile>
 
 </namelist_defaults>

@@ -151,8 +151,6 @@ contains
        end if
     end do
 
-!dir$ concurrent
-!cdir nodep
     do p = begp, endp   
 !      stressT(p)  = 0.0
 !      stressW(p)  = 0.0
@@ -233,7 +231,7 @@ contains
     real(r8) :: tnorm
 !
 ! !CALLED FROM:
-! driver in driver.F90
+! casa_ecosystemDyn
 !
 ! !REVISION HISTORY:
 ! 2004.06.08 Vectorized and reformatted by Forrest Hoffman
@@ -288,8 +286,6 @@ contains
 
     call get_curr_date(kyr, kmo, kda, mcsec)
     if (mcsec == nsecbeg .and. kda == 1) then
-!dir$ concurrent
-!cdir nodep
        do f = 1, num_soilp
           p = filter_soilp(f)
           g = pgridcell(p)
@@ -308,8 +304,6 @@ contains
     ! initialize arrays on first timestep of each new day 
 
     if (mcsec == nsecbeg) then
-!dir$ concurrent
-!cdir nodep
        do f = 1, num_soilp
           p = filter_soilp(f)
           ! tdayavg is needed for degday calculation and possibly for 
@@ -321,8 +315,6 @@ contains
        end do
     end if
 
-!dir$ concurrent
-!cdir nodep
     do f = 1, num_soilp
        p = filter_soilp(f)
 
@@ -343,8 +335,6 @@ contains
     ! tdayavg is needed for degday calculation and possibly for 
     ! monthly history accumulations - don't reset to zero.
 
-!dir$ concurrent
-!cdir nodep
     do f = 1, num_soilp
        p = filter_soilp(f)
        if (tcount(p) /= 0.0_r8) then
@@ -363,8 +353,6 @@ contains
     ! for corn, tbase = 50F
     ! Foley (1996) essentially has Tbase = 5C for winter deciduous trees
     
-!dir$ concurrent
-!cdir nodep
     do f = 1, num_soilp
        p = filter_soilp(f)
        if (tdayavg(p) > tbase(ivt(p))) then
@@ -386,8 +374,6 @@ contains
   ! If lgrow=0 even if GPP > 0, we set NPP to zero, and
   ! pretend that all GPP went into autotrophic respiration.
 
-!dir$ concurrent
-!cdir nodep
     do f = 1, num_soilp
        p = filter_soilp(f)
        if (evergreen(ivt(p)) == 0) then
@@ -457,10 +443,6 @@ contains
     ! To distinguish the autumn from the spring,
     ! put in a minimum growing season of 30 days
     
-! Because of an apparent bug in the Cray compiler, the code crashes when this
-! loop is executed if it is vectorized with the concurrent directive--FMH
-!dir$ concurrent
-!cdir nodep
     do f = 1, num_soilp
        p = filter_soilp(f)
 

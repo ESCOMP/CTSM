@@ -57,7 +57,7 @@ subroutine BeginCBalance(lbc, ubc, num_soilc, filter_soilc)
    integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! 2/4/05: Created by Peter Thornton
@@ -80,8 +80,6 @@ subroutine BeginCBalance(lbc, ubc, num_soilc, filter_soilc)
    totcolc                        => clm3%g%l%c%ccs%totcolc
 
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
  
@@ -118,7 +116,7 @@ subroutine BeginNBalance(lbc, ubc, num_soilc, filter_soilc)
    integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! 2/4/05: Created by Peter Thornton
@@ -141,8 +139,6 @@ subroutine BeginNBalance(lbc, ubc, num_soilc, filter_soilc)
    totcoln                        => clm3%g%l%c%cns%totcoln
 
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
  
@@ -178,7 +174,7 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
    integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! 12/9/03: Created by Peter Thornton
@@ -229,8 +225,6 @@ subroutine CBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 
    err_found = .false.
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 
@@ -306,7 +300,7 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
    integer, intent(in) :: filter_soilc(ubc-lbc+1) ! filter for soil columns
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! 12/9/03: Created by Peter Thornton
@@ -363,8 +357,6 @@ subroutine NBalanceCheck(lbc, ubc, num_soilc, filter_soilc)
 
    err_found = .false.
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c=filter_soilc(fc)
 

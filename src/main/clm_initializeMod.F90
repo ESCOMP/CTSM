@@ -1,12 +1,12 @@
 #include <misc.h>
 #include <preproc.h>
 
-module initializeMod
+module clm_initializeMod
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: initializeMod
+! !MODULE: clm_initializeMod
 !
 ! !DESCRIPTION:
 ! Performs land model initialization
@@ -28,16 +28,16 @@ module initializeMod
   private    ! By default everything is private
 
 ! !PUBLIC MEMBER FUNCTIONS:
-  public :: initialize1
-  public :: initialize2
+  public :: initialize1  ! Phase one initialization
+  public :: initialize2  ! Phase two initialization
 !
 ! !REVISION HISTORY:
 ! Created by Gordon Bonan, Sam Levis and Mariana Vertenstein
 !
 !
 ! !PRIVATE MEMBER FUNCTIONS:
-  private header    ! echo version numbers
-  private do_restread
+  private header         ! echo version numbers
+  private do_restread    ! read a restart file
 !-----------------------------------------------------------------------
 ! !PRIVATE DATA MEMBERS: None
 
@@ -115,9 +115,7 @@ contains
     if (masterproc) then
        write(iulog,*) 'Attempting to initialize the land model .....'
        write(iulog,*)
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
     endif
 
     call clm_varpar_init ()
@@ -134,25 +132,19 @@ contains
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read alatlon from fatmgrid'
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
     endif
 
     call surfrd_get_latlon(alatlon, fatmgrid, amask, fatmlndfrc)
     call latlon_check(alatlon)
     if (masterproc) then
        write(iulog,*) 'amask size/min/max ',size(amask),minval(amask),maxval(amask)
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
     endif
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read llatlon from fsurdat'
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
     endif
 
     call surfrd_get_latlon(llatlon, fsurdat, pftm, pftmflag=.true.)
@@ -219,26 +211,20 @@ contains
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read adomain from fatmgrid'
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
     endif
     call surfrd_get_grid(adomain, fatmgrid, begg_atm, endg_atm, gratm)
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read atm landfrac from fatmlndfrc'
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
     endif
     call surfrd_get_frac(adomain, fatmlndfrc)
 
     if (fatmtopo /= " ") then
     if (masterproc) then
        write(iulog,*) 'Attempting to read atm topo from fatmtopo'
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
     endif
     call surfrd_get_topo(adomain, fatmtopo)
     endif
@@ -265,18 +251,14 @@ contains
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read ldomain from fsurdat ',trim(fsurdat)
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
     endif
     call surfrd_get_grid(ldomain, fsurdat, begg, endg, grlnd)
 
     if (flndtopo /= " ") then
     if (masterproc) then
        write(iulog,*) 'Attempting to read lnd topo from flndtopo ',trim(flndtopo)
-#ifndef UNICOSMP
        call shr_sys_flush(iulog)
-#endif
     endif
     call surfrd_get_topo(ldomain, flndtopo)
     endif
@@ -535,9 +517,7 @@ contains
     if (masterproc) write(iulog,*)'Attempting to initialize RTM'
     call Rtmini()
     if (masterproc) write(iulog,*)'Successfully initialized RTM'
-#ifndef UNICOSMP
     call shr_sys_flush(iulog)
-#endif
     call t_stopf('init_rtm')
 #endif
 
@@ -573,6 +553,21 @@ contains
 #endif
 
     ! ------------------------------------------------------------------------
+    ! Initialization of dynamic pft weights
+    ! ------------------------------------------------------------------------
+
+    ! Determine correct pft weights (interpolate pftdyn dataset if initial run)
+    ! Otherwise these are read in for a restart run
+    
+    if (fpftdyn /= ' ') then
+       call t_startf('init_pftdyn')
+       call pftdyn_init()
+       call pftdyn_interp( begg, endg, begc, endc, begp, endp )
+       call t_stopf('init_pftdyn')
+    end if
+
+
+    ! ------------------------------------------------------------------------
     ! Read restart/initial info
     ! ------------------------------------------------------------------------
 
@@ -600,20 +595,6 @@ contains
     end if
 
     call t_stopf('init_io2')
-
-    ! ------------------------------------------------------------------------
-    ! Initialization of dynamic pft weights
-    ! ------------------------------------------------------------------------
-
-    ! Determine correct pft weights (interpolate pftdyn dataset if initial run)
-    ! Otherwise these are read in for a restart run
-    
-    if (fpftdyn /= ' ') then
-       call t_startf('init_pftdyn')
-       call pftdyn_init()
-       if (nsrest == 0) call pftdyn_interp( begg, endg, begc, endc, begp, endp )
-       call t_stopf('init_pftdyn')
-    end if
 
     ! ------------------------------------------------------------------------
     ! Initialize dynamic nitrogen deposition
@@ -796,4 +777,4 @@ contains
     end if
   end function do_restread
   
-end module initializeMod
+end module clm_initializeMod

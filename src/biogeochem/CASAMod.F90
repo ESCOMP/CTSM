@@ -235,7 +235,6 @@ module CASAMod
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: initCASA                 ! initialize the CASA submodel
   public :: CASA_ecosystemDyn        ! the main submodel interface
-  public :: CASAPot_Evptr            ! potential evapotranspiration computation
   public :: CASARest             ! CASA restart
 !
 ! !REVISION HISTORY:
@@ -260,6 +259,8 @@ module CASAMod
   real(r8) annK(0:numpft,npools)         
   real(r8) kdt(0:numpft,npools)         
 !-----------------------------------------------------------------------
+
+  private :: CASAPot_Evptr            ! potential evapotranspiration computation
 
 contains
 
@@ -537,8 +538,6 @@ contains
        end if
     end do
 
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        l = plandunit(p)
 
@@ -637,8 +636,6 @@ contains
        wood_wts(begg:endg) = 0._r8
 
        do pi = 1,max_pft_per_gcell
-!dir$ concurrent
-!cdir nodep
           do g = begg, endg
              if (pi <= npfts(g)) then
                 p = pfti(g) + pi - 1
@@ -649,8 +646,6 @@ contains
           end do
        end do
 
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           g = pgridcell(p)
           if (ivt(p) > noveg .and. vege_wts(g) > 0._r8) then
@@ -680,8 +675,6 @@ contains
        ! TPOOL_C_LEAF
        call ncd_iolocal(ncid,'TPOOL_C_LEAF','read',rloc,nameg,status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_LEAF NOT on fcpool file' )
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           Tpool_C(p,LEAF) = rloc(pgridcell(p)) * vege_scale(p)
        end do
@@ -689,8 +682,6 @@ contains
        ! TPOOL_C_WOOD
        call ncd_iolocal(ncid,'TPOOL_C_WOOD','read',rloc,nameg,status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_WOOD NOT on fcpool file' )
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           Tpool_C(p,WOOD) = rloc(pgridcell(p)) * wood_scale(p)
        end do
@@ -698,8 +689,6 @@ contains
        ! TPOOL_C_FROOT
        call ncd_iolocal(ncid,'TPOOL_C_FROOT','read',rloc,nameg,status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_FROOT NOT on fcpool file' )
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           Tpool_C(p,FROOT) = rloc(pgridcell(p)) * vege_scale(p)
        end do
@@ -721,8 +710,6 @@ contains
        ! TPOOL_C_SOILMET
        call ncd_iolocal(ncid,'TPOOL_C_SOILMET','read',rloc,nameg,status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILMET NOT on fcpool file' )
-!dir$ concurrent
-!cdir nodep
        do p = begp, endp
           Tpool_C(p,SOILMET) = rloc(pgridcell(p)) * vege_scale(p)
        end do
@@ -730,8 +717,6 @@ contains
        ! TPOOL_C_SOILSTR
        call ncd_iolocal(ncid,'TPOOL_C_SOILSTR','read',rloc,nameg,status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILSTR NOT on fcpool file' )
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           Tpool_C(p,SOILSTR) = rloc(pgridcell(p)) * vege_scale(p)
        end do
@@ -739,8 +724,6 @@ contains
        ! TPOOL_C_CWD
        call ncd_iolocal(ncid,'TPOOL_C_CWD','read',rloc,nameg,status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_CWD NOT on fcpool file' )
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           Tpool_C(p,CWD) = rloc(pgridcell(p)) * wood_scale(p)
        end do
@@ -748,8 +731,6 @@ contains
        ! TPOOL_C_SURFMIC
        call ncd_iolocal(ncid,'TPOOL_C_SURFMIC','read',rloc,nameg,status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SURFMIC NOT on fcpool file' )
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           Tpool_C(p,SURFMIC) = rloc(pgridcell(p)) * vege_scale(p)
        end do
@@ -757,8 +738,6 @@ contains
        ! TPOOL_C_SOILMIC
        call ncd_iolocal(ncid,'TPOOL_C_SOILMIC','read',rloc,nameg,status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SOILMIC NOT on fcpool file' )
-!dir$ concurrent
-!cdir nodep
        do p = begp, endp
           Tpool_C(p,SOILMIC) = rloc(pgridcell(p)) * vege_scale(p)
        end do
@@ -766,8 +745,6 @@ contains
        ! TPOOL_C_SLOW
        call ncd_iolocal(ncid,'TPOOL_C_SLOW','read',rloc,nameg,status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_SLOW  NOT on fcpool file' )
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           Tpool_C(p,SLOW) = rloc(pgridcell(p)) * vege_scale(p)
        end do
@@ -775,8 +752,6 @@ contains
        ! TPOOL_C_PASSIVE
        call ncd_iolocal(ncid,'TPOOL_C_PASSIVE','read',rloc,nameg,status=ret)
        if (ret /= 0) call endrun( trim(subname)//' ERROR: TPOOL_C_PASSIVE NOT on fcpool file' )
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           Tpool_C(p,PASSIVE) = rloc(pgridcell(p)) * vege_scale(p)
        end do
@@ -802,8 +777,6 @@ contains
     Resp_C(begp:endp,1:npools) = 0._r8
 
     ! Initialize watdry, watopt, sz and watdryc, watoptc, szc
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        l = plandunit(p)
        if (ltype(l) == istsoil) then
@@ -822,8 +795,6 @@ contains
 
     ! Compute watdry, watopt, and watdryc, watoptc in mm^3/mm^3
     do j = 1, nlevsoi
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           c = pcolumn(p)
           l = plandunit(p)
@@ -844,8 +815,6 @@ contains
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        l = plandunit(p)
        if (ltype(l) == istsoil) then
@@ -1158,7 +1127,7 @@ contains
 !    Primary calling interface to the CASA submodel.
 !
 ! !CALLED FROM:
-!    driver in driver.F90 and initSurfAlb
+!    clm_driver1 and initSurfAlb
 !
 ! !REVISION HISTORY:
 !    2004.06.08  F. Hoffman: Vectorized and reformatted
@@ -1306,7 +1275,6 @@ contains
     real(r8), pointer :: pet(:)            !potential evaporation (mm h2o/s)
 !
 ! !CALLED FROM:
-! driver in driver.F90
 ! Casa in CASAMod
 !
 ! !REVISION HISTORY:
@@ -1345,8 +1313,6 @@ contains
 
     a_psy = 0.000662_r8                ! unit is s-1
 
-!dir$ concurrent
-!cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
        g = pgridcell(p)
@@ -1464,8 +1430,6 @@ contains
     !============================================================
     fnpp      => clm3%g%l%c%p%pps%fnpp
 
-!dir$ concurrent
-!cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
 
@@ -1625,8 +1589,6 @@ contains
     ! Get avg soil moisture, avg soil temperature over all layers
     ! only for soils (ist = 1)
 
-!dir$ concurrent
-!cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
        soilt(p)   = 0._r8
@@ -1671,8 +1633,6 @@ contains
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
 
@@ -1688,8 +1648,6 @@ contains
 
     if (LALLOC == 1) then
 
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
           g = pgridcell(p)
@@ -1754,8 +1712,6 @@ contains
 
     if (LALLOC == 0) then
 
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
 
@@ -1886,16 +1842,12 @@ contains
     ! Tpool is unit of gC/m2
 
     do n = 1, nlive
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
           Tpool_C(p,n) = Tpool_C(p,n) + livefr(p,n) * fnpp(p) * dtime
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
 
@@ -1923,8 +1875,6 @@ contains
     !     SLA is a function of veg type
     ! Tpool is unit of gC/m2
 
-!dir$ concurrent
-!cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
 
@@ -1956,8 +1906,6 @@ contains
     !iyf:  Resp in unit of gC/m2/timestep
 
     do n = 1, npools
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
           Resp_C(p,n) = 0._r8 ! could dimension by ndead, but caution later!!!
@@ -1968,8 +1916,6 @@ contains
     !  bgmoist currently set to 0.5 for all points
     !  01/07/04 change bgmoist to CLM2/LPJ temperature dependence
 
-!dir$ concurrent
-!cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
 
@@ -2014,16 +1960,12 @@ contains
     !iyf:  The distribution of Closs is done in subroutine casa_respire, Step 3c. 
 
     do n = nlive+1, npools
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
           Closs(p,n) = Tpool_C(p,n) * kdt(ivt(p),n) * bgtemp(p) * bgmoist(p)
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
 
@@ -2038,8 +1980,6 @@ contains
 
     !iyf:  limits on loss from dead pools.
     do n = nlive+1,npools
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
 
@@ -2062,8 +2002,6 @@ contains
     ! CALCULATE NITROGEN POOLS                                 
 
     !   do n = 1,npools
-!!dir$ concurrent
-!!cdir nodep
     !      do f = 1,num_soilp
     !         p = filter_soilp(f)
     !         Tpool_N(p,n)=Tpool_C(p,n)/CNratio(n)
@@ -2078,8 +2016,6 @@ contains
     Cflux(lbp:ubp)=0._r8
 
     do n = nlive+1,npools
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
 
@@ -2090,8 +2026,6 @@ contains
     end do
 
     do n = 1,npools
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
 
@@ -2103,16 +2037,12 @@ contains
 
     ! Loop over all pool types to adjust units on Ctrans to gC/m2/s
     do iptype = 1, npool_types
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
           Ctrans(p,iptype) = Ctrans(p,iptype) / dtime
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
 
@@ -2180,8 +2110,6 @@ contains
 
     ! These need to be changed (dependent on monthly LAI) 
 
-!dir$ concurrent
-!cdir nodep
     do p = lbp, ubp
        l = plandunit(p)
        if (ltype(l) == istsoil) then
@@ -2273,8 +2201,6 @@ contains
 
     !  FOLIAGE and ROOT LOSS; Jim's model; Needs to be checked
 
-!dir$ concurrent
-!cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
 
@@ -2313,16 +2239,12 @@ contains
     ! Decrement plant C pools : LEAF, WOOD, FROOT
 
     do n = 1,nlive
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
           Tpool_C(p,n)  =  Tpool_C(p,n)-Closs(p,n)    
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do f = 1,num_soilp
        p = filter_soilp(f)
 
@@ -2428,8 +2350,6 @@ contains
 
     ! Loop over all pool types to initialize transfer to zero
     do iptype = 1, npool_types
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
           Ctrans(p,iptype) = 0._r8
@@ -2446,8 +2366,6 @@ contains
        recvr_type = pool_type_index(recvr_pool)
 
        ! Loop over pfts
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
 
@@ -2475,8 +2393,6 @@ contains
 
     ! Stuff the total C lost by live pools into live pool type transfers
     do n = 1, nlive
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
           Ctrans(p,pool_type_index(n)) = Ctrans(p,pool_type_index(n)) + &
@@ -2486,8 +2402,6 @@ contains
 
     ! Add in the respired C to transfers out of pool types
     do n = nlive+1, npools
-!dir$ concurrent
-!cdir nodep
        do f = 1,num_soilp
           p = filter_soilp(f)
           Ctrans(p,pool_type_index(n)) = Ctrans(p,pool_type_index(n)) + &
@@ -2933,8 +2847,6 @@ subroutine CASASummary(lbp, ubp, num_soilp, filter_soilp)
    dtime = get_step_size()
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do f = 1, num_soilp
       p = filter_soilp(f)
 

@@ -11,7 +11,6 @@ module clmtype
 ! !DESCRIPTION: 
 ! Define derived type hierarchy. Includes declaration of
 ! the clm derived type and 1d mapping arrays. 
-! All variaible are local only, no global information.
 !
 ! -------------------------------------------------------- 
 ! gridcell types can have values of 
@@ -29,11 +28,11 @@ module clmtype
 ! -------------------------------------------------------- 
 ! column types can have values of
 ! -------------------------------------------------------- 
-!   1  => (istsoil)      soil (vegetated or bare soil)
-!   2  => (istice)       land ice
-!   3  => (istdlak)      deep lake
-!   4  => (istslak)      shallow lake 
-!   5  => (istwet)       wetland
+!   1  => (istsoil)          soil (vegetated or bare soil)
+!   2  => (istice)           land ice
+!   3  => (istdlak)          deep lake
+!   4  => (istslak)          shallow lake 
+!   5  => (istwet)           wetland
 !   61 => (icol_roof)        urban roof
 !   62 => (icol_sunwall)     urban sunwall
 !   63 => (icol_shadewall)   urban shadewall
@@ -192,7 +191,7 @@ type, public :: pft_pstate_type
 #if (defined CASA)
    real(r8), pointer :: Closs(:,:)  ! C lost to atm
    real(r8), pointer :: Ctrans(:,:) ! C transfers out of pool types
-   real(r8), pointer :: Resp_C(:,:)
+   real(r8), pointer :: Resp_C(:,:) ! C respired
    real(r8), pointer :: Tpool_C(:,:)! Total C pool size
    real(r8), pointer :: eff(:,:)
    real(r8), pointer :: frac_donor(:,:)
@@ -210,7 +209,7 @@ type, public :: pft_pstate_type
    real(r8), pointer :: szc(:)      !thickness of soil layers contributing to output
    real(r8), pointer :: watoptc(:)  !optimal soil water content for et for entire column (mm3/mm3)
    real(r8), pointer :: watdryc(:)  !soil water when et stops for entire column (mm3/mm3)
-   real(r8), pointer :: Wlim(:)
+   real(r8), pointer :: Wlim(:)     !Water limitation min value
    real(r8), pointer :: litterscalar(:)
    real(r8), pointer :: rootlitscalar(:)
    real(r8), pointer :: stressCD(:) ! cold and drought stress function (sec-1)
@@ -220,7 +219,7 @@ type, public :: pft_pstate_type
    real(r8), pointer :: bgtemp(:)   ! temperature dependence
    real(r8), pointer :: bgmoist(:)  ! moisture dependence
    real(r8), pointer :: plai(:)     ! prognostic LAI (m2 leaf/m2 ground)
-   real(r8), pointer :: Cflux(:)
+   real(r8), pointer :: Cflux(:)    ! Carbon flux
    real(r8), pointer :: XSCpool(:)
    real(r8), pointer :: tday(:)      ! daily accumulated temperature (deg C)
    real(r8), pointer :: tdayavg(:)   ! daily averaged temperature (deg C)
@@ -351,13 +350,13 @@ type, public :: pft_dgvepc_type
    real(r8), pointer :: tcmax(:)           !maximum coldest monthly mean temperature [units?]
    real(r8), pointer :: gddmin(:)          !minimum growing degree days (at or above 5 C)
    real(r8), pointer :: twmax(:)           !upper limit of temperature of the warmest month [units?]
-   real(r8), pointer :: lm_sapl(:) 
-   real(r8), pointer :: sm_sapl(:) 
-   real(r8), pointer :: hm_sapl(:) 
-   real(r8), pointer :: rm_sapl(:) 
-   logical , pointer :: tree(:)
-   logical , pointer :: summergreen(:)
-   logical , pointer :: raingreen(:)
+   real(r8), pointer :: lm_sapl(:)         ! ecophys const - leaf mass of sapling
+   real(r8), pointer :: sm_sapl(:)         ! ecophys const - stem mass of sapling
+   real(r8), pointer :: hm_sapl(:)         ! ecophys const - heartwood mass of sapling 
+   real(r8), pointer :: rm_sapl(:)         ! ecophys const - root mass of sapling 
+   logical , pointer :: tree(:)            ! flag if tree PFT or not
+   logical , pointer :: summergreen(:)     ! ecophys const
+   logical , pointer :: raingreen(:)       ! ecophys const
    real(r8), pointer :: reinickerp(:)      !parameter in allometric equation
    real(r8), pointer :: wooddens(:)        !wood density (gC/m3)
    real(r8), pointer :: latosa(:)          !ratio of leaf area to sapwood cross-sectional area (Shinozaki et al 1964a,b)
@@ -1054,7 +1053,7 @@ type, public :: column_pstate_type
    real(r8), pointer :: smpmin(:)             !restriction for min of soil potential (mm) (new)
    real(r8), pointer :: gwc_thr(:)            !threshold soil moisture based on clay content
    real(r8), pointer :: mss_frc_cly_vld(:)    ![frc] Mass fraction clay limited to 0.20
-   real(r8), pointer :: mbl_bsn_fct(:)        !??
+   real(r8), pointer :: mbl_bsn_fct(:)        !basin factor
    logical , pointer :: do_capsnow(:)         !true => do snow capping
    real(r8), pointer :: snowdp(:)             !snow height (m)
    real(r8), pointer :: frac_sno(:)           !fraction of ground covered by snow (0 to 1)
@@ -1772,20 +1771,6 @@ end type landunit_dflux_type
 !----------------------------------------------------
 type, public :: gridcell_pstate_type
    type(column_pstate_type):: cps_a   !column-level physical state variables averaged to gridcell
-   !real(r8), pointer :: bcphiwet2t(:,:)
-   !real(r8), pointer :: bcphidry2t(:,:)
-   !real(r8), pointer :: bcphodry2t(:,:)
-   !real(r8), pointer :: ocphiwet2t(:,:)
-   !real(r8), pointer :: ocphidry2t(:,:)
-   !real(r8), pointer :: ocphodry2t(:,:)
-   !real(r8), pointer :: dstx01wd2t(:,:)
-   !real(r8), pointer :: dstx01dd2t(:,:)
-   !real(r8), pointer :: dstx02wd2t(:,:)
-   !real(r8), pointer :: dstx02dd2t(:,:)
-   !real(r8), pointer :: dstx03wd2t(:,:)
-   !real(r8), pointer :: dstx03dd2t(:,:)
-   !real(r8), pointer :: dstx04wd2t(:,:)
-   !real(r8), pointer :: dstx04dd2t(:,:)
 end type gridcell_pstate_type
 
 !----------------------------------------------------

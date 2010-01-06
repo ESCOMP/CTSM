@@ -87,7 +87,7 @@ contains
     integer  :: filter_nosnowc(ubc-lbc+1)  ! column filter for non-snow points
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
@@ -369,8 +369,6 @@ contains
     ! Set empty snow layers to zero
 
     do j = -nlevsno+1,0
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j <= snl(c) .and. snl(c) > -nlevsno) then
@@ -392,15 +390,11 @@ contains
     ! Vertically average t_soisno and sum of h2osoi_liq and h2osoi_ice
     ! over all snow layers for history output
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        snowice(c) = 0._r8
        snowliq(c) = 0._r8
     end do
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_nosnowc
        c = filter_nosnowc(fc)
        snowice(c) = spval
@@ -408,8 +402,6 @@ contains
     end do
 
     do j = -nlevsno+1, 0
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
@@ -421,8 +413,6 @@ contains
 
     ! Determine ground temperature, ending water balance and volumetric soil water
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_nolakec
        
        c = filter_nolakec(fc)
@@ -445,8 +435,6 @@ contains
     end do
 
     do j = 1, nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_nolakec
           c = filter_nolakec(fc)
           endwb(c) = endwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
@@ -457,8 +445,6 @@ contains
     ! Determine wetland and land ice hydrology (must be placed here
     ! since need snow updated from CombineSnowLayers)
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
        l = clandunit(c)
@@ -490,8 +476,6 @@ contains
 
 #if (defined CN) || (defined CASA)
     do j = 1, nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           
@@ -516,8 +500,6 @@ contains
     ! Potentially available soil water (=whc) up to a depth of 0.5 m.
     ! Water content as fraction of whc up to a depth of 0.5 m.
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        rwat(c) = 0._r8
@@ -526,8 +508,6 @@ contains
     end do
 
     do j = 1, nlevgrnd
-!dir$ concurrent
-!cdir nodep
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           !if (z(c,j)+0.5_r8*dz(c,j) <= 0.5_r8) then
@@ -540,8 +520,6 @@ contains
        end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
        if (rz(c) /= 0._r8) then

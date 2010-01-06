@@ -80,7 +80,7 @@ contains
 !
 ! !CALLED FROM:
 ! subroutine lpjreset1 in module DGVMMod (only applicable when cpp token DGVM is defined)
-! subroutine driver
+! subroutine clm_driver1
 ! subroutine iniTimeVar
 !
 ! !REVISION HISTORY:
@@ -281,8 +281,6 @@ contains
 
     ! Cosine solar zenith angle for next time step
 
-!dir$ concurrent
-!cdir nodep
     do g = lbg, ubg
        coszen_gcell(g) = shr_orb_cosz (nextsw_cday, lat(g), lon(g), declinp1)
     end do
@@ -290,8 +288,6 @@ contains
     ! Save coszen and declination values to  clm3 data structures for
     ! use in other places in the CN and urban code
 
-!dir$ concurrent
-!cdir nodep
     do c = lbc,ubc
        g = cgridcell(c)
        coszen_col(c) = coszen_gcell(g)
@@ -299,8 +295,6 @@ contains
        decl(c) = declinp1
     end do
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
        g = pgridcell(p)
@@ -310,8 +304,6 @@ contains
     ! Initialize output because solar radiation only done if coszen > 0
 
     do ib = 1, numrad
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nourbanc
           c = filter_nourbanc(fc)
           albgrd(c,ib)     = 0._r8
@@ -331,8 +323,6 @@ contains
              flx_absin(c,i) = 0._r8
           enddo
        end do
-!dir$ concurrent
-!cdir nodep
        do fp = 1,num_nourbanp
           p = filter_nourbanp(fp)
           albd(p,ib) = 1._r8
@@ -502,8 +492,6 @@ contains
 
     ! ground albedos and snow-fraction weighting of snow absorption factors
     do ib = 1, nband
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nourbanc
           c = filter_nourbanc(fc)
           if (coszen(c) > 0._r8) then
@@ -557,8 +545,6 @@ contains
     ! so that it is not averaged in history buffer
     ! (OPTIONAL)
     do ib = 1, nband
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nourbanc
           c = filter_nourbanc(fc)
           if ((coszen(c) > 0._r8) .and. (h2osno(c) > 0._r8)) then
@@ -593,8 +579,6 @@ contains
     ! Weight reflectance/transmittance by lai and sai
     ! Only perform on vegetated pfts where coszen > 0
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_vegsol
        p = filter_vegsol(fp)
        vai(p) = elai(p) + esai(p)
@@ -603,8 +587,6 @@ contains
     end do
 
     do ib = 1, numrad
-!dir$ concurrent
-!cdir nodep
        do fp = 1,num_vegsol
           p = filter_vegsol(fp)
           rho(p,ib) = max( rhol(ivt(p),ib)*wl(p) + rhos(ivt(p),ib)*ws(p), mpe )
@@ -621,8 +603,6 @@ contains
     ! Determine values for non-vegetated pfts where coszen > 0
 
     do ib = 1,numrad
-!dir$ concurrent
-!cdir nodep
        do fp = 1,num_novegsol
           p = filter_novegsol(fp)
           c = pcolumn(p)
@@ -728,8 +708,6 @@ contains
     ! Compute soil albedos
 
     do ib = 1, nband
-!dir$ concurrent
-!cdir nodep
        do fc = 1,num_nourbanc
           c = filter_nourbanc(fc)
           if (coszen(c) > 0._r8) then
@@ -891,8 +869,6 @@ contains
     ! Also, the transmittances and reflectances (tau, rho) are linear
     ! weights of leaf and stem values.
 
-!dir$ concurrent
-!cdir nodep
     do fp = 1,num_vegsol
        p = filter_vegsol(fp)
        
@@ -914,8 +890,6 @@ contains
     end do
 
     do ib = 1, numrad
-!dir$ concurrent
-!cdir nodep
        do fp = 1,num_vegsol
           p = filter_vegsol(fp)
           c = pcolumn(p)

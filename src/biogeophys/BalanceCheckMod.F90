@@ -39,11 +39,8 @@ contains
 !
 ! !INTERFACE:
   subroutine BeginWaterBalance(lbc, ubc, lbp, ubp, &
-!KO             num_nolakec, filter_nolakec, num_lakec, filter_lakec)
-!KO
              num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
              num_hydrologyc, filter_hydrologyc)
-!KO
 !
 ! !DESCRIPTION:
 ! Initialize column-level water balance at beginning of time step
@@ -51,10 +48,7 @@ contains
 ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clmtype
-!KO    use clm_varpar   , only : nlevgrnd
-!KO
     use clm_varpar   , only : nlevgrnd, nlevsoi
-!KO
     use subgridAveMod, only : p2c
     use clm_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, &
                               icol_road_imperv
@@ -67,13 +61,11 @@ contains
     integer, intent(in) :: filter_nolakec(ubc-lbc+1)   ! column filter for non-lake points
     integer, intent(in) :: num_lakec                   ! number of column non-lake points in column filter
     integer, intent(in) :: filter_lakec(ubc-lbc+1)     ! column filter for non-lake points
-!KO
     integer , intent(in)  :: num_hydrologyc               ! number of column soil points in column filter
     integer , intent(in)  :: filter_hydrologyc(ubc-lbc+1) ! column filter for soil points
-!KO
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! Created by Peter Thornton
@@ -90,10 +82,8 @@ contains
     real(r8), pointer :: h2ocan_pft(:)         ! canopy water (mm H2O) (pft-level) 
     real(r8), pointer :: wa(:)                 ! water in the unconfined aquifer (mm)
     integer , pointer :: ctype(:)              ! column type 
-!KO
     real(r8), pointer :: zwt(:)                ! water table depth (m)
     real(r8), pointer :: zi(:,:)               ! interface level below a "z" level (m)
-!KO
 !
 ! local pointers to original implicit out variables
 !
@@ -114,10 +104,8 @@ contains
     h2ocan_col         => clm3%g%l%c%cws%pws_a%h2ocan
     wa                 => clm3%g%l%c%cws%wa
     ctype              => clm3%g%l%c%itype
-!KO
     zwt                => clm3%g%l%c%cws%zwt
     zi                 => clm3%g%l%c%cps%zi
-!KO
 
     ! Assign local pointers to derived type members (pft-level)
 
@@ -127,19 +115,13 @@ contains
     ! pft-level canopy water averaged to column
     call p2c(num_nolakec, filter_nolakec, h2ocan_pft, h2ocan_col)
 
-!KO
-!dir$ concurrent
-!cdir nodep
     do f = 1, num_hydrologyc
        c = filter_hydrologyc(f)
        if(zwt(c) <= zi(c,nlevsoi)) then
           wa(c) = 5000._r8
        end if
     end do
-!KO
 
-!dir$ concurrent
-!cdir nodep
     do f = 1, num_nolakec
        c = filter_nolakec(f)
        if (ctype(c) == icol_roof .or. ctype(c) == icol_sunwall &
@@ -150,16 +132,12 @@ contains
        end if
     end do
     do j = 1, nlevgrnd
-!dir$ concurrent
-!cdir nodep
       do f = 1, num_nolakec
          c = filter_nolakec(f)
          begwb(c) = begwb(c) + h2osoi_ice(c,j) + h2osoi_liq(c,j)
       end do
     end do
 
-!dir$ concurrent
-!cdir nodep
     do f = 1, num_lakec
        c = filter_lakec(f)
        begwb(c) = h2osno(c)
@@ -206,7 +184,7 @@ contains
     integer :: lbg, ubg ! grid-index bounds
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver
 !
 ! !REVISION HISTORY:
 ! 15 September 1999: Yongjiu Dai; Initial code
@@ -350,8 +328,6 @@ contains
     ! Determine column level incoming snow and rain
     ! Assume no incident precipitation on urban wall columns (as in Hydrology1Mod.F90).
 
-!dir$ concurrent
-!cdir nodep
     do c = lbc,ubc
        g = cgridcell(c)
        if (ctype(c) == icol_sunwall .or.  ctype(c) == icol_shadewall) then
@@ -365,8 +341,6 @@ contains
 
     ! Water balance check
 
-!dir$ concurrent
-!cdir nodep
     do c = lbc, ubc
        g = cgridcell(c)
       
@@ -422,8 +396,6 @@ contains
 
     ! Energy balance checks
 
-!dir$ concurrent
-!cdir nodep
     do p = lbp, ubp
        if (pwtgcell(p)>0._r8) then
           g = pgridcell(p)

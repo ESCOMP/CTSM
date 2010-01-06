@@ -230,7 +230,7 @@ sub GetListofNeededFiles {
         #
         # Now also do the datm namelist (only for mask and resolution)
         #
-        my $nml = "datm_dshr_in";
+        my $nml = "shr_strdata_nml";
         print "nml = $nml\n" if $printing;
         $inputopts{'namelist'} = $nml;
         &GetListofNeededFiles( \%inputopts, \%settings, \%files );

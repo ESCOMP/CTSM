@@ -56,7 +56,7 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 ! 12/9/03: Created by Peter Thornton
@@ -534,8 +534,6 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     tempsum_npp                    => clm3%g%l%c%p%pepv%tempsum_npp
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 
@@ -829,8 +827,6 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    call p2c(num_soilc, filter_soilc, hrv_xsmrpool_to_atm, col_hrv_xsmrpool_to_atm)
 
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 
@@ -986,7 +982,7 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine CNEcosystemDyn
 !
 ! !REVISION HISTORY:
 ! 6/28/04: Created by Peter Thornton
@@ -1193,8 +1189,6 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     totprodn                       => clm3%g%l%c%cns%totprodn
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 
@@ -1273,8 +1267,6 @@ subroutine NSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    call p2c(num_soilc, filter_soilc, totpftn, col_totpftn)
 
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 

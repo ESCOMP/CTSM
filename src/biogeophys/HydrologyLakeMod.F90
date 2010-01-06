@@ -53,7 +53,7 @@ contains
     integer, intent(in) :: filter_lakep(ubp-lbp+1) ! pft filter for non-lake points
 !
 ! !CALLED FROM:
-! subroutine driver
+! subroutine clm_driver1
 !
 ! !REVISION HISTORY:
 ! Author: Gordon Bonan
@@ -166,9 +166,6 @@ contains
 
     dtime = get_step_size()
 
-!dir$ prefervector
-!dir$ concurrent
-!cdir nodep
     do fp = 1, num_lakep
        p = filter_lakep(fp)
        c = pcolumn(p)

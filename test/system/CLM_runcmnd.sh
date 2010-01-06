@@ -217,8 +217,8 @@ case $hostname in
         fi
     fi ;;
 
-    ##aluminum
-    aluminum* )
+    ##yong
+    yong* )
     cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpirun -np ${CLM_TASKS} "
     ;;
 

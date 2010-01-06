@@ -149,6 +149,25 @@
       <xsl:apply-templates select="entry[@category='datm_internal']"/>
     </table>
 
+    <h3>CASA Namelist items in clm_inparm namelist (EXPERIMENTAL NOT SUPPORTED!)</h3>
+    <table BORDER="1" CELLPADDING="10">
+      <th>Name</th>
+      <th>Type</th>
+      <th>Valid values</th>
+      <th>Description</th>
+      <xsl:apply-templates select="entry[@category='casa']"/>
+    </table>
+
+<!--
+    <h3>PIO Namelist items in clm_inparm namelist (EXPERIMENTAL NOT WORKING!)</h3>
+    <table BORDER="1" CELLPADDING="10">
+      <th>Name</th>
+      <th>Type</th>
+      <th>Valid values</th>
+      <th>Description</th>
+      <xsl:apply-templates select="entry[@category='pio']"/>
+    </table>
+-->
 
   </body>
 </xsl:template>

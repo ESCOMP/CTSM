@@ -49,8 +49,8 @@ fi
 # Initialize the following so won't do anything by default
 #
 restart_file=" "
-restbfile=" "
-restsfile=" "
+restfilm=" "
+restfils=" "
 logfile=" "
 atm_cpl_dt=" "
 #
@@ -59,8 +59,12 @@ atm_cpl_dt=" "
 if [ "$6" = "branch" ]; then
   if [ -f "$drv_restart" ]; then
      restart_file="restart_file='$drv_restart'"
-     restbfile="restbfile='$restBfile'"
-     restsfile="restsfile='$restSfile'"
+  fi 
+  if [ -f "$datm_restfilm" ]; then
+     restfilm="restfilm='$datm_restfilm'"
+  fi 
+  if [ -f "$datm_restfils" ]; then
+     restfils="restfils='$datm_restfils'"
   fi 
 fi
 
@@ -87,24 +91,24 @@ fi
 clmopt=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile`
 clmnl=${CLM_SCRIPTDIR}/nl_files/$nlfile
 
-source=`grep source ${CLM_SCRIPTDIR}/nl_files/$optfile | awk '{print $NF}'`
-if [ "$source" = "CLM_QIAN" ]; then
+datm_source=`grep datm_source ${CLM_SCRIPTDIR}/nl_files/$optfile | awk '{print $NF}'`
+if [ "$datm_source" = "CLM_QIAN" ]; then
    clmopt="$clmopt -datm_data_dir $DATM_QIAN_DATA_DIR"
 fi
 
 echo "env OMP_NUM_THREADS=$CLM_THREADS $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \ "
 echo "                 -infile $clmnl -res $res -lnd_res $land_res -start_type $6 \ "
-echo "                 -csmdata $CSMDATA -runlength $runlen $clmopt -test \ "
+echo "                 -csmdata $CSMDATA -drv_runlength $runlen $clmopt -test \ "
 echo "                 -namelist \"&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / "
 echo "                             &seq_infodata_inparm $restart_file $logfile / "
-echo "                             &shr_nml $restbfile $restsfile / "
+echo "                             &datm_nml $restfilm $restfils / "
 echo "                             &clm_inparm dtime=$dtime hist_crtinic='$inithist' "
 echo "                             $hist_samp nrevsn='$nrevsn' $hist_freq /\""
 
 env OMP_NUM_THREADS=$CLM_THREADS $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \
                        -infile $clmnl -res $res -lnd_res $land_res -start_type $6 \
-                       -csmdata $CSMDATA -runlength $runlen $clmopt -test \
+                       -csmdata $CSMDATA -drv_runlength $runlen $clmopt -test \
                        -namelist "&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / \
                                   &seq_infodata_inparm $restart_file $logfile / \
-                                  &shr_nml $restbfile $restsfile / \
+                                  &datm_nml $restfilm $restfils / \
                                   &clm_inparm dtime=$dtime hist_crtinic='$inithist' $hist_samp nrevsn='$nrevsn' $hist_freq /"
