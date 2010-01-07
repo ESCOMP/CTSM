@@ -272,7 +272,7 @@ export intel=/fs/local
 export PATH=\${intel}/bin:\${PATH}
 export MAKE_CMD="gmake -j5 "
 export CCSM_MACH="breeze_intel"
-export CFG_STRING="-fc ifort -cc icc "
+export CFG_STRING="-fc ifort -cc icc  -cppdefs '-DFORTRANUNDERSCORE' "
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export MACH_WORKSPACE="/ptmp"
 export CPRNC_EXE=/fs/home/erik/bin/cprnc

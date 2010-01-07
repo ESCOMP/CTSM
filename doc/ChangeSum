@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_61         erik 01/07/2010 Comment out endrun on finidat and fsurdat weights being incomptable, and go back to using finidat weights
    clm3_6_60         erik 01/05/2010 Fix clm template
    clm3_6_59         erik 01/05/2010 Update to datm8, fix so wts used are from fsurdat file NOT finidat file
    clm3_6_58         erik 12/08/2009 Fix rpointer, correct units for export of nee, start adding testing for intrepid

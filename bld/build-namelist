@@ -1143,7 +1143,6 @@ if ($mode eq "ccsm_seq") {
 if ($mode eq "ccsm_seq") {
     add_default($nl, 'diri'    );
     add_default($nl, 'diro'    );
-    add_default($nl, 'logfile' );
 }
 
 #-----------------------------------------------------------------------------------------------
@@ -1188,12 +1187,14 @@ if ($mode eq "ccsm_seq") {
     # atm_modelio
     @groups = qw(modelio);
     $outfile = "$opts{'dir'}/atm_modelio.nml";
+    $nl->set_variable_value( "modelio", "logfile", "'atm.log'" );
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing atm_modelio.nml namelist to $outfile $eol"; }
 
     # lnd_modelio
     @groups = qw(modelio);
     $outfile = "$opts{'dir'}/lnd_modelio.nml";
+    $nl->set_variable_value( "modelio", "logfile", "'lnd.log'" );
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing lnd_modelio.nml namelist to $outfile $eol"; }
 }

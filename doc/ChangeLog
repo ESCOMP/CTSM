@@ -1,4 +1,118 @@
 ===============================================================
+Tag name:  clm3_6_61
+Originator(s):  erik (erik)
+Date: Thu Jan  7 00:55:20 MST 2010
+One-line Summary: Comment out endrun on finidat and fsurdat weights being incomptable, and go back to using finidat weights
+
+Purpose of changes:
+
+Most of our finidat files have weights incompatible with our new fsurdat files. Hence, we went back to allowing
+the weights to be different and to using the finidat weights so that answers would be the same as before.
+Also hardwire the logfile for datm and clm so that can run testsuite on jaguar. Also add in cppdef required
+for breeze.
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts
+   scripts to scripts4_100107
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+ M   models/lnd/clm/test/system/test_driver.sh -------------------- Add -cppdefs '-DFORTRANUNDERSCORE' for breeze.
+ M   models/lnd/clm/bld/build-namelist ---------------------------- For standalone testing hardwire clm and 
+                                                                    datm output log files
+ M   models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml - Add comment remove logfile
+ M   models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 ---------- Put implicit none in right place, comment
+        out abort if weights too different, and use finidat weights instead of fsurdat weights. Hence
+        this version is identical to clm3_6_58, other than the use of datm8 (which is roundoff different).
+
+Summary of testing:
+
+  bluefire:
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+051 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 4
+052 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 4
+053 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 4
+054 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 4
+  bluefire/CCSM testing:
+PEND  SMS_RLA.f45_f45.I.bluefire.200614 
+PEND  SMS_RLB.f45_f45.I.bluefire.200614 
+PASS  SMS_ROA.f45_f45.I.bluefire 
+PASS  ERS_D.f45_g37.I.bluefire 
+PASS  PET.f45_g37.I1850.bluefire.cpl 
+PASS  PET.f45_g37.I1850.bluefire.atm 
+PASS  PET.f45_g37.I1850.bluefire.lnd 
+PASS  PET.f45_g37.I1850.bluefire.ice 
+PASS  PET.f45_g37.I1850.bluefire.ocn 
+PASS  PET.f45_g37.I1850.bluefire.glc 
+PASS  ERS.f19_g16.I1850.bluefire 
+PASS  ERB.f09_g16.I_1948-2004.bluefire 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+PASS  ERH_D.f10_f10.I1850CN.bluefire 
+PASS  PET.f10_f10.I8520CN.bluefire.cpl 
+PASS  PET.f10_f10.I8520CN.bluefire.atm 
+PASS  PET.f10_f10.I8520CN.bluefire.lnd 
+PASS  PET.f10_f10.I8520CN.bluefire.ice 
+PASS  PET.f10_f10.I8520CN.bluefire.ocn 
+PASS  PET.f10_f10.I8520CN.bluefire.glc 
+  jaguar interactive testing:
+004 blA74 TBL.sh _nrsc_ds clm_std^nl_urb 20030101:NONE:1800 1x1_brazil navy -10 arb_ic ..........FAIL! rc= 5
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+008 blAK4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10 cold ............FAIL! rc= 5
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+012 blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+013 smJ74 TSM.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -1100 arb_ic FAIL! rc= 8
+014 erJ74 TER.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -10+-10 arb_ic FAIL! rc= 5
+015 brJ74 TBR.sh 4p_nrcasasc_ds clm_std^nl_urb_br 10001230:NONE:3600 1x1_tropicAtl test -3+-3 arb_icFAIL! rc= 5
+016 blJ74 TBL.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic FAIL! rc= 4
+  dublin/lf95: All Fail due to bug 1092
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_58 (but with datm8 rather than datm7)
+
+Changes answers relative to baseline: No bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_60
 Originator(s):  erik (erik)
 Date:  Tue Jan  5 23:59:43 MST 2010

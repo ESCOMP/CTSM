@@ -121,8 +121,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <io_root    >0</io_root>
 <num_agg    >0</num_agg>
 
+<!-- =========================================  -->
+<!-- Defaults for modelio namelist              -->
+<!-- =========================================  -->
+
 <diri>.</diri>
 <diro>.</diro>
-<logfile>clm.log</logfile>
 
 </namelist_defaults>

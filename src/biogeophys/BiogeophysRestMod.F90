@@ -187,15 +187,19 @@ contains
 
              if (      weights_within_roundoff_different( pptr, wtgcell, wtlunit, wtcol ) )then
                 write(iulog,*) sub// &
-                '::NOTE, weights from finidat file and fsurdat file different to roundoff -- using fsurdat values.'
+                '::NOTE, weights from finidat file and fsurdat file different to roundoff -- using finidat values.'
              else if ( weights_tooDifferent( begp, endp, pptr, wtgcell ) )then
-                write(iulog,*) "Weights are different from the input files, ", &
-                               "if you really do want to continue, uncomment out this endrun call in __FILE__"
-                call endrun( sub//'::ERROR, weights on fsurdat and finidat files are too different!' )
+                write(iulog,*) "Weights are significantly different from the input finidat and fsurdat files, ", __FILE__
+                !               "if you really do want to continue, uncomment out this endrun call in ", &
+                !               __FILE__
+                !call endrun( sub//'::ERROR, weights on fsurdat and finidat files are too different!' )
              else
                 write(iulog,*) sub// &
-                '::WARNING, weights different between finidat file and fsurdat file, but close enough -- using fsurdat values'
+                '::WARNING, weights different between finidat file and fsurdat file, but close enough -- using finidat values'
              end if
+             pptr%wtgcell = wtgcell
+             pptr%wtlunit = wtlunit
+             pptr%wtcol   = wtcol
 
           end if
 
@@ -1901,12 +1905,12 @@ contains
 ! !USES:
     use clmtype     , only : pft_type
     use clm_varpar  , only : numpft
+    implicit none
 !
 ! !ARGUMENTS:
     integer, intent(IN)     :: begp, endp         ! per-proc beginning and ending pft indices
     type(pft_type), pointer :: pptr               ! pointer to pft derived subtype
     real(r8), intent(IN)    :: wtgcell(begp:endp) ! grid cell weights for each PFT
-    implicit none
 !
 ! !REVISION HISTORY:
 ! Created by Erik Kluzek
