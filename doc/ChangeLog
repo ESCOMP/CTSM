@@ -1,4 +1,130 @@
 ===============================================================
+Tag name:  clm3_6_62
+Originator(s):  erik (erik)
+Date: Fri Jan  8 04:50:59 MST 2010
+One-line Summary: Fix startup of PFT transient cases so properly use data from pftdyn file rather than finidat file
+
+Purpose of changes:
+
+Fix bug 1098 so that properly use the PFT weights interpolated from the fpftdyn file rather than using the
+weights from the input finidat file.
+
+Bugs fixed (include bugzilla ID):
+                                 1098 (Use finidat weights instead of weights from fpftdyn file)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts and mct
+
+   scripts to scripts4_100107b
+   mct     to MCT2_7_0_100106
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+   M models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 --- Fix bug with fpftdyn weights
+   M models/lnd/clm/test/system/test_driver.sh ------------- Fix name of ifort Macros file
+
+Summary of testing:
+
+  bluefire: All PASS except, up to 045 erLD1
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+  bluefire interactive testing: All PASS up to..
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+  bluefire/CCSM testing: All PASS except CN spinup as below
+PASS  ERS.f09_g16.I8520CN.bluefire 
+PASS  ERS.f09_g16.I8520CN.bluefire.compare_hist.clm3_6_58+datm8 
+PASS  ERS.f09_g16.I8520CN.bluefire.compare.clm3_6_58+datm8 
+PASS  SMS_RLA.f45_g37.I.bluefire 
+PASS  SMS_RLA.f45_g37.I.bluefire.compare_hist.clm3_6_58+datm8 
+PASS  SMS_RLA.f45_g37.I.bluefire.compare.clm3_6_58+datm8 
+PASS  SMS_RLB.f45_g37.I.bluefire 
+PASS  SMS_RLB.f45_g37.I.bluefire.compare_hist.clm3_6_58+datm8 
+PASS  SMS_RLB.f45_g37.I.bluefire.compare.clm3_6_58+datm8 
+PASS  SMS_ROA.f45_g37.I.bluefire 
+PASS  SMS_ROA.f45_g37.I.bluefire.compare_hist.clm3_6_58+datm8 
+PASS  SMS_ROA.f45_g37.I.bluefire.compare.clm3_6_58+datm8 
+PASS  ERS_D.f45_g37.I.bluefire 
+PASS  ERS_D.f45_g37.I.bluefire.compare_hist.clm3_6_58+datm8 
+PASS  ERS_D.f45_g37.I.bluefire.compare.clm3_6_58+datm8 
+PASS  PET.f45_g37.I1850.bluefire.cpl 
+PASS  PET.f45_g37.I1850.bluefire.atm 
+PASS  PET.f45_g37.I1850.bluefire.lnd 
+PASS  PET.f45_g37.I1850.bluefire.ice 
+PASS  PET.f45_g37.I1850.bluefire.ocn 
+PASS  PET.f45_g37.I1850.bluefire.glc 
+PASS  PET.f45_g37.I1850.bluefire.compare.clm3_6_58+datm8 
+PASS  ERS.f19_g16.I1850.bluefire 
+PASS  ERS.f19_g16.I1850.bluefire.compare_hist.clm3_6_58+datm8 
+PASS  ERS.f19_g16.I1850.bluefire.compare.clm3_6_58+datm8 
+PASS  ERB.f09_g16.I_1948-2004.bluefire 
+PASS  ERB.f09_g16.I_1948-2004.bluefire.compare.clm3_6_58+datm8 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm3_6_58+datm8 
+PASS  ERH_D.f09_g16.I1850CN.bluefire 
+PASS  ERH_D.f09_g16.I1850CN.bluefire.compare.clm3_6_58+datm8 
+PASS  PET.f19_g16.I8520CN.bluefire.cpl 
+PASS  PET.f19_g16.I8520CN.bluefire.atm 
+  jaguar: All PASS up to 021 smJ05 
+  jaguar interactive testing: All FAIL except...
+001 smA74 TSM.sh _nrsc_ds clm_std^nl_urb 20030101:NONE:1800 1x1_brazil navy -10 arb_ic ..........PASS
+002 erA74 TER.sh _nrsc_ds clm_std^nl_urb 20030101:NONE:1800 1x1_brazil navy -5+-5 arb_ic ........PASS
+003 brA74 TBR.sh _nrsc_ds clm_std^nl_urb_br 20030101:NONE:1800 1x1_brazil navy -5+-5 arb_ic .....PASS
+004 blA74 TBL.sh _nrsc_ds clm_std^nl_urb 20030101:NONE:1800 1x1_brazil navy -10 arb_ic ..........PASS
+005 smAK4 TSM.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10 cold ............PASS
+008 blAK4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10 cold ............PASS
+  dublin/lf95: None pass because of bug 1092
+  dublin/pgi:  All PASS except...
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+030 sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48 .......................FAIL! rc= 4
+  dublin/ifort interactive: All PASS up to...
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_58+datm8 (ccsm4_0_beta38)
+
+Changes answers relative to baseline: Identical with and without pftdyn files and
+                                      with and without finidat files
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_61
 Originator(s):  erik (erik)
 Date: Thu Jan  7 00:55:20 MST 2010
@@ -30,6 +156,7 @@ Known bugs (include bugzilla ID):
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
+                                 1098 (Use finidat weights instead of weights from fpftdyn file)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None

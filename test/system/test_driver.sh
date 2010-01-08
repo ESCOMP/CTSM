@@ -440,7 +440,7 @@ elif [ "\$CLM_FC" = "INTEL" ]; then
     mpich=/usr/local/mpich-1.2.7p1-intel-3.2.02
     export LD_LIBRARY_PATH=/cluster/torque/lib:\${INTEL}/cc/11.0.074/lib/intel64:\${INTEL}/fc/11.0.074/lib/intel64:\${LD_LIBRARY_PATH}
     export PATH=\${INTEL}/fc/11.0.074/bin/intel64:\${INTEL}/cc/11.0.074/bin/intel64:\${mpich}/bin:\${PATH}
-    export CCSM_MACH="dublin_ifort"
+    export CCSM_MACH="dublin_intel"
     export CFG_STRING="-fc ifort "
     export TOOLS_MAKE_STRING="USER_FC=ifort "
     /usr/local/intel-cluster-3.2.02/intel-login-script.sh

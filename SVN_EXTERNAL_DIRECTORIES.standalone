@@ -1,4 +1,4 @@
-scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_100107
+scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_100107b
 models/drv                    https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/branch_tags/vocemis-drydep_drvseq2_0_33_tags/vocemis-drydep12_drvseq3_1_11
 models/atm/datm               https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_091218
 models/ocn/socn               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_2_02/socn
@@ -7,6 +7,6 @@ models/glc/sglc               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_t
 models/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/branch_tags/vocemis-drydep_share3_081009_tags/vocemis-drydep13_share3_091217/
 models/utils/esmf_wrf_timemgr https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_090402
 models/utils/timing           https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_090929
-models/utils/mct              https://svn-ccsm-models.cgd.ucar.edu/mct/trunk_tags/MCT2_6_0_090926/
+models/utils/mct              https://svn-ccsm-models.cgd.ucar.edu/mct/trunk_tags/MCT2_7_0_100106/
 models/utils/pio              https://svn-ccsm-models.cgd.ucar.edu/pio/trunk_tags/pio60_prod/pio
 models/lnd/clm/tools/cprnc    https://svn-ccsm-models.cgd.ucar.edu/tools/cprnc/trunk_tags/cprnc_081022

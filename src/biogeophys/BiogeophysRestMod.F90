@@ -54,7 +54,7 @@ contains
     use decompMod       , only : get_proc_bounds
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb
     use clm_varcon      , only : denice, denh2o, istdlak, istslak, isturb, istsoil, pondmx, watmin
-    use clm_varctl      , only : allocate_all_vegpfts, nsrest
+    use clm_varctl      , only : allocate_all_vegpfts, nsrest, fpftdyn
     use initSurfAlbMod  , only : do_initsurfalb
     use clm_time_manager, only : is_first_step
     use SNICARMod       , only : snw_rds_min
@@ -83,6 +83,7 @@ contains
     real(r8) :: maxwatsat                 !maximum porosity    
     real(r8) :: excess                    !excess volumetric soil water
     real(r8) :: totwat                    !total soil water (mm)
+    real(r8) :: maxdiff                   !maximum difference in PFT weights
     real(r8), pointer :: wtgcell(:)       ! Grid cell weights for PFT
     real(r8), pointer :: wtlunit(:)       ! Land-unit weights for PFT
     real(r8), pointer :: wtcol(:)         ! Column weights for PFT
@@ -100,6 +101,8 @@ contains
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
     type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
     type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
+    character(len=7), parameter :: filetypes(0:3) = (/ "finidat", "restart", "missing", "nrevsn " /)
+    character(len=7) :: fileusing
     character(len=*), parameter :: sub="BiogeophysRest"
 !-----------------------------------------------------------------------
 
@@ -183,23 +186,33 @@ contains
 
        if (flag == 'read' )then
 
+          if ( nsrest == 0 .and. fpftdyn /= ' ' )then
+             fileusing = "fsurdat"
+          else
+             fileusing = filetypes(nsrest)
+          end if
           if ( .not.   weights_exactly_the_same( pptr, wtgcell, wtlunit, wtcol ) )then
 
              if (      weights_within_roundoff_different( pptr, wtgcell, wtlunit, wtcol ) )then
-                write(iulog,*) sub// &
-                '::NOTE, weights from finidat file and fsurdat file different to roundoff -- using finidat values.'
-             else if ( weights_tooDifferent( begp, endp, pptr, wtgcell ) )then
-                write(iulog,*) "Weights are significantly different from the input finidat and fsurdat files, ", __FILE__
-                !               "if you really do want to continue, uncomment out this endrun call in ", &
-                !               __FILE__
-                !call endrun( sub//'::ERROR, weights on fsurdat and finidat files are too different!' )
+                write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
+                               " file and fsurdat/fpftdyn files are different to roundoff -- using ", &
+                               fileusing, " values."
+             else if ( weights_tooDifferent( begp, endp, pptr, wtgcell, maxdiff ) )then
+                write(iulog,*) "WARNING:: PFT weights are SIGNIFICANTLY different from the input ", &
+                               filetypes(nsrest), " file and fsurdat/fpftdyn file."
+                write(iulog,*) "WARNING:: Now using the weights from the ", fileusing, " file."
+                write(iulog,*) "WARNING:: maximum difference is ", maxdiff
+                write(iulog,*) "WARNING:: Are you certain this is correct! ", &
+                               "Code is continuing, but may not be doing what you really want"
              else
-                write(iulog,*) sub// &
-                '::WARNING, weights different between finidat file and fsurdat file, but close enough -- using finidat values'
+                write(iulog,*) sub//"::WARNING, weights different between ", filetypes(nsrest), &
+                               " file and fsurdat/fpftdyn file, but close enough -- using ", fileusing, " values."
              end if
-             pptr%wtgcell = wtgcell
-             pptr%wtlunit = wtlunit
-             pptr%wtcol   = wtcol
+             if ( trim(fileusing) /= "fsurdat" )then
+                pptr%wtgcell = wtgcell
+                pptr%wtlunit = wtlunit
+                pptr%wtcol   = wtcol
+             end if
 
           end if
 
@@ -1897,7 +1910,7 @@ contains
 ! !IROUTINE: weights_tooDifferent
 !
 ! !INTERFACE:
-  logical function weights_tooDifferent( begp, endp, pptr, wtgcell )
+  logical function weights_tooDifferent( begp, endp, pptr, wtgcell, maxdiff )
 !
 ! !DESCRIPTION:
 ! Determine if the weights read in are too different and should flag an error
@@ -1911,6 +1924,7 @@ contains
     integer, intent(IN)     :: begp, endp         ! per-proc beginning and ending pft indices
     type(pft_type), pointer :: pptr               ! pointer to pft derived subtype
     real(r8), intent(IN)    :: wtgcell(begp:endp) ! grid cell weights for each PFT
+    real(r8), intent(OUT)   :: maxdiff            ! maximum difference found
 !
 ! !REVISION HISTORY:
 ! Created by Erik Kluzek
@@ -1918,17 +1932,18 @@ contains
 !EOP
 !-----------------------------------------------------------------------
      integer  :: p        ! PFT index
+     real(r8) :: diff     ! difference in weights
      real(r8) :: adiff    ! tolerance of acceptible difference
 
      ! Assume weights are NOT different and only change if find weights too different
      weights_tooDifferent = .false.
+     maxdiff = 0.0_r8
      adiff                = 1.e-02_r8 / real(numpft+1)
      do p = begp, endp
 
-        if ( abs(pptr%wtgcell(p) - wtgcell(p)) > adiff )then
-           weights_tooDifferent = .true.
-           cycle
-        end if
+        diff = abs(pptr%wtgcell(p) - wtgcell(p))
+        if ( diff > maxdiff ) maxdiff = diff
+        if ( diff > adiff   ) weights_tooDifferent = .true.
      end do
 
   end function weights_tooDifferent

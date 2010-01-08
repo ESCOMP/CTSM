@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_6_62         erik 01/08/2010 Fix startup of PFT transient cases so properly use data from pftdyn file rather than finidat file
    clm3_6_61         erik 01/07/2010 Comment out endrun on finidat and fsurdat weights being incomptable, and go back to using finidat weights
    clm3_6_60         erik 01/05/2010 Fix clm template
    clm3_6_59         erik 01/05/2010 Update to datm8, fix so wts used are from fsurdat file NOT finidat file
