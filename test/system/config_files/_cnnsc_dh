@@ -1,0 +1,6 @@
+-mode ccsm_seq
+-spmd -smp
+-debug
+-bgc cn
+-supln on 
+-s

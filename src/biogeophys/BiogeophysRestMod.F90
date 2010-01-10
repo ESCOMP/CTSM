@@ -102,7 +102,7 @@ contains
     type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
     type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
     character(len=7), parameter :: filetypes(0:3) = (/ "finidat", "restart", "missing", "nrevsn " /)
-    character(len=7) :: fileusing
+    character(len=32) :: fileusing
     character(len=*), parameter :: sub="BiogeophysRest"
 !-----------------------------------------------------------------------
 
@@ -131,12 +131,13 @@ contains
                dim1name='pft', &
                long_name='pft weight relative to corresponding gridcell', units='')
        else if (flag == 'read' .or. flag == 'write') then
-          if (flag == 'write' )then
-             wtgcell => pptr%wtgcell
-          else
+          ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
+          ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
+          if (flag == 'read' )then
              allocate( wtgcell(begp:endp) )
+             wtgcell(:) = pptr%wtgcell(:)
           end if
-          call ncd_iolocal(varname='PFT_WTGCELL', data=wtgcell, &
+          call ncd_iolocal(varname='PFT_WTGCELL', data=pptr%wtgcell, &
                dim1name=namep, &
                ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
@@ -151,12 +152,13 @@ contains
                dim1name='pft', &
                long_name='pft weight relative to corresponding landunit', units='')
        else if (flag == 'read' .or. flag == 'write') then
-          if (flag == 'write' )then
-             wtlunit => pptr%wtlunit
-          else
+          ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
+          ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
+          if (flag == 'read' )then
              allocate( wtlunit(begp:endp) )
+             wtlunit(:) = pptr%wtlunit(:)
           end if
-          call ncd_iolocal(varname='PFT_WTLUNIT', data=wtlunit, &
+          call ncd_iolocal(varname='PFT_WTLUNIT', data=pptr%wtlunit, &
                dim1name=namep, &
                ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
@@ -171,12 +173,13 @@ contains
                dim1name='pft', &
                long_name='pft weight relative to corresponding column', units='')
        else if (flag == 'read' .or. flag == 'write') then
-          if (flag == 'write' )then
-             wtcol => pptr%wtcol
-          else
+          ! Copy weights calculated from fsurdat/fpftdyn to temp array for comparision
+          ! Don't read directly into temp array -- so that answers are identical with clm3.6.58. EBK 1/9/2010
+          if (flag == 'read' )then
              allocate( wtcol(begp:endp)   )
+             wtcol(:) = pptr%wtcol(:)
           end if
-          call ncd_iolocal(varname='PFT_WTCOL', data=wtcol, &
+          call ncd_iolocal(varname='PFT_WTCOL', data=pptr%wtcol, &
                dim1name=namep, &
                ncid=ncid, flag=flag, readvar=readvar)
           if (flag=='read' .and. .not. readvar) then
@@ -187,35 +190,30 @@ contains
        if (flag == 'read' )then
 
           if ( nsrest == 0 .and. fpftdyn /= ' ' )then
-             fileusing = "fsurdat"
+             fileusing = "fsurdat/fpftdyn"
           else
              fileusing = filetypes(nsrest)
           end if
           if ( .not.   weights_exactly_the_same( pptr, wtgcell, wtlunit, wtcol ) )then
-
-             if (      weights_within_roundoff_different( pptr, wtgcell, wtlunit, wtcol ) )then
-                write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
-                               " file and fsurdat/fpftdyn files are different to roundoff -- using ", &
-                               fileusing, " values."
-             else if ( weights_tooDifferent( begp, endp, pptr, wtgcell, maxdiff ) )then
-                write(iulog,*) "WARNING:: PFT weights are SIGNIFICANTLY different from the input ", &
-                               filetypes(nsrest), " file and fsurdat/fpftdyn file."
-                write(iulog,*) "WARNING:: Now using the weights from the ", fileusing, " file."
-                write(iulog,*) "WARNING:: maximum difference is ", maxdiff
-                write(iulog,*) "WARNING:: Are you certain this is correct! ", &
-                               "Code is continuing, but may not be doing what you really want"
-             else
-                write(iulog,*) sub//"::WARNING, weights different between ", filetypes(nsrest), &
-                               " file and fsurdat/fpftdyn file, but close enough -- using ", fileusing, " values."
-             end if
-             if ( trim(fileusing) /= "fsurdat" )then
-                pptr%wtgcell = wtgcell
-                pptr%wtlunit = wtlunit
-                pptr%wtcol   = wtcol
-             end if
-
+  
+              if (      weights_within_roundoff_different( pptr, wtgcell, wtlunit, wtcol ) )then
+                 write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
+                                " file and fsurdat/fpftdyn files are different to roundoff -- using ", &
+                                trim(fileusing), " values."
+              else if ( weights_tooDifferent( begp, endp, pptr, wtgcell, maxdiff ) )then
+                 write(iulog,*) "WARNING:: PFT weights are SIGNIFICANTLY different from the input ", &
+                                filetypes(nsrest), " file and fsurdat/fpftdyn file."
+                 write(iulog,*) "WARNING:: Now using the weights from the ", trim(fileusing), " file."
+                 write(iulog,*) "WARNING:: maximum difference is ", maxdiff
+                 write(iulog,*) "WARNING:: Are you certain this is correct! ", &
+                                "Code is continuing, but may not be doing what you really want"
+              else
+                 write(iulog,*) sub//"::WARNING, weights different between ", filetypes(nsrest), &
+                                " file and fsurdat/fpftdyn file, but close enough -- using ",    &
+                                trim(fileusing), " values."
+              end if
           end if
-
+ 
           deallocate( wtgcell )
           deallocate( wtlunit )
           deallocate( wtcol   )

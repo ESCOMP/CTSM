@@ -1,4 +1,137 @@
 ===============================================================
+Tag name:  clm3_6_63
+Originator(s):  erik (erik)
+Date: Sat Jan  9 20:37:53 MST 2010
+One-line Summary: Get answers to be identical with ccsm4_0_beta38 for 1 and 2 degree transient cases
+
+Purpose of changes:
+
+Get answers to be identical to ccsm4_0_beta38 for both 1 and 2 degree transient cases. Update scripts to
+very latest. Tweak test_suite for CN so that can run with finidat file, and can run interactive on dublin
+by turning CCSM_BLD to off.
+
+Bugs fixed (include bugzilla ID):
+                                 1098 (Use finidat weights instead of weights from fpftdyn file)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+>>>>>> Add configuration files for CN with default of numpft+1 maxpft
+A    models/lnd/clm/test/system/config_files/_cnnsc_h
+A    models/lnd/clm/test/system/config_files/_cnnsc_m
+A    models/lnd/clm/test/system/config_files/_cnnsc_o
+A    models/lnd/clm/test/system/config_files/_cnnsc_dh
+A    models/lnd/clm/test/system/config_files/_cnnsc_dm
+A    models/lnd/clm/test/system/config_files/_cnnsc_do
+A    models/lnd/clm/test/system/config_files/_cnnsc_ds
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>>> Tweak test suite so can test for a CN transient case with a startup file, needed to find bug
+M    models/lnd/clm/test/system/test_driver.sh ------------ Turn CCSM_BLD to off for interactive use
+M    models/lnd/clm/test/system/input_tests_master -------- Tweak CN tests so can use finidat file
+>>>>>>>>>>>>>>> Get answers to be identical with ccsm4_0_beta38
+M    models/lnd/clm/src/main/clm_initializeMod.F90 -------- add extra call to pftdyn_interp after restart
+M    models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 -- Read weights directly into clm_type rather than
+                                                            a temporary array.
+
+Summary of testing:
+
+  bluefire: All PASS up to...
+017 blF92 TBL.sh 17p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 cold .............PASS
+  bluefire interactive testing: All PASS up to..
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+  bluefire/CCSM testing:
+PASS  ERH.f09_g16.B20TRCN.bluefire 
+BFAIL ERH.f09_g16.B20TRCN.bluefire.compare.ccsm4_0_beta38 --- compset names changed -- but cpl.log files compare exactly!
+> ../Tools/check_exactrestart.pl cpl.log.100109-171753 $FISHOME/ccsm4_0_beta38/scripts/ERH.f09_g16.B20TRTR1CN.bluefire.G.172652/logs/cpl.log.100108-181015 
+log files match!
+PASS 
+PASS  SMS_RLA.f45_f45.I.bluefire 
+BFAIL SMS_RLA.f45_f45.I.bluefire.compare.clm3_6_58+datm8  <<< f45_f45 NOT allowed in baseline
+PASS  SMS_RLB.f45_f45.I.bluefire 
+BFAIL SMS_RLB.f45_f45.I.bluefire.compare.clm3_6_58+datm8  <<< f45_f45 NOT allowed in baseline
+PASS  SMS_ROA.f45_f45.I.bluefire 
+BFAIL SMS_ROA.f45_f45.I.bluefire.compare.clm3_6_58+datm8  <<< f45_f45 NOT allowed in baseline
+PASS  ERS_D.f45_g37.I.bluefire 
+PASS  ERS_D.f45_g37.I.bluefire.compare_hist.clm3_6_58+datm8 
+PASS  ERS_D.f45_g37.I.bluefire.compare.clm3_6_58+datm8 
+PASS  PET.f45_g37.I1850.bluefire.cpl 
+PASS  PET.f45_g37.I1850.bluefire.atm 
+PASS  PET.f45_g37.I1850.bluefire.lnd 
+PASS  PET.f45_g37.I1850.bluefire.ice 
+PASS  PET.f45_g37.I1850.bluefire.ocn 
+PASS  PET.f45_g37.I1850.bluefire.glc 
+PASS  PET.f45_g37.I1850.bluefire.compare.clm3_6_58+datm8 
+PASS  ERS.f19_g16.I1850.bluefire 
+PASS  ERS.f19_g16.I1850.bluefire.compare_hist.clm3_6_58+datm8 
+PASS  ERS.f19_g16.I1850.bluefire.compare.clm3_6_58+datm8 
+PASS  ERB.f09_g16.I_1948-2004.bluefire 
+PASS  ERB.f09_g16.I_1948-2004.bluefire.compare.clm3_6_58+datm8 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire  <<<<<<<<<<<<<<<<<<<<<<<<< Failed before bug 1063
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm3_6_58+datm8 
+PASS  ERH_D.f10_f10.I1850CN.bluefire 
+BFAIL ERH_D.f10_f10.I1850CN.bluefire.compare.clm3_6_58+datm8  <<< f10_f10 NOT allowed in baseline
+PASS  PET.f10_f10.I8520CN.bluefire.cpl 
+PASS  PET.f10_f10.I8520CN.bluefire.atm 
+PASS  PET.f10_f10.I8520CN.bluefire.lnd 
+PASS  PET.f10_f10.I8520CN.bluefire.ice 
+PASS  PET.f10_f10.I8520CN.bluefire.ocn 
+PASS  PET.f10_f10.I8520CN.bluefire.glc 
+BFAIL PET.f10_f10.I8520CN.bluefire.compare.clm3_6_58+datm8 <<< f10_f10 NOT allowed in baseline
+  jaguar interactive testing: All PASS up to...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+  dublin/lf95 interactive testing: None PASS because of bug 1092
+  dublin/lf95: None PASS because of bug 1092
+  dublin/INTEL interactive testing: ALL PASS except (and didn't compare to baseline)
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+007 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 6
+028 smM94 TSMncl_tools.sh ndepregrid ............................................................FAIL! rc= 6
+030 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  dublin/INTEL: All PASS up to  021 smJ92 TSM.sh (and didn't compare to baseline)
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_58+datm8
+
+Changes answers relative to baseline: No bit-for-bit -- really now!
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_62
 Originator(s):  erik (erik)
 Date: Fri Jan  8 04:50:59 MST 2010
@@ -6,10 +139,10 @@ One-line Summary: Fix startup of PFT transient cases so properly use data from p
 
 Purpose of changes:
 
-Fix bug 1098 so that properly use the PFT weights interpolated from the fpftdyn file rather than using the
+Attempt to fix bug 1098 so that properly use the PFT weights interpolated from the fpftdyn file rather than using the
 weights from the input finidat file.
 
-Bugs fixed (include bugzilla ID):
+Bugs fixed (include bugzilla ID): Attempt to fix -- but only a partial fix, answers were still different
                                  1098 (Use finidat weights instead of weights from fpftdyn file)
 
 Known bugs (include bugzilla ID):
@@ -120,8 +253,9 @@ PASS  PET.f19_g16.I8520CN.bluefire.atm
 
 CLM tag used for the baseline comparison tests if applicable: clm3_6_58+datm8 (ccsm4_0_beta38)
 
-Changes answers relative to baseline: Identical with and without pftdyn files and
-                                      with and without finidat files
+Changes answers relative to baseline: Identical without fpftdyn files 
+                                      with and without finidat files. But, can be
+                                      different to roundoff or more for transient cases.
 
 ===============================================================
 ===============================================================
@@ -236,7 +370,7 @@ PASS  PET.f10_f10.I8520CN.bluefire.glc
 
 CLM tag used for the baseline comparison tests if applicable: clm3_6_58 (but with datm8 rather than datm7)
 
-Changes answers relative to baseline: No bit-for-bit
+Changes answers relative to baseline: No bit-for-bit except for transient cases which are different
 
 ===============================================================
 ===============================================================

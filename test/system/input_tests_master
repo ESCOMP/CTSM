@@ -316,16 +316,20 @@ erC45 TER.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -3+-7 a
 brC45 TBR.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -5+-5 arb_ic
 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10   arb_ic
 
-smH65 TSM.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   arb_ic
-erH65 TER.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 arb_ic
-brH65 TBR.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 arb_ic
-blH65 TBL.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   arb_ic
+smH65 TSM.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
+erH65 TER.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
+brH65 TBR.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
+blH65 TBL.sh _cnnsc_dh clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 
-smH67 TSM.sh 17p_cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   arb_ic
-erH67 TER.sh 17p_cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 arb_ic
-brH67 TBR.sh 17p_cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 arb_ic
-blH67 TBL.sh 17p_cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   arb_ic
+smH66 TSM.sh _cnnsc_dm clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
+erH66 TER.sh _cnnsc_dm clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
+brH66 TBR.sh _cnnsc_dm clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
+blH66 TBL.sh _cnnsc_dm clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 
+smH67 TSM.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
+erH67 TER.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
+brH67 TBR.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
+blH67 TBL.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 
 smHM1 TSM.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 USGS@1850-2000 -10   arb_ic
 erHM1 TER.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 USGS@1850-2000 -3+-7 arb_ic

@@ -1,0 +1,5 @@
+-mode ccsm_seq
+-smp -nospmd
+-bgc cn
+-supln on 
+-s

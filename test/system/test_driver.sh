@@ -405,6 +405,7 @@ if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
     interactive="NO"
     input_file="tests_pretag_dublin"
 else
+    export CLM_CCSMBLD="FALSE"
     interactive="YES"
     input_file="tests_pretag_dublin_nompi"
 fi
