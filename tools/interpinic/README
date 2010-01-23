@@ -26,9 +26,9 @@ make SMP=TRUE     # will compile with Open-MP parallelism on
 
 Files:
 
-Makefile ---------------------------- GNU makefile
-Srcfiles ---------------------------- List of source files needed (includes files outside this directory)
-Filepath ---------------------------- Filepath location to source files needed
-clmi_1999-01-02_10x15_c070330.nc ---- Sample 10x15 resolution dataset that you can interpolate to
-interpinic.runoptions --------------- Example runoptions using the above file.
+Makefile ------------------------------------------- GNU makefile
+Srcfiles ------------------------------------------- List of source files needed (includes files outside this directory)
+Filepath ------------------------------------------- Filepath location to source files needed
+clmi.IQ.1953-01-01_10x15_USGS_simyr2000_c081202.nc-- Sample 10x15 resolution dataset that you can interpolate to
+interpinic.runoptions ------------------------------ Example runoptions using the above file.
 

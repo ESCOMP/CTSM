@@ -128,11 +128,11 @@ program mksrfdat
     ! ======================================================================
     ! Read input namelist
     ! ======================================
-    ! Must specify settings for either:
+    ! Must specify settings for the output grid:
     ! ======================================
     !	 mksrf_fgrid
     ! ======================================
-    ! Must specify settings for:
+    ! And must specify settings for:
     ! ======================================
     !    mksrf_fvegtyp
     !	 mksrf_fsoitex

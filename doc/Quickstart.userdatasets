@@ -1,4 +1,4 @@
-          Quick-Start to using your own datasets in clm3.6
+          Quick-Start to using your own datasets in clm4
           ===============================================
 
 Assumptions: You are already familiar with the use of the cpl7 scripts
@@ -15,8 +15,8 @@ Assumptions: You are already familiar with the use of the cpl7 scripts
              case that you choose for your compset (i.e. 1850_control, 
              20thC_transient etc.).
 
-                 SIM_YEAR -------- Simulation year       (i.e. 1850)
-                 SIM_YEAR_RANGE -- Simulation year range (i.e. 1850-2000)
+                 SIM_YEAR -------- Simulation year       (i.e. 1850, or 2000)
+                 SIM_YEAR_RANGE -- Simulation year range (i.e. constant, or 1850-2000)
                  MASK ------------ Land mask             (i.e. navy, USGS, or gx1v6)
 
 Process:

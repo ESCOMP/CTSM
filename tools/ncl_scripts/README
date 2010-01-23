@@ -11,21 +11,28 @@ be done.
 	
 Scripts available:
 
-getregional_datasets.pl ----- Extract out regional datasets from global ones put files in location can be used by build-namelist.
+Master perl scripts that call the other ncl scripts:
+
+getregional_datasets.pl ----- Extract out regional datasets from global ones and put files in a location that 
+                              can be used by build-namelist.
+runDepositionRegrid.pl ------ Runs the aerosol and nitrogen deposition regrid scripts for all valid resolutions
+                              and simulation years.
+
+NCL Scripts available:
+
+getregional_datasets.ncl ---- NCL script to extract out regional datasets.
 addgrid2spointurban.ncl ----- Add grid data to urban point datafiles.
-clmi_increasesoillayer.ncl -- Increate soil layer for clm Initial Condition files from 10 to 15.
-convertUrbanOffline2Seq.ncl - Convert urban offline data to ccsm sequential mode that can be used by datm7.
+convertUrbanOffline2Seq.ncl - Convert urban offline data to ccsm sequential mode that can be used by datm8.
 pftdyntest2raw.ncl ---------- Convert pftdyn test datasets to rawdata format so can be used to create future datasets.
 ndeplintInterp.ncl ---------- Create transient ndepdyn dataset from decadal average output
                               from CAM and convert the units to whats needed by CLM.
 getndepdatFrom20thCentury.ncl Extract out a static ndepdat file from a transient ndepdyn file
-aerdepregrid.ncl ------------ Regrid the Aerosol deposition dataset to a different
-resolution.
+aerdepregrid.ncl ------------ Regrid the Aerosol deposition dataset to a different resolution.
                               Uses bi-linear interpolation.
 ndepregrid.ncl -------------- Regrid the Nitrogen deposition datasets to a different resolution.
                               Uses bi-linear interpolation.
 
 convertUrbanOffline2Seq.ncl - Converts urban offline datasets for Mexicocity and Vancouver to seq-ccsm format
-                              needed for datm7.
+                              needed for datm8.
 
 

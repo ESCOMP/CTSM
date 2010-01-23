@@ -1,4 +1,149 @@
 ===============================================================
+Tag name:  clm3_6_64
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Fri Jan 22 22:19:24 MST 2010
+One-line Summary: Update documentation and README/Quickstart files, set NetCDF large-file format on by default in template, update pio, update some fsurdat files to vocemis-drydep versions, add 2.5x3.33_gx3v7 frac file, make gx3v7 default for 4x5 res
+
+Purpose of changes:
+
+Setup makefiles for docbook UsersGuide to output both pdf and html formats. Work on documentation of new _esmf driver files. Work on documentation. Make sure documentation of clm xml variables is good. Add note about CASA NOT being supported. Work on README/Quickstart files, and move the files from the top level to clm doc directory, but leave a file at top level pointing to these files. Make large file support default, remove LND_CDF64. Add in VOC surfdata files from voc branch: T42, T31, T21, T5, 4x5, 10x15-pftdyn. Add in new 2x5x3.33_gx3v7 frac file. Make default mask for 4x5 gx3v7.
+
+Bugs fixed (include bugzilla ID):
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: Turn NetCDF large-file support on by default
+
+List any changes to the defaults for the boundary datasets: 
+
+ 	New fsurdat files for: T42, T31, T21, T5, 4x5
+        New fpftdyn file for 10x15 for 1850-2000, new frac file for 2.5x3.33_gx3v7
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): pio
+
+   pio updated to google version: http://parallelio.googlecode.com/svn/trunk_tags/pio1_0_7/pio
+
+List all files eliminated:
+
+  D  Quickstart.userdatasets --- Move to models/lnd/clm/doc
+  D  Quickstart.GUIDE ---------- Move to models/lnd/clm/doc
+  D  README.DGVM --------------- Move to models/lnd/clm/doc
+  D  KnownBugs ----------------- Move to models/lnd/clm/doc
+  D  models/lnd/clm/doc/docs.html ----------------- Remove in favor of DocBook documentation
+  D  models/lnd/clm/doc/UsersGuide/clm_head.shtml - Remove in favor of DocBook documentation
+  D  models/lnd/clm/doc/UsersGuide/tree.html ------ Remove in favor of DocBook documentation
+  D  models/lnd/clm/doc/UsersGuide/clm_foot.shtml - Remove in favor of DocBook documentation
+  D  models/lnd/clm/doc/UsersGuide/index.shtml ---- Remove in favor of DocBook documentation
+
+List all files added and what they do:
+
+  A  models/lnd/clm/doc/Quickstart.userdatasets - Move from top level
+  A  models/lnd/clm/doc/IMPORTANT_NOTES --------- Add important notes about what's scientifically valided/expected to work
+  A  models/lnd/clm/doc/Quickstart.GUIDE -------- Move from top level
+  A  models/lnd/clm/doc/KnownBugs --------------- Move from top level
+  A  models/lnd/clm/doc/UsersGuide/Makefile ----- Makefile to build Users-Guide
+  A  models/lnd/clm/doc/index.shtml ------------- Add HTML guide to documentation
+  A  models/lnd/clm/doc/CodeReference/Filepath -- Filepath to source-code to build Code Reference Guide
+  A  models/lnd/clm/doc/CodeReference/Makefile -- Makefile to build Code Reference Guide using Protex
+
+  A  models/lnd/clm/test/system/Makefile -------- Makefile to build HTML test table
+
+  A  models/lnd/clm/test/system/config_files/_nrsc_do --- Add smp only option for no-RTM seq-ccsm default mode
+
+List all existing files that have been modified, and describe the changes:
+
+  M  models/lnd/clm/bld/clm.cpl7.template -------------------------- Set large_file_format to true by default
+  M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml --- Add in vocemis-drydep branch fsurdat files for: T42, T31, T21, T5,
+                                                                     and 4x5 resolution (as well as 10x15 1850-2005 pftdyn file)
+                                                                     Add in 2.5x3.33_gx3v7 frac file, and make gx3v7 mask the default
+                                                                     for 4x5 resolution.
+  M  models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml -- 2.5x3.33_gx3v7 domain file
+>>>>>>>>>>>>> Update documentation and README text files
+  M  models/lnd/clm/test/system/README
+  M  models/lnd/clm/tools/mksurfdata/README
+  M  models/lnd/clm/tools/mksurfdata/mksrfdat.F90 ------------------ Make namelist documentation a little more clea
+  M  models/lnd/clm/tools/ncl_scripts/convertUrbanOffline2Seq.ncl -- Document datm as datm8
+  M  models/lnd/clm/tools/ncl_scripts/README
+  M  models/lnd/clm/tools/interpinic/README
+  M  models/lnd/clm/tools/mkdatadomain/README
+  M  models/lnd/clm/tools/README
+  M  models/lnd/clm/bld/README
+  M  models/lnd/clm/doc/UsersGuide/index.xml ---- Update docbook UsersGuide
+  M  models/lnd/clm/doc/README
+  M  README
+
+  M  models/lnd/clm/test/system/tests_pretag_bluefire ----------- Remove LD1 (2.65x3.33 res) tests
+  M  models/lnd/clm/test/system/tests_posttag_hybrid_regression - Remove LD1 tests
+  M  models/lnd/clm/test/system/input_tests_master -------------- Remove LD1 tests
+
+Summary of testing:
+
+  bluefire: All PASS except...
+004 blA91 TBL.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 7 << 4x5 fsurdat
+007 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v5 144 cold .................FAIL! rc= 7 << 4x5 fsurdat
+012 blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 arb_ic ............FAIL! rc= 7 << 4x5 fsurdat
+017 blF92 TBL.sh 17p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 cold .............FAIL! rc= 7 << 4x5 fsurdat
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+030 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic .........FAIL! rc= 7 << 10x15 fpftdyn different
+042 brLI1 TBR.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 6
+043 blLI1 TBL.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 5
+  bluefire interactive testing: All PASS except...
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+032 blF93 TBL.sh 17p_vodsrsc_do clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 cold .............FAIL! rc= 7 << 4x5 fsurdat
+040 blL83 TBL.sh _nrsc_do clm_std^nl_urb 20020115:NONE:3600 5x5_amazon navy -10 arb_ic ..........FAIL! rc= 5 << no _nrsc_do in previous
+041 bl744 TBLtools.sh mksurfdata tools__s namelist ..............................................FAIL! rc= 7 << script error
+043 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 7 << script error
+045 bl754 TBLtools.sh mksurfdata tools__s globalirrig ...........................................FAIL! rc= 3 << script error
+050 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 3
+  bluefire/CCSM testing: All PASS except...
+BFAIL SMS_RLA.f45_f45.I.bluefire.compare.clm3_6_58+datm8 <<<<<<<<<<< 4x5 surfdata file different than previous version
+BFAIL SMS_RLB.f45_f45.I.bluefire.compare.clm3_6_58+datm8 <<<<<<<<<<< 4x5 surfdata file different
+BFAIL SMS_ROA.f45_f45.I.bluefire.compare.clm3_6_58+datm8 <<<<<<<<<<< 4x5 surfdata file different
+FAIL  ERS_D.f45_g37.I.bluefire.compare_hist.clm3_6_58+datm8 <<<<<<<< 4x5 surfdata file different
+FAIL  ERS_D.f45_g37.I.bluefire.compare.clm3_6_58+datm8 <<<<<<<<<<<<< 4x5 surfdata file different
+FAIL  PET.f45_g37.I1850.bluefire.compare.clm3_6_58+datm8 <<<<<<<<<<< 4x5 surfdata file different
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire <<<<<<<<<<<<<<<<<<<<<<<<<<< Previous failure
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm3_6_64 <<<<<<<< Previous failure
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm3_6_58+datm8 <<< Previous failure
+BFAIL ERH_D.f10_f10.I1850CN.bluefire.compare.clm3_6_58+datm8 <<<<<<< 10x15 pftdyn file different
+BFAIL PET.f10_f10.I8520CN.bluefire.compare.clm3_6_58+datm8 <<<<<<<<< 10x15 pftdyn file different
+
+CLM tag used for the baseline comparison tests if applicable: clm3_6_63
+
+Changes answers relative to baseline: Only for the following resolutions because of new fsurdat files: T42, T31, T5, 4x5
+                                      and for dynamic PFT at 10x15 resolution because of a new pftdyn file
+
+===============================================================
+===============================================================
 Tag name:  clm3_6_63
 Originator(s):  erik (erik)
 Date: Sat Jan  9 20:37:53 MST 2010

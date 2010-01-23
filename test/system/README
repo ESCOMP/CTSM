@@ -7,8 +7,8 @@ To use...
 test_driver.sh
 
 (will then ask if you want to submit the script to the batch que)
-Intended for use on NCAR machines: bangkok.cgd, calgary.cgd, breeze/gale/hail/gust, bluefire, bluevista, lightning, 
-and ORNL machine: jaguarcnl
+Intended for use on NCAR machines: dublin.cgd, bangkok.cgd, calgary.cgd, breeze/gale/hail/gust, bluefire, 
+and ORNL machines: jaguar and jaguarpf as well as NICS kraken and ANL intrepid.
 
 Important environment variables
 

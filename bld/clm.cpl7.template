@@ -57,8 +57,7 @@ endif
 
 set co2ppmv = " co2_ppmv         =  $CCSM_CO2_PPMV"
 
-set outnc_large_files = ".false."
-if ($LND_CDF64 == TRUE ) set outnc_large_files = ".true."
+set outnc_large_files = ".true."
 
 cat >> $cfgdir/ccsm_namelist << EOF1
  &clm_inparm

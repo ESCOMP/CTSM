@@ -1,6 +1,6 @@
 ;
 ;  Convert the urban point datasets for Mexicocity and Vancouver from off-line to
-;  format that datm7 can use.
+;  format that datm8 can use.
 ;
 ;  Erik Kluzek
 ;  Jan/23/2008

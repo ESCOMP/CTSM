@@ -6,7 +6,7 @@
 <book label="CLM4_UsersGuide" status="draft">
 
 <bookinfo>
-<title>CCSM Research Tools: CLM4.0 Users Guide Documentation</title>
+<title>CCSM Research Tools: CLM4.0 Users Guide Documentation (DRAFT)</title>
 
 <authorgroup>
 
@@ -26,14 +26,15 @@
 
 <dedication>
 <para>
-Dedicated to the Land Model Working Group.
+Dedicated to the Land Model Working Group winners of the 2008 CCSM Distinguished Achievement Award.
 </para>
 </dedication>
 
 <preface id="acknowledge">
 <title>Acknowledgements</title>
 <para>
-We acknowledge all of the people that helped review or edit the model documentation:
+We acknowledge all of the people that helped review or edit the model documentation: 
+David Lawrence, Samuel Levis, and Keith Oleson. 
 </para>
 </preface>
 
@@ -44,7 +45,7 @@ We acknowledge all of the people that helped review or edit the model documentat
 The Community Land Model (CLM) is the latest in a series of
 global land models developed at the National Center for
 Atmospheric Research (NCAR). This guide is intended to instruct both
-the novice and experienced user on running CLM;.
+the novice and experienced user on running CLM.
 </para>
 </preface>
 
@@ -86,12 +87,63 @@ Since CLM3.5 there have been advances in both the science and the software infra
 <para>
 The following aspects are changes to the science in CLM since CLM3.5.
 </para>
+<para>
+Changes to CLM4 beyond CLM3.5 (Oleson et al., 2008a; Stockli et al., 2008) include updates throughout the model. The hydrology scheme has been modified with a revised numerical solution of the Richards equation (Zeng and Decker, 2009; Decker and Zeng, 2009); a revised soil evaporation parameterization that removes the soil resistance term introduced in CLM3.5 and replaces it with a so-called	formulation, as well as accounts for the role of litter and within-
+canopy stability (Sakaguchi and Zeng, 2009).
+</para>
+<para>
+The snow model is significantly modified via incorporation of SNICAR (SNow and Ice Aerosol Radiation) which represents the effect of aerosol deposition (e.g. black and organic carbon and dust) on albedo, introduces a grain-size dependent snow ageing parameterization, and permits vertically resolved snowpack heating (Flanner and Zender, 2005; Flanner and Zender, 2006; Flanner et al., 2007). The new snow model also includes a new density-dependent snow cover fraction parameterization (Niu and Yang, 2007), a revised snow burial fraction over short vegetation (Wang and Zeng, 2009) and corrections to snow compaction (Lawrence and Slater, 2009).
+</para>
+<para>
+CLM4 also includes a representation of the thermal and hydraulic properties of organic soil that operates in conjunction with the mineral soil properties (Lawrence and Slater, 2008). The ground column has been extended to ~50-m depth by adding five additional hydrologically inactive ground layers (making a total of 15 ground layers, 10 soil layers and 5 bedrock layers; Lawrence et al., 2008). An urban landunit and associated urban canyon model has been added which permits the study of urban climate and urban heat island effects (Oleson et al., 2008b). The PFT distribution is as in Lawrence and Chase (2007) except that a new cropping dataset is used (Ramankutty et al., 2008) and a grass PFT restriction has been put in place to reduce a high grass PFT bias in forested regions by replacing the herbaceous fraction with low trees rather than grass. Grass and crop PFT optical properties have been adjusted according to values presented in Asner et al. (1998), resulting in significantly reduced albedo biases. Soil colors have been re-derived according to the new PFT distribution.
+</para>
+<para>
+The model is extended with a carbon-nitrogen biogeochemical model (Thornton et al., 2007; Thornton et al., 2009; Randerson et al., 2009) which is referred to as CLM4CN. CN is based on the terrestrial biogeochemistry Biome-BGC model with prognostic carbon and nitrogen cycle (Thornton et al., 2002; Thornton and Rosenbloom, 2005). CLM4CN is prognostic with respect to carbon and nitrogen state variables in the vegetation, litter, and soil organic matter. Vegetation phenology and canopy heights are also prognostic. A detailed description of the biogeochemical component can be found in Thornton et al. (2007). Note that CLM4 can be run with either prescribed satellite phenology (CLM4SP) or with prognostic phenology provided by the carbon- nitrogen cycle model (CLM4CN). Additionally, a transient land cover and land use change, including wood harvest, capability has been introduced that enables the evaluation of the impact of historic and future land cover and land use change on energy, water, and momentum fluxes as well as carbon and nitrogen fluxes.	The dynamic global vegetation model in CLM3 has been revised such that the carbon dynamics (e.g. productivity, decomposition, phenology, allocation, etc.) are controlled by CN and only the dynamic vegetation biogeography (competition) aspect of the CLM3 DGVM is retained.
+</para>
+<para>
+Several other minor changes have been incorporated including a change to the atmospheric reference height so that it is the height above zo+d for all surface types. The convergence of
+canopy roughness length zo and displacement height d to bare soil values as the above-ground biomass, or the sum of leaf and stem area indices, goes to zero is ensured (Zeng and Wang, 2007). Several corrections have been made to the way the offline forcing data is interpreted. The main change is a vastly improved and smooth diurnal cycle of incoming solar radiation that conserves the total incoming solar radiation from the forcing dataset. Additionally, in offline mode rather than partitioning incoming solar radiation into a constant 70%/30% direct vs diffuse split, it is partitioned according to empirical equations that are a function of total solar radiation. Finally, to improve global energy conservation in fully coupled simulations, runoff is split into separate liquid and ice water streams that are passed separately to the ocean. Input to the ice water comes from excess snowfall in snow-capped regions. The biogenic volative organic compounds model (BVOC) that was available in CLM3 has been replaced with the MEGAN BVOC model (Heald et al. 2008).
+</para>
+<para>
+Taken together, these augmentations to CLM3.5 result in improved soil moisture dynamics that lead to higher soil moisture variability and drier soils. Excessively wet and unvarying soil moisture was recognized as a deficiency in CLM3.5 (Oleson et al. 2008a, Decker and Zeng, 2009). The revised model also simulates, on average, higher snow cover, cooler soil temperatures in organic-rich soils, greater global river discharge, lower albedos over forests and grasslands, and higher transition-season albedos in snow covered regions, all of which are improvements compared to CLM3.5.
+</para>
 </sect1>
-
 <sect1 id="software">
 <title>What is new with CLM4 Software Infrastructure?</title>
 <para>
 The following aspects are changes to the software infrastructure in CLM since CLM3.5.
+</para>
+<para>
+<simplelist>
+    <member>Update to cpl7 and scripts.</member>
+    <member>Remove offline and cpl6 modes.</member>
+    <member>Remove support for CASA model.</member>
+    <member>Update to datm8 atmospheric data model.</member>
+    <member>Add gx3v7 land mask for T31 and fv-4x5 horizontal resolutions.</member>
+    <member>Add gx1v6 land mask for f05, f09, and f19 horigonzl resolutions.</member>
+    <member>Add tx1v1 land mask and 1.9x2.5_tx1v1 horizontal resolution.</member>
+    <member>Add in 2.5x3.33 horizontal resolution.</member>
+    <member>Add in T62 horizontal resolution so can run at same resolution as input datm
+data.</member>
+    <member>Allow first history tape to be 1D.</member>
+    <member>Add ability to use own version of input datasets with CLM_USRDAT_NAME
+variable.</member>
+    <member>Add a script to extract out regional datasets.</member>
+    <member>New build-namelist system with XML file describing all namelist
+items.</member>
+    <member>Add glacier_mec use-case and stub glacier model.</member>
+    <member>Add ncl script to time-interpolate between 1850 and 2000 for fndepdat
+dataset, for fndepdyn version.</member>
+    <member>Make default of maxpatch_pft=numpft+1 instead of 4.</member>
+    <member>Only output static 3D fields on first h0 history file to save space.</member>
+    <member>Add new fields for VOC (Volatile Organic Compounds) on some surface datasets, that will be 
+    needed for the new MEGAN VOC model (NOT incorporated yet).</member>
+    <member>Add irrigation area to mksurfdata tool (NOT used in CLM yet).</member>
+    <member>Add multiple elevation class option for glaciers in mksurfdata tool (NOT used
+in CLM yet).</member>
+    <member>Add ascale field to land model in support of model running on it's own
+grid.</member>
+</simplelist>
 </para>
 </sect1>
 
@@ -101,8 +153,207 @@ The following aspects are changes to the software infrastructure in CLM since CL
 <preface id="quickstart">
 <title>Quickstart to using CLM4</title>
 <para>
-Here we give a quick outline of how to run CLM4.
+Before working with CLM4 read the QuickStart Guide in the
+<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">CCSM4.0
+Scripts User Guide</ulink>. Once you are familiar with how to setup cases for 
+any type of simulation with CCSM you will want to direct your attention to the specifics
+of using CLM.
 </para>
+<para>
+For some of the details of setting up cases for CLM4 read the README and text files available
+from the "models/lnd/clm/doc" directory (see the "CLM Web pages" section for a link to the list
+of these files). Here are the important ones that you should be familiar with.
+<orderedlist>
+<listitem><para><ulink url="../README">README</ulink> file describing the directory structure.</para></listitem>
+<listitem><para><ulink url="../Quickstart.userdatasets">Quickstart.userdatasets</ulink> file describing how to
+use your own datasets in the model.</para></listitem>
+<listitem><para><ulink url="../KnownBugs">KnownBugs</ulink> file describing known problems in CLM4.</para></listitem>
+</orderedlist>
+</para>
+<para>The <emphasis>IMPORTANT_NOTES</emphasis> file is given in the next chapter on what is functional/validated in CLM4?
+</para>
+<para>The <emphasis>ChangeLog/ChangeSum</emphasis> files are largely explained in the previous chapter on "What is new with
+CLM4?"</para>
+<para>
+Note other directories have README files that explain different components and tools used when running CLM and are useful in
+understanding how those parts of the model work and should be consulted when using tools in those directories.
+</para>
+<para>The <emphasis>Quickstart.GUIDE</emphasis> is repeated in the section below.</para>
+<programlisting>
+Assumptions: You want to use bluefire with clm4
+             to do a clm simulation with data atmosphere and the
+             latest atm forcing files and settings. You also want to cycle
+             the atm data between 1948 to 2004 and you want to run at
+             1.9x2.5 degree resolution.
+
+Process:
+
+   # Create the case
+
+   cd scripts
+
+   ./create_newcase -case testcase -mach bluevista -res f19_g15 -compset I4804 -skip_rundb
+   (./create_newcase -help -- to get help on the script)
+TRUE
+
+   # Configure the case
+
+   cd testcase
+   $EDITOR env_run.xml env_conf.xml   # If you need to make changes (or use the xmlchange script)
+   ./configure -case
+   (./configure -help -- to get help on the script)
+
+   # Make any changes to the namelist
+
+   $EDITOR Buildconf/clm.buildnml_prestage.csh
+
+   # Compile the code
+
+   ./testcase.build
+
+   # Submit the run
+
+   bsub < testcase.run
+
+Information on Compsets:
+
+     "I" compsets are the ones with clm and datm7 without ice and ocean.
+     The latest "I" compsets use the new CLM_QIAN data with solar following
+     the cosine of solar zenith angle, precipitation constant, and other
+     variables linear interpolated in time (and with appropriate time-stamps on
+     the date).
+
+     Name                 (short-name): Description
+     --------------------------------------------------------------------------
+     I_2000           (I):         CLM to simulate year=2000
+     I_1850           (I1850):     CLM to simulate year=1850
+     I_1948_2004      (I4804):     CLM running with atm data over 1948-2004
+     I_1850-2000      (I8520):     CLM with transient PFT over 1850-2000
+     I_2000_CN        (ICN):       CLM with CN on to simulate year=2000
+     I_1850_CN        (I1850CN):   CLM with CN on to simulate year=1850
+     I_1948-2004_CN   (I4804CN):   CLM with CN on running with atm data over 1948-2004
+     I_1850-2000_CN   (I8520CN):   CLM with CN on with transient PFT over 1850-2000
+
+Information on run-database:
+
+    -skip_rundb says to skip entering information on this case into the run-database.
+    The run-database stores meta-data on simulations being performed so they can
+    be shared effectively with collaborators. The information on how to redo a simulation
+    as well as where the simulation is stored and any diagnostics on it are stored in
+    the run data-base. The run data-base is on the web at...
+
+    http://ccsm-rundb.cgd.ucar.edu/case_list.php
+
+    It contains information on important cases that we want to retain information on
+    (so they can be reproduced and so scientific details are publicly available).
+    The standard CSM internal user-name/password is used for the database (as for the CSEG
+    internal web-page).
+
+Automatically resubmitting jobs:
+
+   After doing a short simulation that you believe is correct
+
+   $EDITOR env_run.xml
+
+   # Change RESUBMIT to number greater than 0, and CONTINUE_RUN to TRUE...
+
+   bsub < testcase.run
+</programlisting>
+</preface>
+<!-- ======================================================================= -->
+<preface id="whats_validated">
+<title>What is scientifically validated and functional in CLM4?</title>
+
+<sect1 id="config_not_validated">
+<title>Configure Modes NOT scientifically validated, documented, supported or even advised to be used:</title>
+<para>
+<orderedlist>
+<listitem>
+   <para>
+   <varname>C13</varname><screen>(-c13)</screen>
+       The C13 mode for bgc=cn is NOT scientifically validated or documented and NOT recommended to be used.
+   </para>
+
+</listitem>
+<listitem>
+   <para>
+   <varname>CASA</varname><screen>(-bgc casa)</screen>
+       The bgc=casa mode is NOT scientifically validated or documented and NOT recommended to be used.
+   </para>
+
+</listitem>
+<listitem>
+   <para>
+   <varname>DGVM</varname><screen>(-bgc dgvm)</screen>
+       The bgc=dgvm  mode is NOT scientifically validated or documented and NOT recommended to be used.
+       This mode will be replaced by CNDV (coupled with bgc=cn mode) in the final CLM4.0 release (see below).
+   </para>
+</listitem>
+<listitem>
+   <para>
+   <varname>BUILDPIO</varname><screen>(-pio)</screen>
+       This mode is NOT tested and not even functional and hence should NOT be used. PIO WILL be provided
+       in future versions however.
+   </para>
+</listitem>
+<listitem>
+   <para>
+   <varname>SNICAR_FRC</varname><screen>(-snicar_frc)</screen>
+       This mode is tested and functional, but is NOT constantly scientifcally validated, and should be 
+       considered experimental.
+   </para>
+</listitem>
+<listitem>
+   <para>
+   <varname>PERGRO</varname><screen>(-pergro)</screen>
+       This mode is tested to be functional, but NOT scientifically validated. It's purpose is in an attempt
+       to validate that a port to a new machine is reasonable, or changes that are only roundoff will NOT 
+       affect the climate. The best method for this validation is to run 100 year simulations with both and
+       make sure the climate is similar between each. We hope to validate the method using PERGRO in future
+       versions of the model.
+   </para>
+</listitem>
+</orderedlist>
+</para>
+</sect1>
+
+<sect1 id="changes_expected">
+<title>Changes expected to happen for the official CCSM4.0 release:</title>
+<para>
+<orderedlist>
+<listitem><para><emphasis><varname>CNDV</varname> mode will be available: (replaces the DGVM mode)</emphasis>
+       A Dynamic Vegetation mode coupled to the Carbon Nitrogen (bgc=cn) biogeochemistry mode WILL be provided
+       in the main CLM4.0 release.</para>
+</listitem>
+
+<listitem><para><emphasis><varname>VOC</varname> version will be updated:</emphasis>
+       The current Volatile Organic Compounds option used in CLM is the older version and NOT the newer MEGAN
+       version. The new MEGAN version WILL be provided in the main CLM4.0 release.</para>
+</listitem>
+</orderedlist>
+</para>
+</sect1>
+
+<sect1 id="nml_not_validated">
+<title>Namelist items that should NOT be exercised:</title>
+<para>
+<orderedlist>
+<listitem><para><emphasis>create_crop_landunit:</emphasis>  Functional, but experimental</para>
+</listitem>
+<listitem><para><emphasis>urban_traffic:</emphasis>         Not currently functional</para>
+</listitem>
+<listitem><para><emphasis>pio namelist options:</emphasis>  hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, ncd_pio_UseBoxRearr, 
+                         ncd_pio_SerialCDF, ncd_pio_DebugLevel, and ncd_pio_num_iotasks
+        These options are NOT currently tested or functional. See the pio configure mode above.</para>
+</listitem>
+<listitem><para><emphasis>casa namelist options:</emphasis> lnpp, lalloc, q10, spunup, and fcpool
+
+        As above CASA is NOT scientifically validated and hence we don't recommend using it, thus we don't
+        recommend using the casa namelist options (they are only available when running with CASA).</para>
+</listitem>
+</orderedlist>
+</para>
+</sect1>
 </preface>
 
 <!-- ======================================================================= -->
@@ -112,28 +363,51 @@ Here we give a quick outline of how to run CLM4.
 <sect1 id="CCSM_UG">
 <title>The CCSM Users-Guide</title>
 <para>
-....
+CLM4 is always run from within the standard CCSM4 build and run scripts. Therefore, the user of CLM4
+should familiarize themselves with the CCSM4 scripts and understand and know how to work with them.
+Users-Guide documentation on the CCSM4 scripts are available from the following web-page. The purpose
+of this CLM4 Users Guide is to give the CLM4 user better descriptions and more details on how to work
+with CLM and the set of tools that support CLM, as well as give examples that are unique to the use
+of CLM. But, the CCSM4 Scripts Users-Guide is the source to get detailed understanding of how to build
+and run the CCSM system in total.
+<simplelist>
+<member><ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">CCSM4.0 Scripts
+Users-Guide</ulink></member>
+</simplelist>
 </para>
 </sect1>
 
 <sect1 id="CCSM_BB">
 <title>The CCSM Bulletin Board</title>
 <para>
-....
+There is a rich and diverse set of people that use the CCSM, and often it is useful to be in contact with
+others to get help in solving problems or trying something new. To facilitate this we have an online
+Bulletin Board for questions on the CCSM. There are also different sections in the Bulletin Board for
+the different component models or for different topics.
+<simplelist>
+<member><ulink url="http://www.bb.cgd.ucar.edu/">CCSM Online Bulletin Board</ulink></member>
+</simplelist>
 </para>
 </sect1>
 
 <sect1 id="CLM_web">
 <title>The CLM web pages</title>
 <para>
-....
+The main CLM web page contains information on the CLM, it's history, developers, as well as
+downloads for previous model versions. There are also documentation text files in the 
+models/lnd/clm/doc directory that give some quick information on using CLM.
+<simplelist>
+<member><ulink url="http://www.cgd.ucar.edu/tss/clm/">CLM web page</ulink></member>
+<member><ulink url="../">CLM Documentation Text Files</ulink></member>
+</simplelist>
 </para>
 </sect1>
 
 <sect1 id="reporting_bugs">
 <title>Reporting bugs in CLM4</title>
 <para>
-....
+If you have any problems, additional questions, bug reports, or any other feedback, please send an email to
+ccsm4-help@cgd.ucar.edu.
 </para>
 </sect1>
 
@@ -155,30 +429,42 @@ Here we give a quick outline of how to run CLM4.
 <title>Choosing a compset using CLM</title>
 
 <para>
-....
+When setting up a new case one of the first choices to make is which "component set" (or compset) to use. The
+compset refers to which component models are used as well as specific settings for them. We label the differnt
+types of compsets with a different letter of the alphabet from "A" (for all data model) to "X" (for all dead model).
+The compsets of interest when working with CLM are the "I" compsets (which contain CLM with a data atmosphere model
+and a stub ocean, and stub sea-ice models), "E" and "F" compsets (which contain CLM with the active atmosphere model (CAM),
+a prescribed sea-ice model and a data ocean model), and "B" compsets which have all active components. Below we
+go into details on the "I" compsets which emphasize CLM as the only active model, and just mention the two other categories.
+</para>
+<para>
+When working with CLM you usually want to start with a relevant "I" compset before moving to the more
+complex cases that involve other active model components. The "I" compsets can exersice CLM in a way that
+is similar to the coupled modes, but with much lower computational cost and faster turnaround times.
 </para>
 <sect2 id="I_compsets">
 <title>Compsets coupled to data atmosphere and stub ocean/sea-ice ("I" compsets)</title>
 <orderedlist>
        <listitem><para><varname>I_2000</varname> for vegetation types simulating year 2000 AD.</para></listitem>
        <listitem><para><varname>I_1850</varname> for vegetation types simulating year 1850 AD.</para></listitem>
+<!--
        <listitem><para><varname>I_GLC</varname> for running with the glacier model (2000 AD conditions).</para></listitem>
+-->
        <listitem><para><varname>I_1948_2004</varname> for 2000 AD simulation year running over atmospheric
            data from 1948 to 2004.</para></listitem>
        <listitem><para><varname>I_1850-2000</varname> for 20th Century simulations varying the vegetation
           types from 1850 to 2000 AD.</para></listitem>
-       <listitem><para><varname>I_CASA</varname> for 2000 AD simulation year running with CASA' BGC model..</para></listitem>
-       <listitem><para><varname>I_CASA_1948_2004</varname> for 2000 AD simulation year running with CASA'
-           BGC model over atmospheric data from 1948 to 2004.</para></listitem>
        <listitem><para><varname>I_CN</varname> for 2000 AD simulation year running with CN BGC model.</para></listitem>
        <listitem><para><varname>I_1850_CN</varname> for 1850 AD simulation year running with CN BGC model.</para></listitem>
+<!--
        <listitem><para><varname>I_1850_SPINUP_3HrWxHfHrSol_CN</varname> for 1850 AD simulation year running
           with CN BGC model and using 3-hourly weather forcing and half-hour solar
           data from a fully coupled case for the atmosphere. This is meant to spinup the
           CN BGC model.</para></listitem>
-       <listitem><para><varname>I_CN_1948_2004</varname> for 2000 AD simulation year running with CN BGC model
+-->
+       <listitem><para><varname>I_1948-2004_CN</varname> for 2000 AD simulation year running with CN BGC model
           with atmospheric data from 1948 to 2004.</para></listitem>
-       <listitem><para><varname>I_CN_1850-2000</varname> for 20th Century simulations varying the vegetation
+       <listitem><para><varname>I_1850-2000_CN</varname> for 20th Century simulations varying the vegetation
           types from 1850 to 2000 AD running with the CN BGC model
           with atmospheric data from 1948 to 2004.</para></listitem>
 </orderedlist>
@@ -188,7 +474,8 @@ Here we give a quick outline of how to run CLM4.
      <title>Compsets coupled to active atmosphere with data ocean</title>
 <para>
        CAM compsets are compsets that start with "E" or "F" in the name. They are
-       described more fully in the scripts documentation or the CAM documentation.
+       described more fully in the scripts documentation or the CAM documentation. "E" compsets have
+a slab ocean model while "F" compsets have a data ocean model.
 </para>
 </sect2>
 
@@ -199,7 +486,6 @@ Here we give a quick outline of how to run CLM4.
        described more fully in the scripts documentation.
 </para>
 </sect2>
-
 </sect1>
 </chapter>
 <!-- End of choosing a compset section -->
@@ -207,33 +493,315 @@ Here we give a quick outline of how to run CLM4.
 <!-- Beg of customonizing clm config section -->
 <chapter id="customizing_clm_config">
 <title>Customizing the clm configuration</title>
-   <para>How to customize the configuration for a case with CLM</para>
+<para>
+The "Creating a Case" section of the 
+<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm/ccsm_doc/book1.html">CCSM4.0 Scripts Users-Guide</ulink>
+gives instructions on creating a case. What is of interest here is how to customize your use of clm
+for the case that you created. In this section we discuss how to customize your case before the first
+step -- the "configure -case" step is done. in the next section we will discuss how to customize your
+clm namelist after "configure -case" has already been done.
+</para>
+<para>
+For CLM when "configure -case" is called there are two steps that take place:
+</para>
+<orderedlist>
+<listitem><para>The clm "configure" script is called to setup the build-time configuration for clm.</para></listitem>
+<listitem><para>The clm "build-namelist" script is called to generate  the initial run-time namelist for clm.</para></listitem>
+</orderedlist>
+<para>
+When customizing your case at the configure step you are able to modify the process by effecting either one
+or both of these steps. The clm "configure" and "build-namelist" scripts are both available in the "models/lnd/clm/bld" 
+directory in the distribution. Both of these scripts have a "-help" option that is useful to examine to see what
+types of options you can give either of them.
+</para>
+<para>
+There are four different types of customization for the configuration that we will discuss: CCSM4 CLM configuration
+items, other noteworthy CCSM configuration items, the CLM configure script options, and the CLM build-namelist 
+script options.
+</para>
 
 <sect1 id="clm_script">
 <title>CLM Script configuration items</title>
+<para>
+Below we list each of the CCSM configuration items that are specific to CLM.
+</para>
+<para>
 <simplelist>
-    <member>CLM_CONFIG_OPTS</member>
-    <member>CLM_BLDNML_OPTS</member>
-    <member>CLM_NAMELIST_OPTS</member>
-    <member>CLM_DEMAND</member>
-    <member>CLM_FORCE_COLDSTART</member>
-    <member>CLM_PT1_NAME</member>
-    <member>CLM_USRDAT_NAME</member>
+    <member><varname>CLM_CONFIG_OPTS</varname></member>
+    <member><varname>CLM_BLDNML_OPTS</varname></member>
+    <member><varname>CLM_NAMELIST_OPTS</varname></member>
+    <member><varname>CLM_DEMAND</varname></member>
+    <member><varname>CLM_FORCE_COLDSTART</varname></member>
+    <member><varname>CLM_PT1_NAME</varname></member>
+    <member><varname>CLM_USRDAT_NAME</varname></member>
 </simplelist>
-</sect1>
+</para>
+<para>
+The first item "CLM_CONFIG_OPTS" has to do with customizing the CLM configuration options for your case, the rest
+all have to do with generating the initial namelist.
+</para>
+<para>
+CLM_CONFIG_OPTS
+</para>
+<para>
+The option "CLM_CONFIG_OPTS" is all about passing command line arguments to the CLM configure script. It is important
+to note that some compsets, may already put a value into the CLM_CONFIG_OPTS variable. You can still add more
+options to your "CLM_CONFIG_OPTS" but make sure you add to what is already there rather than replacing it. Hence,
+it may be best to edit the "env_conf.xml" file to do this rather than use the xmlchange script. In the 
+section below we will go into more details on options that can be customized in the CLM "configure" script. It's
+also important to note that the clm template may already invoke certain CLM configure options and as such those
+command line options are NOT going to be available to change at this step (nor would you want to change them).
+</para>
+<para>
+CLM_BLDNML_OPTS
+</para>
+<para>
+The option "CLM_BLDNML_OPTS" is for passing options to the CLM "build-namelist" script. As with the "configure"
+script the clm template may already invoke certain options and as such those options will NOT be available to be
+set here. The best way to see what options can be sent to the "build-namelist" script is to do
+</para>
+<screen>
+cd models/lnd/clm/bld
+build-namelist -help
+</screen>
+<para>
+The clm template already sets the resolution and mask as well as the configure file, the start-type, and defines a input
+namelist and namelist input file, and it normally sets either "-ignore_ic_year" or "-ignore_ic_date". Also many
+of the options are designed solely for CLM stand-alone testing and hence should NOT be used (any of the options starting
+with a "datm_" or "drv_" prefix. Hence there are then only four different options that could be set:
+</para>
+<para>
+<orderedlist>
+<listitem><para>-lnd_res</para></listitem>
+<listitem><para>-sim_year</para></listitem>
+<listitem><para>-use_case</para></listitem>
+<listitem><para>-verbose</para></listitem>
+</orderedlist>
+</para>
+<para>
+"-lnd_res" is used to run CLM at a higher resolution than it is coupling to the atmospheric model. This can
+be useful to get more accuracy from the land model by running at a higher resolution, but saving computer time
+by running the more expensive atmospheric model at a lower resolution. To get a list of valid resolutions to
+run at do the following:
+</para>
+<screen>
+cd models/lnd/clm/bld
+build-namelist -lnd_res list
+</screen>
+<para>
+"-sim_year" is used to set the simulation year you want the data-sets to simulate conditions for in the input
+datasets. To list the valid options do the following:
+</para>
+<screen>
+cd models/lnd/clm/bld
+build-namelist -sim_year list
+</screen>
+<para>
+"-use_case" is used to set a particular set of conditions that set multiple namelist items, all centering around
+a particular usage of the model.
+To list the valid options do the following:
+</para>
+<screen>
+cd models/lnd/clm/bld
+build-namelist -use_case list
+</screen>
+<para>
+CLM_NAMELIST_OPTS
+</para>
+<para>
+The option <envar>CLM_NAMELIST_OPTS</envar> is for passing namelist items into the "clm_inparm" namelist.
+Any items that are set in CLM_NAMELIST_OPTS will be set in your namelist after "configure
+-case" is done.
+</para>
+<note>
+<para>
+For character namelist items you need to use "apos;" as quotes for strings so that the 
+scripts don't get confused with other quotes they use.
+</para>
+</note>
+<para>
+Example, you want to set <varname>hist_dov2xy</varname> to <varname>.false.</varname>
+so that you get vector output to your history files. 
+<screen>$EDITOR env_conf.xml</screen>
+and add <varname>hist_dov2xy=.false.</varname> to the settings in
+<envar>CLM_NAMELIST_OPTS</envar>.
+</para>
+<para>
+CLM_DEMAND
+</para>
+<para>
+<envar>CLM_DEMAND</envar> asks the build-namelist step to require that the list of variables
+entered be set. Typically, this is used to require that optional filenames be used and ensure
+they are set before continuing. For example, you may want to require that
+<varname>fpftdyn</varname> be set to get dynamically changing vegetation types. To do this
+you would do the following.
+<screen>
+xmlchange -file env_conf.xml -id CLM_DEMAND -val "fpftdyn"
+</screen>
+To see a list of valid variables that you could set do this:
+<screen>
+cd models/lnd/clm/bld
+build-namelist -clm_demand list
+</screen>
+</para>
+<note>
+<para>
+Using a 20th-Century transient compset or the <envar>20thC_transient</envar> use-case would
+set this as well, but would also use fndepdyn, and dynamic faerdep files, so using
+<envar>CLM_DEMAND</envar> would be a way to get <emphasis>just</emphasis> dynamic vegetation types
+and NOT the other files as well.
+</para>
+</note>
+<para>
+CLM_FORCE_COLDSTART
+</para>
+<para>
+<envar>CLM_FORCE_COLDSTART</envar> when set to <emphasis><envar>on</envar></emphasis> <emphasis>requires</emphasis> that
+your simulation do a cold start from arbitrary initial conditions. If this is NOT set, it
+will use an initial condition file if it can find an appropriate one, and otherwise do a cold
+start. <envar>CLM_FORCE_COLDSTART</envar> is a good way to ensure that you are doing a cold
+start if that is what you want to do.
+</para>
+<para>
+CLM_PT1_NAME
+</para>
+<para>
+<envar>CLM_PT1_NAME</envar> is used <emphasis>ONLY</emphasis> for a <varname>pt1_pt1</varname>
+resolution simulation to set the name of the single-point files to use.
+To see a list of the valid resolutions do this:
+<screen>
+cd models/lnd/clm/
+build-namelist -res list
+</screen>
+the valid resolutions that can be used with <envar>CLM_PT1_NAME</envar> are the ones that
+have city or nation names such as: 5x5_amazon, 1x1_vancouverCAN 1x1_mexicocityMEX, or
+1x1_brazil. The "1x1_" prefix means the file is for a single-point, while "5x5_" prefix means
+it's for a region of five points in latitude by five points in longitude. Both regional an
+single point datasets can be used for CLM_PT1_NAME.
+</para>
+<para>
+CLM_USR_DATNAME
+</para>
+<para>
+<envar>CLM_USR_DATNAME</envar> provides a way to enter your own datasets into the initial
+namelist setup at "configure -case". The files you create must be named with
+See the <ulink url="../Quickstart.userdatasets">Quickstart.userdatasets</ulink> 
+file describing the steps do use your own datasets, for more details on each step.
+To see what the expected names of the files are use, queryDefaultNamelist.pl to see
+what the names will need to be. For example if you <envar>CLM_USR_DATNAME</envar> will 
+be "1x1_boulderCO", with a "navy" land-mask, constant simulation year range, for 1850,
+the following will list what your filenames should be:
+<screen>
+queryDefaultNamelist.pl -usrname "1x1_boulderCO" -options
+mask=navy,sim_year=1850,sim_year_range="constant"  -csmdata $CSMDATA
+</screen>
+</para>
 
+</sect1>
 <sect1 id="other_config">
 <title>Other noteworthy configuration items</title>
+<para>
+For running "I" cases there are several other noteworthy configuration items that
+you may want to work with. Most of these involve settings for the DATM, but one
+<varname>CCSM_CO2_PPMV</varname> is a overall setting. If you are running an B, E,
+or F case that doesn't use the DATM obviously these will not be important.
     <simplelist>
-    <member>CCSM_CO2_PPMV</member>
-    <member>DATM_MODE</member>
-    <member>DATM_CLMNCEP_YR_ALIGN</member>
-    <member>DATM_CLMNCEP_YR_START</member>
-    <member>DATM_CLMNCEP_YR_END</member>
-    <member>DATM_CO2_TSERIES</member>
+    <member><varname>CCSM_CO2_PPMV</varname></member>
+    <member><varname>DATM_MODE</varname></member>
+    <member><varname>DATM_CLMNCEP_YR_ALIGN</varname></member>
+    <member><varname>DATM_CLMNCEP_YR_START</varname></member>
+    <member><varname>DATM_CLMNCEP_YR_END</varname></member>
+<!--
+    <member><varname>DATM_CO2_TSERIES</varname></member>
+-->
     </simplelist>
+</para>
+<variablelist>
+<varlistentry>
+<term>CCSM_CO2_PPMV</term> <listitem> 
+<para>
+<envar>CCSM_CO2_PPMV</envar> sets the mixing ratio of CO<subscript>2</subscript> in 
+parts per million by volume for ALL CCSM components to use. Note that most compsets
+already set this value to something reasonable. Also note that some compsets may
+tell the atmosphere model to override this value with either historic or ramped 
+values. If the <envar>CCSM_BGC</envar> variable is set to something other than "none"
+the atmosphere model will determine CO<subscript>2</subscript>, and CLM will listen
+and use what the atmosphere sends it. On the CLM side the namelist item <varname>
+co2_type</varname> tells CLM to use the value sent from the atmosphere rather than
+a value set on it's own namelist.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>DATM_MODE</term><listitem>
+<para>
+<envar>DATM_MODE</envar> sets the mode that the DATM model should run in this determines
+how data is handled as well as what the source of the data will be. Many of the modes
+are setup specifically to be used for ocean and/or sea-ice modelling. The modes
+that are designed for use by CLM are:
+<simplelist>
+<member>CLM_QIAN</member>
+<member>CLM1PT</member>
+<!--
+<member>CPLHIST3HrWx</member>
+<member>CPLHIST3HrWxHfHrSol</member>
+-->
+</simplelist>
+</para>
+<para>
+<varname>CLMQIAN</varname> is for the standard mode of using global atmospheric data 
+that was developed by Qian et. al. for CLM using NCEP data from 1948 to 2004.
+<varname>CLM1PT</varname> is for the special cases where we have single-point tower
+data for particular sites. Right now we only have data for three urban locations:
+MexicoCity, Mexico, Vancouver Canada, and the urban-c alpha site. This is non-standard
+functionality and we recommend that users stick with the CLMQIAN mode of operation.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>DATM_CLMNCEP_YR_START</term><listitem>
+<para>
+<envar>DATM_CLMNCEP_YR_START</envar> sets the beginning year to cycle the atmospheric
+data over for the CLMQIAN mode.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>DATM_CLMNCEP_YR_END</term><listitem>
+<para>
+<envar>DATM_CLMNCEP_YR_END</envar> sets the ending year to cycle the atmospheric
+data over for the CLMQIAN mode.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>DATM_CLMNCEP_YR_ALIGN</term><listitem>
+<para>
+<envar>DATM_CLMNCEP_YR_START</envar> and <envar>DATM_CLMNCEP_YR_END</envar> determine
+the range of years to cycle the atmospheric data over, and <envar>DATM_CLMNCEP_YR_ALIGN</envar>
+determines which year in that range of years the simulation will start with.
+</para>
+</listitem>
+</varlistentry>
+<!--
+<varlistentry>
+<term>DATM_CO2_TSERIES</term><listitem>
+<para>
+....
+</para>
+</listitem>
+</varlistentry>
+-->
+</variablelist>
 <para>
 <ulink url="../../bld/config_files/config_definition.xml">Definition of each clm configuration Item</ulink>
+</para>
+</sect1>
+
+<sect1 id="build_namelist_options">
+<title>Build-namelist Options</title>
+<para>
+....
 </para>
 </sect1>
 
@@ -243,12 +811,18 @@ Here we give a quick outline of how to run CLM4.
 <!-- Beg of customonizing clm nl section -->
 <chapter id="customizing_clm_nl">
    <title>Customizing the clm namelist</title>
-   <para>How to customize the namelist for a case with CLM</para>
-
 <para>
-<ulink url="../../bld/namelist_files/namelist_definition.xml">Definition of each Namelist Item</ulink>
-<ulink url="../../bld/namelist_files/namelist_defaults_clm.xml">Default values of each CLM Namelist Item</ulink>
+Once a case is configured, we can then customize the case further, by editing the run-time namelist
+for CLM.
 </para>
+<orderedlist>
+<listitem><para>
+<ulink url="../../bld/namelist_files/namelist_definition.xml">Definition of each Namelist Item</ulink>
+</para></listitem>
+<listitem><para>
+<ulink url="../../bld/namelist_files/namelist_defaults_clm.xml">Default values of each CLM Namelist Item</ulink>
+</para></listitem>
+</orderedlist>
 <!-- Beg of nl examples section -->
 <sect1 id="nl_examples">
 <title>Examples of using different namelist features</title>
@@ -313,8 +887,38 @@ the plant function types within gridcells</title>
 ....
 </para>
 
+<sect1 id="CN_SPINUP">
+<title>Spinning up the biogeochemistry Carbon-Nitrogen Model (CN spinup)</title>
+<para>
+<screen>
+cd scripts
+create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+cd CN_spinup
+$EDITOR env_conf.xml   # Add "-ad_spinup on" to CLM_CONFIG_OPTS
+xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART on
+xmlchange -file env_run.xml -id RESUBMIT 30
+xmlchange -file env_run.xml -id STOP_DATE 6000101
+</screen>
+</para>
+</sect1>
+
+<sect1 id="PERGRO">
+<title>Doing perturbation error growth tests</title>
+<para>
+Doing perturbation error growth tests is a way to validate a port of
+the model to a new machine or to verify that changes are only roundoff.
+</para>
+</sect1>
+
 <sect1 id="PTS_MODE">
 <title>Running PTS_MODE configurations</title>
+<para>
+....
+</para>
+</sect1>
+
+<sect1 id="suprted_single_point_datasets">
+<title>Running Supported Single-point Datasets</title>
 <para>
 ....
 </para>

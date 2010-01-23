@@ -331,10 +331,10 @@ erH67 TER.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+
 brH67 TBR.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
 blH67 TBL.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
 
-smHM1 TSM.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 USGS@1850-2000 -10   arb_ic
-erHM1 TER.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 USGS@1850-2000 -3+-7 arb_ic
-brHM1 TBR.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 USGS@1850-2000 -5+-5 arb_ic
-blHM1 TBL.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 USGS@1850-2000 -10   arb_ic
+smHM1 TSM.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -10   arb_ic
+erHM1 TER.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -3+-7 arb_ic
+brHM1 TBR.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -5+-5 arb_ic
+blHM1 TBL.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -10   arb_ic
 
 smH11 TSM.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 96    cold
 erH11 TER.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 10+38 cold
@@ -607,20 +607,17 @@ erL83 TER.sh _nrsc_do clm_std^nl_urb    20020115:NONE:3600 5x5_amazon navy -5+-5
 brL83 TBR.sh _nrsc_do clm_std^nl_urb_br 20020115:NONE:3600 5x5_amazon navy -10+-10 arb_ic
 blL83 TBL.sh _nrsc_do clm_std^nl_urb    20020115:NONE:3600 5x5_amazon navy -10     arb_ic
 
-smLD1 TSM.sh _sc_dh clm_std^nl_urb    20030101:NONE:1800 2.65x3.33 USGS -10   arb_ic
-erLD1 TER.sh _sc_dh clm_std^nl_urb    20030101:NONE:1800 2.65x3.33 USGS -5+-5 arb_ic
+smLM1 TSM.sh _sc_dh clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 gx3v7 -10   arb_ic
+erLM1 TER.sh _sc_dh clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 gx3v7 -5+-5 arb_ic
 
-smLM1 TSM.sh _sc_dh clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -10   arb_ic
-erLM1 TER.sh _sc_dh clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -5+-5 arb_ic
+smLM2 TSM.sh _sc_dm clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 gx3v7 -10   arb_ic
+erLM1 TER.sh _sc_dm clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 gx3v7 -5+-5 arb_ic
 
-smLM2 TSM.sh _sc_dm clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -10   arb_ic
-erLM1 TER.sh _sc_dm clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -5+-5 arb_ic
+smLM3 TSM.sh _sc_do clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 gx3v7 -10   arb_ic
+erLM3 TER.sh _sc_do clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 gx3v7 -5+-5 arb_ic
 
-smLM3 TSM.sh _sc_do clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -10   arb_ic
-erLM3 TER.sh _sc_do clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -5+-5 arb_ic
-
-smLM4 TSM.sh _sc_ds clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -10   arb_ic
-erLM4 TER.sh _sc_ds clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 USGS -5+-5 arb_ic
+smLM4 TSM.sh _sc_ds clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 gx3v7 -10   arb_ic
+erLM4 TER.sh _sc_ds clm_std^nl_urb    20030101:NONE:1800 2.5x3.33 gx3v7 -5+-5 arb_ic
 
 sm654 TSMtools.sh mkgriddata   tools__ds namelist
 sm674 TSMtools.sh mkgriddata   tools__ds singlept

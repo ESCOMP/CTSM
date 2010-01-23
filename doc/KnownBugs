@@ -1,0 +1,122 @@
+Known Bugs in CLM4.0    		                          Jan/13/2010
+
+====================================================================================
+Bug Number: 1100
+Trouble compiling with pgi7
+
+The model does NOT compile using PGI7.2.2. It DOES compile with later versions of the
+PGI compiler, such as 9.0.4.
+
+====================================================================================
+Bug Number: 1092
+Problems running in debug mode on dublin with datm8
+
+Running clm test suite with the latest datm8 I get the following...
+
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+
+
+(seq_mct_drv) : Initialize each component: atm, lnd, ocn, and ice
+(seq_mct_drv) : Initialize atm component
+The variable (sendbuf(18162)) has an undefined value.
+ Error occurs at or near line 566 of m_fccomms.fc_gatherv_fp_         
+ Called from or near line 536 of m_attrvectcomms.gm_gather__          
+ Called from or near line 755 of m_attrvectcomms.gsm_gather__         
+ Called from or near line 771 of shr_dmodel_mod.shr_dmodel_ggridcompare_      
+ Called from or near line 262 of shr_strdata_mod.shr_strdata_init_      
+ Called from or near line 380 of datm_comp_mod.datm_comp_init_        
+ Called from or near line 61 of atm_comp_mct.atm_init_mct_           
+ Called from or near line 615 of MAIN__  
+
+====================================================================================
+Bug Number: 1063
+Problems restarting for CCSM spinup data mode
+
+Exact restarts for the 1850 CN spinup compset fail on bluefire...
+
+ERS.f09_g16.I1850SPINUPCN.bluefire
+
+also the ERB test fails, and the ERB_D test fails with optimization set to
+zero.
+
+(note ERS for the I1850CN compset passes, it's just the SPINUP case that fails)
+
+In the coupler log file there's a single field that is different...
+
+The good thing is that it's a single field from the land model that's causing
+trouble...
+
+Comparing initial log file with second log file
+Error:
+/ptmp/erik/ERS.f09_g16.I1850SPINUPCN.bluefire.124426/run/cpl.log.091029-130401
+and
+/ptmp/erik/ERS.f09_g16.I1850SPINUPCN.bluefire.124426/run/cpl.log.091029-130648
+are different.
+>comm_diag xxx sorr   1 4.5555498624818352000E+16 recv lnd Sl_t
+
+<comm_diag xxx sorr   1 4.5555508855413304000E+16 recv lnd Sl_t
+
+
+But, there are many clm history fields that are different.
+
+====================================================================================
+Bug Number: 1017 and 1025
+PTS_MODE can NOT restart or use a global finidat file
+
+Single column mode (or PTS_MODE turned on using the -pts_lat and -pts_lon options in scripts/create_newcase)
+can NOT read restart files or global finidat initial condition files.
+
+Here's the message that happens when you try to run from a restart file.
+
+(OPNFIL): Successfully opened file ./rpointer.lnd on unit=  14
+ Reading restart data.....
+------------------------------------------------------------
+ (GETFIL): attempting to find local file
+c40b19+.I.pts.01.clm2.r.0001-01-06-00000.nc
+ (GETFIL): using c40b19+.I.pts.01.clm2.r.0001-01-06-00000.nc in current working
+directory
+ Reading restart dataset
+ ERROR - setlatlon.F:Cant get variable dim for lat or lsmlat
+ ENDRUN: called without a message string
+
+
+====================================================================================
+Bug Number: 717
+Problem with lt_archiving for too-many files
+
+Keith has been running into a bunch of problems with the lt_archiving when
+using CLM. He can get 30 years in a 6 hour wall-clock cycle -- which means
+overa thousand files -- where lt_archive.sh pukes.
+
+Making it robust -- regardless of the number of files would be one first step.
+The next problem he has is that running over just 10 years -- the job resubmits
+itself before the lt_archive script is done. Then the scripts conflict and he
+ends up having to run the archiving by hand. It would also help if it were
+easier to submit the lt_archive.sh script as well.
+
+====================================================================================
+Bug number: 652
+Output different for different number of threads PGF90 
+
+PGI Version 6.1.6, and NetCDF Version 3.6.2. Works on other platforms/compilers and
+also works with PGI-7.0-7.
+
+====================================================================================
+Bug number: 546
+clm-offline-tools: interpinic does NOT work for DGVM
+
+interpinic does NOT work for DGVM. OK as CNDV will replace DGVM.
+
+====================================================================================
+Bug Number: 452
+Problem with support of number of soil-colors NOT equal to 8 or 20
+
+The mksurfdata tools file mksoicol.F90 sets nsoicol to the max value found in
+the input soilcolor file:
+  nsoicol = maxval(soil_color_i)  
+
+However, the code will fail if  nsoicol does not equal 20 or 8 (which it might
+in paleo cases).  perhaps the code should be extended to handle a case where
+nsoicol is not 20 or 8.
+
+====================================================================================

@@ -8,5 +8,5 @@ models/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/bra
 models/utils/esmf_wrf_timemgr https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_090402
 models/utils/timing           https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_090929
 models/utils/mct              https://svn-ccsm-models.cgd.ucar.edu/mct/trunk_tags/MCT2_7_0_100106/
-models/utils/pio              https://svn-ccsm-models.cgd.ucar.edu/pio/trunk_tags/pio60_prod/pio
+models/utils/pio              http://parallelio.googlecode.com/svn/trunk_tags/pio1_0_7/pio
 models/lnd/clm/tools/cprnc    https://svn-ccsm-models.cgd.ucar.edu/tools/cprnc/trunk_tags/cprnc_081022

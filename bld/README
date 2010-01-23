@@ -15,11 +15,14 @@ Important files/directories:
 
 configure ---------------- Configure script -- creates Makefile and files needed to build CLM
   ----- configure --help - Configure help mode -- sends information on all configure options
-config_files/Makefile.in ------------- Base Makefile for building CLM
 config_files/config_defaults.xml ----- XML file of defaults for CLM
+config_files/config_definition.xml --- XML file definining all CLM configuration items
 config_files/config_sys_defaults.xml - XML file of system defaults
+config_files/Makefile.in ------------- Base Makefile for building CLM used ONLY for stand-alone CLM testing
+                                       The Makefile and Macro's in the root scripts/ccsm_utils/Build and
+                                       scripts/ccsm_utils/Machines are used to build the model normally.
 
----------- Scripts to figure out dependencies between source files (used by Makefile)
+---------- Scripts to figure out dependencies between source files (may be used by Makefile)
 mkDepends
 mkSrcfiles
 
@@ -35,16 +38,18 @@ listDefaultNamelist.pl -- List the files needed for a list of resolutions
                           that are NOT available
 queryDefaultNamelist.pl - Query default namelist for variables
 queryDefaultXML.pm ------ Subroutines needed by queryDefaultNamelist.pl script
-urban_input ------------- Input files used by the urban model for 
-                          single-point cases
 
 ---------- XML Files describing namelists in namelist_files
-datm.streams.template.xml -- Template describing streams for datm7
-namelist_defaults_clm.xml -- List of default values for all namelists needed
-namelist_definition.xml ---- Definition of all namelist items
-namelist_definition.xsl ---- Describes how to view the xml file as html
-streams.txt.readme --------- Header info on streams file added to streams created
-use_cases ------------------ Specific configurations that build-namelist uses
+namelist_files/namelist_defaults_clm.xml -------- List of default values for the clm namelist
+namelist_files/namelist_defaults_overall.xml ---- List of default values for overall settings
+namelist_files/namelist_defaults_usr_files.xml -- List of default values for the user-files
+namelist_files/namelist_definition.xml ---------- Definition of all namelist items
+namelist_files/namelist_definition.xsl ---------- Describes how to view the xml file as html
+namelist_files/use_cases ------------------------ Specific configurations that build-namelist uses
+
+---------- XML Files describing namelists only used in stand-alone CLM testing
+namelist_files/namelist_defaults_datm.xml -- List of default values for the datm model namelist
+namelist_files/namelist_defaults_drv.xml -- List of default values for the drv namelist
 
 
 ---------- Script to create a new case directory and run-script

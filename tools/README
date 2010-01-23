@@ -44,3 +44,12 @@ II. Notes on the build system for each of the above tools:
 	gmake
 
     The process will create a file called "Depends" which has with the dependencies for the build of each file on other files.
+
+      By default code compiles non-optimized so that you can use the debugger,
+      and with bounds-checking, and float trapping on. To speed up do the following...
+
+   gmake OPT=TRUE  
+
+      Also some of the tools allow for OpenMP shared memory parallelism (such as interpinic) with
+
+   gmake SMP=TRUE

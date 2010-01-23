@@ -10,7 +10,7 @@ mkgriddata tool.
 The following steps provide a method to create the executable
 and generate the surface dataset:
 
-0) untar your input data
+0) export your input data
 
 1) cd to this directory 
 
@@ -29,32 +29,39 @@ NOTE: In order to successfully build, some source files are required from
    (sample namelists are: mksurfdata.namelist, mksurfdata.regional, or mksurfdata.singlept)
 
     ! ======================================
-    ! Must specify settings for either:
+    ! Must specify settings for the output grid:
     ! ======================================
     !    mksrf_fgrid
     ! ======================================
-    ! Must specify settings for:
+    ! Must specify settings for input high resolution datafiles
     ! ======================================
     !    mksrf_fvegtyp
     !    mksrf_fsoitex
+    !    mksrf_forganic
     !    mksrf_fsoicol
     !    mksrf_flanwat
+    !    mksrf_fmax
     !    mksrf_fglacier
+    !    mksrf_ftopo
+    !    mksrf_ffrac
     !    mksrf_furban
     !    mksrf_firrig
     !    mksrf_flai
     ! ======================================
     ! Optionally specify setting for:
     ! ======================================
-    !    mksrf_gridtype  (default is 'global')
+    !    mksrf_gridtype (default is 'global')
     !    mksrf_fdynuse
+    !    all_urban
     !    outnc_large_files
+    !    outnc_double
+    ! ==================
     ! ======================================================================
 
    make sure the datasets in the namelist correspond to the full path of where
    you downloaded your input datasets.
 
-   Sample namelists (using /fs/cgd/csm as the root location where inputdata was untarred) are:
+   Sample namelists (using /fs/cgd/csm as the root location where inputdata was exported) are:
 
    mksurfdata.namelist   ----- Standard global dataset
    mksurfdata.regional   ----- Regional dataset 
@@ -72,13 +79,18 @@ NOTE: In order to successfully build, some source files are required from
 
 Important files:
 
-  Makefile ---------------- GNU makefile
-  Srcfiles ---------------- List of source files needed (includes files outside this directory)
-  Filepath ---------------- Filepath location to source files needed
-  misc.h ------------------ CPP preprocess file required by outside source code
-  preproc.h --------------- CPP preprocess file required by outside source code
-  mksrfdat.fdynfile ------- Sample namelist to create a dynamic PFT surface dataset (PFT changes in time)
-  mksurfdata.namelist ----- Samele global grid namelist
-  mksurfdata.regional ----- Samele regional grid namelist
-  mksurfdata.singlept ----- Samele single-point namelist
+  mksurfdata.pl ------------- Script to run mksurfdata for many resolutions and simulation years.
+  Makefile ------------------ GNU makefile
+  Srcfiles ------------------ List of source files needed (includes files outside this directory)
+  Filepath ------------------ Filepath location to source files needed
+  misc.h -------------------- CPP preprocess file required by outside source code
+  preproc.h ----------------- CPP preprocess file required by outside source code
+  mksurfdata.pftdyn --------- Sample namelist to create a dynamic PFT surface dataset (PFT changes in time)
+  mksurfdata.namelist ------- Sample global grid namelist
+  mksurfdata.regional ------- Sample regional grid namelist
+  mksurfdata.singlept ------- Sample single-point namelist
+  mksurfdata.globalirrig ---- Sample namelist also outputting global irrigation data
+  pftdyn_simyr1850-2005.txt - List of input PFT files from 1850 to 2005
+  pftdyn_simyr1850.txt ------ Input PFT file for year 1850
+  pftdyn_simyr2000.txt ------ Input PFT file for year 2000
 
