@@ -1,4 +1,374 @@
 ===============================================================
+Tag name:  clm3_7_00
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date: Fri Jan 22 22:48:09 MST 2010
+One-line Summary: Update to datm8, redirect aquifer overflow to drainage, add gx3v7 
+                  masks, script to extract regional datasets, add harvesting for CN, 
+                  modify shrubs, include urban model, ice stream for snowcapping, 
+                  new build-namelist system, scale solar by solar zenith angle in 
+                  datm, deep soil with bedrock at bottom, organic matter in soils, 
+                  SNICAR for snow radiation, sparce dense aero, snow cover changes
+
+Software engineering changes:
+
+    Update to cpl7 and scripts.
+    Remove offline and cpl6 modes.
+    Remove support for CASA model.
+    Update to datm8 atmospheric data model.
+    Add gx3v7 land mask for T31 and fv-4x5 horizontal resolutions.
+    Add gx1v6 land mask for f05, f09, and f19 horigonzl resolutions.
+    Add tx1v1 land mask and 1.9x2.5_tx1v1 horizontal resolution.
+    Add in 2.5x3.33 horizontal resolution.
+    Add in T62 horizontal resolution so can run at same resolution as input datm data.
+    Allow first history tape to be 1D.
+    Add ability to use own version of input datasets with CLM_USRDAT_NAME variable.
+    Add a script to extract out regional datasets.
+    New build-namelist system with XML file describing all namelist items.
+    Add glacier_mec use-case and stub glacier model.
+    Add ncl script to time-interpolate between 1850 and 2000 for fndepdat dataset, for fndepdyn version.
+    Make default of maxpatch_pft=numpft+1 instead of 4.
+    Only output static 3D fields on first h0 history file to save space.
+    Add new fields for VOC (Volatile Organic Compounds) on some surface datasets, that will be 
+    needed for the new MEGAN VOC model (NOT incorporated yet).
+    Add irrigation area to mksurfdata tool (NOT used in CLM yet).
+    Add multiple elevation class option for glaciers in mksurfdata tool (NOT used in CLM yet).
+    Add ascale field to land model in support of model running on it's own grid.
+
+Science changes:
+
+    Change to freezing temperature constant      
+    Forcing height at atm plus z0+d on each tile                    
+    Effective porosity divide by zero fix                          
+    Sparse/dense canopy aerodynamic parameters                 
+    Ground/snow emissivity smooth transition                                                       
+    Thermal and hydraulic properties of organic soil                                                                        
+    Init h2osoi=0.3                                                            
+    Snow compaction fix                                                          
+    Snow T profile during layer splitting fix                                  
+    Snow burial fraction                                                             
+    Snow cover fraction                                                                   
+    SNICAR (snow aging, black carbon and dust deposition, vertical distribution of solar energy) 
+    Remove SNOWAGE, no longer used                                                   
+    Deep soil (15 layers, ~50m), 5 new layers are hydrologically inactive bed rock                          
+    Ground evap (beta), stability, and litter resistance                      
+    Organic/mineral soil hydraulic conductivity percolation theory       
+    Richards equation modifications                                         
+    Normalization of frozen fraction of soil formulation                                 
+    One-step solution for soil moisture and qcharge                          
+    Changes to rsub_max for drainage and decay factor for surface runoff      
+    Fixed diurnal cycle of solar radiation in offline forcing data                            
+    Back to CLM3 lakes and wetlands datasets, but 1% rather than 5% threshold (same for glacier) 
+    Changes to pft physiology file from CN                                                                                     
+    New grass optical properties                                                                   
+    New surface dataset assuming no herbaceous understory  
+    Direct versus diffuse radiation offline                                           
+    New VOC model (MEGAN)                                                                                            
+    Snow-capped runoff goes to new ice stream and routed to ocean as ice                                         
+    Dust model always on, LAI threshold parameter change from 0.1 to 0.3     
+    Daylength control on vcmax                                                           
+    SAI and get_rad_dtime fix                                                              
+    Always run with MAXPATCH_PFT=npfts + 1 instead of 4                                                                               
+    Transient land cover/use mode - datasets, energy and water balance   
+    RTM sub-cycling                                                     
+    Twostream bug fix                                
+    Update soil colors     
+    2m relative humidity        
+    Fix for aquifer leak (SoilHydrologyMod, BalanceCheckMod)              
+    New nitrogen deposition file (units and sum of NOx, NHy)  
+
+Quickstart to new cpl7 scripts...
+
+         cd scripts
+         ./create_newcase -help      # get help on how to run create_newcase
+         ./create_newcase -case testI -mach bluefire -res f19_g16 -compset I    # create new "I" case for bluefire at 1.9x2.5_gx1v6 res
+                                     # "I" case is clm active, datm7, and inactive ice/ocn
+         cd testI
+         ./xmlchange -help           # Get help on editor for XML files
+         ./xmlchange <options> env_conf.xml env_mach_pes  # Edit configure files if needed
+         configure -case             # create scripts
+         ./xmlchange <options> env_build.xml              # Edit build files if needed
+         testI.build                 # build model and create namelists
+         ./xmlchange <options> env_run.xml                # Edit run files if needed
+         bsub < testI.run            # submit script
+                                     # (NOTE: edit env_run.xml to set RESUBMIT to number of times to automatically resubmit)
+Quickstart to use of regional extraction scripts and PERSONAL datasets:
+
+       # Run the script to create an area to put your files (assume CSMDATA set to standard inputdata)
+       cd scripts
+       setenv MYCSMDATA $HOME/myinputdata
+       link_dirtree $CSMDATA $MYCSMDATA
+
+       # Run the extraction for data from 52-73 North latitude, 190-220 longitude
+       # that creates 13x12 gridcell region from the f19 (1.9x2.5) global resolution over
+       # Alaska
+       cd ../models/lnd/clm/tools/ncl_scripts
+       setenv MYID 13x12pt_f19_alaskaUSA
+       getregional_datasets.pl -sw 52,190 -ne 73,220 -id $MYID -mycsmdata $MYCSMDATA
+
+       # Now create a case that uses these datasets
+       cd ../../../../../scripts
+       create_newcase -case testregional -compset I -mach bluefire -res pt1_pt1 -skip_rundb
+       cd testregional
+       $EDITOR env_conf.xml # change CLM_BLDNML_OPTS to include "-clm_usr_name $MYID" (expand $MYID)
+       $EDITOR env_mach_pes.xml # Change tasks/threads as appropriate (defaults to serial)
+       xmlchange -file env_run.xml -id DIN_LOC_ROOT_CSMDATA -val $MYCSMDATA
+
+       # Do other changes to xml files as appropriate
+       # configure as normal, then edit the datm namelist
+
+       configure -case
+
+       # Then build and run the case as normal
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+
+Describe any changes made to build system:
+
+   Change directory structure to match CCSM.
+   Add BGP target.
+   Add choice between ESMF and MCT frameworks.
+   Start removing #ifdef and directives that supported Cray-X1 Phoenix as now decommisioned.
+   Make default of maxpatch_pft=numpft+1 instead of 4 for all configurations.
+   By default turn on CLAMP when either CN or CASA is enabled
+   New SNICAR_FRC, CARBON_AERO, and C13 CPP ifdef tokens.
+
+   New options added to configure:
+
+     -comp_intf <name>   Component interface to use (ESMF or MCT) (default MCT)
+     -nofire             Turn off wildfires for bgc setting of CN (default includes fire for CN)
+     -pio <name>         Switch enables building with Parallel I/O library. [on | off] (default is on)
+     -snicar_frc <name>  Turn on SNICAR radiative forcing calculation. [on | off] (default is off)
+
+Describe any changes made to the namelist:
+
+   NOTE: build-namelist now checks the validity of your namelist you generate by looking at data in the namelist_definition.xml
+         file. In order to add new namelist items you need to change the code and also edit this file. To view information
+         on the namelist view the file:
+         models/lnd/clm/bld/namelist_files/namelist_definition.xml
+         in your browser and you'll see the names, type, description and valid_values for all namelist variables.
+
+   Changes to build-namelist:
+     Transient sim_year ranges (i.e. 1850-2000)
+     Remove cam_hist_case option.
+     Make sure options ONLY used for stand-alone testing have a "drv_" or "datm_" prefix in them and list these
+     options all together and last when asking for help from build-namelist.
+   New options to build-namelist:
+     -clm_usr_name     "name" Dataset resolution/descriptor for personal datasets. Default: not used
+                              Example: 1x1pt_boulderCO_c090722 to describe location,
+                                       number of pts, and date files created
+   New list options to build-namelist:
+     build-namelist -res list          # List valid resolutions
+     build-namelist -mask list         # List valid land-masks
+     build-namelist -sim_year list     # List valid simulation years and simulation year ranges
+     build-namelist -clm_demand list   # List namelist variables including those you could demand to be included.
+     build-namelist -use_case list     # List valid use-cases
+
+     New use-cases for:
+
+   1850_control = Conditions to simulate 1850 land-use
+   2000_control = Conditions to simulate 2000 land-use
+20thC_transient = Simulate transient land-use, and aerosol deposition changes from 1850 to 2005
+    glacier_mec = Placeholder for running IG cases with the ice sheet model glimmer
+
+   New namelist items:
+
+        urban_hac = OFF, ON or ON_WASTEHEAT   (default OFF)     Flag for urban Heating and Air-Conditioning
+                                                       OFF          = Building internal temperature is un-regulated.
+                                                       ON           = Building internal temperature is bounded to reasonable range.
+                                                       ON_WASTEHEAT = Building internal temperature is bounded and resultant waste
+                                                                      heat is given off.
+        urban_traffic = .true. or .false.     (default .false.) Flag to include additional multiplicative factor of urban traffic
+                                                                to sensible heat flux.
+        fsnowoptions = filename          file for snow/aerosol optical properties (required)
+        fsnowaging   = filename          file for snow aging parameters (required)
+        faerdep      = filename          file of aerosol deposition (required)
+
+  New history variables: (note watt vs. W in units, 26 vs. 76)
+     BCDEP                      total BC deposition (dry+wet) from atmosphere                kg/m^2/s
+     C13_PRODUCT_CLOSS          C13 total carbon loss from wood product pools                gC13/m^2/s
+     DSTDEP                     total dust deposition (dry+wet) from atmosphere              kg/m^2/s
+     EFLX_DYNBAL                dynamic land cover change conversion energy flux             W/m^2
+     FGR12                      heat flux between soil layers 1 and 2                        watt/m^2
+     FSAT                       fractional area with water table at surface                  unitless
+     FSH_NODYNLNDUSE		sensible heat flux not including correction for land use change
+                                                                                             watt/m^2
+     GC_HEAT1                   initial gridcell total heat content                          J/m^2
+     GC_HEAT2                   post land cover change total heat content                    J/m^2    inactive
+     GC_ICE1                    initial gridcell total ice content                           mm/s
+     GC_ICE2                    post land cover change total ice content                     mm/s     inactive
+     GC_LIQ1                    initial gridcell total liq content                           mm
+     GC_LIQ2                    initial gridcell total liq content                           mm       inactive <<<< name??
+     H2OSNO_TOP                 mass of snow in top snow layer                               kg
+     HEAT_FROM_AC               sensible heat flux put into canyon due to heat removed from air conditioning
+                                                                                             watt/m^2
+     HK                         hydraulic conductivity                                       mm/s     inactive
+     LWup                       upwelling longwave radiation                                 watt/m^2 inactive
+     NBP                        net biome production, includes fire, landuse, and harvest flux, positive for sink
+                                                                                             gC/m^2/s
+     OCDEP                      total OC deposition (dry+wet) from atmosphere                kg/m^2/s
+     PBOT                       atmospheric pressure                                         Pa
+     PCO2                       atmospheric partial pressure of CO2                          Pa
+     PRODUCT_CLOSS              total carbon loss from wood product pools                    gC/m^2/s
+     PRODUCT_NLOSS              total N loss from wood product pools                         gN/m^2/s
+     Qair                       atmospheric specific humidity                                kg/kg    inactive
+     Qanth                      anthropogenic heat flux                                      watt/m^2 inactive
+     Qtau                       momentum flux                                                kg/m/s^2
+     QFLX_LIQ_DYNBAL            liq dynamic land cover change conversion runoff flux         mm/s
+     QFLX_ICE_DYNBAL            ice dynamic land cover change conversion runoff flux         mm/s
+     QRUNOFF_NODYNLNDUSE        total liquid runoff not including correction for land use change (does not include QSNWCPICE) 
+                                                                                             mm/s
+     QSNWCPICE                  excess snowfall due to snow capping                          mm/s
+     QSNWCPICE_NODYNLNDUSE      excess snowfall due to snow capping not including correction for land use change
+                                                                                             mm/s
+     QSNWCPLIQ                  excess rainfall due to snow capping                          mm/s     inactive
+     SMP                        soil matric potential                                        mm       inactive
+     SNOAERFRC2L                surface forcing of all aerosols in snow, averaged only when snow is present (land)
+                                                                                             watt/m^2
+     SNOAERFRCL                 surface forcing of all aerosols in snow (land)               watt/m^2
+     SNOBCFRCL                  surface forcing of BC in snow (land)                         watt/m^2
+     SNOBCMCL                   mass of BC in snow column                                    kg/m2
+     SNOBCMSL                   mass of BC in top snow layer                                 kg/m2
+     SNOdTdzL                   top snow layer temperature gradient (land)                   K/m
+     SNODSTFRC2L                surface forcing of dust in snow, averaged only when snow is present (land)
+                                                                                             watt/m^2
+     SNODSTFRCL                 surface forcing of dust in snow (land)                       watt/m^2
+     SNODSTMCL                  mass of dust in snow column                                  kg/m2
+     SNODSTMSL                  mass of dust in top snow layer                               kg/m2
+     SNOFSRND                   direct nir reflected solar radiation from snow               watt/m^2 inactive
+     SNOFSRNI                   diffuse nir reflected solar radiation from snow              watt/m^2 inactive
+     SNOFSRVD                   direct vis reflected solar radiation from snow               watt/m^2 inactive
+     SNOFSRVI                   diffuse vis reflected solar radiation from snow              watt/m^2 inactive
+     SNOFSDSND                  direct nir incident solar radiation on snow                  watt/m^2 inactive
+     SNOFSDSNI                  diffuse nir incident solar radiation on snow                 watt/m^2 inactive
+     SNOFSDSVD                  direct vis incident solar radiation on snow                  watt/m^2 inactive
+     SNOFSDSVI                  diffuse vis incident solar radiation on snow                 watt/m^2 inactive
+     SNOLIQFL                   top snow layer liquid water fraction (land)                  fraction inactive
+     SNOOCMCL                   mass of OC in snow column                                    kg/m2
+     SNOOCMSL                   mass of OC in top snow layer                                 Kg/m2
+     SNOOCFRC2L                 surface forcing of OC in snow, averaged only when snow is present (land)
+     SNOOCFRCL                  surface forcing of OC in snow (land)                         watt/m^2
+                                                                                             watt/m^2
+     SNORDSL                    top snow layer effective grain radius                        m^-6     inactive
+     SNOTTOPL                   snow temperature (top layer)                                 K/m      inactive <<< units?
+     SWup                       upwelling shortwave radiation                                watt/m^2 inactive
+     URBAN_AC                   urban air conditioning flux                                  watt/m^2
+     URBAN_HEAT                 urban heating flux                                           watt/m^2
+     Wind                       atmospheric wind velocity magnitude                          m/s      inactive
+     WOOD_HARVESTC              wood harvest (to product pools)                              gC/m^2/s
+     WOOD_HARVESTN              wood harvest (to product pools)                              gN/m^2/s
+
+  History field name changes:
+
+     ANNSUM_PLANT_NDEMAND  => ANNSUM_POTENTIAL_GPP
+     ANNSUM_RETRANSN       => ANNMAX_RETRANSN
+     C13_DWT_PROD10C_LOSS  => C13_PROD10C_LOSS
+     C13_DWT_PROD100C_LOSS => C13_PROD100C_LOSS
+     C13_DWT_PROD10N_LOSS  => C13_PROD10N_LOSS
+     C13_DWT_PROD100C_LOSS => C13_PROD100C_LOSS
+     DWT_PROD100N_LOSS     => PROD10N_LOSS
+     DWT_PROD100N_LOSS     => PROD100N_LOSS
+     DWT_PROD100C_LOSS     => PROD10C_LOSS
+     DWT_PROD100C_LOSS     => PROD100C_LOSS
+     HCSOISNO              => HC
+     TEMPSUM_PLANT_NDEMAND => TEMPSUM_POTENTIAL_GPP
+     TEMPSUM_RETRANSN      => TEMPMAX_RETRANSN
+
+   History field names deleted:
+     SNOWAGE, TSNOW, FMICR, FCO2, DMI, QFLX_SNOWCAP
+
+  Add new urban oriented _U, and _R (Urban and Rural) for:
+        EFLX_LH_TOT, FGR, FIRA, FSH, FSM, Q2M, QRUNOFF, RH2M, SoilAlpha, TG, TREFMNAV, TREFMXAV, and TSA
+        (missing _R for SoilAlpha)
+
+Describe timing and memory performance:
+
+Versions of any externally defined libraries:
+
+   scripts             scripts4_100108b
+   drv                 vocemis-drydep12_drvseq3_1_11
+   datm                datm8_091218
+   socn                stubs1_2_02/socn
+   sice                stubs1_2_02/sice
+   sglc                stubs1_2_02/sglc
+   csm_share           vocemis-drydep13_share3_091217
+   esmf_wrf_timemgr    esmf_wrf_timemgr_090402
+   timing              timing_090929
+   mct                 MCT2_7_0_100106
+   pio                 pio60_prod
+   cprnc               cprnc_081022
+
+Summary of testing:
+  bluefire: All PASS up to...017 blF92 TBL.sh 17p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 cold .............PASS
+  bluefire interactive testing: All PASS up to..
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+  bluefire/CCSM testing:
+PASS  ERH.f09_g16.B20TRCN.bluefire
+BFAIL ERH.f09_g16.B20TRCN.bluefire.compare.ccsm4_0_beta38 --- compset names changed -- but cpl.log files compare exactly
+!
+> ../Tools/check_exactrestart.pl cpl.log.100109-171753 $FISHOME/ccsm4_0_beta38/scripts/ERH.f09_g16.B20TRTR1CN.bluefire.G
+.172652/logs/cpl.log.100108-181015
+log files match!
+PASS
+PASS  SMS_RLA.f45_f45.I.bluefire
+PASS  SMS_RLB.f45_f45.I.bluefire
+PASS  SMS_ROA.f45_f45.I.bluefire
+PASS  ERS_D.f45_g37.I.bluefire
+PASS  ERS_D.f45_g37.I.bluefire.compare_hist.clm3_6_58+datm8
+PASS  ERS_D.f45_g37.I.bluefire.compare.clm3_6_58+datm8
+PASS  PET.f45_g37.I1850.bluefire.cpl
+PASS  PET.f45_g37.I1850.bluefire.atm
+PASS  PET.f45_g37.I1850.bluefire.lnd
+PASS  PET.f45_g37.I1850.bluefire.ice
+PASS  PET.f45_g37.I1850.bluefire.ocn
+PASS  PET.f45_g37.I1850.bluefire.glc
+PASS  PET.f45_g37.I1850.bluefire.compare.clm3_6_58+datm8
+PASS  ERS.f19_g16.I1850.bluefire
+PASS  ERS.f19_g16.I1850.bluefire.compare_hist.clm3_6_58+datm8
+PASS  ERS.f19_g16.I1850.bluefire.compare.clm3_6_58+datm8
+PASS  ERB.f09_g16.I_1948-2004.bluefire
+PASS  ERB.f09_g16.I_1948-2004.bluefire.compare.clm3_6_58+datm8
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire  <<<<<<<<<<<<<<<<<<<<<<<<< Failed before bug 1063
+PASS  ERH_D.f10_f10.I1850CN.bluefire
+PASS  PET.f10_f10.I8520CN.bluefire.cpl
+PASS  PET.f10_f10.I8520CN.bluefire.atm
+PASS  PET.f10_f10.I8520CN.bluefire.lnd
+PASS  PET.f10_f10.I8520CN.bluefire.ice
+PASS  PET.f10_f10.I8520CN.bluefire.ocn
+PASS  PET.f10_f10.I8520CN.bluefire.glc
+  jaguar interactive testing: All PASS up to...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+  dublin/lf95 interactive testing: None PASS because of bug 1092
+  dublin/lf95: None PASS because of bug 1092
+  dublin/INTEL interactive testing: ALL PASS except (and didn't compare to baseline)
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+007 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 6
+028 smM94 TSMncl_tools.sh ndepregrid ............................................................FAIL! rc= 6
+030 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  dublin/INTEL: All PASS up to  021 smJ92 TSM.sh (and didn't compare to baseline)
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+	
+===============================================================
+===============================================================
 Tag name:  clm3_6_64
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Fri Jan 22 22:19:24 MST 2010
