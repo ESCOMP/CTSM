@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on calgary, breeze, dublin, lightning, bluefire, jaguar, kraken, intrepid: 
+# usage on calgary, breeze, dublin, edinburgh, bluefire, jaguar, kraken, intrepid: 
 # ./test_driver.sh
 #
 # valid arguments: 
@@ -20,7 +20,7 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta38"
+seqccsm_vers="ccsm4_0_beta40"
 
 hostname=`hostname`
 case $hostname in
@@ -133,110 +133,6 @@ dataroot="/fs/cgd/csm"
 export LD_LIBRARY_PATH="/contrib/tcl8.4.19/unix:\$LD_LIBRARY_PATH"
 export PATH="/contrib/xlf/12.01.0000.0003/bin:\$PATH"
 echo_arg=""
-
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
-
-
-    ##lightning
-    ln* )
-    submit_script="test_driver_lightning_${cur_time}.sh"
-
-    if [ -z "$CLM_ACCOUNT" ]; then
-	export CLM_ACCOUNT=`grep -i "^${LOGNAME}:" /etc/project | cut -f 1 -d "," | cut -f 2 -d ":" `
-	if [ -z "${CLM_ACCOUNT}" ]; then
-	    echo "ERROR: unable to locate an account number to charge for this job under user: $LOGNAME"
-	    exit 2
-	fi
-    fi
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-#BSUB -a mpich_gm            #lightning requirement
-#BSUB -x                     # exclusive use of node (not_shared)
-#BSUB -N
-#BSUB -n 64                  # total tasks needed
-#BSUB -R "span[ptile=2]"     # tasks on node
-#BSUB -o test_dr.o%J         # output filename
-#BSUB -e test_dr.o%J         # error filename
-#BSUB -q regular             # queue
-#BSUB -W 6:00                     
-#BSUB -P $CLM_ACCOUNT
-#BSUB -J clmtest
-
-if [ -n "\$LSB_JOBID" ]; then   #batch job
-    export JOBID=\${LSB_JOBID}
-    initdir=\${LS_SUBCWD}
-    interactive="NO"
-    input_file="tests_posttag_lightning"
-else
-    interactive="YES"
-    export LSB_MCPU_HOSTS="\$hostname 8"
-    input_file="tests_posttag_lightning_nompi"
-fi
-
-##omp threads
-if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=1
-fi
-export CLM_RESTART_THREADS=2
-
-##mpi tasks
-export CLM_TASKS=64
-export CLM_RESTART_TASKS=30
-
-export CLM_COMPSET="I"
-
-if [ "\$CLM_FC" = "pathf90" ]; then
-   export INC_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/include
-   export LIB_NETCDF=/contrib/2.6/netcdf/3.6.0-p1-pathscale-2.4-64/lib
-   mpich=/contrib/2.6/mpich-gm/1.2.6..14a-pathscale-2.4-64
-   export INC_MPI=\${mpich}/include
-   export LIB_MPI=\${mpich}/lib
-   export PS=/contrib/2.6/pathscale/2.4
-   export PATH=\${mpich}/bin:\${PS}/bin:\${PATH}
-   export LD_LIBRARY_PATH=\${PS}/lib/2.4:/opt/pathscale/lib/2.4/32:\${LD_LIBRARY_PATH}
-   export MAKE_CMD="gmake"
-   export CCSM_MACH="lightning_path"
-   export CFG_STRING="-fc pathf90 -linker \${mpich}/bin/mpif90 "
-   export TOOLS_MAKE_STRING="USER_FC=pathf90 USER_LINKER=\${mpich}/bin/mpif90 "
-elif [ "\$CLM_FC" = "PGI" ]; then
-   netcdf=/contrib/2.6/netcdf/3.6.2-pgi-6.2-64
-   export INC_NETCDF=\${netcdf}/include
-   export LIB_NETCDF=\${netcdf}/lib
-   mpich=/contrib/2.6/mpich-gm/1.2.6..14a-pgi-6.2-64
-   export INC_MPI=\${mpich}/include
-   export LIB_MPI=\${mpich}/lib
-   export PGI=/usr/local/pgi/linux86-64/6.2
-   export PATH=\${mpich}/bin:\${PGI}/bin:\${PATH}
-   export LD_LIBRARY_PATH=\${PGI}/lib:\${LD_LIBRARY_PATH}
-   export MAKE_CMD="gmake"
-   export CCSM_MACH="lightning_pgi"
-   export CFG_STRING="-fc pgf90 -linker \${mpich}/bin/mpif90 "
-   export TOOLS_MAKE_STRING="USER_FC=pgf90 USER_LINKER=\${mpich}/bin/mpif90 "
-else
-   netcdf=/contrib/2.6/netcdf/3.6.2-intel-10.1.008-64
-   export INC_NETCDF=\$netcdf/include
-   export LIB_NETCDF=\$netcdf/lib
-   mpich=/contrib/2.6/mpich-gm/1.2.6..14a-intel-10.1.008-64
-   export INC_MPI=\${mpich}/include
-   export LIB_MPI=\${mpich}/lib
-   export intel=/contrib/2.6/intel/10.1.008
-   export PATH=\${mpich}/bin:\${intel}/bin:\${PATH}
-   export MAKE_CMD="gmake"
-   export CCSM_MACH="lightning_intel"
-   export CFG_STRING="-fc ifort -cc icc -linker \$mpich/bin/mpif90 "
-   export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
-fi
-export MACH_WORKSPACE="/ptmp"
-export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
-export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
-dataroot="/fs/cgd/csm"
-echo_arg="-e"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -459,6 +355,105 @@ export LIB_NETCDF=\${netcdf}/lib
 export INC_MPI=\${mpich}/include
 export LIB_MPI=\${mpich}/lib
 export MAKE_CMD="gmake -j 5"   ##using hyper-threading on dublin
+export MACH_WORKSPACE="/scratch/cluster"
+export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_64/cprnc
+export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
+dataroot="/fs/cgd/csm"
+echo_arg="-e"
+
+EOF
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
+    ;;
+
+    ## edinburgh
+    edinburgh* | e0*) 
+    submit_script="test_driver_edinburgh_${cur_time}.sh"
+    export PATH=/cluster/torque/bin:${PATH}
+
+    if [ -z "$CLM_CCSMBLD" ]; then
+	export CLM_CCSMBLD="TRUE"
+    fi
+
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
+cat > ./${submit_script} << EOF
+#!/bin/sh
+#
+
+# Name of the queue (CHANGE THIS if needed)
+#PBS -q long
+# Number of nodes (CHANGE THIS if needed)
+#PBS -l nodes=1:ppn=8
+# output file base name
+#PBS -N test_dr
+# Put standard error and standard out in same file
+#PBS -j oe
+# Export all Environment variables
+#PBS -V
+# End of options
+
+if [ -n "\$PBS_JOBID" ]; then    #batch job
+    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
+    initdir=\${PBS_O_WORKDIR}
+fi
+
+if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
+    interactive="NO"
+    input_file="tests_pretag_edinburgh"
+else
+    export CLM_CCSMBLD="FALSE"
+    interactive="YES"
+    input_file="tests_pretag_edinburgh_nompi"
+fi
+
+##omp threads
+if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
+   export CLM_THREADS=1
+fi
+export CLM_RESTART_THREADS=2
+
+##mpi tasks
+export CLM_TASKS=8
+export CLM_RESTART_TASKS=1
+
+export CLM_COMPSET="I"
+
+export PGI=/usr/local/pgi-pgcc-pghf-7.2-5
+export LAHEY=/usr/local/lf6481
+export INTEL=/usr/local/intel-cluster-3.2.02
+export P4_GLOBMEMSIZE=500000000
+
+
+if [ "\$CLM_FC" = "PGI" ]; then
+    netcdf=/usr/local/netcdf-3.6.3-pgi-hpf-cc-7.2-5
+    mpich=/usr/local/mpich-1.2.7p1-pgi-hpf-cc-7.2-5
+    export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
+    export PATH=\${PGI}/linux86/bin:\${mpich}/bin:\${PATH}
+    export CCSM_MACH="edinburgh_pgi"
+    export CFG_STRING=""
+    export TOOLS_MAKE_STRING=""
+elif [ "\$CLM_FC" = "INTEL" ]; then
+    netcdf=/usr/local/netcdf-3.6.3-intel-3.2.02
+    mpich=/usr/local/mpich-1.2.7p1-intel-3.2.02
+    export LD_LIBRARY_PATH=/cluster/torque/lib:\${INTEL}/cc/11.0.074/lib/intel64:\${INTEL}/fc/11.0.074/lib/intel64:\${LD_LIBRARY_PATH}
+    export PATH=\${INTEL}/fc/11.0.074/bin/intel64:\${INTEL}/cc/11.0.074/bin/intel64:\${mpich}/bin:\${PATH}
+    export CCSM_MACH="edinburgh_intel"
+    export CFG_STRING="-fc ifort "
+    export TOOLS_MAKE_STRING="USER_FC=ifort "
+    /usr/local/intel-cluster-3.2.02/intel-login-script.sh
+else
+    netcdf=/usr/local/netcdf-3.6.3-gcc-4.1.2-lf95-8.0_x86_64
+    mpich=/usr/local/mpich-1.2.7p1-gcc-g++-4.1.2-42-lf9581
+    export LD_LIBRARY_PATH=\${LAHEY}/lib64:/cluster/torque/lib:\${LD_LIBRARY_PATH}
+    export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
+    export CCSM_MACH="edinburgh_lahey"
+    export CFG_STRING="-fc lf95 -cc gcc "
+    export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
+fi
+export INC_NETCDF=\${netcdf}/include
+export LIB_NETCDF=\${netcdf}/lib
+export INC_MPI=\${mpich}/include
+export LIB_MPI=\${mpich}/lib
+export MAKE_CMD="gmake -j 5"   ##using hyper-threading on edinburgh
 export MACH_WORKSPACE="/scratch/cluster"
 export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_64/cprnc
 export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
@@ -1006,6 +1001,9 @@ EOF
 
 
 chmod a+x $submit_script
+if [ ! -z "$CLM_RETAIN_FILES" ]; then
+   export CLM_RETAIN_FILES="FALSE"
+fi
 arg1=${1##*-}
 case $arg1 in
     [iI]* )
@@ -1075,7 +1073,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on calgary, bluefire, dublin, lightning, jaguar, kraken, intrepid: "
+    echo "usage on calgary, bluefire, dublin, edinburgh, jaguar, kraken, intrepid: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
@@ -1100,14 +1098,14 @@ case $hostname in
     ##bluefire
     be* )  bsub < ${submit_script};;
 
-    ##lightning
-    ln* )  bsub < ${submit_script};;
-
     ##calgary
     ca* | c0* )  qsub ${submit_script};;
 
     ##dublin
     dublin* | d0* )  qsub ${submit_script};;
+
+    ##edinburgh
+    edinburgh** | e0* )  qsub ${submit_script};;
 
     ##jaguar
     jaguar* )  qsub ${submit_script};;

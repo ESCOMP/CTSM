@@ -62,12 +62,13 @@ OPTIONS
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying 
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
+     -rcp "value"             Representative concentration pathway (rcp) to use for future scenarios.
      -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
     			      in degrees for latitude and longitude respectively)
                               "-res list" to list valid resolutions.
      -s                       Turns on silent mode - only fatal messages issued.
-     -sim_year "year"         Year to simulate for input datasets (i.e. 1850, 2000, 1850-2000)
+     -sim_year "year"         Year to simulate for input datasets (i.e. 1850, 2000, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
      -start_type "type"       Type of simulation (cold, arb_ic, startup, continue, or branch)
                               (cold=always start with arbitrary initial conditions)
@@ -140,6 +141,7 @@ my %opts = ( config                => $cfg_cache,
              clm_demand            => "null",
 	     help                  => 0,
 	     dir                   => $outdirname,
+	     rcp                   => "default",
              sim_year              => "default",
 	     res                   => "default",
 	     lnd_res               => "default",
@@ -171,6 +173,7 @@ GetOptions(
     "mask=s"                    => \$opts{'mask'},
     "namelist=s"                => \$opts{'namelist'},
     "res=s"                     => \$opts{'res'},
+    "rcp=f"                     => \$opts{'rcp'},
     "drv_runlength=s"           => \$opts{'drv_runlength'},
     "s|silent"                  => \$opts{'silent'},
     "sim_year=s"                => \$opts{'sim_year'},
@@ -489,6 +492,22 @@ if (  ! $definition->is_valid_value( $var, $val ) ) {
    die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
 }
 if ($print>=2) { print "CLM land mask is $mask $eol"; }
+
+$var = "rcp";
+if ( $opts{$var} ne "default" ) {
+    $val = $opts{$var};
+} else {
+    $val = $defaults->get_value($var);
+}
+my $rcp = $val;
+$opts{'rcp'} = $rcp;
+$group = $definition->get_group_name($var);
+$nl->set_variable_value($group, $var, $val);
+if (  ! $definition->is_valid_value( $var, $val ) ) {
+   my @valid_values   = $definition->get_valid_values( $var );
+   die "$nm $var has a value ($val) that is NOT valid. Valid values are: @valid_values\n";
+}
+if ($print>=2) { print "CLM future scenario representative concentration is $rcp $eol"; }
 
 my $var = "sim_year";
 if ( $opts{$var} ne "default" ) {

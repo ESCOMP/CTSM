@@ -422,7 +422,25 @@ ccsm4-help@cgd.ucar.edu.
 <title>How to customize the configuration for a case with CLM</title>
 
 <para>
-....
+The <ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">
+CCSM Users Guide</ulink> gives you the details on how to setup, configure, build, and run
+a case. That is the document to give you the details on using the CCSM scripts. The purpose 
+of this document is to give you the details when using CCSM with CLM on how to customize
+and use advanced features in CLM. You should be familiar with the CCSM Users Guide and
+how to setup cases with CCSM4 before refering to this document.
+</para>
+<para>
+In this chapter we deal with three different ways of customizing a case: Choosing a compset,
+Customizing Configuration options, and customizing the CLM Namelist. There are many different
+compsets that use CLM and many are setup to enable special features of CLM from the start. So
+the first thing you want to be familiar with are the different options in the compsets. The 
+next section shows the different options for customizing the configuration options for CLM.
+Here we introduce the CLM configure and build-namelist scripts and how using the
+<filename>env_conf.xml</filename> options you can customize the configuration and the initial
+namelist. The final section tells you about the CLM namelist and how you could customize the
+namelist once you have run "configure -case" and have an initial namelist in
+<filename>BuildConf/clm.buildnml.csh</filename> that you can customize by hand. You can also 
+use <filename>env_conf.xml</filename> options to change you namelist as well.
 </para>
 <!-- Beg of choosing a compset section -->
 <sect1 id="compset_choice">
@@ -486,12 +504,19 @@ a slab ocean model while "F" compsets have a data ocean model.
        described more fully in the scripts documentation.
 </para>
 </sect2>
+<para>
+We've introduced the basic type of compsets that use CLM and given some further details
+for the "standalone CLM" (or "I" compsets).  The 
+<ulink url="./../../../../scripts/ccsm_utils/Case.template/config_compsets.xml">
+config_compsets.xml</ulink> lists all of the compsets and gives a full description
+of each of them. In the next section we look into customizing the configure time options
+for compsets using CLM.
+</para>
 </sect1>
-</chapter>
 <!-- End of choosing a compset section -->
 
 <!-- Beg of customonizing clm config section -->
-<chapter id="customizing_clm_config">
+<sect1 id="customizing_clm_config">
 <title>Customizing the clm configuration</title>
 <para>
 The "Creating a Case" section of the 
@@ -520,7 +545,7 @@ items, other noteworthy CCSM configuration items, the CLM configure script optio
 script options.
 </para>
 
-<sect1 id="clm_script">
+<sect2 id="clm_script">
 <title>CLM Script configuration items</title>
 <para>
 Below we list each of the CCSM configuration items that are specific to CLM.
@@ -697,8 +722,9 @@ mask=navy,sim_year=1850,sim_year_range="constant"  -csmdata $CSMDATA
 </screen>
 </para>
 
-</sect1>
-<sect1 id="other_config">
+</sect2>
+
+<sect2 id="other_config">
 <title>Other noteworthy configuration items</title>
 <para>
 For running "I" cases there are several other noteworthy configuration items that
@@ -794,26 +820,44 @@ determines which year in that range of years the simulation will start with.
 -->
 </variablelist>
 <para>
-<ulink url="../../bld/config_files/config_definition.xml">Definition of each clm configuration Item</ulink>
+The configure script defines the details of a clm configuration and summarizes it into a
+"config_cache.xml" file. The
+<ulink url="../../bld/config_files/config_definition.xml">config_definition.xml</ulink>
+gives a definition of each clm configuration item. Many of these items are things that you
+would NOT change, but looking through the list gives you the valid options, and a good
+description of each. Coupling this with looking at the options to configure with
+"models/lnd/clm/bld/configure -help" will enable you to understand how to set the different
+options.
 </para>
-</sect1>
-
-<sect1 id="build_namelist_options">
-<title>Build-namelist Options</title>
 <para>
-....
+We've given details on how to use the options in <filename>env_conf.xml</filename> to
+interact with the CLM "configure" and "build-namelist" scripts. As well as giving a good
+understanding of how these scripts work and the options to them. In the next section we
+give further details on the clm namelist. You could customize the namelist for these 
+options after "configure -case" is run, or you could customize it using the
+<envar>CLM_BLDNML_OPTS</envar> which we described here.
 </para>
-</sect1>
-
-</chapter>
+</sect2>
 <!-- End of customonizing clm config section -->
 
 <!-- Beg of customonizing clm nl section -->
-<chapter id="customizing_clm_nl">
+<sect1 id="customizing_clm_nl">
    <title>Customizing the clm namelist</title>
 <para>
-Once a case is configured, we can then customize the case further, by editing the run-time namelist
-for CLM.
+Once a case is configured, we can then customize the case further, by editing the 
+run-time namelist for CLM. First let's list the definition of each namelist
+item and their valid values, and then we'll list the default values for them.
+Next for some of the most used or tricky namelist items we'll give examples of their
+use, and give you example namelists that highlight these features.
+</para>
+
+<!-- Beg of nl definition section -->
+<sect2 id="nl_def">
+<title>Definition of Namelist items and their default values</title>
+<para>
+Here we give the definition of each namelist item and separately the default values for
+them. The default values may change depending on the resolution, land-mask, simulation-year
+and other attributes.
 </para>
 <orderedlist>
 <listitem><para>
@@ -823,82 +867,335 @@ for CLM.
 <ulink url="../../bld/namelist_files/namelist_defaults_clm.xml">Default values of each CLM Namelist Item</ulink>
 </para></listitem>
 </orderedlist>
-<!-- Beg of nl examples section -->
-<sect1 id="nl_examples">
-<title>Examples of using different namelist features</title>
-<para>Examples of using different features in your namelist</para>
+</sect2>
+<!-- End of nl definition section -->
 
-<sect2 id="add_rm_primary_hist">
+<para>
+We've given the definition of each namelist item, and the default values that the CLM
+"build-namelist" script will use for them. In the next section we give examples of using
+selected namelist features.
+</para>
+
+<!-- Beg of nl examples section -->
+<sect2 id="nl_examples">
+<title>Examples of using different namelist features</title>
+<para>
+Below we will give examples of namelists that activate different commonly used
+namelist features. We will discuss the namelist features in different examples and then
+show a complete namelist that includes an example of the use of these features. First we
+give a default namelist that will be the base for all the examples, and then the examples
+will highlight what is different about them from the default.
+</para>
+
+<sect3 id="default_nml">
+<title>The default namelist</title>
+<para>
+Here we give the default namelist as it would be created for a I1850CN compset at 0.9x1.25
+resolution with a gx1v6 land-mask. To edit the namelist you would edit the
+<filename>BuildConf/clm.buildnml.csh</filename> under your case. For simplicity we will
+just show the namelist and NOT the entire file. We will also highlight what changes between
+the upcoming namelists and this one with <emphasis>emphasis</emphasis>.
+</para>
+</sect3>
+
+<sect3 id="add_rm_primary_hist">
 <title>Adding/removing fields on your primary history file</title>
 <para>
-....
+The primary history files are output monthly, and contain an extensive list of
+fieldnames, but the list of fieldsnames can be added to using <varname>hist_fincl1</varname>
+or removed from by adding fieldnames to <varname>hist_fexcl1</varname>.
 </para>
-</sect2>
+</sect3>
 
-<sect2 id="add_aux_hist_chng_output_frq">
+<sect3 id="add_aux_hist_chng_output_frq">
 <title>Adding auxillary history files and changing output
 frequency</title>
 <para>
-....
+The <varname>hist_fincl2</varname> through <varname>hist_fincl6</varname> set of
+namelist variables add given history fieldnames to auxillary history file "streams", and
+<varname>hist_fexcl2</varname> through <varname>hist_fexcl6</varname> set of
+namelist variables remove given history fieldnames from history file auxillary "streams".
+A history "stream" is a set of history files that are produced at a given frequency.
+By default there is only one stream of monthly data files. To add more streams you
+add history fieldnames to <varname>hist_fincl2</varname> through
+<varname>hist_fincl6</varname>. The output frequency and the way averaging is done
+can be different for each history file stream. By default the primary history files
+are monthly and any others are daily. You can have up to six active history streams, but you need
+to activate them in order. So if you activate stream "6" by setting
+<varname>hist_fincl6</varname>, but if any of <varname>hist_fincl2</varname> through
+<varname>hist_fincl5</varname> are unset, only the history streams up to the first blank one
+will be activated.
 </para>
-</sect2>
+<para>
+The frequency of the history file streams is given by the namelist variable
+<varname>hist_nhtfrq</varname> which is an array of rank six for each history stream.
+The value of <varname>hist_nhtfrq</varname> can be integers, where the following values 
+have the given meaning:
+<simplelist>
+<member><emphasis>Positive value</emphasis> means the output frequency is the number of
+model steps between output.
+</member>
+<member><emphasis>Negative value</emphasis> means the output frequency is the absolute
+value in hours given (i.e -1 would mean an hour and -24 would mean a full day). Daily
+(-24) is the default value for all auxillary files.
+</member>
+<member><emphasis>Zero</emphasis> means the output frequency is monthly. This is the
+default for the primary history files.
+</member>
+</simplelist>
+</para>
+</sect3>
 
-<sect2 id="rm_hist">
+<sect3 id="rm_hist">
 <title>Removing all history fields</title>
 <para>
-....
+Sometimes for various reasons you want to remove all the history fields either
+because you want to do testing without any output, or you only want a very small
+custom list of output fields rather than the default extensive list of fields.
+By default only the primary history files are active, so technically using
+<varname>hist_fexcl1</varname> explained in the first example, you could list 
+<emphasis>ALL</emphasis> of the history fields that are output in 
+<varname>hist_fexcl1</varname> and then you wouldn't get any output. However, as
+the list is very extensive this would be a cumbersome thing to do. So to facilitate
+this <varname>hist_empty_htapes</varname> allows you to turn off all default output.
+You can still use <varname>hist_fincl1</varname> to turn your own list of fields
+on, but you then start from a clean slate.
 </para>
-</sect2>
+</sect3>
 
-<sect2 id="hist_averaging">
+<sect3 id="hist_averaging">
 <title>Various ways to change history output averaging flags</title>
 <para>
-....
-</para>
-</sect2>
+There are two ways to change the averaging of output history fields. The first is using
+<varname>hist_avgflag_pertape</varname> which gives a default value for each history
+stream, the second is when you add fields using <varname>hist_fincl*</varname>, you add
+an averaging flag to the end of the field name after a colen (for example 'TSOI:X', would
+output the maximum of TSOI).
+The types of averaging that can be done are:
+<simplelist>
+<member><emphasis>A</emphasis> Average, over the output interval.</member>
+<member><emphasis>I</emphasis> Instantaneous, output the value at the output interval.</member>
+<member><emphasis>X</emphasis> Maximum, over the output interval.</member>
+<member><emphasis>M</emphasis> Minimum, over the output interval.</member>
+</simplelist>
 
-<sect2 id="hist_vector">
+</para>
+</sect3>
+
+<sect3 id="hist_vector">
 <title>Outputting history files as a vector in order to analyze
 the plant function types within gridcells</title>
 <para>
-....
+By default the output to history files are the grid-cell average of all land-units, and
+vegetation types within that grid-cell, and output is on the
+full 2D latitude/longitude grid with ocean masked out. Sometimes it's important to
+understand how different land-units or vegetation types are acting within a grid-cell.
+The way to do this is to output history files as a 1D-vector of all land-units and vegetation
+types. In order to display this, you'll need to do extensive post-processing to make sense
+of the output. Often you may only be interested in a few points, so once you figure out the
+1D indices for the grid-cells of interest, you can easily view that data. 1D vector output
+can also be useful for single point datasets, since it's then obvious that all data is for the
+same grid cell.
+</para>
+<para>
+To do this you use <varname>hist_dov2xy</varname> which is an array of six six for each history stream. Set it to
+<varname>.false.</varname> if you want one of the history streams to be a 1D vector. 
+You can also use <varname>hist_type1d_pertape</varname> if you want to average over all the:
+Plant-Function-Types, columns, land-units, or grid-cells.
+</para>
+</sect3>
+
+<para>
+We've given various examples of namelists that feature the use of different namelist options
+to customize a case for particular uses. Most the examples revolve around how to customize the
+output history fields. This should give you a good basis for setting up your own CLM namelist.
 </para>
 </sect2>
+<!-- End of nl examples section -->
 
 </sect1>
 <!-- End of customonizing clm nl section -->
 
+<para>
+We've given extensive details on customizing cases with CLM, by choosing compsets, by changing
+configure options and interacting with the CLM "configure" and "build-namelist" scripts, and
+finally we've given details on all of the CLM namelist items. In the next chapter we talk
+about further ways to customize cases with CLM by creating your own datasets using the tools
+provided in CLM.
+</para>
 </chapter>
-<!-- End of customizing section -->
+<!-- End of customizing chapter -->
 
-<!-- Beg of tools section -->
+<!-- Beg of tools chapter -->
 <chapter id="tools">
 <title>Using the CLM tools to create your own input datasets</title>
 <para>
-....
+There are several tools provided with CLM that allow you to create your own input 
+datasets at resolutions you choose, or to interpolate initial conditions to a different
+resolution, or used to compare CLM history files between different cases. The tools are
+all available in the <filename>models/lnd/clm/tools</filename> directory. Most of the tools
+are FORTRAN stand-alone programs in their own directory, but there is also a suite of NCL
+scripts in the <filename>ncl_scripts</filename> directory. Some of the NCL scripts are
+very specialized and not meant for general use, and we won't document them here. They
+still contain documentation in the script themself and the README file in the tools
+directory. But, the list of generally important scripts and programs are:
+<orderedlist>
+<listitem>
+<para> <emphasis>cprnc</emphasis> to compare NetCDF files with a time axis.</para>
+</listitem>
+<listitem>
+<para> <emphasis>interpinic</emphasis> to interpolate initial condition files.</para>
+</listitem>
+<listitem>
+<para> <emphasis>mkgriddata</emphasis> to create grid datasets.</para>
+</listitem>
+<listitem>
+<para> <emphasis>mkdatadomain</emphasis> to create domain files from grid datasets
+used by datm or docn.</para>
+</listitem>
+<listitem>
+<para> <emphasis>mksurfdata</emphasis> to create surface datasets from grid datasets.</para>
+</listitem>
+<listitem>
+<para> <emphasis>ncl_scripts/getregional_datasets.pl</emphasis> script to extract a
+region or a single-point from global input datasets. See the single-point chapter
+for more information on this.</para>
+</listitem>
+<listitem>
+<para> <emphasis>ncl_scripts/npdepregrid.ncl</emphasis> interpolate the Nitrogen
+deposition datasets to a new resolution.</para>
+</listitem>
+<listitem>
+<para> <emphasis>ncl_scripts/aerdepregrid.ncl</emphasis> interpolate the Aerosol
+deposition datasets to a new resolution.</para>
+</listitem>
+</orderedlist>
 </para>
-</chapter>
-<!-- End of tools section -->
 
-<!-- Beg of single_point section -->
-<chapter id="single_point">
-<title>How to run Single-Point cases</title>
+<sect1 id="cprnc">
+<title>Using the cprnc tool to compare two history files</title>
 <para>
-....
+...
+</para>
+</sect1>
+
+<sect1 id="interpinic">
+<title>Using interpinic to interpolate initial conditions to different
+resolutions</title>
+<para>
+...
+</para>
+</sect1>
+
+<sect1 id="mkgridata">
+<title>Using mkgridata to create grid datasets</title>
+<para>
+...
+</para>
+</sect1>
+
+<sect1 id="mkdatadomain">
+<title>Using mkdatadomain to create domain datasets for datm or docn from CLM grid datasets</title>
+<para>
+...
+</para>
+</sect1>
+
+<sect1 id="mksurfdata">
+<title>Using mksurfdata to create surface datasets from grid datasets</title>
+<para>
+...
+</para>
+</sect1>
+
+<sect1 id="ndepregrid">
+<title>Using ndepregrid.ncl to interpolate Nitrogen deposition datasets</title>
+<para>
+...
+</para>
+</sect1>
+
+<sect1 id="aerdepregrid">
+<title>Using aerdepregrid.ncl to interpolate Aerosol deposition datasets</title>
+<para>
+...
+</para>
+</sect1>
+<para>
+We've given a description of how to use the different tools with CLM to create
+customized datasets.
+</para>
+
+</chapter>
+<!-- End of tools chapter -->
+
+<!-- Beg of special cases chapter -->
+<chapter id="special_cases">
+<title>How to run some special cases</title>
+<para>
+In this chapter we describe how to run some special cases that take more than one step
+to do. The straightforward cases have compsets and/or build-namelist use-cases setup for
+them or require simple editing of a single-case. All of the cases here require you
+to do at least two simulations with different configurations.
+</para>
+<para>
+The two cases we will describe are:
+<orderedlist>
+<listitem>
+<para>
+<emphasis>Spinning up the biogeochemistry Carbon-Nitrogen Model (CN spinup)</emphasis>
+</para>
+</listitem>
+<listitem>
+<para>
+<emphasis>Doing perturbation error growth tests</emphasis>
+</para>
+</listitem>
+</orderedlist>
 </para>
 
 <sect1 id="CN_SPINUP">
 <title>Spinning up the biogeochemistry Carbon-Nitrogen Model (CN spinup)</title>
 <para>
+To get the CN model to a steady state, you first run it from arbitrary initial conditions
+using the "accelerated decomposition spinup" (-ad_spinup in configure) mode for 600 simulation years. After
+this you branch from this mode in the "exit spinup" (-exit_spinup in configure), run
+for a simulation year, and then save a restart from that and use it as initial conditions 
+for further spinup of CN.
+</para>
+<para>
+For the first step of running 600 years in "-ad_spinup" mode do the following:
 <screen>
 cd scripts
 create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 cd CN_spinup
 $EDITOR env_conf.xml   # Add "-ad_spinup on" to CLM_CONFIG_OPTS
-xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART on
-xmlchange -file env_run.xml -id RESUBMIT 30
-xmlchange -file env_run.xml -id STOP_DATE 6000101
+xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+xmlchange -file env_run.xml -id RESUBMIT -val 30
+xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+xmlchange -file env_run.xml -id STOP_N -val 20
+xmlchange -file env_run.xml -id STOP_DATE -val 6000101
 </screen>
+Then configure your case and build and run it as normal. And then save the last restart
+file from this simulation to use in the next step.
+</para>
+<para>
+To exit the spinup up mode and create an initial condition file to do further simulations
+(or further spinup with) use "-exit_spinup" mode as follows:
+<screen>
+cd scripts
+create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+cd CN_spinup
+$EDITOR env_conf.xml   # Add "-exit_spinup on" to CLM_CONFIG_OPTS
+configure -case
+$EDITOR BuildConf/clm.buildnml.csh # Set finidat file to the last restart file saved in previous step
+xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+xmlchange -file env_run.xml -id STOP_N -val 1
+</screen>
+</para>
+<para>
+Then finally save the last restart file from this step and use it as the "finidat" file to
+use for future simulations.
 </para>
 </sect1>
 
@@ -907,32 +1204,158 @@ xmlchange -file env_run.xml -id STOP_DATE 6000101
 <para>
 Doing perturbation error growth tests is a way to validate a port of
 the model to a new machine or to verify that changes are only roundoff.
+The steps are the same in either case, but in the discussion below I will
+assume you are doing a port validation to a new machine (but in parathesis 
+I will put a reminder that it could also be for code-mods).
+The basic idea is to do run two cases on the trusted machine (trusted code) and
+one with initial conditions perturbed by roundoff and compare the results of
+the two. The difference between these two simulations (the error) will grow over time
+and describe a curve that we want to compare the non-perturbed state with the new
+machine (code changes in place). If the new machine (code changes) are well-behaved
+the plot of this curve compared to the perturbation growth curve should be similar. If the 
+changes are NOT well-behaved the changes from the new machine (code changes) will be 
+larger than the pertubation changes. In summary the simulations and steps that need to be performed are:
+<orderedlist>
+<listitem>
+<para>Run a simulation with the trusted code on the trusted machine.</para>
+</listitem>
+<listitem>
+<para>Run a simulation with the trusted code on the trusted machine with initial conditions
+perturbed by roundoff (using a namelist item to do so).</para>
+</listitem>
+<listitem>
+<para>Run a simulation with the new code on the non-trusted machine (code changes).</para>
+</listitem>
+<listitem>
+<para>Do a plot of the RMS difference of TSOI between simulation 1 and simulation 2.</para>
+</listitem>
+<listitem>
+<para>Do a plot of the RMS difference of TSOI between simulation 1 and simulation 3.</para>
+</listitem>
+<listitem>
+<para>Compare the two plots in steps 4 and 5.</para>
+</listitem>
+<listitem>
+<para>If the plots compare well the new machine (code changes) is running as well as the trusted machine.</para>
+</listitem>
+<listitem>
+<para>If the plots do <emphasis>NOT</emphasis>compare well the new machine is
+<emphasis>NOT</emphasis>running as well as the trusted machine. Typically the
+recommendation here is to lower the optimization level on the new machine and try
+again (or in the case of code changes, modify or simiplify the code changes to get
+something that should be closer).</para>
+</listitem>
+</orderedlist>
+</para>
+<para>
 </para>
 </sect1>
+</chapter>
+<!-- End of special cases chapter-->
+
+<!-- Beg of single_point chapter-->
+<chapter id="single_point">
+<title>How to run Single-Point cases</title>
+<para>
+The CLM also allows you to set up and run cases with a single-point or a local region as well
+as global resolutions. This is often useful for running quick cases for testing, evaluating
+specific vegetation types, or land-units, or running with observed data for a specfic site.
+There are three different ways to do this: <envar>PTS_MODE</envar>,
+<envar>CLM_1PT_NAME</envar>, and <envar>CLM_USRDAT_NAME</envar>.
+<simplelist>
+<member><emphasis><envar>PTS_MODE</envar></emphasis> -- to run for a single point
+using global datasets</member>
+<member><emphasis><envar>CLM_1PT_NAME</envar></emphasis> -- to run for a supported single-point
+or regional dataset.</member>
+<member><emphasis><envar>CLM_USRDAT_NAME</envar></emphasis> -- to run using your own datasets.</member>
+</simplelist>
+</para>
 
 <sect1 id="PTS_MODE">
 <title>Running PTS_MODE configurations</title>
 <para>
-....
+<envar>PTS_MODE</envar> enables you to run the model using global datasets, but just picking a
+single point from those datasets and operating on it. It can be a very quick way to do fast
+simulations and get a quick turnaround.
 </para>
+<para>
+To setup a <envar>PTS_MODE</envar> simulation you use the "-pts_lat" and "-pts_lon"
+arguments to create_newcase to give the latitude and longitude of the point you want to
+simulate for (the code will pick the point on the global grid nearest to the point you
+give. Here's an example to setup a simulation for the nearest point at 2-degree resolution
+to Boulder Colorado.
+<screen>
+cd scripts
+create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire -skip_rundb -pts_lat 40.0 -pts_lon -105
+</screen>
+Then configure, build and run as normal.
+</para>
+<note>
+<para>
+By default it sets up to run with
+<envar>USE_MPISERIAL</envar> (in the <filename>env_builld.xml</filename> file) turned on, 
+which allows you to run the model interactively. On some machines this mode is NOT 
+supported and you may need to change it to FALSE before you are able to build.
+</para>
+</note>
+<note>
+<para>
+<envar>PTS_MODE</envar> currently does <emphasis>NOT</emphasis> restart nor
+is it able to startup from global initial condition files.
+</para>
+</note>
+<note>
+<para>
+You can change the point you are simulating for at run-time by changing the values of
+<envar>PTS_LAT</envar> and <envar>PTS_LON</envar> in the <filename>env_run.xml</filename> file.
+</para>
+</note>
 </sect1>
 
 <sect1 id="suprted_single_point_datasets">
 <title>Running Supported Single-point Datasets</title>
 <para>
-....
+In addition to <envar>PTS_MODE</envar> the CLM supports running using single-point or
+regional datasets that are customized to a particular region. In the section below we
+tell the user how to create their own dataset, but we also support a small number of
+single-point and regional datasets that are ready to setup and run in the CCSM modelling
+system.
 </para>
+<para>
+To run with the supported single-point and regional datasets, you setup a simulation for the
+"pt1_pt1" resolution and give the short-name for the file to use in the
+<filename>env_conf.xml</filename> file. Then to run for the urban MexicoCity Mexico test site
+do teh following:
+<screen>
+cd scripts
+create_newcase -case testSPDATASET -res pt1_pt1 -compset I -mach bluefire -skip_rundb
+cd testSPDATASET
+xmlchange -file env_conf.xml -id CLM_PT1_NAME -val 1x1_mexicocityMEX
+</screen>
+Then configure, build and run normally.
+</para>
+<note>
+<para>
+Just like <envar>PTS_MODE</envar> above, By default it sets up to run with
+<envar>USE_MPISERIAL</envar> (in the <filename>env_builld.xml</filename> file) turned on, 
+which allows you to run the model interactively. On some machines this mode is NOT 
+supported and you may need to change it to FALSE before you are able to build.
+</para>
+</note>
 </sect1>
 
 <sect1 id="own_single_point_datasets">
 <title>Creating your own single-point datasets</title>
 <para>
-....
+The file:
+<ulink url="../Quickstart.userdatasets">Quickstart.userdatasets</ulink> in the
+<filename>models/lnd/clm/doc</filename> directory gives guidelines on how to create and run
+with your own single-point or regional datasets.
 </para>
 </sect1>
 
 </chapter>
-<!-- End of single_point section -->
+<!-- End of single_point chapter -->
 
 
 </book>

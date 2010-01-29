@@ -24,4 +24,7 @@ determine default values for namelists.
 <!-- Default simulation year range -->
 <sim_year_range>constant</sim_year_range>
 
+<!-- Default representative concentration pathway for future scenarios -->
+<rcp>-999.</rcp>
+
 </namelist_defaults>

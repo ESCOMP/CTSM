@@ -12,6 +12,6 @@
  mksrf_ftopo        = '/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_topo.10min.c080912.nc'
  mksrf_ffrac        = '/fs/cgd/csm/inputdata/lnd/clm2/griddata/fracdata_10min_USGS_071205.nc'
  mksrf_firrig       = ' '
- mksrf_fdynuse      = 'pftdyn_simyr1850-2005.txt'
+ mksrf_fdynuse      = 'pftdyn_hist_simyr1850-2005.txt'
  outnc_double       = .true.
 /

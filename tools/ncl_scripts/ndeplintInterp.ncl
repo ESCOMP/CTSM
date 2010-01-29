@@ -11,12 +11,20 @@ begin
    ; ===========================================================================================================
 
    res      = getenv("RES");   ; Get output resolution from env variable
+   rcp      = getenv("RCP");   ; Get output RCP (representative concentration pathway) from env variable
 
    if ( ismissing(res) )then
       res = "1.9x2.5";
    end if
+   if ( ismissing(rcp) )then
+      rcp = "8.5";
+   end if
 
-   nyrsb4 = 6;   ; Number of years to copy first year before to...
+   nyrsb4           = 6;   ; Number of years to copy first year before to...
+   lastHistoricYear = 2005 ; Last year of historical data (could be 2005 or 1995)
+                           ; if 2005 will use previous historical data until 2005 (which doesn't have data from 2006-2009)
+                           ; if 1995 will use historical data until 1995 (and scenario data for 2005 2000-2005=historical, 2006-2009=scenario)
+   copyLastHist     = False; If should copy the last historical year and then use it to interpolate to the first future year
    ; ===========================================================================================================
    load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 
@@ -46,14 +54,51 @@ begin
    end if
    ncg       = addfile( gridfile, "r" );
 
+   ;
+   ; Set the simulation years to get data for...
+   ;
+   sim_years = (/ 1855, 1865, 1875, 1885, 1895, 1905, 1915, 1925, 1935, 1945, 1955, 1965, 1975, 1985, 1995, 2005, 2015, 2025, 2035, 2045, 2055, 2065, 2075, 2085, 2095, 2105 /);
+   if ( copyLastHist )then
+      ;
+      ; Add in an extra year that's a copy of the last year, but labeled as the next year
+      ;
+      years = new( (/ dimsizes(sim_years)+1 /), typeof(sim_years) );
+      histInd = ind( sim_years .eq. lastHistoricYear );
+      if ( ismissing(histInd) )then
+         print( "Last Historic Year of "+lastHistoicYear+" does NOT exist in sim_years array" );
+         exit
+      end if
+      years(0:histInd)  = sim_years(0:histInd);
+      years(histInd+1)  = sim_years(histInd)+1;
+      repeatYear        = years(histInd+1);
+      years(histInd+2:) = sim_years(histInd+1:);
+      delete( sim_years );
+      sim_years = years;
+      delete( years );
+   else
+      repeatYear = 0;
+   end if
+   ;
+   ; Setup arrays that will be used..
+   ;
    filetype  = "fndepdat";
-   sim_years = (/ 1855, 1865, 1875, 1885, 1895, 1905, 1915, 1925, 1935, 1945, 1955, 1965, 1975, 1985, 1995, 2005 /);
    nfiles    = dimsizes(sim_years)
    nc        = new( (/ nfiles /), "file"   );
    filenames = new( (/ nfiles /), "string" );
    do yr = 0, nfiles-1
-      filenames(yr) = systemfunc( querynml+" -res "+res+" -var "+filetype+" -options bgc=cn,sim_year="+sim_years(yr) );
-      print( "Use "+filetype+" file: "+filenames(yr)+" for sim_year="+sim_years(yr) );
+      year = sim_years(yr);
+      if ( year .eq. repeatYear )then
+         year = repeatYear - 1;
+      end if
+      if ( year .gt. lastHistoricYear )then
+         queryopts = ",rcp="+rcp;
+         printopts = " rcp="+rcp;
+      else
+         printopts = " ";
+         queryopts = " ";
+      end if
+      filenames(yr) = systemfunc( querynml+" -res "+res+" -var "+filetype+" -options bgc=cn,sim_year="+year+queryopts);
+      print( "Use "+filetype+" file: "+filenames(yr)+" for sim_year="+sim_years(yr)+printopts );
       if ( systemfunc("test -f "+filenames(yr)+"; echo $?" ) .ne. 0 )then
          print( "Input "+filetype+" file does not exist or not found: "+filenames(yr) );
          exit
@@ -123,7 +168,7 @@ begin
    sdate     = systemfunc( "date +%y%m%d" );
    ldate     = systemfunc( "date" );
 
-   outfilename = "fndep_clm_simyr"+sim_year_range+"_"+res+"_c"+sdate+".nc";
+   outfilename = "fndep_clm_rcp"+rcp+"_simyr"+sim_year_range+"_"+res+"_c"+sdate+".nc";
    system( "/bin/rm -f "+outfilename );
    print( "output file: "+outfilename );
    nco = addfile( outfilename, "c" );

@@ -1,4 +1,159 @@
 ===============================================================
+Tag name:  clm3_7_01
+Originator(s):  erik (Erik Kluzek)
+Date: Fri Jan 29 12:58:12 MST 2010
+One-line Summary: OpenMP fix for pftdyn, start adding in rcp's, update ndeplintInterp.ncl script
+
+Purpose of changes:
+
+Changes to ndeplintInterp script to add the ability to generate ndepdyn datasets for future scenarios 
+2005+. Add rcp as input to build-namelist and add use-cases with different rcp's. Small bug-fixes to 
+mksurfdata. Add lists for 1850-2100 for the rcp's. Update drv and scripts to latest. Update documentation. 
+Fix from Mariana on OpenMP problem in pftdyn. Remove lightning from tests, start adding in
+edinburgh.
+
+Bugs fixed (include bugzilla ID):
+                                 1102 (OpenMP problem with pftdyn mode)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1104 (Restart problem with pftdyn mode)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: None
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, code-changes came from Mariana-Vertenstein, reviewed by Pat Worley
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, and datm
+
+    scripts to scripts4_100125
+    drv     to drvseq3_1_13
+    datm    to datm8_100122
+
+List all files eliminated:
+
+   D  models/lnd/clm/tools/mksurfdata/pftdyn_simyr1850-2005.txt --> rename to pftdyn_hist_simyr1850-2005.txt
+
+List all files added and what they do:
+
+>>>>>>>>>>>>>>> List of surface datasets to create pftdyn files
+   A  models/lnd/clm/tools/mksurfdata/pftdyn_rcp2.6_simyr1850-2100.txt
+   A  models/lnd/clm/tools/mksurfdata/pftdyn_rcp4.5_simyr1850-2100.txt
+   A  models/lnd/clm/tools/mksurfdata/pftdyn_rcp8.5_simyr1850-2100.txt
+>>>>>>>>>>>>>>> Add use-cases for future scenarios
+   A  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+   A  models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+
+   A  models/lnd/clm/tools/mksurfdata/pftdyn_hist_simyr1850-2005.txt --> renamed
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>>> Add edinburgh, remove lightning
+   M  models/lnd/clm/test/system/test_driver.sh --------- Remove lightning, add edinburgh
+   M  models/lnd/clm/test/system/TCBext_ccsmseq_cam.sh -- Delete csm_share/dshr directory no longer exists
+   M  models/lnd/clm/test/system/CLM_runcmnd.sh --------- Remove lightning, add edinburgh
+
+   M  models/lnd/clm/tools/mksurfdata/mkharvestMod.F90 -- Fix small compiler bug for jaguar
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.pftdyn - Point to new name for historical pftdyn file
+
+>>>>>>>>>>>>>> Handle future scenarios for dynamic Nitrogen-Deposition file creation
+   M  models/lnd/clm/tools/ncl_scripts/ndeplintInterp.ncl -- Add ability to handle future scenario data, and also leave
+                                                             previous historical data the same as before, or 
+
+>>>>>>>>>>>>>> Start adding ability to handle future scenarios for different RCP's
+   M  models/lnd/clm/bld/build-namelist ------------------------------- Add rcp,
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xml ------- Add rcp, new sim_year, sim_year_range values, allow blank
+                                                                        for hist_type1d_pertape
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - Add default for rcp as -999.
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ----- Add new Nitrogen deposition decadal datasets for RCP4.5/RCP8.5
+
+   M  models/lnd/clm/doc/UsersGuide/index.xml -- Add more in, add notes on namelist, tools, and special cases
+
+>>>>>>>>>>>> Changes from Mariana V. to fix bug 1102, OpenMP bug with pftdyn cases
+   M  models/lnd/clm/src/main/clm_initializeMod.F90 - Don't pass decomp bounds down
+   M  models/lnd/clm/src/main/pftdynMod.F90 --------- Get decomp bounds here
+   M  models/lnd/clm/src/main/clm_driver.F90 -------- Call pftdyn_interp on own OMP loop
+
+Summary of testing:
+
+  bluefire:
+022 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+023 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+024 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+025 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+026 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+049 sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh ext_ccsm_seq_cam 48 ....................FAIL! rc= 8
+050 erP61 TSM_ccsmseq.sh ERS f19_g15 I4804 ......................................................FAIL! rc= 4
+051 erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804 ....................................................FAIL! rc= 4
+052 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 4
+  bluefire interactive testing:
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7022 
+brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+050 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  bluefire special testing:
+    Run I8520 from Dec/1/1850 @f09_g16 for 14 months with 64 tasks and 4 threads and make sure identical 
+      to same with 128 tasks and 1 thread (require openMP build) comparing clm history files. clm3_7_00 4-thread case for this fails. But, answers are identical with clm3_7_00 for 128 tasks and 1 thread.
+  jaguar:
+020 blJ62 TBL.sh 4p_casasc_dm clm_std^nl_urb 20021230:NONE:1800 1.9x2.5 gx1v6 48 cold ...........FAIL! rc= 5
+026 erP65 TSM_ccsmseq.sh ERS f19_g15 I ..........................................................FAIL! rc= 4
+027 erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA ......................................................FAIL! rc= 4
+  jaguar interactive testing:
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+012 blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+  jaguar/special testing:
+    Run I8520 from Dec/1/1850 @f09_g16 for 5 months with 416 tasks and 4 threads and make sure identical 
+      to same with 1 thread (require openMP build) comparing clm history files. clm3_7_00 4-thread case for this fails.
+  jaguar/CCSM testing:
+PASS  ERS_D.f09_g16.I1850.jaguar
+PASS  PET.f10_f10.I8520CN.jaguar.cpl
+PASS  PET.f10_f10.I8520CN.jaguar.atm
+PASS  PET.f10_f10.I8520CN.jaguar.lnd
+PASS  PET.f10_f10.I8520CN.jaguar.ice
+PASS  PET.f10_f10.I8520CN.jaguar.ocn
+PASS  PET.f10_f10.I8520CN.jaguar.glc
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+  dublin/ifort interactive testing: All PASS except...
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+007 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 6
+030 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+  edinburgh/pgi interactive testing: All PASS except...
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+007 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 6
+030 sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3 .................FAIL! rc= 4
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_00
+
+Changes answers relative to baseline: No bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_00
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date: Fri Jan 22 22:48:09 MST 2010
@@ -137,6 +292,7 @@ Known bugs (include bugzilla ID):
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
+                                 1102 (OpenMP problem with pftdyn mode)
 
 Describe any changes made to build system:
 
@@ -397,6 +553,7 @@ Known bugs (include bugzilla ID):
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -545,6 +702,7 @@ Known bugs (include bugzilla ID):
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
+                                 1102 (OpenMP problem with pftdyn mode)
 
 Describe any changes made to build system: None
 
@@ -677,6 +835,7 @@ Known bugs (include bugzilla ID):
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
+                                 1102 (OpenMP problem with pftdyn mode)
 
 Describe any changes made to build system: None
 
@@ -806,6 +965,7 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1098 (Use finidat weights instead of weights from fpftdyn file)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -917,6 +1077,7 @@ Known bugs (include bugzilla ID):
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1003,6 +1164,7 @@ Known bugs (include bugzilla ID):
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: 
@@ -1252,6 +1414,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: 
@@ -1345,6 +1508,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1433,6 +1597,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1618,6 +1783,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1733,6 +1899,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Have configure write out unresolved filepaths 
@@ -2058,6 +2225,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: In template turn off RTM if grid=pt1
@@ -2171,6 +2339,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Filepath, bluefire compiler to XLF12
@@ -2362,6 +2531,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Small change to configure
@@ -2516,6 +2686,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -2621,6 +2792,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system:  Local Makefile changed for ifort
@@ -2766,6 +2938,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Get ccsm_bld option working
@@ -3014,6 +3187,7 @@ Known bugs (include bugzilla ID): 698 (cprnc bug gives false difference)
                                  1079 (rpointer file updated with clm.i files)
                                  1083 (Units of NEE exported should be kg CO2 NOT kg C)
                                  1087 (let weights come from fsurdat file NOT finidat)
+                                 1102 (OpenMP problem with pftdyn mode)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None

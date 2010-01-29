@@ -267,7 +267,7 @@ contains
 ! !ROUTINE: pftdyn_interp
 !
 ! !INTERFACE:
-  subroutine pftdyn_interp( begg, endg, begc, endc, begp, endp )
+  subroutine pftdyn_interp()
 !
 ! !DESCRIPTION:
 ! Time interpolate dynamic landuse data to get pft weights for model time
@@ -285,17 +285,15 @@ contains
     use clm_varpar  , only : numpft, lsmlon, lsmlat
     implicit none
 !
-! !ARGUMENTS:
-    integer, intent(IN)  :: begg     ! beg indices for land gridcells
-    integer, intent(IN)  :: endg     ! end indices for land gridcells
-    integer, intent(IN)  :: begc     ! beg indices for land columns
-    integer, intent(IN)  :: endc     ! end indices for land columns
-    integer, intent(IN)  :: begp     ! beg indices for land plant function types
-    integer, intent(IN)  :: endp     ! end indices for land plant function types
-!
 !
 ! !LOCAL VARIABLES:
 !EOP
+!
+! !ARGUMENTS:
+    integer  :: begg,endg        ! beg/end indices for land gridcells
+    integer  :: begl,endl        ! beg/end indices for land landunits
+    integer  :: begc,endc        ! beg/end indices for land columns
+    integer  :: begp,endp        ! beg/end indices for land pfts
     integer  :: i,j,m,p,l,g,c    ! indices
     integer  :: year             ! year (0, ...) for nstep+1
     integer  :: mon              ! month (1, ..., 12) for nstep+1
@@ -312,6 +310,8 @@ contains
     type(pft_type)     , pointer :: pptr         ! pointer to pft derived subtype
     character(len=32) :: subname='pftdyn_interp' ! subroutine name
 !-----------------------------------------------------------------------
+
+    call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
     ! Set pointers into derived type
 
@@ -454,6 +454,7 @@ contains
     character(len=32) :: subname='pftdyn_getdata' ! subroutine name
 !-----------------------------------------------------------------------
     
+    write(iulog,*) subname,' get next pftdyn data'
     allocate(arrayl(begg:endg))
     do n = 0,numpft
        start(1) = 1

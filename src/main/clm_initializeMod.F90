@@ -562,7 +562,7 @@ contains
     if (fpftdyn /= ' ') then
        call t_startf('init_pftdyn')
        call pftdyn_init()
-       call pftdyn_interp( begg, endg, begc, endc, begp, endp )
+       call pftdyn_interp( )
        call t_stopf('init_pftdyn')
     end if
 
@@ -596,7 +596,7 @@ contains
     ! =======================================================================
     ! ------------------------------------------------------------------------
     if (fpftdyn /= ' ' .and. nsrest == 0 ) then
-       call pftdyn_interp( begg, endg, begc, endc, begp, endp )
+       call pftdyn_interp( )
     end if
     ! =======================================================================
     ! ------------------------------------------------------------------------

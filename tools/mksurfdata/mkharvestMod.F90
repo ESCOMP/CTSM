@@ -375,7 +375,7 @@ subroutine mkharvest(lsmlon, lsmlat, fharvest, ndiag, harv_o)
      k = lsmlat/2
      write (ndiag,*)
      write (ndiag,*) 'For reference the area on the output grid of a cell near the equator is: '
-     write (ndiag,'(f10.3,a14)')ldomain%area(1,k)*fac,' x ', unit
+     write (ndiag,'(f10.3,2a)')ldomain%area(1,k)*fac,' x ', unit
      write (ndiag,*)
   endif
   call shr_sys_flush(ndiag)

@@ -286,23 +286,34 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
      !--- get initial heat,water content ---
       call dynland_hwcontent( begg, endg, clm3%g%gws%gc_liq1(begg:endg), &
                               clm3%g%gws%gc_ice1(begg:endg), clm3%g%ges%gc_heat1(begg:endg) )
+   end do
+!$OMP END PARALLEL DO
 
 #if (!defined DGVM)
-     if (fpftdyn /= ' ') then
+   if (fpftdyn /= ' ') then
+      call pftdyn_interp  ! change the pft weights
+      
+!$OMP PARALLEL DO PRIVATE (nc,g,begg,endg,begl,endl,begc,endc,begp,endp)
+      do nc = 1,nclumps
+         call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
 
-        call pftdyn_interp( begg, endg, begc, endc, begp, endp )  ! change the pft weights
-
-        !--- get new heat,water content: (new-old)/dt = flux into lnd model ---
-        call dynland_hwcontent( begg, endg, clm3%g%gws%gc_liq2(begg:endg), &
-                                clm3%g%gws%gc_ice2(begg:endg), clm3%g%ges%gc_heat2(begg:endg) )
-        dtime = get_step_size()
-        do g = begg,endg
-           clm3%g%gwf%qflx_liq_dynbal(g) = (clm3%g%gws%gc_liq2 (g) - clm3%g%gws%gc_liq1 (g))/dtime
-           clm3%g%gwf%qflx_ice_dynbal(g) = (clm3%g%gws%gc_ice2 (g) - clm3%g%gws%gc_ice1 (g))/dtime
-           clm3%g%gef%eflx_dynbal    (g) = (clm3%g%ges%gc_heat2(g) - clm3%g%ges%gc_heat1(g))/dtime
-        enddo
-     end if
+         !--- get new heat,water content: (new-old)/dt = flux into lnd model ---
+         call dynland_hwcontent( begg, endg, clm3%g%gws%gc_liq2(begg:endg), &
+                                 clm3%g%gws%gc_ice2(begg:endg), clm3%g%ges%gc_heat2(begg:endg) )
+         dtime = get_step_size()
+         do g = begg,endg
+            clm3%g%gwf%qflx_liq_dynbal(g) = (clm3%g%gws%gc_liq2 (g) - clm3%g%gws%gc_liq1 (g))/dtime
+            clm3%g%gwf%qflx_ice_dynbal(g) = (clm3%g%gws%gc_ice2 (g) - clm3%g%gws%gc_ice1 (g))/dtime
+            clm3%g%gef%eflx_dynbal    (g) = (clm3%g%ges%gc_heat2(g) - clm3%g%ges%gc_heat1(g))/dtime
+         enddo
+      end do
+!$OMP END PARALLEL DO
+   end if
 #endif
+      
+!$OMP PARALLEL DO PRIVATE (nc,g,begg,endg,begl,endl,begc,endc,begp,endp)
+  do nc = 1,nclumps
+     call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
 
      ! ============================================================================
      ! Initialize the mass balance checks: water, carbon, and nitrogen

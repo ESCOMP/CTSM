@@ -421,7 +421,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fndepdat hgrid="64x128"    bgc="cn" sim_year="1850" >lnd/clm2/ndepdata/ndep_clm_1890_64x128_c071221.nc</fndepdat>
 <fndepdat hgrid="48x96"     bgc="cn" sim_year="1850" >lnd/clm2/ndepdata/ndep_clm_1890_48x96_c060414.nc</fndepdat>
 
-<!--CN Nitrogen deposition dataset for a fixed decade for 1.9x2.5 resolution (relative to {csmdata}) -->
+<!--CN Nitrogen deposition dataset for a fixed historical decade for 1.9x2.5 resolution (relative to {csmdata}) -->
 <!-- These are ONLY used by the ../tools/ncl_scripts ncl script ndeplintInterp.ncl to create fndepdyn files -->
 <!-- The units are incorrect to be used by the model and the NOy and NHx terms need to be summed together -->
 <fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1855" >lnd/clm2/ndepdata/ndep_clm_simyr1850-1859_1.9x2.5_c090730.nc</fndepdat>
@@ -440,6 +440,38 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1985" >lnd/clm2/ndepdata/ndep_clm_simyr1980-1989_1.9x2.5_c090730.nc</fndepdat>
 <fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="1995" >lnd/clm2/ndepdata/ndep_clm_simyr1990-1999_1.9x2.5_c090730.nc</fndepdat>
 <fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2005" >lnd/clm2/ndepdata/ndep_clm_simyr2000-2009_1.9x2.5_c090730.nc</fndepdat>
+
+<!--CN Nitrogen deposition dataset for a fixed future scenario decade for 1.9x2.5 resolution (relative to {csmdata}) -->
+<!-- These are ONLY used by the ../tools/ncl_scripts ncl script ndeplintInterp.ncl to create fndepdyn files -->
+<!-- The units are incorrect to be used by the model and the NOy and NHx terms need to be summed together -->
+
+<!-- RCP is representative concentration pathway and points to the radiative forcing at the peak or at 2100 -->
+
+<!-- RCP 8.5 - the MESSAGE scenario -->
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2005" rcp="8.5">lnd/clm2/ndepdata/ndep_clm_rcp8.5_simyr2000-2009_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2015" rcp="8.5">lnd/clm2/ndepdata/ndep_clm_rcp8.5_simyr2010-2019_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2025" rcp="8.5">lnd/clm2/ndepdata/ndep_clm_rcp8.5_simyr2020-2029_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2035" rcp="8.5">lnd/clm2/ndepdata/ndep_clm_rcp8.5_simyr2030-2039_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2045" rcp="8.5">lnd/clm2/ndepdata/ndep_clm_rcp8.5_simyr2040-2049_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2055" rcp="8.5">lnd/clm2/ndepdata/ndep_clm_rcp8.5_simyr2050-2059_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2065" rcp="8.5">lnd/clm2/ndepdata/ndep_clm_rcp8.5_simyr2060-2069_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2075" rcp="8.5">lnd/clm2/ndepdata/ndep_clm_rcp8.5_simyr2070-2079_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2085" rcp="8.5">lnd/clm2/ndepdata/ndep_clm_rcp8.5_simyr2080-2089_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2095" rcp="8.5">lnd/clm2/ndepdata/ndep_clm_rcp8.5_simyr2090-2099_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2105" rcp="8.5">lnd/clm2/ndepdata/ndep_clm_rcp8.5_simyr2100-2109_1.9x2.5_c100115.nc</fndepdat>
+
+<!-- RCP 4.5 - the MINICAM scenario -->
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2005" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2000-2009_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2015" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2010-2019_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2025" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2020-2029_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2035" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2030-2039_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2045" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2040-2049_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2055" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2050-2059_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2065" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2060-2069_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2075" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2070-2079_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2085" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2080-2089_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2095" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2090-2099_1.9x2.5_c100115.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2105" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2100-2109_1.9x2.5_c100115.nc</fndepdat>
 
 <!--CN Nitrogen deposition dataset for a series of years (relative to {csmdata}) -->
 
