@@ -217,14 +217,28 @@ sub GetListofNeededFiles {
            print "sim_year = $sim_year\n" if $printing;
            $settings{'sim_year'} = $sim_year;   
 
+           my @rcps;
+           if ( $sim_year >= 2005 ) {
+             @rcps = $definition->get_valid_values( "rcp", 'noquotes'=>1 )
+           } else {
+             @rcps = ( -999. );
+           }
            #
-           # Loop over all possible BGC seetings: none, cn, casa etc.
+           # Loop over all possible rcp's:
            #
-           foreach my $bgc ( $cfg->get_valid_values( "bgc" ) ) {
-              print "bgc = $bgc\n" if $printing;
-              $settings{'bgc'} = $bgc;
-              $inputopts{'namelist'} = "clm_inparm";
-              &GetListofNeededFiles( \%inputopts, \%settings, \%files );
+           foreach my $rcp ( @rcps ) {
+
+              $settings{'rcp'} = $rcp;
+
+              #
+              # Loop over all possible BGC seetings: none, cn, casa etc.
+              #
+              foreach my $bgc ( $cfg->get_valid_values( "bgc" ) ) {
+                 print "bgc = $bgc\n" if $printing;
+                 $settings{'bgc'} = $bgc;
+                 $inputopts{'namelist'} = "clm_inparm";
+                 &GetListofNeededFiles( \%inputopts, \%settings, \%files );
+              }
            }
         }
         #

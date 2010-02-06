@@ -5,7 +5,7 @@
 
                     <a href="UsersGuide/index.pdf"> (pdf)</a>
 <li>CLM Code Reference Guide <a href="CodeReference/"> (html)</a>
-<li>CLM Testing Table of Tests run with the offline CLM Test-suite<a href="../test/system/test_table.html/"> (html)</a>
+<li>CLM Testing Table of Tests run with the offline CLM Test-suite<a href="../test/system/test_table.html"> (html)</a>
 </ul>
 <h1>CLM Quickstart Documentation (all in text format)</h1>
 <ul>

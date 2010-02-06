@@ -1,12 +1,10 @@
 models/lnd/clm/bld/README                              3/13/2008 
 
 CLM build and configure directory and scripts. Scripts to help
-you prepare to build CLM, actually build CLM and then help you
-to run the model.
-
-NOTE: THE MAIN BUILD/RUN SCRIPTS IN HERE ARE DEPRECATED 
-      (USE THE CPL7 SCRIPTS IN "../../../../scripts" TO BUILD
-       AN "I" COMPSET CASE INSTEAD)
+you prepare to build CLM as a component within CCSM, and setup
+a namelist for it. There is also functionality only used for CLM
+stand-alone testing to build and run the complete system (in conjuction
+with the scripts in the models/lnd/clm/test/system directory).
 
 Important files/directories:
 
@@ -21,10 +19,6 @@ config_files/config_sys_defaults.xml - XML file of system defaults
 config_files/Makefile.in ------------- Base Makefile for building CLM used ONLY for stand-alone CLM testing
                                        The Makefile and Macro's in the root scripts/ccsm_utils/Build and
                                        scripts/ccsm_utils/Machines are used to build the model normally.
-
----------- Scripts to figure out dependencies between source files (may be used by Makefile)
-mkDepends
-mkSrcfiles
 
 --------- Scripts to build the namelists
 --------- (These scripts are also used by the cpl7 scripts)
@@ -50,25 +44,4 @@ namelist_files/use_cases ------------------------ Specific configurations that b
 ---------- XML Files describing namelists only used in stand-alone CLM testing
 namelist_files/namelist_defaults_datm.xml -- List of default values for the datm model namelist
 namelist_files/namelist_defaults_drv.xml -- List of default values for the drv namelist
-
-
----------- Script to create a new case directory and run-script
----------- THIS SCRIPT IS DEPRECATED BY THE CPL7 SCRIPTS
-create_newcase
----------- Scripts to configure, build and run on various platforms
----------- THESE SCRIPTS ARE DEPRECATED BY THE CPL7 SCRIPTS
-run-ibm.csh -------- for IBM SP machines such as bluefire
-
-NOTE:  To use the run-scripts you HAVE to set the following:
-
-o Project number for Batch script.
-o Setting of clmroot to full path of the root to your clm directory.
-
-NOTE2: On non-NCAR machines you will also have to do the following.
-
-o Convert batch notation to the syntax for the specific machine you are using.
-o Set INC_NETCDF and LIB_NETCDF to include and library path for NetCDF.
-o Set CSMDATA to the path of where you place your input data.
-o Set datm_data_dir to the path of where the datm7 CLMNCEP data is.
-o On non-supported platforms, you will also have to extend the configure and Makefile.in files.
 

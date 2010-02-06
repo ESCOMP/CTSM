@@ -1,14 +1,7 @@
 #! /bin/csh -f
-#--------------------------------------------------------------------
-# Configure clm and create resolved namelist script for cpl7
-#--------------------------------------------------------------------
 
 if !(-d $CASEBUILD) mkdir $CASEBUILD
 if !(-d $CASEBUILD/clmconf) mkdir $CASEBUILD/clmconf
-
-#--------------------------------------------------------------------
-# Error checks
-#--------------------------------------------------------------------
 
 #--------------------------------------------------------------------
 # Invoke configure
@@ -29,7 +22,7 @@ setenv COMP "unknown"
 if ($COMP_INTERFACE == 'MCT' ) setenv COMP mct
 if ($COMP_INTERFACE == 'ESMF') setenv COMP esmf
 
-set config_opts = "-spmd -mode ext_ccsm_seq $CLM_CONFIG_OPTS -rtm $rtm -clm_bld $cfgdir"
+set config_opts = "-spmd -mode ext_ccsm_seq $CLM_CONFIG_OPTS -rtm $rtm "
 $CODEROOT/lnd/clm*/bld/configure -comp_intf cpl_\$COMP -clm_root \$CODEROOT/lnd/clm -usr_src \$CASEROOT/SourceMods/src.clm $config_opts || exit -1 
 
 #--------------------------------------------------------------------
@@ -44,10 +37,6 @@ if ($RUN_TYPE == hybrid) set finidat = " finidat = '${RUN_REFCASE}.clm2.r.${RUN_
 set nrevsn = " "
 if ($RUN_TYPE == branch) set nrevsn   = ${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-00000.nc 
 
-set config = $CASEBUILD/clmconf/config_cache.xml
-
-set clm_demand = "$CLM_DEMAND"
-
 @ clm_dtime  = ( 3600 * 24 ) / $LND_NCPL
 
 if ( $rtm == "on" )then
@@ -56,43 +45,51 @@ if ( $rtm == "on" )then
 endif
 
 set co2ppmv = " co2_ppmv         =  $CCSM_CO2_PPMV"
-
-set outnc_large_files = ".true."
+set co2type = " co2_type         =  '$CLM_CO2_TYPE'"
 
 cat >> $cfgdir/ccsm_namelist << EOF1
  &clm_inparm
  dtime            =  $clm_dtime
 $rtmnsteps
 $co2ppmv
+$co2type
 $finidat
  nrevsn           = '$nrevsn'
  hist_mfilt       =  1
  hist_nhtfrq      =  0
- outnc_large_files = $outnc_large_files
+ outnc_large_files = .true.
 /
 EOF1
 
+# Allow the user to supply namelist values by putting them in the file
+# $CASEROOT/user_nl_clm.  The file should contain
+# a valid namelist, just like any file that supplies user input to
+# build-namelist via the -infile argument.
+if (-f $CASEROOT/user_nl_clm) then
+   cat $CASEROOT/user_nl_clm >> $cfgdir/ccsm_namelist || exit -1
+endif
+
+#
+# Other options to build-namelist
+#
 if ($RUN_TYPE == startup ) then
    set START_TYPE = "arb_ic"
 else
    set START_TYPE = $RUN_TYPE
    if ($RUN_TYPE == hybrid ) set START_TYPE = "startup"
 endif
-
 if ($CLM_FORCE_COLDSTART == on) then
    set START_TYPE = "cold"
 endif
 
-if ($ATM_GRID == $OCN_GRID) then
-  set mask = " "
-else
+set mask = " "
+if ($ATM_GRID != $OCN_GRID) then
   set mask = "-mask $OCN_GRID"
 endif
 
 if ($LND_GRID == pt1 ) then
    set RESOLUTION = $CLM_PT1_NAME
    if ( $RESOLUTION == "" ) set RESOLUTION = "default"
-   set mask = " "
 else
    set RESOLUTION = $LND_GRID
 endif
@@ -104,15 +101,19 @@ else
     set ignore = "-ignore_ic_date"
 endif
 
+if ($CLM_NML_USE_CASE == UNSET) then
+    set usecase = " "
+else
+    set usecase = "-use_case $CLM_NML_USE_CASE"
+endif
+
+set options    = ""
 if ( $CLM_USRDAT_NAME != UNSET )then
    set options    = "-clm_usr_name $CLM_USRDAT_NAME"
-else
-   set options    = ""
 endif
-set options = "$options $CLM_BLDNML_OPTS -config $config -res $RESOLUTION $mask "
-set options = "$options -clm_demand $clm_demand $ignore "
+set options = "$options -config $CASEBUILD/clmconf/config_cache.xml -res $RESOLUTION $mask $ignore $usecase "
 set options = "$options -infile ccsm_namelist -start_type $START_TYPE "
-$CODEROOT/lnd/clm*/bld/build-namelist $options -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" -csmdata \$DIN_LOC_ROOT -inputdata $CASEBUILD/clm.input_data_list || exit -1
+$CODEROOT/lnd/clm*/bld/build-namelist $options -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" -csmdata \$DIN_LOC_ROOT \-inputdata $CASEBUILD/clm.input_data_list || exit -1
 
 # ---------------------------------------------------------------------------
 #  Create namelist and prestage data script
@@ -121,14 +122,14 @@ $CODEROOT/lnd/clm*/bld/build-namelist $options -namelist "&clm_inparm $CLM_NAMEL
 cat >! $CASEBUILD/clm.buildnml.csh << EOF1
 #! /bin/csh -f 
 
-set exedir = \$RUNDIR; cd \$exedir
-
 #******************************************************************#
 #                  WARNING:                                        #
-# - CLM namelist and CAM variable dtime must have the same value   #
+# - CAM and CLM namelist variable dtime must have same values      #
 # - If the user changes any input datasets - be sure to give it a  #
 #   unique filename. Do not duplicate any existing input files     #
 #******************************************************************#
+
+set exedir = \$RUNDIR; cd \$exedir
 
 cat >! lnd_in << EOF
 EOF1

@@ -1,9 +1,9 @@
 smA91 erA91 brA91 blA91
 smD91 erD91       blD91
-smB91
 smE91 erE91 brE91 blE91 smE95
 smF92 erF92 brF92 blF92
 smEH1 erEH1 brEH1 blEH1
+smHN1 erHN1 brHN1 blHN1
 smG41 erG41 brG41 blG41 smG45
 smC45 erC45 brC45 blC45
 smC61 erC61 brC61 blC61
@@ -11,7 +11,3 @@ smH52 erH52 brH52 blH52
 smI59
 smLI1 erLI1 brLI1 blLI1
 smJ61 erJ61 brJ61 blJ61 smJ05
-sm9J2
-erP61
-erP91
-erP68

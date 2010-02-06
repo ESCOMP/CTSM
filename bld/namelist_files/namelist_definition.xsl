@@ -25,97 +25,137 @@
     example <code>char*1(6)</code> denotes a array of six
     <code>char*1</code> values.
     </li>
-    <li>Valid values (if restricted).</li>
     <li>Variable description (includes information on defaults).</li>
+    <li>Valid values (if restricted).</li>
     </ul>
 
     <h3>CLM Physics Options</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='clm_physics']"/>
     </table>
 
     <h3>Solar, orbital and radiation options</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='radiation']"/>
     </table>
 
     <h3>Data atmosphere model settings</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='datm']"/>
     </table>
 
     <h3>Driver</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='driver']"/>
     </table>
 
     <h3>Time Manager</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='time_mgr']"/>
     </table>
 
     <h3>Datasets</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='datasets']"/>
     </table>
 
     <h3>History output settings</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='history']"/>
     </table>
 
     <h3>Restart (Continuation and Branch) Runs</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='restart']"/>
     </table>
 
     <h3>Performance Tuning and Profiling</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='performance']"/>
     </table>
 
     <h3>Single Column Atmosphere Model (part of CAM)</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='scam']"/>
     </table>
 
@@ -133,38 +173,54 @@
 
     <h3>Default Settings</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='default_settings']"/>
     </table>
 
     <h3>Data atmosphere model internal settings</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='datm_internal']"/>
     </table>
 
     <h3>CASA Namelist items in clm_inparm namelist (EXPERIMENTAL NOT SUPPORTED!)</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='casa']"/>
     </table>
 
 <!--
     <h3>PIO Namelist items in clm_inparm namelist (EXPERIMENTAL NOT WORKING!)</h3>
     <table BORDER="1" CELLPADDING="10">
-      <th>Name</th>
-      <th>Type</th>
-      <th>Valid values</th>
+      <tr>
+      <th rowspan="2">Name</th>
+      <th rowspan="2">Type</th>
       <th>Description</th>
+      </tr>
+      <tr>
+      <th>Valid values</th>
+      </tr>
       <xsl:apply-templates select="entry[@category='pio']"/>
     </table>
 -->
@@ -174,10 +230,12 @@
 
 <xsl:template match="entry">
   <tr>
-    <td><font color="#ff0000"><xsl:value-of select="@id"/></font></td>
-    <td><xsl:value-of select="@type"/></td>
-    <td><xsl:value-of select="@valid_values"/></td>
+    <td rowspan="2"><font color="#ff0000"><xsl:value-of select="@id"/></font></td>
+    <td rowspan="2"><xsl:value-of select="@type"/></td>
     <td><xsl:apply-templates/></td>
+  </tr>
+  <tr>
+    <td><xsl:value-of select="@valid_values"/></td>
   </tr>
 </xsl:template>
 

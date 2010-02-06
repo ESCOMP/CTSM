@@ -1,5 +1,5 @@
-scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_100125
-models/drv                    https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq3_1_13
+scripts                       https://svn-ccsm-models.cgd.ucar.edu/scripts/trunk_tags/scripts4_100204
+models/drv                    https://svn-ccsm-models.cgd.ucar.edu/drv/seq_mct/trunk_tags/drvseq3_1_15
 models/atm/datm               https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_tags/datm8_100122
 models/ocn/socn               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_2_02/socn
 models/ice/sice               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_2_02/sice
@@ -8,5 +8,5 @@ models/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/bra
 models/utils/esmf_wrf_timemgr https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_090402
 models/utils/timing           https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_090929
 models/utils/mct              https://svn-ccsm-models.cgd.ucar.edu/mct/trunk_tags/MCT2_7_0_100106/
-models/utils/pio              http://parallelio.googlecode.com/svn/trunk_tags/pio1_0_7/pio
+models/utils/pio              http://parallelio.googlecode.com/svn/trunk_tags/pio1_0_8/pio
 models/lnd/clm/tools/cprnc    https://svn-ccsm-models.cgd.ucar.edu/tools/cprnc/trunk_tags/cprnc_081022

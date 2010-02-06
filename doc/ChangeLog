@@ -1,4 +1,209 @@
 ===============================================================
+Tag name:  clm3_7_02
+Originator(s):  erik (erik)
+Date: Sat Feb  6 00:43:49 MST 2010
+One-line Summary: Start adding in new rcp=8.5 datasets, remove some junk, change some env_conf variables, add user_nl_clm
+
+Purpose of changes:
+
+New pftdyn, ndep and aerdep files for rcp=8.5 future scenario 2005+ . Need to have the
+ability to handle four future scenarios: minicam (rcp4.5), aim (rcp 6), image (rcp2.6),
+and message (rcp8.5). Add in ndepdat datasets for rcp2.6 for future decades. Add in
+ndepdyn, pftdyn, aerdep datasets for rcp8.5, and ndepdyn for rcp4.5 (f19) and pftdyn for
+f10 as well. Some changes to scripts, remove CLM_DEMAND, add CLM_NML_USE_CASE,
+CLM_CO2_TYPE and user namelist. Add user_nl to clm.cpl7.template, remove CLM_DEMAND add
+CLM_CO2_TYPE and CLM_NML_USE_CASE (in favor of use_case's,). Make sure driver/scripts
+updated with this change. Update documentation Users-Guide with comments from Keith and
+Sam. Remove clm copy of mkSrcfiles/mkDepends. Remove run-ibm. Remove following options
+from configure and config_definition: clm_exe, clm_exedir, and clm_bld. Remove
+CASE/CCSM/CAM tests from test_driver.sh. Add some tests for new rcp=8.5.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1104 (Restart problem with pftdyn mode)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Some changes to configure
+   Remove unused configure options: clm_exe, -clm_exedir, and -clm_bld.
+   Move standalone testing options to the end of help. Use CCSM version 
+   of mkSrcfiles/mkDepends, separate config vars into categories, work 
+  on documentation with comments from Keith/Sam.
+
+Describe any changes made to the namelist: Check for some files based on rcp
+
+   Add in ability to add a user namelist in your case directory to input
+   namelist items at configure time. Simply add a file called "user_nl_clm"
+  as a valid namelist and the items in that namelist will show up in the initial
+  BuildConf/clm.buildnml.csh file.
+
+List any changes to the defaults for the boundary datasets:
+           fsurdat:  f10, 1850
+           fpftdyn:  f10, 1850-2000, 1850-2100 (rcp=8.5)
+           fpftdyn:  f19, 1850-2100 (rcp=8.5)
+           faerdep:  f19, 1850-2100 (rcp=8.5)
+           fndepdat: f19, decadal averages (rcp=2.6)
+           fndepdyn: f19, 1850-2100 (rcp=8.5 and rcp=4.5)
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, pio
+
+    scripts to scripts4_100204
+    drv     to drvseq3_1_15
+    pio     to pio1_0_8
+
+List all files eliminated:
+
+>>>>>>>>>>>>>>> Remove CCSM, scam, cam, and run-ibm script testing from test-system
+>>>>>>>>>>>>>>> Use <machine>.clm.auxtest lists in CCSM scripts for CCSM testing
+   D  models/lnd/clm/test/system/TSM_ccsmseq.sh
+   D  models/lnd/clm/test/system/TSMext_ccsmseq_cam.sh
+   D  models/lnd/clm/test/system/TCT_ccsmseq.sh
+   D  models/lnd/clm/test/system/TCSruncase.sh
+   D  models/lnd/clm/test/system/TSMruncase.sh
+   D  models/lnd/clm/test/system/TCBext_ccsmseq_cam.sh
+   D  models/lnd/clm/test/system/TSCext_ccsmseq_scam.sh
+   D  models/lnd/clm/test/system/tests_posttag_lightning
+   D  models/lnd/clm/test/system/config_files/scam_ds
+   D  models/lnd/clm/test/system/config_files/ext_ccsm_seq_10x15_dh
+   D  models/lnd/clm/test/system/config_files/ext_ccsm_seq_4x5_dh
+   D  models/lnd/clm/test/system/config_files/ext_ccsm_seq_1.9x2.5_dh
+   D  models/lnd/clm/test/system/config_files/ext_ccsm_seq_64x128_s
+   D  models/lnd/clm/test/system/config_files/ext_ccsm_seq_0.9x1.25_dh
+   D  models/lnd/clm/bld/run-ibm.csh
+   D  models/lnd/clm/bld/create_newcase
+>>>>>>>>>>>>>>> Remove mkSrcfiles/mkDepends duplicated from ccsm scripts
+   D  models/lnd/clm/bld/mkSrcfiles
+   D  models/lnd/clm/bld/mkDepends
+
+List all files added and what they do:
+
+>>>>>>>>>>>>> no-RTM mode configurations for hybrid and mpi-only testing
+   A  models/lnd/clm/test/system/config_files/_nrsc_dh
+   A  models/lnd/clm/test/system/config_files/_nrsc_dm
+>>>>>>>>>>>>> Add transient_rcp8.5 use-case option
+   A  models/lnd/clm/test/system/nl_files/clm_transient_rcp8.5
+
+List all existing files that have been modified, and describe the changes:
+
+   M  models/lnd/clm/test/system/README.testnames --- Update test names
+   M  models/lnd/clm/test/system/test_driver.sh ----- Remove CLM_SEQCCSMROOT
+   M  models/lnd/clm/test/system/input_tests_master - Remove CCSM/cam tests, add rcp8.5 test
+   M  models/lnd/clm/test/system/README ------------- Remove doc on CLM_SEQCCSMROOT
+>>>>>>>>>>>>> Remove CCSM, cam, scam, and run-ibm tests from test lists
+   M  models/lnd/clm/test/system/tests_pretag_bluefire
+   M  models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+   M  models/lnd/clm/test/system/tests_pretag_jaguar
+   M  models/lnd/clm/test/system/tests_posttag_kraken
+   M  models/lnd/clm/test/system/tests_posttag_hybrid_regression
+   M  models/lnd/clm/test/system/tests_pretag_bangkok
+   M  models/lnd/clm/test/system/tests_posttag_intrepid
+   M  models/lnd/clm/test/system/tests_pretag_dublin
+   M  models/lnd/clm/test/system/tests_pretag_dublin_nompi
+   M  models/lnd/clm/test/system/tests_posttag_nompi_regression
+   M  models/lnd/clm/test/system/tests_pretag_calgary
+
+>>>>>>>>>>>>> New location for mkDepends, correct documentation
+   M  models/lnd/clm/tools/mkgriddata/README ----- Correct mention of download
+   M  models/lnd/clm/tools/mksurfdata/Makefile --- Change location of mkDepends
+   M  models/lnd/clm/tools/interpinic/Makefile --- Change location of mkDepends
+   M  models/lnd/clm/tools/mkgriddata/Makefile --- Change location of mkDepends
+   M  models/lnd/clm/tools/mkdatadomain/Makefile - Change location of mkDepends
+
+>>>>>>>>>>>>> Remove unused configure options: clm_exe, -clm_exedir, and -clm_bld
+>>>>>>>>>>>>> Move standalone testing options to the end of help
+>>>>>>>>>>>>> Use CCSM version of mkSrcfiles/mkDepends, separate config vars into
+>>>>>>>>>>>>> categories, work on documentation
+   M  models/lnd/clm/bld/configure -------------------------- Move clm standalone testing
+                                       options to the end of the help, remove: -clm_exe,
+                                       -clm_exedir, and -clm_bld options
+   M  models/lnd/clm/bld/config_files/Makefile.in ----------- Use CCSM version of mkSrcfiles/mkDepends
+   M  models/lnd/clm/bld/config_files/config_definition.xsl - Separate variables into categories.
+   M  models/lnd/clm/bld/config_files/config_definition.xml - Add categories, add
+           description changes from Keith/Sam, remove clm_exe, clm_exedir, and clm_bld
+
+   M  models/lnd/clm/bld/listDefaultNamelist.pl -- Also loop over rcp values
+
+   M  models/lnd/clm/bld/build-namelist ----- have rcp value impact filenames retrieved
+   M  models/lnd/clm/bld/clm.cpl7.template -- Add CLM_NML_USE_CASE and CLM_CO2_TYPE,
+                           remove CLM_DEMAND add user_nl_clm namelist, remove -clm_bld.
+   M  models/lnd/clm/bld/README ------------- Update documentation after removing the
+                           clm stand-alone build/run scripts.
+
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xml ------- Remove defaults
+               as in namelist_defaults files, apply suggestions from Keith/Sam
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - Change rcp default to -999.9
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xsl ------- Put description above valid values
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ----- New datasets:
+           fsurdat:  f10, 1850
+           fpftdyn:  f10, 1850-2000, 1850-2100 (rcp=8.5)
+           fpftdyn:  f19, 1850-2100 (rcp=8.5)
+           faerdep:  f19, 1850-2100 (rcp=8.5)
+           fndepdat: f19, decadal averages (rcp=2.6)
+           fndepdyn: f19, 1850-2100 (rcp=8.5 and rcp=4.5)
+>>>>>>>>>>>>> Update documentation, add in documentation on changes added in here
+   M  models/lnd/clm/doc/UsersGuide/index.xml -- Spellcheck, more work on doc, update
+           for changes that came in on this tag.
+   M  models/lnd/clm/doc/index.shtml ----------- Correct test table.
+
+Summary of testing:
+
+  bluefire: All PASS except...
+009 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
+........FAIL! rc= 10
+010 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72
+arb_ic ......FAIL! rc= 5
+011 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72
+arb_ic ......FAIL! rc= 5
+012 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
+........FAIL! rc= 4
+013 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
+.........FAIL! rc= 10
+017 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic
+.........FAIL! rc= 7
+  bluefire interactive testing: All PASS
+  bluefire/CCSM testing: All PASS, except..
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm3_7_02 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm3_7_01 
+FAIL  ERH_D.f10_f10.I1850CN.bluefire.compare.clm3_7_01 
+FAIL  PET.f10_f10.I8520CN.bluefire.compare.clm3_7_01 
+FAIL  ERS_D.f19_g16.I8521CNR85.bluefire 
+BFAIL ERS_D.f19_g16.I8521CNR85.bluefire.generate.clm3_7_02 
+BFAIL ERS_D.f19_g16.I8521CNR85.bluefire.compare.clm3_7_01 
+  Special testing:
+PASS  ERS.f19_g16.I8521CNR85.bluefire 
+  breeze,gale,hail,gust/ifort interactive testing: All PASS except...
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+021 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+022 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_01
+
+Changes answers relative to baseline: f10 because of new surface dataset
+                                      Other resolutions will be bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_01
 Originator(s):  erik (Erik Kluzek)
 Date: Fri Jan 29 12:58:12 MST 2010

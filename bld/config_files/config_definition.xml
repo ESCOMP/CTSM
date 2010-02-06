@@ -4,138 +4,145 @@
 
 <config_definition>
 
-<entry id="ad_spinup" valid_values="on,off" value="off">
-Toggle to turn on ad_spinup
+<entry id="ad_spinup" valid_values="on,off" value="off" category="bgc">
+Toggle to turn on accelerated decomposition spinup for CN biogeochemistry model
 </entry>
-<entry id="carbon_aero" valid_values="on,off" value="off">
+<entry id="carbon_aero" valid_values="on,off" value="off" category="physics">
 Toggle to turn on passing of carbon aerosols to land in ccsm_seq mode
 </entry>
-<entry id="snicar_frc" valid_values="on,off" value="off">
+<entry id="snicar_frc" valid_values="on,off" value="off" category="physics">
 Toggle to turn on calculation of SNICAR radiative forcing
 </entry>
-<entry id="bgc" valid_values="none,cn,casa,dgvm" value="none">
+<entry id="bgc" valid_values="none,cn,casa,dgvm" value="none" category="bgc">
 CLM BGC mode
 </entry>
-<entry id="clm_bld" value=".">
-CLM build directory; contains .o and .mod files.
+<entry id="clm_root" value="" category="directories">
+Root directory of CLM source distribution (directory above configure).
 </entry>
-<entry id="clm_exedir" value=".">
-Directory where CLM executable will be created.
+<entry id="comp_interface" valid_values="ESMF,MCT,cpl_\$COMP" value="MCT"
+category="directories">
+Component framework interface to use
 </entry>
-<entry id="clm_root" value="">
-Root directory of CLM source distribution.
-</entry>
-<entry id="comp_interface" valid_values="ESMF,MCT,cpl_\$COMP" value="MCT">
-Component framework interface to use (MCT, ESMF or cpl_${COMP})
-</entry>
-<entry id="usr_src" value="" list="1">
+<entry id="usr_src" value="" list="1" category="directories">
 User source directories to prepend to the filepath.  Multiple directories
 are specified as a comma separated list with no embedded white space.
 </entry>
-<entry id="pergro" valid_values="0,1" value="0">
-Modifications that allow perturbation growth testing: 0=off, 1=on.
-</entry>
-<entry id="pio" valid_values="on,off" value="on">
+<entry id="pio" valid_values="on,off" value="on" category="mach_options">
 Toggle to enable/disable building with the PIO parallel I/O library (by default not used, use BUILDPIO CPP token to turn on use of it)
 </entry>
-<entry id="clm_exe" value="clm">
-Name of CLM executable.
-</entry>
-<entry id="cppdefs" value="">
+<entry id="cppdefs" value="" category="physics">
 User specified CPP defines to append to Makefile defaults.
 </entry>
-<entry id="cc" value="">
+<entry id="cc" value="" category="standalone_test">
 User specified C compiler overrides Makefile default (linux only).
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="cflags" value="">
+<entry id="cflags" value="" category="standalone_test">
 User specified C compiler options to append to Makefile defaults.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="fc" value="">
+<entry id="fc" value="" category="standalone_test">
 User specified Fortran compiler overrides Makefile default.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="debug" valid_values="0,1" value="0">
+<entry id="debug" valid_values="0,1" value="0" category="standalone_test">
 Switch to enable debugging options for Fortran compiler: 0=off, 1=on.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="dust" valid_values="on,off" value="on">
+<entry id="dust" valid_values="on,off" value="on" category="physics">
 Toggle to turn on dust module
 </entry>
-<entry id="c13" valid_values="on,off" value="off">
+<entry id="c13" valid_values="on,off" value="off" category="bgc">
 Toggle to turn on C13 isotopes as part of the CN biogeochemistry model
 </entry>
-<entry id="mach" value="bluefire">
+<entry id="mach" value="bluefire" category="mach_options">
 CCSM build machine name and compiler
 </entry>
-<entry id="exit_spinup" valid_values="on,off" value="off">
+<entry id="exit_spinup" valid_values="on,off" value="off" category="bgc">
 Toggle to turn exit spinup
 </entry>
-<entry id="fflags" value="">
+<entry id="fflags" value="" category="standalone_test">
 User specified Fortran compiler flags to append to Makefile defaults.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="fopt" value="">
+<entry id="fopt" value="" category="standalone_test">
 User specified Fortran optimization flags to override Makefile defaults.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="linker" value="">
+<entry id="linker" value="" category="standalone_test">
 User specified linker.  Overrides the Makefile default $(FC).
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="ldflags" value="">
+<entry id="ldflags" value="" category="standalone_test">
 User specified load options to append to Makefile defaults.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="spmd" valid_values="0,1" value="">
+<entry id="spmd" valid_values="0,1" value="" category="mach_options">
 Switch to enable or disable building SPMD version of CLM: 0=off, 1=on.
 </entry>
-<entry id="smp" valid_values="0,1" value="">
+<entry id="smp" valid_values="0,1" value="" category="mach_options">
 Switch to enable or disable building SMP version (OPENMP) of CLM: 0=off, 1=on.
 </entry>
-<entry id="nc_inc" value="">
+<entry id="nc_inc" value="" category="standalone_test">
 Directory containing NetCDF include files.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="nc_lib" value="">
+<entry id="nc_lib" value="" category="standalone_test">
 Directory containing NetCDF library.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="nc_mod" value="">
+<entry id="nc_mod" value="" category="standalone_test">
 Directory containing NetCDF module files.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="esmf_libdir" value="">
+<entry id="esmf_libdir" value="" category="standalone_test">
 Directory containing ESMF library (for linking to external ESMF).
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="maxpft"  value="numpft+1">
+<entry id="maxpft"  value="numpft+1" category="physics">
 Maximum numbr of pfts per gridcell (numpft+1 means use all available)
 </entry>
-<entry id="mpi_inc" value="">
+<entry id="mpi_inc" value="" category="standalone_test">
 Directory containing MPI include files.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="mpi_lib" value="">
+<entry id="mpi_lib" value="" category="standalone_test">
 Directory containing MPI library.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="mpi_lib_name" value="">
+<entry id="mpi_lib_name" value="" category="standalone_test">
 Name of MPI library.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="mode" valid_values="ccsm_seq,ext_ccsm_seq" value="ccsm_seq">
+<entry id="mode" valid_values="ccsm_seq,ext_ccsm_seq" value="ccsm_seq"
+category="mach_options">
 CLM coupling mode
 </entry>
-<entry id="ccsm_bld" valid_values="on,off" value="off">
+<entry id="ccsm_bld" valid_values="on,off" value="off" category="standalone_test">
 Toggle to build using CCSM makefiles or not.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="pergro" valid_values="on,off" value="off">
+<entry id="pergro" valid_values="on,off" value="off" category="physics">
 Toggle to turn on perturbation error growth test
 </entry>
-<entry id="progsslt" valid_values="on,off" value="on">
+<entry id="progsslt" valid_values="on,off" value="on" category="physics">
 Toggle to turn on prognostic sea salt 
 </entry>
-<entry id="rtm" valid_values="on,off" value="on">
-Toggle to turn on river runoff module
+<entry id="rtm" valid_values="on,off" value="on" category="physics">
+Toggle to turn on river transport module
 </entry>
-<entry id="supln" valid_values="on,off" value="off">
-Toggle to turn on CN suplemental nitrnogen
+<entry id="supln" valid_values="on,off" value="off" category="bgc">
+Toggle to turn on CN suplemental nitrogen (Carbon only model)
 </entry>
-<entry id="nofire" valid_values="on,off" value="off">
+<entry id="nofire" valid_values="on,off" value="off" category="bgc">
 Toggle to make wildfires inactive for biogeochemistry=CN mode
 </entry>
-<entry id="target_os" value="">
+<entry id="target_os" value="" category="mach_options">
 OS for which CLM is being built.  The value is the name returned by the "uname -s"
 command on the target platform.  This parameter is to allow cross-compilation.
+(linux,aix,darwin,bgp etc.)
 </entry>
-<entry id="voc" valid_values="on,off" value="off">
+<entry id="voc" valid_values="on,off" value="off" category="physics">
 Toggle to turn on voc module
 </entry>
 

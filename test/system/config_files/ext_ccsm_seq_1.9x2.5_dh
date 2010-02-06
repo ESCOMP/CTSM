@@ -1,8 +1,0 @@
--spmd -smp
--dyn fv
--res 1.9x2.5
--debug
--cice_decomptype cartesian
--cice_maxblocks 1
--cice_bsizex 16
--cice_bsizey 6

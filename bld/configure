@@ -55,47 +55,20 @@ OPTIONS
      -cache <file>       Name of output cache file (default: config_cache.xml).
      -cachedir <file>    Name of directory where output cache file is written (default: CLM build directory).
      -carbon_aero <name> Turn on passing carbon aerosols from atm to land. [on | off] (default is off)
-     -ccsm_bld <name>    Turn use of CCSM build and makefiles. [on | off] (default is off)
-                         Can ONLY be turned on for mode=ccsm_seq.
-     -clm_bld <dir>      Directory where CLM will be built.  This is where configure will write the
-                         output files it generates (Makefile, Filepath, etc...)
-     -clm_exe <name>     Name of the CLM executable (default: clm).
-     -clm_exedir <dir>   Directory where CLM executable will be created (default: CLM build directory).
      -clm_root <dir>     Root directory of clm source code (default: directory above location of this script)
-     -cc <name>          User specified C compiler (linux or darwin only).  Overrides Makefile default.
-     -cflags <string>    A string of user specified C compiler options.  Appended to
-                         Makefile defaults.
      -cppdefs <string>   A string of user specified CPP defines.  Appended to
                          Makefile defaults.  E.g. -cppdefs '-DVAR1 -DVAR2'
-     -comp_intf <name>   Component interface to use (ESMF or MCT) (default MCT)
-     -debug              Switch to turn on building CLM with debugging compiler options.
+     -comp_intf <name>   Component interface to use (ESMF, MCT or cpl_\$COMP) (default MCT)
      -defaults <file>    Specify full path to a configuration file which will be used to supply defaults instead of
                          the defaults in bld/config_files.  This file is used to specify model
                          configuration parameters only.  Parameters relating to the build which
                          are system dependent will be ignored.
      -dust <name>        Turn on DUST [on | off] (default is on).
-     -esmf_libdir <dir>  Directory containing ESMF library and esmf.mk file.
      -exit_spinup <name> Turn on EXIT_SPINUP mode for bgc setting of CN [on | off] (default is off).
-     -fc <name>          User specified Fortran compiler.  Overrides Makefile default.
-     -fflags <string>    A string of user specified Fortran compiler flags.  Appended to
-                         Makefile defaults.  See -fopt to override optimization flags.
-     -fopt <string>      A string of user specified Fortran compiler optimization flags.  
-                         Overrides Makefile defaults.
-     -gmake <name>       Name of the GNU make program on your system.  Supply the absolute
-                         pathname if the program is not in your path (or fix your path).
      -help [or -h]       Print usage to STDOUT.
-     -ldflags <string>   A string of user specified load options.  Appended to
-                         Makefile defaults.
-     -linker <name>      User specified linker.  Overrides Makefile default of \$(FC).
      -mach <name>        Machine name to use for CCSM build.
-     -maxpft <n>         Value of maxpatch_pft (default is 4)
      -maxpft <n>         Value of maxpatch_pft (default is numpft+1)
-     -mpi_inc <dir>      Directory containing MPI include files.
-     -mpi_lib <dir>      Directory containing MPI library.
      -mode <name>        CLM mode [ccsm_seq | ext_ccsm_seq]
-     -nc_inc <dir>       Directory containing netCDF include files.
-     -nc_lib <dir>       Directory containing netCDF library.
-     -nc_mod <dir>       Directory containing netCDF module files.
      -nofire             Turn off wildfires for bgc setting of CN (default includes fire for CN)
      -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off] (default is off)
      -pio <name>         Switch enables building with Parallel I/O library. [on | off] (default is on)
@@ -114,6 +87,35 @@ OPTIONS
      -verbose [or -v]    Turn on verbose echoing of settings made by configure.
      -version            Echo the CVS tag name used to check out this CLM distribution.
      -voc <name>         Turn on Volatile Organic Compounds [on | off] (default is off)
+
+
+OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=ccsm_seq)
+
+    The CCSM scripts already take care of everything here. These options exist for
+    use with the CLM standalone testing in the models/lnd/clm/test/system directory.
+
+     -ccsm_bld <name>    Turn use of CCSM build and makefiles. [on | off] (default is off)
+                         Can ONLY be turned on for mode=ccsm_seq.
+     -cc <name>          User specified C compiler (linux or darwin only).  Overrides Makefile default.
+     -cflags <string>    A string of user specified C compiler options.  Appended to
+                         Makefile defaults.
+     -debug              Switch to turn on building CLM with debugging compiler options.
+     -esmf_libdir <dir>  Directory containing ESMF library and esmf.mk file.
+     -fc <name>          User specified Fortran compiler.  Overrides Makefile default.
+     -fflags <string>    A string of user specified Fortran compiler flags.  Appended to
+                         Makefile defaults.  See -fopt to override optimization flags.
+     -fopt <string>      A string of user specified Fortran compiler optimization flags.  
+                         Overrides Makefile defaults.
+     -gmake <name>       Name of the GNU make program on your system.  Supply the absolute
+                         pathname if the program is not in your path (or fix your path).
+     -ldflags <string>   A string of user specified load options.  Appended to
+                         Makefile defaults.
+     -linker <name>      User specified linker.  Overrides Makefile default of \$(FC).
+     -mpi_inc <dir>      Directory containing MPI include files.
+     -mpi_lib <dir>      Directory containing MPI library.
+     -nc_inc <dir>       Directory containing netCDF include files.
+     -nc_lib <dir>       Directory containing netCDF library.
+     -nc_mod <dir>       Directory containing netCDF module files.
 EOF
 }
 
@@ -162,9 +164,6 @@ GetOptions(
     "snicar_frc=s"              => \$opts{'snicar_frc'},
     "cc=s"                      => \$opts{'cc'},
     "cflags=s"                  => \$opts{'cflags'},
-    "clm_bld=s"                 => \$opts{'clm_bld'},
-    "clm_exe=s"                 => \$opts{'clm_exe'},
-    "clm_exedir=s"              => \$opts{'clm_exedir'},
     "clm_root=s"                => \$opts{'clm_root'},
     "cppdefs=s"                 => \$opts{'cppdefs'},
     "comp_intf=s"               => \$opts{'comp_interface'},
@@ -335,20 +334,12 @@ EOF
 if ($print>=2) { print "Setting CLM root directory to $clm_root$eol"; }
 
 #-----------------------------------------------------------------------------------------------
-# CLM build directory.
-my $clm_bld;
-if (defined $opts{'clm_bld'}) {
-    $clm_bld = absolute_path($opts{'clm_bld'});
-}
-else { # use default value
-    $clm_bld = absolute_path($cfg_ref->get('clm_bld'));
-}
+# CLM build directory is current directory
+my $clm_bld = `pwd`;
+chomp( $clm_bld );
 
-if (&is_valid_directory( $clm_bld ) or mkdirp($clm_bld)) {
-    # If the build directory exists or can be made then set the value...
-    $cfg_ref->set('clm_bld', $clm_bld);
-}
-else {
+# Make sure directory is valid
+if ( ! &is_valid_directory( $clm_bld ) and ! mkdirp($clm_bld)) {
     die <<"EOF";
 ** Could not create the specified CLM build directory: $clm_bld
 EOF
@@ -357,21 +348,12 @@ EOF
 if ($print>=2) { print "Setting CLM build directory to $clm_bld$eol"; }
 
 #-----------------------------------------------------------------------------------------------
-# CLM install directory.
-my $clm_exedir;
-if (defined $opts{'clm_exedir'}) {
-    $clm_exedir = absolute_path($opts{'clm_exedir'});
-}
-else { # use default value
-    $clm_exedir = $clm_bld;
-}
+# CLM install directory same as build directory
+my $clm_exedir = $clm_bld;
 
 if ($clm_build) {
 
-    if (&is_valid_directory( $clm_exedir ) or mkdirp($clm_exedir)) {
-	# If the install directory exists or can be made then set the value...
-	$cfg_ref->set('clm_exedir', $clm_exedir);
-    } else {
+    if ( ! &is_valid_directory( $clm_exedir ) and ! mkdirp($clm_exedir)) {
 	die <<"EOF";
 ** Could not create the specified CLM installation directory: $clm_exedir
 EOF
@@ -407,7 +389,7 @@ if (defined $opts{'cachedir'}) {
     $config_cache_dir = absolute_path($opts{'cachedir'});
 }
 else {
-    $config_cache_dir = $cfg_ref->get('clm_bld');
+    $config_cache_dir = $clm_bld;
 }
 
 if (&is_valid_directory( $config_cache_dir, allowEnv=>1 ) or mkdirp($config_cache_dir)) {
@@ -605,10 +587,7 @@ my %sys_defaults = get_sys_defaults("$cfgdir/config_files/$sys_defaults_file", $
 
 #-----------------------------------------------------------------------------------------------
 # Name of CLM executable.
-if (defined $opts{'clm_exe'}) {
-    $cfg_ref->set('clm_exe', $opts{'clm_exe'});
-}
-my $clm_exe = $cfg_ref->get('clm_exe');
+my $clm_exe = "clm";
 
 if ($print>=2) { print "Name of CLM executable: $clm_exe.$eol"; }
 
@@ -1376,7 +1355,6 @@ sub write_filepath_ccsmbld
     my $mode        = $cfg_ref->get('mode');
     my $buildpio    = $cfg_ref->get('pio');
     my $comp_intf   = $cfg_ref->get('comp_interface');
-    my $clm_bld     = $cfg_ref->get('clm_bld');
 
     # Source root
     my $srcdir = "$clm_root/src";
@@ -1476,7 +1454,6 @@ sub write_filepath_ccsmbld
        if ( ! $spmd ) {
 	   print $fh "$srcdir/../../../utils/mct/mpi-serial\n";
        }
-       #print $fh "$clm_bld/include\n";
     }
 
     # CCSM driver
@@ -1642,8 +1619,6 @@ sub write_makefile
     # configuration parameters
     my $target_os    = $cfg_ref->get('target_os');
     my $clm_root     = $cfg_ref->get('clm_root');
-    my $clm_exe      = $cfg_ref->get('clm_exe');
-    my $clm_exedir   = $cfg_ref->get('clm_exedir');
     my $nc_inc       = $cfg_ref->get('nc_inc');
     my $nc_lib       = $cfg_ref->get('nc_lib');
     my $nc_mod       = $cfg_ref->get('nc_mod');
@@ -1726,8 +1701,6 @@ sub write_ccsm_makefile
     $fh_out->open(">$file_out") or die "** can't open file: $file_out\n";
 
     # configuration parameters
-    my $clm_exe      = $cfg_ref->get('clm_exe');
-    my $clm_exedir   = $cfg_ref->get('clm_exedir');
 
     my $target_name;
     my $target;

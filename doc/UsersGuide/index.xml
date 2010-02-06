@@ -31,7 +31,7 @@ Dedicated to the Land Model Working Group winners of the 2008 CCSM Distinguished
 </dedication>
 
 <preface id="acknowledge">
-<title>Acknowledgements</title>
+<title>Acknowledgments</title>
 <para>
 We acknowledge all of the people that helped review or edit the model documentation: 
 David Lawrence, Samuel Levis, and Keith Oleson. 
@@ -54,7 +54,7 @@ the novice and experienced user on running CLM.
 <title>How to Use This Document</title>
 
 <para>
-This section provides the details in using CLM with the CCSM modelling
+This section provides the details in using CLM with the CCSM modeling
 system. Links to descriptions and definitions have been provided in the code below.
 We use the same conventions used in the CCSM documentation as outlined below.
 </para>
@@ -68,7 +68,11 @@ UNIX prompt.
 Lastly, throughout the document this style is used to indicate shell
 commands and options, fragments of code, namelist variables, etc.
 Where examples from an interactive shell session are presented, lines
-starting with % indicate the shell prompt.
+starting with % indicate the shell prompt. Note that "$EDITOR" is used
+to refer to the text editor of your choice. $EDITOR is a standard UNIX
+environment variable and should be set on most UNIX systems. Comment
+lines are signaled to start with a "#" sign, which is the standard UNIX
+comment sign as well.
 </screen>
 
 </preface>
@@ -92,7 +96,7 @@ Changes to CLM4 beyond CLM3.5 (Oleson et al., 2008a; Stockli et al., 2008) inclu
 canopy stability (Sakaguchi and Zeng, 2009).
 </para>
 <para>
-The snow model is significantly modified via incorporation of SNICAR (SNow and Ice Aerosol Radiation) which represents the effect of aerosol deposition (e.g. black and organic carbon and dust) on albedo, introduces a grain-size dependent snow ageing parameterization, and permits vertically resolved snowpack heating (Flanner and Zender, 2005; Flanner and Zender, 2006; Flanner et al., 2007). The new snow model also includes a new density-dependent snow cover fraction parameterization (Niu and Yang, 2007), a revised snow burial fraction over short vegetation (Wang and Zeng, 2009) and corrections to snow compaction (Lawrence and Slater, 2009).
+The snow model is significantly modified via incorporation of SNICAR (SNow and Ice Aerosol Radiation) which represents the effect of aerosol deposition (e.g. black and organic carbon and dust) on albedo, introduces a grain-size dependent snow aging parameterization, and permits vertically resolved snowpack heating (Flanner and Zender, 2005; Flanner and Zender, 2006; Flanner et al., 2007). The new snow model also includes a new density-dependent snow cover fraction parameterization (Niu and Yang, 2007), a revised snow burial fraction over short vegetation (Wang and Zeng, 2009) and corrections to snow compaction (Lawrence and Slater, 2009).
 </para>
 <para>
 CLM4 also includes a representation of the thermal and hydraulic properties of organic soil that operates in conjunction with the mineral soil properties (Lawrence and Slater, 2008). The ground column has been extended to ~50-m depth by adding five additional hydrologically inactive ground layers (making a total of 15 ground layers, 10 soil layers and 5 bedrock layers; Lawrence et al., 2008). An urban landunit and associated urban canyon model has been added which permits the study of urban climate and urban heat island effects (Oleson et al., 2008b). The PFT distribution is as in Lawrence and Chase (2007) except that a new cropping dataset is used (Ramankutty et al., 2008) and a grass PFT restriction has been put in place to reduce a high grass PFT bias in forested regions by replacing the herbaceous fraction with low trees rather than grass. Grass and crop PFT optical properties have been adjusted according to values presented in Asner et al. (1998), resulting in significantly reduced albedo biases. Soil colors have been re-derived according to the new PFT distribution.
@@ -102,7 +106,7 @@ The model is extended with a carbon-nitrogen biogeochemical model (Thornton et a
 </para>
 <para>
 Several other minor changes have been incorporated including a change to the atmospheric reference height so that it is the height above zo+d for all surface types. The convergence of
-canopy roughness length zo and displacement height d to bare soil values as the above-ground biomass, or the sum of leaf and stem area indices, goes to zero is ensured (Zeng and Wang, 2007). Several corrections have been made to the way the offline forcing data is interpreted. The main change is a vastly improved and smooth diurnal cycle of incoming solar radiation that conserves the total incoming solar radiation from the forcing dataset. Additionally, in offline mode rather than partitioning incoming solar radiation into a constant 70%/30% direct vs diffuse split, it is partitioned according to empirical equations that are a function of total solar radiation. Finally, to improve global energy conservation in fully coupled simulations, runoff is split into separate liquid and ice water streams that are passed separately to the ocean. Input to the ice water comes from excess snowfall in snow-capped regions. The biogenic volative organic compounds model (BVOC) that was available in CLM3 has been replaced with the MEGAN BVOC model (Heald et al. 2008).
+canopy roughness length zo and displacement height d to bare soil values as the above-ground biomass, or the sum of leaf and stem area indices, goes to zero is ensured (Zeng and Wang, 2007). Several corrections have been made to the way the offline forcing data is interpreted. The main change is a vastly improved and smooth diurnal cycle of incoming solar radiation that conserves the total incoming solar radiation from the forcing dataset. Additionally, in offline mode rather than partitioning incoming solar radiation into a constant 70%/30% direct vs diffuse split, it is partitioned according to empirical equations that are a function of total solar radiation. Finally, to improve global energy conservation in fully coupled simulations, runoff is split into separate liquid and ice water streams that are passed separately to the ocean. Input to the ice water comes from excess snowfall in snow-capped regions. The biogenic volatile organic compounds model (BVOC) that was available in CLM3 has been replaced with the MEGAN BVOC model (Heald et al. 2008).
 </para>
 <para>
 Taken together, these augmentations to CLM3.5 result in improved soil moisture dynamics that lead to higher soil moisture variability and drier soils. Excessively wet and unvarying soil moisture was recognized as a deficiency in CLM3.5 (Oleson et al. 2008a, Decker and Zeng, 2009). The revised model also simulates, on average, higher snow cover, cooler soil temperatures in organic-rich soils, greater global river discharge, lower albedos over forests and grasslands, and higher transition-season albedos in snow covered regions, all of which are improvements compared to CLM3.5.
@@ -120,7 +124,7 @@ The following aspects are changes to the software infrastructure in CLM since CL
     <member>Remove support for CASA model.</member>
     <member>Update to datm8 atmospheric data model.</member>
     <member>Add gx3v7 land mask for T31 and fv-4x5 horizontal resolutions.</member>
-    <member>Add gx1v6 land mask for f05, f09, and f19 horigonzl resolutions.</member>
+    <member>Add gx1v6 land mask for f05, f09, and f19 horizontal resolutions.</member>
     <member>Add tx1v1 land mask and 1.9x2.5_tx1v1 horizontal resolution.</member>
     <member>Add in 2.5x3.33 horizontal resolution.</member>
     <member>Add in T62 horizontal resolution so can run at same resolution as input datm
@@ -299,7 +303,7 @@ Automatically resubmitting jobs:
 <listitem>
    <para>
    <varname>SNICAR_FRC</varname><screen>(-snicar_frc)</screen>
-       This mode is tested and functional, but is NOT constantly scientifcally validated, and should be 
+       This mode is tested and functional, but is NOT constantly scientifically validated, and should be 
        considered experimental.
    </para>
 </listitem>
@@ -385,7 +389,7 @@ others to get help in solving problems or trying something new. To facilitate th
 Bulletin Board for questions on the CCSM. There are also different sections in the Bulletin Board for
 the different component models or for different topics.
 <simplelist>
-<member><ulink url="http://www.bb.cgd.ucar.edu/">CCSM Online Bulletin Board</ulink></member>
+<member><ulink url="http://bb.cgd.ucar.edu/">CCSM Online Bulletin Board</ulink></member>
 </simplelist>
 </para>
 </sect1>
@@ -427,7 +431,7 @@ CCSM Users Guide</ulink> gives you the details on how to setup, configure, build
 a case. That is the document to give you the details on using the CCSM scripts. The purpose 
 of this document is to give you the details when using CCSM with CLM on how to customize
 and use advanced features in CLM. You should be familiar with the CCSM Users Guide and
-how to setup cases with CCSM4 before refering to this document.
+how to setup cases with CCSM4 before referring to this document.
 </para>
 <para>
 In this chapter we deal with three different ways of customizing a case: Choosing a compset,
@@ -448,7 +452,7 @@ use <filename>env_conf.xml</filename> options to change you namelist as well.
 
 <para>
 When setting up a new case one of the first choices to make is which "component set" (or compset) to use. The
-compset refers to which component models are used as well as specific settings for them. We label the differnt
+compset refers to which component models are used as well as specific settings for them. We label the different
 types of compsets with a different letter of the alphabet from "A" (for all data model) to "X" (for all dead model).
 The compsets of interest when working with CLM are the "I" compsets (which contain CLM with a data atmosphere model
 and a stub ocean, and stub sea-ice models), "E" and "F" compsets (which contain CLM with the active atmosphere model (CAM),
@@ -457,7 +461,7 @@ go into details on the "I" compsets which emphasize CLM as the only active model
 </para>
 <para>
 When working with CLM you usually want to start with a relevant "I" compset before moving to the more
-complex cases that involve other active model components. The "I" compsets can exersice CLM in a way that
+complex cases that involve other active model components. The "I" compsets can exercise CLM in a way that
 is similar to the coupled modes, but with much lower computational cost and faster turnaround times.
 </para>
 <sect2 id="I_compsets">
@@ -504,6 +508,9 @@ a slab ocean model while "F" compsets have a data ocean model.
        described more fully in the scripts documentation.
 </para>
 </sect2>
+
+<sect2 id="chose_compset_conclude">
+<title>Conclusion to choosing a compset</title>
 <para>
 We've introduced the basic type of compsets that use CLM and given some further details
 for the "standalone CLM" (or "I" compsets).  The 
@@ -512,10 +519,11 @@ config_compsets.xml</ulink> lists all of the compsets and gives a full descripti
 of each of them. In the next section we look into customizing the configure time options
 for compsets using CLM.
 </para>
+</sect2>
 </sect1>
 <!-- End of choosing a compset section -->
 
-<!-- Beg of customonizing clm config section -->
+<!-- Beg of customizing clm config section -->
 <sect1 id="customizing_clm_config">
 <title>Customizing the clm configuration</title>
 <para>
@@ -540,9 +548,10 @@ directory in the distribution. Both of these scripts have a "-help" option that 
 types of options you can give either of them.
 </para>
 <para>
-There are four different types of customization for the configuration that we will discuss: CCSM4 CLM configuration
-items, other noteworthy CCSM configuration items, the CLM configure script options, and the CLM build-namelist 
-script options.
+There are five different types of customization for the configuration that we will 
+discuss: CCSM4 CLM configuration items, Configure time User Namelist,
+other noteworthy CCSM configuration items, the CLM configure script options, and 
+the CLM build-namelist script options.
 </para>
 
 <sect2 id="clm_script">
@@ -555,7 +564,6 @@ Below we list each of the CCSM configuration items that are specific to CLM.
     <member><varname>CLM_CONFIG_OPTS</varname></member>
     <member><varname>CLM_BLDNML_OPTS</varname></member>
     <member><varname>CLM_NAMELIST_OPTS</varname></member>
-    <member><varname>CLM_DEMAND</varname></member>
     <member><varname>CLM_FORCE_COLDSTART</varname></member>
     <member><varname>CLM_PT1_NAME</varname></member>
     <member><varname>CLM_USRDAT_NAME</varname></member>
@@ -578,6 +586,18 @@ also important to note that the clm template may already invoke certain CLM conf
 command line options are NOT going to be available to change at this step (nor would you want to change them).
 </para>
 <para>
+CLM_NML_USE_CASE
+</para>
+<para>
+"CLM_NML_USE_CASE" is used to set a particular set of conditions that set multiple namelist items, all centering around
+a particular usage of the model.
+To list the valid options do the following:
+</para>
+<screen>
+%cd models/lnd/clm/bld
+%build-namelist -use_case list
+</screen>
+<para>
 CLM_BLDNML_OPTS
 </para>
 <para>
@@ -586,8 +606,8 @@ script the clm template may already invoke certain options and as such those opt
 set here. The best way to see what options can be sent to the "build-namelist" script is to do
 </para>
 <screen>
-cd models/lnd/clm/bld
-build-namelist -help
+%cd models/lnd/clm/bld
+%build-namelist -help
 </screen>
 <para>
 The clm template already sets the resolution and mask as well as the configure file, the start-type, and defines a input
@@ -599,7 +619,8 @@ with a "datm_" or "drv_" prefix. Hence there are then only four different option
 <orderedlist>
 <listitem><para>-lnd_res</para></listitem>
 <listitem><para>-sim_year</para></listitem>
-<listitem><para>-use_case</para></listitem>
+<listitem><para>-rcp</para></listitem>
+<listitem><para>-clm_demand</para></listitem>
 <listitem><para>-verbose</para></listitem>
 </orderedlist>
 </para>
@@ -610,25 +631,48 @@ by running the more expensive atmospheric model at a lower resolution. To get a 
 run at do the following:
 </para>
 <screen>
-cd models/lnd/clm/bld
-build-namelist -lnd_res list
+%cd models/lnd/clm/bld
+%build-namelist -lnd_res list
 </screen>
+<para>
+"-clm_demand" asks the build-namelist step to require that the list of variables
+entered be set. Typically, this is used to require that optional filenames be used and ensure
+they are set before continuing. For example, you may want to require that
+<varname>fpftdyn</varname> be set to get dynamically changing vegetation types. To do this
+you would do the following.
+<screen>
+%xmlchange -file env_conf.xml -id CLM_BLDNML_OPTS -val "-clm_demand fpftdyn"
+</screen>
+To see a list of valid variables that you could set do this:
+<screen>
+%cd models/lnd/clm/bld
+%build-namelist -clm_demand list
+</screen>
+</para>
+<note>
+ <para>
+Using a 20th-Century transient compset or the <envar>20thC_transient</envar> use-case
+using <envar>CLM_NML_USE_CASE</envar> would set this as well, but would also use 
+fndepdyn, and dynamic faerdep files, so using <envar>-clm_demand</envar> would be a way 
+to get <emphasis>just</emphasis> dynamic vegetation types and NOT the other files as well.
+</para>
+</note>
 <para>
 "-sim_year" is used to set the simulation year you want the data-sets to simulate conditions for in the input
 datasets. To list the valid options do the following:
 </para>
 <screen>
-cd models/lnd/clm/bld
-build-namelist -sim_year list
+%cd models/lnd/clm/bld
+%build-namelist -sim_year list
 </screen>
 <para>
-"-use_case" is used to set a particular set of conditions that set multiple namelist items, all centering around
-a particular usage of the model.
-To list the valid options do the following:
+"-rcp" is used to set the representative concentration pathway for the future scenarios
+you want the data-sets to simulate conditions for, in the input
+datasets. To list the valid options do the following:
 </para>
 <screen>
-cd models/lnd/clm/bld
-build-namelist -use_case list
+%cd models/lnd/clm/bld
+%build-namelist -rcp list
 </screen>
 <para>
 CLM_NAMELIST_OPTS
@@ -640,43 +684,23 @@ Any items that are set in CLM_NAMELIST_OPTS will be set in your namelist after "
 </para>
 <note>
 <para>
-For character namelist items you need to use "apos;" as quotes for strings so that the 
+For character namelist items you need to use "&amp;apos;" as quotes for strings so that the 
 scripts don't get confused with other quotes they use.
 </para>
 </note>
 <para>
 Example, you want to set <varname>hist_dov2xy</varname> to <varname>.false.</varname>
-so that you get vector output to your history files. 
-<screen>$EDITOR env_conf.xml</screen>
-and add <varname>hist_dov2xy=.false.</varname> to the settings in
-<envar>CLM_NAMELIST_OPTS</envar>.
+so that you get vector output to your history files. You want to edit
+<filename>env_conf.xml</filename> and add a setting for <varname>hist_dov2xy</varname>.
+So do the following:
+<screen>%xmlchange -file env_conf.xml -id CLM_NAMELIST_OPTS -val hist_dov2xy=.false.</screen>
 </para>
 <para>
-CLM_DEMAND
+CLM_CO2_TYPE
 </para>
 <para>
-<envar>CLM_DEMAND</envar> asks the build-namelist step to require that the list of variables
-entered be set. Typically, this is used to require that optional filenames be used and ensure
-they are set before continuing. For example, you may want to require that
-<varname>fpftdyn</varname> be set to get dynamically changing vegetation types. To do this
-you would do the following.
-<screen>
-xmlchange -file env_conf.xml -id CLM_DEMAND -val "fpftdyn"
-</screen>
-To see a list of valid variables that you could set do this:
-<screen>
-cd models/lnd/clm/bld
-build-namelist -clm_demand list
-</screen>
+<envar>CLM_CO2_TYPE</envar>
 </para>
-<note>
-<para>
-Using a 20th-Century transient compset or the <envar>20thC_transient</envar> use-case would
-set this as well, but would also use fndepdyn, and dynamic faerdep files, so using
-<envar>CLM_DEMAND</envar> would be a way to get <emphasis>just</emphasis> dynamic vegetation types
-and NOT the other files as well.
-</para>
-</note>
 <para>
 CLM_FORCE_COLDSTART
 </para>
@@ -695,8 +719,8 @@ CLM_PT1_NAME
 resolution simulation to set the name of the single-point files to use.
 To see a list of the valid resolutions do this:
 <screen>
-cd models/lnd/clm/
-build-namelist -res list
+%cd models/lnd/clm/
+%build-namelist -res list
 </screen>
 the valid resolutions that can be used with <envar>CLM_PT1_NAME</envar> are the ones that
 have city or nation names such as: 5x5_amazon, 1x1_vancouverCAN 1x1_mexicocityMEX, or
@@ -717,11 +741,60 @@ what the names will need to be. For example if you <envar>CLM_USR_DATNAME</envar
 be "1x1_boulderCO", with a "navy" land-mask, constant simulation year range, for 1850,
 the following will list what your filenames should be:
 <screen>
-queryDefaultNamelist.pl -usrname "1x1_boulderCO" -options
+%cd models/lnd/clm/bld
+%queryDefaultNamelist.pl -usrname "1x1_boulderCO" -options
 mask=navy,sim_year=1850,sim_year_range="constant"  -csmdata $CSMDATA
 </screen>
 </para>
 
+</sect2>
+
+<sect2 id="config_time_nml">
+<title>Configure time User Namelist</title>
+<para>
+<envar>CLM_NAMELIST_OPTS</envar> as described above allows you to set any
+extra namelist items you would like to appear in your namelist after first configured.
+However, it only allows you a single line to enter namelist items, and strings must
+be quoted with &amp;apos; which is a bit awkward. If you have a long list of namelist
+items you want to set (such as a long list of history fields) a convienent way to do it
+is to create a <filename>user_nl_clm</filename> that contains just the list of namelist
+variables you want to add to your initial namelist. The <filename>user_nl_clm</filename>
+will only be used when configure is run, so if you change it after configure -- it won't
+change anything. The file needs to be in valid FORTRAN namelist format, and the configure
+step will abort if there are syntax errors. The namelist name actually doesn't have to be
+valid, but all the variable names must be. Here's an example <filename>user_nl_clm</filename>
+namelist that sets a bunch of history file related items, to create output history files
+monthly, daily, every six and 1 hours.
+<screen>
+&amp;clmexp
+ hist_fincl2    = 'TG','TBOT','FIRE','FIRA','FLDS','FSDS',
+                  'FSR','FSA','FGEV','FSH','FGR','TSOI',
+                  'ERRSOI','BUILDHEAT','SABV','SABG',
+                  'FSDSVD','FSDSND','FSDSVI','FSDSNI',
+                  'FSRVD','FSRND','FSRVI','FSRNI',
+                  'TSA','FCTR','FCEV','QBOT','RH2M','H2OSOI',
+                  'H2OSNO','SOILLIQ','SOILICE', 
+                  'TSA_U', 'TSA_R',
+                  'TREFMNAV_U', 'TREFMNAV_R',
+                  'TREFMXAV_U', 'TREFMXAV_R',
+                  'TG_U', 'TG_R',
+                  'RH2M_U', 'RH2M_R',
+                  'QRUNOFF_U', 'QRUNOFF_R',
+                  'SoilAlpha_U',
+                  'Qanth', 'SWup', 'LWup', 'URBAN_AC', 'URBAN_HEAT'
+  hist_fincl3 = 'TG:I', 'FSA:I', 'SWup:I', 'URBAN_AC:I', 'URBAN_HEAT:I',
+                'TG_U:I', 'TG_R:I',
+  hist_fincl4 = 'TG', 'FSA', 'SWup', 'URBAN_AC', 'URBAN_HEAT'
+  hist_mfilt  = 1, 30,  28, 24
+  hist_nhtfrq = 0, -24, -6, -1
+/
+</screen>
+Obviously, all of this would be difficult to put in the <envar>CLM_NAMELIST_OPTS</envar>
+variable, especially having to put &amp;apos; around all the character strings. For
+more information on the namelist variables being set here and what they mean, see
+the section on CLM namelists below, as well as the namelist definition that gives
+details on each variable.
+</para>
 </sect2>
 
 <sect2 id="other_config">
@@ -763,7 +836,7 @@ a value set on it's own namelist.
 <para>
 <envar>DATM_MODE</envar> sets the mode that the DATM model should run in this determines
 how data is handled as well as what the source of the data will be. Many of the modes
-are setup specifically to be used for ocean and/or sea-ice modelling. The modes
+are setup specifically to be used for ocean and/or sea-ice modeling. The modes
 that are designed for use by CLM are:
 <simplelist>
 <member>CLM_QIAN</member>
@@ -821,7 +894,7 @@ determines which year in that range of years the simulation will start with.
 </variablelist>
 <para>
 The configure script defines the details of a clm configuration and summarizes it into a
-"config_cache.xml" file. The
+<filename>config_cache.xml</filename> file. The
 <ulink url="../../bld/config_files/config_definition.xml">config_definition.xml</ulink>
 gives a definition of each clm configuration item. Many of these items are things that you
 would NOT change, but looking through the list gives you the valid options, and a good
@@ -838,9 +911,10 @@ options after "configure -case" is run, or you could customize it using the
 <envar>CLM_BLDNML_OPTS</envar> which we described here.
 </para>
 </sect2>
-<!-- End of customonizing clm config section -->
+</sect1>
+<!-- End of customizing clm config section -->
 
-<!-- Beg of customonizing clm nl section -->
+<!-- Beg of customizing clm nl section -->
 <sect1 id="customizing_clm_nl">
    <title>Customizing the clm namelist</title>
 <para>
@@ -870,11 +944,14 @@ and other attributes.
 </sect2>
 <!-- End of nl definition section -->
 
+<sect2 id="nl_def_conclude">
+<title>Namelist definition Conclusion</title>
 <para>
 We've given the definition of each namelist item, and the default values that the CLM
 "build-namelist" script will use for them. In the next section we give examples of using
 selected namelist features.
 </para>
+</sect2>
 
 <!-- Beg of nl examples section -->
 <sect2 id="nl_examples">
@@ -902,19 +979,19 @@ the upcoming namelists and this one with <emphasis>emphasis</emphasis>.
 <title>Adding/removing fields on your primary history file</title>
 <para>
 The primary history files are output monthly, and contain an extensive list of
-fieldnames, but the list of fieldsnames can be added to using <varname>hist_fincl1</varname>
+fieldnames, but the list of fieldnames can be added to using <varname>hist_fincl1</varname>
 or removed from by adding fieldnames to <varname>hist_fexcl1</varname>.
 </para>
 </sect3>
 
 <sect3 id="add_aux_hist_chng_output_frq">
-<title>Adding auxillary history files and changing output
+<title>Adding auxiliary history files and changing output
 frequency</title>
 <para>
 The <varname>hist_fincl2</varname> through <varname>hist_fincl6</varname> set of
-namelist variables add given history fieldnames to auxillary history file "streams", and
+namelist variables add given history fieldnames to auxiliary history file "streams", and
 <varname>hist_fexcl2</varname> through <varname>hist_fexcl6</varname> set of
-namelist variables remove given history fieldnames from history file auxillary "streams".
+namelist variables remove given history fieldnames from history file auxiliary "streams".
 A history "stream" is a set of history files that are produced at a given frequency.
 By default there is only one stream of monthly data files. To add more streams you
 add history fieldnames to <varname>hist_fincl2</varname> through
@@ -937,7 +1014,7 @@ model steps between output.
 </member>
 <member><emphasis>Negative value</emphasis> means the output frequency is the absolute
 value in hours given (i.e -1 would mean an hour and -24 would mean a full day). Daily
-(-24) is the default value for all auxillary files.
+(-24) is the default value for all auxiliary files.
 </member>
 <member><emphasis>Zero</emphasis> means the output frequency is monthly. This is the
 default for the primary history files.
@@ -969,7 +1046,7 @@ on, but you then start from a clean slate.
 There are two ways to change the averaging of output history fields. The first is using
 <varname>hist_avgflag_pertape</varname> which gives a default value for each history
 stream, the second is when you add fields using <varname>hist_fincl*</varname>, you add
-an averaging flag to the end of the field name after a colen (for example 'TSOI:X', would
+an averaging flag to the end of the field name after a colon (for example 'TSOI:X', would
 output the maximum of TSOI).
 The types of averaging that can be done are:
 <simplelist>
@@ -1005,17 +1082,22 @@ Plant-Function-Types, columns, land-units, or grid-cells.
 </para>
 </sect3>
 
+<sect3 id="nl_example_conclude">
+<title>Conclusion to namelist examples</title>
 <para>
 We've given various examples of namelists that feature the use of different namelist options
 to customize a case for particular uses. Most the examples revolve around how to customize the
 output history fields. This should give you a good basis for setting up your own CLM namelist.
 </para>
+</sect3>
 </sect2>
 <!-- End of nl examples section -->
 
 </sect1>
-<!-- End of customonizing clm nl section -->
+<!-- End of customizing clm nl section -->
 
+<sect1 id="customizing_conclude">
+<title>Conclusion to customizing chapter</title>
 <para>
 We've given extensive details on customizing cases with CLM, by choosing compsets, by changing
 configure options and interacting with the CLM "configure" and "build-namelist" scripts, and
@@ -1023,6 +1105,7 @@ finally we've given details on all of the CLM namelist items. In the next chapte
 about further ways to customize cases with CLM by creating your own datasets using the tools
 provided in CLM.
 </para>
+</sect1>
 </chapter>
 <!-- End of customizing chapter -->
 
@@ -1037,7 +1120,7 @@ all available in the <filename>models/lnd/clm/tools</filename> directory. Most o
 are FORTRAN stand-alone programs in their own directory, but there is also a suite of NCL
 scripts in the <filename>ncl_scripts</filename> directory. Some of the NCL scripts are
 very specialized and not meant for general use, and we won't document them here. They
-still contain documentation in the script themself and the README file in the tools
+still contain documentation in the script itself and the README file in the tools
 directory. But, the list of generally important scripts and programs are:
 <orderedlist>
 <listitem>
@@ -1072,10 +1155,103 @@ deposition datasets to a new resolution.</para>
 </orderedlist>
 </para>
 
+<sect1 id="tool_build">
+<title>Common environment variables and options used in building the FORTRAN
+tools</title>
+<para>
+The FORTRAN tools all have similar makefiles, and similar options for building.
+All of the Makefiles use GNU Make extensions and thus require that you use GNU make
+to use them. They also auto detect the type of platform you are on, using "uname -s"
+and set the compiler, compiler flags and such accordingly. There are also environment
+variables that can be set to set things that must be customized. All the tools use
+NetCDF and hence require that the path to the NetCDF libraries and include files.
+On some platforms (such as Linux) multiple compilers can be used, and hence there
+are env variables that can be set to change the FORTRAN and/or "C" compilers used.
+The tools other than "cprnc" also  allow finer control, by also allowing the user to
+add compiler flags they choose for both "C" and FORTRAN compilers and set the linker 
+and add linker options. Finally the tools other than "cprnc" allow you to turn
+optimization on (which is off by default) with the <envar>OPT</envar> flag so that the 
+tool will run faster. To get even faster performance, the interpinic program allows 
+you to also use the <envar>SMP</envar> to turn on multiple shared memory processors.
+When <envar>SMP=TRUE</envar> you set the number of threads used by the program with
+the <envar>OMP_NUM_THREADS</envar> environment variable.
+</para>
+<para>
+Options used by all: cprnc, interpinic, mkdatadomain, mkgriddata, and mksurfdata
+<simplelist>
+<member><envar>LIB_NETCDF</envar> -- sets the location of the NetCDF library.</member>
+<member><envar>INC_NETCDF</envar> -- sets the location of the NetCDF include files.</member>
+<member><envar>USER_FC</envar> -- sets the name of the FORTRAN compiler.</member>
+</simplelist>
+Options used by: interpinic, mkdatadomain, mkgriddata, and mksurfdata
+<simplelist>
+<member><envar>MOD_NETCDF</envar> -- sets the location of the NetCDF FORTRAN module.</member>
+<member><envar>USER_LINKER</envar> -- sets the name of the linker to use.</member>
+<member><envar>USER_CPPDEFS</envar> -- adds any CPP defines to use.</member>
+<member><envar>USER_CFLAGS</envar> -- add any "C" compiler flags to use.</member>
+<member><envar>USER_FFLAGS</envar> -- add any FORTRAN compiler flags to use.</member>
+<member><envar>USER_LDFLAGS</envar> -- add any linker flags to use.</member>
+<member><envar>USER_CC</envar> -- sets the name of the "C" compiler to use.</member>
+<member><envar>OPT</envar> -- set to TRUE to compile the code optimized (TRUE or FALSE)</member>
+</simplelist>
+Options used only by interpinic:
+<simplelist>
+<member><envar>SMP</envar> -- set to TRUE to turn on shared memory parallelism (i.e.
+OpenMP) (TRUE or FALSE)</member>
+</simplelist>
+Options used only by cprnc:
+<simplelist>
+<member><envar>EXEDIR</envar> -- sets the location where the executable will be built.</member>
+<member><envar>VPATH</envar> -- colen delimited path list to find the source files.</member>
+</simplelist>
+More details on each environment variable.
+<simplelist>
+<member><envar>LIB_NETCDF</envar></member>
+<member><envar>INC_NETCDF</envar></member>
+<member><envar>USER_FC</envar></member>
+<member><envar>MOD_NETCDF</envar></member>
+<member><envar>USER_LINKER</envar></member>
+<member><envar>USER_CPPDEFS</envar></member>
+<member><envar>USER_CFLAGS</envar></member>
+<member><envar>USER_FFLAGS</envar></member>
+<member><envar>USER_LDFLAGS</envar></member>
+<member><envar>USER_CC</envar></member>
+<member><envar>SMP</envar></member>
+<member><envar>OPT</envar></member>
+</simplelist>
+"cprnc" unlike the other CLM tools doesn't need any outside code to operate. The
+other tools are use some code outside their directory that is in the CCSM
+distribution (either csm_share code or clm source code). They all have a 
+<filename>Filepath</filename> file to set the location of the source code
+directories that will be used. The "cprnc" program uses the <envar>VPATH</envar>
+variable instead to do the same function.
+</para>
+</sect1>
+
 <sect1 id="cprnc">
 <title>Using the cprnc tool to compare two history files</title>
 <para>
-...
+"cprnc" is a tool shared by both CAM and CLM to compare two NetCDF history files.
+It differences every field that has a time-axis that is also shared on both files,
+and reports a summary of the difference. The summary includes the three largest 
+differences, as well as the root mean square (RMS) difference. It also gives some
+summary information on the field as well. You have to enter at least one file, and up to
+two files. With one file it gives you summary information on the file, and with two it
+gives you information on the differences between the two. At the end it will give you a
+summary of the fields compared and how many fields were different and how many were
+identical.
+</para>
+<para>
+Options:
+<simplelist>
+<member>-m = do NOT align time-stamps before comparing</member>
+<member>-v = verbose output</member>
+<member>-ipr</member>
+<member>-jpr</member>
+<member>-kpr</member>
+</simplelist>
+See the "cprnc"
+<ulink url="../../tools/cprnc/README">README</ulink> file for more details.
 </para>
 </sect1>
 
@@ -1083,48 +1259,157 @@ deposition datasets to a new resolution.</para>
 <title>Using interpinic to interpolate initial conditions to different
 resolutions</title>
 <para>
-...
+"interpinic" is used to interpolate initial conditions from one resolution to another.
+In order to do the interpolation you must first run CLM to create a restart file to
+use as the "template" to interpolate into. Running from arbitrary initial conditions
+(i.e. finidat = ' ') for a single time-step is sufficient to do this. Make sure the
+model produces a restart file. You also need to make sure that you setup the same
+configuration that you want to run the model with, when you create the template file.
+Options:
+<simplelist>
+<member>-i = Input filename to interpolate from</member>
+<member>-o = Output interpolated file, and starting template file</member>
+</simplelist>
 </para>
 </sect1>
 
-<sect1 id="mkgridata">
-<title>Using mkgridata to create grid datasets</title>
+<sect1 id="mkgriddata">
+<title>Using mkgriddata to create grid datasets</title>
 <para>
-...
+"mkgriddata" is used to create grid, fraction and topography datasets to run CLM
+at a new resolution. It is typically the first step in creating datasets needed
+to run CLM at a new resolution (followed by mksurfdata, and then the interpolation
+programs, aerdepregrid, ndepregrid when running with CN).
 </para>
+<para>
+There are three different major modes for using "mkgriddata" to create grid files
+for CLM:
+<simplelist>
+<member>Convert CCSM domain files to CLM grid files</member>
+<member>Convert CAM files to CLM grid files</member>
+<member>Create single point or regional area grid files</member>
+</simplelist>
+</para>
+
+<sect2 id="mkgridata_from_domainfile">
+<title>Convert CCSM domain files to CLM grid files</title>
+<para>
+CCSM domain files such as used for datm, include all the information
+needed to create CLM grid files.
+<screen>
+</screen>
+</para>
+</sect2>
+
+<sect2 id="mkgridata_from_camfile">
+<title>Convert CAM files to CLM grid files</title>
+<para>
+Older CAM initial files included all the information needed to create CLM
+grid files. Newer CAM files no longer include land fraction data. Hence you
+can use CAM files to give you the grid coordinates, but you need other data
+to give you the land-mask and topography.
+<screen>
+</screen>
+</para>
+</sect2>
+
+<sect2 id="mkgridata_regional">
+<title>Create single point or regional area grid files</title>
+<para>
+The process to create single-point or regional area CLM grid files is the same.
+You enter the number of latitudes and longitudes you want on your output file and
+the extent of the grid: North, East, South and West. You also tell "mkgriddata" that
+you are entering a "regional" grid and you also enter the standard Navy orography
+dataset (or your own orography file if desired). For a single point you simply
+enter "1" for the number of latitudes and longitudes, but you still enter the
+grid extent (of the single grid cell). Here is a sample regional namelist to create
+a 5x5 regional grid over the Amazon:
+<screen>
+&amp;clmexp
+ mksrf_fnavyoro="/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_navyoro_20min.c010129.nc"
+ mksrf_lsmlon = 5
+ mksrf_lsmlat = 5
+ mksrf_edgee = 303.75
+ mksrf_edgew = 286.25
+ mksrf_edges = -15.
+ mksrf_edgen = -4.
+/
+</screen>
+</para>
+<note>
+<para>
+You should enter longitudes with values from 0 to 360 East.
+</para>
+</note>
+</sect2>
+
+<sect2 id="mkgriddata_nml">
+<title>mkgriddata namelist</title>
+<para>
+Namelist options to mkgriddata include:
+<simplelist>
+<member><varname>mksrf_fnavyoro</varname> -- Navy orography file to use for land fraction
+and surface heights.</member>
+<member><varname>mksrf_frawtopo</varname> -- Raw topography file with just surface
+heights.</member>
+<member><varname>mksrf_fcamfile</varname> -- CAM initial conditions file with
+land-fractions and topography</member>
+<member><varname>mksrf_fclmgrid</varname> -- CLM grid file</member>
+<member><varname>mksrf_fccsmdom</varname> -- CCSM domain file</member>
+<member><varname>mksrf_fcamtopo</varname> -- CAM topography file</member>
+<member><varname>mksrf_lsmlon</varname> -- number of longitude for regional grid</member>
+<member><varname>mksrf_lsmlat</varname>number of latitudes for regional grid</member>
+<member><varname>mksrf_edgen</varname> -- Northern edge for regional grid</member>
+<member><varname>mksrf_edgee</varname> -- Southern edge for regional grid</member>
+<member><varname>mksrf_edges</varname> -- Eastern edge for regional grid</member>
+<member><varname>mksrf_edgew</varname> -- Western edge for regional grid</member>
+</simplelist>
+</para>
+</sect2>
+
 </sect1>
 
 <sect1 id="mkdatadomain">
 <title>Using mkdatadomain to create domain datasets for datm or docn from CLM grid datasets</title>
 <para>
-...
+"mkdatadomain" is used to convert CLM grid and fraction datasets into domain datasets
+that can be used by either the "datm" or "docn" models.
 </para>
 </sect1>
 
 <sect1 id="mksurfdata">
 <title>Using mksurfdata to create surface datasets from grid datasets</title>
 <para>
-...
+"mksurfdata" is used to create surface-datasets from grid datasets and raw datafiles
+at half-degree resolution to produce files that describe the surface characteristics
+needed by CLM (fraction of grid cell covered by different land-unit types, and fraction
+for different vegetation types, as well as things like soil color, and soil texture,
+etc.).
 </para>
 </sect1>
 
 <sect1 id="ndepregrid">
 <title>Using ndepregrid.ncl to interpolate Nitrogen deposition datasets</title>
 <para>
-...
+"ndepregrid.ncl" interpolates the Nitrogen deposition datasets from one resolution
+to another.
 </para>
 </sect1>
 
 <sect1 id="aerdepregrid">
 <title>Using aerdepregrid.ncl to interpolate Aerosol deposition datasets</title>
 <para>
-...
+"aerdepregrid.ncl" interpolates the Aerosol deposition datasets from one resolution.
 </para>
 </sect1>
+
+<sect1 id="tools_conclude">
+<title>Conclusion of tools description</title>
 <para>
 We've given a description of how to use the different tools with CLM to create
 customized datasets.
 </para>
+</sect1>
 
 </chapter>
 <!-- End of tools chapter -->
@@ -1164,17 +1449,27 @@ for a simulation year, and then save a restart from that and use it as initial c
 for further spinup of CN.
 </para>
 <para>
-For the first step of running 600 years in "-ad_spinup" mode do the following:
+For the first step of running 600 years in "-ad_spinup" mode, you will setup
+a case, and then edit the values in <filename>env_conf.xml</filename> and
+<filename>env_run.xml</filename> so that the right configuration is turned on and
+the simulation is setup to run for the required length of simulation time.
+So do the following:
 <screen>
-cd scripts
-create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
-cd CN_spinup
-$EDITOR env_conf.xml   # Add "-ad_spinup on" to CLM_CONFIG_OPTS
-xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
-xmlchange -file env_run.xml -id RESUBMIT -val 30
-xmlchange -file env_run.xml -id STOP_OPTION -val nyears
-xmlchange -file env_run.xml -id STOP_N -val 20
-xmlchange -file env_run.xml -id STOP_DATE -val 6000101
+%cd scripts
+%create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+%cd CN_spinup
+# Add "-ad_spinup on" to CLM_CONFIG_OPTS in env_conf.xml using your editor of choice
+%$EDITOR env_conf.xml
+# The following sets CLM_FORCE_COLDSTART to "on" in env_conf.xml (you could also use an editor)
+%xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+# The following sets RESUBMIT to 30 times in env_run.xml (you could also use an editor)
+%xmlchange -file env_run.xml -id RESUBMIT -val 30
+# The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
+%xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+# The following sets STOP_N to 20 years in env_run.xml (you could also use an editor)
+%xmlchange -file env_run.xml -id STOP_N -val 20
+# The following sets STOP_DATE to Jan/1 of year 600 in env_run.xml (you could also use an editor)
+%xmlchange -file env_run.xml -id STOP_DATE -val 6000101
 </screen>
 Then configure your case and build and run it as normal. And then save the last restart
 file from this simulation to use in the next step.
@@ -1183,14 +1478,18 @@ file from this simulation to use in the next step.
 To exit the spinup up mode and create an initial condition file to do further simulations
 (or further spinup with) use "-exit_spinup" mode as follows:
 <screen>
-cd scripts
-create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
-cd CN_spinup
-$EDITOR env_conf.xml   # Add "-exit_spinup on" to CLM_CONFIG_OPTS
-configure -case
-$EDITOR BuildConf/clm.buildnml.csh # Set finidat file to the last restart file saved in previous step
-xmlchange -file env_run.xml -id STOP_OPTION -val nyears
-xmlchange -file env_run.xml -id STOP_N -val 1
+%cd scripts
+%create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+%cd CN_exitspinup
+# Add "-exit_spinup on" to CLM_CONFIG_OPTS in env_conf.xml using your editor of choice
+%$EDITOR env_conf.xml
+%configure -case
+# Set the finidat file to the last restart file saved in previous step
+%$EDITOR BuildConf/clm.buildnml.csh
+# The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
+%xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+# The following sets STOP_N to one year in env_run.xml (you could also use an editor)
+%xmlchange -file env_run.xml -id STOP_N -val 1
 </screen>
 </para>
 <para>
@@ -1205,7 +1504,7 @@ use for future simulations.
 Doing perturbation error growth tests is a way to validate a port of
 the model to a new machine or to verify that changes are only roundoff.
 The steps are the same in either case, but in the discussion below I will
-assume you are doing a port validation to a new machine (but in parathesis 
+assume you are doing a port validation to a new machine (but in parenthesis 
 I will put a reminder that it could also be for code-mods).
 The basic idea is to do run two cases on the trusted machine (trusted code) and
 one with initial conditions perturbed by roundoff and compare the results of
@@ -1214,7 +1513,7 @@ and describe a curve that we want to compare the non-perturbed state with the ne
 machine (code changes in place). If the new machine (code changes) are well-behaved
 the plot of this curve compared to the perturbation growth curve should be similar. If the 
 changes are NOT well-behaved the changes from the new machine (code changes) will be 
-larger than the pertubation changes. In summary the simulations and steps that need to be performed are:
+larger than the perturbation changes. In summary the simulations and steps that need to be performed are:
 <orderedlist>
 <listitem>
 <para>Run a simulation with the trusted code on the trusted machine.</para>
@@ -1242,7 +1541,7 @@ perturbed by roundoff (using a namelist item to do so).</para>
 <para>If the plots do <emphasis>NOT</emphasis>compare well the new machine is
 <emphasis>NOT</emphasis>running as well as the trusted machine. Typically the
 recommendation here is to lower the optimization level on the new machine and try
-again (or in the case of code changes, modify or simiplify the code changes to get
+again (or in the case of code changes, modify or simplify the code changes to get
 something that should be closer).</para>
 </listitem>
 </orderedlist>
@@ -1259,7 +1558,7 @@ something that should be closer).</para>
 <para>
 The CLM also allows you to set up and run cases with a single-point or a local region as well
 as global resolutions. This is often useful for running quick cases for testing, evaluating
-specific vegetation types, or land-units, or running with observed data for a specfic site.
+specific vegetation types, or land-units, or running with observed data for a specific site.
 There are three different ways to do this: <envar>PTS_MODE</envar>,
 <envar>CLM_1PT_NAME</envar>, and <envar>CLM_USRDAT_NAME</envar>.
 <simplelist>
@@ -1285,8 +1584,8 @@ simulate for (the code will pick the point on the global grid nearest to the poi
 give. Here's an example to setup a simulation for the nearest point at 2-degree resolution
 to Boulder Colorado.
 <screen>
-cd scripts
-create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire -skip_rundb -pts_lat 40.0 -pts_lon -105
+%cd scripts
+%create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire -skip_rundb -pts_lat 40.0 -pts_lon -105
 </screen>
 Then configure, build and run as normal.
 </para>
@@ -1318,19 +1617,19 @@ You can change the point you are simulating for at run-time by changing the valu
 In addition to <envar>PTS_MODE</envar> the CLM supports running using single-point or
 regional datasets that are customized to a particular region. In the section below we
 tell the user how to create their own dataset, but we also support a small number of
-single-point and regional datasets that are ready to setup and run in the CCSM modelling
+single-point and regional datasets that are ready to setup and run in the CCSM modeling
 system.
 </para>
 <para>
 To run with the supported single-point and regional datasets, you setup a simulation for the
 "pt1_pt1" resolution and give the short-name for the file to use in the
 <filename>env_conf.xml</filename> file. Then to run for the urban MexicoCity Mexico test site
-do teh following:
+do the following:
 <screen>
-cd scripts
-create_newcase -case testSPDATASET -res pt1_pt1 -compset I -mach bluefire -skip_rundb
-cd testSPDATASET
-xmlchange -file env_conf.xml -id CLM_PT1_NAME -val 1x1_mexicocityMEX
+%cd scripts
+%create_newcase -case testSPDATASET -res pt1_pt1 -compset I -mach bluefire -skip_rundb
+%cd testSPDATASET
+%xmlchange -file env_conf.xml -id CLM_PT1_NAME -val 1x1_mexicocityMEX
 </screen>
 Then configure, build and run normally.
 </para>

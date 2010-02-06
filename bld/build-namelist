@@ -173,7 +173,7 @@ GetOptions(
     "mask=s"                    => \$opts{'mask'},
     "namelist=s"                => \$opts{'namelist'},
     "res=s"                     => \$opts{'res'},
-    "rcp=f"                     => \$opts{'rcp'},
+    "rcp=s"                     => \$opts{'rcp'},
     "drv_runlength=s"           => \$opts{'drv_runlength'},
     "s|silent"                  => \$opts{'silent'},
     "sim_year=s"                => \$opts{'sim_year'},
@@ -837,7 +837,7 @@ my $dust        = $cfg->get('dust');
 my $carbon_aero = $cfg->get('carbon_aero');
 if ( $mode eq "ext_ccsm_con" || $dust eq "off" || $carbon_aero eq "off" ) {
    add_default($nl, 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year,
-                    'sim_year_range'=>$sim_year_range);
+                    'sim_year_range'=>$sim_year_range, 'rcp'=>$rcp );
 }
 
 #
@@ -855,6 +855,7 @@ $settings{'hgrid'}          = $res;
 $settings{'sim_year'}       = $sim_year;
 $settings{'sim_year_range'} = $sim_year_range;
 $settings{'mask'}           = $mask;
+$settings{'rcp'}            = $rcp;
 foreach my $item ( @demandlist ) {
    if ( $item eq "null" ) { next; }
    add_default($nl, $item, %settings );
@@ -1587,12 +1588,12 @@ sub list_options {
     my $cfg     = shift;   # configure object
     my $optsref = shift;   # reference to hash that contains the options
 
-    # options to list value values for that are in the defaults files
+    # options to list values that are in the defaults files
     my @opts_list = ( "res", "lnd_res", "mask", "datm_source", "sim_year", 
                       "datm_cycle_beg_year", "datm_cycle_end_year", 
-                      "datm_cycle_init_year" );
+                      "datm_cycle_init_year", "rcp" );
     my %opts;
-    foreach my $var ( "res", "mask", "sim_year" ) {
+    foreach my $var ( "res", "mask", "sim_year", "rcp" ) {
        my $val;
        if (      $optsref->{$var} eq "list" ) {
          $val = "default";

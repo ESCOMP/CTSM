@@ -45,8 +45,6 @@ erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold
 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold
 blAL4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -10   cold
 
-smB91 TSMruncase.sh
-
 smD91 TSM.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 144    cold
 erD91 TER.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 72+72  cold
 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 144    cold
@@ -330,6 +328,11 @@ smH67 TSM.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10
 erH67 TER.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -3+-7 startup
 brH67 TBR.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -5+-5 startup
 blH67 TBL.sh _cnnsc_do clm_pftdyn 18501230:NONE:1800 1.9x2.5 gx1v6@1850-2000 -10   startup
+
+smHN1 TSM.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10   cold
+erHN1 TER.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -3+-7 cold
+brHN1 TBR.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -5+-5 cold
+blHN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10   cold
 
 smHM1 TSM.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -10   arb_ic
 erHM1 TER.sh 17p_cnnsc_dh clm_pftdyn 18501230:NONE:1800 2.5x3.33 gx3v7@1850-2000 -3+-7 arb_ic
@@ -641,30 +644,3 @@ sm854 TSMtools.sh interpinic   tools__ds runoptions
 sm853 TSMtools.sh interpinic   tools__o  runoptions
 
 smM94 TSMncl_tools.sh ndepregrid
-
-sm991 TSMext_ccsmseq_cam.sh ext_ccsm_seq_4x5_dh   ext_ccsm_seq_cam 48
-bl991 TSMext_ccsmseq_cam.sh ext_ccsm_seq_4x5_dh   ext_ccsm_seq_cam 48
-
-sm952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48
-bl952 TSMext_ccsmseq_cam.sh ext_ccsm_seq_10x15_dh ext_ccsm_seq_cam 48
-
-sm962 TSMext_ccsmseq_cam.sh ext_ccsm_seq_1.9x2.5_dh   ext_ccsm_seq_cam 48
-bl962 TSMext_ccsmseq_cam.sh ext_ccsm_seq_1.9x2.5_dh   ext_ccsm_seq_cam 48
-
-sm9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh   ext_ccsm_seq_cam 48
-bl9J2 TSMext_ccsmseq_cam.sh ext_ccsm_seq_0.9x1.25_dh   ext_ccsm_seq_cam 48
-
-sm984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3
-bl984 TSCext_ccsmseq_scam.sh ext_ccsm_seq_64x128_s scam_prep scam_ds scam 3
-
-erP61 TSM_ccsmseq.sh ERS f19_g15 I4804
-erP11 TSM_ccsmseq.sh ERS T31_g35 ICN4804
-erP91 TSM_ccsmseq.sh ERS f45_g35 ICN4804
-
-erP65 TSM_ccsmseq.sh ERS f19_g15 I
-erP15 TSM_ccsmseq.sh ERS T31_g35 ICN
-erP95 TSM_ccsmseq.sh ERS f45_g35 ICN
-
-erP68 TSM_ccsmseq.sh ERS f19_g15 ICASA
-erP18 TSM_ccsmseq.sh ERS T31_g35 ICASA
-erP98 TSM_ccsmseq.sh ERS f45_g35 ICASA

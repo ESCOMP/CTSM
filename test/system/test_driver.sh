@@ -20,7 +20,6 @@
 
 #will attach timestamp onto end of script name to prevent overwriting
 cur_time=`date '+%H:%M:%S'`
-seqccsm_vers="ccsm4_0_beta40"
 
 hostname=`hostname`
 case $hostname in
@@ -854,9 +853,6 @@ export MPI_TYPE_MAX=100000
 if [ -z "\$CLM_RETAIN_FILES" ]; then
     export CLM_RETAIN_FILES=FALSE
 fi
-if [ -z "\$CLM_SEQCCSMROOT" ]; then
-    export CLM_SEQCCSMROOT="\${dataroot}/collections/${seqccsm_vers}"
-fi
 if [ -n "\${CLM_INPUT_TESTS}" ]; then
     input_file=\$CLM_INPUT_TESTS
 else
@@ -878,8 +874,6 @@ echo "STATUS OF CLM TESTING UNDER JOB \${JOBID};  scheduled to run \$num_tests t
 echo "\$input_file" >> \${clm_status}
 echo "" >> \${clm_status}
 echo " on machine: $hostname" >> \${clm_status}
-echo "tests of Sequential-CCSM will use source code from:" >> \${clm_status}
-echo "\$CLM_SEQCCSMROOT" >> \${clm_status}
 if [ -n "${BL_ROOT}" ]; then
    echo "tests of baseline will use source code from:" >> \${clm_status}
    echo "\$BL_ROOT" >> \${clm_status}

@@ -182,7 +182,7 @@ lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr1850_c090421.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="1850" >
 lnd/clm2/surfdata/surfdata_4x5_simyr1850_c090928.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="1850" >
-lnd/clm2/surfdata/surfdata_10x15_simyr1850_c090928.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_10x15_simyr1850_c100202.nc</fsurdat>
 
 <!-- Single point data for year 1850 -->
 <fsurdat hgrid="1x1_tropicAtl" sim_year="1850" >
@@ -193,9 +193,13 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fpftdyn hgrid="0.9x1.25"      sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_simyr1850-2005_c091008.nc</fpftdyn>
 <fpftdyn hgrid="1.9x2.5"       sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_simyr1850-2005_c091108.nc</fpftdyn>
 <fpftdyn hgrid="2.5x3.33"      sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_2.5x3.33_simyr1850-2005_c091109.nc</fpftdyn>
-<fpftdyn hgrid="10x15"         sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_simyr1850-2005_c091231.nc</fpftdyn>
+<fpftdyn hgrid="10x15"         sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_simyr1850-2005_c100205.nc</fpftdyn>
 <fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_1x1_tropicAtl_simyr1850-2005_c091026.nc</fpftdyn>
 <fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1000-1004" >lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_tropicAtl_testyr1000-1004_c090731.nc</fpftdyn>
+
+<!-- Dynamic PFT surface datasets for future scenarios(relative to {csmdata}) -->
+<fpftdyn hgrid="1.9x2.5"       rcp="8.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp8.5_simyr1850-2100_c100203.nc</fpftdyn>
+<fpftdyn hgrid="10x15"         rcp="8.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp8.5_simyr1850-2100_c100202.nc</fpftdyn>
 
 <!-- Grid datasets (relative to {csmdata}) -->
 <fatmgrid hgrid="360x720"   >lnd/clm2/griddata/griddata_360x720_070122.nc</fatmgrid>
@@ -359,6 +363,9 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 
 <faerdep hgrid="1x1_tropicAtl"  sim_year_range="1850-2000" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1849-2006_1x1_tropicAtl_c091026.nc</faerdep>
 
+<!-- Transient future scenarios 1850-2100 datasets -->
+<faerdep hgrid="1.9x2.5"        rcp="8.5" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp8.5_monthly_1849-2104_1.9x2.5_c100201.nc</faerdep>
+
 <!-- Old 1990s data -->
 <faerdep hgrid="2.65x3.33"                   >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_2.65x3.33_c080709.nc</faerdep>
 <faerdep hgrid="4x5"                         >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_4x5_c080410.nc</faerdep>
@@ -473,6 +480,19 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2095" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2090-2099_1.9x2.5_c100115.nc</fndepdat>
 <fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2105" rcp="4.5">lnd/clm2/ndepdata/ndep_clm_rcp4.5_simyr2100-2109_1.9x2.5_c100115.nc</fndepdat>
 
+<!-- RCP 2.6 - the IMAGE scenario -->
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2005" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2000-2009_1.9x2.5_c100127.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2015" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2010-2019_1.9x2.5_c100127.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2025" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2020-2029_1.9x2.5_c100127.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2035" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2030-2039_1.9x2.5_c100127.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2045" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2040-2049_1.9x2.5_c100127.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2055" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2050-2059_1.9x2.5_c100127.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2065" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2060-2069_1.9x2.5_c100127.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2075" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2070-2079_1.9x2.5_c100127.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2085" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2080-2089_1.9x2.5_c100127.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2095" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2090-2099_1.9x2.5_c100127.nc</fndepdat>
+<fndepdat hgrid="1.9x2.5"   bgc="cn" sim_year="2105" rcp="2.6">lnd/clm2/ndepdata/ndep_clm_rcp2.6_simyr2100-2109_1.9x2.5_c100127.nc</fndepdat>
+
 <!--CN Nitrogen deposition dataset for a series of years (relative to {csmdata}) -->
 
 <fndepdyn hgrid="0.9x1.25"  bgc="cn" sim_year_range="1850-2000" >lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_0.9x1.25_c091106.nc</fndepdyn>
@@ -482,6 +502,10 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fndepdyn hgrid="4x5"       bgc="cn" sim_year_range="1850-2000" >lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_4x5_c091106.nc</fndepdyn>
 
 <fndepdyn hgrid="1x1_tropicAtl"  bgc="cn" sim_year_range="1850-2000" >lnd/clm2/ndepdata/fndep_clm_simyr1849-2006_1x1_tropicAtl_c091106.nc</fndepdyn>
+
+<!--CN Nitrogen deposition dataset for future scenarios (relative to {csmdata}) -->
+<fndepdyn hgrid="1.9x2.5"   bgc="cn" sim_year_range="1850-2100" rcp="8.5" >lnd/clm2/ndepdata/fndep_clm_rcp8.5_simyr1849-2106_1.9x2.5_c100201.nc</fndepdyn>
+<fndepdyn hgrid="1.9x2.5"   bgc="cn" sim_year_range="1850-2100" rcp="4.5" >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100201.nc</fndepdyn>
 
 <!-- Old 1890-2100 datasets from AR4 -->
 <fndepdyn hgrid="48x96"     bgc="cn" sim_year_range="1850-2000" >lnd/clm2/ndepdata/fndep_clm_1890-2100_48x96_c050608.nc</fndepdyn>

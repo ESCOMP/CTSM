@@ -89,7 +89,7 @@ else
 endif
 
 $(CURDIR)/Depends: $(CURDIR)/Srcfiles $(CURDIR)/Filepath
-	$(ROOTDIR)/bld/mkDepends Filepath Srcfiles > $@
+	$(ROOTDIR)/../../../scripts/ccsm_utils/Build/mkDepends Filepath Srcfiles > $@
 
 
 # Architecture-specific flags and rules

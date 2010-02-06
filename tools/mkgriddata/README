@@ -5,7 +5,7 @@ a regular regional or global grid and associated
 land fraction and land mask given a high resolution
 input topographic dataset. 
 
-0) Untar your input data in some directory
+0) Download your required input data in some directory
 
 1) cd to this directory 
 
