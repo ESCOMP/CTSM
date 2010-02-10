@@ -1,4 +1,148 @@
 ===============================================================
+Tag name:  clm3_7_03
+Originator(s):  erik (erik)
+Date: Wed Feb 10 11:29:56 MST 2010
+One-line Summary: Add in more future scenario datasets, new history fields from Keith
+
+Purpose of changes:
+
+Add in pftdyn dataset for 1-degree rcp-8.5. Add in interpolated aerdep/ndepdyn scenario
+files for f10, f09. Add in code change from Keith O. for average of top soil layers. Add
+in rcp for ndep and aerdep regrid scripts. Allow 2000-2100 sim_year_range for 1-degree
+resolution, and have a aerdep dataset for 1-degree for 2000-2100 (copy other 1850-2100
+datasets). There is also a 1-degree 1850-2100 aerosol dataset, but the file is large (~9GB).
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1104 (Restart problem with pftdyn mode)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: 
+    Add 2000-2100 simulation year range as allowed option
+
+   Two new history fields:
+
+        TSOI_10CM      = soil temperature in top 10cm of soil (K)
+        SOILWATER_10CM = soil liquid water + ice in top 10cm of soil (kg/m2)
+
+List any changes to the defaults for the boundary datasets: New datasets for rcp=8.5
+        f09, rcp=8.5 pftdyn for 1850-200 (use same file for 2000-2100)
+        faerdep, for 1850-2100 rcp=8.5, f10, f45, f25, f09 (and 2000-2100) and f19 for 2000-2100
+        fndepdyn, for 1850-2000 rcp=8.5 f09 (use same file for 2000-2100), f25, f45, f10
+        fndepdyn for 1850-2100 rcp=2.6 for native f19
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, history changes from Keith Oleson, reviewed by Dave Lawrenece
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do:  use-case for 2000-2100 for high resolution (1 degree and up)
+
+>>>>>>>>>> Add a use-case for a future scenario that only includes 2000-2100
+>>>>>>>>>> this is for 1-degree and higher resolution where we can't include the
+>>>>>>>>>> historical period and have resonable sized files.
+   A   models/lnd/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>> Get regridding scripts working for rcp's
+   M   models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl - Allow rcp to be set, more printing
+   M   models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl --- Allow rcp to be set, allow more sim_year_ranges
+
+>>>>>>>>>> New rcp=8.5 datasets, and 2000-2100 support for 1-degree
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - New rcp=8.5 datasets
+        f09, rcp=8.5 pftdyn for 1850-200 (use same file for 2000-2100)
+        faerdep, for 1850-2100 rcp=8.5, f10, f45, f25, f09 (and 2000-2100) and f19 for 2000-2100
+        fndepdyn, for 1850-2000 rcp=8.5 f09 (use same file for 2000-2100), f25, f45, f10
+        fndepdyn for 1850-2100 rcp=2.6 for native f19
+   M   models/lnd/clm/bld/namelist_files/namelist_definition.xml --- Allow 2000-2100 sim-year range
+
+   M   models/lnd/clm/doc/UsersGuide/index.xml --- Update documentation with namelist examples
+
+>>>>>>>>>> Code changes from Keith Oleson to add 10cm soil temperature and soil water history variables.
+   M   models/lnd/clm/src/main/clmtypeInitMod.F90 ------ Add h2osoi_liqice_10cm and t_soi_10cm
+   M   models/lnd/clm/src/main/clmtype.F90 ------------- Add h2osoi_liqice_10cm and t_soi_10cm
+   M   models/lnd/clm/src/main/histFldsMod.F90 --------- Add TSOI_10CM and SOILWATER_10CM,
+                                               on by default and output as average by default.
+   M   models/lnd/clm/src/biogeophys/Hydrology2Mod.F90 - Calculate 10cm soil averages for non-urban points
+
+Summary of testing:
+
+  bluefire: All PASS except...
+022 erHN1 TER.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -3+-7 cFAIL! rc= 7
+025 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+026 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+027 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+028 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+029 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+  bluefire interactive testing: All PASS except...
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+034 erL83 TER.sh _nrsc_do clm_std^nl_urb 20020115:NONE:3600 5x5_amazon navy -5+-5 arb_ic ........FAIL! rc= 6
+035 brL83 TBR.sh _nrsc_do clm_std^nl_urb_br 20020115:NONE:3600 5x5_amazon navy -10+-10 arb_ic ...FAIL! rc= 3
+036 blL83 TBL.sh _nrsc_do clm_std^nl_urb 20020115:NONE:3600 5x5_amazon navy -10 arb_ic ..........FAIL! rc= 3
+  bluefire/CCSM testing:
+PASS  SMS_RLA.f45_f45.I.bluefire
+PASS  SMS_RLA.f45_f45.I.bluefire.compare_hist.clm3_7_02
+PASS  SMS_RLA.f45_f45.I.bluefire.compare.clm3_7_02
+PEND  SMS_RLB.f45_f45.I.bluefire.GC.140232
+PEND  SMS_ROA.f45_f45.I.bluefire.GC.140232
+PASS  ERS_D.f45_g37.I.bluefire
+PASS  ERS_D.f45_g37.I.bluefire.compare_hist.clm3_7_02
+PASS  ERS_D.f45_g37.I.bluefire.compare.clm3_7_02
+PEND  PET.f45_g37.I1850.bluefire.GC.140232
+PEND  ERS.f19_g16.I1850.bluefire.GC.140232
+RUN   ERB.f09_g16.I_1948-2004.bluefire.GC.140232
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm3_7_02
+PASS  ERH_D.f10_f10.I1850CN.bluefire
+PASS  ERH_D.f10_f10.I1850CN.bluefire.compare.clm3_7_02
+PEND  PET.f10_f10.I8520CN.bluefire.GC.140232
+FAIL  ERS_D.f19_g16.I8521CNR85.bluefire
+BFAIL ERS_D.f19_g16.I8521CNR85.bluefire.compare.clm3_7_02
+  jaguar interactive testing: All PASS except...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+  edinburgh/lf95: All PASS up to smL58 (test 29) except...
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_02
+
+Changes answers relative to baseline: no bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_02
 Originator(s):  erik (erik)
 Date: Sat Feb  6 00:43:49 MST 2010

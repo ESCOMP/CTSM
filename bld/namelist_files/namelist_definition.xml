@@ -1074,7 +1074,7 @@ A sim_year of 1000 corresponds to data used for testing only, NOT corresponding 
 
 <entry id="sim_year_range" type="char*9" category="default_settings"
        group="default_settings" valid_values=
-"constant,1000-1002,1000-1004,1850-2000,1850-2100">
+"constant,1000-1002,1000-1004,1850-2000,1850-2100,2000-2100">
 Range of years to simulate transitory datasets for (such as dynamic: land-use datasets, aerosol-deposition, Nitrogen deposition rates etc.)
 Constant means simulation will be held at a constant year given in sim_year.
 A sim_year_range near 1000 corresponds to data used for testing only, NOT corresponding to any real datasets.

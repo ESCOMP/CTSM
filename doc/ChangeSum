@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_7_03         erik 02/10/2010 Add in more future scenario datasets, new history fields from Keith
    clm3_7_02         erik 02/06/2010 Start adding in new rcp=8.5 datasets, remove some junk, change some env_conf variables, add user_nl_clm
    clm3_7_01         erik 01/29/2010 OpenMP fix for pftdyn, start adding in rcp's, update ndeplintInterp.ncl script
    clm3_7_00         erik 01/22/2010 Update to datm8, redirect aquifer overflow to drainage, add gx3v7 masks, script to extract regional datasets, add harvesting for CN, modify shrubs, include urban model, ice stream for snowcapping, new build-namelist system, scale solar by solar zenith angle in datm, deep soil with bedrock at bottom, organic matter in soils, SNICAR for snow radiation, sparce dense aero, snow cover changes

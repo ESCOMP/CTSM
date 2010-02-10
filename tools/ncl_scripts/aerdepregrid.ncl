@@ -20,6 +20,7 @@ begin
   ;
   resin          = "1.9x2.5";              ; Input resolution:  1.9x2.5 (normally NOT changed)
   res            = getenv("RES");          ; Get output resolution from env variable
+  rcp            = getenv("RCP");          ; Get input representative concen. pathway
   sim_year       = getenv("SIM_YR");       ; Get input simulation year from env variable
   sim_year_range = getenv("SIM_YR_RNG");   ; Get input simulation year range from env variable
 
@@ -28,11 +29,14 @@ begin
   if ( ismissing(res) )then
      res      = "48x96";      ; Output Resolution: 1.9x2.5, 48x96 etc.
   end if
+  if ( ismissing(rcp) )then
+     rcp      = "8.5";        ; Input representative concentration pathway (2.6,4.5,6,8.5)
+  end if
   if ( ismissing(sim_year) )then
      sim_year = "2000";       ; Input/Output simulation year: 1850, 2000
   end if
   if ( ismissing(sim_year_range) )then
-     sim_year_range = "constant";       ; Input/Output simulation year range: constant or 1850-2000
+     sim_year_range = "constant";       ; Input/Output simulation year range: constant, 1850-2000, 1850-2100, or 2000-2100
   end if
 
   ; END OF SECTION TO EDIT
@@ -56,7 +60,7 @@ begin
   sdate     = systemfunc( "date +%y%m%d" );
   ldate     = systemfunc( "date" );
   print( "query string="+querynml )
-  filename    = systemfunc( querynml+" -res "+resin+" -var "+filetype+" -options sim_year="+sim_year+",sim_year_range="+sim_year_range );
+  filename    = systemfunc( querynml+" -res "+resin+" -var "+filetype+" -options sim_year="+sim_year+",sim_year_range="+sim_year_range+",rcp="+rcp );
   gridinfile  = systemfunc( querynml+" -res "+resin+" -var fatmgrid" );
   gridfile    = systemfunc( querynml+" -res "+res  +" -var fatmgrid" );
   if ( sim_year_range .eq. "constant" ) then
@@ -106,19 +110,20 @@ begin
   ;
   ; Define vars and add attributes from original file
   ;
+  print( "Define vars" );
   vars = getfilevarnames( nc );
   i = dimsizes(vars) - 1
   do while ( i .ge. 0 )
-     dimlist = getfilevardims( nc, vars(i) )
-     filevardef (    nco, vars(i), typeof(nc->$vars(i)$), dimlist );
+     print( "Define "+vars(i) );
+     filevardef (    nco, vars(i), typeof(nc->$vars(i)$), getfilevardims( nc, vars(i) ) );
      filevarattdef ( nco, vars(i), nc->$vars(i)$ );
-     delete( dimlist );
      i = i - 1
   end do
   fileattdef ( nco, nc );
   ;
   ; Add global attributes to output file
   ;
+  print( "Global attributes" );
   nco@history              = ldate+": Regrid from "+resin+" resolution to "+res+" by aerdepregrid.ncl";
   nco@source               = "Regrid from:"+filename;
   nco@gridfile             = gridfile;

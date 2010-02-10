@@ -158,6 +158,10 @@ contains
          avgflag='A', long_name='soil temperature', &
          ptr_col=clm3%g%l%c%ces%t_soisno, c2l_scale_type='urbanh')
 
+    call hist_addfld1d (fname='TSOI_10CM',  units='K', &
+         avgflag='A', long_name='soil temperature in top 10cm of soil', &
+         ptr_col=clm3%g%l%c%ces%t_soi_10cm, set_urb=spval)
+
     call hist_addfld2d (fname='TLAKE',  units='K', type2d='levlak', &
          avgflag='A', long_name='lake temperature', &
          ptr_col=clm3%g%l%c%ces%t_lake)
@@ -595,6 +599,10 @@ contains
     call hist_addfld2d (fname='SOILICE',  units='kg/m2', type2d='levgrnd', &
          avgflag='A', long_name='soil ice', &
          ptr_col=clm3%g%l%c%cws%h2osoi_ice, c2l_scale_type='urbanh')
+
+    call hist_addfld1d (fname='SOILWATER_10CM',  units='kg/m2', &
+         avgflag='A', long_name='soil liquid water + ice in top 10cm of soil', &
+         ptr_col=clm3%g%l%c%cws%h2osoi_liqice_10cm, set_urb=spval)
 
     call hist_addfld1d (fname='SNOWLIQ',  units='kg/m2',  &
          avgflag='I', long_name='snow liquid water', &

@@ -36,8 +36,8 @@ Summary of testing:
   bluefire/CCSM testing:
   jaguar:
   jaguar interactive testing:
-  dublin/lf95 interactive testing:
-  dublin/lf95:
+  edinburgh/lf95 interactive testing:
+  edinburgh/lf95:
   breeze,gale,hail,gust/ifort interactive testing:
 
 CLM tag used for the baseline comparison tests if applicable:

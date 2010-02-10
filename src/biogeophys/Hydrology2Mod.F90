@@ -65,7 +65,7 @@ contains
     use clm_varcon      , only : denh2o, denice, istice, istwet, istsoil, isturb, spval, &
                                  icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
                                  icol_shadewall
-    use clm_varpar      , only : nlevgrnd, nlevsno
+    use clm_varpar      , only : nlevgrnd, nlevsno, nlevsoi
     use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, &
                                  SnowWater, BuildSnowFilter
     use SoilHydrologyMod, only : Infiltration, SoilWater, Drainage, SurfaceRunoff
@@ -138,6 +138,8 @@ contains
     real(r8), pointer :: t_soisno(:,:)    ! soil temperature (Kelvin)
     real(r8), pointer :: h2osoi_ice(:,:)  ! ice lens (kg/m2)
     real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2)
+    real(r8), pointer :: t_soi_10cm(:)         ! soil temperature in top 10cm of soil (Kelvin)
+    real(r8), pointer :: h2osoi_liqice_10cm(:) ! liquid water + ice lens in top 10cm of soil (kg/m2)
     real(r8), pointer :: h2osoi_vol(:,:)  ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
     real(r8), pointer :: qflx_drain(:)    ! sub-surface runoff (mm H2O /s)
     real(r8), pointer :: qflx_surf(:)     ! surface runoff (mm H2O /s)
@@ -210,6 +212,7 @@ contains
 #endif
     real(r8) :: snowmass                   ! liquid+ice snow mass in a layer [kg/m2]
     real(r8) :: snowcap_scl_fct            ! temporary factor used to correct for snow capping
+    real(r8) :: fracl                      ! fraction of soil layer contributing to 10cm total soil water
 
 !-----------------------------------------------------------------------
 
@@ -249,6 +252,8 @@ contains
     h2osoi_ice        => clm3%g%l%c%cws%h2osoi_ice
     h2osoi_liq        => clm3%g%l%c%cws%h2osoi_liq
     h2osoi_vol        => clm3%g%l%c%cws%h2osoi_vol
+    t_soi_10cm         => clm3%g%l%c%ces%t_soi_10cm
+    h2osoi_liqice_10cm => clm3%g%l%c%cws%h2osoi_liqice_10cm
     qflx_evap_tot     => clm3%g%l%c%cwf%pwf_a%qflx_evap_tot
     qflx_drain        => clm3%g%l%c%cwf%qflx_drain
     qflx_surf         => clm3%g%l%c%cwf%qflx_surf
@@ -412,6 +417,36 @@ contains
     end do
 
     ! Determine ground temperature, ending water balance and volumetric soil water
+    ! Calculate soil temperature and total water (liq+ice) in top 10cm of soil
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+       l = clandunit(c)
+       if (ityplun(l) /= isturb) then
+          t_soi_10cm(c) = 0._r8
+          h2osoi_liqice_10cm(c) = 0._r8
+       end if
+    end do
+    do j = 1, nlevsoi
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+          l = clandunit(c)
+          if (ityplun(l) /= isturb) then
+            if (zi(c,j) <= 0.1_r8) then
+              fracl = 1._r8
+              t_soi_10cm(c) = t_soi_10cm(c) + t_soisno(c,j)*dz(c,j)*fracl
+              h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
+                                       fracl
+            else
+              if (zi(c,j) > 0.1_r8 .and. zi(c,j-1) .lt. 0.1_r8) then
+                 fracl = (0.1_r8 - zi(c,j-1))/dz(c,j)
+                 t_soi_10cm(c) = t_soi_10cm(c) + t_soisno(c,j)*dz(c,j)*fracl
+                 h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
+                                          fracl
+              end if
+            end if
+          end if
+       end do
+    end do
 
     do fc = 1, num_nolakec
        
@@ -419,7 +454,9 @@ contains
        l = clandunit(c)
 
        t_grnd(c) = t_soisno(c,snl(c)+1)
-
+       if (ityplun(l) /= isturb) then
+          t_soi_10cm(c) = t_soi_10cm(c)/0.1_r8
+       end if
        if (ityplun(l)==isturb) then
          t_grnd_u(c) = t_soisno(c,snl(c)+1)
        end if

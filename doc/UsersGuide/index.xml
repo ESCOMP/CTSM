@@ -59,16 +59,11 @@ system. Links to descriptions and definitions have been provided in the code bel
 We use the same conventions used in the CCSM documentation as outlined below.
 </para>
 
-<para>
-Note that computer input is written in a fixed point font and ">" is a
-UNIX prompt.
-</para>
-
 <screen>
-Lastly, throughout the document this style is used to indicate shell
+Throughout the document this style is used to indicate shell
 commands and options, fragments of code, namelist variables, etc.
 Where examples from an interactive shell session are presented, lines
-starting with % indicate the shell prompt. Note that "$EDITOR" is used
+starting with > indicate the shell prompt. Note that "$EDITOR" is used
 to refer to the text editor of your choice. $EDITOR is a standard UNIX
 environment variable and should be set on most UNIX systems. Comment
 lines are signaled to start with a "#" sign, which is the standard UNIX
@@ -594,8 +589,8 @@ a particular usage of the model.
 To list the valid options do the following:
 </para>
 <screen>
-%cd models/lnd/clm/bld
-%build-namelist -use_case list
+> cd models/lnd/clm/bld
+> build-namelist -use_case list
 </screen>
 <para>
 CLM_BLDNML_OPTS
@@ -606,8 +601,8 @@ script the clm template may already invoke certain options and as such those opt
 set here. The best way to see what options can be sent to the "build-namelist" script is to do
 </para>
 <screen>
-%cd models/lnd/clm/bld
-%build-namelist -help
+> cd models/lnd/clm/bld
+> build-namelist -help
 </screen>
 <para>
 The clm template already sets the resolution and mask as well as the configure file, the start-type, and defines a input
@@ -631,8 +626,8 @@ by running the more expensive atmospheric model at a lower resolution. To get a 
 run at do the following:
 </para>
 <screen>
-%cd models/lnd/clm/bld
-%build-namelist -lnd_res list
+> cd models/lnd/clm/bld
+> build-namelist -lnd_res list
 </screen>
 <para>
 "-clm_demand" asks the build-namelist step to require that the list of variables
@@ -641,12 +636,12 @@ they are set before continuing. For example, you may want to require that
 <varname>fpftdyn</varname> be set to get dynamically changing vegetation types. To do this
 you would do the following.
 <screen>
-%xmlchange -file env_conf.xml -id CLM_BLDNML_OPTS -val "-clm_demand fpftdyn"
+> xmlchange -file env_conf.xml -id CLM_BLDNML_OPTS -val "-clm_demand fpftdyn"
 </screen>
 To see a list of valid variables that you could set do this:
 <screen>
-%cd models/lnd/clm/bld
-%build-namelist -clm_demand list
+> cd models/lnd/clm/bld
+> build-namelist -clm_demand list
 </screen>
 </para>
 <note>
@@ -662,8 +657,8 @@ to get <emphasis>just</emphasis> dynamic vegetation types and NOT the other file
 datasets. To list the valid options do the following:
 </para>
 <screen>
-%cd models/lnd/clm/bld
-%build-namelist -sim_year list
+> cd models/lnd/clm/bld
+> build-namelist -sim_year list
 </screen>
 <para>
 "-rcp" is used to set the representative concentration pathway for the future scenarios
@@ -671,8 +666,8 @@ you want the data-sets to simulate conditions for, in the input
 datasets. To list the valid options do the following:
 </para>
 <screen>
-%cd models/lnd/clm/bld
-%build-namelist -rcp list
+> cd models/lnd/clm/bld
+> build-namelist -rcp list
 </screen>
 <para>
 CLM_NAMELIST_OPTS
@@ -719,8 +714,8 @@ CLM_PT1_NAME
 resolution simulation to set the name of the single-point files to use.
 To see a list of the valid resolutions do this:
 <screen>
-%cd models/lnd/clm/
-%build-namelist -res list
+> cd models/lnd/clm/
+> build-namelist -res list
 </screen>
 the valid resolutions that can be used with <envar>CLM_PT1_NAME</envar> are the ones that
 have city or nation names such as: 5x5_amazon, 1x1_vancouverCAN 1x1_mexicocityMEX, or
@@ -741,8 +736,8 @@ what the names will need to be. For example if you <envar>CLM_USR_DATNAME</envar
 be "1x1_boulderCO", with a "navy" land-mask, constant simulation year range, for 1850,
 the following will list what your filenames should be:
 <screen>
-%cd models/lnd/clm/bld
-%queryDefaultNamelist.pl -usrname "1x1_boulderCO" -options
+> cd models/lnd/clm/bld
+> queryDefaultNamelist.pl -usrname "1x1_boulderCO" -options
 mask=navy,sim_year=1850,sim_year_range="constant"  -csmdata $CSMDATA
 </screen>
 </para>
@@ -957,11 +952,10 @@ selected namelist features.
 <sect2 id="nl_examples">
 <title>Examples of using different namelist features</title>
 <para>
-Below we will give examples of namelists that activate different commonly used
+Below we will give examples of user namelists that activate different commonly used
 namelist features. We will discuss the namelist features in different examples and then
-show a complete namelist that includes an example of the use of these features. First we
-give a default namelist that will be the base for all the examples, and then the examples
-will highlight what is different about them from the default.
+show a user namelist that includes an example of the use of these features. First we
+will show the default namelist that doesn't activate any user options.
 </para>
 
 <sect3 id="default_nml">
@@ -969,9 +963,46 @@ will highlight what is different about them from the default.
 <para>
 Here we give the default namelist as it would be created for a I1850CN compset at 0.9x1.25
 resolution with a gx1v6 land-mask. To edit the namelist you would edit the
-<filename>BuildConf/clm.buildnml.csh</filename> under your case. For simplicity we will
-just show the namelist and NOT the entire file. We will also highlight what changes between
-the upcoming namelists and this one with <emphasis>emphasis</emphasis>.
+<filename>BuildConf/clm.buildnml.csh</filename> under your case (or before configure
+include a user namelist with just the items you want to change). For simplicity we will
+just show the namelist and NOT the entire file. In the sections below, for simplicity
+ we will just show the user namelist (user_nl_clm) that will add (or modify existing) 
+namelist items to the namelist.
+<screen>
+&amp;clm_inparm
+ co2_ppmv               = 284.7
+ co2_type               = 'constant'
+ dtime          = 1800
+ faerdep                =
+'$DIN_LOC_ROOT/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1850_0.9x1.25_c090828.nc'
+ fatmgrid               = '$DIN_LOC_ROOT/lnd/clm2/griddata/griddata_0.9x1.25_070212.nc'
+ fatmlndfrc             =
+'$DIN_LOC_ROOT/lnd/clm2/griddata/fracdata_0.9x1.25_gx1v6_c090317.nc'
+ finidat                =
+'$DIN_LOC_ROOT/lnd/clm2/initdata/clmi.BCN.0400-01-01_0.9x1.25_gx1v6_simyr1850_c091016.nc'
+ fndepdat               =
+'$DIN_LOC_ROOT/lnd/clm2/ndepdata/ndep_clm_simyr1850_0.9x1.25_c091106.nc'
+ fpftcon                = '$DIN_LOC_ROOT/lnd/clm2/pftdata/pft-physiology.c081222'
+ frivinp_rtm            = '$DIN_LOC_ROOT/lnd/clm2/rtmdata/rdirc.05.061026'
+ fsnowaging             =
+'$DIN_LOC_ROOT/lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc'
+ fsnowoptics            =
+'$DIN_LOC_ROOT/lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc'
+ fsurdat                =
+'$DIN_LOC_ROOT/lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr1850_c090702.nc'
+ hist_crtinic           = 'NONE'
+ hist_mfilt             = 1
+ hist_nhtfrq            = 0
+ nrevsn         = ' '
+ outnc_large_files              = .true.
+ rtm_nsteps             = 6
+ urban_hac              = 'ON_WASTEHEAT'
+ urban_traffic          = .false.
+/
+</screen>
+Note that the namelist introduces some of the history namelist options that will be
+talked about in further detail below (<varname>hist_mfilt</varname> and
+<varname>hist_nhtfrq</varname>).
 </para>
 </sect3>
 
@@ -981,6 +1012,15 @@ the upcoming namelists and this one with <emphasis>emphasis</emphasis>.
 The primary history files are output monthly, and contain an extensive list of
 fieldnames, but the list of fieldnames can be added to using <varname>hist_fincl1</varname>
 or removed from by adding fieldnames to <varname>hist_fexcl1</varname>.
+A sample user namelist <filename>user_nl_clm</filename> adding few new fields
+(shortwave up, longwave up, and anthropogentic heat flux) and excluding a few 
+standard fields is (ground temperature, vegetation temperature, soil temperature and soil water).:
+<screen>
+&amp;clm_inparm
+ hist_fincl1 = 'SWup', 'LWup', 'Qanth'
+ hist_fexcl1 = 'TG', 'TV', 'TSOI', 'H2OSOI'
+/
+</screen>
 </para>
 </sect3>
 
@@ -1020,6 +1060,18 @@ value in hours given (i.e -1 would mean an hour and -24 would mean a full day). 
 default for the primary history files.
 </member>
 </simplelist>
+A sample user namelist <filename>user_nl_clm</filename> turning on four extra file
+streams for output: daily, six-hourly, hourly, and every time-step, and 
+leaving the primary history files for monthly is:
+<screen>
+&amp;clm_inparm
+ hist_fincl2 = 'TG', 'TV'
+ hist_fincl3 = 'TG', 'TV'
+ hist_fincl4 = 'TG', 'TV'
+ hist_fincl5 = 'TG', 'TV'
+ hist_nhtfrq = 0, -24, -6, -1, 1
+/
+</screen>
 </para>
 </sect3>
 
@@ -1036,7 +1088,16 @@ By default only the primary history files are active, so technically using
 the list is very extensive this would be a cumbersome thing to do. So to facilitate
 this <varname>hist_empty_htapes</varname> allows you to turn off all default output.
 You can still use <varname>hist_fincl1</varname> to turn your own list of fields
-on, but you then start from a clean slate.
+on, but you then start from a clean slate. 
+A sample user namelist <filename>user_nl_clm</filename> turning off all history 
+fields and then activating just a few selected fields (ground and vegetation temperatures
+and abosrbed solar radiation) is:
+<screen>
+&amp;clm_inparm
+ hist_empty_htapes = .true.
+ hist_fincl1 = 'TG', 'TV', 'FSA'
+/
+</screen>
 </para>
 </sect3>
 
@@ -1056,7 +1117,41 @@ The types of averaging that can be done are:
 <member><emphasis>M</emphasis> Minimum, over the output interval.</member>
 </simplelist>
 
+A sample user namelist <filename>user_nl_clm</filename> making the monthly output
+fields all averages, and adding auxillary file streams for instantaneous (6-hourly), 
+maximum (daily), minimum (daily), and average (daily). For some of the fields we
+diverge from the per-tape value given and customize to some different type of 
+optimization.
+<screen>
+&amp;clm_inparm
+ hist_empty_htapes = .true.
+ hist_fincl1 = 'TSOI:X', 'TG',   'TV',   'LWup',   'SWup', 'FSH', 'EFLX_LH_TOT', 'WT'
+ hist_fincl2 = 'TSOI:X', 'TG',   'TV',   'LWup',   'SWup', 'FSH', 'EFLX_LH_TOT', 'WT'
+ hist_fincl3 = 'TSOI',   'TG:I', 'TV',   'LWup',   'SWup', 'FSH', 'EFLX_LH_TOT', 'WT'
+ hist_fincl4 = 'TSOI',   'TG',   'TV:I', 'LWup',   'SWup', 'FSH', 'EFLX_LH_TOT', 'WT'
+ hist_fincl5 = 'TSOI',   'TG',   'TV',   'LWup:I', 'SWup', 'FSH', 'EFLX_LH_TOT', 'WT'
+ hist_avgflag_pertape = 'A', 'I', 'X',   'M', 'A'
+ hist_nhtfrq = 0, -6, -24, -24, -24
+/
+</screen>
 </para>
+<para>
+In the example we put the same list of fields on each of the tapes: soil-temperature,
+ground temperature, vegetation temperature, Longwave radiation upwards, shortwave
+radiation upwards, sensible heat, total latent-heat, and total water storage. We also
+modify the soil-temperature for the primary and secondary auxillary tapes by outputing
+them for a maximum instead of the default per-tape of average and instantaneous
+respectively. For the tertiary auxillary tape we output ground temperature instantaneous
+instead of as a maximum, and for the fourth auxillary tape we output vegetation
+temperature instantaneous instead of as a maximum. Finally, for the fifth auxillary
+tapes we output <varname>LWup</varname> instanteously instead of as an average.
+</para>
+<note>
+<para>
+We also use <varname>hist_empty_htapes</varname> as in the previous example,
+so we can list ONLY the fields that we want on the primary history tapes.
+</para>
+</note>
 </sect3>
 
 <sect3 id="hist_vector">
@@ -1079,7 +1174,39 @@ To do this you use <varname>hist_dov2xy</varname> which is an array of six six f
 <varname>.false.</varname> if you want one of the history streams to be a 1D vector. 
 You can also use <varname>hist_type1d_pertape</varname> if you want to average over all the:
 Plant-Function-Types, columns, land-units, or grid-cells.
+A sample user namelist <filename>user_nl_clm</filename> leaving the primary monthly
+files as 2D, and then doing grid-cell, land-unit, column, PFT and no averaging over
+auxillary tapes output daily for a single field (ground temperature) is:
+<screen>
+&amp;clm_inparm
+ hist_fincl2 = 'TG'
+ hist_fincl3 = 'TG'
+ hist_fincl4 = 'TG'
+ hist_fincl5 = 'TG'
+ hist_fincl6 = 'TG'
+ hist_dov2xy = .false., .true., .true., .true., .true., .true.
+ hist_type2d_pertape = ' ', 'GRID', 'LAND', 'COLS', 'PFTS', ' '
+ hist_nhtfrq = 0, -24, -24, -24, -24, -24
+/
+</screen>
 </para>
+<note>
+<para>
+Technically the default for <varname>hist_nhtfrq</varname> is for primary files
+output monthly and the other auxillary tapes for daily, so we don't actually have
+to include <varname>hist_nhtfrq</varname>, we could use the default for it. Here
+we specify it for clarity.
+</para>
+</note>
+<note>
+<para>
+Visuallizing global 1D vector files will take effort. You'll probably want
+to do some postprocessing and possibly just extract out single points of interest
+to see what is going on. Since, the output is a 1D vector, of only land-points
+traditional plots won't be helpful. The number of points per grid-cell will also
+vary for anything, but grid-cell averaging.
+</para>
+</note>
 </sect3>
 
 <sect3 id="nl_example_conclude">
@@ -1446,7 +1573,7 @@ To get the CN model to a steady state, you first run it from arbitrary initial c
 using the "accelerated decomposition spinup" (-ad_spinup in configure) mode for 600 simulation years. After
 this you branch from this mode in the "exit spinup" (-exit_spinup in configure), run
 for a simulation year, and then save a restart from that and use it as initial conditions 
-for further spinup of CN.
+for further spinup of CN (at least 50 simulation years).
 </para>
 <para>
 For the first step of running 600 years in "-ad_spinup" mode, you will setup
@@ -1455,46 +1582,69 @@ a case, and then edit the values in <filename>env_conf.xml</filename> and
 the simulation is setup to run for the required length of simulation time.
 So do the following:
 <screen>
-%cd scripts
-%create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
-%cd CN_spinup
+> cd scripts
+> create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> cd CN_spinup
 # Add "-ad_spinup on" to CLM_CONFIG_OPTS in env_conf.xml using your editor of choice
-%$EDITOR env_conf.xml
+> $EDITOR env_conf.xml
 # The following sets CLM_FORCE_COLDSTART to "on" in env_conf.xml (you could also use an editor)
-%xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
 # The following sets RESUBMIT to 30 times in env_run.xml (you could also use an editor)
-%xmlchange -file env_run.xml -id RESUBMIT -val 30
+> xmlchange -file env_run.xml -id RESUBMIT -val 30
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
-%xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+> xmlchange -file env_run.xml -id STOP_OPTION -val nyears
 # The following sets STOP_N to 20 years in env_run.xml (you could also use an editor)
-%xmlchange -file env_run.xml -id STOP_N -val 20
+> xmlchange -file env_run.xml -id STOP_N -val 20
 # The following sets STOP_DATE to Jan/1 of year 600 in env_run.xml (you could also use an editor)
-%xmlchange -file env_run.xml -id STOP_DATE -val 6000101
+> xmlchange -file env_run.xml -id STOP_DATE -val 6000101
 </screen>
 Then configure your case and build and run it as normal. And then save the last restart
 file from this simulation to use in the next step.
 </para>
 <para>
-To exit the spinup up mode and create an initial condition file to do further simulations
-(or further spinup with) use "-exit_spinup" mode as follows:
+To exit the spinup up mode and create an initial condition file to do further
+spinup with use "-exit_spinup" mode as follows:
 <screen>
-%cd scripts
-%create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
-%cd CN_exitspinup
+> cd scripts
+> create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> cd CN_exitspinup
 # Add "-exit_spinup on" to CLM_CONFIG_OPTS in env_conf.xml using your editor of choice
-%$EDITOR env_conf.xml
-%configure -case
+> $EDITOR env_conf.xml
+> configure -case
 # Set the finidat file to the last restart file saved in previous step
-%$EDITOR BuildConf/clm.buildnml.csh
+> $EDITOR BuildConf/clm.buildnml.csh
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
-%xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+> xmlchange -file env_run.xml -id STOP_OPTION -val nyears
 # The following sets STOP_N to one year in env_run.xml (you could also use an editor)
-%xmlchange -file env_run.xml -id STOP_N -val 1
+> xmlchange -file env_run.xml -id STOP_N -val 1
 </screen>
 </para>
 <para>
-Then finally save the last restart file from this step and use it as the "finidat" file to
-use for future simulations.
+Next save the last restart file from this step and use it as the "finidat" file to
+use for one more spinup for at least 50 years in normal mode. To assess it the model
+if fully spinup you'll want to plot different CN variables you are interested in and see
+if they have any trend or not.
+So do the following:
+<screen>
+> cd scripts
+> create_newcase -case CN_finalspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> cd CN_finalspinup
+# The following sets CLM_FORCE_COLDSTART to "on" in env_conf.xml (you could also use an editor)
+> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+# The following sets RESUBMIT to 5 times in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id RESUBMIT -val 5
+# The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+# The following sets STOP_N to 10 years in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_N -val 10
+> configure -case
+# Set the finidat file to the last restart file saved in previous step
+> $EDITOR BuildConf/clm.buildnml.csh
+</screen>
+</para>
+<para>
+Finally save the restart file from the end of this simulation to use as an "finidat" file for future
+simulations.
 </para>
 </sect1>
 
@@ -1584,8 +1734,8 @@ simulate for (the code will pick the point on the global grid nearest to the poi
 give. Here's an example to setup a simulation for the nearest point at 2-degree resolution
 to Boulder Colorado.
 <screen>
-%cd scripts
-%create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire -skip_rundb -pts_lat 40.0 -pts_lon -105
+> cd scripts
+> create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire -skip_rundb -pts_lat 40.0 -pts_lon -105
 </screen>
 Then configure, build and run as normal.
 </para>
@@ -1626,10 +1776,10 @@ To run with the supported single-point and regional datasets, you setup a simula
 <filename>env_conf.xml</filename> file. Then to run for the urban MexicoCity Mexico test site
 do the following:
 <screen>
-%cd scripts
-%create_newcase -case testSPDATASET -res pt1_pt1 -compset I -mach bluefire -skip_rundb
-%cd testSPDATASET
-%xmlchange -file env_conf.xml -id CLM_PT1_NAME -val 1x1_mexicocityMEX
+> cd scripts
+> create_newcase -case testSPDATASET -res pt1_pt1 -compset I -mach bluefire -skip_rundb
+> cd testSPDATASET
+> xmlchange -file env_conf.xml -id CLM_PT1_NAME -val 1x1_mexicocityMEX
 </screen>
 Then configure, build and run normally.
 </para>

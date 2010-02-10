@@ -21,6 +21,7 @@ begin
   ;
   resin          = "1.9x2.5";              ; Input resolution:  1.9x2.5 (normally NOT changed)
   res            = getenv("RES");          ; Get output resolution from env variable
+  rcp            = getenv("RCP");          ; Get input representative concen. pathway
   sim_year       = getenv("SIM_YR");       ; Get input simulation year from env variable
   sim_year_range = getenv("SIM_YR_RNG");   ; Get input simulation year range from env variable
 
@@ -33,16 +34,19 @@ begin
   if ( ismissing(res) )then
      res      = "48x96";      ; Output Resolution: 1.9x2.5, 48x96 etc.
   end if
+  if ( ismissing(rcp) )then
+     rcp      = "8.5";        ; Input representative concentration pathway (2.6,4.5,6,8.5)
+  end if
   if ( ismissing(sim_year) )then
      sim_year = "2000";       ; Input/Output simulation year: 1850, 2000
   end if
   if ( ismissing(sim_year_range) )then
-     sim_year_range = "constant";       ; Input/Output simulation year range: constant or 1850-2000
+     sim_year_range = "constant";       ; Input/Output simulation year range: constant, 1850-2000, 1850-2100, or 2000-2100
   end if
 
   ; Figure out file type from sim-year
 
-  if ( sim_year_range .eq. "1850-2000" )then
+  if ( sim_year_range .eq. "1850-2000" .or. sim_year_range .eq. "1850-2100" .or. sim_year_range .eq. "2000-2100")then
      filetype = "fndepdyn"
   else
      filetype = "fndepdat"
@@ -61,7 +65,7 @@ begin
   csmdata  = getenv("CSMDATA");
   clmroot  = getenv("CLM_ROOT");
   querynml = "bld/queryDefaultNamelist.pl -silent -justvalue -options sim_year="+sim_year;
-  querynml = querynml+",sim_year_range="+sim_year_range+",bgc=cn"
+  querynml = querynml+",sim_year_range="+sim_year_range+",bgc=cn,rcp="+rcp;
   if ( .not. ismissing(csmdata) )then
      querynml = querynml+" -csmdata "+csmdata;
   end if

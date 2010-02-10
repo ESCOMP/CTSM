@@ -2845,6 +2845,7 @@ contains
     allocate(ces%t_grnd_r(beg:end))
     allocate(ces%dt_grnd(beg:end))
     allocate(ces%t_soisno(beg:end,-nlevsno+1:nlevgrnd))
+    allocate(ces%t_soi_10cm(beg:end))
     allocate(ces%t_lake(beg:end,1:nlevlak))
     allocate(ces%tssbef(beg:end,-nlevsno+1:nlevgrnd))
     allocate(ces%thv(beg:end))
@@ -2856,6 +2857,7 @@ contains
     ces%t_grnd_r(beg:end)  = nan
     ces%dt_grnd(beg:end)   = nan
     ces%t_soisno(beg:end,-nlevsno+1:nlevgrnd) = spval
+    ces%t_soi_10cm(beg:end) = spval
     ces%t_lake(beg:end,1:nlevlak)            = nan
     ces%tssbef(beg:end,-nlevsno+1:nlevgrnd)   = nan
     ces%thv(beg:end)       = nan
@@ -2891,6 +2893,7 @@ contains
     allocate(cws%h2osno(beg:end))
     allocate(cws%h2osoi_liq(beg:end,-nlevsno+1:nlevgrnd))
     allocate(cws%h2osoi_ice(beg:end,-nlevsno+1:nlevgrnd))
+    allocate(cws%h2osoi_liqice_10cm(beg:end))
     allocate(cws%h2osoi_vol(beg:end,1:nlevgrnd))
     allocate(cws%h2osno_old(beg:end))
     allocate(cws%qg(beg:end))
@@ -2912,6 +2915,7 @@ contains
     cws%h2osno(beg:end) = nan
     cws%h2osoi_liq(beg:end,-nlevsno+1:nlevgrnd)= spval
     cws%h2osoi_ice(beg:end,-nlevsno+1:nlevgrnd) = spval
+    cws%h2osoi_liqice_10cm(beg:end) = spval
     cws%h2osoi_vol(beg:end,1:nlevgrnd) = spval
     cws%h2osno_old(beg:end) = nan
     cws%qg(beg:end) = nan

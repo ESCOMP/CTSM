@@ -1156,6 +1156,7 @@ type, public :: column_estate_type
    real(r8), pointer :: t_grnd_r(:)           !Rural ground temperature (Kelvin)
    real(r8), pointer :: dt_grnd(:)            !change in t_grnd, last iteration (Kelvin)
    real(r8), pointer :: t_soisno(:,:)         !soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd) 
+   real(r8), pointer :: t_soi_10cm(:)         !soil temperature in top 10cm of soil (Kelvin)
    real(r8), pointer :: t_lake(:,:)           !lake temperature (Kelvin)  (1:nlevlak)          
    real(r8), pointer :: tssbef(:,:)           !soil/snow temperature before update (-nlevsno+1:nlevgrnd) 
    real(r8), pointer :: thv(:)                !virtual potential temperature (kelvin)
@@ -1171,6 +1172,7 @@ type, public :: column_wstate_type
    real(r8), pointer :: h2osno(:)             !snow water (mm H2O)
    real(r8), pointer :: h2osoi_liq(:,:)       !liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
    real(r8), pointer :: h2osoi_ice(:,:)       !ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
+   real(r8), pointer :: h2osoi_liqice_10cm(:) !liquid water + ice lens in top 10cm of soil (kg/m2)
    real(r8), pointer :: h2osoi_vol(:,:)       !volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)  
    real(r8), pointer :: h2osno_old(:)         !snow mass for previous time step (kg/m2) (new)
    real(r8), pointer :: qg(:)                 !ground specific humidity [kg/kg]
