@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+
+<config_definition>
+
+<commandline>
+/fs/cgd/data0/erik/clm_trunk/models/lnd/clm/bld/configure 
+</commandline>
+<entry id="ad_spinup" value="off" list="" valid_values="on,off">
+Toggle to turn on ad_spinup
+</entry>
+<entry id="bgc" value="none" list="" valid_values="none,cn,casa,dgvm">
+CLM BGC mode
+</entry>
+<entry id="c13" value="off" list="" valid_values="on,off">
+Toggle to turn on C13 isotopes as part of the CN biogeochemistry model
+</entry>
+<entry id="carbon_aero" value="off" list="" valid_values="on,off">
+Toggle to turn on passing of carbon aerosols to land in ccsm_seq mode
+</entry>
+<entry id="cc" value="" list="" valid_values="">
+User specified C compiler overrides Makefile default (linux only).
+</entry>
+<entry id="ccsm_bld" value="off" list="" valid_values="on,off">
+Toggle to build using CCSM makefiles or not.
+</entry>
+<entry id="cflags" value="" list="" valid_values="">
+User specified C compiler options to append to Makefile defaults.
+</entry>
+<entry id="clm_bld" value="/fs/cgd/data0/erik/clm_trunk/models/lnd/clm/bld" list="" valid_values="">
+CLM build directory; contains .o and .mod files.
+</entry>
+<entry id="clm_exe" value="clm" list="" valid_values="">
+Name of CLM executable.
+</entry>
+<entry id="clm_exedir" value="/fs/cgd/data0/erik/clm_trunk/models/lnd/clm/bld" list="" valid_values="">
+Directory where CLM executable will be created.
+</entry>
+<entry id="clm_root" value="/fs/cgd/data0/erik/clm_trunk/models/lnd/clm" list="" valid_values="">
+Root directory of CLM source distribution.
+</entry>
+<entry id="comp_interface" value="MCT" list="" valid_values="ESMF,MCT">
+Component framework interface to use (MCT or ESMF)
+</entry>
+<entry id="cppdefs" value="" list="" valid_values="">
+User specified CPP defines to append to Makefile defaults.
+</entry>
+<entry id="debug" value="0" list="" valid_values="0,1">
+Switch to enable debugging options for Fortran compiler: 0=off, 1=on.
+</entry>
+<entry id="dust" value="on" list="" valid_values="on,off">
+Toggle to turn on dust module
+</entry>
+<entry id="esmf_libdir" value="" list="" valid_values="">
+Directory containing ESMF library (for linking to external ESMF).
+</entry>
+<entry id="exit_spinup" value="off" list="" valid_values="on,off">
+Toggle to turn exit spinup
+</entry>
+<entry id="fc" value="" list="" valid_values="">
+User specified Fortran compiler overrides Makefile default.
+</entry>
+<entry id="fflags" value="" list="" valid_values="">
+User specified Fortran compiler flags to append to Makefile defaults.
+</entry>
+<entry id="fopt" value="" list="" valid_values="">
+User specified Fortran optimization flags to override Makefile defaults.
+</entry>
+<entry id="lapack_libdir" value="" list="" valid_values="">
+Directory containing LAPACK library.
+</entry>
+<entry id="ldflags" value="" list="" valid_values="">
+User specified load options to append to Makefile defaults.
+</entry>
+<entry id="linker" value="" list="" valid_values="">
+User specified linker.  Overrides the Makefile default $(FC).
+</entry>
+<entry id="mach" value="calgary_pgi" list="" valid_values="">
+CCSM build machine name and compiler
+</entry>
+<entry id="maxpft" value="numpft+1" list="" valid_values="">
+Maximum numbr of pfts per gridcell (numpft+1 means use all available)
+</entry>
+<entry id="mode" value="ccsm_seq" list="" valid_values="ccsm_seq,ext_ccsm_seq">
+CLM coupling mode
+</entry>
+<entry id="mpi_inc" value="" list="" valid_values="">
+Directory containing MPI include files.
+</entry>
+<entry id="mpi_lib" value="" list="" valid_values="">
+Directory containing MPI library.
+</entry>
+<entry id="mpi_lib_name" value="" list="" valid_values="">
+Name of MPI library.
+</entry>
+<entry id="nc_inc" value="/usr/local/netcdf-3.6.1-pgi-hpf-cc-6.1-6/include" list="" valid_values="">
+Directory containing NetCDF include files.
+</entry>
+<entry id="nc_lib" value="/usr/local/netcdf-3.6.1-pgi-hpf-cc-6.1-6/lib" list="" valid_values="">
+Directory containing NetCDF library.
+</entry>
+<entry id="nc_mod" value="/usr/local/netcdf-3.6.1-pgi-hpf-cc-6.1-6/include" list="" valid_values="">
+Directory containing NetCDF module files.
+</entry>
+<entry id="nofire" value="off" list="" valid_values="on,off">
+Toggle to make wildfires inactive for biogeochemistry=CN mode
+</entry>
+<entry id="pergro" value="off" list="" valid_values="on,off">
+Toggle to turn on perturbation error growth test
+</entry>
+<entry id="pio" value="on" list="" valid_values="on,off">
+Toggle to enable/disable building with the PIO parallel I/O library (by default not used, use BUILDPIO CPP token to turn on use of it)
+</entry>
+<entry id="progsslt" value="on" list="" valid_values="on,off">
+Toggle to turn on prognostic sea salt 
+</entry>
+<entry id="rtm" value="on" list="" valid_values="on,off">
+Toggle to turn on river runoff module
+</entry>
+<entry id="smp" value="0" list="" valid_values="0,1">
+Switch to enable or disable building SMP version (OPENMP) of CLM: 0=off, 1=on.
+</entry>
+<entry id="snicar_frc" value="off" list="" valid_values="on,off">
+Toggle to turn on calculation of SNICAR radiative forcing
+</entry>
+<entry id="spmd" value="0" list="" valid_values="0,1">
+Switch to enable or disable building SPMD version of CLM: 0=off, 1=on.
+</entry>
+<entry id="supln" value="off" list="" valid_values="on,off">
+Toggle to turn on CN suplemental nitrnogen
+</entry>
+<entry id="target_os" value="linux" list="" valid_values="">
+OS for which CLM is being built.  The value is the name returned by the "uname -s"
+command on the target platform.  This parameter is to allow cross-compilation.
+</entry>
+<entry id="usr_src" value="" list="1" valid_values="">
+User source directories to prepend to the filepath.  Multiple directories
+are specified as a comma separated list with no embedded white space.
+</entry>
+<entry id="voc" value="off" list="" valid_values="on,off">
+Toggle to turn on voc module
+</entry>
+
+</config_definition>

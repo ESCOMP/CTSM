@@ -1,0 +1,160 @@
+<!-- Beg of special cases chapter -->
+<chapter id="special_cases">
+<title>How to run some special cases</title>
+<para>
+In this chapter we describe how to run some special cases that take more than one step
+to do. The straightforward cases have compsets and/or build-namelist use-cases setup for
+them or require simple editing of a single-case. All of the cases here require you
+to do at least two simulations with different configurations.
+</para>
+<para>
+The two cases we will describe are:
+<orderedlist>
+<listitem>
+<para>
+<emphasis>Spinning up the biogeochemistry Carbon-Nitrogen Model (CN spinup)</emphasis>
+</para>
+</listitem>
+<listitem>
+<para>
+<emphasis>Doing perturbation error growth tests</emphasis>
+</para>
+</listitem>
+</orderedlist>
+</para>
+
+<sect1 id="CN_SPINUP">
+<title>Spinning up the biogeochemistry Carbon-Nitrogen Model (CN spinup)</title>
+<para>
+To get the CN model to a steady state, you first run it from arbitrary initial conditions
+using the "accelerated decomposition spinup" (-ad_spinup in configure) mode for 600 simulation years. After
+this you branch from this mode in the "exit spinup" (-exit_spinup in configure), run
+for a simulation year, and then save a restart from that and use it as initial conditions 
+for further spinup of CN (at least 50 simulation years).
+</para>
+<para>
+For the first step of running 600 years in "-ad_spinup" mode, you will setup
+a case, and then edit the values in <filename>env_conf.xml</filename> and
+<filename>env_run.xml</filename> so that the right configuration is turned on and
+the simulation is setup to run for the required length of simulation time.
+So do the following:
+<screen>
+> cd scripts
+> create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> cd CN_spinup
+# Add "-ad_spinup on" to CLM_CONFIG_OPTS in env_conf.xml using your editor of choice
+> $EDITOR env_conf.xml
+# The following sets CLM_FORCE_COLDSTART to "on" in env_conf.xml (you could also use an editor)
+> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+# The following sets RESUBMIT to 30 times in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id RESUBMIT -val 30
+# The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+# The following sets STOP_N to 20 years in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_N -val 20
+# The following sets STOP_DATE to Jan/1 of year 600 in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_DATE -val 6000101
+</screen>
+Then configure your case and build and run it as normal. And then save the last restart
+file from this simulation to use in the next step.
+</para>
+<para>
+To exit the spinup up mode and create an initial condition file to do further
+spinup with use "-exit_spinup" mode as follows:
+<screen>
+> cd scripts
+> create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> cd CN_exitspinup
+# Add "-exit_spinup on" to CLM_CONFIG_OPTS in env_conf.xml using your editor of choice
+> $EDITOR env_conf.xml
+> configure -case
+# Set the finidat file to the last restart file saved in previous step
+> $EDITOR BuildConf/clm.buildnml.csh
+# The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+# The following sets STOP_N to one year in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_N -val 1
+</screen>
+</para>
+<para>
+Next save the last restart file from this step and use it as the "finidat" file to
+use for one more spinup for at least 50 years in normal mode. To assess it the model
+if fully spinup you'll want to plot different CN variables you are interested in and see
+if they have any trend or not.
+So do the following:
+<screen>
+> cd scripts
+> create_newcase -case CN_finalspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> cd CN_finalspinup
+# The following sets CLM_FORCE_COLDSTART to "on" in env_conf.xml (you could also use an editor)
+> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+# The following sets RESUBMIT to 5 times in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id RESUBMIT -val 5
+# The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+# The following sets STOP_N to 10 years in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_N -val 10
+> configure -case
+# Set the finidat file to the last restart file saved in previous step
+> $EDITOR BuildConf/clm.buildnml.csh
+</screen>
+</para>
+<para>
+Finally save the restart file from the end of this simulation to use as an "finidat" file for future
+simulations.
+</para>
+</sect1>
+
+<sect1 id="PERGRO">
+<title>Doing perturbation error growth tests</title>
+<para>
+Doing perturbation error growth tests is a way to validate a port of
+the model to a new machine or to verify that changes are only roundoff.
+The steps are the same in either case, but in the discussion below I will
+assume you are doing a port validation to a new machine (but in parenthesis 
+I will put a reminder that it could also be for code-mods).
+The basic idea is to do run two cases on the trusted machine (trusted code) and
+one with initial conditions perturbed by roundoff and compare the results of
+the two. The difference between these two simulations (the error) will grow over time
+and describe a curve that we want to compare the non-perturbed state with the new
+machine (code changes in place). If the new machine (code changes) are well-behaved
+the plot of this curve compared to the perturbation growth curve should be similar. If the 
+changes are NOT well-behaved the changes from the new machine (code changes) will be 
+larger than the perturbation changes. In summary the simulations and steps that need to be performed are:
+<orderedlist>
+<listitem>
+<para>Run a simulation with the trusted code on the trusted machine.</para>
+</listitem>
+<listitem>
+<para>Run a simulation with the trusted code on the trusted machine with initial conditions
+perturbed by roundoff (using a namelist item to do so).</para>
+</listitem>
+<listitem>
+<para>Run a simulation with the new code on the non-trusted machine (code changes).</para>
+</listitem>
+<listitem>
+<para>Do a plot of the RMS difference of TSOI between simulation 1 and simulation 2.</para>
+</listitem>
+<listitem>
+<para>Do a plot of the RMS difference of TSOI between simulation 1 and simulation 3.</para>
+</listitem>
+<listitem>
+<para>Compare the two plots in steps 4 and 5.</para>
+</listitem>
+<listitem>
+<para>If the plots compare well the new machine (code changes) is running as well as the trusted machine.</para>
+</listitem>
+<listitem>
+<para>If the plots do <emphasis>NOT</emphasis>compare well the new machine is
+<emphasis>NOT</emphasis>running as well as the trusted machine. Typically the
+recommendation here is to lower the optimization level on the new machine and try
+again (or in the case of code changes, modify or simplify the code changes to get
+something that should be closer).</para>
+</listitem>
+</orderedlist>
+</para>
+<para>
+</para>
+</sect1>
+</chapter>
+<!-- End of special cases chapter-->

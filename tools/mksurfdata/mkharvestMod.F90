@@ -55,18 +55,22 @@ contains
 ! !IROUTINE: mkharvest_init
 !
 ! !INTERFACE:
-  subroutine mkharvest_init( lsmlon, lsmlat, init_val, harvest )
+  subroutine mkharvest_init( lsmlon, lsmlat, init_val, harvest, fharvest )
 !
 ! !DESCRIPTION:
 !              Initialization of mkharvest module.
 !
 ! !USES:
+    use fileutils    , only : getfil
+    use ncdio        , only : nf_open, check_ret, nf_inq_varid, &
+                              nf_close, nf_get_att_text
     implicit none
 !
 ! !ARGUMENTS:
     integer,   intent(in)  :: lsmlon, lsmlat       ! clm output grid resolution
     real(r8),  intent(in)  :: init_val             ! initial value to set to
     real(r8),  pointer     :: harvest(:,:,:)       ! output grid: normalized harvesting
+    character(len=*), intent(in)  :: fharvest      ! input harvest dataset file name
 !
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
@@ -74,12 +78,26 @@ contains
 !
 ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'mkharvest_init'
+    integer  :: ncid,varid                      ! input netCDF id's
+    character(len=256) locfn                    ! local dataset file name
+    integer  :: ifld                            ! indices
 !EOP
 !-----------------------------------------------------------------------
 
     allocate( harvest(lsmlon,lsmlat,numharv) )
 
     harvest(:,:,:) = init_val
+
+    call getfil (fharvest, locfn, 0)
+
+    call check_ret(nf_open(locfn, 0, ncid), subname)
+
+    do ifld = 1, numharv
+       call check_ret(nf_inq_varid (   ncid, mkharvest_fieldname(ifld), varid),            subname)
+       call check_ret(nf_get_att_text( ncid, varid, 'long_name', harvest_longnames(ifld)), subname)
+    end do
+
+    call check_ret(nf_close(ncid), subname)
 
   end subroutine mkharvest_init
 
@@ -288,7 +306,6 @@ subroutine mkharvest(lsmlon, lsmlat, fharvest, ndiag, harv_o)
   do ifld = 1, numharv
      call check_ret(nf_inq_varid (     ncid, mkharvest_fieldname(ifld), varid),             subname)
      call check_ret(nf_get_var_double (ncid, varid, harv_i(:,:,ifld)),                      subname)
-     call check_ret(nf_get_att_text(   ncid, varid, 'long_name', harvest_longnames(ifld)), subname)
   end do
 
   call check_ret(nf_close(ncid), subname)
@@ -313,9 +330,7 @@ subroutine mkharvest(lsmlon, lsmlat, fharvest, ndiag, harv_o)
 
   ! Area-average normalized harvest on input grid [harv_i] to output grid [harv_o]
 
-  do m = 1, numharv
-     call areaave(harv_i(:,:,m),harv_o(:,:,m),tgridmap)
-  enddo
+  call areaave(harv_i,harv_o,tgridmap)
 
   ! -----------------------------------------------------------------
   ! Error check

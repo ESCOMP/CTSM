@@ -166,7 +166,7 @@ export LIB_NETCDF=\$netcdf/lib
 export intel=/fs/local
 export PATH=\${intel}/bin:\${PATH}
 export MAKE_CMD="gmake -j5 "
-export CCSM_MACH="breeze_intel"
+export CCSM_MACH="generic_linux_intel"
 export CFG_STRING="-fc ifort -cc icc  -cppdefs '-DFORTRANUNDERSCORE' "
 export TOOLS_MAKE_STRING="USER_FC=ifort USER_LINKER=ifort "
 export MACH_WORKSPACE="/ptmp"
@@ -518,18 +518,19 @@ export CLM_RESTART_TASKS=129
 
 export CLM_COMPSET="I"
 
-export PATH="/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
-export PATH="\${PATH}:/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
+#export PATH="/opt/public/bin:/opt/cray/bin:/usr/bin/X11"
+#export PATH="\${PATH}:/usr/bin:/bin:/opt/bin:/sbin:/usr/sbin:/apps/jaguar/bin"
 source /opt/modules/default/init/sh
-module load PrgEnv-pgi Base-opts
-module load xtpe-quadcore
-module load torque moab
+#module load PrgEnv-pgi Base-opts
+#module load xtpe-quadcore
+#module load torque moab
 module switch pgi pgi/9.0.2               # 9.0.2 tested for bfb on 2009-sep-25
 module switch xt-mpt    xt-mpt/3.2.0      # 3.2.0  is default on 2009-sep-25
 module switch xt-libsci xt-libsci/10.3.5  # 10.3.5 is default on 2009-sep-25
 module load   netcdf/3.6.2                # 3.6.2  is default on 2008-sep-03
 module load p-netcdf
 module load   ncl
+module load subversion
 
 export MPICH_MAX_SHORT_MSG_SIZE=32000 # default is 128000 bytes
 export MPICH_PTL_UNEX_EVENTS=960000   # default is  90000 (unexpected recv queue size)

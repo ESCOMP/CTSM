@@ -207,7 +207,8 @@ EOF
      my @files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
                    "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
                    "$cfgdir/namelist_files/namelist_defaults_drv.xml",
-                   "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
+                   "$cfgdir/namelist_files/namelist_defaults_datm.xml",
+                   "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
      push( @nl_defaults_files, @files );
   }
   $inputopts{files}          = \@nl_defaults_files;

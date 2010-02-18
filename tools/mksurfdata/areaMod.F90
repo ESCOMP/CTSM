@@ -55,6 +55,11 @@ module areaMod
   public :: areaave        ! area averaging of field from input to output grids
   public :: areaini_pft    ! area averaging initialization for plant function type average
   public :: areaave_pft    ! area averaging of field from input to output grids with pft
+  interface areaave
+     module procedure areaave
+     module procedure areaave3D
+     module procedure areaave4D
+  end interface
   interface celledge
      module procedure celledge_regional
      module procedure celledge_global  
@@ -794,6 +799,7 @@ end subroutine gridmap_checkmap
 !
 ! !LOCAL VARIABLES:
 !EOP
+    character(len=*), parameter :: subName = "areaave_internal"
     integer  :: nlat_i    !input grid : number of latitude points
     integer  :: nlon_i    !input grid : max number longitude points
     integer  :: nlat_o    !output grid: number of latitude points
@@ -809,14 +815,13 @@ end subroutine gridmap_checkmap
     integer ii            !longitude index for input grid
     integer n             !overlapping cell index
 !------------------------------------------------------------------------
-!dir$ inlinenever areaave_internal
 
     call domain_setptrs(gridmap%domain_i,ni=nlon_i,nj=nlat_i)
     call domain_setptrs(gridmap%domain_o,ni=nlon_o,nj=nlat_o)
     call gridmap_setptrs(gridmap,mx_ovr=mx_ovr,n_ovr=n_ovr,i_ovr=i_ovr,j_ovr=j_ovr,w_ovr=w_ovr)
 
     if (trim(gridmap%type) /= trim(gridmap_typeglobal)) then
-       write(6,*) 'areaave WARNING: gridmap type not global, ',gridmap%name,gridmap%type
+       write(6,*) subname, ' WARNING: gridmap type not global, ',gridmap%name,gridmap%type
     endif
 
     ! initialize field on output grid to zero everywhere
@@ -829,21 +834,31 @@ end subroutine gridmap_checkmap
 
     ! loop through overlapping cells on input grid to make area-average
 
-    do n = 1, mx_ovr
-       do jo = 1, nlat_o
-          do io =1, nlon_o
-                ii = i_ovr(io,jo,n)
-                ji = j_ovr(io,jo,n)
-                if (present(scale_i)) then
-                   fld_o(io,jo) = fld_o(io,jo) + &
-                                  w_ovr(io,jo,n)*fld_i(ii,ji)*scale_i(ii,ji)
-                else
-                   fld_o(io,jo) = fld_o(io,jo) + &
-                                  w_ovr(io,jo,n)*fld_i(ii,ji)
-                endif
+    if (present(scale_i)) then
+       do n = 1, mx_ovr
+!$OMP PARALLEL DO PRIVATE (jo,io,ii,ji)
+          do jo = 1, nlat_o
+          do io = 1, nlon_o
+             ii = i_ovr(io,jo,n)
+             ji = j_ovr(io,jo,n)
+             fld_o(io,jo) = fld_o(io,jo) + w_ovr(io,jo,n)*fld_i(ii,ji)*scale_i(ii,ji)
           end do
+          end do
+!$OMP END PARALLEL DO
        end do
-    end do
+    else
+       do n = 1, mx_ovr
+!$OMP PARALLEL DO PRIVATE (jo,io,ii,ji)
+          do jo = 1, nlat_o
+          do io = 1, nlon_o
+             ii = i_ovr(io,jo,n)
+             ji = j_ovr(io,jo,n)
+             fld_o(io,jo) = fld_o(io,jo) + w_ovr(io,jo,n)*fld_i(ii,ji)
+          end do
+          end do
+!$OMP END PARALLEL DO
+       end do
+    endif
     nullify( w_ovr )
     nullify( n_ovr )
     nullify( i_ovr )
@@ -851,6 +866,195 @@ end subroutine gridmap_checkmap
 
     return
   end subroutine areaave_internal
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: areaave_internal3D
+!
+! !INTERFACE:
+  subroutine areaave_internal3D (fld_i , fld_o , gridmap, scale_i)
+!
+! !DESCRIPTION:
+! Mapping of field from input to output grids, 3d global fields
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    real(r8)          ,intent(in) :: fld_i(:,:,:)   !input grid : field
+    real(r8)          ,intent(out):: fld_o(:,:,:)   !field for output grid
+    type(gridmap_type),intent(in) :: gridmap      ! gridmap
+    real(r8),optional ,intent(in) :: scale_i(:,:) !input scale field
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    character(len=*), parameter :: subName = "areaave_internal3D"
+    integer  :: nlat_i    !input grid : number of latitude points
+    integer  :: nlon_i    !input grid : max number longitude points
+    integer  :: nlat_o    !output grid: number of latitude points
+    integer  :: nlon_o    !output grid: max number of longitude points
+    integer  :: nk        !input/output grid: max number of vertical levels
+    integer          :: mx_ovr       !max overlapping cells
+    integer ,pointer :: n_ovr(:,:)   !lon index, overlapping input cell
+    integer ,pointer :: i_ovr(:,:,:) !lon index, overlapping input cell
+    integer ,pointer :: j_ovr(:,:,:) !lat index, overlapping input cell
+    real(r8),pointer :: w_ovr(:,:,:) !overlap weights for input cells
+    integer jo            !latitude index for output grid
+    integer k             !vertical level index for input or output grid
+    integer io            !longitude index for output grid
+    integer ji            !latitude index for input grid
+    integer ii            !longitude index for input grid
+    integer n             !overlapping cell index
+!------------------------------------------------------------------------
+
+    call domain_setptrs(gridmap%domain_i,ni=nlon_i,nj=nlat_i)
+    call domain_setptrs(gridmap%domain_o,ni=nlon_o,nj=nlat_o)
+    call gridmap_setptrs(gridmap,mx_ovr=mx_ovr,n_ovr=n_ovr,i_ovr=i_ovr,j_ovr=j_ovr,w_ovr=w_ovr)
+
+    nk = size( fld_i, dim=3 )
+
+    if (trim(gridmap%type) /= trim(gridmap_typeglobal)) then
+       write(6,*) subname,' WARNING: gridmap type not global, ',gridmap%name,gridmap%type
+    endif
+
+    ! initialize field on output grid to zero everywhere
+
+    do k  = 1, nk
+    do jo = 1, nlat_o
+    do io = 1, nlon_o
+          fld_o(io,jo,k) = 0._r8
+    end do
+    end do
+    end do
+
+    ! loop through overlapping cells on input grid to make area-average
+
+    if (present(scale_i)) then
+       write(6,*) subname,' ERROR: scale input, but code does NOT handle it for a 3D field'
+       stop
+    end if
+    do n = 1, mx_ovr
+!$OMP PARALLEL DO PRIVATE (jo,io,ii,ji,k)
+       do k  = 1, nk
+       do jo = 1, nlat_o
+       do io = 1, nlon_o
+          ii = i_ovr(io,jo,n)
+          ji = j_ovr(io,jo,n)
+          fld_o(io,jo,k) = fld_o(io,jo,k) + w_ovr(io,jo,n)*fld_i(ii,ji,k)
+       end do
+       end do
+       end do
+!$OMP END PARALLEL DO
+    end do
+
+    nullify( w_ovr )
+    nullify( n_ovr )
+    nullify( i_ovr )
+    nullify( j_ovr )
+
+    return
+  end subroutine areaave_internal3D
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: areaave_internal4D
+!
+! !INTERFACE:
+  subroutine areaave_internal4D (fld_i , fld_o , gridmap)
+!
+! !DESCRIPTION:
+! Mapping of field from input to output grids, 4d global fields
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    real(r8)          ,intent(in) :: fld_i(:,:,:,:)   !input grid : field
+    real(r8)          ,intent(out):: fld_o(:,:,:,:)   !field for output grid
+    type(gridmap_type),intent(in) :: gridmap          ! gridmap
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!EOP
+!
+! LOCAL VARIABLES:
+    character(len=*), parameter :: subName = "areaave_internal4D"
+    integer  :: nlat_i    !input grid : number of latitude points
+    integer  :: nlon_i    !input grid : max number longitude points
+    integer  :: nlat_o    !output grid: number of latitude points
+    integer  :: nlon_o    !output grid: max number of longitude points
+    integer  :: nk        !input/output grid: max number of vertical levels
+    integer  :: nl        !input/output grid: max number of second-vertical levels
+    integer          :: mx_ovr       !max overlapping cells
+    integer ,pointer :: n_ovr(:,:)   !lon index, overlapping input cell
+    integer ,pointer :: i_ovr(:,:,:) !lon index, overlapping input cell
+    integer ,pointer :: j_ovr(:,:,:) !lat index, overlapping input cell
+    real(r8),pointer :: w_ovr(:,:,:) !overlap weights for input cells
+    integer jo            !latitude index for output grid
+    integer k             !vertical level index for input or output grid
+    integer l             !second-vertical level index for input or output grid
+    integer io            !longitude index for output grid
+    integer ji            !latitude index for input grid
+    integer ii            !longitude index for input grid
+    integer n             !overlapping cell index
+!------------------------------------------------------------------------
+
+    call domain_setptrs(gridmap%domain_i,ni=nlon_i,nj=nlat_i)
+    call domain_setptrs(gridmap%domain_o,ni=nlon_o,nj=nlat_o)
+    call gridmap_setptrs(gridmap,mx_ovr=mx_ovr,n_ovr=n_ovr,i_ovr=i_ovr,j_ovr=j_ovr,w_ovr=w_ovr)
+
+    nk = size( fld_i, dim=3 )
+    nl = size( fld_i, dim=4 )
+
+    if (trim(gridmap%type) /= trim(gridmap_typeglobal)) then
+       write(6,*) subname,' WARNING: gridmap type not global, ',gridmap%name,gridmap%type
+    endif
+
+    ! initialize field on output grid to zero everywhere
+
+    do l  = 1, nl
+    do k  = 1, nk
+    do jo = 1, nlat_o
+    do io = 1, nlon_o
+          fld_o(io,jo,k,l) = 0._r8
+    end do
+    end do
+    end do
+    end do
+
+    ! loop through overlapping cells on input grid to make area-average
+
+    do n = 1, mx_ovr
+!$OMP PARALLEL DO PRIVATE (jo,io,ii,ji,k,l)
+       do l  = 1, nl
+       do k  = 1, nk
+       do jo = 1, nlat_o
+       do io = 1, nlon_o
+          ii = i_ovr(io,jo,n)
+          ji = j_ovr(io,jo,n)
+          fld_o(io,jo,k,l) = fld_o(io,jo,k,l) + w_ovr(io,jo,n)*fld_i(ii,ji,k,l)
+       end do
+       end do
+       end do
+       end do
+!$OMP END PARALLEL DO
+    end do
+
+    nullify( w_ovr )
+    nullify( n_ovr )
+    nullify( i_ovr )
+    nullify( j_ovr )
+
+    return
+  end subroutine areaave_internal4D
+
 
 !------------------------------------------------------------------------
 !BOP
@@ -878,12 +1082,75 @@ end subroutine gridmap_checkmap
 ! !LOCAL VARIABLES:
 !EOP
 !------------------------------------------------------------------------
-!dir$ inlinenever areaave
 
     call areaave_internal (fld_i , fld_o , gridmap )
 
     return
   end subroutine areaave
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: areaave3D
+!
+! !INTERFACE:
+  subroutine areaave3D(fld_i , fld_o , gridmap)
+!
+! !DESCRIPTION:
+! Mapping of field from input to output grids, 2d global fields
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    real(r8)          ,intent(in) :: fld_i(:,:,:)   !input grid : field
+    real(r8)          ,intent(out):: fld_o(:,:,:)   !field for output grid
+    type(gridmap_type),intent(in) :: gridmap        ! gridmap
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!EOP
+!
+! LOCAL VARIABLES:
+!------------------------------------------------------------------------
+
+    call areaave_internal3D (fld_i , fld_o , gridmap )
+
+    return
+  end subroutine areaave3D
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: areaave4D
+!
+! !INTERFACE:
+  subroutine areaave4D(fld_i , fld_o , gridmap)
+!
+! !DESCRIPTION:
+! Mapping of field from input to output grids, 4d global fields
+!
+! !USES:
+!
+! !ARGUMENTS:
+    implicit none
+    real(r8)          ,intent(in) :: fld_i(:,:,:,:)   !input grid : field
+    real(r8)          ,intent(out):: fld_o(:,:,:,:)   !field for output grid
+    type(gridmap_type),intent(in) :: gridmap          ! gridmap
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!EOP
+!
+! LOCAL VARIABLES:
+!------------------------------------------------------------------------
+
+    call areaave_internal4D (fld_i , fld_o , gridmap )
+
+    return
+  end subroutine areaave4D
 
 
 !------------------------------------------------------------------------
@@ -913,7 +1180,6 @@ end subroutine gridmap_checkmap
     real(r8),pointer :: scale_pft_i(:,:)  !PFT %
 !EOP
 !------------------------------------------------------------------------
-!dir$ inlinenever areaave_pft
 
     call gridmap_setptrs(gridmap, scale_pft_i=scale_pft_i)
     call areaave_internal (fld_i , fld_o , gridmap, scale_i=scale_pft_i )
@@ -1046,6 +1312,7 @@ end subroutine gridmap_checkmap
     ! average.
     ! --------------------------------------------------------------------
 
+!$OMP PARALLEL DO PRIVATE (jo,io,f_ovr,n,ii,ji)
     do jo = 1, nlat_o
        do io = 1, nlon_o
 
@@ -1082,6 +1349,7 @@ end subroutine gridmap_checkmap
 
        end do
     end do
+!$OMP END PARALLEL DO
 
     ! --------------------------------------------------------------------
     ! Error check: overlap weights for input grid cells must sum to 1. This
@@ -1252,6 +1520,8 @@ end subroutine gridmap_checkmap
     integer ,allocatable :: n_ovrl(:,:)    ! local copy of novr
     real(r8),allocatable :: lonw_il(:,:)  ! local copy of lonw_i with offset
     real(r8),allocatable :: lone_il(:,:)  ! local copy of lone_i with offset
+    logical W2E            ! Grid cells are west to east
+    logical S2N            ! Grid cells are south to north
     integer ier            ! error flag
 !------------------------------------------------------------------------
  
@@ -1267,6 +1537,18 @@ end subroutine gridmap_checkmap
        stop
     end if
 
+    if (latn_i(1,nlat_i) > latn_i(1,1)) then
+       S2N = .true.             !south to north at the center of cell
+    else
+       S2N = .false.            !north to south at the center of cell
+    end if
+
+    if (lonw_i(1,1) < lonw_o(1,1)) then
+       W2E = .true.             !west to east at the center of cell
+    else
+       W2E = .false.            !east to west at the center of cell
+    end if
+
     deg2rad = SHR_CONST_PI / 180._r8
     noffsetl = 1
     if (present(noffset)) then
@@ -1280,7 +1562,7 @@ end subroutine gridmap_checkmap
 
     do n = 0,noffsetl   ! loop through offsets
 
-       if (lonw_i(1,1) < lonw_o(1,1)) then
+       if ( W2E ) then
           offset = (n*360)
        else
           offset = -(n*360)
@@ -1296,19 +1578,20 @@ end subroutine gridmap_checkmap
 
        do jo = 1, nlat_o
 
-       if (latn_o(1,nlat_o) > latn_o(1,1)) then
+       if ( S2N ) then
           indexo  = jo          !south to north at the center of cell
        else
           indexo  = nlat_o+1-jo !north to south at the center of cell
        end if
 
+!$OMP PARALLEL DO PRIVATE (io,ii,ji,s2n,indexi,dx,dy,lone,lonw,latn,lats) SHARED (jo,indexo)
        do io = 1, nlon_o
 
           ! loop through all input grid cells to find overlap with output grid
 
           do ji = 1, nlat_i
 
-          if (latn_i(1,nlat_i) > latn_i(1,1)) then
+          if ( S2N ) then
              indexi  = ji          !south to north at the center of cell
           else
              indexi  = nlat_i+1-ji !north to south at the center of cell
@@ -1366,6 +1649,7 @@ end subroutine gridmap_checkmap
           end do
 
        end do
+!$OMP END PARALLEL DO
        end do
 
     enddo   ! offset loop

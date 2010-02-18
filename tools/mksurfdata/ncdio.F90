@@ -189,7 +189,8 @@ contains
 !-----------------------------------------------------------------------
 
     if (ret /= NF_NOERR) then
-       write(6,*)'netcdf error from ',trim(calling)
+       write(6,*)'netcdf error from ',trim(calling), ' rcode = ', ret, &
+                 ' error = ', NF_STRERROR(ret)
        call abort()
     end if
 

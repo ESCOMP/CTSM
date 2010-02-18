@@ -1,0 +1,107 @@
+
+<!-- Beg of single_point chapter-->
+<chapter id="single_point">
+<title>How to run Single-Point cases</title>
+<para>
+The CLM also allows you to set up and run cases with a single-point or a local region as well
+as global resolutions. This is often useful for running quick cases for testing, evaluating
+specific vegetation types, or land-units, or running with observed data for a specific site.
+There are three different ways to do this: <envar>PTS_MODE</envar>,
+<envar>CLM_1PT_NAME</envar>, and <envar>CLM_USRDAT_NAME</envar>.
+<simplelist>
+<member><emphasis><envar>PTS_MODE</envar></emphasis> -- to run for a single point
+using global datasets</member>
+<member><emphasis><envar>CLM_1PT_NAME</envar></emphasis> -- to run for a supported single-point
+or regional dataset.</member>
+<member><emphasis><envar>CLM_USRDAT_NAME</envar></emphasis> -- to run using your own datasets.</member>
+</simplelist>
+</para>
+
+<sect1 id="PTS_MODE">
+<title>Running PTS_MODE configurations</title>
+<para>
+<envar>PTS_MODE</envar> enables you to run the model using global datasets, but just picking a
+single point from those datasets and operating on it. It can be a very quick way to do fast
+simulations and get a quick turnaround.
+</para>
+<para>
+To setup a <envar>PTS_MODE</envar> simulation you use the "-pts_lat" and "-pts_lon"
+arguments to create_newcase to give the latitude and longitude of the point you want to
+simulate for (the code will pick the point on the global grid nearest to the point you
+give. Here's an example to setup a simulation for the nearest point at 2-degree resolution
+to Boulder Colorado.
+<screen>
+> cd scripts
+> create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire -skip_rundb -pts_lat 40.0 -pts_lon -105
+</screen>
+Then configure, build and run as normal.
+</para>
+<note>
+<para>
+By default it sets up to run with
+<envar>USE_MPISERIAL</envar> (in the <filename>env_builld.xml</filename> file) turned on, 
+which allows you to run the model interactively. On some machines this mode is NOT 
+supported and you may need to change it to FALSE before you are able to build.
+</para>
+</note>
+<note>
+<para>
+<envar>PTS_MODE</envar> currently does <emphasis>NOT</emphasis> restart nor
+is it able to startup from global initial condition files.
+</para>
+</note>
+<note>
+<para>
+You can change the point you are simulating for at run-time by changing the values of
+<envar>PTS_LAT</envar> and <envar>PTS_LON</envar> in the <filename>env_run.xml</filename> file.
+</para>
+</note>
+</sect1>
+
+<sect1 id="suprted_single_point_datasets">
+<title>Running Supported Single-point Datasets</title>
+<para>
+In addition to <envar>PTS_MODE</envar> the CLM supports running using single-point or
+regional datasets that are customized to a particular region. In the section below we
+tell the user how to create their own dataset, but we also support a small number of
+single-point and regional datasets that are ready to setup and run in the CCSM modeling
+system.
+</para>
+<para>
+To run with the supported single-point and regional datasets, you setup a simulation for the
+"pt1_pt1" resolution and give the short-name for the file to use in the
+<filename>env_conf.xml</filename> file. Then to run for the urban MexicoCity Mexico test site
+do the following:
+<screen>
+> cd scripts
+> create_newcase -case testSPDATASET -res pt1_pt1 -compset I -mach bluefire -skip_rundb
+> cd testSPDATASET
+> xmlchange -file env_conf.xml -id CLM_PT1_NAME -val 1x1_mexicocityMEX
+</screen>
+Then configure, build and run normally.
+</para>
+<note>
+<para>
+Just like <envar>PTS_MODE</envar> above, By default it sets up to run with
+<envar>USE_MPISERIAL</envar> (in the <filename>env_builld.xml</filename> file) turned on, 
+which allows you to run the model interactively. On some machines this mode is NOT 
+supported and you may need to change it to FALSE before you are able to build.
+</para>
+</note>
+</sect1>
+
+<sect1 id="own_single_point_datasets">
+<title>Creating your own single-point datasets</title>
+<para>
+The file:
+<ulink url="../Quickstart.userdatasets">Quickstart.userdatasets</ulink> in the
+<filename>models/lnd/clm/doc</filename> directory gives guidelines on how to create and run
+with your own single-point or regional datasets. Below we reprint the above guide.
+<programlisting>
+&quickstart_userdata;
+</programlisting>
+</para>
+</sect1>
+
+</chapter>
+<!-- End of single_point chapter -->

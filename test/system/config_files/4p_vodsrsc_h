@@ -1,5 +1,5 @@
 -mode ccsm_seq
--spmd -smp
+-smp -spmd
 -maxpft 4
 -rtm on
 -dust on

@@ -47,8 +47,6 @@ subroutine mkorganic(lsmlon, lsmlat, fname, ndiag, organic_o)
   real(r8), allocatable :: organic_i(:,:,:)  ! input grid: total column organic matter
   real(r8), allocatable :: mask_i(:,:)        ! input grid: mask (0, 1)
   real(r8), allocatable :: mask_o(:,:)        ! output grid: mask (0, 1)
-  real(r8), allocatable :: fld_i(:,:)         ! input grid: dummy field
-  real(r8), allocatable :: fld_o(:,:)         ! output grid: dummy field
   real(r8), allocatable :: omlev_i(:,:)       ! input grid: organic matter on lev
   real(r8), allocatable :: omlev_o(:,:)       ! output grid: organic matter on lev
   real(r8) :: sum_fldi                        ! global sum of dummy input fld
@@ -101,7 +99,6 @@ subroutine mkorganic(lsmlon, lsmlat, fname, ndiag, organic_o)
   ! Compute local fields _o
 
   allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat))
-  allocate( fld_i(nlon_i,nlat_i), fld_o(lsmlon,lsmlat))
 
   mask_i = 1.0_r8
   mask_o = 1.0_r8
@@ -120,20 +117,9 @@ subroutine mkorganic(lsmlon, lsmlat, fname, ndiag, organic_o)
   ! and correct according to land landmask
   ! Note that percent cover is in terms of total grid area.
 
+  call areaave(organic_i,organic_o,tgridmap)
+
   do lev = 1,nlevsoi
-     do ji = 1, nlat_i
-     do ii = 1, nlon_i
-        omlev_i(ii,ji) = organic_i(ii,ji,lev)
-     enddo
-     enddo
-
-     call areaave(omlev_i,omlev_o,tgridmap)
-
-     do jo = 1, ldomain%nj
-     do io = 1, ldomain%numlon(jo)
-        organic_o(io,jo,lev) = omlev_o(io,jo)
-     enddo
-     enddo
 
      ! Check for conservation
 
@@ -147,76 +133,6 @@ subroutine mkorganic(lsmlon, lsmlat, fname, ndiag, organic_o)
         end if
      enddo
      enddo
-
-     ! Global sum of output field -- must multiply by fraction of
-     ! output grid that is land as determined by input grid
-
-     sum_fldi = 0.0_r8
-     do ji = 1, nlat_i
-     do ii = 1, nlon_i
-       fld_i(ii,ji) = ((ji-1)*nlon_i + ii) * tdomain%mask(ii,ji)
-       sum_fldi = sum_fldi + tdomain%area(ii,ji) * fld_i(ii,ji)
-     enddo
-     enddo
-
-     call areaave(fld_i,fld_o,tgridmap)
-
-     sum_fldo = 0.
-     do jo = 1, ldomain%nj
-     do io = 1, ldomain%numlon(jo)
-        fld_o(io,jo) = fld_o(io,jo)*mask_o(io,jo)
-        sum_fldo = sum_fldo + ldomain%area(io,jo) * fld_o(io,jo)
-     end do
-     end do
-
-     ! -----------------------------------------------------------------
-     ! Error check1
-     ! Compare global sum fld_o to global sum fld_i.
-     ! -----------------------------------------------------------------
-
-     if ( trim(mksrf_gridtype) == 'global') then
-        if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-           write (6,*) 'MKSOICARB error: input field not conserved'
-           write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-           write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-!           stop
-        end if
-     end if
-
-     ! -----------------------------------------------------------------
-     ! Error check2
-     ! Compare global areas on input and output grids
-     ! -----------------------------------------------------------------
-
-     ! Input grid
-
-     gomlev_i = 0.
-     garea_i = 0.
-
-     do ji = 1, nlat_i
-     do ii = 1, nlon_i
-        garea_i = garea_i + tdomain%area(ii,ji)
-        gomlev_i = gomlev_i + omlev_i(ii,ji)*(tdomain%area(ii,ji)/100.) * &
-                                        tdomain%frac(ii,ji)
-     end do
-     end do
-
-     ! Output grid
-
-     gomlev_o = 0.
-     garea_o = 0.
-
-     do jo = 1, ldomain%nj
-     do io = 1, ldomain%numlon(jo)
-        garea_o = garea_o + ldomain%area(io,jo)
-        gomlev_o = gomlev_o + omlev_o(io,jo)*(ldomain%area(io,jo)/100.) * &
-                                        ldomain%frac(io,jo)
-        if ( (ldomain%frac(io,jo) < 0.0) .or. (ldomain%frac(io,jo) > 1.0001) )then
-           write(6,*) "ERROR:: frac out of range: ", ldomain%frac(io,jo), io, jo
-           stop
-        end if
-     end do
-     end do
 
      ! Diagnostic output
 
@@ -253,7 +169,6 @@ subroutine mkorganic(lsmlon, lsmlat, fname, ndiag, organic_o)
   call gridmap_clean(tgridmap)
   deallocate (organic_i, omlev_i, omlev_o)
   deallocate (mask_i,mask_o)
-  deallocate ( fld_i, fld_o)
 
 end subroutine mkorganic
 

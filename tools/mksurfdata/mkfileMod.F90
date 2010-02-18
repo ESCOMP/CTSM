@@ -35,6 +35,11 @@ contains
     integer            :: omode     ! netCDF output mode
     integer            :: xtype     ! external type
 
+#ifdef _OPENMP
+    integer            :: OMP_GET_MAX_THREADS
+    external           :: OMP_GET_MAX_THREADS
+#endif
+
     character(len=32) :: subname = 'mkfile'  ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -87,6 +92,26 @@ contains
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
          'Source', len_trim(str), trim(str)), subname)
 
+#ifdef _OPENMP
+    str = 'OMP_NUM_THREADS'
+    call check_ret(nf_put_att_int (ncid, NF_GLOBAL, str, NF_INT, 1, &
+                   OMP_GET_MAX_THREADS() ), subname)
+    str = 'TRUE'
+#else
+    str = 'FALSE'
+#endif
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, "OpenMP", len_trim(str), &
+                   trim(str) ), subname)
+
+#ifdef OPT
+    str = 'TRUE'
+#else
+    str = 'FALSE'
+#endif
+
+    call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
+         'Compiler_Optimized', len_trim(str), trim(str)), subname)
+
     str = &
 '$HeadURL$'
     call check_ret(nf_put_att_text (ncid, NF_GLOBAL, &
@@ -119,6 +144,10 @@ contains
        str = get_filename(mksrf_fsoicol)
        call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
             'Soil_color_raw_data_file_name', len_trim(str), trim(str)), subname)
+
+       str = get_filename(mksrf_fvocef)
+       call check_ret(nf_put_att_text(ncid, NF_GLOBAL, &
+            'VOC_EF_raw_data_file_name', len_trim(str), trim(str)), subname)
     end if
 
     str = get_filename(mksrf_forganic)
@@ -243,6 +272,30 @@ contains
        call ncd_defvar(ncid=ncid, varname='PCT_CLAY', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
             long_name='percent clay', units='unitless')
+       
+       call ncd_defvar(ncid=ncid, varname='EF1_BTR', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='EF btr (isoprene)', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='EF1_FET', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='EF fet (isoprene)', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='EF1_FDT', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='EF fdt (isoprene)', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='EF1_SHR', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='EF shr (isoprene)', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='EF1_GRS', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='EF grs (isoprene)', units='unitless')
+
+       call ncd_defvar(ncid=ncid, varname='EF1_CRP', xtype=xtype, &
+            dim1name='lsmlon', dim2name='lsmlat', &
+            long_name='EF crp (isoprene)', units='unitless')
 
        call ncd_defvar(ncid=ncid, varname='ORGANIC', xtype=xtype, &
             dim1name='lsmlon', dim2name='lsmlat', dim3name='nlevsoi', &
@@ -443,6 +496,10 @@ contains
        call ncd_defvar(ncid=ncid, varname='time', xtype=nf_int,  &
             dim1name='time', &
             long_name='year', units='unitless')
+       call ncd_defvar(ncid=ncid, varname='input_pftdata_filename', xtype=nf_char,  &
+            dim1name='nchar', &
+            dim2name='time',  &
+            long_name='Input filepath for PFT values for this year', units='unitless')
     else
        call ncd_defvar(ncid=ncid, varname='time', xtype=nf_int,  &
             dim1name='time', &

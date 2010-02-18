@@ -18,6 +18,7 @@ module mkvarctl
   logical            :: outnc_large_files     ! output files in 64-bit format for large files
   logical            :: outnc_double          ! output ALL data in files as 64-bit
   logical            :: all_urban             ! output ALL data as 100% covered in urban
+  character(len=32)  :: mksrf_gridnm   = ' '  ! name of grid to use on output file
   character(len=256) :: mksrf_fgrid    = ' '  ! land grid file name to use 
   character(len=256) :: mksrf_gridtype = ' '  ! land gridtype, global or reg
   character(len=256) :: mksrf_fvegtyp  = ' '  ! vegetation data file name
@@ -33,6 +34,7 @@ module mkvarctl
   character(len=256) :: mksrf_fmax     = ' '  ! fmax data file name
   character(len=256) :: mksrf_flai     = ' '  ! lai data filename
   character(len=256) :: mksrf_fdynuse  = ' '  ! ascii file containing names of dynamic land use files
+  character(len=256) :: mksrf_fvocef = ' '    ! VOC Emission Factor data file name
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 11/04

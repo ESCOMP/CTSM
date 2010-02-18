@@ -30,8 +30,7 @@ bgl="0"
 
 <mach
 aix="bluefire"
-darwin="yong_g95"
-linux="calgary_pgi"
+linux="edinburgh_pgi"
 bgl="intrepid"
 />
 

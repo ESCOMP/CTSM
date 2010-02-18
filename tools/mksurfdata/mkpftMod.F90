@@ -75,8 +75,6 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
   real(r8), allocatable :: pctpft_i(:,:,:)    ! input grid: PFT percent
   real(r8), allocatable :: mask_i(:,:)        ! input grid: mask (0, 1)
   real(r8), allocatable :: mask_o(:,:)        ! output grid: mask (0, 1)
-  real(r8), allocatable :: fld_i(:,:)         ! input grid: dummy field
-  real(r8), allocatable :: fld_o(:,:)         ! output grid: dummy field
   real(r8) :: sum_fldo                        ! global sum of dummy output fld
   real(r8) :: sum_fldi                        ! global sum of dummy input fld
   real(r8) :: wst(0:numpft)                   ! as pft_o at specific io, jo
@@ -151,7 +149,6 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
   ! Compute pctlnd_o, pctpft_o
 
   allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat))
-  allocate( fld_i(nlon_i,nlat_i), fld_o(lsmlon,lsmlat))
 
   mask_i = 1.0_r8
   mask_o = 1.0_r8
@@ -170,10 +167,8 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
   ! [pctpft_o] and correct [pctpft_o] according to land landmask
   ! Note that percent cover is in terms of total grid area.
 
+  call areaave(pctpft_i,pctpft_o,tgridmap)
   do m = 0, numpft
-     fld_i(:,:) = pctpft_i(:,:,m)
-     call areaave(fld_i,fld_o,tgridmap)
-     pctpft_o(:,:,m) = fld_o(:,:)
      do jo = 1, ldomain%nj
      do io = 1, ldomain%numlon(jo)
        if (pctlnd_o(io,jo) < 1.0e-6) then
@@ -223,27 +218,6 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
      enddo
   end if
 
-  ! Global sum of output field -- must multiply by fraction of
-  ! output grid that is land as determined by input grid
-
-  sum_fldi = 0.0_r8
-  do ji = 1, nlat_i
-  do ii = 1, nlon_i
-    fld_i(ii,ji) = ((ji-1)*nlon_i + ii) * tdomain%mask(ii,ji)
-    sum_fldi = sum_fldi + tdomain%area(ii,ji) * fld_i(ii,ji)
-  enddo
-  enddo
-
-  call areaave(fld_i,fld_o,tgridmap)
-
-  sum_fldo = 0.
-  do jo = 1, ldomain%nj
-  do io = 1, ldomain%numlon(jo)
-     fld_o(io,jo) = fld_o(io,jo)*mask_o(io,jo)
-     sum_fldo = sum_fldo + ldomain%area(io,jo) * fld_o(io,jo)
-  end do
-  end do
-
   ! Send back percent plat function types on input grid if asked for
 
   if ( present(pct_pft_i) )then
@@ -253,21 +227,7 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
   end if
 
   ! -----------------------------------------------------------------
-  ! Error check1
-  ! Compare global sum fld_o to global sum fld_i.
-  ! -----------------------------------------------------------------
-
-  if ( trim(mksrf_gridtype) == 'global' .and. .not. all_urban ) then
-     if ( abs(sum_fldo/sum_fldi-1.) > relerr ) then
-        write (6,*) 'MKPFT error: input field not conserved'
-        write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-        write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-        stop
-     end if
-  end if
-
-  ! -----------------------------------------------------------------
-  ! Error check2
+  ! Error check
   ! Compare global areas on input and output grids
   ! -----------------------------------------------------------------
 
@@ -336,7 +296,6 @@ subroutine mkpft(lsmlon, lsmlat, fpft, firrig, ndiag, pctlnd_o, pctirr_o, pctpft
   call gridmap_clean(tgridmap)
   deallocate (pctpft_i)
   deallocate (mask_i,mask_o)
-  deallocate ( fld_i, fld_o)
 
 end subroutine mkpft
 

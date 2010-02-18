@@ -1,4 +1,215 @@
 ===============================================================
+Tag name:  clm3_7_04
+Originator(s):  erik (erik)
+Date: Wed Feb 17 23:22:23 MST 2010
+One-line Summary: Bring VOC branch (vocemis-drydep18_clm3_7_03) tools, testing, and build to trunk (everything other than VOC code changes)
+
+Purpose of changes:
+
+Move VOC branch (vocemis-drydep18_clm3_7_03) to trunk for support functionality, tools,
+testing, everything but the code changes. This includes optimization of mksurfdata,
+adding new tests, adding drydep to build, listen to cpl flag if aerosols are sent, update
+documentation about configure variables, remove pio and carbon_aero config options
+(always build with pio), remove local Macro's files for Darwin (yong_g95, and
+breeze_intel), and remove gx1v3, gx1v4 masks, and 1x1.25 and 2x2.5 grids. All NCL regrid
+scripts to be able to use GRDFIL env variable to set location of a grid file just
+created. turn rtm off if PTS_MODE is TRUE. mksurfdata optimization includes: create
+subroutines for landuse normalization, add OpenMP parallelism, optimize memory so
+deallocate when done, and put OMP threads, veg filenames and optimization level on
+mksurfdata files. Move shr_drydepInputMod.F90 to drv/shr/seq_drydepMod.F90 (from
+csm_share to drv). Update externals. Work on documentation using output logs from scripts
+and moving documentation into separate chapters.
+
+Bugs fixed (include bugzilla ID):
+                                  926 (pftdyn code needs to be shared in mksurfdata)
+                                 1105 (Turn RTM mode off for PTS_MODE)
+                                 1110 (dt limit error, for mexicocity)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1104 (Restart problem with pftdyn mode)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: 
+    Remove carbon_aero and pio from configure (always build with pio)
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+   Remove 1x1.25, 2x2.5, and 2.5x3.33 grid resolutions
+   Remove gx1v3, gx1v4, gx1v5 land masks, add drydep defaults.
+   Update 2.65x3.33@2000, 1x1_tropicAtl@2000, f09@1850 and 1x1_tropicAtl@1000-1004 pftdyn
+   add mksrf_fvegtyp@1000-1004
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, csm_share, drv, datm, and timing
+
+    csm_share    to share3_100215
+    scripts      to scripts4_100216
+    drv          to drvseq3_1_16
+    datm         to datm8_100215
+    timing       to timing_091021
+
+List all files eliminated:
+
+>>>>>>>>>>>> Remove local Macros files, and remove maxpft=4 vodsrcsc tests
+   D   models/lnd/clm/bld/config_files/Macros.yong_g95
+   D   models/lnd/clm/bld/config_files/Macros.breeze_intel
+   D   models/lnd/clm/test/system/config_files/4p_vodsrsc_m
+   D   models/lnd/clm/test/system/config_files/4p_vodsrsc_h
+
+   D   models/lnd/clm/doc/UsersGuide/index.xml -- Rename to clm_ug.xml
+              Divide most of the content into separate chapters.
+
+List all files added and what they do:
+
+   A   models/lnd/clm/test/system/config_files/_scnv_dh ---- No-VOC debug-hybrid mode
+   A   models/lnd/clm/test/system/config_files/_scnv_do ---- No-VOC debug-pure SMP hybrid mode
+   A   models/lnd/clm/test/system/config_files/17p_scnv_dh - 17pft no-VOC debug-hybrid mode
+   A   models/lnd/clm/test/system/config_files/17p_scnv_do - 17pft no-VOC debug-pure SMP mode
+   A   models/lnd/clm/test/system/nl_files/clm_drydep ------ Turn on drydep in namelist
+   A   models/lnd/clm/tools/mksurfdata/mkvocef.F90 --------- VOC emissions
+   A   models/lnd/clm/bld/namelist_files/namelist_defaults_drydep.xml - Drydep namelist defaults
+   A   models/lnd/clm/doc/UsersGuide/tools.xml --------- Tools chapter
+   A   models/lnd/clm/doc/UsersGuide/preface.xml ------- Preface and introduction chapter
+   A   models/lnd/clm/doc/UsersGuide/clm_ug.xml -------- Change name of index.xml
+                         Move most of the contents into separate chapters
+   A   models/lnd/clm/doc/UsersGuide/adding_files.xml -- Adding files chapter
+   A   models/lnd/clm/doc/UsersGuide/config_cache.xml -- Sample config cache file so can 
+                                                         run build-namelist for documentation
+   A   models/lnd/clm/doc/UsersGuide/custom.xml -------- Customizing chapter
+   A   models/lnd/clm/doc/UsersGuide/get_Icaselist.pl -- Script to get list of I cases
+   A   models/lnd/clm/doc/UsersGuide/single_point.xml -- Single point chapter
+   A   models/lnd/clm/doc/UsersGuide/special_cases.xml - Special cases chapter
+
+List all existing files that have been modified, and describe the changes:
+
+   M   models/lnd/clm/test/system/config_files/README - Add nv no-VOC config case
+   M   models/lnd/clm/test/system/README.testnames ---- Add drydep testnames
+   M   models/lnd/clm/test/system/test_driver.sh ------ Use generic_linux_intel mach for breeze
+                                 also changes to get jaguar to work
+   M   models/lnd/clm/test/system/input_tests_master -- Add drydep and no-VOC tests, cut
+                                                        back Mexicocity test to 158 steps
+
+   M   models/lnd/clm/tools/mksurfdata/mkvarctl.F90 -------- Add mksrf_gridnm and mksrf_fvocef
+   M   models/lnd/clm/tools/mksurfdata/ncdio.F90 ----------- Write out error codes on a problem.
+   M   models/lnd/clm/tools/mksurfdata/mksurfdata.regional - Add voc file.
+   M   models/lnd/clm/tools/mksurfdata/mksurfdata.pftdyn --- Add voc file, use 1850 veg file.
+   M   models/lnd/clm/tools/mksurfdata/mksurfdata.singlept - Add voc file.
+   M   models/lnd/clm/tools/mksurfdata/mksurfdata.namelist - Add voc file.
+   M   models/lnd/clm/tools/mksurfdata/mkharvestMod.F90 ---- Move file definition for harvest to init sub
+   M   models/lnd/clm/tools/mksurfdata/mkfileMod.F90 ------- Write out OpenMP threads 
+                   and OPT TRUE or FALSE, VOC fields, and veg filenames
+   M   models/lnd/clm/tools/mksurfdata/mkorganic.F90 ------- Remove test and use 3D areaave
+   M   models/lnd/clm/tools/mksurfdata/Makefile ------------ Add in SMP option to turn on OpenMP
+   M   models/lnd/clm/tools/mksurfdata/mkurbanparMod.F90 --- Remove single level fields
+                                                             and use 4D areaave
+   M   models/lnd/clm/tools/mksurfdata/areaMod.F90 --------- Add 3D and 4D areaave interfaces
+                                              and add OpenMP directives
+   M   models/lnd/clm/tools/mksurfdata/mksrfdat.F90 -------- Create subroutines shared
+           by dynpft loop and surfdata: change_landuse and normalizencheck_landuse.
+           Allocate memory as late as possible and deallocate as soon as possible.
+           Add: mksrf_gridnm and mksrf_fvocef to namelist
+           Add mkvocef and add to output file
+   M   models/lnd/clm/tools/mksurfdata/Srcfiles ------------ Add mkvocef.F90
+   M   models/lnd/clm/tools/mksurfdata/mksurfdata.pl ------- Allow command line arguments
+            to pick resolutions and simulation-years. Read in namelist database information
+            for checking and using defaults. Add in mksrf_fvocef, and use mksrf_gridnm to
+            give output file same name as the input grid resolution name.
+   M   models/lnd/clm/tools/mksurfdata/mkpftMod.F90 -------- Remove testing, add 3D areaave
+
+   M   models/lnd/clm/tools/ncl_scripts/README ----------- Remove script no longer available.
+   M   models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl - Allow env var GRDFIL to give
+                                                           grid file to use
+   M   models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl --- Allow env var GRDFIL to give
+                                                           grid file to use
+
+   M   models/lnd/clm/tools/mkgriddata/README -- Fix typo
+
+   M   models/lnd/clm/bld/configure --------------------------------- Remove carbon_aero
+                           and pio (always build with pio), and make voc default on
+   M   models/lnd/clm/bld/queryDefaultNamelist.pl ------------------- Add drydep file.
+   M   models/lnd/clm/bld/config_files/config_sys_defaults.xml ------ Change mach
+                           defaults, remove darwin make linux edinburgh_pgi
+   M   models/lnd/clm/bld/config_files/config_definition.xml -------- Remove carbon_aero
+                           and pio, make default for mode ext_ccsm_seq, make voc on,
+                           work on documentation
+   M   models/lnd/clm/bld/build-namelist ---------------------------- Add drydep, remove
+                           carbon_aero and pio
+   M   models/lnd/clm/bld/clm.cpl7.template ------------------------- Turn rtm off for PTS_MODE
+   M   models/lnd/clm/bld/namelist_files/namelist_definition.xml ---- Add mksrf_fvegtyp, 
+                           remove 1x1.25, 2x2.5, and 2.5x3.33 grid resolutions
+                           remove gx1v3, gx1v4, gx1v5 land masks, add drydep_method, and drydep_list
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml - Remove 1x1.25,
+                           2x2.5, and gx1v3, gx1v4, gx1v5 domain files
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml -- Remove 1x1.25,
+                           and gx1v3, gx1v4, gx1v5 files
+                           update 2.65x3.33@2000, 1x1_tropicAtl@2000, f09@1850
+                           and 1x1_tropicAtl@1000-1004 pftdyn
+                           add mksrf_fvegtyp@1000-1004
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml -- Remove gx1v4, gx1v5 start dates
+
+   M   models/lnd/clm/doc/UsersGuide/Makefile --- Get makefile to use scripts to make
+                           log info to put into document, and separate out document
+                           into chapters
+
+   M   models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 --- Use atm_aero in infodata 
+                           to determine: caerdep_filled, and dustdep_filled
+                           some changes to get ready for VOC and drydep branch to come to trunk
+
+Summary of testing:
+
+  bluefire: All PASS up to 019 brEH1 
+  bluefire interactive testing: All PASS except...
+004 blJ74 TBL.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -100
+arb_ic FAIL! rc= 5
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+  bluefire/CCSM testing:
+PASS  SMS_RLB.f45_f45.I.bluefire 
+PASS  ERH_D.f10_f10.I1850CN.bluefire 
+  jaguar interactive testing: All PASS except...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+  edinburgh/ifort: All PASS except...
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+  breeze,gale,hail,gust/ifort interactive testing: All PASS except...
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+021 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+022 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+023 blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_03
+
+Changes answers relative to baseline: 1x1_tropicAtl changes due to new surfdata file
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_03
 Originator(s):  erik (erik)
 Date: Wed Feb 10 11:29:56 MST 2010

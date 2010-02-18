@@ -1,0 +1,827 @@
+<!-- ======================================================================= -->
+<!-- Beg of customizing section -->
+
+<chapter id="customize">
+<title>How to customize the configuration for a case with CLM</title>
+
+<para>
+The <ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">
+CCSM Users Guide</ulink> gives you the details on how to setup, configure, build, and run
+a case. That is the document to give you the details on using the CCSM scripts. The purpose 
+of this document is to give you the details when using CCSM with CLM on how to customize
+and use advanced features in CLM. You should be familiar with the CCSM Users Guide and
+how to setup cases with CCSM4 before referring to this document.
+</para>
+<para>
+In this chapter we deal with three different ways of customizing a case: Choosing a compset,
+Customizing Configuration options, and customizing the CLM Namelist. There are many different
+compsets that use CLM and many are setup to enable special features of CLM from the start. So
+the first thing you want to be familiar with are the different options in the compsets. The 
+next section shows the different options for customizing the configuration options for CLM.
+Here we introduce the CLM configure and build-namelist scripts and how using the
+<filename>env_conf.xml</filename> options you can customize the configuration and the initial
+namelist. The final section tells you about the CLM namelist and how you could customize the
+namelist once you have run "configure -case" and have an initial namelist in
+<filename>BuildConf/clm.buildnml.csh</filename> that you can customize by hand. You can also 
+use <filename>env_conf.xml</filename> options to change you namelist as well.
+</para>
+<!-- Beg of choosing a compset section -->
+<sect1 id="compset_choice">
+<title>Choosing a compset using CLM</title>
+
+<para>
+When setting up a new case one of the first choices to make is which "component set" (or compset) to use. The
+compset refers to which component models are used as well as specific settings for them. We label the different
+types of compsets with a different letter of the alphabet from "A" (for all data model) to "X" (for all dead model).
+The compsets of interest when working with CLM are the "I" compsets (which contain CLM with a data atmosphere model
+and a stub ocean, and stub sea-ice models), "E" and "F" compsets (which contain CLM with the active atmosphere model (CAM),
+a prescribed sea-ice model and a data ocean model), and "B" compsets which have all active components. Below we
+go into details on the "I" compsets which emphasize CLM as the only active model, and just mention the two other categories.
+</para>
+<para>
+When working with CLM you usually want to start with a relevant "I" compset before moving to the more
+complex cases that involve other active model components. The "I" compsets can exercise CLM in a way that
+is similar to the coupled modes, but with much lower computational cost and faster turnaround times.
+</para>
+<sect2 id="I_compsets">
+<title>Compsets coupled to data atmosphere and stub ocean/sea-ice ("I" compsets)</title>
+&compsets_list;
+</sect2>
+
+<sect2 id="EF_compsets">
+     <title>Compsets coupled to active atmosphere with data ocean</title>
+<para>
+       CAM compsets are compsets that start with "E" or "F" in the name. They are
+       described more fully in the scripts documentation or the CAM documentation. "E" compsets have
+a slab ocean model while "F" compsets have a data ocean model.
+</para>
+</sect2>
+
+<sect2 id="B_compsets">
+<title>Fully coupled compsets with fully active ocean, sea-ice, and atmosphere</title>
+<para>
+       Fully coupled compsets are compsets that start with "B" in the name. They are
+       described more fully in the scripts documentation.
+</para>
+</sect2>
+
+<sect2 id="chose_compset_conclude">
+<title>Conclusion to choosing a compset</title>
+<para>
+We've introduced the basic type of compsets that use CLM and given some further details
+for the "standalone CLM" (or "I" compsets).  The 
+<ulink url="../../../../../scripts/ccsm_utils/Case.template/config_compsets.xml">
+config_compsets.xml</ulink> lists all of the compsets and gives a full description
+of each of them. In the next section we look into customizing the configure time options
+for compsets using CLM.
+</para>
+</sect2>
+</sect1>
+<!-- End of choosing a compset section -->
+
+<!-- Beg of customizing clm config section -->
+<sect1 id="customizing_clm_config">
+<title>Customizing the clm configuration</title>
+<para>
+The "Creating a Case" section of the 
+<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">CCSM4.0 Scripts Users-Guide</ulink>
+gives instructions on creating a case. What is of interest here is how to customize your use of clm
+for the case that you created. In this section we discuss how to customize your case before the first
+step -- the "configure -case" step is done. in the next section we will discuss how to customize your
+clm namelist after "configure -case" has already been done.
+</para>
+<para>
+For CLM when "configure -case" is called there are two steps that take place:
+</para>
+<orderedlist>
+<listitem><para>The clm "configure" script is called to setup the build-time configuration for clm.</para></listitem>
+<listitem><para>The clm "build-namelist" script is called to generate  the initial run-time namelist for clm.</para></listitem>
+</orderedlist>
+<para>
+When customizing your case at the configure step you are able to modify the process by effecting either one
+or both of these steps. The clm "configure" and "build-namelist" scripts are both available in the "models/lnd/clm/bld" 
+directory in the distribution. Both of these scripts have a "-help" option that is useful to examine to see what
+types of options you can give either of them.
+</para>
+<para>
+There are five different types of customization for the configuration that we will 
+discuss: CCSM4 CLM configuration items, Configure time User Namelist,
+other noteworthy CCSM configuration items, the CLM configure script options, and 
+the CLM build-namelist script options.
+</para>
+
+<sect2 id="clm_script">
+<title>CLM Script configuration items</title>
+<para>
+Below we list each of the CCSM configuration items that are specific to CLM.
+</para>
+<para>
+<simplelist>
+    <member><varname>CLM_CONFIG_OPTS</varname></member>
+    <member><varname>CLM_BLDNML_OPTS</varname></member>
+    <member><varname>CLM_NAMELIST_OPTS</varname></member>
+    <member><varname>CLM_FORCE_COLDSTART</varname></member>
+    <member><varname>CLM_PT1_NAME</varname></member>
+    <member><varname>CLM_USRDAT_NAME</varname></member>
+</simplelist>
+</para>
+<para>
+The first item "CLM_CONFIG_OPTS" has to do with customizing the CLM configuration options for your case, the rest
+all have to do with generating the initial namelist.
+</para>
+<para>
+CLM_CONFIG_OPTS
+</para>
+<para>
+The option "CLM_CONFIG_OPTS" is all about passing command line arguments to the CLM configure script. It is important
+to note that some compsets, may already put a value into the CLM_CONFIG_OPTS variable. You can still add more
+options to your "CLM_CONFIG_OPTS" but make sure you add to what is already there rather than replacing it. Hence,
+it may be best to edit the "env_conf.xml" file to do this rather than use the xmlchange script. In the 
+section below we will go into more details on options that can be customized in the CLM "configure" script. It's
+also important to note that the clm template may already invoke certain CLM configure options and as such those
+command line options are NOT going to be available to change at this step (nor would you want to change them).
+</para>
+<para>
+CLM_NML_USE_CASE
+</para>
+<para>
+"CLM_NML_USE_CASE" is used to set a particular set of conditions that set multiple namelist items, all centering around
+a particular usage of the model.
+To list the valid options do the following:
+</para>
+<screen>
+> cd models/lnd/clm/bld
+> build-namelist -use_case list
+</screen>
+<para>
+The output of the above command is:
+</para>
+<screen>
+&usecases_list;
+</screen>
+<para>
+CLM_BLDNML_OPTS
+</para>
+<para>
+The option "CLM_BLDNML_OPTS" is for passing options to the CLM "build-namelist" script. As with the "configure"
+script the clm template may already invoke certain options and as such those options will NOT be available to be
+set here. The best way to see what options can be sent to the "build-namelist" script is to do
+</para>
+<screen>
+> cd models/lnd/clm/bld
+> build-namelist -help
+</screen>
+<para>
+Here is the output from the above.
+</para>
+<screen>
+&buildnml_help;
+</screen>
+<para>
+The clm template already sets the resolution and mask as well as the configure file, the start-type, and defines a input
+namelist and namelist input file, and it normally sets either "-ignore_ic_year" or "-ignore_ic_date". Also many
+of the options are designed solely for CLM stand-alone testing and hence should NOT be used (any of the options starting
+with a "datm_" or "drv_" prefix. Hence there are then only four different options that could be set:
+</para>
+<para>
+<orderedlist>
+<listitem><para>-lnd_res</para></listitem>
+<listitem><para>-sim_year</para></listitem>
+<listitem><para>-rcp</para></listitem>
+<listitem><para>-clm_demand</para></listitem>
+<listitem><para>-verbose</para></listitem>
+</orderedlist>
+</para>
+<para>
+"-lnd_res" is used to run CLM at a higher resolution than it is coupling to the atmospheric model. This can
+be useful to get more accuracy from the land model by running at a higher resolution, but saving computer time
+by running the more expensive atmospheric model at a lower resolution. To get a list of valid resolutions to
+run at do the following:
+</para>
+<screen>
+> cd models/lnd/clm/bld
+> build-namelist -lnd_res list
+</screen>
+<para>
+"-clm_demand" asks the build-namelist step to require that the list of variables
+entered be set. Typically, this is used to require that optional filenames be used and ensure
+they are set before continuing. For example, you may want to require that
+<varname>fpftdyn</varname> be set to get dynamically changing vegetation types. To do this
+you would do the following.
+<screen>
+> xmlchange -file env_conf.xml -id CLM_BLDNML_OPTS -val "-clm_demand fpftdyn"
+</screen>
+To see a list of valid variables that you could set do this:
+<screen>
+> cd models/lnd/clm/bld
+> build-namelist -clm_demand list
+</screen>
+</para>
+<note>
+ <para>
+Using a 20th-Century transient compset or the <envar>20thC_transient</envar> use-case
+using <envar>CLM_NML_USE_CASE</envar> would set this as well, but would also use 
+fndepdyn, and dynamic faerdep files, so using <envar>-clm_demand</envar> would be a way 
+to get <emphasis>just</emphasis> dynamic vegetation types and NOT the other files as well.
+</para>
+</note>
+<para>
+"-sim_year" is used to set the simulation year you want the data-sets to simulate conditions for in the input
+datasets. To list the valid options do the following:
+</para>
+<screen>
+> cd models/lnd/clm/bld
+> build-namelist -sim_year list
+</screen>
+<para>
+"-rcp" is used to set the representative concentration pathway for the future scenarios
+you want the data-sets to simulate conditions for, in the input
+datasets. To list the valid options do the following:
+</para>
+<screen>
+> cd models/lnd/clm/bld
+> build-namelist -rcp list
+</screen>
+<para>
+CLM_NAMELIST_OPTS
+</para>
+<para>
+The option <envar>CLM_NAMELIST_OPTS</envar> is for passing namelist items into the "clm_inparm" namelist.
+Any items that are set in CLM_NAMELIST_OPTS will be set in your namelist after "configure
+-case" is done.
+</para>
+<note>
+<para>
+For character namelist items you need to use "&amp;apos;" as quotes for strings so that the 
+scripts don't get confused with other quotes they use.
+</para>
+</note>
+<para>
+Example, you want to set <varname>hist_dov2xy</varname> to <varname>.false.</varname>
+so that you get vector output to your history files. You want to edit
+<filename>env_conf.xml</filename> and add a setting for <varname>hist_dov2xy</varname>.
+So do the following:
+<screen>%xmlchange -file env_conf.xml -id CLM_NAMELIST_OPTS -val hist_dov2xy=.false.</screen>
+</para>
+<para>
+CLM_CO2_TYPE
+</para>
+<para>
+<envar>CLM_CO2_TYPE</envar>
+</para>
+<para>
+CLM_FORCE_COLDSTART
+</para>
+<para>
+<envar>CLM_FORCE_COLDSTART</envar> when set to <emphasis><envar>on</envar></emphasis> <emphasis>requires</emphasis> that
+your simulation do a cold start from arbitrary initial conditions. If this is NOT set, it
+will use an initial condition file if it can find an appropriate one, and otherwise do a cold
+start. <envar>CLM_FORCE_COLDSTART</envar> is a good way to ensure that you are doing a cold
+start if that is what you want to do.
+</para>
+<para>
+CLM_PT1_NAME
+</para>
+<para>
+<envar>CLM_PT1_NAME</envar> is used <emphasis>ONLY</emphasis> for a <varname>pt1_pt1</varname>
+resolution simulation to set the name of the single-point files to use.
+To see a list of the valid resolutions do this:
+<screen>
+> cd models/lnd/clm/
+> build-namelist -res list
+</screen>
+</para>
+<para>
+The output of the above command is:
+</para>
+<screen>
+&res_list;
+</screen>
+<para>
+the valid resolutions that can be used with <envar>CLM_PT1_NAME</envar> are the ones that
+have city or nation names such as: 5x5_amazon, 1x1_vancouverCAN 1x1_mexicocityMEX, or
+1x1_brazil. The "1x1_" prefix means the file is for a single-point, while "5x5_" prefix means
+it's for a region of five points in latitude by five points in longitude. Both regional an
+single point datasets can be used for CLM_PT1_NAME.
+</para>
+<para>
+CLM_USR_DATNAME
+</para>
+<para>
+<envar>CLM_USR_DATNAME</envar> provides a way to enter your own datasets into the initial
+namelist setup at "configure -case". The files you create must be named with
+See the <ulink url="../Quickstart.userdatasets">Quickstart.userdatasets</ulink> 
+file describing the steps do use your own datasets, for more details on each step.
+To see what the expected names of the files are use, queryDefaultNamelist.pl to see
+what the names will need to be. For example if you <envar>CLM_USR_DATNAME</envar> will 
+be "1x1_boulderCO", with a "navy" land-mask, constant simulation year range, for 1850,
+the following will list what your filenames should be:
+<screen>
+> cd models/lnd/clm/bld
+> queryDefaultNamelist.pl -usrname "1x1_boulderCO" -options
+mask=navy,sim_year=1850,sim_year_range="constant"  -csmdata $CSMDATA
+</screen>
+</para>
+
+</sect2>
+
+<sect2 id="config_time_nml">
+<title>Configure time User Namelist</title>
+<para>
+<envar>CLM_NAMELIST_OPTS</envar> as described above allows you to set any
+extra namelist items you would like to appear in your namelist after first configured.
+However, it only allows you a single line to enter namelist items, and strings must
+be quoted with &amp;apos; which is a bit awkward. If you have a long list of namelist
+items you want to set (such as a long list of history fields) a convienent way to do it
+is to create a <filename>user_nl_clm</filename> that contains just the list of namelist
+variables you want to add to your initial namelist. The <filename>user_nl_clm</filename>
+will only be used when configure is run, so if you change it after configure -- it won't
+change anything. The file needs to be in valid FORTRAN namelist format, and the configure
+step will abort if there are syntax errors. The namelist name actually doesn't have to be
+valid, but all the variable names must be. Here's an example <filename>user_nl_clm</filename>
+namelist that sets a bunch of history file related items, to create output history files
+monthly, daily, every six and 1 hours.
+<screen>
+&amp;clmexp
+ hist_fincl2    = 'TG','TBOT','FIRE','FIRA','FLDS','FSDS',
+                  'FSR','FSA','FGEV','FSH','FGR','TSOI',
+                  'ERRSOI','BUILDHEAT','SABV','SABG',
+                  'FSDSVD','FSDSND','FSDSVI','FSDSNI',
+                  'FSRVD','FSRND','FSRVI','FSRNI',
+                  'TSA','FCTR','FCEV','QBOT','RH2M','H2OSOI',
+                  'H2OSNO','SOILLIQ','SOILICE', 
+                  'TSA_U', 'TSA_R',
+                  'TREFMNAV_U', 'TREFMNAV_R',
+                  'TREFMXAV_U', 'TREFMXAV_R',
+                  'TG_U', 'TG_R',
+                  'RH2M_U', 'RH2M_R',
+                  'QRUNOFF_U', 'QRUNOFF_R',
+                  'SoilAlpha_U',
+                  'Qanth', 'SWup', 'LWup', 'URBAN_AC', 'URBAN_HEAT'
+  hist_fincl3 = 'TG:I', 'FSA:I', 'SWup:I', 'URBAN_AC:I', 'URBAN_HEAT:I',
+                'TG_U:I', 'TG_R:I',
+  hist_fincl4 = 'TG', 'FSA', 'SWup', 'URBAN_AC', 'URBAN_HEAT'
+  hist_mfilt  = 1, 30,  28, 24
+  hist_nhtfrq = 0, -24, -6, -1
+/
+</screen>
+Obviously, all of this would be difficult to put in the <envar>CLM_NAMELIST_OPTS</envar>
+variable, especially having to put &amp;apos; around all the character strings. For
+more information on the namelist variables being set here and what they mean, see
+the section on CLM namelists below, as well as the namelist definition that gives
+details on each variable.
+</para>
+</sect2>
+
+<sect2 id="other_config">
+<title>Other noteworthy configuration items</title>
+<para>
+For running "I" cases there are several other noteworthy configuration items that
+you may want to work with. Most of these involve settings for the DATM, but one
+<varname>CCSM_CO2_PPMV</varname> is a overall setting. If you are running an B, E,
+or F case that doesn't use the DATM obviously these will not be important.
+    <simplelist>
+    <member><varname>CCSM_CO2_PPMV</varname></member>
+    <member><varname>DATM_MODE</varname></member>
+    <member><varname>DATM_CLMNCEP_YR_ALIGN</varname></member>
+    <member><varname>DATM_CLMNCEP_YR_START</varname></member>
+    <member><varname>DATM_CLMNCEP_YR_END</varname></member>
+<!--
+    <member><varname>DATM_CO2_TSERIES</varname></member>
+-->
+    </simplelist>
+</para>
+<variablelist>
+<varlistentry>
+<term>CCSM_CO2_PPMV</term> <listitem> 
+<para>
+<envar>CCSM_CO2_PPMV</envar> sets the mixing ratio of CO<subscript>2</subscript> in 
+parts per million by volume for ALL CCSM components to use. Note that most compsets
+already set this value to something reasonable. Also note that some compsets may
+tell the atmosphere model to override this value with either historic or ramped 
+values. If the <envar>CCSM_BGC</envar> variable is set to something other than "none"
+the atmosphere model will determine CO<subscript>2</subscript>, and CLM will listen
+and use what the atmosphere sends it. On the CLM side the namelist item <varname>
+co2_type</varname> tells CLM to use the value sent from the atmosphere rather than
+a value set on it's own namelist.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>DATM_MODE</term><listitem>
+<para>
+<envar>DATM_MODE</envar> sets the mode that the DATM model should run in this determines
+how data is handled as well as what the source of the data will be. Many of the modes
+are setup specifically to be used for ocean and/or sea-ice modeling. The modes
+that are designed for use by CLM are:
+<simplelist>
+<member>CLM_QIAN</member>
+<member>CLM1PT</member>
+<!--
+<member>CPLHIST3HrWx</member>
+<member>CPLHIST3HrWxHfHrSol</member>
+-->
+</simplelist>
+</para>
+<para>
+<varname>CLMQIAN</varname> is for the standard mode of using global atmospheric data 
+that was developed by Qian et. al. for CLM using NCEP data from 1948 to 2004.
+<varname>CLM1PT</varname> is for the special cases where we have single-point tower
+data for particular sites. Right now we only have data for three urban locations:
+MexicoCity, Mexico, Vancouver Canada, and the urban-c alpha site. This is non-standard
+functionality and we recommend that users stick with the CLMQIAN mode of operation.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>DATM_CLMNCEP_YR_START</term><listitem>
+<para>
+<envar>DATM_CLMNCEP_YR_START</envar> sets the beginning year to cycle the atmospheric
+data over for the CLMQIAN mode.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>DATM_CLMNCEP_YR_END</term><listitem>
+<para>
+<envar>DATM_CLMNCEP_YR_END</envar> sets the ending year to cycle the atmospheric
+data over for the CLMQIAN mode.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>DATM_CLMNCEP_YR_ALIGN</term><listitem>
+<para>
+<envar>DATM_CLMNCEP_YR_START</envar> and <envar>DATM_CLMNCEP_YR_END</envar> determine
+the range of years to cycle the atmospheric data over, and <envar>DATM_CLMNCEP_YR_ALIGN</envar>
+determines which year in that range of years the simulation will start with.
+</para>
+</listitem>
+</varlistentry>
+<!--
+<varlistentry>
+<term>DATM_CO2_TSERIES</term><listitem>
+<para>
+....
+</para>
+</listitem>
+</varlistentry>
+-->
+</variablelist>
+<para>
+The configure script defines the details of a clm configuration and summarizes it into a
+<filename>config_cache.xml</filename> file. The
+<ulink url="../../bld/config_files/config_definition.xml">config_definition.xml</ulink>
+gives a definition of each clm configuration item. Many of these items are things that you
+would NOT change, but looking through the list gives you the valid options, and a good
+description of each. Coupling this with looking at the options to configure with
+"-help" as below will enable you to understand how to set the different options.
+<screen>
+> cd models/lnd/clm/bld
+> configure -help
+</screen>
+</para>
+<para>
+The output to the above command is as follows:
+</para>
+<screen>
+&config_help;
+</screen>
+<para>
+We've given details on how to use the options in <filename>env_conf.xml</filename> to
+interact with the CLM "configure" and "build-namelist" scripts. As well as giving a good
+understanding of how these scripts work and the options to them. In the next section we
+give further details on the clm namelist. You could customize the namelist for these 
+options after "configure -case" is run, or you could customize it using the
+<envar>CLM_BLDNML_OPTS</envar> which we described here.
+</para>
+</sect2>
+</sect1>
+<!-- End of customizing clm config section -->
+
+<!-- Beg of customizing clm nl section -->
+<sect1 id="customizing_clm_nl">
+   <title>Customizing the clm namelist</title>
+<para>
+Once a case is configured, we can then customize the case further, by editing the 
+run-time namelist for CLM. First let's list the definition of each namelist
+item and their valid values, and then we'll list the default values for them.
+Next for some of the most used or tricky namelist items we'll give examples of their
+use, and give you example namelists that highlight these features.
+</para>
+
+<!-- Beg of nl definition section -->
+<sect2 id="nl_def">
+<title>Definition of Namelist items and their default values</title>
+<para>
+Here we give the definition of each namelist item and separately the default values for
+them. The default values may change depending on the resolution, land-mask, simulation-year
+and other attributes.
+</para>
+<orderedlist>
+<listitem><para>
+<ulink url="../../bld/namelist_files/namelist_definition.xml">Definition of each Namelist Item</ulink>
+</para></listitem>
+<listitem><para>
+<ulink url="../../bld/namelist_files/namelist_defaults_clm.xml">Default values of each CLM Namelist Item</ulink>
+</para></listitem>
+</orderedlist>
+</sect2>
+<!-- End of nl definition section -->
+
+<sect2 id="nl_def_conclude">
+<title>Namelist definition Conclusion</title>
+<para>
+We've given the definition of each namelist item, and the default values that the CLM
+"build-namelist" script will use for them. In the next section we give examples of using
+selected namelist features.
+</para>
+</sect2>
+
+<!-- Beg of nl examples section -->
+<sect2 id="nl_examples">
+<title>Examples of using different namelist features</title>
+<para>
+Below we will give examples of user namelists that activate different commonly used
+namelist features. We will discuss the namelist features in different examples and then
+show a user namelist that includes an example of the use of these features. First we
+will show the default namelist that doesn't activate any user options.
+</para>
+
+<sect3 id="default_nml">
+<title>The default namelist</title>
+<para>
+Here we give the default namelist as it would be created for a I1850CN compset at 0.9x1.25
+resolution with a gx1v6 land-mask. To edit the namelist you would edit the
+<filename>BuildConf/clm.buildnml.csh</filename> under your case (or before configure
+include a user namelist with just the items you want to change). For simplicity we will
+just show the namelist and NOT the entire file. In the sections below, for simplicity
+ we will just show the user namelist (user_nl_clm) that will add (or modify existing) 
+namelist items to the namelist.
+<screen>
+&amp;clm_inparm
+ co2_ppmv               = 284.7
+ co2_type               = 'constant'
+ dtime          = 1800
+ faerdep                =
+'$DIN_LOC_ROOT/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_monthly_1850_0.9x1.25_c090828.nc'
+ fatmgrid               = '$DIN_LOC_ROOT/lnd/clm2/griddata/griddata_0.9x1.25_070212.nc'
+ fatmlndfrc             =
+'$DIN_LOC_ROOT/lnd/clm2/griddata/fracdata_0.9x1.25_gx1v6_c090317.nc'
+ finidat                =
+'$DIN_LOC_ROOT/lnd/clm2/initdata/clmi.BCN.0400-01-01_0.9x1.25_gx1v6_simyr1850_c091016.nc'
+ fndepdat               =
+'$DIN_LOC_ROOT/lnd/clm2/ndepdata/ndep_clm_simyr1850_0.9x1.25_c091106.nc'
+ fpftcon                = '$DIN_LOC_ROOT/lnd/clm2/pftdata/pft-physiology.c081222'
+ frivinp_rtm            = '$DIN_LOC_ROOT/lnd/clm2/rtmdata/rdirc.05.061026'
+ fsnowaging             =
+'$DIN_LOC_ROOT/lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc'
+ fsnowoptics            =
+'$DIN_LOC_ROOT/lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc'
+ fsurdat                =
+'$DIN_LOC_ROOT/lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr1850_c090702.nc'
+ hist_crtinic           = 'NONE'
+ hist_mfilt             = 1
+ hist_nhtfrq            = 0
+ nrevsn         = ' '
+ outnc_large_files              = .true.
+ rtm_nsteps             = 6
+ urban_hac              = 'ON_WASTEHEAT'
+ urban_traffic          = .false.
+/
+</screen>
+Note that the namelist introduces some of the history namelist options that will be
+talked about in further detail below (<varname>hist_mfilt</varname> and
+<varname>hist_nhtfrq</varname>).
+</para>
+</sect3>
+
+<sect3 id="add_rm_primary_hist">
+<title>Adding/removing fields on your primary history file</title>
+<para>
+The primary history files are output monthly, and contain an extensive list of
+fieldnames, but the list of fieldnames can be added to using <varname>hist_fincl1</varname>
+or removed from by adding fieldnames to <varname>hist_fexcl1</varname>.
+A sample user namelist <filename>user_nl_clm</filename> adding few new fields
+(shortwave up, longwave up, and anthropogentic heat flux) and excluding a few 
+standard fields is (ground temperature, vegetation temperature, soil temperature and soil water).:
+<screen>
+&amp;clm_inparm
+ hist_fincl1 = 'SWup', 'LWup', 'Qanth'
+ hist_fexcl1 = 'TG', 'TV', 'TSOI', 'H2OSOI'
+/
+</screen>
+</para>
+</sect3>
+
+<sect3 id="add_aux_hist_chng_output_frq">
+<title>Adding auxiliary history files and changing output
+frequency</title>
+<para>
+The <varname>hist_fincl2</varname> through <varname>hist_fincl6</varname> set of
+namelist variables add given history fieldnames to auxiliary history file "streams", and
+<varname>hist_fexcl2</varname> through <varname>hist_fexcl6</varname> set of
+namelist variables remove given history fieldnames from history file auxiliary "streams".
+A history "stream" is a set of history files that are produced at a given frequency.
+By default there is only one stream of monthly data files. To add more streams you
+add history fieldnames to <varname>hist_fincl2</varname> through
+<varname>hist_fincl6</varname>. The output frequency and the way averaging is done
+can be different for each history file stream. By default the primary history files
+are monthly and any others are daily. You can have up to six active history streams, but you need
+to activate them in order. So if you activate stream "6" by setting
+<varname>hist_fincl6</varname>, but if any of <varname>hist_fincl2</varname> through
+<varname>hist_fincl5</varname> are unset, only the history streams up to the first blank one
+will be activated.
+</para>
+<para>
+The frequency of the history file streams is given by the namelist variable
+<varname>hist_nhtfrq</varname> which is an array of rank six for each history stream.
+The value of <varname>hist_nhtfrq</varname> can be integers, where the following values 
+have the given meaning:
+<simplelist>
+<member><emphasis>Positive value</emphasis> means the output frequency is the number of
+model steps between output.
+</member>
+<member><emphasis>Negative value</emphasis> means the output frequency is the absolute
+value in hours given (i.e -1 would mean an hour and -24 would mean a full day). Daily
+(-24) is the default value for all auxiliary files.
+</member>
+<member><emphasis>Zero</emphasis> means the output frequency is monthly. This is the
+default for the primary history files.
+</member>
+</simplelist>
+A sample user namelist <filename>user_nl_clm</filename> turning on four extra file
+streams for output: daily, six-hourly, hourly, and every time-step, and 
+leaving the primary history files for monthly is:
+<screen>
+&amp;clm_inparm
+ hist_fincl2 = 'TG', 'TV'
+ hist_fincl3 = 'TG', 'TV'
+ hist_fincl4 = 'TG', 'TV'
+ hist_fincl5 = 'TG', 'TV'
+ hist_nhtfrq = 0, -24, -6, -1, 1
+/
+</screen>
+</para>
+</sect3>
+
+<sect3 id="rm_hist">
+<title>Removing all history fields</title>
+<para>
+Sometimes for various reasons you want to remove all the history fields either
+because you want to do testing without any output, or you only want a very small
+custom list of output fields rather than the default extensive list of fields.
+By default only the primary history files are active, so technically using
+<varname>hist_fexcl1</varname> explained in the first example, you could list 
+<emphasis>ALL</emphasis> of the history fields that are output in 
+<varname>hist_fexcl1</varname> and then you wouldn't get any output. However, as
+the list is very extensive this would be a cumbersome thing to do. So to facilitate
+this <varname>hist_empty_htapes</varname> allows you to turn off all default output.
+You can still use <varname>hist_fincl1</varname> to turn your own list of fields
+on, but you then start from a clean slate. 
+A sample user namelist <filename>user_nl_clm</filename> turning off all history 
+fields and then activating just a few selected fields (ground and vegetation temperatures
+and abosrbed solar radiation) is:
+<screen>
+&amp;clm_inparm
+ hist_empty_htapes = .true.
+ hist_fincl1 = 'TG', 'TV', 'FSA'
+/
+</screen>
+</para>
+</sect3>
+
+<sect3 id="hist_averaging">
+<title>Various ways to change history output averaging flags</title>
+<para>
+There are two ways to change the averaging of output history fields. The first is using
+<varname>hist_avgflag_pertape</varname> which gives a default value for each history
+stream, the second is when you add fields using <varname>hist_fincl*</varname>, you add
+an averaging flag to the end of the field name after a colon (for example 'TSOI:X', would
+output the maximum of TSOI).
+The types of averaging that can be done are:
+<simplelist>
+<member><emphasis>A</emphasis> Average, over the output interval.</member>
+<member><emphasis>I</emphasis> Instantaneous, output the value at the output interval.</member>
+<member><emphasis>X</emphasis> Maximum, over the output interval.</member>
+<member><emphasis>M</emphasis> Minimum, over the output interval.</member>
+</simplelist>
+
+A sample user namelist <filename>user_nl_clm</filename> making the monthly output
+fields all averages, and adding auxillary file streams for instantaneous (6-hourly), 
+maximum (daily), minimum (daily), and average (daily). For some of the fields we
+diverge from the per-tape value given and customize to some different type of 
+optimization.
+<screen>
+&amp;clm_inparm
+ hist_empty_htapes = .true.
+ hist_fincl1 = 'TSOI:X', 'TG',   'TV',   'LWup',   'SWup', 'FSH', 'EFLX_LH_TOT', 'WT'
+ hist_fincl2 = 'TSOI:X', 'TG',   'TV',   'LWup',   'SWup', 'FSH', 'EFLX_LH_TOT', 'WT'
+ hist_fincl3 = 'TSOI',   'TG:I', 'TV',   'LWup',   'SWup', 'FSH', 'EFLX_LH_TOT', 'WT'
+ hist_fincl4 = 'TSOI',   'TG',   'TV:I', 'LWup',   'SWup', 'FSH', 'EFLX_LH_TOT', 'WT'
+ hist_fincl5 = 'TSOI',   'TG',   'TV',   'LWup:I', 'SWup', 'FSH', 'EFLX_LH_TOT', 'WT'
+ hist_avgflag_pertape = 'A', 'I', 'X',   'M', 'A'
+ hist_nhtfrq = 0, -6, -24, -24, -24
+/
+</screen>
+</para>
+<para>
+In the example we put the same list of fields on each of the tapes: soil-temperature,
+ground temperature, vegetation temperature, Longwave radiation upwards, shortwave
+radiation upwards, sensible heat, total latent-heat, and total water storage. We also
+modify the soil-temperature for the primary and secondary auxillary tapes by outputing
+them for a maximum instead of the default per-tape of average and instantaneous
+respectively. For the tertiary auxillary tape we output ground temperature instantaneous
+instead of as a maximum, and for the fourth auxillary tape we output vegetation
+temperature instantaneous instead of as a maximum. Finally, for the fifth auxillary
+tapes we output <varname>LWup</varname> instanteously instead of as an average.
+</para>
+<note>
+<para>
+We also use <varname>hist_empty_htapes</varname> as in the previous example,
+so we can list ONLY the fields that we want on the primary history tapes.
+</para>
+</note>
+</sect3>
+
+<sect3 id="hist_vector">
+<title>Outputting history files as a vector in order to analyze
+the plant function types within gridcells</title>
+<para>
+By default the output to history files are the grid-cell average of all land-units, and
+vegetation types within that grid-cell, and output is on the
+full 2D latitude/longitude grid with ocean masked out. Sometimes it's important to
+understand how different land-units or vegetation types are acting within a grid-cell.
+The way to do this is to output history files as a 1D-vector of all land-units and vegetation
+types. In order to display this, you'll need to do extensive post-processing to make sense
+of the output. Often you may only be interested in a few points, so once you figure out the
+1D indices for the grid-cells of interest, you can easily view that data. 1D vector output
+can also be useful for single point datasets, since it's then obvious that all data is for the
+same grid cell.
+</para>
+<para>
+To do this you use <varname>hist_dov2xy</varname> which is an array of six six for each history stream. Set it to
+<varname>.false.</varname> if you want one of the history streams to be a 1D vector. 
+You can also use <varname>hist_type1d_pertape</varname> if you want to average over all the:
+Plant-Function-Types, columns, land-units, or grid-cells.
+A sample user namelist <filename>user_nl_clm</filename> leaving the primary monthly
+files as 2D, and then doing grid-cell, land-unit, column, PFT and no averaging over
+auxillary tapes output daily for a single field (ground temperature) is:
+<screen>
+&amp;clm_inparm
+ hist_fincl2 = 'TG'
+ hist_fincl3 = 'TG'
+ hist_fincl4 = 'TG'
+ hist_fincl5 = 'TG'
+ hist_fincl6 = 'TG'
+ hist_dov2xy = .false., .true., .true., .true., .true., .true.
+ hist_type2d_pertape = ' ', 'GRID', 'LAND', 'COLS', 'PFTS', ' '
+ hist_nhtfrq = 0, -24, -24, -24, -24, -24
+/
+</screen>
+</para>
+<note>
+<para>
+Technically the default for <varname>hist_nhtfrq</varname> is for primary files
+output monthly and the other auxillary tapes for daily, so we don't actually have
+to include <varname>hist_nhtfrq</varname>, we could use the default for it. Here
+we specify it for clarity.
+</para>
+</note>
+<note>
+<para>
+Visuallizing global 1D vector files will take effort. You'll probably want
+to do some postprocessing and possibly just extract out single points of interest
+to see what is going on. Since, the output is a 1D vector, of only land-points
+traditional plots won't be helpful. The number of points per grid-cell will also
+vary for anything, but grid-cell averaging.
+</para>
+</note>
+</sect3>
+
+<sect3 id="nl_example_conclude">
+<title>Conclusion to namelist examples</title>
+<para>
+We've given various examples of namelists that feature the use of different namelist options
+to customize a case for particular uses. Most the examples revolve around how to customize the
+output history fields. This should give you a good basis for setting up your own CLM namelist.
+</para>
+</sect3>
+</sect2>
+<!-- End of nl examples section -->
+
+</sect1>
+<!-- End of customizing clm nl section -->
+
+<sect1 id="customizing_conclude">
+<title>Conclusion to customizing chapter</title>
+<para>
+We've given extensive details on customizing cases with CLM, by choosing compsets, by changing
+configure options and interacting with the CLM "configure" and "build-namelist" scripts, and
+finally we've given details on all of the CLM namelist items. In the next chapter we talk
+about further ways to customize cases with CLM by creating your own datasets using the tools
+provided in CLM.
+</para>
+</sect1>
+</chapter>
+<!-- End of customizing chapter -->

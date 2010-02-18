@@ -491,7 +491,7 @@ contains
        end do
        deallocate(data)
 
-       call lnd_chkAerDep_mct( x2l_l )
+       call lnd_chkAerDep_mct( infodata )
 
        call aerdepini( )
 
@@ -726,13 +726,11 @@ contains
 ! !IROUTINE: lnd_chkAerDep_mct
 !
 ! !INTERFACE:
-  subroutine lnd_chkAerDep_mct( x2l_l )
+  subroutine lnd_chkAerDep_mct( infodata )
 !
 ! !DESCRIPTION:
-! Check aerosol deposition values sent from atmosphere to make sure data is filled.
-! If any data is set to special-value or if all data is equal to zero than mark
-! data as NOT filled. Model will abort if the data sent from the atmosphere is NOT
-! filled.
+! Check infodata to see if aerosol deposition data is sent to the land model.
+! If data is NOT sent, read in CLM version of datasets that have this information.
 !
 !------------------------------------------------------------------------------
 ! !USES:
@@ -749,12 +747,13 @@ contains
                                   index_x2l_Faxa_dstdry3, index_x2l_Faxa_dstdry4,   &
                                   index_x2l_Faxa_dstwet1, index_x2l_Faxa_dstwet2,   &
                                   index_x2l_Faxa_dstwet3, index_x2l_Faxa_dstwet4
+    use seq_infodata_mod , only : seq_infodata_type, seq_infodata_GetData
     use spmdMod          , only : masterproc
     implicit none
 !
 ! !ARGUMENTS:
 
-    type(mct_aVect)             , intent(inout) :: x2l_l   ! coupler to land import state on land grid
+    type(seq_infodata_type),pointer :: infodata ! CCSM information from the driver
 !
 ! !REVISION HISTORY:
 ! Author: Erik Kluzek
@@ -766,71 +765,30 @@ contains
     !
     logical :: caerdep_filled = .true.     ! Flag if carbon aerosol deposition is filled
     logical :: dustdep_filled = .true.     ! Flag if dust deposition is filled
+    logical :: atm_aero                    ! Flag if aerosol data sent from atm model
 
-    ! If ANY values set to special value -- then mark data as NOT filled
-    if ( any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphidry,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphodry,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_bcphiwet,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphidry,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphodry,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_ocphiwet,:) - spval)/spval < 1._r8 ) &
-    )then
+    call seq_infodata_GetData(infodata, atm_aero=atm_aero )
+    if ( .not. atm_aero )then
         caerdep_filled = .false.
-    end if
-
-    ! If ANY values set to special value -- then mark dust data as NOT filled
-    if ( any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry1,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry2,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry3,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstdry4,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet1,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet2,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet3,:) - spval)/spval < 1._r8 ) &
-    .or. any(abs(x2l_l%rAttr(index_x2l_Faxa_dstwet4,:) - spval)/spval < 1._r8) &
-    )then
-        dustdep_filled = .false.
-    end if
-
-    ! If ALL values are set to zero -- then mark carbon aerosol dep. as NOT filled
-    if (  all(x2l_l%rAttr(index_x2l_Faxa_bcphidry,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_bcphodry,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_bcphiwet,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_ocphidry,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_ocphodry,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_ocphiwet,:) == 0.0_r8) &
-    )then
-        caerdep_filled = .false.
-    end if
-
-    ! If ALL values are set to zero -- then mark dust dep. as NOT filled
-    if (  all(x2l_l%rAttr(index_x2l_Faxa_dstdry1,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstdry2,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstdry3,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstdry4,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstwet1,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstwet2,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstwet3,:) == 0.0_r8) &
-    .and. all(x2l_l%rAttr(index_x2l_Faxa_dstwet4,:) == 0.0_r8) &
-    )then
         dustdep_filled = .false.
     end if
 
     if ( caerdep_filled )then
        if ( masterproc ) &
-       write(iulog,*) "Using aerosol deposition sent from atmosphere model"
+          write(iulog,*) "Using aerosol deposition sent from atmosphere model"
     else
-       if ( masterproc )then
+       if ( masterproc ) then
+          write(iulog,*) "WARNING: carbon aerosol deposition data NOT sent in from atmosphere model"
           write(iulog,*) "WARNING: Reading carbon aerosol deposition from CLM input file"
-          write(iulog,*) "WARNING: aerosol deposition from atm is either spval or all zero"
        end if
     end if
     if ( dustdep_filled )then
        if ( masterproc ) &
-       write(iulog,*) "Using dust deposition sent from atmosphere model"
+          write(iulog,*) "Using dust deposition sent from atmosphere model"
     else
-       if ( masterproc )then
+       if ( masterproc ) then
+          write(iulog,*) "WARNING: dust deposition data NOT sent in from atmosphere model"
           write(iulog,*) "WARNING: Reading dust deposition from CLM input file"
-          write(iulog,*) "WARNING: Dust deposition from atm is either spval or all zero"
        end if
     end if
     call shr_sys_flush( iulog )
@@ -857,11 +815,12 @@ contains
 ! 
 !---------------------------------------------------------------------------
 ! !USES:
-    use shr_kind_mod    , only : r8 => shr_kind_r8
-    use clm_time_manager, only : get_nstep  
-    use clm_atmlnd      , only : lnd2atm_type
-    use domainMod       , only : adomain
-    use decompMod       , only : get_proc_bounds_atm, adecomp
+    use shr_kind_mod       , only : r8 => shr_kind_r8
+    use clm_time_manager   , only : get_nstep  
+    use clm_atmlnd         , only : lnd2atm_type
+    use domainMod          , only : adomain
+    use decompMod          , only : get_proc_bounds_atm, adecomp
+    use seq_drydep_mod     , only : n_drydep
     use seq_flds_indices
     implicit none
 ! !ARGUMENTS:
@@ -918,6 +877,18 @@ contains
        if (index_l2x_Fall_flxdst3 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst3,i)= -l2a%flxdst(g,3)
        if (index_l2x_Fall_flxdst4 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxdst4,i)= -l2a%flxdst(g,4)
 #endif
+!! -- Turn on when VOC comes to the trunk -------------------------
+!!     if ( index_l2x_Sl_ddvel /= 0 ) l2x_l%rAttr(index_l2x_Sl_ddvel:index_l2x_Sl_ddvel+n_drydep-1,i) = l2a%ddvel(g,:n_drydep)
+!! -- Turn on when VOC comes to the trunk -------------------------
+!!#ifdef VOC
+!!       if (index_l2x_Fall_flxvoc1 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxvoc1,i)= -l2a%flxvoc(g,1)
+!!       if (index_l2x_Fall_flxvoc2 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxvoc2,i)= -l2a%flxvoc(g,2)
+!!       if (index_l2x_Fall_flxvoc3 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxvoc3,i)= -l2a%flxvoc(g,3)
+!!       if (index_l2x_Fall_flxvoc4 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxvoc4,i)= -l2a%flxvoc(g,4)
+!!       if (index_l2x_Fall_flxvoc5 /= 0 )  l2x_l%rAttr(index_l2x_Fall_flxvoc5,i)= -l2a%flxvoc(g,5)
+!!#endif
+!! -- end ---------------------------------------------------------
+
     end do
 
   end subroutine lnd_export_mct

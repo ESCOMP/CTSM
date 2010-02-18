@@ -59,6 +59,9 @@ K -- 1.9x2.5 with single point mode
 L -- 10x15   with single point mode
 M -- 2.5x3.33
 N -- 1.9x2.5 with transient 1850-2100 for rcp=8.5
+O -- 10x15 with drydep
+P -- 1.9x2.5 with drydep
+Q -- 1x1 brazil with drydep
 
 i is the specific test (usually this implies...)
 

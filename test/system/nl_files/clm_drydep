@@ -1,0 +1,5 @@
+-ignore_ic_date 
+-silent 
+-case clmrun 
+-source CLM_QIAN
+-drydep

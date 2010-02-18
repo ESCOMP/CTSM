@@ -12,7 +12,7 @@ set config = $cfgdir/config_cache.xml
 cd $cfgdir
 
 # Global River Transport model off for pt1 mode
-if ($LND_GRID == pt1 ) then
+if ($LND_GRID == pt1 || $PTS_MODE == TRUE ) then
    set rtm = "off"
 else
    set rtm = "on"
@@ -42,6 +42,8 @@ if ($RUN_TYPE == branch) set nrevsn   = ${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-000
 if ( $rtm == "on" )then
   @ rtm_nsteps = ( 3600 * 3  ) / $clm_dtime  # rtm is done every 3 hours
   set rtmnsteps = " rtm_nsteps       =  $rtm_nsteps"
+else
+  set rtmnsteps = " "
 endif
 
 set co2ppmv = " co2_ppmv         =  $CCSM_CO2_PPMV"

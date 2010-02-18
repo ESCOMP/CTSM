@@ -95,44 +95,24 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   real(r8), allocatable :: wtroad_perv_i(:,:)     ! fraction of pervious road in
   real(r8), allocatable :: alb_improad_o(:,:,:,:)  ! albedo of impervious road out (lon,lat,numrad,numsolar)
   real(r8), allocatable :: alb_improad_i(:,:,:,:)  ! albedo of impervious road in (lon,lat,numrad,numsolar)
-  real(r8), allocatable :: alb_improad_sdiv_o(:,:) ! albedo of impervious road out on sdiv
-  real(r8), allocatable :: alb_improad_sdiv_i(:,:) ! albedo of impervious road in on sdiv
   real(r8), allocatable :: alb_perroad_o(:,:,:,:)  ! albedo of pervious road out (lon,lat,numrad,numsolar)
   real(r8), allocatable :: alb_perroad_i(:,:,:,:)  ! albedo of pervious road in (lon,lat,numrad,numsolar)
-  real(r8), allocatable :: alb_perroad_sdiv_o(:,:) ! albedo of pervious road out on sdiv
-  real(r8), allocatable :: alb_perroad_sdiv_i(:,:) ! albedo of pervious road in on sdiv
   real(r8), allocatable :: alb_roof_o(:,:,:,:)  ! albedo of roof out (lon,lat,numrad,numsolar)
   real(r8), allocatable :: alb_roof_i(:,:,:,:)  ! albedo of roof in (lon,lat,numrad,numsolar)
-  real(r8), allocatable :: alb_roof_sdiv_o(:,:) ! albedo of roof out on sdiv
-  real(r8), allocatable :: alb_roof_sdiv_i(:,:) ! albedo of roof in on sdiv
   real(r8), allocatable :: alb_wall_o(:,:,:,:)  ! albedo of wall out (lon,lat,numrad,numsolar)
   real(r8), allocatable :: alb_wall_i(:,:,:,:)  ! albedo of wall in (lon,lat,numrad,numsolar)
-  real(r8), allocatable :: alb_wall_sdiv_o(:,:) ! albedo of wall out on sdiv
-  real(r8), allocatable :: alb_wall_sdiv_i(:,:) ! albedo of wall in on sdiv
   real(r8), allocatable :: tk_roof_o(:,:,:)     ! thermal conductivity of roof out (lon,lat,nlevurb)
   real(r8), allocatable :: tk_roof_i(:,:,:)     ! thermal conductivity of roof in (lon,lat,nlevurb)
-  real(r8), allocatable :: tk_roof_lev_o(:,:)   ! thermal conductivity of roof out on lev
-  real(r8), allocatable :: tk_roof_lev_i(:,:)   ! thermal conductivity of roof in on lev
   real(r8), allocatable :: tk_wall_o(:,:,:)     ! thermal conductivity of wall out (lon,lat,nlevurb)
   real(r8), allocatable :: tk_wall_i(:,:,:)     ! thermal conductivity of wall in (lon,lat,nlevurb)
-  real(r8), allocatable :: tk_wall_lev_o(:,:)   ! thermal conductivity of wall out on lev
-  real(r8), allocatable :: tk_wall_lev_i(:,:)   ! thermal conductivity of wall in on lev
   real(r8), allocatable :: tk_improad_o(:,:,:)   ! thermal conductivity of impervious road out (lon,lat,nlevurb)
   real(r8), allocatable :: tk_improad_i(:,:,:)   ! thermal conductivity of impervious road in (lon,lat,nlevurb)
-  real(r8), allocatable :: tk_improad_lev_o(:,:) ! thermal conductivity of impervious road out on lev
-  real(r8), allocatable :: tk_improad_lev_i(:,:) ! thermal conductivity of impervious road in on lev
   real(r8), allocatable :: cv_roof_o(:,:,:)     ! volumetric heat capacity of roof out (lon,lat,nlevurb)
   real(r8), allocatable :: cv_roof_i(:,:,:)     ! volumetric heat capacity of roof in (lon,lat,nlevurb)
-  real(r8), allocatable :: cv_roof_lev_o(:,:)   ! volumetric heat capacity of roof out on lev
-  real(r8), allocatable :: cv_roof_lev_i(:,:)   ! volumetric heat capactiy of roof in on lev
   real(r8), allocatable :: cv_wall_o(:,:,:)     ! volumetric heat capacity of wall out (lon,lat,nlevurb)
   real(r8), allocatable :: cv_wall_i(:,:,:)     ! volumetric heat capacity of wall in (lon,lat,nlevurb)
-  real(r8), allocatable :: cv_wall_lev_o(:,:)   ! volumetric heat capacity of wall out on lev
-  real(r8), allocatable :: cv_wall_lev_i(:,:)   ! volumetric heat capacity of wall in on lev
   real(r8), allocatable :: cv_improad_o(:,:,:)   ! volumetric heat capacity of impervious road out (lon,lat,nlevurb)
   real(r8), allocatable :: cv_improad_i(:,:,:)   ! volumetric heat capacity of impervious road in (lon,lat,nlevurb)
-  real(r8), allocatable :: cv_improad_lev_o(:,:) ! volumetric heat capacity of impervious road out on lev
-  real(r8), allocatable :: cv_improad_lev_i(:,:) ! volumetric heat capacity of impervious road in on lev
   integer,  allocatable :: nlev_improad_o(:,:)! number of impervious road layers out
   integer,  allocatable :: nlev_improad_i(:,:)! number of impervious road layers in
   real(r8), allocatable :: mask_i(:,:)        ! input grid: mask (0, 1)
@@ -278,17 +258,7 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(alb_improad_sdiv_i(nlon_i,nlat_i), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
   allocate(alb_perroad_i(nlon_i,nlat_i,numrad_i,numsolar_i), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(alb_perroad_sdiv_i(nlon_i,nlat_i), &
            stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
@@ -298,17 +268,7 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(alb_roof_sdiv_i(nlon_i,nlat_i), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
   allocate(alb_wall_i(nlon_i,nlat_i,numrad_i,numsolar_i), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(alb_wall_sdiv_i(nlon_i,nlat_i), &
            stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
@@ -318,17 +278,7 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(tk_roof_lev_i(nlon_i,nlat_i), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
   allocate(tk_wall_i(nlon_i,nlat_i,nlevurb), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(tk_wall_lev_i(nlon_i,nlat_i), &
            stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
@@ -338,17 +288,7 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(tk_improad_lev_i(nlon_i,nlat_i), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
   allocate(cv_roof_i(nlon_i,nlat_i,nlevurb), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(cv_roof_lev_i(nlon_i,nlat_i), &
            stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
@@ -358,17 +298,7 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(cv_wall_lev_i(nlon_i,nlat_i), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
   allocate(cv_improad_i(nlon_i,nlat_i,nlevurb), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(cv_improad_lev_i(nlon_i,nlat_i), &
            stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
@@ -449,17 +379,7 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(alb_improad_sdiv_o(lsmlon,lsmlat), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
   allocate(alb_perroad_o(lsmlon,lsmlat,numrad,numsolar), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(alb_perroad_sdiv_o(lsmlon,lsmlat), &
            stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
@@ -469,17 +389,7 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(alb_roof_sdiv_o(lsmlon,lsmlat), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
   allocate(alb_wall_o(lsmlon,lsmlat,numrad,numsolar), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(alb_wall_sdiv_o(lsmlon,lsmlat), &
            stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
@@ -489,17 +399,7 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(tk_roof_lev_o(lsmlon,lsmlat), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
   allocate(tk_wall_o(lsmlon,lsmlat,nlevurb), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(tk_wall_lev_o(lsmlon,lsmlat), &
            stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
@@ -509,17 +409,7 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(tk_improad_lev_o(lsmlon,lsmlat), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
   allocate(cv_roof_o(lsmlon,lsmlat,nlevurb), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(cv_roof_lev_o(lsmlon,lsmlat), &
            stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
@@ -529,22 +419,11 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(cv_wall_lev_o(lsmlon,lsmlat), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
   allocate(cv_improad_o(lsmlon,lsmlat,nlevurb), &
            stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(cv_improad_lev_o(lsmlon,lsmlat), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-
   allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat), stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
@@ -569,67 +448,54 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
 
   call check_ret(nf_inq_varid (ncidi, 'CANYON_HWR', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, canyon_hwr_i), subname)
-  canyon_hwr_o(:,:)  = 0.
   call areaave(canyon_hwr_i,canyon_hwr_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'EM_IMPROAD', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, em_improad_i), subname)
-  em_improad_o(:,:)  = 0.
   call areaave(em_improad_i,em_improad_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'EM_PERROAD', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, em_perroad_i), subname)
-  em_perroad_o(:,:)  = 0.
   call areaave(em_perroad_i,em_perroad_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'EM_ROOF', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, em_roof_i), subname)
-  em_roof_o(:,:)  = 0.
   call areaave(em_roof_i,em_roof_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'EM_WALL', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, em_wall_i), subname)
-  em_wall_o(:,:)  = 0.
   call areaave(em_wall_i,em_wall_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'HT_ROOF', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, ht_roof_i), subname)
-  ht_roof_o(:,:)  = 0.
   call areaave(ht_roof_i,ht_roof_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'THICK_ROOF', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, thick_roof_i), subname)
-  thick_roof_o(:,:)  = 0.
   call areaave(thick_roof_i,thick_roof_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'THICK_WALL', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, thick_wall_i), subname)
-  thick_wall_o(:,:)  = 0.
   call areaave(thick_wall_i,thick_wall_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'T_BUILDING_MAX', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, t_building_max_i), subname)
-  t_building_max_o(:,:)  = 0.
   call areaave(t_building_max_i,t_building_max_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'T_BUILDING_MIN', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, t_building_min_i), subname)
-  t_building_min_o(:,:)  = 0.
   call areaave(t_building_min_i,t_building_min_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'WIND_HGT_CANYON', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, wind_hgt_canyon_i), subname)
-  wind_hgt_canyon_o(:,:)  = 0.
   call areaave(wind_hgt_canyon_i,wind_hgt_canyon_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'WTLUNIT_ROOF', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, wtlunit_roof_i), subname)
-  wtlunit_roof_o(:,:)  = 0.
   call areaave(wtlunit_roof_i,wtlunit_roof_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'WTROAD_PERV', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, wtroad_perv_i), subname)
-  wtroad_perv_o(:,:)  = 0.
   call areaave(wtroad_perv_i,wtroad_perv_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'ALB_IMPROAD', varid), subname)
@@ -640,34 +506,10 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   call check_ret(nf_get_var_double (ncidi, varid, alb_roof_i), subname)
   call check_ret(nf_inq_varid (ncidi, 'ALB_WALL', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, alb_wall_i), subname)
-  alb_improad_o(:,:,:,:)  = 0.
-  alb_perroad_o(:,:,:,:)  = 0.
-  alb_roof_o(:,:,:,:)  = 0.
-  alb_wall_o(:,:,:,:)  = 0.
-  do nsolar = 1,numsolar
-    do nrad = 1,numrad
-      do ji = 1, nlat_i
-      do ii = 1, nlon_i
-        alb_improad_sdiv_i(ii,ji) = alb_improad_i(ii,ji,nrad,nsolar)
-        alb_perroad_sdiv_i(ii,ji) = alb_perroad_i(ii,ji,nrad,nsolar)
-        alb_roof_sdiv_i(ii,ji)    = alb_roof_i(ii,ji,nrad,nsolar)
-        alb_wall_sdiv_i(ii,ji)    = alb_wall_i(ii,ji,nrad,nsolar)
-      end do
-      end do 
-      call areaave(alb_improad_sdiv_i,alb_improad_sdiv_o,tgridmap)
-      call areaave(alb_perroad_sdiv_i,alb_perroad_sdiv_o,tgridmap)
-      call areaave(alb_roof_sdiv_i,alb_roof_sdiv_o,tgridmap)
-      call areaave(alb_wall_sdiv_i,alb_wall_sdiv_o,tgridmap)
-      do jo = 1, ldomain%nj
-      do io = 1, ldomain%numlon(jo)
-        alb_improad_o(io,jo,nrad,nsolar) = alb_improad_sdiv_o(io,jo)
-        alb_perroad_o(io,jo,nrad,nsolar) = alb_perroad_sdiv_o(io,jo)
-        alb_roof_o(io,jo,nrad,nsolar)    = alb_roof_sdiv_o(io,jo)
-        alb_wall_o(io,jo,nrad,nsolar)    = alb_wall_sdiv_o(io,jo)
-      end do
-      end do
-    end do
-  end do 
+  call areaave(alb_improad_i,alb_improad_o,tgridmap)
+  call areaave(alb_perroad_i,alb_perroad_o,tgridmap)
+  call areaave(alb_roof_i,alb_roof_o,tgridmap)
+  call areaave(alb_wall_i,alb_wall_o,tgridmap)
 
   call check_ret(nf_inq_varid (ncidi, 'TK_ROOF', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, tk_roof_i), subname)
@@ -679,42 +521,18 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   call check_ret(nf_get_var_double (ncidi, varid, cv_wall_i), subname)
   call check_ret(nf_inq_varid (ncidi, 'CV_IMPROAD', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, cv_improad_i), subname)
-  tk_roof_o(:,:,:)  = 0.
-  tk_wall_o(:,:,:)  = 0.
-  cv_roof_o(:,:,:)  = 0.
-  cv_wall_o(:,:,:)  = 0.
-  do nurb = 1,nlevurb
-      do ji = 1, nlat_i
-      do ii = 1, nlon_i
-        tk_roof_lev_i(ii,ji)    = tk_roof_i(ii,ji,nurb)
-        tk_wall_lev_i(ii,ji)    = tk_wall_i(ii,ji,nurb)
-        cv_roof_lev_i(ii,ji)    = cv_roof_i(ii,ji,nurb)
-        cv_wall_lev_i(ii,ji)    = cv_wall_i(ii,ji,nurb)
-      end do
-      end do 
-      call areaave(tk_roof_lev_i,tk_roof_lev_o,tgridmap)
-      call areaave(tk_wall_lev_i,tk_wall_lev_o,tgridmap)
-      call areaave(cv_roof_lev_i,cv_roof_lev_o,tgridmap)
-      call areaave(cv_wall_lev_i,cv_wall_lev_o,tgridmap)
-      do jo = 1, ldomain%nj
-      do io = 1, ldomain%numlon(jo)
-        tk_roof_o(io,jo,nurb)    = tk_roof_lev_o(io,jo)
-        tk_wall_o(io,jo,nurb)    = tk_wall_lev_o(io,jo)
-        cv_roof_o(io,jo,nurb)    = cv_roof_lev_o(io,jo)
-        cv_wall_o(io,jo,nurb)    = cv_wall_lev_o(io,jo)
-      end do
-      end do
-  end do 
+  call areaave(tk_roof_i,tk_roof_o,tgridmap)
+  call areaave(tk_wall_i,tk_wall_o,tgridmap)
+  call areaave(cv_roof_i,cv_roof_o,tgridmap)
+  call areaave(cv_wall_i,cv_wall_o,tgridmap)
 
-! Impervious road thermal conductivity and heat capacity need to be
-! handled differently because of varying levels of data.
+  ! Impervious road thermal conductivity and heat capacity need to be
+  ! handled differently because of varying levels of data.
 
   call check_ret(nf_inq_varid (ncidi, 'TK_IMPROAD', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, tk_improad_i), subname)
   call check_ret(nf_inq_varid (ncidi, 'CV_IMPROAD', varid), subname)
   call check_ret(nf_get_var_double (ncidi, varid, cv_improad_i), subname)
-  tk_improad_o(:,:,:)  = 0.
-  cv_improad_o(:,:,:)  = 0.
   do nurb = 1,nlevurb
       write(6,*)'nlevurb: ',nurb
       mask_i = 1.0_r8
@@ -724,9 +542,7 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
       ! Create mask for input data from missing values
       do ji = 1, nlat_i
       do ii = 1, nlon_i
-        tk_improad_lev_i(ii,ji)    = tk_improad_i(ii,ji,nurb)
-        cv_improad_lev_i(ii,ji)    = cv_improad_i(ii,ji,nurb)
-        if (tk_improad_lev_i(ii,ji) .eq. -999.) then
+        if (tk_improad_i(ii,ji,nurb) .eq. -999.) then
            mask_i(ii,ji) = 0.
         else
            mask_i(ii,ji) = 1.
@@ -754,19 +570,17 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
       call gridmap_setptrs(tgridmap,mx_ovr=mxovr,n_ovr=novr,i_ovr=iovr,j_ovr=jovr,w_ovr=wovr)
       do jo = 1, ldomain%nj
          do io = 1, ldomain%numlon(jo)
-            tk_improad_lev_o(io,jo) = 0.
-            cv_improad_lev_o(io,jo) = 0.
+            tk_improad_o(io,jo,nurb) = 0.
+            cv_improad_o(io,jo,nurb) = 0.
             do n = 1, novr(io,jo)  !overlap cell index
                ii = iovr(io,jo,n)  !lon index (input grid) of overlap cell
                ji = jovr(io,jo,n)  !lat index (input grid) of overlap cell
                wt = wovr(io,jo,n)  !overlap weight
                if (num_good_o(io,jo) .gt. 0) then
-                 tk_improad_lev_o(io,jo) = tk_improad_lev_o(io,jo) + tk_improad_lev_i(ii,ji) * wt
-                 cv_improad_lev_o(io,jo) = cv_improad_lev_o(io,jo) + cv_improad_lev_i(ii,ji) * wt
+                 tk_improad_o(io,jo,nurb) = tk_improad_o(io,jo,nurb) + tk_improad_i(ii,ji,nurb) * wt
+                 cv_improad_o(io,jo,nurb) = cv_improad_o(io,jo,nurb) + cv_improad_i(ii,ji,nurb) * wt
                end if
             end do
-            tk_improad_o(io,jo,nurb) = tk_improad_lev_o(io,jo)
-            cv_improad_o(io,jo,nurb) = cv_improad_lev_o(io,jo)
          end do
       end do
   end do
@@ -902,44 +716,24 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   deallocate (wtroad_perv_i)
   deallocate (alb_improad_o)
   deallocate (alb_improad_i)
-  deallocate (alb_improad_sdiv_o)
-  deallocate (alb_improad_sdiv_i)
   deallocate (alb_perroad_o)
   deallocate (alb_perroad_i)
-  deallocate (alb_perroad_sdiv_o)
-  deallocate (alb_perroad_sdiv_i)
   deallocate (alb_roof_o)
   deallocate (alb_roof_i)
-  deallocate (alb_roof_sdiv_o)
-  deallocate (alb_roof_sdiv_i)
   deallocate (alb_wall_o)
   deallocate (alb_wall_i)
-  deallocate (alb_wall_sdiv_o)
-  deallocate (alb_wall_sdiv_i)
   deallocate (tk_roof_o)
   deallocate (tk_roof_i)
-  deallocate (tk_roof_lev_o)
-  deallocate (tk_roof_lev_i)
   deallocate (tk_wall_o)
   deallocate (tk_wall_i)
-  deallocate (tk_wall_lev_o)
-  deallocate (tk_wall_lev_i)
   deallocate (tk_improad_o)
   deallocate (tk_improad_i)
-  deallocate (tk_improad_lev_o)
-  deallocate (tk_improad_lev_i)
   deallocate (cv_roof_o)
   deallocate (cv_roof_i)
-  deallocate (cv_roof_lev_o)
-  deallocate (cv_roof_lev_i)
   deallocate (cv_wall_o)
   deallocate (cv_wall_i)
-  deallocate (cv_wall_lev_o)
-  deallocate (cv_wall_lev_i)
   deallocate (cv_improad_o)
   deallocate (cv_improad_i)
-  deallocate (cv_improad_lev_o)
-  deallocate (cv_improad_lev_i)
   deallocate (mask_i,mask_o)
 
 end subroutine mkurbanpar

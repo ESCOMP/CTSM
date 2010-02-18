@@ -54,7 +54,6 @@ OPTIONS
      -c13 <name>         Turn on C13 mode for bgc setting of CN [on | off] (default is off).
      -cache <file>       Name of output cache file (default: config_cache.xml).
      -cachedir <file>    Name of directory where output cache file is written (default: CLM build directory).
-     -carbon_aero <name> Turn on passing carbon aerosols from atm to land. [on | off] (default is off)
      -clm_root <dir>     Root directory of clm source code (default: directory above location of this script)
      -cppdefs <string>   A string of user specified CPP defines.  Appended to
                          Makefile defaults.  E.g. -cppdefs '-DVAR1 -DVAR2'
@@ -71,7 +70,6 @@ OPTIONS
      -mode <name>        CLM mode [ccsm_seq | ext_ccsm_seq]
      -nofire             Turn off wildfires for bgc setting of CN (default includes fire for CN)
      -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off] (default is off)
-     -pio <name>         Switch enables building with Parallel I/O library. [on | off] (default is on)
      -prog_seasalt<name> Turn on prognostic sea-salt (PROGSSLT cppdef token) [on | off] (default is on)
      -rtm <name>         Turn on RTM  [on | off] (default is on)
      -silent [or -s]     Turns on silent mode - only fatal messages issued.
@@ -86,7 +84,7 @@ OPTIONS
                          Directories containing user source code.
      -verbose [or -v]    Turn on verbose echoing of settings made by configure.
      -version            Echo the CVS tag name used to check out this CLM distribution.
-     -voc <name>         Turn on Volatile Organic Compounds [on | off] (default is off)
+     -voc <name>         Turn on Volatile Organic Compounds [on | off] (default is on)
 
 
 OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=ccsm_seq)
@@ -159,7 +157,6 @@ GetOptions(
     "bgc=s"                     => \$opts{'bgc'}, 
     "cache=s"                   => \$opts{'cache'},
     "cachedir=s"                => \$opts{'cachedir'},
-    "carbon_aero=s"             => \$opts{'carbon_aero'},
     "ccsm_bld=s"                => \$opts{'ccsm_bld'},
     "snicar_frc=s"              => \$opts{'snicar_frc'},
     "cc=s"                      => \$opts{'cc'},
@@ -190,8 +187,6 @@ GetOptions(
     "nc_mod=s"                  => \$opts{'nc_mod'},
     "nofire"                    => \$opts{'nofire'},
     "pergro=s"                  => \$opts{'pergro'}, 
-    "pio=s"                     => \$opts{'pio'}, 
-    "carbon_aero=s"             => \$opts{'carbon_aero'}, 
     "snicar_frc=s"              => \$opts{'snicar_frc'}, 
     "prog_seasalt=s"            => \$opts{'progsslt'}, 
     "rtm=s"                     => \$opts{'rtm'}, 
@@ -531,28 +526,12 @@ my $pergro = $cfg_ref->get('pergro');
 if ($print>=2) { print "Using $pergro for pergro.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
-# PIO option
-if (defined $opts{'pio'}) {
-    $cfg_ref->set('pio', $opts{'pio'});
-}
-my $pio = $cfg_ref->get('pio');
-if ($print>=2) { print "Building with the PIO library $pio.$eol"; }
-
-#-----------------------------------------------------------------------------------------------
 # SNICAR_FRC option
 if (defined $opts{'snicar_frc'}) {
     $cfg_ref->set('snicar_frc', $opts{'snicar_frc'});
 }
 my $snicar_frc = $cfg_ref->get('snicar_frc');
 if ($print>=2) { print "Using $snicar_frc for snicar_frc.$eol"; }
-
-#-----------------------------------------------------------------------------------------------
-# CARBON_AERO option
-if (defined $opts{'carbon_aero'}) {
-    $cfg_ref->set('carbon_aero', $opts{'carbon_aero'});
-}
-my $carbon_aero = $cfg_ref->get('carbon_aero');
-if ($print>=2) { print "Using $carbon_aero for carbon_aero.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # ccsm_bld option
@@ -793,13 +772,9 @@ if ( $pergro eq 'on' ) {
 if ( $snicar_frc eq 'on' ) {
     $cfg_cppdefs .= " -DSNICAR_FRC";
 }
-if ( $carbon_aero eq 'on' ) {
-    $cfg_cppdefs .= " -DCARBON_AERO";
-}
-if ( $pio eq 'on' ) {
-    $cfg_cppdefs .= " -D_USEBOX -D_NETCDF";
-    if ( ($clm_mode eq "ccsm_seq") && ($spmd eq "off") ) { $cfg_cppdefs .= " -D_MPISERIAL";}
-}
+# Always built with PIO
+$cfg_cppdefs .= " -D_USEBOX -D_NETCDF";
+if ( ($clm_mode eq "ccsm_seq") && ($spmd eq "off") ) { $cfg_cppdefs .= " -D_MPISERIAL";}
 
 # -DSPMD only added for CCSM build.  The CLM Makefile has a separate SPMD macro.
 if ( ($clm_mode eq "ext_ccsm_seq") && $spmd eq "on" ) { $cfg_cppdefs .= " -DSPMD";}
@@ -1247,7 +1222,6 @@ sub write_filepath
     my $rtm         = $cfg_ref->get('rtm');
     my $comp_intf   = $cfg_ref->get('comp_interface');
     my $mode        = $cfg_ref->get('mode');
-    my $buildpio    = $cfg_ref->get('pio');
 
     # User specified source directories.
     if ($usr_src  =~ /\S+/) {
@@ -1311,9 +1285,7 @@ sub write_filepath
 		die "** source directory does not exist: $srcdir/../../../$dir\n";
 	    }
 	}
-        if ( $buildpio eq "on" ) {
-	   print $fh absolute_path( "$srcdir/../../../utils/pio" ) . "\n";
-        }
+	print $fh absolute_path( "$srcdir/../../../utils/pio" ) . "\n";
     }
     
     # CLM
@@ -1353,7 +1325,6 @@ sub write_filepath_ccsmbld
     my $esmf_libdir = $cfg_ref->get('esmf_libdir');
     my $rtm         = $cfg_ref->get('rtm');
     my $mode        = $cfg_ref->get('mode');
-    my $buildpio    = $cfg_ref->get('pio');
     my $comp_intf   = $cfg_ref->get('comp_interface');
 
     # Source root
@@ -1414,9 +1385,7 @@ sub write_filepath_ccsmbld
 		   die "** source directory does not exist: $srcdir/../../../$dir\n";
 	       }
 	   }
-           if ( $buildpio eq "on" ) {
-	      print $fh absolute_path( "$srcdir/../../../utils/pio" ) . "\n";
-           }
+	   print $fh absolute_path( "$srcdir/../../../utils/pio" ) . "\n";
        }
     }
     

@@ -83,6 +83,7 @@ OPTIONS
 OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=ccsm_seq)
 
      -drv_case "name"         Case identifier up to 32 characters
+     -drv_drydep              Also produce a drydep namelist
      -datm_cycle_beg_year  "year"  The begining year to cycle input datasets over.
      -datm_cycle_end_year  "year"  The ending year to cycle input datasets over.
      -datm_cycle_init_year "year"  The simulation year that will correspond to the data for cycle_beg_year.
@@ -143,6 +144,7 @@ my %opts = ( config                => $cfg_cache,
 	     dir                   => $outdirname,
 	     rcp                   => "default",
              sim_year              => "default",
+	     drydep                => 0,
 	     res                   => "default",
 	     lnd_res               => "default",
 	     silent                => 0,
@@ -163,6 +165,7 @@ GetOptions(
     "datm_data_dir=s"           => \$opts{'datm_data_dir'},
     "datm_domain=s"             => \$opts{'datm_domain'},
     "datm_dom_dir=s"            => \$opts{'datm_dom_dir'},
+    "drydep"                    => \$opts{'drydep'},
     "d|d=s"                     => \$opts{'dir'},
     "h|help"                    => \$opts{'help'},
     "lnd_res=s"                 => \$opts{'lnd_res'},
@@ -260,6 +263,7 @@ EOF
 my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml", 
                           "$cfgdir/namelist_files/namelist_defaults_clm.xml", 
                           "$cfgdir/namelist_files/namelist_defaults_drv.xml",
+                          "$cfgdir/namelist_files/namelist_defaults_drydep.xml",
                           "$cfgdir/namelist_files/namelist_defaults_datm.xml" );
 
 if (defined $opts{'use_case'}) {
@@ -438,9 +442,6 @@ my $val;
 
 my $mode = $cfg->get('mode');
 if ($print>=2) { print "CLM mode is $mode $eol"; }
-
-# Get PIO mode
-my $pio = $cfg->get('pio');
 
 # Get BGC mode
 
@@ -778,7 +779,7 @@ if ($mode eq "ccsm_seq") {
 # namelist group: pio_inparm #
 ##############################
 
-if ($mode eq "ccsm_seq" && $pio eq "on") {
+if ($mode eq "ccsm_seq" ) {
 
    add_default($nl, 'cpl_io_stride'   );
    add_default($nl, 'cpl_io_numtasks' );
@@ -832,13 +833,9 @@ if ( $rtm eq "on" ) {
    add_default($nl, 'frivinp_rtm');
 }
 
-# If cpl6 mode or if DUST or CARBON_AERO NOT turned on -- get aerosol deposition rates from datasets
-my $dust        = $cfg->get('dust');
-my $carbon_aero = $cfg->get('carbon_aero');
-if ( $mode eq "ext_ccsm_con" || $dust eq "off" || $carbon_aero eq "off" ) {
-   add_default($nl, 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year,
-                    'sim_year_range'=>$sim_year_range, 'rcp'=>$rcp );
-}
+# Get aerosol deposition rates from datasets
+add_default($nl, 'faerdep', 'hgrid'=>$lnd_res, 'sim_year'=>$sim_year,
+            'sim_year_range'=>$sim_year_range, 'rcp'=>$rcp );
 
 #
 # Deal with options that the user has said are required...
@@ -1156,10 +1153,17 @@ if ($mode eq "ccsm_seq") {
     }
 }
 
+#################################
+# namelist group: drydep_inparm #
+#################################
+if ($opts{'drydep'} ) {
+    add_default($nl, 'drydep_list');
+    add_default($nl, 'drydep_method');
+}
+
 ##############################
 # namelist group: modelio    #
 ##############################
-
 if ($mode eq "ccsm_seq") {
     add_default($nl, 'diri'    );
     add_default($nl, 'diro'    );
@@ -1188,7 +1192,7 @@ if ($print>=2) { print "Writing clm namelist to $outfile $eol"; }
 if ($mode eq "ccsm_seq") {
     # Driver
     @groups = qw(seq_infodata_inparm seq_timemgr_inparm ccsm_pes prof_inparm);
-    if ( $pio eq "on" ) { push( @groups, "pio_inparm" ); }
+    push( @groups, "pio_inparm" );
     $outfile = "$opts{'dir'}/drv_in";
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing driver namelist to $outfile $eol"; }
@@ -1217,6 +1221,14 @@ if ($mode eq "ccsm_seq") {
     $nl->set_variable_value( "modelio", "logfile", "'lnd.log'" );
     $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
     if ($print>=2) { print "Writing lnd_modelio.nml namelist to $outfile $eol"; }
+}
+
+# Drydep namelist
+if ($opts{'drydep'} ) {
+    @groups = qw(drydep_inparm);
+    $outfile = "$opts{'dir'}/drv_flds_in";
+    $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
+    if ($print>=2) { print "Writing drydep_inparm namelist to $outfile $eol"; }
 }
 
 #-----------------------------------------------------------------------------------------------

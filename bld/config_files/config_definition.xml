@@ -7,31 +7,33 @@
 <entry id="ad_spinup" valid_values="on,off" value="off" category="bgc">
 Toggle to turn on accelerated decomposition spinup for CN biogeochemistry model
 </entry>
-<entry id="carbon_aero" valid_values="on,off" value="off" category="physics">
-Toggle to turn on passing of carbon aerosols to land in ccsm_seq mode
-</entry>
 <entry id="snicar_frc" valid_values="on,off" value="off" category="physics">
-Toggle to turn on calculation of SNICAR radiative forcing
+Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) radiative forcing
 </entry>
 <entry id="bgc" valid_values="none,cn,casa,dgvm" value="none" category="bgc">
-CLM BGC mode
+CLM Biogeochemistry mode
+   none = Satellite Phenology (SP)
+   cn   = Carbon Nitrogen model
+   casa = CASA' model based on Carnegie-Ames-Stanford Approach Carbon-only cycle model
+   dgvm = Dynamic Global Vegetation Model
 </entry>
 <entry id="clm_root" value="" category="directories">
 Root directory of CLM source distribution (directory above configure).
 </entry>
 <entry id="comp_interface" valid_values="ESMF,MCT,cpl_\$COMP" value="MCT"
 category="directories">
-Component framework interface to use
+Component framework interface to use 
+(Model Coupling Toolkit, or Earth System Modeling Framework or variable set at build-time)
 </entry>
 <entry id="usr_src" value="" list="1" category="directories">
 User source directories to prepend to the filepath.  Multiple directories
 are specified as a comma separated list with no embedded white space.
-</entry>
-<entry id="pio" valid_values="on,off" value="on" category="mach_options">
-Toggle to enable/disable building with the PIO parallel I/O library (by default not used, use BUILDPIO CPP token to turn on use of it)
+Normally this is SourceMods/src.clm in your case.
 </entry>
 <entry id="cppdefs" value="" category="physics">
 User specified CPP defines to append to Makefile defaults.
+Note: It's recommended to use configure options to set standard CPP values rather
+than defining them here.
 </entry>
 <entry id="cc" value="" category="standalone_test">
 User specified C compiler overrides Makefile default (linux only).
@@ -56,10 +58,10 @@ Toggle to turn on dust module
 Toggle to turn on C13 isotopes as part of the CN biogeochemistry model
 </entry>
 <entry id="mach" value="bluefire" category="mach_options">
-CCSM build machine name and compiler
+CCSM build machine name and compiler (set by create_newcase)
 </entry>
 <entry id="exit_spinup" valid_values="on,off" value="off" category="bgc">
-Toggle to turn exit spinup
+Toggle to turn on exit spinup mode on for CN biogeochemistry after ad_spinup was run.
 </entry>
 <entry id="fflags" value="" category="standalone_test">
 User specified Fortran compiler flags to append to Makefile defaults.
@@ -79,9 +81,11 @@ ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scr
 </entry>
 <entry id="spmd" valid_values="0,1" value="" category="mach_options">
 Switch to enable or disable building SPMD version of CLM: 0=off, 1=on.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
 <entry id="smp" valid_values="0,1" value="" category="mach_options">
-Switch to enable or disable building SMP version (OPENMP) of CLM: 0=off, 1=on.
+Switch to enable or disable building SMP version (Open-MP) of CLM: 0=off, 1=on.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
 <entry id="nc_inc" value="" category="standalone_test">
 Directory containing NetCDF include files.
@@ -100,7 +104,7 @@ Directory containing ESMF library (for linking to external ESMF).
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
 <entry id="maxpft"  value="numpft+1" category="physics">
-Maximum numbr of pfts per gridcell (numpft+1 means use all available)
+Maximum number of plant function types (PFT)  per gridcell (numpft+1 means use all available)
 </entry>
 <entry id="mpi_inc" value="" category="standalone_test">
 Directory containing MPI include files.
@@ -114,9 +118,10 @@ ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scr
 Name of MPI library.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="mode" valid_values="ccsm_seq,ext_ccsm_seq" value="ccsm_seq"
+<entry id="mode" valid_values="ccsm_seq,ext_ccsm_seq" value="ext_ccsm_seq"
 category="mach_options">
-CLM coupling mode
+CLM coupling mode, ext_ccsm_seq is for use with cpl7 scripts, 
+ccsm_seq is ONLY for CLM stand-alone testing scripts.
 </entry>
 <entry id="ccsm_bld" valid_values="on,off" value="off" category="standalone_test">
 Toggle to build using CCSM makefiles or not.
@@ -129,21 +134,23 @@ Toggle to turn on perturbation error growth test
 Toggle to turn on prognostic sea salt 
 </entry>
 <entry id="rtm" valid_values="on,off" value="on" category="physics">
-Toggle to turn on river transport module
+Toggle to turn on river transport module, to run global river routing model to ocean
 </entry>
 <entry id="supln" valid_values="on,off" value="off" category="bgc">
-Toggle to turn on CN suplemental nitrogen (Carbon only model)
+Toggle to turn on CN supplemental nitrogen (Carbon only model)
 </entry>
 <entry id="nofire" valid_values="on,off" value="off" category="bgc">
-Toggle to make wildfires inactive for biogeochemistry=CN mode
+Toggle to make wild-fires inactive for biogeochemistry=CN mode
 </entry>
 <entry id="target_os" value="" category="mach_options">
 OS for which CLM is being built.  The value is the name returned by the "uname -s"
 command on the target platform.  This parameter is to allow cross-compilation.
 (linux,aix,darwin,bgp etc.)
 </entry>
-<entry id="voc" valid_values="on,off" value="off" category="physics">
-Toggle to turn on voc module
+<entry id="voc" valid_values="on,off" value="on" category="physics">
+Toggle to turn on coupling of Volatile Organic Compounds module to atmosphere model.
+ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts.
+This is turned on with the CCSM_VOC env_conf.xml in the standard ccsm scripts.
 </entry>
 
 </config_definition>

@@ -2,34 +2,91 @@
 # Makefile to convert DocBook CLM Users-Guide into html and/or pdf
 # (rtf, txt, ps, tex, man, dvi, and texi are also valid docbook formats)
 #
-.SUFFIXES: .xml .pdf .html
+VPATH := . .. ../../bld
 
-VPATH := . ../../bld
+PDFUG     := clm_ug.pdf
+HTMLUG    := book1.html
+DOCBKUG   := clm_ug.xml
+CFGLOG    := config_help
+BNMLOG    := buildnml_help
+RESLOG    := buildnml_resolutions
+USCLOG    := buildnml_usecases
+QCKLOG    := quickstart_guide
+USRLOG    := quickstart_usrdat
+COMPLIST  := compsets_list_ofIcases.xml
+SOURCES   := $(DOCBKUG) $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
+             $(RESLOG).xml $(USCLOG).xml $(QCKLOG).xml \
+             $(USRLOG).xml preface.xml custom.xml special_cases.xml \
+             tools.xml adding_files.xml single_point.xml
 
-PDFUG   := index.pdf
-HTMLUG  := book1.html
-DOCBKUG := index.xml
-CFGLOG  := config_help.log
-BNMLOG  := buildnml_help.log
+CONVAMP    := sed 's/</\&amp;/g'
+CONVSIGNS  := sed 's/>/\&gt;/g' | sed 's/&/\&lt;/g'
 
 all: $(HTMLUG) $(PDFUG)
 
-$(HTMLUG): $(DOCBKUG)
+.SUFFIXES:
+.SUFFIXES: .xml .pdf .html .log
+
+$(CFGLOG).xml: $(CFGLOG).log
+$(BNMLOG).xml: $(BNMLOG).log
+$(RESLOG).xml: $(RESLOG).log
+$(USCLOG).xml: $(USCLOG).log
+$(QCKLOG).xml: $(QCKLOG).log
+$(USRLOG).xml: $(USRLOG).log
+
+clm_ug.xml: preface.xml custom.xml special_cases.xml \
+            tools.xml adding_files.xml single_point.xml
+
+custom.xml: $(CFGLOG).xml $(RESLOG).xml $(BNMLOG).xml $(USCLOG).xml $(COMPLIST)
+preface.xml: $(QCKLOG).xml
+single_point.xml: $(USRLOG).xml
+
+.log.xml:
+	$(CONVAMP) $< | $(CONVSIGNS) > $@
+
+debug:
+	@echo "SOURCES:   $(SOURCES)"
+	@echo "CONVAMP:   $(CONVAMP)"
+	@echo "CONVSIGNS: $(CONVSIGNS)"
+
+$(COMPLIST): 
+	get_Icaselist.pl > $@
+
+$(HTMLUG): $(SOURCES)
 	docbook2html $<
 
-$(PDFUG): $(DOCBKUG)
+$(PDFUG): $(SOURCES)
 	docbook2pdf $<
 
-$(BNMLOG): build-namelist
+$(BNMLOG).log: build-namelist
 	@echo "The following line will fail in the make as it calls die -- but that is expected"
-	@echo "Check that the output $(BNMLOG) is good and redo your make"
-	../../bld/build-namelist -help >& $(BNMLOG)
+	@echo "Check that the output $@ is good and redo your make"
+	../../bld/build-namelist -help >& $@
 
-$(CFGLOG): configure
+$(RESLOG).log: build-namelist
+	@echo "The following line will fail in the make as it calls die -- but that is expected"
+	@echo "Check that the output $@ is good and redo your make"
+	../../bld/build-namelist -res list >& $@
+
+$(USCLOG).log: build-namelist
+	@echo "The following line will fail in the make as it calls die -- but that is expected"
+	@echo "Check that the output $@ is good and redo your make"
+	../../bld/build-namelist -use_case list >& $@
+
+$(CFGLOG).log: configure
 	@echo "The following line will fail in the make as it calls die -- but that is expected"
 	@echo "Check that the output $(CFGLOG) is good and redo your make"
-	../../bld/configure -help >& $(CFGLOG)
+	../../bld/configure -help >& $@
+
+$(QCKLOG).log: Quickstart.GUIDE
+	cp $<  $@
+
+$(USRLOG).log: Quickstart.userdatasets
+	cp $<  $@
+
 clean:
-	rm -f $(HTMLUG) $(PDFUG)
+	rm -f $(HTMLUG) $(PDFUG) *.log
+
 realclean: clean
-	rm -f f*.html c*.html x*.html
+	rm -f f*.html c*.html x*.html $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
+	$(RESLOG).xml $(USCLOG).xml $(USRLOG).xml $(QCKLOG).xml

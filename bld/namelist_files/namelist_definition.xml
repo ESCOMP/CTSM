@@ -269,6 +269,15 @@ TRUE if want urban traffic flux (Currently NOT implemented)
        group="clm_inparm" valid_values="" >
 TRUE if want diagnostic of global radiative temperature written to CLM log file
 </entry>
+
+<!--                                                   -->
+<!-- mksurfdata namelist                               -->
+<!--                                                   -->
+<entry id="mksrf_fvegtyp" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Plant Function Type dataset for mksurfdata
+</entry>
+
 <!--                                                   -->
 <!-- PIO experimental namelist  NOT currently working  -->
 <!--                                                   -->
@@ -1048,7 +1057,7 @@ End of year to cycle datm data through
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"360x720,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.5x3.33,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
+"360x720,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
 Horizontal resolutions
 </entry> 
 
@@ -1061,7 +1070,7 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v5,gx3v7,gx1v3,gx1v4,gx1v5,gx1v6,navy,test,tx0.1v2,tx1v1,T62">
+       valid_values="USGS,gx3v5,gx3v7,gx1v5,gx1v6,navy,test,tx0.1v2,tx1v1,T62">
 Land mask description
 </entry> 
 
@@ -1089,6 +1098,25 @@ Namelist entries to demand be provided on the namelist.
 <entry id="use_case_desc" type="char*256"  category="default_settings"
        group="use_case_desc" valid_values="" >
 Description of the use case selected.
+</entry>
+
+
+<!-- ========================================================================================  -->
+<!-- drydep Namelists                                                                           -->
+<!-- ========================================================================================  -->
+
+<entry id="drydep_method" type="char*16" category="dry-deposition"
+       group="drydep_inparm" 
+       valid_values="xactive_lnd,xactive_atm,table">
+Where dry deposition is calculated (from land, atmosphere, or from a table)
+</entry>
+
+<entry id="drydep_list" type="char*32(100)" category="dry-deposition"
+       group="drydep_inparm" 
+       valid_values=
+"OX,H2O2,OH,HO2,CO,CH4,CH3O2,CH3OOH,CH2O,CHOOH,NO,NO2,HNO3,CO2,NH3,N2O5,NO3,CH3OH,HO2NO2,O1D,C2H6,C2H5O2,PO2,MACRO2,ISOPO2,C4H10,CH3CHO,C2H5OOH,C3H6,POOH,C2H4,PAN,CH3COOOH,C10H16,CHOCHO,CH3COCHO,GLYALD,CH3CO3,C3H8,C3H7O2,CH3COCH3,C3H7OOH,RO2,ROOH,Rn,ISOP,MVK,MACR,C2H5OH,ONITR,ONIT,ISOPNO3,HYDRALD"
+>
+List of chemical constituents that dry deposition will be calculated for
 </entry>
 
 </namelist_definition>

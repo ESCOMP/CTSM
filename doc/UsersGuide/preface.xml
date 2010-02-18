@@ -1,0 +1,307 @@
+<!-- Begin introduction preface -->
+<preface id="acknowledge">
+<title>Acknowledgments</title>
+<para>
+We acknowledge all of the people that helped review or edit the model documentation: 
+David Lawrence, Samuel Levis, and Keith Oleson. 
+</para>
+</preface>
+
+<preface id="intro">
+<title>Introduction</title>
+
+<para>
+The Community Land Model (CLM) is the latest in a series of
+global land models developed at the National Center for
+Atmospheric Research (NCAR). This guide is intended to instruct both
+the novice and experienced user on running CLM.
+</para>
+</preface>
+
+<!-- ======================================================================= -->
+<preface id="how_to">
+<title>How to Use This Document</title>
+
+<para>
+This section provides the details in using CLM with the CCSM modeling
+system. Links to descriptions and definitions have been provided in the code below.
+We use the same conventions used in the CCSM documentation as outlined below.
+</para>
+
+<screen>
+Throughout the document this style is used to indicate shell
+commands and options, fragments of code, namelist variables, etc.
+Where examples from an interactive shell session are presented, lines
+starting with > indicate the shell prompt. Note that "$EDITOR" is used
+to refer to the text editor of your choice. $EDITOR is a standard UNIX
+environment variable and should be set on most UNIX systems. Comment
+lines are signaled to start with a "#" sign, which is the standard UNIX
+comment sign as well.
+</screen>
+
+</preface>
+
+
+<!-- ======================================================================= -->
+<preface id="what_is_new">
+<title>What is new with CLM4 since CLM3.5?</title>
+
+<para>
+Since CLM3.5 there have been advances in both the science and the software infrastructure.
+</para>
+
+<sect1 id="science">
+<title>What is new with CLM4 Science?</title>
+<para>
+The following aspects are changes to the science in CLM since CLM3.5.
+</para>
+<para>
+Changes to CLM4 beyond CLM3.5 (Oleson et al., 2008a; Stockli et al., 2008) include updates throughout the model. The hydrology scheme has been modified with a revised numerical solution of the Richards equation (Zeng and Decker, 2009; Decker and Zeng, 2009); a revised soil evaporation parameterization that removes the soil resistance term introduced in CLM3.5 and replaces it with a so-called	formulation, as well as accounts for the role of litter and within-
+canopy stability (Sakaguchi and Zeng, 2009).
+</para>
+<para>
+The snow model is significantly modified via incorporation of SNICAR (SNow and Ice Aerosol Radiation) which represents the effect of aerosol deposition (e.g. black and organic carbon and dust) on albedo, introduces a grain-size dependent snow aging parameterization, and permits vertically resolved snowpack heating (Flanner and Zender, 2005; Flanner and Zender, 2006; Flanner et al., 2007). The new snow model also includes a new density-dependent snow cover fraction parameterization (Niu and Yang, 2007), a revised snow burial fraction over short vegetation (Wang and Zeng, 2009) and corrections to snow compaction (Lawrence and Slater, 2009).
+</para>
+<para>
+CLM4 also includes a representation of the thermal and hydraulic properties of organic soil that operates in conjunction with the mineral soil properties (Lawrence and Slater, 2008). The ground column has been extended to ~50-m depth by adding five additional hydrologically inactive ground layers (making a total of 15 ground layers, 10 soil layers and 5 bedrock layers; Lawrence et al., 2008). An urban landunit and associated urban canyon model has been added which permits the study of urban climate and urban heat island effects (Oleson et al., 2008b). The PFT distribution is as in Lawrence and Chase (2007) except that a new cropping dataset is used (Ramankutty et al., 2008) and a grass PFT restriction has been put in place to reduce a high grass PFT bias in forested regions by replacing the herbaceous fraction with low trees rather than grass. Grass and crop PFT optical properties have been adjusted according to values presented in Asner et al. (1998), resulting in significantly reduced albedo biases. Soil colors have been re-derived according to the new PFT distribution.
+</para>
+<para>
+The model is extended with a carbon-nitrogen biogeochemical model (Thornton et al., 2007; Thornton et al., 2009; Randerson et al., 2009) which is referred to as CLM4CN. CN is based on the terrestrial biogeochemistry Biome-BGC model with prognostic carbon and nitrogen cycle (Thornton et al., 2002; Thornton and Rosenbloom, 2005). CLM4CN is prognostic with respect to carbon and nitrogen state variables in the vegetation, litter, and soil organic matter. Vegetation phenology and canopy heights are also prognostic. A detailed description of the biogeochemical component can be found in Thornton et al. (2007). Note that CLM4 can be run with either prescribed satellite phenology (CLM4SP) or with prognostic phenology provided by the carbon- nitrogen cycle model (CLM4CN). Additionally, a transient land cover and land use change, including wood harvest, capability has been introduced that enables the evaluation of the impact of historic and future land cover and land use change on energy, water, and momentum fluxes as well as carbon and nitrogen fluxes.	The dynamic global vegetation model in CLM3 has been revised such that the carbon dynamics (e.g. productivity, decomposition, phenology, allocation, etc.) are controlled by CN and only the dynamic vegetation biogeography (competition) aspect of the CLM3 DGVM is retained.
+</para>
+<para>
+Several other minor changes have been incorporated including a change to the atmospheric reference height so that it is the height above zo+d for all surface types. The convergence of
+canopy roughness length zo and displacement height d to bare soil values as the above-ground biomass, or the sum of leaf and stem area indices, goes to zero is ensured (Zeng and Wang, 2007). Several corrections have been made to the way the offline forcing data is interpreted. The main change is a vastly improved and smooth diurnal cycle of incoming solar radiation that conserves the total incoming solar radiation from the forcing dataset. Additionally, in offline mode rather than partitioning incoming solar radiation into a constant 70%/30% direct vs diffuse split, it is partitioned according to empirical equations that are a function of total solar radiation. Finally, to improve global energy conservation in fully coupled simulations, runoff is split into separate liquid and ice water streams that are passed separately to the ocean. Input to the ice water comes from excess snowfall in snow-capped regions. The biogenic volatile organic compounds model (BVOC) that was available in CLM3 has been replaced with the MEGAN BVOC model (Heald et al. 2008).
+</para>
+<para>
+Taken together, these augmentations to CLM3.5 result in improved soil moisture dynamics that lead to higher soil moisture variability and drier soils. Excessively wet and unvarying soil moisture was recognized as a deficiency in CLM3.5 (Oleson et al. 2008a, Decker and Zeng, 2009). The revised model also simulates, on average, higher snow cover, cooler soil temperatures in organic-rich soils, greater global river discharge, lower albedos over forests and grasslands, and higher transition-season albedos in snow covered regions, all of which are improvements compared to CLM3.5.
+</para>
+</sect1>
+<sect1 id="software">
+<title>What is new with CLM4 Software Infrastructure?</title>
+<para>
+The following aspects are changes to the software infrastructure in CLM since CLM3.5.
+</para>
+<para>
+<simplelist>
+    <member>Update to cpl7 and scripts.</member>
+    <member>Remove offline and cpl6 modes.</member>
+    <member>Remove support for CASA model.</member>
+    <member>Update to datm8 atmospheric data model.</member>
+    <member>Add gx3v7 land mask for T31 and fv-4x5 horizontal resolutions.</member>
+    <member>Add gx1v6 land mask for f05, f09, and f19 horizontal resolutions.</member>
+    <member>Add tx1v1 land mask and 1.9x2.5_tx1v1 horizontal resolution.</member>
+    <member>Add in 2.5x3.33 horizontal resolution.</member>
+    <member>Add in T62 horizontal resolution so can run at same resolution as input datm
+data.</member>
+    <member>Allow first history tape to be 1D.</member>
+    <member>Add ability to use own version of input datasets with CLM_USRDAT_NAME
+variable.</member>
+    <member>Add a script to extract out regional datasets.</member>
+    <member>New build-namelist system with XML file describing all namelist
+items.</member>
+    <member>Add glacier_mec use-case and stub glacier model.</member>
+    <member>Add ncl script to time-interpolate between 1850 and 2000 for fndepdat
+dataset, for fndepdyn version.</member>
+    <member>Make default of maxpatch_pft=numpft+1 instead of 4.</member>
+    <member>Only output static 3D fields on first h0 history file to save space.</member>
+    <member>Add new fields for VOC (Volatile Organic Compounds) on some surface datasets, that will be 
+    needed for the new MEGAN VOC model (NOT incorporated yet).</member>
+    <member>Add irrigation area to mksurfdata tool (NOT used in CLM yet).</member>
+    <member>Add multiple elevation class option for glaciers in mksurfdata tool (NOT used
+in CLM yet).</member>
+    <member>Add ascale field to land model in support of model running on it's own
+grid.</member>
+</simplelist>
+</para>
+</sect1>
+
+</preface>
+
+<!-- ======================================================================= -->
+<preface id="quickstart">
+<title>Quickstart to using CLM4</title>
+<para>
+Before working with CLM4 read the QuickStart Guide in the
+<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">CCSM4.0
+Scripts User Guide</ulink>. Once you are familiar with how to setup cases for 
+any type of simulation with CCSM you will want to direct your attention to the specifics
+of using CLM.
+</para>
+<para>
+For some of the details of setting up cases for CLM4 read the README and text files available
+from the "models/lnd/clm/doc" directory (see the "CLM Web pages" section for a link to the list
+of these files). Here are the important ones that you should be familiar with.
+<orderedlist>
+<listitem><para><ulink url="../README">README</ulink> file describing the directory structure.</para></listitem>
+<listitem><para><ulink url="../Quickstart.userdatasets">Quickstart.userdatasets</ulink> file describing how to
+use your own datasets in the model.</para></listitem>
+<listitem><para><ulink url="../KnownBugs">KnownBugs</ulink> file describing known problems in CLM4.</para></listitem>
+</orderedlist>
+</para>
+<para>The <emphasis>IMPORTANT_NOTES</emphasis> file is given in the next chapter on what is functional/validated in CLM4?
+</para>
+<para>The <emphasis>ChangeLog/ChangeSum</emphasis> files are largely explained in the previous chapter on "What is new with
+CLM4?"</para>
+<para>
+Note other directories have README files that explain different components and tools used when running CLM and are useful in
+understanding how those parts of the model work and should be consulted when using tools in those directories.
+</para>
+<para>The <emphasis>Quickstart.GUIDE</emphasis> is repeated in the section below.</para>
+<programlisting>
+&quickstart_guide;
+</programlisting>
+</preface>
+<!-- ======================================================================= -->
+<preface id="whats_validated">
+<title>What is scientifically validated and functional in CLM4?</title>
+
+<sect1 id="config_not_validated">
+<title>Configure Modes NOT scientifically validated, documented, supported or even advised to be used:</title>
+<para>
+<orderedlist>
+<listitem>
+   <para>
+   <varname>C13</varname><screen>(-c13)</screen>
+       The C13 mode for bgc=cn is NOT scientifically validated or documented and NOT recommended to be used.
+   </para>
+
+</listitem>
+<listitem>
+   <para>
+   <varname>CASA</varname><screen>(-bgc casa)</screen>
+       The bgc=casa mode is NOT scientifically validated or documented and NOT recommended to be used.
+   </para>
+
+</listitem>
+<listitem>
+   <para>
+   <varname>DGVM</varname><screen>(-bgc dgvm)</screen>
+       The bgc=dgvm  mode is NOT scientifically validated or documented and NOT recommended to be used.
+       This mode will be replaced by CNDV (coupled with bgc=cn mode) in the final CLM4.0 release (see below).
+   </para>
+</listitem>
+<listitem>
+   <para>
+   <varname>BUILDPIO</varname><screen>(-pio)</screen>
+       This mode is NOT tested and not even functional and hence should NOT be used. PIO WILL be provided
+       in future versions however.
+   </para>
+</listitem>
+<listitem>
+   <para>
+   <varname>SNICAR_FRC</varname><screen>(-snicar_frc)</screen>
+       This mode is tested and functional, but is NOT constantly scientifically validated, and should be 
+       considered experimental.
+   </para>
+</listitem>
+<listitem>
+   <para>
+   <varname>PERGRO</varname><screen>(-pergro)</screen>
+       This mode is tested to be functional, but NOT scientifically validated. It's purpose is in an attempt
+       to validate that a port to a new machine is reasonable, or changes that are only roundoff will NOT 
+       affect the climate. The best method for this validation is to run 100 year simulations with both and
+       make sure the climate is similar between each. We hope to validate the method using PERGRO in future
+       versions of the model.
+   </para>
+</listitem>
+</orderedlist>
+</para>
+</sect1>
+
+<sect1 id="changes_expected">
+<title>Changes expected to happen for the official CCSM4.0 release:</title>
+<para>
+<orderedlist>
+<listitem><para><emphasis><varname>CNDV</varname> mode will be available: (replaces the DGVM mode)</emphasis>
+       A Dynamic Vegetation mode coupled to the Carbon Nitrogen (bgc=cn) biogeochemistry mode WILL be provided
+       in the main CLM4.0 release.</para>
+</listitem>
+
+<listitem><para><emphasis><varname>VOC</varname> version will be updated:</emphasis>
+       The current Volatile Organic Compounds option used in CLM is the older version and NOT the newer MEGAN
+       version. The new MEGAN version WILL be provided in the main CLM4.0 release.</para>
+</listitem>
+</orderedlist>
+</para>
+</sect1>
+
+<sect1 id="nml_not_validated">
+<title>Namelist items that should NOT be exercised:</title>
+<para>
+<orderedlist>
+<listitem><para><emphasis>create_crop_landunit:</emphasis>  Functional, but experimental</para>
+</listitem>
+<listitem><para><emphasis>urban_traffic:</emphasis>         Not currently functional</para>
+</listitem>
+<listitem><para><emphasis>pio namelist options:</emphasis>  hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, ncd_pio_UseBoxRearr, 
+                         ncd_pio_SerialCDF, ncd_pio_DebugLevel, and ncd_pio_num_iotasks
+        These options are NOT currently tested or functional. See the pio configure mode above.</para>
+</listitem>
+<listitem><para><emphasis>casa namelist options:</emphasis> lnpp, lalloc, q10, spunup, and fcpool
+
+        As above CASA is NOT scientifically validated and hence we don't recommend using it, thus we don't
+        recommend using the casa namelist options (they are only available when running with CASA).</para>
+</listitem>
+</orderedlist>
+</para>
+</sect1>
+</preface>
+
+<!-- ======================================================================= -->
+<preface id="help">
+<title>Other resources to get help from</title>
+
+<sect1 id="CCSM_UG">
+<title>The CCSM Users-Guide</title>
+<para>
+CLM4 is always run from within the standard CCSM4 build and run scripts. Therefore, the user of CLM4
+should familiarize themselves with the CCSM4 scripts and understand and know how to work with them.
+Users-Guide documentation on the CCSM4 scripts are available from the following web-page. The purpose
+of this CLM4 Users Guide is to give the CLM4 user better descriptions and more details on how to work
+with CLM and the set of tools that support CLM, as well as give examples that are unique to the use
+of CLM. But, the CCSM4 Scripts Users-Guide is the source to get detailed understanding of how to build
+and run the CCSM system in total.
+<simplelist>
+<member><ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">CCSM4.0 Scripts
+Users-Guide</ulink></member>
+</simplelist>
+</para>
+</sect1>
+
+<sect1 id="CCSM_BB">
+<title>The CCSM Bulletin Board</title>
+<para>
+There is a rich and diverse set of people that use the CCSM, and often it is useful to be in contact with
+others to get help in solving problems or trying something new. To facilitate this we have an online
+Bulletin Board for questions on the CCSM. There are also different sections in the Bulletin Board for
+the different component models or for different topics.
+<simplelist>
+<member><ulink url="http://bb.cgd.ucar.edu/">CCSM Online Bulletin Board</ulink></member>
+</simplelist>
+</para>
+</sect1>
+
+<sect1 id="CLM_web">
+<title>The CLM web pages</title>
+<para>
+The main CLM web page contains information on the CLM, it's history, developers, as well as
+downloads for previous model versions. There are also documentation text files in the 
+models/lnd/clm/doc directory that give some quick information on using CLM.
+<simplelist>
+<member><ulink url="http://www.cgd.ucar.edu/tss/clm/">CLM web page</ulink></member>
+<member><ulink url="../">CLM Documentation Text Files</ulink></member>
+</simplelist>
+</para>
+</sect1>
+
+<sect1 id="reporting_bugs">
+<title>Reporting bugs in CLM4</title>
+<para>
+If you have any problems, additional questions, bug reports, or any other feedback, please send an email to
+ccsm4-help@cgd.ucar.edu.
+</para>
+</sect1>
+
+</preface>
+
+<!-- End introduction preface -->

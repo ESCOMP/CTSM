@@ -1,7 +1,8 @@
 ;
 ; Regrid CLM Aerosol-Deposition file (aerdep) to a new resolution. 
 ; Works for climatology monthly aerdep files.
-; Edit the top few lines of the file for a different output resolution.
+; Uses input environment variables to determine resolution and other 
+; parameters to describe set of files to use.
 ; Uses bld query to get input filenames. Also uses env variable CSMDATA for location
 ; of input files.
 ;
@@ -19,6 +20,7 @@ begin
   ; Input and output resolution
   ;
   resin          = "1.9x2.5";              ; Input resolution:  1.9x2.5 (normally NOT changed)
+  gridfile       = getenv("GRDFIL");       ; Get input grid file to use  for output resolution
   res            = getenv("RES");          ; Get output resolution from env variable
   rcp            = getenv("RCP");          ; Get input representative concen. pathway
   sim_year       = getenv("SIM_YR");       ; Get input simulation year from env variable
@@ -26,7 +28,14 @@ begin
 
   ; Defaults if env variable is NOT set
 
+  if ( ismissing(gridfile) )then
+     gridfile = "default";      ; default means use query and other env parameters to get filename
+  end if
   if ( ismissing(res) )then
+     if ( gridfile .ne. "default" )then
+        print( "Must set output resolution description ('RES' env variable) when you supply a gridfile name (GRDFIL)" );
+        exit
+     end if
      res      = "48x96";      ; Output Resolution: 1.9x2.5, 48x96 etc.
   end if
   if ( ismissing(rcp) )then
@@ -62,7 +71,9 @@ begin
   print( "query string="+querynml )
   filename    = systemfunc( querynml+" -res "+resin+" -var "+filetype+" -options sim_year="+sim_year+",sim_year_range="+sim_year_range+",rcp="+rcp );
   gridinfile  = systemfunc( querynml+" -res "+resin+" -var fatmgrid" );
-  gridfile    = systemfunc( querynml+" -res "+res  +" -var fatmgrid" );
+  if ( gridfile .eq. "default" )then
+     gridfile    = systemfunc( querynml+" -res "+res  +" -var fatmgrid" );
+  end if
   if ( sim_year_range .eq. "constant" ) then
      filenameout = "aerosoldep_"+sim_year+"_mean_"+res+"_c"+sdate+".nc";
   else

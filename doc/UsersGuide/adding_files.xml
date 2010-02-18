@@ -1,0 +1,288 @@
+<!-- Beg of adding_files chapter -->
+<chapter id="adding_files">
+<title>Adding New Resolutions or New Files to the build-namelist Database</title>
+<para>
+In the last chapter we gave the details on how to create new files for input into
+CLM. These files could be either global resolutions, regional-grids or even a single
+grid point. If you want to easily have these files available for continued use in your
+development you will then want to include them in the build-namelist database so
+that build-namelist can easily find them for you. You can deal with them, just by
+editing your namelist by hand (or using a user_nl_clm namelist file), or by using
+<envar>CLM_USRDAT_NAME</envar>. Another way to deal with them is to enter them into
+the database for build-namelist, so that build-namelist can find them for you.
+This keeps one central database for all your files, rather than having multiple locations
+to keep track of files. If you have a LOT of files to keep track of it also might
+be easier than keeping track by hand, especially if you have to periodically update
+your files. If you just have a few quick experiements to try, for a short time period
+you might be best off using the other methods mentioned above.
+</para>
+<para>
+There are two parts to adding files to the build-namelist database. The first part
+is adding new resolution names which is done in the
+<filename>models/lnd/clm/bld/namelist_files/namelist_definition.xml</filename> file.
+The second part is actually adding the new filenames which is done in the 
+<filename>models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml</filename> file.
+If you aren't adding any new resolutions, and you are just changing the files for existing
+resolutions, you don't need to edit the namelist_definition file.
+</para>
+<sect1 id="adding_resolutions">
+<title>Adding Resolution Names</title>
+<para>
+If you are adding files for new resolutions which aren't covered in the
+namelist_definition file -- you'll need to add them in. The list of valid resolutions
+is in the id="res" entry in the
+<filename>models/lnd/clm/bld/namelist_files/namelist_definition.xml</filename> file.
+You need to choose a name for your new resolution and simply add it to the comma
+delimited
+list of valid_values for the id="res" entry. The convention for global Gaussian grids
+is number_of_latitudes x number_of_longitudes. The convention for global finite
+volume grids is latitude_grid_size x longitude_grid_size where latitude and longitude
+is measured in degrees. For regional or single-point datasets the names have a grid size
+number_of_latitudes x number_of_longitudes followed by an underscore and then a 
+descriptive name such as a City name followed by an abbreviation for the Country in caps. 
+The only hard requirement is that names be unique for different grid files.
+Here's what the entry for resolutions looks like in the file:
+<screen>
+&lt;entry id="res" type="char*30" category="default_settings"
+       group="default_settings"  
+       valid_values=
+"360x720,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.5x3.33,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCA
+N,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha"&gt;
+Horizontal resolutions
+&lt;/entry&gt;
+</screen>
+As you can see you just add your new resolution names to the end of the valid_values
+list.
+</para>
+</sect1>
+
+<sect1 id="adding_default_files">
+<title>Adding or Changing Default Filenames</title>
+<para>
+To add or change the default fileames you edit the
+<filename>models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml</filename>
+and either change an existing filename or add a new one. Most entries in the
+default namelist files, include different attributes that describe the different
+properties that describe the differences in the datasets. Attributes include 
+the: resolution, year to simulation, range of years to simulate for transient
+datafiles, the land-mask, the representative concentration pathway (rcp) for future
+scenarios, and the type of biogeochemistry (bgc) model used. For example the
+<filename>fatmgrid</filename> for the 1.9x2.5 resolution is as follows:
+<screen>
+&lt;fatmgrid hgrid="1.9x2.5" &gt;lnd/clm2/griddata/griddata_1.9x2.5_060404.nc&lt;/fatmgrid&gt;
+</screen>
+Other <filename>fatmgrid</filename> files are distinguished from this one by 
+their resolution (hgrid) attribute.
+</para>
+<sect2 id="required_files">
+<title>What are the required files?</title>
+<para>
+Different types of simulations and different types of configurations for CLM require
+different lists of files. The Carbon Nitrogen (cn) Biogeochemistry model for example
+requires <filename>fndepdat</filename> files, which are NOT required by other bgc modes.
+Transient simulations also require transient datasets, and the names of these datasets
+are sometimes different from the static versions (sometimes both are required as in
+the dynamic PFT cases).
+</para>
+<para>
+In the following table we list the different files used by CLM, they are listed
+in order of importance, dependencies, and customizing. So the required files 
+are all near the top, and the files used only under different conditions are listed
+later, and files with the fewest dependencies are near the top, as are the files
+that are least likely to be customized.
+</para>
+<table tocentry="1">
+<title>Required Files for Different Configurations and Simulation Types</title>
+<tgroup cols="4" align="left" colsep="1" rowsep="1">
+<colspec colnum="2" colname="config"></colspec>
+<colspec colnum="5" colname="other"></colspec>
+<spanspec spanname="notes_span" namest="config" nameend="other"></spanspec>
+<thead>
+<row>
+   <entry morerows="1" valign="middle">Filename</entry>
+   <entry>Configuration type</entry>
+   <entry>Simulation type</entry>
+   <entry>Resolution Dependent?</entry>
+   <entry>Other Dependencies?</entry>
+</row>
+<row>
+   <entry spanname="notes_span">Notes
+</entry>
+</row>
+</thead>
+<tbody>
+<row>
+   <entry morerows="1" valign="middle">fpftcon</entry>
+   <entry>ALL</entry>
+   <entry>ALL</entry>
+   <entry>No</entry>
+   <entry>No</entry>
+</row>
+<row>
+   <entry spanname="notes_span">Not usually customized, as describes plants for global coverage.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">fsnowoptics</entry>
+   <entry>All</entry>
+   <entry>All</entry>
+   <entry>No</entry>
+   <entry>None</entry>
+</row>
+<row>
+   <entry spanname="notes_span">Not usually customized as describes global snow optical properties.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">fsnowaging</entry>
+   <entry>All</entry>
+   <entry>All</entry>
+   <entry>No</entry>
+   <entry>None</entry>
+</row>
+<row>
+   <entry spanname="notes_span">Not usually customized as describes global snow agining properties.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">fatmgrid</entry>
+   <entry>All</entry>
+   <entry>All</entry>
+   <entry>Yes</entry>
+   <entry>None</entry>
+</row>
+<row>
+   <entry spanname="notes_span">Creating using mkgriddata usually gives you the amount of customization 
+you need, as it just describes the grid and grid extents..</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">fatmlndfrc</entry>
+   <entry>All</entry>
+   <entry>All</entry>
+   <entry>Yes</entry>
+   <entry>land-mask</entry>
+</row>
+<row>
+   <entry spanname="notes_span">Describes the land-mask for points with active land, as well as the fraction
+of each grid-cell covered by land. You might customize it to make sure the land-fraction
+of your grid-cell matches the expected values for your site. But, usually you will just
+use what mkgriddata gives you.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">fsurdat</entry>
+   <entry>All</entry>
+   <entry>All</entry>
+   <entry>Yes</entry>
+   <entry>simulation-year</entry>
+</row>
+<row>
+   <entry spanname="notes_span">Describes percentages of different land-units, columns and 
+vegetation types within each grid-cell. To customize for a specific point
+or region you may want to use custom input datasets to mksurfdata when
+creating the file.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">faerdep</entry>
+   <entry>All</entry>
+   <entry>Constant and transient scenarios</entry>
+   <entry>Yes</entry>
+   <entry>simulation-year,simulation-year range, and possibly representative 
+          concentration pathway (rcp)</entry>
+</row>
+<row>
+   <entry spanname="notes_span">You may customize this file to get the aerosol deposition characteristics 
+of your site if available. Or use a higher resolution dataset when you use 
+aerdepregrid.ncl to create this file. Note, both constant and transient files have
+the same namelist entry name.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">fndepdat</entry>
+   <entry>bgc=cn</entry>
+   <entry>Constant scenarios</entry>
+   <entry>Yes</entry>
+   <entry>simulation-year and possibly representative concentration pathway (rcp)</entry>
+</row>
+<row>
+   <entry spanname="notes_span">You may customize this file to get the Nitrogen deposition characteristics 
+of your site if available. Or use a higher resolution dataset when you use 
+ndepregrid.ncl to create this file.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">fpftdyn</entry>
+   <entry>All</entry>
+   <entry>transient land-use land-cover change</entry>
+   <entry>Yes</entry>
+   <entry>Simulation year range, and possibly representative concentration pathway (rcp)</entry>
+</row>
+<row>
+   <entry spanname="notes_span">See notes on fsurdat files.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">frivinp_rtm</entry>
+   <entry>RTM only</entry>
+   <entry>All</entry>
+   <entry>No</entry>
+   <entry>None</entry>
+</row>
+<row>
+   <entry spanname="notes_span">We only provide a half-degree global river routing file. If you want
+to model river flow for a smaller scale, or a basin regional scale, you would
+need to create your own custom file to do that. Normally, we turn river-routing
+OFF for regional or single point simulations.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">flndtopo</entry>
+   <entry>All</entry>
+   <entry>fine-mesh simulations (specifying land resolution as a finer grid than
+atmosphere resolution running the model at).</entry>
+   <entry>Yes</entry>
+   <entry>None</entry>
+</row>
+<row>
+   <entry spanname="notes_span">You may customize to give better surface heights for your site, or
+input a higher resolution ororgraphy file when you create it using mkgriddata.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">fatmtopo</entry>
+   <entry>All</entry>
+   <entry>fine-mesh simulations (specifying land resolution as a finer grid than
+atmosphere resolution running the model at).</entry>
+   <entry>Yes</entry>
+   <entry>None</entry>
+</row>
+<row>
+   <entry spanname="notes_span">You may customize to give better surface heights for your site, or
+input a higher resolution ororgraphy file when you create it using mkgriddata.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">fndepdyn</entry>
+   <entry>bgc=cn</entry>
+   <entry>transient simulations</entry>
+   <entry>Yes</entry>
+   <entry>Simulation year range</entry>
+</row>
+<row>
+   <entry spanname="notes_span">You may customize this file to get the Nitrogen deposition characteristics 
+of your site if available. Or use a higher resolution dataset when you use 
+ndepregrid.ncl to create this file.</entry>
+</row>
+<row>
+   <entry morerows="1" valign="middle">finidat</entry>
+   <entry>All</entry>
+   <entry>RUN_TYPE="startup",CLM_FORCE_COLDSTART="off"</entry>
+   <entry>Yes</entry>
+   <entry>mask,maxpft,bgc,sim_year,start-date</entry>
+</row>
+<row>
+   <entry spanname="notes_span">Used for starting the model from a spun-up state (or you can
+use hybrid or branch RUN_TYPE. Create these files by running the model
+for multiple years and saving the restart file from the end of a spin-up 
+simulation.
+</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</sect2>
+
+</sect1>
+
+</chapter>
+<!-- End of adding_files chapter -->

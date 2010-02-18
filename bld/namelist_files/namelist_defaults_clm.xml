@@ -29,7 +29,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mask hgrid="0.23x0.31"           >gx1v5</mask>
 <mask hgrid="0.47x0.63"           >gx1v6</mask>
 <mask hgrid="0.9x1.25"            >gx1v6</mask>
-<mask hgrid="1x1.25"              >gx1v5</mask>
 <mask hgrid="1.9x2.5"             >gx1v6</mask>
 <mask hgrid="2.65x3.33"           >USGS</mask>
 <mask hgrid="2.5x3.33"            >gx3v7</mask>
@@ -128,7 +127,7 @@ lnd/clm2/surfdata/surfdata_1.9x2.5_simyr2000_c091005.nc</fsurdat>
 <fsurdat hgrid="2.5x3.33"  sim_year="2000" >
 lnd/clm2/surfdata/surfdata_2.5x3.33_simyr2000_c091023.nc</fsurdat>
 <fsurdat hgrid="2.65x3.33" sim_year="2000" >
-lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr2000_c090421.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_2.65x3.33_simyr2000_c090928.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="2000" >
 lnd/clm2/surfdata/surfdata_4x5_simyr2000_c090928.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" >
@@ -139,7 +138,7 @@ lnd/clm2/surfdata/surfdata_5x5_amazon_simyr2000_c091026.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"    sim_year="2000" >
 lnd/clm2/surfdata/surfdata_1x1_brazil_simyr2000_c090928.nc</fsurdat>
 <fsurdat hgrid="1x1_tropicAtl" sim_year="2000" >
-lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_simyr2000_c090421.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr2000_c090923.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" >
@@ -172,7 +171,7 @@ lnd/clm2/surfdata/surfdata_0.23x0.31_urb3den_simyr1850_c090827.nc</fsurdat>
 <fsurdat hgrid="0.47x0.63" sim_year="1850" >
 lnd/clm2/surfdata/surfdata_0.47x0.63_urb3den_simyr1850_c090729.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"  sim_year="1850" >
-lnd/clm2/surfdata/surfdata_0.9x1.25_urb3den_simyr1850_c090702.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_0.9x1.25_simyr1850_c091006.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="1850" >
 lnd/clm2/surfdata/surfdata_1.9x2.5_simyr1850_c091108.nc</fsurdat>
 <fsurdat hgrid="2.5x3.33"  sim_year="1850" >
@@ -195,7 +194,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fpftdyn hgrid="2.5x3.33"      sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_2.5x3.33_simyr1850-2005_c091109.nc</fpftdyn>
 <fpftdyn hgrid="10x15"         sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_simyr1850-2005_c100205.nc</fpftdyn>
 <fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1850-2000" >lnd/clm2/surfdata/surfdata.pftdyn_1x1_tropicAtl_simyr1850-2005_c091026.nc</fpftdyn>
-<fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1000-1004" >lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_tropicAtl_testyr1000-1004_c090731.nc</fpftdyn>
+<fpftdyn hgrid="1x1_tropicAtl" sim_year_range="1000-1004" >lnd/clm2/surfdata/surfdata.pftdyn_1x1pt_tropicAtl_testyr1000-1004_c090924.nc</fpftdyn>
 
 <!-- Dynamic PFT surface datasets for future scenarios(relative to {csmdata}) -->
 <fpftdyn hgrid="0.9x1.25"      rcp="8.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp8.5_simyr1850-2100_c100205.nc</fpftdyn>
@@ -215,7 +214,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmgrid hgrid="0.23x0.31" >lnd/clm2/griddata/griddata_0.23x0.31_c070927.nc</fatmgrid>
 <fatmgrid hgrid="0.47x0.63" >lnd/clm2/griddata/griddata_0.47x0.63_c070918.nc</fatmgrid>
 <fatmgrid hgrid="0.9x1.25"  >lnd/clm2/griddata/griddata_0.9x1.25_070212.nc</fatmgrid>
-<fatmgrid hgrid="1x1.25"    >lnd/clm2/griddata/griddata_1x1.25_060404.nc</fatmgrid>
 <fatmgrid hgrid="1.9x2.5"   >lnd/clm2/griddata/griddata_1.9x2.5_060404.nc</fatmgrid>
 <fatmgrid hgrid="2.65x3.33" >lnd/clm2/griddata/griddata_2.65x3.33_c080208.nc</fatmgrid>
 <fatmgrid hgrid="2.5x3.33"  >lnd/clm2/griddata/griddata_2.5x3.33_c091012.nc</fatmgrid>
@@ -242,7 +240,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <flndtopo hgrid="0.23x0.31" >lnd/clm2/griddata/topodata_0.23x0.31_USGS_c070927.nc</flndtopo>
 <flndtopo hgrid="0.47x0.63" >lnd/clm2/griddata/topodata_0.47x0.63_USGS_c070918.nc</flndtopo>
 <flndtopo hgrid="0.9x1.25"  >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</flndtopo>
-<flndtopo hgrid="1x1.25"    >lnd/clm2/griddata/topodata_1x1.25_USGS_070110.nc</flndtopo>
 <flndtopo hgrid="1.9x2.5"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</flndtopo>
 <flndtopo hgrid="2.65x3.33" >lnd/clm2/griddata/topodata_2.65x3.33_USGS_c080208.nc</flndtopo>
 <flndtopo hgrid="2.5x3.33"  >lnd/clm2/griddata/topodata_2.5x3.33_USGS_c091012.nc</flndtopo>
@@ -260,7 +257,6 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmtopo hgrid="0.23x0.31" >lnd/clm2/griddata/topodata_0.23x0.31_USGS_c070927.nc</fatmtopo>
 <fatmtopo hgrid="0.47x0.63" >lnd/clm2/griddata/topodata_0.47x0.63_USGS_c070918.nc</fatmtopo>
 <fatmtopo hgrid="0.9x1.25"  >lnd/clm2/griddata/topodata_0.9x1.25_USGS_070110.nc</fatmtopo>
-<fatmtopo hgrid="1x1.25"    >lnd/clm2/griddata/topodata_1x1.25_USGS_070110.nc</fatmtopo>
 <fatmtopo hgrid="1.9x2.5"   >lnd/clm2/griddata/topodata_1.9x2.5_USGS_061130.nc</fatmtopo>
 <fatmtopo hgrid="2.65x3.33" >lnd/clm2/griddata/topodata_2.65x3.33_USGS_c080208.nc</fatmtopo>
 <fatmtopo hgrid="2.5x3.33"  >lnd/clm2/griddata/topodata_2.5x3.33_USGS_c091012.nc</fatmtopo>
@@ -271,11 +267,7 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 
 <fatmlndfrc hgrid="360x720" mask="USGS"  >lnd/clm2/griddata/fracdata_360x720_070122.nc</fatmlndfrc>
 <fatmlndfrc hgrid="128x256" mask="USGS"  >lnd/clm2/griddata/fracdata_128x256_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc hgrid="128x256" mask="gx1v3" >lnd/clm2/griddata/fracdata_128x256_gx1v3_060829.nc</fatmlndfrc>
-<fatmlndfrc hgrid="128x256" mask="gx1v4" >lnd/clm2/griddata/fracdata_128x256_gx1v4_060829.nc</fatmlndfrc>
 <fatmlndfrc hgrid="64x128"  mask="USGS"  >lnd/clm2/griddata/fracdata_64x128_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc hgrid="64x128"  mask="gx1v3" >lnd/clm2/griddata/fracdata_64x128_gx1v3_060829.nc</fatmlndfrc>
-<fatmlndfrc hgrid="64x128"  mask="gx1v4" >lnd/clm2/griddata/fracdata_64x128_gx1v4_060829.nc</fatmlndfrc>
 <fatmlndfrc hgrid="64x128"  mask="gx1v5" >lnd/clm2/griddata/fracdata_64x128_gx1v5_c090206.nc</fatmlndfrc>
 <fatmlndfrc hgrid="64x128"  mask="gx3v5" >lnd/clm2/griddata/fracdata_64x128_gx3v5_c090206.nc</fatmlndfrc>
 <fatmlndfrc hgrid="48x96"   mask="USGS"  >lnd/clm2/griddata/fracdata_48x96_USGS_070110.nc</fatmlndfrc>
@@ -296,14 +288,8 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fatmlndfrc hgrid="0.9x1.25"  mask="gx1v5"  >lnd/clm2/griddata/fracdata_0.9x1.25_gx1v5_c070927.nc</fatmlndfrc>
 <fatmlndfrc hgrid="0.9x1.25"  mask="gx1v6"  >lnd/clm2/griddata/fracdata_0.9x1.25_gx1v6_c090317.nc</fatmlndfrc>
 <fatmlndfrc hgrid="0.9x1.25"  mask="tx0.1v2">lnd/clm2/griddata/fracdata_0.9x1.25_tx0.1v2_c070928.nc</fatmlndfrc>
-<fatmlndfrc hgrid="1x1.25"    mask="USGS"   >lnd/clm2/griddata/fracdata_1x1.25_USGS_070110.nc</fatmlndfrc>
-<fatmlndfrc hgrid="1x1.25"    mask="gx1v3"  >lnd/clm2/griddata/fracdata_1x1.25_gx1v3_060404.nc</fatmlndfrc>
-<fatmlndfrc hgrid="1x1.25"    mask="gx1v4"  >lnd/clm2/griddata/fracdata_1x1.25_gx1v4_060711.nc</fatmlndfrc>
-<fatmlndfrc hgrid="1x1.25"    mask="gx1v5"  >lnd/clm2/griddata/fracdata_1x1.25_gx1v5_070612.nc</fatmlndfrc>
 
 <fatmlndfrc hgrid="1.9x2.5"   mask="USGS"   >lnd/clm2/griddata/fracdata_1.9x2.5_USGS_061130.nc</fatmlndfrc>
-<fatmlndfrc hgrid="1.9x2.5"   mask="gx1v3"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v3_060404.nc</fatmlndfrc>
-<fatmlndfrc hgrid="1.9x2.5"   mask="gx1v4"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v4_060808.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1.9x2.5"   mask="gx1v5"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v5_070316.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1.9x2.5"   mask="gx1v6"  >lnd/clm2/griddata/fracdata_1.9x2.5_gx1v6_c090206.nc</fatmlndfrc>
 <fatmlndfrc hgrid="1.9x2.5"   mask="tx1v1"  >lnd/clm2/griddata/fracdata_1.9x2.5_tx1v1_c090714.nc</fatmlndfrc>
@@ -531,5 +517,12 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <frivinp_rtm rtm="on">lnd/clm2/rtmdata/rdirc.05.061026</frivinp_rtm>
 
 <hist_crtinic >NONE</hist_crtinic>
+
+<!-- mksrf_fvegtyp -->
+<mksrf_fvegtyp hgrid="1x1_tropicAtl" sim_year="1000">lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_1x1_tropicAtl_testyr1000_c090722.nc</mksrf_fvegtyp>
+<mksrf_fvegtyp hgrid="1x1_tropicAtl" sim_year="1001">lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_1x1_tropicAtl_testyr1001_c090722.nc</mksrf_fvegtyp>
+<mksrf_fvegtyp hgrid="1x1_tropicAtl" sim_year="1002">lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_1x1_tropicAtl_testyr1002_c090722.nc</mksrf_fvegtyp>
+<mksrf_fvegtyp hgrid="1x1_tropicAtl" sim_year="1003">lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_1x1_tropicAtl_testyr1003_c090722.nc</mksrf_fvegtyp>
+<mksrf_fvegtyp hgrid="1x1_tropicAtl" sim_year="1004">lnd/clm2/rawdata/pftdyn.testing.testyr1000-1004/mksrf_pft_1x1_tropicAtl_testyr1004_c090722.nc</mksrf_fvegtyp>
 
 </namelist_defaults>
