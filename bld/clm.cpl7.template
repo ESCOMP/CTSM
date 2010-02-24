@@ -141,6 +141,12 @@ cat >> $CASEBUILD/clm.buildnml.csh << EOF1
 EOF
 EOF1
 
+#
+# Remove temporary namelist in the clmconf directory
+# (Leave config_cache.xml file as it documents what was done here)
+#
+\rm -f $CASEBUILD/clmconf/lnd_in $CASEBUILD/clmconf/ccsm_namelist
+
 #--------------------------------------------------------------------
 # Create clm.buildexe.csh
 #--------------------------------------------------------------------
@@ -178,3 +184,9 @@ set clmdefs = "`cat \$CASEBUILD/clmconf/CCSM_cppdefs`"
 gmake complib -j \$GMAKE_J MODEL=clm COMPLIB=\$LIBROOT/liblnd.a MACFILE=\$CASEROOT/Macros.\$MACH USER_CPPDEFS="\$clmdefs" -f \$CASEROOT/Tools/Makefile || exit 2
 
 EOF2
+
+#
+# Remove any temporary configure files in the clmconf directory
+# (Some files are still used in clm.buildexe.csh, so leave those around: CCSM_cppdefs and *.h)
+#
+\rm -f $CASEBUILD/clmconf/Filepath

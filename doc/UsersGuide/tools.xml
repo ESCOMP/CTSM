@@ -60,8 +60,9 @@ The tools other than "cprnc" also  allow finer control, by also allowing the use
 add compiler flags they choose for both "C" and FORTRAN compilers and set the linker 
 and add linker options. Finally the tools other than "cprnc" allow you to turn
 optimization on (which is off by default) with the <envar>OPT</envar> flag so that the 
-tool will run faster. To get even faster performance, the interpinic program allows 
-you to also use the <envar>SMP</envar> to turn on multiple shared memory processors.
+tool will run faster. To get even faster performance, the interpinic, mksurfdata, and
+mkgriddata programs allow you to also use the <envar>SMP</envar> to turn on multiple 
+shared memory processors.
 When <envar>SMP=TRUE</envar> you set the number of threads used by the program with
 the <envar>OMP_NUM_THREADS</envar> environment variable.
 </para>
@@ -83,7 +84,7 @@ Options used by: interpinic, mkdatadomain, mkgriddata, and mksurfdata
 <member><envar>USER_CC</envar> -- sets the name of the "C" compiler to use.</member>
 <member><envar>OPT</envar> -- set to TRUE to compile the code optimized (TRUE or FALSE)</member>
 </simplelist>
-Options used only by interpinic:
+Options used by: interpinic, mkgriddata, and mksurfdata:
 <simplelist>
 <member><envar>SMP</envar> -- set to TRUE to turn on shared memory parallelism (i.e.
 OpenMP) (TRUE or FALSE)</member>
@@ -277,19 +278,113 @@ etc.).
 </para>
 </sect1>
 
-<sect1 id="ndepregrid">
+<sect1 id="ncl_scripts">
+<title>Using NCL scripts ndepregrid.ncl and aerdepregrid.ncl to interpolate aerosol deposition datasets</title>
+<para>
+Unlike the other tools, these are NCAR Command Language (NCL) scripts
+and you will need to get a copy of NCL in order to use them. You also won't have to
+build an executable in order to use them, hence no Makefile is provided. NCL is provided
+for free download as either binaries or source code from:
+<ulink url="http://www.ncl.ucar.edu/">http://www.ncl.ucar.edu/</ulink>. The NCL
+web-site also contains documentation on NCL and it's use.
+</para>
+<para>
+Both the <filename>ndepregrid.ncl</filename> and <filename>aerdepregrid.ncl</filename>
+scripts have similar interfaces and you customize the output resolution and
+characteristics based on the settings of environment variables that you set (if you
+don't set any of the variables, the script has defaults that it will use).
+The list of environment variables that can be set are:
+<simplelist>
+<member><envar>RES</envar> -- output resolution name</member>
+<member><envar>RCP</envar> -- representative concentration pathway for future scenarios
+(example 2.6, 4.5, 6, or 8.5)</member>
+<member><envar>SIM_YR</envar> -- simulation year (example 1850 or 2000)</member>
+<member><envar>SIM_YR_RNG</envar> -- simulation year range (example 1850-2000 or
+1850-2100)</member>
+<member><envar>GRDFIL</envar> -- full pathname of grid file to use 
+(in place of getting the default grid file based on the <envar>RES</envar> value)</member>
+<member><envar>CSMDATA</envar> -- CCSM inputdata directory</member>
+<member><envar>CLM_ROOT</envar> -- root directory for clm (models/lnd/clm directory)</member>
+</simplelist>
+</para>
+<note>
+<para>
+You <emphasis>MUST</emphasis> provide either <envar>RES</envar> or both
+<envar>GRDFIL</envar> <emphasis>AND</emphasis> <envar>RES</envar>. If you
+just give <envar>RES</envar> the default namelist database in
+<filename>models/lnd/clm/bld</filename> will be used to find the default grid
+file based on the resolution name <envar>RES</envar>. If you provide
+<envar>GRDFIL</envar> the input pathname of the gridfile provided will be used,
+and the output filename will include <envar>RES</envar> as part of it's name
+to designate it as an output file at that resolution.
+</para>
+</note>
+<para>
+Both scripts assume that you will be interpolating from a native resolution of 1.9x2.5
+and using the default files found in the namelist database to interpolate from. If you
+want to interpolate from another resolution or use other files, you would need to edit
+the scripts to do so. Both scripts also use a bilinear interpolation to do the
+regridding. The environment variables: <envar>RCP</envar>, <envar>SIM_YR</envar>,
+and <envar>SIM_YR_RNG</envar> will be used to query the namelist database to 
+determine which native dataset to interpolate from. If you don't provide valid
+values for these variables, it won't be able to find a dataset to interpolate from.
+You can use the build-namelist script to query what the valid values for these can
+be. Likewise, when you use <envar>RES</envar> to determine the grid file to interpolate
+to, it needs to be a valid value from the namelist database.
+</para>
+<para>
+The scripts can be used to interpolate from (and create output) constant or
+transient datasets.
+Constant datasets specify the <envar>SIM_YR</envar> and set <envar>SIM_YR_RNG</envar>
+to <varname>constant</varname> (which is also the default). Transient datasets need
+to specify both <envar>SIM_YR</envar> and <envar>SIM_YR_RNG</envar>, where 
+<envar>SIM_YR</envar> is set to the first year in the interval (typcially 1850).
+</para>
+<para>
+The default for <envar>CSMDATA</envar> works for NCAR computers, but will need to
+be set to the top level directory location of your CCSM input data on other computers.
+If you set this as a default for your shell when you login (for example with your
+<filename>$HOME/.cshrc</filename> if you use csh) you won't have to set it each time
+you run the script. <envar>CLM_ROOT</envar> will default to the proper location
+when you run it in the <filename>models/lnd/clm/tools/ncl_script</filename>
+directory. It is only useful if you want to run the script out of a different 
+directory.
+</para>
+<sect2 id="ndepregrid">
 <title>Using ndepregrid.ncl to interpolate Nitrogen deposition datasets</title>
 <para>
 "ndepregrid.ncl" interpolates the Nitrogen deposition datasets from one resolution
-to another.
+to another.  It can be used to interpolate either constant datasets
+(<varname>fndepdat</varname> files) or transient datasets (<varname>fndepdyn</varname> files).
 </para>
-</sect1>
+<para>
+For example, to interpolate to an output resolution of 0.9x1.25, for a constant
+simulation-year of 1850, you would do the following:
+<screen>
+> env RES=0.9x1.25 SIM_YR=1850 ncl ndepregrid.ncl
+</screen>
+</para>
+</sect2>
 
-<sect1 id="aerdepregrid">
+<sect2 id="aerdepregrid">
 <title>Using aerdepregrid.ncl to interpolate Aerosol deposition datasets</title>
 <para>
 "aerdepregrid.ncl" interpolates the Aerosol deposition datasets from one resolution.
+It can be used to interpolate either constant datasets (for example:
+aerosoldep_monthly_2000_0.9x1.25_c090828.nc) or transient datasets (for example:
+aerosoldep_monthly_1849-2006_0.9x1.25_c090830.nc). The aerosol datasets unlike the
+Nitrogen deposition datasets, are named the same <varname>faerdep</varname> whether
+they contain one time-sample or a time-series of data. But, in any case, this script
+can be used to interpolate either kind of file.
 </para>
+<para>
+For example, to interpolate to an output resolution of 4x5, for a transient
+simulation-year range of 1850 to 2100 and the rcp of 8.5, you would do the following:
+<screen>
+> env RES=4x5 SIM_YR=1850 SIM_YR_RNG=1850-2100 RCP=8.5 ncl ndepregrid.ncl
+</screen>
+</para>
+</sect2>
 </sect1>
 
 <sect1 id="customizing_files">

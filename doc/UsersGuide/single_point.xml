@@ -83,7 +83,7 @@ Then configure, build and run normally.
 <note>
 <para>
 Just like <envar>PTS_MODE</envar> above, By default it sets up to run with
-<envar>USE_MPISERIAL</envar> (in the <filename>env_builld.xml</filename> file) turned on, 
+<envar>USE_MPISERIAL</envar> (in the <filename>env_build.xml</filename> file) turned on, 
 which allows you to run the model interactively. On some machines this mode is NOT 
 supported and you may need to change it to FALSE before you are able to build.
 </para>
@@ -101,6 +101,92 @@ with your own single-point or regional datasets. Below we reprint the above guid
 &quickstart_userdata;
 </programlisting>
 </para>
+
+<sect2 id="getregional_datasets.pl">
+<title>Using getregional_datasets.pl to get a complete suite of regional datasets from
+global ones</title>
+<para>
+Use the regional extraction script to get regional datasets from the global ones
+The getregional_datasets.pl script to extract out regional datasets of interest.
+Note, the script works on all files other than the "finidat" file as it's a 1D vector file.
+The script will extract out a block of gridpoints from all the input global datasets,
+and create the full suite of input datasets to run over that block. The input datasets
+will be named according to the input "id" you give them and the id can then be used
+as input to <envar>CLM_USRDAT_NAME</envar> to create a case that uses it. See
+the section on <link linkend="clm_script">CLM Script Configuration Items</link> for 
+more information on setting <envar>CLM_USRDAT_NAME</envar> (in <xref 
+linkend="customize"></xref>). The list of files extracted by
+their name used in the namelists are:
+<varname>fatmgrid</varname>, <varname>fatmlndfrc</varname>, 
+<varname>fsurdat</varname>, <varname>fpftdyn</varname>, 
+<varname>flndtopo</varname>, <varname>faerdep</varname>, <varname>fndepdat</varname>,
+<varname>fndepdyn</varname>, and the datm file <varname>domainfile</varname>.
+For more information on these files see the <link linkend="required_files"
+>Table on required files</link>.
+</para>
+<para>
+The alturnatives to using this script are to use <envar>PTS_MODE</envar>,
+disucssed earlier, or creating the files individually using the different 
+file creation tools (given in the <link linkend="tools">Tools Chapter</link>). Creating
+all the files individually takes quite a bit of effort and time. <envar>PTS_MODE</envar>
+has some limitations as discussed earlier, but also as it uses global files, is
+a bit slower when running simulations than using files that just have the set
+of points you want to run over. Another advantage is that once you've created the
+files using this script you can customize them if you have data on this specific
+location that you can replace with what's already in these files.
+</para>
+<para>
+The script requires the use of both "Perl" and "NCL". See the <link
+linkend="ncl_scripts">NCL Script</link> section in the <link linkend="tools">Tools Chapter</link>
+on getting and using NCL and NCL scripts. The main script to use is a perl script 
+which will then in turn call the NCL script that actually creates the output files. 
+The ncl script gets it's settings from environment variables set by the perl script.
+To get help with the script use "-help" as follows:
+<screen>
+> cd models/lnd/clm/tools/ncl_scripts
+> getregional_datasets.pl -help
+</screen>
+The output of the above is:
+<screen>
+&getreg_datasets;
+</screen>
+</para>
+<para>
+The <emphasis>required</emphasis> options are: <varname>-id</varname>,
+<varname>-ne</varname>, and <varname>-se</varname>, for the output identifier
+name to use in the filenames, latitude and longitude of the Northeast corner, and
+latitude and longitude of the SouthEast corner (in degrees). Options that specify
+which files will be used are: <varname>-mask</varname>, <varname>-res</varname>,
+<varname>-rcp</varname>, <varname>-sim_year</varname>, and <varname>-sim_yr_rng</varname>
+for the land-mask to use, global resolution name, representative concentration pathway
+for future scenarios, simulation year, and simulation year range. The location of the 
+input and output files will be determined by the option <varname>-mycsmdata</varname> 
+(can also be set by using the environment variable <varname>$CSMDATA</varname>). If
+you are running on a machine like at NCAR where you do NOT have write permission
+to the CCSM inputdata files, you should use the <filename>scripts/link_dirtree</filename>
+script to create softlinks of the original files to a location that you can write
+to. This way you can use both your new files you created as well as the original
+files and use them from the same location.
+</para>
+<para>
+The remaining options to the script are <varname>-debug</varname>,
+and <varname>-verbose</varname>. <varname>-debug</varname> is used to show what
+would happen if the script was run, without creating the actual files.
+<varname>-verbose</varname> adds extra log output while creating the files so you
+can more easily see what the script is doing.
+</para>
+<para>
+For example, Run the extraction for data from 52-73 North latitude, 190-220 longitude
+that creates 13x12 gridcell region from the f19 (1.9x2.5) global resolution over Alaska.
+<screen>
+> cd models/lnd/clm/tools/ncl_scripts
+> getregional_datasets.pl -sw 52,190 -ne 73,220 -id 13x12pt_f19_alaskaUSA -mycsmdata $CSMDATA
+</screen>
+Repeat this process if you need files for multiple sim_year, resolutions, land-masks, 
+and sim_year_range values.
+</para>
+</sect2>
+
 </sect1>
 
 </chapter>

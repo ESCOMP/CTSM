@@ -261,7 +261,7 @@ Example, you want to set <varname>hist_dov2xy</varname> to <varname>.false.</var
 so that you get vector output to your history files. You want to edit
 <filename>env_conf.xml</filename> and add a setting for <varname>hist_dov2xy</varname>.
 So do the following:
-<screen>%xmlchange -file env_conf.xml -id CLM_NAMELIST_OPTS -val hist_dov2xy=.false.</screen>
+<screen>> xmlchange -file env_conf.xml -id CLM_NAMELIST_OPTS -val hist_dov2xy=.false.</screen>
 </para>
 <para>
 CLM_CO2_TYPE

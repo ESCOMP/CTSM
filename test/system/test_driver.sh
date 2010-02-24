@@ -3,7 +3,7 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on calgary, breeze, dublin, edinburgh, bluefire, jaguar, kraken, intrepid: 
+# usage on calgary, breeze, edinburgh, bluefire, jaguar, kraken, intrepid: 
 # ./test_driver.sh
 #
 # valid arguments: 
@@ -260,105 +260,6 @@ input_file="tests_pretag_calgary"
 if [ -z "$CLM_CCSMBLD" ]; then
    export CLM_CCSMBLD="TRUE"
 fi
-
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
-
-    ## dublin
-    dublin* | d0*) 
-    submit_script="test_driver_dublin_${cur_time}.sh"
-    export PATH=/cluster/torque/bin:${PATH}
-
-    if [ -z "$CLM_CCSMBLD" ]; then
-	export CLM_CCSMBLD="TRUE"
-    fi
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-# Name of the queue (CHANGE THIS if needed)
-#PBS -q long
-# Number of nodes (CHANGE THIS if needed)
-#PBS -l nodes=1:ppn=8
-# output file base name
-#PBS -N test_dr
-# Put standard error and standard out in same file
-#PBS -j oe
-# Export all Environment variables
-#PBS -V
-# End of options
-
-if [ -n "\$PBS_JOBID" ]; then    #batch job
-    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
-    initdir=\${PBS_O_WORKDIR}
-fi
-
-if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
-    interactive="NO"
-    input_file="tests_pretag_dublin"
-else
-    export CLM_CCSMBLD="FALSE"
-    interactive="YES"
-    input_file="tests_pretag_dublin_nompi"
-fi
-
-##omp threads
-if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=1
-fi
-export CLM_RESTART_THREADS=2
-
-##mpi tasks
-export CLM_TASKS=8
-export CLM_RESTART_TASKS=1
-
-export CLM_COMPSET="I"
-
-export PGI=/usr/local/pgi-pgcc-pghf-7.2-5
-export LAHEY=/usr/local/lf6481
-export INTEL=/usr/local/intel-cluster-3.2.02
-export P4_GLOBMEMSIZE=500000000
-
-
-if [ "\$CLM_FC" = "PGI" ]; then
-    netcdf=/usr/local/netcdf-3.6.3-pgi-hpf-cc-7.2-5
-    mpich=/usr/local/mpich-1.2.7p1-pgi-hpf-cc-7.2-5
-    export LD_LIBRARY_PATH=\${PGI}/linux86/lib:/cluster/torque/lib:\${LD_LIBRARY_PATH}
-    export PATH=\${PGI}/linux86/bin:\${mpich}/bin:\${PATH}
-    export CCSM_MACH="dublin_pgi"
-    export CFG_STRING=""
-    export TOOLS_MAKE_STRING=""
-elif [ "\$CLM_FC" = "INTEL" ]; then
-    netcdf=/usr/local/netcdf-3.6.3-intel-3.2.02
-    mpich=/usr/local/mpich-1.2.7p1-intel-3.2.02
-    export LD_LIBRARY_PATH=/cluster/torque/lib:\${INTEL}/cc/11.0.074/lib/intel64:\${INTEL}/fc/11.0.074/lib/intel64:\${LD_LIBRARY_PATH}
-    export PATH=\${INTEL}/fc/11.0.074/bin/intel64:\${INTEL}/cc/11.0.074/bin/intel64:\${mpich}/bin:\${PATH}
-    export CCSM_MACH="dublin_intel"
-    export CFG_STRING="-fc ifort "
-    export TOOLS_MAKE_STRING="USER_FC=ifort "
-    /usr/local/intel-cluster-3.2.02/intel-login-script.sh
-else
-    netcdf=/usr/local/netcdf-3.6.3-gcc-4.1.2-lf95-8.0_x86_64
-    mpich=/usr/local/mpich-1.2.7p1-gcc-g++-4.1.2-42-lf9581
-    export LD_LIBRARY_PATH=\${LAHEY}/lib64:/cluster/torque/lib:\${LD_LIBRARY_PATH}
-    export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
-    export CCSM_MACH="dublin_lahey"
-    export CFG_STRING="-fc lf95 -cc gcc "
-    export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
-fi
-export INC_NETCDF=\${netcdf}/include
-export LIB_NETCDF=\${netcdf}/lib
-export INC_MPI=\${mpich}/include
-export LIB_MPI=\${mpich}/lib
-export MAKE_CMD="gmake -j 5"   ##using hyper-threading on dublin
-export MACH_WORKSPACE="/scratch/cluster"
-export CPRNC_EXE=/fs/cgd/csm/tools/cprnc_64/cprnc
-export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
-dataroot="/fs/cgd/csm"
-echo_arg="-e"
 
 EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
@@ -1068,7 +969,7 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on calgary, bluefire, dublin, edinburgh, jaguar, kraken, intrepid: "
+    echo "usage on calgary, bluefire, edinburgh, jaguar, kraken, intrepid: "
     echo "./test_driver.sh"
     echo ""
     echo "valid arguments: "
@@ -1095,9 +996,6 @@ case $hostname in
 
     ##calgary
     ca* | c0* )  qsub ${submit_script};;
-
-    ##dublin
-    dublin* | d0* )  qsub ${submit_script};;
 
     ##edinburgh
     edinburgh** | e0* )  qsub ${submit_script};;

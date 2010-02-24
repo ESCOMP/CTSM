@@ -27,6 +27,7 @@ module clmtypeInitMod
 !
 ! !REVISION HISTORY:
 ! Created by Peter Thornton and Mariana Vertenstein
+! Modified by Colette L. Heald (05/06) for VOC emission factors
 ! 3/17/08 David Lawrence, changed nlevsoi to nlevgrnd where appropriate
 !
 ! !PRIVATE MEMBER FUNCTIONS:
@@ -45,6 +46,7 @@ module clmtypeInitMod
 #if (defined DGVM)
   private :: init_pft_pdgvstate_type
 #endif
+  private :: init_pft_vstate_type
   private :: init_pft_estate_type
   private :: init_pft_wstate_type
   private :: init_pft_cstate_type
@@ -56,6 +58,7 @@ module clmtypeInitMod
   private :: init_pft_nflux_type
   private :: init_pft_vflux_type
   private :: init_pft_dflux_type
+  private :: init_pft_depvd_type
   private :: init_column_pstate_type
   private :: init_column_estate_type
   private :: init_column_wstate_type
@@ -68,6 +71,7 @@ module clmtypeInitMod
   private :: init_landunit_pstate_type
   private :: init_landunit_eflux_type
   private :: init_gridcell_pstate_type
+  private :: init_gridcell_efstate_type
   private :: init_gridcell_wflux_type
 !EOP
 !----------------------------------------------------
@@ -175,6 +179,7 @@ contains
     call init_pft_pdgvstate_type(begp, endp, clm3%g%l%c%p%pdgvs)
     call init_pft_pdgvstate_type(begc, endc, clm3%g%l%c%cdgvs%pdgvs_a)
 #endif
+    call init_pft_vstate_type(begp, endp, clm3%g%l%c%p%pvs)
 
     ! pft energy state variables at the pft level and averaged to the column
 
@@ -238,10 +243,18 @@ contains
     call init_pft_vflux_type(begp, endp, clm3%g%l%c%p%pvf)
     call init_pft_vflux_type(begc, endc, clm3%g%l%c%cvf%pvf_a)
 
+    ! gridcell VOC emission factors (heald, 05/06)
+
+    call init_gridcell_efstate_type(begg, endg, clm3%g%gve)
+
     ! pft dust flux variables at pft level and averaged to column
 
     call init_pft_dflux_type(begp, endp, clm3%g%l%c%p%pdf)
     call init_pft_dflux_type(begc, endc, clm3%g%l%c%cdf%pdf_a)
+
+    ! pft dry dep velocity variables at pft level and averaged to column
+
+    call init_pft_depvd_type(begp, endp, clm3%g%l%c%p%pdd)
 
     ! column physical state variables at column level and averaged to
     ! the landunit and gridcell and model
@@ -916,6 +929,7 @@ contains
     allocate(pps%u10(beg:end))
     allocate(pps%fv(beg:end))
     allocate(pps%ram1(beg:end))
+    allocate(pps%vds(beg:end))
     allocate(pps%slasun(beg:end))
     allocate(pps%slasha(beg:end))
     allocate(pps%lncsun(beg:end))
@@ -941,6 +955,18 @@ contains
     allocate(pps%alphapsnsun(beg:end))
     allocate(pps%alphapsnsha(beg:end))
 #endif
+    ! heald: added from CASA definition
+    allocate(pps%sandfrac(beg:end))
+    allocate(pps%clayfrac(beg:end))
+    pps%sandfrac(beg:end) = nan
+    pps%clayfrac(beg:end) = nan
+    allocate(pps%mlaidiff(beg:end))
+    allocate(pps%rb1(beg:end))
+    allocate(pps%annlai(12,beg:end))
+    pps%mlaidiff(beg:end) = nan
+    pps%rb1(beg:end) = nan
+    pps%annlai(:,:) = nan
+
     
 #if (defined CASA)
     allocate(pps%Closs(beg:end,npools))  ! C lost to atm
@@ -984,8 +1010,6 @@ contains
     allocate(pps%nstepbeg(beg:end)) ! nstep at start of growing season
     allocate(pps%lgrow(beg:end))    ! growing season index (0 or 1) to be
                                     ! passed daily to CASA to get NPP
-    allocate(pps%sandfrac(beg:end))
-    allocate(pps%clayfrac(beg:end))
 #if (defined CLAMP)
     ! Summary variables added for the C-LAMP Experiments
     allocate(pps%casa_agnpp(beg:end))
@@ -1054,6 +1078,7 @@ contains
     pps%u10(beg:end) = nan
     pps%fv(beg:end) = nan
     pps%ram1(beg:end) = nan
+    pps%vds(beg:end) = nan
     pps%slasun(beg:end) = nan
     pps%slasha(beg:end) = nan
     pps%lncsun(beg:end) = nan
@@ -1121,8 +1146,6 @@ contains
     pps%tday(beg:end) = nan
     pps%tcount(beg:end) = nan
     pps%ndegday(beg:end) = nan
-    pps%sandfrac(beg:end) = nan
-    pps%clayfrac(beg:end) = nan
 #if (defined CLAMP)
     ! Summary variables added for the C-LAMP Experiments
     pps%casa_agnpp(beg:end) = nan
@@ -1342,48 +1365,92 @@ contains
     allocate(pdgvs%litter_decom_ave(beg:end))
     allocate(pdgvs%turnover_ind(beg:end))
 
-    pdgvs%agdd0(beg:end) = nan
-    pdgvs%agdd5(beg:end) = nan
-    pdgvs%agddtw(beg:end) = nan
-    pdgvs%agdd(beg:end) = nan
-    pdgvs%t10(beg:end) = nan
-    pdgvs%t_mo(beg:end) = nan
-    pdgvs%t_mo_min(beg:end) = nan
-    pdgvs%fnpsn10(beg:end) = nan
-    pdgvs%prec365(beg:end) = nan
-    pdgvs%agdd20(beg:end) = nan
-    pdgvs%tmomin20(beg:end) = nan
-    pdgvs%t10min(beg:end) = nan
-    pdgvs%tsoi25(beg:end) = nan
-    pdgvs%annpsn(beg:end) = nan
-    pdgvs%annpsnpot(beg:end) = nan
-    pdgvs%present(beg:end) = .false.
-    pdgvs%dphen(beg:end) = nan
-    pdgvs%leafon(beg:end) = nan
-    pdgvs%leafof(beg:end) = nan
-    pdgvs%nind(beg:end) = nan
-    pdgvs%lm_ind(beg:end) = nan
-    pdgvs%sm_ind(beg:end) = nan
-    pdgvs%hm_ind(beg:end) = nan
-    pdgvs%rm_ind(beg:end) = nan
-    pdgvs%lai_ind(beg:end) = nan
-    pdgvs%fpcinc(beg:end) = nan
-    pdgvs%fpcgrid(beg:end) = nan
-    pdgvs%crownarea(beg:end) = nan
-    pdgvs%bm_inc(beg:end) = nan
-    pdgvs%afmicr(beg:end) = nan
-    pdgvs%firelength (beg:end) = nan
-    pdgvs%litterag(beg:end) = nan
-    pdgvs%litterbg(beg:end) = nan
-    pdgvs%cpool_fast(beg:end) = nan
-    pdgvs%cpool_slow(beg:end) = nan
-    pdgvs%k_fast_ave(beg:end) = nan
-    pdgvs%k_slow_ave(beg:end) = nan
+    pdgvs%agdd0(beg:end)            = nan
+    pdgvs%agdd5(beg:end)            = nan
+    pdgvs%agddtw(beg:end)           = nan
+    pdgvs%agdd(beg:end)             = nan
+    pdgvs%t10(beg:end)              = nan
+    pdgvs%t_mo(beg:end)             = nan
+    pdgvs%t_mo_min(beg:end)         = nan
+    pdgvs%fnpsn10(beg:end)          = nan
+    pdgvs%prec365(beg:end)          = nan
+    pdgvs%agdd20(beg:end)           = nan
+    pdgvs%tmomin20(beg:end)         = nan
+    pdgvs%t10min(beg:end)           = nan
+    pdgvs%tsoi25(beg:end)           = nan
+    pdgvs%annpsn(beg:end)           = nan
+    pdgvs%annpsnpot(beg:end)        = nan
+    pdgvs%present(beg:end)          = .false.
+    pdgvs%dphen(beg:end)            = nan
+    pdgvs%leafon(beg:end)           = nan
+    pdgvs%leafof(beg:end)           = nan
+    pdgvs%nind(beg:end)             = nan
+    pdgvs%lm_ind(beg:end)           = nan
+    pdgvs%sm_ind(beg:end)           = nan
+    pdgvs%hm_ind(beg:end)           = nan
+    pdgvs%rm_ind(beg:end)           = nan
+    pdgvs%lai_ind(beg:end)          = nan
+    pdgvs%fpcinc(beg:end)           = nan
+    pdgvs%fpcgrid(beg:end)          = nan
+    pdgvs%crownarea(beg:end)        = nan
+    pdgvs%bm_inc(beg:end)           = nan
+    pdgvs%afmicr(beg:end)           = nan
+    pdgvs%firelength (beg:end)      = nan
+    pdgvs%litterag(beg:end)         = nan
+    pdgvs%litterbg(beg:end)         = nan
+    pdgvs%cpool_fast(beg:end)       = nan
+    pdgvs%cpool_slow(beg:end)       = nan
+    pdgvs%k_fast_ave(beg:end)       = nan
+    pdgvs%k_slow_ave(beg:end)       = nan
     pdgvs%litter_decom_ave(beg:end) = nan
-    pdgvs%turnover_ind(beg:end) = nan
-
+    pdgvs%turnover_ind(beg:end)     = nan
   end subroutine init_pft_pdgvstate_type
 #endif
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_pft_vstate_type
+!
+! !INTERFACE:
+  subroutine init_pft_vstate_type(beg, end, pvs)
+!
+! !DESCRIPTION:
+! Initialize pft VOC variables
+!
+! !USES:
+    use clm_varcon, only : spval
+! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: beg, end
+    type (pft_vstate_type), intent(inout):: pvs
+!
+! !REVISION HISTORY:
+! Created by Erik Kluzek
+!
+!EOP
+!------------------------------------------------------------------------
+
+    allocate(pvs%t_veg24 (beg:end))
+    allocate(pvs%t_veg240(beg:end))
+    allocate(pvs%fsd24   (beg:end))
+    allocate(pvs%fsd240  (beg:end))
+    allocate(pvs%fsi24   (beg:end))
+    allocate(pvs%fsi240  (beg:end))
+    allocate(pvs%fsun24  (beg:end))
+    allocate(pvs%fsun240 (beg:end))
+    allocate(pvs%elai_p  (beg:end))
+
+    pvs%t_veg24 (beg:end)   = spval
+    pvs%t_veg240(beg:end)   = spval
+    pvs%fsd24   (beg:end)   = spval
+    pvs%fsd240  (beg:end)   = spval
+    pvs%fsi24   (beg:end)   = spval
+    pvs%fsi240  (beg:end)   = spval
+    pvs%fsun24  (beg:end)   = spval
+    pvs%fsun240 (beg:end)   = spval
+    pvs%elai_p  (beg:end)   = spval
+  end subroutine init_pft_vstate_type
 
 !------------------------------------------------------------------------
 !BOP
@@ -2516,6 +2583,7 @@ contains
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
+! (heald, 08/06)
 !
 !EOP
 !------------------------------------------------------------------------
@@ -2527,6 +2595,22 @@ contains
     allocate(pvf%vocflx_3(beg:end))
     allocate(pvf%vocflx_4(beg:end))
     allocate(pvf%vocflx_5(beg:end))
+    allocate(pvf%Eopt_out(beg:end))
+    allocate(pvf%topt_out(beg:end))
+    allocate(pvf%alpha_out(beg:end))
+    allocate(pvf%cp_out(beg:end))
+    allocate(pvf%para_out(beg:end))
+    allocate(pvf%par24a_out(beg:end))
+    allocate(pvf%par240a_out(beg:end))
+    allocate(pvf%paru_out(beg:end))
+    allocate(pvf%par24u_out(beg:end))
+    allocate(pvf%par240u_out(beg:end))
+    allocate(pvf%gamma_out(beg:end))
+    allocate(pvf%gammaL_out(beg:end))
+    allocate(pvf%gammaT_out(beg:end))
+    allocate(pvf%gammaP_out(beg:end))
+    allocate(pvf%gammaA_out(beg:end))
+    allocate(pvf%gammaS_out(beg:end))
 
     pvf%vocflx_tot(beg:end) = nan
     pvf%vocflx(beg:end,1:nvoc) = nan
@@ -2535,6 +2619,22 @@ contains
     pvf%vocflx_3(beg:end) = nan
     pvf%vocflx_4(beg:end) = nan
     pvf%vocflx_5(beg:end) = nan
+    pvf%Eopt_out(beg:end) = nan
+    pvf%topt_out(beg:end) = nan
+    pvf%alpha_out(beg:end) = nan
+    pvf%cp_out(beg:end) = nan
+    pvf%para_out(beg:end) = nan
+    pvf%par24a_out(beg:end) = nan
+    pvf%par240a_out(beg:end) = nan
+    pvf%paru_out(beg:end) = nan
+    pvf%par24u_out(beg:end) = nan
+    pvf%par240u_out(beg:end) = nan
+    pvf%gamma_out(beg:end) = nan
+    pvf%gammaL_out(beg:end) = nan
+    pvf%gammaT_out(beg:end) = nan
+    pvf%gammaP_out(beg:end) = nan
+    pvf%gammaA_out(beg:end) = nan
+    pvf%gammaS_out(beg:end) = nan
 
   end subroutine init_pft_vflux_type
 
@@ -2577,6 +2677,38 @@ contains
     pdf%vlc_trb_4(beg:end) = nan
 
   end subroutine init_pft_dflux_type
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_pft_depvd_type
+!
+! !INTERFACE:
+  subroutine init_pft_depvd_type(beg, end, pdd)
+
+    use seq_drydep_mod, only:  n_drydep
+!
+! !DESCRIPTION:
+! Initialize pft dep velocity variables
+!
+! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: beg, end
+    type (pft_depvd_type), intent(inout):: pdd
+    integer :: i
+!
+! !REVISION HISTORY:
+! Created by James Sulzman 541-929-6183
+!
+!EOP
+!------------------------------------------------------------------------
+
+    if ( n_drydep > 0 )then
+       allocate(pdd%drydepvel(beg:end,n_drydep))
+       pdd%drydepvel = nan
+    end if
+
+  end subroutine init_pft_depvd_type
 
 !------------------------------------------------------------------------
 !BOP
@@ -3906,6 +4038,33 @@ contains
     !gps%dstx04dd2t(beg:end,1:2) = nan
 
   end subroutine init_gridcell_pstate_type
+
+!------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: init_gridcell_efstate_type
+!
+! !INTERFACE:
+  subroutine init_gridcell_efstate_type(beg, end, gve)
+!
+! !DESCRIPTION:
+! Initialize gridcell isoprene emission factor variables
+!
+! !ARGUMENTS:
+    implicit none
+    integer, intent(in) :: beg, end
+    type (gridcell_efstate_type), intent(inout) :: gve
+!
+! !REVISION HISTORY:
+! Created by Mariana Vertenstein (heald)
+!
+!EOP
+!------------------------------------------------------------------------
+
+    allocate(gve%efisop(6,beg:end))
+    gve%efisop(:,beg:end) = nan
+
+  end subroutine init_gridcell_efstate_type
 
 !------------------------------------------------------------------------
 !BOP

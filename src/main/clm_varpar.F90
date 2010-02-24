@@ -41,7 +41,7 @@ module clm_varpar
   integer, parameter :: ndst        =   4   ! number of dust size classes (BGC only)
   integer, parameter :: dst_src_nbr =   3   ! number of size distns in src soil (BGC only)
   integer, parameter :: sz_nbr      = 200   ! number of sub-grid bins in large bin of dust size distribution (BGC only)
-  integer, parameter :: nvoc        =   5   ! number of voc categories (BGC only)
+  integer, parameter :: nvoc        =   5   ! number of voc categories
 
 ! Define parameters for RTM river routing model
 

@@ -86,8 +86,8 @@ case $hostname in
         fi
     fi ;;
 
-    ##dublin or edinburgh
-    du* | d0* | edinburgh* | e0* )
+    ## edinburgh
+    edinburgh* | e0* )
     ##search config options file for parallelization info; default on linux is mpi
     if grep -ic NOSPMD ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
 	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then

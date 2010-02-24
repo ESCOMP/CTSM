@@ -164,6 +164,7 @@ type, public :: pft_pstate_type
    real(r8), pointer :: forc_hgt_u_pft(:)       !wind forcing height (10m+z0m+d) (m)
    real(r8), pointer :: forc_hgt_t_pft(:)       !temperature forcing height (10m+z0m+d) (m)
    real(r8), pointer :: forc_hgt_q_pft(:)       !specific humidity forcing height (10m+z0m+d) (m)
+   real(r8), pointer :: vds(:) 		        !deposition velocity term (m/s) (for dry dep SO4, NH4NO3)
    ! new variables for CN code
    real(r8), pointer :: slasun(:)     !specific leaf area for sunlit canopy, projected area basis (m^2/gC)
    real(r8), pointer :: slasha(:)     !specific leaf area for shaded canopy, projected area basis (m^2/gC)
@@ -187,6 +188,14 @@ type, public :: pft_pstate_type
    real(r8), pointer :: alphapsnsun(:) !sunlit 13c fractionation ([])
    real(r8), pointer :: alphapsnsha(:) !shaded 13c fractionation ([])
 #endif
+   ! heald: added outside of CASA definition
+   real(r8), pointer :: sandfrac(:)    ! sand fraction
+   real(r8), pointer :: clayfrac(:)    ! clay fraction
+   ! for dry deposition of chemical tracers
+   real(r8), pointer :: mlaidiff(:)    ! difference between lai month one and month two
+   real(r8), pointer :: rb1(:)         ! aerodynamical resistance (s/m)
+   real(r8), pointer :: annlai(:,:)    ! 12 months of monthly lai from input data set  
+
    
 #if (defined CASA)
    real(r8), pointer :: Closs(:,:)  ! C lost to atm
@@ -233,8 +242,6 @@ type, public :: pft_pstate_type
    real(r8), pointer :: nstepbeg(:)  ! nstep at start of growing season
    real(r8), pointer :: lgrow(:)     ! growing season index (0 or 1) to be
                                      ! passed daily to CASA to get NPP
-   real(r8), pointer :: sandfrac(:)  ! sand fraction
-   real(r8), pointer :: clayfrac(:)  ! clay fraction
 #if (defined CLAMP)
    ! Summary variables added for the C-LAMP Experiments
    real(r8), pointer :: casa_agnpp(:)        ! above-ground net primary production [gC/m2/s]
@@ -527,7 +534,15 @@ end type pft_nstate_type
 ! pft VOC state variables structure
 !----------------------------------------------------
 type, public :: pft_vstate_type
-   real(r8), pointer :: dummy_entry(:)
+   real(r8), pointer :: t_veg24(:)             ! 24hr average vegetation temperature (K)
+   real(r8), pointer :: t_veg240(:)            ! 240hr average vegetation temperature (Kelvin)
+   real(r8), pointer :: fsd24(:)               ! 24hr average of direct beam radiation 
+   real(r8), pointer :: fsd240(:)              ! 240hr average of direct beam radiation 
+   real(r8), pointer :: fsi24(:)               ! 24hr average of diffuse beam radiation 
+   real(r8), pointer :: fsi240(:)              ! 240hr average of diffuse beam radiation 
+   real(r8), pointer :: fsun24(:)              ! 24hr average of sunlit fraction of canopy 
+   real(r8), pointer :: fsun240(:)             ! 240hr average of sunlit fraction of canopy
+   real(r8), pointer :: elai_p(:)              ! leaf area index average over timestep 
 end type pft_vstate_type
 
 #if (defined DGVM)
@@ -1006,7 +1021,30 @@ type, public :: pft_vflux_type
    real(r8), pointer :: vocflx_3(:)       !vocflx(3) (for history output) [ug C m-2 h-1]
    real(r8), pointer :: vocflx_4(:)       !vocflx(4) (for history output) [ug C m-2 h-1]
    real(r8), pointer :: vocflx_5(:)       !vocflx(5) (for history output) [ug C m-2 h-1]
+   real(r8), pointer :: Eopt_out(:)       !Eopt coefficient
+   real(r8), pointer :: topt_out(:)       !topt coefficient
+   real(r8), pointer :: alpha_out(:)      !alpha coefficient
+   real(r8), pointer :: cp_out(:)         !cp coefficient
+   real(r8), pointer :: paru_out(:)
+   real(r8), pointer :: par24u_out(:)
+   real(r8), pointer :: par240u_out(:)
+   real(r8), pointer :: para_out(:)
+   real(r8), pointer :: par24a_out(:)
+   real(r8), pointer :: par240a_out(:)
+   real(r8), pointer :: gamma_out(:)
+   real(r8), pointer :: gammaL_out(:)
+   real(r8), pointer :: gammaT_out(:)
+   real(r8), pointer :: gammaP_out(:)
+   real(r8), pointer :: gammaA_out(:)
+   real(r8), pointer :: gammaS_out(:)
 end type pft_vflux_type
+
+!----------------------------------------------------
+! pft dry dep velocity variables structure
+!----------------------------------------------------
+type, public :: pft_depvd_type
+   real(r8), pointer :: drydepvel(:,:)
+end type pft_depvd_type
 
 !----------------------------------------------------
 ! pft dust flux variables structure
@@ -1609,6 +1647,7 @@ end type column_vflux_type
 type, public :: column_dflux_type
    type(pft_dflux_type):: pdf_a         !pft-level dust flux variables averaged to the column
 end type column_dflux_type
+
 !----------------------------------------------------
 ! End definition of structures defined at the column_type level
 !----------------------------------------------------
@@ -1689,7 +1728,7 @@ end type landunit_nstate_type
 ! landunit VOC state variables structure
 !----------------------------------------------------
 type, public :: landunit_vstate_type
-   type(column_vstate_type):: cvs_a            !column-level VOC state variables averaged to landunit
+   real(r8):: dummy_entry
 end type landunit_vstate_type
 
 !----------------------------------------------------
@@ -1759,6 +1798,7 @@ end type landunit_vflux_type
 type, public :: landunit_dflux_type
    type(pft_dflux_type):: pdf_a                !pft-level dust flux variables averaged to landunit
 end type landunit_dflux_type
+
 !----------------------------------------------------
 ! End definition of structures defined at the landunit_type level
 !----------------------------------------------------
@@ -1815,6 +1855,13 @@ end type gridcell_nstate_type
 type, public :: gridcell_vstate_type
    type(column_vstate_type):: cvs_a            !column-level VOC state variables averaged to gridcell
 end type gridcell_vstate_type
+
+!----------------------------------------------------
+! gridcell VOC emission factor variables structure (heald)
+!----------------------------------------------------
+type, public :: gridcell_efstate_type
+   real(r8), pointer      :: efisop(:,:)    ! isoprene emission factors
+end type gridcell_efstate_type
 
 !----------------------------------------------------
 ! gridcell dust state variables structure
@@ -1893,6 +1940,7 @@ end type gridcell_vflux_type
 type, public :: gridcell_dflux_type
    type(pft_dflux_type):: pdf_a                !pft-level dust flux variables averaged to gridcell
 end type gridcell_dflux_type
+
 !----------------------------------------------------
 ! End definition of structures defined at the gridcell_type level
 !----------------------------------------------------
@@ -2057,6 +2105,7 @@ type, public :: pft_type
    type(pft_nflux_type)  :: pnf         !pft nitrogen flux
    type(pft_vflux_type)  :: pvf         !pft VOC flux
    type(pft_dflux_type)  :: pdf         !pft dust flux
+   type(pft_depvd_type)  :: pdd         !dry dep velocity
    
 #if (defined C13)
    ! 4/14/05: PET
@@ -2099,7 +2148,6 @@ type, public :: column_type
    type(column_wstate_type) :: cws      !column water state
    type(column_cstate_type) :: ccs      !column carbon state
    type(column_nstate_type) :: cns      !column nitrogen state
-   type(column_vstate_type) :: cvs      !column VOC state
    type(column_dstate_type) :: cds      !column dust state
    
    ! flux variables defined at the column level
@@ -2234,6 +2282,7 @@ type, public :: gridcell_type
    type(gridcell_cstate_type) :: gcs    !average of carbon states all landunits
    type(gridcell_nstate_type) :: gns    !average of nitrogen states all landus
    type(gridcell_vstate_type) :: gvs    !average of VOC states all landunits
+   type(gridcell_efstate_type):: gve	!gridcell VOC emission factors
    type(gridcell_dstate_type) :: gds    !average of dust states all landunits
    
    ! flux variables defined at the gridcell level

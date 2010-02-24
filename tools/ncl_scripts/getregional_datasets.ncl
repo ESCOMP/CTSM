@@ -21,6 +21,7 @@ begin
   lonW       = stringtodouble( getenv("W_LON") );   ; Get west longitude from env variable
   id         = getenv("ID");                        ; Get mydataid from env variable
   res        = getenv("RES");                       ; Get resolution from env variable
+  rcp        = getenv("RCP");                       ; Get representative concentration pathway from env variable
   lmask      = getenv("MASK");                      ; Get input land/use mask to use from env variable
   sim_year   = stringtointeger( getenv("SIM_YR") ); ; Get input simulation year to use from env variable
   sim_yr_rng = getenv("SIM_YR_RNG");                ; Get input simulation year range to use
@@ -30,6 +31,9 @@ begin
 
   if ( ismissing(res) )then
      res = "1.9x2.5";
+  end if
+  if ( ismissing(rcp) )then
+     rcp = "8.5";
   end if
   if ( ismissing(lmask) )then
      lmask = "gx1v6";
@@ -83,7 +87,10 @@ begin
   end if
   print( "Extract out regional datasets from global datasets" );
   if ( printn .eq. True )then
-    print( "Global:   Resolution="+res+" mask="+lmask+" simyear="+sim_year+" sim_year_range="+sim_yr_rng );
+    print( "Global:   Resolution="+res+" mask="+lmask+" simyear="+sim_year );
+    if ( sim_yr_rng .ne. "constant" )then
+       print( "          sim_year_range="+sim_yr_rng+" rcp="+rcp );
+    end if
     print( "Regional: id="+id+" Latitude="+latS+"-"+latN+" Longitude="+lonW+"-"+lonE );
   end if
 
@@ -93,7 +100,8 @@ begin
   ldate     = systemfunc( "date" );
   clmroot  = getenv("CLM_ROOT");
   querynml = "bld/queryDefaultNamelist.pl -silent -justvalue ";
-  querynml = querynml + " -options bgc=cn,mask="+lmask+",sim_year="+sim_year+",sim_year_range="+sim_yr_rng;
+  querynml = querynml + " -options bgc=cn,mask="+lmask+",sim_year="+sim_year;
+  querynml = querynml + ",sim_year_range="+sim_yr_rng+",rcp="+rcp;
   if ( .not. ismissing(csmdata) )then
      querynml = querynml+" -csmdata "+csmdata;
   end if
@@ -142,7 +150,7 @@ begin
      ; Get the filename of the input global file and the output regional filename
      ;
      if ( files(i) .eq. "domainfile" ) then
-        queryopt= " -namelist dshr_nml";
+        queryopt= " -namelist shr_strdata_nml";
      else
         queryopt= " ";
      end if

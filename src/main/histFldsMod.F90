@@ -24,6 +24,7 @@ module histFldsMod
 !
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein 03/2003
+! heald (11/28/06)
 !
 !EOP
 !------------------------------------------------------------------------
@@ -133,6 +134,14 @@ contains
     call hist_addfld1d (fname='TV', units='K',  &
          avgflag='A', long_name='vegetation temperature', &
          ptr_pft=clm3%g%l%c%p%pes%t_veg)
+
+    call hist_addfld1d (fname='TV24', units='K',  &
+         avgflag='A', long_name='vegetation temperature (last 24hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvs%t_veg24, default='inactive')
+
+    call hist_addfld1d (fname='TV240', units='K',  &
+         avgflag='A', long_name='vegetation temperature (last 240hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvs%t_veg240, default='inactive')
 
     call hist_addfld1d (fname='TG',  units='K',  &
          avgflag='A', long_name='ground temperature', &
@@ -514,31 +523,117 @@ contains
          ptr_pft=clm3%g%l%c%p%pdf%vlc_trb_4, default='inactive')
 #endif
 
-#if (defined VOC)
-    call hist_addfld1d (fname='VOCFLXT', units='uG/M2/H',  &
+    call hist_addfld1d (fname='VOCFLXT', units='uGC/M2/H',  &
          avgflag='A', long_name='total VOC flux into atmosphere', &
          ptr_pft=clm3%g%l%c%p%pvf%vocflx_tot, set_lake=0._r8, set_urb=0._r8)
 
-    call hist_addfld1d (fname='ISOPRENE', units='uG/M2/H',  &
+    call hist_addfld1d (fname='ISOPRENE', units='uGC/M2/H',  &
          avgflag='A', long_name='isoprene flux', &
          ptr_pft=clm3%g%l%c%p%pvf%vocflx_1, set_lake=0._r8, set_urb=0._r8)
 
-    call hist_addfld1d (fname='MONOTERP', units='uG/M2/H',  &
+    call hist_addfld1d (fname='MONOTERP', units='uGC/M2/H',  &
          avgflag='A', long_name='monoterpene flux', &
          ptr_pft=clm3%g%l%c%p%pvf%vocflx_2, set_lake=0._r8, set_urb=0._r8)
 
-    call hist_addfld1d (fname='OVOC', units='uG/M2/H',  &
+    call hist_addfld1d (fname='OVOC', units='uGC/M2/H',  &
          avgflag='A', long_name='other VOC flux', &
          ptr_pft=clm3%g%l%c%p%pvf%vocflx_3, set_lake=0._r8, set_urb=0._r8)
 
-    call hist_addfld1d (fname='ORVOC', units='uG/M2/H',  &
+    call hist_addfld1d (fname='ORVOC', units='uGC/M2/H',  &
          avgflag='A', long_name='other reactive VOC flux', &
          ptr_pft=clm3%g%l%c%p%pvf%vocflx_4, set_lake=0._r8, set_urb=0._r8)
 
-    call hist_addfld1d (fname='BIOGENCO', units='uG/M2/H',  &
+    call hist_addfld1d (fname='BIOGENCO', units='uGC/M2/H',  &
          avgflag='A', long_name='biogenic CO flux', &
          ptr_pft=clm3%g%l%c%p%pvf%vocflx_5, set_lake=0._r8, set_urb=0._r8)
-#endif
+
+    call hist_addfld1d (fname='EOPT', units='non',  &
+         avgflag='A', long_name='Eopt coefficient for VOC calc', &
+         ptr_pft=clm3%g%l%c%p%pvf%Eopt_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='TOPT', units='non',  &
+         avgflag='A', long_name='topt coefficient for VOC calc', &
+         ptr_pft=clm3%g%l%c%p%pvf%topt_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='ALPHA', units='non',  &
+         avgflag='A', long_name='alpha coefficient for VOC calc', &
+         ptr_pft=clm3%g%l%c%p%pvf%alpha_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='CP', units='non',  &
+         avgflag='A', long_name='cp coefficient for VOC calc', &
+         ptr_pft=clm3%g%l%c%p%pvf%cp_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='FSUN24', units='K',  &
+         avgflag='A', long_name='fraction sunlit (last 24hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvs%fsun24, default='inactive')
+
+    call hist_addfld1d (fname='FSUN240', units='K',  &
+         avgflag='A', long_name='fraction sunlit (last 240hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvs%fsun240, default='inactive')
+
+    call hist_addfld1d (fname='FSI24', units='K',  &
+         avgflag='A', long_name='indirect radiation (last 24hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvs%fsi24, default='inactive')
+
+    call hist_addfld1d (fname='FSI240', units='K',  &
+         avgflag='A', long_name='indirect radiation (last 240hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvs%fsi240, default='inactive')
+
+    call hist_addfld1d (fname='FSD24', units='K',  &
+         avgflag='A', long_name='direct radiation (last 24hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvs%fsd24, default='inactive')
+
+    call hist_addfld1d (fname='FSD240', units='K',  &
+         avgflag='A', long_name='direct radiation (last 240hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvs%fsd240, default='inactive')
+
+    call hist_addfld1d (fname='PAR_sun', units='umol/m2/s', &
+         avgflag='A', long_name='sunlit PAR', &
+         ptr_pft=clm3%g%l%c%p%pvf%paru_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='PAR24_sun', units='umol/m2/s', &
+         avgflag='A', long_name='sunlit PAR (24 hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvf%par24u_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='PAR240_sun', units='umol/m2/s', &
+         avgflag='A', long_name='sunlit PAR (240 hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvf%par240u_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='PAR_shade', units='umol/m2/s', &
+         avgflag='A', long_name='shade PAR', &
+         ptr_pft=clm3%g%l%c%p%pvf%para_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='PAR24_shade', units='umol/m2/s', &
+         avgflag='A', long_name='shade PAR (24 hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvf%par24a_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='PAR240_shade', units='umol/m2/s', &
+         avgflag='A', long_name='shade PAR (240 hrs)', &
+         ptr_pft=clm3%g%l%c%p%pvf%par240a_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='GAMMA', units='non',  &
+         avgflag='A', long_name='total gamma for VOC calc', &
+         ptr_pft=clm3%g%l%c%p%pvf%gamma_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='GAMMAL', units='non',  &
+         avgflag='A', long_name='gamma L for VOC calc', &
+         ptr_pft=clm3%g%l%c%p%pvf%gammaL_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='GAMMAT', units='non',  &
+         avgflag='A', long_name='gamma T for VOC calc', &
+         ptr_pft=clm3%g%l%c%p%pvf%gammaT_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='GAMMAP', units='non',  &
+         avgflag='A', long_name='gamma P for VOC calc', &
+         ptr_pft=clm3%g%l%c%p%pvf%gammaP_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='GAMMAA', units='non',  &
+         avgflag='A', long_name='gamma A for VOC calc', &
+         ptr_pft=clm3%g%l%c%p%pvf%gammaA_out, set_lake=0._r8, default='inactive')
+
+    call hist_addfld1d (fname='GAMMAS', units='non',  &
+         avgflag='A', long_name='gamma S for VOC calc', &
+         ptr_pft=clm3%g%l%c%p%pvf%gammaS_out, set_lake=0._r8, default='inactive')
 
     ! Hydrology
 
@@ -4403,20 +4498,6 @@ contains
    call hist_addfld2d (fname='TPOOL_C', units='g/m2', type2d='npools', &  
         avgflag='A', long_name='Total Carbon for pool', &
         ptr_pft=clm3%g%l%c%p%pps%Tpool_C, set_lake=0._r8)
-
-! place holder:
-
-!!$    call hist_addfld2d (fname='NLOSS', units='', type2d='npools',  &
-!!$         avgflag='A', long_name='Amt. of Nitrogen lost by pool', &
-!!$         ptr_pft=clm3%g%l%c%p%pps%Nloss, set_lake=0.)
-!!$
-!!$    call hist_addfld2d (fname='RESP_N', units='', type2d='npools',  &
-!!$         avgflag='A', long_name='Amt. of Nitrogen lost to atm by pool', &
-!!$         ptr_pft=clm3%g%l%c%p%pps%Resp_N, set_lake=0.)
-!!$
-!!$    call hist_addfld2d (fname='TPOOL_N', units='', type2d='npools',  &
-!!$         avgflag='A', long_name='Total Nitrogen for pool', &
-!!$         ptr_pft=clm3%g%l%c%p%pps%Tpool_N, set_lake=0.)
 
 #if (defined CLAMP)
    ! Summary variables added for the C-LAMP Experiments

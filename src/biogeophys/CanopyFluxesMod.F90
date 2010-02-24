@@ -194,6 +194,7 @@ contains
 !
 ! local pointers to implicit out arguments
 !
+   real(r8), pointer :: rb1(:)             ! boundary layer resistance (s/m)
    real(r8), pointer :: cgrnd(:)           ! deriv. of soil energy flux wrt to soil temp [w/m2/k]
    real(r8), pointer :: dlrad(:)           ! downward longwave radiation below the canopy [W/m2]
    real(r8), pointer :: ulrad(:)           ! upward longwave radiation above the canopy [W/m2]
@@ -412,6 +413,7 @@ contains
 
    ! Assign local pointers to derived type members (pft-level)
 
+   rb1            => clm3%g%l%c%p%pps%rb1
    ivt            => clm3%g%l%c%p%itype
    pcolumn        => clm3%g%l%c%p%column
    plandunit      => clm3%g%l%c%p%landunit
@@ -530,6 +532,8 @@ contains
       dayl_factor(p) = 1.0_r8
 #endif
    end do
+
+   rb1(lbp:ubp) = 0._r8
 
    ! Effective porosity of soil, partial volume of ice and liquid (needed for btran)
    ! and root resistance factors
@@ -711,7 +715,8 @@ contains
          uaf(p) = um(p)*sqrt( 1._r8/(ram1(p)*um(p)) )
          cf  = 0.01_r8/(sqrt(uaf(p))*sqrt(dleaf(ivt(p))))
          rb(p)  = 1._r8/(cf*uaf(p))
-
+         rb1(p) = rb(p)
+  
          ! Parameterization for variation of csoilc with canopy density from
          ! X. Zeng, University of Arizona
 

@@ -1,4 +1,288 @@
 ===============================================================
+Tag name:  clm3_7_05
+Originator(s):  erik (erik)
+Date: Wed Feb 24 00:33:08 MST 2010
+One-line Summary: Bring VOC branch source code to trunk
+
+Purpose of changes:
+
+Move VOC branch over to trunk (vocemis-drydep19_clm3_7_04), this includes source code
+changes for VOC and drydep. Ensure answers for f09, f19, f10 are identical to clm3_7_02
+(other than VOC fields). Split users guide into separate files by chapter. Remove dublin.
+Add rcp option to getregional dataset script.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1104 (Restart problem with pftdyn mode)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+   Fix date of 1x1_tropicAtl surfdata
+   New T62 fsurdat  file with VOC
+   Fix syntax error in default_datm file
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts and drv
+
+    scripts to scripts4_100222 (uses new bluefire compiler with bug-fix for
+                                reproducibility bug)
+    drv     to drvseq3_1_17
+
+List all files eliminated:
+
+>>>>>>>>>>>>> Rename to edinburgh
+ D  models/lnd/clm/test/system/tests_pretag_dublin
+ D  models/lnd/clm/test/system/tests_pretag_dublin_nompi
+
+>>>>>>>>>>>>> Split into separate files
+ D  models/lnd/clm/doc/UsersGuide/index.xml
+
+List all files added and what they do:
+
+ A  models/lnd/clm/test/system/tests_pretag_edinburgh ------- Rename dublin files
+ A  models/lnd/clm/test/system/tests_pretag_edinburgh_nompi - Rename dublin files
+
+>>>>>>>>>>>>> Split Users Guide into separate files by chapter
+ A  models/lnd/clm/doc/UsersGuide/tools.xml
+ A  models/lnd/clm/doc/UsersGuide/preface.xml
+ A  models/lnd/clm/doc/UsersGuide/clm_ug.xml
+ A  models/lnd/clm/doc/UsersGuide/adding_files.xml
+ A  models/lnd/clm/doc/UsersGuide/config_cache.xml
+ A  models/lnd/clm/doc/UsersGuide/custom.xml
+ A  models/lnd/clm/doc/UsersGuide/get_Icaselist.pl --- Script to list I cases
+ A  models/lnd/clm/doc/UsersGuide/single_point.xml
+ A  models/lnd/clm/doc/UsersGuide/special_cases.xml
+
+>>>>>>>>>>>>> Add module to handle dry-deposition velocity
+ A   models/lnd/clm/src/biogeochem/DryDepVelocity.F90
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>> Remove dublin
+ M  models/lnd/clm/test/system/test_driver.sh
+ M  models/lnd/clm/test/system/input_tests_master - Decrease mexicoCity run length to 157
+ M  models/lnd/clm/test/system/CLM_runcmnd.sh
+
+>>>>>>>>>>>>> Fix bug in dynamic PFT file generation example, let intel allow lines of
+>>>>>>>>>>>>> any length
+ M  models/lnd/clm/tools/mksurfdata/mksurfdata.pftdyn - Use 1850 veg file to start from
+ M  models/lnd/clm/tools/mksurfdata/Makefile ---------- Remove intel -132 so can be any
+length
+ M  models/lnd/clm/tools/mkgriddata/Makefile ---------- Remove intel -132 so can be any 
+                                                        length, add SMP option
+ M  models/lnd/clm/tools/mkdatadomain/Makefile -------- Remove intel -132 so can be any
+length
+
+  M   models/lnd/clm/tools/ncl_scripts/getregional_datasets.pl -- Add absolute_path and
+                                                        ability to use rcp
+  M   models/lnd/clm/tools/ncl_scripts/getregional_datasets.ncl - Add rcp
+                                                        correct namelist for domainfile
+
+>>>>>>>>>>>>> 
+ M  models/lnd/clm/bld/clm.cpl7.template ---- Turn rtm off for PTS_MODE, remove lnd_in
+and Filepath files from clmconf
+ M  models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml - Fix syntax error in
+2.5x3.33 domain file
+ M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml -- Fix date of
+surfdata_1x1_tropicAtl file
+
+>>>>>>>>>>>>> Split into separate files by Chapter
+ M  models/lnd/clm/doc/UsersGuide/Makefile
+
+>>>>>>>>>>>>> Source code changes to use MEGAN VOC and dry-deposition
+
+  M   models/lnd/clm/src/biogeochem/STATICEcosysDynMod.F90 -- Add readAnnualVegetation
+                        subroutine for dry-deposition, use some F90 NetCDF,
+                        get mlai difference between months for dry-deposition
+  M   models/lnd/clm/src/biogeochem/VOCEmissionMod.F90 ------ New MEGAN VOC module
+                        remove concurrent directives
+  M   models/lnd/clm/src/main/clm_varpar.F90 ---------------- Change comment on nvoc
+  M   models/lnd/clm/src/main/clm_comp.F90 ------------------ Interp monthly veg for
+                        drydep on clm_init2
+  M   models/lnd/clm/src/main/clm_initializeMod.F90 --------- add readAnnualVegetation 
+  M   models/lnd/clm/src/main/accFldsMod.F90 ---------------- 24hr and 10day accumulators for 
+                        t_veg, fsd, fsi, fsun, laip, remove concurrent directives
+  M   models/lnd/clm/src/main/clmtypeInitMod.F90 ------------ Add new VOC and drydep variables
+  M   models/lnd/clm/src/main/iniTimeConst.F90 -------------- Read in VOC emission 
+                        factors, remove concurrent directives
+  M   models/lnd/clm/src/main/clm_atmlnd.F90 ---------------- Add VOC and drydep fluxes
+  M   models/lnd/clm/src/main/cpl_mct/lnd_comp_mct.F90 ------ Pass VOC and drydep fluxes
+  M   models/lnd/clm/src/main/clm_driver.F90 ---------------- Always call VOC emission
+                        and call depvel_compute
+  M   models/lnd/clm/src/main/clmtype.F90 ------------------- Add some VOC and drydep
+                        variables, move sandfrac/clayfrac for all not just CASA
+                        add accumulation variables
+  M   models/lnd/clm/src/main/histFldsMod.F90 --------------- Bunch of new inactive
+                        variables for VOC fluxes
+  M   models/lnd/clm/src/main/inicFileMod.F90 --------------- Li Xu: correct ncd_iolocal and snow_fraction
+  M   models/lnd/clm/src/biogeophys/FrictionVelocityMod.F90 - Deal with drydep velocity
+  M   models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 --- Add mlaidiff to restart
+                        file, if fsun set to NaN on restart set it to spval
+  M   models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90 ----- Keep track of boundary
+                        layer resistance
+
+Summary of testing:
+
+  Baseline tests are identical other than VOC flux fields..
+> grep RMS
+> /ptmp/erik/test-driver.612049/TBL.4p_vodsrsc_dh.clm_std^nl_urb.20021231:NONE:3600.1.9x2.5^0.9x1.25.gx1v6.48.arb_ic/cprnc.clmrun.clm2.h0.2002-12-31-00000.nc.out
+> | grep -v 0.0000E+00
+ RMS BIOGENCO 1.0058E-01
+ RMS ISOPRENE 2.9500E+02
+ RMS MONOTERP 2.9129E+00
+ RMS ORVOC    3.3526E-01
+ RMS OVOC     3.3526E-01
+ RMS VOCFLXT  2.9641E+02
+
+  bluefire:
+004 blA91 TBL.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v5 -6 arb_ic ...................FAIL! rc= 7
+011 blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 arb_ic ............FAIL! rc= 7
+016 blF92 TBL.sh 17p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 cold .............FAIL! rc= 7
+020 blEH1 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 48 arb_ic FAIL! rc= 7
+024 blHN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10 colFAIL! rc= 7
+025 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+026 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+027 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+028 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+029 smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+033 blC45 TBL.sh 17p_sc_m clm_pftdyn 18501230:NONE:3600 10x15 USGS@1850-2000 -10 arb_ic .........FAIL! rc= 7
+041 blH52 TBL.sh 17p_cnnsc_dm clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@2000 48 cold .........FAIL! rc= 7
+043 smLI1 TSM.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 8
+044 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+045 brLI1 TBR.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+046 blLI1 TBL.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 4
+050 blJ61 TBL.sh 4p_casasc_dh clm_std^nl_urb 20021230:NONE:1800 1.9x2.5 gx1v6 48 cold ...........FAIL! rc= 7
+  bluefire interactive testing:
+004 blA74 TBL.sh _nrsc_ds clm_std^nl_urb 20030101:NONE:1800 1x1_brazil navy -10 arb_ic ..........FAIL! rc= 7
+006 smCA4 TSM.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 10
+007 erCA4 TER.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ....FAIL! rc= 5
+008 brCA4 TBR.sh _nrsc_ds clm_std^nl_urb_br 20021001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic .FAIL! rc= 5
+009 blCA4 TBL.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 4
+010 smNB4 TSM.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 10
+011 erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 57+100 arb_FAIL! rc= 5
+012 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arFAIL! rc= 5
+013 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 4
+017 blJ74 TBL.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic FAIL! rc= 7
+018 smCA8 TSM.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 10
+019 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 4
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+023 blAK4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10 cold ............FAIL! rc= 7
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+028 blL78 TBL.sh _nrsc_s clm_std^nl_urb 20021231:NONE:1800 1x1_brazil navy -10 arb_ic ...........FAIL! rc= 7
+032 blF93 TBL.sh 17p_vodsrsc_do clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 cold .............FAIL! rc= 7
+036 blL83 TBL.sh _nrsc_do clm_std^nl_urb 20020115:NONE:3600 5x5_amazon navy -10 arb_ic ..........FAIL! rc= 7
+041 bl744 TBLtools.sh mksurfdata tools__s namelist ..............................................FAIL! rc= 7
+043 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 7
+045 bl754 TBLtools.sh mksurfdata tools__s globalirrig ...........................................FAIL! rc= 6
+  bluefire/CCSM testing:
+PASS  SMS_RLA.f45_f45.I.bluefire 
+PASS  SMS_RLB.f45_f45.I.bluefire 
+PASS  SMS_ROA.f45_f45.I.bluefire 
+RUN   ERS_D.f45_g37.I.bluefire.GC.092123 
+PASS  PST.f45_g37.I1850.bluefire.cpl 
+PASS  PST.f45_g37.I1850.bluefire.atm 
+PASS  PST.f45_g37.I1850.bluefire.lnd 
+PASS  PST.f45_g37.I1850.bluefire.ice 
+PASS  PST.f45_g37.I1850.bluefire.ocn 
+PASS  PST.f45_g37.I1850.bluefire.glc 
+PASS  PET_PT.f45_g37.I1850.bluefire 
+PASS  ERS.f19_g16.I1850.bluefire 
+PASS  ERB.f09_g16.I_1948-2004.bluefire 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+PEND  ERH_D.f10_f10.I1850CN.bluefire.GC.092123 
+PASS  PST.f10_f10.I8520CN.bluefire.cpl 
+PASS  PST.f10_f10.I8520CN.bluefire.atm 
+PASS  PST.f10_f10.I8520CN.bluefire.lnd 
+PASS  PST.f10_f10.I8520CN.bluefire.ice 
+PASS  PST.f10_f10.I8520CN.bluefire.ocn 
+PASS  PST.f10_f10.I8520CN.bluefire.glc 
+  jaguar/CCSM testing:
+PASS  ERS_D.f09_g16.I1850.jaguar 
+PASS  PST.f10_f10.I8520CN.jaguar.cpl 
+PASS  PST.f10_f10.I8520CN.jaguar.atm 
+PASS  PST.f10_f10.I8520CN.jaguar.lnd 
+PASS  PST.f10_f10.I8520CN.jaguar.ice 
+PASS  PST.f10_f10.I8520CN.jaguar.ocn 
+PASS  PST.f10_f10.I8520CN.jaguar.glc 
+PASS  PET_PT.f10_f10.I8520CN.jaguar 
+  jaguar interactive testing:
+004 blA74 TBL.sh _nrsc_ds clm_std^nl_urb 20030101:NONE:1800 1x1_brazil navy -10 arb_ic ..........FAIL! rc= 7
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+008 blAK4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10 cold ............FAIL! rc= 7
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+012 blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+013 smJ74 TSM.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -1100 arb_ic FAIL! rc= 8
+014 erJ74 TER.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -10+-10 arb_ic FAIL! rc= 5
+015 brJ74 TBR.sh 4p_nrcasasc_ds clm_std^nl_urb_br 10001230:NONE:3600 1x1_tropicAtl test -3+-3 arb_icFAIL! rc= 5
+016 blJ74 TBL.sh 4p_nrcasasc_ds clm_std^nl_urb 10001230:NONE:3600 1x1_tropicAtl test -100 arb_ic FAIL! rc= 4
+  edinburgh/ifort interactive testing:
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+007 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 6
+009 smCA4 TSM.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 10
+010 erCA4 TER.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ....FAIL! rc= 5
+011 brCA4 TBR.sh _nrsc_ds clm_std^nl_urb_br 20021001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic .FAIL! rc= 5
+012 blCA4 TBL.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 4
+013 smOC4 TSM.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 10
+014 erOC4 TER.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 115+115 arb_FAIL! rc= 5
+015 brOC4 TBR.sh _nrvansc_ds clm_urb1pt^nl_urb_br 19920812:NONE:3600 1x1_vancouverCAN navy 72+72 arbFAIL! rc= 5
+016 blOC4 TBL.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 4
+017 smNB4 TSM.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 10
+018 erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 57+100 arb_FAIL! rc= 5
+019 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arFAIL! rc= 5
+020 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 4
+  edinburgh/ifort:
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+012 smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+016 blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v5 48 arb_ic ............FAIL! rc= 7
+  breeze,gale,hail,gust/ifort interactive testing:
+004 blA74 TBL.sh _nrsc_ds clm_std^nl_urb 20030101:NONE:1800 1x1_brazil navy -10 arb_ic ..........FAIL! rc= 7
+008 smCA4 TSM.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 10
+009 blCA4 TBL.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 4
+010 smCA8 TSM.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 10
+011 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 4
+015 blL54 TBL.sh _sc_ds clm_std^nl_urb 20020115:NONE:1800 10x15 USGS 48 arb_ic ..................FAIL! rc= 7
+019 blR53 TBL.sh 17p_cnc13sc_do clm_std^nl_urb 20020115:NONE:1800 10x15 USGS@1850 48 cold .......FAIL! rc= 7
+020 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+021 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+022 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+023 blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_04
+
+Changes answers relative to baseline: No bit-for-bit (except voc flux fields)
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_04
 Originator(s):  erik (erik)
 Date: Wed Feb 17 23:22:23 MST 2010

@@ -102,9 +102,9 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_testyr1000_c090731.nc
 
 <!-- for present day simulations - year 2000 -->
 <fsurdat hgrid="360x720"   sim_year="2000">
-lnd/clm2/surfdata/surfdata_360x720_urb3den_simyr2000_c090420.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_360x720__c081210.nc</fsurdat>
 <fsurdat hgrid="128x256"   sim_year="2000">
-lnd/clm2/surfdata/surfdata_128x256_urb3den_simyr2000_c090420.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_128x256__c090213.nc</fsurdat>
 <fsurdat hgrid="64x128"    sim_year="2000">
 lnd/clm2/surfdata/surfdata_64x128_simyr2000_c090928.nc</fsurdat>
 <fsurdat hgrid="48x96"     sim_year="2000" >
@@ -114,7 +114,7 @@ lnd/clm2/surfdata/surfdata_32x64_simyr2000_c090928.nc</fsurdat>
 <fsurdat hgrid="8x16"      sim_year="2000" >
 lnd/clm2/surfdata/surfdata_8x16_simyr2000_c090928.nc</fsurdat>
 <fsurdat hgrid="94x192"    sim_year="2000" >
-lnd/clm2/surfdata/surfdata_94x192_urb3den_simyr2000_c090420.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_94x192_urb3den_simyr2000_c091016.nc</fsurdat>
 
 <fsurdat hgrid="0.23x0.31" sim_year="2000" >
 lnd/clm2/surfdata/surfdata_0.23x0.31_urb3den_simyr2000_c090828.nc</fsurdat>
@@ -176,8 +176,6 @@ lnd/clm2/surfdata/surfdata_0.9x1.25_simyr1850_c091006.nc</fsurdat>
 lnd/clm2/surfdata/surfdata_1.9x2.5_simyr1850_c091108.nc</fsurdat>
 <fsurdat hgrid="2.5x3.33"  sim_year="1850" >
 lnd/clm2/surfdata/surfdata_2.5x3.33_simyr1850_c091109.nc</fsurdat>
-<fsurdat hgrid="2.65x3.33" sim_year="1850" >
-lnd/clm2/surfdata/surfdata_2.65x3.33_urb3den_simyr1850_c090421.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="1850" >
 lnd/clm2/surfdata/surfdata_4x5_simyr1850_c090928.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="1850" >

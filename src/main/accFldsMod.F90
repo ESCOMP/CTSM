@@ -101,6 +101,60 @@ contains
          accum_type='timeavg', accum_period=nint(3600._r8/dtime), &
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
+    ! 24hr average of vegetation temperature (heald, 04/06)
+    call init_accum_field (name='T_VEG24', units='K', &
+         desc='24hr average of vegetation temperature', &
+         accum_type='runmean', accum_period=-1, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
+    ! 240hr average of vegetation temperature (heald, 04/06)
+    call init_accum_field (name='T_VEG240', units='K', &
+         desc='240hr average of vegetation temperature', &
+         accum_type='runmean', accum_period=-10, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
+    ! 24hr average of direct solar radiation (heald, 04/06)
+    call init_accum_field (name='FSD24', units='W/m2', &
+         desc='24hr average of direct solar radiation', &
+         accum_type='runmean', accum_period=-1, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
+    ! 240hr average of direct solar radiation (heald, 04/06)
+    call init_accum_field (name='FSD240', units='W/m2', &
+         desc='240hr average of direct solar radiation', &
+         accum_type='runmean', accum_period=-10, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
+    ! 24hr average of diffuse solar radiation (heald, 04/06)
+    call init_accum_field (name='FSI24', units='W/m2', &
+         desc='24hr average of diffuse solar radiation', &
+         accum_type='runmean', accum_period=-1, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
+    ! 240hr average of diffuse solar radiation (heald, 04/06)
+    call init_accum_field (name='FSI240', units='W/m2', &
+         desc='240hr average of diffuse solar radiation', &
+         accum_type='runmean', accum_period=-10, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
+    ! 24hr average of fraction of canopy that is sunlit (heald, 04/06)
+    call init_accum_field (name='FSUN24', units='fraction', &
+         desc='24hr average of diffuse solar radiation', &
+         accum_type='runmean', accum_period=-1, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
+    ! 240hr average of fraction of canopy that is sunlit (heald, 04/06)
+    call init_accum_field (name='FSUN240', units='fraction', &
+         desc='240hr average of diffuse solar radiation', &
+         accum_type='runmean', accum_period=-10, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
+    ! Average of LAI from previous and current timestep (heald, 04/06)
+    call init_accum_field (name='LAIP', units='m2/m2', &
+         desc='leaf area index average over timestep', &
+         accum_type='runmean', accum_period=1, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
 #if (defined DGVM)
     ! 30-day average of 2m temperature.
 
@@ -202,6 +256,12 @@ contains
     logical , pointer :: urbpoi(:)           ! true => landunit is an urban point
     logical , pointer :: ifspecial(:)        ! true => landunit is not vegetated
     integer , pointer :: plandunit(:)        ! landunit index associated with each pft
+    ! heald (04/06): variables to be accumulated for VOC emissions
+    real(r8), pointer :: t_veg(:)            ! pft vegetation temperature (Kelvin) 
+    real(r8), pointer :: forc_solad(:,:)     ! direct beam radiation (visible only)
+    real(r8), pointer :: forc_solai(:,:)     ! diffuse radiation     (visible only)
+    real(r8), pointer :: fsun(:)             ! sunlit fraction of canopy 
+    real(r8), pointer :: elai(:)             ! one-sided leaf area index with burying by snow 
 
 #ifdef DGVM
     real(r8), pointer :: frmf(:)             ! leaf maintenance respiration  (umol CO2 /m**2 /s)
@@ -232,6 +292,16 @@ contains
     real(r8), pointer :: agddtw(:)           ! accumulated growing degree days above twmax
     real(r8), pointer :: agdd(:)             ! accumulated growing degree days above 5
 #endif
+    ! heald (04/06): accumulated variables for VOC emissions
+    real(r8), pointer :: t_veg24(:)          ! 24hr average vegetation temperature (K)
+    real(r8), pointer :: t_veg240(:)         ! 240hr average vegetation temperature (Kelvin)
+    real(r8), pointer :: fsd24(:)            ! 24hr average of direct beam radiation 
+    real(r8), pointer :: fsd240(:)           ! 240hr average of direct beam radiation 
+    real(r8), pointer :: fsi24(:)            ! 24hr average of diffuse beam radiation 
+    real(r8), pointer :: fsi240(:)           ! 240hr average of diffuse beam radiation 
+    real(r8), pointer :: fsun24(:)           ! 24hr average of sunlit fraction of canopy 
+    real(r8), pointer :: fsun240(:)          ! 240hr average of sunlit fraction of canopy
+    real(r8), pointer :: elai_p(:)           ! leaf area index average over timestep 
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -259,9 +329,11 @@ contains
 
     ! Assign local pointers to derived subtypes components (gridcell-level)
 
-    forc_t => clm_a2l%forc_t
-    forc_rain => clm_a2l%forc_rain
-    forc_snow => clm_a2l%forc_snow
+    forc_t     => clm_a2l%forc_t
+    forc_rain  => clm_a2l%forc_rain
+    forc_snow  => clm_a2l%forc_snow
+    forc_solad => clm_a2l%forc_solad 	    ! (heald 04/06)
+    forc_solai => clm_a2l%forc_solai 	    ! (heald 04/06)
 
     ! Assign local pointers to derived subtypes components (landunit-level)
     ifspecial  => clm3%g%l%ifspecial
@@ -300,6 +372,18 @@ contains
     agddtw           => clm3%g%l%c%p%pdgvs%agddtw
     agdd             => clm3%g%l%c%p%pdgvs%agdd
 #endif
+    t_veg24          => clm3%g%l%c%p%pvs%t_veg24           ! (heald 04/06)
+    t_veg240         => clm3%g%l%c%p%pvs%t_veg240          ! (heald 04/06)
+    fsd24            => clm3%g%l%c%p%pvs%fsd24             ! (heald 04/06)
+    fsd240           => clm3%g%l%c%p%pvs%fsd240            ! (heald 04/06)
+    fsi24            => clm3%g%l%c%p%pvs%fsi24             ! (heald 04/06)
+    fsi240           => clm3%g%l%c%p%pvs%fsi240            ! (heald 04/06)
+    fsun24           => clm3%g%l%c%p%pvs%fsun24            ! (heald 04/06)
+    fsun240          => clm3%g%l%c%p%pvs%fsun240           ! (heald 04/06)
+    elai_p           => clm3%g%l%c%p%pvs%elai_p            ! (heald 04/06)
+    t_veg            => clm3%g%l%c%p%pes%t_veg 	           ! (heald 04/06)
+    fsun             => clm3%g%l%c%p%pps%fsun 	           ! (heald 04/06)
+    elai             => clm3%g%l%c%p%pps%elai 	           ! (heald 04/06)
 
     ! Determine calendar information
 
@@ -334,8 +418,6 @@ contains
     call update_accum_field  ('TREFAV', t_ref2m, nstep)
     call extract_accum_field ('TREFAV', rbufslp, nstep)
     end_cd = is_end_curr_day()
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        if (rbufslp(p) /= spval) then
           t_ref2m_max_inst(p) = max(rbufslp(p), t_ref2m_max_inst(p))
@@ -361,8 +443,6 @@ contains
 
     call update_accum_field  ('TREFAV_U', t_ref2m_u, nstep)
     call extract_accum_field ('TREFAV_U', rbufslp, nstep)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        l = plandunit(p)
        if (rbufslp(p) /= spval) then
@@ -391,8 +471,6 @@ contains
 
     call update_accum_field  ('TREFAV_R', t_ref2m_r, nstep)
     call extract_accum_field ('TREFAV_R', rbufslp, nstep)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        l = plandunit(p)
        if (rbufslp(p) /= spval) then
@@ -412,21 +490,62 @@ contains
        endif
     end do
 
-#if (defined DGVM)
+    ! Accumulate and extract T_VEG24 & T_VEG240 (heald 04/06)
+    do p = begp,endp
+       rbufslp(p) = t_veg(p)
+    end do
+    call update_accum_field  ('T_VEG24', rbufslp, nstep)
+    call extract_accum_field ('T_VEG24', t_veg24, nstep)
+    call update_accum_field  ('T_VEG240', rbufslp, nstep)
+    call extract_accum_field ('T_VEG240', t_veg240, nstep)
+
+    ! Accumulate and extract forc_solad24 & forc_solad240 (heald 04/06)
+    do p = begp,endp
+       g = pgridcell(p)
+       rbufslp(p) = forc_solad(g,1)
+    end do
+    call update_accum_field  ('FSD240', rbufslp, nstep)
+    call extract_accum_field ('FSD240', fsd240, nstep)
+    call update_accum_field  ('FSD24', rbufslp, nstep)
+    call extract_accum_field ('FSD24', fsd24, nstep)
+
+    ! Accumulate and extract forc_solai24 & forc_solai240 (heald 04/06)
+    do p = begp,endp
+       g = pgridcell(p)
+       rbufslp(p) = forc_solai(g,1)
+    end do
+    call update_accum_field  ('FSI24', rbufslp, nstep)
+    call extract_accum_field ('FSI24', fsi24, nstep)
+    call update_accum_field  ('FSI240', rbufslp, nstep)
+    call extract_accum_field ('FSI240', fsi240, nstep)
+
+    ! Accumulate and extract fsun24 & fsun240 (heald 04/06)
+    do p = begp,endp
+       rbufslp(p) = fsun(p)
+    end do
+    call update_accum_field  ('FSUN24', rbufslp, nstep)
+    call extract_accum_field ('FSUN24', fsun24, nstep)
+    call update_accum_field  ('FSUN240', rbufslp, nstep)
+    call extract_accum_field ('FSUN240', fsun240, nstep)
+
+    ! Accumulate and extract elai_p (heald 04/06)
+    do p = begp,endp
+       rbufslp(p) = elai(p)
+    end do
+    call update_accum_field  ('LAIP', rbufslp, nstep)
+    call extract_accum_field ('LAIP', elai_p, nstep)
+
+#ifdef DGVM
     ! Accumulate and extract TDA
     ! (accumulates TBOT as 30-day average)
     ! Also determine t_mo_min
 
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        g = pgridcell(p)
        rbufslp(p) = forc_t(g)
     end do
     call update_accum_field  ('TDA', rbufslp, nstep)
     call extract_accum_field ('TDA', rbufslp, nstep)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        t_mo(p) = rbufslp(p)
        t_mo_min(p) = min(t_mo_min(p), rbufslp(p))
@@ -441,8 +560,6 @@ contains
     ! Accumulate and extract FNPSN10
     !(accumulates fpsn-frmf as 10-day running mean)
 
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        rbufslp(p) = fpsn(p) - frmf(p)
     end do
@@ -452,8 +569,6 @@ contains
     ! Accumulate and extract PREC365
     ! (accumulates total precipitation as 365-day running mean)
 
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        g = pgridcell(p)
        rbufslp(p) = forc_rain(g) + forc_snow(g)
@@ -468,8 +583,6 @@ contains
 
     ! Accumulate and extract AGDDO
 
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        rbufslp(p) = (t10(p) - SHR_CONST_TKFRZ) * dtime / SHR_CONST_CDAY
        if (rbufslp(p) < 0._r8) rbufslp(p) = -99999._r8
@@ -479,8 +592,6 @@ contains
 
     ! Accumulate and extract AGDD5
 
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        rbufslp(p) = (t10(p) - (SHR_CONST_TKFRZ - 5.0_r8))*dtime / SHR_CONST_CDAY
        if (rbufslp(p) < 0._r8) rbufslp(p) = -99999._r8
@@ -490,8 +601,6 @@ contains
 
     ! Accumulate and extract AGDDTW
 
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        itypveg = itype(p)
        rbufslp(p) = max(0.0_r8, (t10(p) - (SHR_CONST_TKFRZ+pftpar(itypveg,31))) &
@@ -502,8 +611,6 @@ contains
 
     ! Accumulate and extract AGDD
 
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        rbufslp(p) = max(0.0_r8, (t_ref2m(p) - (SHR_CONST_TKFRZ + 5.0_r8)) &
             * dtime/SHR_CONST_CDAY)
@@ -577,6 +684,16 @@ contains
     real(r8), pointer :: agddtw(:)           ! accumulated growing degree days above twmax
     real(r8), pointer :: agdd(:)             ! accumulated growing degree days above 5
 #endif
+    ! heald (04/06): accumulated variables for VOC emissions
+    real(r8), pointer :: t_veg24(:)          ! 24hr average vegetation temperature (K)
+    real(r8), pointer :: t_veg240(:)         ! 240hr average vegetation temperature (Kelvin)
+    real(r8), pointer :: fsd24(:)            ! 24hr average of direct beam radiation 
+    real(r8), pointer :: fsd240(:)           ! 240hr average of direct beam radiation 
+    real(r8), pointer :: fsi24(:)            ! 24hr average of diffuse beam radiation 
+    real(r8), pointer :: fsi240(:)           ! 240hr average of diffuse beam radiation 
+    real(r8), pointer :: fsun24(:)           ! 24hr average of sunlit fraction of canopy 
+    real(r8), pointer :: fsun240(:)          ! 240hr average of sunlit fraction of canopy
+    real(r8), pointer :: elai_p(:)           ! leaf area index average over timestep 
 !
 ! !LOCAL VARIABLES:
 !
@@ -617,6 +734,16 @@ contains
     agddtw           => clm3%g%l%c%p%pdgvs%agddtw
     agdd             => clm3%g%l%c%p%pdgvs%agdd
 #endif
+    ! heald (04/06): accumulated variables for VOC emissions
+    t_veg24          => clm3%g%l%c%p%pvs%t_veg24
+    t_veg240         => clm3%g%l%c%p%pvs%t_veg240
+    fsd24            => clm3%g%l%c%p%pvs%fsd24
+    fsd240           => clm3%g%l%c%p%pvs%fsd240
+    fsi24            => clm3%g%l%c%p%pvs%fsi24
+    fsi240           => clm3%g%l%c%p%pvs%fsi240
+    fsun24           => clm3%g%l%c%p%pvs%fsun24
+    fsun240          => clm3%g%l%c%p%pvs%fsun240
+    elai_p           => clm3%g%l%c%p%pvs%elai_p
 
     ! Determine necessary indices
 
@@ -629,8 +756,6 @@ contains
     ! Initialize 2m ref temperature max and min values
 
     if (nsrest == 0) then
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           t_ref2m_max(p) = spval
           t_ref2m_min(p) = spval
@@ -647,8 +772,6 @@ contains
        end do
     end if
 
-#if (defined DGVM)
-
     ! Allocate needed dynamic memory for single level pft field
 
     allocate(rbufslp(begp:endp), stat=ier)
@@ -659,58 +782,88 @@ contains
 
     ! Initialize clmtype variables that are to be time accumulated
 
+    call extract_accum_field ('T_VEG24', rbufslp, nstep)
+    do p = begp,endp
+       t_veg24(p) = rbufslp(p)
+    end do
+
+    call extract_accum_field ('T_VEG240', rbufslp, nstep)
+    do p = begp,endp
+       t_veg240(p) = rbufslp(p)
+    end do
+
+    call extract_accum_field ('FSD24', rbufslp, nstep)
+    do p = begp,endp
+       fsd24(p) = rbufslp(p)
+    end do
+
+    call extract_accum_field ('FSD240', rbufslp, nstep)
+    do p = begp,endp
+       fsd240(p) = rbufslp(p)
+    end do
+
+    call extract_accum_field ('FSI24', rbufslp, nstep)
+    do p = begp,endp
+       fsi24(p) = rbufslp(p)
+    end do
+
+    call extract_accum_field ('FSI240', rbufslp, nstep)
+    do p = begp,endp
+       fsi240(p) = rbufslp(p)
+    end do
+
+    call extract_accum_field ('FSUN24', rbufslp, nstep)
+    do p = begp,endp
+       fsun24(p) = rbufslp(p)
+    end do
+
+    call extract_accum_field ('FSUN240', rbufslp, nstep)
+    do p = begp,endp
+       fsun240(p) = rbufslp(p)
+    end do
+
+    call extract_accum_field ('LAIP', rbufslp, nstep)
+    do p = begp,endp
+       elai_p(p) = rbufslp(p)
+    end do
+
+#ifdef DGVM
     call extract_accum_field ('T10', rbufslp, nstep)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        t10(p) = rbufslp(p)
     end do
 
     call extract_accum_field ('TDA', rbufslp, nstep)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        t_mo(p) = rbufslp(p)
     end do
 
     call extract_accum_field ('AGDD0', rbufslp, nstep)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        agdd0(p) = rbufslp(p)
     end do
 
     call extract_accum_field ('AGDD5', rbufslp, nstep)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        agdd5(p) = rbufslp(p)
     end do
 
     call extract_accum_field ('FNPSN10', rbufslp, nstep)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        fnpsn10(p) = rbufslp(p)
     end do
 
     call extract_accum_field ('PREC365', rbufslp, nstep)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        prec365(p) = rbufslp(p)
     end do
 
     call extract_accum_field ('AGDDTW', rbufslp, nstep)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        agddtw(p) = rbufslp(p)
     end do
 
     call extract_accum_field ('AGDD', rbufslp, nstep)
-!dir$ concurrent
-!cdir nodep
     do p = begp,endp
        agdd(p) = rbufslp(p)
     end do

@@ -6,6 +6,7 @@
   <!ENTITY buildnml_help       SYSTEM "buildnml_help.xml">
   <!ENTITY res_list            SYSTEM "buildnml_resolutions.xml">
   <!ENTITY usecases_list       SYSTEM "buildnml_usecases.xml">
+  <!ENTITY getreg_datasets     SYSTEM "getregional_datasets.xml">
   <!ENTITY config_help         SYSTEM "config_help.xml">
   <!ENTITY quickstart_guide    SYSTEM "quickstart_guide.xml">
   <!ENTITY quickstart_userdata SYSTEM "quickstart_usrdat.xml">

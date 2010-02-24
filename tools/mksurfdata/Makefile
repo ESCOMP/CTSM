@@ -248,7 +248,7 @@ ifeq ($(UNAMES),Linux)
   endif
   ifeq ($(FC),ifort)
 
-    FFLAGS      += -132 -ftz -g -fp-model precise -convert big_endian -assume byterecl -traceback -FR
+    FFLAGS      += -ftz -g -fp-model precise -convert big_endian -assume byterecl -traceback -FR
     CFLAGS      += -m64 -g
     LDFLAGS   += -m64
 

@@ -63,6 +63,7 @@ subroutine iniTimeConst
 ! Updated to clm2.1 data structrues by Mariana Vertenstein
 ! 4/26/05, Peter Thornton: Eliminated exponential decrease in saturated hydraulic
 !   conductivity (hksat) with depth. 
+! Updated: Colette L. Heald (05/06) reading in VOC emission factors
 ! 27 February 2008: Keith Oleson; Qing Liu (2004) saturated hydraulic conductivity 
 ! and matric potential
 ! 29 February 2008: David Lawrence; modified soil thermal and hydraulic properties to
@@ -115,11 +116,10 @@ subroutine iniTimeConst
   real(r8), pointer :: gwc_thr(:)         ! threshold soil moisture based on clay content
   real(r8), pointer :: mss_frc_cly_vld(:) ! [frc] Mass fraction clay limited to 0.20
   real(r8), pointer :: forc_ndep(:)       ! nitrogen deposition rate (gN/m2/s)
+  real(r8), pointer :: efisop(:,:)        ! emission factors for isoprene (ug isoprene m-2 h-1)
   real(r8), pointer :: max_dayl(:)        ! maximum daylength (s)
-#if (defined CASA)
   real(r8), pointer :: sandfrac(:)
   real(r8), pointer :: clayfrac(:)
-#endif
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -143,6 +143,10 @@ subroutine iniTimeConst
   integer  :: numl             ! total number of landunits across all processors
   integer  :: numc             ! total number of columns across all processors
   integer  :: nump             ! total number of pfts across all processors
+
+  real(r8),pointer :: temp_ef(:)        ! read in - temporary EFs
+  real(r8),pointer :: efisop2d(:,:)     ! read in - isoprene emission factors
+
   real(r8),pointer :: arrayl(:)      ! generic global array
   integer ,pointer :: irrayg(:)      ! generic global array
   integer ,pointer :: soic2d(:)      ! read in - soil color
@@ -170,6 +174,7 @@ subroutine iniTimeConst
   integer  :: start(3),count(3)      ! netcdf start/count arrays
   integer  :: varid                  ! netCDF id's
   integer  :: ret
+
   integer  :: ier                                ! error status
   character(len=256) :: locfn                    ! local filename
   character(len= 32) :: subname = 'iniTimeConst' ! subroutine name
@@ -184,6 +189,7 @@ subroutine iniTimeConst
 
   integer :: closelatidx,closelonidx
   real(r8):: closelat,closelon
+  integer :: iostat
 
 !------------------------------------------------------------------------
 
@@ -195,6 +201,10 @@ subroutine iniTimeConst
   allocate(soic2d(begg:endg),ndep(begg:endg), gti(begg:endg))
   allocate(sand3d(begg:endg,nlevsoi),clay3d(begg:endg,nlevsoi))
   allocate(organic3d(begg:endg,nlevsoi))
+
+  allocate(temp_ef(begg:endg),efisop2d(6,begg:endg))
+
+  efisop          => clm3%g%gve%efisop
 
   ! Assign local pointers to derived subtypes components (gridcell-level)
   lat             => clm3%g%lat
@@ -246,10 +256,8 @@ subroutine iniTimeConst
   dewmx           => clm3%g%l%c%p%pps%dewmx
   rootfr          => clm3%g%l%c%p%pps%rootfr
   rresis          => clm3%g%l%c%p%pps%rresis
-#if (defined CASA)
   sandfrac        => clm3%g%l%c%p%pps%sandfrac
   clayfrac        => clm3%g%l%c%p%pps%clayfrac
-#endif
 
   allocate(zurb_wall(begl:endl,nlevurb), zurb_roof(begl:endl,nlevurb), &
            dzurb_wall(begl:endl,nlevurb), dzurb_roof(begl:endl,nlevurb), &
@@ -300,6 +308,43 @@ subroutine iniTimeConst
   ! Read in soil color, sand and clay fraction
   call ncd_iolocal(ncid, 'SOIL_COLOR', 'read', soic2d, grlnd,start(:2),count(:2),status=ret)
   if (ret /= 0) call endrun( trim(subname)//' ERROR: SOIL_COLOR NOT on surfdata file' ) 
+  ! Read in emission factors
+
+  call ncd_iolocal(ncid, 'EF1_BTR', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
+  if (iostat/=0) then
+     call endrun('iniTimeConst: errror reading EF1_BTR')
+  endif
+  efisop2d(1,:)=temp_ef(:)
+
+  call ncd_iolocal(ncid, 'EF1_FET', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
+  if (iostat/=0) then
+     call endrun('iniTimeConst: errror reading EF1_FET')
+  endif
+  efisop2d(2,:)=temp_ef(:)
+
+  call ncd_iolocal(ncid, 'EF1_FDT', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
+  if (iostat/=0) then
+     call endrun('iniTimeConst: errror reading EF1_FDT')
+  endif
+  efisop2d(3,:)=temp_ef(:)
+
+  call ncd_iolocal(ncid, 'EF1_SHR', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
+  if (iostat/=0) then
+     call endrun('iniTimeConst: errror reading EF1_SHR')
+  endif
+  efisop2d(4,:)=temp_ef(:)
+
+  call ncd_iolocal(ncid, 'EF1_GRS', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
+  if (iostat/=0) then
+     call endrun('iniTimeConst: errror reading EF1_GRS')
+  endif
+  efisop2d(5,:)=temp_ef(:)
+
+  call ncd_iolocal(ncid, 'EF1_CRP', 'read', temp_ef, grlnd,start(:2),count(:2),status=iostat)
+  if (iostat/=0) then
+     call endrun('iniTimeConst: errror reading EF1_CRP')
+  endif
+  efisop2d(6,:)=temp_ef(:)
 
   allocate(arrayl(begg:endg))
   do n = 1,nlevsoi
@@ -346,15 +391,11 @@ subroutine iniTimeConst
      call endrun
   end if
   
-#if (defined CASA)
-!dir$ concurrent
-!cdir nodep
   do p = begp,endp
      g = pgridcell(p)
      sandfrac(p) = sand3d(g,1)/100.0_r8
      clayfrac(p) = clay3d(g,1)/100.0_r8
   end do
-#endif
 
   ! --------------------------------------------------------------------
   ! If a nitrogen deposition dataset has been specified, read it
@@ -374,8 +415,6 @@ subroutine iniTimeConst
   ! arrays of dgvm ecophysiological constants
   ! --------------------------------------------------------------------
 
-!dir$ concurrent
-!cdir nodep
    do m = 0,numpft
       pftcon%ncorn(m) = ncorn
       pftcon%nwheat(m) = nwheat
@@ -429,8 +468,6 @@ subroutine iniTimeConst
    end do
 
 #ifdef DGVM
-!dir$ concurrent
-!cdir nodep
    do m = 0,numpft
       dgv_pftcon%respcoeff(m) = pftpar(m,5)
       dgv_pftcon%flam(m) = pftpar(m,6)
@@ -517,8 +554,6 @@ subroutine iniTimeConst
    zisoi(nlevgrnd) = zsoi(nlevgrnd) + 0.5_r8*dzsoi(nlevgrnd)
 
    ! Column level initialization for urban wall and roof layers and interfaces
-!dir$ concurrent
-!cdir nodep
    do l = begl, endl
 
    ! "0" refers to urban wall/roof surface and "nlevsoi" refers to urban wall/roof bottom
@@ -572,6 +607,10 @@ subroutine iniTimeConst
       
       forc_ndep(g) = ndep(g)/(86400._r8 * 365._r8)
       
+      ! VOC emission factors
+      ! Set gridcell and landunit indices
+      efisop(:,g)=efisop2d(:,g)
+
    end do
 
 
@@ -581,8 +620,6 @@ subroutine iniTimeConst
    ! --------------------------------------------------------------------
 
    ! Column level initialization
-!dir$ concurrent
-!cdir nodep
    do c = begc, endc
 
       ! Set gridcell and landunit indices
@@ -773,8 +810,6 @@ subroutine iniTimeConst
    end do
 
    ! pft level initialization
-!dir$ concurrent
-!cdir nodep
    do p = begp, endp
 
       ! Initialize maximum allowed dew
@@ -850,6 +885,7 @@ subroutine iniTimeConst
 #endif
 
    deallocate(soic2d,ndep,sand3d,clay3d,gti,organic3d)
+   deallocate(temp_ef,efisop2d)
 
 
    ! Initialize SNICAR optical and aging parameters:

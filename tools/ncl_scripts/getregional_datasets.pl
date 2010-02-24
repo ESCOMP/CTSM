@@ -43,6 +43,7 @@ if ($ProgDir) {
 # Default resolution
 
 my $res        = "1.9x2.5";
+my $rcp        = "8.5";
 my $mask       = "gx1v6";
 my $sim_year   = "2000";
 my $sim_yr_rng = "constant";
@@ -68,9 +69,14 @@ OPTIONS
                                    (i.e. 12x13pt_f19_alaskaUSA for 12x13 grid cells from the f19 global resolution over Alaska)
      -NE_corner "lat,lon" [or -ne] North East corner latitude and longitude                       (REQUIRED)
      -res "resolution"             Global horizontal resolution to extract data from (default $res).
+     -rcp "pathway"                Representative concentration pathway for future scenarios 
+                                   Only used when simulation year range ends in a future
+                                   year, such as 2100.
+                                   (default $rcp).
      -sim_year   "year"            Year to simulate for input datasets (i.e. 1850, 2000) (default $sim_year)
 (default $sim_year)
-     -sim_yr_rng "year-range"      Range of years for transient simulations (i.e.  1850-2000 or constant) (default $sim_yr_rng)
+     -sim_yr_rng "year-range"      Range of years for transient simulations 
+                                   (i.e. 1850-2000, 1850-2100,  or constant) (default $sim_yr_rng)
 
      -SW_corner "lat,lon" [or -sw] South West corner latitude and longitude                        (REQUIRED)
      -verbose [or -v]              Make output more verbose.
@@ -123,6 +129,7 @@ my %opts = (
               SW_corner        => undef,
               NE_corner        => undef,
               res              => $res,
+              rcp              => $rcp,
               help             => 0, 
               verbose          => 0,
               debug            => 0,
@@ -133,8 +140,9 @@ GetOptions(
     "mycsmdata=s"      => \$opts{'mycsmdata'},
     "id|mydataid=s"    => \$opts{'mydataid'},
     "sim_year=i"       => \$opts{'sim_year'},
-    "mask=i"           => \$opts{'mask'},
+    "mask=s"           => \$opts{'mask'},
     "res=s"            => \$opts{'res'},
+    "rcp=f"            => \$opts{'rcp'},
     "sim_yr_rng=s"     => \$opts{'sim_yr_rng'},
     "h|help"           => \$opts{'help'},
     "d|debug"          => \$opts{'debug'},
@@ -206,5 +214,70 @@ my $cmd = "env S_LAT=$S_lat W_LON=$W_lon N_LAT=$N_lat E_LON=$E_lon " .
 
 print "Execute: $cmd\n";
 system( $cmd );
+
+#-------------------------------------------------------------------------------
+
+sub absolute_path {
+#
+# Convert a pathname into an absolute pathname, expanding any . or .. characters.
+# Assumes pathnames refer to a local filesystem.
+# Assumes the directory separator is "/".
+#
+  my $path = shift;
+  my $cwd = getcwd();  # current working directory
+  my $abspath;         # resulting absolute pathname
+
+# Strip off any leading or trailing whitespace.  (This pattern won't match if
+# there's embedded whitespace.
+  $path =~ s!^\s*(\S*)\s*$!$1!;
+
+# Convert relative to absolute path.
+
+  if ($path =~ m!^\.$!) {          # path is "."
+      return $cwd;
+  } elsif ($path =~ m!^\./!) {     # path starts with "./"
+      $path =~ s!^\.!$cwd!;
+  } elsif ($path =~ m!^\.\.$!) {   # path is ".."
+      $path = "$cwd/..";
+  } elsif ($path =~ m!^\.\./!) {   # path starts with "../"
+      $path = "$cwd/$path";
+  } elsif ($path =~ m!^[^/]!) {    # path starts with non-slash character
+      $path = "$cwd/$path";
+  }
+
+  my ($dir, @dirs2);
+  my @dirs = split "/", $path, -1;   # The -1 prevents split from stripping trailing nulls
+                                     # This enables correct processing of the input "/".
+
+  # Remove any "" that are not leading.
+  for (my $i=0; $i<=$#dirs; ++$i) {
+      if ($i == 0 or $dirs[$i] ne "") {
+          push @dirs2, $dirs[$i];
+      }
+  }
+  @dirs = ();
+
+  # Remove any "."
+  foreach $dir (@dirs2) {
+      unless ($dir eq ".") {
+          push @dirs, $dir;
+      }
+  }
+  @dirs2 = ();
+
+  # Remove the "subdir/.." parts.
+  foreach $dir (@dirs) {
+    if ( $dir !~ /^\.\.$/ ) {
+        push @dirs2, $dir;
+    } else {
+        pop @dirs2;   # remove previous dir when current dir is ..
+    }
+  }
+  if ($#dirs2 == 0 and $dirs2[0] eq "") { return "/"; }
+  $abspath = join '/', @dirs2;
+  return( $abspath );
+}
+
+#-------------------------------------------------------------------------------
 
 

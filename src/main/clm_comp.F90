@@ -114,12 +114,14 @@ contains
 ! back from (i.e. albedos, surface temperature and snow cover over land).
 !
 ! !USES:
-    use shr_orb_mod     , only : shr_orb_decl
-    use clm_varctl      , only : finidat, nsrest
-    use initSurfAlbMod  , only : initSurfAlb, do_initsurfalb 
-    use clm_time_manager, only : get_nstep, get_step_size, get_curr_calday
-    use clm_atmlnd      , only : clm_map2gcell
-    use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr
+    use shr_orb_mod        , only : shr_orb_decl
+    use clm_varctl         , only : finidat, nsrest
+    use initSurfAlbMod     , only : initSurfAlb, do_initsurfalb 
+    use clm_time_manager   , only : get_nstep, get_step_size, get_curr_calday
+    use clm_atmlnd         , only : clm_map2gcell
+    use clm_varorb         , only : eccen, mvelpp, lambm0, obliqr
+    use STATICEcosysDynMod , only : interpMonthlyVeg
+    use seq_drydep_mod     , only : n_drydep
 !
 ! !ARGUMENTS:
 !
@@ -161,6 +163,14 @@ contains
           call initSurfAlb( calday, declin, declinm1 )
           call t_stopf('init_orbSA')
           call t_stopf('init_orb')
+       else if ( n_drydep > 0 )then
+#if (defined DGVM)
+          ! no call
+#elif (defined CN)
+          ! no call
+#else
+          call interpMonthlyVeg()
+#endif
        end if
 
        ! Determine gridcell averaged properties to send to atm

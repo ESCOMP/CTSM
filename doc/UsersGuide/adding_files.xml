@@ -91,7 +91,7 @@ are all near the top, and the files used only under different conditions are lis
 later, and files with the fewest dependencies are near the top, as are the files
 that are least likely to be customized.
 </para>
-<table tocentry="1">
+<table label="required_files" tocentry="1">
 <title>Required Files for Different Configurations and Simulation Types</title>
 <tgroup cols="4" align="left" colsep="1" rowsep="1">
 <colspec colnum="2" colname="config"></colspec>

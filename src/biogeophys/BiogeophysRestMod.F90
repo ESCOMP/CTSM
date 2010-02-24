@@ -58,6 +58,7 @@ contains
     use initSurfAlbMod  , only : do_initsurfalb
     use clm_time_manager, only : is_first_step
     use SNICARMod       , only : snw_rds_min
+    use shr_infnan_mod  , only : shr_infnan_isnan
 !
 ! !ARGUMENTS:
     implicit none
@@ -1162,6 +1163,19 @@ contains
        end if
     end if
 
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='mlaidiff', xtype=nf_double,  &
+            dim1name='pft',&
+            long_name='difference between lai month one and month two',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='mlaidiff', data=pptr%pps%mlaidiff, &
+            dim1name='pft', &
+            ncid=ncid, flag=flag, readvar=readvar) 
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun()
+       end if
+    end if
+
     ! pft type physical state variable - elai
 
     if (flag == 'define') then
@@ -1202,8 +1216,16 @@ contains
        call ncd_iolocal(varname='fsun', data=pptr%pps%fsun, &
             dim1name=namep, &
             ncid=ncid, flag=flag, readvar=readvar)
-       if (flag=='read' .and. .not. readvar) then
-          if (is_restart()) call endrun()
+       if (flag=='read' )then
+          if ( .not. readvar) then
+             if (is_restart()) call endrun()
+          else
+             do p = begp, endp
+                if ( shr_infnan_isnan( pptr%pps%fsun(p) ) )then
+                   pptr%pps%fsun(p) = spval
+                end if
+             end do
+          end if
        end if
     end if
 

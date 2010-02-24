@@ -21,6 +21,8 @@ module clm_atmlnd
   use nanMod      , only : nan
   use spmdMod     , only : masterproc
   use abortutils  , only : endrun
+  use seq_drydep_mod, only : n_drydep
+  use clm_varpar  , only : nvoc
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -88,6 +90,8 @@ type lnd2atm_type
 #if (defined DUST  )
   real(r8), pointer :: flxdst(:,:)       !dust flux (size bins)
 #endif
+  real(r8), pointer :: ddvel(:,:)        !dry deposition velocities
+  real(r8), pointer :: flxvoc(:,:)       ! VOC flux (size bins)
 end type lnd2atm_type
 
   type(atm2lnd_type),public,target :: atm_a2l      ! a2l fields on atm grid
@@ -301,6 +305,10 @@ end subroutine init_atm2lnd_type
 #if (defined DUST )
   allocate(l2a%flxdst(beg:end,1:ndst))
 #endif
+  allocate(l2a%flxvoc(beg:end,1:nvoc))
+  if ( n_drydep > 0 )then
+     allocate(l2a%ddvel(beg:end,1:n_drydep))
+  end if
 
 ! ival = nan      ! causes core dump in map_maparray, tcx fix
   ival = 0.0_r8
@@ -326,6 +334,8 @@ end subroutine init_atm2lnd_type
 #if (defined DUST )
   l2a%flxdst(beg:end,1:ndst) = ival
 #endif
+  if ( n_drydep > 0 ) l2a%ddvel(beg:end, : ) = ival
+  l2a%flxvoc(beg:end,1:nvoc) = ival
 end subroutine init_lnd2atm_type
 
 !------------------------------------------------------------------------------
@@ -853,9 +863,6 @@ end subroutine clm_mapa2l
   integer :: begg_d,endg_d         ! beg,end of output grid
   real(r8),pointer :: asrc(:,:)    ! temporary source data
   real(r8),pointer :: adst(:,:)    ! temporary dest data
-#if (defined DUST )
-  integer :: m                     ! loop counter
-#endif
 !------------------------------------------------------------------------------
 
   nradflds = size(l2a_src%albd,dim=2)
@@ -880,6 +887,10 @@ end subroutine clm_mapa2l
   nflds = nflds + ndst
 #endif
 
+  ! add on the number of dry dep bins
+  nflds = nflds + n_drydep
+  ! add on the number of voc bins
+  nflds = nflds + nvoc
 
   allocate(asrc(begg_s:endg_s,nflds))
   allocate(adst(begg_d:endg_d,nflds))
@@ -911,10 +922,16 @@ end subroutine clm_mapa2l
   ix=ix+1; asrc(:,ix) = l2a_src%fv(:)
 #endif
 #if (defined DUST )
-  do m = 1,ndst  ! dust bins
-     ix=ix+1; asrc(:,ix) = l2a_src%flxdst(:,m)  
+  do n = 1,ndst  ! dust bins
+     ix=ix+1; asrc(:,ix) = l2a_src%flxdst(:,n)  
   end do !m
 #endif
+  do n = 1,nvoc 
+     ix=ix+1; asrc(:,ix) = l2a_src%flxvoc(:,n)  
+  end do
+  do n = 1,n_drydep
+    ix=ix+1; asrc(:,ix) = l2a_src%ddvel(:,n)  
+  enddo
   if ( ix /= nflds )then
      call endrun( ' clm_mapa2l ERROR: number of atm-grid l2a forcing fields NOT equal to nflds' )
   end if
@@ -952,10 +969,16 @@ end subroutine clm_mapa2l
   ix=ix+1; l2a_dst%fv(:)             = adst(:,ix)
 #endif
 #if (defined DUST  )
-  do m = 1,ndst  ! dust bins
-     ix=ix+1; l2a_dst%flxdst(:,m)    = adst(:,ix)
-  end do !m
+  do n = 1,ndst  ! dust bins
+     ix=ix+1; l2a_dst%flxdst(:,n)    = adst(:,ix)
+  end do
 #endif
+  do n = 1,nvoc  ! voc bins
+     ix=ix+1; l2a_dst%flxvoc(:,n)    = adst(:,ix)
+  end do
+  do n = 1,n_drydep
+    ix=ix+1; l2a_dst%ddvel(:,n)   = adst(:,ix)
+  enddo
   if ( ix /= nflds )then
      call endrun( ' clm_mapa2l ERROR: number of l2a forcing fields NOT equal to nflds' )
   end if
@@ -1154,6 +1177,15 @@ end subroutine clm_mapl2a
            pptr%pdf%flx_mss_vrt_dst, clm_l2a%flxdst, &
            p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 #endif
+
+      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, nvoc, &
+           pptr%pvf%vocflx, clm_l2a%flxvoc, &
+           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
+
+      if ( n_drydep > 0 ) &
+      call p2g(begp, endp, begc, endc, begl, endl, begg, endg, n_drydep, &
+           pptr%pdd%drydepvel, clm_l2a%ddvel, &
+           p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
      ! Convert from gC/m2/s to kgCO2/m2/s
      do g = begg,endg

@@ -105,6 +105,7 @@ contains
 !
    real(r8), pointer :: u10(:)         ! 10-m wind (m/s) (for dust model)
    real(r8), pointer :: fv(:)          ! friction velocity (m/s) (for dust model)
+   real(r8), pointer :: vds(:)         ! dry deposition velocity term (m/s) (for SO4 NH4NO3)
 !
 !
 ! !OTHER LOCAL VARIABLES:
@@ -124,6 +125,7 @@ contains
    real(r8) :: fm10                        ! Used to diagnose the 10 meter wind
    real(r8) :: zeta10                      ! Used to diagnose the 10 meter wind
 #endif
+   real(r8) :: vds_tmp                     ! Temporary for dry deposition velocity
 !------------------------------------------------------------------------------
 
    ! Assign local pointers to derived type members (gridcell-level)
@@ -133,6 +135,8 @@ contains
    else
      ngridcell  => clm3%g%l%c%p%gridcell
    end if
+
+   vds        => clm3%g%l%c%p%pps%vds
    u10        => clm3%g%l%c%p%pps%u10
    fv         => clm3%g%l%c%p%pps%fv
 
@@ -179,6 +183,20 @@ contains
       else
          ustar(n) = vkc*um(n)/(log(obu(n)/z0m(n))+5._r8-5._r8*z0m(n)/obu(n) &
               +(5._r8*log(zeta(n))+zeta(n)-1._r8))
+      end if
+      
+      if (zeta(n) < 0._r8) then
+         vds_tmp = 2.e-3_r8*ustar(n) * ( 1._r8 + (300._r8/(-obu(n)))**0.666_r8)
+      else
+         vds_tmp = 2.e-3_r8*ustar(n)
+      endif
+
+      if (present(landunit_index)) then
+         do pp = pfti(n),pftf(n)
+            vds(pp) = vds_tmp
+         end do
+      else
+         vds(n) = vds_tmp
       end if
 
       ! Temperature profile

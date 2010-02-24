@@ -391,6 +391,7 @@ contains
     use UrbanMod        , only : UrbanClumpInit
     use UrbanInitMod    , only : UrbanInitTimeConst, UrbanInitTimeVar, UrbanInitAero 
     use UrbanInputMod   , only : UrbanInput
+    use STATICEcosysdynMOD, only: readAnnualVegetation
 !
 !
 ! !REVISION HISTORY:
@@ -705,6 +706,7 @@ contains
     call t_stopf('init_dgvmw')
 #endif
 
+    call readAnnualVegetation()
     ! End initialization
 
     call t_startf('init_wlog')

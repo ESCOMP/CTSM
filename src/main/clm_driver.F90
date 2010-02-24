@@ -125,9 +125,8 @@ module clm_driver
 #if (defined DUST)
   use DUSTMod             , only : DustDryDep, DustEmission
 #endif
-#if (defined VOC)
   use VOCEmissionMod      , only : VOCEmission
-#endif
+  use DryDepVelocity      , only : depvel_compute
 #if (defined CASA)
   use CASAMod             , only : casa_ecosystemDyn
 #endif
@@ -504,11 +503,9 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
      call DustDryDep(begp, endp)
 #endif
 
-#if (defined VOC)
-     ! VOC emission (A. Guenther's model)
+     ! VOC emission (A. Guenther's MEGAN (2006) model)
      call VOCEmission(begp, endp, &
                       filter(nc)%num_nolakep, filter(nc)%nolakep)
-#endif
 
      call t_stopf('bgc')
 
@@ -623,6 +620,9 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
                        doalb)
 #endif
      call t_stopf('ecosysdyn')
+
+     ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
+     call depvel_compute(begp,endp)
 
      ! ============================================================================
      ! Check the energy and water balance, also carbon and nitrogen balance
