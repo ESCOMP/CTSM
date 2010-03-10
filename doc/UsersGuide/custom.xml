@@ -2,45 +2,48 @@
 <!-- Beg of customizing section -->
 
 <chapter id="customize">
-<title>How to customize the configuration for a case with CLM</title>
+<title>How to customize the configuration for a case with &clm;</title>
 
 <para>
 The <ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">
-CCSM Users Guide</ulink> gives you the details on how to setup, configure, build, and run
-a case. That is the document to give you the details on using the CCSM scripts. The purpose 
-of this document is to give you the details when using CCSM with CLM on how to customize
-and use advanced features in CLM. You should be familiar with the CCSM Users Guide and
-how to setup cases with CCSM4 before referring to this document.
+&ccsm; Users Guide</ulink> gives you the details on how to setup, &configure;, build, and run
+a case. That is the document to give you the details on using the &ccsm; scripts. The purpose 
+of this document is to give you the details when using &ccsm; with &clm; on how to customize
+and use advanced features in &clm;. You should be familiar with the &ccsm; Users Guide and
+how to setup cases with &ccsm4; before referring to this document.
 </para>
 <para>
 In this chapter we deal with three different ways of customizing a case: Choosing a compset,
-Customizing Configuration options, and customizing the CLM Namelist. There are many different
-compsets that use CLM and many are setup to enable special features of CLM from the start. So
+Customizing Configuration options, and customizing the &clm; Namelist. There are many different
+compsets that use &clm; and many are setup to enable special features of &clm; from the start. So
 the first thing you want to be familiar with are the different options in the compsets. The 
-next section shows the different options for customizing the configuration options for CLM.
-Here we introduce the CLM configure and build-namelist scripts and how using the
-<filename>env_conf.xml</filename> options you can customize the configuration and the initial
-namelist. The final section tells you about the CLM namelist and how you could customize the
-namelist once you have run "configure -case" and have an initial namelist in
+next section shows the different options for customizing the configuration options for
+&clm;.
+Here we introduce the &clm; &configure; and &buildnml; scripts and how using the
+&envconf; options you can customize the configuration and the initial
+namelist. The final section tells you about the &clm; namelist and how you could customize the
+namelist once you have run "&configure; -case" and have an initial namelist in
 <filename>BuildConf/clm.buildnml.csh</filename> that you can customize by hand. You can also 
-use <filename>env_conf.xml</filename> options to change you namelist as well.
+use &envconf; options to change you namelist as well.
 </para>
 <!-- Beg of choosing a compset section -->
 <sect1 id="compset_choice">
-<title>Choosing a compset using CLM</title>
+<title>Choosing a compset using &clm;</title>
 
 <para>
 When setting up a new case one of the first choices to make is which "component set" (or compset) to use. The
 compset refers to which component models are used as well as specific settings for them. We label the different
 types of compsets with a different letter of the alphabet from "A" (for all data model) to "X" (for all dead model).
-The compsets of interest when working with CLM are the "I" compsets (which contain CLM with a data atmosphere model
-and a stub ocean, and stub sea-ice models), "E" and "F" compsets (which contain CLM with the active atmosphere model (CAM),
-a prescribed sea-ice model and a data ocean model), and "B" compsets which have all active components. Below we
-go into details on the "I" compsets which emphasize CLM as the only active model, and just mention the two other categories.
+The compsets of interest when working with &clm; are the "I" compsets (which contain
+&clm; with a data atmosphere model
+and a stub ocean, and stub sea-ice models), "E" and "F" compsets (which contain &clm; with the active atmosphere model (CAM),
+&clm; prescribed sea-ice model and a data ocean model), and "B" compsets which have all active components. Below we
+go into details on the "I" compsets which emphasize &clm; as the only active model, and just mention the two other categories.
 </para>
 <para>
-When working with CLM you usually want to start with a relevant "I" compset before moving to the more
-complex cases that involve other active model components. The "I" compsets can exercise CLM in a way that
+When working with &clm; you usually want to start with a relevant "I" compset before moving to the more
+complex cases that involve other active model components. The "I" compsets can exercise
+&clm; in a way that
 is similar to the coupled modes, but with much lower computational cost and faster turnaround times.
 </para>
 <sect2 id="I_compsets">
@@ -68,12 +71,12 @@ a slab ocean model while "F" compsets have a data ocean model.
 <sect2 id="chose_compset_conclude">
 <title>Conclusion to choosing a compset</title>
 <para>
-We've introduced the basic type of compsets that use CLM and given some further details
-for the "standalone CLM" (or "I" compsets).  The 
+We've introduced the basic type of compsets that use &clm; and given some further details
+for the "standalone &clm;" (or "I" compsets).  The 
 <ulink url="../../../../../scripts/ccsm_utils/Case.template/config_compsets.xml">
 config_compsets.xml</ulink> lists all of the compsets and gives a full description
-of each of them. In the next section we look into customizing the configure time options
-for compsets using CLM.
+of each of them. In the next section we look into customizing the &configure; time options
+for compsets using &clm;.
 </para>
 </sect2>
 </sect1>
@@ -81,77 +84,82 @@ for compsets using CLM.
 
 <!-- Beg of customizing clm config section -->
 <sect1 id="customizing_clm_config">
-<title>Customizing the clm configuration</title>
+<title>Customizing the &clm; configuration</title>
 <para>
 The "Creating a Case" section of the 
-<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">CCSM4.0 Scripts Users-Guide</ulink>
-gives instructions on creating a case. What is of interest here is how to customize your use of clm
+<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">&ccsm4; Scripts Users-Guide</ulink>
+gives instructions on creating a case. What is of interest here is how to customize your
+use of &clm;
 for the case that you created. In this section we discuss how to customize your case before the first
-step -- the "configure -case" step is done. in the next section we will discuss how to customize your
-clm namelist after "configure -case" has already been done.
+step -- the "&configure; -case" step is done. in the next section we will discuss how to customize your
+&clm; namelist after "&configure; -case" has already been done.
 </para>
 <para>
-For CLM when "configure -case" is called there are two steps that take place:
+For &clm; when "&configure; -case" is called there are two steps that take place:
 </para>
 <orderedlist>
-<listitem><para>The clm "configure" script is called to setup the build-time configuration for clm.</para></listitem>
-<listitem><para>The clm "build-namelist" script is called to generate  the initial run-time namelist for clm.</para></listitem>
+<listitem><para>The &clm; "&configure;" script is called to setup the build-time
+configuration for &clm;.</para></listitem>
+<listitem><para>The &clm; "&buildnml;" script is called to generate  the initial
+run-time namelist for &clm;.</para></listitem>
 </orderedlist>
 <para>
-When customizing your case at the configure step you are able to modify the process by effecting either one
-or both of these steps. The clm "configure" and "build-namelist" scripts are both available in the "models/lnd/clm/bld" 
+When customizing your case at the &configure; step you are able to modify the process by effecting either one
+or both of these steps. The &clm; "&configure;" and "&buildnml;" scripts are both available in the "models/lnd/clm/bld" 
 directory in the distribution. Both of these scripts have a "-help" option that is useful to examine to see what
 types of options you can give either of them.
 </para>
 <para>
 There are five different types of customization for the configuration that we will 
-discuss: CCSM4 CLM configuration items, Configure time User Namelist,
-other noteworthy CCSM configuration items, the CLM configure script options, and 
-the CLM build-namelist script options.
+discuss: &ccsm4;  &clm; configuration items, Configure time User Namelist,
+other noteworthy &ccsm;  configuration items, the &clm; &configure; script options, and 
+the &clm; &buildnml; script options.
 </para>
 
 <sect2 id="clm_script">
-<title>CLM Script configuration items</title>
+<title>&clm; Script configuration items</title>
 <para>
-Below we list each of the CCSM configuration items that are specific to CLM.
+Below we list each of the &ccsm; configuration items that are specific to &clm;.
 </para>
 <para>
 <simplelist>
-    <member><varname>CLM_CONFIG_OPTS</varname></member>
-    <member><varname>CLM_BLDNML_OPTS</varname></member>
-    <member><varname>CLM_NAMELIST_OPTS</varname></member>
-    <member><varname>CLM_FORCE_COLDSTART</varname></member>
-    <member><varname>CLM_PT1_NAME</varname></member>
-    <member><varname>CLM_USRDAT_NAME</varname></member>
+    <member>&CLMCONFIG;</member>
+    <member>&CLMBLDNML;</member>
+    <member>&CLMNAMELIST;</member>
+    <member>&CLMFORCECOLD;</member>
+    <member>&CLMUSECASE;</member>
+    <member>&CLM1PT;</member>
+    <member>&CLMUSRDAT;</member>
+    <member>&CLMCO2;</member>
 </simplelist>
 </para>
 <para>
-The first item "CLM_CONFIG_OPTS" has to do with customizing the CLM configuration options for your case, the rest
+The first item &CLMCONFIG; has to do with customizing the &clm; configuration options for your case, the rest
 all have to do with generating the initial namelist.
 </para>
 <para>
-CLM_CONFIG_OPTS
+&CLMCONFIG;
 </para>
 <para>
-The option "CLM_CONFIG_OPTS" is all about passing command line arguments to the CLM configure script. It is important
-to note that some compsets, may already put a value into the CLM_CONFIG_OPTS variable. You can still add more
-options to your "CLM_CONFIG_OPTS" but make sure you add to what is already there rather than replacing it. Hence,
-it may be best to edit the "env_conf.xml" file to do this rather than use the xmlchange script. In the 
-section below we will go into more details on options that can be customized in the CLM "configure" script. It's
-also important to note that the clm template may already invoke certain CLM configure options and as such those
+The option &CLMCONFIG; is all about passing command line arguments to the &clm; &configure; script. It is important
+to note that some compsets, may already put a value into the &CLMCONFIG; variable. You can still add more
+options to your &CLMCONFIG; but make sure you add to what is already there rather than replacing it. Hence,
+it may be best to edit the &envconf; file to do this rather than use the xmlchange script. In the 
+section below we will go into more details on options that can be customized in the &clm; "&configure;" script. It's
+also important to note that the &clm; template may already invoke certain &clm; &configure; options and as such those
 command line options are NOT going to be available to change at this step (nor would you want to change them).
 </para>
 <para>
-CLM_NML_USE_CASE
+&CLMUSECASE;
 </para>
 <para>
-"CLM_NML_USE_CASE" is used to set a particular set of conditions that set multiple namelist items, all centering around
+&CLMUSECASE; is used to set a particular set of conditions that set multiple namelist items, all centering around
 a particular usage of the model.
 To list the valid options do the following:
 </para>
 <screen>
 > cd models/lnd/clm/bld
-> build-namelist -use_case list
+> &buildnml; -use_case list
 </screen>
 <para>
 The output of the above command is:
@@ -160,16 +168,16 @@ The output of the above command is:
 &usecases_list;
 </screen>
 <para>
-CLM_BLDNML_OPTS
+&CLMBLDNML;
 </para>
 <para>
-The option "CLM_BLDNML_OPTS" is for passing options to the CLM "build-namelist" script. As with the "configure"
-script the clm template may already invoke certain options and as such those options will NOT be available to be
-set here. The best way to see what options can be sent to the "build-namelist" script is to do
+The option &CLMBLDNML; is for passing options to the &clm; "&buildnml;" script. As with the "&configure;"
+script the &clm; template may already invoke certain options and as such those options will NOT be available to be
+set here. The best way to see what options can be sent to the "&buildnml;" script is to do
 </para>
 <screen>
 > cd models/lnd/clm/bld
-> build-namelist -help
+> &buildnml; -help
 </screen>
 <para>
 Here is the output from the above.
@@ -178,9 +186,9 @@ Here is the output from the above.
 &buildnml_help;
 </screen>
 <para>
-The clm template already sets the resolution and mask as well as the configure file, the start-type, and defines a input
+The &clm; template already sets the resolution and mask as well as the &configure; file, the start-type, and defines a input
 namelist and namelist input file, and it normally sets either "-ignore_ic_year" or "-ignore_ic_date". Also many
-of the options are designed solely for CLM stand-alone testing and hence should NOT be used (any of the options starting
+of the options are designed solely for &clm; stand-alone testing and hence should NOT be used (any of the options starting
 with a "datm_" or "drv_" prefix. Hence there are then only four different options that could be set:
 </para>
 <para>
@@ -193,34 +201,34 @@ with a "datm_" or "drv_" prefix. Hence there are then only four different option
 </orderedlist>
 </para>
 <para>
-"-lnd_res" is used to run CLM at a higher resolution than it is coupling to the atmospheric model. This can
+"-lnd_res" is used to run &clm; at a higher resolution than it is coupling to the atmospheric model. This can
 be useful to get more accuracy from the land model by running at a higher resolution, but saving computer time
 by running the more expensive atmospheric model at a lower resolution. To get a list of valid resolutions to
 run at do the following:
 </para>
 <screen>
 > cd models/lnd/clm/bld
-> build-namelist -lnd_res list
+> &buildnml; -lnd_res list
 </screen>
 <para>
-"-clm_demand" asks the build-namelist step to require that the list of variables
+"-clm_demand" asks the &buildnml; step to require that the list of variables
 entered be set. Typically, this is used to require that optional filenames be used and ensure
 they are set before continuing. For example, you may want to require that
 <varname>fpftdyn</varname> be set to get dynamically changing vegetation types. To do this
 you would do the following.
 <screen>
-> xmlchange -file env_conf.xml -id CLM_BLDNML_OPTS -val "-clm_demand fpftdyn"
+> xmlchange -file env_conf.xml -id &CLMBLDNML; -val "-clm_demand fpftdyn"
 </screen>
 To see a list of valid variables that you could set do this:
 <screen>
 > cd models/lnd/clm/bld
-> build-namelist -clm_demand list
+> &buildnml; -clm_demand list
 </screen>
 </para>
 <note>
  <para>
 Using a 20th-Century transient compset or the <envar>20thC_transient</envar> use-case
-using <envar>CLM_NML_USE_CASE</envar> would set this as well, but would also use 
+using &CLMUSECASE; would set this as well, but would also use 
 fndepdyn, and dynamic faerdep files, so using <envar>-clm_demand</envar> would be a way 
 to get <emphasis>just</emphasis> dynamic vegetation types and NOT the other files as well.
 </para>
@@ -231,7 +239,7 @@ datasets. To list the valid options do the following:
 </para>
 <screen>
 > cd models/lnd/clm/bld
-> build-namelist -sim_year list
+> &buildnml; -sim_year list
 </screen>
 <para>
 "-rcp" is used to set the representative concentration pathway for the future scenarios
@@ -240,14 +248,14 @@ datasets. To list the valid options do the following:
 </para>
 <screen>
 > cd models/lnd/clm/bld
-> build-namelist -rcp list
+> &buildnml; -rcp list
 </screen>
 <para>
-CLM_NAMELIST_OPTS
+&CLMNAMELIST;
 </para>
 <para>
-The option <envar>CLM_NAMELIST_OPTS</envar> is for passing namelist items into the "clm_inparm" namelist.
-Any items that are set in CLM_NAMELIST_OPTS will be set in your namelist after "configure
+The option &CLMNAMELIST; is for passing namelist items into the "clm_inparm" namelist.
+Any items that are set in &CLMNAMELIST; will be set in your namelist after "&configure;
 -case" is done.
 </para>
 <note>
@@ -259,36 +267,38 @@ scripts don't get confused with other quotes they use.
 <para>
 Example, you want to set <varname>hist_dov2xy</varname> to <varname>.false.</varname>
 so that you get vector output to your history files. You want to edit
-<filename>env_conf.xml</filename> and add a setting for <varname>hist_dov2xy</varname>.
+&envconf; and add a setting for <varname>hist_dov2xy</varname>.
 So do the following:
-<screen>> xmlchange -file env_conf.xml -id CLM_NAMELIST_OPTS -val hist_dov2xy=.false.</screen>
+<screen>> xmlchange -file env_conf.xml -id &CLMNAMELIST; -val hist_dov2xy=.false.</screen>
 </para>
 <para>
-CLM_CO2_TYPE
+&CLMCO2;
 </para>
 <para>
-<envar>CLM_CO2_TYPE</envar>
+&CLMCO2; sets the type of input &CO2; for either "constant", "diagnostic" or prognostic".
+If "constant" the value from <envar>CCSM_CO2_PPMV</envar> will be used. If "diagnostic"
+or "prognostic" the values MUST be sent from the atmosphere model.
 </para>
 <para>
-CLM_FORCE_COLDSTART
+&CLMFORCECOLD;
 </para>
 <para>
-<envar>CLM_FORCE_COLDSTART</envar> when set to <emphasis><envar>on</envar></emphasis> <emphasis>requires</emphasis> that
+&CLMFORCECOLD; when set to <emphasis><envar>on</envar></emphasis> <emphasis>requires</emphasis> that
 your simulation do a cold start from arbitrary initial conditions. If this is NOT set, it
 will use an initial condition file if it can find an appropriate one, and otherwise do a cold
-start. <envar>CLM_FORCE_COLDSTART</envar> is a good way to ensure that you are doing a cold
+start. &CLMFORCECOLD; is a good way to ensure that you are doing a cold
 start if that is what you want to do.
 </para>
 <para>
-CLM_PT1_NAME
+&CLM1PT;
 </para>
 <para>
-<envar>CLM_PT1_NAME</envar> is used <emphasis>ONLY</emphasis> for a <varname>pt1_pt1</varname>
+&CLM1PT; is used <emphasis>ONLY</emphasis> for a <varname>pt1_pt1</varname>
 resolution simulation to set the name of the single-point files to use.
 To see a list of the valid resolutions do this:
 <screen>
 > cd models/lnd/clm/
-> build-namelist -res list
+> &buildnml; -res list
 </screen>
 </para>
 <para>
@@ -298,22 +308,22 @@ The output of the above command is:
 &res_list;
 </screen>
 <para>
-the valid resolutions that can be used with <envar>CLM_PT1_NAME</envar> are the ones that
+the valid resolutions that can be used with &CLM1PT; are the ones that
 have city or nation names such as: 5x5_amazon, 1x1_vancouverCAN 1x1_mexicocityMEX, or
 1x1_brazil. The "1x1_" prefix means the file is for a single-point, while "5x5_" prefix means
 it's for a region of five points in latitude by five points in longitude. Both regional an
-single point datasets can be used for CLM_PT1_NAME.
+single point datasets can be used for &CLM1PT;.
 </para>
 <para>
-CLM_USR_DATNAME
+&CLMUSRDAT;
 </para>
 <para>
-<envar>CLM_USR_DATNAME</envar> provides a way to enter your own datasets into the initial
-namelist setup at "configure -case". The files you create must be named with
+&CLMUSRDAT; provides a way to enter your own datasets into the initial
+namelist setup at "&configure; -case". The files you create must be named with
 See the <ulink url="../Quickstart.userdatasets">Quickstart.userdatasets</ulink> 
 file describing the steps do use your own datasets, for more details on each step.
 To see what the expected names of the files are use, queryDefaultNamelist.pl to see
-what the names will need to be. For example if you <envar>CLM_USR_DATNAME</envar> will 
+what the names will need to be. For example if you &CLMUSRDAT; will 
 be "1x1_boulderCO", with a "navy" land-mask, constant simulation year range, for 1850,
 the following will list what your filenames should be:
 <screen>
@@ -328,15 +338,15 @@ mask=navy,sim_year=1850,sim_year_range="constant"  -csmdata $CSMDATA
 <sect2 id="config_time_nml">
 <title>Configure time User Namelist</title>
 <para>
-<envar>CLM_NAMELIST_OPTS</envar> as described above allows you to set any
-extra namelist items you would like to appear in your namelist after first configured.
+&CLMNAMELIST; as described above allows you to set any
+extra namelist items you would like to appear in your namelist after first &configure;d.
 However, it only allows you a single line to enter namelist items, and strings must
 be quoted with &amp;apos; which is a bit awkward. If you have a long list of namelist
 items you want to set (such as a long list of history fields) a convienent way to do it
 is to create a <filename>user_nl_clm</filename> that contains just the list of namelist
 variables you want to add to your initial namelist. The <filename>user_nl_clm</filename>
-will only be used when configure is run, so if you change it after configure -- it won't
-change anything. The file needs to be in valid FORTRAN namelist format, and the configure
+will only be used when &configure; is run, so if you change it after &configure; -- it won't
+change anything. The file needs to be in valid FORTRAN namelist format, and the &configure;
 step will abort if there are syntax errors. The namelist name actually doesn't have to be
 valid, but all the variable names must be. Here's an example <filename>user_nl_clm</filename>
 namelist that sets a bunch of history file related items, to create output history files
@@ -365,10 +375,10 @@ monthly, daily, every six and 1 hours.
   hist_nhtfrq = 0, -24, -6, -1
 /
 </screen>
-Obviously, all of this would be difficult to put in the <envar>CLM_NAMELIST_OPTS</envar>
+Obviously, all of this would be difficult to put in the &CLMNAMELIST;
 variable, especially having to put &amp;apos; around all the character strings. For
 more information on the namelist variables being set here and what they mean, see
-the section on CLM namelists below, as well as the namelist definition that gives
+the section on &clm; namelists below, as well as the namelist definition that gives
 details on each variable.
 </para>
 </sect2>
@@ -378,16 +388,16 @@ details on each variable.
 <para>
 For running "I" cases there are several other noteworthy configuration items that
 you may want to work with. Most of these involve settings for the DATM, but one
-<varname>CCSM_CO2_PPMV</varname> is a overall setting. If you are running an B, E,
+<envar>CCSM_CO2_PPMV</envar> is a overall setting. If you are running an B, E,
 or F case that doesn't use the DATM obviously these will not be important.
     <simplelist>
-    <member><varname>CCSM_CO2_PPMV</varname></member>
-    <member><varname>DATM_MODE</varname></member>
-    <member><varname>DATM_CLMNCEP_YR_ALIGN</varname></member>
-    <member><varname>DATM_CLMNCEP_YR_START</varname></member>
-    <member><varname>DATM_CLMNCEP_YR_END</varname></member>
+    <member><envar>CCSM_CO2_PPMV</envar></member>
+    <member><envar>DATM_MODE</envar></member>
+    <member><envar>DATM_CLMNCEP_YR_ALIGN</envar></member>
+    <member><envar>DATM_CLMNCEP_YR_START</envar></member>
+    <member><envar>DATM_CLMNCEP_YR_END</envar></member>
 <!--
-    <member><varname>DATM_CO2_TSERIES</varname></member>
+    <member><envar>DATM_CO2_TSERIES</envar></member>
 -->
     </simplelist>
 </para>
@@ -395,14 +405,14 @@ or F case that doesn't use the DATM obviously these will not be important.
 <varlistentry>
 <term>CCSM_CO2_PPMV</term> <listitem> 
 <para>
-<envar>CCSM_CO2_PPMV</envar> sets the mixing ratio of CO<subscript>2</subscript> in 
-parts per million by volume for ALL CCSM components to use. Note that most compsets
+<envar>CCSM_CO2_PPMV</envar> sets the mixing ratio of &CO2; in 
+parts per million by volume for ALL &ccsm; components to use. Note that most compsets
 already set this value to something reasonable. Also note that some compsets may
 tell the atmosphere model to override this value with either historic or ramped 
 values. If the <envar>CCSM_BGC</envar> variable is set to something other than "none"
-the atmosphere model will determine CO<subscript>2</subscript>, and CLM will listen
-and use what the atmosphere sends it. On the CLM side the namelist item <varname>
-co2_type</varname> tells CLM to use the value sent from the atmosphere rather than
+the atmosphere model will determine &CO2;, and &clm; will listen
+and use what the atmosphere sends it. On the &clm; side the namelist item <varname>
+co2_type</varname> tells &clm; to use the value sent from the atmosphere rather than
 a value set on it's own namelist.
 </para>
 </listitem>
@@ -413,7 +423,7 @@ a value set on it's own namelist.
 <envar>DATM_MODE</envar> sets the mode that the DATM model should run in this determines
 how data is handled as well as what the source of the data will be. Many of the modes
 are setup specifically to be used for ocean and/or sea-ice modeling. The modes
-that are designed for use by CLM are:
+that are designed for use by &clm; are:
 <simplelist>
 <member>CLM_QIAN</member>
 <member>CLM1PT</member>
@@ -425,7 +435,7 @@ that are designed for use by CLM are:
 </para>
 <para>
 <varname>CLMQIAN</varname> is for the standard mode of using global atmospheric data 
-that was developed by Qian et. al. for CLM using NCEP data from 1948 to 2004.
+that was developed by Qian et. al. for &clm; using NCEP data from 1948 to 2004.
 <varname>CLM1PT</varname> is for the special cases where we have single-point tower
 data for particular sites. Right now we only have data for three urban locations:
 MexicoCity, Mexico, Vancouver Canada, and the urban-c alpha site. This is non-standard
@@ -469,16 +479,16 @@ determines which year in that range of years the simulation will start with.
 -->
 </variablelist>
 <para>
-The configure script defines the details of a clm configuration and summarizes it into a
+The &configure; script defines the details of a clm configuration and summarizes it into a
 <filename>config_cache.xml</filename> file. The
 <ulink url="../../bld/config_files/config_definition.xml">config_definition.xml</ulink>
 gives a definition of each clm configuration item. Many of these items are things that you
 would NOT change, but looking through the list gives you the valid options, and a good
-description of each. Coupling this with looking at the options to configure with
+description of each. Coupling this with looking at the options to &configure; with
 "-help" as below will enable you to understand how to set the different options.
 <screen>
 > cd models/lnd/clm/bld
-> configure -help
+> &configure; -help
 </screen>
 </para>
 <para>
@@ -488,12 +498,19 @@ The output to the above command is as follows:
 &config_help;
 </screen>
 <para>
-We've given details on how to use the options in <filename>env_conf.xml</filename> to
-interact with the CLM "configure" and "build-namelist" scripts. As well as giving a good
+The final thing that the user may wish to do before &configure; is run is to edit
+the template files which determine the configuration and intial namelist. The
+variables in &envconf; typically mean you will NOT have
+to edit the template. But, there are rare instances where it is useful to do so.
+<xref linkend="editing_templates"></xref> gives the details on how to do this.
+</para>
+<para>
+We've given details on how to use the options in &envconf; to
+interact with the &clm; "&configure;" and "&buildnml;" scripts. As well as giving a good
 understanding of how these scripts work and the options to them. In the next section we
-give further details on the clm namelist. You could customize the namelist for these 
-options after "configure -case" is run, or you could customize it using the
-<envar>CLM_BLDNML_OPTS</envar> which we described here.
+give further details on the &clm; namelist. You could customize the namelist for these 
+options after "&configure; -case" is run, or you could customize it using the
+&CLMBLDNML; which we described here.
 </para>
 </sect2>
 </sect1>
@@ -501,10 +518,10 @@ options after "configure -case" is run, or you could customize it using the
 
 <!-- Beg of customizing clm nl section -->
 <sect1 id="customizing_clm_nl">
-   <title>Customizing the clm namelist</title>
+   <title>Customizing the &clm; namelist</title>
 <para>
-Once a case is configured, we can then customize the case further, by editing the 
-run-time namelist for CLM. First let's list the definition of each namelist
+Once a case is &configure;d, we can then customize the case further, by editing the 
+run-time namelist for &clm;. First let's list the definition of each namelist
 item and their valid values, and then we'll list the default values for them.
 Next for some of the most used or tricky namelist items we'll give examples of their
 use, and give you example namelists that highlight these features.
@@ -523,7 +540,8 @@ and other attributes.
 <ulink url="../../bld/namelist_files/namelist_definition.xml">Definition of each Namelist Item</ulink>
 </para></listitem>
 <listitem><para>
-<ulink url="../../bld/namelist_files/namelist_defaults_clm.xml">Default values of each CLM Namelist Item</ulink>
+<ulink url="../../bld/namelist_files/namelist_defaults_clm.xml">Default values of each
+&clm; Namelist Item</ulink>
 </para></listitem>
 </orderedlist>
 </sect2>
@@ -532,8 +550,8 @@ and other attributes.
 <sect2 id="nl_def_conclude">
 <title>Namelist definition Conclusion</title>
 <para>
-We've given the definition of each namelist item, and the default values that the CLM
-"build-namelist" script will use for them. In the next section we give examples of using
+We've given the definition of each namelist item, and the default values that the &clm;
+"&buildnml;" script will use for them. In the next section we give examples of using
 selected namelist features.
 </para>
 </sect2>
@@ -553,7 +571,7 @@ will show the default namelist that doesn't activate any user options.
 <para>
 Here we give the default namelist as it would be created for a I1850CN compset at 0.9x1.25
 resolution with a gx1v6 land-mask. To edit the namelist you would edit the
-<filename>BuildConf/clm.buildnml.csh</filename> under your case (or before configure
+<filename>BuildConf/clm.buildnml.csh</filename> under your case (or before &configure;
 include a user namelist with just the items you want to change). For simplicity we will
 just show the namelist and NOT the entire file. In the sections below, for simplicity
  we will just show the user namelist (user_nl_clm) that will add (or modify existing) 
@@ -804,7 +822,7 @@ vary for anything, but grid-cell averaging.
 <para>
 We've given various examples of namelists that feature the use of different namelist options
 to customize a case for particular uses. Most the examples revolve around how to customize the
-output history fields. This should give you a good basis for setting up your own CLM namelist.
+output history fields. This should give you a good basis for setting up your own &clm; namelist.
 </para>
 </sect3>
 </sect2>
@@ -816,11 +834,11 @@ output history fields. This should give you a good basis for setting up your own
 <sect1 id="customizing_conclude">
 <title>Conclusion to customizing chapter</title>
 <para>
-We've given extensive details on customizing cases with CLM, by choosing compsets, by changing
-configure options and interacting with the CLM "configure" and "build-namelist" scripts, and
-finally we've given details on all of the CLM namelist items. In the next chapter we talk
-about further ways to customize cases with CLM by creating your own datasets using the tools
-provided in CLM.
+We've given extensive details on customizing cases with &clm;, by choosing compsets, by changing
+&configure; options and interacting with the &clm; "&configure;" and "&buildnml;" scripts, and
+finally we've given details on all of the &clm; namelist items. In the next chapter we talk
+about further ways to customize cases with &clm; by creating your own datasets using the tools
+provided in &clm;.
 </para>
 </sect1>
 </chapter>

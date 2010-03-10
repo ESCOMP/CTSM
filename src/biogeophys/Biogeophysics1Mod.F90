@@ -66,7 +66,7 @@ contains
 ! !USES:
     use clmtype
     use clm_atmlnd         , only : clm_a2l
-    use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub,          &
+    use clm_varcon         , only : denh2o, denice, roverg, hvap, hsub, &
                                     istice, istwet, istsoil, isturb, istdlak, &
                                     zlnd, zsno, tfrz, &
                                     icol_roof, icol_sunwall, icol_shadewall,     &

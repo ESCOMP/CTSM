@@ -21,6 +21,7 @@ runDepositionRegrid.pl ------ Runs the aerosol and nitrogen deposition regrid sc
 NCL Scripts available:
 
 getregional_datasets.ncl ---- NCL script to extract out regional datasets.
+getco2_historical.ncl ------- Get historical CO2 to use for input in datm8 streams
 convertUrbanOffline2Seq.ncl - Convert urban offline data to ccsm sequential mode that can be used by datm8.
 pftdyntest2raw.ncl ---------- Convert pftdyn test datasets to rawdata format so can be used to create future datasets.
 ndeplintInterp.ncl ---------- Create transient ndepdyn dataset from decadal average output

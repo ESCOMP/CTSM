@@ -33,9 +33,7 @@ module clm_varpar
 
 ! Define miscellaneous parameters
 
-  integer, parameter :: numpft      =  16   ! number of plant types
   integer, parameter :: numwat      =   5   ! number of water types (soil, ice, 2 lakes, wetland)
-  integer, parameter :: npftpar     =  32   ! number of pft parameters (in LPJ - DGVM only)
   integer, parameter :: numrad      =   2   ! number of solar radiation bands: vis, nir
   integer, parameter :: numsolar    =   2   ! number of solar type bands: direct, diffuse
   integer, parameter :: ndst        =   4   ! number of dust size classes (BGC only)
@@ -49,27 +47,28 @@ module clm_varpar
   integer, parameter :: rtmlat = 360  !number of rtm latitudes
 
 ! Define indices used in surface file read
-! maxpatch_pft     = max number of vegetated pfts in naturally vegetated landunit
-! maxpatch_crop    = max number of crop pfts (columns) in crop landunit
+! maxpatch_pft     = max number of plant functional types in naturally vegetated landunit
 ! maxpatch_urb     = max number of urban pfts (columns) in urban landunit
-! maxpatch_wet     = max number of wetland pfts (columns) in urban landunit
-! maxpathch_lake   = max number of wetland pfts (columns) in lake landunit
-! maxpathch_glacier= max number of wetland pfts (columns) in glacier landunit
+! maxpatch_wet     = max number of wetland pfts (columns) in wetland landunit
+! maxpatch_lake    = max number of lake pfts (columns) in lake landunit
+! maxpatch_glacier = max number of glacier pfts (columns) in glacier landunit
 
+  integer, parameter :: numpft         = 16     ! actual # of pfts (without bare)
+  integer, parameter :: numcft         =  2     ! actual # of crops
+  integer, parameter :: numveg         = numpft ! number of veg types (without specific crop)
   integer, parameter :: maxpatch_urb   = 5
-  integer, parameter :: maxpatch_cft   = 2
   integer            :: maxpatch_pft
   integer            :: npatch_urban
   integer            :: npatch_lake 
   integer            :: npatch_wet  
   integer            :: npatch_glacier
-  integer            :: npatch_crop 
   integer            :: maxpatch    
 
-  integer, parameter :: max_pft_per_gcell = numpft+1 + 3 + maxpatch_urb + maxpatch_cft
-  integer, parameter :: max_pft_per_lu    = max(numpft+1, maxpatch_cft, maxpatch_urb)
-  integer, parameter :: max_pft_per_col   = max(numpft+1, maxpatch_cft, maxpatch_urb)
-
+! clm_varpar_init seems to do something similar; less prone to error to move
+! these three lines there? (slevis)
+  integer, parameter :: max_pft_per_gcell = numpft+1 + 3 + maxpatch_urb + numcft
+  integer, parameter :: max_pft_per_lu    = max(numpft+1, numcft, maxpatch_urb)
+  integer, parameter :: max_pft_per_col   = max(numpft+1, numcft, maxpatch_urb)
 
 ! !PUBLIC MEMBER FUNCTIONS:
   public clm_varpar_init          ! set parameters
@@ -113,8 +112,7 @@ contains
   npatch_lake    = npatch_urban + maxpatch_urb
   npatch_wet     = npatch_lake  + 1
   npatch_glacier = npatch_wet   + 1
-  npatch_crop    = npatch_glacier + maxpatch_cft
-  maxpatch       = npatch_crop
+  maxpatch       = npatch_glacier
 
   end subroutine clm_varpar_init
 

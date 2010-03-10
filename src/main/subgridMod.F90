@@ -53,10 +53,9 @@ contains
 ! Obtain gridcell properties
 !
 ! !USES
-  use clm_varpar  , only : numpft, maxpatch_pft, &
-                           npatch_lake, npatch_glacier, npatch_wet, npatch_crop, &
-                           npatch_urban
-  use clm_varctl  , only : allocate_all_vegpfts
+  use clm_varpar  , only : numpft, maxpatch_pft, numcft, &
+                           npatch_lake, npatch_glacier, npatch_wet, npatch_urban
+  use clm_varctl  , only : allocate_all_vegpfts, create_crop_landunit
   use clm_varsur  , only : wtxy
 
 ! !ARGUMENTS
@@ -101,19 +100,35 @@ contains
     icols   = 0
     ilunits = 0
 
-    ! Set naturally vegetated landunit assuming that 
-    ! the vegetated landunit has one column
+    ! Set naturally vegetated landunit
 
     npfts_per_lunit = 0
     wtlunit = 0._r8
-    do m = 1, maxpatch_pft            
-       if (wtxy(nw,m) > 0.0_r8) then
-          npfts_per_lunit = npfts_per_lunit + 1
-          wtlunit = wtlunit + wtxy(nw,m)
-       end if
-    end do
-    if (npfts_per_lunit > 0) then
+    ! If crop should be on separate land units
+    if (allocate_all_vegpfts .and. create_crop_landunit) then
+       do m = 1, maxpatch_pft-numcft
+          if (wtxy(nw,m) > 0.0_r8) then
+             npfts_per_lunit = npfts_per_lunit + 1 ! sum natural pfts
+             wtlunit = wtlunit + wtxy(nw,m)        ! and their wts
+          end if
+       end do
+       do m = maxpatch_pft-numcft+1, maxpatch_pft
+          if (wtxy(nw,m) > 0.0_r8) then
+             npfts_per_lunit = npfts_per_lunit + 1 ! sum crops, too, but not
+          end if                                   ! their wts for now
+       end do
+    ! Assume that the vegetated landunit has one column
+    else
+       do m = 1, maxpatch_pft            
+          if (wtxy(nw,m) > 0.0_r8) then
+             npfts_per_lunit = npfts_per_lunit + 1
+             wtlunit = wtlunit + wtxy(nw,m)
+          end if
+       end do
+    end if
+    if (npfts_per_lunit > 0) then ! true even when only crops are present
        if (allocate_all_vegpfts) npfts_per_lunit = numpft+1
+       if (allocate_all_vegpfts .and. create_crop_landunit) npfts_per_lunit = numpft+1-numcft
        ilunits = ilunits + 1
        icols = icols + 1  
     end if
@@ -191,13 +206,21 @@ contains
 
     npfts_per_lunit = 0
     wtlunit = 0._r8
-    do m = npatch_glacier+1, npatch_crop 
-       if (wtxy(nw,m) > 0.0_r8) then
-          npfts_per_lunit = npfts_per_lunit + 1
-          wtlunit = wtlunit + wtxy(nw,m)
-       end if
-    end do
-    if (npfts_per_lunit > 0) then
+    if (allocate_all_vegpfts .and. create_crop_landunit) then
+       do m = 1, maxpatch_pft-numcft
+          if (wtxy(nw,m) > 0.0_r8) then
+             npfts_per_lunit = npfts_per_lunit + 1 ! sum natural pfts again
+          end if                                   ! not their wts this time
+       end do
+       do m = maxpatch_pft-numcft+1, maxpatch_pft
+          if (wtxy(nw,m) > 0.0_r8) then
+             npfts_per_lunit = npfts_per_lunit + 1 ! sum crops
+             wtlunit = wtlunit + wtxy(nw,m)        ! and their wts
+          end if
+       end do
+    end if
+    if (npfts_per_lunit > 0) then ! true even if only natural veg is present
+       if (allocate_all_vegpfts .and. create_crop_landunit) npfts_per_lunit = numcft
        ilunits = ilunits + 1
        icols   = icols + npfts_per_lunit
     end if

@@ -49,7 +49,7 @@ OPTIONS
      NOT be bundled.
 
      -ad_spinup <name>   Turn on AD_SPINUP mode for bgc setting of CN [on | off] (default is off).
-     -bgc <name>         Build CLM with bgc package [ none | cn | casa | dgvm ] (default is none).
+     -bgc <name>         Build CLM with bgc package [ none | cn | casa | cndv ] (default is none).
                          NOTE: When set to cn or casa -- also turns on the CLAMP CPP macro.
      -c13 <name>         Turn on C13 mode for bgc setting of CN [on | off] (default is off).
      -cache <file>       Name of output cache file (default: config_cache.xml).
@@ -66,7 +66,8 @@ OPTIONS
      -exit_spinup <name> Turn on EXIT_SPINUP mode for bgc setting of CN [on | off] (default is off).
      -help [or -h]       Print usage to STDOUT.
      -mach <name>        Machine name to use for CCSM build.
-     -maxpft <n>         Value of maxpatch_pft (default is numpft+1)
+     -maxpft <n>         Value of maxpatch_pft (default is numpft+1) 
+                         (required to be numpft+1 for CN or CNDV or transient cases)
      -mode <name>        CLM mode [ccsm_seq | ext_ccsm_seq]
      -nofire             Turn off wildfires for bgc setting of CN (default includes fire for CN)
      -pergro <name>      Switch enables building CLM for perturbation growth tests. [on | off] (default is off)
@@ -84,7 +85,6 @@ OPTIONS
                          Directories containing user source code.
      -verbose [or -v]    Turn on verbose echoing of settings made by configure.
      -version            Echo the CVS tag name used to check out this CLM distribution.
-     -voc <name>         Turn on Volatile Organic Compounds [on | off] (default is on)
 
 
 OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=ccsm_seq)
@@ -114,6 +114,7 @@ OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=ccsm_seq
      -nc_inc <dir>       Directory containing netCDF include files.
      -nc_lib <dir>       Directory containing netCDF library.
      -nc_mod <dir>       Directory containing netCDF module files.
+     -voc <name>         Turn on passing of Volatile Organic Compounds (VOC's) to driver [on | off] (default is on)
 EOF
 }
 
@@ -397,13 +398,6 @@ EOF
 
 if ($print>=2) { print "The configuration cache file will be created in $config_cache_file$eol"; }
 
-#-----------------------------------------------------------------------------------------------
-# MAXPFT option
-if (defined $opts{'maxpft'}) {
-    $cfg_ref->set('maxpft', $opts{'maxpft'});
-}
-my $maxpft = $cfg_ref->get('maxpft');
-if ($print>=2) { print "Using $maxpft for maxpft.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
 # BGC option
@@ -428,18 +422,6 @@ if ($print>=2) {
    else                  { print "Wildfires are turned off.$eol";       }
 }
 
-# SUPLN option for BGC/CN mode only
-if (defined $opts{'supln'}) {
-    $cfg_ref->set('supln', $opts{'supln'});
-}
-my $supln = $cfg_ref->get('supln');
-if ( ($supln eq "on" ) && ($bgc_mode ne "cn") ) {
-   die <<"EOF";
-** Cannot turn supln mode on -- without cn for bgc mode** 
-EOF
-}
-if ($print>=2) { print "Using $supln for supplemental nitrogen for cn mode.$eol"; }
-
 # AD_SPINUP option for BGC/CN mode only
 if (defined $opts{'ad_spinup'}) {
     $cfg_ref->set('ad_spinup', $opts{'ad_spinup'});
@@ -448,6 +430,10 @@ my $ad_spinup = $cfg_ref->get('ad_spinup');
 if ( ($ad_spinup eq "on" ) && ($bgc_mode ne "cn") ) {
    die <<"EOF";
 ** Cannot turn ad_spinup mode on -- without cn for bgc mode** 
+** 
+** Set the bgc mode by the following means from highest to lowest precedence:
+** * by the command-line option -bgc cn
+** * by a default configuration file, specified by -defaults 
 EOF
 }
 if ($print>=2) { print "Using $ad_spinup for ad_spinup for cn mode.$eol"; }
@@ -460,9 +446,47 @@ my $exit_spinup = $cfg_ref->get('exit_spinup');
 if ( ($exit_spinup eq "on" ) && ($bgc_mode ne "cn") ) {
    die <<"EOF";
 ** Cannot turn exit_spinup mode on -- without cn for bgc mode** 
+** 
+** Set the bgc mode by the following means from highest to lowest precedence:
+** * by the command-line option -bgc cn
+** * by a default configuration file, specified by -defaults 
+EOF
+}
+if ( ($exit_spinup eq "on") && ($ad_spinup eq "on") ) {
+   die <<"EOF";
+** Cannot turn exit_spinup mode on -- when ad_spinup mode is on.
+** 
+** Set the spinup modes by the following means from highest to lowest precedence:
+** * by the command-line option -bgc cn
+** * by a default configuration file, specified by -defaults 
 EOF
 }
 if ($print>=2) { print "Using $exit_spinup for exit_spinup for cn mode.$eol"; }
+
+# SUPLN option for BGC/CN mode only
+if (defined $opts{'supln'}) {
+    $cfg_ref->set('supln', $opts{'supln'});
+}
+my $supln = $cfg_ref->get('supln');
+if ( ($supln eq "on") && ($bgc_mode ne "cn") && ($bgc_mode ne "cndv") ) {
+   die <<"EOF";
+** Cannot turn supln mode on -- without cn or cndv for bgc mode
+** 
+** Set the bgc mode by the following means from highest to lowest precedence:
+** * by the command-line option -bgc cn
+** * by a default configuration file, specified by -defaults 
+EOF
+}
+if ( ($supln eq "on") && (($exit_spinup eq "on") || ($ad_spinup eq "on")) ) {
+   die <<"EOF";
+** Cannot turn supln mode on -- when exit_spinup or ad_spinup mode is on.
+** 
+** Set the supln and spinup modes by the following means from highest to lowest precedence:
+** * by the command-line option -bgc cn
+** * by a default configuration file, specified by -defaults 
+EOF
+}
+if ($print>=2) { print "Using $supln for supplemental nitrogen for cn mode.$eol"; }
 
 # C13 option for BGC/CN mode only
 if (defined $opts{'c13'}) {
@@ -507,12 +531,36 @@ if (defined $opts{'voc'}) {
     $cfg_ref->set('voc', $opts{'voc'});
 }
 my $voc = $cfg_ref->get('voc');
-if ($print>=2) { print "Using $voc for voc.$eol"; }
+if ( $voc eq "on" && $clm_mode eq "ext_ccsm_seq" ) {
+   die <<"EOF";
+** Can NOT turn on passing of VOC to driver just in CLM -- must also do this in the driver as well.
+** 
+**** Turn passing VOCs to and from the driver with the CCSM_VOC env_conf variable.
+EOF
+}
+if ($print>=2) { print "Using $voc for passing voc to driver.$eol"; }
 
 #-----------------------------------------------------------------------------------------------
+# MAXPFT option
+if (defined $opts{'maxpft'}) {
+    $cfg_ref->set('maxpft', $opts{'maxpft'});
+}
+my $maxpft = $cfg_ref->get('maxpft');
+if ( (($bgc_mode eq "cn") || ($bgc_mode eq "cndv")) && ($maxpft ne "numpft+1") ) {
+   die <<"EOF";
+** For CN or CNDV BGC mode you MUST set max patch PFT's to "numpft+1"
+** 
+** Set the bgc mode and maxpft by the following means from highest to lowest precedence:
+** * by the command-line options -bgc and -maxpft
+** * by a default configuration file, specified by -defaults 
+EOF
+}
+if ($print>=2) { print "Using $maxpft for maxpft.$eol"; }
+#-----------------------------------------------------------------------------------------------
+
 # PROGSSLT option
-if (defined $opts{'prog_seasalt'}) {
-    $cfg_ref->set('progsslt', $opts{'prog_seasalt'});
+if (defined $opts{'progsslt'}) {
+    $cfg_ref->set('progsslt', $opts{'progsslt'});
 }
 my $progsslt = $cfg_ref->get('progsslt');
 if ($print>=2) { print "Using $progsslt for progsslt.$eol"; }
@@ -745,11 +793,11 @@ if ($voc eq 'on') {
 if ($bgc_mode eq 'cn') { 
     $cfg_cppdefs .= " -DCN -DCLAMP";
 }
+if ($bgc_mode eq 'cndv') { 
+    $cfg_cppdefs .= " -DCNDV -DCN";
+}
 if ($bgc_mode eq 'casa') { 
     $cfg_cppdefs .= " -DCASA -DCLAMP";
-}
-if ($bgc_mode eq 'dgvm') { 
-    $cfg_cppdefs .= " -DDGVM";
 }
 if ($supln eq 'on') { 
     $cfg_cppdefs .= " -DSUPLN";

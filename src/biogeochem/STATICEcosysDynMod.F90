@@ -2,7 +2,7 @@
 #include <preproc.h>
 module STATICEcosysdynMOD
 
-#if (!defined DGVM)
+#if (!defined CN) && (!defined CNDV)
 
 !-----------------------------------------------------------------------
 !BOP
@@ -316,7 +316,7 @@ contains
   subroutine readAnnualVegetation ( )
 
     use clmtype
-    use clm_varpar  , only : lsmlon, lsmlat, npatch_crop, numpft
+    use clm_varpar  , only : lsmlon, lsmlat, numpft
     use pftvarcon   , only : noveg
     use decompMod   , only : get_proc_bounds, ldecomp
     use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
@@ -490,7 +490,7 @@ contains
 ! !USES:
     use clmtype
     use decompMod   , only : get_proc_bounds, ldecomp, gsmap_lnd_gdc2glo
-    use clm_varpar  , only : lsmlon, lsmlat, npatch_crop, numpft
+    use clm_varpar  , only : lsmlon, lsmlat, numpft
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
     use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER

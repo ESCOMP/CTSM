@@ -58,18 +58,15 @@ contains
     use filterMod           , only : filter
     use clm_varpar          , only : nlevsoi, nlevsno, nlevlak, nlevgrnd
     use clm_varcon          , only : zlnd, istsoil, isturb, denice, denh2o, &
-                                     icol_roof, icol_road_imperv,           &
-                                     icol_road_perv, spval
-    use clm_varcon          , only : zlnd, istsoil 
+                                     icol_roof, icol_road_imperv, &
+                                     icol_road_perv
     use clm_time_manager        , only : get_step_size
     use FracWetMod          , only : FracWet
     use SurfaceAlbedoMod    , only : SurfaceAlbedo
 #if (defined CASA)
   use CASAMod             , only : CASA_ecosystemDyn
 #endif
-#if (defined DGVM)
-    use DGVMEcosystemDynMod , only : DGVMEcosystemDyn
-#elif (defined CN)
+#if (defined CN)
     use CNEcosystemDynMod   , only : CNEcosystemDyn
     use CNVegStructUpdateMod, only : CNVegStructUpdate
     use CNSetValueMod       , only : CNZeroFluxes
@@ -197,11 +194,7 @@ contains
     ! frac_sno is needed by SoilAlbedo (called by SurfaceAlbedo)
     ! ========================================================================
 
-#if (defined DGVM)
-    ! no call
-#elif (defined CN)
-    ! no call
-#else
+#if (!defined CN)
     ! the default mode uses prescribed vegetation structure
     ! Read monthly vegetation data for interpolation to daily values
 
@@ -239,7 +232,7 @@ contains
        end do
 
        ! ============================================================================
-       ! Ecosystem dynamics: Uses CASA, CN, DGVM, or static parameterizations
+       ! Ecosystem dynamics: Uses CASA, CN, or static parameterizations
        ! ============================================================================
 
 #if (defined CASA)
@@ -260,10 +253,7 @@ contains
 
        ! Determine variables needed for SurfaceAlbedo for non-lake points
 
-#ifdef DGVM
-       call DGVMEcosystemDyn(begp, endp, filter(nc)%num_nolakep, filter(nc)%nolakep, &
-            doalb=.true., endofyr=.false.)	
-#elif defined (CN)
+#if defined (CN)
        ! CN initialization is done only on the soil landunits.
 
        if (.not. present(declinm1)) then
@@ -307,7 +297,7 @@ contains
        call CNEcosystemDyn(begc, endc, begp, endp, filter(nc)%num_soilc, filter(nc)%soilc, &
             filter(nc)%num_soilp, filter(nc)%soilp, doalb=.true.)
 #else
-       ! this is the default call if neither DGVM nor CN are set
+       ! this is the default call if CN not set
 
        call EcosystemDyn(begp, endp, filter(nc)%num_nolakep, filter(nc)%nolakep, &
             doalb=.true.)

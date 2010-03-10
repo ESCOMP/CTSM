@@ -38,12 +38,12 @@ module clmtypeInitMod
   private :: init_energy_balance_type
   private :: init_water_balance_type
   private :: init_pft_ecophys_constants
-#if (defined DGVM)
+#if (defined CNDV)
   private :: init_pft_DGVMecophys_constants
 #endif
   private :: init_pft_pstate_type
   private :: init_pft_epv_type
-#if (defined DGVM)
+#if (defined CNDV)
   private :: init_pft_pdgvstate_type
 #endif
   private :: init_pft_vstate_type
@@ -133,7 +133,7 @@ contains
 
     call init_pft_ecophys_constants()
 
-#if (defined DGVM)
+#if (defined CNDV)
     ! pft DGVM-specific ecophysiological constants
 
     call init_pft_DGVMecophys_constants()
@@ -173,10 +173,12 @@ contains
     ! pft ecophysiological variables (only at the pft level for now)
     call init_pft_epv_type(begp, endp, clm3%g%l%c%p%pepv)
 
-#if (defined DGVM)
+#if (defined CNDV)
     ! pft DGVM state variables at pft level and averaged to column
 
     call init_pft_pdgvstate_type(begp, endp, clm3%g%l%c%p%pdgvs)
+#endif
+#if (defined CNDV)
     call init_pft_pdgvstate_type(begc, endc, clm3%g%l%c%cdgvs%pdgvs_a)
 #endif
     call init_pft_vstate_type(begp, endp, clm3%g%l%c%p%pvs)
@@ -338,7 +340,7 @@ contains
 
     call init_landunit_eflux_type(begl, endl, clm3%g%l%lef)
 
-#if (defined DGVM)
+#if (defined CNDV)
     ! gridcell DGVM variables
 
     call init_gridcell_dgvstate_type(begg, endg, clm3%g%gdgvs)
@@ -669,10 +671,8 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-    allocate(pftcon%ncorn(0:numpft))
-    allocate(pftcon%nwheat(0:numpft))
     allocate(pftcon%noveg(0:numpft))
-    allocate(pftcon%ntree(0:numpft))
+    allocate(pftcon%tree(0:numpft))
     allocate(pftcon%smpso(0:numpft)) 
     allocate(pftcon%smpsc(0:numpft)) 
     allocate(pftcon%fnitr(0:numpft))
@@ -719,11 +719,10 @@ contains
     allocate(pftcon%stress_decid(0:numpft))
     allocate(pftcon%season_decid(0:numpft))
     allocate(pftcon%resist(0:numpft))
+    allocate(pftcon%dwood(0:numpft))
 
-    pftcon%ncorn(:) = bigint
-    pftcon%nwheat(:) = bigint
     pftcon%noveg(:) = bigint
-    pftcon%ntree(:) = bigint
+    pftcon%tree(:) = bigint
     pftcon%smpso(:) = nan
     pftcon%smpsc(:) = nan
     pftcon%fnitr(:) = nan
@@ -770,10 +769,11 @@ contains
     pftcon%stress_decid(:) = nan
     pftcon%season_decid(:) = nan
     pftcon%resist(:) = nan
+    pftcon%dwood(:) = nan
 
   end subroutine init_pft_ecophys_constants
 
-#if (defined DGVM)
+#if (defined CNDV)
 !------------------------------------------------------------------------
 !BOP
 !
@@ -794,70 +794,22 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-    allocate(dgv_pftcon%respcoeff(0:numpft))
-    allocate(dgv_pftcon%flam(0:numpft))
-    allocate(dgv_pftcon%resist(0:numpft))
-    allocate(dgv_pftcon%l_turn(0:numpft))
-    allocate(dgv_pftcon%l_long(0:numpft))
-    allocate(dgv_pftcon%s_turn(0:numpft))
-    allocate(dgv_pftcon%r_turn(0:numpft))
-    allocate(dgv_pftcon%l_cton(0:numpft))
-    allocate(dgv_pftcon%s_cton(0:numpft))
-    allocate(dgv_pftcon%r_cton(0:numpft))
-    allocate(dgv_pftcon%l_morph(0:numpft))
-    allocate(dgv_pftcon%l_phen(0:numpft))
-    allocate(dgv_pftcon%lmtorm(0:numpft))
     allocate(dgv_pftcon%crownarea_max(0:numpft))
-    allocate(dgv_pftcon%init_lai(0:numpft))
-    allocate(dgv_pftcon%x(0:numpft))
     allocate(dgv_pftcon%tcmin(0:numpft))
     allocate(dgv_pftcon%tcmax(0:numpft))
     allocate(dgv_pftcon%gddmin(0:numpft))
     allocate(dgv_pftcon%twmax(0:numpft))
-    allocate(dgv_pftcon%lm_sapl(0:numpft))
-    allocate(dgv_pftcon%sm_sapl(0:numpft))
-    allocate(dgv_pftcon%hm_sapl(0:numpft))
-    allocate(dgv_pftcon%rm_sapl(0:numpft))
-    allocate(dgv_pftcon%tree(0:numpft))
-    allocate(dgv_pftcon%summergreen(0:numpft))
-    allocate(dgv_pftcon%raingreen(0:numpft))
     allocate(dgv_pftcon%reinickerp(0:numpft))
-    allocate(dgv_pftcon%wooddens(0:numpft))
-    allocate(dgv_pftcon%latosa(0:numpft))
     allocate(dgv_pftcon%allom1(0:numpft))
     allocate(dgv_pftcon%allom2(0:numpft))
     allocate(dgv_pftcon%allom3(0:numpft))
 
-    dgv_pftcon%respcoeff(:) = nan
-    dgv_pftcon%flam(:) = nan
-    dgv_pftcon%resist(:) = nan
-    dgv_pftcon%l_turn(:) = nan
-    dgv_pftcon%l_long(:) = nan
-    dgv_pftcon%s_turn(:) = nan
-    dgv_pftcon%r_turn(:) = nan
-    dgv_pftcon%l_cton(:) = nan
-    dgv_pftcon%s_cton(:) = nan
-    dgv_pftcon%r_cton(:) = nan
-    dgv_pftcon%l_morph(:) = nan
-    dgv_pftcon%l_phen(:) = nan
-    dgv_pftcon%lmtorm(:) = nan
     dgv_pftcon%crownarea_max(:) = nan
-    dgv_pftcon%init_lai(:) = nan
-    dgv_pftcon%x(:) = nan
     dgv_pftcon%tcmin(:) = nan
     dgv_pftcon%tcmax(:) = nan
     dgv_pftcon%gddmin(:) = nan
     dgv_pftcon%twmax(:) = nan
-    dgv_pftcon%lm_sapl(:) = nan
-    dgv_pftcon%sm_sapl(:) = nan
-    dgv_pftcon%hm_sapl(:) = nan
-    dgv_pftcon%rm_sapl(:) = nan
-    dgv_pftcon%tree(:) = .false.
-    dgv_pftcon%summergreen(:) = .false.
-    dgv_pftcon%raingreen(:) = .false.
     dgv_pftcon%reinickerp(:) = nan
-    dgv_pftcon%wooddens(:) = nan
-    dgv_pftcon%latosa(:) = nan
     dgv_pftcon%allom1(:) = nan
     dgv_pftcon%allom2(:) = nan
     dgv_pftcon%allom3(:) = nan
@@ -1242,6 +1194,10 @@ contains
     allocate(pepv%prev_frootc_to_litter(beg:end))
     allocate(pepv%tempsum_npp(beg:end))
     allocate(pepv%annsum_npp(beg:end))
+#if (defined CNDV)
+    allocate(pepv%tempsum_litfall(beg:end))
+    allocate(pepv%annsum_litfall(beg:end))
+#endif
 #if (defined C13)
     ! 4/21/05, PET
     ! Adding isotope code
@@ -1292,6 +1248,10 @@ contains
     pepv%prev_frootc_to_litter(beg:end) = nan
     pepv%tempsum_npp(beg:end) = nan
     pepv%annsum_npp(beg:end) = nan
+#if (defined CNDV)
+    pepv%tempsum_litfall(beg:end) = nan
+    pepv%annsum_litfall(beg:end) = nan
+#endif
 #if (defined C13)
     ! 4/21/05, PET
     ! Adding isotope code
@@ -1302,7 +1262,7 @@ contains
     
   end subroutine init_pft_epv_type
 
-#if (defined DGVM)
+#if (defined CNDV)
 !------------------------------------------------------------------------
 !BOP
 !
@@ -1325,85 +1285,42 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-    allocate(pdgvs%agdd0(beg:end))
-    allocate(pdgvs%agdd5(beg:end))
     allocate(pdgvs%agddtw(beg:end))
     allocate(pdgvs%agdd(beg:end))
     allocate(pdgvs%t10(beg:end))
     allocate(pdgvs%t_mo(beg:end))
     allocate(pdgvs%t_mo_min(beg:end))
-    allocate(pdgvs%fnpsn10(beg:end))
     allocate(pdgvs%prec365(beg:end))
-    allocate(pdgvs%agdd20(beg:end))
-    allocate(pdgvs%tmomin20(beg:end))
-    allocate(pdgvs%t10min(beg:end))
-    allocate(pdgvs%tsoi25(beg:end))
-    allocate(pdgvs%annpsn(beg:end))
-    allocate(pdgvs%annpsnpot(beg:end))
     allocate(pdgvs%present(beg:end))
-    allocate(pdgvs%dphen(beg:end))
-    allocate(pdgvs%leafon(beg:end))
-    allocate(pdgvs%leafof(beg:end))
+    allocate(pdgvs%pftmayexist(beg:end))
     allocate(pdgvs%nind(beg:end))
     allocate(pdgvs%lm_ind(beg:end))
-    allocate(pdgvs%sm_ind(beg:end))
-    allocate(pdgvs%hm_ind(beg:end))
-    allocate(pdgvs%rm_ind(beg:end))
     allocate(pdgvs%lai_ind(beg:end))
     allocate(pdgvs%fpcinc(beg:end))
     allocate(pdgvs%fpcgrid(beg:end))
+    allocate(pdgvs%fpcgridold(beg:end))
     allocate(pdgvs%crownarea(beg:end))
-    allocate(pdgvs%bm_inc(beg:end))
-    allocate(pdgvs%afmicr(beg:end))
-    allocate(pdgvs%firelength (beg:end))
-    allocate(pdgvs%litterag(beg:end))
-    allocate(pdgvs%litterbg(beg:end))
-    allocate(pdgvs%cpool_fast(beg:end))
-    allocate(pdgvs%cpool_slow(beg:end))
-    allocate(pdgvs%k_fast_ave(beg:end))
-    allocate(pdgvs%k_slow_ave(beg:end))
-    allocate(pdgvs%litter_decom_ave(beg:end))
-    allocate(pdgvs%turnover_ind(beg:end))
+    allocate(pdgvs%greffic(beg:end))
+    allocate(pdgvs%heatstress(beg:end))
 
-    pdgvs%agdd0(beg:end)            = nan
-    pdgvs%agdd5(beg:end)            = nan
     pdgvs%agddtw(beg:end)           = nan
     pdgvs%agdd(beg:end)             = nan
     pdgvs%t10(beg:end)              = nan
     pdgvs%t_mo(beg:end)             = nan
     pdgvs%t_mo_min(beg:end)         = nan
-    pdgvs%fnpsn10(beg:end)          = nan
     pdgvs%prec365(beg:end)          = nan
-    pdgvs%agdd20(beg:end)           = nan
-    pdgvs%tmomin20(beg:end)         = nan
-    pdgvs%t10min(beg:end)           = nan
-    pdgvs%tsoi25(beg:end)           = nan
-    pdgvs%annpsn(beg:end)           = nan
-    pdgvs%annpsnpot(beg:end)        = nan
     pdgvs%present(beg:end)          = .false.
-    pdgvs%dphen(beg:end)            = nan
-    pdgvs%leafon(beg:end)           = nan
-    pdgvs%leafof(beg:end)           = nan
+    pdgvs%pftmayexist(beg:end)      = .false.
     pdgvs%nind(beg:end)             = nan
     pdgvs%lm_ind(beg:end)           = nan
-    pdgvs%sm_ind(beg:end)           = nan
-    pdgvs%hm_ind(beg:end)           = nan
-    pdgvs%rm_ind(beg:end)           = nan
     pdgvs%lai_ind(beg:end)          = nan
     pdgvs%fpcinc(beg:end)           = nan
     pdgvs%fpcgrid(beg:end)          = nan
+    pdgvs%fpcgridold(beg:end)       = nan
     pdgvs%crownarea(beg:end)        = nan
-    pdgvs%bm_inc(beg:end)           = nan
-    pdgvs%afmicr(beg:end)           = nan
-    pdgvs%firelength (beg:end)      = nan
-    pdgvs%litterag(beg:end)         = nan
-    pdgvs%litterbg(beg:end)         = nan
-    pdgvs%cpool_fast(beg:end)       = nan
-    pdgvs%cpool_slow(beg:end)       = nan
-    pdgvs%k_fast_ave(beg:end)       = nan
-    pdgvs%k_slow_ave(beg:end)       = nan
-    pdgvs%litter_decom_ave(beg:end) = nan
-    pdgvs%turnover_ind(beg:end)     = nan
+    pdgvs%greffic(beg:end)          = nan
+    pdgvs%heatstress(beg:end)       = nan
+
   end subroutine init_pft_pdgvstate_type
 #endif
 
@@ -1596,7 +1513,7 @@ contains
     allocate(pcs%storvegc(beg:end))
     allocate(pcs%totvegc(beg:end))
     allocate(pcs%totpftc(beg:end))
-
+    allocate(pcs%leafcmax(beg:end))
 #if (defined CLAMP) && (defined CN)
     !CLAMP
     allocate(pcs%woodc(beg:end))
@@ -1629,7 +1546,7 @@ contains
     pcs%storvegc(beg:end) = nan
     pcs%totvegc(beg:end) = nan
     pcs%totpftc(beg:end) = nan
-
+    pcs%leafcmax(beg:end) = nan
 #if (defined CLAMP) && (defined CN)
     !CLAMP
     pcs%woodc(beg:end) = nan
@@ -2006,15 +1923,6 @@ contains
     allocate(pcf%psnsun(beg:end))
     allocate(pcf%psnsha(beg:end))
     allocate(pcf%fpsn(beg:end))
-#if (defined DGVM)
-    allocate(pcf%frm(beg:end))
-    allocate(pcf%frmf(beg:end))
-    allocate(pcf%frms(beg:end))
-    allocate(pcf%frmr(beg:end))
-    allocate(pcf%frg(beg:end))
-    allocate(pcf%dmi(beg:end))
-    allocate(pcf%fmicr(beg:end))
-#endif
     allocate(pcf%fco2(beg:end))
 
     allocate(pcf%m_leafc_to_litter(beg:end))
@@ -2161,7 +2069,6 @@ contains
     allocate(pcf%pft_cinputs(beg:end))
     allocate(pcf%pft_coutputs(beg:end))
     allocate(pcf%pft_fire_closs(beg:end))
-
 #if (defined CLAMP) && (defined CN)
     !CLAMP
     allocate(pcf%frootc_alloc(beg:end))
@@ -2175,15 +2082,6 @@ contains
     pcf%psnsun(beg:end) = nan
     pcf%psnsha(beg:end) = nan
     pcf%fpsn(beg:end) = nan
-#if (defined DGVM)
-    pcf%frm(beg:end) = nan
-    pcf%frmf(beg:end) = nan
-    pcf%frms(beg:end) = nan
-    pcf%frmr(beg:end) = nan
-    pcf%frg(beg:end) = nan
-    pcf%dmi(beg:end) = nan
-    pcf%fmicr(beg:end) = nan
-#endif
     pcf%fco2(beg:end) = 0._r8
 
     pcf%m_leafc_to_litter(beg:end) = nan
@@ -2330,7 +2228,6 @@ contains
     pcf%pft_cinputs(beg:end) = nan
     pcf%pft_coutputs(beg:end) = nan
     pcf%pft_fire_closs(beg:end) = nan
-
 #if (defined CLAMP) && (defined CN)
     !CLAMP
     pcf%frootc_alloc(beg:end) = nan
@@ -2576,6 +2473,7 @@ contains
 ! !DESCRIPTION:
 ! Initialize pft VOC flux variables
 !
+    use clm_varcon, only : spval
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: beg, end
@@ -2612,13 +2510,13 @@ contains
     allocate(pvf%gammaA_out(beg:end))
     allocate(pvf%gammaS_out(beg:end))
 
-    pvf%vocflx_tot(beg:end) = nan
-    pvf%vocflx(beg:end,1:nvoc) = nan
-    pvf%vocflx_1(beg:end) = nan
-    pvf%vocflx_2(beg:end) = nan
-    pvf%vocflx_3(beg:end) = nan
-    pvf%vocflx_4(beg:end) = nan
-    pvf%vocflx_5(beg:end) = nan
+    pvf%vocflx_tot(beg:end) = spval
+    pvf%vocflx(beg:end,1:nvoc) = spval
+    pvf%vocflx_1(beg:end) = spval
+    pvf%vocflx_2(beg:end) = spval
+    pvf%vocflx_3(beg:end) = spval
+    pvf%vocflx_4(beg:end) = spval
+    pvf%vocflx_5(beg:end) = spval
     pvf%Eopt_out(beg:end) = nan
     pvf%topt_out(beg:end) = nan
     pvf%alpha_out(beg:end) = nan
@@ -2776,6 +2674,7 @@ contains
     allocate(cps%rootfr_road_perv(beg:end,nlevgrnd))
     allocate(cps%rootr_road_perv(beg:end,nlevgrnd))
     allocate(cps%wf(beg:end))
+!   allocate(cps%xirrig(beg:end))
     allocate(cps%max_dayl(beg:end))
     allocate(cps%bsw2(beg:end,nlevgrnd))
     allocate(cps%psisat(beg:end,nlevgrnd))
@@ -2883,6 +2782,7 @@ contains
     cps%rootfr_road_perv(beg:end,1:nlevurb) = nan
     cps%rootr_road_perv(beg:end,1:nlevurb) = nan
     cps%wf(beg:end) = nan
+!   cps%xirrig(beg:end) = 0._r8
     cps%bsw2(beg:end,1:nlevgrnd) = nan
     cps%psisat(beg:end,1:nlevgrnd) = nan
     cps%vwcsat(beg:end,1:nlevgrnd) = nan
@@ -3436,6 +3336,8 @@ contains
     allocate(ccf%dwt_livecrootc_to_cwdc(beg:end))
     allocate(ccf%dwt_deadcrootc_to_cwdc(beg:end))
     allocate(ccf%dwt_closs(beg:end))
+    allocate(ccf%landuseflux(beg:end))
+    allocate(ccf%landuptake(beg:end))
     allocate(ccf%prod10c_loss(beg:end))
     allocate(ccf%prod100c_loss(beg:end))
     allocate(ccf%product_closs(beg:end))
@@ -3550,6 +3452,8 @@ contains
     ccf%dwt_livecrootc_to_cwdc(beg:end)           = nan
     ccf%dwt_deadcrootc_to_cwdc(beg:end)           = nan
     ccf%dwt_closs(beg:end)                        = nan
+    ccf%landuseflux(beg:end)                      = nan
+    ccf%landuptake(beg:end)                       = nan
     ccf%prod10c_loss(beg:end)                     = nan
     ccf%prod100c_loss(beg:end)                    = nan
     ccf%product_closs(beg:end)                    = nan
@@ -3941,7 +3845,7 @@ contains
 
   end subroutine init_landunit_eflux_type
 
-#if (defined DGVM)
+#if (defined CNDV)
 !------------------------------------------------------------------------
 !BOP
 !
@@ -3964,22 +3868,12 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-    allocate(gps%afirefrac(beg:end))
-    allocate(gps%acfluxfire(beg:end))
-    allocate(gps%bmfm(beg:end,maxpatch_pft))
-    allocate(gps%afmicr(beg:end,maxpatch_pft))
-    allocate(gps%begwater(beg:end))
-    allocate(gps%endwater(beg:end))
-    allocate(gps%begenergy(beg:end))
-    allocate(gps%endenergy(beg:end))
-    gps%afirefrac(beg:end) = nan
-    gps%acfluxfire(beg:end) = nan
-    gps%bmfm(beg:end,1:maxpatch_pft) = nan
-    gps%afmicr(beg:end,1:maxpatch_pft) = nan
-    gps%begwater(beg:end) = nan
-    gps%endwater(beg:end) = nan
-    gps%begenergy(beg:end) = nan
-    gps%endenergy(beg:end) = nan
+    allocate(gps%agdd20(beg:end))
+    allocate(gps%tmomin20(beg:end))
+    allocate(gps%t10min(beg:end))
+    gps%agdd20(beg:end) = nan
+    gps%tmomin20(beg:end) = nan
+    gps%t10min(beg:end) = nan
 
   end subroutine init_gridcell_dgvstate_type
 #endif

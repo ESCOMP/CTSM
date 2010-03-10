@@ -1,0 +1,37 @@
+*** datm.buildnml.csh.orig	2010-03-04 11:51:11.000000000 -0700
+--- datm.buildnml.csh	2010-03-04 11:51:17.000000000 -0700
+***************
+*** 18,23 ****
+--- 18,24 ----
+  set STREAM1TXT = "clm_qian.T62.stream.Solar.txt"
+  set STREAM2TXT = "clm_qian.T62.stream.Precip.txt"
+  set STREAM3TXT = "clm_qian.T62.stream.TPQW.txt"
++ set STREAMCO2  = "datm.global1val.stream.CO2.txt"
+  
+  # Only change these in env_conf -- so that the streams file will be generated consistently
+  # Rerun configure if you want to change these values (doing configure -cleanall first)
+***************
+*** 37,42 ****
+--- 38,44 ----
+     streams        = '$STREAM1TXT $year_align $year_start $year_end ',
+                      '$STREAM2TXT $year_align $year_start $year_end ',
+                      '$STREAM3TXT $year_align $year_start $year_end '
++                     '$STREAMCO2  $year_align $year_start $year_end '
+     vectors        = 'null'
+     mapmask        = 'nomask',
+                      'nomask',
+***************
+*** 1112,1121 ****
+--- 1114,1125 ----
+  </streamstemplate>
+  EOF1
+  
++ cp $CASEBUILD/co2_streams.txt $STREAMCO2
+  
+  $CASETOOLS/listfilesin_streams -input_data_list -t $STREAM1TXT >> $CASEBUILD/datm.input_data_list
+  $CASETOOLS/listfilesin_streams -input_data_list -t $STREAM2TXT >> $CASEBUILD/datm.input_data_list
+  $CASETOOLS/listfilesin_streams -input_data_list -t $STREAM3TXT >> $CASEBUILD/datm.input_data_list
++ $CASETOOLS/listfilesin_streams -input_data_list -t $STREAMCO2  >> $CASEBUILD/datm.input_data_list
+  
+  cat >! datm_in << EOF1
+    &datm_nml

@@ -12,8 +12,7 @@ module SurfaceAlbedoMod
 ! Performs surface albedo calculations
 !
 ! !PUBLIC TYPES:
-  use clm_varcon  , only : istsoil, spval
-  use spmdMod     , only : masterproc
+  use clm_varcon , only : istsoil
   use shr_kind_mod, only : r8 => shr_kind_r8
   use clm_varpar  , only : nlevsno
   use SNICARMod   , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
@@ -79,7 +78,6 @@ contains
     real(r8), intent(in) :: declinp1                   ! declination angle (radians) for next time step
 !
 ! !CALLED FROM:
-! subroutine lpjreset1 in module DGVMMod (only applicable when cpp token DGVM is defined)
 ! subroutine clm_driver1
 ! subroutine iniTimeVar
 !
@@ -297,8 +295,10 @@ contains
 
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
+!      if (pwtgcell(p)>0._r8) then ! "if" added due to chg in filter definition
        g = pgridcell(p)
        coszen_pft(p) = coszen_gcell(g)
+!      end if ! then removed for CNDV (and dyn. landuse?) cases to work
     end do
 
     ! Initialize output because solar radiation only done if coszen > 0
@@ -325,6 +325,7 @@ contains
        end do
        do fp = 1,num_nourbanp
           p = filter_nourbanp(fp)
+!         if (pwtgcell(p)>0._r8) then ! "if" added due to chg in filter definition
           albd(p,ib) = 1._r8
           albi(p,ib) = 1._r8
           fabd(p,ib) = 0._r8
@@ -336,6 +337,7 @@ contains
           if (ib==1) then
              gdir(p) = 0._r8
           end if
+!         end if ! then removed for CNDV (and dyn. landuse?) cases to work
        end do
     end do
 
@@ -563,17 +565,17 @@ contains
     num_novegsol = 0
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
-       if (coszen_pft(p) > 0._r8) then
-          if (itypelun(plandunit(p)) == istsoil .and. (elai(p) + esai(p)) > 0._r8 &
-          .and. pwtgcell(p)>0._r8 ) then
-             num_vegsol = num_vegsol + 1
-             filter_vegsol(num_vegsol) = p
-          else if (itypelun(plandunit(p)) /= istsoil .or. &
-                  (itypelun(plandunit(p)) == istsoil .and. (elai(p) + esai(p)) == 0._r8)) then
-             num_novegsol = num_novegsol + 1
-             filter_novegsol(num_novegsol) = p
+          if (coszen_pft(p) > 0._r8) then
+             if (itypelun(plandunit(p)) == istsoil  &
+                 .and. (elai(p) + esai(p)) > 0._r8        &
+                 .and. pwtgcell(p) > 0._r8) then
+                num_vegsol = num_vegsol + 1
+                filter_vegsol(num_vegsol) = p
+             else
+                num_novegsol = num_novegsol + 1
+                filter_novegsol(num_novegsol) = p
+             end if
           end if
-       end if
     end do
 
     ! Weight reflectance/transmittance by lai and sai
@@ -634,7 +636,7 @@ contains
 ! !USES:
     use clmtype
     use clm_varpar, only : numrad
-    use clm_varcon, only : albsat, albdry, alblak, albice, tfrz, istice, istsoil
+    use clm_varcon, only : albsat, albdry, alblak, albice, tfrz, istice
 !
 ! !ARGUMENTS:
     implicit none
@@ -713,7 +715,7 @@ contains
           if (coszen(c) > 0._r8) then
              l = clandunit(c)
 
-             if (ltype(l) == istsoil)  then              ! soil
+             if (ltype(l) == istsoil)  then             ! soil
                 inc    = max(0.11_r8-0.40_r8*h2osoi_vol(c,1), 0._r8)
                 soilcol = isoicol(c)
                 ! changed from local variable to clm_type:

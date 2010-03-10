@@ -1,6 +1,6 @@
 -mode ccsm_seq
 -smp -nospmd
--maxpft 17
+-maxpft numpft+1
 -bgc cn
 -supln on 
 -s

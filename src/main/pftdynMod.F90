@@ -17,6 +17,7 @@ module pftdynMod
   use clm_varsur  , only : pctspec
   use clm_varpar  , only : max_pft_per_col
   use clm_varctl  , only : iulog
+  use shr_sys_mod, only : shr_sys_flush
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
 !
@@ -34,12 +35,17 @@ module pftdynMod
   public :: pftdyn_wbal
 #ifdef CN
   public :: pftdyn_cnbal
+#ifdef CNDV
+  public :: pftwt_init
+  public :: pftwt_interp
+#endif
   public :: CNHarvest
   public :: CNHarvestPftToColumn
 #endif
 !
 ! !REVISION HISTORY:
 ! Created by Peter Thornton
+! slevis modified to handle CNDV
 ! 19 May 2009: PET - modified to handle harvest fluxes
 !
 !EOP
@@ -326,7 +332,7 @@ contains
     ! Interpolat pctpft to current time step - output in pctpft_intp
     ! Map interpolated pctpft to subgrid weights
     ! assumes that maxpatch_pft = numpft + 1, that each landunit has only 1 column, 
-    ! SCAM and DGVM have not been defined, and that create_croplandunit = .false.
+    ! SCAM and CNDV have not been defined, and create_croplandunit = .false.
 
     ! If necessary, obtain new time sample
 
@@ -666,14 +672,14 @@ contains
     ! term to 0 at the beginning of every weight-shifting timestep
 
     do c = begc,endc
-       cptr%cwf%h2ocan_loss(c) = 0._r8
+       cptr%cwf%h2ocan_loss(c) = 0._r8 ! is this OR pftdyn_wbal_init redundant?
     end do
 
     do p = begp,endp
        l = pptr%landunit(p)
        loss_h2ocan(p) = 0._r8
 
-       if (lptr%itype(l) == istsoil) then
+       if (lptr%itype(l) == istsoil) then ! CNDV incompatible with dynLU
 
           ! calculate the change in weight for the timestep
           dwt = pptr%wtcol(p)-wtcol_old(p)
@@ -706,10 +712,10 @@ contains
                 pptr%pws%h2ocan(p) = 0._r8
                 loss_h2ocan(p) = init_h2ocan
              end if 
-          
+       
 
           end if
-          
+
        end if
        
     end do
@@ -746,6 +752,7 @@ contains
     use shr_const_mod,only : SHR_CONST_PDB
     use decompMod   , only : get_proc_bounds
     use clm_varcon  , only : istsoil
+    use clm_varpar  , only : numveg, numpft
 #if (defined C13)
     use clm_varcon  , only : c13ratio
 #endif
@@ -816,23 +823,27 @@ contains
         real(r8) :: leafc13_seed, deadstemc13_seed
 #endif
     real(r8), pointer :: dwt_ptr0, dwt_ptr1, dwt_ptr2, dwt_ptr3, ptr
-    real(r8) :: pconv(0:16)     ! proportion of deadstem to conversion flux
-    real(r8) :: pprod10(0:16)   ! proportion of deadstem to 10-yr product pool
-    real(r8) :: pprod100(0:16)  ! proportion of deadstem to 100-yr product pool
+    real(r8) :: pconv(0:numpft)    ! proportion of deadstem to conversion flux
+    real(r8) :: pprod10(0:numpft)  ! proportion of deadstem to 10-yr product pool
+    real(r8) :: pprod100(0:numpft) ! proportion of deadstem to 100-yr product pool
     type(landunit_type), pointer :: lptr         ! pointer to landunit derived subtype
     type(column_type),   pointer :: cptr         ! pointer to column derived subtype
     type(pft_type)   ,   pointer :: pptr         ! pointer to pft derived subtype
     character(len=32) :: subname='pftdyn_cbal' ! subroutine name
 !-----------------------------------------------------------------------
     
+    ! (dangerous hardwiring) (should put this into pftphysiology file)
     ! set deadstem proportions
     ! veg type:      0       1       2       3       4       5       6       7       8       9      10      11      12     &
     !                13      14      15      16
-    pconv   =    (/0.0_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.8_r8, 0.8_r8, 0.8_r8, 1.0_r8, &
+    pconv(0:numveg)   = &
+                 (/0.0_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.6_r8, 0.8_r8, 0.8_r8, 0.8_r8, 1.0_r8, &
                    1.0_r8, 1.0_r8, 1.0_r8, 1.0_r8/)
-    pprod10 =    (/0.0_r8, 0.3_r8, 0.3_r8, 0.3_r8, 0.4_r8, 0.3_r8, 0.4_r8, 0.3_r8, 0.3_r8, 0.2_r8, 0.2_r8, 0.2_r8, 0.0_r8, &
+    pprod10(0:numveg) = &
+                 (/0.0_r8, 0.3_r8, 0.3_r8, 0.3_r8, 0.4_r8, 0.3_r8, 0.4_r8, 0.3_r8, 0.3_r8, 0.2_r8, 0.2_r8, 0.2_r8, 0.0_r8, &
                    0.0_r8, 0.0_r8, 0.0_r8, 0.0_r8/)
-    pprod100 =   (/0.0_r8, 0.1_r8, 0.1_r8, 0.1_r8, 0.0_r8, 0.1_r8, 0.0_r8, 0.1_r8, 0.1_r8, 0.0_r8, 0.0_r8, 0.0_r8, 0.0_r8, &
+    pprod100(0:numveg) = &
+                 (/0.0_r8, 0.1_r8, 0.1_r8, 0.1_r8, 0.0_r8, 0.1_r8, 0.0_r8, 0.1_r8, 0.1_r8, 0.0_r8, 0.0_r8, 0.0_r8, 0.0_r8, &
                    0.0_r8, 0.0_r8, 0.0_r8, 0.0_r8/)
     
     ! Set pointers into derived type
@@ -991,7 +1002,7 @@ contains
        
 		l = pptr%landunit(p)
 		c = pptr%column(p)
-		if (lptr%itype(l) == istsoil) then
+		if (lptr%itype(l) == istsoil) then ! CNDV incompatible with dynLU
 
 			! calculate the change in weight for the timestep
 			dwt = pptr%wtcol(p)-wtcol_old(p)
@@ -2428,6 +2439,133 @@ contains
 	deallocate(prod100_nflux)
     
 end subroutine pftdyn_cnbal
+#endif
+
+#if (defined CNDV)
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: pftwt_init
+!
+! !INTERFACE:
+  subroutine pftwt_init()
+!
+! !DESCRIPTION:
+! Initialize time interpolation of cndv pft weights from annual to time step
+!
+! !USES:
+  use clm_varctl, only : nsrest
+!
+! !ARGUMENTS:
+    implicit none
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer  :: ier, p                        ! error status, do-loop index
+    integer  :: begp,endp                     ! beg/end indices for land pfts
+    character(len=32) :: subname='pftwt_init' ! subroutine name
+    type(pft_type), pointer :: pptr           ! ponter to pft derived subtype
+!-----------------------------------------------------------------------
+
+    pptr => clm3%g%l%c%p
+
+    call get_proc_bounds(begp=begp,endp=endp)
+
+    allocate(wtcol_old(begp:endp),stat=ier)
+    if (ier /= 0) then
+       write(6,*)'pftwt_init allocation error for wtcol_old'
+       call endrun()
+    end if
+
+    if (nsrest == 0) then
+       do p = begp,endp
+          pptr%pdgvs%fpcgrid(p) = pptr%wtcol(p)
+          pptr%pdgvs%fpcgridold(p) = pptr%wtcol(p)
+       end do
+    end if
+
+  end subroutine pftwt_init
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: pftwt_interp
+!
+! !INTERFACE:
+  subroutine pftwt_interp()
+!
+! !DESCRIPTION:
+! Time interpolate cndv pft weights from annual to time step
+!
+! !USES:
+    use clm_time_manager, only : get_curr_calday, get_curr_date
+    use clm_time_manager, only : get_step_size, get_nstep
+    use clm_varcon      , only : istsoil ! CNDV incompatible with dynLU
+    use clm_varctl      , only : finidat
+!
+! !ARGUMENTS:
+    implicit none
+!
+!EOP
+!
+! !LOCAL VARIABLES:
+    integer  :: c,g,l,p            ! indices
+    real(r8) :: cday               ! current calendar day (1.0 = 0Z on Jan 1)
+    real(r8) :: wt1                ! time interpolation weights
+    real(r8) :: dtime              ! model time step
+    integer  :: nstep              ! time step number
+    integer  :: year               ! year (0, ...) at nstep + 1
+    integer  :: mon                ! month (1, ..., 12) at nstep + 1
+    integer  :: day                ! day of month (1, ..., 31) at nstep + 1
+    integer  :: sec                ! seconds into current date at nstep + 1
+    integer  :: begp,endp                ! beg/end indices for land pfts
+    type(landunit_type), pointer :: lptr ! pointer to landunit derived subtype
+    type(pft_type)     , pointer :: pptr ! ...     to pft derived subtype
+    character(len=32) :: subname='pftwt_interp' ! subroutine name
+
+! !CALLED FROM:
+!  subr. driver
+!-----------------------------------------------------------------------
+
+    ! Set pointers into derived type
+
+    lptr => clm3%g%l
+    pptr => clm3%g%l%c%p
+
+    call get_proc_bounds(begp=begp,endp=endp)
+
+    ! Interpolate pft weight to current time step
+    ! Map interpolated pctpft to subgrid weights
+    ! assumes maxpatch_pft = numpft + 1, each landunit has 1 column, 
+    ! SCAM not defined and create_croplandunit = .false.
+
+    nstep = get_nstep()
+    dtime = get_step_size()
+    cday = get_curr_calday(offset=-int(dtime))
+
+    wt1 = ((days_per_year + 1._r8) - cday)/days_per_year
+
+    call get_curr_date(year, mon, day, sec, offset=int(dtime))
+
+    do p = begp,endp
+       g = pptr%gridcell(p)
+       l = pptr%landunit(p)
+
+       if (lptr%itype(l) == istsoil) then ! CNDV incompatible with dynLU
+          wtcol_old(p)    = pptr%wtcol(p)
+          pptr%wtcol(p)   = pptr%pdgvs%fpcgrid(p) + &
+                     wt1 * (pptr%pdgvs%fpcgridold(p) - pptr%pdgvs%fpcgrid(p))
+          pptr%wtlunit(p) = pptr%wtcol(p)
+          pptr%wtgcell(p) = pptr%wtcol(p) * lptr%wtgcell(l)
+
+          if (mon==1 .and. day==1 .and. sec==dtime .and. nstep>0) then
+             pptr%pdgvs%fpcgridold(p) = pptr%pdgvs%fpcgrid(p)
+          end if
+       end if
+    end do
+
+  end subroutine pftwt_interp
 #endif
 
 !-----------------------------------------------------------------------

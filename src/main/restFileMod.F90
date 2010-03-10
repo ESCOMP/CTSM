@@ -72,9 +72,6 @@ contains
 #if (defined CN)
     use CNRestMod        , only : CNRest
 #endif
-#if (defined DGVM)
-    use DGVMRestMod      , only : DGVMRest
-#endif
 #if (defined RTM)
     use RtmMod           , only : RTMRest
 #endif
@@ -128,9 +125,6 @@ contains
 #if (defined CASA)
     call CASARest( ncid, flag='define' )
 #endif
-#if (defined DGVM)
-    call DGVMRest( ncid, flag='define' )
-#endif
 #if (defined RTM)
     call RtmRest( ncid, flag='define' )
 #endif
@@ -147,9 +141,6 @@ contains
 #endif
 #if (defined CASA)
     call CASARest( ncid, flag='write' )
-#endif
-#if (defined DGVM)
-    call DGVMRest( ncid, flag='write' )
 #endif
 #if (defined RTM)
     call RtmRest( ncid, flag='write' )
@@ -190,9 +181,6 @@ contains
 #if (defined CN)
     use CNRestMod        , only : CNRest
 #endif
-#if (defined DGVM)
-    use DGVMRestMod      , only : DGVMRest
-#endif
 #if (defined RTM)
     use RtmMod           , only : RTMRest
 #endif
@@ -232,9 +220,6 @@ contains
 #endif
 #if (defined CASA)
     call CASARest( ncid, flag='read' )
-#endif
-#if (defined DGVM)
-    call DGVMRest( ncid, flag='read' )
 #endif
 #if (defined RTM)
     call RtmRest( ncid, flag='read' )

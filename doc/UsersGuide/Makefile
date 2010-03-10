@@ -14,6 +14,7 @@ USCLOG    := buildnml_usecases
 QCKLOG    := quickstart_guide
 USRLOG    := quickstart_usrdat
 GETREG    := getregional_datasets
+CO2DIF    := addco2_datm.buildnml
 COMPLIST  := compsets_list_ofIcases.xml
 SOURCES   := $(DOCBKUG) $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
              $(RESLOG).xml $(USCLOG).xml $(QCKLOG).xml \
@@ -26,7 +27,7 @@ CONVSIGNS  := sed 's/>/\&gt;/g' | sed 's/&/\&lt;/g'
 all: $(HTMLUG) $(PDFUG)
 
 .SUFFIXES:
-.SUFFIXES: .xml .pdf .html .log
+.SUFFIXES: .xml .pdf .html .log .diff
 
 $(CFGLOG).xml: $(CFGLOG).log
 $(BNMLOG).xml: $(BNMLOG).log
@@ -35,6 +36,7 @@ $(USCLOG).xml: $(USCLOG).log
 $(QCKLOG).xml: $(QCKLOG).log
 $(USRLOG).xml: $(USRLOG).log
 $(GETREG).xml: $(GETREG).log
+$(CO2DIF).xml: $(CO2DIF).diff
 
 clm_ug.xml: preface.xml custom.xml special_cases.xml \
             tools.xml adding_files.xml single_point.xml
@@ -42,8 +44,12 @@ clm_ug.xml: preface.xml custom.xml special_cases.xml \
 custom.xml: $(CFGLOG).xml $(RESLOG).xml $(BNMLOG).xml $(USCLOG).xml $(COMPLIST)
 preface.xml: $(QCKLOG).xml
 single_point.xml: $(USRLOG).xml $(GETREG).xml
+special_cases.xml: $(CO2DIF).xml
 
 .log.xml:
+	$(CONVAMP) $< | $(CONVSIGNS) > $@
+
+.diff.xml:
 	$(CONVAMP) $< | $(CONVSIGNS) > $@
 
 debug:

@@ -19,6 +19,7 @@ subroutine CNiniSpecial ()
    use pftvarcon   , only: noveg
    use decompMod   , only: get_proc_bounds
    use clm_varcon  , only: spval
+   use clm_varctl  , only: iulog
    use clmtype
    use CNSetValueMod
 !
@@ -191,6 +192,8 @@ subroutine CNiniSpecial ()
 	  clm3%g%l%c%ccf%dwt_livecrootc_to_cwdc(c) = 0._r8
 	  clm3%g%l%c%ccf%dwt_deadcrootc_to_cwdc(c) = 0._r8
 	  clm3%g%l%c%ccf%dwt_closs(c) = 0._r8
+	  clm3%g%l%c%ccf%landuseflux(c) = 0._r8
+	  clm3%g%l%c%ccf%landuptake(c) = 0._r8
 #if (defined C13)
 	  clm3%g%l%c%cc13f%dwt_seedc_to_leaf(c) = 0._r8
 	  clm3%g%l%c%cc13f%dwt_seedc_to_deadstem(c) = 0._r8

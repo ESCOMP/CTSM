@@ -289,7 +289,6 @@ contains
     use clm_time_manager, only : get_curr_date, get_curr_calday
     use decompMod   , only : get_proc_bounds
     use clm_atmlnd  , only : clm_a2l
-    use clm_varcon  , only : istsoil
 !
 ! !ARGUMENTS:
     implicit none

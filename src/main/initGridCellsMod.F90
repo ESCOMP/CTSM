@@ -525,9 +525,8 @@ end subroutine clm_ptrs_check
     use clmtype   , only : clm3, model_type, gridcell_type, landunit_type, &
                            column_type,pft_type
     use subgridMod, only : subgrid_get_gcellinfo
-    use clm_varcon, only : istsoil
-    use clm_varpar, only : numpft, maxpatch_pft
-    use clm_varctl, only : allocate_all_vegpfts
+    use clm_varpar, only : numpft, maxpatch_pft, numcft
+    use clm_varctl, only : allocate_all_vegpfts, create_crop_landunit
 !
 ! !ARGUMENTS:
     implicit none
@@ -542,7 +541,7 @@ end subroutine clm_ptrs_check
     logical , intent(in)    :: setdata           ! set info or just compute
 !
 ! !REVISION HISTORY:
-! Created by Sam Levis
+! Created by ?
 ! 2005.11.25 Updated by T Craig
 !
 !
@@ -599,15 +598,37 @@ end subroutine clm_ptrs_check
 
        ! Set pft properties for this landunit
 
-       if (allocate_all_vegpfts) then
+       if (create_crop_landunit) then
+          do n = 1,numpft+1-numcft
+             pi = pi + 1
+             pitype = n-1
+             if (setdata) then
+                pptr%mxy(pi)      = n
+                pptr%itype(pi)    = pitype
+                pptr%gridcell(pi) = gi
+                pptr%landunit(pi) = li
+                pptr%column (pi) = ci
+                pptr%wtgcell(pi) = 0.0_r8
+                pptr%wtlunit(pi) = 0.0_r8
+                pptr%wtcol(pi) = 0.0_r8
+                do m = 1,maxpatch_pft
+                   if (vegxy(nw,m) == pitype .and. wtxy(nw,m) > 0._r8) then
+                      pptr%wtgcell(pi)  = pptr%wtgcell(pi) + wtxy(nw,m)
+                      pptr%wtlunit(pi)  = pptr%wtlunit(pi) + wtxy(nw,m) / wtlunit2gcell
+                      pptr%wtcol(pi)  = pptr%wtcol(pi) + wtxy(nw,m) / wtlunit2gcell
+                   end if
+                end do
+             endif ! setdata
+          end do
+       else if (allocate_all_vegpfts) then
           do n = 1,numpft+1
              pi = pi + 1
              pitype = n-1
              if (setdata) then
                 pptr%mxy(pi)      = n
                 pptr%itype(pi)    = pitype
-                pptr%gridcell (pi) = gi
-                pptr%landunit (pi) = li
+                pptr%gridcell(pi) = gi
+                pptr%landunit(pi) = li
                 pptr%column (pi) = ci
                 pptr%wtgcell(pi) = 0.0_r8
                 pptr%wtlunit(pi) = 0.0_r8
@@ -628,9 +649,9 @@ end subroutine clm_ptrs_check
                 if (setdata) then
                    pptr%mxy(pi)      = m
                    pptr%itype(pi)    = vegxy(nw,m)
-                   pptr%gridcell (pi) = gi
+                   pptr%gridcell(pi) = gi
                    pptr%wtgcell(pi) = wtxy(nw,m)
-                   pptr%landunit (pi) = li
+                   pptr%landunit(pi) = li
                    pptr%wtlunit(pi) = wtxy(nw,m) / wtlunit2gcell
                    pptr%column (pi) = ci
                    pptr%wtcol(pi) = wtxy(nw,m) / wtlunit2gcell
@@ -802,7 +823,8 @@ end subroutine clm_ptrs_check
     use clmtype   , only : clm3, model_type, gridcell_type, landunit_type, &
                            column_type,pft_type
     use subgridMod, only : subgrid_get_gcellinfo
-    use clm_varpar, only : npatch_crop, npatch_glacier
+    use clm_varctl, only : create_crop_landunit
+    use clm_varpar, only : maxpatch_pft, numcft
 !
 ! !ARGUMENTS:
     implicit none
@@ -864,30 +886,36 @@ end subroutine clm_ptrs_check
        ! Set column and pft properties for this landunit 
        ! (each column has its own pft)
 
-       do m = npatch_glacier+1, npatch_crop
-          if (wtxy(nw,m) > 0._r8) then
+       if (create_crop_landunit) then
+          do m = maxpatch_pft-numcft+1, maxpatch_pft
              ci = ci + 1
              pi = pi + 1
              
              if (setdata) then
                 cptr%itype(ci)    = 1
-                pptr%itype(pi)    = vegxy(nw,m)
+                pptr%itype(pi)    = m - 1
                 pptr%mxy(pi)      = m
-             
+          
                 cptr%gridcell (ci) = gi
                 cptr%wtgcell(ci) = wtxy(nw,m)
                 cptr%landunit (ci) = li
-                cptr%wtlunit(ci) = wtxy(nw,m) / wtlunit2gcell
 
                 pptr%gridcell (pi) = gi
                 pptr%wtgcell(pi) = wtxy(nw,m)
                 pptr%landunit (pi) = li
-                pptr%wtlunit(pi) = wtxy(nw,m) / wtlunit2gcell
                 pptr%column (pi) = ci
-                pptr%wtcol(pi) = 1.0_r8
+                if (wtxy(nw,m) > 0._r8) then
+                   cptr%wtlunit(ci) = wtxy(nw,m) / wtlunit2gcell
+                   pptr%wtlunit(pi) = wtxy(nw,m) / wtlunit2gcell
+                   pptr%wtcol(pi) = 1._r8
+                else
+                   cptr%wtlunit(ci) = 0._r8
+                   pptr%wtlunit(pi) = 0._r8
+                   pptr%wtcol(pi) = 0._r8
+                end if
              endif ! setdata
-          end if
-       end do
+          end do
+       end if
 
     end if
        

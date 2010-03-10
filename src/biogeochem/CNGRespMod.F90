@@ -15,7 +15,6 @@ module CNGRespMod
 !
 ! !USES:
    use shr_kind_mod, only: r8 => shr_kind_r8
-   use clm_varcon  , only: istsoil
    implicit none
    save
    private
@@ -161,10 +160,9 @@ subroutine CNGResp(num_soilp, filter_soilp)
 
    ! Loop through pfts
    ! start pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
+
 
       ! leaf and fine root growth respiration
       cpool_leaf_gr(p)          = cpool_to_leafc(p) * grperc

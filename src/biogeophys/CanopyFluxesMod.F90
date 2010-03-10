@@ -16,6 +16,7 @@ module CanopyFluxesMod
 ! !USES:
    use abortutils,   only: endrun
    use clm_varctl,   only: iulog
+   use shr_sys_mod,  only: shr_sys_flush
 !
 ! !PUBLIC TYPES:
    implicit none
@@ -1083,7 +1084,8 @@ contains
      use shr_const_mod, only : SHR_CONST_TKFRZ, SHR_CONST_RGAS
      use clmtype
      use clm_atmlnd   , only : clm_a2l
-     use spmdMod, only: masterproc
+     use spmdMod      , only: masterproc
+     use pftvarcon    , only : nbrdlf_dcd_tmp_shrub
 !
 ! !ARGUMENTS:
      implicit none
@@ -1132,10 +1134,6 @@ contains
      real(r8), pointer :: alphapsn(:)    ! 13C fractionation factor for PSN ()
 #endif
 
-#if (defined DGVM)
-     real(r8), pointer :: annpsnpot(:)   ! annual potential photosynthesis (umol CO2 /m**2)
-     real(r8), pointer :: annpsn(:)      ! annual photosynthesis (umol CO2 /m**2)
-#endif
 !
 ! local pointers to implicit out variables
 !
@@ -1169,9 +1167,6 @@ contains
      real(r8) :: we      ! export limited photosynthesis (umol co2/m**2/s)
      real(r8) :: cp      ! co2 compensation point (pa)
      real(r8) :: awc     ! intermediate calcuation for wc
-#if (defined DGVM)
-     real(r8) :: vcmxpot ! potential maximum rate of carboxylation (umol co2/m**2/s)
-#endif
      real(r8) :: j       ! electron transport (umol co2/m**2/s)
      real(r8) :: cea     ! constrain ea or else model blows up
      real(r8) :: cf      ! s m**2/umol -> s/m
@@ -1224,10 +1219,6 @@ contains
         lnc    => clm3%g%l%c%p%pps%lncsha   
         vcmx   => clm3%g%l%c%p%pps%vcmxsha
      end if
-#if (defined DGVM)
-     annpsnpot => clm3%g%l%c%p%pdgvs%annpsnpot
-     annpsn    => clm3%g%l%c%p%pdgvs%annpsn
-#endif
 
      ! Assign local pointers to derived type members (gridcell-level)
 
@@ -1296,6 +1287,13 @@ contains
            ko = ko25 * f1(ako,tc)
            awc = kc * (1._r8+o2(p)/ko)
            cp = 0.5_r8*kc/ko*o2(p)*0.21_r8
+
+           ! Modification for shrubs proposed by X.D.Z
+           ! Why does he prefer this line here instead of in subr.
+           ! CanopyFluxes? (slevis)
+#if (defined CNDV)
+           if (ivt(p) == nbrdlf_dcd_tmp_shrub) btran(p) = min(1._r8, btran(p) * 3.33_r8)
+#endif
            
            ! new calculations for vcmax, 1/26/04
            lnc(p) = 1._r8 / (sla(p) * leafcn(ivt(p)))
@@ -1306,10 +1304,6 @@ contains
            vcmx(p) = lnc(p) * flnr(ivt(p)) * fnr * act / f2(tc) * btran(p) * dayl_factor(p) * fnitr(ivt(p))
 #endif
            
-#if (defined DGVM)
-           vcmxpot = vcmx25(ivt(p)) * f1(avcmx,tc) / f2(tc)
-#endif
-
            ! First guess ci
 
            ci(p) = 0.7_r8*co2(p)*c3psn(ivt(p)) + 0.4_r8*co2(p)*(1._r8-c3psn(ivt(p)))
@@ -1321,36 +1315,6 @@ contains
            ! Constrain ea
 
            cea = max(0.25_r8*ei(p)*c3psn(ivt(p))+0.40_r8*ei(p)*(1._r8-c3psn(ivt(p))), min(ea(p),ei(p)) ) 
-
-#if (defined DGVM)
-           ! ci iteration for 'potential' photosynthesis
-
-           do iter = 1, niter
-              wj = max(ci(p)-cp,0._r8)*j/(ci(p)+2._r8*cp)*c3psn(ivt(p)) + j*(1._r8-c3psn(ivt(p)))
-              wc = max(ci(p)-cp,0._r8)*vcmxpot/(ci(p)+awc)*c3psn(ivt(p)) + vcmxpot*(1._r8-c3psn(ivt(p)))
-              we = 0.5_r8*vcmxpot*c3psn(ivt(p)) + 4000._r8*vcmxpot*ci(p)/forc_pbot(g)*(1._r8-c3psn(ivt(p)))
-              psn(p) = min(wj,wc,we)
-              cs = max( co2(p) - 1.37_r8*rb(p)*forc_pbot(g)*psn(p), mpe )
-              atmp = mp(ivt(p))*psn(p)*forc_pbot(g)*cea / (cs*ei(p)) + bp
-              btmp = ( mp(ivt(p))*psn(p)*forc_pbot(g)/cs + bp ) * rb(p) - 1._r8
-              ctmp = -rb(p)
-              if (btmp >= 0._r8) then
-                 q = -0.5_r8*( btmp + sqrt(btmp*btmp-4._r8*atmp*ctmp) )
-              else
-                 q = -0.5_r8*( btmp - sqrt(btmp*btmp-4._r8*atmp*ctmp) )
-              end if
-              r1 = q/atmp
-              r2 = ctmp/q
-              rs(p) = max(r1,r2)
-              ci(p) = max( cs-psn(p)*forc_pbot(g)*1.65_r8*rs(p), 0._r8 )
-           end do
-
-           annpsnpot(p) = annpsnpot(p) + psn(p)
-
-           ! First guess ci
-
-           ci(p) = 0.7_r8*co2(p)*c3psn(ivt(p)) + 0.4_r8*co2(p)*(1._r8-c3psn(ivt(p)))
-#endif
 
            ! ci iteration for 'actual' photosynthesis
 
@@ -1437,10 +1401,6 @@ contains
               rs(p) = max(r1,r2)
               ci(p) = max( cs-psn(p)*forc_pbot(g)*1.65_r8*rs(p), 0._r8 )
            end do
-#endif
-
-#if (defined DGVM)
-           annpsn(p) = annpsn(p) + psn(p)
 #endif
 
            ! rs, rb:  s m**2 / umol -> s/m 

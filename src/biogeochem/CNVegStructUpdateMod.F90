@@ -14,8 +14,6 @@ module CNVegStructUpdateMod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varcon  , only: istsoil
-    use spmdMod     , only: masterproc
     implicit none
     save
     private
@@ -64,18 +62,25 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in scalars
 !
-   integer , pointer :: ivt(:)         ! pft vegetation type
-   integer , pointer :: pcolumn(:)  ! column index associated with each pft
-   integer , pointer :: pgridcell(:)   ! pft's gridcell index
-   real(r8), pointer :: snowdp(:)   ! snow height (m)
-   real(r8), pointer :: leafc(:)              ! (kgC/m2) leaf C
-   real(r8), pointer :: deadstemc(:)          ! (kgC/m2) dead stem C
-   real(r8), pointer :: woody(:)                        !binary flag for woody lifeform (1=woody, 0=not woody)
-   real(r8), pointer :: slatop(:)    !specific leaf area at top of canopy, projected area basis [m^2/gC]
-   real(r8), pointer :: dsladlai(:)  !dSLA/dLAI, projected area basis [m^2/gC]
-   real(r8), pointer :: z0mr(:)      !ratio of momentum roughness length to canopy top height (-)
-   real(r8), pointer :: displar(:)   !ratio of displacement height to canopy top height (-)
+#if (defined CNDV)
+   real(r8), pointer :: allom2(:)     ! ecophys const
+   real(r8), pointer :: allom3(:)     ! ecophys const
+   real(r8), pointer :: nind(:)       ! number of individuals (#/m**2)
+   real(r8), pointer :: fpcgrid(:)    ! fractional area of pft (pft area/nat veg area)
+#endif
+   integer , pointer :: ivt(:)        ! pft vegetation type
+   integer , pointer :: pcolumn(:)    ! column index associated with each pft
+   integer , pointer :: pgridcell(:)  ! pft's gridcell index
+   real(r8), pointer :: snowdp(:)     ! snow height (m)
+   real(r8), pointer :: leafc(:)      ! (kgC/m2) leaf C
+   real(r8), pointer :: deadstemc(:)  ! (kgC/m2) dead stem C
+   real(r8), pointer :: woody(:)      !binary flag for woody lifeform (1=woody, 0=not woody)
+   real(r8), pointer :: slatop(:)     !specific leaf area at top of canopy, projected area basis [m^2/gC]
+   real(r8), pointer :: dsladlai(:)   !dSLA/dLAI, projected area basis [m^2/gC]
+   real(r8), pointer :: z0mr(:)       !ratio of momentum roughness length to canopy top height (-)
+   real(r8), pointer :: displar(:)    !ratio of displacement height to canopy top height (-)
    real(r8), pointer :: forc_hgt_u_pft(:) ! observational height of wind at pft-level [m]
+   real(r8), pointer :: dwood(:)      ! density of wood (kgC/m^3)
 !
 ! local pointers to implicit in/out scalars
 !
@@ -95,7 +100,6 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
    integer :: fp           !lake filter indices
    real(r8):: taper        ! ratio of height:radius_breast_height (tree allometry)
    real(r8):: stocking     ! #stems / ha (stocking density)
-   real(r8):: dwood        ! density of wood (kgC/m^3)
    real(r8):: ol           ! thickness of canopy layer covered by snow (m)
    real(r8):: fb           ! fraction of canopy layer covered by snow
    real(r8) :: tlai_old    ! for use in Zeng tsai formula
@@ -119,6 +123,12 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 !-------------------------------------------------------------------------------
 
    ! assign local pointers to derived type arrays (in)
+#if (defined CNDV)
+    allom2                         => dgv_pftcon%allom2
+    allom3                         => dgv_pftcon%allom3
+    nind                           => clm3%g%l%c%p%pdgvs%nind
+    fpcgrid                        => clm3%g%l%c%p%pdgvs%fpcgrid
+#endif
     ivt                            => clm3%g%l%c%p%itype
     pcolumn                        => clm3%g%l%c%p%column
     pgridcell                      => clm3%g%l%c%p%gridcell
@@ -130,6 +140,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
     dsladlai                       => pftcon%dsladlai
     z0mr                           => pftcon%z0mr
     displar                        => pftcon%displar
+    dwood                          => pftcon%dwood
 
    ! assign local pointers to derived type arrays (out)
     tlai                           => clm3%g%l%c%p%pps%tlai
@@ -149,15 +160,6 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
    ! convert from stems/ha -> stems/m^2
    stocking = stocking / 10000._r8
-
-   ! a typical value for wood density is 500 kg dry mass/m^3
-   dwood = 500._r8
-
-   ! convert from kg -> g
-   dwood = dwood * 1000._r8
-
-   ! convert from dry mass -> Carbon
-   dwood = dwood * 0.5_r8
 
    ! pft loop
    do fp = 1,num_soilp
@@ -188,6 +190,7 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
           ! dt and dividing by dtsmonth (seconds in average 30 day month)
           ! tsai_min scaled by 0.5 to match MODIS satellite derived values
           if (ivt(p) == ncorn .or. ivt(p) == nwheat ) then    ! crops (corn, wheat in CLM)
+
              tsai_alpha = 1.0_r8-1.0_r8*dt/dtsmonth
              tsai_min = 0.1_r8
           else
@@ -211,7 +214,18 @@ subroutine CNVegStructUpdate(num_soilp, filter_soilp)
 
              ! trees and shrubs for now have a very simple allometry, with hard-wired
              ! stem taper (height:radius) and hard-wired stocking density (#individuals/area)
-             htop(p) = ((3._r8 * deadstemc(p) * taper * taper)/(SHR_CONST_PI * stocking * dwood))**(1._r8/3._r8)
+#if (defined CNDV)
+             if (fpcgrid(p) > 0._r8 .and. nind(p) > 0._r8) then
+                stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 pft area
+                htop(p) = allom2(ivt(p)) * ( (24._r8 * deadstemc(p) / &
+                  (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
+             else
+                htop(p) = 0._r8
+             end if
+#else
+                htop(p) = ((3._r8 * deadstemc(p) * taper * taper)/ &
+                  (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
+#endif
 
              ! Peter Thornton, 5/3/2004
              ! Adding test to keep htop from getting too close to forcing height for windspeed

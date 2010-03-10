@@ -11,6 +11,7 @@ nr    => rtm                    is off
 
 _cnn  => bgc is in cn   mode with suplemental nitrogen on
 _cn   => bgc is in cn   mode with suplemental nitrogen off
+_cndv => bgc is in cndv mode
 _cnc13=> bgc is in cn   mode with C13 on as well
 _casa => bgc is in casa mode
 

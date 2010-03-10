@@ -278,10 +278,8 @@ end type pft_pstate_type
 ! pft ecophysiological constants structure
 !----------------------------------------------------
 type, public :: pft_epc_type
-   integer , pointer :: ncorn(:)                !value for corn
-   integer , pointer :: nwheat(:)               !value for wheat
    integer , pointer :: noveg(:)                !value for not vegetated
-   integer , pointer :: ntree(:)                !value for last type of tree
+   integer , pointer :: tree(:)                 !tree or not?
    real(r8), pointer :: smpso(:)                !soil water potential at full stomatal opening (mm)
    real(r8), pointer :: smpsc(:)                !soil water potential at full stomatal closure (mm)
    real(r8), pointer :: fnitr(:)                !foliage nitrogen limitation factor (-)
@@ -302,6 +300,7 @@ type, public :: pft_epc_type
    real(r8), pointer :: rootb_par(:)            !CLM rooting distribution parameter [1/m]
    real(r8), pointer :: sla(:)                  !specific leaf area [m2 leaf g-1 carbon]
    ! new variables for CN code
+   real(r8), pointer :: dwood(:)           !wood density (gC/m3)
    real(r8), pointer :: slatop(:)    !specific leaf area at top of canopy, projected area basis [m^2/gC]
    real(r8), pointer :: dsladlai(:)  !dSLA/dLAI, projected area basis [m^2/gC]
    real(r8), pointer :: leafcn(:)    !leaf C:N (gC/gN)
@@ -332,27 +331,12 @@ type, public :: pft_epc_type
    real(r8), pointer :: resist(:)       !resistance to fire (no units)
 end type pft_epc_type
 
-#if (defined DGVM)
+#if (defined CNDV)
 !----------------------------------------------------
 ! pft DGVM-specific ecophysiological constants structure
 !----------------------------------------------------
 type, public :: pft_dgvepc_type
-   real(r8), pointer :: respcoeff(:)       !maintenance respiration coefficient [-]
-   real(r8), pointer :: flam(:)            !flammability threshold [units?]
-   real(r8), pointer :: resist(:)          !fire resistance index [units?]
-   real(r8), pointer :: l_turn(:)          !leaf turnover period [years]
-   real(r8), pointer :: l_long(:)          !leaf longevity [years]
-   real(r8), pointer :: s_turn(:)          !sapwood turnover period [years]
-   real(r8), pointer :: r_turn(:)          !root turnover period [years]
-   real(r8), pointer :: l_cton(:)          !leaf C:N (mass ratio)
-   real(r8), pointer :: s_cton(:)          !sapwood C:N (mass ratio)
-   real(r8), pointer :: r_cton(:)          !root C:N (mass ratio)
-   real(r8), pointer :: l_morph(:)         !leaf morphology: 1=broad, 2=needle, 3=grass
-   real(r8), pointer :: l_phen(:)          !leaf phenology: 1=everg, 2=summerg, 3=raing, 4=any
-   real(r8), pointer :: lmtorm(:)          !leaf:root ratio under non-water stressed conditions
    real(r8), pointer :: crownarea_max(:)   !tree maximum crown area [m2]
-   real(r8), pointer :: init_lai(:)        !sapling (or initial grass) LAI [-]
-   real(r8), pointer :: x(:)               !sapling: (heart+sapwood)/sapwood [-]
    real(r8), pointer :: tcmin(:)           !minimum coldest monthly mean temperature [units?]
    real(r8), pointer :: tcmax(:)           !maximum coldest monthly mean temperature [units?]
    real(r8), pointer :: gddmin(:)          !minimum growing degree days (at or above 5 C)
@@ -365,8 +349,6 @@ type, public :: pft_dgvepc_type
    logical , pointer :: summergreen(:)     ! ecophys const
    logical , pointer :: raingreen(:)       ! ecophys const
    real(r8), pointer :: reinickerp(:)      !parameter in allometric equation
-   real(r8), pointer :: wooddens(:)        !wood density (gC/m3)
-   real(r8), pointer :: latosa(:)          !ratio of leaf area to sapwood cross-sectional area (Shinozaki et al 1964a,b)
    real(r8), pointer :: allom1(:)          !parameter in allometric
    real(r8), pointer :: allom2(:)          !parameter in allometric
    real(r8), pointer :: allom3(:)          !parameter in allometric
@@ -419,6 +401,10 @@ type, public :: pft_epv_type
    real(r8), pointer :: prev_frootc_to_litter(:)!previous timestep froot C litterfall flux (gC/m2/s)
    real(r8), pointer :: tempsum_npp(:)          !temporary annual sum of NPP (gC/m2/yr)
    real(r8), pointer :: annsum_npp(:)           !annual sum of NPP (gC/m2/yr)
+#if (defined CNDV)
+   real(r8), pointer :: tempsum_litfall(:)      !temporary annual sum of litfall (gC/m2/yr)
+   real(r8), pointer :: annsum_litfall(:)       !annual sum of litfall (gC/m2/yr)
+#endif
 #if (defined C13)
    real(r8), pointer :: rc13_canair(:)          !C13O2/C12O2 in canopy air
    real(r8), pointer :: rc13_psnsun(:)          !C13O2/C12O2 in sunlit canopy psn flux
@@ -464,6 +450,7 @@ end type pft_wstate_type
 ! pft carbon state variables structure
 !----------------------------------------------------
 type, public :: pft_cstate_type
+   real(r8), pointer :: leafcmax(:)           ! (gC/m2) ann max leaf C
    real(r8), pointer :: leafc(:)              ! (gC/m2) leaf C
    real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
    real(r8), pointer :: leafc_xfer(:)         ! (gC/m2) leaf C transfer
@@ -545,50 +532,28 @@ type, public :: pft_vstate_type
    real(r8), pointer :: elai_p(:)              ! leaf area index average over timestep 
 end type pft_vstate_type
 
-#if (defined DGVM)
+#if (defined CNDV)
 !----------------------------------------------------
 ! pft DGVM state variables structure
 !----------------------------------------------------
 type, public :: pft_dgvstate_type
-   real(r8), pointer :: agdd0(:)               !accumulated growing degree days above 0 deg C
-   real(r8), pointer :: agdd5(:)               !accumulated growing degree days above -5
    real(r8), pointer :: agddtw(:)              !accumulated growing degree days above twmax
    real(r8), pointer :: agdd(:)                !accumulated growing degree days above 5
    real(r8), pointer :: t10(:)                 !10-day running mean of the 2 m temperature (K)
    real(r8), pointer :: t_mo(:)                !30-day average temperature (Kelvin)
    real(r8), pointer :: t_mo_min(:)            !annual min of t_mo (Kelvin)
-   real(r8), pointer :: fnpsn10(:)             !10-day running mean net photosynthesis
    real(r8), pointer :: prec365(:)             !365-day running mean of tot. precipitation
-   real(r8), pointer :: agdd20(:)              !20-yr running mean of agdd
-   real(r8), pointer :: tmomin20(:)            !20-yr running mean of tmomin
-   real(r8), pointer :: t10min(:)              !annual minimum of 10-day running mean (K)
-   real(r8), pointer :: tsoi25(:)              !soil temperature to 0.25 m (Kelvin)
-   real(r8), pointer :: annpsn(:)              !annual photosynthesis (umol CO2 /m**2)
-   real(r8), pointer :: annpsnpot(:)           !annual potential photosynthesis (same units)
    logical , pointer :: present(:)             !whether PFT present in patch
-   real(r8), pointer :: dphen(:)               !phenology [0 to 1]
-   real(r8), pointer :: leafon(:)              !leafon days
-   real(r8), pointer :: leafof(:)              !leafoff days
+   logical , pointer :: pftmayexist(:)         !if .false. then exclude seasonal decid pfts from tropics
    real(r8), pointer :: nind(:)                !number of individuals (#/m**2)
    real(r8), pointer :: lm_ind(:)              !individual leaf mass
-   real(r8), pointer :: sm_ind(:)              !individual sapwood mass
-   real(r8), pointer :: hm_ind(:)              !individual heartwood mass
-   real(r8), pointer :: rm_ind(:)              !individual root mass
    real(r8), pointer :: lai_ind(:)             !LAI per individual
    real(r8), pointer :: fpcinc(:)              !foliar projective cover increment (fraction) 
    real(r8), pointer :: fpcgrid(:)             !foliar projective cover on gridcell (fraction)
+   real(r8), pointer :: fpcgridold(:)          !last yr's fpcgrid
    real(r8), pointer :: crownarea(:)           !area that each individual tree takes up (m^2)
-   real(r8), pointer :: bm_inc(:)              !biomass increment
-   real(r8), pointer :: afmicr(:)              !annual microbial respiration
-   real(r8), pointer :: firelength(:)          !fire season in days
-   real(r8), pointer :: litterag(:)            !above ground litter
-   real(r8), pointer :: litterbg(:)            !below ground litter
-   real(r8), pointer :: cpool_fast(:)          !fast carbon pool 
-   real(r8), pointer :: cpool_slow(:)          !slow carbon pool
-   real(r8), pointer :: k_fast_ave(:)          !decomposition rate
-   real(r8), pointer :: k_slow_ave(:)          !decomposition rate 
-   real(r8), pointer :: litter_decom_ave(:)    !decomposition rate
-   real(r8), pointer :: turnover_ind(:)        !
+   real(r8), pointer :: greffic(:)
+   real(r8), pointer :: heatstress(:)
 end type pft_dgvstate_type
 #endif
 
@@ -713,18 +678,6 @@ type, public :: pft_cflux_type
    real(r8), pointer :: psnsun(:)         !sunlit leaf photosynthesis (umol CO2 /m**2/ s)
    real(r8), pointer :: psnsha(:)         !shaded leaf photosynthesis (umol CO2 /m**2/ s)
    real(r8), pointer :: fpsn(:)           !photosynthesis (umol CO2 /m**2 /s)
-#if (defined DGVM)
-   ! variables in the following block are used by the 
-   ! original CLM carbon cycle code, and are not used 
-   ! in the CN code
-   real(r8), pointer :: frm(:)            !total maintenance respiration (umol CO2 /m**2/s)
-   real(r8), pointer :: frmf(:)           !leaf maintenance respiration  (umol CO2 /m**2 /s)
-   real(r8), pointer :: frms(:)           !stem maintenance respiration  (umol CO2 /m**2 /s)
-   real(r8), pointer :: frmr(:)           !root maintenance respiration  (umol CO2 /m**2 /s)
-   real(r8), pointer :: frg(:)            !growth respiration (umol CO2 /m**2 /s)
-   real(r8), pointer :: dmi(:)            !total dry matter production (ug /m**2 /s)
-   real(r8), pointer :: fmicr(:)          !microbial respiration (umol CO2 /m**2 /s)
-#endif
    real(r8), pointer :: fco2(:)           !net CO2 flux (umol CO2 /m**2 /s) [+ = to atm]
    ! new variables for CN code
    ! gap mortality fluxes
@@ -1114,6 +1067,7 @@ type, public :: column_pstate_type
    real(r8), pointer :: rootfr_road_perv(:,:) !fraction of roots in each soil layer for urban pervious road
    real(r8), pointer :: rootr_road_perv(:,:)  !effective fraction of roots in each soil layer of urban pervious road
    real(r8), pointer :: wf(:)                 !soil water as frac. of whc for top 0.5 m
+!  real(r8), pointer :: xirrig(:)             !irrigation rate
    real(r8), pointer :: max_dayl(:)           !maximum daylength for this column (s)
    ! new variables for CN code
    real(r8), pointer :: bsw2(:,:)        !Clapp and Hornberger "b" for CN code
@@ -1296,7 +1250,7 @@ type, public :: column_vstate_type
    type(pft_vstate_type):: pvs_a              !pft-level VOC state variables averaged to the column
 end type column_vstate_type
 
-#if (defined DGVM)
+#if (defined CNDV)
 !----------------------------------------------------
 ! column DGVM state variables structure
 !----------------------------------------------------
@@ -1474,6 +1428,8 @@ type, public :: column_cflux_type
    real(r8), pointer :: dwt_livecrootc_to_cwdc(:) ! (gC/m2/s) live coarse root to CWD due to landcover change
    real(r8), pointer :: dwt_deadcrootc_to_cwdc(:) ! (gC/m2/s) dead coarse root to CWD due to landcover change
    real(r8), pointer :: dwt_closs(:)              ! (gC/m2/s) total carbon loss from product pools and conversion
+   real(r8), pointer :: landuseflux(:)            ! (gC/m2/s) dwt_closs+product_closs
+   real(r8), pointer :: landuptake(:)             ! (gC/m2/s) nee-landuseflux
    ! wood product pool loss fluxes
    real(r8), pointer :: prod10c_loss(:)           ! (gC/m2/s) decomposition loss from 10-yr wood product pool
    real(r8), pointer :: prod100c_loss(:)          ! (gC/m2/s) decomposition loss from 100-yr wood product pool
@@ -1870,19 +1826,14 @@ type, public :: gridcell_dstate_type
    type(column_dstate_type):: cds_a            !column-level dust state variables averaged to gridcell
 end type gridcell_dstate_type
 
-#if (defined DGVM)
+#if (defined CNDV)
 !----------------------------------------------------
 ! gridcell DGVM state variables structure
 !----------------------------------------------------
 type, public :: gridcell_dgvstate_type
-   real(r8), pointer :: afirefrac(:)   ! fraction of gridcell affected by fire
-   real(r8), pointer :: acfluxfire(:)  ! C flux to atmosphere from biomass burning
-   real(r8), pointer :: bmfm(:,:)      ! biomass (NPP) for each naturally-vegetated pft
-   real(r8), pointer :: afmicr(:,:)    ! microbial respiration (Rh) for each naturally-vegetated pft
-   real(r8), pointer :: begwater(:)
-   real(r8), pointer :: endwater(:)
-   real(r8), pointer :: begenergy(:)
-   real(r8), pointer :: endenergy(:)
+   real(r8), pointer :: agdd20(:)      !20-yr running mean of agdd
+   real(r8), pointer :: tmomin20(:)    !20-yr running mean of tmomin
+   real(r8), pointer :: t10min(:)      !ann minimum of 10-day running mean (K)
 end type gridcell_dgvstate_type
 #endif
 
@@ -2081,7 +2032,7 @@ type, public :: pft_type
    type(carbon_balance_type)   :: pcbal !carbon balance structure
    type(nitrogen_balance_type) :: pnbal !nitrogen balance structure
    
-#if (defined DGVM)
+#if (defined CNDV)
    ! DGVM state variables
    type(pft_dgvstate_type) :: pdgvs     !pft DGVM state variables
 #endif
@@ -2159,7 +2110,7 @@ type, public :: column_type
    type(column_vflux_type) :: cvf       !column VOC flux
    type(column_dflux_type) :: cdf       !column dust flux
 
-#if (defined DGVM)
+#if (defined CNDV)
    ! dgvm variables defined at the column level
    type (column_dgvstate_type) :: cdgvs !column DGVM structure
 #endif
@@ -2270,7 +2221,7 @@ type, public :: gridcell_type
    type(carbon_balance_type)   :: gcbal !carbon balance structure
    type(nitrogen_balance_type) :: gnbal !nitrogen balance structure
 
-#if (defined DGVM)
+#if (defined CNDV)
    ! dgvm variables defined at the gridcell level
    type(gridcell_dgvstate_type):: gdgvs !gridcell DGVM structure
 #endif
@@ -2345,7 +2296,7 @@ type(model_type)    , public, target     , save :: clm3
 !----------------------------------------------------
 type(pft_epc_type), public, target, save :: pftcon
 
-#if (defined DGVM)
+#if (defined CNDV)
 !----------------------------------------------------
 ! Declare single instance of array of dgvm ecophysiological constant types
 !----------------------------------------------------

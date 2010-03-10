@@ -15,8 +15,6 @@ module C13SummaryMod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varcon  , only: istsoil
-    use spmdMod     , only: masterproc
     implicit none
     save
     private
@@ -46,6 +44,8 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use pft2colMod, only: p2c
+   use clm_varctl, only: iulog
+   use shr_sys_mod, only: shr_sys_flush
 !
 ! !ARGUMENTS:
    implicit none
@@ -513,7 +513,6 @@ subroutine C13Summary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          froot_mr(p)    + &
          livestem_mr(p) + &
          livecroot_mr(p)
-
       ! growth respiration (GR)
       ! current GR is respired this time step for new growth displayed in this timestep
       current_gr(p) = &

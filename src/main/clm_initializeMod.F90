@@ -304,7 +304,8 @@ contains
 
     ! --------------------------------------------------------------------
     ! Read list of PFTs and their corresponding parameter values
-    ! This is independent of the model resolution
+    ! Independent of model resolution
+    ! Needs to stay before call surfrd
     ! --------------------------------------------------------------------
 
     call pftconrd()
@@ -357,7 +358,6 @@ contains
     use decompMod       , only : get_proc_clumps, get_clump_bounds, &
                                  get_proc_bounds, get_proc_bounds_atm
     use filterMod       , only : allocFilters, setFilters
-    use pftdynMod       , only : pftdyn_init, pftdyn_interp
     use histFldsMod     , only : hist_initFlds
     use histFileMod     , only : hist_htapes_build
     use restFileMod     , only : restFile_getfile, &
@@ -366,11 +366,12 @@ contains
     use accFldsMod      , only : initAccFlds, initAccClmtype
     use mkarbinitMod    , only : mkarbinit
     use ndepFileMod     , only : ndepdyn_init, ndepdyn_interp
-#if (defined DGVM)
-    use DGVMMod            , only : resetTimeConstDGVM, resetWeightsDGVM
-    use DGVMEcosystemDynMod, only : DGVMEcosystemDynini
-#else
-    use STATICEcosysDynMod , only : EcosystemDynini
+    use pftdynMod       , only : pftdyn_init, pftdyn_interp
+#if (defined CNDV)
+    use pftdynMod             , only : pftwt_init, pftwt_interp
+    use CNDVEcosystemDyniniMod, only : CNDVEcosystemDynini
+#elif (!defined CN)
+    use STATICEcosysDynMod , only : EcosystemDynini, readAnnualVegetation
 #endif
 #if (defined DUST) 
     use DustMod         , only : Dustini
@@ -391,7 +392,6 @@ contains
     use UrbanMod        , only : UrbanClumpInit
     use UrbanInitMod    , only : UrbanInitTimeConst, UrbanInitTimeVar, UrbanInitAero 
     use UrbanInputMod   , only : UrbanInput
-    use STATICEcosysdynMOD, only: readAnnualVegetation
 !
 !
 ! !REVISION HISTORY:
@@ -458,13 +458,9 @@ contains
 
     ! Initialize Ecosystem Dynamics 
 
-#if (defined DGVM)
-    call t_startf('init_dgvm')
-    call DGVMEcosystemDynini()
-    call t_stopf('init_dgvm')
-#elif defined (CN)
-    ! currently no call required
-#else
+#if (defined CNDV)
+    call CNDVEcosystemDynini()
+#elif (!defined CN)
     call t_startf('init_ecosys')
     call EcosystemDynini()
     call t_stopf('init_ecosys')
@@ -482,8 +478,8 @@ contains
 
     call UrbanInitTimeConst()
 
-    ! Initialize time constant variables (this must be called after
-    ! DGVMEcosystemDynini() and before initCASA())
+    ! Initialize time constant variables (this must be called
+    ! before initCASA())
 
     call t_startf('init_io1')
     call iniTimeConst()
@@ -559,13 +555,17 @@ contains
 
     ! Determine correct pft weights (interpolate pftdyn dataset if initial run)
     ! Otherwise these are read in for a restart run
-    
+
+#if (defined CNDV)
+    call pftwt_init()
+#else
     if (fpftdyn /= ' ') then
        call t_startf('init_pftdyn')
        call pftdyn_init()
        call pftdyn_interp( )
        call t_stopf('init_pftdyn')
     end if
+#endif
 
 
     ! ------------------------------------------------------------------------
@@ -690,23 +690,9 @@ contains
     
     call UrbanInput(mode='finalize')
 
-#if (defined DGVM)
-    call t_startf('init_dgvmw')
-    ! Determine new subgrid weights and areas (obtained from fpcgrid) and
-    ! reset DGVM time constant variables for input pft types
-
-    nclumps = get_proc_clumps()
-!$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
-    do nc = 1,nclumps
-       call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
-       call resetWeightsDGVM(begg, endg, begc, endc, begp, endp)
-       call resetTimeConstDGVM(begp, endp)
-    end do
-!$OMP END PARALLEL DO
-    call t_stopf('init_dgvmw')
-#endif
-
+#if (!defined CN) && (!defined CNDV)
     call readAnnualVegetation()
+#endif
     ! End initialization
 
     call t_startf('init_wlog')

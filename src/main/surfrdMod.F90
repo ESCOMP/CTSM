@@ -24,7 +24,7 @@ module surfrdMod
   use abortutils  , only : endrun
   use clm_varpar  , only : lsmlon, lsmlat
   use clm_varpar  , only : nlevsoi, numpft, &
-                           maxpatch_pft, maxpatch_cft, maxpatch, &
+                           maxpatch_pft, numcft, maxpatch, &
                            npatch_urban, npatch_lake, npatch_wet, npatch_glacier, &
                            maxpatch_urb
   use clm_varsur  , only : wtxy, vegxy
@@ -96,7 +96,7 @@ contains
 !    o real % abundance PFTs (as a percent of vegetated area)
 !
 ! !USES:
-    use clm_varctl  , only : allocate_all_vegpfts
+    use clm_varctl  , only : allocate_all_vegpfts, create_crop_landunit
     use pftvarcon   , only : noveg
     use fileutils   , only : getfil
     use domainMod , only : domain_type
@@ -130,7 +130,7 @@ contains
     call get_proc_bounds(begg,endg)
     allocate(pctspec(begg:endg))
 
-    vegxy(:,:)   = noveg
+    vegxy(:,:) = noveg
     wtxy(:,:)  = 0._r8
     pctspec(:) = 0._r8
 
@@ -154,14 +154,17 @@ contains
 
     ! Obtain surface dataset vegetated landunit info
 
-#if (! defined DGVM)     
+#if (defined CNDV)
+    if (create_crop_landunit) then ! CNDV means allocate_all_vegpfts = .true.
+       call surfrd_wtxy_veg_all(ncid, domain)
+    end if
+    call surfrd_wtxy_veg_dgvm(domain)
+#else
     if (allocate_all_vegpfts) then
        call surfrd_wtxy_veg_all(ncid, domain)
     else
        call surfrd_wtxy_veg_rank(ncid, domain)
     end if
-#else
-    call surfrd_wtxy_veg_dgvm(domain)
 #endif
 
     if ( masterproc )then
@@ -960,8 +963,8 @@ contains
 !
 ! !USES:
     use clm_varctl, only : create_crop_landunit
-    use pftvarcon   , only : crop, noveg
-    use domainMod   , only : domain_type
+    use pftvarcon , only : crop, noveg
+    use domainMod , only : domain_type
 !
 ! !ARGUMENTS:
     implicit none
@@ -1015,9 +1018,9 @@ contains
     call get_proc_bounds(begg,endg)
 
     allocate(sumvec(begg:endg))
-    allocate(cft(begg:endg,maxpatch_cft))
+    allocate(cft(begg:endg,numcft))
     allocate(pft(begg:endg,maxpatch_pft))
-    allocate(pctcft_lunit(begg:endg,maxpatch_cft))
+    allocate(pctcft_lunit(begg:endg,numcft))
     allocate(pctpft_lunit(begg:endg,maxpatch_pft))
     allocate(pctpft(begg:endg,0:numpft))
     allocate(wsti(maxpatch_pft))
@@ -1042,7 +1045,7 @@ contains
     ! 1. pctpft must go back to %vegetated landunit instead of %gridcell
     ! 2. pctpft bare = 100 when landmask = 1 and 100% special landunit
     ! NB: (1) and (2) do not apply to crops.
-    ! For now keep all cfts (< 4 anyway) instead of 4 most dominant cfts
+    ! For now keep all cfts instead of most dominant cfts
 
     do nl = begg,endg
 
@@ -1058,8 +1061,8 @@ contains
 
                 if (crop(m) == 1._r8 .and. pctpft(nl,m) > 0._r8) then
                    cropcount = cropcount + 1
-                   if (cropcount > maxpatch_cft) then
-                      write(iulog,*) 'ERROR surfrdMod: cropcount>maxpatch_cft'
+                   if (cropcount > numcft) then
+                      write(iulog,*) 'ERROR surfrdMod: cropcount>numcft'
                       call endrun()
                    end if
                    cft(nl,cropcount) = m
@@ -1167,7 +1170,7 @@ contains
           do m=1,maxpatch_pft
              pctpft_lunit(nl,m) = float(nint(pctpft_lunit(nl,m)))
           end do
-          do m=1,maxpatch_cft
+          do m=1,numcft
              pctcft_lunit(nl,m) = float(nint(pctcft_lunit(nl,m)))
           end do
        end if
@@ -1186,7 +1189,7 @@ contains
              rmax = pctpft_lunit(nl,m)
           end if
        end do
-       do m = 1, maxpatch_cft
+       do m = 1, numcft
           sumpct = sumpct + pctcft_lunit(nl,m)
           if (pctcft_lunit(nl,m) > rmax) then
              k2 = m
@@ -1213,7 +1216,7 @@ contains
        do m = 1, maxpatch_pft
           sumpct = sumpct + pctpft_lunit(nl,m)
        end do
-       do m = 1, maxpatch_cft
+       do m = 1, numcft
           sumpct = sumpct + pctcft_lunit(nl,m)
        end do
        if (domain%pftm(nl) >= 0) then
@@ -1244,15 +1247,15 @@ contains
           ! Naturally vegetated landunit
 
           do m = 1, maxpatch_pft
-             vegxy(nl,m)  = pft(nl,m)
+             vegxy(nl,m) = pft(nl,m)
              wtxy(nl,m) = pctpft_lunit(nl,m) * (100._r8-pctspec(nl))/10000._r8
           end do
 
           ! Crop landunit
 
           if (create_crop_landunit) then
-             do m = 1,maxpatch_cft
-                vegxy(nl,npatch_glacier+m)  = cft(nl,m)
+             do m = 1,numcft
+                vegxy(nl,npatch_glacier+m) = cft(nl,m)
                 wtxy(nl,npatch_glacier+m) = pctcft_lunit(nl,m) * (100._r8-pctspec(nl))/10000._r8
              end do
           end if
@@ -1376,7 +1379,7 @@ contains
           ! Set weight of each pft wrt gridcell (note that maxpatch_pft = numpft+1 here)
 
           do m = 1,numpft+1
-             vegxy(nl,m)  = m-1
+             vegxy(nl,m)  = m - 1 ! 0 (bare ground) to numpft
              wtxy(nl,m) = pctpft(nl,m-1) / 100._r8
           end do
 
@@ -1393,21 +1396,18 @@ contains
 ! !IROUTINE: surfrd_wtxy_veg_dgvm
 !
 ! !INTERFACE:
-!  subroutine surfrd_wtxy_veg_dgvm(pctspec, vegxy, wtxy, domain)
   subroutine surfrd_wtxy_veg_dgvm(domain)
 !
 ! !DESCRIPTION:
-! Determine wtxy and vegxy for DGVM mode.
+! Determine wtxy and vegxy for CNDV mode.
 !
 ! !USES:
-    use pftvarcon   , only : crop, noveg
-    use domainMod   , only : domain_type
+    use domainMod, only : domain_type
+    use pftvarcon, only : noveg, crop
+    use clm_varctl, only : create_crop_landunit
 !
 ! !ARGUMENTS:
     implicit none
-!    real(r8), intent(in)    :: pctspec(:) ! percent gridcell of special landunits
-!    integer , intent(inout) :: vegxy(:,:)   ! PFT
-!    real(r8), intent(inout) :: wtxy(:,:)  ! subgrid weights
     type(domain_type),intent(in) :: domain ! domain associated with wtxy
 !
 ! !CALLED FROM:
@@ -1426,10 +1426,22 @@ contains
 
     call get_proc_bounds(begg,endg)
     do nl = begg,endg
-       do m = 1, maxpatch_pft
-          vegxy(nl,m)  = noveg 
-          wtxy(nl,m) = 1.0_r8/maxpatch_pft * (100._r8-pctspec(nl))/100._r8
+       do m = 1, maxpatch_pft ! CNDV means allocate_all_vegpfts = .true.
+          if (create_crop_landunit) then ! been through surfrd_wtxy_veg_all
+             if (crop(m-1) == 0) then    ! so update natural vegetation only
+                wtxy(nl,m) = 0._r8       ! crops should have values >= 0.
+             end if
+          else                   ! not been through surfrd_wtxy_veg_all
+             wtxy(nl,m) = 0._r8  ! so update all vegetation
+             vegxy(nl,m) = m - 1 ! 0 (bare ground) to maxpatch_pft-1 (= 16)
+          end if
        end do
+       ! bare ground weights
+       wtxy(nl,noveg+1) = max(0._r8, 1._r8 - sum(wtxy(nl,:)))
+       if (abs(sum(wtxy(nl,:)) - 1._r8) > 1.e-5_r8) then
+          write(iulog,*) 'all wtxy =', wtxy(nl,:)
+          call endrun()
+       end if ! error check
     end do
 
   end subroutine surfrd_wtxy_veg_dgvm

@@ -1,7 +1,13 @@
+<!--
+
+Top level docbook Users-Guide for CLM4
+
+-->
 <?xml version='1.0'?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
 "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 
+  <!-- Files to link in -->
   <!ENTITY compsets_list       SYSTEM "compsets_list_ofIcases.xml">
   <!ENTITY buildnml_help       SYSTEM "buildnml_help.xml">
   <!ENTITY res_list            SYSTEM "buildnml_resolutions.xml">
@@ -10,19 +16,62 @@
   <!ENTITY config_help         SYSTEM "config_help.xml">
   <!ENTITY quickstart_guide    SYSTEM "quickstart_guide.xml">
   <!ENTITY quickstart_userdata SYSTEM "quickstart_usrdat.xml">
+  <!ENTITY co2streams_diff     SYSTEM "addco2_datm.buildnml.xml">
   <!ENTITY preface             SYSTEM "preface.xml">
   <!ENTITY custom              SYSTEM "custom.xml">
   <!ENTITY tools               SYSTEM "tools.xml">
   <!ENTITY special_cases       SYSTEM "special_cases.xml">
   <!ENTITY adding_files        SYSTEM "adding_files.xml">
   <!ENTITY single_point        SYSTEM "single_point.xml">
+  <!ENTITY appendix            SYSTEM "appendix.xml">
+
+  <!-- Aliases to use -->
+  <!ENTITY buildnml          "<command>build-namelist</command>">
+  <!ENTITY configure         "<command>configure</command>">
+  <!ENTITY clm               "<acronym>CLM</acronym>">
+  <!ENTITY clmcn             "<acronym>CLMCN</acronym>">
+  <!ENTITY clmsp             "<acronym>CLMSP</acronym>">
+  <!ENTITY clm3              "<acronym>CLM3.0</acronym>">
+  <!ENTITY clm35             "<acronym>CLM3.5</acronym>">
+  <!ENTITY clm4              "<acronym>CLM4</acronym>">
+  <!ENTITY clm40             "<acronym>CLM4.0</acronym>">
+  <!ENTITY ccsm              "<acronym>CCSM</acronym>">
+  <!ENTITY ccsm4             "<acronym>CCSM4.0</acronym>">
+  <!ENTITY netcdf            "<acronym>NetCDF</acronym>">
+  <!ENTITY FORTRAN           "<acronym>FORTRAN</acronym>">
+  <!ENTITY mpi               "<acronym>MPI</acronym>">
+  <!ENTITY omp               "<acronym>OpenMP</acronym>">
+  <!ENTITY ncl               "<acronym>NCL</acronym>">
+  <!ENTITY perl              "<acronym>Perl</acronym>">
+  <!ENTITY xml               "<acronym>XML</acronym>">
+  <!ENTITY xmlchange         "<command>xmlchange</command>">
+  <!ENTITY CO2               "CO<subscript>2</subscript>">
+
+  <!-- Aliases of cpl7 scripts files -->
+  <!ENTITY envrun            "<filename>env_run.xml</filename>">
+  <!ENTITY envbuild          "<filename>env_build.xml</filename>">
+  <!ENTITY envconf           "<filename>env_conf.xml</filename>">
+  <!ENTITY usernlclm         "<filename>user_nl_clm</filename>">
+
+  <!-- Aliases of cpl7 scripts env variables to use -->
+  <!ENTITY PTSMODE           "<envar>PTS_MODE</envar>">
+  <!ENTITY CSMDATA           "<envar>CSMDATA</envar>">
+  <!ENTITY CLMFORCECOLD      "<envar>CLM_FORCE_COLDSTART</envar>">
+  <!ENTITY CLMCONFIG         "<envar>CLM_CONFIG_OPTS</envar>">
+  <!ENTITY CLMBLDNML         "<envar>CLM_BLDNML_OPTS</envar>">
+  <!ENTITY CLMUSECASE        "<envar>CLM_NML_USE_CASE</envar>">
+  <!ENTITY CLMNAMELIST       "<envar>CLM_NAMELIST_OPTS</envar>">
+  <!ENTITY CLM1PT            "<envar>CLM_1PT_NAME</envar>">
+  <!ENTITY CLMUSRDAT         "<envar>CLM_USRDAT_NAME</envar>">
+  <!ENTITY CLMCO2            "<envar>CLM_CO2_TYPE</envar>">
+  <!ENTITY DINLOC            "<envar>DIN_LOC_ROOT</envar>">
 
 ]>
 
 <book label="CLM4_UsersGuide" status="draft">
 
 <bookinfo>
-<title>CCSM Research Tools: CLM4.0 Users Guide Documentation (DRAFT)</title>
+<title>&ccsm; Research Tools: &clm40; Users Guide Documentation (DRAFT)</title>
 
 <authorgroup>
 
@@ -30,7 +79,7 @@
     <firstname>Erik</firstname>
     <surname>Kluzek</surname>
    <affiliation>
-   <orgname> NCAR </orgname>
+   <orgname>NCAR</orgname>
    </affiliation>
 </author>
 
@@ -42,15 +91,17 @@
 
 <dedication>
 <para>
-Dedicated to the Land Model Working Group winners of the 2008 CCSM Distinguished Achievement Award.
+Dedicated to the Land Model Working Group winners of the 2008 &ccsm; Distinguished Achievement Award.
 </para>
 </dedication>
 
+<!-- Chapters -->
 &preface;
 &custom;
 &tools;
 &adding_files;
 &special_cases;
 &single_point;
+&appendix;
 
 </book>

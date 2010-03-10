@@ -249,9 +249,11 @@ contains
 
        if (fpftdyn /= ' ' .and. create_crop_landunit) &
           call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with create_crop_landunit option' )
+       if (create_crop_landunit .and. .not.allocate_all_vegpfts) &
+          call shr_sys_abort( subname//' ERROR:: maxpft<numpft+1 is currently not supported with create_crop_landunit option' )
        if (fpftdyn /= ' ') then
-#if (defined DGVM)
-          call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with DGVM option' )
+#if (defined CNDV)
+          call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with CNDV option' )
 #elif (defined CASA)
           call shr_sys_abort( subname//' ERROR:: dynamic landuse is currently not supported with CASA option' )
 #endif
@@ -281,13 +283,9 @@ contains
        if (nsrest == 0) nrevsn = ' '
        if (nsrest == 1) nrevsn = 'set by restart pointer file file'
 
-#if (defined DGVM)
-       hist_crtinic = 'YEARLY'
-#else
        if (trim(hist_crtinic) /= 'MONTHLY'  .and. trim(hist_crtinic) /= 'YEARLY' .and. &
             trim(hist_crtinic) /= '6-HOURLY' .and. trim(hist_crtinic) /= 'DAILY'  ) &
           hist_crtinic = 'NONE'
-#endif
        if ( single_column .and. (scmlat == rundef  .or. scmlon == rundef ) ) &
           call shr_sys_abort( subname//' ERROR:: single column mode on -- but scmlat and scmlon are NOT set' )
 

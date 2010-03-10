@@ -46,7 +46,7 @@ contains
     use clmtype
     use clm_atmlnd         , only : clm_a2l
     use clm_varpar         , only : nlevgrnd
-    use clm_varcon         , only : cpair, vkc, grav, denice, denh2o, hvap, istsoil
+    use clm_varcon         , only : cpair, vkc, grav, denice, denh2o, istsoil
     use shr_const_mod      , only : SHR_CONST_RGAS
     use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni
     use QSatMod            , only : QSat

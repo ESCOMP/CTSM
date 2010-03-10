@@ -22,6 +22,7 @@ module CNSetValueMod
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varpar  , only: nlevgrnd
+    use clm_varctl  , only: iulog
     use clmtype
     implicit none
     save
@@ -147,7 +148,7 @@ subroutine CNZeroFluxes_dwt()
     integer  :: begc, endc    ! proc beginning and ending column indices
     integer  :: begl, endl    ! proc beginning and ending landunit indices
     integer  :: begg, endg    ! proc beginning and ending gridcell indices
-    integer  :: c             ! indices
+    integer  :: c, p          ! indices
     type(column_type),   pointer :: cptr         ! pointer to column derived subtype
 !EOP
 !-----------------------------------------------------------------------
@@ -194,6 +195,22 @@ subroutine CNZeroFluxes_dwt()
        cptr%cnf%dwt_livecrootn_to_cwdn(c) = 0._r8
        cptr%cnf%dwt_deadcrootn_to_cwdn(c) = 0._r8
     end do
+#if (defined CN)
+    do p = begp,endp
+       cptr%p%pcs%dispvegc(p)   = 0._r8
+       cptr%p%pcs%storvegc(p)   = 0._r8
+       cptr%p%pcs%totpftc(p)    = 0._r8
+#if (defined C13)
+       cptr%p%pc13s%dispvegc(p) = 0._r8
+       cptr%p%pc13s%storvegc(p) = 0._r8
+       cptr%p%pc13s%totpftc(p)  = 0._r8
+#endif
+       cptr%p%pns%dispvegn(p)   = 0._r8
+       cptr%p%pns%storvegn(p)   = 0._r8
+       cptr%p%pns%totvegn(p)    = 0._r8
+       cptr%p%pns%totpftn(p)    = 0._r8
+    end do
+#endif
     
 end subroutine CNZeroFluxes_dwt
 !-----------------------------------------------------------------------
@@ -329,6 +346,10 @@ subroutine CNSetPepv (num, filter, val, pepv)
       pepv%prev_frootc_to_litter(i) = val
       pepv%tempsum_npp(i) = val
       pepv%annsum_npp(i) = val
+#if (defined CNDV)
+      pepv%tempsum_litfall(i) = val
+      pepv%annsum_litfall(i) = val
+#endif
    end do
 
 end subroutine CNSetPepv

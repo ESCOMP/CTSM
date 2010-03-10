@@ -35,7 +35,12 @@ Flag to output NetCDF files in 64-bit large-file format
 
 <entry id="dtime" type="real"  category="clm_physics" 
        group="clm_inparm" valid_values="">
-Time step, seconds
+Time step (seconds)
+</entry>
+
+<entry id="override_nsrest" type="integer"  category="restart" 
+       group="clm_inparm" valid_values="3">
+Override the start type from the driver: 3: branch
 </entry>
 
 <entry id="fatmgrid" type="char*256" input_pathname="abs" category="datasets"
@@ -276,6 +281,14 @@ TRUE if want diagnostic of global radiative temperature written to CLM log file
 <entry id="mksrf_fvegtyp" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Plant Function Type dataset for mksurfdata
+</entry>
+
+<!--             -->
+<!-- mkghg       -->
+<!--             -->
+<entry id="mkghg_bndtvghg" type="char*256" category="mksurfdata"
+       input_pathname="abs" group="clmexp" valid_values="" >
+Historical greenhouse gas concentrations from CAM
 </entry>
 
 <!--                                                   -->
@@ -1054,10 +1067,21 @@ End of year to cycle datm data through
 <!-- Generic issues (resolution, mask etc.)                                                    -->
 <!-- ========================================================================================  -->
 
+<entry id="clm_start_type" type="char*8"  category="default_settings"
+       group="default_settings" valid_values="default,cold,arb_ic,startup,continue,branch" >
+CLM run type.  
+   'default' use the default type of clm_start type for this configuration
+   'cold' is a run from arbitrary initial conditions
+   'arb_ic' is a run using initial conditions if provided, OR arbitrary initial conditions if no files can be found
+   'startup' is an initial run with initial conditions provided.  
+   'continue' is a restart run.
+   'branch' is a restart run in which properties of the output history files may be changed.
+</entry>
+
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"360x720,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
+"128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha">
 Horizontal resolutions
 </entry> 
 
@@ -1070,7 +1094,7 @@ Representative concentration pathway for future scenarios [radiative forcing at 
 
 <entry id="mask" type="char*10" category="default_settings"
        group="default_settings"  
-       valid_values="USGS,gx3v5,gx3v7,gx1v5,gx1v6,navy,test,tx0.1v2,tx1v1,T62">
+       valid_values="USGS,gx3v7,gx1v6,navy,test,tx0.1v2,tx1v1,T62">
 Land mask description
 </entry> 
 

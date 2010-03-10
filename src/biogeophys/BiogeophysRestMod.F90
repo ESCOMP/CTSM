@@ -744,6 +744,145 @@ contains
        end if
     end if
 
+#ifdef SNICAR_FRC
+    ! column type physical state variable - albgrd_bc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='albgrd_bc', xtype=nf_double,  &
+            dim1name='column', dim2name='numrad', &
+            long_name='ground albedo without BC (direct) (0 to 1)',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='albgrd_bc', data=cptr%cps%albgrd_bc, &
+            dim1name=namec, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_bc in restart (or initial) file..."
+          if (masterproc) write(iulog,*) "Initialize albgrd_bc to albgrd"
+          do c=begc,endc
+             cptr%cps%albgrd_bc(c,:) = cptr%cps%albgrd(c,:)
+          enddo
+       end if
+    end if
+    ! column type physical state variable - albgri_bc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='albgri_bc', xtype=nf_double,  &
+            dim1name='column', dim2name='numrad', &
+            long_name='ground albedo without BC (diffuse) (0 to 1)',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='albgri_bc', data=cptr%cps%albgri_bc, &
+            dim1name=namec, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "SNICAR: can't find albgri_bc in restart (or initial) file..."
+          if (masterproc) write(iulog,*) "Initialize albgri_bc to albgri"
+          do c=begc,endc
+             cptr%cps%albgri_bc(c,:) = cptr%cps%albgri(c,:)
+          enddo
+       end if
+    end if
+    ! column type physical state variable - albgrd_pur
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='albgrd_pur', xtype=nf_double,  &
+            dim1name='column', dim2name='numrad', &
+            long_name='pure snow ground albedo (direct) (0 to 1)',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='albgrd_pur', data=cptr%cps%albgrd_pur, &
+            dim1name=namec, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_pur in restart (or initial) file..."
+          if (masterproc) write(iulog,*) "Initialize albgrd_pur to albgrd"
+          do c=begc,endc
+             cptr%cps%albgrd_pur(c,:) = cptr%cps%albgrd(c,:)
+          enddo
+       end if
+    end if
+    ! column type physical state variable - albgri_pur
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='albgri_pur', xtype=nf_double,  &
+            dim1name='column', dim2name='numrad', &
+            long_name='pure snow ground albedo (diffuse) (0 to 1)',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='albgri_pur', data=cptr%cps%albgri_pur, &
+            dim1name=namec, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "SNICAR: can't find albgri_pur in restart (or initial) file..."
+          if (masterproc) write(iulog,*) "Initialize albgri_pur to albgri"
+          do c=begc,endc
+             cptr%cps%albgri_pur(c,:) = cptr%cps%albgri(c,:)
+          enddo
+       end if
+    end if
+    ! column type physical state variable - albgrd_oc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='albgrd_oc', xtype=nf_double,  &
+            dim1name='column', dim2name='numrad', &
+            long_name='ground albedo without OC (direct) (0 to 1)',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='albgrd_oc', data=cptr%cps%albgrd_oc, &
+            dim1name=namec, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_oc in restart (or initial) file..."
+          if (masterproc) write(iulog,*) "Initialize albgrd_oc to albgrd"
+          do c=begc,endc
+             cptr%cps%albgrd_oc(c,:) = cptr%cps%albgrd(c,:)
+          enddo
+       end if
+    end if
+    ! column type physical state variable - albgri_oc
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='albgri_oc', xtype=nf_double,  &
+            dim1name='column', dim2name='numrad', &
+            long_name='ground albedo without OC (diffuse) (0 to 1)',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='albgri_oc', data=cptr%cps%albgri_oc, &
+            dim1name=namec, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "SNICAR: can't find albgri_oc in restart (or initial) file..."
+          if (masterproc) write(iulog,*) "Initialize albgri_oc to albgri"
+          do c=begc,endc
+             cptr%cps%albgri_oc(c,:) = cptr%cps%albgri(c,:)
+          enddo
+       end if
+    end if
+    ! column type physical state variable - albgrd_dst
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='albgrd_dst', xtype=nf_double,  &
+            dim1name='column', dim2name='numrad', &
+            long_name='ground albedo without dust (direct) (0 to 1)',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='albgrd_dst', data=cptr%cps%albgrd_dst, &
+            dim1name=namec, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_dst in restart (or initial) file..."
+          if (masterproc) write(iulog,*) "Initialize albgrd_dst to albgrd"
+          do c=begc,endc
+             cptr%cps%albgrd_dst(c,:) = cptr%cps%albgrd(c,:)
+          enddo
+       end if
+    end if
+    ! column type physical state variable - albgri_dst
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='albgri_dst', xtype=nf_double,  &
+            dim1name='column', dim2name='numrad', &
+            long_name='ground albedo without dust (diffuse) (0 to 1)',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='albgri_dst', data=cptr%cps%albgri_dst, &
+            dim1name=namec, dim2name='numrad', &
+            ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (masterproc) write(iulog,*) "SNICAR: can't find albgri_dst in restart (or initial) file..."
+          if (masterproc) write(iulog,*) "Initialize albgri_dst to albgri"
+          do c=begc,endc
+             cptr%cps%albgri_dst(c,:) = cptr%cps%albgri(c,:)
+          enddo
+       end if
+    end if
+#endif
+
    ! column water state variable - h2osno
 
     if (flag == 'define') then

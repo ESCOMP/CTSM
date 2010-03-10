@@ -203,8 +203,7 @@ contains
     integer , pointer :: ltype(:)           ! landunit type 
     integer , pointer :: ctype(:)           ! column type 
     real(r8), pointer :: pwtgcell(:)        ! pft's weight relative to corresponding gridcell
-    real(r8), pointer :: lwtgcell(:)        ! landunit's weight relative to corresponding gridcell
-    integer , pointer :: pcolumn(:)         ! column of corresponding pft
+    real(r8), pointer :: cwtgcell(:)        ! column's weight relative to corresponding gridcell
     real(r8), pointer :: forc_rain(:)       ! rain rate [mm/s]
     real(r8), pointer :: forc_snow(:)       ! snow rate [mm/s]
     real(r8), pointer :: forc_lwrad(:)      ! downward infrared (longwave) radiation (W/m**2)
@@ -270,13 +269,13 @@ contains
     ! Assign local pointers to derived type scalar members (landunit-level)
 
     ltype             => clm3%g%l%itype
-    lwtgcell          => clm3%g%l%wtgcell
     canyon_hwr        => clm3%g%l%canyon_hwr
 
     ! Assign local pointers to derived type scalar members (column-level)
 
     ctype             => clm3%g%l%c%itype
     cgridcell         => clm3%g%l%c%gridcell
+    cwtgcell          => clm3%g%l%c%wtgcell
     endwb             => clm3%g%l%c%cwbal%endwb
     begwb             => clm3%g%l%c%cwbal%begwb
     qflx_surf         => clm3%g%l%c%cwf%qflx_surf
@@ -306,7 +305,6 @@ contains
     errseb            => clm3%g%l%c%p%pebal%errseb
     errlon            => clm3%g%l%c%p%pebal%errlon
     netrad            => clm3%g%l%c%p%pef%netrad
-    pcolumn           => clm3%g%l%c%p%column
     eflx_wasteheat_pft => clm3%g%l%c%p%pef%eflx_wasteheat_pft
     eflx_heat_from_ac_pft => clm3%g%l%c%p%pef%eflx_heat_from_ac_pft
     eflx_traffic_pft  => clm3%g%l%c%p%pef%eflx_traffic_pft
@@ -352,7 +350,7 @@ contains
 
     found = .false.
     do c = lbc, ubc
-       if (abs(errh2o(c)) > 1e-7_r8) then
+       if (cwtgcell(c) > 0._r8 .and. abs(errh2o(c)) > 1e-7_r8) then
           found = .true.
           indexc = c
        end if
@@ -400,7 +398,6 @@ contains
        if (pwtgcell(p)>0._r8) then
           g = pgridcell(p)
           l = plandunit(p)
-          c = pcolumn(p)
 
           ! Solar radiation energy balance
           ! Do not do this check for an urban pft since it will not balance on a per-column

@@ -15,8 +15,6 @@ module CNGapMortalityMod
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varcon  , only: istsoil
-  use spmdMod     , only: masterproc
   implicit none
   save
   private
@@ -44,6 +42,7 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
+   use clm_time_manager, only: get_days_per_year
 !
 ! !ARGUMENTS:
    implicit none
@@ -103,6 +102,10 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: deadstemn_xfer(:)     ! (gN/m2) dead stem N transfer
    real(r8), pointer :: livecrootn_xfer(:)    ! (gN/m2) live coarse root N transfer
    real(r8), pointer :: deadcrootn_xfer(:)    ! (gN/m2) dead coarse root N transfer
+#if (defined CNDV)
+   real(r8), pointer :: greffic(:)
+   real(r8), pointer :: heatstress(:)
+#endif
 !
 ! local pointers to implicit in/out arrays
 !
@@ -152,6 +155,8 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
    integer :: fp                        ! pft filter index
    real(r8):: am                        ! rate for fractional mortality (1/yr)
    real(r8):: m                         ! rate for fractional mortality (1/s)
+   real(r8):: mort_max                  ! asymptotic max mortality rate (/yr)
+   real(r8), parameter :: k_mort = 0.3  !coeff of growth efficiency in mortality equation
 !EOP
 !-----------------------------------------------------------------------
 
@@ -238,14 +243,43 @@ subroutine CNGapMortality (num_soilc, filter_soilc, num_soilp, filter_soilp)
    m_deadstemn_xfer_to_litter     => clm3%g%l%c%p%pnf%m_deadstemn_xfer_to_litter
    m_livecrootn_xfer_to_litter    => clm3%g%l%c%p%pnf%m_livecrootn_xfer_to_litter
    m_deadcrootn_xfer_to_litter    => clm3%g%l%c%p%pnf%m_deadcrootn_xfer_to_litter
+#if (defined CNDV)
+   greffic                        => clm3%g%l%c%p%pdgvs%greffic
+   heatstress                     => clm3%g%l%c%p%pdgvs%heatstress
+#endif
 
    ! set the mortality rate based on annual rate
    am = 0.02_r8
-   m  = am/(365._r8 * 86400._r8)
 
    ! pft loop
    do fp = 1,num_soilp
       p = filter_soilp(fp)
+
+#if (defined CNDV)
+   ! Stress mortality from lpj's subr Mortality.
+
+      if (woody(ivt(p)) == 1._r8) then
+
+         if (ivt(p) == 8) then
+            mort_max = 0.03_r8 ! BDT boreal
+         else
+            mort_max = 0.01_r8 ! original value for all pfts
+         end if
+
+         ! heatstress and greffic calculated in Establishment once/yr
+
+         ! Mortality rate inversely related to growth efficiency
+         ! (Prentice et al 1993)
+         am = mort_max / (1._r8 + k_mort * greffic(p))
+
+         am = min(1._r8, am + heatstress(p))
+      else ! lpj didn't set this for grasses; cn does
+         ! set the mortality rate based on annual rate
+         am = 0.02_r8
+      end if
+#endif
+
+      m  = am/(get_days_per_year() * 86400._r8)
 
       ! pft-level gap mortality carbon fluxes
       ! displayed pools
@@ -324,7 +358,7 @@ subroutine CNGapPftToColumn (num_soilc, filter_soilc)
 !
 ! !USES:
   use clmtype
-  use clm_varpar, only : max_pft_per_col, maxpatch_pft
+  use clm_varpar, only : maxpatch_pft
 !
 ! !ARGUMENTS:
   implicit none

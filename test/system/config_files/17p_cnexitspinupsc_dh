@@ -2,7 +2,7 @@
 -spmd -smp
 -exit_spinup on
 -debug
--maxpft 17
+-maxpft numpft+1
 -bgc cn
 -supln off
 -s

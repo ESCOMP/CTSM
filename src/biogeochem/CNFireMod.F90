@@ -15,10 +15,9 @@ module CNFireMod
 !
 ! !USES:
   use shr_kind_mod , only: r8 => shr_kind_r8
-  use shr_const_mod, only: SHR_CONST_PI,SHR_CONST_TKFRZ,shr_const_cday
-  use clm_varcon   , only: istsoil
-  use spmdMod      , only: masterproc
+  use shr_const_mod, only: SHR_CONST_PI,SHR_CONST_TKFRZ
   use pft2colMod   , only: p2c
+  use clm_varctl   , only: iulog
   implicit none
   save
   private
@@ -136,8 +135,6 @@ subroutine CNFireArea (num_soilc, filter_soilc)
    end do
    mep = me_woody
    do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
          if (pi <=  npfts(c)) then
@@ -172,8 +169,6 @@ subroutine CNFireArea (num_soilc, filter_soilc)
 
    ! begin column loop to calculate fractional area affected by fire
 
-!dir$ concurrent
-!cdir nodep
    do fc = 1, num_soilc
       c = filter_soilc(fc)
 
@@ -264,6 +259,9 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !LOCAL VARIABLES:
 ! local pointers to implicit in scalars
 !
+#if (defined CNDV)
+   real(r8), pointer :: nind(:)         ! number of individuals (#/m2)
+#endif
    integer , pointer :: ivt(:)          ! pft vegetation type
    real(r8), pointer :: woody(:)        ! binary flag for woody lifeform (1=woody, 0=not woody)
    real(r8), pointer :: resist(:)       ! resistance to fire (no units)
@@ -296,6 +294,10 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: m_deadstemc_storage_to_fire(:)  
    real(r8), pointer :: m_deadstemc_to_fire(:)
    real(r8), pointer :: m_deadstemc_to_litter_fire(:)
+   real(r8), pointer :: m_deadstemc_to_litter(:)
+   real(r8), pointer :: m_livestemc_to_litter(:)
+   real(r8), pointer :: m_deadcrootc_to_litter(:)
+   real(r8), pointer :: m_livecrootc_to_litter(:)
    real(r8), pointer :: m_deadstemc_xfer_to_fire(:) 
    real(r8), pointer :: m_frootc_storage_to_fire(:)     
    real(r8), pointer :: m_frootc_to_fire(:)             
@@ -323,6 +325,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: gresp_storage(:)      ! (gC/m2) growth respiration storage
    real(r8), pointer :: gresp_xfer(:)         ! (gC/m2) growth respiration transfer
    real(r8), pointer :: leafc(:)              ! (gC/m2) leaf C
+   real(r8), pointer :: leafcmax(:)           ! (gC/m2) ann max leaf C
    real(r8), pointer :: leafc_storage(:)      ! (gC/m2) leaf C storage
    real(r8), pointer :: leafc_xfer(:)         ! (gC/m2) leaf C transfer
    real(r8), pointer :: livecrootc(:)         ! (gC/m2) live coarse root C
@@ -384,6 +387,9 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
 
    ! assign local pointers
 
+#if (defined CNDV)
+    nind                           => clm3%g%l%c%p%pdgvs%nind
+#endif
     ivt                            => clm3%g%l%c%p%itype
     pcolumn                        => clm3%g%l%c%p%column
     woody                          => pftcon%woody
@@ -416,6 +422,10 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
     m_deadstemc_storage_to_fire    => clm3%g%l%c%p%pcf%m_deadstemc_storage_to_fire
     m_deadstemc_to_fire            => clm3%g%l%c%p%pcf%m_deadstemc_to_fire
     m_deadstemc_to_litter_fire     => clm3%g%l%c%p%pcf%m_deadstemc_to_litter_fire
+    m_deadstemc_to_litter          => clm3%g%l%c%p%pcf%m_deadstemc_to_litter
+    m_livestemc_to_litter          => clm3%g%l%c%p%pcf%m_livestemc_to_litter
+    m_deadcrootc_to_litter         => clm3%g%l%c%p%pcf%m_deadcrootc_to_litter
+    m_livecrootc_to_litter         => clm3%g%l%c%p%pcf%m_livecrootc_to_litter
     m_deadstemc_xfer_to_fire       => clm3%g%l%c%p%pcf%m_deadstemc_xfer_to_fire
     m_frootc_storage_to_fire       => clm3%g%l%c%p%pcf%m_frootc_storage_to_fire
     m_frootc_to_fire               => clm3%g%l%c%p%pcf%m_frootc_to_fire
@@ -443,6 +453,7 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
     gresp_storage                  => clm3%g%l%c%p%pcs%gresp_storage
     gresp_xfer                     => clm3%g%l%c%p%pcs%gresp_xfer
     leafc                          => clm3%g%l%c%p%pcs%leafc
+    leafcmax                       => clm3%g%l%c%p%pcs%leafcmax
     leafc_storage                  => clm3%g%l%c%p%pcs%leafc_storage
     leafc_xfer                     => clm3%g%l%c%p%pcs%leafc_xfer
     livecrootc                     => clm3%g%l%c%p%pcs%livecrootc
@@ -498,8 +509,6 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    dt = real( get_step_size(), r8 )
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       c = pcolumn(p)
@@ -563,6 +572,58 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
       m_deadcrootn_xfer_to_fire(p)     =  deadcrootn_xfer(p)    * f
       m_retransn_to_fire(p)            =  retransn(p)           * f
 
+#if (defined CNDV)
+      ! Carbon per individual (c) remains constant in gap mortality & fire
+      ! but individuals are removed from the population P (#/m2 naturally
+      ! vegetated area), so
+      !
+      ! c = Cnew*FPC/Pnew = Cold*FPC/Pold
+      !
+      ! where C = carbon/m2 pft area & FPC = pft area/naturally vegetated area.
+      ! FPC does not change from mortality or fire. FPC changes from Light and
+      ! Establishment at the end of the year. So...
+      !
+      ! Pnew = Pold * Cnew / Cold
+      !
+      ! where "new" refers to after mortality & fire, while "old" refers to
+      ! before mortality & fire. For C I use total wood. (slevis)
+      !
+      ! nind calculation placed here for convenience; nind could be updated
+      ! once per year instead if we saved Cold for that calculation;
+      ! as is, nind slowly decreases through the year, while fpcgrid remains
+      ! unchanged; this affects the htop calculation in CNVegStructUpdate
+
+      if (woody(ivt(p)) == 1._r8) then
+         if (livestemc(p)+deadstemc(p)+m_livestemc_to_litter(p)*dt+ &
+                                       m_deadstemc_to_litter(p)*dt > 0._r8) then
+            nind(p) = nind(p) * (livestemc(p)  + deadstemc(p) +       &
+                                 livecrootc(p) + deadcrootc(p) - dt * &
+                                 (m_livestemc_to_fire(p)  +           &
+                                  m_livecrootc_to_fire(p) +           &
+                                  m_deadstemc_to_fire(p)  +           &
+                                  m_deadcrootc_to_fire(p) +           &
+                                  m_deadcrootc_to_litter_fire(p) +    &
+                                  m_deadstemc_to_litter_fire(p))) /   &
+                                (livestemc(p)  + deadstemc(p) +       &
+                                 livecrootc(p) + deadcrootc(p) + dt * &
+                                 (m_livestemc_to_litter(p)  +         &
+                                  m_livecrootc_to_litter(p) +         &
+                                  m_deadcrootc_to_litter(p) +         &
+                                  m_deadstemc_to_litter(p)))
+         else
+            nind(p) = 0._r8
+         end if
+      end if
+
+      ! annual dgvm calculations use lm_ind = leafcmax * fpcgrid / nind
+      ! leafcmax is reset to 0 once per yr
+      ! could calculate leafcmax in CSummary instead; if so, should remove
+      ! subtraction of m_leafc_to_fire(p)*dt from the calculation (slevis)
+
+      leafcmax(p) = max(leafc(p)-m_leafc_to_fire(p)*dt, leafcmax(p))
+      if (ivt(p) == 0) leafcmax(p) = 0._r8
+#endif
+
    end do  ! end of pfts loop
 
    ! send the fire affected but uncombusted woody fraction to the column-level cwd fluxes
@@ -573,8 +634,6 @@ subroutine CNFireFluxes (num_soilc, filter_soilc, num_soilp, filter_soilp)
    call p2c(num_soilc, filter_soilc, m_deadcrootn_to_litter_fire, m_deadcrootn_to_cwdn_fire)
 
    ! column loop
-!dir$ concurrent
-!cdir nodep
    do fc = 1,num_soilc
       c = filter_soilc(fc)
 

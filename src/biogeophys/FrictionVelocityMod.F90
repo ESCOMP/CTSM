@@ -79,7 +79,7 @@ contains
    real(r8), intent(out) :: temp12m(lbn:ubn) ! relation for potential temperature profile applied at 2-m
    real(r8), intent(out) :: temp2(lbn:ubn)   ! relation for specific humidity profile
    real(r8), intent(out) :: temp22m(lbn:ubn) ! relation for specific humidity profile applied at 2-m
-   real(r8), intent(inout) :: fm(lbn:ubn)    ! needed for DGVM only to diagnose 10m wind
+   real(r8), intent(inout) :: fm(lbn:ubn)    ! diagnose 10m wind (DUST only)
 !
 ! !CALLED FROM:
 !
@@ -119,7 +119,7 @@ contains
    integer :: pp                           ! pfti,pftf index
    real(r8):: zldis(lbn:ubn)               ! reference height "minus" zero displacement heght [m]
    real(r8):: zeta(lbn:ubn)                ! dimensionless height used in Monin-Obukhov theory
-#if (defined DGVM) || (defined DUST)
+#if (defined DUST)
    real(r8) :: tmp1,tmp2,tmp3,tmp4         ! Used to diagnose the 10 meter wind
    real(r8) :: fmnew                       ! Used to diagnose the 10 meter wind
    real(r8) :: fm10                        ! Used to diagnose the 10 meter wind
@@ -313,7 +313,7 @@ contains
          end if
       end if
 
-#if (defined DGVM) || (defined DUST)
+#if (defined DUST)
       ! diagnose 10-m wind for dust model (dstmbl.F)
       ! Notes from C. Zender's dst.F:
       ! According to Bon96 p. 62, the displacement height d (here displa) is
@@ -453,7 +453,7 @@ contains
       else
          temp22m(n)=vkc/log(obu(n)/z0q(n))
       end if
-#if (defined DGVM) || (defined DUST)
+#if (defined DUST)
       ! diagnose 10-m wind for dust model (dstmbl.F)
       ! Notes from C. Zender's dst.F:
       ! According to Bon96 p. 62, the displacement height d (here displa) is

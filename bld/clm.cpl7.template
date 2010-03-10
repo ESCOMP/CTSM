@@ -35,7 +35,7 @@ if ($RUN_TYPE == hybrid) set finidat = " finidat = '${RUN_REFCASE}.clm2.r.${RUN_
 
 # --- set branch run restart dataset 
 set nrevsn = " "
-if ($RUN_TYPE == branch) set nrevsn   = ${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-00000.nc 
+if ($RUN_TYPE == branch) set nrevsn   = " nrevsn = '${RUN_REFCASE}.clm2.r.${RUN_REFDATE}-00000.nc' "
 
 @ clm_dtime  = ( 3600 * 24 ) / $LND_NCPL
 
@@ -56,7 +56,7 @@ $rtmnsteps
 $co2ppmv
 $co2type
 $finidat
- nrevsn           = '$nrevsn'
+$nrevsn
  hist_mfilt       =  1
  hist_nhtfrq      =  0
  outnc_large_files = .true.
@@ -75,7 +75,7 @@ endif
 # Other options to build-namelist
 #
 if ($RUN_TYPE == startup ) then
-   set START_TYPE = "arb_ic"
+   set START_TYPE = "default"
 else
    set START_TYPE = $RUN_TYPE
    if ($RUN_TYPE == hybrid ) set START_TYPE = "startup"
@@ -114,7 +114,7 @@ if ( $CLM_USRDAT_NAME != UNSET )then
    set options    = "-clm_usr_name $CLM_USRDAT_NAME"
 endif
 set options = "$options -config $CASEBUILD/clmconf/config_cache.xml -res $RESOLUTION $mask $ignore $usecase "
-set options = "$options -infile ccsm_namelist -start_type $START_TYPE "
+set options = "$options -infile ccsm_namelist -clm_start_type $START_TYPE "
 $CODEROOT/lnd/clm*/bld/build-namelist $options -namelist "&clm_inparm $CLM_NAMELIST_OPTS /" -csmdata \$DIN_LOC_ROOT \-inputdata $CASEBUILD/clm.input_data_list || exit -1
 
 # ---------------------------------------------------------------------------

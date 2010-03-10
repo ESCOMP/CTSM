@@ -14,8 +14,6 @@ module CNC13StateUpdate1Mod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varcon  , only: istsoil
-    use spmdMod     , only: masterproc
     implicit none
     save
     private
@@ -106,6 +104,7 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use clm_time_manager, only: get_step_size
+
 !
 ! !ARGUMENTS:
    implicit none
@@ -368,7 +367,7 @@ subroutine C13StateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
     transfer_livecroot_gr          => clm3%g%l%c%p%pc13f%transfer_livecroot_gr
     transfer_livestem_gr           => clm3%g%l%c%p%pc13f%transfer_livestem_gr
     cpool                          => clm3%g%l%c%p%pc13s%cpool
-    xsmrpool                          => clm3%g%l%c%p%pc13s%xsmrpool
+    xsmrpool                       => clm3%g%l%c%p%pc13s%xsmrpool
     deadcrootc                     => clm3%g%l%c%p%pc13s%deadcrootc
     deadcrootc_storage             => clm3%g%l%c%p%pc13s%deadcrootc_storage
     deadcrootc_xfer                => clm3%g%l%c%p%pc13s%deadcrootc_xfer

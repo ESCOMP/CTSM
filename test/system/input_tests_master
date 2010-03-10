@@ -2,27 +2,27 @@
 
 cbA91 TCB.sh _sc_dh
 
-smA91 TSM.sh _sc_dh clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v5 -6    arb_ic
-erA91 TER.sh _sc_dh clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic
-brA91 TBR.sh _sc_dh clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic
-blA91 TBL.sh _sc_dh clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v5 -6    arb_ic
+smA91 TSM.sh _sc_dh clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v7 -6    arb_ic
+erA91 TER.sh _sc_dh clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic
+brA91 TBR.sh _sc_dh clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic
+blA91 TBL.sh _sc_dh clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v7 -6    arb_ic
 
 cbA92 TCB.sh _sc_dm
 
-smA92 TSM.sh _sc_dm clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v5 -6    arb_ic
-erA92 TER.sh _sc_dm clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic
-brA92 TBR.sh _sc_dm clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic
-blA92 TBL.sh _sc_dm clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v5 -6    arb_ic
+smA92 TSM.sh _sc_dm clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v7 -6    arb_ic
+erA92 TER.sh _sc_dm clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic
+brA92 TBR.sh _sc_dm clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic
+blA92 TBL.sh _sc_dm clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v7 -6    arb_ic
 
-smA93 TSM.sh _sc_do clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v5 -6    arb_ic
-erA93 TER.sh _sc_do clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic
-brA93 TBR.sh _sc_do clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v5 -3+-3 arb_ic
-blA93 TBL.sh _sc_do clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v5 -6    arb_ic
+smA93 TSM.sh _sc_do clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v7 -6    arb_ic
+erA93 TER.sh _sc_do clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic
+brA93 TBR.sh _sc_do clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic
+blA93 TBL.sh _sc_do clm_std^nl_urb    20030101:NONE:3600 4x5 gx3v7 -6    arb_ic
 
-smA97 TSM.sh _sc_do clm_spin^nl_urb    20030101:NONE:1800 4x5 gx3v5@1850 -6    arb_ic
-erA97 TER.sh _sc_do clm_spin^nl_urb    20030101:NONE:1800 4x5 gx3v5@1850 -3+-3 arb_ic
-brA97 TBR.sh _sc_do clm_spin^nl_urb_br 20030101:NONE:1800 4x5 gx3v5@1850 -3+-3 arb_ic
-blA97 TBL.sh _sc_do clm_spin^nl_urb    20030101:NONE:1800 4x5 gx3v5@1850 -6    arb_ic
+smA97 TSM.sh _sc_do clm_spin^nl_urb    20030101:NONE:1800 4x5 gx3v7@1850 -6    arb_ic
+erA97 TER.sh _sc_do clm_spin^nl_urb    20030101:NONE:1800 4x5 gx3v7@1850 -3+-3 arb_ic
+brA97 TBR.sh _sc_do clm_spin^nl_urb_br 20030101:NONE:1800 4x5 gx3v7@1850 -3+-3 arb_ic
+blA97 TBL.sh _sc_do clm_spin^nl_urb    20030101:NONE:1800 4x5 gx3v7@1850 -6    arb_ic
 
 cbA74 TCB.sh _sc_ds
 
@@ -50,25 +50,25 @@ erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold
 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold
 blAL4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -10   cold
 
-smD91 TSM.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 144    cold
-erD91 TER.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 72+72  cold
-blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 144    cold
+smD91 TSM.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 144    cold
+erD91 TER.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 72+72  cold
+blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 144    cold
 
-smD92 TSM.sh _persc_dm clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 144    cold
-erD92 TER.sh _persc_dm clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 72+72  cold
-blD92 TBL.sh _persc_dm clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 144    cold
+smD92 TSM.sh _persc_dm clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 144    cold
+erD92 TER.sh _persc_dm clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 72+72  cold
+blD92 TBL.sh _persc_dm clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 144    cold
 
-smD93 TSM.sh _persc_do clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 144    cold
-erD93 TER.sh _persc_do clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 72+72  cold
-blD93 TBL.sh _persc_do clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 144    cold
+smD93 TSM.sh _persc_do clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 144    cold
+erD93 TER.sh _persc_do clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 72+72  cold
+blD93 TBL.sh _persc_do clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 144    cold
 
-smD94 TSM.sh _persc_ds clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 144    cold
-erD94 TER.sh _persc_ds clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 72+72  cold
-blD94 TBL.sh _persc_ds clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v5 144    cold
+smD94 TSM.sh _persc_ds clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 144    cold
+erD94 TER.sh _persc_ds clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 72+72  cold
+blD94 TBL.sh _persc_ds clm_per^nl_urb 20021231:NONE:1200  4x5 gx3v7 144    cold
 
-smD95 TSMpergro.sh _persc_dh clm_per0^nl_urb clm_per 20021231:NONE:1200  4x5 gx3v5 144    cold
-smD96 TSMpergro.sh _persc_dm clm_per0^nl_urb clm_per 20021231:NONE:1200  4x5 gx3v5 144    cold
-smD97 TSMpergro.sh _persc_do clm_per0^nl_urb clm_per 20021231:NONE:1200  4x5 gx3v5 144    cold
+smD95 TSMpergro.sh _persc_dh clm_per0^nl_urb clm_per 20021231:NONE:1200  4x5 gx3v7 144    cold
+smD96 TSMpergro.sh _persc_dm clm_per0^nl_urb clm_per 20021231:NONE:1200  4x5 gx3v7 144    cold
+smD97 TSMpergro.sh _persc_do clm_per0^nl_urb clm_per 20021231:NONE:1200  4x5 gx3v7 144    cold
 
 smE11 TSM.sh 4p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  48x96 gx3v7 96    arb_ic
 erE11 TER.sh 4p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  48x96 gx3v7 10+38 arb_ic
@@ -96,26 +96,26 @@ smE15 TSM.sh 4p_vodsrsc_h clm_std^nl_urb 20021231:NONE:1800  48x96 gx3v7 48 arb_
 smE16 TSM.sh 4p_vodsrsc_m clm_std^nl_urb 20021231:NONE:1800  48x96 gx3v7 48 arb_ic
 smE17 TSM.sh 4p_vodsrsc_o clm_std^nl_urb 20021231:NONE:1800  48x96 gx3v7 48 arb_ic
 
-smE91 TSM.sh 4p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 96    arb_ic
-erE91 TER.sh 4p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 10+38 arb_ic
-brE91 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v5 72+72 arb_ic
-blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 48    arb_ic
+smE91 TSM.sh 4p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 96    arb_ic
+erE91 TER.sh 4p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 10+38 arb_ic
+brE91 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v7 72+72 arb_ic
+blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 48    arb_ic
 
 cbE92 TCB.sh 4p_vodsrsc_dm
 
-smE92 TSM.sh 4p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 96    arb_ic
-erE92 TER.sh 4p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 10+38 arb_ic
-brE92 TBR.sh 4p_vodsrsc_dm clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v5 72+72 arb_ic
-blE92 TBL.sh 4p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 48    arb_ic
+smE92 TSM.sh 4p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 96    arb_ic
+erE92 TER.sh 4p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 10+38 arb_ic
+brE92 TBR.sh 4p_vodsrsc_dm clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v7 72+72 arb_ic
+blE92 TBL.sh 4p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 48    arb_ic
 
-smE93 TSM.sh 4p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 96    arb_ic
-erE93 TER.sh 4p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 10+38 arb_ic
-brE93 TBR.sh 4p_vodsrsc_do clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v5 72+72 arb_ic
-blE93 TBL.sh 4p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 48    arb_ic
+smE93 TSM.sh 4p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 96    arb_ic
+erE93 TER.sh 4p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 10+38 arb_ic
+brE93 TBR.sh 4p_vodsrsc_do clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v7 72+72 arb_ic
+blE93 TBL.sh 4p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 48    arb_ic
 
-smE95 TSM.sh 4p_vodsrsc_h clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v5 48 arb_ic
-smE96 TSM.sh 4p_vodsrsc_m clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v5 48 arb_ic
-smE97 TSM.sh 4p_vodsrsc_o clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v5 48 arb_ic
+smE95 TSM.sh 4p_vodsrsc_h clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v7 48 arb_ic
+smE96 TSM.sh 4p_vodsrsc_m clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v7 48 arb_ic
+smE97 TSM.sh 4p_vodsrsc_o clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v7 48 arb_ic
 
 smF21 TSM.sh 17p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  48x96 gx3v7 96    cold
 erF21 TER.sh 17p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  48x96 gx3v7 10+38 cold
@@ -138,31 +138,31 @@ smF25 TSM.sh 17p_vodsrsc_h clm_std^nl_urb    20021231:NONE:1800  48x96 gx3v7 48 
 smF26 TSM.sh 17p_vodsrsc_m clm_std^nl_urb    20021231:NONE:1800  48x96 gx3v7 48 arb_ic
 smF27 TSM.sh 17p_vodsrsc_o clm_std^nl_urb    20021231:NONE:1800  48x96 gx3v7 48 arb_ic
 
-smF91 TSM.sh 17p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 96    cold
-erF91 TER.sh 17p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 10+38 cold
-brF91 TBR.sh 17p_vodsrsc_dh clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v5 72+72 cold
-blF91 TBL.sh 17p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 48    cold
+smF91 TSM.sh 17p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 96    cold
+erF91 TER.sh 17p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 10+38 cold
+brF91 TBR.sh 17p_vodsrsc_dh clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v7 72+72 cold
+blF91 TBL.sh 17p_vodsrsc_dh clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 48    cold
 
 cbF92 TCB.sh 17p_vodsrsc_dm
 
-smF92 TSM.sh 17p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 96    cold
-erF92 TER.sh 17p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 10+38 cold
-brF92 TBR.sh 17p_vodsrsc_dm clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v5 72+72 cold
-blF92 TBL.sh 17p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 48    cold
+smF92 TSM.sh 17p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 96    cold
+erF92 TER.sh 17p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 10+38 cold
+brF92 TBR.sh 17p_vodsrsc_dm clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v7 72+72 cold
+blF92 TBL.sh 17p_vodsrsc_dm clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 48    cold
 
-smF93 TSM.sh 17p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 96    cold
-erF93 TER.sh 17p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 10+38 cold
-brF93 TBR.sh 17p_vodsrsc_do clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v5 72+72 cold
-blF93 TBL.sh 17p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 48    cold
+smF93 TSM.sh 17p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 96    cold
+erF93 TER.sh 17p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 10+38 cold
+brF93 TBR.sh 17p_vodsrsc_do clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v7 72+72 cold
+blF93 TBL.sh 17p_vodsrsc_do clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 48    cold
 
-smF94 TSM.sh 17p_vodsrsc_ds clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 96    cold
-erF94 TER.sh 17p_vodsrsc_ds clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 10+38 cold
-brF94 TBR.sh 17p_vodsrsc_ds clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v5 72+72 cold
-blF94 TBL.sh 17p_vodsrsc_ds clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v5 48    cold
+smF94 TSM.sh 17p_vodsrsc_ds clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 96    cold
+erF94 TER.sh 17p_vodsrsc_ds clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 10+38 cold
+brF94 TBR.sh 17p_vodsrsc_ds clm_std^nl_urb_br 20021230:NONE:1800  4x5   gx3v7 72+72 cold
+blF94 TBL.sh 17p_vodsrsc_ds clm_std^nl_urb    20021230:NONE:1800  4x5   gx3v7 48    cold
 
-smF95 TSM.sh 17p_vodsrsc_h clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v5 48 arb_ic
-smF96 TSM.sh 17p_vodsrsc_m clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v5 48 arb_ic
-smF97 TSM.sh 17p_vodsrsc_o clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v5 48 arb_ic
+smF95 TSM.sh 17p_vodsrsc_h clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v7 48 arb_ic
+smF96 TSM.sh 17p_vodsrsc_m clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v7 48 arb_ic
+smF97 TSM.sh 17p_vodsrsc_o clm_std^nl_urb    20021231:NONE:1800  4x5   gx3v7 48 arb_ic
 
 smE74 TSM.sh 4p_vodsnrsc_ds clm_std 20021231:NONE:3600  1x1_tropicAtl test@1850 48    arb_ic
 erE74 TER.sh 4p_vodsnrsc_ds clm_std 20021231:NONE:3600  1x1_tropicAtl test@1850 10+38 arb_ic
@@ -289,6 +289,26 @@ erC52 TER.sh _sc_dm clm_std^nl_urb    20020401:NONE:3600 10x15 USGS  -3+-7 cold
 brC52 TBR.sh _sc_dm clm_std^nl_urb_br 20020401:NONE:3600 10x15 USGS  -5+-5 cold
 blC52 TBL.sh _sc_dm clm_std^nl_urb    20020401:NONE:3600 10x15 USGS  -10   cold
 
+smG51 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144    arb_ic
+erG51 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72  arb_ic
+brG51 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72  arb_ic
+blG51 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144    arb_ic
+
+smB51 TSM.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
+erB51 TER.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
+brB51 TBR.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
+blB51 TBL.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
+
+smB52 TSM.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
+erB52 TER.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
+brB52 TBR.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
+blB52 TBL.sh _scsnf_dm clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
+
+smB53 TSM.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
+erB53 TER.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
+brB53 TBR.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72  arb_ic
+blB53 TBL.sh _scsnf_do clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144    arb_ic
+
 smCO1 TSM.sh _sc_dh clm_drydep^nl_urb    20020401:NONE:3600 10x15 USGS  -10   cold
 erCO1 TER.sh _sc_dh clm_drydep^nl_urb    20020401:NONE:3600 10x15 USGS  -3+-7 cold
 brCO1 TBR.sh _sc_dh clm_drydep^nl_urb_br 20020401:NONE:3600 10x15 USGS  -5+-5 cold
@@ -314,26 +334,36 @@ erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 
 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72  arb_ic
 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144    arb_ic
 
-cbG42 TCB.sh 17p_sc_dm
+smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144    arb_ic
+erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72  arb_ic
+brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72  arb_ic
+blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144    arb_ic
 
-smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
-erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic
-brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic
-blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
+smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144    arb_ic
+erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72  arb_ic
+brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72  arb_ic
+blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144    arb_ic
 
-smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
-erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic
-brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic
-blG43 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
+cbG52 TCB.sh 17p_sc_dm
 
-smG44 TSM.sh 17p_sc_ds clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
-erG44 TER.sh 17p_sc_ds clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic
-brG44 TBR.sh 17p_sc_ds clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic
-blG44 TBL.sh 17p_sc_ds clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
+smG52 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
+erG52 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic
+brG52 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic
+blG52 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
 
-smG45 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
-smG46 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
-smG47 TSM.sh 17p_sc_o clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
+smG53 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
+erG53 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic
+brG53 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic
+blG53 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
+
+smG54 TSM.sh 17p_sc_ds clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
+erG54 TER.sh 17p_sc_ds clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic
+brG54 TBR.sh 17p_sc_ds clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic
+blG54 TBL.sh 17p_sc_ds clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144   arb_ic
+
+smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
+smG56 TSM.sh 17p_sc_m clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
+smG57 TSM.sh 17p_sc_o clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic
 
 smG74 TSM.sh 17p_nrsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -1100 arb_ic
 blG74 TBL.sh 17p_nrsc_ds clm_pftdyn 10001230:NONE:3600 1x1_tropicAtl test@1000-1004 -100  arb_ic
@@ -395,26 +425,26 @@ smH15 TSM.sh 17p_cnnsc_h clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 48
 smH16 TSM.sh 17p_cnnsc_m clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 48 cold
 smH17 TSM.sh 17p_cnnsc_o clm_ndepdyn 20020101:NONE:1800 48x96 gx3v7@1850-2000 48 cold
 
-smH91 TSM.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 96    cold
-erH91 TER.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 10+38 cold
-brH91 TBR.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 72+72 cold
-blH91 TBL.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 48    cold
+smH91 TSM.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 96    cold
+erH91 TER.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 10+38 cold
+brH91 TBR.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 72+72 cold
+blH91 TBL.sh 17p_cnnsc_dh clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48    cold
 
 cbH92 TCB.sh 17p_cnnsc_dm
 
-smH92 TSM.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 96    cold
-erH92 TER.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 10+38 cold
-brH92 TBR.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 72+72 cold
-blH92 TBL.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 48    cold
+smH92 TSM.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 96    cold
+erH92 TER.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 10+38 cold
+brH92 TBR.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 72+72 cold
+blH92 TBL.sh 17p_cnnsc_dm clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48    cold
 
-smH93 TSM.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 96    cold
-erH93 TER.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 10+38 cold
-brH93 TBR.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 72+72 cold
-blH93 TBL.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 48    cold
+smH93 TSM.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 96    cold
+erH93 TER.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 10+38 cold
+brH93 TBR.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 72+72 cold
+blH93 TBL.sh 17p_cnnsc_do clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48    cold
 
-smH95 TSM.sh 17p_cnnsc_h clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 48 cold
-smH96 TSM.sh 17p_cnnsc_m clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 48 cold
-smH97 TSM.sh 17p_cnnsc_o clm_ndepdyn 20020101:NONE:1800 4x5 gx3v5@1850-2000 48 cold
+smH95 TSM.sh 17p_cnnsc_h clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48 cold
+smH96 TSM.sh 17p_cnnsc_m clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48 cold
+smH97 TSM.sh 17p_cnnsc_o clm_ndepdyn 20020101:NONE:1800 4x5 gx3v7@1850-2000 48 cold
 
 smH51 TSM.sh 17p_cnnsc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 96    cold
 erH51 TER.sh 17p_cnnsc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS@2000 10+38 cold
@@ -507,56 +537,56 @@ smJ15 TSM.sh 4p_casasc_h clm_std^nl_urb    20021230:NONE:1800 48x96 gx3v7 48 arb
 smJ16 TSM.sh 4p_casasc_m clm_std^nl_urb    20021230:NONE:1800 48x96 gx3v7 48 arb_ic
 smJ17 TSM.sh 4p_casasc_o clm_std^nl_urb    20021230:NONE:1800 48x96 gx3v7 48 arb_ic
 
-smJ91 TSM.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 4x5   gx3v5 96    arb_ic
-erJ91 TER.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 4x5   gx3v5 10+38 arb_ic
-brJ91 TBR.sh 4p_casasc_dh clm_std^nl_urb_br 20021230:NONE:1800 4x5   gx3v5 72+72 arb_ic
-blJ91 TBL.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 4x5   gx3v5 48    arb_ic
+smJ91 TSM.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 4x5   gx3v7 96    arb_ic
+erJ91 TER.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 4x5   gx3v7 10+38 arb_ic
+brJ91 TBR.sh 4p_casasc_dh clm_std^nl_urb_br 20021230:NONE:1800 4x5   gx3v7 72+72 arb_ic
+blJ91 TBL.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 4x5   gx3v7 48    arb_ic
 
 cb392 TCB.sh 4p_casasc_dm
 cbJ92 TCB.sh 4p_casasc_dm
 
-smJ92 TSM.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 96    cold
-erJ92 TER.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 10+38 cold
-brJ92 TBR.sh 4p_casasc_dm clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v5 72+72 cold
-blJ92 TBL.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 48    cold
+smJ92 TSM.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 96    cold
+erJ92 TER.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 10+38 cold
+brJ92 TBR.sh 4p_casasc_dm clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v7 72+72 cold
+blJ92 TBL.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 48    cold
 
-smJ93 TSM.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 96    cold
-erJ93 TER.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 10+38 cold
-brJ93 TBR.sh 4p_casasc_do clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v5 72+72 cold
-blJ93 TBL.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 48    cold
+smJ93 TSM.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 96    cold
+erJ93 TER.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 10+38 cold
+brJ93 TBR.sh 4p_casasc_do clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v7 72+72 cold
+blJ93 TBL.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 48    cold
 
-smJ94 TSM.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 96    cold
-erJ94 TER.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 10+38 cold
-brJ94 TBR.sh 4p_casasc_ds clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v5 72+72 cold
-blJ94 TBL.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 48    cold
+smJ94 TSM.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 96    cold
+erJ94 TER.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 10+38 cold
+brJ94 TBR.sh 4p_casasc_ds clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v7 72+72 cold
+blJ94 TBL.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 48    cold
 
-smJ95 TSM.sh 4p_casasc_h clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 48 cold
-smJ96 TSM.sh 4p_casasc_m clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 48 cold
-smJ97 TSM.sh 4p_casasc_o clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v5 48 cold
+smJ95 TSM.sh 4p_casasc_h clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 48 cold
+smJ96 TSM.sh 4p_casasc_m clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 48 cold
+smJ97 TSM.sh 4p_casasc_o clm_std^nl_urb    20021230:NONE:1800 4x5 gx3v7 48 cold
 
-smJ41 TSM.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 96    arb_ic
-erJ41 TER.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 10+38 arb_ic
-brJ41 TBR.sh 4p_casasc_dh clm_std^nl_urb_br 20021230:NONE:1800 10x15 USGS 72+72 arb_ic
-blJ41 TBL.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48    arb_ic
+smJ51 TSM.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 96    arb_ic
+erJ51 TER.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 10+38 arb_ic
+brJ51 TBR.sh 4p_casasc_dh clm_std^nl_urb_br 20021230:NONE:1800 10x15 USGS 72+72 arb_ic
+blJ51 TBL.sh 4p_casasc_dh clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48    arb_ic
 
-smJ42 TSM.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 96    cold
-erJ42 TER.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 10+38 cold
-brJ42 TBR.sh 4p_casasc_dm clm_std^nl_urb_br 20021230:NONE:1800 10x15 USGS 72+72 cold
-blJ42 TBL.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48    cold
+smJ52 TSM.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 96    cold
+erJ52 TER.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 10+38 cold
+brJ52 TBR.sh 4p_casasc_dm clm_std^nl_urb_br 20021230:NONE:1800 10x15 USGS 72+72 cold
+blJ52 TBL.sh 4p_casasc_dm clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48    cold
 
-smJ43 TSM.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 96    cold
-erJ43 TER.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 10+38 cold
-brJ43 TBR.sh 4p_casasc_do clm_std^nl_urb_br 20021230:NONE:1800 10x15 USGS 72+72 cold
-blJ43 TBL.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48    cold
+smJ53 TSM.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 96    cold
+erJ53 TER.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 10+38 cold
+brJ53 TBR.sh 4p_casasc_do clm_std^nl_urb_br 20021230:NONE:1800 10x15 USGS 72+72 cold
+blJ53 TBL.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48    cold
 
-smJ44 TSM.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 96    cold
-erJ44 TER.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 10+38 cold
-brJ44 TBR.sh 4p_casasc_ds clm_std^nl_urb_br 20021230:NONE:1800 10x15 USGS 72+72 cold
-blJ44 TBL.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48    cold
+smJ54 TSM.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 96    cold
+erJ54 TER.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 10+38 cold
+brJ54 TBR.sh 4p_casasc_ds clm_std^nl_urb_br 20021230:NONE:1800 10x15 USGS 72+72 cold
+blJ54 TBL.sh 4p_casasc_ds clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48    cold
 
-smJ45 TSM.sh 4p_casasc_h clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48 cold
-smJ46 TSM.sh 4p_casasc_m clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48 cold
-smJ47 TSM.sh 4p_casasc_o clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48 cold
+smJ55 TSM.sh 4p_casasc_h clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48 cold
+smJ56 TSM.sh 4p_casasc_m clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48 cold
+smJ57 TSM.sh 4p_casasc_o clm_std^nl_urb    20021230:NONE:1800 10x15 USGS 48 cold
 
 smJ05 TSM.sh 4p_casasc_h clm_std^nl_lfiles 19800101:NONE:1800 0.47x0.63 gx1v6 48 arb_ic
 smJ06 TSM.sh 4p_casasc_m clm_std^nl_lfiles 19800101:NONE:1800 0.47x0.63 gx1v6 48 arb_ic
@@ -576,6 +606,53 @@ smJ63 TSM.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 1.9x2.5 gx1v6 96 
 erJ63 TER.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 1.9x2.5 gx1v6 10+38 cold
 brJ63 TBR.sh 4p_casasc_do clm_std^nl_urb_br 20021230:NONE:1800 1.9x2.5 gx1v6 72+72 cold
 blJ63 TBL.sh 4p_casasc_do clm_std^nl_urb    20021230:NONE:1800 1.9x2.5 gx1v6 48    cold
+
+smK11 TSM.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 48x96 gx3v7 48    arb_ic
+erK11 TER.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 48x96 gx3v7 3+3   arb_ic
+brK11 TBR.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 48x96 gx3v7 25+23 arb_ic
+blK11 TBL.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 48x96 gx3v7 48    arb_ic
+
+smK12 TSM.sh 17p_cndvsc_dm clm_std 19981231:NONE:1800 48x96 gx3v7 48    arb_ic
+erK12 TER.sh 17p_cndvsc_dm clm_std 19981231:NONE:1800 48x96 gx3v7 10+38 arb_ic
+brK12 TBR.sh 17p_cndvsc_dm clm_std 19981231:NONE:1800 48x96 gx3v7 24+24 arb_ic
+blK12 TBL.sh 17p_cndvsc_dm clm_std 19981231:NONE:1800 48x96 gx3v7 48    arb_ic
+
+smK13 TSM.sh 17p_cndvsc_do clm_std 19981231:NONE:1800 48x96 gx3v7 48    arb_ic
+erK13 TER.sh 17p_cndvsc_do clm_std 19981231:NONE:1800 48x96 gx3v7 3+3 arb_ic
+brK13 TBR.sh 17p_cndvsc_do clm_std 19981231:NONE:1800 48x96 gx3v7 24+24 arb_ic
+blK13 TBL.sh 17p_cndvsc_do clm_std 19981231:NONE:1800 48x96 gx3v7 48    arb_ic
+
+smK15 TSM.sh 17p_cndvsc_h clm_std 19981231:NONE:1800 48x96 gx3v7 48 arb_ic
+smK16 TSM.sh 17p_cndvsc_m clm_std 19981231:NONE:1800 48x96 gx3v7 48 arb_ic
+smK17 TSM.sh 17p_cndvsc_o clm_std 19981231:NONE:1800 48x96 gx3v7 48 arb_ic
+
+smK18 TSM.sh 17p_cndvsc_h clm_std 19981231:NONE:1800 48x96 gx3v7 -213     arb_ic
+erK18 TER.sh 17p_cndvsc_h clm_std 19981231:NONE:1800 48x96 gx3v7 -90+-121 arb_ic
+
+smK19 TSM.sh 17p_cndvsc_m clm_std 19981231:NONE:1800 48x96 gx3v7 -213     arb_ic
+erK19 TER.sh 17p_cndvsc_m clm_std 19981231:NONE:1800 48x96 gx3v7 -90+-121 arb_ic
+
+smK51 TSM.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 10x15 USGS 48    arb_ic
+erK51 TER.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 10x15 USGS 10+38 arb_ic
+brK51 TBR.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 10x15 USGS 24+24 arb_ic
+blK51 TBL.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 10x15 USGS 48    arb_ic
+
+smK52 TSM.sh 17p_cndvsc_dm clm_std 19981231:NONE:1800 10x15 USGS 48    arb_ic
+erK52 TER.sh 17p_cndvsc_dm clm_std 19981231:NONE:1800 10x15 USGS 10+38 arb_ic
+brK52 TBR.sh 17p_cndvsc_dm clm_std 19981231:NONE:1800 10x15 USGS 24+24 arb_ic
+blK52 TBL.sh 17p_cndvsc_dm clm_std 19981231:NONE:1800 10x15 USGS 48    arb_ic
+
+smK53 TSM.sh 17p_cndvsc_do clm_std 19981231:NONE:1800 10x15 USGS 48    arb_ic
+erK53 TER.sh 17p_cndvsc_do clm_std 19981231:NONE:1800 10x15 USGS 10+38 arb_ic
+brK53 TBR.sh 17p_cndvsc_do clm_std 19981231:NONE:1800 10x15 USGS 24+24 arb_ic
+blK53 TBL.sh 17p_cndvsc_do clm_std 19981231:NONE:1800 10x15 USGS 48    arb_ic
+
+smK74 TSM.sh 17p_cndvsc_s clm_std 19971231:NONE:1800 1x1_brazil navy -670      arb_ic
+erK74 TER.sh 17p_cndvsc_s clm_std 19971231:NONE:1800 1x1_brazil navy -334+-336 arb_ic
+brK74 TBR.sh 17p_cndvsc_s clm_std 19971231:NONE:1800 1x1_brazil navy -334+-336 arb_ic
+blK74 TBL.sh 17p_cndvsc_s clm_std 19971231:NONE:1800 1x1_brazil navy -670      arb_ic
+
+cbK12 TCB.sh 17p_cndvsc_dm
 
 smL51 TSM.sh _sc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS 96     arb_ic
 erL51 TER.sh _sc_dh clm_std^nl_urb    20020115:NONE:1800 10x15 USGS 10+38  arb_ic
@@ -661,14 +738,14 @@ sm654 TSMtools.sh mkgriddata   tools__ds namelist
 sm674 TSMtools.sh mkgriddata   tools__ds singlept
 sm694 TSMtools.sh mkgriddata   tools__ds ccsm_dom
 
-sm744 TSMtools.sh mksurfdata   tools__s  namelist
-bl744 TBLtools.sh mksurfdata   tools__s  namelist
+sm754 TSMtools.sh mksurfdata   tools__s  namelist
+bl754 TBLtools.sh mksurfdata   tools__s  namelist
 
 sm774 TSMtools.sh mksurfdata   tools__ds singlept
 bl774 TBLtools.sh mksurfdata   tools__ds singlept
 
-sm754 TSMtools.sh mksurfdata   tools__s  globalirrig
-bl754 TBLtools.sh mksurfdata   tools__s  globalirrig
+sm758 TSMtools.sh mksurfdata   tools__s  globalirrig
+bl758 TBLtools.sh mksurfdata   tools__s  globalirrig
 
 sm756 TSMtools.sh mksurfdata   tools__s  pftdyn
 bl756 TBLtools.sh mksurfdata   tools__s  pftdyn

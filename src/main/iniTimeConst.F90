@@ -30,17 +30,16 @@ subroutine iniTimeConst
                            albsat, albdry
   use clm_varctl  , only : nsrest, fsurdat,scmlon,scmlat,single_column
   use clm_varctl  , only : iulog
-  use pftvarcon   , only : ncorn, nwheat, noveg, ntree, roota_par, rootb_par,  &
-                           smpso, smpsc, fnitr, &
+  use pftvarcon   , only : noveg, ntree, roota_par, rootb_par,  &
+                           smpso, smpsc, fnitr, nbrdlf_dcd_brl_shrub, &
                            z0mr, displar, dleaf, rhol, rhos, taul, taus, xl, &
                            qe25, vcmx25, mp, c3psn, slatop, dsladlai, leafcn, flnr, woody, &
                            lflitcn, frootcn, livewdcn, deadwdcn, froot_leaf, stem_leaf, croot_stem, &
                            flivewd, fcur, lf_flab, lf_fcel, lf_flig, fr_flab, fr_fcel, fr_flig, &
                            dw_fcel, dw_flig, leaf_long, evergreen, stress_decid, season_decid, &
-                           resist, &
-                           pftpar , tree   , summergreen, raingreen  , sla     , &
-                           lm_sapl, sm_sapl, hm_sapl    , rm_sapl    , latosa  , &
-                           allom1 , allom2 , allom3     , reinickerp , wooddens
+                           resist, pftpar20, pftpar28, pftpar29, pftpar30, pftpar31, &
+                           allom1s, allom2s, &
+                           allom1 , allom2 , allom3  , reinickerp, dwood
   use clm_time_manager, only : get_step_size
   use abortutils      , only : endrun
   use fileutils       , only : getfil
@@ -125,7 +124,7 @@ subroutine iniTimeConst
 ! !OTHER LOCAL VARIABLES:
 !EOP
   integer  :: ncid             ! netCDF file id 
-  integer  :: n,i,j,ib,lev,bottom      ! indices
+  integer  :: n,j,ib,lev,bottom! indices
   integer  :: g,l,c,p          ! indices
   integer  :: m                ! vegetation type index
   real(r8) :: bd               ! bulk density of dry soil material [kg/m^3]
@@ -397,7 +396,6 @@ subroutine iniTimeConst
      clayfrac(p) = clay3d(g,1)/100.0_r8
   end do
 
-  ! --------------------------------------------------------------------
   ! If a nitrogen deposition dataset has been specified, read it
   ! --------------------------------------------------------------------
   
@@ -416,10 +414,11 @@ subroutine iniTimeConst
   ! --------------------------------------------------------------------
 
    do m = 0,numpft
-      pftcon%ncorn(m) = ncorn
-      pftcon%nwheat(m) = nwheat
-      pftcon%noveg(m) = noveg
-      pftcon%ntree(m) = ntree
+      if (m <= ntree) then
+         pftcon%tree(m) = 1
+      else
+         pftcon%tree(m) = 0
+      end if
       pftcon%z0mr(m) = z0mr(m)
       pftcon%displar(m) = displar(m)
       pftcon%dleaf(m) = dleaf(m)
@@ -434,7 +433,6 @@ subroutine iniTimeConst
       pftcon%vcmx25(m) = vcmx25(m)
       pftcon%mp(m) = mp(m)
       pftcon%c3psn(m) = c3psn(m)
-      pftcon%sla(m) = sla(m)
       pftcon%slatop(m) = slatop(m)
       pftcon%dsladlai(m) = dsladlai(m)
       pftcon%leafcn(m) = leafcn(m)
@@ -465,43 +463,25 @@ subroutine iniTimeConst
       pftcon%stress_decid(m) = stress_decid(m)
       pftcon%season_decid(m) = season_decid(m)
       pftcon%resist(m) = resist(m)
+      pftcon%dwood(m) = dwood
    end do
 
-#ifdef DGVM
+#ifdef CNDV
    do m = 0,numpft
-      dgv_pftcon%respcoeff(m) = pftpar(m,5)
-      dgv_pftcon%flam(m) = pftpar(m,6)
-      dgv_pftcon%resist(m) = pftpar(m,8)
-      dgv_pftcon%l_turn(m) = pftpar(m,9)
-      dgv_pftcon%l_long(m) = pftpar(m,10)
-      dgv_pftcon%s_turn(m) = pftpar(m,11)
-      dgv_pftcon%r_turn(m) = pftpar(m,12)
-      dgv_pftcon%l_cton(m) = pftpar(m,13)
-      dgv_pftcon%s_cton(m) = pftpar(m,14)
-      dgv_pftcon%r_cton(m) = pftpar(m,15)
-      dgv_pftcon%l_morph(m) = pftpar(m,16)
-      dgv_pftcon%l_phen(m) = pftpar(m,17)
-      dgv_pftcon%lmtorm(m) = pftpar(m,18)
-      dgv_pftcon%crownarea_max(m) = pftpar(m,20)
-      dgv_pftcon%init_lai(m) = pftpar(m,21)
-      dgv_pftcon%x(m) = pftpar(m,22)
-      dgv_pftcon%tcmin(m) = pftpar(m,28)
-      dgv_pftcon%tcmax(m) = pftpar(m,29)
-      dgv_pftcon%gddmin(m) = pftpar(m,30)
-      dgv_pftcon%twmax(m) = pftpar(m,31)
-      dgv_pftcon%lm_sapl(m) = lm_sapl(m)
-      dgv_pftcon%sm_sapl(m) = sm_sapl(m)
-      dgv_pftcon%hm_sapl(m) = hm_sapl(m)
-      dgv_pftcon%rm_sapl(m) = rm_sapl(m)
-      dgv_pftcon%tree(m) = tree(m)
-      dgv_pftcon%summergreen(m) = summergreen(m)
-      dgv_pftcon%raingreen(m) = raingreen(m)
+      dgv_pftcon%crownarea_max(m) = pftpar20(m)
+      dgv_pftcon%tcmin(m) = pftpar28(m)
+      dgv_pftcon%tcmax(m) = pftpar29(m)
+      dgv_pftcon%gddmin(m) = pftpar30(m)
+      dgv_pftcon%twmax(m) = pftpar31(m)
       dgv_pftcon%reinickerp(m) = reinickerp
-      dgv_pftcon%wooddens(m) = wooddens
-      dgv_pftcon%latosa(m) = latosa
       dgv_pftcon%allom1(m) = allom1
       dgv_pftcon%allom2(m) = allom2
       dgv_pftcon%allom3(m) = allom3
+      ! modification for shrubs by X.D.Z
+      if (m > ntree .and. m <= nbrdlf_dcd_brl_shrub ) then 
+         dgv_pftcon%allom1(m) = allom1s
+         dgv_pftcon%allom2(m) = allom2s
+      end if
    end do
 #endif
 

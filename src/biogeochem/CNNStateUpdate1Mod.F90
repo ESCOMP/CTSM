@@ -14,8 +14,6 @@ module CNNStateUpdate1Mod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varcon  , only: istsoil
-    use spmdMod     , only: masterproc
     implicit none
     save
     private
@@ -317,7 +315,6 @@ subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
       litr1n(c) = litr1n(c) + frootn_to_litr1n(c)*dt
       litr2n(c) = litr2n(c) + frootn_to_litr2n(c)*dt
       litr3n(c) = litr3n(c) + frootn_to_litr3n(c)*dt
-
        ! seeding fluxes, from dynamic landcover
 	   seedn(c) = seedn(c) - dwt_seedn_to_leaf(c) * dt
 	   seedn(c) = seedn(c) - dwt_seedn_to_deadstem(c) * dt

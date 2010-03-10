@@ -1,7 +1,7 @@
 -mode ccsm_seq
 -spmd -smp
 -debug
--maxpft 17
+-maxpft numpft+1
 -bgc cn
 -supln off
 -s

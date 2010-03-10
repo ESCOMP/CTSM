@@ -129,7 +129,7 @@ contains
 #endif
     use fileutils        , only : getavu, relavu
     use shr_string_mod   , only : shr_string_getParentDir
-    use clm_varctl       , only : clmvarctl_init
+    use clm_varctl       , only : clmvarctl_init, set_clmvarctl
 
     implicit none
 !
@@ -193,9 +193,10 @@ contains
 
     ! clm other options
 
+    integer :: override_nsrest   ! If want to override the startup type sent from driver
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, rtm_nsteps, pertlim, &
-         create_crop_landunit, nsegspc, co2_ppmv
+         create_crop_landunit, nsegspc, co2_ppmv, override_nsrest
 
     ! clm urban options
 
@@ -230,6 +231,8 @@ contains
     clump_pproc = 1
 #endif
 
+    override_nsrest = nsrest
+
     if (masterproc) then
 
        ! ----------------------------------------------------------------------
@@ -257,9 +260,9 @@ contains
 
        call set_timemgr_init( dtime_in=dtime )
 
-#if (defined RTM) || (defined DGVM)
+#if (defined RTM) || (defined CNDV)
        if (is_perpetual()) then
-          write(iulog,*)'RTM or DGVM cannot be defined in perpetual mode'
+          write(iulog,*)'RTM or CNDV cannot be defined in perpetual mode'
           call endrun()
        end if
 #endif
@@ -284,6 +287,19 @@ contains
              hist_nhtfrq(i) = nint(-hist_nhtfrq(i)*SHR_CONST_CDAY/(24._r8*dtime))
           endif
        end do
+
+       ! Override start-type (can only override to branch (3)  and only 
+       ! if the driver is a startup type
+       if ( override_nsrest /= nsrest )then
+
+           if ( override_nsrest /= 3 .and. nsrest /= 0 )then
+              call endrun( subname//' ERROR: can ONLY override clm start-type ' // &
+                           'to branch type and ONLY if driver is a startup type' )
+           end if
+
+           call set_clmvarctl( nsrest_in=override_nsrest )
+
+       end if
        
     endif   ! end of if-masterproc if-block
 

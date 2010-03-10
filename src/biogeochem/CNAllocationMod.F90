@@ -15,8 +15,6 @@ module CNAllocationMod
 !
 ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varcon  , only: istsoil
-  use spmdMod     , only: masterproc
   implicit none
   save
   private
@@ -37,18 +35,21 @@ contains
 ! !IROUTINE: CNAllocation
 !
 ! !INTERFACE:
-subroutine CNAllocation (lbc, ubc, &
+subroutine CNAllocation (lbp, ubp, lbc, ubc, &
        num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !DESCRIPTION:
 !
 ! !USES:
    use clmtype
+   use clm_varctl, only: iulog
+   use shr_sys_mod, only: shr_sys_flush
    use clm_time_manager, only: get_step_size
    use pft2colMod, only: p2c
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbp, ubp        ! pft-index bounds
    integer, intent(in) :: lbc, ubc        ! column-index bounds
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
@@ -69,7 +70,6 @@ subroutine CNAllocation (lbc, ubc, &
    integer , pointer :: ivt(:)        ! pft vegetation type
    integer , pointer :: pcolumn(:)    ! pft's column index
    real(r8), pointer :: lgsf(:)       ! long growing season factor [0-1]
-   real(r8), pointer :: cpool(:)      ! (kgC/m2) temporary photosynthate C pool
    real(r8), pointer :: xsmrpool(:)      ! (kgC/m2) temporary photosynthate C pool
    real(r8), pointer :: retransn(:)   ! (kgN/m2) plant pool of retranslocated N
    real(r8), pointer :: psnsun(:)     ! sunlit leaf-level photosynthesis (umol CO2 /m**2/ s)
@@ -175,10 +175,10 @@ subroutine CNAllocation (lbc, ubc, &
 !
 !
 ! !OTHER LOCAL VARIABLES:
-   integer :: c,p          !indices
-   integer :: fp           !lake filter pft index
-   integer :: fc           !lake filter column index
-   real(r8):: dt           !decomp timestep (seconds)
+   integer :: c,p                  !indices
+   integer :: fp                   !lake filter pft index
+   integer :: fc                   !lake filter column index
+   real(r8):: dt                   !decomp timestep (seconds)
    integer :: nlimit               !flag for N limitation
    real(r8), pointer:: col_plant_ndemand(:)    !column-level plant N demand
    real(r8):: dayscrecover         !number of days to recover negative cpool
@@ -191,7 +191,8 @@ subroutine CNAllocation (lbc, ubc, &
    real(r8):: gresp_storage        !temporary variable for growth resp to storage
    real(r8):: nlc                  !temporary variable for total new leaf carbon allocation
    real(r8):: bdnr                 !bulk denitrification rate (1/s)
-   real(r8):: curmr, curmr_ratio ! xsmrpool temporary variables
+   real(r8):: curmr, curmr_ratio   !xsmrpool temporary variables
+
 !EOP
 !-----------------------------------------------------------------------
    ! Assign local pointers to derived type arrays (in)
@@ -201,8 +202,7 @@ subroutine CNAllocation (lbc, ubc, &
    clandunit                   => clm3%g%l%c%landunit
    itypelun                    => clm3%g%l%itype
    lgsf                        => clm3%g%l%c%p%pepv%lgsf
-   cpool                       => clm3%g%l%c%p%pcs%cpool
-   xsmrpool                       => clm3%g%l%c%p%pcs%xsmrpool
+   xsmrpool                    => clm3%g%l%c%p%pcs%xsmrpool
    retransn                    => clm3%g%l%c%p%pns%retransn
    psnsun                      => clm3%g%l%c%p%pcf%psnsun
    psnsha                      => clm3%g%l%c%p%pcf%psnsha
@@ -216,14 +216,14 @@ subroutine CNAllocation (lbc, ubc, &
    froot_mr                    => clm3%g%l%c%p%pcf%froot_mr
    livestem_mr                 => clm3%g%l%c%p%pcf%livestem_mr
    livecroot_mr                => clm3%g%l%c%p%pcf%livecroot_mr
-   leaf_curmr                     => clm3%g%l%c%p%pcf%leaf_curmr
-   froot_curmr                    => clm3%g%l%c%p%pcf%froot_curmr
-   livestem_curmr                 => clm3%g%l%c%p%pcf%livestem_curmr
-   livecroot_curmr                => clm3%g%l%c%p%pcf%livecroot_curmr
-   leaf_xsmr                     => clm3%g%l%c%p%pcf%leaf_xsmr
-   froot_xsmr                    => clm3%g%l%c%p%pcf%froot_xsmr
-   livestem_xsmr                 => clm3%g%l%c%p%pcf%livestem_xsmr
-   livecroot_xsmr                => clm3%g%l%c%p%pcf%livecroot_xsmr
+   leaf_curmr                  => clm3%g%l%c%p%pcf%leaf_curmr
+   froot_curmr                 => clm3%g%l%c%p%pcf%froot_curmr
+   livestem_curmr              => clm3%g%l%c%p%pcf%livestem_curmr
+   livecroot_curmr             => clm3%g%l%c%p%pcf%livecroot_curmr
+   leaf_xsmr                   => clm3%g%l%c%p%pcf%leaf_xsmr
+   froot_xsmr                  => clm3%g%l%c%p%pcf%froot_xsmr
+   livestem_xsmr               => clm3%g%l%c%p%pcf%livestem_xsmr
+   livecroot_xsmr              => clm3%g%l%c%p%pcf%livecroot_xsmr
    sminn                       => clm3%g%l%c%cns%sminn
    woody                       => pftcon%woody
    froot_leaf                  => pftcon%froot_leaf
@@ -238,7 +238,7 @@ subroutine CNAllocation (lbc, ubc, &
    ! Assign local pointers to derived type arrays (out)
    gpp                         => clm3%g%l%c%p%pepv%gpp
    availc                      => clm3%g%l%c%p%pepv%availc
-   xsmrpool_recover               => clm3%g%l%c%p%pepv%xsmrpool_recover
+   xsmrpool_recover            => clm3%g%l%c%p%pepv%xsmrpool_recover
    c_allometry                 => clm3%g%l%c%p%pepv%c_allometry
    n_allometry                 => clm3%g%l%c%p%pepv%n_allometry
    plant_ndemand               => clm3%g%l%c%p%pepv%plant_ndemand
@@ -304,8 +304,6 @@ subroutine CNAllocation (lbc, ubc, &
    bdnr = 0.5_r8 * (dt/86400._r8)
 
    ! loop over pfts to assess the total plant N demand
-!dir$ concurrent
-!cdir nodep
    do fp=1,num_soilp
       p = filter_soilp(fp)
 
@@ -347,7 +345,7 @@ subroutine CNAllocation (lbc, ubc, &
       ! cpool (xsmr)
       curmr_ratio = 1._r8
       if (mr > 0._r8 .and. availc(p) < 0._r8) then
-      	curmr = gpp(p)
+         curmr = gpp(p)
          curmr_ratio = curmr / mr
       end if
       leaf_curmr(p) = leaf_mr(p) * curmr_ratio
@@ -391,7 +389,7 @@ subroutine CNAllocation (lbc, ubc, &
       if (stem_leaf(ivt(p)) == -1._r8) then
          f3 = (2.7/(1.0+exp(-0.004*(annsum_npp(p) - 300.0)))) - 0.4
       else
-      	f3 = stem_leaf(ivt(p))
+         f3 = stem_leaf(ivt(p))
       end if
       
       f4 = flivewd(ivt(p))
@@ -450,8 +448,6 @@ subroutine CNAllocation (lbc, ubc, &
    call p2c(num_soilc,filter_soilc,plant_ndemand,col_plant_ndemand)
 
    ! column loop to resolve plant/heterotroph competition for mineral N
-!dir$ concurrent
-!cdir nodep
    do fc=1,num_soilc
       c = filter_soilc(fc)
 
@@ -523,8 +519,6 @@ subroutine CNAllocation (lbc, ubc, &
    ! competing pfts on the basis of relative demand, and allocate C and N to
    ! new growth and storage
 
-!dir$ concurrent
-!cdir nodep
    do fp=1,num_soilp
       p = filter_soilp(fp)
       c = pcolumn(p)
@@ -541,11 +535,9 @@ subroutine CNAllocation (lbc, ubc, &
       ! allocation as specified in the pft-physiology file.  The value is also used
       ! as a trigger here: -1.0 means to use the dynamic allocation (trees).
       if (stem_leaf(ivt(p)) == -1._r8) then
-!             f3 = max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p))
-!       f3 = min(max(0.2_r8, 0.2_r8 + 0.0025_r8*annsum_npp(p)),2.5_r8)
         f3 = (2.7/(1.0+exp(-0.004*(annsum_npp(p) - 300.0)))) - 0.4
       else
-      	f3 = stem_leaf(ivt(p))
+        f3 = stem_leaf(ivt(p))
       end if
       
       f4 = flivewd(ivt(p))

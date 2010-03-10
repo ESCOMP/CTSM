@@ -16,7 +16,7 @@ n is the configuration type:
 9 -- unused
 0 -- unused
 A -- Standard Sequential CCSM mode 
-B -- unused
+B -- Standard ccsm_seq with SNICAR_FRC on
 C -- ccsm_seq URBAN
 D -- ccsm_seq Pergro
 E -- ccsm_seq numpft=4, VOC, DUST, RTM
@@ -24,7 +24,7 @@ F -- ccsm_seq numpft=17, VOC, DUST, RTM
 G -- ccsm_seq numpft=17
 H -- ccsm_seq numpft=17, CN
 J -- ccsm_seq numpft=4, CASA
-K -- ccsm_seq numpft=10, DGVM
+K -- ccsm_seq numpft=10, CNDV
 L -- ccsm_seq Standard default
 M -- ndepregrid
 N -- ccsm_seq MEXICOCITY
@@ -38,8 +38,8 @@ m is the resolution
 1 -- 48x96
 2 -- 48x96 debug mode
 3 -- 64x128 with 360x720 fine mesh
-4 -- 10x15 with pftdyn
-5 -- 10x15 with DGVM or without
+4 -- (unused)
+5 -- 10x15
 6 -- 1.9x2.5
 7 -- 1x1 brazil
 8 -- 5x5 amazon

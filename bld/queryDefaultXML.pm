@@ -66,7 +66,7 @@ sub read_cfg_file
           if ( $cpp eq "casa" ) {
             $config{'bgc'} = $cpp;
           }
-          if ( $cpp eq "DGVM" ) {
+          if ( $cpp eq "cndv" ) {
             $config{'bgc'} = $cpp;
           }
        }

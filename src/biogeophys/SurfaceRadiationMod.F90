@@ -13,7 +13,6 @@ module SurfaceRadiationMod
 !
 ! !USES:
    use shr_kind_mod, only: r8 => shr_kind_r8
-   use shr_sys_mod , only: shr_sys_flush
    use clm_varctl  , only: iulog
 !
 ! !PUBLIC TYPES:
@@ -384,7 +383,7 @@ contains
 !cdir nodep
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        if (pwtgcell(p)>0._r8) then
+        if (pwtgcell(p)>0._r8) then ! was redundant b/c filter already included wt>0; not redundant anymore with chg in filter definition
            sabg(p)       = 0._r8
            sabv(p)       = 0._r8
            fsa(p)        = 0._r8
@@ -405,7 +404,7 @@ contains
 !cdir nodep
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        if (pwtgcell(p)>0._r8) then
+        if (pwtgcell(p)>0._r8) then ! see comment with this line above
            c = pcolumn(p)
            g = pgridcell(p)
         
@@ -460,7 +459,7 @@ contains
 !cdir nodep
         do fp = 1,num_nourbanp
            p = filter_nourbanp(fp)
-           if (pwtgcell(p)>0._r8) then
+           if (pwtgcell(p)>0._r8) then ! see comment with this line above
               c = pcolumn(p)
               g = pgridcell(p)
               
@@ -729,7 +728,7 @@ contains
 !cdir nodep
      do fp = 1,num_nourbanp
         p = filter_nourbanp(fp)
-        if (pwtgcell(p)>0._r8) then
+        if (pwtgcell(p)>0._r8) then ! see comment with this line above
            g = pgridcell(p)
         
            ! Final step of new sunlit/shaded canopy algorithm

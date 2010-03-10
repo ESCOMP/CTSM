@@ -36,7 +36,7 @@ contains
 ! !IROUTINE: VOCEmission
 !
 ! !INTERFACE:
-  subroutine VOCEmission (lbp, ubp, num_nolakep, filter_nolakep)
+  subroutine VOCEmission (lbp, ubp, num_soilp, filter_soilp )
 !
 ! ! NEW DESCRIPTION
 ! Volatile organic compound emission
@@ -74,6 +74,8 @@ contains
     use clm_atmlnd   , only : clm_a2l
     use clmtype
     use clm_varpar   , only : nvoc, numpft
+    use clm_varpar   , only : nvoc, numpft
+    use clm_atmlnd   , only : clm_a2l
     use shr_const_mod, only : SHR_CONST_RGAS
     use clm_varcon   , only : denice
     use clm_varpar   , only : nlevsoi
@@ -89,8 +91,8 @@ contains
 ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: lbp, ubp                    ! pft bounds
-    integer, intent(in) :: num_nolakep                 ! number of column non-lake points in pft filter
-    integer, intent(in) :: filter_nolakep(num_nolakep) ! pft filter for non-lake points
+    integer, intent(in) :: num_soilp                   ! number of columns in soil pft filter
+    integer, intent(in) :: filter_soilp(num_soilp)     ! pft filter for soil
 !
 ! !CALLED FROM:
 !
@@ -113,7 +115,7 @@ contains
     real(r8), pointer :: sandfrac(:)      ! fraction of soil that is sand
     real(r8), pointer :: forc_solad(:,:)  ! direct beam radiation (visible only)
     real(r8), pointer :: forc_solai(:,:)  ! diffuse radiation     (visible only)
-    real(r8), pointer :: sla(:)           ! ecophys constant - specific leaf area [m2 leaf g-1 carbon]
+    real(r8), pointer :: sla(:)           ! specific leaf area [m2 leaf g-1 C]
     real(r8), pointer :: h2osoi_vol(:,:)  ! volumetric soil water (m3/m3)
     real(r8), pointer :: h2osoi_ice(:,:)  ! ice soil content (kg/m3)
     real(r8), pointer :: dz(:,:)          ! depth of layer (m)
@@ -224,11 +226,11 @@ contains
     real(r8), parameter :: deltheta1=0.06_r8             ! empirical coefficient
 !
 ! These are the values from version of genesis-ibis / 1000.
-! With DGVM defined, use LPJ's sla [m2 leaf g-1 carbon]
+! CN calculates its own sla [m2 leaf g-1 C]
 ! Divide by 2 in the equation to get dry weight foliar mass from grams carbon
 !
     real(r8) :: hardwire_sla(0:numpft)
-    real(r8) :: slarea(lbp:ubp)           ! Specific leaf areas [m2 leaf g-1 carbon]
+    real(r8) :: slarea(lbp:ubp)           ! Specific leaf areas [m2 leaf g-1 C]
     real(r8) :: hardwire_droot(0:numpft)  ! Root depth [m]
 !-----------------------------------------------------------------------
 
@@ -277,7 +279,7 @@ contains
     gammaA_out       => clm3%g%l%c%p%pvf%gammaA_out
     gammaS_out       => clm3%g%l%c%p%pvf%gammaS_out
     gamma_out        => clm3%g%l%c%p%pvf%gamma_out
-    sla              => pftcon%sla
+    sla              => clm3%g%l%c%p%pps%slasha
 
     t_veg24          => clm3%g%l%c%p%pvs%t_veg24
     t_veg240         => clm3%g%l%c%p%pvs%t_veg240
@@ -289,7 +291,6 @@ contains
     fsun240          => clm3%g%l%c%p%pvs%fsun240
     elai_p           => clm3%g%l%c%p%pvs%elai_p
 
-#if (!defined DGVM)
     hardwire_sla(noveg)                                    = 0._r8     ! bare-soil
 
     hardwire_sla(ndllf_evr_tmp_tree)                       = 0.0125_r8 !needleleaf
@@ -302,7 +303,6 @@ contains
     hardwire_sla(nbrdlf_dcd_tmp_tree:nbrdlf_dcd_brl_shrub) = 0.0250_r8 
 
     hardwire_sla(nc3_arctic_grass:numpft)                  = 0.0200_r8 !grass/crop
-#endif
 
 ! root depth (m) (defined based on Zeng et al., 2001, cf Guenther 2006)
 
@@ -318,15 +318,11 @@ contains
     vocflx(lbp:ubp, :)=0._r8
 
     ! Determine specific leaf array
-    do fp = 1,num_nolakep
-       p = filter_nolakep(fp)
-       g = pgridcell(p)
+    do fp = 1,num_soilp
+       p = filter_soilp(fp)
 
-#if (!defined DGVM)
        slarea(p) = hardwire_sla(ivt(p))
-#else
-       slarea(p) = sla(ivt(p))
-#endif
+
     end do
 
 
@@ -338,8 +334,8 @@ contains
 
        case(1)	
 
-          do fp = 1,num_nolakep
-             p = filter_nolakep(fp)
+          do fp = 1,num_soilp
+             p = filter_soilp(fp)
              g = pgridcell(p)
 
 
@@ -372,8 +368,8 @@ contains
 
        case(2)
 
-          do fp = 1,num_nolakep
-             p = filter_nolakep(fp)
+          do fp = 1,num_soilp
+             p = filter_soilp(fp)
              g = pgridcell(p)
 
              ! epsilon: use values from table 3 in Guenther (1997) which originate in
@@ -397,14 +393,14 @@ contains
              .and.    ivt(p) <= nbrdlf_dcd_brl_shrub) then   !other woody veg
                 epsilon(p) = 0.8_r8
              else if (ivt(p) >= nc3_arctic_grass &
-             .and.    ivt(p) <= nwheat) then                 !grass & crop
+             .and.    ivt(p) <= numpft) then                 !grass & crop
                 epsilon(p) = 0.1_r8
              end if
           end do
 
        case (3)
-          do fp = 1,num_nolakep
-             p = filter_nolakep(fp)
+          do fp = 1,num_soilp
+             p = filter_soilp(fp)
              g = pgridcell(p)
 
              ! other VOCs (OVOCs)
@@ -412,8 +408,8 @@ contains
           end do
 
        case (4)
-          do fp = 1,num_nolakep
-             p = filter_nolakep(fp)
+          do fp = 1,num_soilp
+             p = filter_soilp(fp)
              g = pgridcell(p)
 
              ! other reactive VOCs (ORVOCs)
@@ -421,8 +417,8 @@ contains
           end do
 
        case (5)
-          do fp = 1,num_nolakep
-             p = filter_nolakep(fp)
+          do fp = 1,num_soilp
+             p = filter_soilp(fp)
              g = pgridcell(p)
 
              ! CO
@@ -444,8 +440,8 @@ contains
 
        case (1)
 
-          do fp = 1,num_nolakep
-             p = filter_nolakep(fp)
+          do fp = 1,num_soilp
+             p = filter_soilp(fp)
              g = pgridcell(p)
              c = pcolumn(p)
 
@@ -472,9 +468,12 @@ contains
 
              ! fvitt -- forc_solad240, forc_solai240 can be zero when CLM finidat is specified
              !          which will cause par240 to be zero and produce NaNs via log(par240)
-             ! dml   -- also be careful before the 10 day running averages are set.
-             if ( (fsun240(p) > 0._r8) .and. (fsun240(p) < 1.e30_r8) .and. (forc_solad240(p) > 0._r8) &
-                  .and. (forc_solai240(p) > 0._r8) .and. (fsun240(p) /= 1._r8)) then 
+             ! dml   -- fsun240 can be equal to or greater than one before 10 day averages are
+             !           set on startup or if a new pft comes online during land cover change.
+             !           Avoid this problem by only doing calculations with fsun240 when fsun240 is
+             !           between 0 and 1
+             if ( (fsun240(p) > 0._r8) .and. (fsun240(p) < 1._r8) .and.  (forc_solad240(p) > 0._r8) &
+             .and. (forc_solai240(p) > 0._r8)) then
                 ! With alpha and cp calculated based on eq 6 and 7:
                 ! Note indexing for accumulated variables is all at pft level
                 ! SUN:
@@ -539,7 +538,7 @@ contains
 
              ! Activity factor for leaf age (Guenther et al., 2006)
              !-----------------------------
-             ! If not DGVM elai is constant therefore gamma_a=1.0
+             ! If not CNDV elai is constant therefore gamma_a=1.0
              ! gamma_a set to unity for evergreens (PFTs 1, 2, 4, 5)
              ! Note that we assume here that the time step is shorter than the number of 
              !days after budbreak required to induce isoprene emissions (ti=12 days) and 
@@ -625,8 +624,8 @@ contains
 
        case (2,3,4,5)
 
-          do fp = 1,num_nolakep
-             p = filter_nolakep(fp)
+          do fp = 1,num_soilp
+             p = filter_soilp(fp)
              g = pgridcell(p)
 
              ! gamma: Activity factor. Units [dimensionless]
@@ -639,8 +638,8 @@ contains
 
        end select
 
-       do fp = 1,num_nolakep
-          p = filter_nolakep(fp)
+       do fp = 1,num_soilp
+          p = filter_soilp(fp)
           g = pgridcell(p)
 
           ! density: Source density factor [g dry weight foliar mass m-2 ground]
@@ -672,18 +671,18 @@ contains
 
     ! Calculate total voc flux and individual components for history output
 
-    do fp = 1,num_nolakep
-       p = filter_nolakep(fp)
+    do fp = 1,num_soilp
+       p = filter_soilp(fp)
        vocflx_tot(p) = 0._r8
     end do
     do n = 1, nvoc
-       do fp = 1,num_nolakep
-          p = filter_nolakep(fp)
+       do fp = 1,num_soilp
+          p = filter_soilp(fp)
           vocflx_tot(p) = vocflx_tot(p) + vocflx(p,n)
        end do
     end do
-    do fp = 1,num_nolakep
-       p = filter_nolakep(fp)
+    do fp = 1,num_soilp
+       p = filter_soilp(fp)
        g = pgridcell(p)
        vocflx_1(p) = vocflx(p,1)
        vocflx_2(p) = vocflx(p,2)

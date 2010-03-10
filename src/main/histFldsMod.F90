@@ -955,33 +955,7 @@ contains
          avgflag='A', long_name='atmospheric pressure', &
          ptr_lnd=clm_a2l%forc_pbot)
 
-#if (defined DGVM)
-    ! History output of accumulation variables
-
-    call hist_addfld1d (fname='FRMS', units='umol/m2s',  &
-         avgflag='A', long_name='stem maintenance respiration', &
-         ptr_pft=clm3%g%l%c%p%pcf%frms, set_lake=0._r8)
-
-    call hist_addfld1d (fname='FRMR', units='umol/m2s',  &
-         avgflag='A', long_name='root maintenance respiration', &
-         ptr_pft=clm3%g%l%c%p%pcf%frmr, set_lake=0._r8)
-
-    call hist_addfld1d (fname='FRMF', units='umol/m2s',  &
-         avgflag='A', long_name='foliage maintenance respiration', &
-         ptr_pft=clm3%g%l%c%p%pcf%frmf, set_lake=0._r8)
-
-    call hist_addfld1d (fname='FRG', units='umol/m2s',  &
-         avgflag='A', long_name='growth respiration', &
-         ptr_pft=clm3%g%l%c%p%pcf%frg, set_lake=0._r8)
-
-    call hist_addfld1d (fname='HTOP', units='m',  &
-         avgflag='A', long_name='height of top of canopy', &
-         ptr_pft=clm3%g%l%c%p%pps%htop)
-
-    call hist_addfld1d (fname='HBOT', units='m',  &
-         avgflag='A', long_name='height of bottom of canopy', &
-         ptr_pft=clm3%g%l%c%p%pps%hbot)
-
+#if (defined CNDV)
     call hist_addfld1d (fname='TDA', units='K',  &
          avgflag='A', long_name='daily average 2-m temperature', &
          ptr_pft=clm3%g%l%c%p%pdgvs%t_mo)
@@ -990,13 +964,9 @@ contains
          avgflag='A', long_name='10-day running mean of 2-m temperature', &
          ptr_pft=clm3%g%l%c%p%pdgvs%t10)
 
-    call hist_addfld1d (fname='AGDD0', units='K',  &
-         avgflag='A', long_name='growing degree-days base 0C', &
-         ptr_pft=clm3%g%l%c%p%pdgvs%agdd0)
-
-    call hist_addfld1d (fname='AGDD5', units='K',  &
+    call hist_addfld1d (fname='AGDD', units='K',  &
          avgflag='A', long_name='growing degree-days base 5C', &
-         ptr_pft=clm3%g%l%c%p%pdgvs%agdd5)
+         ptr_pft=clm3%g%l%c%p%pdgvs%agdd)
 #endif
 
 #if (defined CASA) || (defined CN)
@@ -2855,6 +2825,14 @@ contains
     call hist_addfld1d (fname='PRODUCT_CLOSS', units='gC/m^2/s', &
          avgflag='A', long_name='total carbon loss from wood product pools', &
          ptr_col=clm3%g%l%c%ccf%product_closs)
+
+    call hist_addfld1d (fname='LAND_USE_FLUX', units='gC/m^2/s', &
+         avgflag='A', long_name='total C emitted from land cover conversion and wood product pools', &
+         ptr_col=clm3%g%l%c%ccf%landuseflux)
+
+    call hist_addfld1d (fname='LAND_UPTAKE', units='gC/m^2/s', &
+         avgflag='A', long_name='NEE minus LAND_USE_FLUX, negative for update', &
+         ptr_col=clm3%g%l%c%ccf%landuptake)
 
 #if (defined C13)
     !-------------------------------

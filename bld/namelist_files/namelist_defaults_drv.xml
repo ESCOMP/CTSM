@@ -26,9 +26,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <orb_iyear_ad sim_year="2000" >2000</orb_iyear_ad>
 <orb_iyear_ad sim_year="1850" >1850</orb_iyear_ad>
 
-<!-- start-type -->
-<start_type>startup</start_type>
-
 <!-- Model Version -->
 <model_version>
 $HeadURL: https://svn-ccsm-models.cgd.ucar.edu/clm2/branches/pftintdat_clm3_5_01/bld/DefaultCLM_INPARM_Namelist.xml$

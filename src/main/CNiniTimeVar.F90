@@ -161,6 +161,10 @@ subroutine CNiniTimeVar()
    real(r8), pointer :: downreg(:)            ! fractional reduction in GPP due to N limitation (DIM)
    real(r8), pointer :: tempsum_npp(:)        ! temporary annual sum of NPP
    real(r8), pointer :: annsum_npp(:)         ! annual sum of NPP
+#if (defined CNDV)
+   real(r8), pointer :: tempsum_litfall(:)    ! temporary annual sum of litfall
+   real(r8), pointer :: annsum_litfall(:)     ! annual sum of litfall
+#endif
 #if (defined C13)
    real(r8), pointer :: rc13_canair(:)        !C13O2/C12O2 in canopy air
    real(r8), pointer :: rc13_psnsun(:)        !C13O2/C12O2 in sunlit canopy psn flux
@@ -449,6 +453,10 @@ subroutine CNiniTimeVar()
     downreg                        => clm3%g%l%c%p%pepv%downreg
     tempsum_npp                    => clm3%g%l%c%p%pepv%tempsum_npp
     annsum_npp                     => clm3%g%l%c%p%pepv%annsum_npp
+#if (defined CNDV)
+    tempsum_litfall                => clm3%g%l%c%p%pepv%tempsum_litfall
+    annsum_litfall                 => clm3%g%l%c%p%pepv%annsum_litfall
+#endif
     dispvegc                       => clm3%g%l%c%p%pcs%dispvegc
     pft_ctrunc                     => clm3%g%l%c%p%pcs%pft_ctrunc
     storvegc                       => clm3%g%l%c%p%pcs%storvegc
@@ -857,6 +865,10 @@ subroutine CNiniTimeVar()
          prev_frootc_to_litter(p) = 0._r8
          tempsum_npp(p) = 0._r8
          annsum_npp(p) = 0._r8
+#if (defined CNDV)
+         tempsum_litfall(p) = 0._r8
+         annsum_litfall(p) = 0._r8
+#endif
 #if (defined C13)
          rc13_canair(p) = 0._r8
          rc13_psnsun(p) = 0._r8

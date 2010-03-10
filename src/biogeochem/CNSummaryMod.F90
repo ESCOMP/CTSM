@@ -15,8 +15,6 @@ module CNSummaryMod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varcon  , only: istsoil
-    use spmdMod     , only: masterproc
     implicit none
     save
     private
@@ -47,6 +45,8 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! !USES:
    use clmtype
    use pft2colMod, only: p2c
+   use clm_varctl, only: iulog
+   use shr_sys_mod, only: shr_sys_flush
 !
 ! !ARGUMENTS:
    implicit none
@@ -255,7 +255,12 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
    real(r8), pointer :: totpftc(:)            ! (gC/m2) total pft-level carbon, including cpool
    real(r8), pointer :: totvegc(:)            ! (gC/m2) total vegetation carbon, excluding cpool
    real(r8), pointer :: tempsum_npp(:)        ! temporary annual sum of NPP (gC/m2/yr)
+#if (defined CNDV)
+   real(r8), pointer :: tempsum_litfall(:)      !temporary annual sum of litfall (gC/m2/yr)
+#endif
    ! for landcover change
+   real(r8), pointer :: landuseflux(:)        ! (gC/m2/s) dwt_closs+product_closs
+   real(r8), pointer :: landuptake(:)         ! (gC/m2/s) nee-landuseflux
    real(r8), pointer :: dwt_closs(:)          ! (gC/m2/s) total carbon loss from land cover conversion
    real(r8), pointer :: dwt_conv_cflux(:)     ! (gC/m2/s) conversion C flux (immediate loss to atm)
    real(r8), pointer :: prod10c_loss(:)       ! (gC/m2/s) loss from 10-yr wood product pool
@@ -348,6 +353,8 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
 #endif
     ! dynamic landcover pointers
     dwt_closs                      => clm3%g%l%c%ccf%dwt_closs
+    landuseflux                    => clm3%g%l%c%ccf%landuseflux
+    landuptake                     => clm3%g%l%c%ccf%landuptake
     dwt_conv_cflux                 => clm3%g%l%c%ccf%dwt_conv_cflux
     seedc                          => clm3%g%l%c%ccs%seedc
     
@@ -532,6 +539,9 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
     woodc                          => clm3%g%l%c%p%pcs%woodc
 #endif
     tempsum_npp                    => clm3%g%l%c%p%pepv%tempsum_npp
+#if (defined CNDV)
+    tempsum_litfall                => clm3%g%l%c%p%pepv%tempsum_litfall
+#endif
 
    ! pft loop
    do fp = 1,num_soilp
@@ -677,6 +687,11 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
          hrv_gresp_storage_to_litter(p)     + &
          hrv_gresp_xfer_to_litter(p)
                  
+#if (defined CNDV)
+      ! update the annual litfall accumulator, for use in mortality code
+      tempsum_litfall(p) = tempsum_litfall(p) + leafc_to_litter(p) + frootc_to_litter(p)
+#endif
+
       ! pft-level fire losses (VEGFIRE)
       vegfire(p) = 0._r8
       
@@ -891,6 +906,9 @@ subroutine CSummary(num_soilc, filter_soilc, num_soilp, filter_soilp)
       ! net ecosystem exchange of carbon, includes fire flux, landcover change flux, loss
       ! from wood products pools, and hrv_xsmrpool flux, positive for source (NEE)
       nee(c) = -nep(c) + col_fire_closs(c) + dwt_closs(c) + product_closs(c) + col_hrv_xsmrpool_to_atm(c)
+      ! land use flux and land uptake
+      landuseflux(c) = dwt_closs(c) + product_closs(c)
+      landuptake(c) = nee(c) - landuseflux(c)
 
       ! total litter carbon (TOTLITC)
       totlitc(c) = &

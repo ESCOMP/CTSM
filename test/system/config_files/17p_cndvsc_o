@@ -1,0 +1,6 @@
+-mode ccsm_seq
+-smp
+-nospmd
+-maxpft numpft+1
+-bgc cndv
+-s

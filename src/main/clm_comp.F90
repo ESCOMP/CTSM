@@ -120,8 +120,10 @@ contains
     use clm_time_manager   , only : get_nstep, get_step_size, get_curr_calday
     use clm_atmlnd         , only : clm_map2gcell
     use clm_varorb         , only : eccen, mvelpp, lambm0, obliqr
-    use STATICEcosysDynMod , only : interpMonthlyVeg
     use seq_drydep_mod     , only : n_drydep
+#if (!defined CN) && (!defined CNDV)
+    use STATICEcosysDynMod , only : interpMonthlyVeg
+#endif
 !
 ! !ARGUMENTS:
 !
@@ -164,7 +166,7 @@ contains
           call t_stopf('init_orbSA')
           call t_stopf('init_orb')
        else if ( n_drydep > 0 )then
-#if (defined DGVM)
+#if (defined CNDV)
           ! no call
 #elif (defined CN)
           ! no call

@@ -16,8 +16,6 @@ module CNDecompMod
 ! !USES:
    use shr_kind_mod , only: r8 => shr_kind_r8
    use shr_const_mod, only: SHR_CONST_TKFRZ
-   use clm_varcon   , only: istsoil
-   use spmdMod      , only: masterproc
    implicit none
    save
    private
@@ -39,7 +37,7 @@ contains
 ! !IROUTINE: CNDecompAlloc
 !
 ! !INTERFACE:
-subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
+subroutine CNDecompAlloc (lbp, ubp, lbc, ubc, num_soilc, filter_soilc, &
    num_soilp, filter_soilp)
 !
 ! !DESCRIPTION:
@@ -52,6 +50,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
 !
 ! !ARGUMENTS:
    implicit none
+   integer, intent(in) :: lbp, ubp        ! pft-index bounds
    integer, intent(in) :: lbc, ubc        ! column-index bounds
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
@@ -556,7 +555,7 @@ subroutine CNDecompAlloc (lbc, ubc, num_soilc, filter_soilc, &
    ! to resolve the competition between plants and soil heterotrophs
    ! for available soil mineral N resource.
 
-   call CNAllocation(lbc,ubc,num_soilc,filter_soilc,num_soilp,filter_soilp)
+   call CNAllocation(lbp, ubp, lbc,ubc,num_soilc,filter_soilc,num_soilp,filter_soilp)
 
    ! column loop to calculate actual immobilization and decomp rates, following
    ! resolution of plant/heterotroph  competition for mineral N

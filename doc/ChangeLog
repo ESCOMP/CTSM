@@ -1,4 +1,338 @@
 ===============================================================
+Tag name:  clm3_7_06
+Originator(s):  erik (erik)
+Date: Wed Mar 10 16:35:57 MST 2010
+One-line Summary: Bring cndv branch to trunk
+
+Purpose of changes:
+
+Bring CNDV branch to trunk cndv16_clm3_7_05 (erik/slevis).  Fix bug 978 for Sam (nl
+option for branch). Put CROP part of CNDV branch on it's own branch. Add a couple more
+history fields (LAND_USE_FLUX, and LAND_UPTAKE). Add HTOP to default output. SNICAR_FRC
+fix, test SNICAR_FRC. Fix VOC by making sure fsun240 is between 0 and 1. Fix CO2 PPMV for
+I cases. Add in script to create CO2 streams file that can be used by datm8. Update VOC
+documentation. Get in updates from ccsm4_0_rel branch. Remove 360x720 grid, files with
+gx3v5/gx1v5 masks. Fix bug 1120, by initializing displavegc+ for CN, Change start_type to
+clm_start_type, don't allow both fndepdat and fndepdyn. Don't allow spinup modes with
+supln, and don't allow both ad_spinup and exit_spinup. Move testing from gx3v5 to gx3v7
+mask
+
+Bugs fixed (include bugzilla ID):
+                                 1104 (Restart problem with pftdyn mode)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: Switch cndv for dgvm, Have configure disallow
+bad cases
+    Change configure to NOT allow supln with spinup cases
+    Do NOT allow exit_spinup and ad_spinup at the same time.
+    Only allow voc to be set for seq_ccsm NOT ext_ccsm_seq
+
+Describe any changes made to the namelist: Add override_nsrest namelist option
+
+List any changes to the defaults for the boundary datasets:
+    New pft-physiology files with extra fields for CNDV
+    Add new f05 1850 surfdata file
+    Remove 360x720 files, gx3v5, gx1v5 files
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: slevis, self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, csm_share, mct, and pio
+
+   scripts   to scripts4_100306
+   drv       to drvseq3_1_19
+   csm_share to share3_100228
+   mct       to MCT2_7_0_100228
+   pio       to pio1_0_15
+
+List all files eliminated: Remove DGVM files
+
+   D   models/lnd/clm/src/biogeochem/DGVMLightMod.F90
+   D   models/lnd/clm/src/biogeochem/DGVMReproductionMod.F90
+   D   models/lnd/clm/src/biogeochem/DGVMAllocationMod.F90
+   D   models/lnd/clm/src/biogeochem/DGVMEcosystemDynMod.F90
+   D   models/lnd/clm/src/biogeochem/DGVMKillMod.F90
+   D   models/lnd/clm/src/biogeochem/DGVMEstablishmentMod.F90
+   D   models/lnd/clm/src/biogeochem/DGVMRestMod.F90
+   D   models/lnd/clm/src/biogeochem/DGVMMod.F90
+   D   models/lnd/clm/src/biogeochem/DGVMMortalityMod.F90
+   D   models/lnd/clm/src/biogeochem/DGVMTurnoverMod.F90
+   D   models/lnd/clm/src/biogeochem/DGVMFireMod.F90
+
+List all files added and what they do:
+
+>>>>>>>>>>>>> Add CNDV files
+   A    models/lnd/clm/src/biogeochem/CNDVEstablishmentMod.F90
+   A    models/lnd/clm/src/biogeochem/CNDVLightMod.F90
+   A    models/lnd/clm/src/biogeochem/CNDVMod.F90
+   A    models/lnd/clm/src/biogeochem/CNDVEcosystemDynIniMod.F90
+>>>>>>>>>>>>> Add script to convert CAM historical greenhouse gas file to CO2 history
+>>>>>>>>>>>>> file that can be used in datm streams
+   A   models/lnd/clm/tools/ncl_scripts/getco2_historical.ncl
+>>>>>>>>>>>>> Add SNICAR_FRC and CNDV config files to test
+   A   models/lnd/clm/test/system/config_files/_scsnf_dh
+   A   models/lnd/clm/test/system/config_files/_scsnf_dm
+   A   models/lnd/clm/test/system/config_files/_scsnf_do
+   A   models/lnd/clm/test/system/config_files/17p_cndvsc_dh
+   A   models/lnd/clm/test/system/config_files/17p_cndvsc_dm
+   A   models/lnd/clm/test/system/config_files/17p_cndvsc_do
+   A   models/lnd/clm/test/system/config_files/17p_cndvsc_h
+
+>>>>>>>>>>>>> Add files to describe how to add streams for CO2
+   A   models/lnd/clm/doc/UsersGuide/addco2_datm.buildnml.diff
+   A   models/lnd/clm/doc/UsersGuide/co2_streams.txt
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>> Document new getco2 script, use correct namelist in getregional script
+   M   models/lnd/clm/tools/ncl_scripts/README
+   M   models/lnd/clm/tools/ncl_scripts/getregional_datasets.ncl
+
+>>>>>>>>>>>>>>> Add K configure tests for CNDV, B configure tests for SNICAR_FRC, 
+>>>>>>>>>>>>>>> and create_croplunit tests Change maxpft 17 tests to numpft+1
+   M    models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_dh
+   M    models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_dm
+   M    models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_do
+   M    models/lnd/clm/test/system/config_files/17p_cnnsc_h
+   M    models/lnd/clm/test/system/config_files/17p_cnnsc_m
+   M    models/lnd/clm/test/system/config_files/17p_cnnsc_o
+   M    models/lnd/clm/test/system/config_files/17p_cnsc_dh
+   M    models/lnd/clm/test/system/config_files/17p_cnsc_dm
+   M    models/lnd/clm/test/system/config_files/17p_cnc13sc_dh
+   M    models/lnd/clm/test/system/config_files/17p_cnsc_do
+   M    models/lnd/clm/test/system/config_files/17p_cnc13sc_dm
+   M    models/lnd/clm/test/system/config_files/17p_cnc13sc_do
+   M    models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dh
+   M    models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dm
+   M    models/lnd/clm/test/system/config_files/17p_cnadspinupsc_do
+   M    models/lnd/clm/test/system/config_files/17p_cnnsc_dh
+   M    models/lnd/clm/test/system/config_files/17p_cnnsc_dm
+   M    models/lnd/clm/test/system/config_files/17p_cnnsc_do
+   M    models/lnd/clm/test/system/config_files/17p_cnnsc_ds
+
+   M    models/lnd/clm/test/system/tests_pretag_bluefire
+   M    models/lnd/clm/test/system/tests_pretag_bluefire_nompi
+   M    models/lnd/clm/test/system/tests_pretag_jaguar
+   M    models/lnd/clm/test/system/tests_posttag_kraken
+   M    models/lnd/clm/test/system/tests_posttag_breeze
+   M    models/lnd/clm/test/system/tests_pretag_jaguar_nompi
+   M    models/lnd/clm/test/system/tests_pretag_bangkok
+   M    models/lnd/clm/test/system/tests_posttag_purempi_regression
+   M    models/lnd/clm/test/system/tests_posttag_hybrid_regression
+   M    models/lnd/clm/test/system/tests_posttag_nompi_regression
+   M    models/lnd/clm/test/system/tests_pretag_calgary
+
+   M    models/lnd/clm/test/system/input_tests_master - Add B and K tests
+   M    models/lnd/clm/test/system/test_driver.sh ----- Update for bluefire changes
+                                   to scripts
+   M    models/lnd/clm/test/system/mknamelist --------- Change start_type to
+                                   clm_start_type add in nrevsnfile
+   M    models/lnd/clm/test/system/README.testnames --- Change K configure
+tests to mean CNDV
+
+>>>>>>>>>>>>> 
+   M   models/lnd/clm/bld/configure ---- Swap out cndv for dgvm. -bgc cndv turns on
+                                         both CN AND CNDV cpp tokens.
+                                         voc part of standalone_test arguments
+                                         supln and spinup options can't be on at the same
+time
+                                         exit_spinup and ad_spinup can't be on at the
+same time
+   M    models/lnd/clm/bld/queryDefaultXML.pm ---------------- Swap cndv for DGVM
+   M   models/lnd/clm/bld/config_files/config_definition.xml - Swap cndv for dgvm
+                    voc in standalone_test, maxpft lists valid numbers
+category
+   M   models/lnd/clm/bld/build-namelist ----- Change start_type to clm_start_type
+                                               Don't allow both fndepdyn and fndepdat to e set
+                                               Work with nrevsn, so not always given
+   M   models/lnd/clm/bld/clm.cpl7.template -- Rename start_type to clm_start_type, and
+                                               let default be "default"
+   M   models/lnd/clm/bld/namelist_files/checkdatmfiles.ncl ------ Update mask list
+   M   models/lnd/clm/bld/namelist_files/namelist_definition.xml - Add override_nsrest, 
+                    mkghg_bndtvghg, rename start_type to clm_startype
+
+  M   models/lnd/clm/bld/namelist_files/namelist_defaults_overall.xml - Add
+clm_start_type
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_datm.xml ---- Remove domain
+files
+                                               with gx3v5 and gx1v5 masks
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml ----- new pft-physiology files for CNDV
+                                               Use same fndepdat datasets for cndv
+                                               Remove 360x720 files,
+                                               files with gx3v5 and gx1v5 masks
+                                               New 1850 f05 fsurdat file
+                                               Add mkghg_bndtvghg dataset to point to CAM
+                                               historical greenhouse dataset
+   M   models/lnd/clm/bld/namelist_files/namelist_defaults_drv.xml ----- Remove
+start_type
+
+   M   models/lnd/clm/doc/UsersGuide/tools.xml
+   M   models/lnd/clm/doc/UsersGuide/preface.xml
+   M   models/lnd/clm/doc/UsersGuide/clm_ug.xml
+   M   models/lnd/clm/doc/UsersGuide/adding_files.xml
+   M   models/lnd/clm/doc/UsersGuide/appendix.xml
+   M   models/lnd/clm/doc/UsersGuide/custom.xml
+   M   models/lnd/clm/doc/UsersGuide/single_point.xml
+   M   models/lnd/clm/doc/UsersGuide/Makefile
+   M   models/lnd/clm/doc/UsersGuide/special_cases.xml
+
+>>>>>>>>>>>>> Add in landuseflux/landuptake, always use hardwire_sla for VOC
+>>>>>>>>>>>>> Set displavegc for CN not just CNDV, new fields for SNICAR_FRC restarts
+   M   models/lnd/clm/src/biogeochem/CNSummaryMod.F90 --------- Calculate landuseflux/landuptake
+   M   models/lnd/clm/src/biogeochem/CNPhenologyMod.F90 ------- Calculate pftmayexist for CNDV
+                                       Remove concurrent directives
+   M   models/lnd/clm/src/biogeochem/VOCEmissionMod.F90 ------- Always use hardwire_sla
+                          Remove DGVM CPP ifdefs, fix for transient problem from Dave
+                          loop over soil filter rather than non-lake
+   M   models/lnd/clm/src/biogeochem/CNSetValueMod.F90 -------- Set displavegc etc. for CN as well as CNDV
+                                   Add some CNDV fields
+   M   models/lnd/clm/src/main/clmtypeInitMod.F90 ------------- Remove agdd0/agdd5,fnpsn10,
+                                                                initialize landuseflux/landuptake
+   M   models/lnd/clm/src/main/CNiniSpecial.F90 --------------- initialize landuseflux/landuptake
+   M   models/lnd/clm/src/main/clmtype.F90 -------------------- Swap DGVM vars for CNDV
+                                                                add pftmayexist, landuseflux/landuptake
+   M   models/lnd/clm/src/main/histFldsMod.F90 ---------------- Add LAND_USE_FLUX, LAND_UPTAKE, make HTOP active
+                     Swap DGVM fields for CNDV
+   M   models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 ---- Add fields needed for SNICAR_FRC
+
+   M   models/lnd/clm/src/biogeochem/CNCStateUpdate2Mod.F90 --- Remove uneeded use statement
+   M   models/lnd/clm/src/biogeochem/CNGapMortalityMod.F90 ---- CNDV changes
+   M   models/lnd/clm/src/biogeochem/CNC13StateUpdate2Mod.F90 - Remove junk
+   M   models/lnd/clm/src/biogeochem/CNGRespMod.F90 ----------- Remove junk
+   M   models/lnd/clm/src/biogeochem/CNNStateUpdate1Mod.F90 --- Remove junk
+   M   models/lnd/clm/src/biogeochem/CNBalanceCheckMod.F90 ----
+   M   models/lnd/clm/src/biogeochem/CNNStateUpdate3Mod.F90 ---
+   M   models/lnd/clm/src/biogeochem/CNFireMod.F90 ------------ CNDV section
+   M   models/lnd/clm/src/biogeochem/CNMRespMod.F90 ----------- Remove junk
+   M   models/lnd/clm/src/biogeochem/CNPrecisionControlMod.F90  Remove junk
+   M   models/lnd/clm/src/biogeochem/CNDecompMod.F90 ---------- Pass lbp, ubp to CNAllocate
+   M   models/lnd/clm/src/biogeochem/CNCStateUpdate1Mod.F90 --- Formatting changes
+   M   models/lnd/clm/src/biogeochem/STATICEcosysDynMod.F90 --- Swap CNDV for DGVM
+   M   models/lnd/clm/src/biogeochem/CNCStateUpdate3Mod.F90 --- Remove junk
+   M   models/lnd/clm/src/biogeochem/CNC13StateUpdate1Mod.F90 - Remove junk
+   M   models/lnd/clm/src/biogeochem/CNC13StateUpdate3Mod.F90 - Remove junk
+   M   models/lnd/clm/src/biogeochem/CNrestMod.F90 ------------ Add CNDV section
+   M   models/lnd/clm/src/biogeochem/CNAnnualUpdateMod.F90 ---- Add CNDV section
+   M   models/lnd/clm/src/biogeochem/CNNStateUpdate2Mod.F90 --- Remove junk
+   M   models/lnd/clm/src/biogeochem/C13SummaryMod.F90 -------- Remove junk
+   M   models/lnd/clm/src/biogeochem/CNNDynamicsMod.F90 ------- Remove junk
+   M   models/lnd/clm/src/biogeochem/CNAllocationMod.F90 ------ Pass pft loop indices in, 
+                                  formatting changes remove junk
+   M   models/lnd/clm/src/biogeochem/CNC13FluxMod.F90 --------- Remove junk
+   M   models/lnd/clm/src/biogeochem/DryDepVelocity.F90 ------- Swap CNDV for DGVM
+   M   models/lnd/clm/src/biogeochem/CNEcosystemDynMod.F90 ---- Pass lbp, ubp to CNDecompAlloc
+   M   models/lnd/clm/src/biogeochem/CNVegStructUpdateMod.F90 - Use dwood from pft-physiology file
+                  Add CNDV section
+
+   M   models/lnd/clm/src/main/clm_varpar.F90 --------- Change some of the names around
+   M   models/lnd/clm/src/main/CNiniTimeVar.F90 ------- CNDV section for litter fall
+   M   models/lnd/clm/src/main/clm_comp.F90 ----------- Swap CNDV for DGVM
+   M   models/lnd/clm/src/main/clm_initializeMod.F90 -- Swap CNDV for DGVM
+   M   models/lnd/clm/src/main/accFldsMod.F90 --------- Swap CNDV for DGVM 
+   M   models/lnd/clm/src/main/subgridMod.F90 --------- Handle create_croplandunit correctly
+   M   models/lnd/clm/src/main/pftdynMod.F90 ---------- Add CNDV subroutine: pftwt_init
+                 For CNDV make pftwt_interp public
+and 
+   M   models/lnd/clm/src/main/iniTimeConst.F90 ------- Change dgvm vars init
+   M   models/lnd/clm/src/main/restFileMod.F90 -------- Remove DGVM
+   M   models/lnd/clm/src/main/controlMod.F90 --------- Add override_nsrest, swap CNDV for DGVM
+   M   models/lnd/clm/src/main/initSurfAlbMod.F90 ----- Swap CNDV for DGVM
+   M   models/lnd/clm/src/main/filterMod.F90 ---------- Swap CNDV for DGVM remove concurrent directives
+   M   models/lnd/clm/src/main/clm_driver.F90 --------- Swap CNDV for DGVM
+   M   models/lnd/clm/src/main/clm_varctl.F90 --------- Swap CNDV for DGVM, fix check for create_croplandunit
+   M   models/lnd/clm/src/main/ndepFileMod.F90 -------- Remove junk
+   M   models/lnd/clm/src/main/initGridCellsMod.F90 --- Fix create_croplandunit
+   M   models/lnd/clm/src/main/pftvarcon.F90 ---------- New CNDV parameters, formatting changes,
+                              Always read all parameters to make read easier to understand
+   M   models/lnd/clm/src/main/surfrdMod.F90 ---------- Swap CNDV for DGVMA, fix create_croplandunit, change some names
+
+   M   models/lnd/clm/src/biogeophys/BalanceCheckMod.F90 ----- Remove junk
+   M   models/lnd/clm/src/biogeophys/SurfaceRadiationMod.F90 - Remove junk add comments
+   M   models/lnd/clm/src/biogeophys/Biogeophysics1Mod.F90 --- Remove junk
+   M   models/lnd/clm/src/biogeophys/FrictionVelocityMod.F90 - Change comments remove DGVM
+   M   models/lnd/clm/src/biogeophys/SurfaceAlbedoMod.F90 ---- Change formatting add comments
+   M   models/lnd/clm/src/biogeophys/Hydrology2Mod.F90 ------- Remove DGVM
+   M   models/lnd/clm/src/biogeophys/BareGroundFluxesMod.F90 - Remove junk
+   M   models/lnd/clm/src/biogeophys/CanopyFluxesMod.F90 ----- Remove DGVM add in CNDV
+
+Summary of testing:
+
+  bluefire:
+FAIL! rc= 7
+025 smK51 TSM.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 10x15 USGS 48 arb_ic ..................PASS
+026 erK51 TER.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 10x15 USGS 10+38 arb_ic ...............PASS
+027 brK51 TBR.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 10x15 USGS 24+24 arb_ic ...............PASS
+028 blK51 TBL.sh 17p_cndvsc_dh clm_std 19981231:NONE:1800 10x15 USGS 48 arb_ic ..................FAIL! rc= 5
+029 smHN1 TSM.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10 colPASS
+030 erHN1 TER.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -3+-7 cFAIL! rc= 13
+031 brHN1 TBR.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -5+-5 cFAIL! rc= 11
+032 blHN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10 colFAIL! rc= 7
+033 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+034 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+035 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+036 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+  bluefire interactive testing: All PASS except...
+006 smCA4 TSM.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 10
+007 erCA4 TER.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ....FAIL! rc= 5
+008 brCA4 TBR.sh _nrsc_ds clm_std^nl_urb_br 20021001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic .FAIL! rc= 5
+009 blCA4 TBL.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 4
+010 smNB4 TSM.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 10
+011 erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 57+100 arb_FAIL! rc= 5
+012 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arFAIL! rc= 5
+013 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 4
+018 smCA8 TSM.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 10
+019 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 4
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+032 blF93 TBL.sh 17p_vodsrsc_do clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 48 cold .............FAIL! rc= 5
+036 blL83 TBL.sh _nrsc_do clm_std^nl_urb 20020115:NONE:3600 5x5_amazon navy -10 arb_ic ..........FAIL! rc= 7
+040 blK74 TBL.sh 17p_cndvsc_s clm_std 19971231:NONE:1800 1x1_brazil navy -670 arb_ic ............FAIL! rc= 5
+  bluefire/CCSM testing: All PASS except.. (compare tests fail because CO2 level was changed for 2000 compsets)
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare_hist.clm3_7_05
+FAIL  SMS_RLA.f45_f45.I.bluefire.compare.clm3_7_05
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare_hist.clm3_7_05
+FAIL  SMS_RLB.f45_f45.I.bluefire.compare.clm3_7_05
+BFAIL ERS_D.f45_g37.I.bluefire.compare.clm3_7_05
+FAIL  ERB.f09_g16.I_1948-2004.bluefire.compare.clm3_7_05
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm3_7_06
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm3_7_05
+BFAIL ERH_D.f10_f10.I1850CN.bluefire.compare.clm3_7_05
+FAIL  PST.f10_f10.I8520CN.bluefire.compare.clm3_7_05
+BFAIL PET_PT.f10_f10.I8520CN.bluefire.compare.clm3_7_05
+BFAIL ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm3_7_05
+  jaguar interactive testing: All PASS except...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_05
+
+Changes answers relative to baseline: I2000 cases are different because of new CCSM_CO2_PPMV
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_05
 Originator(s):  erik (erik)
 Date: Wed Feb 24 00:33:08 MST 2010

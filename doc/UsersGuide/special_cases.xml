@@ -5,10 +5,11 @@
 In this chapter we describe how to run some special cases that take more than one step
 to do. The straightforward cases have compsets and/or build-namelist use-cases setup for
 them or require simple editing of a single-case. All of the cases here require you
-to do at least two simulations with different configurations.
+to do at least two simulations with different configurations, or require more complex
+editing of the case (changing the streams files).
 </para>
 <para>
-The two cases we will describe are:
+The three cases we will describe are:
 <orderedlist>
 <listitem>
 <para>
@@ -17,11 +18,27 @@ The two cases we will describe are:
 </listitem>
 <listitem>
 <para>
+<emphasis>Spinning up the Carbon-Nitrogen Dynamic Global Vegetation Model (CNDV spinup)</emphasis>
+</para>
+</listitem>
+<listitem>
+<para>
 <emphasis>Doing perturbation error growth tests</emphasis>
+</para>
+<para>
+<emphasis>Running stand-alone &clm; with transient historical &CO2;
+concentration</emphasis>
 </para>
 </listitem>
 </orderedlist>
 </para>
+<note>
+<para>
+The cases in this chapter are more sosphisticated and require more technical knowledge
+and skill that cases in previous chapters. The user should be very familiar with doing
+simple cases before moving onto the cases described here.
+</para>
+</note>
 
 <sect1 id="CN_SPINUP">
 <title>Spinning up the biogeochemistry Carbon-Nitrogen Model (CN spinup)</title>
@@ -42,10 +59,10 @@ So do the following:
 > cd scripts
 > create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CN_spinup
-# Add "-ad_spinup on" to CLM_CONFIG_OPTS in env_conf.xml using your editor of choice
+# Add "-ad_spinup on" to &CLMCONFIG; in env_conf.xml using your editor of choice
 > $EDITOR env_conf.xml
-# The following sets CLM_FORCE_COLDSTART to "on" in env_conf.xml (you could also use an editor)
-> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+# The following sets &CLMFORCECOLD; to "on" in env_conf.xml (you could also use an editor)
+> xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
 # The following sets RESUBMIT to 30 times in env_run.xml (you could also use an editor)
 > xmlchange -file env_run.xml -id RESUBMIT -val 30
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
@@ -65,11 +82,11 @@ spinup with use "-exit_spinup" mode as follows:
 > cd scripts
 > create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CN_exitspinup
-# Add "-exit_spinup on" to CLM_CONFIG_OPTS in env_conf.xml using your editor of choice
+# Add "-exit_spinup on" to &CLMCONFIG; in env_conf.xml using your editor of choice
 > $EDITOR env_conf.xml
 > configure -case
 # Set the finidat file to the last restart file saved in previous step
-> $EDITOR BuildConf/clm.buildnml.csh
+> $EDITOR Buildconf/clm.buildnml.csh
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
 > xmlchange -file env_run.xml -id STOP_OPTION -val nyears
 # The following sets STOP_N to one year in env_run.xml (you could also use an editor)
@@ -86,8 +103,8 @@ So do the following:
 > cd scripts
 > create_newcase -case CN_finalspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CN_finalspinup
-# The following sets CLM_FORCE_COLDSTART to "on" in env_conf.xml (you could also use an editor)
-> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+# The following sets &CLMFORCECOLD; to "on" in env_conf.xml (you could also use an editor)
+> xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
 # The following sets RESUBMIT to 5 times in env_run.xml (you could also use an editor)
 > xmlchange -file env_run.xml -id RESUBMIT -val 5
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
@@ -96,12 +113,45 @@ So do the following:
 > xmlchange -file env_run.xml -id STOP_N -val 10
 > configure -case
 # Set the finidat file to the last restart file saved in previous step
-> $EDITOR BuildConf/clm.buildnml.csh
+> $EDITOR Buildconf/clm.buildnml.csh
 </screen>
 </para>
 <para>
 Finally save the restart file from the end of this simulation to use as an "finidat" file for future
 simulations.
+</para>
+</sect1>
+<sect1 id="CNDV_SPINUP">
+<title>Spinning up the Carbon-Nitrogen Dynamic Global Vegetation Model (CNDV spinup)</title>
+<para>
+To spinup the CNDV model -- you first follow the procedures above to spinup the CN model.
+Then you take the CN initial state file you created for the spinup with just CN, and 
+run CNDV for 200 more years. There are no compsets using CNDV, so you have to edit the
+<filename>env_conf.xml</filename> file and change <envar>CLM_CONFIG_OPTS</envar> to
+<literal>-bgc cndv</literal>, so that the CNDV model will be used instead of just CN.
+<screen>
+> cd scripts
+> create_newcase -case CNDV_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
+> cd CNDV_spinup
+# The following sets CLM_CONFIG_OPTS to "-bgc cndv" in env_conf.xml (you could also use an editor)
+> xmlchange -file env_conf.xml -id CLM_CONFIG_OPTS  -val "-bgc cndv"
+# The following sets CLM_FORCE_COLDSTART to "on" in env_conf.xml (you could also use an editor)
+> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+# The following sets RESUBMIT to 10 times in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id RESUBMIT -val 10
+# The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_OPTION -val nyears
+# The following sets STOP_N to 20 years in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_N -val 20
+> configure -case
+# Set the finidat file to the last restart file saved from spinning up CN
+> $EDITOR BuildConf/clm.buildnml.csh
+</screen>
+</para>
+<para>
+The CNDV model takes at least two centuries to get spunup, because it only runs once per
+year. Each year vegetation can advance, or continue to establish itself. But, it takes
+time for vegetated areas such as forests to reach maturity and be well established.
 </para>
 </sect1>
 
@@ -154,6 +204,111 @@ something that should be closer).</para>
 </orderedlist>
 </para>
 <para>
+</para>
+</sect1>
+
+<sect1 id="DATM_CO2_TSERIES">
+<title>Running stand-alone &clm; with transient historical &CO2;
+concentration</title>
+<para>
+...
+</para>
+<para>
+In this case you want to run a simulation with stand-alone &clm; responding
+to changes in &CO2; for a historical period.
+For this example, we will start with the "I_1850-2000_CN" compset that
+has transient: land-use, Nitrogen and Aerosol deposition already. You could
+also use another compset if you didn't want these other features to be transient.
+In order to get &CO2; to be transient we need to edit the
+datm template so that we add an extra streams file to describe how
+&CO2; varies over the historical period. You also need
+a NetCDF datafile that datm can read that gives the variation. You could
+supply your own file, but we have a standard file that is used by CAM for this
+and our example will make use of this file.
+</para>
+<note>
+<para>
+Most everything here has to do with changing datm rather than &clm;
+to allow this to happen. As such the user that wishes to do this should
+first become more familiar with datm and read the 
+<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/data8/book1.html">&ccsm; Data
+Model Users Guide</ulink> especially as it pertains to the datm. Note, also
+that in this example we show how to edit the datm "buildnml" file for your
+case, but you could do something similar by editing the datm template.
+</para>
+</note>
+<note>
+<para>
+This section documents the process for doing something that is non-standard.
+There may be errors with the documentation and process, and you may have to do
+some work before all of this works for you. If that is the case, we recommend
+that you do further research into understanding the process and the files, as
+well as understanding the datm and how it works. You may have to read documentation
+found in the code for datm as well as "csm_share".
+</para>
+</note>
+<para>
+The datm has "streams" files that have rough XML-like syntax and specify the
+location and file to get data from, as well as information on the variable names
+and the data locations of the grid points. The datm expects specific variable names
+and the datm "maps" the expected variable names from the file to the names expected
+by datm. The file we are working with here is a file with a single-point, that covers 
+the entire globe (so the vertices go from -90 to 90 degrees in latitude and 0 to 360 
+degrees in longitude). Since it's a single point it's a little easier to work with
+than datasets that may be at a given horizontal resolution. The datm also expects
+that variables will be in certain units, and only expects a limited number of 
+variables so arbitrary fields can NOT be exchanged this way. However, the process
+would be similar for datasets that do contain more than one point.
+</para>
+<para>
+The three things that are needed: a domain file, a data file, and a streams text file.
+The domain file is a CF-compliant NetCDF file that has information
+on the grid points (latitudes and longitudes for cell-centers and vertices, mask
+, fraction, and areas). The datafile is a CF-compliant NetCDF file with the data that 
+will be mapped. The streams text file is the XML-like file that tells datm how to find
+the files and how to map the variables datm knows about to the variable names on the
+NetCDF files. Note, that in our case the domain file and the data file are the same
+file. In other cases, the domain file may be separate from the data file.
+</para>
+<para>
+First we are going to create a case, and we will edit
+the <filename>Buildconf/datm.buildnml.csh</filename> so that we add a
+&CO2; data stream in. There is a streams text file
+available in <filename>models/lnd/clm/doc/UsersGuide/co2_streams.txt</filename>,
+that includes file with a &CO2; time-series from 1765 to 2007.
+<screen>
+> cd scripts
+> create_newcase -case DATM_CO2_TSERIES -res f19_g16 -compset I_1850-2000_CN -mach bluefire -skip_rundb
+> cd DATM_CO2_TSERIES
+> configure -case
+> cd Buildconf
+> cp ../../../models/lnd/clm/doc/UsersGuide/co2_streams.txt .
+</screen>
+The first thing we will do is to edit the datm buildnml script to add 
+a CO2 file stream in. To do this we will apply a patch with the differences
+needed. The patch file <filename>addco2_datm.buildnml.diff</filename> is
+in <filename>models/lnd/clm/doc</filename> and looks like this...
+<screen>
+&co2streams_diff;
+</screen>
+So to apply the patch you do this...
+<screen>
+> cd scripts/DATM_CO2_TSERIES/Buildconf
+> patch &lt; ../../../models/lnd/clm/doc/addco2_datm.buildnml.diff
+</screen>
+</para>
+
+<note>
+<para>
+If the patch fails, you will have to add the changes to the
+<filename>datm.buildnml.csh</filename> found in the above
+patch file by hand.
+</para>
+</note>
+<para>
+After going through these steps, you will have a case where you have datm reading
+in an extra streams text file that points to a data file with &CO2;
+data on it that will send that data to the &clm;.
 </para>
 </sect1>
 </chapter>

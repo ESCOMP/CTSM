@@ -14,8 +14,6 @@ module CNAnnualUpdateMod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varcon  , only: istsoil
-    use spmdMod     , only: masterproc
     implicit none
     save
     private
@@ -82,6 +80,10 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
    real(r8), pointer :: annsum_npp(:)            ! annual sum NPP (gC/m2/yr)
    real(r8), pointer :: cannsum_npp(:)           ! column annual sum NPP (gC/m2/yr)
    real(r8), pointer :: cannavg_t2m(:)    !annual average of 2m air temperature, averaged from pft-level (K)
+#if (defined CNDV)
+   real(r8), pointer :: tempsum_litfall(:)       ! temporary sum litfall (gC/m2/yr)
+   real(r8), pointer :: annsum_litfall(:)        ! annual sum litfall (gC/m2/yr)
+#endif
 !
 ! local pointers to implicit out scalars
 !
@@ -105,6 +107,10 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
    annsum_npp            => clm3%g%l%c%p%pepv%annsum_npp
    cannsum_npp           => clm3%g%l%c%cps%cannsum_npp
    cannavg_t2m           => clm3%g%l%c%cps%cannavg_t2m
+#if (defined CNDV)
+   tempsum_litfall       => clm3%g%l%c%p%pepv%tempsum_litfall
+   annsum_litfall        => clm3%g%l%c%p%pepv%annsum_litfall
+#endif
    pcolumn               => clm3%g%l%c%p%column
 
    ! set time steps
@@ -116,11 +122,19 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
       annsum_counter(c) = annsum_counter(c) + dt
    end do
 
+#if (defined CNDV)
+   ! In the future -- ONLY use this code and remove the similar part below
+   ! So the #ifdef on CNDV
+   if (annsum_counter(filter_soilc(1)) >= get_days_per_year() * secspday) then ! new (slevis)
+#endif
    ! pft loop
    do fp = 1,num_soilp
       p = filter_soilp(fp)
-      c = pcolumn(p)
-      if (annsum_counter(c) >= get_days_per_year() * secspday) then
+#if (!defined CNDV)
+      ! In the future -- REMOVE this code and use the equivalent code above always
+      c = pcolumn(p)                                                ! old (slevis)
+      if (annsum_counter(c) >= get_days_per_year() * secspday) then ! old (slevis)
+#endif
          ! update annual plant ndemand accumulator
          annsum_potential_gpp(p)  = tempsum_potential_gpp(p)
          tempsum_potential_gpp(p) = 0._r8
@@ -136,12 +150,23 @@ subroutine CNAnnualUpdate(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
          ! update annual NPP accumulator, convert to annual total
          annsum_npp(p) = tempsum_npp(p) * dt
          tempsum_npp(p) = 0._r8
-      end if
+
+#if (defined CNDV)
+         ! update annual litfall accumulator, convert to annual total
+         annsum_litfall(p) = tempsum_litfall(p) * dt
+         tempsum_litfall(p) = 0._r8
+#endif
+#if (!defined CNDV)
+      end if ! old (slevis)
+#endif
    end do
 
    ! use p2c routine to get selected column-average pft-level fluxes and states
    call p2c(num_soilc, filter_soilc, annsum_npp, cannsum_npp)
    call p2c(num_soilc, filter_soilc, annavg_t2m, cannavg_t2m)
+#if (defined CNDV)
+   end if ! new (slevis)
+#endif
 
    ! column loop
    do fc = 1,num_soilc

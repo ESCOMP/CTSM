@@ -75,6 +75,8 @@ contains
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
     type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
     type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
+    integer , pointer :: iptemp(:) ! pointer to memory to be allocated
+    integer :: ier                 ! error status
 !-----------------------------------------------------------------------
 
     ! Set pointers into derived type
@@ -2154,6 +2156,182 @@ contains
           clm3%g%l%c%cns%soil3n(c) = clm3%g%l%c%cns%soil3n(c) * m
           clm3%g%l%c%cns%soil4n(c) = clm3%g%l%c%cns%soil4n(c) * m
        end do
+    end if
+#endif
+
+#if (defined CNDV)
+    ! pft type dgvm physical state - crownarea
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='CROWNAREA', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='CROWNAREA', data=pptr%pdgvs%crownarea, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
+    end if
+
+    ! tempsum_litfall
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='tempsum_litfall', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='tempsum_litfall', data=pptr%pepv%tempsum_litfall, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
+    end if
+
+    ! annsum_litfall
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='annsum_litfall', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='annsum_litfall', data=pptr%pepv%annsum_litfall, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
+    end if
+
+    ! nind
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='nind', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='nind', data=pptr%pdgvs%nind, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
+    end if
+
+    ! fpcgrid
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='fpcgrid', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='fpcgrid', data=pptr%pdgvs%fpcgrid, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
+    end if
+
+    ! fpcgridold
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='fpcgridold', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='fpcgridold', data=pptr%pdgvs%fpcgridold, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
+    end if
+
+    ! gridcell type dgvm physical state - tmomin20
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='TMOMIN20', xtype=nf_double,  &
+            dim1name='gridcell',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='TMOMIN20', data=gptr%gdgvs%tmomin20, &
+            dim1name=nameg, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
+    end if
+
+    ! gridcell type dgvm physical state - agdd20
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='AGDD20', xtype=nf_double,  &
+            dim1name='gridcell',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='AGDD20', data=gptr%gdgvs%agdd20, &
+            dim1name=nameg, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
+    end if
+
+    ! pft type dgvm physical state - t_mo_min
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='T_MO_MIN', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='T_MO_MIN', data=pptr%pdgvs%t_mo_min, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
+    end if
+
+    ! present
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='present', xtype=nf_int,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       allocate (iptemp(begp:endp), stat=ier)
+       if (ier /= 0) then
+          write(6,*) 'CNrest: allocation error '; call endrun()
+       end if
+       if (flag == 'write') then
+          do p = begp,endp
+             iptemp(p) = 0
+             if (pptr%pdgvs%present(p)) iptemp(p) = 1
+          end do
+       end if
+       call ncd_iolocal(varname='present', data=iptemp, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read') then
+          if (.not. readvar) then
+             if (is_restart()) call endrun
+          else
+             do p = begp,endp
+                pptr%pdgvs%present(p) = .false.
+                if (iptemp(p) == 1) pptr%pdgvs%present(p) = .true.
+             end do
+          end if
+       end if
+       deallocate (iptemp)
+    end if
+
+    ! leafcmax
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='leafcmax', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='leafcmax', data=pptr%pcs%leafcmax, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
+    end if
+
+    ! heatstress
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='heatstress', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='heatstress', data=pptr%pdgvs%heatstress, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
+    end if
+
+    ! greffic
+    if (flag == 'define') then
+       call ncd_defvar(ncid=ncid, varname='greffic', xtype=nf_double,  &
+            dim1name='pft',long_name='',units='')
+    else if (flag == 'read' .or. flag == 'write') then
+       call ncd_iolocal(varname='greffic', data=pptr%pdgvs%greffic, &
+            dim1name=namep, ncid=ncid, flag=flag, readvar=readvar)
+       if (flag=='read' .and. .not. readvar) then
+          if (is_restart()) call endrun
+       end if
     end if
 #endif
 

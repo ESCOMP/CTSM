@@ -83,6 +83,10 @@ module clm_driver
   use spmdMod             , only : masterproc,mpicom
   use decompMod           , only : get_proc_clumps, get_clump_bounds
   use filterMod           , only : filter, setFilters
+#if (defined CNDV)
+  use CNDVMod             , only : dv, histCNDV
+  use pftdynMod           , only : pftwt_interp
+#endif
   use pftdynMod           , only : pftdyn_interp, pftdyn_wbal_init, pftdyn_wbal
 #ifdef CN
   use pftdynMod           , only : pftdyn_cnbal
@@ -108,11 +112,7 @@ module clm_driver
   use BiogeophysicsLakeMod, only : BiogeophysicsLake
   use SurfaceAlbedoMod    , only : SurfaceAlbedo
   use pft2colMod          , only : pft2col
-#if (defined DGVM)
-  use DGVMEcosystemDynMod , only : DGVMEcosystemDyn, DGVMRespiration
-  use DGVMMod             , only : lpj, lpjreset, histDGVM, &
-	                           resetweightsdgvm, resettimeconstdgvm 
-#elif (defined CN)
+#if (defined CN)
   use CNSetValueMod       , only : CNZeroFluxes_dwt
   use CNEcosystemDynMod   , only : CNEcosystemDyn
   use CNAnnualUpdateMod   , only : CNAnnualUpdate
@@ -169,6 +169,8 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
 ! First phase of the clm driver calling the clm physics. An outline of
 ! the calling tree is given in the description of this module.
 !
+! !USES:
+
 ! !ARGUMENTS:
   implicit none
   logical , intent(in) :: doalb       ! true if time for surface albedo calc
@@ -182,6 +184,7 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
 !  cpp directive SUNSHA is set, for sunlit/shaded canopy radiation.
 ! 4/25/05, Peter Thornton: Made the sun/shade routine the default, no longer
 !  need to have SUNSHA defined.  
+! 10/05 & 07/07 Sam Levis: Starting dates of CNDV work
 ! 2/29/08, Dave Lawrence: Revised snow cover fraction according to Niu and Yang, 2007
 ! 3/6/09, Peter Thornton: Added declin as new argument, for daylength control on Vcmax
 ! 2008.11.12  B. Kauffman: morph routine casa() in casa_ecosytemDyn(), so casa
@@ -220,11 +223,7 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
 
   cptr => clm3%g%l%c
 
-#if (defined DGVM)
-   ! no call
-#elif (defined CN)
-   ! no call
-#else
+#if (!defined CN)
   ! ============================================================================
   ! Determine weights for time interpolation of monthly vegetation data.
   ! This also determines whether it is time to read new monthly vegetation and
@@ -288,7 +287,7 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
    end do
 !$OMP END PARALLEL DO
 
-#if (!defined DGVM)
+#if (!defined CNDV)
    if (fpftdyn /= ' ') then
       call pftdyn_interp  ! change the pft weights
       
@@ -340,8 +339,15 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
   call t_startf('pftdynwts')
   call pftdyn_wbal_init()
 
-
-#if (!defined DGVM)
+#if (defined CNDV)
+! if (doalb) then ! Currently CNDV and fpftdyn /= ' ' are incompatible
+     call CNZeroFluxes_dwt()
+     call pftwt_interp()
+     call pftdyn_wbal( begg, endg, begc, endc, begp, endp )
+     call pftdyn_cnbal()
+     call setFilters()
+! end if
+#else
   ! ============================================================================
   ! Update weights and reset filters if dynamic land use
   ! This needs to be done outside the clumps loop, but after BeginWaterBalance()
@@ -489,7 +495,7 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
      call t_stopf('bgplake')
 
      ! ============================================================================
-     ! Determine VOC, DUST and DGVM Respiration if appropriate
+     ! DUST and VOC emissions (if defined)
      ! ============================================================================
 
      call t_startf('bgc')
@@ -505,7 +511,7 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
 
      ! VOC emission (A. Guenther's MEGAN (2006) model)
      call VOCEmission(begp, endp, &
-                      filter(nc)%num_nolakep, filter(nc)%nolakep)
+                      filter(nc)%num_soilp, filter(nc)%soilp)
 
      call t_stopf('bgc')
 
@@ -580,23 +586,13 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
           filter(nc)%num_nosnowc, filter(nc)%nosnowc)
 
      ! ============================================================================
-     ! Ecosystem dynamics: Uses CN, DGVM, or static parameterizations
+     ! Ecosystem dynamics: Uses CN, CNDV, or static parameterizations
      ! ============================================================================
      call t_startf('ecosysdyn')
 
-#if (defined DGVM)
-     ! Prognostic biogeography,
-     ! surface biogeochemical fluxes: co2 respiration and plant production
-     call DGVMRespiration(begc, endc, begp, endp, &
-                          filter(nc)%num_nolakec, filter(nc)%nolakec, &
-                          filter(nc)%num_nolakep, filter(nc)%nolakep)
-
-     call DGVMEcosystemDyn(begp, endp, &
-                       filter(nc)%num_nolakep, filter(nc)%nolakep, &
-                       doalb, endofyr=.false.)
-#elif (defined CN)
-     ! Prescribed biogeography,
+#if (defined CN)
      ! fully prognostic canopy structure and C-N biogeochemistry
+     ! - CNDV defined: prognostic biogeography; else prescribed
      call CNEcosystemDyn(begc,endc,begp,endp,filter(nc)%num_soilc,&
                   filter(nc)%soilc, filter(nc)%num_soilp, &
                   filter(nc)%soilp, doalb)
@@ -645,6 +641,7 @@ subroutine clm_driver1 (doalb, nextsw_cday, declinp1, declin)
         call t_stopf('cnbalchk')
      end if
 #endif
+
      ! ============================================================================
      ! Determine albedos for next time step
      ! ============================================================================
@@ -721,7 +718,7 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 ! !LOCAL VARIABLES:
   integer  :: nstep         ! time step number
   real(r8) :: dtime         ! land model time step (sec)
-#if (defined DGVM)
+#if (defined CNDV)
   integer  :: nc, c         ! indices
   integer  :: nclumps       ! number of clumps on this processor
   integer  :: yrp1          ! year (0, ...) for nstep+1
@@ -793,15 +790,11 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
   call t_stopf('hbuf')
 
   ! ============================================================================
-  ! Call DGVM (Dynamic Global Vegetation Model) if appropriate
-  ! LPJ is called at last time step of year. Then reset vegetation distribution
-  ! and some counters for the next year.
+  ! Call dv (dynamic vegetation) at last time step of year
   ! NOTE: monp1, dayp1, and secp1 correspond to nstep+1
-  ! NOTE: lpjreset must be called after update_accum and hist_update_hbuf
-  ! in order to have the correct values of the accumulated variables
   ! ============================================================================
 
-#if (defined DGVM)
+#if (defined CNDV)
   call t_startf('d2dgvm')
   dtime = get_step_size()
   call get_curr_date(yrp1, monp1, dayp1, secp1, offset=int(dtime))
@@ -814,7 +807,7 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
      nbdate = yr*10000 + mon*100 + day
      kyr = ncdate/10000 - nbdate/10000 + 1
 
-     if (masterproc) write(iulog,*) 'End of year. DGVM called now: ncdate=', &
+     if (masterproc) write(iulog,*) 'End of year. CNDV called now: ncdate=', &
                      ncdate,' nbdate=',nbdate,' kyr=',kyr,' nstep=', nstep
 
      nclumps = get_proc_clumps()
@@ -822,13 +815,8 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
 !$OMP PARALLEL DO PRIVATE (nc,begg,endg,begl,endl,begc,endc,begp,endp)
      do nc = 1,nclumps
         call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
-        call lpj(begg, endg, begp, endp, filter(nc)%num_natvegp, filter(nc)%natvegp, kyr)
-        call lpjreset(begg, endg, begc, endc, begp, endp, filter(nc)%num_nolakep, filter(nc)%nolakep, &
-                      filter(nc)%num_nourbanc, filter(nc)%nourbanc, &
-                      filter(nc)%num_nourbanp, filter(nc)%nourbanp, &
-                      nextsw_cday, declinp1)
-        call resetWeightsDGVM(begg, endg, begc, endc, begp, endp)
-        call resetTimeConstDGVM(begp, endp)
+        call dv(begg, endg, begp, endp,                  &
+           filter(nc)%num_natvegp, filter(nc)%natvegp, kyr)
      end do
 !$OMP END PARALLEL DO
   end if
@@ -848,14 +836,14 @@ subroutine clm_driver2(nextsw_cday, declinp1, rstwr, nlend, rdate)
   call t_stopf('clm_driver_io_htapes')
 
   ! ============================================================================
-  ! Write to DGVM history buffer if appropriate
+  ! Write to CNDV history buffer if appropriate
   ! ============================================================================
 
-#if (defined DGVM)
+#if (defined CNDV)
   if (monp1==1 .and. dayp1==1 .and. secp1==dtime .and. nstep>0)  then
      call t_startf('clm_driver_io_hdgvm')
-     call histDGVM()
-     if (masterproc) write(iulog,*) 'Annual DGVM calculations are complete'
+     call histCNDV()
+     if (masterproc) write(iulog,*) 'Annual CNDV calculations are complete'
      call t_stopf('clm_driver_io_hdgvm')
   end if
 #endif

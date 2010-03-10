@@ -15,8 +15,6 @@ module CNPrecisionControlMod
 ! 
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varcon  , only: istsoil
-    use spmdMod     , only: masterproc
     implicit none
     save
     private
@@ -45,6 +43,8 @@ subroutine CNPrecisionControl(num_soilc, filter_soilc, num_soilp, filter_soilp)
 !
 ! !USES:
    use clmtype
+   use abortutils,   only: endrun
+   use clm_varctl,   only: iulog
 !
 ! !ARGUMENTS:
    implicit none

@@ -14,13 +14,14 @@ module CNPhenologyMod
 ! nitrogen code.
 !
 ! !USES:
+  use clmtype
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varcon  , only: istsoil
-  use spmdMod     , only: masterproc
   implicit none
   save
   private
-!
+
+! local variables to the whole module
+
 ! !PUBLIC MEMBER FUNCTIONS:
   public :: CNPhenology
 !
@@ -46,10 +47,8 @@ subroutine CNPhenology (num_soilc, filter_soilc, num_soilp, filter_soilp)
 ! 1. grass phenology
 !
 ! !USES:
-   use clmtype
 !
 ! !ARGUMENTS:
-   implicit none
    integer, intent(in) :: num_soilc       ! number of soil columns in filter
    integer, intent(in) :: filter_soilc(:) ! filter for soil columns
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
@@ -118,11 +117,9 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp)
 ! For coupled carbon-nitrogen code (CN).
 !
 ! !USES:
-   use clmtype
    use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
-   implicit none
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
@@ -162,9 +159,6 @@ subroutine CNPhenologyClimate (num_soilp, filter_soilp)
    dt = real( get_step_size(), r8 )
    fracday = dt/86400.0_r8
 
-
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 	  tempavg_t2m(p) = tempavg_t2m(p) + t_ref2m(p) * (fracday/365._r8)
@@ -185,10 +179,8 @@ subroutine CNEvergreenPhenology (num_soilp, filter_soilp)
 ! For coupled carbon-nitrogen code (CN).
 !
 ! !USES:
-   use clmtype
 !
 ! !ARGUMENTS:
-   implicit none
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
@@ -228,8 +220,6 @@ subroutine CNEvergreenPhenology (num_soilp, filter_soilp)
    bgtr      => clm3%g%l%c%p%pepv%bgtr
    lgsf      => clm3%g%l%c%p%pepv%lgsf
 
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       if (evergreen(ivt(p)) == 1._r8) then
@@ -256,12 +246,10 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 ! deciduous vegetation that has only one growing season per year).
 !
 ! !USES:
-   use clmtype
    use clm_time_manager, only: get_step_size
    use shr_const_mod, only: SHR_CONST_TKFRZ, SHR_CONST_PI
 !
 ! !ARGUMENTS:
-   implicit none
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
@@ -296,7 +284,6 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    real(r8), pointer :: deadcrootn_storage(:) ! (kgN/m2) dead coarse root N storage
    ! ecophysiological constants
    real(r8), pointer :: season_decid(:) ! binary flag for seasonal-deciduous leaf habit (0 or 1)
-   real(r8), pointer :: leaf_long(:)    ! leaf longevity (yrs)
    real(r8), pointer :: woody(:)        ! binary flag for woody lifeform (1=woody, 0=not woody)
 !
 ! local pointers to implicit in/out scalars
@@ -353,6 +340,9 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    real(r8), pointer :: deadstemn_storage_to_xfer(:)
    real(r8), pointer :: livecrootn_storage_to_xfer(:)
    real(r8), pointer :: deadcrootn_storage_to_xfer(:)
+#if (defined CNDV)
+   logical , pointer :: pftmayexist(:)     ! exclude seasonal decid pfts from tropics
+#endif
 !
 ! local pointers to implicit out scalars
 !
@@ -394,7 +384,6 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    livecrootn_storage            => clm3%g%l%c%p%pns%livecrootn_storage
    deadcrootn_storage            => clm3%g%l%c%p%pns%deadcrootn_storage
    season_decid                  => pftcon%season_decid
-   leaf_long                     => pftcon%leaf_long
    woody                         => pftcon%woody
 
    ! Assign local pointers to derived type arrays (out)
@@ -451,6 +440,9 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    deadstemn_storage_to_xfer     => clm3%g%l%c%p%pnf%deadstemn_storage_to_xfer
    livecrootn_storage_to_xfer    => clm3%g%l%c%p%pnf%livecrootn_storage_to_xfer
    deadcrootn_storage_to_xfer    => clm3%g%l%c%p%pnf%deadcrootn_storage_to_xfer
+#if (defined CNDV)
+   pftmayexist                   => clm3%g%l%c%p%pdgvs%pftmayexist
+#endif
 
    ! set time steps
    dt = real( get_step_size(), r8 )
@@ -465,8 +457,6 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
    fstor2tran = 0.5_r8
 
    ! start pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       c = pcolumn(p)
@@ -514,6 +504,9 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
                offset_counter(p) = 0._r8
                dormant_flag(p) = 1._r8
                days_active(p) = 0._r8
+#if (defined CNDV)
+               pftmayexist(p) = .true.
+#endif
 
                ! reset the previous timestep litterfall flux memory
                prev_leafc_to_litter(p) = 0._r8
@@ -634,6 +627,15 @@ subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp)
 
          ! test for switching from growth period to offset period
          else if (offset_flag(p) == 0.0_r8) then
+#if (defined CNDV)
+            ! If days_active > 355, then remove pft in
+            ! CNDVEstablishment at the end of the year.
+            ! days_active > 355 is a symptom of seasonal decid. pfts occurring in
+            ! gridcells where dayl never drops below crit_dayl.
+            ! This results in TLAI>1e4 in a few gridcells.
+            days_active(p) = days_active(p) + fracday
+            if (days_active(p) > 355._r8) pftmayexist(p) = .false.
+#endif
 
             ! only begin to test for offset daylength once past the summer sol
             if (ws_flag == 0._r8 .and. dayl(p) < crit_dayl) then
@@ -671,12 +673,10 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
 ! per year.
 !
 ! !USES:
-   use clmtype
    use clm_time_manager, only: get_step_size
    use shr_const_mod, only: SHR_CONST_TKFRZ, SHR_CONST_PI
 !
 ! !ARGUMENTS:
-   implicit none
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
@@ -910,8 +910,6 @@ subroutine CNStressDecidPhenology (num_soilp, filter_soilp)
    ! transfer parameters
    fstor2tran = 0.5_r8
 
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
       c = pcolumn(p)
@@ -1217,11 +1215,9 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
 ! pools during the phenological onset period.
 !
 ! !USES:
-   use clmtype
    use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
-   implicit none
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
@@ -1314,8 +1310,6 @@ subroutine CNOnsetGrowth (num_soilp, filter_soilp)
    dt = real( get_step_size(), r8 )
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 
@@ -1386,11 +1380,9 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 ! pools during the phenological offset period.
 !
 ! !USES:
-   use clmtype
    use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
-   implicit none
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
@@ -1428,7 +1420,7 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
 !
 !
 ! !OTHER LOCAL VARIABLES:
-   integer :: p            ! indices
+   integer :: p, c         ! indices
    integer :: fp           ! lake filter pft index
    real(r8):: dt           ! radiation time step delta t (seconds)
    real(r8):: t1           ! temporary variable
@@ -1462,8 +1454,6 @@ subroutine CNOffsetLitterfall (num_soilp, filter_soilp)
    ! The litterfall transfer rate starts at 0.0 and increases linearly
    ! over time, with displayed growth going to 0.0 on the last day of litterfall
 
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 
@@ -1511,11 +1501,9 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
 ! pools as the result of background litter fall.
 !
 ! !USES:
-   use clmtype
    use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
-   implicit none
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
@@ -1577,8 +1565,6 @@ subroutine CNBackgroundLitterfall (num_soilp, filter_soilp)
    dt = real( get_step_size(), r8 )
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 
@@ -1615,11 +1601,9 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
 ! dead wood pools, for stem and coarse root.
 !
 ! !USES:
-   use clmtype
    use clm_time_manager, only: get_step_size
 !
 ! !ARGUMENTS:
-   implicit none
    integer, intent(in) :: num_soilp       ! number of soil pfts in filter
    integer, intent(in) :: filter_soilp(:) ! filter for soil pfts
 !
@@ -1691,8 +1675,6 @@ subroutine CNLivewoodTurnover (num_soilp, filter_soilp)
    lwtop = 0.7_r8 / 31536000.0_r8
 
    ! pft loop
-!dir$ concurrent
-!cdir nodep
    do fp = 1,num_soilp
       p = filter_soilp(fp)
 
@@ -1735,11 +1717,9 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
 ! to the column level and assign them to the three litter pools
 !
 ! !USES:
-  use clmtype
   use clm_varpar, only : max_pft_per_col
 !
 ! !ARGUMENTS:
-  implicit none
   integer, intent(in) :: num_soilc       ! number of soil columns in filter
   integer, intent(in) :: filter_soilc(:) ! filter for soil columns
 !
@@ -1822,8 +1802,6 @@ subroutine CNLitterToColumn (num_soilc, filter_soilc)
     frootn_to_litr3n               => clm3%g%l%c%cnf%frootn_to_litr3n
 
    do pi = 1,max_pft_per_col
-!dir$ concurrent
-!cdir nodep
       do fc = 1,num_soilc
          c = filter_soilc(fc)
 

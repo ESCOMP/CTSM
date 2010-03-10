@@ -184,9 +184,9 @@ CONTAINS
     !----------------------------------------------------------------------- 
     if ( n_drydep == 0 ) return
 
-    ! Check if running with CN or DGVM model -- if so abort as mlaidiff is NOT set in this case
-#if (defined DGVM) || (defined CN)
-    call endrun('DryDepVelocity: drydep can NOT compute the season with CN or DGVM since mlaidiff is NOT defined')
+    ! Check if running with CN or CNDV model -- if so abort as mlaidiff is NOT set in this case
+#if (defined CNDV) || (defined CN)
+    call endrun('DryDepVelocity: drydep can NOT compute the season with CN or CNDV since mlaidiff is NOT defined')
 #endif
     ! local pointers to original implicit out arrays 
 

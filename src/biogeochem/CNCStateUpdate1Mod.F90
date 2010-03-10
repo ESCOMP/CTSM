@@ -14,8 +14,6 @@ module CNCStateUpdate1Mod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varcon  , only: istsoil
-    use spmdMod     , only: masterproc
     implicit none
     save
     private
@@ -299,7 +297,7 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
     ! new pointers for dynamic landcover
     dwt_seedc_to_leaf              => clm3%g%l%c%ccf%dwt_seedc_to_leaf
     dwt_seedc_to_deadstem          => clm3%g%l%c%ccf%dwt_seedc_to_deadstem
-	 dwt_frootc_to_litr1c           => clm3%g%l%c%ccf%dwt_frootc_to_litr1c
+    dwt_frootc_to_litr1c           => clm3%g%l%c%ccf%dwt_frootc_to_litr1c
     dwt_frootc_to_litr2c           => clm3%g%l%c%ccf%dwt_frootc_to_litr2c
     dwt_frootc_to_litr3c           => clm3%g%l%c%ccf%dwt_frootc_to_litr3c
     dwt_livecrootc_to_cwdc         => clm3%g%l%c%ccf%dwt_livecrootc_to_cwdc
@@ -346,20 +344,20 @@ subroutine CStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp)
     frootc_xfer_to_frootc          => clm3%g%l%c%p%pcf%frootc_xfer_to_frootc
     gresp_storage_to_xfer          => clm3%g%l%c%p%pcf%gresp_storage_to_xfer
     leaf_mr                        => clm3%g%l%c%p%pcf%leaf_mr
-    leaf_curmr                        => clm3%g%l%c%p%pcf%leaf_curmr
-    leaf_xsmr                        => clm3%g%l%c%p%pcf%leaf_xsmr
+    leaf_curmr                     => clm3%g%l%c%p%pcf%leaf_curmr
+    leaf_xsmr                      => clm3%g%l%c%p%pcf%leaf_xsmr
     leafc_storage_to_xfer          => clm3%g%l%c%p%pcf%leafc_storage_to_xfer
     leafc_to_litter                => clm3%g%l%c%p%pcf%leafc_to_litter
     leafc_xfer_to_leafc            => clm3%g%l%c%p%pcf%leafc_xfer_to_leafc
     livecroot_mr                   => clm3%g%l%c%p%pcf%livecroot_mr
-    livecroot_curmr                   => clm3%g%l%c%p%pcf%livecroot_curmr
-    livecroot_xsmr                   => clm3%g%l%c%p%pcf%livecroot_xsmr
+    livecroot_curmr                => clm3%g%l%c%p%pcf%livecroot_curmr
+    livecroot_xsmr                 => clm3%g%l%c%p%pcf%livecroot_xsmr
     livecrootc_storage_to_xfer     => clm3%g%l%c%p%pcf%livecrootc_storage_to_xfer
     livecrootc_to_deadcrootc       => clm3%g%l%c%p%pcf%livecrootc_to_deadcrootc
     livecrootc_xfer_to_livecrootc  => clm3%g%l%c%p%pcf%livecrootc_xfer_to_livecrootc
     livestem_mr                    => clm3%g%l%c%p%pcf%livestem_mr
-    livestem_curmr                    => clm3%g%l%c%p%pcf%livestem_curmr
-    livestem_xsmr                    => clm3%g%l%c%p%pcf%livestem_xsmr
+    livestem_curmr                 => clm3%g%l%c%p%pcf%livestem_curmr
+    livestem_xsmr                  => clm3%g%l%c%p%pcf%livestem_xsmr
     livestemc_storage_to_xfer      => clm3%g%l%c%p%pcf%livestemc_storage_to_xfer
     livestemc_to_deadstemc         => clm3%g%l%c%p%pcf%livestemc_to_deadstemc
     livestemc_xfer_to_livestemc    => clm3%g%l%c%p%pcf%livestemc_xfer_to_livestemc

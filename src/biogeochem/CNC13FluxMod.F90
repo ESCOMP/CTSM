@@ -14,8 +14,6 @@ module CNC13FluxMod
 !
 ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varcon  , only: istsoil,c13ratio
-    use spmdMod     , only: masterproc
     implicit none
     save
     private

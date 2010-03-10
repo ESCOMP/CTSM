@@ -51,6 +51,7 @@ fi
 restart_file=" "
 restfilm=" "
 restfils=" "
+nrevsnfile=" "
 logfile=" "
 atm_cpl_dt=" "
 #
@@ -60,6 +61,7 @@ if [ "$6" = "branch" ]; then
   if [ -f "$drv_restart" ]; then
      restart_file="restart_file='$drv_restart'"
   fi 
+  nrevsnfile=" nrevsn='$nrevsn'"
   if [ -f "$datm_restfilm" ]; then
      restfilm="restfilm='$datm_restfilm'"
   fi 
@@ -96,19 +98,20 @@ if [ "$datm_source" = "CLM_QIAN" ]; then
    clmopt="$clmopt -datm_data_dir $DATM_QIAN_DATA_DIR"
 fi
 
+
 echo "env OMP_NUM_THREADS=$CLM_THREADS $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \ "
-echo "                 -infile $clmnl -res $res -lnd_res $land_res -start_type $6 \ "
+echo "                 -infile $clmnl -res $res -lnd_res $land_res -clm_start_type $6 \ "
 echo "                 -csmdata $CSMDATA -drv_runlength $runlen $clmopt -test \ "
 echo "                 -namelist \"&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / "
 echo "                             &seq_infodata_inparm $restart_file $logfile / "
 echo "                             &datm_nml $restfilm $restfils / "
 echo "                             &clm_inparm dtime=$dtime hist_crtinic='$inithist' "
-echo "                             $hist_samp nrevsn='$nrevsn' $hist_freq /\""
+echo "                             $hist_samp $nrevsnfile $hist_freq /\""
 
 env OMP_NUM_THREADS=$CLM_THREADS $cfgdir/build-namelist -mask $mask -sim_year $sim_year -config $config_file \
-                       -infile $clmnl -res $res -lnd_res $land_res -start_type $6 \
+                       -infile $clmnl -res $res -lnd_res $land_res -clm_start_type $6 \
                        -csmdata $CSMDATA -drv_runlength $runlen $clmopt -test \
                        -namelist "&seq_timemgr_inparm start_ymd=$start_ymd $atm_cpl_dt / \
                                   &seq_infodata_inparm $restart_file $logfile / \
                                   &datm_nml $restfilm $restfils / \
-                                  &clm_inparm dtime=$dtime hist_crtinic='$inithist' $hist_samp nrevsn='$nrevsn' $hist_freq /"
+                                  &clm_inparm dtime=$dtime hist_crtinic='$inithist' $hist_samp $nrevsnfile $hist_freq /"

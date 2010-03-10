@@ -15,7 +15,6 @@ module CNNDynamicsMod
 !
 ! !USES:
    use shr_kind_mod, only: r8 => shr_kind_r8
-   use clm_varcon  , only: istsoil
    implicit none
    save
    private
@@ -109,6 +108,8 @@ subroutine CNNFixation(num_soilc, filter_soilc)
 !
 ! !USES:
    use clmtype
+   use clm_varctl, only: iulog
+   use shr_sys_mod, only: shr_sys_flush
 !
 ! !ARGUMENTS:
    implicit none

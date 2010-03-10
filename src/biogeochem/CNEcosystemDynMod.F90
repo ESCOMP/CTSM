@@ -43,7 +43,7 @@ contains
 !
 ! !INTERFACE:
   subroutine CNEcosystemDyn(lbc, ubc, lbp, ubp, num_soilc, filter_soilc, &
-                          num_soilp, filter_soilp, doalb)
+                     num_soilp, filter_soilp, doalb)
 !
 ! !DESCRIPTION:
 ! The core CN code is executed here. Calculates fluxes for maintenance
@@ -125,7 +125,7 @@ contains
 
        call CNMResp(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 
-       call CNDecompAlloc(lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
+       call CNDecompAlloc(lbp, ubp, lbc, ubc, num_soilc, filter_soilc, num_soilp, filter_soilp)
 
        ! CNphenology needs to be called after CNdecompAlloc, becuase it
        ! depends on current time-step fluxes to new growth on the last

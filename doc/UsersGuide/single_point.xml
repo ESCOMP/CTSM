@@ -3,17 +3,17 @@
 <chapter id="single_point">
 <title>How to run Single-Point cases</title>
 <para>
-The CLM also allows you to set up and run cases with a single-point or a local region as well
+The &clm; also allows you to set up and run cases with a single-point or a local region as well
 as global resolutions. This is often useful for running quick cases for testing, evaluating
 specific vegetation types, or land-units, or running with observed data for a specific site.
 There are three different ways to do this: <envar>PTS_MODE</envar>,
-<envar>CLM_1PT_NAME</envar>, and <envar>CLM_USRDAT_NAME</envar>.
+&CLM1PT;, and &CLMUSRDAT;.
 <simplelist>
 <member><emphasis><envar>PTS_MODE</envar></emphasis> -- to run for a single point
 using global datasets</member>
-<member><emphasis><envar>CLM_1PT_NAME</envar></emphasis> -- to run for a supported single-point
+<member><emphasis>&CLM1PT;</emphasis> -- to run for a supported single-point
 or regional dataset.</member>
-<member><emphasis><envar>CLM_USRDAT_NAME</envar></emphasis> -- to run using your own datasets.</member>
+<member><emphasis>&CLMUSRDAT;</emphasis> -- to run using your own datasets.</member>
 </simplelist>
 </para>
 
@@ -61,7 +61,7 @@ You can change the point you are simulating for at run-time by changing the valu
 <sect1 id="suprted_single_point_datasets">
 <title>Running Supported Single-point Datasets</title>
 <para>
-In addition to <envar>PTS_MODE</envar> the CLM supports running using single-point or
+In addition to <envar>PTS_MODE</envar> the &clm; supports running using single-point or
 regional datasets that are customized to a particular region. In the section below we
 tell the user how to create their own dataset, but we also support a small number of
 single-point and regional datasets that are ready to setup and run in the CCSM modeling
@@ -76,7 +76,7 @@ do the following:
 > cd scripts
 > create_newcase -case testSPDATASET -res pt1_pt1 -compset I -mach bluefire -skip_rundb
 > cd testSPDATASET
-> xmlchange -file env_conf.xml -id CLM_PT1_NAME -val 1x1_mexicocityMEX
+> xmlchange -file env_conf.xml -id &CLM1PT; -val 1x1_mexicocityMEX
 </screen>
 Then configure, build and run normally.
 </para>
@@ -112,9 +112,9 @@ Note, the script works on all files other than the "finidat" file as it's a 1D v
 The script will extract out a block of gridpoints from all the input global datasets,
 and create the full suite of input datasets to run over that block. The input datasets
 will be named according to the input "id" you give them and the id can then be used
-as input to <envar>CLM_USRDAT_NAME</envar> to create a case that uses it. See
-the section on <link linkend="clm_script">CLM Script Configuration Items</link> for 
-more information on setting <envar>CLM_USRDAT_NAME</envar> (in <xref 
+as input to &CLMUSRDAT; to create a case that uses it. See
+the section on <link linkend="clm_script">&clm; Script Configuration Items</link> for 
+more information on setting &CLMUSRDAT; (in <xref 
 linkend="customize"></xref>). The list of files extracted by
 their name used in the namelists are:
 <varname>fatmgrid</varname>, <varname>fatmlndfrc</varname>, 

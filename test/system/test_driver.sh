@@ -97,7 +97,9 @@ export MP_EUIDEVICE=sn_all
 export MP_SHARED_MEMORY=yes
 export LAPI_USE_SHM=yes
 export MP_EUILIB=us
-export MP_EAGER_LIMIT=32k
+# commenting out the following line because we believe it will be better to use 
+# the defaults, which change with processor count
+#export MP_EAGER_LIMIT=32k
 export MP_BULK_MIN_MSG_SIZE=64k
 export MP_POLLING_INTERVAL=20000000
 export MEMORY_AFFINITY=MCM
@@ -108,6 +110,7 @@ export MP_RFIFO_SIZE=16777216
 export MP_SHM_ATTACH_THRESH=500000
 export MP_EUIDEVELOP=min
 export MP_USE_BULK_XFER=yes
+export MP_BUFFER_MEM=64M
 
 export MP_RC_MAX_QP=8192
 export LAPI_DEBUG_RC_DREG_THRESHOLD=1000000
@@ -129,8 +132,7 @@ export DATM_QIAN_DATA_DIR="/cgd/tss/atm_forcing.datm7.Qian.T62.c080727"
 export DIN_LOC_ROOT="/fs/cgd/csm/inputdata"
 dataroot="/fs/cgd/csm"
 
-export LD_LIBRARY_PATH="/contrib/tcl8.4.19/unix:\$LD_LIBRARY_PATH"
-export PATH="/contrib/xlf/12.01.0000.0003/bin:\$PATH"
+
 echo_arg=""
 
 EOF

@@ -8,7 +8,7 @@ grid point. If you want to easily have these files available for continued use i
 development you will then want to include them in the build-namelist database so
 that build-namelist can easily find them for you. You can deal with them, just by
 editing your namelist by hand (or using a user_nl_clm namelist file), or by using
-<envar>CLM_USRDAT_NAME</envar>. Another way to deal with them is to enter them into
+&CLMUSRDAT;. Another way to deal with them is to enter them into
 the database for build-namelist, so that build-namelist can find them for you.
 This keeps one central database for all your files, rather than having multiple locations
 to keep track of files. If you have a LOT of files to keep track of it also might

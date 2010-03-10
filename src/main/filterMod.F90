@@ -25,8 +25,8 @@ module filterMod
   private
 
   type clumpfilter
-#ifdef DGVM
-     integer, pointer :: natvegp(:)      ! DGVM nat-vegetated (present) filter (pfts)
+#if (defined CNDV)
+     integer, pointer :: natvegp(:)      ! CNDV nat-vegetated (present) filter (pfts)
      integer :: num_natvegp              ! number of pfts in nat-vegetated filter
 #endif
 
@@ -81,6 +81,7 @@ module filterMod
 ! !REVISION HISTORY:
 ! Created by Mariana Vertenstein
 ! 11/13/03, Peter Thornton: Added soilp and num_soilp
+! Jan/08, S. Levis: Added crop-related filters
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -139,10 +140,6 @@ contains
     do nc = 1, nclumps
        call get_clump_bounds(nc, begg, endg, begl, endl, begc, endc, begp, endp)
 
-#ifdef DGVM
-       allocate(filter(nc)%natvegp(endp-begp+1))
-#endif
-
        allocate(filter(nc)%lakep(endp-begp+1))
        allocate(filter(nc)%nolakep(endp-begp+1))
        allocate(filter(nc)%nolakeurbanp(endp-begp+1))
@@ -155,6 +152,10 @@ contains
 
        allocate(filter(nc)%snowc(endc-begc+1))
        allocate(filter(nc)%nosnowc(endc-begc+1))
+
+#if (defined CNDV)
+       allocate(filter(nc)%natvegp(endp-begp+1))
+#endif
 
        allocate(filter(nc)%hydrologyc(endc-begc+1))
 
@@ -229,8 +230,6 @@ contains
 
        fl = 0
        fnl = 0
-!dir$ concurrent
-!cdir nodep
        do c = begc,endc
           l = clm3%g%l%c%landunit(c)
           if (clm3%g%l%lakpoi(l)) then
@@ -250,8 +249,6 @@ contains
        fl = 0
        fnl = 0
        fnlu = 0
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           if (clm3%g%l%c%p%wtgcell(p) > 0._r8) then
              l = clm3%g%l%c%p%landunit(p)
@@ -275,8 +272,6 @@ contains
        ! Create soil filter at column-level
 
        fs = 0
-!dir$ concurrent
-!cdir nodep
        do c = begc,endc
           l = clm3%g%l%c%landunit(c)
           if (clm3%g%l%itype(l) == istsoil) then
@@ -290,8 +285,6 @@ contains
        ! Filter will only be active if weight of pft wrt gcell is nonzero
 
        fs = 0
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           if (clm3%g%l%c%p%wtgcell(p) > 0._r8) then
              l = clm3%g%l%c%p%landunit(p)
@@ -306,8 +299,6 @@ contains
        ! Create column-level hydrology filter (soil and Urban pervious road cols) 
 
        f = 0
-!dir$ concurrent
-!cdir nodep
        do c = begc,endc
           l = clm3%g%l%c%landunit(c)
           if (clm3%g%l%itype(l) == istsoil .or. ctype(c) == icol_road_perv ) then
@@ -321,8 +312,6 @@ contains
 
        f = 0
        fn = 0
-!dir$ concurrent
-!cdir nodep
        do l = begl,endl
           if (clm3%g%l%itype(l) == isturb) then
              f = f + 1
@@ -339,8 +328,6 @@ contains
 
        f = 0
        fn = 0
-!dir$ concurrent
-!cdir nodep
        do c = begc,endc
           l = clm3%g%l%c%landunit(c)
           if (clm3%g%l%itype(l) == isturb) then
@@ -358,8 +345,6 @@ contains
 
        f = 0
        fn = 0
-!dir$ concurrent
-!cdir nodep
        do p = begp,endp
           l = clm3%g%l%c%p%landunit(p)
           if (clm3%g%l%itype(l) == isturb .and. clm3%g%l%c%p%wtgcell(p) > 0._r8) then
@@ -374,7 +359,7 @@ contains
        filter(nc)%num_nourbanp = fn
 
        ! Note: snow filters are reconstructed each time step in Hydrology2
-       ! Note: DGVM present vegetated filter is reconstructed each time DGVM is run
+       ! Note: CNDV "pft present" filter is reconstructed each time CNDV is run
 
     end do
 !$OMP END PARALLEL DO

@@ -70,7 +70,8 @@ OPTIONS
      -s                       Turns on silent mode - only fatal messages issued.
      -sim_year "year"         Year to simulate for input datasets (i.e. 1850, 2000, 1850-2000, 1850-2100)
                               "-sim_year list" to list valid simulation years
-     -start_type "type"       Type of simulation (cold, arb_ic, startup, continue, or branch)
+     -clm_start_type "type"   Type of simulation (default, cold, arb_ic, startup, continue, or branch)
+                              (default=do the default type for this configuration)
                               (cold=always start with arbitrary initial conditions)
                               (arb_ic=start with arbitrary initial conditions if initial conditions don't exist)
                               (startup=ensure that initial conditions are being used)
@@ -180,7 +181,7 @@ GetOptions(
     "drv_runlength=s"           => \$opts{'drv_runlength'},
     "s|silent"                  => \$opts{'silent'},
     "sim_year=s"                => \$opts{'sim_year'},
-    "start_type=s"              => \$opts{'start_type'},
+    "clm_start_type=s"          => \$opts{'clm_start_type'},
     "datm_source=s"             => \$opts{'datm_source'},
     "test"                      => \$opts{'test'},
     "use_case=s"                => \$opts{'use_case'},
@@ -611,19 +612,25 @@ if (defined $opts{'clm_usr_name'}) {
 # namelist group: seq_infodata_inparm #
 #######################################
 
-# Run type for driver namelist - note that arb_ic implies that the run is startup
-my $var = "start_type";
-my $start_type = $nl->get_value($var);
+# Get clm run type
+my $var = "clm_start_type";
 if (defined $opts{$var}) { 
-    $start_type = $opts{$var};
-    if ($opts{$var} eq "cold" || $opts{$var} eq "arb_ic") {
-       add_default($nl, $var, 'val'=>'startup'); 
+    if ($opts{$var} eq "default" ) {
+       add_default($nl, $var );
     } else {
        add_default($nl, $var, 'val'=>$opts{$var}); 
     }
 } else {
     add_default($nl, $var );
-    $start_type = $nl->get_value($var);
+}
+my $clm_start_type = $nl->get_value($var);
+
+# Run type for driver namelist - note that arb_ic implies that the run is startup
+my $var = "start_type";
+if ($clm_start_type eq "'cold'" || $clm_start_type eq "'arb_ic'") {
+   add_default($nl, $var, 'val'=>'startup'   ); 
+} else {
+   add_default($nl, $var, 'val'=>$clm_start_type ); 
 }
 
 if ($mode eq "ccsm_seq") {
@@ -672,9 +679,13 @@ if ($mode eq "ccsm_seq") {
    add_default($nl, 'eps_amask'  );
    add_default($nl, 'eps_aarea'  );
    
-   if ( $start_type =~ /branch/ ) {
+   if ( $clm_start_type =~ /branch/ ) {
       if ( not defined $nl->get_value('restart_file') ) {
-         die "$nm restart_file MUST be set when start_type equals branch\n";
+         die "$nm restart_file MUST be set when clm_start_type equals branch\n";
+      }
+   } else {
+      if ( defined $nl->get_value('restart_file') ) {
+         die "$nm restart_file ONLY needed when clm_start_type equals branch\n";
       }
    }
 
@@ -792,11 +803,31 @@ if ($mode eq "ccsm_seq" ) {
 # namelist group: clm_inparm #
 ##############################
 
+$var = "start_type";
+my $drv_start_type = $nl->get_value($var);
+my $my_start_type  = $clm_start_type;
+my $nsrest         = $nl->get_value('override_nsrest');
+if ( defined($nsrest) ) {
+   if ( $nsrest == 0 ) { $my_start_type = "startup";  }
+   if ( $nsrest == 1 ) { $my_start_type = "continue"; }
+   if ( $nsrest == 3 ) { $my_start_type = "branch";   }
+   if ( "$my_start_type" eq "$drv_start_type" ) {
+      die "$ProgName ERROR:: no need to set override_nsrest to same as start_type.\n";
+   }
+   if ( "$drv_start_type" !~ /startup/ ) {
+      die "$ProgName ERROR:: can NOT set override_nsrest if driver is NOT a startup type.\n";
+   }
+}
+
 add_default($nl, 'dtime');
 
-if ( $start_type =~ /branch/ ) {
+if ( $my_start_type =~ /branch/ ) {
    if (not defined $nl->get_value('nrevsn')) {
       die "$ProgName ERROR:: nrevsn is required for a branch type.\n";
+   }
+} else {
+   if (defined $nl->get_value('nrevsn')) {
+      die "$ProgName ERROR:: nrevsn should ONLY be set for a branch type.\n";
    }
 }
 
@@ -813,7 +844,6 @@ add_default($nl, 'fatmgrid'  , 'hgrid'=>$res );
 
 
 add_default($nl, 'fpftcon');
-
 
 add_default($nl, 'co2_ppmv', 'sim_year'=>$sim_year );
 add_default($nl, 'co2_type');
@@ -878,7 +908,7 @@ my $fsurdat = $nl->get_value( 'fsurdat' );
 # the user explicitly requests to ignore the initial date via the -ignore_ic_date option, 
 # or just ignore the year of the initial date via the -ignore_ic_year option.
 
-if ( $start_type =~ /cold/ ) {
+if ( $clm_start_type =~ /cold/ ) {
    if (defined $nl->get_value('finidat')) {
       die "$ProgName ERROR:: setting finidat is incomptable with using start_type=cold.\n";
    }
@@ -889,7 +919,7 @@ if (not defined $nl->get_value('finidat')) {
     my $ic_date = $nl->get_value('start_ymd');
     my $nofail = 1;
     my $var = "finidat";
-    if ( $start_type =~ /startup/  ) { $nofail = 0; }
+    if ( $clm_start_type =~ /startup/  ) { $nofail = 0; }
     if ($opts{'ignore_ic_date'}) {
 	   add_default($nl, $var, 'hgrid'=>$lnd_res, 'mask'=>$mask, 
                     'nofail'=>$nofail, 'fpftdyn'=>$fpftdyn, 'fndepdyn'=>$fndepdyn, 
@@ -916,6 +946,9 @@ if (not defined $nl->get_value('finidat')) {
 #
 if ( ($bgc eq "cn") && not defined $nl->get_value('fndepdyn') ) {
    add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'nofail'=>1 );
+}
+if ( defined($nl->get_value('fndepdat')) && defined($nl->get_value('fndepdyn')) ) {
+   die "$ProgName ERROR:: Both fndepdat AND fndepdyn are set, must only set one!\n";
 }
  
 ###############################
@@ -1142,7 +1175,7 @@ if ($mode eq "ccsm_seq") {
     add_default($nl, 'atm_in');
     $atm_in = $nl->get_value('atm_in');
     $atm_in =~ s/"|'//g;
-    if ( $start_type =~ /branch/ ) {
+    if ( $clm_start_type =~ /branch/ ) {
        # The datm master restart file is currently unused
        #if (not defined $nl->get_value('restfilm')) {
        #   die "$ProgName ERROR:: restfilm is required for a branch type.\n";

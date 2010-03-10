@@ -1,19 +1,20 @@
 <!-- Beg of tools chapter -->
 <chapter id="tools">
-<title>Using the CLM tools to create your own input datasets</title>
+<title>Using the &clm; tools to create your own input datasets</title>
 <para>
-There are several tools provided with CLM that allow you to create your own input 
+There are several tools provided with &clm; that allow you to create your own input 
 datasets at resolutions you choose, or to interpolate initial conditions to a different
-resolution, or used to compare CLM history files between different cases. The tools are
+resolution, or used to compare &clm; history files between different cases. The tools are
 all available in the <filename>models/lnd/clm/tools</filename> directory. Most of the tools
-are FORTRAN stand-alone programs in their own directory, but there is also a suite of NCL
-scripts in the <filename>ncl_scripts</filename> directory. Some of the NCL scripts are
+are FORTRAN stand-alone programs in their own directory, but there is also a suite of
+&ncl;
+scripts in the <filename>ncl_scripts</filename> directory. Some of the &ncl; scripts are
 very specialized and not meant for general use, and we won't document them here. They
 still contain documentation in the script itself and the README file in the tools
 directory. But, the list of generally important scripts and programs are:
 <orderedlist>
 <listitem>
-<para> <emphasis>cprnc</emphasis> to compare NetCDF files with a time axis.</para>
+<para> <emphasis>cprnc</emphasis> to compare &netcdf; files with a time axis.</para>
 </listitem>
 <listitem>
 <para> <emphasis>interpinic</emphasis> to interpolate initial condition files.</para>
@@ -53,7 +54,7 @@ All of the Makefiles use GNU Make extensions and thus require that you use GNU m
 to use them. They also auto detect the type of platform you are on, using "uname -s"
 and set the compiler, compiler flags and such accordingly. There are also environment
 variables that can be set to set things that must be customized. All the tools use
-NetCDF and hence require that the path to the NetCDF libraries and include files.
+&netcdf; and hence require that the path to the &netcdf; libraries and include files.
 On some platforms (such as Linux) multiple compilers can be used, and hence there
 are env variables that can be set to change the FORTRAN and/or "C" compilers used.
 The tools other than "cprnc" also  allow finer control, by also allowing the user to
@@ -69,13 +70,13 @@ the <envar>OMP_NUM_THREADS</envar> environment variable.
 <para>
 Options used by all: cprnc, interpinic, mkdatadomain, mkgriddata, and mksurfdata
 <simplelist>
-<member><envar>LIB_NETCDF</envar> -- sets the location of the NetCDF library.</member>
-<member><envar>INC_NETCDF</envar> -- sets the location of the NetCDF include files.</member>
+<member><envar>LIB_NETCDF</envar> -- sets the location of the &netcdf; library.</member>
+<member><envar>INC_NETCDF</envar> -- sets the location of the &netcdf; include files.</member>
 <member><envar>USER_FC</envar> -- sets the name of the FORTRAN compiler.</member>
 </simplelist>
 Options used by: interpinic, mkdatadomain, mkgriddata, and mksurfdata
 <simplelist>
-<member><envar>MOD_NETCDF</envar> -- sets the location of the NetCDF FORTRAN module.</member>
+<member><envar>MOD_NETCDF</envar> -- sets the location of the &netcdf; FORTRAN module.</member>
 <member><envar>USER_LINKER</envar> -- sets the name of the linker to use.</member>
 <member><envar>USER_CPPDEFS</envar> -- adds any CPP defines to use.</member>
 <member><envar>USER_CFLAGS</envar> -- add any "C" compiler flags to use.</member>
@@ -109,9 +110,9 @@ More details on each environment variable.
 <member><envar>SMP</envar></member>
 <member><envar>OPT</envar></member>
 </simplelist>
-"cprnc" unlike the other CLM tools doesn't need any outside code to operate. The
-other tools are use some code outside their directory that is in the CCSM
-distribution (either csm_share code or clm source code). They all have a 
+"cprnc" unlike the other &clm; tools doesn't need any outside code to operate. The
+other tools are use some code outside their directory that is in the &ccsm;
+distribution (either csm_share code or &clm; source code). They all have a 
 <filename>Filepath</filename> file to set the location of the source code
 directories that will be used. The "cprnc" program uses the <envar>VPATH</envar>
 variable instead to do the same function.
@@ -121,7 +122,8 @@ variable instead to do the same function.
 <sect1 id="cprnc">
 <title>Using the cprnc tool to compare two history files</title>
 <para>
-"cprnc" is a tool shared by both CAM and CLM to compare two NetCDF history files.
+"cprnc" is a tool shared by both <acronym>CAM</acronym> and &clm; to compare two
+&netcdf; history files.
 It differences every field that has a time-axis that is also shared on both files,
 and reports a summary of the difference. The summary includes the three largest 
 differences, as well as the root mean square (RMS) difference. It also gives some
@@ -150,7 +152,7 @@ See the "cprnc"
 resolutions</title>
 <para>
 "interpinic" is used to interpolate initial conditions from one resolution to another.
-In order to do the interpolation you must first run CLM to create a restart file to
+In order to do the interpolation you must first run &clm; to create a restart file to
 use as the "template" to interpolate into. Running from arbitrary initial conditions
 (i.e. finidat = ' ') for a single time-step is sufficient to do this. Make sure the
 model produces a restart file. You also need to make sure that you setup the same
@@ -166,39 +168,40 @@ Options:
 <sect1 id="mkgriddata">
 <title>Using mkgriddata to create grid datasets</title>
 <para>
-"mkgriddata" is used to create grid, fraction and topography datasets to run CLM
+"mkgriddata" is used to create grid, fraction and topography datasets to run &clm;
 at a new resolution. It is typically the first step in creating datasets needed
-to run CLM at a new resolution (followed by mksurfdata, and then the interpolation
+to run &clm; at a new resolution (followed by mksurfdata, and then the interpolation
 programs, aerdepregrid, ndepregrid when running with CN).
 </para>
 <para>
 There are three different major modes for using "mkgriddata" to create grid files
-for CLM:
+for &clm;:
 <simplelist>
-<member>Convert CCSM domain files to CLM grid files</member>
-<member>Convert CAM files to CLM grid files</member>
+<member>Convert &ccsm; domain files to &clm; grid files</member>
+<member>Convert <acronym>CAM</acronym> files to &clm; grid files</member>
 <member>Create single point or regional area grid files</member>
 </simplelist>
 </para>
 
 <sect2 id="mkgridata_from_domainfile">
-<title>Convert CCSM domain files to CLM grid files</title>
+<title>Convert &ccsm; domain files to &clm; grid files</title>
 <para>
-CCSM domain files such as used for datm, include all the information
-needed to create CLM grid files.
+&ccsm; domain files such as used for datm, include all the information
+needed to create &clm; grid files.
 <screen>
 </screen>
 </para>
 </sect2>
 
 <sect2 id="mkgridata_from_camfile">
-<title>Convert CAM files to CLM grid files</title>
+<title>Convert <acronym>CAM</acronym> files to &clm; grid files</title>
 <para>
-Older CAM initial files included all the information needed to create CLM
-grid files. Newer CAM files no longer include land fraction data. Hence you
-can use CAM files to give you the grid coordinates, but you need other data
+Older <acronym>CAM</acronym> initial files included all the information needed to create &clm;
+grid files. Newer <acronym>CAM</acronym> files no longer include land fraction data. Hence you
+can use <acronym>CAM</acronym> files to give you the grid coordinates, but you need other data
 to give you the land-mask and topography.
 <screen>
+...
 </screen>
 </para>
 </sect2>
@@ -206,7 +209,7 @@ to give you the land-mask and topography.
 <sect2 id="mkgridata_regional">
 <title>Create single point or regional area grid files</title>
 <para>
-The process to create single-point or regional area CLM grid files is the same.
+The process to create single-point or regional area &clm; grid files is the same.
 You enter the number of latitudes and longitudes you want on your output file and
 the extent of the grid: North, East, South and West. You also tell "mkgriddata" that
 you are entering a "regional" grid and you also enter the standard Navy orography
@@ -242,11 +245,11 @@ Namelist options to mkgriddata include:
 and surface heights.</member>
 <member><varname>mksrf_frawtopo</varname> -- Raw topography file with just surface
 heights.</member>
-<member><varname>mksrf_fcamfile</varname> -- CAM initial conditions file with
+<member><varname>mksrf_fcamfile</varname> -- <acronym>CAM</acronym> initial conditions file with
 land-fractions and topography</member>
-<member><varname>mksrf_fclmgrid</varname> -- CLM grid file</member>
-<member><varname>mksrf_fccsmdom</varname> -- CCSM domain file</member>
-<member><varname>mksrf_fcamtopo</varname> -- CAM topography file</member>
+<member><varname>mksrf_fclmgrid</varname> -- &clm; grid file</member>
+<member><varname>mksrf_fccsmdom</varname> -- &ccsm; domain file</member>
+<member><varname>mksrf_fcamtopo</varname> -- <acronym>CAM</acronym> topography file</member>
 <member><varname>mksrf_lsmlon</varname> -- number of longitude for regional grid</member>
 <member><varname>mksrf_lsmlat</varname>number of latitudes for regional grid</member>
 <member><varname>mksrf_edgen</varname> -- Northern edge for regional grid</member>
@@ -260,9 +263,9 @@ land-fractions and topography</member>
 </sect1>
 
 <sect1 id="mkdatadomain">
-<title>Using mkdatadomain to create domain datasets for datm or docn from CLM grid datasets</title>
+<title>Using mkdatadomain to create domain datasets for datm or docn from &clm; grid datasets</title>
 <para>
-"mkdatadomain" is used to convert CLM grid and fraction datasets into domain datasets
+"mkdatadomain" is used to convert &clm; grid and fraction datasets into domain datasets
 that can be used by either the "datm" or "docn" models.
 </para>
 </sect1>
@@ -272,21 +275,21 @@ that can be used by either the "datm" or "docn" models.
 <para>
 "mksurfdata" is used to create surface-datasets from grid datasets and raw datafiles
 at half-degree resolution to produce files that describe the surface characteristics
-needed by CLM (fraction of grid cell covered by different land-unit types, and fraction
+needed by &clm; (fraction of grid cell covered by different land-unit types, and fraction
 for different vegetation types, as well as things like soil color, and soil texture,
 etc.).
 </para>
 </sect1>
 
 <sect1 id="ncl_scripts">
-<title>Using NCL scripts ndepregrid.ncl and aerdepregrid.ncl to interpolate aerosol deposition datasets</title>
+<title>Using &ncl; scripts ndepregrid.ncl and aerdepregrid.ncl to interpolate aerosol deposition datasets</title>
 <para>
-Unlike the other tools, these are NCAR Command Language (NCL) scripts
-and you will need to get a copy of NCL in order to use them. You also won't have to
-build an executable in order to use them, hence no Makefile is provided. NCL is provided
+Unlike the other tools, these are NCAR Command Language (&ncl;) scripts
+and you will need to get a copy of &ncl; in order to use them. You also won't have to
+build an executable in order to use them, hence no Makefile is provided. &ncl; is provided
 for free download as either binaries or source code from:
-<ulink url="http://www.ncl.ucar.edu/">http://www.ncl.ucar.edu/</ulink>. The NCL
-web-site also contains documentation on NCL and it's use.
+<ulink url="http://www.ncl.ucar.edu/">http://www.ncl.ucar.edu/</ulink>. The &ncl;
+web-site also contains documentation on &ncl; and it's use.
 </para>
 <para>
 Both the <filename>ndepregrid.ncl</filename> and <filename>aerdepregrid.ncl</filename>
@@ -303,7 +306,7 @@ The list of environment variables that can be set are:
 1850-2100)</member>
 <member><envar>GRDFIL</envar> -- full pathname of grid file to use 
 (in place of getting the default grid file based on the <envar>RES</envar> value)</member>
-<member><envar>CSMDATA</envar> -- CCSM inputdata directory</member>
+<member><envar>CSMDATA</envar> -- &ccsm; inputdata directory</member>
 <member><envar>CLM_ROOT</envar> -- root directory for clm (models/lnd/clm directory)</member>
 </simplelist>
 </para>
@@ -342,7 +345,7 @@ to specify both <envar>SIM_YR</envar> and <envar>SIM_YR_RNG</envar>, where
 </para>
 <para>
 The default for <envar>CSMDATA</envar> works for NCAR computers, but will need to
-be set to the top level directory location of your CCSM input data on other computers.
+be set to the top level directory location of your &ccsm; input data on other computers.
 If you set this as a default for your shell when you login (for example with your
 <filename>$HOME/.cshrc</filename> if you use csh) you won't have to set it each time
 you run the script. <envar>CLM_ROOT</envar> will default to the proper location
@@ -396,7 +399,7 @@ simulation-year range of 1850 to 2100 and the rcp of 8.5, you would do the follo
 <sect1 id="tools_conclude">
 <title>Conclusion of tools description</title>
 <para>
-We've given a description of how to use the different tools with CLM to create
+We've given a description of how to use the different tools with &clm; to create
 customized datasets. In the next chapter we will talk about how to make these
 files available for build-namelist so that you can easily create simulations
 that include them. In the chapter on single-point and regional datasets we also

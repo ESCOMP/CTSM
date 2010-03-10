@@ -10,12 +10,12 @@ Toggle to turn on accelerated decomposition spinup for CN biogeochemistry model
 <entry id="snicar_frc" valid_values="on,off" value="off" category="physics">
 Toggle to turn on calculation of SNow and Ice Aerosol Radiation model (SNICAR) radiative forcing
 </entry>
-<entry id="bgc" valid_values="none,cn,casa,dgvm" value="none" category="bgc">
+<entry id="bgc" valid_values="none,cn,cndv,casa" value="none" category="bgc">
 CLM Biogeochemistry mode
    none = Satellite Phenology (SP)
    cn   = Carbon Nitrogen model
+   cndv = Carbon Nitrogen with Dynamic Global Vegetation Model
    casa = CASA' model based on Carnegie-Ames-Stanford Approach Carbon-only cycle model
-   dgvm = Dynamic Global Vegetation Model
 </entry>
 <entry id="clm_root" value="" category="directories">
 Root directory of CLM source distribution (directory above configure).
@@ -36,7 +36,7 @@ Note: It's recommended to use configure options to set standard CPP values rathe
 than defining them here.
 </entry>
 <entry id="cc" value="" category="standalone_test">
-User specified C compiler overrides Makefile default (linux only).
+User specified C compiler overrides Makefile default (Linux and Darwin only).
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
 <entry id="cflags" value="" category="standalone_test">
@@ -103,9 +103,11 @@ ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scr
 Directory containing ESMF library (for linking to external ESMF).
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
-<entry id="maxpft"  value="numpft+1" category="physics">
+
+<entry id="maxpft"  value="numpft+1" valid_values="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,numpft\+1">
 Maximum number of plant function types (PFT)  per gridcell (numpft+1 means use all available)
 </entry>
+
 <entry id="mpi_inc" value="" category="standalone_test">
 Directory containing MPI include files.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
@@ -144,10 +146,10 @@ Toggle to make wild-fires inactive for biogeochemistry=CN mode
 </entry>
 <entry id="target_os" value="" category="mach_options">
 OS for which CLM is being built.  The value is the name returned by the "uname -s"
-command on the target platform.  This parameter is to allow cross-compilation.
-(linux,aix,darwin,bgp etc.)
+command on the target platform.  This parameter is to allow cross-compilation
+(linux,aix,darwin,bgp etc.).
 </entry>
-<entry id="voc" valid_values="on,off" value="on" category="physics">
+<entry id="voc" valid_values="on,off" value="off" category="standalone_test">
 Toggle to turn on coupling of Volatile Organic Compounds module to atmosphere model.
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts.
 This is turned on with the CCSM_VOC env_conf.xml in the standard ccsm scripts.

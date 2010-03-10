@@ -62,7 +62,8 @@ contains
     use shr_kind_mod, only: r8 => shr_kind_r8
     use clmtype
     use clm_atmlnd      , only : clm_a2l
-    use clm_varcon      , only : denh2o, denice, istice, istwet, istsoil, isturb, spval, &
+    use clm_varcon      , only : denh2o, denice, spval, &
+                                 istice, istwet, istsoil, isturb, &
                                  icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, &
                                  icol_shadewall
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevsoi
@@ -202,7 +203,7 @@ contains
     real(r8) :: hk(lbc:ubc,1:nlevgrnd)     ! hydraulic conductivity (mm h2o/s)
     real(r8) :: dhkdw(lbc:ubc,1:nlevgrnd)  ! d(hk)/d(vol_liq)
     real(r8) :: psi,vwc,fsattmp            ! temporary variables for soilpsi calculation
-#if (defined DGVM) || (defined CN) || (defined CASA)
+#if (defined CN) || (defined CASA)
     real(r8) :: watdry                     ! temporary
     real(r8) :: rwat(lbc:ubc)              ! soil water wgted by depth to maximum depth of 0.5 m
     real(r8) :: swat(lbc:ubc)              ! same as rwat but at saturation
@@ -532,7 +533,7 @@ contains
     end do
 #endif
 
-#if (defined DGVM) || (defined CN) || (defined CASA)
+#if (defined CN) || (defined CASA)
     ! Available soil water up to a depth of 0.5 m.
     ! Potentially available soil water (=whc) up to a depth of 0.5 m.
     ! Water content as fraction of whc up to a depth of 0.5 m.
