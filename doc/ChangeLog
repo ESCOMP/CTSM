@@ -1,4 +1,141 @@
 ===============================================================
+Tag name:  clm3_7_07
+Originator(s):  erik (erik)
+Date: Wed Mar 10 23:35:37 MST 2010
+One-line Summary: New finidat datasets for 1-deg, 2-deg, and abort if weights from finidat/fsurdat files are too different, and use fsurdat files as truth
+
+Purpose of changes:
+
+Use surfdata weights and stop if finidat file weights are too different. Use ccsm4init
+datasets for finidat files for 1-deg and 2-deg. In I compsets, setup for special I case
+finidat files. Update scripts. Drydep changes from Francis. Change cell_method to
+cell_methods. Allow clm_start_type to be overridden if on use_case. Only set orb_iyearad
+for standalone clm testing. Allow vars on use_cases to not be set for some configs. Make
+sure all BGC modes are set for variables on use_cases. Set cold-start for pergro cases.
+Update documentation.
+
+Bugs fixed (include bugzilla ID):
+                                1098 (use weights from surdat file rather than finidat file)
+                                1121 (history variable attribute cell_methods misnamed)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+
+     New finidat files for 1-deg and 2-deg (from fully coupled simulations)
+     New datasets for I cases that are set in scripts
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self, dlawren, slevis, oleson
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts
+
+    scripts to scripts4_100310c
+
+    This version of scripts sets up special finidat files that will be used
+    for all I cases (other cases use the fully coupled datasets that are stored
+    in the namelist_defaults_clm.xml database).
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - New finidat files
+M      models/lnd/clm/src/biogeochem/DryDepVelocity.F90 ------------ Changes from Francis
+M      models/lnd/clm/src/main/ncdio.F90 --------------------------- Change cell_method to cell_methods
+M      models/lnd/clm/src/main/clm_initializeMod.F90 --------------- Remove second call to pftdyn_interp
+M      models/lnd/clm/src/biogeophys/BiogeophysRestMod.F90 --------- Compare weights only
+                if NOT restart and NOT branch with pftdyn. If weights are too different
+                abort, if close enough write a warning and continue using the surfdata
+                weights
+
+>>>>>>>>>>>>>>>> Some work on documentation
+M      models/lnd/clm/doc/KnownBugs
+M      models/lnd/clm/doc/UsersGuide/preface.xml
+M      models/lnd/clm/doc/IMPORTANT_NOTES
+M      models/lnd/clm/doc/Quickstart.GUIDE
+
+>>>>>>>>>>>>>>>> Allow clm_start_type to be overridden if on use_case
+>>>>>>>>>>>>>>>> Allow vars in use_cases to not be set for some configs
+M      models/lnd/clm/bld/build-namelist
+
+>>>>>>>>>>>>>>>> Change start_type to clm_start_type for all use-cases
+>>>>>>>>>>>>>>>> Only set orb_iyearad for standalone clm testing
+M      models/lnd/clm/bld/namelist_files/use_cases/2000_control.xml
+M      models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp8.5_transient.xml
+M      models/lnd/clm/bld/namelist_files/use_cases/2000-2100_rcp8.5_transient.xml
+M      models/lnd/clm/bld/namelist_files/use_cases/20thC_transient.xml
+M      models/lnd/clm/bld/namelist_files/use_cases/1850_control.xml
+M      models/lnd/clm/bld/namelist_files/use_cases/pergro.xml --------- Set start to cold
+M      models/lnd/clm/bld/namelist_files/use_cases/pergro0.xml -------- Set start to cold
+M      models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp4.5_transient.xml
+
+Summary of testing:
+
+  bluefire: All PASS except...
+024 blHN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10 colFAIL! rc= 7
+025 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+026 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+027 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+028 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+  bluefire interactive testing: All PASS except...
+006 smCA4 TSM.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 10
+007 erCA4 TER.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ....FAIL! rc= 5
+008 brCA4 TBR.sh _nrsc_ds clm_std^nl_urb_br 20021001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic .FAIL! rc= 5
+009 blCA4 TBL.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 4
+010 smNB4 TSM.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 10
+011 erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 57+100 arb_FAIL! rc= 5
+012 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arFAIL! rc= 5
+013 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 4
+018 smCA8 TSM.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 10
+019 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 4
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+  bluefire/CCSM testing: All PASS except...
+FAIL  ERS.f19_g16.I1850.bluefire.compare_hist.clm3_7_06 
+FAIL  ERS.f19_g16.I1850.bluefire.compare.clm3_7_06 
+FAIL  ERB.f09_g16.I_1948-2004.bluefire.compare.clm3_7_06 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm3_7_07 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm3_7_06 
+SFAIL PST.f10_f10.I8520CN.bluefire.GC.201955 
+SFAIL PET_PT.f10_f10.I8520CN.bluefire.GC.201955 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm3_7_06 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm3_7_06 
+  jaguar interactive testing: All PASS up to...
+005 smAK4 TSM.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10 cold
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_06
+
+Changes answers relative to baseline: Different initial condition datasets, 
+                also now using weights from surfdata files rather than finidat files
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_06
 Originator(s):  erik (erik)
 Date: Wed Mar 10 16:35:57 MST 2010
@@ -19,6 +156,7 @@ mask
 
 Bugs fixed (include bugzilla ID):
                                  1104 (Restart problem with pftdyn mode)
+                                 1118 (Restarts with SNICAR_FRC fail)
 
 Known bugs (include bugzilla ID):
                                   701 (svn keyword)
@@ -36,6 +174,7 @@ Known bugs (include bugzilla ID):
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
+                                1121 (history variable attribute cell_methods misnamed)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Switch cndv for dgvm, Have configure disallow
@@ -364,6 +503,8 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1104 (Restart problem with pftdyn mode)
+                                 1121 (history variable attribute cell_methods misnamed)
+                                 1118 (Restarts with SNICAR_FRC fail)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -660,6 +801,8 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1104 (Restart problem with pftdyn mode)
+                                 1121 (history variable attribute cell_methods misnamed)
+                                 1118 (Restarts with SNICAR_FRC fail)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: 
@@ -861,6 +1004,8 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1104 (Restart problem with pftdyn mode)
+                                 1121 (history variable attribute cell_methods misnamed)
+                                 1118 (Restarts with SNICAR_FRC fail)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1011,6 +1156,8 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1104 (Restart problem with pftdyn mode)
+                                 1121 (history variable attribute cell_methods misnamed)
+                                 1118 (Restarts with SNICAR_FRC fail)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Some changes to configure
@@ -1211,6 +1358,8 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1104 (Restart problem with pftdyn mode)
+                                 1121 (history variable attribute cell_methods misnamed)
+                                 1118 (Restarts with SNICAR_FRC fail)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1471,6 +1620,8 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1102 (OpenMP problem with pftdyn mode)
+                                 1121 (history variable attribute cell_methods misnamed)
+                                 1118 (Restarts with SNICAR_FRC fail)
 
 Describe any changes made to build system:
 

@@ -1,4 +1,12 @@
-Known Bugs in CLM4.0    		                          Jan/13/2010
+Known Bugs in CLM4.0    		                          Mar/10/2010
+
+====================================================================================
+Bug Number: 1101
+Supln mode is over-productive
+
+-supln on mode is over-productive. Fixing it requires using fnitr from the pft-physiology
+file, a different pft-physiology file with fnitr scaled appropriately and some code
+modifications to get this all to work. We expect to fix this with the CESM release.
 
 ====================================================================================
 Bug Number: 1100

@@ -1,4 +1,4 @@
-IMPORTANT_NOTES							Jan/13/2010
+IMPORTANT_NOTES							Mar/10/2010
 								Erik Kluzek
 
 Configure Modes NOT scientifically validated, documented, supported or even advised to be used:
@@ -9,9 +9,10 @@ Configure Modes NOT scientifically validated, documented, supported or even advi
    CASA 	(-bgc casa)
        The bgc=casa mode is NOT scientifically validated or documented and NOT recommended to be used.
 
-   DGVM 	(-bgc dgvm)
-       The bgc=dgvm  mode is NOT scientifically validated or documented and NOT recommended to be used.
-       This mode will be replaced by CNDV (coupled with bgc=cn mode) in the final CLM4.0 release (see below).
+   SUPLN	(-supln on with -bgc cn)
+       The supplemental Nitrogen mode (Carbon only mode of CN model) is known to be
+       too productive, and requires some modifications that will be on the CESM1.0
+       release.
 
    BUILDPIO  	(-pio)
        This mode is NOT tested and not even functional and hence should NOT be used. PIO WILL be provided
@@ -27,16 +28,6 @@ Configure Modes NOT scientifically validated, documented, supported or even advi
        affect the climate. The best method for this validation is to run 100 year simulations with both and
        make sure the climate is similar between each. We hope to validate the method using PERGRO in future
        versions of the model.
-
-Changes expected to happen for the official CCSM4.0 release:
-
-   CNDV mode will be available: (replaces the DGVM mode)
-       A Dynamic Vegetation mode coupled to the Carbon Nitrogen (bgc=cn) biogeochemistry mode WILL be provided
-       in the main CLM4.0 release.
-
-   VOC version will be updated:
-       The current Volatile Organic Compounds option used in CLM is the older version and NOT the newer MEGAN
-       version. The new MEGAN version WILL be provided in the main CLM4.0 release.
 
 Namelist items that should NOT be exercised:
 

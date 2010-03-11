@@ -42,7 +42,7 @@ Information on Compsets:
      The latest "I" compsets use the new CLM_QIAN data with solar following
      the cosine of solar zenith angle, precipitation constant, and other
      variables linear interpolated in time (and with appropriate time-stamps on
-     the date).
+     the date). Some of the I compsets are:
 
      Name		  (short-name): Description
      --------------------------------------------------------------------------
@@ -74,7 +74,7 @@ Automatically resubmitting jobs:
 
    After doing a short simulation that you believe is correct
 
-   $EDITOR env_run.xml
+   xmlchange -file env_run.xml -id CONTINUE_RUN -val TRUE
 
    # Change RESUBMIT to number greater than 0, and CONTINUE_RUN to TRUE...
 

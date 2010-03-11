@@ -102,6 +102,7 @@ contains
     type(landunit_type), pointer :: lptr  ! pointer to landunit derived subtype
     type(column_type)  , pointer :: cptr  ! pointer to column derived subtype
     type(pft_type)     , pointer :: pptr  ! pointer to pft derived subtype
+    real(r8), parameter :: adiff = 5.e-04_r8   ! tolerance of acceptible difference
     character(len=7), parameter :: filetypes(0:3) = (/ "finidat", "restart", "missing", "nrevsn " /)
     character(len=32) :: fileusing
     character(len=*), parameter :: sub="BiogeophysRest"
@@ -190,29 +191,43 @@ contains
 
        if (flag == 'read' )then
 
-          if ( nsrest == 0 .and. fpftdyn /= ' ' )then
+          if ( fpftdyn /= ' ' )then
              fileusing = "fsurdat/fpftdyn"
           else
-             fileusing = filetypes(nsrest)
+             fileusing = "fsurdat"
           end if
-          if ( .not.   weights_exactly_the_same( pptr, wtgcell, wtlunit, wtcol ) )then
+          !
+          ! Note: Do not compare weights if restart or if dynamic-pft branch
+          !
+          if ( nsrest == 1 .or. (nsrest == 3 .and. fpftdyn /= ' ') )then
+             ! Do NOT do any testing for restart or a pftdyn branch case
+          !
+          ! Otherwise test and make sure weights agree to reasonable tolerence
+          !
+          else if ( .not.weights_exactly_the_same( pptr, wtgcell, wtlunit, wtcol ) )then
   
-              if (      weights_within_roundoff_different( pptr, wtgcell, wtlunit, wtcol ) )then
-                 write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
-                                " file and fsurdat/fpftdyn files are different to roundoff -- using ", &
-                                trim(fileusing), " values."
-              else if ( weights_tooDifferent( begp, endp, pptr, wtgcell, maxdiff ) )then
-                 write(iulog,*) "WARNING:: PFT weights are SIGNIFICANTLY different from the input ", &
-                                filetypes(nsrest), " file and fsurdat/fpftdyn file."
-                 write(iulog,*) "WARNING:: Now using the weights from the ", trim(fileusing), " file."
-                 write(iulog,*) "WARNING:: maximum difference is ", maxdiff
-                 write(iulog,*) "WARNING:: Are you certain this is correct! ", &
-                                "Code is continuing, but may not be doing what you really want"
-              else
-                 write(iulog,*) sub//"::WARNING, weights different between ", filetypes(nsrest), &
-                                " file and fsurdat/fpftdyn file, but close enough -- using ",    &
-                                trim(fileusing), " values."
-              end if
+             if (      weights_within_roundoff_different( pptr, wtgcell, wtlunit, wtcol ) )then
+                write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
+                               " file and ", trim(fileusing), " file(s) are different to roundoff -- using ", &
+                               trim(fileusing), " values."
+             else if ( weights_tooDifferent( begp, endp, pptr, wtgcell, adiff, maxdiff ) )then
+                write(iulog,*) "ERROR:: PFT weights are SIGNIFICANTLY different from the input ", &
+                               filetypes(nsrest), " file and ", trim(fileusing), " file(s)."
+                write(iulog,*) "ERROR:: maximum difference is ", maxdiff, " max allowed = ", adiff
+                write(iulog,*) "ERROR:: Run interpinic on your initial condition file to interpolate to the new surface dataset"
+                call endrun( sub//"::ERROR:: Weights between initial condition file and surface dataset are too different" )
+             else
+                write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
+                               " file and ", trim(fileusing), " file(s) are different to < ", &
+                               adiff, " -- using ", trim(fileusing), " values."
+             end if
+             write(iulog,*) sub//"::WARNING, weights different between ", filetypes(nsrest), &
+                            " file and ", trim(fileusing), " file(s), but close enough -- using ",    &
+                            trim(fileusing), " values."
+             ! Copy weights from fsurdat file back in -- they are only off by roundoff to 1% or so...
+             pptr%wtgcell(:) = wtgcell(:)
+             pptr%wtlunit(:) = wtlunit(:)
+             pptr%wtcol(:)   = wtcol(:)
           end if
  
           deallocate( wtgcell )
@@ -2069,20 +2084,20 @@ contains
 ! !IROUTINE: weights_tooDifferent
 !
 ! !INTERFACE:
-  logical function weights_tooDifferent( begp, endp, pptr, wtgcell, maxdiff )
+  logical function weights_tooDifferent( begp, endp, pptr, wtgcell, adiff, maxdiff )
 !
 ! !DESCRIPTION:
 ! Determine if the weights read in are too different and should flag an error
 !
 ! !USES:
     use clmtype     , only : pft_type
-    use clm_varpar  , only : numpft
     implicit none
 !
 ! !ARGUMENTS:
     integer, intent(IN)     :: begp, endp         ! per-proc beginning and ending pft indices
     type(pft_type), pointer :: pptr               ! pointer to pft derived subtype
     real(r8), intent(IN)    :: wtgcell(begp:endp) ! grid cell weights for each PFT
+    real(r8), intent(IN)    :: adiff              ! tolerance of acceptible difference
     real(r8), intent(OUT)   :: maxdiff            ! maximum difference found
 !
 ! !REVISION HISTORY:
@@ -2092,12 +2107,10 @@ contains
 !-----------------------------------------------------------------------
      integer  :: p        ! PFT index
      real(r8) :: diff     ! difference in weights
-     real(r8) :: adiff    ! tolerance of acceptible difference
 
      ! Assume weights are NOT different and only change if find weights too different
      weights_tooDifferent = .false.
      maxdiff = 0.0_r8
-     adiff                = 1.e-02_r8 / real(numpft+1)
      do p = begp, endp
 
         diff = abs(pptr%wtgcell(p) - wtgcell(p))

@@ -1620,7 +1620,7 @@ contains
     end if
     if (present(cell_method)) then
        str = 'time: ' // trim(cell_method)
-       call ncd_putatt(ncid, varid, 'cell_method', trim(str), lsubname, usepio=lusepio)
+       call ncd_putatt(ncid, varid, 'cell_methods', trim(str), lsubname, usepio=lusepio)
     end if
     if (present(fill_value)) then
        call ncd_putatt(ncid, varid, '_FillValue', fill_value, lsubname, xtype, usepio=lusepio)
@@ -1765,7 +1765,7 @@ contains
     end if
     if (present(cell_method)) then
        str = 'time: ' // trim(cell_method)
-       call ncd_putatt(ncid, varid, 'cell_method', trim(str), subname, usepio=lusepio)
+       call ncd_putatt(ncid, varid, 'cell_methods', trim(str), subname, usepio=lusepio)
     end if
     if (present(fill_value)) then
        call ncd_putatt(ncid, varid, '_FillValue', fill_value, subname, xtype, usepio=lusepio)

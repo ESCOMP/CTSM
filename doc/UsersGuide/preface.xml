@@ -395,6 +395,15 @@ understanding how those parts of the model work and should be consulted when usi
 </listitem>
 <listitem>
    <para>
+   <varname>SUPLN</varname><screen>(-bgc cn -supln on)</screen>
+       The suplemental Nitrogen mode of the CN Biogeochemistry model is known to be over
+productive.
+       And hence not recommended to be used.
+   </para>
+
+</listitem>
+<listitem>
+   <para>
    <varname>BUILDPIO</varname><screen>(-pio)</screen>
        This mode is NOT tested and not even functional and hence should NOT be used. PIO WILL be provided
        in future versions however.

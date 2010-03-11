@@ -70,33 +70,38 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Initial files at 0.9x1.25 or 1.9x2.5 native resolution -->
 
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="19500101" ic_tod="0" sim_year="1850">lnd/clm2/initdata/clmi.IQmp17_1950-01-01_1.9x2.5_gx1v6_simyr1850_c090509.nc
-</finidat>
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="20000101" ic_tod="0" sim_year="2000">lnd/clm2/initdata/clmi.IQmp17_2000-01-01_1.9x2.5_gx1v6_simyr2000_c090509.nc
-</finidat>
-<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="04000101" ic_tod="0" sim_year="1850">lnd/clm2/initdata/clmi.BCN.0400-01-01_0.9x1.25_gx1v6_simyr1850_c091016.nc
+<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="04010101" ic_tod="0" sim_year="1850">ccsm4_init/b40.1850.track1.2deg.003/year_401/b40.1850.track1.2deg.003.clm2.r.0401-01-01-00000.nc
 </finidat>
 
-<!-- Initial files interpolated to given resolution without BGC and for both Jan and Sep -->
-
-<!-- Initial files interpolated to given resolution with CASA BGC and for January -->
-
-<!-- Initial files interpolated to given resolution with CN BGC and for January -->
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="00930101" ic_tod="0" sim_year="1850">lnd/clm2/initdata/clmi.IQCN.1951-01-01_1.9x2.5_gx1v6_simyr1850_c091016.nc
+<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="04010101" ic_tod="0" sim_year="1850">ccsm4_init/b40.1850.track1.2deg.003/year_401/b40.1850.track1.2deg.003.clm2.r.0401-01-01-00000.nc
 </finidat>
-<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="00930101" ic_tod="0" sim_year="1850">lnd/clm2/initdata/clmi.IQCN.1951-01-01_1.9x2.5_USGS_simyr1850_c091016.nc
+
+<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="08630101" ic_tod="0" sim_year="1850">ccsm4_init/b40.1850.track1.1deg.006/0863-01-01/b40.1850.track1.1deg.006.clm2.r.0863-01-01-00000.nc
 </finidat>
-<finidat hgrid="0.47x0.63"  maxpft="numpft+1"  mask="gx1v6" bgc="cn"  ic_ymd="19510101" ic_tod="0" sim_year="1850">lnd/clm2/initdata/clmi.IQCN.1951-01-01_0.47x0.63_gx1v6_simyr1850_c090729.nc
+
+<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="08630101" ic_tod="0" sim_year="1850">ccsm4_init/b40.1850.track1.1deg.006/0863-01-01/b40.1850.track1.1deg.006.clm2.r.0863-01-01-00000.nc
+</finidat>
+
+<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="20000101" ic_tod="0" sim_year="2000">lnd/clm2/initdata/clmi.BCN.2000-01-01_0.9x1.25_gx1v6_simyr2000_c100303.nc
+</finidat>
+
+<finidat hgrid="0.9x1.25"  maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="20000101" ic_tod="0" sim_year="2000">lnd/clm2/initdata/clmi.BCN.2000-01-01_0.9x1.25_gx1v6_simyr2000_c100303.nc
+</finidat>
+
+<!-- Initial files interpolated from native resolution -->
+
+<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="none" ic_ymd="20000101" ic_tod="0" sim_year="2000">lnd/clm2/initdata/clmi.BCN.2000-01-01_1.9x2.5_gx1v6_simyr2000_c100309.nc
+</finidat>
+
+<finidat hgrid="1.9x2.5"   maxpft="numpft+1"  mask="gx1v6" bgc="cn"   ic_ymd="20000101" ic_tod="0" sim_year="2000">lnd/clm2/initdata/clmi.BCN.2000-01-01_1.9x2.5_gx1v6_simyr2000_c100309.nc
 </finidat>
 
 <!-- Surface datasets (relative to {csmdata}) -->
 
 <!-- Surface datasets that belong with dynamic land-use change datasets (relative to {csmdata}) -->
-<fsurdat hgrid="10x15"         sim_year="1000" >
-lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc
+<fsurdat hgrid="10x15"         sim_year="1000" >lnd/clm2/surfdata/surfdata_10x15_USGS_070307.nc
 </fsurdat>
-<fsurdat hgrid="1x1_tropicAtl" sim_year="1000" >
-lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_testyr1000_c090731.nc
+<fsurdat hgrid="1x1_tropicAtl" sim_year="1000" >lnd/clm2/surfdata/surfdata_1x1_tropicAtl_urb3den_testyr1000_c090731.nc
 </fsurdat>
 
 <!-- for present day simulations - year 2000 -->

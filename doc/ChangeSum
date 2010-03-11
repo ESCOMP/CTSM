@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_7_07         erik 03/10/2010 New finidat datasets for 1-deg, 2-deg, and abort if weights from finidat/fsurdat files are too different, and use fsurdat files as truth
    clm3_7_06         erik 03/10/2010 Bring cndv branch to trunk
    clm3_7_05         erik 02/24/2010 Bring VOC branch source code to trunk
    clm3_7_04         erik 02/17/2010 Bring VOC branch (vocemis-drydep18_clm3_7_03) tools, testing, and build to trunk (everything other than VOC code changes)

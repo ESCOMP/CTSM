@@ -61,6 +61,7 @@ Module DryDepVelocity
   use clm_atmlnd,           only : clm_a2l
   use spmdMod,              only : masterproc
   use seq_drydep_mod,       only : n_drydep, drydep_list
+  use seq_drydep_mod,       only : drydep_method, DD_XLND
   use seq_drydep_mod,       only : index_o3=>o3_ndx, index_o3a=>o3a_ndx, index_so2=>so2_ndx, index_h2=>h2_ndx, &
                                    index_co=>co_ndx, index_ch4=>ch4_ndx, index_pan=>pan_ndx
   implicit none 
@@ -182,7 +183,7 @@ CONTAINS
     real(r8) :: k_pan (11) = (/ 0.000_r8, 0.010_r8, 0.005_r8, 0.004_r8, 0.003_r8, &
                                 0.005_r8, 0.000_r8, 0.000_r8, 0.000_r8, 0.075_r8, 0.002_r8 /)
     !----------------------------------------------------------------------- 
-    if ( n_drydep == 0 ) return
+    if ( n_drydep == 0 .or. drydep_method /= DD_XLND ) return
 
     ! Check if running with CN or CNDV model -- if so abort as mlaidiff is NOT set in this case
 #if (defined CNDV) || (defined CN)

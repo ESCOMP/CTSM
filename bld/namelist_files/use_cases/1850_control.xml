@@ -2,12 +2,12 @@
 
 <namelist_defaults>
 
+<use_case_desc>Conditions to simulate 1850 land-use</use_case_desc>
+
 <sim_year>1850</sim_year>
 
 <sim_year_range>constant</sim_year_range>
 
-<orb_iyear_ad>1850</orb_iyear_ad>
-
-<use_case_desc>Conditions to simulate 1850 land-use</use_case_desc>
+<orb_iyear_ad mode="ccsm_seq" >1850</orb_iyear_ad>
 
 </namelist_defaults>

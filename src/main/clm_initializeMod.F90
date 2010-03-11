@@ -585,24 +585,7 @@ contains
        call UrbanInitTimeVar( )
     end if
        
-    ! ------------------------------------------------------------------------
-    ! =======================================================================
-    ! In order to get identical answers -- MUST call pftdyn_interp again.
-    ! The first time is done to just make sure that weights from the restart 
-    ! file are identical. In many cases answers are still the same, but
-    ! this can have an important impact on transient fully coupled cases with CN.
-    ! Look at bug 1098 in bugzilla.
-    !   http://bugs.cgd.ucar.edu/show_bug.cgi?id=1098
-    !                                              Erik Kluzek 1/9/2010
-    ! =======================================================================
-    ! ------------------------------------------------------------------------
-    if (fpftdyn /= ' ' .and. nsrest == 0 ) then
-       call pftdyn_interp( )
-    end if
-    ! =======================================================================
-    ! ------------------------------------------------------------------------
-
-!   ! For restart run, read binary history restart
+    ! For restart run, read binary history restart
 
     if (nsrest == 1) then
        if (masterproc)then 

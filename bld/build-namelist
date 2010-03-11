@@ -386,12 +386,10 @@ if (defined $opts{'use_case'}) {
     foreach my $var (@vars) {
 	my $val = $uc_defaults->get_value($var);
 
-        print "adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
+	if ( defined($val) ) {
+            print "adding use_case $opts{'use_case'} defaults for var $var with val $val \n";
 
-	if ($val) {
 	    add_default($nl, $var, 'val'=>$val);
-	} else {
-	    die "$ProgName - ERROR: No default value found for variable $var in '-use_case' $opts{'use_case'}.\n $@";
 	}
     }
 }
@@ -618,7 +616,8 @@ if (defined $opts{$var}) {
     if ($opts{$var} eq "default" ) {
        add_default($nl, $var );
     } else {
-       add_default($nl, $var, 'val'=>$opts{$var}); 
+       my $group = $definition->get_group_name($var);
+       $nl->set_variable_value($group, $var, quote_string( $opts{$var} ) );
     }
 } else {
     add_default($nl, $var );
