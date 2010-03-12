@@ -1,4 +1,35 @@
 ===============================================================
+Tag name:  clm3_7_08
+Originator(s):  Mariana Vertenstein (mvertens)
+Date: Fri Mar 12 13:26:09 MST 2010
+One-line Summary: Removal of check for weights if dynamic land use is used
+
+Purpose of changes:
+This one line change enabled the vast majority of the CCSM tests to pass.
+	
+Verified that ERI 20th century tests in CCSM test suite for ccsm4_0_beta46 now passed with this changed 
+	
+This was reviewed by Dave Lawrence and Sam Levis	
+	
+Everything from clm3_7_07 applies except for the following:
+	
+M      biogeophys/BiogeophysRestMod.F90
+  -   if ( nsrest == 1 .or. (nsrest == 3 .and. fpftdyn /= ' ') )then
+  -   ! Do NOT do any testing for restart or a pftdyn branch case
+  +   if ( nsrest == 1 .or. fpftdyn /= ' ' )then
+  +   ! Do NOT do any testing for restart or a pftdyn case
+  also added in a #if CNDV 
+
+M      biogeochem/CNDVEstablishmentMod.F90
+M      main/clmtypeInitMod.F90
+       - fix for case when leaf area index is pathologically large
+         the original fix for this was not longer working - and the above changes address this
+
+M      bld/build-namelist
+M      bld/namelist_files/namelist_defaults_clm.xml
+       - fixed issues related to getting fndepdat for -bgc cndv
+
+===============================================================
 Tag name:  clm3_7_07
 Originator(s):  erik (erik)
 Date: Wed Mar 10 23:35:37 MST 2010

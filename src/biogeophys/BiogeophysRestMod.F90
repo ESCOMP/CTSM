@@ -199,12 +199,13 @@ contains
           !
           ! Note: Do not compare weights if restart or if dynamic-pft branch
           !
-          if ( nsrest == 1 .or. (nsrest == 3 .and. fpftdyn /= ' ') )then
-             ! Do NOT do any testing for restart or a pftdyn branch case
+          if ( nsrest == 1 .or. fpftdyn /= ' ' )then
+             ! Do NOT do any testing for restart or a pftdyn case
           !
           ! Otherwise test and make sure weights agree to reasonable tolerence
           !
           else if ( .not.weights_exactly_the_same( pptr, wtgcell, wtlunit, wtcol ) )then
+#if (!defined CNDV)
   
              if (      weights_within_roundoff_different( pptr, wtgcell, wtlunit, wtcol ) )then
                 write(iulog,*) sub//"::NOTE, PFT weights from ", filetypes(nsrest),      &
@@ -228,6 +229,7 @@ contains
              pptr%wtgcell(:) = wtgcell(:)
              pptr%wtlunit(:) = wtlunit(:)
              pptr%wtcol(:)   = wtcol(:)
+#endif
           end if
  
           deallocate( wtgcell )

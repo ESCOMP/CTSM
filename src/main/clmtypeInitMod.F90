@@ -1310,7 +1310,7 @@ contains
     pdgvs%t_mo_min(beg:end)         = nan
     pdgvs%prec365(beg:end)          = nan
     pdgvs%present(beg:end)          = .false.
-    pdgvs%pftmayexist(beg:end)      = .false.
+    pdgvs%pftmayexist(beg:end)      = .true.
     pdgvs%nind(beg:end)             = nan
     pdgvs%lm_ind(beg:end)           = nan
     pdgvs%lai_ind(beg:end)          = nan

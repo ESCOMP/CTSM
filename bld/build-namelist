@@ -946,6 +946,9 @@ if (not defined $nl->get_value('finidat')) {
 if ( ($bgc eq "cn") && not defined $nl->get_value('fndepdyn') ) {
    add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'nofail'=>1 );
 }
+if ( ($bgc eq "cndv") && not defined $nl->get_value('fndepdyn') ) {
+   add_default($nl, "fndepdat",  'hgrid'=>$lnd_res, 'sim_year'=>$sim_year, 'nofail'=>1 );
+}
 if ( defined($nl->get_value('fndepdat')) && defined($nl->get_value('fndepdyn')) ) {
    die "$ProgName ERROR:: Both fndepdat AND fndepdyn are set, must only set one!\n";
 }

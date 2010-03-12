@@ -252,9 +252,10 @@ contains
           survive(p) = .true.
           ! seasonal decid. pfts that would have occurred in regions without
           ! short winter day lengths (see CNPhenology)
-          if (pftmayexist(p)) then
+          if (.not. pftmayexist(p)) then
              survive(p) = .false.
              estab(p) = .false.
+             pftmayexist(p) = .true.
           end if
        end if
     end do
