@@ -1549,13 +1549,7 @@ contains
     h2= (cpice*wice2+cpliq*wliq2) * (t2-tfrz)+hfus*wliq2
 
     hc = h + h2
-    if(hc < 0._r8)then
-       tc = tfrz + hc/(cpice*wicec + cpliq*wliqc)
-    else if (hc.le.hfus*wliqc) then
-       tc = tfrz
-    else
-       tc = tfrz + (hc - hfus*wliqc) / (cpice*wicec + cpliq*wliqc)
-    end if
+    tc = tfrz + (hc - hfus*wliqc) / (cpice*wicec + cpliq*wliqc)
 
     dz = dzc
     wice = wicec

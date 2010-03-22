@@ -29,6 +29,14 @@ Configure Modes NOT scientifically validated, documented, supported or even advi
        make sure the climate is similar between each. We hope to validate the method using PERGRO in future
        versions of the model.
 
+build-namelist items that are NOT recommended:
+
+-lnd_res 
+
+This is the option to turn on the fine-mesh mode of CLM, running CLM at a finer
+resolution than the atmospheric forcing. This is an experimental mode and NOT recommend
+for general use. You turn this on by 
+
 Namelist items that should NOT be exercised:
 
   create_crop_landunit:  Functional, but experimental
@@ -36,6 +44,7 @@ Namelist items that should NOT be exercised:
   pio namelist options:  hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, ncd_pio_UseBoxRearr, 
                          ncd_pio_SerialCDF, ncd_pio_DebugLevel, and ncd_pio_num_iotasks
         These options are NOT currently tested or functional. See the pio configure mode above.
+  fine-mesh namelist options: 
   casa namelist options: lnpp, lalloc, q10, spunup, and fcpool
 
         As above CASA is NOT scientifically validated and hence we don't recommend using it, thus we don't

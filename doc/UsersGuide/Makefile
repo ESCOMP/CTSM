@@ -102,4 +102,5 @@ clean:
 
 realclean: clean
 	rm -f f*.html c*.html x*.html $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
-	$(RESLOG).xml $(USCLOG).xml $(USRLOG).xml $(GETREG).xml $(QCKLOG).xml
+	$(RESLOG).xml $(USCLOG).xml $(USRLOG).xml $(GETREG).xml $(QCKLOG).xml \
+	$(CO2DIF).xml

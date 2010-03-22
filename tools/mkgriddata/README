@@ -44,18 +44,24 @@ NOTE: In order to successfully build, some source files are required from
 
 Notes:
 
-1. File naming conventions need explanation.  An input file from 1.9x2.5 will
-produce an output file of 096x144.  The output griddata file must be renamed to
-the FV naming convention (1.9x2.5) when it is archived under /fs/cgd/csm/inputdata/lnd/clm2/griddata/.
+1. When using CCSM domain files, sometimes the latitude/longitudes on the domain files
+   are slightly inconsistent with the existing clm grid datasets. To make the grid
+   coordinates exactly the same as existing grid files, enter a mksrf_fclmgrid as
+   well so that the latitudes/longitudes used will be from the clm grid file.
+2. File naming conventions need explanation.  An input file from 1.9x2.5 will
+   produce an output file of 096x144.  The output griddata file must be renamed to
+   the FV naming convention (1.9x2.5) when it is archived under 
+   /fs/cgd/csm/inputdata/lnd/clm2/griddata/.
 
 e.g., cp surfdata_096x144.nc /fs/cgd/csm/inputdata/lnd/clm2/surfdata/surfdata_1.9x2.5_061130.nc
 
-2.  Grid files should have LATIXY of 90 at the poles.  The displaced pole (89.*) should not appear in
-FV grid files, although 90+/-0.25 is used for mapping and domain files.  FV Grid files with something other
-than 90 at the poles are incorrect and should not be used.
+3.  Grid files should have LATIXY of 90 at the poles.  The displaced pole (89.*) 
+    should not appear in FV grid files, although 90+/-0.25 is used for mapping and 
+    domain files.  FV Grid files with something other than 90 at the poles are 
+    incorrect and should not be used.
 
-3.  Grid files should have Longitudes between 0.0 and 360.0 -- so that other files that
-use them will have a grids that are consistent and can be easily regridded etcetera.
+4.  Grid files should have Longitudes between 0.0 and 360.0 -- so that other files that
+    use them will have a grids that are consistent and can be easily regridded etcetera.
 
 Important files:
 

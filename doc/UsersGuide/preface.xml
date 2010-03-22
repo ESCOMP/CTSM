@@ -249,6 +249,10 @@ Describe any changes made to the namelist:
      HEAT_FROM_AC               sensible heat flux put into canyon due to heat removed from air conditioning
                                                                                              watt/m^2
      HK                         hydraulic conductivity                                       mm/s     inactive
+     LAND_USE_FLUX              total C emitted from land cover conversion and wood product pools
+   gC/m^2/s
+     LAND_UPTAKE                NEE minus LAND_USE_FLUX, negative for update
+   gC/m^2/s
      LWup                       upwelling longwave radiation                                 watt/m^2 inactive
      NBP                        net biome production, includes fire, landuse, and harvest flux, positive for sink
                                                                                              gC/m^2/s

@@ -76,6 +76,8 @@ NOTE: In order to successfully build, some source files are required from
 5) move (and rename if appropriate) generated surface dataset
    to /fis/cgd/csm/inputdata/lnd/clm/surfdata, etc.
 
+6) Alturnative to steps 3-5: run the mksurfdata.pl script to get files for the 
+   standard resolutions (already in the namelist_defaults_clm.xml file).
 
 Important files:
 
@@ -90,7 +92,17 @@ Important files:
   mksurfdata.regional ------- Sample regional grid namelist
   mksurfdata.singlept ------- Sample single-point namelist
   mksurfdata.globalirrig ---- Sample namelist also outputting global irrigation data
-  pftdyn_simyr1850-2005.txt - List of input PFT files from 1850 to 2005
-  pftdyn_simyr1850.txt ------ Input PFT file for year 1850
-  pftdyn_simyr2000.txt ------ Input PFT file for year 2000
+
+Lists of input files for range of dates historical or future scenarios:
+
+  pftdyn_hist_simyr1850-2005.txt --- List of historical input PFT files from 1850 to 2005
+  pftdyn_rcp2.6_simyr1850-2100.txt - List of rcp=2.6 input PFT files from 1850 to 2100
+  pftdyn_rcp4.5_simyr1850-2100.txt - List of rcp=4.5 input PFT files from 1850 to 2100
+  pftdyn_rcp6.0_simyr1850-2100.txt - List of rcp=6.0 input PFT files from 1850 to 2100
+  pftdyn_rcp8.5_simyr1850-2100.txt - List of rcp=8.5 input PFT files from 1850 to 2100
+  pftdyn_simyr1850.txt ------------- Input PFT file for year 1850
+  pftdyn_simyr2000.txt ------------- Input PFT file for year 2000
+
+(Historical period from 1850-2005 datafiles all point to the historical files, while
+ the future scenarios 2006-2100 are the scenario datasets)
 

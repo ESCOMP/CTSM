@@ -61,7 +61,7 @@ OPTIONS
      -debug [or -d]                Just debug by printing out what the script would do.
                                    This can be useful to find the size of the output area.
      -help [or -h]                 Print usage to STDOUT.
-     -mask "landmask"              Type of land-mask (i.e. navy, gx3v5, gx1v5 etc.) (default $mask)
+     -mask "landmask"              Type of land-mask (i.e. navy, gx3v7, gx1v6 etc.) (default $mask)
      -mycsmdata "dir"              Root directory of where to put your csmdata. 
                                    (default $mycsmdata or value of CSMDATA env variable)
      -mydataid "name" [or -id]     Your name for the region that will be extracted.               (REQUIRED)

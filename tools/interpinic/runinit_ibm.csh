@@ -40,7 +40,7 @@ set rtm      = on       # settings are [on   | off         ] (default is off)
 #--------------------------------------------------------------------------------------------
 ## Run time settings that are set for all cases:
 ## May also make changes to namelist in build-namelist section below:
-set sim_year   = default    # settings are [default | 1890    | 2000 | 2100                      ]
+set sim_year   = default    # settings are [default | 1850    | 2000                             ]
 set start_type = cold       # settings are [cold    | arb_ic  | startup | continue | branch      ] (default is arb_ic)
 set runlen     = 1s         # settings are [ integer<sdy> where s=cpling-step, d=days, y=years   ] (default is 2d)
 #--------------------------------------------------------------------------------------------
@@ -155,13 +155,13 @@ foreach bgc ( "none" "cn" )
    #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
    #---------------- Loop over different resolutions and run-time configurations ---------
    #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-   foreach res ( "1.9x2.5" "10x15" "4x5" "0.9x1.25" "2.65x3.33" "0.47x0.63" "48x96" )
+   foreach res ( "1.9x2.5" "10x15" "4x5" "0.9x1.25" "2.5x3.33" "0.47x0.63" "48x96" )
       set fres    = `echo $res | tr '.' '_'`
       set case    = "clmrun_${bgc}_${fres}"
       set rundir  = $wrkdir/$case
       mkdir -p $rundir/timing         || echo "cannot create $rundir" && exit 1
       if ( "$res" == "48x96" || "$res" == "4x5" )then
-         set masks = ( "gx3v5" )
+         set masks = ( "gx3v7" )
       else if ( "$res" == "1.9x2.5" ) then
          set masks = ( "gx1v6" "USGS" )
       else if ( "$res" == "1.9x2.5" || "$res" == "0.47x0.63" || "$res" == "0.23x0.31" \

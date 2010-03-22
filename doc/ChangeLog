@@ -1,4 +1,186 @@
 ===============================================================
+Tag name:  clm3_7_09
+Originator(s):  erik (erik)
+Date: Sun Mar 21 21:08:54 MDT 2010
+One-line Summary: Fix snow enthalpy bug, cndv datasets, various fixes
+
+Purpose of changes:
+
+Fix snow enthalpy bug from Dave Lawrence. Add rcp to mksurfdata.pl. Add new 2006 datasets
+for pftdyn files for mksurfdata. Fix history bug. New rcp 8.5 1-degree pftdyn dataset.
+Duplicate all cn datasets for cndv. pergro use cases output in double precision. Some
+work on documentation.
+
+Bugs fixed (include bugzilla ID):
+                                 1128 (cndv needs the same input files as cn)
+                                 1130 (History problem on restarts)
+                                 1131 (pergro use cases need double output files)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1125 (T85, qtr-degree and urban pt surface datasets)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+
+   New 1-degree rcp=8.5 pftdyn dataset with harvest for 2006
+   Duplicate cn datasets for cndv
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+   snow changes come from dlawren and also reviewed by oleson
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+>>>>>>>>>>> Add AIM rcp datasets
+A    models/lnd/clm/tools/mksurfdata/pftdyn_rcp6.0_simyr1850-2100.txt
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>> New 2006 file
+M    models/lnd/clm/tools/mksurfdata/pftdyn_rcp2.6_simyr1850-2100.txt - New 2006 file
+M    models/lnd/clm/tools/mksurfdata/pftdyn_rcp4.5_simyr1850-2100.txt - New 2006 file
+M    models/lnd/clm/tools/mksurfdata/pftdyn_rcp8.5_simyr1850-2100.txt - New 2006 file
+M    models/lnd/clm/tools/mksurfdata/mksurfdata.pl - Add rcp as argument
+M    models/lnd/clm/tools/mksurfdata/README -------- Document mksurfdata.pl and rcp files
+
+M    models/lnd/clm/tools/ncl_scripts/getregional_datasets.pl - Get rid of old masks
+
+M    models/lnd/clm/tools/interpinic/runinit_ibm.csh - Get rid of old masks/grids, and sim_year
+M    models/lnd/clm/tools/interpinic/README ---------- Update documentation
+
+M    models/lnd/clm/tools/mkgriddata/mkgriddata.ccsm_dom - Add clm grid file
+M    models/lnd/clm/tools/mkgriddata/README  ------------- More documentation
+
+M    models/lnd/clm/bld/namelist_files/use_cases/pergro.xml ------ Output history in double
+M    models/lnd/clm/bld/namelist_files/use_cases/pergro0.xml ----- Output history in double
+M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Duplicate cn files for cndv
+                                      New 1-degree rcp=8.5 pftdyn file
+
+M    models/lnd/clm/src/main/histFileMod.F90 - Make sure 3D fields defined before output
+
+M    models/lnd/clm/src/biogeophys/SnowHydrologyMod.F90 - conserve enthalpy on snow combination
+
+M    models/lnd/clm/doc/IMPORTANT_NOTES ----- Add notes about fine-mesh
+M    models/lnd/clm/doc/UsersGuide/Makefile - Remove file for realclean
+
+Summary of testing:
+
+  bluefire:
+003 brA91 TBR.sh _sc_dh clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic .............FAIL! rc= 11
+004 blA91 TBL.sh _sc_dh clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v7 -6 arb_ic ...................FAIL! rc= 7
+007 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 144 cold .................FAIL! rc= 7
+010 brE91 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v7 72+72 arb_ic ......FAIL! rc= 11
+011 blE91 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 48 arb_ic ............FAIL! rc= 7
+015 brF92 TBR.sh 17p_vodsrsc_dm clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v7 72+72 cold .......FAIL! rc= 11
+016 blF92 TBL.sh 17p_vodsrsc_dm clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 48 cold .............FAIL! rc= 7
+019 brEH1 TBR.sh 4p_vodsrsc_dh clm_std^nl_urb_br 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 24+24 arbFAIL! rc= 13
+020 blEH1 TBL.sh 4p_vodsrsc_dh clm_std^nl_urb 20021231:NONE:3600 1.9x2.5^0.9x1.25 gx1v6 48 arb_ic FAIL! rc= 7
+023 brHN1 TBR.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -5+-5 cFAIL! rc= 13
+024 blHN1 TBL.sh 17p_cnsc_dh clm_transient_rcp8.5 20051220:NONE:1800 1.9x2.5 gx1v6@1850-2100 -10 colFAIL! rc= 7
+025 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+026 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+027 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+028 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+  bluefire interactive testing:
+003 brA74 TBR.sh _nrsc_ds clm_std^nl_urb_br 20030101:NONE:1800 1x1_brazil navy -5+-5 arb_ic .....FAIL! rc= 13
+006 smCA4 TSM.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 10
+007 erCA4 TER.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ....FAIL! rc= 5
+008 brCA4 TBR.sh _nrsc_ds clm_std^nl_urb_br 20021001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic .FAIL! rc= 5
+009 blCA4 TBL.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 4
+010 smNB4 TSM.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 10
+011 erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 57+100 arb_FAIL! rc= 5
+012 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arFAIL! rc= 5
+013 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 4
+016 brJ74 TBR.sh 4p_nrcasasc_ds clm_std^nl_urb_br 10001230:NONE:3600 1x1_tropicAtl test -3+-3 arb_icFAIL! rc= 11
+018 smCA8 TSM.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 10
+019 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 4
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+031 brF93 TBR.sh 17p_vodsrsc_do clm_std^nl_urb_br 20021230:NONE:1800 4x5 gx3v7 72+72 cold .......FAIL! rc= 11
+032 blF93 TBL.sh 17p_vodsrsc_do clm_std^nl_urb 20021230:NONE:1800 4x5 gx3v7 48 cold .............FAIL! rc= 7
+035 brL83 TBR.sh _nrsc_do clm_std^nl_urb_br 20020115:NONE:3600 5x5_amazon navy -10+-10 arb_ic ...FAIL! rc= 13
+040 blK74 TBL.sh 17p_cndvsc_s clm_std 19971231:NONE:1800 1x1_brazil navy -670 arb_ic ............FAIL! rc= 7
+045 bl754 TBLtools.sh mksurfdata tools__s namelist ..............................................FAIL! rc= 7
+047 bl774 TBLtools.sh mksurfdata tools__ds singlept .............................................FAIL! rc= 7
+049 bl754 TBLtools.sh mksurfdata tools__s namelist ..............................................FAIL! rc= 2
+  jaguar interactive testing:
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+  edinburgh/ifort: interactive testing:
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+007 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 6
+009 smCA4 TSM.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 10
+010 erCA4 TER.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ....FAIL! rc= 5
+011 brCA4 TBR.sh _nrsc_ds clm_std^nl_urb_br 20021001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic .FAIL! rc= 5
+013 smOC4 TSM.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 10
+014 erOC4 TER.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 115+115 arb_FAIL! rc= 5
+015 brOC4 TBR.sh _nrvansc_ds clm_urb1pt^nl_urb_br 19920812:NONE:3600 1x1_vancouverCAN navy 72+72 arbFAIL! rc= 5
+017 smNB4 TSM.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 10
+018 erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 57+100 arb_FAIL! rc= 5
+019 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arFAIL! rc= 5
+  edinburgh/ifort
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_08
+
+Changes answers relative to baseline: YES
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers:
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: same climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+    ccsm4_0_beta35
+    bluefire
+    -compset B_1850_TRACK1_CN -res f19_g16
+
+   MSS location of control simulations used to validate new climate:
+
+/DLAWREN/csm/b40.1850.track1.2deg.003.snow
+   
+   URL for LMWG diagnostics output used to validate new climate:
+
+http://www.cgd.ucar.edu/ccr/paleo/b40.snow/b40.1850.track1.2deg.003.snow-b40.1850.track1.2deg.003.control/
+http://www.cgd.ucar.edu/ccr/dlawren/research/clm4.0_dev/b40.1850.track1.2deg.003.snowa-b40.1850.track1.2deg.003.controla/setsIndex.html
+	
+===============================================================
+===============================================================
 Tag name:  clm3_7_08
 Originator(s):  Mariana Vertenstein (mvertens)
 Date: Fri Mar 12 13:26:09 MST 2010
