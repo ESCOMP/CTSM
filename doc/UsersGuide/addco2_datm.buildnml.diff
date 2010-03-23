@@ -16,7 +16,7 @@
      streams        = '$STREAM1TXT $year_align $year_start $year_end ',
                       '$STREAM2TXT $year_align $year_start $year_end ',
                       '$STREAM3TXT $year_align $year_start $year_end '
-+                     '$STREAMCO2  $year_align $year_start $year_end '
++                     '$STREAMCO2  1850        1765        2007      '
      vectors        = 'null'
      mapmask        = 'nomask',
                       'nomask',

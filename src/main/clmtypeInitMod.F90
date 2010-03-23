@@ -2584,7 +2584,7 @@ contains
 ! !INTERFACE:
   subroutine init_pft_depvd_type(beg, end, pdd)
 
-    use seq_drydep_mod, only:  n_drydep
+    use seq_drydep_mod, only:  n_drydep, drydep_method, DD_XLND
 !
 ! !DESCRIPTION:
 ! Initialize pft dep velocity variables
@@ -2601,7 +2601,7 @@ contains
 !EOP
 !------------------------------------------------------------------------
 
-    if ( n_drydep > 0 )then
+    if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
        allocate(pdd%drydepvel(beg:end,n_drydep))
        pdd%drydepvel = nan
     end if

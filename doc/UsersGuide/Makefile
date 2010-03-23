@@ -21,8 +21,8 @@ SOURCES   := $(DOCBKUG) $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
              $(USRLOG).xml $(GETREG).xml preface.xml custom.xml special_cases.xml \
              tools.xml adding_files.xml single_point.xml
 
-CONVAMP    := sed 's/</\&amp;/g'
-CONVSIGNS  := sed 's/>/\&gt;/g' | sed 's/&/\&lt;/g'
+CONVAMP    := sed 's/\&/\&amp;/g'
+CONVSIGNS  := sed 's/>/\&gt;/g' | sed 's/</\&lt;/g'
 
 all: $(HTMLUG) $(PDFUG)
 

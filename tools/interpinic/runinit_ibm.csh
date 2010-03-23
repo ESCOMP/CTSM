@@ -40,7 +40,6 @@ set rtm      = on       # settings are [on   | off         ] (default is off)
 #--------------------------------------------------------------------------------------------
 ## Run time settings that are set for all cases:
 ## May also make changes to namelist in build-namelist section below:
-set sim_year   = default    # settings are [default | 1850    | 2000                             ]
 set start_type = cold       # settings are [cold    | arb_ic  | startup | continue | branch      ] (default is arb_ic)
 set runlen     = 1s         # settings are [ integer<sdy> where s=cpling-step, d=days, y=years   ] (default is 2d)
 #--------------------------------------------------------------------------------------------
@@ -110,17 +109,15 @@ date
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #------------------ Loop over different and configuration types -------------------------
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-foreach bgc ( "none" "cn" )
+#foreach bgc ( "none" "cn" )
+foreach bgc ( "cn" )
    set maxpft   = "numpft+1"
    if (      "$bgc" == "none" )then
       set compset = "IQ"
-      set start_times = ( 19521231 19480831 )
    else if ( "$bgc" == "casa" )then
       set compset = "IQCASA"
-      set start_times = ( 19521231 )
    else if ( "$bgc" == "cn"   )then
       set compset = "IQCN"
-      set start_times = ( 19501231 )
    endif
    set bldcase = "clmbld_$bgc"
    set blddir  = $wrkdir/$bldcase/bld
@@ -128,7 +125,7 @@ foreach bgc ( "none" "cn" )
 
    ## Build (or re-build) executable
    set flags = "-maxpft $maxpft -bgc $bgc -supln $supln -voc $voc -rtm $rtm -dust $dust "
-   set flags = "$flags -prog_seasalt $seaslt -mach $ccsm_mach"
+   set flags = "$flags -prog_seasalt $seaslt -mach $ccsm_mach -ccsm_bld on -mode ccsm_seq"
    if ($spmd == on ) set flags = "$flags -spmd"
    if ($spmd == off) set flags = "$flags -nospmd"
    if ($smp  == on ) set flags = "$flags -smp"
@@ -163,7 +160,7 @@ foreach bgc ( "none" "cn" )
       if ( "$res" == "48x96" || "$res" == "4x5" )then
          set masks = ( "gx3v7" )
       else if ( "$res" == "1.9x2.5" ) then
-         set masks = ( "gx1v6" "USGS" )
+         set masks = ( "gx1v6" )
       else if ( "$res" == "1.9x2.5" || "$res" == "0.47x0.63" || "$res" == "0.23x0.31" \
              || "$res" == "0.9x1.25" || "$res" == "64x128" || "$res" == "48x96" )then
          set masks = ( "gx1v6" )
@@ -192,6 +189,12 @@ foreach bgc ( "none" "cn" )
 
          foreach sim_year ( $sim_years )
 
+            if (      "$sim_year" == "1850" )then
+               set start_times = ( 19481231 )
+            else if ( "$sim_year" == "2000" )then
+               set start_times = ( 19991231 )
+            endif
+
 
             #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             #---------------- Loop over different start times -------------------------------------
@@ -215,12 +218,12 @@ foreach bgc ( "none" "cn" )
  /
  &clm_inparm
  dtime          =  1800
- hist_crtinic   = 'MONTHLY'
+ hist_crtinic   = 'NONE'
  /
 EOF
-               set bnflags="-case $case -start_type $start_type -config $config -mask $mask -sim_year $sim_year -infile lndinput"
-               set bnflags="$bnflags -datm_data_dir $datm_data_dir -res $res -csmdata $CSMDATA -runlength $runlen"
-               set bnflags="$bnflags -cycle_init $cycle_init -cycle_beg_year $cycle_beg -cycle_end_year $cycle_end"
+               set bnflags="-drv_case $case -clm_start_type $start_type -config $config -mask $mask -sim_year $sim_year -infile lndinput"
+               set bnflags="$bnflags -datm_data_dir $datm_data_dir -res $res -csmdata $CSMDATA -drv_runlength $runlen"
+               set bnflags="$bnflags -datm_cycle_init $cycle_init -datm_cycle_beg_year $cycle_beg -datm_cycle_end_year $cycle_end"
                set bnflags="$bnflags -test"
                echo "Build-namelist flags: $bnflags"
                $cfgdir/build-namelist $bnflags    || echo "build-namelist failed" && exit 1
@@ -251,7 +254,7 @@ EOF
 
                # Run interpinic on resulting file
                cd $curdir
-               set finidat = `../../bld/queryDefaultNamelist.pl -res 1.9x2.5 -options mask=gx1v6 -onlyfiles -justvalue -var finidat -s -config $config`
+               set finidat = `../../bld/queryDefaultNamelist.pl -res 0.9x1.25 -options mask=gx1v6,sim_year=$sim_year -onlyfiles -justvalue -var finidat -s -config $config`
 
                echo "Run interpinic to interpolate from $finidat to $outfile"
 

@@ -47,7 +47,7 @@ my $definition = Build::NamelistDefinition->new( $nldef_file );
 
 my %opts = ( 
                hgrid=>"all", 
-               rcp=>"-999.99", 
+               rcp=>"-999.9", 
                debug=>0,
                years=>"1850,2000",
                help=>0,
@@ -65,7 +65,7 @@ OPTIONS
      -help  [or -h]                Display this help.
      -res   [or -r] "resolution"   Resolution(s) to use for files (by default $opts{'hgrid'} ).
      -rcp   [or -c] "rep-con-path" Representative concentration pathway(s) to use for future scenarios 
-                                   (by default $opts{'rcp'}, -999.9 means historical ).
+                                   (by default $opts{'rcp'}, where -999.9 means historical ).
 
 NOTE: years, res, and rcp can be comma delimited lists.
 

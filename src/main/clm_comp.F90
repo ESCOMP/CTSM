@@ -120,7 +120,7 @@ contains
     use clm_time_manager   , only : get_nstep, get_step_size, get_curr_calday
     use clm_atmlnd         , only : clm_map2gcell
     use clm_varorb         , only : eccen, mvelpp, lambm0, obliqr
-    use seq_drydep_mod     , only : n_drydep
+    use seq_drydep_mod     , only : n_drydep, drydep_method, DD_XLND
 #if (!defined CN) && (!defined CNDV)
     use STATICEcosysDynMod , only : interpMonthlyVeg
 #endif
@@ -165,7 +165,7 @@ contains
           call initSurfAlb( calday, declin, declinm1 )
           call t_stopf('init_orbSA')
           call t_stopf('init_orb')
-       else if ( n_drydep > 0 )then
+       else if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
 #if (defined CNDV)
           ! no call
 #elif (defined CN)

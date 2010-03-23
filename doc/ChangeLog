@@ -1,4 +1,90 @@
 ===============================================================
+Tag name:  clm3_7_10
+Originator(s):  erik (erik)
+Date: Mon Mar 22 23:54:48 MDT 2010
+One-line Summary: Fix drydep so that BMOZ case will work
+
+Purpose of changes:
+
+Update externals, fix drydep bug (so that BMOZ case will run bug 1132). Add 10x15 and 4x5
+finidat files, so that bluefire.clm.auxtest PET and PST cases will work. Fix
+documentation on transient CO2.
+
+Bugs fixed (include bugzilla ID):
+                                 1132 (clm failure for BMOZ compset)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1125 (T85, qtr-degree and urban pt surface datasets)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+   New 10x15 and 4x5 finidat files so that transient cases will work at those resolutions
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv, datm, pio
+  Update to ccsm4_0_beta47 versions
+   scripts  to scripts4_100322b
+   drv      to drvseq3_1_20
+   datm     to datm8_100225
+   pio      to pio1_0_18 
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M      models/lnd/clm/doc/UsersGuide/Makefile ---------- Fix conversion to xml
+M      models/lnd/clm/doc/UsersGuide/special_cases.xml - Fix transient CO2 doc
+M      models/lnd/clm/doc/UsersGuide/addco2_datm.buildnml.diff - Fix CO2 file
+
+M      models/lnd/clm/tools/mksurfdata/mksurfdata.pl --- Fix historical rcp value
+M      models/lnd/clm/tools/interpinic/runinit_ibm.csh - Fix so will run
+
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Add 10x15, 4x5
+              finidat files
+
+M      models/lnd/clm/src/main/clm_comp.F90 ------- check drydep_method
+M      models/lnd/clm/src/main/clmtypeInitMod.F90 - check drydep_method
+M      models/lnd/clm/src/main/clm_atmlnd.F90 ----- check drydep_method, don't pass
+                  drydep stuff unless drydep_method is DD_XLND
+
+Summary of testing:
+
+  bluefire/CCSM testing: All PASS except...
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm3_7_10 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm3_7_07 
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_09
+
+Changes answers relative to baseline: No bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_09
 Originator(s):  erik (erik)
 Date: Sun Mar 21 21:08:54 MDT 2010
@@ -34,6 +120,7 @@ Known bugs (include bugzilla ID):
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1125 (T85, qtr-degree and urban pt surface datasets)
+                                 1132 (clm failure for BMOZ compset)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -247,6 +334,7 @@ Known bugs (include bugzilla ID):
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
+                                 1132 (clm failure for BMOZ compset)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -387,7 +475,8 @@ Known bugs (include bugzilla ID):
                                  1025 (SCM mode can NOT use a global finidat file)
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
-                                1121 (history variable attribute cell_methods misnamed)
+                                 1121 (history variable attribute cell_methods misnamed)
+                                 1132 (clm failure for BMOZ compset)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Switch cndv for dgvm, Have configure disallow
@@ -716,8 +805,9 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1104 (Restart problem with pftdyn mode)
-                                 1121 (history variable attribute cell_methods misnamed)
                                  1118 (Restarts with SNICAR_FRC fail)
+                                 1121 (history variable attribute cell_methods misnamed)
+                                 1132 (clm failure for BMOZ compset)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None

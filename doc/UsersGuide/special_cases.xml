@@ -280,6 +280,7 @@ that includes file with a &CO2; time-series from 1765 to 2007.
 > cd scripts
 > create_newcase -case DATM_CO2_TSERIES -res f19_g16 -compset I_1850-2000_CN -mach bluefire -skip_rundb
 > cd DATM_CO2_TSERIES
+> xmlchange -file env_conf.xml -id CLM_CO2_TYPE -val diagnostic
 > configure -case
 > cd Buildconf
 > cp ../../../models/lnd/clm/doc/UsersGuide/co2_streams.txt .
@@ -287,14 +288,14 @@ that includes file with a &CO2; time-series from 1765 to 2007.
 The first thing we will do is to edit the datm buildnml script to add 
 a CO2 file stream in. To do this we will apply a patch with the differences
 needed. The patch file <filename>addco2_datm.buildnml.diff</filename> is
-in <filename>models/lnd/clm/doc</filename> and looks like this...
+in <filename>models/lnd/clm/doc/UsersGuide</filename> and looks like this...
 <screen>
 &co2streams_diff;
 </screen>
 So to apply the patch you do this...
 <screen>
 > cd scripts/DATM_CO2_TSERIES/Buildconf
-> patch &lt; ../../../models/lnd/clm/doc/addco2_datm.buildnml.diff
+> patch &lt; ../../../models/lnd/clm/doc/UsersGuide/addco2_datm.buildnml.diff
 </screen>
 </para>
 
