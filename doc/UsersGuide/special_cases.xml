@@ -9,8 +9,13 @@ to do at least two simulations with different configurations, or require more co
 editing of the case (changing the streams files).
 </para>
 <para>
-The three cases we will describe are:
+The five cases we will describe are:
 <orderedlist>
+<listitem>
+<para>
+<emphasis>Spinning up the Satellite Phenology Model (&clmsp; spinup)</emphasis>
+</para>
+</listitem>
 <listitem>
 <para>
 <emphasis>Spinning up the biogeochemistry Carbon-Nitrogen Model (CN spinup)</emphasis>
@@ -25,6 +30,8 @@ The three cases we will describe are:
 <para>
 <emphasis>Doing perturbation error growth tests</emphasis>
 </para>
+</listitem>
+<listitem>
 <para>
 <emphasis>Running stand-alone &clm; with transient historical &CO2;
 concentration</emphasis>
@@ -32,29 +39,49 @@ concentration</emphasis>
 </listitem>
 </orderedlist>
 </para>
-<note>
+<caution>
 <para>
-The cases in this chapter are more sosphisticated and require more technical knowledge
-and skill that cases in previous chapters. The user should be very familiar with doing
+The cases in this chapter are more sophisticated and require more technical knowledge
+and skill than cases in previous chapters. The user should be very familiar with doing
 simple cases before moving onto the cases described here.
 </para>
-</note>
+</caution>
+
+<sect1 id="CLMSP_SPINUP">
+<title>Spinning up the Satellite Phenology Model (&clmsp; spinup)</title>
+
+<para>
+To spin-up the &clmsp; model you merely need to run &clmsp; for 50 simulation
+years starting from arbitrary initial conditions. You then use the final
+restart file for initial conditions in other simulations.
+Because, this is a straight forward operation we will NOT give
+the details on how to do that here, but leave it as an exercise for the reader.
+See the <xref linkend="final_CN_spinup"></xref> as an example of doing this
+as the last step for &clmcn;.
+</para>
+</sect1>
 
 <sect1 id="CN_SPINUP">
 <title>Spinning up the biogeochemistry Carbon-Nitrogen Model (CN spinup)</title>
 <para>
-To get the CN model to a steady state, you first run it from arbitrary initial conditions
+To get the &clmcn; model to a steady state, you first run it from arbitrary initial conditions
 using the "accelerated decomposition spinup" (-ad_spinup in configure) mode for 600 simulation years. After
 this you branch from this mode in the "exit spinup" (-exit_spinup in configure), run
 for a simulation year, and then save a restart from that and use it as initial conditions 
 for further spinup of CN (at least 50 simulation years).
 </para>
+<procedure>
+<title>Spinup of &clmcn</title>
+<step>
+<title>AD_SPINUP</title>
 <para>
 For the first step of running 600 years in "-ad_spinup" mode, you will setup
 a case, and then edit the values in <filename>env_conf.xml</filename> and
 <filename>env_run.xml</filename> so that the right configuration is turned on and
 the simulation is setup to run for the required length of simulation time.
 So do the following:
+<example>
+<title>Example AD_SPINUP Simulation</title>
 <screen>
 > cd scripts
 > create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
@@ -63,42 +90,68 @@ So do the following:
 > $EDITOR env_conf.xml
 # The following sets &CLMFORCECOLD; to "on" in env_conf.xml (you could also use an editor)
 > xmlchange -file env_conf.xml -id &CLMFORCECOLD; -val on
+# Configure
+> configure -case
 # The following sets RESUBMIT to 30 times in env_run.xml (you could also use an editor)
 > xmlchange -file env_run.xml -id RESUBMIT -val 30
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
 > xmlchange -file env_run.xml -id STOP_OPTION -val nyears
 # The following sets STOP_N to 20 years in env_run.xml (you could also use an editor)
 > xmlchange -file env_run.xml -id STOP_N -val 20
-# The following sets STOP_DATE to Jan/1 of year 600 in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id STOP_DATE -val 6000101
+# The following sets STOP_DATE to Jan/1 of year 601 in env_run.xml (you could also use an editor)
+> xmlchange -file env_run.xml -id STOP_DATE -val 6010101
+# Make the output history files only annual, by adding the following to the &usernlclm; namelist
+> echo '&amp;clm_inparm hist_nhtfrq = -8760 /' > &usernlclm;
+# Build and run normally
+> CN_spinup.build
+> bsub < CN_spinup.run
 </screen>
+</example>
 Then configure your case and build and run it as normal. And then save the last restart
 file from this simulation to use in the next step.
 </para>
+</step>
+
+<step>
+<title>EXIT_SPINIP</title>
 <para>
-To exit the spinup up mode and create an initial condition file to do further
-spinup with use "-exit_spinup" mode as follows:
+<example>
+<title>Example EXIT_SPINUP Simulation</title>
 <screen>
 > cd scripts
 > create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CN_exitspinup
 # Add "-exit_spinup on" to &CLMCONFIG; in env_conf.xml using your editor of choice
 > $EDITOR env_conf.xml
+# Change run type to branch and branch from the last year of the last simulation
+> xmlchange -file env_conf.xml -id RUN_TYPE    -val branch
+> xmlchange -file env_conf.xml -id RUN_REFCASE -val CN_spinup
+> xmlchange -file env_conf.xml -id RUN_REFDATE -val 0601-01-01
+> xmlchange -file env_conf.xml -id GET_REFCASE -val FALSE
 > configure -case
-# Set the finidat file to the last restart file saved in previous step
-> $EDITOR Buildconf/clm.buildnml.csh
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
 > xmlchange -file env_run.xml -id STOP_OPTION -val nyears
-# The following sets STOP_N to one year in env_run.xml (you could also use an editor)
-> xmlchange -file env_run.xml -id STOP_N -val 1
+> xmlchange -file env_run.xml -id STOP_N      -val 1
+# Go ahead and build, so that the run directory is created
+> CN_exitspinup.build
+# Now, Copy the last restart file from the earlier case into your run directory
+> cp /ptmp/$LOGIN/archive/CN_spinup/rest/CN_spinup.*.r*.0601-01-01-00000* /ptmp/$LOGIN/CN_exitspinup
+# Build and run normally
+> CN_exitspinup.build
+> bsub < CN_exitspinup.run
 </screen>
+</example>
 </para>
+</step>
+
+<step>
+<title>Final spinup</title>
 <para>
 Next save the last restart file from this step and use it as the "finidat" file to
-use for one more spinup for at least 50 years in normal mode. To assess it the model
-if fully spinup you'll want to plot different CN variables you are interested in and see
-if they have any trend or not.
+use for one more spinup for at least 50 years in normal mode. 
 So do the following:
+<example id="final_CN_spinup">
+<title>Example Final CN Spinup Simulation</title>
 <screen>
 > cd scripts
 > create_newcase -case CN_finalspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
@@ -115,44 +168,80 @@ So do the following:
 # Set the finidat file to the last restart file saved in previous step
 > $EDITOR Buildconf/clm.buildnml.csh
 </screen>
+</example>
 </para>
 <para>
+To assess if the model is spunup plot trends of CN variables of interest. If you see
+a trend, you may need to run the simulation longer.
 Finally save the restart file from the end of this simulation to use as an "finidat" file for future
 simulations.
 </para>
+</step>
+</procedure>
+
 </sect1>
 <sect1 id="CNDV_SPINUP">
 <title>Spinning up the Carbon-Nitrogen Dynamic Global Vegetation Model (CNDV spinup)</title>
 <para>
-To spinup the CNDV model -- you first follow the procedures above to spinup the CN model.
+To spinup the &clm; CNDV model -- you first follow the procedures above to spinup the CN model.
 Then you take the CN initial state file you created for the spinup with just CN, and 
-run CNDV for 200 more years. There are no compsets using CNDV, so you have to edit the
-<filename>env_conf.xml</filename> file and change <envar>CLM_CONFIG_OPTS</envar> to
-<literal>-bgc cndv</literal>, so that the CNDV model will be used instead of just CN.
+run CNDV for 200 more years. 
+We've provided such spunup files for two resolutions (f09 and f19) and two time-periods 
+(1850 and 2000), so in this example we will use the files provided to start from.
+If you were to start from your own &clmcn; spunup files -- the procedure would require
+some modification.
+There are no compsets using CNDV, so in
+<filename>env_conf.xml</filename> change <envar>CLM_CONFIG_OPTS</envar> to
+<literal>-bgc cndv</literal>.
+<example>
+<title>Example CNDV Spinup Simulation</title>
 <screen>
 > cd scripts
 > create_newcase -case CNDV_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CNDV_spinup
+# Set run type to startup and do a cold start
+> xmlchange -file env_conf.xml -id RUN_TYPE -val startup
 # The following sets CLM_CONFIG_OPTS to "-bgc cndv" in env_conf.xml (you could also use an editor)
 > xmlchange -file env_conf.xml -id CLM_CONFIG_OPTS  -val "-bgc cndv"
-# The following sets CLM_FORCE_COLDSTART to "on" in env_conf.xml (you could also use an editor)
-> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
 # The following sets RESUBMIT to 10 times in env_run.xml (you could also use an editor)
 > xmlchange -file env_run.xml -id RESUBMIT -val 10
 # The following sets STOP_OPTION to "nyears" in env_run.xml (you could also use an editor)
 > xmlchange -file env_run.xml -id STOP_OPTION -val nyears
 # The following sets STOP_N to 20 years in env_run.xml (you could also use an editor)
 > xmlchange -file env_run.xml -id STOP_N -val 20
+# Make sure you turn archiving on, so you save your files to long term archival
+> xmlchange -file env_run.xml -id DOUT_L_MS -val TRUE
+# Make the default primary history file annual and add an annual 1D vector auxillary file
+# By putting the following in a &usernlclm; file.
+> cat << EOF > &usernlclm;
+&amp;clm_inparm 
+ hist_nhtfrq = -8760, -8760
+ hist_mfilt  =     1, 1
+ hist_fincl2 = 'TLAI', 'TSAI', 'HTOP', 'HBOT', 'NPP'
+ hist_dov2xy = .true., .false.
+/
 > configure -case
-# Set the finidat file to the last restart file saved from spinning up CN
-> $EDITOR BuildConf/clm.buildnml.csh
+# NOTE: If you were using your own CN spinup files you would edit the namelist to use it
+# $EDITOR Buildconf/clm.buildnml.csh
+#
+# Now build and run as normal
+> CNDV_spinup.build
+> bsub < CNDV_spinup.run
 </screen>
+</example>
 </para>
 <para>
-The CNDV model takes at least two centuries to get spunup, because it only runs once per
-year. Each year vegetation can advance, or continue to establish itself. But, it takes
-time for vegetated areas such as forests to reach maturity and be well established.
+In a data analysis tool you should examine the auxillary file and examine the
+<varname>pfts1d_wtgcell</varname> to see where and what types of vegetation have
+been established. See the caution in <xref linkend="vector1D"></xref> for more
+information on visualizing and analyzing 1D vector fields.
 </para>
+<note>
+<para>
+CNDV also writes out two vector fields to "hv" auxillary files, on an annual basis by
+default.
+</para>
+</note>
 </sect1>
 
 <sect1 id="PERGRO">
@@ -161,14 +250,17 @@ time for vegetated areas such as forests to reach maturity and be well establish
 Doing perturbation error growth tests is a way to validate a port of
 the model to a new machine or to verify that changes are only roundoff.
 The steps are the same in either case, but in the discussion below I will
-assume you are doing a port validation to a new machine (but in parenthesis 
+assume you are doing a port validation to a new machine (but in parentheses 
 I will put a reminder that it could also be for code-mods).
-The basic idea is to do run two cases on the trusted machine (trusted code) and
-one with initial conditions perturbed by roundoff and compare the results of
+The basic idea is to run a case on the trusted machine (trusted code) and
+another with initial conditions perturbed by roundoff and compare the results of
 the two. The difference between these two simulations (the error) will grow over time
-and describe a curve that we want to compare the non-perturbed state with the new
-machine (code changes in place). If the new machine (code changes) are well-behaved
-the plot of this curve compared to the perturbation growth curve should be similar. If the 
+and describe a curve that we compare with the error growth on the new machine (code
+changes). The error growth on the new machine is the difference between the non-perturbed
+state on the trusted machine and the non-perturbed state on the new machine (code
+changes).  If the new machine (code changes) are well-behaved
+the plot of this error growth compared to the error growth curve on the trusted machine
+should be similar. If the 
 changes are NOT well-behaved the changes from the new machine (code changes) will be 
 larger than the perturbation changes. In summary the simulations and steps that need to be performed are:
 <orderedlist>
@@ -222,7 +314,7 @@ also use another compset if you didn't want these other features to be transient
 In order to get &CO2; to be transient we need to edit the
 datm template so that we add an extra streams file to describe how
 &CO2; varies over the historical period. You also need
-a NetCDF datafile that datm can read that gives the variation. You could
+a &netcdf; datafile that datm can read that gives the variation. You could
 supply your own file, but we have a standard file that is used by CAM for this
 and our example will make use of this file.
 </para>
@@ -237,7 +329,7 @@ that in this example we show how to edit the datm "buildnml" file for your
 case, but you could do something similar by editing the datm template.
 </para>
 </note>
-<note>
+<warning>
 <para>
 This section documents the process for doing something that is non-standard.
 There may be errors with the documentation and process, and you may have to do
@@ -246,7 +338,7 @@ that you do further research into understanding the process and the files, as
 well as understanding the datm and how it works. You may have to read documentation
 found in the code for datm as well as "csm_share".
 </para>
-</note>
+</warning>
 <para>
 The datm has "streams" files that have rough XML-like syntax and specify the
 location and file to get data from, as well as information on the variable names
@@ -262,12 +354,12 @@ would be similar for datasets that do contain more than one point.
 </para>
 <para>
 The three things that are needed: a domain file, a data file, and a streams text file.
-The domain file is a CF-compliant NetCDF file that has information
+The domain file is a CF-compliant &netcdf; file that has information
 on the grid points (latitudes and longitudes for cell-centers and vertices, mask
-, fraction, and areas). The datafile is a CF-compliant NetCDF file with the data that 
+, fraction, and areas). The datafile is a CF-compliant &netcdf; file with the data that 
 will be mapped. The streams text file is the XML-like file that tells datm how to find
 the files and how to map the variables datm knows about to the variable names on the
-NetCDF files. Note, that in our case the domain file and the data file are the same
+&netcdf; files. Note, that in our case the domain file and the data file are the same
 file. In other cases, the domain file may be separate from the data file.
 </para>
 <para>
@@ -276,15 +368,22 @@ the <filename>Buildconf/datm.buildnml.csh</filename> so that we add a
 &CO2; data stream in. There is a streams text file
 available in <filename>models/lnd/clm/doc/UsersGuide/co2_streams.txt</filename>,
 that includes file with a &CO2; time-series from 1765 to 2007.
+<example>
+<title>Example Transient Simulation with Historical &CO2;</title>
 <screen>
 > cd scripts
 > create_newcase -case DATM_CO2_TSERIES -res f19_g16 -compset I_1850-2000_CN -mach bluefire -skip_rundb
 > cd DATM_CO2_TSERIES
+# Set CCSM_BGC to CO2A so that CO2 will be passed from atmosphere to land
+> xmlchange -file env_conf.xml -id CCSM_BGC -val CO2A
+# Set CLM_CO2_TYPE to diagnostic so that the land will use the value sent from the atmosphere
 > xmlchange -file env_conf.xml -id CLM_CO2_TYPE -val diagnostic
 > configure -case
 > cd Buildconf
+# Copy the sample streams file over
 > cp ../../../models/lnd/clm/doc/UsersGuide/co2_streams.txt .
 </screen>
+</example>
 The first thing we will do is to edit the datm buildnml script to add 
 a CO2 file stream in. To do this we will apply a patch with the differences
 needed. The patch file <filename>addco2_datm.buildnml.diff</filename> is
@@ -297,6 +396,7 @@ So to apply the patch you do this...
 > cd scripts/DATM_CO2_TSERIES/Buildconf
 > patch &lt; ../../../models/lnd/clm/doc/UsersGuide/addco2_datm.buildnml.diff
 </screen>
+Once, you've done that you can build and run your case normally.
 </para>
 
 <note>
@@ -306,6 +406,14 @@ If the patch fails, you will have to add the changes to the
 patch file by hand.
 </para>
 </note>
+
+<warning>
+<para>
+The streams file above is hard-coded for the path of the file on NCAR computers. To use it on an outside
+machine you'll need to edit the filepath in the streams file to point to the location where you have the file.
+</para>
+</warning>
+
 <para>
 After going through these steps, you will have a case where you have datm reading
 in an extra streams text file that points to a data file with &CO2;

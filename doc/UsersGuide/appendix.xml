@@ -57,3 +57,77 @@ EOF2
 </screen>
 </para>
 </appendix>
+
+<appendix id="runinit_ibm.csh">
+<title>Using the Script <filename>runinit_ibm.csh</filename> to both Run &clm; and
+Interpolate Datasets</title>
+<para>
+The script <filename>runinit_ibm.csh</filename> can be used on the
+<acronym>NCAR</acronym> bluefire machine to run &clm; to create a template file and
+then run <command>interpinic</command> and do this over a variety of standard
+resolutions. By default it is setup to loop over the following resolutions:
+<screen width="99">
+foreach res ( "1.9x2.5" "10x15" "4x5" "0.9x1.25" "2.5x3.33" "0.47x0.63" "48x96" )
+</screen>
+It is also only setup to run &clmcn; and only particular masks for each resolution.
+But, the script can be modified by the user to run over whatever list you would like it
+to. It is also hooked up to the &buildnml; XML database, so will only use the
+datasets that are part of the database, see <xref linkend="adding_files"></xref>
+to see how to add files to the database. The script runs &clm; only using OpenMP
+threading and as such can be run interactively, but it can also be submitted to the
+batch que.
+</para>
+</appendix>
+
+<appendix id="testing">
+<title>Scripts for testing &clm;</title>
+
+<para>
+Technically, you could use the customization we gave in <xref linkend="customize"></xref>
+to test various configuration and namelist options for &clm;. Sometimes, it's also
+useful to have automated tests though to test that restarts give exactly the same 
+results as without a restart. It's also useful to have automated tests to run over a
+wide variety of configurations, resolutions, and namelist options. To do that we have
+several different types of scripts set up to make running comprehensive testing of
+&clm; easy. There are two types of testing scripts for &clm;. The first are the &ccsm;
+test scripts, which utilize the <command>create_newcase</command> scripts that we
+shown how to use in this User's Guide. The second are a set of stand-alone scripts that
+use the &clm; &configure; and &buildnml; scripts to build and test the model as well as
+testing the &clm; tools as well. Below we will 
+</para>
+
+<sect1 id="ccsm_testing">
+<title>Testing &clm; Using the &ccsm; Test Scripts</title>
+
+<para>
+<screen width="99">
+> cd scripts
+> create_test -testname ERI.f19_g16.I1850CN.bluefire
+</screen>
+<screen width="99">
+> cd scripts
+> create_test_suite -input_list ccsm_utils/Testlists/bluefire.clm.auxtest
+> cs.submit.$id.bluefire
+> cs.status.$id
+</screen>
+</para>
+</sect1>
+
+<sect1 id="clm_standalone_testing">
+<title>Testing &clm; Using the &clm; Stand-Alone Testing Scripts</title>
+
+<para>
+To submit a suite of stand-alone tests to the batch que:
+<screen width="99">
+> cd models/lnd/clm/test/system
+> test_driver.sh
+</screen>
+You can also run tests interactively:
+<screen width="99">
+> cd models/lnd/clm/test/system
+> test_driver.sh -i
+</screen>
+</para>
+</sect1>
+
+</appendix>

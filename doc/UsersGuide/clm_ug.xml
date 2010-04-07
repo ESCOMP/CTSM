@@ -39,6 +39,7 @@ Top level docbook Users-Guide for CLM4
   <!ENTITY ccsm4             "<acronym>CCSM4.0</acronym>">
   <!ENTITY netcdf            "<acronym>NetCDF</acronym>">
   <!ENTITY FORTRAN           "<acronym>FORTRAN</acronym>">
+  <!ENTITY FORTRAN90         "<acronym>FORTRAN-90</acronym>">
   <!ENTITY mpi               "<acronym>MPI</acronym>">
   <!ENTITY omp               "<acronym>OpenMP</acronym>">
   <!ENTITY ncl               "<acronym>NCL</acronym>">
@@ -73,6 +74,19 @@ Top level docbook Users-Guide for CLM4
 <bookinfo>
 <title>&ccsm; Research Tools: &clm40; Users Guide Documentation (DRAFT)</title>
 
+<keywordset>
+    <keyword>CCSM</keyword>
+    <keyword>CLM</keyword>
+    <keyword>community climate system model</keyword>
+    <keyword>climate</keyword>
+    <keyword>climate model</keyword>
+    <keyword>land surface model</keyword>
+    <keyword>hydrology</keyword>
+    <keyword>biogeochemistry</keyword>
+    <keyword>urban model</keyword>
+    <keyword>documentation</keyword>
+</keywordset>
+
 <authorgroup>
 
 <author>
@@ -85,7 +99,17 @@ Top level docbook Users-Guide for CLM4
 
 </authorgroup>
 
-<date>2010-04-01</date>
+<abstract>
+<para>
+The user's guide to &clm40; which is the active land surface model component of &ccsm4;. 
+The purpose of this guide is to instruct both the novice and experienced user, as well as
+&clm; developers in the use of &clm4; for land-surface climate modelling.
+</para>
+</abstract>
+
+<releaseinfo>$URL$</releaseinfo>
+
+<date>2010-04-06</date>
                      
 </bookinfo>
 

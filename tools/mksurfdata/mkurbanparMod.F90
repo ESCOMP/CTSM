@@ -114,7 +114,6 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   real(r8), allocatable :: cv_improad_o(:,:,:)   ! volumetric heat capacity of impervious road out (lon,lat,nlevurb)
   real(r8), allocatable :: cv_improad_i(:,:,:)   ! volumetric heat capacity of impervious road in (lon,lat,nlevurb)
   integer,  allocatable :: nlev_improad_o(:,:)! number of impervious road layers out
-  integer,  allocatable :: nlev_improad_i(:,:)! number of impervious road layers in
   real(r8), allocatable :: mask_i(:,:)        ! input grid: mask (0, 1)
   real(r8), allocatable :: mask_o(:,:)        ! output grid: mask (0, 1)
   integer , allocatable :: num_good_o(:,:)    ! number of non-missing inputs within output gridcell
@@ -213,11 +212,6 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(nlev_improad_i(nlon_i,nlat_i), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
   allocate(thick_roof_i(nlon_i,nlat_i), &
            stat=ier)
   if (ier /= 0) then
@@ -273,36 +267,6 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(tk_roof_i(nlon_i,nlat_i,nlevurb), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(tk_wall_i(nlon_i,nlat_i,nlevurb), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(tk_improad_i(nlon_i,nlat_i,nlevurb), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(cv_roof_i(nlon_i,nlat_i,nlevurb), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(cv_wall_i(nlon_i,nlat_i,nlevurb), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(cv_improad_i(nlon_i,nlat_i,nlevurb), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
 
   allocate(canyon_hwr_o(lsmlon,lsmlat), &
            stat=ier)
@@ -330,11 +294,6 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
   allocate(ht_roof_o(lsmlon,lsmlat), &
-           stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
-  allocate(nlev_improad_o(lsmlon,lsmlat), &
            stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
@@ -394,6 +353,215 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
+  allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat), stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mkurbanpar allocation error'; call abort()
+  end if
+
+  ! Compute local fields _o
+  ! Area average and then deallocate input data
+
+  mask_i = 1.0_r8
+  mask_o = 1.0_r8
+  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
+
+  mask_i = float(tdomain%mask(:,:))
+
+  call areaave(mask_i,mask_o,tgridmap)
+
+  call gridmap_clean(tgridmap)
+  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
+
+  call check_ret(nf_inq_varid (ncidi, 'CANYON_HWR', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, canyon_hwr_i), subname)
+  call areaave(canyon_hwr_i,canyon_hwr_o,tgridmap)
+  deallocate (canyon_hwr_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'EM_IMPROAD', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, em_improad_i), subname)
+  call areaave(em_improad_i,em_improad_o,tgridmap)
+  deallocate (em_improad_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'EM_PERROAD', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, em_perroad_i), subname)
+  call areaave(em_perroad_i,em_perroad_o,tgridmap)
+  deallocate (em_perroad_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'EM_ROOF', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, em_roof_i), subname)
+  call areaave(em_roof_i,em_roof_o,tgridmap)
+  deallocate (em_roof_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'EM_WALL', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, em_wall_i), subname)
+  call areaave(em_wall_i,em_wall_o,tgridmap)
+  deallocate (em_wall_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'HT_ROOF', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, ht_roof_i), subname)
+  call areaave(ht_roof_i,ht_roof_o,tgridmap)
+  deallocate (ht_roof_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'THICK_ROOF', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, thick_roof_i), subname)
+  call areaave(thick_roof_i,thick_roof_o,tgridmap)
+  deallocate (thick_roof_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'THICK_WALL', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, thick_wall_i), subname)
+  call areaave(thick_wall_i,thick_wall_o,tgridmap)
+  deallocate (thick_wall_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'T_BUILDING_MAX', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, t_building_max_i), subname)
+  call areaave(t_building_max_i,t_building_max_o,tgridmap)
+  deallocate (t_building_max_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'T_BUILDING_MIN', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, t_building_min_i), subname)
+  call areaave(t_building_min_i,t_building_min_o,tgridmap)
+  deallocate (t_building_min_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'WIND_HGT_CANYON', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, wind_hgt_canyon_i), subname)
+  call areaave(wind_hgt_canyon_i,wind_hgt_canyon_o,tgridmap)
+  deallocate (wind_hgt_canyon_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'WTLUNIT_ROOF', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, wtlunit_roof_i), subname)
+  call areaave(wtlunit_roof_i,wtlunit_roof_o,tgridmap)
+  deallocate (wtlunit_roof_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'WTROAD_PERV', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, wtroad_perv_i), subname)
+  call areaave(wtroad_perv_i,wtroad_perv_o,tgridmap)
+  deallocate (wtroad_perv_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'ALB_IMPROAD', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, alb_improad_i), subname)
+  call areaave(alb_improad_i,alb_improad_o,tgridmap)
+  deallocate (alb_improad_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'ALB_PERROAD', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, alb_perroad_i), subname)
+  call areaave(alb_perroad_i,alb_perroad_o,tgridmap)
+  deallocate (alb_perroad_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'ALB_ROOF', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, alb_roof_i), subname)
+  call areaave(alb_roof_i,alb_roof_o,tgridmap)
+  deallocate (alb_roof_i)
+
+  call check_ret(nf_inq_varid (ncidi, 'ALB_WALL', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, alb_wall_i), subname)
+  call areaave(alb_wall_i,alb_wall_o,tgridmap)
+  deallocate (alb_wall_i)
+
+  ! Now write output data to the file and then deallocate
+  call check_ret(nf_inq_varid(ncido, 'CANYON_HWR', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, canyon_hwr_o), subname)
+  deallocate (canyon_hwr_o)
+
+  call check_ret(nf_inq_varid(ncido, 'EM_IMPROAD', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, em_improad_o), subname)
+  deallocate (em_improad_o)
+
+  call check_ret(nf_inq_varid(ncido, 'EM_PERROAD', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, em_perroad_o), subname)
+  deallocate (em_perroad_o)
+
+  call check_ret(nf_inq_varid(ncido, 'EM_ROOF', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, em_roof_o), subname)
+  deallocate (em_roof_o)
+
+  call check_ret(nf_inq_varid(ncido, 'EM_WALL', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, em_wall_o), subname)
+  deallocate (em_wall_o)
+
+  call check_ret(nf_inq_varid(ncido, 'HT_ROOF', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, ht_roof_o), subname)
+  deallocate (ht_roof_o)
+
+  call check_ret(nf_inq_varid(ncido, 'THICK_ROOF', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, thick_roof_o), subname)
+  deallocate (thick_roof_o)
+
+  call check_ret(nf_inq_varid(ncido, 'THICK_WALL', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, thick_wall_o), subname)
+  deallocate (thick_wall_o)
+
+  call check_ret(nf_inq_varid(ncido, 'T_BUILDING_MAX', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, t_building_max_o), subname)
+  deallocate (t_building_max_o)
+
+  call check_ret(nf_inq_varid(ncido, 'T_BUILDING_MIN', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, t_building_min_o), subname)
+  deallocate (t_building_min_o)
+
+  call check_ret(nf_inq_varid(ncido, 'WIND_HGT_CANYON', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, wind_hgt_canyon_o), subname)
+  deallocate (wind_hgt_canyon_o)
+
+  call check_ret(nf_inq_varid(ncido, 'WTLUNIT_ROOF', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, wtlunit_roof_o), subname)
+  deallocate (wtlunit_roof_o)
+
+  call check_ret(nf_inq_varid(ncido, 'WTROAD_PERV', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, wtroad_perv_o), subname)
+  deallocate (wtroad_perv_o)
+
+  call check_ret(nf_inq_varid(ncido, 'ALB_IMPROAD', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, alb_improad_o), subname)
+  deallocate (alb_improad_o)
+
+  call check_ret(nf_inq_varid(ncido, 'ALB_PERROAD', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, alb_perroad_o), subname)
+  deallocate (alb_perroad_o)
+
+  call check_ret(nf_inq_varid(ncido, 'ALB_ROOF', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, alb_roof_o), subname)
+  deallocate (alb_roof_o)
+
+  call check_ret(nf_inq_varid(ncido, 'ALB_WALL', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, alb_wall_o), subname)
+  deallocate (alb_wall_o)
+
+  !
+  ! 3D nlevurb fields
+  !
+  ! First allocate data
+  allocate(cv_improad_i(nlon_i,nlat_i,nlevurb), &
+           stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mkurbanpar allocation error'; call abort()
+  end if
+
+  allocate(tk_roof_i(nlon_i,nlat_i,nlevurb), &
+           stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mkurbanpar allocation error'; call abort()
+  end if
+  allocate(tk_wall_i(nlon_i,nlat_i,nlevurb), &
+           stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mkurbanpar allocation error'; call abort()
+  end if
+  allocate(tk_improad_i(nlon_i,nlat_i,nlevurb), &
+           stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mkurbanpar allocation error'; call abort()
+  end if
+  allocate(cv_roof_i(nlon_i,nlat_i,nlevurb), &
+           stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mkurbanpar allocation error'; call abort()
+  end if
+  allocate(cv_wall_i(nlon_i,nlat_i,nlevurb), &
+           stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mkurbanpar allocation error'; call abort()
+  end if
+
   allocate(tk_roof_o(lsmlon,lsmlat,nlevurb), &
            stat=ier)
   if (ier /= 0) then
@@ -424,119 +592,69 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
-  allocate(mask_i(nlon_i,nlat_i),mask_o(lsmlon,lsmlat), stat=ier)
-  if (ier /= 0) then
-     write(6,*)'mkurbanpar allocation error'; call abort()
-  end if
+
+  ! Next read in input data
+  call check_ret(nf_inq_varid (ncidi, 'TK_ROOF', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, tk_roof_i), subname)
+
+  call check_ret(nf_inq_varid (ncidi, 'TK_WALL', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, tk_wall_i), subname)
+
+  call check_ret(nf_inq_varid (ncidi, 'CV_ROOF', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, cv_roof_i), subname)
+
+  call check_ret(nf_inq_varid (ncidi, 'CV_WALL', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, cv_wall_i), subname)
+
+  ! Do the areaaveraging and then deallocate data
+  call areaave(tk_roof_i,tk_roof_o,tgridmap)
+  deallocate (tk_roof_i)
+
+  call areaave(tk_wall_i,tk_wall_o,tgridmap)
+  deallocate (tk_wall_i)
+
+  call areaave(cv_roof_i,cv_roof_o,tgridmap)
+  deallocate (cv_roof_i)
+
+  call areaave(cv_wall_i,cv_wall_o,tgridmap)
+  deallocate (cv_wall_i)
+
+  call check_ret(nf_inq_varid(ncido, 'TK_WALL', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, tk_wall_o), subname)
+  deallocate (tk_wall_o)
+
+  call check_ret(nf_inq_varid(ncido, 'TK_ROOF', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, tk_roof_o), subname)
+  deallocate (tk_roof_o)
+
+  call check_ret(nf_inq_varid(ncido, 'CV_WALL', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, cv_wall_o), subname)
+  deallocate (cv_wall_o)
+
+  call check_ret(nf_inq_varid(ncido, 'CV_ROOF', varid), subname)
+  call check_ret(nf_put_var_double(ncido, varid, cv_roof_o), subname)
+  deallocate (cv_roof_o)
+
+  ! Get fields from input file
+  call check_ret(nf_inq_varid (ncidi, 'CV_IMPROAD', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, cv_improad_i), subname)
+
+  call check_ret(nf_inq_varid (ncidi, 'TK_IMPROAD', varid), subname)
+  call check_ret(nf_get_var_double (ncidi, varid, tk_improad_i), subname)
+
+  ! Impervious road thermal conductivity and heat capacity need to be
+  ! handled differently because of varying levels of data.
+
   allocate(num_good_o(lsmlon,lsmlat),num_miss_o(lsmlon,lsmlat), stat=ier)
   if (ier /= 0) then
      write(6,*)'mkurbanpar allocation error'; call abort()
   end if
 
-  ! Compute local fields _o
-
-  mask_i = 1.0_r8
-  mask_o = 1.0_r8
-  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
-
-  mask_i = float(tdomain%mask(:,:))
-
-  call areaave(mask_i,mask_o,tgridmap)
-
-  call gridmap_clean(tgridmap)
-  call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
-
-  call check_ret(nf_inq_varid (ncidi, 'CANYON_HWR', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, canyon_hwr_i), subname)
-  call areaave(canyon_hwr_i,canyon_hwr_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'EM_IMPROAD', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, em_improad_i), subname)
-  call areaave(em_improad_i,em_improad_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'EM_PERROAD', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, em_perroad_i), subname)
-  call areaave(em_perroad_i,em_perroad_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'EM_ROOF', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, em_roof_i), subname)
-  call areaave(em_roof_i,em_roof_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'EM_WALL', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, em_wall_i), subname)
-  call areaave(em_wall_i,em_wall_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'HT_ROOF', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, ht_roof_i), subname)
-  call areaave(ht_roof_i,ht_roof_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'THICK_ROOF', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, thick_roof_i), subname)
-  call areaave(thick_roof_i,thick_roof_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'THICK_WALL', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, thick_wall_i), subname)
-  call areaave(thick_wall_i,thick_wall_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'T_BUILDING_MAX', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, t_building_max_i), subname)
-  call areaave(t_building_max_i,t_building_max_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'T_BUILDING_MIN', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, t_building_min_i), subname)
-  call areaave(t_building_min_i,t_building_min_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'WIND_HGT_CANYON', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, wind_hgt_canyon_i), subname)
-  call areaave(wind_hgt_canyon_i,wind_hgt_canyon_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'WTLUNIT_ROOF', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, wtlunit_roof_i), subname)
-  call areaave(wtlunit_roof_i,wtlunit_roof_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'WTROAD_PERV', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, wtroad_perv_i), subname)
-  call areaave(wtroad_perv_i,wtroad_perv_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'ALB_IMPROAD', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, alb_improad_i), subname)
-  call check_ret(nf_inq_varid (ncidi, 'ALB_PERROAD', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, alb_perroad_i), subname)
-  call check_ret(nf_inq_varid (ncidi, 'ALB_ROOF', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, alb_roof_i), subname)
-  call check_ret(nf_inq_varid (ncidi, 'ALB_WALL', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, alb_wall_i), subname)
-  call areaave(alb_improad_i,alb_improad_o,tgridmap)
-  call areaave(alb_perroad_i,alb_perroad_o,tgridmap)
-  call areaave(alb_roof_i,alb_roof_o,tgridmap)
-  call areaave(alb_wall_i,alb_wall_o,tgridmap)
-
-  call check_ret(nf_inq_varid (ncidi, 'TK_ROOF', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, tk_roof_i), subname)
-  call check_ret(nf_inq_varid (ncidi, 'TK_WALL', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, tk_wall_i), subname)
-  call check_ret(nf_inq_varid (ncidi, 'CV_ROOF', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, cv_roof_i), subname)
-  call check_ret(nf_inq_varid (ncidi, 'CV_WALL', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, cv_wall_i), subname)
-  call check_ret(nf_inq_varid (ncidi, 'CV_IMPROAD', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, cv_improad_i), subname)
-  call areaave(tk_roof_i,tk_roof_o,tgridmap)
-  call areaave(tk_wall_i,tk_wall_o,tgridmap)
-  call areaave(cv_roof_i,cv_roof_o,tgridmap)
-  call areaave(cv_wall_i,cv_wall_o,tgridmap)
-
-  ! Impervious road thermal conductivity and heat capacity need to be
-  ! handled differently because of varying levels of data.
-
-  call check_ret(nf_inq_varid (ncidi, 'TK_IMPROAD', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, tk_improad_i), subname)
-  call check_ret(nf_inq_varid (ncidi, 'CV_IMPROAD', varid), subname)
-  call check_ret(nf_get_var_double (ncidi, varid, cv_improad_i), subname)
   do nurb = 1,nlevurb
       write(6,*)'nlevurb: ',nurb
       mask_i = 1.0_r8
       mask_o = 1.0_r8
+      call gridmap_clean(tgridmap)
       call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
       call gridmap_setptrs(tgridmap,mx_ovr=mxovr,n_ovr=novr,i_ovr=iovr,j_ovr=jovr,w_ovr=wovr)
       ! Create mask for input data from missing values
@@ -566,6 +684,7 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
             end do
          end do
       end do
+      call gridmap_clean(tgridmap)
       call areaini(tdomain,ldomain,tgridmap,fracin=mask_i,fracout=mask_o)
       call gridmap_setptrs(tgridmap,mx_ovr=mxovr,n_ovr=novr,i_ovr=iovr,j_ovr=jovr,w_ovr=wovr)
       do jo = 1, ldomain%nj
@@ -584,80 +703,29 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
          end do
       end do
   end do
+  deallocate (num_miss_o)
+  deallocate (num_good_o)
+  deallocate (cv_improad_i)
+  deallocate (tk_improad_i)
 
-  ! -----------------------------------------------------------------
-  ! Output model resolution Urban Parameter data
-  ! -----------------------------------------------------------------
 
-  call check_ret(nf_inq_varid(ncido, 'CANYON_HWR', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, canyon_hwr_o), subname)
+  ! Deallocate dynamic memory needed for regridding
 
-  call check_ret(nf_inq_varid(ncido, 'EM_IMPROAD', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, em_improad_o), subname)
+  call domain_clean(tdomain)
+  call gridmap_clean(tgridmap)
 
-  call check_ret(nf_inq_varid(ncido, 'EM_PERROAD', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, em_perroad_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'EM_ROOF', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, em_roof_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'EM_WALL', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, em_wall_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'HT_ROOF', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, ht_roof_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'THICK_ROOF', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, thick_roof_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'THICK_WALL', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, thick_wall_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'T_BUILDING_MAX', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, t_building_max_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'T_BUILDING_MIN', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, t_building_min_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'WIND_HGT_CANYON', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, wind_hgt_canyon_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'WTLUNIT_ROOF', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, wtlunit_roof_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'WTROAD_PERV', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, wtroad_perv_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'ALB_IMPROAD', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, alb_improad_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'ALB_PERROAD', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, alb_perroad_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'ALB_ROOF', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, alb_roof_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'ALB_WALL', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, alb_wall_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'TK_WALL', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, tk_wall_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'TK_ROOF', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, tk_roof_o), subname)
-
+  ! Output fields to file
   call check_ret(nf_inq_varid(ncido, 'TK_IMPROAD', varid), subname)
   call check_ret(nf_put_var_double(ncido, varid, tk_improad_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'CV_WALL', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, cv_wall_o), subname)
-
-  call check_ret(nf_inq_varid(ncido, 'CV_ROOF', varid), subname)
-  call check_ret(nf_put_var_double(ncido, varid, cv_roof_o), subname)
 
   call check_ret(nf_inq_varid(ncido, 'CV_IMPROAD', varid), subname)
   call check_ret(nf_put_var_double(ncido, varid, cv_improad_o), subname)
 
+  allocate(nlev_improad_o(lsmlon,lsmlat), &
+           stat=ier)
+  if (ier /= 0) then
+     write(6,*)'mkurbanpar allocation error'; call abort()
+  end if
   nlev_improad_o(:,:)  = 0
   do jo = 1, ldomain%nj
      do io = 1, ldomain%numlon(jo)
@@ -673,6 +741,11 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
 
   call check_ret(nf_inq_varid(ncido, 'NLEV_IMPROAD', varid), subname)
   call check_ret(nf_put_var_int(ncido, varid, nlev_improad_o), subname)
+  ! Deallocate dynamic memory
+  deallocate (nlev_improad_o)
+  deallocate (cv_improad_o)
+  deallocate (tk_improad_o)
+  deallocate (mask_i,mask_o)
      
   call check_ret(nf_sync(ncido), subname)
 
@@ -681,60 +754,6 @@ subroutine mkurbanpar(lsmlon, lsmlat, fname, ndiag, ncido)
   call shr_sys_flush(6)
 
   call check_ret(nf_close(ncidi), subname)
-
-  ! Deallocate dynamic memory
-
-  call domain_clean(tdomain)
-  call gridmap_clean(tgridmap)
-  deallocate (canyon_hwr_o)
-  deallocate (canyon_hwr_i)
-  deallocate (em_improad_o)
-  deallocate (em_improad_i)
-  deallocate (em_perroad_o)
-  deallocate (em_perroad_i)
-  deallocate (em_roof_o)
-  deallocate (em_roof_i)
-  deallocate (em_wall_o)
-  deallocate (em_wall_i)
-  deallocate (ht_roof_o)
-  deallocate (ht_roof_i)
-  deallocate (nlev_improad_o)
-  deallocate (nlev_improad_i)
-  deallocate (thick_roof_o)
-  deallocate (thick_roof_i)
-  deallocate (thick_wall_o)
-  deallocate (thick_wall_i)
-  deallocate (t_building_max_o)
-  deallocate (t_building_max_i)
-  deallocate (t_building_min_o)
-  deallocate (t_building_min_i)
-  deallocate (wind_hgt_canyon_o)
-  deallocate (wind_hgt_canyon_i)
-  deallocate (wtlunit_roof_o)
-  deallocate (wtlunit_roof_i)
-  deallocate (wtroad_perv_o)
-  deallocate (wtroad_perv_i)
-  deallocate (alb_improad_o)
-  deallocate (alb_improad_i)
-  deallocate (alb_perroad_o)
-  deallocate (alb_perroad_i)
-  deallocate (alb_roof_o)
-  deallocate (alb_roof_i)
-  deallocate (alb_wall_o)
-  deallocate (alb_wall_i)
-  deallocate (tk_roof_o)
-  deallocate (tk_roof_i)
-  deallocate (tk_wall_o)
-  deallocate (tk_wall_i)
-  deallocate (tk_improad_o)
-  deallocate (tk_improad_i)
-  deallocate (cv_roof_o)
-  deallocate (cv_roof_i)
-  deallocate (cv_wall_o)
-  deallocate (cv_wall_i)
-  deallocate (cv_improad_o)
-  deallocate (cv_improad_i)
-  deallocate (mask_i,mask_o)
 
 end subroutine mkurbanpar
 

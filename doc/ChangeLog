@@ -1,4 +1,173 @@
 ===============================================================
+Tag name:  clm3_7_11
+Originator(s):  erik (erik)
+Date: Wed Apr  7 11:59:22 MDT 2010
+One-line Summary: qtr-degree and T85 surfdata, rcp=2.6/4.5 datasets, doc updates
+
+Purpose of changes:
+
+Documentation updates, for users guide and namelist and configure xml files (rel04 to
+rel05 update). Fix missing deallocate (bug 1133), and line length for NEE. Changes in
+mksurfdata so that will run for qtr-degree. New rcp datasets for 4.5 and 2.6, aerdep
+(only f19)/ndepdyn/pftdyn datasets. Fix CN spinup test, fix test name for bluefire tests.
+Add in qtr-degree and T85 surfdata files.
+
+Bugs fixed (include bugzilla ID):
+                                 1141 (CN spinup test)
+                                 1137 (qtr-deg fsurdat)
+                                 1136 (line length for NEE in histFlds)
+                                 1135 (miss smG45 test)
+                                 1133 (missing deallocate)
+                                 1125 (T85, qtr-degree and urban pt surface datasets)
+                                      (partial T85 and qtr-degree)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1125 (T85, qtr-degree and urban pt surface datasets)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+              new qtr-degree and T85 fsurdat
+              new rcp=8.5, f19 pftdyn, rcp=4.5 f09, f19, f10 pftdyn
+              new rcp=2.6 f09, f19, f10 pftdyn
+              new rcp=4.5/2.6 f19 aerdep 1850-2100 datasets
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): scripts, drv
+    scripts to scripts4_100406a
+    drv     to drvseq3_1_23
+
+List all files eliminated:
+
+   D  models/lnd/clm/tools/mksurfdata/pftdyn_simyr1850.txt -- Rename with _hist_
+   D  models/lnd/clm/tools/mksurfdata/pftdyn_simyr2000.txt -- Rename with _hist_
+
+List all files added and what they do:
+
+   A  models/lnd/clm/tools/mksurfdata/pftdyn_hist_simyr2000.txt - Renamed from above
+   A  models/lnd/clm/tools/mksurfdata/pftdyn_hist_simyr1850.txt - Renamed from above
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>>>> Turn supln off for spinup modes
+   M  models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_dh
+   M  models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_dm
+   M  models/lnd/clm/test/system/config_files/17p_cnexitspinupsc_do
+   M  models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dh
+   M  models/lnd/clm/test/system/config_files/17p_cnadspinupsc_dm
+   M  models/lnd/clm/test/system/config_files/17p_cnadspinupsc_do
+   M  models/lnd/clm/test/system/tests_pretag_bluefire --------------- Change name of missing test smG45->smG55
+
+>>>>>>>>>>>>> Change names of pftdyn text files to include _hist_
+>>>>>>>>>>>>> Memory updates so uses less memory (allocate just before needed
+>>>>>>>>>>>>> deallocate after done). This is from the ccsm4_0_rel05 update
+>>>>>>>>>>>>> Mariana started the changes and Erik added some more.
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.namelist
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.globalirrig
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.regional
+   M  models/lnd/clm/tools/mksurfdata/mksurfdata.singlept
+   M  models/lnd/clm/tools/mksurfdata/README
+   M  models/lnd/clm/tools/mksurfdata/mkurbanparMod.F90 ----- Memory updates
+
+   M  models/lnd/clm/bld/clm.cpl7.template - Use $CASETOOLS for Makefile
+
+   M  models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - 
+              new qtr-degree and T85 fsurdat
+              new rcp=8.5, f19 pftdyn, rcp=4.5 f09, f19, f10 pftdyn
+              new rcp=2.6 f09, f19, f10 pftdyn
+              new rcp=4.5/2.6 f19 aerdep 1850-2100 datasets
+
+>>>>>>>>>>>>> Documentation udpates updating from rel04 to ccsm4_0_rel05
+   M  models/lnd/clm/bld/configure -------------------------- change CVS to SVN
+   M  models/lnd/clm/bld/config_files/config_definition.xsl - Correct name
+   M  models/lnd/clm/bld/config_files/config_definition.xml - Add category for maxpft
+
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xml - Work with categories
+                    and improve descriptions, remove rpntpath
+   M  models/lnd/clm/bld/namelist_files/namelist_definition.xsl - Seperate out
+                    stand-alone testing categories, improve documentation, work
+                    on categories.
+
+>>>>>>>>>>>>> Documentation udpates updating from rel04 to ccsm4_0_rel05
+>>>>>>>>>>>>> Updates from Sam, Keith, and Sean, more doc on tools and appendix
+   M  models/lnd/clm/doc/UsersGuide/co2_streams.txt
+   M  models/lnd/clm/doc/UsersGuide/tools.xml
+   M  models/lnd/clm/doc/UsersGuide/preface.xml
+   M  models/lnd/clm/doc/UsersGuide/clm_stylesheet.dsl
+   M  models/lnd/clm/doc/UsersGuide/clm_ug.xml
+   M  models/lnd/clm/doc/UsersGuide/adding_files.xml
+   M  models/lnd/clm/doc/UsersGuide/appendix.xml
+   M  models/lnd/clm/doc/UsersGuide/custom.xml
+   M  models/lnd/clm/doc/UsersGuide/single_point.xml
+   M  models/lnd/clm/doc/UsersGuide/Makefile
+   M  models/lnd/clm/doc/UsersGuide/addco2_datm.buildnml.diff
+   M  models/lnd/clm/doc/UsersGuide/special_cases.xml
+   M  models/lnd/clm/doc/KnownBugs --------------------------- Add notes on: 
+       bugzilla bugs: 669, 1024, 1124, 1125, 1127
+
+   M  models/lnd/clm/src/main/accFldsMod.F90 -- Deallocate outside #ifdef
+   M  models/lnd/clm/src/main/histFldsMod.F90 - Shorten long line for NEE
+
+Summary of testing:
+
+  bluefire: All PASS up to 024, blHN1 test except...
+025 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+026 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+027 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+028 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+  bluefire interactive testing: All PASS except (up to 26 brAK8 test)
+006 smCA4 TSM.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 10
+007 erCA4 TER.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -45+-45 arb_ic ....FAIL! rc= 5
+008 brCA4 TBR.sh _nrsc_ds clm_std^nl_urb_br 20021001:NONE:3600 1x1_camdenNJ navy -10+-10 arb_ic .FAIL! rc= 5
+009 blCA4 TBL.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 4
+010 smNB4 TSM.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 10
+011 erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 57+100 arb_FAIL! rc= 5
+012 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arFAIL! rc= 5
+013 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 4
+018 smCA8 TSM.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 10
+019 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 4
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+  jaguar interactive testing: All PASS up to smAK4 test except...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+008 blAK4 TBL.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -10 cold ............SKIPPED*
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
+008 smCA4 TSM.sh _nrsc_ds clm_std^nl_urb 20021001:NONE:3600 1x1_camdenNJ navy -90 arb_ic ........FAIL! rc= 10
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_10
+
+Changes answers relative to baseline: no (b4b)
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_10
 Originator(s):  erik (erik)
 Date: Mon Mar 22 23:54:48 MDT 2010
@@ -31,6 +200,12 @@ Known bugs (include bugzilla ID):
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1125 (T85, qtr-degree and urban pt surface datasets)
+                                 1133 (missing deallocate)
+                                 1135 (miss smG45 test)
+                                 1136 (line length for NEE in histFlds)
+                                 1137 (qtr-deg fsurdat)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1141 (CN spinup test)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -121,6 +296,12 @@ Known bugs (include bugzilla ID):
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1125 (T85, qtr-degree and urban pt surface datasets)
                                  1132 (clm failure for BMOZ compset)
+                                 1133 (missing deallocate)
+                                 1135 (miss smG45 test)
+                                 1136 (line length for NEE in histFlds)
+                                 1137 (qtr-deg fsurdat)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1141 (CN spinup test)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -335,6 +516,12 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1132 (clm failure for BMOZ compset)
+                                 1133 (missing deallocate)
+                                 1135 (miss smG45 test)
+                                 1136 (line length for NEE in histFlds)
+                                 1137 (qtr-deg fsurdat)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1141 (CN spinup test)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -477,6 +664,12 @@ Known bugs (include bugzilla ID):
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1121 (history variable attribute cell_methods misnamed)
                                  1132 (clm failure for BMOZ compset)
+                                 1133 (missing deallocate)
+                                 1135 (miss smG45 test)
+                                 1136 (line length for NEE in histFlds)
+                                 1137 (qtr-deg fsurdat)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1141 (CN spinup test)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Switch cndv for dgvm, Have configure disallow
@@ -808,6 +1001,12 @@ Known bugs (include bugzilla ID):
                                  1118 (Restarts with SNICAR_FRC fail)
                                  1121 (history variable attribute cell_methods misnamed)
                                  1132 (clm failure for BMOZ compset)
+                                 1133 (missing deallocate)
+                                 1135 (miss smG45 test)
+                                 1136 (line length for NEE in histFlds)
+                                 1137 (qtr-deg fsurdat)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1141 (CN spinup test)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1106,6 +1305,12 @@ Known bugs (include bugzilla ID):
                                  1104 (Restart problem with pftdyn mode)
                                  1121 (history variable attribute cell_methods misnamed)
                                  1118 (Restarts with SNICAR_FRC fail)
+                                 1133 (missing deallocate)
+                                 1135 (miss smG45 test)
+                                 1136 (line length for NEE in histFlds)
+                                 1137 (qtr-deg fsurdat)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1141 (CN spinup test)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: 

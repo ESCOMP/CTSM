@@ -100,8 +100,8 @@ Lists of input files for range of dates historical or future scenarios:
   pftdyn_rcp4.5_simyr1850-2100.txt - List of rcp=4.5 input PFT files from 1850 to 2100
   pftdyn_rcp6.0_simyr1850-2100.txt - List of rcp=6.0 input PFT files from 1850 to 2100
   pftdyn_rcp8.5_simyr1850-2100.txt - List of rcp=8.5 input PFT files from 1850 to 2100
-  pftdyn_simyr1850.txt ------------- Input PFT file for year 1850
-  pftdyn_simyr2000.txt ------------- Input PFT file for year 2000
+  pftdyn_hist_simyr1850.txt -------- Input PFT file for year 1850
+  pftdyn_hist_simyr2000.txt -------- Input PFT file for year 2000
 
 (Historical period from 1850-2005 datafiles all point to the historical files, while
  the future scenarios 2006-2100 are the scenario datasets)

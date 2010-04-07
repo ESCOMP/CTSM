@@ -1,6 +1,29 @@
 Known Bugs in CLM4.0    		                          Mar/10/2010
 
 ====================================================================================
+Bug Number: 1127
+interpinic not tested for CNDV, yet; expected not to work 
+
+Interpinic has not worked for the old dgvm since probably before clm3.5.
+Interpinic has not been tested, yet, for CNDV. Therefore, we assume that it
+does not work.
+
+====================================================================================
+Bug Number: 1125
+T85, qtr-degree and urban pt datasets need new surface datasets.
+
+With the new VOC code we need new surface datasets for T85, qtr-degree and the
+urban point resolutions: camdenNJ, asphaltjungleNJ, urbanc_alpha, vancouver,
+mexicocity.
+
+====================================================================================
+Bug Number: 1124
+Reported energy for grid-cell is not quite right for pftdyn
+
+The amount of water is conserved correctly in pftdyn mode, but the energy isn't
+reported quite accurately.
+
+====================================================================================
 Bug Number: 1101
 Supln mode is over-productive
 
@@ -68,6 +91,19 @@ are different.
 But, there are many clm history fields that are different.
 
 ====================================================================================
+Bug Number: 1044
+VOC input raw data file has reverse coordinates and hence upside down LANDMASK
+
+The file
+
+$CSMDATA/lnd/clm2/rawdata/mksrf_vocef.c060502.nc
+
+produces reasonable results for VOC emission fields on surfdata files. But, the
+LANDMASK when viewed with ncview is upside down and shifted from what's
+expected. I think this is because the latitude coordinates are reversed from
+the other files (N to S instead of S to N).
+
+====================================================================================
 Bug Number: 1017 and 1025
 PTS_MODE can NOT restart or use a global finidat file
 
@@ -103,6 +139,22 @@ ends up having to run the archiving by hand. It would also help if it were
 easier to submit the lt_archive.sh script as well.
 
 ====================================================================================
+Bug number: 669
+Y10K problem for clm
+
+CCSM can't use negative years or years > 9999. Having dates of Y10K or more
+is sometimes useful for paleo simulations.
+For clm to get past the Y10K barrier -- it needs the subroutines
+
+set_hist_filename
+restFile_filename
+set_dgvm_filename
+
+changed to allow 5 or 6 digit years rather than just 4-digit ones.
+
+scripts, drv, and csm_share also have problems with Y10K as well.
+
+====================================================================================
 Bug number: 652
 Output different for different number of threads PGF90 
 
@@ -110,10 +162,11 @@ PGI Version 6.1.6, and NetCDF Version 3.6.2. Works on other platforms/compilers 
 also works with PGI-7.0-7.
 
 ====================================================================================
-Bug number: 546
-clm-offline-tools: interpinic does NOT work for DGVM
+Bug Number: 498
+problems creating .1 degree surface dataset
 
-interpinic does NOT work for DGVM. OK as CNDV will replace DGVM.
+mksurfdata can NOT create surface datasets at .1 degree resolution or higher. We've
+been successful with 0.23x0.31, but NOT higher resolutions.
 
 ====================================================================================
 Bug Number: 452

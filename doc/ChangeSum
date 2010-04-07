@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_7_11         erik 04/07/2010 qtr-degree and T85 surfdata, rcp=2.6/4.5 datasets, doc updates
    clm3_7_10         erik 03/22/2010 Fix drydep so that BMOZ case will work
    clm3_7_09         erik 03/21/2010 Fix snow enthalpy bug, cndv datasets, various fixes
    clm3_7_08     mvertens 03/12/2010 Removal of check for weights if dynamic land use is

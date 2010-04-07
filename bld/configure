@@ -84,7 +84,7 @@ OPTIONS
      -usr_src <dir1>[,<dir2>[,<dir3>[...]]]
                          Directories containing user source code.
      -verbose [or -v]    Turn on verbose echoing of settings made by configure.
-     -version            Echo the CVS tag name used to check out this CLM distribution.
+     -version            Echo the SVN tag name used to check out this CLM distribution.
 
 
 OPTIONS used ONLY for clm standalone testing: (i.e. ONLY used when mode=ccsm_seq)

@@ -104,7 +104,8 @@ Directory containing ESMF library (for linking to external ESMF).
 ONLY used for CLM stand-alone testing scripts -- NOT used with standard ccsm scripts
 </entry>
 
-<entry id="maxpft"  value="numpft+1" valid_values="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,numpft\+1">
+<entry id="maxpft"  value="numpft+1" 
+valid_values="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,numpft\+1" category="physics">
 Maximum number of plant function types (PFT)  per gridcell (numpft+1 means use all available)
 </entry>
 

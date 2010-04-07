@@ -7,13 +7,13 @@ CLM. These files could be either global resolutions, regional-grids or even a si
 grid point. If you want to easily have these files available for continued use in your
 development you will then want to include them in the build-namelist database so
 that build-namelist can easily find them for you. You can deal with them, just by
-editing your namelist by hand (or using a user_nl_clm namelist file), or by using
+editing your namelist by hand (or using a &usernlclm; namelist file), or by using
 &CLMUSRDAT;. Another way to deal with them is to enter them into
 the database for build-namelist, so that build-namelist can find them for you.
 This keeps one central database for all your files, rather than having multiple locations
 to keep track of files. If you have a LOT of files to keep track of it also might
 be easier than keeping track by hand, especially if you have to periodically update
-your files. If you just have a few quick experiements to try, for a short time period
+your files. If you just have a few quick experiments to try, for a short time period
 you might be best off using the other methods mentioned above.
 </para>
 <para>
@@ -59,7 +59,7 @@ list.
 <sect1 id="adding_default_files">
 <title>Adding or Changing Default Filenames</title>
 <para>
-To add or change the default fileames you edit the
+To add or change the default filenames you edit the
 <filename>models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml</filename>
 and either change an existing filename or add a new one. Most entries in the
 default namelist files, include different attributes that describe the different
@@ -91,7 +91,7 @@ are all near the top, and the files used only under different conditions are lis
 later, and files with the fewest dependencies are near the top, as are the files
 that are least likely to be customized.
 </para>
-<table label="required_files" tocentry="1">
+<table id="table_required_files" tocentry="1">
 <title>Required Files for Different Configurations and Simulation Types</title>
 <tgroup cols="4" align="left" colsep="1" rowsep="1">
 <colspec colnum="2" colname="config"></colspec>
@@ -119,43 +119,44 @@ that are least likely to be customized.
    <entry>No</entry>
 </row>
 <row>
-   <entry spanname="notes_span">Not usually customized, as describes plants for global coverage.</entry>
+   <entry spanname="notes_span"><para>Not usually customized, as describes plant function
+type properties..</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fsnowoptics</entry>
-   <entry>All</entry>
-   <entry>All</entry>
+   <entry>ALL</entry>
+   <entry>ALL</entry>
    <entry>No</entry>
-   <entry>None</entry>
+   <entry>No</entry>
 </row>
 <row>
    <entry spanname="notes_span">Not usually customized as describes global snow optical properties.</entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fsnowaging</entry>
-   <entry>All</entry>
-   <entry>All</entry>
+   <entry>ALL</entry>
+   <entry>ALL</entry>
    <entry>No</entry>
-   <entry>None</entry>
+   <entry>No</entry>
 </row>
 <row>
-   <entry spanname="notes_span">Not usually customized as describes global snow agining properties.</entry>
+   <entry spanname="notes_span"><para>Not usually customized as describes global snow aging properties.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fatmgrid</entry>
-   <entry>All</entry>
-   <entry>All</entry>
+   <entry>ALL</entry>
+   <entry>ALL</entry>
    <entry>Yes</entry>
-   <entry>None</entry>
+   <entry>No</entry>
 </row>
 <row>
-   <entry spanname="notes_span">Creating using mkgriddata usually gives you the amount of customization 
-you need, as it just describes the grid and grid extents..</entry>
+   <entry spanname="notes_span"><para>Creating, using mkgriddata usually gives you the amount of customization 
+you need, as it just describes the grid and grid extents.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fatmlndfrc</entry>
-   <entry>All</entry>
-   <entry>All</entry>
+   <entry>ALL</entry>
+   <entry>ALL</entry>
    <entry>Yes</entry>
    <entry>land-mask</entry>
 </row>
@@ -167,8 +168,8 @@ use what mkgriddata gives you.</entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fsurdat</entry>
-   <entry>All</entry>
-   <entry>All</entry>
+   <entry>ALL</entry>
+   <entry>ALL</entry>
    <entry>Yes</entry>
    <entry>simulation-year</entry>
 </row>
@@ -180,7 +181,7 @@ creating the file.</entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">faerdep</entry>
-   <entry>All</entry>
+   <entry>ALL</entry>
    <entry>Constant and transient scenarios</entry>
    <entry>Yes</entry>
    <entry>simulation-year,simulation-year range, and possibly representative 
@@ -194,7 +195,7 @@ the same namelist entry name.</entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fndepdat</entry>
-   <entry>bgc=cn</entry>
+   <entry>bgc=cn/cndv</entry>
    <entry>Constant scenarios</entry>
    <entry>Yes</entry>
    <entry>simulation-year and possibly representative concentration pathway (rcp)</entry>
@@ -206,7 +207,7 @@ ndepregrid.ncl to create this file.</entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fpftdyn</entry>
-   <entry>All</entry>
+   <entry>ALL</entry>
    <entry>transient land-use land-cover change</entry>
    <entry>Yes</entry>
    <entry>Simulation year range, and possibly representative concentration pathway (rcp)</entry>
@@ -217,9 +218,9 @@ ndepregrid.ncl to create this file.</entry>
 <row>
    <entry morerows="1" valign="middle">frivinp_rtm</entry>
    <entry>RTM only</entry>
-   <entry>All</entry>
+   <entry>ALL</entry>
    <entry>No</entry>
-   <entry>None</entry>
+   <entry>No</entry>
 </row>
 <row>
    <entry spanname="notes_span">We only provide a half-degree global river routing file. If you want
@@ -229,31 +230,31 @@ OFF for regional or single point simulations.</entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">flndtopo</entry>
-   <entry>All</entry>
-   <entry>fine-mesh simulations (specifying land resolution as a finer grid than
-atmosphere resolution running the model at).</entry>
+   <entry>ALL</entry>
+   <entry><para>fine-mesh simulations (specifying land resolution as a finer grid than
+atmosphere resolution).</para></entry>
    <entry>Yes</entry>
-   <entry>None</entry>
+   <entry>No</entry>
 </row>
 <row>
-   <entry spanname="notes_span">You may customize to give better surface heights for your site, or
-input a higher resolution ororgraphy file when you create it using mkgriddata.</entry>
+   <entry spanname="notes_span"><para>You may customize to give better surface heights for your site, or
+input a higher resolution orography file when you create it using mkgriddata.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fatmtopo</entry>
-   <entry>All</entry>
-   <entry>fine-mesh simulations (specifying land resolution as a finer grid than
-atmosphere resolution running the model at).</entry>
+   <entry>ALL</entry>
+   <entry><para>fine-mesh simulations (specifying land resolution as a finer grid than
+atmosphere resolution).</para></entry>
    <entry>Yes</entry>
-   <entry>None</entry>
+   <entry>No</entry>
 </row>
 <row>
-   <entry spanname="notes_span">You may customize to give better surface heights for your site, or
-input a higher resolution ororgraphy file when you create it using mkgriddata.</entry>
+   <entry spanname="notes_span"><para>You may customize to give better surface heights for your site, or
+input a higher resolution orography file when you create it using mkgriddata.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fndepdyn</entry>
-   <entry>bgc=cn</entry>
+   <entry>bgc=cn/cndv</entry>
    <entry>transient simulations</entry>
    <entry>Yes</entry>
    <entry>Simulation year range</entry>
@@ -265,14 +266,14 @@ ndepregrid.ncl to create this file.</entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">finidat</entry>
-   <entry>All</entry>
+   <entry>ALL</entry>
    <entry>RUN_TYPE="startup",CLM_FORCE_COLDSTART="off"</entry>
    <entry>Yes</entry>
    <entry>mask,maxpft,bgc,sim_year,start-date</entry>
 </row>
 <row>
-   <entry spanname="notes_span">Used for starting the model from a spun-up state (or you can
-use hybrid or branch RUN_TYPE. Create these files by running the model
+   <entry spanname="notes_span"><para>Used for starting the model from a spun-up state
+with startup <envar>RUN_TYPE</envar>. Create these files by running the model
 for multiple years and saving the restart file from the end of a spin-up 
 simulation.
 </entry>

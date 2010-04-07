@@ -57,7 +57,7 @@
       <th>Value</th>
       <th>Valid Value</th>
       <th>Description</th>
-      <xsl:apply-templates select="entry[@category='mach_options']"/>
+      <xsl:apply-templates select="entry[@category='standalone_test']"/>
     </table>
 
   </body>

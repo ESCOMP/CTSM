@@ -794,8 +794,9 @@ contains
        agdd(p) = rbufslp(p)
     end do
 
-    deallocate(rbufslp)
 #endif
+
+    deallocate(rbufslp)
 
   end subroutine initAccClmtype
 

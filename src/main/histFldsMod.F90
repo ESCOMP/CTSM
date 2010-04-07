@@ -2763,7 +2763,8 @@ contains
          ptr_col=clm3%g%l%c%ccf%nbp)
 
     call hist_addfld1d (fname='NEE', units='gC/m^2/s', &
-         avgflag='A', long_name='net ecosystem exchange of carbon, includes fire, landuse, harvest, and hrv_xsmrpool flux, positive for source', &
+         avgflag='A', long_name=&
+         'net ecosystem exchange of carbon, includes fire, landuse, harvest, and hrv_xsmrpool flux, positive for source', &
          ptr_col=clm3%g%l%c%ccf%nee)
 
     call hist_addfld1d (fname='COL_FIRE_CLOSS', units='gC/m^2/s', &

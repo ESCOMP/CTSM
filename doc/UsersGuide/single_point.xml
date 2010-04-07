@@ -32,24 +32,25 @@ give. Here's an example to setup a simulation for the nearest point at 2-degree 
 to Boulder Colorado.
 <screen>
 > cd scripts
-> create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire -skip_rundb -pts_lat 40.0 -pts_lon -105
+> create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire \
+-skip_rundb -pts_lat 40.0 -pts_lon -105
 </screen>
 Then configure, build and run as normal.
 </para>
-<note>
+<important>
 <para>
 By default it sets up to run with
 <envar>USE_MPISERIAL</envar> (in the <filename>env_builld.xml</filename> file) turned on, 
 which allows you to run the model interactively. On some machines this mode is NOT 
 supported and you may need to change it to FALSE before you are able to build.
 </para>
-</note>
-<note>
+</important>
+<warning>
 <para>
 <envar>PTS_MODE</envar> currently does <emphasis>NOT</emphasis> restart nor
 is it able to startup from global initial condition files.
 </para>
-</note>
+</warning>
 <note>
 <para>
 You can change the point you are simulating for at run-time by changing the values of
@@ -74,20 +75,21 @@ To run with the supported single-point and regional datasets, you setup a simula
 do the following:
 <screen>
 > cd scripts
-> create_newcase -case testSPDATASET -res pt1_pt1 -compset I -mach bluefire -skip_rundb
+> create_newcase -case testSPDATASET -res pt1_pt1 -compset I \
+-mach bluefire -skip_rundb
 > cd testSPDATASET
 > xmlchange -file env_conf.xml -id &CLM1PT; -val 1x1_mexicocityMEX
 </screen>
 Then configure, build and run normally.
 </para>
-<note>
+<important>
 <para>
 Just like <envar>PTS_MODE</envar> above, By default it sets up to run with
 <envar>USE_MPISERIAL</envar> (in the <filename>env_build.xml</filename> file) turned on, 
 which allows you to run the model interactively. On some machines this mode is NOT 
 supported and you may need to change it to FALSE before you are able to build.
 </para>
-</note>
+</important>
 </sect1>
 
 <sect1 id="own_single_point_datasets">

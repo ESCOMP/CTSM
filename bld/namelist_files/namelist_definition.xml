@@ -8,7 +8,7 @@
 <!-- CLM Namelist -->
 <!-- ========================================================================================  -->
 
-<entry id="clump_pproc" type="integer" category="performance"
+<entry id="clump_pproc" type="integer" category="clm_performance"
        group="clm_inparm" valid_values="" >
 Clumps per processor.
 </entry>
@@ -38,7 +38,7 @@ Flag to output NetCDF files in 64-bit large-file format
 Time step (seconds)
 </entry>
 
-<entry id="override_nsrest" type="integer"  category="restart" 
+<entry id="override_nsrest" type="integer"  category="clm_restart" 
        group="clm_inparm" valid_values="3">
 Override the start type from the driver: 3: branch
 </entry>
@@ -226,12 +226,12 @@ Per file history write frequency in steps if positive, (0=monthly), negative mea
 <default>Default: 0,-24,-24,-24,-24,-24</default>
 </entry>
 
-<entry id="nrevsn" type="char*256" input_pathname="abs" category="restart"
+<entry id="nrevsn" type="char*256" input_pathname="abs" category="clm_restart"
        group="clm_inparm" valid_values="" >
 Full pathname of master restart file for branch run.
 </entry>
 
-<entry id="nsegspc" type="integer" category="performance"
+<entry id="nsegspc" type="integer" category="clm_performance"
        group="clm_inparm" valid_values="" >
 number of segments per clump for decomposition
 <default>Default: 20</default>
@@ -242,14 +242,9 @@ number of segments per clump for decomposition
 Perturbation limit when doing error growth test
 </entry>
 
-<entry id="rest_flag" type="logical" category="restart"
+<entry id="rest_flag" type="logical" category="clm_restart"
        group="clm_inparm" valid_values="" >
 FALSE implies don't write any restart files.
-</entry>
-
-<entry id="rpntpath" type="char*256" input_pathname="abs" category="restart"
-       group="clm_inparm" valid_values="" >
-Full pathname of restart pointer file.
 </entry>
 
 <entry id="rtm_nsteps" type="integer" category="clm_physics"
@@ -482,7 +477,7 @@ Setting is Required if <varname>orb_iyear_ad</varname> not set.  Not used
 when running as part of CCSM.
 </entry>
 
-<entry id="outpathroot" type="char*256" category="history"
+<entry id="outpathroot" type="char*256" category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
 Root output files
 </entry>
@@ -503,7 +498,7 @@ and the perpetual date is set to 321.
 
 <entry id="restart_file" type="char*256" category="restart"
        group="seq_infodata_inparm" valid_values="" >
-Restart filename.
+Driver restart filename.
 </entry>
 
 <entry id="restart_file_override" type="char*256" category="restart"
@@ -513,7 +508,7 @@ List of namelist variables that may be overridden on a restart run.
 
 <entry id="restart_pfile" type="char*256" category="restart"
        group="seq_infodata_inparm" valid_values="" >
-Restart pointer filename.
+Driver restart pointer filename.
 </entry>
 
 <entry id="samegrid_ao" type="logical" category="driver"
@@ -548,17 +543,17 @@ Run type.  'startup' is an initial run.  'continue' is a restart run.
 may be changed.
 </entry>
 
-<entry id="model_version" type="char*256"  category="history"
+<entry id="model_version" type="char*256"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
 Model version.
 </entry>
 
-<entry id="hostname" type="char*80"  category="history"
+<entry id="hostname" type="char*80"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
 Name of the machine you are running the model on.
 </entry>
 
-<entry id="username" type="char*80"  category="history"
+<entry id="username" type="char*80"  category="drv_history"
        group="seq_infodata_inparm" valid_values="" >
 Name of user running the model.
 </entry>
@@ -939,7 +934,7 @@ Root PE for PIO output processing
 
 <entry id="datamode" type="char*256"  category="datm"
        group="shr_strdata_nml" valid_values="CLMNCEP,CAMHIST,COPYALL,CPLHIST,CORE2,TN460,NULL" >
-Flags physics options wrt input data.
+Flags for physics options with respect to how to handle input data.
 </entry>
 
 <entry id="domainfile" type="char*256" input_pathname="abs"  category="datm"

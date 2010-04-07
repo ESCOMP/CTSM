@@ -1,5 +1,8 @@
 <!-- Begin introduction preface -->
 <preface id="acknowledge">
+<prefaceinfo>
+<releaseinfo>$Id$</releaseinfo>
+</prefaceinfo>
 <title>Acknowledgments</title>
 <para>
 We acknowledge all of the people that helped review or edit the model documentation: 
@@ -14,13 +17,164 @@ David Lawrence, Samuel Levis, and Keith Oleson.
 The Community Land Model (&clm;) is the latest in a series of
 global land models developed at the National Center for
 Atmospheric Research (<acronym>NCAR</acronym>). This guide is intended to instruct both
-the novice and experienced user on running &clm;.
+the novice and experienced user on running &clm;. 
+</para>
+
+<para>
+The novice user should read
+<xref linkend="customize"></xref> in detail before beginning work. While the
+expert user should read <xref linkend="what_is_new"></xref> and 
+<xref linkend="quickstart"></xref> chapters, and then use the more detailed
+chapters as reference. Before novice users go onto more technical problems covered
+in <xref linkend="tools"></xref>, <xref linkend="adding_files"></xref>, <xref
+linkend="special_cases"></xref>, or the <xref linkend="single_point"></xref> they
+should know the material covered in <xref linkend="customize"></xref> and be able
+to replicate some of the examples given there. 
+</para>
+<para>
+All users should read the 
+<xref linkend="how_to"></xref>
+and <xref linkend="help"></xref> sections to understand the document conventions
+and the various ways of getting help on using &clm4;. Users should also read
+the <xref linkend="whats_validated"></xref> chapter to see if their planned use of the
+model is something that has been scientifically validated and well tested. Users
+that are NOT using NCAR machines or our list of well tested machines should also
+read the <xref linkend="utilities_required"></xref> chapter to make sure they have
+all the required UNIX utilities on the system they want to do their work.
 </para>
 </preface>
 
 <!-- ======================================================================= -->
+<preface id="doc_intro">
+<title>Introduction to the &clm4; Users Guide</title>
+<subtitle>What is in here anyway?</subtitle>
+
+<para>
+Here in the introduction we first give a simple guide to understand the document
+conventions in <xref linkend="how_to"></xref>. The next <xref linkend="what_is_new"></xref>
+goes into detail the differences between &clm40; and &clm35;, both from a scientific
+as well as a software engineering point of view. It also details differences in the
+configuration, namelist, and history fields. The next <xref linkend="quickstart"></xref>
+for users that are already experts in using &clm; gives a quickstart guide to the bare
+details on how to use &clm4;. The next <xref linkend="whats_validated"></xref> tells
+you about what has been extensively tested and scientifically validated (and maybe more
+importantly) what has NOT. <xref linkend="utilities_required"></xref> lists the UNIX utilties
+required to use &clm40; and is important if you are running on non-NCAR machines, generic
+local machines, or machines NOT as well tested by us at <acronym>NCAR</acronym>. Next we
+have <xref linkend="best_practice"></xref> to detail some of the best practices for using
+&clm4; for science. The last introduction chapter is <xref linkend="help"></xref> which lists
+different resources for getting help with &ccsm4; and &clm4;.
+</para>
+
+<para>
+The first <xref linkend="customize"></xref> goes into detail on how to setup and run simulations with
+&clm4; and especially how to customize cases for things you might be interested in. Details of &configure;
+modes and &buildnml; options as well as namelist options are given in this chapter. 
+</para>
+
+<para>
+The next <xref linkend="tools"></xref> gives instructions on the &clm40; tools for creating input datasets
+for use by &clm;, for the expert user. There's an overview of what each tool does, and some general notes on how to build 
+the FORTRAN tools. Then each tool is described in detail and different ways you might use it. A final section
+on how to customize datasets for observational sites for very savvy expert users is given as the last section of this chapter.
+</para>
+
+<para>
+As a followup to the tools chapter the next <xref linkend="adding_files"></xref> tells how to add files to the
+XML database for &buildnml; to use. This is important if you want to use the XML database to automatically select
+input files that you have created when you setup new cases with &clm;.
+</para>
+
+<para>
+In the next <xref linkend="special_cases"></xref> again for the expert user we give details on how to do some particularly
+difficult special cases. For example, we give the protocol for spinning up both the &clmcn; model and &clm; with dynamic
+vegetation active <acronym>CNDV</acronym>. We also talk about validating a port to a new machine using the Perturbation error
+growth technique. And finally we tell the user how to use the DATM model to send historical &CO2; data to &clm;.
+</para>
+
+<para>
+The final <xref linkend="single_point"></xref> is on how to do single-point simulations using &clm4; rather than global gridded
+simulations. This is useful to either compare &clm; simulations with point observational stations, such as tower sites, or
+to do quick simulations with &clm; for a specific climate regime. There are a couple different ways given on how to perform
+single-point simulations which range from simple &PTSMODE; to more complex where you create all your own datasets, tying into
+the <xref linkend="tools"></xref> and also <xref linkend="adding_files"></xref> to add the files into the &buildnml; XML database.
+</para>
+
+<para>
+In <xref linkend="editing_templates"></xref> we give some basic background to the &clm; developer on how to edit the 
+<filename>models/lnd/clm/bld/clm.cpl7.template</filename>. This is a very difficult exercise and we don't recommend it for
+any, but the most advanced users of &clm; who are also experts in UNIX and UNIX scripting.
+</para>
+
+<!--
+<sect1 id="listsofthings">
+<title>List of Tables, Figures and Examples</title>
+
+<sect2 id="lot">
+<title>List of Tables</title>
+
+<para>
+List of tables in the document.
+</para>
+<lot id="listoftables">
+<lotentry>Empty</lotentry>
+<lotentry linkend="table_required_files">Required Files<xref linkend="required_files"></xref></lotentry>
+<lotentry pagenum="31">Page 31</lotentry>
+<lotentry pagenum="57">Page 57</lotentry>
+</lot>
+</sect2>
+
+<sect2 id="loe">
+<title>List of Examples</title>
+<para>
+List of formal examples in the document.
+</para>
+
+<lot id="listofexamples">
+<lotentry linkend="quickstart">Example of Running &clm4; on bluefire at 2-degree Resolution with Data Atmosphere Model</lotentry>
+<lotentry linkend="default_nml">Example of the Default Namelist</lotentry>
+<lotentry linkend="add_rm_primary_hist">Example of Namelist Adding and Removing Fields from the Primary History Files</lotentry>
+<lotentry linkend="add_aux_hist_chng_output_frq">Example of Namelist Add Auxillary History Files and Change the Output History Frequency</lotentry>
+<lotentry linkend="rm_hist">Example of Namelist Removing All History Files</lotentry>
+<lotentry linkend="hist_averaging">Example of Namelist with Different Ways of Averaging on History Files</lotentry>
+<lotentry linkend="hist_vector">Example of Namelist Outputting History Fields as a 1D Vector</lotentry>
+<lotentry linkend="CN_SPINUP">Example of Doing a Spinup for CN</lotentry>
+<lotentry linkend="CNDV_SPINUP">Example of Doing a Spinup for CNDV</lotentry>
+<lotentry linkend="PERGRO">Example of Doing Perturbation Error Growth Testing to Help Validate a Port to a New Machine</lotentry>
+<lotentry linkend="DATM_CO2_TSERIES">Example of Sending Historical &CO2; Data from the Data Atmosphere Model</lotentry>
+</lot>
+</sect2>
+
+</sect1>
+-->
+
+</preface>
+
+<!-- ======================================================================= -->
+
+<preface id="best_practice">
+<title>Important Notes and Best Practices for Usage of &clm4;</title>
+
+<para>
+The main important note for using &clm4; especially with &clmcn; is that you
+need to startup from spun-up initial conditions. We've provided a few spun-up
+datasets for 1-degree and 2-degree resolutions, but you'll need to do your own
+spinup's for other resolutions.
+</para>
+</preface>
+
+
+<!-- ======================================================================= -->
 <preface id="how_to">
+<!--
+<prefaceinfo>
+<itermset>
+   <indexterm zone="how_to" id="EDITOR"><primary>$EDITOR</primary></indexterm>
+</itermset>
+</prefaceinfo>
+-->
 <title>How to Use This Document</title>
+<subtitle>Conventions used in the document for code and commands</subtitle>
 
 <para>
 This section provides the details in using &clm; with the &ccsm; modeling
@@ -32,11 +186,16 @@ We use the same conventions used in the &ccsm; documentation as outlined below.
 Throughout the document this style is used to indicate shell
 commands and options, fragments of code, namelist variables, etc.
 Where examples from an interactive shell session are presented, lines
-starting with > indicate the shell prompt. Note that "$EDITOR" is used
+starting with > indicate the shell prompt.  Note that $EDITOR" is used
 to refer to the text editor of your choice. $EDITOR is a standard UNIX
 environment variable and should be set on most UNIX systems. Comment
 lines are signaled to start with a "#" sign, which is the standard UNIX
 comment sign as well.
+
+> This is a shell prompt.
+> $EDITOR filename # means you are using a text editor to edit the file "filename"
+# This is a comment line
+
 </screen>
 
 </preface>
@@ -44,10 +203,20 @@ comment sign as well.
 
 <!-- ======================================================================= -->
 <preface id="what_is_new">
+<!--
+<prefaceinfo>
+<itermset>
+   <indexterm zone="science" id="clmcn"><primary>&clmcn;</primary></indexterm>
+   <indexterm zone="science" id="clmsp"><primary>&clmsp;</primary></indexterm>
+</itermset>
+</prefaceinfo>
+-->
 <title>What is new with &clm4; since &clm35;?</title>
 
 <para>
 Since &clm35; there have been advances in both the science and the software infrastructure.
+There are also new configure and namelist options as well as new history fields. In this
+section we will describe each of these changes in turn.
 </para>
 
 <sect1 id="science">
@@ -77,9 +246,9 @@ nitrogen cycle (Thornton et al., 2002; Thornton and Rosenbloom, 2005). &clmcn; i
 prognostic with respect to carbon and nitrogen state variables in the vegetation, litter,
 and soil organic matter. Vegetation phenology and canopy heights are also prognostic. A
 detailed description of the biogeochemical component can be found in Thornton et al.
-(2007). Note that &clm4; can be run with either prescribed satellite phenology (&clmsp;)
-or with prognostic phenology provided by the carbon- nitrogen cycle model (&clmcn;).
-Additionally, a transient land cover and land use change, including wood harvest,
+(2007). Note that &clm4; can be run with either prescribed satellite phenology
+(&clmsp;) or with prognostic phenology provided by the carbon- nitrogen cycle model 
+(&clmcn;).  Additionally, a transient land cover and land use change, including wood harvest,
 capability has been introduced that enables the evaluation of the impact of historic and
 future land cover and land use change on energy, water, and momentum fluxes as well as
 carbon and nitrogen fluxes.	The dynamic global vegetation model in &clm3; has been
@@ -172,6 +341,7 @@ Describe any changes made to build system:
      -pio &lt;name&gt;         Switch enables building with Parallel I/O library. [on | off] (default is on)
      -snicar_frc &lt;name&gt;  Turn on SNICAR radiative forcing calculation. [on | off] (default is off)
 </programlisting>
+More information on options to clm &configure; are given in <xref linkend="clm_configure_script"></xref>.
 </para>
 </sect1>
 
@@ -223,6 +393,8 @@ Describe any changes made to the namelist:
         fsnowaging   = filename          file for snow aging parameters (required)
         faerdep      = filename          file of aerosol deposition (required)
 </programlisting>
+More information on the &buildnml; options are given in how to use <link linkend="CLMBLDNML">&CLMBLDNML;</link> and in <xref
+linkend="nl_def"></xref>.
 </para>
 </sect1>
 
@@ -232,6 +404,7 @@ Describe any changes made to the namelist:
 <programlisting>
   New history variables: (note watt vs. W in units, 26 vs. 76)
      BCDEP                      total BC deposition (dry+wet) from atmosphere                kg/m^2/s
+     BIOGENCO                   biogenic CO flux                                             uGC/M2/H
      C13_PRODUCT_CLOSS          C13 total carbon loss from wood product pools                gC13/m^2/s
      DSTDEP                     total dust deposition (dry+wet) from atmosphere              kg/m^2/s
      EFLX_DYNBAL                dynamic land cover change conversion energy flux             W/m^2
@@ -249,16 +422,18 @@ Describe any changes made to the namelist:
      HEAT_FROM_AC               sensible heat flux put into canyon due to heat removed from air conditioning
                                                                                              watt/m^2
      HK                         hydraulic conductivity                                       mm/s     inactive
-     LAND_USE_FLUX              total C emitted from land cover conversion and wood product pools
-   gC/m^2/s
-     LAND_UPTAKE                NEE minus LAND_USE_FLUX, negative for update
-   gC/m^2/s
+     ISOPRENE                   isoprene flux                                                uGC/M2/H
+     LAND_USE_FLUX              total C emitted from land cover conversion and wood product pools gC/m^2/s
+     LAND_UPTAKE                NEE minus LAND_USE_FLUX, negative for update                 gC/m^2/s
      LWup                       upwelling longwave radiation                                 watt/m^2 inactive
+     MONOTERP                   monoterpene flux                                             uGC/M2/H
      NBP                        net biome production, includes fire, landuse, and harvest flux, positive for sink
                                                                                              gC/m^2/s
      OCDEP                      total OC deposition (dry+wet) from atmosphere                kg/m^2/s
+     OVOC                       other VOC flux                                               uGC/M2/H
+     ORVOC                      other reactive VOC flux                                      uGC/M2/H
      PBOT                       atmospheric pressure                                         Pa
-     PCO2                       atmospheric partial pressure of &CO2;                          Pa
+     PCO2                       atmospheric partial pressure of &CO2;                        Pa
      PRODUCT_CLOSS              total carbon loss from wood product pools                    gC/m^2/s
      PRODUCT_NLOSS              total N loss from wood product pools                         gN/m^2/s
      Qair                       atmospheric specific humidity                                kg/kg    inactive
@@ -302,8 +477,10 @@ Describe any changes made to the namelist:
      SNORDSL                    top snow layer effective grain radius                        m^-6     inactive
      SNOTTOPL                   snow temperature (top layer)                                 K/m      inactive
      SWup                       upwelling shortwave radiation                                watt/m^2 inactive
+     TSOI_10CM                  soil temperature in top 10cm of soil                         K
      URBAN_AC                   urban air conditioning flux                                  watt/m^2
      URBAN_HEAT                 urban heating flux                                           watt/m^2
+     VOCFLXT                    total VOC flux into atmosphere                               uGC/M2/H
      Wind                       atmospheric wind velocity magnitude                          m/s      inactive
      WOOD_HARVESTC              wood harvest (to product pools)                              gC/m^2/s
      WOOD_HARVESTN              wood harvest (to product pools)                              gN/m^2/s
@@ -355,7 +532,7 @@ of these files). Here are the important ones that you should be familiar with.
 <orderedlist>
 <listitem><para><ulink url="../README">README</ulink> file describing the directory structure.</para></listitem>
 <listitem><para><ulink url="../Quickstart.userdatasets">Quickstart.userdatasets</ulink> file describing how to
-use your own datasets in the model.</para></listitem>
+use your own datasets in the model (also see <xref linkend="own_single_point_datasets"></xref>).</para></listitem>
 <listitem><para><ulink url="../KnownBugs">KnownBugs</ulink> file describing known
 problems in &clm4;.</para></listitem>
 </orderedlist>
@@ -369,6 +546,7 @@ is functional/validated in &clm4;?
 Note other directories have README files that explain different components and tools used
 when running &clm; and are useful in
 understanding how those parts of the model work and should be consulted when using tools in those directories.
+For more details on configuring and customizing a case with CLM see <xref linkend="customize"></xref>.
 </para>
 <para>The <emphasis>Quickstart.GUIDE</emphasis> is repeated in the section below.</para>
 <programlisting>
@@ -378,6 +556,34 @@ understanding how those parts of the model work and should be consulted when usi
 <!-- ======================================================================= -->
 <preface id="whats_validated">
 <title>What is scientifically validated and functional in &clm4;?</title>
+<para>
+In this section we go over what has been extensively tested and scientifically validated
+with &clm40;, and maybe more importantly what has NOT been tested and may NOT be
+scientifically validated. You can use all features of &clm;, but need to realize that
+some things haven't been tested extensively or validated scientifically. When you use
+these features you may run into trouble doing so, and will need to do your own work to
+make sure the science is reasonable.
+</para>
+
+<sect1 id="standard_validated">
+<title>Standard Configuration and Namelist Options that are Validated</title>
+<para>
+The standard version of the model is &clmcn; at 1-degree horizontal resolution (0.9x1.25). This version has been scientifically
+validated with long simulations for: fully coupled simulations ("B" cases), coupled to atmosphere model CAM ("F" cases), and stand-alone CLM
+cases ("I" cases). We've also done both long simulations for 1850 conditions, and transient 20th century simulations from 1850 to 2005 (with
+transient land-use, Nitrogen and Aerosol deposition). To a lesser extent there have also been simulations done at 2-degree horizontal 
+resolution (1.9x2.5), and with &clmsp; for these resolutions. As such we have provided appropriate 1-degree and 2-degree initial condition
+datasets for these configurations. Other resolutions, configurations, and namelist options are less well tested or scientifically validated.
+The further you get away from the standard configurations and resolutions, the more likely you are to run into trouble, and/or need to
+scientifically validate your work.
+</para>
+<para>
+In the sections below we go through configuration and/or namelist options or modes that the user should be especially wary of using. You
+are of course free to use these options, and you may find that they work functionally. Although in some cases you will find issues even
+with functionality of using them. If so you will need to test, debug and find solutions for these issues on your own. But in every case 
+you will need to go through more extensive work to validate these options from a scientific standpoint.
+</para>
+</sect1>
 
 <sect1 id="config_not_validated">
 <title>Configure Modes NOT scientifically validated, documented, supported or even advised to be used:</title>
@@ -400,7 +606,7 @@ understanding how those parts of the model work and should be consulted when usi
 <listitem>
    <para>
    <varname>SUPLN</varname><screen>(-bgc cn -supln on)</screen>
-       The suplemental Nitrogen mode of the CN Biogeochemistry model is known to be over
+       The supplemental Nitrogen mode of the CN Biogeochemistry model is known to be over
 productive.
        And hence not recommended to be used.
    </para>
@@ -435,24 +641,49 @@ productive.
 </sect1>
 
 <sect1 id="nml_not_validated">
+<title>Namelist options that should NOT be exercised:</title>
+<sect2 id="bld_nml_not_validated">
+<title>Build-Namelist options that should NOT be exercised:</title>
+<para>
+<orderedlist>
+<listitem><para><emphasis>-lnd_res:</emphasis>  Fine-mesh mode, functional, but experimental</para>
+</listitem>
+<listitem><para><emphasis>-rcp:</emphasis>  Representative Concentration Pathway (RCP)
+for future scenarios, functional for limited resolutions, but experimental</para>
+</listitem>
+<listitem><para><emphasis>-datm_*:</emphasis>  All options that start with "datm_" they are
+only used for &clm; stand-alone testing.</para>
+</listitem>
+<listitem><para><emphasis>-drv_*:</emphasis>  All options that start with "drv_" they are
+only used for &clm; stand-alone testing.</para>
+</listitem>
+</orderedlist>
+</para>
+</sect2>
+
+<sect2 id="nml_items_not_validated">
 <title>Namelist items that should NOT be exercised:</title>
 <para>
 <orderedlist>
-<listitem><para><emphasis>create_crop_landunit:</emphasis>  Functional, but experimental</para>
-</listitem>
-<listitem><para><emphasis>urban_traffic:</emphasis>         Not currently functional</para>
-</listitem>
-<listitem><para><emphasis>pio namelist options:</emphasis>  hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, ncd_pio_UseBoxRearr, 
-                         ncd_pio_SerialCDF, ncd_pio_DebugLevel, and ncd_pio_num_iotasks
-        These options are NOT currently tested or functional. See the pio &configure; mode above.</para>
-</listitem>
 <listitem><para><emphasis>casa namelist options:</emphasis> lnpp, lalloc, q10, spunup, and fcpool
 
         As above CASA is NOT scientifically validated and hence we don't recommend using it, thus we don't
         recommend using the casa namelist options (they are only available when running with CASA).</para>
 </listitem>
+<listitem><para><emphasis>create_crop_landunit:</emphasis>  Functional, but experimental</para>
+</listitem>
+<listitem><para><emphasis>fine-mesh namelist options:</emphasis> flndtopo, and fatmtopo.
+        These options are functional but experimental. See the -lnd_res option above.</para>
+</listitem>
+<listitem><para><emphasis>pio namelist options:</emphasis>  hist_pioflag, ncd_lowmem2d, ncd_pio_def, ncd_pio_UseRearranger, ncd_pio_UseBoxRearr, 
+                         ncd_pio_SerialCDF, ncd_pio_DebugLevel, and ncd_pio_num_iotasks
+        These options are NOT currently tested or functional. See the pio &configure; mode above.</para>
+</listitem>
+<listitem><para><emphasis>urban_traffic:</emphasis>         Not currently functional</para>
+</listitem>
 </orderedlist>
 </para>
+</sect2>
 </sect1>
 </preface>
 
@@ -465,7 +696,7 @@ make sure you have all of these available before trying to go forward with using
 it. If you are missing one of these you should contact the systems administrator
 for the machine you wish to run on and make sure they are installed.
 <simplelist>
-<member>FORTRAN-90 compiler</member>
+<member>&FORTRAN90; compiler</member>
 <member>"C" compiler</member>
 <member>GNU make</member>
 <member>UNIX csh and tcsh shells</member>
@@ -481,23 +712,31 @@ for the machine you wish to run on and make sure they are installed.
 <member>m4 macro processor</member>
 <member>Parallel &netcdf; (optional)</member>
 <member>&ncl; (for some of the offline tools for creating/modifying &clm; input
-datasets see the <xref linkend="tools"></xref> for more information on &ncl;)</member>
+datasets see <xref linkend="tools"></xref> for more information on &ncl;)</member>
 </simplelist>
 </para>
 </preface>
 
 <!-- ======================================================================= -->
-<preface id="best_practice">
-<title>Important Notes and Best Practices for Usage of &clm4;</title>
+<preface id="help">
+<!--
+<prefaceinfo>
+<itermset>
+  <indexterm zone="CCSM_BB"><primary>&ccsm; Online Bulletin Board</primary></indexterm>
+  <indexterm zone="CCSM_UG"><primary>&ccsm4; Scripts Users-Guide</primary></indexterm>
+</itermset>
+</prefaceinfo>
+-->
+<title>Other resources to get help from</title>
 
 <para>
-...
+Outside this users-guide there are several other resources that we recommend you get help
+with when using CLM. The first one is the &ccsm; Users-Guide, which documents the entire
+process of creating cases with &ccsm;. The next is the &ccsm; bulletin board which is 
+a web-site for exchanging information between users of &ccsm;. Next there are &clm;
+web-pages specific for &clm;, and finally there is an email address to report bugs that
+you find in &ccsm4;.
 </para>
-</preface>
-
-<!-- ======================================================================= -->
-<preface id="help">
-<title>Other resources to get help from</title>
 
 <sect1 id="CCSM_UG">
 <title>The &ccsm; Users-Guide</title>
@@ -547,10 +786,12 @@ models/lnd/clm/doc directory that give some quick information on using &clm;.
 <title>Reporting bugs in &clm4;</title>
 <para>
 If you have any problems, additional questions, bug reports, or any other feedback, please send an email to
-ccsm4-help@cgd.ucar.edu.
+<email>ccsm4-help@cgd.ucar.edu</email>.
 </para>
 </sect1>
 
 </preface>
+
+
 
 <!-- End introduction preface -->

@@ -1,5 +1,5 @@
-*** datm.buildnml.csh.orig	2010-03-04 11:51:11.000000000 -0700
---- datm.buildnml.csh	2010-03-04 11:51:17.000000000 -0700
+*** datm.buildnml.csh	Tue Mar 23 15:35:39 2010
+--- datm.buildnml.csh	Tue Mar 23 15:30:04 2010
 ***************
 *** 18,23 ****
 --- 18,24 ----
@@ -11,18 +11,46 @@
   # Only change these in env_conf -- so that the streams file will be generated consistently
   # Rerun configure if you want to change these values (doing configure -cleanall first)
 ***************
-*** 37,42 ****
---- 38,44 ----
+*** 36,49 ****
+     domainFile     = '$DOMAINFILE'
      streams        = '$STREAM1TXT $year_align $year_start $year_end ',
                       '$STREAM2TXT $year_align $year_start $year_end ',
-                      '$STREAM3TXT $year_align $year_start $year_end '
-+                     '$STREAMCO2  1850        1765        2007      '
+!                     '$STREAM3TXT $year_align $year_start $year_end '
      vectors        = 'null'
      mapmask        = 'nomask',
                       'nomask',
+                      'nomask'
+     tintalgo       = 'coszen',
+                      'nearest',
+!                     'linear'
+    /
+  EOF1
+  
+--- 37,57 ----
+     domainFile     = '$DOMAINFILE'
+     streams        = '$STREAM1TXT $year_align $year_start $year_end ',
+                      '$STREAM2TXT $year_align $year_start $year_end ',
+!                     '$STREAM3TXT $year_align $year_start $year_end ',
+!                     '$STREAMCO2 1850 1850 2005 '
+     vectors        = 'null'
+     mapmask        = 'nomask',
+                      'nomask',
++                     'nomask',
+                      'nomask'
++    mapalgo        = 'bilinear',
++                     'bilinear',
++                     'bilinear',
++                     'copy'
+     tintalgo       = 'coszen',
+                      'nearest',
+!                     'linear',
+!                     'nearest'
+    /
+  EOF1
+  
 ***************
 *** 1112,1121 ****
---- 1114,1125 ----
+--- 1124,1135 ----
   </streamstemplate>
   EOF1
   
