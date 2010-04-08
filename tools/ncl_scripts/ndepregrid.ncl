@@ -44,7 +44,7 @@ begin
      res      = "48x96";      ; Output Resolution: 1.9x2.5, 48x96 etc.
   end if
   if ( ismissing(rcp) )then
-     rcp      = "8.5";        ; Input representative concentration pathway (2.6,4.5,6,8.5)
+     rcp      = "-999.9";     ; Input representative concentration pathway (2.6,4.5,6,8.5,-999.9)
   end if
   if ( ismissing(sim_year) )then
      sim_year = "2000";       ; Input/Output simulation year: 1850, 2000
@@ -66,10 +66,15 @@ begin
   ;
   ; Use above to get filenames, and various other information needed such as dates
   ;
-  if ( filetype .eq. "fndepdyn" )then
-     ftype    = "fndep_clm_simyr";
+  if ( rcp .eq. "-999.9" ) then
+     rcpmsg = "";
   else
-     ftype    = "ndep_clm_simyr";
+     rcpmsg = "rcp"+rcp+"_";
+  end if
+  if ( filetype .eq. "fndepdyn" )then
+     ftype    = "fndep_clm_"+rcpmsg+"simyr";
+  else
+     ftype    = "ndep_clm_"+rcpmsg+"simyr";
   end if
   csmdata  = getenv("CSMDATA");
   clmroot  = getenv("CLM_ROOT");

@@ -66,7 +66,7 @@ program mksrfdat
     character(len=256) :: fdyndat           ! dynamic landuse data file name
     character(len=256) :: fname             ! generic filename
     character(len=256) :: loc_fn            ! local file name
-    character(len=  9) :: resol             ! resolution for file name
+    character(len= 32) :: resol             ! resolution for file name
     integer  :: t1                          ! timer
     real(r8),parameter :: p5  = 0.5_r8      ! constant
     real(r8),parameter :: p25 = 0.25_r8     ! constant

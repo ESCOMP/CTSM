@@ -39,7 +39,7 @@ begin
      res      = "48x96";      ; Output Resolution: 1.9x2.5, 48x96 etc.
   end if
   if ( ismissing(rcp) )then
-     rcp      = "8.5";        ; Input representative concentration pathway (2.6,4.5,6,8.5)
+     rcp      = "-999.9";     ; Input representative concentration pathway (2.6,4.5,6,8.5,-999.9)
   end if
   if ( ismissing(sim_year) )then
      sim_year = "2000";       ; Input/Output simulation year: 1850, 2000
@@ -74,10 +74,15 @@ begin
   if ( gridfile .eq. "default" )then
      gridfile    = systemfunc( querynml+" -res "+res  +" -var fatmgrid" );
   end if
-  if ( sim_year_range .eq. "constant" ) then
-     filenameout = "aerosoldep_"+sim_year+"_mean_"+res+"_c"+sdate+".nc";
+  if ( rcp .eq. -999.9 ) then
+     rcpmsg = "";
   else
-     filenameout = "aerosoldep_"+sim_year_range+"_mean_"+res+"_c"+sdate+".nc";
+     rcpmsg = "rcp"+rcp+"_";
+  end if
+  if ( sim_year_range .eq. "constant" ) then
+     filenameout = "aerosoldep_"+rcpmsg+sim_year+"_mean_"+res+"_c"+sdate+".nc";
+  else
+     filenameout = "aerosoldep_"+rcpmsg+sim_year_range+"_mean_"+res+"_c"+sdate+".nc";
   end if
   ;
   ; Open files

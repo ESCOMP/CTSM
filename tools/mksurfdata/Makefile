@@ -54,7 +54,8 @@ endif
 
 CPPDEF := -DNO_SHR_VMATH -DOFFLINE $(USER_CPPDEFS)
 
-ifeq ($(OPT),TRUE)
+ifeq ($(OPT),FALSE)
+else
    CPPDEF += -DOPT
 endif
 

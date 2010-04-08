@@ -340,6 +340,7 @@ EOF
                if ( $? != 0 ) {
                   die "ERROR:: fatmlndfrc file NOT found\n";
                }
+               chomp( $fracdata );
                $cmd = "ncks -A $fracdata $ncfiles[0]";
                print "$cmd\n";
                if ( ! $opts{'debug'} ) { system( $cmd ); }

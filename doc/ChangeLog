@@ -1,4 +1,87 @@
 ===============================================================
+Tag name:  clm3_7_12
+Originator(s):  erik (erik)
+Date: Thu Apr  8 00:30:30 MDT 2010
+One-line Summary: rcp=2.6/4.5 datasets for fndepdyn and aerdepdat, fix some minor issues, new 1pt urban surfdata files
+
+Purpose of changes:
+
+Add in urban single-point surfdata files.  Add in regridded ndepdyn/aerdep files: f09,
+f45, f10, f25. Fix name of f05, 1850 fsurdat file, add in new urban single point
+datasets, add back urbanc_alpha grid/frac files. Put rcp in filenames for aerdep/ndep
+regrid scripts. chomp frac filename in mksurfdata.pl, for urban single-point files. Make
+OPT=TRUE default for mksurfdata. Lengthen allowed gridname for mksurfdata.
+
+Bugs fixed (include bugzilla ID): None
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1125 (T85, qtr-degree and urban pt surface datasets)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets:
+    aerdep/ndepdyn for rcp=2.6/4.5 f10, f45, f25, f09
+    fix name of f05 fsurdata file for 1850
+    get urbanc_alpha grid and frac files in
+    get in new urban single-point datasets
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.):
+    csm_share to share3_100407
+
+List all files eliminated: None
+
+List all files added and what they do: None
+
+List all existing files that have been modified, and describe the changes:
+
+M    models/lnd/clm/tools/mksurfdata/Makefile ------ make OPT=TRUE the default
+M    models/lnd/clm/tools/mksurfdata/mksrfdat.F90 -- lengthen gridname to 32
+M    models/lnd/clm/tools/mksurfdata/mksurfdata.pl - make sure to chomp fracdata file
+
+M    models/lnd/clm/tools/ncl_scripts/aerdepregrid.ncl - Add rcp to filename
+M    models/lnd/clm/tools/ncl_scripts/ndepregrid.ncl --- Add rcp to filename
+
+M    models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - New datasets
+                    aerdep/ndepdyn for rcp=2.6/4.5 f10, f45, f25, f09
+                    fix name of f05 fsurdata file for 1850
+                    get urbanc_alpha grid and frac files in
+                    get in new urban single-point datasets
+
+Summary of testing:
+
+  bluefire interactive testing: All PASS except up to 014 smJ74
+010 smNB4 TSM.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 10
+011 erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 57+100 arb_FAIL! rc= 5
+012 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arFAIL! rc= 5
+  breeze,gale,hail,gust/ifort interactive testing: All PASS up to...
+010 smCA8 TSM.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 10
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_11
 Originator(s):  erik (erik)
 Date: Wed Apr  7 11:59:22 MDT 2010

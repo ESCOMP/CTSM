@@ -4,7 +4,7 @@ models/atm/datm               https://svn-ccsm-models.cgd.ucar.edu/datm7/trunk_t
 models/ocn/socn               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_2_02/socn
 models/ice/sice               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_2_02/sice
 models/glc/sglc               https://svn-ccsm-models.cgd.ucar.edu/stubs/trunk_tags/stubs1_2_02/sglc
-models/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_100228
+models/csm_share              https://svn-ccsm-models.cgd.ucar.edu/csm_share/trunk_tags/share3_100407
 models/utils/esmf_wrf_timemgr https://svn-ccsm-models.cgd.ucar.edu/esmf_wrf_timemgr/trunk_tags/esmf_wrf_timemgr_090402
 models/utils/timing           https://svn-ccsm-models.cgd.ucar.edu/timing/trunk_tags/timing_091021
 models/utils/mct              https://svn-ccsm-models.cgd.ucar.edu/mct/trunk_tags/MCT2_7_0_100228/
