@@ -230,13 +230,13 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fpftdyn hgrid="1.9x2.5"       rcp="8.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp8.5_simyr1850-2100_c100322.nc</fpftdyn>
 <fpftdyn hgrid="10x15"         rcp="8.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp8.5_simyr1850-2100_c100202.nc</fpftdyn>
 
-<fpftdyn hgrid="0.9x1.25      rcp="4.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c100406.nc</fpftdyn>
-<fpftdyn hgrid="0.9x1.25      rcp="4.5" sim_year_range="2000-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c100406.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="4.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c100406.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="4.5" sim_year_range="2000-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp4.5_simyr1850-2100_c100406.nc</fpftdyn>
 <fpftdyn hgrid="1.9x2.5"       rcp="4.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp4.5_simyr1850-2100_c100322.nc</fpftdyn>
 <fpftdyn hgrid="10x15"         rcp="4.5" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp4.5_simyr1850-2100_c100322.nc</fpftdyn>
 
-<fpftdyn hgrid="0.9x1.25      rcp="2.6" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp2.6_simyr1850-2100_c100323.nc</fpftdyn>
-<fpftdyn hgrid="0.9x1.25      rcp="2.6" sim_year_range="2000-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp2.6_simyr1850-2100_c100323.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="2.6" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp2.6_simyr1850-2100_c100323.nc</fpftdyn>
+<fpftdyn hgrid="0.9x1.25"      rcp="2.6" sim_year_range="2000-2100" >lnd/clm2/surfdata/surfdata.pftdyn_0.9x1.25_rcp2.6_simyr1850-2100_c100323.nc</fpftdyn>
 <fpftdyn hgrid="1.9x2.5"       rcp="2.6" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_1.9x2.5_rcp2.6_simyr1850-2100_c100322.nc</fpftdyn>
 <fpftdyn hgrid="10x15"         rcp="2.6" sim_year_range="1850-2100" >lnd/clm2/surfdata/surfdata.pftdyn_10x15_rcp2.6_simyr1850-2100_c100322.nc</fpftdyn>
 
@@ -390,13 +390,13 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <faerdep hgrid="1.9x2.5"        rcp="2.6" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp2.6_monthly_1849-2104_1.9x2.5_c100402.nc</faerdep>
 <faerdep hgrid="2.5x3.33"       rcp="2.6" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp2.6_monthly_1849-2104_2.5x3.33_c100407.nc</faerdep>
 <faerdep hgrid="4x5"            rcp="2.6" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp2.6_monthly_1849-2104_4x5_c100407.nc</faerdep>
-<faerdep hgrid=10x15"           rcp="2.6" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp2.6_monthly_1849-2104_10x15_c100407.nc</faerdep>
+<faerdep hgrid="10x15"          rcp="2.6" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp2.6_monthly_1849-2104_10x15_c100407.nc</faerdep>
 
 <faerdep hgrid="0.9x1.25"       rcp="4.5" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp4.5_monthly_1849-2104_0.9x1.25_c100407.nc</faerdep>
 <faerdep hgrid="1.9x2.5"        rcp="4.5" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp4.5_monthly_1849-2104_1.9x2.5_c100402.nc</faerdep>
 <faerdep hgrid="2.5x3.33"       rcp="4.5" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp4.5_monthly_1849-2104_2.5x3.33_c100407.nc</faerdep>
 <faerdep hgrid="4x5"            rcp="4.5" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp4.5_monthly_1849-2104_4x5_c100407.nc</faerdep>
-<faerdep hgrid=10x15"           rcp="4.5" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp4.5_monthly_1849-2104_10x15_c100407.nc</faerdep>
+<faerdep hgrid="10x15"          rcp="4.5" sim_year_range="1850-2100" >atm/cam/chem/trop_mozart_aero/aero/aerosoldep_rcp4.5_monthly_1849-2104_10x15_c100407.nc</faerdep>
 
 <!-- Old 1990s data -->
 <faerdep hgrid="2.65x3.33"                   >lnd/clm2/snicardata/aerosoldep_monthly_1990s_mean_2.65x3.33_c080709.nc</faerdep>

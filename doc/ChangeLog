@@ -1,4 +1,64 @@
 ===============================================================
+Tag name:  clm3_7_13
+Originator(s):  erik (Kluzek Erik 1326 CGD)
+Date:  Thu Apr  8 10:53:06 MDT 2010
+One-line Summary: Add in missing rcp=2.6/6 use-cases, and fix syntax errors in the namelist_defaults file
+
+Purpose of changes:
+
+Add in missing use cases for rcp=4.5 and rcp=6 transient future scenarios. Fix syntax errors in the namelist_defaults_clm
+file.
+
+Bugs fixed (include bugzilla ID):  Above two problems
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1125 (T85, qtr-degree and urban pt surface datasets)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+    http://bugs.cgd.ucar.edu/
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: Nonae
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): None
+
+List all files eliminated: None
+
+List all files added and what they do:
+
+A      models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp2.6_transient.xml
+A      models/lnd/clm/bld/namelist_files/use_cases/1850-2100_rcp6_transient.xml
+
+List all existing files that have been modified, and describe the changes:
+
+M      models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - Fix syntax errors
+
+Summary of testing: None, other than script creation testing
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_12
 Originator(s):  erik (erik)
 Date: Thu Apr  8 00:30:30 MDT 2010
