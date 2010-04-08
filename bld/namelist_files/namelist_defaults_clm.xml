@@ -648,13 +648,13 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr1850_c090923.nc</fsurdat>
 <fndepdyn hgrid="4x5"       bgc="cn"   sim_year_range="1850-2100" rcp="8.5" >lnd/clm2/ndepdata/fndep_clm_rcp8.5_simyr1849-2106_4x5_c100208.nc</fndepdyn>
 <fndepdyn hgrid="10x15"     bgc="cn"   sim_year_range="1850-2100" rcp="8.5" >lnd/clm2/ndepdata/fndep_clm_rcp8.5_simyr1849-2106_10x15_c100208.nc</fndepdyn>
 
-<fndepdyn hgrid="0.9x1.25"  bgc="cn"   sim_year_range="1850-2100" rcp="4.5" >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_0.9x1.25_c100208.nc</fndepdyn>
+<fndepdyn hgrid="0.9x1.25"  bgc="cn"   sim_year_range="1850-2100" rcp="4.5" >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_0.9x1.25_c100407.nc</fndepdyn>
 <fndepdyn hgrid="1.9x2.5"   bgc="cn"   sim_year_range="1850-2100" rcp="4.5" >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_1.9x2.5_c100201.nc</fndepdyn>
 <fndepdyn hgrid="2.5x3.33"  bgc="cn"   sim_year_range="1850-2100" rcp="4.5" >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_2.5x3.33_c100407.nc</fndepdyn>
 <fndepdyn hgrid="4x5"       bgc="cn"   sim_year_range="1850-2100" rcp="4.5" >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_4x5_c100407.nc</fndepdyn>
 <fndepdyn hgrid="10x15"     bgc="cn"   sim_year_range="1850-2100" rcp="4.5" >lnd/clm2/ndepdata/fndep_clm_rcp4.5_simyr1849-2106_10x15_c100407.nc</fndepdyn>
 
-<fndepdyn hgrid="0.9x1.25"  bgc="cn"   sim_year_range="1850-2100" rcp="2.6" >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_0.9x1.25_c100208.nc</fndepdyn>
+<fndepdyn hgrid="0.9x1.25"  bgc="cn"   sim_year_range="1850-2100" rcp="2.6" >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_0.9x1.25_c100407.nc</fndepdyn>
 <fndepdyn hgrid="1.9x2.5"   bgc="cn"   sim_year_range="1850-2100" rcp="2.6" >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_1.9x2.5_c100208.nc</fndepdyn>
 <fndepdyn hgrid="2.5x3.33"  bgc="cn"   sim_year_range="1850-2100" rcp="2.6" >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_2.5x3.33_c100407.nc</fndepdyn>
 <fndepdyn hgrid="4x5"       bgc="cn"   sim_year_range="1850-2100" rcp="2.6" >lnd/clm2/ndepdata/fndep_clm_rcp2.6_simyr1849-2106_4x5_c100407.nc</fndepdyn>

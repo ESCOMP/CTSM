@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_7_14         erik 04/08/2010 Fix rcp=2.6/4.5 1-degree fndepdyn filenames
    clm3_7_13         erik 04/08/2010 Add in missing rcp=2.6/6 use-cases, and fix syntax errors in the namelist_defaults file
    clm3_7_12         erik 04/08/2010 rcp=2.6/4.5 datasets for fndepdyn and aerdepdat, fix some minor issues, new 1pt urban surfdata files
    clm3_7_11         erik 04/07/2010 qtr-degree and T85 surfdata, rcp=2.6/4.5 datasets, doc updates
