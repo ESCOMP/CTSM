@@ -1,7 +1,7 @@
 
 <!-- Beg of single_point chapter-->
 <chapter id="single_point">
-<title>How to run Single-Point cases</title>
+<title>How to run Single-Point/Regional cases</title>
 <para>
 The &clm; also allows you to set up and run cases with a single-point or a local region as well
 as global resolutions. This is often useful for running quick cases for testing, evaluating
@@ -10,12 +10,19 @@ There are three different ways to do this: <envar>PTS_MODE</envar>,
 &CLM1PT;, and &CLMUSRDAT;.
 <simplelist>
 <member><emphasis><envar>PTS_MODE</envar></emphasis> -- to run for a single point
-using global datasets</member>
+using global datasets.</member>
 <member><emphasis>&CLM1PT;</emphasis> -- to run for a supported single-point
 or regional dataset.</member>
-<member><emphasis>&CLMUSRDAT;</emphasis> -- to run using your own datasets.</member>
+<member><emphasis>&CLMUSRDAT;</emphasis> -- to run using your own datasets (single-point
+or regional).</member>
 </simplelist>
 </para>
+<note>
+<para>
+<envar>PTS_MODE</envar> only works for a single point, while the other two options can
+also work for regional datasets as well.
+</para>
+</note>
 
 <sect1 id="PTS_MODE">
 <title>Running PTS_MODE configurations</title>
@@ -30,7 +37,7 @@ arguments to create_newcase to give the latitude and longitude of the point you 
 simulate for (the code will pick the point on the global grid nearest to the point you
 give. Here's an example to setup a simulation for the nearest point at 2-degree resolution
 to Boulder Colorado.
-<screen>
+<screen width="99">
 > cd scripts
 > create_newcase -case testPTS_MODE -res f19_g16 -compset I -mach bluefire \
 -skip_rundb -pts_lat 40.0 -pts_lon -105
@@ -60,7 +67,7 @@ You can change the point you are simulating for at run-time by changing the valu
 </sect1>
 
 <sect1 id="suprted_single_point_datasets">
-<title>Running Supported Single-point Datasets</title>
+<title>Running Supported Single-point/Regional Datasets</title>
 <para>
 In addition to <envar>PTS_MODE</envar> the &clm; supports running using single-point or
 regional datasets that are customized to a particular region. In the section below we
@@ -69,11 +76,18 @@ single-point and regional datasets that are ready to setup and run in the CCSM m
 system.
 </para>
 <para>
+To get the list of supported dataset resolutions see 
+<link endterm="CLM1PT" linkend="CLM1PT"></link>, which results in the following:
+<screen width="99">
+&res_list;
+</screen>
+The resolution names that have an underscore in them ("_") are all single-point or 
+regional resolutions.
 To run with the supported single-point and regional datasets, you setup a simulation for the
 "pt1_pt1" resolution and give the short-name for the file to use in the
 <filename>env_conf.xml</filename> file. Then to run for the urban MexicoCity Mexico test site
 do the following:
-<screen>
+<screen width="99">
 > cd scripts
 > create_newcase -case testSPDATASET -res pt1_pt1 -compset I \
 -mach bluefire -skip_rundb
@@ -90,23 +104,29 @@ which allows you to run the model interactively. On some machines this mode is N
 supported and you may need to change it to FALSE before you are able to build.
 </para>
 </important>
+<warning>
+<para>
+Currently the urban locations are NOT functional, because the surface datasets need
+to be updated.
+</para>
+</warning>
 </sect1>
 
 <sect1 id="own_single_point_datasets">
-<title>Creating your own single-point datasets</title>
+<title>Creating your own single-point/regional surface datasets</title>
 <para>
 The file:
 <ulink url="../Quickstart.userdatasets">Quickstart.userdatasets</ulink> in the
 <filename>models/lnd/clm/doc</filename> directory gives guidelines on how to create and run
 with your own single-point or regional datasets. Below we reprint the above guide.
-<programlisting>
+<programlisting width="99">
 &quickstart_userdata;
 </programlisting>
 </para>
 
 <sect2 id="getregional_datasets.pl">
-<title>Using getregional_datasets.pl to get a complete suite of regional datasets from
-global ones</title>
+<title>Using getregional_datasets.pl to get a complete suite of single-point/regional 
+surface datasets from global ones</title>
 <para>
 Use the regional extraction script to get regional datasets from the global ones
 The getregional_datasets.pl script to extract out regional datasets of interest.
@@ -127,8 +147,8 @@ For more information on these files see the <link linkend="required_files"
 >Table on required files</link>.
 </para>
 <para>
-The alturnatives to using this script are to use <envar>PTS_MODE</envar>,
-disucssed earlier, or creating the files individually using the different 
+The alternatives to using this script are to use <envar>PTS_MODE</envar>,
+discussed earlier, or creating the files individually using the different 
 file creation tools (given in the <link linkend="tools">Tools Chapter</link>). Creating
 all the files individually takes quite a bit of effort and time. <envar>PTS_MODE</envar>
 has some limitations as discussed earlier, but also as it uses global files, is
@@ -144,12 +164,12 @@ on getting and using NCL and NCL scripts. The main script to use is a perl scrip
 which will then in turn call the NCL script that actually creates the output files. 
 The ncl script gets it's settings from environment variables set by the perl script.
 To get help with the script use "-help" as follows:
-<screen>
+<screen width="99">
 > cd models/lnd/clm/tools/ncl_scripts
 > getregional_datasets.pl -help
 </screen>
 The output of the above is:
-<screen>
+<screen width="99">
 &getreg_datasets;
 </screen>
 </para>
@@ -180,7 +200,7 @@ can more easily see what the script is doing.
 <para>
 For example, Run the extraction for data from 52-73 North latitude, 190-220 longitude
 that creates 13x12 gridcell region from the f19 (1.9x2.5) global resolution over Alaska.
-<screen>
+<screen width="99">
 > cd models/lnd/clm/tools/ncl_scripts
 > getregional_datasets.pl -sw 52,190 -ne 73,220 -id 13x12pt_f19_alaskaUSA -mycsmdata $CSMDATA
 </screen>

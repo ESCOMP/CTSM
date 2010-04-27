@@ -1,11 +1,11 @@
 <!--
 
-Top level docbook Users-Guide for CLM4
+Top level docbook User's-Guide for CLM4
 
 -->
 <?xml version='1.0'?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
 
   <!-- Files to link in -->
   <!ENTITY compsets_list       SYSTEM "compsets_list_ofIcases.xml">
@@ -24,6 +24,8 @@ Top level docbook Users-Guide for CLM4
   <!ENTITY adding_files        SYSTEM "adding_files.xml">
   <!ENTITY single_point        SYSTEM "single_point.xml">
   <!ENTITY appendix            SYSTEM "appendix.xml">
+  <!ENTITY mksurfdatapl        SYSTEM "mksurfdata.pl.xml">
+  <!ENTITY clmtestdriver       SYSTEM "test_driver.sh.xml">
 
   <!-- Aliases to use -->
   <!ENTITY buildnml          "<command>build-namelist</command>">
@@ -31,6 +33,7 @@ Top level docbook Users-Guide for CLM4
   <!ENTITY clm               "<acronym>CLM</acronym>">
   <!ENTITY clmcn             "<acronym>CLMCN</acronym>">
   <!ENTITY clmsp             "<acronym>CLMSP</acronym>">
+  <!ENTITY clmu              "<acronym>CLMU</acronym>">
   <!ENTITY clm3              "<acronym>CLM3.0</acronym>">
   <!ENTITY clm35             "<acronym>CLM3.5</acronym>">
   <!ENTITY clm4              "<acronym>CLM4</acronym>">
@@ -59,20 +62,38 @@ Top level docbook Users-Guide for CLM4
   <!ENTITY CSMDATA           "<envar>CSMDATA</envar>">
   <!ENTITY CLMFORCECOLD      "<envar>CLM_FORCE_COLDSTART</envar>">
   <!ENTITY CLMCONFIG         "<envar>CLM_CONFIG_OPTS</envar>">
+  <!--
   <!ENTITY CLMBLDNML         "<envar>CLM_BLDNML_OPTS</envar>">
+  -->
   <!ENTITY CLMUSECASE        "<envar>CLM_NML_USE_CASE</envar>">
   <!ENTITY CLMNAMELIST       "<envar>CLM_NAMELIST_OPTS</envar>">
   <!ENTITY CLM1PT            "<envar>CLM_1PT_NAME</envar>">
+  <!ENTITY CLMQIAN           "<literal>CLM_QIAN</literal>">
   <!ENTITY CLMUSRDAT         "<envar>CLM_USRDAT_NAME</envar>">
   <!ENTITY CLMCO2            "<envar>CLM_CO2_TYPE</envar>">
   <!ENTITY DINLOC            "<envar>DIN_LOC_ROOT</envar>">
+
+  <!-- Aliases of cpl7 scripts env variable literal values to use -->
+  <!ENTITY CLMQIAN           "<literal>CLM_QIAN</literal>">
+
+  <!ENTITY % ISOamsa.module "INCLUDE">
+  <![ %ISOamsa.module; [
+  <!ENTITY % ISOamsa PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Arrow Relations//EN"> 
+   %ISOamsa;
+  <!--end of ISOamsa.module-->]]>
+
+  <!ENTITY % ISOgrk1.module "INCLUDE">
+  <![ %ISOgrk1.module; [
+  <!ENTITY % ISOgrk1 PUBLIC "ISO 8879:1986//ENTITIES Greek Letters//EN"> 
+   %ISOgrk1;
+  <!--end of ISOgrk1.module-->]]>
 
 ]>
 
 <book label="CLM4_UsersGuide" status="draft">
 
 <bookinfo>
-<title>&ccsm; Research Tools: &clm40; Users Guide Documentation (DRAFT)</title>
+<title>&ccsm; Research Tools: &clm40; User's Guide Documentation</title>
 
 <keywordset>
     <keyword>CCSM</keyword>
@@ -103,19 +124,21 @@ Top level docbook Users-Guide for CLM4
 <para>
 The user's guide to &clm40; which is the active land surface model component of &ccsm4;. 
 The purpose of this guide is to instruct both the novice and experienced user, as well as
-&clm; developers in the use of &clm4; for land-surface climate modelling.
+&clm; developers in the use of &clm4; for land-surface climate modeling.
 </para>
 </abstract>
 
 <releaseinfo>$URL$</releaseinfo>
 
-<date>2010-04-06</date>
+<date>2010-04-17</date>
                      
 </bookinfo>
 
 <dedication>
 <para>
-Dedicated to the Land Model Working Group winners of the 2008 &ccsm; Distinguished Achievement Award.
+Dedicated to the Land Model Working Group, winners of the 2008 &ccsm; Distinguished Achievement Award.
+May you continue to collaborate together well, and continue to drive
+the science of land surface modeling forward with your diligent and persistent efforts.
 </para>
 </dedication>
 

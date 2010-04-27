@@ -1,4 +1,201 @@
 ===============================================================
+Tag name:  clm3_7_15
+Originator(s):  erik (erik)
+Date: Tue Apr 27 10:13:57 MDT 2010
+One-line Summary: Finish User's Guide, surfdata files for urban-1pt, fix mksurfdata ifort bugs, work with testing
+
+Purpose of changes:
+
+Fix all urban single-point datasets (mexicocity, urbanc_alpha), fix get_regional script
+to work. Add more documentation on mksurfdata to users-guide, add pergro procedure
+examples, more to testing section. Remove "moving the sun" warning. Fix
+ndeplintInterp.ncl and getregional_datasets.ncl scripts.
+
+Bugs fixed (include bugzilla ID):
+                                 1125 (T85, qtr-degree and urban pt surface datasets)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1150 (Bug in indices in getregional_datasets.ncl script)
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: std-test
+
+Describe any changes made to build system: None
+
+Describe any changes made to the namelist: None
+
+List any changes to the defaults for the boundary datasets: New fsurdat files for urban-1p datasets
+      1x1_vancouverCAN, 1x1_mexicocityMEX, 1x1_urbanc_alpha, 1x1_asphaltjungleNJ
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by: self
+
+List any svn externals directories updated (csm_share, mct, etc.): datm
+
+   datm to datm8_100406
+
+List all files eliminated:
+
+>>>>>>>>>>> Remove test lists no longer used
+     D   models/lnd/clm/test/system/tests_pretag_bangkok
+     D   models/lnd/clm/test/system/tests_pretag_calgary
+     D   models/lnd/clm/test/system/tests_posttag_lightning_nompi
+
+List all files added and what they do:
+
+>>>>>>>>>>> Add plot of pergro testing
+     A   models/lnd/clm/doc/UsersGuide/pergro.jpg
+>>>>>>>>>>> Add in plotting for pergro testing
+     A   models/lnd/clm/tools/ncl_scripts/RMSbluefire.dat
+     A   models/lnd/clm/tools/ncl_scripts/RMSintrepid.dat
+     A   models/lnd/clm/tools/ncl_scripts/pergroPlot.ncl
+
+List all existing files that have been modified, and describe the changes:
+
+>>>>>>>>>>> Remove tests no longer used, work on documentation
+     M   models/lnd/clm/test/system/test_driver.sh ---- Remove calgary, work on doc
+     M   models/lnd/clm/test/system/gen_test_table.sh - Remove note for calgary
+     M   models/lnd/clm/test/system/README ------------ Clarify documentation
+     M   models/lnd/clm/test/system/CLM_runcmnd.sh ---- Remove calgary
+>>>>>>>>>>> Fix ifort compiler problems, point to $CSMDATA locations of 1850
+>>>>>>>>>>> and 2000 PFT datasets
+     M   models/lnd/clm/tools/mksurfdata/mksurfdata.globalirrig ---- Change path
+     M   models/lnd/clm/tools/mksurfdata/pftdyn_hist_simyr2000.txt - Change path
+     M   models/lnd/clm/tools/mksurfdata/mksurfdata.regional ------- Change path
+     M   models/lnd/clm/tools/mksurfdata/mksurfdata.pftdyn --------- Change path
+     M   models/lnd/clm/tools/mksurfdata/pftdyn_hist_simyr1850.txt - Change path
+     M   models/lnd/clm/tools/mksurfdata/mksurfdata.singlept ------- Change path
+     M   models/lnd/clm/tools/mksurfdata/mksurfdata.namelist ------- Change path
+     M   models/lnd/clm/tools/mksurfdata/README -------------------- Update documentation
+     M   models/lnd/clm/tools/mksurfdata/mksrfdat.F90 -------------- outnc_double to
+                    .true., fix implicit none statements, add documentation
+     M   models/lnd/clm/tools/mksurfdata/mksurfdata.pl ------------- Add ability to set 
+                    inputdata directory
+     M   models/lnd/clm/tools/mksurfdata/creategridMod.F90 --------- Change where to loops
+>>>>>>>>>>> Fix bug in time axis and getregional indices
+     M   models/lnd/clm/tools/ncl_scripts/ndeplintInterp.ncl - Fix time axis and check it
+     M   models/lnd/clm/tools/ncl_scripts/README ------------- Add note about pergroPlot
+     M   models/lnd/clm/tools/ncl_scripts/getregional_datasets.ncl
+>>>>>>>>>>> Fix CLM_USRDAT_NAME and add urban 1pt datasets
+     M   models/lnd/clm/bld/clm.cpl7.template ------------------------ Set resolution for CLM_USRDAT_NAME
+     M   models/lnd/clm/bld/namelist_files/namelist_defaults_clm.xml - New urban pt1
+               datasets: 1x1_vancouverCAN, 1x1_mexicocityMEX, 1x1_urbanc_alpha, 1x1_asphaltjungleNJ
+>>>>>>>>>>> Remove SNICAR message about moving the sun
+     M   models/lnd/clm/src/biogeophys/SNICARMod.F90
+>>>>>>>>>>> Finish off current User's Guide
+>>>>>>>>>>> Bring rel03->rel04 updates in, run ispell on everything
+>>>>>>>>>>> Work on mksurfdata and testing sections, give instructions for pergro
+>>>>>>>>>>> Add help from mksurfdata.pl and test_driver.sh scripts
+     M   models/lnd/clm/doc/KnownBugs -- Add note that mkgriddata can not straddle Greenich
+     M   models/lnd/clm/doc/UsersGuide/tools.xml
+     M   models/lnd/clm/doc/UsersGuide/preface.xml
+     M   models/lnd/clm/doc/UsersGuide/clm_ug.xml
+     M   models/lnd/clm/doc/UsersGuide/adding_files.xml
+     M   models/lnd/clm/doc/UsersGuide/appendix.xml
+     M   models/lnd/clm/doc/UsersGuide/config_cache.xml
+     M   models/lnd/clm/doc/UsersGuide/custom.xml
+     M   models/lnd/clm/doc/UsersGuide/single_point.xml
+     M   models/lnd/clm/doc/UsersGuide/Makefile
+     M   models/lnd/clm/doc/UsersGuide/addco2_datm.buildnml.diff
+     M   models/lnd/clm/doc/UsersGuide/special_cases.xml
+
+Summary of testing:
+
+  bluefire: All PASS except...
+025 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+026 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+027 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+028 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+029 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+043 smLI1 TSM.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+044 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+045 brLI1 TBR.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+046 blLI1 TBL.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 4
+048 erL58 TER.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 12+84 arb_ic ............FAIL! rc= 12
+  bluefire interactive testing: All PASS except...
+013 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 5
+019 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 5
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+  bluefire/CCSM testing: All PASS except
+FAIL  PST.f45_g37.I1850.bluefire.compare.clm3_7_10 
+FAIL  PET_PT.f45_g37.I1850.bluefire.compare.clm3_7_10 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm3_7_15 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm3_7_10 
+FAIL  ERH_D.f10_f10.I1850CN.bluefire.compare.clm3_7_10 
+BFAIL PST.f10_f10.I8520CN.bluefire.compare.clm3_7_10 
+BFAIL PET_PT.f10_f10.I8520CN.bluefire.compare.clm3_7_10 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm3_7_10 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm3_7_10 
+  jaguar: All PASS except..
+005 smB51 TSM.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144 arb_ic ..............FAIL! rc= 10
+006 erB51 TER.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 5
+007 brB51 TBR.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 5
+026 smLI2 TSM.sh _sc_dm clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+027 erLI2 TER.sh _sc_dm clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+028 brLI2 TBR.sh _sc_dm clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+030 smL58 TSM.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 96 arb_ic ...............FAIL! rc= 10
+031 erL58 TER.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 12+84 arb_ic ............FAIL! rc= 5
+  jaguar interactive testing: All PASS except...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+  edinburgh/ifort interactive testing: All PASS except...
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+007 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 6
+014 erOC4 TER.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 115+115 arb_FAIL! rc= 5
+015 brOC4 TBR.sh _nrvansc_ds clm_urb1pt^nl_urb_br 19920812:NONE:3600 1x1_vancouverCAN navy 72+72 arbFAIL! rc= 5
+016 blOC4 TBL.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 4
+018 erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 57+100 arb_FAIL! rc= 5
+019 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arFAIL! rc= 5
+020 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 4
+  edinburgh/ifort: All PASS except...
+002 erA92 TER.sh _sc_dm clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic ................FAIL! rc= 7
+003 brA92 TBR.sh _sc_dm clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic .............FAIL! rc= 6
+006 erD91 TER.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 72+72 cold ...............FAIL! rc= 7
+007 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 144 cold .................FAIL! rc= 5
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+  breeze,gale,hail,gust/ifort interactive testing: All PASS except...
+011 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 5
+020 smG53 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+021 erG53 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+022 brG53 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+023 blG53 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_14
+
+Changes answers relative to baseline: No bit-for-bit
+
+===============================================================
+===============================================================
 Tag name:  clm3_7_14
 Originator(s):  erik (Kluzek Erik 1326 CGD)
 Date:  Thu Apr  8 16:15:35 MDT 2010
@@ -30,6 +227,9 @@ Known bugs (include bugzilla ID):
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1125 (T85, qtr-degree and urban pt surface datasets)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -87,6 +287,9 @@ Known bugs (include bugzilla ID):
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1125 (T85, qtr-degree and urban pt surface datasets)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -150,6 +353,9 @@ Known bugs (include bugzilla ID):
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1125 (T85, qtr-degree and urban pt surface datasets)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -240,6 +446,9 @@ Known bugs (include bugzilla ID):
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1125 (T85, qtr-degree and urban pt surface datasets)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -406,6 +615,9 @@ Known bugs (include bugzilla ID):
                                  1137 (qtr-deg fsurdat)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1141 (CN spinup test)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -502,6 +714,9 @@ Known bugs (include bugzilla ID):
                                  1137 (qtr-deg fsurdat)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1141 (CN spinup test)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -722,6 +937,9 @@ Known bugs (include bugzilla ID):
                                  1137 (qtr-deg fsurdat)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1141 (CN spinup test)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -870,6 +1088,9 @@ Known bugs (include bugzilla ID):
                                  1137 (qtr-deg fsurdat)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1141 (CN spinup test)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Switch cndv for dgvm, Have configure disallow
@@ -1207,6 +1428,9 @@ Known bugs (include bugzilla ID):
                                  1137 (qtr-deg fsurdat)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1141 (CN spinup test)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1511,6 +1735,9 @@ Known bugs (include bugzilla ID):
                                  1137 (qtr-deg fsurdat)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1141 (CN spinup test)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: 
@@ -1712,8 +1939,11 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1104 (Restart problem with pftdyn mode)
-                                 1121 (history variable attribute cell_methods misnamed)
                                  1118 (Restarts with SNICAR_FRC fail)
+                                 1121 (history variable attribute cell_methods misnamed)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1864,8 +2094,11 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1104 (Restart problem with pftdyn mode)
-                                 1121 (history variable attribute cell_methods misnamed)
                                  1118 (Restarts with SNICAR_FRC fail)
+                                 1121 (history variable attribute cell_methods misnamed)
+                                 1143 (Problems with mksurfdata and ifort)
+                                 1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
+                                 1147 (mkgriddata can't straddle over Greenich)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Some changes to configure
@@ -2066,8 +2299,8 @@ Known bugs (include bugzilla ID):
                                  1063 (Problem in restarts for CCSM spinup data)
                                  1092 (Problems running in debug mode on dublin with datm8)
                                  1104 (Restart problem with pftdyn mode)
-                                 1121 (history variable attribute cell_methods misnamed)
                                  1118 (Restarts with SNICAR_FRC fail)
+                                 1121 (history variable attribute cell_methods misnamed)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None

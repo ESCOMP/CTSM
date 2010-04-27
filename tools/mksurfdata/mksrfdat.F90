@@ -129,32 +129,34 @@ program mksrfdat
     ! ======================================
     ! Must specify settings for the output grid:
     ! ======================================
-    !	 mksrf_fgrid
+    !    mksrf_fgrid -- Grid dataset
     ! ======================================
-    ! And must specify settings for:
+    ! Must specify settings for input high resolution datafiles
     ! ======================================
-    !    mksrf_fvegtyp
-    !	 mksrf_fsoitex
-    !    mksrf_forganic
-    !    mksrf_fsoicol
-    !    mksrf_flanwat
-    !    mksrf_fmax
-    !    mksrf_fglacier
-    !    mksrf_ftopo
-    !    mksrf_ffrac
-    !    mksrf_furban
-    !    mksrf_firrig
-    !    mksrf_flai
+    !    mksrf_ffrac ---- land fraction and land mask dataset
+    !    mksrf_fglacier - Glacier dataset
+    !    mksrf_flai ----- Leaf Area Index dataset
+    !    mksrf_flanwat -- Land water dataset
+    !    mksrf_forganic - Organic soil carbon dataset
+    !    mksrf_fmax ----- Max fractional saturated area dataset
+    !    mksrf_fsoicol -- Soil color dataset
+    !    mksrf_fsoitex -- Soil texture dataset
+    !    mksrf_furban --- Urban dataset
+    !    mksrf_fvegtyp -- PFT vegetation type dataset
+    !    mksrf_fvocef  -- Volatile Organic Compund Emission Factor dataset
     ! ======================================
     ! Optionally specify setting for:
     ! ======================================
-    !    mksrf_gridtype
-    !    mksrf_gridnm
-    !    mksrf_fdynuse
-    !    mksrf_fvocef
-    !    all_urban
-    !    outnc_large_files
-    !    outnc_double
+    !    mksrf_firrig ------ Irrigation dataset
+    !    mksrf_ftopo ------- Topography dataset (for glacier multiple elevation classes)
+    !                        (and for limiting urban areas)
+    !    all_urban --------- If entire area is urban
+    !    mksrf_fdynuse ----- ASCII text file that lists the
+    !    mksrf_gridtype ---- Type of grid (default is 'global')
+    !    mksrf_gridnm ------ Name of output grid resolution
+    !    outnc_double ------ If output should be in double precision
+    !    outnc_large_files - If output should be in NetCDF large file format
+    ! ==================
     ! ======================================================================
 
     call shr_timer_init()
@@ -165,7 +167,7 @@ program mksrfdat
 
     mksrf_gridtype    = 'global'
     outnc_large_files = .false.
-    outnc_double      = .false.
+    outnc_double      = .true.
     all_urban         = .false.
     read(5, clmexp, iostat=ier)
     if (ier /= 0) then
@@ -755,11 +757,11 @@ subroutine change_landuse( lsmlon, lsmlat, dynpft )
 !
 ! !USES:
     use mkvarsur    , only : ldomain
+    implicit none
 !
 ! !ARGUMENTS:
     integer, intent(in)  :: lsmlon, lsmlat  ! clm grid resolution
     logical, intent(in)  :: dynpft          ! if part of the dynpft section of code
-    implicit none
 
 !
 ! !REVISION HISTORY:
@@ -884,9 +886,9 @@ subroutine normalizencheck_landuse( lsmlon, lsmlat )
 !
 ! !USES:
     use mkvarsur    , only : ldomain
+    implicit none
 ! !ARGUMENTS:
     integer, intent(in)  :: lsmlon, lsmlat  ! clm grid resolution
-    implicit none
 
 !
 ! !REVISION HISTORY:

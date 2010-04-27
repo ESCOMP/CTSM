@@ -348,20 +348,24 @@ contains
 
     if (.not.maskset.and.landfracset) then
        maskset = .true.
-       where (domain%frac(:,:) < flandmin)
-          domain%mask(:,:) = 0     !ocean
+       where (domain%frac < flandmin)
+          domain%mask = 0     !ocean
        elsewhere
-          domain%mask(:,:) = 1     !land
+          domain%mask = 1     !land
        endwhere
     endif
 
     if (.not.landfracset.and.maskset) then
        landfracset = .true.
-       where (domain%mask(:,:) == 0)
-          domain%frac(:,:) = 0._r8     !ocean
-       elsewhere
-          domain%frac(:,:) = 1._r8     !land
-       endwhere
+       do j = 1, nlat
+       do i = 1, nlon
+          if ( domain%mask(i,j) == 0 )then
+             domain%frac(i,j) = 0._r8     !ocean
+          else
+             domain%frac(i,j) = 1._r8     !land
+          end if
+       end do
+       end do
     endif
 
     if (.not.llneswset) then

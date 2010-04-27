@@ -1,4 +1,12 @@
-Known Bugs in CLM4.0    		                          Mar/10/2010
+Known Bugs in CLM4.0    		                          Apr/23/2010
+
+
+====================================================================================
+Bug Number: 1147
+mkgriddata regional grids can't straddle over Greenich
+
+mkgriddata is not able to run for any domain that has Eastern edge > Western
+edge, because it straddles across the 0 degree longitude line.
 
 ====================================================================================
 Bug Number: 1127

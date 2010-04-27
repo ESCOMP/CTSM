@@ -28,33 +28,38 @@ NOTE: In order to successfully build, some source files are required from
 3) create namelist file :
    (sample namelists are: mksurfdata.namelist, mksurfdata.regional, or mksurfdata.singlept)
 
+    ! ======================================================================
+    ! Read input namelist
     ! ======================================
     ! Must specify settings for the output grid:
     ! ======================================
-    !    mksrf_fgrid
+    !    mksrf_fgrid -- Grid dataset
     ! ======================================
     ! Must specify settings for input high resolution datafiles
     ! ======================================
-    !    mksrf_fvegtyp
-    !    mksrf_fsoitex
-    !    mksrf_forganic
-    !    mksrf_fsoicol
-    !    mksrf_flanwat
-    !    mksrf_fmax
-    !    mksrf_fglacier
-    !    mksrf_ftopo
-    !    mksrf_ffrac
-    !    mksrf_furban
-    !    mksrf_firrig
-    !    mksrf_flai
+    !    mksrf_ffrac ---- land fraction and land mask dataset
+    !    mksrf_fglacier - Glacier dataset
+    !    mksrf_flai ----- Leaf Area Index dataset
+    !    mksrf_flanwat -- Land water dataset
+    !    mksrf_forganic - Organic soil carbon dataset
+    !    mksrf_fmax ----- Max fractional saturated area dataset
+    !    mksrf_fsoicol -- Soil color dataset
+    !    mksrf_fsoitex -- Soil texture dataset
+    !    mksrf_furban --- Urban dataset
+    !    mksrf_fvegtyp -- PFT vegetation type dataset
+    !    mksrf_fvocef  -- Volatile Organic Compund Emission Factor dataset
     ! ======================================
     ! Optionally specify setting for:
     ! ======================================
-    !    mksrf_gridtype (default is 'global')
-    !    mksrf_fdynuse
-    !    all_urban
-    !    outnc_large_files
-    !    outnc_double
+    !    mksrf_firrig ------ Irrigation dataset
+    !    mksrf_ftopo ------- Topography dataset (for glacier multiple elevation classes)
+    !                        (and for limiting urban areas)
+    !    all_urban --------- If entire area is urban
+    !    mksrf_fdynuse ----- ASCII text file that lists the
+    !    mksrf_gridtype ---- Type of grid (default is 'global')
+    !    mksrf_gridnm ------ Name of output grid resolution
+    !    outnc_double ------ If output should be in double precision
+    !    outnc_large_files - If output should be in NetCDF large file format
     ! ==================
     ! ======================================================================
 

@@ -2,7 +2,7 @@
 # Makefile to convert DocBook CLM Users-Guide into html and/or pdf
 # (rtf, txt, ps, tex, man, dvi, and texi are also valid docbook formats)
 #
-VPATH := . .. ../../bld ../../tools/ncl_scripts
+VPATH := . .. ../../bld ../../tools/ncl_scripts ../../tools/mksurfdata ../../test/system
 
 PDFUG     := clm_ug.pdf
 HTMLUG    := book1.html
@@ -12,14 +12,17 @@ BNMLOG    := buildnml_help
 RESLOG    := buildnml_resolutions
 USCLOG    := buildnml_usecases
 QCKLOG    := quickstart_guide
+MKSLOG    := mksurfdata.pl
 USRLOG    := quickstart_usrdat
+TDRLOG    := test_driver.sh
 GETREG    := getregional_datasets
 CO2DIF    := addco2_datm.buildnml
 COMPLIST  := compsets_list_ofIcases.xml
 SOURCES   := $(DOCBKUG) $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
              $(RESLOG).xml $(USCLOG).xml $(QCKLOG).xml \
              $(USRLOG).xml $(GETREG).xml preface.xml custom.xml special_cases.xml \
-             tools.xml adding_files.xml single_point.xml addco2_datm.buildnml.xml
+             tools.xml adding_files.xml single_point.xml addco2_datm.buildnml.xml \
+             $(MKSLOG).xml $(TDRLOG).xml
 
 CONVAMP    := sed 's/\&/\&amp;/g'
 CONVSIGNS  := sed 's/>/\&gt;/g' | sed 's/</\&lt;/g'
@@ -36,6 +39,7 @@ $(USCLOG).xml: $(USCLOG).tlog
 $(QCKLOG).xml: $(QCKLOG).tlog
 $(USRLOG).xml: $(USRLOG).tlog
 $(GETREG).xml: $(GETREG).tlog
+$(MKSLOG).xml: $(MKSLOG).tlog
 $(CO2DIF).xml: $(CO2DIF).diff
 
 .tlog.xml:
@@ -53,10 +57,10 @@ $(COMPLIST):
 	get_Icaselist.pl > $@
 
 $(HTMLUG): $(SOURCES)
-	docbook2html $<
+	docbook2html --dsl clm_stylesheet.dsl#html $<
 
 $(PDFUG): $(SOURCES)
-	docbook2pdf $<
+	docbook2pdf --dsl clm_stylesheet.dsl#print $<
 
 $(BNMLOG).tlog: build-namelist
 	@echo "The following line will fail in the make as it calls die -- but that is expected"
@@ -75,8 +79,18 @@ $(USCLOG).tlog: build-namelist
 
 $(CFGLOG).tlog: configure
 	@echo "The following line will fail in the make as it calls die -- but that is expected"
-	@echo "Check that the output $(CFGLOG) is good and redo your make"
+	@echo "Check that the output $@ is good and redo your make"
 	../../bld/configure -help >& $@
+
+$(MKSLOG).tlog: mksurfdata.pl
+	@echo "The following line will fail in the make as it calls die -- but that is expected"
+	@echo "Check that the output $@ is good and redo your make"
+	../../tools/mksurfdata/mksurfdata.pl -help >& $@
+
+$(TDRLOG).tlog: test_driver.sh
+	@echo "The following line will fail in the make as it calls die -- but that is expected"
+	@echo "Check that the output $@ is good and redo your make"
+	../../test/system/test_driver.sh -help >& $@
 
 $(QCKLOG).tlog: Quickstart.GUIDE
 	cp $<  $@
@@ -90,9 +104,9 @@ $(GETREG).tlog:  getregional_datasets.pl
 	../../tools/ncl_scripts/getregional_datasets.pl -help >& $@
 
 clean:
-	rm -f $(HTMLUG) $(PDFUG)
+	rm -f $(HTMLUG) $(PDFUG) *.tlog
 
 realclean: clean
 	rm -f f*.html c*.html x*.html a*.html i*.html $(COMPLIST) $(CFGLOG).xml $(BNMLOG).xml \
 	$(RESLOG).xml $(USCLOG).xml $(USRLOG).xml $(GETREG).xml $(QCKLOG).xml \
-	$(CO2DIF).xml *.tlog
+	$(CO2DIF).xml *.tlog $(MKSLOG).xml $(TDRLOG).xml

@@ -103,15 +103,16 @@ else
     set ignore = "-ignore_ic_date"
 endif
 
-if ($CLM_NML_USE_CASE == UNSET) then
+if ("$CLM_NML_USE_CASE" == "UNSET") then
     set usecase = " "
 else
     set usecase = "-use_case $CLM_NML_USE_CASE"
 endif
 
 set options    = ""
-if ( $CLM_USRDAT_NAME != UNSET )then
+if ( "$CLM_USRDAT_NAME" != "UNSET" )then
    set options    = "-clm_usr_name $CLM_USRDAT_NAME"
+   if ( "$RESOLUTION" == "" || "$RESOLUTION" == "UNSET" ) set RESOLUTION = "$CLM_USRDAT_NAME"
 endif
 set options = "$options -config $CASEBUILD/clmconf/config_cache.xml -res $RESOLUTION $mask $ignore $usecase "
 set options = "$options -infile ccsm_namelist -clm_start_type $START_TYPE "

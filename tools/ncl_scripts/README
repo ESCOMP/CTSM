@@ -34,5 +34,6 @@ ndepregrid.ncl -------------- Regrid the Nitrogen deposition datasets to a diffe
 
 convertUrbanOffline2Seq.ncl - Converts urban offline datasets for Mexicocity and Vancouver to seq-ccsm format
                               needed for datm8.
+pergroPlot.ncl -------------- Plots up two ASCII files with RMS differences in them.
 
 

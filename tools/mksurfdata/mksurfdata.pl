@@ -44,6 +44,8 @@ my $nldef_file     = "$scrdir/../../bld/namelist_files/namelist_definition.xml";
 
 my $definition = Build::NamelistDefinition->new( $nldef_file );
 
+my $CSMDATA = "/fs/cgd/csm/inputdata";
+my $PFTDATA = "/cgd/tss";
 
 my %opts = ( 
                hgrid=>"all", 
@@ -51,6 +53,7 @@ my %opts = (
                debug=>0,
                years=>"1850,2000",
                help=>0,
+               csmdata=>$CSMDATA,
            );
 
 #-----------------------------------------------------------------------------------------------
@@ -59,12 +62,16 @@ sub usage {
 SYNOPSIS
      $ProgName [options]
 OPTIONS
-     -debug [or -d]                Don't actually run -- just print out what would happen if ran.
+     -dinlc [or -l]                Enter the directory location for inputdata 
+                                   (default $opts{'csmdata'})
+     -debug [or -d]                Don't actually run -- just print out what 
+                                   would happen if ran.
      -years [or -y]                Simulation year(s) to run over (by default $opts{'years'}) 
                                    (can also be a simulation year range: i.e. 1850-2000)
      -help  [or -h]                Display this help.
      -res   [or -r] "resolution"   Resolution(s) to use for files (by default $opts{'hgrid'} ).
-     -rcp   [or -c] "rep-con-path" Representative concentration pathway(s) to use for future scenarios 
+     -rcp   [or -c] "rep-con-path" Representative concentration pathway(s) to use for 
+                                   future scenarios 
                                    (by default $opts{'rcp'}, where -999.9 means historical ).
 
 NOTE: years, res, and rcp can be comma delimited lists.
@@ -78,9 +85,10 @@ EOF
    GetOptions(
         "r|res=s"      => \$opts{'hgrid'},
         "c|rcp=s"      => \$opts{'rcp'},
+        "l|dinlc=s"    => \$opts{'csmdata'},
         "d|debug"      => \$opts{'debug'},
         "y|years=s"    => \$opts{'years'},
-        "h|elp"        => \$opts{'help'},
+        "h|help"       => \$opts{'help'},
    ) or usage();
 
    # Check for unparsed arguments
@@ -91,11 +99,15 @@ EOF
    if ( $opts{'help'} ) {
        usage();
    }
+   # If csmdata was changed from the default, change both CSMDATA and PFTDATA
+   if ( $CSMDATA ne $opts{'csmdata'} ) {
+      $CSMDATA = $opts{'csmdata'};
+      $PFTDATA = "$CSMDATA/lnd/clm2/rawdata";
+   }
    #
    # Set disk location to send files to, and list resolutions to operate over, 
    # set filenames, and short-date-name
    #
-   my $CSMDATA = "/fs/cgd/csm/inputdata";
    my @hresols;
    my @all_hresols = $definition->get_valid_values( "res" );
    if ( $opts{'hgrid'} eq "all" ) {
@@ -269,7 +281,7 @@ EOF
             if ( $sim_year < 1850 ) {
                $vegtyp = `../../bld/queryDefaultNamelist.pl -res $res -csmdata $CSMDATA -onlyfiles -silent -justvalue -filenameonly -var mksrf_fvegtyp`;
             } else {
-               $vegtyp = "/cgd/tss/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/" . 
+               $vegtyp = "$PFTDATA/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/" . 
                          "mksrf_landuse_rc${sim_yr0}_c090630.nc";
             }
             if ( $rcp == -999.9 ) {
@@ -285,8 +297,8 @@ EOF
             }
             print $fh <<"EOF";
  mksrf_fvegtyp      = '$vegtyp'
- mksrf_fsoicol      = '/cgd/tss/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_soilcol_global_c090324.nc'
- mksrf_flai         = '/cgd/tss/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_lai_global_c090506.nc'
+ mksrf_fsoicol      = '$PFTDATA/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_soilcol_global_c090324.nc'
+ mksrf_flai         = '$PFTDATA/pftlandusedyn.0.5x0.5.simyr1850-2005.c090630/mksrf_lai_global_c090506.nc'
  mksrf_fdynuse      = '$pftdyntext_file'
 /
 EOF

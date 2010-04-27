@@ -16,11 +16,7 @@ echo "<body  BGCOLOR=\"666699\" TEXT=\"black\" LINK=\"white\" VLINK=\"FF9933\">"
 #########################################################################################
 for input_file in `ls tests_*` ; do
     echo "<TABLE border=2 width=750>" >> ./test_table.html
-    if [ $input_file = "tests_posttag_bangkok" ] || [ $input_file = "tests_pretag_bangkok" ]; then
-	echo "<CAPTION>${input_file}*</CAPTION>" >> ./test_table.html
-    else
-	echo "<CAPTION>$input_file</CAPTION>" >> ./test_table.html
-    fi
+    echo "<CAPTION>$input_file</CAPTION>" >> ./test_table.html
     echo "<TR>" >> ./test_table.html
     echo "<TH>test# </TH>" >> ./test_table.html
     echo "<TH>testid </TH>" >> ./test_table.html
@@ -66,8 +62,5 @@ for input_file in `ls tests_*` ; do
     echo " " >> ./test_table.html
     echo "</pre>" >> ./test_table.html
 done
-echo "<pre>" >> ./test_table.html
-echo "* post-tag testing on bangkok is done with pgi compilers, pre-tag with lahey " >> ./test_table.html
-echo "</pre>" >> ./test_table.html
 
 exit 0

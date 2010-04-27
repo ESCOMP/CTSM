@@ -254,7 +254,6 @@ begin
       nco->NDEP_NOy_year(i,:,:) = (/ ncy0->NDEP_year(:,:) /) * Factor / area;
       nco->NDEP_NHx_year(i,:,:) = (/ ncy0->NDEP_AER_year(:,:) /) * Factor / area;
       nco->YEAR(i)              = beg_sim_year + i;
-      nco->time(i)              = int2dble(beg_sim_year)*daysperyear + daysperyear*i;
       print( "year="+nco->YEAR(i)+" NOy = "+avg(nco->NDEP_NOy_year(i,:,:)) );
    end do
    ;
@@ -266,7 +265,6 @@ begin
       nco->NDEP_NOy_year(nyears+i,:,:) = (/ ncyn->NDEP_year(:,:) /) * Factor / area;
       nco->NDEP_NHx_year(nyears+i,:,:) = (/ ncyn->NDEP_AER_year(:,:) /) * Factor / area;
       nco->YEAR(nyears+i)              =  end_sim_year+i+1;
-      nco->time(nyears+i)              =  int2dble(end_sim_year+i)*daysperyear
       print( "year="+nco->YEAR(nyears+i)+" NOy = "+avg(nco->NDEP_NOy_year(nyears+i,:,:)) );
    end do
    ;
@@ -294,11 +292,24 @@ begin
       nco->NDEP_NHx_year(n,:,:) = (/ t0*ncy0->NDEP_AER_year(:,:) + t1*ncy1->NDEP_AER_year(:,:) /);
       nco->NDEP_NHx_year(n,:,:) = (/ nco->NDEP_NHx_year(n,:,:) /) * Factor / area;
       nco->YEAR(n)              = year;
-      nco->time(n)              = int2flt(year)*daysperyear;
       print( "year = "+year+" t0 ="+t0+" t1 = "+t1+" avg(NDEP)="+avg(nco->NDEP_NOy_year(n,:,:)) );
       n  = n  + 1;
 
    end do
+   ;
+   ; Get time coord and make sure monotone increasing
+   ;
+   year0 = nco->YEAR(0) - 1;
+   do i = 0, nyears-1
+      if ( nco->YEAR(i)-year0 .ne. 1 ) then
+         print( "Year is NOT monotone increasing by one" )
+         exit
+      end if
+      year0 = nco->YEAR(i);
+      ; Calculate time coordinate as number of days per year times the year
+      nco->time(i) = int2dble(year0)*daysperyear;
+   end do
+
    print( "Sum NOy and NHx together:" );
 
    nco->NDEP_year(:,:,:) = (/ nco->NDEP_NOy_year(:,:,:) /) + (/ nco->NDEP_NHx_year(:,:,:) /);

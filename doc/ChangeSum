@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+   clm3_7_15         erik 04/27/2010 Finish User's Guide, surfdata files for urban-1pt, fix mksurfdata ifort bugs, work with testing
    clm3_7_14         erik 04/08/2010 Fix rcp=2.6/4.5 1-degree fndepdyn filenames
    clm3_7_13         erik 04/08/2010 Add in missing rcp=2.6/6 use-cases, and fix syntax errors in the namelist_defaults file
    clm3_7_12         erik 04/08/2010 rcp=2.6/4.5 datasets for fndepdyn and aerdepdat, fix some minor issues, new 1pt urban surfdata files

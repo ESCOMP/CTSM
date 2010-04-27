@@ -66,9 +66,10 @@ variables that can be set to set things that must be customized. All the tools u
 &netcdf; and hence require the path to the &netcdf; libraries and include files.
 On some platforms (such as Linux) multiple compilers can be used, and hence there
 are env variables that can be set to change the &FORTRAN; and/or "C" compilers used.
-The tools other than "cprnc" also  allow finer control, by also allowing the user to
-add compiler flags they choose for both "C" and &FORTRAN; compilers and set the linker 
-and add linker options. Finally the tools other than "cprnc" allow you to turn
+The tools other than <command>cprnc</command> also allow finer control, by also 
+allowing the user to add compiler flags they choose, for both &FORTRAN; and "C", as 
+well as picking the compiler, linker and and add linker options. Finally the tools 
+other than <command>cprnc</command> allow you to turn
 optimization on (which is off by default) with the <envar>OPT</envar> flag so that the 
 tool will run faster. To get even faster performance, the interpinic, mksurfdata, and
 mkgriddata programs allow you to also use the <envar>SMP</envar> to turn on multiple 
@@ -253,7 +254,7 @@ is activated.
 <varlistentry>
 <term><filename>Filepath</filename></term><listitem> 
 <para>
-"cprnc" unlike the other &clm; tools doesn't need any outside code to operate. The
+<command>cprnc</command> unlike the other &clm; tools doesn't need any outside code to operate. The
 other tools are use some code outside their directory that is in the &ccsm;
 distribution (either csm_share code or &clm; source code). They all have a 
 <filename>Filepath</filename> file to set the location of the source code
@@ -274,7 +275,7 @@ when building the tool.
 <varlistentry>
 <term><filename>EXEDIR</filename></term><listitem> 
 <para>
-The "cprnc" tool uses this variable to set the location of where the executable
+The <command>cprnc</command> tool uses this variable to set the location of where the executable
 will be built. The default is the current directory.
 </para>
 </listitem>
@@ -283,7 +284,7 @@ will be built. The default is the current directory.
 <varlistentry>
 <term><filename>VPATH</filename></term><listitem> 
 <para>
-The "cprnc" tool uses this variable to set the colon delimited pathnames of where
+The <command>cprnc</command> tool uses this variable to set the colon delimited pathnames of where
 the source code exists.  The default is the current directory.
 </para>
 </listitem>
@@ -419,9 +420,9 @@ they automatically come up when you create new cases.
 </sect1>
 
 <sect1 id="cprnc">
-<title>Using the cprnc tool to compare two history files</title>
+<title>Using the <command>cprnc</command> tool to compare two history files</title>
 <para>
-"cprnc" is a tool shared by both <acronym>CAM</acronym> and &clm; to compare two
+<command>cprnc</command> is a tool shared by both <acronym>CAM</acronym> and &clm; to compare two
 &netcdf; history files.
 It differences every field that has a time-axis that is also shared on both files,
 and reports a summary of the difference. The summary includes the three largest 
@@ -441,7 +442,7 @@ Options:
 <member>-jpr</member>
 <member>-kpr</member>
 </simplelist>
-See the "cprnc"
+See the <command>cprnc</command>
 <ulink url="../../tools/cprnc/README">README</ulink> file for more details.
 </para>
 </sect1>
@@ -474,7 +475,8 @@ to use.
 <para>
 
 <example id="example_createtemplate">
-<title>Example running &clm; to create a template file to interpolate to</title>
+<title>Example of running &clm; to create a template file for
+<command>interpinic</command> to interpolate to</title>
 <screen width="99">
 > cd scripts
 > create_newcase -case cr_f10_TmpltI1850CN -res f10_f10 -compset I1850CN -mach bluefire
@@ -490,7 +492,7 @@ to use.
 # Then configure, build and run as normal
 > configure -case
 > cr_f10_TmpltI1850CN.bluefire.build
-> bsub < cr_f10_TmpltI1850CN.bluefire.run
+> bsub &lt; cr_f10_TmpltI1850CN.bluefire.run
 # And copy the resulting restart file to your interpinic directory
 > cd ../models/lnd/clm/tools/interpinic
 > cp /ptmp/$LOGIN/cr_f10_TmpltI1850CN/run/cr_f10_TmpltI1850CN.clm2.r.1949-01-01-00000.nc .
@@ -503,9 +505,9 @@ memory on for 64 threads so that it runs as fast as possible, to interpolate one
 the standard 1-degree datasets to the above 10x15 template file that we created.
 </para>
 <example id="example_interpinic">
-<title>Example building and running interpinic to interpolate a 1-degree dataset to
-10x15</title>
-<screen>
+<title>Example of building and running <command>interpinic</command> to 
+interpolate a 1-degree <filename>finidat</filename> dataset to 10x15</title>
+<screen width="99">
 > cd models/lnd/clm/tools/interpinic
 > gmake OPT=TRUE SMP=TRUE
 > env OMP_NUM_THREADS=64 interpinic -o cr_f10_TmpltI1850CN.clm2.r.1949-01-01-00000.nc /
@@ -528,7 +530,7 @@ cut down the run time as much as possible.
 </example>
 
 <para>
-In <xref linkend="runinit_ibm.csh"></xref> we give a simplier way to run
+In <xref linkend="runinit_ibm.csh"></xref> we give a simpler way to run
 <command>interpinic</command> for several standard resolutions at once, with a script
 to loop over several resolutions. This is useful for &clm; developers who need to
 create many <filename>finidat</filename> files at once.
@@ -537,12 +539,14 @@ create many <filename>finidat</filename> files at once.
 </sect1>
 
 <sect1 id="mkgriddata">
-<title>Using mkgriddata to create grid datasets</title>
+<title>Using <command>mkgriddata</command> to create grid datasets</title>
 <para>
-"mkgriddata" is used to create grid, fraction and topography datasets to run &clm;
-at a new resolution. It is typically the first step in creating datasets needed
-to run &clm; at a new resolution (followed by mksurfdata, and then the interpolation
-programs, aerdepregrid, and ndepregrid when running with CN).
+<command>mkgriddata</command> is used to create grid, fraction, and topography 
+datasets to run &clm; at a new resolution. It is typically the first step in creating 
+datasets needed to run &clm; at a new resolution (followed by 
+<command>mksurfdata</command>, and 
+then the interpolation programs, <command>aerdepregrid.ncl</command>, and 
+<command>ndepregrid.ncl</command> when running with CN).
 </para>
 
 <sect2 id="mkgriddata_nml">
@@ -550,7 +554,7 @@ programs, aerdepregrid, and ndepregrid when running with CN).
 <para>
 <command>mkgriddata</command> is controlled by a namelist. There are ten different
 namelist items, and you need to use enough of them so that files will be output.
-The different types of input datasets contain different input data types that
+The different types of input datasets contain different input data types, that
 correspond to the three different types of output files: grid, fraction, and topography.
 Output files for each of these will only be output if there is input data that 
 correspond to these. If you only have input data for grid locations -- you will only
@@ -558,7 +562,7 @@ get an output grid file. If you have both grid and fraction data you will get gr
 fraction data files. If you also have topography data you will also get topo files.
 </para>
 <para>
-Namelist options to mkgriddata include:
+Namelist options to <command>mkgriddata</command> include:
 <simplelist>
 <member><varname>mksrf_fnavyoro</varname> -- Navy orography file to use for land fraction
 and surface heights.</member>
@@ -579,7 +583,7 @@ land-fractions and topography</member>
 </para>
 <para>
 You need to enter one of the following four options:
-<screen>
+<screen width="99">
    mksrf_fnavyoro    - high resolution topo dataset (topo data)
    mksrf_lsmlon      - number of longitudes
    mksrf_lsmlat      - number of latitudes
@@ -589,15 +593,15 @@ You need to enter one of the following four options:
    mksrf_edgew       - western  edge of grid (degrees)
 </screen>
 or
-<screen>
+<screen width="99">
    mksrf_fcamfile    - cam topo file (grid and possibly fraction data)
 </screen>
 or 
-<screen>
+<screen width="99">
    mksrf_fccsmdom    - ccsm domain file (both grid, and fraction data)
 </screen>
 or
-<screen>
+<screen width="99">
    mksrf_fclmgrid    - clm grid or surface dataset file (grid data)
 </screen>
 Note, you can provide more than one of the needed datasets, and the output
@@ -620,6 +624,66 @@ file are off from that.
 There are three different major modes for using "mkgriddata" to create grid files
 for &clm;:
 <simplelist>
+<member><varname>mksrf_fnavyoro</varname> -- Navy orography file to use for land fraction
+and surface heights.</member>
+<member><varname>mksrf_frawtopo</varname> -- Raw topography file with just surface
+heights.</member>
+<member><varname>mksrf_fcamfile</varname> -- <acronym>CAM</acronym> initial conditions file with
+land-fractions and topography</member>
+<member><varname>mksrf_fclmgrid</varname> -- &clm; grid file</member>
+<member><varname>mksrf_fccsmdom</varname> -- &ccsm; domain file</member>
+<member><varname>mksrf_fcamtopo</varname> -- <acronym>CAM</acronym> topography file</member>
+<member><varname>mksrf_lsmlon</varname> -- number of longitude for regional grid</member>
+<member><varname>mksrf_lsmlat</varname>number of latitudes for regional grid</member>
+<member><varname>mksrf_edgen</varname> -- Northern edge for regional grid</member>
+<member><varname>mksrf_edgee</varname> -- Southern edge for regional grid</member>
+<member><varname>mksrf_edges</varname> -- Eastern edge for regional grid</member>
+<member><varname>mksrf_edgew</varname> -- Western edge for regional grid</member>
+</simplelist>
+</para>
+<para>
+You need to enter one of the following four options:
+<screen width="99">
+   mksrf_fnavyoro    - high resolution topo dataset (topo data)
+   mksrf_lsmlon      - number of longitudes
+   mksrf_lsmlat      - number of latitudes
+   mksrf_edgen       - northern edge of grid (degrees)
+   mksrf_edgee       - eastern  edge of grid (degrees)
+   mksrf_edges       - southern edge of grid (degrees)
+   mksrf_edgew       - western  edge of grid (degrees)
+</screen>
+or
+<screen width="99">
+   mksrf_fcamfile    - cam topo file (grid and possibly fraction data)
+</screen>
+or 
+<screen width="99">
+   mksrf_fccsmdom    - ccsm domain file (both grid, and fraction data)
+</screen>
+or
+<screen width="99">
+   mksrf_fclmgrid    - clm grid or surface dataset file (grid data)
+</screen>
+Note, you can provide more than one of the needed datasets, and the output
+data will be determined by the datasets according to an order of precedence.
+The order of precedence for data is as follows:
+<orderedlist>
+<listitem><para><filename>mksrf_fcamfile</filename></para></listitem>
+<listitem><para><filename>mksrf_fclmgrid</filename></para></listitem>
+<listitem><para><filename>mksrf_fnavyoro</filename></para></listitem>
+<listitem><para><filename>mksrf_fccsmdom</filename></para></listitem>
+</orderedlist>
+Grid data then will be established by the file with the highest precedence. 
+&ccsm; domain files sometimes have latitudes and longitudes that are "off" from
+the standard by a small amount. By establishing an order of precedence you can ensure
+that grid locations exactly match a given standard file, even if the values in the domain
+file are off from that.
+</para>
+
+<para>
+There are three different major modes for using <command>mkgriddata</command> to 
+create grid files for &clm;:
+<simplelist>
 <member>Convert &ccsm; domain files to &clm; grid files</member>
 <member>Create single point or regional area grid files</member>
 <member>Convert <acronym>CAM</acronym> files to &clm; grid files</member>
@@ -627,14 +691,14 @@ for &clm;:
 </para>
 </sect2>
 
-<sect2 id="mkgridata_from_domainfile">
+<sect2 id="mkgriddata_from_domainfile">
 <title>Convert &ccsm; domain files to &clm; grid files</title>
 <para>
 &ccsm; domain files such as used for datm, include all the information
 needed to create &clm; grid and fraction files.
 <example>
-<title>Example namelist to convert &ccsm; 4x5 domain files to &clm; grid files</title>
-<screen>
+<title>Example <command>mkgriddata</command> namelist to convert &ccsm; 4x5 domain files to &clm; grid files</title>
+<screen width="99">
 &amp;clmexp
  mksrf_fccsmdom=
 '/fs/cgd/csm/inputdata/lnd/dlnd7/domain.lnd.4x5_gx3v5.060404.nc'
@@ -653,20 +717,21 @@ on the output files exactly match a standard grid file.
 </para>
 </sect2>
 
-<sect2 id="mkgridata_regional">
+<sect2 id="mkgriddata_regional">
 <title>Create single point or regional area grid files</title>
 <para>
 The process to create single-point or regional area &clm; grid files is the same.
 You enter the number of latitudes and longitudes you want on your output file and
-the extent of the grid: North, East, South and West. You also tell "mkgriddata" that
+the extent of the grid: North, East, South and West. You also tell 
+<command>mkgriddata</command> that
 you are entering a "regional" grid and you also enter the standard Navy orography
 dataset (or your own orography file if desired). For a single point you simply
 enter "1" for the number of latitudes and longitudes, but you still enter the
 grid extent (of the single grid cell). Here is a sample regional namelist to create
 a 5x5 regional grid over the Amazon:
 <example>
-<title>Example namelist for mkgriddata to create regional grid over Amazon</title>
-<screen>
+<title>Example <command>mkgriddata</command> namelist to create regional grid over Amazon</title>
+<screen width="99">
 &amp;clmexp
  mksrf_fnavyoro=
 "/fs/cgd/csm/inputdata/lnd/clm2/rawdata/mksrf_navyoro_20min.c010129.nc"
@@ -680,6 +745,12 @@ a 5x5 regional grid over the Amazon:
 </screen>
 </example>
 </para>
+<warning>
+<para>
+Currently you can <emphasis>NOT</emphasis> have regional grids that straddle both
+sides of the Greenich (longitude = zero) line.
+</para>
+</warning>
 <important>
 <para>
 You should enter longitudes with values from 0 to 360 East.
@@ -687,7 +758,7 @@ You should enter longitudes with values from 0 to 360 East.
 </important>
 </sect2>
 
-<sect2 id="mkgridata_from_camfile">
+<sect2 id="mkgriddata_from_camfile">
 <title>Convert <acronym>CAM</acronym> files to &clm; grid files</title>
 <para>
 Older <acronym>CAM</acronym> initial files included all the information needed to create &clm;
@@ -703,7 +774,7 @@ use one of the other two options.
 </sect1>
 
 <sect1 id="mkdatadomain">
-<title>Using mkdatadomain to create domain datasets for datm or docn from &clm; grid datasets</title>
+<title>Using <command>mkdatadomain</command> to create domain datasets for datm or docn from &clm; grid datasets</title>
 <para>
 "mkdatadomain" is used to convert &clm; grid and fraction datasets into domain datasets
 that can be used by either the "datm" or "docn" models. Most often &clm; users will want
@@ -714,8 +785,9 @@ namelist items all of which are required. You specify which output mode you want
 or "docn", and then set the input &clm; grid and frac datasets, and the output domain file.
 </para>
 <example>
-<title>Example namelist to create domain file from &clm; frac and grid data files</title>
-<screen>
+<title>Example <command>mkdatadomain</command> namelist to create a domain file from 
+&clm; frac and grid data files</title>
+<screen width="99">
 &amp;domain_nl
  dtype = "datm"
  f_fracdata = 
@@ -732,16 +804,242 @@ or "docn", and then set the input &clm; grid and frac datasets, and the output d
 <sect1 id="mksurfdata">
 <title>Using mksurfdata to create surface datasets from grid datasets</title>
 <para>
-"mksurfdata" is used to create surface-datasets from grid datasets and raw datafiles
+<command>mksurfdata</command> is used to create surface-datasets from grid datasets and raw datafiles
 at half-degree resolution to produce files that describe the surface characteristics
 needed by &clm; (fraction of grid cell covered by different land-unit types, and fraction
 for different vegetation types, as well as things like soil color, and soil texture,
-etc.).
+etc.). To run <command>mksurfdata</command> you can either use the
+<command>mksurfdata.pl</command> which will create namelists for you using the &buildnml;
+XML database, or you can run it by hand using a namelist that you provide (possibly
+modeled after one of the examples that is provided in the
+<filename>models/lnd/clm/tools/mksurfdata</filename> directory. In the next section
+we describe how to use the <command>mksurfdata.pl</command> script and the following
+section gives more details on running <command>mksurfdata</command> by hand and the
+various namelist input variables to it.
 </para>
+<sect2 id="mksurfdata.pl">
+<title>Running <command>mksurfdata.pl</command></title>
+<para>
+The script <command>mksurfdata.pl</command> can be used to run the 
+<command>mksurfdata</command> program for several resolutions, simulation-years and
+simulation year ranges. It will create the needed namelists for you and move the files
+over to your inputdata directory location (and create a list of the files created, and
+for developers this file is also a script to import the files into the svn inputdata
+repository. It will also use the &buildnml; XML database
+to determine the correct input files to use. And in the case of urban single-point 
+datasets (where surface datasets are actually input into <command>mksurfdata</command>)
+it will do the additional processing required so that the output dataset
+can be used once again by <command>mksurfdata</command>. Because, it figures out
+namelist and input files for you, it is recommended that you use this script for creation
+of standard surface datasets. If you need to create surface datasets for customized
+cases, you will be better off running <command>mksurfdata</command> on it's own.
+For help on <command>mksurfdata.pl</command> you can use the "-help" option as below:
+<screen width="99">
+> cd models/lnd/clm/tools/mksurfdata
+> mksurdata.pl -help
+</screen>
+The output of the above command is:
+<screen width="99">
+&mksurfdatapl;
+</screen>
+</para>
+<para>
+To run the script with optimized <command>mksurfdata</command> for a 4x5 degree grid 
+for 1850 conditions, on bluefire you would do the following:
+<example id="example_mksurfdata.pl">
+<title>Example of running <command>mksurfdata.pl</command> to create a 4x5 resolution
+<filename>fsurdat</filename> for a 1850 simulation year</title>
+<screen width="99">
+> cd models/lnd/clm/tools/mksurfdata
+> gmake
+> mksurfdata.pl -y 1850 -r 4x5
+</screen>
+</example>
+</para>
+</sect2>
+
+<sect2 id="mksurfdata_byhand">
+<title>Running <command>mksurfdata</command> by Hand</title>
+<para>
+In the above section we show how to run <command>mksurfdata</command> through
+the <command>mksurfdata.pl</command> using input datasets that are in the &buildnml;
+XML database. When you are running with input datasets that are NOT available in
+the XML database you either need to add them as outlined in 
+<xref linkend="adding_files"></xref>, or you need to run <command>mksurfdata</command> 
+by hand, as we will outline here.
+</para>
+
+<sect3 id="mksurfdata_namelist">
+<title>Preparing your <command>mksurfdata</command> namelist</title>
+<para>
+When running <command>mksurfdata</command> by hand you will need to prepare your
+own input namelist. There are sample namelists that are setup for running on the
+<acronym>NCAR</acronym> machine bluefire. You will need to change the filepaths to
+run on a different machine. The list of sample namelists include
+<simplelist>
+<member><filename>mksurfdata.namelist</filename> -- standard sample namelist.</member>
+<member><filename>mksurfdata.pftdyn</filename> -- sample namelist to
+build transient PFT land-use and land cover change over 1850 to 2005.</member>
+<member><filename>mksurfdata.regional</filename> -- sample namelist to
+build for a regional grid dataset (5x5_amazon)</member>
+<member><filename>mksurfdata.singlept</filename> -- sample namelist to
+build for a single point grid dataset (1x1_brazil)</member>
+</simplelist>
+Note, that one of the inputs <varname>mksrf_fdynuse</varname> is a filename that
+includes the filepaths to other files. The filepaths in this file will have to
+be changed as well. You also need to make sure that the line lengths remain the same
+as the read is a formatted read, so the placement of the year in the file, must remain
+the same, even with the new filenames.
+</para>
+<para>
+We list the namelist items below. Most of the namelist items are filepaths to give to
+the input half degree resolution datasets that you will use to scale from to the
+resolution of your grid dataset.
+You must first specify the input grid dataset for the resolution to output for:
+<orderedlist>
+<listitem><para><varname>mksrf_fgrid</varname> Grid dataset</para></listitem>
+</orderedlist>
+Then you must specify settings for input high resolution datafiles
+<orderedlist>
+<listitem><para><varname>mksrf_ffrac</varname> land fraction and land mask dataset</para></listitem>
+<listitem><para><varname>mksrf_fglacier</varname> Glacier dataset</para></listitem>
+<listitem><para><varname>mksrf_flai</varname> Leaf Area Index dataset</para></listitem>
+<listitem><para><varname>mksrf_flanwat</varname> Land water dataset</para></listitem>
+<listitem><para><varname>mksrf_forganic</varname> Organic soil carbon dataset</para></listitem>
+<listitem><para><varname>mksrf_fmax</varname> Max fractional saturated area dataset</para></listitem>
+<listitem><para><varname>mksrf_fsoicol</varname> Soil color dataset</para></listitem>
+<listitem><para><varname>mksrf_fsoitex</varname> Soil texture dataset</para></listitem>
+<listitem><para><varname>mksrf_furban</varname> Urban dataset</para></listitem>
+<listitem><para><varname>mksrf_fvegtyp</varname> PFT vegetation type dataset</para></listitem>
+<listitem><para><varname>mksrf_fvocef</varname> Volatile Organic Compound Emission Factor
+dataset</para></listitem>
+</orderedlist>
+And optionally you can specify settings for:
+<orderedlist>
+<listitem><para><varname>all_urban</varname> If entire area is urban (typically used for
+single-point urban datasets, that you want to be exclusively urban)</para></listitem>
+<listitem><para><varname>mksrf_fdynuse</varname> "dynamic land use" for transient
+land-use/land-cover changes. This is an ASCII text file that lists the filepaths
+to files for each year and then the year it represents (note: you MUST change the
+filepaths inside the file when running on a machine NOT at <acronym>NCAR</acronym>).
+Normally we always use this file, even for creating datasets of a fixed year.
+</para></listitem>
+<listitem><para><varname>mksrf_firrig</varname> Irrigation dataset (experimental mode, normally NOT used)</para></listitem>
+<listitem><para><varname>mksrf_ftopo</varname> Topography dataset (this is used to limit
+the extent of urban regions and is used for glacier multiple elevation classes --
+normally always used)</para></listitem>
+<listitem><para><varname>mksrf_gridnm</varname> Name of output grid resolution (if not
+set the files will be named according to the number of longitudes by latitudes)</para></listitem>
+<listitem><para><varname>mksrf_gridtype</varname> Type of grid (default is 'global')</para></listitem>
+<listitem><para><varname>outnc_large_files</varname> If output should be in NetCDF large file
+format</para></listitem>
+<listitem><para><varname>outnc_double</varname> If output should be in double
+precision (normally we turn this on)</para></listitem>
+</orderedlist>
+</para>
+<para>
+After creating your namelist,
+when running on a non <acronym>NCAR</acronym> you will need to get the files
+from the inputdata repository.
+In order to retrieve the files needed for mksurfdata you can do the following on your
+namelist to get the files from the inputdata repository, using the
+<command>check_input_data</command> script which also allows you to export data to
+your local disk.
+<example id="getmksurfdata_datasets">
+<title>Getting the raw datasets for <command>mksurfdata</command> to your local 
+machine using the <command>check_input_data</command> script</title>
+<screen width="99">
+> cd models/lnd/clm/tools/mksurfdata
+# First remove any quotes and copy into a filename that can be read by the
+# check_input_data script
+> sed "s/'//g" namelist > clm.input_data_list
+# Run the script with -export and give the location of your inputdata with $CSMDATA
+> ../../../../../scripts/ccsm_utils/Tools/check_input_data -datalistdir . \
+-inputdata $CSMDATA -check -export
+</screen>
+</example>
+</para>
+<para>
+There is one option to <command>mksurfdata</command> that is purely
+experimental, and should NOT be used (changes are NOT implemented in &clm40; to use
+it yet). This option is: <varname>mksrf_firrig</varname>.
+It separates out crop land-units into irrigated and non-irrigated columns.
+This option is experimental and not even enabled for use with &clm40;.
+</para>
+</sect3>
+
+<sect3 id="mksurfdata_sop">
+<title>Standard Practices when using <command>mksurfdata</command></title>
+<para>
+In this section we give the recommendations 
+</para>
+<para>
+If you look at the standard surface datasets that we have created and provided for use,
+there are three practices that we have consistently done in each (you also see these in
+the sample namelists and in the <command>mksurfdata.pl</command> script). The first is 
+that we always output data in double precision (hence <varname>outnc_double</varname> 
+is set to <literal>.true.</literal>. The next is that we always use the procedure 
+for creating transient datasets (using <varname>mksrf_fdynuse</varname>) even when 
+creating datasets for a fixed simulation year. This is to ensure that the fixed year
+datasets will be consistent with the transient datasets. When this is done a 
+"surfdata.pftdyn" dataset will be created -- but will NOT be used in clm. If you look
+at the sample namelist <filename>mksurfdata.namelist</filename> you note that it
+sets <varname>mksrf_fdynuse</varname> to the file
+<filename>pftdyn_hist_simyr2000.txt</filename>, where the single file entered is
+the same PFT file used in the rest of the namelist (as <varname>mksrf_fvegtyp</varname>).
+The last practice that we always do is to always set <varname>mksrf_ftopo</varname>,
+even though multiple glacier elevation classes are NOT a part of &clm4;. This is
+important in limiting urban areas based on topographic height, and hence is important
+to use all the time. In future versions of &clm; the glacier multiple elevation classes
+will be used as well.
+</para>
+<para>
+There are two other important practices for creating urban single point datasets. The
+first is that you often will want to set <varname>all_urban</varname> to
+<literal>.true.</literal> so that the dataset will have 100% of the gridcell output
+as urban rather than some mix of: urban, vegetation types, and other landunits. The
+next practice is that most of our specialized urban datasets have custom values for
+the urban parameters, hence we do NOT want to use the global urban dataset to get
+urban parameters -- we use a previous version of the surface dataset for the urban
+parameters. However, in order to do this, we need to append onto the previous surface
+dataset the grid and land mask/land fraction information from the grid and fraction
+datasets. This is done in <command>mksurfdata.pl</command> using the <acronym>NCO</acronym>
+program <command>ncks</command>. An example of doing this for the Mexicocity, Mexico
+urban surface dataset is as follows:
+<screen width="99">
+> ncks -A $CSMDATA/lnd/clm2/griddata/griddata_1x1pt_mexicocityMEX_c090715.nc \
+$CSMDATA/lnd/clm2/surfdata/surfdata_1x1_mexicocityMEX_simyr2000_c100407.nc
+> ncks -A $CSMDATA/lnd/clm2/griddata/fracdata_1x1pt_mexicocityMEX_navy_c090715.nc \
+$CSMDATA/lnd/clm2/surfdata/surfdata_1x1_mexicocityMEX_simyr2000_c100407.nc
+</screen>
+Note, if you look at the current single point urban surface datasets you will note
+that the above has already been done.
+</para>
+<para>
+The final issue is how to build <command>mksurfdata</command>. When NOT optimized
+<command>mksurfdata</command> is very slow, and can take many hours to days to
+even run for medium resolutions such as one or two degree. So usually you will want
+to run it optimized. Possibly you also want to use shared memory parallelism using 
+&omp; with the <envar>SMP</envar> option. The problem with running optimized is that
+answers will be different when running optimized versus non-optimized for most
+compilers. So if you want answers to be the same as a previous surface dataset, you
+will need to run it on the same platform and optimization level. Likewise, running
+with or without &omp; may also change answers (for most compilers it will NOT, however
+it does for the IBM compiler). However, answers should be the same regardless of the
+number of threads used when &omp; is enabled. Note, that the output surface datasets
+will have attributes that describe whether the file was written out optimized or not,
+with threading or not and the number of threads used, to enable the user to more
+easily try to match datasets created previously. For more information on the different
+compiler options for the &clm4; tools see <xref linkend="tool_build"></xref>.
+</para>
+</sect3>
+</sect2>
+
 </sect1>
 
 <sect1 id="ncl_scripts">
-<title>Using &ncl; scripts ndepregrid.ncl and aerdepregrid.ncl to interpolate aerosol deposition datasets</title>
+<title>Using &ncl; scripts <command>ndepregrid.ncl</command> and 
+<command>aerdepregrid.ncl</command> to interpolate aerosol deposition datasets</title>
 <para>
 Unlike the other tools, these are NCAR Command Language (&ncl;) scripts
 and you will need to get a copy of &ncl; in order to use them. You also won't have to
@@ -751,7 +1049,7 @@ for free download as either binaries or source code from:
 web-site also contains documentation on &ncl; and it's use.
 </para>
 <para>
-Both the <filename>ndepregrid.ncl</filename> and <filename>aerdepregrid.ncl</filename>
+Both the <command>ndepregrid.ncl</command> and <command>aerdepregrid.ncl</command>
 scripts have similar interfaces and you customize the output resolution and
 characteristics based on the settings of environment variables that you set (if you
 don't set any of the variables, the script has defaults that it will use).
@@ -813,28 +1111,28 @@ directory. It is only useful if you want to run the script out of a different
 directory.
 </para>
 <sect2 id="ndepregrid">
-<title>Using ndepregrid.ncl to interpolate Nitrogen deposition datasets</title>
+<title>Using <command>ndepregrid.ncl</command> to interpolate Nitrogen deposition datasets</title>
 <para>
-"ndepregrid.ncl" interpolates the Nitrogen deposition datasets from one resolution
+<command>ndepregrid.ncl</command> interpolates the Nitrogen deposition datasets from one resolution
 to another.  It can be used to interpolate either constant datasets
 (<varname>fndepdat</varname> files) or transient datasets (<varname>fndepdyn</varname> files).
 </para>
 <para>
 For example, to interpolate to an output resolution of 0.9x1.25, for a constant
 simulation-year of 1850, you would do the following:
-<screen>
+<screen width="99">
 > env RES=0.9x1.25 SIM_YR=1850 ncl ndepregrid.ncl
 </screen>
 </para>
 </sect2>
 
 <sect2 id="aerdepregrid">
-<title>Using aerdepregrid.ncl to interpolate Aerosol deposition datasets</title>
+<title>Using <command>aerdepregrid.ncl</command> to interpolate Aerosol deposition datasets</title>
 <para>
-"aerdepregrid.ncl" interpolates the Aerosol deposition datasets from one resolution.
+<command>aerdepregrid.ncl</command> interpolates the Aerosol deposition datasets from one resolution.
 It can be used to interpolate either constant datasets (for example:
-aerosoldep_monthly_2000_0.9x1.25_c090828.nc) or transient datasets (for example:
-aerosoldep_monthly_1849-2006_0.9x1.25_c090830.nc). The aerosol datasets unlike the
+<filename>aerosoldep_monthly_2000_0.9x1.25_c090828.nc</filename>) or transient datasets (for example:
+<filename>aerosoldep_monthly_1849-2006_0.9x1.25_c090830.nc</filename>). The aerosol datasets unlike the
 Nitrogen deposition datasets, are named the same <varname>faerdep</varname> whether
 they contain one time-sample or a time-series of data. But, in any case, this script
 can be used to interpolate either kind of file.
@@ -842,7 +1140,7 @@ can be used to interpolate either kind of file.
 <para>
 For example, to interpolate to an output resolution of 4x5, for a transient
 simulation-year range of 1850 to 2100 and the rcp of 8.5, you would do the following:
-<screen>
+<screen width="99">
 > env RES=4x5 SIM_YR=1850 SIM_YR_RNG=1850-2100 RCP=8.5 ncl ndepregrid.ncl
 </screen>
 </para>

@@ -132,8 +132,8 @@ begin
      print( "Indices:"+indx );
   end if
   if ( printn .eq. True )then
-     latdim = indx(3) - indx(2) + 1;
-     londim = indx(1) - indx(0) + 1;
+     latdim = indx(1) - indx(0) + 1;
+     londim = indx(3) - indx(2) + 1;
      print( "Grid size:"+latdim+"x"+londim );
      print( "Actual grid span: Latitude="+ncg->LATIXY(indx(2),indx(0))+"-"+ncg->LATIXY(indx(3),indx(1))+" Longitude="+ncg->LONGXY(indx(2),indx(0))+"-"+ncg->LONGXY(indx(3),indx(1)) );
   end if

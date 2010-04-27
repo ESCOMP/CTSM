@@ -912,8 +912,6 @@ contains
                 elseif((trip == 1).and.(flg_dover == 4).and.(err_idx < 20)) then
                    flg_dover = 3
                    err_idx = err_idx + 1
-                   write(iulog,*) "SNICAR WARNING: Both approximations failed with new zenith angle :(. Zenith= ", mu_not, &
-                                  " called from: ", flg_snw_ice, " flg_slr= ", flg_slr_in, " bnd= ", bnd_idx, " Moving the sun..."
                 elseif((trip == 1).and.(flg_dover == 4).and.(err_idx >= 20)) then
                    flg_dover = 0
                    write(iulog,*) "SNICAR ERROR: FOUND A WORMHOLE. STUCK IN INFINITE LOOP! Called from: ", flg_snw_ice

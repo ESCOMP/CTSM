@@ -20,7 +20,7 @@ experts! It's difficult to do because the template is a script that actually cre
 another script. So part of the script is echoing the script to be created and part of
 it is a script that is run when "configure -case" is run. As a result any variables 
 in the part of the script that is being echoed have to be escaped like this:
-<screen>
+<screen width="99">
 \$VARIABLE
 </screen>
 But, in other parts of the script that is run, you can NOT escape variables. So you 
@@ -38,7 +38,7 @@ to the template because of code or script updates.
 </para>
 <para>
 The outline of the clm template is as follows:
-<screen>
+<screen width="99">
 # set up options for clm configure and then run clm configure
 $CODEROOT/lnd/clm*/bld/configure &lt;options&gt;
 # set up options for clm build-namelist and then run clm build-namelist
@@ -93,29 +93,69 @@ several different types of scripts set up to make running comprehensive testing 
 test scripts, which utilize the <command>create_newcase</command> scripts that we
 shown how to use in this User's Guide. The second are a set of stand-alone scripts that
 use the &clm; &configure; and &buildnml; scripts to build and test the model as well as
-testing the &clm; tools as well. Below we will 
+testing the &clm; tools as well. Below we will go into further details of how to use
+both methods.
 </para>
 
 <sect1 id="ccsm_testing">
 <title>Testing &clm; Using the &ccsm; Test Scripts</title>
 
 <para>
+We first introduce the test scripts that work for all CCSM components. We will
+use the <command>create_test</command> and then the <command>create_test_suite</command>
+scripts. The <command>create_test</command> runs a specific type of test, at a given
+resolution, for a given compset using a given machine. There is a list of different
+tests, but the "ERI" tests do several things at once, running from startup, as well
+as doing exact branch and restart tests. So to run "ERI" testing at 2-degree with
+the I1850CN compset on bluefire you do the following.
 <screen width="99">
 > cd scripts
 > create_test -testname ERI.f19_g16.I1850CN.bluefire
+> cd ERI.f19_g16.I1850CN.bluefire.$id
+> ERI.f19_g16.I1850CN.bluefire.$id.build
+> bsub &lt; ERI.f19_g16.I1850CN.bluefire.$id.test
 </screen>
+When the test is done it will update the file <filename>TestStatus</filename> with
+either a PASS or FAIL message.
+</para>
+<para>
+To run a suite of tests from a list of tests with syntax similar to above you use
+<command>create_test_suite</command> as follows passing it a ASCII list of tests.
+There are already some test lists in the
+<filename>scripts/ccsm_utils/Testlists</filename> directory a few of which are specific
+to &clm;. To run for the &clm; bluefire test list, on bluefire, you would do the
+following:
 <screen width="99">
 > cd scripts
 > create_test_suite -input_list ccsm_utils/Testlists/bluefire.clm.auxtest
+# Submit the suite of tests (note $id refers to the integer job number for this job)
 > cs.submit.$id.bluefire
+# Later check the tests with...
 > cs.status.$id
+# The above will give a PASS or FAIL message for each test.
 </screen>
+For more information on doing testing with the &ccsm; scripts see the
+<ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/ccsm_doc/book1.html">&ccsm4;
+User's Guide</ulink> on testing.
 </para>
 </sect1>
 
 <sect1 id="clm_standalone_testing">
 <title>Testing &clm; Using the &clm; Stand-Alone Testing Scripts</title>
 
+<para>
+In the <filename>models/lnd/clm/test/system</filename> directory there is
+a set of test scripts that is specific to stand-alone &clm;. It does testing
+on configurations harder to test for in the &ccsm; test scripts, and also allows
+you to test the &clm; tools such as <command>mkgriddata</command> and 
+<command>mksurfdata</command>. The main driver script is called
+<filename>test_driver.sh</filename> and it can run both interactively as well as being
+submitted to the batch queue. Like other scripts you can get help on it by running the 
+"-help" option as: <command>test_driver.sh -help</command>. 
+There is also a <filename>README</filename>
+file that gives details about environment variables that can be given to
+<command>test_driver.sh</command> to change it's operation.
+</para>
 <para>
 To submit a suite of stand-alone tests to the batch que:
 <screen width="99">
@@ -127,6 +167,12 @@ You can also run tests interactively:
 > cd models/lnd/clm/test/system
 > test_driver.sh -i
 </screen>
+The output of the help option is as follows:
+<screen width="99">
+&clmtestdriver;
+</screen>
+A table of the list of tests and the machines they are run on is available from:
+<ulink url="../../test/system/test_table.html">test_table.html</ulink>
 </para>
 </sect1>
 

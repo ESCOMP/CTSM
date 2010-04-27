@@ -78,7 +78,7 @@ User specified linker.  Overrides the Makefile default $(FC).
 CCSM build machine name and compiler
 </entry>
 <entry id="maxpft" value="numpft+1" list="" valid_values="">
-Maximum numbr of pfts per gridcell (numpft+1 means use all available)
+Maximum number of pfts per gridcell (numpft+1 means use all available)
 </entry>
 <entry id="mode" value="ccsm_seq" list="" valid_values="ccsm_seq,ext_ccsm_seq">
 CLM coupling mode
@@ -126,7 +126,7 @@ Toggle to turn on calculation of SNICAR radiative forcing
 Switch to enable or disable building SPMD version of CLM: 0=off, 1=on.
 </entry>
 <entry id="supln" value="off" list="" valid_values="on,off">
-Toggle to turn on CN suplemental nitrnogen
+Toggle to turn on CN supplemental nitrogen
 </entry>
 <entry id="target_os" value="linux" list="" valid_values="">
 OS for which CLM is being built.  The value is the name returned by the "uname -s"

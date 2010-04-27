@@ -697,7 +697,7 @@ namelist items to the namelist. Again, just adding the &usernlclm; file to your 
 directory, before "&configure; -case" is invoked will cause the given namelist items to
 appear in your clm namelist.
 <example>
-<title>Default Namelist</title>
+<title>Default &clm; Namelist</title>
 <screen width="99">
 &amp;clm_inparm
  co2_ppmv               = 284.7
@@ -809,7 +809,7 @@ leaving the primary history files as monthly, and changing the number
 of samples on the streams to: yearly (12), thirty, weekly (28), daily (24), and daily
 (48) is:
 <example>
-<title>Example &usernlclm; namelist adding auxillary history files and changing output frequency</title>
+<title>Example &usernlclm; namelist adding auxiliary history files and changing output frequency</title>
 <screen width="99">
 &amp;clm_inparm
  hist_fincl2 = 'TG', 'TV'
@@ -940,7 +940,7 @@ each history stream. Set it to
 You can also use <varname>hist_type1d_pertape</varname> if you want to average over all the:
 Plant-Function-Types, columns, land-units, or grid-cells.
 A sample user namelist &usernlclm; leaving the primary monthly
-files as 2D, and then doing grid-cell (GRID), land-unit (LAND), column (COLS), PFT (PFTS)
+files as 2D, and then doing grid-cell (GRID), column (COLS), 
 and no averaging over auxiliary tapes output daily for a single field 
 (ground temperature) is:
 <example id="vector1D">
@@ -983,7 +983,7 @@ vary for anything, but grid-cell averaging. You'll need to use the output fields
 <varname>pfts1d_ixy</varname>, and <varname>pfts1d_jxy</varname>, to get the mapping
 of the fields to the global 2D array. <varname>pfts1d_itype_veg</varname> gives you 
 the PFT number for each PFT. Most likely you'll want to do this analysis in a 
-data processing tool (such as NCL, Matlab, Mathmatical, IDL, etcetera that is able
+data processing tool (such as NCL, Matlab, Mathmatica, IDL, etcetera that is able
 to read and process &netcdf; data files).
 </para>
 </caution>

@@ -59,33 +59,6 @@ case $hostname in
     fi ;;
 
 
-    ##calgary
-    ca* | c0* )
-    ##search config options file for parallelization info; default on linux is mpi
-    if grep -ic NOSPMD ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-	if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##serial
-	    cmnd=""
-	elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##open-mp only
-	    cmnd="env OMP_NUM_THREADS=${CLM_THREADS} "
-	else
-            ##serial
-	    cmnd=""
-	fi
-    else
-        if grep -ic NOSMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##mpi only
-            cmnd="mpirun -np ${CLM_TASKS} "
-        elif grep -ic SMP ${CLM_SCRIPTDIR}/config_files/$1 > /dev/null; then
-            ##hybrid
-            cmnd="env OMP_NUM_THREADS=${CLM_THREADS} mpiexec -np ${CLM_TASKS} "
-        else
-            ##mpi only
-            cmnd="mpirun -np ${CLM_TASKS} "
-        fi
-    fi ;;
-
     ## edinburgh
     edinburgh* | e0* )
     ##search config options file for parallelization info; default on linux is mpi

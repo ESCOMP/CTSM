@@ -42,12 +42,14 @@ number_of_latitudes x number_of_longitudes followed by an underscore and then a
 descriptive name such as a City name followed by an abbreviation for the Country in caps. 
 The only hard requirement is that names be unique for different grid files.
 Here's what the entry for resolutions looks like in the file:
-<screen>
+<screen width="99">
 &lt;entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"360x720,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.5x3.33,2.65x3.33,4x5,10x15,5x5_amazon,1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCA
-N,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha"&gt;
+"360x720,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,
+0.9x1.25,1x1.25,1.9x2.5,2x2.5,2.5x3.33,2.65x3.33,4x5,10x15,5x5_amazon,
+1x1_tropicAtl,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,
+1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha"&gt;
 Horizontal resolutions
 &lt;/entry&gt;
 </screen>
@@ -68,8 +70,9 @@ the: resolution, year to simulation, range of years to simulate for transient
 datafiles, the land-mask, the representative concentration pathway (rcp) for future
 scenarios, and the type of biogeochemistry (bgc) model used. For example the
 <filename>fatmgrid</filename> for the 1.9x2.5 resolution is as follows:
-<screen>
-&lt;fatmgrid hgrid="1.9x2.5" &gt;lnd/clm2/griddata/griddata_1.9x2.5_060404.nc&lt;/fatmgrid&gt;
+<screen width="99">
+&lt;fatmgrid hgrid="1.9x2.5" &gt;lnd/clm2/griddata/griddata_1.9x2.5_060404.nc
+&lt;/fatmgrid&gt;
 </screen>
 Other <filename>fatmgrid</filename> files are distinguished from this one by 
 their resolution (hgrid) attribute.
@@ -91,7 +94,7 @@ are all near the top, and the files used only under different conditions are lis
 later, and files with the fewest dependencies are near the top, as are the files
 that are least likely to be customized.
 </para>
-<table id="table_required_files" tocentry="1">
+<table id="table_required_files" tocentry="1" pgwide="1" frame="all">
 <title>Required Files for Different Configurations and Simulation Types</title>
 <tgroup cols="4" align="left" colsep="1" rowsep="1">
 <colspec colnum="2" colname="config"></colspec>
@@ -100,10 +103,10 @@ that are least likely to be customized.
 <thead>
 <row>
    <entry morerows="1" valign="middle">Filename</entry>
-   <entry>Configuration type</entry>
-   <entry>Simulation type</entry>
-   <entry>Resolution Dependent?</entry>
-   <entry>Other Dependencies?</entry>
+   <entry><para>Config. type</para></entry>
+   <entry><para>Simulation type</para></entry>
+   <entry><para>Resol. Dependent?</para></entry>
+   <entry><para>Other Dependencies?</para></entry>
 </row>
 <row>
    <entry spanname="notes_span">Notes
@@ -120,7 +123,7 @@ that are least likely to be customized.
 </row>
 <row>
    <entry spanname="notes_span"><para>Not usually customized, as describes plant function
-type properties..</para></entry>
+type properties.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fsnowoptics</entry>
@@ -130,7 +133,7 @@ type properties..</para></entry>
    <entry>No</entry>
 </row>
 <row>
-   <entry spanname="notes_span">Not usually customized as describes global snow optical properties.</entry>
+   <entry spanname="notes_span"><para>Not usually customized as describes global snow optical properties.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fsnowaging</entry>
@@ -150,7 +153,8 @@ type properties..</para></entry>
    <entry>No</entry>
 </row>
 <row>
-   <entry spanname="notes_span"><para>Creating, using mkgriddata usually gives you the amount of customization 
+   <entry spanname="notes_span"><para>Creating, using <command>mkgriddata</command> 
+usually gives you the amount of customization 
 you need, as it just describes the grid and grid extents.</para></entry>
 </row>
 <row>
@@ -161,10 +165,10 @@ you need, as it just describes the grid and grid extents.</para></entry>
    <entry>land-mask</entry>
 </row>
 <row>
-   <entry spanname="notes_span">Describes the land-mask for points with active land, as well as the fraction
+   <entry spanname="notes_span"><para>Describes the land-mask for points with active land, as well as the fraction
 of each grid-cell covered by land. You might customize it to make sure the land-fraction
 of your grid-cell matches the expected values for your site. But, usually you will just
-use what mkgriddata gives you.</entry>
+use what mkgriddata gives you.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fsurdat</entry>
@@ -174,43 +178,43 @@ use what mkgriddata gives you.</entry>
    <entry>simulation-year</entry>
 </row>
 <row>
-   <entry spanname="notes_span">Describes percentages of different land-units, columns and 
+   <entry spanname="notes_span"><para>Describes percentages of different land-units, columns and 
 vegetation types within each grid-cell. To customize for a specific point
 or region you may want to use custom input datasets to mksurfdata when
-creating the file.</entry>
+creating the file.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">faerdep</entry>
    <entry>ALL</entry>
    <entry>Constant and transient scenarios</entry>
    <entry>Yes</entry>
-   <entry>simulation-year,simulation-year range, and possibly representative 
-          concentration pathway (rcp)</entry>
+   <entry><para>simulation-year,simulation-year range, and possibly representative 
+          concentration pathway (rcp)</para></entry>
 </row>
 <row>
-   <entry spanname="notes_span">You may customize this file to get the aerosol deposition characteristics 
+   <entry spanname="notes_span"><para>You may customize this file to get the aerosol deposition characteristics 
 of your site if available. Or use a higher resolution dataset when you use 
-aerdepregrid.ncl to create this file. Note, both constant and transient files have
-the same namelist entry name.</entry>
+<command>aerdepregrid.ncl</command> to create this file. Note, both constant and transient files have
+the same namelist entry name.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fndepdat</entry>
    <entry>bgc=cn/cndv</entry>
-   <entry>Constant scenarios</entry>
+   <entry><para>Constant scenarios</para></entry>
    <entry>Yes</entry>
-   <entry>simulation-year and possibly representative concentration pathway (rcp)</entry>
+   <entry><para>simulation-year and possibly representative concentration pathway (rcp)</para></entry>
 </row>
 <row>
-   <entry spanname="notes_span">You may customize this file to get the Nitrogen deposition characteristics 
+   <entry spanname="notes_span"><para>You may customize this file to get the Nitrogen deposition characteristics 
 of your site if available. Or use a higher resolution dataset when you use 
-ndepregrid.ncl to create this file.</entry>
+<command>ndepregrid.ncl</command> to create this file.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fpftdyn</entry>
    <entry>ALL</entry>
-   <entry>transient land-use land-cover change</entry>
+   <entry><para>transient land-use land-cover change</para></entry>
    <entry>Yes</entry>
-   <entry>Simulation year range, and possibly representative concentration pathway (rcp)</entry>
+   <entry><para>Simulation year range, and possibly representative concentration pathway (rcp)</para></entry>
 </row>
 <row>
    <entry spanname="notes_span">See notes on fsurdat files.</entry>
@@ -223,10 +227,10 @@ ndepregrid.ncl to create this file.</entry>
    <entry>No</entry>
 </row>
 <row>
-   <entry spanname="notes_span">We only provide a half-degree global river routing file. If you want
+   <entry spanname="notes_span"><para>We only provide a half-degree global river routing file. If you want
 to model river flow for a smaller scale, or a basin regional scale, you would
 need to create your own custom file to do that. Normally, we turn river-routing
-OFF for regional or single point simulations.</entry>
+OFF for regional or single point simulations.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">flndtopo</entry>
@@ -238,7 +242,8 @@ atmosphere resolution).</para></entry>
 </row>
 <row>
    <entry spanname="notes_span"><para>You may customize to give better surface heights for your site, or
-input a higher resolution orography file when you create it using mkgriddata.</para></entry>
+input a higher resolution orography file when you create it using
+<command>mkgriddata</command>.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fatmtopo</entry>
@@ -250,32 +255,33 @@ atmosphere resolution).</para></entry>
 </row>
 <row>
    <entry spanname="notes_span"><para>You may customize to give better surface heights for your site, or
-input a higher resolution orography file when you create it using mkgriddata.</para></entry>
+input a higher resolution orography file when you create it using
+<command>mkgriddata</command>.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">fndepdyn</entry>
    <entry>bgc=cn/cndv</entry>
-   <entry>transient simulations</entry>
+   <entry><para>transient simulations</para></entry>
    <entry>Yes</entry>
-   <entry>Simulation year range</entry>
+   <entry><para>Simulation year range</para></entry>
 </row>
 <row>
-   <entry spanname="notes_span">You may customize this file to get the Nitrogen deposition characteristics 
+   <entry spanname="notes_span"><para>You may customize this file to get the Nitrogen deposition characteristics 
 of your site if available. Or use a higher resolution dataset when you use 
-ndepregrid.ncl to create this file.</entry>
+<command>ndepregrid.ncl</command> to create this file.</para></entry>
 </row>
 <row>
    <entry morerows="1" valign="middle">finidat</entry>
    <entry>ALL</entry>
-   <entry>RUN_TYPE="startup",CLM_FORCE_COLDSTART="off"</entry>
+   <entry><para>RUN_TYPE="startup", CLM_FORCE_COLDSTART="off"</para></entry>
    <entry>Yes</entry>
-   <entry>mask,maxpft,bgc,sim_year,start-date</entry>
+   <entry><para>mask, maxpft, bgc, sim_year, start-date</para></entry>
 </row>
 <row>
-   <entry spanname="notes_span"><para>Used for starting the model from a spun-up state
-with startup <envar>RUN_TYPE</envar>. Create these files by running the model
+   <entry spanname="notes_span"><para>Used for starting the model from a spun-up state.
+Create these files by running the model
 for multiple years and saving the restart file from the end of a spin-up 
-simulation.
+simulation.</para>
 </entry>
 </row>
 </tbody>

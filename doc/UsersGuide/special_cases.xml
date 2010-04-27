@@ -82,7 +82,7 @@ the simulation is setup to run for the required length of simulation time.
 So do the following:
 <example>
 <title>Example AD_SPINUP Simulation</title>
-<screen>
+<screen width="99">
 > cd scripts
 > create_newcase -case CN_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CN_spinup
@@ -107,8 +107,7 @@ So do the following:
 > bsub < CN_spinup.run
 </screen>
 </example>
-Then configure your case and build and run it as normal. And then save the last restart
-file from this simulation to use in the next step.
+Afterwards save the last restart file from this simulation to use in the next step.
 </para>
 </step>
 
@@ -117,7 +116,7 @@ file from this simulation to use in the next step.
 <para>
 <example>
 <title>Example EXIT_SPINUP Simulation</title>
-<screen>
+<screen width="99">
 > cd scripts
 > create_newcase -case CN_exitspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CN_exitspinup
@@ -152,7 +151,7 @@ use for one more spinup for at least 50 years in normal mode.
 So do the following:
 <example id="final_CN_spinup">
 <title>Example Final CN Spinup Simulation</title>
-<screen>
+<screen width="99">
 > cd scripts
 > create_newcase -case CN_finalspinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CN_finalspinup
@@ -195,7 +194,7 @@ There are no compsets using CNDV, so in
 <literal>-bgc cndv</literal>.
 <example>
 <title>Example CNDV Spinup Simulation</title>
-<screen>
+<screen width="99">
 > cd scripts
 > create_newcase -case CNDV_spinup -res f19_g16 -compset ICN -mach bluefire -skip_rundb
 > cd CNDV_spinup
@@ -211,9 +210,9 @@ There are no compsets using CNDV, so in
 > xmlchange -file env_run.xml -id STOP_N -val 20
 # Make sure you turn archiving on, so you save your files to long term archival
 > xmlchange -file env_run.xml -id DOUT_L_MS -val TRUE
-# Make the default primary history file annual and add an annual 1D vector auxillary file
+# Make the default primary history file annual and add an annual 1D vector auxiliary file
 # By putting the following in a &usernlclm; file.
-> cat << EOF > &usernlclm;
+> cat &lt;&lt; EOF > &usernlclm;
 &amp;clm_inparm 
  hist_nhtfrq = -8760, -8760
  hist_mfilt  =     1, 1
@@ -226,19 +225,19 @@ There are no compsets using CNDV, so in
 #
 # Now build and run as normal
 > CNDV_spinup.build
-> bsub < CNDV_spinup.run
+> bsub &lt; CNDV_spinup.run
 </screen>
 </example>
 </para>
 <para>
-In a data analysis tool you should examine the auxillary file and examine the
+In a data analysis tool you should examine the auxiliary file and examine the
 <varname>pfts1d_wtgcell</varname> to see where and what types of vegetation have
 been established. See the caution in <xref linkend="vector1D"></xref> for more
 information on visualizing and analyzing 1D vector fields.
 </para>
 <note>
 <para>
-CNDV also writes out two vector fields to "hv" auxillary files, on an annual basis by
+CNDV also writes out two vector fields to "hv" auxiliary files, on an annual basis by
 default.
 </para>
 </note>
@@ -294,9 +293,141 @@ again (or in the case of code changes, modify or simplify the code changes to ge
 something that should be closer).</para>
 </listitem>
 </orderedlist>
+Now we will give a detailed description of the procedure with examples and the
+exact steps to perform.
 </para>
+<procedure>
+<title>Using Perturbation Error Growth Analysis to Verify a Port to a New Machine</title>
+<step>
+<title>Running non-perturbed on trusted machine</title>
 <para>
+The first step is to run a non-perturbed case on the trusted machine. You need to run
+all of the steps with the same compset and same resolution. For these examples we will
+use 2-degree resolution with the ICN compset for 2000 conditions. You need to run for
+three days with a cold-start.
+<example>
+<title>Example non-perturbed error growth simulation</title>
+<screen width="99">
+> cd scripts
+> create_newcase -case trustedMachinePergro0 -compset ICN -res f19_g16 \
+-mach bluefire -skip_rundb
+> cd trustedMachinePergro0
+# Set the non-perturbed PERGRO use-case
+> xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro0
+# Set coldstart on so arbitrary initial conditions will be used
+> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+# Set PERGRO on in the configure
+> $EDITOR env_conf.xml  # add "-pergro on" to CLM_CONFIG_OPTS
+# Now configure and build
+> configure -case
+> trustedMachinePergro0.build
+# Set it to run for three days and turn archiving off
+> xmlchange -file env_run.xml -id STOP_N -val 3 
+> xmlchange -file env_run.xml -id DOUT_S -val FALSE
+# Run the case and then you will save the history file output for later use
+> bsub &lt; trustedMachinePergro0.run
+</screen>
+</example>
 </para>
+</step>
+<step>
+<title>Running perturbed on the trusted machine</title>
+<para>
+The next step is to run a perturbed case on the trusted machine.
+<example>
+<title>Example perturbed error growth simulation</title>
+<screen width="99">
+> cd scripts
+> create_newcase -case trustedMachinePergroRnd -compset ICN -res f19_g16 \
+-mach bluefire -skip_rundb
+> cd trustedMachinePergroRnd
+# Set the perturbed PERGRO use-case
+> xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro
+# Set coldstart on so arbitrary initial conditions will be used
+> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+# Set PERGRO on in the configure
+> $EDITOR env_conf.xml  # add "-pergro on" to CLM_CONFIG_OPTS
+# Now configure and build
+> configure -case
+> trustedMachinePergroRnd.build
+# Set it to run for three days and turn archiving off
+> xmlchange -file env_run.xml -id STOP_N -val 3 
+> xmlchange -file env_run.xml -id DOUT_S -val FALSE
+# Run the case and then you will save the history file output for later use
+> bsub &lt; trustedMachinePergroRnd.run
+</screen>
+</example>
+</para>
+</step>
+<step>
+<title>Running non-perturbed on the new machine</title>
+<para>
+The next step is to run a non-perturbed case on the new machine. Here
+we will demonstrate using the machine intrepid.
+<screen width="99">
+> cd scripts
+> create_newcase -case newMachinePergro0 -compset ICN -res f19_g16 \
+-mach intrepid  -skip_rundb
+> cd newMachinePergro0
+# Set the non-perturbed PERGRO use-case
+> xmlchange -file env_conf.xml -id CLM_NML_USE_CASE -val pergro0
+> xmlchange -file env_conf.xml -id CLM_FORCE_COLDSTART -val on
+# Set PERGRO on in the configure
+> $EDITOR env_conf.xml  # add "-pergro on" to CLM_CONFIG_OPTS
+# Now configure and build
+> configure -case
+> newMachinePergro0.build
+# Set it to run for three days and turn archiving off
+> xmlchange -file env_run.xml -id STOP_N -val 3 
+> xmlchange -file env_run.xml -id DOUT_S -val FALSE
+# Run the case and then you will save the history file output for later use
+> bsub &lt; newMachinePergro0.run
+</screen>
+</para>
+</step>
+
+<step>
+<title>Plotting the differences</title>
+<para>
+You can use the <command>cprnc</command> program to compute root mean square differences
+between the relevant history files. See <xref linkend="cprnc"></xref> for more information
+on it and how to build it. On many platforms you will need to set some environment 
+variables in order to complete the build (see <xref linkend="tool_build"></xref> for
+more information on building the tools).
+<screen width="99">
+# Build the cprnc program
+> cd models/lnd/clm/tools/cprnc
+> gmake
+# Now go to your case directory and run cprnc on the trusted-machine with and without
+# perturbation
+> cd ../../../../../scripts/trustedMachinePergro0
+> ../../models/lnd/clm/tools/cprnc/cprnc trustedMachinePergro0.clm2.h0.001-01-01.00000.nc \
+../trustedMachinePergroRnd/trustedMachinePergroRnd.clm2.h0.001-01-01.00000.nc &gt; trustedPergro.log
+# Copy the history file from the new machine to here
+#
+# And now run cprnc on the trusted-machine and the new machine both without perturbation
+> ../../models/lnd/clm/tools/cprnc/cprnc trustedMachinePergro0.clm2.h0.001-01-01.00000.nc \
+../newMachinePergro0/newMachinePergro0.clm2.h0.001-01-01.00000.nc &gt; newPergro.log
+# Now extract out the RMS differences to both
+> grep RMS trustedPergro.log | awk '{print $3}' &gt; trustedPergro.dat
+> grep RMS newPergro.log     | awk '{print $3}' &gt; newPergro.dat
+# And plot the two curves up to your screen
+> env TYPE=x11 RMSDAT=newPergro.dat RMSDAT2=trustedPergro.dat ncl \
+../../models/lnd/clm/tools/ncl_scripts/pergroPlot.ncl
+</screen>
+Here is a sample plot for two trusted machines (using data that Sheri Mickelson provided
+to us). The green line is the error growth for bluefire, and the red is the error growth
+for intrepid.
+<figure id="pergroplot">
+<title>Sample Perturbation Error Growth Curve</title>
+<mediaobject>
+<imageobject><imagedata fileref="pergro.jpg" format="JPEG"/></imageobject>
+</mediaobject>
+</figure>
+
+</para>
+</step>
+</procedure>
 </sect1>
 
 <sect1 id="DATM_CO2_TSERIES">
@@ -324,7 +455,7 @@ Most everything here has to do with changing datm rather than &clm;
 to allow this to happen. As such the user that wishes to do this should
 first become more familiar with datm and read the 
 <ulink url="http://www.ccsm.ucar.edu/models/ccsm4.0/data8/book1.html">&ccsm; Data
-Model Users Guide</ulink> especially as it pertains to the datm. Note, also
+Model User's Guide</ulink> especially as it pertains to the datm. Note, also
 that in this example we show how to edit the datm "buildnml" file for your
 case, but you could do something similar by editing the datm template.
 </para>
@@ -370,7 +501,7 @@ available in <filename>models/lnd/clm/doc/UsersGuide/co2_streams.txt</filename>,
 that includes file with a &CO2; time-series from 1765 to 2007.
 <example>
 <title>Example Transient Simulation with Historical &CO2;</title>
-<screen>
+<screen width="99">
 > cd scripts
 > create_newcase -case DATM_CO2_TSERIES -res f19_g16 -compset I_1850-2000_CN -mach bluefire -skip_rundb
 > cd DATM_CO2_TSERIES
@@ -388,11 +519,11 @@ The first thing we will do is to edit the datm buildnml script to add
 a CO2 file stream in. To do this we will apply a patch with the differences
 needed. The patch file <filename>addco2_datm.buildnml.diff</filename> is
 in <filename>models/lnd/clm/doc/UsersGuide</filename> and looks like this...
-<screen>
+<screen width="99">
 &co2streams_diff;
 </screen>
 So to apply the patch you do this...
-<screen>
+<screen width="99">
 > cd scripts/DATM_CO2_TSERIES/Buildconf
 > patch &lt; ../../../models/lnd/clm/doc/UsersGuide/addco2_datm.buildnml.diff
 </screen>

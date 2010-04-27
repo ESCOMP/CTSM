@@ -11,6 +11,8 @@ Bugs fixed (include bugzilla ID):
 Known bugs (include bugzilla ID):
     http://bugs.cgd.ucar.edu/
 
+Type of tag: doc, critical, standard, std-test, reg-test
+
 Describe any changes made to build system:
 
 Describe any changes made to the namelist:

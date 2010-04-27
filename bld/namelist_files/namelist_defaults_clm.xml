@@ -176,13 +176,13 @@ lnd/clm2/surfdata/surfdata_1x1_tropicAtl_simyr2000_c090923.nc</fsurdat>
 <fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" >
 lnd/clm2/surfdata/surfdata_1x1_camdenNJ_simyr2000_c100407.nc</fsurdat>
 <fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" >
-lnd/clm2/surfdata/surfdata_1x1_vancouverCAN_simyr2000_c100407.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_1x1_vancouverCAN_simyr2000_c100409.nc</fsurdat>
 <fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" >
-lnd/clm2/surfdata/surfdata_1x1_mexicocityMEX_simyr2000_c100407.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_1x1_mexicocityMEX_simyr2000_c100409.nc</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" >
-lnd/clm2/surfdata/surfdata_1x1_urbanc_alpha_simyr2000_c100407.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_1x1_urbanc_alpha_simyr2000_c100409.nc</fsurdat>
 <fsurdat hgrid="1x1_asphaltjungleNJ" sim_year="2000" >
-lnd/clm2/surfdata/surfdata_1x1_asphaltjungleNJ_simyr2000_c100407.nc</fsurdat>
+lnd/clm2/surfdata/surfdata_1x1_asphaltjungleNJ_simyr2000_c100409.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 -->
 <fsurdat hgrid="128x256"   sim_year="1850">

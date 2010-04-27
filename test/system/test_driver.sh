@@ -3,14 +3,19 @@
 
 # test_driver.sh:  driver script for the offline testing of CLM
 #
-# usage on calgary, breeze, edinburgh, bluefire, jaguar, kraken, intrepid: 
+# usage on breeze, edinburgh, bluefire, kraken, intrepid: 
 # ./test_driver.sh
+#
+# usage on jaguar:
+# env CLM_JOBID=1001 ./test_driver.sh -c
+# env CLM_JOBID=1001 ./test_driver.sh
 #
 # valid arguments: 
 # -i    interactive usage
 # -d    debug usage -- display tests that will run -- but do NOT actually execute them
 # -f    force batch submission (avoids user prompt)
 # -h    displays this help message
+#
 #
 # **pass environment variables by preceding above commands 
 #   with 'env var1=setting var2=setting '
@@ -182,91 +187,6 @@ EOF
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
     ;;
 
-    ##calgary
-    ca* | c0* ) 
-    submit_script="test_driver_calgary_${cur_time}.sh"
-
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv writing to batch script vvvvvvvvvvvvvvvvvvv
-cat > ./${submit_script} << EOF
-#!/bin/sh
-#
-
-# Name of the queue (CHANGE THIS if needed)
-#PBS -q long
-# Number of nodes (CHANGE THIS if needed)
-#PBS -l nodes=2:ppn=2
-# output file base name
-#PBS -N test_dr
-# Put standard error and standard out in same file
-#PBS -j oe
-# Export all Environment variables
-#PBS -V
-# End of options
-
-if [ -n "\$PBS_JOBID" ]; then    #batch job
-    export JOBID=\`echo \${PBS_JOBID} | cut -f1 -d'.'\`
-    initdir=\${PBS_O_WORKDIR}
-fi
-
-if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
-    interactive="NO"
-else
-    interactive="YES"
-fi
-
-##omp threads
-if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
-   export CLM_THREADS=1
-fi
-export CLM_RESTART_THREADS=2
-
-##mpi tasks
-export CLM_TASKS=4
-export CLM_RESTART_TASKS=1
-
-export CLM_COMPSET="I"
-
-if [ "\$CLM_FC" = "PGI" ]; then
-    export PGI=/usr/local/pgi-pgcc-pghf
-    export INC_NETCDF=/usr/local/netcdf-pgi/include
-    export LIB_NETCDF=/usr/local/netcdf-pgi/lib
-    mpich=/usr/local/mpich-pgi-pgcc-pghf
-    export INC_MPI=\${mpich}/include
-    export LIB_MPI=\${mpich}/lib
-    export PATH=\${PGI}/linux86/6.1/bin:\${mpich}/bin:\${PATH}
-    export LD_LIBRARY_PATH=\${PGI}/linux86/6.1/lib:\${LD_LIBRARY_PATH}
-    export CCSM_MACH="calgary_pgi"
-    export CFG_STRING=""
-    export TOOLS_MAKE_STRING=""
-else
-    export LAHEY=/usr/local/lf9562
-    export INC_NETCDF=/usr/local/netcdf-gcc-lf95/include
-    export LIB_NETCDF=/usr/local/netcdf-gcc-lf95/lib
-    export LD_LIBRARY_PATH=/usr/local/torque/lib:\${LD_LIBRARY_PATH}
-    mpich=/usr/local/mpich-gcc-g++-lf95
-    export INC_MPI=\${mpich}/include
-    export LIB_MPI=\${mpich}/lib
-    export PATH=\${LAHEY}/bin:\${mpich}/bin:\${PATH}
-    export CCSM_MACH="calgary_lahey"
-    export CFG_STRING="-fc lf95 -cc gcc -cflags -I/usr/lib/gcc/i386-redhat-linux/4.1.0/include "
-    export TOOLS_MAKE_STRING="USER_FC=lf95 USER_LINKER=lf95 "
-fi
-export MAKE_CMD="gmake -j 2"   ##using hyper-threading on calgary
-export MACH_WORKSPACE="/scratch/cluster"
-export CPRNC_EXE=/contrib/newcprnc3.0/bin/newcprnc
-export DATM_QIAN_DATA_DIR="/project/tss/atm_forcing.datm7.Qian.T62.c080727"
-dataroot="/fs/cgd/csm"
-echo_arg="-e"
-input_file="tests_pretag_calgary"
-
-if [ -z "$CLM_CCSMBLD" ]; then
-   export CLM_CCSMBLD="TRUE"
-fi
-
-EOF
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ writing to batch script ^^^^^^^^^^^^^^^^^^^
-    ;;
-
     ## edinburgh
     edinburgh* | e0*) 
     submit_script="test_driver_edinburgh_${cur_time}.sh"
@@ -382,7 +302,7 @@ cat > ./${submit_script} << EOF
 # Name of the queue (CHANGE THIS if needed)
 # #PBS -q batch
 # Number of nodes (CHANGE THIS if needed)
-#PBS -l walltime=04:00:00,size=520
+#PBS -l walltime=04:00:00,size=528
 # output file base name
 #PBS -N test_dr
 # Put standard error and standard out in same file
@@ -406,6 +326,9 @@ if [ "\$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
 else
     interactive="YES"
     input_file="tests_pretag_jaguar_nompi"
+    if [ "\$compile_only" = "YES" ]; then
+       input_file="tests_pretag_jaguar"
+    fi
 fi
 
 
@@ -416,7 +339,7 @@ fi
 export CLM_RESTART_THREADS=4
 
 ##mpi tasks
-export CLM_TASKS=520
+export CLM_TASKS=528
 export CLM_RESTART_TASKS=129
 
 export CLM_COMPSET="I"
@@ -427,9 +350,12 @@ source /opt/modules/default/init/sh
 #module load PrgEnv-pgi Base-opts
 #module load xtpe-quadcore
 #module load torque moab
-module switch pgi pgi/9.0.2               # 9.0.2 tested for bfb on 2009-sep-25
-module switch xt-mpt    xt-mpt/3.2.0      # 3.2.0  is default on 2009-sep-25
-module switch xt-libsci xt-libsci/10.3.5  # 10.3.5 is default on 2009-sep-25
+#module switch pgi pgi/9.0.2               # 9.0.2 tested for bfb on 2009-sep-25
+#module switch xt-mpt    xt-mpt/3.2.0      # 3.2.0  is default on 2009-sep-25
+#module switch xt-libsci xt-libsci/10.3.5  # 10.3.5 is default on 2009-sep-25
+module load pgi/9.0.2                     # 9.0.2 tested for bfb on 2009-sep-25
+module load xt-mpt/3.2.0                  # 3.2.0  is default on 2009-sep-25
+module load xt-libsci/10.3.5              # 10.3.5 is default on 2009-sep-25
 module load   netcdf/3.6.2                # 3.6.2  is default on 2008-sep-03
 module load p-netcdf
 module load   ncl
@@ -971,8 +897,12 @@ case $arg1 in
     * )
     echo ""
     echo "**********************"
-    echo "usage on calgary, bluefire, edinburgh, jaguar, kraken, intrepid: "
+    echo "usage on bluefire, edinburgh, breeze, kraken, intrepid: "
     echo "./test_driver.sh"
+    echo ""
+    echo "usage on jaguar: (compile interactively before submitting)"
+    echo "env CLM_JOBID=1001 ./test_driver.sh -c"
+    echo "env CLM_JOBID=1001 ./test_driver.sh"
     echo ""
     echo "valid arguments: "
     echo "-i    interactive usage"
@@ -983,8 +913,6 @@ case $arg1 in
     echo ""
     echo "**pass environment variables by preceding above commands "
     echo "  with 'env var1=setting var2=setting '"
-    echo "**more details in the CLM testing user's guide, accessible "
-    echo "  from the CLM developers web page"
     echo ""
     echo "**********************"
     exit 0
@@ -995,9 +923,6 @@ echo "submitting..."
 case $hostname in
     ##bluefire
     be* )  bsub < ${submit_script};;
-
-    ##calgary
-    ca* | c0* )  qsub ${submit_script};;
 
     ##edinburgh
     edinburgh** | e0* )  qsub ${submit_script};;
