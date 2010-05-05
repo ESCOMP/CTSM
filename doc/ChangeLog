@@ -1,4 +1,227 @@
 ===============================================================
+Tag name:  clm3_8_00
+Originator(s):  erik (erik)
+Date: Tue May  4 22:39:18 MDT 2010
+One-line Summary: Get future scenarios working, finalize documentation, bring in MEGAN VOC and CNDV, simplify, mksurfdata optimization, fix bugs: snow enthalpy, BMOZ, pergro, use pft weights from fsurdat NOT finidat
+
+Purpose of changes:
+
+Get all of the future scenarios working (other than rcp=6.0) and get all of the datasets
+for these scenarios (pftdyn, fndepdyn, and aerdep files, for rcp=2.6,4.5, and 8.5).
+Finalize the User's Guide for now, with reviews from: Sam, Keith, Dave, and Sean, as
+well as more work on tools chapter, and adding testing chapter in appendix. We brought
+in the MEGAN version of the Volatile Organic Compounds (VOC) module which also reads
+in VOC emission factors from the surface dataset, and hence all fsurdat files needed
+to be replaced. Along with this the mksurfdata tool was changed in order to handle VOC's
+and effort was made to optimize it, add shared memory paralelism, and do memory
+optimization. We also removed the old Dynamic Global Vegetation Model (DGVM) and replaced
+it with the Carbon Nitrogen Dynamic Vegetation model (CNDV). Make some simplifications
+in the configure system to always use the CCSM version of build files, remove some 
+unused options, put standalone test options last in configure. Improve documenation in
+XML files for configure and build-namelist options.
+
+Fix many different bugs. Enthalpy in snow combination was sometimes NOT conserved and now
+is. There was a problem running DryDeposition for the BMOZ compset that is now fixed.
+There were multiple issues running PERGRO testing that is now fixed. Previously, if 
+both the finidat file and the fsurdat file had PFT weights on them, the values from
+the finidat file was used, now it will use the values from the fsurdat file. There are
+also several cases where if the weights are different it will abort with an error, or
+at least send a message to the log file about the differences.
+
+Known bugs (include bugzilla ID):
+                                  701 (svn keyword)
+                                  717 (archiving bug -- only archive 1000 files at a time)
+                                  722 (threading slow)
+                                  789 (1pt sims 2.5X slow)
+                                  794 (hist avg strange)
+                                  883 (aerosol deposition not from atm)
+                                  896 (T62 mode does not work)
+                                  920 (glacier_mec problems in mksurfdata)
+                                  935 (RTM warning NOT an error)
+                                  990 (CN transient blowup)
+                                  994 (finidat files on jaguar for pftdyn fail)
+                                 1017 (SCM mode can NOT restart)
+                                 1025 (SCM mode can NOT use a global finidat file)
+                                 1063 (Problem in restarts for CCSM spinup data)
+                                 1092 (Problems running in debug mode on dublin with datm8)
+                                 1124 (Reported energy for pftdyn grid-cell not right)
+                                 1139 (LAND and PFTS 1D vector averaging doesn't work)
+                                 1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
+    http://bugs.cgd.ucar.edu/
+
+Type of tag: doc
+
+Describe any changes made to build system:
+   Switch cndv for dgvm, Have configure disallow bad cases
+   Change configure to NOT allow supln with spinup cases
+   Do NOT allow exit_spinup and ad_spinup at the same time.
+   Only allow voc to be set for seq_ccsm NOT ext_ccsm_seq
+   Remove carbon_aero and pio from configure (always build with pio)
+   emove unused configure options: clm_exe, -clm_exedir, and -clm_bld.
+   Move standalone testing options to the end of help. Use CCSM version
+   of mkSrcfiles/mkDepends, separate config vars into categories, work
+   on documentation with comments from Keith/Sam.
+
+Describe any changes made to the namelist:
+   Add 2000-2100 simulation year range as allowed option
+
+   Two new history fields:
+
+        TSOI_10CM      = soil temperature in top 10cm of soil (K)
+        SOILWATER_10CM = soil liquid water + ice in top 10cm of soil (kg/m2)
+
+   Check for some files based on rcp (fpftdyn, ndepdyn, and aerdep)
+
+   Add in ability to add a user namelist in your case directory to input
+   namelist items at configure time. Simply add a file called "user_nl_clm"
+   as a valid namelist and the items in that namelist will show up in the initial
+   BuildConf/clm.buildnml.csh file.
+
+List any changes to the defaults for the boundary datasets:
+    get urbanc_alpha grid and frac files in
+    get in new single-point datasets
+              new qtr-degree, T62 and T85 fsurdat
+              new f10, f05, f09, 1850 fsurdat
+              new rcp=8.5, f19 pftdyn, 
+              new rcp=4.5 f09, f19, f10 pftdyn
+              new rcp=2.6 f09, f19, f10 pftdyn
+              new rcp=8.5/4.5/2.6 f19 aerdep 1850-2100 datasets
+              new rcp=8.5/4.5 f19 fndepdyn 1850-2100 datasets
+              new rcp=2.6/4.5 f10, f45, f25, f09 aerdep/ndepdyn datasets
+              new rcp=2.6/4.5,8.5 f19 decadal averages for ndepdat
+   (Note: harvest was updated in PFTDYN files and raw PFT input files for 2006).
+   New 10x15 and 4x5 finidat files so that transient cases will work at those resolutions
+     New finidat files for 1-deg and 2-deg (from fully coupled simulations)
+     New datasets for I cases that are set in scripts
+   Duplicate cn datasets for cndv
+    New pft-physiology files with extra fields for CNDV
+   Remove 360x720 files, gx3v5, gx1v5 files
+   Remove 1x1.25, 2x2.5, and 2.5x3.33 grid resolutions
+   Remove gx1v3, gx1v4, gx1v5 land masks, add drydep defaults.
+   add mksrf_fvegtyp@1000-1004
+
+Describe any substantial timing or memory changes: None
+
+Code reviewed by:
+    snow changes came from dlawren and also reviewed by oleson
+    PFT weight change also reviewed by: dlawren, slevis, oleson
+    CNDV came from slevis
+    VOC changes came from Francis Vitt and Jean-Francois Lamarque
+    history changes came from Keith Oleson, reviewed by Dave Lawrenece
+    OpenMP bug fix came from Mariana-Vertenstein, reviewed by Pat Worley
+
+List any svn externals directories updated (csm_share, mct, etc.): all
+    scripts    to scripts4_100406a
+    drv        to drvseq3_1_23
+    datm       to datm8_100406
+    csm_share  to share3_100407
+    pio        to pio1_0_18
+    timing     to timing_091021
+
+Summary of testing:
+
+  bluefire: All PASS except...
+025 smG41 TSM.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+026 erG41 TER.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+027 brG41 TBR.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+028 blG41 TBL.sh 17p_sc_dh clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+029 smG55 TSM.sh 17p_sc_h clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic .........FAIL! rc= 10
+043 smLI1 TSM.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+044 erLI1 TER.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+045 brLI1 TBR.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+046 blLI1 TBL.sh _sc_dh clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 4
+048 erL58 TER.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 12+84 arb_ic ............FAIL! rc= 12
+  bluefire interactive testing: All PASS except...
+013 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 5
+019 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 5
+021 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+022 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+026 brAK8 TBR.sh _sc_ds clm_std^nl_ptsmode_ocn 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ......FAIL! rc= 6
+  bluefire/CCSM testing: All PASS except
+FAIL  PST.f45_g37.I1850.bluefire.compare.clm3_7_10 
+FAIL  PET_PT.f45_g37.I1850.bluefire.compare.clm3_7_10 
+FAIL  ERB.f09_g16.I1850SPINUPCN.bluefire 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.generate.clm3_7_15 
+BFAIL ERB.f09_g16.I1850SPINUPCN.bluefire.compare.clm3_7_10 
+FAIL  ERH_D.f10_f10.I1850CN.bluefire.compare.clm3_7_10 
+BFAIL PST.f10_f10.I8520CN.bluefire.compare.clm3_7_10 
+BFAIL PET_PT.f10_f10.I8520CN.bluefire.compare.clm3_7_10 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare_hist.clm3_7_10 
+FAIL  ERS_D.f19_g16.IRCP85CN.bluefire.compare.clm3_7_10 
+  jaguar: All PASS except..
+005 smB51 TSM.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 144 arb_ic ..............FAIL! rc= 10
+006 erB51 TER.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 5
+007 brB51 TBR.sh _scsnf_dh clm_std^nl_urb 20021230:NONE:1800 10x15 USGS 72+72 arb_ic ............FAIL! rc= 5
+026 smLI2 TSM.sh _sc_dm clm_std 20020101:NONE:1800 94x192 T62 -10 arb_ic ........................FAIL! rc= 10
+027 erLI2 TER.sh _sc_dm clm_std 20020101:NONE:1800 94x192 T62 -5+-5 arb_ic ......................FAIL! rc= 5
+028 brLI2 TBR.sh _sc_dm clm_std 20020101:NONE:1800 94x192 T62 -10+-10 arb_ic ....................FAIL! rc= 5
+030 smL58 TSM.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 96 arb_ic ...............FAIL! rc= 10
+031 erL58 TER.sh _sc_dh clm_std^nl_crcrop 20020115:NONE:1800 10x15 USGS 12+84 arb_ic ............FAIL! rc= 5
+  jaguar interactive testing: All PASS except...
+006 erAK4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 7
+007 brAK4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 1.9x2.5 gx1v6 -5+-5 cold ..........FAIL! rc= 6
+009 smG43 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+010 erG43 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 brG43 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+  edinburgh/ifort interactive testing: All PASS except...
+006 erAL4 TER.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 7
+007 brAL4 TBR.sh _sc_ds clm_std^nl_ptsmode 20030101:NONE:1800 10x15 USGS -5+-5 cold .............FAIL! rc= 6
+014 erOC4 TER.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 115+115 arb_FAIL! rc= 5
+015 brOC4 TBR.sh _nrvansc_ds clm_urb1pt^nl_urb_br 19920812:NONE:3600 1x1_vancouverCAN navy 72+72 arbFAIL! rc= 5
+016 blOC4 TBL.sh _nrvansc_ds clm_urb1pt^nl_urb 19920812:NONE:3600 1x1_vancouverCAN navy 330 arb_ic FAIL! rc= 4
+018 erNB4 TER.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 57+100 arb_FAIL! rc= 5
+019 brNB4 TBR.sh _nrmexsc_ds clm_urb1pt^nl_urb_br 19931201:NONE:3600 1x1_mexicocityMEX navy 72+72 arFAIL! rc= 5
+020 blNB4 TBL.sh _nrmexsc_ds clm_urb1pt^nl_urb 19931201:NONE:3600 1x1_mexicocityMEX navy 157 arb_ic FAIL! rc= 4
+  edinburgh/ifort: All PASS except...
+002 erA92 TER.sh _sc_dm clm_std^nl_urb 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic ................FAIL! rc= 7
+003 brA92 TBR.sh _sc_dm clm_std^nl_urb_br 20030101:NONE:3600 4x5 gx3v7 -3+-3 arb_ic .............FAIL! rc= 6
+006 erD91 TER.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 72+72 cold ...............FAIL! rc= 7
+007 blD91 TBL.sh _persc_dh clm_per^nl_urb 20021231:NONE:1200 4x5 gx3v7 144 cold .................FAIL! rc= 5
+008 smG42 TSM.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+009 erG42 TER.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+010 brG42 TBR.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+011 blG42 TBL.sh 17p_sc_dm clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+  breeze,gale,hail,gust/ifort interactive testing: All PASS except...
+011 blCA8 TBL.sh _nrsc_ds clm_std^nl_urb 20021230:NONE:3600 1x1_asphaltjungleNJ navy -90 arb_ic .FAIL! rc= 5
+020 smG53 TSM.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 10
+021 erG53 TER.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 10+38 arb_ic ......FAIL! rc= 5
+022 brG53 TBR.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 72+72 arb_ic ......FAIL! rc= 5
+023 blG53 TBL.sh 17p_sc_do clm_pftdyn 10001230:NONE:1800 10x15 USGS@1000-1002 144 arb_ic ........FAIL! rc= 4
+
+CLM tag used for the baseline comparison tests if applicable: clm3_7_00
+
+Changes answers relative to baseline: Yes!
+    snow change has a small effect on climate (see below)
+    Bringing in MEGAN VOC changes answers for VOC fluxes in a diagnostic way
+    Changing to use weights from fsurdat file rather than finidat file, changes
+      answers for cases with finidat startup files, if the weights are different.
+
+IF tag changes answers relative to baseline comparison the
+following should be filled in:
+
+  Summarize any changes to answers:
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: same climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate in enough detail that it(they) could be reproduced, i.e.,
+    ccsm4_0_beta35
+    bluefire
+    -compset B_1850_TRACK1_CN -res f19_g16
+
+   MSS location of control simulations used to validate new climate:
+
+/DLAWREN/csm/b40.1850.track1.2deg.003.snow
+   
+   URL for LMWG diagnostics output used to validate new climate:
+
+http://www.cgd.ucar.edu/ccr/paleo/b40.snow/b40.1850.track1.2deg.003.snow-b40.1850.track1.2deg.003.control/
+http://www.cgd.ucar.edu/ccr/dlawren/research/clm4.0_dev/b40.1850.track1.2deg.003.snowa-b40.1850.track1.2deg.003.controla/setsIndex.html
+	
+===============================================================
+===============================================================
 Tag name:  clm3_7_15
 Originator(s):  erik (erik)
 Date: Tue Apr 27 10:13:57 MDT 2010
@@ -36,6 +259,7 @@ Known bugs (include bugzilla ID):
                                  1124 (Reported energy for pftdyn grid-cell not right)
                                  1139 (LAND and PFTS 1D vector averaging doesn't work)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Type of tag: std-test
@@ -230,6 +454,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -290,6 +515,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -356,6 +582,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -449,6 +676,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -618,6 +846,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -717,6 +946,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -940,6 +1170,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1091,6 +1322,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Switch cndv for dgvm, Have configure disallow
@@ -1431,6 +1663,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -1738,6 +1971,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: 
@@ -1944,6 +2178,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
@@ -2099,6 +2334,7 @@ Known bugs (include bugzilla ID):
                                  1143 (Problems with mksurfdata and ifort)
                                  1144 (Bug in ndeplintInterp.ncl in calculation of time axis)
                                  1147 (mkgriddata can't straddle over Greenich)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: Some changes to configure
@@ -2301,6 +2537,7 @@ Known bugs (include bugzilla ID):
                                  1104 (Restart problem with pftdyn mode)
                                  1118 (Restarts with SNICAR_FRC fail)
                                  1121 (history variable attribute cell_methods misnamed)
+                                 1155 (Problem with ndeplintInterp for historical case)
     http://bugs.cgd.ucar.edu/
 
 Describe any changes made to build system: None
