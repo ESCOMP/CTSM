@@ -1,6 +1,16 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-   clm3_8_00         erik 05/04/2010 Get future scenarios working, finalize documentation, bring in MEGAN VOC and CNDV, simplify, mksurfdata optimization, fix bugs: snow enthalpy, BMOZ, pergro, use pft weights from fsurdat NOT finidat
+   clm4_0_00         erik 05/04/2010  Update to datm8, redirect aquifer overflow 
+                     to drainage, add gx3v7 masks, script to extract regional 
+                     datasets, add harvesting for CN, modify shrubs, include urban 
+                     model, ice stream for snowcapping, new build-namelist system, 
+                     scale solar by solar zenith angle in datm, deep soil with 
+                     bedrock at bottom, organic matter in soils, SNICAR for snow 
+                     radiation, sparce dense aero, snow cover changes
+   clm3_8_00         erik 05/04/2010 Get future scenarios working, finalize 
+                     documentation, bring in MEGAN VOC and CNDV, simplify, 
+                     mksurfdata optimization, fix bugs: snow enthalpy, BMOZ, pergro, 
+                     use pft weights from fsurdat NOT finidat
    clm3_7_15         erik 04/27/2010 Finish User's Guide, surfdata files for urban-1pt, fix mksurfdata ifort bugs, work with testing
    clm3_7_14         erik 04/08/2010 Fix rcp=2.6/4.5 1-degree fndepdyn filenames
    clm3_7_13         erik 04/08/2010 Add in missing rcp=2.6/6 use-cases, and fix syntax errors in the namelist_defaults file
